@@ -2245,7 +2245,7 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     /* If obj needs to be closed before being finalized, remember it. */
     if ((clasp->flags & JSCLASS_IS_EXTENDED) &&
         ((JSExtendedClass *)clasp)->close &&
-        !js_RegisterObjectWithCloseHook(cx, obj)) {
+        !js_AddObjectToCloseTable(cx, obj)) {
         goto bad;
     }
 

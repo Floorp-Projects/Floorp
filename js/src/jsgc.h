@@ -140,20 +140,8 @@ typedef struct JSPtrTable {
 extern JSBool
 js_RegisterCloseableIterator(JSContext *cx, JSObject *obj);
 
-typedef struct JSCloseLink JSCloseLink;
-
-/*
- * Structure to track an object of extended class with a non-null close hook.
- */
-typedef struct JSGCCloseListItem JSGCCloseListItem;
-
-struct JSGCCloseListItem {
-    JSGCCloseListItem *next;
-    JSObject          *object;
-};
-
 extern JSBool
-js_RegisterObjectWithCloseHook(JSContext *cx, JSObject *obj);
+js_AddObjectToCloseTable(JSContext *cx, JSObject *obj);
 
 /*
  * The private JSGCThing struct, which describes a gcFreeList element.
@@ -218,35 +206,29 @@ extern void
 js_MarkStackFrame(JSContext *cx, JSStackFrame *fp);
 
 /*
- * Kinds of js_GC invocation.
+ * Flags to modify how a GC marks and sweeps:
+ *   GC_KEEP_ATOMS      Don't sweep unmarked atoms, they may be in use by the
+ *                      compiler, or by an API function that calls js_Atomize,
+ *                      when the GC is called from js_NewGCThing, due to a
+ *                      malloc failure or the runtime GC-thing limit.
+ *   GC_LAST_CONTEXT    Called from js_DestroyContext for last JSContext in a
+ *                      JSRuntime, when it is imperative that rt->gcPoke gets
+ *                      cleared early in js_GC, if it is set.
+ *   GC_LAST_DITCH      Called from js_NewGCThing as a last-ditch GC attempt.
+ *                      See comments before js_GC definition for details.
  */
-typedef enum JSGCInvocationKind {
-
-    /* Normal invocation. */
-    GC_NORMAL,
-
-    /*
-     * Called from js_DestroyContext for last JSContext in a JSRuntime, when
-     * it is imperative that rt->gcPoke gets cleared early in js_GC.
-     */
-    GC_LAST_CONTEXT,
-
-    /*
-     * Called from js_NewGCThing as a last-ditch GC attempt. See comments
-     * before js_GC definition for details.
-     */
-    GC_LAST_DITCH
-
-} JSGCInvocationKind;
+#define GC_KEEP_ATOMS       0x1
+#define GC_LAST_CONTEXT     0x2
+#define GC_LAST_DITCH       0x4
 
 extern void
-js_ForceGC(JSContext *cx, JSGCInvocationKind gckind);
+js_ForceGC(JSContext *cx, uintN gcflags);
 
 /*
  * Return false when the branch callback cancels GC and true otherwise.
  */
 extern JSBool
-js_GC(JSContext *cx, JSGCInvocationKind gckind);
+js_GC(JSContext *cx, uintN gcflags);
 
 /* Call this after succesful malloc of memory for GC-related things. */
 extern void
@@ -285,9 +267,6 @@ typedef struct JSGCStats {
     uint32  afree;      /* thing arenas freed so far */
     uint32  stackseg;   /* total extraordinary stack segments scanned */
     uint32  segslots;   /* total stack segment jsval slots scanned */
-    uint32  nclose;     /* number of objects with close hooks */
-    uint32  maxnclose;  /* max number of objects with close hooks */
-    uint32  maxcloselater; /* max number of close hooks scheduled to run */
 } JSGCStats;
 
 extern JS_FRIEND_API(void)

@@ -61,7 +61,6 @@
 #include "jscntxt.h"
 #include "jsconfig.h"
 #include "jsdbgapi.h"
-#include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
@@ -249,8 +248,15 @@ typedef struct JSPtrTableInfo {
     uint16      linearGrowthThreshold;
 } JSPtrTableInfo;
 
+#define GC_CLOSE_TABLE_MIN        4
+#define GC_CLOSE_TABLE_LINEAR     1024
 #define GC_ITERATOR_TABLE_MIN     4
 #define GC_ITERATOR_TABLE_LINEAR  1024
+
+static const JSPtrTableInfo closeTableInfo = {
+    GC_CLOSE_TABLE_MIN,
+    GC_CLOSE_TABLE_LINEAR
+};
 
 static const JSPtrTableInfo iteratorTableInfo = {
     GC_ITERATOR_TABLE_MIN,
@@ -480,6 +486,9 @@ FinishGCArenaLists(JSRuntime *rt)
             DestroyGCArena(rt, arenaList, &arenaList->last);
         arenaList->freeList = NULL;
     }
+
+    FreePtrTable(&rt->gcCloseTable, &closeTableInfo);
+    FreePtrTable(&rt->gcIteratorTable, &iteratorTableInfo);
 }
 
 uint8 *
@@ -690,9 +699,6 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
     fprintf(fp, "  thing arenas freed so far: %lu\n", ULSTAT(afree));
     fprintf(fp, "     stack segments scanned: %lu\n", ULSTAT(stackseg));
     fprintf(fp, "stack segment slots scanned: %lu\n", ULSTAT(segslots));
-    fprintf(fp, "                close hooks: %lu\n", ULSTAT(nclose));
-    fprintf(fp, "            max close hooks: %lu\n", ULSTAT(maxnclose));
-    fprintf(fp, "max close hooks not yet run: %lu\n", ULSTAT(maxcloselater));
 #undef UL
 #undef US
 
@@ -727,16 +733,6 @@ js_FinishGC(JSRuntime *rt)
 #ifdef JS_GCMETER
     js_DumpGCStats(rt, stdout);
 #endif
-
-    FreePtrTable(&rt->gcIteratorTable, &iteratorTableInfo);
-#ifdef DEBUG
-    if (rt->gcCloseList) {
-        fprintf(stderr,
-"JS engine warning: Some close hooks were not executed before destroying the\n"
-"JSRuntime at %p. This may result in a memory leak.\n", (void *)rt);
-    }
-#endif
-    rt->gcCloseList = NULL;
     FinishGCArenaLists(rt);
 
     if (rt->gcRootsHash.ops) {
@@ -850,7 +846,7 @@ js_RegisterCloseableIterator(JSContext *cx, JSObject *obj)
     JSBool ok;
 
     rt = cx->runtime;
-    JS_ASSERT(!rt->gcRunning);
+    JS_ASSERT(!rt->gcRunning || rt->gcClosePhase);
 
     JS_LOCK_GC(rt);
     ok = AddToPtrTable(cx, &rt->gcIteratorTable, &iteratorTableInfo, obj);
@@ -882,19 +878,18 @@ CloseIteratorStates(JSContext *cx)
 }
 
 JSBool
-js_RegisterObjectWithCloseHook(JSContext *cx, JSObject *obj)
+js_AddObjectToCloseTable(JSContext *cx, JSObject *obj)
 {
     JSRuntime *rt;
-    JSGCCloseListItem *item;
-
-    rt = cx->runtime;
-    JS_ASSERT(!rt->gcRunning);
+    JSBool ok;
 
     /*
      * Return early without doing anything if shutting down, to prevent a bad
      * close hook from ilooping the GC.  This could result in shutdown leaks,
      * so printf in DEBUG builds.
      */
+    rt = cx->runtime;
+    JS_ASSERT(!rt->gcRunning || rt->gcClosePhase);
     if (rt->state == JSRTS_LANDING) {
 #ifdef DEBUG
         fprintf(stderr,
@@ -907,107 +902,75 @@ js_RegisterObjectWithCloseHook(JSContext *cx, JSObject *obj)
         return JS_TRUE;
     }
 
-    item = (JSGCCloseListItem *)js_NewGCThing(cx, GCX_PRIVATE, sizeof *item);
-    if (!item)
-        return JS_FALSE;
-
-    item->object = obj;
     JS_LOCK_GC(rt);
-    item->next = rt->gcCloseList;
-    rt->gcCloseList = item;
-    METER(rt->gcStats.nclose++);
-    METER(rt->gcStats.maxnclose = JS_MAX(rt->gcStats.maxnclose,
-                                         rt->gcStats.nclose));
+    ok = AddToPtrTable(cx, &rt->gcCloseTable, &closeTableInfo, obj);
     JS_UNLOCK_GC(rt);
-
-    return JS_TRUE;
+    return ok;
 }
+
+/*
+ * Struct to define object to close after the finalization phase of GC:
+ * GC executes the close hooks for elements of JSRuntime.gcCloseTable.array
+ * with indexes from the [startIndex, startIndex + count) range.
+ */
+typedef struct JSObjectsToClose {
+    size_t      count;
+    size_t      startIndex;
+#ifdef DEBUG
+    JSPtrTable  tableSnapshot;
+#endif
+} JSObjectsToClose;
 
 static void
 ScanDelayedChildren(JSContext *cx);
 
 static void
-MarkCloseList(JSContext *cx, JSGCCloseListItem *item)
-{
-    while (item) {
-        GC_MARK(cx, item, "close-phase list item");
-        GC_MARK(cx, item->object, "close-phase object");
-        item = item->next;
-    }
-}
-
-static JSGCCloseListItem **
-GetCloseListTail(JSGCCloseListItem **itemp)
-{
-    while (*itemp)
-        itemp = &(*itemp)->next;
-    return itemp;
-}
-
-/*
- * First half of the close phase: loop over the objects that we set aside
- * in the close table and mark them to protect them against finalization
- * during sweeping phase.
- */
-static void
-FindAndMarkObjectsToClose(JSContext *cx, JSGCInvocationKind gckind)
+FindAndMarkObjectsToClose(JSContext *cx, JSObjectsToClose *toClose)
 {
     JSRuntime *rt;
-    JSGCCloseListItem *todo, **itemp, *item;
-
-    rt = cx->runtime;
+    void **array;
+    JSObject *obj;
+    size_t count, index, pivot;
 
     /*
-     * We delay the execution of close hooks for unreachable objects from
-     * rt->gcCloseList when the current thread has not yet finished execution
-     * of close hooks found during the previous GC cycle or when GC is the
-     * last ditch.
-     *
-     * The former prevents an infinite loop via close hooks creating more
-     * objects with close hooks.
-     *
-     * The latter is necessary to preserve the invariant that an allocation of
-     * GC thing of one kind should not affect affect cx->newborn[anotherKind].
-     * A close hook can violate it since it can allocate arbitrary things.
-     *
-     * Not running close hooks when GC is the last ditch also preserves the
-     * assumption that such GC should keep all atoms. A recursive invocation
-     * of GC from a close hook can break it.
+     * Find unmarked objects reachable from rt->gcCloseTable and set them
+     * aside at the end of the table. These are the objects to close.
      */
-    if (cx->gcRunningCloseHooks || gckind == GC_LAST_DITCH) {
-        MarkCloseList(cx, rt->gcCloseList);
-    } else {
-        todo = NULL;
-        itemp = &rt->gcCloseList;
-        while ((item = *itemp) != NULL) {
-            if (*js_GetGCThingFlags(item->object) & GCF_MARK) {
-                GC_MARK(cx, item, "reachable close-phase list item");
-                itemp = &item->next;
-            } else {
-                *itemp = item->next;
-                item->next = todo;
-                todo = item;
-                METER(JS_ASSERT(rt->gcStats.nclose));
-                METER(rt->gcStats.nclose--);
-            }
-        }
-
-        if (todo) {
-            MarkCloseList(cx, todo);
-            itemp = GetCloseListTail(&cx->gcObjectsToClose);
-            *itemp = todo;
-#ifdef JS_GCMETER
-            {
-                uint32 toCloseSize = 0;
-
-                for (item = cx->gcObjectsToClose; item; item = item->next)
-                    toCloseSize++;
-                if (toCloseSize > rt->gcStats.maxcloselater)
-                    rt->gcStats.maxcloselater = rt->gcStats.maxcloselater;
-            }
-#endif
+    rt = cx->runtime;
+    array = rt->gcCloseTable.array;
+    count = pivot = rt->gcCloseTable.count;
+    index = 0;
+    while (index != pivot) {
+        obj = (JSObject *)array[index];
+        if (*js_GetGCThingFlags(obj) & GCF_MARK) {
+            ++index;
+        } else {
+            array[index] = array[--pivot];
+            array[pivot] = obj;
         }
     }
+
+    if (pivot == count) {
+        /* Skip the close phase when threre are no objects to close. */
+        toClose->count = 0;
+        return;
+    }
+
+    toClose->count = count - pivot;
+    toClose->startIndex = pivot;
+#ifdef DEBUG
+    toClose->tableSnapshot = rt->gcCloseTable;
+#endif
+
+    /*
+     * First half of the close phase: loop over the objects that we set aside
+     * in the close table and mark them to protect them against finalization
+     * during sweeping phase.
+     */
+    index = pivot;
+    do {
+        GC_MARK(cx, array[index], "close-phase object");
+    } while (++index != count);
 
     /*
      * Mark children of things that caused too deep recursion during the
@@ -1016,78 +979,56 @@ FindAndMarkObjectsToClose(JSContext *cx, JSGCInvocationKind gckind)
     ScanDelayedChildren(cx);
 }
 
-static JSBool
-RunCloseHooks(JSContext *cx)
+static void
+ExecuteCloseHooks(JSContext *cx, const JSObjectsToClose *toClose)
 {
     JSRuntime *rt;
-    JSTempValueRooter tvr;
     JSStackFrame *fp;
+    uint32 index, endIndex;
     JSObject *obj;
     JSExtendedClass *xclasp;
-    JSBool ok;
+    void **array;
 
-    /* Ignore recursive invocations. */
-    if (cx->gcRunningCloseHooks)
-        return JS_TRUE;
-
-    if (!cx->gcObjectsToClose)
-        return JS_TRUE;
-
-    /* Prepare for execution of at least one close hook. */
     rt = cx->runtime;
-    cx->gcRunningCloseHooks = JS_TRUE;
-    JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
+    JS_ASSERT(toClose->count > 0);
+
+    /* Close table manupulations are not allowed during the marking phase. */
+    JS_ASSERT(memcmp(&toClose->tableSnapshot, &rt->gcCloseTable,
+                     sizeof toClose->tableSnapshot) == 0);
 
     /*
-     * Temporarily set aside cx->fp here to prevent the close hooks from
-     * running on the GC's interpreter stack.
+     * Execute the close hooks. Temporarily set aside cx->fp here to prevent
+     * the close hooks from running on the GC's interpreter stack.
      */
+    rt->gcClosePhase = JS_TRUE;
     fp = cx->fp;
     cx->fp = NULL;
 
+    index = toClose->startIndex;
+    endIndex = index + toClose->count;
     do {
-        obj = cx->gcObjectsToClose->object;
-
-        /* Root obj before unlinking the item and executing the hook. */
-        tvr.u.value = OBJECT_TO_JSVAL(obj);
-        cx->gcObjectsToClose = cx->gcObjectsToClose->next;
-
-        xclasp = (JSExtendedClass *) OBJ_GET_CLASS(cx, obj);
+        /*
+         * Reload rt->gcCloseTable.array because close hooks may create
+         * new objects that have close hooks and reallocate the table.
+         */
+        obj = (JSObject *)rt->gcCloseTable.array[index];
+        xclasp = (JSExtendedClass *) LOCKED_OBJ_GET_CLASS(obj);
         JS_ASSERT(xclasp->base.flags & JSCLASS_IS_EXTENDED);
-        JS_ASSERT(xclasp->close);
-        ok = xclasp->close(cx, obj);
+        xclasp->close(cx, obj);
+    } while (++index != endIndex);
 
-        /* One more object with a close hook becomes unreachable. */
-        rt->gcPoke = JS_TRUE;
-        if (cx->throwing) {
-            /*
-             * Report the exception thrown by the close hook and continue to
-             * execute the rest of the hooks.
-             */
-            if (!js_ReportUncaughtException(cx))
-                JS_ClearPendingException(cx);
-            ok = JS_TRUE;
-        } else if (!ok) {
-            /*
-             * Assume this is a stop signal from the branch callback or other
-             * quit ASAP condition. Break execution until the next invocation
-             * of GC and put the rest of handlers back to the global list.
-             */
-            if (cx->gcObjectsToClose) {
-                JS_LOCK_GC(rt);
-                *GetCloseListTail(&rt->gcCloseList) = cx->gcObjectsToClose;
-                cx->gcObjectsToClose = NULL;
-                JS_UNLOCK_GC(rt);
-            }
-            break;
-        }
-    } while (cx->gcObjectsToClose);
-
+    rt->gcClosePhase = JS_FALSE;
     cx->fp = fp;
-    JS_POP_TEMP_ROOT(cx, &tvr);
-    cx->gcRunningCloseHooks = JS_FALSE;
 
-    return ok;
+    /*
+     * Move any added object pointers down over the span just
+     * processed, and update the table's count.
+     */
+    array = rt->gcCloseTable.array;
+    memmove(array + toClose->startIndex, array + endIndex,
+            (rt->gcCloseTable.count - endIndex) * sizeof array[0]);
+    ShrinkPtrTable(&rt->gcCloseTable, &closeTableInfo,
+                   rt->gcCloseTable.count - toClose->count);
 }
 
 #if defined(DEBUG_brendan) || defined(DEBUG_timeless)
@@ -1158,8 +1099,8 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
             rt->gcMallocBytes += localMallocBytes;
     }
 #endif
-    JS_ASSERT(!rt->gcRunning);
-    if (rt->gcRunning) {
+    JS_ASSERT(!rt->gcRunning || rt->gcClosePhase);
+    if (rt->gcRunning && !rt->gcClosePhase) {
         METER(rt->gcStats.finalfail++);
         JS_UNLOCK_GC(rt);
         return NULL;
@@ -1176,7 +1117,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
 
     arenaList = &rt->gcArenaList[flindex];
     for (;;) {
-        if (doGC) {
+        if (doGC && !rt->gcClosePhase) {
             /*
              * Keep rt->gcLock across the call into js_GC so we don't starve
              * and lose to racing threads who deplete the heap just after
@@ -1185,7 +1126,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
              * can happen on certain operating systems. For the gory details,
              * see bug 162779 at https://bugzilla.mozilla.org/.
              */
-            if (!js_GC(cx, GC_LAST_DITCH)) {
+            if (!js_GC(cx, GC_KEEP_ATOMS | GC_LAST_DITCH)) {
                 /*
                  * js_GC ensures that GC is unlocked when the branch callback
                  * wants to stop execution, and in this case we do not report
@@ -2298,16 +2239,16 @@ gc_lock_marker(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num, void *arg)
 }
 
 void
-js_ForceGC(JSContext *cx, JSGCInvocationKind gckind)
+js_ForceGC(JSContext *cx, uintN gcflags)
 {
     uintN i;
 
-    JS_ASSERT(gckind == GC_NORMAL || gckind == GC_LAST_CONTEXT);
+    JS_ASSERT((gcflags & ~(GC_KEEP_ATOMS | GC_LAST_CONTEXT)) == 0);
     for (i = 0; i < GCX_NTYPES; i++)
         cx->newborn[i] = NULL;
     cx->lastAtom = NULL;
     cx->runtime->gcPoke = JS_TRUE;
-    js_GC(cx, gckind);
+    js_GC(cx, gcflags);
     JS_ArenaFinish();
 }
 
@@ -2407,30 +2348,30 @@ js_MarkStackFrame(JSContext *cx, JSStackFrame *fp)
  * Return false when the branch callback wants to stop exeution ASAP and true
  * otherwise.
  *
- * When gckind is GC_LAST_DITCH, it indicates a call from js_NewGCThing with
- * rt->gcLock already held. On return to js_NewGCThing the lock is kept when
- * js_GC returns false and released when it returns true. This asymmetry helps
- * avoid re-taking the lock just to release it immediately in js_NewGCThing
- * when the branch callback called outside the lock cancels the allocation and
- * js_GC returns false. See bug 341896.
+ * When gcflags contains GC_LAST_DITCH, it indicates a call from js_NewGCThing
+ * with rt->gcLock already held. On return to js_NewGCThing the lock is kept
+ * when js_GC returns false and released when it returns true. This asymmetry
+ * helps avoid re-taking the lock just to release it immediately in
+ * js_NewGCThing when the branch callback called outside the lock cancels the
+ * allocation and js_GC returns false. See bug 341896.
  */
 JSBool
-js_GC(JSContext *cx, JSGCInvocationKind gckind)
+js_GC(JSContext *cx, uintN gcflags)
 {
     JSRuntime *rt;
-    JSBool keepAtoms;
     JSContext *iter, *acx;
     JSStackFrame *fp, *chain;
     uintN i, type;
     JSStackHeader *sh;
     JSTempValueRooter *tvr;
+    JSObjectsToClose objectsToClose;
     size_t nbytes, limit, offset;
     JSGCArena *a, **ap;
     uint8 flags, *flagp, *firstPage;
     JSGCThing *thing, *freeList;
     JSGCArenaList *arenaList;
     GCFinalizeOp finalizer;
-    JSBool allClear, checkBranchCallback;
+    JSBool allClear, shouldRestart, checkBranchCallback;
 #ifdef JS_THREADSAFE
     uint32 requestDebit;
 #endif
@@ -2447,7 +2388,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      * should suppress that final collection or there may be shutdown leaks,
      * or runtime bloat until the next context is created.
      */
-    if (rt->state != JSRTS_UP && gckind != GC_LAST_CONTEXT)
+    if (rt->state != JSRTS_UP && !(gcflags & GC_LAST_CONTEXT))
         return JS_TRUE;
 
     /*
@@ -2456,18 +2397,18 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      */
     if (rt->gcCallback &&
         !rt->gcCallback(cx, JSGC_BEGIN) &&
-        gckind != GC_LAST_CONTEXT) {
+        !(gcflags & GC_LAST_CONTEXT)) {
         return JS_TRUE;
     }
 
     /* Lock out other GC allocator and collector invocations. */
-    if (gckind != GC_LAST_DITCH)
+    if (!(gcflags & GC_LAST_DITCH))
         JS_LOCK_GC(rt);
 
     /* Do nothing if no mutator has executed since the last GC. */
     if (!rt->gcPoke) {
         METER(rt->gcStats.nopoke++);
-        if (gckind != GC_LAST_DITCH)
+        if (!(gcflags & GC_LAST_DITCH))
             JS_UNLOCK_GC(rt);
         return JS_TRUE;
     }
@@ -2481,7 +2422,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         rt->gcLevel++;
         METER(if (rt->gcLevel > rt->gcStats.maxlevel)
                   rt->gcStats.maxlevel = rt->gcLevel);
-        if (gckind != GC_LAST_DITCH)
+        if (!(gcflags & GC_LAST_DITCH))
             JS_UNLOCK_GC(rt);
         return JS_TRUE;
     }
@@ -2538,7 +2479,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
             JS_AWAIT_GC_DONE(rt);
         if (requestDebit)
             rt->requestCount += requestDebit;
-        if (gckind != GC_LAST_DITCH)
+        if (!(gcflags & GC_LAST_DITCH))
             JS_UNLOCK_GC(rt);
         return JS_TRUE;
     }
@@ -2574,11 +2515,9 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     rt->gcRunning = JS_TRUE;
     JS_UNLOCK_GC(rt);
 
-    /*
-     * Keep atoms if a suspended compile is running on another context or we
-     * are doing the last ditch GC.
-     */
-    keepAtoms = (rt->gcKeepAtoms != 0 || gckind == GC_LAST_DITCH);
+    /* If a suspended compile is running on another context, keep atoms. */
+    if (rt->gcKeepAtoms)
+        gcflags |= GC_KEEP_ATOMS;
 
     /* Reset malloc counter. */
     rt->gcMallocBytes = 0;
@@ -2618,9 +2557,9 @@ restart:
     JS_DHashTableEnumerate(&rt->gcRootsHash, gc_root_marker, cx);
     if (rt->gcLocksHash)
         JS_DHashTableEnumerate(rt->gcLocksHash, gc_lock_marker, cx);
-    js_MarkAtomState(&rt->atomState, keepAtoms, gc_mark_atom_key_thing, cx);
+    js_MarkAtomState(&rt->atomState, gcflags, gc_mark_atom_key_thing, cx);
     js_MarkWatchPoints(rt);
-    js_MarkScriptFilenames(rt, keepAtoms);
+    js_MarkScriptFilenames(rt, gcflags);
     js_MarkNativeIteratorStates(cx);
 
     iter = NULL;
@@ -2691,11 +2630,6 @@ restart:
             js_GCMarkSharpMap(cx, &acx->sharpObjectMap);
 
         acx->cachedIterObj = NULL;
-
-        /*
-         * Mark objects with close hooks that some thread is actively closing.
-         */
-        MarkCloseList(cx, acx->gcObjectsToClose);
     }
 
 #ifdef DUMP_CALL_TABLE
@@ -2712,11 +2646,14 @@ restart:
      * Close phase: search and mark part.
      *
      * We find all unreachable objects with close hooks and move them to a
-     * private work-list to execute the close hooks after the GC cycle
-     * completes. To ensure liveness during the sweep phase we mark all
-     * objects we are about to close.
+     * private work-list to execute the close hooks after the sweep phase.
+     * To ensure liveness during the sweep phase we mark all objects we are
+     * about to close.
      */
-    FindAndMarkObjectsToClose(cx, gckind);
+#ifdef __GNUC__         /* suppress a bogus gcc warning */
+    objectsToClose.startIndex = 0;
+#endif
+    FindAndMarkObjectsToClose(cx, &objectsToClose);
 
     JS_ASSERT(!cx->insideGCMarkCallback);
     if (rt->gcCallback) {
@@ -2863,13 +2800,36 @@ restart:
   }
 #endif
 
-    JS_LOCK_GC(rt);
+    /*
+     * We want to restart GC if any of the finalizers called js_RemoveRoot or
+     * js_UnlockGCThingRT.
+     */
+    shouldRestart = rt->gcPoke;
 
     /*
-     * We want to restart GC if js_GC was called recursively or if any of the
-     * finalizers called js_RemoveRoot or js_UnlockGCThingRT.
+     * Close phase: execution part.
+     *
+     * The GC allocator works when called during execution of a close hook
+     * but if it exhausts the malloc heap, it will fail without trying a
+     * last-ditch GC.
      */
-    if (rt->gcLevel > 1 || rt->gcPoke) {
+    if (objectsToClose.count != 0) {
+        ExecuteCloseHooks(cx, &objectsToClose);
+
+        /*
+         * On the last destroy context restart GC to collect just closed
+         * objects. This does not cause infinite loops with close hooks
+         * creating more closeable objects since we do not allow installing
+         * close hooks during the shutdown of runtime.
+         *
+         * See bug 340889 and bug 341675.
+         */
+        if (gcflags & GC_LAST_CONTEXT)
+            shouldRestart = JS_TRUE;
+    }
+
+    JS_LOCK_GC(rt);
+    if (rt->gcLevel > 1 || shouldRestart) {
         rt->gcLevel = 1;
         rt->gcPoke = JS_FALSE;
         JS_UNLOCK_GC(rt);
@@ -2891,17 +2851,18 @@ restart:
      * Unlock unless we have GC_LAST_DITCH which requires locked GC on return
      * after a successful GC cycle.
      */
-    if (gckind != GC_LAST_DITCH)
+    if (!(gcflags & GC_LAST_DITCH))
         JS_UNLOCK_GC(rt);
 #endif
 
-    checkBranchCallback = (gckind == GC_LAST_DITCH &&
-                           JS_HAS_NATIVE_BRANCH_CALLBACK_OPTION(cx) &&
-                           cx->branchCallback);
+    checkBranchCallback = (gcflags & GC_LAST_DITCH) &&
+                          JS_HAS_NATIVE_BRANCH_CALLBACK_OPTION(cx) &&
+                          cx->branchCallback;
 
-    /* Execute JSGC_END callback and branch callback outside the lock. */
     if (rt->gcCallback || checkBranchCallback) {
-        if (gckind == GC_LAST_DITCH)
+
+        /* Execute JSGC_END and branch callbacks outside the lock. */
+        if (gcflags & GC_LAST_DITCH)
             JS_UNLOCK_GC(rt);
         if (rt->gcCallback)
             (void) rt->gcCallback(cx, JSGC_END);
@@ -2913,17 +2874,8 @@ restart:
             /* Keep GC unlocked when canceled. */
             return JS_FALSE;
         }
-        if (gckind == GC_LAST_DITCH)
+        if (gcflags & GC_LAST_DITCH)
             JS_LOCK_GC(rt);
-    }
-
-    /*
-     * See FindAndMarkObjectsToClose for comments about the check for the last
-     * ditch GC here.
-     */
-    if (gckind != GC_LAST_DITCH && !RunCloseHooks(cx)) {
-        METER(rt->gcStats.retryhalt++);
-        return JS_FALSE;
     }
 
     return JS_TRUE;
