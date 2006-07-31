@@ -624,7 +624,7 @@ typedef struct JSGenerator {
     jsval               stack[1];
 } JSGenerator;
 
-static JSBool
+static void
 generator_closehook(JSContext *cx, JSObject *obj)
 {
     JSGenerator *gen;
@@ -632,10 +632,17 @@ generator_closehook(JSContext *cx, JSObject *obj)
     const jsid id = ATOM_TO_JSID(cx->runtime->atomState.closeAtom);
 
     gen = (JSGenerator *) JS_GetPrivate(cx, obj);
-    if (!gen || !JS_GetMethodById(cx, obj, id, &obj, &fval))
-        return JS_TRUE;
+    if (!gen)
+        return;
 
-    return js_InternalCall(cx, obj, fval, 0, NULL, &rval);
+   /*
+    * Ignore errors until after we call the close method, then force prompt
+    * error reporting, since GC is infallible.
+    */
+    if (JS_GetMethodById(cx, obj, id, &obj, &fval))
+        js_InternalCall(cx, obj, fval, 0, NULL, &rval);
+    if (cx->throwing && !js_ReportUncaughtException(cx))
+        JS_ClearPendingException(cx);
 }
 
 static void
