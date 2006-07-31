@@ -3666,6 +3666,12 @@ enum BWCOpenDest {
       ++numSuggestions;
       nsCRT::free(suggestion);
     } while (numSuggestions < kMaxSuggestions);
+
+    if (numSuggestions == 0) {
+      NSMenuItem* item = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"No Guesses Found", nil) action:NULL keyEquivalent:@""] autorelease];
+      [item setEnabled:NO];
+      [inMenu insertItem:item atIndex:insertBase];
+    }
   }
   else
     showSuggestions = NO;
