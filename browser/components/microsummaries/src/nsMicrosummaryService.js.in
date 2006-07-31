@@ -1207,8 +1207,10 @@ MicrosummaryGenerator.prototype = {
     // in the microsummaries namespace, regardless of whether or not
     // it's the root element.  Should it matter?
     var generatorNode = xmlDocument.getElementsByTagNameNS(MICSUM_NS, "generator")[0];
+    // XXX We should throw instead of returning if the file doesn't contain
+    // a generator.
     if (!generatorNode)
-      throw Components.results.NS_ERROR_FAILURE;
+      return;
 
     this.name = generatorNode.getAttribute("name");
 
@@ -1221,21 +1223,11 @@ MicrosummaryGenerator.prototype = {
                  this.localURI; // locally created generator without sourceURI
     }
 
-    function getFirstChildByTagName(aTagName, aParentNode) {
-      var nodeList = aParentNode.getElementsByTagNameNS(MICSUM_NS, aTagName);
-      for (var i = 0; i < nodeList.length; i++) {
-        // Make sure that the node is a direct descendent of the generator node
-        if (nodeList[i].parentNode == aParentNode)
-          return nodeList[i];
-      }
-      return null;
-    }
-
     // Slurp the include/exclude rules that determine the pages to which
     // this generator applies.  Order is important, so we add the rules
     // in the order in which they appear in the XML.
     this._rules = [];
-    var pages = getFirstChildByTagName("pages", generatorNode);
+    var pages = generatorNode.getElementsByTagNameNS(MICSUM_NS, "pages")[0];
     if (pages) {
       // XXX Make sure the pages tag exists.
       for ( var i = 0; i < pages.childNodes.length ; i++ ) {
@@ -1251,7 +1243,7 @@ MicrosummaryGenerator.prototype = {
 
     // allow the generators to set individual update values (even varying
     // depending on certain XPath expressions)
-    var update = getFirstChildByTagName("update", generatorNode);
+    var update = generatorNode.getElementsByTagNameNS(MICSUM_NS, "update")[0] || null;
     if (update) {
       function _parseInterval(string) {
         // convert from minute fractions to milliseconds
@@ -1281,12 +1273,12 @@ MicrosummaryGenerator.prototype = {
       }
     }
 
-    var templateNode = getFirstChildByTagName("template", generatorNode);
+    var templateNode = generatorNode.getElementsByTagNameNS(MICSUM_NS, "template")[0];
     if (templateNode) {
-      this.template = getFirstChildByTagName("transform", templateNode) ||
-                      getFirstChildByTagName("stylesheet", templateNode);
+      this.template = templateNode.getElementsByTagNameNS(XSLT_NS, "transform")[0]
+                      || templateNode.getElementsByTagNameNS(XSLT_NS, "stylesheet")[0];
     }
-    // XXX Make sure the template is a valid XSL transform sheet.
+      // XXX Make sure the template is a valid XSL transform sheet.
 
     this.loaded = true;
   },
