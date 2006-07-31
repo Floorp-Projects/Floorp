@@ -375,7 +375,6 @@ create_htaccess() if $lc_hash->{'create_htaccess'};
 
 # XXX Some parts of checksetup still need these, right now.
 my $datadir   = bz_locations()->{'datadir'};
-my $webdotdir = bz_locations()->{'webdotdir'};
 
 # Remove parameters from the params file that no longer exist in Bugzilla,
 # and set the defaults for new ones
@@ -402,27 +401,7 @@ fix_all_file_permissions(!$silent);
 # If we are using a local 'dot' binary, verify the specified binary exists
 # and that the generated images are accessible.
 #
-
-if( Bugzilla->params->{'webdotbase'} && Bugzilla->params->{'webdotbase'} !~ /^https?:/ ) {
-    printf("Checking for %15s %-9s ", "GraphViz", "(any)") unless $silent;
-    if(-x Bugzilla->params->{'webdotbase'}) {
-        print "ok: found\n" unless $silent;
-    } else {
-        print "not a valid executable: " . Bugzilla->params->{'webdotbase'} . "\n";
-    }
-
-    # Check .htaccess allows access to generated images
-    if(-e "$webdotdir/.htaccess") {
-        open HTACCESS, "$webdotdir/.htaccess";
-        if(! grep(/png/,<HTACCESS>)) {
-            print "Dependency graph images are not accessible.\n";
-            print "delete $webdotdir/.htaccess and re-run checksetup.pl to fix.\n";
-        }
-        close HTACCESS;
-    }
-    print "\n" unless $silent;
-}
-
+check_graphviz(!$silent) if Bugzilla->params->{'webdotbase'};
 
 ###########################################################################
 # Populate groups table
