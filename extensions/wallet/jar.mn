@@ -1,6 +1,8 @@
 comm.jar:
 #ifdef MOZ_XUL_APP
 % content wallet %content/wallet/ xpcnativewrappers=yes
+% overlay chrome://navigator/content/navigator.xul chrome://wallet/content/walletNavigatorOverlay.xul
+% overlay chrome://communicator/content/pref/preftree.xul chrome://wallet/content/walletPrefsOverlay.xul
 % overlay chrome://communicator/content/tasksOverlay.xul chrome://wallet/content/walletTasksOverlay.xul
 #else
 *   content/wallet/contents.rdf                         (resources/content/contents.rdf)
