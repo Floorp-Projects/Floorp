@@ -23,10 +23,11 @@
 # Contributor(s):
 #   timeless
 #   slucy@objectivesw.co.uk
-#   H�kan Waara <hwaara@chello.se>
+#   Håkan Waara <hwaara@chello.se>
 #   Jan Varga <varga@nixcorp.com>
 #   Seth Spitzer <sspitzer@netscape.com>
 #   David Bienvenu <bienvenu@nventure.com>
+#   Karsten Düsterloh <mnyromyr@tprac.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -548,12 +549,56 @@ function IsImapMessage(messageUri)
 
 function SetMenuItemLabel(menuItemId, customLabel)
 {
-    var menuItem = document.getElementById(menuItemId);
-    if(menuItem)
-        menuItem.setAttribute('label', customLabel);
+  var menuItem = document.getElementById(menuItemId);
+  if (menuItem)
+    menuItem.setAttribute('label', customLabel);
 }
 
-function ToggleMessageTagCmd(target)
+function RemoveAllMessageTags()
+{
+  var selectedMsgUris = GetSelectedMessages();
+  if (!selectedMsgUris.length)
+    return;
+    
+  for (var i = 0; i < selectedMsgUris.length; ++i)
+  {
+    // remove all tags by removing all their tag keys at once
+    // (using a msgHdr's setStringProperty won't notify the threadPane!)
+    var msgHdr = messenger.msgHdrFromURI(selectedMsgUris[i]);
+    msgHdr.label = 0; // remove legacy label
+    msgHdr.folder.getMsgDatabase(msgWindow)
+          .setStringProperty(msgHdr.messageKey, "keywords", "");
+  }
+  onTagsChange();
+}
+
+function ToggleMessageTagKey(index)
+{
+  if (GetNumSelectedMessages() < 1)
+    return;
+  // set the tag state based upon that of the first selected message,
+  // just like we do for markAsRead etc.
+  var msgHdr = gDBView.hdrForFirstSelectedMessage;
+  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
+                             .getService(Components.interfaces.nsIMsgTagService);
+  var allKeys = tagService.keyEnumerator;
+  while (allKeys.hasMore()) 
+  {
+    var key = allKeys.getNext();
+    if (!--index) 
+    {
+      // found the key, now toggle its state
+      var curKeys = msgHdr.getStringProperty("keywords");
+      if (msgHdr.label)
+        curKeys += " $label" + msgHdr.label;
+      var addKey  = (" " + curKeys + " ").indexOf(" " + key + " ") < 0;
+      ToggleMessageTag(key, addKey);
+      return;
+    }
+  }
+}
+
+function ToggleMessageTagMenu(target)
 {
   var key    = target.getAttribute("value");
   var addKey = target.getAttribute("checked") == "true";
@@ -562,14 +607,13 @@ function ToggleMessageTagCmd(target)
 
 function ToggleMessageTag(key, addKey)
 {
-  var msgHdr = gDBView.hdrForFirstSelectedMessage;
   var messages = Components.classes["@mozilla.org/supports-array;1"]
                            .createInstance(Components.interfaces.nsISupportsArray);
+  var msg = Components.classes["@mozilla.org/supports-array;1"]
+                          .createInstance(Components.interfaces.nsISupportsArray);
   var selectedMsgUris = GetSelectedMessages();
-     
   var toggler = addKey ? "addKeywordToMessages" : "removeKeywordFromMessages";
-  var prevHdrFolder;
-  var msgHdr; 
+  var prevHdrFolder = null;
   // this crudely handles cross-folder virtual folders with selected messages
   // that spans folders, by coalescing consecutive msgs in the selection
   // that happen to be in the same folder. nsMsgSearchDBView does this
@@ -577,36 +621,44 @@ function ToggleMessageTag(key, addKey)
   // and (un)tag takes a key argument.
   for (var i = 0; i < selectedMsgUris.length; ++i)
   {
-    msgHdr = messenger.msgHdrFromURI(selectedMsgUris[i]);
-    if (prevHdrFolder && prevHdrFolder != msgHdr.folder)
+    var msgHdr = messenger.msgHdrFromURI(selectedMsgUris[i]);
+    if (msgHdr.label)
     {
-      prevHdrFolder.folder[toggler](messages, key);
+      // Since we touch all these messages anyway, migrate the label now.
+      // If we don't, the thread tree won't always show the correct tag state,
+      // because resetting a label doesn't update the tree anymore...
+      msg.Clear();
+      msg.AppendElement(msgHdr);
+      msgHdr.folder.addKeywordToMessages(msg, "$label" + msgHdr.label);
+      msgHdr.label = 0; // remove legacy label
+    }
+    if (prevHdrFolder != msgHdr.folder)
+    {
+      if (prevHdrFolder)
+        prevHdrFolder[toggler](messages, key);
       messages.Clear();
+      prevHdrFolder = msgHdr.folder;
     }
-    else
-    {
-        messages.AppendElement(msgHdr);
-    }
-    prevHdrFolder = msgHdr.folder;
+    messages.AppendElement(msgHdr);
   }
-
-  msgHdr.folder[toggler](messages, key);
+  if (prevHdrFolder)
+    prevHdrFolder[toggler](messages, key);
   onTagsChange();
 }
 
 function AddTag()
 {
   var args = {result: "", okCallback: AddTagCallback};
-	var dialog = window.openDialog(
-				"chrome://messenger/content/newTagDialog.xul",
-				"",
-				"chrome,titlebar,modal",
-				args);
+  var dialog = window.openDialog("chrome://messenger/content/newTagDialog.xul",
+                                 "",
+                                 "chrome,titlebar,modal",
+                                 args);
 }
 
 function AddTagCallback(name, color)
 {
-  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService);
+  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
+                             .getService(Components.interfaces.nsIMsgTagService);
   tagService.addTag(name, color);
   try
   {
@@ -619,42 +671,59 @@ function AddTagCallback(name, color)
   return true;
 }
 
+function SetMessageTagLabel(menuitem, index, name)
+{
+  // if a <key> is defined for this tag, use its key as the accesskey
+  // (the key for the tag at index n needs to have the id key_tag<n>)
+  var shortcutkey = document.getElementById("key_tag" + index);
+  var accesskey = shortcutkey ? shortcutkey.getAttribute("key") : "";
+  if (accesskey)
+    menuitem.setAttribute("accesskey", accesskey);
+  var label = gMessengerBundle.getFormattedString("mailnews.tags.format", 
+                                                  [accesskey, name]);
+  menuitem.setAttribute("label", label);
+}
+
 function InitMessageTags(menuPopup)
 {
-  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService);
+  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
+                             .getService(Components.interfaces.nsIMsgTagService);
   var allTags = tagService.tagEnumerator;
   var allKeys = tagService.keyEnumerator;
-  
-  // remove existing entries up until the menuseparator which precedes the Add New Tag option
-  while (menuPopup.firstChild && menuPopup.firstChild.localName != 'menuseparator')
-    menuPopup.removeChild(menuPopup.firstChild);
-    
-  var menuSeparatorNode = menuPopup.firstChild;
+
+  // remove any existing non-static entries...
+  var menuseparator = menuPopup.lastChild.previousSibling;
+  for (var i = menuPopup.childNodes.length; i > 4; --i)
+    menuPopup.removeChild(menuseparator.previousSibling);
+
+  // hide double menuseparator
+  menuseparator.previousSibling.hidden = !allTags.hasMore();
+
+  // create label and accesskey for the static remove item
+  var tagRemoveLabel = gMessengerBundle.getString("mailnews.tags.remove");
+  SetMessageTagLabel(menuPopup.firstChild, 0, tagRemoveLabel);
 
   // now rebuild the list
   var msgHdr = gDBView.hdrForFirstSelectedMessage;
   var curKeys = msgHdr.getStringProperty("keywords");
-  var newMenuItem; 
+  if (msgHdr.label)
+    curKeys += " $label" + msgHdr.label;
 
-  var curMsgHdrKeyArray = curKeys.split(" ");
-  if (msgHdr.label != 0)
-    curMsgHdrKeyArray.push("$label" + msgHdr.label);
-    
+  var index = 0;
   while (allTags.hasMore())
   {
     var tag = allTags.getNext();
     var key = allKeys.getNext();
     // TODO we want to either remove or "check" the tags that already exist
-    newMenuItem = document.createElement('menuitem');
-    newMenuItem.setAttribute('label', tag);
-    newMenuItem.setAttribute('value',  key);
-    newMenuItem.setAttribute('type', 'checkbox');
+    var newMenuItem = document.createElement("menuitem");
+    SetMessageTagLabel(newMenuItem, ++index, tag);
+    newMenuItem.setAttribute("value", key);
+    newMenuItem.setAttribute("type", "checkbox");
     newMenuItem.style.color = tagService.getColorForKey(key);
-    
     var removeKey = (" " + curKeys + " ").indexOf(" " + key + " ") > -1;
     newMenuItem.setAttribute('checked', removeKey);
-    newMenuItem.setAttribute('oncommand', 'ToggleMessageTagCmd(event.target)');
-    menuPopup.insertBefore(newMenuItem, menuSeparatorNode);
+    newMenuItem.setAttribute('oncommand', 'ToggleMessageTagMenu(event.target);');
+    menuPopup.insertBefore(newMenuItem, menuseparator);
   }
 }
 

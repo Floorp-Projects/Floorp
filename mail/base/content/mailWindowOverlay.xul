@@ -21,6 +21,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Karsten Düsterloh <mnyromyr@tprac.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -276,19 +277,6 @@
     <command id="cmd_recalculateJunkScore" oncommand="goDoCommand('cmd_recalculateJunkScore');" disabled="true"/>
 </commandset>
 
-<commandset id="mailLabelMenuItems"
-              commandupdater="true"
-              events="create-menu-label"
-              oncommandupdate="goUpdateMailMenuItems(this)">
-
-    <command id="cmd_label0" oncommand="goDoCommand('cmd_label0');" disabled="true"/>
-    <command id="cmd_label1" oncommand="goDoCommand('cmd_label1');" disabled="true"/>
-    <command id="cmd_label2" oncommand="goDoCommand('cmd_label2');" disabled="true"/>
-    <command id="cmd_label3" oncommand="goDoCommand('cmd_label3');" disabled="true"/>
-    <command id="cmd_label4" oncommand="goDoCommand('cmd_label4');" disabled="true"/>
-    <command id="cmd_label5" oncommand="goDoCommand('cmd_label5');" disabled="true"/>
-</commandset>
-
 <commandset id="mailToolsMenuItems"
               commandupdater="true"
               events="create-menu-tasks"
@@ -406,13 +394,17 @@
   <!-- View Toggle Keys (F8) -->
   <key id="key_toggleMessagePane" keycode="VK_F8" oncommand="MsgToggleMessagePane();" disabled="true"/>
 
-  <!-- Label Keys -->
-  <key id="key_label0" charcode="&labelCmd0.key;"  oncommand="goDoCommand('cmd_label0')"/>
-  <key id="key_label1" charcode="&labelCmd1.key;"  oncommand="goDoCommand('cmd_label1')"/>
-  <key id="key_label2" charcode="&labelCmd2.key;"  oncommand="goDoCommand('cmd_label2')"/>
-  <key id="key_label3" charcode="&labelCmd3.key;"  oncommand="goDoCommand('cmd_label3')"/>
-  <key id="key_label4" charcode="&labelCmd4.key;"  oncommand="goDoCommand('cmd_label4')"/>
-  <key id="key_label5" charcode="&labelCmd5.key;"  oncommand="goDoCommand('cmd_label5')"/>
+  <!-- Tag Keys -->
+  <key id="key_tag0" key="&tagCmd0.key;" oncommand="RemoveAllMessageTags();"/>
+  <key id="key_tag1" key="&tagCmd1.key;" oncommand="ToggleMessageTagKey(1);"/>
+  <key id="key_tag2" key="&tagCmd2.key;" oncommand="ToggleMessageTagKey(2);"/>
+  <key id="key_tag3" key="&tagCmd3.key;" oncommand="ToggleMessageTagKey(3);"/>
+  <key id="key_tag4" key="&tagCmd4.key;" oncommand="ToggleMessageTagKey(4);"/>
+  <key id="key_tag5" key="&tagCmd5.key;" oncommand="ToggleMessageTagKey(5);"/>
+  <key id="key_tag6" key="&tagCmd6.key;" oncommand="ToggleMessageTagKey(6);"/>
+  <key id="key_tag7" key="&tagCmd7.key;" oncommand="ToggleMessageTagKey(7);"/>
+  <key id="key_tag8" key="&tagCmd8.key;" oncommand="ToggleMessageTagKey(8);"/>
+  <key id="key_tag9" key="&tagCmd9.key;" oncommand="ToggleMessageTagKey(9);"/>
 
   <!-- Tools Keys -->
 #ifdef MOZ_WIDGET_GTK2
@@ -608,6 +600,8 @@
     </menu>
     <menu id="threadPaneContext-tags" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;">
       <menupopup id="threadPaneContext-tagpopup" onpopupshowing="InitMessageTags(this)">
+        <menuitem id="threadPaneContext-tagRemoveAll" oncommand="RemoveAllMessageTags();"/>
+        <menuseparator/>
         <menuseparator/>
         <menuitem id="addNewTag" label="&addNewTag.label;" accesskey="&addNewTag.accesskey;"
                   oncommand="AddTag();"/>
@@ -921,6 +915,8 @@
     <menuseparator id="messagePaneContext-sep-tags-1"/>
     <menu id="messagePaneContext-tags" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;">
       <menupopup id="messagePaneContext-tagpopup" onpopupshowing="InitMessageTags(this)">
+        <menuitem id="messagePaneContext-tagRemoveAll" oncommand="RemoveAllMessageTags();"/>
+        <menuseparator/>
         <menuseparator/>
         <menuitem id="addNewTag" label="&addNewTag.label;" accesskey="&addNewTag.accesskey;"
                   oncommand="AddTag();"/>
@@ -1551,6 +1547,8 @@
 
             <menu id="tagMenu" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;" observes="cmd_tag">
               <menupopup id="tagMenu-tagpopup" onpopupshowing="InitMessageTags(this)">
+              <menuitem id="tagMenu-tagRemoveAll" oncommand="RemoveAllMessageTags();"/>
+                <menuseparator/>
                 <menuseparator/>
                 <menuitem id="addNewTag" label="&addNewTag.label;" accesskey="&addNewTag.accesskey;"
                           oncommand="AddTag();"/>
@@ -1869,7 +1867,9 @@
 
       <toolbarbutton id="button-tag" type="menu" class="toolbarbutton-1"
                      label="&tagButton.label;" tooltiptext="&tagButton.tooltip;" observes="cmd_tag">
-        <menupopup onpopupshowing="InitMessageTags(this)">
+        <menupopup id="button-tagpopup" onpopupshowing="InitMessageTags(this)">
+          <menuitem id="button-tagRemoveAll" oncommand="RemoveAllMessageTags();"/>
+          <menuseparator/>
           <menuseparator/>
           <menuitem id="addNewTag" label="&addNewTag.label;" accesskey="&addNewTag.accesskey;"
                     oncommand="AddTag();"/>
