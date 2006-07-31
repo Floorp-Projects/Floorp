@@ -1,0 +1,25 @@
+
+ 
+/* icon #5 */
+#button-save {
+  list-style-image: url("chrome://calendar/skin/sun-event-dialog-toolbar.png");
+  -moz-image-region: rect(0px 144px 24px 120px);
+}
+#button-save:hover:active {
+  -moz-image-region: rect(24px 144px 48px 120px);
+}
+#button-save[disabled="true"] {
+  -moz-image-region: rect(48px 144px 72px 120px);
+}
+
+/* icon #18 */
+#button-print {
+  list-style-image: url("chrome://calendar/skin/sun-event-dialog-toolbar.png");
+  -moz-image-region: rect(0px 456px 24px 432px);
+}
+#button-print:hover:active {
+  -moz-image-region: rect(24px 456px 48px 432px);
+}
+#button-print[disabled="true"] {
+  -moz-image-region: rect(48px 456px 72px 432px);
+}
