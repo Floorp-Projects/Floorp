@@ -1259,7 +1259,22 @@
     <handlers>
       <handler event="dblclick" button="0"><![CDATA[
         if (this.calendarView.controller) {
-            this.calendarView.controller.createNewEvent();
+            var newStart = this.date.clone();
+            newStart.isDate = false;
+            newStart.hour = 0;
+
+            const ROUND_INTERVAL = 15;
+
+            var interval = this.mPixPerMin * ROUND_INTERVAL;
+            var pos;
+            if (this.getAttribute("orient") == "vertical") {
+                pos = event.screenY - this.parentNode.boxObject.screenY;
+            } else {
+                pos = event.screenX - this.parentNode.boxObject.screenX;
+            }
+            newStart.minute = (Math.round(pos/interval) * ROUND_INTERVAL) + this.mStartMin;
+            newStart.normalize();
+            this.calendarView.controller.createNewEvent(null, newStart, null);
         }
       ]]></handler>
 

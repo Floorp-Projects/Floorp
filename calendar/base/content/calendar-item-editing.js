@@ -84,7 +84,7 @@ function createEventWithDialog(calendar, startDate, endDate, summary, event)
 
     if (!endDate) {
         endDate = startDate.clone();
-        endDate.hour = endDate.hour + 1; // XXX we should get a default duration from prefs
+        endDate.minute += getPrefSafe("calendar.event.defaultlength", 60);
         endDate.normalize();
     }
     event.endDate = endDate.clone();

@@ -77,16 +77,14 @@ var calendarViewController = {
             doTransaction('add', event, aCalendar, null, null);
         } else {
             // default pop up the dialog
-            //XXX unify these
-            if ("newEvent" in window) {
-                // Sunbird specific code
-                newEvent();
+            var date;
+            if (aStartTime) {
+                date = aStartTime;
             } else {
-                // Lightning specific code
-                var date = document.getElementById("calendar-view-box").selectedPanel.selectedDay.clone();
+                date = currentView().selectedDay.clone();
                 date.isDate = false;
-                createEventWithDialog(aCalendar, date, date);
             }
+            createEventWithDialog(aCalendar, date, null);
         }
     },
 

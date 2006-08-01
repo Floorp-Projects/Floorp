@@ -51,7 +51,8 @@ interface calICalendarViewController : nsISupports
    * Create an event, with an optional start time and optional end
    * time in the given Calendar.  The Calendar will be the
    * displayCalendar set on the View which invokes this method
-   * on the controller.
+   * on the controller, or null, if the views wish to delegate the
+   * choice of the calendar to the controller.
    *
    * If neither aStartTime or aEndTime are given, the user wants to
    * create a generic event with no information prefilled.
@@ -62,7 +63,8 @@ interface calICalendarViewController : nsISupports
    *
    * If aStartTime is given and is a time, but no aEndTime is
    * given, the user wants to create an event starting at
-   * aStartTime and of the default duration.
+   * aStartTime and of the default duration.  The controller has the
+   * option of creating this event automatically or via the dialog.
    *
    * If both aStartTime and aEndTime are given as times, then
    * the user wants to create an event going from aStartTime
