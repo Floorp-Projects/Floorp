@@ -210,7 +210,7 @@ nsMenuItemIcon::GetIconURI(nsIURI** aIconURI)
   }
 
   // If this menu item shouldn't have an icon, the string will be empty,
-  // and NS_NewURI wil fail.
+  // and NS_NewURI will fail.
   nsCOMPtr<nsIURI> iconURI;
   rv = NS_NewURI(getter_AddRefs(iconURI), imageURIString);
   if (NS_FAILED(rv)) return rv;
