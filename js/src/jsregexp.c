@@ -1336,11 +1336,13 @@ doSimple:
             }
             if (*state->cp == '\\') {
                 state->cp++;
-            } else {
-                if (*state->cp == ']') {
-                    state->result->u.ucclass.kidlen = state->cp - termStart;
-                    break;
-                }
+                if (state->cp != state->cpend)
+                    state->cp++;
+                continue;
+            }
+            if (*state->cp == ']') {
+                state->result->u.ucclass.kidlen = state->cp - termStart;
+                break;
             }
             state->cp++;
         }
