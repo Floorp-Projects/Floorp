@@ -53,9 +53,9 @@ static char copyright[] = "@(#) Copyright (c) 1995 Regents of the University of 
 static LDAPConn *find_connection( LDAP *ld, LDAPServer *srv, int any );
 static void free_servers( LDAPServer *srvlist );
 static int chase_one_referral( LDAP *ld, LDAPRequest *lr, LDAPRequest *origreq,
-    char *refurl, char *desc, int *unknownp );
+    char *refurl, char *desc, int *unknownp, int is_reference );
 static int re_encode_request( LDAP *ld, BerElement *origber,
-    int msgid, LDAPURLDesc *ludp, BerElement **berp );
+    int msgid, LDAPURLDesc *ludp, BerElement **berp, int is_reference );
 
 #ifdef LDAP_DNS
 static LDAPServer *dn2servers( LDAP *ld, char *dn );
@@ -1067,7 +1067,7 @@ nsldapi_chase_v2_referrals( LDAP *ld, LDAPRequest *lr, char **errstrp,
 		++*totalcountp;
 
 		rc = chase_one_referral( ld, lr, origreq, ref, "v2 referral",
-		    &unknown );
+		    &unknown, 0 /* not a reference */ );
 
 		if ( rc != LDAP_SUCCESS || unknown ) {
 			if (( tmprc = nsldapi_append_referral( ld, &unfollowed,
@@ -1124,7 +1124,8 @@ nsldapi_chase_v3_refs( LDAP *ld, LDAPRequest *lr, char **v3refs,
 	 */
 	for ( i = 0; v3refs[i] != NULL; ++i ) {
 		rc = chase_one_referral( ld, lr, origreq, v3refs[i],
-		    is_reference ? "v3 reference" : "v3 referral", &unknown );
+		    is_reference ? "v3 reference" : "v3 referral", &unknown,
+		    is_reference );
 		if ( rc == LDAP_SUCCESS && !unknown ) {
 			*chasingcountp = 1;
 			break;
@@ -1146,7 +1147,7 @@ nsldapi_chase_v3_refs( LDAP *ld, LDAPRequest *lr, char **v3refs,
  */
 static int
 chase_one_referral( LDAP *ld, LDAPRequest *lr, LDAPRequest *origreq,
-    char *refurl, char *desc, int *unknownp )
+    char *refurl, char *desc, int *unknownp, int is_reference )
 {
 	int		rc, tmprc, secure, msgid;
 	LDAPServer	*srv;
@@ -1183,7 +1184,7 @@ chase_one_referral( LDAP *ld, LDAPRequest *lr, LDAPRequest *origreq,
 	LDAP_MUTEX_UNLOCK( ld, LDAP_MSGID_LOCK );
 
 	if (( tmprc = re_encode_request( ld, origreq->lr_ber, msgid,
-	    ludp, &ber )) != LDAP_SUCCESS ) {
+	    ludp, &ber, is_reference )) != LDAP_SUCCESS ) {
 		rc = tmprc;
 		goto cleanup_and_return;
 	}
@@ -1297,7 +1298,7 @@ nsldapi_append_referral( LDAP *ld, char **referralsp, char *s )
 /* returns an LDAP error code */
 static int
 re_encode_request( LDAP *ld, BerElement *origber, int msgid, LDAPURLDesc *ludp,
-    BerElement **berp )
+    BerElement **berp, int is_reference )
 {
 /*
  * XXX this routine knows way too much about how the lber library works!
@@ -1308,6 +1309,9 @@ re_encode_request( LDAP *ld, BerElement *origber, int msgid, LDAPURLDesc *ludp,
 	BerElement		*ber;
 	struct berelement	tmpber;
 	char			*dn, *orig_dn;
+	/* extra stuff for search request */
+	long orig_scope = -1;
+	int scope; /* scan needs long - print needs int :-P */
 
 	LDAPDebug( LDAP_DEBUG_TRACE,
 	    "re_encode_request: new msgid %d, new dn <%s>\n",
@@ -1328,12 +1332,18 @@ re_encode_request( LDAP *ld, BerElement *origber, int msgid, LDAPURLDesc *ludp,
 	}
 
 	/*
-	 * XXXmcs: we don't support scope or filters in search referrals yet,
-	 * so if either were present we return an error which is probably
+	 * XXXmcs: we don't support filters in search referrals yet,
+	 * so if present we return an error which is probably
 	 * better than just ignoring the extra info.
+	 * XXXrichm: we now support scopes.  Supporting filters would require
+	 * a lot more additional work to be able to read the filter from
+	 * the ber original search request, convert to string, etc.  It might
+	 * be better and easier to change nsldapi_build_search_req to have
+	 * some special mode by which you could tell it to skip filter and
+	 * attrlist encoding if no filter was given - then we could just
+	 * create a new ber search request with our new filter if present.
 	 */
-	if ( tag == LDAP_REQ_SEARCH &&
-	    ( ludp->lud_scope != -1 || ludp->lud_filter != NULL )) {
+	if ( ( tag == LDAP_REQ_SEARCH ) && ( ludp->lud_filter != NULL )) {
 		return( LDAP_LOCAL_ERROR );
 	}
 
@@ -1343,38 +1353,63 @@ re_encode_request( LDAP *ld, BerElement *origber, int msgid, LDAPURLDesc *ludp,
 	} else if ( tag == LDAP_REQ_DELETE ) {
 		/* delete requests DNs are not within a sequence */
 		rc = ber_scanf( &tmpber, "a", &orig_dn );
+	} else if ( tag == LDAP_REQ_SEARCH ) {
+	    /* need scope */
+	    rc = ber_scanf( &tmpber, "{ae", &orig_dn, &orig_scope );
 	} else {
-		rc = ber_scanf( &tmpber, "{a", &orig_dn );
+	    rc = ber_scanf( &tmpber, "{a", &orig_dn );
 	}
 
 	if ( rc == LBER_ERROR ) {
-		return( LDAP_DECODING_ERROR );
+	    return( LDAP_DECODING_ERROR );
 	}
 
 	if ( ludp->lud_dn == NULL ) {
-		dn = orig_dn;
+	    dn = orig_dn;
 	} else {
-		dn = ludp->lud_dn;
-		NSLDAPI_FREE( orig_dn );
-		orig_dn = NULL;
+	    dn = ludp->lud_dn;
+	    NSLDAPI_FREE( orig_dn );
+	    orig_dn = NULL;
+	}
+
+	if ( ludp->lud_scope != -1 ) {
+	    scope = ludp->lud_scope; /* scope provided by ref - use it */
+	} else if (is_reference) {
+	    /* 
+	     * RFC 4511 says that the we should use scope BASE in the
+	     * search reference if the client's original request was for scope
+	     * ONELEVEL - since the server did not include the scope in the 
+	     * search reference returned, we must provide the correct behavior
+	     * in the client (i.e. the correct behavior is implied)
+	     * see RFC 4511 section 4.5.3 for more information
+	     */
+	    if (orig_scope == LDAP_SCOPE_ONELEVEL) {
+		scope = LDAP_SCOPE_BASE;
+	    } else {
+		scope = (int)orig_scope;
+	    }
+	} else {
+	    scope = (int)orig_scope;
 	}
 
 	/* allocate and build the new request */
-        if (( rc = nsldapi_alloc_ber_with_options( ld, &ber ))
+	if (( rc = nsldapi_alloc_ber_with_options( ld, &ber ))
 	    != LDAP_SUCCESS ) {
 		if ( orig_dn != NULL ) {
 			NSLDAPI_FREE( orig_dn );
 		}
-                return( rc );
-        }
+		return( rc );
+	}
 
 	if ( tag == LDAP_REQ_BIND ) {
-		rc = ber_printf( ber, "{it{is", msgid, tag,
-		    (int)ver /* XXX lossy cast */, dn );
+	    rc = ber_printf( ber, "{it{is", msgid, tag,
+			     (int)ver /* XXX lossy cast */, dn );
 	} else if ( tag == LDAP_REQ_DELETE ) {
-		rc = ber_printf( ber, "{its}", msgid, tag, dn );
+	    rc = ber_printf( ber, "{its}", msgid, tag, dn );
+	} else if ( tag == LDAP_REQ_SEARCH ) {
+	    rc = ber_printf( ber, "{it{se", msgid, tag, dn, scope );
 	} else {
-		rc = ber_printf( ber, "{it{s", msgid, tag, dn );
+	    rc = ber_printf( ber, "{it{s", msgid, tag, dn );
 	}
 
 	if ( orig_dn != NULL ) {
