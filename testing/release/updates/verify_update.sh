@@ -8,6 +8,7 @@ build_id="2006050817"
 product="Firefox"
 release="1.5.0.4"
 channel="release"
+platforms="Linux_x86-gcc3 Darwin_Universal-gcc3 WINNT_x86-msvc"
 
 check_update () {
 # called with 4 args - platform, source package, target package, update package
@@ -55,7 +56,7 @@ check_update () {
     return $?
 }
 
-for build_platform in Linux_x86-gcc3 Darwin_Universal-gcc3 WINNT_x86-msvc 
+for build_platform in $platforms
 do
 
   # cleanup
