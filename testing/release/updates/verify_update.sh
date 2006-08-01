@@ -20,10 +20,15 @@ check_update () {
     rm -rf target/*
 
     unpack_build $platform source "$source_package" 
+    if [ "$?" != "0" ]; then
+      echo "FAILED: cannot unpack_build $platform source $source_package"
+      return 1
+    fi
     unpack_build $platform target "$target_package" 
-    
-    #mkdir update
-    #cp $update_package update/update.mar
+    if [ "$?" != "0" ]; then
+      echo "FAILED: cannot unpack_build $platform target $target_package"
+      return 1
+    fi
     
     case $platform in
         mac|mac-ppc) 
