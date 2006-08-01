@@ -4528,7 +4528,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                  * popping the pc index.
                  */
                 JS_ASSERT(cg->stackDepth == depth + 2);
-                JS_ASSERT(cg->stackDepth <= cg->maxStackDepth);
+                JS_ASSERT((uintN)cg->stackDepth <= cg->maxStackDepth);
                 cg->stackDepth = depth + 1;
             }
 
