@@ -2229,6 +2229,9 @@ function my_endofexcepts(e)
 CIRCChannel.prototype.on482 =
 function my_needops(e)
 {
+    if ("pendingExceptList" in this)
+        return;
+
     this.display(getMsg(MSG_CHANNEL_NEEDOPS, this.unicodeName), MT_ERROR);
 }
 
