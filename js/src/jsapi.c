@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=80:
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -652,19 +652,36 @@ JS_NewRuntime(uint32 maxbytes)
     JSRuntime *rt;
 
 #ifdef DEBUG
-    JS_BEGIN_MACRO
-    /*
-     * This code asserts that the numbers associated with the error names in
-     * jsmsg.def are monotonically increasing.  It uses values for the error
-     * names enumerated in jscntxt.c.  It's not a compiletime check, but it's
-     * better than nothing.
-     */
-    int errorNumber = 0;
-#define MSG_DEF(name, number, count, exception, format) \
+    static JSBool didFirstChecks;
+
+    if (!didFirstChecks) {
+        /*
+         * This code asserts that the numbers associated with the error names
+         * in jsmsg.def are monotonically increasing.  It uses values for the
+         * error names enumerated in jscntxt.c.  It's not a compile-time check
+         * but it's better than nothing.
+         */
+        int errorNumber = 0;
+#define MSG_DEF(name, number, count, exception, format)                       \
     JS_ASSERT(name == errorNumber++);
 #include "js.msg"
 #undef MSG_DEF
+
+#define MSG_DEF(name, number, count, exception, format)                       \
+    JS_BEGIN_MACRO                                                            \
+        uintN numfmtspecs = 0;                                                \
+        const char *fmt;                                                      \
+        for (fmt = format; *fmt != '\0'; fmt++) {                             \
+            if (*fmt == '{' && isdigit(fmt[1]))                               \
+                ++numfmtspecs;                                                \
+        }                                                                     \
+        JS_ASSERT(count == numfmtspecs);                                      \
     JS_END_MACRO;
+#include "js.msg"
+#undef MSG_DEF
+
+        didFirstChecks = JS_TRUE;
+    }
 #endif /* DEBUG */
 
     rt = (JSRuntime *) malloc(sizeof(JSRuntime));
