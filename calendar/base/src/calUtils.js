@@ -128,6 +128,20 @@ function calGetString(aBundleName, aStringName) {
     return props.GetStringFromName(aStringName);
 }
 
+/** Returns a best effort at making a UUID.  If we have the UUIDGenerator
+ * service available, we'll use that.  If we're somewhere where it doesn't
+ * exist, like Lightning in TB 1.5, we'll just use the current time.
+ */
+function getUUID() {
+    if ("@mozilla.org/uuid-generator;1" in Components.classes) {
+        var uuidGen = Cc["@mozilla.org/uuid-generator;1"].
+                      getService(Ci.nsIUUIDGenerator);
+        return uuidGen.generateUUID().toString();
+    }
+    // No uuid service (we're on the 1.8.0 branch)
+    return "uuid" + (new Date()).getTime();
+}
+
 /****
  **** debug code
  ****/

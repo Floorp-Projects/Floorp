@@ -145,7 +145,7 @@ calMemoryCalendar.prototype = {
         if (this.readOnly) 
             throw Components.interfaces.calIErrors.CAL_IS_READONLY;
         if (aItem.id == null && aItem.isMutable)
-            aItem.id = "uuid" + (new Date()).getTime();
+            aItem.id = getUUID();
 
         if (aItem.id == null) {
             if (aListener)

@@ -343,7 +343,7 @@ calStorageCalendar.prototype = {
 
         if (aItem.id == null) {
             // is this an error?  Or should we generate an IID?
-            aItem.id = "uuid:" + (new Date()).getTime();
+            aItem.id = getUUID();
         } else {
             var olditem = this.getItemById(aItem.id);
             if (olditem) {

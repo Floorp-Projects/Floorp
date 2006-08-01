@@ -177,8 +177,7 @@ calDavCalendar.prototype = {
         }
 
         if (aItem.id == null && aItem.isMutable)
-            // XXX real UUID here!!
-            aItem.id = "uuid" + (new Date()).getTime();
+            aItem.id = getUUID();
 
         if (aItem.id == null) {
             if (aListener)
