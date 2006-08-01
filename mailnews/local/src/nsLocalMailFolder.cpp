@@ -1965,6 +1965,9 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder,
       ConfirmFolderDeletion(msgWindow, &okToDelete);
       if (!okToDelete)
         return NS_MSG_ERROR_COPY_FOLDER_ABORTED;
+      // if we are moving a favorite folder to trash, we should clear the favorites flag
+      // so it gets removed from the view.
+      srcFolder->ClearFlag(MSG_FOLDER_FLAG_FAVORITE);
     }
 
     PRBool match = PR_FALSE;
