@@ -625,6 +625,11 @@ nsresult nsUnknownDecoder::FireListenerNotifications(nsIRequest* request,
 
   if (!mBuffer) return NS_ERROR_OUT_OF_MEMORY;
 
+  // If the request was canceled, then we need to treat that equivalently
+  // to an error returned by OnStartRequest.
+  if (NS_SUCCEEDED(rv))
+    request->GetStatus(&rv);
+
   // Fire the first OnDataAvailable for the data that was read from the
   // stream into the sniffer buffer...
   if (NS_SUCCEEDED(rv) && (mBufferLen > 0)) {
