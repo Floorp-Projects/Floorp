@@ -85,7 +85,7 @@ JSClass FileSpecObjectClass = {
 /*
  * Native method fso_ToString
  */
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 fso_ToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstallFolder *nativeThis =
@@ -117,7 +117,7 @@ fso_ToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 /*
  * Native method fso_AppendString
  */
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 fso_AppendPath(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   return JS_TRUE;
@@ -127,7 +127,7 @@ fso_AppendPath(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 /*
  * FileSpecObj destructor
  */
-static void PR_CALLBACK FileSpecObjectCleanup(JSContext *cx, JSObject *obj)
+JS_STATIC_DLL_CALLBACK(void) FileSpecObjectCleanup(JSContext *cx, JSObject *obj)
 {
   nsInstallFolder *nativeThis = (nsInstallFolder*)JS_GetPrivate(cx, obj);
   if (nativeThis != nsnull)

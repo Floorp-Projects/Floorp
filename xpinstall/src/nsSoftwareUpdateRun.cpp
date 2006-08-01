@@ -86,14 +86,14 @@ extern nsresult InitInstallVersionClass(JSContext *jscontext, JSObject *global, 
 extern nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *global, void** prototype);
 
 // Defined in this file:
-PR_STATIC_CALLBACK(void) XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
+JS_STATIC_DLL_CALLBACK(void) XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 static PRInt32  GetInstallScriptFromJarfile(nsIZipReader* hZip, char** scriptBuffer, PRUint32 *scriptLength);
 static PRInt32  OpenAndValidateArchive(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* aPrincipal);
 
 static nsresult SetupInstallContext(nsIZipReader* hZip, nsIFile* jarFile, const PRUnichar* url, const PRUnichar* args, 
                                     PRUint32 flags, CHROMEREG_IFACE* reg, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
 
-extern "C" void RunInstallOnThread(void *data);
+extern "C" void PR_CALLBACK RunInstallOnThread(void *data);
 
 
 nsresult VerifySigning(nsIZipReader* hZip, nsIPrincipal* aPrincipal)
@@ -456,7 +456,7 @@ PRInt32 RunInstall(nsInstallInfo *installInfo)
 // Return type      : extern "C"
 // Argument         : void *data
 ///////////////////////////////////////////////////////////////////////////////////////////////
-extern "C" void RunInstallOnThread(void *data)
+extern "C" void PR_CALLBACK RunInstallOnThread(void *data)
 {
     nsInstallInfo *installInfo = (nsInstallInfo*)data;
 
@@ -624,7 +624,7 @@ extern "C" void RunInstallOnThread(void *data)
 // How do we get it there? Maybe just alerts on errors, could also dump to
 // the new console service.
 //-----------------------------------------------------------------------------
-extern "C" void RunChromeInstallOnThread(void *data)
+extern "C" void PR_CALLBACK RunChromeInstallOnThread(void *data)
 {
     nsresult rv;
 
