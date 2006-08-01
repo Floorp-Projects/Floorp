@@ -37,10 +37,14 @@ check_update () {
             ;;
     esac
 
-    cd source/$platform_dirname;
-    $HOME/bin/updater ../../update 0
-    
-    cd ../..
+    if [ -d source/$platform_dirname ]; then
+      cd source/$platform_dirname;
+      $HOME/bin/updater ../../update 0
+      cd ../..
+    else
+      echo "FAIL: no dir in source/$platform_dirname"
+      return 1
+    fi
     
     diff -r source/$platform_dirname target/$platform_dirname 
     return $?
@@ -121,7 +125,9 @@ do
       continue
     fi
     check_update "$source_build_platform" "downloads/$source_file" "downloads/$target_file"
-
+    if [ "$?" != "0" ]; then
+      echo "FAIL: check_update returned non-zero exit code: $?"
+      continue
+    fi
   done
-  
 done
