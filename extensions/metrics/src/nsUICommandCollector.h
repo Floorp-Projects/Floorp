@@ -46,6 +46,7 @@
 #include "nsDataHashtable.h"
 
 class nsIDOMWindow;
+class nsIMetricsEventItem;
 
 class nsUICommandCollector : public nsIObserver,
                              public nsIDOMEventListener,
@@ -68,6 +69,11 @@ class nsUICommandCollector : public nsIObserver,
 
  private:
   ~nsUICommandCollector();
+
+  // Checks whether the given target id corresponds to a bookmark resource,
+  // and if so, adds additional data about the bookmark to parentItem.
+  nsresult LogBookmarkInfo(const nsString& id,
+                           nsIMetricsEventItem* parentItem);
 };
 
 #define NS_UICOMMANDCOLLECTOR_CLASSNAME "UI Command Collector"
