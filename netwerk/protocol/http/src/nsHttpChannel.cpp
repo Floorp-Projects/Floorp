@@ -3015,6 +3015,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
     NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
     NS_INTERFACE_MAP_ENTRY(nsIProtocolProxyCallback)
+    NS_INTERFACE_MAP_ENTRY(nsIProxiedChannel)
 NS_INTERFACE_MAP_END_INHERITING(nsHashPropertyBag)
 
 //-----------------------------------------------------------------------------
@@ -3847,18 +3848,6 @@ nsHttpChannel::SetCookie(const char *aCookieHeader)
                                        this);
 }
 
-NS_IMETHODIMP
-nsHttpChannel::GetProxyInfo(nsIProxyInfo **result)
-{
-    if (!mConnectionInfo)
-        *result = nsnull;
-    else {
-        *result = mConnectionInfo->ProxyInfo();
-        NS_IF_ADDREF(*result);
-    }
-    return NS_OK;
-}
-
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsISupportsPriority
 //-----------------------------------------------------------------------------
@@ -3917,6 +3906,22 @@ nsHttpChannel::OnProxyAvailable(nsICancelable *request, nsIURI *uri,
 
     if (NS_FAILED(status))
         AsyncAbort(status);
+    return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsHttpChannel::nsIProxiedChannel
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsHttpChannel::GetProxyInfo(nsIProxyInfo **result)
+{
+    if (!mConnectionInfo)
+        *result = nsnull;
+    else {
+        *result = mConnectionInfo->ProxyInfo();
+        NS_IF_ADDREF(*result);
+    }
     return NS_OK;
 }
 

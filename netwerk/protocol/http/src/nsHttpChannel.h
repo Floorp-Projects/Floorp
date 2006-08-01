@@ -79,6 +79,7 @@
 #include "nsISupportsPriority.h"
 #include "nsIProtocolProxyCallback.h"
 #include "nsICancelable.h"
+#include "nsIProxiedChannel.h"
 
 class nsHttpResponseHead;
 class nsAHttpConnection;
@@ -101,6 +102,7 @@ class nsHttpChannel : public nsHashPropertyBag
                     , public nsIResumableChannel
                     , public nsISupportsPriority
                     , public nsIProtocolProxyCallback
+                    , public nsIProxiedChannel
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
@@ -118,6 +120,7 @@ public:
     NS_DECL_NSIRESUMABLECHANNEL
     NS_DECL_NSISUPPORTSPRIORITY
     NS_DECL_NSIPROTOCOLPROXYCALLBACK
+    NS_DECL_NSIPROXIEDCHANNEL
 
     nsHttpChannel();
     virtual ~nsHttpChannel();

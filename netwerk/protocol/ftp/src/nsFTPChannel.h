@@ -61,6 +61,7 @@
 #include "nsIFTPChannel.h"
 #include "nsIUploadChannel.h"
 #include "nsIProxyInfo.h"
+#include "nsIProxiedChannel.h"
 #include "nsIResumableChannel.h"
 #include "nsHashPropertyBag.h"
 
@@ -78,12 +79,14 @@
 class nsFtpChannel : public nsBaseChannel,
                      public nsIFTPChannel,
                      public nsIUploadChannel,
-                     public nsIResumableChannel
+                     public nsIResumableChannel,
+                     public nsIProxiedChannel
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIUPLOADCHANNEL
     NS_DECL_NSIRESUMABLECHANNEL
+    NS_DECL_NSIPROXIEDCHANNEL
     
     nsFtpChannel(nsIURI *uri, nsIProxyInfo *pi)
         : mProxyInfo(pi)
