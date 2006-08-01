@@ -160,8 +160,8 @@ sub FILESYSTEM {
                                      dirs => $ws_dir_readable },
          'docs/images'         => { files => $ws_readable,
                                      dirs => $ws_dir_readable },
-         'docs/xml'            => { files => $owner_dir_readable,
-                                     dirs => $owner_readable },
+         'docs/xml'            => { files => $owner_readable,
+                                     dirs => $owner_dir_readable },
     );
 
     # --- FILES TO CREATE --- #
