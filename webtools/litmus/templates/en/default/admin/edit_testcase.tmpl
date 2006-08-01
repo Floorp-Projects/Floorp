@@ -36,7 +36,6 @@ function checkFormContents(f) {
   return (
           checkString(f.editform_summary, 'Summary') &&
           verifySelected(f.product, 'Product') &&
-          verifySelected(f.subgroup, 'Subgroup') &&
           verifySelected(f.editform_author_id, 'Author')
          );
 }
@@ -92,11 +91,15 @@ function checkFormContents(f) {
 	</tr>
 	<tr>
 	<td class="headerleft">Test Group(s):</td>
-	<td>[% INCLUDE testgroupbox %]</td>
+	<td colspan="2">
+          <div id="testgroups_link_display">[% IF testgroups.size==0 %]<span class="errorHeading">This testcase does not belong to any testgroups that are currently enabled.</span>[% ELSE %][% FOREACH testgroup=testgroups %][% testgroup.name | html %][% UNLESS loop.last %], [% END %][% END %][% END %]</div>
+        </td>
         </tr>
 	<tr>
 	<td class="headerleft">Subgroup(s):</td>
-	<td>[% INCLUDE subgroupbox %]</td>
+	<td colspan="2">
+      <div id="subgroups_link_display">[% IF subgroups.size==0 %]<span class="errorHeading">This testcase does not belong to any subgroups that are currently enabled.</span>[% ELSE %][% FOREACH subgroup=subgroups %][% subgroup.name | html %][% UNLESS loop.last %], [% END %][% END %][% END %]</div>
+       </td>
 	</tr>
 	</tr>
         <tr>

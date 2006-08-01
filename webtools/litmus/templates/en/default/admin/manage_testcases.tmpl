@@ -158,65 +158,42 @@ function populateTestcase(data) {
     options[0].selected = true;
   }
   changeProduct();
-  var found_testgroup = 0;
-  if (testcase.testgroups[0]) {
-    var testgroup_box = document.getElementById('testgroup');
-    options = testgroup_box.getElementsByTagName('option');  
-    for (var i=0; i<options.length; i++) {
-      if (options[i].value == testcase.testgroups[0].testgroup_id) {
-        options[i].selected = true;
-        found_testgroup=1;
-      } else {
-        options[i].selected = false;
-      }      
-    }
-    if (found_testgroup == 0) {
-      options[0].selected = true;
-    }
-  }
 
   var testgroups_text = "";
+  var testgroups_link_text = "";
   for (var i in testcase.testgroups) {
     if (testcase.testgroups[i].name != '') {
       testgroups_text = testgroups_text + testcase.testgroups[i].name + ', ';
+      testgroups_link_text = testgroups_link_text + '<a target="manage_testgroups" href="manage_testgroups.cgi?testgroup_id=' + testcase.testgroups[i].testgroup_id + '">'+ testcase.testgroups[i].name + '</a>, ';
+
     }
   }
   if (testgroups_text != '') {
     testgroups_text = testgroups_text.replace(/, $/g,'');
+    testgroups_link_text = testgroups_link_text.replace(/, $/g,'');
     document.getElementById('testgroups_display').innerHTML = testgroups_text;
+    document.getElementById('testgroups_link_display').innerHTML = testgroups_link_text;
   } else {
     document.getElementById('testgroups_display').innerHTML = '<span class="errorHeading">This testcase does not belong to any testgroups that are currently enabled.</span>';
-  }
-
-  changeTestgroup();
-  var found_subgroup = 0;
-  if (testcase.subgroups[0]) {
-    var subgroup_box = document.getElementById('subgroup');
-    options = subgroup_box.getElementsByTagName('option');  
-    for (var i=0; i<options.length; i++) {
-      if (options[i].value == testcase.subgroups[0].subgroup_id) {
-        options[i].selected = true;
-        found_subgroup=1;
-      } else {
-        options[i].selected = false;
-      }      
-    }
-    if (found_subgroup == 0) {
-      options[0].selected = true;
-    }
+    document.getElementById('testgroups_link_display').innerHTML = '<span class="errorHeading">This testcase does not belong to any testgroups that are currently enabled &rArr;&nbsp;<a target="manage_subgroups" href="manage_testgroups.cgi">Jump to Manage Testgroups</a>.</span>';
   }
 
   var subgroups_text = "";
+  var subgroups_link_text = "";
   for (var i in testcase.subgroups) {
     if (testcase.subgroups[i].name != '') {
       subgroups_text = subgroups_text + testcase.subgroups[i].name + ', ';
+      subgroups_link_text = subgroups_link_text + '<a target="manage_subgroups" href="manage_subgroups.cgi?subgroup_id=' + testcase.subgroups[i].subgroup_id + '">'+ testcase.subgroups[i].name + '</a>, ';
     }
   }
   if (subgroups_text != '') {
     subgroups_text = subgroups_text.replace(/, $/g,'');
+    subgroups_link_text = subgroups_link_text.replace(/, $/g,'');
     document.getElementById('subgroups_display').innerHTML = subgroups_text;
+    document.getElementById('subgroups_link_display').innerHTML = subgroups_link_text;
   } else {
     document.getElementById('subgroups_display').innerHTML = '<span class="errorHeading">This testcase does not belong to any subgroups that are currently enabled.</span>';
+    document.getElementById('subgroups_link_display').innerHTML = '<span class="errorHeading">This testcase does not belong to any subgroups that are currently enabled &rArr;&nbsp;<a target="manage_subgroups" href="manage_subgroups.cgi">Jump to Manage Subgroups</a>.</span>';
   }
 
   var enabled_em = document.getElementById('editform_enabled')
@@ -265,7 +242,6 @@ function blankTestcaseForm(formid) {
   document.getElementById('editform_testrunner_case_id').innerHTML = '';
   document.getElementById('editform_testrunner_case_version').innerHTML = '';
   changeProduct();
-  changeTestgroup();
 }
 
 function switchToAdd() {
@@ -276,6 +252,14 @@ function switchToAdd() {
   document.getElementById('editform_mode').value = 'add';
   enableForm('edit_testcase_form');
   document.getElementById('testcase_display_div').style.display = 'none';
+  document.getElementById('editform_testcase_id_display').innerHTML = '<em>Automatically generated for a new testcase</em>';
+  document.getElementById('testgroups_link_display').innerHTML = '<em>A new testcase does not belong to any testgroups by default.<br/>Use the <a target="manage_testgroups" href="manage_testgroups.cgi">Manage Testgroups</a> interface to assign the subgroups to testgroups after the new testcase is created.</em>';
+  document.getElementById('subgroups_link_display').innerHTML = '<em>A new testcase does not belong to any subgroups by default.<br/>Use the <a target="manage_subgroups" href="manage_subgroups.cgi">Manage Subgroups</a> interface to assign the new testcase to subgroups once it is created.</em>';
+  document.getElementById('editform_creation_date').innerHTML = '<em>Automatically generated for a new testcase</em>';
+  document.getElementById('editform_last_updated').innerHTML = '<em>Automatically generated for a new testcase</em>';
+  document.getElementById('editform_litmus_version').innerHTML = '<em>Automatically generated for a new testcase</em>';
+  document.getElementById('editform_testrunner_case_id').innerHTML = '<em>Not Applicable</em>';
+  document.getElementById('editform_testrunner_case_version').innerHTML = '<em>Not Applicable</em>';
   document.getElementById('editform_div').style.display = 'block';
 }
 
