@@ -10,7 +10,7 @@ release="1.5.0.4"
 channel="release"
 
 
-for build_platform in WINNT_x86-msvc Darwin_Universal-gcc3 Linux_x86-gcc3
+for build_platform in Darwin_Universal-gcc3 # WINNT_x86-msvc Darwin_Universal-gcc3 Linux_x86-gcc3
 do
 
   for locale in `cat all-locales`
