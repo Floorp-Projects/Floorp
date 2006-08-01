@@ -33,6 +33,9 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
+<!-- Toolbar -->
+<!ENTITY  event.command.save.label                      "Save">
+
 <!-- Main page -->
 <!ENTITY event.tab.main.label                           "Event">
 <!ENTITY event.tab.recurrence.label                     "Recurrence">
