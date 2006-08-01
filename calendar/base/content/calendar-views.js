@@ -105,10 +105,11 @@ var calendarViewController = {
             // out how much the occurrence moved, and move the occurrence by
             // that amount.
             if (instance.parentItem.hasSameIds(instance)) {
-                //XXX bad! Don't modify in-params!
                 var startDiff = instance.startDate.subtractDate(aOccurrence.startDate);
+                aNewStartTime = aNewStartTime.clone();
                 aNewStartTime.addDuration(startDiff);
                 var endDiff = instance.endDate.subtractDate(aOccurrence.endDate);
+                aNewEndTime = aNewEndTime.clone();
                 aNewEndTime.addDuration(endDiff);
             }
 
