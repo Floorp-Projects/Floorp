@@ -137,8 +137,9 @@ tab {
  * All Tabs Button
  */
 
-.tabs-alltabs-box[flash="true"] {
+.tabs-alltabs-box {
   background-color: orange;
+  opacity: 0.0;
 }
 
 .tabs-alltabs-button {
