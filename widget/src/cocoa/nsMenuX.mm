@@ -959,10 +959,20 @@ nsresult nsMenuX::CountVisibleBefore(PRUint32* outVisibleBefore)
 } // CountVisibleBefore
 
 
-NS_IMETHODIMP nsMenuX::ChangeNativeEnabledStatusForMenuItem(nsIMenuItem* aMenuItem,
-                                                            PRBool aEnabled)
+NS_IMETHODIMP
+nsMenuX::ChangeNativeEnabledStatusForMenuItem(nsIMenuItem* aMenuItem,
+                                              PRBool aEnabled)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsMenuX::GetMenuRefAndItemIndexForMenuItem(nsISupports* aMenuItem,
+                                           void**       aMenuRef,
+                                           PRUint16*    aMenuItemIndex)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
@@ -1093,6 +1103,13 @@ NS_IMETHODIMP nsMenuX::ContentInserted(nsIDocument *aDocument, nsIContent *aChil
   
   return NS_OK;
 } // ContentInserted
+
+
+NS_IMETHODIMP
+nsMenuX::SetupIcon()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 
 //
