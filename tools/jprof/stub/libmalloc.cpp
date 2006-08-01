@@ -264,6 +264,12 @@ static int setupRTCSignals(int hz, struct sigaction *sap)
 
 static int enableRTCSignals(bool enable)
 {
+    static bool enabled = false;
+    if (enabled == enable) {
+        return 0;
+    }
+    enabled = enable;
+    
     int flags = fcntl(rtcFD, F_GETFL);
     if (flags < 0) {
         perror("JPROF_RTC setup: fcntl(/dev/rtc, F_GETFL)");
@@ -317,11 +323,18 @@ void *mystry)
             milisec = 0;
         }
     } else {
-	struct timeval tNow;
-        gettimeofday(&tNow, 0);
-	double usec = 1e6*(tNow.tv_sec - tFirst.tv_sec);
-	usec += (tNow.tv_usec - tFirst.tv_usec);
-	milisec = static_cast<size_t>(usec*1e-3);
+#if defined(linux)
+        if (rtcHz) {
+            enableRTCSignals(true);
+        } else
+#endif
+        {
+            struct timeval tNow;
+            gettimeofday(&tNow, 0);
+            double usec = 1e6*(tNow.tv_sec - tFirst.tv_sec);
+            usec += (tNow.tv_usec - tFirst.tv_usec);
+            milisec = static_cast<size_t>(usec*1e-3);
+        }
     }
 
 #ifdef JPROF_PTHREAD_HACK
