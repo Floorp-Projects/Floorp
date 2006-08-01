@@ -607,25 +607,19 @@ typedef struct JSGenerator {
     jsval               stack[1];
 } JSGenerator;
 
-static void
-generator_closehook(JSContext *cx, JSObject *obj)
+JSBool
+js_CloseGeneratorObject(JSContext *cx, JSObject *obj)
 {
-    JSGenerator *gen;
     jsval fval, rval;
     const jsid id = ATOM_TO_JSID(cx->runtime->atomState.closeAtom);
 
-    gen = (JSGenerator *) JS_GetPrivate(cx, obj);
-    if (!gen)
-        return;
+    JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_GeneratorClass);
+    JS_ASSERT(JS_GetPrivate(cx, obj));
 
-   /*
-    * Ignore errors until after we call the close method, then force prompt
-    * error reporting, since GC is infallible.
-    */
-    if (JS_GetMethodById(cx, obj, id, &obj, &fval))
-        js_InternalCall(cx, obj, fval, 0, NULL, &rval);
-    if (cx->throwing && !js_ReportUncaughtException(cx))
-        JS_ClearPendingException(cx);
+    if (!JS_GetMethodById(cx, obj, id, &obj, &fval))
+        return JS_FALSE;
+
+    return js_InternalCall(cx, obj, fval, 0, NULL, &rval);
 }
 
 static void
@@ -657,16 +651,14 @@ generator_mark(JSContext *cx, JSObject *obj, void *arg)
     return 0;
 }
 
-JSExtendedClass js_GeneratorClass = {
-  { js_Generator_str,
+JSClass js_GeneratorClass = {
+    js_Generator_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_IS_ANONYMOUS | JSCLASS_IS_EXTENDED |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Generator),
     JS_PropertyStub,  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,  generator_finalize,
     NULL,             NULL,            NULL,            NULL,
-    NULL,             NULL,            generator_mark,  NULL },
-    NULL,             NULL,            NULL,            generator_closehook,
-    JSCLASS_NO_RESERVED_MEMBERS
+    NULL,             NULL,            generator_mark,  NULL
 };
 
 JSObject *
@@ -677,7 +669,8 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     JSGenerator *gen;
     jsval *newsp;
 
-    obj = js_NewObject(cx, &js_GeneratorClass.base, NULL, NULL);
+    /* After the following return, failing control flow must goto bad. */
+    obj = js_NewObject(cx, &js_GeneratorClass, NULL, NULL);
     if (!obj)
         return NULL;
 
@@ -691,10 +684,8 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     /* Allocate obj's private data struct. */
     gen = (JSGenerator *)
           JS_malloc(cx, sizeof(JSGenerator) + (nslots - 1) * sizeof(jsval));
-    if (!gen || !JS_SetPrivate(cx, obj, gen)) {
-        JS_free(cx, gen);
-        return NULL;
-    }
+    if (!gen)
+        goto bad;
 
     /* Copy call-invariant object and function references. */
     gen->frame.callobj = fp->callobj;
@@ -746,7 +737,24 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
 
     /* Note that gen is newborn. */
     gen->state = JSGEN_NEWBORN;
+
+    if (!JS_SetPrivate(cx, obj, gen)) {
+        JS_free(cx, gen);
+        goto bad;
+    }
+
+    if (!js_RegisterGeneratorObject(cx, obj)) {
+        /*
+         * Do not free gen here, as the finalizer will do that since we
+         * called JS_SetPrivate.
+         */
+        goto bad;
+    }
     return obj;
+
+  bad:
+    cx->newborn[GCX_OBJECT] = NULL;
+    return NULL;
 }
 
 static JSBool
@@ -760,7 +768,7 @@ generator_send(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSBool ok;
     jsval junk;
 
-    if (!JS_InstanceOf(cx, obj, &js_GeneratorClass.base, argv))
+    if (!JS_InstanceOf(cx, obj, &js_GeneratorClass, argv))
         return JS_FALSE;
 
     gen = (JSGenerator *)JS_GetPrivate(cx, obj);
@@ -890,7 +898,7 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
         return NULL;
     proto->slots[JSSLOT_ITER_STATE] = JSVAL_NULL;
 
-    if (!JS_InitClass(cx, obj, NULL, &js_GeneratorClass.base, NULL, 0,
+    if (!JS_InitClass(cx, obj, NULL, &js_GeneratorClass, NULL, 0,
                       NULL, generator_methods, NULL, NULL)) {
         return NULL;
     }

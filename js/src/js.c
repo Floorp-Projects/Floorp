@@ -1870,7 +1870,7 @@ static JSExtendedClass split_global_class = {
     NULL, NULL, NULL, NULL, NULL, NULL,
     split_mark, NULL},
     NULL, split_outerObject, split_innerObject,
-    JSCLASS_NO_RESERVED_MEMBERS
+    NULL, NULL, NULL, NULL, NULL
 };
 
 JSObject *

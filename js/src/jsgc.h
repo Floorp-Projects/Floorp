@@ -141,7 +141,7 @@ extern JSBool
 js_RegisterCloseableIterator(JSContext *cx, JSObject *obj);
 
 extern JSBool
-js_AddObjectToCloseTable(JSContext *cx, JSObject *obj);
+js_RegisterGeneratorObject(JSContext *cx, JSObject *obj);
 
 /*
  * The private JSGCThing struct, which describes a gcFreeList element.
