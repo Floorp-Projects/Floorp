@@ -2720,8 +2720,6 @@ interrupt:
                                      (flags & JSITER_ENUMERATE) ? &fid : NULL,
                                      &rval);
             if (!ok) {
-                uintN protoFlags;
-
                 /* Nothing more to iterate in obj, or some other exception? */
                 if (!cx->throwing ||
                     !VALUE_IS_STOP_ITERATION(cx, cx->exception)) {
@@ -2735,10 +2733,10 @@ interrupt:
 
                 /*
                  * Enumerate the properties on obj's prototype chain, unless
-                 * the iterator is the iterable -- in this case, do not merge
+                 * the JSITER_ENUMERATE is clear -- in this case, do not merge
                  * ECMA precedent and the Pythonic iteration protocol.  Loop
-                 * over only the keys, or [key, value] pairs, returned by the
-                 * iterator for the directly referenced object.
+                 * over only whatever values are returned by the iterator for
+                 * the directly referenced object.
                  */
                 if (!(flags & JSITER_ENUMERATE) ||
                     !(obj = OBJ_GET_PROTO(cx, obj))) {
@@ -2756,35 +2754,22 @@ interrupt:
                  * the original object, so we must do our own getting, further
                  * below when testing 'if (flags & JSITER_FOREACH)'.
                  */
-                protoFlags = flags & ~JSITER_FOREACH;
+                ok = js_NewNativeIterator(cx, obj, flags & ~JSITER_FOREACH, vp);
+                if (!ok)
+                    goto out;
+                iterobj = JSVAL_TO_OBJECT(*vp);
 
-                if (flags & JSITER_ENUMERATE) {
-                    ok = js_NewNativeIterator(cx, obj, protoFlags, vp);
-                    if (!ok)
-                        goto out;
-                    iterobj = JSVAL_TO_OBJECT(*vp);
-                } else {
-                    iterobj = js_ValueToIterator(cx, OBJECT_TO_JSVAL(obj),
-                                                 protoFlags);
-                    if (!iterobj) {
-                        JS_ASSERT(!ok);
-                        goto out;
-                    }
-
-                    /* Reset ok and store the current iterable in vp[-1]. */
-                    ok = JS_TRUE;
-                    vp[-1] = OBJECT_TO_JSVAL(obj);
-                }
-
-                *vp = OBJECT_TO_JSVAL(iterobj);
+                /* Reset ok and store the current iterable in vp[-1]. */
+                ok = JS_TRUE;
+                vp[-1] = OBJECT_TO_JSVAL(obj);
                 goto enum_next_property;
             }
 
             /*
-             * If the iterator is the iterable, do not expect to lookup fid
+             * Without the JSITER_ENUMERATE flag, do not expect to lookup fid
              * and find anything.  The iteration protocol does not require any
              * such thing, which would make a name collision on 'next' hazard.
-             * But if the iterable is a different object, we must do the usual
+             * But if the JSITER_ENUMERATE flag is set, we must do the usual
              * deleted-property and shadowed-proto-property tests.
              */
             if (flags & JSITER_ENUMERATE) {
