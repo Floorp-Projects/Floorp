@@ -133,7 +133,7 @@ do
     check_update "$source_build_platform" "downloads/$source_file" "downloads/$target_file"
     $err = $?
     if [ "$err" != "0" ]; then
-      echo "FAIL: check_update returned non-zero exit code: $err" |tee /dev/stderr
+      echo "FAIL: check_update returned non-zero exit code for $source_build_platform downloads/$source_file vs. downloads/$target_file: $err" |tee /dev/stderr
       continue
     fi
   done
