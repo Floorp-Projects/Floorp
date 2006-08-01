@@ -19,7 +19,6 @@ function addCalendarToTree(aCalendar)
     if (!gCachedStyleSheet) {
         gCachedStyleSheet = getStyleSheet("chrome://calendar/content/calendar-view-bindings.css");
     }
-alert("1"+gCachedStyleSheet);
     updateStyleSheetForObject(aCalendar, gCachedStyleSheet);
 }
 
