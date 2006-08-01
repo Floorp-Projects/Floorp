@@ -106,7 +106,8 @@ public:
   NS_IMETHOD GetState(PRUint32 *aState) { nsHTMLTextAccessible::GetState(aState); *aState &= ~STATE_FOCUSABLE; *aState |= STATE_READONLY; return NS_OK; }
   // Don't cache via unique ID -- bullet accessible shares the same dom node as this LI accessible.
   // Also, don't cache via mParent/SetParent(), prevent circular reference since li holds onto us.
-  NS_IMETHOD SetParent(nsIAccessible *aParentAccessible) { mParent = nsnull; return NS_OK; }
+  NS_IMETHOD SetParent(nsIAccessible *aParentAccessible) { mParent = nsnull; mWeakParent = aParentAccessible; return NS_OK; }
+  NS_IMETHOD GetParent(nsIAccessible **aParentAccessible) { NS_IF_ADDREF(*aParentAccessible = mWeakParent); return NS_OK; }
 protected:
   // XXX Ideally we'd get the bullet text directly from the bullet frame via
   // nsBulletFrame::GetListItemText(), but we'd need an interface
@@ -115,6 +116,7 @@ protected:
   // However, in practice storing the bullet text here should not be a
   // problem if we invalidate the right parts of the accessibility cache
   // when mutation events occur.
+  nsIAccessible *mWeakParent;
   nsString mBulletText;
 };
 
@@ -132,7 +134,7 @@ class nsHTMLLIAccessible : public nsHyperTextAccessible
 public:
   nsHTMLLIAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell, 
                      nsIFrame *aBulletFrame, const nsAString& aBulletText);
-  NS_IMETHOD Shutdown() { nsresult rv = nsAccessibleWrap::Shutdown(); mBulletAccessible = nsnull; return rv; }
+  NS_IMETHOD Shutdown();
   NS_IMETHOD GetRole(PRUint32 *aRole) { *aRole = ROLE_LISTITEM; return NS_OK; }
   NS_IMETHOD GetState(PRUint32 *aState) { nsAccessibleWrap::GetState(aState); *aState |= STATE_READONLY; return NS_OK; }
   NS_IMETHOD GetName(nsAString& aName) { aName.SetIsVoid(PR_TRUE); return mRoleMapEntry ? nsAccessible::GetName(aName) : NS_OK; }
