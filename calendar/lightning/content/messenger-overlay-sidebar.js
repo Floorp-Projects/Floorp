@@ -173,7 +173,27 @@ function ltnOnLoad(event)
     document.getElementById("displayDeck")
             .addEventListener("dayselect", ltnObserveViewDaySelect, false);
 
+    // Make sure we update ourselves if the program stays open over midnight
+    scheduleMidnightUpdate(refreshUIBits);
+
     return;
+}
+
+/* Called at midnight to tell us to redraw date-specific widgets.  Do NOT call
+ * this for normal refresh, since it also calls scheduleMidnightRefresh.
+ */
+function refreshUIBits() {
+    agendaTreeView.refreshPeriodDates();
+    document.getElementById("ltnMinimonth").refreshDisplay();
+
+    // refresh the current view, if it has ever been shown
+    var cView = currentView();
+    if (cView.displayCalendar) {
+        cView.goToDay(cView.selectedDay);
+    }
+
+    // schedule our next update...
+    scheduleMidnightUpdate(refreshUIBits);
 }
 
 function showCalendarView(type)

@@ -184,6 +184,28 @@ function currentView() {
     return getViewDeck().selectedPanel;
 }
 
+/** Creates a timer that will fire after midnight.  Pass in a function as 
+ * aRefreshCallback that should be called at that time.
+ */
+function scheduleMidnightUpdate(aRefreshCallback) {
+    var jsNow = new Date();
+    var tomorrow = new Date(jsNow.getFullYear(), jsNow.getMonth(), jsNow.getDate() + 1);
+    var msUntilTomorrow = tomorrow.getTime() - jsNow.getTime();
+
+    // Is an nsITimer/callback extreme overkill here? Yes, but it's necessary to
+    // workaround bug 291386.  If we don't, we stand a decent chance of getting
+    // stuck in an infinite loop.
+    var udCallback = {
+        notify: function(timer) {
+            aRefreshCallback();
+        }
+    };
+
+    var timer = Components.classes["@mozilla.org/timer;1"]
+                          .createInstance(Components.interfaces.nsITimer);
+    timer.initWithCallback(udCallback, msUntilTomorrow, timer.TYPE_ONE_SHOT);
+}
+
 // Returns the actual style sheet object with the specified path.  Callers are
 // responsible for any caching they may want to do.
 function getStyleSheet(aStyleSheetPath) {

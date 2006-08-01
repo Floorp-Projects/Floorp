@@ -102,7 +102,7 @@ function calendarInit()
 
    prepareCalendarToDoUnifinder();
    
-   update_date();
+   scheduleMidnightUpdate(refreshUIBits);
 
    checkForMailNews();
 
@@ -133,34 +133,13 @@ function calendarInit()
            .addEventListener("dayselect", observeViewDaySelect, false);
 }
 
-// Set the date and time on the clock and set up a timeout to refresh the clock when the 
-// next minute ticks over
+/* Called at midnight to tell us to update the views and other ui bits */
+function refreshUIBits() {
+    gCalendarWindow.currentView.hiliteTodaysDate();
+    refreshEventTree();
 
-function update_date()
-{
-   // get the current time
-   var now = new Date();
-   
-   var tomorrow = new Date( now.getFullYear(), now.getMonth(), ( now.getDate() + 1 ) );
-   
-   var milliSecsTillTomorrow = tomorrow.getTime() - now.getTime();
-   
-   gCalendarWindow.currentView.hiliteTodaysDate();
-
-   refreshEventTree();
-
-   // Is an nsITimer/callback extreme overkill here? Yes, but it's necessary to
-   // workaround bug 291386.  If we don't, we stand a decent chance of getting
-   // stuck in an infinite loop.
-   var udCallback = {
-       notify: function(timer) {
-           update_date();
-       }
-   };
-
-   var timer = Components.classes["@mozilla.org/timer;1"]
-                         .createInstance(Components.interfaces.nsITimer);
-   timer.initWithCallback(udCallback, milliSecsTillTomorrow, timer.TYPE_ONE_SHOT);
+    // and schedule again...
+    scheduleMidnightUpdate(refreshUIBits);
 }
 
 /** 
