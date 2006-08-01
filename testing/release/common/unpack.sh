@@ -10,11 +10,11 @@ unpack_build () {
         mac|mac-ppc) 
             cd ../
             mkdir -p mnt
-            echo "y" | PAGER="cat > /dev/null"  hdiutil attach \
-                -quiet -mountpoint ./mnt "$pkg_file" 
-            sleep 5
+            echo "y" | PAGER="/bin/cat"  hdiutil attach \
+                -quiet -puppetstrings -noautoopen -mountpoint \ 
+                ./mnt "$pkg_file" > /dev/null
             rsync -a ./mnt/* $dir_name/ 
-            hdiutil detach mnt
+            hdiutil detach mnt > /dev/null
             cd $dir_name
             ;;
         win32) 
