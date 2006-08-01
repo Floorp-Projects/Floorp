@@ -98,13 +98,17 @@ calCompositeCalendarObserverHelper.prototype = {
 function calCompositeCalendar () {
     this.mObserverHelper = new calCompositeCalendarObserverHelper(this);
     this.wrappedJSObject = this;
+
+    this.mCalendars = new Array();
+    this.mCompositeObservers = new Array();
+    this.mObservers = new Array();
+    this.mDefaultCalendar = null;
 }
 
 calCompositeCalendar.prototype = {
     //
     // private members
     //
-    mCalendars: Array(),
     mDefaultCalendar: null,
 
     //
@@ -125,7 +129,7 @@ calCompositeCalendar.prototype = {
     // calICompositeCalendar interface
     //
 
-    mCalendars: Array(),
+    mCalendars: null,
     mDefaultCalendar: null,
     mPrefPrefix: null,
     mDefaultPref: null,
@@ -268,8 +272,8 @@ calCompositeCalendar.prototype = {
     },
 
     // void addObserver( in calIObserver observer );
-    mCompositeObservers: Array(),
-    mObservers: Array(),
+    mCompositeObservers: null,
+    mObservers: null,
     addObserver: function (aObserver) {
         const calICompositeObserver = Components.interfaces.calICompositeObserver;
         if (aObserver instanceof calICompositeObserver) {
