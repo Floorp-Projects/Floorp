@@ -382,24 +382,26 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     rv = mListener->OnStartRequest(request, aContext);
     if (NS_FAILED(rv)) return rv;
 
-    rv = FormatInputStream(request, aContext, buffer);
+    // The request may have been canceled, and if that happens, we want to
+    // suppress calls to OnDataAvailable.
+    request->GetStatus(&rv);
+    if (NS_FAILED(rv)) return rv;
 
+    rv = FormatInputStream(request, aContext, buffer);
     return rv;
 }
 
 NS_IMETHODIMP
 nsIndexedToHTML::OnStopRequest(nsIRequest* request, nsISupports *aContext,
                                nsresult aStatus) {
-    nsresult rv = NS_OK;
-    nsString buffer;
-    buffer.AssignLiteral("</table><hr/></body></html>\n");
+    if (NS_SUCCEEDED(aStatus)) {
+        nsString buffer;
+        buffer.AssignLiteral("</table><hr/></body></html>\n");
 
-    rv = FormatInputStream(request, aContext, buffer);
-    if (NS_FAILED(rv)) return rv;
+        aStatus = FormatInputStream(request, aContext, buffer);
+    }
 
-    rv = mParser->OnStopRequest(request, aContext, aStatus);
-    if (NS_FAILED(rv)) return rv;
-
+    mParser->OnStopRequest(request, aContext, aStatus);
     mParser = 0;
     
     return mListener->OnStopRequest(request, aContext, aStatus);

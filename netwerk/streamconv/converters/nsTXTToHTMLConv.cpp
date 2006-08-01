@@ -93,6 +93,11 @@ nsTXTToHTMLConv::OnStartRequest(nsIRequest* request, nsISupports *aContext)
     nsresult rv = mListener->OnStartRequest(request, aContext);
     if (NS_FAILED(rv)) return rv;
 
+    // The request may have been canceled, and if that happens, we want to
+    // suppress calls to OnDataAvailable.
+    request->GetStatus(&rv);
+    if (NS_FAILED(rv)) return rv;
+
     nsCOMPtr<nsIInputStream> inputData;
     rv = NS_NewStringInputStream(getter_AddRefs(inputData), mBuffer);
     if (NS_FAILED(rv)) return rv;
