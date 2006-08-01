@@ -131,8 +131,9 @@ do
       continue
     fi
     check_update "$source_build_platform" "downloads/$source_file" "downloads/$target_file"
-    if [ "$?" != "0" ]; then
-      echo "FAIL: check_update returned non-zero exit code: $?" |tee /dev/stderr
+    $err = $?
+    if [ "$err" != "0" ]; then
+      echo "FAIL: check_update returned non-zero exit code: $err" |tee /dev/stderr
       continue
     fi
   done
