@@ -86,7 +86,7 @@ my $platform_sql_group_by = "GROUP BY o.platform_id";
 my $status_sql_select = "SELECT rs.name,count(tr.testresult_id)";
 my $status_sql_from = "FROM test_results tr, test_result_status_lookup rs";
 my $status_sql_where = "WHERE tr.submission_time>=$start_ts and tr.submission_time<$finish_ts AND rs.result_status_id=tr.result_status_id";
-my $status_sql_group_by = "tr.result_status_id";
+my $status_sql_group_by = "GROUP BY tr.result_status_id";
 
 my $subgroup_sql_select = "SELECT CONCAT(p.name,':',tg.name,':',s.name) as name,count(tr.testresult_id),sgtg.subgroup_id";
 my $subgroup_sql_from = "FROM test_results tr, testcases t, testcase_subgroups tsg, subgroups s, subgroup_testgroups sgtg, testgroups tg, products p";
