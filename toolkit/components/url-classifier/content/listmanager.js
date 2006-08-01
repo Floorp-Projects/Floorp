@@ -439,6 +439,35 @@ PROT_ListManager.prototype.checkForUpdates = function() {
     G_Debug(this, 'checkForUpdates: no update server url');
     return false;
   }
+  // Check to make sure our tables still exist (maybe the db got corrupted or
+  // the user deleted the file).  If not, we need to reset the table version
+  // before sending the update check.
+  var tableNames = [];
+  for (var tableName in this.tablesKnown_) {
+    tableNames.push(tableName);
+  }
+  var dbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
+                  .getService(Ci.nsIUrlClassifierDBService);
+  dbService.checkTables(tableNames.join(","),
+                        BindToObject(this.makeUpdateRequest_, this));
+  return true;
+}
+
+/**
+ * Method that fires the actual HTTP update request.
+ * First we reset any tables that have disappeared.
+ * @param tableNames String comma separated list of tables that
+ *   don't exist
+ */
+PROT_ListManager.prototype.makeUpdateRequest_ = function(tableNames) {
+  // Clear prefs that track table version if they no longer exist in the db.
+  var tables = tableNames.split(",");
+  for (var i = 0; i < tables.length; ++i) {
+    G_Debug(this, "Table |" + tables[i] + "| no longer exists, clearing pref.");
+    this.prefs_.clearPref(kTableVersionPrefPrefix + tables[i]);
+  }
+
+  // Ok, now reload the table version.
   this.loadTableVersions_();
 
   G_Debug(this, 'checkForUpdates: scheduling request..');
@@ -449,69 +478,12 @@ PROT_ListManager.prototype.checkForUpdates = function() {
     streamer.updateUrl = url;
   } catch (e) {
     G_Debug(this, 'invalid url');
-    return false;
+    return;
   }
 
-  return streamer.downloadUpdates(BindToObject(this.setTableVersion_, this));
-}
-
-/**
- * Given the server response, extract out the new table lines and table
- * version numbers.  If the table has a mac, also check to see if it matches
- * the data.
- *
- * @param data String update string from the server
- * @return String The same update string sans tables with invalid macs.
- */
-PROT_ListManager.prototype.checkMac_ = function(data) {
-  var dataTables = data.split('\n\n');
-  var returnString = "";
-
-  for (var table = null, t = 0; table = dataTables[t]; ++t) {
-    var firstLineEnd = table.indexOf("\n");
-    while (firstLineEnd == 0) {
-      // Skip leading blank lines
-      table = table.substring(1);
-      firstLineEnd = table.indexOf("\n");
-    }
-    if (firstLineEnd == -1) {
-      continue;
-    }
-
-    var versionLine = table.substring(0, firstLineEnd);
-    var versionParser = new PROT_VersionParser("dummy");
-    if (!versionParser.fromString(versionLine)) {
-      // Failed to parse the version string, skip this table.
-      G_Debug(this, "Failed to parse version string");
-      continue;
-    }
-
-    if (versionParser.mac && versionParser.macval.length > 0) {
-      // Includes a mac, so we check it.
-      var updateData = table.substring(firstLineEnd + 1) + '\n';
-      if (!this.urlCrypto_)
-        this.urlCrypto_ = new PROT_UrlCrypto();
-
-      var computedMac = this.urlCrypto_.computeMac(updateData);
-      if (computedMac != versionParser.macval) {
-        G_Debug(this, "mac doesn't match: " + computedMac + " != " +
-                      versionParser.macval)
-        continue;
-      }
-    } else {
-      // No mac in the return.  Check to see if it's required.  If it is
-      // required, skip this data.
-      if (this.tablesKnown_[versionParser.type] &&
-          this.tablesKnown_[versionParser.type].requireMac) {
-        continue;
-      }
-    }
-
-    // Everything looks ok, add it to the return string.
-    returnString += table + "\n\n";
+  if (!streamer.downloadUpdates(BindToObject(this.setTableVersion_, this))) {
+    G_Debug(this, "pending update, wait until later");
   }
-
-  return returnString;
 }
 
 PROT_ListManager.prototype.QueryInterface = function(iid) {
