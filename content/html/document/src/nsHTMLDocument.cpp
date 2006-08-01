@@ -1915,6 +1915,19 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
+  nsresult rv = NS_OK;
+
+  nsPIDOMWindow *win = GetWindow();
+  if (win) {
+    nsCOMPtr<nsIDOMElement> frameElement;
+    rv = win->GetFrameElement(getter_AddRefs(frameElement));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (frameElement && !nsContentUtils::CanCallerAccess(frameElement)) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+  }
+
   // If we already have a parser we ignore the document.open call.
   if (mParser) {
 
@@ -1926,8 +1939,6 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     NS_WARNING("Unsupported type; fix the caller");
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
-
-  nsresult rv = NS_OK;
 
   // Note: We want to use GetDocumentFromContext here because this document
   // should inherit the security information of the document that's opening us,
@@ -2008,7 +2019,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
   nsPIDOMWindow *window = GetInnerWindow();
   if (window) {
-    // Rememer the old scope in case the call to SetNewDocument changes it.
+    // Remember the old scope in case the call to SetNewDocument changes it.
     nsCOMPtr<nsIScriptGlobalObject> oldScope(do_QueryReferent(mScopeObject));
 
     rv = window->SetNewDocument(this, nsnull, PR_FALSE);

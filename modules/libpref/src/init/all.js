@@ -279,7 +279,6 @@ pref("capability.policy.default.History.next", "UniversalBrowserRead");
 pref("capability.policy.default.History.previous", "UniversalBrowserRead");
 pref("capability.policy.default.History.toString", "UniversalBrowserRead");
 
-pref("capability.policy.default.HTMLDocument.close.get", "allAccess");
 pref("capability.policy.default.HTMLDocument.open.get", "allAccess");
 
 pref("capability.policy.default.Location.hash.set", "allAccess");
