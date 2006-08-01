@@ -55,7 +55,7 @@
 #include "nsHttpNegotiateAuth.h"
 
 #include "nsIHttpChannel.h"
-#include "nsIHttpChannelInternal.h"
+#include "nsIProxiedChannel.h"
 #include "nsIAuthModule.h"
 #include "nsIServiceManager.h"
 #include "nsIPrefService.h"
@@ -136,12 +136,12 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpChannel *httpChannel,
             return NS_ERROR_ABORT;
         }
 
-        nsCOMPtr<nsIHttpChannelInternal> httpInternal =
+        nsCOMPtr<nsIProxiedChannel> proxied =
                 do_QueryInterface(httpChannel);
-        NS_ENSURE_STATE(httpInternal);
+        NS_ENSURE_STATE(proxied);
 
         nsCOMPtr<nsIProxyInfo> proxyInfo;
-        httpInternal->GetProxyInfo(getter_AddRefs(proxyInfo));
+        proxied->GetProxyInfo(getter_AddRefs(proxyInfo));
         NS_ENSURE_STATE(proxyInfo);
 
         proxyInfo->GetHost(service);

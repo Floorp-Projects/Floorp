@@ -448,6 +448,18 @@ nsGopherContentStream::SendRequest()
 
 //-----------------------------------------------------------------------------
 
+NS_IMPL_ISUPPORTS_INHERITED1(nsGopherChannel,
+                             nsBaseChannel,
+                             nsIProxiedChannel)
+
+NS_IMETHODIMP
+nsGopherChannel::GetProxyInfo(nsIProxyInfo** aProxyInfo)
+{
+    *aProxyInfo = ProxyInfo();
+    NS_IF_ADDREF(*aProxyInfo);
+    return NS_OK;
+}
+
 nsresult
 nsGopherChannel::OpenContentStream(PRBool async, nsIInputStream **result)
 {

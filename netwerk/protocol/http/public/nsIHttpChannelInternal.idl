@@ -45,7 +45,7 @@ interface nsIProxyInfo;
  * using any feature exposed by this interface, be aware that this interface 
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(f3764874-ed7e-4873-883c-11d67a4e3638)]
+[scriptable, uuid(602e8cf0-c387-4598-9e6c-aa4b1551ed1c)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -72,9 +72,4 @@ interface nsIHttpChannelInternal : nsISupports
      *        The cookie header to be parsed.
      */
     void setCookie(in string aCookieHeader);
-
-    /**
-     * Get the proxy info in use by the channel.
-     */
-    readonly attribute nsIProxyInfo proxyInfo;
 };

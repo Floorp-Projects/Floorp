@@ -56,12 +56,14 @@
 #include "nsIStreamListener.h"
 #include "nsISocketTransport.h"
 #include "nsIProxyInfo.h"
+#include "nsIProxiedChannel.h"
 
 //-----------------------------------------------------------------------------
 
 class nsFingerChannel : public nsIChannel
                       , public nsIStreamListener
                       , public nsITransportEventSink
+                      , public nsIProxiedChannel
 {
 public:
     NS_DECL_ISUPPORTS
@@ -70,6 +72,7 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSITRANSPORTEVENTSINK
+    NS_DECL_NSIPROXIEDCHANNEL
 
     // nsFingerChannel methods:
     nsFingerChannel();

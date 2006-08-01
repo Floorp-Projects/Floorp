@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,16 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Gopher protocol code.
+ * The Original Code is Mozilla networking code.
  *
  * The Initial Developer of the Original Code is
- * Bradley Baetz.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ * Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bradley Baetz <bbaetz@student.usyd.edu.au>
- *   Darin Fisher <darin@netscape.com>
+ *   Christian Biesinger <cbiesinger@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,34 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsGopherChannel_h__
-#define nsGopherChannel_h__
+#include "nsISupports.idl"
 
-#include "nsBaseChannel.h"
-#include "nsIProxyInfo.h"
-#include "nsIProxiedChannel.h"
+interface nsIProxyInfo;
 
-class nsGopherChannel : public nsBaseChannel, public nsIProxiedChannel {
-public:
-    nsGopherChannel(nsIURI *uri, nsIProxyInfo *pi) : mProxyInfo(pi) {
-        SetURI(uri);
-    }
-
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIPROXIEDCHANNEL
-
-    nsIProxyInfo *ProxyInfo() { return mProxyInfo; }
-
-protected:
-    virtual ~nsGopherChannel() {}
-
-    virtual nsresult OpenContentStream(PRBool async, nsIInputStream **result);
-    virtual PRBool GetStatusArg(nsresult status, nsString &statusArg);
-
-private:
-    nsresult SendRequest(nsIOutputStream *stream);
-
-    nsCOMPtr<nsIProxyInfo> mProxyInfo;
+/**
+ * An interface for accessing the proxy info that a channel was
+ * constructed with.
+ *
+ * @see nsIProxiedProtocolHandler
+ */
+[scriptable, uuid(6238f134-8c3f-4354-958f-dfd9d54a4446)]
+interface nsIProxiedChannel : nsISupports
+{
+  /**
+   * Gets the proxy info the channel was constructed with. null or a
+   * proxyInfo with type "direct" mean no proxy.
+   *
+   * The returned proxy info must not be modified.
+   */
+  readonly attribute nsIProxyInfo proxyInfo;
 };
 
-#endif // !nsGopherChannel_h__
+

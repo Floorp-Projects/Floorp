@@ -77,11 +77,12 @@ PRTimeToSeconds(PRTime t_usec)
 
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsFtpChannel,
+NS_IMPL_ISUPPORTS_INHERITED4(nsFtpChannel,
                              nsBaseChannel,
                              nsIUploadChannel,
                              nsIResumableChannel,
-                             nsIFTPChannel)
+                             nsIFTPChannel,
+                             nsIProxiedChannel)
 
 //-----------------------------------------------------------------------------
 
@@ -127,6 +128,15 @@ nsFtpChannel::GetEntityID(nsACString& entityID)
       return NS_ERROR_NOT_RESUMABLE;
 
     entityID = mEntityID;
+    return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+NS_IMETHODIMP
+nsFtpChannel::GetProxyInfo(nsIProxyInfo** aProxyInfo)
+{
+    *aProxyInfo = ProxyInfo();
+    NS_IF_ADDREF(*aProxyInfo);
     return NS_OK;
 }
 

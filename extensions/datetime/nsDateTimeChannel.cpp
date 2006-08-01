@@ -67,11 +67,12 @@ nsDateTimeChannel::~nsDateTimeChannel()
 {
 }
 
-NS_IMPL_ISUPPORTS4(nsDateTimeChannel, 
+NS_IMPL_ISUPPORTS5(nsDateTimeChannel, 
                    nsIChannel, 
                    nsIRequest,
                    nsIStreamListener, 
-                   nsIRequestObserver)
+                   nsIRequestObserver,
+                   nsIProxiedChannel)
 
 nsresult
 nsDateTimeChannel::Init(nsIURI *uri, nsIProxyInfo *proxyInfo)
@@ -429,3 +430,16 @@ nsDateTimeChannel::OnTransportStatus(nsITransport *trans, nsresult status,
     }
     return NS_OK;
 }
+
+//-----------------------------------------------------------------------------
+// nsIProxiedChannel methods
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsDateTimeChannel::GetProxyInfo(nsIProxyInfo** aProxyInfo)
+{
+    *aProxyInfo = mProxyInfo;
+    NS_IF_ADDREF(*aProxyInfo);
+    return NS_OK;
+}
+

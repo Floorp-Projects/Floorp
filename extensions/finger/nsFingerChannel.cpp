@@ -71,11 +71,12 @@ nsFingerChannel::~nsFingerChannel()
 {
 }
 
-NS_IMPL_ISUPPORTS4(nsFingerChannel, 
+NS_IMPL_ISUPPORTS5(nsFingerChannel, 
                    nsIChannel, 
                    nsIRequest,
                    nsIStreamListener, 
-                   nsIRequestObserver)
+                   nsIRequestObserver,
+                   nsIProxiedChannel)
 
 nsresult
 nsFingerChannel::Init(nsIURI *uri, nsIProxyInfo *proxyInfo)
@@ -449,6 +450,18 @@ nsFingerChannel::OnTransportStatus(nsITransport *trans, nsresult status,
             mProgressSink->OnProgress(this, nsnull, progress, progressMax);
         }
     }
+    return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsIProxiedChannel methods
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsFingerChannel::GetProxyInfo(nsIProxyInfo** aProxyInfo)
+{
+    *aProxyInfo = mProxyInfo;
+    NS_IF_ADDREF(*aProxyInfo);
     return NS_OK;
 }
 
