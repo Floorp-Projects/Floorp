@@ -120,7 +120,7 @@ function onCancel()
 
 function loadDialog(item)
 {
-    var kDefaultTimezone = calendarDefaultTimezone();
+    var kDefaultTimezone = window.opener.calendarDefaultTimezone();
 
     setElementValue("item-title",       item.title);
     setElementValue("item-location",    item.getProperty("LOCATION"));
@@ -264,7 +264,7 @@ function saveDialog(item)
     setItemProperty(item, "title",       getElementValue("item-title"));
     setItemProperty(item, "LOCATION",    getElementValue("item-location"));
 
-    var kDefaultTimezone = calendarDefaultTimezone();
+    var kDefaultTimezone = window.opener.calendarDefaultTimezone();
 
     if (isEvent(item)) {
         var startDate = jsDateToDateTime(getElementValue("event-starttime"));
@@ -456,7 +456,7 @@ function onStartTimeChange()
     }
     var start = jsDateToDateTime(getElementValue(startWidgetId));
     start.addDuration(gItemDuration);
-    setElementValue(endWidgetId, start.getInTimezone(calendarDefaultTimezone()).jsDate);
+    setElementValue(endWidgetId, start.getInTimezone(window.opener.calendarDefaultTimezone()).jsDate);
     updateAccept();
 }
 
@@ -485,7 +485,7 @@ function updateAccept()
 {
     var enableAccept = true;
 
-    var kDefaultTimezone = calendarDefaultTimezone();
+    var kDefaultTimezone = window.opener.calendarDefaultTimezone();
 
     var title = getElementValue("item-title");
     if (title.length == 0)
@@ -704,7 +704,7 @@ function editRecurrence()
     args.calendarEvent = window.calendarItem;
     args.recurrenceInfo = window.recurrenceInfo || args.calendarEvent.recurrenceInfo;
 
-    var kDefaultTimezone = calendarDefaultTimezone();
+    var kDefaultTimezone = window.opener.calendarDefaultTimezone();
     if (isEvent(window.calendarItem)) {
         var startDate = jsDateToDateTime(getElementValue("event-starttime")).getInTimezone(kDefaultTimezone);
         if (getElementValue("event-all-day", "checked")) {
