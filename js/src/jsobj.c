@@ -1912,6 +1912,10 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
     return clone;
 }
 
+/*
+ * XXXblock this reverses a path in the property tree -- try to share
+ *          the prototype's scope harder!
+ */
 JSBool
 js_PutBlockObject(JSContext *cx, JSObject *obj)
 {
@@ -2022,6 +2026,9 @@ block_xdrObject(JSXDRState *xdr, JSObject **objp)
         count = OBJ_BLOCK_COUNT(cx, *objp);
         tmp = (uint32)(depth << 16) | count;
     }
+#ifdef __GNUC__ /* suppress bogus gcc warnings */
+    else count = 0;
+#endif
 
     /* First, XDR the parent atomid. */
     if (!JS_XDRUint32(xdr, &parentId))
