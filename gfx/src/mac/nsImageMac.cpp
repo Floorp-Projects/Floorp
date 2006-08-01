@@ -794,6 +794,17 @@ nsImageMac::ConvertFromPICT(PicHandle inPicture)
 }
 
 
+NS_IMETHODIMP
+nsImageMac::GetCGImageRef(CGImageRef* aCGImageRef)
+{
+  nsresult rv = EnsureCachedImage();
+  if (NS_FAILED(rv)) return rv;
+
+  *aCGImageRef = mImage;
+  return NS_OK;
+}
+
+
 #pragma mark -
 
 nsresult

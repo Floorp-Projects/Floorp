@@ -25,9 +25,18 @@
 }
 
 #page-proxy-button {
-  list-style-image: url("chrome://browser/skin/places/defaultFavicon.png") !important;
+  list-style-image: url("chrome://browser/skin/bookmarks/bookmark-item.png") !important;
+}
+
+.bookmark-item[container] {
+  list-style-image: url("chrome://global/skin/tree/folder.png") !important;
 }
 
 .bookmark-item {
-  list-style-image: url("chrome://browser/skin/places/defaultFavicon.png") !important;
+  list-style-image: url("chrome://browser/skin/bookmarks/bookmark-item.png") !important;
+}
+
+.bookmark-item menuitem[openInTabs],
+.bookmark-item menuitem[siteURI] {
+  list-style-image: none;
 }

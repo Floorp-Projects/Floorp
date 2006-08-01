@@ -73,6 +73,7 @@ WIDGET_ATOM(focused, "focused")
 WIDGET_ATOM(hidden, "hidden")
 WIDGET_ATOM(horizontal, "horizontal")
 WIDGET_ATOM(id, "id")
+WIDGET_ATOM(image, "image")
 WIDGET_ATOM(input, "input")
 WIDGET_ATOM(key, "key") // The key element / attribute
 WIDGET_ATOM(label, "label")

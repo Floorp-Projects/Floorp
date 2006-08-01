@@ -53,6 +53,7 @@
 #include "nsIMenuListener.h"
 #include "nsPresContext.h"
 #include "nsIMenuCommandDispatcher.h"
+#include "nsMenuItemIcon.h"
 
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -179,7 +180,11 @@ nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString 
   // menu gets selected, which is bad.
   nsMenuEvent fake(PR_TRUE, 0, nsnull);
   MenuConstruct(fake, nsnull, nsnull, nsnull);
-  
+
+  if (menu)
+    mIcon = new nsMenuItemIcon(NS_STATIC_CAST(nsIMenu*, this),
+                               menu, mMenuContent);
+
   return NS_OK;
 }
 
@@ -869,6 +874,8 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
       
     nsCOMPtr<nsISupports> supports ( do_QueryInterface(pnsMenuItem) );
     inParentMenu->AddItem(supports);         // Parent now owns menu item
+
+    pnsMenuItem->SetupIcon();
   }
 }
 
@@ -905,6 +912,8 @@ nsMenuX::LoadSubMenu( nsIMenu * pParentMenu, nsIContent* inMenuItemContent )
     // Make nsMenu a child of parent nsMenu. The parent takes ownership
     nsCOMPtr<nsISupports> supports2 ( do_QueryInterface(pnsMenu) );
 	  pParentMenu->AddItem(supports2);
+
+    pnsMenu->SetupIcon();
   }     
 }
 
@@ -1199,25 +1208,45 @@ nsMenuX :: CountVisibleBefore ( PRUint32* outVisibleBefore )
 
 
 NS_IMETHODIMP
-nsMenuX::ChangeNativeEnabledStatusForMenuItem(nsIMenuItem* aMenuItem, PRBool aEnabled)
+nsMenuX::ChangeNativeEnabledStatusForMenuItem(nsIMenuItem* aMenuItem,
+                                              PRBool aEnabled)
+{
+  MenuRef menuRef;
+  PRUint16 menuItemIndex;
+  nsresult rv = GetMenuRefAndItemIndexForMenuItem(aMenuItem,
+                                                  (void**)&menuRef,
+                                                  &menuItemIndex);
+  if (NS_FAILED(rv)) return rv;
+
+  if (aEnabled)
+    ::EnableMenuItem(menuRef, menuItemIndex);
+  else
+    ::DisableMenuItem(menuRef, menuItemIndex);
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsMenuX::GetMenuRefAndItemIndexForMenuItem(nsISupports* aMenuItem,
+                                           void**       aMenuRef,
+                                           PRUint16*    aMenuItemIndex)
 {
   // look for the menu item given
   PRUint32 menuItemCount;
   mMenuItemsArray.Count(&menuItemCount);
-    
+
   for (PRUint32 i = 0; i < menuItemCount; i++) {
-    nsISupports* currItem;
-    mMenuItemsArray.GetElementAt(i, &currItem);
+    nsCOMPtr<nsISupports> currItem; 
+    mMenuItemsArray.GetElementAt(i, getter_AddRefs(currItem));
     if (currItem == aMenuItem) {
-      if (aEnabled)
-        ::EnableMenuItem(mMacMenuHandle, i + 1);
-      else
-        ::DisableMenuItem(mMacMenuHandle, i + 1);
-      break;
+      *aMenuRef = (void*)mMacMenuHandle;
+      *aMenuItemIndex = i + 1;
+      return NS_OK;
     }
   }
 
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 
@@ -1334,6 +1363,9 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIConte
         ::DrawMenuBar();
       }
   }
+  else if (aAttribute == nsWidgetAtoms::image) {
+    SetupIcon();
+  }
 
   return NS_OK;
   
@@ -1367,3 +1399,15 @@ nsMenuX :: ContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt32 a
   return NS_OK;
   
 } // ContentInserted
+
+
+NS_IMETHODIMP
+nsMenuX::SetupIcon()
+{
+  // In addition to out-of-memory, menus that are children of the menu bar
+  // will not have mIcon set.
+
+  if (!mIcon) return NS_ERROR_OUT_OF_MEMORY;
+
+  return mIcon->SetupIcon();
+}
