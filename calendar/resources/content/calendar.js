@@ -392,7 +392,7 @@ function closeCalendar()
    self.close();
 }
 
-function print()
+function calPrint()
 {
     window.openDialog("chrome://calendar/content/printDialog.xul",
                       "printdialog","chrome");

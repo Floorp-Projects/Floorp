@@ -53,7 +53,7 @@
   <command id="modify_command" oncommand="editEvent()" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="send_event_command" oncommand="sendEvent()" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="cmd_pageSetup" oncommand="PrintUtils.showPageSetup();"/>
-  <command id="print_command" oncommand="print()"/>
+  <command id="print_command" oncommand="calPrint()"/>
   
   <command id="undo_command" oncommand="undo()" disabled="true"/>
   <command id="redo_command" oncommand="redo()" disabled="true"/>
