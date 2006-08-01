@@ -915,7 +915,6 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnItemRemoved(nsIRDFResource *parentItem, n
   return OnItemAddedOrRemoved(parentItem, item, PR_FALSE);
 }
 
-
 nsresult nsMsgFolderDataSource::OnItemAddedOrRemoved(nsIRDFResource *parentItem, nsISupports *item, PRBool added)
 {
   nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item));
@@ -2282,18 +2281,13 @@ nsMsgFlatFolderDataSource::~nsMsgFlatFolderDataSource()
 
 nsresult nsMsgFlatFolderDataSource::Init()
 {
-  nsCOMPtr<nsIMsgAccountManager> am;
+  nsIRDFService* rdf = getRDFService();
+  NS_ENSURE_TRUE(rdf, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIRDFResource> source;
+  nsCAutoString dsUri(m_dsName);
+  dsUri.Append(":/");
+  rdf->GetResource(dsUri, getter_AddRefs(m_rootResource));
 
-  // get a weak ref to the account manager
-  if (!mAccountManager) 
-  {
-    nsresult rv;
-    am = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    mAccountManager = do_GetWeakReference(am);
-  }
-  else
-    am = do_QueryReferent(mAccountManager);
   return nsMsgFolderDataSource::Init();
 }
 
@@ -2415,24 +2409,39 @@ NS_IMETHODIMP nsMsgFlatFolderDataSource::HasAssertion(nsIRDFResource* source,
   else if (property == kNC_Child && ResourceIsOurRoot(source)) // check if source is us
   {
     folder = do_QueryInterface(target);
-    if (WantsThisFolder(folder))
+    if (folder)
     {
-      *hasAssertion = PR_TRUE;
-      return NS_OK;
+      nsCOMPtr<nsIMsgFolder> parentMsgFolder;
+      folder->GetParentMsgFolder(getter_AddRefs(parentMsgFolder));
+      // a folder without a parent must be getting deleted as part of
+      // the rename operation and is thus a folder we are 
+      // no longer interested in
+      if (parentMsgFolder && WantsThisFolder(folder))
+      {
+        *hasAssertion = PR_TRUE;
+        return NS_OK;
+      }
     }
   }
   *hasAssertion = PR_FALSE;
   return NS_OK;
 }
 
+nsresult nsMsgFlatFolderDataSource::OnItemAddedOrRemoved(nsIRDFResource *parentItem, nsISupports *item, PRBool added)
+{
+  // When a folder is added or removed, parentItem is the parent folder and item is the folder being
+  // added or removed. In a flat data source, there is no arc in the graph between the parent folder
+  // and the folder being added or removed. Our flat data source root (i.e. mailnewsunreadfolders:/) has 
+  // an arc with the child property to every folder in the data source.  We must change parentItem
+  // to be our data source root before calling nsMsgFolderDataSource::OnItemAddedOrRemoved. This ensures
+  // that datasource listeners such as the template builder properly handle add and remove 
+  // notifications on the flat datasource.
+  return nsMsgFolderDataSource::OnItemAddedOrRemoved(m_rootResource, item, added);
+}
+
 PRBool nsMsgFlatFolderDataSource::ResourceIsOurRoot(nsIRDFResource *resource)
 {
-  const char *uri;
-  nsCAutoString dsUri(m_dsName);
-  dsUri.Append(":/");
-
-  resource->GetValueConst(&uri);
-  return dsUri.Equals(uri);
+  return m_rootResource.get() == resource;
 }
 
 PRBool nsMsgFlatFolderDataSource::WantsThisFolder(nsIMsgFolder *folder)

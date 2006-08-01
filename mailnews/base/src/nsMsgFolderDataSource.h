@@ -202,7 +202,7 @@ protected:
   nsresult CreateUnreadMessagesNameString(PRInt32 unreadMessages, nsAutoString &nameString);
   nsresult CreateArcsOutEnumerator();
 
-  nsresult OnItemAddedOrRemoved(nsIRDFResource *parentItem, nsISupports *item, PRBool added);
+  virtual nsresult OnItemAddedOrRemoved(nsIRDFResource *parentItem, nsISupports *item, PRBool added);
 
   nsresult OnUnreadMessagePropertyChanged(nsIRDFResource *folderResource, PRInt32 oldValue, PRInt32 newValue);
   nsresult OnTotalMessagePropertyChanged(nsIRDFResource *folderResource, PRInt32 oldValue, PRInt32 newValue);
@@ -329,9 +329,10 @@ protected:
   virtual nsresult GetFolderDisplayName(nsIMsgFolder *folder, PRUnichar **folderName);
   virtual PRBool WantsThisFolder(nsIMsgFolder *folder);
           PRBool ResourceIsOurRoot(nsIRDFResource *resource);
+  virtual nsresult OnItemAddedOrRemoved(nsIRDFResource *parentItem, nsISupports *item, PRBool added);
 
   nsCOMArray <nsIMsgFolder> m_folders;
-  nsWeakPtr mAccountManager;
+  nsCOMPtr<nsIRDFResource>  m_rootResource; // the resource for our root
   nsCString m_dsName;
 };
 
