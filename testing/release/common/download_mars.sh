@@ -3,7 +3,7 @@ download_mars () {
     only="$2"
 
     echo "Using  $update_url"
-    curl -s $update_url > update.xml
+    curl -s $update_url #> update.xml
 
     mkdir -p update/
     if [ -z $only ]; then
@@ -15,8 +15,8 @@ download_mars () {
       grep_rv=$?
 
       if [ 0 -ne $grep_rv ]; then
-	  echo "FAIL: no $patch_type update found"
-	  continue
+	      echo "FAIL: no $patch_type update found"
+	      continue
       fi
 
       command=`echo $line | sed -e 's/^.*<patch //' -e 's:/>.*$::' -e 's:\&amp;:\&:g'`
@@ -31,20 +31,18 @@ download_mars () {
       actual_hash=`openssl dgst -$hashFunction update/$patch_type.mar | sed -e 's/^.*= //'`
       
       if [ $actual_size != $size ]; then
-	  echo "FAIL: $patch_type wrong size"
-	  echo "FAIL: update.xml size: $size"
-	  echo "FAIL: actual size: $actual_size"
-	  continue
+	      echo "FAIL: $patch_type wrong size"
+	      echo "FAIL: update.xml size: $size"
+	      echo "FAIL: actual size: $actual_size"
+	      continue
       fi
       
       if [ $actual_hash != $hashValue ]; then
-	  echo "FAIL: $patch_type wrong hash"
-	  echo "FAIL: update.xml hash: $hashValue"
-	  echo "FAIL: actual hash: $actual_hash"
-	  continue
+	      echo "FAIL: $patch_type wrong hash"
+	      echo "FAIL: update.xml hash: $hashValue"
+	      echo "FAIL: actual hash: $actual_hash"
+	      continue
       fi
-      
-#      ln -s $mar_location $patch_type.mar
 
     done
 }
