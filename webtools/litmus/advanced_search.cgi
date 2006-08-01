@@ -38,17 +38,18 @@ use Litmus::FormWidget;
 use CGI;
 use Time::Piece::MySQL;
 
+Litmus->init();
 my $c = Litmus->cgi();
 print $c->header();
 
-use diagnostics;
+
 
 # Hash refs for maintaining state in the search form.
-my $defaults;
-my $order_bys;
+my $defaults = undef;
+my $order_bys = undef;
 
-our $MAX_SORT_FIELDS = 10;
-our $MAX_SEARCH_FIELDS = 10;
+my $MAX_SORT_FIELDS = 10;
+my $MAX_SEARCH_FIELDS = 10;
 
 my $criteria = "Custom<br/>";
 my $results;
@@ -58,6 +59,7 @@ my $limit;
 my $where_criteria = "";
 my $order_by_criteria = "";
 my $limit_criteria = "";
+
 if ($c->param) {    
 
     foreach my $param ($c->param) {

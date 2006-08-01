@@ -36,8 +36,6 @@ package Litmus::Error;
 
 use strict;
 
-use Litmus;
-
 our @ISA = qw(Exporter);
 @Litmus::Error::EXPORT = qw(
 	basicError

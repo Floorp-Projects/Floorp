@@ -42,8 +42,9 @@ use Litmus::FormWidget;
 use CGI;
 use Time::Piece::MySQL;
 
-use diagnostics;
 
+
+Litmus->init();
 Litmus::Auth::requireAdmin("edit_categories.cgi");
 
 my $c = Litmus->cgi();

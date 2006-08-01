@@ -40,6 +40,7 @@ use CGI;
 use Date::Manip;
 use JSON;
 
+Litmus->init();
 my $c = Litmus->cgi(); 
 
 my $vars;

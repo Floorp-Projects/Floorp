@@ -39,12 +39,10 @@ use strict;
 ## header so that any required cookies can be sent.
 
 require Exporter;
-use Litmus;
-use Litmus::DB::User;
 use Litmus::Error;
-use Litmus::Template;
 use Time::Piece;
 use Time::Seconds;
+use Litmus::DB::User;
 
 use CGI;
 
@@ -53,8 +51,6 @@ our @EXPORT = qw();
 
 my $logincookiename = $Litmus::Config::user_cookiename;
 my $cookie_expire_days = 7;
-
-my $curSession;
 
 # Given a username and password, validate the login. Returns the 
 # Litmus::DB::User object associated with the username if the login 
@@ -139,7 +135,9 @@ sub getCurrentSession() {
 	
 	# we're actually processing the login form right now, so the cookie hasn't
 	# been sent yet...
-	if ($curSession) { return $curSession } 
+	if (Litmus->request_cache->{'curSession'}) { 
+		return Litmus->request_cache->{'curSession'}; 
+	} 
 	
 	my $sessionCookie = $c->cookie($logincookiename);
   	if (! $sessionCookie) {
@@ -383,7 +381,7 @@ sub makeSession {
                                              sessioncookie => $sessioncookie,
                                              expires => $expires});
   
-  $curSession = $session;
+  Litmus->request_cache->{'curSession'} = $session;
   return $session;
 }
 

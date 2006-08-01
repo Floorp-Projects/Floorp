@@ -33,8 +33,9 @@ $|++;
 use Litmus;
 use Litmus::Auth;
 
-use CGI;
-use diagnostics;
+
+
+Litmus->init();
 
 my $title = "Log out";
 

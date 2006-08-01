@@ -31,6 +31,10 @@
 
 package Litmus::XML; 
 
+# Litmus XML Interface
+# For further details, see the web services specification at 
+# http://wiki.mozilla.org/Litmus:Web_Services
+
 use strict;
 
 use XML::XPath;
@@ -41,6 +45,8 @@ use Litmus::UserAgentDetect;
 use Date::Manip;
 
 use CGI::Carp qw(set_message fatalsToBrowser);
+
+# if we die for some reason, make sure we give a fatal error per spec
 BEGIN { 
 	set_message(sub { 
 		print "Fatal error: internal server error\n";

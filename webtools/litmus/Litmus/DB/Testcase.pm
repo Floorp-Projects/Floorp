@@ -36,9 +36,9 @@ use strict;
 use base 'Litmus::DBI';
 
 use Date::Manip;
-use Litmus::DB::Testresult;
+#use Litmus::DB::Testresult;
 use Memoize;
-use Litmus::Error;
+#use Litmus::Error;
 
 our $default_relevance_threshold = 1.0;
 our $default_match_limit = 25;

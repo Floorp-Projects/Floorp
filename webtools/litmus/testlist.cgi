@@ -37,6 +37,7 @@ use Litmus::DB::Product;
 use CGI;
 use Time::Piece::MySQL;
 
+Litmus->init();
 my $c = Litmus->cgi(); 
 
 print $c->header();

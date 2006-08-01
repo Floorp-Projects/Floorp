@@ -25,6 +25,7 @@
  # Contributor(s):
  #   Chris Cooper <ccooper@deadsquid.com>
  #   Zach Lipton <zach@zachlipton.com>
+ #   Max Kanat-Alexander <mkanat@bugzilla.org>
  #
  # ***** END LICENSE BLOCK *****
 
@@ -38,40 +39,71 @@ use strict;
 
 use Litmus::Template;
 use Litmus::Config;
+use Litmus::Error;
 use Litmus::Auth;
 use Litmus::CGI;
 
-BEGIN {
+our $_request_cache = {};
+
+# each cgi _MUST_ call Litmus->init() prior to doing anything else.
+# init() ensures that the installation has not been disabled, deals with pending 
+# login requests, and other essential tasks.
+sub init() {
 	if ($Litmus::Config::disabled) {
   	  	my $c = new CGI();
     	print $c->header();
     	print "Litmus has been shutdown by the administrator. Please try again later.";
     	exit;
 	}
-}
-
-# Global Template object
-my $_template;
-sub template() {
-    my $class = shift;
-    $_template ||= Litmus::Template->create();
-    return $_template;
-}
-
-# Global CGI object
-my $_cgi;
-sub cgi() {
-    my $class = shift;
-    $_cgi ||= Litmus::CGI->new();
-    return $_cgi;
-}
-
-# hook to handle a login in progress for any CGI script:
-BEGIN {
+	# check for pending logins:
 	my $c = cgi();
 	if ($c->param("login_type")) {
 		Litmus::Auth::processLoginForm();
 	}
+}
+
+# Global Template object
+sub template() {
+    my $class = shift;
+    request_cache()->{template} ||= Litmus::Template->create();
+    return request_cache()->{template};
+}
+
+# Global CGI object
+sub cgi() {
+    my $class = shift;
+    request_cache()->{cgi} ||= new Litmus::CGI();
+    return request_cache()->{cgi};
+}
+
+sub getCurrentUser {
+	return Litmus::Auth::getCurrentUser();
+}
+
+# cache of global variables for a single request only
+# use me like: Litmus->request_cache->{'var'} = 'foo';
+# entries here are guarenteed to get flushed when the request ends, 
+# even when running under mod_perl
+# from Bugzilla.pm:
+sub request_cache {
+    if ($ENV{MOD_PERL}) {
+        my $request = Apache->request();
+        my $cache = $request->pnotes();
+        # Sometimes mod_perl doesn't properly call DESTROY on all
+        # the objects in pnotes(), so we register a cleanup handler
+        # to make sure that this happens.
+        if (!$cache->{cleanup_registered}) {
+             $request->push_handlers(PerlCleanupHandler => sub {
+                 my $r = shift;
+                 foreach my $key (keys %{$r->pnotes}) {
+                     delete $r->pnotes->{$key};
+                 }
+             });
+             $cache->{cleanup_registered} = 1;
+        }
+        return $cache;
+    }
+    return $_request_cache;
 }
 
 1;

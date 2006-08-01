@@ -39,6 +39,7 @@ use Litmus::Utils;
 use CGI;
 use Date::Manip;
 
+Litmus->init();
 my $c = Litmus->cgi(); 
 
 my $vars;

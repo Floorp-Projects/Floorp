@@ -37,7 +37,7 @@ use Litmus::Config;
 use DBI ();
 
 use Data::Dumper;
-use diagnostics;
+
 
 use vars qw(
             $tr_dbh

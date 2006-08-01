@@ -35,8 +35,9 @@ use CGI;
 use Date::Manip;
 use Time::Piece::MySQL;
 
-use diagnostics;
 
+
+Litmus->init();
 my $c = Litmus->cgi(); 
 
 print $c->header();

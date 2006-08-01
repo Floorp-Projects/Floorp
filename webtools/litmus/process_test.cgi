@@ -41,8 +41,9 @@ use Litmus::XML;
 
 use CGI;
 use Date::Manip;
-use diagnostics;
 
+
+Litmus->init();
 my $c = Litmus->cgi(); 
 
 if ($c->param('data')) {

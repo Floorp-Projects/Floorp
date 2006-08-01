@@ -36,6 +36,7 @@ use Litmus::Error;
 use CGI;
 use Date::Manip;
 
+Litmus->init();
 my $c = Litmus->cgi(); 
 print $c->header;
 

@@ -83,7 +83,7 @@ Litmus::DB::Testresult->set_sql(DefaultTestResults => qq{
     SELECT tr.testresult_id,tr.testcase_id,t.summary,tr.submission_time AS created,p.name AS platform_name,pr.name as product_name,trsl.name AS result_status,trsl.class_name result_status_class,b.name AS branch_name,tg.name AS test_group_name, tr.locale_abbrev, u.email
     FROM test_results tr, testcases t, platforms p, opsyses o, branches b, products pr, test_result_status_lookup trsl, testgroups tg, subgroups sg, users u, testcase_subgroups tcsg, subgroup_testgroups sgtg
     WHERE tr.testcase_id=t.testcase_id AND tr.opsys_id=o.opsys_id AND o.platform_id=p.platform_id AND tr.branch_id=b.branch_id AND b.product_id=pr.product_id AND tr.result_status_id=trsl.result_status_id AND tcsg.testcase_id=tr.testcase_id AND tcsg.subgroup_id=sg.subgroup_id AND sg.subgroup_id=sgtg.subgroup_id AND sgtg.testgroup_id=tg.testgroup_id AND tr.user_id=u.user_id AND tr.valid=1
-    ORDER BY tr.submission_time DESC
+    ORDER BY tr.submission_time DESC, t.testcase_id DESC
     LIMIT $_num_results_default 
 });
 

@@ -33,6 +33,7 @@ use CGI;
 use Time::Piece::MySQL;
 use Date::Manip;
 
+Litmus->init();
 my $c = Litmus->cgi(); 
 
 # for the moment, you must be an admin to enter tests:

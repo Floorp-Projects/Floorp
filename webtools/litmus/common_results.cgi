@@ -35,12 +35,12 @@ use Litmus::Auth;
 use Litmus::Error;
 use Litmus::DB::Testresult;
 use Litmus::FormWidget;
-use diagnostics;
+
 
 use CGI;
 use Time::Piece::MySQL;
 
-
+Litmus->init();
 my $c = Litmus->cgi();
 print $c->header();
 

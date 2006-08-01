@@ -38,6 +38,7 @@ use Litmus::DB::Resultbug;
 use CGI;
 use Date::Manip;
 
+Litmus->init();
 my $c = Litmus->cgi(); 
 print $c->header();
 

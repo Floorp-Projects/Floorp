@@ -39,10 +39,11 @@ use Litmus::Error;
 use Litmus::DB::Testresult;
 use Litmus::FormWidget;
 
-use CGI;
 use Time::Piece::MySQL;
 
-use diagnostics;
+
+
+Litmus->init();
 
 my ($criteria,$results) = Litmus::DB::Testresult->getDefaultTestResults;
 

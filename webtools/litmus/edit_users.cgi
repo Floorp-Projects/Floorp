@@ -32,6 +32,7 @@ use Litmus::Utils;
 use CGI;
 use Time::Piece::MySQL;
 
+Litmus->init();
 my $c = Litmus->cgi(); 
 
 # obviously, you need to be an admin to edit users...

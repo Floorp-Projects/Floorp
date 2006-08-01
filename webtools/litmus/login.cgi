@@ -33,8 +33,10 @@ $|++;
 use Litmus;
 use Litmus::Auth;
 
+Litmus->init();
+
 use CGI;
-use diagnostics;
+
 
 my $title = "Log in";
 

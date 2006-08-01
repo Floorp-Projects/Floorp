@@ -38,10 +38,11 @@ use Litmus::FormWidget;
 use CGI;
 use Time::Piece::MySQL;
 
+Litmus->init();
 my $c = Litmus->cgi(); 
 print $c->header();
 
-use diagnostics;
+
 
 my $criteria = "Custom<br/>";
 my $results;

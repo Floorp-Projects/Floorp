@@ -30,7 +30,7 @@
 use strict;
 
 use Time::HiRes qw( gettimeofday tv_interval );
-my $t0 = [gettimeofday];
+our $t0 = [gettimeofday];
 
 use Litmus;
 use Litmus::Error;
@@ -42,9 +42,11 @@ use Litmus::Auth;
 use CGI;
 use Time::Piece::MySQL;
 
-my $title = "Run Tests";
+Litmus->init();
 
-my $c = Litmus->cgi(); 
+our $title = "Run Tests";
+
+our $c = Litmus->cgi(); 
 
 if ($c->param("group")) { # display the test screen
     page_test();

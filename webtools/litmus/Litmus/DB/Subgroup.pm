@@ -36,7 +36,7 @@ use strict;
 use base 'Litmus::DBI';
 
 use Time::Piece::MySQL;
-use Litmus::DB::Testresult;
+#use Litmus::DB::Testresult;
 
 Litmus::DB::Subgroup->table('subgroups');
 

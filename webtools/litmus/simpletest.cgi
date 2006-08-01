@@ -39,13 +39,14 @@ use Litmus::Auth;
 use CGI;
 use Time::Piece::MySQL;
 
-my $c = Litmus->cgi(); 
+Litmus->init();
+our $c = Litmus->cgi(); 
 
 # how old of a build do we want to allow? default is 10 days
-my $maxbuildage = 10; 
+our $maxbuildage = 10; 
 # what branch do we accept? default is the trunk or the 1.8 branch
-my $branch = Litmus::DB::Branch->retrieve(1);
-my $branch2 = Litmus::DB::Branch->retrieve(2);
+our $branch = Litmus::DB::Branch->retrieve(1);
+our $branch2 = Litmus::DB::Branch->retrieve(2);
 
 showTest();
 

@@ -32,20 +32,21 @@
 
 package Litmus::DBI;
 
+require Apache::DBI;
 use strict;
 use warnings;
 use Litmus::Config;
-use Litmus::Error;
 use Memoize;
 
 use base 'Class::DBI::mysql';
 
-my $dsn = "dbi:mysql:$Litmus::Config::db_name:$Litmus::Config::db_host";
+our $dsn = "dbi:mysql:database=$Litmus::Config::db_name;host=$Litmus::Config::db_host;port=3306";
+
+
 
 our %column_aliases;
 
-Litmus::DBI->set_db('Main',
-                         $dsn,
+Litmus::DBI->connection( $dsn,
                          $Litmus::Config::db_user,
                          $Litmus::Config::db_pass,
                          	{AutoCommit=>1}
@@ -90,7 +91,7 @@ sub AUTOLOAD {
     
     my $col = $self->find_column($name);
     if (!$col) {
-        internalEror("tried to call Litmus::DBI method $name which does not exist");
+        internalError("tried to call Litmus::DBI method $name which does not exist");
     }
     
     return $self->$col(@args);
@@ -101,5 +102,29 @@ sub _croak {
 	internalError($message);
 	return;
 }
+
+# Get Class::DBI's default dbh options
+my $db_options = { __PACKAGE__->_default_attributes };
+
+__PACKAGE__->_remember_handle('Main'); # so dbi_commit works
+
+# override default to avoid using Ima::DBI closure
+sub db_Main {
+   my $dbh;
+   if ( $ENV{'MOD_PERL'} and !$Apache::ServerStarting ) {
+	   $dbh = Apache->request()->pnotes('dbh');
+   }
+   if ( !$dbh ) {
+	   $dbh = DBI->connect(
+		   $dsn,  $Litmus::Config::db_user,
+		   $Litmus::Config::db_pass, $db_options
+	   );
+	   if ( $ENV{'MOD_PERL'} and !$Apache::ServerStarting ) {
+		   Apache->request()->pnotes( 'dbh', $dbh );
+	   }
+   }
+   return $dbh;
+}
+
 1;
 
