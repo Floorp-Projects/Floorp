@@ -57,6 +57,7 @@
 #include "nsISchemaLoader.h"
 #include "nsISchema.h"
 #include "nsIXFormsContextControl.h"
+#include "nsDataHashtable.h"
 
 class nsIDOMElement;
 class nsIDOMNode;
@@ -136,8 +137,19 @@ class nsXFormsControlListItem
   /** The first child of the node */
   nsXFormsControlListItem        *mFirstChild;
 
+  nsDataHashtable<nsISupportsHashKey,nsXFormsControlListItem *> *mControlListHash;
+
 public:
-  nsXFormsControlListItem(nsIXFormsControl* aControl);
+
+  /** The constructor takes a hashtable pointer, which needs to point to the
+   *  model's hashtable.  This is so that each item in the control list has
+   *  access to the same hashtable and can add/remove items from it and find
+   *  items in it.
+   */
+  nsXFormsControlListItem(
+    nsIXFormsControl* aControl,
+    nsDataHashtable<nsISupportsHashKey,nsXFormsControlListItem *> *aHash);
+  nsXFormsControlListItem();
   ~nsXFormsControlListItem();
   nsXFormsControlListItem(const nsXFormsControlListItem& aCopy);
 
@@ -389,6 +401,7 @@ private:
   nsCOMPtr<nsISchemaLoader> mSchemas;
   nsStringArray             mPendingInlineSchemas;
   nsXFormsControlListItem   mFormControls;
+  nsDataHashtable<nsISupportsHashKey,nsXFormsControlListItem *> mControlListHash;
 
   PRInt32 mSchemaCount;
   PRInt32 mSchemaTotal;

@@ -246,10 +246,13 @@ nsXFormsControlListItem::iterator::operator*()
   return mCur;
 }
 
-nsXFormsControlListItem::nsXFormsControlListItem(nsIXFormsControl* aControl)
+nsXFormsControlListItem::nsXFormsControlListItem(
+  nsIXFormsControl* aControl,
+  nsDataHashtable<nsISupportsHashKey,nsXFormsControlListItem *>* aHashtable)
   : mNode(aControl),
     mNextSibling(nsnull),
-    mFirstChild(nsnull)
+    mFirstChild(nsnull),
+    mControlListHash(aHashtable)
 {
   
 }
@@ -294,8 +297,15 @@ nsXFormsControlListItem::Clear()
     delete mNextSibling;
     mNextSibling = nsnull;
   }
-  if (mNode)
+  if (mNode) {
+    /* we won't bother removing each item one by one from the hashtable.  This
+     * approach assumes that we are clearing the whole model's list of controls
+     * due to the model going away.  After the model clears this list, it will
+     * clear the hashtable all at once.
+     */
+    mControlListHash = nsnull;
     mNode = nsnull;
+  }
 }
 
 nsresult
@@ -311,12 +321,17 @@ nsXFormsControlListItem::AddControl(nsIXFormsControl *aControl,
 
   // 2) control with no parent
   if (!aParent) {
-    nsXFormsControlListItem* newNode = new nsXFormsControlListItem(aControl);
+    nsXFormsControlListItem* newNode =
+      new nsXFormsControlListItem(aControl, mControlListHash);
+
     NS_ENSURE_STATE(newNode);
 
     // Empty tree (we have already checked mFirstChild)
     if (!mNode) {
       mFirstChild = newNode;
+      nsCOMPtr<nsIDOMElement> ele;
+      aControl->GetElement(getter_AddRefs(ele));
+      mControlListHash->Put(ele, newNode);
       return NS_OK;
     }
 
@@ -324,6 +339,9 @@ nsXFormsControlListItem::AddControl(nsIXFormsControl *aControl,
       newNode->mNextSibling = mNextSibling;
     }
     mNextSibling = newNode;
+    nsCOMPtr<nsIDOMElement> ele;
+    aControl->GetElement(getter_AddRefs(ele));
+    mControlListHash->Put(ele, newNode);
 #ifdef DEBUG
     nsXFormsControlListItem* next = newNode->mNextSibling;
     while (next) {
@@ -346,9 +364,14 @@ nsXFormsControlListItem::AddControl(nsIXFormsControl *aControl,
   }
 
   // 4) first child for parentControl
-  nsXFormsControlListItem* newNode = new nsXFormsControlListItem(aControl);
+  nsXFormsControlListItem* newNode =
+    new nsXFormsControlListItem(aControl, mControlListHash);
+
   NS_ENSURE_STATE(newNode);
   parentControl->mFirstChild = newNode;
+  nsCOMPtr<nsIDOMElement> ele;
+  aControl->GetElement(getter_AddRefs(ele));
+  mControlListHash->Put(ele, newNode);
 
   return NS_OK;
 }
@@ -431,6 +454,9 @@ nsXFormsControlListItem::RemoveControl(nsIXFormsControl *aControl,
                  "Deleted control should not have siblings!");
     NS_ASSERTION(!(deleteMe->mFirstChild),
                  "Deleted control should not have children!");
+    nsCOMPtr<nsIDOMElement> element;
+    deleteMe->mNode->GetElement(getter_AddRefs(element));
+    mControlListHash->Remove(element);
     delete deleteMe;
     aRemoved = PR_TRUE;
   }
@@ -444,25 +470,14 @@ nsXFormsControlListItem::FindControl(nsIXFormsControl *aControl)
   if (!aControl)
     return nsnull;
 
-  // this should only be false for the root
-  if (mNode) {
-    // XXX: *sigh* pointer comparision of nsIXFormsControl would be nice...
-    nsCOMPtr<nsIDOMElement> el1, el2;
-    aControl->GetElement(getter_AddRefs(el1));
-    mNode->GetElement(getter_AddRefs(el2));
-
-    if (el1 == el2)
-      return this;
+  nsXFormsControlListItem *listItem;
+  nsCOMPtr<nsIDOMElement> element;
+  aControl->GetElement(getter_AddRefs(element));
+  if (mControlListHash->Get(element, &listItem)) {
+    return listItem;
   }
 
-  nsXFormsControlListItem* cur = nsnull;
-  if (mFirstChild) {
-    cur = mFirstChild->FindControl(aControl);
-  }
-  if (!cur && mNextSibling) {
-    cur = mNextSibling->FindControl(aControl);
-  }
-  return cur;
+  return nsnull;
 }
 
 already_AddRefed<nsIXFormsControl>
@@ -637,7 +652,7 @@ nsXFormsModelElement::CancelPostRefresh(nsIXFormsControl* aControl)
 
 nsXFormsModelElement::nsXFormsModelElement()
   : mElement(nsnull),
-    mFormControls(nsnull),
+    mFormControls(nsnull, &mControlListHash),
     mSchemaCount(0),
     mSchemaTotal(0),
     mPendingInstanceCount(0),
@@ -651,6 +666,7 @@ nsXFormsModelElement::nsXFormsModelElement()
     mLoopMax(600),
     mInstanceDocuments(nsnull)
 {
+  mControlListHash.Init();
 }
 
 NS_INTERFACE_MAP_BEGIN(nsXFormsModelElement)
@@ -676,6 +692,7 @@ nsXFormsModelElement::OnDestroyed()
     mInstanceDocuments->DropReferences();
 
   mFormControls.Clear();
+  mControlListHash.Clear();
 
   return NS_OK;
 }
