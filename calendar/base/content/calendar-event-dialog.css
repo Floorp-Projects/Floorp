@@ -5,3 +5,7 @@ label.label {
 .warning-text-class {
   color : red;
 }
+
+.checkbox-no-label > .checkbox-label-box {
+  display: none;
+}
