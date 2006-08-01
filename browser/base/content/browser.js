@@ -93,6 +93,7 @@ var gCharsetMenu = null;
 var gLastBrowserCharset = null;
 var gPrevCharset = null;
 var gURLBar = null;
+var gURLBarContainer = null;
 var gProxyButton = null;
 var gProxyFavIcon = null;
 var gProxyDeck = null;
@@ -865,6 +866,7 @@ function BrowserStartup()
 function prepareForStartup()
 {
   gURLBar = document.getElementById("urlbar");
+  gURLBarContainer = document.getElementById("urlbar-container");
   gNavigatorBundle = document.getElementById("bundle_browser");
   gProgressMeterPanel = document.getElementById("statusbar-progresspanel");
   gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
@@ -1005,7 +1007,8 @@ function delayedStartup()
   window.addEventListener("fullscreen", onFullScreen, true);
 
   var element;
-  if (gIsLoadingBlank && gURLBar && !gURLBar.hidden && !gURLBar.parentNode.parentNode.collapsed)
+  if (gIsLoadingBlank && gURLBar && !gURLBar.hidden &&
+      !gURLBarContainer.parentNode.collapsed)
     element = gURLBar;
   else
     element = content;
@@ -1807,8 +1810,9 @@ function addBookmarkForBrowser(aDocShell, aIsWebPanel)
 
 function openLocation()
 {
-  if (gURLBar && !gURLBar.parentNode.parentNode.collapsed &&
-      !(window.getComputedStyle(gURLBar.parentNode, null).display == "none")) {
+  if (gURLBar && !gURLBarContainer.parentNode.collapsed &&
+      (document.defaultView.getComputedStyle(gURLBarContainer, null).display
+       != "none")) {
     gURLBar.focus();
     gURLBar.select();
   }
@@ -3354,6 +3358,7 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   // Update global UI elements that may have been added or removed
   if (aToolboxChanged) {
     gURLBar = document.getElementById("urlbar");
+    gURLBarContainer = document.getElementById("urlbar-container");
     if (gURLBar)
       gURLBar.clickSelectsAll = gClickSelectsAll;
     gProxyButton = document.getElementById("page-proxy-button");
