@@ -22,12 +22,12 @@ check_update () {
 
     unpack_build $platform source "$source_package" 
     if [ "$?" != "0" ]; then
-      echo "FAILED: cannot unpack_build $platform source $source_package"
+      echo "FAILED: cannot unpack_build $platform source $source_package" > /dev/stderr
       return 1
     fi
     unpack_build $platform target "$target_package" 
     if [ "$?" != "0" ]; then
-      echo "FAILED: cannot unpack_build $platform target $target_package"
+      echo "FAILED: cannot unpack_build $platform target $target_package" > /dev/stderr
       return 1
     fi
     
@@ -48,7 +48,7 @@ check_update () {
       $HOME/bin/updater ../../update 0
       cd ../..
     else
-      echo "FAIL: no dir in source/$platform_dirname"
+      echo "FAIL: no dir in source/$platform_dirname" > /dev/stderr
       return 1
     fi
     
@@ -110,7 +110,7 @@ do
     wget -nv $PARAMS "$build_url"
     popd > /dev/null
     if [ $? != 0 ]; then
-      echo "FAIL: Could not download source $source_file from $build_url"
+      echo "FAIL: Could not download source $source_file from $build_url" > /dev/stderr
       echo "skipping.."
       continue
     fi
@@ -126,13 +126,13 @@ do
     wget -nv $PARAMS "$build_url"
     popd > /dev/null
     if [ $? != 0 ]; then
-      echo "FAIL: Could not download target $target_file from $build_url"
+      echo "FAIL: Could not download target $target_file from $build_url" > /dev/stderr
       echo "skipping.."
       continue
     fi
     check_update "$source_build_platform" "downloads/$source_file" "downloads/$target_file"
     if [ "$?" != "0" ]; then
-      echo "FAIL: check_update returned non-zero exit code: $?"
+      echo "FAIL: check_update returned non-zero exit code: $?" > /dev/stderr
       continue
     fi
   done

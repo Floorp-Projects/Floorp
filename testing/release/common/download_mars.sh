@@ -15,7 +15,7 @@ download_mars () {
       grep_rv=$?
 
       if [ 0 -ne $grep_rv ]; then
-	      echo "FAIL: no $patch_type update found"
+	      echo "FAIL: no $patch_type update found" > /dev/stderr
 	      return 1
       fi
 
@@ -31,16 +31,16 @@ download_mars () {
       actual_hash=`openssl dgst -$hashFunction update/$patch_type.mar | sed -e 's/^.*= //'`
       
       if [ $actual_size != $size ]; then
-	      echo "FAIL: $patch_type wrong size"
-	      echo "FAIL: update.xml size: $size"
-	      echo "FAIL: actual size: $actual_size"
+	      echo "FAIL: $patch_type wrong size" > /dev/stderr
+	      echo "FAIL: update.xml size: $size" > /dev/stderr
+	      echo "FAIL: actual size: $actual_size" > /dev/stderr
 	      return 1
       fi
       
       if [ $actual_hash != $hashValue ]; then
-	      echo "FAIL: $patch_type wrong hash"
-	      echo "FAIL: update.xml hash: $hashValue"
-	      echo "FAIL: actual hash: $actual_hash"
+	      echo "FAIL: $patch_type wrong hash" > /dev/stderr
+	      echo "FAIL: update.xml hash: $hashValue" > /dev/stderr
+	      echo "FAIL: actual hash: $actual_hash" > /dev/stderr
 	      return 1
       fi
 
