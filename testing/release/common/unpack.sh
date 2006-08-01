@@ -11,8 +11,8 @@ unpack_build () {
             cd ../
             mkdir -p mnt
             echo "y" | PAGER="/bin/cat"  hdiutil attach \
-                -quiet -puppetstrings -noautoopen -mountpoint \ 
-                ./mnt "$pkg_file" > /dev/null
+                -quiet -puppetstrings -noautoopen \ 
+                -mountpoint ./mnt "$pkg_file" > /dev/null
             rsync -a ./mnt/* $dir_name/ 
             hdiutil detach mnt > /dev/null
             cd $dir_name
