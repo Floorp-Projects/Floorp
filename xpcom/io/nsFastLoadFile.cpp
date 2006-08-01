@@ -1123,24 +1123,6 @@ nsFastLoadFileReader::ReadObject(PRBool aIsStrongRef, nsISupports* *aObject)
             // We must skip over the object definition.
             if (oid & MFL_OBJECT_DEF_TAG) {
                 NS_ASSERTION(entry->mSkipOffset != 0, "impossible! see above");
-
-                // Since we are seeking within a muxed segment, we must adjust
-                // mBytesLeft, so that Seek called from Read will be triggered
-                // when mBytesLeft goes to zero.
-                PRInt64 currentOffset;
-                rv = mSeekableInput->Tell(&currentOffset);
-                if (NS_FAILED(rv))
-                    return rv;
-
-                NS_ASSERTION(entry->mSkipOffset > (PRUint32)currentOffset,
-                             "skipping backwards from object?!");
-                NS_ASSERTION(mCurrentDocumentMapEntry->mBytesLeft >=
-                             entry->mSkipOffset - (PRUint32)currentOffset,
-                             "skipped object buffer underflow!");
-
-                mCurrentDocumentMapEntry->mBytesLeft -=
-                    entry->mSkipOffset - (PRUint32)currentOffset;
-
                 rv = mSeekableInput->Seek(nsISeekableStream::NS_SEEK_SET,
                                           entry->mSkipOffset);
                 if (NS_FAILED(rv))
@@ -1482,6 +1464,7 @@ nsFastLoadFileWriter::SelectMuxedDocument(nsISupports* aURI,
         uriMapEntry->mDocMapEntry = docMapEntry;
         uriMapEntry->mGeneration = mDocumentMap.generation;
     }
+    docMapEntry = uriMapEntry->mDocMapEntry;
 
     // If there is a muxed document segment open, close it now by setting its
     // length, stored in the second PRUint32 of the segment.
@@ -1581,13 +1564,9 @@ nsFastLoadFileWriter::EndMuxedDocument(nsISupports* aURI)
     }
 
     // Drop our ref to the URI object that was passed to StartMuxedDocument,
-    // we no longer need it, and we do not want to extend its lifetime.  Also
-    // null mCurrentDocumentMapEntry if aURI is currently selected.
-    if (uriMapEntry->mDocMapEntry) {
+    // we no longer need it, and we do not want to extend its lifetime.
+    if (uriMapEntry->mDocMapEntry)
         NS_RELEASE(uriMapEntry->mDocMapEntry->mURI);
-        if (uriMapEntry->mDocMapEntry == mCurrentDocumentMapEntry)
-            mCurrentDocumentMapEntry = nsnull;
-    }
 
     // Shrink the table if half the entries are removed sentinels.
     PRUint32 size = PL_DHASH_TABLE_SIZE(&mURIMap);
