@@ -2228,9 +2228,8 @@ nsBoxFrame::FireDOMEventSynch(const nsAString& aDOMEventName, nsIContent *aConte
       nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
       privateEvent->SetTrusted(PR_TRUE);
 
-      nsEventStatus eventStatusUnused;
       nsEventDispatcher::DispatchDOMEvent(content, nsnull, event,
-                                          presContext, &eventStatusUnused);
+                                          presContext, nsnull);
     }
   }
 }
