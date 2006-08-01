@@ -45,10 +45,10 @@
 #include "nsIDocShell.h"
 #include "nsIDOMElement.h"
 
-// {F5E4F801-DFD2-4DE3-8708-7914F2D4710D}
-#define NS_IMENUITEM_IID      \
-{ 0xF5E4F801, 0xDFD2, 0x4DE3, \
-{ 0x87, 0x08, 0x79, 0x14, 0xF2, 0xD4, 0x71, 0x0D } }
+// {4E3931A7-D7E5-47FC-9489-83928536DA9D}
+#define NS_IMENUITEM_IID \
+{ 0x4E3931A7, 0xD7E5, 0x47FC, \
+  { 0x94, 0x89, 0x83, 0x92, 0x85, 0x36, 0xDA, 0x9D } }
 
 class nsIMenu;
 class nsIWidget;
@@ -165,6 +165,11 @@ class nsIMenuItem : public nsISupports {
     */
     NS_IMETHOD SetModifiers(PRUint8 aModifiers) = 0;
     NS_IMETHOD GetModifiers(PRUint8 * aModifiers) = 0;
+
+   /**
+    * Sets an appropriate icon for the menu item.
+    */
+    NS_IMETHOD SetupIcon() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIMenuItem, NS_IMENUITEM_IID)

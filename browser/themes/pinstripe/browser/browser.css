@@ -180,6 +180,10 @@ padding: 4px 4px 3px 2px;
 list-style-image: url("chrome://browser/skin/bookmarks/livemark-folder-hover.png");
 }
 
+.bookmark-item[livemark] {
+  list-style-image: url("chrome://browser/skin/page-livemarks.png");
+}
+
 .bookmark-item[livemark] .menuitem-iconic {
 list-style-image: url("chrome://browser/skin/bookmarks/livemark-item.png");
 }
@@ -874,6 +878,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .bookmark-item {
 	  list-style-image: url("chrome://browser/skin/bookmarks/bookmark-item.png");
+}
+
+.openintabs-menuitem {
+  list-style-image: none;
 }
 
 .tabs-left {

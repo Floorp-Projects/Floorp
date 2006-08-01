@@ -112,6 +112,7 @@ public:
   NS_IMETHOD          ConvertToPICT(PicHandle* outPicture);
   NS_IMETHOD          ConvertFromPICT(PicHandle inPicture);
 
+  NS_IMETHOD          GetCGImageRef(CGImageRef* aCGImageRef);
 
 protected:
 

@@ -43,6 +43,7 @@
 #include "nsMenuBarX.h"         // for MenuHelpers namespace
 #include "nsMenuX.h"
 #include "nsMenuItemX.h"
+#include "nsMenuItemIcon.h"
 
 #include "nsWidgetAtoms.h"
 
@@ -139,7 +140,10 @@ NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, PRBool 
       }
     }
   }
-  
+
+  mIcon = new nsMenuItemIcon(NS_STATIC_CAST(nsIMenuItem*, this),
+                             mMenuParent, mContent);
+
   return NS_OK;
 }
 
@@ -425,6 +429,9 @@ nsMenuItemX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIC
       nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
       listener->SetRebuild(PR_TRUE);
     }    
+    else if (aAttribute == nsWidgetAtoms::image) {
+      SetupIcon();
+    }
   }
   else if (aContent == mCommandContent &&
     aAttribute == nsWidgetAtoms::disabled &&
@@ -471,3 +478,12 @@ nsMenuItemX :: ContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt
   return NS_OK;
   
 } // ContentInserted
+
+
+NS_IMETHODIMP
+nsMenuItemX::SetupIcon()
+{
+  if (!mIcon) return NS_ERROR_OUT_OF_MEMORY;
+
+  return mIcon->SetupIcon();
+}

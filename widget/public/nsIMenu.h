@@ -51,10 +51,10 @@ class nsIContent;
 class nsIMenuCommandDispatcher;
 
 
-// {D0E18BEA-A0B9-4D33-899E-283A4D753F2C}
-#define NS_IMENU_IID      \
-{ 0xD0E18BEA, 0xA0B9, 0x4D33, \
-{ 0x89, 0x9E, 0x28, 0x3A, 0x4D, 0x75, 0x3F, 0x2C } }
+// {FC5BCA9C-4494-4C0F-BEFD-CB31BEBA1531}
+#define NS_IMENU_IID \
+{ 0xFC5BCA9C, 0x4494, 0x4C0F, \
+  { 0xBE, 0xFD, 0xCB, 0x31, 0xBE, 0xBA, 0x15, 0x31 } }
 
 
 /**
@@ -192,6 +192,19 @@ class nsIMenu : public nsISupports {
     */
     NS_IMETHOD ChangeNativeEnabledStatusForMenuItem(nsIMenuItem* aMenuItem,
                                                     PRBool aEnabled) = 0;
+
+   /**
+    * Retrieve the native menu and the index of the item within that menu.
+    *
+    */
+    NS_IMETHOD GetMenuRefAndItemIndexForMenuItem(nsISupports* aMenuItem,
+                                                 void**       aMenuRef,
+                                                 PRUint16*    aMenuItemIndex) = 0;
+
+   /**
+    * Sets an appropriate icon for the menu.
+    */
+    NS_IMETHOD SetupIcon() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIMenu, NS_IMENU_IID)

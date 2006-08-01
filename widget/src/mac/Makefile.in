@@ -69,6 +69,7 @@ REQUIRES	= xpcom \
 		  mimetype \
 		  unicharutil \
 		  exthandler \
+		  imglib2 \
 		  $(NULL)
 
 ifdef ACCESSIBILITY
@@ -99,6 +100,7 @@ CPPSRCS	= nsAppShell.cpp \
 		nsMacWindow.cpp \
 		nsMenuX.cpp \
 		nsMenuBarX.cpp \
+		nsMenuItemIcon.cpp \
 		nsMenuItemX.cpp \
 		nsMimeMapper.cpp \
 	        nsNativeThemeMac.cpp \

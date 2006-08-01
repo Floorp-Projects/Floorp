@@ -46,9 +46,10 @@
 
 
 // IID for the nsIImage interface
-// {80b2f600-f140-11d4-bb6f-d472847e8dbc}
-#define NS_IIMAGEMAC_IID      \
-    { 0x80b2f600, 0xf140, 0x11d4, { 0xbb, 0x6f, 0xd4, 0x72, 0x84, 0x7e, 0x8d, 0xbc } };
+// {DE2628F9-6023-4443-A4C9-CE0CE6DA0628}
+#define NS_IIMAGEMAC_IID \
+ { 0xDE2628F9, 0x6023, 0x4443, \
+   { 0xA4, 0xC9, 0xCE, 0x0C, 0xE6, 0xDA, 0x06, 0x28 } };
 
 
 // 
@@ -71,6 +72,10 @@ public:
     // Convert from the os-native PICT format. Most likely
     // used for clipboard.  
   NS_IMETHOD ConvertFromPICT ( PicHandle inPicture ) = 0;
+
+    // Get the underlying CGImageRef.  The object that is returned is
+    // not retained.
+  NS_IMETHOD GetCGImageRef(CGImageRef* aCGImageRef) = 0;
 
 }; // nsIImageMac
 
