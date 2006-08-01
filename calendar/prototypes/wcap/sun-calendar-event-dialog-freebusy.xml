@@ -661,7 +661,9 @@
                     var offset = entry.dtRangeStart.subtractDate(start);
                     var duration = entry.dtRangeEnd.subtractDate(entry.dtRangeStart);
                     var startHours = Math.floor(offset.inSeconds / 3600);
-                    var endHours = startHours + Math.ceil(duration.inSeconds / 3600);
+                    var endHours = startHours +
+                                   Math.ceil((duration.inSeconds / 3600) +
+                                   (offset.inSeconds / 3600 % startHours));
 
                     // set all affected state slots to 'busy'
                     for(var i=startHours; i<endHours; i++) {
@@ -720,42 +722,44 @@
             var duration = this.mEndDate.subtractDate(this.mStartDate);
             var numHours = Math.ceil(duration.inSeconds / 3600);
 
-            var maxOffset = this.mRange*(this.mEndHour - this.mStartHour);
-
+            // prepare datetime-objects corrosponding to the free/busy-grid display.
             var start = this.mStartDate.clone();
             start.hour = 0;
             start.minute = 0;
             start.second = 0;
+            var base = start.clone();
             var end = start.clone();
             end.day += this.mRange;
             
-            var offset = 0;
             while(start.compare(end) != 0) {
             
               // we're only interested in times that are greater or equal
               // than the time passed as argument to the function.
               if(start.compare(aTime) >= 0) {
-              
-                // time could be considered as a possible candidate,
-                // we need to check if 'numHours' are free from here on.
-                var startCheck = offset;
-                var endCheck = offset+numHours;
-                while(startCheck < endCheck) {
-                  if(startCheck >= maxOffset)
-                    break;
-                  if(this.mState[startCheck] == 2)
-                    break;
-                  startCheck++;
-                }
 
-                // return if a new free slot has been found.
-                if(startCheck == endCheck)
-                  return start;
+                if(start.hour >= this.mStartHour) {
+                  if((start.hour+numHours) <= this.mEndHour) {
+                  
+                    // time could be considered as a possible candidate,
+                    // we need to check if 'numHours' are free from here on.
+                    var numHoursPerDay = this.mEndHour - this.mStartHour;
+                    var startCheck = (start.day-base.day)*numHoursPerDay+(start.hour-this.mStartHour);
+                    var endCheck = startCheck+numHours;
+                    while(startCheck < endCheck) {
+                      if(this.mState[startCheck] == 2)
+                        break;
+                      startCheck++;
+                    }
+
+                    // return if a new free slot has been found.
+                    if(startCheck == endCheck)
+                      return start;
+                  }
+                }
               }
             
               start.hour++;
               start.normalize();
-              offset++;
             }
             
             return aTime;
@@ -767,50 +771,49 @@
         <parameter name="aTime"/>
         <body>
           <![CDATA[
-            debugger;
-          
             // aTime is some time expected to be in the start/end range.
             // we return the modified time to not conflict with any busy entries.
             // time won't change if no free area could be found.
             var duration = this.mEndDate.subtractDate(this.mStartDate);
             var numHours = Math.ceil(duration.inSeconds / 3600);
 
-            var maxOffset = this.mRange*(this.mEndHour - this.mStartHour);
-
             var start = this.mStartDate.clone();
             start.hour = 0;
             start.minute = 0;
             start.second = 0;
+            var base = start.clone();
             var end = start.clone();
             start.day += this.mRange;
             
-            var offset = this.mRange*(this.mEndHour - this.mStartHour);
             while(start.compare(end) != 0) {
             
               // we're only interested in times that are less or equal
               // than the time passed as argument to the function.
               if(start.compare(aTime) <= 0) {
               
-                // time could be considered as a possible candidate,
-                // we need to check if 'numHours' are free from here on.
-                var startCheck = offset;
-                var endCheck = offset+numHours;
-                while(startCheck < endCheck) {
-                  if(startCheck >= maxOffset)
-                    break;
-                  if(this.mState[startCheck] == 2)
-                    break;
-                  startCheck++;
-                }
+                if(start.hour >= this.mStartHour) {
+                  if((start.hour+numHours) <= this.mEndHour) {
+              
+                    // time could be considered as a possible candidate,
+                    // we need to check if 'numHours' are free from here on.
+                    var numHoursPerDay = this.mEndHour - this.mStartHour;
+                    var startCheck = (start.day-base.day)*numHoursPerDay+(start.hour-this.mStartHour);
+                    var endCheck = startCheck+numHours;
+                    while(startCheck < endCheck) {
+                      if(this.mState[startCheck] == 2)
+                        break;
+                      startCheck++;
+                    }
 
-                // return if a new free slot has been found.
-                if(startCheck == endCheck)
-                  return start;
+                    // return if a new free slot has been found.
+                    if(startCheck == endCheck)
+                      return start;
+                  }
+                }
               }
             
               start.hour--;
               start.normalize();
-              offset--;
             }
             
             return aTime;
@@ -1106,7 +1109,7 @@
                         this.mFreeBusy.push(i);
                         this.mFreeBusySequence = this.mFreeBusy.length-1;
                         
-                        this.mCalendar.getFreeBusyTimes(calid,start,end,true,this.mFreeBusyListener,true,this.mFreeBusySequence);
+                        this.mCalendar.session.getFreeBusyTimes(calid,start,end,true,this.mFreeBusyListener,true,this.mFreeBusySequence);
                       }
                     }
                     catch (ex) {}
@@ -1147,12 +1150,21 @@
       <method name="nextSlot">
         <body>
           <![CDATA[
-          var recheck = false;
+          // start with the startdate of the item, slightly
+          // shifted towards the future since we are interested
+          // in a different startdate scheduled later.
           var time = this.mStartDate.clone();
           time.minute++;
+          var base = time.clone();
+
+          // now iterate all freebusy-rows and ask each one
+          // if it wants to modify the suggested time slot.
+          // we keep iterating the rows until all of them
+          // are happy with it.
+          var recheck = false;
           do {
             recheck = false;
-            for (i=1; i <= this.mMaxFreeBusy; i++) {
+            for (var i=1; i <= this.mMaxFreeBusy; i++) {
               var row = this.getFreeBusyElement(i);
               var newTime = row.nextSlot(time);
               if(newTime.compare(time) != 0) {
@@ -1161,6 +1173,25 @@
               }
             }
           } while(recheck);
+
+          // return the unmodifed startdate of the item
+          // in case no possible match was found.
+          if(time.compare(base) == 0)
+            return this.mStartDate.clone();
+
+          // in case the new starttime happens to be scheduled
+          // on a different day, we also need to update the
+          // complete freebusy informations and appropriate
+          // underlying arrays holding the information.
+          if(base.day != time.day) {
+            for (var i=1; i <= this.mMaxFreeBusy; i++) {
+              var row = this.getFreeBusyElement(i);
+              row.setAttribute("dirty","true");
+            }
+            this.updateFreeBusy();
+          }
+
+          // return the new starttime of the item.
           return time;
           ]]>
         </body>
@@ -1169,12 +1200,21 @@
       <method name="previousSlot">
         <body>
           <![CDATA[
-          var recheck = false;
+          // start with the startdate of the item, slightly
+          // shifted towards the past since we are interested
+          // in a different startdate scheduled earlier.
           var time = this.mStartDate.clone();
           time.minute--;
+          var base = time.clone();
+
+          // now iterate all freebusy-rows and ask each one
+          // if it wants to modify the suggested time slot.
+          // we keep iterating the rows until all of them
+          // are happy with it.
+          var recheck = false;
           do {
             recheck = false;
-            for (i=1; i <= this.mMaxFreeBusy; i++) {
+            for (var i=1; i <= this.mMaxFreeBusy; i++) {
               var row = this.getFreeBusyElement(i);
               var newTime = row.previousSlot(time);
               if(newTime.compare(time) != 0) {
@@ -1183,6 +1223,25 @@
               }
             }
           } while(recheck);
+          
+          // return the unmodifed startdate of the item
+          // in case no possible match was found.
+          if(time.compare(base) == 0)
+            return this.mStartDate.clone();
+            
+          // in case the new starttime happens to be scheduled
+          // on a different day, we also need to update the
+          // complete freebusy informations and appropriate
+          // underlying arrays holding the information.
+          if(base.day != time.day) {
+            for (var i=1; i <= this.mMaxFreeBusy; i++) {
+              var row = this.getFreeBusyElement(i);
+              row.setAttribute("dirty","true");
+            }
+            this.updateFreeBusy();
+          }
+          
+          // return the new starttime of the item.
           return time;
           ]]>
         </body>

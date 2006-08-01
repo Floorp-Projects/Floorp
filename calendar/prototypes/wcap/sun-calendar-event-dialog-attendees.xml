@@ -1291,6 +1291,8 @@
 
       <field name="mStartDate">null</field>
       <field name="mEndDate">null</field>
+      <field name="mStartHour">0</field>
+      <field name="mEndHour">24</field>
 
       <field name="mCalID">null</field>
       <field name="mUserID">null</field>
@@ -1305,6 +1307,17 @@
 
           if (isToDo(item))
             return;
+
+          var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
+
+          // get default start/end times from prefs and set on the
+          // view.  if we hit an error (eg because sunbird's pref
+          // infrastructure hasn't created the pref yet), the
+          // defaults will do
+          try {
+            this.mStartHour = pb2.getIntPref("calendar.view.defaultstarthour");
+            this.mEndHour = pb2.getIntPref("calendar.view.defaultendhour");
+          } catch (ex) {}
 
           var self = this;
           var load = function loadHandler() { self.onLoad(); };
@@ -1602,7 +1615,7 @@
         <body>
           <![CDATA[
             var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
-            var ratio = this.mStartDate.hour * timebar.step;
+            var ratio = (this.mStartDate.hour-this.mStartHour) * timebar.step;
             if(ratio <= 0.0)
               ratio = 0.0;
             if(ratio >= 1.0)
