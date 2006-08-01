@@ -66,13 +66,13 @@ extern JSClass FileSpecObjectClass;
 
 extern JSClass FileOpClass;
 
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 SetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
-PR_STATIC_CALLBACK(void)
+JS_STATIC_DLL_CALLBACK(void)
 FinalizeInstall(JSContext *cx, JSObject *obj);
 
 /***********************************************************************/
@@ -120,7 +120,7 @@ JSObject *gFileOpObject = nsnull;
 //
 // Install Properties Getter
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsInstall *a = (nsInstall*)JS_GetPrivate(cx, obj);
@@ -213,7 +213,7 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 //
 // Install Properties Setter
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 SetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsInstall *a = (nsInstall*)JS_GetPrivate(cx, obj);
@@ -238,7 +238,7 @@ SetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 
-static void PR_CALLBACK FinalizeInstall(JSContext *cx, JSObject *obj)
+static void JS_DLL_CALLBACK FinalizeInstall(JSContext *cx, JSObject *obj)
 {
     nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
     delete nativeThis;
@@ -371,7 +371,7 @@ void ConvertJSvalToVersionString(nsString& versionString, JSContext* cx, jsval a
 //
 // Native method AbortInstall
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallAbortInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -411,7 +411,7 @@ InstallAbortInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 //
 // Native method AddDirectory
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -565,7 +565,7 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 //
 // Native method AddSubcomponent
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -728,7 +728,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 //
 // Native method DeleteComponent
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallDeleteComponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   // this function was once documented but never supported. Return an error,
@@ -740,7 +740,7 @@ InstallDeleteComponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 //
 // Native method Execute
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -807,7 +807,7 @@ InstallExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 //
 // Native method FinalizeInstall
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallFinalizeInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -838,7 +838,7 @@ InstallFinalizeInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 //
 // Native method Gestalt
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallGestalt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -881,7 +881,7 @@ InstallGestalt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 //
 // Native method GetComponentFolder
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallGetComponentFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -955,7 +955,7 @@ InstallGetComponentFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 //
 // Native method GetFolder
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -1058,7 +1058,7 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 //
 // Native method GetLastError
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallGetLastError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -1087,7 +1087,7 @@ InstallGetLastError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 //
 // Native method GetWinProfile
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallGetWinProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   *rval = JSVAL_NULL;
@@ -1128,7 +1128,7 @@ InstallGetWinProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 //
 // Native method GetWinRegistry
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallGetWinRegistry(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   *rval = JSVAL_NULL;
@@ -1155,7 +1155,7 @@ InstallGetWinRegistry(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 //
 // Native method LoadResources
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallLoadResources(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -1191,7 +1191,7 @@ InstallLoadResources(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 //
 // Native method Patch
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -1304,7 +1304,7 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 //         int  type,
 //         FileSpecObject chrome,
 //         String extraPath)
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallRegisterChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   // If there's no private data, this must be the prototype, so ignore
@@ -1350,7 +1350,7 @@ InstallRegisterChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 //
 // Native method RefreshPlugins
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallRefreshPlugins(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -1376,7 +1376,7 @@ InstallRefreshPlugins(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 //
 // Native method ResetError
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallResetError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -1403,7 +1403,7 @@ InstallResetError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 //
 // Native method SetPackageFolder
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallSetPackageFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -1463,7 +1463,7 @@ InstallSetPackageFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 //
 // Native method StartInstall
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallStartInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -1517,7 +1517,7 @@ InstallStartInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 //
 // Native method Uninstall
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallUninstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -1558,7 +1558,7 @@ InstallUninstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
 /*START HACK FOR DEBUGGING UNTIL ALERTS WORK*/
 
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallTRACE(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsAutoString b0;
@@ -1580,7 +1580,7 @@ InstallTRACE(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 //
 // Native method LogComment
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallLogComment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -1613,7 +1613,7 @@ InstallLogComment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 //
 // Native method InstallAlert
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -1649,7 +1649,7 @@ InstallAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 //
 // Native method InstallConfirm
 //
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 InstallConfirm(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =

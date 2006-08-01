@@ -109,7 +109,7 @@ GetNativeThis(JSContext *cx, JSObject *obj, jsval *argv)
 //
 // Native method DirCreate
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpDirCreate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -154,7 +154,7 @@ InstallFileOpDirCreate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 //
 // Native method DirGetParent
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpDirGetParent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -214,7 +214,7 @@ InstallFileOpDirGetParent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 //
 // Native method DirRemove
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpDirRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -267,7 +267,7 @@ InstallFileOpDirRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 //
 // Native method DirRename
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpDirRename(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -330,7 +330,7 @@ InstallFileOpDirRename(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 //
 // Native method FileCopy
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpFileCopy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -399,7 +399,7 @@ InstallFileOpFileCopy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 //
 // Native method FileDelete
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpFileRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -444,7 +444,7 @@ InstallFileOpFileRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 //
 // Native method FileExists
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpFileExists(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -489,7 +489,7 @@ InstallFileOpFileExists(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 //
 // Native method FileExecute
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpFileExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -564,7 +564,7 @@ InstallFileOpFileExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 //
 // Native method FileGetNativeVersion
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpFileGetNativeVersion(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -609,7 +609,7 @@ InstallFileOpFileGetNativeVersion(JSContext *cx, JSObject *obj, uintN argc, jsva
 //
 // Native method FileGetDiskSpaceAvailable
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpFileGetDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
 
@@ -657,7 +657,7 @@ InstallFileOpFileGetDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc,
 //
 // Native method FileGetModDate
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpFileGetModDate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -702,7 +702,7 @@ InstallFileOpFileGetModDate(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 //
 // Native method FileGetSize
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpFileGetSize(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -750,7 +750,7 @@ InstallFileOpFileGetSize(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 //
 // Native method FileIsDirectory
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpFileIsDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -795,7 +795,7 @@ InstallFileOpFileIsDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 //
 // Native method FileIsWritable
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpFileIsWritable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -839,7 +839,7 @@ InstallFileOpFileIsWritable(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 //
 // Native method FileIsFile
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpFileIsFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -884,7 +884,7 @@ InstallFileOpFileIsFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 //
 // Native method FileModDateChanged
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpFileModDateChanged(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -939,7 +939,7 @@ InstallFileOpFileModDateChanged(JSContext *cx, JSObject *obj, uintN argc, jsval 
 //
 // Native method FileMove
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpFileMove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -1005,7 +1005,7 @@ InstallFileOpFileMove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 //
 // Native method FileRename
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpFileRename(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -1068,7 +1068,7 @@ InstallFileOpFileRename(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 //
 // Native method FileWindowsGetShortName
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpFileWindowsGetShortName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsAutoString shortPathName;
@@ -1114,7 +1114,7 @@ InstallFileOpFileWindowsGetShortName(JSContext *cx, JSObject *obj, uintN argc, j
 //
 // Native method FileWindowsShortcut
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpFileWindowsShortcut(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -1190,7 +1190,7 @@ InstallFileOpFileWindowsShortcut(JSContext *cx, JSObject *obj, uintN argc, jsval
 //
 // Native method FileMacAlias
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpFileMacAlias(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -1312,7 +1312,7 @@ InstallFileOpFileMacAlias(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 //
 // Native method FileUnixLinkCreate
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpFileUnixLink(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
@@ -1369,7 +1369,7 @@ InstallFileOpFileUnixLink(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 //
 // Native method WindowsRegisterServer
 //
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 InstallFileOpWinRegisterServer(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =

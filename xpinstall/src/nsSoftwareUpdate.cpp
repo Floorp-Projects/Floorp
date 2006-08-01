@@ -82,7 +82,7 @@
 
 #include "nsCURILoader.h"
 
-extern "C" void RunChromeInstallOnThread(void *data);
+extern "C" void PR_CALLBACK RunChromeInstallOnThread(void *data);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Globals
