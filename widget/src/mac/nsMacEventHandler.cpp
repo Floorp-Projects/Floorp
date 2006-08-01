@@ -52,6 +52,8 @@
 #include "nsIMenuRollup.h"
 #include "nsGfxUtils.h"
 
+static nsMacEventHandler* sLastActive;
+
 //#define DEBUG_TSM
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
@@ -364,6 +366,11 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget,
   else {
     mEventDispatchHandler = new nsMacEventDispatchHandler();
     mOwnEventDispatchHandler = PR_TRUE;
+  }
+
+  if (sLastActive == this) {
+    // This shouldn't happen
+    sLastActive = nsnull;
   }
 }
 
@@ -1152,8 +1159,23 @@ void nsMacEventHandler::HandleActivateEvent(EventRef aEvent)
   PRUint32 eventKind = ::GetEventKind(aEvent);
   PRBool isActive = (eventKind == kEventWindowActivated) ? PR_TRUE : PR_FALSE;
 
-	if (isActive)
+  // Be paranoid about deactivating the last-active window before activating
+  // the new one, and about not handling activation for the already-active
+  // window.
+
+	if (isActive && sLastActive != this)
 	{
+		if (sLastActive) {
+			WindowRef oldWindow = NS_STATIC_CAST(WindowRef,
+			 sLastActive->mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
+			// Deactivating also causes HandleActivateEvent to
+			// be called on sLastActive with isActive = PR_FALSE,
+			// so sLastActive will be nsnull after this call.
+			::ActivateWindow(oldWindow, PR_FALSE);
+		}
+
+		sLastActive = this;
+
 		//
 		// Activate The TSMDocument associated with this handler
 		//
@@ -1205,8 +1227,9 @@ void nsMacEventHandler::HandleActivateEvent(EventRef aEvent)
 		::ConvertEventRefToEventRecord(aEvent, &eventRecord);
 		HandleMouseMoveEvent(eventRecord);
 	}
-	else
+	else if (!isActive && sLastActive == this)
 	{
+		sLastActive = nsnull;
 
 		if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
 			// If there's a widget to be rolled up, it's got to
