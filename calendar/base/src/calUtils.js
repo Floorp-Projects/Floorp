@@ -142,6 +142,23 @@ function getUUID() {
     return "uuid" + (new Date()).getTime();
 }
 
+/** Due to a bug in js-wrapping, normal == comparison can fail when we
+ * have 2 calIItemBases.  Use this function to force them both to get wrapped
+ * the same way, allowing for normal comparison.
+ */
+function compareItems(aItem, aOtherItem) {
+    var sip1 = Cc["@mozilla.org/supports-interface-pointer;1"].
+               createInstance(Ci.nsISupportsInterfacePointer);
+    sip1.data = aItem;
+    sip1.dataIID = Ci.calIItemBase;
+
+    var sip2 = Cc["@mozilla.org/supports-interface-pointer;1"].
+               createInstance(Ci.nsISupportsInterfacePointer);
+    sip2.data = aItem;
+    sip2.dataIID = Ci.calIItemBase;
+    return sip1.data == sip2.data;
+}
+
 /****
  **** debug code
  ****/
