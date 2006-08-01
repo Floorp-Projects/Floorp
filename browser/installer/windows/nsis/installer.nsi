@@ -51,6 +51,7 @@ CRCCheck on
 
 ; empty files - except for the comment line - for generating custom pages.
 !system 'echo ; > options.ini'
+!system 'echo ; > components.ini'
 !system 'echo ; > shortcuts.ini'
 
 !addplugindir ./
@@ -124,6 +125,7 @@ ShowUnInstDetails nevershow
 
 ReserveFile options.ini
 ReserveFile shortcuts.ini
+ReserveFile components.ini
 
 !define MUI_ABORTWARNING
 !define MUI_COMPONENTSPAGE_SMALLDESC
@@ -157,9 +159,13 @@ ReserveFile shortcuts.ini
 ; Custom Options Page
 Page custom preOptions ChangeOptions
 
+ 
+Page custom preComponents checkComponents
+
+
 ; Select Install Components Page
-!define MUI_PAGE_CUSTOMFUNCTION_PRE preComponents
-!insertmacro MUI_PAGE_COMPONENTS
+;!define MUI_PAGE_CUSTOMFUNCTION_PRE preComponents
+;!insertmacro MUI_PAGE_COMPONENTS
 
 ; Select Install Directory Page
 !define MUI_PAGE_CUSTOMFUNCTION_PRE CheckCustom
@@ -341,6 +347,22 @@ Section "-Application" Section1
   DetailPrint $(STATUS_CLEANUP)
   SetDetailsPrint none
   SetOutPath $INSTDIR
+
+  ; Try to delete the app executable and if we can't delete it try to close the
+  ; app. This allows running an instance that is located in another directory.
+  ClearErrors
+  ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
+    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+  ${EndIf}
+  ${If} ${Errors}
+    ClearErrors
+    ${CloseApp} "true" $(WARN_APP_RUNNING_INSTALL)
+    ; Try to delete it again to prevent launching the app while we are
+    ; installing.
+    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+    ClearErrors
+  ${EndIf}
+
   ; For a "Standard" upgrade without talkback installed add the InstallDisabled
   ; file to the talkback source files so it will be disabled by the extension
   ; manager. This is done at the start of the installation since we check for
@@ -357,21 +379,22 @@ Section "-Application" Section1
       FileWrite $2 "$\r$\n"
       FileClose $2
     ${EndUnless}
-  ${EndIf}
-
-  ; Try to delete the app executable and if we can't delete it try to close the
-  ; app. This allows running an instance that is located in another directory.
-  ClearErrors
-  ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
-    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
-  ${EndIf}
-  ${If} ${Errors}
-    ClearErrors
-    ${CloseApp} "true" $(WARN_APP_RUNNING_INSTALL)
-    ; Try to delete it again to prevent launching the app while we are
-    ; installing.
-    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
-    ClearErrors
+  ${Else}
+    ; Custom installs.
+    ; If DOMi is installed and this install includes DOMi remove it from
+    ; the installation directory. This will remove it if the user deselected
+    ; DOMi on the components page.
+    ${If} ${FileExists} "$INSTDIR\extensions\inspector@mozilla.org"
+    ${AndIf} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
+      RmDir /r "$INSTDIR\extensions\inspector@mozilla.org"
+    ${EndIf}
+    ; If TalkBack is installed and this install includes TalkBack remove it from
+    ; the installation directory. This will remove it if the user deselected
+    ; TalkBack on the components page.
+    ${If} ${FileExists} "$INSTDIR\extensions\talkback@mozilla.org"
+    ${AndIf} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
+      RmDir /r "$INSTDIR\extensions\talkback@mozilla.org"
+    ${EndIf}
   ${EndIf}
 
   Call CleanupOldLogs
@@ -597,6 +620,11 @@ Section "-Application" Section1
 
   StrCpy $0 "Software\Clients\StartMenuInternet\$R9\shell\open\command"
   ${WriteRegStr2} $TmpVal "$0" "" "$INSTDIR\${FileMainEXE}" 0
+
+  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\shell\properties"
+  ${WriteRegStr2} $TmpVal "$0" "" "$(OPTIONS)" 0  
+  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\shell\properties\command"
+  ${WriteRegStr2} $TmpVal "$0" "" "$INSTDIR\${FileMainEXE} -preferences" 0
 
   ; These need special handling on uninstall since they may be overwritten by
   ; an install into a different location.
@@ -1150,7 +1178,7 @@ FunctionEnd
 
 Function preComponents
   Call CheckCustom
-  ; If DOMi isn't available skip the options page
+  ; If DOMi isn't available skip the components page
   ${Unless} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
     ; If talkback exists always install it enabled.
     ${If} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
@@ -1158,6 +1186,33 @@ Function preComponents
     ${EndIf}
     Abort
   ${EndUnless}
+  !insertmacro MUI_HEADER_TEXT "$(OPTIONAL_COMPONENTS_TITLE)" "$(OPTIONAL_COMPONENTS_SUBTITLE)"
+  !insertmacro MUI_INSTALLOPTIONS_DISPLAY "components.ini"
+FunctionEnd
+
+Function checkComponents
+  ; If DOMi exists then it will be Field 2.
+  ; If DOMi doesn't exist and talkback exists then TalkBack will be Field 2 but
+  ; if DOMi doesn't exist we won't display this page anyways.
+  StrCpy $R1 2
+  ${If} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
+    ${MUI_INSTALLOPTIONS_READ} $R0 "components.ini" "Field $R1" "State"
+    ; State will be 1 for checked and 0 for unchecked so we can use that to set
+    ; the section flags for installation.
+    SectionSetFlags 1 $R0
+    IntOp $R1 $R1 + 1
+  ${Else}
+    SectionSetFlags 1 0 ; Disable install for DOMi
+  ${EndIf}
+
+  ${If} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
+    ${MUI_INSTALLOPTIONS_READ} $R0 "components.ini" "Field $R1" "State"
+    ; State will be 1 for checked and 0 for unchecked so we can use that to set
+    ; the section flags for installation.
+    SectionSetFlags 2 $R0
+  ${Else}
+    SectionSetFlags 1 0 ; Disable install for TalkBack
+  ${EndIf}
 FunctionEnd
 
 Function LaunchApp
@@ -1274,8 +1329,10 @@ Function .onInit
   StrCpy $LANGUAGE 0
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "options.ini"
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "shortcuts.ini"
-  !insertmacro createShortcutsINI
+  !insertmacro MUI_INSTALLOPTIONS_EXTRACT "components.ini"
   !insertmacro createBasicCustomOptionsINI
+  !insertmacro createComponentsINI
+  !insertmacro createShortcutsINI
 
   ; There must always be nonlocalized and localized directories.
   ${GetSize} "$EXEDIR\nonlocalized\" "/S=0K" $1 $8 $9
