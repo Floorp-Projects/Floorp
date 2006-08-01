@@ -904,6 +904,20 @@ case "$host" in
 esac
 
 dnl ========================================================
+dnl Check for --with-rpath and user supplied rpath
+dnl ========================================================
+DEFAULT_RPATHFLAG=..:../lib:../../lib:../../../lib:../../../../lib
+AC_ARG_WITH(rpath,
+    [  --with-rpath[[=dir]]    Build the shared libs and cmd lines progs with an RPATH (default dir is ..:../lib:../../lib:../../../lib:../../../../lib)],
+[
+    if test "$withval" = "yes" ; then # set default
+       RPATHFLAG="$DEFAULT_RPATHFLAG"
+    elif test -n "$withval" ; then # user supplied
+       RPATHFLAG="$withval"
+    fi
+])
+
+dnl ========================================================
 dnl Override of system specific target options
 dnl ========================================================
 case "$target" in
@@ -1302,6 +1316,13 @@ tools are selected during the Xcode/Developer Tools installation.])
             fi
         fi
         DEFAULT_IMPL_STRATEGY=_PTH
+    fi
+
+    if test "$DEFAULT_RPATHFLAG" = "$RPATHFLAG" ; then
+       if test "$OS_RELEASE" = "B.11.23" -o "$OS_RELEASE" = "B.11.11" ; then
+          # add ORIGIN to default rpath
+          RPATHFLAG="\\\$\$ORIGIN/../lib:\\\$\$ORIGIN/../../lib:$RPATHFLAG"
+       fi
     fi
 
     if test "$DEFAULT_IMPL_STRATEGY" = "_EMU"; then
@@ -1945,6 +1966,10 @@ mips-sony-newsos*)
             CXXFLAGS="$CXXFLAGS -xs"
         fi
     fi
+    if test "$DEFAULT_RPATHFLAG" = "$RPATHFLAG" ; then
+       # add origin stuff
+       RPATHFLAG="\\\$\$ORIGIN/../lib:\\\$\$ORIGIN/../../lib:$RPATHFLAG"
+    fi
     if test -z "$GNU_AS"; then
         ASFLAGS="$ASFLAGS -Wa,-P"
     fi
@@ -2520,6 +2545,7 @@ AC_SUBST(OS_DLLFLAGS)
 AC_SUBST(CYGWIN_WRAPPER)
 AC_SUBST(WIN_TOP_SRC)
 AC_SUBST(NEXT_ROOT)
+AC_SUBST(RPATHFLAG)
 
 dnl ========================================================
 dnl Generate output files.

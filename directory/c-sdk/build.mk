@@ -320,7 +320,9 @@ endif
 
 ifeq ($(OS_ARCH),ReliantUNIX)
 DL=-ldl
+ifdef RPATHFLAG
 USE_LD_RUN_PATH=1
+endif
 USE_CCC_TO_LINK=1
 CCC=$(CXX)
 endif
@@ -329,30 +331,34 @@ ifeq ($(OS_ARCH),UnixWare)
 DL=
 endif
 
-RPATHFLAG = ..:../lib:../../lib:../../../lib:../../../../lib
-
 ifeq ($(OS_ARCH), SunOS)
-# include $ORIGIN in run time library path (works on Solaris 8 10/01 and later)
-RPATHFLAG := \$$ORIGIN/../lib:\$$ORIGIN/../../lib:$(RPATHFLAG)
 
 # flag to pass to cc when linking to set runtime shared library search path
 # this is used like this, for example:   $(RPATHFLAG_PREFIX)../..
 # Also, use the C++ compiler to link for 64-bit builds.
 ifeq ($(USE_64), 1)
 USE_CCC_TO_LINK=1
+ifdef RPATHFLAG
 RPATHFLAG_PREFIX=-R:
+endif
 else
+ifdef RPATHFLAG
 RPATHFLAG_PREFIX=-Wl,-R,
+endif
 endif
 
 ifdef NS_USE_GCC
 USE_CCC_TO_LINK=1
+ifdef RPATHFLAG
 RPATHFLAG_PREFIX=-Wl,-R,
+endif
 endif
 
 # flag to pass to ld when linking to set runtime shared library search path
 # this is used like this, for example:   $(LDRPATHFLAG_PREFIX)../..
+ifdef RPATHFLAG
 LDRPATHFLAG_PREFIX=-R
+endif
 
 # OS network libraries
 PLATFORMLIBS+=-lresolv -lsocket -lnsl -lgen -ldl -lposix4
@@ -364,11 +370,13 @@ USE_CCC_TO_LINK=1
 
 # flag to pass to cc when linking to set runtime shared library search path
 # this is used like this, for example:   $(RPATHFLAG_PREFIX)../..
+ifdef RPATHFLAG
 RPATHFLAG_PREFIX=-Wl,-rpath,
 
 # flag to pass to ld when linking to set runtime shared library search path
 # this is used like this, for example:   $(LDRPATHFLAG_PREFIX)../..
 LDRPATHFLAG_PREFIX=-rpath
+endif
 
 # allow for unresolved symbols
 DLL_LDFLAGS += -expect_unresolved "*"
@@ -377,12 +385,15 @@ endif # OSF1
 ifeq ($(OS_ARCH), AIX)
 # Flags to set runtime shared library search path.  For example:
 # $(CC) $(RPATHFLAG_PREFIX)../..$(RPATHFLAG_EXTRAS)
+ifdef RPATHFLAG
 RPATHFLAG_PREFIX=-blibpath:
 RPATHFLAG_EXTRAS=:/usr/lib:/lib
 
 # flag to pass to ld when linking to set runtime shared library search path
 # this is used like this, for example:   $(LDRPATHFLAG_PREFIX)../..
 LDRPATHFLAG_PREFIX=-blibpath:/usr/lib:/lib:
+endif
+
 DLL_LDFLAGS= -bM:SRE -bnoentry \
     -L.:/usr/lib/threads:/usr/lpp/xlC/lib:/usr/lib:/lib
 DLL_EXTRA_LIBS= -bI:/usr/lib/lowsys.exp -lC_r -lC -lpthreads -lc_r -lm \
@@ -395,14 +406,7 @@ ifeq ($(OS_ARCH), HP-UX)
 # Use the C++ compiler to link
 USE_CCC_TO_LINK=1
 
-# include $ORIGIN in run time library path (works on HP-UX 11.11 with latest patches and later)
-ifeq ($(OS_RELEASE), B.11.11)
-RPATHFLAG := \$$ORIGIN/../lib:\$$ORIGIN/../../lib:$(RPATHFLAG)
-endif
-ifeq ($(OS_RELEASE), B.11.23)
-RPATHFLAG := \$$ORIGIN/../lib:\$$ORIGIN/../../lib:$(RPATHFLAG)
-endif
-
+ifdef RPATHFLAG
 # flag to pass to cc when linking to set runtime shared library search path
 # this is used like this, for example:   $(RPATHFLAG_PREFIX)../..
 RPATHFLAG_PREFIX=-Wl,+s,+b,
@@ -410,6 +414,7 @@ RPATHFLAG_PREFIX=-Wl,+s,+b,
 # flag to pass to ld when linking to set runtime shared library search path
 # this is used like this, for example:   $(LDRPATHFLAG_PREFIX)../..
 LDRPATHFLAG_PREFIX=+s +b
+endif
 
 # we need to link in the rt library to get sem_*()
 PLATFORMLIBS += -lrt
@@ -423,18 +428,21 @@ USE_CCC_TO_LINK=1
 
 # flag to pass to cc when linking to set runtime shared library search path
 # this is used like this, for example:   $(RPATHFLAG_PREFIX)../..
+ifdef RPATHFLAG
 RPATHFLAG_PREFIX=-Wl,-rpath,
 
 # flag to pass to ld when linking to set runtime shared library search path
 # this is used like this, for example:   $(LDRPATHFLAG_PREFIX)../..
 # note, there is a trailing space
 LDRPATHFLAG_PREFIX=-rpath
+endif # RPATHFLAG
 endif # Linux
 
 ifeq ($(OS_ARCH), Darwin)
 # Darwin doesn't use RPATH.
+#ifdef RPATHFLAG
 RPATHFLAG_PREFIX=
-RPATHFLAG=
+#endif
 
 # Use the C++ compiler to link
 USE_CCC_TO_LINK=1
