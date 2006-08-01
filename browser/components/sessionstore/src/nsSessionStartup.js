@@ -295,7 +295,7 @@ SessionStartup.prototype = {
         // create prompt strings
         var ssStringBundle = this._getStringBundle("chrome://browser/locale/sessionstore.properties");
         var restoreTitle = ssStringBundle.formatStringFromName("restoredTitle", [brandShortName], 1);
-        var restoreText = ssStringBundle.formatStringFromName("restoredText", [brandShortName], 1);
+        var restoreText = ssStringBundle.formatStringFromName("restoredMsg", [brandShortName], 1);
         var buttonTitle = ssStringBundle.GetStringFromName("buttonTitle");
         var cancelTitle = ssStringBundle.GetStringFromName("cancelTitle");
 
