@@ -789,7 +789,7 @@ nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
         diskEntry->Swap();
         PRInt32 bytesWritten = PR_Write(fd, diskEntry, size);
         
-        PRStatus err = PR_Close(mMapFD);
+        PRStatus err = PR_Close(fd);
         if ((bytesWritten != (PRInt32)size) || (err != PR_SUCCESS)) {
             rv = NS_ERROR_UNEXPECTED;
             goto exit;
