@@ -22,7 +22,7 @@ download_mars () {
       command=`echo $line | sed -e 's/^.*<patch //' -e 's:/>.*$::' -e 's:\&amp;:\&:g'`
       eval "export $command"
 
-      wget -nv -O update/$patch_type.mar $URL
+      wget -nv -O update/$patch_type.mar $URL 2>&1 
       if [ "$?" != 0 ]; then
         echo "Could not download $patch_type!"
         echo "from: $URL"
