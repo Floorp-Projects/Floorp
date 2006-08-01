@@ -62,13 +62,28 @@
             <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1" style="min-width: 1px;" clicktoscroll="true">
               <children/>
             </xul:arrowscrollbox>
-            <xul:hbox class="tabs-alltabs-box" pack="end" align="center"
-                      anonid="alltabs-box">
-              <xul:toolbarbutton class="tabs-alltabs-button" type="menu">
-                <xul:menupopup class="tabs-alltabs-popup"
-                  anonid="alltabs-popup" position="after_end"/>
-              </xul:toolbarbutton>
-            </xul:hbox>
+            <xul:stack align="center" pack="end">
+              <!-- XXXsspitzer hack
+                   this extra hbox with position: relative
+                   is needed to work around two bugs.
+                   see bugs #346307 and #346035 
+              -->
+              <xul:hbox style="position: relative;">
+                <xul:hbox flex="1" class="tabs-alltabs-box" 
+                          anonid="alltabs-box"/>
+              </xul:hbox>
+              <!-- XXXsspitzer hack
+                   this extra hbox with position: relative
+                   is needed to work around two bugs.
+                   see bugs #346307 and #346035 
+              -->
+              <xul:hbox style="position: relative;">
+                <xul:toolbarbutton class="tabs-alltabs-button" type="menu">
+                  <xul:menupopup class="tabs-alltabs-popup"
+                                 anonid="alltabs-popup" position="after_end"/>
+                </xul:toolbarbutton>
+              </xul:hbox>
+            </xul:stack>
             <xul:hbox class="tabs-closebutton-box" align="center" pack="end" anonid="tabstrip-closebutton">
               <xul:toolbarbutton class="close-button tabs-closebutton"/>
             </xul:hbox>

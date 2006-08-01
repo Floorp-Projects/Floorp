@@ -41,8 +41,6 @@ tab:hover > .tab-image-middle > .tab-icon > .tab-extra-status {
   padding-top: 1px;
 }
 
-
-
 tab[busy] > .tab-icon-image, tab[busy] > .tab-image-middle > .tab-icon > .tab-icon-image {
  list-style-image: url("chrome://global/skin/icons/loading_16_grey.gif") !important; 
 }
@@ -245,8 +243,14 @@ tabbrowser > tabbox > tabpanels {
  * All Tabs Button
  */
 
-.tabs-alltabs-box[flash="true"] {
-  background-color: orange;
+.tabs-alltabs-box {
+/* XXXsspitzer
+ * disabling the background-color because on mac trunk
+ * due to the opacity bug #346738 (aka #325296)
+ *
+ * background-color: orange;
+ */
+  opacity: 0.0;
 }
 
 .tabs-alltabs-button {
