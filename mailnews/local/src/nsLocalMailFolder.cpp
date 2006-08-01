@@ -1241,8 +1241,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
       if (cnt > 0)
         newFolder->RenameSubFolders(msgWindow, this);
       
-      // save folder flags, because PropagateDelete will clear them.
-      PRUint32 saveFolderFlags = mFlags;
+      // the newFolder should have the same flags
+      newFolder->SetFlags(mFlags);
       if (parentFolder)
       {
         SetParent(nsnull);
@@ -1251,8 +1251,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
       }
       SetPath(nsnull); // forget our path, since this folder object renamed itself
       folderRenameAtom = do_GetAtom("RenameCompleted");
-      // restore saved folder flags, after PropagateDelete cleared them.
-      newFolder->SetFlags(saveFolderFlags);
       newFolder->NotifyFolderEvent(folderRenameAtom);
     }
   }
