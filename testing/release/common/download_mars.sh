@@ -16,7 +16,7 @@ download_mars () {
 
       if [ 0 -ne $grep_rv ]; then
 	      echo "FAIL: no $patch_type update found"
-	      continue
+	      return 1
       fi
 
       command=`echo $line | sed -e 's/^.*<patch //' -e 's:/>.*$::' -e 's:\&amp;:\&:g'`
@@ -34,14 +34,14 @@ download_mars () {
 	      echo "FAIL: $patch_type wrong size"
 	      echo "FAIL: update.xml size: $size"
 	      echo "FAIL: actual size: $actual_size"
-	      continue
+	      return 1
       fi
       
       if [ $actual_hash != $hashValue ]; then
 	      echo "FAIL: $patch_type wrong hash"
 	      echo "FAIL: update.xml hash: $hashValue"
 	      echo "FAIL: actual hash: $actual_hash"
-	      continue
+	      return 1
       fi
 
     done
