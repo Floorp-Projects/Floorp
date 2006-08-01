@@ -175,7 +175,7 @@ timezone-page
 {
 	border-right: 1px solid #CACAFF;
 	background-color: #8EA4BB;
-	color: #FFFFFF;/* #8EA4BB;*/
+	color: #8EA4BB;
 }
 
 .freebusy-grid[state="busy"] 
@@ -254,78 +254,78 @@ timezone-page
 
 .status-icon[status="ACCEPTED"] {
   margin: 0 3px;
-  list-style-image: url("chrome://calendar/skin/attendees.png");
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-attendees.png");
   -moz-image-region: rect(0px 12px 14px 0px);
 }
 .status-icon[status="ACCEPTED"][disabled="true"] {
   margin: 0 3px;
-  list-style-image: url("chrome://calendar/skin/attendees.png");
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-attendees.png");
   -moz-image-region: rect(14px 12px 28px 0px);
 }
 
 .status-icon[status="DECLINED"] {
   margin: 0 3px;
-  list-style-image: url("chrome://calendar/skin/attendees.png");
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-attendees.png");
   -moz-image-region: rect(0px 24px 14px 12px);
 }
 .status-icon[status="DECLINED"][disabled="true"] {
   margin: 0 3px;
-  list-style-image: url("chrome://calendar/skin/attendees.png");
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-attendees.png");
   -moz-image-region: rect(14px 24px 28px 12px);
 }
 
 .status-icon[status="NEEDS-ACTION"] {
   margin: 0 3px;
-  list-style-image: url("chrome://calendar/skin/attendees.png");
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-attendees.png");
   -moz-image-region: rect(0px 36px 14px 24px);
 }
 .status-icon[status="NEEDS-ACTION"][disabled="true"] {
   margin: 0 3px;
-  list-style-image: url("chrome://calendar/skin/attendees.png");
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-attendees.png");
   -moz-image-region: rect(14px 36px 28px 24px);
 }
 
 .status-icon[status="TENTATIVE"] {
   margin: 0 3px;
-  list-style-image: url("chrome://calendar/skin/attendees.png");
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-attendees.png");
   -moz-image-region: rect(0px 48px 14px 36px);
 }
 .status-icon[status="TENTATIVE"][disabled="true"] {
   margin: 0 3px;
-  list-style-image: url("chrome://calendar/skin/attendees.png");
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-attendees.png");
   -moz-image-region: rect(14px 48px 28px 36px);
 }
 
 .role-icon[role="REQ-PARTICIPANT"] {
   margin: 0 3px;
-  list-style-image: url("chrome://calendar/skin/attendees.png");
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-attendees.png");
   -moz-image-region: rect(0px 60px 14px 48px);
 }
 .role-icon[role="REQ-PARTICIPANT"][disabled="true"] {
   margin: 0 3px;
-  list-style-image: url("chrome://calendar/skin/attendees.png");
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-attendees.png");
   -moz-image-region: rect(14px 60px 28px 48px);
 }
 
 .role-icon[role="OPT-PARTICIPANT"] {
   margin: 0 3px;
-  list-style-image: url("chrome://calendar/skin/attendees.png");
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-attendees.png");
   -moz-image-region: rect(0px 72px 14px 60px);
 }
 .role-icon[role="OPT-PARTICIPANT"][disabled="true"] {
   margin: 0 3px;
-  list-style-image: url("chrome://calendar/skin/attendees.png");
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-attendees.png");
   -moz-image-region: rect(14px 72px 28px 60px);
 }
 
 .role-icon[role="CHAIR"] {
   margin: 0 3px;
-  list-style-image: url("chrome://calendar/skin/attendees.png");
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-attendees.png");
   -moz-image-region: rect(0px 84px 14px 72px);
 }
 .role-icon[role="CHAIR"][disabled="true"] {
   margin: 0 3px;
-  list-style-image: url("chrome://calendar/skin/attendees.png");
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-attendees.png");
   -moz-image-region: rect(14px 84px 28px 72px);
 }
  

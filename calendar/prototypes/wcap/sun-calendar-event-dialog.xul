@@ -38,13 +38,14 @@
 -->
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/skin/sun-calendar-event-dialog.css" ?>
 <?xml-stylesheet href="chrome://calendar/content/sun-calendar-event-dialog.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/datetimepickers/datetimepickers.css" ?>
 
 <!DOCTYPE dialog
 [
   <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/calendar.dtd" >  %dtd1;
-  <!ENTITY % dtd2 SYSTEM "chrome://calendar/content/sun-calendar-event-dialog.dtd" >  %dtd2;
+  <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/sun-calendar-event-dialog.dtd" >  %dtd2;
 ]>     
 
 <dialog
@@ -71,7 +72,7 @@
 
     <!-- Toolbar -->
     <toolbar id="nav-toolbar" class="chromeclass-toolbar">
-      <toolbarbutton class="toolbarbutton-1" id="button-save" label="save" command="cmd_accept"/>
+      <toolbarbutton class="toolbarbutton-1" id="button-save" label="&event.command.save.label;" command="cmd_accept"/>
     </toolbar>
   </toolbox>
 

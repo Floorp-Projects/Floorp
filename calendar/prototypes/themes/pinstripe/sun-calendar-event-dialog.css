@@ -2,7 +2,7 @@
  
 /* icon #5 */
 #button-save {
-  list-style-image: url("chrome://calendar/skin/sun-event-dialog-toolbar.png");
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-toolbar.png");
   -moz-image-region: rect(0px 192px 32px 160px);
 }
 #button-save:hover:active {
@@ -14,7 +14,7 @@
 
 /* icon #18 */
 #button-print {
-  list-style-image: url("chrome://calendar/skin/sun-event-dialog-toolbar.png");
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-toolbar.png");
   -moz-image-region: rect(0px 608px 32px 576px);
 }
 #button-print:hover:active {
