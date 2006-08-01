@@ -93,7 +93,9 @@ protected:
     nsresult            EqualsInternal(nsISupports* inFile,
                                        PRBool aUpdateCache, PRBool *_retval);
 
-    nsresult            MoveCopy(nsIFile* newParentDir, const nsAString &newName, PRBool isCopy, PRBool followLinks);
+    nsresult            CopyInternal(nsIFile* newParentDir,
+                                     const nsAString& newName,
+                                     PRBool followLinks);
 
     static PRInt64      HFSPlustoNSPRTime(const UTCDateTime& utcTime);
     static void         NSPRtoHFSPlusTime(PRInt64 nsprTime, UTCDateTime& utcTime);
