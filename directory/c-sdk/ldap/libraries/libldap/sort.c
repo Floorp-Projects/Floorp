@@ -107,6 +107,14 @@ ldap_keysort_entries(
 
 	count = ldap_count_entries( ld, *chain );
 
+	if (count < 0) { /* error */
+		return( LDAP_PARAM_ERROR );
+	}
+
+	if (count < 2) { /* nothing to sort */
+		return( 0 );
+	}
+
 	kt = (keything_t**)NSLDAPI_MALLOC( count * (sizeof(keything_t*) + sizeof(keything_t)) );
 	if ( kt == NULL ) {
 		LDAP_SET_LDERRNO( ld, LDAP_NO_MEMORY, NULL, NULL );
@@ -227,6 +235,14 @@ ldap_multisort_entries(
 	}
 
 	count = ldap_count_entries( ld, *chain );
+
+	if (count < 0) { /* error, usually with bad ld or malloc */
+		return( LDAP_PARAM_ERROR );
+	}
+
+	if (count < 2) { /* nothing to sort */
+		return( 0 );
+	}
 
 	if ( (et = (struct entrything *)NSLDAPI_MALLOC( count *
 	    sizeof(struct entrything) )) == NULL ) {
