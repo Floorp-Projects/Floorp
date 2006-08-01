@@ -878,10 +878,12 @@ CloseIteratorStates(JSContext *cx)
 }
 
 JSBool
-js_AddObjectToCloseTable(JSContext *cx, JSObject *obj)
+js_RegisterGeneratorObject(JSContext *cx, JSObject *obj)
 {
     JSRuntime *rt;
     JSBool ok;
+
+    JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_GeneratorClass);
 
     /*
      * Return early without doing anything if shutting down, to prevent a bad
@@ -890,17 +892,8 @@ js_AddObjectToCloseTable(JSContext *cx, JSObject *obj)
      */
     rt = cx->runtime;
     JS_ASSERT(!rt->gcRunning || rt->gcClosePhase);
-    if (rt->state == JSRTS_LANDING) {
-#ifdef DEBUG
-        fprintf(stderr,
-"JS API usage error: an extended class's close hook allocates another object\n"
-"also of extended class %s that has a close hook.  To prevent infinite loops\n"
-"when shutting down the JS garbage collector, this object will not be closed.\n"
-"This may result in a memory leak.\n",
-                OBJ_GET_CLASS(cx, obj)->name);
-#endif
+    if (rt->state == JSRTS_LANDING)
         return JS_TRUE;
-    }
 
     JS_LOCK_GC(rt);
     ok = AddToPtrTable(cx, &rt->gcCloseTable, &closeTableInfo, obj);
@@ -986,7 +979,6 @@ ExecuteCloseHooks(JSContext *cx, const JSObjectsToClose *toClose)
     JSStackFrame *fp;
     uint32 index, endIndex;
     JSObject *obj;
-    JSExtendedClass *xclasp;
     void **array;
 
     rt = cx->runtime;
@@ -1012,9 +1004,14 @@ ExecuteCloseHooks(JSContext *cx, const JSObjectsToClose *toClose)
          * new objects that have close hooks and reallocate the table.
          */
         obj = (JSObject *)rt->gcCloseTable.array[index];
-        xclasp = (JSExtendedClass *) LOCKED_OBJ_GET_CLASS(obj);
-        JS_ASSERT(xclasp->base.flags & JSCLASS_IS_EXTENDED);
-        xclasp->close(cx, obj);
+
+        /*
+         * Ignore errors until after we call the close method, then force
+         * prompt error reporting, since GC is infallible.
+         */
+        js_CloseGeneratorObject(cx, obj);
+        if (cx->throwing && !js_ReportUncaughtException(cx))
+            JS_ClearPendingException(cx);
     } while (++index != endIndex);
 
     rt->gcClosePhase = JS_FALSE;

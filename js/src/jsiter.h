@@ -95,7 +95,10 @@ js_ThrowStopIteration(JSContext *cx, JSObject *obj);
 extern JSObject *
 js_NewGenerator(JSContext *cx, JSStackFrame *fp);
 
-extern JSExtendedClass  js_GeneratorClass;
+extern JSBool
+js_CloseGeneratorObject(JSContext *cx, JSObject *obj);
+
+extern JSClass          js_GeneratorClass;
 extern JSClass          js_IteratorClass;
 extern JSClass          js_StopIterationClass;
 extern JSClass          js_GeneratorExitClass;

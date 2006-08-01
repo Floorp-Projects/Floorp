@@ -2398,13 +2398,6 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     /* Store newslots after initializing all of 'em, just in case. */
     obj->slots = newslots;
 
-    /* If obj needs to be closed before being finalized, remember it. */
-    if ((clasp->flags & JSCLASS_IS_EXTENDED) &&
-        ((JSExtendedClass *)clasp)->close &&
-        !js_AddObjectToCloseTable(cx, obj)) {
-        goto bad;
-    }
-
     if (cx->runtime->objectHook) {
         JS_KEEP_ATOMS(cx->runtime);
         cx->runtime->objectHook(cx, obj, JS_TRUE, cx->runtime->objectHookData);
