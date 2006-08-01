@@ -1,11 +1,11 @@
 // This file tests authentication prompt callbacks
 
-function AuthPrompt1() {
-}
+const FLAG_RETURN_FALSE   = 1 << 0;
+const FLAG_WRONG_PASSWORD = 1 << 1;
 
-// Also ought to test:
-// - return false from authprompt
-// - return wrong username from authprompt
+function AuthPrompt1(flags) {
+  this.flags = flags;
+}
 
 AuthPrompt1.prototype = {
   user: "guest",
@@ -38,8 +38,17 @@ AuthPrompt1.prototype = {
     if (text.indexOf("-1") != -1)
       do_throw("Text must contain negative numbers");
 
+    if (this.flags & FLAG_RETURN_FALSE)
+      return false;
+
     user.value = this.user;
-    pw.value = this.pass;
+    if (this.flags & FLAG_WRONG_PASSWORD) {
+      pw.value = this.pass + ".wrong";
+      // Now clear the flag to avoid an infinite loop
+      this.flags &= ~FLAG_WRONG_PASSWORD;
+    } else {
+      pw.value = this.pass;
+    }
     return true;
   },
 
@@ -49,7 +58,8 @@ AuthPrompt1.prototype = {
 
 };
 
-function Requestor() {
+function Requestor(flags) {
+  this.flags = flags;
 }
 
 Requestor.prototype = {
@@ -61,10 +71,16 @@ Requestor.prototype = {
   },
 
   getInterface: function requestor_gi(iid) {
-    if (iid.equals(Components.interfaces.nsIAuthPrompt))
-      return new AuthPrompt1();
+    if (iid.equals(Components.interfaces.nsIAuthPrompt)) {
+      // Allow the prompt to store state by caching it here
+      if (!this.prompt1)
+        this.prompt1 = new AuthPrompt1(this.flags); 
+      return this.prompt1;
+    }
     throw Components.results.NS_ERROR_NO_INTERFACE;
-  }
+  },
+
+  prompt1: null
 };
 
 var listener = {
@@ -113,7 +129,7 @@ function makeChan(url) {
   return chan;
 }
 
-var tests = [test_noauth, test_prompt1];
+var tests = [test_noauth, test_returnfalse1, test_prompt1];
 var current_test = 0;
 
 function run_test() {
@@ -124,6 +140,27 @@ function run_test() {
 function test_noauth() {
   var chan = makeChan("http://localhost:4444/auth");
 
+  listener.expectedCode = 401; // Unauthorized
+  chan.asyncOpen(listener, null);
+
+  do_test_pending();
+}
+
+function test_returnfalse1() {
+  var chan = makeChan("http://localhost:4444/auth");
+
+  chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE);
+  listener.expectedCode = 401; // Unauthorized
+  chan.asyncOpen(listener, null);
+
+  do_test_pending();
+}
+
+function test_wrongpw1() {
+  var chan = makeChan("http://localhost:4444/auth");
+
+  chan.notificationCallbacks = new Requestor(FLAG_WRONG_PASSWORD);
+  listener.expectedCode = 200; // OK
   chan.asyncOpen(listener, null);
 
   do_test_pending();
@@ -132,7 +169,7 @@ function test_noauth() {
 function test_prompt1() {
   var chan = makeChan("http://localhost:4444/auth");
 
-  chan.notificationCallbacks = new Requestor();
+  chan.notificationCallbacks = new Requestor(0);
   listener.expectedCode = 200; // OK
   chan.asyncOpen(listener, null);
 
