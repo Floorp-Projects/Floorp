@@ -210,65 +210,79 @@
 
       <toolbaritem id="urlbar-container" align="center" flex="1000"
                    title="&locationItem.title;" class="chromeclass-location">
-        <textbox id="urlbar" flex="1"
-                 type="autocomplete"
-                 autocompletesearch="history" 
-                 autocompletepopup="PopupAutoComplete"
-                 completeselectedindex="true"
-                 tabscrolling="true"
-                 showcommentcolumn="true"
-                 enablehistory="true"
+        <!-- This deck is a hack to make sure that the border between the
+             urlbar and the searchbar doesn't shift when the SSL and RSS
+             icons appear and disappear.  Now that the searchbar is flexible,
+             the appearance of the urlbar status icons tweaks the flex
+             calculation enough to move the border between the two.  The "fix"
+             is to hide a decoy textbox with a spacer behind the urlbar, so
+             that the deck that contains it is always as least as large as
+             it would be if both icons were visible. -->
+        <deck id="urlbar-sizing-deck" flex="1">
+          <textbox id="urlbar" flex="1"
+                   type="autocomplete"
+                   autocompletesearch="history" 
+                   autocompletepopup="PopupAutoComplete"
+                   completeselectedindex="true"
+                   tabscrolling="true"
+                   showcommentcolumn="true"
+                   enablehistory="true"
 #ifndef MOZILLA_1_8_BRANCH
 # bug 23485
-                 newlines="stripsurroundingwhitespace"
+                   newlines="stripsurroundingwhitespace"
 #endif
-                 oninput="gBrowser.userTypedValue = this.value"
-                 ontextentered="return handleURLBarCommand(param);"
-                 ontextreverted="return handleURLBarRevert();">
-          <deck id="page-proxy-deck" onclick="PageProxyClickHandler(event);">
-            <image id="page-proxy-button"
-                    ondraggesture="PageProxyDragGesture(event);"
-                    tooltiptext="&proxyIcon.tooltip;"/>
-            <image id="page-proxy-favicon"
-                    ondraggesture="PageProxyDragGesture(event);"
-                    onload="this.parentNode.selectedIndex = 1;
-                            event.stopPropagation();"
-                    onerror="gBrowser.addToMissedIconCache(this.src);
-                             this.removeAttribute('src');
-                             this.parentNode.selectedIndex = 0;"
-                    tooltiptext="&proxyIcon.tooltip;"/>
-          </deck>
-          <hbox id="urlbar-icons">
-            <button type="menu"
-                    style="-moz-user-focus: none"
-                    class="plain"
-                    id="feed-button"
-                    chromedir="&locale.dir;"
-                    onclick="event.stopPropagation();">
-              <menupopup position="after_end"
-                         onpopupshowing="return FeedHandler.buildFeedList(event);"
+                   oninput="gBrowser.userTypedValue = this.value"
+                   ontextentered="return handleURLBarCommand(param);"
+                   ontextreverted="return handleURLBarRevert();">
+            <deck id="page-proxy-deck" onclick="PageProxyClickHandler(event);">
+              <image id="page-proxy-button"
+                      ondraggesture="PageProxyDragGesture(event);"
+                      tooltiptext="&proxyIcon.tooltip;"/>
+              <image id="page-proxy-favicon"
+                      ondraggesture="PageProxyDragGesture(event);"
+                      onload="this.parentNode.selectedIndex = 1;
+                              event.stopPropagation();"
+                      onerror="gBrowser.addToMissedIconCache(this.src);
+                               this.removeAttribute('src');
+                               this.parentNode.selectedIndex = 0;"
+                      tooltiptext="&proxyIcon.tooltip;"/>
+            </deck>
+            <hbox id="urlbar-icons">
+              <button type="menu"
+                      style="-moz-user-focus: none"
+                      class="plain"
+                      id="feed-button"
+                      chromedir="&locale.dir;"
+                      onclick="event.stopPropagation();">
+                <menupopup position="after_end"
+                           onpopupshowing="return FeedHandler.buildFeedList(event);"
 #ifdef MOZ_PLACES
 #ifdef MOZ_FEEDS
-                         oncommand="loadURI(event.target.getAttribute('feed'), null, null, false);"/>
+                           oncommand="loadURI(event.target.getAttribute('feed'), null, null, false);"/>
 #else
-                         oncommand="PlacesCommandHook.addLiveBookmark(event.target.getAttribute('feed'));" />
+                           oncommand="PlacesCommandHook.addLiveBookmark(event.target.getAttribute('feed'));" />
 #endif
 #else
 #ifdef MOZ_FEEDS
-                         oncommand="loadURI(event.target.getAttribute('feed'), null, null, false);"/>
+                           oncommand="loadURI(event.target.getAttribute('feed'), null, null, false);"/>
 #else
-                         oncommand="FeedHandler.addLiveBookmark(event.target.getAttribute('feed'));" />
+                           oncommand="FeedHandler.addLiveBookmark(event.target.getAttribute('feed'));" />
 #endif
 #endif
-            </button>
-            <image id="lock-icon" onclick="if (event.button == 0) displaySecurityInfo(); event.stopPropagation();"/>
+              </button>
+              <image id="lock-icon" onclick="if (event.button == 0) displaySecurityInfo(); event.stopPropagation();"/>
 #ifdef MOZ_SAFE_BROWSING
-            <image id="safebrowsing-urlbar-icon" tooltiptext="&safeb.urlbaricon.tooltip;"
-                   level="safe"
-                   onclick="goDoCommand('safebrowsing-show-warning')" />
+              <image id="safebrowsing-urlbar-icon" tooltiptext="&safeb.urlbaricon.tooltip;"
+                     level="safe"
+                     onclick="goDoCommand('safebrowsing-show-warning')" />
 #endif
-          </hbox>
-        </textbox>
+            </hbox>
+          </textbox>
+          <!-- Hack to make sure urlbar size doesn't shift, see above. -->
+          <textbox id="urlbar-spacer" flex="1">
+            <hbox id="urlbar-icons-spacer"/>
+          </textbox>
+        </deck>
       </toolbaritem>
 
       <toolbaritem id="search-container" title="&searchItem.title;" 
