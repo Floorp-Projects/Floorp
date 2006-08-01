@@ -231,11 +231,9 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       aAttribute->ToString(attributeName);
       const nsAFlatString& attributeValue = PromiseFlatString(aValue);
       const PRUnichar *strings[] = { attributeName.get(), attributeValue.get() };
-#if 0
       nsSVGUtils::ReportToConsole(GetOwnerDoc(),
                                   "AttributeParseWarning",
                                   strings, NS_ARRAY_LENGTH(strings));
-#endif
       nsCOMPtr<nsISVGValue> proxy;
       nsresult rv =
         NS_CreateSVGStringProxyValue(svg_value, getter_AddRefs(proxy));
