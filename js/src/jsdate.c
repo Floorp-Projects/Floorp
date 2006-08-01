@@ -1438,7 +1438,7 @@ date_makeDate(JSContext *cx, JSObject *obj, uintN argc,
     /* return NaN if date is NaN and we're not setting the year,
      * If we are, use 0 as the time. */
     if (!(JSDOUBLE_IS_FINITE(result))) {
-        if (argc < 3)
+        if (maxargs < 3)
             return js_NewNumberValue(cx, result, rval);
         else
             lorutime = +0.;
