@@ -490,3 +490,10 @@ nsMenuItemX::ContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt32
   listener->SetRebuild(PR_TRUE);
   return NS_OK;
 } // ContentInserted
+
+
+NS_IMETHODIMP
+nsMenuItemX::SetupIcon()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
