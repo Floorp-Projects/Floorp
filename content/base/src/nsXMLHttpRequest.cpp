@@ -373,8 +373,10 @@ nsXMLHttpRequest::RemoveEventListener(const nsAString & type,
 
   // Allow a caller to remove O(N^2) behavior by removing end-to-start.
   for (PRUint32 i = array->Length() - 1; i != PRUint32(-1); --i) {
-    if (nsCOMPtr<nsIDOMEventListener>(array->ElementAt(i)->Get()) == listener) {
+    ListenerHolder *holder = array->ElementAt(i);
+    if (nsCOMPtr<nsIDOMEventListener>(holder->Get()) == listener) {
       array->RemoveElementAt(i);
+      delete holder;
       break;
     }
   }
