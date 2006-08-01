@@ -184,7 +184,7 @@ function bc_connect(host, port, config, observer)
 
     function getProxyFor(uri)
     {
-        var uri = ios.newURI(uri, null, null);
+        uri = ios.newURI(uri, null, null);
         // As of 2005-03-25, 'examineForProxy' was replaced by 'resolve'.
         if ("resolve" in pps)
             return pps.resolve(uri, 0);
