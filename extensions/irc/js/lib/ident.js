@@ -86,7 +86,7 @@ function ident_add(net, serv)
     {
         addr = dnsRecord.getNextAddrAsString();
         this.responses.push({net: net, ip: addr, port: serv.port,
-                             username: net.INITIAL_NAME});
+                             username: net.INITIAL_NAME || net.INITIAL_NICK});
     }
 
     if (this.responses.length == 0)
