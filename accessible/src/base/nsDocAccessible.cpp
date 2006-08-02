@@ -166,7 +166,7 @@ NS_IMETHODIMP nsDocAccessible::GetRole(PRUint32 *aRole)
       PRInt32 itemType;
       docShellTreeItem->GetItemType(&itemType);
       if (itemType == nsIDocShellTreeItem::typeChrome) {
-        *aRole = ROLE_APPLICATION;
+        *aRole = ROLE_CHROME_WINDOW;
       }
       else if (itemType == nsIDocShellTreeItem::typeContent) {
 #ifdef MOZ_XUL

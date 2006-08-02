@@ -60,7 +60,7 @@ PRUint32 atkRoleMap[] = {
     ATK_ROLE_MENU,                // nsIAccessible::ROLE_MENUPOPUP         11
     ATK_ROLE_MENU_ITEM,           // nsIAccessible::ROLE_MENUITEM          12
     ATK_ROLE_TOOL_TIP,            // nsIAccessible::ROLE_TOOLTIP           13
-    ATK_ROLE_FRAME,               // nsIAccessible::ROLE_APPLICATION       14
+    ATK_ROLE_EMBEDDED,            // nsIAccessible::ROLE_APPLICATION       14
 #ifdef USE_ATK_ROLE_DOCUMENT_FRAME 
     ATK_ROLE_DOCUMENT_FRAME,      // nsIAccessible::ROLE_DOCUMENT          15
 #else
@@ -134,7 +134,7 @@ PRUint32 atkRoleMap[] = {
     ATK_ROLE_FILE_CHOOSER,        // nsIAccessible::ROLE_FILE_CHOOSER      73
     ATK_ROLE_FILLER,              // nsIAccessible::ROLE_FILLER            74
     ATK_ROLE_FONT_CHOOSER,        // nsIAccessible::ROLE_FONT_CHOOSER      75
-    ATK_ROLE_FRAME,               // nsIAccessible::ROLE_FRAME             76
+    ATK_ROLE_FRAME,               // nsIAccessible::ROLE_CHROME_WINDOW     76
     ATK_ROLE_GLASS_PANE,          // nsIAccessible::ROLE_GLASS_PANE        77
     ATK_ROLE_HTML_CONTAINER,      // nsIAccessible::ROLE_HTML_CONTAINER    78
     ATK_ROLE_ICON,                // nsIAccessible::ROLE_ICON              79
@@ -224,7 +224,7 @@ PRUint32 atkRoleMap[] = {
 #ifdef USE_ATK_ROLE_REDUNDANT_OBJECT
     ATK_ROLE_REDUNDANT_OBJECT,    // nsIAccessible::ROLE_REDUNDANT_OBJECT  111
 #else
-   ATK_ROLE_INVALID,              // nsIAccessible::ROLE_REDUNDANT_OBJECT  111
+    ATK_ROLE_INVALID,             // nsIAccessible::ROLE_REDUNDANT_OBJECT  111
 #endif
 #ifdef USE_ATK_ROLE_FORM
     ATK_ROLE_FORM,                // nsIAccessible::ROLE_FORM              112
