@@ -1756,6 +1756,7 @@ MicrosummaryResource.prototype = {
     this._uri = null;
     this._content = null;
     this._callback = null;
+    this._loadTimer = null;
     this._httpAuthFailed = false;
     if (this._iframe) {
       if (this._iframe && this._iframe.parentNode)
