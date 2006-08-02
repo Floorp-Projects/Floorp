@@ -160,6 +160,10 @@
       <handler event="DOMMouseScroll" action="this.scrollByIndex(event.detail); event.stopPropagation();"/>
 
       <handler event="underflow"><![CDATA[
+        // filter underflow events which were dispatched on nested scrollboxes
+        if (event.target != this)
+          return;
+
         this._scrollButtonUp.collapsed = true;
         this._scrollButtonDown.collapsed = true;
         var childNodes = document.getAnonymousNodes(this._scrollbox);
@@ -168,14 +172,16 @@
           if (childNodes.length > 1)
             this.ensureElementIsVisible(childNodes[childNodes.length-1]);
         }
-        event.stopPropagation();
       ]]></handler>
 
       <handler event="overflow"><![CDATA[
+        // filter underflow events which were dispatched on nested scrollboxes
+        if (event.target != this)
+          return;
+
         this._scrollButtonUp.collapsed = false;
         this._scrollButtonDown.collapsed = false;
         this._updateScrollButtonsDisabledState();
-        event.stopPropagation();
       ]]></handler>
 
       <handler event="scroll" action="this._updateScrollButtonsDisabledState()"/>
