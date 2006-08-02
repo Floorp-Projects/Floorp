@@ -282,7 +282,11 @@ ldap_getfirstfilter( LDAPFiltDesc *lfdp, char *tagpat, char *value )
 	NSLDAPI_FREE( lfdp->lfd_curvalwords );
     }
 
-    lfdp->lfd_curval = value;
+    NSLDAPI_FREE(lfdp->lfd_curval);
+    if ((lfdp->lfd_curval = nsldapi_strdup(value)) == NULL) {
+	return( NULL );
+    }
+
     lfdp->lfd_curfip = NULL;
 
     for ( flp = lfdp->lfd_filtlist; flp != NULL; flp = flp->lfl_next ) {
