@@ -1,30 +1,17 @@
-<!ENTITY safeb.palm.warning.heading "Web Forgery">
+<!ENTITY safeb.palm.warning.title "Suspected Web Forgery">
 
-<!ENTITY safeb.palm.message.part1 "This page is very likely to have been designed to trick users into sharing personal or financial information. Entering any personal information on this page may result in identity theft or other fraud. &#160;">
-<!ENTITY safeb.palm.message.link1.more "more &#187;">
-<!ENTITY safeb.palm.showmore.statustext "Read more">
+<!ENTITY safeb.palm.message.p1 "This page has been reported as a web forgery designed to trick users into sharing personal or financial information. Entering any personal information on this page may result in identity theft or other fraud. &#160;">
+<!ENTITY safeb.palm.message.p1.linkText "Read more &#187;">
+<!ENTITY safeb.palm.p1.linkStatusText "Read more &#133;">
 
-<!-- XXX This should point to a mozilla.org page describing phishing in general -->
-<!ENTITY safeb.palm.message.part2 "Safe Browsing uses automated technology to warn you about web pages that we believe may be unsafe. This page appears to be a part of a scam known as a">
-<!ENTITY safeb.palm.message.link2.phishing.faq "phishing">
-<!ENTITY safeb.palm.message.link2.href "http://www.google.com/tools/service/npredir?r=ff_sb_faq#phishing">
+<!ENTITY safeb.palm.message.p2.start "These types of web forgeries are used in scams known as phishing attacks, in which fradulent web pages and emails are used to imitate sources you may trust. You can find out more about ">
+<!ENTITY safeb.palm.message.p2.linkText "how Firefox protects you">
+<!ENTITY safeb.palm.message.p2.linkURL "http://www.mozilla.org/projects/bonecho/anti-phishing/">
+<!ENTITY safeb.palm.message.p2.end " from phishing attacks.">
 
-<!ENTITY safeb.palm.message.part3 "attack, in which criminals create fraudulent pages to mimic legitimate sources that you may trust. You can read more about phishing at">
-<!ENTITY safeb.palm.message.link3.antiphishing.org "antiphishing.org">
-<!ENTITY safeb.palm.message.link3.href "http://antiphishing.org/">
-<!ENTITY safeb.palm.message.part3.dot ".">
-
-<!-- XXX This should point to a mozilla.org page describing this
-         implementation of anti-phishing (e.g., 2 modes, privacy implications,
-         etc) -->
-<!ENTITY safeb.palm.message.part4 "You can also learn more about">
-<!ENTITY safeb.palm.message.link4.gwghome "Safe Browsing">
-<!ENTITY safeb.palm.message.link4.href "http://www.google.com/tools/service/npredir?r=ff_sb_home">
-<!ENTITY safeb.palm.message.part4.dot ".">
-
-<!ENTITY safeb.palm.message.part5 "Finally, if you believe this page has been falsely flagged as a forgery, you can ">
-<!ENTITY safeb.palm.message.link5.report "report it">
-<!ENTITY safeb.palm.message.part5.dot ".">
+<!ENTITY safeb.palm.message.p3.start "If you believe this page has been falsely reported as a web forgery, you can ">
+<!ENTITY safeb.palm.message.p3.linkText "let us know">
+<!ENTITY safeb.palm.message.p3.end ".">
 
 <!ENTITY safeb.palm.accept.label "Get me out of here!">
 <!ENTITY safeb.palm.accept.statustext "Navigate to my home page">
