@@ -1350,6 +1350,7 @@
             var kDefaultTimezone = calendarDefaultTimezone();
             this.mStartDate = aStartDate.getInTimezone(kDefaultTimezone);
             this.mEndDate = aEndDate.getInTimezone(kDefaultTimezone);
+            var endDate = this.mEndDate.clone();
                 
             // Check if an all-day event has been passed in (to adapt endDate).
             if (this.mStartDate.isDate) {
@@ -1362,9 +1363,11 @@
                 // in local timezone.
                 this.mEndDate.normalize();
                 this.mStartDate.normalize();
+                endDate.normalize();
             }
             this.mStartDate.makeImmutable();
             this.mEndDate.makeImmutable();
+            endDate.makeImmutable();
 
             document.getAnonymousElementByAttribute(this, "anonid", "event-starttime").value = this.mStartDate.jsDate;
             document.getAnonymousElementByAttribute(this, "anonid", "event-endtime").value = this.mEndDate.jsDate;
@@ -1372,7 +1375,7 @@
             // tell the timebar about the new start/enddate
             var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
             timebar.startDate = this.mStartDate;
-            timebar.endDate = this.mEndDate;
+            timebar.endDate = endDate;
             timebar.refresh();
           ]]>
         </body>

@@ -142,6 +142,16 @@ function onTabSelected()
     var kDefaultTimezone = calendarDefaultTimezone();
     var startDate = jsDateToDateTime(getElementValue("event-starttime"));
     var endDate = jsDateToDateTime(getElementValue("event-endtime"));
+    startDate = startDate.getInTimezone(kDefaultTimezone);
+    endDate = endDate.getInTimezone(kDefaultTimezone);
+    var isAllDay = getElementValue("event-all-day", "checked");
+    if (isAllDay) {
+        startDate.isDate = true;
+        startDate.normalize();
+        endDate.isDate = true;
+        endDate.day += 1;
+        endDate.normalize();
+    }
     attendees.setTimeRange(startDate,endDate);
   }
 }

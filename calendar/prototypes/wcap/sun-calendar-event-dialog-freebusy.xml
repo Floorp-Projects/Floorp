@@ -159,6 +159,7 @@
           var date = val.clone();
           date.hour = 0;
           date.minute = 0;
+          date.isDate = false;
 
           if (!this.mDateFormatter) {
             this.mDateFormatter = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
@@ -298,11 +299,13 @@
           var container = document.getAnonymousElementByAttribute(this, "anonid", "container");
           var date = this.mStartDate.clone();
           date.day += val;
+          date.normalize();
           var numChilds = container.childNodes.length;
           for(var i=0; i<numChilds; i++) {
             var child = container.childNodes[i];
             child.date = date;
             date.day++;
+            date.normalize();
           }
           return val;
         ]]>
@@ -410,6 +413,7 @@
             child.endDate = this.mEndDate;
             child.date = date;
             date.day++;
+            date.normalize();
           }
           var offset = this.mDayOffset;
           this.dayOffset = offset;
@@ -442,6 +446,7 @@
             if(count > 0) {
               for(var i=0; i<count; i++) {
                 date.day++;
+                date.normalize();
                 var newNode = template.cloneNode(false);
                 newNode.startDate = this.mStartDate;
                 newNode.endDate = this.mEndDate;
@@ -615,6 +620,7 @@
               }
               date.hour = this.mStartHour;
               date.day++;
+              date.normalize();
             }
           }
           ]]>
