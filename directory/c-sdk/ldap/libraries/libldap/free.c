@@ -76,6 +76,9 @@ ldap_getfilter_free( LDAPFiltDesc *lfdp )
 	NSLDAPI_FREE( flp );
     }
 
+    if ( lfdp->lfd_curval != NULL ) {
+	NSLDAPI_FREE( lfdp->lfd_curval );
+    }
     if ( lfdp->lfd_curvalcopy != NULL ) {
 	NSLDAPI_FREE( lfdp->lfd_curvalcopy );
     }
