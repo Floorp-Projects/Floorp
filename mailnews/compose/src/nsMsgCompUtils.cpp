@@ -1204,16 +1204,6 @@ msg_generate_message_id (nsIMsgIdentity *identity)
 }
 
 
-// In Shift_JIS, Big5 and GB18030 (and GBK, UHC), octets in the ASCII
-// range can represent a non-first byte of a multi-byte character.
-inline static PRBool isAsciiPreserving(const nsAFlatCString& charset)
-{
-  // charset name is canonical (no worry about case-sensitivity)
-  return !charset.EqualsLiteral("Shift_JIS") &&
-         !Substring(charset, 0, 4).EqualsLiteral("Big5") &&
-         !charset.EqualsLiteral("gb18030"); 
-}
-
 inline static PRBool is7bitCharset(const nsAFlatCString& charset)
 {
   // charset name is canonical (no worry about case-sensitivity)
@@ -1236,7 +1226,7 @@ RFC2231ParmFolding(const char *parmName, const nsAFlatCString& charset,
     needEscape = PR_TRUE;
     nsCAutoString nativeParmValue; 
     ConvertFromUnicode(charset.get(), parmValue, nativeParmValue);
-    dupParm = nsEscape(nativeParmValue.get(), url_XAlphas); 
+    dupParm = nsEscape(nativeParmValue.get(), url_All);
   }
   else {
     needEscape = PR_FALSE;
