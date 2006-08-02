@@ -6,8 +6,9 @@
   z-index: 2;
 }
 
-.safebrowsing-palm-message-bubble { 
+#safebrowsing-palm-message-content {
   background-color: white;
+  color: black;
   -moz-box-sizing: border-box;
   -moz-border-radius: 10px;
   padding: 10px;
@@ -16,6 +17,8 @@
   border-right: 2px solid;
   border-bottom: 2px solid;
   z-index: 1;
+  margin: 0;
+  font-size: 120%;
 }
 
 .safebrowsing-palm-fixed-width { 
@@ -23,26 +26,22 @@
   max-width: 400px;
 }
 
-.safebrowsing-palm-title { 
-  font-size: 20px; 
-  font-weight: bold;
-}
-
-#safebrowsing-palm-title-icon { 
-  height: 24px;
-  width: 24px;
-  max-height: 24px;
-}
-
 .safebrowsing-palm-paragraph {
   padding-bottom: 2em;
 }
 
+#safebrowsing-palm-close-container {
+  height: 16px;
+  margin: 0;
+  padding: 0;
+}
+
 #safebrowsing-palm-close { 
   cursor: pointer;
-  max-width: 16px !important; 
   height: 16px; 
   width: 16px; 
+  list-style-image: url("chrome://browser/skin/safebrowsing/close16x16.png");
+  z-index: 10;
 }
 
 #safebrowsing-palm-message-tail-container { 
@@ -65,12 +64,15 @@
 }
 
 #safebrowsing-palm-message-titlebox { 
-  padding-bottom: 5px;
-  padding-left: 10px;
-}
-
-#safebrowsing-palm-message-title { 
-  padding-left: 5px;
+  background-image: url("chrome://browser/skin/safebrowsing/warning24x24.png");
+  background-repeat: no-repeat;
+  background-position: top left;
+  text-indent: 30px;
+  padding: 0 0 5px;
+  margin-top: -16px;
+  font-size: 120%;
+  font-weight: bold;
+  min-height: 26px;
 }
 
 #safebrowsing-palm-message-actionbox { 
@@ -79,12 +81,11 @@
 }
 
 .safebrowsing-palm-bigtext { 
-  font-size: 14px;
   font-weight: bold;
 }
 
 .safebrowsing-palm-smalltext { 
-  font-size: 10px;
+  font-size: 80%;
 }
 
 #safebrowsing-palm-google-logo { 
@@ -100,17 +101,6 @@
 #safebrowsing-dim-area-canvas {
   background-image: url("chrome://browser/skin/safebrowsing/dim.png");
   position: fixed;
-}
-
-#safebrowsing-pref-caption { 
-  background-color: #2222EE;
-}
-
-#safebrowsing-pref-caption text { 
-  text-align: center;
-  color: #FFFFFF;
-  font-size: 150%;
-  font-family: arial, helvetica, sans-serif;
 }
 
 #safebrowsing-urlbar-icon {

@@ -28,30 +28,26 @@
       <!-- This is the main warning area -->
 
       <vbox id="safebrowsing-palm-message-content" 
-      class="safebrowsing-palm-fixed-width safebrowsing-palm-message-bubble"
+      class="safebrowsing-palm-fixed-width"
       style="-moz-user-focus: normal"
       xmlns:x2="http://www.w3.org/TR/xhtml2"
       xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
       x2:role="wairole:alert">
 
-        <!-- Top line -->
-
-        <hbox id="safebrowsing-palm-message-titlebox"
-        class="safebrowsing-palm-fixed-width">
-          <image
-          src="chrome://browser/skin/safebrowsing/warning24x24.png" 
-          id="safebrowsing-palm-title-icon" />
-          <description id="safebrowsing-palm-message-title"
-          class="safebrowsing-palm-title"
-          value="&safeb.palm.warning.title;" />
+        <hbox id="safebrowsing-palm-close-container"
+        align="center" class="safebrowsing-palm-fixed-width">
           <spacer flex="1" />
-          <vbox pack="start" align="start">
-            <image
-            src="chrome://browser/skin/safebrowsing/close16x16.png"
-            id="safebrowsing-palm-close"
-            onclick="goDoCommand('safebrowsing-decline-warning')" />
-          </vbox>
+          <image
+          id="safebrowsing-palm-close"
+          onclick="goDoCommand('safebrowsing-decline-warning')" />
         </hbox>
+
+        <!-- Top line -->
+        <description id="safebrowsing-palm-message-titlebox"
+        class="safebrowsing-palm-fixed-width">
+          &safeb.palm.warning.title;
+        </description>
+
 
         <!-- Content area: short warning -->
 
@@ -90,7 +86,7 @@
         </vbox>
 
         <!-- Main action links -->
-        <hbox id="safebrowsing-palm-message-actionbox"
+        <description id="safebrowsing-palm-message-actionbox"
          class="safebrowsing-palm-fixed-width"
          align="center" crop="none">
          <label
@@ -106,7 +102,7 @@
            id="safebrowsing-palm-decline-link"
            onclick="goDoCommand('safebrowsing-decline-warning')"
            value="&safeb.palm.decline.label;" />
-        </hbox>
+        </description>
 
         <!-- Footer -->
 
