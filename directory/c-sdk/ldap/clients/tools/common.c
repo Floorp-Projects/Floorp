@@ -1005,7 +1005,7 @@ ldaptool_ldap_init( int second_host )
     }
 
 #ifdef LDAP_TOOL_ARGPIN
-    if (secure) {
+    if (secure || isZZ) {
 	if (PinArgRegistration( )) {
 	    exit( LDAP_LOCAL_ERROR);
 	}
