@@ -329,6 +329,7 @@ import Bugzilla::Install::Filesystem qw(update_filesystem create_htaccess
 
 require Bugzilla::DB;
 require Bugzilla::Template;
+require Bugzilla::Field;
 require Bugzilla::Install;
 
 ###########################################################################
@@ -444,101 +445,138 @@ sub AddGroup {
 
 
 ###########################################################################
-# Populate the list of fields.
+# The list of fields.
 ###########################################################################
 
-my $headernum = 1;
+# NOTE: All of these entries are unconditional, from when get_field_id
+# used to create an entry if it wasn't found. New fielddef columns should
+# be created with their associated schema change.
+use constant OLD_FIELD_DEFS => (
+    {name => 'bug_id',       desc => 'Bug #',      in_new_bugmail => 1},
+    {name => 'short_desc',   desc => 'Summary',    in_new_bugmail => 1},
+    {name => 'classification', desc => 'Classification', in_new_bugmail => 1},
+    {name => 'product',      desc => 'Product',    in_new_bugmail => 1},
+    {name => 'version',      desc => 'Version',    in_new_bugmail => 1},
+    {name => 'rep_platform', desc => 'Platform',   in_new_bugmail => 1},
+    {name => 'bug_file_loc', desc => 'URL',        in_new_bugmail => 1},
+    {name => 'op_sys',       desc => 'OS/Version', in_new_bugmail => 1},
+    {name => 'bug_status',   desc => 'Status',     in_new_bugmail => 1},
+    {name => 'status_whiteboard', desc => 'Status Whiteboard',
+     in_new_bugmail => 1},
+    {name => 'keywords',     desc => 'Keywords',   in_new_bugmail => 1},
+    {name => 'resolution',   desc => 'Resolution'},
+    {name => 'bug_severity', desc => 'Severity',   in_new_bugmail => 1},
+    {name => 'priority',     desc => 'Priority',   in_new_bugmail => 1},
+    {name => 'component',    desc => 'Component',  in_new_bugmail => 1},
+    {name => 'assigned_to',  desc => 'AssignedTo', in_new_bugmail => 1},
+    {name => 'reporter',     desc => 'ReportedBy', in_new_bugmail => 1},
+    {name => 'votes',        desc => 'Votes'},
+    {name => 'qa_contact',   desc => 'QAContact',  in_new_bugmail => 1},
+    {name => 'cc',           desc => 'CC',         in_new_bugmail => 1},
+    {name => 'dependson',    desc => 'BugsThisDependsOn', in_new_bugmail => 1},
+    {name => 'blocked',      desc => 'OtherBugsDependingOnThis',
+     in_new_bugmail => 1},
 
-sub AddFDef {
-    my ($name, $description, $mailhead) = (@_);
+    {name => 'attachments.description', desc => 'Attachment description'},
+    {name => 'attachments.filename',    desc => 'Attachment filename'},
+    {name => 'attachments.mimetype',    desc => 'Attachment mime type'},
+    {name => 'attachments.ispatch',     desc => 'Attachment is patch'},
+    {name => 'attachments.isobsolete',  desc => 'Attachment is obsolete'},
+    {name => 'attachments.isprivate',   desc => 'Attachment is private'},
 
-    my $sth = $dbh->prepare("SELECT id FROM fielddefs " .
-                            "WHERE name = ?");
-    $sth->execute($name);
-    my ($fieldid) = ($sth->fetchrow_array());
-    if (!$fieldid) {
-        $dbh->do(q{INSERT INTO fielddefs
-                               (name, description, mailhead, sortkey)
-                   VALUES (?, ?, ?, ?)},
-                 undef, ($name, $description, $mailhead, $headernum));
-    } else {
-        $dbh->do(q{UPDATE fielddefs
-                      SET name = ?, description = ?,
-                          mailhead = ?, sortkey = ?
-                    WHERE id = ?}, undef,
-                 $name, $description, $mailhead, $headernum, $fieldid);
-    }
-    $headernum++;
+    {name => 'target_milestone',      desc => 'Target Milestone'},
+    {name => 'creation_ts', desc => 'Creation date', in_new_bugmail => 1},
+    {name => 'delta_ts', desc => 'Last changed date', in_new_bugmail => 1},
+    {name => 'longdesc',              desc => 'Comment'},
+    {name => 'alias',                 desc => 'Alias'},
+    {name => 'everconfirmed',         desc => 'Ever Confirmed'},
+    {name => 'reporter_accessible',   desc => 'Reporter Accessible'},
+    {name => 'cclist_accessible',     desc => 'CC Accessible'},
+    {name => 'bug_group',             desc => 'Group'},
+    {name => 'estimated_time', desc => 'Estimated Hours', in_new_bugmail => 1},
+    {name => 'remaining_time',        desc => 'Remaining Hours'},
+    {name => 'deadline',              desc => 'Deadline', in_new_bugmail => 1},
+    {name => 'commenter',             desc => 'Commenter'},
+    {name => 'flagtypes.name',        desc => 'Flag'},
+    {name => 'requestees.login_name', desc => 'Flag Requestee'},
+    {name => 'setters.login_name',    desc => 'Flag Setter'},
+    {name => 'work_time',             desc => 'Hours Worked'},
+    {name => 'percentage_complete',   desc => 'Percentage Complete'},
+    {name => 'content',               desc => 'Content'},
+    {name => 'attach_data.thedata',   desc => 'Attachment data'},
+    {name => 'attachments.isurl',     desc => 'Attachment is a URL'}
+);
+# Please see comment above before adding any new values to this constant.
+
+###########################################################################
+# Changes to the fielddefs --TABLE--
+###########################################################################
+
+# Calling Bugzilla::Field::create_or_update depends on the
+# fielddefs table having a modern definition. So, we have to make
+# these particular schema changes before we make any other schema changes.
+
+# 2005-02-21 - LpSolit@gmail.com - Bug 279910
+# qacontact_accessible and assignee_accessible field names no longer exist
+# in the 'bugs' table. Their corresponding entries in the 'bugs_activity'
+# table should therefore be marked as obsolete, meaning that they cannot
+# be used anymore when querying the database - they are not deleted in
+# order to keep track of these fields in the activity table.
+if (!$dbh->bz_column_info('fielddefs', 'obsolete')) {
+    $dbh->bz_add_column('fielddefs', 'obsolete',
+        {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'FALSE'});
+    print "Marking qacontact_accessible and assignee_accessible as obsolete",
+          " fields...\n";
+    $dbh->do("UPDATE fielddefs SET obsolete = 1
+              WHERE name = 'qacontact_accessible'
+                 OR name = 'assignee_accessible'");
 }
+
+# 2005-08-10 Myk Melez <myk@mozilla.org> bug 287325
+# Record each field's type and whether or not it's a custom field in fielddefs.
+$dbh->bz_add_column('fielddefs', 'type',
+                    { TYPE => 'INT2', NOTNULL => 1, DEFAULT => 0 });
+$dbh->bz_add_column('fielddefs', 'custom',
+                    { TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'FALSE' });
+
+$dbh->bz_add_column('fielddefs', 'enter_bug',
+    {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'FALSE'});
 
 # Change the name of the fieldid column to id, so that fielddefs
 # can use Bugzilla::Object easily. We have to do this up here, because
 # otherwise adding these field definitions will fail.
 $dbh->bz_rename_column('fielddefs', 'fieldid', 'id');
 
-# Note that all of these entries are unconditional, from when get_field_id
-# used to create an entry if it wasn't found. New fielddef columns should
-# be created with their associated schema change.
-AddFDef("bug_id", "Bug \#", 1);
-AddFDef("short_desc", "Summary", 1);
-AddFDef("classification", "Classification", 1);
-AddFDef("product", "Product", 1);
-AddFDef("version", "Version", 1);
-AddFDef("rep_platform", "Platform", 1);
-AddFDef("bug_file_loc", "URL", 1);
-AddFDef("op_sys", "OS/Version", 1);
-AddFDef("bug_status", "Status", 1);
-AddFDef("status_whiteboard", "Status Whiteboard", 0);
-AddFDef("keywords", "Keywords", 1);
-AddFDef("resolution", "Resolution", 0);
-AddFDef("bug_severity", "Severity", 1);
-AddFDef("priority", "Priority", 1);
-AddFDef("component", "Component", 1);
-AddFDef("assigned_to", "AssignedTo", 1);
-AddFDef("reporter", "ReportedBy", 1);
-AddFDef("votes", "Votes", 0);
-AddFDef("qa_contact", "QAContact", 1);
-AddFDef("cc", "CC", 1);
-AddFDef("dependson", "BugsThisDependsOn", 1);
-AddFDef("blocked", "OtherBugsDependingOnThis", 1);
-AddFDef("attachments.description", "Attachment description", 0);
-AddFDef("attachments.filename", "Attachment filename", 0);
-AddFDef("attachments.mimetype", "Attachment mime type", 0);
-AddFDef("attachments.ispatch", "Attachment is patch", 0);
-AddFDef("attachments.isobsolete", "Attachment is obsolete", 0);
-AddFDef("attachments.isprivate", "Attachment is private", 0);
+# If the largest fielddefs sortkey is less than 100, then
+# we're using the old sorting system, and we should convert
+# it to the new one before adding any new definitions.
+if (!$dbh->selectrow_arrayref(
+        'SELECT COUNT(id) FROM fielddefs WHERE sortkey >= 100'))
+{
+    print "Updating the sortkeys for the fielddefs table...\n";
+    my $field_ids = $dbh->selectcol_arrayref(
+        'SELECT id FROM fielddefs ORDER BY sortkey');
+    my $sortkey = 100;
+    foreach my $field_id (@$field_ids) {
+        $dbh->do('UPDATE fielddefs SET sortkey = ? WHERE id = ?',
+                 undef, $sortkey, $field_id);
+        $sortkey += 100;
+    }
+}
 
-AddFDef("target_milestone", "Target Milestone", 0);
-AddFDef("creation_ts", "Creation date", 0);
-AddFDef("delta_ts", "Last changed date", 0);
-AddFDef("longdesc", "Comment", 0);
-AddFDef("alias", "Alias", 0);
-AddFDef("everconfirmed", "Ever Confirmed", 0);
-AddFDef("reporter_accessible", "Reporter Accessible", 0);
-AddFDef("cclist_accessible", "CC Accessible", 0);
-AddFDef("bug_group", "Group", 0);
-AddFDef("estimated_time", "Estimated Hours", 1);
-AddFDef("remaining_time", "Remaining Hours", 0);
-AddFDef("deadline", "Deadline", 1);
-AddFDef("commenter", "Commenter", 0);
+# Create field definitions
+foreach my $definition (OLD_FIELD_DEFS) {
+    Bugzilla::Field::create_or_update($definition);
+}
+
+# Delete or adjust old field definitions.
 
 # Oops. Bug 163299
 $dbh->do("DELETE FROM fielddefs WHERE name='cc_accessible'");
-
 # Oops. Bug 215319
 $dbh->do("DELETE FROM fielddefs WHERE name='requesters.login_name'");
-
-AddFDef("flagtypes.name", "Flag", 0);
-AddFDef("requestees.login_name", "Flag Requestee", 0);
-AddFDef("setters.login_name", "Flag Setter", 0);
-AddFDef("work_time", "Hours Worked", 0);
-AddFDef("percentage_complete", "Percentage Complete", 0);
-
-AddFDef("content", "Content", 0);
-
+# This field was never tracked in bugs_activity, so it's safe to delete.
 $dbh->do("DELETE FROM fielddefs WHERE name='attachments.thedata'");
-AddFDef("attach_data.thedata", "Attachment data", 0);
-AddFDef("attachments.isurl", "Attachment is a URL", 0);
 
 # 2005-11-13 LpSolit@gmail.com - Bug 302599
 # One of the field names was a fragment of SQL code, which is DB dependent.
@@ -597,7 +635,10 @@ if ($old_field_id && ($old_field_name ne $new_field_name)) {
     $dbh->do('UPDATE fielddefs SET name = ? WHERE id = ?',
               undef, ($new_field_name, $old_field_id));
 }
-AddFDef($new_field_name, $field_description, 0);
+
+
+Bugzilla::Field::create_or_update(
+    {name => $new_field_name, desc => $field_description});
 
 ###########################################################################
 # Create initial test product if there are no products present.
@@ -1778,8 +1819,6 @@ if ($dbh->bz_column_info("profiles", "groupset")) {
         }
     }
     # Replace old activity log groupset records with lists of names of groups.
-    # Start by defining the bug_group field and getting its id.
-    AddFDef("bug_group", "Group", 0);
     $sth = $dbh->prepare("SELECT id " .
                            "FROM fielddefs " .
                           "WHERE name = " . $dbh->quote('bug_group'));
@@ -2322,7 +2361,8 @@ if (!$series_exists) {
     }
 }
 
-AddFDef("owner_idle_time", "Time Since Assignee Touched", 0);
+Bugzilla::Field::create_or_update(
+    {name => "owner_idle_time", desc => "Time Since Assignee Touched"});
 
 # 2004-04-12 - Keep regexp-based group permissions up-to-date - Bug 240325
 if ($dbh->bz_column_info("user_group_map", "isderived")) {
@@ -2411,21 +2451,6 @@ if ($dbh->bz_column_info('quips', 'userid')->{NOTNULL}) {
     $dbh->bz_alter_column('quips', 'userid', {TYPE => 'INT3'});
     print "Changing owner to NULL for quips where the owner is unknown...\n";
     $dbh->do('UPDATE quips SET userid = NULL WHERE userid = 0');
-}
-
-# 2005-02-21 - LpSolit@gmail.com - Bug 279910
-# qacontact_accessible and assignee_accessible field names no longer exist
-# in the 'bugs' table. Their corresponding entries in the 'bugs_activity'
-# table should therefore be marked as obsolete, meaning that they cannot
-# be used anymore when querying the database - they are not deleted in
-# order to keep track of these fields in the activity table.
-if (!$dbh->bz_column_info('fielddefs', 'obsolete')) {
-    $dbh->bz_add_column('fielddefs', 'obsolete', 
-        {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'FALSE'});
-    print "Marking qacontact_accessible and assignee_accessible as obsolete fields...\n";
-    $dbh->do("UPDATE fielddefs SET obsolete = 1
-              WHERE name = 'qacontact_accessible'
-                 OR name = 'assignee_accessible'");
 }
 
 # Add fulltext indexes for bug summaries and descriptions/comments.
@@ -2986,13 +3011,6 @@ if (scalar(@$controlchar_bugs))
     print " done.\n" if $found;
 }
 
-# 2005-08-10 Myk Melez <myk@mozilla.org> bug 287325
-# Record each field's type and whether or not it's a custom field in fielddefs.
-$dbh->bz_add_column('fielddefs', 'type',
-                    { TYPE => 'INT2', NOTNULL => 1, DEFAULT => 0 });
-$dbh->bz_add_column('fielddefs', 'custom',
-                    { TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'FALSE' });
-
 # 2005-12-07 altlst@sonic.net -- Bug 225221
 $dbh->bz_add_column('longdescs', 'comment_id',
                     {TYPE => 'MEDIUMSERIAL', NOTNULL => 1, PRIMARYKEY => 1});
@@ -3090,9 +3108,6 @@ if (!$dbh->bz_column_info('classifications', 'sortkey')) {
         $sortkey += 100;
     }
 }
-
-$dbh->bz_add_column('fielddefs', 'enter_bug',
-    {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'FALSE'});
 
 # 2006-07-14 karl@kornel.name - Bug 100953
 # If a nomail file exists, move its contents into the DB

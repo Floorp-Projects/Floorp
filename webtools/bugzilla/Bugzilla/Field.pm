@@ -42,9 +42,9 @@ Bugzilla::Field - a particular piece of information about bugs
   # so both methods take the same arguments.
   print Dumper(Bugzilla::Field->match({ obsolete => 1, custom => 1 }));
 
-  # Create a custom field.
-  my $field = Bugzilla::Field::create("hilarity", "Hilarity");
-  print $field->description . " is a custom field\n";
+  # Create or update a custom field or field definition.
+  my $field = Bugzilla::Field::create_or_update(
+    {name => 'hilarity', desc => 'Hilarity', custom => 1});
 
   # Instantiate a Field object for an existing field.
   my $field = new Bugzilla::Field({name => 'qacontact_accessible'});
@@ -92,6 +92,13 @@ use constant DB_COLUMNS => (
     'obsolete',
     'enter_bug',
 );
+
+# How various field types translate into SQL data definitions.
+use constant SQL_DEFINITIONS => {
+    # Using commas because these are constants and they shouldn't
+    # be auto-quoted by the "=>" operator.
+    FIELD_TYPE_FREETEXT, { TYPE => 'varchar(255)' },
+};
 
 =pod
 
@@ -176,44 +183,61 @@ sub enter_bug { return $_[0]->{enter_bug} }
 
 =over
 
-=item C<create($name, $desc)>
+=item C<create_or_update({name => $name, desc => $desc, in_new_bugmail => 0, custom => 0})>
 
-Description: creates a new custom field.
+Description: Creates a new field, or updates one that
+             already exists with the same name.
 
-Params:      C<$name> - string - the name of the field;
-             C<$desc> - string - the field label to display in the UI.
+Params:      This function takes named parameters in a hashref: 
+             C<name> - string - The name of the field.
+             C<desc> - string - The field label to display in the UI.
+             C<in_new_bugmail> - boolean - Whether this field appears at the
+                 top of the bugmail for a newly-filed bug.
+             C<custom> - boolean - True if this is a Custom Field. The field
+                 will be added to the C<bugs> table if it does not exist.
 
-Returns:     a field object.
+Returns:     a C<Bugzilla::Field> object.
 
 =back
 
 =cut
 
-sub create {
-    my ($name, $desc, $custom) = @_;
+sub create_or_update {
+    my ($params) = @_;
     
-    # Convert the $custom argument into a DB-compatible value.
-    $custom = $custom ? 1 : 0;
+    my $custom         = $params->{custom} ? 1 : 0;
+    my $name           = $params->{name};
+    my $in_new_bugmail = $params->{in_new_bugmail} ? 1 : 0;
+
+    # Some day we'll allow invocants to specify the field type.
+    my $type = $custom ? FIELD_TYPE_FREETEXT : FIELD_TYPE_UNKNOWN;
+
+    my $field = new Bugzilla::Field({name => $name});
 
     my $dbh = Bugzilla->dbh;
+    if ($field) {
+        # Update the already-existing definition.
+        $dbh->do("UPDATE fielddefs SET description = ?, mailhead = ?
+                   WHERE id = ?",
+                 undef, $params->{desc}, $in_new_bugmail, $field->id);
+    }
+    else {
+        # Some day we'll allow invocants to specify the sort key.
+        my ($sortkey) = $dbh->selectrow_array(
+            "SELECT MAX(sortkey) + 100 FROM fielddefs") || 100;
 
-    # Some day we'll allow invocants to specify the sort key.
-    my ($sortkey) =
-      $dbh->selectrow_array("SELECT MAX(sortkey) + 1 FROM fielddefs");
+        # Add the field to the list of fields at this Bugzilla installation.
+        $dbh->do("INSERT INTO fielddefs (name, description, sortkey, type,
+                                         custom, mailhead)
+                       VALUES (?, ?, ?, ?, ?, ?)", undef,
+                 $name, $params->{desc}, $sortkey, $type, $custom, 
+                 $in_new_bugmail);
+    }
 
-    # Some day we'll require invocants to specify the field type.
-    my $type = FIELD_TYPE_FREETEXT;
-
-    # Create the database column that stores the data for this field.
-    $dbh->bz_add_column("bugs", $name, { TYPE => 'varchar(255)' });
-
-    # Add the field to the list of fields at this Bugzilla installation.
-    my $sth = $dbh->prepare(
-                  "INSERT INTO fielddefs (name, description, sortkey, type,
-                                          custom, mailhead)
-                   VALUES (?, ?, ?, ?, ?, 1)"
-              );
-    $sth->execute($name, $desc, $sortkey, $type, $custom);
+    if (!$dbh->bz_column_info('bugs', $name) && $custom) {
+        # Create the database column that stores the data for this field.
+        $dbh->bz_add_column('bugs', $name, SQL_DEFINITIONS->{$type});
+    }
 
     return new Bugzilla::Field({name => $name});
 }

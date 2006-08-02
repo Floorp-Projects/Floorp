@@ -84,5 +84,6 @@ if ( new Bugzilla::Field({name => $name}) ) {
 
 # Create the field.
 print "Creating custom field $name ...\n";
-my $field = Bugzilla::Field::create($name, $desc, 1);
+Bugzilla::Field::create_or_update(
+    {name => $name, desc => $desc, custom => 1});
 print "Custom field $name created.\n";
