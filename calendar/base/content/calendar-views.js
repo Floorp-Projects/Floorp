@@ -103,17 +103,30 @@ var calendarViewController = {
             // out how much the occurrence moved, and move the occurrence by
             // that amount.
             if (instance.parentItem.hasSameIds(instance)) {
-                var startDiff = instance.startDate.subtractDate(aOccurrence.startDate);
+
+                // Figure out how much the start has moved, and adjust 
+                // aNewStartTime so that the parent moves the same amuount.
+                var instanceStart = instance.startDate || instance.entryDate;
+                var occStart = aOccurrence.startDate || aOccurrence.entryDate;
+                var startDiff = instanceStart.subtractDate(occStart);
                 aNewStartTime = aNewStartTime.clone();
                 aNewStartTime.addDuration(startDiff);
-                var endDiff = instance.endDate.subtractDate(aOccurrence.endDate);
+
+                // Now do the same for end
+                var instanceEnd = instance.endDate || instance.dueDate;
+                var occEnd = aOccurrence.endDate || aOccurrence.dueDate;
+                var endDiff = instanceEnd.subtractDate(occEnd);
                 aNewEndTime = aNewEndTime.clone();
                 aNewEndTime.addDuration(endDiff);
             }
-
-            instance.startDate = aNewStartTime;
-            instance.endDate = aNewEndTime;
-
+            // Yay for variable names that make this next line look silly
+            if (instance instanceof Components.interfaces.calIEvent) {
+                instance.startDate = aNewStartTime;
+                instance.endDate = aNewEndTime;
+            } else {
+                instance.entryDate = aNewStartTime;
+                instance.dueDate = aNewEndTime;
+            }
             doTransaction('modify', instance, instance.calendar, itemToEdit, null);
         } else {
             //XXX unify these
