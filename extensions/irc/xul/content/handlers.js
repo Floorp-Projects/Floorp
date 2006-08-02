@@ -1582,6 +1582,17 @@ function my_352 (e)
     }
 }
 
+CIRCNetwork.prototype.on301 = /* user away message */
+function my_301(e)
+{
+    if (e.user.awayMessage != e.user.lastShownAwayMessage)
+    {
+        var params = [e.user.unicodeName, e.user.awayMessage];
+        e.user.display(getMsg(MSG_WHOIS_AWAY, params), e.code);
+        e.user.lastShownAwayMessage = e.user.awayMessage;
+    }
+}
+
 CIRCNetwork.prototype.on311 = /* whois name */
 CIRCNetwork.prototype.on319 = /* whois channels */
 CIRCNetwork.prototype.on312 = /* whois server */
@@ -1603,6 +1614,10 @@ function my_whoisreply (e)
     switch (Number(e.code))
     {
         case 311:
+            // Clear saved away message so it appears and can be reset.
+            if (e.user)
+                e.user.lastShownAwayMessage = "";
+
             text = getMsg(MSG_WHOIS_NAME,
                           [nick, e.params[3], e.params[4],
                            e.decodeParam(6)]);
@@ -2517,6 +2532,7 @@ CIRCUser.prototype.onInit =
 function user_oninit ()
 {
     this.logFile = null;
+    this.lastShownAwayMessage = "";
 }
 
 CIRCUser.prototype.onPrivmsg =

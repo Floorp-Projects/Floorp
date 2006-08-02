@@ -1562,6 +1562,15 @@ function serv_005 (e)
     return true;
 }
 
+/* user away message */
+CIRCServer.prototype.on301 =
+function serv_301(e)
+{
+    e.user = new CIRCUser(this, null, e.params[2]);
+    e.user.awayMessage = e.decodeParam(3, e.user);
+    e.destObject = this.parent;
+    e.set = "network";
+}
 
 /* whois name */
 CIRCServer.prototype.on311 =
