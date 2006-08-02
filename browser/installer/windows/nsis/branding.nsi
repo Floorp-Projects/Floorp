@@ -41,7 +41,7 @@
 # BrandFullNameInternal is used for some registry and file system values that
 # should not contain release that may be in the BrandFullName (e.g. Beta 1, etc.)
 !define BrandFullNameInternal "Minefield"
-!define CompanyName           "Mozilla"
+!define CompanyName           "mozilla.org"
 !define URLInfoAbout          "http://www.mozilla.org"
 !define URLUpdateInfo         "http://www.mozilla.org/projects/firefox"
 !define SurveyURL             "https://survey.mozilla.com/1/Mozilla%20Firefox/${AppVersion}/${AB_CD}/exit.html"
