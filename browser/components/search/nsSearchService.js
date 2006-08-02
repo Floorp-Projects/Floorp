@@ -628,22 +628,6 @@ function getLocalizedPref(aPrefName, aDefault) {
 }
 
 /**
- * Wrapper for nsIPrefBranch::setComplexValue.
- * @param aPrefName
- *        The name of the pref to set.
- * @param aValue
- *        The value of the pref.
- */
-function setLocalizedPref(aPrefName, aValue) {
-  var prefB = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefBranch);
-  var pls = Cc["@mozilla.org/pref-localizedstring;1"].
-            createInstance(Ci.nsIPrefLocalizedString);
-  pls.data = aValue;
-  prefB.setComplexValue(aPrefName, Ci.nsIPrefLocalizedString, pls);
-}
-
-/**
  * Wrapper for nsIPrefBranch::getBoolPref.
  * @param aPrefName
  *        The name of the pref to get.
@@ -2686,8 +2670,20 @@ SearchService.prototype = {
            Cr.NS_ERROR_UNEXPECTED);
 
     this._currentEngine = newCurrentEngine;
-    setLocalizedPref(BROWSER_SEARCH_PREF + "selectedEngine",
-                     this._currentEngine.name);
+
+    var currentEnginePref = BROWSER_SEARCH_PREF + "selectedEngine";
+
+    var prefB = Cc["@mozilla.org/preferences-service;1"].
+      getService(Ci.nsIPrefService).QueryInterface(Ci.nsIPrefBranch);
+
+    if (this._currentEngine == this.defaultEngine) {
+      if (prefB.prefHasUserValue(currentEnginePref))
+        prefB.clearUserPref(currentEnginePref);
+    }
+    else {
+      prefB.setCharPref(currentEnginePref, this._currentEngine.name);
+    }
+
     notifyAction(this._currentEngine, SEARCH_ENGINE_CURRENT);
   },
 
