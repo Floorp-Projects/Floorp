@@ -90,6 +90,7 @@ var safebrowsing = {
     phishWarden.registerWhiteTable("goog-white-domain");
     phishWarden.registerWhiteTable("goog-white-url");
     phishWarden.registerBlackTable("goog-black-url");
+    phishWarden.registerBlackTable("goog-black-enchash");
 
     // Download/update lists if we're in non-enhanced mode
     phishWarden.maybeToggleUpdateChecking();
