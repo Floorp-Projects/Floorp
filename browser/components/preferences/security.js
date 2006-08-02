@@ -82,8 +82,8 @@ var gSecurityPane = {
 
     var params = this._addonParams;
     if (!params.windowTitle || !params.introText) {
-      params.windowTitle = bundlePrefs.getString("installpermissionstitle");
-      params.introText = bundlePrefs.getString("installpermissionstext");
+      params.windowTitle = bundlePrefs.getString("addonspermissionstitle");
+      params.introText = bundlePrefs.getString("addonspermissionstext");
     }
 
     document.documentElement.openWindow("Browser:Permissions",
