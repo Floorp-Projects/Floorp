@@ -271,8 +271,8 @@ nsSVGInnerSVGFrame::NotifyViewportChange()
   SuspendRedraw();
   nsIFrame* kid = mFrames.FirstChild();
   while (kid) {
-    nsISVGChildFrame* SVGFrame=nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
+    nsISVGChildFrame* SVGFrame = nsnull;
+    CallQueryInterface(kid, &SVGFrame);
     if (SVGFrame)
       SVGFrame->NotifyCanvasTMChanged(PR_FALSE); 
     kid = kid->GetNextSibling();
