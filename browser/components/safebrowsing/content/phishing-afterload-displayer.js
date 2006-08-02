@@ -409,10 +409,19 @@ PROT_PhishMsgDisplayerBase.prototype.adjustLocation_ = function(message,
   G_Debug(this, "Tail is at [window-relative] (" + tailX + ", " + 
           tailY + ")");
 
+  if (messageX < 0) {
+    // We're hanging off the left edge, switch to floating mode
+    tail.style.display = "none";
+    this.adjustLocationFloating_(message);
+    return;
+  }
+
   tail.style.top = tailY + "px";
   tail.style.left = tailX + "px";
   message.style.top = messageY + "px";
   message.style.left = messageX + "px";
+  
+  this.maybeAddScrollbars_();
 }
 
 /**
@@ -432,6 +441,29 @@ PROT_PhishMsgDisplayerBase.prototype.adjustLocationFloating_ = function(message)
   // Position message
   message.style.top = messageY + "px";
   message.style.left = messageX + "px";
+
+  this.maybeAddScrollbars_();
+}
+
+/**
+ * Add a vertical scrollbar if we're falling out of the browser window.
+ */
+PROT_PhishMsgDisplayerBase.prototype.maybeAddScrollbars_ = function() {
+  var message = this.doc_.getElementById(this.messageId_);
+  
+  var content = this.doc_.getElementById(this.messageContentId_);
+  var bottom = content.boxObject.y + content.boxObject.height;
+  var maxY = this.doc_.defaultView.innerHeight;
+  G_Debug(this, "bottom: " + bottom + ", maxY: " + maxY
+                + ", new height: " + (maxY - content.boxObject.y));
+  if (bottom > maxY) {
+    var newHeight = maxY - content.boxObject.y;
+    if (newHeight < 1)
+      newHeight = 1;
+
+    content.style.height = newHeight + "px";
+    content.style.overflow = "auto";
+  }
 }
 
 /**
@@ -440,6 +472,8 @@ PROT_PhishMsgDisplayerBase.prototype.adjustLocationFloating_ = function(message)
 PROT_PhishMsgDisplayerBase.prototype.showMore_ = function() {
   this.doc_.getElementById(this.extendedMessageId_).hidden = false;
   this.doc_.getElementById(this.showmoreLinkId_).style.display = "none";
+  
+  this.maybeAddScrollbars_();
 }
 
 /**
@@ -671,6 +705,9 @@ PROT_PhishMsgDisplayerCanvas.prototype.hideMessage_ = function() {
   var message = this.doc_.getElementById(this.messageId_);
   message.hidden = true;
   message.style.display = "none";
+  var content = this.doc_.getElementById(this.messageContentId_);
+  content.style.height = "";
+  content.style.overflow = "";
 
   var tail = this.doc_.getElementById(this.messageTailId_);
   tail.hidden = true;
