@@ -113,9 +113,17 @@ var listener = {
     do_check_eq(status, Components.results.NS_ERROR_ABORT);
 
     if (current_test < (tests.length - 1)) {
+      // First, gotta clear the auth cache
+      Components.classes["@mozilla.org/network/http-auth-manager;1"]
+                .getService(Components.interfaces.nsIHttpAuthManager)
+                .clearAll();
+
       current_test++;
       tests[current_test]();
+    } else { 
+      httpserv.stopListening();
     }
+
     do_test_finished();
   }
 };
@@ -129,11 +137,13 @@ function makeChan(url) {
   return chan;
 }
 
-var tests = [test_noauth, test_returnfalse1, test_prompt1];
+var tests = [test_noauth, test_returnfalse1, test_wrongpw1, test_prompt1];
 var current_test = 0;
 
+var httpserv = null;
+
 function run_test() {
-  start_server(4444);
+  httpserv = start_server(4444);
   tests[0]();
 }
 

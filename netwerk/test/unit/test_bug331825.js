@@ -15,6 +15,7 @@ TestListener.prototype.onStopRequest = function(request, context, status) {
   do_check_eq(channel.responseStatus, 304);
 
   do_test_finished();
+  server.stopListening();
 }
 
 function run_test() {

@@ -81,6 +81,8 @@ var listener = {
   onStopRequest: function test_onStopR(request, ctx, status) {
     if (this._iteration <= 2)
       run_test_continued();
+    else
+      httpserv.stopListening();
     do_test_finished();
   },
 
@@ -96,8 +98,10 @@ function makeChan(url) {
   return chan;
 }
 
+var httpserv = null;
+
 function run_test() {
-  start_server(4444);
+  httpserv = start_server(4444);
 
   Components.manager.nsIComponentRegistrar.registerFactory(sinkCID,
     "Unit test Event sink", sinkContract, eventsink);

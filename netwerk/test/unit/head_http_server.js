@@ -127,6 +127,7 @@ nsTestServ.prototype =
   onStopListening: function(serverSocket, status)
   {
     dump(">>> shutting down server socket\n");
+    this.shutdown = true;
   },
 
   startListening: function()
@@ -137,6 +138,21 @@ nsTestServ.prototype =
     socket.init(this.port, true /* loopback only */, 5);
     dump(">>> listening on port "+socket.port+"\n");
     socket.asyncListen(this);
+    this.socket = socket;
+  },
+
+  // Shuts down the server. Note that this processes events.
+  stopListening: function()
+  {
+    if (!this.socket)
+      return;
+    this.socket.close();
+    this.socket = null;
+    var thr = Components.classes["@mozilla.org/thread-manager;1"]
+                        .getService().currentThread;
+    while (!this.shutdown) {
+      thr.processNextEvent(true);
+    }
   },
 
   parseInput: function(input)
@@ -177,11 +193,17 @@ nsTestServ.prototype =
       return [400];
 
     return [request[1], req_head];
-  }
+  },
+
+  socket: null,
+  shutdown: false
 }
 
 
 
 function start_server(port) {
-  new nsTestServ(port).startListening();
+  var serv = new nsTestServ(port);
+  serv.startListening();
+  return serv;
 }
+
