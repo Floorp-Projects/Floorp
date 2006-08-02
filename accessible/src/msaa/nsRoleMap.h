@@ -135,7 +135,7 @@ PRUint32 msaaRoleMap[] = {
     USE_ROLE_STRING,                 // nsIAccessible::ROLE_FILE_CHOOSER
     USE_ROLE_STRING,                 // nsIAccessible::ROLE_FILLER
     USE_ROLE_STRING,                 // nsIAccessible::ROLE_FONT_CHOOSER
-    ROLE_SYSTEM_APPLICATION,         // nsIAccessible::ROLE_CHROME_WINDOW
+    USE_ROLE_STRING,                 // nsIAccessible::ROLE_FRAME
     USE_ROLE_STRING,                 // nsIAccessible::ROLE_GLASS_PANE
     USE_ROLE_STRING,                 // nsIAccessible::ROLE_HTML_CONTAINER
     ROLE_SYSTEM_PUSHBUTTON,          // nsIAccessible::ROLE_ICON
