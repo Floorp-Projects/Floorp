@@ -109,8 +109,8 @@ nsSVGTextFrame::AttributeChanged(PRInt32         aNameSpaceID,
     
     nsIFrame* kid = mFrames.FirstChild();
     while (kid) {
-      nsISVGChildFrame* SVGFrame=0;
-      kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
+      nsISVGChildFrame* SVGFrame = nsnull;
+      CallQueryInterface(kid, &SVGFrame);
       if (SVGFrame)
         SVGFrame->NotifyCanvasTMChanged(PR_FALSE);
       kid = kid->GetNextSibling();
@@ -425,8 +425,8 @@ nsSVGTextFrame::EnsureFragmentTreeUpToDate()
     mFragmentTreeState = updating;
     nsIFrame* kid = mFrames.FirstChild();
     while (kid) {
-      nsISVGGlyphFragmentNode* node=nsnull;
-      kid->QueryInterface(NS_GET_IID(nsISVGGlyphFragmentNode), (void**)&node);
+      nsISVGGlyphFragmentNode* node = nsnull;
+      CallQueryInterface(kid, &node);
       if (node)
         node->NotifyGlyphFragmentTreeUnsuspended();
       kid = kid->GetNextSibling();
@@ -452,8 +452,8 @@ nsSVGTextFrame::EnsureFragmentTreeUpToDate()
   
     nsIFrame* kid = mFrames.FirstChild();
     while (kid) {
-      nsISVGGlyphFragmentNode* fragmentNode=nsnull;
-      kid->QueryInterface(NS_GET_IID(nsISVGGlyphFragmentNode), (void**)&fragmentNode);
+      nsISVGGlyphFragmentNode* fragmentNode = nsnull;
+      CallQueryInterface(kid, &fragmentNode);
       if (fragmentNode) {
         fragmentNode->NotifyGlyphFragmentTreeSuspended();
       }

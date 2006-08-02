@@ -214,8 +214,8 @@ nsSVGUtils::GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval)
 
   nsIFrame* kid = aFrames->FirstChild();
   while (kid) {
-    nsISVGChildFrame* SVGFrame=0;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame), (void**)&SVGFrame);
+    nsISVGChildFrame* SVGFrame = nsnull;
+    CallQueryInterface(kid, &SVGFrame);
     if (SVGFrame) {
       nsCOMPtr<nsIDOMSVGRect> box;
       SVGFrame->GetBBox(getter_AddRefs(box));

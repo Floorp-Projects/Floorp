@@ -1107,7 +1107,7 @@ nsSVGGlyphFrame::GetNextGlyphFragment()
   nsIFrame* sibling = mNextSibling;
   while (sibling) {
     nsISVGGlyphFragmentNode *node = nsnull;
-    sibling->QueryInterface(NS_GET_IID(nsISVGGlyphFragmentNode), (void**)&node);
+    CallQueryInterface(sibling, &node);
     if (node)
       return node->GetFirstGlyphFragment();
     sibling = sibling->GetNextSibling();
@@ -1117,7 +1117,7 @@ nsSVGGlyphFrame::GetNextGlyphFragment()
   
   NS_ASSERTION(mParent, "null parent");
   nsISVGGlyphFragmentNode *node = nsnull;
-  mParent->QueryInterface(NS_GET_IID(nsISVGGlyphFragmentNode), (void**)&node);
+  CallQueryInterface(mParent, &node);
   return node ? node->GetNextGlyphFragment() : nsnull;
 }
 

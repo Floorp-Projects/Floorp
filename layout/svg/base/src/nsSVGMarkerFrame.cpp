@@ -264,8 +264,8 @@ nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame=nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
+    nsISVGChildFrame* SVGFrame = nsnull;
+    CallQueryInterface(kid, &SVGFrame);
     if (SVGFrame) {
       SVGFrame->NotifyCanvasTMChanged(PR_TRUE);
       nsSVGUtils::PaintChildWithEffects(aCanvas, nsnull, kid);
