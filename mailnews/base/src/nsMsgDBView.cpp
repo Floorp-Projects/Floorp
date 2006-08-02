@@ -4889,7 +4889,7 @@ nsresult nsMsgDBView::NavigateFromPos(nsMsgNavigationTypeValue motion, nsMsgView
                 PRUint32 flags = m_flags.GetAt(curIndex);
 
                 // don't return start index since navigate should move
-                if (!(flags & MSG_FLAG_READ) && (curIndex != startIndex)) 
+                if (!(flags & (MSG_FLAG_READ | MSG_VIEW_FLAG_DUMMY)) && (curIndex != startIndex)) 
                 {
                     *pResultIndex = curIndex;
                     *pResultKey = m_keys.GetAt(*pResultIndex);
@@ -5129,57 +5129,6 @@ nsresult nsMsgDBView::FindFirstNew(nsMsgViewIndex *pResultIndex)
   return NS_OK;
 }
 
-// Generic routine to find next unread id. It doesn't do an expand of a
-// thread with new messages, so it can't return a view index.
-nsresult nsMsgDBView::FindNextUnread(nsMsgKey startId, nsMsgKey *pResultKey,
-                                     nsMsgKey *resultThreadId)
-{
-    nsMsgViewIndex startIndex = FindViewIndex(startId);
-    nsMsgViewIndex curIndex = startIndex;
-    nsMsgViewIndex lastIndex = (nsMsgViewIndex) GetSize() - 1;
-    nsresult rv = NS_OK;
-
-    if (startIndex == nsMsgViewIndex_None)
-        return NS_MSG_MESSAGE_NOT_FOUND;
-
-    *pResultKey = nsMsgKey_None;
-    if (resultThreadId)
-        *resultThreadId = nsMsgKey_None;
-
-    for (; curIndex <= lastIndex && (*pResultKey == nsMsgKey_None); curIndex++) 
-    {
-        char    flags = m_flags.GetAt(curIndex);
-
-        if (!(flags & MSG_FLAG_READ) && (curIndex != startIndex)) 
-        {
-            *pResultKey = m_keys.GetAt(curIndex);
-            break;
-        }
-        // check for collapsed thread with unread children
-        if ((m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay) && flags & MSG_VIEW_FLAG_ISTHREAD && flags & MSG_FLAG_ELIDED) 
-        {
-            nsCOMPtr<nsIMsgThread> thread;
-            //nsMsgKey threadId = m_keys.GetAt(curIndex);
-            rv = GetThreadFromMsgIndex(curIndex, getter_AddRefs(thread));
-            if (NS_SUCCEEDED(rv) && thread) 
-            {
-              nsCOMPtr <nsIMsgDBHdr> unreadChild;
-              rv = thread->GetFirstUnreadChild(getter_AddRefs(unreadChild));
-              if (NS_SUCCEEDED(rv) && unreadChild)
-                unreadChild->GetMessageKey(pResultKey);
-            }
-            //rv = m_db->GetUnreadKeyInThread(threadId, pResultKey, resultThreadId);
-            if (NS_SUCCEEDED(rv) && (*pResultKey != nsMsgKey_None))
-                break;
-        }
-    }
-    // found unread message but we don't know the thread
-    NS_ASSERTION(!(*pResultKey != nsMsgKey_None && resultThreadId && *resultThreadId == nsMsgKey_None),
-      "fix this");
-    return rv;
-}
-
-
 nsresult nsMsgDBView::FindPrevUnread(nsMsgKey startKey, nsMsgKey *pResultKey,
                                      nsMsgKey *resultThreadId)
 {
@@ -5206,7 +5155,7 @@ nsresult nsMsgDBView::FindPrevUnread(nsMsgKey startKey, nsMsgKey *pResultKey,
             if (NS_SUCCEEDED(rv) && (*pResultKey != nsMsgKey_None))
                 break;
         }
-        if (!(flags & MSG_FLAG_READ) && (curIndex != startIndex)) 
+        if (!(flags & (MSG_FLAG_READ | MSG_VIEW_FLAG_DUMMY)) && (curIndex != startIndex)) 
         {
             *pResultKey = m_keys.GetAt(curIndex);
             rv = NS_OK;

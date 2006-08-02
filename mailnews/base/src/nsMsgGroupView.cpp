@@ -298,7 +298,7 @@ nsMsgGroupThread *nsMsgGroupView::AddHdrToThread(nsIMsgDBHdr *msgHdr, PRBool *pN
     if (GroupViewUsesDummyRow())
     {
       foundThread->m_dummy = PR_TRUE;
-      msgFlags |=  MSG_VIEW_FLAG_DUMMY | MSG_VIEW_FLAG_HASCHILDREN | MSG_FLAG_READ;
+      msgFlags |=  MSG_VIEW_FLAG_DUMMY | MSG_VIEW_FLAG_HASCHILDREN;
     }
 
     nsMsgViewIndex insertIndex = GetInsertIndex(msgHdr);
