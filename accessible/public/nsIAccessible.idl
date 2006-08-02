@@ -372,7 +372,7 @@ interface nsIAccessible : nsISupports
   const unsigned long ROLE_MENUPOPUP = 11;
   const unsigned long ROLE_MENUITEM = 12;
   const unsigned long ROLE_TOOLTIP = 13;
-  const unsigned long ROLE_APPLICATION = 14;
+  const unsigned long ROLE_APPLICATION = 14; // See also ROLE_APP_ROOT
   const unsigned long ROLE_DOCUMENT = 15;
   const unsigned long ROLE_PANE = 16;
   const unsigned long ROLE_CHART = 17;
@@ -472,7 +472,9 @@ interface nsIAccessible : nsISupports
   const unsigned long ROLE_REDUNDANT_OBJECT = 111;
   const unsigned long ROLE_FORM = 112;
   const unsigned long ROLE_IME = 113;
-  const unsigned long ROLE_LAST_ENTRY = 114; // Important -- helps ensure nsRoleMap's are synchronized
+  const unsigned long ROLE_APP_ROOT = 114;
+  const unsigned long ROLE_PARENT_MENUITEM = 115;
+  const unsigned long ROLE_LAST_ENTRY = 116; // Important -- helps ensure nsRoleMap's are synchronized
 
 // MSAA relationship extensions to accNavigate
   const unsigned long NAVRELATION_CONTROLLED_BY = 0x1000;

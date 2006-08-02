@@ -191,23 +191,36 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetKeyBinding(nsAString& _retval)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsXULMenuitemAccessible::GetRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULMenuitemAccessible::GetRole(PRUint32 *aRole)
 {
-  *_retval = ROLE_MENUITEM;
+  *aRole = ROLE_MENUITEM;
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   if (!element)
     return NS_ERROR_FAILURE;
   nsAutoString menuItemType;
   element->GetAttribute(NS_LITERAL_STRING("type"), menuItemType);
   if (menuItemType.EqualsIgnoreCase("radio"))
-    *_retval = ROLE_RADIO_MENU_ITEM;
+    *aRole = ROLE_RADIO_MENU_ITEM;
   else if (menuItemType.EqualsIgnoreCase("checkbox"))
-    *_retval = ROLE_CHECK_MENU_ITEM;
+    *aRole = ROLE_CHECK_MENU_ITEM;
+  else { // Fortunately, radio/checkbox menuitems don't typically have children
+    PRInt32 childCount;
+    GetChildCount(&childCount);
+    if (childCount > 0) {
+      *aRole = ROLE_PARENT_MENUITEM;
+    }
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsXULMenuitemAccessible::GetChildCount(PRInt32 *aAccChildCount)
 {
+  if (mAccChildCount != eChildCountUninitialized) {
+    *aAccChildCount = mAccChildCount;
+    return NS_OK;
+  }
+
   // Set menugenerated="true" on the menupopup node to generate the
   // sub-menu items if they have not been generated
   PRUint32 childIndex, numChildren = 0;
