@@ -130,9 +130,10 @@ sub add_setting {
     my $sth = $dbh->prepare(q{INSERT INTO setting_value (name, value, sortindex)
                                     VALUES (?, ?, ?)});
 
-    my @values_list = keys %{$values};
-    foreach my $key (@values_list){
-        $sth->execute($name, $key, $values->{$key});
+    my $sortindex = 5;
+    foreach my $key (@$values){
+        $sth->execute($name, $key, $sortindex);
+        $sortindex += 5;
     }
 }
 
@@ -307,17 +308,19 @@ $settings->{$setting_name} = new Bugzilla::User::Setting(
 
 =over 4
 
-=item C<add_setting($name, $values, $default_value)>
+=item C<add_setting($name, \@values, $default_value)>
 
 Description: Checks for the existence of a setting, and adds it 
              to the database if it does not yet exist.
+
 Params:      C<$name> - string - the name of the new setting
-             C<$values> - hash - contains the new values (key) and 
-             sortindexes for the new setting
+             C<$values> - arrayref - contains the new choices
+               for the new Setting.
              C<$default_value> - string - the site default
+
 Returns:     a pointer to a hash of settings
-#
-#
+
+
 =item C<get_all_settings($user_id)>
 
 Description: Provides the user's choices for each setting in the 

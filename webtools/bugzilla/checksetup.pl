@@ -329,6 +329,7 @@ import Bugzilla::Install::Filesystem qw(update_filesystem create_htaccess
 
 require Bugzilla::DB;
 require Bugzilla::Template;
+require Bugzilla::Install;
 
 ###########################################################################
 # Check and update --LOCAL-- configuration
@@ -3264,36 +3265,7 @@ if (!GroupDoesExist('bz_sudoers')) {
 # Create --SETTINGS-- users can adjust
 ###########################################################################
 
-# 2005-03-03 travis@sedsystems.ca -- Bug 41972
-add_setting ("display_quips", {"on" => 1, "off" => 2 }, "on" );
-
-# 2005-03-10 travis@sedsystems.ca -- Bug 199048
-add_setting ("comment_sort_order", {"oldest_to_newest" => 1,
-                                    "newest_to_oldest" => 2,
-                                    "newest_to_oldest_desc_first" => 3}, 
-             "oldest_to_newest" );
-
-# 2005-05-12 bugzilla@glob.com.au -- Bug 63536
-add_setting ("post_bug_submit_action", {"next_bug" => 1,
-                                        "same_bug" => 2,
-                                        "nothing" => 3,
-                                       },
-             "next_bug" );
-
-# 2005-06-29 wurblzap@gmail.com -- Bug 257767
-add_setting ('csv_colsepchar', {',' => 1, ';' => 2 }, ',' );
-
-# 2005-10-26 wurblzap@gmail.com -- Bug 291459
-add_setting ("zoom_textareas", {"on" => 1, "off" => 2 }, "on" );
-
-# 2005-10-21 LpSolit@gmail.com -- Bug 313020
-add_setting('per_bug_queries', {'on' => 1, 'off' => 2}, 'on');
-
-# 2006-05-01 olav@bkor.dhs.org -- Bug 7710
-add_setting('state_addselfcc', {'always' => 1,
-                                'never' => 2,
-                                'cc_unless_role' => '3'},
-            'cc_unless_role');
+Bugzilla::Install::update_settings();
 
 ###########################################################################
 # Create Administrator  --ADMIN--
