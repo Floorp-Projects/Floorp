@@ -525,8 +525,10 @@ nsCLiveconnect::Call(JNIEnv *jEnv, lcjsobject obj, const jchar *name, jsize leng
     /* Convert arguments from Java to JS values */
     for (arg_num = 0; arg_num < argc; arg_num++) {
         jobject arg = jEnv->GetObjectArrayElement(java_args, arg_num);
-
-        if (!jsj_ConvertJavaObjectToJSValue(cx, jEnv, arg, &argv[arg_num]))
+        JSBool ret = jsj_ConvertJavaObjectToJSValue(cx, jEnv, arg, &argv[arg_num]);
+		
+        jEnv->DeleteLocalRef(arg);
+        if (!ret)
             goto cleanup_argv;
         JS_AddRoot(cx, &argv[arg_num]);
     }
