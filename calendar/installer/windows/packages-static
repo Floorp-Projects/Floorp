@@ -210,6 +210,7 @@ bin\js\calHtmlExport.js
 bin\js\calIcsImportExport.js
 bin\js\calItemBase.js
 bin\js\calListFormatter.js
+bin\js\calMonthGridPrinter.js
 bin\js\calOutlookCSVImportExport.js
 bin\js\calRecurrenceInfo.js
 bin\js\calTodo.js
