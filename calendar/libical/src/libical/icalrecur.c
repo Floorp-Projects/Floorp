@@ -139,7 +139,7 @@
 #endif
 
 #ifndef HAVE_INTPTR_T
-#ifdef WIN32
+#if defined (WIN32) || defined (XP_BEOS)
 typedef long intptr_t;
 #endif
 #endif

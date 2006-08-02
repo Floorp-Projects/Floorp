@@ -24,7 +24,7 @@
 #define HAVE_SNPRINTF 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
-#if !defined(XP_WIN32) && !defined(__sun) && !defined(BEOS)
+#if !defined(XP_WIN32) && !defined(__sun) && !defined(XP_BEOS)
 #define HAVE_STDINT_H 1
 #endif
 
