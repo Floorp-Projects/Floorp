@@ -46,6 +46,7 @@
 #include "nsXULAtoms.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
+#include "nsIMenuFrame.h"
 #include "nsIPopupBoxObject.h"
 #include "nsIServiceManager.h"
 #ifdef MOZ_XUL
@@ -557,7 +558,7 @@ GetImmediateChild(nsIContent* aContent, nsIAtom *aTag, nsIContent** aResult)
 }
 
 nsresult
-nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
+nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
 {
   if (!aTarget)
     return NS_ERROR_NULL_POINTER;
@@ -629,6 +630,34 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
 #endif
 
   return NS_OK;
+}
+
+
+nsresult
+nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
+{
+  *aTooltip = nsnull;
+  nsCOMPtr<nsIContent> tooltip;
+  nsresult rv = FindTooltip(aTarget, getter_AddRefs(tooltip));
+  if (NS_FAILED(rv) || !tooltip) {
+    return rv;
+  }
+
+  // Submenus can't be used as tooltips, see bug 288763.
+  nsIContent* parent = tooltip->GetParent();
+  if (parent) {
+    nsIDocument* doc = parent->GetCurrentDoc();
+    nsIPresShell* presShell = doc ? doc->GetShellAt(0) : nsnull;
+    nsIFrame* frame = presShell ? presShell->GetPrimaryFrameFor(parent) : nsnull;
+    if (frame) {
+      nsIMenuFrame* menu = nsnull;
+      CallQueryInterface(frame, &menu);
+      NS_ENSURE_FALSE(menu, NS_ERROR_FAILURE);
+    }
+  }
+
+  tooltip.swap(*aTooltip);
+  return rv;
 }
 
 nsresult

@@ -81,6 +81,7 @@
 #include "nsPIDOMWindow.h"
 
 #include "nsIFrame.h"
+#include "nsIMenuFrame.h"
 
 // on win32 and os/2, context menus come up on mouse up. On other platforms,
 // they appear on mouse down. Certain bits of code care about this difference.
@@ -585,6 +586,21 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
   }
   if ( !popupContent )
     return NS_OK;
+
+  // Submenus can't be used as context menus or popups, bug 288763.
+  // Similar code also in nsXULTooltipListener::GetTooltipFor.
+  nsCOMPtr<nsIContent> popup = do_QueryInterface(popupContent);
+  nsIContent* parent = popup->GetParent();
+  if (parent) {
+    nsIDocument* doc = parent->GetCurrentDoc();
+    nsIPresShell* presShell = doc ? doc->GetShellAt(0) : nsnull;
+    nsIFrame* frame = presShell ? presShell->GetPrimaryFrameFor(parent) : nsnull;
+    if (frame) {
+      nsIMenuFrame* menu = nsnull;
+      CallQueryInterface(frame, &menu);
+      NS_ENSURE_FALSE(menu, NS_OK);
+    }
+  }
 
   // We have some popup content. Obtain our window.
   nsPIDOMWindow *domWindow = document->GetWindow();

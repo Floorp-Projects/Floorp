@@ -119,6 +119,10 @@ protected:
   nsresult LaunchTooltip(nsIContent* aTarget, PRInt32 aX, PRInt32 aY);
   nsresult HideTooltip();
   nsresult DestroyTooltip();
+  // This method tries to find a tooltip for aTarget.
+  nsresult FindTooltip(nsIContent* aTarget, nsIContent** aTooltip);
+  // This method calls FindTooltip and checks that the tooltip
+  // can be really used (i.e. tooltip is not a menu).
   nsresult GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip);
 
   static int ToolbarTipsPrefChanged(const char *aPref, void *aClosure);
