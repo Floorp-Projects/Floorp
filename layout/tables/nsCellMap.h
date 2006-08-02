@@ -416,7 +416,6 @@ protected:
                          nsRect&           aDamageArea);
 
   void RebuildConsideringRows(nsTableCellMap& aMap,
-                              PRInt32         aNumOrigCols,
                               PRInt32         aStartRowIndex,
                               nsVoidArray*    aRowsToInsert,
                               PRInt32         aNumRowsToRemove,

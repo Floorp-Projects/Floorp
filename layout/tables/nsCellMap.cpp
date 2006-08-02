@@ -770,7 +770,7 @@ nsTableCellMap::RebuildConsideringRows(nsCellMap*      aCellMap,
   PRInt32 rowCount = 0;
   while (cellMap) {
     if (cellMap == aCellMap) {
-      cellMap->RebuildConsideringRows(*this, numOrigCols, aStartRowIndex, aRowsToInsert, aNumRowsToRemove, aDamageArea);
+      cellMap->RebuildConsideringRows(*this, aStartRowIndex, aRowsToInsert, aNumRowsToRemove, aDamageArea);
     }
     else {
       cellMap->RebuildConsideringCells(*this, numOrigCols, nsnull, -1, 0, PR_FALSE, aDamageArea);
@@ -2025,7 +2025,6 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap&   aMap,
 
 void
 nsCellMap::RebuildConsideringRows(nsTableCellMap& aMap,
-                                  PRInt32         aNumOrigCols,
                                   PRInt32         aStartRowIndex,
                                   nsVoidArray*    aRowsToInsert,
                                   PRBool          aNumRowsToRemove,
@@ -2061,7 +2060,7 @@ nsCellMap::RebuildConsideringRows(nsTableCellMap& aMap,
   for (rowX = 0; rowX < copyEndRowIndex; rowX++) {
     nsVoidArray* row = (nsVoidArray *)origRows[rowX];
     PRInt32 numCols = row->Count();
-    for (colX = 0; colX < aNumOrigCols; colX++) {
+    for (colX = 0; colX < numCols; colX++) {
       // put in the original cell from the cell map
       CellData* data = (CellData*) row->ElementAt(colX);
       if (data && data->IsOrig()) {
