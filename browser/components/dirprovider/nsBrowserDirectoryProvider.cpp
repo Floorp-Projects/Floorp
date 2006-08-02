@@ -42,6 +42,8 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
+#include "nsArrayEnumerator.h"
+#include "nsEnumeratorUtils.h"
 #include "nsBrowserDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
@@ -196,6 +198,23 @@ nsBrowserDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
   return NS_OK;
 }
 
+static void
+AppendFileKey(const char *key, nsIProperties* aDirSvc,
+              nsCOMArray<nsIFile> &array)
+{
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = aDirSvc->Get(key, NS_GET_IID(nsIFile), getter_AddRefs(file));
+  if (NS_FAILED(rv))
+    return;
+
+  PRBool exists;
+  rv = file->Exists(&exists);
+  if (NS_FAILED(rv) || !exists)
+    return;
+
+  array.AppendObject(file);
+}
+
 NS_IMETHODIMP
 nsBrowserDirectoryProvider::GetFiles(const char *aKey,
                                      nsISimpleEnumerator* *aResult)
@@ -208,6 +227,16 @@ nsBrowserDirectoryProvider::GetFiles(const char *aKey,
     if (!dirSvc)
       return NS_ERROR_FAILURE;
 
+    nsCOMArray<nsIFile> baseFiles;
+
+    AppendFileKey(NS_APP_SEARCH_DIR, dirSvc, baseFiles);
+    AppendFileKey(NS_APP_USER_SEARCH_DIR, dirSvc, baseFiles);
+
+    nsCOMPtr<nsISimpleEnumerator> baseEnum;
+    rv = NS_NewArrayEnumerator(getter_AddRefs(baseEnum), baseFiles);
+    if (NS_FAILED(rv))
+      return rv;
+
     nsCOMPtr<nsISimpleEnumerator> list;
     rv = dirSvc->Get(XRE_EXTENSIONS_DIR_LIST,
                      NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(list));
@@ -216,12 +245,12 @@ nsBrowserDirectoryProvider::GetFiles(const char *aKey,
 
     static char const *const kAppendSPlugins[] = {"searchplugins", nsnull};
 
-    *aResult = new AppendingEnumerator(list, kAppendSPlugins);
-    if (!*aResult)
+    nsCOMPtr<nsISimpleEnumerator> extEnum =
+      new AppendingEnumerator(list, kAppendSPlugins);
+    if (!extEnum)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    NS_ADDREF(*aResult);
-    return NS_SUCCESS_AGGREGATE_RESULT;
+    return NS_NewUnionEnumerator(aResult, extEnum, baseEnum);
   }
 
   return NS_ERROR_FAILURE;
