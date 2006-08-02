@@ -109,7 +109,7 @@ message, alert, help {
   display: none;
 }
 
-action, message[level="ephemeral"], hint {
+html|*:root message[level="ephemeral"], html|*:root hint {
   position: absolute;
   z-index: 2147481647;
   visibility: hidden;
@@ -120,25 +120,40 @@ action, message[level="ephemeral"], hint {
   display: block;
 }
 
-alert {
-  -moz-binding: url('chrome://xforms/content/xforms.xml#inline-alert');
+html|*:root alert {
+  -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-alert');
+}
+xul|*:root alert {
+  -moz-binding: url('chrome://xforms/content/xforms-xul.xml#xformswidget-alert');
 }
 
-message[level="ephemeral"], hint {
-  -moz-binding: url('chrome://xforms/content/xforms.xml#ephemeral-message');
+html|*:root message[level="ephemeral"], html|*:root hint {
+  -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-ephemeral-message');
+}
+xul|*:root message[level="ephemeral"], xul|*:root hint {
+  -moz-binding: url('chrome://xforms/content/xforms-xul.xml#xformswidget-ephemeral-message');
+}
+
+html|*:root message[level="ephemeral"], html|*:root hint {
   background-color: InfoBackground;
   color: InfoText;
   border: 1px black solid;
   padding: 2px 3px;
   font: message-box;
-  position: absolute !important;
   width: auto;
   height: auto;
   display: block;
 }
 
-message[level="ephemeral"] > html|div.-moz-xforms-message-container,
-hint > html|div.-moz-xforms-message-container {
+xul|*:root message[level="ephemeral"] xul|deck , xul|*:root hint xul|deck {
+  background-color: InfoBackground;
+  color: InfoText;
+  padding: 2px 3px;
+  font: message-box;
+}
+
+html|*:root message[level="ephemeral"] > html|div.-moz-xforms-message-container,
+html|*:root hint > html|div.-moz-xforms-message-container {
   background-color: inherit;
   color: inherit;
   border: inherit;
