@@ -41,17 +41,27 @@ import logging
 import sys
 from datetime import date
 
-logging.basicConfig(level=1)
-
 from Mozilla import Parser, CompareLocales, Paths
 import simplejson
 
-res = CompareLocales.compare()
+testLocales = []
+lvl = logging.WARNING
+date = date.today().strftime('%Y-%m-%d')
+# parse commandline arguments
+argsiter = sys.argv.__iter__()
+# drop command
+argsiter.next()
+for arg in argsiter:
+  if arg == '-V':
+    lvl -= 10
+  elif arg == '-D':
+    testLocales.append(argsiter.next())
+  else:
+    date = arg
 
-if len(sys.argv) > 1:
-  date = sys.argv[1]
-else:
-  date = date.today().strftime('%Y-%m-%d')
+logging.basicConfig(level=lvl)
+
+res = CompareLocales.compare(testLocales=testLocales)
 
 class Separator:
   def __init__(self, date):

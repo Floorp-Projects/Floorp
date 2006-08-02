@@ -171,7 +171,7 @@ class CompareCollector:
       self.files[aLocale]['obsoleteFiles'].append((aModule, aLeaf))
     pass
 
-def compare():
+def compare(testLocales=[]):
   result = {}
   c = CompareCollector()
   collectFiles(c)
