@@ -183,13 +183,9 @@ nsAccessibleWrap(aNode, aShell)
 }
 
 /** We are a Property Page */
-NS_IMETHODIMP nsXULTabPanelsAccessible::GetRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULTabPanelsAccessible::GetRole(PRUint32 *aRole)
 {
-#ifndef MOZ_ACCESSIBILITY_ATK
-  *_retval = ROLE_PROPERTYPAGE;
-#else
-  *_retval = ROLE_SCROLL_PANE;
-#endif
+  *aRole = ROLE_PROPERTYPAGE;
   return NS_OK;
 }
 

@@ -59,7 +59,6 @@ public:
     NS_IMETHOD Init();
     NS_IMETHOD Shutdown();
     NS_IMETHOD GetParent(nsIAccessible **  aParent);
-    NS_IMETHOD GetRole(PRUint32 *aRole);
 };
 
 #endif   /* __NS_ROOT_ACCESSIBLE_WRAP_H__ */

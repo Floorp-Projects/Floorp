@@ -84,10 +84,6 @@
 #include "nsAccessibleEventData.h"
 #include "nsIDOMDocument.h"
 
-#ifdef MOZ_ACCESSIBILITY_ATK
-#include "nsIAccessibleHyperText.h"
-#endif
-
 // Expanded version of NS_IMPL_ISUPPORTS_INHERITED2 
 // so we can QI directly to concrete nsRootAccessible
 NS_IMPL_QUERY_HEAD(nsRootAccessible)

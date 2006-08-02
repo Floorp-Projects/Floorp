@@ -56,15 +56,11 @@ PRUint32 atkRoleMap[] = {
     ATK_ROLE_UNKNOWN,             // nsIAccessible::ROLE_CARET             7
     ATK_ROLE_ALERT,               // nsIAccessible::ROLE_ALERT             8
     ATK_ROLE_WINDOW,              // nsIAccessible::ROLE_WINDOW            9
-    ATK_ROLE_DRAWING_AREA,        // nsIAccessible::ROLE_CLIENT            10
+    ATK_ROLE_PANEL,               // nsIAccessible::ROLE_CLIENT            10
     ATK_ROLE_MENU,                // nsIAccessible::ROLE_MENUPOPUP         11
     ATK_ROLE_MENU_ITEM,           // nsIAccessible::ROLE_MENUITEM          12
     ATK_ROLE_TOOL_TIP,            // nsIAccessible::ROLE_TOOLTIP           13
-#ifdef USE_ATK_ROLE_APPLICATION
-    ATK_ROLE_APPLICATION,         // nsIAccessible::ROLE_APPLICATION       14
-#else
-    ATK_ROLE_PANEL,               // nsIAccessible::ROLE_APPLICATION       14
-#endif
+    ATK_ROLE_FRAME,               // nsIAccessible::ROLE_APPLICATION       14
 #ifdef USE_ATK_ROLE_DOCUMENT_FRAME 
     ATK_ROLE_DOCUMENT_FRAME,      // nsIAccessible::ROLE_DOCUMENT          15
 #else
@@ -100,7 +96,7 @@ PRUint32 atkRoleMap[] = {
     ATK_ROLE_TREE,                // nsIAccessible::ROLE_OUTLINE           35
     ATK_ROLE_LIST_ITEM,           // nsIAccessible::ROLE_OUTLINEITEM       36
     ATK_ROLE_PAGE_TAB,            // nsIAccessible::ROLE_PAGETAB           37
-    ATK_ROLE_UNKNOWN,             // nsIAccessible::ROLE_PROPERTYPAGE      38
+    ATK_ROLE_SCROLL_PANE,         // nsIAccessible::ROLE_PROPERTYPAGE      38
     ATK_ROLE_UNKNOWN,             // nsIAccessible::ROLE_INDICATOR         39
     ATK_ROLE_IMAGE,               // nsIAccessible::ROLE_GRAPHIC           40
     ATK_ROLE_UNKNOWN,             // nsIAccessible::ROLE_STATICTEXT        41
@@ -240,6 +236,12 @@ PRUint32 atkRoleMap[] = {
 #else
     ATK_ROLE_INVALID,             // nsIAccessible::ROLE_IME               113
 #endif
-    ROLE_ATK_LAST_ENTRY          // nsIAccessible::ROLE_LAST_ENTRY
+#ifdef USE_ATK_ROLE_APPLICATION
+    ATK_ROLE_APPLICATION,         // nsIAccessible::ROLE_APP_ROOT          114
+#else
+    ATK_ROLE_PANEL,               // nsIAccessible::ROLE_APP_ROOT          114
+#endif
+    ATK_ROLE_MENU,                // nsIAccessible::ROLE_PARENT_MENUITEM   115
+    ROLE_ATK_LAST_ENTRY           // nsIAccessible::ROLE_LAST_ENTRY
 };
 
