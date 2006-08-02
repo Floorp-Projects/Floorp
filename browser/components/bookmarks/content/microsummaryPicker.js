@@ -168,6 +168,12 @@ var MicrosummaryPicker = {
     var microsummaryMenuList = document.getElementById("name");
     var microsummaryMenuPopup = document.getElementById("microsummaryMenuPopup");
   
+    // Save a reference to the active item (i.e. the item the user is hovering
+    // over), if any, so we can reactivate it after the rebuild.
+    var activeMicrosummary;
+    if (microsummaryMenuList.menuBoxObject.activeChild)
+      activeMicrosummary = microsummaryMenuList.menuBoxObject.activeChild.microsummary;
+
     // Remove old items from the menu, except for the first item, which holds
     // the user-entered name, and the second item, which separates and labels
     // the microsummaries below it.
@@ -216,7 +222,12 @@ var MicrosummaryPicker = {
   
       // Select the item if this is the current microsummary for the bookmark.
       if (this._bookmarkID && this._mss.isMicrosummary(this._bookmarkID, microsummary))
-          microsummaryMenuList.selectedItem = menuItem;
+        microsummaryMenuList.selectedItem = menuItem;
+
+      // Activate the item if it was active before the rebuild (i.e. the user
+      // was hovering over it).
+      if (activeMicrosummary && microsummary == activeMicrosummary)
+        microsummaryMenuList.menuBoxObject.activeChild = menuItem;
     }
   },
 
