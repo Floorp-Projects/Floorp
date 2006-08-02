@@ -431,7 +431,19 @@ protected:
                                nsRect&         aDamageArea);
 
   PRBool CellsSpanOut(nsVoidArray&    aNewRows);
-
+ 
+  /** If a cell spans out of the area defined by aStartRowIndex, aEndRowIndex
+    * and aStartColIndex, aEndColIndex the cellmap changes are more severe so
+    * the corresponding routines needs to be called. This is also necessary if
+    * cells outside spans into this region.
+    * @param aMap - the whole table cellmap
+    * @aStartRowIndex       - y start index
+    * @aEndRowIndex         - y end index
+    * @param aStartColIndex - x start index
+    * @param aEndColIndex   - x end index
+    * @return               - true if a cell span crosses the border of the
+                              region
+    */
   PRBool CellsSpanInOrOut(nsTableCellMap& aMap,
                           PRInt32         aStartRowIndex, 
                           PRInt32         aEndRowIndex,
@@ -472,8 +484,10 @@ protected:
     * row spans extending beyond the table */
   nsAutoVoidArray mRows; 
 
-  /** the number of rows in the table which is <= the number of rows in the cell map
-    * due to row spans extending beyond the end of the table (dead rows) */
+  /** the number of rows in the table (content) which is not indentical to the
+    * number of rows in the cell map due to row spans extending beyond the end
+    * of thetable (dead rows) or empty tr tags 
+    */
   PRInt32 mRowCount;
 
   // the row group that corresponds to this map

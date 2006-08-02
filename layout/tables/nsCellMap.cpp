@@ -808,7 +808,7 @@ nsTableCellMap::Dump(char* aString) const
     nsColInfo* colInfo = (nsColInfo *)mCols.ElementAt(colX);
     printf ("%d=%d/%d ", colX, colInfo->mNumCellsOrig, colInfo->mNumCellsSpan);
   }
-  printf(" cols in cache %d", mTableFrame.GetColCache().Count());
+  printf(" cols in cache %d\n", mTableFrame.GetColCache().Count());
   nsCellMap* cellMap = mFirstMap;
   while (cellMap) {
     cellMap->Dump(nsnull != mBCInfo);
@@ -1253,7 +1253,7 @@ nsCellMap::InsertRows(nsTableCellMap& aMap,
                       nsRect&         aDamageArea)
 {
   PRInt32 numCols = aMap.GetColCount();
-
+  NS_ASSERTION(aFirstRowIndex >= 0, "nsCellMap::InsertRows called with negative rowIndex");
   if (aFirstRowIndex > mRowCount) {
     // create (aFirstRowIndex - mRowCount) empty rows up to aFirstRowIndex
     PRInt32 numEmptyRows = aFirstRowIndex - mRowCount;
@@ -1298,6 +1298,10 @@ nsCellMap::RemoveRows(nsTableCellMap& aMap,
   PRInt32 numCols = aMap.GetColCount();
 
   if (aFirstRowIndex >= numRows) {
+    // reduce the content based row count based on the function arguments
+    // as they are known to be real rows even if the cell map did not create
+    // rows for them before.
+    mRowCount -= aNumRowsToRemove;
     return;
   }
   if (!aConsiderSpans) {
@@ -1503,6 +1507,21 @@ PRBool nsCellMap::CellsSpanInOrOut(nsTableCellMap& aMap,
                                    PRInt32         aStartColIndex, 
                                    PRInt32         aEndColIndex)
 {
+  /*
+   * this routine will watch the cells adjacent to the region or at the edge
+   * they are marked with *. The routine will verify whether they span in or
+   * are spanned out.
+   *
+   *                           startCol          endCol
+   *             r1c1   r1c2   r1c3      r1c4    r1c5    r1rc6  r1c7
+   *  startrow   r2c1   r2c2  *r2c3     *r2c4   *r2c5   *r2rc6  r2c7
+   *  endrow     r3c1   r3c2  *r3c3      r3c4    r3c5   *r3rc6  r3c7
+   *             r4c1   r4c2  *r4c3     *r4c4   *r4c5    r4rc6  r4c7
+   *             r5c1   r5c2   r5c3      r5c4    r5c5    r5rc6  r5c7  
+   */
+
+  PRInt32 numRows = mRows.Count(); // use the cellmap rows to determine the 
+                                   // current cellmap extent.
   for (PRInt32 colX = aStartColIndex; colX <= aEndColIndex; colX++) {
     CellData* cellData;
     if (aStartRowIndex > 0) {
@@ -1511,10 +1530,16 @@ PRBool nsCellMap::CellsSpanInOrOut(nsTableCellMap& aMap,
         return PR_TRUE; // there is a row span into the region
       }
     }
-    if (aEndRowIndex < mRowCount - 1) {
+    if (aEndRowIndex < numRows - 1) { // is there anything below aEndRowIndex
       cellData = GetDataAt(aMap, aEndRowIndex + 1, colX, PR_TRUE);
       if ((cellData) && (cellData->IsRowSpan())) {
         return PR_TRUE; // there is a row span out of the region
+      }
+    }
+    else {
+      cellData = GetDataAt(aMap, aEndRowIndex, colX, PR_TRUE);
+      if ((cellData) && (cellData->IsRowSpan()) && (mRowCount < numRows)) {
+        return PR_TRUE; // this cell might be the cause of a dead row
       }
     }
   }
@@ -2028,8 +2053,12 @@ nsCellMap::RebuildConsideringRows(nsTableCellMap& aMap,
     Grow(aMap, numOrigRows); 
   }
 
+  // aStartRowIndex might be after all existing rows so we should limit the
+  // copy to the amount of exisiting rows
+  PRInt32 copyEndRowIndex = PR_MIN(numOrigRows, aStartRowIndex);
+
   // put back the rows before the affected ones just as before
-  for (rowX = 0; rowX < aStartRowIndex; rowX++) {
+  for (rowX = 0; rowX < copyEndRowIndex; rowX++) {
     nsVoidArray* row = (nsVoidArray *)origRows[rowX];
     PRInt32 numCols = row->Count();
     for (colX = 0; colX < aNumOrigCols; colX++) {
@@ -2063,8 +2092,7 @@ nsCellMap::RebuildConsideringRows(nsTableCellMap& aMap,
     copyStartRowIndex = aStartRowIndex + aNumRowsToRemove;
   }
   // put back the rows after the affected ones just as before
-  PRInt32 copyEndRowIndex = numOrigRows - 1;
-  for (PRInt32 copyRowX = copyStartRowIndex; copyRowX <= copyEndRowIndex; copyRowX++) {
+  for (PRInt32 copyRowX = copyStartRowIndex; copyRowX < numOrigRows; copyRowX++) {
     nsVoidArray* row = (nsVoidArray *)origRows[copyRowX];
     PRInt32 numCols = row->Count();
     for (colX = 0; colX < numCols; colX++) {
@@ -2116,8 +2144,6 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
   // reinitialize data members
   mRows.Clear();
   mRowCount = 0;
-  
-  Grow(aMap, numOrigRows);
 
   PRInt32 numNewCells = (aCellFrames) ? aCellFrames->Count() : 0;
   
@@ -2149,7 +2175,15 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
       }
     }
   }
-
+  if (aInsert && numOrigRows <= aRowIndex) { // append the new cells below the last original row
+    NS_ASSERTION (numOrigRows == aRowIndex, "Appending cells far beyond the last row");
+    for (PRInt32 cellX = 0; cellX < numNewCells; cellX++) {
+      nsTableCellFrame* cell = (nsTableCellFrame*)aCellFrames->ElementAt(cellX);
+      if (cell) {
+        AppendCell(aMap, cell, aRowIndex, PR_FALSE, aDamageArea);
+      }
+    }
+  } 
   // For cell deletion, since the row is not being deleted, 
   // keep mRowCount the same as before. 
   mRowCount = PR_MAX(mRowCount, mRowCountOrig);
