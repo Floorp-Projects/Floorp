@@ -139,7 +139,8 @@ enum {
   NSLoadFlagsNone                   = 0x0000,
   NSLoadFlagsDontPutInHistory       = 0x0010,
   NSLoadFlagsReplaceHistoryEntry    = 0x0020,
-  NSLoadFlagsBypassCacheAndProxy    = 0x0040
+  NSLoadFlagsBypassCacheAndProxy    = 0x0040,
+  NSLoadFlagsAllowThirdPartyFixup   = 0x2000
 }; 
 
 enum {

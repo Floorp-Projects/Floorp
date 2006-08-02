@@ -350,7 +350,10 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
     NSRect tabContentRect = [[[mWindow delegate] getTabBrowser] contentRect];
     [self setFrame:tabContentRect resizingBrowserViewIfHidden:YES];
   }
-  
+
+  if ([[PreferenceManager sharedInstance] getBooleanPref:"keyword.enabled" withSuccess:NULL])
+    flags |= NSLoadFlagsAllowThirdPartyFixup;
+
   [self setPendingActive:activate];
   [mBrowserView loadURI:urlSpec referrer:referrer flags:flags allowPopups:inAllowPopups];
 }
