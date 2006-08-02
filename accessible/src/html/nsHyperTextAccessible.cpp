@@ -222,52 +222,53 @@ nsIFrame* nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& a
   while (NextChild(accessible)) {
     nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
     nsIFrame *frame = accessNode->GetFrame();
+    if (!frame) {
+      continue;
+    }
     if (Role(accessible) == ROLE_TEXT_LEAF) {
-      if (frame) {
-        // Avoid string copies
-        PRInt32 substringEndOffset = frame->GetContent()->TextLength();
-        if (startOffset < substringEndOffset) {
-          // Our start is within this substring
-          // XXX Can we somehow optimize further by getting the nsTextFragment
-          // and use CopyTo to a PRUnichar buffer to copy it directly to
-          // the string?
-          nsAutoString newText;
-          frame->GetContent()->AppendTextTo(newText);
-          if (startOffset > 0 || endOffset < substringEndOffset) {
-            // XXX the Substring operation is efficient, but does the 
-            // reassignment to the original nsAutoString cause a copy?
-            if (endOffset < substringEndOffset) {
-              // Don't take entire substring: stop before the end
-              substringEndOffset = endOffset;
-            }
-            if (aText) {
-              newText = Substring(newText, startOffset,
-                                  substringEndOffset - startOffset);
-            }
-            if (aEndFrame) {
-              *aEndFrame = frame; // We ended in the current frame
-            }
-            aEndOffset = endOffset;
+      // Avoid string copies
+      PRInt32 substringEndOffset = frame->GetContent()->TextLength();
+      if (startOffset < substringEndOffset) {
+        // Our start is within this substring
+        // XXX Can we somehow optimize further by getting the nsTextFragment
+        // and use CopyTo to a PRUnichar buffer to copy it directly to
+        // the string?
+        nsAutoString newText;
+        frame->GetContent()->AppendTextTo(newText);
+        if (startOffset > 0 || endOffset < substringEndOffset) {
+          // XXX the Substring operation is efficient, but does the 
+          // reassignment to the original nsAutoString cause a copy?
+          if (endOffset < substringEndOffset) {
+            // Don't take entire substring: stop before the end
+            substringEndOffset = endOffset;
           }
           if (aText) {
-            if (frame && !frame->GetStyleText()->WhiteSpaceIsSignificant()) {
-              // Replace \r\n\t in markup with space unless in this is
-              // preformatted text  where those characters are significant
-              newText.ReplaceChar("\r\n\t", ' ');
-            }
-            *aText += newText;
+            newText = Substring(newText, startOffset,
+                                substringEndOffset - startOffset);
           }
-          if (!startFrame) {
-            startFrame = frame;
-            aStartOffset = startOffset;
+          if (aEndFrame) {
+            *aEndFrame = frame; // We ended in the current frame
           }
-          startOffset = 0;
+          aEndOffset = endOffset;
         }
-        else {
-          startOffset -= substringEndOffset;
+        if (aText) {
+          if (!frame->GetStyleText()->WhiteSpaceIsSignificant()) {
+            // Replace \r\n\t in markup with space unless in this is
+            // preformatted text  where those characters are significant
+            newText.ReplaceChar("\r\n\t", ' ');
+          }
+          *aText += newText;
         }
-        endOffset -= substringEndOffset;
+        if (!startFrame) {
+          startFrame = frame;
+          aStartOffset = startOffset;
+        }
+        startOffset = 0;
       }
+      else {
+        startOffset -= substringEndOffset;
+      }
+      endOffset -= substringEndOffset;
     }
     else {
       // Embedded object, append marker
