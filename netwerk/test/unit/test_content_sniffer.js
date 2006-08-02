@@ -86,8 +86,10 @@ var urls = [
   "http://localhost:4444"
 ];
 
+var httpserv = null;
+
 function run_test() {
-  start_server(4444);
+  httpserv = start_server(4444);
 
   Components.manager.nsIComponentRegistrar.registerFactory(snifferCID,
     "Unit test content sniffer", snifferContract, sniffer);
@@ -101,6 +103,7 @@ function run_test_iteration(index) {
         sniffing_enabled = false;
         index = listener._iteration = 1;
     } else {
+        httpserv.stopListening();
         return; // we're done
     }
   }

@@ -32,6 +32,8 @@ var listener = {
   onStopRequest: function test_onStopR(request, ctx, status) {
     if (this._iteration == 1)
       run_test_continued();
+    else
+      httpserv.stopListening();
     do_test_finished();
   },
 
@@ -47,8 +49,10 @@ function makeChan() {
   return chan;
 }
 
+var httpserv = null;
+
 function run_test() {
-  start_server(4444);
+  httpserv = start_server(4444);
 
   var chan = makeChan();
 
