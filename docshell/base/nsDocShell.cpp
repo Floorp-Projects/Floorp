@@ -6695,7 +6695,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                    !(aFlags & INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER),
                    owner, aTypeHint, aPostData, aHeadersData, aFirstParty,
                    aDocShell, getter_AddRefs(req),
-                   aFlags & INTERNAL_LOAD_FLAGS_NEW_WINDOW);
+                   (aFlags & INTERNAL_LOAD_FLAGS_NEW_WINDOW) != 0);
     if (req && aRequest)
         NS_ADDREF(*aRequest = req);
 
