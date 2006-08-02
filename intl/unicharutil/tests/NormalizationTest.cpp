@@ -34,7 +34,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#define MOZILLA_INTERNAL_API
 
 #include <stdio.h>
 #include "nsISupports.h"
@@ -43,7 +42,8 @@
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"
 #include "nsIUnicodeNormalizer.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
+#include "nsCharTraits.h"
 
 struct testcaseLine {
   wchar_t* c1;
@@ -82,7 +82,7 @@ PRBool verboseMode = PR_FALSE;
 
 #include "NormalizationData.h"
 
-void showError(char* description, char* errorText)
+void showError(const char* description, const char* errorText)
 {
   if (verboseMode)
     printf("%s failed: %s", description, errorText);
