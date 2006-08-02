@@ -1169,14 +1169,6 @@ get_keyandcert( LDAPSSLSessionInfo *ssip,
     CERTCertificate	*cert;
     SECKEYPrivateKey	*key;
 
-    if (( cert = PK11_FindCertFromNickname( ssip->lssei_certnickname, NULL ))
-		== NULL ) {
-	if ( errmsgp != NULL ) {
-	    *errmsgp = "unable to find certificate";
-	}
-	return( SECFailure );
-    }
-
     if (!ssip->lssei_using_pcks_fns && NULL != ssip->lssei_keypasswd) {
 	/*
 	 * XXX: This function should be called only once, and probably
@@ -1185,7 +1177,14 @@ get_keyandcert( LDAPSSLSessionInfo *ssip,
 	PK11_SetPasswordFunc( get_keypassword );
     }
     
-
+    if (( cert = CERT_FindUserCertByUsage( CERT_GetDefaultCertDB(), ssip->lssei_certnickname,
+					   certUsageSSLClient, PR_FALSE, (void *)ssip ))
+		== NULL ) {
+	if ( errmsgp != NULL ) {
+	    *errmsgp = "unable to find certificate";
+	}
+	return( SECFailure );
+    }
 
     if (( key = PK11_FindKeyByAnyCert( cert, (void *)ssip )) == NULL ) {
 	CERT_DestroyCertificate( cert );
