@@ -207,7 +207,7 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
   StrCpy $R1 2
   ${If} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
     WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Type   "checkbox"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Text   "$(DEV_TOOLS_TITLE)"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Text   "$(DOMI_TITLE)"
     WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Left   "15"
     WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Right  "-1"
     WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Top    "20"
@@ -230,7 +230,7 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 
   ${If} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
     WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Type   "label"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Text   "$(DEV_TOOLS_DESC)"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Text   "$(DOMI_TEXT)"
     WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Left   "30"
     WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Right  "-1"
     WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Top    "32"
@@ -240,7 +240,7 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 
   ${If} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
     WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Type   "label"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Text   "$(QFA_DESC)"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Text   "$(QFA_TEXT)"
     WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Left   "30"
     WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Right  "-1"
     WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Top    "67"
