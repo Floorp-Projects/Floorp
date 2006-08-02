@@ -95,6 +95,7 @@ public:
   virtual nsresult CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgDBHdr **result);
   virtual nsresult GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **result);
   virtual nsresult EnumerateMessagesWithFlag(nsISimpleEnumerator* *result, PRUint32 *pFlag);
+  nsresult         GetSearchResultsTable(const char *searchFolderUri, PRBool createIfMissing, nsIMdbTable **table);
 
   // this might just be for debugging - we'll see.
   nsresult ListAllThreads(nsMsgKeyArray *threadIds);
@@ -289,6 +290,8 @@ protected:
   nsresult      ClearUseHdrCache();
   nsresult      RemoveHdrFromUseCache(nsIMsgDBHdr *hdr, nsMsgKey key);
   
+  mdb_pos       FindInsertIndexInSortedTable(nsIMdbTable *table, mdb_id idToInsert);
+
   void          ClearCachedObjects(PRBool dbGoingAway);
   // all instantiated headers, but doesn't hold refs. 
   PLDHashTable  *m_headersInUse;

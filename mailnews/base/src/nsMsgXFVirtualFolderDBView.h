@@ -65,11 +65,20 @@ public:
   NS_IMETHOD GetViewType(nsMsgViewTypeValue *aViewType);
   NS_IMETHOD DoCommand(nsMsgViewCommandTypeValue command);
   virtual nsresult OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey parentKey, PRBool ensureListed);
+  virtual nsresult InsertHdrFromFolder(nsIMsgDBHdr *msgHdr, nsISupports *folder);
   NS_IMETHOD GetMsgFolder(nsIMsgFolder **aMsgFolder);
+  void UpdateCacheAndViewForPrevSearchedFolders(nsIMsgFolder *curSearchFolder);
+  void UpdateCacheAndViewForFolder(nsIMsgFolder *folder, nsMsgKey *newHits, PRUint32 numNewHits);
 
 protected:
 
   nsCOMPtr <nsIMsgFolder> m_viewFolder;
+  PRUint32 m_cachedFolderArrayIndex; // array index of next folder with cached hits to deal with.
+  nsCOMArray<nsIMsgFolder> m_foldersWithNonVerifiedCachedHits;
+  nsCOMArray<nsIMsgDBHdr> m_hdrHits;
+  nsCOMPtr <nsIMsgFolder> m_curFolderGettingHits;
+  PRUint32 m_curFolderStartKeyIndex; // keeps track of the index of the first hit from the cur folder
+  PRBool m_curFolderHasCachedHits;
   nsWeakPtr m_searchSession;
   PRInt32 m_numUnread;
   PRInt32 m_numTotal;

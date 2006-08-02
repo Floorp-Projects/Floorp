@@ -42,6 +42,9 @@
 #include "nsMsgThreadedDBView.h"
 #include "nsIMsgSearchNotify.h"
 #include "nsIMsgSearchSession.h"
+#include "nsCOMArray.h"
+#include "nsIMsgHdr.h"
+
 
 class nsMsgQuickSearchDBView : public nsMsgThreadedDBView, public nsIMsgSearchNotify
 {
@@ -66,6 +69,9 @@ public:
 protected:
   nsWeakPtr m_searchSession;
   nsMsgKeyArray m_origKeys;
+  PRBool    m_usingCachedHits;
+  PRBool    m_cacheEmpty;
+  nsCOMArray <nsIMsgDBHdr> m_hdrHits;
   virtual nsresult OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey aParentKey, PRBool ensureListed);
   virtual nsresult SortThreads(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
   virtual nsresult GetFirstMessageHdrToDisplayInThread(nsIMsgThread *threadHdr, nsIMsgDBHdr **result);

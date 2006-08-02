@@ -142,6 +142,86 @@ nsresult nsMsgXFVirtualFolderDBView::OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey a
   return NS_OK;
 }
 
+nsresult nsMsgXFVirtualFolderDBView::InsertHdrFromFolder(nsIMsgDBHdr *msgHdr, nsISupports *folder)
+{
+  nsMsgViewIndex insertIndex = GetInsertIndex(msgHdr);
+  if (insertIndex == nsMsgViewIndex_None)
+    return AddHdrFromFolder(msgHdr, folder);
+
+  nsMsgKey msgKey;
+  PRUint32 msgFlags;
+  msgHdr->GetMessageKey(&msgKey);
+  msgHdr->GetFlags(&msgFlags);
+  m_keys.InsertAt(insertIndex, msgKey);
+  m_flags.InsertAt(insertIndex, msgFlags);
+  m_folders->InsertElementAt(folder, insertIndex);
+  m_levels.InsertAt((PRInt32) insertIndex, (PRUint8) 0);
+    
+  // the call to NoteChange() has to happen after we add the key
+  // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
+  NoteChange(insertIndex, 1, nsMsgViewNotificationCode::insertOrDelete);
+  return NS_OK;
+}
+
+void nsMsgXFVirtualFolderDBView::UpdateCacheAndViewForFolder(nsIMsgFolder *folder, nsMsgKey *newHits, PRUint32 numNewHits)
+{
+  nsCOMPtr <nsIMsgDatabase> db;
+  nsresult rv = folder->GetMsgDatabase(nsnull, getter_AddRefs(db));
+  if (NS_SUCCEEDED(rv) && db)
+  {
+    nsXPIDLCString searchUri;
+    m_viewFolder->GetURI(getter_Copies(searchUri));
+    PRUint32 numBadHits;
+    nsMsgKey *badHits;
+    rv = db->RefreshCache(searchUri, numNewHits, newHits,
+                     &numBadHits, &badHits);
+    if (NS_SUCCEEDED(rv))
+    {
+      for (PRUint32 badHitIndex = 0; badHitIndex < numBadHits; badHitIndex++)
+      {
+        // of course, this isn't quite right
+        nsMsgViewIndex staleHitIndex = FindKey(badHits[badHitIndex], PR_TRUE);
+        if (staleHitIndex != nsMsgViewIndex_None)
+          RemoveByIndex(staleHitIndex);
+      }
+      delete [] badHits;
+    }
+  }
+}
+
+void nsMsgXFVirtualFolderDBView::UpdateCacheAndViewForPrevSearchedFolders(nsIMsgFolder *curSearchFolder)
+{
+  // Handle the most recent folder with hits, if any.
+  if (m_curFolderGettingHits)
+  {
+    PRUint32 count = m_hdrHits.Count();
+    nsMsgKeyArray newHits;
+    for (PRUint32 i = 0; i < count; i++)
+    {
+      nsMsgKey key;
+      m_hdrHits[i]->GetMessageKey(&key);
+      newHits.Add(key);
+    }
+    UpdateCacheAndViewForFolder(m_curFolderGettingHits, newHits.GetArray(), newHits.GetSize());
+  }
+
+  while (m_foldersWithNonVerifiedCachedHits.Count() > 0)
+  {
+    // this new folder has cached hits.
+    if (m_foldersWithNonVerifiedCachedHits[0] == curSearchFolder)
+    {
+      m_curFolderHasCachedHits = PR_TRUE;
+      break;
+    }
+    else if (m_foldersWithNonVerifiedCachedHits[0] != m_curFolderGettingHits)
+    {
+      // this must be a folder that had cached hits but no hits with 
+      // the current search. So all cached hits need to be removed. 
+      UpdateCacheAndViewForFolder(m_foldersWithNonVerifiedCachedHits[0], 0, nsnull);
+    }
+    m_foldersWithNonVerifiedCachedHits.RemoveObjectAt(0);
+  }
+}
 NS_IMETHODIMP
 nsMsgXFVirtualFolderDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
 {
@@ -149,32 +229,54 @@ nsMsgXFVirtualFolderDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *fold
   NS_ENSURE_ARG(folder);
 
   nsCOMPtr <nsISupports> supports = do_QueryInterface(folder);
+  nsCOMPtr<nsIMsgDatabase> dbToUse;
+  nsCOMPtr<nsIDBFolderInfo> folderInfo;
+  folder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(dbToUse));
+  
   if (m_folders->IndexOf(supports) < 0 ) //do this just for new folder
   {
-    nsCOMPtr<nsIMsgDatabase> dbToUse;
-    nsCOMPtr<nsIDBFolderInfo> folderInfo;
-    folder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(dbToUse));
     if (dbToUse)
     {
       dbToUse->AddListener(this);
       m_dbToUseList.AppendObject(dbToUse);
     }
   }
+  if (m_curFolderGettingHits != folder)
+  {
+    m_curFolderHasCachedHits = PR_FALSE;
+    // since we've gotten a hit for a new folder, the searches for 
+    // any previous folders are done, so deal with stale cached hits
+    // for those folders now.
 
-  m_folders->AppendElement(supports);
-  nsMsgKey msgKey;
-  PRUint32 msgFlags;
-  aMsgHdr->GetMessageKey(&msgKey);
-  aMsgHdr->GetFlags(&msgFlags);
-  m_keys.Add(msgKey);
-  m_levels.Add(0);
-  m_flags.Add(msgFlags);
-
-  // this needs to be called after we add the key, since RowCountChanged() will call our GetRowCount()
-  if (mTree)
-    mTree->RowCountChanged(GetSize() - 1, 1);
+    UpdateCacheAndViewForPrevSearchedFolders(folder);
+    m_curFolderGettingHits = folder;
+    m_hdrHits.Clear();
+    m_curFolderStartKeyIndex = m_keys.GetSize();
+  }
+  // calling FindHdr is sub-optimal here since for virtual folders with 
+  // a large number of hits, we'll have an 0(n2) algorithm 
+  // - we could add a way to check if a hdr is in the cached hits for 
+  // this folder, or we could make FindHdr do a binary search when
+  // the view is sorted. Checking the cached hits is probably best
+  // since they're in id order, so we can do a binary search.
+  // Actually, I think Mork has a hash table for uid lookups in a
+  // table, so we should definitely use the db.
+  PRBool hdrInCache = PR_FALSE;
+  nsXPIDLCString searchUri;
+  m_viewFolder->GetURI(getter_Copies(searchUri));
+  dbToUse->HdrIsInCache(searchUri, aMsgHdr, &hdrInCache);
+  if (!m_curFolderHasCachedHits || !hdrInCache)
+  {
+    if (m_sortValid)
+      InsertHdrFromFolder(aMsgHdr, supports);
+    else
+      AddHdrFromFolder(aMsgHdr, supports);
+  }
+  m_hdrHits.AppendObject(aMsgHdr);
 
   m_numTotal++;
+  PRUint32 msgFlags;
+  aMsgHdr->GetFlags(&msgFlags);
   if (!(msgFlags & MSG_FLAG_READ))
     m_numUnread++;
 
@@ -184,6 +286,9 @@ nsMsgXFVirtualFolderDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *fold
 NS_IMETHODIMP
 nsMsgXFVirtualFolderDBView::OnSearchDone(nsresult status)
 {
+  // handle any non verified hits we haven't handled yet.
+  UpdateCacheAndViewForPrevSearchedFolders(nsnull);
+
   //we want to set imap delete model once the search is over because setting next
   //message after deletion will happen before deleting the message and search scope
   //can change with every search.
@@ -200,11 +305,13 @@ nsMsgXFVirtualFolderDBView::OnSearchDone(nsresult status)
   dbFolderInfo->SetNumMessages(m_numTotal);
   m_viewFolder->UpdateSummaryTotals(true); // force update from db.
   virtDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
-  if (m_sortType != nsMsgViewSortType::byThread)
+  if (!m_sortValid && m_sortType != nsMsgViewSortType::byThread)
   {
     m_sortValid = PR_FALSE;       //sort the results 
     Sort(m_sortType, m_sortOrder);
   }
+  m_foldersWithNonVerifiedCachedHits.Clear();
+  m_curFolderGettingHits = nsnull;
   return rv;
 }
 
@@ -229,6 +336,73 @@ nsMsgXFVirtualFolderDBView::OnNewSearch()
   if (mTree) 
     mTree->RowCountChanged(0, -oldSize);
 
+  // to use the search results cache, we'll need to iterate over the scopes in the
+  // search session, calling getNthSearchScope for i = 0; i < searchSession.countSearchScopes; i++
+  // and for each folder, then open the db and pull out the cached hits, add them to the view.
+  // For each hit in a new folder, we'll then clean up the stale hits from the previous folder(s).
+  
+  PRInt32 scopeCount;
+  nsCOMPtr <nsIMsgSearchSession> searchSession = do_QueryReferent(m_searchSession);
+  searchSession->CountSearchScopes(&scopeCount);
+  for (PRInt32 i = 0; i < scopeCount; i++)
+  {
+    nsMsgSearchScopeValue scopeId;
+    nsCOMPtr<nsIMsgFolder> searchFolder;
+    searchSession->GetNthSearchScope(i, &scopeId, getter_AddRefs(searchFolder));
+    if (searchFolder)
+    {
+      nsCOMPtr<nsISimpleEnumerator> cachedHits;
+      nsCOMPtr<nsIMsgDatabase> searchDB;
+      nsXPIDLCString searchUri;
+      m_viewFolder->GetURI(getter_Copies(searchUri));
+      nsresult rv = searchFolder->GetMsgDatabase(nsnull, getter_AddRefs(searchDB));
+      if (NS_SUCCEEDED(rv) && searchDB)
+      {
+        searchDB->GetCachedHits(searchUri, getter_AddRefs(cachedHits));
+        PRBool hasMore;
+        if (cachedHits)
+        {
+          cachedHits->HasMoreElements(&hasMore);
+          if (hasMore)
+          {
+            nsMsgKey prevKey = nsMsgKey_None;
+            m_foldersWithNonVerifiedCachedHits.AppendObject(searchFolder);
+            while (hasMore)
+            {
+              nsCOMPtr <nsIMsgDBHdr> pHeader;
+              nsresult rv = cachedHits->GetNext(getter_AddRefs(pHeader));
+              NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
+              if (pHeader && NS_SUCCEEDED(rv))
+              {
+                nsMsgKey msgKey;
+                pHeader->GetMessageKey(&msgKey);
+                NS_ASSERTION(prevKey == nsMsgKey_None || msgKey > prevKey, "cached Hits not sorted");
+                prevKey = msgKey;
+                AddHdrFromFolder(pHeader, searchFolder); // need to QI to nsISupports?
+              }
+              else
+                break;
+              cachedHits->HasMoreElements(&hasMore);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  m_curFolderStartKeyIndex = 0;
+  m_curFolderGettingHits = nsnull;
+  m_curFolderHasCachedHits = PR_FALSE;
+
+  // if we have cached hits, sort them.
+  if (GetSize() > 0)
+  {
+    if (m_sortType != nsMsgViewSortType::byThread)
+    {
+      m_sortValid = PR_FALSE;       //sort the results 
+      Sort(m_sortType, m_sortOrder);
+    }
+  }
 //    mSearchResults->Clear();
     return NS_OK;
 }

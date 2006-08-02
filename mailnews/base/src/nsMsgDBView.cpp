@@ -4178,7 +4178,10 @@ nsMsgViewIndex nsMsgDBView::GetInsertIndexHelper(nsIMsgDBHdr *msgHdr, nsMsgKeyAr
     nsMsgViewIndex tryIndex = (lowIndex + highIndex - 1) / 2;
     EntryInfo2.id = keys->GetAt(tryIndex);
     nsCOMPtr <nsIMsgDBHdr> tryHdr;
-    rv = m_db->GetMsgHdrForKey(EntryInfo2.id, getter_AddRefs(tryHdr));
+    nsCOMPtr <nsIMsgDatabase> db;
+    GetDBForViewIndex(tryIndex, getter_AddRefs(db));
+    if (db)
+      rv = db->GetMsgHdrForKey(EntryInfo2.id, getter_AddRefs(tryHdr));
     if (!tryHdr)
       break;
     if (fieldType == kCollationKey)

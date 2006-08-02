@@ -171,7 +171,8 @@ nsMsgSearchSession::GetNthSearchTerm(PRInt32 whichTerm,
 NS_IMETHODIMP nsMsgSearchSession::CountSearchScopes(PRInt32 *_retval)
 {
   NS_ENSURE_ARG(_retval);
-    return NS_ERROR_NOT_IMPLEMENTED;
+  *_retval = m_scopeList.Count();
+  return NS_OK;
 }
 
   /* void GetNthSearchScope (in long which, out nsMsgSearchScope scopeId, out nsIMsgFolder folder); */

@@ -275,6 +275,7 @@ var folderListener = {
              {
                 gDefaultSearchViewTerms = null;
                 viewDebug("searching gVirtualFolderTerms\n");
+                gDBView.viewFolder = gMsgFolderSelected;
                 loadVirtualFolder(); 
              }
              else if (gMsgFolderSelected.flags & MSG_FOLDER_FLAG_VIRTUAL)

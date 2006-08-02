@@ -48,6 +48,8 @@
 
 nsMsgQuickSearchDBView::nsMsgQuickSearchDBView()
 {
+  m_usingCachedHits = PR_FALSE;
+  m_cacheEmpty = PR_TRUE;
 }
 
 nsMsgQuickSearchDBView::~nsMsgQuickSearchDBView()
@@ -219,17 +221,55 @@ nsMsgQuickSearchDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
   NS_ENSURE_ARG(aMsgHdr);
   if (!m_db)
     return NS_ERROR_NULL_POINTER;
+  // remember search hit and when search is done, reconcile cache
+  // with new hits;
+  m_hdrHits.AppendObject(aMsgHdr);
+  nsMsgKey key;
+  aMsgHdr->GetMessageKey(&key);
+  // is FindKey going to be expensive here? A lot of hits could make
+  // it a little bit slow to search through the view for every hit.
+  if (m_cacheEmpty || FindKey(key, PR_FALSE) == nsMsgViewIndex_None)
   return AddHdr(aMsgHdr); 
+  else
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMsgQuickSearchDBView::OnSearchDone(nsresult status)
 {
+  if (m_viewFolder)
+  {
+    nsMsgKeyArray keyArray;
+    nsXPIDLCString searchUri;
+    m_viewFolder->GetURI(getter_Copies(searchUri));
+    PRUint32 count = m_hdrHits.Count();
+    // build up message keys.
+    PRUint32 i;
+    for (i = 0; i < count; i++)
+    {
+      nsMsgKey key;
+      m_hdrHits[i]->GetMessageKey(&key);
+      keyArray.Add(key);
+    }
+    nsMsgKey *staleHits;
+    PRUint32 numBadHits;
+    m_db->RefreshCache(searchUri, m_hdrHits.Count(), keyArray.GetArray(), &numBadHits, &staleHits);
+    for (i = 0; i < numBadHits; i++)
+    {
+      nsMsgViewIndex staleHitIndex = FindKey(staleHits[i], PR_TRUE);
+      if (staleHitIndex != nsMsgViewIndex_None)
+        RemoveByIndex(staleHitIndex);
+    }
+    delete [] staleHits;
+    // we also need to add new hits - should we have RefreshCache calculate these?
+    // or just look through the view for each hit to see if we're already displaying it?
+  }
   if (m_sortType != nsMsgViewSortType::byThread)//we do not find levels for the results.
   {
     m_sortValid = PR_FALSE;       //sort the results 
     Sort(m_sortType, m_sortOrder);
   }
+  m_hdrHits.Clear();
   return NS_OK;
 }
 
@@ -242,11 +282,41 @@ nsMsgQuickSearchDBView::OnNewSearch()
   m_keys.RemoveAll();
   m_levels.RemoveAll();
   m_flags.RemoveAll();
-
+  m_hdrHits.Clear();
   // this needs to happen after we remove all the keys, since RowCountChanged() will call our GetRowCount()
   if (mTree)
     mTree->RowCountChanged(0, -oldSize);
+  PRUint32 folderFlags = 0;
+  if (m_viewFolder)
+    m_viewFolder->GetFlags(&folderFlags);
+  // check if it's a virtual folder - if so, we should get the cached hits 
+  // from the db, and set a flag saying that we're using cached values.
+  if (folderFlags & MSG_FOLDER_FLAG_VIRTUAL)
+  {
+    nsCOMPtr<nsISimpleEnumerator> cachedHits;
+    nsXPIDLCString searchUri;
+    m_viewFolder->GetURI(getter_Copies(searchUri));
+    m_db->GetCachedHits(searchUri, getter_AddRefs(cachedHits));
+    if (cachedHits)
+    {
+      PRBool hasMore;
 
+      m_usingCachedHits = PR_TRUE;
+      cachedHits->HasMoreElements(&hasMore);
+      m_cacheEmpty = !hasMore;
+      while (hasMore)
+      {
+        nsCOMPtr <nsIMsgDBHdr> pHeader;
+        nsresult rv = cachedHits->GetNext(getter_AddRefs(pHeader));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
+        if (pHeader && NS_SUCCEEDED(rv))
+          AddHdr(pHeader);
+        else
+          break;
+        cachedHits->HasMoreElements(&hasMore);
+      }
+    }
+  }
   return NS_OK;
 }
 

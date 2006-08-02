@@ -156,7 +156,7 @@ NS_IMETHODIMP nsMsgDBService::OpenFolderDB(nsIMsgFolder *aFolder, PRBool aCreate
       PRInt32 numMessages;
       msgDatabase->m_mdbAllMsgHeadersTable->GetCount(msgDatabase->GetEnv(), &numHdrsInTable);
       msgDatabase->m_dbFolderInfo->GetNumMessages(&numMessages);
-      if (numMessages != numHdrsInTable)
+      if (numMessages != (PRInt32) numHdrsInTable)
         msgDatabase->SyncCounts();
     }
   }
@@ -2130,7 +2130,7 @@ nsMsgDatabase::MarkThreadIgnored(nsIMsgThread *thread, nsMsgKey threadKey, PRBoo
   
   nsCOMPtr <nsIMsgDBHdr> msg;
   nsresult rv = GetMsgHdrForKey(threadKey, getter_AddRefs(msg));
-
+  NS_ENSURE_SUCCESS(rv, rv);
   return NotifyHdrChangeAll(msg, oldThreadFlags, threadFlags, instigator);
 }
 
@@ -2545,7 +2545,7 @@ public:
     // nsMsgDBEnumerator methods:
     typedef nsresult (*nsMsgDBEnumeratorFilter)(nsIMsgDBHdr* hdr, void* closure);
 
-    nsMsgDBEnumerator(nsMsgDatabase* db, 
+    nsMsgDBEnumerator(nsMsgDatabase* db, nsIMdbTable *table,
                       nsMsgDBEnumeratorFilter filter, void* closure);
     virtual ~nsMsgDBEnumerator();
 
@@ -2558,16 +2558,20 @@ protected:
     PRBool                      mDone;
     PRBool						mNextPrefetched;
     nsMsgDBEnumeratorFilter     mFilter;
+    nsCOMPtr <nsIMdbTable>      mTable; 
     void*                       mClosure;
 };
 
 nsMsgDBEnumerator::nsMsgDBEnumerator(nsMsgDatabase* db,
-                                     nsMsgDBEnumeratorFilter filter, void* closure)
+                                     nsIMdbTable *table,
+                                     nsMsgDBEnumeratorFilter filter, 
+                                     void* closure)
     : mDB(db), mRowCursor(nsnull), mResultHdr(nsnull), mDone(PR_FALSE),
       mFilter(filter), mClosure(closure)
 {
     NS_ADDREF(mDB);
     mNextPrefetched = PR_FALSE;
+    mTable = table;
 }
 
 nsMsgDBEnumerator::~nsMsgDBEnumerator()
@@ -2584,10 +2588,10 @@ nsresult nsMsgDBEnumerator::GetRowCursor()
 {
   mDone = PR_FALSE;
   
-  if (!mDB || !mDB->m_mdbAllMsgHeadersTable)
+  if (!mDB || !mTable)
     return NS_ERROR_NULL_POINTER;
 		
-  return mDB->m_mdbAllMsgHeadersTable->GetTableRowCursor(mDB->GetEnv(), -1, &mRowCursor);
+  return mTable->GetTableRowCursor(mDB->GetEnv(), -1, &mRowCursor);
 }
 
 NS_IMETHODIMP nsMsgDBEnumerator::GetNext(nsISupports **aItem)
@@ -2683,7 +2687,7 @@ NS_IMETHODIMP nsMsgDBEnumerator::HasMoreElements(PRBool *aResult)
 NS_IMETHODIMP 
 nsMsgDatabase::EnumerateMessages(nsISimpleEnumerator* *result)
 {
-    nsMsgDBEnumerator* e = new nsMsgDBEnumerator(this, nsnull, nsnull);
+    nsMsgDBEnumerator* e = new nsMsgDBEnumerator(this, m_mdbAllMsgHeadersTable, nsnull, nsnull);
     if (e == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(e);
@@ -2978,7 +2982,7 @@ nsMsgFlagSetFilter(nsIMsgDBHdr *msg, void *closure)
 nsresult  
 nsMsgDatabase::EnumerateMessagesWithFlag(nsISimpleEnumerator* *result, PRUint32 *pFlag)
 {
-    nsMsgDBEnumerator* e = new nsMsgDBEnumerator(this, nsMsgFlagSetFilter, pFlag);
+    nsMsgDBEnumerator* e = new nsMsgDBEnumerator(this, m_mdbAllMsgHeadersTable, nsMsgFlagSetFilter, pFlag);
     if (e == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(e);
@@ -4790,3 +4794,233 @@ nsMsgDatabase::GetNewList(PRUint32 *aCount, PRUint32 **aNewKeys)
     *aNewKeys = nsnull;
     return NS_OK;
 }
+
+nsresult nsMsgDatabase::GetSearchResultsTable(const char *searchFolderUri, PRBool createIfMissing, nsIMdbTable **table)
+{
+  mdb_kind kindToken;
+  mdb_count numTables;
+  mdb_bool mustBeUnique;
+  mdb_err err = m_mdbStore->StringToToken(GetEnv(), searchFolderUri, &kindToken); 
+  err = m_mdbStore->GetTableKind(GetEnv(), m_hdrRowScopeToken,  kindToken, 
+                                  &numTables, &mustBeUnique, table);
+  if ((!*table || NS_FAILED(err)) && createIfMissing)
+    err = m_mdbStore->NewTable(GetEnv(), m_hdrRowScopeToken, kindToken, PR_TRUE, nsnull, table);
+
+  return *table ? err : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsMsgDatabase::GetCachedHits(const char *aSearchFolderUri, nsISimpleEnumerator **aEnumerator)
+{
+  nsCOMPtr <nsIMdbTable> table;
+  nsresult err = GetSearchResultsTable(aSearchFolderUri, PR_FALSE, getter_AddRefs(table));
+  NS_ENSURE_SUCCESS(err, err);
+  if (!table)
+    return NS_ERROR_FAILURE;
+  nsMsgDBEnumerator* e = new nsMsgDBEnumerator(this, table, nsnull, nsnull);
+  if (e == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*aEnumerator = e);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDatabase::RefreshCache(const char *aSearchFolderUri, PRUint32 aNumKeys, nsMsgKey *aNewHits, PRUint32 *aNumBadHits, nsMsgKey **aStaleHits)
+{
+  nsCOMPtr <nsIMdbTable> table;
+  nsresult err = GetSearchResultsTable(aSearchFolderUri, PR_TRUE, getter_AddRefs(table));
+  NS_ENSURE_SUCCESS(err, err);
+  // update the table so that it just contains aNewHits.
+  // And, keep track of the headers in the original table but not in aNewHits, so we
+  // can put those in aStaleHits.
+  // both aNewHits and the db table are sorted by uid/key.
+  // So, start at the beginning of the table and the aNewHits array.
+  PRUint32 newHitIndex = 0;
+  PRUint32 tableRowIndex = 0;
+  
+  PRUint32 rowCount;
+  table->GetCount(GetEnv(), &rowCount);
+  nsMsgKeyArray staleHits;
+  // should assert that each array is sorted
+  while (newHitIndex < aNumKeys || tableRowIndex < rowCount)
+  {
+    mdbOid oid;
+    nsMsgKey tableRowKey = nsMsgKey_None;
+    if (tableRowIndex < rowCount)
+    {
+      nsresult ret = table->PosToOid (GetEnv(), tableRowIndex, &oid);
+      if (NS_FAILED(ret))
+      {
+        tableRowIndex++;
+        continue;
+      }
+      tableRowKey = oid.mOid_Id;  // ### TODO need the real key for the 0th key problem.
+    }
+    
+   if (newHitIndex < aNumKeys && aNewHits[newHitIndex] == tableRowKey) 
+   {
+      newHitIndex++;
+      tableRowIndex++;
+      continue;
+    }
+    else if (tableRowIndex >= rowCount || (newHitIndex < aNumKeys && aNewHits[newHitIndex] < tableRowKey))
+    {
+      nsCOMPtr <nsIMdbRow> hdrRow;
+      mdbOid rowObjectId;
+
+      rowObjectId.mOid_Id = aNewHits[newHitIndex];
+      rowObjectId.mOid_Scope = m_hdrRowScopeToken;
+      err = m_mdbStore->GetRow(GetEnv(), &rowObjectId, getter_AddRefs(hdrRow));
+      if (hdrRow)
+      {
+        table->AddRow(GetEnv(), hdrRow);
+        mdb_pos newPos;
+#ifdef DEBUG_David_Bienvenu
+        printf("adding row %lx at pos %lx \n", rowObjectId.mOid_Id, tableRowIndex);
+#endif
+        table->MoveRow(GetEnv(), hdrRow, rowCount, tableRowIndex, &newPos);
+        rowCount++;
+        tableRowIndex++;
+      }
+      newHitIndex++; 
+      continue;
+    }
+    else if (newHitIndex >= aNumKeys || aNewHits[newHitIndex] > tableRowKey)
+    {
+      staleHits.Add(tableRowKey);
+      table->CutOid(GetEnv(), &oid);
+      rowCount--;
+      continue; // don't increment tableRowIndex since we removed that row.
+    }
+   }  
+   *aNumBadHits = staleHits.GetSize();
+   if (*aNumBadHits)
+   {
+     *aStaleHits = NS_STATIC_CAST(PRUint32 *, nsMemory::Alloc(*aNumBadHits * sizeof(PRUint32)));
+     if (!*aStaleHits)
+       return NS_ERROR_OUT_OF_MEMORY;
+     memcpy(*aStaleHits, staleHits.GetArray(), *aNumBadHits * sizeof(PRUint32));
+   }
+   else
+     *aStaleHits = nsnull;
+
+#ifdef DEBUG_David_Bienvenu
+  printf("after refreshing cache\n");
+  // iterate over table and assert that it's in id order
+  table->GetCount(GetEnv(), &rowCount);
+  mdbOid oid;
+  tableRowIndex = 0;
+  mdb_id prevId = 0;
+  while (tableRowIndex < rowCount)
+  {
+    nsresult ret = table->PosToOid (m_mdbEnv, tableRowIndex++, &oid);
+    if (tableRowIndex > 1 && oid.mOid_Id <= prevId)
+    {
+      NS_ASSERTION(PR_FALSE, "inserting row into cached hits table, not sorted correctly");
+      printf("key %lx is before or equal %lx \n", prevId, oid.mOid_Id);
+    }
+    prevId = oid.mOid_Id;
+  }
+
+#endif
+  Commit(nsMsgDBCommitType::kLargeCommit);
+  return NS_OK;
+}
+
+// search sorted table
+mdb_pos nsMsgDatabase::FindInsertIndexInSortedTable(nsIMdbTable *table, mdb_id idToInsert)
+{
+  mdb_pos searchPos = 0;
+  PRUint32 rowCount;
+  table->GetCount(GetEnv(), &rowCount);
+  mdb_pos hi = rowCount;
+  mdb_pos lo = 0;
+  
+  while (hi > lo)
+  {
+    mdbOid outOid;
+    searchPos = (lo + hi - 1) / 2;
+    table->PosToOid(GetEnv(), searchPos, &outOid);
+    if (outOid.mOid_Id == idToInsert)
+    {
+      NS_ASSERTION(PR_FALSE, "id shouldn't be in table");
+      return hi;
+    }
+    if (outOid.mOid_Id > idToInsert)
+      hi = searchPos;
+    else // if (outOid.mOid_Id <  idToInsert)
+      lo = searchPos + 1;
+  }
+  return hi;
+}
+NS_IMETHODIMP
+nsMsgDatabase::UpdateHdrInCache(const char *aSearchFolderUri, nsIMsgDBHdr *aHdr, PRBool aAdd)
+{
+  nsCOMPtr <nsIMdbTable> table;
+  nsresult err = GetSearchResultsTable(aSearchFolderUri, PR_TRUE, getter_AddRefs(table));
+  NS_ENSURE_SUCCESS(err, err);
+  nsMsgKey key;
+  aHdr->GetMessageKey(&key);
+  nsMsgHdr* msgHdr = NS_STATIC_CAST(nsMsgHdr*, aHdr);  // closed system, so this is ok
+  if (err == NS_OK && m_mdbStore && msgHdr->m_mdbRow)
+  {
+    if (!aAdd)
+    {
+      table->CutRow(m_mdbEnv, msgHdr->m_mdbRow);
+#ifdef DEBUG_David_Bienvenu
+      printf("removing key %lx \n", key);
+#endif
+    }
+    else
+    {
+      mdbOid rowId;
+      msgHdr->m_mdbRow->GetOid(m_mdbEnv, &rowId);
+      mdb_pos insertPos = FindInsertIndexInSortedTable(table, rowId.mOid_Id);
+      PRUint32 rowCount;
+      table->GetCount(m_mdbEnv, &rowCount);
+      table->AddRow(m_mdbEnv, msgHdr->m_mdbRow);
+      mdb_pos newPos;
+      table->MoveRow(m_mdbEnv, msgHdr->m_mdbRow, rowCount, insertPos, &newPos);
+#ifdef DEBUG_David_Bienvenu
+      printf("moving row with key %lx to pos %lx \n", key, newPos);
+      // iterate over table and assert that it's in id order
+      table->GetCount(GetEnv(), &rowCount);
+      mdbOid oid;
+      PRUint32 tableRowIndex = 0;
+      mdb_id prevId = 0;
+      while (tableRowIndex < rowCount)
+      {
+        nsresult ret = table->PosToOid (m_mdbEnv, tableRowIndex++, &oid);
+        if (tableRowIndex > 1 && oid.mOid_Id <= prevId)
+        {
+          NS_ASSERTION(PR_FALSE, "inserting row into cached hits table, not sorted correctly");
+          printf("key %lx is before or equal %lx \n", prevId, oid.mOid_Id);
+        }
+        prevId = oid.mOid_Id;
+      }
+
+#endif
+    }
+  }
+    
+//  if (aAdd)
+ // if we need to add this hdr, we need to insert it in key order.
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsMsgDatabase::HdrIsInCache(const char* aSearchFolderUri, nsIMsgDBHdr *aHdr, PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  nsCOMPtr <nsIMdbTable> table;
+  nsresult err = GetSearchResultsTable(aSearchFolderUri, PR_TRUE, getter_AddRefs(table));
+  NS_ENSURE_SUCCESS(err, err);
+  nsMsgKey key;
+  aHdr->GetMessageKey(&key);
+  mdbOid rowObjectId;
+  rowObjectId.mOid_Id = key;
+  rowObjectId.mOid_Scope = m_hdrRowScopeToken;
+  mdb_bool hasOid;
+  err =  table->HasOid(GetEnv(), &rowObjectId, &hasOid);
+  *aResult = hasOid;
+  return err;
+}
+

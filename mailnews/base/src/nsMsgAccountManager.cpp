@@ -2725,6 +2725,13 @@ NS_IMETHODIMP VirtualFolderChangeListener::OnHdrChange(nsIMsgDBHdr *aHdrChanged,
       if (numNewMessages == 1)
         m_virtualFolder->SetHasNewMessages(PR_FALSE);
     }
+    if (totalDelta)
+    {
+      nsXPIDLCString searchUri;
+      m_virtualFolder->GetURI(getter_Copies(searchUri));
+      msgDB->UpdateHdrInCache(searchUri, aHdrChanged, totalDelta == 1);
+    }
+
     m_virtualFolder->UpdateSummaryTotals(PR_TRUE); // force update from db.
     virtDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
   }
@@ -2762,6 +2769,10 @@ NS_IMETHODIMP VirtualFolderChangeListener::OnHdrDeleted(nsIMsgDBHdr *aHdrDeleted
       if (numNewMessages == 1)
         m_virtualFolder->SetHasNewMessages(PR_FALSE);
     }
+    nsXPIDLCString searchUri;
+    m_virtualFolder->GetURI(getter_Copies(searchUri));
+    msgDB->UpdateHdrInCache(searchUri, aHdrDeleted, PR_FALSE);
+
     m_virtualFolder->UpdateSummaryTotals(PR_TRUE); // force update from db.
     virtDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
   }
@@ -2797,6 +2808,9 @@ NS_IMETHODIMP VirtualFolderChangeListener::OnHdrAdded(nsIMsgDBHdr *aNewHdr, nsMs
       m_virtualFolder->SetHasNewMessages(PR_TRUE);
       m_virtualFolder->SetNumNewMessages(numNewMessages + 1);
     }
+    nsXPIDLCString searchUri;
+    m_virtualFolder->GetURI(getter_Copies(searchUri));
+    msgDB->UpdateHdrInCache(searchUri, aNewHdr, PR_TRUE);
     dbFolderInfo->ChangeNumMessages(1);
     m_virtualFolder->UpdateSummaryTotals(true); // force update from db.
     virtDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
@@ -2945,20 +2959,8 @@ NS_IMETHODIMP nsMsgAccountManager::LoadVirtualFolders()
           // and we have to add a pending listener for each of them.
           if (buffer.Length())
           {
-            nsCStringArray folderUris;
             dbFolderInfo->SetCharPtrProperty("searchFolderUri", buffer.get());
-            folderUris.ParseString(buffer.get(), "|");
-            for (PRInt32 i = 0; i < folderUris.Count(); i++)
-            {
-              rdf->GetResource(*(folderUris[i]), getter_AddRefs(resource));
-              nsCOMPtr <nsIMsgFolder> realFolder = do_QueryInterface(resource);
-              VirtualFolderChangeListener *dbListener = new VirtualFolderChangeListener();
-              m_virtualFolderListeners.AppendObject(dbListener);
-              dbListener->m_virtualFolder = virtualFolder;
-              dbListener->m_folderWatching = realFolder;
-              dbListener->Init();
-              msgDBService->RegisterPendingListener(realFolder, dbListener);
-            }
+            AddVFListenersForVF(virtualFolder, buffer.get(), rdf, msgDBService);
           }
           else // this folder is useless
           {
@@ -3067,6 +3069,29 @@ nsresult nsMsgAccountManager::WriteLineToOutputStream(const char *prefix, const 
   return NS_OK;
 }
 
+nsresult nsMsgAccountManager::AddVFListenersForVF(nsIMsgFolder *virtualFolder, 
+                                                  const char *srchFolderUris,
+                                                  nsIRDFService *rdf,
+                                                  nsIMsgDBService *msgDBService)
+{
+  nsCStringArray folderUris;
+  folderUris.ParseString(srchFolderUris, "|");
+  nsCOMPtr <nsIRDFResource> resource;
+
+  for (PRInt32 i = 0; i < folderUris.Count(); i++)
+  {
+    rdf->GetResource(*(folderUris[i]), getter_AddRefs(resource));
+    nsCOMPtr <nsIMsgFolder> realFolder = do_QueryInterface(resource);
+    VirtualFolderChangeListener *dbListener = new VirtualFolderChangeListener();
+    NS_ENSURE_TRUE(dbListener, NS_ERROR_OUT_OF_MEMORY);
+    m_virtualFolderListeners.AppendObject(dbListener);
+    dbListener->m_virtualFolder = virtualFolder;
+    dbListener->m_folderWatching = realFolder;
+    dbListener->Init();
+    msgDBService->RegisterPendingListener(realFolder, dbListener);
+  }
+}
+
 NS_IMETHODIMP nsMsgAccountManager::OnItemAdded(nsIRDFResource *parentItem, nsISupports *item)
 {
   nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(item);
@@ -3083,23 +3108,14 @@ NS_IMETHODIMP nsMsgAccountManager::OnItemAdded(nsIRDFResource *parentItem, nsISu
     nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
     if (msgDBService)
     {
-      VirtualFolderChangeListener *dbListener = new VirtualFolderChangeListener();
-      dbListener->m_virtualFolder = folder;
       nsCOMPtr <nsIMsgDatabase> virtDatabase;
       nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
-      m_virtualFolderListeners.AppendObject(dbListener);
       rv = folder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(virtDatabase));
       NS_ENSURE_SUCCESS(rv, rv);
       nsXPIDLCString srchFolderUri;
       dbFolderInfo->GetCharPtrProperty("searchFolderUri", getter_Copies(srchFolderUri));
-      // if we supported cross folder virtual folders, we'd have a list of folders uris,
-      // and we'd have to add a pending listener for each of them.
-      rv = GetExistingFolder(srchFolderUri.get(), getter_AddRefs(dbListener->m_folderWatching));
-      if (dbListener->m_folderWatching)
-      {
-        dbListener->Init();
-        msgDBService->RegisterPendingListener(dbListener->m_folderWatching, dbListener);
-      }
+      nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
+      AddVFListenersForVF(folder, srchFolderUri, rdf, msgDBService);
     }
     rv = SaveVirtualFolders();
   }

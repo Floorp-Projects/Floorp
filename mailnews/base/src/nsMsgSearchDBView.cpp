@@ -190,6 +190,27 @@ nsresult nsMsgSearchDBView::GetDBForViewIndex(nsMsgViewIndex index, nsIMsgDataba
     return NS_MSG_INVALID_DBVIEW_INDEX;
 }
 
+nsresult nsMsgSearchDBView::AddHdrFromFolder(nsIMsgDBHdr *msgHdr, nsISupports *folder)
+{
+  m_folders->AppendElement(folder);
+  nsMsgKey msgKey;
+  PRUint32 msgFlags;
+  msgHdr->GetMessageKey(&msgKey);
+  // nsMsgKey_None means it's not a valid hdr.
+  if (msgKey != nsMsgKey_None)
+  {
+    msgHdr->GetFlags(&msgFlags);
+    m_keys.Add(msgKey);
+    m_levels.Add(0);
+    m_flags.Add(msgFlags);
+    
+    // this needs to be called after we add the key, since RowCountChanged() will call our GetRowCount()
+    if (mTree)
+      mTree->RowCountChanged(GetSize() - 1, 1);
+  }
+  return NS_OK;
+  }
+
 NS_IMETHODIMP
 nsMsgSearchDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
 {
@@ -209,20 +230,7 @@ nsMsgSearchDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
     }
   }
 
-  m_folders->AppendElement(supports);
-  nsMsgKey msgKey;
-  PRUint32 msgFlags;
-  aMsgHdr->GetMessageKey(&msgKey);
-  aMsgHdr->GetFlags(&msgFlags);
-  m_keys.Add(msgKey);
-  m_levels.Add(0);
-  m_flags.Add(msgFlags);
-
-  // this needs to be called after we add the key, since RowCountChanged() will call our GetRowCount()
-  if (mTree)
-    mTree->RowCountChanged(GetSize() - 1, 1);
-
-  return NS_OK;
+  return AddHdrFromFolder(aMsgHdr, supports);
 }
 
 NS_IMETHODIMP
@@ -518,7 +526,7 @@ nsresult nsMsgSearchDBView::ProcessRequestsInOneFolder(nsIMsgWindow *window)
 
     // called for delete with trash, copy and move
     if (mCommand == nsMsgViewCommandType::deleteMsg)
-        curFolder->DeleteMessages(messageArray, window, PR_FALSE /* delete storage */, PR_FALSE /* is move*/, this, PR_FALSE /*allowUndo*/);
+        curFolder->DeleteMessages(messageArray, window, PR_FALSE /* delete storage */, PR_FALSE /* is move*/, this, PR_TRUE /*allowUndo*/);
     else 
     {
       NS_ASSERTION(!(curFolder == mDestFolder), "The source folder and the destination folder are the same");
@@ -528,9 +536,9 @@ nsresult nsMsgSearchDBView::ProcessRequestsInOneFolder(nsIMsgWindow *window)
          if (NS_SUCCEEDED(rv))
          {
            if (mCommand == nsMsgViewCommandType::moveMessages)
-             copyService->CopyMessages(curFolder, messageArray, mDestFolder, PR_TRUE /* isMove */, this, window, PR_FALSE /*allowUndo*/);
+             copyService->CopyMessages(curFolder, messageArray, mDestFolder, PR_TRUE /* isMove */, this, window, PR_TRUE /*allowUndo*/);
            else if (mCommand == nsMsgViewCommandType::copyMessages)
-             copyService->CopyMessages(curFolder, messageArray, mDestFolder, PR_FALSE /* isMove */, this, window, PR_FALSE /*allowUndo*/);
+             copyService->CopyMessages(curFolder, messageArray, mDestFolder, PR_FALSE /* isMove */, this, window, PR_TRUE /*allowUndo*/);
          }
       }
     }

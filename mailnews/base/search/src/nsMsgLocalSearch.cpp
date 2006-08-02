@@ -616,15 +616,6 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
   NS_ENSURE_ARG(aExpressionTree);
   nsresult err;
 
-  // Don't even bother to look at expunged messages awaiting compression
-  PRUint32 msgFlags;
-  msgToMatch->GetFlags(&msgFlags);
-  if (msgFlags & MSG_FLAG_EXPUNGED)
-  {
-    *pResult = PR_FALSE;
-    return NS_OK;
-  }
-
   if (!*aExpressionTree)
   {
     PRUint32 initialPos = 0; 

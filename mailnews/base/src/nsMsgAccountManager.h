@@ -56,6 +56,8 @@
 #include "nsIUrlListener.h"
 #include "nsCOMArray.h"
 
+class nsIRDFService;
+
 class nsMsgAccountManager: public nsIMsgAccountManager,
     public nsIObserver,
     public nsSupportsWeakReference,
@@ -205,6 +207,10 @@ private:
   // handle virtual folders
   nsresult GetVirtualFoldersFile(nsCOMPtr<nsILocalFile>& file);
   nsresult WriteLineToOutputStream(const char *prefix, const char * line, nsIOutputStream *outputStream);
+  nsresult AddVFListenersForVF(nsIMsgFolder *virtualFolder, 
+                               const char *srchFolderUris,
+                               nsIRDFService *rdf,
+                               nsIMsgDBService *msgDBService);
 
   static void getUniqueKey(const char* prefix,
                            nsHashtable *hashTable,

@@ -54,6 +54,7 @@ interface nsIMsgOfflineImapOperation;
 interface nsIMsgFolder;
 interface nsIOFileStream;
 interface nsIUrlListener;
+interface nsISupportsArray;
 
 [ptr] native octetPtr(PRUint8);
 
@@ -117,7 +118,7 @@ interface nsIMsgDBService : nsISupports
     void unregisterPendingListener(in nsIDBChangeListener aListener);
 };
 
-[scriptable, uuid(7b510984-bbac-4e8f-b6cd-134509000776)]
+[scriptable, uuid(6393FEF1-D6C6-444A-90B8-BEC84E8BD8D7)]
 
 interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   void Open(in nsIFileSpec aFolderName, in boolean aCreate, in boolean aLeaveInvalidDB);
@@ -301,5 +302,13 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
    * the caller should free when done using nsMemory::Free.
    */
   void getNewList(out unsigned long count, [array, size_is(count)] out nsMsgKey newKeys);
+  
+  // These are used for caching search hits in a db, to speed up saved search folders.
+  nsISimpleEnumerator getCachedHits(in string aSearchFolderUri);
+  void refreshCache(in string aSearchFolderUri, in unsigned long aNumKeys, [array, size_is (aNumKeys)] in nsMsgKey aNewHits,
+     out unsigned long aNumBadHits, [array, size_is(aNumBadHits)] out nsMsgKey aStaleHits);
+  void updateHdrInCache(in string aSearchFolderUri, in nsIMsgDBHdr aHdr, in boolean aAdd);
+  boolean hdrIsInCache(in string aSearchFolderUri, in nsIMsgDBHdr aHdr);
+
 };
 
