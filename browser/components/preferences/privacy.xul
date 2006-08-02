@@ -65,8 +65,10 @@
       <!-- History -->
       <preference id="browser.history_expire_days"
                   name="browser.history_expire_days"
-                  type="int"
-                  onchange="gPrivacyPane.historyDaysPrefChanged();"/>
+                  type="int"/>
+      <preference id="browser.history_expire_days.mirror"
+                  name="browser.history_expire_days.mirror"
+                  type="int"/>
       <preference id="browser.formfill.enable"
                   name="browser.formfill.enable"
                   type="bool"/>
@@ -96,9 +98,8 @@
         <checkbox id="rememberHistoryDays"
                   label="&rememberBefore.label;"
                   accesskey="&rememberBefore.accesskey;"
-                  onchange="gPrivacyPane.onchangeHistoryDaysCheckbox();"/>
-        <textbox id="historyDays" size="2"
-                 onkeyup="gPrivacyPane.changeHistoryDays();"/>
+                  oncommand="gPrivacyPane.onchangeHistoryDaysCheck();"/>
+        <textbox id="historyDays" size="3"/>
         <label>&rememberAfter.label;</label>
       </hbox>
       <checkbox id="rememberForms"
@@ -128,8 +129,8 @@
                 preference="pref.privacy.disable_button.cookie_exceptions"/>
       </hbox>
       <hbox id="keepRow">
-        <hbox id="keepBox" align="center">
-          <label id="keepUntil" class="indent"
+        <hbox id="keepBox" align="center" class="indent">
+          <label id="keepUntil"
                  control="keepCookiesUntil"
                  accesskey="&keepUntil.accesskey;">&keepUntil.label;</label>
           <menulist id="keepCookiesUntil"
