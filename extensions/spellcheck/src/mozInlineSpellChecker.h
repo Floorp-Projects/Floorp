@@ -39,6 +39,8 @@
 #ifndef __mozinlinespellchecker_h__
 #define __mozinlinespellchecker_h__
 
+#include "nsAutoPtr.h"
+#include "nsIDOMRange.h"
 #include "nsIEditorSpellCheck.h"
 #include "nsIEditActionListener.h"
 #include "nsIInlineSpellChecker.h"
@@ -53,6 +55,26 @@
 
 class nsIDOMMouseEventListener;
 class mozInlineSpellWordUtil;
+class mozInlineSpellChecker;
+class mozInlineSpellResume;
+
+class mozInlineSpellStatus
+{
+public:
+  mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker,
+                       nsIDOMRange* aRange,
+                       nsIDOMRange* aNoCheckRange,
+                       nsIDOMRange* aCreatedRange);
+
+  nsRefPtr<mozInlineSpellChecker> mSpellChecker;
+
+  nsCOMPtr<nsIDOMRange> mRange;
+  nsCOMPtr<nsIDOMRange> mNoCheckRange;
+  nsCOMPtr<nsIDOMRange> mCreatedRange;
+
+  // total number of words checked in this sequence
+  PRInt32 mWordCount;
+};
 
 class mozInlineSpellChecker : public nsIInlineSpellChecker, nsIEditActionListener, nsIDOMMouseListener, nsIDOMKeyListener,
                                      nsSupportsWeakReference
@@ -73,6 +95,13 @@ private:
 
   PRInt32 mNumWordsInSpellSelection;
   PRInt32 mMaxNumWordsInSpellSelection;
+
+  // How many misspellings we can add at once. This is often less than the max
+  // total number of misspellings. When you have a large textarea prepopulated
+  // with text with many misspellings, we can hit this limit. By making it
+  // lower than the total number of misspelled words, new text typed by the
+  // user can also have spellchecking in it.
+  PRInt32 mMaxMisspellingsPerCheck;
 
   // we need to keep track of the current text position in the document
   // so we can spell check the old word when the user clicks around the document.
@@ -154,8 +183,7 @@ public:
   nsresult SpellCheckBetweenNodes(nsIDOMNode *aStartNode,
                                   PRInt32 aStartOffset,
                                   nsIDOMNode *aEndNode,
-                                  PRInt32 aEndOffset,
-                                  nsISelection *aSpellCheckSelection);
+                                  PRInt32 aEndOffset);
   
   // examines the dom node in question and returns true if the inline spell
   // checker should skip the node (i.e. the text is inside of a block quote
@@ -166,11 +194,21 @@ public:
                                  nsIDOMNode* aPreviousNode, PRInt32 aPreviousOffset,
                                  nsISelection* aSpellCheckSelection);
 
-  // spell check  the text contained within aRange
+  // spell check the text contained within aRange, potentially scheduling
+  // another check in the future if the time threshold is reached
+  nsresult ScheduleSpellCheck(mozInlineSpellWordUtil& aWordUtil,
+                              mozInlineSpellStatus* aStatus);
+  nsresult ScheduleSpellCheck(mozInlineSpellWordUtil& aWordUtil,
+                              nsIDOMRange *aRange, nsIDOMRange* aNoCheckRange,
+                              nsIDOMRange *aCreatedRange) {
+    mozInlineSpellStatus status(this, aRange, aNoCheckRange, aCreatedRange);
+    return ScheduleSpellCheck(aWordUtil, &status);
+  }
+
   nsresult DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
-                        nsIDOMRange *aRange, nsIDOMRange* aNoCheckRange,
-                        nsIDOMRange *aCreatedRange,
-                        nsISelection *aSpellCheckSelection);
+                        nsISelection *aSpellCheckSelection,
+                        mozInlineSpellStatus* aStatus,
+                        PRBool* aDoneChecking);
 
   // helper routine to determine if a point is inside of a the passed in selection.
   nsresult IsPointInSelection(nsISelection *aSelection,
@@ -192,6 +230,8 @@ public:
 
   nsresult GetSpellCheckSelection(nsISelection ** aSpellCheckSelection);
   nsresult SaveCurrentSelectionPosition();
+
+  nsresult ResumeCheck(mozInlineSpellStatus* aStatus);
 };
 
 #endif /* __mozinlinespellchecker_h__ */
