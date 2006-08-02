@@ -37,6 +37,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+function createWcapCalendar( calId, session )
+{
+    var cal = new calWcapCalendar( calId, session );
+    switch (CACHE) {
+    case "memory":
+    case "storage":
+        // wrap it up:
+        var cal_ = new calWcapCachedCalendar();
+        cal_.remoteCal = cal;
+        cal = cal_;
+        break;
+    }
+    return cal;
+}
+
 function calWcapCalendar( calId, session ) {
     this.wrappedJSObject = this;
     this.m_calId = calId;
@@ -236,14 +251,13 @@ calWcapCalendar.prototype = {
                 this.calId.indexOf(userId + ":") == 0);
     },
     
-    m_calProps: null,
     getCalendarProperties:
     function( propName, out_count )
     {
-        this.getCalProps_(false /* !async: waits for response */);
         var ret = [];
-        if (this.m_calProps != null) {
-            var nodeList = this.m_calProps.getElementsByTagName(propName);
+        var calProps = this.getCalProps_(false /* !async: waits for response*/);
+        if (calProps != null) {
+            var nodeList = calProps.getElementsByTagName(propName);
             for ( var i = 0; i < nodeList.length; ++i ) {
                 ret.push( trimString(nodeList.item(i).textContent) );
             }
@@ -251,6 +265,7 @@ calWcapCalendar.prototype = {
         out_count.value = ret.length;
         return ret;
     },
+    m_calProps: null,
     getCalProps_:
     function( bAsync )
     {
@@ -283,6 +298,7 @@ calWcapCalendar.prototype = {
             this.notifyError( exc );
             throw exc;
         }
+        return this.m_calProps;
     },
     
     get defaultTimezone() {

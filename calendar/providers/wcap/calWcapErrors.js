@@ -183,6 +183,8 @@ function wcapErrorToString( rc )
 
 function errorToString( err )
 {
+    if (err instanceof String)
+        return err;
     if (err instanceof Error)
         return err.message;
     switch (err) {

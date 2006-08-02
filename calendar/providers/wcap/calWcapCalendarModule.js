@@ -75,7 +75,8 @@ var calWcapCalendarModule = {
         if (!this.m_scriptsLoaded) {
             this.m_scriptsLoaded = true;
             // load scripts:
-            const scripts = [ "calWcapUtils.js", "calWcapErrors.js",
+            const scripts = [ "calWcapUtils.js" /* has the main init code */,
+                              "calWcapErrors.js",
                               "calWcapRequest.js", "calWcapSession.js",
                               "calWcapCalendar.js", "calWcapCalendarItems.js",
                               "calWcapCachedCalendar.js" ];
@@ -91,7 +92,6 @@ var calWcapCalendarModule = {
                 scriptLoader.loadSubScript(
                     ioService.newFileURI(scriptFile).spec, null );
             }
-            init(); // init first time
         }
         
         if (!cid.equals( calWcapCalendar.prototype.classID ))
@@ -104,20 +104,11 @@ var calWcapCalendarModule = {
             function( outer, iid ) {
                 if (outer != null)
                     throw Components.results.NS_ERROR_NO_AGGREGATION;
-                var cal;
-                switch (CACHE) {
-// unsupported until fixed:
-//                 case "memory":
-//                 case "storage":
-//                     cal = new calWcapCachedCalendar();
-//                     break;
-                default:
-                    cal = new calWcapCalendar(
-                        null /* calId: null indicates default calendar */,
-                        new calWcapSession() );
-                    cal.session.defaultCalendar = cal;
-                    break;
-                }
+                var session = new calWcapSession();
+                var cal = createWcapCalendar(
+                    null /* calId: null indicates default calendar */,
+                    session );
+                session.defaultCalendar = cal;
                 return cal.QueryInterface( iid );
             }
         };

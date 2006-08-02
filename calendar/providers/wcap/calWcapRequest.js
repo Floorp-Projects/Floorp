@@ -68,6 +68,9 @@ WcapResponse.prototype = {
         this.m_data = d;
         this.m_exc = null;
     },
+    get exception() {
+        return this.m_exc;
+    },
     set exception(exc) {
         this.m_exc = exc;
     }

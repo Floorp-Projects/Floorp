@@ -765,8 +765,7 @@ calWcapCalendar.prototype.parseItems = function(
                 var lastAckProp = subComp.getFirstProperty("X-MOZ-LASTACK");
                 if (lastAckProp) { // shift to alarm comp:
                     // TZID is UTC:
-                    item.alarmLastAck = getDatetimeFromIcalProp(
-                        lastAckProp );
+                    item.alarmLastAck = getDatetimeFromIcalProp( lastAckProp );
                 }
                 
                 item.calendar = this_.superCalendar;
@@ -786,6 +785,14 @@ calWcapCalendar.prototype.parseItems = function(
                     // force no recurrence info:
                     item.recurrenceInfo = null;
                     excItems.push( item );
+                }
+                
+                if (item.title == null &&
+                    (item.privacy == "PRIVATE" ||
+                     item.privacy == "CONFIDENTIAL")) {
+                    // assumed to look at a subscribed calendar,
+                    // so patch title for private items:
+                    item.title = g_privateItemTitle;
                 }
             }
         },
@@ -914,6 +921,61 @@ calWcapCalendar.prototype.getItems_resp = function(
     itemFilter, maxResult, rangeStart, rangeEnd, iListener )
 {
     try {
+        var exc = wcapResponse.exception;
+        // check  whether access is denied,
+        // then show free-busy information instead:
+        if (exc && (exc == Components.interfaces.
+                           calIWcapErrors.WCAP_ACCESS_DENIED_TO_CALENDAR)) {
+            if (iListener != null) {
+                var this_ = this;
+                var freeBusyListener = { // calIWcapFreeBusyListener:
+                    onGetFreeBusyTimes:
+                    function( rc, requestId, calId, count, entries )
+                    {
+                        if (rc == Components.results.NS_OK) {
+                            var items = [];
+                            for each ( var entry in entries ) {
+                                var item = new CalEvent();
+                                item.id = (g_busyItemUuidPrefix +
+                                           entry.dtRangeStart.icalString);
+                                item.calendar = this_.superCalendar;
+                                item.title = g_busyItemTitle;
+                                item.startDate = entry.dtRangeStart;
+                                item.endDate = entry.dtRangeEnd;
+                                item.makeImmutable();
+                                items.push(item);
+                            }
+                            iListener.onGetResult(
+                                this_.superCalendar, Components.results.NS_OK,
+                                Components.interfaces.calIItemBase,
+                                this_.log( "getItems_resp() using free-busy " +
+                                           "information: success." ),
+                                items.length, items );
+                            iListener.onOperationComplete(
+                                this_.superCalendar, Components.results.NS_OK,
+                                Components.interfaces.calIOperationListener.GET,
+                                items.length == 1 ? items[0].id : null, null );
+                            this_.log(
+                                items.length.toString() + " items delivered." );
+                        }
+                        else {
+                            // if even availability is denied:
+                            iListener.onOperationComplete(
+                                this_.superCalendar,
+                                Components.results.NS_ERROR_FAILURE,
+                                Components.interfaces.calIOperationListener.GET,
+                                null, rc );
+                        }
+                    }
+                };
+                this.session.getFreeBusyTimes(
+                    this.calId, rangeStart, rangeEnd, true /*bBusyOnly*/,
+                    freeBusyListener,
+                    true /*bAsync*/, 0 /*requestId*/ );
+            }
+            return;
+        }
+        
         var icalRootComp = wcapResponse.data; // first statement, may throw
         
         var items = this.parseItems(
@@ -1109,7 +1171,7 @@ calWcapCalendar.prototype.syncChangesTo_resp = function(
 calWcapCalendar.prototype.syncChangesTo = function(
     destCal, dtFrom, iListener )
 {
-    this.ensureOnline();
+//     this.ensureOnline();
     if (dtFrom != null) {
         // assure DATETIMEs:
         if (dtFrom.isDate) {

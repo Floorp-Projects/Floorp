@@ -351,7 +351,7 @@ calWcapSession.prototype = {
                                            "prompting to reconnect." );
                                 var prompt =
                                     getWindowWatcher().getNewPrompter(null);
-                                var bundle = getBundle();
+                                var bundle = getWcapBundle();
                                 if (!prompt.confirm(
                                         bundle.GetStringFromName(
                                             "reconnectConfirmation.label" ),
@@ -455,7 +455,7 @@ calWcapSession.prototype = {
                         }
                         if (loginText == null) {
                             throw new Error(
-                                getBundle().formatStringFromName(
+                                getWcapBundle().formatStringFromName(
                                     "accessingServerFailedError.text",
                                     [loginUri.hostPort], 1 ) );
                         }
@@ -463,7 +463,7 @@ calWcapSession.prototype = {
                             // user specified https, so http is no option:
                             loginText = null;
                             throw new Error(
-                                getBundle() .formatStringFromName(
+                                getWcapBundle() .formatStringFromName(
                                     "mandatoryHttpsError.text",
                                     [loginUri.hostPort], 1 ) );
                         }
@@ -512,9 +512,10 @@ calWcapSession.prototype = {
                 while (this.m_sessionId == null) {
                     var prompt = getWindowWatcher().getNewPrompter(null);
                     if (prompt.promptUsernameAndPassword(
-                            getBundle().GetStringFromName("loginDialog.label"),
+                            getWcapBundle().GetStringFromName(
+                                "loginDialog.label"),
                             loginText, outUser, outPW,
-                            getBundle().GetStringFromName(
+                            getWcapBundle().GetStringFromName(
                                 "loginDialog.savePW.label" ),
                             savePW ))
                     {
@@ -621,9 +622,10 @@ calWcapSession.prototype = {
         if (parseInt(wcapVersion) < 2.0) {
             this.log( "parsed server WCAP major: " + parseInt(wcapVersion) );
             throw new Error(
-                getBundle("insufficientWcapVersionError.text", loginTextVars) );
+                getWcapBundle("insufficientWcapVersionError.text",
+                              loginTextVars) );
         }
-        return getBundle().formatStringFromName(
+        return getWcapBundle().formatStringFromName(
             "loginDialog.text", loginTextVars, loginTextVars.length );
     },
     
@@ -789,14 +791,14 @@ calWcapSession.prototype = {
         var ret;
         if (calId == null || this.userId == calId) {
             if (this.m_defaultCalendar == null)
-                this.m_defaultCalendar = new calWcapCalendar(this.userId, this);
+                this.m_defaultCalendar = createWcapCalendar(this.userId, this);
             ret = this.m_defaultCalendar;
         }
         else {
             var key = encodeURIComponent(calId);
             ret = this.m_calIdToCalendar[key];
             if (!ret) {
-                ret = new calWcapCalendar(calId, this);
+                ret = createWcapCalendar(calId, this);
                 this.m_calIdToCalendar[key] = ret;
             }
         }
@@ -1040,7 +1042,7 @@ function confirmUnsecureLogin( uri )
         }
     }
     var prompt = getWindowWatcher().getNewPrompter(null);
-    var bundle = getBundle();
+    var bundle = getWcapBundle();
     var bConfirmed = prompt.confirm(
         bundle.GetStringFromName("noHttpsConfirmation.label"),
         bundle.formatStringFromName("noHttpsConfirmation.text", [host], 1) );

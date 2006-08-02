@@ -37,27 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// globals:
-
-// ctors:
-var CalEvent;
-var CalTodo;
-var CalDateTime;
-var XmlHttpRequest;
-
-// preferences:
-
-// memory|storage:
-var CACHE = "off"; // xxx todo: off by default for now
-
-// denotes where to host local storage calendar(s)
-var CACHE_DIR = null;
-
-// logging:
-#expand var LOG_LEVEL = __LOG_LEVEL__;
-var LOG_TIMEZONE = null;
-var LOG_FILE_STREAM = null;
-
 function logMessage( context, msg )
 {
     if (LOG_LEVEL > 0) {
@@ -87,116 +66,6 @@ function logMessage( context, msg )
     else
         return msg;
 }
-
-function init()
-{
-    try {
-        // ctors:
-        CalEvent = new Components.Constructor(
-            "@mozilla.org/calendar/event;1", "calIEvent" );
-        CalTodo = new Components.Constructor(
-            "@mozilla.org/calendar/todo;1", "calITodo" );
-        CalDateTime = new Components.Constructor(
-            "@mozilla.org/calendar/datetime;1", "calIDateTime" );
-        XmlHttpRequest = new Components.Constructor(
-            "@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttpRequest" );
-        
-        var prefService =
-            Components.classes["@mozilla.org/preferences-service;1"]
-            .getService(Components.interfaces.nsIPrefService);
-        var prefCalBranch = prefService.getBranch("calendar.");
-        
-        try {
-            LOG_TIMEZONE = prefCalBranch.getCharPref("timezone.local");
-        }
-        catch (exc) {
-        }
-        
-        var logLevel = 0;
-        try {
-            logLevel = prefCalBranch.getIntPref( "wcap.log_level" );
-        }
-        catch (exc) {
-            var calLog = false;
-            try {
-                calLog = prefCalBranch.getBoolPref( "debug.log" );
-            }
-            catch (exc) {
-            }
-            if (calLog)
-                logLevel = 1; // basic logging
-        }
-        if (logLevel > LOG_LEVEL) {
-            LOG_LEVEL = logLevel;
-        }
-        
-        if (LOG_LEVEL > 0) {
-            try {
-                var logFileName = prefCalBranch.getCharPref("wcap.log_file");
-                if (logFileName != null) {
-                    // set up file:
-                    var logFile =
-                        Components.classes["@mozilla.org/file/local;1"]
-                        .createInstance(Components.interfaces.nsILocalFile);
-                    logFile.initWithPath( logFileName );
-                    // create output stream:
-                    var logFileStream = Components.classes[
-                        "@mozilla.org/network/file-output-stream;1"]
-                        .createInstance(
-                            Components.interfaces.nsIFileOutputStream);
-                    logFileStream.init(
-                        logFile,
-                        0x02 /* PR_WRONLY */ |
-                        0x08 /* PR_CREATE_FILE */ |
-                        0x10 /* PR_APPEND */,
-                        0700 /* read, write, execute/search by owner */,
-                        0 /* unused */ );
-                    LOG_FILE_STREAM = logFileStream;
-                }
-            }
-            catch (exc) {
-            }
-            logMessage( "init()",
-                        "################################# NEW LOG " +
-                        "#################################" );
-        }
-        
-        // init cache dir directory:
-        try {
-            CACHE = prefCalBranch.getCharPref( "wcap.cache" );
-        }
-        catch (exc) {
-        }
-        logMessage( "calendar.wcap.cache", CACHE );
-        if (CACHE == "storage") {
-            var cacheDir = null;
-            try {
-                var sCacheDir = prefCalBranch.getCharPref( "wcap.cache_dir" );
-                cacheDir = Components.classes["@mozilla.org/file/local;1"]
-                    .createInstance(Components.interfaces.nsILocalFile);
-                cacheDir.initWithPath( sCacheDir );
-            }
-            catch (exc) { // not found: default to wcap/ directory in profile
-                var dirService = Components.classes[
-                    "@mozilla.org/file/directory_service;1"]
-                    .getService(Components.interfaces.nsIProperties);
-                cacheDir = dirService.get(
-                    "ProfD", Components.interfaces.nsILocalFile );
-                cacheDir.append( "wcap" );
-            }
-            CACHE_DIR = cacheDir;
-            logMessage( "calendar.wcap.cache_dir", CACHE_DIR.path );
-            if (!CACHE_DIR.exists()) {
-                CACHE_DIR.create(
-                    Components.interfaces.nsIFile.DIRECTORY_TYPE,
-                    0700 /* read, write, execute/search by owner */ );
-            }
-        }
-    }
-    catch (exc) {
-        logMessage( "error in init()", exc );
-    }
-}    
 
 // late-init service accessors:
 
@@ -262,26 +131,22 @@ function getCalendarManager()
     return g_calendarManager;
 };
 
-var g_bundle = null;
-function getBundle()
+var g_wcapBundle = null;
+function getWcapBundle()
 {
-    if (g_bundle == null) {
+    if (g_wcapBundle == null) {
         var stringBundleService =
             Components.classes["@mozilla.org/intl/stringbundle;1"]
             .getService(Components.interfaces.nsIStringBundleService);
-        g_bundle = stringBundleService.createBundle(
+        g_wcapBundle = stringBundleService.createBundle(
             "chrome://calendar/locale/wcap.properties" );
     }
-    return g_bundle;
+    return g_wcapBundle;
 }
 
 function isEvent( item )
 {
-    var bRet = (item instanceof Components.interfaces.calIEvent);
-    if (!bRet && !(item instanceof Components.interfaces.calITodo)) {
-        throw new Error("item is no calIEvent nor calITodo!");
-    }
-    return bRet;
+    return (item instanceof Components.interfaces.calIEvent);
 }
 
 function forEachIcalComponent( icalRootComp, componentType, func, maxResult )
@@ -345,4 +210,123 @@ function getDatetimeFromIcalProp( prop )
 //     dt.makeImmutable();
     return dt;
 }
+
+function getPref(prefName, defaultValue)
+{
+    try {
+        const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
+        var prefBranch =Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(nsIPrefBranch);
+        switch (prefBranch.getPrefType(prefName)) {
+        case nsIPrefBranch.PREF_BOOL:
+            return prefBranch.getBoolPref(prefName);
+        case nsIPrefBranch.PREF_INT:
+            return prefBranch.getIntPref(prefName);
+        case nsIPrefBranch.PREF_STRING:
+            return prefBranch.getCharPref(prefName);
+        default:
+            return defaultValue;
+        }
+    }
+    catch (exc) {
+        return defaultValue;
+    }
+}
+
+//
+// init code for globals, prefs:
+//
+
+// ctors:
+var CalEvent = new Components.Constructor(
+    "@mozilla.org/calendar/event;1", "calIEvent" );
+var CalTodo = new Components.Constructor(
+    "@mozilla.org/calendar/todo;1", "calITodo" );
+var CalDateTime = new Components.Constructor(
+    "@mozilla.org/calendar/datetime;1", "calIDateTime" );
+var XmlHttpRequest = new Components.Constructor(
+    "@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttpRequest" );
+
+// global preferences:
+
+// caching: off|memory|storage:
+var CACHE = "off";
+// denotes where to host local storage calendar(s)
+var CACHE_DIR = null;
+
+// logging:
+#expand var LOG_LEVEL = __LOG_LEVEL__;
+var LOG_TIMEZONE = getPref("calendar.timezone.local", null);
+var LOG_FILE_STREAM = null;
+
+try {
+    var logLevel = getPref("calendar.wcap.log_level", null);
+    if (logLevel == null) { // log_level pref undefined:
+        if (getPref("calendar.debug.log", false))
+            logLevel = 1; // at least basic logging when calendar.debug.log
+    }
+    if (logLevel > LOG_LEVEL) {
+        LOG_LEVEL = logLevel;
+    }
+    
+    if (LOG_LEVEL > 0) {
+        var logFileName = getPref("calendar.wcap.log_file", null);
+        if (logFileName != null) {
+            // set up file:
+            var logFile = Components.classes["@mozilla.org/file/local;1"]
+                          .createInstance(Components.interfaces.nsILocalFile);
+            logFile.initWithPath( logFileName );
+            // create output stream:
+            var logFileStream = Components.classes[
+                "@mozilla.org/network/file-output-stream;1"]
+                .createInstance(Components.interfaces.nsIFileOutputStream);
+            logFileStream.init(
+                logFile,
+                0x02 /* PR_WRONLY */ |
+                0x08 /* PR_CREATE_FILE */ |
+                0x10 /* PR_APPEND */,
+                0700 /* read, write, execute/search by owner */,
+                0 /* unused */ );
+            LOG_FILE_STREAM = logFileStream;
+        }
+        logMessage( "init sequence",
+                    "################################# NEW LOG " +
+                    "#################################" );
+    }
+    
+    // init cache dir directory:
+    CACHE = getPref("calendar.wcap.cache", "off" /* xxx todo */ );
+    logMessage( "calendar.wcap.cache", CACHE );
+    if (CACHE == "storage") {
+        var cacheDir = null;
+        var sCacheDir = getPref("calendar.wcap.cache_dir", null);
+        if (sCacheDir != null) {
+            cacheDir = Components.classes["@mozilla.org/file/local;1"]
+                       .createInstance(Components.interfaces.nsILocalFile);
+            cacheDir.initWithPath( sCacheDir );
+        }
+        else { // not found: default to wcap/ directory in profile
+            var dirService = Components.classes[
+                "@mozilla.org/file/directory_service;1"]
+                .getService(Components.interfaces.nsIProperties);
+            cacheDir = dirService.get(
+                "ProfD", Components.interfaces.nsILocalFile );
+            cacheDir.append( "wcap" );
+        }
+        CACHE_DIR = cacheDir;
+        logMessage( "calendar.wcap.cache_dir", CACHE_DIR.path );
+        if (!CACHE_DIR.exists()) {
+            CACHE_DIR.create( Components.interfaces.nsIFile.DIRECTORY_TYPE,
+                              0700 /* read, write, execute/search by owner */ );
+        }
+    }
+}
+catch (exc) {
+    logMessage( "error in init sequence", exc );
+}
+
+// some string resources:
+var g_privateItemTitle = getWcapBundle().GetStringFromName("privateItem.title");
+var g_busyItemTitle = getWcapBundle().GetStringFromName("busyItem.title");
+var g_busyItemUuidPrefix = ("uuid" + getTime().icalString);
 
