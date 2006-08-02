@@ -54,7 +54,7 @@
 
     <!-- front-end metadata -->
     <em:name>DOM Inspector</em:name>
-    <em:description>Inspect the DOM of HTML, XUL, and XML pages, including the browser chrome.</em:description>
+    <em:description>Inspects the structure and properties of a window and its contents.</em:description>
     <em:creator>mozilla.org</em:creator>
     <em:homepageURL>http://www.mozilla.org/projects/inspector/</em:homepageURL>
   </Description>
