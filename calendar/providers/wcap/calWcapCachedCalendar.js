@@ -97,11 +97,9 @@ calWcapCachedCalendar.prototype = {
         return this.remoteCal.getInterface( iid, instance );
     },
     
-    m_observerMultiplexer: null,    
+    m_observerMultiplexer: null,
     m_remoteCal: null,
     get remoteCal() {
-        if (this.m_remoteCal == null)
-            this.remoteCal = new calWcapCalendar();
         return this.m_remoteCal;
     },
     set remoteCal( cal ) {
@@ -192,74 +190,28 @@ calWcapCachedCalendar.prototype = {
     
     // calIWcapCalendar:
     // xxx todo: generic facade helpers for most function delegates
-    
-    getWcapErrorString:
-    function( rc )
-    {
-        return this.remoteCal.getWcapErrorString(rc);
-    },
-    
-    // xxx todo: which userId is used when for offline scheduling?
-    //           if not logged in, no calId/userId is known... => UI
+
+    get session() { return this.remoteCal.session; },
     get calId() { return this.remoteCal.calId; },
+    get calId_() { return this.remoteCal.calId_; },
     set calId( id ) {
         this.localCal = null; // disconnect
         this.remoteCal.calId = id;
     },
-    get userId() { return this.remoteCal.userId; },
-    
+    get description() { return this.remoteCal.description; },
+    get displayName() { return this.remoteCal.displayName; },
     get isOwnedCalendar() { return this.remoteCal.isOwnedCalendar; },
-    
-    createCalendar:
-    function( calId, name, bAllowDoubleBooking, bSetCalProps, bAddToSubscribed )
-    {
-        return this.remoteCal.createCalendar(
-            calId, name, bAllowDoubleBooking, bSetCalProps, bAddToSubscribed );
-    },
-    
-    deleteCalendar:
-    function( calId, bRemoveFromSubscribed )
-    {
-        this.remoteCal.deleteCalendar( calId, bRemoveFromSubscribed );
-    },
-    
-    getOwnedCalendars:
-    function( out_count )
-    {
-        return this.remoteCal.getOwnedCalendars( out_count );
-    },
-    
-    getSubscribedCalendars:
-    function( out_count )
-    {
-        return this.remoteCal.getSubscribedCalendars( out_count );
-    },
-    
-    subscribeToCalendars:
-    function( count, calIds )
-    {
-        this.remoteCal.subscribeToCalendars( count, calIds );
-    },
-    
-    unsubscribeFromCalendars:
-    function( count, calIds )
-    {
-        this.remoteCal.unsubscribeFromCalendars( count, calIds );
-    },
-    
-    getFreeBusyTimes:
-    function( calId, rangeStart, rangeEnd, bBusyOnly, iListener,
-              bAsync, requestId )
-    {
-        return this.remoteCal.getFreeBusyTimes(
-            calId, rangeEnd, rangeEnd, bBusyOnly, iListener, bAsync, requestId);
+    getCalendarProperties:
+    function( propName, out_count ) {
+        return this.remoteCal.getCalendarProperties(propName, out_count); },
+    getCalProps_:
+    function( bAsync ) {
+        return this.remoteCal.getCalProps_(bAsync);
     },
     
     get defaultTimezone() {
         return this.remoteCal.defaultTimezone;
     },
-//     set defaultTimezone( tzid ) {
-//     },    
     
     // calICalendar:
     get name() {
