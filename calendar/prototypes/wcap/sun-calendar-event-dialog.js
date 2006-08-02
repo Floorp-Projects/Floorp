@@ -47,27 +47,47 @@ function onLoad()
 
   window.onAcceptCallback = args.onOk;
   window.calendarItem = args.calendarEvent;
+  window.accept = [ true,true ];
 
   document.getElementById("sun-calendar-event-dialog").getButton("accept").setAttribute("collapsed","true");
   document.getElementById("sun-calendar-event-dialog").getButton("cancel").setAttribute("collapsed","true");
   document.getElementById("sun-calendar-event-dialog").getButton("cancel").parentNode.setAttribute("collapsed","true");
 
+  // the different tabpages occasionally send an 'accept'-event
+  // to indicate whether or not the accept-button should be
+  // enabled or disabled. this is the handler that involves
+  // the necessary steps in order to reflect the new state.
   var accept = function acceptHandler(event) {
-    var enableAccept = event.details;
+  
+    // the bool indicating the new state is expected to be stored in 'event.details'
+    window.accept[event.tab] = event.details;
+    var enableAccept = true;
+    for each(var accept in window.accept) {
+      if (!accept)
+        enableAccept = false;
+    }
+    
+    // we need to modify the accept-button, get the reference to the button
     var acceptButton = document.getElementById("button-save");
+    
+    // set or remove the 'disabled' attribute depending on the requested state.
     if (!enableAccept) {
-        acceptButton.setAttribute("disabled", "true");
+      acceptButton.setAttribute("disabled", "true");
     } else if (acceptButton.getAttribute("disabled")) {
-        acceptButton.removeAttribute("disabled");
-        var statusbarPanel = document.getElementById("statusbarpanel");
-        statusbarPanel.removeAttribute("label");
+      acceptButton.removeAttribute("disabled");
     }
   };
+  
+  // attach the above defined handler to the 'accept'-event.
   window.addEventListener('accept', accept, true);
 
   var warning = function warningHandler(event) {
     var statusbarPanel = document.getElementById("statusbarpanel");
-    statusbarPanel.setAttribute("label",event.details);
+    if(event.details) {
+      statusbarPanel.setAttribute("label",event.details);
+    } else {
+      statusbarPanel.removeAttribute("label");
+    }
   };
   window.addEventListener('warning', warning, true);
 
@@ -88,14 +108,35 @@ function onLoad()
 
 function onTabSelected()
 {
+  var statusbarPanel = document.getElementById("statusbarpanel");
+  statusbarPanel.removeAttribute("label");
+  
   var tab = document.getElementById("dialog-tab");
   var index = tab.selectedIndex;
   var attendees = document.getElementById("attendees-page");
   var main = document.getElementById("main-page");
+
   if(index == 0) {
     if(attendees.startDate) {
-      setElementValue("event-starttime",   attendees.startDate.jsDate);
-      setElementValue("event-endtime",     attendees.endDate.jsDate);
+      setElementValue("event-starttime",attendees.startDate.jsDate);
+      setElementValue("event-endtime",attendees.endDate.jsDate);
+    }
+  } else if(index == 1) {
+    // disable/enable recurrence options based on whether or not
+    // we're editing a task and whether or not this task has
+    // an associated startdate.
+    var item = window.calendarItem;
+    if (isToDo(item)) {
+      var entryDate = getElementValue("todo-has-entrydate", "checked") ? 
+                      jsDateToDateTime(getElementValue("todo-entrydate")) : null;
+      if(entryDate) {
+        var kDefaultTimezone = calendarDefaultTimezone();
+        entryDate = entryDate.getInTimezone(kDefaultTimezone);
+      }
+      var recurrencepage = document.getElementById("recurrence-page");
+      recurrencepage.mStartDate = entryDate;
+      recurrencepage.disableOrEnable(item);
+      recurrencepage.updateAccept();
     }
   } else if(index == 2) {
     var kDefaultTimezone = calendarDefaultTimezone();

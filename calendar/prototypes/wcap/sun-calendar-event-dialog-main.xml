@@ -58,7 +58,6 @@
         <xul:label id="read-only-item" value="&newevent.readonly.item.warning;" hidden="true"/>
         <xul:label id="read-only-cal" value="&newevent.readonly.cal.warning;" hidden="true"/>
         <xul:label id="end-time-warning" value="&newevent.endtime.warning;" hidden="true"/>
-        <xul:label id="task-repeat-warning" value="&newtodo.repeatstart.warning;" hidden="true"/>
         <xul:label id="alarm-start-warning" value="&alarm.start.warning;" hidden="true"/>
         <xul:label id="alarm-end-warning" value="&alarm.due.warning;" hidden="true"/>
 
@@ -1030,14 +1029,6 @@
                     jsDateToDateTime(getElementValue("todo-entrydate")) : null;
                 endDate = getElementValue("todo-has-duedate", "checked") ? 
                     jsDateToDateTime(getElementValue("todo-duedate")) : null;
-                
-                //@@@ TODO: this needs to be addressed
-                //var taskRepeatWarning = document.getElementById();
-                //this.showWarning("task-repeat-warning");
-                //if (!startDate && getElementValue("item-recurrence", "checked")) {
-                    //enableAccept = false;
-                    //taskRepeatWarning.removeAttribute("hidden");
-                //}
             }
 
             if (endDate && startDate && endDate.compare(startDate) == -1) {
@@ -1057,11 +1048,19 @@
             if (!this.updateTaskAlarmWarnings()) {
                 enableAccept = false;
             }
-          
+            
+            // if we would accept the item in its current state
+            // we can be sure to remove any previously issued warnings.
+            if (enableAccept)
+              this.showWarning(null);
+            
             var event = document.createEvent('Events'); 
             event.initEvent('accept', true, false);
             event.details = enableAccept;
+            event.tab = 0;
             this.dispatchEvent(event);
+            
+            return enableAccept;
           ]]>
         </body>
       </method>
@@ -1072,7 +1071,7 @@
           <![CDATA[
             var event = document.createEvent('Events'); 
             event.initEvent('warning', true, false);
-            event.details = document.getElementById(identifier).value;
+            event.details = identifier ? document.getElementById(identifier).value : null;
             this.dispatchEvent(event);
           ]]>
         </body>
