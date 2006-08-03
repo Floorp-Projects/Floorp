@@ -100,6 +100,7 @@ if ($token) {
     'cc'            => { 'type' => 'multi'  },
     'assigned_to'   => { 'type' => 'single' },
     'qa_contact'    => { 'type' => 'single' },
+    '^requestee_type-(\d+)$' => { 'type' => 'multi' },
 });
 
 # The format of the initial comment can be structured by adding fields to the
