@@ -268,11 +268,6 @@ const char* const docEvents[] = {
   "DOMContentLoaded"
 };
 
-const char* const chromeEvents[] = {
-  "pagehide",
-  "pageshow"
-};
-
 nsresult nsRootAccessible::AddEventListeners()
 {
   // use AddEventListener from the nsIDOMEventTarget interface
@@ -288,14 +283,8 @@ nsresult nsRootAccessible::AddEventListeners()
 
   GetChromeEventHandler(getter_AddRefs(target));
   NS_ASSERTION(target, "No chrome event handler for document");
-  if (target) {
-    for (const char* const* e = chromeEvents,
-                   * const* e_end = chromeEvents + NS_ARRAY_LENGTH(chromeEvents);
-         e < e_end; ++e) {
-      nsresult rv = target->AddEventListener(NS_ConvertASCIItoUTF16(*e), this, PR_TRUE);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
+  nsresult rv = target->AddEventListener(NS_LITERAL_STRING("pagehide"), this, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (!mCaretAccessible) {
     mCaretAccessible = new nsCaretAccessible(mDOMNode, mWeakShell, this);
@@ -329,14 +318,8 @@ nsresult nsRootAccessible::RemoveEventListeners()
   }
 
   GetChromeEventHandler(getter_AddRefs(target));
-  if (target) {
-    for (const char* const* e = chromeEvents,
-                   * const* e_end = chromeEvents + NS_ARRAY_LENGTH(chromeEvents);
-         e < e_end; ++e) {
-      nsresult rv = target->RemoveEventListener(NS_ConvertASCIItoUTF16(*e), this, PR_TRUE);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
+  nsresult rv = target->RemoveEventListener(NS_LITERAL_STRING("pagehide"), this, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mCaretAccessible) {
     mCaretAccessible->RemoveSelectionListener();
@@ -787,14 +770,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   }
 #else
   AtkStateChange stateData;
-  if (eventType.EqualsIgnoreCase("pageshow")) {
-    nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(targetNode));
-    if (htmlDoc) {
-      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_REORDER, 
-                                accessible, nsnull);
-    }
-  }
-  else if (eventType.LowerCaseEqualsLiteral("focus") || 
+  if (eventType.LowerCaseEqualsLiteral("focus") || 
            eventType.LowerCaseEqualsLiteral("dommenuitemactive")) {
     if (treeItemAccessible) { // use focused treeitem
       privAcc = do_QueryInterface(treeItemAccessible);
