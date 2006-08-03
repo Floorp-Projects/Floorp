@@ -349,7 +349,6 @@ nsPopupSetFrame::ShowPopup(nsIContent* aElementContent, nsIContent* aPopupConten
   entry->mPopupFrame = GetPresContext()->PresShell()
     ->GetPrimaryFrameFor(aPopupContent);
 
-  nsWeakFrame weakPopupFrame(entry->mPopupFrame);
 #ifdef DEBUG_PINK
   printf("X Pos: %d\n", mXPos);
   printf("Y Pos: %d\n", mYPos);
@@ -358,19 +357,27 @@ nsPopupSetFrame::ShowPopup(nsIContent* aElementContent, nsIContent* aPopupConten
   // Generate the popup.
   entry->mCreateHandlerSucceeded = PR_TRUE;
   entry->mIsOpen = PR_TRUE;
-  // This may destroy entry->mPopupFrame
+  // This may destroy or change entry->mPopupFrame or remove the entry from
+  // mPopupList. |this| may also get deleted.
   MarkAsGenerated(aPopupContent);
-
-  // determine if this menu is a context menu and flag it
-  nsIMenuParent* childPopup = nsnull;
-  if (weakPopupFrame.IsAlive())
-    CallQueryInterface(weakPopupFrame.GetFrame(), &childPopup);
-  if ( childPopup && aPopupType.EqualsLiteral("context") )
-    childPopup->SetIsContextMenu(PR_TRUE);
 
   if (!weakFrame.IsAlive()) {
     return NS_OK;
   }
+
+  nsPopupFrameList* newEntry =
+    mPopupList ? mPopupList->GetEntry(aPopupContent) : nsnull;
+  if (!newEntry || newEntry != entry) {
+    NS_WARNING("The popup entry for aPopupContent has changed!");
+    return NS_OK;
+  }
+
+  // determine if this menu is a context menu and flag it
+  nsIMenuParent* childPopup = nsnull;
+  if (entry->mPopupFrame)
+    CallQueryInterface(entry->mPopupFrame, &childPopup);
+  if ( childPopup && aPopupType.EqualsLiteral("context") )
+    childPopup->SetIsContextMenu(PR_TRUE);
 
   // Now open the popup.
   OpenPopup(entry, PR_TRUE);
