@@ -50,6 +50,9 @@
 #include "prmem.h"
 #include "nsIContent.h"
 
+// FIXME(bug 332648): Give me a real API please!
+#include "jscntxt.h"
+
 // Hash of JSObject wrappers that wraps JSObjects as NPObjects. There
 // will be one wrapper per JSObject per plugin instance, i.e. if two
 // plugins access the JSObject x, two wrappers for x will be
@@ -572,14 +575,20 @@ doInvoke(NPObject *npobj, NPIdentifier method, const NPVariant *args,
     }
   }
 
+  JSTempValueRooter tvr;
+  JS_PUSH_TEMP_ROOT(cx, 0, jsargs, &tvr);
+
   // Convert args
   for (PRUint32 i = 0; i < argCount; ++i) {
     jsargs[i] = NPVariantToJSVal(npp, cx, args + i);
+    ++tvr.count;
   }
 
   jsval v;
   JSBool ok = ::JS_CallFunctionValue(cx, npjsobj->mJSObj, fv, argCount, jsargs,
                                      &v);
+
+  JS_POP_TEMP_ROOT(cx, &tvr);
 
   if (jsargs != jsargs_buf)
     PR_Free(jsargs);
@@ -710,6 +719,7 @@ nsJSObjWrapper::NP_SetProperty(NPObject *npobj, NPIdentifier identifier,
   JSAutoRequest ar(cx);
 
   jsval v = NPVariantToJSVal(npp, cx, value);
+  JSAutoTempValueRooter tvr(cx, v);
 
   if (JSVAL_IS_STRING(id)) {
     JSString *str = JSVAL_TO_STRING(id);
