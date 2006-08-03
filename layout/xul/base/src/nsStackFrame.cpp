@@ -57,6 +57,7 @@
 #include "nsIViewManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsStackLayout.h"
+#include "nsDisplayList.h"
 
 nsIFrame*
 NS_NewStackFrame (nsIPresShell* aPresShell, nsStyleContext* aContext, nsIBoxLayout* aLayoutManager)
@@ -88,12 +89,17 @@ nsStackFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                           const nsRect&           aDirtyRect,
                                           const nsDisplayListSet& aLists)
 {
+  // BuildDisplayListForChild puts stacking contexts into the PositionedDescendants
+  // list. So we need to map that list to aLists.Content(). This is an easy way to
+  // do that.
+  nsDisplayList* content = aLists.Content();
+  nsDisplayListSet kidLists(content, content, content, content, content, content);
   nsIFrame* kid = mFrames.FirstChild();
   while (kid) {
-    // Force each child into its own stacking context.
+    // Force each child into its own true stacking context.
     nsresult rv =
-      BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists,
-                               DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
+      BuildDisplayListForChild(aBuilder, kid, aDirtyRect, kidLists,
+                               DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
     NS_ENSURE_SUCCESS(rv, rv);
     kid = kid->GetNextSibling();
   }

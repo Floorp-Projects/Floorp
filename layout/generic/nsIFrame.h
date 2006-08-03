@@ -762,16 +762,17 @@ public:
 
   enum {
     DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT = 0x01,
-    DISPLAY_CHILD_INLINE = 0x02
-  };                 
+    DISPLAY_CHILD_FORCE_STACKING_CONTEXT = 0x02,
+    DISPLAY_CHILD_INLINE = 0x04
+  };
   /**
    * Adjusts aDirtyRect for the child's offset, checks that the dirty rect
    * actually intersects the child (or its descendants), calls BuildDisplayList
    * on the child if necessary, and puts things in the right lists if the child
    * is positioned.
    *
-   * @param aFlags combination of DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT
-   * and DISPLAY_CHILD_INLINE
+   * @param aFlags combination of DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT,
+   *    DISPLAY_CHILD_FORCE_STACKING_CONTEXT and DISPLAY_CHILD_INLINE
    */
   nsresult BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
                                     nsIFrame*               aChild,
