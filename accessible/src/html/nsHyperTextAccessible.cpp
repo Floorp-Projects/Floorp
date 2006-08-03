@@ -846,15 +846,17 @@ NS_IMETHODIMP nsHyperTextAccessible::GetLink(PRInt32 aIndex, nsIAccessibleHyperL
 
 NS_IMETHODIMP nsHyperTextAccessible::GetLinkIndex(PRInt32 aCharIndex, PRInt32 *aLinkIndex)
 {
-  *aLinkIndex = -1;
+  *aLinkIndex = -1; // API says this magic value means 'not found'
+
   PRInt32 characterCount = 0;
+  PRInt32 linkIndex = 0;
   if (!mDOMNode) {
     return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIAccessible> accessible;
 
-  while (NextChild(accessible)) {
+  while (NextChild(accessible) && characterCount < aCharIndex) {
     PRUint32 role = Role(accessible);
     if (role == ROLE_TEXT_LEAF) {
       nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
@@ -864,19 +866,16 @@ NS_IMETHODIMP nsHyperTextAccessible::GetLinkIndex(PRInt32 aCharIndex, PRInt32 *a
       }
     }
     else {
-      if (characterCount == aCharIndex) {
-        return NS_OK;
+      if (characterCount ++ == aCharIndex) {
+        *aLinkIndex = linkIndex;
+        break;
       }
-      else if (characterCount > aCharIndex) {
-        return NS_ERROR_FAILURE;
-      }
-      ++ characterCount;
       if (role != ROLE_WHITESPACE) {
-        ++ *aLinkIndex;
+        ++ linkIndex;
       }
     }
   }
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsHyperTextAccessible::GetSelectedLinkIndex(PRInt32 *aSelectedLinkIndex)

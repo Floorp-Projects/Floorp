@@ -49,6 +49,11 @@ interface nsIAccessibleHyperText : nsISupports
 
   nsIAccessibleHyperLink getLink (in long index);
 
+  /*
+   * Return the link index at this character index.
+   * Return value of -1 indicates no link at that index.
+   */
   long getLinkIndex (in long charIndex);
+
   long getSelectedLinkIndex ();
 };
