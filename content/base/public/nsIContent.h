@@ -62,8 +62,9 @@ class nsTextFragment;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x98f87249, 0x4cc8, 0x407d, \
-  { 0x80, 0xb6, 0xfe, 0x12, 0x91, 0xd1, 0x4d, 0xc9 } }
+{ 0x4e5f17a1, 0x68c5, 0x4d9b, \
+  { 0xbf, 0x5b, 0xf6, 0x05, 0x10, 0xee, 0xc0, 0x41 } }
+
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsIContent_base : public nsINode {
@@ -162,6 +163,14 @@ public:
   PRBool IsNativeAnonymous() const
   {
     return HasFlag(NODE_IS_ANONYMOUS);
+  }
+
+  /**
+   * Returns PR_TRUE if this content is anonymous for event handling.
+   */
+  PRBool IsAnonymousForEvents() const
+  {
+    return HasFlag(NODE_IS_ANONYMOUS_FOR_EVENTS);
   }
 
   /**

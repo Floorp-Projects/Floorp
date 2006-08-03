@@ -999,6 +999,13 @@ nsXULElement::SetNativeAnonymous(PRBool aAnonymous)
     // XXX Workaround for bug 280541, wallpaper for bug 326644
     if (NodeInfo()->Equals(nsXULAtoms::popupgroup)) {
         nsGenericElement::SetNativeAnonymous(aAnonymous);
+    } else {
+      // We still want to set the anonymous bit for events.
+      if (aAnonymous) {
+        SetFlags(NODE_IS_ANONYMOUS_FOR_EVENTS);
+      } else {
+        UnsetFlags(NODE_IS_ANONYMOUS_FOR_EVENTS);
+      }
     }
 }
 

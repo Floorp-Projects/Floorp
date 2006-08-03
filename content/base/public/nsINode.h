@@ -58,31 +58,35 @@ class nsVoidArray;
 class nsIMutationObserver;
 
 // This bit will be set if the node doesn't have nsSlots
-#define NODE_DOESNT_HAVE_SLOTS      0x00000001U
+#define NODE_DOESNT_HAVE_SLOTS       0x00000001U
 
 // This bit will be set if the node has a range list in the range list hash
-#define NODE_HAS_RANGELIST          0x00000002U
+#define NODE_HAS_RANGELIST           0x00000002U
 
 // This bit will be set if the node has a listener manager in the listener
 // manager hash
-#define NODE_HAS_LISTENERMANAGER    0x00000004U
+#define NODE_HAS_LISTENERMANAGER     0x00000004U
 
 // Whether this node has had any properties set on it
-#define NODE_HAS_PROPERTIES         0x00000008U
+#define NODE_HAS_PROPERTIES          0x00000008U
 
 // Whether this node is anonymous
 // NOTE: Should only be used on nsIContent nodes
-#define NODE_IS_ANONYMOUS           0x00000010U
+#define NODE_IS_ANONYMOUS            0x00000010U
+
+// Whether this node is anonymous for events
+// NOTE: Should only be used on nsIContent nodes
+#define NODE_IS_ANONYMOUS_FOR_EVENTS 0x00000020U
 
 // Whether this node may have a frame
 // NOTE: Should only be used on nsIContent nodes
-#define NODE_MAY_HAVE_FRAME         0x00000020U
+#define NODE_MAY_HAVE_FRAME          0x00000040U
 
 // Four bits for the script-type ID
-#define NODE_SCRIPT_TYPE_OFFSET                6
+#define NODE_SCRIPT_TYPE_OFFSET                7
 
 // Remaining bits are node type specific.
-#define NODE_TYPE_SPECIFIC_BITS_OFFSET      0x0a
+#define NODE_TYPE_SPECIFIC_BITS_OFFSET       0x0b
 
 // Useful macro for getting a node given an nsIContent and an nsIDocument
 // Returns the first argument cast to nsINode if it is non-null, otherwise
