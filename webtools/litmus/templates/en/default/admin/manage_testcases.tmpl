@@ -47,14 +47,19 @@ var showAllTests = function(err) {
 	}
 };
 
+function splitIt(it) {
+	return it.split("\n");
+}
+
 var doFilterList = function(req) {
-	var tests = req.responseText.split("\n");
+	var tests = splitIt(req.responseText);
 	var testbox = document.getElementById("testcase_id");
-	for (var i=0; i<testbox.options.length; i++) {
+	var l = testbox.options.length;
+	var hideTest;
+	for (var i=0; i<l; i++) {
 		var test = testbox.options[i];
-		var hideTest = 0;
-		var id = test.value;
-		if (tests.indexOf(id) == -1) { hideTest = 1; }
+		if (tests.indexOf(test.value) == -1) { hideTest = 1; }
+		else { hideTest=0 } 
 		hideTest == 1 ? test.style.display = 'none' : test.style.display = '';
 	}
 	toggleMessage('none');
@@ -70,9 +75,9 @@ function filterList() {
 	var testgroupfilter = document.getElementById('testgroup_filter');
 	var subgroupfilter = document.getElementById('subgroup_filter');
 	
-	if (productfilter.options[productfilter.selectedIndex].value == '---' &&
-	    testgroupfilter.options[testgroupfilter.selectedIndex].value == '---' &&
-	    subgroupfilter.options[subgroupfilter.selectedIndex].value == '---') {
+	if (productfilter.options[productfilter.selectedIndex].value == '' &&
+	    testgroupfilter.options[testgroupfilter.selectedIndex].value == '' &&
+	    subgroupfilter.options[subgroupfilter.selectedIndex].value == '') {
 		// nothing to do here
 		showAllTests();
 		return;
@@ -154,7 +159,7 @@ function populateTestcase(data) {
       options[i].selected = false;
     }
   }
-  if (found_product == 0) {
+  if (found_product == 0 && options[0]) {
     options[0].selected = true;
   }
   changeProduct();
