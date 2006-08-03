@@ -197,13 +197,15 @@
            <groupbox id="cacheGroup">
              <caption label="&cache.label;"/>
 
-             <hbox id="cacheSizeBox" align="center">
+             <hbox xhtml2:role="wairole:label" id="cacheSizeBox" align="center">
                <label control="cacheSize"
                       accesskey="&useCacheBefore.accesskey;">&useCacheBefore.label;</label>
                <textbox id="cacheSize" size="2"
                         preference="browser.cache.disk.capacity"
                         onsyncfrompreference="return gAdvancedPane.readCacheSize();"
-                        onsynctopreference="return gAdvancedPane.writeCacheSize();"/>
+                        onsynctopreference="return gAdvancedPane.writeCacheSize();"
+                        xhtml2:role="wairole:textfield"
+                        aaa:labelledby="cacheSizeBox"/>
                <label>&useCacheAfter.label;</label>
              </hbox>
            </groupbox>
