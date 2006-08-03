@@ -345,6 +345,8 @@ nsAccessibilityService::CreateRootAccessible(nsIPresShell *aShell,
   nsCOMPtr<nsISupports> container = aDocument->GetContainer();
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
     do_QueryInterface(container);
+  NS_ENSURE_TRUE(docShellTreeItem, NS_ERROR_FAILURE);
+  
   nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
   docShellTreeItem->GetParent(getter_AddRefs(parentTreeItem));
 
