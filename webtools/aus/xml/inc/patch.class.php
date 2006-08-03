@@ -171,23 +171,11 @@ class Patch extends AUS_Object {
         // Determine the branch of the client's version.
         $branchVersion = $this->getBranch($version);
 
-        // Partner falback channel to be used if the partner-specific update doesn't exist or work.
-        $buf = array();
-        $buf = split('-',$channel);
-        $partnerChannel = $buf[0];
-
         // If a specific update exists for the specified channel, it takes priority over the branch update.
         if (!empty($channel) && $this->setPath($product,$platform,$locale,$branchVersion,$build,3,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
-            $this->setSnippet($this->path); 
-            $this->setVar('isPatch',true,true);
-            return true;
-        } 
-        
-        // Here we do a check for the fall-back update.  We should only do this for partner builds.
-        elseif (!empty($partnerChannel) && $this->setPath($product,$platform,$locale,$branchVersion,$build,3,$partnerChannel) && file_exists($this->path) && filesize($this->path) > 0) {
-            $this->setSnippet($this->path); 
-            $this->setVar('isPatch',true,true);
-            return true;
+                $this->setSnippet($this->path); 
+                $this->setVar('isPatch',true,true);
+                return true;
         }
 
         // Otherwise, if it is a complete patch and a nightly channel, force the complete update to take the user to the latest build.
