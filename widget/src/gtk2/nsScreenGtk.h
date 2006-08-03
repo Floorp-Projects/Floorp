@@ -40,9 +40,10 @@
 
 #include "nsIScreen.h"
 #include "nsRect.h"
+#include "gdk/gdk.h"
+#include <X11/Xlib.h>
 
 #ifdef MOZ_ENABLE_XINERAMA
-#include <X11/Xlib.h>
 #include <X11/extensions/Xinerama.h>
 #endif // MOZ_ENABLE_XINERAMA
 
@@ -57,13 +58,19 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCREEN
 
-  void Init();
+  void Init(PRBool aReInit = PR_FALSE);
 #ifdef MOZ_ENABLE_XINERAMA
   void Init(XineramaScreenInfo *aScreenInfo);
 #endif
 
+  Atom NetWorkareaAtom() { return mNetWorkareaAtom; }
+
 private:
+  GdkScreen *mScreen;
+  GdkWindow *mRootWindow;
   PRUint32 mScreenNum;
+  gulong mSizeChangedHandler;
+  Atom mNetWorkareaAtom;
   nsRect mRect; // in pixels, not twips
   nsRect mAvailRect; // in pixels, not twips
 };
