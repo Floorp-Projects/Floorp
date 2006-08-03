@@ -1026,7 +1026,7 @@
             <menupopup id="menu_NewPopup" onpopupshowing="menu_new_init();">
               <menuitem id="newNewMsgCmd" label="&newNewMsgCmd.label;"
                         accesskey="&newNewMsgCmd.accesskey;"
-                        key="key_newMessage"
+                        key="key_newMessage2"
                         oncommand="MsgNewMessage(null);"/>
               <menuitem id="menu_newFolder" label="&newFolderCmd.label;"
                          oncommand="MsgNewFolder(NewFolder);"
@@ -1376,7 +1376,7 @@
           <menupopup id="messageMenuPopup" onpopupshowing="InitMessageMenu();">
             <menuitem id="newMsgCmd" label="&newMsgCmd.label;"
               accesskey="&newMsgCmd.accesskey;"
-              key="key_newMessage"
+              key="key_newMessage2"
               oncommand="MsgNewMessage(null);"/>
             <menuitem id="replyMainMenu" label="&replyMsgCmd.label;" 
               accesskey="&replyMsgCmd.accesskey;"

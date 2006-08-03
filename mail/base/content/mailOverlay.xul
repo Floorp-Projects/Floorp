@@ -46,7 +46,7 @@
   <keyset id="tasksKeys">
 #ifdef XP_MACOSX
   <key id="key_newMessage" key="&newMessageCmd.key;" command="cmd_newMessage" modifiers="accel,shift"/>
-  <key id="key_newMessage2" key="&newMessageCmd2.key;" command="cmd_newMessage" modifiers="accel,shift"/>
+  <key id="key_newMessage2" key="&newMessageCmd2.key;" command="cmd_newMessage" modifiers="accel"/>
 #else
   <key id="key_newMessage"  key="&newMessageCmd.key;" command="cmd_newMessage" modifiers="accel"/>
   <key id="key_newMessage2" key="&newMessageCmd2.key;" command="cmd_newMessage" modifiers="accel"/>

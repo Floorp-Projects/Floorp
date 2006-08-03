@@ -22,7 +22,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@netscape.com> (ass'td polish fixes)
-#   Håkan Waara <hwaara@chello.se>
+#   Hkan Waara <hwaara@chello.se>
 #   Neil Rashbrook <neil@parkwaycc.co.uk> (ass'td polish fix)
 #
 # Alternatively, the contents of this file may be used under the terms of
@@ -179,7 +179,7 @@
   <!-- File Menu -->
 #ifdef XP_MACOSX
   <key id="key_newMessage" key="&newMessage.key;" oncommand="goOpenNewMessage();" modifiers="accel,shift"/>
-  <key id="key_newMessage2" key="&newMessageCmd2.key;" oncommand="goOpenNewMessage();" modifiers="accel,shift"/>
+  <key id="key_newMessage2" key="&newMessageCmd2.key;" oncommand="goOpenNewMessage();" modifiers="accel"/>
 #else
   <key id="key_newMessage" key="&newMessage.key;" oncommand="goOpenNewMessage();" modifiers="accel"/>
   <key id="key_newMessage2" key="&newMessageCmd2.key;" oncommand="goOpenNewMessage();" modifiers="accel"/>
@@ -296,7 +296,7 @@
         <menupopup id="menu_FilePopup">
           <menu id="menu_New" label="&newMenu.label;" accesskey="&newMenu.accesskey;">
             <menupopup id="menu_NewPopup">
-              <menuitem label="&newMessage.label;" accesskey="&newMessage.accesskey;" key="key_newMessage" oncommand="goOpenNewMessage();"/>
+              <menuitem label="&newMessage.label;" accesskey="&newMessage.accesskey;" key="key_newMessage2" oncommand="goOpenNewMessage();"/>
               <menuseparator/>
               <menuitem label="&newCard.label;" accesskey="&newCard.accesskey;"
                         oncommand="window.openDialog('chrome://messenger/content/addressbook/abNewCardDialog.xul', '', 'chrome,resizable=no,titlebar,modal');"/>

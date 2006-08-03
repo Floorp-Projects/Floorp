@@ -135,7 +135,7 @@
   <!-- File Menu -->
 #ifdef XP_MACOSX
     <key id="key_newMessage" key="&newMessageCmd.key;" modifiers="accel,shift" oncommand="AbNewMessage()"/>
-    <key id="key_newCard" key="&newCard.key;" modifiers="accel,shift" oncommand="AbNewCard();"/>
+    <key id="key_newCard" key="&newCard.key;" modifiers="accel" oncommand="AbNewCard();"/>
 #else
     <key id="key_newMessage" key="&newMessageCmd.key;" modifiers="accel" oncommand="AbNewMessage()"/>
     <key id="key_newCard" key="&newCard.key;" modifiers="accel" oncommand="AbNewCard();"/>
