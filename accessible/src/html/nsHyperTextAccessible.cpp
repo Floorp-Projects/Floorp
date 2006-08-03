@@ -684,8 +684,12 @@ NS_IMETHODIMP nsHyperTextAccessible::GetCharacterExtents(PRInt32 aOffset, PRInt3
     //add the width of the string before current char
     nsPoint pt;
     rv = frame->GetPointFromOffset(context, rc, aOffset, &pt);
-    NS_ENSURE_TRUE(rv, rv);
+    NS_ENSURE_SUCCESS(rv, rv);
     frameScreenRect.x += NSTwipsToIntPixels(pt.x, t2p);
+  }
+  else {
+    *aWidth  = frameScreenRect.width;
+    *aHeight = frameScreenRect.height;
   }
 
   *aX = frameScreenRect.x;
