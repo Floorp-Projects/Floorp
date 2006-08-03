@@ -47,13 +47,12 @@ for mod, lst in modules.iteritems():
     components[c] = mod
 
 locales = {}
-all = set()
+all = {}
 for app in ['browser', 'mail']:
   path = 'mozilla/%s/locales/all-locales' % app
   locales[app] = [l.strip() for l in open(path)]
-  all = all.union(locales[app])
-all = list(all)
-all.sort()
+  for loc in locales[app]: all[loc] = 1
+all = sorted(all.keys())
 locales['toolkit'] = all
 #modules = {'browser': ['browser']} # XXX debug
 #locales = {'browser': ['fr', 'pl']} # locales['mail']} # XXX debug
