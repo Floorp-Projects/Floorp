@@ -2,8 +2,6 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-
 <!DOCTYPE page [
 <!ENTITY % pref-composing_messagesDTD SYSTEM "chrome://messenger/locale/messengercompose/pref-composing_messages.dtd" >
 %pref-composing_messagesDTD;

@@ -129,8 +129,8 @@ function SelectLanguage(aTarget) {
     if (aTarget.value != "more-cmd")
       gLastSelectedLang = aTarget;
     else {
-      window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no",
-                        xlateURL('urn:clienturl:composer:spellcheckers'));
+      window.open(parent.hPrefWindow.getPref("localizedstring",
+                                             "editor.spellcheckers.url"));
       if (gLastSelectedLang)
         document.getElementById("languageMenuList").selectedItem = gLastSelectedLang;
     }
