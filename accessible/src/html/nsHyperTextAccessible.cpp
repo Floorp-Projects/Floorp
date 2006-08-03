@@ -878,41 +878,6 @@ NS_IMETHODIMP nsHyperTextAccessible::GetLinkIndex(PRInt32 aCharIndex, PRInt32 *a
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHyperTextAccessible::GetSelectedLinkIndex(PRInt32 *aSelectedLinkIndex)
-{
-  *aSelectedLinkIndex = 0;
-  if (!mDOMNode && !nsAccessNode::gLastFocusedNode) {
-    return NS_ERROR_FAILURE;
-  }
-  nsCOMPtr<nsIAccessible> focusedAccessible;
-
-  nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
-  if (NS_FAILED(accService->GetAccessibleInWeakShell(nsAccessNode::gLastFocusedNode, mWeakShell,
-                                                     getter_AddRefs(focusedAccessible)))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Make sure focused accessible is a child of ours before doing a lot of work
-  nsCOMPtr<nsIAccessible> focusedParent;
-  focusedAccessible->GetParent(getter_AddRefs(focusedParent));
-  if (focusedParent != this) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIAccessible> accessible;
-
-  while (NextChild(accessible)) {
-    if (accessible == focusedAccessible) {
-      return NS_OK;
-    }
-    if (!IsEmbeddedObject(accessible)) {
-      ++ *aSelectedLinkIndex;
-    }
-  }
-  NS_NOTREACHED("Should not reach here, focus of parent was this accessible");
-  return NS_ERROR_FAILURE;
-}
-
 /**
   * nsIAccessibleEditableText impl.
   */
