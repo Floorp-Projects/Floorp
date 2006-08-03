@@ -3722,7 +3722,21 @@ ExtensionManager.prototype = {
     while (elements.hasMoreElements()) {
       var itemResource = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
       var id = stripPrefix(itemResource.Value, PREFIX_ITEM_URI);
-      if (allAppManaged && ds.getItemProperty(id, "appManaged") != "true")
+      if (ds.getItemProperty(id, "appManaged") == "true") {
+        // Force an update of the metadata for appManaged extensions since the
+        // last modified time is not updated for directories on FAT / FAT32
+        // filesystems when software update applies a new version of the app.
+        var location = this.getInstallLocation(id);
+        if (location.name == KEY_APP_GLOBAL) {
+          var installRDF = location.getItemFile(id, FILE_INSTALL_MANIFEST);
+          if (installRDF.exists()) {
+            var metadataDS = getInstallManifest(installRDF);
+            ds.addItemMetadata(id, metadataDS, location);
+            ds.updateProperty(id, "compatible");
+          }
+        }
+      }
+      else if (allAppManaged)
         allAppManaged = false;
       // appDisabled is determined by an item being compatible,
       // satisfying its dependencies, and not being blocklisted
