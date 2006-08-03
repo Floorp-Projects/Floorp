@@ -314,7 +314,7 @@
             
               var provider = item.calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
               this.mCalID = provider.calId;
-              this.mUserID = provider.userId;
+              this.mUserID = provider.session.userId;
               this.mOrganizerID = ((item.organizer == null || item.organizer.id == null)
                               ? this.mCalID // sensible default
                               : item.organizer.id);

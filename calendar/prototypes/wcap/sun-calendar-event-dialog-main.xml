@@ -519,7 +519,7 @@
             
               var provider = item.calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
               this.mCalID = provider.calId;
-              this.mUserID = provider.userId;
+              this.mUserID = provider.session.userId;
               this.mOrganizerID = ((item.organizer == null || item.organizer.id == null)
                               ? this.mCalID // sensible default
                               : item.organizer.id);
@@ -1037,14 +1037,15 @@
             }
 
             // can't add/edit items in readOnly calendars
-            if (this.mIsReadOnly)
-              this.showWarning("read-only-item");
-            var cal = document.getElementById("item-calendar").selectedItem.calendar;
-            if (cal.readOnly)
-              this.showWarning("read-only-cal");
-            if (this.mIsReadOnly || cal.readOnly) {
-                enableAccept = false;
-            }
+            //if (this.mIsReadOnly)
+              //this.showWarning("read-only-item");
+            //var cal = document.getElementById("item-calendar").selectedItem.calendar;
+            //if (cal.readOnly)
+              //this.showWarning("read-only-cal");
+            //if (this.mIsReadOnly || cal.readOnly) {
+                //enableAccept = false;
+            //}
+            
             if (!this.updateTaskAlarmWarnings()) {
                 enableAccept = false;
             }
