@@ -42,6 +42,9 @@
 # allow core dumps
 ulimit -c 20480 2> /dev/null
 
+# Make assertions fatal
+export XPCOM_DEBUG_BREAK=abort
+
 # MOZILLA_FIVE_HOME is exported by run-mozilla.sh, and is usually $(DIST)/bin
 # we need to know that dir path in order to find xpcshell
 bin=${MOZILLA_FIVE_HOME:-`dirname $0`}
