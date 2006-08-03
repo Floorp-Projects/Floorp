@@ -38,6 +38,7 @@ use Bugzilla::Error;
 use Bugzilla::Product;
 use Bugzilla::Keyword;
 use Bugzilla::Field;
+use Bugzilla::Install::Requirements;
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
@@ -211,7 +212,7 @@ foreach my $product (@selectable_products) {
 }
 
 my @components = sort(keys %components);
-my @versions = sort(keys %versions);
+my @versions = sort { vers_cmp (lc($a), lc($b)) } keys %versions;
 my @milestones = sort(keys %milestones);
 
 $vars->{'product'} = \@selectable_products;

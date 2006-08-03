@@ -25,6 +25,8 @@ use Bugzilla::Util;
 use Bugzilla::Group;
 use Bugzilla::Error;
 
+use Bugzilla::Install::Requirements;
+
 use base qw(Bugzilla::Object);
 
 use constant DEFAULT_CLASSIFICATION_ID => 1;
@@ -107,11 +109,10 @@ sub versions {
     if (!defined $self->{versions}) {
         my $values = $dbh->selectcol_arrayref(q{
             SELECT value FROM versions
-            WHERE product_id = ?
-            ORDER BY value}, undef, $self->id);
+            WHERE product_id = ?}, undef, $self->id);
 
         my @versions;
-        foreach my $value (@$values) {
+        foreach my $value (sort { vers_cmp (lc($a), lc($b)) } @$values) {
             push @versions, new Bugzilla::Version($self->id, $value);
         }
         $self->{versions} = \@versions;
