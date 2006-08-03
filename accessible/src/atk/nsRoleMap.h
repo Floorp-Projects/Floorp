@@ -60,7 +60,11 @@ PRUint32 atkRoleMap[] = {
     ATK_ROLE_MENU,                // nsIAccessible::ROLE_MENUPOPUP         11
     ATK_ROLE_MENU_ITEM,           // nsIAccessible::ROLE_MENUITEM          12
     ATK_ROLE_TOOL_TIP,            // nsIAccessible::ROLE_TOOLTIP           13
+#ifdef USE_ATK_ROLE_EMBEDDED
     ATK_ROLE_EMBEDDED,            // nsIAccessible::ROLE_APPLICATION       14
+#else
+    ATK_ROLE_PANEL,               // nsIAccessible::ROLE_APPLICATION       14
+#endif
 #ifdef USE_ATK_ROLE_DOCUMENT_FRAME 
     ATK_ROLE_DOCUMENT_FRAME,      // nsIAccessible::ROLE_DOCUMENT          15
 #else
