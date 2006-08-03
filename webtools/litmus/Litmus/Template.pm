@@ -64,7 +64,7 @@ sub getTemplateIncludePath () {
 }
 
 # Constants:
-my %constants = {};
+my %constants = ();
 $constants{litmus_version} = $Litmus::Config::version;
 
 # html tag stripper:
