@@ -106,6 +106,9 @@ SessionStartup.prototype = {
   // set default load state
   _loadState: STATE_STOPPED,
 
+  // the state to restore at startup
+  _iniString: null,
+
 /* ........ Global Event Handlers .............. */
 
   /**
@@ -157,8 +160,8 @@ SessionStartup.prototype = {
     // prompt and check prefs
     this._doRestore = this._lastSessionCrashed ? this._doRecoverSession() : this._doResumeSession();
     if (this._initialState && !this._doRestore) {
-      delete this._iniString; // delete state string
       delete this._initialState; // delete state
+      this._iniString = null; // reset the state string
     }
     if (this._getPref("sessionstore.resume_session_once", DEFAULT_RESUME_SESSION_ONCE)) {
       this._prefBranch.setBoolPref("sessionstore.resume_session_once", false);
@@ -235,7 +238,7 @@ SessionStartup.prototype = {
    * @returns bool
    */
   doRestore: function sss_doRestore() {
-    return this._doRestore;
+    return this._doRestore && this._iniString != null;
   },
 
 /* ........ Disk Access .............. */
