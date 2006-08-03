@@ -196,6 +196,7 @@ sub encode_message_entity {
         $head->mime_attr('Content-Type.charset' => 'UTF-8');
     }
 
+    $head->mime_attr('MIME-Version' => '1.0');
     $head->fold(75);
     return $entity;
 }
