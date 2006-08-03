@@ -2986,21 +2986,6 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
 
 
     if (isFIPS) {
-	/* make sure that our check file signatures are OK */
-	if (!BLAPI_VerifySelf(NULL) || 
-	    !BLAPI_SHVerify(SOFTOKEN_LIB_NAME, (PRFuncPtr) sftk_closePeer)) {
-	    crv = CKR_DEVICE_ERROR; /* better error code? checksum error? */
-	    if (sftk_audit_enabled) {
-		char msg[128];
-		PR_snprintf(msg,sizeof msg,
-		    "C_Initialize()=0x%08lX "
-		    "self-test: software/firmware integrity test failed",
-		    (PRUint32)crv);
-		sftk_LogAuditMessage(NSS_AUDIT_ERROR, msg);
-	    }
-	    return crv;
-	}
-
 	loginWaitTime = PR_SecondsToInterval(1);
     }
 

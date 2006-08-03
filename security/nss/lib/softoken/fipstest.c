@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: fipstest.c,v 1.17 2006/07/28 20:45:01 wtchang%redhat.com Exp $ */
+/* $Id: fipstest.c,v 1.18 2006/08/03 21:50:51 wtchang%redhat.com Exp $ */
 
 #include "softoken.h"   /* Required for RC2-ECB, RC2-CBC, RC4, DES-ECB,  */
                         /*              DES-CBC, DES3-ECB, DES3-CBC, RSA */
@@ -1831,6 +1831,19 @@ sftk_fips_RNG_PowerUpSelfTest( void )
    return( CKR_OK ); 
 }
 
+static CK_RV
+sftk_fipsSoftwareIntegrityTest(void)
+{
+    CK_RV crv = CKR_OK;
+
+    /* make sure that our check file signatures are OK */
+    if( !BLAPI_VerifySelf( NULL ) || 
+	!BLAPI_SHVerify( SOFTOKEN_LIB_NAME, (PRFuncPtr) sftk_fips_HMAC ) ) {
+	crv = CKR_DEVICE_ERROR; /* better error code? checksum error? */
+    }
+    return crv;
+}
+
 CK_RV
 sftk_fipsPowerUpSelfTest( void )
 {
@@ -1927,6 +1940,12 @@ sftk_fipsPowerUpSelfTest( void )
     if( rv != CKR_OK )
         return rv;
 #endif
+
+    /* Software/Firmware Integrity Test. */
+    rv = sftk_fipsSoftwareIntegrityTest();
+
+    if( rv != CKR_OK )
+        return rv;
 
     /* Passed Power-Up SelfTest(s). */
     return( CKR_OK );

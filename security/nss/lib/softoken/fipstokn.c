@@ -438,7 +438,7 @@ CK_RV FC_Initialize(CK_VOID_PTR pReserved) {
 	    char msg[128];
 	    PR_snprintf(msg,sizeof msg,
 			"C_Initialize()=0x%08lX "
-			"self-test: cryptographic algorithm test failed",
+			"power-up self-tests failed",
 			(PRUint32)crv);
 	    sftk_LogAuditMessage(NSS_AUDIT_ERROR, msg);
 	}
@@ -637,8 +637,8 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 	if (sftk_fatalError) {
 	    severity = NSS_AUDIT_ERROR;
 	    PR_snprintf(msg,sizeof msg,
-			"C_Login(hSession=%lu, userType=%lu)=0x%08lX ",
-			"self-test: cryptographic algorithm test failed",
+			"C_Login(hSession=%lu, userType=%lu)=0x%08lX "
+			"power-up self-tests failed",
 			(PRUint32)hSession,(PRUint32)userType,(PRUint32)rv);
 	} else {
 	    severity = (rv == CKR_OK || rv == CKR_USER_ALREADY_LOGGED_IN) ?
