@@ -77,11 +77,9 @@ public:
                               const nsDisplayListSet& aLists);
 
   NS_IMETHOD
-  Place(nsIRenderingContext&     aRenderingContext,
-        PRBool                   aPlaceOrigin,
-        nsHTMLReflowMetrics&     aDesiredSize,
-        const nsHTMLReflowState& aReflowState,
-        nsReflowStatus&          aStatus);
+  Place(nsIRenderingContext& aRenderingContext,
+        PRBool               aPlaceOrigin,
+        nsHTMLReflowMetrics& aDesiredSize);
 
   NS_IMETHOD
   Reflow(nsPresContext*          aPresContext,
