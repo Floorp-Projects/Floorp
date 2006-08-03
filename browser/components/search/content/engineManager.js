@@ -358,25 +358,29 @@ EngineView.prototype = {
 
   canDrop: function(targetIndex, orientation) {
     var sourceIndex = this.getSourceIndexFromDrag();
-    return sourceIndex != -1 &&
-           sourceIndex != targetIndex && 
-           (orientation == Ci.nsITreeView.DROP_BEFORE ||
-            orientation == Ci.nsITreeView.DROP_AFTER);
-           
+    return (sourceIndex != -1 &&
+            sourceIndex != targetIndex &&
+            sourceIndex != (targetIndex + orientation));
   },
 
-  drop: function(newIndex, orientation) {
+  drop: function(dropIndex, orientation) {
     var sourceIndex = this.getSourceIndexFromDrag();
-    if (sourceIndex != -1) {
-      var sourceEngine = this._engineStore.engines[sourceIndex];
+    var sourceEngine = this._engineStore.engines[sourceIndex];
 
-      this._engineStore.moveEngine(sourceEngine, newIndex);
-
-      // Redraw, and adjust selection
-      this.invalidate();
-      this.selection.clearSelection();
-      this.selection.select(newIndex);
+    if (dropIndex > sourceIndex) {
+      if (orientation == Ci.nsITreeView.DROP_BEFORE)
+        dropIndex--;
+    } else {
+      if (orientation == Ci.nsITreeView.DROP_AFTER)
+        dropIndex++;    
     }
+
+    this._engineStore.moveEngine(sourceEngine, dropIndex);
+
+    // Redraw, and adjust selection
+    this.invalidate();
+    this.selection.clearSelection();
+    this.selection.select(dropIndex);
   },
 
   selection: null,
