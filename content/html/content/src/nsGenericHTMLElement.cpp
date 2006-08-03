@@ -1584,6 +1584,7 @@ nsGenericHTMLElement::PostHandleEventForAnchors(nsEventChainPostVisitor& aVisito
       // Set the status bar the same for focus and mouseover
       case NS_MOUSE_ENTER_SYNTH:
         aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+        // FALL THROUGH
       case NS_FOCUS_CONTENT:
       {
         nsAutoString target;
@@ -1597,11 +1598,13 @@ nsGenericHTMLElement::PostHandleEventForAnchors(nsEventChainPostVisitor& aVisito
       break;
 
       case NS_MOUSE_EXIT_SYNTH:
-      {
         aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
         rv = LeaveLink(aVisitor.mPresContext);
-      }
-      break;
+        break;
+
+      case NS_BLUR_CONTENT:
+        rv = LeaveLink(aVisitor.mPresContext);
+        break;
 
       default:
         break;
