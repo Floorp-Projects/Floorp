@@ -6345,15 +6345,23 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 do_GetInterface(GetAsSupports(this));
             NS_ENSURE_TRUE(win, NS_ERROR_NOT_AVAILABLE);
 
-            isNewWindow = PR_TRUE;
-            aFlags |= INTERNAL_LOAD_FLAGS_NEW_WINDOW;
-
             nsDependentString name(aWindowTarget);
             nsCOMPtr<nsIDOMWindow> newWin;
             rv = win->Open(EmptyString(), // URL to load
                            name,          // window name
                            EmptyString(), // Features
                            getter_AddRefs(newWin));
+
+            // In some cases the Open call doesn't actually result in a new
+            // window being opened (i.e. browser.link.open_newwindow is set
+            // to 1, forcing us to reuse the current window).  This will
+            // protect us against that use case but still isn't totally
+            // ideal since perhaps in some future use case newWin could be
+            // some other, already open window.
+            if (win != newWin) {
+                isNewWindow = PR_TRUE;
+                aFlags |= INTERNAL_LOAD_FLAGS_NEW_WINDOW;
+            }
 
             nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(newWin);
             targetDocShell = do_QueryInterface(webNav);
