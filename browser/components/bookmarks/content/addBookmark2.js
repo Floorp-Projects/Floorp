@@ -258,8 +258,16 @@ function onOK()
 
 function onCancel()
 {
-  if (MicrosummaryPicker.enabled)
-    MicrosummaryPicker.destroy();
+  // Destroy the microsummary picker controller to prevent memory leaks,
+  // catching exceptions so we don't prevent the dialog from closing.
+  try {
+    if (MicrosummaryPicker.enabled)
+      MicrosummaryPicker.destroy();
+  }
+  catch(e) {
+    Components.utils.reportError(e);
+  }
+
   return true;
 }
 
