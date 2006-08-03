@@ -1264,8 +1264,10 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
 
   PRBool visualMovement = 
     (aKeycode == nsIDOMKeyEvent::DOM_VK_BACK_SPACE || 
-     aKeycode == nsIDOMKeyEvent::DOM_VK_DELETE) ?
-    PR_FALSE : // Delete operations are always logical
+     aKeycode == nsIDOMKeyEvent::DOM_VK_DELETE ||
+     aKeycode == nsIDOMKeyEvent::DOM_VK_HOME || 
+     aKeycode == nsIDOMKeyEvent::DOM_VK_END) ?
+    PR_FALSE : // Delete operations and home/end are always logical
     mCaretMovementStyle == 1 || (mCaretMovementStyle == 2 && !aContinueSelection);
 
   //set data using mLimiter to stop on scroll views.  If we have a limiter then we stop peeking

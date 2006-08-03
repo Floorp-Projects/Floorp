@@ -125,7 +125,7 @@ struct nsPeekOffsetStruct
   PRBool mIsKeyboardSelect;
 
   // mVisual: Whether bidi caret behavior is visual (PR_TRUE) or logical (PR_FALSE).
-  //          Used with: eSelectCharacter, eSelectWord.
+  //          Used with: eSelectCharacter, eSelectWord, eSelectBeginLine, eSelectEndLine.
   PRBool mVisual;
 
   // mWordMovementType: An enum that determines whether to prefer the start or end of a word
