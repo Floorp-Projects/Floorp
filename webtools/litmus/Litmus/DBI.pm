@@ -42,15 +42,8 @@ use base 'Class::DBI::mysql';
 
 our $dsn = "dbi:mysql:database=$Litmus::Config::db_name;host=$Litmus::Config::db_host;port=3306";
 
-
-
 our %column_aliases;
 
-Litmus::DBI->connection( $dsn,
-                         $Litmus::Config::db_user,
-                         $Litmus::Config::db_pass,
-                         	{AutoCommit=>1}
-                         );
 Litmus::DBI->autoupdate(1);
                          
 # In some cases, we have column names that make sense from a database perspective
