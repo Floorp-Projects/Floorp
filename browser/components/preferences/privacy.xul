@@ -91,15 +91,20 @@
     <script type="application/x-javascript" src="chrome://browser/content/preferences/privacy.js"/>
 
     <!-- History -->
-    <groupbox id="historyGroup">
+    <groupbox id="historyGroup"
+              xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
+              xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+              xmlns:aaa="http://www.w3.org/2005/07/aaa">
       <caption label="&history.label;"/>
 
-      <hbox id="historyBox" align="center">
+      <hbox id="historyBox" align="center" xhtml2:role="wairole:label">
         <checkbox id="rememberHistoryDays"
                   label="&rememberBefore.label;"
                   accesskey="&rememberBefore.accesskey;"
                   oncommand="gPrivacyPane.onchangeHistoryDaysCheck();"/>
-        <textbox id="historyDays" size="3"/>
+        <textbox id="historyDays" size="3"
+                 xhtml2:role="wairole:textfield"
+                 aaa:labelledby="historyBox"/>
         <label>&rememberAfter.label;</label>
       </hbox>
       <checkbox id="rememberForms"
