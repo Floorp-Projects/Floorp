@@ -138,7 +138,7 @@ VoidStats::~VoidStats()
 VoidStats gVoidStats;
 #endif
 
-inline void
+void
 nsVoidArray::SetArray(Impl *newImpl, PRInt32 aSize, PRInt32 aCount,
                       PRBool aOwner, PRBool aHasAuto)
 {
