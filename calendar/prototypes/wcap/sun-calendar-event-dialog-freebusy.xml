@@ -392,7 +392,7 @@
           var kDefaultTimezone = calendarDefaultTimezone();
           this.startDate = item.startDate.getInTimezone(kDefaultTimezone);
           this.endDate = item.endDate.getInTimezone(kDefaultTimezone);
-          this.mRange = this.getAttribute("range");
+          this.mRange = Number(this.getAttribute("range"));
 
           var self = this;
           var load = function loadHandler() { self.onLoad(); };
@@ -487,6 +487,7 @@
         <setter>
           <![CDATA[
           this.mStartDate = val.clone();
+          this.mStartDate.isDate = false;
           this.mStartDate.makeImmutable();
           return val;
         ]]>
@@ -497,6 +498,7 @@
         <setter>
           <![CDATA[
           this.mEndDate = val.clone();
+          this.mEndDate.isDate = false;
           this.mEndDate.makeImmutable();
           return val;
         ]]>
@@ -583,7 +585,7 @@
             this.mEndHour = pb2.getIntPref("calendar.view.defaultendhour");
           } catch (ex) {}
 
-          this.mRange = this.getAttribute("range");
+          this.mRange = Number(this.getAttribute("range"));
         
           var numHours = this.mEndHour - this.mStartHour;
           this.mState = new Array(this.mRange*numHours);
@@ -727,6 +729,16 @@
             // time won't change if no free area could be found.
             var duration = this.mEndDate.subtractDate(this.mStartDate);
             var numHours = Math.ceil(duration.inSeconds / 3600);
+            
+            // now for some tricky part. currently we're only taking the working
+            // hours into account when finding a new possible new time for the item.
+            // but what happens if we're given an intervall that is larger than the
+            // one spanned by the working hours? this needs to be addressed later.
+            // the algorithm just assumes that everything outside of the working
+            // hours is marked as 'free'.
+            var maxHours = this.mEndHour-this.mStartHour;
+            var offset = numHours > maxHours ? numHours - maxHours : 0;
+            numHours -= offset;
 
             // prepare datetime-objects corrosponding to the free/busy-grid display.
             var start = this.mStartDate.clone();
@@ -758,8 +770,9 @@
                     }
 
                     // return if a new free slot has been found.
-                    if(startCheck == endCheck)
+                    if(startCheck == endCheck) {
                       return start;
+                    }
                   }
                 }
               }
@@ -782,6 +795,16 @@
             // time won't change if no free area could be found.
             var duration = this.mEndDate.subtractDate(this.mStartDate);
             var numHours = Math.ceil(duration.inSeconds / 3600);
+
+            // now for some tricky part. currently we're only taking the working
+            // hours into account when finding a new possible new time for the item.
+            // but what happens if we're given an intervall that is larger than the
+            // one spanned by the working hours? this needs to be addressed later.
+            // the algorithm just assumes that everything outside of the working
+            // hours is marked as 'free'.
+            var maxHours = this.mEndHour-this.mStartHour;
+            var offset = numHours > maxHours ? numHours - maxHours : 0;
+            numHours -= offset;
 
             var start = this.mStartDate.clone();
             start.hour = 0;
@@ -865,6 +888,8 @@
       <field name="mEndDate">null</field>
       <field name="mScrollOffset">0</field>
       <field name="mRange">0</field>
+      <field name="mStartHour">0</field>
+      <field name="mEndHour">24</field>
 
       <field name="mFreeBusyListener">
         <![CDATA[
@@ -900,7 +925,18 @@
           if (isToDo(item))
             return;
 
-          this.mRange = this.getAttribute("range");
+          var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
+
+          // get default start/end times from prefs and set on the
+          // view.  if we hit an error (eg because sunbird's pref
+          // infrastructure hasn't created the pref yet), the
+          // defaults will do
+          try {
+            this.mStartHour = pb2.getIntPref("calendar.view.defaultstarthour");
+            this.mEndHour = pb2.getIntPref("calendar.view.defaultendhour");
+          } catch (ex) {}
+
+          this.mRange = Number(this.getAttribute("range"));
         
           this.mMaxFreeBusy = 0;
           this.mFreeBusySequence = 0;
@@ -1160,7 +1196,11 @@
           // shifted towards the future since we are interested
           // in a different startdate scheduled later.
           var time = this.mStartDate.clone();
+          time.isDate = false;
+          if(time.hour < this.mStartHour)
+            time.hour = this.mStartHour;
           time.minute++;
+          time.normalize();
           var base = time.clone();
 
           // now iterate all freebusy-rows and ask each one
@@ -1184,6 +1224,14 @@
           // in case no possible match was found.
           if(time.compare(base) == 0)
             return this.mStartDate.clone();
+
+          // special case for allday events - if the original
+          // datetime was indeed a date we need to carry this
+          // state over to the calculated datetime.
+          if (this.mStartDate.isDate) {
+            time.hour = 0;
+            time.isDate = true;
+          }
 
           // in case the new starttime happens to be scheduled
           // on a different day, we also need to update the
@@ -1210,6 +1258,9 @@
           // shifted towards the past since we are interested
           // in a different startdate scheduled earlier.
           var time = this.mStartDate.clone();
+          time.isDate = false;
+          if(time.hour < this.mStartHour)
+            time.hour = this.mStartHour;
           time.minute--;
           var base = time.clone();
 
@@ -1234,6 +1285,14 @@
           // in case no possible match was found.
           if(time.compare(base) == 0)
             return this.mStartDate.clone();
+            
+          // special case for allday events - if the original
+          // datetime was indeed a date we need to carry this
+          // state over to the calculated datetime.
+          if (this.mStartDate.isDate) {
+            time.hour = 0;
+            time.isDate = true;
+          }
             
           // in case the new starttime happens to be scheduled
           // on a different day, we also need to update the

@@ -1517,34 +1517,54 @@
       <method name="onNextSlot">
         <body>
           <![CDATA[
-          // ask the grid for the next possible timeslot.
-          var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
-          var duration = this.mEndDate.subtractDate(this.mStartDate);
-          var start = grid.nextSlot();
-          var end = start.clone();
-          end.addDuration(duration);
-          var kDefaultTimezone = calendarDefaultTimezone();
-          this.mStartDate = start.getInTimezone(kDefaultTimezone).clone();
-          this.mEndDate = end.getInTimezone(kDefaultTimezone).clone();
-          this.mStartDate.makeImmutable();
-          this.mEndDate.makeImmutable();
+            // ask the grid for the next possible timeslot.
+            var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
+            var duration = this.mEndDate.subtractDate(this.mStartDate);
+            var start = grid.nextSlot();
+            var end = start.clone();
+            end.addDuration(duration);
+            if(start.isDate) {
+              end.day++;
+              end.normalize();
+            }
+            var kDefaultTimezone = calendarDefaultTimezone();
+            this.mStartDate = start.getInTimezone(kDefaultTimezone);
+            this.mEndDate = end.getInTimezone(kDefaultTimezone);
+            var endDate = this.mEndDate.clone();
+                
+            // Check if an all-day event has been passed in (to adapt endDate).
+            if (this.mStartDate.isDate) {
+                this.mEndDate.day -= 1;
 
-          // show the new start/enddate in the appropriate controls
-          document.getAnonymousElementByAttribute(this, "anonid", "event-starttime").value = this.mStartDate.jsDate;
-          document.getAnonymousElementByAttribute(this, "anonid", "event-endtime").value = this.mEndDate.jsDate;
+                // The date/timepicker uses jsDate internally. Because jsDate does
+                // not know the concept of dates we end up displaying times unequal
+                // to 00:00 for all-day events depending on local timezone setting. 
+                // Calling normalize() recalculates that times to represent 00:00
+                // in local timezone.
+                this.mEndDate.normalize();
+                this.mStartDate.normalize();
+                endDate.normalize();
+            }
+            this.mStartDate.makeImmutable();
+            this.mEndDate.makeImmutable();
+            endDate.makeImmutable();
 
-          // tell the grid about the new start/enddate
-          grid.startDate = this.mStartDate;
-          grid.endDate = this.mEndDate;
-          
-          // tell the timebar about the new start/enddate
-          var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
-          timebar.startDate = this.mStartDate;
-          timebar.endDate = this.mEndDate;
-          timebar.refresh();
+            // show the new start/enddate in the appropriate controls
+            document.getAnonymousElementByAttribute(this, "anonid", "event-starttime").value = this.mStartDate.jsDate;
+            document.getAnonymousElementByAttribute(this, "anonid", "event-endtime").value = this.mEndDate.jsDate;
 
-          // scroll the grid/timebar such that the current time is visible
-          this.scrollToCurrentTime();
+            // tell the grid about the new start/enddate
+            grid.startDate = this.mStartDate;
+            grid.endDate = endDate;
+            
+            // tell the timebar about the new start/enddate
+            var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
+            timebar.startDate = this.mStartDate;
+            timebar.endDate = endDate;
+            timebar.refresh();
+
+            // scroll the grid/timebar such that the current time is visible
+            this.scrollToCurrentTime();
           ]]>
         </body>
       </method>
@@ -1558,11 +1578,31 @@
             var start = grid.previousSlot();
             var end = start.clone();
             end.addDuration(duration);
+            if(start.isDate) {
+              end.day++;
+              end.normalize();
+            }
             var kDefaultTimezone = calendarDefaultTimezone();
-            this.mStartDate = start.getInTimezone(kDefaultTimezone).clone();
-            this.mEndDate = end.getInTimezone(kDefaultTimezone).clone();
+            this.mStartDate = start.getInTimezone(kDefaultTimezone);
+            this.mEndDate = end.getInTimezone(kDefaultTimezone);
+            var endDate = this.mEndDate.clone();
+                
+            // Check if an all-day event has been passed in (to adapt endDate).
+            if (this.mStartDate.isDate) {
+                this.mEndDate.day -= 1;
+
+                // The date/timepicker uses jsDate internally. Because jsDate does
+                // not know the concept of dates we end up displaying times unequal
+                // to 00:00 for all-day events depending on local timezone setting. 
+                // Calling normalize() recalculates that times to represent 00:00
+                // in local timezone.
+                this.mEndDate.normalize();
+                this.mStartDate.normalize();
+                endDate.normalize();
+            }
             this.mStartDate.makeImmutable();
             this.mEndDate.makeImmutable();
+            endDate.makeImmutable();
 
             // show the new start/enddate in the appropriate controls
             document.getAnonymousElementByAttribute(this, "anonid", "event-starttime").value = this.mStartDate.jsDate;
@@ -1570,12 +1610,12 @@
 
             // tell the grid about the new start/enddate
             grid.startDate = this.mStartDate;
-            grid.endDate = this.mEndDate;
+            grid.endDate = endDate;
             
             // tell the timebar about the new start/enddate
             var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
             timebar.startDate = this.mStartDate;
-            timebar.endDate = this.mEndDate;
+            timebar.endDate = endDate;
             timebar.refresh();
             
             // scroll the grid/timebar such that the current time is visible
