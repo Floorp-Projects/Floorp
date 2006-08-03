@@ -141,11 +141,9 @@ nsMathMLmmultiscriptsFrame::ProcessAttributes()
 }
 
 NS_IMETHODIMP
-nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext&     aRenderingContext,
-                                  PRBool                   aPlaceOrigin,
-                                  nsHTMLReflowMetrics&     aDesiredSize,
-                                  const nsHTMLReflowState& aReflowState,
-                                  nsReflowStatus&          aStatus)
+nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
+                                  PRBool               aPlaceOrigin,
+                                  nsHTMLReflowMetrics& aDesiredSize)
 {
   ////////////////////////////////////
   // Get the children's desired sizes
@@ -270,7 +268,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext&     aRenderingContext,
         // duplicate <mprescripts/> found
         // report an error, encourage people to get their markups in order
         NS_WARNING("invalid markup");
-        return ReflowError(aRenderingContext, aDesiredSize, aReflowState, aStatus);
+        return ReflowError(aRenderingContext, aDesiredSize);
       }
       mprescriptsFrame = childFrame;
       firstPrescriptsPair = PR_TRUE;
@@ -381,7 +379,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext&     aRenderingContext,
   if ((0 != width) || !baseFrame || !subScriptFrame || !supScriptFrame) {
     // report an error, encourage people to get their markups in order
     NS_WARNING("invalid markup");
-    return ReflowError(aRenderingContext, aDesiredSize, aReflowState, aStatus);
+    return ReflowError(aRenderingContext, aDesiredSize);
   }
 
   // we left out the width of prescripts, so ...

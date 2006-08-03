@@ -315,11 +315,9 @@ nsMathMLmactionFrame::Reflow(nsPresContext*          aPresContext,
 
 // Only place the selected child ...
 NS_IMETHODIMP
-nsMathMLmactionFrame::Place(nsIRenderingContext&     aRenderingContext,
-                            PRBool                   aPlaceOrigin,
-                            nsHTMLReflowMetrics&     aDesiredSize,
-                            const nsHTMLReflowState& aReflowState,
-                            nsReflowStatus&          aStatus)
+nsMathMLmactionFrame::Place(nsIRenderingContext& aRenderingContext,
+                            PRBool               aPlaceOrigin,
+                            nsHTMLReflowMetrics& aDesiredSize)
 {
   aDesiredSize.width = aDesiredSize.height = 0;
   aDesiredSize.ascent = aDesiredSize.descent = 0;
