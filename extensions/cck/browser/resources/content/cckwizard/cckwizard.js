@@ -1793,6 +1793,17 @@ function CCKWriteDefaultJS(destdir)
         }
       }
       break;
+    case "4":
+      var proxyintegerlist = ["ProxyType"];
+
+      for (i = 0; i < proxyintegerlist.length; i++) {
+        var proxyitem = document.getElementById(proxyintegerlist[i]);
+        if (proxyitem.value.length > 0) {
+          var line = 'pref("' + proxyitem.getAttribute("preference") + '", ' + proxyitem.value + ');\n';
+          fos.write(line, line.length);
+        }
+      }
+      break;      
     case "5":
       var file = Components.classes["@mozilla.org/file/local;1"]
                            .createInstance(Components.interfaces.nsILocalFile);
