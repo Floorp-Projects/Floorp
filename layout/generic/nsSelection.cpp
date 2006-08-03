@@ -6705,7 +6705,7 @@ nsTypedSelection::ContainsNode(nsIDOMNode* aNode, PRBool aAllowPartial,
   NS_ASSERTION(ValidateRanges(), "Ranges out of sync");
   *aYes = PR_FALSE;
 
-  if (mRanges.Length() == 0)
+  if (mRanges.Length() == 0 || !aNode)
     return NS_OK;
   
   PRUint16 nodeType;
