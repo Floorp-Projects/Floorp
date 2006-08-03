@@ -731,19 +731,15 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
                 // if there is no frameBefore, we must be at the beginning of the line
                 // so we stay with the current frame.
                 // Exception: when the first frame on the line has a different Bidi level from the paragraph level, there is no
-                // real frame for the caret to be in. We have to find the first frame whose level is the same as the
-                // paragraph level, and put the caret at the end of the frame before that.
+                // real frame for the caret to be in. We have to find the visually first frame on the line.
                 PRUint8 baseLevel = NS_GET_BASE_LEVEL(frameAfter);
                 if (baseLevel != levelAfter)
                 {
-                  if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(frameAfter, eDirNext, baseLevel, &theFrame)))
-                  {
-                    theFrame->GetOffsets(start, end);
-                    levelAfter = NS_GET_EMBEDDING_LEVEL(theFrame);
-                    if (baseLevel & 1) // RTL paragraph: caret to the right of the rightmost character
-                      theFrameOffset = (levelAfter & 1) ? start : end;
-                    else               // LTR paragraph: caret to the left of the leftmost character
-                      theFrameOffset = (levelAfter & 1) ? end : start;
+                  nsPeekOffsetStruct pos;
+                  pos.SetData(eSelectBeginLine, eDirPrevious, 0, 0, PR_FALSE, PR_TRUE, PR_FALSE, PR_TRUE);
+                  if (NS_SUCCEEDED(frameAfter->PeekOffset(presContext, &pos))) {
+                    theFrame = pos.mResultFrame;
+                    theFrameOffset = pos.mContentOffset;
                   }
                 }
               }
@@ -766,22 +762,16 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
               {
                 // if there is no frameAfter, we must be at the end of the line
                 // so we stay with the current frame.
-                //
                 // Exception: when the last frame on the line has a different Bidi level from the paragraph level, there is no
-                // real frame for the caret to be in. We have to find the last frame whose level is the same as the
-                // paragraph level, and put the caret at the end of the frame after that.
-
+                // real frame for the caret to be in. We have to find the visually last frame on the line.
                 PRUint8 baseLevel = NS_GET_BASE_LEVEL(frameBefore);
                 if (baseLevel != levelBefore)
                 {
-                  if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(frameBefore, eDirPrevious, baseLevel, &theFrame)))
-                  {
-                    theFrame->GetOffsets(start, end);
-                    levelBefore = NS_GET_EMBEDDING_LEVEL(theFrame);
-                    if (baseLevel & 1) // RTL paragraph: caret to the left of the leftmost character
-                      theFrameOffset = (levelBefore & 1) ? end : start;
-                    else               // RTL paragraph: caret to the right of the rightmost character
-                      theFrameOffset = (levelBefore & 1) ? start : end;
+                  nsPeekOffsetStruct pos;
+                  pos.SetData(eSelectEndLine, eDirNext, 0, 0, PR_FALSE, PR_TRUE, PR_FALSE, PR_TRUE);
+                  if (NS_SUCCEEDED(frameBefore->PeekOffset(presContext, &pos))) {
+                    theFrame = pos.mResultFrame;
+                    theFrameOffset = pos.mContentOffset;
                   }
                 }
               }

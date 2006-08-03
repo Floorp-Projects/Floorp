@@ -4364,17 +4364,35 @@ nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       nsIFrame *firstFrame;
       nsRect usedRect;
       PRUint32 lineFlags;
-      it->GetLine(thisLine, &firstFrame, &lineFrameCount, usedRect, &lineFlags);
-
-      PRBool endOfLine = (eSelectEndLine == aPos->mAmount);
       nsIFrame* baseFrame = nsnull;
-      nsIFrame* frame = firstFrame;
-      for (PRInt32 count = lineFrameCount; count;
-           --count, frame = frame->GetNextSibling()) {
-        if (!frame->IsGeneratedContentFrame()) {
-          baseFrame = frame;
-          if (!endOfLine)
-            break;
+      PRBool endOfLine = (eSelectEndLine == aPos->mAmount);
+      
+#ifdef IBMBIDI
+      if (aPos->mVisual && aPresContext->BidiEnabled()) {
+        PRBool lineIsRTL;
+        it->GetDirection(&lineIsRTL);
+        PRBool isReordered;
+        nsIFrame *lastFrame;
+        result = it->CheckLineOrder(thisLine, &isReordered, &firstFrame, &lastFrame);
+        baseFrame = endOfLine ? lastFrame : firstFrame;
+        nsBidiLevel embeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(baseFrame);
+        // If the direction of the frame on the edge is opposite to that of the line,
+        // we'll need to drill down to its opposite end, so reverse endOfLine.
+        if ((embeddingLevel & 1) == !lineIsRTL)
+          endOfLine = !endOfLine;
+      } else
+#endif
+      {
+        it->GetLine(thisLine, &firstFrame, &lineFrameCount, usedRect, &lineFlags);
+
+        nsIFrame* frame = firstFrame;
+        for (PRInt32 count = lineFrameCount; count;
+             --count, frame = frame->GetNextSibling()) {
+          if (!frame->IsGeneratedContentFrame()) {
+            baseFrame = frame;
+            if (!endOfLine)
+              break;
+          }
         }
       }
       if (!baseFrame)
@@ -4384,6 +4402,7 @@ nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       FrameContentRange range = GetRangeForFrame(targetFrame.frame);
       aPos->mResultContent = range.content;
       aPos->mContentOffset = endOfLine ? range.end : range.start;
+      aPos->mResultFrame = targetFrame.frame;
       aPos->mAttachForward = (aPos->mContentOffset == range.start);
       if (!range.content)
         return NS_ERROR_FAILURE;
