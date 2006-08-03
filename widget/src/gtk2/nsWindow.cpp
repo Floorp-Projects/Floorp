@@ -4740,7 +4740,7 @@ nsWindow::GetRootAccessible(nsIAccessible** aAccessible)
 
     while (docAcc) {
         docAcc->GetRole(&role);
-        if (role == nsIAccessible::ROLE_FRAME) {
+        if (role == nsIAccessible::ROLE_CHROME_WINDOW) {
             *aAccessible = docAcc;
             NS_ADDREF(*aAccessible);
             break;
