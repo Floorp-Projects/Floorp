@@ -348,6 +348,11 @@ EOT
         rmtree("shadow");
     }
 
+    if (-e "$datadir/versioncache") {
+        print "Removing versioncache...\n";
+        unlink "$datadir/versioncache";
+    }
+
 }
 
 sub create_htaccess {

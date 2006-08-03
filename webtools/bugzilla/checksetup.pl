@@ -172,6 +172,19 @@ Note: sometimes those special comments occur more than once. For
 example, C<--LOCAL--> is used at least 3 times in this code!  C<--TABLE-->
 is also used more than once, so search for each and every occurrence!
 
+=head2 Modifying the Database
+
+Sometimes you'll want to modify the database. In fact, that's mostly
+what checksetup does, is upgrade old Bugzilla databases to the modern
+format.
+
+If you'd like to know how to make changes to the datbase, see
+the information in the Bugzilla Developer's Guide, at:
+L<http:E<sol>E<sol>www.bugzilla.orgE<sol>docsE<sol>developer.html#sql-schema>
+
+Also see L<Bugzilla::DB/"Schema Modification Methods"> and 
+L<Bugzilla::DB/"Schema Information Methods">.
+
 =head1 RUNNING CHECKSETUP NON-INTERACTIVELY
 
 To operate checksetup non-interactively, run it with a single argument
@@ -203,14 +216,12 @@ function calls needs to be specified in this file.
 
 =head1 SEE ALSO
 
-L<Bugzilla::Install::Requirements>
-
-L<Bugzilla::Install::Localconfig>
-
-L<Bugzilla::Install::Filesystem>
-
-L<Bugzilla::Config/update_params>
-
+L<Bugzilla::Install::Requirements>,
+L<Bugzilla::Install::Localconfig>,
+L<Bugzilla::Install::Filesystem>,
+L<Bugzilla::Install::DB>,
+L<Bugzilla::Install>,
+L<Bugzilla::Config/update_params>, and
 L<Bugzilla::DB/CONNECTION>
 
 =cut
@@ -516,54 +527,7 @@ use constant OLD_FIELD_DEFS => (
 # Calling Bugzilla::Field::create_or_update depends on the
 # fielddefs table having a modern definition. So, we have to make
 # these particular schema changes before we make any other schema changes.
-
-# 2005-02-21 - LpSolit@gmail.com - Bug 279910
-# qacontact_accessible and assignee_accessible field names no longer exist
-# in the 'bugs' table. Their corresponding entries in the 'bugs_activity'
-# table should therefore be marked as obsolete, meaning that they cannot
-# be used anymore when querying the database - they are not deleted in
-# order to keep track of these fields in the activity table.
-if (!$dbh->bz_column_info('fielddefs', 'obsolete')) {
-    $dbh->bz_add_column('fielddefs', 'obsolete',
-        {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'FALSE'});
-    print "Marking qacontact_accessible and assignee_accessible as obsolete",
-          " fields...\n";
-    $dbh->do("UPDATE fielddefs SET obsolete = 1
-              WHERE name = 'qacontact_accessible'
-                 OR name = 'assignee_accessible'");
-}
-
-# 2005-08-10 Myk Melez <myk@mozilla.org> bug 287325
-# Record each field's type and whether or not it's a custom field in fielddefs.
-$dbh->bz_add_column('fielddefs', 'type',
-                    { TYPE => 'INT2', NOTNULL => 1, DEFAULT => 0 });
-$dbh->bz_add_column('fielddefs', 'custom',
-                    { TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'FALSE' });
-
-$dbh->bz_add_column('fielddefs', 'enter_bug',
-    {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'FALSE'});
-
-# Change the name of the fieldid column to id, so that fielddefs
-# can use Bugzilla::Object easily. We have to do this up here, because
-# otherwise adding these field definitions will fail.
-$dbh->bz_rename_column('fielddefs', 'fieldid', 'id');
-
-# If the largest fielddefs sortkey is less than 100, then
-# we're using the old sorting system, and we should convert
-# it to the new one before adding any new definitions.
-if (!$dbh->selectrow_arrayref(
-        'SELECT COUNT(id) FROM fielddefs WHERE sortkey >= 100'))
-{
-    print "Updating the sortkeys for the fielddefs table...\n";
-    my $field_ids = $dbh->selectcol_arrayref(
-        'SELECT id FROM fielddefs ORDER BY sortkey');
-    my $sortkey = 100;
-    foreach my $field_id (@$field_ids) {
-        $dbh->do('UPDATE fielddefs SET sortkey = ? WHERE id = ?',
-                 undef, $sortkey, $field_id);
-        $sortkey += 100;
-    }
-}
+Bugzilla::Install::DB::update_fielddefs_definition();
 
 # Create field definitions
 foreach my $definition (OLD_FIELD_DEFS) {
@@ -629,15 +593,12 @@ if ($old_field_id && ($old_field_name ne $new_field_name)) {
         $query =~ s/=\Q$old_field_name\E(&|$)/=$new_field_name$1/gi;
         $sth_UpdateSeries->execute($query, $series_id);
     }
-
     # Now that saved searches have been fixed, we can fix the field name.
     print "Fixing the 'fielddefs' table...\n";
     print "New field name: " . $new_field_name . "\n";
     $dbh->do('UPDATE fielddefs SET name = ? WHERE id = ?',
               undef, ($new_field_name, $old_field_id));
 }
-
-
 Bugzilla::Field::create_or_update(
     {name => $new_field_name, desc => $field_description});
 
@@ -689,420 +650,10 @@ if (!$class_count) {
 }
 
 ###########################################################################
-# Update the tables to the current definition  --TABLE--
+# Update the tables to the current definition --TABLE--
 ###########################################################################
 
 Bugzilla::Install::DB::update_table_definitions();        
-
-# 2005-04-07 - alt@sonic.net, bug 289455
-# make classification_id field type be consistent with DB:Schema
-$dbh->bz_alter_column('products', 'classification_id',
-                      {TYPE => 'INT2', NOTNULL => 1, DEFAULT => '1'});
-
-# initialowner was accidentally NULL when we checked-in Schema,
-# when it really should be NOT NULL.
-$dbh->bz_alter_column('components', 'initialowner',
-                      {TYPE => 'INT3', NOTNULL => 1}, 0);
-
-# 2005-03-28 - bug 238800 - index flags.type_id to make editflagtypes.cgi speedy
-$dbh->bz_add_index('flags', 'flags_type_id_idx', [qw(type_id)]);
-
-# For a short time, the flags_type_id_idx was misnamed in upgraded installs.
-$dbh->bz_drop_index('flags', 'type_id');
-
-# 2005-04-28 - LpSolit@gmail.com - Bug 7233: add an index to versions
-$dbh->bz_alter_column('versions', 'value',
-                      {TYPE => 'varchar(64)', NOTNULL => 1});
-$dbh->bz_add_index('versions', 'versions_product_id_idx',
-                   {TYPE => 'UNIQUE', FIELDS => [qw(product_id value)]});
-
-# Milestone sortkeys get a default just like all other sortkeys.
-if (!exists $dbh->bz_column_info('milestones', 'sortkey')->{DEFAULT}) {
-    $dbh->bz_alter_column('milestones', 'sortkey', 
-                          {TYPE => 'INT2', NOTNULL => 1, DEFAULT => 0});
-}
-
-# 2005-06-14 - LpSolit@gmail.com - Bug 292544: only set creation_ts
-# when all bug fields have been correctly set.
-$dbh->bz_alter_column('bugs', 'creation_ts', {TYPE => 'DATETIME'});
-
-if (!exists $dbh->bz_column_info('whine_queries', 'title')->{DEFAULT}) {
-
-    # The below change actually has nothing to do with the whine_queries
-    # change, it just has to be contained within a schema change so that
-    # it doesn't run every time we run checksetup.
-
-    # Old Bugzillas have "other" as an OS choice, new ones have "Other"
-    # (capital O).
-    print "Setting any 'other' op_sys to 'Other'...\n";
-    $dbh->do('UPDATE op_sys SET value = ? WHERE value = ?',
-             undef, "Other", "other");
-    $dbh->do('UPDATE bugs SET op_sys = ? WHERE op_sys = ?',
-             undef, "Other", "other");
-    if (Bugzilla->params->{'defaultopsys'} eq 'other') {
-        # We can't actually fix the param here, because WriteParams() will
-        # make $datadir/params unwriteable to the webservergroup.
-        # It's too much of an ugly hack to copy the permission-fixing code
-        # down to here. (It would create more potential future bugs than
-        # it would solve problems.)
-        print "WARNING: Your 'defaultopsys' param is set to 'other', but"
-            . " Bugzilla now\n"
-            . "         uses 'Other' (capital O).\n";
-    }
-
-    # Add a DEFAULT to whine_queries stuff so that editwhines.cgi
-    # works on PostgreSQL.
-    $dbh->bz_alter_column('whine_queries', 'title', {TYPE => 'varchar(128)', 
-                          NOTNULL => 1, DEFAULT => "''"});
-}
-
-# 2005-06-29 bugreport@peshkin.net, bug 299156
-if ($dbh->bz_index_info('attachments', 'attachments_submitter_id_idx')
-   && (scalar(@{$dbh->bz_index_info('attachments',
-                                    'attachments_submitter_id_idx'
-                                   )->{FIELDS}}) < 2)
-      ) {
-    $dbh->bz_drop_index('attachments', 'attachments_submitter_id_idx');
-}
-$dbh->bz_add_index('attachments', 'attachments_submitter_id_idx',
-                   [qw(submitter_id bug_id)]);
-
-# 2005-08-25 - bugreport@peshkin.net - Bug 305333
-if ($dbh->bz_column_info("attachments", "thedata")) {
-    print "Migrating attachment data to its own table...\n";
-    print "(This may take a very long time)\n";
-    $dbh->do("INSERT INTO attach_data (id, thedata) 
-                   SELECT attach_id, thedata FROM attachments");
-    $dbh->bz_drop_column("attachments", "thedata");    
-}
-
-# 2005-11-26 - wurblzap@gmail.com - Bug 300473
-# Repair broken automatically generated series queries for non-open bugs.
-my $broken_series_indicator =
-    'field0-0-0=resolution&type0-0-0=notequals&value0-0-0=---';
-my $broken_nonopen_series =
-    $dbh->selectall_arrayref("SELECT series_id, query FROM series
-                               WHERE query LIKE '$broken_series_indicator%'");
-if (@$broken_nonopen_series) {
-    print 'Repairing broken series...';
-    my $sth_nuke =
-        $dbh->prepare('DELETE FROM series_data WHERE series_id = ?');
-    # This statement is used to repair a series by replacing the broken query
-    # with the correct one.
-    my $sth_repair =
-        $dbh->prepare('UPDATE series SET query = ? WHERE series_id = ?');
-    # The corresponding series for open bugs look like one of these two
-    # variations (bug 225687 changed the order of bug states).
-    # This depends on the set of bug states representing open bugs not to have
-    # changed since series creation.
-    my $open_bugs_query_base_old = 
-        join("&", map { "bug_status=" . url_quote($_) }
-                      ('UNCONFIRMED', 'NEW', 'ASSIGNED', 'REOPENED'));
-    my $open_bugs_query_base_new = 
-        join("&", map { "bug_status=" . url_quote($_) } BUG_STATE_OPEN);
-    my $sth_openbugs_series =
-        $dbh->prepare("SELECT series_id FROM series
-                        WHERE query IN (?, ?)");
-    # Statement to find the series which has collected the most data.
-    my $sth_data_collected =
-        $dbh->prepare('SELECT count(*) FROM series_data WHERE series_id = ?');
-    # Statement to select a broken non-open bugs count data entry.
-    my $sth_select_broken_nonopen_data =
-        $dbh->prepare('SELECT series_date, series_value FROM series_data' .
-                      ' WHERE series_id = ?');
-    # Statement to select an open bugs count data entry.
-    my $sth_select_open_data =
-        $dbh->prepare('SELECT series_value FROM series_data' .
-                      ' WHERE series_id = ? AND series_date = ?');
-    # Statement to fix a broken non-open bugs count data entry.
-    my $sth_fix_broken_nonopen_data =
-        $dbh->prepare('UPDATE series_data SET series_value = ?' .
-                      ' WHERE series_id = ? AND series_date = ?');
-    # Statement to delete an unfixable broken non-open bugs count data entry.
-    my $sth_delete_broken_nonopen_data =
-        $dbh->prepare('DELETE FROM series_data' .
-                      ' WHERE series_id = ? AND series_date = ?');
-
-    foreach (@$broken_nonopen_series) {
-        my ($broken_series_id, $nonopen_bugs_query) = @$_;
-
-        # Determine the product-and-component part of the query.
-        if ($nonopen_bugs_query =~ /^$broken_series_indicator(.*)$/) {
-            my $prodcomp = $1;
-
-            # If there is more than one series for the corresponding open-bugs
-            # series, we pick the one with the most data, which should be the
-            # one which was generated on creation.
-            # It's a pity we can't do subselects.
-            $sth_openbugs_series->execute($open_bugs_query_base_old . $prodcomp,
-                                          $open_bugs_query_base_new . $prodcomp);
-            my ($found_open_series_id, $datacount) = (undef, -1);
-            foreach my $open_series_id ($sth_openbugs_series->fetchrow_array()) {
-                $sth_data_collected->execute($open_series_id);
-                my ($this_datacount) = $sth_data_collected->fetchrow_array();
-                if ($this_datacount > $datacount) {
-                    $datacount = $this_datacount;
-                    $found_open_series_id = $open_series_id;
-                }
-            }
-
-            if ($found_open_series_id) {
-                # Move along corrupted series data and correct it. The
-                # corruption consists of it being the number of all bugs
-                # instead of the number of non-open bugs, so we calculate the
-                # correct count by subtracting the number of open bugs.
-                # If there is no corresponding open-bugs count for some reason
-                # (shouldn't happen), we drop the data entry.
-                print " $broken_series_id...";
-                $sth_select_broken_nonopen_data->execute($broken_series_id);
-                while (my $rowref =
-                       $sth_select_broken_nonopen_data->fetchrow_arrayref()) {
-                    my ($date, $broken_value) = @$rowref;
-                    my ($openbugs_value) =
-                        $dbh->selectrow_array($sth_select_open_data, undef,
-                                              $found_open_series_id, $date);
-                    if (defined($openbugs_value)) {
-                        $sth_fix_broken_nonopen_data->execute
-                            ($broken_value - $openbugs_value,
-                             $broken_series_id, $date);
-                    }
-                    else {
-                        print "\nWARNING - During repairs of series " .
-                              "$broken_series_id, the irreparable data\n" .
-                              "entry for date $date was encountered and is " .
-                              "being deleted.\n" .
-                              "Continuing repairs...";
-                        $sth_delete_broken_nonopen_data->execute
-                            ($broken_series_id, $date);
-                    }
-                }
-
-                # Fix the broken query so that it collects correct data in the
-                # future.
-                $nonopen_bugs_query =~
-                    s/^$broken_series_indicator/field0-0-0=resolution&type0-0-0=regexp&value0-0-0=./;
-                $sth_repair->execute($nonopen_bugs_query, $broken_series_id);
-            }
-            else {
-                print "\nWARNING - Series $broken_series_id was meant to\n" .
-                      "collect non-open bug counts, but it has counted\n" .
-                      "all bugs instead. It cannot be repaired\n" .
-                      "automatically because no series that collected open\n" .
-                      "bug counts was found. You'll probably want to delete\n" .
-                      "or repair collected data for series $broken_series_id " .
-                      "manually.\n" .
-                      "Continuing repairs...";
-            }
-        }
-    }
-    print " done.\n";
-}
-
-# 2005-09-15 lance.larsh@oracle.com Bug 308717
-if ($dbh->bz_column_info("series", "public")) {
-    # PUBLIC is a reserved word in Oracle, so renaming the column
-    # PUBLIC in table SERIES avoids having to quote the column name
-    # in every query against that table
-    $dbh->bz_rename_column('series', 'public', 'is_public');
-}
-
-# 2005-09-28 bugreport@peshkin.net Bug 149504
-$dbh->bz_add_column('attachments', 'isurl',
-                    {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 0});
-
-# 2005-10-21 LpSolit@gmail.com - Bug 313020
-$dbh->bz_add_column('namedqueries', 'query_type',
-                    {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 0});
-
-# 2005-11-04 LpSolit@gmail.com - Bug 305927
-$dbh->bz_alter_column('groups', 'userregexp', 
-                      {TYPE => 'TINYTEXT', NOTNULL => 1, DEFAULT => "''"});
-
-# 2005-09-26 - olav@bkor.dhs.org - Bug 119524
-# Convert logincookies into a varchar
-# this allows to store a random token instead of a guessable auto_increment
-$dbh->bz_alter_column('logincookies', 'cookie',
-                      {TYPE => 'varchar(16)', PRIMARYKEY => 1, NOTNULL => 1});
-
-# Fixup for Bug 101380
-# "Newlines, nulls, leading/trailing spaces are getting into summaries"
-
-my $controlchar_bugs =
-    $dbh->selectall_arrayref("SELECT short_desc, bug_id FROM bugs WHERE " .
-                             $dbh->sql_regexp('short_desc', "'[[:cntrl:]]'"));
-if (scalar(@$controlchar_bugs))
-{
-    my $msg = 'Cleaning control characters from bug summaries...';
-    my $found = 0;
-    foreach (@$controlchar_bugs) {
-        my ($short_desc, $bug_id) = @$_;
-        my $clean_short_desc = clean_text($short_desc);
-        if ($clean_short_desc ne $short_desc) {
-            print $msg if !$found;
-            $found = 1;
-            print " $bug_id...";
-            $dbh->do("UPDATE bugs SET short_desc = ? WHERE bug_id = ?",
-                      undef, $clean_short_desc, $bug_id);
-        }
-    }
-    print " done.\n" if $found;
-}
-
-# 2005-12-07 altlst@sonic.net -- Bug 225221
-$dbh->bz_add_column('longdescs', 'comment_id',
-                    {TYPE => 'MEDIUMSERIAL', NOTNULL => 1, PRIMARYKEY => 1});
-
-# 2006-03-02 LpSolit@gmail.com - Bug 322285
-# Do not store inactive flags in the DB anymore.
-if ($dbh->bz_column_info('flags', 'id')->{'TYPE'} eq 'INT3') {
-    # We first have to remove all existing inactive flags.
-    if ($dbh->bz_column_info('flags', 'is_active')) {
-        $dbh->do('DELETE FROM flags WHERE is_active = 0');
-    }
-
-    # Now we convert the id column to the auto_increment format.
-    $dbh->bz_alter_column('flags', 'id',
-                          {TYPE => 'MEDIUMSERIAL', NOTNULL => 1, PRIMARYKEY => 1});
-
-    # And finally, we remove the is_active column.
-    $dbh->bz_drop_column('flags', 'is_active');
-}
-
-# short_desc should not be a mediumtext, fix anything longer than 255 chars.
-if($dbh->bz_column_info('bugs', 'short_desc')->{TYPE} eq 'MEDIUMTEXT') {
-    # Move extremely long summaries into a comment ("from" the Reporter),
-    # and then truncate the summary.
-    my $long_summary_bugs = $dbh->selectall_arrayref(
-        'SELECT bug_id, short_desc, reporter
-           FROM bugs WHERE LENGTH(short_desc) > 255');
-
-    if (@$long_summary_bugs) {
-        print <<EOF;
-
-WARNING: Some of your bugs had summaries longer than 255 characters.
-They have had their original summary copied into a comment, and then
-the summary was truncated to 255 characters. The affected bug numbers were:
-EOF
-        my $comment_sth = $dbh->prepare(
-            'INSERT INTO longdescs (bug_id, who, thetext, bug_when) 
-                  VALUES (?, ?, ?, NOW())');
-        my $desc_sth = $dbh->prepare('UPDATE bugs SET short_desc = ? 
-                                       WHERE bug_id = ?');
-        my @affected_bugs;
-        foreach my $bug (@$long_summary_bugs) {
-            my ($bug_id, $summary, $reporter_id) = @$bug;
-            my $summary_comment = "The original summary for this bug"
-               . " was longer than 255 characters, and so it was truncated"
-               . " when Bugzilla was upgraded. The original summary was:"
-               . "\n\n$summary";
-            $comment_sth->execute($bug_id, $reporter_id, $summary_comment);
-            my $short_summary = substr($summary, 0, 252) . "...";
-            $desc_sth->execute($short_summary, $bug_id);
-            push(@affected_bugs, $bug_id);
-        }
-        print join(', ', @affected_bugs) . "\n\n";
-    }
-
-    $dbh->bz_alter_column('bugs', 'short_desc', {TYPE => 'varchar(255)', 
-                                                 NOTNULL => 1});
-}
-
-if (-e "$datadir/versioncache") {
-    print "Removing versioncache...\n";
-    unlink "$datadir/versioncache";
-}
-
-# 2006-07-01 wurblzap@gmail.com -- Bug 69000
-$dbh->bz_add_column('namedqueries', 'id',
-                    {TYPE => 'MEDIUMSERIAL', NOTNULL => 1, PRIMARYKEY => 1});
-if ($dbh->bz_column_info("namedqueries", "linkinfooter")) {
-    # Move link-in-footer information into a table of its own.
-    my $sth_read = $dbh->prepare('SELECT id, userid
-                                    FROM namedqueries 
-                                   WHERE linkinfooter = 1');
-    my $sth_write = $dbh->prepare('INSERT INTO namedqueries_link_in_footer
-                                   (namedquery_id, user_id) VALUES (?, ?)');
-    $sth_read->execute();
-    while (my ($id, $userid) = $sth_read->fetchrow_array()) {
-        $sth_write->execute($id, $userid);
-    }
-    $dbh->bz_drop_column("namedqueries", "linkinfooter");    
-}
-
-# 2006-07-07 olav@bkor.dhs.org - Bug 277377
-# Add a sortkey to the classifications
-if (!$dbh->bz_column_info('classifications', 'sortkey')) {
-    $dbh->bz_add_column('classifications', 'sortkey',
-                        {TYPE => 'INT2', NOTNULL => 1, DEFAULT => 0});
-
-    my $class_ids = $dbh->selectcol_arrayref('SELECT id FROM classifications ' .
-                                             'ORDER BY name');
-    my $sth = $dbh->prepare('UPDATE classifications SET sortkey = ? ' .
-                            'WHERE id = ?');
-    my $sortkey = 0;
-    foreach my $class_id (@$class_ids) {
-        $sth->execute($sortkey, $class_id);
-        $sortkey += 100;
-    }
-}
-
-# 2006-07-14 karl@kornel.name - Bug 100953
-# If a nomail file exists, move its contents into the DB
-$dbh->bz_add_column('profiles', 'disable_mail',
-                    { TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'FALSE' });
-if (-e "$datadir/nomail") {
-    # We have a data/nomail file, read it in and delete it
-    my %nomail;
-    print "Found a data/nomail file.  Moving nomail entries into DB...\n";
-    open NOMAIL, '<', "$datadir/nomail";
-    while (<NOMAIL>) {
-        $nomail{trim($_)} = 1;
-    }
-    close NOMAIL;
-
-    # Go through each entry read.  If a user exists, set disable_mail.
-    my $query = $dbh->prepare('UPDATE profiles
-                                  SET disable_mail = 1
-                                WHERE userid = ?');
-    foreach my $user_to_check (keys %nomail) {
-        my $uid;
-        if ($uid = Bugzilla::User::login_to_id($user_to_check)) {
-            my $user = new Bugzilla::User($uid);
-            print "\tDisabling email for user ", $user->email, "\n";
-            $query->execute($user->id);
-            delete $nomail{$user->email};
-        }
-    }
-
-    # If there are any nomail entries remaining, move them to nomail.bad
-    # and say something to the user.
-    if (scalar(keys %nomail)) {
-        print 'The following users were listed in data/nomail, but do not ' .
-              'have an account here.  The unmatched entries have been moved ' .
-              "to $datadir/nomail.bad\n";
-        open NOMAIL_BAD, '>>', "$datadir/nomail.bad";
-        foreach my $unknown_user (keys %nomail) {
-            print "\t$unknown_user\n";
-            print NOMAIL_BAD "$unknown_user\n";
-            delete $nomail{$unknown_user};
-        }
-        close NOMAIL_BAD;
-    }
-
-    # Now that we don't need it, get rid of the nomail file.
-    unlink "$datadir/nomail";
-}
-
-
-# If you had to change the --TABLE-- definition in any way, then add your
-# differential change code *** A B O V E *** this comment.
-#
-# That is: if you add a new field, you first search for the first occurrence
-# of --TABLE-- and add your field to into the table hash. This new setting
-# would be honored for every new installation. Then add your
-# bz_add_field/bz_drop_field/bz_change_field_type/bz_rename_field code above.
-# This would then be honored by everyone who updates his Bugzilla installation.
-#
 
 #
 # Bugzilla uses --GROUPS-- to assign various rights to its users.
