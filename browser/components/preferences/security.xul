@@ -165,7 +165,7 @@
       <caption label="&warnings.label;"/>
 
       <hbox id="chooseWarningsBox">
-        <label flex="1">&chooseWarnings.label;</label>
+        <description control="warningSettings" flex="1">&chooseWarnings.label;</description>
         <button id="warningSettings"
                 label="&warningSettings.label;"
                 accesskey="&warningSettings.accesskey;"
