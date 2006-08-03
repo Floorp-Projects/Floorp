@@ -434,7 +434,7 @@ interface nsIAccessible : nsISupports
   const unsigned long ROLE_FILE_CHOOSER = 73;
   const unsigned long ROLE_FILLER = 74;
   const unsigned long ROLE_FONT_CHOOSER = 75;
-  const unsigned long ROLE_FRAME = 76;
+  const unsigned long ROLE_CHROME_WINDOW = 76;
   const unsigned long ROLE_GLASS_PANE = 77;
   const unsigned long ROLE_HTML_CONTAINER = 78;
   const unsigned long ROLE_ICON = 79;
