@@ -113,7 +113,7 @@ var gFindBar = {
         prefService.getBoolPref("accessibility.typeaheadfind.linksonly");
       gFindBar.mTypeAheadCaseSensitive =
         prefService.getIntPref("accessibility.typeaheadfind.casesensitive");
-      gFindBar.setCaseSensitiveStr();
+      gFindBar.setCaseSensitiveUI();
     }
   },
 
@@ -369,7 +369,7 @@ var gFindBar = {
     return node;
   },
 
-  setCaseSensitiveStr: function (val)
+  setCaseSensitiveUI: function (val)
   {
     var findToolbar = document.getElementById("FindToolbar");
     if (findToolbar.hidden)
@@ -378,9 +378,29 @@ var gFindBar = {
     if (!val)
       val = document.getElementById("find-field").value;
 
+    var matchCaseCheckbox = document.getElementById("find-case-sensitive");
+    matchCaseCheckbox.checked = this.shouldBeCaseSensitive(val);
+
     var matchCaseText = document.getElementById("match-case-status");
-    matchCaseText.value = this.shouldBeCaseSensitive(val) ?
-        this.mCaseSensitiveStr : "";
+    matchCaseText.value = matchCaseCheckbox.checked ?
+      this.mCaseSensitiveStr : "";
+
+    // Show the checkbox on the full Find bar in non-auto mode.  Show the label
+    // in all other cases.
+    matchCaseCheckbox.hidden = this.mUsingMinimalUI ||
+      (this.mTypeAheadCaseSensitive != 0 && this.mTypeAheadCaseSensitive != 1);
+    matchCaseText.hidden = !matchCaseCheckbox.hidden;
+  },
+
+  toggleCaseSensitiveCheckbox: function (aCaseSensitive)
+  {
+    var prefService =
+      Components.classes["@mozilla.org/preferences-service;1"]
+                .getService(Components.interfaces.nsIPrefBranch);
+
+    // Just set the pref; our observer will change the find bar behavior
+    prefService.setIntPref("accessibility.typeaheadfind.casesensitive",
+                           aCaseSensitive ? 1 : 0);
   },
 
   /**
@@ -421,7 +441,7 @@ var gFindBar = {
 
       var findField = document.getElementById("find-field");
       findField.removeAttribute("status");
-      this.setCaseSensitiveStr(findField.value);
+      this.setCaseSensitiveUI(findField.value);
       var statusIcon = document.getElementById("find-status-icon");
       statusIcon.removeAttribute("status");
       var statusText = document.getElementById("find-status");
@@ -849,7 +869,7 @@ var gFindBar = {
 
     var fastFind = getBrowser().fastFind;
     fastFind.caseSensitive = this.shouldBeCaseSensitive(val);
-    this.setCaseSensitiveStr(val);
+    this.setCaseSensitiveUI(val);
     var res = fastFind.find(val, this.mFindMode == FIND_LINKS, this.mHasFocus);
     this.updateFoundLink(res);
     this.updateStatus(res, true);

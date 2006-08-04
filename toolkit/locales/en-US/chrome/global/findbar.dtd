@@ -12,4 +12,5 @@
 <!ENTITY highlight.label "Highlight all">
 <!ENTITY highlight.accesskey "a">
 <!ENTITY highlight.tooltiptext "Highlight all occurrences of the phrase">
-
+<!ENTITY caseSensitiveCheckbox.label "Match case">
+<!ENTITY caseSensitiveCheckbox.accesskey "c">
