@@ -313,6 +313,8 @@ interface nsIAccessible : nsISupports
 
 /**
  * Relation Types -- most of these come from ATK's atkrelationtype.h
+ * When adding support for relations, make sure to add them to appropriate
+ * places in nsAccessibleWrap implementations
  * RELATION_NULL:
  * RELATION_CONTROLLED_BY:    Controlled by one or more target objects.
  * RELATION_CONTROLLER_FOR:   Controller for one or more target objects.

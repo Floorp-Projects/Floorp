@@ -947,6 +947,13 @@ refRelationSetCB(AtkObject *aAtkObj)
     PRUint32 relationType[] = {nsIAccessible::RELATION_LABELLED_BY,
                                nsIAccessible::RELATION_LABEL_FOR,
                                nsIAccessible::RELATION_NODE_CHILD_OF,
+                               nsIAccessible::RELATION_CONTROLLED_BY,
+                               nsIAccessible::RELATION_CONTROLLER_FOR,
+#ifdef USE_ATK_EMBED_RELATIONS
+                               nsIAccessible::RELATION_EMBEDS,
+#endif
+                               nsIAccessible::RELATION_FLOWS_TO,
+                               nsIAccessible::RELATION_FLOWS_FROM,
 #ifdef USE_ATK_DESCRIPTION_RELATIONS
                                nsIAccessible::RELATION_DESCRIBED_BY,
                                nsIAccessible::RELATION_DESCRIPTION_FOR,
