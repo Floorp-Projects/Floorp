@@ -74,7 +74,7 @@
             // priority. If two are equal, the existing one appears on top.
             var notifications = this.allNotifications;
             var insertPos = null;
-            for (n = notifications.length - 1; n >= 0; n--) {
+            for (var n = notifications.length - 1; n >= 0; n--) {
               if (notifications[n].priority < aPriority)
                 break;
               insertPos = notifications[n];
@@ -171,7 +171,7 @@
             else {
               change = -change;
             }
-            opacitychange = change / height;
+            var opacitychange = change / height;
 
             var self = this;
             var slide = function slideInFn()
@@ -278,7 +278,7 @@
 
     </implementation>
   </binding>
-      
+
   <binding id="notification">
     <content>
       <xul:hbox class="notification-inner outset" flex="1" xbl:inherits="type">
