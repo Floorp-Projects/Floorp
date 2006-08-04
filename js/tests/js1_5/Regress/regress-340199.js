@@ -46,17 +46,25 @@ printStatus (summary);
 if (typeof window != 'undefined' &&
     typeof XPCNativeWrapper != 'undefined')
 {
-  Object.prototype.__iterator__ = function () { actual = "User code called"; writeLineToLog(actual); };
-  for (var i in XPCNativeWrapper(window)) 
+  Object.prototype.__iterator__ = 
+    function () { actual = "User code called"; writeLineToLog(actual); };
+
+  try
   {
-    try 
-    { 
-      writeLineToLog(i);
-    } 
-    catch(ex)
+    for (var i in XPCNativeWrapper(window)) 
     {
-      writeLineToLog(ex);
+      try 
+      { 
+        writeLineToLog(i);
+      } 
+      catch(ex)
+      {
+        writeLineToLog(ex);
+      }
     }
+  }
+  catch(ex)
+  {
   }
 }
   
