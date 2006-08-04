@@ -94,3 +94,8 @@ RewriteRule ^(\w+)/([\w-]+)[/]{0,1}$ $2.php?app=$1
 # Example:
 #    /firefox/ -> /?app=firefox
 RewriteRule ^(\w+)[/]{0,1}$ index.php?app=$1
+
+# Rewrite for client blocklist requests.
+# Example:
+#   /blocklist/1/{ec8030f7-c20a-464f-9b0e-13a3a9e97384}/1.5 -> blocklist.php?reqVersion=1&appGuid={ec8030f7-c20a-464f-9b0e-13a3a9e97384}&appVersion=1.5
+RewriteRule ^blocklist/(.+)/(.+)/(.+)[/]{0,1}$ blocklist.php?reqVersion=$1&appGuid=$2&appVersion=$3
