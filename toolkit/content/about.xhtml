@@ -77,7 +77,7 @@
         listItem.appendChild(document.createTextNode("&about.buildIdentifier;"));
         // replace the shortened 8-digit build id in the UA with the full 10-digit 
         // build id from navigator.buildID
-        var newUA = ua.replace(/\/\d{8}/, navigator.buildID);
+        var newUA = ua.replace(/\/\d{8}/, "/" + navigator.buildID);
         listItem.appendChild(document.createTextNode(newUA));
       }
     </script>
