@@ -59,7 +59,7 @@ const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 
 // See documentation in nsIBrowserSearchService.idl.
 const SEARCH_ENGINE_TOPIC        = "browser-search-engine-modified";
-const XPCOM_SHUTDOWN_TOPIC       = "xpcom-shutdown";
+const QUIT_APPLICATION_TOPIC     = "quit-application";
 
 const SEARCH_ENGINE_REMOVED      = "engine-removed";
 const SEARCH_ENGINE_ADDED        = "engine-added";
@@ -2152,8 +2152,6 @@ SearchService.prototype = {
       this._loadEngines(location);
     }
 
-    this._convertOldPrefs();
-
     // Now that all engines are loaded, build the sorted engine list
     this._buildSortedEngineList();
 
@@ -2298,7 +2296,13 @@ SearchService.prototype = {
     // We only need to write the prefs. if something has changed.
     if (!this._needToSetOrderPrefs)
       return;
-    
+
+    // Set the useDB pref to indicate that from now on we should use the order
+    // information stored in the database.
+    var prefB = Cc["@mozilla.org/preferences-service;1"].
+                getService(Ci.nsIPrefBranch);
+    prefB.setBoolPref(BROWSER_SEARCH_PREF + ".useDBForOrder", true);
+
     var engines = this._getSortedEngines(true);
     var values = [];
     var names = [];
@@ -2316,6 +2320,10 @@ SearchService.prototype = {
     this._sortedEngines = [];
     var engine;
 
+    // If the user has specified a custom engine order, read the order
+    // information from the engineMetadataService instead of the default
+    // prefs.
+    if (getBoolPref(BROWSER_SEARCH_PREF + "useDBForOrder", false)) {
     for each (engine in this._engines) {
       var orderNumber = engineMetadataService.getAttr(engine, "order");
 
@@ -2339,6 +2347,24 @@ SearchService.prototype = {
       this._needToSetOrderPrefs = true;
     this._sortedEngines = filteredEngines;
 
+    } else {
+      // The DB isn't being used, so just read the engines from the prefs.
+      var i = 0;
+      var engineName;
+      while (true) {
+        engineName = getLocalizedPref(BROWSER_SEARCH_PREF + "order." + (++i));
+        if (!engineName)
+          break;
+
+        engine = this._engines[engineName];
+        if (!engine)
+          continue;
+        
+        this._sortedEngines.push(engine);
+        addedEngines[engine.name] = engine;
+      }
+    }
+
     // Array for the remaining engines, alphabetically sorted
     var alphaEngines = [];
 
@@ -2355,45 +2381,6 @@ SearchService.prototype = {
                                      });
     this._sortedEngines = this._sortedEngines.concat(alphaEngines);
   },
-
-  /**
-   *  On first startup, there are some default prefs that we need to migrate
-   *  into our sqlite database.  This function moves those values, along with
-   *  any values users may have set from builds prior to the introduction of
-   *  the database.
-   */
-  _convertOldPrefs: function SRCH_SVC_convertOrder() {
-    if (!engineMetadataService.newTable)
-      return;
-    var i = 0;
-    var engineName, engine;
-    while (true) {
-      engineName = getLocalizedPref(BROWSER_SEARCH_PREF + "order." + (++i));
-      if (!engineName)
-        break;
-
-      engine = this._engines[engineName];
-      if (!engine)
-        continue;
-      engineMetadataService.setAttr(engine, "order", i);
-    }
-
-    var prefService = Cc["@mozilla.org/preferences-service;1"].
-                        getService(Ci.nsIPrefService);
-    for each (engine in this._engines) {
-      var basePref = BROWSER_SEARCH_PREF + "engine." +
-                     encodeURIComponent(engine.name) + ".";
-
-      var alias = getLocalizedPref(basePref + "alias", "");
-      if (alias != "")
-        engineMetadataService.setAttr(engine, "alias", alias);
-
-      var hidden = getBoolPref(basePref + "hidden", false);
-      engineMetadataService.setAttr(engine, "hidden", hidden);
-      var engineBranch = prefService.getBranch(basePref);
-      engineBranch.deleteBranch("");
-    }
-},
 
   /**
    * Converts a Sherlock file and its icon into the custom XML format used by
@@ -2702,9 +2689,9 @@ SearchService.prototype = {
           }
         }
         break;
-      case XPCOM_SHUTDOWN_TOPIC:
-        this._saveSortedEngineList();
+      case QUIT_APPLICATION_TOPIC:
         this._removeObservers();
+        this._saveSortedEngineList();
         break;
     }
   },
@@ -2713,14 +2700,14 @@ SearchService.prototype = {
     var os = Cc["@mozilla.org/observer-service;1"].
              getService(Ci.nsIObserverService);
     os.addObserver(this, SEARCH_ENGINE_TOPIC, false);
-    os.addObserver(this, XPCOM_SHUTDOWN_TOPIC, false);
+    os.addObserver(this, QUIT_APPLICATION_TOPIC, false);
   },
 
   _removeObservers: function SRCH_SVC_removeObservers() {
     var os = Cc["@mozilla.org/observer-service;1"].
              getService(Ci.nsIObserverService);
     os.removeObserver(this, SEARCH_ENGINE_TOPIC);
-    os.removeObserver(this, XPCOM_SHUTDOWN_TOPIC);
+    os.removeObserver(this, QUIT_APPLICATION_TOPIC);
   },
 
   QueryInterface: function SRCH_SVC_QI(aIID) {
@@ -2733,10 +2720,6 @@ SearchService.prototype = {
 };
 
 var engineMetadataService = {
-  // Keeps track of whether init() actually created a new table, or the table
-  // already existed.
-  newTable: false,
-
   init: function epsInit() {
     var engineDataTable = "id INTEGER PRIMARY KEY, engineid STRING, name STRING, value STRING";
     var file = getDir(NS_APP_USER_PROFILE_50_DIR);
@@ -2757,9 +2740,7 @@ var engineMetadataService = {
 
     try {
       this.mDB.createTable("engine_data", engineDataTable);
-      this.newTable = true;
     } catch (ex) {
-      this.newTable = false;
       // Fails if the table already exists, which is fine
     }
 
