@@ -2324,31 +2324,31 @@ SearchService.prototype = {
     // information from the engineMetadataService instead of the default
     // prefs.
     if (getBoolPref(BROWSER_SEARCH_PREF + "useDBForOrder", false)) {
-    for each (engine in this._engines) {
-      var orderNumber = engineMetadataService.getAttr(engine, "order");
+      for each (engine in this._engines) {
+        var orderNumber = engineMetadataService.getAttr(engine, "order");
 
-      // Since the DB isn't regularly cleared, and engine files may disappear
-      // without us knowing, we may already have an engine in this slot. If
-      // that happens, we just skip it - it will be added later on as an
-      // unsorted engine. This problem will sort itself out when we call
-      // _saveSortedEngineList at shutdown.
-      if (orderNumber && !this._sortedEngines[orderNumber-1]) {
-        this._sortedEngines[orderNumber-1] = engine;
-        addedEngines[engine.name] = engine;
-      } else {
-        // We need to call _saveSortedEngines so this gets sorted out.
-        this._needToSetOrderPrefs = true;
+        // Since the DB isn't regularly cleared, and engine files may disappear
+        // without us knowing, we may already have an engine in this slot. If
+        // that happens, we just skip it - it will be added later on as an
+        // unsorted engine. This problem will sort itself out when we call
+        // _saveSortedEngineList at shutdown.
+        if (orderNumber && !this._sortedEngines[orderNumber-1]) {
+          this._sortedEngines[orderNumber-1] = engine;
+          addedEngines[engine.name] = engine;
+        } else {
+          // We need to call _saveSortedEngines so this gets sorted out.
+          this._needToSetOrderPrefs = true;
+        }
       }
-    }
 
-    // Filter out any nulls for engines that may have been removed
-    var filteredEngines = this._sortedEngines.filter(function(a) { return !!a; });
-    if (this._sortedEngines.length != filteredEngines.length)
-      this._needToSetOrderPrefs = true;
-    this._sortedEngines = filteredEngines;
+      // Filter out any nulls for engines that may have been removed
+      var filteredEngines = this._sortedEngines.filter(function(a) { return !!a; });
+      if (this._sortedEngines.length != filteredEngines.length)
+        this._needToSetOrderPrefs = true;
+      this._sortedEngines = filteredEngines;
 
     } else {
-      // The DB isn't being used, so just read the engines from the prefs.
+      // The DB isn't being used, so just read the engine order from the prefs
       var i = 0;
       var engineName;
       while (true) {
