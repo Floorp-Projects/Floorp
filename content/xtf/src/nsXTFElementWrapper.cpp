@@ -608,10 +608,14 @@ nsXTFElementWrapper::GetInterfaces(PRUint32 *count, nsIID * **array)
 
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
 NS_IMETHODIMP 
-nsXTFElementWrapper::GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
+nsXTFElementWrapper::GetHelperForLanguage(PRUint32 language,
+                                          nsISupports** aHelper)
 {
-  *_retval = nsnull;
-  return NS_OK;
+  *aHelper = nsnull;
+  nsCOMPtr<nsIClassInfo> ci = 
+    do_QueryInterface(nsContentUtils::GetClassInfoInstance(eDOMClassInfo_Element_id));
+  return
+    ci ? ci->GetHelperForLanguage(language, aHelper) : NS_ERROR_NOT_AVAILABLE;
 }
 
 /* readonly attribute string contractID; */
