@@ -199,11 +199,28 @@
             // this can only be set by each individual attendee.
             template.childNodes[1].childNodes[0].setAttribute("disabled","true");
 
+            // TODO: the organizer should show up in the attendee list, but this information
+            // should be based on the organizer contained in the appropriate field of calIItemBase.
+            // This is currently not supported, since we're still missing calendar identities.
+            if(this.mOrganizerID && this.mOrganizerID != "") {
+              var organizer = this.createAttendee();
+              organizer.id = this.mOrganizerID;
+              organizer.role = "CHAIR";
+              organizer.participationStatus = "ACCEPTED";
+              try {
+                var provider = item.calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
+                var props = provider.getCalendarProperties("X-S1CS-CALPROPS-COMMON-NAME",{});
+                if(props.length > 0)
+                    organizer.commonName = props[0];
+              }
+              catch(e) {}
+              this.appendAttendee(organizer,listbox,template);
+            }
+
             var attendees = item.getAttendees({});
             if(attendees.length > 0) {
                 for each(var attendee in attendees) {
                   this.appendAttendee(attendee,listbox,template);
-                  template = document.getAnonymousElementByAttribute(this, "anonid", "item");
                 }
             }
             else {
@@ -255,8 +272,22 @@
           var role = document.getAnonymousElementByAttribute(newNode, "anonid", "role");
           var status = document.getAnonymousElementByAttribute(newNode, "anonid", "status");
 
+          // the template could have its input-field disabled,
+          // that's why we need to reset this status.
+          input.removeAttribute("disabled");
+
           if(this.mIsReadOnly || !this.mIsOrganizer)
             input.setAttribute("disabled","true");
+
+          // disable the input-field [name <email>] if this attendee
+          // appears to be the organizer.
+          if (aAttendee) {
+            if (this.mOrganizerID && this.mOrganizerID != "") {
+              if (aAttendee.id == this.mOrganizerID) {
+                input.setAttribute("disabled","true");
+              }
+            }
+          }
 
           this.mMaxAttendees++;
           var rowNumber = this.mMaxAttendees;
@@ -325,6 +356,10 @@
               var role = document.getAnonymousElementByAttribute(newNode, "anonid", "role");
               var status = document.getAnonymousElementByAttribute(newNode, "anonid", "status");
 
+              // the template could have its input-field disabled,
+              // that's why we need to reset this status.
+              input.removeAttribute("disabled");
+              
               if(this.mIsReadOnly || !this.mIsOrganizer)
                 input.setAttribute("disabled","true");
 
@@ -337,6 +372,7 @@
                 status.setAttribute("id", "attendeeCol3#" + rowNumber);
               }
 
+              input.value = null;
               input.removeAttribute("value");
               input.attendee = newAttendee;
 
@@ -418,9 +454,17 @@
                 if(names.value.length > 0) {
                     attendee.commonName = names.value[0];
                 }
-                
+
+                var addAttendee = true;
+                if (this.mOrganizerID && this.mOrganizerID != "") {
+                  if (attendee.id == this.mOrganizerID) {
+                    addAttendee = false;
+                  }
+                }
+
                 // append the attendee object to the list of attendees.
-                attendees.push(attendee);
+                if (addAttendee)
+                  attendees.push(attendee);
               }
 
               i++;
@@ -1412,7 +1456,7 @@
             var attendeesScrollbar = document.getAnonymousElementByAttribute(this, "anonid", "vertical-scrollbar");
             var box = document.getAnonymousElementByAttribute(this, "anonid", "vertical-scrollbar-box");
             attendees.fitDummyRows();
-            var ratio = attendees.boxObject.width / attendees.documentSize;
+            var ratio = attendees.boxObject.height / attendees.documentSize;
             if(ratio < 1) {
               box.removeAttribute("collapsed");
               var maxpos = attendeesScrollbar.getAttribute("maxpos");
