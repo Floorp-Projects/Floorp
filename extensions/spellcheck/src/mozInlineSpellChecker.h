@@ -243,15 +243,12 @@ public:
   mozInlineSpellChecker();
   virtual ~mozInlineSpellChecker();
 
-  // re-spellcheck the currently marked ranges
-  nsresult SpellCheckSelection();
-
   // spell checks all of the words between two nodes
   nsresult SpellCheckBetweenNodes(nsIDOMNode *aStartNode,
                                   PRInt32 aStartOffset,
                                   nsIDOMNode *aEndNode,
                                   PRInt32 aEndOffset);
-  
+
   // examines the dom node in question and returns true if the inline spell
   // checker should skip the node (i.e. the text is inside of a block quote
   // or an e-mail signature...)
