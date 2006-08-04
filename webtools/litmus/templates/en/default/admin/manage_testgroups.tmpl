@@ -97,7 +97,7 @@ function disableModeButtons() {
   document.getElementById("delete_testgroup_button").disabled=true;
 }
 
-function loadTestgroup() {
+function loadTestgroup(silent) {
   var testgroup_select = document.getElementById("testgroup_id");
 
   if (! testgroup_select ||
@@ -113,9 +113,11 @@ function loadTestgroup() {
   var testgroup_id = testgroup_select.options[testgroup_select.selectedIndex].value;
 
   disableForm('edit_testgroup_form');
-  toggleMessage('loading','Loading Testgroup ID# ' + testgroup_id + '...');
+  if (!silent) {
+    toggleMessage('loading','Loading Testgroup ID# ' + testgroup_id + '...');
+  }
   var url = 'json.cgi?testgroup_id=' + testgroup_id;
-  fetchJSON(url,populateTestgroup);
+  fetchJSON(url,populateTestgroup,silent);
 }
 
 function populateBranches(productBox) {
@@ -360,7 +362,7 @@ function resetTestgroup() {
 <script type="text/javascript">
 var em = document.getElementById('testgroup_id'); 
 if (em.selectedIndex >= 0) {
-  loadTestgroup();
+  loadTestgroup(1);
   enableForm('edit_testgroup_form');
 } else {
   disableForm('edit_testgroup_form');

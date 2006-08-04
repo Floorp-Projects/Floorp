@@ -158,33 +158,31 @@ sub page_test {
     my $subgroup_id = $c->param("subgroup_".$testgroup_id);
     
     print $c->header();
+
+    my $cookie =  Litmus::Auth::getCookie();
+    my $show_admin = Litmus::Auth::istrusted($cookie);
     
     # get the tests to display:
-    my @tests = Litmus::DB::Testcase->search_CommunityEnabledBySubgroup($subgroup_id);
-    
-    # get all possible test results:
-    # my @results = Litmus::DB::Result->retrieve_all();
+    my @tests;
+    if ($show_admin) {
+      @tests = Litmus::DB::Testcase->search_EnabledBySubgroup($subgroup_id);
+    } else {
+      @tests = Litmus::DB::Testcase->search_CommunityEnabledBySubgroup($subgroup_id);
+    }
 
     my $sysconfig = Litmus::SysConfig->getCookie($tests[0]->product());
     
-    my $cookie =  Litmus::Auth::getCookie();
-
     my $vars = {
                 title     => $title,
                 sysconfig => Litmus::SysConfig->getCookie($tests[0]->product()),
                 group     => Litmus::DB::Testgroup->retrieve($testgroup_id),
                 subgroup  => Litmus::DB::Subgroup->retrieve($subgroup_id),
                 tests     => \@tests,
-#                results   => \@results,
                 defaultemail => $cookie,
-                show_admin   => Litmus::Auth::istrusted($cookie),
-                istrusted    => Litmus::Auth::istrusted($cookie),
+                show_admin   => $show_admin,
+                istrusted    => $show_admin,
     };
 
-    $vars->{"defaultemail"} = $cookie;
-    $vars->{"show_admin"} = Litmus::Auth::istrusted($cookie);
-    $vars->{"istrusted"} = Litmus::Auth::istrusted($cookie);
-    
     Litmus->template()->process("runtests/testdisplay.html.tmpl", $vars) ||
         internalError(Litmus->template()->error());
     

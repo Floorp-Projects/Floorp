@@ -119,11 +119,13 @@ String.prototype.parseJSON = function () {
     }
 };
 
-function fetchJSON(url,callbackFunction) {
+function fetchJSON(url,callbackFunction,silent) {
   var d = loadJSONDoc(url);
   d.addBoth(function (res) {
     d.deferred = null;
-    toggleMessage('none');
+    if (!silent) {
+      toggleMessage('none');
+    }
     return res;
   });
   d.addCallback(callbackFunction);

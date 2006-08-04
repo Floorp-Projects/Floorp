@@ -103,7 +103,7 @@ function disableModeButtons() {
   document.getElementById("delete_subgroup_button").disabled=true;
 }
 
-function loadSubgroup() {
+function loadSubgroup(silent) {
   var subgroup_select = document.getElementById("subgroup_id");
 
   if (! subgroup_select ||
@@ -120,8 +120,10 @@ function loadSubgroup() {
 
   disableForm('edit_subgroup_form');
   var url = 'json.cgi?subgroup_id=' + subgroup_id;
-  toggleMessage('loading','Loading Subgroup ID# ' + subgroup_id + '...');
-  fetchJSON(url,populateSubgroup);
+  if (!silent) {
+    toggleMessage('loading','Loading Subgroup ID# ' + subgroup_id + '...');
+  }
+  fetchJSON(url,populateSubgroup,silent);
 }
 
 function populateSubgroup(data) {
@@ -343,7 +345,7 @@ function resetSubgroup() {
 <script type="text/javascript">
 var em = document.getElementById('subgroup_id'); 
 if (em.selectedIndex >= 0) {
-  loadSubgroup();
+  loadSubgroup(1);
   enableForm('edit_subgroup_form');
 } else {
   disableForm('edit_subgroup_form');

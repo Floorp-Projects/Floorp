@@ -61,10 +61,15 @@ __PACKAGE__->set_sql(ByTestgroup => qq{
                                        ORDER BY sgtg.sort_order ASC
 });
 
-__PACKAGE__->set_sql(NumEnabledTestcases => qq{
+__PACKAGE__->set_sql(NumCommunityEnabledTestcases => qq{
                                                SELECT count(tc.testcase_id) as num_testcases
                                                FROM testcases tc, testcase_subgroups tcsg
                                                WHERE tcsg.subgroup_id=? AND tcsg.testcase_id=tc.testcase_id AND tc.enabled=1 AND tc.community_enabled=1 
+});
+__PACKAGE__->set_sql(NumEnabledTestcases => qq{
+                                               SELECT count(tc.testcase_id) as num_testcases
+                                               FROM testcases tc, testcase_subgroups tcsg
+                                               WHERE tcsg.subgroup_id=? AND tcsg.testcase_id=tc.testcase_id AND tc.enabled=1 
 });
 
 __PACKAGE__->set_sql(EnabledByTestcase => qq{

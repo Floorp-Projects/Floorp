@@ -114,7 +114,7 @@ function disableModeButtons() {
   document.getElementById("delete_testcase_button").disabled=true;
 }
 
-function loadTestcase() {
+function loadTestcase(silent) {
   var testcase_select = document.getElementById("testcase_id");
 
   if (! testcase_select ||
@@ -130,9 +130,11 @@ function loadTestcase() {
   var testcase_id = testcase_select.options[testcase_select.selectedIndex].value;
 
   disableForm('edit_testcase_form');
-  toggleMessage('loading','Loading Testcase ID# ' + testcase_id + '...');
+  if (!silent) {
+    toggleMessage('loading','Loading Testcase ID# ' + testcase_id + '...');
+  }
   var url = 'json.cgi?testcase_id=' + testcase_id;
-  fetchJSON(url,populateTestcase);
+  fetchJSON(url,populateTestcase,silent);
 }
 
 function populateTestcase(data) {
@@ -368,7 +370,7 @@ function resetTestcase() {
 <script type="text/javascript">
 var em = document.getElementById('testcase_id'); 
 if (em.selectedIndex >= 0) {
-  loadTestcase();
+  loadTestcase(1);
   enableForm('edit_testcase_form');
 } else {
   disableForm('edit_testcase_form');

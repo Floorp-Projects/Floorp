@@ -388,10 +388,10 @@ function toggleMessage(msgType,msg) {
       break;
     case "none":
     default:
-     em.innerHTML="";
-     em.style.display = 'none';
-     return;
-     break;
+      em.innerHTML="";
+      em.style.display = 'none';
+      return;
+      break;
   }
 }
 
