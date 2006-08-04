@@ -153,6 +153,18 @@ PRInt32 nsTableRowGroupFrame::GetStartRowIndex()
   return result;
 }
 
+void  nsTableRowGroupFrame::AdjustRowIndices(PRInt32 aRowIndex,
+                                             PRInt32 anAdjustment)
+{
+  nsIFrame* rowFrame = GetFirstChild(nsnull);
+  for ( ; rowFrame; rowFrame = rowFrame->GetNextSibling()) {
+    if (NS_STYLE_DISPLAY_TABLE_ROW==rowFrame->GetStyleDisplay()->mDisplay) {
+      PRInt32 index = ((nsTableRowFrame*)rowFrame)->GetRowIndex();
+      if (index >= aRowIndex)
+        ((nsTableRowFrame *)rowFrame)->SetRowIndex(index+anAdjustment);
+    }
+  }
+}
 nsresult
 nsTableRowGroupFrame::InitRepeatedFrame(nsPresContext*       aPresContext,
                                         nsTableRowGroupFrame* aHeaderFooterFrame)

@@ -643,42 +643,50 @@ void nsTableFrame::AdjustRowIndices(PRInt32         aRowIndex,
   for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
     nsIFrame* kidFrame = (nsIFrame*)rowGroups.ElementAt(rgX);
     nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(kidFrame);
-    AdjustRowIndices(rgFrame, aRowIndex, aAdjustment);
+    rgFrame->AdjustRowIndices(aRowIndex, aAdjustment);
   }
 }
 
-NS_IMETHODIMP nsTableFrame::AdjustRowIndices(nsIFrame*       aRowGroup,
-                                             PRInt32         aRowIndex,
-                                             PRInt32         anAdjustment)
-{
-  nsresult rv = NS_OK;
-  nsIFrame* rowFrame = aRowGroup->GetFirstChild(nsnull);
-  for ( ; rowFrame; rowFrame = rowFrame->GetNextSibling()) {
-    if (NS_STYLE_DISPLAY_TABLE_ROW==rowFrame->GetStyleDisplay()->mDisplay) {
-      PRInt32 index = ((nsTableRowFrame*)rowFrame)->GetRowIndex();
-      if (index >= aRowIndex)
-        ((nsTableRowFrame *)rowFrame)->SetRowIndex(index+anAdjustment);
-    }
-  }
-  return rv;
-}
 
-void nsTableFrame::ResetRowIndices(void)
+void nsTableFrame::ResetRowIndices(nsIFrame* aFirstRowGroupFrame,
+                                   nsIFrame* aLastRowGroupFrame)
 {
-  // Iterate over the row groups and adjust the row indices of all rows 
+  // Iterate over the row groups and adjust the row indices of all rows
+  // omit the rowgroups that will be inserted later
   nsAutoVoidArray rowGroups;
   PRUint32 numRowGroups;
   OrderRowGroups(rowGroups, numRowGroups, nsnull);
 
   PRInt32 rowIndex = 0;
+  nsTableRowGroupFrame* newRgFrame = nsnull;
+  nsIFrame* omitRgFrame = aFirstRowGroupFrame;
+  if (omitRgFrame) {
+    newRgFrame = GetRowGroupFrame(omitRgFrame);
+    if (omitRgFrame == aLastRowGroupFrame)
+      omitRgFrame = nsnull;
+  }
+
   for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
     nsIFrame* kidFrame = (nsIFrame*)rowGroups.ElementAt(rgX);
     nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(kidFrame);
-    nsIFrame* rowFrame = rgFrame->GetFirstChild(nsnull);
-    for ( ; rowFrame; rowFrame = rowFrame->GetNextSibling()) {
-      if (NS_STYLE_DISPLAY_TABLE_ROW==rowFrame->GetStyleDisplay()->mDisplay) {
-        ((nsTableRowFrame *)rowFrame)->SetRowIndex(rowIndex);
-        rowIndex++;
+    if (rgFrame == newRgFrame) {
+      // omit the new rowgroup
+      if (omitRgFrame) {
+        omitRgFrame = omitRgFrame->GetNextSibling();
+        if (omitRgFrame) {
+          newRgFrame  = GetRowGroupFrame(omitRgFrame);
+          if (omitRgFrame == aLastRowGroupFrame)
+            omitRgFrame = nsnull;
+        }
+      }
+    }
+    else {
+      nsIFrame* rowFrame = rgFrame->GetFirstChild(nsnull);
+      for ( ; rowFrame; rowFrame = rowFrame->GetNextSibling()) {
+        if (NS_STYLE_DISPLAY_TABLE_ROW==rowFrame->GetStyleDisplay()->mDisplay) {
+          ((nsTableRowFrame *)rowFrame)->SetRowIndex(rowIndex);
+          rowIndex++;
+        }
       }
     }
   }
@@ -1025,6 +1033,13 @@ void nsTableFrame::InsertCells(nsVoidArray&    aCellFrames,
       // this sets the child list, updates the col cache and cell map
       CreateAnonymousColFrames(numColsToAdd, eColAnonymousCell, PR_TRUE);
     }
+    if (numColsToAdd < 0) {
+      PRInt32 numColsNotRemoved = DestroyAnonymousColFrames(-numColsToAdd);
+      // if the cell map has fewer cols than the cache, correct it
+      if (numColsNotRemoved > 0) {
+        cellMap->AddColsAtEnd(numColsNotRemoved);
+      }
+    }
     if (IsBorderCollapse()) {
       SetBCDamageArea(damageArea);
     }
@@ -1319,6 +1334,29 @@ nsTableFrame::InsertRowGroups(nsIFrame* aFirstRowGroupFrame,
             ? nsnull : GetRowGroupFrame((nsIFrame*)orderedRowGroups.ElementAt(rgIndex - 1)); 
           // create and add the cell map for the row group
           cellMap->InsertGroupCellMap(*rgFrame, priorRG);
+        
+          break;
+        }
+        else {
+          if (kidFrame == aLastRowGroupFrame) {
+            break;
+          }
+          kidFrame = kidFrame->GetNextSibling();
+        }
+      }
+    }
+    cellMap->Synchronize(this);
+    ResetRowIndices(aFirstRowGroupFrame, aLastRowGroupFrame);
+
+    //now that the cellmaps are reordered too insert the rows
+    for (PRUint32 rgIndex = 0; rgIndex < numRowGroups; rgIndex++) {
+      nsIFrame* kidFrame = aFirstRowGroupFrame;
+      while (kidFrame) {
+        nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(kidFrame);
+
+        if (GetRowGroupFrame((nsIFrame*)orderedRowGroups.ElementAt(rgIndex)) == rgFrame) {
+          nsTableRowGroupFrame* priorRG = (0 == rgIndex)
+            ? nsnull : GetRowGroupFrame((nsIFrame*)orderedRowGroups.ElementAt(rgIndex - 1)); 
           // collect the new row frames in an array and add them to the table
           PRInt32 numRows = CollectRows(kidFrame, rows);
           if (numRows > 0) {
@@ -1339,9 +1377,8 @@ nsTableFrame::InsertRowGroups(nsIFrame* aFirstRowGroupFrame,
           kidFrame = kidFrame->GetNextSibling();
         }
       }
-    }
-    cellMap->Synchronize(this);
-    ResetRowIndices();
+    }    
+    
   }
 #ifdef DEBUG_TABLE_CELLMAP
   printf("=== insertRowGroupsAfter\n");
@@ -2599,6 +2636,17 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
       if (cellMap) {
         cellMap->RemoveGroupCellMap(rgFrame);
       }
+
+       // remove the row group frame from the sibling chain
+      mFrames.DestroyFrame(aOldFrame);
+     
+      if (cellMap) {
+        cellMap->Synchronize(this);
+        ResetRowIndices();
+        nsRect damageArea;
+        cellMap->RebuildConsideringCells(nsnull, nsnull, 0, 0, PR_FALSE, damageArea);
+      }
+
       // only remove cols that are of type eTypeAnonymous cell (they are at the end)
       PRInt32 numColsInMap = GetColCount(); // cell map's notion of num cols
       PRInt32 numColsInCache = mColFrames.Count();
@@ -2610,14 +2658,6 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
         }
       }
       else NS_ASSERTION(numColsInCache == numColsInMap, "cell map has too many cols");
-
-      AdjustRowIndices(startRowIndex, -numRows);
-      // remove the row group frame from the sibling chain
-      mFrames.DestroyFrame(aOldFrame);
-      if (cellMap) {
-        cellMap->Synchronize(this);
-        ResetRowIndices();
-      }
       // XXX This could probably be optimized with much effort
       SetNeedStrategyInit(PR_TRUE);
       AppendDirtyReflowCommand(this);

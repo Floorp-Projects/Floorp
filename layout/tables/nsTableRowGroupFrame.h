@@ -167,6 +167,13 @@ public:
     */
   PRInt32 GetStartRowIndex();
 
+  /** Adjust the row indices of all rows  whose index is >= aRowIndex.  
+    * @param aRowIndex   - start adjusting with this index
+    * @param aAdjustment - shift the row index by this amount
+    */
+  void AdjustRowIndices(PRInt32   aRowIndex,
+                        PRInt32   anAdjustment);
+
   /**
    * Used for header and footer row group frames that are repeated when
    * splitting a table frame.

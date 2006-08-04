@@ -506,8 +506,17 @@ public:
                           PRInt32          aNumRowsToRemove,
                           PRBool           aConsiderSpans);
 
+  /** Insert multiple rowgroups into the table cellmap handling
+    * @param aFirstRowGroupFrame - first row group to be inserted all siblings
+    *                              will be appended too.
+    */
   void AppendRowGroups(nsIFrame* aFirstRowGroupFrame);
 
+  /** Insert multiple rowgroups into the table cellmap handling
+    * @param aFirstRowGroupFrame - first row group to be inserted
+    * @param aLastRowGroupFrame  - when inserting the siblings of 
+    *                              aFirstRowGroupFrame stop at this row group
+    */
   void InsertRowGroups(nsIFrame*       aFirstRowGroupFrame,
                        nsIFrame*       aLastRowGroupFrame);
 
@@ -765,20 +774,25 @@ public:
     * Only the firstInFlow has a legit cell map
     */
   virtual nsTableCellMap* GetCellMap() const;
-    
+
+  /** Iterate over the row groups and adjust the row indices of all rows 
+    * whose index is >= aRowIndex.  
+    * @param aRowIndex   - start adjusting with this index
+    * @param aAdjustment - shift the row index by this amount
+    */
   void AdjustRowIndices(PRInt32 aRowIndex,
                         PRInt32 aAdjustment);
 
-  NS_IMETHOD AdjustRowIndices(nsIFrame* aRowGroup,
-                              PRInt32   aRowIndex,
-                              PRInt32   anAdjustment);
-  /** Reset the rowindices of all rows as they might have changed due to rowgroup
-    * reordering
+  /** Reset the rowindices of all rows as they might have changed due to 
+    * rowgroup reordering, exclude new row group frames that show in the
+    * reordering but are not yet inserted into the cellmap
+    * @param aFirstRowGroupFrame - first row group to be excluded
+    * @param aLastRowGroupFrame  - last sibling of aFirstRowGroupFrame that
+    *                              should be excluded when reseting the row
+    *                              indices.
     */
-  void ResetRowIndices(void);
-
-  // Remove cell borders which aren't bordering row and/or col groups 
-  void ProcessGroupRules(nsPresContext* aPresContext);
+  void ResetRowIndices(nsIFrame* aFirstRowGroupFrame = nsnull,
+                       nsIFrame* aLastRowGroupFrame = nsnull);
 
   nsVoidArray& GetColCache();
 
