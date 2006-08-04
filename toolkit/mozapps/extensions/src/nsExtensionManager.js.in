@@ -2492,7 +2492,7 @@ var Blocklist = {
       const kELEMENT_NODE = Components.interfaces.nsIDOMNode.ELEMENT_NODE;
       var itemNodes = this._getItemNodes(doc.documentElement.childNodes);
       for (var i = 0; i < itemNodes.length; ++i) {
-        var blocklistElement = itemNodes.item(i);
+        var blocklistElement = itemNodes[i];
         if (blocklistElement.nodeType != kELEMENT_NODE ||
             blocklistElement.localName != "emItem")
           continue;
@@ -2502,7 +2502,7 @@ var Blocklist = {
         var id = blocklistElement.getAttribute("id");
         result[id] = [];
         for (var x = 0; x < versionNodes.length; ++x) {
-          var versionRangeElement = versionNodes.item(x);
+          var versionRangeElement = versionNodes[x];
           if (versionRangeElement.nodeType != kELEMENT_NODE ||
               versionRangeElement.localName != "versionRange")
             continue;
@@ -2526,8 +2526,8 @@ var Blocklist = {
   _getItemNodes: function(deChildNodes) {
     const kELEMENT_NODE = Components.interfaces.nsIDOMNode.ELEMENT_NODE;
     for (var i = 0; i < deChildNodes.length; ++i) {
-      var emItemsElement = deChildNodes.item(i);
-      if (emItemsElement.nodeType == kELEMENT_NODE ||
+      var emItemsElement = deChildNodes[i];
+      if (emItemsElement.nodeType == kELEMENT_NODE &&
           emItemsElement.localName == "emItems")
         return emItemsElement.childNodes;
     }
@@ -2549,23 +2549,24 @@ function BlocklistItemData(versionRangeElement) {
   this.minVersion = versionRange.minVersion;
   this.maxVersion = versionRange.maxVersion;
   this.targetApps = { };
+  var found = false;
 
+  if (versionRangeElement) {
+    for (var i = 0; i < versionRangeElement.childNodes.length; ++i) {
+      var targetAppElement = versionRangeElement.childNodes[i];
+      if (targetAppElement.nodeType != Components.interfaces.nsIDOMNode.ELEMENT_NODE ||
+          targetAppElement.localName != "targetApplication")
+        continue;
+      found = true;
+      // default to the current application if id is not provided.
+      var appID = targetAppElement.hasAttribute("id") ? targetAppElement.getAttribute("id") : gApp.ID;
+      this.targetApps[appID] = this.getBlocklistAppVersions(targetAppElement);
+    }
+  }
   // Default to all versions of the extension and the current application when
   // versionRange is not defined.
-  if (!versionRangeElement || versionRangeElement.childNodes.length == 0) {
+  if (!found)
     this.targetApps[gApp.ID] = this.getBlocklistAppVersions(null);
-    return;
-  }
-
-  for (var i = 0; i < versionRangeElement.childNodes.length; ++i) {
-    var targetAppElement = versionRangeElement.childNodes.item(i);
-    if (targetAppElement.nodeType != Components.interfaces.nsIDOMNode.ELEMENT_NODE ||
-        targetAppElement.localName != "targetApplication")
-      continue;
-    // default to the current application if id is not provided.
-    var appID = targetAppElement.hasAttribute("id") ? targetAppElement.getAttribute("id") : gApp.ID;
-    this.targetApps[appID] = this.getBlocklistAppVersions(targetAppElement);
-  }
 }
 
 BlocklistItemData.prototype = {
@@ -2580,18 +2581,21 @@ BlocklistItemData.prototype = {
  */
   getBlocklistAppVersions: function(targetAppElement) {
     var appVersions = [ ];
-    // return minVersion = 0 and maxVersion = * if not available
-    if (!targetAppElement || targetAppElement.childNodes.length == 0)
-      return [ this.getBlocklistVersionRange(null) ];
+    var found = false;
 
-    for (var i = 0; i < targetAppElement.childNodes.length; ++i) {
-      var versionRangeElement = targetAppElement.childNodes.item(i);
-      if (versionRangeElement.nodeType != Components.interfaces.nsIDOMNode.ELEMENT_NODE ||
-          versionRangeElement.localName != "versionRange")
-        continue;
-
-      appVersions.push(this.getBlocklistVersionRange(versionRangeElement));
+    if (targetAppElement) {
+      for (var i = 0; i < targetAppElement.childNodes.length; ++i) {
+        var versionRangeElement = targetAppElement.childNodes[i];
+        if (versionRangeElement.nodeType != Components.interfaces.nsIDOMNode.ELEMENT_NODE ||
+            versionRangeElement.localName != "versionRange")
+          continue;
+        found = true;
+        appVersions.push(this.getBlocklistVersionRange(versionRangeElement));
+      }
     }
+    // return minVersion = 0 and maxVersion = * if not available
+    if (!found)
+      return [ this.getBlocklistVersionRange(null) ];
     return appVersions;
   },
 
@@ -2639,9 +2643,6 @@ function ExtensionManager() {
   }
   gPref = Components.classes["@mozilla.org/preferences-service;1"]
                     .getService(Components.interfaces.nsIPrefBranch2);
-  gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
-  gCheckCompatibility = getPref("getBoolPref", PREF_EM_CHECK_COMPATIBILITY, true);
-  gPref.addObserver("extensions.", this, false);
 
   gOS = Components.classes["@mozilla.org/observer-service;1"]
                   .getService(Components.interfaces.nsIObserverService);
@@ -2776,6 +2777,9 @@ ExtensionManager.prototype = {
     }
     catch (e) {
     }
+    gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
+    gCheckCompatibility = getPref("getBoolPref", PREF_EM_CHECK_COMPATIBILITY, true);
+    gPref.addObserver("extensions.", this, false);
   },
 
   /**
