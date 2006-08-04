@@ -410,8 +410,6 @@ if ($action eq 'search') {
                  ($otherUserID, $userid,
                   get_field_id('bug_group'),
                   join(', ', @groupsRemovedFrom), join(', ', @groupsAddedTo)));
-        $dbh->do('UPDATE profiles SET refreshed_when=? WHERE userid = ?',
-                 undef, ('1900-01-01 00:00:00', $otherUserID));
     }
     # XXX: should create profiles_activity entries for blesser changes.
 

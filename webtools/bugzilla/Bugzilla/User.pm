@@ -707,9 +707,6 @@ sub derive_regexp_groups {
 
     my $sth;
 
-    # avoid races, we are only up to date as of the BEGINNING of this process
-    my $time = $dbh->selectrow_array("SELECT NOW()");
-
     # add derived records for any matching regexps
 
     $sth = $dbh->prepare("SELECT id, userregexp, user_group_map.group_id
@@ -735,9 +732,6 @@ sub derive_regexp_groups {
             $group_delete->execute($id, $group, GRANT_REGEXP) if $present;
         }
     }
-
-    $dbh->do(q{UPDATE profiles SET refreshed_when = ? WHERE userid = ?},
-             undef, ($time, $id));
 }
 
 sub product_responsibilities {
@@ -1363,8 +1357,8 @@ sub insert_new_user {
     # Insert the new user record into the database.
     $dbh->do("INSERT INTO profiles 
                           (login_name, realname, cryptpassword, disabledtext,
-                           refreshed_when, disable_mail) 
-                   VALUES (?, ?, ?, ?, '1901-01-01 00:00:00', ?)",
+                           disable_mail) 
+                   VALUES (?, ?, ?, ?, ?)",
              undef, 
              ($username, $realname, $cryptpassword, $disabledtext, 
               $disable_mail));

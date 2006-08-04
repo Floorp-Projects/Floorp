@@ -289,9 +289,8 @@ if ($action eq 'new') {
 
     # Add the new group
     $dbh->do('INSERT INTO groups
-              (name, description, isbuggroup,
-               userregexp, isactive, last_changed)
-              VALUES (?, ?, 1, ?, ?, NOW())',
+              (name, description, isbuggroup, userregexp, isactive)
+              VALUES (?, ?, 1, ?, ?)',
               undef, ($name, $desc, $regexp, $isactive));
 
     my $gid = $dbh->bz_last_key('groups', 'id');
@@ -566,9 +565,6 @@ if (($action eq 'remove_all_regexp') || ($action eq 'remove_all')) {
             push(@users, $user);
         }
     }
-
-    $dbh->do('UPDATE groups SET last_changed = NOW()
-              WHERE id = ?', undef, $gid);
     $dbh->bz_unlock_tables();
 
     $vars->{'users'}      = \@users;
@@ -710,12 +706,6 @@ sub doGroupChanges {
             }
 
         }
-    }
-
-    if ($chgs) {
-        # mark the changes
-        $dbh->do('UPDATE groups SET last_changed = NOW()
-                  WHERE id = ?', undef, $gid);
     }
     $dbh->bz_unlock_tables();
     return $gid, $chgs, $name, $regexp;

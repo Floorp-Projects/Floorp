@@ -240,9 +240,8 @@ if ($action eq 'new') {
         my $group_description = "Access to bugs in the " .
                                 $product->name . " product";
 
-        $dbh->do('INSERT INTO groups
-                  (name, description, isbuggroup, last_changed)
-                  VALUES (?, ?, ?, NOW())',
+        $dbh->do('INSERT INTO groups (name, description, isbuggroup)
+                  VALUES (?, ?, ?)',
                   undef, ($productgroup, $group_description, 1));
 
         my $gid = $dbh->bz_last_key('groups', 'id');

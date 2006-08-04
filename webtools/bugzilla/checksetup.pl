@@ -446,9 +446,8 @@ sub AddGroup {
     
     print "Adding group $name ...\n";
     my $sth = $dbh->prepare('INSERT INTO groups
-                          (name, description, userregexp, isbuggroup,
-                           last_changed)
-                          VALUES (?, ?, ?, ?, NOW())');
+                          (name, description, userregexp, isbuggroup)
+                          VALUES (?, ?, ?, ?)');
     $sth->execute($name, $desc, $userregexp, 0);
 
     my $last = $dbh->bz_last_key('groups', 'id');

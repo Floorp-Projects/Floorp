@@ -822,28 +822,6 @@ BugCheck("bugs INNER JOIN products ON bugs.product_id = products.id " .
          "Bugs that have enough votes to be confirmed but haven't been");
 
 ###########################################################################
-# Date checks
-###########################################################################
-
-sub DateCheck {
-    my $table = shift @_;
-    my $field = shift @_;
-    my $dbh = Bugzilla->dbh;
-
-    Status("Checking dates in $table.$field");
-    my $c = $dbh->selectrow_array(qq{SELECT COUNT($field)
-                                       FROM $table
-                                      WHERE $field > NOW()});
-    
-    if ($c) {
-        Alert("Found $c dates in future");
-    }
-}
-    
-DateCheck("groups", "last_changed");
-DateCheck("profiles", "refreshed_when");
-
-###########################################################################
 # Control Values
 ###########################################################################
 

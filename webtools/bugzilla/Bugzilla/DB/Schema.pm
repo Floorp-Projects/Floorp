@@ -618,7 +618,6 @@ use constant ABSTRACT_SCHEMA => {
                                DEFAULT => 'FALSE'},
             mybugslink     => {TYPE => 'BOOLEAN', NOTNULL => 1,
                                DEFAULT => 'TRUE'},
-            refreshed_when => {TYPE => 'DATETIME', NOTNULL => 1},
             extern_id      => {TYPE => 'varchar(64)'},
         ],
         INDEXES => [
@@ -738,7 +737,6 @@ use constant ABSTRACT_SCHEMA => {
             name         => {TYPE => 'varchar(255)', NOTNULL => 1},
             description  => {TYPE => 'TEXT', NOTNULL => 1},
             isbuggroup   => {TYPE => 'BOOLEAN', NOTNULL => 1},
-            last_changed => {TYPE => 'DATETIME', NOTNULL => 1},
             userregexp   => {TYPE => 'TINYTEXT', NOTNULL => 1,
                              DEFAULT => "''"},
             isactive     => {TYPE => 'BOOLEAN', NOTNULL => 1,

@@ -459,7 +459,11 @@ sub update_table_definitions {
                           {TYPE => 'INT2', NOTNULL => 1, DEFAULT => 0});
     $dbh->bz_alter_column('products', 'votestoconfirm',
                           {TYPE => 'INT2', NOTNULL => 1, DEFAULT => 0});
-    
+
+    # 2006-08-04 LpSolit@gmail.com - Bug 305941
+    $dbh->bz_drop_column('profiles', 'refreshed_when');
+    $dbh->bz_drop_column('groups', 'last_changed');
+
     ################################################################
     # New --TABLE-- changes should go *** A B O V E *** this point #
     ################################################################
@@ -1315,9 +1319,6 @@ sub _convert_groups_system_from_groupset {
 
     # The groups system needs to be converted if groupset exists
     if ($dbh->bz_column_info("profiles", "groupset")) {
-        $dbh->bz_add_column('groups', 'last_changed',
-            {TYPE => 'DATETIME', NOTNULL => 1}, '0000-00-00 00:00:00');
-
         # Some mysql versions will promote any unique key to primary key
         # so all unique keys are removed first and then added back in
         $dbh->bz_drop_index('groups', 'groups_bit_idx');
@@ -1331,8 +1332,6 @@ sub _convert_groups_system_from_groupset {
 
         $dbh->bz_add_index('groups', 'groups_name_idx',
                            {TYPE => 'UNIQUE', FIELDS => [qw(name)]});
-        $dbh->bz_add_column('profiles', 'refreshed_when',
-            {TYPE => 'DATETIME', NOTNULL => 1}, '0000-00-00 00:00:00');
 
         # Convert all existing groupset records to map entries before removing
         # groupset fields or removing "bit" from groups.
@@ -1979,9 +1978,6 @@ sub _add_user_group_map_grant_type {
         $dbh->bz_add_index('user_group_map', 'user_group_map_user_id_idx',
             {TYPE => 'UNIQUE',
              FIELDS => [qw(user_id group_id grant_type isbless)]});
-
-        # Make sure groups get rederived
-        $dbh->do("UPDATE groups SET last_changed = NOW() WHERE name = 'admin'");
     }
 }
 
@@ -2065,12 +2061,6 @@ sub _rename_votes_count_and_force_group_refresh {
     # Renaming the 'count' column in the votes table because Sybase doesn't
     # like it
     if ($dbh->bz_column_info('votes', 'count')) {
-        # 2003-04-24 - myk@mozilla.org/bbaetz@acm.org, bug 201018
-        # Force all cached groups to be updated at login, due to security bug
-        # Do this here, inside the next schema change block, so that it doesn't
-        # get invalidated on every checksetup run.
-        $dbh->do("UPDATE profiles SET refreshed_when='1900-01-01 00:00:00'");
-
         $dbh->bz_rename_column('votes', 'count', 'vote_count');
     }
 }

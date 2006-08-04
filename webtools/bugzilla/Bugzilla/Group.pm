@@ -37,7 +37,6 @@ use constant DB_COLUMNS => qw(
     groups.name
     groups.description
     groups.isbuggroup
-    groups.last_changed
     groups.userregexp
     groups.isactive
 );
@@ -99,7 +98,6 @@ sub id           { return $_[0]->{'id'};           }
 sub name         { return $_[0]->{'name'};         }
 sub description  { return $_[0]->{'description'};  }
 sub is_bug_group { return $_[0]->{'isbuggroup'};   }
-sub last_changed { return $_[0]->{'last_changed'}; }
 sub user_regexp  { return $_[0]->{'userregexp'};   }
 sub is_active    { return $_[0]->{'isactive'};     }
 
@@ -157,7 +155,6 @@ Bugzilla::Group - Bugzilla group class.
     my $id           = $group->id;
     my $name         = $group->name;
     my $description  = $group->description;
-    my $last_changed = $group->last_changed;
     my $user_reg_exp = $group->user_reg_exp;
     my $is_active    = $group->is_active;
 
