@@ -2133,8 +2133,8 @@ static nsresult
 HandleFrameSelection(nsFrameSelection*         aFrameSelection,
                      nsIFrame::ContentOffsets& aOffsets,
                      PRBool                    aHandleTableSel,
-                     PRUint32                  aContentOffsetForTableSel,
-                     PRUint32                  aTargetForTableSel,
+                     PRInt32                   aContentOffsetForTableSel,
+                     PRInt32                   aTargetForTableSel,
                      nsIContent*               aParentContentForTableSel,
                      nsGUIEvent*               aEvent,
                      nsEventStatus*            aEventStatus)
