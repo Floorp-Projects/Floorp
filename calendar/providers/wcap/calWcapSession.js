@@ -364,12 +364,14 @@ calWcapSession.prototype = {
                             if (!this_.m_bNoLoginsAnymore)
                                 this_.getSessionId_();
                             
-                            this_.getSupportedTimezones(true /* refresh */);
-                            this_.getServerTimeDiff(true /* refresh */);
-                            // preread calprops for subscribed calendars:
-                            var cals = this_.getSubscribedCalendars({});
-                            for each ( cal in cals ) {
-                                cal.getCalProps_(true /* async */);
+                            if (this_.m_sessionId != null) {
+                                this_.getSupportedTimezones(true /* refresh */);
+                                this_.getServerTimeDiff(true /* refresh */);
+                                // preread calprops for subscribed calendars:
+                                var cals = this_.getSubscribedCalendars({});
+                                for each ( cal in cals ) {
+                                    cal.getCalProps_(true /* async */);
+                                }
                             }
                         }
                     }
@@ -421,7 +423,7 @@ calWcapSession.prototype = {
                 else {
                     // user has specified a specific port, but no https:
                     // => leave it to her whether to connect...
-                    if (!confirmUnsecureLogin( loginUri )) {
+                    if (!confirmInsecureLogin( loginUri )) {
                         this.m_bNoLoginsAnymore = true;
                         this.log( "user rejected unsecure login." );
                         return null;
@@ -468,7 +470,7 @@ calWcapSession.prototype = {
                                     [loginUri.hostPort], 1 ) );
                         }
                         // http possible, ask for it:
-                        if (confirmUnsecureLogin( loginUri )) {
+                        if (confirmInsecureLogin( loginUri )) {
                             if (outPW.value != null) {
                                 // user/pw has been found previously,
                                 // but no login was possible,
@@ -760,14 +762,7 @@ calWcapSession.prototype = {
             this.m_sessionId = null;
         }
         this.m_userId = null;
-        // ask next time we log in:
         this.m_bNoLoginsAnymore = false;
-        if (this.uri != null) {
-            var this_ = this;
-            g_httpHosts = g_httpHosts.filter(
-                function(hostEntry) {
-                    return (hostEntry.m_host != this_.uri.hostPort); } );
-        }
     },
     
     getWcapErrorString:
@@ -1032,23 +1027,47 @@ calWcapSession.prototype = {
     }
 };
 
-var g_httpHosts = [];
-function confirmUnsecureLogin( uri )
+var g_confirmedHttpLogins = null;
+function confirmInsecureLogin( uri )
 {
-    var host = uri.hostPort;
-    for each ( var hostEntry in g_httpHosts ) {
-        if (hostEntry.m_host == host) {
-            return hostEntry.m_bConfirmed;
+    if (g_confirmedHttpLogins == null) {
+        g_confirmedHttpLogins = {};
+        var confirmedHttpLogins = getPref(
+            "calendar.wcap.confirmedHttpLogins", "");
+        var tuples = confirmedHttpLogins.split(',');
+        for each ( var tuple in tuples ) {
+            var ar = tuple.split(':');
+            g_confirmedHttpLogins[ar[0]] = ar[1];
         }
     }
+    
+    var host = uri.hostPort;
+    var encodedHost = encodeURIComponent(host);
+    var confirmedEntry = g_confirmedHttpLogins[encodedHost];
+    if (confirmedEntry)
+        return (confirmedEntry == "1" ? true : false);
+    
     var prompt = getWindowWatcher().getNewPrompter(null);
     var bundle = getWcapBundle();
-    var bConfirmed = prompt.confirm(
+    var dontAskAgain = { value: false };
+    var bConfirmed = prompt.confirmCheck(
         bundle.GetStringFromName("noHttpsConfirmation.label"),
-        bundle.formatStringFromName("noHttpsConfirmation.text", [host], 1) );
-    // save decision for all calendars:
-    g_httpHosts.push(
-        { m_host: host, m_bConfirmed: bConfirmed } );
+        bundle.formatStringFromName("noHttpsConfirmation.text", [host], 1),
+        bundle.GetStringFromName("noHttpsConfirmation.check"),
+        dontAskAgain );
+    
+    if (dontAskAgain.value) {
+        // save decision for all running calendars and all future confirmations:
+        var confirmedHttpLogins = getPref(
+            "calendar.wcap.confirmedHttpLogins", "");
+        if (confirmedHttpLogins.length > 0)
+            confirmedHttpLogins += ",";
+        confirmedEntry = (bConfirmed ? "1" : "0");
+        confirmedHttpLogins += (encodedHost + ":" + confirmedEntry);
+        setPref("calendar.wcap.confirmedHttpLogins", confirmedHttpLogins);
+        g_confirmedHttpLogins[encodedHost] = confirmedEntry;
+    }
+    
     return bConfirmed;
 }
 

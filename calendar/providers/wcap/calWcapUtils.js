@@ -213,10 +213,10 @@ function getDatetimeFromIcalProp( prop )
 
 function getPref(prefName, defaultValue)
 {
+    const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
+    var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                     .getService(nsIPrefBranch);
     try {
-        const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
-        var prefBranch =Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(nsIPrefBranch);
         switch (prefBranch.getPrefType(prefName)) {
         case nsIPrefBranch.PREF_BOOL:
             return prefBranch.getBoolPref(prefName);
@@ -232,6 +232,27 @@ function getPref(prefName, defaultValue)
         return defaultValue;
     }
 }
+
+function setPref(prefName, value)
+{
+    const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
+    var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                     .getService(nsIPrefBranch);
+    switch (typeof(value)) {
+    case "boolean":
+        prefBranch.setBoolPref(prefName, value);
+        break;
+    case "number":
+        prefBranch.setIntPref(prefName, value);
+        break;
+    case "string":
+        prefBranch.setCharPref(prefName, value);
+        break;
+    default:
+        throw new Error("unsupported pref value: " + typeof(value));
+    }
+}
+
 
 //
 // init code for globals, prefs:
@@ -327,6 +348,8 @@ catch (exc) {
 
 // some string resources:
 var g_privateItemTitle = getWcapBundle().GetStringFromName("privateItem.title");
+var g_confidentialItemTitle = getWcapBundle().GetStringFromName(
+    "confidentialItem.title");
 var g_busyItemTitle = getWcapBundle().GetStringFromName("busyItem.title");
-var g_busyItemUuidPrefix = ("uuid" + getTime().icalString);
+var g_busyPhantomItemUuidPrefix = ("PHANTOM_uuid" + getTime().icalString);
 

@@ -787,12 +787,17 @@ calWcapCalendar.prototype.parseItems = function(
                     excItems.push( item );
                 }
                 
-                if (item.title == null &&
-                    (item.privacy == "PRIVATE" ||
-                     item.privacy == "CONFIDENTIAL")) {
+                if (item.title == null) {
                     // assumed to look at a subscribed calendar,
                     // so patch title for private items:
-                    item.title = g_privateItemTitle;
+                    switch (item.privacy) {
+                    case "PRIVATE":
+                        item.title = g_privateItemTitle;
+                        break;
+                    case "CONFIDENTIAL":
+                        item.title = g_confidentialItemTitle;
+                        break;
+                    }
                 }
             }
         },
@@ -936,7 +941,7 @@ calWcapCalendar.prototype.getItems_resp = function(
                             var items = [];
                             for each ( var entry in entries ) {
                                 var item = new CalEvent();
-                                item.id = (g_busyItemUuidPrefix +
+                                item.id = (g_busyPhantomItemUuidPrefix +
                                            entry.dtRangeStart.icalString);
                                 item.calendar = this_.superCalendar;
                                 item.title = g_busyItemTitle;
