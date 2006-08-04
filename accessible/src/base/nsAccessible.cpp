@@ -2148,6 +2148,8 @@ already_AddRefed<nsIDOMNode> nsAccessible::GetInverseRelatedNode(nsIAtom *aRelat
 /* nsIAccessible getAccessibleRelated(); */
 NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated)
 {
+  // When adding support for relations, make sure to add them to
+  // appropriate places in nsAccessibleWrap implementations
   *aRelated = nsnull;
 
   // Relationships are defined on the same content node
