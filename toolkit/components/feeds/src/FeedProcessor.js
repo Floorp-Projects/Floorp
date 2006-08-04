@@ -55,6 +55,7 @@ var gUnescapeHTML = Cc[UNESCAPE_CONTRACTID].
                     getService(Ci.nsIScriptableUnescapeHTML);
 
 const XMLNS = "http://www.w3.org/XML/1998/namespace";
+const RSS090NS = "http://my.netscape.com/rdf/simple/0.9/";
 
 /***** Some general utils *****/
 function strToURI(link, base) {
@@ -261,12 +262,15 @@ function W3CToIETFDate(dateString) {
 
 // namespace map
 var gNamespaces = {
+  "http://backend.userland.com/rss":"",
+  "http://blogs.law.harvard.edu/tech/rss":"",
   "http://www.w3.org/2005/Atom":"atom",
   "http://purl.org/atom/ns#":"atom03",
   "http://purl.org/rss/1.0/modules/content/":"content",
   "http://purl.org/dc/elements/1.1/":"dc",
   "http://www.w3.org/1999/02/22-rdf-syntax-ns#":"rdf",
   "http://purl.org/rss/1.0/":"rss1",
+  "http://my.netscape.com/rdf/simple/0.9/":"rss1",
   "http://wellformedweb.org/CommentAPI/":"wfw",                              
   "http://purl.org/rss/1.0/modules/wiki/":"wiki", 
   "http://www.w3.org/XML/1998/namespace":"xml"
@@ -417,7 +421,7 @@ Entry.prototype = {
     id: [["guid", makePropGetter("guid")], "rdf:about",
          "atom03:id", "atom:id"],
     summary: ["description", "rss1:description", "dc:description",
-                 "atom03:summary", "atom:summary"],
+              "atom03:summary", "atom:summary"],
     content: ["content:encoded","atom03:content","atom:content"]
   },
   
@@ -739,8 +743,7 @@ ExtensionHandler.prototype = {
   },
   startElement: function EH_startElement(uri, localName, qName, attrs) {
     ++this._depth;
-    var prefix = gNamespaces[uri] ? gNamespaces[uri] + ":" : "";
-    var key =  prefix + localName;
+    var key =  this._processor._prefixForNS(uri) + localName;
     if (attrs.length > 0 && !arrayContains(gKnownTextElements, key)) 
       this._isSimple = false;
     if (this._depth == 1) {
@@ -818,7 +821,7 @@ function FeedProcessor() {
   this._buf =  "";
   this._feed = Cc[BAG_CONTRACTID].createInstance(Ci.nsIWritablePropertyBag2);
   this._handlerStack = [];
-  this._xmlBaseStack = [];
+  this._xmlBaseStack = []; // sparse array keyed to nesting depth
   this._depth = 0;
   this._state = "START";
   this._result = null;
@@ -1085,8 +1088,7 @@ FeedProcessor.prototype = {
     // allows Dublin Core "creator" elements to be consistently mapped
     // to "dc:creator", for easy field access by consumer code. This
     // strategy also happens to shorten up our state table.
-    var prefix = gNamespaces[uri] ? gNamespaces[uri] + ":" : "";
-    var key =  prefix + localName;
+    var key =  this._prefixForNS(uri) + localName;
 
     // Check to see if we need to hand this off to our XHTML handler.
     // The elements we're dealing with will look like this:
@@ -1139,6 +1141,13 @@ FeedProcessor.prototype = {
     } 
     else if (elementInfo.feedVersion) {
       this._state = "IN_" + elementInfo.fieldName.toUpperCase();
+
+      // Check for the older RSS2 variants
+      if (elementInfo.feedVersion == "rss2")
+        elementInfo.feedVersion = this._findRSSVersion(attributes);
+      else if (uri == RSS090NS)
+        elementInfo.feedVersion = "rss090";
+
       this._docVerified(elementInfo.feedVersion);
       this._stack.push([this._feed, this._state]);
       this._mapAttributes(this._feed, attributes);
@@ -1154,7 +1163,6 @@ FeedProcessor.prototype = {
   // the state we're looking for is prefixed with an underscore
   // to distinguish endElement events from startElement events.
   endElement:  function FP_endElement(uri, localName, qName) {
-    var prefix = gNamespaces[uri] ? gNamespaces[uri] + ":" : "";
     var elementInfo = this._handlerStack[this._depth];
 
     if (elementInfo && !elementInfo.isWrapper)
@@ -1300,17 +1308,40 @@ FeedProcessor.prototype = {
       container.replaceElementAt(element, container.length - 1, false);
   },
   
+  _prefixForNS: function FP_prefixForNS(uri) {
+    if (!uri)
+      return "";
+    var prefix = gNamespaces[uri];
+    if (prefix)
+      return prefix + ":";
+    if (uri.toLowerCase().indexOf("http://backend.userland.com") == 0)
+      return "";
+    else
+      return null;
+  },
 
   _mapAttributes: function FP__mapAttributes(bag, attributes) {
     // Cycle through the attributes, and set our properties using the
     // prefix:localNames we find in our namespace dictionary.
     for (var i = 0; i < attributes.length; ++i) {
-      prefix = gNamespaces[attributes.getURI(i)] ? 
-        gNamespaces[attributes.getURI(i)] + ":" : "";
-      key = prefix + attributes.getLocalName(i);
+      var key = this._prefixForNS(attributes.getURI(i)) + attributes.getLocalName(i);
       var val = attributes.getValue(i);
       bag.setPropertyAsAString(key, val);
     }
+  },
+
+  // Only for RSS2esque formats
+  _findRSSVersion: function FP__findRSSVersion(attributes) {
+    var versionAttr = trimString(attributes.getValueFromName("", "version"));
+    var versions = { "0.91":"rss091",
+                     "0.92":"rss092",
+                     "0.93":"rss093",
+                     "0.94":"rss094" }
+    if (versions[versionAttr])
+      return versions[versionAttr];
+    if (versionAttr.substr(0,2) != "2.")
+      return "rssUnknown";
+    return "rss2";
   },
 
   // unknown element values are returned here. See startElement above
@@ -1342,8 +1373,7 @@ FeedProcessor.prototype = {
     }
     
     // Make the buffer our new property
-    var prefix = gNamespaces[uri] ? gNamespaces[uri] + ":" : "";
-    var propName = prefix + localName;
+    var propName = this._prefixForNS(uri) + localName;
 
     // But, it could be something containing HTML. If so,
     // we need to know about that.
@@ -1401,12 +1431,12 @@ FeedProcessor.prototype = {
     var container = top[0];
 
     // Assign the property
-    var prefix = gNamespaces[uri] ? gNamespaces[uri] + ":" : "";
     var newProp =  newProp = Cc[TEXTCONSTRUCT_CONTRACTID].
                    createInstance(Ci.nsIFeedTextConstruct);
     newProp.text = chars;
     newProp.type = "xhtml";
-    container.setPropertyAsInterface(prefix + localName, newProp);
+    container.setPropertyAsInterface(this._prefixForNS(uri) + localName,
+                                     newProp);
     
     // XHTML will cause us to peek too far. The XHTML handler will
     // send us an end element to call. RFC4287-valid feeds allow a
