@@ -2011,9 +2011,10 @@ NS_IMETHODIMP nsVariant::SetAsDOMString(const nsAString & aValue)
 {
     if(!mWritable) return NS_ERROR_OBJECT_IS_IMMUTABLE;
 
-    // A DOMString maps to an AString internally, so we can re-use
-    // SetFromAString here.
-    return nsVariant::SetFromAString(&mData, aValue);
+    DATA_SETTER_PROLOGUE((&mData));
+    if(!(mData.u.mAStringValue = new nsString(aValue)))
+        return NS_ERROR_OUT_OF_MEMORY;
+    DATA_SETTER_EPILOGUE((&mData), VTYPE_DOMSTRING);
 }
 
 /* void setAsACString (in ACString aValue); */
