@@ -1,6 +1,9 @@
 <!ENTITY sanitizeDialog.title         "Clear Private Data">
 
 <!ENTITY sanitizeItems.label          "Clear the following items now:">
+
+<!-- XXX rearrange entities to match physical layout when l10n isn't an issue -->
+
 <!ENTITY itemHistory.label            "Browsing History">
 <!ENTITY itemHistory.accesskey        "B">
 <!ENTITY itemFormSearchHistory.label  "Saved Form and Search History">
@@ -15,6 +18,3 @@
 <!ENTITY itemDownloads.accesskey      "D">
 <!ENTITY itemSessions.label           "Authenticated Sessions">
 <!ENTITY itemSessions.accesskey       "S">
-
-<!ENTITY promptOnSanitize.label       "Ask me before clearing private data">
-<!ENTITY promptOnSanitize.accesskey   "k">

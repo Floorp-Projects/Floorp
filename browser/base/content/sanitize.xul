@@ -96,22 +96,6 @@
           }
         },
         
-        sanitizePasswords: function ()
-        {
-          var preference = document.getElementById("privacy.item.passwords");
-          var promptPref = document.getElementById("privacy.sanitize.promptOnSanitize");
-          if (preference.value)
-            promptPref.value = true;
-          promptPref.disabled = preference.value;
-          
-          return this.onReadGeneric();
-        },
-        
-        onReadSanitizePasswords: function ()
-        {
-          return this.sanitizePasswords();
-        },
-        
         onReadGeneric: function ()
         {
           var preferences = document.getElementById("sanitizePreferences");
@@ -142,40 +126,37 @@
       <preference id="privacy.item.cache"                 name="privacy.item.cache"                 type="bool" readonly="true"/>
       <preference id="privacy.item.sessions"              name="privacy.item.sessions"              type="bool" readonly="true"/>
     </preferences>
-    <preferences>
-      <preference id="privacy.sanitize.promptOnSanitize"  name="privacy.sanitize.promptOnSanitize"  type="bool" instantApply="true"/>
-    </preferences>
 
-    <groupbox orient="vertical" align="start">
-      <caption label="&sanitizeItems.label;"/>
-      
-      <checkbox label="&itemHistory.label;" accesskey="&itemHistory.accesskey;"
-                preference="privacy.item.history"
-                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-      <checkbox label="&itemFormSearchHistory.label;" accesskey="&itemFormSearchHistory.accesskey;"
-                preference="privacy.item.formdata"
-                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-      <checkbox label="&itemPasswords.label;" accesskey="&itemPasswords.accesskey;"
-                preference="privacy.item.passwords"
-                onsyncfrompreference="return gSanitizePromptDialog.onReadSanitizePasswords();"/>
-      <checkbox label="&itemDownloads.label;" accesskey="&itemDownloads.accesskey;"
-                preference="privacy.item.downloads"
-                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-      <checkbox label="&itemCookies.label;" accesskey="&itemCookies.accesskey;"
-                preference="privacy.item.cookies"
-                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-      <checkbox label="&itemCache.label;" accesskey="&itemCache.accesskey;"
-                preference="privacy.item.cache"
-                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-      <checkbox label="&itemSessions.label;" accesskey="&itemSessions.accesskey;"
-                preference="privacy.item.sessions"
-                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-    </groupbox>
-    
-    <groupbox orient="vertical" align="start">
-      <checkbox id="promptOnSanitize" label="&promptOnSanitize.label;"
-                accesskey="&promptOnSanitize.accesskey;"
-                preference="privacy.sanitize.promptOnSanitize"/>
-    </groupbox>
+    <description>&sanitizeItems.label;</description>
+
+    <checkbox label="&itemHistory.label;"
+              accesskey="&itemHistory.accesskey;"
+              preference="privacy.item.history"
+              onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+    <checkbox label="&itemDownloads.label;"
+              accesskey="&itemDownloads.accesskey;"
+              preference="privacy.item.downloads"
+              onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+    <checkbox label="&itemFormSearchHistory.label;"
+              accesskey="&itemFormSearchHistory.accesskey;"
+              preference="privacy.item.formdata"
+              onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+    <checkbox label="&itemCache.label;"
+              accesskey="&itemCache.accesskey;"
+              preference="privacy.item.cache"
+              onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+    <checkbox label="&itemCookies.label;"
+              accesskey="&itemCookies.accesskey;"
+              preference="privacy.item.cookies"
+              onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+    <checkbox label="&itemPasswords.label;"
+              accesskey="&itemPasswords.accesskey;"
+              preference="privacy.item.passwords"
+              onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+    <checkbox label="&itemSessions.label;"
+              accesskey="&itemSessions.accesskey;"
+              preference="privacy.item.sessions"
+              onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+
   </prefpane>
 </prefwindow>

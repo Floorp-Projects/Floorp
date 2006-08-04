@@ -1,8 +1,9 @@
 <!ENTITY sanitizeDialog.title         "Clear Private Data">
-<!ENTITY window.width                 "30em">
 
-<!ENTITY items.label                  "Private Data">
-<!ENTITY sanitizeItems.label          "Select the items to be cleared:">
+<!ENTITY clearDataSettings.label      "When I ask &brandShortName; to clear my private data, it should erase:">
+
+<!-- XXX rearrange entities to match physical layout when l10n isn't an issue -->
+
 <!ENTITY itemHistory.label            "Browsing History">
 <!ENTITY itemHistory.accesskey        "B">
 <!ENTITY itemFormData.label           "Saved Form Information">
@@ -17,10 +18,3 @@
 <!ENTITY itemDownloads.accesskey      "D">
 <!ENTITY itemSessions.label           "Authenticated Sessions">
 <!ENTITY itemSessions.accesskey       "S">
-
-<!ENTITY settings.label               "Settings">
-<!ENTITY sanitizeOnShutDown.label     "Clear private data when closing &brandShortName;">
-<!ENTITY sanitizeOnShutDown.accesskey "e">
-<!ENTITY promptOnSanitize.label       "Ask me before clearing private data">
-<!ENTITY promptOnSanitize.accesskey   "k">
-

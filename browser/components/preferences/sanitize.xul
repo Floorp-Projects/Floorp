@@ -50,45 +50,45 @@
 <prefwindow id="SanitizeDialog" type="child"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             dlgbuttons="accept,cancel,help"
-            title="&sanitizeDialog.title;"
-            style="width: &window.width; !important;">
+            title="&sanitizeDialog.title;"><!--
+            style="width: &window.width; !important;"-->
 
   <prefpane id="SanitizeDialogPane"
             helpTopic="prefs-clear-private-data" helpURI="chrome://browser/locale/help/help.rdf">
-    <script type="application/x-javascript" src="chrome://browser/content/preferences/sanitize.js"/>
 
     <preferences>
       <preference id="privacy.item.history"               name="privacy.item.history"               type="bool"/>
       <preference id="privacy.item.formdata"              name="privacy.item.formdata"              type="bool"/>
-      <preference id="privacy.item.passwords"             name="privacy.item.passwords"             type="bool" onchange="gSanitizeDialog.sanitizePasswords();"/>
+      <preference id="privacy.item.passwords"             name="privacy.item.passwords"             type="bool"/>
       <preference id="privacy.item.downloads"             name="privacy.item.downloads"             type="bool"/>
       <preference id="privacy.item.cookies"               name="privacy.item.cookies"               type="bool"/>
       <preference id="privacy.item.cache"                 name="privacy.item.cache"                 type="bool"/>
       <preference id="privacy.item.sessions"              name="privacy.item.sessions"              type="bool"/>
-
-      <preference id="privacy.sanitize.promptOnSanitize"   name="privacy.sanitize.promptOnSanitize"   type="bool"/>
     </preferences>
 
-    <groupbox id="sanitizeItems" orient="vertical" align="start">
-      <caption label="&items.label;"/>
-      
-      <description control="sanitizeItems">&sanitizeItems.label;</description>
-      <checkbox label="&itemHistory.label;" accesskey="&itemHistory.accesskey;" preference="privacy.item.history"/>
-      <checkbox label="&itemFormData.label;" accesskey="&itemFormData.accesskey;" preference="privacy.item.formdata"/>
-      <checkbox label="&itemPasswords.label;" accesskey="&itemPasswords.accesskey;" preference="privacy.item.passwords"
-                onsyncfrompreference="return gSanitizeDialog.onReadSanitizePasswords();"/>
-      <checkbox label="&itemDownloads.label;" accesskey="&itemDownloads.accesskey;" preference="privacy.item.downloads"/>
-      <checkbox label="&itemCookies.label;" accesskey="&itemCookies.accesskey;" preference="privacy.item.cookies"/>
-      <checkbox label="&itemCache.label;" accesskey="&itemCache.accesskey;" preference="privacy.item.cache"/>
-      <checkbox label="&itemSessions.label;"  accesskey="&itemSessions.accesskey;" preference="privacy.item.sessions"/>
-    </groupbox>
-    
-    <groupbox orient="vertical" align="start">
-      <caption label="&settings.label;"/>
-<!-- XXX remove groupbox? -->
-      <checkbox id="promptOnSanitize" label="&promptOnSanitize.label;"
-                accesskey="&promptOnSanitize.accesskey;"
-                preference="privacy.sanitize.promptOnSanitize"/>
-    </groupbox>
+    <description>&clearDataSettings.label;</description>
+
+    <checkbox label="&itemHistory.label;"
+              accesskey="&itemHistory.accesskey;"
+              preference="privacy.item.history"/>
+    <checkbox label="&itemDownloads.label;"
+              accesskey="&itemDownloads.accesskey;"
+              preference="privacy.item.downloads"/>
+    <checkbox label="&itemFormData.label;"
+              accesskey="&itemFormData.accesskey;"
+              preference="privacy.item.formdata"/>
+    <checkbox label="&itemCache.label;"
+              accesskey="&itemCache.accesskey;"
+              preference="privacy.item.cache"/>
+    <checkbox label="&itemCookies.label;"
+              accesskey="&itemCookies.accesskey;"
+              preference="privacy.item.cookies"/>
+    <checkbox label="&itemPasswords.label;"
+              accesskey="&itemPasswords.accesskey;"
+              preference="privacy.item.passwords"/>
+    <checkbox label="&itemSessions.label;"
+              accesskey="&itemSessions.accesskey;"
+              preference="privacy.item.sessions"/>
+
   </prefpane>
 </prefwindow>

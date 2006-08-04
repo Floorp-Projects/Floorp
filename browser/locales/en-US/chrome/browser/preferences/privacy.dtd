@@ -41,6 +41,9 @@
 <!ENTITY  alwaysClear.label              "Always clear my private data when I close &brandShortName;">
 <!ENTITY  alwaysClear.accesskey          "w">
 
+<!ENTITY  askBeforeClear.label           "Ask me before clearing private data">
+<!ENTITY  askBeforeClear.accesskey       "A">
+
 <!ENTITY  clearDataSettings.label        "Settings...">
 <!ENTITY  clearDataSettings.accesskey    "t">
 
