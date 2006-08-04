@@ -96,6 +96,7 @@ class nsLoadCollector : public nsIMetricsCollector,
   struct DocumentEntry {
     PRUint32 docID;
     PRUint32 windowID;
+    PRBool subframe;
   };
 
   ~nsLoadCollector();

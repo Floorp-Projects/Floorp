@@ -49,6 +49,7 @@
 #include "nsIServiceManager.h"
 #include "nsIWebProgress.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIChannel.h"
 #include "nsIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -358,13 +359,30 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
         return NS_ERROR_UNEXPECTED;
       }
 
-      // If this was a load of a chrome document, hash the URL of the document
-      // so it can be identified.
+      // Consider the load to be a subframe if the docshell is not chrome,
+      // and has a sameTypeParent.
+      PRBool subframe = PR_FALSE;
+      nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(docShell);
+      if (treeItem) {
+        PRInt32 itemType;
+        treeItem->GetItemType(&itemType);
+        if (itemType == nsIDocShellTreeItem::typeContent) {
+          nsCOMPtr<nsIDocShellTreeItem> parent;
+          treeItem->GetSameTypeParent(getter_AddRefs(parent));
+          if (parent) {
+            subframe = PR_TRUE;
+            rv = props->SetPropertyAsBool(NS_LITERAL_STRING("subframe"),
+                                          PR_TRUE);
+            NS_ENSURE_SUCCESS(rv, rv);
+          }
+        }
+      }
 
       nsMetricsService *ms = nsMetricsService::get();
       DocumentEntry docEntry;
       if (!mDocumentMap.Get(doc, &docEntry)) {
         docEntry.docID = mNextDocID++;
+        docEntry.subframe = subframe;
 
         if (!ms->WindowMap().Get(window, &docEntry.windowID)) {
           MS_LOG(("Window not in the window map"));
@@ -379,6 +397,9 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
       rv = props->SetPropertyAsUint32(NS_LITERAL_STRING("docid"),
                                       docEntry.docID);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      // If this was a load of a chrome document, hash the URL of the document
+      // so it can be identified.
 
       nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
       if (channel) {
@@ -542,6 +563,9 @@ nsLoadCollector::NodeWillBeDestroyed(const nsINode *node)
                                NS_LITERAL_CSTRING("destroy"));
   props->SetPropertyAsUint32(NS_LITERAL_STRING("docid"), entry.docID);
   props->SetPropertyAsUint32(NS_LITERAL_STRING("window"), entry.windowID);
+  if (entry.subframe) {
+    props->SetPropertyAsBool(NS_LITERAL_STRING("subframe"), PR_TRUE);
+  }
 
   MemUsage mu;
   if (GetMemUsage(&mu)) {
