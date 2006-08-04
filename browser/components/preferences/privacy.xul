@@ -82,7 +82,13 @@
       <preference id="network.cookie.blockFutureCookies"  name="network.cookie.blockFutureCookies"  type="bool"/>
 
       <!-- Clear Private Data -->
-      <preference id="privacy.sanitize.sanitizeOnShutdown" name="privacy.sanitize.sanitizeOnShutdown" type="bool"/>
+      <preference id="privacy.sanitize.sanitizeOnShutdown"
+                  name="privacy.sanitize.sanitizeOnShutdown"
+                  type="bool"/>
+      <preference id="privacy.sanitize.promptOnSanitize"
+                  name="privacy.sanitize.promptOnSanitize"
+                  type="bool"
+                  onchange="gPrivacyPane.updateClearNowButtonLabel();"/>
 
     </preferences>
     
@@ -168,7 +174,11 @@
                 accesskey="&clearDataSettings.accesskey;"
                 oncommand="gPrivacyPane.showClearPrivateDataSettings();"/>
       </hbox>
-      <hbox align="right">
+      <hbox id="askClearBox">
+        <checkbox id="askBeforeClear" flex="1"
+                  preference="privacy.sanitize.promptOnSanitize"
+                  label="&askBeforeClear.label;"
+                  accesskey="&askBeforeClear.accesskey;"/>
         <button id="clearDataNow"
                 label1="&clearDataNow.label;"
                 label2="&clearDataNow.label2;"

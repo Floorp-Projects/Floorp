@@ -239,14 +239,14 @@ var gPrivacyPane = {
 
   /**
    * Sets the label of the "Clear Now..." button according to the
-   * privacy.sanitize.promptOnSanitize pref.
+   * privacy.sanitize.promptOnSanitize preference.
    */
   updateClearNowButtonLabel: function ()
   {
-    var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
-                               .getService(Components.interfaces.nsIPrefBranch);
+    var pref = document.getElementById("privacy.sanitize.promptOnSanitize");
     var clearNowButton = document.getElementById("clearDataNow");
-    if (prefBranch.getBoolPref("privacy.sanitize.promptOnSanitize"))
+
+    if (pref.value)
       clearNowButton.label = clearNowButton.getAttribute("label1"); // "Clear Now..."
     else
       clearNowButton.label = clearNowButton.getAttribute("label2"); // "Clear Now"
