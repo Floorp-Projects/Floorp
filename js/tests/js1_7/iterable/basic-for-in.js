@@ -65,15 +65,15 @@ try
   var vals = [6, 5, 14];
 
   iterable.__iterator__ =
-    function(valsOnly)
+    function(keysOnly)
     {
       var gen =
         function()
         {
           for (var i = 0; i < keys.length; i++)
           {
-            if (valsOnly)
-              yield vals[i];
+            if (keysOnly)
+              yield keys[i];
             else
               yield [keys[i], vals[i]];
           }
@@ -81,6 +81,7 @@ try
       return gen();
     };
 
+  // for in sets keysOnly==true
   var index = 0;
   for (var k in iterable)
   {
