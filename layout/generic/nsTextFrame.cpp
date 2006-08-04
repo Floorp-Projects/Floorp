@@ -3930,7 +3930,7 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
                            aPresContext, aTextStyle, dx, dy, width);
     }
     else {
-      SelectionDetails *details;
+      SelectionDetails *details = nsnull;
       nsCOMPtr<nsIContent> content;
       PRInt32 offset;
       PRInt32 length;
