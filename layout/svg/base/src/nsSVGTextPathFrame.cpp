@@ -251,3 +251,29 @@ nsSVGTextPathFrame::AttributeChanged(PRInt32         aNameSpaceID,
 
   return NS_OK;
 }
+
+//----------------------------------------------------------------------
+// nsSVGContainerFrame methods:
+
+already_AddRefed<nsIDOMSVGMatrix>
+nsSVGTextPathFrame::GetCanvasTM()
+{
+  nsCOMPtr<nsIDOMSVGMatrix> transform = nsSVGTextPathFrameBase::GetCanvasTM();
+
+  nsIFrame *path = GetPathFrame();
+  if (path) {
+    nsSVGGraphicElement *element =
+      NS_STATIC_CAST(nsSVGGraphicElement*, path->GetContent());
+    nsCOMPtr<nsIDOMSVGMatrix> localTM = element->GetLocalTransformMatrix();
+
+    if (localTM) {
+      nsCOMPtr<nsIDOMSVGMatrix> tmp;
+      transform->Multiply(localTM, getter_AddRefs(tmp));
+      transform = tmp;
+    }
+  }
+
+  nsIDOMSVGMatrix* retval = nsnull;
+  transform.swap(retval);
+  return retval;
+}
