@@ -467,53 +467,6 @@ Bugzilla::Install::DB::update_fielddefs_definition();
 Bugzilla::Field::populate_field_definitions();
 
 ###########################################################################
-# Create initial test product if there are no products present.
-###########################################################################
-my $sth = $dbh->prepare("SELECT description FROM products");
-$sth->execute;
-unless ($sth->rows) {
-    print "Creating initial dummy product 'TestProduct' ...\n";
-    my $test_product_name = 'TestProduct';
-    my $test_product_desc = 
-        'This is a test product. This ought to be blown away and'
-        . ' replaced with real stuff in a finished installation of bugzilla.';
-    my $test_product_version = 'other';
-
-    $dbh->do(q{INSERT INTO products(name, description, milestoneurl, 
-                           disallownew, votesperuser, votestoconfirm)
-               VALUES (?, ?, '', ?, ?, ?)},
-               undef, $test_product_name, $test_product_desc, 0, 0, 0);
-
-    # We could probably just assume that this is "1", but better
-    # safe than sorry...
-    my $product_id = $dbh->bz_last_key('products', 'id');
-    
-    $dbh->do(q{INSERT INTO versions (value, product_id) 
-                VALUES (?, ?)}, 
-             undef, $test_product_version, $product_id);
-    # note: since admin user is not yet known, components gets a 0 for 
-    # initialowner and this is fixed during final checks.
-    $dbh->do("INSERT INTO components (name, product_id, description, " .
-                                     "initialowner) " .
-             "VALUES (" .
-             "'TestComponent', $product_id, " .
-             "'This is a test component in the test product database.  " .
-             "This ought to be blown away and replaced with real stuff in " .
-             "a finished installation of Bugzilla.', 0)");
-    $dbh->do(q{INSERT INTO milestones (product_id, value, sortkey) 
-               VALUES (?,?,?)},
-             undef, $product_id, '---', 0);
-}
-
-# Create a default classification if one does not exist
-my $class_count =
-    $dbh->selectrow_array("SELECT COUNT(*) FROM classifications");
-if (!$class_count) {
-    $dbh->do("INSERT INTO classifications (name,description) " .
-             "VALUES('Unclassified','Unassigned to any classifications')");
-}
-
-###########################################################################
 # Update the tables to the current definition --TABLE--
 ###########################################################################
 
@@ -576,7 +529,7 @@ use constant GRANT_DERIVED => 1;
 # Get rid of leftover DERIVED group permissions
 $dbh->do("DELETE FROM user_group_map WHERE grant_type = " . GRANT_DERIVED);
 # Evaluate regexp-based group memberships
-$sth = $dbh->prepare("SELECT profiles.userid, profiles.login_name,
+my $sth = $dbh->prepare("SELECT profiles.userid, profiles.login_name,
                          groups.id, groups.userregexp,
                          user_group_map.group_id
                          FROM (profiles
@@ -845,9 +798,15 @@ if ($sth->rows == 0) {
     print "\n$login is now set up as an administrator account.\n";
 }
 
+###########################################################################
+# Create default Product and Classification
+###########################################################################
 
-#
-# Final checks...
+Bugzilla::Install::create_default_product();
+
+###########################################################################
+# Final checks
+###########################################################################
 
 $sth = $dbh->prepare("SELECT user_id " .
                        "FROM groups INNER JOIN user_group_map " .
@@ -856,10 +815,6 @@ $sth = $dbh->prepare("SELECT user_id " .
 $sth->execute;
 my ($adminuid) = $sth->fetchrow_array;
 if (!$adminuid) { die "No administrator!" } # should never get here
-# when test product was created, admin was unknown
-$dbh->do("UPDATE components " .
-            "SET initialowner = $adminuid " .
-          "WHERE initialowner = 0");
 
 # Check if the default parameter for urlbase is still set, and if so, give
 # notification that they should go and visit editparams.cgi 

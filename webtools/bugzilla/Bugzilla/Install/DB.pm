@@ -449,6 +449,16 @@ sub update_table_definitions {
 
     _add_classifications_sortkey();
     _move_data_nomail_into_db();
+
+    # The products table lacked sensible defaults.
+    $dbh->bz_alter_column('products', 'milestoneurl',
+                          {TYPE => 'TINYTEXT', NOTNULL => 1, DEFAULT => "''"});
+    $dbh->bz_alter_column('products', 'disallownew',
+                          {TYPE => 'BOOLEAN', NOTNULL => 1,  DEFAULT => 0});
+    $dbh->bz_alter_column('products', 'votesperuser', 
+                          {TYPE => 'INT2', NOTNULL => 1, DEFAULT => 0});
+    $dbh->bz_alter_column('products', 'votestoconfirm',
+                          {TYPE => 'INT2', NOTNULL => 1, DEFAULT => 0});
     
     ################################################################
     # New --TABLE-- changes should go *** A B O V E *** this point #
@@ -1194,9 +1204,10 @@ sub _use_ids_for_products_and_components {
             $dbh->do("UPDATE attachstatusdefs SET product_id = $product_id " .
                      "WHERE product = " . $dbh->quote($product))
                 if $dbh->bz_table_info("attachstatusdefs");
-            }
+        }
 
-            print "Updating the database to use component IDs.\n";
+        print "Updating the database to use component IDs.\n";
+
         $dbh->bz_add_column("components", "id",
             {TYPE => 'SMALLSERIAL', NOTNULL => 1, PRIMARYKEY => 1});
         $dbh->bz_add_column("bugs", "component_id",
