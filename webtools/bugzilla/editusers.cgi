@@ -567,10 +567,8 @@ if ($action eq 'search') {
     Bugzilla->logout_user($otherUser);
 
     # Get the named query list so we can delete namedquery_group_map entries.
-    my $namedqueries_as_string = join(', ', $dbh->selectcol_arrayref(
-        'SELECT id FROM namedqueries WHERE userid = ?',
-        undef,
-        $otherUserID));
+    my $namedqueries_as_string = join(', ', @{$dbh->selectcol_arrayref(
+        'SELECT id FROM namedqueries WHERE userid = ?', undef, $otherUserID)});
 
     # Get the timestamp for LogActivityEntry.
     my $timestamp = $dbh->selectrow_array('SELECT NOW()');
