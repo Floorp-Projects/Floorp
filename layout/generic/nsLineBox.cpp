@@ -741,6 +741,8 @@ nsLineIterator::CheckLineOrder(PRInt32                  aLine,
 
   if (!line->mFirstChild) { // empty line
     *aIsReordered = PR_FALSE;
+    *aFirstVisual = nsnull;
+    *aLastVisual = nsnull;
     return NS_OK;
   }
   
