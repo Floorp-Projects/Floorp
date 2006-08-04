@@ -91,6 +91,14 @@ function onLoad()
   };
   window.addEventListener('warning', warning, true);
 
+  var calendar = function calendarHandler(event) {
+    var recurrencepage = document.getElementById("recurrence-page");
+    recurrencepage.onChangeCalendar(event.details);
+    var attendeespage = document.getElementById("attendees-page");
+    attendeespage.onChangeCalendar(event.details);
+  };
+  window.addEventListener('calendar', calendar, true);
+
   // figure out what the title of the dialog should be and set it
   updateTitle();
 

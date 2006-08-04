@@ -299,44 +299,11 @@
             var calendar = item.calendar;
             var recinfo = item.recurrenceInfo;
 
-            // set 'mIsReadOnly' if the calendar is read-only
-            if (calendar && calendar.readOnly)
-              this.mIsReadOnly = true;
-
-            // assume we're the organizer [in case that the calendar
-            // does not support the concept of identities].
-            this.mIsOrganizer = true;
-            
-            try {
-              this.mUserID = "";
-              this.mCalID = "";
-              this.mOrganizerID = "";
-            
-              var provider = item.calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
-              this.mCalID = provider.calId;
-              this.mUserID = provider.session.userId;
-              this.mOrganizerID = ((item.organizer == null || item.organizer.id == null)
-                              ? this.mCalID // sensible default
-                              : item.organizer.id);
-
-              // set 'mIsOrganizer' if the current calid originally scheduled this event.
-              this.mIsOrganizer = false;
-              if(this.mCalID == this.mOrganizerID)
-                this.mIsOrganizer = true;
-            }
-            catch(e) {}
-
+            this.onChangeCalendar(calendar);
 
             // set starting value for 'repeat until' rule.
             this.mStartDate = item.startDate || item.entryDate || item.dueDate;
             setElementValue("repeat-until-date", this.mStartDate);
-
-            // disable or enable controls based on a set or rules
-            // - whether this item is a stand-alone item or an occurrence
-            // - whether or not this item is read-only
-            // - whether or not the state of the item allows recurrence rules
-            //     - tasks without an entrydate are invalid
-            this.disableOrEnable(item);
 
             if(item.parentItem != item) {
               item = item.parentItem;
@@ -586,7 +553,54 @@
           ]]>
         </body>
       </method>
-      
+
+      <method name="onChangeCalendar">
+        <parameter name="calendar"/>
+        <body>
+          <![CDATA[
+            var args = window.arguments[0];
+            var item = args.calendarEvent;
+
+            // set 'mIsReadOnly' if the calendar is read-only
+            this.mIsReadOnly = false;
+            if (calendar && calendar.readOnly)
+              this.mIsReadOnly = true;
+
+            // assume we're the organizer [in case that the calendar
+            // does not support the concept of identities].
+            this.mIsOrganizer = true;
+            
+            try {
+              this.mUserID = "";
+              this.mCalID = "";
+              this.mOrganizerID = "";
+            
+              var provider = calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
+              this.mCalID = provider.calId;
+              this.mUserID = provider.session.userId;
+              this.mOrganizerID = ((item.organizer == null || item.organizer.id == null)
+                              ? this.mCalID // sensible default
+                              : item.organizer.id);
+
+              // set 'mIsOrganizer' if the current calid originally scheduled this event.
+              this.mIsOrganizer = false;
+              if(this.mCalID == this.mOrganizerID)
+                this.mIsOrganizer = true;
+            }
+            catch(e) {}
+
+            // disable or enable controls based on a set or rules
+            // - whether this item is a stand-alone item or an occurrence
+            // - whether or not this item is read-only
+            // - whether or not the state of the item allows recurrence rules
+            //     - tasks without an entrydate are invalid
+            this.disableOrEnable(item);
+            
+            this.updateRecurrenceControls();
+          ]]>
+        </body>
+      </method>
+
       <method name="disableRecurrenceFields">
         <parameter name="aAttributeName"/>
         <body>

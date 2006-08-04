@@ -1027,6 +1027,29 @@
         </body>
       </method>
 
+      <method name="onChangeCalendar">
+        <parameter name="calendar"/>
+        <body>
+          <![CDATA[
+            // query for the wcap interface, the appropriate functionality of this interface
+            // should be migrated to some other generic one instead of relying on the wcap provider.
+            this.mCalendar = null;
+            try {
+              this.mCalendar = calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
+            }
+            catch (ex) {}
+
+            if (this.mMaxFreeBusy != 0) {
+              for (var i=1; i<=this.mMaxFreeBusy; i++) {
+                var freebusy = this.getFreeBusyElement(i);
+                freebusy.setAttribute("dirty","true");
+              }
+              this.updateFreeBusy();
+            }
+          ]]>
+        </body>
+      </method>
+
       <!-- appends a new empty row -->
       <method name="appendNewRow">
         <parameter name="aParentNode"/>
@@ -1137,6 +1160,9 @@
                     var end = start.clone();
                     end.day += this.mRange;
 
+                    // update with 'no data available' until response will be received
+                    freebusy.onFreeBusy(null);
+
                     try {
                       if(this.mCalendar) {
                       
@@ -1144,10 +1170,7 @@
                         var str = ("\n### freebusy log " + start.toString() + " " + end.toString() +
                                    "### " + (msg ? msg : ""));
                         this.mConsoleService.logStringMessage(str);
-                        
-                        // update with 'no data available' until response will be received
-                        freebusy.onFreeBusy(null);
-                        
+                                                
                         this.mFreeBusy.push(i);
                         this.mFreeBusySequence = this.mFreeBusy.length-1;
                         

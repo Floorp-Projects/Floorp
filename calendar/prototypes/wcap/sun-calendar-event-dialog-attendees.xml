@@ -1476,41 +1476,7 @@
             var item = args.calendarEvent;
             var calendar = item.calendar;
 
-            // set 'mIsReadOnly' if the calendar is read-only
-            if (calendar && calendar.readOnly)
-              this.mIsReadOnly = true;
-
-            // assume we're the organizer [in case that the calendar
-            // does not support the concept of identities].
-            this.mIsOrganizer = true;
-            
-            try {
-              this.mUserID = "";
-              this.mCalID = "";
-              this.mOrganizerID = "";
-            
-              var provider = item.calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
-              this.mCalID = provider.calId;
-              this.mUserID = provider.session.userId;
-              this.mOrganizerID = ((item.organizer == null || item.organizer.id == null)
-                              ? this.mCalID // sensible default
-                              : item.organizer.id);
-
-              // set 'mIsOrganizer' if the current calid originally scheduled this event.
-              this.mIsOrganizer = false;
-              if(this.mCalID == this.mOrganizerID)
-                this.mIsOrganizer = true;
-
-              // display the organizer [try to get the common name from the calid]
-              var organizerRow = document.getAnonymousElementByAttribute(this, "anonid", "event-organizer-row");
-              organizerRow.removeAttribute("collapsed");
-              var organizer = document.getAnonymousElementByAttribute(this, "anonid", "event-organizer");
-              organizer.value = this.mOrganizerID;
-              var props = provider.getCalendarProperties("X-S1CS-CALPROPS-COMMON-NAME",{});
-              if(props.length > 0)
-                  organizer.value = props[0];
-            }
-            catch(e) {}
+            this.onChangeCalendar(calendar);
 
             // we need to enfore several layout constraints which can't be modelled
             // with plain xul and css, at least as far as i know.
@@ -1534,11 +1500,6 @@
                     break;
                 }
             }
-            
-            if(this.mIsReadOnly || !this.mIsOrganizer) {
-              document.getAnonymousElementByAttribute(this, "anonid", "next-slot").setAttribute('disabled', 'true');
-              document.getAnonymousElementByAttribute(this, "anonid", "previous-slot").setAttribute('disabled', 'true');
-            }            
 
             this.setTimeRange(item.startDate,item.endDate);
           ]]>
@@ -1554,6 +1515,62 @@
             for each(var attendee in attendees) {
                item.addAttendee(attendee);
             }
+          ]]>
+        </body>
+      </method>
+
+      <method name="onChangeCalendar">
+        <parameter name="calendar"/>
+        <body>
+          <![CDATA[
+            var args = window.arguments[0];
+            var item = args.calendarEvent;
+          
+            // set 'mIsReadOnly' if the calendar is read-only
+            if (calendar && calendar.readOnly)
+              this.mIsReadOnly = true;
+
+            // assume we're the organizer [in case that the calendar
+            // does not support the concept of identities].
+            this.mIsOrganizer = true;
+
+            var organizerRow = document.getAnonymousElementByAttribute(this, "anonid", "event-organizer-row");
+            organizerRow.setAttribute("collapsed","true");
+
+            try {
+              this.mUserID = "";
+              this.mCalID = "";
+              this.mOrganizerID = "";
+            
+              var provider = calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
+              this.mCalID = provider.calId;
+              this.mUserID = provider.session.userId;
+              this.mOrganizerID = ((item.organizer == null || item.organizer.id == null)
+                              ? this.mCalID // sensible default
+                              : item.organizer.id);
+
+              // set 'mIsOrganizer' if the current calid originally scheduled this event.
+              this.mIsOrganizer = false;
+              if(this.mCalID == this.mOrganizerID)
+                this.mIsOrganizer = true;
+
+              // display the organizer [try to get the common name from the calid]
+              organizerRow.removeAttribute("collapsed");
+              var organizer = document.getAnonymousElementByAttribute(this, "anonid", "event-organizer");
+              organizer.value = this.mOrganizerID;
+              var props = provider.getCalendarProperties("X-S1CS-CALPROPS-COMMON-NAME",{});
+              if(props.length > 0)
+                  organizer.value = props[0];
+            }
+            catch(e) {}
+            
+            if(this.mIsReadOnly || !this.mIsOrganizer) {
+              document.getAnonymousElementByAttribute(this, "anonid", "next-slot").setAttribute('disabled', 'true');
+              document.getAnonymousElementByAttribute(this, "anonid", "previous-slot").setAttribute('disabled', 'true');
+            }            
+            
+            var freebusy = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
+            freebusy.onChangeCalendar(calendar);
           ]]>
         </body>
       </method>

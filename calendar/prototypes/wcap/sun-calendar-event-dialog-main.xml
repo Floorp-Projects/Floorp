@@ -115,7 +115,7 @@
             <!-- Calendar -->
             <xul:row align="center">
               <xul:label value="&newevent.server.label;" disable-on-readonly="true"/>
-              <xul:menulist id="item-calendar" flex="1" disable-on-readonly="true"/>
+              <xul:menulist id="item-calendar" oncommand="onChangeCalendar();" flex="1" disable-on-readonly="true"/>
             </xul:row>
 
             <!-- Category -->
@@ -326,8 +326,13 @@
             var calendars = getCalendarManager().getCalendars({});
             for (i in calendars) {
                 var calendar = calendars[i];
-                var menuitem = calendarList.appendItem(calendar.name, i);
-                menuitem.calendar = calendar;
+                if (calendar == item.calendar || calendar == window.arguments[0].calendar) {
+                  var menuitem = calendarList.appendItem(calendar.name, i);
+                  menuitem.calendar = calendar;
+                } else if (calendar && !calendar.readOnly) {
+                  var menuitem = calendarList.appendItem(calendar.name, i);
+                  menuitem.calendar = calendar;
+                }
             }
 
             // item default calendar
@@ -504,46 +509,7 @@
             // update datetime pickers
             this.updateAllDay();
 
-            // set 'mIsReadOnly' if the calendar is read-only
-            if (calendar && calendar.readOnly)
-              this.mIsReadOnly = true;
-
-            // assume we're the organizer [in case that the calendar
-            // does not support the concept of identities].
-            this.mIsOrganizer = true;
-            
-            try {
-              this.mUserID = "";
-              this.mCalID = "";
-              this.mOrganizerID = "";
-            
-              var provider = item.calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
-              this.mCalID = provider.calId;
-              this.mUserID = provider.session.userId;
-              this.mOrganizerID = ((item.organizer == null || item.organizer.id == null)
-                              ? this.mCalID // sensible default
-                              : item.organizer.id);
-
-              // set 'mIsOrganizer' if the current calid originally scheduled this event.
-              this.mIsOrganizer = false;
-              if(this.mCalID == this.mOrganizerID)
-                this.mIsOrganizer = true;
-            }
-            catch(e) {}
-            
-            if (!this.mIsReadOnly)
-              this.mIsReadOnly = !this.mIsOrganizer;
-
-            // update the accept button
-            this.updateAccept();
-
-            if(this.mIsReadOnly) {
-              var list = document.getAnonymousNodes(this)[0];
-              var disableElements = list.getElementsByAttribute("disable-on-readonly", "true");
-              for (i=0;i<disableElements.length;i++) {
-                disableElements[i].setAttribute('disabled', 'true');
-              }
-            }
+            this.onChangeCalendar();
 
             document.getElementById("item-title").focus();
         ]]>
@@ -664,6 +630,66 @@
 
                 item.alarmOffset = duration;
             }
+          ]]>
+        </body>
+      </method>
+
+      <method name="onChangeCalendar">
+        <body>
+          <![CDATA[
+            var calendar = document.getElementById("item-calendar").selectedItem.calendar;
+
+            // set 'mIsReadOnly' if the calendar is read-only
+            this.mIsReadOnly = false;
+            if (calendar && calendar.readOnly)
+              this.mIsReadOnly = true;
+
+            // assume we're the organizer [in case that the calendar
+            // does not support the concept of identities].
+            this.mIsOrganizer = true;
+            
+            try {
+              this.mUserID = "";
+              this.mCalID = "";
+              this.mOrganizerID = "";
+            
+              var provider = calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
+              this.mCalID = provider.calId;
+              this.mUserID = provider.session.userId;
+              this.mOrganizerID = ((item.organizer == null || item.organizer.id == null)
+                              ? this.mCalID // sensible default
+                              : item.organizer.id);
+
+              // set 'mIsOrganizer' if the current calid originally scheduled this event.
+              this.mIsOrganizer = false;
+              if(this.mCalID == this.mOrganizerID)
+                this.mIsOrganizer = true;
+            }
+            catch(e) {}
+            
+            if (!this.mIsReadOnly)
+              this.mIsReadOnly = !this.mIsOrganizer;
+
+            // update the accept button
+            this.updateAccept();
+
+            var list = document.getAnonymousNodes(this)[0];
+            if(this.mIsReadOnly) {
+              var disableElements = list.getElementsByAttribute("disable-on-readonly", "true");
+              for (i=0;i<disableElements.length;i++) {
+                disableElements[i].setAttribute('disabled', 'true');
+              }
+            } else {
+              var enableElements = list.getElementsByAttribute("disable-on-readonly", "true");
+              for (i=0;i<enableElements.length;i++) {
+                enableElements[i].removeAttribute('disabled');
+              }
+            }
+
+            var event = document.createEvent('Events'); 
+            event.initEvent('calendar', true, false);
+            event.details = calendar;
+            this.dispatchEvent(event);
           ]]>
         </body>
       </method>
