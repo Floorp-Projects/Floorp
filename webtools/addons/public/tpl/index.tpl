@@ -51,9 +51,9 @@
 <div class="front-section-right">
     <h2><img src="{$config.webpath}/images/title-develop.gif" width="152" height="22" alt="Develop Your Own"></h2>
     <ul>
-    <li><a href="{$config.webpath}/developers/">Login to Submit</a></li>
-    <li><a href="http://developer.mozilla.org/en/docs/Extensions">Documentation</a></li>
-    <li><a href="http://developer.mozilla.org/en/docs/Building_an_Extension">Develop Your Own</a></li>
+    <li><a href="{$config.webpath}/developers/">Developer Control Panel</a></li>
+    <li><a href="http://developer.mozilla.org/en/docs/Extensions">Extension Documentation on MDC</a></li>
+    <li><a href="http://developer.mozilla.org/en/docs/Themes">Theme Documentation on MDC</a></li>
     </ul>
 </div>
 
