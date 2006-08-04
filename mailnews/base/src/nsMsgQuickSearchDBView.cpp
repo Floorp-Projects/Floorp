@@ -269,6 +269,9 @@ nsMsgQuickSearchDBView::OnSearchDone(nsresult status)
     m_sortValid = PR_FALSE;       //sort the results 
     Sort(m_sortType, m_sortOrder);
   }
+  if (m_viewFolder)
+    SetMRUTimeForFolder(m_viewFolder);
+
   m_hdrHits.Clear();
   return NS_OK;
 }

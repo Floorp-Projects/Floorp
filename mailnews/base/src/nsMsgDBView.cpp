@@ -1755,11 +1755,7 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
     m_folder = folder;
     m_viewFolder = folder;
 
-    PRUint32 seconds;
-    PRTime2Seconds(PR_Now(), &seconds);
-    nsCAutoString nowStr;
-    nowStr.AppendInt(seconds);
-    m_folder->SetStringProperty(MRU_TIME_PROPERTY, nowStr.get());
+    SetMRUTimeForFolder(m_folder);
 
     // determine if we are in a news folder or not.
     // if yes, we'll show lines instead of size, and special icons in the thread pane
@@ -2102,9 +2098,8 @@ NS_IMETHODIMP nsMsgDBView::DoCommand(nsMsgViewCommandTypeValue command)
 
 PRBool nsMsgDBView::ServerSupportsFilterAfterTheFact()
 {
-  NS_ASSERTION(m_folder, "no folder!");
-  if (!m_folder)
-    return PR_FALSE; // unexpected
+  if (!m_folder)  // cross folder virtual folders might not have a folder set.
+    return PR_FALSE; 
 
   // can't manually run news filters yet
   if (mIsNews)
@@ -5817,4 +5812,13 @@ nsresult nsMsgDBView::InitDisplayFormats()
   getDateFormatPref( dateFormatPrefs, "thisweek", m_dateFormatThisWeek );
   getDateFormatPref( dateFormatPrefs, "today", m_dateFormatToday );
   return rv;
+}
+
+void nsMsgDBView::SetMRUTimeForFolder(nsIMsgFolder *folder)
+{
+  PRUint32 seconds;
+  PRTime2Seconds(PR_Now(), &seconds);
+  nsCAutoString nowStr;
+  nowStr.AppendInt(seconds);
+  folder->SetStringProperty(MRU_TIME_PROPERTY, nowStr.get());
 }

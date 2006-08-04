@@ -229,6 +229,7 @@ protected:
   nsresult ReverseThreads();
   nsresult SaveSortInfo(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
   nsresult PersistFolderInfo(nsIDBFolderInfo **dbFolderInfo);
+  void     SetMRUTimeForFolder(nsIMsgFolder *folder);
 
   nsMsgKey		GetAt(nsMsgViewIndex index) ;
   nsMsgViewIndex	FindViewIndex(nsMsgKey  key) 
