@@ -566,16 +566,10 @@ __END__
 Bugzilla::Install::Filesystem - Fix up the filesystem during
   installation.
 
-=head1 SYNOPSIS
-
 =head1 DESCRIPTION
 
 This module is used primarily by L<checksetup.pl> to modify the 
 filesystem during installation, including creating the data/ directory.
-
-=over
-
-=back
 
 =head1 SUBROUTINES
 

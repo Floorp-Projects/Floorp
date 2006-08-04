@@ -382,6 +382,8 @@ sub get_legal_field_values {
     return $result_ref;
 }
 
+=over
+
 =item C<populate_field_definitions()>
 
 Description: Populates the fielddefs table during an installation
@@ -390,6 +392,8 @@ Description: Populates the fielddefs table during an installation
 Params:      none
 
 Returns:     nothing
+
+=back
 
 =cut
 
