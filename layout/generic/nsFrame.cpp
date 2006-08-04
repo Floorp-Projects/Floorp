@@ -4491,14 +4491,18 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
       PRBool isReordered;
       result = it->CheckLineOrder(thisLine, &isReordered, &firstFrame, &lastFrame);
       nsIFrame** framePtr = aPos->mDirection == eDirPrevious ? &firstFrame : &lastFrame;
-      nsBidiLevel embeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(*framePtr);
-      if (((embeddingLevel & 1) && lineIsRTL || !(embeddingLevel & 1) && !lineIsRTL) ==
-          (aPos->mDirection == eDirPrevious)) {
-        GetFirstLeaf(aPresContext, framePtr);
+      if (*framePtr) {
+        nsBidiLevel embeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(*framePtr);
+        if (((embeddingLevel & 1) && lineIsRTL || !(embeddingLevel & 1) && !lineIsRTL) ==
+            (aPos->mDirection == eDirPrevious)) {
+          GetFirstLeaf(aPresContext, framePtr);
+        } else {
+          GetLastLeaf(aPresContext, framePtr);
+        }
+        atLineEdge = *framePtr == traversedFrame;
       } else {
-        GetLastLeaf(aPresContext, framePtr);
+        atLineEdge = PR_TRUE;
       }
-      atLineEdge = *framePtr == traversedFrame;
     } else
 #endif
     {
