@@ -22,6 +22,9 @@
                                   gFindBar.setFindCloseTimeout();"
                      type="checkbox" disabled="true"
                      accesskey="&highlight.accesskey;"/>
+      <checkbox id="find-case-sensitive"
+                oncommand="gFindBar.toggleCaseSensitiveCheckbox(this.checked);"
+                label="&caseSensitiveCheckbox.label;" accesskey="&caseSensitiveCheckbox.accesskey;"/>
       <label id="match-case-status" class="find-fast"/>
       <image id="find-status-icon"/>
       <label id="find-status"/>
