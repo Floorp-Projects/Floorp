@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK ******
 
-// Dependencies: 
+// Dependencies:
 // gPrefBranch, gBrandBundle, gMessengerBundle should already be defined
 // gatherTextUnder from utilityOverlay.js
 
@@ -46,7 +46,7 @@ const kPhishingWithMismatchedHosts = 2;
 
 //////////////////////////////////////////////////////////////////////////////
 // isEmailScam --> examines the message currently loaded in the message pane
-//                 and returns true if we think that message is an e-mail scam. 
+//                 and returns true if we think that message is an e-mail scam.
 //                 Assumes the message has been completely loaded in the message pane (i.e. OnMsgParsed has fired)
 // aUrl: nsIURI object for the msg we want to examine...
 //////////////////////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ function isMsgEmailScam(aUrl)
   var isEmailScam = false; 
   if (!aUrl || !gPrefBranch.getBoolPref("mail.phishing.detection.enabled"))
     return isEmailScam;
- 
+
   // Ignore nntp and RSS messages
   var folder = aUrl.folder;
   if (folder.server.type == 'nntp' || folder.server.type == 'rss')
@@ -92,9 +92,9 @@ function isPhishingURL(aLinkNode, aSilentMode)
 
   var phishingType = kPhishingNotSuspicious;
   var href = aLinkNode.href;
-  if(!href) 
+  if (!href)
     return false;
-  
+
   var linkTextURL = {};
   var unobscuredHostName = {};
   var isPhishingURL = false;
@@ -110,20 +110,20 @@ function isPhishingURL(aLinkNode, aSilentMode)
     return false;
   }
   
-  // only check for phishing urls if the url is an http or https link. 
+  // only check for phishing urls if the url is an http or https link.
   // this prevents us from flagging imap and other internally handled urls
   if (hrefURL.schemeIs('http') || hrefURL.schemeIs('https'))
   {
     unobscuredHostName.value = hrefURL.host;
-  
+
     if (hostNameIsIPAddress(hrefURL.host, unobscuredHostName) && !isLocalIPAddress(unobscuredHostName))
-        phishingType = kPhishingWithIPAddress;
+      phishingType = kPhishingWithIPAddress;
     else if (misMatchedHostWithLinkText(aLinkNode, hrefURL, linkTextURL))
       phishingType = kPhishingWithMismatchedHosts;
 
     isPhishingURL = phishingType != kPhishingNotSuspicious;
 
-    if (!aSilentMode && isPhishingURL) // allow the user to over ride the decision
+    if (!aSilentMode && isPhishingURL) // allow the user to override the decision
       isPhishingURL = confirmSuspiciousURL(phishingType, unobscuredHostName.value);
   }
 
@@ -136,7 +136,7 @@ function isPhishingURL(aLinkNode, aSilentMode)
 
 function misMatchedHostWithLinkText(aLinkNode, aHrefURL, aLinkTextURL)
 {
-  var linkNodeText = gatherTextUnder(aLinkNode);    
+  var linkNodeText = gatherTextUnder(aLinkNode);
 
   // gatherTextUnder puts a space between each piece of text it gathers,
   // so strip the spaces out (see bug 326082 for details).
@@ -149,7 +149,7 @@ function misMatchedHostWithLinkText(aLinkNode, aHrefURL, aLinkTextURL)
      if (linkNodeText.search(/(^http:|^https:)/) != -1)
      {
        var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-       linkTextURL  = ioService.newURI(linkNodeText, null, null);
+       var linkTextURL  = ioService.newURI(linkNodeText, null, null);
        aLinkTextURL.value = linkTextURL;
        return aHrefURL.host != linkTextURL.host;
      }
@@ -172,7 +172,7 @@ function hostNameIsIPAddress(aHostName, aUnobscuredHostName)
   // break the IP address down into individual components.
   var ipComponents = aHostName.split(".");
 
-  // if we didn't find at least 4 parts to our IP address it either isn't a numerical IP 
+  // if we didn't find at least 4 parts to our IP address it either isn't a numerical IP
   // or it is encoded as a dword
   if (ipComponents.length < 4)
   {
@@ -181,7 +181,7 @@ function hostNameIsIPAddress(aHostName, aUnobscuredHostName)
     if (isNaN(binaryDword))
       return false;
 
-    // convert the dword into its component IP parts. 
+    // convert the dword into its component IP parts.
     ipComponents = new Array;
     ipComponents[0] = (aHostName >> 24) & 255;
     ipComponents[1] = (aHostName >> 16) & 255;
@@ -194,7 +194,7 @@ function hostNameIsIPAddress(aHostName, aUnobscuredHostName)
     {
       // by leaving the radix parameter blank, we can handle IP addresses
       // where one component is hex, another is octal, etc.
-      ipComponents[index] = parseInt(ipComponents[index]); 
+      ipComponents[index] = parseInt(ipComponents[index]);
     }
   }
 
@@ -219,10 +219,7 @@ function isIPv4HostName(aHostName)
 {
   var ipv4HostRegExp = new RegExp(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/);  // IPv4
   // treat 0.0.0.0 as an invalid IP address
-  if (ipv4HostRegExp.test(aHostName) && aHostName != '0.0.0.0')
-    return true;
-  else
-    return false;
+  return ipv4HostRegExp.test(aHostName) && aHostName != '0.0.0.0';
 }
 
 // returns true if the user confirms the URL is a scam
