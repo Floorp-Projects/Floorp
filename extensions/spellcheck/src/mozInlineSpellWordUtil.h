@@ -88,10 +88,6 @@ public:
 
   nsresult SetEnd(nsIDOMNode* aEndNode, PRInt32 aEndOffset);
 
-  // expands the current range to incorporate this new range
-  nsresult ExpandFor(nsIDOMNode* aBeginNode, PRInt32 aBeginOffset,
-                     nsIDOMNode* aEndNode, PRInt32 aEndOffset);
-
   // sets the current position, this should be inside the range. If we are in
   // the middle of a word, we'll move to its start.
   nsresult SetPosition(nsIDOMNode* aNode, PRInt32 aOffset);

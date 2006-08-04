@@ -241,17 +241,6 @@ mozInlineSpellWordUtil::SetEnd(nsIDOMNode* aEndNode, PRInt32 aEndOffset)
   return NS_OK;
 }
 
-
-// mozInlineSpellWordUtil::ExpandFor
-
-nsresult
-mozInlineSpellWordUtil::ExpandFor(nsIDOMNode* aBeginNode, PRInt32 aBeginOffset,
-                                  nsIDOMNode* aEndNode, PRInt32 aEndOffset)
-{
-  // InvalidateWords();
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 nsresult
 mozInlineSpellWordUtil::SetPosition(nsIDOMNode* aNode, PRInt32 aOffset)
 {
