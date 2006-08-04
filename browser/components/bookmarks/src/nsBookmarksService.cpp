@@ -3910,6 +3910,7 @@ nsBookmarksService::Change(nsIRDFResource* aSource,
             rv = mInner->GetTarget(aSource, kNC_LivemarkExpiration, PR_TRUE, getter_AddRefs(oldExpiration));
             if (rv == NS_OK)
                 mInner->Unassert(aSource, kNC_LivemarkExpiration, oldExpiration);
+            ClearBookmarksContainer(aSource);
             rv = UpdateLivemarkChildren(aSource);
             return rv;
         } else if (aProperty == kRDF_type) {
