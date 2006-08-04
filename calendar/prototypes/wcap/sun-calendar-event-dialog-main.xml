@@ -637,6 +637,7 @@
       <method name="onChangeCalendar">
         <body>
           <![CDATA[
+            var item = window.calendarItem;
             var calendar = document.getElementById("item-calendar").selectedItem.calendar;
 
             // set 'mIsReadOnly' if the calendar is read-only

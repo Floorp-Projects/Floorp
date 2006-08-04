@@ -209,7 +209,8 @@
               organizer.participationStatus = "ACCEPTED";
               try {
                 var provider = item.calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
-                var props = provider.getCalendarProperties("X-S1CS-CALPROPS-COMMON-NAME",{});
+                var organizerCalendar = provider.session.getCalendarByCalId(this.mOrganizerID);
+                var props = organizerCalendar.getCalendarProperties("X-S1CS-CALPROPS-COMMON-NAME",{});
                 if(props.length > 0)
                     organizer.commonName = props[0];
               }
@@ -217,13 +218,20 @@
               this.appendAttendee(organizer,listbox,template);
             }
 
+            var numRowsAdded = 0;
             var attendees = item.getAttendees({});
             if(attendees.length > 0) {
                 for each(var attendee in attendees) {
+                  if(this.mOrganizerID && this.mOrganizerID != "") {
+                    if (attendee.id == this.mOrganizerID) {
+                      continue;
+                    }
+                  }
                   this.appendAttendee(attendee,listbox,template);
+                  numRowsAdded++;
                 }
             }
-            else {
+            if(numRowsAdded == 0) {
               this.appendAttendee(null,listbox,template);
             }
 
@@ -1558,7 +1566,8 @@
               organizerRow.removeAttribute("collapsed");
               var organizer = document.getAnonymousElementByAttribute(this, "anonid", "event-organizer");
               organizer.value = this.mOrganizerID;
-              var props = provider.getCalendarProperties("X-S1CS-CALPROPS-COMMON-NAME",{});
+              var organizerCalendar = provider.session.getCalendarByCalId(this.mOrganizerID);
+              var props = organizerCalendar.getCalendarProperties("X-S1CS-CALPROPS-COMMON-NAME",{});
               if(props.length > 0)
                   organizer.value = props[0];
             }
