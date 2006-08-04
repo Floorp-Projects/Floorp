@@ -54,7 +54,9 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
+#include "nsXPCOMStrings.h"
 #include "prlog.h"
+#include "prprf.h"
 
 // NSPR_LOG_MODULES=UrlClassifierDbService:5
 #if defined(PR_LOGGING)
@@ -71,6 +73,8 @@ static nsUrlClassifierDBService* sUrlClassifierDBService;
 
 // Thread that we do the updates on.
 static nsIThread* gDbBackgroundThread = nsnull;
+
+static const char* kNEW_TABLE_SUFFIX = "_new";
 
 // -------------------------------------------------------------------------
 // Actual worker implemenatation
@@ -99,6 +103,20 @@ private:
 
   // Create a table in the db if it doesn't exist.
   nsresult MaybeCreateTable(const nsCString& aTableName);
+
+  // Drop a table if it exists.
+  nsresult MaybeDropTable(const nsCString& aTableName);
+
+  // If this is not an update request, swap the new table
+  // in for the old table.
+  nsresult MaybeSwapTables(const nsCString& aVersionLine);
+
+  // Parse a version string of the form [table-name #.###] or
+  // [table-name #.### update] and return the table name and
+  // whether or not it's an update.
+  nsresult ParseVersionString(const nsCSubstring& aLine,
+                              nsCString* aTableName,
+                              PRBool* aIsUpdate);
 
   // Handle a new table line of the form [table-name #.####].  We create the
   // table if it doesn't exist and set the aTableName, aUpdateStatement,
@@ -262,13 +280,14 @@ nsUrlClassifierDBServiceWorker::UpdateTables(const nsACString& updateString,
   nsCOMPtr<mozIStorageStatement> deleteStatement;
   while(cur < updateString.Length() &&
         (next = updateString.FindChar('\n', cur)) != kNotFound) {
-    count ++;
     const nsCSubstring &line = Substring(updateString, cur, next - cur);
     cur = next + 1; // prepare for next run
 
     // Skip blank lines
     if (line.Length() == 0)
       continue;
+
+    count++;
 
     if ('[' == line[0]) {
       rv = ProcessNewTable(line, &dbTableName,
@@ -279,9 +298,15 @@ nsUrlClassifierDBServiceWorker::UpdateTables(const nsACString& updateString,
         // If it's a new table, we may have completed a table.
         // Go ahead and post the completion to the UI thread and db.
         if (lastTableLine.Length() > 0) {
-          mConnection->CommitTransaction();
-          c->HandleEvent(lastTableLine);
-
+          // If it was a new table, we need to swap in the new table.
+          rv = MaybeSwapTables(lastTableLine);
+          if (NS_SUCCEEDED(rv)) {
+            mConnection->CommitTransaction();
+            c->HandleEvent(lastTableLine);
+          } else {
+            // failed to swap, rollback
+            mConnection->RollbackTransaction();
+          }
           mConnection->BeginTransaction();
         }
         lastTableLine.Assign(line);
@@ -294,12 +319,15 @@ nsUrlClassifierDBServiceWorker::UpdateTables(const nsACString& updateString,
   }
   LOG(("Num update lines: %d\n", count));
 
-  // Commit the transaction
-  rv = mConnection->CommitTransaction();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to commit");
-
-  if (lastTableLine.Length() > 0)
+  rv = MaybeSwapTables(lastTableLine);
+  if (NS_SUCCEEDED(rv)) {
+    mConnection->CommitTransaction();
     c->HandleEvent(lastTableLine);
+  } else {
+    // failed to swap, rollback
+    mConnection->RollbackTransaction();
+  }
+
   LOG(("Finishing table update\n"));
   return NS_OK;
 }
@@ -378,12 +406,27 @@ nsUrlClassifierDBServiceWorker::Finish(nsIUrlClassifierCallback *c)
   if (!mHasPendingUpdate)
     return NS_OK;
 
-  LOG(("Finish, committing transaction"));
-  mConnection->CommitTransaction();
-
+  nsresult rv = NS_OK;
   for (PRUint32 i = 0; i < mTableUpdateLines.Length(); ++i) {
-    c->HandleEvent(mTableUpdateLines[i]);
+    rv = MaybeSwapTables(mTableUpdateLines[i]);
+    if (NS_FAILED(rv)) {
+      break;
+    }
   }
+  
+  if (NS_SUCCEEDED(rv)) {
+    LOG(("Finish, committing transaction"));
+    mConnection->CommitTransaction();
+
+    // Send update information to main thread.
+    for (PRUint32 i = 0; i < mTableUpdateLines.Length(); ++i) {
+      c->HandleEvent(mTableUpdateLines[i]);
+    }
+  } else {
+    LOG(("Finish failed (swap table error?), rolling back transaction"));
+    mConnection->RollbackTransaction();
+  }
+
   mTableUpdateLines.Clear();
   mPendingStreamUpdate.Truncate();
   mHasPendingUpdate = PR_FALSE;
@@ -430,20 +473,24 @@ nsUrlClassifierDBServiceWorker::ProcessNewTable(
                                     mozIStorageStatement** aDeleteStatement)
 {
   // The line format is "[table-name #.####]" or "[table-name #.#### update]"
-  PRInt32 spacePos = aLine.FindChar(' ');
-  if (spacePos == kNotFound) {
-    // bad table header
-    return NS_ERROR_FAILURE;
-  }
+  // The additional "update" in the header means that this is a diff.
+  // Otherwise, we should blow away the old table and start afresh.
+  PRBool isUpdate = PR_FALSE;
 
-  const nsCSubstring &tableName = Substring(aLine, 1, spacePos - 1);
-  GetDbTableName(tableName, aDbTableName);
+  // If the version string is bad, give up.
+  nsresult rv = ParseVersionString(aLine, aDbTableName, &isUpdate);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // If it's not an update, we dump the values into a new table.  Once we're
+  // done with the table, we drop the original table and copy over the values
+  // from the old table into the new table.
+  if (!isUpdate)
+    aDbTableName->Append(kNEW_TABLE_SUFFIX);
 
   // Create the table
-  nsresult rv = MaybeCreateTable(*aDbTableName);
+  rv = MaybeCreateTable(*aDbTableName);
   if (NS_FAILED(rv))
     return rv;
-  LOG(("Create table ok.\n"));
 
   // insert statement
   nsCAutoString statement;
@@ -560,6 +607,93 @@ nsUrlClassifierDBServiceWorker::MaybeCreateTable(const nsCString& aTableName)
   NS_ENSURE_SUCCESS(rv, rv);
 
   return createStatement->Execute();
+}
+
+nsresult
+nsUrlClassifierDBServiceWorker::MaybeDropTable(const nsCString& aTableName)
+{
+  LOG(("MaybeDropTable %s\n", aTableName.get()));
+  nsCAutoString statement("DROP TABLE IF EXISTS ");
+  statement.Append(aTableName);
+  return mConnection->ExecuteSimpleSQL(statement);
+}
+
+nsresult
+nsUrlClassifierDBServiceWorker::MaybeSwapTables(const nsCString& aVersionLine)
+{
+  if (aVersionLine.Length() == 0)
+    return NS_ERROR_FAILURE;
+
+  // Check to see if this was a full table update or not.
+  nsCAutoString tableName;
+  PRBool isUpdate;
+  nsresult rv = ParseVersionString(aVersionLine, &tableName, &isUpdate);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Updates don't require any fancy logic.
+  if (isUpdate)
+    return NS_OK;
+
+  // Not an update, so we need to swap tables by dropping the original table
+  // and copying in the values from the new table.
+  rv = MaybeDropTable(tableName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString newTableName(tableName);
+  newTableName.Append(kNEW_TABLE_SUFFIX);
+
+  // Bring over new table
+  nsCAutoString sql("ALTER TABLE ");
+  sql.Append(newTableName);
+  sql.Append(" RENAME TO ");
+  sql.Append(tableName);
+  rv = mConnection->ExecuteSimpleSQL(sql);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  LOG(("tables swapped (%s)\n", tableName.get()));
+
+  return NS_OK;
+}
+
+// The line format is "[table-name #.####]" or "[table-name #.#### update]".
+nsresult
+nsUrlClassifierDBServiceWorker::ParseVersionString(const nsCSubstring& aLine,
+                                                   nsCString* aTableName,
+                                                   PRBool* aIsUpdate)
+{
+  // Blank lines are not valid
+  if (aLine.Length() == 0)
+    return NS_ERROR_FAILURE;
+
+  // Max size for an update line (so we don't buffer overflow when sscanf'ing).
+  const PRUint32 MAX_LENGTH = 2048;
+  if (aLine.Length() > MAX_LENGTH)
+    return NS_ERROR_FAILURE;
+
+  nsCAutoString lineData(aLine);
+  char tableNameBuf[MAX_LENGTH], endChar = ' ';
+  PRInt32 majorVersion, minorVersion, numConverted;
+  // Use trailing endChar to make sure the update token gets parsed.
+  numConverted = PR_sscanf(lineData.get(), "[%s %d.%d update%c", tableNameBuf,
+                           &majorVersion, &minorVersion, &endChar);
+  if (numConverted != 4 || endChar != ']') {
+    // Check to see if it's not an update request
+    numConverted = PR_sscanf(lineData.get(), "[%s %d.%d%c", tableNameBuf,
+                             &majorVersion, &minorVersion, &endChar);
+    if (numConverted != 4 || endChar != ']')
+      return NS_ERROR_FAILURE;
+    *aIsUpdate = PR_FALSE;
+  } else {
+    // First sscanf worked, so it's an update string.
+    *aIsUpdate = PR_TRUE;
+  }
+
+  LOG(("Is update? %d\n", *aIsUpdate));
+
+  // Table header looks valid, go ahead and copy over the table name into the
+  // return variable.
+  GetDbTableName(nsCAutoString(tableNameBuf), aTableName);
+  return NS_OK;
 }
 
 void
