@@ -440,12 +440,8 @@ var gFindBar = {
       findToolbar.hidden = false;
 
       var findField = document.getElementById("find-field");
-      findField.removeAttribute("status");
       this.setCaseSensitiveUI(findField.value);
-      var statusIcon = document.getElementById("find-status-icon");
-      statusIcon.removeAttribute("status");
-      var statusText = document.getElementById("find-status");
-      statusText.value = "";
+      this.updateStatus(Components.interfaces.nsITypeAheadFind.FIND_FOUND, false);
 
       return true;
     }
@@ -728,6 +724,8 @@ var gFindBar = {
             evt.charCode != CHAR_CODE_APOSTROPHE &&
             evt.charCode != CHAR_CODE_SLASH)
           this.fireKeypressEvent(findField.inputField, evt);
+        else
+          this.updateStatus(Components.interfaces.nsITypeAheadFind.FIND_FOUND, false);
         evt.preventDefault();
       }
       else {
@@ -738,6 +736,8 @@ var gFindBar = {
           if (evt.charCode != CHAR_CODE_APOSTROPHE &&
               evt.charCode != CHAR_CODE_SLASH)
             this.fireKeypressEvent(findField.inputField, evt);
+          else
+            this.updateStatus(Components.interfaces.nsITypeAheadFind.FIND_FOUND, false);
           evt.preventDefault();
         }
       }
