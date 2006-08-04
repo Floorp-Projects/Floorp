@@ -23,7 +23,6 @@ use strict;
 
 use Bugzilla::Bug qw(is_open_state);
 use Bugzilla::Constants;
-use Bugzilla::Field;
 use Bugzilla::Util;
 use Bugzilla::Series;
 
@@ -279,9 +278,6 @@ sub update_table_definitions {
     _setup_usebuggroups_backward_compatibility();
     _remove_user_series_map();
     _copy_old_charts_into_database();
-
-    Bugzilla::Field::create_or_update(
-        {name => "owner_idle_time", desc => "Time Since Assignee Touched"});
 
     _add_user_group_map_grant_type();
     _add_group_group_map_grant_type();
@@ -1376,9 +1372,7 @@ sub _convert_groups_system_from_groupset {
             }
         }
         # Replace old activity log groupset records with lists of names 
-        # of groups. Start by defining the bug_group field and getting its id.
-        Bugzilla::Field::create_or_update(
-            {name => "bug_group", desc => "Group"});
+        # of groups.
         $sth = $dbh->prepare("SELECT id FROM fielddefs
                                WHERE name = " . $dbh->quote('bug_group'));
         $sth->execute();
