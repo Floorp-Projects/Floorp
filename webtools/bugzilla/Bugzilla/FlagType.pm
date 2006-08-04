@@ -240,6 +240,7 @@ sub flag_count {
             Bugzilla->dbh->selectrow_array('SELECT COUNT(*) FROM flags
                                             WHERE type_id = ?', undef, $self->{'id'});
     }
+    return $self->{'flag_count'};
 }
 
 sub inclusions {
