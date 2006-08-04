@@ -827,16 +827,6 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
 {
     nsresult rv = NS_OK;
 
-    // force clip to be set (or reset) on our underlying surface (or reset);
-    // some platforms, like win32, use the clip of the source surface as well
-    // as the destination when blitting.  This means that this costs us a 
-    // cairo_save()/cairo_restore() here.
-    // XXX fix this in cairo eventually (in the win32 surface code specifically)
-    cairo_save(mCairo);
-    cairo_reset_clip(mCairo);
-    cairo_rectangle(mCairo, 0, 0, 0, 0);
-    cairo_fill(mCairo);
-
 #ifdef MOZ_CAIRO_GFX
 
     gfxContext* ctx = (gfxContext*) rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
@@ -873,10 +863,8 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
     void *ptr = nsnull;
 #ifdef MOZILLA_1_8_BRANCH
     rv = rc->RetrieveCurrentNativeGraphicData(&ptr);
-    if (NS_FAILED(rv) || !ptr) {
-        cairo_restore(mCairo);
+    if (NS_FAILED(rv) || !ptr)
         return NS_ERROR_FAILURE;
-    }
 #else
     /* OS/2 also uses NATIVE_WINDOWS_DC to get a native OS/2 PS */
     ptr = rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
@@ -897,16 +885,12 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
     GdkDrawable *gdkdraw = nsnull;
 #ifdef MOZILLA_1_8_BRANCH
     rv = rc->RetrieveCurrentNativeGraphicData((void**) &gdkdraw);
-    if (NS_FAILED(rv) || !gdkdraw) {
-        cairo_restore(mCairo);
+    if (NS_FAILED(rv) || !gdkdraw)
         return NS_ERROR_FAILURE;
-    }
 #else
     gdkdraw = (GdkDrawable*) rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_GDK_DRAWABLE);
-    if (!gdkdraw) {
-        cairo_restore(mCairo);
+    if (!gdkdraw)
         return NS_ERROR_FAILURE;
-    }
 #endif
 
     gint w, h;
@@ -940,7 +924,6 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
         tx->TransformNoXLate(&sx, &sy);
     }
 
-    fprintf (stderr, "x0 %f y0 %f sx %f sy %f\n", x0, y0, sx, sy); fflush(stderr);
     cairo_translate (dest_cr, NSToIntRound(x0), NSToIntRound(y0));
     if (sx != 1.0 || sy != 1.0)
         cairo_scale (dest_cr, sx, sy);
@@ -961,10 +944,8 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
     // OSX path
     nsIDrawingSurface *ds = nsnull;
     rc->GetDrawingSurface(&ds);
-    if (!ds) {
-        cairo_restore(mCairo);
+    if (!ds)
         return NS_ERROR_FAILURE;
-    }
 
     nsDrawingSurfaceMac *macds = NS_STATIC_CAST(nsDrawingSurfaceMac*, ds);
     CGContextRef cgc = macds->StartQuartzDrawing();
@@ -1009,9 +990,6 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
     rv = NS_OK;
 #endif
 #endif
-
-    // from the cairo_save that we used to save the clip
-    cairo_restore(mCairo);
 
     return rv;
 }
@@ -1846,11 +1824,25 @@ nsCanvasRenderingContext2D::DrawImage()
 
     cairo_save(mCairo);
     cairo_translate(mCairo, dx, dy);
+    cairo_new_path(mCairo);
     cairo_rectangle(mCairo, 0, 0, dw, dh);
     cairo_set_source(mCairo, pat);
     cairo_clip(mCairo);
     cairo_paint_with_alpha(mCairo, CurrentState().globalAlpha);
     cairo_restore(mCairo);
+
+#if 1
+    // XXX cairo bug workaround; force a clip update on mCairo.
+    // Otherwise, a pixman clip gets left around somewhere, and pixman
+    // (Render) does source clipping as well -- so we end up
+    // compositing with an incorrect clip.  This only seems to affect
+    // fallback cases, which happen when we have CSS scaling going on.
+    // This will blow away the current path, but we already blew it
+    // away in this function earlier.
+    cairo_new_path(mCairo);
+    cairo_rectangle(mCairo, 0, 0, 0, 0);
+    cairo_fill(mCairo);
+#endif
 
     cairo_pattern_destroy(pat);
 
