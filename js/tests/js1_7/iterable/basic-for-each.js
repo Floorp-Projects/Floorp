@@ -50,6 +50,18 @@ var failed = false;
 
 var iterable = { persistedProp: 17 };
 
+function Array_equals(a, b)
+{
+  if (!(a instanceof Array) || !(b instanceof Array))
+    throw new Error("Arguments not both of type Array");
+  if (a.length != b.length)
+    return false;
+  for (var i = 0, sz = a.length; i < sz; i++)
+    if (a[i] !== b[i])
+      return false;
+  return true;
+}
+
 try
 {
   // nothing unusual so far -- verify basic properties
@@ -65,15 +77,15 @@ try
   var vals = [6, 5, 14];
 
   iterable.__iterator__ =
-    function(valsOnly)
+    function(keysOnly)
     {
       var gen =
         function()
         {
           for (var i = 0; i < keys.length; i++)
           {
-            if (valsOnly)
-              yield vals[i];
+            if (keysOnly)
+              yield keys[i];
             else
               yield [keys[i], vals[i]];
           }
@@ -81,11 +93,12 @@ try
       return gen();
     };
 
+  // for each sets keysOnly==false
   var index = 0;
   for each (var v in iterable)
   {
-    if (v != vals[index])
-      throw "for-each iteration failed on vals[\"" + index + "\"]";
+    if (!Array_equals(v, [keys[index], vals[index]]))
+      throw "for-each iteration failed on index=" + index + "!";
     index++;
   }
   if (index != keys.length)
