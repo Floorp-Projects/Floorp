@@ -2166,9 +2166,7 @@ ToXMLList(JSContext *cx, jsval v)
         list = (JSXML *) JS_GetPrivate(cx, listobj);
         for (i = 0; i < length; i++) {
             kid = OrphanXMLChild(cx, xml, i);
-            if (!kid)
-                return NULL;
-            if (!Append(cx, list, kid)) {
+            if (!kid || !Append(cx, list, kid)) {
                 listobj = NULL;
                 break;
             }
