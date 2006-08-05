@@ -46,6 +46,8 @@ var BookmarksMenu = {
   createContextMenu: function (aEvent)
   {
     var target = document.popupNode;
+    if (!this.isBTBookmark(target.id))
+      return false;
     target.focus() // buttons in the pt have -moz-user-focus: ignore -->
     this._selection   = this.getBTSelection(target);
     this._orientation = this.getBTOrientation(aEvent, target);
@@ -53,6 +55,7 @@ var BookmarksMenu = {
     BookmarksCommand.createContextMenu(aEvent, this._selection);
     this.onCommandUpdate();
     aEvent.target.addEventListener("mousemove", BookmarksMenuController.onMouseMove, false);
+    return true;
   },
 
   /////////////////////////////////////////////////////////////////////////
