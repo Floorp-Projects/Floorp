@@ -37,7 +37,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.52 2004/10/22 22:39:47 julien.pierre.bugs%sun.com Exp $
+ * $Id: cmsutil.c,v 1.53 2006/08/05 01:19:23 julien.pierre.bugs%sun.com Exp $
  */
 
 #include "nspr.h"
@@ -206,6 +206,7 @@ static NSSCMSMessage *
 decode(FILE *out, SECItem *input, const struct decodeOptionsStr *decodeOptions)
 {
     NSSCMSDecoderContext *dcx;
+    SECStatus rv;
     NSSCMSMessage *cmsg;
     int nlevels, i;
     SECItem sitem = { 0, 0, 0 };
@@ -216,7 +217,16 @@ decode(FILE *out, SECItem *input, const struct decodeOptionsStr *decodeOptions)
                                pwcb, pwcb_arg,     /* password callback    */
 			       decodeOptions->dkcb, /* decrypt key callback */
                                decodeOptions->bulkkey);
-    (void)NSS_CMSDecoder_Update(dcx, (char *)input->data, input->len);
+    if (dcx == NULL) {
+	fprintf(stderr, "%s: failed to set up message decoder.\n", progName);
+	return NULL;
+    }
+    rv = NSS_CMSDecoder_Update(dcx, (char *)input->data, input->len);
+    if (rv != SECSuccess) {
+	fprintf(stderr, "%s: failed to decode message.\n", progName);
+	NSS_CMSDecoder_Cancel(dcx);
+	return NULL;
+    }
     cmsg = NSS_CMSDecoder_Finish(dcx);
     if (cmsg == NULL) {
 	fprintf(stderr, "%s: failed to decode message.\n", progName);
