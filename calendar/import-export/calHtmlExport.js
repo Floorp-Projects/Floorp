@@ -169,11 +169,17 @@ function html_exportToStream(aStream, aCount, aItems) {
                     <div class='value'/>
                 </div>;
 
-            if (usePre)
+            if (usePre) {
                 descnode.div[1] = <pre class='description'>{desc}</pre>;
-            else {
-                descnode.div[1] = desc.replace(/\n/g, "<BR>\n");
-                descnode.div[1].@class += ' description';
+            } else {
+                var lines = desc.split('\n');
+                for (var i in lines) {
+                    descnode.div[1].appendChild(lines[i]);
+                    // Add a new line, except after the last line
+                    if (i != (lines.length-1)) {
+                        descnode.div[1].appendChild(<br/>);
+                    }
+                }
             }
             ev.appendChild(descnode);
         }
