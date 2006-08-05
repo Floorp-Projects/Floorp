@@ -113,7 +113,7 @@
         <hbox align="center">
           <label value="&calendar.print.from.label;"/>
           <datepicker id="start-date-picker" onchange="onDatePick();"/>
-          <label value="&calendar.print.from.label;"/>
+          <label value="&calendar.print.to.label;"/>
           <datepicker id="end-date-picker" onchange="onDatePick();"/>
         </hbox>
       </radiogroup>
