@@ -495,6 +495,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
     targetFile->GetLeafName(displayName);
   }
   internalDownload->SetDisplayName(displayName.get());
+  internalDownload->SetTempFile(aTempFile);
  
   nsCOMPtr<nsIRDFLiteral> nameLiteral;
   gRDFService->GetLiteral(displayName.get(), getter_AddRefs(nameLiteral));
@@ -947,6 +948,16 @@ nsDownload::Cancel()
     return rv;
   mDownloadManager->DownloadEnded(path, nsnull);
   
+  // dump the temp file.  This should really be done when the transfer
+  // is cancelled, but there's other cancelallation causes that shouldn't
+  // remove this, we need to improve those bits
+  if (mTempFile) {
+    PRBool exists;
+    mTempFile->Exists(&exists);
+    if (exists)
+      mTempFile->Remove(PR_FALSE);
+  }
+
   // if there's a progress dialog open for the item,
   // we have to notify it that we're cancelling
   nsCOMPtr<nsIObserver> observer = do_QueryInterface(GetDialog());
@@ -1431,5 +1442,12 @@ NS_IMETHODIMP
 nsDownload::GetSpeed(double* aSpeed)
 {
   *aSpeed = mSpeed;
+  return NS_OK;
+}
+
+nsresult
+nsDownload::SetTempFile(nsILocalFile* aTempFile)
+{
+  mTempFile = aTempFile;
   return NS_OK;
 }
