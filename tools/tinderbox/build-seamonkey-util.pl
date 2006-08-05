@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.331 $ ';
+$::UtilsVersion = '$Revision: 1.332 $ ';
 
 package TinderUtils;
 
@@ -1144,7 +1144,7 @@ sub BuildIt {
               }
             }
           } elsif ($build_status ne 'busted' and $Settings::TestOnlyTinderbox) {
-            my $graph_time = get_build_time_from_server($start_time);
+            $graph_time = get_build_time_from_server($start_time);
             my $prebuilt = "$build_dir/$Settings::DownloadBuildDir";
             my $status = 0;
             if ( -f $prebuilt) {
@@ -1734,7 +1734,7 @@ sub print_log_test_result {
   print_log "\nTinderboxPrint:";
   if ($Settings::TestsPhoneHome) {
 
-    my $time = POSIX::strftime("%Y:%m:%d:%H:%M:%S", localtime($graph_time));
+    my $time = POSIX::strftime("%Y:%m:%d:%H:%M:%S", localtime);
     print_log "<a title=\"$test_title\" href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $test_name . "&units=$units&tbox=" . get_graph_tbox_name() . "&autoscale=1&days=7&avg=1&showpoint=$time,$num_result\">";
   } else {
     print_log "<abbr title=\"$test_title\">";
@@ -1792,6 +1792,11 @@ sub send_results_to_server {
     my $data_plus_co_time = "MOZ_CO_DATE=$co_time_str\t$raw_data";
     my $tbox = get_graph_tbox_name();
 
+    my $time = POSIX::strftime("%Y:%m:%d:%H:%M:%S", localtime);
+    if ($Settings::TestOnlyTinderbox) {
+      $time = POSIX::strftime("%Y:%m:%d:%H:%M:%S", localtime($graph_time));
+      $data_plus_co_time = "MOZ_CO_DATE=$time\t$raw_data";
+    }
     my $tmpurl = "http://$Settings::results_server/graph/collect.cgi";
     $tmpurl .= "?value=$value&data=$data_plus_co_time&testname=$testname&tbox=$tbox";
 
