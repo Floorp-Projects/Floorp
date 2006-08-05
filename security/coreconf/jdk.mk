@@ -184,6 +184,31 @@ ifeq ($(OS_ARCH), Linux)
 	JDK_JIT_OPT =
 endif
 
+# set [Mac OS X] platforms
+ifeq ($(OS_ARCH), Darwin)
+	JAVA_CLASSES = $(JAVA_HOME)/../Classes/classes.jar
+
+	ifeq ($(JRE_HOME),)
+		JRE_HOME = $(JAVA_HOME)
+		JRE_CLASSES = $(JAVA_CLASSES)
+	else
+		ifeq ($(JRE_CLASSES),)
+			JRE_CLASSES = $(JRE_HOME)/../Classes/classes.jar
+		endif
+	endif
+
+	PATH_SEPARATOR = :
+
+	# (2) specify "header" information
+	JAVA_ARCH = darwin
+
+	INCLUDES += -I$(JAVA_HOME)/include
+	INCLUDES += -I$(JAVA_HOME)/include/$(JAVA_ARCH)
+
+	# no JIT option available on this platform
+	JDK_JIT_OPT =
+endif
+
 # set [IBM AIX] platforms
 ifeq ($(OS_ARCH), AIX)
 	JAVA_CLASSES = $(JAVA_HOME)/jre/lib/rt.jar
