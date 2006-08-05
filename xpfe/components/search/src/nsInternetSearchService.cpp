@@ -4701,22 +4701,24 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &engineNa
       rv = defaultBranch->GetComplexValue("browser.search.defaultenginename", 
                                           NS_GET_IID(nsIPrefLocalizedString),
                                           getter_AddRefs(defaultEngineName));
-      defaultEngineName->GetData(getter_Copies(defaultEngineNameStr));
+      if (NS_SUCCEEDED(rv)) {
+        defaultEngineName->GetData(getter_Copies(defaultEngineNameStr));
 
-      nsXPIDLString selectedEngineNameStr;
-      nsCOMPtr<nsIPrefLocalizedString> selectedEngineName;
-      rv = rootBranch->GetComplexValue("browser.search.selectedEngine", 
-                                       NS_GET_IID(nsIPrefLocalizedString),
-                                       getter_AddRefs(selectedEngineName));
-      if (selectedEngineName) {
-        selectedEngineName->GetData(getter_Copies(selectedEngineNameStr));
-        engineIsNotDefault = !defaultEngineNameStr.Equals(selectedEngineNameStr);
-      }
-      else {
-        engineIsNotDefault = PR_FALSE; // The selected engine *is* the default
-                                       // since the user has not changed the
-                                       // selected item in the list causing
-                                       // the selectedEngine pref to be set.
+        nsXPIDLString selectedEngineNameStr;
+        nsCOMPtr<nsIPrefLocalizedString> selectedEngineName;
+        rv = rootBranch->GetComplexValue("browser.search.selectedEngine", 
+                                         NS_GET_IID(nsIPrefLocalizedString),
+                                         getter_AddRefs(selectedEngineName));
+        if (NS_SUCCEEDED(rv) && selectedEngineName) {
+          selectedEngineName->GetData(getter_Copies(selectedEngineNameStr));
+          engineIsNotDefault = !defaultEngineNameStr.Equals(selectedEngineNameStr);
+        }
+        else {
+          engineIsNotDefault = PR_FALSE; // The selected engine *is* the default
+                                         // since the user has not changed the
+                                         // selected item in the list causing
+                                         // the selectedEngine pref to be set.
+        }
       }
     }
 
