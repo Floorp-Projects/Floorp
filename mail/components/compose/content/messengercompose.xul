@@ -670,7 +670,7 @@
            toolbarname="Compose" 
            fullscreentoolbar="true" mode="full"
 #ifdef XP_MACOSX
-           defaultset="button-send,spacer,button-address,spacer,spellingButton,spacer,button-attach,button-security,spacer,button-save,throbber-box"
+           defaultset="button-send,spacer,button-address,spacer,spellingButton,spacer,button-attach,button-security,spacer,button-save,spring,throbber-box"
 #else
            defaultset="button-send,spacer,button-address,spacer,spellingButton,spacer,button-attach,button-security,spacer,button-save"
 #endif
