@@ -37,7 +37,7 @@
 /*
  * CMS decoding.
  *
- * $Id: cmsdecode.c,v 1.8 2004/04/25 15:03:16 gerv%gerv.net Exp $
+ * $Id: cmsdecode.c,v 1.9 2006/08/05 01:19:23 julien.pierre.bugs%sun.com Exp $
  */
 
 #include "cmslocal.h"
@@ -695,10 +695,9 @@ NSS_CMSDecoder_Update(NSSCMSDecoderContext *p7dcx, const char *buf,
 void
 NSS_CMSDecoder_Cancel(NSSCMSDecoderContext *p7dcx)
 {
-    /* XXXX what about inner decoders? running digests? decryption? */
-    /* XXXX there's a leak here! */
+    if (p7dcx->dcx != NULL)
+	(void)SEC_ASN1DecoderFinish(p7dcx->dcx);
     NSS_CMSMessage_Destroy(p7dcx->cmsg);
-    (void)SEC_ASN1DecoderFinish(p7dcx->dcx);
     PORT_Free(p7dcx);
 }
 
@@ -736,6 +735,8 @@ NSS_CMSMessage_CreateFromDER(SECItem *DERmessage,
     /* first arg(poolp) == NULL => create our own pool */
     p7dcx = NSS_CMSDecoder_Start(NULL, cb, cb_arg, pwfn, pwfn_arg, 
                                  decrypt_key_cb, decrypt_key_cb_arg);
+    if (p7dcx == NULL)
+	return NULL;
     NSS_CMSDecoder_Update(p7dcx, (char *)DERmessage->data, DERmessage->len);
     return NSS_CMSDecoder_Finish(p7dcx);
 }
