@@ -1222,9 +1222,11 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
         }
       } else { // otherwise, it must be HTML
         // It's hard to say what HTML4 wants us to do in all cases.
-        // So for now we'll settle for A) Set focus
-        ChangeFocusWith(content, eEventFocusedByKey);
-
+        // So for now we'll settle for A) Set focus (except for <label>s
+        // which focus their control in nsHTMLLabelElement::PostHandleEvent)
+        if (content->Tag() != nsHTMLAtoms::label || !sKeyCausesActivation) {
+          ChangeFocusWith(content, eEventFocusedByKey);
+        }
         if (sKeyCausesActivation) {
           // B) Click on it if the users prefs indicate to do so.
 
