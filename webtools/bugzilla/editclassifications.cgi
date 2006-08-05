@@ -106,13 +106,17 @@ if ($action eq 'new') {
         ThrowUserError("classification_already_exists",
                        { name => $classification->name });
     }
-    
+
     my $description = trim($cgi->param('description')  || '');
+
     my $sortkey = trim($cgi->param('sortkey') || 0);
+    my $stored_sortkey = $sortkey;
+    detaint_natural($sortkey)
+      || ThrowUserError('classification_invalid_sortkey', {'name' => $class_name,
+                                                           'sortkey' => $stored_sortkey});
 
     trick_taint($description);
     trick_taint($class_name);
-    detaint_natural($sortkey);
 
     # Add the new classification.
     $dbh->do("INSERT INTO classifications (name, description, sortkey)
@@ -203,11 +207,17 @@ if ($action eq 'update') {
     $class_name || ThrowUserError("classification_not_specified");
 
     my $class_old_name = trim($cgi->param('classificationold') || '');
-    my $description    = trim($cgi->param('description')       || '');
-    my $sortkey        = trim($cgi->param('sortkey')           || 0);
 
     my $class_old =
         Bugzilla::Classification::check_classification($class_old_name);
+
+    my $description = trim($cgi->param('description') || '');
+
+    my $sortkey = trim($cgi->param('sortkey') || 0);
+    my $stored_sortkey = $sortkey;
+    detaint_natural($sortkey)
+      || ThrowUserError('classification_invalid_sortkey', {'name' => $class_old->name,
+                                                           'sortkey' => $stored_sortkey});
 
     $dbh->bz_lock_tables('classifications WRITE');
 
@@ -235,7 +245,6 @@ if ($action eq 'update') {
     }
 
     if ($sortkey ne $class_old->sortkey) {
-        detaint_natural($sortkey);
         $dbh->do("UPDATE classifications SET sortkey = ?
                   WHERE id = ?", undef,
                  ($sortkey, $class_old->id));

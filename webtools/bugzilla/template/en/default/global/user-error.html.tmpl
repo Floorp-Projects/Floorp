@@ -261,6 +261,11 @@
     The classification '[% classification FILTER html %]' does not exist
     for product '[% product FILTER html %]'.
 
+  [% ELSIF error == "classification_invalid_sortkey" %]
+    [% title = "Invalid Sortkey for Classification" %]
+    The sortkey <em>[% sortkey FILTER html %]</em> for the '[% name FILTER html %]'
+    classification is invalid. It must be a positive integer.
+
   [% ELSIF error == "classification_not_deletable" %]
     [% title = "Default Classification Can Not Be Deleted" %]
     You can not delete the default classification
