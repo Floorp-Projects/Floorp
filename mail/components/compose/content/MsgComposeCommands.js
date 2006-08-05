@@ -232,8 +232,7 @@ var gComposeRecyclingListener = {
     ReleaseGlobalVariables();
 
     // Clear the focus
-    if (top.awInputElement.getAttribute('focused') != '')
-      top.awInputElement.removeAttribute('focused');
+    awGetInputElement(1).removeAttribute('focused');
 
     //Reset Boxes size    
     document.getElementById("headers-box").removeAttribute("height");
