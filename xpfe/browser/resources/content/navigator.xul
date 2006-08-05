@@ -294,7 +294,8 @@
                      onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)" 
                      template="bookmarksMenuTemplate"
                      ondraggesture="if (event.target.id=='bookmarks-button') event.stopPropagation()">
-        <menupopup onpopupshowing="updateGroupmarkCommand();">
+        <menupopup context="bookmarks-context-menu"
+                   onpopupshowing="updateGroupmarkCommand();">
           <menuitem command="Browser:AddBookmark"/>
           <menuitem command="Browser:AddBookmarkAs"/>
           <menuitem command="Browser:AddGroupmarkAs"/>
@@ -324,6 +325,7 @@
                        oncommand="BookmarksUtils.loadBookmarkBrowser(event, this.database)"
                        onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)">
           <menupopup id="bookmarks-chevron-popup"
+                     context="bookmarks-context-menu"
                      onpopupshowing="if (event.target == this) BookmarksToolbar.updateOverflowMenu(this);"/>
         </toolbarbutton>
       </hbox>

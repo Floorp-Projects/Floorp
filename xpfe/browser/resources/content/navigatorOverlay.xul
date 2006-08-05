@@ -217,7 +217,7 @@
   <!-- bookmarks context menu -->
   <popupset id="bookmarksPopupset">
     <popup id="bookmarks-context-menu" 
-           onpopupshowing="BookmarksMenu.createContextMenu(event);"
+           onpopupshowing="return BookmarksMenu.createContextMenu(event);"
            onpopuphidden ="BookmarksMenu.destroyContextMenu(event);"/>
   </popupset>
 
@@ -264,7 +264,7 @@
                      validate="never"
                      rdf:type="http://home.netscape.com/NC-rdf#Folder"
                      label="rdf:http://home.netscape.com/NC-rdf#Name">
-        <menupopup/>
+        <menupopup context="bookmarks-context-menu"/>
       </toolbarbutton>
     </rule>
     <rule parent="hbox">
@@ -306,7 +306,7 @@
               validate="never"
               label="rdf:http://home.netscape.com/NC-rdf#Name"
               type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-          <menupopup />
+          <menupopup context="bookmarks-context-menu"/>
         </menu>
       </menupopup>
     </rule>
@@ -472,6 +472,7 @@
           ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.stopPropagation()"
           ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.stopPropagation()">
       <menupopup id="menu_BookmarksPopup"
+                 context="bookmarks-context-menu"
                  onpopupshowing="updateGroupmarkCommand();">
         <menuitem key="addBookmarkKb"   command="Browser:AddBookmark"/>
         <menuitem key="addBookmarkAsKb" command="Browser:AddBookmarkAs"/>
