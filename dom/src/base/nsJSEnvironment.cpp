@@ -3111,7 +3111,7 @@ nsJSContext::HoldScriptObject(void* aScriptObject)
 {
     NS_ASSERTION(sIsInitialized, "runtime not initialized");
     if (! nsJSRuntime::sRuntime) {
-        NS_NOTREACHED("couldn't remove GC root - no runtime");
+        NS_NOTREACHED("couldn't add GC root - no runtime");
         return NS_ERROR_FAILURE;
     }
 
