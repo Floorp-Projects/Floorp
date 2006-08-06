@@ -90,6 +90,7 @@ typedef GtkWidget* (*_gtk_file_chooser_dialog_new_fn)(const gchar *title,
                                                       const gchar *first_button_text,
                                                       ...);
 typedef void (*_gtk_file_chooser_set_select_multiple_fn)(GtkFileChooser* chooser, gboolean truth);
+typedef void (*_gtk_file_chooser_set_do_overwrite_confirmation_fn)(GtkFileChooser* chooser, gboolean do_confirm);
 typedef void (*_gtk_file_chooser_set_current_name_fn)(GtkFileChooser* chooser, const gchar* name);
 typedef void (*_gtk_file_chooser_set_current_folder_fn)(GtkFileChooser* chooser, const gchar* folder);
 typedef void (*_gtk_file_chooser_add_filter_fn)(GtkFileChooser* chooser, GtkFileFilter* filter);
@@ -105,6 +106,7 @@ DECL_FUNC_PTR(gtk_file_chooser_get_filename);
 DECL_FUNC_PTR(gtk_file_chooser_get_filenames);
 DECL_FUNC_PTR(gtk_file_chooser_dialog_new);
 DECL_FUNC_PTR(gtk_file_chooser_set_select_multiple);
+DECL_FUNC_PTR(gtk_file_chooser_set_do_overwrite_confirmation);
 DECL_FUNC_PTR(gtk_file_chooser_set_current_name);
 DECL_FUNC_PTR(gtk_file_chooser_set_current_folder);
 DECL_FUNC_PTR(gtk_file_chooser_add_filter);
@@ -184,6 +186,7 @@ nsFilePicker::LoadSymbolsGTK24()
   GET_LIBGTK_FUNC(gtk_file_chooser_get_filenames);
   GET_LIBGTK_FUNC(gtk_file_chooser_dialog_new);
   GET_LIBGTK_FUNC(gtk_file_chooser_set_select_multiple);
+  GET_LIBGTK_FUNC(gtk_file_chooser_set_do_overwrite_confirmation);
   GET_LIBGTK_FUNC(gtk_file_chooser_set_current_name);
   GET_LIBGTK_FUNC(gtk_file_chooser_set_current_folder);
   GET_LIBGTK_FUNC(gtk_file_chooser_add_filter);
@@ -564,6 +567,13 @@ nsFilePicker::Show(PRInt16 *aReturn)
     }
   }
 
+  PRBool checkForOverwrite = PR_TRUE;
+  if (_gtk_file_chooser_set_do_overwrite_confirmation) {
+    checkForOverwrite = PR_FALSE;
+    // Only available in GTK 2.8
+    _gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(file_chooser), PR_TRUE);
+  }
+
   gint response = gtk_dialog_run (GTK_DIALOG (file_chooser));
 
   switch (response) {
@@ -577,12 +587,13 @@ nsFilePicker::Show(PRInt16 *aReturn)
         PRBool exists = PR_FALSE;
         file->Exists(&exists);
         if (exists) {
-          PRBool overwrite = confirm_overwrite_file (file_chooser, file);
+          PRBool overwrite = !checkForOverwrite ||
+            confirm_overwrite_file (file_chooser, file);
 
           if (overwrite) {
             *aReturn = nsIFilePicker::returnReplace;
           } else {
-            *aReturn = nsIFilePicker::returnCancel;    
+            *aReturn = nsIFilePicker::returnCancel;
           }
         }
       }
