@@ -358,12 +358,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 #endif
 
     if (last) {
-        /* Always force, so we wait for any racing GC to finish. */
-        js_ForceGC(cx, GC_LAST_CONTEXT);
-
-        /* Iterate until no JSGC_END-status callback creates more garbage. */
-        while (rt->gcPoke)
-            js_GC(cx, GC_LAST_CONTEXT);
+        js_GC(cx, GC_LAST_CONTEXT);
 
         /* Try to free atom state, now that no unrooted scripts survive. */
         if (rt->atomState.liveAtoms == 0)
@@ -386,14 +381,18 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
         JS_UNLOCK_GC(rt);
     } else {
         if (mode == JSDCM_FORCE_GC)
-            js_ForceGC(cx, 0);
+            js_GC(cx, GC_NORMAL);
         else if (mode == JSDCM_MAYBE_GC)
             JS_MaybeGC(cx);
     }
 
+    if (last || mode == JSDCM_FORCE_GC)
+        JS_ArenaFinish();
+
     /* Free the stuff hanging off of cx. */
     JS_FinishArenaPool(&cx->stackPool);
     JS_FinishArenaPool(&cx->tempPool);
+
     if (cx->lastMessage)
         free(cx->lastMessage);
 

@@ -92,11 +92,30 @@ js_CallIteratorNext(JSContext *cx, JSObject *iterobj, uintN flags,
 extern JSBool
 js_ThrowStopIteration(JSContext *cx, JSObject *obj);
 
+#if JS_HAS_GENERATORS
+
+typedef enum JSGeneratorState {
+    JSGEN_NEWBORN,
+    JSGEN_RUNNING,
+    JSGEN_CLOSED
+} JSGeneratorState;
+
+struct JSGenerator {
+    JSGenerator         *next;
+    JSObject            *obj;
+    JSGeneratorState    state;
+    JSStackFrame        frame;
+    JSArena             arena;
+    jsval               stack[1];
+};
+
 extern JSObject *
 js_NewGenerator(JSContext *cx, JSStackFrame *fp);
 
 extern JSBool
-js_CloseGeneratorObject(JSContext *cx, JSObject *obj);
+js_CloseGeneratorObject(JSContext *cx, JSGenerator *gen);
+
+#endif
 
 extern JSClass          js_GeneratorClass;
 extern JSClass          js_IteratorClass;

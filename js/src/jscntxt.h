@@ -79,6 +79,11 @@ struct JSThread {
      * locks on each JS_malloc.
      */
     uint32              gcMallocBytes;
+
+#if JS_HAS_GENERATORS
+    /* Flag indicating that the current thread is excuting close hooks. */
+    JSBool              gcRunningCloseHooks;
+#endif
 };
 
 extern void JS_DLL_CALLBACK
@@ -146,8 +151,7 @@ struct JSRuntime {
      */
     JSPackedBool        gcPoke;
     JSPackedBool        gcRunning;
-    JSPackedBool        gcClosePhase;
-    uint8               gcPadding;
+    uint16              gcPadding;
 
     JSGCCallback        gcCallback;
     uint32              gcMallocBytes;
@@ -170,16 +174,15 @@ struct JSRuntime {
     uint32              gcPrivateBytes;
 
     /*
-     * Table for tracking objects of extended classes that have non-null close
-     * hooks, and need the GC to perform two-phase finalization.
-     */
-    JSPtrTable          gcCloseTable;
-
-    /*
      * Table for tracking iterators to ensure that we close iterator's state
      * before finalizing the iterable object.
      */
     JSPtrTable          gcIteratorTable;
+
+#if JS_HAS_GENERATORS
+    /* Runtime state to support close hooks. */
+    JSGCCloseState      gcCloseState;
+#endif
 
 #ifdef JS_GCMETER
     JSGCStats           gcStats;

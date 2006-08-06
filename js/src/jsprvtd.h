@@ -94,6 +94,7 @@ typedef struct JSDependentString    JSDependentString;
 typedef struct JSGCLockHashEntry    JSGCLockHashEntry;
 typedef struct JSGCRootHashEntry    JSGCRootHashEntry;
 typedef struct JSGCThing            JSGCThing;
+typedef struct JSGenerator          JSGenerator;
 typedef struct JSParseNode          JSParseNode;
 typedef struct JSSharpObjectMap     JSSharpObjectMap;
 typedef struct JSThread             JSThread;

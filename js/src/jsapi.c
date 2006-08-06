@@ -1926,12 +1926,25 @@ JS_MarkGCThing(JSContext *cx, void *thing, const char *name, void *arg)
 JS_PUBLIC_API(void)
 JS_GC(JSContext *cx)
 {
+#if JS_HAS_GENERATORS
+    /* Run previously scheduled but delayed close hooks. */
+    js_RunCloseHooks(cx);
+#endif
+
     /* Don't nuke active arenas if executing or compiling. */
     if (cx->stackPool.current == &cx->stackPool.first)
         JS_FinishArenaPool(&cx->stackPool);
     if (cx->tempPool.current == &cx->tempPool.first)
         JS_FinishArenaPool(&cx->tempPool);
-    js_ForceGC(cx, 0);
+    js_GC(cx, GC_NORMAL);
+
+#if JS_HAS_GENERATORS
+    /*
+     * Run close hooks for objects that became unreachable after the last GC.
+     */
+    js_RunCloseHooks(cx);
+#endif
+    JS_ArenaFinish();
 }
 
 JS_PUBLIC_API(void)
@@ -1998,6 +2011,12 @@ JS_MaybeGC(JSContext *cx)
         rt->gcMallocBytes >= rt->gcMaxMallocBytes) {
         JS_GC(cx);
     }
+#if JS_HAS_GENERATORS
+    else {
+        /* Run scheduled but not yet executed close hooks. */
+        js_RunCloseHooks(cx);
+    }
+#endif
 #endif
 }
 

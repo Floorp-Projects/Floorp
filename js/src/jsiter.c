@@ -594,28 +594,23 @@ js_ThrowStopIteration(JSContext *cx, JSObject *obj)
 
 #if JS_HAS_GENERATORS
 
-typedef enum JSGeneratorState {
-    JSGEN_NEWBORN,
-    JSGEN_RUNNING,
-    JSGEN_CLOSED
-} JSGeneratorState;
-
-typedef struct JSGenerator {
-    JSGeneratorState    state;
-    JSStackFrame        frame;
-    JSArena             arena;
-    jsval               stack[1];
-} JSGenerator;
-
+/*
+ * Execute generator's close hook after GC detects that the object has become
+ * unreachable.
+ */
 JSBool
-js_CloseGeneratorObject(JSContext *cx, JSObject *obj)
+js_CloseGeneratorObject(JSContext *cx, JSGenerator *gen)
 {
+    JSObject *obj;
     jsval fval, rval;
     const jsid id = ATOM_TO_JSID(cx->runtime->atomState.closeAtom);
 
-    JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_GeneratorClass);
-    JS_ASSERT(JS_GetPrivate(cx, obj));
+    /* JSGenerator.closeLink must be already unlinked from all lists. */
+    JS_ASSERT(!gen->next);
+    JS_ASSERT(gen != cx->runtime->gcCloseState.reachableList);
+    JS_ASSERT(gen != cx->runtime->gcCloseState.todoHead);
 
+    obj = gen->obj;
     if (!JS_GetMethodById(cx, obj, id, &obj, &fval))
         return JS_FALSE;
 
@@ -687,6 +682,8 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     if (!gen)
         goto bad;
 
+    gen->obj = obj;
+
     /* Copy call-invariant object and function references. */
     gen->frame.callobj = fp->callobj;
     gen->frame.argsobj = fp->argsobj;
@@ -743,13 +740,9 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
         goto bad;
     }
 
-    if (!js_RegisterGeneratorObject(cx, obj)) {
-        /*
-         * Do not free gen here, as the finalizer will do that since we
-         * called JS_SetPrivate.
-         */
-        goto bad;
-    }
+    /* Register after we have properly initialized the private slot. */
+    js_RegisterGeneratorObject(cx, gen);
+
     return obj;
 
   bad:
