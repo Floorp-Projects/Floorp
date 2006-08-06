@@ -1182,14 +1182,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
              * can happen on certain operating systems. For the gory details,
              * see bug 162779 at https://bugzilla.mozilla.org/.
              */
-            if (!js_GC(cx, GC_LAST_DITCH)) {
-                /*
-                 * js_GC ensures that GC is unlocked when the branch callback
-                 * wants to stop execution, and in this case we do not report
-                 * out-of-memory.
-                 */
-                return NULL;
-            }
+            js_GC(cx, GC_LAST_DITCH);
             METER(rt->gcStats.retry++);
         }
 
@@ -2391,13 +2384,9 @@ js_MarkStackFrame(JSContext *cx, JSStackFrame *fp)
  * otherwise.
  *
  * When gckind is GC_LAST_DITCH, it indicates a call from js_NewGCThing with
- * rt->gcLock already held. On return to js_NewGCThing the lock is kept when
- * js_GC returns false and released when it returns true. This asymmetry helps
- * avoid re-taking the lock just to release it immediately in js_NewGCThing
- * when the branch callback called outside the lock cancels the allocation and
- * js_GC returns false. See bug 341896.
+ * rt->gcLock already held and when the lock should be kept on return.
  */
-JSBool
+void
 js_GC(JSContext *cx, JSGCInvocationKind gckind)
 {
     JSRuntime *rt;
@@ -2413,7 +2402,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     JSGCThing *thing, *freeList;
     JSGCArenaList *arenaList;
     GCFinalizeOp finalizer;
-    JSBool allClear, checkBranchCallback;
+    JSBool allClear;
 #ifdef JS_THREADSAFE
     uint32 requestDebit;
 #endif
@@ -2444,7 +2433,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      * or runtime bloat until the next context is created.
      */
     if (rt->state != JSRTS_UP && gckind != GC_LAST_CONTEXT)
-        return JS_TRUE;
+        return;
 
   restart_after_callback:
     /*
@@ -2454,7 +2443,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     if (rt->gcCallback &&
         !rt->gcCallback(cx, JSGC_BEGIN) &&
         gckind != GC_LAST_CONTEXT) {
-        return JS_TRUE;
+        return;
     }
 
     /* Lock out other GC allocator and collector invocations. */
@@ -2466,7 +2455,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         METER(rt->gcStats.nopoke++);
         if (gckind != GC_LAST_DITCH)
             JS_UNLOCK_GC(rt);
-        return JS_TRUE;
+        return;
     }
     METER(rt->gcStats.poke++);
     rt->gcPoke = JS_FALSE;
@@ -2480,7 +2469,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
                   rt->gcStats.maxlevel = rt->gcLevel);
         if (gckind != GC_LAST_DITCH)
             JS_UNLOCK_GC(rt);
-        return JS_TRUE;
+        return;
     }
 
     /*
@@ -2537,7 +2526,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
             rt->requestCount += requestDebit;
         if (gckind != GC_LAST_DITCH)
             JS_UNLOCK_GC(rt);
-        return JS_TRUE;
+        return;
     }
 
     /* No other thread is in GC, so indicate that we're now in GC. */
@@ -2556,7 +2545,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     METER(if (rt->gcLevel > rt->gcStats.maxlevel)
               rt->gcStats.maxlevel = rt->gcLevel);
     if (rt->gcLevel > 1)
-        return JS_TRUE;
+        return;
 
 #endif /* !JS_THREADSAFE */
 
@@ -2883,44 +2872,27 @@ restart:
     JS_NOTIFY_GC_DONE(rt);
 
     /*
-     * Unlock unless we have GC_LAST_DITCH which requires locked GC on return
-     * after a successful GC cycle.
+     * Unlock unless we have GC_LAST_DITCH which requires locked GC on return.
      */
     if (gckind != GC_LAST_DITCH)
         JS_UNLOCK_GC(rt);
 #endif
 
-    checkBranchCallback = (gckind == GC_LAST_DITCH &&
-                           JS_HAS_NATIVE_BRANCH_CALLBACK_OPTION(cx) &&
-                           cx->branchCallback);
-
-    /* Execute JSGC_END callback and branch callback outside the lock. */
-    if (rt->gcCallback || checkBranchCallback) {
+    if (rt->gcCallback) {
+        /* Execute JSGC_END callback outside the lock. */
         if (gckind == GC_LAST_DITCH)
             JS_UNLOCK_GC(rt);
-        if (rt->gcCallback) {
-            (void) rt->gcCallback(cx, JSGC_END);
+        (void) rt->gcCallback(cx, JSGC_END);
 
-            /*
-             * On shutdown iterate until no JSGC_END-status callback creates
-             * more garbage.
-             */
-            if (gckind == GC_LAST_CONTEXT && rt->gcPoke)
-                goto restart_after_callback;
-        }
-        if (checkBranchCallback &&
-            cx->branchCallback && /* gcCallback can reset the branchCallback */
-            !cx->branchCallback(cx, NULL)) {
-            METER(rt->gcStats.retryhalt++);
+        /*
+         * On shutdown iterate until JSGC_END callback stops creating garbage.
+         */
+        if (gckind == GC_LAST_CONTEXT && rt->gcPoke)
+            goto restart_after_callback;
 
-            /* Keep GC unlocked when canceled. */
-            return JS_FALSE;
-        }
         if (gckind == GC_LAST_DITCH)
             JS_LOCK_GC(rt);
     }
-
-    return JS_TRUE;
 }
 
 void
