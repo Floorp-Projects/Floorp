@@ -77,7 +77,7 @@
       </vbox>
     </vbox>
     <vbox flex="1" id="creditsBox">
-      <iframe id="creditsIframe" src="chrome://browser/content/credits.xhtml" flex="1"/>
+      <iframe id="creditsIframe" flex="1"/>
     </vbox>    
   </deck>
   <separator class="groove" id="groove"/>
