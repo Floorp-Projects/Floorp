@@ -88,7 +88,7 @@
     <separator flex="1"/>
 
     <vbox flex="1">
-      <listbox id="profiles" flex="1" rows="5" seltype="single"
+      <listbox id="profiles" rows="5" seltype="single"
                ondblclick="onProfilesDblClick(event)"
                onkeypress="onProfilesKey(event);">
       </listbox>
