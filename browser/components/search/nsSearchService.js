@@ -1161,11 +1161,6 @@ Engine.prototype = {
     if (aEngine._engineToUpdate) {
       engineToUpdate = aEngine._engineToUpdate.wrappedJSObject;
 
-      if (engineToUpdate._readOnly) {
-        LOG("_onLoad: Can't update readonly engine!");
-        return;
-      }
-
       // Make this new engine use the old engine's file.
       aEngine._file = engineToUpdate._file;
     }
@@ -2888,7 +2883,7 @@ var engineUpdateService = {
     ULOG("currentTime: " + currentTime);
     for each (engine in searchService.getEngines({})) {
       engine = engine.wrappedJSObject;
-      if (!engine._hasUpdates)
+      if (!engine._hasUpdates || engine._readOnly)
         continue;
 
       ULOG("checking " + engine.name);
