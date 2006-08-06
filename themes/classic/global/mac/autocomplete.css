@@ -95,6 +95,21 @@ textbox {
   padding: 0 !important;
 }
 
+.autocomplete-result-popup[nomatch] > .autocomplete-search-box {
+  border-top: none;
+}
+
+.autocomplete-search-box {
+  border-top: 1px solid ThreeDDarkShadow;
+  background-color: -moz-Dialog;
+  color: ButtonText;
+}
+
+.autocomplete-search-engine[menuactive="true"] {
+  background-color: -moz-mac-alternateprimaryhighlight;
+  color: #FFFFFF;
+}
+
 /* ::::: tree ::::: */
 
 .autocomplete-tree {
@@ -114,9 +129,13 @@ textbox {
 }
 
 .autocomplete-treebody::-moz-tree-row(menuactive) {
-  background-color: Highlight;
+  background-color: -moz-mac-alternateprimaryhighlight;
 }
 
 .autocomplete-treebody::-moz-tree-cell-text(menuactive)  {
-  color: HighlightText !important;
+  color: #FFFFFF !important;
+}
+
+.autocomplete-treebody::-moz-tree-cell-text(comment) {
+  color: GrayText;
 }

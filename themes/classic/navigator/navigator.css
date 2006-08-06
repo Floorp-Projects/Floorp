@@ -250,27 +250,8 @@
   padding-left: 15px;
 }
 
-.autocomplete-treebody::-moz-tree-cell-text(comment) {
-  color: ThreeDShadow;
-}
-
-.autocomplete-search-box {
-  border-top: 2px groove -moz-Dialog;
-  background-color: -moz-Dialog;
-  color: ButtonText;
-}
-
-.autocomplete-result-popup[nomatch] > .autocomplete-search-box {
-  border-top: 1px solid ThreeDHighlight;
-}
-
 .autocomplete-search-engine {
   padding: 2px;
-}
-
-.autocomplete-search-engine[menuactive="true"] {
-  background-color: Highlight;
-  color: HighlightText;
 }
 
 .autocomplete-search-engine-img {

@@ -245,8 +245,8 @@ menulist > menupopup > menuseparator,
 }
 
 .autocomplete-history-popup > menuitem[_moz-menuactive="true"] {
-  color: inherit !important;
-  background-color: Highlight !important;
+  color: #FFFFFF !important;
+  background-color: -moz-mac-alternateprimaryhighlight !important;
 }
 
 /* ::::: tree column picker ::::: */

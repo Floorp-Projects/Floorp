@@ -77,13 +77,13 @@ listbox:focus > listitem[selected="true"][current="true"] {
 }
 
 listitem[selected="true"] {
-  background-color: -moz-Dialog;
+  background-color: -moz-mac-secondaryhighlight;
   color: -moz-DialogText;
 }
 
 listbox:focus > listitem[selected="true"] {
-  background-color: Highlight;
-  color: HighlightText;
+  background-color: -moz-mac-alternateprimaryhighlight;
+  color: #FFFFFF;
 }
 
 /* ::::: listheader ::::: */

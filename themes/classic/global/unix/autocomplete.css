@@ -109,8 +109,23 @@ textbox {
   background-color: -moz-Field !important;
 }
 
+.autocomplete-result-popup[nomatch] > .autocomplete-search-box {
+  border-top: 1px solid ThreeDHighlight;
+}
+
 .autocomplete-history-popup {
   max-height: 25em;
+}
+
+.autocomplete-search-box {
+  border-top: 2px groove -moz-Dialog;
+  background-color: -moz-Dialog;
+  color: ButtonText;
+}
+
+.autocomplete-search-engine[menuactive="true"] {
+  background-color: Highlight;
+  color: HighlightText;
 }
 
 /* ::::: tree ::::: */
@@ -136,4 +151,8 @@ textbox {
 
 .autocomplete-treebody::-moz-tree-cell-text(menuactive)  {
   color: HighlightText !important;
+}
+
+.autocomplete-treebody::-moz-tree-cell-text(comment) {
+  color: ThreeDShadow;
 }
