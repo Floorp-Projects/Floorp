@@ -279,12 +279,11 @@
             case "bool":
               var val = this._branch.getBoolPref(this.name);
               return this.inverted ? !val : val;
-            case "string":
-              return this._branch.getCharPref(this.name);
             case "wstring":
               return this._branch
                          .getComplexValue(this.name, Components.interfaces.nsIPrefLocalizedString)
                          .data;
+            case "string":
             case "unichar":
               return this._branch
                          .getComplexValue(this.name, Components.interfaces.nsISupportsString)
@@ -314,9 +313,6 @@
           case "bool":
             this.preferences.rootBranch.setBoolPref(this.name, this.inverted ? !val : val);
             break;
-          case "string":
-            this.preferences.rootBranch.setCharPref(this.name, val);
-            break;
           case "wstring":
             var pls = Components.classes["@mozilla.org/pref-localizedstring;1"]
                                 .createInstance(Components.interfaces.nsIPrefLocalizedString);
@@ -324,6 +320,7 @@
             this.preferences.rootBranch
                 .setComplexValue(this.name, Components.interfaces.nsIPrefLocalizedString, pls);
             break;
+          case "string":
           case "unichar":
             var iss = Components.classes["@mozilla.org/supports-string;1"]
                                 .createInstance(Components.interfaces.nsISupportsString);
