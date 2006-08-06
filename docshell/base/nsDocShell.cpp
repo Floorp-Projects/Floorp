@@ -841,8 +841,8 @@ nsDocShell::LoadURI(nsIURI * aURI,
         if (aLoadFlags & LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP)
             flags |= INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
 
-        if (aLoadFlags & LOAD_FLAGS_NEW_WINDOW)
-            flags |= INTERNAL_LOAD_FLAGS_NEW_WINDOW;
+        if (aLoadFlags & LOAD_FLAGS_FIRST_LOAD)
+            flags |= INTERNAL_LOAD_FLAGS_FIRST_LOAD;
 
         rv = InternalLoad(aURI,
                           referrer,
@@ -6360,7 +6360,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             // some other, already open window.
             if (win != newWin) {
                 isNewWindow = PR_TRUE;
-                aFlags |= INTERNAL_LOAD_FLAGS_NEW_WINDOW;
+                aFlags |= INTERNAL_LOAD_FLAGS_FIRST_LOAD;
             }
 
             nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(newWin);
@@ -6703,7 +6703,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                    !(aFlags & INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER),
                    owner, aTypeHint, aPostData, aHeadersData, aFirstParty,
                    aDocShell, getter_AddRefs(req),
-                   (aFlags & INTERNAL_LOAD_FLAGS_NEW_WINDOW) != 0);
+                   (aFlags & INTERNAL_LOAD_FLAGS_FIRST_LOAD) != 0);
     if (req && aRequest)
         NS_ADDREF(*aRequest = req);
 
