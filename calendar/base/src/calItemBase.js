@@ -403,7 +403,7 @@ calItemBase.prototype = {
     getAttendeeById: function (id) {
         var attendees = this.getAttendees({});
         for (var i = 0; i < attendees.length; i++)
-            if (this.attendees[i].id == id)
+            if (attendees[i].id == id)
                 return attendees[i];
         return null;
     },
