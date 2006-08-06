@@ -3,6 +3,20 @@
 The link below has an onmousedown, an onmouseup, and an onmousemove handler.
 Mouseover or click for event info in debug console.
 <a href="jshandlers.html">Link back to this page</a>
+
+<p>The link below has an event that should open www.mozilla.org when 
+   clicked
+</p>
+<!-- The link does 'return 0' - as per bug 345521 this should *not* be 
+     interpreted as false
+-->
+<a href="http://www.mozilla.org" onclick="return 0">Click me</a>
+
+<p>The link below has an event that is cancelled - nothing should happen when 
+   clicked
+</p>
+<a href="http://www.mozilla.org" onclick="return false">Click me<a/>
+
 </body>
 <script>
 function findElementByTagName(start, tag)

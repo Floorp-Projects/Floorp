@@ -243,13 +243,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
           vrv->GetAsDOMString(beforeUnload->text);
         }
       }
-    } else if (dataType == nsIDataType::VTYPE_BOOL ||
-               dataType == nsIDataType::VTYPE_INT8 ||
-               dataType == nsIDataType::VTYPE_INT16 ||
-               dataType == nsIDataType::VTYPE_INT32 ||
-               dataType == nsIDataType::VTYPE_UINT8 ||
-               dataType == nsIDataType::VTYPE_UINT16 ||
-               dataType == nsIDataType::VTYPE_UINT32) {
+    } else if (dataType == nsIDataType::VTYPE_BOOL) {
       // If the handler returned false and its sense is not reversed,
       // or the handler returned true and its sense is reversed from
       // the usual (false means cancel), then prevent default.
