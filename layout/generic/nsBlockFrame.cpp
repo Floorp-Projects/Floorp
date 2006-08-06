@@ -6840,7 +6840,8 @@ nsBlockFrame::Init(nsIContent*      aContent,
     // Copy over the block/area frame type flags
     nsBlockFrame*  blockFrame = (nsBlockFrame*)aPrevInFlow;
 
-    SetFlags(blockFrame->mState & NS_BLOCK_FLAGS_MASK);
+    SetFlags(blockFrame->mState &
+             (NS_BLOCK_FLAGS_MASK & ~NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET));
   }
 
   nsresult rv = nsBlockFrameSuper::Init(aContent, aParent, aPrevInFlow);
