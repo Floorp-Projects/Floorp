@@ -518,7 +518,7 @@ calWcapSession.prototype = {
                                 "loginDialog.label"),
                             loginText, outUser, outPW,
                             getWcapBundle().GetStringFromName(
-                                "loginDialog.savePW.label" ),
+                                "loginDialog.check.text"),
                             savePW ))
                     {
                         try {
@@ -784,9 +784,13 @@ calWcapSession.prototype = {
     function( calId )
     {
         var ret;
-        if (calId == null || this.userId == calId) {
-            if (this.m_defaultCalendar == null)
-                this.m_defaultCalendar = createWcapCalendar(this.userId, this);
+        // xxx todo: for now the default calendar (calId=null)
+        //           is separated (own instance) from subscribed calendars
+        if (calId == null /*|| this.userId == calId*/) {
+            if (this.m_defaultCalendar == null) {
+                this.m_defaultCalendar = createWcapCalendar(
+                    null/*this.userId*/, this);
+            }
             ret = this.m_defaultCalendar;
         }
         else {
@@ -1053,7 +1057,7 @@ function confirmInsecureLogin( uri )
     var bConfirmed = prompt.confirmCheck(
         bundle.GetStringFromName("noHttpsConfirmation.label"),
         bundle.formatStringFromName("noHttpsConfirmation.text", [host], 1),
-        bundle.GetStringFromName("noHttpsConfirmation.check"),
+        bundle.GetStringFromName("noHttpsConfirmation.check.text"),
         dontAskAgain );
     
     if (dontAskAgain.value) {

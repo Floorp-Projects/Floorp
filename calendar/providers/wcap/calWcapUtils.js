@@ -347,9 +347,11 @@ catch (exc) {
 }
 
 // some string resources:
-var g_privateItemTitle = getWcapBundle().GetStringFromName("privateItem.title");
+var g_privateItemTitle = getWcapBundle().GetStringFromName(
+    "privateItem.title.text");
 var g_confidentialItemTitle = getWcapBundle().GetStringFromName(
-    "confidentialItem.title");
-var g_busyItemTitle = getWcapBundle().GetStringFromName("busyItem.title");
+    "confidentialItem.title.text");
+var g_busyItemTitle = getWcapBundle().GetStringFromName(
+    "busyItem.title.text");
 var g_busyPhantomItemUuidPrefix = ("PHANTOM_uuid" + getTime().icalString);
 

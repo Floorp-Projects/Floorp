@@ -191,7 +191,7 @@ calWcapCalendar.prototype.getRecurrenceParams = function(
     }
 };
 
-calWcapCalendar.prototype.getStoreUrl = function( item )
+calWcapCalendar.prototype.getStoreUrl = function( item, oldItem )
 {
     var bIsEvent = isEvent(item);
     var url = this.session.getCommandUrl( bIsEvent ? "storeevents"
@@ -199,12 +199,10 @@ calWcapCalendar.prototype.getStoreUrl = function( item )
     url += "&fetch=1&compressed=1&recurring=1";
     url += ("&calid=" + encodeURIComponent(this.calId));
     
-    // it is always safe to use orgCalId,
-    // because every user has a calId == userId
-    var orgCalid = ((item.organizer == null || item.organizer.id == null)
-                    ? this.calId // sensible default
-                    : item.organizer.id);
-    url += ("&orgCalid=" + encodeURIComponent(orgCalid));
+    var ownerId = this.ownerId;
+    var orgUID = ((item.organizer == null || item.organizer.id == null)
+                    ? ownerId : item.organizer.id);
+    url += ("&orgUID=" + encodeURIComponent(orgUID));
     
     // xxx todo: default prio is 0 (5 in sjs cs)
     url += ("&priority=" + item.priority);
@@ -277,40 +275,10 @@ calWcapCalendar.prototype.getStoreUrl = function( item )
         url += encodeURIComponent( item.getProperty( "URL" ) );
     }
     
-    // attendees:
-    var attendees =  item.getAttendees({});
-    var forceRSVP = false;
-    
     var dtstart = null;
     var dtend = null; // for alarmRelated
     
     if (bIsEvent) {
-        if (attendees != null && attendees.length > 0) {
-            // ORGANIZER is this cal?
-            if (orgCalid == this.calId) {
-                url += "&method=2"; // REQUEST
-                forceRSVP = true;
-            }
-            else {
-                var userId = this.session.userId;
-                if (userId == null)
-                    userId = this.calId; // fallback
-                var i = 0;
-                for ( ; i < attendees.length; ++i ) {
-                    if (attendees[i].id == userId) {
-                        // REPLY for just this user:
-                        url += "&method=4";
-                        attendees = [ attendees[i] ];
-                        break;
-                    }
-                }
-                if (i >= attendees.length) {
-                    // user not in list, don't write attendee list:
-                    attendees = null;
-                }
-            }
-        } // else just PUBLISH (default)
-        
         dtstart = item.startDate;
         var dtend = item.endDate;
         url += ("&dtend=" + getIcalUTC(dtend));
@@ -407,14 +375,53 @@ calWcapCalendar.prototype.getStoreUrl = function( item )
     }
     
     // attendees:
-    url += "&attendees=";
-    if (attendees != null) {
-        for ( var i = 0; i < attendees.length; ++i ) {
-            if (i > 0)
-                url += ";";
-            url += this.encodeAttendee( attendees[i], forceRSVP );
+    var attendees =  item.getAttendees({});
+    if (attendees.length > 0) {
+        // ORGANIZER is owner fo this cal?
+        if (!oldItem || orgUID == ownerId) {
+            url += "&method=2"; // REQUEST
+            url += "&attendees=";
+            for ( var i = 0; i < attendees.length; ++i ) {
+                if (i > 0)
+                    url += ";";
+                url += this.encodeAttendee( attendees[i], true /*forceRSVP*/ );
+            }
         }
-    }
+        else { // attendee's calendar:
+            var attendee = item.getAttendeeById(ownerId);
+            if (attendee == null) {
+                this.logError( "not in attendee list, but in my cal?" );
+            }
+            else {
+                this.log( "attendee: " + attendee.icalProperty.icalString );
+                var oldAttendee = oldItem.getAttendeeById(ownerId);
+                if (!oldAttendee ||
+                    attendee.participationStatus !=
+                    oldAttendee.participationStatus) {
+                    // REPLY for just this calendar owner:
+                    url += "&method=4";
+                    url += ("&attendees=PARTSTAT=" +
+                            attendee.participationStatus);
+                    url += ("^" + ownerId);
+                }
+                else {
+                    // UPDATE attendee's copy of item:
+                    url += "&method=256";
+                }
+            }
+        }
+    } // else use just PUBLISH (method=1)
+    
+    // xxx todo: however, sometimes socs just returns an empty calendar when
+    //           nothing or only optional props like attendee ROLE has changed,
+    //           although fetch=1.
+    //           This also occurs when the event organizer is in the attendees
+    //           list and switches its PARTSTAT too often...
+    //     hack: ever changing dummy prop, then the cs engine seems to write
+    //           every time. WTF.
+    url += ("&X-MOZ-WCAP-DUMMY=" +
+            "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" +
+            getIcalUTC(getTime()));
     
     return url;
 };
@@ -473,7 +480,7 @@ calWcapCalendar.prototype.adoptItem = function( item, iListener )
             // will most probably lead to error => existing parent
         }
         
-        var url = this.getStoreUrl( item );
+        var url = this.getStoreUrl( item, null );
         url += this.encodeRecurrenceParams( item );
         // (WCAP_STORE_TYPE_CREATE) error if existing item:
         url += "&storetype=1";
@@ -503,9 +510,9 @@ calWcapCalendar.prototype.addItem = function( item, iListener )
 };
 
 calWcapCalendar.prototype.modifyItem_resp = function(
-    wcapResponse, newItem_, oldItem, iListener )
+    wcapResponse, oldItem, iListener )
 {
-    var newItem = null;
+    var item = null;
     try {
         var icalRootComp = wcapResponse.data; // first statement, may throw
         
@@ -513,26 +520,19 @@ calWcapCalendar.prototype.modifyItem_resp = function(
             icalRootComp,
             Components.interfaces.calICalendar.ITEM_FILTER_ALL_ITEMS,
             0, null, null );
+        if (items.length < 1)
+            throw new Error("empty VCALENDAR returned!");
         if (items.length > 1)
             this.notifyError( "unexpected number of items: " + items.length );
-        if (items.length < 1) {
-            // however, sometimes socs just returns an empty calendar when
-            // nothing has changed, although fetch=1.
-            // This also occurs when the event organizer is in the attendees
-            // list and switches its PARTSTAT too often... WTF.
-            this.log( "empty VCALENDAR returned!" );
-            newItem = newItem_; // fallback, assuming item has been written
-        }
-        else
-            newItem = items[0];
+        item = items[0];
         
         if (iListener != null) {
             iListener.onOperationComplete(
                 this.superCalendar, Components.results.NS_OK,
                 Components.interfaces.calIOperationListener.MODIFY,
-                newItem.id, newItem );
+                item.id, item );
         }
-        this.notifyObservers( "onModifyItem", [newItem, oldItem] );
+        this.notifyObservers( "onModifyItem", [item, oldItem] );
         // xxx todo: maybe log request status
     }
     catch (exc) {
@@ -540,7 +540,7 @@ calWcapCalendar.prototype.modifyItem_resp = function(
             iListener.onOperationComplete(
                 this.superCalendar, Components.results.NS_ERROR_FAILURE,
                 Components.interfaces.calIOperationListener.MODIFY,
-                newItem == null ? null : newItem.id, exc );
+                item == null ? null : item.id, exc );
         }
         this.notifyError( exc );
     }
@@ -557,7 +557,7 @@ calWcapCalendar.prototype.modifyItem = function(
         if (!newItem.id)
             throw new Error("new item has no id!");
         
-        var url = this.getStoreUrl( newItem );
+        var url = this.getStoreUrl( newItem, oldItem );
         url += ("&uid=" + newItem.id);
         if (newItem.parentItem == newItem) { // is master
             // (WCAP_STORE_TYPE_MODIFY) error if not existing:
@@ -577,8 +577,7 @@ calWcapCalendar.prototype.modifyItem = function(
         this.session.issueAsyncRequest(
             url + "&fmt-out=text%2Fcalendar", stringToIcal,
             function( wcapResponse ) {
-                this_.modifyItem_resp( wcapResponse,
-                                       newItem, oldItem, iListener );
+                this_.modifyItem_resp( wcapResponse, oldItem, iListener );
             } );
     }
     catch (exc) {
@@ -1239,8 +1238,8 @@ calWcapCalendar.prototype.syncChangesTo = function(
                         function( item ) {
                             syncState.acquire();
                             this_.log( "adding " + item.id );
-                            // xxx todo: verify whether exceptions
-                            // are written:
+                            // xxx todo: verify whether exceptions have been
+                            //           written
                             destCal.addItem( item, addItemListener );
                         } );
                 } );
@@ -1268,7 +1267,7 @@ calWcapCalendar.prototype.syncChangesTo = function(
                             modifiedItems.push( item.id );
                             if (bAdd) {
                                 // xxx todo: verify whether exceptions
-                                // are written:
+                                //           have been written
                                 this_.log( "adding " + item.id );
                                 destCal.addItem( item, addItemListener );
                             }

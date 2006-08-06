@@ -116,8 +116,7 @@ calWcapCalendar.prototype = {
     function()
     {
         var str = this.session.toString();
-        if (this.calId != this.session.userId)
-            str += (", calId=" + this.calId);
+        str += (", calId=" + this.calId);
         return str;
     },
     log:
@@ -184,8 +183,7 @@ calWcapCalendar.prototype = {
     
     // xxx todo: rework like in
     //           https://bugzilla.mozilla.org/show_bug.cgi?id=257428
-    m_bSuppressAlarms: true /* xxx todo:
-                               off for now until all problems are solved */,
+    m_bSuppressAlarms: false,
     get suppressAlarms() {
         return (this.m_bSuppressAlarms || this.readOnly);
     },
@@ -209,18 +207,28 @@ calWcapCalendar.prototype = {
     //           calendar has its own calICalendar object...
     //           poking calId, so default calendar will then behave
     //           like a subscribed one...
-    m_overriddencalId: null,
     m_calId: null,
     get calId() {
-        return this.m_overriddencalId || this.calId_;
-    },
-    get calId_() { // the original (static) calId of this calendar
         var userId = this.session.userId; // assure being logged in
         return this.m_calId || userId;
     },
     set calId( id ) {
-        this.log( "overriding calId to " + id );
-        this.m_overriddencalId = id;
+        this.log( "setting calId to " + id );
+        this.m_calId = id;
+        // refresh calprops:
+        this.m_calProps = null;
+        this.getCalProps_( true /* async */ );
+    },
+    
+    get ownerId() {
+        var ar = this.getCalendarProperties("X-NSCP-CALPROPS-PRIMARY-OWNER",{});
+        if (ar.length < 1) {
+            this.notifyError(
+                "cannot determine primary owner of calendar " + this.calId );
+            // fallback to userId:
+            return this.session.userId;
+        }
+        return ar[0];
     },
     
     get description() {
@@ -239,16 +247,16 @@ calWcapCalendar.prototype = {
             ar = this.getCalendarProperties(
                 "X-S1CS-CALPROPS-COMMON-NAME", {});
             if (ar.length < 1) {
-                return this.calId_; // fallback, xxx todo calId_
+                return this.calId;
             }
         }
         return ar[0];
     },
     
     get isOwnedCalendar() {
-        var userId = this.session.userId;
-        return (this.calId == userId ||
-                this.calId.indexOf(userId + ":") == 0);
+        var ownerId = this.ownerId;
+        return (this.calId == ownerId ||
+                this.calId.indexOf(ownerId + ":") == 0);
     },
     
     getCalendarProperties:
@@ -272,9 +280,7 @@ calWcapCalendar.prototype = {
         try {
             if (this.m_calProps == null) {
                 var url = this.session.getCommandUrl( "get_calprops" );
-                // xxx todo: for now this alwas gets the description of
-                //           the original calId_
-                url += ("&calid=" + encodeURIComponent(this.calId_));
+                url += ("&calid=" + encodeURIComponent(this.calId));
                 url += "&fmt-out=text%2Fxml";
                 var this_ = this;
                 function resp( wcapResponse ) {

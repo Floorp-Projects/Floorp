@@ -57,6 +57,11 @@ interface calIWcapCalendar : calICalendar
     readonly attribute string calId;
     
     /**
+     * UserId of primary owner of this calendar instance.
+     */
+    readonly attribute string ownerId;
+    
+    /**
      * Whether the currently selected calendar belongs to user.
      */
     readonly attribute boolean isOwnedCalendar;
