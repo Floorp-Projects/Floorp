@@ -76,7 +76,8 @@
 static char _progname[1024] = "huh?";
 static unsigned int _gdb_sleep_duration = 300;
 
-#if defined(LINUX) && defined(DEBUG) && (defined(__i386) || defined(PPC))
+#if defined(LINUX) && defined(DEBUG) && \
+      (defined(__i386) || defined(__x86_64) || defined(PPC))
 #define CRAWL_STACK_ON_SIGSEGV
 #endif
 
