@@ -569,7 +569,7 @@ nsUnknownContentTypeDialog.prototype = {
           catch (ex) {
           }
           if (primaryExtension != "")
-            typeString = primaryExtension.toUpperCase() + " file";
+            typeString = this.dialogElement("strings").getFormattedString("fileType", [primaryExtension.toUpperCase()]);
           // 3. If we can't even do that, just give up and show the MIME type. 
           else
             typeString = mimeInfo.MIMEType;
