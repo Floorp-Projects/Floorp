@@ -105,6 +105,7 @@ function filepickerLoad() {
   if (filePickerMode == nsIFilePicker.modeGetFolder) {
     var textInputLabel = document.getElementById("textInputLabel");
     textInputLabel.value = gFilePickerBundle.getString("dirTextInputLabel");
+    textInputLabel.accessKey = gFilePickerBundle.getString("dirTextInputAccesskey");
   }
   
   if ((filePickerMode == nsIFilePicker.modeOpen) ||
