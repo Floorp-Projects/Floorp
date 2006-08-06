@@ -259,10 +259,7 @@ typedef enum JSGCInvocationKind {
     GC_LAST_DITCH
 } JSGCInvocationKind;
 
-/*
- * Return false when the branch callback cancels GC and true otherwise.
- */
-extern JSBool
+extern void
 js_GC(JSContext *cx, JSGCInvocationKind gckind);
 
 /* Call this after succesful malloc of memory for GC-related things. */
