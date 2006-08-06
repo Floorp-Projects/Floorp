@@ -2073,7 +2073,7 @@
            var dates = new Array();
            if (this.mStartDate && this.mEndDate) {
                var d = this.mStartDate.clone();
-               while (d.compare(this.mEndDate) != 0) {
+               while (d.compare(this.mEndDate) <= 0) {
                    dates.push(d.clone());
                    d.day += 1;
                    d.normalize();
