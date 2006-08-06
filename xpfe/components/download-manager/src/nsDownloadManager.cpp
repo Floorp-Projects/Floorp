@@ -948,9 +948,9 @@ nsDownload::Cancel()
     return rv;
   mDownloadManager->DownloadEnded(path, nsnull);
   
-  // dump the temp file.  This should really be done when the transfer
-  // is cancelled, but there's other cancelallation causes that shouldn't
-  // remove this, we need to improve those bits
+  // Dump the temp file.  This should really be done when the transfer
+  // is cancelled, but there are other cancellation causes that shouldn't
+  // remove this. We need to improve those bits.
   if (mTempFile) {
     PRBool exists;
     mTempFile->Exists(&exists);
