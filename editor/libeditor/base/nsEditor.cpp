@@ -515,11 +515,14 @@ nsEditor::PreDestroy()
   if (mDidPreDestroy)
     return NS_OK;
 
-  // Let spellchecker clean up its observers etc.
-  if (mInlineSpellChecker) {
+  // Let spellchecker clean up its observers etc. It is important not to
+  // actually free the spellchecker here, since the spellchecker could have
+  // caused flush notifications, which could have gotten here if a textbox
+  // is being removed. Setting the spellchecker to NULL could free the
+  // object that is still in use! It will be freed when the editor is
+  // destroyed.
+  if (mInlineSpellChecker)
     mInlineSpellChecker->Cleanup();
-    mInlineSpellChecker = nsnull;
-  }
 
   // tell our listeners that the doc is going away
   NotifyDocumentListeners(eDocumentToBeDestroyed);

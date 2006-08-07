@@ -542,6 +542,16 @@ mozInlineSpellChecker::Init(nsIEditor *aEditor)
   return NS_OK;
 }
 
+// mozInlineSpellChecker::Cleanup
+//
+//    Called by the editor when the editor is going away. This is important
+//    because we remove listeners. We do NOT clean up anything else in this
+//    function, because it can get called while DoSpellCheck is running!
+//
+//    Getting the style information there can cause DOM notifications to be
+//    flushed, which can cause editors to go away which will bring us here.
+//    We can not do anything that will cause DoSpellCheck to freak out.
+
 nsresult mozInlineSpellChecker::Cleanup()
 {
   mNumWordsInSpellSelection = 0;
@@ -555,8 +565,6 @@ nsresult mozInlineSpellChecker::Cleanup()
 
     rv = UnregisterEventListeners();
   }
-
-  mSpellCheck = nsnull;
 
   return rv;
 }
@@ -660,6 +668,7 @@ NS_IMETHODIMP
 mozInlineSpellChecker::SetEnableRealTimeSpell(PRBool aEnabled)
 {
   if (!aEnabled) {
+    mSpellCheck = nsnull;
     return Cleanup();
   }
 
