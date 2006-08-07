@@ -358,7 +358,7 @@ crmf_encode_popoprivkey(PRArenaPool            *poolp,
 			const SEC_ASN1Template *privKeyTemplate)
 {
     struct crmfEncoderArg   encoderArg;
-    SECItem                 derTemp; 
+    SECItem                 derTemp = { siBuffer, NULL, 0 };
     SECStatus               rv;
     void                   *mark;
     const SEC_ASN1Template *subDerTemplate;
