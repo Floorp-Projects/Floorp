@@ -205,6 +205,11 @@ nsWindowCollector::Observe(nsISupports *subject,
       rv = properties->SetPropertyAsBool(NS_LITERAL_STRING("chrome"), PR_TRUE);
       NS_ENSURE_SUCCESS(rv, rv);
     }
+    if (nsMetricsUtils::IsSubframe(item)) {
+      rv = properties->SetPropertyAsBool(NS_LITERAL_STRING("subframe"),
+                                         PR_TRUE);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   } else if (strcmp(topic, "domwindowopened") == 0) {
     // We'd like to log a window open event now, but the window opener
     // has not yet been set when we receive the domwindowopened notification.
@@ -229,6 +234,14 @@ nsWindowCollector::Observe(nsISupports *subject,
     // Log a window destroy event.
     action.Assign("destroy");
     window = do_GetInterface(subject);
+
+    nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(subject);
+    NS_ENSURE_STATE(item);
+    if (nsMetricsUtils::IsSubframe(item)) {
+      rv = properties->SetPropertyAsBool(NS_LITERAL_STRING("subframe"),
+                                         PR_TRUE);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   if (window) {

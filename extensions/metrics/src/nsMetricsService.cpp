@@ -83,6 +83,7 @@
 #ifndef MOZILLA_1_8_BRANCH
 #include "nsIClassInfoImpl.h"
 #endif
+#include "nsIDocShellTreeItem.h"
 #include "nsDocShellCID.h"
 #include "nsMemory.h"
 #include "nsIBadCertListener.h"
@@ -1744,4 +1745,25 @@ nsMetricsUtils::CreateElement(nsIDOMDocument *ownerDoc,
 {
   return ownerDoc->CreateElementNS(NS_LITERAL_STRING(NS_METRICS_NAMESPACE),
                                    tag, element);
+}
+
+
+/* static */ PRBool
+nsMetricsUtils::IsSubframe(nsIDocShellTreeItem* docShell)
+{
+  // Consider the docshell to be a subframe if it's is content, not chrome,
+  // and has a parent docshell which is also content.
+  if (!docShell) {
+    return PR_FALSE;
+  }
+
+  PRInt32 itemType;
+  docShell->GetItemType(&itemType);
+  if (itemType != nsIDocShellTreeItem::typeContent) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> parent;
+  docShell->GetSameTypeParent(getter_AddRefs(parent));
+  return (parent != nsnull);
 }
