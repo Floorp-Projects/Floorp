@@ -64,6 +64,8 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
   virtual nsIAtom* GetType() const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -103,6 +105,12 @@ nsIAtom*
 nsFirstLetterFrame::GetType() const
 {
   return nsLayoutAtoms::letterFrame;
+}
+
+PRBool
+nsFirstLetterFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~nsIFrame::eBidiInlineContainer);
 }
 
 PRIntn

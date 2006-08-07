@@ -1174,9 +1174,10 @@ public:
    * Bit-flags to pass to IsFrameOfType()
    */
   enum {
-    eMathML =           1 << 0,
-    eSVG =              1 << 1,
-    eSVGForeignObject = 1 << 2
+    eMathML =              1 << 0,
+    eSVG =                 1 << 1,
+    eSVGForeignObject =    1 << 2,
+    eBidiInlineContainer = 1 << 3
   };
 
   /**
