@@ -727,7 +727,7 @@ function xpinstallEditPermissions(aDocShell)
                    allowVisible   : true,
                    prefilledHost  : webNav.currentURI.host,
                    permissionType : "install",
-                   windowTitle    : bundlePreferences.getString("addonspermissionstitle"),
+                   windowTitle    : bundlePreferences.getString("addons_permissions_title"),
                    introText      : bundlePreferences.getString("addonspermissionstext") };
     wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                    .getService(Components.interfaces.nsIWindowMediator);
