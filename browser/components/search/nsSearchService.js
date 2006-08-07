@@ -2537,6 +2537,43 @@ SearchService.prototype = {
     return engines;
   },
 
+  getDefaultEngines: function SRCH_SVC_getDefault(aCount) {
+    function isDefault (engine) {
+      return engine._isInAppDir;
+    };
+    var engines = this._sortedEngines.filter(isDefault);
+    var prefB = Cc["@mozilla.org/preferences-service;1"].
+                getService(Ci.nsIPrefService).
+                getBranch(BROWSER_SEARCH_PREF + "order.");
+    var engineOrder = {};
+    var i = 1;
+    while (true) {
+      try {
+        engineOrder[prefB.getCharPref(i)] = i++;
+      } catch (ex) {
+        break;
+      }
+    }
+
+    function compareEngines (a, b) {
+      var aIdx = engineOrder[a.name];
+      var bIdx = engineOrder[b.name];
+
+      if (aIdx && bIdx)
+        return aIdx - bIdx;
+      if (aIdx)
+        return -1;
+      if (bIdx)
+        return 1;
+
+      return a.name < b.name ? -1 : 1;
+    }
+    engines.sort(compareEngines);
+
+    aCount.value = engines.length;
+    return engines;
+  },
+
   getEngineByName: function SRCH_SVC_getEngineByName(aEngineName) {
     return this._engines[aEngineName] || null;
   },

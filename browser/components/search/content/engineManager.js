@@ -106,6 +106,16 @@ var gEngineManagerDialog = {
     os.removeObserver(this, "browser-search-engine-modified");
   },
 
+  onRestoreDefaults: function engineManager_onRestoreDefaults() {
+    var num = gEngineView._engineStore.restoreDefaultEngines();
+    gEngineView.rowCountChanged(0, num);
+    gEngineView.invalidate();
+  },
+
+  showRestoreDefaults: function engineManager_showRestoreDefaults(val) {
+    document.documentElement.getButton("extra2").disabled = !val;
+  },
+
   loadAddEngines: function engineManager_loadAddEngines() {
     this.onOK();
     window.opener.BrowserSearch.loadAddEngines();
@@ -205,15 +215,38 @@ EngineRemoveOp.prototype = {
   }
 }
 
+function EngineUnhideOp(aEngineClone, aNewIndex) {
+  if (!aEngineClone)
+    throw new Error("bad args to new EngineUnhideOp!");
+  this._engine = aEngineClone.originalEngine;
+  this._newIndex = aNewIndex;
+}
+EngineUnhideOp.prototype = {
+  _engine: null,
+  _newIndex: null,
+  commit: function EUO_commit() {
+    this._engine.hidden = false;
+    var searchService = Cc["@mozilla.org/browser/search-service;1"].
+                        getService(Ci.nsIBrowserSearchService);
+    searchService.moveEngine(this._engine, this._newIndex);
+  }
+}
+
 function EngineStore() {
   var searchService = Cc["@mozilla.org/browser/search-service;1"].
                       getService(Ci.nsIBrowserSearchService);
   this._engines = searchService.getVisibleEngines({}).map(this._cloneEngine);
+  this._defaultEngines = searchService.getDefaultEngines({}).map(this._cloneEngine);
 
   this._ops = [];
+
+  // check if we need to disable the restore defaults button
+  var someHidden = this._defaultEngines.some(function (e) {return e.hidden;});
+  gEngineManagerDialog.showRestoreDefaults(someHidden);
 }
 EngineStore.prototype = {
   _engines: null,
+  _defaultEngines: null,
   _ops: null,
 
   get engines() {
@@ -221,6 +254,7 @@ EngineStore.prototype = {
   },
   set engines(val) {
     this._engines = val;
+    return val;
   },
 
   _getIndexForEngine: function ES_getIndexForEngine(aEngine) {
@@ -235,9 +269,23 @@ EngineStore.prototype = {
     return newO;
   },
 
+  // Callback for Array's some(). A thisObj must be passed to some()
+  _isSameEngine: function ES_isSameEngine(aEngineClone) {
+    return aEngineClone.originalEngine == this.originalEngine;
+  },
+
   commit: function ES_commit() {
+    var searchService = Cc["@mozilla.org/browser/search-service;1"].
+                        getService(Ci.nsIBrowserSearchService);
+    var currentEngine = this._cloneEngine(searchService.currentEngine);
     for (var i = 0; i < this._ops.length; i++)
       this._ops[i].commit();
+
+    // Restore currentEngine if it is a default engine that is still visible.
+    // Needed if the user deletes currentEngine and then restores it.
+    if (this._defaultEngines.some(this._isSameEngine, currentEngine) &&
+        !currentEngine.originalEngine.hidden)
+      searchService.currentEngine = currentEngine.originalEngine;
   },
 
   addEngine: function ES_addEngine(aEngine) {
@@ -265,6 +313,23 @@ EngineStore.prototype = {
  
     this._engines.splice(index, 1);
     this._ops.push(new EngineRemoveOp(aEngine));
+    if (this._defaultEngines.some(this._isSameEngine, aEngine))
+      gEngineManagerDialog.showRestoreDefaults(true);
+  },
+
+  restoreDefaultEngines: function ES_restoreDefaultEngines() {
+    var i = 0;
+    for each (var e in this._defaultEngines) {
+      // skip adding engine if the engine is already in the list
+      if (this._engines.some(this._isSameEngine, e))
+        continue;
+
+      this._engines.splice(i, 0, e);
+      this._ops.push(new EngineUnhideOp(e, i));
+      i++;
+    }
+    gEngineManagerDialog.showRestoreDefaults(false);
+    return i;
   },
 
   reloadIcons: function ES_reloadIcons() {

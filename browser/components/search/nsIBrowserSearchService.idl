@@ -162,7 +162,7 @@ interface nsISearchEngine : nsISupports
 
 };
 
-[scriptable, uuid(0c6164fe-580d-497f-87d3-1bf36006cb7c)]
+[scriptable, uuid(8307b8f2-08ea-45b8-96bf-b1dc7688fe3b)]
 interface nsIBrowserSearchService : nsISupports
 {
   /**
@@ -228,7 +228,8 @@ interface nsIBrowserSearchService : nsISupports
 
   /**
    * Un-hides all engines installed in the directory corresponding to
-   * the directory service's NS_APP_SEARCH_DIR key.
+   * the directory service's NS_APP_SEARCH_DIR key. (i.e. the set of
+   * engines returned by getDefaultEngines)
    */
   void restoreDefaultEngines();
 
@@ -268,6 +269,15 @@ interface nsIBrowserSearchService : nsISupports
    * @returns an array of nsISearchEngine objects.
    */
   void getVisibleEngines(
+            out unsigned long engineCount,
+            [retval, array, size_is(engineCount)] out nsISearchEngine engines);
+
+  /**
+   * Returns an array of all default search engines.
+   *
+   * @returns an array of nsISearchEngine objects.
+   */
+  void getDefaultEngines(
             out unsigned long engineCount,
             [retval, array, size_is(engineCount)] out nsISearchEngine engines);
 
