@@ -736,8 +736,10 @@ void
 nsXULTooltipListener::sAutoHideCallback(nsITimer *aTimer, void* aListener)
 {
   nsXULTooltipListener* self = NS_STATIC_CAST(nsXULTooltipListener*, aListener);
-  if (self)
+  if (self) {
+    nsCOMPtr<nsIDOMMouseListener> kungFuDeathGrip(self);
     self->HideTooltip();
+  }
 }
 
 #ifdef MOZ_XUL
