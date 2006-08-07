@@ -1022,7 +1022,9 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
   if (!WidgetIsContainer(aWidgetType) ||
       aWidgetType == NS_THEME_TOOLBOX || 
       aWidgetType == NS_THEME_STATUSBAR || 
-      aWidgetType == NS_THEME_RESIZER || aWidgetType == NS_THEME_TAB_PANEL)
+      aWidgetType == NS_THEME_RESIZER || aWidgetType == NS_THEME_TAB_PANEL ||
+      aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL ||
+      aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL)
     return NS_OK; // Don't worry about it.
 
   if (aWidgetType == NS_THEME_TOOLBAR) {
