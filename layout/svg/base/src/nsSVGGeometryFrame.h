@@ -96,6 +96,9 @@ public:
   // Set up a cairo context for measuring a stroked path
   void SetupCairoStrokeGeometry(cairo_t *aCtx);
 
+  // Set up a cairo context for hit testing a stroked path
+  void SetupCairoStrokeHitGeometry(cairo_t *aCtx);
+
   // Setup/Cleanup a cairo context for stroking path
   nsresult SetupCairoStroke(nsISVGRendererCanvas *aCanvas,
                             cairo_t *aCtx,

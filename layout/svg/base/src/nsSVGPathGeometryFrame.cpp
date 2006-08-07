@@ -339,17 +339,23 @@ nsSVGPathGeometryFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
   double xx = x, yy = y;
   cairo_device_to_user(ctx, &xx, &yy);
 
-  if (IsClipChild()) {
-    if (GetClipRule() == NS_STYLE_FILL_RULE_EVENODD)
-      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_EVEN_ODD);
-    else
-      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_WINDING);
-  }
+  PRUint32 fillRule;
+  if (IsClipChild())
+    fillRule = GetClipRule();
+  else
+    fillRule = GetStyleSVG()->mFillRule;
+
+  if (fillRule == NS_STYLE_FILL_RULE_EVENODD)
+    cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_EVEN_ODD);
+  else
+    cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_WINDING);
 
   if (mask & HITTEST_MASK_FILL)
     isHit = cairo_in_fill(ctx, xx, yy);
-  if (!isHit && (mask & HITTEST_MASK_STROKE))
+  if (!isHit && (mask & HITTEST_MASK_STROKE)) {
+    SetupCairoStrokeHitGeometry(ctx);
     isHit = cairo_in_stroke(ctx, xx, yy);
+  }
 
   cairo_destroy(ctx);
 
@@ -417,30 +423,22 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
 {
   mRect.Empty();
 
-  PRBool hasFill = HasFill();
-  PRBool hasStroke = HasStroke();
+  cairo_t *ctx = cairo_create(nsSVGUtils::GetCairoComputationalSurface());
 
-  if (hasFill || hasStroke) {
-    cairo_t *ctx = cairo_create(nsSVGUtils::GetCairoComputationalSurface());
+  GeneratePath(ctx, nsnull);
 
-    GeneratePath(ctx, nsnull);
+  double xmin, ymin, xmax, ymax;
 
-    double xmin, ymin, xmax, ymax;
+  SetupCairoStrokeGeometry(ctx);
+  cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+  if (!IsDegeneratePath(xmin, ymin, xmax, ymax)) {
+    cairo_user_to_device(ctx, &xmin, &ymin);
+    cairo_user_to_device(ctx, &xmax, &ymax);
 
-    if (hasStroke) {
-      SetupCairoStrokeGeometry(ctx);
-      cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
-    } else
-      cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
-
-    if (!IsDegeneratePath(xmin, ymin, xmax, ymax)) {
-      cairo_user_to_device(ctx, &xmin, &ymin);
-      cairo_user_to_device(ctx, &xmax, &ymax);
-
-      mRect = nsSVGUtils::ToBoundingPixelRect(xmin, ymin, xmax, ymax);
-    }
-    cairo_destroy(ctx);
+    mRect = nsSVGUtils::ToBoundingPixelRect(xmin, ymin, xmax, ymax);
   }
+
+  cairo_destroy(ctx);
 
   // Add in markers
   mRect = GetCoveredRegion();
