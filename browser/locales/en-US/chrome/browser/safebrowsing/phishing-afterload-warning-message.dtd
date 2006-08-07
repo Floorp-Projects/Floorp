@@ -4,8 +4,8 @@
 <!ENTITY safeb.palm.message.p1.linkText "Read more &#187;">
 <!ENTITY safeb.palm.p1.linkStatusText "Read more &#133;">
 
-<!ENTITY safeb.palm.message.p2.start "These types of web forgeries are used in scams known as phishing attacks, in which fradulent web pages and emails are used to imitate sources you may trust. You can find out more about ">
-<!ENTITY safeb.palm.message.p2.linkText "how Firefox protects you">
+<!ENTITY safeb.palm.message.p2.start "These types of web forgeries are used in scams known as phishing attacks, in which fraudulent web pages and emails are used to imitate sources you may trust. You can find out more about ">
+<!ENTITY safeb.palm.message.p2.linkText "how &brandShortName; protects you">
 <!ENTITY safeb.palm.message.p2.linkURL "http://www.mozilla.org/projects/bonecho/anti-phishing/">
 <!ENTITY safeb.palm.message.p2.end " from phishing attacks.">
 

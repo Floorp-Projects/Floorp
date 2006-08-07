@@ -5,8 +5,12 @@
 <?xml-stylesheet
  href="chrome://browser/skin/safebrowsing/browser-protection.css" 
  type="text/css" ?>
-<!DOCTYPE 
- window SYSTEM "chrome://browser/locale/safebrowsing/phishing-afterload-warning-message.dtd">
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % safebrowsingDTD SYSTEM "chrome://browser/locale/safebrowsing/phishing-afterload-warning-message.dtd">
+%safebrowsingDTD;
+]>
 
 <overlay id="safebrowsing-overlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
