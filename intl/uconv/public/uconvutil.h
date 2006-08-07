@@ -52,7 +52,7 @@
 #else
 #define ShiftInCell(sub,len,min,max)  \
     PACK(sub,len), PACK(min, max)
-#define ShiftOutCell(sub,len,min,max,minh,minl,maxh,maxl)  \
+#define ShiftOutCell(sub,len,minh,minl,maxh,maxl)  \
     PACK(sub,len), PACK(minh,minl), PACK(maxh,maxl)
 #endif
 
