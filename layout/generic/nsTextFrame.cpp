@@ -3724,12 +3724,7 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
         nsTextDimensions newDimensions;//temp
 #ifdef IBMBIDI // Simon - display substrings RTL in RTL frame
         if (isRightToLeftOnBidiPlatform)
-        {
-          nsTextDimensions frameDimensions;
-          GetTextDimensions(aRenderingContext, aTextStyle, text, 
-                            (PRInt32)textLength, iter.IsLast(), &frameDimensions);
-          currentX = dx + frameDimensions.width;
-        }
+          currentX = dx + mRect.width;
 #endif
         while (!iter.IsDone())
         {
