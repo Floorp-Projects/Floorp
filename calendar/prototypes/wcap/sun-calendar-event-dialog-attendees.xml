@@ -190,15 +190,6 @@
             // until this function returns we add at least a single copy of this template back again.
             listbox.removeChild(template);
 
-            // disable the 'role' menulist if this item was not initiated from this calendar.    
-            if (this.mIsReadOnly || !this.mIsOrganizer) {
-              template.childNodes[0].childNodes[0].setAttribute("disabled","true");
-            }
-
-            // always disable the 'status' menulist, since
-            // this can only be set by each individual attendee.
-            template.childNodes[1].childNodes[0].setAttribute("disabled","true");
-
             // TODO: the organizer should show up in the attendee list, but this information
             // should be based on the organizer contained in the appropriate field of calIItemBase.
             // This is currently not supported, since we're still missing calendar identities.
@@ -215,24 +206,19 @@
                     organizer.commonName = props[0];
               }
               catch(e) {}
-              this.appendAttendee(organizer,listbox,template);
+              this.appendAttendee(organizer,listbox,template,true);
             }
 
             var numRowsAdded = 0;
             var attendees = item.getAttendees({});
             if(attendees.length > 0) {
                 for each(var attendee in attendees) {
-                  if(this.mOrganizerID && this.mOrganizerID != "") {
-                    if (attendee.id == this.mOrganizerID) {
-                      continue;
-                    }
-                  }
-                  this.appendAttendee(attendee,listbox,template);
+                  this.appendAttendee(attendee,listbox,template,false);
                   numRowsAdded++;
                 }
             }
             if(numRowsAdded == 0) {
-              this.appendAttendee(null,listbox,template);
+              this.appendAttendee(null,listbox,template,false);
             }
 
             this.fitDummyRows();
@@ -269,6 +255,7 @@
         <parameter name="aAttendee"/>
         <parameter name="aParentNode"/>
         <parameter name="aTemplateNode"/>
+        <parameter name="aDisableIfOrganizer"/>
         <body>
           <![CDATA[
           
@@ -280,19 +267,28 @@
           var role = document.getAnonymousElementByAttribute(newNode, "anonid", "role");
           var status = document.getAnonymousElementByAttribute(newNode, "anonid", "status");
 
-          // the template could have its input-field disabled,
-          // that's why we need to reset this status.
+          // the template could have its fields disabled,
+          // that's why we need to reset their status.
           input.removeAttribute("disabled");
+          role.removeAttribute("disabled");
 
-          if(this.mIsReadOnly || !this.mIsOrganizer)
+          // always disable the 'status' menulist, since
+          // this can only be set by each individual attendee.
+          status.setAttribute("disabled","true");
+
+          if(this.mIsReadOnly || !this.mIsOrganizer) {
             input.setAttribute("disabled","true");
+            role.setAttribute("disabled","true");
+          }
 
           // disable the input-field [name <email>] if this attendee
           // appears to be the organizer.
-          if (aAttendee) {
-            if (this.mOrganizerID && this.mOrganizerID != "") {
-              if (aAttendee.id == this.mOrganizerID) {
-                input.setAttribute("disabled","true");
+          if (aDisableIfOrganizer) {
+            if (aAttendee) {
+              if (this.mOrganizerID && this.mOrganizerID != "") {
+                if (aAttendee.id == this.mOrganizerID) {
+                  input.setAttribute("disabled","true");
+                }
               }
             }
           }
@@ -340,6 +336,18 @@
             }
           }
   
+          // always disable 'role' & 'status' for the organizer
+          if (aDisableIfOrganizer) {
+            if (aAttendee) {
+              if (this.mOrganizerID && this.mOrganizerID != "") {
+                if (aAttendee.id == this.mOrganizerID) {
+                  role.setAttribute("disabled","true");
+                  status.setAttribute("disabled","true");
+                }
+              }
+            }
+          }
+  
           return true;
           ]]>
         </body>
@@ -364,12 +372,19 @@
               var role = document.getAnonymousElementByAttribute(newNode, "anonid", "role");
               var status = document.getAnonymousElementByAttribute(newNode, "anonid", "status");
 
-              // the template could have its input-field disabled,
-              // that's why we need to reset this status.
+              // the template could have its fields disabled,
+              // that's why we need to reset their status.
               input.removeAttribute("disabled");
-              
-              if(this.mIsReadOnly || !this.mIsOrganizer)
+              role.removeAttribute("disabled");
+
+              // always disable the 'status' menulist, since
+              // this can only be set by each individual attendee.
+              status.setAttribute("disabled","true");
+
+              if(this.mIsReadOnly || !this.mIsOrganizer) {
                 input.setAttribute("disabled","true");
+                role.setAttribute("disabled","true");
+              }
 
               this.mMaxAttendees++;
               var rowNumber = this.mMaxAttendees;
@@ -466,7 +481,9 @@
                 var addAttendee = true;
                 if (this.mOrganizerID && this.mOrganizerID != "") {
                   if (attendee.id == this.mOrganizerID) {
-                    addAttendee = false;
+                    if (i == 1) {
+                      addAttendee = false;
+                    }
                   }
                 }
 
@@ -479,6 +496,65 @@
             }
             
             return attendees;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="organizer">
+        <getter>
+          <![CDATA[
+            var i=1;
+            var inputField;
+            while ((inputField = this.getInputElement(i))) {
+              var fieldValue = inputField.value;
+              if (fieldValue == null)
+                fieldValue = inputField.getAttribute("value");
+
+              if (fieldValue != "") {
+              
+                // the inputfield already has a reference to the attendee
+                // object, we just need to fill in the name. we need to make sure
+                // to pay attention to the case where the attendee object is immutable.
+                var attendee = inputField.attendee;
+                if(!attendee.isMutable) {
+                  attendee = attendee.clone();
+                }
+
+                attendee.role = this.getRoleElement(i).getAttribute("role");
+                attendee.participationStatus = this.getStatusElement(i).getAttribute("status");
+                
+                // break the list of potentially many attendees back into individual names
+                var emailAddresses = {};
+                var names = {};
+                var fullNames = {};
+                var numAddresses = this.mHeaderParser.parseHeadersWithArray(fieldValue,emailAddresses,names,fullNames);
+                
+                if(emailAddresses.value.length > 0) {
+
+                    // if the new address has no 'mailto'-prefix but seems
+                    // to look like an email-address, we prepend the prefix.
+                    // this also allows for non-email-addresses.
+                    var email = emailAddresses.value[0];
+                    if (email.indexOf("mailto:") != 0)
+                        if (email.indexOf("@") >= 0)
+                            email = "mailto:" + email;
+                    attendee.id = email;
+                }
+                if(names.value.length > 0) {
+                    attendee.commonName = names.value[0];
+                }
+
+                if (this.mOrganizerID && this.mOrganizerID != "") {
+                  if (attendee.id == this.mOrganizerID) {
+                    return attendee;
+                  }
+                }
+              }
+
+              i++;
+            }
+            
+            return null;
           ]]>
         </getter>
       </property>
@@ -1519,7 +1595,9 @@
         <body>
           <![CDATA[
             item.removeAllAttendees();
-            var attendees = document.getAnonymousElementByAttribute(this, "anonid", "attendees-list").attendees;
+            var attendeelist = document.getAnonymousElementByAttribute(this, "anonid", "attendees-list");
+            var attendees = attendeelist.attendees;
+            item.organizer = attendeelist.organizer;
             for each(var attendee in attendees) {
                item.addAttendee(attendee);
             }
