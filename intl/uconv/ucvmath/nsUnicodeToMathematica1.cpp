@@ -45,16 +45,11 @@ static const PRUint16 g_ufMappingTable[] = {
 #include "mathematica1.uf"
 };
 
-static const PRInt16 g_ufShiftTable[] =  {
-  0, u1ByteCharset ,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
 //----------------------------------------------------------------------
 // Class nsUnicodeToMathematica1 [implementation]
 
 nsUnicodeToMathematica1::nsUnicodeToMathematica1() 
-: nsTableEncoderSupport((uShiftTable*) &g_ufShiftTable, 
+  : nsTableEncoderSupport(u1ByteCharset,
                         (uMappingTable*) &g_ufMappingTable, 1)
 {
 }

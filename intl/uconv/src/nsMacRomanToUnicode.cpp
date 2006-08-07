@@ -45,17 +45,11 @@ static const PRUint16 g_MacRomanMappingTable[] = {
 #include "macroman.ut"
 };
 
-static const PRInt16 g_MacRomanShiftTable[] =  {
-  1, u1ByteCharset ,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
 NS_METHOD
 nsMacRomanToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                void **aResult)
 {
-  return CreateTableDecoder((uShiftTable*) &g_MacRomanShiftTable, 
-                            (uMappingTable*) &g_MacRomanMappingTable, 1,
+  return CreateOneByteDecoder((uMappingTable*) &g_MacRomanMappingTable,
                             aOuter, aIID, aResult);
 }
 

@@ -43,16 +43,11 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static const PRInt16 g_ShiftTable[] =  {
-  0, u2BytesCharset,
-  ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
-};
-
 NS_METHOD
 nsUnicodeToCNS11643p4Constructor(nsISupports *aOuter, REFNSIID aIID,
                                  void **aResult)
 {
-  return CreateTableEncoder((uShiftTable*) &g_ShiftTable, 
+  return CreateTableEncoder(u2BytesCharset,
                             (uMappingTable*) &g_ufCNS4MappingTable,
                             2 /* max length = src * 2 */,
                             aOuter, aIID, aResult);

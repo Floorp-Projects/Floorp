@@ -39,18 +39,12 @@
 #include "nsUCVJADll.h"
 #include "nsUCConstructors.h"
 
-// Shift Table
-static const PRInt16 g0201ShiftTable[] =  {
-        1, u1ByteCharset,
-        ShiftCell(0,0,0,0,0,0,0,0)
-};
-
 NS_METHOD
 nsUnicodeToJISx0201Constructor(nsISupports *aOuter, REFNSIID aIID,
                                void **aResult)
 {
-  return CreateTableEncoder((uShiftTable*)  g0201ShiftTable,
-                            (uMappingTable*) g_uf0201Mapping, 1,
+  return CreateTableEncoder(u1ByteCharset,
+                            (uMappingTable*) &g_uf0201Mapping, 1,
                             aOuter, aIID, aResult);
 }
 

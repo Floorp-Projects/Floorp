@@ -45,16 +45,11 @@ static const PRUint16 g_MacCEMappingTable[] = {
 #include "macce.uf"
 };
 
-static const PRInt16 g_MacCEShiftTable[] =  {
-  1, u1ByteCharset ,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
 NS_METHOD
 nsUnicodeToMacCEConstructor(nsISupports *aOuter, REFNSIID aIID,
                             void **aResult) 
 {
-  return CreateTableEncoder((uShiftTable*) &g_MacCEShiftTable, 
+  return CreateTableEncoder(u1ByteCharset,
                             (uMappingTable*) &g_MacCEMappingTable, 1,
                             aOuter, aIID, aResult);
 }

@@ -42,16 +42,11 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static const PRInt16 g0212ShiftTable[] =  {
-        0, u2BytesCharset, 
-        ShiftCell(0,0,0,0,0,0,0,0)
-};
-
 NS_METHOD
 nsUnicodeToJISx0212Constructor(nsISupports *aOuter, REFNSIID aIID,
                                void **aResult)
 {
-  return CreateTableEncoder((uShiftTable*) g0212ShiftTable,
+  return CreateTableEncoder(u2BytesCharset,
                             (uMappingTable*) g_uf0212Mapping,
                             2 /* max len = src * 2 */,
                             aOuter, aIID, aResult);

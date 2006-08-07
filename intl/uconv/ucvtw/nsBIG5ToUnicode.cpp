@@ -42,20 +42,9 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-
-static const PRInt16 g_BIG5ShiftTable[] =  {
-  0, u2BytesCharset,  
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
-static const PRInt16 g_ASCIIShiftTable[] =  {
-  0, u1ByteCharset,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
-static const PRInt16 *g_BIG5ShiftTableSet [] = {
-  g_ASCIIShiftTable,
-  g_BIG5ShiftTable
+static const uScanClassID g_BIG5ScanClassIDs[] = {
+  u1ByteCharset,
+  u2BytesCharset
 };
 
 static const PRUint16 *g_BIG5MappingTableSet [] ={
@@ -74,7 +63,7 @@ nsBIG5ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
 {
   return CreateMultiTableDecoder(2, 
                                  (const uRange* ) &g_BIG5Ranges,
-                                 (uShiftTable**) &g_BIG5ShiftTableSet, 
+                                 (uScanClassID*) &g_BIG5ScanClassIDs,
                                  (uMappingTable**) &g_BIG5MappingTableSet, 1,
                                  aOuter, aIID, aResult);
 }

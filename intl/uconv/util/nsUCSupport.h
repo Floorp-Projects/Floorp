@@ -185,7 +185,7 @@ public:
   /**
    * Class constructor.
    */
-  nsTableDecoderSupport(uShiftTable * aShiftTable, 
+  nsTableDecoderSupport(uScanClassID aScanClass, uShiftInTable * aShiftInTable,
       uMappingTable * aMappingTable, PRUint32 aMaxLengthFactor);
 
   /**
@@ -195,7 +195,8 @@ public:
 
 protected:
 
-  uShiftTable               * mShiftTable;
+  uScanClassID              mScanClass;
+  uShiftInTable             * mShiftInTable;
   uMappingTable             * mMappingTable;
 
   //--------------------------------------------------------------------
@@ -222,7 +223,7 @@ public:
    * Class constructor.
    */
   nsMultiTableDecoderSupport(PRInt32 aTableCount, const uRange * aRangeArray, 
-                             uShiftTable ** aShiftTable,
+                             uScanClassID * aScanClassArray,
                              uMappingTable ** aMappingTable,
                              PRUint32 aMaxLengthFactor);
 
@@ -235,7 +236,7 @@ protected:
 
   PRInt32                   mTableCount;
   const uRange              * mRangeArray;
-  uShiftTable               ** mShiftTable;
+  uScanClassID              * mScanClassArray;
   uMappingTable             ** mMappingTable;
 
   //--------------------------------------------------------------------
@@ -261,8 +262,7 @@ public:
   /**
    * Class constructor.
    */
-  nsOneByteDecoderSupport(uShiftTable * aShiftTable, 
-      uMappingTable * aMappingTable);
+  nsOneByteDecoderSupport(uMappingTable * aMappingTable);
 
   /**
    * Class destructor.
@@ -271,7 +271,6 @@ public:
 
 protected:
 
-  uShiftTable               * mShiftTable;
   uMappingTable             * mMappingTable;
   PRUnichar                 mFastTable[ONE_BYTE_TABLE_SIZE];
   PRBool                    mFastTableCreated;
@@ -411,9 +410,14 @@ class nsTableEncoderSupport : public nsEncoderSupport
 public:
 
   /**
-   * Class constructor.
+   * Class constructors.
    */
-  nsTableEncoderSupport(uShiftTable * aShiftTable, 
+  nsTableEncoderSupport(uScanClassID  aScanClass,
+                        uShiftOutTable * aShiftOutTable,
+                        uMappingTable  * aMappingTable,
+                        PRUint32 aMaxLengthFactor);
+
+  nsTableEncoderSupport(uScanClassID  aScanClass,
                         uMappingTable  * aMappingTable,
                         PRUint32 aMaxLengthFactor);
 
@@ -425,7 +429,8 @@ public:
 
 protected:
 
-  uShiftTable               * mShiftTable;
+  uScanClassID              mScanClass;
+  uShiftOutTable            * mShiftOutTable;
   uMappingTable             * mMappingTable;
 
   //--------------------------------------------------------------------
@@ -452,7 +457,8 @@ public:
    * Class constructor.
    */
   nsMultiTableEncoderSupport(PRInt32 aTableCount,
-                             uShiftTable ** aShiftTable,
+                             uScanClassID * aScanClassArray,
+                             uShiftOutTable ** aShiftOutTable,
                              uMappingTable  ** aMappingTable,
                              PRUint32 aMaxLengthFactor);
 
@@ -465,7 +471,8 @@ public:
 protected:
 
   PRInt32                   mTableCount;
-  uShiftTable               ** mShiftTable;
+  uScanClassID              * mScanClassArray;
+  uShiftOutTable            ** mShiftOutTable;
   uMappingTable             ** mMappingTable;
 
   //--------------------------------------------------------------------

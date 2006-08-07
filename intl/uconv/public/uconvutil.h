@@ -45,35 +45,35 @@
 #define PACK(h,l)   (int16)(( (h) << 8) | (l))
 
 #if defined(IS_LITTLE_ENDIAN)
-#define ShiftCell(sub,len,min,max,minh,minl,maxh,maxl)  \
-    PACK(len,sub), PACK(max,min), PACK(minl,minh), PACK(maxl,maxh)
+#define ShiftInCell(sub,len,min,max)  \
+    PACK(len,sub), PACK(max,min)
+#define ShiftOutCell(sub,len,minh,minl,maxh,maxl)  \
+    PACK(len,sub), PACK(minl,minh), PACK(maxl,maxh)
 #else
-#define ShiftCell(sub,len,min,max,minh,minl,maxh,maxl)  \
-    PACK(sub,len), PACK(min, max), PACK(minh,minl), PACK(maxh,maxl)
+#define ShiftInCell(sub,len,min,max)  \
+    PACK(sub,len), PACK(min, max)
+#define ShiftOutCell(sub,len,min,max,minh,minl,maxh,maxl)  \
+    PACK(sub,len), PACK(minh,minl), PACK(maxh,maxl)
 #endif
 
 typedef enum {
         u1ByteCharset = 0,
         u2BytesCharset,
-        uMultibytesCharset,
         u2BytesGRCharset,
         u2BytesGRPrefix8FCharset,
         u2BytesGRPrefix8EA2Charset,
-        u2BytesSwapCharset,
-        u4BytesCharset,
-        u4BytesSwapCharset,
         u2BytesGRPrefix8EA3Charset,
         u2BytesGRPrefix8EA4Charset,
         u2BytesGRPrefix8EA5Charset,
         u2BytesGRPrefix8EA6Charset,
         u2BytesGRPrefix8EA7Charset,
-        u1ByteGLCharset,
         uDecomposedHangulCharset,
         uJohabHangulCharset,
         uJohabSymbolCharset,
         u4BytesGB18030Charset,
         u2BytesGR128Charset,
-        uNumOfCharsetType
+        uMultibytesCharset,
+        uNumOfCharsetType = uMultibytesCharset
 } uScanClassID;
 
 typedef enum {
@@ -81,8 +81,6 @@ typedef enum {
         u2BytesChar,
         u2BytesGRChar,
         u1BytePrefix8EChar,             /* Used by JIS0201 GR in EUC_JP */
-        u2BytesUTF8,                    /* Used by UTF8 */
-        u3BytesUTF8,                    /* Used by UTF8 */
         uNumOfCharType
 } uScanSubClassID;
 
@@ -91,19 +89,30 @@ typedef struct  {
         unsigned char   reserveLen;
         unsigned char   shiftin_Min;
         unsigned char   shiftin_Max;
+} uShiftInCell;
+
+typedef struct  {
+        PRInt16         numOfItem;
+        uShiftInCell    shiftcell[1];
+} uShiftInTableMutable;
+
+typedef const uShiftInTableMutable uShiftInTable;
+
+typedef struct  {
+        unsigned char   classID;
+        unsigned char   reserveLen;
         unsigned char   shiftout_MinHB;
         unsigned char   shiftout_MinLB;
         unsigned char   shiftout_MaxHB;
         unsigned char   shiftout_MaxLB;
-} uShiftCell;
+} uShiftOutCell;
 
 typedef struct  {
         PRInt16         numOfItem;
-        PRInt16         classID; 
-        uShiftCell      shiftcell[1];
-} uShiftTableMutable;
+        uShiftOutCell   shiftcell[1];
+} uShiftOutTableMutable;
 
-typedef const uShiftTableMutable uShiftTable;
+typedef const uShiftOutTableMutable uShiftOutTable;
 
 
 /*=====================================*/

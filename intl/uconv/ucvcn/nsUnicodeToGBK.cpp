@@ -56,15 +56,6 @@
 // Global table initialization function defined in gbku.h
 //-------------------------------------------------------------
 
-static const PRInt16 g_2BytesShiftTable[] = {
- 0, u2BytesCharset,
- ShiftCell(0,0,0,0,0,0,0,0)
-};
-static const PRInt16 g_4BytesGB18030ShiftTable[] = {
- 0, u4BytesGB18030Charset,
- ShiftCell(0,0,0,0,0,0,0,0)
-};
-
 //-----------------------------------------------------------------------
 //  Private class used by nsUnicodeToGB18030 and nsUnicodeToGB18030Font0
 //    nsUnicodeToGB18030Uniq2Bytes
@@ -76,7 +67,7 @@ class nsUnicodeToGB18030Uniq2Bytes : public nsTableEncoderSupport
 {
 public: 
   nsUnicodeToGB18030Uniq2Bytes() 
-    : nsTableEncoderSupport((uShiftTable*) &g_2BytesShiftTable,
+    : nsTableEncoderSupport(u2BytesCharset,
                             (uMappingTable*) &g_uf_gb18030_2bytes, 2) {};
 protected: 
 };
@@ -91,7 +82,7 @@ class nsUnicodeTo4BytesGB18030 : public nsTableEncoderSupport
 {
 public: 
   nsUnicodeTo4BytesGB18030()
-    : nsTableEncoderSupport( (uShiftTable*) &g_4BytesGB18030ShiftTable,
+    : nsTableEncoderSupport(u4BytesGB18030Charset, 
                              (uMappingTable*) &g_uf_gb18030_4bytes, 4) {};
 protected: 
 };
@@ -106,7 +97,7 @@ class nsUnicodeToGBKUniq2Bytes : public nsTableEncoderSupport
 {
 public: 
   nsUnicodeToGBKUniq2Bytes()
-    : nsTableEncoderSupport( (uShiftTable*) &g_2BytesShiftTable,
+    : nsTableEncoderSupport(u2BytesCharset, 
                              (uMappingTable*) &g_uf_gbk_2bytes, 2) {};
 protected: 
 };
@@ -178,7 +169,7 @@ NS_IMETHODIMP nsUnicodeToGB18030Font0::FillInfo(PRUint32 *aInfo)
 //  nsUnicodeToGB18030Font1
 //-----------------------------------------------------------------------
 nsUnicodeToGB18030Font1::nsUnicodeToGB18030Font1()
-    : nsTableEncoderSupport( (uShiftTable*) &g_2BytesShiftTable,
+  : nsTableEncoderSupport(u2BytesCharset,
                              (uMappingTable*) &g_uf_gb18030_4bytes, 4)
 {
 

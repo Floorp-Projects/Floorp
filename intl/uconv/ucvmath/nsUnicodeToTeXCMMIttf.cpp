@@ -45,16 +45,11 @@ static const PRUint16 g_ufMappingTable[] = {
 #include "texcmmi-ttf.uf"
 };
 
-static const PRInt16 g_ufShiftTable[] =  {
-  0, u1ByteCharset ,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
 //----------------------------------------------------------------------
 // Class nsUnicodeToTeXCMMIttf [implementation]
 
 nsUnicodeToTeXCMMIttf::nsUnicodeToTeXCMMIttf() 
-: nsTableEncoderSupport((uShiftTable*) &g_ufShiftTable, 
+  : nsTableEncoderSupport(u1ByteCharset,
                         (uMappingTable*) &g_ufMappingTable, 1)
 {
 }

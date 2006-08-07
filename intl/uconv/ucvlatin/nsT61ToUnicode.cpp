@@ -46,18 +46,19 @@ static const PRUint16 g_T61MappingTable[] = {
 };
 
 
-static const PRInt16 g_T61ShiftTable[] =  {
-    3, uMultibytesCharset,  
-    ShiftCell(u1ByteChar,   1, 0x00, 0xBF, 0x00, 0x00, 0x00, 0xBF),
-    ShiftCell(u1ByteChar,   1, 0xD0, 0xFF, 0x00, 0xD0, 0x00, 0xFF),
-    ShiftCell(u2BytesChar,  2, 0xC0, 0xCF, 0xC0, 0x41, 0xCF, 0x7A)
+static const PRInt16 g_T61ShiftInTable[] =  {
+    3,  
+    ShiftInCell(u1ByteChar,   1, 0x00, 0xBF),
+    ShiftInCell(u1ByteChar,   1, 0xD0, 0xFF),
+    ShiftInCell(u2BytesChar,  2, 0xC0, 0xCF)
 };
 
 NS_METHOD
 nsT61ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                           void **aResult) 
 {
-  return CreateTableDecoder((uShiftTable*) &g_T61ShiftTable, 
+  return CreateTableDecoder(uMultibytesCharset,
+                            (uShiftInTable*) &g_T61ShiftInTable, 
                             (uMappingTable*) &g_T61MappingTable, 1,
                             aOuter, aIID, aResult);
 }

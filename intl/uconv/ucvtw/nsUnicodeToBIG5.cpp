@@ -43,25 +43,14 @@
 // Global functions and data [declaration]
 
 
-static const PRUint16 gAsciiShiftTable[] =  {
-  0, u1ByteCharset,
-  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
-};
-
-static const PRUint16 gBig5ShiftTable[] =  {
-  0, u2BytesCharset,
-  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
-};
- 
-
 static const PRUint16 *g_Big5MappingTable[2] = {
   g_ASCIIMapping,
   g_ufBig5Mapping
 };
 
-static const PRUint16 *g_Big5ShiftTable[2] =  {
-  gAsciiShiftTable,
-  gBig5ShiftTable
+static const uScanClassID g_Big5ScanClassIDs[2] =  {
+  u1ByteCharset,
+  u2BytesCharset
 };
 
 //----------------------------------------------------------------------
@@ -73,7 +62,7 @@ nsUnicodeToBIG5Constructor(nsISupports *aOuter, REFNSIID aIID,
 {
 
   return CreateMultiTableEncoder(2,
-                                 (uShiftTable**) &g_Big5ShiftTable, 
+                                 (uScanClassID*) &g_Big5ScanClassIDs,
                                  (uMappingTable**) &g_Big5MappingTable,
                                  2 /* max length = src * 2 */,
                                  aOuter, aIID, aResult);

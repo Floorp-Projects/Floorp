@@ -44,20 +44,6 @@
 // Global functions and data [declaration]
 
 
-static const PRUint16 gAsciiShiftTable[] =  {
-  0, u1ByteCharset,  
-  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
-};
-
-static const PRUint16 gKSC5601ShiftTable[] =  {
-  0, u2BytesGRCharset,  
-  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
-};
-static const PRUint16 gCP949ShiftTable[] =  {
-  0, u2BytesCharset,  
-  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
-};
-
 // Unicode Hangul syllables (not enumerated in KS X 1001) to CP949 : 8822 of them
 static const PRUint16 g_ufCP949NoKSCHangulMapping[] = {
 #include "u20cp949hangul.uf"
@@ -71,10 +57,10 @@ static const PRUint16 *g_CP949MappingTable[3] = {
   g_ufCP949NoKSCHangulMapping
 };
 
-static const PRUint16 *g_CP949ShiftTable[3] =  {
-  gAsciiShiftTable,
-  gKSC5601ShiftTable,
-  gCP949ShiftTable
+static const uScanClassID g_CP949ScanClassTable[3] =  {
+  u1ByteCharset,
+  u2BytesGRCharset,
+  u2BytesCharset
 };
 
 NS_METHOD
@@ -82,7 +68,7 @@ nsUnicodeToCP949Constructor(nsISupports *aOuter, REFNSIID aIID,
                             void **aResult)
 {
   return CreateMultiTableEncoder(3,
-                                 (uShiftTable**) g_CP949ShiftTable, 
+                                 (uScanClassID*) g_CP949ScanClassTable, 
                                  (uMappingTable**) g_CP949MappingTable,
                                  2 /* max len = src * 2 */,
                                  aOuter, aIID, aResult);

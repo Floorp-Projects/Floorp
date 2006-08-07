@@ -45,17 +45,11 @@ static const PRUint16 g_MacGreekMappingTable[] = {
 #include "macgreek.ut"
 };
 
-static const PRInt16 g_MacGreekShiftTable[] =  {
-  1, u1ByteCharset ,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
 NS_METHOD
 nsMacGreekToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                void **aResult) 
 {
-  return CreateTableDecoder((uShiftTable*) &g_MacGreekShiftTable, 
-                            (uMappingTable*) &g_MacGreekMappingTable, 1,
+  return CreateOneByteDecoder((uMappingTable*) &g_MacGreekMappingTable,
                             aOuter, aIID, aResult);
 }
 
