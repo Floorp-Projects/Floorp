@@ -187,7 +187,7 @@ interface nsIDocumentEncoder : nsISupports
   const unsigned long OutputEncodeHTMLEntities = (1 << 16);
 
   /**
-   * Normally &npsp; is replaced with a space character when
+   * Normally &nbsp; is replaced with a space character when
    * encoding data as plain text, set this flag if that's
    * not desired.
    */
