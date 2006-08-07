@@ -1386,9 +1386,12 @@ var PlacesController = {
         firstIndex = 0;
       // If the pref is not set, only load over the blank tabs at the end, if any.
       else {
-        for (firstIndex = tabCount - 1; firstIndex >= 0; --firstIndex)
-          if (browser.browsers[firstIndex].currentURI.spec != "about:blank")
+        for (firstIndex = tabCount - 1; firstIndex >= 0; --firstIndex) {
+          var br = browser.browsers[firstIndex];
+          if (br.currentURI.spec != "about:blank" ||
+              br.webProgress.isLoadingDocument)
             break;
+        }
         ++firstIndex;
       }
 
