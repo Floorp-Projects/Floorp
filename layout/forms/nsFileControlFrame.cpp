@@ -358,8 +358,6 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsPresContext*          aPresContext,
   // except for when style is used to change its size.
   nsresult rv = nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   if (NS_SUCCEEDED(rv) && mTextFrame != nsnull) {
-    const nsStyleVisibility* vis = GetStyleVisibility();
-
     nsIFrame* child = GetFirstChild(nsnull);
     if (child == mTextFrame) {
       child = child->GetNextSibling();
@@ -388,31 +386,15 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsPresContext*          aPresContext,
         rv = nsAreaFrame::DidReflow(aPresContext, &txtKidReflowState, aStatus);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Should have succeeded");
 
-        // If LTR then re-calc and set the correct rect
-        if (NS_STYLE_DIRECTION_RTL != vis->mDirection) {
-          // now adjust the frame positions
-          txtRect.y      = aReflowState.mComputedBorderPadding.top;
-          txtRect.height = aDesiredSize.height;
-          mTextFrame->SetRect(txtRect);
-        }
+        // Re-calc and set the correct rect
+        txtRect.y      = aReflowState.mComputedBorderPadding.top;
+        txtRect.height = aDesiredSize.height;
+        mTextFrame->SetRect(txtRect);
+
         if (aDesiredSize.mComputeMEW) {
            aDesiredSize.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
         }
       }
-
-      // Do RTL positioning
-      // for some reason the areaframe does set the X coord of the rects correctly
-      // so we must redo them here
-      // and we must make sure the text field is the correct height
-      if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
-        buttonRect.x      = aReflowState.mComputedBorderPadding.left;
-        child->SetRect(buttonRect);
-        txtRect.x         = aDesiredSize.width - txtRect.width + aReflowState.mComputedBorderPadding.left;
-        txtRect.y         = aReflowState.mComputedBorderPadding.top;
-        txtRect.height    = aDesiredSize.height;
-        mTextFrame->SetRect(txtRect);
-      }
-
     }
   }
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
