@@ -179,6 +179,7 @@ menulist > menupopup > menu {
   max-width: none;
   font: message-box;
   color: -moz-FieldText;
+  background-color: -moz-Field;
 }
 
 .menulist-menupopup > menuitem > .menu-iconic-left,
