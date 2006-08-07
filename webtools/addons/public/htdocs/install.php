@@ -4,6 +4,12 @@
  * @package amo
  * @subpackage docs
  */
+
+// If we don't have our required URI, terminate the request immediately.
+if (empty($_GET['uri'])) {
+    exit;
+}
+
 require_once('includes.php');
 
 $uri = mysql_real_escape_string(str_replace(" ","+",$_GET["uri"]));
@@ -21,7 +27,6 @@ $db->query("
 ", SQL_INIT, SQL_ASSOC);
 
 if (empty($db->record)) {
-    echo 'nope';
     exit;
 } else {
     $row=$db->record;
@@ -66,6 +71,8 @@ if (empty($db->record)) {
     ",SQL_NONE);
 }
 
+// Set a no-cache header to make sure this page is never cached.
+header('Cache-control: no-cache');
 header('Location: '.$uri);
 exit;
 ?>
