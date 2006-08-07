@@ -182,7 +182,7 @@ FeedConverter.prototype = {
       var feedService = 
           Cc["@mozilla.org/browser/feeds/result-service;1"].
           getService(Ci.nsIFeedResultService);
-      if (!this._forcePreviewPage) {
+      if (!this._forcePreviewPage && result.doc) {
         var handler = safeGetCharPref(PREF_SELECTED_ACTION, "ask");
         if (handler != "ask") {
           if (handler == "reader")
@@ -211,20 +211,26 @@ FeedConverter.prototype = {
         }
       }
           
-      // If there was no automatic handler, or this was a podcast, photostream or
-      // some other kind of application, we must always show the preview page...
-
-      // Store the result in the result service so that the display page can 
-      // access it.
-      feedService.addFeedResult(result);
-
-      // Now load the actual XUL document.
       var ios = 
           Cc["@mozilla.org/network/io-service;1"].
           getService(Ci.nsIIOService);
-      var chromeURI = ios.newURI(FEEDHANDLER_URI, null, null);
-      var chromeChannel = ios.newChannelFromURI(chromeURI, null);
-      chromeChannel.originalURI = result.uri;
+      var chromeChannel;
+      if (result.doc) {
+        // If there was no automatic handler, or this was a podcast, photostream or
+        // some other kind of application, we must always show the preview page...
+
+        // Store the result in the result service so that the display page can 
+        // access it.
+        feedService.addFeedResult(result);
+
+        // Now load the actual XUL document.
+        var chromeURI = ios.newURI(FEEDHANDLER_URI, null, null);
+        chromeChannel = ios.newChannelFromURI(chromeURI, null);
+        chromeChannel.originalURI = result.uri;
+      }
+      else
+        chromeChannel = ios.newChannelFromURI(result.uri, null);
+
       chromeChannel.asyncOpen(this._listener, null);
     }
     finally {
