@@ -38,7 +38,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.77 2006/02/16 00:06:23 julien.pierre.bugs%sun.com Exp $
+ * $Id: certdb.c,v 1.78 2006/08/07 19:09:41 julien.pierre.bugs%sun.com Exp $
  */
 
 #include "nssilock.h"
@@ -390,27 +390,34 @@ loser:
  * DER certificate.
  */
 SECStatus
-CERT_KeyFromDERCert(PRArenaPool *arena, SECItem *derCert, SECItem *key)
+CERT_KeyFromDERCert(PRArenaPool *reqArena, SECItem *derCert, SECItem *key)
 {
     int rv;
     CERTSignedData sd;
     CERTCertKey certkey;
 
+    if (!reqArena) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
     PORT_Memset(&sd, 0, sizeof(CERTSignedData));
-    rv = SEC_ASN1DecodeItem(arena, &sd, CERT_SignedDataTemplate, derCert);
+    rv = SEC_QuickDERDecodeItem(reqArena, &sd, CERT_SignedDataTemplate,
+                                derCert);
     
     if ( rv ) {
 	goto loser;
     }
     
     PORT_Memset(&certkey, 0, sizeof(CERTCertKey));
-    rv = SEC_ASN1DecodeItem(arena, &certkey, CERT_CertKeyTemplate, &sd.data);
+    rv = SEC_QuickDERDecodeItem(reqArena, &certkey, CERT_CertKeyTemplate,
+                                &sd.data);
 
     if ( rv ) {
 	goto loser;
     }
 
-    return(CERT_KeyFromIssuerAndSN(arena, &certkey.derIssuer,
+    return(CERT_KeyFromIssuerAndSN(reqArena, &certkey.derIssuer,
 				   &certkey.serialNumber, key));
 loser:
     return(SECFailure);

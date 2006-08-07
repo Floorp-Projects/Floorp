@@ -130,7 +130,7 @@ SECStatus
 CERT_CompareNameSpace(CERTCertificate  *cert,
 		      CERTGeneralName  *namesList,
  		      CERTCertificate **certsList,
- 		      PRArenaPool      *arena,
+ 		      PRArenaPool      *reqArena,
  		      CERTCertificate **pBadCert);
 
 SEC_END_PROTOS

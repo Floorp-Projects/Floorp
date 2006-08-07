@@ -38,7 +38,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.26 2006/07/19 00:08:52 nelson%bolyard.com Exp $
+ * $Id: ocsp.c,v 1.27 2006/08/07 19:09:41 julien.pierre.bugs%sun.com Exp $
  */
 
 #include "prerror.h"
@@ -1280,7 +1280,7 @@ ocsp_CertStatusTypeByTag(int derTag)
  * have allocated; it expects its caller to do that.
  */
 static SECStatus
-ocsp_FinishDecodingSingleResponses(PRArenaPool *arena,
+ocsp_FinishDecodingSingleResponses(PRArenaPool *reqArena,
 				   CERTOCSPSingleResponse **responses)
 {
     ocspCertStatus *certStatus;
@@ -1290,10 +1290,16 @@ ocsp_FinishDecodingSingleResponses(PRArenaPool *arena,
     int i;
     SECStatus rv = SECFailure;
 
+    if (!reqArena) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
+
     if (responses == NULL)			/* nothing to do */
 	return SECSuccess;
 
     for (i = 0; responses[i] != NULL; i++) {
+        SECItem* newStatus;
 	/*
 	 * The following assert points out internal errors (problems in
 	 * the template definitions or in the ASN.1 decoder itself, etc.).
@@ -1304,12 +1310,16 @@ ocsp_FinishDecodingSingleResponses(PRArenaPool *arena,
 	certStatusType = ocsp_CertStatusTypeByTag(derTag);
 	certStatusTemplate = ocsp_CertStatusTemplateByType(certStatusType);
 
-	certStatus = PORT_ArenaZAlloc(arena, sizeof(ocspCertStatus));
+	certStatus = PORT_ArenaZAlloc(reqArena, sizeof(ocspCertStatus));
 	if (certStatus == NULL) {
 	    goto loser;
 	}
-	rv = SEC_ASN1DecodeItem(arena, certStatus, certStatusTemplate,
-				&responses[i]->derCertStatus);
+        newStatus = SECITEM_ArenaDupItem(reqArena, &responses[i]->derCertStatus);
+        if (!newStatus) {
+            goto loser;
+        }
+	rv = SEC_QuickDERDecodeItem(reqArena, certStatus, certStatusTemplate,
+				newStatus);
 	if (rv != SECSuccess) {
 	    if (PORT_GetError() == SEC_ERROR_BAD_DER)
 		PORT_SetError(SEC_ERROR_OCSP_MALFORMED_RESPONSE);

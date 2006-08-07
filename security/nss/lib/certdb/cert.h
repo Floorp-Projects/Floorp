@@ -37,7 +37,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.53 2005/03/09 23:02:47 neil.williams%sun.com Exp $
+ * $Id: cert.h,v 1.54 2006/08/07 19:09:41 julien.pierre.bugs%sun.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -348,7 +348,7 @@ CERT_EncodeGeneralName(CERTGeneralName *genName, SECItem *dest,
 		       PRArenaPool *arena);
 
 extern CERTGeneralName *
-CERT_DecodeGeneralName(PRArenaPool *arena, SECItem *encodedName,
+CERT_DecodeGeneralName(PRArenaPool *reqArena, SECItem *encodedName,
 		       CERTGeneralName  *genName);
 
 
@@ -360,7 +360,8 @@ CERT_DecodeGeneralName(PRArenaPool *arena, SECItem *encodedName,
 **	"derCert" the DER encoded certificate
 **	"key" the returned key
 */
-extern SECStatus CERT_KeyFromDERCert(PRArenaPool *arena, SECItem *derCert, SECItem *key);
+extern SECStatus CERT_KeyFromDERCert(PRArenaPool *reqArena, SECItem *derCert,
+                                     SECItem *key);
 
 extern SECStatus CERT_KeyFromIssuerAndSN(PRArenaPool *arena, SECItem *issuer,
 					 SECItem *sn, SECItem *key);
@@ -1148,7 +1149,7 @@ CERTUserNotice *
 CERT_DecodeUserNotice(SECItem *noticeItem);
 
 extern CERTGeneralName *
-CERT_DecodeAltNameExtension(PRArenaPool *arena, SECItem *EncodedAltName);
+CERT_DecodeAltNameExtension(PRArenaPool *reqArena, SECItem *EncodedAltName);
 
 extern CERTNameConstraints *
 CERT_DecodeNameConstraintsExtension(PRArenaPool *arena, 
@@ -1156,7 +1157,7 @@ CERT_DecodeNameConstraintsExtension(PRArenaPool *arena,
 
 /* returns addr of a NULL termainated array of pointers to CERTAuthInfoAccess */
 extern CERTAuthInfoAccess **
-CERT_DecodeAuthInfoAccessExtension(PRArenaPool *arena,
+CERT_DecodeAuthInfoAccessExtension(PRArenaPool *reqArena,
 				   SECItem     *encodedExtension);
 
 extern CERTPrivKeyUsagePeriod *
