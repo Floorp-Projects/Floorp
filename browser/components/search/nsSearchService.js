@@ -2296,7 +2296,7 @@ SearchService.prototype = {
     // information stored in the database.
     var prefB = Cc["@mozilla.org/preferences-service;1"].
                 getService(Ci.nsIPrefBranch);
-    prefB.setBoolPref(BROWSER_SEARCH_PREF + ".useDBForOrder", true);
+    prefB.setBoolPref(BROWSER_SEARCH_PREF + "useDBForOrder", true);
 
     var engines = this._getSortedEngines(true);
     var values = [];
