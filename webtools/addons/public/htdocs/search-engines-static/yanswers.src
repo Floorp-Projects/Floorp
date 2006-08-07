@@ -8,9 +8,9 @@
     version = "1.0" 
    name="Yahoo! Answers"
    description="Yahoo! Answers Search"
-   searchForm="http://answers.yahoo.com/search/search_result"
+   searchForm="http://answers.yahoo.com/search/search_result;_ylc=X3oDMTFmMnNpODU3BF9TAzM5NjU0NzEyNgRfcwMzOTY1NDcxMjYEc2VjA3BsdWdpbgRzbGsDc2VhcmNo"
    method="GET"
-   action="http://answers.yahoo.com/search/search_result" 
+   action="http://answers.yahoo.com/search/search_result;_ylc=X3oDMTFmMnNpODU3BF9TAzM5NjU0NzEyNgRfcwMzOTY1NDcxMjYEc2VjA3BsdWdpbgRzbGsDc2VhcmNo" 
    queryCharset="utf-8"
 >
 
