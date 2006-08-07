@@ -1211,7 +1211,7 @@ Function checkComponents
     ; the section flags for installation.
     SectionSetFlags 2 $R0
   ${Else}
-    SectionSetFlags 1 0 ; Disable install for TalkBack
+    SectionSetFlags 2 0 ; Disable install for TalkBack
   ${EndIf}
 FunctionEnd
 
