@@ -3208,7 +3208,10 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
         kidReflowState.mComputedWidth = PR_MAX(kidReflowState.mComputedWidth, 0);
   
         // If this isn't the first row group, then we can't be at the top of the page
-        if (childX > 0) {
+        // When a new page starts, a head row group may be added automatically.
+        // We also consider the row groups just after the head as the top of the page.
+        // That is to prevent the infinite loop in some circumstance. See bug 344883.
+        if (childX > (thead ? 1 : 0)) {
           kidReflowState.mFlags.mIsTopOfPage = PR_FALSE;
         }
         aReflowState.y += cellSpacingY;
