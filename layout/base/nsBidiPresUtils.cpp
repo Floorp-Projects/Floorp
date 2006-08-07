@@ -111,9 +111,7 @@ SplitInlineAncestors(nsPresContext* aPresContext,
   nsIFrame* newFrame = aFrame->GetNextSibling();
   nsIFrame* newParent;
 
-  while (nsLayoutAtoms::inlineFrame == parent->GetType() ||
-         nsLayoutAtoms::positionedInlineFrame == parent->GetType()) {
-
+  while (parent->IsFrameOfType(nsIFrame::eBidiInlineContainer)) {
     nsIFrame* grandparent = parent->GetParent();
     NS_ASSERTION(grandparent, "Couldn't get parent's parent in nsBidiPresUtils::SplitInlineAncestors");
     
@@ -449,16 +447,13 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
       nsIFrame* child = frame;
       nsIFrame* parent = frame->GetParent();
       while (parent &&
-             (nsLayoutAtoms::inlineFrame == parent->GetType() ||
-              nsLayoutAtoms::positionedInlineFrame == parent->GetType()) &&
+             parent->IsFrameOfType(nsIFrame::eBidiInlineContainer) &&
              !child->GetNextSibling()) {
         child = parent;
         parent = child->GetParent();
       }
-      if (parent &&
-          (nsLayoutAtoms::inlineFrame == parent->GetType() ||
-           nsLayoutAtoms::positionedInlineFrame == parent->GetType()))
-        SplitInlineAncestors(aPresContext, child);      
+      if (parent && parent->IsFrameOfType(nsIFrame::eBidiInlineContainer))
+        SplitInlineAncestors(aPresContext, child);
     }
   } // for
   return mSuccess;
@@ -470,9 +465,7 @@ PRBool IsBidiLeaf(nsIFrame* aFrame) {
   nsIFrame* kid = aFrame->GetFirstChild(nsnull);
   return !kid
     || aFrame->GetStyleDisplay()->IsBlockLevel()
-    || !(nsLayoutAtoms::inlineFrame == frameType
-         || nsLayoutAtoms::positionedInlineFrame == frameType
-         || nsLayoutAtoms::letterFrame == frameType
+    || !(aFrame->IsFrameOfType(nsIFrame::eBidiInlineContainer)
          || nsLayoutAtoms::blockFrame == frameType);
 }
 
@@ -493,9 +486,9 @@ nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
        frame && frame != aNextInFlow;
        frame = frame->GetNextSibling()) {
     directionalFrame = nsnull;
-    const nsStyleDisplay* display = frame->GetStyleDisplay();
 
-    if (aAddMarkers && !display->IsBlockLevel() ) {
+    if (aAddMarkers &&
+        frame->IsFrameOfType(nsIFrame::eBidiInlineContainer)) {
       const nsStyleVisibility* vis = frame->GetStyleVisibility();
       const nsStyleTextReset* text = frame->GetStyleTextReset();
       switch (text->mUnicodeBidi) {
