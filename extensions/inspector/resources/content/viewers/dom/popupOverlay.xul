@@ -34,6 +34,13 @@
         accesskey="&cmdToggleAnonContent.accesskey;"
         observes="cmd:toggleAnon"/>
 
+      <menuitem id="item:toggleAccessibleNodes"
+                class="menuitem-iconic"
+                type="checkbox"
+                label="&cmdToggleAccessibleNodes.label;"
+                accesskey="&cmdToggleAccessibleNodes.accesskey;"
+                observes="cmd:toggleAccessibleNodes"/>
+
       <menuitem id="item:toggleWhitespaceNodes"
         class="menuitem-iconic"
         type="checkbox"
@@ -78,6 +85,13 @@
               label="&cmdToggleAnonContent.label;"
               accesskey="&cmdToggleAnonContent.accesskey;"
               observes="cmd:toggleAnon"/>
+
+    <menuitem id="item:toggleAccessibleNodes"
+              class="menuitem-iconic"
+              type="checkbox"
+              label="&cmdToggleAccessibleNodes.label;"
+              accesskey="&cmdToggleAccessibleNodes.accesskey;"
+              observes="cmd:toggleAccessibleNodes"/>
 
     <menuitem id="item:toggleWhitespaceNodes"
               class="menuitem-iconic"

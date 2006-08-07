@@ -83,6 +83,7 @@ protected:
   static nsIAtom* kDocumentTypeNodeAtom;
   static nsIAtom* kDocumentFragmentNodeAtom;
   static nsIAtom* kNotationNodeAtom;
+  static nsIAtom* kAccessibleNodeAtom;
 
   static const nsStaticAtom Atoms_info[]; 
 
@@ -93,6 +94,7 @@ protected:
   PRPackedBool mShowAnonymous;
   PRPackedBool mShowSubDocuments;
   PRPackedBool mShowWhitespaceNodes;
+  PRPackedBool mShowAccessibleNodes;
   PRUint32 mWhatToShow;
 
   nsCOMPtr<nsIDOMNode> mRootNode;

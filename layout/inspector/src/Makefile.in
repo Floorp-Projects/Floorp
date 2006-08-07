@@ -61,6 +61,10 @@ REQUIRES	= xpcom \
 		  webshell \
 		  $(NULL)
 
+ifdef ACCESSIBILITY
+REQUIRES        += accessibility
+endif
+
 CPPSRCS= \
   inDOMView.cpp \
   inDeepTreeWalker.cpp \

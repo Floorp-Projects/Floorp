@@ -44,6 +44,8 @@
 <!ENTITY cmdToggleAnonContent.accesskey "a">
 <!ENTITY cmdToggleWhitespaceNodes.label "Zobrazit prázdné uzly">
 <!ENTITY cmdToggleWhitespaceNodes.accesskey "p">
+<!ENTITY cmdToggleAccessibleNodes.label "Show Accessible Nodes">
+<!ENTITY cmdToggleAccessibleNodes.accesskey "c">
 <!ENTITY cmdFlashSelected.label "Zvýraznit vybraný prvek">
 <!ENTITY cmdToggleAttributes.label "Zobrazit atributy">
 <!ENTITY cmdToggleAttributes.accesskey "r">

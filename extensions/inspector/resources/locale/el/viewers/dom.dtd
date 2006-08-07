@@ -47,6 +47,9 @@
   <!ENTITY cmdToggleWhitespaceNodes.label "Προβολή Whitespace Nodes">
   <!ENTITY cmdToggleWhitespaceNodes.accesskey "W">
 
+  <!ENTITY cmdToggleAccessibleNodes.label "Show Accessible Nodes">
+  <!ENTITY cmdToggleAccessibleNodes.accesskey "c">
+
   <!ENTITY cmdFlashSelected.label "Αναβόσβημα επιλεγμένου στοιχείου">
 
   <!ENTITY cmdToggleAttributes.label "Προβολή γνωρισμάτων">

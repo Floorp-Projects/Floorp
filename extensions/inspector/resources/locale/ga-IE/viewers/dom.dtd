@@ -44,6 +44,8 @@
 <!ENTITY cmdToggleAnonContent.accesskey "A">
 <!ENTITY cmdToggleWhitespaceNodes.label "Taispeáin Nóid Spáis Bháin">
 <!ENTITY cmdToggleWhitespaceNodes.accesskey "B">
+<!ENTITY cmdToggleAccessibleNodes.label "Show Accessible Nodes">
+<!ENTITY cmdToggleAccessibleNodes.accesskey "c">
 <!ENTITY cmdFlashSelected.label "Cuir Eilimint Roghnaithe ag Caochadh">
 <!ENTITY cmdToggleAttributes.label "Taispeáin Aitreabúidí">
 <!ENTITY cmdToggleAttributes.accesskey "r">

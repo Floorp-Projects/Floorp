@@ -43,25 +43,9 @@
 *   chrome://inspector/content/jsutil/xpcom/XPCU.js
 ****************************************************************/
 
-//////////// global variables /////////////////////
-
-var viewer;
-var bundle;
-
 //////////// global constants ////////////////////
 
 const kClipboardHelperCID  = "@mozilla.org/widget/clipboardhelper;1";
-
-//////////////////////////////////////////////////
-
-window.addEventListener("load", JSObjectViewer_initialize, false);
-
-function JSObjectViewer_initialize()
-{
-  bundle = document.getElementById("inspector-bundle");
-  viewer = new JSObjectViewer();
-  viewer.initialize(parent.FrameExchange.receiveData(window));
-}
 
 ////////////////////////////////////////////////////////////////////////////
 //// class JSObjectViewer

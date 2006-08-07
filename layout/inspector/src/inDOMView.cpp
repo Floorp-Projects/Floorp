@@ -57,6 +57,11 @@
 #include "nsIServiceManager.h"
 #include "nsITreeColumns.h"
 
+#ifdef ACCESSIBILITY
+#include "nsIAccessible.h"
+#include "nsIAccessibilityService.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////
 // inDOMViewNode
 
@@ -113,11 +118,13 @@ nsIAtom* inDOMView::kDocumentNodeAtom = nsnull;
 nsIAtom* inDOMView::kDocumentTypeNodeAtom = nsnull;
 nsIAtom* inDOMView::kDocumentFragmentNodeAtom = nsnull;
 nsIAtom* inDOMView::kNotationNodeAtom = nsnull;
+nsIAtom* inDOMView::kAccessibleNodeAtom = nsnull;
 
 inDOMView::inDOMView() :
   mShowAnonymous(PR_FALSE),
   mShowSubDocuments(PR_FALSE),
   mShowWhitespaceNodes(PR_TRUE),
+  mShowAccessibleNodes(PR_FALSE),
   mWhatToShow(nsIDOMNodeFilter::SHOW_ALL)
 {
 }
@@ -140,7 +147,8 @@ inDOMView::~inDOMView()
   {"DOCUMENT_NODE", &inDOMView::kDocumentNodeAtom},
   {"DOCUMENT_TYPE_NODE", &inDOMView::kDocumentTypeNodeAtom},
   {"DOCUMENT_FRAGMENT_NODE", &inDOMView::kDocumentFragmentNodeAtom},
-  {"NOTATION_NODE", &inDOMView::kNotationNodeAtom}
+  {"NOTATION_NODE", &inDOMView::kNotationNodeAtom},
+  {"ACCESSIBLE_NODE", &inDOMView::kAccessibleNodeAtom}
 };
 
 /* static */ void
@@ -280,6 +288,20 @@ inDOMView::SetShowWhitespaceNodes(PRBool aShowWhitespaceNodes)
 }
 
 NS_IMETHODIMP
+inDOMView::GetShowAccessibleNodes(PRBool *aShowAccessibleNodes)
+{
+  *aShowAccessibleNodes = mShowAccessibleNodes;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inDOMView::SetShowAccessibleNodes(PRBool aShowAccessibleNodes)
+{
+  mShowAccessibleNodes = aShowAccessibleNodes;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 inDOMView::GetWhatToShow(PRUint32 *aWhatToShow)
 {
   *aWhatToShow = mWhatToShow;
@@ -370,6 +392,21 @@ inDOMView::GetCellProperties(PRInt32 row, nsITreeColumn* col, nsISupportsArray *
       properties->AppendElement(kNotationNodeAtom);
       break;
   }
+
+#ifdef ACCESSIBILITY
+  if (mShowAccessibleNodes) {
+    nsCOMPtr<nsIAccessibilityService> accService(
+      do_GetService("@mozilla.org/accessibilityService;1"));
+    NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIAccessible> accessible;
+    nsresult rv = accService->GetAccessibleFor(node->node,
+                                               getter_AddRefs(accessible));
+    if (accessible)
+      properties->AppendElement(kAccessibleNodeAtom);
+  }
+#endif
+
   return NS_OK;
 }
 

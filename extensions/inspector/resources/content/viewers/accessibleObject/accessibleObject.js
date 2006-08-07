@@ -11,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is DOM Inspector.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Joe Hewitt <hewitt@netscape.com> (original author)
+ *   Alexander Surkov <surkov.alexander@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,25 +36,62 @@
  * ***** END LICENSE BLOCK ***** */
 
 /***************************************************************
-* JSObjectViewer --------------------------------------------
-*  The viewer for all facets of a javascript object.
-* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+* AccessibleObjectViewer --------------------------------------------
+*  The viewer for the accessible object.
+* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 * REQUIRED IMPORTS:
-*   chrome://inspector/content/jsutil/xpcom/XPCU.js
+*   chrome://inspector/content/jsutil/events/ObserverManager.js
 ****************************************************************/
 
 //////////// global variables /////////////////////
 
 var viewer;
 var bundle;
+var accService;
 
+//////////// global constants ////////////////////
 //////////////////////////////////////////////////
 
-window.addEventListener("load", JSObjectViewer_initialize, false);
+window.addEventListener("load", AccessibleObjectViewer_initialize, false);
 
-function JSObjectViewer_initialize()
+function AccessibleObjectViewer_initialize()
 {
   bundle = document.getElementById("inspector-bundle");
+  accService = Components.classes['@mozilla.org/accessibilityService;1']
+                         .getService(Components.interfaces.nsIAccessibilityService);
+
   viewer = new JSObjectViewer();
+
+  viewer.__defineGetter__(
+    "uid",
+    function uidGetter()
+    {
+      return "accessibleObject";
+    }
+  );
+
+  viewer.__defineSetter__(
+    "subject",
+    function subjectSetter(aObject)
+    {
+      var accObject = null;
+      try {
+        accObject = accService.getAccessibleFor(aObject);
+      } catch(e) {
+        dump("Failed to get accessible object for node.");
+      }
+
+      this.mSubject = accObject;
+      this.emptyTree(this.mTreeKids);
+      var ti = this.addTreeItem(this.mTreeKids,
+                                bundle.getString("root.title"),
+                                accObject,
+                                accObject);
+      ti.setAttribute("open", "true");
+
+      this.mObsMan.dispatchEvent("subjectChange", { subject: accObject });
+    }
+   );
+
   viewer.initialize(parent.FrameExchange.receiveData(window));
 }

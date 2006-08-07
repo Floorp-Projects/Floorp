@@ -39,7 +39,7 @@
 
 interface nsIDOMNode;
 
-[scriptable, uuid(3EB4C760-DFFD-4983-94A8-18BCB99100E4)]
+[scriptable, uuid(FBB67442-27A3-483C-8EB2-29C3EED7514C)]
 interface inIDOMView : nsISupports
 {
   attribute nsIDOMNode rootNode;
@@ -47,6 +47,7 @@ interface inIDOMView : nsISupports
   attribute boolean showAnonymousContent;
   attribute boolean showSubDocuments;
   attribute boolean showWhitespaceNodes;
+  attribute boolean showAccessibleNodes;
   attribute unsigned long    whatToShow;
 
   nsIDOMNode getNodeFromRowIndex(in long rowIndex);

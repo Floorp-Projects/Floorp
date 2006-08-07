@@ -23,6 +23,8 @@
 <!ENTITY cmdToggleAttributes.label "Показать атрибуты">
 <!ENTITY cmdToggleWhitespaceNodes.accesskey "П">
 <!ENTITY cmdToggleWhitespaceNodes.label "Показывать пробельные узлы">
+<!ENTITY cmdToggleAccessibleNodes.label "Show Accessible Nodes">
+<!ENTITY cmdToggleAccessibleNodes.accesskey "c">
 <!ENTITY findNodes.title "Найти узлы">
 <!ENTITY findNodesByAttr.label "Атрибут">
 <!ENTITY findNodesByAttrValue.label "Значение">

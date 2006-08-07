@@ -23,6 +23,9 @@
     <command id="cmd:toggleSubDocs" viewer="dom"
              oncommand="inspector.getViewer('dom').toggleSubDocs()"/>
 
+    <command id="cmd:toggleAccessibleNodes" viewer="dom"
+             oncommand="inspector.getViewer('dom').toggleAccessibleNodes(true);"/>
+
     <command id="cmd:toggleWhitespaceNodes" viewer="dom"
              oncommand="inspector.getViewer('dom').toggleWhitespaceNodes()"/>
 

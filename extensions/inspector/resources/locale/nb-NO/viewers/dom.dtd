@@ -49,6 +49,9 @@
   <!ENTITY cmdToggleWhitespaceNodes.label "Vis blanke noder">
   <!ENTITY cmdToggleWhitespaceNodes.accesskey "b">
 
+  <!ENTITY cmdToggleAccessibleNodes.label "Show Accessible Nodes">
+  <!ENTITY cmdToggleAccessibleNodes.accesskey "c">
+
   <!ENTITY cmdFlashSelected.label "Blink valgt element">
 
   <!ENTITY cmdToggleAttributes.label "Vis egenskaper">

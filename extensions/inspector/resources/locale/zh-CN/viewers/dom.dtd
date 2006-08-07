@@ -23,6 +23,8 @@
 <!ENTITY cmdToggleAttributes.label "显示属性">
 <!ENTITY cmdToggleWhitespaceNodes.accesskey "W">
 <!ENTITY cmdToggleWhitespaceNodes.label "显示空白节点">
+<!ENTITY cmdToggleAccessibleNodes.label "Show Accessible Nodes">
+<!ENTITY cmdToggleAccessibleNodes.accesskey "c">
 <!ENTITY findNodes.title "查找节点">
 <!ENTITY findNodesByAttr.label "属性">
 <!ENTITY findNodesByAttrValue.label "值">

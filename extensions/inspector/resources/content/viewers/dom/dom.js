@@ -134,6 +134,7 @@ DOMViewer.prototype =
     aPane.notifyViewerReady(this);
 
     this.setAnonContent(PrefUtils.getPref("inspector.dom.showAnon"), false);
+    this.setAccessibleNodes(PrefUtils.getPref("inspector.dom.showAccessibleNodes"), false);
     this.setWhitespaceNodes(PrefUtils.getPref("inspector.dom.showWhitespaceNodes"));
     this.setFlashSelected(PrefUtils.getPref("inspector.blink.on"));
   },
@@ -286,6 +287,46 @@ DOMViewer.prototype =
     var val = !this.mDOMView.showSubDocuments;
     this.mDOMView.showSubDocuments = val;
     this.mPanel.panelset.setCommandAttribute("cmd:toggleSubDocs", "checked", val);
+  },
+
+  /**
+   * Toggle state of 'Show Accessible Nodes' option.
+   *
+   * @param Boolean aRebuild - if true then DOM nodes tree will be rebuilded.
+   */
+  toggleAccessibleNodes: function toggleAccessibleNodes(aRebuild)
+  {
+    this.setAccessibleNodes(!this.getAccessibleNodes(), aRebuild);
+  },
+
+  /**
+   * Set state of 'Show Accessible Nodes' option.
+   *
+   * @param Boolean aValue - if true then accessible nodes will be shown
+   * @param Boolean aRebuild - if true then DOM nodes tree will be rebuilded.
+   */
+  setAccessibleNodes: function setAccessibleNodes(aValue, aRebuild)
+  {
+    if (!("@mozilla.org/accessibilityService;1" in Components.classes))
+      aValue = false;
+
+    this.mDOMView.showAccessibleNodes = aValue;
+    this.mPanel.panelset.setCommandAttribute("cmd:toggleAccessibleNodes",
+                                             "checked", aValue);
+    PrefUtils.setPref("inspector.dom.showAccessibleNodes", aValue);
+
+    if (aRebuild) {
+      this.rebuild();
+    }
+    this.onItemSelected();
+  },
+
+  /**
+   * Return state of 'Show Accessible Nodes' option.
+   */
+  getAccessibleNodes: function getAccessibleNodes()
+  {
+    return this.mDOMView.showAccessibleNodes;
   },
 
   setWhitespaceNodes: function(aValue)
