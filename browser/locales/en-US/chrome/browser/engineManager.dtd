@@ -15,3 +15,6 @@
 
 <!ENTITY  enableSuggest.label       "Show search suggestions">
 <!ENTITY  enableSuggest.accesskey   "S">
+
+<!ENTITY  restoreDefaults.label     "Restore Defaults">
+<!ENTITY  restoreDefaults.accesskey "e">
