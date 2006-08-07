@@ -2346,13 +2346,34 @@ SearchService.prototype = {
       // The DB isn't being used, so just read the engine order from the prefs
       var i = 0;
       var engineName;
+      var prefName;
+
+      try {
+        var prefB = Cc["@mozilla.org/preferences-service;1"].
+                    getService(Ci.nsIPrefBranch);
+        var extras =
+          prefB.getChildList(BROWSER_SEARCH_PREF + "order.extra.", { });
+
+        for each (prefName in extras) {
+          engineName = prefB.getCharPref(prefName);
+
+          engine = this._engines[engineName];
+          if (!engine || engine.name in addedEngines)
+            continue;
+
+          this._sortedEngines.push(engine);
+          addedEngines[engine.name] = engine;
+        }
+      }
+      catch (e) { }
+
       while (true) {
         engineName = getLocalizedPref(BROWSER_SEARCH_PREF + "order." + (++i));
         if (!engineName)
           break;
 
         engine = this._engines[engineName];
-        if (!engine)
+        if (!engine || engine.name in addedEngines)
           continue;
         
         this._sortedEngines.push(engine);
