@@ -2799,8 +2799,9 @@ nsMsgDBView::PerformActionsOnJunkMsgs()
   if (movingJunkMessages) 
   {
     // check if one of the messages to be junked is actually selected
-    // if more than one message being junked, one must be selected
-    PRBool junkedMsgSelected = mNumJunkIndices > 1;
+    // if more than one message being junked, one must be selected.
+    // if no tree selection at all, must be in stand-alone message window.
+    PRBool junkedMsgSelected = mNumJunkIndices > 1 || !mTreeSelection;
     for (nsMsgViewIndex junkIndex = 0; !junkedMsgSelected && junkIndex < mNumJunkIndices; junkIndex++)
       mTreeSelection->IsSelected(mJunkIndices[junkIndex], &junkedMsgSelected);
 
