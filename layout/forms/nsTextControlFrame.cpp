@@ -2606,14 +2606,14 @@ nsTextControlFrame::GetValue(nsAString& aValue, PRBool aIgnoreWrap) const
   
   if (mEditor && mUseEditor) 
   {
-    PRUint32 flags = nsIDocumentEncoder::OutputLFLineBreak;;
+    PRUint32 flags = (nsIDocumentEncoder::OutputLFLineBreak |
+                      nsIDocumentEncoder::OutputPreformatted |
+                      nsIDocumentEncoder::OutputPersistNBSP);
 
     if (PR_TRUE==IsPlainTextControl())
     {
       flags |= nsIDocumentEncoder::OutputBodyOnly;
     }
-
-    flags |= nsIDocumentEncoder::OutputPreformatted;
 
     if (!aIgnoreWrap) {
       nsHTMLTextWrap wrapProp;

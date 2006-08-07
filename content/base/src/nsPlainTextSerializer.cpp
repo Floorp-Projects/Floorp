@@ -1239,12 +1239,13 @@ nsPlainTextSerializer::Output(nsString& aString)
     mStartedOutput = PR_TRUE;
   }
 
-  // First, replace all nbsp characters with spaces,
-  // which the unicode encoder won't do for us.
-  static PRUnichar nbsp = 160;
-  static PRUnichar space = ' ';
-  aString.ReplaceChar(nbsp, space);
-
+  if (!(mFlags & nsIDocumentEncoder::OutputPersistNBSP)) {
+    // First, replace all nbsp characters with spaces,
+    // which the unicode encoder won't do for us.
+    static PRUnichar nbsp = 160;
+    static PRUnichar space = ' ';
+    aString.ReplaceChar(nbsp, space);
+  }
   mOutputString->Append(aString);
 }
 

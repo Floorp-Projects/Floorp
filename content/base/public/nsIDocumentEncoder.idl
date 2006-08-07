@@ -58,7 +58,7 @@ interface nsIDocumentEncoderNodeFixup : nsISupports
   nsIDOMNode fixupNode(in nsIDOMNode aNode);
 };
 
-[scriptable, uuid(9e732561-e720-409a-a93c-6754b44b311a)]
+[scriptable, uuid(f85c5a20-258d-11db-a98b-0800200c9a66)]
 interface nsIDocumentEncoder : nsISupports
 {
   // Output methods flag bits. There are a frightening number of these,
@@ -186,6 +186,13 @@ interface nsIDocumentEncoder : nsISupports
    */
   const unsigned long OutputEncodeHTMLEntities = (1 << 16);
 
+  /**
+   * Normally &npsp; is replaced with a space character when
+   * encoding data as plain text, set this flag if that's
+   * not desired.
+   */
+  const unsigned long OutputPersistNBSP = (1 << 17);
+  
   /**
    * Initialize with a pointer to the document and the mime type.
    * @param aDocument Document to encode.
