@@ -176,7 +176,7 @@ sub CheckGroupRegexp {
 # If no action is specified, get a list of all groups available.
 
 unless ($action) {
-    my @groups = Bugzilla::Group::get_all_groups();
+    my @groups = Bugzilla::Group->get_all;
     $vars->{'groups'} = \@groups;
     
     print $cgi->header();

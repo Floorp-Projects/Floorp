@@ -20,11 +20,13 @@
 # Contributor(s): Joel Peshkin <bugreport@peshkin.net>
 #                 Erik Stambaugh <erik@dasbistro.com>
 #                 Tiago R. Mello <timello@async.com.br>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 
 use strict;
 
 package Bugzilla::Group;
 
+use base qw(Bugzilla::Object);
 use Bugzilla::Util;
 use Bugzilla::Error;
 
@@ -41,61 +43,14 @@ use constant DB_COLUMNS => qw(
     groups.isactive
 );
 
-our $columns = join(", ", DB_COLUMNS);
+use constant DB_TABLE => 'groups';
 
-sub new {
-    my $invocant = shift;
-    my $class = ref($invocant) || $invocant;
-    my $self = {};
-    bless($self, $class);
-    return $self->_init(@_);
-}
-
-sub _init {
-    my $self = shift;
-    my ($param) = (@_);
-    my $dbh = Bugzilla->dbh;
-
-    my $id = $param unless (ref $param eq 'HASH');
-    my $group;
-
-    if (defined $id) {
-        detaint_natural($id)
-          || ThrowCodeError('param_must_be_numeric',
-                            {function => 'Bugzilla::Group::_init'});
-
-        $group = $dbh->selectrow_hashref(qq{
-            SELECT $columns FROM groups
-            WHERE id = ?}, undef, $id);
-
-    } elsif (defined $param->{'name'}) {
-
-        trick_taint($param->{'name'});
-
-        $group = $dbh->selectrow_hashref(qq{
-            SELECT $columns FROM groups
-            WHERE name = ?}, undef, $param->{'name'});
-
-    } else {
-        ThrowCodeError('bad_arg',
-            {argument => 'param',
-             function => 'Bugzilla::Group::_init'});
-    }
-
-    return undef unless (defined $group);
-
-    foreach my $field (keys %$group) {
-        $self->{$field} = $group->{$field};
-    }
-    return $self;
-}
+use constant LIST_ORDER => 'isbuggroup, name';
 
 ###############################
 ####      Accessors      ######
 ###############################
 
-sub id           { return $_[0]->{'id'};           }
-sub name         { return $_[0]->{'name'};         }
 sub description  { return $_[0]->{'description'};  }
 sub is_bug_group { return $_[0]->{'isbuggroup'};   }
 sub user_regexp  { return $_[0]->{'userregexp'};   }
@@ -124,19 +79,6 @@ sub ValidateGroupName {
     return $ret;
 }
 
-sub get_all_groups {
-    my $dbh = Bugzilla->dbh;
-
-    my $group_ids = $dbh->selectcol_arrayref('SELECT id FROM groups
-                                              ORDER BY isbuggroup, name');
-
-    my @groups;
-    foreach my $gid (@$group_ids) {
-        push @groups, new Bugzilla::Group($gid);
-    }
-    return @groups;
-}
-
 1;
 
 __END__
@@ -159,30 +101,13 @@ Bugzilla::Group - Bugzilla group class.
     my $is_active    = $group->is_active;
 
     my $group_id = Bugzilla::Group::ValidateGroupName('admin', @users);
-    my @groups   = Bugzilla::Group::get_all_groups();
+    my @groups   = Bugzilla::Group->get_all;
 
 =head1 DESCRIPTION
 
-Group.pm represents a Bugzilla Group object.
-
-=head1 METHODS
-
-=over
-
-=item C<new($param)>
-
- Description: The constructor is used to load an existing group
-              by passing a group id or a hash with the group name.
-
- Params:      $param - If you pass an integer, the integer is the
-                       group id from the database that we want to
-                       read in. If you pass in a hash with 'name'
-                       key, then the value of the name key is the
-                       name of a product from the DB.
-
- Returns:     A Bugzilla::Group object.
-
-=back
+Group.pm represents a Bugzilla Group object. It is an implementation
+of L<Bugzilla::Object>, and thus has all the methods that L<Bugzilla::Object>
+provides, in addition to any methods documented below.
 
 =head1 SUBROUTINES
 
@@ -200,15 +125,4 @@ Group.pm represents a Bugzilla Group object.
  Returns:     It returns the group id if successful
               and undef otherwise.
 
-=item C<get_all_groups()>
-
- Description: Returns all groups available, including both
-              system groups and bug groups.
-
- Params:      none
-
- Returns:     An array of group objects.
-
 =back
-
-=cut

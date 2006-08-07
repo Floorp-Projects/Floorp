@@ -186,7 +186,7 @@ sub edit {
                             'inclusions'  => \%inclusions };
     }
     # Get a list of groups available to restrict this flag type against.
-    my @groups = Bugzilla::Group::get_all_groups();
+    my @groups = Bugzilla::Group->get_all;
     $vars->{'groups'} = \@groups;
     # Return the appropriate HTTP response headers.
     print $cgi->header();
@@ -236,7 +236,7 @@ sub processCategoryChange {
     # Fill $vars with products and components data.
     $vars = get_products_and_components($vars);
 
-    my @groups = Bugzilla::Group::get_all_groups();
+    my @groups = Bugzilla::Group->get_all;
     $vars->{'groups'} = \@groups;
     $vars->{'action'} = $cgi->param('action');
 
