@@ -50,6 +50,9 @@
   <!ENTITY cmdToggleWhitespaceNodes.label "Visa tomma noder">
   <!ENTITY cmdToggleWhitespaceNodes.accesskey "t">
 
+  <!ENTITY cmdToggleAccessibleNodes.label "Show Accessible Nodes">
+  <!ENTITY cmdToggleAccessibleNodes.accesskey "c">
+
   <!ENTITY cmdFlashSelected.label "Blinka med det markerade elementet">
 
   <!ENTITY cmdToggleAttributes.label "Visa attribut">

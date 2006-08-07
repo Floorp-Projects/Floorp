@@ -52,6 +52,9 @@
 <!ENTITY cmdToggleWhitespaceNodes.label "Mostra els nodes d'espais blancs">
 <!ENTITY cmdToggleWhitespaceNodes.accesskey "b">
 
+<!ENTITY cmdToggleAccessibleNodes.label "Show Accessible Nodes">
+<!ENTITY cmdToggleAccessibleNodes.accesskey "c">
+
 <!ENTITY cmdFlashSelected.label "Marca l'element seleccionat">
 
 <!ENTITY cmdToggleAttributes.label "Mostra els atributs">

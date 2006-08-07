@@ -99,17 +99,17 @@ ViewerRegistry.prototype =
     this.mObserver.onViewerRegistryLoad();
   },
 
-  prepareRegistry: function()
+  prepareRegistry: function prepareRegistry()
   {
     this.mViewerDS = RDFArray.fromContainer(this.mDS, "inspector:viewers", kInspectorNSURI);
-    
+
     // create and cache the filter functions
     var js, fn;
     this.mFilters = [];
     for (var i = 0; i < this.mViewerDS.length; ++i) {
       js = this.getEntryProperty(i, "filter");
       try {
-        fn = new Function("object", js);
+        fn = new Function("object", "linkedViewer", js);
       } catch (ex) {
         fn = new Function("return false");
         debug("### ERROR - Syntax error in filter for viewer \"" + this.getEntryProperty(i, "description") + "\"\n");
@@ -132,15 +132,18 @@ ViewerRegistry.prototype =
 
   //// Lookup Methods
 
-  ///////////////////////////////////////////////////////////////////////////
-  // Searches the viewer registry for all viewers that can view a particular
-  // object.
-  //
-  // @param Object aObject - the object being searched against
-  // @param String aPanelId - the id of the panel requesting viewers
-  // @return nsIRDFResource[] - array of entries in the viewer registry
-  ///////////////////////////////////////////////////////////////////////////
-  findViewersForObject: function(aObject, aPanelId)
+  /**
+   * Searches the viewer registry for all viewers that can view a particular
+   * object.
+   *
+   * @param Object aObject - the object being searched against
+   * @param String aPanelId - the id of the panel requesting viewers
+   * @param Object aLinkedViewer - the view object of linked panel
+   *
+   * @return nsIRDFResource[] - array of entries in the viewer registry
+   */
+  findViewersForObject: function findViewersForObject(aObject, aPanelId,
+                                                      aLinkedViewer)
   {
     // check each entry in the registry
     var len = this.mViewerDS.length;
@@ -150,9 +153,9 @@ ViewerRegistry.prototype =
       if (this.getEntryProperty(i, "panels").indexOf(aPanelId) == -1) {
         continue;
       }
-      if (this.objectMatchesEntry(aObject, i)) {
+      if (this.objectMatchesEntry(aObject, aLinkedViewer, i)) {
         if (this.getEntryProperty(i, "important")) {
-          urls.unshift(i); 
+          urls.unshift(i);
         } else {
           urls.push(i);
         }
@@ -162,16 +165,19 @@ ViewerRegistry.prototype =
     return urls;
   },
 
-  ///////////////////////////////////////////////////////////////////////////
-  // Determines if an object is eligible to be viewed by a particular viewer.
-  //
-  // @param Object aObject - the object being checked for eligibility
-  // @param long aIndex - the index of the entry
-  // @return boolean - true if object can be viewed
-  ///////////////////////////////////////////////////////////////////////////
-  objectMatchesEntry: function(aObject, aIndex)
+  /**
+   * Determines if an object is eligible to be viewed by a particular viewer.
+   *
+   * @param Object aObject - the object being checked for eligibility
+   * @param Object aLinkedViewer - the view object of linked panel
+   * @param long aIndex - the index of the entry
+   *
+   * @return boolean - true if object can be viewed
+   */
+  objectMatchesEntry: function objectMatchesEntry(aObject, aLinkedViewer,
+                                                  aIndex)
   {
-    return this.mFilters[aIndex](aObject);
+    return this.mFilters[aIndex](aObject, aLinkedViewer);
   },
 
   ///////////////////////////////////////////////////////////////////////////

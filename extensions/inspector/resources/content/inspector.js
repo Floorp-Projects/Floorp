@@ -129,6 +129,13 @@ InspectorApp.prototype =
     document.getElementById("cmdToggleChrome").setAttribute("checked",
                                                PrefUtils.getPref("inspector.showChrome"));
 
+    // check if accessibility service is available
+    var cmd = document.getElementById("cmd:toggleAccessibleNodes");
+    if (cmd) {
+      if (!("@mozilla.org/accessibilityService;1" in Components.classes))
+        cmd.setAttribute("disabled", "true");
+    }
+
     if (aURI) {
       this.gotoURL(aURI);
     }

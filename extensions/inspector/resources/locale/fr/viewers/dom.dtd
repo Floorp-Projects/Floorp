@@ -49,6 +49,9 @@
   <!ENTITY cmdToggleWhitespaceNodes.label "Voir les nœuds vides">
   <!ENTITY cmdToggleWhitespaceNodes.accesskey "V">
 
+  <!ENTITY cmdToggleAccessibleNodes.label "Show Accessible Nodes">
+  <!ENTITY cmdToggleAccessibleNodes.accesskey "c">
+
   <!ENTITY cmdFlashSelected.label "Faire clignoter l'élément sélectionné">
 
   <!ENTITY cmdToggleAttributes.label "Afficher les attributs">

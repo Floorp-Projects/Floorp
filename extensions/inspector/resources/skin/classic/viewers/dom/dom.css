@@ -39,6 +39,10 @@
 
 /* :::::::: node type color coding :::::::: */
 
+treechildren::-moz-tree-cell-text(ACCESSIBLE_NODE) {
+  font-weight: bold;
+}
+
 treechildren::-moz-tree-cell-text(ELEMENT_NODE) {
   color: #000000;
 }

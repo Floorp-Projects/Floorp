@@ -49,6 +49,9 @@
   <!ENTITY cmdToggleWhitespaceNodes.label "Pokaż węzły zawierające niewidoczne znaki">
   <!ENTITY cmdToggleWhitespaceNodes.accesskey "W">
 
+  <!ENTITY cmdToggleAccessibleNodes.label "Show Accessible Nodes">
+  <!ENTITY cmdToggleAccessibleNodes.accesskey "c">
+
   <!ENTITY cmdFlashSelected.label "Wyróżnij wybrany element">
 
   <!ENTITY cmdToggleAttributes.label "Pokaż atrybuty">

@@ -8,6 +8,8 @@
 <!ENTITY cmdToggleAnonContent.accesskey "a">
 <!ENTITY cmdToggleWhitespaceNodes.label "顯示空白節點">
 <!ENTITY cmdToggleWhitespaceNodes.accesskey "W">
+<!ENTITY cmdToggleAccessibleNodes.label "Show Accessible Nodes">
+<!ENTITY cmdToggleAccessibleNodes.accesskey "c">
 <!ENTITY cmdFlashSelected.label "閃爍已選項目">
 <!ENTITY cmdToggleAttributes.label "顯示屬性">
 <!ENTITY cmdToggleAttributes.accesskey "r">

@@ -50,6 +50,9 @@
   <!ENTITY cmdToggleWhitespaceNodes.label "Exibir nós de espaços em branco">
   <!ENTITY cmdToggleWhitespaceNodes.accesskey "x">
 
+  <!ENTITY cmdToggleAccessibleNodes.label "Show Accessible Nodes">
+  <!ENTITY cmdToggleAccessibleNodes.accesskey "c">
+
   <!ENTITY cmdFlashSelected.label "Piscar elemento selecionado">
 
   <!ENTITY cmdToggleAttributes.label "Exibir atributos">

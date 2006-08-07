@@ -49,6 +49,9 @@
   <!ENTITY cmdToggleWhitespaceNodes.label "Üres csomópontok megjelenítése">
   <!ENTITY cmdToggleWhitespaceNodes.accesskey "r">
 
+  <!ENTITY cmdToggleAccessibleNodes.label "Show Accessible Nodes">
+  <!ENTITY cmdToggleAccessibleNodes.accesskey "c">
+
   <!ENTITY cmdFlashSelected.label "Kijelölt elem villogtatása">
 
   <!ENTITY cmdToggleAttributes.label "Attribútumok megjelenítése">

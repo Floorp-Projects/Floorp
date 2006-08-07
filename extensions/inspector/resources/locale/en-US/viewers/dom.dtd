@@ -49,6 +49,9 @@
   <!ENTITY cmdToggleWhitespaceNodes.label "Show Whitespace Nodes">
   <!ENTITY cmdToggleWhitespaceNodes.accesskey "W">
 
+  <!ENTITY cmdToggleAccessibleNodes.label "Show Accessible Nodes">
+  <!ENTITY cmdToggleAccessibleNodes.accesskey "c">
+
   <!ENTITY cmdFlashSelected.label "Blink Selected Element">
 
   <!ENTITY cmdToggleAttributes.label "Show Attributes">
