@@ -306,21 +306,21 @@ sub insert {
                          'components READ', 'flaginclusions WRITE',
                          'flagexclusions WRITE');
 
-    # Determine the new flag type's unique identifier.
-    my $id = $dbh->selectrow_array('SELECT MAX(id) FROM flagtypes') + 1;
-
     # Insert a record for the new flag type into the database.
     $dbh->do('INSERT INTO flagtypes
-                          (id, name, description, cc_list, target_type,
+                          (name, description, cc_list, target_type,
                            sortkey, is_active, is_requestable, 
                            is_requesteeble, is_multiplicable, 
                            grant_group_id, request_group_id) 
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-              undef, ($id, $name, $description, $cc_list, $target_type,
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+              undef, ($name, $description, $cc_list, $target_type,
                       $cgi->param('sortkey'), $cgi->param('is_active'),
                       $cgi->param('is_requestable'), $cgi->param('is_requesteeble'),
                       $cgi->param('is_multiplicable'), scalar($cgi->param('grant_gid')),
                       scalar($cgi->param('request_gid'))));
+
+    # Get the ID of the new flag type.
+    my $id = $dbh->bz_last_key('flagtypes', 'id');
 
     # Populate the list of inclusions/exclusions for this flag type.
     validateAndSubmit($id);

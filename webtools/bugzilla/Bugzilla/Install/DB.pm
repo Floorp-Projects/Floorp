@@ -464,6 +464,10 @@ sub update_table_definitions {
     $dbh->bz_drop_column('profiles', 'refreshed_when');
     $dbh->bz_drop_column('groups', 'last_changed');
 
+    # 2006-08-06 LpSolit@gmail.com - Bug 347521
+    $dbh->bz_alter_column('flagtypes', 'id',
+          {TYPE => 'SMALLSERIAL', NOTNULL => 1, PRIMARYKEY => 1});
+
     ################################################################
     # New --TABLE-- changes should go *** A B O V E *** this point #
     ################################################################

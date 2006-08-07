@@ -397,7 +397,7 @@ use constant ABSTRACT_SCHEMA => {
     # "flagtypes" defines the types of flags that can be set.
     flagtypes => {
         FIELDS => [
-            id               => {TYPE => 'INT2', NOTNULL => 1,
+            id               => {TYPE => 'SMALLSERIAL', NOTNULL => 1,
                                  PRIMARYKEY => 1},
             name             => {TYPE => 'varchar(50)', NOTNULL => 1},
             description      => {TYPE => 'TEXT'},
