@@ -380,10 +380,8 @@ nsSVGGeometryFrame::SetupCairoStrokeGeometry(cairo_t *aCtx)
   }
 }
 
-nsresult
-nsSVGGeometryFrame::SetupCairoStroke(nsISVGRendererCanvas *aCanvas,
-                                     cairo_t *aCtx,
-                                     void **aClosure)
+void
+nsSVGGeometryFrame::SetupCairoStrokeHitGeometry(cairo_t *aCtx)
 {
   SetupCairoStrokeGeometry(aCtx);
 
@@ -394,6 +392,14 @@ nsSVGGeometryFrame::SetupCairoStroke(nsISVGRendererCanvas *aCanvas,
     cairo_set_dash(aCtx, dashArray, count, GetStrokeDashoffset());
     delete [] dashArray;
   }
+}
+
+nsresult
+nsSVGGeometryFrame::SetupCairoStroke(nsISVGRendererCanvas *aCanvas,
+                                     cairo_t *aCtx,
+                                     void **aClosure)
+{
+  SetupCairoStrokeHitGeometry(aCtx);
 
   if (GetStateBits() & NS_STATE_SVG_STROKE_PSERVER) {
     nsSVGPaintServerFrame *ps = NS_STATIC_CAST(nsSVGPaintServerFrame*,
