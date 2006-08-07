@@ -148,6 +148,13 @@ public:
          nsReflowStatus&          aStatus);
 
   NS_IMETHOD
+  WillReflow(nsPresContext* aPresContext)
+  {
+    mPresentationData.flags &= ~NS_MATHML_ERROR;
+    return nsHTMLContainerFrame::WillReflow(aPresContext);
+  }
+
+  NS_IMETHOD
   DidReflow(nsPresContext*           aPresContext,
             const nsHTMLReflowState*  aReflowState,
             nsDidReflowStatus         aStatus)
