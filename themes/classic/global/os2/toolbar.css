@@ -60,6 +60,7 @@ toolbar {
   border-bottom: 1px solid ThreeDShadow;
 }
 menubar {
+  background-color: Menu;
   min-width: 1px; /* DON'T DELETE!
     Prevents hiding of scrollbars in browser when window is made smaller.*/
   border: 0;
