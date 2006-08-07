@@ -572,7 +572,7 @@ var gCheckingPage = {
     /**
      * See nsISupports.idl
      */
-    QueryInterface: function(iid) {
+    QueryInterface: function(aIID) {
       if (!aIID.equals(Components.interfaces.nsIUpdateCheckListener) &&
           !aIID.equals(Components.interfaces.nsISupports))
         throw Components.results.NS_ERROR_NO_INTERFACE;
