@@ -749,9 +749,9 @@ nsDownloadManager::CancelDownload(const PRUnichar* aPath)
 
   DownloadEnded(aPath, nsnull);
 
-  // dump the temp file.  This should really be done when the transfer
-  // is cancelled, but there's other cancelallation causes that shouldn't 
-  // remove this, we need to improve those bits
+  // Dump the temp file.  This should really be done when the transfer
+  // is cancelled, but there are other cancellation causes that shouldn't
+  // remove this. We need to improve those bits.
   nsCOMPtr<nsILocalFile> tempFile;
   internalDownload->GetTempFile(getter_AddRefs(tempFile));
   if (tempFile) {
