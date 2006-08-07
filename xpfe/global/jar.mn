@@ -81,7 +81,8 @@ toolkit.jar:
 #endif
         content/global/aboutAbout.html              (resources/content/aboutAbout.html) 
         content/global/about.xul                    (resources/content/about.xul) 
-        content/global/plugins.html                 (resources/content/plugins.html)
+        content/global/plugins.html                 (/toolkit/content/plugins.html)
+        content/global/plugins.css                  (/toolkit/content/plugins.css)
         content/global/fullScreen.js                (resources/content/fullScreen.js)
         content/global/build.dtd                    (build.dtd)
 
