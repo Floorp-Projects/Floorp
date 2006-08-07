@@ -4465,7 +4465,7 @@ nsFrame::GetLineNumber(nsIFrame *aFrame, nsIFrame** aContainingBlock)
   return thisLine;
 }
 
-NS_IMETHODIMP
+nsresult
 nsIFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 {
   // Find the prev/next selectable frame
