@@ -702,9 +702,15 @@ nsRenderingContextImpl::GetTextDimensions(const char*       aString,
   for (wordCount = 0; wordCount < aNumBreaks; ++wordCount) {
     PRInt32 lastBreak = wordCount > 0 ? aBreaks[wordCount - 1] : 0;
     nsTextDimensions dimensions;
-    // Call safe method
-    nsresult rv = GetTextDimensions(aString + lastBreak, aBreaks[wordCount],
-                                    dimensions);
+    
+    NS_ASSERTION(aBreaks[wordCount] > lastBreak, "Breaks must be monotonically increasing");
+    NS_ASSERTION(aBreaks[wordCount] <= aLength, "Breaks can't exceed string length");
+   
+     // Call safe method
+
+    nsresult rv =
+      GetTextDimensions(aString + lastBreak, aBreaks[wordCount] - lastBreak,
+                        dimensions);
     if (NS_FAILED(rv))
       return rv;
     x += dimensions.width;
@@ -751,10 +757,15 @@ nsRenderingContextImpl::GetTextDimensions(const PRUnichar*  aString,
   PRInt32 wordCount;
   for (wordCount = 0; wordCount < aNumBreaks; ++wordCount) {
     PRInt32 lastBreak = wordCount > 0 ? aBreaks[wordCount - 1] : 0;
+    
+    NS_ASSERTION(aBreaks[wordCount] > lastBreak, "Breaks must be monotonically increasing");
+    NS_ASSERTION(aBreaks[wordCount] <= aLength, "Breaks can't exceed string length");
+    
     nsTextDimensions dimensions;
     // Call safe method
-    nsresult rv = GetTextDimensions(aString + lastBreak, aBreaks[wordCount],
-                                    dimensions);
+    nsresult rv =
+      GetTextDimensions(aString + lastBreak, aBreaks[wordCount] - lastBreak,
+                        dimensions);
     if (NS_FAILED(rv))
       return rv;
     x += dimensions.width;
