@@ -97,7 +97,12 @@ NS_IMETHODIMP nsFontMetricsMac::Init(const nsFont& aFont, nsIAtom* aLangGroup, n
   mMaxAscent  = mEmAscent;
   mMaxDescent = mEmDescent;
 
-  mMaxAdvance = NSToCoordRound(float(::CharWidth('M')) * dev2app);	// don't use fInfo.widMax here
+  float maxCharWidth = float(::CharWidth('M'));	// don't use fInfo.widMax here
+  mMaxAdvance = NSToCoordRound(maxCharWidth * dev2app);
+  // If we try to measure draw more than ~32767 pixels
+  // in one operation, the string may not be drawn:
+  mMaxStringLength = PR_MAX(1, (PRInt32)floor(32767.0 / maxCharWidth));
+
   mAveCharWidth = NSToCoordRound(float(::CharWidth('x')) * dev2app);	
   mSpaceWidth = NSToCoordRound(float(::CharWidth(' ')) * dev2app);
 
@@ -367,6 +372,11 @@ NS_IMETHODIMP nsFontMetricsMac :: GetAveCharWidth(nscoord &aAveCharWidth)
 {
   aAveCharWidth = mAveCharWidth;
   return NS_OK;
+}
+
+PRInt32 nsFontMetricsMac::GetMaxStringLength()
+{
+  return mMaxStringLength;
 }
 
 nsresult nsFontMetricsMac :: GetSpaceWidth(nscoord &aSpaceWidth)
