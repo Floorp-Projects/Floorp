@@ -82,6 +82,9 @@ sub FILESYSTEM {
     my $owner_dir_readable = 0700;
     # Writeable by the web server.
     my $ws_dir_writeable = $ws_group ? 0770 : 01777;
+    # The webserver can overwrite files owned by other users, 
+    # in this directory.
+    my $ws_dir_full_control = $ws_group ? 0770 : 0777;
 
     # Note: When being processed by checksetup, these have their permissions
     # set in this order: %all_dirs, %recurse_dirs, %all_files.
@@ -126,7 +129,7 @@ sub FILESYSTEM {
     my %recurse_dirs = (
         # Writeable directories
         "$datadir/template" => { files => $ws_readable, 
-                                  dirs => $ws_dir_writeable },
+                                  dirs => $ws_dir_full_control },
          $attachdir         => { files => $ws_writeable,
                                   dirs => $ws_dir_writeable },
          $webdotdir         => { files => $ws_writeable,
@@ -170,7 +173,7 @@ sub FILESYSTEM {
     # The name of each directory that we should actually *create*,
     # pointing at its default permissions.
     my %create_dirs = (
-        $datadir                => $ws_dir_writeable,
+        $datadir                => $ws_dir_full_control,
         "$datadir/mimedump-tmp" => $ws_dir_writeable,
         "$datadir/mining"       => $ws_dir_readable,
         "$datadir/duplicates"   => $ws_dir_readable,
