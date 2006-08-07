@@ -1935,120 +1935,20 @@ nsFrameSelection::GetPrevNextBidiLevels(nsIContent *aNode,
     return levels;
   }
 
-  /*
-  we have to find the next or previous *logical* frame.
-
-  Unfortunately |GetFrameFromDirection| has already been munged to return the next/previous *visual* frame, so we can't use that.
-  The following code is taken from there without the Bidi changes.
-
-  XXX is there a simpler way to do this? 
-  */
-
-  if (!aJumpLines) {
-    nsIFrame *blockFrame = currentFrame;
-    nsIFrame *thisBlock = nsnull;
-    PRInt32   thisLine;
-    nsILineIteratorNavigator* it;  // This is qi'd off a frame, and those aren't
-                                   // refcounted
-    nsresult rv = NS_ERROR_FAILURE;
-    while (NS_FAILED(rv) && blockFrame)
-    {
-      thisBlock = blockFrame;
-      blockFrame = blockFrame->GetParent();
-      if (blockFrame) {
-        rv = CallQueryInterface(blockFrame, &it);
-      }
-    }
-
-    if (!blockFrame || !it)
-      return levels;
-
-    if (NS_FAILED(it->FindLineContaining(thisBlock, &thisLine)))
-      return levels;
-
-    if (thisLine < 0)
-      return levels;
-
-    nsIFrame *firstFrame;
-    nsIFrame *lastFrame;
-    nsRect    nonUsedRect;
-    PRInt32   lineFrameCount;
-    PRUint32  lineFlags;
-
-    if (NS_FAILED(it->GetLine(thisLine, &firstFrame,
-                              &lineFrameCount, nonUsedRect, &lineFlags)))
-      return levels;
-
-    lastFrame = firstFrame;
-
-    for (;lineFrameCount > 1;lineFrameCount --) {
-      lastFrame = lastFrame->GetNextSibling();
-    }
-
-    // GetFirstLeaf
-    nsIFrame *lookahead;
-    while (1) {
-      lookahead = firstFrame->GetFirstChild(nsnull);
-      if (!lookahead)
-        break; //nothing to do
-      firstFrame = lookahead;
-    }
-
-    // GetLastLeaf
-    while (1) {
-      lookahead = lastFrame->GetFirstChild(nsnull);
-      if (!lookahead)
-        break; //nothing to do
-      lastFrame = lookahead;
-      while ((lookahead = lastFrame->GetNextSibling()) != nsnull)
-        lastFrame = lookahead;
-    }
-    //END LINE DATA CODE
-
-    if (direction == eDirNext && lastFrame == currentFrame) { // End of line: set aPrevFrame to the current frame
-                                                              //              set aPrevLevel to the embedding level of the current frame
-                                                              //              set aNextFrame to null
-                                                              //              set aNextLevel to the paragraph embedding level
-      levels.SetData(currentFrame, nsnull,
-                     NS_GET_EMBEDDING_LEVEL(currentFrame),
-                     NS_GET_BASE_LEVEL(currentFrame));
-      return levels;
-    }
-
-    if (direction == eDirPrevious && firstFrame == currentFrame) { // Beginning of line: set aPrevFrame to null
-                                                                   //                    set aPrevLevel to the paragraph embedding level
-                                                                   //                    set aNextFrame to the current frame
-                                                                   //                    set aNextLevel to the embedding level of the current frame
-      levels.SetData(nsnull, currentFrame,
-                     NS_GET_BASE_LEVEL(currentFrame),
-                     NS_GET_EMBEDDING_LEVEL(currentFrame));
-      return levels;
-    }
-  } //if (!aJumpLines)
-
-  // Find the adjacent frame
-
-  nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
-  if (NS_FAILED(NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
-                                     LEAF, mShell->GetPresContext(),
-                                     currentFrame, PR_TRUE)))
-    return levels;
-
-  nsresult rv;
-  if (direction == eDirNext)
-    rv = frameTraversal->Next();
-  else 
-    rv = frameTraversal->Prev();
-
-  nsISupports *isupports = nsnull;
-  if (NS_SUCCEEDED(rv)) {
-    if (NS_FAILED(frameTraversal->CurrentItem(&isupports)))
-      return levels;
-  }
-
-  //we must CAST here to an nsIFrame. nsIFrame doesn't really follow the rules
-  //for speed reasons
-  nsIFrame *newFrame = (nsIFrame *)isupports;
+  nsPeekOffsetStruct pos;
+  pos.SetData(eSelectCharacter,
+              direction,
+              currentOffset,
+              0,
+              aJumpLines,
+              PR_TRUE,        // aScrollViewStop
+              PR_FALSE,       // aIsKeyboardSelect
+              PR_FALSE);      // aVisual
+  
+  nsresult rv = currentFrame->GetFrameFromDirection(mShell->GetPresContext(), &pos);  
+  nsIFrame *newFrame = nsnull;
+  if (NS_SUCCEEDED(rv))
+    newFrame = pos.mResultFrame;
 
   if (direction == eDirNext) {
     levels.SetData(currentFrame, newFrame,
