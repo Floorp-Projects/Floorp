@@ -599,6 +599,17 @@ NS_IMETHODIMP nsLocalFile::MoveToNative(nsIFile *newParentDir, const nsACString&
     if (NS_FAILED(rv))
       return rv;   
   }
+  else {
+    PRBool exists;
+    rv = parentDir->Exists(&exists);
+    if (NS_FAILED(rv))
+      return rv;
+    if (!exists) {
+      rv = parentDir->Create(nsIFile::DIRECTORY_TYPE, 0777);
+      if (NS_FAILED(rv))
+        return rv;
+    }
+  }
 
   nsCAutoString destPath;
   rv = parentDir->GetNativePath(destPath);
