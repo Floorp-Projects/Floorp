@@ -36,7 +36,7 @@
       <radio id="useReader" value="reader"
              label="&useReader.label;" accesskey="&useReader.accesskey;"/>
       <hbox id="readerContainer" class="indent" flex="1">
-        <listbox id="readers" onselect="event.preventBubble();" rows="5" flex="1">
+        <listbox id="readers" onselect="event.stopPropagation();" rows="5" flex="1">
           <listcols>
             <listcol flex="1"/>
             <listcol/>
