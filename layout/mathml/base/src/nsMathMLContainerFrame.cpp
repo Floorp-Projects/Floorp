@@ -715,16 +715,16 @@ nsMathMLContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                          const nsRect&           aDirtyRect,
                                          const nsDisplayListSet& aLists)
 {
-  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
   // report an error if something wrong was found in this frame
   if (NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
-    // XXX this has no visibility check ... dunno if that's right or not
-    // REVIEW: That is an existing issue
-    rv = aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplayMathMLError(this));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (!IsVisibleForPainting(aBuilder))
+      return NS_OK;
+
+    return aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplayMathMLError(this));
   }
+
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = DisplayTextDecorationsAndChildren(aBuilder, aDirtyRect, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
