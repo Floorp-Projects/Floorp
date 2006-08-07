@@ -4,6 +4,11 @@
 
 #itemList {
   margin: 10px 4px 10px 4px;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
   background-color: -moz-Field;
   color: -moz-FieldText;
 }
