@@ -257,7 +257,7 @@
               </xul:box>
               <xul:box orient="horizontal" align="center">
                 <xul:radio id="recurrence-range-until" label="&event.repeat.until.label;" value="until" disable-on-readonly="true" disable-on-occurrence="true"/>
-                <xul:datepicker id="repeat-until-date" disable-on-readonly="true" disable-on-occurrence="true"/>
+                <xul:datepicker id="repeat-until-date" onchange="updateRecurrenceControls();" disable-on-readonly="true" disable-on-occurrence="true"/>
               </xul:box>
             </xul:radiogroup>
           </xul:vbox>
@@ -460,7 +460,7 @@
                     recurrenceInfo.deleteRecurrenceItem(rrules[0][0]);
             } else {
                 recurrenceInfo = createRecurrenceInfo();
-                recurrenceInfo.item = window.calendarItem;
+                recurrenceInfo.item = item;
             }
 
             var recRule = new calRecurrenceRule();
@@ -716,9 +716,49 @@
             if(item.parentItem != item) {
                 item = item.parentItem;
             }
-            var recurrenceInfo = this.onSave(item);
+            
+            // TODO: we should better start the whole dialog with a newly cloned item
+            // and always pump changes immediately into it. this would eliminate the
+            // need to break the encapsulation, as we do it here. but we need the item
+            // to contain the startdate in order to calculate the recurrence preview.
+            item = item.clone();
+            var kDefaultTimezone = calendarDefaultTimezone();
+            if (isEvent(item)) {
+                var startDate = jsDateToDateTime(getElementValue("event-starttime"));
+                var endDate = jsDateToDateTime(getElementValue("event-endtime"));
+                startDate = startDate.getInTimezone(kDefaultTimezone);
+                endDate = endDate.getInTimezone(kDefaultTimezone);
+                var isAllDay = getElementValue("event-all-day", "checked");
+                if (isAllDay) {
+                    startDate.isDate = true;
+                    startDate.normalize();
+                    endDate.isDate = true;
+                    endDate.day += 1;
+                    endDate.normalize();
+                }
+                this.setItemProperty(item, "startDate",   startDate);
+                this.setItemProperty(item, "endDate",     endDate);
+            }
+            if (isToDo(item)) {
+                var entryDate = getElementValue("todo-has-entrydate", "checked") ? 
+                    jsDateToDateTime(getElementValue("todo-entrydate")) : null;
+                if (entryDate) {
+                    entryDate = entryDate.getInTimezone(kDefaultTimezone);
+                } else {
+                    item.recurrenceInfo = null;
+                }
+                this.setItemProperty(item,"entryDate",entryDate);
+                var dueDate = getElementValue("todo-has-duedate", "checked") ? 
+                    jsDateToDateTime(getElementValue("todo-duedate")) : null;
+                if (dueDate) {
+                    dueDate = dueDate.getInTimezone(kDefaultTimezone);
+                }
+                this.setItemProperty(item, "dueDate",     dueDate);
+            }
+            
+            var recInfo = this.onSave(item);
             var preview = document.getElementById("recurrence-preview");
-            preview.updatePreview(recurrenceInfo);
+            preview.updatePreview(recInfo);
           ]]>
         </body>
       </method>
@@ -856,6 +896,67 @@
                         yearlyMonthOrdinal.setAttribute("disabled", "true");
                     }
                     break;
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="setItemProperty">
+        <parameter name="item"/>
+        <parameter name="propertyName"/>
+        <parameter name="value"/>
+        <body>
+          <![CDATA[
+            switch(propertyName) {
+              case "startDate":
+                if (value.isDate && !item.startDate.isDate ||
+                    !value.isDate && item.startDate.isDate ||
+                    value.timezone != item.startDate.timezone ||
+                    value.compare(item.startDate) != 0)
+                    item.startDate = value;
+                break;
+              case "endDate":
+                if (value.isDate && !item.endDate.isDate ||
+                    !value.isDate && item.endDate.isDate ||
+                    value.timezone != item.endDate.timezone ||
+                    value.compare(item.endDate) != 0)
+                    item.endDate = value;
+                break;
+
+              case "entryDate":
+                if (value == item.entryDate)
+                    break;
+                if ((value && !item.entryDate) ||
+                    (!value && item.entryDate) ||
+                    (value.timezone != item.entryDate.timezone) ||
+                    (value.compare(item.entryDate) != 0))
+                    item.entryDate = value;
+                break;
+              case "dueDate":
+                if (value == item.dueDate)
+                    break;
+                if ((value && !item.dueDate) ||
+                    (!value && item.dueDate) ||
+                    (value.timezone != item.dueDate.timezone) ||
+                    (value.compare(item.dueDate) != 0))
+                    item.dueDate = value;
+                break;
+              case "isCompleted":
+                if (value != item.isCompleted)
+                    item.isCompleted = value;
+                break;
+
+              case "title":
+                if (value != item.title)
+                    item.title = value;
+                break;
+
+              default:
+                if (!value || value == "")
+                    item.deleteProperty(propertyName);
+                else if (item.getProperty(propertyName) != value)
+                    item.setProperty(propertyName, value);
+                break;
             }
           ]]>
         </body>

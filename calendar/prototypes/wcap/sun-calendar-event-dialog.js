@@ -144,7 +144,7 @@ function onTabSelected()
       var recurrencepage = document.getElementById("recurrence-page");
       recurrencepage.mStartDate = entryDate;
       recurrencepage.disableOrEnable(item);
-      recurrencepage.updateAccept();
+      recurrencepage.updateRecurrenceControls();
     }
   } else if(index == 2) {
     var kDefaultTimezone = calendarDefaultTimezone();
