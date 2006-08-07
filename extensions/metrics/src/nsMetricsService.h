@@ -66,6 +66,7 @@ class nsIDOMWindow;
 class nsIDOMDocument;
 class nsIDOMNode;
 class nsIMetricsCollector;
+class nsIDocShellTreeItem;
 
 #ifdef PR_LOGGING
 // Shared log for the metrics service and collectors.
@@ -309,6 +310,9 @@ public:
   // ownerDocument and tag.
   static nsresult CreateElement(nsIDOMDocument *ownerDoc,
                                 const nsAString &tag, nsIDOMElement **element);
+
+  // Returns true if the docshell should be considered a subframe.
+  static PRBool IsSubframe(nsIDocShellTreeItem *docShell);
 };
 
 #endif  // nsMetricsService_h__

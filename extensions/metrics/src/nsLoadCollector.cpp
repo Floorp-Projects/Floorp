@@ -42,7 +42,6 @@
 #endif
 
 #include "nsLoadCollector.h"
-#include "nsWindowCollector.h"
 #include "nsMetricsService.h"
 #include "nsCOMPtr.h"
 #include "nsCURILoader.h"
@@ -359,23 +358,12 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
         return NS_ERROR_UNEXPECTED;
       }
 
-      // Consider the load to be a subframe if the docshell is not chrome,
-      // and has a sameTypeParent.
-      PRBool subframe = PR_FALSE;
-      nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(docShell);
-      if (treeItem) {
-        PRInt32 itemType;
-        treeItem->GetItemType(&itemType);
-        if (itemType == nsIDocShellTreeItem::typeContent) {
-          nsCOMPtr<nsIDocShellTreeItem> parent;
-          treeItem->GetSameTypeParent(getter_AddRefs(parent));
-          if (parent) {
-            subframe = PR_TRUE;
-            rv = props->SetPropertyAsBool(NS_LITERAL_STRING("subframe"),
-                                          PR_TRUE);
-            NS_ENSURE_SUCCESS(rv, rv);
-          }
-        }
+      nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(docShell);
+      NS_ENSURE_STATE(item);
+      PRBool subframe = nsMetricsUtils::IsSubframe(item);
+      if (subframe) {
+        rv = props->SetPropertyAsBool(NS_LITERAL_STRING("subframe"), PR_TRUE);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
 
       nsMetricsService *ms = nsMetricsService::get();
