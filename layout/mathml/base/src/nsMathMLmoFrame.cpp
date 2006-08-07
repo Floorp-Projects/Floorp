@@ -974,6 +974,13 @@ nsMathMLmoFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
   return ReLayoutChildren(target);
 }
 
+nsresult
+nsMathMLmoFrame::ChildListChanged(PRInt32 aModType)
+{
+  ProcessTextData(GetPresContext());
+  return nsMathMLContainerFrame::ChildListChanged(aModType);
+}
+
 NS_IMETHODIMP
 nsMathMLmoFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                   nsIAtom*        aAttribute,

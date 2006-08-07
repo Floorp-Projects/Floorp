@@ -84,6 +84,9 @@ public:
                    nsIAtom*        aAttribute,
                    PRInt32         aModType);
 
+  virtual nsresult
+  ChildListChanged(PRInt32 aModType);
+
   // This method is called by the parent frame to ask <mo> 
   // to stretch itself.
   NS_IMETHOD
