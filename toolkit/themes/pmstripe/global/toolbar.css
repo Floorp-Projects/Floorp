@@ -63,6 +63,7 @@ toolbar {
 }
 
 toolbar[type="menubar"], menubar {
+  background-color: Menu;
   -moz-appearance: toolbar;
   border-top: none !important;
   border-bottom: 1px solid;
