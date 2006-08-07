@@ -1360,8 +1360,8 @@ nsresult nsSSLIOLayerHelpers::Init()
     return NS_ERROR_OUT_OF_MEMORY;
 
   mSharedPollableEvent = PR_NewPollableEvent();
-  if (!mSharedPollableEvent)
-    return NS_ERROR_OUT_OF_MEMORY;
+
+  // if we can not get a pollable event, we'll have to do busy waiting
 
   mTLSIntolerantSites = new nsCStringHashSet();
   if (!mTLSIntolerantSites)
