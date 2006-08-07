@@ -1,5 +1,0 @@
-classic.jar:
-        skin/classic/global/plugins.css                                       (../../../themes/classic/global/plugins.css)
-
-toolkit.jar:
-        content/global/plugins.html                                           (../../../xpfe/global/resources/content/plugins.html)

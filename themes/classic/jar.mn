@@ -310,7 +310,7 @@ classic.jar:
   skin/classic/global/progressmeter/progressmeter-busy.gif    (global/win/progressmeter/progressmeter-busy.gif)
 #endif
   skin/classic/global/netError.css                                      (global/netError.css)
-  skin/classic/global/plugins.css                                       (global/plugins.css)
+  skin/classic/global/plugins.css                                       (/toolkit/empty-file)
   skin/classic/global/printing.css                                      (global/printing.css)
 # chrome://global/skin/nativescrollbars.css is used on Mac
   skin/classic/global/nativescrollbars.css                              (global/mac/nativescrollbars.css)
