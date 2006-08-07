@@ -38,7 +38,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.27 2006/08/07 19:09:41 julien.pierre.bugs%sun.com Exp $
+ * $Id: ocsp.c,v 1.28 2006/08/07 20:48:04 julien.pierre.bugs%sun.com Exp $
  */
 
 #include "prerror.h"
@@ -1292,7 +1292,7 @@ ocsp_FinishDecodingSingleResponses(PRArenaPool *reqArena,
 
     if (!reqArena) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return NULL;
+        return SECFailure;
     }
 
     if (responses == NULL)			/* nothing to do */
