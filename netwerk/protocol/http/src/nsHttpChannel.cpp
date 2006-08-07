@@ -127,20 +127,14 @@ nsHttpChannel::~nsHttpChannel()
 {
     LOG(("Destroying nsHttpChannel @%x\n", this));
 
-    if (mResponseHead) {
-        delete mResponseHead;
-        mResponseHead = 0;
-    }
-    if (mCachedResponseHead) {
-        delete mCachedResponseHead;
-        mCachedResponseHead = 0;
-    }
-
     NS_IF_RELEASE(mConnectionInfo);
     NS_IF_RELEASE(mTransaction);
 
     NS_IF_RELEASE(mProxyAuthContinuationState);
     NS_IF_RELEASE(mAuthContinuationState);
+
+    delete mResponseHead;
+    delete mCachedResponseHead;
 
     // release our reference to the handler
     nsHttpHandler *handler = gHttpHandler;
@@ -1669,10 +1663,22 @@ nsHttpChannel::CloseCacheEntry()
 
     LOG(("nsHttpChannel::CloseCacheEntry [this=%x]", this));
 
-    // Doom the cache entry if it was newly created and never initialized.
-    // Else, we keep it around in the hope of being able to make use of it
-    // again (see CheckCache).
-    if (mCacheAccess == nsICache::ACCESS_WRITE && !mInitedCacheEntry) {
+    // If we have begun to create or replace a cache entry, and that cache
+    // entry is not complete and not resumable, then it needs to be doomed.
+    // Otherwise, CheckCache will make the mistake of thinking that the
+    // partial cache entry is complete.
+
+    PRBool doom = PR_FALSE;
+    if (mInitedCacheEntry) {
+        NS_ASSERTION(mResponseHead, "oops");
+        if (NS_FAILED(mStatus) && (mCacheAccess & nsICache::ACCESS_WRITE) &&
+            !mResponseHead->IsResumable())
+            doom = PR_TRUE;
+    }
+    else if (mCacheAccess == nsICache::ACCESS_WRITE)
+        doom = PR_TRUE;
+
+    if (doom) {
         LOG(("  dooming cache entry!!"));
         mCacheEntry->Doom();
     }
