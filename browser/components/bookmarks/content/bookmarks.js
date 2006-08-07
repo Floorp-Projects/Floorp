@@ -799,9 +799,12 @@ var BookmarksCommand = {
       if (doReplace)
         index0 = 0;
       else {
-        for (index0=tabCount-1; index0>=0; --index0)
-          if (tabPanels[index0].webNavigation.currentURI.spec != "about:blank")
+        for (index0=tabCount-1; index0>=0; --index0) {
+          var tab = tabPanels[index0];
+          if (tab.webNavigation.currentURI.spec != "about:blank" ||
+              tab.webProgress.isLoadingDocument)
             break;
+        }
         ++index0;
       }
 
