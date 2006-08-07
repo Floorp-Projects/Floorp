@@ -82,7 +82,7 @@ var gSecurityPane = {
 
     var params = this._addonParams;
     if (!params.windowTitle || !params.introText) {
-      params.windowTitle = bundlePrefs.getString("addonspermissionstitle");
+      params.windowTitle = bundlePrefs.getString("addons_permissions_title");
       params.introText = bundlePrefs.getString("addonspermissionstext");
     }
 
