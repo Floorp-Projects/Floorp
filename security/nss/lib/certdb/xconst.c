@@ -205,20 +205,32 @@ CERT_EncodeAltNameExtension(PRArenaPool *arena,  CERTGeneralName  *value, SECIte
 }
 
 CERTGeneralName *
-CERT_DecodeAltNameExtension(PRArenaPool *arena, SECItem *EncodedAltName)
+CERT_DecodeAltNameExtension(PRArenaPool *reqArena, SECItem *EncodedAltName)
 {
-    SECStatus              rv = SECSuccess;
+    SECStatus                  rv = SECSuccess;
     CERTAltNameEncodedContext  encodedContext;
+    SECItem*                   newEncodedAltName;
+
+    if (!reqArena) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
+
+    newEncodedAltName = SECITEM_ArenaDupItem(reqArena, EncodedAltName);
+    if (!newEncodedAltName) {
+        return NULL;
+    }
 
     encodedContext.encodedGenName = NULL;
     PORT_Memset(&encodedContext, 0, sizeof(CERTAltNameEncodedContext));
-    rv = SEC_ASN1DecodeItem (arena, &encodedContext, CERT_GeneralNamesTemplate,
-			     EncodedAltName);
+    rv = SEC_QuickDERDecodeItem (reqArena, &encodedContext,
+                                 CERT_GeneralNamesTemplate, newEncodedAltName);
     if (rv == SECFailure) {
 	goto loser;
     }
     if (encodedContext.encodedGenName && encodedContext.encodedGenName[0])
-	return cert_DecodeGeneralNames(arena, encodedContext.encodedGenName);
+	return cert_DecodeGeneralNames(reqArena,
+                                       encodedContext.encodedGenName);
     /* Extension contained an empty GeneralNames sequence */
     /* Treat as extension not found */
     PORT_SetError(SEC_ERROR_EXTENSION_NOT_FOUND);
@@ -248,21 +260,32 @@ CERT_DecodeNameConstraintsExtension(PRArenaPool          *arena,
 
 
 CERTAuthInfoAccess **
-CERT_DecodeAuthInfoAccessExtension(PRArenaPool *arena,
+CERT_DecodeAuthInfoAccessExtension(PRArenaPool *reqArena,
 				   SECItem     *encodedExtension)
 {
     CERTAuthInfoAccess **info = NULL;
     SECStatus rv;
     int i;
+    SECItem* newEncodedExtension;
 
-    rv = SEC_ASN1DecodeItem(arena, &info, CERTAuthInfoAccessTemplate, 
-			    encodedExtension);
+    if (!reqArena) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
+
+    newEncodedExtension = SECITEM_ArenaDupItem(reqArena, encodedExtension);
+    if (!newEncodedExtension) {
+        return NULL;
+    }
+
+    rv = SEC_QuickDERDecodeItem(reqArena, &info, CERTAuthInfoAccessTemplate, 
+			    newEncodedExtension);
     if (rv != SECSuccess || info == NULL) {
 	return NULL;
     }
 
     for (i = 0; info[i] != NULL; i++) {
-	info[i]->location = CERT_DecodeGeneralName(arena,
+	info[i]->location = CERT_DecodeGeneralName(reqArena,
 						   &(info[i]->derLocation),
 						   NULL);
     }

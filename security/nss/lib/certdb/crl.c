@@ -37,7 +37,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.52 2006/05/31 01:57:55 julien.pierre.bugs%sun.com Exp $
+ * $Id: crl.c,v 1.53 2006/08/07 19:09:41 julien.pierre.bugs%sun.com Exp $
  */
  
 #include "cert.h"
@@ -381,23 +381,32 @@ CERT_KeyFromDERCrl(PRArenaPool *arena, SECItem *derCrl, SECItem *key)
     SECStatus rv;
     CERTSignedData sd;
     CERTCrlKey crlkey;
+    PRArenaPool* myArena;
 
+    if (!arena) {
+        /* arena needed for QuickDER */
+        myArena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    } else {
+        myArena = arena;
+    }
     PORT_Memset (&sd, 0, sizeof (sd));
-    rv = SEC_ASN1DecodeItem (arena, &sd, CERT_SignedDataTemplate, derCrl);
-    if (rv != SECSuccess) {
-	return rv;
+    rv = SEC_QuickDERDecodeItem (myArena, &sd, CERT_SignedDataTemplate, derCrl);
+    if (SECSuccess == rv) {
+        PORT_Memset (&crlkey, 0, sizeof (crlkey));
+        rv = SEC_QuickDERDecodeItem(myArena, &crlkey, cert_CrlKeyTemplate, &sd.data);
     }
 
-    PORT_Memset (&crlkey, 0, sizeof (crlkey));
-    rv = SEC_ASN1DecodeItem(arena, &crlkey, cert_CrlKeyTemplate, &sd.data);
-    if (rv != SECSuccess) {
-	return rv;
+    /* make a copy so the data doesn't point to memory inside derCrl, which
+       may be temporary */
+    if (SECSuccess == rv) {
+        rv = SECITEM_CopyItem(arena, key, &crlkey.derName);
     }
 
-    key->len =  crlkey.derName.len;
-    key->data = crlkey.derName.data;
+    if (myArena != arena) {
+        PORT_FreeArena(myArena, PR_FALSE);
+    }
 
-    return(SECSuccess);
+    return rv;
 }
 
 #define GetOpaqueCRLFields(x) ((OpaqueCRLFields*)x->opaque)
