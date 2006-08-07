@@ -377,7 +377,11 @@ int main(void)
     
     CreationTest("/tmp", "mumble/a/b/c/d/e/f/g/h/i/j/k/", nsIFile::DIRECTORY_TYPE, 0644);
     DeletionTest("/tmp", "mumble", PR_TRUE);
-    CopyTest("/tmp/test.txt", "/tmp/foo");
+
+    CreationTest("/tmp", "file", nsIFile::NORMAL_FILE_TYPE, 0644);
+    CopyTest("/tmp/file", "/tmp/newDir");
+    MoveTest("/tmp/file", "/tmp/newDir/anotherNewDir");
+    DeletionTest("/tmp", "newDir", PR_TRUE);
 
 #endif /* XP_UNIX */
 #endif /* XP_WIN || XP_OS2 */
