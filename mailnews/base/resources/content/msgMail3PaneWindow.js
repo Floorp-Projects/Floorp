@@ -862,7 +862,8 @@ function loadStartFolder(initialUri)
             InitPrompts();
             InitServices();
 
-            if (gPromptService) 
+            var sendUnsentWhenGoingOnlinePref = pref.getIntPref("offline.send.unsent_messages");
+            if(gPromptService && sendUnsentWhenGoingOnlinePref == 0) // pref is "ask"
             {
                 var buttonPressed = gPromptService.confirmEx(window, 
                                     gOfflinePromptsBundle.getString('sendMessagesOfflineWindowTitle'), 
@@ -872,9 +873,11 @@ function loadStartFolder(initialUri)
                                     gOfflinePromptsBundle.getString('sendMessagesSendButtonLabel'),
                                     gOfflinePromptsBundle.getString('sendMessagesNoSendButtonLabel'),
                                     null, null, {value:0});
-                if (buttonPressed == 0) 
+                if (buttonPressed == 0)
                     SendUnsentMessages();
             }
+            else if(sendUnsentWhenGoingOnlinePref == 1) // pref is "yes"
+                SendUnsentMessages();
         }
     }
 }
