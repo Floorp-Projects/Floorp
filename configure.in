@@ -5023,6 +5023,7 @@ then
     if test "$MOZ_ENABLE_GNOMEVFS"
     then
         PKG_CHECK_MODULES(MOZ_GNOMEVFS, gnome-vfs-2.0 >= $GNOMEVFS_VERSION gnome-vfs-module-2.0 >= $GNOMEVFS_VERSION,[
+            MOZ_GNOMEVFS_LIBS=`echo $MOZ_GNOMEVFS_LIBS | sed 's/-llinc\>//'`
             MOZ_ENABLE_GNOMEVFS=1
         ],[
             if test "$MOZ_ENABLE_GNOMEVFS" = "force"
@@ -5039,6 +5040,7 @@ then
     if test "$MOZ_ENABLE_GCONF"
     then
         PKG_CHECK_MODULES(MOZ_GCONF, gconf-2.0 >= $GCONF_VERSION,[
+            MOZ_GCONF_LIBS=`echo $MOZ_GCONF_LIBS | sed 's/-llinc\>//'`
             MOZ_ENABLE_GCONF=1
         ],[
             MOZ_ENABLE_GCONF=
@@ -5051,6 +5053,7 @@ then
     if test "$MOZ_ENABLE_LIBGNOME"
     then
         PKG_CHECK_MODULES(MOZ_LIBGNOME, libgnome-2.0 >= $LIBGNOME_VERSION,[
+            MOZ_LIBGNOME_LIBS=`echo $MOZ_LIBGNOME_LIBS | sed 's/-llinc\>//'`
             MOZ_ENABLE_LIBGNOME=1
         ],[
             MOZ_ENABLE_LIBGNOME=
