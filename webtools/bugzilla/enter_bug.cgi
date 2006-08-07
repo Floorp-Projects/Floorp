@@ -183,6 +183,7 @@ sub pickplatform {
             /\(.*PPC.*\)/ && do {@platform = "Macintosh"; last;};
             /\(.*AIX.*\)/ && do {@platform = "Macintosh"; last;};
         #Intel x86
+            /\(.*Intel.*\)/ && do {@platform = "PC"; last;};
             /\(.*[ix0-9]86.*\)/ && do {@platform = "PC"; last;};
         #Versions of Windows that only run on Intel x86
             /\(.*Win(?:dows )[39M].*\)/ && do {@platform = "PC"; last};
