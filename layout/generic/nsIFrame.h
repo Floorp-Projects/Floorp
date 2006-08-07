@@ -100,10 +100,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// 4742c112-3577-4d90-aeb8-833729f14033
+// b7f1e31d-0dc8-466f-a46c-76a718a805a3
 #define NS_IFRAME_IID \
-{ 0x4742c112, 0x3577, 0x4d90, \
-  { 0xae, 0xb8, 0x83, 0x37, 0x29, 0xf1, 0x40, 0x33 } }
+{ 0xb7f1e31d, 0x0dc8, 0x466f, \
+  { 0xa4, 0x6c, 0x76, 0xa7, 0x18, 0xa8, 0x05, 0xa3 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -1336,6 +1336,25 @@ public:
    *  @param aPOS is defined in nsFrameSelection
    */
   NS_IMETHOD  PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos) = 0;
+
+  /**
+   *  called to find the previous/next selectable leaf frame.
+   *  @param aPOS is defined in nsFrameSelection.
+   *  Fields of aPos used as input are:
+   *    mAmount: should be either eSelectWord or eSelectCharacter
+   *    mDirection: eDirPrevious or eDirNext
+   *    mJumpLines: whether to allow jumping across line boundaries
+   *    mScrollViewStop: whether to stop when reaching a scroll view boundary
+   *    mVisual:  whether bidi caret behavior is visual (PR_TRUE) or logical (PR_FALSE)
+   *    mEatingWS: indicates whether we're seeking a boundary between
+   *               non-whitespace and whitespace.
+   *  Fields of aPos set as output are:
+   *    mResultFrame: the previous/next selectable leaf frame
+   *    mAmount: might be set to eSelectNone after crossing a line boundary
+   *    mStartOffset: set to 0 or -1 to indicate which edge of the result frame 
+   *                  is closer to "this" frame.
+   */
+  nsresult GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos);
 
   /**
    *  called to see if the children of the frame are visible from indexstart to index end.

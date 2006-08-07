@@ -4466,7 +4466,7 @@ nsFrame::GetLineNumber(nsIFrame *aFrame, nsIFrame** aContainingBlock)
 }
 
 NS_IMETHODIMP
-nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
+nsIFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 {
   // Find the prev/next selectable frame
   PRBool selectable = PR_FALSE;
@@ -4475,7 +4475,7 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
     nsIFrame *blockFrame;
     nsCOMPtr<nsILineIteratorNavigator> it; 
     
-    PRInt32 thisLine = GetLineNumber(traversedFrame, &blockFrame);
+    PRInt32 thisLine = nsFrame::GetLineNumber(traversedFrame, &blockFrame);
     if (thisLine < 0)
       return NS_ERROR_FAILURE;
     nsresult result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
@@ -4495,9 +4495,9 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
         nsBidiLevel embeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(*framePtr);
         if (((embeddingLevel & 1) && lineIsRTL || !(embeddingLevel & 1) && !lineIsRTL) ==
             (aPos->mDirection == eDirPrevious)) {
-          GetFirstLeaf(aPresContext, framePtr);
+          nsFrame::GetFirstLeaf(aPresContext, framePtr);
         } else {
-          GetLastLeaf(aPresContext, framePtr);
+          nsFrame::GetLastLeaf(aPresContext, framePtr);
         }
         atLineEdge = *framePtr == traversedFrame;
       } else {
@@ -4515,7 +4515,7 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
         return result;
 
       if (aPos->mDirection == eDirPrevious) {
-        GetFirstLeaf(aPresContext, &firstFrame);
+        nsFrame::GetFirstLeaf(aPresContext, &firstFrame);
         atLineEdge = firstFrame == traversedFrame;
       } else { // eDirNext
         lastFrame = firstFrame;
@@ -4526,7 +4526,7 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
             return NS_ERROR_FAILURE;
           }
         }
-        GetLastLeaf(aPresContext, &lastFrame);
+        nsFrame::GetLastLeaf(aPresContext, &lastFrame);
         atLineEdge = lastFrame == traversedFrame;
       }
     }
