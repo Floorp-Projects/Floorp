@@ -1236,8 +1236,8 @@ public class ScriptRuntime {
     static Object getIndexObject(double d)
     {
         int i = (int)d;
-        if ((double)i == d) {
-            return new Integer((int)i);
+        if (i == d) {
+            return new Integer(i);
         }
         return toString(d);
     }
@@ -1252,7 +1252,7 @@ public class ScriptRuntime {
         if (id instanceof Number) {
             double d = ((Number)id).doubleValue();
             int index = (int)d;
-            if (((double)index) == d) {
+            if (index == d) {
                 storeIndexResult(cx, index);
                 return null;
             }
@@ -1352,7 +1352,7 @@ public class ScriptRuntime {
         }
 
         int index = (int)dblIndex;
-        if ((double)index == dblIndex) {
+        if (index == dblIndex) {
             return getObjectIndex(sobj, index, cx);
         } else {
             String s = toString(dblIndex);
@@ -1447,7 +1447,7 @@ public class ScriptRuntime {
         }
 
         int index = (int)dblIndex;
-        if ((double)index == dblIndex) {
+        if (index == dblIndex) {
             return setObjectIndex(sobj, index, value, cx);
         } else {
             String s = toString(dblIndex);
@@ -2940,12 +2940,10 @@ public class ScriptRuntime {
                     errorObject, "javaException", wrap,
                     ScriptableObject.PERMANENT | ScriptableObject.READONLY);
             }
-            if (re != null) {
-                Object wrap = cx.getWrapFactory().wrap(cx, scope, re, null);
-                ScriptableObject.defineProperty(
-                    errorObject, "rhinoException", wrap,
-                    ScriptableObject.PERMANENT | ScriptableObject.READONLY);
-            }
+            Object wrap = cx.getWrapFactory().wrap(cx, scope, re, null);
+            ScriptableObject.defineProperty(
+                errorObject, "rhinoException", wrap,
+                ScriptableObject.PERMANENT | ScriptableObject.READONLY);
 
             obj = errorObject;
         }

@@ -490,7 +490,7 @@ public final class XMLLibImpl extends XMLLib implements Serializable
                 listToAdd = new XMLList(this, obj1);
             }
         } else {
-            listToAdd.addToList(((XML)obj1));
+            listToAdd.addToList(obj1);
         }
 
         if (obj2 instanceof XMLList) {
@@ -499,7 +499,7 @@ public final class XMLLibImpl extends XMLLib implements Serializable
                 listToAdd.addToList(list2.item(i));
             }
         } else if (obj2 instanceof XML) {
-            listToAdd.addToList(((XML)obj2));
+            listToAdd.addToList(obj2);
         }
 
         return listToAdd;

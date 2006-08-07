@@ -204,7 +204,7 @@ class DToA {
         z = d0 & Frac_mask;
         d0 &= 0x7fffffff;   /* clear sign bit, which we ignore */
 
-        if ((de = (int)(d0 >>> Exp_shift)) != 0)
+        if ((de = (d0 >>> Exp_shift)) != 0)
             z |= Exp_msk1;
 
         if ((y = d1) != 0) {
@@ -302,7 +302,6 @@ class DToA {
 
             char[] buffer;       /* The output string */
             int p;               /* index to current position in the buffer */
-            int q;
             int digit;
             double df;           /* The fractional part of d */
             BigInteger b;
@@ -554,7 +553,7 @@ class DToA {
         }
 
         b = d2b(d, be, bbits);
-        if ((i = (int)(word0(d) >>> Exp_shift1 & (Exp_mask>>Exp_shift1))) != 0) {
+        if ((i = (word0(d) >>> Exp_shift1 & (Exp_mask>>Exp_shift1))) != 0) {
             d2 = setWord0(d, (word0(d) & Frac_mask1) | Exp_11);
             /* log(x)   ~=~ log(1.5) + (x-1.5)/1.5
              * log10(x)  =  log(x) / log(10)
@@ -1188,7 +1187,6 @@ class DToA {
             boolean exponentialNotation = false;
             int minNDigits = 0;         /* Minimum number of significand digits required by mode and precision */
             int p;
-            int q;
 
             switch (mode) {
                 case DTOSTR_STANDARD:

@@ -258,7 +258,7 @@ public class Parser
         loopAndSwitchSet.pop();
     }
 
-    private Node enterSwitch(Node switchSelector, int lineno, Node switchLabel)
+    private Node enterSwitch(Node switchSelector, int lineno)
     {
         Node switchNode = nf.createSwitch(switchSelector, lineno);
         if (loopAndSwitchSet == null) {
@@ -493,7 +493,6 @@ public class Parser
         loopAndSwitchSet = null;
 
         Node body;
-        String source;
         try {
             decompiler.addToken(Token.LP);
             if (!matchToken(Token.RP)) {
@@ -681,7 +680,7 @@ public class Parser
             int lineno = ts.getLineno();
             mustMatchToken(Token.LP, "msg.no.paren.switch");
             decompiler.addToken(Token.LP);
-            pn = enterSwitch(expr(false), lineno, statementLabel);
+            pn = enterSwitch(expr(false), lineno);
             try {
                 mustMatchToken(Token.RP, "msg.no.paren.after.switch");
                 decompiler.addToken(Token.RP);

@@ -568,11 +568,6 @@ class Block
         return changed;
     }
 
-    private boolean isLiveOnEntry(int index)
-    {
-        return (itsLiveOnEntrySet != null) && (itsLiveOnEntrySet.test(index));
-    }
-
     private void printLiveOnEntrySet(OptFunctionNode fn)
     {
         if (DEBUG) {

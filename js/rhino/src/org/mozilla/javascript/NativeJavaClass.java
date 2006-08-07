@@ -192,8 +192,7 @@ public class NativeJavaClass extends NativeJavaObject implements Function
                 if (v != NOT_FOUND) {
                     Function f = (Function) v;
                     Object[] adapterArgs = { this, args[0] };
-                    return (Scriptable) f.construct(cx, topLevel,
-                                                    adapterArgs);
+                    return f.construct(cx, topLevel,adapterArgs);
                 }
             } catch (Exception ex) {
                 // fall through to error
@@ -210,7 +209,6 @@ public class NativeJavaClass extends NativeJavaObject implements Function
                                         Object[] args, MemberBox ctor)
     {
         Scriptable topLevel = ScriptableObject.getTopLevelScope(scope);
-        Class classObject = ctor.getDeclaringClass();
         Class[] argTypes = ctor.argTypes;
 
         Object[] origArgs = args;

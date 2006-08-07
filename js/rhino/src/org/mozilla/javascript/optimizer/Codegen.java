@@ -198,7 +198,7 @@ public class Codegen extends Interpreter
         ot.transform(tree);
 
         if (optLevel > 0) {
-            (new Optimizer()).optimize(tree, optLevel);
+            (new Optimizer()).optimize(tree);
         }
     }
 
@@ -261,11 +261,10 @@ public class Codegen extends Interpreter
         }
 
         if (hasScript) {
-            ScriptOrFnNode script = scriptOrFnNodes[0];
             cfw.addInterface("org/mozilla/javascript/Script");
-            generateScriptCtor(cfw, script);
+            generateScriptCtor(cfw);
             generateMain(cfw);
-            generateExecute(cfw, script);
+            generateExecute(cfw);
         }
 
         generateCallMethod(cfw);
@@ -504,7 +503,7 @@ public class Codegen extends Interpreter
         cfw.stopMethod((short)1);
     }
 
-    private void generateExecute(ClassFileWriter cfw, ScriptOrFnNode script)
+    private void generateExecute(ClassFileWriter cfw)
     {
         cfw.startMethod("exec",
                         "(Lorg/mozilla/javascript/Context;"
@@ -535,8 +534,7 @@ public class Codegen extends Interpreter
         cfw.stopMethod((short)3);
     }
 
-    private void generateScriptCtor(ClassFileWriter cfw,
-                                    ScriptOrFnNode script)
+    private void generateScriptCtor(ClassFileWriter cfw)
     {
         cfw.startMethod("<init>", "()V", ClassFileWriter.ACC_PUBLIC);
 
@@ -1035,7 +1033,6 @@ public class Codegen extends Interpreter
 
     private static String getStaticConstantWrapperType(double num)
     {
-        String constantType;
         int inum = (int)num;
         if (inum == num) {
             return "Ljava/lang/Integer;";
@@ -1151,9 +1148,6 @@ public class Codegen extends Interpreter
     String mainClassName;
     String mainClassSignature;
 
-    boolean itsUseDynamicScope;
-    int languageVersion;
-
     private double[] itsConstantList;
     private int itsConstantListSize;
 }
@@ -1178,7 +1172,7 @@ class BodyCodegen
         } else {
             treeTop = scriptOrFn;
         }
-        generateStatement(treeTop, null);
+        generateStatement(treeTop);
 
         generateEpilogue();
 
@@ -1491,7 +1485,7 @@ class BodyCodegen
                                "(Lorg/mozilla/javascript/Context;)V");
     }
 
-    private void generateStatement(Node node, Node parent)
+    private void generateStatement(Node node)
     {
         // System.out.println("gen code for " + node.toString());
 
@@ -1507,7 +1501,7 @@ class BodyCodegen
               case Token.EMPTY:
                 // no-ops.
                 while (child != null) {
-                    generateStatement(child, node);
+                    generateStatement(child);
                     child = child.getNext();
                 }
                 break;
@@ -1516,7 +1510,7 @@ class BodyCodegen
                 int local = getNewWordLocal();
                 node.putIntProp(Node.LOCAL_PROP, local);
                 while (child != null) {
-                    generateStatement(child, node);
+                    generateStatement(child);
                     child = child.getNext();
                 }
                 releaseWordLocal((short)local);
@@ -1693,7 +1687,7 @@ class BodyCodegen
                     int finallyRegister = getNewWordLocal();
                     cfw.addAStore(finallyRegister);
                     while (child != null) {
-                        generateStatement(child, node);
+                        generateStatement(child);
                         child = child.getNext();
                     }
                     cfw.add(ByteCode.RET, finallyRegister);
@@ -1921,7 +1915,7 @@ class BodyCodegen
 
               case Token.INC:
               case Token.DEC:
-                visitIncDec(node, false);
+                visitIncDec(node);
                 break;
 
               case Token.OR:
@@ -2981,7 +2975,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         cfw.markLabel(startLabel, (short)1);
 
         while (child != null) {
-            generateStatement(child, node);
+            generateStatement(child);
             child = child.getNext();
         }
 
@@ -3043,9 +3037,9 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         cfw.markLabel(realEnd);
     }
 
-    private final int JAVASCRIPT_EXCEPTION  = 0;
-    private final int EVALUATOR_EXCEPTION   = 1;
-    private final int ECMAERROR_EXCEPTION   = 2;
+    private static final int JAVASCRIPT_EXCEPTION  = 0;
+    private static final int EVALUATOR_EXCEPTION   = 1;
+    private static final int ECMAERROR_EXCEPTION   = 2;
 
     private void generateCatchBlock(int exceptionType,
                                     short savedVariableObject,
@@ -3149,7 +3143,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                                +")Ljava/lang/String;");
     }
 
-    private void visitIncDec(Node node, boolean isInc)
+    private void visitIncDec(Node node)
     {
         int incrDecrMask = node.getExistingIntProp(Node.INCRDECR_PROP);
         Node child = node.getFirstChild();
@@ -3997,14 +3991,6 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         }
         throw Context.reportRuntimeError("Program too complex " +
                                          "(out of locals)");
-    }
-
-    private void releaseWordpairLocal(short local)
-    {
-        if (local < firstFreeLocal)
-            firstFreeLocal = local;
-        locals[local] = false;
-        locals[local + 1] = false;
     }
 
     private void releaseWordLocal(short local)

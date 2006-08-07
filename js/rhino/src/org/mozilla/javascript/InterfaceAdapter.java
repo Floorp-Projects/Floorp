@@ -129,7 +129,6 @@ public class InterfaceAdapter
                       Object[] args)
     {
         int N = (args == null) ? 0 : args.length;
-        String methodName = method.getName();
 
         Callable function = (Callable)target;
         Scriptable thisObj = topScope;

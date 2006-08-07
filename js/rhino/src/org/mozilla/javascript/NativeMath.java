@@ -216,7 +216,7 @@ final class NativeMath extends IdScriptableObject
                     // Round only finite x
                     long l = Math.round(x);
                     if (l != 0) {
-                        x = (double)l;
+                        x = l;
                     } else {
                         // We must propagate the sign of d into the result
                         if (x < 0.0) {

@@ -70,7 +70,6 @@ public abstract class IdScriptableObject extends ScriptableObject
         private static final int SLOT_SPAN = 2;
 
         private IdScriptableObject obj;
-        private Object tag;
         private int maxId;
         private volatile Object[] valueArray;
         private volatile short[] attributeArray;

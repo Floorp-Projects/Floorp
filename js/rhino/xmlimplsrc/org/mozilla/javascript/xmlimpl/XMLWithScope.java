@@ -43,6 +43,8 @@ import org.mozilla.javascript.xml.*;
 
 final class XMLWithScope extends NativeWith
 {
+    private static final long serialVersionUID = -696429282095170887L;
+
     private XMLLibImpl lib;
     private int         _currIndex;
     private XMLList     _xmlList;
@@ -84,7 +86,6 @@ final class XMLWithScope extends NativeWith
         XMLObject seed = _dqPrototype;
         XMLList xmlL = _xmlList;
 
-        Object result;
         if (seed instanceof XMLList) {
             // We're a list so keep testing each element of the list if the
             // result on the top of stack is true then that element is added

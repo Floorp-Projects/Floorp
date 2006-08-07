@@ -2286,10 +2286,9 @@ public class Context
 
         Object result;
         if (returnFunction) {
-            result = compiler.createFunctionObject(this, scope, bytecode,
-                                                   securityDomain);
+            result = compiler.createFunctionObject(this, scope, securityDomain);
         } else {
-            result = compiler.createScriptObject(bytecode, securityDomain);
+            result = compiler.createScriptObject(securityDomain);
         }
 
         return result;

@@ -988,7 +988,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
             {
                 if (xmlValue instanceof XMLList)
                 {
-                    xml = (XML)((XMLList) xmlValue).item(i);
+                    xml = ((XMLList) xmlValue).item(i);
                 }
                 else
                 {
@@ -1052,7 +1052,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
             throw ScriptRuntime.typeError(e.getMessage());
         }
 
-        result = createTextElement(lib, qname, value.toString());
+        result = createTextElement(lib, qname, value);
 
         return result;
     }
@@ -1306,7 +1306,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
                     {
                         for (int i = 0; i < xmlValue.length(); i++)
                         {
-                            XML xml = (XML)((XMLList) xmlValue).item(i);
+                            XML xml = ((XMLList) xmlValue).item(i);
 
                             if (xml.tokenType() == XmlCursor.TokenType.ATTR)
                             {
@@ -1320,7 +1320,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
                     xmlValue = makeXmlFromString(lib, xmlName, ScriptRuntime.toString(value));
                 }
 
-                XMLList matches = (XMLList)getPropertyList(xmlName);
+                XMLList matches = getPropertyList(xmlName);
 
                 if (matches.length() == 0)
                 {
@@ -1335,7 +1335,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
                     }
 
                     // Replace first match with new value.
-                    doPut(xmlName, (XML)matches.item(0), xmlValue);
+                    doPut(xmlName, matches.item(0), xmlValue);
                 }
             }
         }
@@ -1389,7 +1389,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
         }
         else
         {
-            XMLList matches = (XMLList)getPropertyList(name);
+            XMLList matches = getPropertyList(name);
 
             matches.remove();
         }
@@ -2715,11 +2715,11 @@ todo need to handle namespace prefix not found in XML look for namespace type in
 
     XML replace(long index, Object xml)
     {
-        XMLList xlChildToReplace = (XMLList)child(index);
+        XMLList xlChildToReplace = child(index);
         if (xlChildToReplace.length() > 0)
         {
             // One exists an that index
-            XML childToReplace = (XML)xlChildToReplace.item(0);
+            XML childToReplace = xlChildToReplace.item(0);
             insertChildAfter(childToReplace, xml);
             removeChild(index);
         }
@@ -2746,7 +2746,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
     {
         // remove all children
         XMLName xmlName = XMLName.formStar();
-        XMLList matches = (XMLList)getPropertyList(xmlName);
+        XMLList matches = getPropertyList(xmlName);
         matches.remove();
 
         // append new children

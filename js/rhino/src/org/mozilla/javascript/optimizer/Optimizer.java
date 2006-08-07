@@ -48,9 +48,8 @@ class Optimizer
 
     // It is assumed that (NumberType | AnyType) == AnyType
 
-    void optimize(ScriptOrFnNode scriptOrFn, int optLevel)
+    void optimize(ScriptOrFnNode scriptOrFn)
     {
-        itsOptLevel = optLevel;
         //  run on one function at a time for now
         int functionCount = scriptOrFn.getFunctionCount();
         for (int i = 0; i != functionCount; ++i) {
@@ -502,7 +501,6 @@ class Optimizer
         }
     }
 
-    private int itsOptLevel;
     private boolean inDirectCallFunction;
     OptFunctionNode theFunction;
     private boolean parameterUsedInNumberContext;

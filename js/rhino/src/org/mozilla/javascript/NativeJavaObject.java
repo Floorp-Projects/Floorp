@@ -707,8 +707,8 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
             }
             return new Character((char)toInteger(value,
                                                  ScriptRuntime.CharacterClass,
-                                                 (double)Character.MIN_VALUE,
-                                                 (double)Character.MAX_VALUE));
+                                                 Character.MIN_VALUE,
+                                                 Character.MAX_VALUE));
         }
 
         // Double, Float
@@ -731,10 +731,10 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 }
                 else {
                     double absNumber = Math.abs(number);
-                    if (absNumber < (double)Float.MIN_VALUE) {
+                    if (absNumber < Float.MIN_VALUE) {
                         return new Float((number > 0.0) ? +0.0 : -0.0);
                     }
-                    else if (absNumber > (double)Float.MAX_VALUE) {
+                    else if (absNumber > Float.MAX_VALUE) {
                         return new Float((number > 0.0) ?
                                          Float.POSITIVE_INFINITY :
                                          Float.NEGATIVE_INFINITY);
@@ -754,8 +754,8 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
             else {
                 return new Integer((int)toInteger(value,
                                                   ScriptRuntime.IntegerClass,
-                                                  (double)Integer.MIN_VALUE,
-                                                  (double)Integer.MAX_VALUE));
+                                                  Integer.MIN_VALUE,
+                                                  Integer.MAX_VALUE));
             }
         }
 
@@ -787,8 +787,8 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
             else {
                 return new Short((short)toInteger(value,
                                                   ScriptRuntime.ShortClass,
-                                                  (double)Short.MIN_VALUE,
-                                                  (double)Short.MAX_VALUE));
+                                                  Short.MIN_VALUE,
+                                                  Short.MAX_VALUE));
             }
         }
 
@@ -799,8 +799,8 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
             else {
                 return new Byte((byte)toInteger(value,
                                                 ScriptRuntime.ByteClass,
-                                                (double)Byte.MIN_VALUE,
-                                                (double)Byte.MAX_VALUE));
+                                                Byte.MIN_VALUE,
+                                                Byte.MAX_VALUE));
             }
         }
 

@@ -231,8 +231,6 @@ final class Arguments extends IdScriptableObject
                     NativeCall caller = activation.parentActivationCall;
                     if (caller != null) {
                         value = caller.get("arguments", caller);
-                    } else {
-                        value = null;
                     }
                 }
                 return value;

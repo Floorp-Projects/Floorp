@@ -1358,9 +1358,6 @@ class TokenStream
 
     String regExpFlags;
 
-    private String line;
-    private boolean fromEval;
-
     // Set this to an inital non-null value so that the Parser has
     // something to retrieve even if an error has occured and no
     // string is found.  Fosters one class of error, but saves lots of

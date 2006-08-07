@@ -461,19 +461,15 @@ public class Interpreter
         return itsData;
     }
 
-    public Script createScriptObject(Object bytecode,
-                                     Object staticSecurityDomain)
+    public Script createScriptObject(Object staticSecurityDomain)
     {
-        InterpreterData idata = (InterpreterData)bytecode;
         return InterpretedFunction.createScript(itsData,
                                                 staticSecurityDomain);
     }
 
-    public Function createFunctionObject(Context cx, Scriptable scope,
-                                         Object bytecode,
-                                         Object staticSecurityDomain)
+    public Function createFunctionObject(Context cx, Scriptable scope, 
+            Object staticSecurityDomain)
     {
-        InterpreterData idata = (InterpreterData)bytecode;
         return InterpretedFunction.createFunction(cx, scope, itsData,
                                                   staticSecurityDomain);
     }
@@ -686,7 +682,6 @@ public class Interpreter
             // See comments in IRFactory.createSwitch() for description
             // of SWITCH node
             {
-                Node switchNode = (Node.Jump)node;
                 visitExpression(child, 0);
                 for (Node.Jump caseNode = (Node.Jump)child.getNext();
                      caseNode != null;
@@ -2413,9 +2408,6 @@ public class Interpreter
                         setCallResult(frame, cjump.result, cjump.resultDbl);
                         // restart the execution
                     }
-
-                    // Should be already cleared
-                    if (throwable != null) Kit.codeBug();
 
                 } else {
                     if (frame.frozen) Kit.codeBug();

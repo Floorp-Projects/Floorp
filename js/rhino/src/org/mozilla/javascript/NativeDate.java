@@ -439,11 +439,6 @@ final class NativeDate extends IdScriptableObject
         return lo;
     }
 
-    private static boolean InLeapYear(double t)
-    {
-        return IsLeapYear(YearFromTime(t));
-    }
-
     private static double DayFromMonth(int m, int year)
     {
         int day = m * 30;
@@ -547,7 +542,7 @@ final class NativeDate extends IdScriptableObject
 
     private static double now()
     {
-        return (double) System.currentTimeMillis();
+        return System.currentTimeMillis();
     }
 
     /* Should be possible to determine the need for this dynamically

@@ -506,7 +506,6 @@ final class IRFactory
     Node createForIn(Node loop, Node lhs, Node obj, Node body,
                      boolean isForEach)
     {
-        String name;
         int type = lhs.getType();
 
         Node lvalue;

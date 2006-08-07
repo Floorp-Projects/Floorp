@@ -156,7 +156,7 @@ class XMLList extends XMLObjectImpl implements Function
             XML orgXML = XML.createFromJS(lib, frag);
 
             // Now orphan the children and add them to our XMLList.
-            XMLList children = (XMLList)orgXML.children();
+            XMLList children = orgXML.children();
 
             _annos = new AnnotationList();
 
@@ -391,11 +391,11 @@ class XMLList extends XMLObjectImpl implements Function
                 }
                 else
                 {
-                    XML xml = (XML)item(0);
+                    XML xml = item(0);
                     xml.putXMLProperty(xmlName, value);
 
                     // Update the list with the new item at location 0.
-                    replace(0, (XML)item(0));
+                    replace(0, item(0));
                 }
 
                 // Now add us to our parent
@@ -413,11 +413,11 @@ class XMLList extends XMLObjectImpl implements Function
         }
         else
         {
-            XML xml = (XML)item(0);
+            XML xml = item(0);
             xml.putXMLProperty(xmlName, value);
 
             // Update the list with the new item at location 0.
-            replace(0, (XML)item(0));
+            replace(0, item(0));
         }
     }
 
@@ -502,14 +502,14 @@ class XMLList extends XMLObjectImpl implements Function
                     if (list.length() > 0)
                     {
                         int lastIndexAdded = xmlNode.childIndex();
-                        xmlNode.replaceAll((XML)list.item(0));
-                        replace(index, (XML)list.item(0));
+                        xmlNode.replaceAll(list.item(0));
+                        replace(index, list.item(0));
 
                         for (int i = 1; i < list.length(); i++)
                         {
                             xmlParent.insertChildAfter(xmlParent.getXmlChild(lastIndexAdded), list.item(i));
                             lastIndexAdded++;
-                            insert(index + i, (XML)list.item(i));
+                            insert(index + i, list.item(i));
                         }
                     }
                 }
@@ -540,12 +540,12 @@ class XMLList extends XMLObjectImpl implements Function
 
                     if (list.length() > 0)
                     {
-                        xmlNode.replaceAll((XML)list.item(0));
-                        replace(index, (XML)list.item(0));
+                        xmlNode.replaceAll(list.item(0));
+                        replace(index, list.item(0));
 
                         for (int i = 1; i < list.length(); i++)
                         {
-                            insert(index + i, (XML)list.item(i));
+                            insert(index + i, list.item(i));
                         }
                     }
                 }
@@ -686,7 +686,7 @@ class XMLList extends XMLObjectImpl implements Function
             XMLList xmlSrc = (XMLList)toAdd;
             for (int i = 0; i < xmlSrc.length(); i++)
             {
-                _annos.add(((XML)xmlSrc.item(i)).getAnnotation());
+                _annos.add((xmlSrc.item(i)).getAnnotation());
             }
         }
         else if (toAdd instanceof XML)
@@ -1261,7 +1261,7 @@ class XMLList extends XMLObjectImpl implements Function
         } else if (name instanceof Number) {
             double x = ((Number)name).doubleValue();
             index = (long)x;
-            if ((double)index != x) {
+            if (index != x) {
                 return false;
             }
             if (index == 0 && 1.0 / x < 0) {
