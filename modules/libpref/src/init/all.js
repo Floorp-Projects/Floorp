@@ -821,9 +821,9 @@ pref("middlemouse.scrollbarPosition", false);
 pref("clipboard.autocopy", false);
 
 // mouse wheel scroll transaction period of time (in milliseconds)
-pref("mousewheel.transaction.timeout", 3000);
+pref("mousewheel.transaction.timeout", 1500);
 // mouse wheel scroll transaction is held even if the mouse cursor is moved.
-pref("mousewheel.transaction.ignoremovedelay", 500);
+pref("mousewheel.transaction.ignoremovedelay", 100);
 
 // 0=lines, 1=pages, 2=history , 3=text size
 pref("mousewheel.withnokey.action",0);

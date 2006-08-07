@@ -227,15 +227,18 @@ public:
   static void EndTransaction();
   static void OnEvent(nsEvent* aEvent);
 protected:
-  static void Init();
   static nsPoint GetScreenPoint(nsGUIEvent* aEvent);
+  static PRUint32 GetTimeoutTime();
+  static PRUint32 GetIgnoreMoveDelayTime();
 
-  static nsWeakFrame          sTargetFrame;
-  static PRUint32             sTime;        // in milliseconds
+  static nsWeakFrame sTargetFrame;
+  static PRUint32    sTime;        // in milliseconds
+  static PRUint32    sMouseMoved;  // in milliseconds
 };
 
 nsWeakFrame nsMouseWheelTransaction::sTargetFrame(nsnull);
 PRUint32    nsMouseWheelTransaction::sTime        = 0;
+PRUint32    nsMouseWheelTransaction::sMouseMoved  = 0;
 
 void
 nsMouseWheelTransaction::BeginTransaction(nsIFrame* aTargetFrame,
@@ -254,6 +257,7 @@ nsMouseWheelTransaction::UpdateTransaction()
   // 2. If the computer runs slowly by other processes eating the CPU resource,
   //    the event creation time doesn't keep real time.
   sTime = PR_IntervalToMilliseconds(PR_IntervalNow());
+  sMouseMoved = 0;
 }
 
 void
@@ -275,9 +279,7 @@ nsMouseWheelTransaction::OnEvent(nsEvent* aEvent)
   if (!sTargetFrame)
     return;
 
-  PRUint32 timeout =
-    nsContentUtils::GetIntPref("mousewheel.transaction.timeout", 3000);
-  if (OutOfTime(sTime, timeout)) {
+  if (OutOfTime(sTime, GetTimeoutTime())) {
     // Time out the current transaction.
     EndTransaction();
     return;
@@ -285,24 +287,33 @@ nsMouseWheelTransaction::OnEvent(nsEvent* aEvent)
 
   switch (aEvent->message) {
     case NS_MOUSE_SCROLL:
+      if (sMouseMoved != 0 &&
+          OutOfTime(sMouseMoved, GetIgnoreMoveDelayTime())) {
+        // Terminate the current mousewheel transaction if the mouse moved more
+        // than ignoremovedelay milliseconds ago
+        EndTransaction();
+      }
       return;
     case NS_MOUSE_MOVE:
     case NS_DRAGDROP_OVER:
       if (((nsMouseEvent*)aEvent)->reason == nsMouseEvent::eReal) {
-        // If the cursor is moving inside the frame, and it is less than
-        // ignoremovedelay milliseconds since the last scroll operation, ignore
-        // the mouse move; otherwise, terminate the scrollwheel transaction.
-        PRUint32 holdingTime =
-          nsContentUtils::GetIntPref("mousewheel.transaction.ignoremovedelay",
-                                     500);
-        if (OutOfTime(sTime, holdingTime)) {
+        // If the cursor is moving to be outside the frame,
+        // terminate the scrollwheel transaction.
+        nsPoint pt = GetScreenPoint((nsGUIEvent*)aEvent);
+        nsIntRect r = sTargetFrame->GetScreenRectExternal();
+        if (!r.Contains(pt)) {
           EndTransaction();
           return;
         }
-        nsPoint pt = GetScreenPoint((nsGUIEvent*)aEvent);
-        nsIntRect r = sTargetFrame->GetScreenRectExternal();
-        if (!r.Contains(pt))
-          EndTransaction();
+
+        // If the cursor is moving inside the frame, and it is less than
+        // ignoremovedelay milliseconds since the last scroll operation, ignore
+        // the mouse move; otherwise, record the current mouse move time to be
+        // checked later
+        if (OutOfTime(sTime, GetIgnoreMoveDelayTime())) {
+          if (sMouseMoved == 0)
+            sMouseMoved = PR_IntervalToMilliseconds(PR_IntervalNow());
+        }
       }
       return;
     case NS_KEY_PRESS:
@@ -337,6 +348,20 @@ nsMouseWheelTransaction::GetScreenPoint(nsGUIEvent* aEvent)
   aEvent->widget->WidgetToScreen(nsRect(aEvent->refPoint, nsSize(1, 1)),
                                  tmpRect);
   return tmpRect.TopLeft();
+}
+
+PRUint32
+nsMouseWheelTransaction::GetTimeoutTime()
+{
+  return (PRUint32)
+    nsContentUtils::GetIntPref("mousewheel.transaction.timeout", 1500);
+}
+
+PRUint32
+nsMouseWheelTransaction::GetIgnoreMoveDelayTime()
+{
+  return (PRUint32)
+    nsContentUtils::GetIntPref("mousewheel.transaction.ignoremovedelay", 100);
 }
 
 /******************************************************************/
