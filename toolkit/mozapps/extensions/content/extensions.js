@@ -460,6 +460,21 @@ function flushDataSource()
     rds.Flush();
 }
 
+function noUpdatesDismiss(aEvent)
+{
+  window.removeEventListener("command", noUpdatesDismiss, true);
+  if (aEvent.target.localName == "addonsmessage")
+    return;
+
+  var children = gExtensionsView.children;
+  for (var i = 0; i < children.length; ++i) {
+    var child = children[i];
+    if (child.hasAttribute("updateStatus"))
+      child.removeAttribute("updateStatus");
+  }
+  document.getElementById("addonsMsg").hideMessage();
+}
+
 function setRestartMessage(aItem)
 {
   var themeName = aItem.getAttribute("name");
@@ -593,6 +608,8 @@ function Shutdown()
                      .getService(Components.interfaces.nsIObserverService);
   os.removeObserver(gAddonsMsgObserver, "addons-message-notification");
   os.removeObserver(gDownloadManager, "xpinstall-download-started");
+  if (document.getElementById("addonsMsg").notifyData == "addons-no-updates")
+    window.removeEventListener("command", noUpdatesDismiss, true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -823,6 +840,7 @@ UpdateCheckListener.prototype = {
       addonsMsg.showMessage("chrome://mozapps/skin/extensions/question.png",
                             getExtensionString("noUpdatesMsg"),
                             null, null, true, "addons-no-updates");
+      window.addEventListener("command", noUpdatesDismiss, true);
     }
   },
   
