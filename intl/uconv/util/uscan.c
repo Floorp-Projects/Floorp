@@ -47,7 +47,6 @@ typedef  PRBool (*uSubScannerFunc) (unsigned char* in, PRUint16* out);
 =================================================================================*/
 
 typedef PRBool (*uScannerFunc) (
-                                uShiftTable    *shift,
                                 PRInt32*    state,
                                 unsigned char  *in,
                                 PRUint16    *out,
@@ -56,7 +55,7 @@ typedef PRBool (*uScannerFunc) (
                                 );
 
 MODULE_PRIVATE PRBool uScan(  
-                            uShiftTable    *shift,
+                            uScanClassID scanClass,
                             PRInt32*    state,
                             unsigned char  *in,
                             PRUint16    *out,
@@ -67,7 +66,6 @@ MODULE_PRIVATE PRBool uScan(
 #define uSubScanner(sub,in,out) (* m_subscanner[sub])((in),(out))
 
 PRIVATE PRBool uCheckAndScanAlways1Byte(
-                                        uShiftTable    *shift,
                                         PRInt32*    state,
                                         unsigned char  *in,
                                         PRUint16    *out,
@@ -75,7 +73,6 @@ PRIVATE PRBool uCheckAndScanAlways1Byte(
                                         PRUint32*    inscanlen
                                         );
 PRIVATE PRBool uCheckAndScanAlways2Byte(
-                                        uShiftTable    *shift,
                                         PRInt32*    state,
                                         unsigned char  *in,
                                         PRUint16    *out,
@@ -83,7 +80,6 @@ PRIVATE PRBool uCheckAndScanAlways2Byte(
                                         PRUint32*    inscanlen
                                         );
 PRIVATE PRBool uCheckAndScanAlways2ByteShiftGR(
-                                               uShiftTable    *shift,
                                                PRInt32*    state,
                                                unsigned char  *in,
                                                PRUint16    *out,
@@ -91,23 +87,22 @@ PRIVATE PRBool uCheckAndScanAlways2ByteShiftGR(
                                                PRUint32*    inscanlen
                                                );
 PRIVATE PRBool uCheckAndScanAlways2ByteGR128(
-                                               uShiftTable    *shift,
                                                PRInt32*    state,
                                                unsigned char  *in,
                                                PRUint16    *out,
                                                PRUint32     inbuflen,
                                                PRUint32*    inscanlen
                                                );
-PRIVATE PRBool uCheckAndScanByTable(
-                                    uShiftTable    *shift,
-                                    PRInt32*    state,
-                                    unsigned char  *in,
-                                    PRUint16    *out,
-                                    PRUint32     inbuflen,
-                                    PRUint32*    inscanlen
-                                    );
+MODULE_PRIVATE PRBool uScanShift(  
+                                 uShiftInTable    *shift,
+                                 PRInt32*    state,
+                                 unsigned char  *in,
+                                 PRUint16    *out,
+                                 PRUint32     inbuflen,
+                                 PRUint32*    inscanlen
+                                 );
+
 PRIVATE PRBool uCheckAndScan2ByteGRPrefix8F(
-                                            uShiftTable    *shift,
                                             PRInt32*    state,
                                             unsigned char  *in,
                                             PRUint16    *out,
@@ -115,40 +110,13 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8F(
                                             PRUint32*    inscanlen
                                             );
 PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA2(
-                                              uShiftTable    *shift,
                                               PRInt32*    state,
                                               unsigned char  *in,
                                               PRUint16    *out,
                                               PRUint32     inbuflen,
                                               PRUint32*    inscanlen
                                               );
-
-PRIVATE PRBool uCheckAndScanAlways2ByteSwap(
-                                            uShiftTable    *shift,
-                                            PRInt32*    state,
-                                            unsigned char  *in,
-                                            PRUint16    *out,
-                                            PRUint32     inbuflen,
-                                            PRUint32*    inscanlen
-                                            );
-PRIVATE PRBool uCheckAndScanAlways4Byte(
-                                        uShiftTable    *shift,
-                                        PRInt32*    state,
-                                        unsigned char  *in,
-                                        PRUint16    *out,
-                                        PRUint32     inbuflen,
-                                        PRUint32*    inscanlen
-                                        );
-PRIVATE PRBool uCheckAndScanAlways4ByteSwap(
-                                            uShiftTable    *shift,
-                                            PRInt32*    state,
-                                            unsigned char  *in,
-                                            PRUint16    *out,
-                                            PRUint32     inbuflen,
-                                            PRUint32*    inscanlen
-                                            );
 PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA3(
-                                              uShiftTable    *shift,
                                               PRInt32*    state,
                                               unsigned char  *in,
                                               PRUint16    *out,
@@ -156,7 +124,6 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA3(
                                               PRUint32*    inscanlen
                                               );
 PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA4(
-                                              uShiftTable    *shift,
                                               PRInt32*    state,
                                               unsigned char  *in,
                                               PRUint16    *out,
@@ -164,7 +131,6 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA4(
                                               PRUint32*    inscanlen
                                               );
 PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA5(
-                                              uShiftTable    *shift,
                                               PRInt32*    state,
                                               unsigned char  *in,
                                               PRUint16    *out,
@@ -172,7 +138,6 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA5(
                                               PRUint32*    inscanlen
                                               );
 PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA6(
-                                              uShiftTable    *shift,
                                               PRInt32*    state,
                                               unsigned char  *in,
                                               PRUint16    *out,
@@ -180,24 +145,13 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA6(
                                               PRUint32*    inscanlen
                                               );
 PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA7(
-                                              uShiftTable    *shift,
                                               PRInt32*    state,
                                               unsigned char  *in,
                                               PRUint16    *out,
                                               PRUint32     inbuflen,
                                               PRUint32*    inscanlen
                                               );
-PRIVATE PRBool uCheckAndScanAlways1ByteShiftGL(
-                                               uShiftTable    *shift,
-                                               PRInt32*    state,
-                                               unsigned char  *in,
-                                               PRUint16    *out,
-                                               PRUint32     inbuflen,
-                                               PRUint32*    inscanlen
-                                               );
-
 PRIVATE PRBool uCnSAlways8BytesDecomposedHangul(
-                                              uShiftTable    *shift,
                                               PRInt32*    state,
                                               unsigned char  *in,
                                               PRUint16    *out,
@@ -205,7 +159,6 @@ PRIVATE PRBool uCnSAlways8BytesDecomposedHangul(
                                               PRUint32*    inscanlen
                                               );
 PRIVATE PRBool uCheckAndScanJohabHangul(
-                                        uShiftTable    *shift,
                                         PRInt32*    state,
                                         unsigned char  *in,
                                         PRUint16    *out,
@@ -213,7 +166,6 @@ PRIVATE PRBool uCheckAndScanJohabHangul(
                                         PRUint32*    inscanlen
                                         );
 PRIVATE PRBool uCheckAndScanJohabSymbol(
-                                        uShiftTable    *shift,
                                         PRInt32*    state,
                                         unsigned char  *in,
                                         PRUint16    *out,
@@ -222,7 +174,6 @@ PRIVATE PRBool uCheckAndScanJohabSymbol(
                                         );
 
 PRIVATE PRBool uCheckAndScan4BytesGB18030(
-                                          uShiftTable    *shift,
                                           PRInt32*    state,
                                           unsigned char  *in,
                                           PRUint16    *out,
@@ -246,14 +197,6 @@ PRIVATE PRBool uScanAlways1BytePrefix8E(
                                         unsigned char*  in,
                                         PRUint16*    out
                                         );
-PRIVATE PRBool uScanAlways2ByteUTF8(
-                                    unsigned char*  in,
-                                    PRUint16*    out
-                                    );
-PRIVATE PRBool uScanAlways3ByteUTF8(
-                                    unsigned char*  in,
-                                    PRUint16*    out
-                                    );
                                     /*=================================================================================
                                     
 =================================================================================*/
@@ -261,19 +204,14 @@ PRIVATE const uScannerFunc m_scanner[uNumOfCharsetType] =
 {
     uCheckAndScanAlways1Byte,
     uCheckAndScanAlways2Byte,
-    uCheckAndScanByTable,
     uCheckAndScanAlways2ByteShiftGR,
     uCheckAndScan2ByteGRPrefix8F,
     uCheckAndScan2ByteGRPrefix8EA2,
-    uCheckAndScanAlways2ByteSwap,
-    uCheckAndScanAlways4Byte,
-    uCheckAndScanAlways4ByteSwap,
     uCheckAndScan2ByteGRPrefix8EA3,
     uCheckAndScan2ByteGRPrefix8EA4,
     uCheckAndScan2ByteGRPrefix8EA5,
     uCheckAndScan2ByteGRPrefix8EA6,
     uCheckAndScan2ByteGRPrefix8EA7,
-    uCheckAndScanAlways1ByteShiftGL,
     uCnSAlways8BytesDecomposedHangul,
     uCheckAndScanJohabHangul,
     uCheckAndScanJohabSymbol,
@@ -290,15 +228,13 @@ PRIVATE const uSubScannerFunc m_subscanner[uNumOfCharType] =
     uScanAlways1Byte,
     uScanAlways2Byte,
     uScanAlways2ByteShiftGR,
-    uScanAlways1BytePrefix8E,
-    uScanAlways2ByteUTF8,
-    uScanAlways3ByteUTF8
+    uScanAlways1BytePrefix8E
 };
 /*=================================================================================
 
 =================================================================================*/
 MODULE_PRIVATE PRBool uScan(  
-                            uShiftTable    *shift,
+                            uScanClassID scanClass,
                             PRInt32*    state,
                             unsigned char  *in,
                             PRUint16    *out,
@@ -306,7 +242,7 @@ MODULE_PRIVATE PRBool uScan(
                             PRUint32*    inscanlen
                             )
 {
-  return (* m_scanner[shift->classID]) (shift,state,in,out,inbuflen,inscanlen);
+  return (* m_scanner[scanClass]) (state,in,out,inbuflen,inscanlen);
 }
 /*=================================================================================
 
@@ -357,32 +293,7 @@ PRIVATE PRBool uScanAlways1BytePrefix8E(
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE PRBool uScanAlways2ByteUTF8(
-                                    unsigned char*  in,
-                                    PRUint16*    out
-                                    )
-{
-  *out = (PRUint16) (((in[0] & 0x001F) << 6 )| (in[1] & 0x003F));
-  return PR_TRUE;
-}
-
-/*=================================================================================
-
-=================================================================================*/
-PRIVATE PRBool uScanAlways3ByteUTF8(
-                                    unsigned char*  in,
-                                    PRUint16*    out
-                                    )
-{
-  *out = (PRUint16) (((in[0] & 0x000F) << 12 ) | ((in[1] & 0x003F) << 6)
-    | (in[2] & 0x003F));
-  return PR_TRUE;
-}
-/*=================================================================================
-
-=================================================================================*/
 PRIVATE PRBool uCheckAndScanAlways1Byte(
-                                        uShiftTable    *shift,
                                         PRInt32*    state,
                                         unsigned char  *in,
                                         PRUint16    *out,
@@ -401,7 +312,6 @@ PRIVATE PRBool uCheckAndScanAlways1Byte(
 
 =================================================================================*/
 PRIVATE PRBool uCheckAndScanAlways2Byte(
-                                        uShiftTable    *shift,
                                         PRInt32*    state,
                                         unsigned char  *in,
                                         PRUint16    *out,
@@ -422,7 +332,6 @@ PRIVATE PRBool uCheckAndScanAlways2Byte(
 
 =================================================================================*/
 PRIVATE PRBool uCheckAndScanAlways2ByteShiftGR(
-                                               uShiftTable    *shift,
                                                PRInt32*    state,
                                                unsigned char  *in,
                                                PRUint16    *out,
@@ -455,7 +364,6 @@ PRIVATE PRBool uCheckAndScanAlways2ByteShiftGR(
 
 =================================================================================*/
 PRIVATE PRBool uCheckAndScanAlways2ByteGR128(
-                                               uShiftTable    *shift,
                                                PRInt32*    state,
                                                unsigned char  *in,
                                                PRUint16    *out,
@@ -488,8 +396,8 @@ PRIVATE PRBool uCheckAndScanAlways2ByteGR128(
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE PRBool uCheckAndScanByTable(
-                                    uShiftTable    *shift,
+PRIVATE PRBool uScanShift(
+                                    uShiftInTable    *shift,
                                     PRInt32*    state,
                                     unsigned char  *in,
                                     PRUint16    *out,
@@ -498,7 +406,7 @@ PRIVATE PRBool uCheckAndScanByTable(
                                     )
 {
   PRInt16 i;
-  const uShiftCell* cell = &(shift->shiftcell[0]);
+  const uShiftInCell* cell = &(shift->shiftcell[0]);
   PRInt16 itemnum = shift->numOfItem;
   for(i=0;i<itemnum;i++)
   {
@@ -520,7 +428,6 @@ PRIVATE PRBool uCheckAndScanByTable(
 
 =================================================================================*/
 PRIVATE PRBool uCheckAndScan2ByteGRPrefix8F(
-                                            uShiftTable    *shift,
                                             PRInt32*    state,
                                             unsigned char  *in,
                                             PRUint16    *out,
@@ -585,7 +492,6 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8F(
   }    
 
 PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA2(
-                                              uShiftTable    *shift,
                                               PRInt32*    state,
                                               unsigned char  *in,
                                               PRUint16    *out,
@@ -599,78 +505,7 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA2(
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE PRBool uCheckAndScanAlways2ByteSwap(
-                                            uShiftTable    *shift,
-                                            PRInt32*    state,
-                                            unsigned char  *in,
-                                            PRUint16    *out,
-                                            PRUint32     inbuflen,
-                                            PRUint32*    inscanlen
-                                            )
-{
-  if(inbuflen < 2)
-    return PR_FALSE;
-  else
-  {
-    *inscanlen = 2;
-    *out = ((in[1] << 8) | ( in[0])) ;
-    return PR_TRUE;
-  }
-}
-/*=================================================================================
-
-=================================================================================*/
-PRIVATE PRBool uCheckAndScanAlways4Byte(
-                                        uShiftTable    *shift,
-                                        PRInt32*    state,
-                                        unsigned char  *in,
-                                        PRUint16    *out,
-                                        PRUint32     inbuflen,
-                                        PRUint32*    inscanlen
-                                        )
-{
-  if(inbuflen < 4)
-    return PR_FALSE;
-  else
-  {
-    *inscanlen = 4;
-    if((0 ==in[0]) && ( 0==in[1]))
-      *out = ((in[2] << 8) | ( in[3])) ;
-    else
-      *out = 0xFFFD ;
-    return PR_TRUE;
-  }
-}
-
-/*=================================================================================
-
-=================================================================================*/
-PRIVATE PRBool uCheckAndScanAlways4ByteSwap(
-                                            uShiftTable    *shift,
-                                            PRInt32*    state,
-                                            unsigned char  *in,
-                                            PRUint16    *out,
-                                            PRUint32     inbuflen,
-                                            PRUint32*    inscanlen
-                                            )
-{
-  if(inbuflen < 4)
-    return PR_FALSE;
-  else
-  {
-    *inscanlen = 4;
-    if((0 ==in[2]) && ( 0==in[3]))
-      *out = ((in[1] << 8) | ( in[0])) ;
-    else
-      *out = 0xFFFD ;
-    return PR_TRUE;
-  }
-}
-/*=================================================================================
-
-=================================================================================*/
 PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA3(
-                                              uShiftTable    *shift,
                                               PRInt32*    state,
                                               unsigned char  *in,
                                               PRUint16    *out,
@@ -684,7 +519,6 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA3(
 
 =================================================================================*/
 PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA4(
-                                              uShiftTable    *shift,
                                               PRInt32*    state,
                                               unsigned char  *in,
                                               PRUint16    *out,
@@ -698,7 +532,6 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA4(
 
 =================================================================================*/
 PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA5(
-                                              uShiftTable    *shift,
                                               PRInt32*    state,
                                               unsigned char  *in,
                                               PRUint16    *out,
@@ -712,7 +545,6 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA5(
 
 =================================================================================*/
 PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA6(
-                                              uShiftTable    *shift,
                                               PRInt32*    state,
                                               unsigned char  *in,
                                               PRUint16    *out,
@@ -726,7 +558,6 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA6(
 
 =================================================================================*/
 PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA7(
-                                              uShiftTable    *shift,
                                               PRInt32*    state,
                                               unsigned char  *in,
                                               PRUint16    *out,
@@ -739,24 +570,6 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA7(
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE PRBool uCheckAndScanAlways1ByteShiftGL(
-                                               uShiftTable    *shift,
-                                               PRInt32*    state,
-                                               unsigned char  *in,
-                                               PRUint16    *out,
-                                               PRUint32     inbuflen,
-                                               PRUint32*    inscanlen
-                                               )
-{
-  /* Don't check inlen. The caller should ensure it is larger than 0 */
-  *inscanlen = 1;
-  *out = (PRUint16) in[0] | 0x80;
-  
-  return PR_TRUE;
-}
-/*=================================================================================
-
-=================================================================================*/
 #define SBase 0xAC00
 #define SCount 11172
 #define LCount 19
@@ -765,7 +578,6 @@ PRIVATE PRBool uCheckAndScanAlways1ByteShiftGL(
 #define NCount (VCount * TCount)
 
 PRIVATE PRBool uCnSAlways8BytesDecomposedHangul(
-                                              uShiftTable    *shift,
                                               PRInt32*    state,
                                               unsigned char  *in,
                                               PRUint16    *out,
@@ -844,7 +656,6 @@ PRIVATE PRBool uCnSAlways8BytesDecomposedHangul(
 =================================================================================*/
 
 PRIVATE PRBool uCheckAndScanJohabHangul(
-                                        uShiftTable    *shift,
                                         PRInt32*    state,
                                         unsigned char  *in,
                                         PRUint16    *out,
@@ -897,7 +708,6 @@ PRIVATE PRBool uCheckAndScanJohabHangul(
   }
 }
 PRIVATE PRBool uCheckAndScanJohabSymbol(
-                                        uShiftTable    *shift,
                                         PRInt32*    state,
                                         unsigned char  *in,
                                         PRUint16    *out,
@@ -953,7 +763,6 @@ PRIVATE PRBool uCheckAndScanJohabSymbol(
   }
 }
 PRIVATE PRBool uCheckAndScan4BytesGB18030(
-                                          uShiftTable    *shift,
                                           PRInt32*    state,
                                           unsigned char  *in,
                                           PRUint16    *out,

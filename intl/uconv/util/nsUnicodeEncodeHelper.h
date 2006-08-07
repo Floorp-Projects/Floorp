@@ -54,18 +54,19 @@ public:
   //--------------------------------------------------------------------
 
   /**
-   * Converts data using a lookup table.
+   * Converts data using a lookup table and optional shift table.
    */
   static nsresult ConvertByTable(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
-      char * aDest, PRInt32 * aDestLength, uShiftTable * aShiftTable, 
-      uMappingTable  * aMappingTable);
+      char * aDest, PRInt32 * aDestLength, uScanClassID aScanClass,
+      uShiftOutTable * aShiftOutTable, uMappingTable  * aMappingTable);
 
   /**
-   * Converts data using a set of lookup tables.
+   * Converts data using a set of lookup tables and optional shift tables.
    */
   static nsresult ConvertByMultiTable(const PRUnichar * aSrc, PRInt32 * aSrcLength,
       char * aDest, PRInt32 * aDestLength, PRInt32 aTableCount, 
-      uShiftTable ** aShiftTable, uMappingTable  ** aMappingTable);
+      uScanClassID * aScanClassArray, 
+      uShiftOutTable ** aShiftOutTable, uMappingTable  ** aMappingTable);
 
   /**
    * Create Char Representable Info

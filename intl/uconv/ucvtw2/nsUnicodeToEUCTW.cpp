@@ -42,51 +42,15 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static const PRInt16 g_ASCIIShiftTable[] =  {
-  0, u1ByteCharset,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
-static const PRInt16 g_CNS1ShiftTable[] =  {
-  0, u2BytesGRCharset,
-  ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
-};
-
-static const PRInt16 g_CNS2ShiftTable[] =  {
-  0, u2BytesGRPrefix8EA2Charset,
-  ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
-};
-static const PRInt16 g_CNS3ShiftTable[] =  {
-  0, u2BytesGRPrefix8EA3Charset,
-  ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
-};
-static const PRInt16 g_CNS4ShiftTable[] =  {
-  0, u2BytesGRPrefix8EA4Charset,
-  ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
-};
-static const PRInt16 g_CNS5ShiftTable[] =  {
-  0, u2BytesGRPrefix8EA5Charset,
-  ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
-};
-static const PRInt16 g_CNS6ShiftTable[] =  {
-  0, u2BytesGRPrefix8EA6Charset,
-  ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
-};
-static const PRInt16 g_CNS7ShiftTable[] =  {
-  0, u2BytesGRPrefix8EA7Charset,
-  ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
-};
-
-
-static const PRInt16 *g_EUCTWShiftTableSet [] = {
-  g_ASCIIShiftTable,
-  g_CNS1ShiftTable,
-  g_CNS2ShiftTable,
-  g_CNS3ShiftTable,
-  g_CNS4ShiftTable,
-  g_CNS5ShiftTable,
-  g_CNS6ShiftTable,
-  g_CNS7ShiftTable
+static const uScanClassID g_EUCTWScanClassSet [] = {
+  u1ByteCharset,
+  u2BytesGRCharset,
+  u2BytesGRPrefix8EA2Charset,
+  u2BytesGRPrefix8EA3Charset,
+  u2BytesGRPrefix8EA4Charset,
+  u2BytesGRPrefix8EA5Charset,
+  u2BytesGRPrefix8EA6Charset,
+  u2BytesGRPrefix8EA7Charset
 };
 
 static const PRUint16 *g_EUCTWMappingTableSet [] ={
@@ -108,7 +72,7 @@ nsUnicodeToEUCTWConstructor(nsISupports *aOuter, REFNSIID aIID,
                             void **aResult)
 {
   return CreateMultiTableEncoder(8,
-                                 (uShiftTable**) &g_EUCTWShiftTableSet, 
+                                 (uScanClassID*) &g_EUCTWScanClassSet,
                                  (uMappingTable**) &g_EUCTWMappingTableSet,
                                  4 /* max length = src * 4 */,
                                  aOuter, aIID, aResult);

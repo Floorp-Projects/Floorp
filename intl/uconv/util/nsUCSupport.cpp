@@ -211,12 +211,14 @@ NS_IMETHODIMP nsBufferDecoderSupport::GetMaxLength(const char* aSrc,
 //----------------------------------------------------------------------
 // Class nsTableDecoderSupport [implementation]
 
-nsTableDecoderSupport::nsTableDecoderSupport(uShiftTable * aShiftTable, 
+nsTableDecoderSupport::nsTableDecoderSupport(uScanClassID aScanClass,
+                                             uShiftInTable * aShiftInTable,
                                              uMappingTable  * aMappingTable,
                                              PRUint32 aMaxLengthFactor) 
 : nsBufferDecoderSupport(aMaxLengthFactor)
 {
-  mShiftTable = aShiftTable;
+  mScanClass = aScanClass;
+  mShiftInTable = aShiftInTable;
   mMappingTable = aMappingTable;
 }
 
@@ -233,8 +235,9 @@ NS_IMETHODIMP nsTableDecoderSupport::ConvertNoBuff(const char * aSrc,
                                                    PRInt32 * aDestLength)
 {
   return nsUnicodeDecodeHelper::ConvertByTable(aSrc, aSrcLength,
-                                               aDest, aDestLength, 
-                                               mShiftTable, mMappingTable);
+                                               aDest, aDestLength,
+                                               mScanClass, 
+                                               mShiftInTable, mMappingTable);
 }
 
 //----------------------------------------------------------------------
@@ -243,14 +246,14 @@ NS_IMETHODIMP nsTableDecoderSupport::ConvertNoBuff(const char * aSrc,
 nsMultiTableDecoderSupport::nsMultiTableDecoderSupport(
                             PRInt32 aTableCount,
                             const uRange * aRangeArray, 
-                            uShiftTable ** aShiftTable, 
+                            uScanClassID * aScanClassArray,
                             uMappingTable ** aMappingTable,
                             PRUint32 aMaxLengthFactor) 
 : nsBufferDecoderSupport(aMaxLengthFactor)
 {
   mTableCount = aTableCount;
   mRangeArray = aRangeArray;
-  mShiftTable = aShiftTable;
+  mScanClassArray = aScanClassArray;
   mMappingTable = aMappingTable;
 }
 
@@ -269,18 +272,17 @@ NS_IMETHODIMP nsMultiTableDecoderSupport::ConvertNoBuff(const char * aSrc,
   return nsUnicodeDecodeHelper::ConvertByMultiTable(aSrc, aSrcLength, 
                                                     aDest, aDestLength, 
                                                     mTableCount, mRangeArray,
-                                                    mShiftTable, mMappingTable);
+                                                    mScanClassArray,
+                                                    mMappingTable);
 }
 
 //----------------------------------------------------------------------
 // Class nsOneByteDecoderSupport [implementation]
 
 nsOneByteDecoderSupport::nsOneByteDecoderSupport(
-                         uShiftTable * aShiftTable, 
                          uMappingTable  * aMappingTable) 
 : nsBasicDecoderSupport()
 {
-  mShiftTable = aShiftTable;
   mMappingTable = aMappingTable;
   mFastTableCreated = PR_FALSE;
 }
@@ -298,7 +300,7 @@ NS_IMETHODIMP nsOneByteDecoderSupport::Convert(const char * aSrc,
                                               PRInt32 * aDestLength)
 {
   if (!mFastTableCreated) {
-    nsresult res = nsUnicodeDecodeHelper::CreateFastTable(mShiftTable, 
+    nsresult res = nsUnicodeDecodeHelper::CreateFastTable(
                        mMappingTable, mFastTable, ONE_BYTE_TABLE_SIZE);
     if (NS_FAILED(res)) return res;
     mFastTableCreated = PR_TRUE;
@@ -569,12 +571,24 @@ nsEncoderSupport::GetMaxLength(const PRUnichar * aSrc,
 //----------------------------------------------------------------------
 // Class nsTableEncoderSupport [implementation]
 
-nsTableEncoderSupport::nsTableEncoderSupport(uShiftTable * aShiftTable, 
+nsTableEncoderSupport::nsTableEncoderSupport(uScanClassID aScanClass,
+                                             uShiftOutTable * aShiftOutTable,
                                              uMappingTable  * aMappingTable,
                                              PRUint32 aMaxLengthFactor) 
 : nsEncoderSupport(aMaxLengthFactor)
 {
-  mShiftTable = aShiftTable;
+  mScanClass = aScanClass;
+  mShiftOutTable = aShiftOutTable,
+  mMappingTable = aMappingTable;
+}
+
+nsTableEncoderSupport::nsTableEncoderSupport(uScanClassID aScanClass,
+                                             uMappingTable  * aMappingTable,
+                                             PRUint32 aMaxLengthFactor) 
+: nsEncoderSupport(aMaxLengthFactor)
+{
+  mScanClass = aScanClass;
+  mShiftOutTable = nsnull;
   mMappingTable = aMappingTable;
 }
 
@@ -597,7 +611,8 @@ NS_IMETHODIMP nsTableEncoderSupport::ConvertNoBuffNoErr(
 {
   return nsUnicodeEncodeHelper::ConvertByTable(aSrc, aSrcLength, 
                                                aDest, aDestLength, 
-                                               mShiftTable, mMappingTable);
+                                               mScanClass,
+                                               mShiftOutTable, mMappingTable);
 }
 
 //----------------------------------------------------------------------
@@ -605,13 +620,15 @@ NS_IMETHODIMP nsTableEncoderSupport::ConvertNoBuffNoErr(
 
 nsMultiTableEncoderSupport::nsMultiTableEncoderSupport(
                             PRInt32 aTableCount,
-                            uShiftTable ** aShiftTable, 
+                            uScanClassID * aScanClassArray,
+                            uShiftOutTable ** aShiftOutTable, 
                             uMappingTable  ** aMappingTable,
                             PRUint32 aMaxLengthFactor) 
 : nsEncoderSupport(aMaxLengthFactor)
 {
   mTableCount = aTableCount;
-  mShiftTable = aShiftTable;
+  mScanClassArray = aScanClassArray;
+  mShiftOutTable = aShiftOutTable;
   mMappingTable = aMappingTable;
 }
 
@@ -634,6 +651,8 @@ NS_IMETHODIMP nsMultiTableEncoderSupport::ConvertNoBuffNoErr(
 {
   return nsUnicodeEncodeHelper::ConvertByMultiTable(aSrc, aSrcLength,
                                                     aDest, aDestLength, 
-                                                    mTableCount, mShiftTable, 
+                                                    mTableCount, 
+                                                    mScanClassArray,
+                                                    mShiftOutTable, 
                                                     mMappingTable);
 }

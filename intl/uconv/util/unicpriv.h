@@ -52,19 +52,33 @@ PRBool	uMapCode(const uTable *uT,
                     PRUint16 in, 
                     PRUint16* out);
 
-PRBool 	uGenerate(  uShiftTable *shift,
-                    PRInt32* state, 
-                    PRUint16 in, 
-                    unsigned char* out, 
-                    PRUint32 outbuflen, 
-                    PRUint32* outlen);
+PRBool 	uGenerate(uScanClassID scanClass,
+                  PRInt32* state, 
+                  PRUint16 in, 
+                  unsigned char* out, 
+                  PRUint32 outbuflen, 
+                  PRUint32* outlen);
 
-PRBool 	uScan(      uShiftTable *shift, 
-                    PRInt32 *state, 
-                    unsigned char *in,
-                    PRUint16 *out, 
-                    PRUint32 inbuflen, 
-                    PRUint32* inscanlen);
+PRBool 	uScan(uScanClassID scanClass,
+              PRInt32 *state, 
+              unsigned char *in,
+              PRUint16 *out, 
+              PRUint32 inbuflen, 
+              PRUint32* inscanlen);
+
+PRBool 	uGenerateShift(uShiftOutTable *shift,
+                       PRInt32* state, 
+                       PRUint16 in, 
+                       unsigned char* out, 
+                       PRUint32 outbuflen, 
+                       PRUint32* outlen);
+
+PRBool 	uScanShift(uShiftInTable *shift, 
+                   PRInt32 *state, 
+                   unsigned char *in,
+                   PRUint16 *out, 
+                   PRUint32 inbuflen, 
+                   PRUint32* inscanlen);
 
 #ifdef __cplusplus
 }

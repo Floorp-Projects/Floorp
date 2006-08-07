@@ -45,16 +45,11 @@ static const PRUint16 g_ufMappingTable[] = {
 #include "mtextra.uf"
 };
 
-static const PRInt16 g_ufShiftTable[] =  {
-  0, u1ByteCharset ,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
 //----------------------------------------------------------------------
 // Class nsUnicodeToMTExtra [implementation]
 
 nsUnicodeToMTExtra::nsUnicodeToMTExtra() 
-: nsTableEncoderSupport((uShiftTable*) &g_ufShiftTable, 
+  : nsTableEncoderSupport(u1ByteCharset,
                         (uMappingTable*) &g_ufMappingTable, 1)
 {
 }

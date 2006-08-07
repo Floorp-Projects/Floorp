@@ -47,10 +47,6 @@
 #include "gbku.h"
 
 
-static const PRInt16 g_2BytesShiftTable[] = {
- 0, u2BytesCharset,
- ShiftCell(0,0,0,0,0,0,0,0)
-};
 //------------------------------------------------------------
 // nsGBKUnique2BytesToUnicode
 //------------------------------------------------------------
@@ -67,7 +63,7 @@ static const PRUint16 g_utGBKUnique2Bytes[] = {
 #include "gbkuniq2b.ut"
 };
 nsGBKUnique2BytesToUnicode::nsGBKUnique2BytesToUnicode() 
-: nsTableDecoderSupport((uShiftTable*) &g_2BytesShiftTable,
+  : nsTableDecoderSupport(u2BytesCharset, nsnull,
         (uMappingTable*) &g_utGBKUnique2Bytes, 1) 
 {
 }
@@ -88,7 +84,7 @@ static const PRUint16 g_utGB18030Unique2Bytes[] = {
 #include "gb18030uniq2b.ut"
 };
 nsGB18030Unique2BytesToUnicode::nsGB18030Unique2BytesToUnicode() 
-: nsTableDecoderSupport((uShiftTable*) &g_2BytesShiftTable,
+  : nsTableDecoderSupport(u2BytesCharset, nsnull,
         (uMappingTable*) &g_utGB18030Unique2Bytes, 1) 
 {
 }
@@ -96,11 +92,6 @@ nsGB18030Unique2BytesToUnicode::nsGB18030Unique2BytesToUnicode()
 //------------------------------------------------------------
 // nsGB18030Unique4BytesToUnicode
 //------------------------------------------------------------
-static const PRInt16 g_GB18030_4BytesShiftTable[] = {
- 0, u4BytesGB18030Charset,
- ShiftCell(0,0,0,0,0,0,0,0)
-};
-
 class nsGB18030Unique4BytesToUnicode : public nsTableDecoderSupport 
 {
 public:
@@ -114,7 +105,7 @@ static const PRUint16 g_utGB18030Unique4Bytes[] = {
 #include "gb180304bytes.ut"
 };
 nsGB18030Unique4BytesToUnicode::nsGB18030Unique4BytesToUnicode() 
-: nsTableDecoderSupport((uShiftTable*) &g_GB18030_4BytesShiftTable,
+  : nsTableDecoderSupport(u4BytesGB18030Charset, nsnull,
         (uMappingTable*) &g_utGB18030Unique4Bytes, 1) 
 {
 }

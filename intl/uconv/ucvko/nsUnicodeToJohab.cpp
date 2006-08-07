@@ -43,25 +43,6 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-
-static const PRUint16 gAsciiShiftTable[] =  {
-  0, u1ByteCharset,  
-  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
-};
-
-static const PRUint16 gJohabSymbolShiftTable[] =  {
-  0, uJohabSymbolCharset,  
-  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
-};
-static const PRUint16 gJohabHangulShiftTable[] =  {
-  0, uJohabHangulCharset,  
-  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
-};
-static const PRUint16 gJohabHangulCompatJamoShiftTable[] =  {
-  0, u2BytesCharset,
-  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
-};
-
 static const PRUint16 *g_JohabMappingTable[4] = {
   g_ucvko_AsciiMapping,
   g_HangulNullMapping,
@@ -69,11 +50,11 @@ static const PRUint16 *g_JohabMappingTable[4] = {
   g_ufKSC5601Mapping
 };
 
-static const PRUint16 *g_JohabShiftTable[4] =  {
-  gAsciiShiftTable,
-  gJohabHangulShiftTable,
-  gJohabHangulCompatJamoShiftTable,
-  gJohabSymbolShiftTable
+static const uScanClassID g_JohabScanClassTable[4] =  {
+  u1ByteCharset,
+  uJohabHangulCharset,
+  u2BytesCharset,
+  uJohabSymbolCharset
 };
 
 //----------------------------------------------------------------------
@@ -83,8 +64,8 @@ NS_METHOD
 nsUnicodeToJohabConstructor(nsISupports *aOuter, REFNSIID aIID,
                             void **aResult) {
 
-  return CreateMultiTableEncoder(sizeof(g_JohabShiftTable) / sizeof(g_JohabShiftTable[0]),
-                                 (uShiftTable**) g_JohabShiftTable, 
+  return CreateMultiTableEncoder(sizeof(g_JohabScanClassTable) / sizeof(g_JohabScanClassTable[0]),
+                                 (uScanClassID*) g_JohabScanClassTable, 
                                  (uMappingTable**) g_JohabMappingTable,
                                  2 /* max length = src * 2*/,
                                  aOuter, aIID, aResult);

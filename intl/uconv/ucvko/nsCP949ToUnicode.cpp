@@ -43,33 +43,16 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static const PRUint16 g_ASCIIShiftTable[] =  {
-  0, u1ByteCharset,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
+static const uScanClassID g_CP949ScanClassIDs[] = {
+  u1ByteCharset,
 // This is necessary to decode 8byte sequence representation of Hangul
 // syllables. This representation is uniq to EUC-KR and is not used
 // in CP949. However, this converter is for both EUC-KR and CP949
-// so that this shift table is put here. See bug 131388. 
-static const PRUint16 g_DecomposedHangulShiftTable[] =  {
-  0, uDecomposedHangulCharset,  
-  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
-};
-
-static const PRUint16 g_EUCKRShiftTable[] =  {
-  0, u2BytesGRCharset,  
-  ShiftCell(0,  0, 0, 0, 0, 0, 0, 0)
-};
-
-static const PRUint16 g_CP949HighShiftTable[] =  {
-  0, u2BytesGR128Charset,  
-  ShiftCell(0,  0, 0, 0, 0, 0, 0, 0)
-};
-
-static const PRUint16 g_CP949LowShiftTable[] =  {
-  0, u2BytesCharset,  
-  ShiftCell(0,  0, 0, 0, 0, 0, 0, 0)
+// so that this class ID is put here. See bug 131388. 
+  uDecomposedHangulCharset,  
+  u2BytesGRCharset,       // EUC_KR
+  u2BytesGR128Charset,    // CP949 High
+  u2BytesCharset          // CP949 Low
 };
 
 // CP949(non-EUC-KR portion) to Unicode
@@ -84,15 +67,6 @@ static const uRange g_CP949Ranges[] = {
   { 0xA1, 0xFE },
   { 0xA1, 0xC6 },   // CP949 extension B. ends at 0xC6.
   { 0x80, 0xA0 }
-};
-
-
-static const PRUint16 *g_CP949ShiftTableSet [] = {
-  g_ASCIIShiftTable,
-  g_DecomposedHangulShiftTable,
-  g_EUCKRShiftTable,
-  g_CP949HighShiftTable,
-  g_CP949LowShiftTable
 };
 
 static const PRUint16 *g_CP949MappingTableSet [] ={
@@ -112,7 +86,7 @@ nsCP949ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
 {
   return CreateMultiTableDecoder(sizeof(g_CP949Ranges) / sizeof(g_CP949Ranges[0]),
                                  (const uRange*) &g_CP949Ranges,
-                                 (uShiftTable**) &g_CP949ShiftTableSet, 
+                                 (uScanClassID*) &g_CP949ScanClassIDs,
                                  (uMappingTable**) &g_CP949MappingTableSet, 1,
                                  aOuter, aIID, aResult);
 }

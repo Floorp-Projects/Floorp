@@ -43,30 +43,16 @@
 // Global functions and data [declaration]
 
 
-static const PRUint16 gAsciiShiftTable[] =  {
-  0, u1ByteCharset,  
-  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
-};
-
-static const PRUint16 gKSC5601ShiftTable[] =  {
-  0, u2BytesGRCharset,  
-  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
-};
-static const PRUint16 gDecomposedHangulShiftTable[] =  {
-  0, uDecomposedHangulCharset,  
-  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
-};
-
 static const PRUint16 *g_EUCKRMappingTable[3] = {
   g_ucvko_AsciiMapping,
   g_ufKSC5601Mapping,
   g_HangulNullMapping
 };
 
-static const PRUint16 *g_EUCKRShiftTable[3] =  {
-  gAsciiShiftTable,
-  gKSC5601ShiftTable,
-  gDecomposedHangulShiftTable
+static const uScanClassID g_EUCKRScanCellIDTable[3] =  {
+  u1ByteCharset,
+  u2BytesCharset,
+  uDecomposedHangulCharset
 };
 
 NS_METHOD
@@ -74,7 +60,7 @@ nsUnicodeToEUCKRConstructor(nsISupports *aOuter, REFNSIID aIID,
                             void **aResult)
 {
   return CreateMultiTableEncoder(3,
-                                 (uShiftTable**) g_EUCKRShiftTable, 
+                                 (uScanClassID*) g_EUCKRScanCellIDTable, 
                                  (uMappingTable**) g_EUCKRMappingTable,
                                  // change from 2 to 8 because of composed jamo
                                  8 /* max length = src * 8 */,

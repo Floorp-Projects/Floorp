@@ -51,18 +51,20 @@ class nsUnicodeDecodeHelper
 {
 public:
   /**
-   * Converts data using a lookup table.
+   * Converts data using a lookup table and optional shift table
    */
   static nsresult ConvertByTable(const char * aSrc, PRInt32 * aSrcLength, 
-      PRUnichar * aDest, PRInt32 * aDestLength, uShiftTable * aShiftTable, 
-      uMappingTable  * aMappingTable);
+                                 PRUnichar * aDest, PRInt32 * aDestLength,
+                                 uScanClassID aScanClass,
+                                 uShiftInTable * aShiftInTable,
+                                 uMappingTable  * aMappingTable);
 
   /**
    * Converts data using a set of lookup tables.
    */
   static nsresult ConvertByMultiTable(const char * aSrc, PRInt32 * aSrcLength,
       PRUnichar * aDest, PRInt32 * aDestLength, PRInt32 aTableCount, 
-      const uRange * aRangeArray, uShiftTable ** aShiftTable, 
+      const uRange * aRangeArray, uScanClassID * aScanClassArray,
       uMappingTable ** aMappingTable);
 
   /**
@@ -75,9 +77,8 @@ public:
   /**
    * Create a cache-like fast lookup table from a normal one.
    */
-  static nsresult CreateFastTable( uShiftTable * aShiftTable, 
-      uMappingTable * aMappingTable, PRUnichar * aFastTable, 
-      PRInt32 aTableSize);
+  static nsresult CreateFastTable(uMappingTable * aMappingTable,
+      PRUnichar * aFastTable,  PRInt32 aTableSize);
 };
 
 #endif // nsUnicodeDecodeHelper_h__
