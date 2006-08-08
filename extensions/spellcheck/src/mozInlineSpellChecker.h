@@ -252,7 +252,8 @@ public:
   // examines the dom node in question and returns true if the inline spell
   // checker should skip the node (i.e. the text is inside of a block quote
   // or an e-mail signature...)
-  nsresult SkipSpellCheckForNode(nsIDOMNode *aNode, PRBool * aCheckSpelling);
+  nsresult SkipSpellCheckForNode(nsIEditor* aEditor,
+                                 nsIDOMNode *aNode, PRBool * aCheckSpelling);
 
   nsresult SpellCheckAfterChange(nsIDOMNode* aCursorNode, PRInt32 aCursorOffset,
                                  nsIDOMNode* aPreviousNode, PRInt32 aPreviousOffset,
