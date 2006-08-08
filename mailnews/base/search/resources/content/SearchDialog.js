@@ -198,7 +198,7 @@ var gSearchNotificationListener =
     onSearchDone: function(status)
     {
         gSearchStopButton.setAttribute("label", gSearchBundle.getString("labelForSearchButton"));
-        gSearchStopButton.setAttribute("accesskey", gSearchBundle.getString("accesskeyForSearchButton"));
+        gSearchStopButton.setAttribute("accesskey", gSearchBundle.getString("labelForSearchButton.accesskey"));
         gStatusFeedback._stopMeteors();
         SetAdvancedSearchStatusText(gSearchView.QueryInterface(Components.interfaces.nsITreeView).rowCount);
     },
@@ -206,7 +206,7 @@ var gSearchNotificationListener =
     onNewSearch: function()
     {
       gSearchStopButton.setAttribute("label", gSearchBundle.getString("labelForStopButton"));
-      gSearchStopButton.setAttribute("accesskey", gSearchBundle.getString("accesskeyForStopButton"));
+      gSearchStopButton.setAttribute("accesskey", gSearchBundle.getString("labelForStopButton.accesskey"));
       UpdateMailSearch("new-search");	
       gStatusFeedback._startMeteors();
       gStatusFeedback.showStatusString(gSearchBundle.getString("searchingMessage"));
@@ -266,7 +266,7 @@ function searchOnLoad()
 
   gSearchBundle = document.getElementById("bundle_search");
   gSearchStopButton.setAttribute("label", gSearchBundle.getString("labelForSearchButton"));
-  gSearchStopButton.setAttribute("accesskey", gSearchBundle.getString("accesskeyForSearchButton"));
+  gSearchStopButton.setAttribute("accesskey", gSearchBundle.getString("labelForSearchButton.accesskey"));
   gMessengerBundle = document.getElementById("bundle_messenger");
   setupDatasource();
   setupSearchListener();
