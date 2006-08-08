@@ -164,4 +164,90 @@ NS_NewSingletonEnumerator(nsISimpleEnumerator* *result,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+nsUnionEnumerator::nsUnionEnumerator(nsISimpleEnumerator* firstEnumerator,
+                                     nsISimpleEnumerator* secondEnumerator)
+    : mFirstEnumerator(firstEnumerator),
+      mSecondEnumerator(secondEnumerator),
+      mConsumed(PR_FALSE), mAtSecond(PR_FALSE)
+{
+}
 
+nsUnionEnumerator::~nsUnionEnumerator()
+{
+}
+
+NS_IMPL_ISUPPORTS1(nsUnionEnumerator, nsISimpleEnumerator)
+
+NS_IMETHODIMP
+nsUnionEnumerator::HasMoreElements(PRBool* aResult)
+{
+    NS_PRECONDITION(aResult != 0, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+
+    if (mConsumed) {
+        *aResult = PR_FALSE;
+        return NS_OK;
+    }
+
+    if (! mAtSecond) {
+        rv = mFirstEnumerator->HasMoreElements(aResult);
+        if (NS_FAILED(rv)) return rv;
+
+        if (*aResult)
+            return NS_OK;
+
+        mAtSecond = PR_TRUE;
+    }
+
+    rv = mSecondEnumerator->HasMoreElements(aResult);
+    if (NS_FAILED(rv)) return rv;
+
+    if (*aResult)
+        return NS_OK;
+
+    *aResult = PR_FALSE;
+    mConsumed = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUnionEnumerator::GetNext(nsISupports** aResult)
+{
+    NS_PRECONDITION(aResult != 0, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    if (mConsumed)
+        return NS_ERROR_UNEXPECTED;
+
+    if (! mAtSecond)
+        return mFirstEnumerator->GetNext(aResult);
+
+    return mSecondEnumerator->GetNext(aResult);
+}
+
+extern "C" NS_COM nsresult
+NS_NewUnionEnumerator(nsISimpleEnumerator* *result,
+                      nsISimpleEnumerator* firstEnumerator,
+                      nsISimpleEnumerator* secondEnumerator)
+{
+    *result = nsnull;
+    if (! firstEnumerator) {
+        *result = secondEnumerator;
+    } else if (! secondEnumerator) {
+        *result = firstEnumerator;
+    } else {
+        nsUnionEnumerator* enumer = new nsUnionEnumerator(firstEnumerator, secondEnumerator);
+        if (enumer == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+        *result = enumer; 
+    }
+    NS_ADDREF(*result);
+    return NS_OK;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
