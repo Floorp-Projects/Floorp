@@ -9,7 +9,7 @@ my $CURRENT_BUILD_PID = 0;
 my $HALT_AFTER_THIS_BUILD = 0;
 my $RELOAD_CONFIG = 0;
 
-my $TBOX_CLIENT_CVSUP_CMD = 'cvs update';
+my $TBOX_CLIENT_CVSUP_CMD = 'cvs update -Pd';
 my $TBOX_CLIENT_CVS_TIMEOUT = 300;
 
 sub PrintUsage() {
@@ -84,11 +84,15 @@ sub HandleSigAlrm() {
 sub UpdateTinderboxScripts() {
     if (exists($ENV{'TBOX_CLIENT_CVS_DIR'})) {
         print STDERR "Updating tinderbox scripts in $ENV{'TBOX_CLIENT_CVS_DIR'}\n";
+        my $cvsUpCmd = $TBOX_CLIENT_CVSUP_CMD;
+        $cvsUpCmd .= exists($ENV{'TBOX_CLIENT_CVS_TAG'}) ? 
+         " -r $ENV{'TBOX_CLIENT_CVS_TAG'}" : '';
+
         eval {
             local $SIG{'ALRM'} = \&HandleSigAlrm;
             alarm($TBOX_CLIENT_CVS_TIMEOUT);
-            system("cd $ENV{'TBOX_CLIENT_CVS_DIR'} && $TBOX_CLIENT_CVSUP_CMD") 
-             == 0 or print STDERR "$TBOX_CLIENT_CVSUP_CMD failed: $!\n";
+            system("cd $ENV{'TBOX_CLIENT_CVS_DIR'} && $cvsUpCmd") == 0 
+             or print STDERR "$TBOX_CLIENT_CVSUP_CMD failed: $!\n";
             alarm(0);
         };
 
