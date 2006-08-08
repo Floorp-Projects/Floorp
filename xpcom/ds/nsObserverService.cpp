@@ -49,7 +49,7 @@
 #include "nsHashtable.h"
 #include "nsThreadUtils.h"
 #include "nsIWeakReference.h"
-#include "nsIEnumerator.h"
+#include "nsEnumeratorUtils.h"
 
 #define NOTIFY_GLOBAL_OBSERVERS
 

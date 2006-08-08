@@ -179,12 +179,7 @@ NS_IMETHODIMP nsAbMDBDirFactory::CreateDirectory(nsIAbDirectoryProperties *aProp
     rv = RemoveMailListDBListeners (listDatabase, directory);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsSingletonEnumerator* cursor =    new nsSingletonEnumerator(directory);
-    if(!cursor)
-        return NS_ERROR_NULL_POINTER;
-    
-    NS_IF_ADDREF(*_retval = cursor);
-    return rv;
+    return NS_NewSingletonEnumerator(_retval, directory);
 }
 
 

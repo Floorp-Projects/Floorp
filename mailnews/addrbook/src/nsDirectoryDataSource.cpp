@@ -240,14 +240,8 @@ NS_IMETHODIMP nsAbDirectoryDataSource::GetTargets(nsIRDFResource* source,
       (kNC_IsSecure == property) ||
       (kNC_IsWriteable == property) ||
       (kNC_DirTreeNameSort == property)) 
-    { 
-      nsSingletonEnumerator* cursor =
-        new nsSingletonEnumerator(property);
-      if (cursor == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-      NS_ADDREF(cursor);
-      *targets = cursor;
-      return NS_OK;
+    {
+      return NS_NewSingletonEnumerator(targets, property);
     }
   }
   return NS_NewEmptyEnumerator(targets);
@@ -319,15 +313,7 @@ NS_IMETHODIMP nsAbDirectoryDataSource::ArcLabelsOut(nsIRDFResource* source,
     NS_NewISupportsArray(getter_AddRefs(arcs));
   }
 
-  nsArrayEnumerator* cursor =
-    new nsArrayEnumerator(arcs);
-  
-  if (cursor == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(cursor);
-  *labels = cursor;
-  
-  return NS_OK;
+  return NS_NewArrayEnumerator(labels, arcs);
 }
 
 nsresult

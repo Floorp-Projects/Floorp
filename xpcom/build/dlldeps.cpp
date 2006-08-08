@@ -160,7 +160,6 @@ void XXXNeverCalled()
     nsTraceRefcnt::LogAddCOMPtr(nsnull, nsnull);
     nsTraceRefcntImpl::DumpStatistics();
     NS_NewEmptyEnumerator(nsnull);
-    new nsArrayEnumerator(nsnull);
     NS_QuickSort(nsnull, 0, 0, nsnull, nsnull);
     nsString();
     NS_ProxyRelease(nsnull, nsnull, PR_FALSE);

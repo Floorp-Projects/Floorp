@@ -1276,13 +1276,7 @@ nsHTTPIndex::ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator **_retval
 		}
 	}
 
-	nsISimpleEnumerator* result = new nsArrayEnumerator(array);
-	if (! result)
-	return NS_ERROR_OUT_OF_MEMORY;
-
-	NS_ADDREF(result);
-	*_retval = result;
-	return(NS_OK);
+        return NS_NewArrayEnumerator(_retval, array);
 }
 
 NS_IMETHODIMP

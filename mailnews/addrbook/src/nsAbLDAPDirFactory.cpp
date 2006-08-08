@@ -128,8 +128,7 @@ NS_IMETHODIMP nsAbLDAPDirFactory::CreateDirectory(nsIAbDirectoryProperties *aPro
     rv = directory->SetDirPrefId(prefName);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    NS_IF_ADDREF(*aDirectories = new nsSingletonEnumerator(directory));
-    return *aDirectories ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return NS_NewSingletonEnumerator(aDirectories, directory);
 }
 
 /* void deleteDirectory (in nsIAbDirectory directory); */

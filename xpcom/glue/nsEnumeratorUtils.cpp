@@ -20,6 +20,11 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
+ * 
+ * Code moved from nsEmptyEnumerator.cpp:
+ *   L. David Baron <dbaron@dbaron.org>
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,75 +42,104 @@
 
 #include "nsEnumeratorUtils.h"
 
+#include "nsISimpleEnumerator.h"
+#include "nsIStringEnumerator.h"
 
-nsArrayEnumerator::nsArrayEnumerator(nsISupportsArray* aValueArray)
-    : mValueArray(aValueArray),
-      mIndex(0)
+#include "nsCOMPtr.h"
+
+class EmptyEnumeratorImpl : public nsISimpleEnumerator,
+                            public nsIUTF8StringEnumerator,
+                            public nsIStringEnumerator
 {
-    NS_IF_ADDREF(mValueArray);
-}
+public:
+    // nsISupports interface
+    NS_DECL_ISUPPORTS_INHERITED  // not really inherited, but no mRefCnt
 
-nsArrayEnumerator::~nsArrayEnumerator(void)
-{
-    NS_IF_RELEASE(mValueArray);
-}
+    // nsISimpleEnumerator
+    NS_DECL_NSISIMPLEENUMERATOR
+    NS_DECL_NSIUTF8STRINGENUMERATOR
+    // can't use NS_DECL_NSISTRINGENUMERATOR because they share the
+    // HasMore() signature
+    NS_IMETHOD GetNext(nsAString& aResult);
 
-NS_IMPL_ISUPPORTS1(nsArrayEnumerator, nsISimpleEnumerator)
-
-NS_IMETHODIMP
-nsArrayEnumerator::HasMoreElements(PRBool* aResult)
-{
-    NS_PRECONDITION(aResult != 0, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    if (!mValueArray) {
-        *aResult = PR_FALSE;
-        return NS_OK;
+    static EmptyEnumeratorImpl* GetInstance() {
+        return NS_CONST_CAST(EmptyEnumeratorImpl*, &kInstance);
     }
 
-    PRUint32 cnt;
-    nsresult rv = mValueArray->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    *aResult = (mIndex < (PRInt32) cnt);
+private:
+    static const EmptyEnumeratorImpl kInstance;
+};
+
+// nsISupports interface
+NS_IMETHODIMP_(nsrefcnt) EmptyEnumeratorImpl::AddRef(void)
+{
+    return 2;
+}
+
+NS_IMETHODIMP_(nsrefcnt) EmptyEnumeratorImpl::Release(void)
+{
+    return 1;
+}
+
+NS_IMPL_QUERY_INTERFACE1(EmptyEnumeratorImpl, nsISimpleEnumerator)
+
+// nsISimpleEnumerator interface
+NS_IMETHODIMP EmptyEnumeratorImpl::HasMoreElements(PRBool* aResult)
+{
+    *aResult = PR_FALSE;
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsArrayEnumerator::GetNext(nsISupports** aResult)
+NS_IMETHODIMP EmptyEnumeratorImpl::HasMore(PRBool* aResult)
 {
-    NS_PRECONDITION(aResult != 0, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    if (!mValueArray) {
-        *aResult = nsnull;
-        return NS_OK;
-    }
-
-    PRUint32 cnt;
-    nsresult rv = mValueArray->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    if (mIndex >= (PRInt32) cnt)
-        return NS_ERROR_UNEXPECTED;
-
-    *aResult = mValueArray->ElementAt(mIndex++);
+    *aResult = PR_FALSE;
     return NS_OK;
 }
 
-extern NS_COM nsresult
-NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
-                      nsISupportsArray* array)
+NS_IMETHODIMP EmptyEnumeratorImpl::GetNext(nsISupports** aResult)
 {
-    nsArrayEnumerator* enumer = new nsArrayEnumerator(array);
-    if (enumer == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    *result = enumer; 
-    NS_ADDREF(*result);
+    return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP EmptyEnumeratorImpl::GetNext(nsACString& aResult)
+{
+    return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP EmptyEnumeratorImpl::GetNext(nsAString& aResult)
+{
+    return NS_ERROR_UNEXPECTED;
+}
+
+const EmptyEnumeratorImpl EmptyEnumeratorImpl::kInstance;
+
+nsresult
+NS_NewEmptyEnumerator(nsISimpleEnumerator** aResult)
+{
+    *aResult = EmptyEnumeratorImpl::GetInstance();
     return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+class nsSingletonEnumerator : public nsISimpleEnumerator
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    // nsISimpleEnumerator methods
+    NS_IMETHOD HasMoreElements(PRBool* aResult);
+    NS_IMETHOD GetNext(nsISupports** aResult);
+
+    nsSingletonEnumerator(nsISupports* aValue);
+
+private:
+    ~nsSingletonEnumerator();
+
+protected:
+    nsISupports* mValue;
+    PRBool mConsumed;
+};
 
 nsSingletonEnumerator::nsSingletonEnumerator(nsISupports* aValue)
     : mValue(aValue)
@@ -150,7 +184,7 @@ nsSingletonEnumerator::GetNext(nsISupports** aResult)
     return NS_OK;
 }
 
-extern "C" NS_COM nsresult
+nsresult
 NS_NewSingletonEnumerator(nsISimpleEnumerator* *result,
                           nsISupports* singleton)
 {
@@ -163,6 +197,27 @@ NS_NewSingletonEnumerator(nsISimpleEnumerator* *result,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+class nsUnionEnumerator : public nsISimpleEnumerator
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    // nsISimpleEnumerator methods
+    NS_IMETHOD HasMoreElements(PRBool* aResult);
+    NS_IMETHOD GetNext(nsISupports** aResult);
+
+    nsUnionEnumerator(nsISimpleEnumerator* firstEnumerator,
+                      nsISimpleEnumerator* secondEnumerator);
+
+private:
+    ~nsUnionEnumerator();
+
+protected:
+    nsCOMPtr<nsISimpleEnumerator> mFirstEnumerator, mSecondEnumerator;
+    PRBool mConsumed;
+    PRBool mAtSecond;
+};
 
 nsUnionEnumerator::nsUnionEnumerator(nsISimpleEnumerator* firstEnumerator,
                                      nsISimpleEnumerator* secondEnumerator)
@@ -229,7 +284,7 @@ nsUnionEnumerator::GetNext(nsISupports** aResult)
     return mSecondEnumerator->GetNext(aResult);
 }
 
-extern "C" NS_COM nsresult
+nsresult
 NS_NewUnionEnumerator(nsISimpleEnumerator* *result,
                       nsISimpleEnumerator* firstEnumerator,
                       nsISimpleEnumerator* secondEnumerator)
@@ -248,6 +303,3 @@ NS_NewUnionEnumerator(nsISimpleEnumerator* *result,
     NS_ADDREF(*result);
     return NS_OK;
 }
-
-
-////////////////////////////////////////////////////////////////////////////////

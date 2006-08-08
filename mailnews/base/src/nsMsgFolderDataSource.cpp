@@ -534,13 +534,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
       (kNC_SyncDisabled == property) ||
       (kNC_CanSearchMessages == property))
     {
-      nsSingletonEnumerator* cursor =
-        new nsSingletonEnumerator(property);
-      if (cursor == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-      NS_ADDREF(cursor);
-      *targets = cursor;
-      rv = NS_OK;
+      return NS_NewSingletonEnumerator(targets, property);
     }
   }
   if(!*targets)
@@ -2375,11 +2369,7 @@ NS_IMETHODIMP nsMsgFlatFolderDataSource::GetTargets(nsIRDFResource* source,
       return NS_NewArrayEnumerator(targets, allFolders);
     }
   }
-  nsSingletonEnumerator* cursor = new nsSingletonEnumerator(property);
-  if (cursor == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*targets = cursor);
-  return NS_OK;
+  return NS_NewSingletonEnumerator(targets, property);
 }
 
 

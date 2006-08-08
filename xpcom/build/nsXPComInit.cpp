@@ -91,8 +91,6 @@
 #include "nsEnvironment.h"
 #include "nsVersionComparatorImpl.h"
 
-#include "nsEmptyEnumerator.h"
-
 #include "nsILocalFile.h"
 #include "nsLocalFile.h"
 #if defined(XP_UNIX) || defined(XP_OS2)
@@ -829,8 +827,6 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 #endif
 
     ShutdownSpecialSystemDirectory();
-
-    EmptyEnumeratorImpl::Shutdown();
 
     NS_PurgeAtomTable();
 

@@ -52,6 +52,7 @@ native nsISupportsArrayEnumFunc(nsISupportsArrayEnumFunc);
 %{C++
 
 class nsIBidirectionalEnumerator;
+class nsISupportsArray;
  
 #define NS_SUPPORTSARRAY_CID                         \
 { /* bda17d50-0d6b-11d3-9331-00104ba0fd40 */         \
@@ -66,6 +67,9 @@ class nsIBidirectionalEnumerator;
 // Enumerator callback function. Return PR_FALSE to stop
 typedef PRBool (*nsISupportsArrayEnumFunc)(nsISupports* aElement, void *aData);
  
+NS_COM nsresult
+NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
+                      nsISupportsArray* array);
 %}
 
 [scriptable, uuid(791eafa0-b9e6-11d1-8031-006008159b5a)]

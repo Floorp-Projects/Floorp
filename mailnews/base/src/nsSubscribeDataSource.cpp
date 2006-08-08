@@ -266,13 +266,7 @@ nsSubscribeDataSource::GetChildren(nsISubscribableServer *aServer,
     // GetChildren() can fail if there are no children
     if (NS_FAILED(rv)) return rv;
 
-    nsISimpleEnumerator* result = new nsArrayEnumerator(children);
-    if (!result) return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(result);
-    *aResult = result;
-
-    return NS_OK;
+    return NS_NewArrayEnumerator(aResult, children);
 }
 
 NS_IMETHODIMP
@@ -324,33 +318,23 @@ nsSubscribeDataSource::GetTargets(nsIRDFResource *source,
         rv = mRDFService->GetLiteral(leafNameStr, getter_AddRefs(leafName));
         NS_ENSURE_SUCCESS(rv,rv);
 
-        nsISimpleEnumerator* result = new nsSingletonEnumerator(leafName);
-        if (!result) return NS_ERROR_OUT_OF_MEMORY;
-
-        NS_IF_ADDREF(*targets = result);
-        return NS_OK;
+        return NS_NewSingletonEnumerator(targets, leafName);
     }
     else if (property == kNC_Subscribed.get()) {
         PRBool isSubscribed;
         rv = server->IsSubscribed(relativePath, &isSubscribed);
         NS_ENSURE_SUCCESS(rv,rv);
 
-        nsISimpleEnumerator* result = new nsSingletonEnumerator(isSubscribed ? kTrueLiteral : kFalseLiteral);
-        if (!result) return NS_ERROR_OUT_OF_MEMORY;
-
-        NS_IF_ADDREF(*targets = result);
-        return NS_OK;
+        return NS_NewSingletonEnumerator(targets,
+                 isSubscribed ? kTrueLiteral : kFalseLiteral);
     }
     else if (property == kNC_Subscribable.get()) {
         PRBool isSubscribable;
         rv = server->IsSubscribable(relativePath, &isSubscribable);
         NS_ENSURE_SUCCESS(rv,rv);
 
-        nsISimpleEnumerator* result = new nsSingletonEnumerator(isSubscribable ? kTrueLiteral : kFalseLiteral);
-        if (!result) return NS_ERROR_OUT_OF_MEMORY;
-
-        NS_IF_ADDREF(*targets = result);
-        return NS_OK;
+        return NS_NewSingletonEnumerator(targets,
+                 isSubscribable ? kTrueLiteral : kFalseLiteral);
     }
     else if (property == kNC_Name.get()) {
         nsCOMPtr<nsIRDFLiteral> name;
@@ -358,11 +342,7 @@ nsSubscribeDataSource::GetTargets(nsIRDFResource *source,
                                      getter_AddRefs(name));
         NS_ENSURE_SUCCESS(rv,rv);
 
-        nsISimpleEnumerator* result = new nsSingletonEnumerator(name);
-        if (!result) return NS_ERROR_OUT_OF_MEMORY;
-
-        NS_IF_ADDREF(*targets = result);
-        return NS_OK;
+        return NS_NewSingletonEnumerator(targets, name);
     }
     else if (property == kNC_ServerType.get()) {
         nsXPIDLCString serverTypeStr;
@@ -374,11 +354,7 @@ nsSubscribeDataSource::GetTargets(nsIRDFResource *source,
                                      getter_AddRefs(serverType));
         NS_ENSURE_SUCCESS(rv,rv);
 
-        nsISimpleEnumerator* result = new nsSingletonEnumerator(serverType);
-        if (!result) return NS_ERROR_OUT_OF_MEMORY;
-
-        NS_IF_ADDREF(*targets = result);
-        return NS_OK;
+        return NS_NewSingletonEnumerator(targets, serverType);
     }
     else {
         // do nothing
@@ -647,12 +623,7 @@ nsSubscribeDataSource::ArcLabelsOut(nsIRDFResource *source,
         array->AppendElement(kNC_Child);
     }
 
-    nsISimpleEnumerator* result = new nsArrayEnumerator(array);
-    if (! result) return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(result);
-    *labels = result;
-    return NS_OK;
+    return NS_NewArrayEnumerator(labels, array);
 }
 
 NS_IMETHODIMP

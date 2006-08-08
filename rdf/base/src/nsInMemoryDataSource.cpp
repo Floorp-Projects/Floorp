@@ -1789,12 +1789,7 @@ InMemoryDataSource::GetAllResources(nsISimpleEnumerator** aResult)
     // Enumerate all of our entries into an nsISupportsArray.
     PL_DHashTableEnumerate(&mForwardArcs, ResourceEnumerator, values.get());
 
-    *aResult = new nsArrayEnumerator(values);
-    if (! *aResult)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*aResult);
-    return NS_OK;
+    return NS_NewArrayEnumerator(aResult, values);
 }
 
 NS_IMETHODIMP
