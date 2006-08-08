@@ -522,7 +522,7 @@
       <xul:spacer class="addonsmessage-spacer"/>
       <xul:hbox hidden="true" anonid="messageClose" align="center" pack="end"
                 class="addonsmessage-closebutton-box">
-        <xul:toolbarbutton ondblclick="event.stopProgagation();"
+        <xul:toolbarbutton ondblclick="event.stopPropagation();"
                            anonid="closeButton"
                            class="addonsmessage-close-button close-button"
                            tooltiptext="&closeMessage.tooltip;"/>
