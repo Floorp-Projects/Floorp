@@ -1837,10 +1837,6 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
    */
   function moveFile(file, destination) {
     try {
-      //XXXrstrong - Mac OS X is not reliably creating the destination
-      // directory when using moveTo (bug 344276 and bug 347778).
-      if (!destination.exists())
-        destination.create(nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
       var oldFile = file.clone();
       file.moveTo(destination, file.leafName);
       movedFiles.push({ oldFile: oldFile, newFile: file });
