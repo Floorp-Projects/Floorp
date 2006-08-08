@@ -224,15 +224,19 @@ calCompositeCalendar.prototype = {
     },
 
     setDefaultCalendar: function (cal, usePref) {
-        if (this.mDefaultCalendar && this.mDefaultCalendar.uri.equals(cal.uri))
+        // don't do anything if the passed calendar is the default calendar!
+        if (this.mDefaultCalendar && cal && this.mDefaultCalendar.uri.equals(cal.uri))
             return;
         if (usePref && this.mPrefPrefix) {
             if (this.mDefaultCalendar) {
                 getCalendarManager().deleteCalendarPref(this.mDefaultCalendar,
                                                 this.mDefaultPref);
             }
-            getCalendarManager().setCalendarPref(cal, this.mDefaultPref,
-                                         "true");
+            // if not null set the new calendar as default in the preferences
+            if (cal)  {
+                getCalendarManager().setCalendarPref(cal, this.mDefaultPref,
+                                                     "true");
+            }
         }
         this.mDefaultCalendar = cal;
         this.notifyObservers("onDefaultCalendarChanged", [cal]);
