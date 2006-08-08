@@ -1336,6 +1336,7 @@ NS_INTERFACE_MAP_BEGIN(nsExternalAppHandler)
    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
    NS_INTERFACE_MAP_ENTRY(nsIHelperAppLauncher)   
    NS_INTERFACE_MAP_ENTRY(nsICancelable)
+   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
@@ -1345,9 +1346,9 @@ nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
                                            PRUint32 aReason)
 : mMimeInfo(aMIMEInfo)
 , mWindowContext(aWindowContext)
+, mWindowToClose(nsnull)
 , mSuggestedFileName(aSuggestedFilename)
 , mCanceled(PR_FALSE)
-, mHasRefreshHeader(PR_FALSE)
 , mShouldCloseWindow(PR_FALSE)
 , mReceivedDispositionInfo(PR_FALSE)
 , mStopRequestIssued(PR_FALSE)
@@ -1651,6 +1652,24 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
 
   // retarget all load notifications to our docloader instead of the original window's docloader...
   RetargetLoadNotifications(request);
+
+  // Check to see if there is a refresh header on the original channel.
+  if (mOriginalChannel) {
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mOriginalChannel));
+    if (httpChannel) {
+      nsCAutoString refreshHeader;
+      httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("refresh"),
+                                     refreshHeader);
+      if (!refreshHeader.IsEmpty()) {
+        mShouldCloseWindow = PR_FALSE;
+      }
+    }
+  }
+
+  // Close the underlying DOMWindow if there is no refresh header
+  // and it was opened specifically for the download
+  MaybeCloseWindow();
+
   nsCOMPtr<nsIEncodedChannel> encChannel = do_QueryInterface( aChannel );
   if (encChannel) 
   {
@@ -2084,10 +2103,6 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
       }
       mWebProgressListener->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, NS_OK);
     }
-
-    // Close the underlying DOMWindow if there is no refresh header
-    // and it was opened specifically for the download
-    MaybeCloseWindow();
   }
   
   return rv;
@@ -2474,10 +2489,6 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel(nsresult aReason)
   NS_ENSURE_ARG(NS_FAILED(aReason));
   // XXX should not ignore the reason
 
-  // Close the underlying DOMWindow if there is no refresh header
-  // and it was opened specifically for the download
-  MaybeCloseWindow();
-
   mCanceled = PR_TRUE;
   // Break our reference cycle with the helper app dialog (set up in
   // OnStartRequest)
@@ -2524,10 +2535,7 @@ void nsExternalAppHandler::ProcessAnyRefreshTags()
    {
      nsCOMPtr<nsIRefreshURI> refreshHandler (do_GetInterface(mWindowContext));
      if (refreshHandler) {
-        nsresult rv = refreshHandler->SetupRefreshURI(mOriginalChannel);
-        if (rv == NS_REFRESHURI_HEADER_FOUND) {
-          mHasRefreshHeader = PR_TRUE;
-        }
+        refreshHandler->SetupRefreshURI(mOriginalChannel);
      }
      mOriginalChannel = nsnull;
    }
@@ -2566,15 +2574,42 @@ nsresult nsExternalAppHandler::MaybeCloseWindow()
   nsCOMPtr<nsIDOMWindowInternal> internalWindow = do_QueryInterface(window);
   NS_ENSURE_STATE(internalWindow);
 
-  // Only close the page if there is no refresh header and if the window
-  // was opened specifically for the download
-  if (!mHasRefreshHeader && mShouldCloseWindow) {
-    internalWindow->Close();
+  if (mShouldCloseWindow) {
+    // Reset the window context to the opener window so that the dependent
+    // dialogs have a parent
+    nsCOMPtr<nsIDOMWindowInternal> opener;
+    internalWindow->GetOpener(getter_AddRefs(opener));
+
+    if (opener) {
+      mWindowContext = do_GetInterface(opener);
+
+      // Now close the old window.  Do it on a timer so that we don't run
+      // into issues trying to close the window before it has fully opened.
+      NS_ASSERTION(!mTimer, "mTimer was already initialized once!");
+      mTimer = do_CreateInstance("@mozilla.org/timer;1");
+      if (!mTimer) {
+        return NS_ERROR_FAILURE;
+      }
+
+      mTimer->InitWithCallback(this, 0, nsITimer::TYPE_ONE_SHOT);
+      mWindowToClose = internalWindow;
+    }
   }
 
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsExternalAppHandler::Notify(nsITimer* timer)
+{
+  NS_ASSERTION(mWindowToClose, "No window to close after timer fired");
+
+  mWindowToClose->Close();
+  mWindowToClose = nsnull;
+  mTimer = nsnull;
+
+  return NS_OK;
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The following section contains our nsIMIMEService implementation and related methods.
 //

@@ -65,6 +65,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILocalFile.h"
 #include "nsIChannel.h"
+#include "nsITimer.h"
 
 #include "nsIRDFDataSource.h"
 #include "nsIRDFResource.h"
@@ -78,6 +79,7 @@ class nsExternalAppHandler;
 class nsIMIMEInfo;
 class nsIRDFService;
 class nsITransfer;
+class nsIDOMWindowInternal;
 
 /**
  * The helper app service. Responsible for handling content that Mozilla
@@ -318,7 +320,8 @@ protected:
  * data using a helper app.
  */
 class nsExternalAppHandler : public nsIStreamListener,
-                             public nsIHelperAppLauncher
+                             public nsIHelperAppLauncher,
+                             public nsITimerCallback
 {
 public:
   NS_DECL_ISUPPORTS
@@ -326,6 +329,7 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSIHELPERAPPLAUNCHER
   NS_DECL_NSICANCELABLE
+  NS_DECL_NSITIMERCALLBACK
 
   /**
    * @param aMIMEInfo      MIMEInfo object, representing the type of the
@@ -353,7 +357,15 @@ protected:
    */
   nsCOMPtr<nsIMIMEInfo> mMimeInfo;
   nsCOMPtr<nsIOutputStream> mOutStream; /**< output stream to the temp file */
-  nsCOMPtr<nsIInterfaceRequestor> mWindowContext; 
+  nsCOMPtr<nsIInterfaceRequestor> mWindowContext;
+
+  /**
+   * Used to close the window on a timer, to avoid any exceptions that are
+   * thrown if we try to close the window before it's fully loaded.
+   */
+  nsCOMPtr<nsIDOMWindowInternal> mWindowToClose;
+  nsCOMPtr<nsITimer> mTimer;
+
   /**
    * The following field is set if we were processing an http channel that had
    * a content disposition header which specified the SUGGESTED file name we
@@ -366,12 +378,6 @@ protected:
    * application before we finished saving the data to a temp file.
    */
   PRPackedBool mCanceled;
-
-  /**
-   * This flag is set if a refresh header was found.  In this case, we
-   * don't want to close the dom window after handling the content.
-   */
-  PRPackedBool mHasRefreshHeader;
 
   /**
    * This is set based on whether the channel indicates that a new window
