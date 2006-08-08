@@ -32,7 +32,7 @@ nsArrayEnumerator::~nsArrayEnumerator(void)
     NS_IF_RELEASE(mValueArray);
 }
 
-NS_IMPL_ISUPPORTS(nsArrayEnumerator, nsISimpleEnumerator::GetIID());
+NS_IMPL_ISUPPORTS1(nsArrayEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsArrayEnumerator::HasMoreElements(PRBool* aResult)
@@ -92,7 +92,7 @@ nsSingletonEnumerator::~nsSingletonEnumerator()
     NS_IF_RELEASE(mValue);
 }
 
-NS_IMPL_ISUPPORTS(nsSingletonEnumerator, nsISimpleEnumerator::GetIID());
+NS_IMPL_ISUPPORTS1(nsSingletonEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsSingletonEnumerator::HasMoreElements(PRBool* aResult)
@@ -153,7 +153,7 @@ nsAdapterEnumerator::~nsAdapterEnumerator()
 }
 
 
-NS_IMPL_ISUPPORTS(nsAdapterEnumerator, nsISimpleEnumerator::GetIID());
+NS_IMPL_ISUPPORTS1(nsAdapterEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsAdapterEnumerator::HasMoreElements(PRBool* aResult)
