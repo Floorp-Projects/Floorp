@@ -860,7 +860,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetLinkIndex(PRInt32 aCharIndex, PRInt32 *a
 
   nsCOMPtr<nsIAccessible> accessible;
 
-  while (NextChild(accessible) && characterCount < aCharIndex) {
+  while (NextChild(accessible) && characterCount <= aCharIndex) {
     PRUint32 role = Role(accessible);
     if (role == ROLE_TEXT_LEAF) {
       nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
