@@ -226,13 +226,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       // expects a length.
       // To accomodate this "erronous" value, we'll insert a proxy
       // object between ourselves and the actual value object:
-      nsAutoString attributeName;
-      aAttribute->ToString(attributeName);
-      const nsAFlatString& attributeValue = PromiseFlatString(aValue);
-      const PRUnichar *strings[] = { attributeName.get(), attributeValue.get() };
-      nsSVGUtils::ReportToConsole(GetOwnerDoc(),
-                                  "AttributeParseWarning",
-                                  strings, NS_ARRAY_LENGTH(strings));
+      ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
       nsCOMPtr<nsISVGValue> proxy;
       nsresult rv =
         NS_CreateSVGStringProxyValue(svg_value, getter_AddRefs(proxy));
@@ -267,6 +261,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
         nsresult rv = lengthInfo.mLengths[i].SetBaseValueString(aValue, this,
                                                                 PR_FALSE);
         if (NS_FAILED(rv)) {
+          ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
           return PR_FALSE;
         }
         aResult.SetTo(aValue);
@@ -281,6 +276,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
         nsresult rv = numberInfo.mNumbers[i].SetBaseValueString(aValue, this,
                                                                 PR_FALSE);
         if (NS_FAILED(rv)) {
+          ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
           return PR_FALSE;
         }
         aResult.SetTo(aValue);
@@ -995,3 +991,16 @@ nsSVGElement::GetAnimatedNumberValues(float *aFirst, ...)
   va_end(args);
 }
 
+nsresult
+nsSVGElement::ReportAttributeParseFailure(nsIDocument* aDocument,
+                                          nsIAtom* aAttribute,
+                                          const nsAString& aValue)
+{
+  nsAutoString attributeName;
+  aAttribute->ToString(attributeName);
+  const nsAFlatString& attributeValue = PromiseFlatString(aValue);
+  const PRUnichar *strings[] = { attributeName.get(), attributeValue.get() };
+  return nsSVGUtils::ReportToConsole(aDocument,
+                                     "AttributeParseWarning",
+                                     strings, NS_ARRAY_LENGTH(strings));
+}
