@@ -1583,13 +1583,7 @@ InternetSearchDataSource::ArcLabelsOut(nsIRDFResource *source,
 
             array->AppendElement(mNC_Child);
 
-            nsISimpleEnumerator* result = new nsArrayEnumerator(array);
-            if (! result)
-                return NS_ERROR_OUT_OF_MEMORY;
-
-            NS_ADDREF(result);
-            *labels = result;
-            return(NS_OK);
+            return NS_NewArrayEnumerator(labels, array);
   }
 
   if ((isSearchCategoryURI(source)) && (categoryDataSource))
@@ -1776,12 +1770,7 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
   // always append a separator last (due to aggregation of commands from multiple datasources)
   cmdArray->AppendElement(mNC_BookmarkSeparator);
 
-  nsISimpleEnumerator   *result = new nsArrayEnumerator(cmdArray);
-  if (!result)
-    return(NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(result);
-  *commands = result;
-  return(NS_OK);
+  return NS_NewArrayEnumerator(commands, cmdArray);
 }
 
 

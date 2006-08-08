@@ -4439,13 +4439,7 @@ nsBookmarksService::GetAllCmds(nsIRDFResource* source,
     // always append a separator last (due to aggregation of commands from multiple datasources)
     cmdArray->AppendElement(kNC_BookmarkSeparator);
 
-    nsISimpleEnumerator     *result = new nsArrayEnumerator(cmdArray);
-    if (!result)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(result);
-    *commands = result;
-    return NS_OK;
+    return NS_NewArrayEnumerator(commands, cmdArray);
 }
 
 NS_IMETHODIMP
