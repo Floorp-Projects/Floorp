@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 //-----------------------------------------------------------------------------
-var bug = 347593;
+var bug = 341815;
 var summary = 'Close hook crash';
 var actual = 'No Crash';
 var expect = 'No Crash';
