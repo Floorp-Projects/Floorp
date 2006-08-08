@@ -46,7 +46,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsCOMPtr.h"
 
-class NS_COM nsSimpleArrayEnumerator : public nsISimpleEnumerator
+class nsSimpleArrayEnumerator : public nsISimpleEnumerator
 {
 public:
     // nsISupports interface
