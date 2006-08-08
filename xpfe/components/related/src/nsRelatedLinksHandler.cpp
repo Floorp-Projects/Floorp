@@ -894,9 +894,6 @@ RelatedLinksHandlerImpl::ArcLabelsOut(nsIRDFResource *aSource,
 	rv = NS_NewISupportsArray(getter_AddRefs(array));
 	if (NS_FAILED(rv)) return rv;
 
-	nsISimpleEnumerator* result = new nsArrayEnumerator(array);
-	if (! result)	return(NS_ERROR_OUT_OF_MEMORY);
-
 	PRBool	hasValueFlag = PR_FALSE;
 	if ((aSource == kNC_RelatedLinksRoot) || 
 		(NS_SUCCEEDED(rv = mInner->HasAssertion(aSource, kRDF_type,
@@ -905,9 +902,8 @@ RelatedLinksHandlerImpl::ArcLabelsOut(nsIRDFResource *aSource,
 	{
 		array->AppendElement(kNC_Child);
 	}
-	NS_ADDREF(result);
-	*aLabels = result;
-	return(NS_OK);
+
+	return NS_NewArrayEnumerator(aLabels, array);
 }
 
 
