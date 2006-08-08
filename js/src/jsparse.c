@@ -628,6 +628,7 @@ HasFinalReturn(JSParseNode *pn)
         return ENDS_IN_RETURN;
 
       case TOK_COLON:
+      case TOK_LEXICALSCOPE:
         return HasFinalReturn(pn->pn_expr);
 
       case TOK_THROW:
