@@ -87,30 +87,6 @@ extern "C" NS_COM nsresult
 NS_NewSingletonEnumerator(nsISimpleEnumerator* *result,
                           nsISupports* singleton);
 
-////////////////////////////////////////////////////////////////////////////////
-
-class NS_COM nsAdapterEnumerator : public nsISimpleEnumerator
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    // nsISimpleEnumerator methods
-    NS_IMETHOD HasMoreElements(PRBool* aResult);
-    NS_IMETHOD GetNext(nsISupports** aResult);
-
-    nsAdapterEnumerator(nsIEnumerator* aEnum);
-    virtual ~nsAdapterEnumerator();
-
-protected:
-    nsIEnumerator* mEnum;
-    nsISupports*   mCurrent;
-    PRBool mStarted;
-};
-
-extern "C" NS_COM nsresult
-NS_NewAdapterEnumerator(nsISimpleEnumerator* *result,
-                        nsIEnumerator* enumerator);
-
 ////////////////////////////////////////////////////////////////////////
 
 #endif /* nsEnumeratorUtils_h__ */
