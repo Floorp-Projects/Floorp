@@ -74,7 +74,7 @@ if (empty($db->record)) {
 //}
 
 // Set a no-cache header to make sure this page is never cached.
-header('Cache-control: no-cache');
+header('Cache-Control: no-cache');
 header('Location: '.$uri);
 exit;
 ?>
