@@ -51,10 +51,20 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
+  function generator()
+  {
+    try {
+      yield [];
+    } finally {
+      make_iterator();
+    }
+  }
+
   function make_iterator()
   {
-    var iter = (function() { yield 0; })();
-    iter.close = make_iterator;
+    var iter = generator();
+    iter.next();
+    iter = null;
     if (typeof alert != 'undefined')
     {
       alert(1);
@@ -63,6 +73,7 @@ function test()
 
   make_iterator();
 
+  // Trigger GC through the branch callback.
   for (var i = 0; i != 50000; ++i) {
     var x = {};
   }
