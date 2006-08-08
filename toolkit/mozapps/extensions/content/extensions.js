@@ -316,11 +316,6 @@ function showView(aView) {
       break;
   }
 
-  AddonsViewBuilder.updateView(types, "richlistitem", bindingList, null);
-
-  if (aView == "updates" || aView == "installs")
-    gExtensionsView.selectedItem = gExtensionsView.children[0];
-
   var isThemes = aView == "themes";
 
   var getMore = document.getElementById("getMore");
@@ -360,6 +355,11 @@ function showView(aView) {
   document.getElementById("continueDialogButton").hidden = !showContinue;
   document.getElementById("themePreviewArea").hidden = !isThemes;
   document.getElementById("themeSplitter").hidden = !isThemes;
+
+  AddonsViewBuilder.updateView(types, "richlistitem", bindingList, null);
+
+  if (aView == "updates" || aView == "installs")
+    gExtensionsView.selectedItem = gExtensionsView.children[0];
 
   if (showSkip) {
     var button = document.getElementById("installUpdatesAllButton");
