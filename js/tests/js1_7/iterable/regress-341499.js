@@ -44,8 +44,21 @@ var expect = 'No Crash';
 printBugNumber (bug);
 printStatus (summary);
 
-var iter = (function() { yield 0; })();
-iter.close = function() { return []; }
+var someGlobal;
+
+function generator()
+{
+  try {
+    yield 0;
+  } finally {
+    someGlobal = [];
+  }
+}
+
+var iter = generator();
+iter.next();
+iter = null;
+
 gc();
 
 reportCompare(expect, actual, summary);

@@ -44,9 +44,16 @@ var expect = 'No Crash';
 printBugNumber (bug);
 printStatus (summary);
 
-function gen(i) { yield i; }
+function gen(i) {
+  try {
+    yield i;
+  } finally {
+    name_that_does_not_exist_in_the_scope_chain = 1;
+  }
+}
+
 var iter = gen(1);
-iter.close = function() { name_that_does_not_exist_in_the_scope_chain = 1; }
+iter.next();
 iter = null;
 gc();
 
