@@ -107,13 +107,14 @@
             else
               newitem.type = "warning";
 
+            if (!insertPos)
+              this._showNotification(newitem, true);
+
             // Fire event for accessibility APIs
             var event = document.createEvent("Events");
             event.initEvent("AlertActive", true, true);
-            this.dispatchEvent(event);
+            newitem.dispatchEvent(event);
 
-            if (!insertPos)
-              this._showNotification(newitem, true);
             return newitem;
           ]]>
         </body>
