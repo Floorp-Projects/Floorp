@@ -425,16 +425,11 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
          */
     case nsIAccessibleEvent::EVENT_MENUSTART:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_MENUSTART\n"));
-        atk_focus_tracker_notify(accWrap->GetAtkObject());
-        g_signal_emit_by_name(accWrap->GetAtkObject(),
-                              "selection_changed");
         rv = NS_OK;
         break;
 
     case nsIAccessibleEvent::EVENT_MENUEND:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_MENUEND\n"));
-        g_signal_emit_by_name(accWrap->GetAtkObject(),
-                              "selection_changed");
         rv = NS_OK;
         break;
 

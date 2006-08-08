@@ -417,8 +417,10 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
       // stays outside on that binding parent.
       nsCOMPtr<nsIDOMEventTarget> domEventTarget;
       nsevent->GetOriginalTarget(getter_AddRefs(domEventTarget));
-      nsCOMPtr<nsIDOMNode> realFocusedNode = do_QueryInterface(domEventTarget);
-      mCaretAccessible->AttachNewSelectionListener(realFocusedNode);
+      nsCOMPtr<nsIDOMNode> realFocusedNode(do_QueryInterface(domEventTarget));
+      if (realFocusedNode) {
+        mCaretAccessible->AttachNewSelectionListener(realFocusedNode);
+      }
     }
   }
 
@@ -498,7 +500,7 @@ void nsRootAccessible::FireCurrentFocusEvent()
                                                      NS_LITERAL_STRING("Events"),
                                                      getter_AddRefs(event))) &&
         NS_SUCCEEDED(event->InitEvent(NS_LITERAL_STRING("focus"), PR_TRUE, PR_TRUE))) {
-      HandleEvent(event);
+      HandleEventWithTarget(event, focusedNode);
     }
   }
 }
@@ -514,7 +516,13 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   GetTargetNode(aEvent, getter_AddRefs(targetNode));
   if (!targetNode)
     return NS_ERROR_FAILURE;
+  
+  return HandleEventWithTarget(aEvent, targetNode);
+}
 
+NS_IMETHODIMP nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
+                                              nsCOMPtr<nsIDOMNode> targetNode)
+{
   nsAutoString eventType;
   aEvent->GetType(eventType);
   nsAutoString localName;
@@ -656,25 +664,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   }
   else 
 #endif
-  if (eventType.LowerCaseEqualsLiteral("dommenuitemactive")) {
-    nsCOMPtr<nsIAccessible> containerAccessible = accessible;
-    PRUint32 containerState = 0;
-    do {
-      nsIAccessible *tempAccessible = containerAccessible;
-      tempAccessible->GetParent(getter_AddRefs(containerAccessible));
-      if (!containerAccessible) {
-        break;
-      }
-      containerAccessible->GetFinalState(&containerState);
-    }
-    while ((containerState & STATE_HASPOPUP) == 0);
-
-    // Only fire focus event for DOMMenuItemActive is not inside collapsed popup
-    if (0 == (containerState & STATE_COLLAPSED)) {
-      FireAccessibleFocusEvent(accessible, targetNode, aEvent, PR_TRUE);
-    }
-  }
-  else if (eventType.LowerCaseEqualsLiteral("focus")) {
+  if (eventType.LowerCaseEqualsLiteral("focus")) {
     nsCOMPtr<nsIDOMXULSelectControlElement> selectControl =
       do_QueryInterface(targetNode);
     // Send focus to individual radio button or selected item
@@ -739,12 +729,6 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       FireAccessibleFocusEvent(accessible, targetNode, aEvent);
     }
   }
-  else if (eventType.LowerCaseEqualsLiteral("dommenubaractive"))
-    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUSTART, accessible, nsnull);
-  else if (eventType.LowerCaseEqualsLiteral("dommenubarinactive")) {
-    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUEND, accessible, nsnull);
-    FireCurrentFocusEvent();
-  }
   else if (eventType.LowerCaseEqualsLiteral("popuphiding")) {
     // If accessible focus was inside popup that closes,
     // then restore it to true current focus.
@@ -770,8 +754,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   }
 #else
   AtkStateChange stateData;
-  if (eventType.LowerCaseEqualsLiteral("focus") || 
-           eventType.LowerCaseEqualsLiteral("dommenuitemactive")) {
+  if (eventType.LowerCaseEqualsLiteral("focus")) {
     if (treeItemAccessible) { // use focused treeitem
       privAcc = do_QueryInterface(treeItemAccessible);
       privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
@@ -863,6 +846,33 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     //FireAccessibleFocusEvent(accessible, targetNode);  // Not yet used in ATK
   }
 #endif
+  else if (eventType.LowerCaseEqualsLiteral("dommenuitemactive")) {
+    nsCOMPtr<nsIAccessible> containerAccessible;
+    accessible->GetParent(getter_AddRefs(containerAccessible));
+    NS_ENSURE_TRUE(containerAccessible, NS_OK);
+    if (Role(containerAccessible) == ROLE_MENUBAR) {
+      // It is top level menuitem
+      // Only fire focus event if it is not collapsed
+      if (State(accessible) & STATE_COLLAPSED)
+        return NS_OK;
+    }
+    else {
+      // It is not top level menuitem
+      // Only fire focus event if it is not inside collapsed popup
+      if (State(containerAccessible) & STATE_COLLAPSED)
+        return NS_OK;
+    }
+    FireAccessibleFocusEvent(accessible, targetNode, aEvent, PR_TRUE);
+  }
+  else if (eventType.LowerCaseEqualsLiteral("dommenubaractive")) {
+    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUSTART,
+                              accessible, nsnull);
+  }
+  else if (eventType.LowerCaseEqualsLiteral("dommenubarinactive")) {
+    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUEND,
+                              accessible, nsnull);
+    FireCurrentFocusEvent();
+  }
   return NS_OK;
 }
 

@@ -727,6 +727,7 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
     MarkAsGenerated();
 
     mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::open, NS_LITERAL_STRING("true"), PR_TRUE);
+    FireDOMEventSynch(NS_LITERAL_STRING("DOMMenuItemActive"));
   }
   else mContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::open, PR_TRUE);
   OpenMenuInternal(aActivateFlag);
