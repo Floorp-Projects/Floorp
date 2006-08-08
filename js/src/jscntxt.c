@@ -386,9 +386,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
             JS_MaybeGC(cx);
     }
 
-    if (last || mode == JSDCM_FORCE_GC)
-        JS_ArenaFinish();
-
     /* Free the stuff hanging off of cx. */
     JS_FinishArenaPool(&cx->stackPool);
     JS_FinishArenaPool(&cx->tempPool);

@@ -70,7 +70,6 @@ struct JSArenaStats {
     char        *name;          /* name for debugging */
     uint32      narenas;        /* number of arenas in pool */
     uint32      nallocs;        /* number of JS_ARENA_ALLOCATE() calls */
-    uint32      nreclaims;      /* number of reclaims from freeArenas */
     uint32      nmallocs;       /* number of malloc() calls */
     uint32      ndeallocs;      /* number of lifetime deallocations */
     uint32      ngrows;         /* number of JS_ARENA_GROW() calls */
@@ -234,22 +233,13 @@ extern JS_PUBLIC_API(void)
 JS_FinishArenaPool(JSArenaPool *pool);
 
 /*
- * Finish using arenas, freeing all memory associated with them except for
- * any locks needed for thread safety.
+ * Deprecated do-nothing function.
  */
 extern JS_PUBLIC_API(void)
 JS_ArenaFinish(void);
 
 /*
- * Free any locks or other memory needed for thread safety, just before
- * shutting down.  At that point, we must be called by a single thread.
- *
- * After shutting down, the next thread to call JS_InitArenaPool must not
- * race with any other thread.  Once a pool has been initialized, threads
- * may safely call jsarena.c functions on thread-local pools.  The upshot
- * is that pools are per-thread, but the underlying global freelist is
- * thread-safe, provided that both the first pool initialization and the
- * shut-down call are single-threaded.
+ * Deprecated do-nothing function.
  */
 extern JS_PUBLIC_API(void)
 JS_ArenaShutDown(void);
