@@ -2319,7 +2319,7 @@ interrupt:
                 ok = JS_FALSE;
                 goto out;
             }
-            withobj = js_NewWithObject(cx, obj, obj2, sp - fp->spbase);
+            withobj = js_NewWithObject(cx, obj, obj2, sp - fp->spbase - 1);
             if (!withobj) {
                 ok = JS_FALSE;
                 goto out;
