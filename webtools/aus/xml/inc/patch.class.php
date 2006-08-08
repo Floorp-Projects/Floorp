@@ -173,13 +173,29 @@ class Patch extends AUS_Object {
 
         // If a specific update exists for the specified channel, it takes priority over the branch update.
         if (!empty($channel) && $this->setPath($product,$platform,$locale,$branchVersion,$build,3,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
+            $this->setSnippet($this->path); 
+            $this->setVar('isPatch',true,true);
+            return true;
+        } 
+
+        // If our channel matches our regexp for fallback channels, let's try to fallback.
+        if (preg_match('/^(release|beta)(test)?\-cck\-\w+$/',$channel)) {
+
+            // Partner fallback channel to be used if the partner-specific update doesn't exist or work.
+            $buf = array();
+            $buf = split('-cck-',$channel);
+            $fallbackChannel = $buf[0];
+        
+            // Do a check for the fallback update.  If we find a valid fallback update, we can offer it. 
+            if (!empty($fallbackChannel) && $this->setPath($product,$platform,$locale,$branchVersion,$build,3,$fallbackChannel) && file_exists($this->path) && filesize($this->path) > 0) {
                 $this->setSnippet($this->path); 
                 $this->setVar('isPatch',true,true);
                 return true;
+            }
         }
 
         // Otherwise, if it is a complete patch and a nightly channel, force the complete update to take the user to the latest build.
-        elseif ($this->isComplete() && $this->isNightlyChannel($channel)) {
+        if ($this->isComplete() && $this->isNightlyChannel($channel)) {
 
             // Get the latest build that has an update for this branch.
             $latestCompleteBuild = $this->getLatestCompleteBuild($product,$branchVersion,$platform);
