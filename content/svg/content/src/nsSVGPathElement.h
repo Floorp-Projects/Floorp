@@ -121,7 +121,7 @@ public:
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(cairo_t *aCtx);
 
-  virtual nsSVGFlattenedPath *GetFlattenedPath();
+  virtual nsSVGFlattenedPath *GetFlattenedPath(nsIDOMSVGMatrix *aMatrix);
 
 protected:
 
