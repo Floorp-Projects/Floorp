@@ -74,7 +74,7 @@ REQUIRES	+= widget
 endif
 
 ifdef MOZ_PLACES
-REQUIRES	+= places browsercomps
+REQUIRES	+= places toolkitcomps
 else
 REQUIRES	+= bookmarks
 endif
