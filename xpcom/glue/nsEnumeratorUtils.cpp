@@ -65,6 +65,18 @@ nsArrayEnumerator::GetNext(nsISupports** aResult)
     return NS_OK;
 }
 
+extern "C" NS_COM nsresult
+NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
+                      nsISupportsArray* array)
+{
+    nsArrayEnumerator* enumer = new nsArrayEnumerator(array);
+    if (enumer == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(enumer);
+    *result = enumer; 
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 nsSingletonEnumerator::nsSingletonEnumerator(nsISupports* aValue)
@@ -111,6 +123,17 @@ nsSingletonEnumerator::GetNext(nsISupports** aResult)
     return NS_OK;
 }
 
+extern "C" NS_COM nsresult
+NS_NewSingletonEnumerator(nsISimpleEnumerator* *result,
+                          nsISupports* singleton)
+{
+    nsSingletonEnumerator* enumer = new nsSingletonEnumerator(singleton);
+    if (enumer == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(enumer);
+    *result = enumer; 
+    return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -131,7 +154,6 @@ nsAdapterEnumerator::~nsAdapterEnumerator()
 
 
 NS_IMPL_ISUPPORTS(nsAdapterEnumerator, nsISimpleEnumerator::GetIID());
-
 
 NS_IMETHODIMP
 nsAdapterEnumerator::HasMoreElements(PRBool* aResult)
@@ -188,5 +210,19 @@ nsAdapterEnumerator::GetNext(nsISupports** aResult)
     mCurrent = 0;
     return NS_OK;
 }
+
+extern "C" NS_COM nsresult
+NS_NewAdapterEnumerator(nsISimpleEnumerator* *result,
+                        nsIEnumerator* enumerator)
+{
+    nsAdapterEnumerator* enumer = new nsAdapterEnumerator(enumerator);
+    if (enumer == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(enumer);
+    *result = enumer; 
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 
