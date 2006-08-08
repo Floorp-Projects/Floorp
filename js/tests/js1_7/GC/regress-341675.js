@@ -45,11 +45,19 @@ printStatus (summary);
 
 var globalToPokeGC = {};
 
+function generator()
+{
+  try {
+    yield [];
+  } finally {
+    make_iterator();
+  }
+}
+
 function make_iterator()
 {
-  var iter = (function() { yield 0; })();
-  iter.close = make_iterator;
-  globalToPokeGC = {};
+  var iter = generator();
+  iter.next();
 }
 
 make_iterator();
