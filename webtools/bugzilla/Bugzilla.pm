@@ -266,7 +266,7 @@ sub dbh {
 sub batch {
     my $class = shift;
     my $newval = shift;
-    if ($newval) {
+    if (defined $newval) {
         request_cache()->{batch} = $newval;
     }
     return request_cache()->{batch} || 0;
