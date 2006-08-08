@@ -10,7 +10,7 @@
 <dd>People in the MozillaZine forums are often helpful and know a lot about Mozilla Add-ons.</dd>
 <dt><abbr title="Internet Relay Chat">IRC</abbr></dt>
 <dd>IRC offers instant support in real time.  You should find people who can help in <a href="irc://irc.mozilla.org/mozillazine">#mozillazine</a>, <a href="irc://irc.mozilla.org/firefox">#firefox</a>, <a href="irc://irc.mozilla.org/thunderbird">#thunderbird</a> and <a href="irc://irc.mozilla.org/seamonkey">#seamonkey</a> on <a href="irc://irc.mozilla.org/">irc.mozilla.org</a>.  If you don't have an IRC client, you can use <a href="{$config.webpath}/extensions/moreinfo.php?id=16">ChatZilla</a>. For help using IRC, see <a href="http://www.irchelp.org/">irchelp.org</a>.</dd>
-<dt><a href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Update&amp;component=Listings">File a Bug in Bugzilla</a></dt>
+<dt><a href="https://bugzilla.mozilla.org/enter_bug.cgi?product=addons.mozilla.org&amp;component=Add-ons">File a Bug in Bugzilla</a></dt>
 <dd>To report a bug regarding an major error in an extension or theme, file a bug in Bugzilla. Try to include as much information as possible.</dd>
 </dl>
 
@@ -20,7 +20,7 @@
 <dd>The Wiki contains some information regarding using the addons.mozilla.org website.</dd>
 <dt>IRC</dt>
 <dd>IRC offers instant support in real time.  You should find people who can help in <a href="irc://irc.mozilla.org/addons">#addons</a> on <a href="irc://irc.mozilla.org/">irc.mozilla.org</a>.  If you don't have an IRC client, you can use <a href="{$config.webpath}/extensions/moreinfo.php?id=16">ChatZilla</a>. For help using IRC, see <a href="http://www.irchelp.org/">irchelp.org</a>.</dd>
-<dt><a href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Update">File a Bug in Bugzilla</a></dt>
+<dt><a href="https://bugzilla.mozilla.org/enter_bug.cgi?product=addons.mozilla.org">File a Bug in Bugzilla</a></dt>
 <dd>To report a problem with this website, please file a bug in Bugzilla. Try to include as much information as possible.</dd>
 </dl>
 
