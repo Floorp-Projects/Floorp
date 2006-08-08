@@ -468,14 +468,14 @@ if ($action eq 'search') {
     $vars->{'longdescs'} = $dbh->selectrow_array(
         'SELECT COUNT(*) FROM longdescs WHERE who = ?',
         undef, $otherUserID);
-    $vars->{'namedqueries'} = $dbh->selectcol_arrayref(
+    my $namedquery_ids = $dbh->selectcol_arrayref(
         'SELECT id FROM namedqueries WHERE userid = ?',
-        undef,
-        $otherUserID);
-    if (@{$vars->{'namedqueries'}}) {
+        undef, $otherUserID);
+    $vars->{'namedqueries'} = scalar(@$namedquery_ids);
+    if (scalar(@$namedquery_ids)) {
         $vars->{'namedquery_group_map'} = $dbh->selectrow_array(
             'SELECT COUNT(*) FROM namedquery_group_map WHERE namedquery_id IN' .
-            ' (' . join(', ', @{$vars->{'namedqueries'}}) . ')');
+            ' (' . join(', ', @$namedquery_ids) . ')');
     }
     else {
         $vars->{'namedquery_group_map'} = 0;
