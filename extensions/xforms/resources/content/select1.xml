@@ -183,7 +183,9 @@
         <body>
           <![CDATA[
             var key = aEvent.keyCode;
-            if (key == aEvent.DOM_VK_RETURN || key == aEvent.DOM_VK_ENTER) {
+            if (key == aEvent.DOM_VK_RETURN || key == aEvent.DOM_VK_ENTER ||
+                key == aEvent.DOM_VK_F4 || aEvent.altKey &&
+                (key == aEvent.DOM_VK_UP || key == aEvent.DOM_VK_DOWN)) {
               var open = this.popupOpen;
               this.togglePopup();
               if (open && this._selected) {
@@ -194,8 +196,11 @@
                   this.dispatchSelectEvents();
                 }
               }
-            } else if (key == aEvent.DOM_VK_UP ||
-                       key == aEvent.DOM_VK_DOWN) {
+              if (aEvent.altKey && (key == aEvent.DOM_VK_UP ||
+                  key == aEvent.DOM_VK_DOWN)) {
+                aEvent.preventDefault();
+              }
+            } else if (key == aEvent.DOM_VK_UP || key == aEvent.DOM_VK_DOWN) {
               this.internalScroll(aEvent.keyCode == aEvent.DOM_VK_DOWN);
               if (this._selected && this.popupOpen) {
                 var el = this._selected.QueryInterface(Components.interfaces.nsIDOMElement);
@@ -1028,6 +1033,21 @@
         </body>
       </method>
     </implementation>
+
+    <handlers>
+      <handler event="keypress" keycode="VK_ESCAPE">
+        if (this.popupOpen) {
+          this.hidePopup();
+          if (this._selected)
+            this._selected.setActive(false);
+            this._selected = this._tmpSelected;
+            this._tmpSelected = null;
+            if (this._selected)
+              this._selected.setActive(true);
+          }
+        }
+      </handler>
+    </handlers>
   </binding>
 
   <binding id="xformswidget-itemset"
