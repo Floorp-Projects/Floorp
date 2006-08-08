@@ -153,14 +153,14 @@ sub initBug  {
       INNER JOIN classifications
               ON classifications.id = products.classification_id
       WHERE bugs.bug_id = ? " .
-    $dbh->sql_group_by('bugs.bug_id', 'alias, products.classification_id,
+    $dbh->sql_group_by('bugs.bug_id', "alias, products.classification_id,
       classifications.name, bugs.product_id, products.name, version,
       rep_platform, op_sys, bug_status, resolution, priority,
       bug_severity, bugs.component_id, components.name, assigned_to,
       reporter, bug_file_loc, short_desc, target_milestone,
       qa_contact, status_whiteboard, everconfirmed, creation_ts, 
       delta_ts, reporter_accessible, cclist_accessible,
-      estimated_time, remaining_time, deadline');
+      estimated_time, remaining_time, deadline $custom_fields");
 
   my $bug_sth = $dbh->prepare($query);
   $bug_sth->execute($bug_id);
