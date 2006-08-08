@@ -153,7 +153,6 @@ var calImportExportModule = {
             var comp = componentData[i];
             if (!comp.cid)
                 continue;
-            dump ("calItemModule: registering " + comp.contractid + "\n");
             compMgr.registerFactoryLocation(comp.cid,
                                             "",
                                             comp.contractid,
@@ -169,7 +168,6 @@ var calImportExportModule = {
                     contractid = comp.contractid;
                 catman.addCategoryEntry(comp.category, comp.categoryEntry,
                                         contractid, true, true);
-                dump("registering for category stuff\n");
             }
         }
     },
