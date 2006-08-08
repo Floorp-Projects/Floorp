@@ -26,6 +26,8 @@ toolkit.jar:
         content/global/nsTransferable.js            (resources/content/nsTransferable.js) 
         content/global/nsUserSettings.js            (resources/content/nsUserSettings.js) 
         content/global/xul.css                      (resources/content/xul.css) 
+        content/global/plugins.html                 (/toolkit/content/plugins.html)
+        content/global/plugins.css                  (/toolkit/content/plugins.css)
         content/global/printdialog.xul              (resources/content/printdialog.xul)
         content/global/printdialog.js               (resources/content/printdialog.js)
         content/global/printPageSetup.xul           (resources/content/printPageSetup.xul)
@@ -81,8 +83,6 @@ toolkit.jar:
 #endif
         content/global/aboutAbout.html              (resources/content/aboutAbout.html) 
         content/global/about.xul                    (resources/content/about.xul) 
-        content/global/plugins.html                 (/toolkit/content/plugins.html)
-        content/global/plugins.css                  (/toolkit/content/plugins.css)
         content/global/fullScreen.js                (resources/content/fullScreen.js)
         content/global/build.dtd                    (build.dtd)
 
