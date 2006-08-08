@@ -86,15 +86,7 @@ const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere f
 static nsIPopupSetFrame*
 GetPopupSetFrame(nsPresContext* aPresContext)
 {
-  nsIFrame* rootFrame =
-    aPresContext->PresShell()->FrameManager()->GetRootFrame();
-  if (!rootFrame)
-    return nsnull;
-
-  if (rootFrame)
-    rootFrame = rootFrame->GetFirstChild(nsnull);
- 
-  nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
+  nsIRootBox* rootBox = nsIRootBox::GetRootBox(aPresContext->PresShell());
   if (!rootBox)
     return nsnull;
 

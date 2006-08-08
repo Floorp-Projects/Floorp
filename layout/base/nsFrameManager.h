@@ -216,13 +216,12 @@ public:
   NS_HIDDEN_(void) DebugVerifyStyleTree(nsIFrame* aFrame);
 #endif
 
-private:
-
   NS_HIDDEN_(nsIPresShell*) GetPresShell() const { return mPresShell; }
   NS_HIDDEN_(nsPresContext*) GetPresContext() const {
     return mPresShell->GetPresContext();
   }
 
+private:
   NS_HIDDEN_(nsChangeHint)
     ReResolveStyleContext(nsPresContext    *aPresContext,
                           nsIFrame          *aFrame,

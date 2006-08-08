@@ -77,21 +77,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsPopupBoxObject, nsBoxObject, nsIPopupBoxObject)
 nsIPopupSetFrame*
 nsPopupBoxObject::GetPopupSetFrame()
 {
-  nsIPresShell* shell = GetPresShell(PR_FALSE);
-  if (!shell) {
-    return nsnull;
-  }
-
-  nsIFrame* rootFrame = shell->FrameManager()->GetRootFrame();
-  if (!rootFrame)
-    return nsnull;
-
-  if (rootFrame) {
-    rootFrame = rootFrame->GetFirstChild(nsnull);
-  }
-
-  nsIRootBox *rootBox = nsnull;
-  CallQueryInterface(rootFrame, &rootBox);
+  nsIRootBox* rootBox = nsIRootBox::GetRootBox(GetPresShell(PR_FALSE));
   if (!rootBox)
     return nsnull;
 

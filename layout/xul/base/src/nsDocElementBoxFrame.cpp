@@ -58,7 +58,6 @@
 #include "nsIPresShell.h"
 #include "nsBoxFrame.h"
 #include "nsStackLayout.h"
-#include "nsIRootBox.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsINodeInfo.h"
 #include "nsIServiceManager.h"

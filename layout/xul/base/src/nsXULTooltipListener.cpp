@@ -59,6 +59,7 @@
 #include "nsIScriptContext.h"
 #include "nsPIDOMWindow.h"
 #include "nsContentUtils.h"
+#include "nsIRootBox.h"
 
 //////////////////////////////////////////////////////////////////////////
 //// nsISupports
@@ -274,9 +275,8 @@ PRBool nsXULTooltipListener::sShowTooltips = PR_FALSE;
 
 // XXX: This could all be done in the ctor.
 nsresult
-nsXULTooltipListener::Init(nsIContent* aSourceNode, nsIRootBox* aRootBox)
+nsXULTooltipListener::Init(nsIContent* aSourceNode)
 {
-  mRootBox = aRootBox;
   mSourceNode = aSourceNode;
   AddTooltipSupport(aSourceNode);
   
@@ -585,7 +585,9 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
   aTarget->GetAttr(kNameSpaceID_None, nsXULAtoms::tooltiptext, tooltipText);
   if (!tooltipText.IsEmpty()) {
     // specifying tooltiptext means we will always use the default tooltip
-    *aTooltip = mRootBox->GetDefaultTooltip();
+    nsIRootBox* rootBox = nsIRootBox::GetRootBox(document->GetShellAt(0));
+    NS_ENSURE_STATE(rootBox);
+    *aTooltip = rootBox->GetDefaultTooltip();
     if (*aTooltip) {
       NS_ADDREF(*aTooltip);
       (*aTooltip)->SetAttr(kNameSpaceID_None, nsXULAtoms::label, tooltipText, PR_TRUE);
@@ -625,7 +627,9 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
 #ifdef MOZ_XUL
   // titletips should just use the default tooltip
   if (mIsSourceTree && mNeedTitletip) {
-    NS_IF_ADDREF(*aTooltip = mRootBox->GetDefaultTooltip());
+    nsIRootBox* rootBox = nsIRootBox::GetRootBox(document->GetShellAt(0));
+    NS_ENSURE_STATE(rootBox);
+    NS_IF_ADDREF(*aTooltip = rootBox->GetDefaultTooltip());
   }
 #endif
 

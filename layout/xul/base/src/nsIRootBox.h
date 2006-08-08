@@ -43,10 +43,13 @@
 #include "nsISupports.h"
 class nsIFrame;
 class nsIContent;
+class nsIPresShell;
 
-// {DF05F6AB-320B-4e06-AFB3-E39E632A7555}
+// {2256d568-3f5a-42ec-b932-3d0f78551a1a}
 #define NS_IROOTBOX_IID \
-{ 0xdf05f6ab, 0x320b, 0x4e06, { 0xaf, 0xb3, 0xe3, 0x9e, 0x63, 0x2a, 0x75, 0x55 } }
+{ 0x2256d568, 0x3f5a, 0x42ec, \
+  { 0xb9, 0x32, 0x3d, 0x0f, 0x78, 0x55, 0x1a, 0x1a } }
+
 
 class nsIRootBox : public nsISupports {
 
@@ -61,6 +64,8 @@ public:
 
   virtual nsresult AddTooltipSupport(nsIContent* aNode) = 0;
   virtual nsresult RemoveTooltipSupport(nsIContent* aNode) = 0;
+
+  static nsIRootBox* GetRootBox(nsIPresShell* aShell);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIRootBox, NS_IROOTBOX_IID)
