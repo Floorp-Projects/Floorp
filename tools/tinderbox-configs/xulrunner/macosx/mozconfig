@@ -1,0 +1,15 @@
+#
+## hostname: columbia
+## uname: Darwin columbia.mozilla.org 7.9.0 Darwin Kernel Version 7.9.0: Wed Mar 30 20:11:17 PST 2005; root:xnu/xnu-517.12.7.obj~1/RELEASE_PPC  Power Macintosh powerpc
+#
+export MOZILLA_OFFICIAL=1
+mk_add_options MOZILLA_OFFICIAL=1
+
+mk_add_options MOZ_CO_PROJECT=xulrunner
+mk_add_options MOZ_MAKE_FLAGS="-j8"
+
+ac_add_options --enable-application=xulrunner
+ac_add_options --disable-tests
+ac_add_options --enable-svg
+ac_add_options --enable-canvas
+ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.2.8.sdk

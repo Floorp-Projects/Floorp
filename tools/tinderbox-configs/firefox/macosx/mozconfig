@@ -1,0 +1,26 @@
+#
+## hostname: atlantia
+## uname: Darwin atlantia.mozilla.org 7.9.0 Darwin Kernel Version 7.9.0: Wed Mar 30 20:11:17 PST 2005; root:xnu/xnu-517.12.7.obj~1/RELEASE_PPC  Power Macintosh powerpc
+#
+
+# . $topsrcdir/browser/config/mozconfig
+
+mk_add_options MOZ_MAKE_FLAGS="-j4"
+mk_add_options MOZ_CO_MODULE="mozilla/tools/update-packaging mozilla/tools/codesighs"
+mk_add_options MOZ_CO_PROJECT="browser"
+
+ac_add_options --enable-application=browser
+ac_add_options --enable-update-channel=nightly
+ac_add_options --enable-optimize="-O2 -g"
+ac_add_options --disable-debug
+ac_add_options --disable-tests
+ac_add_options --enable-update-packaging
+
+ac_add_options --enable-static
+ac_add_options --disable-shared
+# ac_add_options --enable-official-branding
+ac_add_options --enable-prebinding
+ac_add_options --enable-svg
+ac_add_options --enable-canvas
+
+ac_add_options --enable-codesighs
