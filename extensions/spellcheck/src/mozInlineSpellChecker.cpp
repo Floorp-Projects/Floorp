@@ -1060,17 +1060,15 @@ mozInlineSpellChecker::SpellCheckBetweenNodes(nsIDOMNode *aStartNode,
 //    for these cases.
 
 nsresult
-mozInlineSpellChecker::SkipSpellCheckForNode(nsIDOMNode *aNode,
+mozInlineSpellChecker::SkipSpellCheckForNode(nsIEditor* aEditor,
+                                             nsIDOMNode *aNode,
                                              PRBool *checkSpelling)
 {
   *checkSpelling = PR_TRUE;
   NS_ENSURE_ARG_POINTER(aNode);
 
-  nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
-  NS_ENSURE_TRUE(editor, NS_ERROR_NULL_POINTER);
-
   PRUint32 flags;
-  editor->GetFlags(&flags);
+  aEditor->GetFlags(&flags);
   if (flags & nsIPlaintextEditor::eEditorMailMask)
   {
     nsCOMPtr<nsIDOMNode> parent;
@@ -1238,6 +1236,12 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
   PRInt32 beginOffset, endOffset;
   *aDoneChecking = PR_TRUE;
 
+  // get the editor for SkipSpellCheckForNode, this may fail in reasonable
+  // circumstances since the editor could have gone away
+  nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
+  if (! editor)
+    return NS_ERROR_FAILURE;
+
   PRBool iscollapsed;
   nsresult rv = aStatus->mRange->GetCollapsed(&iscollapsed);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1320,7 +1324,8 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
 
     // some nodes we don't spellcheck
     PRBool checkSpelling;
-    SkipSpellCheckForNode(beginNode, &checkSpelling);
+    rv = SkipSpellCheckForNode(editor, beginNode, &checkSpelling);
+    NS_ENSURE_SUCCESS(rv, rv);
     if (!checkSpelling)
       continue;
 
@@ -1390,7 +1395,7 @@ mozInlineSpellChecker::ResumeCheck(mozInlineSpellStatus* aStatus)
   mozInlineSpellWordUtil wordUtil;
   nsresult rv = wordUtil.Init(mEditor);
   if (NS_FAILED(rv))
-    return NS_OK; // editor doesn't like us
+    return NS_OK; // editor doesn't like us, don't assert
 
   nsCOMPtr<nsISelection> spellCheckSelection;
   rv = GetSpellCheckSelection(getter_AddRefs(spellCheckSelection));
