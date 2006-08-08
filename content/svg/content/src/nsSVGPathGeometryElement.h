@@ -48,6 +48,7 @@ struct nsSVGMark {
 };
 
 class nsSVGFlattenedPath;
+class nsIDOMSVGMatrix;
 
 typedef nsSVGGraphicElement nsSVGPathGeometryElementBase;
 
@@ -60,7 +61,7 @@ public:
   virtual PRBool IsMarkable();
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(cairo_t *aCtx) = 0;
-  virtual nsSVGFlattenedPath *GetFlattenedPath();
+  virtual nsSVGFlattenedPath *GetFlattenedPath(nsIDOMSVGMatrix *aMatrix);
 };
 
 #endif

@@ -47,6 +47,7 @@
 #include "nsISVGValueUtils.h"
 #include "nsSVGUtils.h"
 #include "nsSVGPoint.h"
+#include "nsSVGMatrix.h"
 
 nsSVGElement::NumberInfo nsSVGPathElement::sNumberInfo = 
                                                   { &nsGkAtoms::pathLength, 0 };
@@ -103,7 +104,7 @@ nsSVGPathElement::GetTotalLength(float *_retval)
 {
   *_retval = 0;
 
-  nsAutoPtr<nsSVGFlattenedPath> flat(GetFlattenedPath());
+  nsAutoPtr<nsSVGFlattenedPath> flat(GetFlattenedPath(nsnull));
 
   if (!flat)
     return NS_ERROR_FAILURE;
@@ -117,7 +118,7 @@ nsSVGPathElement::GetTotalLength(float *_retval)
 NS_IMETHODIMP
 nsSVGPathElement::GetPointAtLength(float distance, nsIDOMSVGPoint **_retval)
 {
-  nsAutoPtr<nsSVGFlattenedPath> flat(GetFlattenedPath());
+  nsAutoPtr<nsSVGFlattenedPath> flat(GetFlattenedPath(nsnull));
   if (!flat)
     return NS_ERROR_FAILURE;
 
@@ -402,7 +403,7 @@ nsSVGPathElement::DidModifySVGObservable(nsISVGValue* observable,
 }
 
 nsSVGFlattenedPath *
-nsSVGPathElement::GetFlattenedPath()
+nsSVGPathElement::GetFlattenedPath(nsIDOMSVGMatrix *aMatrix)
 {
   cairo_surface_t *dummySurface =
     cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 1, 1);
@@ -415,7 +416,14 @@ nsSVGPathElement::GetFlattenedPath()
     return nsnull;
   }
 
+  if (aMatrix) {
+    cairo_matrix_t matrix = NS_ConvertSVGMatrixToCairo(aMatrix);
+    cairo_set_matrix(ctx, &matrix);
+  }
+
   mPathData.Playback(ctx);
+
+  cairo_identity_matrix(ctx);
 
   cairo_path_t *path = cairo_copy_path_flat(ctx);
 

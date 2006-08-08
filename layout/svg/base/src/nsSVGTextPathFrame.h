@@ -87,9 +87,6 @@ public:
   nsSVGFlattenedPath *GetFlattenedPath();
   nsIFrame *GetPathFrame();
 
-  // nsSVGContainerFrame methods:
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
-
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
