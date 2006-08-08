@@ -50,6 +50,7 @@
 #include "nsIFileURL.h"
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -74,10 +75,13 @@ typedef int (PR_CALLBACK *EsdOpenSoundType)(const char *host);
 typedef int (PR_CALLBACK *EsdCloseType)(int);
 
 /* used to play the sounds from the find symbol call */
-typedef int (PR_CALLBACK *EsdPlayStreamFallbackType)  (int, 
-                                                       int, 
-                                                       const char *, 
-                                                       const char *);
+typedef int (PR_CALLBACK *EsdPlayStreamType)  (int, 
+                                               int, 
+                                               const char *, 
+                                               const char *);
+typedef int  (PR_CALLBACK *EsdAudioOpenType)  (void);
+typedef int  (PR_CALLBACK *EsdAudioWriteType) (const void *, int);
+typedef void (PR_CALLBACK *EsdAudioCloseType) (void);
 
 NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 
@@ -220,11 +224,11 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
 #endif
 
     /* open up conneciton to esd */  
-    EsdPlayStreamFallbackType EsdPlayStreamFallback = 
-        (EsdPlayStreamFallbackType) PR_FindSymbol(elib, 
-                                                  "esd_play_stream_fallback");
+    EsdPlayStreamType EsdPlayStream = 
+        (EsdPlayStreamType) PR_FindSymbol(elib, 
+                                          "esd_play_stream");
     // XXX what if that fails? (Bug 241738)
-  
+
     mask = ESD_PLAY | ESD_STREAM;
 
     if (bits_per_sample == 8)
@@ -237,21 +241,13 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
     else 
         mask |= ESD_STEREO;
 
-    fd = (*EsdPlayStreamFallback)(mask, rate, NULL, "mozillaSound"); 
-  
-    if (fd < 0) {
-        return NS_ERROR_FAILURE;
-    }
-
-    /* write data out */
+    nsAutoArrayPtr<PRUint8> buf;
 
     // ESD only handle little-endian data. 
     // Swap the byte order if we're on a big-endian architecture.
 #ifdef IS_BIG_ENDIAN
-    if (bits_per_sample == 8)
-        write(fd, data, dataLen);
-    else {
-        PRUint8 *buf = new PRUint8[dataLen - WAV_MIN_LENGTH];
+    if (bits_per_sample != 8) {
+        buf = new PRUint8[dataLen - WAV_MIN_LENGTH];
         // According to the wav file format, the first 44 bytes are headers.
         // We don't really need to send them.
         if (!buf)
@@ -260,14 +256,40 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
             buf[j] = data[j + WAV_MIN_LENGTH + 1];
             buf[j + 1] = data[j + WAV_MIN_LENGTH];
         }
-        write(fd, buf, (dataLen - WAV_MIN_LENGTH));
-        delete [] buf;
+
+	data = buf;
+	dataLen -= WAV_MIN_LENGTH;
     }
-#else
-    write(fd, data, dataLen);
 #endif
+
+    fd = (*EsdPlayStream)(mask, rate, NULL, "mozillaSound"); 
   
-    close(fd);
+    if (fd < 0) {
+      int *esd_audio_format = (int *) PR_FindSymbol(elib, "esd_audio_format");
+      int *esd_audio_rate = (int *) PR_FindSymbol(elib, "esd_audio_rate");
+      EsdAudioOpenType EsdAudioOpen = (EsdAudioOpenType) PR_FindSymbol(elib, "esd_audio_open");
+      EsdAudioWriteType EsdAudioWrite = (EsdAudioWriteType) PR_FindSymbol(elib, "esd_audio_write");
+      EsdAudioCloseType EsdAudioClose = (EsdAudioCloseType) PR_FindSymbol(elib, "esd_audio_close");
+
+      *esd_audio_format = mask;
+      *esd_audio_rate = rate;
+      fd = (*EsdAudioOpen)();
+
+      if (fd < 0)
+        return NS_ERROR_FAILURE;
+
+      (*EsdAudioWrite)(data, dataLen);  
+      (*EsdAudioClose)();
+    } else {
+      while (dataLen > 0) {
+        size_t written = write(fd, data, dataLen);
+        if (written <= 0)
+          break;
+        data += written;
+        dataLen -= written;
+      }
+      close(fd);
+    }
 
     return NS_OK;
 }
