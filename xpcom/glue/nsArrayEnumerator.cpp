@@ -55,7 +55,7 @@ nsSimpleArrayEnumerator::HasMoreElements(PRBool* aResult)
     PRUint32 cnt;
     nsresult rv = mValueArray->GetLength(&cnt);
     if (NS_FAILED(rv)) return rv;
-    *aResult = (mIndex < (PRInt32) cnt);
+    *aResult = (mIndex < cnt);
     return NS_OK;
 }
 
@@ -74,7 +74,7 @@ nsSimpleArrayEnumerator::GetNext(nsISupports** aResult)
     PRUint32 cnt;
     nsresult rv = mValueArray->GetLength(&cnt);
     if (NS_FAILED(rv)) return rv;
-    if (mIndex >= (PRInt32) cnt)
+    if (mIndex >= cnt)
         return NS_ERROR_UNEXPECTED;
 
     return mValueArray->QueryElementAt(mIndex++, NS_GET_IID(nsISupports), (void**)aResult);
@@ -108,7 +108,9 @@ public:
     NS_DECL_NSISIMPLEENUMERATOR
 
     // nsSimpleArrayEnumerator methods
-    nsCOMArrayEnumerator() : mIndex(0) {}
+    nsCOMArrayEnumerator() : mIndex(0) {
+        NS_INIT_ISUPPORTS();
+    }
     virtual ~nsCOMArrayEnumerator(void);
 
     // specialized operator to make sure we make room for mValues
