@@ -655,6 +655,12 @@ HasFinalReturn(JSParseNode *pn)
             rv &= HasFinalReturn(pn2->pn_kid3);
         return rv;
 
+      case TOK_LET:
+        /* Non-binary let statements are let declarations. */
+        if (pn->pn_arity != PN_BINARY)
+            return ENDS_IN_OTHER;
+        return HasFinalReturn(pn->pn_right);
+
       default:
         return ENDS_IN_OTHER;
     }
