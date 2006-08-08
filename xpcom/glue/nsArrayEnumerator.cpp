@@ -38,6 +38,34 @@
 
 #include "nsArrayEnumerator.h"
 
+#include "nsIArray.h"
+#include "nsISimpleEnumerator.h"
+
+#include "nsCOMArray.h"
+#include "nsCOMPtr.h"
+
+class nsSimpleArrayEnumerator : public nsISimpleEnumerator
+{
+public:
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+
+    // nsISimpleEnumerator interface
+    NS_DECL_NSISIMPLEENUMERATOR
+
+    // nsSimpleArrayEnumerator methods
+    nsSimpleArrayEnumerator(nsIArray* aValueArray) :
+        mValueArray(aValueArray), mIndex(0) {
+    }
+
+private:
+    ~nsSimpleArrayEnumerator() {}
+
+protected:
+    nsCOMPtr<nsIArray> mValueArray;
+    PRUint32 mIndex;
+};
+
 NS_IMPL_ISUPPORTS1(nsSimpleArrayEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP

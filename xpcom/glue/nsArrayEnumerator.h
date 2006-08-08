@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Alec Flett <alecf@netscape.com>
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,46 +42,23 @@
 
 // enumerator implementation for nsIArray
 
-#include "nsIArray.h"
-#include "nsCOMArray.h"
-#include "nsISimpleEnumerator.h"
-#include "nsCOMPtr.h"
+#include "nscore.h"
 
-class nsSimpleArrayEnumerator : public nsISimpleEnumerator
-{
-public:
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
-
-    // nsISimpleEnumerator interface
-    NS_DECL_NSISIMPLEENUMERATOR
-
-    // nsSimpleArrayEnumerator methods
-    nsSimpleArrayEnumerator(nsIArray* aValueArray) :
-        mValueArray(aValueArray), mIndex(0) {
-    }
-
-private:
-    ~nsSimpleArrayEnumerator() {}
-
-protected:
-    nsCOMPtr<nsIArray> mValueArray;
-    PRUint32 mIndex;
-};
-
+class nsISimpleEnumerator;
+class nsIArray;
+class nsCOMArray_base;
 
 // Create an enumerator for an existing nsIArray implementation
 // The enumerator holds an owning reference to the array.
-extern NS_COM nsresult
+NS_COM_GLUE nsresult
 NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
                       nsIArray* array);
-
 
 // create an enumerator for an existing nsCOMArray<T> implementation
 // The enumerator will hold an owning reference to each ELEMENT in
 // the array. This means that the nsCOMArray<T> can safely go away
 // without its objects going away.
-extern NS_COM nsresult
+NS_COM_GLUE nsresult
 NS_NewArrayEnumerator(nsISimpleEnumerator* *aResult,
                       const nsCOMArray_base& aArray);
 

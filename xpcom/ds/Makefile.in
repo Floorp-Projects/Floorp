@@ -59,8 +59,6 @@ CPPSRCS		= \
 		nsCheapSets.cpp \
 		nsCRT.cpp \
 		nsDeque.cpp \
-		nsEmptyEnumerator.cpp \
-		nsEnumeratorUtils.cpp \
 		nsFixedSizeAllocator.cpp \
 		nsHashSets.cpp \
 		nsHashtable.cpp \
@@ -81,7 +79,6 @@ CPPSRCS		= \
 		nsTimelineService.cpp \
 		nsValueArray.cpp \
 		nsArray.cpp \
-		nsArrayEnumerator.cpp \
 		nsHashPropertyBag.cpp \
 		$(NULL)
 
@@ -92,7 +89,6 @@ EXPORTS		= \
 		nsCRT.h \
 		nsDeque.h \
 		nsDoubleHashtable.h \
-		nsEnumeratorUtils.h \
 		nsFixedSizeAllocator.h \
 		nsHashSets.h \
 		nsHashtable.h \
@@ -110,7 +106,6 @@ EXPORTS		= \
 		nsVariant.h \
 		nsTextFormatter.h \
 		nsValueArray.h \
-		nsArrayEnumerator.h \
 		nsStringEnumerator.h \
 		nsAutoBuffer.h \
 		nsHashPropertyBag.h \

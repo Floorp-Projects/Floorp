@@ -49,6 +49,7 @@
 #define PL_ARENA_CONST_ALIGN_MASK 3
 #include "nsPersistentProperties.h"
 #include "nsIProperties.h"
+#include "nsISupportsArray.h"
 #include "nsProperties.h"
 
 struct PropertyTableEntry : public PLDHashEntryHdr

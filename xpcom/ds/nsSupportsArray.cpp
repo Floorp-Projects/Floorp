@@ -682,3 +682,90 @@ NS_NewISupportsArray(nsISupportsArray** aInstancePtrResult)
   return rv;
 }
 
+class nsArrayEnumerator : public nsISimpleEnumerator
+{
+public:
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+
+    // nsISimpleEnumerator interface
+    NS_IMETHOD HasMoreElements(PRBool* aResult);
+    NS_IMETHOD GetNext(nsISupports** aResult);
+
+    // nsArrayEnumerator methods
+    nsArrayEnumerator(nsISupportsArray* aValueArray);
+
+private:
+    ~nsArrayEnumerator(void);
+
+protected:
+    nsISupportsArray* mValueArray;
+    PRInt32 mIndex;
+};
+
+nsArrayEnumerator::nsArrayEnumerator(nsISupportsArray* aValueArray)
+    : mValueArray(aValueArray),
+      mIndex(0)
+{
+    NS_IF_ADDREF(mValueArray);
+}
+
+nsArrayEnumerator::~nsArrayEnumerator(void)
+{
+    NS_IF_RELEASE(mValueArray);
+}
+
+NS_IMPL_ISUPPORTS1(nsArrayEnumerator, nsISimpleEnumerator)
+
+NS_IMETHODIMP
+nsArrayEnumerator::HasMoreElements(PRBool* aResult)
+{
+    NS_PRECONDITION(aResult != 0, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    if (!mValueArray) {
+        *aResult = PR_FALSE;
+        return NS_OK;
+    }
+
+    PRUint32 cnt;
+    nsresult rv = mValueArray->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    *aResult = (mIndex < (PRInt32) cnt);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsArrayEnumerator::GetNext(nsISupports** aResult)
+{
+    NS_PRECONDITION(aResult != 0, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    if (!mValueArray) {
+        *aResult = nsnull;
+        return NS_OK;
+    }
+
+    PRUint32 cnt;
+    nsresult rv = mValueArray->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    if (mIndex >= (PRInt32) cnt)
+        return NS_ERROR_UNEXPECTED;
+
+    *aResult = mValueArray->ElementAt(mIndex++);
+    return NS_OK;
+}
+
+nsresult
+NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
+                      nsISupportsArray* array)
+{
+    nsArrayEnumerator* enumer = new nsArrayEnumerator(array);
+    if (enumer == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    *result = enumer; 
+    NS_ADDREF(*result);
+    return NS_OK;
+}

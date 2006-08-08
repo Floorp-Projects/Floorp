@@ -48,6 +48,7 @@
 #include "nsILocalFile.h"
 #include "nsIObserverService.h"
 #include "nsIProfileChangeStatus.h"
+#include "nsISimpleEnumerator.h"
 #include "nsIToolkitChromeRegistry.h"
 
 #include "nsAppDirectoryServiceDefs.h"

@@ -38,87 +38,21 @@
 #ifndef nsEnumeratorUtils_h__
 #define nsEnumeratorUtils_h__
 
-#include "nsIEnumerator.h"
-#include "nsISupportsArray.h"
+#include "nscore.h"
 
-class NS_COM nsArrayEnumerator : public nsISimpleEnumerator
-{
-public:
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
+class nsISupports;
+class nsISimpleEnumerator;
 
-    // nsISimpleEnumerator interface
-    NS_IMETHOD HasMoreElements(PRBool* aResult);
-    NS_IMETHOD GetNext(nsISupports** aResult);
+NS_COM_GLUE nsresult
+NS_NewEmptyEnumerator(nsISimpleEnumerator* *aResult);
 
-    // nsArrayEnumerator methods
-    nsArrayEnumerator(nsISupportsArray* aValueArray);
-
-private:
-    ~nsArrayEnumerator(void);
-
-protected:
-    nsISupportsArray* mValueArray;
-    PRInt32 mIndex;
-};
-
-extern NS_COM nsresult
-NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
-                      nsISupportsArray* array);
-
-////////////////////////////////////////////////////////////////////////////////
-
-class NS_COM nsSingletonEnumerator : public nsISimpleEnumerator
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    // nsISimpleEnumerator methods
-    NS_IMETHOD HasMoreElements(PRBool* aResult);
-    NS_IMETHOD GetNext(nsISupports** aResult);
-
-    nsSingletonEnumerator(nsISupports* aValue);
-
-private:
-    ~nsSingletonEnumerator();
-
-protected:
-    nsISupports* mValue;
-    PRBool mConsumed;
-};
-
-extern "C" NS_COM nsresult
+NS_COM_GLUE nsresult
 NS_NewSingletonEnumerator(nsISimpleEnumerator* *result,
                           nsISupports* singleton);
 
-////////////////////////////////////////////////////////////////////////
-
-class NS_COM nsUnionEnumerator : public nsISimpleEnumerator
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    // nsISimpleEnumerator methods
-    NS_IMETHOD HasMoreElements(PRBool* aResult);
-    NS_IMETHOD GetNext(nsISupports** aResult);
-
-    nsUnionEnumerator(nsISimpleEnumerator* firstEnumerator,
-                      nsISimpleEnumerator* secondEnumerator);
-
-private:
-    ~nsUnionEnumerator();
-
-protected:
-    nsCOMPtr<nsISimpleEnumerator> mFirstEnumerator, mSecondEnumerator;
-    PRBool mConsumed;
-    PRBool mAtSecond;
-};
-
-extern "C" NS_COM nsresult
+NS_COM_GLUE nsresult
 NS_NewUnionEnumerator(nsISimpleEnumerator* *result,
                       nsISimpleEnumerator* firstEnumerator,
                       nsISimpleEnumerator* secondEnumerator);
-
-////////////////////////////////////////////////////////////////////////
 
 #endif /* nsEnumeratorUtils_h__ */
