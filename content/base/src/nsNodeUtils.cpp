@@ -38,7 +38,6 @@
 #include "nsNodeUtils.h"
 #include "nsINode.h"
 #include "nsIContent.h"
-#include "nsCOMArray.h"
 #include "nsTArray.h"
 #include "nsIMutationObserver.h"
 #include "nsIDocument.h"
@@ -46,7 +45,6 @@
 #define IMPL_MUTATION_NOTIFICATION_FW(func_, content_, params_)   \
   nsINode* node = content_;                                       \
   nsINode* prev;                                                  \
-  nsCOMArray<nsIMutationObserver> observers;                      \
   do {                                                            \
     nsINode::nsSlots* slots = node->GetExistingSlots();           \
     if (slots && !slots->mMutationObservers.IsEmpty()) {          \
@@ -75,7 +73,6 @@
 #define IMPL_MUTATION_NOTIFICATION_BW(func_, content_, params_)   \
   nsINode* node = content_;                                       \
   nsINode* prev;                                                  \
-  nsCOMArray<nsIMutationObserver> observers;                      \
   do {                                                            \
     nsINode::nsSlots* slots = node->GetExistingSlots();           \
     if (slots && !slots->mMutationObservers.IsEmpty()) {          \
