@@ -193,6 +193,12 @@ protected:
   nsAttrAndChildArray mMappedAttributes;
 
   PRPackedBool mSuppressNotification;
+
+private:
+  static nsresult
+  ReportAttributeParseFailure(nsIDocument* aDocument,
+                              nsIAtom* aAttribute,
+                              const nsAString& aValue);
 };
 
 /**
