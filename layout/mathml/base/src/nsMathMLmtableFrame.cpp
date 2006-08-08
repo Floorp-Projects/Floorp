@@ -596,7 +596,7 @@ nsMathMLmtdFrame::GetRowSpan()
   if (!value.IsEmpty()) {
     PRInt32 error;
     rowspan = value.ToInteger(&error);
-    if (error)
+    if (error || rowspan < 0)
       rowspan = 1;
   }
   return rowspan;
@@ -611,7 +611,7 @@ nsMathMLmtdFrame::GetColSpan()
   if (!value.IsEmpty()) {
     PRInt32 error;
     colspan = value.ToInteger(&error);
-    if (error)
+    if (error || colspan < 0)
       colspan = 1;
   }
   return colspan;
