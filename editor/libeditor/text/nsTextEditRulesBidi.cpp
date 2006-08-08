@@ -91,16 +91,13 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsISelection         *aSelection,
     
   levelBefore = levels.mLevelBefore;
   levelAfter = levels.mLevelAfter;
-    
-  PRUint8 currentCursorLevel;
-  res = shell->GetCaretBidiLevel(&currentCursorLevel);
-  if (NS_FAILED(res))
-    return res;
+
+  PRUint8 currentCaretLevel = frameSelection->GetCaretBidiLevel();
 
   PRUint8 levelOfDeletion;
   levelOfDeletion = (nsIEditor::eNext==aAction) ? levelAfter : levelBefore;
 
-  if (currentCursorLevel == levelOfDeletion)
+  if (currentCaretLevel == levelOfDeletion)
     ; // perform the deletion
   else
   {
@@ -111,9 +108,7 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsISelection         *aSelection,
 
     // Set the bidi level of the caret to that of the
     // character that will be (or would have been) deleted
-    res = shell->SetCaretBidiLevel(levelOfDeletion);
-    if (NS_FAILED(res))
-      return res;
+    frameSelection->SetCaretBidiLevel(levelOfDeletion);
   }
   return NS_OK;
 }

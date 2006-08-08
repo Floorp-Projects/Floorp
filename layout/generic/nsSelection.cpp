@@ -109,6 +109,10 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsCopySupport.h"
 #include "nsIClipboard.h"
 
+#ifdef IBMBIDI
+#include "nsIBidiKeyboard.h"
+#endif // IBMBIDI
+
 #define STATUS_CHECK_RETURN_MACRO() {if (!mShell) return NS_ERROR_FAILURE;}
 
 
@@ -830,6 +834,9 @@ nsFrameSelection::nsFrameSelection()
   mMouseDoubleDownState = PR_FALSE;
   
   mHint = HINTLEFT;
+#ifdef IBMBIDI
+  mCaretBidiLevel = BIDI_LEVEL_UNDEFINED;
+#endif
   mDragSelectingCells = PR_FALSE;
   mSelectingTableCellMode = 0;
   mSelectedCellIndex = 0;
@@ -1084,6 +1091,34 @@ nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(nsIFrame  *aFrame,
 
   return NS_OK;
 }
+
+#ifdef IBMBIDI
+void
+nsFrameSelection::SetCaretBidiLevel(PRUint8 aLevel)
+{
+  // If the current level is undefined, we have just inserted new text.
+  // In this case, we don't want to reset the keyboard language
+  PRBool afterInsert = mCaretBidiLevel & BIDI_LEVEL_UNDEFINED;
+  mCaretBidiLevel = aLevel;
+  
+  nsIBidiKeyboard* bidiKeyboard = nsContentUtils::GetBidiKeyboard();
+  if (bidiKeyboard && !afterInsert)
+    bidiKeyboard->SetLangFromBidiLevel(aLevel);
+  return;
+}
+
+PRUint8
+nsFrameSelection::GetCaretBidiLevel()
+{
+  return mCaretBidiLevel;
+}
+
+void
+nsFrameSelection::UndefineCaretBidiLevel()
+{
+  mCaretBidiLevel |= BIDI_LEVEL_UNDEFINED;
+}
+#endif
 
 #ifdef XP_MAC
 #pragma mark -
@@ -1350,7 +1385,7 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
         case nsIDOMKeyEvent::DOM_VK_HOME:
         case nsIDOMKeyEvent::DOM_VK_END:
           // set the caret Bidi level to the paragraph embedding level
-          mShell->SetCaretBidiLevel(NS_GET_BASE_LEVEL(theFrame));
+          SetCaretBidiLevel(NS_GET_BASE_LEVEL(theFrame));
           break;
 
         default:
@@ -1358,7 +1393,7 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
           if ((pos.mContentOffset != frameStart && pos.mContentOffset != frameEnd)
               || (eSelectLine == aAmount))
           {
-            mShell->SetCaretBidiLevel(NS_GET_EMBEDDING_LEVEL(theFrame));
+            SetCaretBidiLevel(NS_GET_EMBEDDING_LEVEL(theFrame));
           }
           else
             BidiLevelFromMove(mShell, pos.mResultContent, pos.mContentOffset, aKeycode, tHint);
@@ -2068,9 +2103,6 @@ void nsFrameSelection::BidiLevelFromMove(nsIPresShell* aPresShell,
                                          PRUint32      aKeycode,
                                          HINT          aHint)
 {
-  PRUint8 currentLevel;
-  aPresShell->GetCaretBidiLevel(&currentLevel);
-
   switch (aKeycode) {
 
     // Right and Left: the new cursor Bidi level is the level of the character moved over
@@ -2081,9 +2113,9 @@ void nsFrameSelection::BidiLevelFromMove(nsIPresShell* aPresShell,
                                                           aHint, PR_FALSE);
 
       if (HINTLEFT == aHint)
-        aPresShell->SetCaretBidiLevel(levels.mLevelBefore);
+        SetCaretBidiLevel(levels.mLevelBefore);
       else
-        aPresShell->SetCaretBidiLevel(levels.mLevelAfter);
+        SetCaretBidiLevel(levels.mLevelAfter);
       break;
     }
       /*
@@ -2096,7 +2128,7 @@ void nsFrameSelection::BidiLevelFromMove(nsIPresShell* aPresShell,
       */
 
     default:
-      aPresShell->UndefineCaretBidiLevel();
+      UndefineCaretBidiLevel();
   }
 }
 
@@ -2116,7 +2148,7 @@ void nsFrameSelection::BidiLevelFromClick(nsIContent *aNode,
   if (!clickInFrame)
     return;
 
-  mShell->SetCaretBidiLevel(NS_GET_EMBEDDING_LEVEL(clickInFrame));
+  SetCaretBidiLevel(NS_GET_EMBEDDING_LEVEL(clickInFrame));
 }
 
 
@@ -4791,8 +4823,7 @@ nsTypedSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame, PRInt32 *
     
   nsFrameSelection::HINT hint = mFrameSelection->GetHint();
 
-  PRUint8 caretBidiLevel;
-  presShell->GetCaretBidiLevel(&caretBidiLevel);
+  PRUint8 caretBidiLevel = mFrameSelection->GetCaretBidiLevel();
 
   return caret->GetCaretFrameForNodeOffset(content, FetchFocusOffset(),
     hint, caretBidiLevel, aReturnFrame, aOffsetUsed);
@@ -7433,10 +7464,6 @@ nsTypedSelection::SelectionLanguageChange(PRBool aLangRTL)
     levelAfter = levels.mLevelAfter;
   }
 
-  nsIPresShell* shell = context->GetPresShell();
-  if (!shell)
-    return NS_ERROR_FAILURE;
-
   if ((levelBefore & 1) == (levelAfter & 1)) {
     // if cursor is between two characters with the same orientation, changing the keyboard language
     //  must toggle the cursor level between the level of the character with the lowest level
@@ -7445,17 +7472,17 @@ nsTypedSelection::SelectionLanguageChange(PRBool aLangRTL)
     if ((level != levelBefore) && (level != levelAfter))
       level = PR_MIN(levelBefore, levelAfter);
     if ((level & 1) == aLangRTL)
-      shell->SetCaretBidiLevel(level);
+      mFrameSelection->SetCaretBidiLevel(level);
     else
-      shell->SetCaretBidiLevel(level + 1);
+      mFrameSelection->SetCaretBidiLevel(level + 1);
   }
   else {
     // if cursor is between characters with opposite orientations, changing the keyboard language must change
     //  the cursor level to that of the adjacent character with the orientation corresponding to the new language.
     if ((levelBefore & 1) == aLangRTL)
-      shell->SetCaretBidiLevel(levelBefore);
+      mFrameSelection->SetCaretBidiLevel(levelBefore);
     else
-      shell->SetCaretBidiLevel(levelAfter);
+      mFrameSelection->SetCaretBidiLevel(levelAfter);
   }
   
   // The caret might have moved, so invalidate the desired X position

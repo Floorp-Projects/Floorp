@@ -197,10 +197,6 @@
 // Content viewer interfaces
 #include "nsIContentViewer.h"
 
-#ifdef IBMBIDI
-#include "nsIBidiKeyboard.h"
-#endif // IBMBIDI
-
 #include "nsContentCID.h"
 static NS_DEFINE_CID(kCSSStyleSheetCID, NS_CSS_STYLESHEET_CID);
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
@@ -1164,9 +1160,6 @@ public:
                              nsIRenderingContext** aRenderedContext);
 
 #ifdef IBMBIDI
-  NS_IMETHOD SetCaretBidiLevel(PRUint8 aLevel);
-  NS_IMETHOD GetCaretBidiLevel(PRUint8 *aOutLevel);
-  NS_IMETHOD UndefineCaretBidiLevel();
   NS_IMETHOD BidiStyleChangeReflow();
 #endif
 
@@ -1336,10 +1329,6 @@ protected:
   nsIScrollableView* GetViewToScroll(nsLayoutUtils::Direction aDirection);
 
   PRBool mCaretEnabled;
-#ifdef IBMBIDI
-  PRUint8   mBidiLevel; // The Bidi level of the cursor
-  nsCOMPtr<nsIBidiKeyboard> mBidiKeyboard;
-#endif // IBMBIDI
 #ifdef NS_DEBUG
   nsresult CloneStyleSet(nsStyleSet* aSet, nsStyleSet** aResult);
   PRBool VerifyIncrementalReflow();
@@ -1648,9 +1637,6 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
 }
 
 PresShell::PresShell()
-#ifdef IBMBIDI
-  : mBidiLevel(BIDI_LEVEL_UNDEFINED)
-#endif
 {
   mIsAccessibilityActive = PR_FALSE;
   mSelection = nsnull;
@@ -1658,9 +1644,6 @@ PresShell::PresShell()
   mReflowCountMgr = new ReflowCountMgr();
   mReflowCountMgr->SetPresContext(mPresContext);
   mReflowCountMgr->SetPresShell(this);
-#endif
-#ifdef IBMBIDI
-  mBidiLevel = BIDI_LEVEL_UNDEFINED;
 #endif
 #ifdef PR_LOGGING
   if (! gLog)
@@ -1842,10 +1825,6 @@ PresShell::Init(nsIDocument* aDocument,
 
   // cache the drag service so we can check it during reflows
   mDragService = do_GetService("@mozilla.org/widget/dragservice;1");
-
-#ifdef IBMBIDI
-  mBidiKeyboard = do_GetService("@mozilla.org/widget/bidikeyboard;1");
-#endif
 
 #ifdef MOZ_REFLOW_PERF
     if (mReflowCountMgr) {
@@ -5543,36 +5522,6 @@ PresShell::GetPlaceholderFrameFor(nsIFrame*  aFrame,
 }
 
 #ifdef IBMBIDI
-NS_IMETHODIMP
-PresShell::SetCaretBidiLevel(PRUint8 aLevel)
-{
-  // If the current level is undefined, we have just inserted new text.
-  // In this case, we don't want to reset the keyboard language
-  PRBool afterInsert = mBidiLevel & BIDI_LEVEL_UNDEFINED;
-  mBidiLevel = aLevel;
-
-//  PRBool parityChange = ((mBidiLevel ^ aLevel) & 1); // is the parity of the new level different from the current level?
-//  if (parityChange)                                  // if so, change the keyboard language
-  if (mBidiKeyboard && !afterInsert)
-    mBidiKeyboard->SetLangFromBidiLevel(aLevel);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PresShell::GetCaretBidiLevel(PRUint8 *aOutLevel)
-{
-  if (!aOutLevel) { return NS_ERROR_INVALID_ARG; }
-  *aOutLevel = mBidiLevel;
-  return NS_OK;    
-}
-
-NS_IMETHODIMP
-PresShell::UndefineCaretBidiLevel()
-{
-  mBidiLevel |= BIDI_LEVEL_UNDEFINED;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 PresShell::BidiStyleChangeReflow()
 {

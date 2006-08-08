@@ -135,6 +135,9 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIEventListenerManager.h"
 #include "nsAttrName.h"
 #include "nsIDOMUserDataHandler.h"
+#ifdef IBMBIDI
+#include "nsIBidiKeyboard.h"
+#endif
 
 // for ReportToConsole
 #include "nsIStringBundle.h"
@@ -171,6 +174,9 @@ nsVoidArray *nsContentUtils::sPtrsToPtrsToRelease;
 nsIJSRuntimeService *nsContentUtils::sJSRuntimeService;
 JSRuntime *nsContentUtils::sScriptRuntime;
 PRInt32 nsContentUtils::sScriptRootCount = 0;
+#ifdef IBMBIDI
+nsIBidiKeyboard *nsContentUtils::sBidiKeyboard = nsnull;
+#endif
 
 
 PRBool nsContentUtils::sInitialized = PR_FALSE;
@@ -407,6 +413,20 @@ nsContentUtils::GetXTFService()
 }
 #endif
 
+#ifdef IBMBIDI
+nsIBidiKeyboard*
+nsContentUtils::GetBidiKeyboard()
+{
+  if (!sBidiKeyboard) {
+    nsresult rv = CallGetService("@mozilla.org/widget/bidikeyboard;1", &sBidiKeyboard);
+    if (NS_FAILED(rv)) {
+      sBidiKeyboard = nsnull;
+    }
+  }
+  return sBidiKeyboard;
+}
+#endif
+
 template <class OutputIterator>
 struct NormalizeNewlinesCharTraits {
   public:
@@ -603,6 +623,9 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sImgLoader);
   NS_IF_RELEASE(sPrefBranch);
   NS_IF_RELEASE(sPref);
+#ifdef IBMBIDI
+  NS_IF_RELEASE(sBidiKeyboard);
+#endif
   if (sPtrsToPtrsToRelease) {
     for (i = 0; i < sPtrsToPtrsToRelease->Count(); ++i) {
       nsISupports** ptrToPtr =
