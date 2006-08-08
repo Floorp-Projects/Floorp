@@ -45,6 +45,7 @@
 #include "xpcprivate.h"
 #include "nsString.h"
 #include "XPCNativeWrapper.h"
+#include "nsIAtom.h"
 
 //#define STRICT_CHECK_OF_UNICODE
 #ifdef STRICT_CHECK_OF_UNICODE
@@ -978,6 +979,25 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                     return JS_FALSE;
                 *((nsISupports**)d) = NS_STATIC_CAST(nsIVariant*, variant);
                 return JS_TRUE;
+            }
+            else if(iid->Equals(NS_GET_IID(nsIAtom)) &&
+                    JSVAL_IS_STRING(s))
+            {
+                // We're trying to pass a string as an nsIAtom.  Let's atomize!
+                JSString* str = JSVAL_TO_STRING(s);
+                PRUnichar* chars =
+                    NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(str));
+                if (!chars) {
+                    if (pErr)
+                        *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
+                    return JS_FALSE;
+                }
+                PRUint32 length = JS_GetStringLength(str);
+                nsIAtom* atom = NS_NewAtom(nsDependentString(chars, length));
+                if (!atom && pErr)
+                    *pErr = NS_ERROR_OUT_OF_MEMORY;
+                *((nsISupports**)d) = atom;
+                return atom != nsnull;                
             }
             //else ...
 
