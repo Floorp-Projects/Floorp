@@ -779,13 +779,11 @@ JS_DestroyRuntime(JSRuntime *rt)
 #endif
     js_FinishPropertyTree(rt);
     free(rt);
-    JS_ArenaFinish();
 }
 
 JS_PUBLIC_API(void)
 JS_ShutDown(void)
 {
-    JS_ArenaShutDown();
     js_FinishDtoa();
 #ifdef JS_THREADSAFE
     js_CleanupLocks();
@@ -1944,7 +1942,6 @@ JS_GC(JSContext *cx)
      */
     js_RunCloseHooks(cx);
 #endif
-    JS_ArenaFinish();
 }
 
 JS_PUBLIC_API(void)
