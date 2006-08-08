@@ -617,7 +617,7 @@ js_CloseGeneratorObject(JSContext *cx, JSGenerator *gen)
     obj = gen->obj;
     if (!js_GetClassPrototype(cx, obj, INT_TO_JSID(JSProto_Generator), &proto))
         return JS_FALSE;
-    if (!JS_GetMethodById(cx, proto, id, &obj, &fval))
+    if (!JS_GetMethodById(cx, proto, id, &proto, &fval))
         return JS_FALSE;
 
     return js_InternalCall(cx, obj, fval, 0, NULL, &rval);
