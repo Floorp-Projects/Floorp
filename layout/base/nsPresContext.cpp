@@ -347,13 +347,11 @@ nsPresContext::GetFontPreferences()
   pref.Append(langGroup);
 
   PRInt32 size = nsContentUtils::GetIntPref(pref.get());
-  if (size > 0) {
-    if (unit == eUnit_px) {
-      mMinimumFontSize = NSFloatPixelsToTwips((float)size, p2t);
-    }
-    else if (unit == eUnit_pt) {
-      mMinimumFontSize = NSIntPointsToTwips(size);
-    }
+  if (unit == eUnit_px) {
+    mMinimumFontSize = NSFloatPixelsToTwips((float)size, p2t);
+  }
+  else if (unit == eUnit_pt) {
+    mMinimumFontSize = NSIntPointsToTwips(size);
   }
 
   // get attributes specific to each generic font
