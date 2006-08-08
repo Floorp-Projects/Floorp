@@ -3698,34 +3698,30 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
     return NS_ERROR_FAILURE;
 
   if (aDesignMode.LowerCaseEqualsLiteral("on") && !mEditingIsOn) {
+    // Turn the member variable on now, so that when editor calls back to find
+    // out whether to spellcheck, we provide the right answer
+    mEditingIsOn = PR_TRUE;
+
     rv = editSession->MakeWindowEditable(window, "html", PR_FALSE);
+    if (NS_FAILED(rv)) {
+      mEditingIsOn = PR_FALSE;
+      return rv;
+    }
 
-    if (NS_SUCCEEDED(rv)) {
-      // now that we've successfully created the editor, we can
-      // reset our flag
-      mEditingIsOn = PR_TRUE;
-
-      // Set the editor to not insert br's on return when in p
-      // elements by default.
-      PRBool unused;
-      rv = ExecCommand(NS_LITERAL_STRING("insertBrOnReturn"), PR_FALSE,
-                       NS_LITERAL_STRING("false"), &unused);
-
-      if (NS_FAILED(rv)) {
-        // Editor setup failed. Editing is is not on after all.
-
-        editSession->TearDownEditorOnWindow(window);
-
-        mEditingIsOn = PR_FALSE;
-      }
+    // Set the editor to not insert br's on return when in p elements by
+    // default.
+    PRBool unused;
+    rv = ExecCommand(NS_LITERAL_STRING("insertBrOnReturn"), PR_FALSE,
+                     NS_LITERAL_STRING("false"), &unused);
+    if (NS_FAILED(rv)) {
+      // Editor setup failed. Editing is is not on after all.
+      mEditingIsOn = PR_FALSE;
+      editSession->TearDownEditorOnWindow(window);
     }
   } else if (aDesignMode.LowerCaseEqualsLiteral("off") && mEditingIsOn) {
     // turn editing off
+    mEditingIsOn = PR_FALSE;
     rv = editSession->TearDownEditorOnWindow(window);
-
-    if (NS_SUCCEEDED(rv)) {
-      mEditingIsOn = PR_FALSE;
-    }
   }
 
   return rv;
