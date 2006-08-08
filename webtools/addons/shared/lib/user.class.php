@@ -138,17 +138,17 @@ class User extends AMO_Object
      */
     function sendConfirmation($pass)
     {
-        $subject  = "Activate your new Mozilla Update account\n";
+        $subject  = "Activate your new Mozilla Add-ons account\n";
 
-        $message  = "Welcome to Mozilla Update.\n";
-        $message .= "Before you can use your new account you must activate it, this ensures the e-mail address you used is valid and belongs to you.\n";
-        $message .= "To activate your account, click the link below or copy and paste the whole thing into your browsers location bar:\n";
+        $message  = "Welcome to Mozilla Add-ons.\n";
+        $message .= "Before you can use your new account you must activate it - this ensures the e-mail address you used is valid and belongs to you.\n";
+        $message .= "To activate your account, click the link below or copy and paste the whole thing into your browser's location bar:\n";
         $message .= HTTP_HOST.WEB_PATH.'/verifyaccount.php?email='.urlencode($this->UserEmail).'&confirmationcode='.$this->ConfirmationCode."\n\n";
-        $message .= "Keep this e-mail in a safe-place for your records, below is your account details you used when registering for your account.\n\n";
+        $message .= "Keep this e-mail in a safe place for your records, below is your account details you used when registering for your account.\n\n";
         $message .= "E-Mail: {$this->UserEmail}\n";
         $message .= "Password: {$pass}\n\n";
-        $message .= "Thanks for joining Mozilla Update\n";
-        $message .= "-- Mozilla Update Staff\n";
+        $message .= "Thanks for joining Mozilla Add-ons\n";
+        $message .= "-- Mozilla Add-ons Staff\n";
 
         $this->sendMail($subject, $message);
     }
@@ -163,8 +163,8 @@ class User extends AMO_Object
     {
         $_to = $this->UserEmail;
 
-        $_from_name    = "Mozilla Update";
-        $_from_address = "update-daemon@mozilla.org";
+        $_from_name    = "Mozilla Add-ons";
+        $_from_address = "nobody@mozilla.org";
 
         $_headers  = "MIME-Version: 1.0\r\n";
         $_headers .= "Content-type: text/plain; charset=iso-8859-1\r\n";
@@ -172,7 +172,7 @@ class User extends AMO_Object
         //$_headers .= "Reply-To: ".$from_name." <".$from_address.">\r\n";
         $_headers .= "X-Priority: 3\r\n";
         $_headers .= "X-MSMail-Priority: Normal\r\n";
-        $_headers .= "X-Mailer: UMO Mail System 1.0";
+        $_headers .= "X-Mailer: AMO Mail System 1.0";
 
         mail($_to, $subject, $message, $_headers);
     }
@@ -273,18 +273,18 @@ class User extends AMO_Object
         $_email = urlencode($this->UserEmail);
         $_code  = urlencode($this->ConfirmationCode);
 
-        $subject = "Mozilla Addons Password Reset\n";
+        $subject = "Mozilla Add-ons Password Reset\n";
 
-        $message = "Mozilla Addons Password Reset\n";
+        $message = "Mozilla Add-ons Password Reset\n";
         $message .= "\n";
-        $message .= "A request was recieved to reset the password for this\n";
-        $message .= "account on http://addons.mozilla.org/.  To change the password\n";
-        $message .= "please click on the following link, or paste it into your browser:\n";
+        $message .= "A request was received to reset the password for this\n";
+        $message .= "account on ".HTTP_HOST.WEB_PATH.". To change the password\n";
+        $message .= "please click on the following link, or paste it into your browser's location bar:\n";
         $message .= HTTP_HOST.WEB_PATH."/resetpassword.php?email={$_email}&code={$_code}\n";
         $message .= "\n";
         $message .= "If you did not request this email there is no need for further action.\n";
         $message .= "Thanks,\n";
-        $message .= "-- Mozilla Update Staff\n";
+        $message .= "-- Mozilla Add-ons Staff\n";
 
         $this->sendMail($subject,$message);
 
