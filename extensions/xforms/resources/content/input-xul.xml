@@ -191,11 +191,35 @@
           inputControl: this,
           handleEvent: function(aEvent) {
             this.inputControl.control.value = this.inputControl.picker.value;
-            this.inputControl.popup.hidePopup();
+            this.inputControl.hidePicker();
           }
         };
         this.picker.addEventListener("change", pickerChangeHandler, false);
       </constructor>
+
+      <method name="showPicker">
+        <body>
+          this.popup.showPopup(this.dropmarker, -1, -1, "popup",
+                               "bottomleft", "topleft");
+          this._isPickerVisible = true;
+        </body>
+      </method>
+
+      <method name="hidePicker">
+        <body>
+          this.popup.hidePopup();
+          this._isPickerVisible = false;
+        </body>
+      </method>
+
+      <method name="togglePicker">
+        <body>
+          if (!this._isPickerVisible)
+            this.showPicker();
+          else
+            this.hidePicker();
+        </body>
+      </method>
 
       <property name="dropmarker" readonly="true">
         <getter>
@@ -226,18 +250,30 @@
         </getter>
       </property>
       <field name="_popup">null</field>
+
+      <field name="_isPickerVisible">false</field>
     </implementation>
 
     <handlers>
       <handler event="command">
-        if (event.originalTarget == this.dropmarker) {
-          this.popup.showPopup(this.dropmarker, -1, -1, "popup",
-                               "bottomleft", "topleft");
-        }
+        if (event.originalTarget == this.dropmarker)
+          this.showPicker();
       </handler>
 
       <handler event="popupshowing">
         this.picker.value = this.control.value;
+      </handler>
+
+      <handler event="keypress">
+      <![CDATA[
+        if (event.keyCode == event.DOM_VK_F4) {
+          this.togglePicker();
+        } else if (event.altKey && (event.keyCode == event.DOM_VK_DOWN ||
+                   event.keyCode == event.DOM_VK_UP)) {
+          this.togglePicker();
+          event.preventDefault();
+        }
+      ]]>
       </handler>
     </handlers>
   </binding>

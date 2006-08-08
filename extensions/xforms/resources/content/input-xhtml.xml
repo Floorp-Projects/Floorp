@@ -443,7 +443,7 @@
 
     <handlers>
       <handler event="keypress" keycode="VK_ESCAPE">
-        this.hidePicker();
+        this.hidePicker(true);
       </handler>
 
       <handler event="keypress" keycode="VK_RETURN">
@@ -455,10 +455,12 @@
 
       <handler event="keypress">
       <![CDATA[
-        if (event.keyCode == event.DOM_VK_F4 ||
-            event.altKey && (event.keyCode == event.DOM_VK_DOWN ||
-                             event.keyCode == event.DOM_VK_UP)) {
+        if (event.keyCode == event.DOM_VK_F4) {
           this.togglePicker();
+        } else if (event.altKey && (event.keyCode == event.DOM_VK_DOWN ||
+                   event.keyCode == event.DOM_VK_UP)) {
+          this.togglePicker();
+          event.preventDefault();
         }
       ]]>
       </handler>
