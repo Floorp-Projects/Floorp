@@ -87,8 +87,8 @@ NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
     nsSimpleArrayEnumerator* enumer = new nsSimpleArrayEnumerator(array);
     if (enumer == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    *result = enumer; 
-    NS_ADDREF(*result);
+
+    NS_ADDREF(*result = enumer);
     return NS_OK;
 }
 
@@ -202,7 +202,6 @@ NS_NewArrayEnumerator(nsISimpleEnumerator* *aResult,
     nsCOMArrayEnumerator *enumerator = new (aArray) nsCOMArrayEnumerator();
     if (!enumerator) return NS_ERROR_OUT_OF_MEMORY;
 
-    *aResult = enumerator;
-    NS_ADDREF(*aResult);
+    NS_ADDREF(*aResult = enumerator);
     return NS_OK;
 }
