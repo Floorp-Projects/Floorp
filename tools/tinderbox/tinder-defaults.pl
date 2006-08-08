@@ -74,6 +74,7 @@ $XULWindowOpenTest        = 0;  # Txul
 $StartupPerformanceTest   = 0;  # Ts
 $NeckoUnitTest            = 0;
 $RenderPerformanceTest    = 0;  # Tgfx
+$RunUnitTests             = 0;  # TUnit
 @CompareLocaleDirs        = (); # Run compare-locales test on these directories
 # ("network","dom","toolkit","security/manager");
 $CompareLocalesAviary     = 0;  # Should the compare-locales commands use the
@@ -117,6 +118,7 @@ $StartupPerformanceTestTimeout    = 15;    # seconds
 $NeckoUnitTestTimeout             = 30;    # seconds
 $XULWindowOpenTestTimeout	      = 150;   # seconds
 $RenderTestTimeout                = 1800;  # seconds
+$RunUnitTestsTimeout              = 600;   # seconds
 
 $MozConfigFileName = 'mozconfig';
 

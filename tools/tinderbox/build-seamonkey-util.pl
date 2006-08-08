@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.332 $ ';
+$::UtilsVersion = '$Revision: 1.333 $ ';
 
 package TinderUtils;
 
@@ -1981,7 +1981,8 @@ sub run_all_tests {
            $Settings::QATest                 or
            $Settings::BloatTest2             or
            $Settings::BloatTest              or
-           $Settings::RenderPerformanceTest) {
+           $Settings::RenderPerformanceTest  or
+           $Settings::RunUnitTests) {
             
             # Chances are we will be timing these tests.  Bring gettime() into memory
             # by calling it once, before any tests run.
@@ -2326,6 +2327,13 @@ sub run_all_tests {
         set_pref($pref_file, 'privacy.popups.showBrowserMessage', 'true');
         set_pref($pref_file, 'dom.disable_open_during_load', 'false');
       }
+    }
+
+    # run TUnit
+    if ($Settings::RunUnitTests and $test_result eq 'success') {
+      $test_result = RunUnitTests("RunUnitTests",
+                                  $build_dir, "mozilla",
+                                  ["make", "-k", "check"]);
     }
 
     return $test_result;
@@ -3090,6 +3098,28 @@ sub BloatTest {
     }
 
     return 'success';
+}
+
+#
+# Run all unit tests
+#
+
+sub RunUnitTests {
+  my ($test_name, $build_dir, $binary_dir, $args) = @_;
+  my $test_result;
+  my $binary_log = "$build_dir/$test_name.log";
+
+  my $unit_test_result = FileBasedTest($test_name, $build_dir, $binary_dir,
+                                      [@$args],
+                                      $Settings::RunUnitTestsTimeout,
+                                      "FAIL", 0, 1);
+
+  if ($unit_test_result eq 'testfailed') {
+    print_log "TinderboxPrint:TUnit:[FAILED]\n";
+    return 'testfailed';
+  }
+
+  return 'success';
 }
 
 # Page loader (-f option):
