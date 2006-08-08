@@ -108,7 +108,7 @@ nsSimpleArrayEnumerator::GetNext(nsISupports** aResult)
     return mValueArray->QueryElementAt(mIndex++, NS_GET_IID(nsISupports), (void**)aResult);
 }
 
-extern NS_COM nsresult
+nsresult
 NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
                       nsIArray* array)
 {
@@ -226,7 +226,7 @@ nsCOMArrayEnumerator::operator new (size_t size, const nsCOMArray_base& aArray)
     return result;
 }
 
-extern NS_COM nsresult
+nsresult
 NS_NewArrayEnumerator(nsISimpleEnumerator* *aResult,
                       const nsCOMArray_base& aArray)
 {
