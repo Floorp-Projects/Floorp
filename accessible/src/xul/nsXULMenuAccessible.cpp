@@ -72,8 +72,12 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetState(PRUint32 *_retval)
   // Has Popup?
   nsAutoString tagName;
   element->GetLocalName(tagName);
-  if (tagName.EqualsLiteral("menu"))
+  if (tagName.EqualsLiteral("menu")) {
     *_retval |= STATE_HASPOPUP;
+    PRBool isOpen;
+    element->HasAttribute(NS_LITERAL_STRING("open"), &isOpen);
+    *_retval |= isOpen ? STATE_EXPANDED : STATE_COLLAPSED;
+  }
 
   nsAutoString menuItemType;
   element->GetAttribute(NS_LITERAL_STRING("type"), menuItemType); 
@@ -95,15 +99,11 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetState(PRUint32 *_retval)
   // Offscreen?
   // If parent or grandparent menuitem is offscreen, then we're offscreen too
   // We get it by replacing the current offscreen bit with the parent's
-  PRUint32 parentState = 0;
   nsCOMPtr<nsIAccessible> parentAccessible;
+  GetParent(getter_AddRefs(parentAccessible));
   if (parentAccessible) {
-    GetParent(getter_AddRefs(parentAccessible));
-    if (parentAccessible) {
-      parentAccessible->GetFinalState(&parentState);
-      *_retval &= ~STATE_OFFSCREEN;  // clear the old OFFSCREEN bit
-      *_retval |= (parentState & STATE_OFFSCREEN);  // or it with the parent's offscreen bit
-    }
+    *_retval &= ~STATE_OFFSCREEN;  // clear the old OFFSCREEN bit
+    *_retval |= (State(parentAccessible) & STATE_OFFSCREEN);  // or it with the parent's offscreen bit
   }
 
   return NS_OK;
