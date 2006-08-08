@@ -51,13 +51,18 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
-
   var globalToPokeGC = {};
 
   function make_iterator()
   {
-    var iter = (function() { yield 0; })();
-    iter.close = make_iterator;
+    function generator() {
+      try {
+        yield 0;
+      } finally {
+        make_iterator();
+      }
+    }
+    generator().next();
     globalToPokeGC = {};
     if (typeof alert != 'undefined')
     {
