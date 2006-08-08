@@ -348,8 +348,8 @@ int main(void)
     registrar->AutoRegister(nsnull);
   
 #if defined(XP_WIN) || defined(XP_OS2)
-    InitTest("c:\\temp\\", "sub1/sub2/");
-    InitTest("d:\\temp\\", "sub1\\sub2\\");
+    InitTest("c:\\temp\\", "sub1/sub2/"); // expect failure
+    InitTest("d:\\temp\\", "sub1\\sub2\\"); // expect failure
 
     CreationTest("c:\\temp\\", "file.txt", nsIFile::NORMAL_FILE_TYPE, 0644);
     DeletionTest("c:\\temp\\", "file.txt", PR_FALSE);
@@ -370,7 +370,7 @@ int main(void)
 
 #else
 #ifdef XP_UNIX
-    InitTest("/tmp/", "sub1/sub2/");
+    InitTest("/tmp/", "sub1/sub2/"); // expect failure
     
     CreationTest("/tmp", "file.txt", nsIFile::NORMAL_FILE_TYPE, 0644);
     DeletionTest("/tmp/", "file.txt", PR_FALSE);
