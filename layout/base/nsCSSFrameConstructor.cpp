@@ -7709,7 +7709,11 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     newFrame = NS_NewSVGTextFrame(mPresShell, aContent, aStyleContext);
   }
   else if (aTag == nsSVGAtoms::tspan) {
-    newFrame = NS_NewSVGTSpanFrame(mPresShell, aContent, aParentFrame, aStyleContext);
+    nsISVGTextContentMetrics* metrics;
+    CallQueryInterface(aParentFrame, &metrics);
+    if (metrics) {
+      newFrame = NS_NewSVGTSpanFrame(mPresShell, aContent, aParentFrame, aStyleContext);
+    }
   }
   else if (aTag == nsSVGAtoms::linearGradient) {
     newFrame = NS_NewSVGLinearGradientFrame(mPresShell, aContent, aStyleContext);
@@ -7733,7 +7737,11 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     newFrame = NS_NewSVGClipPathFrame(mPresShell, aContent, aStyleContext);
   }
   else if (aTag == nsSVGAtoms::textPath) {
-    newFrame = NS_NewSVGTextPathFrame(mPresShell, aContent, aParentFrame, aStyleContext);
+    nsISVGTextContentMetrics* metrics;
+    CallQueryInterface(aParentFrame, &metrics);
+    if (metrics) {
+      newFrame = NS_NewSVGTextPathFrame(mPresShell, aContent, aParentFrame, aStyleContext);
+    }
   }
   else if (aTag == nsSVGAtoms::filter) {
     newFrame = NS_NewSVGFilterFrame(mPresShell, aContent, aStyleContext);
