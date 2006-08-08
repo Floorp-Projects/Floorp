@@ -162,7 +162,7 @@ FindNextNode(nsIDOMNode* aNode, nsIDOMNode* aRoot,
     }
     
     aNode->GetParentNode(getter_AddRefs(next));
-    if (next == aRoot)
+    if (next == aRoot || ! next)
       return nsnull;
     aNode = next;
     
