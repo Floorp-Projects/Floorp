@@ -659,9 +659,7 @@
     </toolbaritem>
 
     <toolbaritem id="throbber-box" title="&throbberItem.title;" align="center" pack="center">
-      <button id="navigator-throbber" oncommand="openRegionURL('messenger.throbber.url')" tooltiptext="&throbber.tooltip;">
-          <observes element="broadcaster_throbber" attribute="busy"/>
-      </button>
+      <button id="navigator-throbber" disabled="true"/>
     </toolbaritem>
 
   </toolbarpalette>

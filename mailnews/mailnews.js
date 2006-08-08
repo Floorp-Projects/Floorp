@@ -140,6 +140,9 @@ pref("mail.pane_config",                    0);
 pref("mail.addr_book.mapit_url.format", "chrome://messenger-region/locale/region.properties");
 #ifdef MOZ_SUITE
 pref("mail.addr_book.im.onlineCheckAllowed", false);
+pref("messenger.throbber.url","chrome://messenger-region/locale/region.properties");
+pref("compose.throbber.url","chrome://messenger-region/locale/region.properties");
+pref("addressbook.throbber.url","chrome://messenger-region/locale/region.properties");
 #endif
 
 // the format for "mail.addr_book.quicksearchquery.format" is:
@@ -520,10 +523,6 @@ This option is mainly for the UI of html_as.
 pref("mail.forward_message_mode", 0); // 0=default as attachment 2=forward as inline with attachments, (obsolete 4.x value)1=forward as quoted (mapped to 2 in mozilla)
 
 pref("mail.startup.enabledMailCheckOnce", false);
-
-pref("messenger.throbber.url","chrome://messenger-region/locale/region.properties");
-pref("compose.throbber.url","chrome://messenger-region/locale/region.properties");
-pref("addressbook.throbber.url","chrome://messenger-region/locale/region.properties");
 
 pref("mailnews.send_plaintext_flowed", true); // RFC 2646=======
 pref("mailnews.display.disable_format_flowed_support", false);

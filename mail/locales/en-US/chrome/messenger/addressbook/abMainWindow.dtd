@@ -155,7 +155,6 @@
 <!ENTITY newmsgButton.tooltip                           "Send a mail message">
 <!ENTITY newIM.tooltip                                  "Send an instant message or chat">
 <!ENTITY deleteButton.tooltip                           "Delete selected card or address book">
-<!ENTITY throbber.tooltip                               "Go to the &vendorShortName; home page">
 
 <!-- Dir Tree header -->
 <!ENTITY dirTreeHeader.label                            "Address Books">

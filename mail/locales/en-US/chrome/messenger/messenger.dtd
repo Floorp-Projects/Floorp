@@ -450,7 +450,6 @@
 <!ENTITY markButton.tooltip "Mark messages">
 <!ENTITY printButton.tooltip "Print this message">
 <!ENTITY stopButton.tooltip "Stop the current transfer">
-<!ENTITY throbber.tooltip "Go to the &vendorShortName; home page">
 <!ENTITY junkButton.tooltip "Mark the selected messages as junk">
 <!ENTITY notJunkButton.tooltip "Mark the selected messages as not junk">
 <!ENTITY addressBookButton.tooltip "Go to the address book">

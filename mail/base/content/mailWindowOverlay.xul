@@ -1879,7 +1879,7 @@
       <toolbarbutton id="button-address" class="toolbarbutton-1" label="&addressBookButton.label;" oncommand="toAddressBook();" tooltiptext="&addressBookButton.tooltip;"/>
 
       <toolbaritem id="throbber-box" title="&throbberItem.title;" align="center" pack="center">
-        <button id="navigator-throbber" oncommand="openRegionURL('messenger.throbber.url')" tooltiptext="&throbber.tooltip;"/>
+        <button id="navigator-throbber" disabled="true"/>
       </toolbaritem>
 
       <toolbarbutton class="toolbarbutton-1" id="button-stop" label="&stopButton.label;" tooltiptext="&stopButton.tooltip;" command="cmd_stop"/>

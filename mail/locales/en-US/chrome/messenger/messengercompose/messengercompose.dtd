@@ -211,7 +211,6 @@
 <!ENTITY addressButton.tooltip "Select a recipient from an Address Book"> 
 <!ENTITY attachButton.tooltip "Include an attachment"> 
 <!ENTITY saveButton.tooltip "Save this message"> 
-<!ENTITY throbber.tooltip "Go to the &vendorShortName; home page">
 <!ENTITY cutButton.tooltip              "Cut">
 <!ENTITY copyButton.tooltip             "Copy">
 <!ENTITY pasteButton.tooltip            "Paste">
