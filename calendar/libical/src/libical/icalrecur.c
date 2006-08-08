@@ -316,30 +316,26 @@ void icalrecur_add_byrules(struct icalrecur_parser *parser, short *array,
  * function sorts the days taking into account the first day of week.
  */
 static void
-sort_bydayrules(struct icalrecur_parser *parser)
+sort_bydayrules(short *array, int week_start)
 {
-    short *array;
-    int week_start, one, two, i, j;
+	int one, two, i, j;
 
-    array = parser->rt.by_day;
-    week_start = parser->rt.week_start;
+	for (i=0;
+			 i<ICAL_BY_DAY_SIZE && array[i] != ICAL_RECURRENCE_ARRAY_MAX;
+			 i++) {
+		for (j=0; j<i; j++) {
+			one = icalrecurrencetype_day_day_of_week(array[j]) - week_start;
+			if (one < 0) one += 7;
+			two = icalrecurrencetype_day_day_of_week(array[i]) - week_start;
+			if (two < 0) two += 7;
 
-    for (i=0;
-	 i<ICAL_BY_DAY_SIZE && array[i] != ICAL_RECURRENCE_ARRAY_MAX;
-	 i++) {
-	for (j=0; j<i; j++) {
-	    one = icalrecurrencetype_day_day_of_week(array[j]) - week_start;
-	    if (one < 0) one += 7;
-	    two = icalrecurrencetype_day_day_of_week(array[i]) - week_start;
-	    if (two < 0) two += 7;
-
-	    if (one > two) {
-		short tmp = array[j];
-		array[j] = array[i];
-		array[i] = tmp;
-	    }
+			if (one > two) {
+				short tmp = array[j];
+				array[j] = array[i];
+				array[i] = tmp;
+			}
+		}
 	}
-    }
 }
 
 void icalrecur_add_bydayrules(struct icalrecur_parser *parser, const char* vals)
@@ -400,7 +396,7 @@ void icalrecur_add_bydayrules(struct icalrecur_parser *parser, const char* vals)
 
     free(vals_copy);
 
-    sort_bydayrules(parser);
+    sort_bydayrules(parser->rt.by_day,parser->rt.week_start);
 }
 
 
@@ -449,7 +445,7 @@ struct icalrecurrencetype icalrecurrencetype_from_string(const char* str)
 	    parser.rt.interval = (short)atoi(value);
 	} else if (strcmp(name,"WKST") == 0){
 	    parser.rt.week_start = icalrecur_string_to_weekday(value);
-	    sort_bydayrules(&parser);
+      sort_bydayrules(parser.rt.by_day,parser.rt.week_start);
 	} else if (strcmp(name,"BYSECOND") == 0){
 	    icalrecur_add_byrules(&parser,parser.rt.by_second,
 				  ICAL_BY_SECOND_SIZE,value);
@@ -592,7 +588,7 @@ char* icalrecurrencetype_as_string(struct icalrecurrencetype *recur)
     }
 
     /* If week start is not monday (the default per RFC2445) append WKST */
-    if (recur->week_start != ICAL_MONDAY_WEEKDAY) {
+    if (recur->week_start != ICAL_MONDAY_WEEKDAY && recur->week_start != ICAL_NO_WEEKDAY) {
 	icalmemory_append_string(&str,&str_p,&buf_sz,";WKST=");
 	icalmemory_append_string(&str,&str_p,&buf_sz,
 			icalrecur_weekday_to_string(recur->week_start));
@@ -1653,6 +1649,10 @@ static int next_weekday_by_week(icalrecur_iterator* impl)
   if(!has_by_data(impl,BY_DAY)){
       return 1;
   }
+
+	/* this call to 'sort_bydayrules' assures that the occurrences for
+		 weekly recurrences will be generated in a strict linear order. */
+     sort_bydayrules(BYDAYPTR,impl->rule.week_start);
 
   /* If we get here, we need to step to tne next day */
 
