@@ -2557,7 +2557,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                     return NULL;
 
                 /* Destructuring for-in requires [key, value] enumeration. */
-                pn->pn_op = JSOP_FOREACHKEYVAL;
+                if (pn->pn_op != JSOP_FOREACH)
+                    pn->pn_op = JSOP_FOREACHKEYVAL;
                 break;
 #endif
 
@@ -4872,7 +4873,8 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                             return NULL;
 
                         /* Destructuring requires [key, value] enumeration. */
-                        pn2->pn_op = JSOP_FOREACHKEYVAL;
+                        if (pn2->pn_op != JSOP_FOREACH)
+                            pn2->pn_op = JSOP_FOREACHKEYVAL;
                         break;
 #endif
 
