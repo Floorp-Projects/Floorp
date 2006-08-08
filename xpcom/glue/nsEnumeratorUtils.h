@@ -53,7 +53,9 @@ public:
 
     // nsArrayEnumerator methods
     nsArrayEnumerator(nsISupportsArray* aValueArray);
-    virtual ~nsArrayEnumerator(void);
+
+private:
+    ~nsArrayEnumerator(void);
 
 protected:
     nsISupportsArray* mValueArray;
@@ -76,7 +78,9 @@ public:
     NS_IMETHOD GetNext(nsISupports** aResult);
 
     nsSingletonEnumerator(nsISupports* aValue);
-    virtual ~nsSingletonEnumerator();
+
+private:
+    ~nsSingletonEnumerator();
 
 protected:
     nsISupports* mValue;
