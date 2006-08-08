@@ -33,7 +33,7 @@
 <dl>
 <dt><img src="{$config.webpath}/search-engines-static/msn.png" alt=""/> <a href="javascript:addEngine('MSN','png','General','3796')">MSN</a></dt><dd>MSN search engine.</dd>
 <dt><img src="{$config.webpath}/search-engines-static/technorati.gif" alt=""/> <a href="javascript:addEngine('technorati-new','gif','Weblogs','2662')">Technorati</a></dt><dd>A real-time search engine that keeps track of what is going on in the blogosphere</dd>
-<dt><img src="{$config.webpath}/search-engines-static/usatoday.gif" alt=""/> <a href="javascript:addEngine('usatoday','gif','News','0')">USA Today</a></dt><dd>Find the latest news from across the USA and around the world.</dd>
+<dt><img src="{$config.webpath}/search-engines-static/usatoday.gif" alt=""/> <a href="javascript:addEngine('usatoday','gif','News','0')">USATODAY.com</a></dt><dd>Find the latest news from across the USA and around the world.</dd>
 <dt><img src="{$config.webpath}/search-engines-static/weatherchannel.png" alt=""/> <a href="javascript:addEngine('weather','png','Weather','0')">Weather Channel</a></dt><dd>Enter city, state or zip code to find your weather information.</dd>
 <dt><img src="{$config.webpath}/search-engines-static/wikipedia.png" alt=""/> <a href="javascript:addEngine('wikipedia','png','Reference','2286')">Wikipedia</a></dt><dd>The incredible free encyclopedia.</dd>
 <dt><img src="{$config.webpath}/search-engines-static/yahooligans.png" alt=""/> <a href="javascript:addEngine('yahooligans','png','Kids and Teens','0')">Yahooligans</a></dt><dd>Search engine for kids and teens.</dd>
