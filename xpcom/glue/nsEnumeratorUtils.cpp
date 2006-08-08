@@ -41,7 +41,10 @@ nsArrayEnumerator::HasMoreElements(PRBool* aResult)
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    *aResult = (mIndex < (PRInt32) mValueArray->Count());
+    PRUint32 cnt;
+    nsresult rv = mValueArray->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    *aResult = (mIndex < (PRInt32) cnt);
     return NS_OK;
 }
 
@@ -52,7 +55,10 @@ nsArrayEnumerator::GetNext(nsISupports** aResult)
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    if (mIndex >= (PRInt32) mValueArray->Count())
+    PRUint32 cnt;
+    nsresult rv = mValueArray->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    if (mIndex >= (PRInt32) cnt)
         return NS_ERROR_UNEXPECTED;
 
     *aResult = mValueArray->ElementAt(mIndex++);
