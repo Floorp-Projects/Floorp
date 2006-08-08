@@ -60,10 +60,34 @@
 #include "nsIRootBox.h"
 #include "nsIContent.h"
 #include "nsXULTooltipListener.h"
+#include "nsFrameManager.h"
 
 // Interface IDs
 
 //#define DEBUG_REFLOW
+
+// static
+nsIRootBox*
+nsIRootBox::GetRootBox(nsIPresShell* aShell)
+{
+  if (!aShell) {
+    return nsnull;
+  }
+  nsIFrame* rootFrame = aShell->FrameManager()->GetRootFrame();
+  if (!rootFrame) {
+    return nsnull;
+  }
+
+  if (rootFrame) {
+    rootFrame = rootFrame->GetFirstChild(nsnull);
+  }
+
+  nsIRootBox* rootBox = nsnull;
+  if (rootFrame) {
+    CallQueryInterface(rootFrame, &rootBox);
+  }
+  return rootBox;
+}
 
 class nsRootBoxFrame : public nsBoxFrame, public nsIRootBox {
 public:
@@ -304,7 +328,7 @@ nsRootBoxFrame::AddTooltipSupport(nsIContent* aNode)
   if (!listener)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  listener->Init(aNode, this);
+  listener->Init(aNode);
   return NS_OK;
 }
 
