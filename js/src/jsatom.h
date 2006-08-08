@@ -397,13 +397,6 @@ extern JS_FRIEND_API(JSAtom *)
 js_AtomizeChars(JSContext *cx, const jschar *chars, size_t length, uintN flags);
 
 /*
- * Return an existing atom for the given char array or null if the char
- * sequence is currently not atomized.
- */
-extern JSAtom *
-js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length);
-
-/*
  * This variant handles all value tag types.
  */
 extern JSAtom *

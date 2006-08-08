@@ -439,26 +439,6 @@ typedef unsigned long JSUword;
 #define JS_UNLIKELY(x)  (x)
 #endif
 
-/***********************************************************************
-** MACROS:      JS_ARRAY_LENGTH
-**              JS_ARRAY_END
-** DESCRIPTION:
-**      Macros to get the number of elements and the pointer to one past the
-**      last element of a C array. Use them like this:
-**
-**      jschar buf[10], *s;
-**      JSString *str;
-**      ...
-**      for (s = buf; s != JS_ARRAY_END(buf); ++s) *s = ...;
-**      ...
-**      str = JS_NewStringCopyN(cx, buf, JS_ARRAY_LENGTH(buf));
-**      ...
-**
-***********************************************************************/
-
-#define JS_ARRAY_LENGTH(array) (sizeof (array) / sizeof (array)[0])
-#define JS_ARRAY_END(array)    ((array) + JS_ARRAY_LENGTH(array))
-
 JS_END_EXTERN_C
 
 #endif /* jstypes_h___ */
