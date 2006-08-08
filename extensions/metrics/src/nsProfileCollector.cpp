@@ -63,7 +63,7 @@
 #include "nsINavBookmarksService.h"
 #include "nsINavHistoryService.h"
 #include "nsILivemarkService.h"
-#include "nsBrowserCompsCID.h"
+#include "nsToolkitCompsCID.h"
 #else
 #include "nsIBookmarksService.h"
 #include "nsIRDFContainer.h"
