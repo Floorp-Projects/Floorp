@@ -80,6 +80,7 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 
+#include "nsFrameSelection.h"
 
 //const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 //const static char* kMOZEditorBogusNodeValue="TRUE";
@@ -401,10 +402,15 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
      */
     if (action == nsEditor::kOpInsertText
         || action == nsEditor::kOpInsertIMEText) {
-      nsCOMPtr<nsIPresShell> shell;
-      mEditor->GetPresShell(getter_AddRefs(shell));
-      if (shell) {
-        shell->UndefineCaretBidiLevel();
+
+      nsCOMPtr<nsISelection> selection;
+      nsresult res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
+      if (NS_FAILED(res)) return res;
+      nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(selection));
+      nsCOMPtr<nsFrameSelection> frameSelection;
+      privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));
+      if (frameSelection) {
+        frameSelection->UndefineCaretBidiLevel();
       }
     }
   }

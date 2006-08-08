@@ -98,9 +98,10 @@ class nsWeakFrame;
 
 typedef short SelectionType;
 
+// 0d8a87aa-3e6f-409f-a518-96fd8a29b423
 #define NS_IPRESSHELL_IID     \
-{ 0x67880b18, 0xaf91, 0x431b, \
-  { 0x89, 0x69, 0xfa, 0xd9, 0x2b, 0x3c, 0x33, 0x32 } }
+{ 0x0d8a87aa, 0x3e6f, 0x409f, \
+  { 0xa5, 0x18, 0x96, 0xfd, 0x8a, 0x29, 0xb4, 0x23 } }
 
 
 // Constants uses for ScrollFrameIntoView() function
@@ -121,10 +122,6 @@ typedef short SelectionType;
 #define VERIFY_REFLOW_REALLY_NOISY_RC 0x20
 #define VERIFY_REFLOW_INCLUDE_SPACE_MANAGER 0x40
 #define VERIFY_REFLOW_DURING_RESIZE_REFLOW  0x80
-
-#ifdef IBMBIDI // Constant for Set/Get CaretBidiLevel
-#define BIDI_LEVEL_UNDEFINED 0x80
-#endif
 
 // for PostAttributeChanged
 enum nsAttributeChangeType {
@@ -672,21 +669,6 @@ public:
 #endif
 
 #ifdef IBMBIDI
-  /**
-   * SetCaretBidiLevel will set the Bidi embedding level for the cursor. 0-63
-   */
-  NS_IMETHOD SetCaretBidiLevel(PRUint8 aLevel) = 0;
-
-  /**
-   * GetCaretBidiLevel will get the Bidi embedding level for the cursor. 0-63
-   */
-  NS_IMETHOD GetCaretBidiLevel(PRUint8 *aOutLevel) = 0;
-
-  /**
-   * UndefineCaretBidiLevel will set the Bidi embedding level for the cursor to an out-of-range value
-   */
-  NS_IMETHOD UndefineCaretBidiLevel(void) = 0;
-
   /**
    * Reconstruct and reflow frame model 
    */

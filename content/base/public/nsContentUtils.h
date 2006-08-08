@@ -92,6 +92,9 @@ struct JSRuntime;
 #ifdef MOZ_XTF
 class nsIXTFService;
 #endif
+#ifdef IBMBIDI
+class nsIBidiKeyboard;
+#endif
 
 extern const char kLoadAsData[];
 
@@ -380,6 +383,10 @@ public:
   static nsIXTFService* GetXTFService();
 #endif
 
+#ifdef IBMBIDI
+  static nsIBidiKeyboard* GetBidiKeyboard();
+#endif
+  
   /**
    * Get the cache security manager service. Can return null if the layout
    * module has been shut down.
@@ -968,7 +975,11 @@ private:
   static nsIJSRuntimeService* sJSRuntimeService;
   static JSRuntime* sScriptRuntime;
   static PRInt32 sScriptRootCount;
-  
+
+#ifdef IBMBIDI
+  static nsIBidiKeyboard* sBidiKeyboard;
+#endif
+
   static PRBool sInitialized;
 };
 

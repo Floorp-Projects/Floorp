@@ -45,9 +45,6 @@
 #include "nsITimer.h"
 #include "nsICaret.h"
 #include "nsWeakPtr.h"
-#ifdef IBMBIDI
-#include "nsIBidiKeyboard.h"
-#endif
 
 class nsIView;
 
@@ -156,6 +153,8 @@ class nsCaret : public nsICaret,
     }
     void          ToggleDrawnStatus() { mDrawn = !mDrawn; }
 
+    nsFrameSelection* GetFrameSelection();
+
 protected:
 
     nsWeakPtr             mPresShell;
@@ -187,7 +186,6 @@ protected:
 
 #ifdef IBMBIDI
     nsRect                mHookRect;          // directional hook on the caret
-    nsCOMPtr<nsIBidiKeyboard> mBidiKeyboard;  // Bidi keyboard object to set and query keyboard language
     PRUint8               mLastBidiLevel;     // saved bidi level of the last draw request, to use when we erase
     PRPackedBool          mKeyboardRTL;       // is the keyboard language right-to-left
 #endif

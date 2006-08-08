@@ -40,10 +40,14 @@
 #include "nsGUIEvent.h"
 
 // IID for the nsFrameSelection interface
-// cdfa6280-eba6-4938-9406-427818da8ce3
+// 6c2c1a4c-47ec-42be-a790-00417bf4c241
 #define NS_FRAME_SELECTION_IID      \
-{ 0xcdfa6280, 0xeba6, 0x4938, \
-  { 0x94, 0x06, 0x42, 0x78, 0x18, 0xda, 0x8c, 0xe3 } }
+{ 0x6c2c1a4c, 0x47ec, 0x42be, \
+  { 0xa7, 0x90, 0x00, 0x41, 0x7b, 0xf4, 0xc2, 0x41 } }
+
+#ifdef IBMBIDI // Constant for Set/Get CaretBidiLevel
+#define BIDI_LEVEL_UNDEFINED 0x80
+#endif
 
 //----------------------------------------------------------------------
 
@@ -352,6 +356,22 @@ public:
 
   void SetHint(HINT aHintRight) { mHint = aHintRight; }
   HINT GetHint() { return mHint; }
+  
+#ifdef IBMBIDI
+  /** SetCaretBidiLevel sets the caret bidi level
+   *  @param aLevel the caret bidi level
+   *  This method is virtual since it gets called from outside of layout.
+   */
+  virtual void SetCaretBidiLevel (PRUint8 aLevel);
+  /** GetCaretBidiLevel gets the caret bidi level
+   *  This method is virtual since it gets called from outside of layout.
+   */
+  virtual PRUint8 GetCaretBidiLevel();
+  /** UndefineCaretBidiLevel sets the caret bidi level to "undefined"
+   *  This method is virtual since it gets called from outside of layout.
+   */
+  virtual void UndefineCaretBidiLevel();
+#endif
 
   /** CharacterMove will generally be called from the nsiselectioncontroller implementations.
    *  the effect being the selection will move one character left or right.
@@ -619,6 +639,9 @@ private:
   PRInt16 mDisplaySelection; //for visual display purposes.
 
   HINT  mHint;   //hint to tell if the selection is at the end of this line or beginning of next
+#ifdef IBMBIDI
+  PRInt8 mCaretBidiLevel;
+#endif
 
   PRInt32 mDesiredX;
   nsIScrollableView *mScrollView;
