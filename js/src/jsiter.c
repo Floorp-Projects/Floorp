@@ -601,7 +601,7 @@ js_ThrowStopIteration(JSContext *cx, JSObject *obj)
 JSBool
 js_CloseGeneratorObject(JSContext *cx, JSGenerator *gen)
 {
-    JSObject *obj;
+    JSObject *obj, *proto;
     jsval fval, rval;
     const jsid id = ATOM_TO_JSID(cx->runtime->atomState.closeAtom);
 
@@ -610,8 +610,14 @@ js_CloseGeneratorObject(JSContext *cx, JSGenerator *gen)
     JS_ASSERT(gen != cx->runtime->gcCloseState.reachableList);
     JS_ASSERT(gen != cx->runtime->gcCloseState.todoHead);
 
+    /*
+     * Get generator_close from cached class object for gen's scope chain, so
+     * as not to depend on gen->obj's mutable prototype chain.
+     */
     obj = gen->obj;
-    if (!JS_GetMethodById(cx, obj, id, &obj, &fval))
+    if (!js_GetClassPrototype(cx, obj, INT_TO_JSID(JSProto_Generator), &proto))
+        return JS_FALSE;
+    if (!JS_GetMethodById(cx, proto, id, &obj, &fval))
         return JS_FALSE;
 
     return js_InternalCall(cx, obj, fval, 0, NULL, &rval);
@@ -866,7 +872,7 @@ static JSFunctionSpec generator_methods[] = {
     {js_next_str,     generator_next,  0,0,0},
     {js_send_str,     generator_send,  1,0,0},
     {js_throw_str,    generator_throw, 1,0,0},
-    {js_close_str,    generator_close, 0,0,0},
+    {js_close_str,    generator_close, 0,JSPROP_READONLY|JSPROP_PERMANENT,0},
     {0,0,0,0,0}
 };
 
