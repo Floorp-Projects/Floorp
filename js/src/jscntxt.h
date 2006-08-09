@@ -701,10 +701,8 @@ class JSAutoTempValueRooter
     }
 
   private:
-#if 0
-    static void *operator new(size_t) CPP_THROW_NEW { return 0; };
-    static void operator delete(void *, size_t) { };
-#endif
+    static void *operator new(size_t);
+    static void operator delete(void *, size_t);
 
     JSContext *mContext;
     JSTempValueRooter mTvr;
