@@ -45,9 +45,6 @@ pref("browser.chromeURL", "chrome://messenger/content/messengercompose/messenger
 pref("mail.biff.animate_dock_icon", false);
 #endif
 
-pref("update.app.enabled", true); // Whether or not app updates are enabled 
-pref("update.extensions.enabled", true);
-
 // App-specific update preferences
 
 // Whether or not app updates are enabled
@@ -125,40 +122,15 @@ pref("extensions.logging.enabled", false);
 //  .. etc ..
 //
 pref("extensions.update.enabled", true);
-pref("extensions.update.autoUpdateEnabled", true);
 pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.properties");
-pref("extensions.update.autoUpdate", false);    // Automatically download and install 
-                                                // updates to themes and extensions. 
-                                                // Does nothing at present. 
 
 pref("extensions.update.interval", 86400);  // Check for updates to Extensions and 
                                             // Themes every week
 // Non-symmetric (not shared by extensions) extension-specific [update] preferences
 pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
-pref("extensions.update.severity.threshold", 5);// The number of pending Extension/Theme
-                                                // updates you can have before the update
-                                                // notifier goes from low->medium severity.
-pref("extensions.update.count", 0);             // The number of extension/theme/etc 
-                                                // updates available
 pref("extensions.dss.enabled", false);          // Dynamic Skin Switching                                               
 pref("extensions.dss.switchPending", false);    // Non-dynamic switch pending after next
-                                                // restart.
-
-
-// General Update preferences
-pref("update.interval", 3600000);               // Check each of the above intervals 
-                                                // every 60 mins
-pref("update.showSlidingNotification", true);   // Windows-only slide-up taskbar 
-                                                // notification.
-// These prefs relate to the number and severity of updates available. This is a 
-// cache that the browser notification mechanism uses to determine if it should show
-// status bar UI if updates are detected and the app is shut down before installing
-// them.
-// 0 = low    (extension/theme updates), 
-// 1 = medium (numerous extension/theme updates), 
-// 2 = high   (new version of Firefox/Security patch)
-pref("update.severity", 0); 
 
 pref("xpinstall.whitelist.add", "update.mozilla.org");
 pref("xpinstall.whitelist.add.103", "addons.mozilla.org");
@@ -425,6 +397,7 @@ pref("news.directory",                  "");
 pref("autoupdate.enabled",              true);
 pref("browser.editor.disabled", false);
 pref("spellchecker.dictionary", "");
+
 // profile.force.migration can be used to bypass the migration wizard, forcing migration from a particular
 // mail application without any user intervention. Possible values are: 
 // dogbert (4.x), seamonkey (mozilla suite), eudora, oexpress, outlook. 
@@ -432,11 +405,6 @@ pref("profile.force.migration", "");
 
 // Customizable toolbar stuff
 pref("custtoolbar.personal_toolbar_folder", "");
-
-pref("sidebar.customize.all_panels.url", "http://sidebar-rdf.netscape.com/%LOCALE%/sidebar-rdf/%SIDEBAR_VERSION%/all-panels.rdf");
-pref("sidebar.customize.directory.url", "http://dmoz.org/Netscape/Sidebar/");
-pref("sidebar.customize.more_panels.url", "http://dmoz.org/Netscape/Sidebar/");
-pref("sidebar.num_tabs_in_view", 8);
 
 // XXXbsmedberg why are changing the default value here?
 // ------------------
