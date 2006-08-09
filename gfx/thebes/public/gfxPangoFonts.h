@@ -73,7 +73,7 @@ public:
 
     virtual gfxTextRun *MakeTextRun(const nsAString& aString);
     virtual gfxTextRun *MakeTextRun(const nsACString& aCString) {
-        return MakeTextRun(*NS_ConvertASCIItoUTF16(aCString));
+        return MakeTextRun(NS_ConvertASCIItoUTF16(aCString));
     }
 
     gfxPangoFont *GetFontAt(PRInt32 i) {
@@ -89,7 +89,7 @@ protected:
 
 class THEBES_API gfxPangoTextRun : public gfxTextRun {
 public:
-    gfxPangoTextRun(const nsAString *aString, gfxPangoFontGroup *aFontGroup);
+    gfxPangoTextRun(const nsAString& aString, gfxPangoFontGroup *aFontGroup);
     ~gfxPangoTextRun();
 
     virtual void Draw(gfxContext *aContext, gfxPoint pt);
