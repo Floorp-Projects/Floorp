@@ -54,3 +54,7 @@ tab[busy] {
   margin: 0px;
   list-style-image: url("chrome://global/skin/icons/tab-new.gif");
 }
+
+tooltip[tabpreview="true"] {
+  max-width: none;
+}

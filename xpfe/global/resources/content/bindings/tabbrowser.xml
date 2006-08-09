@@ -214,6 +214,7 @@
 
           if (!this.mPrefs.getBoolPref("browser.tabs.tooltippreview.enable")) {
             label.removeAttribute("width");
+            aPopup.removeAttribute("tabpreview");
             return true;
           }
 
@@ -225,6 +226,7 @@
           }
 
           label.width = 0;
+          aPopup.setAttribute("tabpreview", "true");
           var win = b.contentWindow;
           var w = win.innerWidth;
           var h = win.innerHeight;
@@ -243,7 +245,10 @@
             ctx.fillRect(0, 0, canvasW, canvasH);
             var img = b.contentDocument.body.firstChild;
             var ratio = img.naturalHeight / img.naturalWidth;
-            if (ratio * canvasW > canvasH) {
+            if (img.naturalHeight <= canvasH && img.naturalWidth <= canvasW) {
+              ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight);
+            }
+            else if (ratio * canvasW > canvasH) {
               ctx.drawImage(img, 0, 0, canvasH / ratio, canvasH);
             }
             else {
