@@ -274,8 +274,13 @@ nsMsgSearchDBView::OnNewSearch()
 
 NS_IMETHODIMP nsMsgSearchDBView::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *instigator)
 {
-  m_dbToUseList.RemoveObject(NS_STATIC_CAST(nsIMsgDatabase *, instigator));
-  return nsMsgDBView::OnAnnouncerGoingAway(instigator);
+  nsIMsgDatabase *db = NS_STATIC_CAST(nsIMsgDatabase *, instigator);
+  if (db)
+  {
+    db->RemoveListener(this);
+    m_dbToUseList.RemoveObject(db);
+  }
+  return NS_OK;
 }
 
 nsresult nsMsgSearchDBView::GetFolders(nsISupportsArray **aFolders)

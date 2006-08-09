@@ -49,6 +49,7 @@
 #include "nsMsgUtils.h"
 #include "nsITreeColumns.h"
 #include "nsIMsgSearchSession.h"
+#include "nsMsgDBCID.h"
 
 nsMsgXFVirtualFolderDBView::nsMsgXFVirtualFolderDBView()
 {
@@ -66,14 +67,26 @@ NS_IMETHODIMP nsMsgXFVirtualFolderDBView::Open(nsIMsgFolder *folder, nsMsgViewSo
   return nsMsgSearchDBView::Open(folder, sortType, sortOrder, viewFlags, pCount);
 }
 
+void nsMsgXFVirtualFolderDBView::RemovePendingDBListeners()
+{
+  nsresult rv;
+  PRInt32 scopeCount;
+  nsCOMPtr <nsIMsgSearchSession> searchSession = do_QueryReferent(m_searchSession);
+  nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
+  searchSession->CountSearchScopes(&scopeCount);
+  for (PRInt32 i = 0; i < scopeCount; i++)
+  {
+    nsMsgSearchScopeValue scopeId;
+    nsCOMPtr<nsIMsgFolder> searchFolder;
+    searchSession->GetNthSearchScope(i, &scopeId, getter_AddRefs(searchFolder));
+    if (searchFolder && msgDBService)
+      msgDBService->UnregisterPendingListener(this);
+  }
+}
+
 NS_IMETHODIMP nsMsgXFVirtualFolderDBView::Close()
 {
-  PRInt32 count = m_dbToUseList.Count();
-  
-  for(PRInt32 i = 0; i < count; i++)
-    m_dbToUseList[i]->RemoveListener(this);
-
-  m_dbToUseList.Clear();
+  RemovePendingDBListeners();
   return NS_OK;
 }
 
@@ -136,6 +149,9 @@ nsresult nsMsgXFVirtualFolderDBView::OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey a
     {
       nsCOMPtr <nsIMsgFolder> folder;
       newHdr->GetFolder(getter_AddRefs(folder));
+      // set this to null so we don't think we're in the middle of a full-blown
+      // search and start deleting invalid hits.
+      m_curFolderGettingHits = nsnull;
       OnSearchHit(newHdr, folder); 
     }
   }
@@ -233,14 +249,6 @@ nsMsgXFVirtualFolderDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *fold
   nsCOMPtr<nsIDBFolderInfo> folderInfo;
   folder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(dbToUse));
   
-  if (m_folders->IndexOf(supports) < 0 ) //do this just for new folder
-  {
-    if (dbToUse)
-    {
-      dbToUse->AddListener(this);
-      m_dbToUseList.AppendObject(dbToUse);
-    }
-  }
   if (m_curFolderGettingHits != folder)
   {
     m_curFolderHasCachedHits = PR_FALSE;
@@ -253,14 +261,6 @@ nsMsgXFVirtualFolderDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *fold
     m_hdrHits.Clear();
     m_curFolderStartKeyIndex = m_keys.GetSize();
   }
-  // calling FindHdr is sub-optimal here since for virtual folders with 
-  // a large number of hits, we'll have an 0(n2) algorithm 
-  // - we could add a way to check if a hdr is in the cached hits for 
-  // this folder, or we could make FindHdr do a binary search when
-  // the view is sorted. Checking the cached hits is probably best
-  // since they're in id order, so we can do a binary search.
-  // Actually, I think Mork has a hash table for uid lookups in a
-  // table, so we should definitely use the db.
   PRBool hdrInCache = PR_FALSE;
   nsXPIDLCString searchUri;
   m_viewFolder->GetURI(getter_Copies(searchUri));
@@ -321,11 +321,7 @@ nsMsgXFVirtualFolderDBView::OnNewSearch()
 {
   PRInt32 oldSize = GetSize();
 
-  PRInt32 count = m_dbToUseList.Count();
-  for(PRInt32 j = 0; j < count; j++) 
-    m_dbToUseList[j]->RemoveListener(this);
-
-  m_dbToUseList.Clear();
+  RemovePendingDBListeners();
 
   m_folders->Clear();
   m_keys.RemoveAll();
@@ -343,6 +339,7 @@ nsMsgXFVirtualFolderDBView::OnNewSearch()
   
   PRInt32 scopeCount;
   nsCOMPtr <nsIMsgSearchSession> searchSession = do_QueryReferent(m_searchSession);
+  nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID);
   searchSession->CountSearchScopes(&scopeCount);
   for (PRInt32 i = 0; i < scopeCount; i++)
   {
@@ -358,6 +355,9 @@ nsMsgXFVirtualFolderDBView::OnNewSearch()
       nsresult rv = searchFolder->GetMsgDatabase(nsnull, getter_AddRefs(searchDB));
       if (NS_SUCCEEDED(rv) && searchDB)
       {
+        if (msgDBService)
+          msgDBService->RegisterPendingListener(searchFolder, this);
+
         searchDB->GetCachedHits(searchUri, getter_AddRefs(cachedHits));
         PRBool hasMore;
         if (cachedHits)

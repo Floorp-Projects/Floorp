@@ -69,6 +69,7 @@ public:
   NS_IMETHOD GetMsgFolder(nsIMsgFolder **aMsgFolder);
   void UpdateCacheAndViewForPrevSearchedFolders(nsIMsgFolder *curSearchFolder);
   void UpdateCacheAndViewForFolder(nsIMsgFolder *folder, nsMsgKey *newHits, PRUint32 numNewHits);
+  void RemovePendingDBListeners();
 
 protected:
 
