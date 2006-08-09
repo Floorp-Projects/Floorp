@@ -319,9 +319,11 @@ public:
     void SetColor(const gfxRGBA& c);
 
     /**
-     * Uses a pattern for drawing.
+     * Gets the current color.
+     * returns PR_FALSE if there is something other than a color
+     *         set as the current source (pattern, surface, etc)
      */
-    void SetPattern(gfxPattern *pattern);
+    PRBool GetColor(gfxRGBA& c);
 
     /**
      * Uses a surface for drawing. This is a shorthand for creating a
@@ -330,6 +332,16 @@ public:
      * @param offset ?
      */
     void SetSource(gfxASurface *surface, gfxPoint offset = gfxPoint(0.0, 0.0));
+
+    /**
+     * Uses a pattern for drawing.
+     */
+    void SetPattern(gfxPattern *pattern);
+
+    /**
+     * Get the source pattern (solid color, normal pattern, surface, etc)
+     */
+    already_AddRefed<gfxPattern> GetPattern();
 
     /**
      ** Painting
@@ -494,13 +506,7 @@ public:
     /**
      * Groups
      */
-    enum SurfaceContent {
-        CONTENT_COLOR = CAIRO_CONTENT_COLOR,
-        CONTENT_ALPHA = CAIRO_CONTENT_ALPHA,
-        CONTENT_COLOR_ALPHA = CAIRO_CONTENT_COLOR_ALPHA
-    };
-
-    void PushGroup(SurfaceContent content = CONTENT_COLOR_ALPHA);
+    void PushGroup(gfxASurface::gfxContentType content = gfxASurface::CONTENT_COLOR);
     already_AddRefed<gfxPattern> PopGroup();
     void PopGroupToSource();
 

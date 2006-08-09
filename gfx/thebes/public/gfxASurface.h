@@ -79,6 +79,12 @@ public:
         SurfaceTypeQuartz2
     } gfxSurfaceType;
 
+    typedef enum {
+        CONTENT_COLOR = CAIRO_CONTENT_COLOR,
+        CONTENT_ALPHA = CAIRO_CONTENT_ALPHA,
+        CONTENT_COLOR_ALPHA = CAIRO_CONTENT_COLOR_ALPHA
+    } gfxContentType;
+
     /* Wrap the given cairo surface and return a gfxASurface for it */
     static already_AddRefed<gfxASurface> Wrap(cairo_surface_t *csurf);
 
@@ -86,6 +92,8 @@ public:
     cairo_surface_t *CairoSurface() { return mSurface; }
 
     gfxSurfaceType GetType() const { return (gfxSurfaceType)cairo_surface_get_type(mSurface); }
+
+    gfxContentType GetContentType() const { return (gfxContentType)cairo_surface_get_content(mSurface); }
 
     void SetDeviceOffset (gfxFloat xOff, gfxFloat yOff) {
         cairo_surface_set_device_offset(mSurface,

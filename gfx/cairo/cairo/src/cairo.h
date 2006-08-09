@@ -168,6 +168,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_FILE_NOT_FOUND: file not found
  * @CAIRO_STATUS_INVALID_DASH: invalid value for a dash setting
  * @CAIRO_STATUS_INVALID_DSC_COMMENT: invalid value for a DSC comment (Since 1.2)
+ * @CAIRO_STATUS_INVALID_INDEX: invalid index value for a getter (Since 1.3+)
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -195,7 +196,8 @@ typedef enum _cairo_status {
     CAIRO_STATUS_INVALID_VISUAL,
     CAIRO_STATUS_FILE_NOT_FOUND,
     CAIRO_STATUS_INVALID_DASH,
-    CAIRO_STATUS_INVALID_DSC_COMMENT
+    CAIRO_STATUS_INVALID_DSC_COMMENT,
+    CAIRO_STATUS_INVALID_INDEX
 } cairo_status_t;
 
 /**
@@ -1504,6 +1506,15 @@ cairo_pattern_set_matrix (cairo_pattern_t      *pattern,
 cairo_public void
 cairo_pattern_get_matrix (cairo_pattern_t *pattern,
 			  cairo_matrix_t  *matrix);
+
+cairo_public cairo_status_t
+cairo_pattern_get_solid_color (cairo_pattern_t *pattern,
+                               double *r, double *g, double *b, double *a);
+
+cairo_public cairo_status_t
+cairo_pattern_get_color_stop (cairo_pattern_t *pattern,
+                              int stop_index, double *offset,
+                              double *r, double *g, double *b, double *a);
 
 /**
  * cairo_extend_t

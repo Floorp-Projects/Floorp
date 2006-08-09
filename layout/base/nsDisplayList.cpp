@@ -789,9 +789,9 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
   ctx->Clip();
 
   if (mNeedAlpha)
-    ctx->PushGroup(gfxContext::CONTENT_COLOR_ALPHA);
+    ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
   else
-    ctx->PushGroup(gfxContext::CONTENT_COLOR);
+    ctx->PushGroup(gfxASurface::CONTENT_COLOR);
 
   nsDisplayWrapList::Paint(aBuilder, aCtx, bounds);
 

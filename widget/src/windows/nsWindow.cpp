@@ -5701,7 +5701,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
         thebesContext->SetOperator(gfxContext::OPERATOR_OVER);
       } else {
         // If we're not doing translucency, then double buffer
-        thebesContext->PushGroup(gfxContext::CONTENT_COLOR);
+        thebesContext->PushGroup(gfxASurface::CONTENT_COLOR);
       }
 #endif
 

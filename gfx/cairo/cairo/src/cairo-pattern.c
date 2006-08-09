@@ -1464,3 +1464,69 @@ _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
 
     return CAIRO_STATUS_SUCCESS;
 }
+
+/**
+ * cairo_pattern_get_solid_color
+ * @pattern: a #cairo_pattern_t
+ * @r, @g, @b, @a: a double to return a color value in. must not be NULL.
+ *
+ * Gets the solid color for a solid color pattern.
+ *
+ * Return value: CAIRO_STATUS_SUCCESS, or
+ * CAIRO_STATUS_PATTERN_TYPE_MISMATCH if the pattern is not a solid
+ * color pattern.
+ **/
+cairo_status_t
+cairo_pattern_get_solid_color (cairo_pattern_t *pattern,
+                               double *r, double *g, double *b, double *a)
+{
+    cairo_solid_pattern_t *solid = (cairo_solid_pattern_t*) pattern;
+
+    assert(r && g && b && a);
+
+    if (pattern->type != CAIRO_PATTERN_TYPE_SOLID)
+        return CAIRO_STATUS_PATTERN_TYPE_MISMATCH;
+
+    _cairo_color_get_rgba (&solid->color, r, g, b, a);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/**
+ * cairo_pattern_get_color_stop
+ * @pattern: a #cairo_pattern_t
+ * @stop_index: a number from 0 to 1 minus the number of color stops
+ * @offset: a double representing the color stop offset
+ * @r, @g, @b, @a: a double to return a color value in. must not be NULL.
+ *
+ * Gets the color stop from a gradient pattern.  The caller should
+ * keep increasing stop_index until this function returns CAIRO_STATUS_INVALID_INDEX
+ *
+ * Return value: CAIRO_STATUS_SUCCESS, or CAIRO_STATUS_INVALID_INDEX if there
+ * is no stop at the given index.  If the pattern is not a gradient pattern,
+ * CAIRO_STATUS_PATTERN_TYPE_MISMATCH is returned.
+ **/
+cairo_status_t
+cairo_pattern_get_color_stop (cairo_pattern_t *pattern,
+                              int stop_index, double *offset,
+                              double *r, double *g, double *b, double *a)
+{
+    cairo_gradient_pattern_t *gradient = (cairo_gradient_pattern_t*) pattern;
+
+    assert(offset && r && g && b && a);
+
+    if (pattern->type != CAIRO_PATTERN_TYPE_LINEAR ||
+        pattern->type != CAIRO_PATTERN_TYPE_RADIAL)
+        return CAIRO_STATUS_PATTERN_TYPE_MISMATCH;
+
+    if (stop_index < 0 || stop_index >= gradient->n_stops)
+        return CAIRO_STATUS_INVALID_INDEX;
+
+    *offset = _cairo_fixed_to_double(gradient->stops[stop_index].x);
+    *r = gradient->stops[stop_index].color.red / (double) 0xffff;
+    *g = gradient->stops[stop_index].color.green / (double) 0xffff;
+    *b = gradient->stops[stop_index].color.blue / (double) 0xffff;
+    *a = gradient->stops[stop_index].color.alpha / (double) 0xffff;
+
+    return CAIRO_STATUS_SUCCESS;
+}
