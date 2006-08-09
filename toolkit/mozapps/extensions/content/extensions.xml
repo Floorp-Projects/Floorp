@@ -175,9 +175,9 @@
       <xul:hbox flex="1">
         <xul:vbox class="addon-icon" xbl:inherits="iconURL"/>
         <xul:vbox flex="1" class="addonTextBox">
-          <xul:hbox class="addon-name-version" xbl:inherits="name, version"/>
-          <xul:label class="descriptionWrap" xbl:inherits="xbl:text=description"/>
-          <xul:vbox class="selectedStatusMsgs">
+          <xul:hbox anonid="addonNameVersion" class="addon-name-version" xbl:inherits="name, version"/>
+          <xul:label anonid="addonDescriptionWrap" class="descriptionWrap" xbl:inherits="value=description"/>
+          <xul:vbox anonid="addonSelectedStatusMsgs" class="selectedStatusMsgs">
             <xul:hbox class="addon-optype attention" align="center"/>
             <xul:hbox flex="1" class="updateAvailableBox attention">
               <xul:label xbl:inherits="value=updateAvailableMsg" crop="end"/>
@@ -253,6 +253,61 @@
           }
         ]]>
       </constructor>
+
+      <field name="_nameVersion">
+        document.getAnonymousElementByAttribute(this, "anonid", "addonNameVersion");
+      </field>
+
+      <field name="_descriptionWrap">
+        document.getAnonymousElementByAttribute(this, "anonid", "addonDescriptionWrap");
+      </field>
+
+      <field name="_selectedStatusMsgs">
+        document.getAnonymousElementByAttribute(this, "anonid", "addonSelectedStatusMsgs");
+      </field>
+
+      <property name="label" readonly="true">
+        <getter>
+          <![CDATA[
+            var labelPieces = [];
+
+            // Add name and version
+            labelPieces.push(this._nameVersion.getAttribute("name"));
+            labelPieces.push(this._nameVersion.getAttribute("version"));
+
+            // Add description
+            labelPieces.push(this._descriptionWrap.value);
+
+            // Add selected status messages, if any are visible.
+            // Note 1: visibility of status messages is set by CSS rule,
+            // not XUL attributes, so we need to use getComputedStyle.
+            // Note 2: relevant CSS rule is set on the label's parent node;
+            // the label node itself always has "display:-moz-box" which is
+            // not useful.
+            var labels = this._selectedStatusMsgs.getElementsByTagNameNS(
+              "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+              "label");
+            var numLabels = labels.length;
+            for (var i = 0; i < numLabels; i++) {
+              var label = labels[i];
+              var parentStyle = document.defaultView.getComputedStyle(label.parentNode, "");
+
+              // Optimization: we only check a few cases here that we know
+              // are used by the Add-ons window.  For example, the generic
+              // richlistbox.xml label getter checks label.collapsed, but
+              // we don't check that here because we know that the Add-ons
+              // window doesn't use it.
+              if (!label.hidden &&
+                  label.className != "text-link" &&
+                  parentStyle.display != "none") {
+                labelPieces.push(label.value);
+              }
+            }
+
+            return labelPieces.join(" ");
+          ]]>
+        </getter>
+      </property>
     </implementation>
 
     <handlers>
