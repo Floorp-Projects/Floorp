@@ -609,7 +609,7 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
         */
         if (mSpacing.IsEmpty()) { // XXX remove this once we make MeasureOrDrawReallyFast handle spacing
             gfxRGBA color;
-            if (mContext->GetColor(color) && color.a == 1.0) {
+            if (aContext->GetColor(color) && color.a == 1.0) {
                 // we can measure with 32bpp surfaces, but we can't draw to them using this API
                 nsRefPtr<gfxASurface> currentSurface = aContext->CurrentSurface();
                 if (!aDraw || currentSurface->GetContentType() == gfxASurface::CONTENT_COLOR)
