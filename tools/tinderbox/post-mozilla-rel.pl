@@ -44,18 +44,9 @@ use Cwd;
 # This is set in PreBuild(), and is checked after each build.
 my $cachebuild = 0;
 
-sub is_windows { return $Settings::OS =~ /^WIN/; }
-sub is_linux { return $Settings::OS eq 'Linux'; }
-sub is_os2 { return $Settings::OS eq 'OS2'; }
-# XXX Not tested on mac yet.  Probably needs changes.
-sub is_mac { return $Settings::OS eq 'Darwin'; }
-sub do_installer { return is_windows() || is_linux() || is_os2(); }
-
-sub shorthost {
-  my $host = ::hostname();
-  $host = $1 if $host =~ /(.*?)\./;
-  return $host;
-}
+sub do_installer { return TinderUtils::is_windows() || 
+                          TinderUtils::is_linux() ||
+                          TinderUtils::is_os2(); }
 
 sub print_locale_log {
     my ($text) = @_;
@@ -178,7 +169,7 @@ sub stagesymbols {
 sub makefullsoft {
   my $builddir = shift;
   my $srcdir = shift;
-  if (is_windows()) {
+  if (TinderUtils::is_windows()) {
     # need to convert the path in case we're using activestate perl
     $builddir = `cygpath -u $builddir`;
   }
@@ -204,7 +195,7 @@ sub makefullsoft {
     # Something completely different
     TinderUtils::run_shell_command("make -C $builddir/fullsoft fullcircle-push UPLOAD_FILES='`find -X $builddir/dist/Camino.app -type f -perm -111 -exec file {} \\; | grep \": Mach-O\" | sed \"s/: Mach-O.*//\" | xargs`'");
   }
-  if (is_mac()) {
+  if (TinderUtils::is_mac()) {
     if ($Settings::BinaryName eq 'Camino') {
       TinderUtils::run_shell_command("rsync -a --copy-unsafe-links $builddir/dist/bin/components/*qfa* $builddir/dist/bin/components/talkback $builddir/dist/Camino.app/Contents/MacOS/components");
     }
@@ -240,7 +231,7 @@ sub packit {
   my ($packaging_dir, $package_location, $url, $stagedir, $builddir, $cachebuild) = @_;
   my $status = 0;
 
-  if (is_windows()) {
+  if (TinderUtils::is_windows()) {
     # need to convert the path in case we're using activestate perl
     $builddir = `cygpath -u $builddir`;
   }
@@ -249,11 +240,11 @@ sub packit {
   TinderUtils::run_shell_command("mkdir -p $stagedir");
 
   if (do_installer()) {
-    if (is_windows()) {
+    if (TinderUtils::is_windows()) {
       $ENV{INSTALLER_URL} = "$url/windows-xpi";
-    } elsif (is_linux()) {
+    } elsif (TinderUtils::is_linux()) {
       $ENV{INSTALLER_URL} = "$url/linux-xpi/";
-    } elsif (is_os2()) {
+    } elsif (TinderUtils::is_os2()) {
       $ENV{INSTALLER_URL} = "$url/os2-xpi/";
     } else {
       die "Can't make installer for this platform.\n";
@@ -265,7 +256,7 @@ sub packit {
     # the Windows installer scripts currently require Activestate Perl.
     # Put it ahead of cygwin perl in the path.
     my $save_path;
-    if (is_windows()) {
+    if (TinderUtils::is_windows()) {
       $save_path = $ENV{PATH};
       $ENV{PATH} = $Settings::as_perl_path.":".$ENV{PATH};
     }
@@ -277,7 +268,7 @@ sub packit {
       $status = 0;
     }
 
-    if (is_windows()) {
+    if (TinderUtils::is_windows()) {
       $ENV{PATH} = $save_path;
       #my $dos_stagedir = `cygpath -w $stagedir`;
       #chomp ($dos_stagedir);
@@ -290,7 +281,7 @@ sub packit {
       $push_raw_xpis = $Settings::push_raw_xpis;
     }
 
-    if (is_windows() || is_os2()) {
+    if (TinderUtils::is_windows() || TinderUtils::is_os2()) {
       if ($Settings::stub_installer) {
         TinderUtils::run_shell_command("cp $package_location/stub/*.exe $stagedir/");
       }
@@ -323,7 +314,7 @@ sub packit {
         $ENV{MOZ_INSTALLER_USE_7ZIP} = $save_7zip;
         TinderUtils::run_shell_command("cp -r $package_location/xpi $stagedir/windows-xpi");
       }
-    } elsif (is_linux()) {
+    } elsif (TinderUtils::is_linux()) {
       if ($Settings::stub_installer) {
         TinderUtils::run_shell_command("cp $package_location/stub/*.tar.* $stagedir/");
       }
@@ -343,9 +334,9 @@ sub packit {
   my $lightningXpi = "$builddir/dist/xpi-stage/lightning.xpi";
   my $lightningXpiStageDir = undef;
   
-  if (is_windows()) {
+  if (TinderUtils::is_windows()) {
     $lightningXpiStageDir = 'windows-xpi';
-  } elsif (is_linux()) {
+  } elsif (TinderUtils::is_linux()) {
     $lightningXpiStageDir = 'linux-xpi';
   }
 
@@ -366,14 +357,14 @@ sub packit {
       }
     }
 
-    if (is_windows()) {
+    if (TinderUtils::is_windows()) {
       TinderUtils::run_shell_command("cp $package_location/../*.zip $stagedir/");
       if ( scalar(@xforms_xpi) gt 0 ) {
         my $xforms_xpi_files = join(' ', @xforms_xpi);
         TinderUtils::run_shell_command("mkdir -p $stagedir/windows-xpi/") if ( ! -e "$stagedir/windows-xpi/" );
         TinderUtils::run_shell_command("cp $xforms_xpi_files $stagedir/windows-xpi/");
       }
-    } elsif (is_mac()) {
+    } elsif (TinderUtils::is_mac()) {
       TinderUtils::run_shell_command("mkdir -p $package_location");
 
       # If .../*.dmg.gz exists, copy it to the staging directory.  Otherwise, copy
@@ -397,7 +388,7 @@ sub packit {
         TinderUtils::run_shell_command("mkdir -p $stagedir/mac-xpi/") if ( ! -e "$stagedir/mac-xpi/" );
         TinderUtils::run_shell_command("cp $xforms_xpi_files $stagedir/mac-xpi/");
       }
-    } elsif (is_os2()) {
+    } elsif (TinderUtils::is_os2()) {
       TinderUtils::run_shell_command("cp $package_location/../*.zip $stagedir/");
       if ( scalar(@xforms_xpi) gt 0 ) {
         my $xforms_xpi_files = join(' ', @xforms_xpi);
@@ -486,7 +477,7 @@ sub update_create_package {
     $distdir = "$objdir/dist" if !defined($distdir);
     $locale = "en-US" if !defined($locale);
 
-    if (is_windows()) {
+    if (TinderUtils::is_windows()) {
       # need to convert paths for use by Cygwin utilities which treat
       # "drive:/path" interpret drive as a host.
       $objdir = `cygpath -u $objdir`;
@@ -556,7 +547,7 @@ sub update_create_package {
 
     my $up_temp_stagedir = $temp_stagedir;
     my $up_distdir = $distdir;
-    if (is_windows()) {
+    if (TinderUtils::is_windows()) {
       # need to convert paths for use by the mar utility, which doesn't know
       # how to handle non-Windows paths.
       $up_temp_stagedir = `cygpath -m $up_temp_stagedir`;
@@ -655,7 +646,7 @@ sub update_create_stats {
   my $appversion = $args{'appversion'};
   my $extversion = $args{'extversion'};
 
-  my($hashfunction, $hashvalue, $size, $output, $output_file);
+  my($hashfunction, $size, $output, $output_file);
 
   ($size) = (stat($update))[7];
 
@@ -664,17 +655,8 @@ sub update_create_stats {
   # input), sha1.
   $hashfunction = ($Settings::update_hash eq 'md5') ? 'md5' : 'sha1';
 
-  $hashvalue = `openssl dgst -$hashfunction $update`;
-  # if we errored out, make sure the hash value is empty... 
-  if ($?) {
-    $hashvalue = '';
-  }
-
-  chomp($hashvalue);
-
-  # Expects input like MD5(mozconfig)= d7433cc4204b4f3c65d836fe483fa575
-  # Removes everything up to and including the "= "
-  $hashvalue =~ s/^.+\s+(\w+)$/$1/;
+  my $hashvalue = TinderUtils::HashFile(function => $hashfunction,
+   file => $update); 
 
   if ( defined($Settings::update_filehost) ) {
     $url =~ s|^([^:]*)://([^/:]*)(.*)$|$1://$Settings::update_filehost$3|g;
@@ -767,9 +749,9 @@ sub packit_l10n {
       select($oldfh);
 
     if (do_installer()) {
-      if (is_windows()) {
+      if (TinderUtils::is_windows()) {
         $ENV{INSTALLER_URL} = "$url/windows-xpi";
-      } elsif (is_linux()) {
+      } elsif (TinderUtils::is_linux()) {
         $ENV{INSTALLER_URL} = "$url/linux-xpi/";
       } else {
         die "Can't make installer for this platform.\n";
@@ -780,7 +762,7 @@ sub packit_l10n {
       # the Windows installer scripts currently require Activestate Perl.
       # Put it ahead of cygwin perl in the path.
       my $save_path;
-      if (is_windows()) {
+      if (TinderUtils::is_windows()) {
         $save_path = $ENV{PATH};
         $ENV{PATH} = $Settings::as_perl_path.":".$ENV{PATH};
       }
@@ -792,32 +774,32 @@ sub packit_l10n {
       }
   
       if ($tinderstatus eq 'success') {
-        if (is_windows()) {
+        if (TinderUtils::is_windows()) {
           run_locale_shell_command "mkdir -p $stagedir/windows-xpi/";
           run_locale_shell_command "cp $package_location/*$locale.langpack.xpi $stagedir/windows-xpi/$locale.xpi";
-        } elsif (is_mac()) {
+        } elsif (TinderUtils::is_mac()) {
           # Instead of adding something here (which will never be called),
-          # please add your code to the is_mac() section below.
-        } elsif (is_linux()) {
+          # please add your code to the TinderUtils::is_mac() section below.
+        } elsif (TinderUtils::is_linux()) {
           run_locale_shell_command "mkdir -p $stagedir/linux-xpi/";
           run_locale_shell_command "cp $package_location/*$locale.langpack.xpi $stagedir/linux-xpi/$locale.xpi";
         }
       }
 
-      if (is_windows()) {
+      if (TinderUtils::is_windows()) {
         $ENV{PATH} = $save_path;
         #my $dos_stagedir = `cygpath -w $stagedir`;
         #chomp ($dos_stagedir);
       }
   
-      if (is_windows()) {
+      if (TinderUtils::is_windows()) {
         if ($Settings::stub_installer && $tinderstatus ne 'busted' ) {
           run_locale_shell_command "cp $package_location/stub/*.exe $stagedir/";
         }
         if ($Settings::sea_installer && $tinderstatus ne 'busted' ) {
           run_locale_shell_command "cp $package_location/sea/*.exe $stagedir/";
         }
-      } elsif (is_linux()) {
+      } elsif (TinderUtils::is_linux()) {
         if ($Settings::stub_installer && $tinderstatus ne 'busted' ) {
           run_locale_shell_command "cp $package_location/stub/*.tar.* $stagedir/";
         }
@@ -828,9 +810,9 @@ sub packit_l10n {
     } # do_installer
   
     if ($Settings::archive && $tinderstatus ne 'busted' ) {
-      if (is_windows()) {
+      if (TinderUtils::is_windows()) {
         run_locale_shell_command "cp $package_location/../*$locale*.zip $stagedir/";
-      } elsif (is_mac()) {
+      } elsif (TinderUtils::is_mac()) {
         $status = run_locale_shell_command "$Settings::Make -C $objdir/$Settings::LocaleProduct/locales installers-$locale $Settings::BuildLocalesArgs";
         if ($status != 0) {
           $tinderstatus = 'busted';
@@ -946,7 +928,7 @@ sub pushit {
     return 0;
   }
 
-  if (is_windows()) {
+  if (TinderUtils::is_windows()) {
     # need to convert the path in case we're using activestate perl
     $upload_directory = `cygpath -u $upload_directory`;
   }
@@ -1074,7 +1056,7 @@ sub returnStatus{
 
 sub PreBuild {
   # assert that needed variables are defined as the build scripts expect
-  if (is_mac() and !defined($Settings::mac_bundle_path)) {
+  if (TinderUtils::is_mac() and !defined($Settings::mac_bundle_path)) {
     die "ERROR: mac_bundle_path unset!";
   }
 
@@ -1178,7 +1160,7 @@ sub main {
 
   chdir $mozilla_build_dir;
 
-  if (0 and is_windows()) {
+  if (0 and TinderUtils::is_windows()) {
     $mozilla_build_dir = `cygpath -m $mozilla_build_dir`; # cygnusify the path
     chomp($mozilla_build_dir); # remove whitespace
   
@@ -1209,7 +1191,10 @@ sub main {
   # need to modify the settings from tinder-config.pl
   my $package_creation_path = $objdir . $Settings::package_creation_path;
   my $package_location;
-  if (is_windows() || is_mac() || is_os2() || $Settings::package_creation_path ne "/xpinstall/packager") {
+  if (TinderUtils::is_windows() || 
+      TinderUtils::is_mac() || 
+      TinderUtils::is_os2() || 
+      $Settings::package_creation_path ne "/xpinstall/packager") {
     $package_location = $objdir . "/dist/install";
   } else {
     $package_location = $objdir . "/installer";
@@ -1244,7 +1229,7 @@ sub main {
     }
   }
 
-  if (is_windows()) {
+  if (TinderUtils::is_windows()) {
     # hack for cygwin installs with "unix" filetypes
     TinderUtils::run_shell_command("unix2dos $mozilla_build_dir/mozilla/LICENSE");
     TinderUtils::run_shell_command("unix2dos $mozilla_build_dir/mozilla/mail/LICENSE.txt");
@@ -1254,7 +1239,7 @@ sub main {
 
   my($package_dir, $store_name, $local_build_dir);
 
-  my $pretty_build_name = shorthost() . "-" . $Settings::milestone;
+  my $pretty_build_name = TinderUtils::ShortHostname() . "-" . $Settings::milestone;
 
   if ($cachebuild) {
     TinderUtils::print_log("Uploading nightly release build\n");
@@ -1271,7 +1256,7 @@ sub main {
     $store_name = $pretty_build_name;
   }
 
-  if (!is_os2()) {
+  if (!TinderUtils::is_os2()) {
     processtalkback($cachebuild && $Settings::shiptalkback, $objdir, "$mozilla_build_dir/${Settings::Topsrcdir}");
   }
 
@@ -1304,7 +1289,7 @@ sub main {
   my $store_home;
   $store_home = "$mozilla_build_dir/$store_name";
 
-  if (is_windows()) {
+  if (TinderUtils::is_windows()) {
     # need to convert the path in case we're using activestate perl or
     # cygwin rsync
     $local_build_dir = `cygpath -u $local_build_dir`;

@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.333 $ ';
+$::UtilsVersion = '$Revision: 1.334 $ ';
 
 package TinderUtils;
 
@@ -259,8 +259,7 @@ sub GetSystemInfo {
     $Settings::CPU = `uname -m`;
     #$Settings::ObjDir = '';
     my $build_type = $Settings::BuildDepend ? 'Depend' : 'Clobber';
-    my $host = ::hostname();
-    $host = $1 if $host =~ /(.*?)\./;
+    my $host = ShortHostname();
     chomp($Settings::OS, $os_ver, $Settings::CPU, $host);
 
     # Redirecting stderr to stdout works on *nix, winnt, but not on win98.
@@ -3361,6 +3360,62 @@ sub BloatTest2 {
     return 'success';
 }
 
+sub HashFile
+{
+  my %args = @_;
+
+  my $hashFunction = $args{'function'};
+  my $file = $args{'file'};
+
+  if ($hashFunction ne 'md5' && $hashFunction ne 'sha1') {
+    die "ASSERT: unknown hashFunction: $hashFunction\n";
+  }
+  elsif (not -f $file) {
+    return '';
+  }
+
+  # TODO - Use the new RunShellCommand()
+  my $hashValue = `openssl dgst -$hashFunction $file`;
+
+  # if we errored out, make sure the hash value is empty... 
+  if ($?) {
+    $hashValue = '';
+  }
+
+  chomp($hashValue);
+
+  # Expects input like MD5(mozconfig)= d7433cc4204b4f3c65d836fe483fa575
+  # Removes everything up to and including the "= "
+  $hashValue =~ s/^.+\s+(\w+)$/$1/;
+
+  return $hashValue;
+}
+
+sub is_windows
+{
+  return $Settings::OS =~ /^WIN/;
+}
+
+sub is_linux
+{
+  return $Settings::OS eq 'Linux';
+}
+sub is_os2
+{
+  return $Settings::OS eq 'OS2';
+}
+
+sub is_mac
+{
+  return $Settings::OS eq 'Darwin';
+}
+
+sub ShortHostname
+{
+  my $host = ::hostname();
+  $host = $1 if $host =~ /(.*?)\./;
+  return $host;
+}
 
 # Need to end with a true value, (since we're using "require").
 1;
