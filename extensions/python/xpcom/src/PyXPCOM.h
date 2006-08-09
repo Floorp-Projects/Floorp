@@ -478,11 +478,6 @@ protected:
 			PyObject **ppResult,
 			const char *szFormat,
 			va_list va);
-	nsresult InvokeNativeGetViaPolicy(const char *szPropertyName,
-			PyObject **ppResult = NULL
-			);
-	nsresult InvokeNativeSetViaPolicy(const char *szPropertyName,
-			...);
 };
 
 class PYXPCOM_EXPORT PyXPCOM_XPTStub : public PyG_Base, public nsXPTCStubBase
