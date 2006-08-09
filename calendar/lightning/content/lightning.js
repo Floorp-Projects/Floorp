@@ -70,3 +70,5 @@ pref("calendar.week.d6saturdaysoff", true);
 
 // Do not set this!  If it's not there, then we guess the system timezone
 //pref("calendar.timezone.local", "");
+
+pref("calendar.prototypes.wcap", false);

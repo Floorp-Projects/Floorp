@@ -167,8 +167,13 @@ function openEventDialog(calendarItem, calendar, mode, callback)
     window.setCursor("wait");
 
     // open the dialog modally
-    openDialog("chrome://calendar/content/calendar-event-dialog.xul", "_blank",
-               "chrome,titlebar,modal,resizable", args);
+    if (getPrefSafe("calendar.prototypes.wcap", false)) {
+      openDialog("chrome://calendar/content/sun-calendar-event-dialog.xul", "_blank",
+                 "chrome,titlebar,modal,resizable", args);
+    } else {
+      openDialog("chrome://calendar/content/calendar-event-dialog.xul", "_blank",
+                 "chrome,titlebar,modal,resizable", args);
+    }
 }
 
 // When editing a single instance of a recurring event, we need to figure out

@@ -61,6 +61,18 @@ calendar.jar:
   content/calendar/calendar-event-dialog.css	(/calendar/base/content/calendar-event-dialog.css)
   content/calendar/calendar-recurrence-dialog.js	(/calendar/base/content/calendar-recurrence-dialog.js)
   content/calendar/calendar-recurrence-dialog.xul	(/calendar/base/content/calendar-recurrence-dialog.xul)
+  content/calendar/sun-calendar-event-dialog.css	(/calendar/prototypes/wcap/sun-calendar-event-dialog.css)
+  content/calendar/sun-calendar-event-dialog.js	(/calendar/prototypes/wcap/sun-calendar-event-dialog.js)
+  content/calendar/sun-calendar-event-dialog.xul	(/calendar/prototypes/wcap/sun-calendar-event-dialog.xul)
+  content/calendar/sun-calendar-event-dialog-attendees.xml	(/calendar/prototypes/wcap/sun-calendar-event-dialog-attendees.xml)
+  content/calendar/sun-calendar-event-dialog-freebusy.xml	(/calendar/prototypes/wcap/sun-calendar-event-dialog-freebusy.xml)
+  content/calendar/sun-calendar-event-dialog-main.xml	(/calendar/prototypes/wcap/sun-calendar-event-dialog-main.xml)
+  content/calendar/sun-calendar-event-dialog-recurrence.xml	(/calendar/prototypes/wcap/sun-calendar-event-dialog-recurrence.xml)
+  content/calendar/sun-calendar-event-dialog-recurrence-datepicker.css	(/calendar/prototypes/wcap/sun-calendar-event-dialog-recurrence-datepicker.css)
+  content/calendar/sun-calendar-event-dialog-recurrence-datepicker.xml	(/calendar/prototypes/wcap/sun-calendar-event-dialog-recurrence-datepicker.xml)
+  content/calendar/sun-calendar-event-dialog-recurrence-preview.css	(/calendar/prototypes/wcap/sun-calendar-event-dialog-recurrence-preview.css)
+  content/calendar/sun-calendar-event-dialog-recurrence-preview.xml	(/calendar/prototypes/wcap/sun-calendar-event-dialog-recurrence-preview.xml)
+  content/calendar/sun-calendar-event-dialog-timezone.xml	(/calendar/prototypes/wcap/sun-calendar-event-dialog-timezone.xml)
 
 calendar-en-US.jar:
   locale/en-US/calendar/global.dtd             (/calendar/locales/en-US/chrome/calendar/global.dtd)
@@ -76,6 +88,7 @@ calendar-en-US.jar:
   locale/en-US/calendar/preferences/preferences.dtd  (/calendar/locales/en-US/chrome/calendar/preferences/preferences.dtd)
   locale/en-US/calendar/preferences/timezones.dtd    (/calendar/locales/en-US/chrome/calendar/preferences/timezones.dtd)
   locale/en-US/calendar/preferences/views.dtd  (/calendar/locales/en-US/chrome/calendar/preferences/views.dtd)
+  locale/en-US/calendar/sun-calendar-event-dialog.dtd	(/calendar/locales/en-US/chrome/prototypes/sun-calendar-event-dialog.dtd)
 
 classic.jar:
 #expand  skin/classic/lightning/lightning.css	(themes/__THEME__/lightning.css)
@@ -99,3 +112,6 @@ classic.jar:
 #expand  skin/classic/calendar/datetimepickers/left-arrow.gif (/calendar/resources/skin/classic/datetimepickers/left-arrow.gif)
 #expand  skin/classic/calendar/datetimepickers/right-arrow-hover.gif (/calendar/resources/skin/classic/datetimepickers/right-arrow-hover.gif)
 #expand  skin/classic/calendar/datetimepickers/right-arrow.gif (/calendar/resources/skin/classic/datetimepickers/right-arrow.gif)
+#expand  skin/classic/calendar/sun-calendar-event-dialog.css	(/calendar/prototypes/themes/__THEME__/sun-calendar-event-dialog.css)
+#expand  skin/classic/calendar/sun-calendar-event-dialog-attendees.png	(/calendar/prototypes/themes/__THEME__/sun-calendar-event-dialog-attendees.png)
+#expand  skin/classic/calendar/sun-calendar-event-dialog-toolbar.png	(/calendar/prototypes/themes/__THEME__/sun-calendar-event-dialog-toolbar.png)
