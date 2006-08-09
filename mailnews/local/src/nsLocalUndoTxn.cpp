@@ -47,18 +47,8 @@
 #include "nsIMsgMailSession.h"
 #include "nsThreadUtils.h"
 
-nsLocalMoveCopyMsgTxn::nsLocalMoveCopyMsgTxn() :
-    m_isMove(PR_FALSE), m_srcIsImap4(PR_FALSE)
+nsLocalMoveCopyMsgTxn::nsLocalMoveCopyMsgTxn()  : m_srcIsImap4(PR_FALSE)
 {
-	Init(nsnull, nsnull, PR_FALSE);
-}
-
-nsLocalMoveCopyMsgTxn::nsLocalMoveCopyMsgTxn(nsIMsgFolder* srcFolder,
-                                             nsIMsgFolder* dstFolder,
-                                             PRBool isMove) :
-    m_isMove(PR_FALSE), m_srcIsImap4(PR_FALSE)
-{
-	Init(srcFolder, dstFolder, isMove);
 }
 
 nsLocalMoveCopyMsgTxn::~nsLocalMoveCopyMsgTxn()
@@ -109,7 +99,7 @@ nsLocalMoveCopyMsgTxn::Init(nsIMsgFolder* srcFolder, nsIMsgFolder* dstFolder,
     {
         m_srcIsImap4 = PR_TRUE;
     }
-    return NS_OK;
+    return nsMsgTxn::Init();
 }
 nsresult 
 nsLocalMoveCopyMsgTxn::GetSrcIsImap(PRBool *isImap)

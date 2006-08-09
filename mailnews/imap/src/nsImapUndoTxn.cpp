@@ -50,17 +50,6 @@ nsImapMoveCopyMsgTxn::nsImapMoveCopyMsgTxn() :
 {
 }
 
-nsImapMoveCopyMsgTxn::nsImapMoveCopyMsgTxn(
-	nsIMsgFolder* srcFolder, nsMsgKeyArray* srcKeyArray, 
-	const char* srcMsgIdString, nsIMsgFolder* dstFolder,
-	PRBool idsAreUids, PRBool isMove,
-	nsIEventTarget* eventTarget, nsIUrlListener* urlListener) :
-    m_idsAreUids(PR_FALSE), m_isMove(PR_FALSE), m_srcIsPop3(PR_FALSE)
-{
-    Init(srcFolder, srcKeyArray, srcMsgIdString, dstFolder, idsAreUids,
-         isMove, eventTarget, urlListener);
-}
-
 nsresult
 nsImapMoveCopyMsgTxn::Init(
 	nsIMsgFolder* srcFolder, nsMsgKeyArray* srcKeyArray, 
@@ -123,7 +112,7 @@ nsImapMoveCopyMsgTxn::Init(
       }
     }
   }
-  return rv;
+  return nsMsgTxn::Init();
 }
 
 nsImapMoveCopyMsgTxn::~nsImapMoveCopyMsgTxn()

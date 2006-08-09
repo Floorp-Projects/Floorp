@@ -42,6 +42,7 @@
 #include "msgCore.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgWindow.h"
+#include "nsHashPropertyBag.h"
 
 #define NS_MESSAGETRANSACTION_IID \
 { /* da621b30-1efc-11d3-abe4-00805f8ac968 */ \
@@ -54,9 +55,9 @@
 #undef  IMETHOD_VISIBILITY
 #define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
 
-class NS_MSG_BASE nsMsgTxn : public nsITransaction
+class NS_MSG_BASE nsMsgTxn : public nsITransaction, public nsHashPropertyBag
 {
-    NS_DECL_ISUPPORTS 
+    NS_DECL_ISUPPORTS_INHERITED
 
     nsMsgTxn();
     virtual ~nsMsgTxn();
@@ -71,11 +72,10 @@ class NS_MSG_BASE nsMsgTxn : public nsITransaction
 
     NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
 
-    NS_IMETHOD GetMsgWindow(nsIMsgWindow **msgWindow);
-    NS_IMETHOD SetMsgWindow(nsIMsgWindow *msgWindow);
-    NS_IMETHOD SetTransactionType(PRUint32 txnType);
-    NS_IMETHOD GetTransactionType(PRUint32 *txnType);
-
+    nsresult GetMsgWindow(nsIMsgWindow **msgWindow);
+    nsresult SetMsgWindow(nsIMsgWindow *msgWindow);
+    nsresult SetTransactionType(PRUint32 txnType);
+ 
 protected:
     nsCOMPtr<nsIMsgWindow> m_msgWindow;
     PRUint32 m_txnType;

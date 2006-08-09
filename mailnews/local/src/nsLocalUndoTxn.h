@@ -59,10 +59,7 @@ class nsLocalMoveCopyMsgTxn : public nsMsgTxn
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_LOCALMOVECOPYMSGTXN_IID)
 
-	nsLocalMoveCopyMsgTxn();
-    nsLocalMoveCopyMsgTxn(nsIMsgFolder *srcFolder,
-						  nsIMsgFolder *dstFolder,
-						  PRBool isMove);
+    nsLocalMoveCopyMsgTxn();
     virtual ~nsLocalMoveCopyMsgTxn();
 
     NS_DECL_ISUPPORTS_INHERITED

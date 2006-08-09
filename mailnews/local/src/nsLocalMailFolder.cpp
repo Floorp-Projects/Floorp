@@ -678,7 +678,6 @@ nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
     if (NS_SUCCEEDED(rv) && valid)
     {
       NotifyFolderEvent(mFolderLoadedAtom);
-      rv = AutoCompact(aWindow);
       NS_ENSURE_SUCCESS(rv,rv);
     }
     else if (mCopyState)
@@ -1551,6 +1550,8 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
           EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_TRUE /*dbBatching*/);
           if(!isMove)
             NotifyFolderEvent(NS_SUCCEEDED(rv) ? mDeleteOrMoveMsgCompletedAtom : mDeleteOrMoveMsgFailedAtom);
+          if (msgWindow)
+            AutoCompact(msgWindow);
       }
   }
   return rv;
@@ -1777,15 +1778,16 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   {
     nsLocalMoveCopyMsgTxn* msgTxn = nsnull;
     
-    msgTxn = new nsLocalMoveCopyMsgTxn(srcFolder, this, isMove);
+    msgTxn = new nsLocalMoveCopyMsgTxn;
     
-    if (msgTxn)
-      rv =
-      msgTxn->QueryInterface(NS_GET_IID(nsLocalMoveCopyMsgTxn),
-      getter_AddRefs(mCopyState->m_undoMsgTxn));
+    if (msgTxn && NS_SUCCEEDED(msgTxn->Init(srcFolder, this, isMove)))
+      rv = msgTxn->QueryInterface(NS_GET_IID(nsLocalMoveCopyMsgTxn),
+                                  getter_AddRefs(mCopyState->m_undoMsgTxn));
     else
+    {
+      delete msgTxn;
       rv = NS_ERROR_OUT_OF_MEMORY;
-    
+    }
     if (NS_FAILED(rv))
     {
       (void) OnCopyCompleted(srcSupport, PR_FALSE);
@@ -2559,11 +2561,12 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     return NS_OK;
   }
   
-  nsCOMPtr<nsLocalMoveCopyMsgTxn> localUndoTxn;
+  nsRefPtr<nsLocalMoveCopyMsgTxn> localUndoTxn;
   PRBool multipleCopiesFinished = (mCopyState->m_curCopyIndex >= mCopyState->m_totalMsgCount);
   
   if (mCopyState->m_undoMsgTxn)
-    localUndoTxn = do_QueryInterface(mCopyState->m_undoMsgTxn);
+    mCopyState->m_undoMsgTxn->QueryInterface(NS_GET_IID(nsLocalMoveCopyMsgTxn), getter_AddRefs(localUndoTxn));
+
   
   if (mCopyState)
   {
@@ -2765,14 +2768,14 @@ NS_IMETHODIMP nsMsgLocalMailFolder::StartMessage()
 // just finished the current message.
 NS_IMETHODIMP nsMsgLocalMailFolder::EndMessage(nsMsgKey key)
 {
-  nsCOMPtr<nsLocalMoveCopyMsgTxn> localUndoTxn;
+  nsRefPtr<nsLocalMoveCopyMsgTxn> localUndoTxn;
   nsCOMPtr<nsIMsgWindow> msgWindow;
   nsresult rv;
   
   if (mCopyState->m_undoMsgTxn)
   {
-    localUndoTxn = do_QueryInterface(mCopyState->m_undoMsgTxn, &rv);
-    if (NS_SUCCEEDED(rv))
+    rv = mCopyState->m_undoMsgTxn->QueryInterface(NS_GET_IID(nsLocalMoveCopyMsgTxn), getter_AddRefs(localUndoTxn));
+    if (localUndoTxn)
       localUndoTxn->GetMsgWindow(getter_AddRefs(msgWindow));
   }
   
@@ -3407,8 +3410,8 @@ nsresult nsMsgLocalMailFolder::DisplayMoveCopyStatusMsg()
 
       if (mCopyState->m_undoMsgTxn)
       {
-        nsCOMPtr<nsLocalMoveCopyMsgTxn> localUndoTxn;
-        localUndoTxn = do_QueryInterface(mCopyState->m_undoMsgTxn, &rv);
+        nsRefPtr<nsLocalMoveCopyMsgTxn> localUndoTxn;
+        rv = mCopyState->m_undoMsgTxn->QueryInterface(NS_GET_IID(nsLocalMoveCopyMsgTxn), getter_AddRefs(localUndoTxn));
         if (NS_SUCCEEDED(rv))
           localUndoTxn->GetMsgWindow(getter_AddRefs(msgWindow));
       NS_ASSERTION(msgWindow, "no msg window");
@@ -3803,9 +3806,12 @@ nsMsgLocalMailFolder::AddMessage(const char *aMessage)
   else
     return NS_MSG_FOLDER_BUSY;
 
-
   rv = newMailParser->Init(rootFolder, this, 
                            fileSpec, &outFileStream, nsnull, PR_FALSE);
+                           
+  if (!mGettingNewMessages)
+  	newMailParser->DisableFilters();
+  	
   if (NS_SUCCEEDED(rv))
   {
 

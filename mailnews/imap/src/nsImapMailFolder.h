@@ -45,6 +45,7 @@
 #include "nsICopyMessageListener.h"
 #include "nsIImapService.h"
 #include "nsIUrlListener.h"
+#include "nsAutoPtr.h"
 #include "nsIImapIncomingServer.h" // we need this for its IID
 #include "nsIMsgParseMailMsgState.h"
 #include "nsITransactionManager.h"
@@ -84,7 +85,7 @@ public:
 
     nsCOMPtr<nsISupports> m_srcSupport; // source file spec or folder
     nsCOMPtr<nsISupportsArray> m_messages; // array of source messages
-    nsCOMPtr<nsMsgTxn> m_undoMsgTxn; // undo object with this copy operation
+    nsRefPtr<nsMsgTxn> m_undoMsgTxn; // undo object with this copy operation
     nsCOMPtr<nsIMsgDBHdr> m_message; // current message to be copied
     nsCOMPtr<nsIMsgCopyServiceListener> m_listener; // listener of this copy
                                                     // operation 
@@ -450,7 +451,7 @@ protected:
   PRBool m_urlRunning;
   
   // *** jt - undo move/copy trasaction support
-  nsCOMPtr<nsMsgTxn> m_pendingUndoTxn;
+  nsRefPtr<nsMsgTxn> m_pendingUndoTxn;
   nsCOMPtr<nsImapMailCopyState> m_copyState;
   PRMonitor *m_appendMsgMonitor;
   PRUnichar m_hierarchyDelimiter;

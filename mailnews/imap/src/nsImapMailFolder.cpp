@@ -46,6 +46,7 @@
 #include "nsILocalFile.h"
 #include "nsIFolderListener.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsIRDFService.h"
 #include "nsIRDFDataSource.h"
 #include "nsRDFCID.h"
@@ -2238,10 +2239,13 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     if (allowUndo)
     {
       //need to take care of these two delete models
-      nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
-        this, &srcKeyArray, messageIds.get(), nsnull,
-        PR_TRUE, isMove, m_thread, nsnull);
-      if (!undoMsgTxn) return NS_ERROR_OUT_OF_MEMORY;
+      nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn;
+      if (!undoMsgTxn || NS_FAILED(undoMsgTxn->Init(this, &srcKeyArray, messageIds.get(), nsnull,
+                                                      PR_TRUE, isMove, m_thread, nsnull)))
+      {
+        delete undoMsgTxn;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
       undoMsgTxn->SetTransactionType(nsIMessenger::eDeleteMsg);
       // we're adding this undo action before the delete is successful. This is evil,
       // but 4.5 did it as well.
@@ -4830,11 +4834,11 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                         getter_AddRefs(srcDB));
                 if (NS_SUCCEEDED(rv) && srcDB)
                 {
-                  nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn;
+                  nsRefPtr<nsImapMoveCopyMsgTxn> msgTxn;
                   nsMsgKeyArray srcKeyArray;
                   if (m_copyState->m_allowUndo)
                   {
-                     msgTxn = do_QueryInterface(m_copyState->m_undoMsgTxn); 
+                     rv = m_copyState->m_undoMsgTxn->QueryInterface(NS_GET_IID(nsImapMoveCopyMsgTxn), getter_AddRefs(msgTxn)); 
                      if (msgTxn)
                        msgTxn->GetSrcKeyArray(srcKeyArray);
                   }
@@ -5140,7 +5144,7 @@ nsImapMailFolder::SetCopyResponseUid(const char* msgIdString,
                                      nsIImapUrl * aUrl)
 {   // CopyMessages() only
   nsresult rv = NS_OK;
-  nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn;
+  nsRefPtr<nsImapMoveCopyMsgTxn> msgTxn;
   nsCOMPtr<nsISupports> copyState;
   
   if (aUrl)
@@ -5152,7 +5156,7 @@ nsImapMailFolder::SetCopyResponseUid(const char* msgIdString,
           do_QueryInterface(copyState, &rv);
       if (NS_FAILED(rv)) return rv;
       if (mailCopyState->m_undoMsgTxn)
-          msgTxn = do_QueryInterface(mailCopyState->m_undoMsgTxn, &rv);
+        rv = mailCopyState->m_undoMsgTxn->QueryInterface(NS_GET_IID(nsImapMoveCopyMsgTxn), getter_AddRefs(msgTxn)); 
   }
   if (msgTxn)
       msgTxn->SetCopyResponseUid(msgIdString);
@@ -5271,10 +5275,10 @@ nsImapMailFolder::SetAppendMsgUid(nsMsgKey aKey,
 
     if (mailCopyState->m_undoMsgTxn) // CopyMessages()
     {
-        nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn;
-        msgTxn = do_QueryInterface(mailCopyState->m_undoMsgTxn, &rv);
+        nsRefPtr<nsImapMoveCopyMsgTxn> msgTxn;
+        rv = mailCopyState->m_undoMsgTxn->QueryInterface(NS_GET_IID(nsImapMoveCopyMsgTxn), getter_AddRefs(msgTxn)); 
         if (NS_SUCCEEDED(rv))
-            msgTxn->AddDstKey(aKey);
+          msgTxn->AddDstKey(aKey);
     }
     else if (mailCopyState->m_listener) // CopyFileMessage();
                                         // Draft/Template goes here
@@ -6331,11 +6335,14 @@ nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
        rv = QueryInterface(NS_GET_IID(nsIUrlListener), getter_AddRefs(urlListener));
        rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
 
-       nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
-              srcFolder, &srcKeyArray, messageIds.get(), this,
-              PR_TRUE, isMove, m_thread, urlListener);
+       nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn;
 
-       if (!undoMsgTxn) return NS_ERROR_OUT_OF_MEMORY;
+       if (!undoMsgTxn || NS_FAILED(undoMsgTxn->Init(srcFolder, &srcKeyArray, messageIds.get(), this,
+                                    PR_TRUE, isMove, m_thread, urlListener)))
+       {
+         delete undoMsgTxn;
+         return NS_ERROR_OUT_OF_MEMORY;
+       }
        if (isMove)
        {
           if (mFlags & MSG_FOLDER_FLAG_TRASH)
@@ -6911,10 +6918,14 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
   if (m_copyState->m_allowUndo)
     if (NS_SUCCEEDED(rv))
     {
-       nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
-       srcFolder, &srcKeyArray, messageIds.get(), this,
-       PR_TRUE, isMove, m_thread, urlListener);
-       if (!undoMsgTxn) return NS_ERROR_OUT_OF_MEMORY;
+       nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn;
+       if (!undoMsgTxn || NS_FAILED(undoMsgTxn->Init(srcFolder, &srcKeyArray, 
+                                    messageIds.get(), this,
+                                    PR_TRUE, isMove, m_thread, urlListener)))
+       {
+         delete undoMsgTxn;
+         return NS_ERROR_OUT_OF_MEMORY;
+       }
        if (isMove)
        {
          if (mFlags & MSG_FOLDER_FLAG_TRASH)

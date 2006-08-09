@@ -46,6 +46,7 @@
 
 #include "nsMsgDBFolder.h" /* include the interface we are going to support */
 #include "nsFileSpec.h"
+#include "nsAutoPtr.h"
 #include "nsICopyMessageListener.h"
 #include "nsFileStream.h"
 #include "nsIFileStreams.h"
@@ -67,7 +68,7 @@ struct nsLocalMailCopyState
   nsOutputFileStream * m_fileStream;
   nsCOMPtr<nsISupports> m_srcSupport;
   nsCOMPtr<nsISupportsArray> m_messages;
-  nsCOMPtr<nsMsgTxn> m_undoMsgTxn;
+  nsRefPtr<nsMsgTxn> m_undoMsgTxn;
   nsCOMPtr<nsIMsgDBHdr> m_message; // current copy message
   nsCOMPtr<nsIMsgParseMailMsgState> m_parseMsgState;
   nsCOMPtr<nsIMsgCopyServiceListener> m_listener;

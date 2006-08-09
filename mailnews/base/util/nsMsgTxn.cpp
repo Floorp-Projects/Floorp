@@ -38,11 +38,8 @@
 #include "nsMsgTxn.h"
 #include "nsIMsgHdr.h"
 
-NS_IMPL_THREADSAFE_ADDREF(nsMsgTxn)
-NS_IMPL_THREADSAFE_RELEASE(nsMsgTxn)
-NS_IMPL_THREADSAFE_QUERY_INTERFACE1(nsMsgTxn, nsITransaction)
+NS_IMPL_ISUPPORTS_INHERITED1(nsMsgTxn, nsHashPropertyBag, nsITransaction);
 
-// note that aEditor is not refcounted
 nsMsgTxn::nsMsgTxn() 
 {
   m_txnType = 0;
@@ -72,7 +69,7 @@ NS_IMETHODIMP nsMsgTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 }
 
 
-NS_IMETHODIMP nsMsgTxn::GetMsgWindow(nsIMsgWindow **msgWindow)
+nsresult nsMsgTxn::GetMsgWindow(nsIMsgWindow **msgWindow)
 {
     if (!msgWindow || !m_msgWindow)
         return NS_ERROR_NULL_POINTER;
@@ -81,26 +78,17 @@ NS_IMETHODIMP nsMsgTxn::GetMsgWindow(nsIMsgWindow **msgWindow)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgTxn::SetMsgWindow(nsIMsgWindow *msgWindow)
+nsresult nsMsgTxn::SetMsgWindow(nsIMsgWindow *msgWindow)
 {
     m_msgWindow = msgWindow;
     return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsMsgTxn::GetTransactionType(PRUint32 *txnType)
-{
-    if (!txnType) 
-        return NS_ERROR_NULL_POINTER;
-    *txnType = m_txnType;
-    return NS_OK;
-}
 
-NS_IMETHODIMP
+nsresult
 nsMsgTxn::SetTransactionType(PRUint32 txnType)
 {
-    m_txnType = txnType;
-    return NS_OK;
+  return SetPropertyAsUint32(NS_LITERAL_STRING("type"), txnType);
 }
 
 /*none of the callers pass null aFolder, 

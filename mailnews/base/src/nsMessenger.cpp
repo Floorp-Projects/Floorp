@@ -1501,7 +1501,9 @@ NS_IMETHODIMP nsMessenger::GetUndoTransactionType(PRUint32 *txnType)
     rv = mTxnMgr->PeekUndoStack(getter_AddRefs(txn));
     if (NS_SUCCEEDED(rv) && txn)
     {
-        rv = NS_STATIC_CAST(nsMsgTxn*, NS_STATIC_CAST(nsITransaction*, txn.get()))->GetTransactionType(txnType);
+      nsCOMPtr <nsIPropertyBag2> propertyBag = do_QueryInterface(txn, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      return propertyBag->GetPropertyAsUint32(NS_LITERAL_STRING("type"), txnType);
     }
     return rv;
 }
@@ -1529,7 +1531,9 @@ NS_IMETHODIMP nsMessenger::GetRedoTransactionType(PRUint32 *txnType)
     rv = mTxnMgr->PeekRedoStack(getter_AddRefs(txn));
     if (NS_SUCCEEDED(rv) && txn)
     {
-        rv = NS_STATIC_CAST(nsMsgTxn*, NS_STATIC_CAST(nsITransaction*, txn.get()))->GetTransactionType(txnType);
+      nsCOMPtr <nsIPropertyBag2> propertyBag = do_QueryInterface(txn, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      return propertyBag->GetPropertyAsUint32(NS_LITERAL_STRING("type"), txnType);
     }
     return rv;
 }
