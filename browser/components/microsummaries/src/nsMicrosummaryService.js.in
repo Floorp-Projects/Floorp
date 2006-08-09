@@ -1071,7 +1071,7 @@ Microsummary.prototype = {
   },
 
   _handlePageLoad: function MS__handlePageLoad(resource) {
-    if (!resource.isXML && !resource.contentType == "text/html")
+    if (!resource.isXML && resource.contentType != "text/html")
       throw("page is neither HTML nor XML");
 
     this.pageContent = resource.content;
@@ -1798,10 +1798,16 @@ MicrosummaryResource.prototype = {
 
         if (this._self._httpAuthFailed) {
           // Technically the request succeeded, but we treat it as a failure,
-          // since we aren't able to handle HTTP authentication.  So we abort
-          // just like errorHandler does for other kinds of load failures.
+          // since we aren't able to handle HTTP authentication.
           LOG(this._self.uri.spec + " load failed; HTTP auth required");
-          try     { this._self.destroy() }
+          try     { this._self._handleError(event) }
+          finally { this._self = null }
+        }
+        else if (event.target.channel.contentType == "multipart/x-mixed-replace") {
+          // Technically the request succeeded, but we treat it as a failure,
+          // since we aren't able to handle multipart content.
+          LOG(this._self.uri.spec + " load failed; contains multipart content");
+          try     { this._self._handleError(event) }
           finally { this._self = null }
         }
         else {
@@ -1812,9 +1818,6 @@ MicrosummaryResource.prototype = {
       }
     };
 
-    // At the moment the only thing we do after a load error is destroy
-    // ourselves to prevent memory leaks, but we should ultimately notify
-    // the caller and let it handle the error if it wants to.
     var errorHandler = {
       _self: this,
       handleEvent: function MSR_errorHandler_handleEvent(event) {
@@ -1822,7 +1825,7 @@ MicrosummaryResource.prototype = {
           this._self._loadTimer.cancel();
 
         LOG(this._self.uri.spec + " load failed");
-        try     { this._self.destroy() }
+        try     { this._self._handleError(event) }
         finally { this._self = null }
       }
     };
@@ -1891,6 +1894,13 @@ MicrosummaryResource.prototype = {
     }
   },
   
+  _handleError: function MSR__handleError(event) {
+    // At the moment the only thing we do after a load error is destroy
+    // ourselves to prevent memory leaks, but we should ultimately notify
+    // the caller and let it handle the error if it wants to.
+    this.destroy();
+  },
+
   /**
    * Parse a string of HTML text.  Used by _load() when it retrieves HTML.
    * We do this via hidden XUL iframes, which according to bz is the best way
