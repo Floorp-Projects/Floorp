@@ -74,7 +74,7 @@ public:
      * Distance in bytes between the start of a line and the start of the
      * next line.
      */
-    long Stride() const;
+    long Stride() const { return mStride; }
     /**
      * Returns a pointer for the image data. Users of this function can
      * write to it, but must not attempt to free the buffer.
@@ -82,10 +82,15 @@ public:
     unsigned char* Data() { return mData; } // delete this data under us and die.
 
 private:
+
+    long ComputeStride() const;
+
+    PRBool mOwnsData;
     unsigned char *mData;
     gfxImageFormat mFormat;
     long mWidth;
     long mHeight;
+    long mStride;
 };
 
 #endif /* GFX_IMAGESURFACE_H */

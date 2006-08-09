@@ -96,9 +96,16 @@ public:
      */
     virtual nsresult UpdateFontList();
 
+    /* Returns PR_TRUE if the given block of ARGB32 data really has alpha, otherwise PR_FALSE */
+    static PRBool DoesARGBImageDataHaveAlpha(PRUint8* data,
+                                             PRUint32 width,
+                                             PRUint32 height,
+                                             PRUint32 stride);
+
 protected:
     gfxPlatform() { }
     virtual ~gfxPlatform() { }
+
 };
 
 #endif /* GFX_PLATFORM_H */
