@@ -41,7 +41,7 @@
 #include "nsIBrowserProfileMigrator.h"
 #include "nsIObserverService.h"
 #include "nsISupportsArray.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 
 class nsCaminoProfileMigrator : public nsIBrowserProfileMigrator
 {

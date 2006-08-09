@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *  Ben Goodger <ben@bengoodger.com>
+ *  Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,6 +46,8 @@
 #include "nsIStringBundle.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIProperties.h"
 
 #define MACIE_BOOKMARKS_FILE_NAME NS_LITERAL_STRING("Favorites.html")
 #define MACIE_PREFERENCES_FOLDER_NAME NS_LITERAL_STRING("Explorer")
@@ -196,7 +199,7 @@ nsMacIEProfileMigrator::CopyBookmarks(PRBool aReplace)
     rv = bundleService->CreateBundle(MIGRATION_BUNDLE, getter_AddRefs(bundle));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsXPIDLString toolbarFolderNameMacIE;
+    nsString toolbarFolderNameMacIE;
     bundle->GetStringFromName(NS_LITERAL_STRING("toolbarFolderNameMacIE").get(), 
                               getter_Copies(toolbarFolderNameMacIE));
     nsCAutoString ctoolbarFolderNameMacIE;

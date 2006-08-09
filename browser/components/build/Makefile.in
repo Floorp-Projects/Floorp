@@ -11,7 +11,6 @@ SHORT_LIBNAME = brwsrcmp
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 MODULE_NAME = nsBrowserCompsModule
-MOZILLA_INTERNAL_API = 1
 
 REQUIRES = \
 	xpcom \
@@ -76,17 +75,12 @@ LOCAL_INCLUDES += -I$(srcdir)/../safebrowsing/src
 SHARED_LIBRARY_LIBS += ../safebrowsing/src/$(LIB_PREFIX)safebrowsing_s.$(LIB_SUFFIX)
 endif
 
-# Link to gkgfx for GNOME shell service
-ifeq ($(MOZ_WIDGET_TOOLKIT), gtk2)
-EXTRA_DSO_LIBS += gkgfx
-endif
-
 EXTRA_DSO_LDOPTS += \
-	$(LIBS_DIR) \
-	$(EXTRA_DSO_LIBS) \
+	$(call EXPAND_LIBNAME_PATH,unicharutil_external_s,$(LIBXUL_DIST)/lib) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(LIBXUL_DIST)/../modules/libreg/src/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
 	$(MOZ_JS_LIBS) \
+	$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
 

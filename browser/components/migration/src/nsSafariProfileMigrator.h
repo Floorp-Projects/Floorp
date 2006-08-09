@@ -42,7 +42,7 @@
 #include "nsIBrowserProfileMigrator.h"
 #include "nsIObserverService.h"
 #include "nsISupportsArray.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 

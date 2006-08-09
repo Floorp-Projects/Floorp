@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBrowserProfileMigratorUtils.h"
-#include "nsCRT.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
@@ -173,11 +172,11 @@ nsPhoenixProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
                           aReplace, mSourceProfile, aResult);
 
   // Now locate passwords
-  nsXPIDLCString signonsFileName;
+  nsCString signonsFileName;
   GetSignonFileName(aReplace, getter_Copies(signonsFileName));
 
   if (!signonsFileName.IsEmpty()) {
-    nsAutoString fileName; fileName.AssignWithConversion(signonsFileName);
+    NS_ConvertASCIItoUTF16 fileName(signonsFileName);
     nsCOMPtr<nsIFile> sourcePasswordsFile;
     mSourceProfile->Clone(getter_AddRefs(sourcePasswordsFile));
     sourcePasswordsFile->Append(fileName);
@@ -229,11 +228,9 @@ NS_IMETHODIMP
 nsPhoenixProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
 {
   if (!mProfileNames && !mProfileLocations) {
-    nsresult rv = NS_NewISupportsArray(getter_AddRefs(mProfileNames));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = NS_NewISupportsArray(getter_AddRefs(mProfileLocations));
-    if (NS_FAILED(rv)) return rv;
+    mProfileNames = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
+    mProfileLocations = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
+    NS_ENSURE_TRUE(mProfileNames && mProfileLocations, NS_ERROR_UNEXPECTED);
 
     // Fills mProfileNames and mProfileLocations
     FillProfileDataFromPhoenixRegistry();
@@ -257,11 +254,14 @@ nsPhoenixProfileMigrator::GetSourceProfile(const PRUnichar* aProfile)
   PRUint32 count;
   mProfileNames->Count(&count);
   for (PRUint32 i = 0; i < count; ++i) {
-    nsCOMPtr<nsISupportsString> str(do_QueryElementAt(mProfileNames, i));
-    nsXPIDLString profileName;
+    nsCOMPtr<nsISupportsString> str;
+    mProfileNames->QueryElementAt(i, NS_GET_IID(nsISupportsString),
+                                  getter_AddRefs(str));
+    nsString profileName;
     str->GetData(profileName);
     if (profileName.Equals(aProfile)) {
-      mSourceProfile = do_QueryElementAt(mProfileLocations, i);
+      mProfileLocations->QueryElementAt(i, NS_GET_IID(nsILocalFile),
+                                        getter_AddRefs(mSourceProfile));
       break;
     }
   }
@@ -397,7 +397,7 @@ nsPhoenixProfileMigrator::CopyPasswords(PRBool aReplace)
 {
   nsresult rv;
 
-  nsXPIDLCString signonsFileName;
+  nsCString signonsFileName;
   if (!aReplace)
     return NS_OK;
 
@@ -417,7 +417,7 @@ nsPhoenixProfileMigrator::CopyPasswords(PRBool aReplace)
   if (signonsFileName.IsEmpty())
     return NS_ERROR_FILE_NOT_FOUND;
 
-  nsAutoString fileName; fileName.AssignWithConversion(signonsFileName);
+  NS_ConvertASCIItoUTF16 fileName(signonsFileName);
   return aReplace ? CopyFile(fileName, fileName) : NS_OK;
 }
 

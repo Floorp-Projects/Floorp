@@ -48,9 +48,12 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsCategoryManagerUtils.h"
+#include "nsComponentManagerUtils.h"
 #include "nsCOMArray.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsIGenericFactory.h"
-#include "nsString.h"
+#include "nsServiceManagerUtils.h"
+#include "nsStringAPI.h"
 #include "nsXULAppAPI.h"
 
 class nsBrowserDirectoryProvider :
@@ -118,7 +121,7 @@ nsBrowserDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
 
     nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
     if (prefs) {
-      nsXPIDLCString path;
+      nsCString path;
       rv = prefs->GetCharPref("browser.bookmarks.file", getter_Copies(path));
       if (NS_SUCCEEDED(rv)) {
 	NS_NewNativeLocalFile(path, PR_TRUE, (nsILocalFile**)(nsIFile**) getter_AddRefs(file));

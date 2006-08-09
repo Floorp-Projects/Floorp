@@ -41,7 +41,6 @@
 #include "gfxIImageFrame.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
-#include "nsCRT.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLImageElement.h"
@@ -57,7 +56,6 @@
 #include "nsIProcess.h"
 #include "nsICategoryManager.h"
 #include "nsBrowserCompsCID.h"
-#include "nsNativeCharsetUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 
@@ -452,12 +450,13 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Create the Start Menu item if it doesn't exist
-  nsXPIDLString brandFullName;
+  nsString brandFullName;
   brandBundle->GetStringFromName(NS_LITERAL_STRING("brandFullName").get(),
                                  getter_Copies(brandFullName));
   nsCAutoString nativeFullName;
   // For the now, we use 'A' APIs (see bug 240272, 239279)
-  NS_CopyUnicodeToNative(brandFullName, nativeFullName);
+  NS_UTF16ToCString(brandFullName, NS_CSTRING_ENCODING_NATIVE_FILESYSTEM,
+                    nativeFullName);
 
   nsCAutoString key1(NS_LITERAL_CSTRING(SMI));
   key1.Append(exeName);
@@ -466,35 +465,39 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
             backupKey, aClaimAllTypes, aForAllUsers);
 
   // Set the Options and Safe Mode start menu context menu item labels
-  nsCAutoString optionsKey(NS_LITERAL_CSTRING(SMI "%APPEXE%\\shell\\properties"));
-  optionsKey.ReplaceSubstring("%APPEXE%", exeName.get());
+  nsCAutoString optionsKey(SMI);
+  optionsKey.Append(exeName);
+  optionsKey.Append("\\shell\\properties");
 
-  nsCAutoString safeModeKey(NS_LITERAL_CSTRING(SMI "%APPEXE%\\shell\\safemode"));
-  safeModeKey.ReplaceSubstring("%APPEXE%", exeName.get());
+  nsCAutoString safeModeKey(SMI);
+  safeModeKey.Append(exeName);
+  safeModeKey.Append("\\shell\\safemode");
 
-  nsXPIDLString brandShortName;
+  nsString brandShortName;
   brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
                                  getter_Copies(brandShortName));
 
   const PRUnichar* brandNameStrings[] = { brandShortName.get() };
 
   // Set the Options menu item
-  nsXPIDLString optionsTitle;
+  nsString optionsTitle;
   bundle->FormatStringFromName(NS_LITERAL_STRING("optionsLabel").get(),
                                brandNameStrings, 1, getter_Copies(optionsTitle));
   // Set the Safe Mode menu item
-  nsXPIDLString safeModeTitle;
+  nsString safeModeTitle;
   bundle->FormatStringFromName(NS_LITERAL_STRING("safeModeLabel").get(),
                                brandNameStrings, 1, getter_Copies(safeModeTitle));
 
   // Set the registry keys
   nsCAutoString nativeTitle;
   // For the now, we use 'A' APIs (see bug 240272,  239279)
-  NS_CopyUnicodeToNative(optionsTitle, nativeTitle);
+  NS_UTF16ToCString(optionsTitle, NS_CSTRING_ENCODING_NATIVE_FILESYSTEM,
+                    nativeTitle);
   SetRegKey(optionsKey.get(), "", nativeTitle.get(), PR_TRUE, backupKey,
             aClaimAllTypes, aForAllUsers);
   // For the now, we use 'A' APIs (see bug 240272,  239279)
-  NS_CopyUnicodeToNative(safeModeTitle, nativeTitle);
+  NS_UTF16ToCString(safeModeTitle, NS_CSTRING_ENCODING_NATIVE_FILESYSTEM,
+                    nativeTitle);
   SetRegKey(safeModeKey.get(), "", nativeTitle.get(), PR_TRUE, backupKey,
             aClaimAllTypes, aForAllUsers);
 
@@ -571,7 +574,7 @@ nsWindowsShellService::DeleteRegKey(HKEY baseKey, const char *keyName)
  
  // Continue till we get an error or are done.
  while (rc == ERROR_SUCCESS) {
-   char subkeyName[_MAX_PATH];
+   char subkeyName[MAX_PATH];
    DWORD len = sizeof subkeyName;
    // Get first subkey name.  Note that we always get the
    // first one, then delete it.  So we need to get
@@ -791,7 +794,7 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
   NS_ENSURE_SUCCESS(rv, rv);
  
   // e.g. "Desktop Background.bmp"
-  nsXPIDLString fileLeafName;
+  nsString fileLeafName;
   rv = shellBundle->GetStringFromName
                       (NS_LITERAL_STRING("desktopBackgroundLeafNameWin").get(),
                        getter_Copies(fileLeafName));
@@ -1057,7 +1060,7 @@ nsWindowsShellService::GetMailAccountKey(HKEY* aResult)
 NS_IMETHODIMP
 nsWindowsShellService::Observe(nsISupports* aObject, const char* aTopic, const PRUnichar* aMessage)
 {
-  if (!nsCRT::strcmp("app-startup", aTopic)) {
+  if (!strcmp("app-startup", aTopic)) {
     PRBool isDefault;
     IsDefaultBrowser(PR_FALSE, &isDefault);
     if (!isDefault)
@@ -1065,7 +1068,7 @@ nsWindowsShellService::Observe(nsISupports* aObject, const char* aTopic, const P
 
     return RegisterDDESupport();
   }
-  else if (!nsCRT::strcmp("quit-application", aTopic)) {
+  else if (!strcmp("quit-application", aTopic)) {
     PRBool isDefault;
     IsDefaultBrowser(PR_FALSE, &isDefault);
     if (!isDefault)
@@ -1093,7 +1096,7 @@ nsWindowsShellService::OpenApplicationWithURI(nsILocalFile* aApplication, const 
   if (NS_FAILED(rv))
     return rv;
   
-  const nsPromiseFlatCString& spec = PromiseFlatCString(aURI);
+  const nsCString spec(aURI);
   const char* specStr = spec.get();
   PRUint32 pid;
   return process->Run(PR_FALSE, &specStr, 1, &pid);

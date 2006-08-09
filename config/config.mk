@@ -290,15 +290,23 @@ ifneq (,$(FORCE_SHARED_LIB)$(FORCE_USE_PIC))
 _ENABLE_PIC=1
 endif
 
+# In Firefox, all components are linked into either libxul or the static
+# meta-component, and should be compiled with PIC.
+ifdef MOZ_META_COMPONENT
+_ENABLE_PIC=1
+endif
+
 # If module is going to be merged into the nsStaticModule, 
 # make sure that the entry points are translated and 
 # the module is built static.
 
 ifdef IS_COMPONENT
+ifdef EXPORT_LIBRARY
 ifneq (,$(BUILD_STATIC_LIBS))
 ifdef MODULE_NAME
 DEFINES += -DXPCOM_TRANSLATE_NSGM_ENTRY_POINT=1
 FORCE_STATIC_LIB=1
+endif
 endif
 endif
 endif

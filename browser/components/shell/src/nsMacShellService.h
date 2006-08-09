@@ -41,6 +41,7 @@
 #include "nsIMacShellService.h"
 #include "nsIWebProgressListener.h"
 #include "nsILocalFile.h"
+#include "nsCOMPtr.h"
 
 class nsMacShellService : public nsIMacShellService,
                           public nsIWebProgressListener
