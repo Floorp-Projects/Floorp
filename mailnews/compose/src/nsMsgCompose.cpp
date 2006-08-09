@@ -3796,6 +3796,7 @@ nsMsgCompose::BuildBodyMessageAndSignature()
   switch (mType)
   {
     case nsIMsgCompType::New :
+    case nsIMsgCompType::MailToUrl :    /* same as New */
     case nsIMsgCompType::Reply :        /* should not happen! but just in case */
     case nsIMsgCompType::ReplyAll :       /* should not happen! but just in case */
     case nsIMsgCompType::ReplyToList :    /* should not happen! but just in case */
@@ -3813,10 +3814,6 @@ nsMsgCompose::BuildBodyMessageAndSignature()
       addSignature = PR_FALSE;
       break;
     
-    case nsIMsgCompType::MailToUrl :
-      addSignature = body.IsEmpty();
-      break;
-
     default :
       addSignature = PR_FALSE;
       break;
