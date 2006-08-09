@@ -157,7 +157,6 @@ function populateSubgroup(data) {
     if (subgroup.testgroups[i].name != '') {
       testgroups_text = testgroups_text + subgroup.testgroups[i].name + ', ';
       testgroups_link_text = testgroups_link_text + '<a target="manage_testgroups" href="manage_testgroups.cgi?testgroup_id=' + subgroup.testgroups[i].testgroup_id + '">'+ subgroup.testgroups[i].name + '</a>, ';
-
     }
   }
   if (testgroups_text != '') {
@@ -175,7 +174,7 @@ function populateSubgroup(data) {
     enabled_em.checked = true;
   } else {
     enabled_em.checked = false;
- } 
+  } 
   document.getElementById('editform_testrunner_group_id').innerHTML = subgroup.testrunner_group_id;
 
   populateAllTestcases();

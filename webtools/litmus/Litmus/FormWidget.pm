@@ -200,7 +200,7 @@ sub getTestcases()
 #########################################################################
 sub getSubgroups()
 {
-    my $sql = "SELECT s.subgroup_id, s.name, s.product_id, tgb.branch_id FROM subgroups s, subgroup_testgroups sgtg, testgroup_branches tgb WHERE s.enabled=1 AND s.subgroup_id=sgtg.subgroup_id AND sgtg.testgroup_id=tgb.testgroup_id ORDER BY s.name ASC, s.subgroup_id DESC";
+    my $sql = "SELECT DISTINCT(s.subgroup_id), s.name, s.product_id, tgb.branch_id FROM subgroups s, subgroup_testgroups sgtg, testgroup_branches tgb WHERE s.enabled=1 AND s.subgroup_id=sgtg.subgroup_id AND sgtg.testgroup_id=tgb.testgroup_id ORDER BY s.name ASC, s.subgroup_id DESC";
     return _getValues($sql);
 }
 
