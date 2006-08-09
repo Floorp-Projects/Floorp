@@ -182,7 +182,7 @@ function populateTestcase(data) {
     document.getElementById('testgroups_link_display').innerHTML = testgroups_link_text;
   } else {
     document.getElementById('testgroups_display').innerHTML = '<span class="errorHeading">This testcase does not belong to any testgroups that are currently enabled.</span>';
-    document.getElementById('testgroups_link_display').innerHTML = '<span class="errorHeading">This testcase does not belong to any testgroups that are currently enabled &rArr;&nbsp;<a target="manage_subgroups" href="manage_testgroups.cgi">Jump to Manage Testgroups</a>.</span>';
+    document.getElementById('testgroups_link_display').innerHTML = '<span class="errorHeading">This testcase does not belong to any testgroups that are currently enabled &rArr;&nbsp;<a target="manage_testgroups" href="manage_testgroups.cgi">Jump to Manage Testgroups</a>.</span>';
   }
 
   var subgroups_text = "";

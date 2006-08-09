@@ -108,7 +108,6 @@ if ($c->param("delete_subgroup_button")) {
   }
 } elsif ($c->param("editform_mode")) {
   requireField('product', $c->param('product'));
-  requireField('testgroup', $c->param('testgroup'));
   my $enabled = $c->param('editform_enabled') ? 1 : 0;
   if ($c->param("editform_mode") eq "add") {
     my %hash = (
@@ -120,8 +119,6 @@ if ($c->param("delete_subgroup_button")) {
       Litmus::DB::Subgroup->create(\%hash);
 
     if ($new_subgroup) {      
-      my @selected_testgroups = $c->param("testgroup");
-      $new_subgroup->update_testgroups(\@selected_testgroups);
       my @selected_testcases = $c->param("editform_subgroup_testcases");
       $new_subgroup->update_testcases(\@selected_testcases);
       $status = "success";
@@ -143,8 +140,6 @@ if ($c->param("delete_subgroup_button")) {
       $subgroup->name($c->param('editform_name'));
       $rv = $subgroup->update();
       if ($rv) {
-        my @selected_testgroups = $c->param("testgroup");
-        $subgroup->update_testgroups(\@selected_testgroups);
         my @selected_testcases = $c->param("editform_subgroup_testcases");
         $subgroup->update_testcases(\@selected_testcases);
         $status = "success";

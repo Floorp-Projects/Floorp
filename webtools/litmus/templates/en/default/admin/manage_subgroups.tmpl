@@ -150,37 +150,25 @@ function populateSubgroup(data) {
     options[0].selected = true;
   }
   changeProduct();
-  var found_testgroup = 0;
-  if (subgroup.testgroups[0]) {
-    var testgroup_box = document.getElementById('testgroup');
-    options = testgroup_box.getElementsByTagName('option');  
-    for (var i=0; i<options.length; i++) {
-      if (options[i].value == subgroup.testgroups[0].testgroup_id) {
-        options[i].selected = true;
-        found_testgroup=1;
-      } else {
-        options[i].selected = false;
-      }      
-    }
-  }
-  if (found_testgroup == 0) {
-    if (options[0]) {
-      options[0].selected = true;
-    }
-  }
+
   var testgroups_text = "";
+  var testgroups_link_text = "";
   for (var i in subgroup.testgroups) {
     if (subgroup.testgroups[i].name != '') {
       testgroups_text = testgroups_text + subgroup.testgroups[i].name + ', ';
+      testgroups_link_text = testgroups_link_text + '<a target="manage_testgroups" href="manage_testgroups.cgi?testgroup_id=' + subgroup.testgroups[i].testgroup_id + '">'+ subgroup.testgroups[i].name + '</a>, ';
+
     }
   }
   if (testgroups_text != '') {
     testgroups_text = testgroups_text.replace(/, $/g,'');
+    testgroups_link_text = testgroups_link_text.replace(/, $/g,'');
     document.getElementById('testgroups_display').innerHTML = testgroups_text;
+    document.getElementById('testgroups_link_display').innerHTML = testgroups_link_text;
   } else {
     document.getElementById('testgroups_display').innerHTML = '<span class="errorHeading">This subgroup does not belong to any testgroups that are currently enabled.</span>';
+    document.getElementById('testgroups_link_display').innerHTML = '<span class="errorHeading">This subgroup does not belong to any testgroups that are currently enabled &rArr;&nbsp;<a target="manage_testgroups" href="manage_testgroups.cgi">Jump to Manage Testgroups</a>.</span>';
   }
-  changeTestgroup();
 
   var enabled_em = document.getElementById('editform_enabled')
   if (subgroup.enabled == 1) {

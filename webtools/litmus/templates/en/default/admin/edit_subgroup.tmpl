@@ -34,7 +34,6 @@ function checkFormContents(f) {
   return (
           checkString(f.editform_name, 'Name') &&
           verifySelected(f.product, 'Product') &&
-          verifySelected(f.testgroup, 'Testgroup')
          );
 }
 
@@ -79,7 +78,9 @@ var manageTestcasesHelpText="<p>The select box on the left contains all the test
 	</tr>
 	<tr>
 	<td class="headerleft">Test Group(s):</td>
-	<td>[% INCLUDE testgroupbox %]</td>
+	<td colspan="2">
+          <div id="testgroups_link_display">[% IF testgroups.size==0 %]<span class="errorHeading">This testcase does not belong to any testgroups that are currently enabled.</span>[% ELSE %][% FOREACH testgroup=testgroups %][% testgroup.name | html %][% UNLESS loop.last %], [% END %][% END %][% END %]</div>
+        </td>
         </tr>
         <tr>
           <td class="headerleft">Enabled?</td>
