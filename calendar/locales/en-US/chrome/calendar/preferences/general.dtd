@@ -19,6 +19,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s): 
+   -   Cédric Corazza <cedric.corazza@wanadoo.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,9 +35,17 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
+<!-- WARNING! This file contains UTF-8 encoded characters!
+   - If this ==> … <== doesn't look like an ellipsis (three dots in a row),
+   - your editor isn't using UTF-8 encoding and may munge up the document!
+  -->
+
 <!ENTITY pref.mainbox.label "General Settings" >
 <!ENTITY pref.dateformat.label "Date Text Format:" >
+<!ENTITY pref.dateformat.accesskey "D">
 <!ENTITY pref.dateformat.long "Long" >
 <!ENTITY pref.dateformat.short "Short"  >
 <!ENTITY pref.defaultlength.label "Default Event Length:" >
+<!ENTITY pref.defaultlength.accesskey "E">
 <!ENTITY pref.defaultsnoozelength.label "Default Snooze Length:" >
+<!ENTITY pref.defaultsnoozelength.accesskey "S">

@@ -20,6 +20,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
+   -   Cédric Corazza <cedric.corazza@wanadoo.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -80,7 +81,9 @@
         <groupbox>
             <caption label="&pref.mainbox.label;"/>
             <hbox align="center">
-                <label value="&pref.dateformat.label;"/>
+                <label value="&pref.dateformat.label;"
+                       accesskey="&pref.dateformat.accesskey;"
+                       control="dateformat"/>
                 <menulist id="dateformat" crop="none"
                           preference="calendar.date.format">
                     <menupopup id="dateformat">
@@ -95,7 +98,9 @@
             </hbox>
 
             <hbox align="center">
-                <label value="&pref.defaultlength.label;"/>
+                <label value="&pref.defaultlength.label;"
+                       accesskey="&pref.defaultlength.accesskey;"
+                       control="defaultlength"/>
                 <textbox id="defaultlength"
                          preference="calendar.event.defaultlength"
                          maxlength="3"
@@ -104,7 +109,9 @@
             </hbox>
 
             <hbox align="center">
-                <label value="&pref.defaultsnoozelength.label;"/>
+                <label value="&pref.defaultsnoozelength.label;"
+                       accesskey="&pref.defaultsnoozelength.accesskey;"
+                       control="defaultsnoozelength"/>
                 <textbox id="defaultsnoozelength"
                          preference="calendar.alarms.defaultsnoozelength"
                          maxlength="3"
