@@ -755,7 +755,7 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
       newHeight += (float)kTitleBarHeight; // add height of title bar
     // Now we need to adjust for the fact that gecko wants the top of the window
     // to remain in the same place.
-    newFrame.origin.y += newFrame.size.height - (float)newHeight;
+    newFrame.origin.y += newFrame.size.height - newHeight;
     newFrame.size.height = newHeight;
 
     StartResizing();
