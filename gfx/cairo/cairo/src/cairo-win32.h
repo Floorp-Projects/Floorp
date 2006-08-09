@@ -48,12 +48,21 @@ cairo_public cairo_surface_t *
 cairo_win32_surface_create (HDC hdc);
 
 cairo_public cairo_surface_t *
+cairo_win32_surface_create_with_ddb (HDC hdc,
+                                     cairo_format_t format,
+                                     int width,
+                                     int height);
+
+cairo_public cairo_surface_t *
 cairo_win32_surface_create_with_dib (cairo_format_t format,
                                      int width,
                                      int height);
 
 cairo_public HDC
 cairo_win32_surface_get_dc (cairo_surface_t *surface);
+
+cairo_public cairo_surface_t *
+cairo_win32_surface_get_image (cairo_surface_t *surface);
 
 cairo_public cairo_font_face_t *
 cairo_win32_font_face_create_for_logfontw (LOGFONTW *logfont);

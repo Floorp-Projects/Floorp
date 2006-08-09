@@ -55,8 +55,10 @@ typedef struct _cairo_win32_surface {
 
     HDC dc;
 
-    /* We create off-screen surfaces as DIBs */
+    /* We create off-screen surfaces as DIBs or DDBs, based on what we created
+     * originally*/
     HBITMAP bitmap;
+    cairo_bool_t is_dib;
 
     /* Used to save the initial 1x1 monochrome bitmap for the DC to
      * select back into the DC before deleting the DC and our
@@ -74,7 +76,25 @@ typedef struct _cairo_win32_surface {
     HRGN saved_clip;
 
     cairo_rectangle_int16_t extents;
+
+    /* Surface DC flags */
+    uint32_t flags;
 } cairo_win32_surface_t;
+
+/* Surface DC flag values */
+enum {
+    /* Whether the DC is a display DC or not */
+    CAIRO_WIN32_SURFACE_IS_DISPLAY = (1<<1),
+
+    /* Whether we can use BitBlt with this surface */
+    CAIRO_WIN32_SURFACE_CAN_BITBLT = (1<<2),
+
+    /* Whether we can use AlphaBlend with this surface */
+    CAIRO_WIN32_SURFACE_CAN_ALPHABLEND = (1<<3),
+
+    /* Whether we can use StretchBlt with this surface */
+    CAIRO_WIN32_SURFACE_CAN_STRETCHBLT = (1<<4)
+};
 
 cairo_status_t
 _cairo_win32_print_gdi_error (const char *context);

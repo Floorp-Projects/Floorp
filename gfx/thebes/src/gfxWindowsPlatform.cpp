@@ -64,7 +64,7 @@ gfxWindowsPlatform::CreateOffscreenSurface(PRUint32 width,
                                            PRUint32 height,
                                            gfxASurface::gfxImageFormat imageFormat)
 {
-    gfxASurface *surf = new gfxWindowsSurface(nsnull, width, height, imageFormat);
+    gfxASurface *surf = new gfxWindowsSurface(width, height, imageFormat);
     NS_IF_ADDREF(surf);
     return surf;
 }

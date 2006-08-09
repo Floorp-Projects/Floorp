@@ -41,8 +41,12 @@
 
 #include "nsIImage.h"
 
+#include "gfxColor.h"
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
+#ifdef XP_WIN
+#include "gfxWindowsSurface.h"
+#endif
 
 class nsThebesImage : public nsIImage
 {
@@ -102,14 +106,21 @@ public:
     }
 
 protected:
+    gfxImageSurface::gfxImageFormat mFormat;
     PRInt32 mWidth;
     PRInt32 mHeight;
     PRInt32 mStride;
     nsRect mDecoded;
     PRPackedBool mImageComplete;
+    PRPackedBool mSinglePixel;
+
+    gfxRGBA mSinglePixelColor;
 
     nsRefPtr<gfxImageSurface> mImageSurface;
     nsRefPtr<gfxASurface> mOptSurface;
+#ifdef XP_WIN
+    nsRefPtr<gfxWindowsSurface> mWinSurface;
+#endif
 
     PRUint8 mAlphaDepth;
 };

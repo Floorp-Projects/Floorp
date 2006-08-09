@@ -99,13 +99,46 @@ gfxPlatform::SetUseGlitz(PRBool use)
     gGlitzState = (use ? 1 : 0);
 }
 
+PRBool
+gfxPlatform::DoesARGBImageDataHaveAlpha(PRUint8* data,
+                                        PRUint32 width,
+                                        PRUint32 height,
+                                        PRUint32 stride)
+{
+    PRUint32 *r;
+
+    for (int j = 0; j < height; j++) {
+        r = (PRUint32*) (data + stride*j);
+        for (int i = 0; i < width; i++) {
+            if ((*r & 0xff000000) != 0xff000000) {
+                return PR_TRUE;
+            }
+        }
+    }
+
+    return PR_FALSE;    
+}
+
 already_AddRefed<gfxASurface>
 gfxPlatform::OptimizeImage(gfxImageSurface* aSurface)
 {
     nsRefPtr<gfxASurface> optSurface;
+    gfxASurface::gfxImageFormat realFormat = aSurface->Format();
+
+    if (realFormat == gfxASurface::ImageFormatARGB32) {
+        // this might not really need alpha; figure that out
+        if (!DoesARGBImageDataHaveAlpha(aSurface->Data(),
+                                        aSurface->Width(),
+                                        aSurface->Height(),
+                                        aSurface->Stride()))
+        {
+            realFormat = gfxASurface::ImageFormatRGB24;
+        }
+    }
+
     optSurface = CreateOffscreenSurface(aSurface->Width(),
                                         aSurface->Height(),
-                                        aSurface->Format());
+                                        realFormat);
 
     if (!optSurface)
         return nsnull;

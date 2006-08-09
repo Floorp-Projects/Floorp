@@ -42,8 +42,9 @@
 gfxImageSurface::gfxImageSurface(gfxImageFormat format, long width, long height) :
     mFormat(format), mWidth(width), mHeight(height)
 {
-    long stride = Stride();
+    long stride = ComputeStride();
     mData = new unsigned char[height * stride];
+    mOwnsData = PR_TRUE;
 
     //memset(mData, 0xff, height*stride);
 
@@ -53,6 +54,8 @@ gfxImageSurface::gfxImageSurface(gfxImageFormat format, long width, long height)
                                             width,
                                             height,
                                             stride);
+    mStride = stride;
+
     Init(surface);
 }
 
@@ -60,8 +63,10 @@ gfxImageSurface::gfxImageSurface(cairo_surface_t *csurf)
 {
     mWidth = cairo_image_surface_get_width(csurf);
     mHeight = cairo_image_surface_get_height(csurf);
-    mData = nsnull;
-    mFormat = ImageFormatUnknown;
+    mData = cairo_image_surface_get_data(csurf);
+    mFormat = (gfxImageFormat) cairo_image_surface_get_format(csurf);
+    mOwnsData = PR_FALSE;
+    mStride = cairo_image_surface_get_stride(csurf);
 
     Init(csurf, PR_TRUE);
 }
@@ -70,11 +75,12 @@ gfxImageSurface::~gfxImageSurface()
 {
     Destroy();
 
-    delete[] mData;
+    if (mOwnsData)
+        delete[] mData;
 }
 
 long
-gfxImageSurface::Stride() const
+gfxImageSurface::ComputeStride() const
 {
     long stride;
 

@@ -51,10 +51,12 @@ static PRBool gDisableOptimize = PR_FALSE;
 NS_IMPL_ISUPPORTS1(nsThebesImage, nsIImage)
 
 nsThebesImage::nsThebesImage()
-    : mWidth(0),
+    : mFormat(gfxImageSurface::ImageFormatRGB24),
+      mWidth(0),
       mHeight(0),
       mDecoded(0,0,0,0),
       mImageComplete(PR_FALSE),
+      mSinglePixel(PR_FALSE),
       mAlphaDepth(0)
 {
     static PRBool hasCheckedOptimize = PR_FALSE;
@@ -108,7 +110,19 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
             break;
     }
 
+    mFormat = format;
+
+#ifdef XP_WIN
+    mWinSurface = new gfxWindowsSurface(mWidth, mHeight, format);
+    mImageSurface = mWinSurface->GetImageSurface();
+
+    if (!mImageSurface) {
+        mWinSurface = nsnull;
+        mImageSurface = new gfxImageSurface(format, mWidth, mHeight);
+    }
+#else
     mImageSurface = new gfxImageSurface(format, mWidth, mHeight);
+#endif
     mStride = mImageSurface->Stride();
 
     return NS_OK;
@@ -194,10 +208,48 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
     if (gDisableOptimize)
         return NS_OK;
 
-    if (mOptSurface)
+    if (mOptSurface || mSinglePixel)
         return NS_OK;
 
+    if (mWidth == 1 && mHeight == 1) {
+        // yeah, let's optimize this.
+        if (mFormat == gfxImageSurface::ImageFormatARGB32 ||
+            mFormat == gfxImageSurface::ImageFormatRGB24)
+        {
+            PRUint32 *pxl = (PRUint32 *) mImageSurface->Data();
+            mSinglePixelColor = gfxRGBA(*pxl);
+            if (mFormat == gfxImageSurface::ImageFormatRGB24)
+                mSinglePixelColor.a = 1.0;
+
+            mSinglePixel = PR_TRUE;
+
+            return NS_OK;
+        }
+
+        // if it's not RGB24/ARGB32, don't optimize, but we should
+        // never hit this.
+    }
+
+#ifdef XP_WIN
+    // we need to special-case windows here, because windows has
+    // a distinction between DIB and DDB and we want to use DDBs as much
+    // as we can.
+    if (mWinSurface) {
+        nsRefPtr<gfxWindowsSurface> wsurf = mWinSurface->OptimizeToDDB(nsnull, mFormat, mWidth, mHeight);
+        if (wsurf) {
+            mOptSurface = wsurf;
+        } else {
+            // just use the DIB
+            mOptSurface = mWinSurface;
+        }
+    } else {
+        mOptSurface = gfxPlatform::GetPlatform()->OptimizeImage(mImageSurface);
+    }
+
+    mWinSurface = nsnull;
+#else
     mOptSurface = gfxPlatform::GetPlatform()->OptimizeImage(mImageSurface);
+#endif
 
     mImageSurface = nsnull;
 
@@ -227,7 +279,7 @@ nsThebesImage::LockImagePixels(PRBool aMaskPixels)
 {
     if (aMaskPixels)
         return NS_ERROR_NOT_IMPLEMENTED;
-    if (mOptSurface && !mImageSurface) {
+    if ((mOptSurface || mSinglePixel) && !mImageSurface) {
         // Recover the pixels
         mImageSurface = new gfxImageSurface(gfxImageSurface::ImageFormatARGB32,
                                             mWidth, mHeight);
@@ -239,7 +291,10 @@ nsThebesImage::LockImagePixels(PRBool aMaskPixels)
             return NS_ERROR_OUT_OF_MEMORY;
         }
         context->SetOperator(gfxContext::OPERATOR_SOURCE);
-        context->SetSource(mOptSurface);
+        if (mSinglePixel)
+            context->SetColor(mSinglePixelColor);
+        else
+            context->SetSource(mOptSurface);
         context->Paint();
     }
     return NS_OK;
@@ -281,6 +336,18 @@ nsThebesImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
              ctx->CurrentMatrix().GetTranslation().x, ctx->CurrentMatrix().GetTranslation().y,
              mDecoded.x, mDecoded.y, mDecoded.width, mDecoded.height);
 #endif
+
+    if (mSinglePixel) {
+        // if a == 0, it's a noop
+        if (mSinglePixelColor.a == 0.0)
+            return NS_OK;
+
+        // otherwise
+        ctx->SetColor(mSinglePixelColor);
+        ctx->Rectangle(gfxRect(aDX, aDY, aDWidth, aDHeight), PR_TRUE);
+        ctx->Fill();
+        return NS_OK;
+    }
 
     gfxFloat xscale = gfxFloat(aDWidth) / aSWidth;
     gfxFloat yscale = gfxFloat(aDHeight) / aSHeight;

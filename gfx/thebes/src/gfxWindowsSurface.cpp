@@ -38,6 +38,9 @@
 #include "gfxWindowsSurface.h"
 #include "nsString.h"
 
+#include "gfxContext.h"
+#include "gfxPlatform.h"
+
 #include <cairo-win32.h>
 
 gfxWindowsSurface::gfxWindowsSurface(HWND wnd) :
@@ -53,17 +56,34 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, PRBool deleteDC) :
     Init(cairo_win32_surface_create(mDC));
 }
 
+gfxWindowsSurface::gfxWindowsSurface(unsigned long width, unsigned long height, gfxImageFormat imageFormat) :
+    mOwnsDC(PR_FALSE), mWnd(nsnull)
+{
+    HBITMAP bmp = nsnull;
+
+    cairo_surface_t *surf = cairo_win32_surface_create_with_dib((cairo_format_t)imageFormat,
+                                                                width, height);
+    if (!surf || cairo_surface_status(surf)) {
+        fprintf (stderr, "++++++++++++ gfxWindowsSurface: DIB surface creation failed!\n");
+    }
+
+    Init(surf);
+
+    mDC = cairo_win32_surface_get_dc(CairoSurface());
+}
+
 gfxWindowsSurface::gfxWindowsSurface(HDC dc, unsigned long width, unsigned long height, gfxImageFormat imageFormat) :
     mOwnsDC(PR_FALSE), mWnd(nsnull)
 {
     HBITMAP bmp = nsnull;
 
-    // At some point we might want to revisit creating a DDB
-    // with CreateCompatibleDC, but from stuff that I've read
-    // that's only useful for terminal services clients.
+    cairo_surface_t *surf = cairo_win32_surface_create_with_ddb(dc, (cairo_format_t)imageFormat,
+                                                                width, height);
+    if (!surf || cairo_surface_status(surf)) {
+        fprintf (stderr, "++++++++++++ gfxWindowsSurface: DDB surface creation failed!\n");
+    }
 
-    Init(cairo_win32_surface_create_with_dib((cairo_format_t)imageFormat,
-                                             width, height));
+    Init(surf);
 
     mDC = cairo_win32_surface_get_dc(CairoSurface());
 }
@@ -87,6 +107,49 @@ gfxWindowsSurface::~gfxWindowsSurface()
         else
             ::DeleteDC(mDC);
     }
+}
+
+already_AddRefed<gfxImageSurface>
+gfxWindowsSurface::GetImageSurface()
+{
+    cairo_surface_t *isurf = cairo_win32_surface_get_image(CairoSurface());
+    if (!isurf)
+        return nsnull;
+
+    nsRefPtr<gfxASurface> asurf = gfxASurface::Wrap(isurf);
+    gfxImageSurface *imgsurf = (gfxImageSurface*) asurf.get();
+    NS_ADDREF(imgsurf);
+    return imgsurf;
+}
+
+already_AddRefed<gfxWindowsSurface>
+gfxWindowsSurface::OptimizeToDDB(HDC dc, gfxImageFormat format, PRUint32 width, PRUint32 height)
+{
+    gfxImageFormat realFormat = format;
+    if (realFormat == ImageFormatARGB32) {
+        cairo_surface_t *isurf = cairo_win32_surface_get_image(CairoSurface());
+        if (isurf && !gfxPlatform::DoesARGBImageDataHaveAlpha(cairo_image_surface_get_data(isurf),
+                                                              cairo_image_surface_get_width(isurf),
+                                                              cairo_image_surface_get_height(isurf),
+                                                              cairo_image_surface_get_stride(isurf)))
+        {
+            realFormat = ImageFormatRGB24;
+        }
+    }
+
+    if (realFormat != ImageFormatRGB24)
+        return nsnull;
+
+    nsRefPtr<gfxWindowsSurface> wsurf = new gfxWindowsSurface (dc, width, height, realFormat);
+
+    nsRefPtr<gfxContext> tmpCtx(new gfxContext(wsurf));
+    tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
+    tmpCtx->SetSource(this);
+    tmpCtx->Paint();
+
+    gfxWindowsSurface *raw = (gfxWindowsSurface*) (wsurf.get());
+    NS_ADDREF(raw);
+    return raw;
 }
 
 static char*
