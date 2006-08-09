@@ -24,6 +24,7 @@
    -   ArentJan Banck <ajbanck@planet.nl>
    -   Eric Belhaire <belhaire@ief.u-psud.fr>
    -   Matthew Willis <mattwillis@gmail.com>
+   -   Cédric Corazza <cedric.corazza@wanadoo.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -106,7 +107,9 @@
         <groupbox>
             <caption label="&pref.calendar.view.allview.caption;"/>
             <hbox align="center">
-                <caption label="&pref.weekstarts.label;"/>
+                <caption label="&pref.weekstarts.label;"
+                         accesskey="&pref.weekstarts.accesskey;"
+                         control="weekstarts"/>
                 <menulist id="weekstarts" preference="calendar.week.start">
                     <menupopup id="weekstarts">
                         <menuitem label="&day.1.name;" value="0"/>
@@ -127,30 +130,37 @@
                 <caption label="&pref.daysoff.label;"/>
                 <checkbox class="dayOffCheckbox"
                           label="&day.1.Ddd;"
+                          accesskey="&day.1.Ddd.accesskey;"
                           orient="vertical"
                           preference="calendar.week.d0sundaysoff"/>
                 <checkbox class="dayOffCheckbox"
                           label="&day.2.Ddd;"
+                          accesskey="&day.2.Ddd.accesskey;"
                           orient="vertical"
                           preference="calendar.week.d1mondaysoff"/>
                 <checkbox class="dayOffCheckbox"
                           label="&day.3.Ddd;"
+                          accesskey="&day.3.Ddd.accesskey;"
                           orient="vertical"
                           preference="calendar.week.d2tuesdaysoff"/>
                 <checkbox class="dayOffCheckbox"
                           label="&day.4.Ddd;"
+                          accesskey="&day.4.Ddd.accesskey;"
                           orient="vertical"
                           preference="calendar.week.d3wednesdaysoff"/>
                 <checkbox class="dayOffCheckbox"
                           label="&day.5.Ddd;"
+                          accesskey="&day.5.Ddd.accesskey;"
                           orient="vertical"
                           preference="calendar.week.d4thursdaysoff"/>
                 <checkbox class="dayOffCheckbox"
                           label="&day.6.Ddd;"
+                          accesskey="&day.6.Ddd.accesskey;"
                           orient="vertical"
                           preference="calendar.week.d5fridaysoff"/>
                 <checkbox class="dayOffCheckbox"
                           label="&day.7.Ddd;"
+                          accesskey="&day.7.Ddd.accesskey;"
                           orient="vertical"
                           preference="calendar.week.d6saturdaysoff"/>
             </hbox>
@@ -159,7 +169,9 @@
         <groupbox>
             <caption label="&pref.calendar.view.weekanddayview.caption;"/>
             <hbox align="center">
-                <caption label="&pref.calendar.view.restrict.label;"/>
+                <caption label="&pref.calendar.view.restrict.label;"
+                         accesskey="&pref.calendar.view.restrict.accesskey;"
+                         control="daystarthour"/>
                 <menulist id="daystarthour"
                           oncommand="gViewsPane.updateViewEndMenu(this.value);"
                           preference="calendar.view.defaultstarthour">
@@ -190,7 +202,9 @@
                         <menuitem label="&time.23;"       value="23"/>
                     </menupopup>
                 </menulist>
-                <caption label="&pref.calendar.view.endtime.label;"/>
+                <caption label="&pref.calendar.view.endtime.label;"
+                         accesskey="&pref.calendar.view.endtime.accesskey;"
+                         control="dayendhour"/>
                 <menulist id="dayendhour"
                           oncommand="gViewsPane.updateViewStartMenu(this.value);"
                           preference="calendar.view.defaultendhour">
@@ -230,7 +244,9 @@
         <groupbox>
             <caption label="&pref.calendar.view.multiweekview.caption;"/>
             <hbox align="center">
-                <caption label="&pref.numberofweeks.label;"/>
+                <caption label="&pref.numberofweeks.label;"
+                         accesskey="&pref.numberofweeks.accesskey;"
+                         control="viewsMultiweekTotalWeeks"/>
                 <menulist id="viewsMultiweekTotalWeeks"
                           preference="calendar.weeks.inview">
                     <menupopup>
@@ -244,7 +260,9 @@
                 </menulist>
             </hbox>
             <hbox align="center" id="previousWeeksBox">
-                <caption label="&pref.numberofpreviousweeks.label;"/>
+                <caption label="&pref.numberofpreviousweeks.label;"
+                         accesskey="&pref.numberofpreviousweeks.accesskey;"
+                         control="viewsMultiweekPreviousWeeks"/>
                 <menulist id="viewsMultiweekPreviousWeeks"
                           preference="calendar.previousweeks.inview">
                     <menupopup>

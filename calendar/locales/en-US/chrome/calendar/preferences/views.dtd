@@ -23,6 +23,7 @@
    -   ArentJan Banck <ajbanck@planet.nl>
    -   Eric Belhaire <belhaire@ief.u-psud.fr>
    -   Matthew Willis <mattwillis@gmail.com>
+   -   Cédric Corazza <cedric.corazza@wanadoo.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,6 +39,11 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
+<!-- WARNING! This file contains UTF-8 encoded characters!
+   - If this ==> … <== doesn't look like an ellipsis (three dots in a row),
+   - your editor isn't using UTF-8 encoding and may munge up the document!
+  -->
+
 <!ENTITY pref.calendar.view.allview.caption "General">
 <!ENTITY pref.calendar.view.weekanddayview.caption "Week and Day Views">
 <!ENTITY pref.calendar.view.multiweekview.caption "Multiweek View">
@@ -45,15 +51,19 @@
 
 <!-- NOTE TO LOCALIZERS: This entity should end with a space character. -->
 <!ENTITY pref.calendar.view.restrict.label "Display from ">
+<!ENTITY pref.calendar.view.restrict.accesskey "D">
 <!-- NOTE TO LOCALIZERS: This entity should start with a space character. -->
 <!ENTITY pref.calendar.view.endtime.label " until ">
-
+<!ENTITY pref.calendar.view.endtime.accesskey "u">
 <!ENTITY pref.weekstarts.label "Start the week on:">
+<!ENTITY pref.weekstarts.accesskey "r">
 <!ENTITY pref.daysoff.label "Include these days in the workweek:">
 <!ENTITY pref.hour.help.description "Note that events occurring outside these times will be shown regardless of this setting.">
 
 <!ENTITY pref.numberofweeks.label "Default weeks to show (including previous weeks):">
+<!ENTITY pref.numberofweeks.accesskey "e">
 <!ENTITY pref.numberofpreviousweeks.label "Previous weeks to show:">
+<!ENTITY pref.numberofpreviousweeks.accesskey "P">
 <!ENTITY pref.numberofweeks.0 "none">
 <!ENTITY pref.numberofweeks.1 "1 week">
 <!ENTITY pref.numberofweeks.2 "2 weeks">

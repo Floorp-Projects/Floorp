@@ -59,14 +59,23 @@
 <!ENTITY time.22 "10:00 PM" >
 <!ENTITY time.23 "11:00 PM" >
 
-<!-- Month Names -->
+<!-- Day Names -->
+<!-- LOCALIZATION NOTE : Accesskeys for day.1.Ddd to day.7.Ddd are currently
+     only used in Preferences > Views > Workweek groupbox -->
 <!ENTITY day.1.Ddd "Sun" >
+<!ENTITY day.1.Ddd.accesskey "S">
 <!ENTITY day.2.Ddd "Mon" >
+<!ENTITY day.2.Ddd.accesskey "M">
 <!ENTITY day.3.Ddd "Tue" >
+<!ENTITY day.3.Ddd.accesskey "T">
 <!ENTITY day.4.Ddd "Wed" >
+<!ENTITY day.4.Ddd.accesskey "W">
 <!ENTITY day.5.Ddd "Thu" >
+<!ENTITY day.5.Ddd.accesskey "h">
 <!ENTITY day.6.Ddd "Fri" >
+<!ENTITY day.6.Ddd.accesskey "F">
 <!ENTITY day.7.Ddd "Sat" >
+<!ENTITY day.7.Ddd.accesskey "a">
 
 <!ENTITY day.1.DDD "SUN" >
 <!ENTITY day.2.DDD "MON" >
@@ -87,6 +96,7 @@
 <!ENTITY time.am "AM" >
 <!ENTITY time.pm "PM" >
 
+<!-- Month Names -->
 <!ENTITY month.1.MMM "JAN" >
 <!ENTITY month.2.MMM "FEB" >
 <!ENTITY month.3.MMM "MAR" >
