@@ -51,8 +51,11 @@ include $(DEPTH)/config/autoconf.mk
 MODULE=unicharutil
 LIBRARY_NAME=unicharutil_s
 DIST_INSTALL = 1
-EXPORT_LIBRARY = 1
 MOZILLA_INTERNAL_API = 1
+
+ifndef MOZ_META_COMPONENT
+EXPORT_LIBRARY = 1
+endif
 
 include $(srcdir)/../objs.mk
 

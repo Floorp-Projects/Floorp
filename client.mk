@@ -157,6 +157,7 @@ MODULES_core :=                                 \
   mozilla/modules/oji                           \
   mozilla/modules/plugin                        \
   mozilla/modules/zlib                          \
+  mozilla/modules/staticmod                     \
   mozilla/netwerk                               \
   mozilla/plugin/oji                            \
   mozilla/profile                               \

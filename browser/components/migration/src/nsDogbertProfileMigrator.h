@@ -43,7 +43,7 @@
 #include "nsIObserverService.h"
 #include "nsISupportsArray.h"
 #include "nsNetscapeProfileMigratorBase.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 
 #ifdef XP_MACOSX
 #define NEED_TO_FIX_4X_COOKIES 1

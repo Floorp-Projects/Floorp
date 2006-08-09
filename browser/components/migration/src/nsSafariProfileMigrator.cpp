@@ -38,8 +38,8 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsBrowserProfileMigratorUtils.h"
-#include "nsCRT.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsDocShellCID.h"
 #ifdef MOZ_PLACES
 #include "nsINavBookmarksService.h"
@@ -301,7 +301,7 @@ GetNullTerminatedString(CFStringRef aStringRef)
 void
 FreeNullTerminatedString(char* aString)
 {
-  nsCRT::free(aString);
+  free(aString);
   aString = nsnull;
 }
 
@@ -476,7 +476,7 @@ nsSafariProfileMigrator::SetDefaultEncoding(void* aTransform, nsIPrefBranch* aBr
   for (PRUint16 i = 0; (charsetIndex == -1) &&
                        i < (sizeof(gCharsets) / sizeof(gCharsets[0])); ++i) {
     if (gCharsets[i].webkitLabelLength == encodingLength &&
-        !nsCRT::strcmp(gCharsets[i].webkitLabel, encodingStr))
+        !strcmp(gCharsets[i].webkitLabel, encodingStr))
       charsetIndex = (PRInt16)i;
   }
   if (charsetIndex == -1) // Default to "Western"
@@ -654,7 +654,7 @@ nsSafariProfileMigrator::SetDisplayImages(void* aTransform, nsIPrefBranch* aBran
 nsresult
 nsSafariProfileMigrator::SetFontName(void* aTransform, nsIPrefBranch* aBranch)
 {
-  nsXPIDLCString associatedLangGroup;
+  nsCString associatedLangGroup;
   nsresult rv = aBranch->GetCharPref("migration.associatedLangGroup",
                                      getter_Copies(associatedLangGroup));
   if (NS_FAILED(rv))
@@ -670,7 +670,7 @@ nsSafariProfileMigrator::SetFontName(void* aTransform, nsIPrefBranch* aBranch)
 nsresult
 nsSafariProfileMigrator::SetFontSize(void* aTransform, nsIPrefBranch* aBranch)
 {
-  nsXPIDLCString associatedLangGroup;
+  nsCString associatedLangGroup;
   nsresult rv = aBranch->GetCharPref("migration.associatedLangGroup",
                                      getter_Copies(associatedLangGroup));
   if (NS_FAILED(rv))
@@ -916,12 +916,12 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
     nsCOMPtr<nsIStringBundle> bundle;
     bundleService->CreateBundle(MIGRATION_BUNDLE, getter_AddRefs(bundle));
 
-    nsXPIDLString sourceNameSafari;
+    nsString sourceNameSafari;
     bundle->GetStringFromName(NS_LITERAL_STRING("sourceNameSafari").get(),
                               getter_Copies(sourceNameSafari));
 
     const PRUnichar* sourceNameStrings[] = { sourceNameSafari.get() };
-    nsXPIDLString importedSafariBookmarksTitle;
+    nsString importedSafariBookmarksTitle;
     bundle->FormatStringFromName(NS_LITERAL_STRING("importedBookmarksFolder").get(),
                                  sourceNameStrings, 1,
                                  getter_Copies(importedSafariBookmarksTitle));
@@ -1144,7 +1144,9 @@ nsSafariProfileMigrator::ProfileHasContentStyleSheet(PRBool *outExists)
   rv = userChromeDir->GetNativePath(userChromeDirPath);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString path = userChromeDirPath + NS_LITERAL_CSTRING("/userContent.css");
+  nsCAutoString path(userChromeDirPath);
+  path.Append("/userContent.css");
+
   nsCOMPtr<nsILocalFile> file;
   rv = NS_NewNativeLocalFile(path, PR_FALSE,
                             getter_AddRefs(file));

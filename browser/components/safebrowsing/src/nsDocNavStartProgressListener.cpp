@@ -42,8 +42,9 @@
 #include "nsITimer.h"
 #include "nsIURI.h"
 #include "nsIWebProgress.h"
+#include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 
 NS_IMPL_ISUPPORTS4(nsDocNavStartProgressListener,
                    nsIDocNavStartProgressListener,
@@ -328,7 +329,7 @@ nsDocNavStartProgressListener::Observe(nsISupports *subject, const char *topic,
         // We don't care about URL fragments so we take that off.
         PRInt32 pos = uriString.FindChar('#');
         if (pos > -1) {
-          uriString.Truncate(pos);
+          uriString.SetLength(pos);
         }
         
         mCallback->OnDocNavStart(request, uriString);

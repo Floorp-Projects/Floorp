@@ -37,8 +37,8 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsBrowserProfileMigratorUtils.h"
-#include "nsCRT.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsDocShellCID.h"
 #ifdef MOZ_PLACES
 #include "nsINavBookmarksService.h"
@@ -67,8 +67,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsNetUtil.h"
 #include "nsOperaProfileMigrator.h"
-#include "nsReadableUtils.h"
-#include "nsString.h"
 #include "nsToolkitCompsCID.h"
 #ifdef XP_WIN
 #include <windows.h>
@@ -217,7 +215,9 @@ NS_IMETHODIMP
 nsOperaProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
 {
   if (!mProfiles) {
-    nsresult rv = NS_NewISupportsArray(getter_AddRefs(mProfiles));
+    nsresult rv;
+
+    mProfiles = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIProperties> fileLocator(do_GetService("@mozilla.org/file/directory_service;1"));
@@ -379,7 +379,7 @@ nsOperaProfileMigrator::SetWString(void* aTransform, nsIPrefBranch* aBranch)
 {
   PrefTransform* xform = (PrefTransform*)aTransform;
   nsCOMPtr<nsIPrefLocalizedString> pls(do_CreateInstance("@mozilla.org/pref-localizedstring;1"));
-  nsAutoString data; data.AssignWithConversion(xform->stringValue);
+  NS_ConvertASCIItoUTF16 data(xform->stringValue);
   pls->SetData(data.get());
   return aBranch->SetComplexValue(xform->targetPrefName, NS_GET_IID(nsIPrefLocalizedString), pls);
 }
@@ -435,7 +435,7 @@ nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
         transform->prefSetterFunc(transform, branch);
       }
       if (colorString)
-        nsCRT::free(colorString);
+        NS_Free(colorString);
     }
     else {
       nsCAutoString val;
@@ -443,7 +443,7 @@ nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
                             transform->keyName,
                             val);
       if (NS_SUCCEEDED(rv)) {
-        PRInt32 strerr;
+        nsresult strerr;
         switch (transform->type) {
         case _OPM(STRING):
           transform->stringValue = ToNewCString(val);
@@ -462,7 +462,7 @@ nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
         transform->prefHasValue = PR_TRUE;
         transform->prefSetterFunc(transform, branch);
         if (transform->type == _OPM(STRING) && transform->stringValue) {
-          nsCRT::free(transform->stringValue);
+          NS_Free(transform->stringValue);
           transform->stringValue = nsnull;
         }
       }
@@ -550,7 +550,7 @@ nsOperaProfileMigrator::GetInteger(nsINIParser &aParser,
   if (NS_FAILED(rv))
     return rv;
 
-  *aResult = val.ToInteger((PRInt32*) &rv);
+  *aResult = val.ToInteger(&rv);
 
   return rv;
 }
@@ -874,7 +874,7 @@ nsOperaCookieMigrator::AddCookieOverride(nsIPermissionManager* aManager)
 {
   nsresult rv;
 
-  nsXPIDLCString domain;
+  nsCString domain;
   SynthesizeDomain(getter_Copies(domain));
   nsCOMPtr<nsIURI> uri(do_CreateInstance("@mozilla.org/network/standard-url;1"));
   if (!uri)
@@ -896,10 +896,10 @@ nsOperaCookieMigrator::AddCookie(nsICookieManager2* aManager)
 {
   // This is where we use the information gathered in all the other 
   // states to add a cookie to the Firebird/Firefox Cookie Manager.
-  nsXPIDLCString domain;
+  nsCString domain;
   SynthesizeDomain(getter_Copies(domain));
 
-  nsXPIDLCString path;
+  nsCString path;
   SynthesizePath(getter_Copies(path));
 
   mCookieOpen = PR_FALSE;
@@ -1006,7 +1006,7 @@ nsOperaProfileMigrator::CopyHistory(PRBool aReplace)
       break;
     case LASTVISIT:
       // Opera time format is a second offset, PRTime is a microsecond offset
-      PRInt32 err;
+      nsresult err;
       lastVisitDate = buffer.ToInteger(&err);
       
       PRInt64 temp, million;
@@ -1067,12 +1067,12 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
   nsCOMPtr<nsIStringBundle> bundle;
   bundleService->CreateBundle(MIGRATION_BUNDLE, getter_AddRefs(bundle));
   if (!aReplace) {
-    nsXPIDLString sourceNameOpera;
+    nsString sourceNameOpera;
     bundle->GetStringFromName(NS_LITERAL_STRING("sourceNameOpera").get(), 
                               getter_Copies(sourceNameOpera));
 
     const PRUnichar* sourceNameStrings[] = { sourceNameOpera.get() };
-    nsXPIDLString importedOperaHotlistTitle;
+    nsString importedOperaHotlistTitle;
     bundle->FormatStringFromName(NS_LITERAL_STRING("importedBookmarksFolder").get(),
                                  sourceNameStrings, 1, 
                                  getter_Copies(importedOperaHotlistTitle));
@@ -1135,12 +1135,12 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
   if (NS_FAILED(rv))
     return NS_OK;
 
-  nsXPIDLString sourceNameOpera;
+  nsString sourceNameOpera;
   aBundle->GetStringFromName(NS_LITERAL_STRING("sourceNameOpera").get(), 
                              getter_Copies(sourceNameOpera));
 
   const PRUnichar* sourceNameStrings[] = { sourceNameOpera.get() };
-  nsXPIDLString importedSearchUrlsTitle;
+  nsString importedSearchUrlsTitle;
   aBundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchURLsFolder").get(),
                                 sourceNameStrings, 1, 
                                 getter_Copies(importedSearchUrlsTitle));
@@ -1207,10 +1207,10 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
 
     nsCAutoString hostCStr;
     uri->GetHost(hostCStr);
-    nsAutoString host; host.AssignWithConversion(hostCStr.get());
+    NS_ConvertASCIItoUTF16 host(hostCStr);
 
     const PRUnichar* descStrings[] = { NS_ConvertUTF8toUTF16(keyword).get(), host.get() };
-    nsXPIDLString keywordDesc;
+    nsString keywordDesc;
     aBundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchUrlDesc").get(),
                                   descStrings, 2, getter_Copies(keywordDesc));
 
@@ -1340,7 +1340,6 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
   nsAutoString name, keyword, description;
   nsCAutoString url;
   PRBool onToolbar = PR_FALSE;
-  NS_NAMED_LITERAL_STRING(empty, "");
   do {
     nsCAutoString cBuffer;
     rv = aStream->ReadLine(cBuffer, &moreData);
@@ -1349,7 +1348,7 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
     if (!moreData) break;
 
     CopyUTF8toUTF16(cBuffer, buffer);
-    nsXPIDLString data;
+    nsString data;
     LineType type = GetLineType(buffer, getter_Copies(data));
     switch(type) {
     case LineType_FOLDER:
@@ -1415,10 +1414,10 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
           if (NS_FAILED(rv))
             continue;
 #endif
-          name = empty;
-          url.AssignWithConversion(empty);
-          keyword = empty;
-          description = empty;
+          name.Truncate();
+          url.Truncate();
+          keyword.Truncate();
+          description.Truncate();
           onToolbar = PR_FALSE;
         }
       }
@@ -1440,7 +1439,7 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
             continue;
           rv = ParseBookmarksFolder(aStream, itemRes, aToolbar, aBMS);
 #endif
-          name = empty;
+          name.Truncate();
         }
       }
       break;

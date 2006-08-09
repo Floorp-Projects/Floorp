@@ -42,13 +42,14 @@
 #include "nsNetCID.h"
 #include "nsXPCOM.h"
 #include "nsCOMPtr.h"
-#include "nsString.h"
 #include "nsStringStream.h"
 
 #include "nsBrowserCompsCID.h"
 
 #include "nsICategoryManager.h"
 #include "nsIServiceManager.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #include "nsIStreamConverterService.h"
 #include "nsIStreamConverter.h"
@@ -96,9 +97,12 @@ nsFeedSniffer::ConvertEncodedData(nsIRequest* request,
 
       converter->OnStartRequest(request, nsnull);
 
-      nsCOMPtr<nsIInputStream> rawStream;
-      rv = NS_NewByteInputStream(getter_AddRefs(rawStream), 
-                                 (const char*)data, length);
+      nsCOMPtr<nsIStringInputStream> rawStream =
+        do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID);
+      if (!rawStream)
+        return NS_ERROR_FAILURE;
+
+      rv = rawStream->SetData((const char*)data, length);
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = converter->OnDataAvailable(request, nsnull, rawStream, 0, length);
@@ -167,40 +171,24 @@ nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request,
     length = MAX_BYTES;
 
   // Thus begins the actual sniffing.
-  nsDependentCSubstring dataString((const char*)testData, 
-                                   (const char*)testData + length);
-  nsACString::const_iterator start_iter, end_iter;
+  nsDependentCSubstring dataString((const char*)testData, length);
 
   PRBool isFeed = PR_FALSE;
 
   // RSS 0.91/0.92/2.0
-  dataString.BeginReading(start_iter);
-  dataString.EndReading(end_iter);
 
-  isFeed = FindInReadable(NS_LITERAL_CSTRING("<rss"), start_iter, end_iter);
+  isFeed = dataString.Find("<rss") != -1;
 
   // Atom 1.0
   if (!isFeed) {
-    dataString.BeginReading(start_iter);
-    dataString.EndReading(end_iter);
-    isFeed = FindInReadable(NS_LITERAL_CSTRING("<feed"), start_iter, end_iter);
+    isFeed = dataString.Find("<feed") != -1;
   }
 
   // RSS 1.0
   if (!isFeed) {
-    dataString.BeginReading(start_iter);
-    dataString.EndReading(end_iter);
-    isFeed = FindInReadable(NS_LITERAL_CSTRING("<rdf:RDF"), start_iter, end_iter);
-    if (isFeed) {
-      dataString.BeginReading(start_iter);
-      dataString.EndReading(end_iter);
-      isFeed = FindInReadable(NS_LITERAL_CSTRING(NS_RDF), start_iter, end_iter);
-      if (isFeed) {
-        dataString.BeginReading(start_iter);
-        dataString.EndReading(end_iter);
-        isFeed = FindInReadable(NS_LITERAL_CSTRING(NS_RSS), start_iter, end_iter);
-      }
-    }
+    isFeed = dataString.Find("<rdf:RDF") != -1 &&
+             dataString.Find(NS_RDF) != -1 &&
+             dataString.Find(NS_RSS) != -1;
   }
 
   // If we sniffed a feed, coerce our internal type

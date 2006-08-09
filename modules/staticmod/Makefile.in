@@ -35,6 +35,9 @@
 #
 # ***** END LICENSE BLOCK *****
 
+# This makefile links all the static components which have EXPORT_LIBRARY
+# set into a single component DLL.
+
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
@@ -42,131 +45,32 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef MOZ_STATIC_COMPONENTS
-MODULE		= staticmod
-LIBRARY_NAME	= staticmod
-SHORT_LIBNAME	= statcmod
-endif
-
+LIBRARY_NAME	= appmeta
 IS_COMPONENT	= 1
+FORCE_SHARED_LIB = 1
+
+CPPSRCS		= nsMetaModule.cpp
+
+REQUIRES = xpcom
 
 include $(topsrcdir)/config/config.mk
 
-REQUIRES	= xpcom \
-		  $(NULL)
+FINAL_COMPONENT_LIBS := $(shell cat $(FINAL_LINK_COMPS))
+FINAL_LINK_LIBS := $(shell cat $(FINAL_LINK_LIBS))
 
-ifdef MOZ_STATIC_COMPONENTS
-CPPSRCS		= nsStaticModule.cpp
-endif
-
-LOCAL_INCLUDES	= -I$(srcdir)
-
-#
-# _COMPONENT_BASE is the base name of the meta component library
-# that we are building in the current pass of this makefile
-#
-# mozcomps is a special name used to specify that we want to link all
-# of the non-meta components into this special meta component
-#
-ifdef _COMPONENT_BASE
-ifeq ($(_COMPONENT_BASE),mozcomps)
-_FINAL_COMPONENT_NAMES := $(shell cat $(FINAL_LINK_COMP_NAMES))
-_FINAL_COMPONENT_LIBS := $(shell cat $(FINAL_LINK_COMPS))
-_FINAL_LINK_LIBS := $(shell cat $(FINAL_LINK_LIBS))
-_META_COMPONENT_NAMES := _FINAL_COMPONENT_NAMES
-_META_COMPONENT_LIBS := _FINAL_COMPONENT_LIBS
-_META_DEP_LIBS := _FINAL_LINK_LIBS
-else
-_META_COMPONENT_NAMES := MOZ_META_COMPONENTS_$(_COMPONENT_BASE)
-_META_COMPONENT_LIBS := MOZ_META_COMPONENTS_$(_COMPONENT_BASE)_comps
-_META_DEP_LIBS := MOZ_META_COMPONENTS_$(_COMPONENT_BASE)_libs
-endif # mozcomps
-endif # _COMPONENT_BASE
-
-ifdef MOZ_STATIC_COMPONENTS
 SHARED_LIBRARY_LIBS = \
-		$(foreach m, $(MOZ_STATIC_COMPONENTS), $(DIST)/lib/components/$(LIB_PREFIX)$(m).$(LIB_SUFFIX))
-endif
+  $(foreach c,$(FINAL_COMPONENT_LIBS),$(DIST)/lib/components/$(LIB_PREFIX)$(c).$(LIB_SUFFIX)) \
+  $(foreach l,$(FINAL_LINK_LIBS),$(DIST)/lib/$(LIB_PREFIX)$(l).$(LIB_SUFFIX)) \
+  $(NULL)
 
-ifdef _COMPONENT_BASE
-ifneq ($(_COMPONENT_BASE),mozcomps)
-SHARED_LIBRARY_LIBS = $(foreach m,$($(_META_COMPONENT_LIBS)), $(DIST)/lib/components/$(LIB_PREFIX)$(m).$(LIB_SUFFIX))
-EXTRA_DSO_LDOPTS += $(foreach m,$($(_META_DEP_LIBS)), $(DIST)/lib/$(LIB_PREFIX)$(m).$(LIB_SUFFIX))
-endif
-endif
-
-#
-# Create each meta component by calling this makefile recursively
-# and forcing it to built a shared library meta component library
-#
-ifndef NO_RECURSE
-libs clean distclean clobber realclean clobber_all::
-	set -e; \
-	for f in $(MOZ_META_COMPONENTS); do \
-		$(MAKE) NO_RECURSE=1 BUILD_STATIC_LIBS= LIBRARY_NAME=meta_$$f CPPSRCS=nsMetaModule_$$f.cpp _COMPONENT_BASE=$$f $@ ; \
-	done
-endif
-
-ifeq ($(LIBRARY_NAME),meta_mozcomps)
-include $(topsrcdir)/config/static-config.mk
-EXTRA_DSO_LIBS	= $(STATIC_EXTRA_DSO_LIBS)
-endif
+EXTRA_DSO_LDOPTS = \
+		$(XPCOM_GLUE_LDOPTS) \
+		$(NSPR_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(LIBRARY_NAME),meta_mozcomps)
-include $(topsrcdir)/config/static-rules.mk
-endif
-
-ifdef MOZ_STATIC_COMPONENTS
-EXTRA_DSO_LDOPTS += \
-		$(ZLIB_LIBS) \
-		$(XPCOM_LIBS) \
-		$(MOZ_JS_LIBS) \
-		$(NSPR_LIBS) \
-		$(PNG_LIBS)
-endif
-
-ifdef MOZ_META_COMPONENTS
-# Force XPCOM_TRANSLATE_NSGM_ENTRY_POINT to be defined so the macros
-# in nsIGenericFactory.h will come out in the wash.
-DEFINES += -DMETA_MODULE=\"$(LIBRARY_NAME)\" -DXPCOM_TRANSLATE_NSGM_ENTRY_POINT
-
-ifeq ($(LIBRARY_NAME),meta_mail)
-EXTRA_DSO_LDOPTS += \
-	$(LIBS_DIR) \
-	$(call EXPAND_MOZLIBNAME,xpcom_compat gkgfx rdfutil_s) \
-	$(MOZ_UNICHARUTIL_LIBS) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(TK_LIBS) \
-	$(NULL)
-endif # meta_mail
-
-ifeq ($(LIBRARY_NAME),meta_crypto)
-EXTRA_DSO_LDOPTS += \
-	$(MOZ_JS_LIBS) \
-	$(NSS_LIBS) \
-	$(MOZ_UNICHARUTIL_LIBS) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(NULL)
-endif # meta_crypto
-
-ifeq ($(LIBRARY_NAME),meta_mozcomps)
-
-# We don't want to link mozcomps against NSS if not necessary
-ifneq (,$(findstring crypto,$(MOZ_META_COMPONENTS)))
-STATIC_EXTRA_LIBS := $(filter-out $(NSS_LIBS),$(STATIC_EXTRA_LIBS))
-endif
-
-EXTRA_DSO_LDOPTS += \
-	$(LIBS_DIR) \
-	$(EXTRA_DSO_LIBS) \
-	$(STATIC_EXTRA_LIBS) \
-	$(MOZ_JS_LIBS) \
-	$(MOZ_UNICHARUTIL_LIBS) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(TK_LIBS) \
-	$(NULL)
+DEFINES += -DXPCOM_TRANSLATE_NSGM_ENTRY_POINT
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 OS_LIBS	+= -framework QuickTime
@@ -176,39 +80,32 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 OS_LIBS	+= -framework Cocoa
 endif
 
-endif # meta_mozcomps
-
-endif # MOZ_META_COMPONENTS
-
 ifeq ($(OS_ARCH),WINNT)
-OS_LIBS	+= ole32.lib shell32.lib
+OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool imm32)
+# XXX temporary workaround until link ordering issue is solved
+ifdef GNU_CC
+OS_LIBS += $(call EXPAND_LIBNAME,winmm wsock32 gdi32)
+endif
+ifdef MOZ_ENABLE_CAIRO_GFX
+OS_LIBS += $(call EXPAND_LIBNAME, usp10)
+endif
 endif
 
-GARBAGE += $(CPPSRCS)
-
-list:
-	echo $(MOZ_STATIC_COMPONENTS)
-
-ifdef _NO_AUTO_VARS
-_TARGET = $(srcdir)/$(@F)
-GARBAGE	+= $(addprefix $(srcdir)/,$(CPPSRCS))
-else
-_TARGET = $@
+ifneq  (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2)$(MOZ_ENABLE_XLIB))
+OS_LIBS += $(XLDFLAGS) $(XT_LIBS)
 endif
 
-ifdef MOZ_STATIC_COMPONENTS
-nsStaticModule.cpp: nsMetaModule.cpp.in Makefile Makefile.in $(DEPTH)/config/autoconf.mk
-	rm -f $@
-	cat $< | \
-	sed -e "s|%DECLARE_SUBMODULE_INFOS%|$(foreach m, $(MOZ_STATIC_COMPONENTS), extern nsModuleInfo NSMODULEINFO($(m));)|" | \
-	sed -e "s|%SUBMODULE_INFOS%|$(foreach m, $(MOZ_STATIC_COMPONENTS), \\& NSMODULEINFO($(m)),)|" \
-	> $(_TARGET)
-endif
+OS_LIBS += $(TK_LIBS)
 
-nsMetaModule_%.cpp: nsMetaModule.cpp.in Makefile Makefile.in $(topsrcdir)/config/config.mk
-	rm -f $@
-	cat $< | \
-	sed -e "s|%DECLARE_SUBMODULE_INFOS%|$(foreach m, $($(_META_COMPONENT_NAMES)), extern nsModuleInfo NSMODULEINFO($(m));)|" | \
-	sed -e "s|%SUBMODULE_INFOS%|$(foreach m, $($(_META_COMPONENT_NAMES)), \\& NSMODULEINFO($(m)),)|" \
-	> $(_TARGET)
+GARBAGE += module_list.h
 
+LOCAL_INCLUDES += -I.
+
+FINAL_COMPONENT_NAMES := $(shell cat $(FINAL_LINK_COMP_NAMES))
+
+nsMetaModule.$(OBJ_SUFFIX): module_list.h
+
+module_list.h: Makefile Makefile.in $(DEPTH)/config/autoconf.mk
+	echo '#define MODULES \' > $@
+	awk '{ print "MODULE(" $$1 ") \\" }' < $(FINAL_LINK_COMP_NAMES) >> $@
+	echo >> $@
