@@ -129,9 +129,8 @@ use constant DEFAULT_FIELDS => (
     {name => 'votes',        desc => 'Votes'},
     {name => 'qa_contact',   desc => 'QAContact',  in_new_bugmail => 1},
     {name => 'cc',           desc => 'CC',         in_new_bugmail => 1},
-    {name => 'dependson',    desc => 'BugsThisDependsOn', in_new_bugmail => 1},
-    {name => 'blocked',      desc => 'OtherBugsDependingOnThis',
-     in_new_bugmail => 1},
+    {name => 'dependson',    desc => 'Depends on', in_new_bugmail => 1},
+    {name => 'blocked',      desc => 'Blocks',     in_new_bugmail => 1},
 
     {name => 'attachments.description', desc => 'Attachment description'},
     {name => 'attachments.filename',    desc => 'Attachment filename'},
@@ -472,7 +471,7 @@ sub populate_field_definitions {
         print "New field name: " . $new_field_name . "\n";
         $dbh->do('UPDATE fielddefs SET name = ? WHERE id = ?',
                   undef, ($new_field_name, $old_field_id));
-}
+    }
 
     # This field has to be created separately, or the above upgrade code
     # might not run properly.
