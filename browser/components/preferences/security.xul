@@ -79,7 +79,10 @@
     <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
 
     <!-- addons, forgery (phishing) UI -->
-    <groupbox id="addonsPhishingGroup">
+    <groupbox id="addonsPhishingGroup"
+              xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
+              xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+              xmlns:aaa="http://www.w3.org/2005/07/aaa">
       <hbox id="addonInstallBox">
         <checkbox id="warnAddonInstall" flex="1"
                   label="&warnAddonInstall.label;"
@@ -94,36 +97,33 @@
 
       <separator class="thin"/>
 
-      <checkbox id="checkMaybePhish"
-                label="&checkMaybePhish.label;"
-                accesskey="&checkMaybePhish.accesskey;"
+      <checkbox id="tellMaybeForgery"
+                label="&tellMaybeForgery.label;"
+                accesskey="&tellMaybeForgery.accesskey;"
                 preference="browser.safebrowsing.enabled"
-                onsyncfrompreference="return gSecurityPane.readCheckPhish();"
-                onsynctopreference="return gSecurityPane.writeCheckPhish();"/>
+                onsyncfrompreference="return gSecurityPane.readCheckPhish();"/>
       <radiogroup id="checkPhishChoice" class="indent"
                   preference="browser.safebrowsing.remoteLookups"
-                  onsyncfrompreference="return gSecurityPane.readPhishChoice();">
-        <hbox id="cachedBox" align="center">
-          <radio id="cachedRadio"
-                 label="&useCachedPhish.label;"
-                 accesskey="&useCachedPhish.accesskey;"
-                 value="false"/>
-          <menulist id="cacheProvider"
-                    preference="browser.safebrowsing.dataProvider"
-                    onsyncfrompreference="return gSecurityPane.readCachedPhishProvider();"/>
-          <label>&useCachedPhishAfter.label;</label>
-        </hbox>
-        <hbox id="onloadBox" align="center">
+                  onsyncfrompreference="return gSecurityPane.readPhishChoice();"
+                  onsynctopreference="return gSecurityPane.writePhishChoice();">
+        <radio id="cachedRadio"
+               label="&useDownloadedList.label;"
+               accesskey="&useDownloadedList.accesskey;"
+               value="false"/>
+        <hbox id="onloadBox" align="center" xhtml2:role="wairole:label">
           <radio id="onloadRadio"
-                 label="&checkPhishOnLoad.label;"
-                 accesskey="&checkPhishOnLoad.accesskey;"
+                 label="&askThirdParty.label;"
+                 accesskey="&askThirdParty.accesskey;"
                  value="true"/>
           <menulist id="onloadProvider"
                     preference="browser.safebrowsing.dataProvider"
-                    onsyncfrompreference="return gSecurityPane.readOnloadPhishProvider();"/>
-          <label id="onloadAfter">&checkPhishOnLoadAfter.label;</label>
+                    onsyncfrompreference="return gSecurityPane.readOnloadPhishProvider();"
+                    xhtml2:role="wairole:list"
+                    aaa:labelledby="onloadBox"/>
+          <label id="onloadAfter">&askThirdPartyAfter.label;</label>
         </hbox>
       </radiogroup>
+
     </groupbox>
 
     <!-- Passwords -->
@@ -165,7 +165,7 @@
       <caption label="&warnings.label;"/>
 
       <hbox id="chooseWarningsBox">
-        <description control="warningSettings" flex="1">&chooseWarnings.label;</description>
+        <label flex="1">&chooseWarnings.label;</label>
         <button id="warningSettings"
                 label="&warningSettings.label;"
                 accesskey="&warningSettings.accesskey;"
