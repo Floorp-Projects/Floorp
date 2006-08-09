@@ -50,7 +50,7 @@ bin\LICENSE
 bin\README.txt
 
 ; [Components]
-bin\appmeta.dll
+bin\components\appmeta.dll
 bin\components\alerts.xpt
 bin\AccessibleMarshal.dll
 bin\components\accessibility.xpt
