@@ -50,7 +50,7 @@
 # This script will pick up the CVSROOT from the CVS/Root file. If you wish
 # to use a different CVSROOT, you must set CVSROOT in your environment:
 #
-#   export CVSROOT=:pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
+#   export CVSROOT=:pserver:anonymous:anonymous@cvs-mirror.mozilla.org:/cvsroot
 #   export CVSROOT=:pserver:username%somedomain.org@cvs.mozilla.org:/cvsroot
 # 
 # You must specify which products/modules you wish to checkout, with
@@ -460,7 +460,7 @@ CVSCO_LOGFILE := $(shell echo $(CVSCO_LOGFILE) | sed s%//%/%)
 
 # if LOCALES_CVSROOT is not specified, set it here
 # (and let mozconfig override it)
-LOCALES_CVSROOT ?= :pserver:anonymous@cvs-mirror.mozilla.org:/l10n
+LOCALES_CVSROOT ?= :pserver:anonymous:anonymous@cvs-mirror.mozilla.org:/l10n
 
 ####################################
 # Load mozconfig Options
@@ -506,7 +506,7 @@ MOZCONFIG_MODULES := $(sort $(MOZCONFIG_MODULES))
 
 # Change CVS flags if anonymous root is requested
 ifdef MOZ_CO_USE_MIRROR
-  CVS_FLAGS := -d :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
+  CVS_FLAGS := -d :pserver:anonymous:anonymous@cvs-mirror.mozilla.org:/cvsroot
 endif
 
 # MOZ_CVS_FLAGS - Basic CVS flags

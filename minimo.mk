@@ -38,7 +38,7 @@
 # Build the Mozilla client.
 #
 # This needs CVSROOT set to work, e.g.,
-#   setenv CVSROOT :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
+#   setenv CVSROOT :pserver:anonymous:anonymous@cvs-mirror.mozilla.org:/cvsroot
 # or
 #   setenv CVSROOT :pserver:username%somedomain.org@cvs.mozilla.org:/cvsroot
 # 
@@ -168,7 +168,7 @@ include $(TOPSRCDIR)/build/unix/modules.mk
 
 # Change CVS flags if anonymous root is requested
 ifdef MOZ_CO_USE_MIRROR
-  CVS_FLAGS := -d :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
+  CVS_FLAGS := -d :pserver:anonymous:anonymous@cvs-mirror.mozilla.org:/cvsroot
 endif
 
 # MOZ_CVS_FLAGS - Basic CVS flags
