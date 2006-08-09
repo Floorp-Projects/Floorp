@@ -33,6 +33,9 @@ function getPlatformName()
 
 function install( aEvent, extName, iconURL, extHash)  {   
 
+    if (aEvent.altKey)
+        return true;
+
     if (aEvent.target.href.match(/^.+\.xpi$/)) {
 
         var params = new Array();
