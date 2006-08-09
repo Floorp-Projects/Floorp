@@ -1566,10 +1566,10 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 
     // double buffer
     if (translucent) {
-        ctx->PushGroup(gfxContext::CONTENT_COLOR_ALPHA);
+        ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
     } else {
 #ifdef MOZ_ENABLE_GLITZ
-        ctx->PushGroup(gfxContext::CONTENT_COLOR);
+        ctx->PushGroup(gfxASurface::CONTENT_COLOR);
 #else // MOZ_ENABLE_GLITZ
         // Instead of just doing PushGroup we're going to do a little dance
         // to ensure that GDK creates the pixmap, so it doesn't go all
