@@ -279,11 +279,13 @@ pref("ldap_2.autoComplete.directoryServer", "");
 pref("ldap_2.servers.pab.position",								1);
 pref("ldap_2.servers.pab.description",							"chrome://messenger/locale/addressbook/addressBook.properties");
 pref("ldap_2.servers.pab.dirType",								2);
+pref("ldap_2.servers.pab.filename",                             "abook.mab");
 pref("ldap_2.servers.pab.isOffline",							false);
 
 pref("ldap_2.servers.history.position",							2);
 pref("ldap_2.servers.history.description",						"chrome://messenger/locale/addressbook/addressBook.properties");
 pref("ldap_2.servers.history.dirType",							2);
+pref("ldap_2.servers.history.filename",                         "history.mab");
 pref("ldap_2.servers.history.isOffline",						false);
 
 // default mapping of addressbook properties to ldap attributes
