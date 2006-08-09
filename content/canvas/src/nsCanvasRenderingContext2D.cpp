@@ -2451,7 +2451,8 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     //mThebesContext->Rectangle(gfxRect(0, 0, aW, aH));
     //mThebesContext->Clip();
 
-    mThebesContext->PushGroup(NS_GET_A(bgColor) == 0xff ? gfxContext::CONTENT_COLOR_ALPHA : gfxContext::CONTENT_COLOR_ALPHA);
+    // XXX vlad says this shouldn't both be COLOR_ALPHA but that it is a workaround for some bug
+    mThebesContext->PushGroup(NS_GET_A(bgColor) == 0xff ? gfxASurface::CONTENT_COLOR_ALPHA : gfxASurface::CONTENT_COLOR_ALPHA);
 
     // draw background color
     if (NS_GET_A(bgColor) > 0) {

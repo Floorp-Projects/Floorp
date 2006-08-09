@@ -442,12 +442,12 @@ gfxWindowsFontGroup::MakeTextRun(const nsACString& aString)
  **********************************************************************/
 
 gfxWindowsTextRun::gfxWindowsTextRun(const nsAString *aString, gfxWindowsFontGroup *aFontGroup)
-    : mGroup(aFontGroup), mString(aString), mCString(nsnull), mIsASCII(PR_FALSE)
+    : mGroup(aFontGroup), mString(aString), mCString(nsnull), mIsASCII(PR_FALSE), mLength(-1.0)
 {
 }
 
 gfxWindowsTextRun::gfxWindowsTextRun(const nsACString *aString, gfxWindowsFontGroup *aFontGroup)
-    : mGroup(aFontGroup), mString(nsnull), mCString(aString), mIsASCII(PR_TRUE)
+    : mGroup(aFontGroup), mString(nsnull), mCString(aString), mIsASCII(PR_TRUE), mLength(-1.0)
 {
 }
 
@@ -469,12 +469,19 @@ gfxWindowsTextRun::Draw(gfxContext *aContext, gfxPoint pt)
 gfxFloat
 gfxWindowsTextRun::Measure(gfxContext *aContext)
 {
-    double ret = MeasureOrDrawFast(aContext, PR_FALSE, gfxPoint(0,0));
-    if (ret >= 0.0) {
-        return ROUND(ret);
+    static const gfxPoint kZeroZero(0, 0);
+
+    if (mLength < 0.0) {
+        mLength = MeasureOrDrawFast(aContext, PR_FALSE, kZeroZero);
+
+        if (mLength >= 0.0) {
+            return mLength;
+        }
+
+        mLength = MeasureOrDrawUniscribe(aContext, PR_FALSE, kZeroZero);
     }
-    ret = MeasureOrDrawUniscribe(aContext, PR_FALSE, gfxPoint(0,0));
-    return ROUND(ret);
+
+    return mLength;
 }
 
 void
@@ -490,9 +497,10 @@ gfxWindowsTextRun::GetSpacing() const
 }
 
 double
-gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
-                                     PRBool aDraw,
-                                     gfxPoint pt)
+gfxWindowsTextRun::MeasureOrDrawReallyFast(gfxContext *aContext,
+                                           PRBool aDraw,
+                                           gfxPoint pt,
+                                           gfxRGBA color)
 {
     double length = 0;
 
@@ -519,13 +527,123 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
     HDC aDC = GetDCFromSurface(surf);
     NS_ASSERTION(aDC, "No DC");
 
-    PRBool needsSave = aContext->CurrentMatrix().HasNonTranslation();
+    nsRefPtr<gfxWindowsFont> currentFont = mGroup->GetFontAt(0);
+
+    HFONT hfont = currentFont->GetHFONT();
+    SelectObject(aDC, hfont);
+
+    /* check to see if all the glyphs are in this font or not */
+    WORD glyphBuf[512];
+    LPWORD glyphs = glyphBuf;
+    if (aLength > sizeof(glyphBuf) / sizeof(WORD))
+        glyphs = (LPWORD)malloc(aLength * sizeof(WORD));
+
+    DWORD ret;
+    if (mIsASCII)
+        ret = GetGlyphIndicesA(aDC, aCString, aLength, glyphs, GGI_MARK_NONEXISTING_GLYPHS);
+    else
+        ret = GetGlyphIndicesW(aDC, aWString, aLength, glyphs, GGI_MARK_NONEXISTING_GLYPHS);
+
+    if (ret == GDI_ERROR) {
+        NS_WARNING("GetGlyphIndicies failed\n");
+        if (glyphs != glyphBuf)
+            free(glyphs);
+        return 0; // return 0 length
+    }
+
+    for (DWORD i = 0; i < ret; ++i) {
+        if (glyphs[i] == 0xffff) {
+            if (glyphs != glyphBuf)
+                free(glyphs);
+            return -1; // try uniscribe instead
+        }
+    }
+
+    if (glyphs != glyphBuf)
+        free(glyphs);
+
+    if (!aDraw) {
+        /* measure */
+        SIZE len;
+        if (mIsASCII)
+            GetTextExtentPoint32A(aDC, aCString, aLength, &len);
+        else
+            GetTextExtentPoint32W(aDC, aWString, aLength, &len);
+        length = len.cx;
+    } else {
+        /* draw */
+        SetTextAlign(aDC, TA_BASELINE | TA_LEFT);
+        SetBkMode(aDC, TRANSPARENT);
+        SetTextColor(aDC, RGB(color.r * 255.0, color.g * 255.0, color.b * 255.0));
+
+        aContext->UpdateSurfaceClip();
+
+        gfxPoint offset;
+        nsRefPtr<gfxASurface> surf = aContext->CurrentSurface(&offset.x, &offset.y);
+        gfxPoint p = aContext->CurrentMatrix().Transform(pt) + offset;
+
+        /* add support for spacing */
+        if (mIsASCII)
+            ExtTextOutA(aDC, (int)p.x, (int)p.y, 0, nsnull, aCString, aLength, nsnull);
+        else
+            ExtTextOutW(aDC, (int)p.x, (int)p.y, 0, nsnull, aWString, aLength, nsnull);
+    }
+
+    if (aDraw)
+        surf->MarkDirty();
+
+    return length;
+}
+
+double
+gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
+                                     PRBool aDraw,
+                                     gfxPoint pt)
+{
+    double length = 0;
+
+    if (!aContext->CurrentMatrix().HasNonTranslation()) {
+        /* need to not call this if the color isn't solid
+           or the pattern isn't a color
+           or the destination has alpha
+        */
+        if (mSpacing.IsEmpty()) { // XXX remove this once we make MeasureOrDrawReallyFast handle spacing
+            gfxRGBA color;
+            if (mContext->GetColor(color) && color.a == 1.0) {
+                // we can measure with 32bpp surfaces, but we can't draw to them using this API
+                nsRefPtr<gfxASurface> currentSurface = aContext->CurrentSurface();
+                if (!aDraw || currentSurface->GetContentType() == gfxASurface::CONTENT_COLOR)
+                    return MeasureOrDrawReallyFast(aContext, aDraw, pt, color);
+            }
+        }
+    }
+
+    /* this function doesn't handle RTL text. */
+    if (IsRightToLeft()) {
+        return -1;
+    }
+
+    const char *aCString;
+    const PRUnichar *aWString;
+    PRUint32 aLength;
+
+    if (mIsASCII) {
+        aCString = mCString->BeginReading();
+        aLength = mCString->Length();
+    } else {
+        aWString = mString->BeginReading();
+        aLength = mString->Length();
+        if (ScriptIsComplex(aWString, aLength, SIC_COMPLEX) == S_OK)
+            return -1; // try uniscribe instead
+    }
+
+    nsRefPtr<gfxASurface> surf = aContext->CurrentSurface();
+    HDC aDC = GetDCFromSurface(surf);
+    NS_ASSERTION(aDC, "No DC");
 
     XFORM savedxform;
-    if (needsSave) {
-        // cairo munges it underneath us
-        GetWorldTransform(aDC, &savedxform);
-    }
+    // cairo munges it underneath us
+    GetWorldTransform(aDC, &savedxform);
 
     cairo_t *cr = aContext->GetCairo();
 
@@ -537,8 +655,7 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
     cairo_set_font_face(cr, fontFace);
     cairo_set_font_size(cr, mGroup->mStyle.size);
 
-    if (needsSave)
-        SaveDC(aDC);
+    SaveDC(aDC);
 
     cairo_win32_scaled_font_select_font(scaledFont, aDC);
 
@@ -627,8 +744,7 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
             }
         }
 
-        if (needsSave)
-            SetWorldTransform(aDC, &savedxform);
+        SetWorldTransform(aDC, &savedxform);
 
         cairo_show_glyphs(cr, cglyphs, numGlyphs);
 
@@ -642,8 +758,7 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
 
     cairo_win32_scaled_font_done_font(scaledFont);
 
-    if (needsSave)
-        RestoreDC(aDC, -1);
+    RestoreDC(aDC, -1);
 
     if (aDraw)
         surf->MarkDirty();
@@ -774,8 +889,8 @@ public:
         mContext(aContext), mDC(aDC),
         mString(aString), mLength(aLength), mScriptItem(aItem), mGroup(aGroup),
         mGlyphs(nsnull), mClusters(nsnull), mAttr(nsnull),
-        mNumGlyphs(0), mMaxGlyphs((1.5 * aLength) + 16),
-        mOffsets(nsnull), mAdvances(nsnull),
+        mNumGlyphs(0), mMaxGlyphs((int)(1.5 * aLength) + 16),
+        mOffsets(nsnull), mAdvances(nsnull), mSpacing(nsnull),
         mFontIndex(0), mTriedPrefFonts(0), mTriedOtherFonts(0), mFontSelected(PR_FALSE)
     {
         mGlyphs = (WORD *)malloc(mMaxGlyphs * sizeof(WORD));
@@ -827,6 +942,28 @@ public:
         return PR_TRUE;
     }
 
+#ifdef DEBUG_pavlov
+    HRESULT Break() {
+        HRESULT rv;
+
+        SCRIPT_LOGATTR *logAttrs = (SCRIPT_LOGATTR*)malloc(sizeof(SCRIPT_LOGATTR) * mLength);
+
+        rv = ScriptBreak(mString, mLength, &mScriptItem->a, logAttrs);
+
+        for (PRUint32 i = 0; i < mLength; ++i) {
+            PR_LOG(gFontLog, PR_LOG_DEBUG, ("0x%04x - %d %d %d %d %d",
+                                            mString[i],
+                                            logAttrs[i].fSoftBreak,
+                                            logAttrs[i].fWhiteSpace,
+                                            logAttrs[i].fCharStop,
+                                            logAttrs[i].fWordStop,
+                                            logAttrs[i].fInvalid));
+        }
+
+        free(logAttrs);
+        return rv;
+    }
+#endif
 
     /* possible return values:
        E_PENDING -- means script cache lookup failed, DC needs to be set and font selected in to it.
@@ -1174,7 +1311,7 @@ public:
     }
 
     UniscribeItem *GetItem(PRUint32 i, gfxWindowsFontGroup *aGroup) {
-        NS_ASSERTION(i < mNumItems, "Trying to get out of bounds item");
+        NS_ASSERTION(i < (PRUint32)mNumItems, "Trying to get out of bounds item");
 
         UniscribeItem *item = new UniscribeItem(mContext, mDC,
                                                 mString + mItems[i].iCharPos,
@@ -1293,6 +1430,10 @@ gfxWindowsTextRun::MeasureOrDrawUniscribe(gfxContext *aContext,
 
 SCRIPT_PLACE:
             NS_ASSERTION(SUCCEEDED(rv), "Failed to shape -- we should never hit this");
+
+#ifdef DEBUG_pavlov
+            item->Break();
+#endif
 
             rv = item->Place();
             if (FAILED(rv)) {

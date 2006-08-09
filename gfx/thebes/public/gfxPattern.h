@@ -53,6 +53,14 @@ class THEBES_API gfxPattern {
     THEBES_INLINE_DECL_REFCOUNTING(gfxPattern)
 
 public:
+    gfxPattern(cairo_pattern_t *aPattern) {
+        mPattern = cairo_pattern_reference(aPattern);
+    }
+
+    gfxPattern(gfxRGBA aColor) {
+        mPattern = cairo_pattern_create_rgba(aColor.r, aColor.g, aColor.b, aColor.a);
+    }
+
     // from another surface
     gfxPattern(gfxASurface* surface) {
         mPattern = cairo_pattern_create_for_surface(surface->CairoSurface());
@@ -110,8 +118,17 @@ public:
         return (int)cairo_pattern_get_filter(mPattern);
     }
 
+
+    /* returns TRUE if it succeeded */
+    PRBool GetSolidColor(gfxRGBA& aColor) {
+        return cairo_pattern_get_solid_color(mPattern,
+                                             &aColor.r,
+                                             &aColor.g,
+                                             &aColor.b,
+                                             &aColor.a) == CAIRO_STATUS_SUCCESS;
+    }
+
 protected:
-    gfxPattern(cairo_pattern_t *pattern) : mPattern(pattern) {}
     cairo_pattern_t *mPattern;
 };
 

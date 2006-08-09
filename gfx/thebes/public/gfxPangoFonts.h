@@ -89,7 +89,7 @@ protected:
 
 class THEBES_API gfxPangoTextRun : public gfxTextRun {
 public:
-    gfxPangoTextRun(const nsAString& aString, gfxPangoFontGroup *aFontGroup);
+    gfxPangoTextRun(const nsAString *aString, gfxPangoFontGroup *aFontGroup);
     ~gfxPangoTextRun();
 
     virtual void Draw(gfxContext *aContext, gfxPoint pt);
@@ -100,6 +100,7 @@ public:
 
 private:
     nsString mString;
+
     gfxPangoFontGroup *mGroup;
 
     PangoLayout *mPangoLayout;

@@ -134,7 +134,6 @@ public:
         gfxFloat strikeoutOffset;
         gfxFloat underlineSize;
         gfxFloat underlineOffset;
-        gfxFloat height;
 
         gfxFloat internalLeading;
         gfxFloat externalLeading;

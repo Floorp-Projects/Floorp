@@ -888,7 +888,7 @@ nsThebesRenderingContext::PushFilter(const nsRect& twRect, PRBool aAreaIsOpaque,
 
     mThebes->Save();
     mThebes->Clip(GFX_RECT_FROM_TWIPS_RECT(twRect));
-    mThebes->PushGroup(gfxContext::CONTENT_COLOR_ALPHA);
+    mThebes->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
 
     return NS_OK;
 }
@@ -1183,6 +1183,11 @@ nsThebesRenderingContext::GetWidth(PRUnichar aC, nscoord &aWidth, PRInt32 *aFont
 NS_IMETHODIMP
 nsThebesRenderingContext::GetWidthInternal(const char* aString, PRUint32 aLength, nscoord& aWidth)
 {
+#ifdef DISABLE_TEXT
+    aWidth = (8 * aLength);
+    return NS_OK;
+#endif
+
     if (aLength == 0) {
         aWidth = 0;
         return NS_OK;
@@ -1195,6 +1200,11 @@ NS_IMETHODIMP
 nsThebesRenderingContext::GetWidthInternal(const PRUnichar *aString, PRUint32 aLength,
                                            nscoord &aWidth, PRInt32 *aFontID)
 {
+#ifdef DISABLE_TEXT
+    aWidth = (8 * aLength);
+    return NS_OK;
+#endif
+
     if (aLength == 0) {
         aWidth = 0;
         return NS_OK;
@@ -1277,6 +1287,10 @@ nsThebesRenderingContext::DrawStringInternal(const char *aString, PRUint32 aLeng
                                              nscoord aX, nscoord aY,
                                              const nscoord* aSpacing)
 {
+#ifdef DISABLE_TEXT
+    return NS_OK;
+#endif
+
     return mFontMetrics->DrawString(aString, aLength, aX, aY, aSpacing,
                                     this);
 }
@@ -1287,6 +1301,10 @@ nsThebesRenderingContext::DrawStringInternal(const PRUnichar *aString, PRUint32 
                                              PRInt32 aFontID,
                                              const nscoord* aSpacing)
 {
+#ifdef DISABLE_TEXT
+    return NS_OK;
+#endif
+
     return mFontMetrics->DrawString(aString, aLength, aX, aY, aFontID,
                                     aSpacing, this);
 }

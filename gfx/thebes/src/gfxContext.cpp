@@ -566,10 +566,14 @@ gfxContext::SetColor(const gfxRGBA& c)
     cairo_set_source_rgba(mCairo, c.r, c.g, c.b, c.a);
 }
 
-void
-gfxContext::SetPattern(gfxPattern *pattern)
+PRBool
+gfxContext::GetColor(gfxRGBA& c)
 {
-    cairo_set_source(mCairo, pattern->CairoPattern());
+    return cairo_pattern_get_solid_color(cairo_get_source(mCairo),
+                                         &c.r,
+                                         &c.g,
+                                         &c.b,
+                                         &c.a) == CAIRO_STATUS_SUCCESS;
 }
 
 void
@@ -577,6 +581,29 @@ gfxContext::SetSource(gfxASurface *surface, gfxPoint offset)
 {
     cairo_set_source_surface(mCairo, surface->CairoSurface(), offset.x, offset.y);
 }
+
+void
+gfxContext::SetPattern(gfxPattern *pattern)
+{
+    cairo_set_source(mCairo, pattern->CairoPattern());
+}
+
+already_AddRefed<gfxPattern>
+gfxContext::GetPattern()
+{
+    cairo_pattern_t *pat = cairo_get_source(mCairo);
+    NS_ASSERTION(pat, "I was told this couldn't be null");
+
+    gfxPattern *wrapper = nsnull;
+    if (pat)
+        wrapper = new gfxPattern(pat);
+    else
+        wrapper = new gfxPattern(gfxRGBA(0,0,0,0));
+
+    NS_ADDREF(wrapper);
+    return wrapper;
+}
+
 
 // masking
 
@@ -609,7 +636,7 @@ gfxContext::Paint(gfxFloat alpha)
 // groups
 
 void
-gfxContext::PushGroup(SurfaceContent content)
+gfxContext::PushGroup(gfxASurface::gfxContentType content)
 {
     cairo_push_group_with_content(mCairo, (cairo_content_t) content);
 }

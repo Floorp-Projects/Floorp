@@ -40,6 +40,7 @@
 
 #include "prtypes.h"
 #include "gfxTypes.h"
+#include "gfxColor.h"
 #include "gfxFont.h"
 #include "gfxMatrix.h"
 
@@ -476,6 +477,7 @@ public:
 
 private:
     double MeasureOrDrawFast(gfxContext *aContext, PRBool aDraw, gfxPoint pt);
+    double MeasureOrDrawReallyFast(gfxContext *aContext, PRBool aDraw, gfxPoint pt, gfxRGBA color);
     double MeasureOrDrawUniscribe(gfxContext *aContext, PRBool aDraw, gfxPoint pt);
 
     gfxWindowsFontGroup *mGroup;
@@ -488,6 +490,9 @@ private:
     const PRBool mIsASCII;
 
     nsRefPtr<gfxWindowsFont> mFallbackFont;
+
+    /* cached values */
+    double mLength;
 };
 
 #endif /* GFX_WINDOWSFONTS_H */
