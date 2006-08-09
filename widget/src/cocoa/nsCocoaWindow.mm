@@ -164,27 +164,27 @@ static nsIMenuBar* GetHiddenWindowMenuBar()
   nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
   if (!appShell) {
     NS_WARNING("Couldn't get AppShellService in order to get hidden window ref");
-    return NULL;
+    return nsnull;
   }
   
   nsCOMPtr<nsIXULWindow> hiddenWindow;
   appShell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
   if (!hiddenWindow) {
     NS_WARNING("Couldn't get hidden window from appshell");
-    return NULL;
+    return nsnull;
   }
   
   nsCOMPtr<nsIBaseWindow> baseHiddenWindow;
   baseHiddenWindow = do_GetInterface(hiddenWindow);
   if (!baseHiddenWindow) {
     NS_WARNING("Couldn't get nsIBaseWindow from hidden window (nsIXULWindow)");
-    return NULL;
+    return nsnull;
   }
   
   nsCOMPtr<nsIWidget> hiddenWindowWidget;
   if (NS_FAILED(baseHiddenWindow->GetMainWidget(getter_AddRefs(hiddenWindowWidget)))) {
     NS_WARNING("Couldn't get nsIWidget from hidden window (nsIBaseWindow)");
-    return NULL;
+    return nsnull;
   }
   
   nsIWidget* hiddenWindowWidgetNoCOMPtr = hiddenWindowWidget;
@@ -427,6 +427,7 @@ NS_IMETHODIMP nsCocoaWindow::Create(nsIWidget* aParent,
                         aContext, aAppShell, aToolkit, aInitData, nsnull));
 }
 
+
 NS_IMETHODIMP nsCocoaWindow::Destroy()
 {
   if (mPopupContentView)
@@ -441,6 +442,7 @@ NS_IMETHODIMP nsCocoaWindow::Destroy()
   
   return NS_OK;
 }
+
 
 void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
 {
@@ -604,6 +606,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
   return NS_OK;
 }
 
+
 NS_METHOD nsCocoaWindow::AddMouseListener(nsIMouseListener * aListener)
 {
   nsBaseWidget::AddMouseListener(aListener);
@@ -614,10 +617,10 @@ NS_METHOD nsCocoaWindow::AddMouseListener(nsIMouseListener * aListener)
   return NS_OK;
 }
 
-/**
-* Processes a mouse pressed event
-*
-**/
+
+//
+// Processes a mouse pressed event
+//
 NS_METHOD nsCocoaWindow::AddEventListener(nsIEventListener * aListener)
 {
   nsBaseWidget::AddEventListener(aListener);
@@ -628,14 +631,13 @@ NS_METHOD nsCocoaWindow::AddEventListener(nsIEventListener * aListener)
   return NS_OK;
 }
 
-/**
-* Add a menu listener
-* This interface should only be called by the menu services manager
-* This will AddRef() the menu listener
-* This will Release() a previously set menu listener
-*
-**/
 
+/*
+ * Add a menu listener
+ * This interface should only be called by the menu services manager
+ * This will AddRef() the menu listener
+ * This will Release() a previously set menu listener
+ */
 NS_METHOD nsCocoaWindow::AddMenuListener(nsIMenuListener * aListener)
 {
   nsBaseWidget::AddMenuListener(aListener);
@@ -735,8 +737,12 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
   if (mWindow) {
-    NSRect newBounds = [mWindow frame];
-    newBounds.size.width = aWidth;
+    NSRect newFrame = [mWindow frame];
+
+    // width is easy, no adjusting necessary
+    newFrame.size.width = aWidth;
+
+    // Adjusting the height is harder.
     // Note that [mWindow isSheet] is not the same as checking for
     // |mWindowType == eWindowType_sheet|. If this is a sheet object, the latter
     // will always be true. The former is true only when the sheet is being shown.
@@ -744,12 +750,16 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
     // the content view and the window's frame are equal, despite the fact that
     // the native window object has the title bar flag set. If the window is not
     // being shown as a sheet the content area and window frame differ.
-    if (mWindowType == eWindowType_popup || [mWindow isSheet])
-      newBounds.size.height = aHeight;
-    else
-      newBounds.size.height = aHeight + kTitleBarHeight; // add height of title bar
+    float newHeight = (float)aHeight;
+    if (mWindowType != eWindowType_popup && ![mWindow isSheet])
+      newHeight += (float)kTitleBarHeight; // add height of title bar
+    // Now we need to adjust for the fact that gecko wants the top of the window
+    // to remain in the same place.
+    newFrame.origin.y += newFrame.size.height - (float)newHeight;
+    newFrame.size.height = newHeight;
+
     StartResizing();
-    [mWindow setFrame:newBounds display:NO];
+    [mWindow setFrame:newFrame display:NO];
     StopResizing();
   }
 
@@ -804,6 +814,7 @@ NS_IMETHODIMP nsCocoaWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchron
   return NS_OK;
 }
 
+
 NS_IMETHODIMP nsCocoaWindow::Invalidate(PRBool aIsSynchronous)
 {
   if (mPopupContentView)
@@ -811,6 +822,7 @@ NS_IMETHODIMP nsCocoaWindow::Invalidate(PRBool aIsSynchronous)
 
   return NS_OK;
 }
+
 
 NS_IMETHODIMP nsCocoaWindow::Update()
 {
@@ -984,6 +996,7 @@ NS_IMETHODIMP nsCocoaWindow::SetFocus(PRBool aState)
 
   return NS_OK;
 }
+
 
 NS_IMETHODIMP nsCocoaWindow::ShowMenuBar(PRBool aShow)
 {
