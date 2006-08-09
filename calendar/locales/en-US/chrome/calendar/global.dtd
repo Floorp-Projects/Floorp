@@ -106,10 +106,6 @@
 <!ENTITY more.label "MORE" >
 <!ENTITY less.label "LESS" >
 
-<!ENTITY add.label     "Add">
-<!ENTITY edit.label    "Edit">
-<!ENTITY remove.label  "Remove">
-
 <!-- Units -->
 <!ENTITY calendar.global.units.second   "second">
 <!ENTITY calendar.global.units.seconds  "seconds">

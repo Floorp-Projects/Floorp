@@ -19,6 +19,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s): 
+   -   Cédric Corazza <cedric.corazza@wanadoo.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,7 +42,13 @@
 
 <!ENTITY pref.categories.label "Categories" >
 <!ENTITY pref.categories.add.title "Add Category">
+<!ENTITY pref.categories.addButton.label "Add…">
+<!ENTITY pref.categories.addButton.accesskey "A">
 <!ENTITY pref.categories.edit.title "Edit Category">
+<!ENTITY pref.categories.editButton.label "Edit…">
+<!ENTITY pref.categories.editButton.accesskey "E">
+<!ENTITY pref.categories.removeButton.label "Remove">
+<!ENTITY pref.categories.removeButton.accesskey "R">
 <!ENTITY pref.categories.name.label "Name">
 <!ENTITY pref.categories.color.label "Color">
 <!ENTITY pref.categories.usecolor.label "Use Color">
