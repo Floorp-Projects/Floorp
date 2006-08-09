@@ -132,38 +132,13 @@ var gSecurityPane = {
     var remoteLookup = document.getElementById("browser.safebrowsing.remoteLookups").value;
 
     var checkPhish = document.getElementById("checkPhishChoice");
-    var cacheList = document.getElementById("cacheProvider");
     var loadList = document.getElementById("onloadProvider");
     var onloadAfter = document.getElementById("onloadAfter");
 
     checkPhish.disabled = onloadAfter.disabled = !phishEnabled;
     loadList.disabled = !phishEnabled || !remoteLookup;
-    cacheList.disabled = !phishEnabled || remoteLookup;
 
     // don't override pref value
-    return undefined;
-  },
-
-  /**
-   * Displays a EULA for phishing detection if phishing detection is being
-   * enabled, allowing privacy wonks to not enable it if they want; otherwise,
-   * disables phishing protection.
-   */
-  writeCheckPhish: function ()
-  {
-    var checkbox = document.getElementById("checkMaybePhish");
-
-    // if the user's trying to enable phishing, we need to display a phishing
-    // EULA so he can choose not to enable it
-    if (checkbox.checked) {
-      var userAgreed = this._userAgreedToPhishingEULA();
-      // XXX I think this shouldn't be necessary and should be happening automatically, but it isn't
-      if (!userAgreed)
-        checkbox.checked = false;
-      return userAgreed;
-    }
-
-    // user disabling -- nothing to display, no preference value to override
     return undefined;
   },
 
@@ -211,63 +186,30 @@ var gSecurityPane = {
     var phishPref = document.getElementById("browser.safebrowsing.enabled");
     var phishChoice = document.getElementById("browser.safebrowsing.remoteLookups");
 
-    var cachedList = document.getElementById("cacheProvider");
     var onloadList = document.getElementById("onloadProvider");
-
-    if (phishPref.value) {
-      cachedList.disabled = phishChoice.value;
+    if (phishPref.value)
       onloadList.disabled = !phishChoice.value;
-    }
 
     // don't override pref value
     return undefined;
   },
 
   /**
-   * Populates the menulist of providers of cached phishing lists if the
-   * menulist isn't already populated.
+   * Displays a privacy policy if the user enables onload anti-phishing
+   * checking. The policy must be accepted if onload checking is to be enabled,
+   * and if it isn't we revert to downloaded list-based checking.
    */
-  readCachedPhishProvider: function ()
+  writePhishChoice: function ()
   {
-    const Cc = Components.classes, Ci = Components.interfaces;
-    const cachePopupId = "cachePhishPopup";
-    var popup = document.getElementById(cachePopupId);
+    var radio = document.getElementById("checkPhishChoice");
 
-    if (!popup) {
-      var providers = Cc["@mozilla.org/preferences-service;1"]
-                        .getService(Ci.nsIPrefService)
-                        .getBranch("browser.safebrowsing.provider.");
-
-      // fill in onload phishing list data
-      var kids = providers.getChildList("", {});
-      for (var i = 0; i < kids.length; i++) {
-        var curr = kids[i];
-        var matches = curr.match(/^(\d+)\.name$/);
-
-        // skip preferences not of form "##.name"
-        if (!matches)
-          continue;
-
-        if (!popup) {
-          popup = document.createElement("menupopup");
-          popup.id = cachePopupId;
-        }
-
-        var providerNum = matches[1];
-        var providerName = providers.getCharPref(curr);
-
-        var item = document.createElement("menuitem");
-        item.setAttribute("value", providerNum);
-        item.setAttribute("label", providerName);
-
-        popup.appendChild(item);
-      }
-
-      var onloadProviders = document.getElementById("cacheProvider");
-      onloadProviders.appendChild(popup);
+    // display a privacy policy if onload checking is being enabled
+    if (radio.value == "true" && !this._userAgreedToPhishingEULA()) {
+      radio.value = "false";
+      return false;
     }
 
-    // don't override the preference value in determining the right menuitem
+    // don't override pref value
     return undefined;
   },
 
@@ -326,22 +268,20 @@ var gSecurityPane = {
   onProviderChanged: function ()
   {
     if (!this._userAgreedToPhishingEULA()) {
-      this._disablePhishingProtection();
+      this._disableOnloadPhishChecks();
     }
   },
 
   /**
-   * Turns off phishing protection and updates UI accordingly.
+   * Turns off onload phishing protection and updates UI accordingly.
    */
-  _disablePhishingProtection: function ()
+  _disableOnloadPhishChecks: function ()
   {
-    // XXX there aren't privacy concerns if using a cached phishing list --
-    //     maybe just switch to using that if the user doesn't agree to the
-    //     phishing EULA?
-    var checkbox = document.getElementById("checkMaybePhish");
-    var phishEnabled = document.getElementById("browser.safebrowsing.enabled");
-    phishEnabled.value = false;
-    this._pane.userChangedValue(checkbox);
+    var remoteLookup = document.getElementById("browser.safebrowsing.remoteLookups");
+    remoteLookup.value = false;
+
+    var radio = document.getElementById("checkPhishChoice");
+    this._pane.userChangedValue(radio);
   },
 
   // PASSWORDS
