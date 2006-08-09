@@ -168,7 +168,7 @@ gfxPangoFontGroup::~gfxPangoFontGroup()
 gfxTextRun*
 gfxPangoFontGroup::MakeTextRun(const nsAString& aString)
 {
-    return new gfxPangoTextRun(*aString, this);
+    return new gfxPangoTextRun(aString, this);
 }
 
 /**
@@ -605,7 +605,7 @@ DrawCairoGlyphs(gfxContext* ctx,
 }
 #endif
 
-gfxPangoTextRun::gfxPangoTextRun(const nsAString *aString, gfxPangoFontGroup *aGroup)
+gfxPangoTextRun::gfxPangoTextRun(const nsAString &aString, gfxPangoFontGroup *aGroup)
     : mString(aString), mGroup(aGroup), mPangoLayout(nsnull), mWidth(-1), mHeight(-1)
 {
 }
