@@ -97,27 +97,27 @@
         </columns>
         <rows>
           <row align="center">
-            <hbox pack="end"><label id="nameLabel" value="&props.name.label;"/></hbox>
+            <hbox pack="end"><label id="nameLabel" control="name" value="&props.name.label;"/></hbox>
             <textbox id="name" readonly="true" class="plain"/>
           </row>
           <row align="center">
-            <hbox pack="end"><label id="valueLabel" value="&props.value.label;"/></hbox>
+            <hbox pack="end"><label id="valueLabel" control="value" value="&props.value.label;"/></hbox>
             <textbox id="value" readonly="true" class="plain"/>
           </row>
           <row align="center">
-            <hbox pack="end"><label id="isDomain" value="&props.domain.label;"/></hbox>
+            <hbox pack="end"><label id="isDomain" control="host" value="&props.domain.label;"/></hbox>
             <textbox id="host" readonly="true" class="plain"/>
           </row>
           <row align="center">
-            <hbox pack="end"><label id="pathLabel" value="&props.path.label;"/></hbox>
+            <hbox pack="end"><label id="pathLabel" control="path" value="&props.path.label;"/></hbox>
             <textbox id="path" readonly="true" class="plain"/>
           </row>
           <row align="center">
-            <hbox pack="end"><label id="isSecureLabel" value="&props.secure.label;"/></hbox>
+            <hbox pack="end"><label id="isSecureLabel" control="isSecure" value="&props.secure.label;"/></hbox>
             <textbox id="isSecure" readonly="true" class="plain"/>
           </row>
           <row align="center">
-            <hbox pack="end"><label id="expiresLabel" value="&props.expires.label;"/></hbox>
+            <hbox pack="end"><label id="expiresLabel" control="expires" value="&props.expires.label;"/></hbox>
             <textbox id="expires" readonly="true" class="plain"/>
           </row>
         </rows>
