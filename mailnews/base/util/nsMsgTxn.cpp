@@ -38,7 +38,7 @@
 #include "nsMsgTxn.h"
 #include "nsIMsgHdr.h"
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsMsgTxn, nsHashPropertyBag, nsITransaction);
+NS_IMPL_ISUPPORTS_INHERITED1(nsMsgTxn, nsHashPropertyBag, nsITransaction)
 
 nsMsgTxn::nsMsgTxn() 
 {
