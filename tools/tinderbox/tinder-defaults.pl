@@ -272,7 +272,8 @@ $MacUniversalBinary = 0;
 # If tinderbox is running in a test-only mode, it needs to be able to download
 # the latest build and unpack it rather than building it.
 $TestOnlyTinderbox = 0;
-#$DownloadBuildURL = 'http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla1.8/firefox-2.0a3.en-US.linux-i686.tar.gz';
+#$DownloadBuildFile = 'firefox-2.0a3.en-US.linux-i686.tar.gz';
+#$DownloadBuildURL = 'http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla1.8';
 #$DownloadBuildDir = 'firefox';
 
 # If TestOnlyTinderbox is enabled, fetch the latest build info from tinderbox in a 

@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.334 $ ';
+$::UtilsVersion = '$Revision: 1.335 $ ';
 
 package TinderUtils;
 
@@ -55,7 +55,7 @@ require "gettime.pl";
 
 my $co_time_str = 0;  # Global, let tests send cvs co time to graph server.
 my $co_default_timeout = 300;
-my $graph_time;
+my $server_start_time;
 
 sub Setup {
     InitVars();
@@ -892,7 +892,17 @@ sub BuildIt {
             $cvsco = "$Settings::CVSCO -A";
         }
 
-        mail_build_started_message($start_time) if $Settings::ReportStatus;
+        my $mailBuildStartTime = $start_time;
+        if ($Settings::TestOnlyTinderbox){
+          $server_start_time = get_build_time_from_server($start_time);
+          download_prebuilt();
+          if (! $server_start_time) {
+            die "Could not get time from server.\n";
+          }
+          $mailBuildStartTime = $server_start_time;
+        }
+
+        mail_build_started_message($mailBuildStartTime) if $Settings::ReportStatus;
 
         chdir $build_dir;
         my $logfile = "$Settings::DirName.log";
@@ -1142,20 +1152,6 @@ sub BuildIt {
                 TinderUtils::run_shell_command("cd $objdir/dist/universal/xpi-stage/xforms && zip -qr ../xforms.xpi *");
               }
             }
-          } elsif ($build_status ne 'busted' and $Settings::TestOnlyTinderbox) {
-            $graph_time = get_build_time_from_server($start_time);
-            my $prebuilt = "$build_dir/$Settings::DownloadBuildDir";
-            my $status = 0;
-            if ( -f $prebuilt) {
-              $status = run_shell_command("rm -rf $prebuilt");
-              $build_status = 'busted' if ($status);
-            }
-            $status = run_shell_command("mkdir -p $prebuilt");
-            $build_status = 'busted' if ($status);
-            $status = run_shell_command("wget -qO $prebuilt/build.tgz $Settings::DownloadBuildURL");
-            $build_status = 'busted' if ($status);
-            $status = run_shell_command("tar -C $prebuilt -xf $prebuilt/build.tgz");
-            $build_status = 'busted' if ($status);
           }
 
           if ($build_status ne 'busted' and BinaryExists($full_binary_name)) {
@@ -1198,8 +1194,12 @@ sub BuildIt {
         close LOG;
         chdir $build_dir;
 
-        mail_build_finished_message($start_time, $build_status, $binary_url, $logfile)
-            if $Settings::ReportStatus;
+        my $mailBuildEndTime = $start_time;
+        if ($Settings::TestOnlyTinderbox){
+          $mailBuildEndTime = $server_start_time;
+        }
+
+        mail_build_finished_message($mailBuildEndTime, $build_status, $binary_url, $logfile) if $Settings::ReportStatus;
 
         rebootSystem() if $Settings::OS eq 'WIN98' && $Settings::RebootSystem;
 
@@ -1715,7 +1715,7 @@ sub get_build_time_from_server {
         if ($status eq 'success') {
           $grabbed_time = $data[4];
           if (not $grabbed_time =~ /\d+/) {
-            print_log("Error - downloaded start time is no good: $time \n");
+            print_log("Error - downloaded start time is no good: $grabbed_time\n");
           }
         }else{
           print_log("Found match: $buildname but status is not success: $status\n");
@@ -1793,7 +1793,7 @@ sub send_results_to_server {
 
     my $time = POSIX::strftime("%Y:%m:%d:%H:%M:%S", localtime);
     if ($Settings::TestOnlyTinderbox) {
-      $time = POSIX::strftime("%Y:%m:%d:%H:%M:%S", localtime($graph_time));
+      $time = POSIX::strftime("%Y:%m:%d:%H:%M:%S", localtime($server_start_time));
       $data_plus_co_time = "MOZ_CO_DATE=$time\t$raw_data";
     }
     my $tmpurl = "http://$Settings::results_server/graph/collect.cgi";
@@ -3358,6 +3358,55 @@ sub BloatTest2 {
     }
 
     return 'success';
+}
+
+sub download_prebuilt() {
+  my $build_dir = get_system_cwd();
+  my $prebuilt = "$build_dir/$Settings::DownloadBuildDir";
+  my $unpack_build;
+
+  if (is_windows()) {
+    if ($build_dir !~ m/^.:\//) {
+      chomp($build_dir = `cygpath -w $build_dir`);
+      $build_dir =~ s/\\/\//g;
+    }
+    $unpack_build = "cd $prebuilt && unzip -qq -o $build_dir/$Settings::DownloadBuildFile";
+  } elsif (is_linux()) { 
+    $unpack_build = "tar -C $prebuilt -xf $build_dir/$Settings::DownloadBuildFile";
+  } else {
+    stop_tinderbox(reason => "Only Linux and Win32 for now.");
+  }
+  my $status = 0;
+  my $before_sum = HashFile(function => "md5", 
+                            file => "$build_dir/$Settings::DownloadBuildFile");
+
+  my $downloadUrl = $Settings::DownloadBuildURL
+    . '/' . $Settings::DownloadBuildFile;
+
+  if ( -d $prebuilt) {
+    $status = run_shell_command("rm -rf $prebuilt");
+    stop_tinderbox(reason => "Cannot rm -rf $prebuilt") if ($status);
+  }
+  $status = run_shell_command("mkdir -p $prebuilt");
+  stop_tinderbox(reason => "Cannot mkdir $prebuilt") if ($status);
+
+  $status = run_shell_command("wget -q -P $build_dir -N $downloadUrl");
+  stop_tinderbox(reason => "Cannot wget $downloadUrl") if ($status);
+  my $after_sum = HashFile( function => "md5", 
+                            file => "$build_dir/$Settings::DownloadBuildFile");
+  if ($before_sum eq $after_sum) {
+    stop_tinderbox(reason => "No new build available.");
+  }
+  $status = run_shell_command($unpack_build);
+  stop_tinderbox(reason => "Cannot unpack $build_dir/$Settings::DownloadBuildFile") if ($status); 
+}
+
+sub stop_tinderbox() {
+  my %args = @_;
+  my $reason = $args{'reason'};
+
+  print_log("Stopping tinderbox: ".$reason."\n");
+  exit(1);
 }
 
 sub HashFile
