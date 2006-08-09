@@ -56,11 +56,11 @@ tree {
 
 /* ::::: tree focusring ::::: */
 
-.focusring > .tree-rows > .tree-bodybox {
+.focusring > .tree-stack > .tree-rows > .tree-bodybox {
   border: 1px solid transparent;  
 }
 
-.focusring:focus > .tree-rows > .tree-bodybox {
+.focusring:focus > .tree-stack > .tree-rows > .tree-bodybox {
   border: 1px solid #000000;
 }
 
