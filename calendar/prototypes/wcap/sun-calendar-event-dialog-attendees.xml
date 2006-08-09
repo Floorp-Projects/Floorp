@@ -1382,6 +1382,55 @@
           </xul:box>
         </xul:box>
 
+        <xul:separator class="groove"/>
+        <xul:grid>
+          <xul:columns>
+            <xul:column flex="1"/>
+            <xul:column flex="1"/>
+          </xul:columns>
+          <xul:rows>
+            <xul:row align="center">
+              <xul:box orient="horizontal" align="center">
+                <xul:image class="role-icon" role="REQ-PARTICIPANT"/>
+                <xul:label value="Required participant"/>
+              </xul:box>
+              <xul:box orient="horizontal" align="center">
+                <xul:image class="status-icon" status="NEEDS-ACTION"/>
+                <xul:label value="Needs action"/>
+              </xul:box>
+            </xul:row>
+            <xul:row align="center">
+              <xul:box orient="horizontal" align="center">
+                <xul:image class="role-icon" role="OPT-PARTICIPANT"/>
+                <xul:label value="Optional participant"/>
+              </xul:box>
+              <xul:box orient="horizontal" align="center">
+                <xul:image class="status-icon" status="ACCEPTED"/>
+                <xul:label value="Accepted"/>
+              </xul:box>
+            </xul:row>
+            <xul:row align="center">
+              <xul:box orient="horizontal" align="center">
+                <xul:image class="role-icon" role="CHAIR"/>
+                <xul:label value="Chair"/>
+              </xul:box>
+              <xul:box orient="horizontal" align="center">
+                <xul:image class="status-icon" status="DECLINED"/>
+                <xul:label value="Declined"/>
+              </xul:box>
+            </xul:row>
+            <xul:row align="center">
+              <xul:box orient="horizontal" align="center">
+              </xul:box>
+              <xul:box orient="horizontal" align="center">
+                <xul:image class="status-icon" status="TENTATIVE"/>
+                <xul:label value="Tentative"/>
+              </xul:box>
+            </xul:row>
+          </xul:rows>
+        </xul:grid>
+
+        <xul:separator class="groove"/>
         <xul:grid>
           <xul:columns>
             <xul:column/>
