@@ -168,13 +168,7 @@ gfxPangoFontGroup::~gfxPangoFontGroup()
 gfxTextRun*
 gfxPangoFontGroup::MakeTextRun(const nsAString& aString)
 {
-    return new gfxPangoTextRun(&aString, this);
-}
-
-gfxTextRun*
-gfxPangoFontGroup::MakeTextRun(const nsACString& aString)
-{
-    return new gfxPangoTextRun(&aString, this);
+    return new gfxPangoTextRun(*aString, this);
 }
 
 /**
