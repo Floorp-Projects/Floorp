@@ -22,6 +22,7 @@
    - Contributor(s):
    -   Mike Potter <mikep@oeone.com>
    -   Matthew Willis <mattwillis@gmail.com>
+   -   Cédric Corazza <cedric.corazza@wanadoo.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -153,7 +154,9 @@
                 <rows>
                     <row>
                         <vbox align="start">
-                            <caption label="&pref.defalarm4events.label;"/>
+                            <caption label="&pref.defalarm4events.label;"
+                                     accesskey="&pref.defalarm4events.accesskey;"
+                                     control="eventdefalarm"/>
                         </vbox>
                         <menulist id="eventdefalarm"
                                   crop="none"
@@ -171,7 +174,9 @@
                     </row>
                     <row>
                         <vbox align="start">
-                            <caption label="&pref.defalarm4todos.label;"/>
+                            <caption label="&pref.defalarm4todos.label;"
+                                     accesskey="&pref.defalarm4todos.accesskey;"
+                                     control="tododefalarm"/>
                         </vbox>
                         <menulist id="tododefalarm"
                                   crop="none"
@@ -189,7 +194,9 @@
                     </row>
                     <row>
                         <vbox align="start">
-                            <caption label="&pref.defalarmlen4events.label;"/>
+                            <caption label="&pref.defalarmlen4events.label;"
+                                     accesskey="&pref.defalarmlen4events.accesskey;"
+                                     control="eventdefalarmlen"/>
                         </vbox>
                         <hbox>
                             <textbox id="eventdefalarmlen"
@@ -223,7 +230,9 @@
                     </row>
                     <row>
                         <vbox align="start">
-                            <caption label="&pref.defalarmlen4todos.label;"/>
+                            <caption label="&pref.defalarmlen4todos.label;"
+                                     accesskey="&pref.defalarmlen4todos.accesskey;"
+                                     control="tododefalarmlen"/>
                         </vbox>
                         <hbox>
                             <textbox id="tododefalarmlen"
