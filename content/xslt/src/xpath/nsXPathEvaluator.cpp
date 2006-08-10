@@ -151,8 +151,6 @@ nsXPathEvaluator::Evaluate(const nsAString & aExpression,
                            nsISupports *aInResult,
                            nsISupports **aResult)
 {
-    // XXX Need to check document of aContextNode if created by
-    //     QI'ing a document.
     nsCOMPtr<nsIDOMXPathExpression> expression;
     nsresult rv = CreateExpression(aExpression, aResolver,
                                    getter_AddRefs(expression));
@@ -239,7 +237,9 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
         return NS_ERROR_DOM_INVALID_EXPRESSION_ERR;
     }
 
-    *aResult = new nsXPathExpression(expression, mRecycler);
+    nsCOMPtr<nsIDOMDocument> document = do_QueryReferent(mDocument);
+
+    *aResult = new nsXPathExpression(expression, mRecycler, document);
     if (!*aResult) {
         return NS_ERROR_OUT_OF_MEMORY;
     }

@@ -59,9 +59,11 @@ NS_INTERFACE_MAP_BEGIN(nsXPathExpression)
 NS_INTERFACE_MAP_END
 
 nsXPathExpression::nsXPathExpression(nsAutoPtr<Expr>& aExpression,
-                                     txResultRecycler* aRecycler)
+                                     txResultRecycler* aRecycler,
+                                     nsIDOMDocument *aDocument)
     : mExpression(aExpression),
-      mRecycler(aRecycler)
+      mRecycler(aRecycler),
+      mDocument(aDocument)
 {
 }
 
@@ -93,6 +95,13 @@ nsXPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
 
     if (!nsContentUtils::CanCallerAccess(aContextNode))
         return NS_ERROR_DOM_SECURITY_ERR;
+
+    nsCOMPtr<nsIDOMDocument> contextDocument;
+    aContextNode->GetOwnerDocument(getter_AddRefs(contextDocument));
+
+    if (mDocument && mDocument != contextDocument) {
+        return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
+    }
 
     nsresult rv;
     PRUint16 nodeType;
