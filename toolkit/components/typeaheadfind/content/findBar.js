@@ -113,7 +113,7 @@ var gFindBar = {
         prefService.getBoolPref("accessibility.typeaheadfind.linksonly");
       gFindBar.mTypeAheadCaseSensitive =
         prefService.getIntPref("accessibility.typeaheadfind.casesensitive");
-      gFindBar.setCaseSensitiveUI();
+      gFindBar.setCaseSensitivity();
     }
   },
 
@@ -369,7 +369,7 @@ var gFindBar = {
     return node;
   },
 
-  setCaseSensitiveUI: function (val)
+  setCaseSensitivity: function (val)
   {
     var findToolbar = document.getElementById("FindToolbar");
     if (findToolbar.hidden)
@@ -390,6 +390,9 @@ var gFindBar = {
     matchCaseCheckbox.hidden = this.mUsingMinimalUI ||
       (this.mTypeAheadCaseSensitive != 0 && this.mTypeAheadCaseSensitive != 1);
     matchCaseText.hidden = !matchCaseCheckbox.hidden;
+
+    var fastFind = getBrowser().fastFind;
+    fastFind.caseSensitive = matchCaseCheckbox.checked;
   },
 
   toggleCaseSensitiveCheckbox: function (aCaseSensitive)
@@ -440,7 +443,7 @@ var gFindBar = {
       findToolbar.hidden = false;
 
       var findField = document.getElementById("find-field");
-      this.setCaseSensitiveUI(findField.value);
+      this.setCaseSensitivity(findField.value);
       this.updateStatus(Components.interfaces.nsITypeAheadFind.FIND_FOUND, false);
 
       return true;
@@ -700,47 +703,35 @@ var gFindBar = {
       return;
     }
 
-    if (evt.charCode == CHAR_CODE_APOSTROPHE ||
-        evt.charCode == CHAR_CODE_SLASH ||
-        (this.mUseTypeAheadFind &&
-         evt.charCode && evt.charCode != CHAR_CODE_SPACE)) {
+    var manualstartFAYT = (evt.charCode == CHAR_CODE_APOSTROPHE ||
+      evt.charCode == CHAR_CODE_SLASH);
+    var autostartFAYT = !manualstartFAYT && this.mUseTypeAheadFind &&
+      evt.charCode && evt.charCode != CHAR_CODE_SPACE;
+    if (manualstartFAYT || autostartFAYT) {
       var findMode =
         (evt.charCode == CHAR_CODE_APOSTROPHE ||
-        (this.mTypeAheadLinksOnly && evt.charCode != CHAR_CODE_SLASH)) ?
+        (autostartFAYT && this.mTypeAheadLinksOnly)) ?
           FIND_LINKS : FIND_TYPEAHEAD;
       this.setFindMode(findMode);
+
+      // Clear bar first, so that when openFindBar() calls setCaseSensitivity()
+      // it doesn't get confused by a lingering value
+      findField.value = "";
+
       try {
-        var opened = this.openFindBar(true);
+        this.openFindBar(true);
       }
       catch (e) {
-        return;
       }    
-      if (opened) {
-        this.setFindCloseTimeout();
-        this.selectFindBar();
-        this.focusFindBar();
-        findField.value = "";
-        if (this.mUseTypeAheadFind &&
-            evt.charCode != CHAR_CODE_APOSTROPHE &&
-            evt.charCode != CHAR_CODE_SLASH)
-          this.fireKeypressEvent(findField.inputField, evt);
-        else
-          this.updateStatus(Components.interfaces.nsITypeAheadFind.FIND_FOUND, false);
-        evt.preventDefault();
-      }
-      else {
-        this.selectFindBar();
-        this.focusFindBar();
-        if (this.mFindMode != FIND_NORMAL) {
-          findField.value = "";
-          if (evt.charCode != CHAR_CODE_APOSTROPHE &&
-              evt.charCode != CHAR_CODE_SLASH)
-            this.fireKeypressEvent(findField.inputField, evt);
-          else
-            this.updateStatus(Components.interfaces.nsITypeAheadFind.FIND_FOUND, false);
-          evt.preventDefault();
-        }
-      }
+      this.setFindCloseTimeout();
+      this.selectFindBar();
+      this.focusFindBar();
+
+      if (autostartFAYT)
+        this.fireKeypressEvent(findField.inputField, evt);
+      else
+        this.updateStatus(Components.interfaces.nsITypeAheadFind.FIND_FOUND, false);
+      evt.preventDefault();
     }
   },
 
@@ -867,9 +858,9 @@ var gFindBar = {
     if (highlightBtn.checked)
       this.setHighlightTimeout();
 
+    this.setCaseSensitivity(val);
+
     var fastFind = getBrowser().fastFind;
-    fastFind.caseSensitive = this.shouldBeCaseSensitive(val);
-    this.setCaseSensitiveUI(val);
     var res = fastFind.find(val, this.mFindMode == FIND_LINKS, this.mHasFocus);
     this.updateFoundLink(res);
     this.updateStatus(res, true);
