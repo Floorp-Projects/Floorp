@@ -461,15 +461,23 @@ public class Interpreter
         return itsData;
     }
 
-    public Script createScriptObject(Object staticSecurityDomain)
+    public Script createScriptObject(Object bytecode, Object staticSecurityDomain)
     {
+        if(bytecode != itsData)
+        {
+            Kit.codeBug();
+        }
         return InterpretedFunction.createScript(itsData,
                                                 staticSecurityDomain);
     }
 
     public Function createFunctionObject(Context cx, Scriptable scope, 
-            Object staticSecurityDomain)
+            Object bytecode, Object staticSecurityDomain)
     {
+        if(bytecode != itsData)
+        {
+            Kit.codeBug();
+        }
         return InterpretedFunction.createFunction(cx, scope, itsData,
                                                   staticSecurityDomain);
     }
