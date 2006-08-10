@@ -183,6 +183,10 @@ function initMenus()
          ["toggle-profile",
                  {type: "checkbox",
                   checkedif: "console.jsds.flags & COLLECT_PROFILE_DATA"}],
+         ["toggle-forcescriptload",
+                 {type: "checkbox",
+                  checkedif: "console.prefs['profile.forceScriptLoad']"}],
+         ["-"],
          ["clear-profile"],
          ["save-profile"],
          ["show-profile"]

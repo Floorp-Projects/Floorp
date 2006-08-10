@@ -153,6 +153,7 @@ function initCommands()
          ["profile-tb",               "profile toggle",                      0],
          ["this",                     "props this",                CMD_CONSOLE],
          ["toggle-chrome",            "chrome-filter toggle",                0],
+         ["toggle-forcescriptload",   "toggle-pref profile.forceScriptLoad", 0],
          ["toggle-ias",               "startup-init toggle",                 0],
          ["toggle-pprint",            "pprint toggle",                       0],
          ["toggle-profile",           "profile toggle",                      0],
