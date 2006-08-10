@@ -1290,7 +1290,7 @@
             } else if (status == "DECLINED") {
               event.originalTarget.setAttribute("status","TENTATIVE");
             } else if (status == "TENTATIVE") {
-              event.originalTarget.setAttribute("status","NEEDS-ACTION");
+              event.originalTarget.setAttribute("status","ACCEPTED");
             }
             return;
           }
