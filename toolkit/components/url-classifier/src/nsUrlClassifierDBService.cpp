@@ -458,8 +458,6 @@ nsUrlClassifierDBServiceWorker::CloseDb()
 {
   if (mConnection != nsnull) {
     NS_RELEASE(mConnection);
-    delete mConnection;
-    mConnection = nsnull;
     LOG(("urlclassifier db closed\n"));
   }
   return NS_OK;
