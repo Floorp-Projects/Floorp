@@ -380,16 +380,11 @@ RealizeDefaultContent(nsHashKey* aKey, void* aData, void* aClosure)
         // We need to take this template and use it to realize the
         // actual default content (through cloning).
         // Clone this insertion point element.
-        nsCOMPtr<nsIContent> insParent = currPoint->GetInsertionParent();
-        nsCOMPtr<nsIDOMDocument> document =
-          do_QueryInterface(insParent->GetOwnerDoc());
-        if (!document) {
-          return NS_ERROR_FAILURE;
-        }
-
         nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(defContent));
         nsCOMPtr<nsIDOMNode> clonedNode;
-        document->ImportNode(elt, PR_TRUE, getter_AddRefs(clonedNode));
+        elt->CloneNode(PR_TRUE, getter_AddRefs(clonedNode));
+
+        nsCOMPtr<nsIContent> insParent = currPoint->GetInsertionParent();
 
         // Now that we have the cloned content, install the default content as
         // if it were additional anonymous content.
@@ -511,15 +506,9 @@ nsXBLBinding::GenerateAnonymousContent()
     if (hasContent || hasInsertionPoints) {
       nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(content));
 
-      nsCOMPtr<nsIDOMDocument> document =
-        do_QueryInterface(mBoundElement->GetOwnerDoc());
-      if (!document) {
-        return;
-      }
-
       nsCOMPtr<nsIDOMNode> clonedNode;
-      document->ImportNode(domElement, PR_TRUE, getter_AddRefs(clonedNode));
-
+      domElement->CloneNode(PR_TRUE, getter_AddRefs(clonedNode));
+  
       mContent = do_QueryInterface(clonedNode);
       InstallAnonymousContent(mContent, mBoundElement);
 
