@@ -983,7 +983,7 @@ Engine.prototype = {
   _confirm: false,
   // Whether to set this as the current engine as soon as it is loaded.  This
   // is only used when the engine is first added to the list.
-  _useNow: false,
+  _useNow: true,
   // Whether the search engine file is in the app dir.
   __isInAppDir: null,
   // The number of days between update checks for new versions
