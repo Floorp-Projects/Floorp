@@ -51,7 +51,6 @@ var gPromptService;
 //////////// global constants ////////////////////
 
 const kDOMViewCID          = "@mozilla.org/inspector/dom-view;1";
-const kPromptServiceCID    = "@mozilla.org/embedcomp/prompt-service;1";
 
 //////////////////////////////////////////////////
 
@@ -215,7 +214,8 @@ DOMNodeViewer.prototype =
       case "cmdEditDelete":
         return this.selectedAttribute != null;
       case "cmdEditEdit":
-        return this.mAttrTree.view.selection.count == 1;
+        return this.mAttrTree.currentIndex >= 0 &&
+                 this.mAttrTree.view.selection.count == 1;
       case "cmdEditNodeValue":
         // this function can be fired before the subject is set
         if (this.subject) {
@@ -376,43 +376,38 @@ cmdEditInsert.prototype =
   
   promptFor: function()
   {
-    if (!gPromptService) {
-      gPromptService = XPCU.getService(kPromptServiceCID, "nsIPromptService");
-    }
-
-    var attrName = { value: "" };
-    var attrValue = { value: "" };
-    var dummy = { value: false };
-
     var bundle = viewer.pane.panelset.stringBundle;
-    var msg = bundle.getString("enterAttrName.message");
     var title = bundle.getString("newAttribute.title");
+    var doc = viewer.subject.ownerDocument;
+    var out = { name: null, value: null, namespaceURI: null, accepted: false };
 
-    if (gPromptService.prompt(window, title, msg, attrName, null, dummy)) {
-      msg = bundle.getString("enterAttrValue.message");
-      if (gPromptService.prompt(window, title, msg, attrValue, null, dummy)) {
-        this.subject = viewer.subject;
-        this.subject.setAttribute(attrName.value, attrValue.value);
-        this.attr = this.subject.getAttributeNode(attrName.value);
-        return false;
-      }
-    }
-    return true;
+    window.openDialog("chrome://inspector/content/viewers/domNode/domNodeDialog.xul",
+                      "insert", "chrome,modal,centerscreen", out, title, doc);
+
+    this.subject = viewer.subject;
+    if (out.accepted)
+      this.subject.setAttributeNS(out.namespaceURI, out.name, out.value);
+    
+    this.attr = this.subject.getAttributeNode(out.name);
+    return false;
   },
   
   doCommand: function()
   {
-    if (this.attr)
-      this.subject.setAttribute(this.attr.nodeName, this.attr.nodeValue);
-    else
+    if (!this.attr)
       return this.promptFor();
+    
+    this.subject.setAttributeNS(this.attr.namespaceURI,
+                                this.attr.nodeName,
+                                this.attr.nodeValue);
     return false;
   },
   
   undoCommand: function()
   {
     if (this.attr && this.subject == viewer.subject)
-      this.subject.removeAttribute(this.attr.nodeName, this.attr.nodeValue);
+      this.subject.removeAttributeNS(this.attr.namepsaceURI,
+                                     this.attr.localName);
   }
 };
 
@@ -455,28 +450,44 @@ cmdEditEdit.prototype =
   attr: null,
   previousValue: null,
   newValue: null,
+  previousNamespaceURI: null,
+  newNamespaceURI: null,
   subject: null,
   
   promptFor: function()
   {
     var attr = viewer.selectedAttribute.node;
     if (attr) {
-      if (!gPromptService) {
-        gPromptService = XPCU.getService(kPromptServiceCID, "nsIPromptService");
-      }
-
-      var attrValue = { value: attr.nodeValue };
-      var dummy = { value: false };
-
       var bundle = viewer.pane.panelset.stringBundle;
-      var msg = bundle.getString("enterAttrValue.message");
       var title = bundle.getString("editAttribute.title");
+      var doc = attr.ownerDocument;
+      var out = {
+        name: attr.nodeName,
+        value: attr.nodeValue,
+        namespaceURI: attr.namespaceURI,
+        accepted: false
+      };
 
-      if (gPromptService.prompt(window, title, msg, attrValue, null, dummy)) {
-        this.subject = viewer.subject;
-        this.newValue = attrValue.value;
-        this.previousValue = attr.nodeValue;
-        this.subject.setAttribute(attr.nodeName, attrValue.value);
+      window.openDialog("chrome://inspector/content/viewers/domNode/domNodeDialog.xul",
+                        "edit", "chrome,modal,centerscreen", out, title, doc);
+
+      if (out.accepted) {
+        this.subject              = viewer.subject;
+        this.newValue             = out.value;
+        this.newNamespaceURI      = out.namespaceURI;
+        this.previousValue        = attr.nodeValue;
+        this.previousNamespaceURI = attr.namespaceURI;
+        if (this.previousNamespaceURI == this.newNamespaceURI) {
+          this.subject.setAttributeNS(this.previousNamespaceURI,
+                                      attr.nodeName,
+                                      out.value);
+        } else {
+          this.subject.removeAttributeNS(this.previousNamespaceURI,
+                                         attr.localName);
+          this.subject.setAttributeNS(out.namespaceURI,
+                                      attr.nodeName,
+                                      out.value);
+        }
         this.attr = this.subject.getAttributeNode(attr.nodeName);
         return false;
       }
@@ -486,17 +497,32 @@ cmdEditEdit.prototype =
   
   doCommand: function()
   {
-    if (this.attr)
-      this.subject.setAttribute(this.attr.nodeName, this.newValue);
-    else
+    if (!this.attr)
       return this.promptFor();
+
+    this.subject.removeAttributeNS(this.previousNamespaceURI,
+                                   this.attr.localName);
+    this.subject.setAttributeNS(this.newNamespaceURI,
+                                this.attr.nodeName,
+                                this.newValue);
     return false;
   },
   
   undoCommand: function()
   {
-    if (this.attr)
-      this.subject.setAttribute(this.attr.nodeName, this.previousValue);
+    if (this.attr) {
+      if (this.previousNamespaceURI == this.newNamespaceURI) {
+        this.subject.setAttributeNS(this.previousNamespaceURI,
+                                    this.attr.nodeName,
+                                    this.previousValue);
+      } else {
+        this.subject.removeAttributeNS(this.newNamespaceURI,
+                                       this.attr.localName);
+        this.subject.setAttributeNS(this.previousNamespaceURI,
+                                    this.attr.nodeName,
+                                    this.previousValue);
+      }
+    }
   }
 };
 
