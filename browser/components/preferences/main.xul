@@ -69,10 +69,6 @@
                   name="pref.browser.homepage.disable_button.bookmark_page"
                   type="bool"/>
 
-      <preference id="browser.startup.page"
-                  name="browser.startup.page"
-                  type="int"/>
-
       <!-- Downloads -->
       <preference id="browser.download.manager.showWhenStarting"
                   name="browser.download.manager.showWhenStarting"
@@ -133,16 +129,6 @@
                 oncommand="gMainPane.restoreDefaultHomePage();"
                 id="restoreDefaultHomePage"
                 preference="pref.browser.homepage.disable_button.restore_default"/>
-      </hbox>
-      <hbox align="center">
-        <label value="&startup.label;" accesskey="&startup.accesskey;" control="browserStartupPage"/>
-          <menulist id="browserStartupPage" preference="browser.startup.page">
-            <menupopup>
-              <menuitem label="&startupHomePage.label;"         value="1"/>
-              <menuitem label="&startupBlankPage.label;"        value="0"/>
-              <menuitem label="&startupPreviousSession.label;"  value="3"/>
-            </menupopup>
-          </menulist>
       </hbox>
     </groupbox>
 

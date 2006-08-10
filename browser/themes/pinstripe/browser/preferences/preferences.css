@@ -150,7 +150,7 @@ description {
   margin-bottom: 4px !important;
 }
 
-#browserHomePage {
+#browserStartupHomepage {
   padding: 2px 2px 3px 4px;
 }
 
@@ -247,7 +247,7 @@ caption {
   padding: 18px 10px 10px 10px;
 }
 
-#browserHomePage {
+#browserStartupHomepage {
   padding: 0;
 }
 
