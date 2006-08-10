@@ -110,7 +110,7 @@ gfxPlatform::DoesARGBImageDataHaveAlpha(PRUint8* data,
     for (int j = 0; j < height; j++) {
         r = (PRUint32*) (data + stride*j);
         for (int i = 0; i < width; i++) {
-            if ((*r & 0xff000000) != 0xff000000) {
+            if ((*r++ & 0xff000000) != 0xff000000) {
                 return PR_TRUE;
             }
         }
