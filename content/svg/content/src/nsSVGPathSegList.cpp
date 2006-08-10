@@ -41,6 +41,7 @@
 #include "nsSVGValue.h"
 #include "nsWeakReference.h"
 #include "nsVoidArray.h"
+#include "nsCOMArray.h"
 #include "nsDOMError.h"
 #include "nsSVGPathDataParser.h"
 #include "nsReadableUtils.h"
@@ -60,7 +61,7 @@ protected:
   nsSVGPathSegList();
   ~nsSVGPathSegList();
 //  void Init();
-  
+
 public:
   // nsISupports interface:
   NS_DECL_ISUPPORTS
@@ -83,14 +84,13 @@ public:
 
 protected:
   // implementation helpers:
-  nsIDOMSVGPathSeg* ElementAt(PRInt32 index);
   void AppendElement(nsIDOMSVGPathSeg* aElement);
   void RemoveElementAt(PRInt32 index);
   void InsertElementAt(nsIDOMSVGPathSeg* aElement, PRInt32 index);
-  
-  void ReleaseSegments();
-  
-  nsVoidArray mSegments;
+
+  void ReleaseSegments(PRBool aModify = PR_TRUE);
+
+  nsCOMArray<nsIDOMSVGPathSeg> mSegments;
 };
 
 
@@ -103,7 +103,11 @@ nsSVGPathSegList::nsSVGPathSegList()
 
 nsSVGPathSegList::~nsSVGPathSegList()
 {
-  ReleaseSegments();
+  PRInt32 count = mSegments.Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    nsSVGPathSeg* seg = NS_STATIC_CAST(nsSVGPathSeg*, mSegments.ObjectAt(i));
+    seg->SetParent(nsnull);
+  }
 }
 
 //----------------------------------------------------------------------
@@ -128,33 +132,23 @@ NS_IMETHODIMP
 nsSVGPathSegList::SetValueString(const nsAString& aValue)
 {
   nsresult rv;
-
-  nsVoidArray data;
-  nsSVGPathDataParserToDOM parser(&data);
+  
+  WillModify();
+  ReleaseSegments(PR_FALSE);
+  nsSVGPathDataParserToDOM parser(&mSegments);
   rv = parser.Parse(aValue);
-  
-  if (NS_SUCCEEDED(rv)) {
-    WillModify();
-    ReleaseSegments();
-    mSegments = data;
-    PRInt32 count = mSegments.Count();
-    for (PRInt32 i=0; i<count; ++i) {
-      nsIDOMSVGPathSeg* seg = ElementAt(i);
-      nsCOMPtr<nsISVGValue> val = do_QueryInterface(seg);
-      if (val)
-        val->AddObserver(this);
-    }
-    DidModify();
+
+  PRInt32 count = mSegments.Count();
+  for (PRInt32 i=0; i<count; ++i) {
+    nsSVGPathSeg* seg = NS_STATIC_CAST(nsSVGPathSeg*, mSegments.ObjectAt(i));
+    seg->SetParent(this);
   }
-  else {
-    NS_ERROR("path data parse error!");    
-    PRInt32 count = data.Count();
-    for (PRInt32 i=0; i<count; ++i) {
-      nsIDOMSVGPathSeg* seg = (nsIDOMSVGPathSeg*)data.ElementAt(i);
-      NS_RELEASE(seg);
-    }
+
+  if (NS_FAILED(rv)) {
+    NS_ERROR("path data parse error!");
+    ReleaseSegments(PR_FALSE);
   }
-  
+  DidModify();
   return rv;
 }
 
@@ -168,21 +162,19 @@ nsSVGPathSegList::GetValueString(nsAString& aValue)
   if (count<=0) return NS_OK;
 
   PRInt32 i = 0;
-  
+
   while (1) {
-    nsIDOMSVGPathSeg* seg = ElementAt(i);
-    nsCOMPtr<nsISVGValue> val = do_QueryInterface(seg);
-    NS_ASSERTION(val, "path segment doesn't implement required interface");
-    if (!val) continue;
+    nsSVGPathSeg* seg = NS_STATIC_CAST(nsSVGPathSeg*, mSegments.ObjectAt(i));
+
     nsAutoString str;
-    val->GetValueString(str);
+    seg->GetValueString(str);
     aValue.Append(str);
 
     if (++i >= count) break;
 
     aValue.AppendLiteral(" ");
   }
-  
+
   return NS_OK;
 }
 
@@ -225,7 +217,7 @@ NS_IMETHODIMP nsSVGPathSegList::GetItem(PRUint32 index, nsIDOMSVGPathSeg **_retv
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
-  *_retval  = ElementAt(index);
+  *_retval  = mSegments.ObjectAt(index);
   NS_ADDREF(*_retval);
   return NS_OK;
 }
@@ -264,7 +256,7 @@ NS_IMETHODIMP nsSVGPathSegList::RemoveItem(PRUint32 index, nsIDOMSVGPathSeg **_r
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
-  *_retval = ElementAt(index);
+  *_retval = mSegments.ObjectAt(index);
   NS_ADDREF(*_retval);
   WillModify();
   RemoveElementAt(index);
@@ -284,7 +276,6 @@ NS_IMETHODIMP nsSVGPathSegList::AppendItem(nsIDOMSVGPathSeg *newItem,
   if (!newItem)
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
   AppendElement(newItem);
-  NS_ADDREF(*_retval);
   return NS_OK;
 }
 
@@ -296,52 +287,49 @@ NS_IMETHODIMP
 nsSVGPathSegList::WillModifySVGObservable(nsISVGValue* observable,
                                           modificationType aModType)
 {
-  WillModify(aModType);
-  return NS_OK;
+  // This method is not yet used
+
+  NS_NOTYETIMPLEMENTED("nsSVGPathSegList::WillModifySVGObservable");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsSVGPathSegList::DidModifySVGObservable (nsISVGValue* observable,
                                           modificationType aModType)
 {
-  DidModify(aModType);
-  return NS_OK;
+  // This method is not yet used
+
+  NS_NOTYETIMPLEMENTED("nsSVGPathSegList::DidModifySVGObservable");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //----------------------------------------------------------------------
 // Implementation helpers
 
 void
-nsSVGPathSegList::ReleaseSegments()
+nsSVGPathSegList::ReleaseSegments(PRBool aModify)
 {
-  WillModify();
+  if (aModify) {
+    WillModify();
+  }
   PRInt32 count = mSegments.Count();
   for (PRInt32 i = 0; i < count; ++i) {
-    nsIDOMSVGPathSeg* seg = ElementAt(i);
-    nsCOMPtr<nsISVGValue> val = do_QueryInterface(seg);
-    if (val)
-      val->RemoveObserver(this);
-    NS_RELEASE(seg);
+    nsSVGPathSeg* seg = NS_STATIC_CAST(nsSVGPathSeg*, mSegments.ObjectAt(i));
+    seg->SetParent(nsnull);
   }
   mSegments.Clear();
-  DidModify();
-}
-
-nsIDOMSVGPathSeg*
-nsSVGPathSegList::ElementAt(PRInt32 index)
-{
-  return (nsIDOMSVGPathSeg*)mSegments.ElementAt(index);
+  if (aModify) {
+    DidModify();
+  }
 }
 
 void
 nsSVGPathSegList::AppendElement(nsIDOMSVGPathSeg* aElement)
 {
   WillModify();
-  NS_ADDREF(aElement);
-  mSegments.AppendElement((void*)aElement);
-  nsCOMPtr<nsISVGValue> val = do_QueryInterface(aElement);
-  if (val)
-    val->AddObserver(this);
+  mSegments.AppendObject(aElement);
+  nsSVGPathSeg* seg = NS_STATIC_CAST(nsSVGPathSeg*, aElement);
+  seg->SetParent(this);
   DidModify();
 }
 
@@ -349,13 +337,9 @@ void
 nsSVGPathSegList::RemoveElementAt(PRInt32 index)
 {
   WillModify();
-  nsIDOMSVGPathSeg* seg = ElementAt(index);
-  NS_ASSERTION(seg, "null pathsegment");
-  nsCOMPtr<nsISVGValue> val = do_QueryInterface(seg);
-  if (val)
-    val->RemoveObserver(this);
-  mSegments.RemoveElementAt(index);
-  NS_RELEASE(seg);
+  nsSVGPathSeg* seg = NS_STATIC_CAST(nsSVGPathSeg*, mSegments.ObjectAt(index));
+  seg->SetParent(nsnull);
+  mSegments.RemoveObjectAt(index);
   DidModify();
 }
 
@@ -363,11 +347,9 @@ void
 nsSVGPathSegList::InsertElementAt(nsIDOMSVGPathSeg* aElement, PRInt32 index)
 {
   WillModify();
-  NS_ADDREF(aElement);
-  mSegments.InsertElementAt((void*)aElement, index);
-  nsCOMPtr<nsISVGValue> val = do_QueryInterface(aElement);
-  if (val)
-    val->AddObserver(this);
+  mSegments.InsertObjectAt(aElement, index);
+  nsSVGPathSeg* seg = NS_STATIC_CAST(nsSVGPathSeg*, aElement);
+  seg->SetParent(this);
   DidModify();
 }
 
@@ -385,9 +367,9 @@ NS_NewSVGPathSegList(nsIDOMSVGPathSegList** result)
   NS_ADDREF(pathSegList);
 
   // pathSegList->Init();
-  
+
   *result = (nsIDOMSVGPathSegList*) pathSegList;
-  
+
   return NS_OK;
 }
 

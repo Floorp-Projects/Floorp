@@ -42,6 +42,7 @@
 #include "nsSVGDataParser.h"
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
+#include "nsCOMArray.h"
 #include "nsIDOMSVGPathSeg.h"
 #include "nsTArray.h"
 #include <cairo.h>
@@ -194,7 +195,7 @@ private:
 class nsSVGPathDataParserToDOM : public nsSVGPathDataParser
 {
 public:
-  nsSVGPathDataParserToDOM(nsVoidArray *data) : mData(data) {}
+  nsSVGPathDataParserToDOM(nsCOMArray<nsIDOMSVGPathSeg>* data) : mData(data) {}
 
 protected:
   virtual nsresult StoreMoveTo(PRBool absCoords, float x, float y);
@@ -217,7 +218,7 @@ protected:
 private:
   nsresult AppendSegment(nsIDOMSVGPathSeg* seg);
 
-  nsVoidArray *mData;
+  nsCOMArray<nsIDOMSVGPathSeg>* mData;
 };
 
 #endif // __NS_SVGPATHDATAPARSER_H__
