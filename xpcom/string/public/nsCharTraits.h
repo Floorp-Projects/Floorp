@@ -73,14 +73,33 @@
   typedef PRBool nsCharTraits_bool;
 #endif
 
-// Some macros for working with PRUnichar
+/*
+ * Some macros for converting PRUnichar (UTF-16) to and from Unicode scalar
+ * values.
+ *
+ * Note that UTF-16 represents all Unicode scalar values up to U+10FFFF by
+ * using "surrogate pairs". These consist of a high surrogate, i.e. a code
+ * point in the range U+D800 - U+DBFF, and a low surrogate, i.e. a code point
+ * in the range U+DC00 - U+DFFF, like this:
+ *
+ *  U+D800 U+DC00 =  U+10000
+ *  U+D800 U+DC01 =  U+10001
+ *  ...
+ *  U+DBFF U+DFFE = U+10FFFE
+ *  U+DBFF U+DFFF = U+10FFFF
+ *
+ * These surrogate code points U+D800 - U+DFFF are not themselves valid Unicode
+ * scalar values and are not well-formed UTF-16 except as high-surrogate /
+ * low-surrogate pairs.
+ */
+
 #define PLANE1_BASE          PRUint32(0x00010000)
 // High surrogates are in the range 0xD800 -- OxDBFF
-#define IS_HIGH_SURROGATE(u) ((PRUnichar(u) & 0xFC00) == 0xD800)
+#define IS_HIGH_SURROGATE(u) ((PRUint32(u) & 0xFFFFFC00) == 0xD800)
 // Low surrogates are in the range 0xDC00 -- 0xDFFF
-#define IS_LOW_SURROGATE(u)  ((PRUnichar(u) & 0xFC00) == 0xDC00)
+#define IS_LOW_SURROGATE(u)  ((PRUint32(u) & 0xFFFFFC00) == 0xDC00)
 // Faster than testing IS_HIGH_SURROGATE || IS_LOW_SURROGATE
-#define IS_SURROGATE(u)      ((PRUnichar(u) & 0xF800) == 0xD800)
+#define IS_SURROGATE(u)      ((PRUint32(u) & 0xFFFFF800) == 0xD800)
 
 // Everything else is not a surrogate: 0x000 -- 0xD7FF, 0xE000 -- 0xFFFF
 
