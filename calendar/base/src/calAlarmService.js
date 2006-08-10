@@ -80,14 +80,30 @@ function calAlarmService() {
         onEndBatch: function() { },
         onLoad: function() { },
         onAddItem: function(aItem) {
-            if (aItem.alarmOffset)
-                this.alarmService.addAlarm(aItem);
+            if (!aItem.alarmOffset &&
+                !(aItem.parentItem && aItem.parentItem.alarmOffset)) {
+                return;
+            }
+
+            var occs = [];
+            if (aItem.recurrenceInfo) {
+                var start = this.alarmService.mRangeEnd.clone();
+                // We search 1 month in each direction for alarms.  Therefore,
+                // we need to go back 2 months from the end to get this right.
+                start.month -= 2;
+                start.normalize();
+                occs = aItem.recurrenceInfo.getOccurrences(start, this.alarmService.mRangeEnd, 0, {});
+            } else {
+                occs = [aItem];
+            }
+            for each (var occ in occs) {
+                this.alarmService.addAlarm(occ);
+            }
         },
         onModifyItem: function(aNewItem, aOldItem) {
             this.alarmService.removeAlarm(aOldItem);
 
-            if (aNewItem.alarmOffset)
-                this.alarmService.addAlarm(aNewItem);
+            this.onAddItem(aNewItem);
         },
         onDeleteItem: function(aDeletedItem) {
             this.alarmService.removeAlarm(aDeletedItem);
@@ -339,9 +355,11 @@ calAlarmService.prototype = {
             alarmTime.isDate = false;
         }
 
-        alarmTime.addDuration(aItem.alarmOffset);
+        var offset = aItem.alarmOffset || aItem.parentItem.alarmOffset;
+
+        alarmTime.addDuration(offset);
         alarmTime = alarmTime.getInTimezone("UTC");
-dump("considering alarm for item:"+aItem.title+'\n offset:'+aItem.alarmOffset+', which makes alarm time:'+alarmTime+'\n');
+dump("considering alarm for item:"+aItem.title+'\n offset:'+offset+', which makes alarm time:'+alarmTime+'\n');
         var now;
         // XXX When the item is floating, should use the default timezone
         // from the prefs, instead of the javascript timezone (which is what
@@ -356,7 +374,7 @@ dump("now is "+now+'\n');
             item: aItem,
             notify: function(timer) {
                 this.alarmService.alarmFired(this.item);
-                delete this.alarmService.mEvents[this.item];
+                delete this.alarmService.mEvents[this.item.id];
             }
         };
 
@@ -377,9 +395,11 @@ dump("alarm is too late\n");
             this.mEvents[aItem.id] = newTimerWithCallback(callbackObj, timeout, false);
             dump("adding alarm timeout (" + timeout + ") for " + aItem + "\n");
         } else {
+            var lastAck = aItem.alarmLastAck || aItem.parentItem.alarmLastAck;
+            dump("Last ack was:"+lastAck+'\n');
             // This alarm is in the past.  See if it has been previously ack'd
-            if (aItem.alarmLastAck && aItem.alarmLastAck.compare(alarmTime) >= 0) {
-dump(aItem.title+' - alarm previously ackd\n');
+            if (lastAck && lastAck.compare(alarmTime) >= 0) {
+dump(aItem.title+' - alarm previously ackd2\n');
                 return;
             } else { // Fire!
 dump("alarm is in the past, and unack'd, firing now!\n");
@@ -403,7 +423,8 @@ dump("alarm is in the past, and unack'd, firing now!\n");
             onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
                 for (var i = 0; i < aCount; ++i) {
                     var item = aItems[i];
-                    if (item.alarmOffset) {
+                    if (item.alarmOffset || 
+                       (item.parentItem && item.parentItem.alarmOffset)) {
                         this.alarmService.addAlarm(item);
                     }
                 }
@@ -437,9 +458,13 @@ dump("alarm is in the past, and unack'd, firing now!\n");
 
         var calendarManager = this.calendarManager;
         var calendars = calendarManager.getCalendars({});
+        const calICalendar = Components.interfaces.calICalendar;
+        var filter = calICalendar.ITEM_FILTER_COMPLETED_ALL |
+                     calICalendar.ITEM_FILTER_CLASS_OCCURRENCES |
+                     calICalendar.ITEM_FILTER_TYPE_ALL;
+
         for each(var calendar in calendars) {
-            calendar.getItems(calendar.ITEM_FILTER_TYPE_ALL | calendar.ITEM_FILTER_CLASS_OCCURRENCES,
-                              0, start, until, getListener);
+            calendar.getItems(filter, 0, start, until, getListener);
         }
     },
 
