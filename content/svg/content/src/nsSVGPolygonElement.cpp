@@ -36,55 +36,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGPathGeometryElement.h"
-#include "nsSVGAtoms.h"
-#include "nsSVGPointList.h"
+#include "nsSVGPolyElement.h"
 #include "nsIDOMSVGPolygonElement.h"
-#include "nsIDOMSVGAnimatedPoints.h"
-#include "nsCOMPtr.h"
-#include "nsIDOMSVGPoint.h"
-#include "nsSVGUtils.h"
 
-typedef nsSVGPathGeometryElement nsSVGPolygonElementBase;
+typedef nsSVGPolyElement nsSVGPolygonElementBase;
 
 class nsSVGPolygonElement : public nsSVGPolygonElementBase,
-                            public nsIDOMSVGPolygonElement,
-                            public nsIDOMSVGAnimatedPoints
+                            public nsIDOMSVGPolygonElement
 {
 protected:
   friend nsresult NS_NewSVGPolygonElement(nsIContent **aResult,
                                           nsINodeInfo *aNodeInfo);
   nsSVGPolygonElement(nsINodeInfo* aNodeInfo);
-  nsresult Init();
-  
+
 public:
   // interfaces:
-  
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGPOLYGONELEMENT
-  NS_DECL_NSIDOMSVGANIMATEDPOINTS
 
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGPolygonElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGPolygonElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGPolygonElementBase::)
 
-  // nsIContent interface
-  NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
-
   // nsSVGPathGeometryElement methods:
-  virtual PRBool IsDependentAttribute(nsIAtom *aName);
-  virtual PRBool IsMarkable() { return PR_TRUE; }
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(cairo_t *aCtx);
-
-protected:
-  nsCOMPtr<nsIDOMSVGPointList> mPoints;
 };
 
-
 NS_IMPL_NS_NEW_SVG_ELEMENT(Polygon)
-
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -97,7 +78,6 @@ NS_INTERFACE_MAP_BEGIN(nsSVGPolygonElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPolygonElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedPoints)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGPolygonElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGPolygonElementBase)
 
@@ -110,148 +90,35 @@ nsSVGPolygonElement::nsSVGPolygonElement(nsINodeInfo* aNodeInfo)
 
 }
 
-
-nsresult
-nsSVGPolygonElement::Init()
-{
-  nsresult rv = nsSVGPolygonElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // Create mapped properties:
-  
-  // points #IMPLIED
-  rv = nsSVGPointList::Create(getter_AddRefs(mPoints));
-  NS_ENSURE_SUCCESS(rv,rv);
-  rv = AddMappedSVGValue(nsSVGAtoms::points, mPoints);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  return rv;
-}
-
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-
 NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGPolygonElement)
-
-
-//----------------------------------------------------------------------
-// nsIDOMSGAnimatedPoints methods:
-
-/* readonly attribute nsIDOMSVGPointList points; */
-NS_IMETHODIMP nsSVGPolygonElement::GetPoints(nsIDOMSVGPointList * *aPoints)
-{
-  *aPoints = mPoints;
-  NS_ADDREF(*aPoints);
-  return NS_OK;
-}
-
-/* readonly attribute nsIDOMSVGPointList animatedPoints; */
-NS_IMETHODIMP nsSVGPolygonElement::GetAnimatedPoints(nsIDOMSVGPointList * *aAnimatedPoints)
-{
-  *aAnimatedPoints = mPoints;
-  NS_ADDREF(*aAnimatedPoints);
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-// nsIContent methods
-
-NS_IMETHODIMP_(PRBool)
-nsSVGPolygonElement::IsAttributeMapped(const nsIAtom* name) const
-{
-  static const MappedAttributeEntry* const map[] = {
-    sMarkersMap,
-  };
-  
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
-    nsSVGPolygonElementBase::IsAttributeMapped(name);
-}
 
 //----------------------------------------------------------------------
 // nsSVGPathGeometryElement methods
 
-PRBool
-nsSVGPolygonElement::IsDependentAttribute(nsIAtom *aName)
-{
-  if (aName == nsGkAtoms::points)
-    return PR_TRUE;
-
-  return PR_FALSE;
-}
-
 void
 nsSVGPolygonElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 {
-  if (!mPoints)
-    return;
+  nsSVGPolyElement::GetMarkPoints(aMarks);
+  if (aMarks->Length() > 0) {
+    nsSVGMark *endMark = &aMarks->ElementAt(aMarks->Length()-1);
+    nsSVGMark *startMark = &aMarks->ElementAt(0);
+    float angle = atan2(startMark->y - endMark->y, startMark->x - endMark->x);
 
-  PRUint32 count;
-  mPoints->GetNumberOfItems(&count);
-  if (count == 0)
-    return;
-
-  float px = 0.0, py = 0.0, prevAngle, startAngle;
-
-  nsCOMPtr<nsIDOMSVGPoint> point;
-  for (PRUint32 i = 0; i < count; ++i) {
-    mPoints->GetItem(i, getter_AddRefs(point));
-
-    float x, y;
-    point->GetX(&x);
-    point->GetY(&y);
-
-    float angle = atan2(y-py, x-px);
-    if (i == 1)
-      startAngle = angle;
-    else if (i > 1)
-      aMarks->ElementAt(aMarks->Length() - 1).angle =
-        nsSVGUtils::AngleBisect(prevAngle, angle);
-
-    aMarks->AppendElement(nsSVGMark(x, y, 0));
-
-    prevAngle = angle;
-    px = x;
-    py = y;
+    endMark->angle = nsSVGUtils::AngleBisect(angle, endMark->angle);
+    startMark->angle = nsSVGUtils::AngleBisect(angle, startMark->angle);
   }
-
-  float nx, ny, angle;
-  mPoints->GetItem(0, getter_AddRefs(point));
-  point->GetX(&nx);
-  point->GetY(&ny);
-  angle = atan2(ny - py, nx - px);
-
-  aMarks->ElementAt(aMarks->Length() - 1).angle =
-    nsSVGUtils::AngleBisect(prevAngle, angle);
-  aMarks->ElementAt(0).angle =
-    nsSVGUtils::AngleBisect(angle, startAngle);
 }
 
 void
 nsSVGPolygonElement::ConstructPath(cairo_t *aCtx)
 {
-  if (!mPoints)
-    return;
-
-  PRUint32 count;
-  mPoints->GetNumberOfItems(&count);
-  if (count == 0)
-    return;
-
-  PRUint32 i;
-  for (i = 0; i < count; ++i) {
-    nsCOMPtr<nsIDOMSVGPoint> point;
-    mPoints->GetItem(i, getter_AddRefs(point));
-
-    float x, y;
-    point->GetX(&x);
-    point->GetY(&y);
-    if (i == 0)
-      cairo_move_to(aCtx, x, y);
-    else
-      cairo_line_to(aCtx, x, y);
-  }
+  nsSVGPolygonElementBase::ConstructPath(aCtx);
   // the difference between a polyline and a polygon is that the
   // polygon is closed:
   cairo_close_path(aCtx);
 }
+
+
