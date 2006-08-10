@@ -68,14 +68,14 @@ interface nsIDOMSVGPathSeg : nsISupports
 };
 
 
-[scriptable, uuid(2b72d033-f115-45aa-9748-8c11ea07b845)]
-interface nsIDOMSVGPathSegClosePath : nsIDOMSVGPathSeg
+[scriptable, uuid(4970505f-2cc0-4afa-92e6-0cf4bdbf5a53)]
+interface nsIDOMSVGPathSegClosePath : nsISupports
 {
 };
 
 
-[scriptable, uuid(b0106d01-9746-440b-b067-68ee043dabc3)]
-interface nsIDOMSVGPathSegMovetoAbs : nsIDOMSVGPathSeg
+[scriptable, uuid(30cf7749-bf1f-4f9c-9558-8ee24da3a22c)]
+interface nsIDOMSVGPathSegMovetoAbs : nsISupports
 { 
   attribute float   x;
               // raises nsIDOMDOMException on setting
@@ -83,8 +83,8 @@ interface nsIDOMSVGPathSegMovetoAbs : nsIDOMSVGPathSeg
               // raises nsIDOMDOMException on setting
 };
 
-[scriptable, uuid(c6ee1ddd-8b35-4e1b-b381-c063a28012d9)]
-interface nsIDOMSVGPathSegMovetoRel : nsIDOMSVGPathSeg
+[scriptable, uuid(58ca7e86-661a-473a-96de-89682e7e24d6)]
+interface nsIDOMSVGPathSegMovetoRel : nsISupports
 { 
   attribute float   x;
               // raises nsIDOMDOMException on setting
@@ -92,8 +92,8 @@ interface nsIDOMSVGPathSegMovetoRel : nsIDOMSVGPathSeg
               // raises nsIDOMDOMException on setting
 };
 
-[scriptable, uuid(bac3648d-55a3-491b-9863-a18fd7506689)]
-interface nsIDOMSVGPathSegLinetoAbs : nsIDOMSVGPathSeg
+[scriptable, uuid(5c7ba7b0-c7c5-4a7b-bc1c-2d784153be77)]
+interface nsIDOMSVGPathSegLinetoAbs : nsISupports
 { 
   attribute float   x;
               // raises nsIDOMDOMException on setting
@@ -101,8 +101,8 @@ interface nsIDOMSVGPathSegLinetoAbs : nsIDOMSVGPathSeg
               // raises nsIDOMDOMException on setting
 }; 
 
-[scriptable, uuid(3294d20e-c707-4e59-a625-bde93fc0b25f)]
-interface nsIDOMSVGPathSegLinetoRel : nsIDOMSVGPathSeg
+[scriptable, uuid(7933a81a-72c5-4489-ba64-5635f4c23063)]
+interface nsIDOMSVGPathSegLinetoRel : nsISupports
 { 
   attribute float   x;
               // raises nsIDOMDOMException on setting
@@ -110,25 +110,8 @@ interface nsIDOMSVGPathSegLinetoRel : nsIDOMSVGPathSeg
               // raises nsIDOMDOMException on setting
 };
 
-[scriptable, uuid(ad929b96-ef81-4002-b596-c6a8b3a878e9)]
-interface nsIDOMSVGPathSegCurvetoCubicAbs : nsIDOMSVGPathSeg
-{ 
-  attribute float   x;
-              // raises nsIDOMDOMException on setting
-  attribute float   y;
-              // raises nsIDOMDOMException on setting
-  attribute float   x1;
-              // raises nsIDOMDOMException on setting
-  attribute float   y1;
-              // raises nsIDOMDOMException on setting
-  attribute float   x2;
-              // raises nsIDOMDOMException on setting
-  attribute float   y2;
-              // raises nsIDOMDOMException on setting
-};
-
-[scriptable, uuid(dc7ba13f-8cb6-48d2-9e22-a4a6817abbb9)]
-interface nsIDOMSVGPathSegCurvetoCubicRel : nsIDOMSVGPathSeg
+[scriptable, uuid(380afecd-f884-4da7-a0d7-5ffc4531b70b)]
+interface nsIDOMSVGPathSegCurvetoCubicAbs : nsISupports
 { 
   attribute float   x;
               // raises nsIDOMDOMException on setting
@@ -144,8 +127,25 @@ interface nsIDOMSVGPathSegCurvetoCubicRel : nsIDOMSVGPathSeg
               // raises nsIDOMDOMException on setting
 };
 
-[scriptable, uuid(ec4e8f65-5f4a-495e-a5f2-00e18d5e5f96)]
-interface nsIDOMSVGPathSegCurvetoQuadraticAbs : nsIDOMSVGPathSeg
+[scriptable, uuid(0e661233-0c4f-4e0d-94d3-fbc460ad1f88)]
+interface nsIDOMSVGPathSegCurvetoCubicRel : nsISupports
+{ 
+  attribute float   x;
+              // raises nsIDOMDOMException on setting
+  attribute float   y;
+              // raises nsIDOMDOMException on setting
+  attribute float   x1;
+              // raises nsIDOMDOMException on setting
+  attribute float   y1;
+              // raises nsIDOMDOMException on setting
+  attribute float   x2;
+              // raises nsIDOMDOMException on setting
+  attribute float   y2;
+              // raises nsIDOMDOMException on setting
+};
+
+[scriptable, uuid(b7aef0f0-2830-4145-b04f-fe05789ccf8a)]
+interface nsIDOMSVGPathSegCurvetoQuadraticAbs : nsISupports
 { 
   attribute float   x;
               // raises nsIDOMDOMException on setting
@@ -157,8 +157,8 @@ interface nsIDOMSVGPathSegCurvetoQuadraticAbs : nsIDOMSVGPathSeg
               // raises nsIDOMDOMException on setting
 };
 
-[scriptable, uuid(7007113c-e06b-4256-8530-4884d5d769c6)]
-interface nsIDOMSVGPathSegCurvetoQuadraticRel : nsIDOMSVGPathSeg
+[scriptable, uuid(c46eb661-9c05-4d46-9b2a-c2ae5b166060)]
+interface nsIDOMSVGPathSegCurvetoQuadraticRel : nsISupports
 { 
   attribute float   x;
               // raises nsIDOMDOMException on setting
@@ -170,8 +170,8 @@ interface nsIDOMSVGPathSegCurvetoQuadraticRel : nsIDOMSVGPathSeg
   // raises nsIDOMDOMException on setting
 };
 
-[scriptable, uuid(c26e1779-604b-4bad-8a29-02d2a2113769)]
-interface nsIDOMSVGPathSegArcAbs : nsIDOMSVGPathSeg
+[scriptable, uuid(c9e222e5-31fd-4083-ae1f-fcf013681340)]
+interface nsIDOMSVGPathSegArcAbs : nsISupports
 { 
   attribute float   x;
               // raises nsIDOMDOMException on setting
@@ -189,8 +189,8 @@ interface nsIDOMSVGPathSegArcAbs : nsIDOMSVGPathSeg
               // raises nsIDOMDOMException on setting
 };
 
-[scriptable, uuid(a685997e-fb47-47c0-a34c-5da11cb66537)]
-interface nsIDOMSVGPathSegArcRel : nsIDOMSVGPathSeg
+[scriptable, uuid(49d0360d-bb66-4ab9-b9b0-f49b93398595)]
+interface nsIDOMSVGPathSegArcRel : nsISupports
 { 
   attribute float   x;
               // raises nsIDOMDOMException on setting
@@ -208,49 +208,36 @@ interface nsIDOMSVGPathSegArcRel : nsIDOMSVGPathSeg
               // raises nsIDOMDOMException on setting
 };
 
-[scriptable, uuid(e74b55ef-1c44-4a40-9f51-a2196b11283a)]
-interface nsIDOMSVGPathSegLinetoHorizontalAbs : nsIDOMSVGPathSeg
+[scriptable, uuid(4a54a4d2-edef-4e19-9600-2330311000f4)]
+interface nsIDOMSVGPathSegLinetoHorizontalAbs : nsISupports
 { 
   attribute float   x;
               // raises nsIDOMDOMException on setting
 };
 
-[scriptable, uuid(0a797fdc-8b60-4cb3-a0da-4c898832ba30)]
-interface nsIDOMSVGPathSegLinetoHorizontalRel : nsIDOMSVGPathSeg
+[scriptable, uuid(8693268c-5180-43fd-acc3-5b9c09f43386)]
+interface nsIDOMSVGPathSegLinetoHorizontalRel : nsISupports
 { 
   attribute float   x;
               // raises nsIDOMDOMException on setting
 };
 
-[scriptable, uuid(0811d434-3d90-4eec-8fa2-066dde037917)]
-interface nsIDOMSVGPathSegLinetoVerticalAbs : nsIDOMSVGPathSeg
+[scriptable, uuid(fd5ffb7b-7279-4c09-abfd-b733dc872e80)]
+interface nsIDOMSVGPathSegLinetoVerticalAbs : nsISupports
 { 
   attribute float   y;
               // raises nsIDOMDOMException on setting
 };
 
-[scriptable, uuid(93db35b1-6b33-49d5-ad25-1ed1a7611ad2)]
-interface nsIDOMSVGPathSegLinetoVerticalRel : nsIDOMSVGPathSeg
+[scriptable, uuid(d3ef2128-8de3-4aac-a6b4-13c7563119a6)]
+interface nsIDOMSVGPathSegLinetoVerticalRel : nsISupports
 { 
   attribute float   y;
               // raises nsIDOMDOMException on setting
 };
 
-[scriptable, uuid(eb422132-514e-4a1c-81ec-b84a5df5fb96)]
-interface nsIDOMSVGPathSegCurvetoCubicSmoothAbs : nsIDOMSVGPathSeg
-{ 
-  attribute float   x;
-              // raises nsIDOMDOMException on setting
-  attribute float   y;
-              // raises nsIDOMDOMException on setting
-  attribute float   x2;
-              // raises nsIDOMDOMException on setting
-  attribute float   y2;
-              // raises nsIDOMDOMException on setting
-};
-
-[scriptable, uuid(5860bccd-f86b-47f8-86c1-cb1245b6a8e1)]
-interface nsIDOMSVGPathSegCurvetoCubicSmoothRel : nsIDOMSVGPathSeg
+[scriptable, uuid(5fa8fea8-bdd1-4315-ac44-a39b3ff347b5)]
+interface nsIDOMSVGPathSegCurvetoCubicSmoothAbs : nsISupports
 { 
   attribute float   x;
               // raises nsIDOMDOMException on setting
@@ -262,8 +249,21 @@ interface nsIDOMSVGPathSegCurvetoCubicSmoothRel : nsIDOMSVGPathSeg
               // raises nsIDOMDOMException on setting
 };
 
-[scriptable, uuid(3ce86063-0a35-48ec-b372-f198b7d04755)]
-interface nsIDOMSVGPathSegCurvetoQuadraticSmoothAbs : nsIDOMSVGPathSeg
+[scriptable, uuid(dd5b4b00-edaa-493a-b477-bbc2576b4a98)]
+interface nsIDOMSVGPathSegCurvetoCubicSmoothRel : nsISupports
+{ 
+  attribute float   x;
+              // raises nsIDOMDOMException on setting
+  attribute float   y;
+              // raises nsIDOMDOMException on setting
+  attribute float   x2;
+              // raises nsIDOMDOMException on setting
+  attribute float   y2;
+              // raises nsIDOMDOMException on setting
+};
+
+[scriptable, uuid(ff5bbb58-b49a-450f-b91b-e50585c34b3d)]
+interface nsIDOMSVGPathSegCurvetoQuadraticSmoothAbs : nsISupports
 { 
   attribute float   x;
               // raises nsIDOMDOMException on setting
@@ -271,8 +271,8 @@ interface nsIDOMSVGPathSegCurvetoQuadraticSmoothAbs : nsIDOMSVGPathSeg
               // raises nsIDOMDOMException on setting
 };
 
-[scriptable, uuid(5c0e4d25-a9f1-4aab-936c-2b61ed6c085f)]
-interface nsIDOMSVGPathSegCurvetoQuadraticSmoothRel : nsIDOMSVGPathSeg
+[scriptable, uuid(ac0b2007-04e4-4e70-a0e0-294f374b29c4)]
+interface nsIDOMSVGPathSegCurvetoQuadraticSmoothRel : nsISupports
 { 
   attribute float   x;
               // raises nsIDOMDOMException on setting

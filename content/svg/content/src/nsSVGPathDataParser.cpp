@@ -1321,8 +1321,8 @@ nsSVGPathDataParserToInternal::PathFini()
 nsresult
 nsSVGPathDataParserToDOM::AppendSegment(nsIDOMSVGPathSeg* seg)
 {
-  NS_ADDREF(seg);
-  mData->AppendElement((void*)seg);
+  NS_ENSURE_TRUE(seg, NS_ERROR_OUT_OF_MEMORY);
+  mData->AppendObject(seg);
   return NS_OK;
 }
 
@@ -1330,87 +1330,39 @@ nsSVGPathDataParserToDOM::AppendSegment(nsIDOMSVGPathSeg* seg)
 nsresult
 nsSVGPathDataParserToDOM::StoreMoveTo(PRBool absCoords, float x, float y)
 {
-  nsresult rv;
-  nsCOMPtr<nsIDOMSVGPathSeg> seg;
-  if (absCoords) {
-    nsCOMPtr<nsIDOMSVGPathSegMovetoAbs> segAbs;
-    rv = NS_NewSVGPathSegMovetoAbs(getter_AddRefs(segAbs), x, y);
-    seg = segAbs;
-  }
-  else {
-    nsCOMPtr<nsIDOMSVGPathSegMovetoRel> segRel;
-    rv = NS_NewSVGPathSegMovetoRel(getter_AddRefs(segRel), x, y);
-    seg = segRel;
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-  return AppendSegment(seg);
+  return AppendSegment(
+    absCoords ? NS_NewSVGPathSegMovetoAbs(x, y)
+              : NS_NewSVGPathSegMovetoRel(x, y));
 }
 
 nsresult
 nsSVGPathDataParserToDOM::StoreClosePath()
 {
-  nsresult rv;
-  nsCOMPtr<nsIDOMSVGPathSegClosePath> seg;
-  rv = NS_NewSVGPathSegClosePath(getter_AddRefs(seg));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return AppendSegment(seg);
+  return AppendSegment(NS_NewSVGPathSegClosePath());
 }
 
 nsresult
 nsSVGPathDataParserToDOM::StoreLineTo(PRBool absCoords, float x, float y)
 {
-  nsresult rv;
-  nsCOMPtr<nsIDOMSVGPathSeg> seg;
-  if (absCoords) {
-    nsCOMPtr<nsIDOMSVGPathSegLinetoAbs> segAbs;
-    rv = NS_NewSVGPathSegLinetoAbs(getter_AddRefs(segAbs), x, y);
-    seg = segAbs;
-  }
-  else {
-    nsCOMPtr<nsIDOMSVGPathSegLinetoRel> segRel;
-    rv = NS_NewSVGPathSegLinetoRel(getter_AddRefs(segRel), x, y);
-    seg = segRel;
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-  return AppendSegment(seg);
+  return AppendSegment(
+    absCoords ? NS_NewSVGPathSegLinetoAbs(x, y)
+              : NS_NewSVGPathSegLinetoRel(x, y));
 }
 
 nsresult
 nsSVGPathDataParserToDOM::StoreHLineTo(PRBool absCoords, float x)
 {
-  nsresult rv;
-  nsCOMPtr<nsIDOMSVGPathSeg> seg;
-  if (absCoords) {
-    nsCOMPtr<nsIDOMSVGPathSegLinetoHorizontalAbs> segAbs;
-    rv = NS_NewSVGPathSegLinetoHorizontalAbs(getter_AddRefs(segAbs), x);
-    seg = segAbs;
-  }
-  else {
-    nsCOMPtr<nsIDOMSVGPathSegLinetoHorizontalRel> segRel;
-    rv = NS_NewSVGPathSegLinetoHorizontalRel(getter_AddRefs(segRel), x);
-    seg = segRel;
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-  return AppendSegment(seg);
+  return AppendSegment(
+    absCoords ? NS_NewSVGPathSegLinetoHorizontalAbs(x)
+              : NS_NewSVGPathSegLinetoHorizontalRel(x));
 }
 
 nsresult
 nsSVGPathDataParserToDOM::StoreVLineTo(PRBool absCoords, float y)
 {
-  nsresult rv;
-  nsCOMPtr<nsIDOMSVGPathSeg> seg;
-  if (absCoords) {
-    nsCOMPtr<nsIDOMSVGPathSegLinetoVerticalAbs> segAbs;
-    rv = NS_NewSVGPathSegLinetoVerticalAbs(getter_AddRefs(segAbs), y);
-    seg = segAbs;
-  }
-  else {
-    nsCOMPtr<nsIDOMSVGPathSegLinetoVerticalRel> segRel;
-    rv = NS_NewSVGPathSegLinetoVerticalRel(getter_AddRefs(segRel), y);
-    seg = segRel;
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-  return AppendSegment(seg);
+  return AppendSegment(
+    absCoords ? NS_NewSVGPathSegLinetoVerticalAbs(y)
+              : NS_NewSVGPathSegLinetoVerticalRel(y));
 }
 
 nsresult
@@ -1419,20 +1371,9 @@ nsSVGPathDataParserToDOM::StoreCurveTo(PRBool absCoords,
                                        float x1, float y1,
                                        float x2, float y2)
 {
-  nsresult rv;
-  nsCOMPtr<nsIDOMSVGPathSeg> seg;
-  if (absCoords) {
-    nsCOMPtr<nsIDOMSVGPathSegCurvetoCubicAbs> segAbs;
-    rv = NS_NewSVGPathSegCurvetoCubicAbs(getter_AddRefs(segAbs), x, y, x1, y1, x2, y2);
-    seg = segAbs;
-  }
-  else {
-    nsCOMPtr<nsIDOMSVGPathSegCurvetoCubicRel> segRel;
-    rv = NS_NewSVGPathSegCurvetoCubicRel(getter_AddRefs(segRel), x, y, x1, y1, x2, y2);
-    seg = segRel;
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-  return AppendSegment(seg);
+  return AppendSegment(
+    absCoords ? NS_NewSVGPathSegCurvetoCubicAbs(x, y, x1, y1, x2, y2)
+              : NS_NewSVGPathSegCurvetoCubicRel(x, y, x1, y1, x2, y2));
 }
 
 nsresult
@@ -1440,20 +1381,9 @@ nsSVGPathDataParserToDOM::StoreSmoothCurveTo(PRBool absCoords,
                                              float x, float y,
                                              float x2, float y2)
 {
-  nsresult rv;
-  nsCOMPtr<nsIDOMSVGPathSeg> seg;
-  if (absCoords) {
-    nsCOMPtr<nsIDOMSVGPathSegCurvetoCubicSmoothAbs> segAbs;
-    rv = NS_NewSVGPathSegCurvetoCubicSmoothAbs(getter_AddRefs(segAbs), x, y, x2, y2);
-    seg = segAbs;
-  }
-  else {
-    nsCOMPtr<nsIDOMSVGPathSegCurvetoCubicSmoothRel> segRel;
-    rv = NS_NewSVGPathSegCurvetoCubicSmoothRel(getter_AddRefs(segRel), x, y, x2, y2);
-    seg = segRel;
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-  return AppendSegment(seg);
+  return AppendSegment(
+    absCoords ? NS_NewSVGPathSegCurvetoCubicSmoothAbs(x, y, x2, y2)
+              : NS_NewSVGPathSegCurvetoCubicSmoothRel(x, y, x2, y2));
 }
 
 nsresult
@@ -1461,40 +1391,18 @@ nsSVGPathDataParserToDOM::StoreQuadCurveTo(PRBool absCoords,
                                            float x, float y,
                                            float x1, float y1)
 {
-  nsresult rv;
-  nsCOMPtr<nsIDOMSVGPathSeg> seg;
-  if (absCoords) {
-    nsCOMPtr<nsIDOMSVGPathSegCurvetoQuadraticAbs> segAbs;
-    rv = NS_NewSVGPathSegCurvetoQuadraticAbs(getter_AddRefs(segAbs), x, y, x1, y1);
-    seg = segAbs;
-  }
-  else {
-    nsCOMPtr<nsIDOMSVGPathSegCurvetoQuadraticRel> segRel;
-    rv = NS_NewSVGPathSegCurvetoQuadraticRel(getter_AddRefs(segRel), x, y, x1, y1);
-    seg = segRel;
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-  return AppendSegment(seg);
+  return AppendSegment(
+    absCoords ? NS_NewSVGPathSegCurvetoQuadraticAbs(x, y, x1, y1)
+              : NS_NewSVGPathSegCurvetoQuadraticRel(x, y, x1, y1));
 }
 
 nsresult
 nsSVGPathDataParserToDOM::StoreSmoothQuadCurveTo(PRBool absCoords,
                                                  float x, float y)
 {
-  nsresult rv;
-  nsCOMPtr<nsIDOMSVGPathSeg> seg;
-  if (absCoords) {
-    nsCOMPtr<nsIDOMSVGPathSegCurvetoQuadraticSmoothAbs> segAbs;
-    rv = NS_NewSVGPathSegCurvetoQuadraticSmoothAbs(getter_AddRefs(segAbs), x, y);
-    seg = segAbs;
-  }
-  else {
-    nsCOMPtr<nsIDOMSVGPathSegCurvetoQuadraticSmoothRel> segRel;
-    rv = NS_NewSVGPathSegCurvetoQuadraticSmoothRel(getter_AddRefs(segRel), x, y);
-    seg = segRel;
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-  return AppendSegment(seg);
+  return AppendSegment(
+    absCoords ? NS_NewSVGPathSegCurvetoQuadraticSmoothAbs(x, y)
+              : NS_NewSVGPathSegCurvetoQuadraticSmoothRel(x, y));
 }
 
 nsresult
@@ -1505,21 +1413,10 @@ nsSVGPathDataParserToDOM::StoreEllipticalArc(PRBool absCoords,
                                              PRBool largeArcFlag,
                                              PRBool sweepFlag)
 {
-  nsresult rv;
-  nsCOMPtr<nsIDOMSVGPathSeg> seg;
-  if (absCoords) {
-    nsCOMPtr<nsIDOMSVGPathSegArcAbs> segAbs;
-    rv = NS_NewSVGPathSegArcAbs(getter_AddRefs(segAbs), x, y, r1, r2, angle,
-                                largeArcFlag, sweepFlag);
-    seg = segAbs;
-  }
-  else {
-    nsCOMPtr<nsIDOMSVGPathSegArcRel> segRel;
-    rv = NS_NewSVGPathSegArcRel(getter_AddRefs(segRel), x, y, r1, r2, angle,
-                                largeArcFlag, sweepFlag);
-    seg = segRel;
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-  return AppendSegment(seg);
+  return AppendSegment(
+    absCoords ? NS_NewSVGPathSegArcAbs(x, y, r1, r2, angle, 
+                                       largeArcFlag, sweepFlag)
+              : NS_NewSVGPathSegArcRel(x, y, r1, r2, angle,
+                                       largeArcFlag, sweepFlag));
 }
 
