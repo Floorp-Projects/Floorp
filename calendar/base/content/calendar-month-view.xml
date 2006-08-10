@@ -1374,6 +1374,11 @@
             if (this.mBatchCount) {
                 return;
             }
+
+            if (aItem instanceof Components.interfaces.calITodo &&
+                !this.calView.mTasksInView)
+                return;
+
             var occs = aItem.getOccurrencesBetween(this.calView.startDate,
                                                    this.calView.queryEndDate,
                                                    {});
@@ -1384,6 +1389,12 @@
             if (this.mBatchCount) {
                 return;
             }
+
+            if (aNewItem instanceof Components.interfaces.calITodo &&
+                aOldItem instanceof Components.interfaces.calITodo &&
+                !this.calView.mTasksInView)
+                return;
+
             var occs;
             occs = aOldItem.getOccurrencesBetween(this.calView.startDate,
                                                   this.calView.queryEndDate,
@@ -1401,6 +1412,11 @@
             if (this.mBatchCount) {
                 return;
             }
+
+            if (aItem instanceof Components.interfaces.calITodo &&
+                !this.calView.mTasksInView)
+                return;
+
             var occs = aItem.getOccurrencesBetween(this.calView.startDate,
                                                    this.calView.queryEndDate,
                                                    {});
