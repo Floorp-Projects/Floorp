@@ -43,6 +43,7 @@ include $(DEPTH)/config/autoconf.mk
 DIRS		= public src
 include $(topsrcdir)/config/rules.mk
 
+ABS_SRCDIR := $(shell cd $(srcdir) && pwd)
 ifeq ($(OS_ARCH),WINNT)
 
 ABS_DEPTH := $(shell cd $(DEPTH) && pwd)
@@ -53,6 +54,6 @@ check::
 else
 
 check::
-	$(CYGWIN_WRAPPER) $(RUN_TEST_PROGRAM) $(DIST)/bin/xpcshell$(BIN_SUFFIX) $(srcdir)/test/shell.js $(srcdir)/test
+	$(RUN_TEST_PROGRAM) $(DIST)/bin/xpcshell$(BIN_SUFFIX) $(srcdir)/test/shell.js $(ABS_SRCDIR)/test
 
 endif # WINNT
