@@ -434,11 +434,11 @@
             searchService.addEngine(aTarget.getAttribute("uri"), type,
                                     aTarget.getAttribute("src"), false);
           }
-          else if (aTarget.engine) {
+          else if (aTarget.engine)
             this.currentEngine = aTarget.engine;
-            this.focus();
-            this.select();
-          }
+
+          this.focus();
+          this.select();
         ]]></body>
       </method>
 

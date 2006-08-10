@@ -167,8 +167,10 @@ interface nsIBrowserSearchService : nsISupports
 {
   /**
    * Adds a new search engine from the file at the supplied URI, optionally
-   * asking the user for confirmation first.  The confirmation dialog also
-   * offers the option to begin using the newly added engine right away.
+   * asking the user for confirmation first.  If a confirmation dialog is
+   * shown, it will offer the option to begin using the newly added engine
+   * right away; if no confirmation dialog is shown, the new engine will be
+   * used right away automatically.
    *
    * @param engineURL
    *        The URL to the search engine's description file.
@@ -195,7 +197,8 @@ interface nsIBrowserSearchService : nsISupports
                  in boolean confirm);
 
   /**
-   * Adds a new search engine, without asking the user for confirmation.
+   * Adds a new search engine, without asking the user for confirmation and
+   * without starting to use it right away.
    *
    * @param name
    *        The search engine's name. Must be unique. Must not be null.
