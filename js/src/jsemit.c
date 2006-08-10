@@ -4385,6 +4385,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     return JS_FALSE;
 
                 if (catchJump != -1) {
+                    JS_ASSERT(cg->stackDepth == depth);
+
                     /* Fix up and clean up previous catch block. */
                     CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, catchJump);
 
@@ -4474,6 +4476,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                                           &stmtInfo.gosub);
                     if (jmp < 0)
                         return JS_FALSE;
+                    JS_ASSERT(cg->stackDepth == depth + 1);
+                    cg->stackDepth = depth;
                 }
 
                 /* This will get fixed up to jump to after catch/finally. */
