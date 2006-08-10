@@ -1,12 +1,15 @@
 #
-## hostname: triton.mozilla.org
-## uname: Darwin triton.mozilla.org 7.9.0 Darwin Kernel Version 7.9.0: Wed Mar 30 20:11:17 PST 2005; root:xnu/xnu-517.12.7.obj~1/RELEASE_PPC  Power Macintosh powerpc
+## hostname: xserve03.build.mozilla.org
+## uname: Darwin xserve03.build.mozilla.org 8.1.0 Darwin Kernel Version 8.1.0: Tue May 10 18:16:08 PDT 2005; root:xnu-792.1.5.obj~4/RELEASE_PPC Power Macintosh powerpc
 #
+
+. $topsrcdir/build/macosx/universal/mozconfig
 
 # Make flags
 mk_add_options MOZ_CO_PROJECT=mail
 mk_add_options MOZ_MAKE_FLAGS="-j4"
 mk_add_options MOZ_CO_MODULE="mozilla/tools/update-packaging"
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../build/universal
 
 # Configure flags
 ac_add_options --enable-application=mail
@@ -17,7 +20,6 @@ ac_add_options --disable-tests
 ac_add_options --enable-official-branding
 ac_add_options --enable-static
 ac_add_options --disable-shared
-ac_add_options --enable-prebinding
+ac_add_app_options ppc --enable-prebinding
 
-ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.2.8.sdk
 ac_add_options --enable-update-packaging
