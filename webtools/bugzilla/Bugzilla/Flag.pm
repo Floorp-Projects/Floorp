@@ -838,12 +838,14 @@ sub notify {
     # to make sure we don't send email about it to unauthorized users
     # on the request type's CC: list, so we have to trawl the list for users
     # not in those groups or email addresses that don't have an account.
-    if ($bug->groups || $attachment_is_private) {
+    my @bug_in_groups = grep {$_->{'ison'} || $_->{'mandatory'}} @{$bug->groups};
+
+    if (scalar(@bug_in_groups) || $attachment_is_private) {
         my @new_cc_list;
         foreach my $cc (split(/[, ]+/, $flag->type->cc_list)) {
             my $ccuser = Bugzilla::User->new_from_login($cc) || next;
 
-            next if ($bug->groups && !$ccuser->can_see_bug($bug->bug_id));
+            next if (scalar(@bug_in_groups) && !$ccuser->can_see_bug($bug->bug_id));
             next if $attachment_is_private
               && Bugzilla->params->{"insidergroup"}
               && !$ccuser->in_group(Bugzilla->params->{"insidergroup"});
