@@ -228,52 +228,58 @@
       335102.  -->
 
       <!-- If the engine that was just removed from the searchbox list was
-      autodetected on this page, move it to the browser's active list so it will
-      be offered to be added again. -->
+      autodetected on this page, move it to each browser's active list so it
+      will be offered to be added again. -->
       <method name="offerNewEngine">
         <parameter name="aEngine"/>
         <body><![CDATA[
-          var browser = getBrowser().mCurrentBrowser;
-          if (browser.hiddenEngines) {
-            // XXX This will need to be changed when engines are identified by
-            // URL rather than title; see bug 335102.
-            var removeTitle = aEngine.wrappedJSObject.name;
-            for (var i = 0; i < browser.hiddenEngines.length; i++) {
-              if (browser.hiddenEngines[i].title == removeTitle) {
-                if (!browser.engines)
-                  browser.engines = [];
-                browser.engines.push(browser.hiddenEngines[i]);
-                browser.hiddenEngines.splice(i, 1);
-                BrowserSearch.updateSearchButton();
-                break;
+          var allbrowsers = getBrowser().mPanelContainer.childNodes;
+          for (var tab = 0; tab < allbrowsers.length; tab++) {
+            var browser = getBrowser().getBrowserAtIndex(tab);
+            if (browser.hiddenEngines) {
+              // XXX This will need to be changed when engines are identified by
+              // URL rather than title; see bug 335102.
+              var removeTitle = aEngine.wrappedJSObject.name;
+              for (var i = 0; i < browser.hiddenEngines.length; i++) {
+                if (browser.hiddenEngines[i].title == removeTitle) {
+                  if (!browser.engines)
+                    browser.engines = [];
+                  browser.engines.push(browser.hiddenEngines[i]);
+                  browser.hiddenEngines.splice(i, 1);
+                  break;
+                }
               }
             }
           }
+          BrowserSearch.updateSearchButton();
         ]]></body>
       </method>
 
       <!-- If the engine that was just added to the searchbox list was
-      autodetected on this page, move it to the browser's hidden list so it is
+      autodetected on this page, move it to each browser's hidden list so it is
       no longer offered to be added. -->
       <method name="hideNewEngine">
         <parameter name="aEngine"/>
         <body><![CDATA[
-          var browser = getBrowser().mCurrentBrowser;
-          if (browser.engines) {
-            // XXX This will need to be changed when engines are identified by
-            // URL rather than title; see bug 335102.
-            var removeTitle = aEngine.wrappedJSObject.name;
-            for (var i = 0; i < browser.engines.length; i++) {
-              if (browser.engines[i].title == removeTitle) {
-                if (!browser.hiddenEngines)
-                  browser.hiddenEngines = [];
-                browser.hiddenEngines.push(browser.engines[i]);
-                browser.engines.splice(i, 1);
-                BrowserSearch.updateSearchButton();
-                break;
+          var allbrowsers = getBrowser().mPanelContainer.childNodes;
+          for (var tab = 0; tab < allbrowsers.length; tab++) {
+            var browser = getBrowser().getBrowserAtIndex(tab);
+            if (browser.engines) {
+              // XXX This will need to be changed when engines are identified by
+              // URL rather than title; see bug 335102.
+              var removeTitle = aEngine.wrappedJSObject.name;
+              for (var i = 0; i < browser.engines.length; i++) {
+                if (browser.engines[i].title == removeTitle) {
+                  if (!browser.hiddenEngines)
+                    browser.hiddenEngines = [];
+                  browser.hiddenEngines.push(browser.engines[i]);
+                  browser.engines.splice(i, 1);
+                  break;
+                }
               }
             }
           }
+          BrowserSearch.updateSearchButton();
         ]]></body>
       </method>
 
