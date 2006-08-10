@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Sean Su <ssu@netscape.com>
  *   Ian Neal <bugzilla@arlen.demon.co.uk>
+ *   Karsten Düsterloh <mnyromyr@tprac.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,27 +37,105 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* Function to restore pref values to application defaults */
-function restoreColorAndDescriptionToDefaults()
+var gTagListBox = null;
+
+function Startup()
 {
-  var pickerColor;
-  var labelDescription;
+  gTagListBox = document.getElementById('tagList');    
+  BuildTagList();
+}
+
+function GetCSSValue(aElement, aProperty)
+{
+  return getComputedStyle(aElement, null).getPropertyCSSValue(aProperty).cssText;
+}
+
+// appends the tag to the tag list box
+function AppendTagItem(aTagName, aKey, aColor)
+{
+  var item = gTagListBox.appendItem(aTagName, aKey);
+  item.style.color = aColor;
+  var listBackColor = GetCSSValue(gTagListBox, "background-color");
+  var itemForeColor = GetCSSValue(item, "color");
+  if (listBackColor == itemForeColor)
+    item.style.color = GetCSSValue(gTagListBox, "color");
+  return item;
+}
+ 
+function BuildTagList()
+{
+  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
+                             .getService(Components.interfaces.nsIMsgTagService);
+  var allTags = tagService.tagEnumerator;
+  var allKeys = tagService.keyEnumerator;
+  while (allTags.hasMore())
+  {
+    var key = allKeys.getNext();
+    AppendTagItem(allTags.getNext(), key, tagService.getColorForKey(key));
+  }
+}
+
+function DeleteTag()
+{
+  var tagItemToRemove = gTagListBox.getSelectedItem();
+  var index = gTagListBox.selectedIndex;
+  if (index >= 0)
+  {
+    var itemToRemove = gTagListBox.getItemAtIndex(index);
+    var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
+                               .getService(Components.interfaces.nsIMsgTagService);
+    tagService.deleteKey(itemToRemove.value);
+    gTagListBox.removeItemAt(index);
+    var numItemsInListBox = gTagListBox.getRowCount();
+    gTagListBox.selectedIndex = index < numItemsInListBox ? index : numItemsInListBox - 1;
+  }
+}
+
+function AddTag()
+{  
+  var args = {result: "", okCallback: AddTagCallback};
+  var dialog = window.openDialog("chrome://messenger/content/newTagDialog.xul",
+                                 "",
+                                 "chrome,titlebar,modal",
+                                 args);
+}
+ 
+function AddTagCallback(aName, aColor)
+{
+  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
+                             .getService(Components.interfaces.nsIMsgTagService);
+  tagService.addTag(aName, aColor);
+ 
+  var item = AppendTagItem(aName, tagService.getKeyForTag(aName), aColor);
+  var tagListBox = document.getElementById('tagList');
+  tagListBox.ensureElementIsVisible(item);
+  tagListBox.selectItem(item);
+  tagListBox.focus();
+}
+
+function RestoreDefaults()
+{
+  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
+                             .getService(Components.interfaces.nsIMsgTagService);
+  // remove all existing labels
+  var allKeys = tagService.keyEnumerator;
+  while (allKeys.hasMore())
+  {
+    tagService.deleteKey(allKeys.getNext());
+    gTagListBox.removeItemAt(0);
+  }
+  // add default items
   var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefService);
   var prefDescription = prefService.getDefaultBranch("mailnews.labels.description.");
-  var prefColor = prefService.getDefaultBranch("mailnews.labels.color.");
-
-  /* there are only 5 labels */
-  for (var i = 1; i <= 5; i++)
+  var prefColor       = prefService.getDefaultBranch("mailnews.labels.color.");
+  for (var i = 1; i <= 5; ++i)
   {
-    /* set the default description from prefs */
-    labelDescription = document.getElementById("label" + i + "TextBox");
-    if (!labelDescription.disabled)
-      labelDescription.value = prefDescription.getComplexValue(i, Components.interfaces.nsIPrefLocalizedString).data;
-
-    /* set the default color from prefs */
-    pickerColor = document.getElementById("label" + i + "Color");
-    if (!pickerColor.disabled)
-      pickerColor.color = prefColor.getCharPref(i);
+    // mimic nsMsgTagService::MigrateLabelsToTags() and create default tags from
+    // the former label defaults
+    var tag   = prefDescription.getComplexValue(i, Components.interfaces.nsIPrefLocalizedString).data;
+    var color = prefColor.getCharPref(i);
+    tagService.addTagForKey("$label" + i, tag, color);
   }
+  BuildTagList();
 }

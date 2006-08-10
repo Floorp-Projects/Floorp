@@ -20,6 +20,7 @@
    -
    - Contributor(s):
    -   Sean Su <ssu@netscape.com>
+   -   Karsten Düsterloh <mnyromyr@tprac.de>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,9 +36,12 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY pref.labels.title          "Labels">
-<!ENTITY labelsSettings.caption     "Customize Labels">
-<!ENTITY displayText.label          "Labels can be used to categorize and prioritize your messages.  Modify the appearance of Labels using the settings below.">
+<!ENTITY pref.tags.title            "Tags">
+<!ENTITY pref.tags.caption          "Customize Tags">
+<!ENTITY pref.tags.description      "Tags can be used to categorize and prioritize your messages.">
+<!ENTITY addTagButton.label         "Add">
+<!ENTITY addTagButton.accesskey     "A">
+<!ENTITY deleteTagButton.label      "Delete">
+<!ENTITY deleteTagButton.accesskey  "D">
 <!ENTITY restoreDefaults.label      "Restore Defaults">
 <!ENTITY restoreDefaults.accesskey  "R">
-

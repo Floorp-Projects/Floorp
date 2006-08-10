@@ -23,6 +23,7 @@
    - Contributor(s):
    -   Sean Su <ssu@netscape.com>
    -   Ian Neal <bugzilla@arlen.demon.co.uk>
+   -   Karsten Düsterloh <mnyromyr@tprac.de>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,108 +49,40 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://messenger/content/pref-labels.xul');"
-      headertitle="&pref.labels.title;">
-
-  <popupset id="aTooltipSet"/>
+      headertitle="&pref.tags.title;">
+  <script type="application/x-javascript" src="chrome://messenger/content/pref-labels.js"/>
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["label1TextBox", "label1Color", "label2TextBox", "label2Color", "label3TextBox", "label3Color", "label4TextBox", "label4Color", "label5TextBox", "label5Color"];
+    var _elementIDs = ["addTag", "deleteTag", "restoreDefaults"];
   ]]>
   </script>
+  
 
-  <script type="application/x-javascript" src="chrome://messenger/content/pref-labels.js"/>
-
-  <groupbox>
-    <caption label="&labelsSettings.caption;"/>
-
-  <description>&displayText.label;</description>
-
-  <!-- label color: 1 (default red) -->
-  <hbox class="indent" align="center">
-    <textbox
-        id="label1TextBox"
-        pref="true"
-        preftype="localizedstring"
-        prefstring="mailnews.labels.description.1"
-        prefattribute="value"/>
-    <colorpicker
-        class="small-margin"
-        type="button"
-        palettename="standard"
-        id="label1Color"
-        prefstring="mailnews.labels.color.1"/>
-  </hbox>    
-
-  <!-- label color: 2 (default orange) -->
-  <hbox class="indent" align="center">
-    <textbox
-        id="label2TextBox"
-        pref="true"
-        preftype="localizedstring"
-        prefstring="mailnews.labels.description.2"
-        prefattribute="value"/>
-    <colorpicker
-        class="small-margin"
-        type="button"
-        palettename="standard"
-        id="label2Color"
-        prefstring="mailnews.labels.color.2"/>
-  </hbox>    
-
-  <!-- label color: 3 (default green) -->
-  <hbox class="indent" align="center">
-    <textbox
-        id="label3TextBox"
-        pref="true"
-        preftype="localizedstring"
-        prefstring="mailnews.labels.description.3"
-        prefattribute="value"/>
-    <colorpicker
-        class="small-margin"
-        type="button"
-        palettename="standard"
-        id="label3Color"
-        prefstring="mailnews.labels.color.3"/>
-  </hbox>    
-
-  <!-- label color: 4 (default blue) -->
-  <hbox class="indent" align="center">
-    <textbox
-        id="label4TextBox"
-        pref="true"
-        preftype="localizedstring"
-        prefstring="mailnews.labels.description.4"
-        prefattribute="value"/>
-    <colorpicker
-        class="small-margin"
-        type="button"
-        palettename="standard"
-        id="label4Color"
-        prefstring="mailnews.labels.color.4"/>
-  </hbox>    
-
-  <!-- label color: 5 (default purple) -->
-  <hbox class="indent" align="center">
-    <textbox
-        id="label5TextBox"
-        pref="true"
-        preftype="localizedstring"
-        prefstring="mailnews.labels.description.5"
-        prefattribute="value"/>
-    <colorpicker
-        class="small-margin"
-        type="button"
-        palettename="standard"
-        id="label5Color"
-        prefstring="mailnews.labels.color.5"/>
-  </hbox>    
-
-  <hbox pack="end">
-    <button label="&restoreDefaults.label;" accesskey="&restoreDefaults.accesskey;"
-            oncommand="restoreColorAndDescriptionToDefaults();">
-    </button>
-   </hbox>
+  <groupbox flex="1">
+    <caption label="&pref.tags.caption;"/>
+    <description>&pref.tags.description;</description>
+    <hbox flex="1">
+      <listbox id="tagList" flex="1"/>
+      <vbox>
+        <button id="addTag"
+                label="&addTagButton.label;"
+                accesskey="&addTagButton.accesskey;"
+                prefstring="pref.tags.disable_button.add"
+                oncommand="AddTag();"/>
+        <button id="deleteTag"
+                label="&deleteTagButton.label;" 
+                accesskey="&deleteTagButton.accesskey;"
+                prefstring="pref.tags.disable_button.delete"
+                oncommand="DeleteTag();"/>
+        <spacer flex="1"/>
+        <button id="restoreDefaults"
+                label="&restoreDefaults.label;"
+                accesskey="&restoreDefaults.accesskey;"
+                prefstring="pref.tags.disable_button.restore"
+                oncommand="RestoreDefaults();"/>
+      </vbox>
+    </hbox>
   </groupbox>
 
 </page>

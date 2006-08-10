@@ -93,7 +93,7 @@
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell url="chrome://messenger/content/pref-labels.xul" label="&labels.label;"/>
+            <treecell url="chrome://messenger/content/pref-labels.xul" label="&tags.label;"/>
           </treerow>
         </treeitem>
         <treeitem>
