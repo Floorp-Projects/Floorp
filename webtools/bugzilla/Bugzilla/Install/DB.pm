@@ -468,6 +468,9 @@ sub update_table_definitions {
     $dbh->bz_alter_column('flagtypes', 'id',
           {TYPE => 'SMALLSERIAL', NOTNULL => 1, PRIMARYKEY => 1});
 
+    $dbh->bz_alter_column('keyworddefs', 'id',
+        {TYPE => 'SMALLSERIAL', NOTNULL => 1, PRIMARYKEY => 1});
+
     ################################################################
     # New --TABLE-- changes should go *** A B O V E *** this point #
     ################################################################

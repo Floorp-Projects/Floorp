@@ -294,6 +294,12 @@
     Invalid parameter passed to [% function FILTER html %].
     It must be numeric.
 
+  [% ELSIF error == "param_required" %]
+    [% title = "Missing Parameter" %]
+    The function <code>[% function FILTER html %]</code> requires
+    a <code>[% param FILTER html %]</code> argument, and that
+    argument was not set.
+
   [% ELSIF error == "unknown_comparison_type" %]
     Specified comparison type is not supported.
 

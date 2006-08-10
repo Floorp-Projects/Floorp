@@ -346,7 +346,7 @@ use constant ABSTRACT_SCHEMA => {
 
     keyworddefs => {
         FIELDS => [
-            id          => {TYPE => 'INT2', NOTNULL => 1,
+            id          => {TYPE => 'SMALLSERIAL', NOTNULL => 1,
                             PRIMARYKEY => 1},
             name        => {TYPE => 'varchar(64)', NOTNULL => 1},
             description => {TYPE => 'MEDIUMTEXT'},

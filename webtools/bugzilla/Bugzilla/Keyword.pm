@@ -20,6 +20,9 @@ package Bugzilla::Keyword;
 
 use base qw(Bugzilla::Object);
 
+use Bugzilla::Error;
+use Bugzilla::Util;
+
 ###############################
 ####    Initialization     ####
 ###############################
@@ -31,6 +34,13 @@ use constant DB_COLUMNS => qw(
 );
 
 use constant DB_TABLE => 'keyworddefs';
+
+use constant REQUIRED_CREATE_FIELDS => qw(name description);
+
+use constant VALIDATORS => {
+    name        => \&_check_name,
+    description => \&_check_description,
+};
 
 ###############################
 ####      Accessors      ######
@@ -79,6 +89,30 @@ sub get_all_with_bug_count {
         bless($keyword, $class);
     }
     return $keywords;
+}
+
+###############################
+###       Validators        ###
+###############################
+
+sub _check_name {
+    my ($name) = @_;
+    $name = trim($name);
+    $name eq "" && ThrowUserError("keyword_blank_name");
+    if ($name =~ /[\s,]/) {
+        ThrowUserError("keyword_invalid_name");
+    }
+    my $keyword = new Bugzilla::Keyword({ name => $name });
+    ThrowUserError("keyword_already_exists", { name => $name }) if $keyword;
+
+    return $name;
+}
+
+sub _check_description {
+    my ($desc) = @_;
+    $desc = trim($desc);
+    $desc eq '' && ThrowUserError("keyword_blank_description");
+    return $desc;
 }
 
 1;

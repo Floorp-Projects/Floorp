@@ -108,6 +108,45 @@ sub name              { return $_[0]->{'name'};        }
 ####      Subroutines    ######
 ###############################
 
+sub create {
+    my ($class, $params) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    my $required   = $class->REQUIRED_CREATE_FIELDS;
+    my $validators = $class->VALIDATORS;
+    my $table      = $class->DB_TABLE;
+
+    foreach my $field ($class->REQUIRED_CREATE_FIELDS) {
+        ThrowCodeError('param_required', 
+            { function => "${class}->create", param => $field })
+            if !exists $params->{$field};
+    }
+
+    my (@field_names, @values);
+    # We do the sort just to make sure that validation always
+    # happens in a consistent order.
+    foreach my $field (sort keys %$params) {
+        my $value;
+        if (exists $validators->{$field}) {
+            $value = &{$validators->{$field}}($params->{$field});
+        }
+        else {
+            $value = $params->{$field};
+        }
+        trick_taint($value);
+        push(@field_names, $field);
+        push(@values, $value);
+    }
+
+    my $qmarks = '?,' x @values;
+    chop($qmarks);
+    $dbh->do("INSERT INTO $table (" . join(', ', @field_names) 
+             . ") VALUES ($qmarks)", undef, @values);
+    my $id = $dbh->bz_last_key($table, 'id');
+
+    return $class->new($id);
+}
+
 sub get_all {
     my $class = shift;
     my $dbh = Bugzilla->dbh;
@@ -173,6 +212,19 @@ The order that C<new_from_list> and C<get_all> should return objects
 in. This should be the name of a database column. Defaults to
 C<name>.
 
+=item C<REQUIRED_CREATE_FIELDS>
+
+The list of fields that B<must> be specified when the user calls
+C<create()>. This should be an array.
+
+=item C<VALIDATORS>
+
+A hashref that points to a function that will validate each param to
+C<create()>. Each function in this hashref will be passed a single
+argument, the value passed to C<create()> for that field. These
+functions should call L<Bugzilla::Error/ThrowUserError> if they fail.
+They must return the validated value.
+
 =back
 
 =head1 METHODS
@@ -209,6 +261,25 @@ C<name>.
 =head1 SUBROUTINES
 
 =over
+
+=item C<create($params)>
+
+Description: Creates a new item in the database.
+             Throws a User Error if any of the passed-in params
+             are invalid.
+
+Params:      C<$params> - hashref - A value to put in each database
+               field for this object. Certain values must be set (the 
+               ones specified in L</REQUIRED_CREATE_FIELDS>), and
+               the function will throw a Code Error if you don't set
+               them.
+
+Returns:     The Object just created in the database.
+
+Notes:       In order for this function to work in your subclass,
+             your subclass's C<id> field must be of C<SERIAL>
+             type in the database. Your subclass also must
+             define L</REQUIRED_CREATE_FIELDS> and L</VALIDATORS>.
 
 =item C<get_all>
 
