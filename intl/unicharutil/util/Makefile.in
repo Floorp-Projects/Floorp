@@ -54,10 +54,6 @@ MODULE=unicharutil
 LIBRARY_NAME=unicharutil_external_s
 DIST_INSTALL = 1
 
-ifdef MOZ_META_COMPONENT
-EXPORT_LIBRARY = 1
-endif
-
 REQUIRES=xpcom \
 		string \
 		uconv \

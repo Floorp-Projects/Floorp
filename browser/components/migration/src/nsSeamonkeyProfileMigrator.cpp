@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBrowserProfileMigratorUtils.h"
+#include "nsCRT.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsICookieManager2.h"
 #include "nsIObserverService.h"
@@ -160,11 +161,11 @@ nsSeamonkeyProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
                           aReplace, mSourceProfile, aResult);
 
   // Now locate passwords
-  nsCString signonsFileName;
+  nsXPIDLCString signonsFileName;
   GetSignonFileName(aReplace, getter_Copies(signonsFileName));
 
   if (!signonsFileName.IsEmpty()) {
-    NS_ConvertASCIItoUTF16 fileName(signonsFileName);
+    nsAutoString fileName; fileName.AssignWithConversion(signonsFileName);
     nsCOMPtr<nsIFile> sourcePasswordsFile;
     mSourceProfile->Clone(getter_AddRefs(sourcePasswordsFile));
     sourcePasswordsFile->Append(fileName);
@@ -216,9 +217,11 @@ NS_IMETHODIMP
 nsSeamonkeyProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
 {
   if (!mProfileNames && !mProfileLocations) {
-    mProfileNames = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
-    mProfileLocations = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
-    NS_ENSURE_TRUE(mProfileNames && mProfileLocations, NS_ERROR_UNEXPECTED);
+    nsresult rv = NS_NewISupportsArray(getter_AddRefs(mProfileNames));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_NewISupportsArray(getter_AddRefs(mProfileLocations));
+    if (NS_FAILED(rv)) return rv;
 
     // Fills mProfileNames and mProfileLocations
     FillProfileDataFromSeamonkeyRegistry();
@@ -252,7 +255,7 @@ nsSeamonkeyProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
                                  NS_GET_IID(nsIPrefLocalizedString),
                                  getter_AddRefs(prefValue));
     if (NS_SUCCEEDED(rv) && prefValue) {
-      nsString data;
+      nsXPIDLString data;
       prefValue->ToString(getter_Copies(data));
 
       nsCAutoString val;
@@ -277,14 +280,11 @@ nsSeamonkeyProfileMigrator::GetSourceProfile(const PRUnichar* aProfile)
   PRUint32 count;
   mProfileNames->Count(&count);
   for (PRUint32 i = 0; i < count; ++i) {
-    nsCOMPtr<nsISupportsString> str;
-    mProfileNames->QueryElementAt(i, NS_GET_IID(nsISupportsString),
-                                  getter_AddRefs(str));
-    nsString profileName;
+    nsCOMPtr<nsISupportsString> str(do_QueryElementAt(mProfileNames, i));
+    nsXPIDLString profileName;
     str->GetData(profileName);
     if (profileName.Equals(aProfile)) {
-      mProfileLocations->QueryElementAt(i, NS_GET_IID(nsILocalFile),
-                                        getter_AddRefs(mSourceProfile));
+      mSourceProfile = do_QueryElementAt(mProfileLocations, i);
       break;
     }
   }
@@ -570,7 +570,7 @@ nsSeamonkeyProfileMigrator::WriteFontsBranch(nsIPrefService* aPrefService,
     switch (pref->type) {
     case nsIPrefBranch::PREF_STRING:
       rv = branch->SetCharPref(pref->prefName, pref->stringValue);
-      NS_Free(pref->stringValue);
+      nsCRT::free(pref->stringValue);
       pref->stringValue = nsnull;
       break;
     case nsIPrefBranch::PREF_BOOL:
@@ -585,11 +585,11 @@ nsSeamonkeyProfileMigrator::WriteFontsBranch(nsIPrefService* aPrefService,
       rv = branch->SetComplexValue(pref->prefName, 
                                    NS_GET_IID(nsIPrefLocalizedString),
                                    pls);
-      NS_Free(pref->wstringValue);
+      nsCRT::free(pref->wstringValue);
       pref->wstringValue = nsnull;
       break;
     }
-    NS_Free(pref->prefName);
+    nsCRT::free(pref->prefName);
     pref->prefName = nsnull;
     delete pref;
     pref = nsnull;
@@ -673,13 +673,13 @@ nsSeamonkeyProfileMigrator::CopyPasswords(PRBool aReplace)
 {
   nsresult rv;
 
-  nsCString signonsFileName;
+  nsXPIDLCString signonsFileName;
   GetSignonFileName(aReplace, getter_Copies(signonsFileName));
 
   if (signonsFileName.IsEmpty())
     return NS_ERROR_FILE_NOT_FOUND;
 
-  NS_ConvertASCIItoUTF16 fileName(signonsFileName);
+  nsAutoString fileName; fileName.AssignWithConversion(signonsFileName);
   if (aReplace)
     rv = CopyFile(fileName, fileName);
   else {

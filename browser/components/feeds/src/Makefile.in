@@ -58,4 +58,6 @@ LOCAL_INCLUDES = -I$(srcdir)/../../build
 
 FORCE_STATIC_LIB = 1
 
+MOZILLA_INTERNAL_API = 1
+
 include $(topsrcdir)/config/rules.mk

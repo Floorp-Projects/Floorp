@@ -42,7 +42,6 @@
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
-#include "nsServiceManagerUtils.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsICabProfileMigrator

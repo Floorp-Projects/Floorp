@@ -38,7 +38,7 @@
 #define nsgnomeshellservice_h____
 
 #include "nsIShellService.h"
-#include "nsStringAPI.h"
+#include "nsString.h"
 
 class nsGNOMEShellService : public nsIShellService
 {

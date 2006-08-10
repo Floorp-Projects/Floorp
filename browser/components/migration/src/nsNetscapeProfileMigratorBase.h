@@ -41,7 +41,7 @@
 #include "nsILocalFile.h"
 #include "nsIStringBundle.h"
 #include "nsISupportsArray.h"
-#include "nsStringAPI.h"
+#include "nsString.h"
 
 class nsIFile;
 class nsIPrefBranch;

@@ -45,13 +45,12 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsBrowserProfileMigratorUtils.h"
 #include "nsCOMPtr.h"
-#include "nsCRTGlue.h"
 #include "nsNetCID.h"
 #include "nsDocShellCID.h"
 #include "nsDebug.h"
+#include "nsDependentString.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsDirectoryServiceUtils.h"
-#include "nsStringAPI.h"
+#include "nsString.h"
 #include "plstr.h"
 #include "prio.h"
 #include "prmem.h"
@@ -92,6 +91,7 @@
 #include "nsIBookmarksService.h"
 #endif
 #include "nsIStringBundle.h"
+#include "nsCRT.h"
 #include "nsNetUtil.h"
 #include "nsToolkitCompsCID.h"
 #include "nsUnicharUtils.h"
@@ -877,7 +877,7 @@ nsIEProfileMigrator::MigrateSiteAuthSignons(IPStore* aPStore)
           }
 
         nsAutoString tmp(itemName);
-        tmp.SetLength(6);
+        tmp.Truncate(6);
         if (tmp.Equals(NS_LITERAL_STRING("DPAPI:"))) // often FTP logins
           password = NULL; // We can't handle these yet
 
@@ -920,8 +920,9 @@ nsIEProfileMigrator::GetSignonsListFromPStore(IPStore* aPStore, nsVoidArray* aSi
       hr = aPStore->ReadItem(0, &IEPStoreAutocompGUID, &IEPStoreAutocompGUID, itemName, &count, &data, NULL, 0);
       if (SUCCEEDED(hr) && data) {
         nsAutoString itemNameString(itemName);
-        if (StringTail(itemNameString, 11).
-            LowerCaseEqualsLiteral(":stringdata")) {
+        nsAutoString suffix;
+        itemNameString.Right(suffix, 11);
+        if (suffix.EqualsIgnoreCase(":StringData")) {
           // :StringData contains the saved data
           const nsAString& key = Substring(itemNameString, 0, itemNameString.Length() - 11);
           char* realm = nsnull;
@@ -976,7 +977,7 @@ nsIEProfileMigrator::KeyIsURI(const nsAString& aKey, char** aRealm)
       uri->GetHost(host);
       realm.Append(host);
 
-      *aRealm = ToNewCString(realm);
+      *aRealm = nsCRT::strdup(realm.get());
       return validScheme;
     }
   }
@@ -999,14 +1000,15 @@ nsIEProfileMigrator::ResolveAndMigrateSignons(IPStore* aPStore, nsVoidArray* aSi
       hr = aPStore->ReadItem(0, &IEPStoreAutocompGUID, &IEPStoreAutocompGUID, itemName, &count, &data, NULL, 0);
       if (SUCCEEDED(hr) && data) {
         nsAutoString itemNameString(itemName);
-        if (StringTail(itemNameString, 11).
-            LowerCaseEqualsLiteral(":stringdata")) {
+        nsAutoString suffix;
+        itemNameString.Right(suffix, 11);
+        if (suffix.EqualsIgnoreCase(":StringData")) {
           // :StringData contains the saved data
           const nsAString& key = Substring(itemNameString, 0, itemNameString.Length() - 11);
           
           // Assume all keys that are valid URIs are signons, not saved form data, and that 
           // all keys that aren't valid URIs are form field names (containing form data).
-          nsCString realm;
+          nsXPIDLCString realm;
           if (!KeyIsURI(key, getter_Copies(realm))) {
             // Search the data for a username that matches one of the found signons. 
             EnumerateUsernames(key, (PRUnichar*)data, (count/sizeof(PRUnichar)), aSignonsFound);
@@ -1023,7 +1025,7 @@ nsIEProfileMigrator::ResolveAndMigrateSignons(IPStore* aPStore, nsVoidArray* aSi
     for (PRInt32 i = 0; i < signonCount; ++i) {
       SignonData* sd = (SignonData*)aSignonsFound->ElementAt(i);
       ::CoTaskMemFree(sd->user);  // |sd->user| is a pointer to the start of a buffer that also contains sd->pass
-      NS_Free(sd->realm);
+      nsCRT::free(sd->realm);
       delete sd;
     }
   }
@@ -1126,11 +1128,12 @@ nsIEProfileMigrator::CopyFormData(PRBool aReplace)
       hr = PStore->ReadItem(0, &IEPStoreAutocompGUID, &IEPStoreAutocompGUID, itemName, &count, &data, NULL, 0);
       if (SUCCEEDED(hr) && data) {
         nsAutoString itemNameString(itemName);
-        if (StringTail(itemNameString, 11).
-            LowerCaseEqualsLiteral(":stringdata")) {
+        nsAutoString suffix;
+        itemNameString.Right(suffix, 11);
+        if (suffix.EqualsIgnoreCase(":StringData")) {
           // :StringData contains the saved data
           const nsAString& key = Substring(itemNameString, 0, itemNameString.Length() - 11);
-          nsCString realm;
+          nsXPIDLCString realm;
           if (!KeyIsURI(key, getter_Copies(realm))) {
             nsresult rv = AddDataToFormHistory(key, (PRUnichar*)data, (count/sizeof(PRUnichar)));
             if (NS_FAILED(rv)) return rv;
@@ -1209,12 +1212,12 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
     nsCOMPtr<nsIStringBundle> bundle;
     bundleService->CreateBundle(TRIDENTPROFILE_BUNDLE, getter_AddRefs(bundle));
 
-    nsString sourceNameIE;
+    nsXPIDLString sourceNameIE;
     bundle->GetStringFromName(NS_LITERAL_STRING("sourceNameIE").get(), 
                               getter_Copies(sourceNameIE));
 
     const PRUnichar* sourceNameStrings[] = { sourceNameIE.get() };
-    nsString importedIEFavsTitle;
+    nsXPIDLString importedIEFavsTitle;
     bundle->FormatStringFromName(NS_LITERAL_STRING("importedBookmarksFolder").get(),
                                  sourceNameStrings, 1, getter_Copies(importedIEFavsTitle));
 
@@ -1281,7 +1284,7 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
     nsresult rv;
     nsCOMPtr<nsINavBookmarksService> bms(do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
-    PRInt64 keywordsFolder = 0;
+    PRInt64 keywordsFolder;
 #else
     nsCOMPtr<nsIBookmarksService> bms(do_GetService("@mozilla.org/browser/bookmarks-service;1"));
     nsCOMPtr<nsIRDFResource> keywordsFolder, bookmark;
@@ -1300,12 +1303,12 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
         break;
 
       if (!keywordsFolder) {
-        nsString sourceNameIE;
+        nsXPIDLString sourceNameIE;
         bundle->GetStringFromName(NS_LITERAL_STRING("sourceNameIE").get(), 
                                   getter_Copies(sourceNameIE));
 
         const PRUnichar* sourceNameStrings[] = { sourceNameIE.get() };
-        nsString importedIESearchUrlsTitle;
+        nsXPIDLString importedIESearchUrlsTitle;
         bundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchURLsFolder").get(),
                                     sourceNameStrings, 1, getter_Copies(importedIESearchUrlsTitle));
 #ifdef MOZ_PLACES
@@ -1334,13 +1337,13 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
           NS_ConvertUTF8toUTF16 host(hostCStr); 
 
           const PRUnichar* nameStrings[] = { host.get() };
-          nsString keywordName;
+          nsXPIDLString keywordName;
           nsresult rv = bundle->FormatStringFromName(
                         NS_LITERAL_STRING("importedSearchURLsTitle").get(),
                         nameStrings, 1, getter_Copies(keywordName));
 
           const PRUnichar* descStrings[] = { keyName.get(), host.get() };
-          nsString keywordDesc;
+          nsXPIDLString keywordDesc;
           rv = bundle->FormatStringFromName(
                        NS_LITERAL_STRING("importedSearchUrlDesc").get(),
                        descStrings, 2, getter_Copies(keywordDesc));
@@ -1370,7 +1373,7 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
 }
 
 void 
-nsIEProfileMigrator::ResolveShortcut(const nsString &aFileName, char** aOutURL) 
+nsIEProfileMigrator::ResolveShortcut(const nsAFlatString &aFileName, char** aOutURL) 
 {
   HRESULT result;
 
@@ -1464,8 +1467,8 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       NS_NAMED_LITERAL_STRING(lnkExt, ".lnk");
       PRInt32 lnkExtStart = bookmarkName.Length() - lnkExt.Length();
       if (StringEndsWith(bookmarkName, lnkExt,
-                         CaseInsensitiveCompare))
-        bookmarkName.SetLength(lnkExtStart);
+                         nsCaseInsensitiveStringComparator()))
+        bookmarkName.Truncate(lnkExtStart);
 
 #ifdef MOZ_PLACES
       nsCOMPtr<nsIURI> bookmarkURI;
@@ -1558,7 +1561,8 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       nsCAutoString extension;
 
       url->GetFileExtension(extension);
-      if (!extension.Equals("url", CaseInsensitiveCompare))
+      if (!extension.Equals(NS_LITERAL_CSTRING("url"),
+                            nsCaseInsensitiveCStringComparator()))
         continue;
 
       nsAutoString name(Substring(bookmarkName, 0, 
@@ -1567,7 +1571,7 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       nsAutoString path;
       currFile->GetPath(path);
 
-      nsCString resolvedURL;
+      nsXPIDLCString resolvedURL;
       ResolveShortcut(path, getter_Copies(resolvedURL));
 
 #ifdef MOZ_PLACES
@@ -1715,7 +1719,7 @@ nsIEProfileMigrator::CopyCookies(PRBool aReplace)
     nsCAutoString fileName;
     cookieFile->GetNativeLeafName(fileName);
     const nsACString &fileOwner = Substring(fileName, 0, usernameLength);
-    if (!fileOwner.Equals(username, CaseInsensitiveCompare))
+    if (!fileOwner.Equals(username, nsCaseInsensitiveCStringComparator()))
       continue;
 
     // ensure the contents buffer is large enough to hold the entire file

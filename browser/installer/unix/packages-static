@@ -33,9 +33,11 @@ bin/libmozjs.so
 bin/libplc4.so
 bin/libplds4.so
 bin/libxpcom.so
-bin/libxul.so
+bin/libxpcom_core.so
 bin/libxpistub.so
 bin/libnspr4.so
+bin/components/libxpinstall.so
+bin/components/libjar50.so
 
 [browser]
 ; [Base Browser Files]
@@ -48,8 +50,6 @@ bin/res/cmessage.txt
 bin/xpicleanup
 
 ; [Components]
-bin/components/libappmeta.so
-bin/components/libimgicon.so
 bin/components/accessibility.xpt
 bin/components/appshell.xpt
 bin/components/appstartup.xpt
@@ -107,6 +107,7 @@ bin/components/imglib2.xpt
 bin/components/intl.xpt
 bin/components/jar.xpt
 bin/components/jsconsole.xpt
+bin/components/libjsd.so
 bin/components/jsdservice.xpt
 bin/components/layout_base.xpt
 bin/components/layout_printing.xpt

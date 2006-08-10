@@ -89,7 +89,7 @@ protected:
   nsresult AddDataToFormHistory(const nsAString& aKey, PRUnichar* data, unsigned long len);
 
   nsresult CopyFavorites(PRBool aReplace);
-  void     ResolveShortcut(const nsString &aFileName, char** aOutURL);
+  void     ResolveShortcut(const nsAFlatString &aFileName, char** aOutURL);
 #ifdef MOZ_PLACES
   nsresult ParseFavoritesFolder(nsIFile* aDirectory, 
                                 PRInt64 aParentFolder,
