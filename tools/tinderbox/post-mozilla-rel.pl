@@ -1069,6 +1069,17 @@ sub PreBuild {
     unlink "last-built.new";
   }
 
+  if ($Settings::ForceRebuild) {
+    TinderUtils::print_log("Force rebuild requested; removing last-built\n");
+    if (-e 'last-built') {
+      unlink 'last-built';
+      TinderUtils::print_log("Removal of last-built failed?\n")
+       if (-e 'last-built');
+    } else {
+      TinderUtils::print_log("Force rebuild requested, but last-built not found.\n");
+    }
+  }
+
   # We want to be able to remove the last-built file at any time of
   # day to trigger a respin, even if it's before the designated build
   # hour.  This means that we want to do a cached build if any of the

@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.335 $ ';
+$::UtilsVersion = '$Revision: 1.336 $ ';
 
 package TinderUtils;
 
@@ -53,9 +53,16 @@ require "gettime.pl";
 #   cpan> install Bundle::LWP
 #
 
+##
+## Constants.
+##
+
 my $co_time_str = 0;  # Global, let tests send cvs co time to graph server.
 my $co_default_timeout = 300;
+my $graph_time;
 my $server_start_time;
+my $CVS_CLOBBER_FILE = 'CLOBBER';
+my $ST_MTIME = 9;
 
 sub Setup {
     InitVars();
@@ -83,11 +90,32 @@ sub UpdateBuildConfigs() {
         chdir($args->{'TboxBuildConfigDir'}) or 
          die "Couldn't chdir() into $args->{'TboxBuildConfigDir'}: $!";
 
+        my $origClobberFileMTime = 0;
+        if (-f $CVS_CLOBBER_FILE) {
+            $origClobberFileMTime = (stat($CVS_CLOBBER_FILE))[$ST_MTIME];
+        } else {
+            print STDERR "Error: Couldn't find $CVS_CLOBBER_FILE in " .
+             "$args->{'TboxBuildConfigDir'}\n";
+        }
+
         my $status = run_shell_command_with_timeout('cvs update -CPd',
          $co_default_timeout);
         if ($status->{'exit_value'} != 0) {
-           die "cvs update in $args->{'TboxBuildConfigDir'} failed";
+            die "cvs update in $args->{'TboxBuildConfigDir'} failed\n";
         }
+
+        if (-f $CVS_CLOBBER_FILE) {
+            my $newClobberFileMTime = (stat($CVS_CLOBBER_FILE))[$ST_MTIME];
+
+            # Check to make sure that the stat() call actually returned
+            # something; if so, is the new modified-time greater than the old
+            # modified-time? If so, CVS probably updated it.
+            if (defined($newClobberFileMTime) && 
+             $newClobberFileMTime > $origClobberFileMTime) {
+                $args->{'ForceRebuild'} = 1;
+            }
+        }
+
         chdir($cwd) or die "Couldn't return to $cwd";
     }
 }
