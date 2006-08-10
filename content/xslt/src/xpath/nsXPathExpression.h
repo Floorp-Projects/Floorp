@@ -55,8 +55,8 @@ class nsXPathExpression : public nsIDOMXPathExpression,
                           public nsIDOMNSXPathExpression
 {
 public:
-    nsXPathExpression(nsAutoPtr<Expr>& aExpression,
-                      txResultRecycler* aRecycler);
+    nsXPathExpression(nsAutoPtr<Expr>& aExpression, txResultRecycler* aRecycler,
+                      nsIDOMDocument *aDocument);
     virtual ~nsXPathExpression();
 
     // nsISupports interface
@@ -71,6 +71,7 @@ public:
 private:
     nsAutoPtr<Expr> mExpression;
     nsRefPtr<txResultRecycler> mRecycler;
+    nsCOMPtr<nsIDOMDocument> mDocument;
 
     class EvalContextImpl : public txIEvalContext
     {
