@@ -168,7 +168,7 @@ sub ProcessOneBug {
     
     # Convert to names, for later display
     $values{'changer'} = $changer;
-    $values{'changername'} = Bugzilla::User->new_from_login($changer)->name;
+    $values{'changername'} = Bugzilla::User->new({name => $changer})->name;
     $values{'assigned_to'} = user_id_to_login($values{'assigned_to'});
     $values{'reporter'} = user_id_to_login($values{'reporter'});
     if ($values{'qa_contact'}) {

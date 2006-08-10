@@ -125,7 +125,7 @@ elsif ($action eq 'begin-sudo') {
 
     # Get & verify the target user (the user who we will be impersonating)
     my $target_user = 
-        Bugzilla::User->new_from_login($cgi->param('target_login'));
+        new Bugzilla::User({ name => $cgi->param('target_login') });
     unless (defined($target_user)
             && $target_user->id
             && $user->can_see_user($target_user))

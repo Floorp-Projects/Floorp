@@ -21,7 +21,9 @@ package Bugzilla::Object;
 use Bugzilla::Util;
 use Bugzilla::Error;
 
-use constant LIST_ORDER => 'name';
+use constant NAME_FIELD => 'name';
+use constant ID_FIELD   => 'id';
+use constant LIST_ORDER => NAME_FIELD;
 
 ###############################
 ####    Initialization     ####
@@ -35,12 +37,19 @@ sub new {
     return $object;
 }
 
+
+# Note: Because this uses sql_istrcmp, if you make a new object use
+# Bugzilla::Object, make sure that you modify bz_setup_database
+# in Bugzilla::DB::Pg appropriately, to add the right LOWER
+# index. You can see examples already there.
 sub _init {
     my $class = shift;
     my ($param) = @_;
     my $dbh = Bugzilla->dbh;
     my $columns = join(',', $class->DB_COLUMNS);
     my $table   = $class->DB_TABLE;
+    my $name_field = $class->NAME_FIELD;
+    my $id_field   = $class->ID_FIELD;
 
     my $id = $param unless (ref $param eq 'HASH');
     my $object;
@@ -52,12 +61,13 @@ sub _init {
 
         $object = $dbh->selectrow_hashref(qq{
             SELECT $columns FROM $table
-             WHERE id = ?}, undef, $id);
+             WHERE $id_field = ?}, undef, $id);
     } elsif (defined $param->{'name'}) {
         trick_taint($param->{'name'});
         $object = $dbh->selectrow_hashref(qq{
             SELECT $columns FROM $table
-             WHERE name = ?}, undef, $param->{'name'});
+             WHERE } . $dbh->sql_istrcmp($name_field, '?'), 
+            undef, $param->{'name'});
     } else {
         ThrowCodeError('bad_arg',
             {argument => 'param',
@@ -74,6 +84,7 @@ sub new_from_list {
     my $columns = join(',', $class->DB_COLUMNS);
     my $table   = $class->DB_TABLE;
     my $order   = $class->LIST_ORDER;
+    my $id_field = $class->ID_FIELD;
 
     my $objects;
     if (@$id_list) {
@@ -85,7 +96,7 @@ sub new_from_list {
             push(@detainted_ids, $id);
         }
         $objects = $dbh->selectall_arrayref(
-            "SELECT $columns FROM $table WHERE id IN (" 
+            "SELECT $columns FROM $table WHERE $id_field IN (" 
             . join(',', @detainted_ids) . ") ORDER BY $order", {Slice=>{}});
     } else {
         return [];
@@ -152,9 +163,10 @@ sub get_all {
     my $dbh = Bugzilla->dbh;
     my $table = $class->DB_TABLE;
     my $order = $class->LIST_ORDER;
+    my $id_field = $class->ID_FIELD;
 
     my $ids = $dbh->selectcol_arrayref(qq{
-        SELECT id FROM $table ORDER BY $order});
+        SELECT $id_field FROM $table ORDER BY $order});
 
     my $objects = $class->new_from_list($ids);
     return @$objects;
@@ -206,11 +218,24 @@ for C<Bugzilla::Keyword> this would be C<keyworddefs>.
 The names of the columns that you want to read out of the database
 and into this object. This should be an array.
 
+=item C<NAME_FIELD>
+
+The name of the column that should be considered to be the unique
+"name" of this object. The 'name' is a B<string> that uniquely identifies
+this Object in the database. Defaults to 'name'. When you specify 
+C<{name => $name}> to C<new()>, this is the column that will be 
+matched against in the DB.
+
+=item C<ID_FIELD>
+
+The name of the column that represents the unique B<integer> ID
+of this object in the database. Defaults to 'id'.
+
 =item C<LIST_ORDER>
 
 The order that C<new_from_list> and C<get_all> should return objects
 in. This should be the name of a database column. Defaults to
-C<name>.
+L</NAME_FIELD>.
 
 =item C<REQUIRED_CREATE_FIELDS>
 
@@ -240,7 +265,8 @@ They must return the validated value.
                        id of the object, from the database, that we 
                        want to read in. If you pass in a hash with 
                        C<name> key, then the value of the name key 
-                       is the name of the object from the DB.
+                       is the case-insensitive name of the object from 
+                       the DB.
 
  Returns:     A fully-initialized object.
 

@@ -797,7 +797,7 @@ sub check_user {
         $vars->{'user_id'} = $otherUserID;
     }
     elsif ($otherUserLogin) {
-        $otherUser = Bugzilla::User->new_from_login($otherUserLogin);
+        $otherUser = new Bugzilla::User({ name => $otherUserLogin });
         $vars->{'user_login'} = $otherUserLogin;
     }
     ($otherUser && $otherUser->id) || ThrowCodeError('invalid_user', $vars);

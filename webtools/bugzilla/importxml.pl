@@ -179,7 +179,7 @@ sub flag_handler {
 
     my $type         = ($attachid) ? "attachment" : "bug";
     my $err          = '';
-    my $setter       = Bugzilla::User->new_from_login($setter_login);
+    my $setter       = new Bugzilla::User({ name => $setter_login });
     my $requestee;
     my $requestee_id;
 
@@ -195,7 +195,7 @@ sub flag_handler {
     }
     my $setter_id = $setter->id;
     if ( defined($requestee_login) ) {
-        $requestee = Bugzilla::User->new_from_login($requestee_login);
+        $requestee = new Bugzilla::User({ name => $requestee_login });
         if ( $requestee ) {
             if ( !$requestee->can_see_bug($bugid) ) {
                 $err .= "Requestee is not a member of bug group\n";
@@ -423,7 +423,7 @@ sub process_bug {
     my $root             = $twig->root;
     my $maintainer       = $root->{'att'}->{'maintainer'};
     my $exporter_login   = $root->{'att'}->{'exporter'};
-    my $exporter         = Bugzilla::User->new_from_login($exporter_login);
+    my $exporter         = new Bugzilla::User({ name => $exporter_login });
     my $urlbase          = $root->{'att'}->{'urlbase'};
 
     # We will store output information in this variable.

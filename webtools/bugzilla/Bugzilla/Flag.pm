@@ -330,7 +330,7 @@ sub validate {
 
                 # We know the requestee exists because we ran
                 # Bugzilla::User::match_field before getting here.
-                my $requestee = Bugzilla::User->new_from_login($login);
+                my $requestee = new Bugzilla::User({ name => $login });
                 
                 # Throw an error if the user can't see the bug.
                 # Note that if permissions on this bug are changed,
@@ -593,7 +593,7 @@ sub modify {
                 create({ type      => $flag->type,
                          setter    => $setter, 
                          status    => "?",
-                         requestee => Bugzilla::User->new_from_login($login) },
+                         requestee => new Bugzilla::User({ name => $login }) },
                        $bug, $attachment, $timestamp);
             }
         }
@@ -796,7 +796,8 @@ sub FormToNewFlags {
                 push (@flags, { type      => $flag_type ,
                                 setter    => $setter , 
                                 status    => $status ,
-                                requestee => Bugzilla::User->new_from_login($login) });
+                                requestee => 
+                                    new Bugzilla::User({ name => $login }) });
                 last unless $flag_type->is_multiplicable;
             }
         }
@@ -843,7 +844,7 @@ sub notify {
     if (scalar(@bug_in_groups) || $attachment_is_private) {
         my @new_cc_list;
         foreach my $cc (split(/[, ]+/, $flag->type->cc_list)) {
-            my $ccuser = Bugzilla::User->new_from_login($cc) || next;
+            my $ccuser = new Bugzilla::User({ name => $cc }) || next;
 
             next if (scalar(@bug_in_groups) && !$ccuser->can_see_bug($bug->bug_id));
             next if $attachment_is_private

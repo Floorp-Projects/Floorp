@@ -224,6 +224,49 @@ sub bz_setup_database {
     # login_name, which we do with sql_istrcmp all over the place.
     $self->bz_add_index('profiles', 'profiles_login_name_lower_idx', 
         {FIELDS => ['LOWER(login_name)'], TYPE => 'UNIQUE'});
+
+    # Now that Bugzilla::Object uses sql_istrcmp, other tables
+    # also need a LOWER() index.
+    _fix_case_differences('fielddefs', 'name');
+    $self->bz_add_index('fielddefs', 'fielddefs_name_lower_idx',
+        {FIELDS => ['LOWER(name)'], TYPE => 'UNIQUE'});
+    _fix_case_differences('keyworddefs', 'name');
+    $self->bz_add_index('keyworddefs', 'keyworddefs_name_lower_idx',
+        {FIELDS => ['LOWER(name)'], TYPE => 'UNIQUE'});
+    _fix_case_differences('products', 'name');
+    $self->bz_add_index('products', 'products_name_lower_idx',
+        {FIELDS => ['LOWER(name)'], TYPE => 'UNIQUE'});
+}
+
+# Renames things that differ only in case.
+sub _fix_case_differences {
+    my ($table, $field) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    my $duplicates = $dbh->selectcol_arrayref(
+          "SELECT DISTINCT LOWER($field) FROM $table 
+        GROUP BY LOWER($field) HAVING COUNT(LOWER($field)) > 1");
+
+    foreach my $name (@$duplicates) {
+        my $dups = $dbh->selectcol_arrayref(
+            "SELECT $field FROM $table WHERE LOWER($field) = ?",
+            undef, $name);
+        my $primary = shift @$dups;
+        foreach my $dup (@$dups) {
+            my $new_name = "${dup}_";
+            # Make sure the new name isn't *also* a duplicate.
+            while (1) {
+                last if (!$dbh->selectrow_array(
+                             "SELECT 1 FROM $table WHERE LOWER($field) = ?",
+                              undef, lc($new_name)));
+                $new_name .= "_";
+            }
+            print "$table '$primary' and '$dup' have names that differ",
+                  " only in case.\nRenaming '$dup' to '$new_name'...\n";
+            $dbh->do("UPDATE $table SET $field = ? WHERE $field = ?",
+                     undef, $new_name, $dup);
+        }
+    }
 }
 
 #####################################################################

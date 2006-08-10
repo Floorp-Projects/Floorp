@@ -48,7 +48,7 @@ use Bugzilla::Product;
 use Bugzilla::Classification;
 use Bugzilla::Field;
 
-use base qw(Exporter);
+use base qw(Bugzilla::Object Exporter);
 @Bugzilla::User::EXPORT = qw(insert_new_user is_available_username
     login_to_id user_id_to_login validate_password
     UserInGroup
@@ -66,95 +66,51 @@ use constant USER_MATCH_SUCCESS  => 1;
 
 use constant MATCH_SKIP_CONFIRM  => 1;
 
+use constant DEFAULT_USER => {
+    'id'             => 0,
+    'name'           => '',
+    'login'          => '',
+    'showmybugslink' => 0,
+    'disabledtext'   => '',
+    'disable_mail'   => 0,
+};
+
+use constant DB_TABLE => 'profiles';
+
+# XXX Note that Bugzilla::User->name does not return the same thing
+# that you passed in for "name" to new(). That's because historically
+# Bugzilla::User used "name" for the realname field. This should be
+# fixed one day.
+use constant DB_COLUMNS => (
+    'profiles.userid     AS id',
+    'profiles.login_name AS login',
+    'profiles.realname   AS name',
+    'profiles.mybugslink AS showmybugslink',
+    'profiles.disabledtext',
+    'profiles.disable_mail',
+);
+use constant NAME_FIELD => 'login_name';
+use constant ID_FIELD   => 'userid';
+
 ################################################################################
 # Functions
 ################################################################################
 
 sub new {
     my $invocant = shift;
-    my $user_id = shift;
-
-    if ($user_id) {
-        my $uid = $user_id;
-        detaint_natural($user_id)
-          || ThrowCodeError('invalid_numeric_argument',
-                            {argument => 'userID',
-                             value    => $uid,
-                             function => 'Bugzilla::User::new'});
-        return $invocant->_create("userid=?", $user_id);
-    }
-    else {
-        return $invocant->_create;
-    }
-}
-
-# This routine is sort of evil. Nothing except the login stuff should
-# be dealing with addresses as an input, and they can get the id as a
-# side effect of the other sql they have to do anyway.
-# Bugzilla::BugMail still does this, probably as a left over from the
-# pre-id days. Provide this as a helper, but don't document it, and hope
-# that it can go away.
-# The request flag stuff also does this, but it really should be passing
-# in the id it already had to validate (or the User.pm object, of course)
-sub new_from_login {
-    my $invocant = shift;
-    my $login = shift;
-
-    my $dbh = Bugzilla->dbh;
-    return $invocant->_create($dbh->sql_istrcmp('login_name', '?'), $login);
-}
-
-# Internal helper for the above |new| methods
-# $cond is a string (including a placeholder ?) for the search
-# requirement for the profiles table
-sub _create {
-    my $invocant = shift;
     my $class = ref($invocant) || $invocant;
+    my ($param) = @_;
 
-    my $cond = shift;
-    my $val = shift;
+    my $user = DEFAULT_USER;
+    bless ($user, $class);
+    return $user unless $param;
 
-    # Allow invocation with no parameters to create a blank object
-    my $self = {
-        'id'             => 0,
-        'name'           => '',
-        'login'          => '',
-        'showmybugslink' => 0,
-        'disabledtext'   => '',
-        'flags'          => {},
-        'disable_mail'   => 0,
-    };
-    bless ($self, $class);
-    return $self unless $cond && $val;
-
-    # We're checking for validity here, so any value is OK
-    trick_taint($val);
-
-    my $dbh = Bugzilla->dbh;
-
-    my ($id, $login, $name, $disabledtext, $mybugslink, $disable_mail) =
-        $dbh->selectrow_array(qq{SELECT userid, login_name, realname,
-                                        disabledtext, mybugslink, disable_mail 
-                                 FROM profiles WHERE $cond},
-                                 undef, $val);
-
-    return undef unless defined $id;
-
-    $self->{'id'}             = $id;
-    $self->{'name'}           = $name;
-    $self->{'login'}          = $login;
-    $self->{'disabledtext'}   = $disabledtext;
-    $self->{'showmybugslink'} = $mybugslink;
-    $self->{'disable_mail'}   = $disable_mail;
-
-    return $self;
+    return $class->SUPER::new(@_);
 }
 
 # Accessors for user attributes
-sub id { $_[0]->{id}; }
 sub login { $_[0]->{login}; }
 sub email { $_[0]->{login} . Bugzilla->params->{'emailsuffix'}; }
-sub name { $_[0]->{name}; }
 sub disabledtext { $_[0]->{'disabledtext'}; }
 sub is_disabled { $_[0]->disabledtext ? 1 : 0; }
 sub showmybugslink { $_[0]->{showmybugslink}; }
@@ -844,7 +800,7 @@ sub match {
         # User objects.
         my $user_logins = $dbh->selectcol_arrayref($query, undef, ($wildstr, $wildstr));
         foreach my $login_name (@$user_logins) {
-            push(@users, Bugzilla::User->new_from_login($login_name));
+            push(@users, new Bugzilla::User({ name => $login_name }));
         }
     }
     else {    # try an exact match
@@ -884,7 +840,7 @@ sub match {
 
         my $user_logins = $dbh->selectcol_arrayref($query, undef, ($str, $str));
         foreach my $login_name (@$user_logins) {
-            push(@users, Bugzilla::User->new_from_login($login_name));
+            push(@users, new Bugzilla::User({ name => $login_name }));
         }
     }
     return \@users;
@@ -1513,6 +1469,10 @@ there is currently no way to modify a user from this package.
 Note that the currently logged in user (if any) is available via
 L<Bugzilla-E<gt>user|Bugzilla/"user">.
 
+C<Bugzilla::User> is an implementation of L<Bugzilla::Object>, and thus
+provides all the methods of L<Bugzilla::Object> in addition to the
+methods listed below.
+
 =head1 CONSTANTS
 
 =over
@@ -1541,26 +1501,7 @@ confirmation screen.
 
 =head1 METHODS
 
-=over 4
-
-=item C<new($userid)>
-
-Creates a new C<Bugzilla::User> object for the given user id.  If no user
-id was given, a blank object is created with no user attributes.
-
-If an id was given but there was no matching user found, undef is returned.
-
-=begin undocumented
-
-=item C<new_from_login($login)>
-
-Creates a new C<Bugzilla::User> object given the provided login. Returns
-C<undef> if no matching user is found.
-
-This routine should not be required in general; most scripts should be using
-userids instead.
-
-=end undocumented
+=over
 
 =item C<id>
 
