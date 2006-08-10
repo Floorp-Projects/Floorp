@@ -666,7 +666,7 @@ calItemBase.prototype = {
             var triggerProp = icssvc.createIcalProperty("TRIGGER");
             triggerProp.valueAsIcalString = this.alarmOffset.icalString;
 
-            if (this.alarmRelated == this.ALARM_RELATED_END) 
+            if (this.alarmRelated == Components.interfaces.calIItemBase.ALARM_RELATED_END)
                 triggerProp.setParameter("RELATED", "END");
 
             alarmComp.addProperty(triggerProp);
