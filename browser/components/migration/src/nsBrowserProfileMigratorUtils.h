@@ -60,9 +60,7 @@
 
 #include "nsIPrefBranch.h"
 #include "nsIFile.h"
-#include "nsStringAPI.h"
-#include "nsCOMPtr.h"
-
+#include "nsString.h"
 class nsIProfileStartup;
 
 

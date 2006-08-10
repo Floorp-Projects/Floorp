@@ -21,7 +21,6 @@
  * Contributor(s):
  *   Ben Goodger <ben@mozilla.org> (Original Author)
  *   Asaf Romano <mozilla.mano@sent.com>
- *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -53,7 +52,7 @@
 #include "nsMacShellService.h"
 #include "nsNetUtil.h"
 #include "nsShellService.h"
-#include "nsStringAPI.h"
+#include "nsString.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <Carbon/Carbon.h>
@@ -469,7 +468,7 @@ nsMacShellService::OpenApplicationWithURI(nsILocalFile* aApplication, const nsAC
   if (NS_FAILED(rv))
     return rv;
   
-  const nsCString spec(aURI);
+  const nsPromiseFlatCString& spec = PromiseFlatCString(aURI);
   const UInt8* uriString = (const UInt8*)spec.get();
   CFURLRef uri = ::CFURLCreateWithBytes(NULL, uriString, aURI.Length(),
                                         kCFStringEncodingUTF8, NULL);

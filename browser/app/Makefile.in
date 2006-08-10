@@ -97,6 +97,17 @@ CPPSRCS = nsBrowserApp.cpp
 
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 
+ifdef BUILD_STATIC_LIBS
+STATIC_COMPONENTS_LINKER_PATH = -L$(DEPTH)/staticlib
+LIBS += $(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
+else
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+LIBS += $(DIST)/bin/XUL
+else
+EXTRA_DSO_LIBS += xul
+endif
+endif
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 TK_LIBS := -framework Cocoa $(TK_LIBS)
 endif
@@ -106,6 +117,7 @@ EXTRA_DSO_LIBS += thebes
 endif
 
 LIBS += \
+	$(STATIC_COMPONENTS_LINKER_PATH) \
 	$(EXTRA_DSO_LIBS) \
 	$(MOZ_JS_LIBS) \
 	$(XPCOM_LIBS) \
@@ -136,9 +148,23 @@ endif
 NSDISTMODE = copy
 
 include $(topsrcdir)/config/config.mk
+ifndef BUILD_STATIC_LIBS
 
 ifdef NS_TRACE_MALLOC
 EXTRA_DSO_LIBS += tracemalloc
+endif
+
+else
+include $(topsrcdir)/config/static-config.mk
+
+EXTRA_DEPS	+= \
+	$(STATIC_EXTRA_DEPS) \
+	$(NULL)
+DEFINES		+= $(STATIC_DEFINES)
+CPPSRCS		+= $(STATIC_CPPSRCS)
+EXTRA_DSO_LIBS	+= $(STATIC_EXTRA_DSO_LIBS)
+REQUIRES	+= $(STATIC_REQUIRES)
+EXTRA_LIBS	+= $(STATIC_EXTRA_LIBS)
 endif
 
 ifeq ($(OS_ARCH),WINNT)
@@ -153,6 +179,9 @@ RCFLAGS += -DMOZ_PHOENIX -I$(srcdir)
 else
 RCFLAGS += -DMOZ_PHOENIX --include-dir $(srcdir)
 endif
+ifdef BUILD_STATIC_LIBS
+RCFLAGS += -DMOZ_STATIC_BUILD
+endif
 ifdef DEBUG
 RCFLAGS += -DDEBUG
 endif
@@ -160,11 +189,18 @@ endif
 
 ifeq ($(OS_ARCH),BeOS)
 BEOS_PROGRAM_RESOURCE = $(srcdir)/apprunner-beos.rsrc
+ifdef BUILD_STATIC_LIBS
+OS_LIBS += -ltracker -lgame
+endif
 endif
 
 ifeq ($(OS_ARCH),OS2)
 RESFILE=splashos2.res
 RCFLAGS += -DMOZ_PHOENIX
+ifdef BUILD_STATIC_LIBS
+EXE_DEF_FILE = browser.def
+RCFLAGS += -DMOZ_STATIC_BUILD -i $(DIST)/include/widget
+endif
 ifdef DEBUG
 RCFLAGS += -DDEBUG
 endif
@@ -174,6 +210,21 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DFIREFOX_ICO=\"$(DIST)/branding/firefox.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\"
+
+ifdef BUILD_STATIC_LIBS
+include $(topsrcdir)/config/static-rules.mk
+
+DEFINES += -DIMPL_XREAPI
+endif
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifdef BUILD_STATIC_LIBS
+LIBS	+= -framework QuickTime -framework IOKit
+ifdef USE_PREBINDING
+BIN_FLAGS += -Wl,-headerpad -Wl,5a0c
+endif
+endif
+endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
 LIBS += -lphexlib
@@ -196,6 +247,20 @@ endif
 endif
 
 $(PROGRAM): $(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
+
+ifeq ($(OS_ARCH),OS2)
+ifdef BUILD_STATIC_LIBS
+$(EXE_DEF_FILE):
+	rm -f $@
+	@echo NAME mozilla >$(EXE_DEF_FILE)
+	@echo IMPORTS >>$(EXE_DEF_FILE)
+	@echo 	WinQueryProperty		= PMMERGE.5450 >>$(EXE_DEF_FILE)
+	@echo 	WinRemoveProperty		= PMMERGE.5451 >>$(EXE_DEF_FILE)
+	@echo 	WinSetProperty			= PMMERGE.5452 >>$(EXE_DEF_FILE)
+
+LDFLAGS += -Zlinker /NOE
+endif
+endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 

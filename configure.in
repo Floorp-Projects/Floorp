@@ -3996,7 +3996,6 @@ MOZ_ARG_HEADER(Application)
 
 BUILD_MODULES=all
 BUILD_STATIC_LIBS=
-MOZ_META_COMPONENT=
 ENABLE_TESTS=1
 MOZ_ACTIVEX_SCRIPTING_SUPPORT=
 MOZ_BRANDING_DIRECTORY=
@@ -4271,7 +4270,6 @@ browser)
   MOZ_APP_VERSION=$FIREFOX_VERSION
   MOZ_NO_XPCOM_OBSOLETE=1
   MOZ_EXTENSIONS_DEFAULT=" xml-rpc inspector gnomevfs reporter"
-  MOZ_ENABLE_LIBXUL=1
   AC_DEFINE(MOZ_PHOENIX)
   ;;
 
@@ -6752,6 +6750,10 @@ MOZ_ARG_ENABLE_BOOL(libxul,
     MOZ_ENABLE_LIBXUL=1,
     MOZ_ENABLE_LIBXUL=)
 
+if test -n "$MOZ_ENABLE_LIBXUL" -a -n "$BUILD_STATIC_LIBS"; then
+	AC_MSG_ERROR([--enable-libxul is not compatible with --enable-static])
+fi
+
 if test -n "$MOZ_ENABLE_LIBXUL" -a -z "$MOZ_XUL_APP"; then
 	AC_MSG_ERROR([--enable-libxul is only compatible with toolkit XUL applications.])
 fi
@@ -6762,13 +6764,6 @@ if test -n "$MOZ_ENABLE_LIBXUL"; then
 else
     XPCOM_LIBS="$DYNAMIC_XPCOM_LIBS"
 fi
-
-# A Firefox static build is really a meta-component build, not truly static
-if test "$MOZ_BUILD_APP" = "browser" -a -n "$BUILD_STATIC_LIBS"; then
-    MOZ_META_COMPONENT=1
-fi
-
-AC_SUBST(MOZ_META_COMPONENT)
 
 dnl ========================================================
 dnl = Force JS to be a static lib

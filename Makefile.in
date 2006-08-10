@@ -289,16 +289,19 @@ ifdef MOZ_JAVAXPCOM
 tier_50_dirs += extensions/java
 endif
 
-ifneq (1_,$(BUILD_STATIC_LIBS)_$(MOZ_META_COMPONENT))
+ifndef BUILD_STATIC_LIBS
 ifdef MOZ_XUL_APP
 ifneq (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2))
 tier_50_dirs += embedding/browser/gtk
-endif # GTK
+endif
+endif
+endif
 
+ifdef MOZ_XUL_APP
+ifndef BUILD_STATIC_LIBS
 tier_50_dirs += toolkit/library
-
-endif # MOZ_XUL_APP
-endif # STATIC
+endif
+endif
 
 ifdef MOZ_ENABLE_LIBXUL
 tier_50_dirs += xpcom/stub
@@ -449,10 +452,6 @@ endif
 # test harnesses 
 ifdef ENABLE_TESTS
 tier_99_dirs	+= tools/test-harness
-endif
-
-ifdef MOZ_META_COMPONENT
-tier_99_dirs += modules/staticmod
 endif
 
 # This should be built last, after all IDL files in the tree have been processed

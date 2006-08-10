@@ -32,9 +32,11 @@ bin\js3250.dll
 bin\plc4.dll
 bin\plds4.dll
 bin\xpcom.dll
-bin\xul.dll
+bin\xpcom_core.dll
 bin\xpistub.dll
 bin\nspr4.dll
+bin\components\xpinstal.dll
+bin\components\jar50.dll
 bin\Microsoft.VC80.CRT.manifest
 bin\msvcm80.dll
 bin\msvcp80.dll
@@ -50,7 +52,6 @@ bin\LICENSE
 bin\README.txt
 
 ; [Components]
-bin\components\appmeta.dll
 bin\components\alerts.xpt
 bin\AccessibleMarshal.dll
 bin\components\accessibility.xpt

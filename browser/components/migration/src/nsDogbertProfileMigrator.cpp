@@ -37,6 +37,7 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsBrowserProfileMigratorUtils.h"
+#include "nsCRT.h"
 #include "nsDogbertProfileMigrator.h"
 #include "nsICookieManager2.h"
 #include "nsIFile.h"
@@ -52,12 +53,12 @@
 #include "nsISupportsPrimitives.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
+#include "nsReadableUtils.h"
 #include "prprf.h"
 #include "prenv.h"
+#include "nsEscape.h"
 #include "NSReg.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsDirectoryServiceUtils.h"
-#include <stdlib.h>
 
 #ifndef MAXPATHLEN
 #ifdef _MAX_PATH
@@ -288,7 +289,7 @@ nsDogbertProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
   if (!mProfiles) {
     nsresult rv;
 
-    mProfiles = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
+    rv = NS_NewISupportsArray(getter_AddRefs(mProfiles));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIFile> regFile;
@@ -360,7 +361,7 @@ nsDogbertProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
 
   mSourceProfile = profileFile;
 
-  mProfiles = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
+  rv = NS_NewISupportsArray(getter_AddRefs(mProfiles));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISupportsString> nameString
@@ -565,7 +566,7 @@ nsDogbertProfileMigrator::FixDogbertCookies()
 
     // skip line if it is a comment or null line
     if (buffer.IsEmpty() || buffer.CharAt(0) == '#' ||
-        buffer.CharAt(0) == '\r' || buffer.CharAt(0) == '\n') {
+        buffer.CharAt(0) == nsCRT::CR || buffer.CharAt(0) == nsCRT::LF) {
       fileOutputStream->Write(buffer.get(), buffer.Length(), &written);
       continue;
     }
@@ -582,17 +583,15 @@ nsDogbertProfileMigrator::FixDogbertCookies()
       continue;
 
     // separate the expires field from the rest of the cookie line
-    const nsDependentCSubstring prefix = 
-      Substring(buffer, hostIndex, expiresIndex-hostIndex-1);
-    const nsDependentCSubstring expiresString =
-      Substring(buffer, expiresIndex, nameIndex-expiresIndex-1);
-    const nsDependentCSubstring suffix =
-      Substring(buffer, nameIndex, buffer.Length()-nameIndex);
+    nsCAutoString prefix, expiresString, suffix;
+    buffer.Mid(prefix, hostIndex, expiresIndex-hostIndex-1);
+    buffer.Mid(expiresString, expiresIndex, nameIndex-expiresIndex-1);
+    buffer.Mid(suffix, nameIndex, buffer.Length()-nameIndex);
 
     // correct the expires field
     char* expiresCString = ToNewCString(expiresString);
     unsigned long expires = strtoul(expiresCString, nsnull, 10);
-    NS_Free(expiresCString);
+    nsCRT::free(expiresCString);
 
     // if the cookie is supposed to expire at the end of the session
     // expires == 0.  don't adjust those cookies.
@@ -644,7 +643,7 @@ nsDogbertProfileMigrator::MigrateDogbertBookmarks()
   dogbertPrefsFile->Append(PREF_FILE_NAME_IN_4x);
   psvc->ReadUserPrefs(dogbertPrefsFile);
 
-  nsCString toolbarName;
+  nsXPIDLCString toolbarName;
   nsCOMPtr<nsIPrefBranch> branch(do_QueryInterface(psvc));
   rv = branch->GetCharPref("custtoolbar.personal_toolbar_folder", getter_Copies(toolbarName));
   // If the pref wasn't set in the user's 4.x preferences, there's no way we can "Fix" the
@@ -664,5 +663,5 @@ nsDogbertProfileMigrator::MigrateDogbertBookmarks()
   targetBookmarksFile->Append(BOOKMARKS_FILE_NAME_IN_5x);
 
   return AnnotatePersonalToolbarFolder(sourceBookmarksFile,
-                                       targetBookmarksFile, toolbarName.get());
+                                       targetBookmarksFile, toolbarName);
 }

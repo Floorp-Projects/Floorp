@@ -96,10 +96,9 @@ void SetProxyPref(const nsAString& aHostPort, const char* aPref,
     if (portDelimOffset > 0) {
       SetUnicharPref(aPref, Substring(hostPort, 0, portDelimOffset), aPrefs);
       nsAutoString port(Substring(hostPort, portDelimOffset + 1));
-      nsresult stringErr;
+      PRInt32 stringErr;
       portValue = port.ToInteger(&stringErr);
-      if (NS_SUCCEEDED(stringErr))
-        aPrefs->SetIntPref(aPortPref, portValue);
+      aPrefs->SetIntPref(aPortPref, portValue);
     }
     else
       SetUnicharPref(aPref, hostPort, aPrefs); 
@@ -269,11 +268,11 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
   rv = bundleService->CreateBundle(MIGRATION_BUNDLE, getter_AddRefs(bundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsString sourceName;
+  nsXPIDLString sourceName;
   bundle->GetStringFromName(aImportSourceNameKey, getter_Copies(sourceName));
 
   const PRUnichar* sourceNameStrings[] = { sourceName.get() };
-  nsString importedBookmarksTitle;
+  nsXPIDLString importedBookmarksTitle;
   bundle->FormatStringFromName(NS_LITERAL_STRING("importedBookmarksFolder").get(),
                                sourceNameStrings, 1, 
                                getter_Copies(importedBookmarksTitle));
