@@ -869,15 +869,24 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
     xform.eDy  = (FLOAT) dm[5];
     SetWorldTransform (hdc, &xform);
   } else {
-    offset = m.Transform(offset);
+    gfxPoint pos(m.GetTranslation());
+
+    tr.x += NSToCoordRound(pos.x);
+    tr.y += NSToCoordRound(pos.y);
+    cr.x += NSToCoordRound(pos.x);
+    cr.y += NSToCoordRound(pos.y);
   }
 
 #if 0
+  {
+  double dm[6];
+  m.ToValues(&dm[0], &dm[1], &dm[2], &dm[3], &dm[4], &dm[5]);
   fprintf (stderr, "xform: %f %f %f %f [%f %f]\n", dm[0], dm[1], dm[2], dm[3], dm[4], dm[5]);
   fprintf (stderr, "tr: [%d %d %d %d]\ncr: [%d %d %d %d]\noff: [%f %f]\n",
            tr.x, tr.y, tr.width, tr.height, cr.x, cr.y, cr.width, cr.height,
-           xoff, yoff);
+           offset.x, offset.y);
   fflush (stderr);
+  }
 #endif
 
   /* Set the device offsets as appropriate */
@@ -2041,7 +2050,10 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
     xform.eDy  = (FLOAT) dm[5];
     SetWorldTransform (hdc, &xform);
   } else {
-    offset = m.Transform(offset);
+    gfxPoint pos(m.GetTranslation());
+
+    tr.x += NSToCoordRound(pos.x);
+    tr.y += NSToCoordRound(pos.y);
   }
 
   /* Set the device offsets as appropriate */
