@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -57,6 +58,15 @@
 #include "nsIDOMHTMLFormElement.h"
 
 #include "pldhash.h"
+
+#ifdef DEBUG_CONTENT_LIST
+#include "nsIContentIterator.h"
+nsresult
+NS_NewPreContentIterator(nsIContentIterator** aInstancePtrResult);
+#define ASSERT_IN_SYNC AssertInSync()
+#else
+#define ASSERT_IN_SYNC
+#endif
 
 
 static nsContentList *gCachedContentList;
@@ -425,6 +435,7 @@ nsContentList::Item(PRUint32 aIndex, PRBool aDoFlush)
   if (mState != LIST_UP_TO_DATE)
     PopulateSelf(aIndex+1);
 
+  ASSERT_IN_SYNC;
   NS_ASSERTION(!mRootNode || mState != LIST_DIRTY,
                "PopulateSelf left the list in a dirty (useless) state!");
 
@@ -608,6 +619,7 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
         }
       }
  
+      ASSERT_IN_SYNC;
       return;
     }
 
@@ -628,6 +640,8 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
       PRUint32 limit = PRUint32(-1);
       PopulateWith(aContainer->GetChildAt(i), limit);
     }
+
+    ASSERT_IN_SYNC;
   }
 }
 
@@ -646,6 +660,8 @@ nsContentList::ContentInserted(nsIDocument *aDocument,
       MatchSelf(aChild)) {
     mState = LIST_DIRTY;
   }
+
+  ASSERT_IN_SYNC;
 }
  
 void
@@ -663,6 +679,8 @@ nsContentList::ContentRemoved(nsIDocument *aDocument,
       MatchSelf(aChild)) {
     mState = LIST_DIRTY;
   }
+
+  ASSERT_IN_SYNC;
 }
 
 PRBool
@@ -803,6 +821,8 @@ nsContentList::PopulateSelf(PRUint32 aNeededLength)
     return;
   }
 
+  ASSERT_IN_SYNC;
+
   if (mState == LIST_DIRTY) {
     Reset();
   }
@@ -829,6 +849,8 @@ nsContentList::PopulateSelf(PRUint32 aNeededLength)
     mState = LIST_UP_TO_DATE;
   else
     mState = LIST_LAZY;
+
+  ASSERT_IN_SYNC;
 }
 
 void
@@ -867,6 +889,7 @@ nsContentList::BringSelfUpToDate(PRBool aDoFlush)
   if (mState != LIST_UP_TO_DATE)
     PopulateSelf(PRUint32(-1));
     
+  ASSERT_IN_SYNC;
   NS_ASSERTION(!mRootNode || mState == LIST_UP_TO_DATE,
                "PopulateSelf dod not bring content list up to date!");
 }
@@ -917,3 +940,61 @@ nsContentList::IsContentAnonymous(nsIContent* aContent)
   return NS_STATIC_CAST(nsIContent*, mRootNode)->GetBindingParent() !=
          aContent->GetBindingParent();
 }
+
+#ifdef DEBUG_CONTENT_LIST
+void
+nsContentList::AssertInSync()
+{
+  if (mState == LIST_DIRTY) {
+    return;
+  }
+
+  if (!mRootNode) {
+    NS_ASSERTION(mElements.Count() == 0 && mState == LIST_DIRTY,
+                 "Empty iterator isn't quite empty?");
+    return;
+  }
+
+  // XXX This code will need to change if nsContentLists can ever match
+  // elements that are outside of the document element.
+  nsIContent *root;
+  if (mRootNode->IsNodeOfType(nsINode::eDOCUMENT)) {
+    root = NS_STATIC_CAST(nsIDocument*, mRootNode)->GetRootContent();
+  }
+  else {
+    root = NS_STATIC_CAST(nsIContent*, mRootNode);
+  }
+
+  nsCOMPtr<nsIContentIterator> iter;
+  if (mDeep) {
+    NS_NewPreContentIterator(getter_AddRefs(iter));
+    iter->Init(root);
+    iter->First();
+  }
+
+  PRInt32 cnt = 0, index = 0;
+  while (PR_TRUE) {
+    if (cnt == mElements.Count() && mState == LIST_LAZY) {
+      break;
+    }
+
+    nsIContent *cur = mDeep ? iter->GetCurrentNode() :
+                              mRootNode->GetChildAt(index++);
+    if (!cur) {
+      break;
+    }
+
+    if (Match(cur)) {
+      NS_ASSERTION(cnt < mElements.Count() && mElements[cnt] == cur,
+                   "Elements is out of sync");
+      ++cnt;
+    }
+
+    if (mDeep) {
+      iter->Next();
+    }
+  }
+
+  NS_ASSERTION(cnt == mElements.Count(), "Too few elements");
+}
+#endif

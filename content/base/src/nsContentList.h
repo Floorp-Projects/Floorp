@@ -349,6 +349,10 @@ protected:
    * attributes.
    */
   PRPackedBool mFuncMayDependOnAttr;
+
+#ifdef DEBUG_CONTENT_LIST
+  void AssertInSync();
+#endif
 };
 
 /**
