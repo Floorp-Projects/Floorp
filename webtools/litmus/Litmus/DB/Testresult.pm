@@ -168,7 +168,7 @@ sub getDefaultTestResults($) {
 sub getTestResults($\@\@$) {
     my ($self,$where_criteria,$order_by_criteria,$limit_value) = @_;
     
-    my $select = 'SELECT tr.testresult_id,tr.testcase_id,t.summary,tr.submission_time AS created,p.name AS platform_name,pr.name as product_name,trsl.name AS result_status,trsl.class_name AS result_status_class,b.name AS branch_name,tg.name AS test_group_name, tr.locale_abbrev, u.email';
+    my $select = 'SELECT DISTINCT(tr.testresult_id),tr.testcase_id,t.summary,tr.submission_time AS created,p.name AS platform_name,pr.name as product_name,trsl.name AS result_status,trsl.class_name AS result_status_class,b.name AS branch_name,tg.name AS test_group_name, tr.locale_abbrev, u.email';
     
     my $from = 'FROM test_results tr, testcases t, platforms p, opsyses o, branches b, products pr, test_result_status_lookup trsl, testgroups tg, subgroups sg, users u, testcase_subgroups tcsg, subgroup_testgroups sgtg';
     
@@ -233,6 +233,8 @@ sub getTestResults($\@\@$) {
         }
     }
 
+    my $group_by = 'GROUP BY tr.testresult_id';
+
     my $order_by = 'ORDER BY ';
     foreach my $criterion (@$order_by_criteria) {
         # Skip empty fields.
@@ -274,13 +276,11 @@ sub getTestResults($\@\@$) {
         $limit .= "$_num_results_default";
     }
     
-    my $sql = "$select $from $where $order_by $limit";
+    my $sql = "$select $from $where $group_by $order_by $limit";
 #print $sql,"<br/>\n";
     Litmus::DB::Testresult->set_sql(TestResults => qq{
         $sql
         });
-
-    print STDERR $sql;
 
     my @rows = $self->search_TestResults();
     
