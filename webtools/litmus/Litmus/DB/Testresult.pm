@@ -280,6 +280,8 @@ sub getTestResults($\@\@$) {
         $sql
         });
 
+    print STDERR $sql;
+
     my @rows = $self->search_TestResults();
     
     return \@rows;
