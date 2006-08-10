@@ -781,7 +781,7 @@
               start.normalize();
             }
             
-            return aTime;
+            return null;
           ]]>
         </body>
       </method>
@@ -1236,9 +1236,15 @@
             for (var i=1; i <= this.mMaxFreeBusy; i++) {
               var row = this.getFreeBusyElement(i);
               var newTime = row.nextSlot(time);
-              if(newTime.compare(time) != 0) {
-                time = newTime;
-                recheck = true;
+              if (newTime) {
+                if(newTime.compare(time) != 0) {
+                  time = newTime;
+                  recheck = true;
+                }
+              } else {
+                // a new slot could not be found
+                // and the given time was also invalid.
+                return this.mStartDate.clone();
               }
             }
           } while(recheck);
@@ -1297,9 +1303,15 @@
             for (var i=1; i <= this.mMaxFreeBusy; i++) {
               var row = this.getFreeBusyElement(i);
               var newTime = row.previousSlot(time);
-              if(newTime.compare(time) != 0) {
-                time = newTime;
-                recheck = true;
+              if (newTime) {
+                if(newTime.compare(time) != 0) {
+                  time = newTime;
+                  recheck = true;
+                }
+              } else {
+                // a new slot could not be found
+                // and the given time was also invalid.
+                return this.mStartDate.clone();
               }
             }
           } while(recheck);

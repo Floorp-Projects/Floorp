@@ -1554,6 +1554,11 @@
             timebar.startDate = this.mStartDate;
             timebar.endDate = endDate;
             timebar.refresh();
+            
+            // tell the freebusy grid about the new start/enddate
+            var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
+            grid.startDate = this.mStartDate;
+            grid.endDate = endDate;
           ]]>
         </body>
       </method>
