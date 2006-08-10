@@ -4508,6 +4508,22 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * stack fixup.
              */
             finallyCatch = CG_OFFSET(cg);
+
+            /*
+             * Last discriminant jumps to the rethrow code sequence if no
+             * discriminants match.  Target catchJump at the beginning of the
+             * rethrow sequence, just in case a guard expression throws and
+             * leaves the stack unbalanced.
+             *
+             * What's more, we must jump to the front of the rethrow sequence
+             * for a second reason: to re-sample the pending exception via the
+             * [exception] opcode, so that it can be saved across the [gosub].
+             * See below for case 2 in the comment describing finally clause
+             * stack budget.
+             */
+            if (catchJump != -1 && iter->pn_kid1->pn_expr)
+                CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, catchJump);
+
             EMIT_UINT16_IMM_OP(JSOP_SETSP, (jsatomid)depth);
             cg->stackDepth = depth;
 
@@ -4515,10 +4531,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 js_Emit1(cx, cg, JSOP_EXCEPTION) < 0) {
                 return JS_FALSE;
             }
-
-            /* Last discriminant jumps to rethrow if none match. */
-            if (catchJump != -1 && iter->pn_kid1->pn_expr)
-                CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, catchJump);
 
             if (pn->pn_kid3) {
                 jmp = EmitBackPatchOp(cx, cg, JSOP_BACKPATCH_PUSH,
@@ -4552,13 +4564,30 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
 
             /*
-             * The stack budget must be balanced at this point, but we need
-             * two more slots for the saved exception and the JSOP_RETSUB's
-             * return pc index that was pushed by the JSOP_GOSUB opcode that
-             * called this finally clause.
+             * The stack budget must be balanced at this point.  There are
+             * three cases:
+             *
+             * 1.  try-finally: we need two more slots for the saved exception
+             *     and the JSOP_RETSUB's return pc index that was pushed by
+             *     the JSOP_GOSUB opcode that called this finally clause.
+             *
+             * 2.  try-catch(guard)...-catch(guard)-finally: we can't know at
+             *     compile time whether a guarded catch caught the exception,
+             *     so we may need to propagate it via re-throw bytecode when
+             *     the finally returns.  In this case, if no guard expression
+             *     evaluates to true, we will jump to the rethrow sequence,
+             *     which re-samples cx->exception using JSOP_EXCEPTION, then
+             *     calls the finally subroutine.  So in this case as well as
+             *     in case 1, two more slots will already be on the stack.
+             *
+             * 3.  try-catch-finally or try-catch(guard)...-catch-finally:
+             *     we need one slot for the JSOP_RETSUB's return pc index.
+             *     The unguarded catch is guaranteed to pop the exception,
+             *     i.e., to "catch the exception" -- so we do not need to
+             *     stack it across the finally in order to propagate it.
              */
             JS_ASSERT(cg->stackDepth == depth);
-            cg->stackDepth += 2;
+            cg->stackDepth += (iter && !iter->pn_kid1->pn_expr) ? 1 : 2;
             if ((uintN)cg->stackDepth > cg->maxStackDepth)
                 cg->maxStackDepth = cg->stackDepth;
 
@@ -4573,8 +4602,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             }
 
             /* Restore stack depth budget to its balanced state. */
-            JS_ASSERT(cg->stackDepth == depth + 1);
-            cg->stackDepth = depth;
+            if (cg->stackDepth != depth) {
+                JS_ASSERT(cg->stackDepth == depth + 1);
+                cg->stackDepth = depth;
+            }
         }
         js_PopStatementCG(cx, cg);
 
