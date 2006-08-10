@@ -300,6 +300,7 @@ nsresult nsMsgHeaderParser::ReformatUnquotedAddresses (const PRUnichar *line, PR
 {
   NS_ENSURE_ARG_POINTER(result);
   *result = nsnull;
+  PRBool badInput = PR_FALSE;
 
   NS_ConvertUTF16toUTF8 convertedLine(line);
 
@@ -319,7 +320,7 @@ nsresult nsMsgHeaderParser::ReformatUnquotedAddresses (const PRUnichar *line, PR
   PRBool openQuoteLevel1 = PR_FALSE;
   PRBool openQuoteLevel2 = PR_FALSE;
 
-  while (readPtr <= endPtr && writePtr < endOutputPtr)
+  while (readPtr <= endPtr && writePtr < endOutputPtr && !badInput)
   {
     if (*readPtr == '\\')
     {
@@ -347,8 +348,15 @@ nsresult nsMsgHeaderParser::ReformatUnquotedAddresses (const PRUnichar *line, PR
         reformated = msg_reformat_Header_addresses(startRecipient);
         if (reformated)
         {
-          strncpy(writePtr, reformated, endOutputPtr - writePtr);
-          writePtr += strlen(reformated);
+          if ((PRInt32) strlen(reformated) < (endOutputPtr - writePtr))
+          {
+            strncpy(writePtr, reformated, endOutputPtr - writePtr);
+            writePtr += strlen(reformated);
+          }
+          else
+          {
+            badInput = PR_TRUE;
+          }
           PR_Free(reformated);
         }
         else
@@ -371,16 +379,22 @@ nsresult nsMsgHeaderParser::ReformatUnquotedAddresses (const PRUnichar *line, PR
   reformated = msg_reformat_Header_addresses(startRecipient);
   if (reformated)
   {
-    strncpy(writePtr, reformated, endOutputPtr - writePtr);
+    if ((PRInt32) strlen(reformated) < (endOutputPtr - writePtr))
+      strncpy(writePtr, reformated, endOutputPtr - writePtr);
+    else
+      badInput = PR_TRUE;
     PR_Free(reformated);
   }
   else
     strncpy(writePtr, startRecipient, endOutputPtr - writePtr);
 
-  *result = ToNewUnicode(NS_ConvertUTF8toUTF16(outputStr));
+  if (!badInput)
+    *result = ToNewUnicode(NS_ConvertUTF8toUTF16(outputStr));
   PR_Free(outputStr);
   if (*result == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
+  if (badInput)
+    return NS_ERROR_INVALID_ARG;
 
   return NS_OK;
 }
