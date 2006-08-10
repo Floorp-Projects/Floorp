@@ -42,8 +42,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MOZILLA_INTERNAL_API = 1
-
 REQUIRES	= xpcom \
 		  string \
 		  tracemalloc \
@@ -85,7 +83,7 @@ LIBS		+= \
 		tmreader.$(OBJ_SUFFIX) \
 		adreader.$(OBJ_SUFFIX) \
 		$(EXTRA_DSO_LIBS) \
-		$(XPCOM_LIBS) \
+		$(XPCOM_GLUE_LDOPTS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
