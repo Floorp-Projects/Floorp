@@ -365,6 +365,9 @@ private:
                                    PRInt32 aOffset,
                                    const nsTArray<PRInt32>* aRemappingArray,
                                    PRBool aUseBeginning);
+  PRBool FindRangeGivenPoint(nsIDOMNode* aBeginNode, PRInt32 aBeginOffset,
+                             nsIDOMNode* aEndNode, PRInt32 aEndOffset,
+                             PRInt32 aStartSearchingHere);
 
   nsCOMPtr<nsIDOMRange> mAnchorFocusRange;
   nsCOMPtr<nsIDOMRange> mOriginalAnchorRange; //used as a point with range gravity for security
@@ -4353,15 +4356,15 @@ nsTypedSelection::AddItem(nsIDOMRange *aItem)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMNode> itemNode;
-  PRInt32 itemOffset;
-  rv = aItem->GetStartContainer(getter_AddRefs(itemNode));
+  nsCOMPtr<nsIDOMNode> beginNode;
+  PRInt32 beginOffset;
+  rv = aItem->GetStartContainer(getter_AddRefs(beginNode));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aItem->GetStartOffset(&itemOffset);
+  rv = aItem->GetStartOffset(&beginOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 beginInsertionPoint;
-  rv = FindInsertionPoint(nsnull, itemNode, itemOffset,
+  rv = FindInsertionPoint(nsnull, beginNode, beginOffset,
                           CompareToRangeStart, &beginInsertionPoint);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -4370,15 +4373,25 @@ nsTypedSelection::AddItem(nsIDOMRange *aItem)
   // compares (which can be expensive) in this common case by special casing
   // this.
 
-  rv = aItem->GetEndContainer(getter_AddRefs(itemNode));
+  nsCOMPtr<nsIDOMNode> endNode;
+  PRInt32 endOffset;
+  rv = aItem->GetEndContainer(getter_AddRefs(endNode));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aItem->GetEndOffset(&itemOffset);
+  rv = aItem->GetEndOffset(&endOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // make sure that this range is not already in the selection
+  if (FindRangeGivenPoint(beginNode, beginOffset, endNode, endOffset,
+                          beginInsertionPoint)) {
+    // silently succeed, this range is already in the selection
+    return NS_OK;
+  }
+
   PRInt32 endInsertionPoint;
-  rv = FindInsertionPoint(&mRangeEndings, itemNode, itemOffset,
+  rv = FindInsertionPoint(&mRangeEndings, endNode, endOffset,
                           CompareToRangeEnd, &endInsertionPoint);
   NS_ENSURE_SUCCESS(rv, rv);
+
 
   // insert the range, being careful to revert everything on error to keep
   // consistency
@@ -4728,6 +4741,91 @@ nsTypedSelection::GetRangesForIntervalCOMArray(nsIDOMNode* aBeginNode, PRInt32 a
     }
   }
   return NS_OK;
+}
+
+// RangeMatches*Point
+//
+//    Compares the range beginning or ending point, and returns true if it
+//    exactly matches the given DOM point.
+
+static PRBool
+RangeMatchesBeginPoint(nsIDOMRange* aRange, nsIDOMNode* aNode, PRInt32 aOffset)
+{
+  PRInt32 offset;
+  nsresult rv = aRange->GetStartOffset(&offset);
+  if (NS_FAILED(rv) || offset != aOffset)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMNode> node;
+  rv = aRange->GetStartContainer(getter_AddRefs(node));
+  if (NS_FAILED(rv) || node != aNode)
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
+
+static PRBool
+RangeMatchesEndPoint(nsIDOMRange* aRange, nsIDOMNode* aNode, PRInt32 aOffset)
+{
+  PRInt32 offset;
+  nsresult rv = aRange->GetEndOffset(&offset);
+  if (NS_FAILED(rv) || offset != aOffset)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMNode> node;
+  rv = aRange->GetEndContainer(getter_AddRefs(node));
+  if (NS_FAILED(rv) || node != aNode)
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
+
+
+// nsTypedSelection::FindRangeGivenPoint
+//
+//    Searches for the range matching the exact given range points. We search
+//    in the array of beginnings, and start from the given index. This index
+//    should be the result of FindInsertionPoint, which will return any index
+//    within a range of identical ones.
+//
+//    Therefore, this function searches backwards and forwards from that point
+//    of all matching beginning points, and then compares the ending points to
+//    find a match. Returns true if a match was found, false if not.
+
+PRBool
+nsTypedSelection::FindRangeGivenPoint(
+    nsIDOMNode* aBeginNode, PRInt32 aBeginOffset,
+    nsIDOMNode* aEndNode, PRInt32 aEndOffset,
+    PRInt32 aStartSearchingHere)
+{
+  PRInt32 i;
+  NS_ASSERTION(aStartSearchingHere >= 0 && aStartSearchingHere <= (PRInt32)mRanges.Length(),
+               "Input searching seed is not in range.");
+
+  // search backwards for a begin match
+  for (i = aStartSearchingHere; i >= 0 && i < (PRInt32)mRanges.Length(); i --) {
+    if (RangeMatchesBeginPoint(mRanges[i].mRange, aBeginNode, aBeginOffset)) {
+      if (RangeMatchesEndPoint(mRanges[i].mRange, aEndNode, aEndOffset))
+        return PR_TRUE;
+    } else {
+      // done with matches going backwards
+      break;
+    }
+  }
+
+  // search forwards for a begin match
+  for (i = aStartSearchingHere + 1; i < (PRInt32)mRanges.Length(); i ++) {
+    if (RangeMatchesBeginPoint(mRanges[i].mRange, aBeginNode, aBeginOffset)) {
+      if (RangeMatchesEndPoint(mRanges[i].mRange, aEndNode, aEndOffset))
+        return PR_TRUE;
+    } else {
+      // done with matches going forwards
+      break;
+    }
+  }
+
+  // match not found
+  return PR_FALSE;
 }
 
 //utility method to get the primary frame of node or use the offset to get frame of child node
