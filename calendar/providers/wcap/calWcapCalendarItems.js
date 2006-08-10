@@ -196,7 +196,7 @@ calWcapCalendar.prototype.getStoreUrl = function( item, oldItem )
     var bIsEvent = isEvent(item);
     var url = this.session.getCommandUrl( bIsEvent ? "storeevents"
                                                    : "storetodos" );
-    url += "&fetch=1&compressed=1&recurring=1";
+    url += "&fetch=1&relativealarm=1&compressed=1&recurring=1";
     url += ("&calid=" + encodeURIComponent(this.calId));
     
     var ownerId = this.ownerId;
@@ -331,40 +331,42 @@ calWcapCalendar.prototype.getStoreUrl = function( item, oldItem )
     // alarm support:
     var alarmOffset = item.alarmOffset;
     if (alarmOffset) {
-        var alarmStart = null;
-        if (item.alarmRelated ==
-            Components.interfaces.calIItemBase.ALARM_RELATED_END) {
-            if (!dtend)
-                this.logError("no end date (no end nor due) for alarm!");
-            else {
-                alarmStart = dtend.clone();
+        var alarmRelated = item.alarmRelated;
+        if (alarmRelated==Components.interfaces.calIItemBase.ALARM_RELATED_END){
+            // cs does not support RELATED=END:
+            var dur = item.duration;
+            if (dur) {
                 alarmOffset = alarmOffset.clone();
-                alarmOffset.isNegative = !alarmOffset.isNegative;
-            }
-        }
-        else if (dtstart)
-            alarmStart = dtstart.clone(); // default
-        
-        if (alarmStart != null) {
-            alarmStart.addDuration(alarmOffset);
-            var zalarmStart = getIcalUTC(alarmStart);
-            url += ("&alarmStart=" + zalarmStart);
-            // xxx todo: verify ;-separated addresses
-            url += "&alarmEmails=";
-            if (item.hasProperty( "alarmEmailAddress" )) {
-                url += encodeURIComponent(
-                    item.getProperty("alarmEmailAddress") );
+                alarmOffset.addDuration(dur);
             }
             else {
-                // xxx todo: popup exor emails can be currently specified...
-                url += ("&alarmPopup=" + zalarmStart);
+                this.notifyError("alarm relates to END, but no duration!");
+                alarmRelated =
+                    Components.interfaces.calIItemBase.ALARM_RELATED_START;
             }
-            // xxx todo: missing: alarm triggers for flashing, etc.
         }
+        alarmOffset = alarmOffset.icalString;
+        url += ("&alarmStart=" + alarmOffset);
+        url += ("&X-MOZ-WCAP-ALARM-RELATED=" +
+                "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" +
+                alarmRelated);
+        // xxx todo: verify ;-separated addresses
+        url += "&alarmEmails=";
+        if (item.hasProperty("alarmEmailAddress")) {
+            url += encodeURIComponent(
+                item.getProperty("alarmEmailAddress") );
+        }
+        else {
+            // xxx todo: popup exor emails can be currently specified...
+            url += ("&alarmPopup=" + alarmOffset);
+        }
+        // xxx todo: missing: alarm triggers for flashing, etc.
     }
     else {
         // clear alarm:
         url += "&alarmStart=&alarmPopup=&alarmEmails=";
+        url += ("&X-MOZ-WCAP-ALARM-RELATED=" +
+                "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-DELETE^");
     }
     // xxx todo: currently no support to store this at VALARM component...
     var alarmLastAck = item.alarmLastAck;
@@ -372,6 +374,10 @@ calWcapCalendar.prototype.getStoreUrl = function( item, oldItem )
         url += ("&X-MOZ-LASTACK=" +
                 "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" +
                 getIcalUTC(alarmLastAck));
+    }
+    else {
+        url += ("&X-MOZ-LASTACK=" +
+                "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-DELETE^");
     }
     
     // attendees:
@@ -740,31 +746,40 @@ calWcapCalendar.prototype.parseItems = function(
                         }
                     break;
                 }
-                // assure correct TRIGGER;RELATED if VALARM,
-                // cs does not constrain start/due with correct RELATED:
-                if (item != null && item.alarmOffset &&
-                    item.alarmRelated == Components.interfaces
-                                         .calIItemBase.ALARM_RELATED_START &&
-                    !item.entryDate) {
-                    if (item.dueDate) {
-                        // patch missing RELATED=END:
-                        item.alarmRelated = Components.interfaces
-                                            .calIItemBase.ALARM_RELATED_END;
-                    }
-                    else {
-                        this_.log( "todo has no entryDate nor dueDate, " +
-                                   "but VALARM => removing alarm!" );
-                        item.alarmOffset = null;
-                    }
-                }
                 break;
             }
             }
             if (item != null) {
-                var lastAckProp = subComp.getFirstProperty("X-MOZ-LASTACK");
-                if (lastAckProp) { // shift to alarm comp:
-                    // TZID is UTC:
-                    item.alarmLastAck = getDatetimeFromIcalProp( lastAckProp );
+                var alarmOffset = item.alarmOffset;
+                if (alarmOffset) {
+                    var alarmRelated = subComp.getFirstProperty(
+                        "X-MOZ-WCAP-ALARM-RELATED");
+                    if (alarmRelated) {
+                        alarmRelated = Number(alarmRelated.value);
+                        if (alarmRelated != item.alarmRelated) {
+                            alarmOffset = alarmOffset.clone();
+                            var dur = item.duration;
+                            if (dur) {
+                                if (alarmRelated == Components.interfaces
+                                    .calIItemBase.ALARM_RELATED_END) {
+                                    dur = dur.clone();
+                                    dur.isNegative = true;
+                                }
+                                alarmOffset.addDuration(dur);
+                                item.alarmOffset = alarmOffset;
+                                item.alarmRelated = alarmRelated;
+                            }
+                            else {
+                                this_.notifyError("related to END, but no " +
+                                                  "duration!");
+                            }
+                        }
+                    }
+                    var lastAckProp = subComp.getFirstProperty("X-MOZ-LASTACK");
+                    if (lastAckProp) { // shift to alarm comp:
+                        // TZID is UTC:
+                        item.alarmLastAck =getDatetimeFromIcalProp(lastAckProp);
+                    }
                 }
                 
                 item.calendar = this_.superCalendar;
@@ -776,7 +791,7 @@ calWcapCalendar.prototype.parseItems = function(
                 }
                 else {
                     // xxx todo: IMO ought not be needed here: TZID is UTC
-                    var dtrid = getDatetimeFromIcalProp( rid );
+                    var dtrid = getDatetimeFromIcalProp(rid);
                     if (LOG_LEVEL > 1) {
                         this_.log( "exception item: rid=" + dtrid.icalString );
                     }
@@ -892,7 +907,8 @@ calWcapCalendar.prototype.getItem = function( id, iListener )
             this_.log( "item delivered." );
         };
         
-        var params = "&compressed=1&recurring=1&fmt-out=text%2Fcalendar";
+        var params = ("&relativealarm=1&compressed=1&recurring=1" +
+                      "&fmt-out=text%2Fcalendar");
         params += ("&calid=" + encodeURIComponent(this.calId));
         params += ("&uid=" + id);
         try {
@@ -1028,8 +1044,9 @@ calWcapCalendar.prototype.getItems = function(
               ",\n\trangeEnd=" + zRangeEnd );
     try {
         var url = this.session.getCommandUrl( "fetchcomponents_by_range" );
-        url += ("&calid=" + encodeURIComponent(this.calId));
-        url += "&compressed=1&recurring=1";
+        url += ("&relativealarm=1&compressed=1&recurring=1" +
+                "&fmt-out=text%2Fcalendar&calid=" +
+                encodeURIComponent(this.calId));
         
         switch (itemFilter &
                 Components.interfaces.calICalendar.ITEM_FILTER_TYPE_ALL) {
@@ -1066,7 +1083,7 @@ calWcapCalendar.prototype.getItems = function(
         
         var this_ = this;
         this.session.issueAsyncRequest(
-            url + "&fmt-out=text%2Fcalendar", stringToIcal,
+            url, stringToIcal,
             function( wcapResponse ) {
                 this_.getItems_resp( wcapResponse,
                                      itemFilter, maxResult,
@@ -1228,10 +1245,11 @@ calWcapCalendar.prototype.syncChangesTo = function(
             this.log( "syncChangesTo(): doing initial sync." );
             syncState.acquire();
             var url = this.session.getCommandUrl( "fetchcomponents_by_range" );
-            url += ("&compressed=1&recurring=1&calid=" +
+            url += ("&relativealarm=1&compressed=1&recurring=1" +
+                    "&fmt-out=text%2Fcalendar&calid=" +
                     encodeURIComponent(this.calId));
             this.session.issueAsyncRequest(
-                url + "&fmt-out=text%2Fcalendar", stringToIcal,
+                url, stringToIcal,
                 function( wcapResponse ) {
                     this_.syncChangesTo_resp(
                         wcapResponse, syncState, iListener,
@@ -1249,7 +1267,7 @@ calWcapCalendar.prototype.syncChangesTo = function(
             this.log( "syncChangesTo(): getting last modifications." );
             var modifyItemListener = new FinishListener(
                 Components.interfaces.calIOperationListener.MODIFY, syncState );
-            var params = ("&compressed=1&recurring=1&calid=" +
+            var params = ("&relativealarm=1&compressed=1&recurring=1&calid=" +
                           encodeURIComponent(this.calId));
             params += ("&fmt-out=text%2Fcalendar&dtstart=" + zdtFrom);
             syncState.acquire();

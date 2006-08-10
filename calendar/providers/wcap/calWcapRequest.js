@@ -186,12 +186,6 @@ function issueSyncRequest( url, receiverFunc, bLogging )
         url, "" /* charset */, null /* baseURI */ );
     channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
     var stream = channel.open();
-    if (bLogging && LOG_LEVEL > 1) {
-        logMessage( "issueSyncRequest( \"" + url + "\" )",
-                    "contentCharset = " + channel.contentCharset +
-                    ", contentLength = " + channel.contentLength +
-                    ", contentType = " + channel.contentType );
-    }
     var status = channel.status;
     if (status == Components.results.NS_OK) {
         var charset = channel.contentCharset;

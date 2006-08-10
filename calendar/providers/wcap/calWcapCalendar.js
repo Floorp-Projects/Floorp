@@ -254,6 +254,8 @@ calWcapCalendar.prototype = {
     },
     
     get isOwnedCalendar() {
+        if (!this.session.isLoggedIn)
+            return false;
         var ownerId = this.ownerId;
         return (this.calId == ownerId ||
                 this.calId.indexOf(ownerId + ":") == 0);

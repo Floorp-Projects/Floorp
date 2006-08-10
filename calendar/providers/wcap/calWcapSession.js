@@ -114,7 +114,7 @@ calWcapSession.prototype = {
     toString:
     function( msg )
     {
-        var str = this.uri.spec;
+        var str = (this.uri ? this.uri.spec : "no uri");
         if (this.m_userId != null) {
             str += (", userId=" + this.userId);
         }
@@ -201,11 +201,11 @@ calWcapSession.prototype = {
     getSupportedTimezones:
     function( bRefresh )
     {
-        var key = this.uri.hostPort;
+        var key = this.sessionUri.hostPort;
         if ((bRefresh || !g_allSupportedTimezones[key]) &&
             this.m_sessionId != null)
         {
-            var url = this.uri.spec +
+            var url = this.sessionUri.spec +
                 "get_all_timezones.wcap?appid=mozilla-lightning" +
                 "&fmt-out=text%2Fcalendar&id=" + this.m_sessionId;
             var str = issueSyncRequest( url );
@@ -246,10 +246,10 @@ calWcapSession.prototype = {
     getServerTimeDiff:
     function( bRefresh )
     {
-        var key = this.uri.hostPort;
+        var key = this.sessionUri.hostPort;
         if ((bRefresh || !g_serverTimeDiffs[key]) &&
             this.m_sessionId != null) {
-            var url = this.uri.spec +
+            var url = this.sessionUri.spec +
                 // xxx todo: assuming same diff for all calids:
                 "gettime.wcap?appid=mozilla-lightning" +
                 "&fmt-out=text%2Fcalendar&id=" + this.m_sessionId;
@@ -306,79 +306,42 @@ calWcapSession.prototype = {
         }
         
         if (this.m_sessionId == null || this.m_sessionId == timedOutSessionId) {
-            // sync all execution for login to UI thread, using nsIRunnable:
             
-            // change from MOZILLA_1_8_BRANCH->TRUNK: probe xxx todo: test
-            var eventQueueService =
-                Components.classes["@mozilla.org/event-queue-service;1"]
-                .getService(Components.interfaces.nsIEventQueueService);
-            var target; // eventQueue or eventTarget
-            if (eventQueueService == null) {
-                // we are on the TRUNK:
-                var threadManager =
-                    Components.classes["@mozilla.org/thread-manager;1"]
-                    .getService(Components.interfaces.nsIThreadManager);
-                target = threadManager.mainThread;
-            }
-            else {
-                target = eventQueueService.getSpecialEventQueue(
-                    Components.interfaces.
-                    nsIEventQueueService.UI_THREAD_EVENT_QUEUE );
-            }
-            
-            var proxyObjectManager =
-                Components.classes["@mozilla.org/xpcomproxy;1"]
-                .getService(Components.interfaces.nsIProxyObjectManager);
             var this_ = this;
-            var proxy = proxyObjectManager.getProxyForObject(
-                target, Components.interfaces.nsIRunnable,
-                {   // need to implemented QueryInterface, because object param
-                    // is not associated with iid:
-                    QueryInterface: function( iid ) {
-                        if (Components.interfaces.nsIRunnable.equals(iid) ||
-                            Components.interfaces.nsISupports.equals(iid))
-                            return this;
-                        throw Components.results.NS_ERROR_NO_INTERFACE;
-                    },
-                    // nsIRunnable:
-                    run: function() {
-                        if (this_.m_sessionId == null ||
-                            this_.m_sessionId == timedOutSessionId)
-                        {
-                            if (timedOutSessionId != null) {
-                                this_.m_sessionId = null;
-                                this_.log( "session timeout; " +
-                                           "prompting to reconnect." );
-                                var prompt =
-                                    getWindowWatcher().getNewPrompter(null);
-                                var bundle = getWcapBundle();
-                                if (!prompt.confirm(
-                                        bundle.GetStringFromName(
-                                            "reconnectConfirmation.label" ),
-                                        bundle.formatStringFromName(
-                                            "reconnectConfirmation.text",
-                                            [this_.uri.hostPort], 1 ) )) {
-                                    this_.m_bNoLoginsAnymore = true;
-                                }
+            syncExec(
+                function() {
+                    if (this_.m_sessionId == null ||
+                        this_.m_sessionId == timedOutSessionId)
+                    {
+                        if (timedOutSessionId != null) {
+                            this_.m_sessionId = null;
+                            this_.log(
+                                "session timeout; prompting to reconnect." );
+                            var prompt =getWindowWatcher().getNewPrompter(null);
+                            var bundle = getWcapBundle();
+                            if (!prompt.confirm(
+                                    bundle.GetStringFromName(
+                                        "reconnectConfirmation.label" ),
+                                    bundle.formatStringFromName(
+                                        "reconnectConfirmation.text",
+                                        [this_.uri.hostPort], 1 ) )) {
+                                this_.m_bNoLoginsAnymore = true;
                             }
-                            if (!this_.m_bNoLoginsAnymore)
-                                this_.getSessionId_();
-                            
-                            if (this_.m_sessionId != null) {
-                                this_.getSupportedTimezones(true /* refresh */);
-                                this_.getServerTimeDiff(true /* refresh */);
-                                // preread calprops for subscribed calendars:
-                                var cals = this_.getSubscribedCalendars({});
-                                for each ( cal in cals ) {
-                                    cal.getCalProps_(true /* async */);
-                                }
+                        }
+                        if (!this_.m_bNoLoginsAnymore)
+                            this_.getSessionId_();
+                        
+                        if (this_.m_sessionId != null) {
+                            this_.getSupportedTimezones(true /* refresh */);
+                            this_.getServerTimeDiff(true /* refresh */);
+                            // preread calprops for subscribed calendars:
+                            var cals = this_.getSubscribedCalendars({});
+                            for each ( cal in cals ) {
+                                cal.getCalProps_(true /* async */);
                             }
                         }
                     }
-                },
-                Components.interfaces.nsIProxyObjectManager.INVOKE_SYNC );
-            // xxx todo: are rc/exceptions forwarded to current thread?
-            proxy.run();
+                } );
         }
         if (this.m_sessionId == null) {
             throw Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED;
@@ -389,6 +352,8 @@ calWcapSession.prototype = {
     function()
     {
         if (this.m_sessionId == null) {
+            
+            this.log( "attempting to get a session id..." );
             
             var passwordManager =
                 Components.classes["@mozilla.org/passwordmanager;1"]
@@ -413,7 +378,7 @@ calWcapSession.prototype = {
                 }
             }
             
-            var loginUri = this.uri.clone();
+            var loginUri = this.sessionUri.clone();
             if (loginUri.scheme.toLowerCase() != "https") {
                 if (loginUri.port == -1) {
                     // no https, but no port specified
@@ -425,7 +390,7 @@ calWcapSession.prototype = {
                     // => leave it to her whether to connect...
                     if (!confirmInsecureLogin( loginUri )) {
                         this.m_bNoLoginsAnymore = true;
-                        this.log( "user rejected unsecure login." );
+                        this.log( "user rejected insecure login." );
                         return null;
                     }
                 }
@@ -461,11 +426,11 @@ calWcapSession.prototype = {
                                     "accessingServerFailedError.text",
                                     [loginUri.hostPort], 1 ) );
                         }
-                        if (this.uri.scheme.toLowerCase() == "https") {
+                        if (this.sessionUri.scheme.toLowerCase() == "https") {
                             // user specified https, so http is no option:
                             loginText = null;
                             throw new Error(
-                                getWcapBundle() .formatStringFromName(
+                                getWcapBundle().formatStringFromName(
                                     "mandatoryHttpsError.text",
                                     [loginUri.hostPort], 1 ) );
                         }
@@ -489,7 +454,7 @@ calWcapSession.prototype = {
                     }
                 }
                 catch (exc) {
-                    Components.utils.reportError( exc );
+                    this.logError( exc );
                     if (loginText == null) {
                         // accessing server or invalid protocol,
                         // no logins anymore:
@@ -577,55 +542,44 @@ calWcapSession.prototype = {
     getServerInfo:
     function( uri )
     {
-        loginTextVars = [uri.hostPort];
-        var loginText;
-        var wcapVersion;
+        var icalRootComp;
         try {
             // currently, xml parsing at an early stage during process startup
             // does not work reliably, so use libical parsing for now:
             var str = issueSyncRequest(
                 uri.spec + "version.wcap?fmt-out=text%2Fcalendar" );
-            var icalRootComp = getIcsService().parseICS( str );
+            if (str.indexOf("BEGIN:VCALENDAR") < 0)
+                return null; // no ical data returned
+            icalRootComp = getIcsService().parseICS( str );
             if (icalRootComp == null)
-                throw new Error("invalid data, expected ical!");
-            var prop = icalRootComp.getFirstProperty( "PRODID" );
-            if (prop == null)
-                throw new Error("missing PRODID!");
-            loginTextVars.push( prop.value );
-            var prop = icalRootComp.getFirstProperty( "X-NSCP-SERVERVERSION" );
-            if (prop == null)
-                throw new Error("missing X-NSCP-SERVERVERSION!");
-            loginTextVars.push( prop.value );
-            var prop = icalRootComp.getFirstProperty( "X-NSCP-WCAPVERSION" );
-            if (prop == null)
-                throw new Error("missing X-NSCP-WCAPVERSION!");
-            wcapVersion = prop.value;
-            loginTextVars.push( wcapVersion );
-            
-//             var xml = issueSyncXMLRequest(
-//                 uri.spec + "version.wcap?fmt-out=text%2Fxml" );
-//             wcapVersion = xml.getElementsByTagName(
-//                 "X-NSCP-WCAPVERSION" ).item(0).textContent;
-//             if (wcapVersion == undefined || wcapVersion == "")
-//                 throw new Error("invalid response!");
-//             serverInfo =
-//                 ("Server-Info: " +
-//                  xml.getElementsByTagName(
-//                      "iCal" ).item(0).attributes.getNamedItem(
-//                          "prodid" ).value +
-//                  ", v" + xml.getElementsByTagName(
-//                      "X-NSCP-SERVERVERSION" ).item(0).textContent +
-//                  ", WCAP v" + wcapVersion);            
+                throw new Error("invalid ical data!");
         }
-        catch (exc) {
-            this.log( "error: " + exc );
+        catch (exc) { // soft error; request denied etc.
+            this.log( "server version request failed: " + errorToString(exc) );
             return null;
         }
-        if (parseInt(wcapVersion) < 2.0) {
-            this.log( "parsed server WCAP major: " + parseInt(wcapVersion) );
-            throw new Error(
-                getWcapBundle("insufficientWcapVersionError.text",
-                              loginTextVars) );
+        
+        loginTextVars = [uri.hostPort];
+        var prop = icalRootComp.getFirstProperty( "PRODID" );
+        loginTextVars.push( prop ? prop.value : "<unknown>" );
+        prop = icalRootComp.getFirstProperty( "X-NSCP-SERVERVERSION" );
+        loginTextVars.push( prop ? prop.value : "<unknown>" );
+        prop = icalRootComp.getFirstProperty( "X-NSCP-WCAPVERSION" );
+        if (prop == null)
+            throw new Error("missing X-NSCP-WCAPVERSION!");
+        loginTextVars.push( prop.value );
+        var wcapVersion = parseInt(prop.value);
+        if (wcapVersion < 3) {
+            var prompt = getWindowWatcher().getNewPrompter(null);
+            var bundle = getWcapBundle();
+            var labelText = bundle.GetStringFromName(
+                "insufficientWcapVersionConfirmation.label");
+            if (!prompt.confirm( labelText,
+                                 bundle.formatStringFromName(
+                                     "insufficientWcapVersionConfirmation.text",
+                                     loginTextVars, loginTextVars.length ) )) {
+                throw new Error(labelText);
+            }
         }
         return getWcapBundle().formatStringFromName(
             "loginDialog.text", loginTextVars, loginTextVars.length );
@@ -634,12 +588,13 @@ calWcapSession.prototype = {
     getCommandUrl:
     function( wcapCommand )
     {
-        if (this.uri == null)
+        if (this.sessionUri == null)
             throw new Error("no URI!");
         // ensure established session, so userId is set;
         // (calId defaults to userId) if not set:
         this.getSessionId();
-        return (this.uri.spec + wcapCommand + ".wcap?appid=mozilla-lightning");
+        return (this.sessionUri.spec +
+                wcapCommand + ".wcap?appid=mozilla-lightning");
     },
     
     issueRequest:
@@ -707,7 +662,9 @@ calWcapSession.prototype = {
     // calIWcapSession:
     
     m_uri: null,
+    m_sessionUri: null,
     get uri() { return this.m_uri; },
+    get sessionUri() { return this.m_sessionUri; },
     set uri( thatUri )
     {
         if (this.m_uri == null || thatUri == null ||
@@ -724,7 +681,10 @@ calWcapSession.prototype = {
                         (nColon >= 0 ? username.substr(0, nColon) : username);
                 }
                 this.m_uri = thatUri.clone();
-                this.m_uri.userPass = "";
+                this.log( "setting uri to " + this.uri.spec );
+                this.m_sessionUri = thatUri.clone();
+                this.m_sessionUri.userPass = "";
+                this.log( "setting sessionUri to " + this.sessionUri.spec );
             }
         }
     },
@@ -748,7 +708,7 @@ calWcapSession.prototype = {
             // although io service's offline flag is already
             // set BEFORE notification (about to go offline, nsIOService.cpp).
             // WTF.
-            var url = (this.uri.spec +
+            var url = (this.sessionUri.spec +
                        "logout.wcap?fmt-out=text%2Fxml&id=" + this.m_sessionId);
             try {
                 checkWcapXmlErrno( issueSyncXMLRequest(url),
