@@ -9,11 +9,6 @@
 <!ENTITY useBookmark.accesskey     "B">
 <!ENTITY restoreDefault.label      "Restore to Default">
 <!ENTITY restoreDefault.accesskey  "R">
-<!ENTITY startup.label             "When &brandShortName; Starts:">
-<!ENTITY startup.accesskey         "S">
-<!ENTITY startupHomePage.label     "Load my home page">
-<!ENTITY startupBlankPage.label    "Show a blank page">
-<!ENTITY startupPreviousSession.label  "Show the tabs and windows from last time">
 
 <!ENTITY downloads.label     "Downloads">
 
