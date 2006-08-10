@@ -44,6 +44,11 @@ function getAlarmService()
 }
 
 var alarmServiceObserver = {
+    // This is a work-around for the fact that there is a delay between when
+    // we call openWindow and when it appears via getMostRecentWindow.  If an
+    // alarm is fired in that time-frame, it will actually end up in another window. 
+    _WindowOpening: null,
+
     onAlarm: function( event ) {
 
         //If an event has alarm email address, we assume the alarm is of email
@@ -68,26 +73,32 @@ var alarmServiceObserver = {
 
         var wMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                                   .getService(Components.interfaces.nsIWindowMediator);
-        var gAlarmWindow = wMediator.getMostRecentWindow("calendarAlarmWindow");
-        if( !gAlarmWindow ) {
+        var openAlarmWindow = wMediator.getMostRecentWindow("calendarAlarmWindow");
+        if(!openAlarmWindow  && !this._WindowOpening) {
             var wWatcher = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                                      .getService(Components.interfaces.nsIWindowWatcher);
-            gAlarmWindow = wWatcher.openWindow(null,
+            this._WindowOpening = wWatcher.openWindow(null,
                                                "chrome://calendar/content/calendar-alarm-dialog.xul",
                                                "_blank",
                                                "chrome,dialog=yes,all",
                                                 null);
-
         }
-        gAlarmWindow.focus();
-        if ("addAlarm" in gAlarmWindow) {
-            gAlarmWindow.addAlarm(event);
+        if (this._WindowOpening) {
+            openAlarmWindow = this._WindowOpening;
+        }
+        openAlarmWindow.focus();
+        if ("addAlarm" in openAlarmWindow) {
+            openAlarmWindow.addAlarm(event);
         } 
         else {
+            // The window isn't open yet
+            var alarmObserver = this;
             var addAlarm = function() {
-                gAlarmWindow.addAlarm( event );
+                openAlarmWindow.addAlarm( event );
+                // Now the window is open
+                alarmObserver._WindowOpening = null;
             }
-            gAlarmWindow.addEventListener("load", addAlarm, false);
+            openAlarmWindow.addEventListener("load", addAlarm, false);
         }
     }
 };

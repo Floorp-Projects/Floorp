@@ -43,25 +43,37 @@ function getAlarmService()
 }
 
 var alarmServiceObserver = {
+    // This is a work-around for the fact that there is a delay between when
+    // we call openWindow and when it appears via getMostRecentWindow.  If an
+    // alarm is fired in that time-frame, it will actually end up in another window. 
+    _WindowOpening: null,
+
     onAlarm: function(event) {
         var wmediator = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                                   .getService(Components.interfaces.nsIWindowMediator);
 
         var calAlarmWindow = wmediator.getMostRecentWindow("calendarAlarmWindow");
-        if (!calAlarmWindow) {
+        if (!calAlarmWindow  && !this._WindowOpening) {
             var windowWatcher = Components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(CI.nsIWindowWatcher);
-            calAlarmWindow = windowWatcher.openWindow(null,
+            this._WindowOpening = windowWatcher.openWindow(null,
                                                     "chrome://calendar/content/calendar-alarm-dialog.xul",
                                                     "_blank",
                                                     "chrome,dialog=yes,all",
                                                     null);
         }
+        if (this._WindowOpening) {
+            calAlarmWindow = this._WindowOpening;
+        }
 
         if ("addAlarm" in calAlarmWindow) {
             calAlarmWindow.addAlarm(event);
         } else {
+            // The window isn't open yet
+            var alarmObserver = this;
             var addAlarm = function() {
                 calAlarmWindow.addAlarm(event);
+                // Now the window is open
+                alarmObserver._WindowOpening = null;
             }
             calAlarmWindow.addEventListener("load", addAlarm, false);
         }
