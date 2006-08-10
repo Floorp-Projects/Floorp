@@ -42,12 +42,13 @@ interface nsIXFormsControl;
 interface nsISchemaType;
 interface nsIInstanceElementPrivate;
 interface nsIDOMNode;
+interface nsISchemaBuiltinType;
 
 /**
  * Private interface implemented by the model element for other
  * elements to use.
  */
-[uuid(74238f22-d112-4bed-a8dc-cc228df52c2e)]
+[uuid(7df6b6ad-9555-4829-9bb0-8e42e6c02bcf)]
 interface nsIModelElementPrivate : nsIXFormsModelElement
 {
   /**
@@ -215,4 +216,34 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
    * @param control           The control to rebind.
    */
   void forceRebind(in nsIXFormsControl control);
+
+  /**
+   * Retrieves the list of datatypes that the original type is derived from
+   * or is an extension of
+   *
+   * @param aType            The original type
+   * @param aNamespace       The original namespace URI
+   * @param aTypeList        The returned space-delimited list
+   *
+   * Returns NS_ERROR_XFORMS_UNION_TYPE if a schema union datatype was
+   * encounterd while trying to build the type list.  Will also return an
+   * error if we encounter a complex type that comes from complex content
+   * extension or restriction.
+   */
+  void GetDerivedTypeList(in AString aType, in AString aNamespace,
+                          out AString aTypeList);
+
+  /**
+   * Retrieves the primative builtin type that the original type derives from
+   *
+   * @param aType            The original type
+   * @param aBuiltinType     The returned builtin type (defined in nsISchema)
+   *
+   * Returns NS_ERROR_XFORMS_UNION_TYPE if a schema union datatype was
+   * encounterd while trying to build the type list.  Will also return an
+   * error if we encounter a complex type that comes from complex content
+   * extension or restriction.
+   */
+  void GetRootBuiltinType(in nsISchemaType aType,
+                          out unsigned short aBuiltinType);
 };

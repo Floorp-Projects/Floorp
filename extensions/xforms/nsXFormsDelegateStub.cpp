@@ -226,20 +226,41 @@ nsXFormsDelegateStub::SetMozTypeAttribute()
 {
   NS_NAMED_LITERAL_STRING(mozTypeNs, NS_NAMESPACE_MOZ_XFORMS_TYPE);
   NS_NAMED_LITERAL_STRING(mozType, "type");
+  NS_NAMED_LITERAL_STRING(mozTypeList, "typelist");
 
   if (mModel && mBoundNode) {
-    nsAutoString type, ns;
-    if (NS_FAILED(mModel->GetTypeAndNSFromNode(mBoundNode, type, ns))) {
+    nsAutoString type, nsOrig;
+    if (NS_FAILED(mModel->GetTypeAndNSFromNode(mBoundNode, type, nsOrig))) {
       mElement->RemoveAttributeNS(mozTypeNs, mozType);
+      mElement->RemoveAttributeNS(mozTypeNs, mozTypeList);
       return;
     }
 
-    ns.AppendLiteral("#");
-    ns.Append(type);
-    mElement->SetAttributeNS(mozTypeNs, mozType, ns);
-  } else {
-    mElement->RemoveAttributeNS(mozTypeNs, mozType);
+    nsAutoString attrValue(nsOrig);
+    attrValue.AppendLiteral("#");
+    attrValue.Append(type);
+    mElement->SetAttributeNS(mozTypeNs, mozType, attrValue);
+
+    // Get the list of types that this type derives from and set it as the
+    // value of the basetype attribute
+    nsresult rv = mModel->GetDerivedTypeList(type, nsOrig, attrValue);
+    if (NS_SUCCEEDED(rv)) {
+      mElement->SetAttributeNS(mozTypeNs, mozTypeList, attrValue);
+      return;
+    }
+
+    // Note: even if we can't build the derived type list, we should leave on
+    // mozType attribute.  We can still use the attr for validation, etc.  But
+    // the type-restricted controls like range and upload won't display since
+    // they are bound to their anonymous content by @typeList.  Make sure that
+    // we don't leave around mozTypeList if it isn't accurate.
+    mElement->RemoveAttributeNS(mozTypeNs, mozTypeList);
+    return;
   }
+
+  mElement->RemoveAttributeNS(mozTypeNs, mozType);
+  mElement->RemoveAttributeNS(mozTypeNs, mozTypeList);
+  return;
 }
 
 NS_IMETHODIMP

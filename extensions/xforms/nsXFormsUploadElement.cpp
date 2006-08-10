@@ -54,18 +54,10 @@
 #include "nsAutoBuffer.h"
 #include "nsIEventStateManager.h"
 #include "prmem.h"
+#include "nsISchema.h"
 
 #define NS_HTMLFORM_BUNDLE_URL \
           "chrome://global/locale/layout/HtmlForm.properties"
-
-
-enum nsBoundType {
-  TYPE_DEFAULT,
-  TYPE_ANYURI,
-  TYPE_BASE64,
-  TYPE_HEX
-};
-
 
 /**
  * Implementation of the \<upload\> element.
@@ -81,9 +73,10 @@ public:
 
 private:
   /**
-   * Returns the type of the node to which this element is bound.
+   * Returns the nsISchemaBuiltinType of the node to which this element is
+   * bound.
    */
-  nsBoundType GetBoundType();
+  PRUint16 GetBoundType();
 
   /**
    * Sets file path/contents into instance data.  If aFile is nsnull,
@@ -102,7 +95,7 @@ private:
    * Read the contents of the file and encode in Base64 or Hex.  |aResult| must
    * be freed by nsMemory::Free().
    */
-  nsresult EncodeFileContents(nsIFile *aFile, nsBoundType aType,
+  nsresult EncodeFileContents(nsIFile *aFile, PRUint16 aType,
                               PRUnichar **aResult);
 
   void BinaryToHex(const char *aBuffer, PRUint32 aCount,
@@ -127,43 +120,42 @@ nsXFormsUploadElement::Refresh()
   if (!mBoundNode)
     return NS_OK;
 
-  // If it is not bound to 'anyURI', 'base64Binary', or 'hexBinary', then
-  //  mark as not relevant.
-  // XXX Bug 313313 - the 'relevant' state should be handled in XBL constructor.
-  nsCOMPtr<nsIXTFElementWrapper> xtfWrap(do_QueryInterface(mElement));
-  NS_ENSURE_STATE(xtfWrap);
-  if (GetBoundType() == TYPE_DEFAULT) {
-    xtfWrap->SetIntrinsicState(NS_EVENT_STATE_DISABLED);
-    nsXFormsUtils::ReportError(NS_LITERAL_STRING("uploadBoundTypeError"),
-                               mElement);
-  } else {
-    xtfWrap->SetIntrinsicState(NS_EVENT_STATE_ENABLED);
+  // If it is not bound to 'anyURI', 'base64Binary', 'hexBinary', or an
+  // extension or derivation of one of these three types, then put an error in
+  // the console.  CSS and XBL will make sure that the control won't appear in
+  // the form.
+  PRUint16 boundType = GetBoundType();
+  if (boundType == nsISchemaBuiltinType::BUILTIN_TYPE_HEXBINARY ||
+      boundType == nsISchemaBuiltinType::BUILTIN_TYPE_BASE64BINARY ||
+      boundType == nsISchemaBuiltinType::BUILTIN_TYPE_ANYURI) {
+    return NS_OK;
   }
 
+  nsXFormsUtils::ReportError(NS_LITERAL_STRING("uploadBoundTypeError"),
+                             mElement);
   return NS_OK;
 }
 
-nsBoundType
+PRUint16
 nsXFormsUploadElement::GetBoundType()
 {
-  nsBoundType result = TYPE_DEFAULT;
   if (!mModel)
-    return result;
+    return 0;
 
-  // get type bound to node
-  nsAutoString type, nsuri;
-  nsresult rv = mModel->GetTypeFromNode(mBoundNode, type, nsuri);
-  if (NS_SUCCEEDED(rv) && nsuri.EqualsLiteral(NS_NAMESPACE_XML_SCHEMA)) {
-    if (type.EqualsLiteral("anyURI")) {
-      result = TYPE_ANYURI;
-    } else if (type.EqualsLiteral("base64Binary")) {
-      result = TYPE_BASE64;
-    } else if (type.EqualsLiteral("hexBinary")) {
-      result = TYPE_HEX;
-    }
+  // get type of bound instance data
+  nsCOMPtr<nsISchemaType> schemaType;
+  nsresult rv = mModel->GetTypeForControl(this, getter_AddRefs(schemaType));
+  if (NS_FAILED(rv)) {
+    return 0;
   }
 
-  return result;
+  PRUint16 builtinType = 0;
+  rv = mModel->GetRootBuiltinType(schemaType, &builtinType);
+  if (NS_FAILED(rv) || !builtinType) {
+    return 0;
+  }
+
+  return builtinType;
 }
 
 static void
@@ -278,14 +270,15 @@ nsXFormsUploadElement::SetFile(nsILocalFile *aFile)
   } else {
     // set file into instance data
 
-    nsBoundType type = GetBoundType();
-    if (type == TYPE_ANYURI) {
+    PRUint16 type = GetBoundType();
+    if (type == nsISchemaBuiltinType::BUILTIN_TYPE_ANYURI) {
       // set fully qualified path as value in instance data node
       nsCAutoString spec;
       NS_GetURLSpecFromFile(aFile, spec);
       rv = mModel->SetNodeValue(mBoundNode, NS_ConvertUTF8toUTF16(spec),
                                 PR_FALSE, &dataChanged);
-    } else if (type == TYPE_BASE64 || type == TYPE_HEX) {
+    } else if (type == nsISchemaBuiltinType::BUILTIN_TYPE_BASE64BINARY ||
+               type == nsISchemaBuiltinType::BUILTIN_TYPE_HEXBINARY) {
       // encode file contents in base64/hex and set into instance data node
       PRUnichar *fileData;
       rv = EncodeFileContents(aFile, type, &fileData);
@@ -433,7 +426,7 @@ ReportEncodingMemoryError(nsIDOMElement* aElement, nsIFile *aFile,
 }
 
 nsresult
-nsXFormsUploadElement::EncodeFileContents(nsIFile *aFile, nsBoundType aType,
+nsXFormsUploadElement::EncodeFileContents(nsIFile *aFile, PRUint16 aType,
                                           PRUnichar **aResult)
 {
   nsresult rv;
@@ -461,7 +454,7 @@ nsXFormsUploadElement::EncodeFileContents(nsIFile *aFile, nsBoundType aType,
                "fileStream->Read failed");
 
   if (NS_SUCCEEDED(rv)) {
-    if (aType == TYPE_BASE64) {
+    if (aType == nsISchemaBuiltinType::BUILTIN_TYPE_BASE64BINARY) {
       // encode file contents
       *aResult = nsnull;
       char *buffer = PL_Base64Encode(fileData.get(), bytesRead, nsnull);
@@ -475,7 +468,7 @@ nsXFormsUploadElement::EncodeFileContents(nsIFile *aFile, nsBoundType aType,
         ReportEncodingMemoryError(mElement, aFile, failedSize);
         rv = NS_ERROR_OUT_OF_MEMORY;
       }
-    } else if (aType == TYPE_HEX) {
+    } else if (aType == nsISchemaBuiltinType::BUILTIN_TYPE_HEXBINARY) {
       // create buffer for hex encoded data
       PRUint32 length = bytesRead * 2 + 1;
       PRUnichar *fileDataHex =

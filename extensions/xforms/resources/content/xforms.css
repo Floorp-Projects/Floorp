@@ -272,6 +272,21 @@ html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#gDay"] {
   -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input-day');
 }
 
+html|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#base64Binary"],
+html|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#hexBinary"],
+html|*:root secret[mozType|typelist~="http://www.w3.org/2001/XMLSchema#base64Binary"],
+html|*:root secret[mozType|typelist~="http://www.w3.org/2001/XMLSchema#hexBinary"],
+html|*:root textarea[mozType|typelist~="http://www.w3.org/2001/XMLSchema#base64Binary"],
+html|*:root textarea[mozType|typelist~="http://www.w3.org/2001/XMLSchema#hexBinary"],
+xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#base64Binary"],
+xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#hexBinary"],
+xul|*:root secret[mozType|typelist~="http://www.w3.org/2001/XMLSchema#base64Binary"],
+xul|*:root secret[mozType|typelist~="http://www.w3.org/2001/XMLSchema#hexBinary"],
+xul|*:root textarea[mozType|typelist~="http://www.w3.org/2001/XMLSchema#base64Binary"],
+xul|*:root textarea[mozType|typelist~="http://www.w3.org/2001/XMLSchema#hexBinary"] {
+  display: none;
+}
+
 /* secret widgets */
 html|*:root secret {
   -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-secret');
@@ -625,12 +640,14 @@ xul|*:root select, xul|*:root select1 {
 /* upload widgets */
 html|*:root upload {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-upload-disabled');
+  display: none;
 }
 
-html|*:root upload[mozType|type="http://www.w3.org/2001/XMLSchema#anyURI"],
-html|*:root upload[mozType|type="http://www.w3.org/2001/XMLSchema#base64Binary"],
-html|*:root upload[mozType|type="http://www.w3.org/2001/XMLSchema#hexBinary"] {
+html|*:root upload[mozType|typelist~="http://www.w3.org/2001/XMLSchema#anyURI"],
+html|*:root upload[mozType|typelist~="http://www.w3.org/2001/XMLSchema#base64Binary"],
+html|*:root upload[mozType|typelist~="http://www.w3.org/2001/XMLSchema#hexBinary"] {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-upload');
+  display: inline;
 }
 
 /* repeat widgets */
@@ -661,3 +678,4 @@ xul|*:root repeat[appearance="compact"] *|*[anonid="insertion"] {
 xul|*:root repeat .xf-repeat-item {
   -moz-box-flex: 1;
 }
+
