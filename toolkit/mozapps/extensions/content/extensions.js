@@ -582,7 +582,8 @@ function Startup()
       }
     }
   }
-  else if (viewGroup.hasAttribute("last-selected"))
+  else if (viewGroup.hasAttribute("last-selected") &&
+           !document.getElementById(viewGroup.getAttribute("last-selected") + "-view").hidden)
     showView(viewGroup.getAttribute("last-selected"));
   else
     showView("extensions");
