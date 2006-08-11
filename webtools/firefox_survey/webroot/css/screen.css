@@ -36,6 +36,12 @@ div#body ul {
     list-style-type: none;
 }
 
+div#body h2 {
+    border:none;
+}
+
 div#body h3 {
     color: rgb(153,51,0);
+    border:none;
 }
+
