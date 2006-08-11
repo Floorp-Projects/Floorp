@@ -862,6 +862,29 @@ void imgContainerGIF::SetMaskVisibility(gfxIImageFrame *aFrame,
     return;
   }
 
+#ifdef MOZ_CAIRO_GFX
+  PRUint8* alphaData;
+  PRUint32 alphaDataLength;
+  const PRUint8 setMaskTo = aVisible ? 0xFF : 0x00;
+
+  aFrame->LockImageData();
+  nsresult res = aFrame->GetImageData(&alphaData, &alphaDataLength);
+  if (NS_SUCCEEDED(res)) {
+#ifdef IS_LITTLE_ENDIAN
+    alphaData += aY*frameWidth*4 + 3;
+#else
+    alphaData += aY*frameWidth*4;
+#endif
+    for (PRInt32 j = height; j > 0; --j) {
+      for (PRInt32 i = (aX+width-1)*4; i >= aX; i -= 4) {
+        alphaData[i] = setMaskTo;
+      }
+      alphaData += frameWidth*4;
+    }
+  }
+  aFrame->UnlockImageData();
+
+#else
   PRUint8* alphaData;
   PRUint32 alphaDataLength;
   aFrame->LockAlphaData();
@@ -946,6 +969,7 @@ void imgContainerGIF::SetMaskVisibility(gfxIImageFrame *aFrame,
   } // if aVisible
 
   aFrame->UnlockAlphaData();
+#endif
 }
 
 //******************************************************************************
