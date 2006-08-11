@@ -1,4 +1,4 @@
-<?php echo $html->image('firefox-survey-title2.gif', array('alt'=>'Firefox Survey','class'=>'center')); ?>
+<?php echo $html->image('firefox_user_panel.gif', array('alt'=>'Firefox Survey','class'=>'center')); ?>
  
 <div id="body">
 
