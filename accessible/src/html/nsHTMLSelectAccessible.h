@@ -136,11 +136,13 @@ protected:
   already_AddRefed<nsIAccessible>
     AccessibleForOption(nsIAccessibilityService *aAccService,
                         nsIContent *aContent,
-                        nsIAccessible *aLastGoodAccessible);
+                        nsIAccessible *aLastGoodAccessible,
+                        PRInt32 *aChildCount);
   already_AddRefed<nsIAccessible>
     CacheOptSiblings(nsIAccessibilityService *aAccService,
                      nsIContent *aParentContent,
-                     nsIAccessible *aLastGoodAccessible);
+                     nsIAccessible *aLastGoodAccessible,
+                     PRInt32 *aChildCount);
 };
 
 /*

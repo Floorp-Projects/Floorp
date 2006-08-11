@@ -100,7 +100,7 @@ NS_IMPL_ISUPPORTS2(nsAccessNode, nsIAccessNode, nsPIAccessNode)
 nsAccessNode::nsAccessNode(nsIDOMNode *aNode, nsIWeakReference* aShell): 
   mDOMNode(aNode), mWeakShell(aShell)
 {
-#ifdef DEBUG
+#ifdef DEBUG_A11Y
   mIsInitialized = PR_FALSE;
 #endif
 }
@@ -121,7 +121,9 @@ NS_IMETHODIMP nsAccessNode::Init()
   // we don't have the virtual GetUniqueID() method for the hash key.
   // We need that for accessibles that don't have DOM nodes
 
+#ifdef DEBUG_A11Y
   NS_ASSERTION(!mIsInitialized, "Initialized twice!");
+#endif
   nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
   if (!docAccessible) {
     // No doc accessible yet for this node's document. 
@@ -152,7 +154,7 @@ NS_IMETHODIMP nsAccessNode::Init()
     do_QueryInterface(docAccessible);
   NS_ASSERTION(privateDocAccessible, "No private docaccessible for docaccessible");
   privateDocAccessible->CacheAccessNode(uniqueID, this);
-#ifdef DEBUG
+#ifdef DEBUG_A11Y
   mIsInitialized = PR_TRUE;
 #endif
 
@@ -567,7 +569,7 @@ void nsAccessNode::PutCacheEntry(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNo
                                  void* aUniqueID, 
                                  nsIAccessNode *aAccessNode)
 {
-#ifdef DEBUG
+#ifdef DEBUG_A11Y
   nsCOMPtr<nsIAccessNode> oldAccessNode;
   GetCacheEntry(aCache, aUniqueID, getter_AddRefs(oldAccessNode));
   NS_ASSERTION(!oldAccessNode, "This cache entry shouldn't exist already");

@@ -362,8 +362,9 @@ nsresult nsHyperTextAccessible::DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNod
   if (nodeType != nsIDOMNode::TEXT_NODE) {
     // If not text, aNodeOffset is a child
     if (aNode != mDOMNode) {
-#ifdef DEBUG
+#ifdef DEBUG_A11Y
       // This should only happen in the empty plaintext case, when there is no text child yet
+      // XXX What's with this check, the assertion is commented out, why?
       nsCOMPtr<nsIEditor> editor = GetEditor();
       nsCOMPtr<nsIPlaintextEditor> plaintextEditor = do_QueryInterface(editor);
       // NS_ASSERTION(plaintextEditor, "DOM Point is not in this nsHyperTextAccessible");
@@ -1130,7 +1131,7 @@ nsresult nsHyperTextAccessible::FireTextChangeEvent(AtkTextChange *aTextData)
   nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(NS_STATIC_CAST(nsIAccessibleText*, this)));
   nsCOMPtr<nsPIAccessible> privAccessible(do_QueryInterface(accessible));
   if (privAccessible) {
-#ifdef DEBUG
+#ifdef DEBUG_A11Y
     printf("  [start=%d, length=%d, add=%d]\n", aTextData->start, aTextData->length, aTextData->add);
 #endif
     privAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_TEXT_CHANGE, accessible, aTextData);

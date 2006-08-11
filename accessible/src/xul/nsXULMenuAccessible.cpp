@@ -214,11 +214,16 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULMenuitemAccessible::GetChildCount(PRInt32 *aAccChildCount)
+void nsXULMenuitemAccessible::CacheChildren()
 {
+  if (!mWeakShell) {
+    // This node has been shut down
+    mAccChildCount = eChildCountUninitialized;
+    return;
+  }
+
   if (mAccChildCount != eChildCountUninitialized) {
-    *aAccChildCount = mAccChildCount;
-    return NS_OK;
+    return;
   }
 
   // Set menugenerated="true" on the menupopup node to generate the
@@ -246,21 +251,9 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetChildCount(PRInt32 *aAccChildCount)
           element->SetAttribute(NS_LITERAL_STRING("menugenerated"), NS_LITERAL_STRING("true"));
         }
       }
-      // fire a popup dom event
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_SHOWING, nsnull,
-                         nsMouseEvent::eReal);
-
-      nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
-      nsCOMPtr<nsIContent> content(do_QueryInterface(childNode));
-      if (presShell && content)
-        presShell->HandleDOMEventWithTarget(content, &event, &status);
     }
   }
-
-  CacheChildren();
-  *aAccChildCount = mAccChildCount;
-  return NS_OK;  
+  nsAccessibleWrap::CacheChildren();
 }
 
 NS_IMETHODIMP

@@ -174,7 +174,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::Shutdown()
 
 NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData)
 {
-#ifdef DEBUG
+#ifdef DEBUG_A11Y
   // Ensure that we're only firing events that we intend to
   PRUint32 supportedEvents[] = {
     nsIAccessibleEvent::EVENT_SHOW,
@@ -207,7 +207,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessib
     }
   }
   if (!found) {
-    NS_WARNING("Event not supported!");
+    // NS_WARNING("Event not supported!");
   }
 #endif
   if (!mWeakShell) {   // Means we're not active
@@ -526,6 +526,9 @@ STDMETHODIMP nsDocAccessibleWrap::get_docType(/* [out] */ BSTR __RPC_FAR *aDocTy
 STDMETHODIMP nsDocAccessibleWrap::get_nameSpaceURIForID(/* [in] */  short aNameSpaceID,
   /* [out] */ BSTR __RPC_FAR *aNameSpaceURI)
 {
+  if (aNameSpaceID < 0) {
+    return E_FAIL;  // -1 is kNameSpaceID_Unknown
+  }
   *aNameSpaceURI = NULL;
   nsAutoString nameSpaceURI;
   if (NS_SUCCEEDED(GetNameSpaceURIForID(aNameSpaceID, nameSpaceURI))) {

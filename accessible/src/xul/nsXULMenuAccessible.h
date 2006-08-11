@@ -57,11 +57,11 @@ public:
   NS_IMETHOD GetKeyBinding(nsAString& _retval);
   NS_IMETHOD GetState(PRUint32 *_retval); 
   NS_IMETHOD GetRole(PRUint32 *_retval); 
-  NS_IMETHOD GetChildCount(PRInt32 *aAccChildCount);
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
+  void CacheChildren();
 };
 
 class nsXULMenuSeparatorAccessible : public nsXULMenuitemAccessible

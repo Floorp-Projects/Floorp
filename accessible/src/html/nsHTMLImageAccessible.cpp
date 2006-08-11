@@ -182,22 +182,23 @@ void nsHTMLImageAccessible::CacheChildren()
     return;
   }
 
-  mAccChildCount = 0;
   nsCOMPtr<nsIDOMHTMLCollection> mapAreas;
   if (mMapElement) {
     mMapElement->GetAreas(getter_AddRefs(mapAreas));
   }
   if (!mapAreas) {
+    mAccChildCount = 0;
     return;
   }
 
   PRUint32 numMapAreas;
   mapAreas->GetLength(&numMapAreas);
-
+  PRInt32 childCount = 0;
+  
   nsCOMPtr<nsIAccessible> areaAccessible;
   nsCOMPtr<nsPIAccessible> privatePrevAccessible;
-  while (mAccChildCount < (PRInt32)numMapAreas && 
-         (areaAccessible = CreateAreaAccessible(mAccChildCount)) != nsnull) {
+  while (childCount < (PRInt32)numMapAreas && 
+         (areaAccessible = CreateAreaAccessible(childCount)) != nsnull) {
     if (privatePrevAccessible) {
       privatePrevAccessible->SetNextSibling(areaAccessible);
     }
@@ -205,12 +206,13 @@ void nsHTMLImageAccessible::CacheChildren()
       SetFirstChild(areaAccessible);
     }
 
-    ++mAccChildCount;
+    ++ childCount;
 
     privatePrevAccessible = do_QueryInterface(areaAccessible);
     NS_ASSERTION(privatePrevAccessible, "nsIAccessible impl's should always support nsPIAccessible as well");
     privatePrevAccessible->SetParent(this);
   }
+  mAccChildCount = childCount;
 }
 
 NS_IMETHODIMP nsHTMLImageAccessible::DoAction(PRUint8 index)

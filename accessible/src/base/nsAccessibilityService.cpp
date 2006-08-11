@@ -266,7 +266,7 @@ nsAccessibilityService::GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIW
   if (!document)
     return NS_ERROR_FAILURE;
 
-#ifdef DEBUG
+#ifdef DEBUG_A11Y
   PRInt32 shells = document->GetNumberOfShells();
   NS_ASSERTION(shells > 0,"Error no shells!");
 #endif
@@ -1020,7 +1020,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
 
   *aIsHidden = PR_FALSE;
 
-#ifdef DEBUG_aleventhal
+#ifdef DEBUG_A11Y
   // Please leave this in for now, it's a convenient debugging method
   nsAutoString name;
   aNode->GetLocalName(name);
@@ -1031,7 +1031,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aNode));
   if (element) {
     element->GetAttribute(NS_LITERAL_STRING("type"), attrib);
-    if (attrib.EqualsLiteral("checkbox"))
+    if (attrib.EqualsLiteral("statusbarpanel"))
       printf("## aaronl debugging attribute\n");
   }
 #endif
@@ -1098,7 +1098,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
 
   // We have a content node
   nsIFrame *frame = *aFrameHint;
-#ifdef DEBUG_aleventhal
+#ifdef DEBUG_A11Y
   static int frameHintFailed, frameHintTried, frameHintNonexistant, frameHintFailedForText;
   ++frameHintTried;
 #endif
@@ -1106,7 +1106,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     // Frame hint not correct, get true frame, we try to optimize away from this
     frame = aPresShell->GetPrimaryFrameFor(content);
     if (frame) {
-#ifdef DEBUG_aleventhal_
+#ifdef DEBUG_A11Y_FRAME_OPTIMIZATION
       // Frame hint debugging
       ++frameHintFailed;
       if (content->IsNodeOfType(nsINode::eTEXT)) {
@@ -1188,7 +1188,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     nsresult rv = GetAccessibleByType(aNode, getter_AddRefs(newAcc));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (newAcc) {
+    if (!newAcc) {
       if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
                content->Tag() == nsAccessibilityAtoms::svg) {
         newAcc = new nsEnumRoleAccessible(aNode, aWeakShell, nsIAccessible::ROLE_DIAGRAM);
@@ -1275,7 +1275,7 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
 
   nsCOMPtr<nsIAccessibleProvider> node(do_QueryInterface(aNode));
   if (!node)
-    return NS_ERROR_FAILURE;
+    return NS_OK;
 
   PRInt32 type;
   nsresult rv = node->GetAccessibleType(&type);

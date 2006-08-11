@@ -391,6 +391,21 @@ void nsDocAccessible::CheckForEditor()
 NS_IMETHODIMP nsDocAccessible::GetCachedAccessNode(void *aUniqueID, nsIAccessNode **aAccessNode)
 {
   GetCacheEntry(mAccessNodeCache, aUniqueID, aAccessNode); // Addrefs for us
+#ifdef DEBUG_A11Y
+  // All cached accessible nodes should be in the parent
+  // It will assert if not all the children were created
+  // when they were first cached, and no invalidation
+  // ever corrected parent accessible's child cache.
+  nsCOMPtr<nsIAccessible> accessible = do_QueryInterface(*aAccessNode);
+  if (accessible) {
+    nsCOMPtr<nsIAccessible> parent;
+    accessible->GetParent(getter_AddRefs(parent));
+    nsCOMPtr<nsPIAccessible> privateParent(do_QueryInterface(parent));
+    if (privateParent) {
+      privateParent->TestChildCache(accessible);
+    }
+  }
+#endif
   return NS_OK;
 }
 
@@ -1082,21 +1097,39 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   // Otherwise we might miss the nsAccessNode's that are not nsAccessible's.
 
   nsCOMPtr<nsIDOMNode> childNode = aChild ? do_QueryInterface(aChild) : mDOMNode;
-
   if (!mIsContentLoaded && mAccessNodeCache.Count() <= 1) {
     return NS_OK; // Still loading and nothing to invalidate yet
   }
 
-  else if (aChangeEventType == nsIAccessibleEvent::EVENT_HIDE) {
+  nsCOMPtr<nsIAccessNode> childAccessNode;
+  GetCachedAccessNode(childNode, getter_AddRefs(childAccessNode));
+  nsCOMPtr<nsIAccessible> childAccessible = do_QueryInterface(childAccessNode);
+  if (!childAccessible && mIsContentLoaded && aChangeEventType != nsIAccessibleEvent::EVENT_HIDE) {
+    // If not about to hide it, make sure there's an accessible so we can fire an
+    // event for it
+    GetAccService()->GetAccessibleFor(childNode, getter_AddRefs(childAccessible));
+  }
+  nsCOMPtr<nsPIAccessible> privateChildAccessible =
+    do_QueryInterface(childAccessible);
+#ifdef DEBUG_A11Y
+  nsAutoString localName;
+  childNode->GetLocalName(localName);
+  const char *hasAccessible = childAccessible ? " (acc)" : "";
+  if (aChangeEventType == nsIAccessibleEvent::EVENT_HIDE) {
+    printf("[Hide %s %s]\n", NS_ConvertUTF16toUTF8(localName).get(), hasAccessible);
+  }
+  else if (aChangeEventType == nsIAccessibleEvent::EVENT_SHOW) {
+    printf("[Show %s %s]\n", NS_ConvertUTF16toUTF8(localName).get(), hasAccessible);
+  }
+  else if (aChangeEventType == nsIAccessibleEvent::EVENT_REORDER) {
+    printf("[Reorder %s %s]\n", NS_ConvertUTF16toUTF8(localName).get(), hasAccessible);
+  }
+#endif
+
+  if (aChangeEventType == nsIAccessibleEvent::EVENT_HIDE) {
     // Fire EVENT_HIDE or EVENT_MENUPOPUPEND if previous accessible existed
     // for node being hidden. Fire this before the accessible goes away
-    nsCOMPtr<nsIAccessNode> childAccessNode;
-    GetCachedAccessNode(childNode, getter_AddRefs(childAccessNode));
-    nsCOMPtr<nsIAccessible> childAccessible = do_QueryInterface(childAccessNode);
-    if (childAccessible) {
-      nsCOMPtr<nsPIAccessible> privateChildAccessible =
-        do_QueryInterface(childAccessible);
-      NS_ASSERTION(privateChildAccessible, "No nsPIAccessible for an nsIAccessible");
+    if (privateChildAccessible) {
       privateChildAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_HIDE,
                                                childAccessible, nsnull);
     }
@@ -1127,8 +1160,8 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
       containerAccessible = this;  // At the root of UI or content
     }
   }
-  if (!containerAccessible) {
-    GetAccessibleInParentChain(childNode, getter_AddRefs(containerAccessible));
+  if (!containerAccessible && privateChildAccessible) {
+    privateChildAccessible->GetCachedParent(getter_AddRefs(containerAccessible));
   }
   nsCOMPtr<nsPIAccessible> privateContainerAccessible =
     do_QueryInterface(containerAccessible);
