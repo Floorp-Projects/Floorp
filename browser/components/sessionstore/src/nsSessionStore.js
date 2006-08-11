@@ -414,8 +414,10 @@ SessionStoreService.prototype = {
         delete this._initialState;
       }
       
-      // restart any interrupted downloads
-      aWindow.setTimeout(function(){ _this.retryDownloads(aWindow); }, 0);
+      if (this._lastSessionCrashed) {
+        // restart any interrupted downloads
+        aWindow.setTimeout(function(){ _this.retryDownloads(aWindow); }, 0);
+      }
     }
     
     var tabbrowser = aWindow.getBrowser();
