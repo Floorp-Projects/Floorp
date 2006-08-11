@@ -108,6 +108,7 @@ pref("browser.download.lastLocation", true);
 // various default search settings
 pref("browser.search.defaulturl", "chrome://navigator-region/locale/region.properties");
 pref("browser.search.opensidebarsearchpanel", true);
+pref("browser.search.opentabforcontextsearch", false);
 pref("browser.search.last_search_category", "NC:SearchCategory?category=urn:search:category:1");
 pref("browser.search.mode", 0);
 // basic search popup constraint: minimum sherlock plugin version displayed

@@ -45,7 +45,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["engineList","openSidebarPanel","sidebarSearchMode"];
+    var _elementIDs = ["engineList","openSidebarPanel","openContextSearchTab","sidebarSearchMode"];
   ]]>
   </script> 
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-search.js"/>      
@@ -74,6 +74,8 @@
     <caption label="&searchResults.label;"/>
     <checkbox id="openSidebarPanel" label="&openSidebarSearchPanel.label;" accesskey="&openSidebarSearchPanel.accesskey;"
               prefstring="browser.search.opensidebarsearchpanel"/>
+    <checkbox id="openContextSearchTab" label="&openContextSearchTab.label;" accesskey="&openContextSearchTab.accesskey;"
+              prefstring="browser.search.opentabforcontextsearch"/>
   </groupbox>
 
   <groupbox>

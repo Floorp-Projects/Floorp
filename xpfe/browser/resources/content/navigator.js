@@ -1079,7 +1079,7 @@ function QualifySearchTerm()
   return "";
 }
 
-function OpenSearch(tabName, searchStr, newWindowFlag)
+function OpenSearch(tabName, searchStr, newWindowOrTabFlag, reverseBackgroundPref)
 {
   //This function needs to be split up someday.
 
@@ -1136,10 +1136,18 @@ function OpenSearch(tabName, searchStr, newWindowFlag)
         } catch (ex) {
         }
 
-        if (!newWindowFlag)
+        if (!newWindowOrTabFlag)
           loadURI(defaultSearchURL);
-        else
+        else if (!pref.getBoolPref("browser.search.opentabforcontextsearch"))
           window.open(defaultSearchURL, "_blank");
+        else {
+          var newTab = gBrowser.addTab(defaultSearchURL);
+          var loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
+          if (reverseBackgroundPref)
+            loadInBackground = !loadInBackground;
+          if (!loadInBackground)
+            gBrowser.selectedTab = newTab;
+        }
       }
     }
   }
