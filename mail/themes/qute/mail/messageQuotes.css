@@ -19,7 +19,7 @@
 /* ::::: colorize block quote borders. We only go 7 levels deep ::::: */
 
 blockquote[type=cite] {
-  padding: 0em .5em .5em 1em !important;
+  padding: 0em 1em .5em !important;
   border-right: 2px  solid blue !important;
   border-left: 2px solid blue !important;
 }
