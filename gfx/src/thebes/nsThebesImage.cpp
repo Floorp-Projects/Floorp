@@ -344,6 +344,7 @@ nsThebesImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
 
         // otherwise
         ctx->SetColor(mSinglePixelColor);
+        ctx->NewPath();
         ctx->Rectangle(gfxRect(aDX, aDY, aDWidth, aDHeight), PR_TRUE);
         ctx->Fill();
         return NS_OK;
