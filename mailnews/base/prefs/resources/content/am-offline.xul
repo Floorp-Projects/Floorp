@@ -105,7 +105,7 @@
     <hbox align="center" class="indent" hidefor="none">
         <checkbox  wsm_persist="true" id="offline.notDownload"
             label="&offlineNotDownload.label;" accesskey="&offlineNotDownload.accesskey;" oncommand="onCheckItem('bc_notDownload', 'offline.notDownload');"/>
-        <textbox wsm_persist="true" id="offline.notDownloadMin" size="2" value="50"  observes="bc_notDownload"/> 
+        <textbox wsm_persist="true" id="offline.notDownloadMin" size="4" value="50"  observes="bc_notDownload"/> 
         <label value="&kb.label;"/>
     </hbox>
 
@@ -125,13 +125,13 @@
         <hbox flex="1" align="center">
             <radio wsm_persist="true" id="retention.keepNewMsg" accesskey="&retentionKeepNew.accesskey;" 
                 value="3" label="&retentionKeepNew.label;" oncommand="onCheckKeepMsg();"/>
-            <textbox wsm_persist="true" id="retention.keepNewMsgMin" size="2" value="30"/>
+            <textbox wsm_persist="true" id="retention.keepNewMsgMin" size="4" value="30"/>
             <label value="&message.label;"/>
         </hbox>
         <hbox flex="1" align="center">
             <radio wsm_persist="true" id="retention.keepOldMsg" accesskey="&retentionKeepMsg.accesskey;"
                 value="2" label="&retentionKeepMsg.label;" oncommand="onCheckKeepMsg();"/>
-            <textbox wsm_persist="true" id="retention.keepOldMsgMin" size="2" value="30"/>
+            <textbox wsm_persist="true" id="retention.keepOldMsgMin" size="4" value="30"/>
             <label value="&daysOld.label;"/>
         </hbox>
     </radiogroup>
