@@ -191,17 +191,94 @@ calWcapCalendar.prototype.getRecurrenceParams = function(
     }
 };
 
+const XPROP_OP_ADD = 0;
+const XPROP_OP_REPLACE = 1;
+const XPROP_OP_DELETE = 2;
+
+function makeXPropertyUrl( name, op, value )
+{
+    var url = ("&" + name);
+    switch (op) {
+    case XPROP_OP_ADD:
+        url += "=X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-ADD";
+        break;
+    case XPROP_OP_REPLACE:
+        url += "=X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE";
+        break;
+    case XPROP_OP_DELETE:
+        url += "=X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-DELETE";
+        break;
+    }
+    url += "^";
+    if (value)
+        url += value;
+    return url;
+}
+
 calWcapCalendar.prototype.getStoreUrl = function( item, oldItem )
 {
     var bIsEvent = isEvent(item);
     var url = this.session.getCommandUrl( bIsEvent ? "storeevents"
                                                    : "storetodos" );
-    url += "&fetch=1&relativealarm=1&compressed=1&recurring=1";
     url += ("&calid=" + encodeURIComponent(this.calId));
     
     var ownerId = this.ownerId;
     var orgUID = ((item.organizer == null || item.organizer.id == null)
                     ? ownerId : item.organizer.id);
+    
+    // attendees:
+    var attendees =  item.getAttendees({});
+    if (attendees.length > 0) {
+        // ORGANIZER is owner fo this cal?
+        if (!oldItem || orgUID == ownerId) {
+            url += "&method=2"; // REQUEST
+            url += "&attendees=";
+            for ( var i = 0; i < attendees.length; ++i ) {
+                if (i > 0)
+                    url += ";";
+                url += this.encodeAttendee( attendees[i], true /*forceRSVP*/ );
+            }
+        }
+        else { // in modifyItem(), attendee's calendar:
+            var attendee = item.getAttendeeById(ownerId);
+            if (attendee == null) {
+                this.logError( "not in attendee list, but in my cal?" );
+            }
+            else {
+                this.log( "attendee: " + attendee.icalProperty.icalString );
+                var oldAttendee = oldItem.getAttendeeById(ownerId);
+                if (!oldAttendee ||
+                    attendee.participationStatus !=
+                    oldAttendee.participationStatus)
+                {
+                    // REPLY for just this calendar owner:
+                    var replyUrl = (url + "&method=4&attendees=PARTSTAT=" +
+                                    attendee.participationStatus);
+                    replyUrl += ("^" + ownerId);
+                    replyUrl += ("&uid=" + item.id);
+                    var rid = item.recurrenceId;
+                    if (rid) {
+                        replyUrl += "&mod=1"; // THIS INSTANCE
+                        // if not set, whole series of events is modified:
+                        replyUrl = getIcalUTC(rid);
+                        replyUrl += ("&rid=" + rid);
+                    }
+                    else {
+                        replyUrl += "&storetype=2";
+                        replyUrl += "&mod=4"; // THIS AND ALL INSTANCES
+                    }
+                    this.session.issueSyncRequest(
+                        replyUrl + "&fmt-out=text%2Fcalendar", stringToIcal );
+                }
+            }
+            // continue with UPDATE of attendee's copy of item:
+            url += "&method=256";
+        }
+    }
+    else
+        url += "&attendees="; // using just PUBLISH (method=1)
+    
+    url += "&fetch=1&relativealarm=1&compressed=1&recurring=1";
     url += ("&orgUID=" + encodeURIComponent(orgUID));
     
     // xxx todo: default prio is 0 (5 in sjs cs)
@@ -256,7 +333,6 @@ calWcapCalendar.prototype.getStoreUrl = function( item, oldItem )
             item.getProperty( "CATEGORIES" ).replace(/,/g, ";") );
     }
     
-    // xxx todo: contacts, resources missing in calAPI
     // xxx todo: missing relatedTos= in cal api
     
     url += ("&summary=" + encodeURIComponent(item.title));
@@ -276,7 +352,7 @@ calWcapCalendar.prototype.getStoreUrl = function( item, oldItem )
     }
     
     var dtstart = null;
-    var dtend = null; // for alarmRelated
+    var dtend = null;
     
     if (bIsEvent) {
         dtstart = item.startDate;
@@ -297,7 +373,6 @@ calWcapCalendar.prototype.getStoreUrl = function( item, oldItem )
 //         url += ("&X-NSCP-DUE-TZID=" + encodeURIComponent(
 //                     this.getAlignedTimezone(dtend.timezone)));
         }
-        // xxx todo: missing duration
         if (dtstart && dtstart.isDate)
             url += "&isAllDay=1";
         if (item.isCompleted)
@@ -319,8 +394,8 @@ calWcapCalendar.prototype.getStoreUrl = function( item, oldItem )
         // important to provide tz info with entry date for proper
         // occurrence calculation (daylight savings)
         url += ("&dtstart=" + getIcalUTC(dtstart));
-        // xxx todo: setting X-NSCP- does not work.
-        //           i.e. no separate tz for start/end. WTF.
+        // xxx todo: setting X-NSCP-tz does not work.
+        //           i.e. for now no separate tz for start/end.
 //     url += ("&X-NSCP-DTSTART-TZID=" +
 //             encodeURIComponent(this.getAlignedTimezone(dtstart.timezone)));
         // currently the only way to influence X-NSCP-DTSTART-TZID:
@@ -329,27 +404,20 @@ calWcapCalendar.prototype.getStoreUrl = function( item, oldItem )
     }
     
     // alarm support:
-    var alarmOffset = item.alarmOffset;
-    if (alarmOffset) {
+    var alarmStart = item.alarmOffset;
+    if (alarmStart) {
         var alarmRelated = item.alarmRelated;
         if (alarmRelated==Components.interfaces.calIItemBase.ALARM_RELATED_END){
-            // cs does not support RELATED=END:
+            // cs does not support explicit RELATED=END when
+            // both dtstart/due are written
             var dur = item.duration;
-            if (dur) {
-                alarmOffset = alarmOffset.clone();
-                alarmOffset.addDuration(dur);
-            }
-            else {
-                this.notifyError("alarm relates to END, but no duration!");
-                alarmRelated =
-                    Components.interfaces.calIItemBase.ALARM_RELATED_START;
-            }
+            if (dur) { // dtstart+due given
+                alarmStart = alarmStart.clone();
+                alarmStart.addDuration(dur);
+            } // else only dtend is set
         }
-        alarmOffset = alarmOffset.icalString;
-        url += ("&alarmStart=" + alarmOffset);
-        url += ("&X-MOZ-WCAP-ALARM-RELATED=" +
-                "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" +
-                alarmRelated);
+        alarmStart = alarmStart.icalString;
+        url += ("&alarmStart=" + alarmStart);
         // xxx todo: verify ;-separated addresses
         url += "&alarmEmails=";
         if (item.hasProperty("alarmEmailAddress")) {
@@ -358,76 +426,41 @@ calWcapCalendar.prototype.getStoreUrl = function( item, oldItem )
         }
         else {
             // xxx todo: popup exor emails can be currently specified...
-            url += ("&alarmPopup=" + alarmOffset);
+            url += ("&alarmPopup=" + alarmStart);
         }
         // xxx todo: missing: alarm triggers for flashing, etc.
     }
     else {
         // clear alarm:
         url += "&alarmStart=&alarmPopup=&alarmEmails=";
-        url += ("&X-MOZ-WCAP-ALARM-RELATED=" +
-                "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-DELETE^");
     }
-    // xxx todo: currently no support to store this at VALARM component...
-    var alarmLastAck = item.alarmLastAck;
-    if (alarmLastAck) {
-        url += ("&X-MOZ-LASTACK=" +
-                "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" +
-                getIcalUTC(alarmLastAck));
-    }
-    else {
-        url += ("&X-MOZ-LASTACK=" +
-                "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-DELETE^");
-    }
-    
-    // attendees:
-    var attendees =  item.getAttendees({});
-    if (attendees.length > 0) {
-        // ORGANIZER is owner fo this cal?
-        if (!oldItem || orgUID == ownerId) {
-            url += "&method=2"; // REQUEST
-            url += "&attendees=";
-            for ( var i = 0; i < attendees.length; ++i ) {
-                if (i > 0)
-                    url += ";";
-                url += this.encodeAttendee( attendees[i], true /*forceRSVP*/ );
-            }
-        }
-        else { // attendee's calendar:
-            var attendee = item.getAttendeeById(ownerId);
-            if (attendee == null) {
-                this.logError( "not in attendee list, but in my cal?" );
-            }
-            else {
-                this.log( "attendee: " + attendee.icalProperty.icalString );
-                var oldAttendee = oldItem.getAttendeeById(ownerId);
-                if (!oldAttendee ||
-                    attendee.participationStatus !=
-                    oldAttendee.participationStatus) {
-                    // REPLY for just this calendar owner:
-                    url += "&method=4";
-                    url += ("&attendees=PARTSTAT=" +
-                            attendee.participationStatus);
-                    url += ("^" + ownerId);
-                }
-                else {
-                    // UPDATE attendee's copy of item:
-                    url += "&method=256";
-                }
-            }
-        }
-    } // else use just PUBLISH (method=1)
     
     // xxx todo: however, sometimes socs just returns an empty calendar when
     //           nothing or only optional props like attendee ROLE has changed,
     //           although fetch=1.
     //           This also occurs when the event organizer is in the attendees
     //           list and switches its PARTSTAT too often...
-    //     hack: ever changing dummy prop, then the cs engine seems to write
-    //           every time. WTF.
-    url += ("&X-MOZ-WCAP-DUMMY=" +
-            "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" +
-            getIcalUTC(getTime()));
+    //
+    // hack #1:  ever changing X-dummy prop, then the cs engine seems to write
+    //           every time. => does not work for recurring items,
+    //                          operation REPLACE does not work, just adds
+    //                          more and more props. WTF.
+    
+    // misusing CONTACTS for now to store additional X- data
+    // (not used in cs web-frontend nor in mozilla)
+    // xxx todo, contact asavari
+    
+    // stamp:[lastack]:[related]
+    var contacts = getIcalUTC(getTime());
+    // xxx todo: currently no support to store this at VALARM component...
+    var lastAck = item.alarmLastAck;
+    contacts += ":";
+    if (lastAck)
+        contacts += getIcalUTC(lastAck);
+    contacts += ":";
+    if (alarmStart)
+        contacts += item.alarmRelated;
+    url += ("&contacts=" + encodeURIComponent(contacts));
     
     return url;
 };
@@ -746,39 +779,52 @@ calWcapCalendar.prototype.parseItems = function(
                         }
                     break;
                 }
+                if (item &&
+                    item.alarmOffset && !item.entryDate && !item.dueDate) {
+                    // xxx todo: loss on roundtrip
+                    this_.log( "app currently does not support " +
+                               "absolute alarm trigger datetimes. " +
+                               "Removing alarm from item: " + item.title );
+                    item.alarmOffset = null;
+                    item.alarmLastAck = null;
+                }
                 break;
             }
             }
             if (item != null) {
-                var alarmOffset = item.alarmOffset;
-                if (alarmOffset) {
-                    var alarmRelated = subComp.getFirstProperty(
-                        "X-MOZ-WCAP-ALARM-RELATED");
-                    if (alarmRelated) {
-                        alarmRelated = Number(alarmRelated.value);
-                        if (alarmRelated != item.alarmRelated) {
-                            alarmOffset = alarmOffset.clone();
-                            var dur = item.duration;
-                            if (dur) {
-                                if (alarmRelated == Components.interfaces
-                                    .calIItemBase.ALARM_RELATED_END) {
+                var contactsProp = subComp.getFirstProperty("CONTACT");
+                if (contactsProp) { // stamp:[lastack]:[related]
+                    var ar = contactsProp.value.split(":");
+                    if (ar.length > 2) {
+                        var alarmRelated = ar[2];
+                        if (alarmRelated.length > 0) {
+                            alarmRelated = Number(alarmRelated);
+                            if (alarmRelated == Components.interfaces
+                                .calIItemBase.ALARM_RELATED_END &&
+                                alarmRelated != item.alarmRelated)
+                            {
+                                var dur = item.duration;
+                                if (dur) {
                                     dur = dur.clone();
                                     dur.isNegative = true;
+                                    var alarmOffset = item.alarmOffset;
+                                    if (alarmOffset) {
+                                        alarmOffset = alarmOffset.clone();
+                                        alarmOffset.addDuration(dur);
+                                        item.alarmOffset = alarmOffset;
+                                    }
                                 }
-                                alarmOffset.addDuration(dur);
-                                item.alarmOffset = alarmOffset;
-                                item.alarmRelated = alarmRelated;
+                                // else only DUE is set i.e. relates to END
                             }
-                            else {
-                                this_.notifyError("related to END, but no " +
-                                                  "duration!");
-                            }
+                            item.alarmRelated = alarmRelated;
                         }
-                    }
-                    var lastAckProp = subComp.getFirstProperty("X-MOZ-LASTACK");
-                    if (lastAckProp) { // shift to alarm comp:
-                        // TZID is UTC:
-                        item.alarmLastAck =getDatetimeFromIcalProp(lastAckProp);
+                        var lastAck = ar[1];
+                        if (lastAck.length > 0) {
+                            var dtLastAck = new CalDateTime();
+                            dtLastAck.icalString = lastAck; // TZID is UTC
+                            // shift to alarm comp:
+                            item.alarmLastAck = dtLastAck;
+                        }
                     }
                 }
                 
