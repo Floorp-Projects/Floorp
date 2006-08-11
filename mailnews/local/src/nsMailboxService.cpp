@@ -457,7 +457,7 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
       nsFilePath filePath(folderPath); // convert to file url representation...
       nsCAutoString buf;
       NS_EscapeURL((const char *)filePath,-1,
-                   esc_Minimal|esc_Forced|esc_AlwaysCopy,buf);
+                   esc_Directory|esc_Forced|esc_AlwaysCopy,buf);
       if (mPrintingOperation)
         urlSpec = PR_smprintf("mailbox://%s?number=%d&header=print", buf.get(), msgKey);
       else if (part)
