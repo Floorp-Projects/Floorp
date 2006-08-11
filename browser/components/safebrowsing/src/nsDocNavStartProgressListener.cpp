@@ -42,6 +42,7 @@
 #include "nsITimer.h"
 #include "nsIURI.h"
 #include "nsIWebProgress.h"
+#include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 
@@ -194,6 +195,19 @@ nsDocNavStartProgressListener::IsSpurious(nsIURI* aURI, PRBool* isSpurious)
   *isSpurious = scheme.Equals("about") ||
                 scheme.Equals("chrome") ||
                 scheme.Equals("file");
+
+  if (scheme.Equals("jar")) {
+    // If it's a jar URI, we want to check the inner URI's scheme
+    nsCAutoString inner;
+    rv = aURI->GetPath(inner);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsCOMPtr<nsIURI> innerURI;
+    rv = NS_NewURI(getter_AddRefs(innerURI), inner);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return IsSpurious(innerURI, isSpurious);
+  }
 
   return NS_OK;
 }
