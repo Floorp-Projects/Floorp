@@ -24,6 +24,7 @@
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
 #   Jeff Walden <jwalden+code@mit.edu>
+#   Myk Melez <myk@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -57,7 +58,10 @@
     <preferences id="mainPreferences">
       <!-- XXX Button preferences -->
 
-      <!-- Home Page -->
+      <!-- Startup -->
+      <preference id="browser.startup.page"
+                  name="browser.startup.page"
+                  type="int"/>
       <preference id="browser.startup.homepage"
                   name="browser.startup.homepage"
                   type="wstring"/>
@@ -104,10 +108,22 @@
     <stringbundle id="bundleBrand" src="chrome://branding/locale/brand.properties"/>
 #endif
 
-    <!-- Home Page -->
-    <groupbox id="homePageGroup">
-      <caption label="&homePage.label;"/>
+    <!-- Startup -->
+    <groupbox id="startupGroup">
+      <caption label="&startup.label;"/>
 
+      <hbox align="center">
+        <label value="&startupPage.label;" accesskey="&startupPage.accesskey;"
+               control="browserStartupPage"/>
+        <menulist id="browserStartupPage" preference="browser.startup.page">
+          <menupopup>
+            <menuitem label="&startupHomePage.label;"     value="1"/>
+            <menuitem label="&startupBlankPage.label;"    value="0"/>
+            <menuitem label="&startupLastSession.label;"  value="3"/>
+          </menupopup>
+        </menulist>
+      </hbox>
+      <separator class="thin"/>
       <hbox align="center">
         <label value="&location.label;" accesskey="&location.accesskey;" control="browserHomePage"/>
         <textbox id="browserHomePage" class="padded" flex="1"
