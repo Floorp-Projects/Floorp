@@ -1347,7 +1347,7 @@ icalcomponent_kind icalcomponent_string_to_kind(const char* string)
     }
 
     for (i=0; component_map[i].kind  != ICAL_NO_COMPONENT; i++) {
-	if (strcmp(component_map[i].name, string) == 0) {
+	if (strncmp(string, component_map[i].name, strlen(component_map[i].name)) == 0) {
 	    return component_map[i].kind;
 	}
     }
