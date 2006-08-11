@@ -116,7 +116,16 @@ nsresult nsMsgQuickSearchDBView::OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey aPare
     if (searchSession)
       searchSession->MatchHdr(newHdr, m_db, &match);
     if (match)
+    {
+      // put the new header in m_origKeys, so that expanding a thread will
+      // show the newly added header.
+      nsMsgKey newKey;
+      (void) newHdr->GetMessageKey(&newKey);
+      nsMsgViewIndex insertIndex = GetInsertIndexHelper(newHdr, &m_origKeys, 
+                      nsMsgViewSortOrder::ascending, nsMsgViewSortType::byId);
+      m_origKeys.InsertAt(insertIndex, newKey);
       nsMsgThreadedDBView::OnNewHeader(newHdr, aParentKey, ensureListed); // do not add a new message if there isn't a match.
+    }
   }
   return NS_OK;
 }
