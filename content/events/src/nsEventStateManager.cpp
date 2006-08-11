@@ -384,10 +384,8 @@ nsEventStateManager::nsEventStateManager()
     mRClickCount(0),
     mNormalLMouseEventInProcess(PR_FALSE),
     m_haveShutdown(PR_FALSE),
-    mClearedFrameRefsDuringEvent(PR_FALSE),
     mBrowseWithCaret(PR_FALSE),
     mTabbedThroughDocument(PR_FALSE),
-    mDOMEventLevel(0),
     mAccessKeys(nsnull)
 {
   ++sESMInstanceCount;
@@ -2545,9 +2543,6 @@ nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
   if (aFrame && aFrame == mCurrentTarget) {
     mCurrentTargetContent = aFrame->GetContent();
   }
-  if (mDOMEventLevel > 0) {
-    mClearedFrameRefsDuringEvent = PR_TRUE;
-  }
 
   return NS_OK;
 }
@@ -2779,15 +2774,6 @@ nsEventStateManager::SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
   return NS_OK;
 }
 
-void
-nsEventStateManager::AfterDispatchEvent()
-{
-  mDOMEventLevel--;
-  if (mClearedFrameRefsDuringEvent && mDOMEventLevel == 0) {
-    mClearedFrameRefsDuringEvent = PR_FALSE;
-  }
-}
-
 class nsESMEventCB : public nsDispatchingCallback
 {
 public:
@@ -2829,7 +2815,6 @@ nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, PRUint32 aMessage,
 
   mCurrentTargetContent = aTargetContent;
 
-  BeforeDispatchEvent();
   nsIFrame* targetFrame = nsnull;
   if (aTargetContent) {
     nsESMEventCB callback(aTargetContent);
@@ -2844,8 +2829,6 @@ nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, PRUint32 aMessage,
       targetFrame = shell->GetPrimaryFrameFor(aTargetContent);
     }
   }
-
-  AfterDispatchEvent();
 
   mCurrentTargetContent = nsnull;
 

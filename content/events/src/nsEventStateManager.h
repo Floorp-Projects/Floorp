@@ -287,11 +287,6 @@ protected:
   nsresult GetDocSelectionLocation(nsIContent **start, nsIContent **end, 
                                    nsIFrame **startFrame, PRUint32 *startOffset);
 
-  // To be called before and after you fire an event, to update booleans and
-  // such
-  void BeforeDispatchEvent() { ++mDOMEventLevel; }
-  void AfterDispatchEvent();
-
   PRInt32     mLockCursor;
 
   nsWeakFrame mCurrentTarget;
@@ -355,19 +350,11 @@ protected:
 
   PRPackedBool m_haveShutdown;
 
-  // To inform people that dispatched events that frames have been cleared and
-  // they need to drop frame refs
-  PRPackedBool mClearedFrameRefsDuringEvent;
-
   // So we don't have to keep checking accessibility.browsewithcaret pref
   PRPackedBool mBrowseWithCaret;
 
   // Recursion guard for tabbing
   PRPackedBool mTabbedThroughDocument;
-
-  // The number of events we are currently nested in (currently just applies to
-  // those handlers that care about clearing frame refs)
-  PRInt32 mDOMEventLevel;
 
   //Hashtable for accesskey support
   nsSupportsHashtable *mAccessKeys;
