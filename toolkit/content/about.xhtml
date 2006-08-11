@@ -6,6 +6,8 @@
 %brandDTD;
 <!ENTITY % aboutDTD SYSTEM "chrome://global/locale/about.dtd" >
 %aboutDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
 ]>
 
 <!-- ***** BEGIN LICENSE BLOCK *****
@@ -55,7 +57,7 @@
   <link rel="stylesheet" href="chrome://global/skin/about.css" type="text/css"/>
 </head>
 
-<body>
+<body dir="&locale.dir;">
 <div id="aboutPageContainer">
   <div id="aboutLogoContainer">
     <a href="http://www.mozilla.org/">
