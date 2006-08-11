@@ -1655,7 +1655,7 @@ UpdateManager.prototype = {
     this._writeUpdatesToXMLFile([this._activeUpdate], 
                                 getFile(KEY_APPDIR, [FILE_UPDATE_ACTIVE]));
     if (this._updates) {
-      this._writeUpdatesToXMLFile(this._updates, 
+      this._writeUpdatesToXMLFile(this._updates.slice(0, 10), 
                                   getFile(KEY_APPDIR, [FILE_UPDATES_DB]));
     }
   },
