@@ -665,16 +665,21 @@ var BookmarkPropertiesPanel = {
    */
   deleteBookmark: function BPP_deleteBookmark(bookmarkURI) {
     this._assertURINotString(bookmarkURI);
-
-    var folders = this._bms.getBookmarkFolders(bookmarkURI, {});
-    if (folders.length == 0)
-      return;
-
     var transactions = [];
-    for (var i = 0; i < folders.length; i++) {
-      var index = this._bms.indexOfItem(folders[i], bookmarkURI);
-      var transaction = new PlacesRemoveItemTransaction(bookmarkURI,
-                                                        folders[i], index)
+
+    if (this._identifierIsURI()) {
+      var folders = this._bms.getBookmarkFolders(bookmarkURI, {});
+      if (folders.length == 0)
+        return;
+
+      for (var i = 0; i < folders.length; i++) {
+        var index = this._bms.indexOfItem(folders[i], bookmarkURI);
+        var transaction = new PlacesRemoveItemTransaction(bookmarkURI,
+                                                          folders[i], index)
+        transactions.push(transaction);
+      }
+    } else { // This is a folder Id
+      var transaction = new PlacesRemoveFolderTransaction(this._folderId);
       transactions.push(transaction);
     }
 
