@@ -103,18 +103,18 @@ struct JSStmtInfo {
     ptrdiff_t       update;         /* loop update offset (top if none) */
     ptrdiff_t       breaks;         /* offset of last break in loop */
     ptrdiff_t       continues;      /* offset of last continue in loop */
-    JSAtom          *label;         /* name of LABEL or CATCH var */
+    JSAtom          *atom;          /* name of LABEL or CATCH var */
     JSStmtInfo      *down;          /* info for enclosing statement */
     JSStmtInfo      *downScope;     /* next enclosing lexical scope */
-    JSObject        *blockObj;      /* block object if BLOCK_SCOPE */
 };
 
 #define SIF_BODY_BLOCK  0x0001      /* STMT_BLOCK type is a function body */
 #define SIF_SCOPE       0x0002      /* This statement contains a scope. */
 
 /*
- * Rename breaks and continues for use during STMT_FINALLY code generation and
- * backpatching.
+ * To reuse space in JSStmtInfo, rename breaks and continues for use during
+ * try/catch/finally code generation and backpatching.  To match most common
+ * use cases, the macro argument is a struct, not a struct pointer.
  */
 #define GOSUBS(stmt)     ((stmt).breaks)
 #define CATCHJUMPS(stmt) ((stmt).continues)
@@ -373,12 +373,12 @@ js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
                  ptrdiff_t top);
 
 /*
- * Push a block scope statement and link blockObj into tc->blockChain.  To pop
- * this statement info record, use js_PopStatement as usual, or if appropriate
- * (if generating code), js_PopStatementCG.
+ * Push a block scope statement and link blockAtom's object-valued key into
+ * tc->blockChain.  To pop this statement info record, use js_PopStatement as
+ * usual, or if appropriate (if generating code), js_PopStatementCG.
  */
 extern void
-js_PushBlockScope(JSTreeContext *tc, JSStmtInfo *stmt, JSObject *blockObj,
+js_PushBlockScope(JSTreeContext *tc, JSStmtInfo *stmt, JSAtom *blockAtom,
                   ptrdiff_t top);
 
 /*

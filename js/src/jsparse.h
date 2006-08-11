@@ -102,11 +102,11 @@ JS_BEGIN_EXTERN_C
  *                          pn_right: body
  * TOK_THROW    unary       pn_op: JSOP_THROW, pn_kid: exception
  * TOK_TRY      ternary     pn_kid1: try block
- *                          pn_kid2: catch blocks or null
- *                          pn_kid3: finally block or null
- * TOK_CATCH    ternary     pn_kid1: PN_NAME node for catch var (with pn_expr
- *                                   null or the catch guard expression)
- *                          pn_kid2: more catch blocks or null
+ *                          pn_kid2: null or TOK_RESERVED list of catch blocks
+ *                          pn_kid3: null or finally block
+ * TOK_CATCH    ternary     pn_kid1: TOK_NAME, TOK_LB, or TOK_LC cath var node
+ *                                   (TOK_LB or TOK_LC if destructuring)
+ *                          pn_kid2: null or the catch guard expression
  *                          pn_kid3: catch block statements
  * TOK_BREAK    name        pn_atom: label or null
  * TOK_CONTINUE name        pn_atom: label or null

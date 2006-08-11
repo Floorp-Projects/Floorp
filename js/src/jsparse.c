@@ -555,8 +555,8 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
 static int
 HasFinalReturn(JSParseNode *pn)
 {
-    uintN rv, rv2, hasDefault;
     JSParseNode *pn2, *pn3;
+    uintN rv, rv2, hasDefault;
 
     switch (pn->pn_type) {
       case TOK_LC:
@@ -644,16 +644,16 @@ HasFinalReturn(JSParseNode *pn)
 
         /* Else check the try block and any and all catch statements. */
         rv = HasFinalReturn(pn->pn_kid1);
-        if (pn->pn_kid2)
-            rv &= HasFinalReturn(pn->pn_kid2);
+        if (pn->pn_kid2) {
+            JS_ASSERT(pn->pn_kid2->pn_arity == PN_LIST);
+            for (pn2 = pn->pn_kid2->pn_head; pn2; pn2 = pn2->pn_next)
+                rv &= HasFinalReturn(pn2);
+        }
         return rv;
 
       case TOK_CATCH:
-        /* Check this block's code and iterate over further catch blocks. */
-        rv = HasFinalReturn(pn->pn_kid3);
-        for (pn2 = pn->pn_kid2; pn2; pn2 = pn2->pn_kid2)
-            rv &= HasFinalReturn(pn2->pn_kid3);
-        return rv;
+        /* Check this catch block's body. */
+        return HasFinalReturn(pn->pn_kid3);
 
       case TOK_LET:
         /* Non-binary let statements are let declarations. */
@@ -2328,7 +2328,7 @@ PushLexicalScope(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     if (!atom)
         return NULL;
 
-    js_PushBlockScope(tc, stmtInfo, obj, -1);
+    js_PushBlockScope(tc, stmtInfo, atom, -1);
     pn->pn_type = TOK_LEXICALSCOPE;
     pn->pn_op = JSOP_NOP;
     pn->pn_atom = atom;
@@ -2879,18 +2879,18 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
       }
 
       case TOK_TRY: {
-        JSParseNode *catchtail = NULL;
+        JSParseNode *catchList, *lastCatch;
+
         /*
          * try nodes are ternary.
          * kid1 is the try Statement
-         * kid2 is the catch node
+         * kid2 is the catch node list or null
          * kid3 is the finally Statement
          *
          * catch nodes are ternary.
-         * kid1 is the discriminant
-         * kid2 is the next catch node, or NULL
-         * kid3 is the catch block (on kid3 so that we can always append a
-         *                          new catch pn on catchtail->kid2)
+         * kid1 is the lvalue (TOK_NAME, TOK_LB, or TOK_LC)
+         * kid2 is the catch guard or null if no guard
+         * kid3 is the catch block
          *
          * catch discriminant nodes are binary
          * atom is the receptacle
@@ -2911,66 +2911,79 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_TRY);
         js_PopStatement(tc);
 
-        catchtail = pn;
-        while ((tt = js_GetToken(cx, ts)) == TOK_CATCH) {
-            /* check for another catch after unconditional catch */
-            if (catchtail != pn && !catchtail->pn_kid1->pn_expr) {
-                js_ReportCompileErrorNumber(cx, ts,
-                                            JSREPORT_TS | JSREPORT_ERROR,
-                                            JSMSG_CATCH_AFTER_GENERAL);
+        catchList = NULL;
+        tt = js_GetToken(cx, ts);
+        if (tt == TOK_CATCH) {
+            catchList = NewParseNode(cx, ts, PN_LIST, tc);
+            if (!catchList)
                 return NULL;
-            }
+            catchList->pn_type = TOK_RESERVED;
+            PN_INIT_LIST(catchList);
+            lastCatch = NULL;
 
-            /*
-             * legal catch forms are:
-             * catch (v)
-             * catch (v if <boolean_expression>)
-             * (the latter is legal only #ifdef JS_HAS_CATCH_GUARD)
-             */
-            pn2 = NewParseNode(cx, ts, PN_TERNARY, tc);
-            if (!pn2)
-                return NULL;
-
-            /*
-             * We use a PN_NAME for the discriminant (catchguard) node
-             * with the actual discriminant code in the initializer spot
-             */
-            MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_CATCH);
-            MUST_MATCH_TOKEN(TOK_NAME, JSMSG_CATCH_IDENTIFIER);
-            pn3 = NewParseNode(cx, ts, PN_NAME, tc);
-            if (!pn3)
-                return NULL;
-
-            pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
-            pn3->pn_expr = NULL;
-#if JS_HAS_CATCH_GUARD
-            /*
-             * We use `catch (x if x === 5)' (not `catch (x : x === 5)') to
-             * avoid conflicting with the JS2/ECMA2 proposed catchguard syntax.
-             */
-            if (js_PeekToken(cx, ts) == TOK_IF) {
-                (void)js_GetToken(cx, ts); /* eat `if' */
-                pn3->pn_expr = Expr(cx, ts, tc);
-                if (!pn3->pn_expr)
+            do {
+                /* Check for another catch after unconditional catch. */
+                if (lastCatch && !lastCatch->pn_kid1->pn_expr) {
+                    js_ReportCompileErrorNumber(cx, ts,
+                                                JSREPORT_TS | JSREPORT_ERROR,
+                                                JSMSG_CATCH_AFTER_GENERAL);
                     return NULL;
-            }
+                }
+
+                /*
+                 * Legal catch forms are:
+                 *   catch (lhs)
+                 *   catch (lhs if <boolean_expression>)
+                 * where lhs is a name or a destructuring left-hand side.
+                 * (the latter is legal only #ifdef JS_HAS_CATCH_GUARD)
+                 */
+                pn2 = NewParseNode(cx, ts, PN_TERNARY, tc);
+                if (!pn2)
+                    return NULL;
+
+                /*
+                 * We use a PN_NAME for the variable node, in pn2->pn_kid1.
+                 * If there is a guard expression, it goes in pn2->pn_kid2.
+                 */
+                MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_CATCH);
+                MUST_MATCH_TOKEN(TOK_NAME, JSMSG_CATCH_IDENTIFIER);
+                pn3 = NewParseNode(cx, ts, PN_NAME, tc);
+                if (!pn3)
+                    return NULL;
+
+                pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
+                pn3->pn_expr = NULL;
+                pn2->pn_kid1 = pn3;
+                pn2->pn_kid2 = NULL;
+#if JS_HAS_CATCH_GUARD
+                /*
+                 * We use 'catch (x if x === 5)' (not 'catch (x : x === 5)')
+                 * to avoid conflicting with the JS2/ECMAv4 type annotation
+                 * catchguard syntax.
+                 */
+                if (js_MatchToken(cx, ts, TOK_IF)) {
+                    pn2->pn_kid2 = Expr(cx, ts, tc);
+                    if (!pn2->pn_kid2)
+                        return NULL;
+                }
 #endif
-            pn2->pn_kid1 = pn3;
 
-            MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_CATCH);
+                MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_CATCH);
 
-            MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_CATCH);
-            js_PushStatement(tc, &stmtInfo, STMT_CATCH, -1);
-            stmtInfo.label = pn3->pn_atom;
-            pn2->pn_kid3 = Statements(cx, ts, tc);
-            if (!pn2->pn_kid3)
-                return NULL;
-            MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_CATCH);
-            js_PopStatement(tc);
+                MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_CATCH);
+                js_PushStatement(tc, &stmtInfo, STMT_CATCH, -1);
+                stmtInfo.atom = pn3->pn_atom;
+                pn2->pn_kid3 = Statements(cx, ts, tc);
+                if (!pn2->pn_kid3)
+                    return NULL;
+                MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_CATCH);
+                js_PopStatement(tc);
 
-            catchtail = catchtail->pn_kid2 = pn2;
+                PN_APPEND(catchList, pn2);
+                lastCatch = pn2;
+            } while ((tt = js_GetToken(cx, ts)) == TOK_CATCH);
         }
-        catchtail->pn_kid2 = NULL;
+        pn->pn_kid2 = catchList;
 
         if (tt == TOK_FINALLY) {
             tc->tryCount++;
@@ -2985,7 +2998,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             js_UngetToken(ts);
             pn->pn_kid3 = NULL;
         }
-        if (!pn->pn_kid2 && !pn->pn_kid3) {
+        if (!catchList && !pn->pn_kid3) {
             js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
                                         JSMSG_CATCH_OR_FINALLY);
             return NULL;
@@ -3046,7 +3059,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                                                 JSMSG_LABEL_NOT_FOUND);
                     return NULL;
                 }
-                if (stmt->type == STMT_LABEL && stmt->label == label)
+                if (stmt->type == STMT_LABEL && stmt->atom == label)
                     break;
             }
         } else {
@@ -3082,7 +3095,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                     return NULL;
                 }
                 if (stmt->type == STMT_LABEL) {
-                    if (stmt->label == label) {
+                    if (stmt->atom == label) {
                         if (!stmt2 || !STMT_IS_LOOP(stmt2)) {
                             js_ReportCompileErrorNumber(cx, ts,
                                                         JSREPORT_TS |
@@ -3168,8 +3181,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
          */
         stmt = FindMaybeScopeStatement(tc);
         if (stmt && (stmt->flags & SIF_SCOPE)) {
-            JS_ASSERT(stmt->blockObj);
-            obj = stmt->blockObj;
+            JS_ASSERT(stmt->atom);
+            obj = ATOM_TO_OBJECT(stmt->atom);
         } else {
             if (!stmt) {
                 /*
@@ -3195,6 +3208,10 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             obj = js_NewBlockObject(cx);
             if (!obj)
                 return NULL;
+            atom = js_AtomizeObject(cx, obj, 0);
+            if (!atom)
+                return NULL;
+
             JS_ASSERT(!(stmt->flags & SIF_SCOPE));
             stmt->flags |= SIF_SCOPE;
             if (!stmt->downScope) {
@@ -3204,7 +3221,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 JS_ASSERT(stmt == tc->topScopeStmt);
             }
             obj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(tc->blockChain);
-            tc->blockChain = stmt->blockObj = obj;
+            tc->blockChain = obj;
+            stmt->atom = atom;
 
             pn1 = tc->blockNode;
             JS_ASSERT(!tc->blockNode ||
@@ -3215,9 +3233,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             if (!pn1)
                 return NULL;
 
-            atom = js_AtomizeObject(cx, obj, 0);
-            if (!atom)
-                return NULL;
             pn1->pn_type = TOK_LEXICALSCOPE;
             pn1->pn_pos = tc->blockNode->pn_pos;
             pn1->pn_atom = atom;
@@ -3316,7 +3331,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             }
             label = pn2->pn_atom;
             for (stmt = tc->topStmt; stmt; stmt = stmt->down) {
-                if (stmt->type == STMT_LABEL && stmt->label == label) {
+                if (stmt->type == STMT_LABEL && stmt->atom == label) {
                     js_ReportCompileErrorNumber(cx, ts,
                                                 JSREPORT_TS | JSREPORT_ERROR,
                                                 JSMSG_DUPLICATE_LABEL);
@@ -3327,7 +3342,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
             /* Push a label struct and parse the statement. */
             js_PushStatement(tc, &stmtInfo, STMT_LABEL, -1);
-            stmtInfo.label = label;
+            stmtInfo.atom = label;
             pn = Statement(cx, ts, tc);
             if (!pn)
                 return NULL;
@@ -3409,7 +3424,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
      */
     fp = cx->fp;
     if (let) {
-        data.obj = tc->topScopeStmt->blockObj;
+        data.obj = ATOM_TO_OBJECT(tc->topScopeStmt->atom);
         data.u.let.index = OBJ_BLOCK_COUNT(cx, data.obj);
         data.u.let.overflow = JSMSG_TOO_MANY_FUN_VARS;
     } else {
