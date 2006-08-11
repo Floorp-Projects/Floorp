@@ -729,9 +729,11 @@ NS_IMETHODIMP nsAccessible::GetIndexInParent(PRInt32 *aIndexInParent)
   return NS_OK;
 }
 
-#ifdef DEBUG_A11Y
 NS_IMETHODIMP nsAccessible::TestChildCache(nsIAccessible *aCachedChild)
 {
+#ifndef DEBUG_A11Y
+  return NS_OK;
+#else
   // All cached accessible nodes should be in the parent
   // It will assert if not all the children were created
   // when they were first cached, and no invalidation
@@ -751,8 +753,8 @@ NS_IMETHODIMP nsAccessible::TestChildCache(nsIAccessible *aCachedChild)
     sibling = tempAccessible;
   }
   return NS_OK;
-}
 #endif
+}
 
 nsresult nsAccessible::GetTranslatedString(const nsAString& aKey, nsAString& aStringOut)
 {
