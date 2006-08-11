@@ -1379,7 +1379,6 @@ EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
                 return JS_FALSE;
             i = OBJ_BLOCK_COUNT(cx, stmt->blockObj);
             EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, i);
-            break;
         }
 #endif
     }
