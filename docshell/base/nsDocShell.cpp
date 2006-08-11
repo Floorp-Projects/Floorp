@@ -2949,7 +2949,16 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
     else if (NS_ERROR_FILE_NOT_FOUND == aError) {
         NS_ENSURE_ARG_POINTER(aURI);
         nsCAutoString spec;
-        aURI->GetPath(spec);
+        // displaying "file://" is aesthetically unpleasing and could even be
+        // confusing to the user
+        PRBool isFileURI = PR_FALSE;
+        rv = aURI->SchemeIs("file", &isFileURI);
+        if (NS_FAILED(rv))
+            return rv;
+        if (isFileURI)
+            aURI->GetPath(spec);
+        else
+            aURI->GetSpec(spec);
         nsCAutoString charset;
         // unescape and convert from origin charset
         aURI->GetOriginCharset(charset);

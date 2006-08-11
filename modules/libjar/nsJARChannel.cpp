@@ -163,7 +163,13 @@ nsJARInputThunk::EnsureJarStream()
         rv = mJarReader->GetInputStream(mJarEntry.get(),
                                         getter_AddRefs(mJarStream));
     }
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        // convert to the proper result if the entry wasn't found
+        // so that error pages work
+        if (rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
+            rv = NS_ERROR_FILE_NOT_FOUND;
+        return rv;
+    }
 
     // ask the JarStream for the content length
     mJarStream->Available((PRUint32 *) &mContentLength);
