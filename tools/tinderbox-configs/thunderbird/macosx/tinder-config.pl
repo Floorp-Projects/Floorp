@@ -146,7 +146,7 @@ $moz_cvsroot   = ":ext:cltbld\@cvs.mozilla.org:/cvsroot";
 #$moz_client_mk = 'client.mk';
 
 #- Set if you want to build in a separate object tree
-#$ObjDir = '';
+$ObjDir = '../build/universal';
 
 # Extra build name, if needed.
 $BuildNameExtra = 'Universal Nightly';
