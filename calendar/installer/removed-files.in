@@ -26,6 +26,26 @@ components/compreg.dat
 components/xpti.dat
 components/xptitemp.dat
 components/nsBackgroundUpdateService.js
+#
+# Clean out old calendar components which didn't implement nsIModule
+# (see bug 320366)
+components/calAlarmService.js
+components/calAttachment.js
+components/calAttendee.js
+components/calCalendarManager.js
+components/calDateTimeFormatter.js
+components/calEvent.js
+components/calHtmlExport.js
+components/calIcsImportExport.js
+components/calItemBase.js
+components/calListFormatter.js
+components/calMonthGridPrinter.js
+components/calOutlookCSVImportExport.js
+components/calRecurrenceInfo.js
+components/calTodo.js
+components/calUtils.js
+components/calWeekTitleService.js
+#
 #ifndef XP_MACOSX
 components/autocomplete.xpt
 #endif
