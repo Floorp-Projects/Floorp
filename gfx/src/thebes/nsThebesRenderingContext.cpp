@@ -1016,7 +1016,7 @@ nsThebesRenderingContext::DrawImage(imgIContainer *aImage,
     }
 
     return img->Draw(*this, mDrawingSurface,
-                     pxSr.x - pxImgFrameRect.x, pxSr.y - pxImgFrameRect.y,
+                     pxSr.x, pxSr.y,
                      pxSr.width, pxSr.height,
                      pxDr.x, pxDr.y, pxDr.width, pxDr.height);
 }
