@@ -375,6 +375,7 @@ NS_IMETHODIMP nsComboboxControlFrame::GetAccessible(nsIAccessible** aAccessible)
 void 
 nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
+  nsWeakFrame weakFrame(this);
   if (aOn) {
     nsListControlFrame::ComboboxFocusSet();
     mFocused = this;
@@ -383,7 +384,12 @@ nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
     if (mDroppedDown) {
       mListControlFrame->ComboboxFinish(mDisplayedIndex);
     }
+    // May delete |this|.
     mListControlFrame->FireOnChange();
+  }
+
+  if (!weakFrame.IsAlive()) {
+    return;
   }
 
   // This is needed on a temporary basis. It causes the focus
