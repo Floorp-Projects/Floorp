@@ -373,7 +373,9 @@ if ($action eq 'delete') {
     if ($product->bug_count) {
         if (Bugzilla->params->{"allowbugdeletion"}) {
             foreach my $bug_id (@{$product->bug_ids}) {
-                my $bug = new Bugzilla::Bug($bug_id, $whoid);
+                # Note that we allow the user to delete bugs he can't see,
+                # which is okay, because he's deleting the whole Product.
+                my $bug = new Bugzilla::Bug($bug_id);
                 $bug->remove_from_db();
             }
         }

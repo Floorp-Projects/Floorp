@@ -252,7 +252,9 @@ if ($action eq 'delete') {
     if ($component->bug_count) {
         if (Bugzilla->params->{"allowbugdeletion"}) {
             foreach my $bug_id (@{$component->bug_ids}) {
-                my $bug = new Bugzilla::Bug($bug_id, $whoid);
+                # Note: We allow admins to delete bugs even if they can't
+                # see them, as long as they can see the product.
+                my $bug = new Bugzilla::Bug($bug_id);
                 $bug->remove_from_db();
             }
         } else {

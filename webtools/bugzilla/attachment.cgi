@@ -501,7 +501,7 @@ sub insert
     ValidateComment(scalar $cgi->param('comment'));
     my ($timestamp) = Bugzilla->dbh->selectrow_array("SELECT NOW()"); 
 
-    my $bug = new Bugzilla::Bug($bugid, $user->id);
+    my $bug = new Bugzilla::Bug($bugid);
     my $attachid =
         Bugzilla::Attachment->insert_attachment_for_bug(THROW_ERROR, $bug, $user,
                                                         $timestamp, \$vars);
@@ -652,7 +652,7 @@ sub update
     Bugzilla::Flag::validate($cgi, $bugid, $attach_id);
     Bugzilla::FlagType::validate($cgi, $bugid, $attach_id);
 
-    my $bug = new Bugzilla::Bug($bugid, $userid);
+    my $bug = new Bugzilla::Bug($bugid);
     # Lock database tables in preparation for updating the attachment.
     $dbh->bz_lock_tables('attachments WRITE', 'flags WRITE' ,
           'flagtypes READ', 'fielddefs READ', 'bugs_activity WRITE',

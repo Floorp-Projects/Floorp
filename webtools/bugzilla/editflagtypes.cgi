@@ -393,7 +393,7 @@ sub update {
                                              undef, $id);
     foreach my $flag (@$flags) {
         my ($flag_id, $bug_id, $attach_id) = @$flag;
-        my $bug = new Bugzilla::Bug($bug_id, $user->id);
+        my $bug = new Bugzilla::Bug($bug_id);
         my $attachment = $attach_id ? Bugzilla::Attachment->get($attach_id) : undef;
         Bugzilla::Flag::clear($flag_id, $bug, $attachment);
     }
@@ -412,7 +412,7 @@ sub update {
                                           undef, $id);
     foreach my $flag (@$flags) {
         my ($flag_id, $bug_id, $attach_id) = @$flag;
-        my $bug = new Bugzilla::Bug($bug_id, $user->id);
+        my $bug = new Bugzilla::Bug($bug_id);
         my $attachment = $attach_id ? Bugzilla::Attachment->get($attach_id) : undef;
         Bugzilla::Flag::clear($flag_id, $bug, $attachment);
     }

@@ -51,7 +51,7 @@ my $dbh = Bugzilla->switch_to_shadow_db();
 # bug that the user is authorized to access.
 my $id = $cgi->param('id');
 ValidateBugID($id);
-my $current_bug = new Bugzilla::Bug($id, $user->id);
+my $current_bug = new Bugzilla::Bug($id);
 
 my $hide_resolved = $cgi->param('hide_resolved') ? 1 : 0;
 
@@ -120,7 +120,7 @@ sub GenerateTree {
         # its sub-tree if we haven't already done so (which happens
         # when bugs appear in dependency trees multiple times).
         if (!$bugs->{$dep_id}) {
-            $bugs->{$dep_id} = new Bugzilla::Bug($dep_id, $user->id);
+            $bugs->{$dep_id} = new Bugzilla::Bug($dep_id);
             GenerateTree($dep_id, $relationship, $depth+1, $bugs, $ids);
         }
 
@@ -129,6 +129,7 @@ sub GenerateTree {
         # wants the tree to go, and if the dependency isn't resolved 
         # (if we're ignoring resolved dependencies).
         if (!$bugs->{$dep_id}->{'error'}
+            && Bugzilla->user->can_see_bug($dep_id)
             && (!$maxdepth || $depth <= $maxdepth) 
             && ($bugs->{$dep_id}->{'isopened'} || !$hide_resolved))
         {

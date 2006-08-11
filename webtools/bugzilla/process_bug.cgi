@@ -141,7 +141,7 @@ scalar(@idlist) || ThrowUserError("no_bugs_chosen");
 # Build a bug object using $cgi->param('id') as ID.
 # If there are more than one bug changed at once, the bug object will be
 # empty, which doesn't matter.
-my $bug = new Bugzilla::Bug(scalar $cgi->param('id'), $whoid);
+my $bug = new Bugzilla::Bug(scalar $cgi->param('id'));
 
 # Make sure form param 'dontchange' is defined so it can be compared to easily.
 $cgi->param('dontchange','') unless defined $cgi->param('dontchange');
@@ -190,7 +190,7 @@ foreach my $field ("dependson", "blocked") {
             # throw an error if any of the changed bugs are not visible.
             ValidateBugID($id);
             if (Bugzilla->params->{"strict_isolation"}) {
-                my $deltabug = new Bugzilla::Bug($id, $user->id);
+                my $deltabug = new Bugzilla::Bug($id);
                 if (!$user->can_edit_product($deltabug->{'product_id'})) {
                     $vars->{'field'} = $field;
                     ThrowUserError("illegal_change_deps", $vars);
@@ -527,7 +527,7 @@ if ($action eq Bugzilla->params->{'move-button-text'}) {
     my @bugs;
     # First update all moved bugs.
     foreach my $id (@idlist) {
-        my $bug = new Bugzilla::Bug($id, $whoid);
+        my $bug = new Bugzilla::Bug($id);
         push(@bugs, $bug);
 
         $sth->execute($timestamp, $id);
@@ -1346,7 +1346,7 @@ if ($prod_changed && Bugzilla->params->{"strict_isolation"}) {
 foreach my $id (@idlist) {
     my $query = $basequery;
     my @bug_values = @values;
-    my $old_bug_obj = new Bugzilla::Bug($id, $whoid);
+    my $old_bug_obj = new Bugzilla::Bug($id);
 
     if ($cgi->param('knob') eq 'reassignbycomponent') {
         # We have to check whether the bug is moved to another product
@@ -1897,7 +1897,7 @@ foreach my $id (@idlist) {
     # and then generate any necessary bug activity entries by seeing 
     # what has changed since before we wrote out the new values.
     #
-    my $new_bug_obj = new Bugzilla::Bug($id, $whoid);
+    my $new_bug_obj = new Bugzilla::Bug($id);
     my @newvalues = SnapShotBug($id);
     my %newhash;
     $i = 0;
@@ -2096,7 +2096,7 @@ if ($action eq 'next_bug') {
     }
     if ($next_bug) {
         if (detaint_natural($next_bug) && Bugzilla->user->can_see_bug($next_bug)) {
-            my $bug = new Bugzilla::Bug($next_bug, $whoid);
+            my $bug = new Bugzilla::Bug($next_bug);
             ThrowCodeError("bug_error", { bug => $bug }) if $bug->error;
 
             $vars->{'bugs'} = [$bug];
@@ -2110,7 +2110,7 @@ if ($action eq 'next_bug') {
     }
 } elsif ($action eq 'same_bug') {
     if (Bugzilla->user->can_see_bug($cgi->param('id'))) {
-        my $bug = new Bugzilla::Bug($cgi->param('id'), $whoid);
+        my $bug = new Bugzilla::Bug($cgi->param('id'));
         ThrowCodeError("bug_error", { bug => $bug }) if $bug->error;
 
         $vars->{'bugs'} = [$bug];

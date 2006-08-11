@@ -224,7 +224,7 @@ sub flag_handler {
             } );
     }
     else {
-        my $bug = new Bugzilla::Bug( $bugid, $exporterid );
+        my $bug = new Bugzilla::Bug($bugid);
         $flag_types = $bug->flag_types;
     }
     unless ($flag_types){

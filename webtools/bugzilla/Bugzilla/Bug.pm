@@ -65,36 +65,18 @@ use constant MAX_COMMENT_LENGTH => 65535;
 
 #####################################################################
 
-# create a new empty bug
-#
 sub new {
-  my $type = shift();
-  my %bug;
-
-  # create a ref to an empty hash and bless it
-  #
-  my $self = {%bug};
-  bless $self, $type;
-
-  # construct from a hash containing a bug's info
-  #
-  if ($#_ == 1) {
-    $self->initBug(@_);
-  } else {
-    confess("invalid number of arguments \($#_\)($_)");
-  }
-
-  # bless as a Bug
-  #
+  my $invocant = shift;
+  my $class = ref($invocant) || $invocant;
+  my $self = {};
+  bless $self, $class;
+  $self->_init(@_);
   return $self;
 }
 
-# dump info about bug into hash unless user doesn't have permission
-# user_id 0 is used when person is not logged in.
-#
-sub initBug  {
+sub _init {
   my $self = shift();
-  my ($bug_id, $user_id) = (@_);
+  my ($bug_id) = (@_);
   my $dbh = Bugzilla->dbh;
 
   $bug_id = trim($bug_id || 0);
@@ -103,18 +85,6 @@ sub initBug  {
 
   # If the bug ID isn't numeric, it might be an alias, so try to convert it.
   $bug_id = bug_alias_to_id($bug_id) if $bug_id !~ /^0*[1-9][0-9]*$/;
-
-  # If the user is not logged in, sets $user_id to 0.
-  # Else gets $user_id from the user login name if this
-  # argument is not numeric.
-  my $stored_user_id = $user_id;
-  if (!defined $user_id) {
-    $user_id = 0;
-  } elsif (!detaint_natural($user_id)) {
-    $user_id = login_to_id($stored_user_id); 
-  }
-
-  $self->{'who'} = new Bugzilla::User($user_id);
 
   unless ($bug_id && detaint_natural($bug_id)) {
       # no bug number given or the alias didn't match a bug
@@ -166,8 +136,7 @@ sub initBug  {
   $bug_sth->execute($bug_id);
   my @row;
 
-  if ((@row = $bug_sth->fetchrow_array()) 
-      && $self->{'who'}->can_see_bug($bug_id)) {
+  if (@row = $bug_sth->fetchrow_array) {
     my $count = 0;
     my %fields;
     foreach my $field ("bug_id", "alias", "classification_id", "classification",
@@ -188,10 +157,6 @@ sub initBug  {
         }
         $count++;
     }
-  } elsif (@row) {
-      $self->{'bug_id'} = $bug_id;
-      $self->{'error'} = "NotPermitted";
-      return $self;
   } else {
       $self->{'bug_id'} = $bug_id;
       $self->{'error'} = "NotFound";
@@ -1186,7 +1151,7 @@ sub CheckIfVotedConfirmed {
 sub check_can_change_field {
     my $self = shift;
     my ($field, $oldvalue, $newvalue, $PrivilegesRequired, $data) = (@_);
-    my $user = $self->{'who'};
+    my $user = Bugzilla->user;
 
     $oldvalue = defined($oldvalue) ? $oldvalue : '';
     $newvalue = defined($newvalue) ? $newvalue : '';

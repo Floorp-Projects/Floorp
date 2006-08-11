@@ -537,7 +537,10 @@ $dbh->do("UPDATE bugs SET creation_ts = ? WHERE bug_id = ?",
 
 $dbh->bz_unlock_tables();
 
-my $bug = new Bugzilla::Bug($id, $user->id);
+my $bug = new Bugzilla::Bug($id);
+# We don't have to check if the user can see the bug, because a user filing
+# a bug can always see it. You can't change reporter_accessible until
+# after the bug is filed.
 
 # Add an attachment if requested.
 if (defined($cgi->upload('data')) || $cgi->param('attachurl')) {

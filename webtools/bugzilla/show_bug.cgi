@@ -35,7 +35,7 @@ my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
 my $vars = {};
 
-Bugzilla->login();
+my $user = Bugzilla->login();
 
 # Editable, 'single' HTML bugs are treated slightly specially in a few places
 my $single = !$cgi->param('format')
@@ -60,7 +60,7 @@ if ($single) {
     # Its a bit silly to do the validation twice - that functionality should
     # probably move into Bug.pm at some point
     ValidateBugID($id);
-    push @bugs, new Bugzilla::Bug($id, Bugzilla->user->id);
+    push @bugs, new Bugzilla::Bug($id);
     if (defined $cgi->param('mark')) {
         foreach my $range (split ',', $cgi->param('mark')) {
             if ($range =~ /^(\d+)-(\d+)$/) {
@@ -77,7 +77,13 @@ if ($single) {
         # Be kind enough and accept URLs of the form: id=1,2,3.
         my @ids = split(/,/, $id);
         foreach (@ids) {
-            my $bug = new Bugzilla::Bug($_, Bugzilla->user->id);
+            my $bug = new Bugzilla::Bug($_);
+            # This is basically a backwards-compatibility hack from when
+            # Bugzilla::Bug->new used to set 'NotPermitted' if you couldn't
+            # see the bug.
+            if (!$bug->{error} && !$user->can_see_bug($bug->bug_id)) {
+                $bug->{error} = 'NotPermitted';
+            }
             push(@bugs, $bug);
         }
     }

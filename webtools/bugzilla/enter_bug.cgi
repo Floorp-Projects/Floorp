@@ -307,7 +307,7 @@ $cloned_bug_id = $cgi->param('cloned_bug_id');
 
 if ($cloned_bug_id) {
     ValidateBugID($cloned_bug_id);
-    $cloned_bug = new Bugzilla::Bug($cloned_bug_id, $user->id);
+    $cloned_bug = new Bugzilla::Bug($cloned_bug_id);
 }
 
 if (scalar(@{$product->components}) == 1) {
