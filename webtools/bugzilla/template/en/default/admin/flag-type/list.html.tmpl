@@ -26,7 +26,8 @@
 [% PROCESS global/header.html.tmpl
   title = 'Administer Flag Types'
   style = "
-    table#flag_types tr th { text-align: left; }
+    table#flag_types_bugs tr th,
+    table#flag_types_attachments tr th { text-align: left; }
     .inactive { color: #787878; }
     .multiplicable { display: block; }
   "
@@ -86,7 +87,7 @@
 
 <h3>Flag Types for [% terms.Bugs %]</h3>
 
-[% PROCESS display_flag_types types=bug_types %]
+[% PROCESS display_flag_types types=bug_types types_id='bugs' %]
 
 <p>
   <a href="editflagtypes.cgi?action=enter&amp;target_type=bug">Create Flag Type for [% terms.Bugs %]</a>
@@ -94,7 +95,7 @@
 
 <h3>Flag Types for Attachments</h3>
 
-[% PROCESS display_flag_types types=attachment_types %]
+[% PROCESS display_flag_types types=attachment_types types_id='attachments' %]
 
 <p>
   <a href="editflagtypes.cgi?action=enter&amp;target_type=attachment">Create Flag Type For Attachments</a>
@@ -123,7 +124,7 @@
 
 
 [% BLOCK display_flag_types %]
-  <table id="flag_types" cellspacing="0" cellpadding="4" border="1">
+  <table id="flag_types_[% types_id FILTER html %]" cellspacing="0" cellpadding="4" border="1">
 
     <tr>
       <th>Edit name ...</th>
