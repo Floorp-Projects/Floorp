@@ -60,6 +60,17 @@ var gMainPane = {
    * browser.startup.homepage
    * - the user's home page, as a string; if the home page is a set of tabs,
    *   this will be those URLs separated by the pipe character "|"
+   * browser.startup.page
+   * - what page(s) to show when the user starts the application, as an integer:
+   *
+   *     0: a blank page
+   *     1: the home page (as set by the browser.startup.homepage pref)
+   *     2: the last page the user visited (DEPRECATED)
+   *     3: windows and tabs from the last session (a.k.a. session restore)
+   *
+   *   The deprecated option is not exposed in UI; however, if the user has it
+   *   selected and doesn't change the UI for this preference, the deprecated
+   *   option is preserved.
    */
 
   /**
