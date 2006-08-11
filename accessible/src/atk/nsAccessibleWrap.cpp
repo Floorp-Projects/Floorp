@@ -850,6 +850,11 @@ getChildCountCB(AtkObject *aAtkObj)
 AtkObject *
 refChildCB(AtkObject *aAtkObj, gint aChildIndex)
 {
+    // aChildIndex should not be less than zero
+    if (aChildIndex < 0) {
+      return nsnull;
+    }
+
     // XXX Fix this so it is not O(n^2) to walk through the children!
     // Either we can cache the last accessed child so that we can just GetNextSibling()
     // or we should cache an array of children in each nsAccessible
