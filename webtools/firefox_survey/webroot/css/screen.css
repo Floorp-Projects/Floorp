@@ -12,7 +12,6 @@
  .center {
      text-align:center;
  }
-
  .captcha {
      padding-left:13em;
  }
@@ -29,3 +28,14 @@
      font-size:smaller;
      color:#555;
  }
+
+
+/* The new front page, as of 2006-08-10 */
+
+div#body ul {
+    list-style-type: none;
+}
+
+div#body h3 {
+    color: rgb(153,51,0);
+}

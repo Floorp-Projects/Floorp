@@ -1,33 +1,67 @@
 <?php echo $html->image('firefox-survey-title2.gif', array('alt'=>'Firefox Survey','class'=>'center')); ?>
-<p>You're on your way to being part of the future of Firefox!</p>
-<p>After you supply your name (optional) and email address (required) we'll send you a survey and you'll be on your way to helping to guide Firefox.</p>
-<div id="UsersAdd">
-    <?php echo $html->formTag('/users/add')?>
-        <p><label for="UserFirstname">First Name:</label> <?php echo $html->input('User/firstname', array('size' => '40'))?></p>
-        <p><label for="UserLastname">Last Name:</label> <?php echo $html->input('User/lastname', array('size' => '40'))?></p>
-        <p><label for="UserEmail">Email Address:<span class="required">*</span></label> 
-            <?php echo $html->input('User/email', array('size' => '40'))?>
-            <?php echo $html->tagErrorMsg('User/email', 'A properly formatted email address is required.') ?>
-        </p>
-        
-        <p class="captcha"><?php echo $html->image('freecap.php'); ?></p>
-        <p><label class="captcha-entry" for="captcha">Enter the code above:<span class="required">*</span></label> <?php echo $html->input('captcha', array('size' => '40')); ?>
-            <a href="mailto:firefoxsurvey@mozilla.com"><?php echo $html->image('accessibility.jpg',array('title'=>'If you have trouble viewing the image, email us', 'alt'=>'If you have trouble viewing the image, email us', 'class' => 'captcha-entry'));?></a>
-        </p>
-        <?php if (!empty($form_captcha_error)) : ?>
-        <p class="error_message"><?php echo $form_captcha_error; ?></p>
-        <?php endif; ?>
-        <p><?php echo $html->submit('Send') ?></p>
-    </form>
-    <p class="subtext">We will use your email address to send you a link to a short
-    survey and add you to the Firefox User Panel Database. As a member of the Firefox
-    User Panel, you will receive occasional emails from us offering you ways to
-    contribute to the future of the Firefox browser. Mozilla will keep your name and/or
-    email address private according to the terms set forth in our  <a
-    href="http://userpanel.mozilla.com/privacy-policy.html">Firefox User Panel Privacy Policy</a> 
-    and Mozilla will never rent or sell your name and/or email address to
-    others. If you ever want to unsubscribe, you can do so at any time.  Mozilla will
-    only use and publish the information you give us as part of the Firefox User Panel
-    anonymously or in the aggregate unless you explicitly give us permission to do
-    otherwise.</p>
+ 
+<div id="body">
+
+<hr />
+
+<p>The Firefox User Panel is an initiative to better understand how people use the Web.  Over 5000 people opted-in to participate in a series of short surveys on a variety of browser-related topics.  The panel represents users from a range of backgrounds and skill sets who are willing to give feedback on their Web experiences.</p>
+
+<p><a href="http://is4.instantsurvey.com/Report/ViewReport.isp?SurveyId=27399&ReportId=10358&iid=105913&uid=6336&lang=en-us&h=TCV4xjwWPCVfhTu3d_8vVw">Results</a> from the first survey are now available.  We hope the data is useful and beneficial for the Mozilla community.  Keep checking here to see what's happening with the Firefox User Panel!</p>
+
+<hr />
+
+ 
+<h2>Frequently Asked Questions</h2>
+ 
+
+<ul>
+    <li><a href="#q1">How do I become a part of the panel?</a></li>
+
+    <li><a href="#q2">Will I be spammed by Mozilla or anyone else by giving my email address?</a></li>
+
+    <li><a href="#q3">What if I signed up and then change my mind?</a></li>
+
+    <li><a href="#q4">What if I never received my invitation email? Can I still be a part of the panel?</a></li>
+
+    <li><a href="#q5">If I took the first survey, am I automatically a part of the Firefox User Panel?</a></li>
+
+    <li><a href="#q6">What will happen with the information that is collected?</a></li>
+</ul>
+
+ 
+
+<h3 id="q1">How do I become a part of the panel?</h3>
+
+<p>We are no longer recruiting for the Firefox User Panel. Thanks to everyone who signed up, we're very excited to work with you!  There are also still plenty of ways to <a href="http://www.spreadfirefox.com/">help Firefox</a> and contribute to the health of the web!</p>
+
+ 
+
+<h3 id="q2">Will I be spammed by Mozilla or anyone else by giving my email address?</h3>
+
+<p>No. We asked you for a valid email address to prevent automated responses to the survey and to inform you about new surveys as they become available.  Of course, you always have the option to opt-out at anytime.  Still concerned?  See the <a href="http://userpanel.mozilla.com/privacy-policy.html">Firefox User Panel Privacy Policy</a> for more details.</p>
+
+ 
+
+<h3 id="q3">What if I signed up and have now changed my mind?</h3>
+
+<p>If you change your mind about participating, you have a few different options.  You can choose not to answer the first survey, which will automatically unsubscribe you from all future surveys or you can unsubscribe by <a href="mailto:firefoxsurvey@mozilla.com?subject=Firefox User Panel - Unsubscribe">emailing us directly</a>.  All future surveys will allow you to opt-out of the User Panel as well.  You can opt-out of a single future survey by simply not taking the survey.</p>
+
+ 
+
+<h3 id="q4">What if I never received my invitation email?  Can I still be a part of the panel?</h3>
+
+<p>If you signed up, but never received the invitation email please <a href="mailto:firefoxsurvey@mozilla.com?subject=Firefox User Panel - Subscribe">let us know</a> and we will send the invitation email out to you.</p>
+
+ 
+
+<h3 id="q5">If I took the first survey, am I automatically a part of the Firefox User Panel?</h3>
+
+<p>Yes, but we won't ask everyone to take every survey.  We want to make sure we send out surveys that are most relevant for you.  Additionally, we want to make sure we get a diverse mix of respondents for the User Panel, so if we have enough people like you (although of course, there really is no one like you!) we may not need you to take all of the surveys immediately.  Again, if you decide you don't want to be a part of the User Panel after taking the first survey, you will have an option to opt-out of the User Panel on any of the following surveys or you can <a href="mailto:firefoxsurvey@mozilla.com?subject=Firefox User Panel - Unsubscribe">let us know</a> and we'll remove you from the User Panel.</p>
+
+ 
+
+<h3 id="q6">What will happen with the information that is collected?</h3>
+
+<p>Information from the surveys will be used exclusively in the aggregate. The <a href="http://is4.instantsurvey.com/Report/ViewReport.isp?SurveyId=27399&ReportId=10358&iid=105913&uid=6336&lang=en-us&h=TCV4xjwWPCVfhTu3d_8vVw">results from the Firefox User Panel initial survey</a> (excluding all private information) and future results will be available online.  We hope that this data is helpful to the entire Mozilla community.</p>
+
 </div>
