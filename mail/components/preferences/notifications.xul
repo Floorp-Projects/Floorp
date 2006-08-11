@@ -92,10 +92,7 @@
           <separator class="thin"/>
 
           <hbox align="right">
-            <button id="preview" label="&preview.label;"
-                    accesskey="&preview.accesskey;" oncommand="gNotificationsDialog.previewSound();">
-              <observes element="soundUrlLocation" attribute="disabled"/>
-            </button>
+            <button id="preview" label="&preview.label;" accesskey="&preview.accesskey;" oncommand="gNotificationsDialog.previewSound();"/>
           </hbox>
 
         </vbox>

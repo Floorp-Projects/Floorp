@@ -40,11 +40,13 @@ var gNotificationsDialog = {
   mSound: null,
   SoundUrlLocation: null,
   newMailNotificationType: null,
+  mPreviewButton: null,
 
   init: function()
   {
     this.soundUrlLocation = document.getElementById("soundUrlLocation");
     this.newMailNotificationType = document.getElementById("newMailNotificationType");
+    this.mPreviewButton = document.getElementById("preview");
     this.systemSoundCheck();
   },
 
@@ -110,12 +112,20 @@ var gNotificationsDialog = {
       // this.soundUrlLocation.value = fp.fileURL.spec;
       document.getElementById("mail.biff.play_sound.url").value = fp.fileURL.spec;
       this.readSoundLocation(); // XXX We shouldn't have to be doing this by hand
+      this.systemSoundCheck();
     }
   }, 
 
   systemSoundCheck: function ()
   {
     this.soundUrlLocation.disabled = this.newMailNotificationType.value != 1 ? true : false;
+
+    if (this.newMailNotificationType.value != 0 && this.soundUrlLocation.value == "") 
+      this.mPreviewButton.disabled = true;
+    else
+    {
+      this.mPreviewButton.disabled = false;
+    }
   },
 };
 
