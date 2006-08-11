@@ -237,24 +237,7 @@ MicrosummaryService.prototype = {
   },
 
   _updateMicrosummaries: function MSS__updateMicrosummaries() {
-#ifdef MOZ_PLACES
-    // This try/catch block is a temporary workaround for bug 336194.
-    var bookmarks;
-    try {
-      bookmarks = this._ans.getPagesWithAnnotation(FIELD_MICSUM_GEN_URI, {});
-    }
-    catch(e) {
-      bookmarks = [];
-    }
-#else
-    var bookmarks = [];
-
-    var resources = this._bmds.GetSources(this._resource(FIELD_RDF_TYPE),
-                                          this._resource(VALUE_MICSUM_BOOKMARK),
-                                          true);
-    while (resources.hasMoreElements())
-      bookmarks.push(resources.getNext().QueryInterface(Ci.nsIRDFResource));
-#endif
+    var bookmarks = this._getBookmarks();
 
     var now = Date.now();
     for ( var i = 0; i < bookmarks.length; i++ ) {
@@ -346,7 +329,13 @@ MicrosummaryService.prototype = {
   _handleLocalGenerator: function MSS__handleLocalGenerator(resource) {
     if (!resource.isXML)
       throw(resource.uri.spec + " microsummary generator loaded, but not XML");
-  
+
+    // Fix the generator's ID if it was installed before we started using URNs
+    // to uniquely identify generators.
+    // XXX This code can go away after Fx2 beta2, when enough users will have
+    // upgraded from earlier versions to make bug 346822 no longer significant.
+    this._fixGeneratorID(resource.content, resource.uri);
+
     var generator = new MicrosummaryGenerator();
     generator.localURI = resource.uri;
     generator.initFromXML(resource.content);
@@ -358,8 +347,54 @@ MicrosummaryService.prototype = {
     this._localGenerators[generator.uri.spec.split().join()] = generator;
 
     LOG("loaded local microsummary generator\n" +
-        "   local URI: " + generator.localURI.spec + "\n" +
-        "  source URI: " + generator.uri.spec);
+        "  file: " + generator.localURI.spec + "\n" +
+        "    ID: " + generator.uri.spec);
+  },
+
+  /**
+   * Fix the ID of a local generator that was installed before we started
+   * using URNs to uniquely identify local generators.
+   *
+   * @param   xmlDefinition
+   *          an nsIDOMDocument XML document defining the generator
+   * @param   localURI
+   *          an nsIURI file URI to the generator's local file
+   * 
+   */
+  _fixGeneratorID: function MSS__fixGeneratorID(xmlDefinition, localURI) {
+    var generatorNode = xmlDefinition.getElementsByTagNameNS(MICSUM_NS, "generator")[0];
+
+    if (!generatorNode)
+      return;
+
+    // Don't fix generators that have already been fixed or were installed
+    // after we switched to identifying generators by URN.
+    if (generatorNode.hasAttribute("uri"))
+      return;
+
+    // Don't fix generators that don't have any ID at all (we fall back to
+    // the local URI in these cases, which is useful for developers during
+    // the process of developing generators).
+    if (!generatorNode.hasAttribute("sourceURI"))
+      return;
+
+    var oldURI = generatorNode.getAttribute("sourceURI");
+    var newURI = "urn:source:" + oldURI;
+
+    LOG("fixing generator with old-style ID\n" +
+        "  old ID: " + oldURI + "\n" +
+        "  new ID: " + newURI);
+
+    // Update the XML definition to reflect the change.
+    generatorNode.setAttribute("uri", newURI);
+
+    // Save the updated XML definition to the local file.
+    var file = localURI.QueryInterface(Ci.nsIFileURL).file.clone();
+    this._saveGeneratorXML(xmlDefinition, file);
+
+    // Update bookmarks in the bookmarks datastore that are using
+    // this microsummary generator to reflect the change.
+    this._changeField(FIELD_MICSUM_GEN_URI, oldURI, newURI);
   },
 
   // nsIMicrosummaryService
@@ -395,10 +430,27 @@ MicrosummaryService.prototype = {
     // Add a reference to the URI from which we got this generator so we have
     // a unique identifier for the generator and also so we can check back later
     // for updates.
-    rootNode.setAttribute("sourceURI", resource.uri.spec);
+    rootNode.setAttribute("uri", "urn:source:" + resource.uri.spec);
 
+    this.installGenerator(resource.content);
+  },
+ 
+  /**
+   * Install a microsummary generator from the given XML definition.
+   *
+   * @param   xmlDefinition
+   *          an nsIDOMDocument XML document defining the generator
+   *
+   * @returns the newly-installed nsIMicrosummaryGenerator generator
+   *
+   */
+  installGenerator: function MSS_installGenerator(xmlDefinition) {
+    var rootNode = xmlDefinition.getElementsByTagNameNS(MICSUM_NS, "generator")[0];
+ 
+    var generatorID = rootNode.getAttribute("uri");
+ 
     // The existing cache entry for this generator, if it is already installed.
-    var generator = this._localGenerators[resource.uri.spec];
+    var generator = this._localGenerators[generatorID];
 
     var file;
     if (generator) {
@@ -413,7 +465,32 @@ MicrosummaryService.prototype = {
       file = this._dirs.get("UsrMicsumGens", Ci.nsIFile);
       file.append(fileName);
       file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
+      generator = new MicrosummaryGenerator();
+      generator.localURI = this._ios.newFileURI(file);
+      this._localGenerators[generatorID] = generator;
     }
+ 
+    // Initialize (or reinitialize) the generator from its XML definition,
+    // the save the definition to the generator's file.
+    generator.initFromXML(xmlDefinition);
+    this._saveGeneratorXML(xmlDefinition, file);
+
+    LOG("installed generator " + generatorID);
+
+    return generator;
+  },
+
+  /**
+   * Save a generator's XML definition to a local file.
+   *
+   * @param   xmlDefinition
+   *          an nsIDOMDocument XML document defining the generator
+   * @param   file
+   *          an nsIFile file representing the generator's local file
+   * 
+   */
+  _saveGeneratorXML: function MSS_saveGeneratorXML(xmlDefinition, file) {
+    LOG("saving definition to " + file.path);
 
     // Write the generator XML to the local file.
     var outputStream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
@@ -422,19 +499,13 @@ MicrosummaryService.prototype = {
     outputStream.init(localFile, (MODE_WRONLY | MODE_TRUNCATE), PERMS_FILE, 0);
     var serializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"].
                      createInstance(Ci.nsIDOMSerializer);
-    serializer.serializeToStream(resource.content, outputStream, null);
+    serializer.serializeToStream(xmlDefinition, outputStream, null);
     if (outputStream instanceof Ci.nsISafeOutputStream) {
       try       { outputStream.finish() }
       catch (e) { outputStream.close()  }
     }
     else
       outputStream.close();
-
-    // Finally, cache the generator in the local generators cache.
-    // If the generator is already installed, this call will overwrite
-    // the old version of the generator in the cache with the new version.
-    // Otherwise, the call will add the generator to the cache as a new entry.
-    this._cacheLocalGeneratorFile(file);
   },
 
   /**
@@ -510,7 +581,54 @@ MicrosummaryService.prototype = {
     return microsummaries;
   },
 
+  /**
+   * Change all occurrences of a specific value in a given field to a new value.
+   *
+   * @param   fieldName
+   *          the name of the field whose values should be changed
+   * @param   oldValue
+   *          the value that should be changed
+   * @param   newValue
+   *          the value to which it should be changed
+   *
+   */
+  _changeField: function MSS__changeField(fieldName, oldValue, newValue) {
+    var bookmarks = this._getBookmarks();
+
+    for ( var i = 0; i < bookmarks.length; i++ ) {
+      var bookmarkID = bookmarks[i];
+
+      if (this._hasField(bookmarkID, fieldName) &&
+          this._getField(bookmarkID, fieldName) == oldValue)
+        this._setField(bookmarkID, fieldName, newValue);
+    }
+  },
+
 #ifdef MOZ_PLACES
+  /**
+   * Get the set of bookmarks with microsummaries.
+   *
+   * This is the internal version of this method, which is not accessible
+   * via XPCOM but is more performant; inside this component, use this version.
+   * Outside the component, use getBookmarks (no underscore prefix) instead.
+   *
+   * @returns an array of bookmark IDs
+   *
+   */
+  _getBookmarks: function MSS__getBookmarks() {
+    var bookmarks;
+
+    // This try/catch block is a temporary workaround for bug 336194.
+    try {
+      bookmarks = this._ans.getPagesWithAnnotation(FIELD_MICSUM_GEN_URI, {});
+    }
+    catch(e) {
+      bookmarks = [];
+    }
+
+    return bookmarks;
+  },
+
   _getField: function MSS__getField(bookmarkID, fieldName) {
     var pageURI = bookmarkID.QueryInterface(Ci.nsIURI);
     var fieldValue;
@@ -572,6 +690,28 @@ MicrosummaryService.prototype = {
   },
 
 #else
+  /**
+   * Get the set of bookmarks with microsummaries.
+   *
+   * This is the internal version of this method, which is not accessible
+   * via XPCOM but is more performant; inside this component, use this version.
+   * Outside the component, use getBookmarks (no underscore prefix) instead.
+   *
+   * @returns an array of bookmark IDs
+   *
+   */
+  _getBookmarks: function MSS__getBookmarks() {
+    var bookmarks = [];
+
+    var resources = this._bmds.GetSources(this._resource(FIELD_RDF_TYPE),
+                                          this._resource(VALUE_MICSUM_BOOKMARK),
+                                          true);
+    while (resources.hasMoreElements())
+      bookmarks.push(resources.getNext().QueryInterface(Ci.nsIRDFResource));
+
+    return bookmarks;
+  },
+
   _getField: function MSS__getField(bookmarkID, fieldName) {
     var bookmarkResource = bookmarkID.QueryInterface(Ci.nsIRDFResource);
     var fieldValue;
@@ -709,6 +849,23 @@ MicrosummaryService.prototype = {
     return pageURI;
   },
 #endif
+
+  /**
+   * Get the set of bookmarks with microsummaries.
+   *
+   * Bookmark IDs are nsIRDFResource objects on builds with old RDF-based
+   * bookmarks and nsIURI objects on builds with new Places-based bookmarks.
+   *
+   * This is the external version of this method and is accessible via XPCOM.
+   * Use it outside this component. Inside the component, use _getBookmarks
+   * (with underscore prefix) instead for performance.
+   *
+   * @returns an nsISimpleEnumerator enumeration of bookmark IDs
+   *
+   */
+  getBookmarks: function MSS_getBookmarks() {
+    return new ArrayEnumerator(this._getBookmarks());
+  },
 
   /**
    * Get the current microsummary for the given bookmark.
@@ -921,6 +1078,34 @@ function Microsummary(pageURI, generator) {
 }
 
 Microsummary.prototype = {
+  // The microsummary service.
+  __mss: null,
+  get _mss() {
+    if (!this.__mss)
+      this.__mss = Cc["@mozilla.org/microsummary/service;1"].
+                   getService(Ci.nsIMicrosummaryService);
+    return this.__mss;
+  },
+
+  // IO Service
+  __ios: null,
+  get _ios() {
+    if (!this.__ios)
+      this.__ios = Cc["@mozilla.org/network/io-service;1"].
+                   getService(Ci.nsIIOService);
+    return this.__ios;
+  },
+
+  /**
+   * Make a URI from a spec.
+   * @param   spec
+   *          The string spec of the URI.
+   * @returns An nsIURI object.
+   */
+  _uri: function MSS__uri(spec) {
+    return this._ios.newURI(spec, null, null);
+  },
+
   interfaces: [Ci.nsIMicrosummary, Ci.nsISupports],
 
   // nsISupports
@@ -1016,6 +1201,20 @@ Microsummary.prototype = {
     // If we don't have the generator, download it now.  After it downloads,
     // we'll re-call this method to continue updating the microsummary.
     if (!this.generator.loaded) {
+      // If this generator is identified by a URN, then it's a local generator
+      // that should have been cached on application start, so it's missing.
+      if (this.generator.uri.scheme == "urn") {
+        // If it was installed via nsSidebar::addMicrosummaryGenerator (i.e. it
+        // has a URN that identifies the source URL from which we installed it),
+        // try to reinstall it (once).
+        if (/^source:/.test(this.generator.uri.path)) {
+          this._reinstallMissingGenerator();
+          return;
+        }
+        else
+          throw "missing local generator: " + this.generator.uri.spec;
+      }
+
       LOG("generator not yet loaded; downloading it");
       var generatorCallback =
         function MS_generatorCallback(resource) {
@@ -1076,6 +1275,106 @@ Microsummary.prototype = {
 
     this.pageContent = resource.content;
     this.update();
+  },
+
+  /**
+   * Try to reinstall a missing local generator that was originally installed
+   * from a URL using nsSidebar::addMicrosumaryGenerator.
+   *
+   */
+  _reinstallMissingGenerator: function MS__reinstallMissingGenerator() {
+    LOG("attempting to reinstall missing generator " + this.generator.uri.spec);
+
+    var t = this;
+
+    var loadCallback =
+      function MS_missingGeneratorLoadCallback(resource) {
+        try     { t._handleMissingGeneratorLoad(resource) }
+        finally { resource.destroy() }
+      };
+
+    var errorCallback =
+      function MS_missingGeneratorErrorCallback(resource) {
+        try     { t._handleMissingGeneratorError(resource) }
+        finally { resource.destroy() }
+      };
+
+    try {
+      // Extract the URI from which the generator was originally installed.
+      var sourceURL = this.generator.uri.path.replace(/^source:/, "");
+      var sourceURI = this._uri(sourceURL);
+
+      var resource = new MicrosummaryResource(sourceURI);
+      resource.load(loadCallback, errorCallback);
+    }
+    catch(ex) {
+      Components.utils.reportError(ex);
+      this._handleMissingGeneratorError();
+    }
+  },
+
+  /**
+   * Handle a load event for a missing local generator by trying to reinstall
+   * the generator.  If this fails, call _handleMissingGeneratorError to unset
+   * microsummaries for bookmarks using this generator so we don't repeatedly
+   * try to reinstall the generator, creating too much traffic to the website
+   * from which we downloaded it.
+   *
+   * @param resource
+   *        the nsIMicrosummaryResource representing the downloaded generator
+   *
+   */
+  _handleMissingGeneratorLoad: function MS__handleMissingGeneratorLoad(resource) {
+    try {
+      // Make sure the generator is XML, since local generators have to be.
+      if (!resource.isXML)
+        throw("downloaded, but not XML " + this.generator.uri.spec);
+
+      // Store the generator's ID in its XML definition.
+      var generatorID = this.generator.uri.spec;
+      resource.content.documentElement.setAttribute("uri", generatorID);
+
+      // Reinstall the generator and replace our placeholder generator object
+      // with the newly installed generator.
+      this.generator = this._mss.installGenerator(resource.content);
+
+      // A reinstalled generator should always be loaded.  But just in case
+      // it isn't, throw an error so we don't get into an infinite loop
+      // (otherwise this._update would try again to reinstall it).
+      if (!this.generator.loaded)
+        throw("supposedly installed, but not in cache " + this.generator.uri.spec);
+    }
+    catch(ex) {
+      Components.utils.reportError(ex);
+      this._handleMissingGeneratorError(resource);
+      return;
+    }
+  
+    LOG("reinstall succeeded; resuming update " + this.generator.uri.spec);
+    this.update();
+  },
+
+  /**
+   * Handle an error event for a missing local generator load by unsetting
+   * the microsummaries for bookmarks using this generator so we don't
+   * repeatedly try to reinstall the generator, creating too much traffic
+   * to the website from which we downloaded it.
+   *
+   * @param resource
+   *        the nsIMicrosummaryResource representing the downloaded generator
+   *
+   */
+  _handleMissingGeneratorError: function MS__handleMissingGeneratorError(resource) {
+    LOG("reinstall failed; removing microsummaries " + this.generator.uri.spec);
+    var bookmarks = this._mss.getBookmarks();
+    while (bookmarks.hasMoreElements()) {
+      var bookmarkID = bookmarks.getNext();
+      var microsummary = this._mss.getMicrosummary(bookmarkID);
+      if (microsummary.generator.uri.equals(this.generator.uri)) {
+        LOG("removing microsummary for " + microsummary.pageURI.spec);
+        this._mss.removeMicrosummary(bookmarkID);
+      }
+    }
   }
 
 };
@@ -1113,10 +1412,10 @@ MicrosummaryGenerator.prototype = {
 
   // Normally this is just the URL from which we download the generator,
   // but for generators stored in the app or profile generators directory
-  // it's the value of the generator tag's sourceURI attribute (or the
-  // generator's local URI should the sourceURI be missing).
+  // it's the value of the generator tag's "uri" attribute (or its local URI
+  // should the "uri" attribute be missing).
   _uri: null,
-  get uri() { return this._uri },
+  get uri() { return this._uri || this.localURI },
   set uri(newValue) { this._uri = newValue },
 
   // For generators bundled with the browser or installed by the user,
@@ -1223,13 +1522,10 @@ MicrosummaryGenerator.prototype = {
 
     this.name = generatorNode.getAttribute("name");
 
-    // Only set the source URI from the XML if we have a local URI, i.e.
-    // if this is a locally-installed generator, since for remote generators
-    // the source URI of the generator is the URI from which we downloaded it.
-    if (this.localURI) {
-      this.uri = generatorNode.hasAttribute("sourceURI") ?
-                 this._ios.newURI(generatorNode.getAttribute("sourceURI"), null, null) :
-                 this.localURI; // locally created generator without sourceURI
+    // If this is a local generator (i.e. it has a local URI), then we have
+    // to retrieve its URI from the "uri" attribute of its generator tag.
+    if (this.localURI && generatorNode.hasAttribute("uri")) {
+      this.uri = this._ios.newURI(generatorNode.getAttribute("uri"), null, null);
     }
 
     function getFirstChildByTagName(tagName, parentNode, namespace) {
@@ -1639,7 +1935,10 @@ MicrosummaryResource.prototype = {
   },
 
   // A function to call when we finish loading/parsing the resource.
-  _callback: null,
+  _loadCallback: null,
+
+  // A function to call if we get an error while loading/parsing the resource.
+  _errorCallback: null,
 
   // A hidden iframe to parse HTML content.
   _iframe: null,
@@ -1766,7 +2065,8 @@ MicrosummaryResource.prototype = {
   destroy: function MSR_destroy() {
     this._uri = null;
     this._content = null;
-    this._callback = null;
+    this._loadCallback = null;
+    this._errorCallback = null;
     this._loadTimer = null;
     this._httpAuthFailed = false;
     if (this._iframe) {
@@ -1779,14 +2079,17 @@ MicrosummaryResource.prototype = {
   /**
    * Load the resource.
    * 
-   * @param   callback
+   * @param   loadCallback
    *          a function to invoke when the resource finishes loading
+   * @param   errorCallback
+   *          a function to invoke when an error occurs during the load
    *
    */
-  load: function MSR_load(callback) {
+  load: function MSR_load(loadCallback, errorCallback) {
     LOG(this.uri.spec + " loading");
   
-    this._callback = callback;
+    this._loadCallback = loadCallback;
+    this._errorCallback = errorCallback;
 
     var request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
   
@@ -1878,7 +2181,7 @@ MicrosummaryResource.prototype = {
         throw(request.channel.originalURI.spec + " contains invalid XML");
       this._content = request.responseXML;
       this._contentType = request.channel.contentType;
-      this._callback(this);
+      this._loadCallback(this);
     }
 
     else if (request.channel.contentType == "text/html") {
@@ -1890,15 +2193,14 @@ MicrosummaryResource.prototype = {
       // not accounted for by the content type-specific code above.
       this._content = request.responseText;
       this._contentType = request.channel.contentType;
-      this._callback(this);
+      this._loadCallback(this);
     }
   },
   
   _handleError: function MSR__handleError(event) {
-    // At the moment the only thing we do after a load error is destroy
-    // ourselves to prevent memory leaks, but we should ultimately notify
-    // the caller and let it handle the error if it wants to.
-    this.destroy();
+    // Call the error callback, then destroy ourselves to prevent memory leaks.
+    try     { if (this._errorCallback) this._errorCallback() }
+    finally { this.destroy() }
   },
 
   /**
@@ -2004,7 +2306,7 @@ MicrosummaryResource.prototype = {
 
     this._content = this._iframe.contentDocument;
     this._contentType = this._iframe.contentDocument.contentType;
-    this._callback(this);
+    this._loadCallback(this);
   }
 
 };
