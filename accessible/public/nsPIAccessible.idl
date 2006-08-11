@@ -60,8 +60,10 @@ interface nsPIAccessible : nsISupports
    */
   [noscript] readonly attribute boolean allowsAnonChildAccessibles;
 
+%{C++
 #ifdef DEBUG_A11Y
   [noscript] void testChildCache(in nsIAccessible aCachedChild); // Assert if child not in parent's cache
 #endif
+%}
 };
 
