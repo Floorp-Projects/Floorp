@@ -611,7 +611,7 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetDescription(nsAString& aDescription)
   PRBool isProbablyForLayout;
   IsProbablyForLayout(&isProbablyForLayout);
   aDescription = mLayoutHeuristic;
-#ifdef DEBUG
+#ifdef DEBUG_A11Y
   printf("\nTABLE: %s\n", NS_ConvertUTF16toUTF8(mLayoutHeuristic).get());
 #endif
   return NS_OK;

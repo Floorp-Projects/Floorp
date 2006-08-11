@@ -81,7 +81,7 @@ public:
   /* ----- nsIAccessNode ----- */
   NS_IMETHOD Init()
   {
-#ifdef DEBUG
+#ifdef DEBUG_A11Y
     mIsInitialized = PR_TRUE;
 #endif
     return NS_OK;

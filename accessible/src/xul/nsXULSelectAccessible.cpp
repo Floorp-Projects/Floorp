@@ -602,8 +602,18 @@ NS_IMETHODIMP nsXULComboboxAccessible::GetDescription(nsAString& aDescription)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULComboboxAccessible::GetChildCount(PRInt32 *aAccChildCount)
+void nsXULComboboxAccessible::CacheChildren()
 {
+  if (!mWeakShell) {
+    // This node has been shut down
+    mAccChildCount = -1;
+    return;
+  }
+
+  if (mAccChildCount != eChildCountUninitialized) {
+    return;
+  }
+
   // Set menugenerated="true" on the menupopup node to generate the
   // sub-menu items if they have not been generated
   PRUint32 childIndex, numChildren = 0;
@@ -631,10 +641,7 @@ NS_IMETHODIMP nsXULComboboxAccessible::GetChildCount(PRInt32 *aAccChildCount)
       }
     }
   }
-
-  CacheChildren();
-  *aAccChildCount = mAccChildCount;
-  return NS_OK;
+  nsXULSelectableAccessible::CacheChildren();
 }
 
 NS_IMETHODIMP

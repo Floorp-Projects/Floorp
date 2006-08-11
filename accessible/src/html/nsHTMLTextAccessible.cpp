@@ -262,7 +262,7 @@ void nsHTMLLIAccessible::CacheChildren()
   if (mAccChildCount == eChildCountUninitialized) {
     SetFirstChild(mBulletAccessible);
     mBulletAccessible->SetParent(this); // Set weak parent;
-    mAccChildCount = 1;
+    PRInt32 childCount = 1;
     PRBool allowsAnonChildren = PR_FALSE;
     GetAllowsAnonChildAccessibles(&allowsAnonChildren);
     nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, allowsAnonChildren);
@@ -271,12 +271,13 @@ void nsHTMLLIAccessible::CacheChildren()
 
     nsCOMPtr<nsPIAccessible> privatePrevAccessible = mBulletAccessible.get();
     while (walker.mState.accessible) {
-      ++mAccChildCount;
+      ++ childCount;
       privatePrevAccessible->SetNextSibling(walker.mState.accessible);
       privatePrevAccessible = do_QueryInterface(walker.mState.accessible);
       privatePrevAccessible->SetParent(this);
       walker.GetNextSibling();
     }
+    mAccChildCount = childCount;
   }
 }
 

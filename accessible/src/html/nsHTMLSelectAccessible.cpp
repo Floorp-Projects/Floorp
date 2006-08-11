@@ -343,7 +343,8 @@ NS_IMETHODIMP nsHTMLSelectListAccessible::GetRole(PRUint32 *_retval)
 already_AddRefed<nsIAccessible>
 nsHTMLSelectListAccessible::AccessibleForOption(nsIAccessibilityService *aAccService,
                                                 nsIContent *aContent,
-                                                nsIAccessible *aLastGoodAccessible)
+                                                nsIAccessible *aLastGoodAccessible,
+                                                PRInt32 *aChildCount)
 {
   nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(aContent));
   NS_ASSERTION(domNode, "DOM node is null");
@@ -355,7 +356,7 @@ nsHTMLSelectListAccessible::AccessibleForOption(nsIAccessibilityService *aAccSer
     return nsnull;
   }
 
-  ++ mAccChildCount;
+  ++ *aChildCount;
   privateAccessible->SetParent(this);
   nsCOMPtr<nsPIAccessible> privatePrevAccessible(do_QueryInterface(aLastGoodAccessible));
   if (privatePrevAccessible) {
@@ -372,7 +373,8 @@ nsHTMLSelectListAccessible::AccessibleForOption(nsIAccessibilityService *aAccSer
 already_AddRefed<nsIAccessible>
 nsHTMLSelectListAccessible::CacheOptSiblings(nsIAccessibilityService *aAccService,
                                              nsIContent *aParentContent,
-                                             nsIAccessible *aLastGoodAccessible)
+                                             nsIAccessible *aLastGoodAccessible,
+                                             PRInt32 *aChildCount)
 {
   // Recursive helper for CacheChildren()
 
@@ -388,10 +390,12 @@ nsHTMLSelectListAccessible::CacheOptSiblings(nsIAccessibilityService *aAccServic
     if (tag == nsAccessibilityAtoms::option || tag == nsAccessibilityAtoms::optgroup) {
       lastGoodAccessible = AccessibleForOption(aAccService,
                                                childContent,
-                                               lastGoodAccessible);
+                                               lastGoodAccessible,
+                                               aChildCount);
       if (tag == nsAccessibilityAtoms::optgroup) {
         lastGoodAccessible = CacheOptSiblings(aAccService, childContent,
-                                              lastGoodAccessible);
+                                              lastGoodAccessible,
+                                              aChildCount);
       }
     }
   }
@@ -422,9 +426,10 @@ void nsHTMLSelectListAccessible::CacheChildren()
     return;
   }
 
-  mAccChildCount = 0;
+  PRInt32 childCount = 0;
   nsCOMPtr<nsIAccessible> lastGoodAccessible =
-    CacheOptSiblings(accService, selectContent, nsnull);
+    CacheOptSiblings(accService, selectContent, nsnull, &childCount);
+  mAccChildCount = childCount;
 }
 
 /** ----- nsHTMLSelectOptionAccessible ----- */

@@ -527,9 +527,9 @@ NS_IMETHODIMP nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   aEvent->GetType(eventType);
   nsAutoString localName;
   targetNode->GetLocalName(localName);
-#ifdef DEBUG_aleventhal
+#ifdef DEBUG_A11Y
   // Very useful for debugging, please leave this here.
-  if (eventType.LowerCaseEqualsLiteral("focus")) {
+  if (eventType.LowerCaseEqualsLiteral("alertactive")) {
     printf("\ndebugging %s events for %s", NS_ConvertUTF16toUTF8(eventType).get(), NS_ConvertUTF16toUTF8(localName).get());
   }
   if (localName.LowerCaseEqualsLiteral("textbox")) {

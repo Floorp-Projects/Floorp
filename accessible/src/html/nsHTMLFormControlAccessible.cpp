@@ -504,7 +504,7 @@ void nsHTMLGroupboxAccessible::CacheChildren()
     GetAllowsAnonChildAccessibles(&allowsAnonChildren);
     nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, allowsAnonChildren);
     walker.mState.frame = GetFrame();
-    mAccChildCount = 0;
+    PRInt32 childCount = 0;
     walker.GetFirstChild();
     // Check for <legend> and skip it if it's there
     if (walker.mState.accessible && walker.mState.domNode) {
@@ -518,11 +518,12 @@ void nsHTMLGroupboxAccessible::CacheChildren()
     SetFirstChild(walker.mState.accessible);
     nsCOMPtr<nsPIAccessible> privatePrevAccessible;
     while (walker.mState.accessible) {
-      ++mAccChildCount;
+      ++ childCount;
       privatePrevAccessible = do_QueryInterface(walker.mState.accessible);
       privatePrevAccessible->SetParent(this);
       walker.GetNextSibling();
       privatePrevAccessible->SetNextSibling(walker.mState.accessible);
     }
+    mAccChildCount = childCount;
   }
 }

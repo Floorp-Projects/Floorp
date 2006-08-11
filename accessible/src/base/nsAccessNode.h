@@ -158,7 +158,7 @@ protected:
     nsCOMPtr<nsIDOMNode> mDOMNode;
     nsCOMPtr<nsIWeakReference> mWeakShell;
 
-#ifdef DEBUG
+#ifdef DEBUG_A11Y
     PRBool mIsInitialized;
 #endif
 

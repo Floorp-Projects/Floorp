@@ -46,6 +46,8 @@ interface nsPIAccessible : nsISupports
   [noscript] void setParent(in nsIAccessible aAccParent);
   [noscript] void setFirstChild(in nsIAccessible aAccFirstChild);
   [noscript] void setNextSibling(in nsIAccessible aAccNextSibling);
+  // Return parent only if cached
+  [noscript] void getCachedParent(out nsIAccessible aAccParent);
 
   /**
    * Set the child count to -1 (unknown) and null out cached child pointers
@@ -58,5 +60,8 @@ interface nsPIAccessible : nsISupports
    */
   [noscript] readonly attribute boolean allowsAnonChildAccessibles;
 
+#ifdef DEBUG_A11Y
+  [noscript] void testChildCache(in nsIAccessible aCachedChild); // Assert if child not in parent's cache
+#endif
 };
 

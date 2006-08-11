@@ -95,7 +95,6 @@ void nsOuterDocAccessible::CacheChildren()
     return;
   }
 
-  mAccChildCount = 0;
   SetFirstChild(nsnull);
 
   // In these variable names, "outer" relates to the nsOuterDocAccessible
@@ -108,12 +107,14 @@ void nsOuterDocAccessible::CacheChildren()
 
   nsCOMPtr<nsIDocument> outerDoc = content->GetDocument();
   if (!outerDoc) {
+    mAccChildCount = 0;
     return;
   }
 
   nsIDocument *innerDoc = outerDoc->GetSubDocumentFor(content);
   nsCOMPtr<nsIDOMNode> innerNode(do_QueryInterface(innerDoc));
   if (!innerNode) {
+    mAccChildCount = 0;
     return;
   }
 
@@ -124,6 +125,7 @@ void nsOuterDocAccessible::CacheChildren()
   nsCOMPtr<nsPIAccessible> privateInnerAccessible = 
     do_QueryInterface(innerAccessible);
   if (!privateInnerAccessible) {
+    mAccChildCount = 0;
     return;
   }
 

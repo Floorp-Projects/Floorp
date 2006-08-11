@@ -495,18 +495,11 @@ NS_IMETHODIMP nsAccessible::InvalidateChildren()
 
 NS_IMETHODIMP nsAccessible::GetParent(nsIAccessible **  aParent)
 {
-  if (!mWeakShell) {
-    // This node has been shut down
-    *aParent = nsnull;
-    return NS_ERROR_FAILURE;
-  }
-  if (mParent) {
-    *aParent = mParent;
-    NS_ADDREF(*aParent);
-    return NS_OK;
+  nsresult rv = GetCachedParent(aParent);
+  if (NS_FAILED(rv) || *aParent) {
+    return rv;
   }
 
-  *aParent = nsnull;
   // Last argument of PR_TRUE indicates to walk anonymous content
   nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, PR_TRUE); 
   if (NS_SUCCEEDED(walker.GetParent())) {
@@ -515,6 +508,17 @@ NS_IMETHODIMP nsAccessible::GetParent(nsIAccessible **  aParent)
     NS_ADDREF(*aParent);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessible::GetCachedParent(nsIAccessible **  aParent)
+{
+  *aParent = nsnull;
+  if (!mWeakShell) {
+    // This node has been shut down
+    return NS_ERROR_FAILURE;
+  }
+  NS_IF_ADDREF(*aParent = mParent);
   return NS_OK;
 }
 
@@ -660,17 +664,18 @@ void nsAccessible::CacheChildren()
     walker.mState.frame = GetFrame();
 
     nsCOMPtr<nsPIAccessible> privatePrevAccessible;
-    mAccChildCount = 0;
+    PRInt32 childCount = 0;
     walker.GetFirstChild();
     SetFirstChild(walker.mState.accessible);
 
     while (walker.mState.accessible) {
-      ++mAccChildCount;
+      ++ childCount;
       privatePrevAccessible = do_QueryInterface(walker.mState.accessible);
       privatePrevAccessible->SetParent(this);
       walker.GetNextSibling();
       privatePrevAccessible->SetNextSibling(walker.mState.accessible);
     }
+    mAccChildCount = childCount;
   }
 }
 
@@ -723,6 +728,31 @@ NS_IMETHODIMP nsAccessible::GetIndexInParent(PRInt32 *aIndexInParent)
 
   return NS_OK;
 }
+
+#ifdef DEBUG_A11Y
+NS_IMETHODIMP nsAccessible::TestChildCache(nsIAccessible *aCachedChild)
+{
+  // All cached accessible nodes should be in the parent
+  // It will assert if not all the children were created
+  // when they were first cached, and no invalidation
+  // ever corrected parent accessible's child cache.
+  if (mAccChildCount == eChildCountUninitialized) {
+    return NS_OK;
+  }
+  nsCOMPtr<nsIAccessible> sibling = mFirstChild;
+
+  while (sibling != aCachedChild) {
+    NS_ASSERTION(sibling, "[TestChildCache] Never ran into the same child that we started from");
+    if (!sibling)
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIAccessible> tempAccessible;
+    sibling->GetNextSibling(getter_AddRefs(tempAccessible));
+    sibling = tempAccessible;
+  }
+  return NS_OK;
+}
+#endif
 
 nsresult nsAccessible::GetTranslatedString(const nsAString& aKey, nsAString& aStringOut)
 {

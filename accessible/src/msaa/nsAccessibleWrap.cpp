@@ -277,7 +277,9 @@ STDMETHODIMP nsAccessibleWrap::get_accName(
     if (!name.IsVoid()) {
       *pszName = ::SysAllocString(name.get());
     }
+#ifdef DEBUG_A11Y
     NS_ASSERTION(mIsInitialized, "Access node was not initialized");
+#endif
   }
 
   return S_OK;

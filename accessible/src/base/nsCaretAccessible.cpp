@@ -207,9 +207,6 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
   PRInt32 caretOffset;
   if (NS_SUCCEEDED(textAcc->GetCaretOffset(&caretOffset))) {
     mRootAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_TEXT_CARET_MOVE, accessible, &caretOffset);
-#ifdef DEBUG_aleventhal
-    printf("Caret move to offset %d\n", caretOffset);
-#endif
   }
   if (!isCollapsed) {
     mRootAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_TEXT_SELECTION_CHANGE, accessible, nsnull);
