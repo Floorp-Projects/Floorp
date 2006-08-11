@@ -108,7 +108,9 @@ function addSidebar() {
     <li id="logout"><a href="relogin.cgi">Log out [% user.login FILTER html %]</a></li>
   [% END %]
 [% ELSIF user.authorizer.can_login %]
+  </ul>
     [% PROCESS "account/auth/login-small.html.tmpl" %]
+  <ul>
   [% IF Param('createemailregexp') && user.authorizer.user_can_create_account %]
     <li id="account"><a href="createaccount.cgi">Open a new [% terms.Bugzilla %] account</a></li>
   [% END %]
@@ -120,7 +122,7 @@ function addSidebar() {
 
   </ul>
 
-  <form id="show-bug" name="f" action="buglist.cgi" method="get"
+  <form id="f" name="f" action="buglist.cgi" method="get"
         onsubmit="if (this.quicksearch.value == '')
                   { alert('Please enter one or more search terms first.');
                     return false; } return true;">
