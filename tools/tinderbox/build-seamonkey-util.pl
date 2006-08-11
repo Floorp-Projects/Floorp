@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.336 $ ';
+$::UtilsVersion = '$Revision: 1.337 $ ';
 
 package TinderUtils;
 
@@ -2000,15 +2000,16 @@ sub run_all_tests {
     # Set prefs to run tests properly.
     #
     if ($pref_file && $test_result eq 'success') { #XXX lame
-        if($Settings::LayoutPerformanceTest  or
-           $Settings::DHTMLPerformanceTest   or
-           $Settings::XULWindowOpenTest      or
-           $Settings::StartupPerformanceTest or
-           $Settings::MailBloatTest          or
-           $Settings::QATest                 or
-           $Settings::BloatTest2             or
-           $Settings::BloatTest              or
-           $Settings::RenderPerformanceTest  or
+        if($Settings::LayoutPerformanceTest      or
+           $Settings::LayoutPerformanceLocalTest or
+           $Settings::DHTMLPerformanceTest       or
+           $Settings::XULWindowOpenTest          or
+           $Settings::StartupPerformanceTest     or
+           $Settings::MailBloatTest              or
+           $Settings::QATest                     or
+           $Settings::BloatTest2                 or
+           $Settings::BloatTest                  or
+           $Settings::RenderPerformanceTest      or
            $Settings::RunUnitTests) {
             
             # Chances are we will be timing these tests.  Bring gettime() into memory
@@ -2229,6 +2230,29 @@ sub run_all_tests {
       }
 
       $test_result = LayoutPerformanceTest("LayoutPerformanceTest",
+                                           $build_dir,
+                                           $app_args);
+    }
+    # New layout performance test.
+    if ($Settings::LayoutPerformanceLocalTest and $test_result eq 'success') {
+      my $app_args = [$binary];
+      if ($Settings::BinaryName eq 'Camino') {
+        push(@$app_args, '-url');
+      }
+
+      # When I found this, it avoided setting the profile for Firefox.
+      # That didn't work on a tinderbox that had multiple profiles.
+      # Now, it will set the profile if it's not 'default' on the assumption
+      # that existing tinderboxes were all using 'default' anyway.  Why
+      # so careful?  I'm afraid of things like bug 112767, and I assume this
+      # had been done for a reason.  -mm
+      unless ($Settings::BinaryName eq "TestGtkEmbed" ||
+              ($Settings::BinaryName =~ /^firefox/ && $Settings::MozProfileName eq 'default') ||
+              $Settings::BinaryName eq 'Camino') {
+        push(@$app_args, "-P", $Settings::MozProfileName);
+      }
+
+      $test_result = LayoutPerformanceLocalTest("LayoutPerformanceLocalTest",
                                            $build_dir,
                                            $app_args);
     }
@@ -2580,6 +2604,62 @@ sub LayoutPerformanceTest {
       
       if($Settings::TestsPhoneHome) {
         send_results_to_server($layout_time, $raw_data, "pageload");
+      }
+    }
+
+    return $layout_test_result;
+}
+
+sub LayoutPerformanceLocalTest {
+    my ($test_name, $build_dir, $args) = @_;
+    my $layout_test_result;
+    my $layout_time;
+    my $layout_time_details;
+    my $binary_log = "$build_dir/$test_name.log";
+    my $url = "http://localhost/pageload/cycler.html";
+    
+    # Settle OS.
+    run_system_cmd("sync; sleep 5", 35);
+    
+    $layout_time = AliveTestReturnToken($test_name,
+                                        $build_dir,
+                                        [@$args, $url],
+                                        $Settings::LayoutPerformanceLocalTestTimeout,
+                                        "_x_x_mozilla_page_load",
+                                        ",");
+    
+    if($layout_time) {
+      chomp($layout_time);
+      my @times = split(',', $layout_time);
+      $layout_time = $times[0];  # Set layout time to first number. 
+    } else {
+      print_log "TinderboxPrint:Tp2:[CRASH]\n";
+    }
+    
+    # Set test status.
+    if($layout_time) {
+      $layout_test_result = 'success';
+    } else {
+      $layout_test_result = 'testfailed';
+      print_log "LayoutPerformanceLocalTest: test failed\n";
+    }
+    
+    if($layout_test_result eq 'success') {
+      my $tp_prefix = "";
+      if($Settings::BinaryName eq "TestGtkEmbed") {
+        $tp_prefix = "m";
+      }
+      
+      print_log_test_result_ms('pageload2',
+                               'Avg of the median per url pageload time',
+                               $layout_time, 'Tp2');
+      
+      # Pull out detail data from log.
+      my $raw_data = extract_token_from_file($binary_log, "_x_x_mozilla_page_load_details", ",");
+      chomp($raw_data);
+      
+      if($Settings::TestsPhoneHome) {
+        send_results_to_server($layout_time, $raw_data, "pageload2");
       }
     }
 
