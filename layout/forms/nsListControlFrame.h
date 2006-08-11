@@ -153,7 +153,6 @@ public:
   virtual void SyncViewWithFrame();
   virtual void AboutToDropDown();
   virtual void AboutToRollup();
-  virtual void UpdateSelection();
   virtual void SetOverrideReflowOptimization(PRBool aValue) { mOverrideReflowOpt = aValue; }
   virtual void FireOnChange();
   virtual void ComboboxFinish(PRInt32 aIndex);
@@ -201,6 +200,8 @@ public:
 #endif
 
 protected:
+  // Returns PR_FALSE if calling it destroyed |this|.
+  PRBool     UpdateSelection();
   PRBool     GetMultiple(nsIDOMHTMLSelectElement* aSelect = nsnull) const;
   void       DropDownToggleKey(nsIDOMEvent* aKeyEvent);
   nsresult   IsOptionDisabled(PRInt32 anIndex, PRBool &aIsDisabled);
