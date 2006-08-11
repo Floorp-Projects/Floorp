@@ -657,8 +657,9 @@
             var purge = this.sessionHistory.count;
             if (this.currentURI != "about:blank")
               --purge; // Don't remove the page the user's staring at from shistory
-              
-            this.sessionHistory.PurgeHistory(purge);
+            
+            if (purge > 0)
+              this.sessionHistory.PurgeHistory(purge);
           ]]>
         </body>
       </method>
