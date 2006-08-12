@@ -56,6 +56,7 @@
 #include "prtime.h"
 #include "nsReadableUtils.h"
 #include "nsVoidArray.h"
+#include "nsIProxyObjectManager.h"
 
 #include <Application.h>
 #include <InterfaceDefs.h>
@@ -487,36 +488,6 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
 	mListenForResizes = aNativeParent ? PR_TRUE : aInitData->mListenForResizes;
 		
-	// Switch to the "main gui thread" if necessary... This method must
-	// be executed on the "gui thread"...
-	//
-	nsToolkit* toolkit = (nsToolkit *)mToolkit;
-	if (toolkit && !toolkit->IsGuiThread())
-	{
-		uint32 args[7];
-		args[0] = (uint32)aParent;
-		args[1] = (uint32)&aRect;
-		args[2] = (uint32)aHandleEventFunction;
-		args[3] = (uint32)aContext;
-		args[4] = (uint32)aAppShell;
-		args[5] = (uint32)aToolkit;
-		args[6] = (uint32)aInitData;
-
-		if (nsnull != aParent)
-		{
-			// nsIWidget parent dispatch
-			MethodInfo info(this, this, nsSwitchToUIThread::CREATE, 7, args);
-			toolkit->CallMethod(&info);
-		}
-		else
-		{
-			// Native parent dispatch
-			MethodInfo info(this, this, nsSwitchToUIThread::CREATE_NATIVE, 7, args);
-			toolkit->CallMethod(&info);
-		}
-		return NS_OK;
-	}
-
 	mParent = aParent;
 	// Useful shortcut, wondering if we can use it also in GetParent() instead
 	// nsIWidget* type mParent.
@@ -614,6 +585,24 @@ NS_METHOD nsWindow::Create(nsIWidget *aParent,
                            nsIToolkit *aToolkit,
                            nsWidgetInitData *aInitData)
 {
+	// Switch to the "main gui thread" if necessary... This method must
+	// be executed on the "gui thread"...
+
+	nsToolkit* toolkit = (nsToolkit *)mToolkit;
+	if (toolkit && !toolkit->IsGuiThread())
+	{
+		nsCOMPtr<nsIWidget> widgetProxy;
+		nsresult rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+										NS_GET_IID(nsIWidget),
+										this, 
+										NS_PROXY_SYNC | NS_PROXY_ALWAYS, 
+										getter_AddRefs(widgetProxy));
+	
+		if (NS_FAILED(rv))
+			return rv;
+		return widgetProxy->Create(aParent, aRect, aHandleEventFunction, aContext,
+                           			aAppShell, aToolkit, aInitData);
+	}
 	return(StandardWindowCreate(aParent, aRect, aHandleEventFunction,
 	                            aContext, aAppShell, aToolkit, aInitData,
 	                            nsnull));
@@ -634,6 +623,24 @@ NS_METHOD nsWindow::Create(nsNativeWidget aParent,
                            nsIToolkit *aToolkit,
                            nsWidgetInitData *aInitData)
 {
+	// Switch to the "main gui thread" if necessary... This method must
+	// be executed on the "gui thread"...
+
+	nsToolkit* toolkit = (nsToolkit *)mToolkit;
+	if (toolkit && !toolkit->IsGuiThread())
+	{
+		nsCOMPtr<nsIWidget> widgetProxy;
+		nsresult rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+										NS_GET_IID(nsIWidget),
+										this, 
+										NS_PROXY_SYNC | NS_PROXY_ALWAYS, 
+										getter_AddRefs(widgetProxy));
+	
+		if (NS_FAILED(rv))
+			return rv;
+		return widgetProxy->Create(aParent, aRect, aHandleEventFunction, aContext,
+                           			aAppShell, aToolkit, aInitData);
+	}
 	return(StandardWindowCreate(nsnull, aRect, aHandleEventFunction,
 	                            aContext, aAppShell, aToolkit, aInitData,
 	                            aParent));
@@ -663,9 +670,16 @@ NS_METHOD nsWindow::Destroy()
 	nsToolkit* toolkit = (nsToolkit *)mToolkit;
 	if (toolkit != nsnull && !toolkit->IsGuiThread())
 	{
-		MethodInfo info(this, this, nsSwitchToUIThread::DESTROY);
-		toolkit->CallMethod(&info);
-		return NS_ERROR_FAILURE;
+		nsCOMPtr<nsIWidget> widgetProxy;
+		nsresult rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+										NS_GET_IID(nsIWidget),
+										this, 
+										NS_PROXY_SYNC | NS_PROXY_ALWAYS, 
+										getter_AddRefs(widgetProxy));
+	
+		if (NS_FAILED(rv))
+			return rv;
+		return widgetProxy->Destroy();
 	}
 	// Ok, now tell the nsBaseWidget class to clean up what it needs to
 	if (!mIsDestroying)
@@ -1158,13 +1172,18 @@ NS_METHOD nsWindow::SetFocus(PRBool aRaise)
 	// be executed on the "gui thread"...
 	//
 	nsToolkit* toolkit = (nsToolkit *)mToolkit;
-	if (!toolkit->IsGuiThread()) 
+	if (toolkit && !toolkit->IsGuiThread()) 
 	{
-		uint32 args[1];
-		args[0] = (uint32)aRaise;
-		MethodInfo info(this, this, nsSwitchToUIThread::SET_FOCUS, 1, args);
-		toolkit->CallMethod(&info);
-		return NS_ERROR_FAILURE;
+		nsCOMPtr<nsIWidget> widgetProxy;
+		nsresult rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+										NS_GET_IID(nsIWidget),
+										this, 
+										NS_PROXY_SYNC | NS_PROXY_ALWAYS, 
+										getter_AddRefs(widgetProxy));
+	
+		if (NS_FAILED(rv))
+			return rv;
+		return widgetProxy->SetFocus(aRaise);
 	}
 	
 	// Don't set focus on disabled widgets or popups
@@ -1756,33 +1775,6 @@ bool nsWindow::CallMethod(MethodInfo *info)
 
 	switch (info->methodId)
 	{
-	case nsSwitchToUIThread::CREATE:
-		NS_ASSERTION(info->nArgs == 7, "Wrong number of arguments to CallMethod");
-		Create((nsIWidget*)(info->args[0]),
-		       (nsRect&)*(nsRect*)(info->args[1]),
-		       (EVENT_CALLBACK)(info->args[2]),
-		       (nsIDeviceContext*)(info->args[3]),
-		       (nsIAppShell *)(info->args[4]),
-		       (nsIToolkit*)(info->args[5]),
-		       (nsWidgetInitData*)(info->args[6]));
-		break;
-
-	case nsSwitchToUIThread::CREATE_NATIVE:
-		NS_ASSERTION(info->nArgs == 7, "Wrong number of arguments to CallMethod");
-		Create((nsNativeWidget)(info->args[0]),
-		       (nsRect&)*(nsRect*)(info->args[1]),
-		       (EVENT_CALLBACK)(info->args[2]),
-		       (nsIDeviceContext*)(info->args[3]),
-		       (nsIAppShell *)(info->args[4]),
-		       (nsIToolkit*)(info->args[5]),
-		       (nsWidgetInitData*)(info->args[6]));
-		break;
-
-	case nsSwitchToUIThread::DESTROY:
-		NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-		Destroy();
-		break;
-
 	case nsSwitchToUIThread::CLOSEWINDOW :
 		{
 			NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
@@ -1805,13 +1797,6 @@ bool nsWindow::CallMethod(MethodInfo *info)
 			}
 			DispatchStandardEvent(NS_DESTROY);
 		}
-		break;
-
-	case nsSwitchToUIThread::SET_FOCUS:
-		NS_ASSERTION(info->nArgs == 1, "Wrong number of arguments to CallMethod");
-		if (!mEnabled)
-			return false;
-		SetFocus(((PRBool *)info->args)[0]);
 		break;
 
 #ifdef DEBUG_FOCUS
@@ -2938,9 +2923,9 @@ void  nsWindowBeOS::FrameResized(float width, float height)
 		MethodInfo *info = nsnull;
 		if (nsnull != (info = new MethodInfo(w, w, nsSwitchToUIThread::ONRESIZE)))
 		{
-			t->CallMethodAsync(info);
 			//Memorize fact of sending message
-			fJustGotBounds = false;
+			if (t->CallMethodAsync(info))
+				fJustGotBounds = false;
 		}
 		NS_RELEASE(t);
 	}	
@@ -2999,9 +2984,9 @@ void nsViewBeOS::Draw(BRect updateRect)
 		info = new MethodInfo(w, w, nsSwitchToUIThread::ONPAINT, 1, args);
 		if (info)
 		{
-			t->CallMethodAsync(info);
 			//Memorize fact of sending message
-			fJustValidated = false;
+			if (t->CallMethodAsync(info))
+				fJustValidated = false;
 		}
 		NS_RELEASE(t);
 	}
@@ -3243,8 +3228,8 @@ void nsViewBeOS::MessageReceived(BMessage *msg)
 				MethodInfo *info = nsnull;
 				if (nsnull != (info = new MethodInfo(w, w, nsSwitchToUIThread::ONWHEEL, 1, args)))
 				{
-					t->CallMethodAsync(info);
-					fWheelDispatched = false;
+					if (t->CallMethodAsync(info))
+						fWheelDispatched = false;
 					
 				}
 				NS_RELEASE(t);

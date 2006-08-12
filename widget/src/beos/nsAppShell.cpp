@@ -164,13 +164,18 @@ void nsAppShell::ScheduleNativeEventCallback()
 {
 	if (eventport < 0)
 		return;
-
-	// This should be done from different thread in reality in order to unblock
-	ThreadInterfaceData id;
-	id.data = 0;
-	id.waitingThread = find_thread(NULL);
-	write_port(eventport, 'natv', &id, sizeof(id));
-	scheduled = true;
+	port_info portinfo;
+	if (get_port_info(eventport, &portinfo) != B_OK)
+		return;
+	if (port_count(eventport) < portinfo.capacity - 20)
+	{
+		// This should be done from different thread in reality in order to unblock
+		ThreadInterfaceData id;
+		id.data = 0;
+		id.waitingThread = find_thread(NULL);
+		write_port_etc(eventport, 'natv', &id, sizeof(id), B_TIMEOUT, 1000000);
+		scheduled = true;
+	}
 }
 
 bool nsAppShell::InvokeBeOSMessage(bigtime_t timeout)
