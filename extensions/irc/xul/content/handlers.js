@@ -2281,6 +2281,11 @@ function my_cjoin (e)
         var params = [e.user.unicodeName, e.channel.unicodeName];
         this.display(getMsg(MSG_YOU_JOINED, params), "JOIN",
                      e.server.me, this);
+        /* Tell the user that conference mode is on, lest they forget (if it
+         * subsequently turns itself off, they'll get a message anyway).
+         */
+        if (this.prefs["conference.enabled"])
+            this.display(MSG_CONF_MODE_STAYON);
         if (client.globalHistory)
             client.globalHistory.addPage(this.getURL());
 
