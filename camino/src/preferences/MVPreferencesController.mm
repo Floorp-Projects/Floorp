@@ -165,12 +165,11 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
 
   NSToolbar *toolbar = [[[NSToolbar alloc] initWithIdentifier:@"preferences.toolbar.1"] autorelease];
   [toolbar setAllowsUserCustomization:NO];
-  [toolbar setAutosavesConfiguration:NO];
+  [toolbar setAutosavesConfiguration:YES];
   [toolbar setDelegate:self];
   [toolbar setAlwaysCustomizableByDrag:NO];
   [toolbar setShowsContextMenu:NO];
   [mWindow setToolbar:toolbar];
-  [toolbar setDisplayMode:NSToolbarDisplayModeIconAndLabel];
 
   // save/restore the top-left window frame (because our size changes confuse the standard frame saving)
   // (Cocoa will ensure that the window isn't placed totally offscreen)
