@@ -69,6 +69,8 @@
 #include "nsCRLManager.h"
 #include "nsCipherInfo.h"
 #include "nsNTLMAuthModule.h"
+#include "nsStreamCipher.h"
+#include "nsKeyModule.h"
 
 // We must ensure that the nsNSSComponent has been loaded before
 // creating any other components.
@@ -184,6 +186,9 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCRLManager)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCipherInfoService)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(PR_FALSE, nsNTLMAuthModule, InitTest)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCryptoHash)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsStreamCipher)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsKeyObject)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsKeyObjectFactory)
 
 static NS_METHOD RegisterPSMContentListeners(
                       nsIComponentManager *aCompMgr,
@@ -404,6 +409,27 @@ static const nsModuleComponentInfo components[] =
     NS_NTLMAUTHMODULE_CID,
     NS_NTLMAUTHMODULE_CONTRACTID,
     nsNTLMAuthModuleConstructor
+  },
+
+  {
+    NS_STREAMCIPHER_CLASSNAME,
+    NS_STREAMCIPHER_CID,
+    NS_STREAMCIPHER_CONTRACTID,
+    nsStreamCipherConstructor
+  },
+
+  {
+    NS_KEYMODULEOBJECT_CLASSNAME,
+    NS_KEYMODULEOBJECT_CID,
+    NS_KEYMODULEOBJECT_CONTRACTID,
+    nsKeyObjectConstructor
+  },
+
+  {
+    NS_KEYMODULEOBJECTFACTORY_CLASSNAME,
+    NS_KEYMODULEOBJECTFACTORY_CID,
+    NS_KEYMODULEOBJECTFACTORY_CONTRACTID,
+    nsKeyObjectFactoryConstructor
   }
 };
 
