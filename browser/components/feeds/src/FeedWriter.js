@@ -143,9 +143,6 @@ FeedWriter.prototype = {
    *          The feed container
    */
   _setTitleText: function FW__setTitleText(container) {
-    
-    LOG(container);
-
     if(container.title) {
       this._setContentText("feedTitleText", container.title.plainText());
       this._document.title = container.title.plainText();
@@ -267,9 +264,10 @@ FeedWriter.prototype = {
     var ios = 
         Cc["@mozilla.org/network/io-service;1"].
         getService(Ci.nsIIOService);
-    var feedURI = ios.newURI(this._window.location.href, null, null);
+ 
     try {
-      var result = feedService.getFeedResult(feedURI);
+      var result = 
+        feedService.getFeedResult(this._getOriginalURI(this._window));
     }
     catch (e) {
       LOG("Subscribe Preview: feed not available?!");
@@ -415,18 +413,22 @@ FeedWriter.prototype = {
   },
   
   /**
-   * Ensures that this component is only ever invoked from the preview 
-   * document.
-   * @param   window
-   *          The window of the document invoking the BrowserFeedWriter
+   * Returns the original URI object of the feed and ensures that this
+   * component is only ever invoked from the preview document.  
+   * @param window 
+   *        The window of the document invoking the BrowserFeedWriter
    */
-  _isValidWindow: function FW__isValidWindow(window) {
+  _getOriginalURI: function FW__getOriginalURI(window) {
     var chan = 
         window.QueryInterface(Ci.nsIInterfaceRequestor).
         getInterface(Ci.nsIWebNavigation).
         QueryInterface(Ci.nsIDocShell).currentDocumentChannel;
     const kPrefix = "jar:file:";
-    return chan.URI.spec.substring(0, kPrefix.length) == kPrefix;
+    
+    if (chan.URI.spec.substring(0, kPrefix.length) == kPrefix)
+      return chan.originalURI;
+    else
+      return null;
   },
   
   _window: null,
@@ -436,33 +438,41 @@ FeedWriter.prototype = {
    * See nsIFeedWriter
    */
   write: function FW_write(window) {
-    if (!this._isValidWindow(window))
+    var originalURI = this._getOriginalURI(window);
+    if (!originalURI)
       return;
-    
-    this._window = window;
-    this._document = window.document;
+    try {
+      this._window = window;
+      this._document = window.document;
       
-    LOG("Subscribe Preview: feed uri = " + this._window.location.href);
-
-    // Set up the displayed handler
-    this._initSelectedHandler();
-    var prefs =   
+      LOG("Subscribe Preview: feed uri = " + this._window.location.href);
+      
+      // Set up the displayed handler
+      this._initSelectedHandler();
+      var prefs =   
         Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch2);
-    prefs.addObserver(PREF_SELECTED_ACTION, this, false);
-    prefs.addObserver(PREF_SELECTED_READER, this, false);
-    prefs.addObserver(PREF_SELECTED_APP, this, false);
-    
-    // Set up the feed content
-    var container = this._getContainer();
-    if (!container)
-      return;
-
-    this._setTitleText(container);
-    
-    this._setTitleImage(container);
-    
-    this._writeFeedContent(container);
+      prefs.addObserver(PREF_SELECTED_ACTION, this, false);
+      prefs.addObserver(PREF_SELECTED_READER, this, false);
+      prefs.addObserver(PREF_SELECTED_APP, this, false);
+      
+      // Set up the feed content
+      var container = this._getContainer();
+      if (!container)
+        return;
+      
+      this._setTitleText(container);
+      
+      this._setTitleImage(container);
+      
+      this._writeFeedContent(container);
+    }
+    finally {
+      var feedService = 
+          Cc["@mozilla.org/browser/feeds/result-service;1"].
+          getService(Ci.nsIFeedResultService);
+      feedService.removeFeedResult(originalURI);
+    }
   },
   
   /**
