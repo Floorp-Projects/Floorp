@@ -161,6 +161,9 @@ function CBSConnection (binary)
     {
         return null;
     }
+
+    // Shut up a misguided strict warning.
+    return this;
 }
 
 CBSConnection.prototype.workingBinaryStreams = -1;
