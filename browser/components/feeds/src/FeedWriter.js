@@ -486,6 +486,8 @@ FeedWriter.prototype = {
    * See nsIFeedWriter
    */
   close: function FW_close() {
+    this._document = null;
+    this._window = null;
     var prefs =   
         Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch2);
