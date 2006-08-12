@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 // vim:set et cin sw=2 sts=2:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -288,16 +289,39 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     /**
      * Whether to treat this content as a plugin, even though we can't handle
      * the type. This function impl should match the checks in the plugin host.
+     * aContentType is the MIME type we ended up with.
      */
-    static PRBool ShouldShowDefaultPlugin(nsIContent* aContent);
+    static PRBool ShouldShowDefaultPlugin(nsIContent* aContent,
+                                          const nsCString& aContentType);
+
+    enum PluginSupportState {
+      ePluginUnsupported,  // The plugin is not supported (not installed, say)
+      ePluginDisabled,     // The plugin has been explicitly disabled by the
+                           // user.
+      ePluginOtherState    // Something else (e.g. not a plugin at all as far
+                           // as we can tell).
+    };
 
     /**
-     * Whether this content is an unsupported plugin. This is used for purposes
-     * of determining whether to fire PluginNotFound events etc.
+     * Get the plugin support state for the given content node and MIME type.
+     * This is used for purposes of determining whether to fire PluginNotFound
+     * events etc.  aContentType is the MIME type we ended up with.
      *
      * This should only be called if the type of this content is eType_Null.
      */
-    static PRBool IsUnsupportedPlugin(nsIContent* aContent);
+    static PluginSupportState
+      GetPluginSupportState(nsIContent* aContent,
+                            const nsCString& aContentType);
+
+    /**
+     * If the plugin for aContentType is disabled, return ePluginDisabled.
+     * Otherwise (including if there is no plugin for aContentType at all),
+     * return ePluginUnsupported.
+     *
+     * This should only be called if the type of this content is eType_Null.
+     */
+    static PluginSupportState
+      GetPluginDisabledState(const nsCString& aContentType);
 
     /**
      * The final listener to ship the data to (imagelib, uriloader, etc)

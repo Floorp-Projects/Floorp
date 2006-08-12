@@ -82,8 +82,13 @@ interface nsIPluginHost : nsIFactory
 
   void setUpPluginInstance(in string aMimeType, in nsIURI aURL, in nsIPluginInstanceOwner aOwner);
 
+  // The return code is NS_OK if the plugin is enabled,
+  // NS_ERROR_PLUGIN_DISABLED if the plugin is explicitly disabled, and
+  // NS_ERROR_FAILURE if there is no plugin for this type.
   void isPluginEnabledForType(in string aMimeType);
 
+  // The return code is NS_OK if the plugin is enabled and NS_ERROR_FAILURE if
+  // the plugin is explicitly disabled or there is no plugin.
   void isPluginEnabledForExtension(in string aExtension, in constCharStarRef aMimeType);
 
   readonly attribute unsigned long pluginCount;

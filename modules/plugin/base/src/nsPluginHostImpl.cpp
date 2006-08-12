@@ -4015,8 +4015,24 @@ nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType,
 NS_IMETHODIMP
 nsPluginHostImpl::IsPluginEnabledForType(const char* aMimeType)
 {
-  nsPluginTag *plugin = FindPluginForType(aMimeType, PR_TRUE);
-  return plugin ? NS_OK : NS_ERROR_FAILURE;
+  if (!mJavaEnabled && IsJavaMIMEType(aMimeType)) {
+    // Return DISABLED whether we have a java plugin or not -- if it's
+    // disabled, it's disabled.
+    return NS_ERROR_PLUGIN_DISABLED;
+  }
+
+  // Pass PR_FALSE as the second arg so we can return NS_ERROR_PLUGIN_DISABLED
+  // for disabled plug-ins.
+  nsPluginTag *plugin = FindPluginForType(aMimeType, PR_FALSE);
+  if (!plugin) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!plugin->HasFlag(NS_PLUGIN_FLAG_ENABLED)) {
+    return NS_ERROR_PLUGIN_DISABLED;
+  }
+
+  return NS_OK;
 }
 
 
@@ -4271,7 +4287,9 @@ nsPluginHostImpl::GetPluginCount(PRUint32* aPluginCount)
 
   nsPluginTag* plugin = mPlugins;
   while (plugin != nsnull) {
-    ++count;
+    if (plugin->HasFlag(NS_PLUGIN_FLAG_ENABLED)) {
+      ++count;
+    }
     plugin = plugin->mNext;
   }
 
@@ -4290,9 +4308,11 @@ nsPluginHostImpl::GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin** aPluginArray)
   nsPluginTag* plugin = mPlugins;
   for (PRUint32 i = 0; i < aPluginCount && plugin != nsnull;
        i++, plugin = plugin->mNext) {
-    nsIDOMPlugin* domPlugin = new DOMPluginImpl(plugin);
-    NS_IF_ADDREF(domPlugin);
-    aPluginArray[i] = domPlugin;
+    if (plugin->HasFlag(NS_PLUGIN_FLAG_ENABLED)) {
+      nsIDOMPlugin* domPlugin = new DOMPluginImpl(plugin);
+      NS_IF_ADDREF(domPlugin);
+      aPluginArray[i] = domPlugin;
+    }
   }
 
   return NS_OK;
@@ -6180,10 +6200,9 @@ NS_IMETHODIMP nsPluginHostImpl::Observe(nsISupports *aSubject,
 
     if (enabled != mJavaEnabled) {
       mJavaEnabled = enabled;
-      // Unfortunately, we might not be able to remove the java PluginTag from
-      // mPlugins if we ever started a Java applet, because it's a new-school
-      // plugin and it'll have a mEntryPoint pointer.  So just manually mark it
-      // as disabled so at least FindPluginForType/Extension doesn't return
+      // We want to keep the java PluginTag around so we'll know that it's
+      // actually disabled, not just not present.  So just manually mark it as
+      // disabled so at least FindPluginForType/Extension doesn't return
       // anything.
       for (nsPluginTag* cur = mPlugins; cur; cur = cur->mNext) {
         if (IsJavaPluginTag(cur)) {

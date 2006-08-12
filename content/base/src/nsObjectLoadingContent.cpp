@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 // vim:set et cin sw=2 sts=2:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -59,6 +60,8 @@
 #include "nsIURL.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebNavigationInfo.h"
+
+#include "nsPluginError.h"
 
 // Util headers
 #include "prlog.h"
@@ -412,11 +415,15 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
       // return early.
       Fallback(PR_FALSE);
 
+      PluginSupportState pluginState = GetPluginSupportState(thisContent,
+                                                             mContentType);
       // Do nothing, but fire the plugin not found event if needed
-      if (IsUnsupportedPlugin(thisContent)) {
+      if (pluginState == ePluginUnsupported) {
         FirePluginNotFound(thisContent);
       }
-      mTypeUnsupported = PR_TRUE;
+      if (pluginState != ePluginDisabled) {
+        mTypeUnsupported = PR_TRUE;
+      }
       return NS_BINDING_ABORTED;
   }
 
@@ -606,7 +613,7 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
 
 NS_IMETHODIMP
 nsObjectLoadingContent::GetContentTypeForMIMEType(const nsACString& aMIMEType,
-						  PRUint32* aType)
+                                                  PRUint32* aType)
 {
   *aType = GetTypeOfContent(PromiseFlatCString(aMIMEType));
   return NS_OK;
@@ -870,10 +877,14 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
         NS_NOTREACHED("Should not have a loading type here!");
       case eType_Null:
         // No need to load anything
-        if (IsUnsupportedPlugin(thisContent)) {
+        PluginSupportState pluginState = GetPluginSupportState(thisContent,
+                                                               aTypeHint);
+        if (pluginState == ePluginUnsupported) {
           FirePluginNotFound(thisContent);
         }
-        fallback.TypeUnsupported();
+        if (pluginState != ePluginDisabled) {
+          fallback.TypeUnsupported();
+        }
 
         break;
     };
@@ -1207,7 +1218,7 @@ nsObjectLoadingContent::GetTypeOfContent(const nsCString& aMIMEType)
     do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
   NS_ASSERTION(thisContent, "must be a content");
 
-  if (ShouldShowDefaultPlugin(thisContent)) {
+  if (ShouldShowDefaultPlugin(thisContent, aMIMEType)) {
     return eType_Plugin;
   }
 
@@ -1350,25 +1361,27 @@ nsObjectLoadingContent::Instantiate(const nsACString& aMIMEType, nsIURI* aURI)
 }
 
 /* static */ PRBool
-nsObjectLoadingContent::ShouldShowDefaultPlugin(nsIContent* aContent)
+nsObjectLoadingContent::ShouldShowDefaultPlugin(nsIContent* aContent,
+                                                const nsCString& aContentType)
 {
   if (nsContentUtils::GetBoolPref("plugin.default_plugin_disabled", PR_FALSE)) {
     return PR_FALSE;
   }
 
-  return IsUnsupportedPlugin(aContent);
+  return GetPluginSupportState(aContent, aContentType) == ePluginUnsupported;
 }
 
-/* static */ PRBool
-nsObjectLoadingContent::IsUnsupportedPlugin(nsIContent* aContent)
+/* static */ nsObjectLoadingContent::PluginSupportState
+nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
+                                              const nsCString& aContentType)
 {
   if (!aContent->IsNodeOfType(nsINode::eHTML)) {
-    return PR_FALSE;
+    return ePluginOtherState;
   }
 
   if (aContent->Tag() == nsHTMLAtoms::embed ||
       aContent->Tag() == nsHTMLAtoms::applet) {
-    return PR_TRUE;
+    return GetPluginDisabledState(aContentType);
   }
 
   // Search for a child <param> with a pluginurl name
@@ -1381,8 +1394,19 @@ nsObjectLoadingContent::IsUnsupportedPlugin(nsIContent* aContent)
         child->Tag() == nsHTMLAtoms::param &&
         child->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::name,
                            NS_LITERAL_STRING("pluginurl"), eIgnoreCase)) {
-      return PR_TRUE;
+      return GetPluginDisabledState(aContentType);
     }
   }
-  return PR_FALSE;
+  return ePluginOtherState;
+}
+
+/* static */ nsObjectLoadingContent::PluginSupportState
+nsObjectLoadingContent::GetPluginDisabledState(const nsCString& aContentType)
+{
+  nsCOMPtr<nsIPluginHost> host(do_GetService("@mozilla.org/plugin/host;1"));
+  if (!host) {
+    return ePluginUnsupported;
+  }
+  nsresult rv = host->IsPluginEnabledForType(aContentType.get());
+  return rv == NS_ERROR_PLUGIN_DISABLED ? ePluginDisabled : ePluginUnsupported;
 }
