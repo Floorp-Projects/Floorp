@@ -6477,7 +6477,7 @@ var FeedHandler = {
 #ifdef MOZ_FEEDS
       // Just load the feed in the content area to either subscribe or show the
       // preview UI
-      loadURI(href, null, null, false);
+      this.loadFeed(href);
 #else
       PlacesCommandHook.addLiveBookmark(feeds[0].href);
 #endif
@@ -6485,7 +6485,7 @@ var FeedHandler = {
 #ifdef MOZ_FEEDS
       // Just load the feed in the content area to either subscribe or show the
       // preview UI
-      loadURI(href, null, null, false);
+      this.loadFeed(href);
 #else
       this.addLiveBookmark(feeds[0].href);
 #endif
@@ -6570,6 +6570,20 @@ var FeedHandler = {
   },
 #endif
   
+#ifdef MOZ_FEEDS
+  loadFeed: function(href) {
+    var feeds = gBrowser.selectedBrowser.feeds;
+    try {
+      loadURI(href, null, null, false);
+    }
+    finally {
+      // We might default to a livebookmarks modal dialog, 
+      // so reset that if the user happens to click it again
+      gBrowser.selectedBrowser.feeds = feeds;
+    }
+  },
+#endif
+
   /**
    * Update the browser UI to show whether or not feeds are available when
    * a page is loaded or the user switches tabs to a page that has feeds. 
