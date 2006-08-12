@@ -19,7 +19,7 @@
       <xul:hbox pack="center" align="center">
         <xul:image anonid="close-button-placeholder" class="tab-close-button-placeholder"/>
       </xul:hbox>
-      <xul:toolbarbutton anonid="close-button" class="tab-close-button"/>
+      <xul:toolbarbutton anonid="close-button" class="tab-close-button" tabindex="-1"/>
       <xul:hbox flex="1" class="tab-image-middle" align="center" xbl:inherits="selected">
         <xul:stack class="tab-icon">
           <xul:image xbl:inherits="validate,src=image" class="tab-icon-image"/>

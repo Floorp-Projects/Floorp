@@ -111,6 +111,13 @@ tab {
   margin-top: 0px;
   opacity: 1.0;
   -moz-image-region: rect(0px, 16px, 16px, 0px);
+  /* Make this button focusable so clicking on it will not focus the tab while 
+     it's getting closed */
+  -moz-user-focus: normal;
+}
+
+.tab-close-button:focus {
+  outline: none !important;
 }
 
 /**
