@@ -258,13 +258,13 @@
                            onpopupshowing="return FeedHandler.buildFeedList(event);"
 #ifdef MOZ_PLACES
 #ifdef MOZ_FEEDS
-                           oncommand="loadURI(event.target.getAttribute('feed'), null, null, false);"/>
+                           oncommand="FeedHandler.loadFeed(event.target.getAttribute('feed'));" />
 #else
                            oncommand="PlacesCommandHook.addLiveBookmark(event.target.getAttribute('feed'));" />
 #endif
 #else
 #ifdef MOZ_FEEDS
-                           oncommand="loadURI(event.target.getAttribute('feed'), null, null, false);"/>
+                           oncommand="FeedHandler.loadFeed(event.target.getAttribute('feed'));" />
 #else
                            oncommand="FeedHandler.addLiveBookmark(event.target.getAttribute('feed'));" />
 #endif
