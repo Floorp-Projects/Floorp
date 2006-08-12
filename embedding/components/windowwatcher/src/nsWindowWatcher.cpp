@@ -595,6 +595,15 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
                                      getter_AddRefs(newWindow));
         if (NS_SUCCEEDED(rv)) {
           GetWindowTreeItem(newWindow, getter_AddRefs(newDocShellItem));
+          if (windowIsNew && newDocShellItem) {
+            // Make sure to stop any loads happening in this window that the
+            // window provider might have started.  Otherwise if our caller
+            // manipulates the window it just opened and then the load
+            // completes their stuff will get blown away.
+            nsCOMPtr<nsIWebNavigation> webNav =
+              do_QueryInterface(newDocShellItem);
+            webNav->Stop(nsIWebNavigation::STOP_NETWORK);
+          }
         }
       }
     }
