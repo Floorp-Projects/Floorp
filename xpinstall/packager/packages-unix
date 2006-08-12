@@ -136,6 +136,7 @@ bin/components/dom_views.xpt
 bin/components/dom_xbl.xpt
 bin/components/dom_xpath.xpt
 bin/components/dom_xul.xpt
+bin/components/storage.xpt
 bin/components/libstoragecomps.so
 bin/components/editor.xpt
 bin/components/find.xpt
