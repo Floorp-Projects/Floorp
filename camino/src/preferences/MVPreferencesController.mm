@@ -181,6 +181,12 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
     [[self window] center];
 }
 
+// this gets called when the user hits the Escape key
+- (void)cancel:(id)sender
+{
+  [[self window] performClose:self];
+}
+
 - (NSWindow *)window
 {
   return mWindow;
