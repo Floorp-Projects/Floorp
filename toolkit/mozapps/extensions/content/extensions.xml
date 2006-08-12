@@ -176,7 +176,7 @@
         <xul:vbox class="addon-icon" xbl:inherits="iconURL"/>
         <xul:vbox flex="1" class="addonTextBox">
           <xul:hbox anonid="addonNameVersion" class="addon-name-version" xbl:inherits="name, version"/>
-          <xul:label anonid="addonDescriptionWrap" class="descriptionWrap" xbl:inherits="value=description"/>
+          <xul:label anonid="addonDescriptionWrap" class="descriptionWrap" xbl:inherits="xbl:text=description"/>
           <xul:vbox anonid="addonSelectedStatusMsgs" class="selectedStatusMsgs">
             <xul:hbox class="addon-optype attention" align="center"/>
             <xul:hbox flex="1" class="updateAvailableBox attention">
@@ -276,7 +276,7 @@
             labelPieces.push(this._nameVersion.getAttribute("version"));
 
             // Add description
-            labelPieces.push(this._descriptionWrap.value);
+            labelPieces.push(this._descriptionWrap.textContent);
 
             // Add selected status messages, if any are visible.
             // Note 1: visibility of status messages is set by CSS rule,
