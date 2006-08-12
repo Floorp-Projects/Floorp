@@ -56,6 +56,7 @@ function LOG(str) {
     dump("*** Feeds: " + str + "\n");
 }
 
+const XML_NS = "http://www.w3.org/XML/1998/namespace"
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
 const URI_BUNDLE = "chrome://browser/locale/feeds/subscribe.properties";
@@ -196,9 +197,6 @@ FeedWriter.prototype = {
    *          The container of entries in the feed
    */
   _writeFeedContent: function FW__writeFeedContent(container) {
-    // XXXben - do something with this. parameterize?
-    const MAX_CHARS = 600;
-    
     // Build the actual feed content
     var feedContent = this._document.getElementById("feedContent");
     var feed = container.QueryInterface(Ci.nsIFeed);
@@ -209,7 +207,7 @@ FeedWriter.prototype = {
       
       var entryContainer = this._document.createElementNS(HTML_NS, "div");
       entryContainer.className = "entry";
-      
+
       // If the entry has a title, make it a like
       if (entry.title) {
         var a = this._document.createElementNS(HTML_NS, "a");
@@ -224,31 +222,31 @@ FeedWriter.prototype = {
         entryContainer.appendChild(title);
       }
 
-      
-
       var body = this._document.createElementNS(HTML_NS, "p");
       var summary = entry.summary || entry.content;
-      if (summary) 
-        summary = summary.plainText();
-      if (summary && summary.length > MAX_CHARS)
-        summary = summary.substring(0, MAX_CHARS) + "...";
+      var docFragment = null;
+      if (summary) {
 
-      // XXXben - Change to use innerHTML
-      body.appendChild(this._document.createTextNode(summary));
-      body.className = "feedEntryContent";
+        if (summary.base)
+          body.setAttributeNS(XML_NS, "base", summary.base.spec);
+        else
+          LOG("no base?");
+        docFragment = summary.createDocumentFragment(body);
+        body.appendChild(docFragment);
 
-      // If the entry doesn't have a title, append a # permalink
-      // See http://scripting.com/rss.xml for an example
-      if (!entry.title && entry.link) {
-        var a = this._document.createElementNS(HTML_NS, "a");
-        a.appendChild(this._document.createTextNode("#"));
-        this._safeSetURIAttribute(a, "href", entry.link.spec);
-        body.appendChild(this._document.createTextNode(" "));
-        body.appendChild(a);
+        // If the entry doesn't have a title, append a # permalink
+        // See http://scripting.com/rss.xml for an example
+        if (!entry.title && entry.link) {
+          var a = this._document.createElementNS(HTML_NS, "a");
+          a.appendChild(this._document.createTextNode("#"));
+          this._safeSetURIAttribute(a, "href", entry.link.spec);
+          body.appendChild(this._document.createTextNode(" "));
+          body.appendChild(a);
+        }
+
       }
-
+      body.className = "feedEntryContent";
       entryContainer.appendChild(body);
-      
       feedContent.appendChild(entryContainer);
     }
   },

@@ -52,6 +52,9 @@
 #include "nsCOMArray.h"
 #include "nsString.h"
 #include "nsAutoPtr.h"
+#include "nsHTMLAtoms.h"
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
 
 class nsIDocument;
 class nsIURI;
@@ -125,4 +128,162 @@ protected:
   PRBool mNeedToBlockParser;
 };
 
+// these two lists are used by the sanitizing fragment serializers
+static nsIAtom** const kDefaultAllowedTags [] = {
+  &nsHTMLAtoms::a,
+  &nsHTMLAtoms::abbr,
+  &nsHTMLAtoms::acronym,
+  &nsHTMLAtoms::address,
+  &nsHTMLAtoms::area,
+  &nsHTMLAtoms::b,
+  &nsHTMLAtoms::big,
+  &nsHTMLAtoms::blockquote,
+  &nsHTMLAtoms::br,
+  &nsHTMLAtoms::button,
+  &nsHTMLAtoms::caption,
+  &nsHTMLAtoms::center,
+  &nsHTMLAtoms::cite,
+  &nsHTMLAtoms::code,
+  &nsHTMLAtoms::col,
+  &nsHTMLAtoms::colgroup,
+  &nsHTMLAtoms::dd,
+  &nsHTMLAtoms::del,
+  &nsHTMLAtoms::dfn,
+  &nsHTMLAtoms::dir,
+  &nsHTMLAtoms::div,
+  &nsHTMLAtoms::dl,
+  &nsHTMLAtoms::dt,
+  &nsHTMLAtoms::em,
+  &nsHTMLAtoms::fieldset,
+  &nsHTMLAtoms::font,
+  &nsHTMLAtoms::form,
+  &nsHTMLAtoms::h1,
+  &nsHTMLAtoms::h2,
+  &nsHTMLAtoms::h3,
+  &nsHTMLAtoms::h4,
+  &nsHTMLAtoms::h5,
+  &nsHTMLAtoms::h6,
+  &nsHTMLAtoms::hr,
+  &nsHTMLAtoms::i,
+  &nsHTMLAtoms::img,
+  &nsHTMLAtoms::input,
+  &nsHTMLAtoms::ins,
+  &nsHTMLAtoms::kbd,
+  &nsHTMLAtoms::label,
+  &nsHTMLAtoms::legend,
+  &nsHTMLAtoms::li,
+  &nsHTMLAtoms::map,
+  &nsHTMLAtoms::menu,
+  &nsHTMLAtoms::ol,
+  &nsHTMLAtoms::optgroup,
+  &nsHTMLAtoms::option,
+  &nsHTMLAtoms::p,
+  &nsHTMLAtoms::pre,
+  &nsHTMLAtoms::q,
+  &nsHTMLAtoms::s,
+  &nsHTMLAtoms::samp,
+  &nsHTMLAtoms::select,
+  &nsHTMLAtoms::small,
+  &nsHTMLAtoms::span,
+  &nsHTMLAtoms::strike,
+  &nsHTMLAtoms::strong,
+  &nsHTMLAtoms::sub,
+  &nsHTMLAtoms::sup,
+  &nsHTMLAtoms::table,
+  &nsHTMLAtoms::tbody,
+  &nsHTMLAtoms::td,
+  &nsHTMLAtoms::textarea,
+  &nsHTMLAtoms::tfoot,
+  &nsHTMLAtoms::th,
+  &nsHTMLAtoms::thead,
+  &nsHTMLAtoms::tr,
+  &nsHTMLAtoms::tt,
+  &nsHTMLAtoms::u,
+  &nsHTMLAtoms::ul
+};
+
+static nsIAtom** const kDefaultAllowedAttributes [] = {
+  &nsHTMLAtoms::accept,
+  &nsHTMLAtoms::acceptcharset,
+  &nsHTMLAtoms::accesskey,
+  &nsHTMLAtoms::action,
+  &nsHTMLAtoms::align,
+  &nsHTMLAtoms::alt,
+  &nsHTMLAtoms::axis,
+  &nsHTMLAtoms::border,
+  &nsHTMLAtoms::cellpadding,
+  &nsHTMLAtoms::cellspacing,
+  &nsHTMLAtoms::_char,
+  &nsHTMLAtoms::charoff,
+  &nsHTMLAtoms::charset,
+  &nsHTMLAtoms::checked,
+  &nsHTMLAtoms::cite,
+  &nsHTMLAtoms::_class,
+  &nsHTMLAtoms::clear,
+  &nsHTMLAtoms::cols,
+  &nsHTMLAtoms::colspan,
+  &nsHTMLAtoms::color,
+  &nsHTMLAtoms::compact,
+  &nsHTMLAtoms::coords,
+  &nsHTMLAtoms::datetime,
+  &nsHTMLAtoms::dir,
+  &nsHTMLAtoms::disabled,
+  &nsHTMLAtoms::enctype,
+  &nsHTMLAtoms::_for,
+  &nsHTMLAtoms::frame,
+  &nsHTMLAtoms::headers,
+  &nsHTMLAtoms::height,
+  &nsHTMLAtoms::href,
+  &nsHTMLAtoms::hreflang,
+  &nsHTMLAtoms::hspace,
+  &nsHTMLAtoms::id,
+  &nsHTMLAtoms::ismap,
+  &nsHTMLAtoms::label,
+  &nsHTMLAtoms::lang,
+  &nsHTMLAtoms::longdesc,
+  &nsHTMLAtoms::maxlength,
+  &nsHTMLAtoms::media,
+  &nsHTMLAtoms::method,
+  &nsHTMLAtoms::multiple,
+  &nsHTMLAtoms::name,
+  &nsHTMLAtoms::nohref,
+  &nsHTMLAtoms::noshade,
+  &nsHTMLAtoms::nowrap,
+  &nsHTMLAtoms::prompt,
+  &nsHTMLAtoms::readonly,
+  &nsHTMLAtoms::rel,
+  &nsHTMLAtoms::rev,
+  &nsHTMLAtoms::rows,
+  &nsHTMLAtoms::rowspan,
+  &nsHTMLAtoms::rules,
+  &nsHTMLAtoms::scope,
+  &nsHTMLAtoms::selected,
+  &nsHTMLAtoms::shape,
+  &nsHTMLAtoms::size,
+  &nsHTMLAtoms::span,
+  &nsHTMLAtoms::src,
+  &nsHTMLAtoms::start,
+  &nsHTMLAtoms::summary,
+  &nsHTMLAtoms::tabindex,
+  &nsHTMLAtoms::target,
+  &nsHTMLAtoms::title,
+  &nsHTMLAtoms::type,
+  &nsHTMLAtoms::usemap,
+  &nsHTMLAtoms::valign,
+  &nsHTMLAtoms::value,
+  &nsHTMLAtoms::vspace,
+  &nsHTMLAtoms::width
+};
+
+// URIs action, href, src, longdesc, usemap, cite
+static
+PRBool IsAttrURI(nsIAtom *aName)
+{
+  return (aName == nsHTMLAtoms::action ||
+          aName == nsHTMLAtoms::href ||
+          aName == nsHTMLAtoms::src ||
+          aName == nsHTMLAtoms::longdesc ||
+          aName == nsHTMLAtoms::usemap ||
+          aName == nsHTMLAtoms::cite);
+}
 #endif // _nsContentSink_h_

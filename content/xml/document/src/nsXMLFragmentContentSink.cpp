@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Blake Kaplan <mrbkap@gmail.com>
+ *   Robert Sayre <sayrer@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -52,6 +53,12 @@
 #include "nsDOMError.h"
 #include "nsIConsoleService.h"
 #include "nsServiceManagerUtils.h"
+#include "nsContentUtils.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsNetUtil.h"
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
+#include "nsTArray.h"
 
 class nsXMLFragmentContentSink : public nsXMLContentSink,
                                  public nsIFragmentContentSink
@@ -270,6 +277,7 @@ nsXMLFragmentContentSink::HandleDoctypeDecl(const nsAString & aSubset,
                                             nsISupports* aCatalogData)
 {
   NS_NOTREACHED("fragments shouldn't have doctype declarations");
+
   return NS_OK;
 }
 
@@ -437,3 +445,317 @@ nsXMLFragmentContentSink::IgnoreFirstContainer()
   return NS_ERROR_FAILURE;
 }
 
+
+// nsXHTMLParanoidFragmentSink
+
+// Find the whitelist of allowed elements and attributes in
+// nsContentSink.h We share it with nsHTMLParanoidFragmentSink
+
+class nsXHTMLParanoidFragmentSink : public nsXMLFragmentContentSink
+{
+public:
+  nsXHTMLParanoidFragmentSink();
+
+  static nsresult Init();
+  static void Cleanup();
+
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
+  
+  // nsXMLContentSink
+  nsresult AddAttributes(const PRUnichar** aNode, nsIContent* aContent);
+
+  // nsIExpatSink
+  NS_IMETHOD HandleStartElement(const PRUnichar *aName,
+                                const PRUnichar **aAtts,
+                                PRUint32 aAttsCount, PRInt32 aIndex,
+                                PRUint32 aLineNumber);
+    
+  NS_IMETHOD HandleEndElement(const PRUnichar *aName);
+
+  NS_IMETHOD HandleComment(const PRUnichar *aName);
+
+  NS_IMETHOD HandleProcessingInstruction(const PRUnichar *aTarget, 
+                                         const PRUnichar *aData);
+
+  NS_IMETHOD HandleCDataSection(const PRUnichar *aData, 
+                                PRUint32 aLength);
+
+  NS_IMETHOD HandleCharacterData(const PRUnichar *aData,
+                                 PRUint32 aLength);
+protected:
+  PRUint32 mSkipLevel; // used when we descend into <style> or <script>
+  // Use nsTHashTable as a hash set for our whitelists
+  static nsTHashtable<nsISupportsHashKey>* sAllowedTags;
+  static nsTHashtable<nsISupportsHashKey>* sAllowedAttributes;
+};
+
+nsTHashtable<nsISupportsHashKey>* nsXHTMLParanoidFragmentSink::sAllowedTags;
+nsTHashtable<nsISupportsHashKey>* nsXHTMLParanoidFragmentSink::sAllowedAttributes;
+
+nsXHTMLParanoidFragmentSink::nsXHTMLParanoidFragmentSink():
+  nsXMLFragmentContentSink(PR_FALSE), mSkipLevel(0)
+{
+}
+
+nsresult
+nsXHTMLParanoidFragmentSink::Init()
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  
+  if (sAllowedTags) {
+    return NS_OK;
+  }
+
+  PRUint32 size = NS_ARRAY_LENGTH(kDefaultAllowedTags);
+  sAllowedTags = new nsTHashtable<nsISupportsHashKey>();
+  if (sAllowedTags) {
+    rv = sAllowedTags->Init(size);
+    for (PRUint32 i = 0; i < size && NS_SUCCEEDED(rv); i++) {
+      if (!sAllowedTags->PutEntry(*kDefaultAllowedTags[i])) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
+
+  size = NS_ARRAY_LENGTH(kDefaultAllowedAttributes);
+  sAllowedAttributes = new nsTHashtable<nsISupportsHashKey>();
+  if (sAllowedAttributes && NS_SUCCEEDED(rv)) {
+    rv = sAllowedAttributes->Init(size);
+    for (PRUint32 i = 0; i < size && NS_SUCCEEDED(rv); i++) {
+      if (!sAllowedAttributes->PutEntry(*kDefaultAllowedAttributes[i])) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
+
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to populate whitelist hash sets");
+    Cleanup();
+  }
+
+  return rv;
+}
+
+void
+nsXHTMLParanoidFragmentSink::Cleanup()
+{
+  if (sAllowedTags) {
+    delete sAllowedTags;
+    sAllowedTags = nsnull;
+  }
+  
+  if (sAllowedAttributes) {
+    delete sAllowedAttributes;
+    sAllowedAttributes = nsnull;
+  }
+}
+
+nsresult
+NS_NewXHTMLParanoidFragmentSink(nsIFragmentContentSink** aResult)
+{
+  nsXHTMLParanoidFragmentSink* it = new nsXHTMLParanoidFragmentSink();
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsresult rv = nsXHTMLParanoidFragmentSink::Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ADDREF(*aResult = it);
+  
+  return NS_OK;
+}
+
+void
+NS_XHTMLParanoidFragmentSinkShutdown()
+{
+  nsXHTMLParanoidFragmentSink::Cleanup();
+}
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsXHTMLParanoidFragmentSink,
+                             nsXMLFragmentContentSink)
+
+nsresult
+nsXHTMLParanoidFragmentSink::AddAttributes(const PRUnichar** aAtts,
+                                           nsIContent* aContent)
+{
+  nsresult rv;
+
+  // use this to check for safe URIs in the few attributes that allow them
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  nsCOMPtr<nsIURI> baseURI;
+  PRUint32 flags = nsIScriptSecurityManager::DISALLOW_SCRIPT_OR_DATA;
+
+  // scrub URI attributes that point at dangerous content
+  // We have to do this here, because this is where we have a base URI,
+  // but we can't do all the scrubbing here, because other parts of the
+  // code get the attributes before this method is called.
+  nsTArray<const PRUnichar *> allowedAttrs;
+  PRInt32 nameSpaceID;
+  nsCOMPtr<nsIAtom> prefix, localName;
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  while (*aAtts) {
+    nsContentUtils::SplitExpatName(aAtts[0], getter_AddRefs(prefix),
+                                   getter_AddRefs(localName), &nameSpaceID);
+    rv = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
+                                       getter_AddRefs(nodeInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
+    // check the attributes we allow that contain URIs
+    if (IsAttrURI(nodeInfo->NameAtom())) {
+      if (!aAtts[1])
+        rv = NS_ERROR_FAILURE;
+      if (!baseURI)
+        baseURI = aContent->GetBaseURI();
+      nsCOMPtr<nsIURI> attrURI;
+      rv = NS_NewURI(getter_AddRefs(attrURI), nsDependentString(aAtts[1]),
+                     nsnull, baseURI);
+      if (NS_SUCCEEDED(rv)) {
+        rv = secMan->CheckLoadURIWithPrincipal(mTargetDocument->NodePrincipal(),
+                                               attrURI, flags);
+      }
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+      allowedAttrs.AppendElement(aAtts[0]);
+      allowedAttrs.AppendElement(aAtts[1]);
+    }
+
+    aAtts += 2;
+  }
+  allowedAttrs.AppendElement((const PRUnichar*) nsnull);
+
+  return nsXMLFragmentContentSink::AddAttributes(allowedAttrs.Elements(),
+                                                 aContent);
+}
+
+NS_IMETHODIMP
+nsXHTMLParanoidFragmentSink::HandleStartElement(const PRUnichar *aName,
+                                                const PRUnichar **aAtts,
+                                                PRUint32 aAttsCount,
+                                                PRInt32 aIndex,
+                                                PRUint32 aLineNumber)
+{
+  nsresult rv;
+  PRInt32 nameSpaceID;
+  nsCOMPtr<nsIAtom> prefix, localName;
+  nsContentUtils::SplitExpatName(aName, getter_AddRefs(prefix),
+                                 getter_AddRefs(localName), &nameSpaceID);
+  
+  // If the element is not in the XHTML namespace, bounce it
+  if (nameSpaceID != kNameSpaceID_XHTML)
+    return NS_OK;
+  
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  rv = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
+                                     getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // bounce it if it's not on the whitelist or we're inside
+  // <script> or <style>
+  nsCOMPtr<nsIAtom> name = nodeInfo->NameAtom();
+  if (mSkipLevel != 0 ||
+      name == nsHTMLAtoms::script ||
+      name == nsHTMLAtoms::style) {
+    ++mSkipLevel; // track this so we don't spew script text
+    return NS_OK;
+  }  
+  
+  if (!sAllowedTags || !sAllowedTags->GetEntry(name))
+    return NS_OK;
+  
+  // It's an allowed element, so let's scrub the attributes
+  nsTArray<const PRUnichar *> allowedAttrs;
+  for (PRUint32 i = 0; i < aAttsCount; i += 2) {
+    nsContentUtils::SplitExpatName(aAtts[i], getter_AddRefs(prefix),
+                                   getter_AddRefs(localName), &nameSpaceID);
+    rv = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
+                                       getter_AddRefs(nodeInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    name = nodeInfo->NameAtom();
+    // Add if it's xmlns, xml:, or on the HTML whitelist
+    if (nameSpaceID == kNameSpaceID_XMLNS ||
+        nameSpaceID == kNameSpaceID_XML ||
+        sAllowedAttributes && sAllowedAttributes->GetEntry(name)) {
+      allowedAttrs.AppendElement(aAtts[i]);
+      allowedAttrs.AppendElement(aAtts[i + 1]);
+    }
+  }
+  allowedAttrs.AppendElement((const PRUnichar*) nsnull);
+  return
+    nsXMLFragmentContentSink::HandleStartElement(aName,
+                                                 allowedAttrs.Elements(),
+                                                 allowedAttrs.Length() - 1,
+                                                 aIndex,
+                                                 aLineNumber);
+}
+
+NS_IMETHODIMP 
+nsXHTMLParanoidFragmentSink::HandleEndElement(const PRUnichar *aName)
+{
+  nsresult rv;
+  PRInt32 nameSpaceID;
+  nsCOMPtr<nsIAtom> prefix, localName;
+  nsContentUtils::SplitExpatName(aName, getter_AddRefs(prefix),
+                                 getter_AddRefs(localName), &nameSpaceID);
+  
+  // If the element is not in the XHTML namespace, bounce it
+  if (nameSpaceID != kNameSpaceID_XHTML) {
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  rv = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
+                                     getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIAtom> name = nodeInfo->NameAtom();
+  if (mSkipLevel != 0) {
+    --mSkipLevel;
+    return NS_OK;
+  }
+
+  if (!sAllowedTags || !sAllowedTags->GetEntry(name)) {
+    return NS_OK;
+  }
+
+  return nsXMLFragmentContentSink::HandleEndElement(aName);
+}
+
+NS_IMETHODIMP
+nsXHTMLParanoidFragmentSink::
+HandleProcessingInstruction(const PRUnichar *aTarget, 
+                            const PRUnichar *aData)
+{
+  // We don't do PIs
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXHTMLParanoidFragmentSink::HandleComment(const PRUnichar *aName)
+{
+  // We don't do comments
+  return NS_OK;
+}
+
+// We pass all character data through, unless we're inside <script>
+NS_IMETHODIMP 
+nsXHTMLParanoidFragmentSink::HandleCDataSection(const PRUnichar *aData, 
+                                                PRUint32 aLength)
+{
+  if (mSkipLevel != 0) {
+    return NS_OK;
+  }
+
+  return nsXMLFragmentContentSink::HandleCDataSection(aData, aLength);
+}
+
+NS_IMETHODIMP 
+nsXHTMLParanoidFragmentSink::HandleCharacterData(const PRUnichar *aData, 
+                                                 PRUint32 aLength)
+{
+  if (mSkipLevel != 0) {
+    return NS_OK;
+  }
+
+  return nsXMLFragmentContentSink::HandleCharacterData(aData, aLength);
+}

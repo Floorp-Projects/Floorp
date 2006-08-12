@@ -99,7 +99,7 @@ public:
 protected:
   void StartLayout();
 
-  nsresult AddAttributes(const PRUnichar** aNode, nsIContent* aContent);
+  virtual nsresult AddAttributes(const PRUnichar** aNode, nsIContent* aContent);
   nsresult AddText(const PRUnichar* aString, PRInt32 aLength);
   nsresult ProcessEndSCRIPTTag(nsIContent* aContent, nsIContent* aParent);
 

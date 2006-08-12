@@ -478,6 +478,25 @@ TextConstruct.prototype = {
     }
     return this.text;
   },
+
+  createDocumentFragment: function TC_createDocumentFragment(element) {
+    if (this.type == "text") {
+      var doc = element.ownerDocument;
+      var docFragment = doc.createDocumentFragment();
+      var node = doc.createTextNode(this.text);
+      docFragment.appendChild(node);
+      return docFragment;
+    }
+    var isXML;
+    if (this.type == "xhtml")
+      isXML = true
+    else if (this.type == "html")
+      isXML = false;
+    else
+      return null;
+
+    return gUnescapeHTML.parseFragment(this.text, isXML, this.base, element);
+  },
  
   QueryInterface: function(iid) {
     if (iid.equals(Ci.nsIFeedTextConstruct) ||
@@ -1407,6 +1426,7 @@ FeedProcessor.prototype = {
       }
 
       newProp.type = type;
+      newProp.base = this._xmlBaseStack[this._xmlBaseStack.length - 1];
       container.setPropertyAsInterface(propName, newProp);
     }
     else {
@@ -1435,6 +1455,7 @@ FeedProcessor.prototype = {
                    createInstance(Ci.nsIFeedTextConstruct);
     newProp.text = chars;
     newProp.type = "xhtml";
+    newProp.base = this._xmlBaseStack[this._xmlBaseStack.length - 1];
     container.setPropertyAsInterface(this._prefixForNS(uri) + localName,
                                      newProp);
     
