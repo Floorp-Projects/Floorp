@@ -3739,7 +3739,7 @@ enum BWCOpenDest {
   if (aUseWindow)
     [self openNewWindowWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground allowPopups:NO];
   else
-    [self openNewTabWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground allowPopups:NO setJumpback:NO];
+    [self openNewTabWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground allowPopups:NO setJumpback:YES];
 }
 
 - (IBAction)savePageAs:(id)aSender
