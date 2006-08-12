@@ -226,8 +226,10 @@ tabbrowser > tabbox > tabpanels {
 	background-image: url("chrome://global/skin/activetab-middle.png");
   background-repeat: no-repeat;
   background-position: 5px 0px;
+  /* Make this button focusable so clicking on it will not focus the tab while 
+     it's getting closed */
+  -moz-user-focus: normal;
 }
-
 
 .tab-close-button-placeholder {
   list-style-image: url("chrome://global/skin/icons/closetab.png");
