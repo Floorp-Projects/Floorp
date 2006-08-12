@@ -200,7 +200,6 @@ class nsIArray;
 - (IBAction)hideBlockedPopupView:(id)sender;
 
 - (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags focusContent:(BOOL)focusContent allowPopups:(BOOL)inAllowPopups;
-- (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags activate:(BOOL)activate allowPopups:(BOOL)inAllowPopups;
 
 - (void)didBecomeActiveBrowser;
 - (void)willResignActiveBrowser;

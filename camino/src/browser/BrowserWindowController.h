@@ -183,7 +183,8 @@ typedef enum
 - (BrowserTabView*)getTabBrowser;
 - (BrowserWrapper*)getBrowserWrapper;
 
-- (void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer activate:(BOOL)activate allowPopups:(BOOL)inAllowPopups;
+- (void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer focusContent:(BOOL)focusContent allowPopups:(BOOL)inAllowPopups;
+- (void)loadURL:(NSString*)aURLSpec;
 
 - (void)focusURLBar;
 
