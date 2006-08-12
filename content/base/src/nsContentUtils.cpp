@@ -135,6 +135,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIEventListenerManager.h"
 #include "nsAttrName.h"
 #include "nsIDOMUserDataHandler.h"
+#include "nsIFragmentContentSink.h"
+
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
 #endif
@@ -600,6 +602,9 @@ void
 nsContentUtils::Shutdown()
 {
   sInitialized = PR_FALSE;
+
+  NS_HTMLParanoidFragmentSinkShutdown();
+  NS_XHTMLParanoidFragmentSinkShutdown();
 
   NS_IF_RELEASE(sContentPolicyService);
   sTriedToGetContentPolicy = PR_FALSE;

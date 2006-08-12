@@ -106,9 +106,14 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIFragmentContentSink,
 
 #define NS_HTMLFRAGMENTSINK_CONTRACTID "@mozilla.org/layout/htmlfragmentsink;1"
 #define NS_HTMLFRAGMENTSINK2_CONTRACTID "@mozilla.org/layout/htmlfragmentsink;2"
+#define NS_HTMLPARANOIDFRAGMENTSINK_CONTRACTID \
+"@mozilla.org/htmlparanoidfragmentsink;1"
 
 #define NS_XMLFRAGMENTSINK_CONTRACTID "@mozilla.org/layout/xmlfragmentsink;1"
 #define NS_XMLFRAGMENTSINK2_CONTRACTID "@mozilla.org/layout/xmlfragmentsink;2"
+#define NS_XHTMLPARANOIDFRAGMENTSINK_CONTRACTID \
+"@mozilla.org/xhtmlparanoidfragmentsink;1"
+
 
 // the HTML versions are in nsHTMLParts.h
 nsresult
@@ -116,4 +121,10 @@ NS_NewXMLFragmentContentSink(nsIFragmentContentSink** aInstancePtrResult);
 nsresult
 NS_NewXMLFragmentContentSink2(nsIFragmentContentSink** aInstancePtrResult);
 
+// This strips all but a whitelist of elements and attributes defined
+// in nsContentSink.h
+nsresult
+NS_NewXHTMLParanoidFragmentSink(nsIFragmentContentSink** aInstancePtrResult);
+void
+NS_XHTMLParanoidFragmentSinkShutdown();
 #endif

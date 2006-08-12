@@ -36,10 +36,14 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMElement;
+interface nsIDOMDocumentFragment;
+interface nsIURI;
+
 /**
  * A utility class that unescapes HTML strings.
  */
-[scriptable, uuid(0ff58de6-2460-4095-9ff9-9756efedc756)]
+[scriptable, uuid(3ab244a9-f09d-44da-9e3f-ee4d67367f2d)]
 interface nsIScriptableUnescapeHTML : nsISupports 
 {
   /** 
@@ -48,4 +52,12 @@ interface nsIScriptableUnescapeHTML : nsISupports
    * @param src The HTML string to escape.
    */ 
   AString unescape(in AString src);
+        
+  /**
+   * Appends the text to the element.
+   */
+  nsIDOMDocumentFragment parseFragment(in AString fragment,
+                                       in PRBool isXML,
+                                       in nsIURI baseURI,
+                                       in nsIDOMElement element);
 };

@@ -437,8 +437,10 @@ MAKE_CTOR(CreateHTMLContentSerializer,    nsIContentSerializer,        NS_NewHTM
 MAKE_CTOR(CreatePlainTextSerializer,      nsIContentSerializer,        NS_NewPlainTextSerializer)
 MAKE_CTOR(CreateHTMLFragmentSink,         nsIFragmentContentSink,      NS_NewHTMLFragmentContentSink)
 MAKE_CTOR(CreateHTMLFragmentSink2,        nsIFragmentContentSink,      NS_NewHTMLFragmentContentSink2)
+MAKE_CTOR(CreateHTMLParanoidFragmentSink, nsIFragmentContentSink,      NS_NewHTMLParanoidFragmentSink)
 MAKE_CTOR(CreateXMLFragmentSink,          nsIFragmentContentSink,      NS_NewXMLFragmentContentSink)
 MAKE_CTOR(CreateXMLFragmentSink2,         nsIFragmentContentSink,      NS_NewXMLFragmentContentSink2)
+MAKE_CTOR(CreateXHTMLParanoidFragmentSink,nsIFragmentContentSink,      NS_NewXHTMLParanoidFragmentSink)
 MAKE_CTOR(CreateSanitizingHTMLSerializer, nsIContentSerializer,        NS_NewSanitizingHTMLSerializer)
 MAKE_CTOR(CreateXBLService,               nsIXBLService,               NS_NewXBLService)
 MAKE_CTOR(CreateContentPolicy,            nsIContentPolicy,            NS_NewContentPolicy)
@@ -1075,6 +1077,11 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_HTMLFRAGMENTSINK2_CONTRACTID,
     CreateHTMLFragmentSink2 },
 
+  { "html paranoid fragment sink",
+    NS_HTMLPARANOIDFRAGMENTSINK_CID,
+    NS_HTMLPARANOIDFRAGMENTSINK_CONTRACTID,
+    CreateHTMLParanoidFragmentSink },
+
   { "HTML sanitizing content serializer",
     MOZ_SANITIZINGHTMLSERIALIZER_CID,
     MOZ_SANITIZINGHTMLSERIALIZER_CONTRACTID,
@@ -1089,6 +1096,11 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_XMLFRAGMENTSINK2_CID,
     NS_XMLFRAGMENTSINK2_CONTRACTID,
     CreateXMLFragmentSink2 },
+
+  { "xhtml paranoid fragment sink",
+    NS_XHTMLPARANOIDFRAGMENTSINK_CID,
+    NS_XHTMLPARANOIDFRAGMENTSINK_CONTRACTID,
+    CreateXHTMLParanoidFragmentSink },
 
   { "XBL Service",
     NS_XBLSERVICE_CID,

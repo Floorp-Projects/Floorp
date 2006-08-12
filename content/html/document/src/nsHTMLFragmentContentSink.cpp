@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Robert Sayre <sayrer@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -61,6 +62,8 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsNetUtil.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsContentSink.h"
+#include "nsTHashtable.h"
 
 //
 // XXX THIS IS TEMPORARY CODE
@@ -120,8 +123,8 @@ public:
   PRInt32 PushContent(nsIContent *aContent);
   nsIContent* PopContent();
 
-  nsresult AddAttributes(const nsIParserNode& aNode,
-                         nsIContent* aContent);
+  virtual nsresult AddAttributes(const nsIParserNode& aNode,
+                                 nsIContent* aContent);
 
   nsresult AddText(const nsAString& aString);
   nsresult AddTextToContent(nsIContent* aContent, const nsAString& aText);
@@ -819,5 +822,363 @@ nsHTMLFragmentContentSink::AddAttributes(const nsIParserNode& aNode,
     }
   }
 
+  return NS_OK;
+}
+
+// nsHTMLParanoidFragmentSink
+
+// Find the whitelist of allowed elements and attributes in
+// nsContentSink.h We share it with nsHTMLParanoidFragmentSink
+
+class nsHTMLParanoidFragmentSink : public nsHTMLFragmentContentSink
+{
+public:
+  nsHTMLParanoidFragmentSink();
+
+  static nsresult Init();
+  static void Cleanup();
+
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
+
+  NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
+  NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
+  NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
+  NS_IMETHOD AddComment(const nsIParserNode& aNode);
+  NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
+
+  nsresult AddAttributes(const nsIParserNode& aNode,
+                         nsIContent* aContent);
+protected:
+  nsresult NameFromType(const nsHTMLTag aTag,
+                        nsIAtom **aResult);
+
+  nsresult NameFromNode(const nsIParserNode& aNode,
+                        nsIAtom **aResult);
+  
+  PRBool mSkip; // used when we descend into <style> or <script>
+
+  // Use nsTHashTable as a hash set for our whitelists
+  static nsTHashtable<nsISupportsHashKey>* sAllowedTags;
+  static nsTHashtable<nsISupportsHashKey>* sAllowedAttributes;
+};
+
+nsTHashtable<nsISupportsHashKey>* nsHTMLParanoidFragmentSink::sAllowedTags;
+nsTHashtable<nsISupportsHashKey>* nsHTMLParanoidFragmentSink::sAllowedAttributes;
+
+nsHTMLParanoidFragmentSink::nsHTMLParanoidFragmentSink():
+  nsHTMLFragmentContentSink(PR_FALSE), mSkip(PR_FALSE)
+{
+}
+
+nsresult
+nsHTMLParanoidFragmentSink::Init()
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  
+  if (sAllowedTags) {
+    return NS_OK;
+  }
+
+  PRUint32 size = NS_ARRAY_LENGTH(kDefaultAllowedTags);
+  sAllowedTags = new nsTHashtable<nsISupportsHashKey>();
+  if (sAllowedTags) {
+    rv = sAllowedTags->Init(size);
+    for (PRUint32 i = 0; i < size && NS_SUCCEEDED(rv); i++) {
+      if (!sAllowedTags->PutEntry(*kDefaultAllowedTags[i])) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
+
+  size = NS_ARRAY_LENGTH(kDefaultAllowedAttributes);
+  sAllowedAttributes = new nsTHashtable<nsISupportsHashKey>();
+  if (sAllowedAttributes && NS_SUCCEEDED(rv)) {
+    rv = sAllowedAttributes->Init(size);
+    for (PRUint32 i = 0; i < size && NS_SUCCEEDED(rv); i++) {
+      if (!sAllowedAttributes->PutEntry(*kDefaultAllowedAttributes[i])) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
+
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to populate whitelist hash sets");
+    Cleanup();
+    return rv; 
+  }
+
+  return rv;
+}
+
+void
+nsHTMLParanoidFragmentSink::Cleanup()
+{
+  if (sAllowedTags) {
+    delete sAllowedTags;
+    sAllowedTags = nsnull;
+  }
+  
+  if (sAllowedAttributes) {
+    delete sAllowedAttributes;
+    sAllowedAttributes = nsnull;
+  }
+}
+
+nsresult
+NS_NewHTMLParanoidFragmentSink(nsIFragmentContentSink** aResult)
+{
+  nsHTMLParanoidFragmentSink* it = new nsHTMLParanoidFragmentSink();
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsresult rv = nsHTMLParanoidFragmentSink::Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ADDREF(*aResult = it);
+  
+  return NS_OK;
+}
+
+void
+NS_HTMLParanoidFragmentSinkShutdown()
+{
+  nsHTMLParanoidFragmentSink::Cleanup();
+}
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLParanoidFragmentSink,
+                             nsHTMLFragmentContentSink)
+
+nsresult
+nsHTMLParanoidFragmentSink::NameFromType(const nsHTMLTag aTag,
+                                         nsIAtom **aResult)
+{
+  nsIParserService* parserService = nsContentUtils::GetParserService();
+  if (!parserService) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_IF_ADDREF(*aResult = parserService->HTMLIdToAtomTag(aTag));
+  
+  return NS_OK;
+}
+
+nsresult
+nsHTMLParanoidFragmentSink::NameFromNode(const nsIParserNode& aNode,
+                                         nsIAtom **aResult)
+{
+  nsresult rv;
+  eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
+  
+  *aResult = nsnull;
+  if (type == eHTMLTag_userdefined) {
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    rv =
+      mNodeInfoManager->GetNodeInfo(aNode.GetText(), nsnull,
+                                    kNameSpaceID_None,
+                                    getter_AddRefs(nodeInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_IF_ADDREF(*aResult = nodeInfo->NameAtom());
+  } else {
+    rv = NameFromType(type, aResult);
+  }
+  return rv;
+}
+
+// nsHTMLFragmentContentSink
+
+nsresult
+nsHTMLParanoidFragmentSink::AddAttributes(const nsIParserNode& aNode,
+                                          nsIContent* aContent)
+{
+  PRInt32 ac = aNode.GetAttributeCount();
+
+  if (ac == 0) {
+    return NS_OK;
+  }
+
+  nsCAutoString k;
+  nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
+
+  nsresult rv;
+  // use this to check for safe URIs in the few attributes that allow them
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  nsCOMPtr<nsIURI> baseURI;
+
+  for (PRInt32 i = ac - 1; i >= 0; i--) {
+    rv = NS_OK;
+    const nsAString& key = aNode.GetKeyAt(i);
+    CopyUTF16toUTF8(key, k);
+    ToLowerCase(k);
+
+    nsCOMPtr<nsIAtom> keyAtom = do_GetAtom(k);
+
+    // not an allowed attribute
+    if (!sAllowedAttributes || !sAllowedAttributes->GetEntry(keyAtom)) {
+      continue;
+    }
+
+    // Get value and remove mandatory quotes
+    static const char* kWhitespace = "\n\r\t\b";
+    const nsAString& v =
+      nsContentUtils::TrimCharsInSet(kWhitespace, aNode.GetValueAt(i));
+
+    // check the attributes we allow that contain URIs
+    if (IsAttrURI(keyAtom)) {
+      if (!baseURI) {
+        baseURI = aContent->GetBaseURI();
+      }
+      nsCOMPtr<nsIURI> attrURI;
+      rv = NS_NewURI(getter_AddRefs(attrURI), v, nsnull, baseURI);
+      if (NS_SUCCEEDED(rv)) {
+        rv = secMan->CheckLoadURIWithPrincipal(mTargetDocument->NodePrincipal(),
+                                               attrURI,
+                                               nsIScriptSecurityManager::DISALLOW_SCRIPT_OR_DATA);
+      }
+    }
+    
+    // skip to the next attribute if we encountered issues with the
+    // current value
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+
+    if (nodeType == eHTMLTag_a && keyAtom == nsHTMLAtoms::name) {
+      NS_ConvertUTF16toUTF8 cname(v);
+      NS_ConvertUTF8toUTF16 uv(nsUnescape(cname.BeginWriting()));
+      // Add attribute to content
+      aContent->SetAttr(kNameSpaceID_None, keyAtom, uv, PR_FALSE);
+    } else {
+      // Add attribute to content
+      aContent->SetAttr(kNameSpaceID_None, keyAtom, v, PR_FALSE);
+    }
+
+    if (nodeType == eHTMLTag_a || 
+        nodeType == eHTMLTag_form ||
+        nodeType == eHTMLTag_img ||
+        nodeType == eHTMLTag_map ||
+        nodeType == eHTMLTag_q ||
+        nodeType == eHTMLTag_blockquote ||
+        nodeType == eHTMLTag_input) {
+      AddBaseTagInfo(aContent);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLParanoidFragmentSink::OpenContainer(const nsIParserNode& aNode)
+{
+  nsresult rv = NS_OK;
+  
+  // bail if it's a script or style, or we're already inside one of those
+  eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
+  if (type == eHTMLTag_script || type == eHTMLTag_style) {
+    mSkip = PR_TRUE;
+    return rv;
+  }
+
+  nsCOMPtr<nsIAtom> name;
+  rv = NameFromNode(aNode, getter_AddRefs(name));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // not on whitelist
+  if (!sAllowedTags || !sAllowedTags->GetEntry(name)) {
+    return NS_OK;
+  }
+
+  return nsHTMLFragmentContentSink::OpenContainer(aNode);
+}
+
+NS_IMETHODIMP
+nsHTMLParanoidFragmentSink::CloseContainer(const nsHTMLTag aTag)
+{
+  nsresult rv = NS_OK;
+
+  if (mSkip) {
+    mSkip = PR_FALSE;
+    return rv;
+  }
+
+  nsCOMPtr<nsIAtom> name;
+  rv = NameFromType(aTag, getter_AddRefs(name));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // not on whitelist
+  if (!sAllowedTags || !sAllowedTags->GetEntry(name)) {
+    return NS_OK;
+  }
+
+  return nsHTMLFragmentContentSink::CloseContainer(aTag);
+}
+
+NS_IMETHODIMP
+nsHTMLParanoidFragmentSink::AddLeaf(const nsIParserNode& aNode)
+{
+  NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_NOT_INITIALIZED);
+  
+  nsresult rv = NS_OK;
+
+#ifndef MOZILLA_1_8_BRANCH
+  if (mSkip) {
+    return rv;
+  }
+#endif
+  
+  if (aNode.GetTokenType() == eToken_start) {
+    nsCOMPtr<nsIAtom> name;
+    rv = NameFromNode(aNode, getter_AddRefs(name));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef MOZILLA_1_8_BRANCH
+    // we have to do this on the branch for some late 90s reason
+    if (name == nsHTMLAtoms::script || name == nsHTMLAtoms::style) {
+      nsCOMPtr<nsIDTD> dtd;
+      mParser->GetDTD(getter_AddRefs(dtd));
+      NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
+
+      nsAutoString skippedContent;
+      PRInt32 lineNo = 0;                
+      dtd->CollectSkippedContent(nodeType, skippedContent, lineNo);
+    }
+#endif
+
+    // We will process base tags, but we won't include them
+    // in the output
+    if (name == nsHTMLAtoms::base) {
+      nsCOMPtr<nsIContent> content;
+      nsCOMPtr<nsINodeInfo> nodeInfo;
+      nsIParserService* parserService = nsContentUtils::GetParserService();
+      if (!parserService)
+        return NS_ERROR_OUT_OF_MEMORY;
+      rv = mNodeInfoManager->GetNodeInfo(name, nsnull,
+                                         kNameSpaceID_None,
+                                         getter_AddRefs(nodeInfo));
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_NewHTMLElement(getter_AddRefs(content), nodeInfo);
+      NS_ENSURE_SUCCESS(rv, rv);
+      AddAttributes(aNode, content);
+      ProcessBaseTag(content);
+      return NS_OK;
+    }
+
+    if (!sAllowedTags || !sAllowedTags->GetEntry(name)) {
+      return NS_OK;
+    }
+  }
+
+  return nsHTMLFragmentContentSink::AddLeaf(aNode);
+}
+
+NS_IMETHODIMP
+nsHTMLParanoidFragmentSink::AddComment(const nsIParserNode& aNode)
+{
+  // no comments
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLParanoidFragmentSink::AddProcessingInstruction(const nsIParserNode& aNode)
+{
+  // no PIs
   return NS_OK;
 }
