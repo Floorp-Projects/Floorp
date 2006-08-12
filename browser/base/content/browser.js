@@ -1818,14 +1818,16 @@ function addBookmarkForBrowser(aDocShell, aIsWebPanel)
 
 function openLocation()
 {
-  if (gURLBar && !gURLBarContainer.parentNode.collapsed &&
-      (document.defaultView.getComputedStyle(gURLBarContainer, null).display
-       != "none")) {
-    gURLBar.focus();
-    gURLBar.select();
+  if (gURLBar) {
+    var style = document.defaultView.getComputedStyle(gURLBarContainer, null);
+    if (style.visibility == "visible" && style.display != "none") {
+      gURLBar.focus();
+      gURLBar.select();
+      return;
+    }
   }
 #ifdef XP_MACOSX
-  else if (window.location.href != getBrowserURL()) {
+  if (window.location.href != getBrowserURL()) {
     var win = getTopWin();
     if (win) {
       // If there's an open browser window, it should handle this command
@@ -1838,11 +1840,11 @@ function openLocation()
                               "chrome,all,dialog=no", "about:blank");
       win.addEventListener("load", openLocationCallback, false);
     }
+    return;
   }
 #endif
-  else
-    openDialog("chrome://browser/content/openLocation.xul", "_blank",
-               "chrome,modal,titlebar", window);
+  openDialog("chrome://browser/content/openLocation.xul", "_blank",
+             "chrome,modal,titlebar", window);
 }
 
 function openLocationCallback()
@@ -3145,9 +3147,11 @@ const BrowserSearch = {
    */
   getSearchBar: function BrowserSearch_getSearchBar() {
     var searchBar = document.getElementById("searchbar");
-    if (searchBar && !searchBar.parentNode.parentNode.collapsed &&
-        window.getComputedStyle(searchBar.parentNode, null).display != "none")
-      return searchBar;
+    if (searchBar) {
+      var style = window.getComputedStyle(searchBar.parentNode, null);
+      if (style.visibility == "visible" && style.display != "none")
+        return searchBar;
+    }
     return null;
   },
 
