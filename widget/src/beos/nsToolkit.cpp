@@ -229,6 +229,7 @@ void nsToolkit::GetInterface()
   }
 }
 
+// Synchronous version, not in use at the moment
 bool nsToolkit::CallMethod(MethodInfo *info)
 {
 #ifdef DEBUG
@@ -240,11 +241,24 @@ bool nsToolkit::CallMethod(MethodInfo *info)
 
   id.data = info;
   id.waitingThread = find_thread(NULL);
-  if(write_port(eventport, WM_CALLMETHOD, &id, sizeof(id)) == B_OK)
+  // Check message count to not exceed the port's capacity.
+  // There seems to be a BeOS bug that allows more 
+  // messages on a port than its capacity.
+  port_info portinfo;
+  if (get_port_info(eventport, &portinfo) != B_OK)
   {
-    // semantics for CallMethod are that it should be synchronous
-    suspend_thread(id.waitingThread);
-    return true;
+    return false;
+  }
+  
+  if (port_count(eventport) < portinfo.capacity - 20) 
+  {
+    // If we cannot write inside 5 seconds, something is really wrong.
+    if(write_port_etc(eventport, WM_CALLMETHOD, &id, sizeof(id), B_TIMEOUT, 5000000) == B_OK)
+    {
+      // semantics for CallMethod are that it should be synchronous
+   	  suspend_thread(id.waitingThread);
+      return true;
+    }
   }
   return false;
 }
