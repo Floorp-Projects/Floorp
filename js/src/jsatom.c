@@ -743,6 +743,30 @@ js_AtomizeChars(JSContext *cx, const jschar *chars, size_t length, uintN flags)
 }
 
 JSAtom *
+js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length)
+{
+    JSString *str;
+    char buf[2 * ALIGNMENT(JSString)];
+    JSHashNumber keyHash;
+    jsval key;
+    JSAtomState *state;
+    JSHashTable *table;
+    JSHashEntry **hep;
+
+    str = ALIGN(buf, JSString);
+    str->chars = (jschar *)chars;
+    str->length = length;
+    keyHash = js_HashString(str);
+    key = STRING_TO_JSVAL(str);
+    state = &cx->runtime->atomState;
+    JS_LOCK(&state->lock, cx);
+    table = state->table;
+    hep = JS_HashTableRawLookup(table, keyHash, (void *)key);
+    JS_UNLOCK(&state->lock, cx);
+    return (hep) ? (JSAtom *)*hep : NULL;
+}
+
+JSAtom *
 js_AtomizeValue(JSContext *cx, jsval value, uintN flags)
 {
     if (JSVAL_IS_STRING(value))
