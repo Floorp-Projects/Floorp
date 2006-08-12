@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Ben Goodger <beng@google.com>
+ *   Robert Sayre <sayrer@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -116,7 +117,17 @@ nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request,
                                       PRUint32 length, 
                                       nsACString& sniffedType)
 {
-  nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
+  nsCOMPtr<nsIHttpChannel> channel(do_QueryInterface(request));
+  if (!channel)
+    return NS_ERROR_NO_INTERFACE;
+
+  // Check that this is a GET request, since you can't subscribe to a POST...
+  nsCAutoString method;
+  channel->GetRequestMethod(method);
+  if (!method.Equals("GET")) {
+    sniffedType.Truncate();
+    return NS_OK;
+  }
 
   // We need to find out if this is a load of a view-source document. In this
   // case we do not want to override the content type, since the source display
