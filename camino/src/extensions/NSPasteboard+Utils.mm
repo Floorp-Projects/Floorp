@@ -231,8 +231,10 @@ NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; 
     return YES;
   
   if ([types containsObject:NSStringPboardType]) {
+    // NSURL will return nil for invalid url strings (containing spaces, returns etc),
+    // but will return a url otherwise.
     NSURL* testURL = [NSURL URLWithString:[self stringForType:NSStringPboardType]];
-    return (testURL != nil) && ([[testURL scheme] length] > 0);
+    return (testURL != nil);
   }
   
   return NO;
