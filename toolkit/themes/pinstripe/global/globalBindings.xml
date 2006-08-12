@@ -79,7 +79,8 @@
               -->
               <xul:hbox style="position: relative;">
                 <xul:toolbarbutton class="tabs-alltabs-button" type="menu"
-                                   anonid="alltabs-button">
+                                   anonid="alltabs-button"
+                                   tooltipstring="&listAllTabs.label;">
                   <xul:menupopup class="tabs-alltabs-popup"
                                  anonid="alltabs-popup" position="after_end"/>
                 </xul:toolbarbutton>

@@ -2511,7 +2511,7 @@
         -->
         <xul:hbox style="position: relative;">
           <xul:toolbarbutton class="tabs-alltabs-button" type="menu"
-                             anonid="alltabs-button">
+                             anonid="alltabs-button" tooltipstring="&listAllTabs.label;">
             <xul:menupopup class="tabs-alltabs-popup"
                            anonid="alltabs-popup" 
                            position="after_end"/>
@@ -2722,6 +2722,11 @@
                                                 "anonid", "alltabs-box");
       </field>
 
+      <field name="mAllTabsButton">
+        document.getAnonymousElementByAttribute(this, 
+                                                "anonid", "alltabs-button");
+      </field>
+
       <field name="_animateTimer">null</field>
       <field name="_animateStep">-1</field>
       <field name="_animateDelay">25</field>
@@ -2794,6 +2799,15 @@
     </implementation>
     <handlers>
       <handler event="TabSelect" action="this._handleTabSelect();"/>
+      <handler event="mouseover"><![CDATA[
+        if (event.originalTarget == this.mAllTabsButton) {
+          this.mAllTabsButton
+              .setAttribute("tooltiptext",
+                            this.mAllTabsButton.getAttribute("tooltipstring"));
+        }
+        else
+          this.mAllTabsButton.removeAttribute("tooltiptext");
+      ]]></handler>
     </handlers>
   </binding>
 
