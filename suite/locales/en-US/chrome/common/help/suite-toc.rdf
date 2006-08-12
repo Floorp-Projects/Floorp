@@ -307,7 +307,7 @@ nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
         <rdf:li> <rdf:Description ID="folder-copying" nc:name="Moving or Copying a Folder" nc:link="mail_help.xhtml#moving_or_copying_a_folder"/> </rdf:li>
         <rdf:li> <rdf:Description ID="folder-opening" nc:name="Filing Messages in Folders" nc:link="mail_help.xhtml#filing_messages_in_folders"/> </rdf:li>
         <rdf:li> <rdf:Description ID="folder-sharing" nc:name="Sharing Folders" nc:link="mail_help.xhtml#sharing_folders_with_other_users"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="labeling-messages" nc:name="Labeling Messages" nc:link="mail_help.xhtml#labeling_messages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="tagging-messages" nc:name="Tagging Messages" nc:link="mail_help.xhtml#tagging_messages"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-flagging" nc:name="Marking or Flagging Messages" nc:link="mail_help.xhtml#marking_or_flagging_messages"/> </rdf:li>
         <rdf:li> <rdf:Description ID="message-views-using" nc:name="Using Message Views" nc:link="mail_help.xhtml#using_message_views"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-filters" nc:name="Creating Message Filters" nc:link="mail_help.xhtml#creating_message_filters"/> </rdf:li>
@@ -324,13 +324,13 @@ nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#labeling-messages">
+<rdf:Description about="#tagging-messages">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="label-apply" nc:name="Applying a Label" nc:link="mail_help.xhtml#applying_a_label"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="label-customize" nc:name="Customizing Labels" nc:link="mail_help.xhtml#customizing_labels"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="label-sort" nc:name="Sorting Messages by Label" nc:link="mail_help.xhtml#sorting_messages_by_label"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="label-remove" nc:name="Removing Labels" nc:link="mail_help.xhtml#removing_labels"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="tag-apply" nc:name="Applying a Tag" nc:link="mail_help.xhtml#applying_a_tag"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="tag-customize" nc:name="Customizing Tags" nc:link="mail_help.xhtml#customizing_tags"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="tag-sort" nc:name="Sorting Messages by Tags" nc:link="mail_help.xhtml#sorting_messages_by_tags"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="tag-remove" nc:name="Removing Tags" nc:link="mail_help.xhtml#removing_tags"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -492,7 +492,7 @@ nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_prefs_formatting" nc:name="Send Format" nc:link="mail_help.xhtml#send_format"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_prefs_addressing" nc:name="Addressing" nc:link="mail_help.xhtml#addressing_preferences"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-prefs-junk" nc:name="Junk Mail" nc:link="mail_help.xhtml#global_junk_settings"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-prefs-labels" nc:name="Labels" nc:link="mail_help.xhtml#labels"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-prefs-tags" nc:name="Tags" nc:link="mail_help.xhtml#tags"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-prefs-receipts" nc:name="Return Receipts" nc:link="mail_help.xhtml#return_receipts_preferences"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_prefs_character_encoding" nc:name="Character Encoding" nc:link="mail_help.xhtml#character_encoding"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_prefs_offline" nc:name="Offline and Disk Space" nc:link="mail_help.xhtml#offline_and_disk_space_preferences"/> </rdf:li>

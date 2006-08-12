@@ -963,11 +963,6 @@
 <rdf:Description about="help-indexAZ.rdf#l">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="Labels"
-         nc:name="Labels"
-         nc:link="mail_help.xhtml#labeling_messages"/>
-     </rdf:li>
-     <rdf:li>
        <rdf:Description ID="languages"
          nc:name="languages"
          nc:link="nav_help.xhtml#using_languages_and_international_content"/>
@@ -981,16 +976,6 @@
        <rdf:Description ID="lock_icon"
          nc:name="lock icon"
          nc:link="using_certs_help.xhtml#checking_security_for_a_web_page"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Labels">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Labels:general_preferences"
-         nc:name="label preferences"
-         nc:link="mail_help.xhtml#labels"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2103,6 +2088,11 @@
          nc:link="customize_help.xhtml#tabbed_browsing"/>
      </rdf:li>
      <rdf:li>
+       <rdf:Description ID="Tags"
+         nc:name="Tags"
+         nc:link="mail_help.xhtml#tagging_messages"/>
+     </rdf:li>
+     <rdf:li>
        <rdf:Description ID="themes"
          nc:name="themes"
          nc:link="customize_help.xhtml#changing_the_theme"/>
@@ -2150,6 +2140,16 @@
        <rdf:Description ID="Tabbed_Browsing:what_is"
          nc:name="what is tabbed browsing"
          nc:link="customize_help.xhtml#what_is_tabbed_browsing"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Tags">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Tags:general_preferences"
+         nc:name="tag preferences"
+         nc:link="mail_help.xhtml#tags"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
