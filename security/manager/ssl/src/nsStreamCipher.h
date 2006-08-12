@@ -58,7 +58,7 @@ private:
 
   // Helper method for initializing this object.
   // aIV may be null.
-  nsresult InitWithIV_(nsIKeyObject *aKey, const SECItem* aIV);
+  nsresult InitWithIV_(nsIKeyObject *aKey, SECItem* aIV);
   
   // Disallow copy constructor
   nsStreamCipher(nsStreamCipher&);
