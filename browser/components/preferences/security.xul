@@ -164,7 +164,7 @@
     <groupbox id="warningMessagesGroup">
       <caption label="&warnings.label;"/>
 
-      <hbox id="chooseWarningsBox">
+      <hbox id="chooseWarningsBox" align="center">
         <description control="warningSettings" flex="1">&chooseWarnings.label;</description>
         <button id="warningSettings"
                 label="&warningSettings.label;"
