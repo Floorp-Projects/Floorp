@@ -321,14 +321,14 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
 
 - (BOOL)handleDropOnTab:(NSTabViewItem*)overTabViewItem overContent:(BOOL)overContentArea withURL:(NSString*)url
 {
-  if (overTabViewItem) 
+  if (overTabViewItem)
   {
-    [[overTabViewItem view] loadURI: url referrer:nil flags: NSLoadFlagsNone activate:NO allowPopups:NO];
+    [[overTabViewItem view] loadURI:url referrer:nil flags:NSLoadFlagsNone focusContent:YES allowPopups:NO];
     return YES;
   }
   else if (overContentArea)
   {
-    [[[self selectedTabViewItem] view] loadURI: url referrer:nil flags: NSLoadFlagsNone activate:NO allowPopups:NO];
+    [[[self selectedTabViewItem] view] loadURI:url referrer:nil flags:NSLoadFlagsNone focusContent:YES allowPopups:NO];
     return YES;
   }
   else

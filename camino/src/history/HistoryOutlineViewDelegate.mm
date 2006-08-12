@@ -209,7 +209,7 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
         [mBrowserWindowController openNewWindowWithURL:url referrer: nil loadInBackground:loadInBackground allowPopups:NO];
     }
     else
-      [[mBrowserWindowController getBrowserWrapper] loadURI:url referrer:nil flags:NSLoadFlagsNone activate:YES allowPopups:NO];
+      [[mBrowserWindowController getBrowserWrapper] loadURI:url referrer:nil flags:NSLoadFlagsNone focusContent:YES allowPopups:NO];
   }
 }
 

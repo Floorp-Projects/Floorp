@@ -438,7 +438,7 @@ static const unsigned int kMaxTitleLength = 50;
       }
       else
       {
-        [bwc loadURL:itemURL referrer:nil activate:YES allowPopups:NO];
+        [bwc loadURL:itemURL];
       }
     }
     else

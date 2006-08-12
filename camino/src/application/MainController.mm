@@ -556,7 +556,7 @@ const int kReuseWindowOnAE = 2;
     else if (openInNewTab)
       [browserWindowController openNewTabWithURL:[(Bookmark *)item url] referrer:nil loadInBackground:newTabInBackground allowPopups:YES setJumpback:NO];
     else
-      [browserWindowController loadURL:[(Bookmark *)item url] referrer:nil activate:YES allowPopups:YES];
+      [browserWindowController loadURL:[(Bookmark *)item url] referrer:nil focusContent:YES allowPopups:YES];
   }
   else if ([item isKindOfClass:[BookmarkFolder class]]) {
     if (openInNewWindow)
@@ -1119,7 +1119,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
   if ([MainController isBlankURL:aURL])
     [browser disableLoadPage];
   else
-    [browser loadURL:aURL referrer:aReferrer activate:YES allowPopups:inAllowPopups];
+    [browser loadURL:aURL referrer:aReferrer focusContent:YES allowPopups:inAllowPopups];
 
   return browser;
 }
@@ -1169,7 +1169,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
     BOOL tabOrWindowIsAvailable = ([[controller getBrowserWrapper] isEmpty] && ![[controller getBrowserWrapper] isBusy]);
 
     if (tabOrWindowIsAvailable || reuseWindow == kReuseWindowOnAE)
-      [controller loadURL:inURLString referrer:nil activate:YES allowPopups:NO];
+      [controller loadURL:inURLString];
     else if (reuseWindow == kOpenNewTabOnAE)
       [controller openNewTabWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground allowPopups:NO setJumpback:NO];
     else
