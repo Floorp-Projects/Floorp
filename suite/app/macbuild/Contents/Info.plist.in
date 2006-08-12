@@ -19,7 +19,7 @@
 	<key>CFBundleSignature</key>
 	<string>MOZZ</string>
 	<key>CFBundleIconFile</key>
-	<string>mozilla.icns</string>
+	<string>seamonkey.icns</string>
 	<key>CFBundleShortVersionString</key>
 	<string>MOZ_APP_VERSION</string>
 	<key>CFBundleGetInfoString</key>
