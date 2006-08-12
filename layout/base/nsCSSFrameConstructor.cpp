@@ -7131,8 +7131,6 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
   PRBool    isReplaced = PR_FALSE;
   PRBool    ignoreInterTagWhitespace = PR_TRUE;
 
-  // XXXbz somewhere here we should process pseudo frames if !aHasPseudoParent
-
   NS_ASSERTION(aTag != nsnull, "null MathML tag");
   if (aTag == nsnull)
     return NS_OK;
@@ -7142,6 +7140,17 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
 
   // Make sure to keep IsSpecialContent in synch with this code
   const nsStyleDisplay* disp = aStyleContext->GetStyleDisplay();
+
+  // Leverage IsSpecialContent to check if one of the |if aTag| below will
+  // surely match (knowing that aNameSpaceID == kNameSpaceID_MathML here)
+  if (IsSpecialContent(aContent, aTag, aNameSpaceID, aStyleContext) ||
+      (aTag == nsMathMLAtoms::mtable_ && 
+       disp->mDisplay == NS_STYLE_DISPLAY_TABLE)) {
+    // process pending pseudo frames
+    if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
+      ProcessPseudoFrames(aState, aFrameItems); 
+    }
+  }
 
   if (aTag == nsMathMLAtoms::mi_ ||
       aTag == nsMathMLAtoms::mn_ ||
