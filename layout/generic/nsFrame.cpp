@@ -4839,7 +4839,8 @@ nsFrame::DoGetParentStyleContextFrame(nsPresContext* aPresContext,
 {
   *aIsChild = PR_FALSE;
   *aProviderFrame = nsnull;
-  if (mContent && !mContent->GetParent()) {
+  if (mContent && !mContent->GetParent() &&
+      !GetStyleContext()->GetPseudoType()) {
     // we're a frame for the root.  We have no style context parent.
     return NS_OK;
   }
