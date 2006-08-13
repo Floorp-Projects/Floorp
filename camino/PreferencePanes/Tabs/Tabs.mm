@@ -65,7 +65,14 @@
   [radioOpenForAE selectCellWithTag:[self getIntPref:"browser.reuse_window" withSuccess:&gotPref]];
   [checkboxLoadTabsInBackground setState:[self getBooleanPref:"browser.tabs.loadInBackground" withSuccess:&gotPref]];
   [mTabBarVisiblity setState:[self getBooleanPref:"camino.tab_bar_always_visible" withSuccess:&gotPref]];
-  [mSingleWindowMode setState:([self getIntPref:"browser.link.open_newwindow" withSuccess:&gotPref] == nsIBrowserDOMWindow::OPEN_NEWTAB)];
+
+  int swmBehavior = [self getIntPref:"browser.link.open_newwindow" withSuccess:&gotPref];
+  if (swmBehavior == nsIBrowserDOMWindow::OPEN_DEFAULTWINDOW)
+    [mSingleWindowMode setState:NSOffState];
+  else if (swmBehavior == nsIBrowserDOMWindow::OPEN_NEWTAB)
+    [mSingleWindowMode setState:NSOnState];
+  else
+    [mSingleWindowMode setState:NSMixedState];
 }
 
 - (IBAction)checkboxClicked:(id)sender
@@ -86,6 +93,7 @@
     [self setPref:"camino.tab_bar_always_visible" toBoolean:[sender state]];
   }
   else if (sender == mSingleWindowMode) {
+    [sender setAllowsMixedState:NO];
     int newState = [sender state] ? nsIBrowserDOMWindow::OPEN_NEWTAB : nsIBrowserDOMWindow::OPEN_DEFAULTWINDOW;
     [self setPref:"browser.link.open_newwindow" toInt:newState];
   }

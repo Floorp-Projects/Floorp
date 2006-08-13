@@ -296,11 +296,16 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
   PRInt32 acceptCookies = eAcceptAllCookies;
   mPrefService->GetIntPref("network.cookie.cookieBehavior", &acceptCookies);
   [self mapCookiePrefToGUI:acceptCookies];
+
   // lifetimePolicy now controls asking about cookies, despite being totally unintuitive
   PRInt32 lifetimePolicy = kAcceptCookiesNormally;
   mPrefService->GetIntPref("network.cookie.lifetimePolicy", &lifetimePolicy);
   if (lifetimePolicy == kWarnAboutCookies)
-    [mAskAboutCookies setState:YES];
+    [mAskAboutCookies setState:NSOnState];
+  else if (lifetimePolicy == kAcceptCookiesNormally)
+    [mAskAboutCookies setState:NSOffState];
+  else
+    [mAskAboutCookies setState:NSMixedState];
   
   // store permission manager service and cache the enumerator.
   nsCOMPtr<nsIPermissionManager> pm(do_GetService(NS_PERMISSIONMANAGER_CONTRACTID));
@@ -980,6 +985,7 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
 
 -(IBAction) clickAskAboutCookies:(id)sender
 {
+  [sender setAllowsMixedState:NO];
   [self setPref:"network.cookie.lifetimePolicy" toInt:([sender state] == NSOnState) ? kWarnAboutCookies : kAcceptCookiesNormally];
 }
 
