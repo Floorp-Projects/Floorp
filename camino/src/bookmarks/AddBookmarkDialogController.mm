@@ -113,6 +113,24 @@ NSString* const kAddBookmarkItemPrimaryTabKey = @"primary";
   mInitialParentFolderIndex = -1;
 }
 
+- (IBAction)toggleTabGroup:(id)sender
+{
+  NSString* defaultGroupTitle = [NSString stringWithFormat:NSLocalizedString(@"defaultTabGroupTitle", @"[%d tabs] %@"), [mBookmarkItems count], mDefaultTitle];
+
+  // if title is unedited and we're bookmarking a tab group, prepend a prefix to indicate this
+  if ([[mTitleField stringValue] isEqualToString:mDefaultTitle] ||
+      [[mTitleField stringValue] isEqualToString:defaultGroupTitle])
+  {
+    [mTitleField setStringValue:([mTabGroupCheckbox state] == NSOnState) ? defaultGroupTitle : mDefaultTitle];
+  }
+}
+
+- (void)setDefaultTitle:(NSString*)aString
+{
+  [mDefaultTitle autorelease];
+  mDefaultTitle = [aString retain];
+}
+
 // -1 index means put at end
 - (void)setDefaultParentFolder:(BookmarkFolder*)inFolder andIndex:(int)inIndex
 {
@@ -137,13 +155,12 @@ NSString* const kAddBookmarkItemPrimaryTabKey = @"primary";
   mCreatingFolder = inIsFolder;
   
   // set title field
-  NSString* titleString = @"";
   if (mCreatingFolder)
-    titleString = NSLocalizedString(@"NewBookmarkFolder", @"");
+    [self setDefaultTitle:NSLocalizedString(@"NewBookmarkFolder", @"")];
   else
-    titleString  = [AddBookmarkDialogController bookmarkTitleForItem:[AddBookmarkDialogController primaryBookmarkItem:inItems]];
+    [self setDefaultTitle:[AddBookmarkDialogController bookmarkTitleForItem:[AddBookmarkDialogController primaryBookmarkItem:inItems]]];
 
-  [mTitleField setStringValue:titleString];
+  [mTitleField setStringValue:mDefaultTitle];
 
   // setup tab checkbox
   if (!mCreatingFolder)
@@ -269,16 +286,17 @@ NSString* const kAddBookmarkItemPrimaryTabKey = @"primary";
 {
   [mTitleField setStringValue:@""];
   [mTabGroupCheckbox setState:NSOffState];
-  
+
   [mInitialParentFolder release];
   mInitialParentFolder = nil;
   mInitialParentFolderIndex = -1;
 
   mCreatingFolder = NO;
+  [self setDefaultTitle:@""];
 
   [mBookmarkItems release];
   mBookmarkItems = nil;
-  
+
   mBookmarkViewController = nil;
 }
 

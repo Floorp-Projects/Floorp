@@ -1,7 +1,12 @@
 {
     IBClasses = (
         {
-            ACTIONS = {cancelAddBookmark = id; confirmAddBookmark = id; parentFolderChanged = id; }; 
+            ACTIONS = {
+                cancelAddBookmark = id; 
+                confirmAddBookmark = id; 
+                parentFolderChanged = id; 
+                toggleTabGroup = id; 
+            }; 
             CLASS = AddBookmarkDialogController; 
             LANGUAGE = ObjC; 
             OUTLETS = {
