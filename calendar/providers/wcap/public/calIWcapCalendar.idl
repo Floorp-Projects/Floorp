@@ -95,6 +95,17 @@ interface calIWcapCalendar : calICalendar
     
     /* xxx todo: additional filters sensible for calICalendar, too?
                  claiming bits 24-30 for now.
+                 
+                 Those bits are somehow handled special now:
+                 If at least one of the below is set, then
+                 that filter bit(s) are active.
+                 If none of the below is set, then those compstate
+                 filters are not taken into account at all.
+                 So there is no need to OR all of the below together
+                 (ITEM_FILTER_ALL_ITEMS does not cover these bits) if you
+                 don't care about the REQUEST/REPLY states.
+
+       xxx todo: ITEM_FILTER_CLASS_OCCURRENCES is not filter, rename?
     */
     
     /**
@@ -158,13 +169,18 @@ interface calIWcapCalendar : calICalendar
      * The passed <code>iListener</code> receives a
      * <code>SYNC</code> with timestamp as detail.
      *
-     * @param destCal destination calendar to write changes to
+     * @param destCal destination calendar to write changes to (may be null)
+     * @param itemFilter ITEM_FILTER flags OR-ed together,
+     *                   ITEM_FILTER_CLASS_OCCURRENCES not allowed
      * @param dtFrom start time to sync changes from,
      *               if null all items are synced in
      * @param iListener operation listener for SYNC operation
+     *                  (may optionally implemented calIObserver to receive
+     *                  onAddItem(), onModifyItem() or onDeleteItem() calls)
      */
     void syncChangesTo(
         in calICalendar destCal,
+        in unsigned long itemFilter,
         in calIDateTime dtFrom,
         in calIOperationListener iListener );
 };

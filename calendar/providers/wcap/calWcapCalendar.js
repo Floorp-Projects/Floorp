@@ -56,6 +56,7 @@ function calWcapCalendar( calId, session ) {
     this.wrappedJSObject = this;
     this.m_calId = calId;
     this.m_session = session;
+    this.m_bSuppressAlarms = SUPPRESS_ALARMS;
 }
 calWcapCalendar.prototype = {
     m_ifaces: [ Components.interfaces.calIWcapCalendar,

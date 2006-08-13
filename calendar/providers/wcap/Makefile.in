@@ -47,7 +47,7 @@ include $(DEPTH)/config/autoconf.mk
 DIRS            = public
 MODULE          = wcap
 
-EXTRA_PP_COMPONENTS = \
+EXTRA_SCRIPTS = \
                 calWcapUtils.js \
                 calWcapRequest.js \
                 calWcapErrors.js \
@@ -55,6 +55,9 @@ EXTRA_PP_COMPONENTS = \
                 calWcapCalendarItems.js \
                 calWcapCalendar.js \
                 calWcapCachedCalendar.js \
+                $(NULL)
+
+EXTRA_PP_COMPONENTS = \
                 calWcapCalendarModule.js \
                 $(NULL)
 
@@ -68,6 +71,17 @@ endif
 else # ifdef wcap_logging
 DEFINES += -DLOG_LEVEL=0
 endif # ifdef wcap_logging
+
+# installing EXTRA_SCRIPTS into js/
+
+# using NSINSTALL to make directory: no mtime to preserve:
+libs:: $(EXTRA_SCRIPTS)
+	if test ! -d $(FINAL_TARGET)/js; then $(NSINSTALL) -D $(FINAL_TARGET)/js; fi
+	$(INSTALL) $^ $(FINAL_TARGET)/js
+
+# using SYSINSTALL (i.e. NSINSTALL in copy mode):
+install:: $(EXTRA_SCRIPTS)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/js
 
 include $(topsrcdir)/config/rules.mk
 

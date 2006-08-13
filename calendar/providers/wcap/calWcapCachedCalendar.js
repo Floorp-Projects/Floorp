@@ -363,6 +363,12 @@ calWcapCachedCalendar.prototype = {
             } );
     },
     
+    syncChangesTo:
+    function( destCal, itemFilter, dtFrom, iListener )
+    {
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    },
+    
     getStampFile:
     function()
     {
@@ -443,7 +449,9 @@ calWcapCachedCalendar.prototype = {
             
             // first sync in changes from remote, then get items from locally:
             remoteCal.syncChangesTo(
-                localCal, dtFrom,
+                localCal,
+                Components.interfaces.calICalendar.ITEM_FILTER_ALL_ITEMS,
+                dtFrom,
                 { // calIOperationListener:
                     onOperationComplete:
                     function( calendar, status, opType, id, detail )
