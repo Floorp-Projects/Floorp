@@ -63,17 +63,8 @@ static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
 const int kFocusLinks = (1 << 2);
 const int kFocusForms = (1 << 1);
 
-// for annoyance blocker prefs
-const int kAnnoyancePrefNone = 1;
-const int kAnnoyancePrefAll  = 2;
-const int kAnnoyancePrefSome = 3;
-
 @interface OrgMozillaChimeraPreferenceWebFeatures(PRIVATE)
-
 -(NSString*)profilePath;
-- (int)annoyingWindowPrefs;
-- (int)preventAnimationCheckboxState;
-
 @end
 
 @implementation OrgMozillaChimeraPreferenceWebFeatures
@@ -119,19 +110,18 @@ const int kAnnoyancePrefSome = 3;
   [mEnablePopupBlocking setState:enablePopupBlocking];
   [mEditWhitelist setEnabled:enablePopupBlocking];
 
-  // set initial value on annoyance blocker checkbox.
-  if([self annoyingWindowPrefs] == kAnnoyancePrefAll)
-    [mEnableAnnoyanceBlocker setState:NSOnState];
-  else if([self annoyingWindowPrefs] == kAnnoyancePrefNone)
-    [mEnableAnnoyanceBlocker setState:NSOffState];
-  else // annoyingWindowPrefs == kAnnoyancePrefSome
-    [mEnableAnnoyanceBlocker setState:NSMixedState];
+  // set initial value on annoyance blocker checkbox. out of all the prefs,
+  // if the "status" capability is turned off, we use that as an indicator
+  // to turn them all off.
+  BOOL enableAnnoyanceBlocker = [self getBooleanPref:"dom.disable_window_status_change" withSuccess:&gotPref];
+  [mEnableAnnoyanceBlocker setState:enableAnnoyanceBlocker];
 
   // set initial value on image-resizing
   BOOL enableImageResize = [self getBooleanPref:"browser.enable_automatic_image_resizing" withSuccess:&gotPref];
   [mImageResize setState:enableImageResize];
 
-  [mPreventAnimation setState:[self preventAnimationCheckboxState]];
+  BOOL preventAnimation = [[self getStringPref:"image.animation_mode" withSuccess:&gotPref] isEqualToString:@"once"];
+  [mPreventAnimation setState:preventAnimation];
 
   BOOL enableAdBlock = [self getBooleanPref:"camino.enable_ad_blocking" withSuccess:&gotPref];
   [mEnableAdBlocking setState:enableAdBlock];
@@ -212,7 +202,6 @@ const int kAnnoyancePrefSome = 3;
 //
 -(IBAction) clickPreventAnimation:(id)sender
 {
-  [sender setAllowsMixedState:NO];
   [self setPref:"image.animation_mode" toString:([sender state] ? @"once" : @"normal")];
 }
 
@@ -416,7 +405,6 @@ const int kAnnoyancePrefSome = 3;
 //
 -(IBAction) clickEnableAnnoyanceBlocker:(id)sender
 {
-  [sender setAllowsMixedState:NO];
   if ( [sender state] ) 
     [self setAnnoyingWindowPrefsTo:YES];
   else
@@ -434,31 +422,6 @@ const int kAnnoyancePrefSome = 3;
     [self setPref:"dom.disable_window_move_resize" toBoolean:inValue];
     [self setPref:"dom.disable_window_status_change" toBoolean:inValue];
     [self setPref:"dom.disable_window_flip" toBoolean:inValue];
-}
-
-- (int)annoyingWindowPrefs
-{
-  BOOL disableStatusChangePref = [self getBooleanPref:"dom.disable_window_status_change" withSuccess:NULL];
-  BOOL disableMoveResizePref = [self getBooleanPref:"dom.disable_window_move_resize" withSuccess:NULL];
-  BOOL disableWindowFlipPref = [self getBooleanPref:"dom.disable_window_flip" withSuccess:NULL];
-
-  if(disableStatusChangePref && disableMoveResizePref && disableWindowFlipPref)
-    return kAnnoyancePrefAll;
-  if(!disableStatusChangePref && !disableMoveResizePref && !disableWindowFlipPref)
-    return kAnnoyancePrefNone;
-
-  return kAnnoyancePrefSome;
-}
-
-- (int)preventAnimationCheckboxState
-{
-  NSString* preventAnimation = [self getStringPref:"image.animation_mode" withSuccess:NULL];
-  if ([preventAnimation isEqualToString:@"once"])
-    return NSOnState;
-  else if ([preventAnimation isEqualToString:@"normal"])
-    return NSOffState;
-  else
-    return NSMixedState;
 }
 
 //
