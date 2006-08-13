@@ -96,11 +96,13 @@ nsXPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
     if (!nsContentUtils::CanCallerAccess(aContextNode))
         return NS_ERROR_DOM_SECURITY_ERR;
 
-    nsCOMPtr<nsIDOMDocument> contextDocument;
-    aContextNode->GetOwnerDocument(getter_AddRefs(contextDocument));
+    if (mDocument && mDocument != aContextNode) {
+        nsCOMPtr<nsIDOMDocument> contextDocument;
+        aContextNode->GetOwnerDocument(getter_AddRefs(contextDocument));
 
-    if (mDocument && mDocument != contextDocument) {
-        return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
+        if (mDocument != contextDocument) {
+            return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
+        }
     }
 
     nsresult rv;
