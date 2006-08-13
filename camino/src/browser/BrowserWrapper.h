@@ -41,6 +41,7 @@
 @class BrowserWindowController;
 @class ToolTip;
 @class AutoCompleteTextField;
+@class RolloverImageButton;
 
 class nsIMutableArray;
 class nsIArray;
@@ -149,6 +150,7 @@ class nsIArray;
   ToolTip*                  mToolTip;
 
   IBOutlet NSView*          mBlockedPopupView;   // loaded on demand, can be nil, STRONG
+  IBOutlet RolloverImageButton* mBlockedPopupCloseButton; 
 
   double                    mProgress;
   

@@ -9,11 +9,16 @@
             }; 
             CLASS = BrowserWrapper; 
             LANGUAGE = ObjC; 
-            OUTLETS = {mBlockedPopupView = NSView; mDelegate = id; }; 
+            OUTLETS = {
+                mBlockedPopupCloseButton = RolloverImageButton; 
+                mBlockedPopupView = NSView; 
+                mDelegate = id; 
+            }; 
             SUPERCLASS = NSView; 
         }, 
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
-        {CLASS = InformationPanel; LANGUAGE = ObjC; SUPERCLASS = NSView; }
+        {CLASS = InformationPanel; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
+        {CLASS = RolloverImageButton; LANGUAGE = ObjC; SUPERCLASS = NSButton; }
     ); 
     IBVersion = 1; 
 }

@@ -49,6 +49,7 @@
 #import "PageProxyIcon.h"
 #import "KeychainService.h"
 #import "AutoCompleteTextField.h"
+#import "RolloverImageButton.h"
 
 #include "CHBrowserService.h"
 #include "ContentClickListener.h"
@@ -506,6 +507,11 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   // current tab is eventually displayed.
   if ([self popupsBlocked] && !mBlockedPopupView) {
     [NSBundle loadNibNamed:@"PopupBlockView" owner:self];
+
+    [mBlockedPopupCloseButton setImage:[NSImage imageNamed:@"tab_close"]];
+    [mBlockedPopupCloseButton setAlternateImage:[NSImage imageNamed:@"tab_close_pressed"]];
+    [mBlockedPopupCloseButton setHoverImage:[NSImage imageNamed:@"tab_close_hover"]];
+
     [self addSubview:mBlockedPopupView];
     [self setFrame:[self frame] resizingBrowserViewIfHidden:YES];
     [self display];
