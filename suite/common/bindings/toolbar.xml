@@ -155,15 +155,22 @@
         <children/>
       </xul:hbox>
     </content>
+
+    <implementation>
+      <constructor>
+        <![CDATA[
+          if (this.getAttribute("moz-collapsed") == "true" &&
+              this.parentNode.localName == "toolbox")
+            this.parentNode.createCollapsedGrippy(this);
+        ]]>
+      </constructor>
+    </implementation>
   </binding>
 
   <binding id="grippytoolbar-primary" extends="chrome://communicator/content/bindings/toolbar.xml#grippytoolbar">
     <implementation implements="nsIObserver">
       <constructor>
         <![CDATA[
-          if (this.getAttribute("moz-collapsed") == "true" &&
-              this.parentNode.localName == "toolbox")
-            this.parentNode.createCollapsedGrippy(this);
           this.prefs.addObserver(this.domain, this, false);
           if (this.prefs.getIntPref(this.domain) != 2)
             this.observe(this.prefs, "nsPref:changed", this.domain);
