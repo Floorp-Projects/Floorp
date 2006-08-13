@@ -6,10 +6,11 @@ import md5
 
 import os
 import sys
+import re
 import logging
 from codecs import utf_8_encode
 
-from Mozilla import Paths
+from Mozilla import Paths, Parser
 import simplejson
 
 lvl = logging.WARNING
@@ -112,17 +113,28 @@ parser.setFeature(sax.handler.feature_namespaces, True)
 
 locales = [loc.strip() for loc in open('mozilla/browser/locales/all-locales')]
 locales.insert(0, 'en-US')
-engines = {}
+sets = {}
+details = {}
 
 for loc in locales:
   try:
     lst = open(Paths.get_path('browser',loc,'searchplugins/list.txt'),'r')
   except IOError:
     logging.error("Locale " + loc + " doesn't have search plugins")
-    engines[Paths.get_path('browser',loc,'searchplugins/list.txt')] = {
+    details[Paths.get_path('browser',loc,'searchplugins/list.txt')] = {
       'error': 'not found'
       }
     continue
+  sets[loc] = {'list': []}
+  regprop = Paths.get_path('browser', loc, 'chrome/browser-region/region.properties')
+  p = Parser.getParser(regprop)
+  p.read(regprop)
+  orders = {}
+  for key, val in p:
+    m = re.match('browser.search.order.([1-9])', key)
+    if m:
+      orders[val.strip()] = int(m.group(1))
+  sets[loc]['orders'] = orders
   for fn in lst:
     name = fn.strip()
     leaf = 'searchplugins/' + name + '.xml'
@@ -130,26 +142,30 @@ for loc in locales:
     if not os.access(_path, os.R_OK):
       _path = Paths.get_path('browser', loc, leaf)
     logging.info('testing ' + _path)
+    sets[loc]['list'].append(_path)
     try:
       parser.parse(_path)
     except IOError:
       logging.error("can't open " + _path)
-      engines[_path] = {'_name': name, 'error': 'not found'}
+      details[_path] = {'_name': name, 'error': 'not found'}
       continue
     except UserWarning, ex:
       logging.error("error in searchplugin " + _path)
-      engines[_path] = {'_name': name, 'error': ex.args[0]}
+      details[_path] = {'_name': name, 'error': ex.args[0]}
       continue
     except sax._exceptions.SAXParseException, ex:
       logging.error("error in searchplugin " + _path)
-      engines[_path] = {'_name': name, 'error': ex.args[0]}
+      details[_path] = {'_name': name, 'error': ex.args[0]}
       continue
-    engines[_path] = handler.engine
-    engines[_path]['_name'] = name
+    details[_path] = handler.engine
+    details[_path]['_name'] = name
 
-enginelist = engines.keys()
+engines = {'locales': sets,
+  'details': details}
+enginelist = details.keys()
 enginelist.sort()
 fp = open('search-results.js','w')
+fp.write('results = ')
 simplejson.dump(engines, fp, sort_keys=True)
 fp.close()
 print enginelist
