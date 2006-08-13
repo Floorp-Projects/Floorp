@@ -283,7 +283,6 @@ pref("capability.policy.default.HTMLDocument.open.get", "allAccess");
 
 pref("capability.policy.default.Location.hash.set", "allAccess");
 pref("capability.policy.default.Location.href.set", "allAccess");
-pref("capability.policy.default.Location.reload.get", "allAccess");
 pref("capability.policy.default.Location.replace.get", "allAccess");
 
 pref("capability.policy.default.Navigator.preference", "allAccess");
