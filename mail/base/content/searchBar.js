@@ -351,6 +351,7 @@ function createSearchTermsWithList(aTermsArray)
   var searchTermsArray = searchTerms.QueryInterface(Components.interfaces.nsISupportsArray);
   searchTermsArray.Clear();
 
+  var i;
   var selectedFolder = GetThreadPaneFolder();
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                   .getService(Components.interfaces.nsIIOService);
@@ -366,7 +367,7 @@ function createSearchTermsWithList(aTermsArray)
       var srchFolderUri = dbFolderInfo.getCharPtrProperty("searchFolderUri");
       viewDebug("createSearchTermsWithList xf vf scope = " + srchFolderUri + "\n");
       var srchFolderUriArray = srchFolderUri.split('|');
-      for (var i in srchFolderUriArray) 
+      for (i in srchFolderUriArray) 
       {
         var realFolderRes = GetResourceFromUri(srchFolderUriArray[i]);
         var realFolder = realFolderRes.QueryInterface(Components.interfaces.nsIMsgFolder);
@@ -382,7 +383,7 @@ function createSearchTermsWithList(aTermsArray)
   }
 
   // add each item in termsArray to the search session
-  for (var i = 0; i < termsArray.Count(); i++)
+  for (i = 0; i < termsArray.Count(); ++i)
     gSearchSession.appendTerm(termsArray.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgSearchTerm));
 }
 
