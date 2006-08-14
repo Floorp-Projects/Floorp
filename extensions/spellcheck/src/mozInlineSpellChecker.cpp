@@ -314,8 +314,10 @@ mozInlineSpellStatus::FinishInitOnEvent(mozInlineSpellWordUtil& aWordUtil)
         return FillNoCheckRangeFromAnchor(aWordUtil);
       break;
     case eOpChangeDelete:
-      if (mAnchorRange)
-        return FillNoCheckRangeFromAnchor(aWordUtil);
+      if (mAnchorRange) {
+        rv = FillNoCheckRangeFromAnchor(aWordUtil);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
       // Delete events will have no range for the changed text (because it was
       // deleted), and InitForEditorChange will set it to NULL. Here, we select
       // the entire word to cause any underlining to be removed.
