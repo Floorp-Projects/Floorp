@@ -616,37 +616,19 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
  CK_RV FC_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType,
 				    CK_CHAR_PTR pPin, CK_ULONG usPinLen) {
     CK_RV rv;
+    PRBool successful;
     if (sftk_fatalError) return CKR_DEVICE_ERROR;
     rv = NSC_Login(hSession,userType,pPin,usPinLen);
-    if (rv == CKR_OK)
+    successful = (rv == CKR_OK) || (rv == CKR_USER_ALREADY_LOGGED_IN);
+    if (successful)
 	isLoggedIn = PR_TRUE;
-    else if (rv == CKR_USER_ALREADY_LOGGED_IN)
-    {
-	isLoggedIn = PR_TRUE;
-
-	/* Provide FIPS PUB 140-2 power-up self-tests on demand. */
-	rv = sftk_fipsPowerUpSelfTest();
-	if (rv == CKR_OK)
-		rv = CKR_USER_ALREADY_LOGGED_IN;
-	else
-		sftk_fatalError = PR_TRUE;
-    }
     if (sftk_audit_enabled) {
 	char msg[128];
 	NSSAuditSeverity severity;
-	if (sftk_fatalError) {
-	    severity = NSS_AUDIT_ERROR;
-	    PR_snprintf(msg,sizeof msg,
-			"C_Login(hSession=%lu, userType=%lu)=0x%08lX "
-			"power-up self-tests failed",
-			(PRUint32)hSession,(PRUint32)userType,(PRUint32)rv);
-	} else {
-	    severity = (rv == CKR_OK || rv == CKR_USER_ALREADY_LOGGED_IN) ?
-			NSS_AUDIT_INFO : NSS_AUDIT_ERROR;
-	    PR_snprintf(msg,sizeof msg,
-			"C_Login(hSession=%lu, userType=%lu)=0x%08lX",
-			(PRUint32)hSession,(PRUint32)userType,(PRUint32)rv);
-	}
+	severity = successful ? NSS_AUDIT_INFO : NSS_AUDIT_ERROR;
+	PR_snprintf(msg,sizeof msg,
+		    "C_Login(hSession=%lu, userType=%lu)=0x%08lX",
+		    (PRUint32)hSession,(PRUint32)userType,(PRUint32)rv);
 	sftk_LogAuditMessage(severity, msg);
     }
     return rv;
