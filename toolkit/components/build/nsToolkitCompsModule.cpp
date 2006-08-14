@@ -47,8 +47,10 @@
 #ifndef MOZ_SUITE
 // XXX Suite isn't ready to include this just yet
 #ifdef MOZ_XPINSTALL
+#ifdef MOZ_RDF
 #include "nsDownloadManager.h"
 #include "nsDownloadProxy.h"
+#endif
 #endif
 
 #include "nsTypeAheadFind.h"
@@ -75,8 +77,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 #ifndef MOZ_SUITE
 // XXX Suite isn't ready to include this just yet
 #ifdef MOZ_XPINSTALL
+#ifdef MOZ_RDF
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init) 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
+#endif
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTypeAheadFind)
@@ -114,6 +118,7 @@ static const nsModuleComponentInfo components[] =
 #ifndef MOZ_SUITE
 // XXX Suite isn't ready to include this just yet
 #ifdef MOZ_XPINSTALL
+#ifdef MOZ_RDF
   { "Download Manager",
     NS_DOWNLOADMANAGER_CID,
     NS_DOWNLOADMANAGER_CONTRACTID,
@@ -122,6 +127,7 @@ static const nsModuleComponentInfo components[] =
     NS_DOWNLOAD_CID,
     NS_TRANSFER_CONTRACTID,
     nsDownloadProxyConstructor },
+#endif
 #endif
   { "TypeAheadFind Component",
     NS_TYPEAHEADFIND_CID,

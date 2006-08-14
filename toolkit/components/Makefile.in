@@ -108,7 +108,9 @@ DIRS += help
 endif
 
 ifdef MOZ_XPINSTALL
+ifdef MOZ_RDF
 DIRS +=	downloads
+endif
 endif
 endif # MOZ_SUITE
 

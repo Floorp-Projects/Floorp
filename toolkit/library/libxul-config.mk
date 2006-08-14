@@ -97,7 +97,6 @@ COMPONENT_LIBS += \
 	jar$(VERSION_NUMBER) \
 	pref \
 	caps \
-	rdf \
 	htmlpars \
 	imglib2 \
 	gklayout \
@@ -109,8 +108,6 @@ COMPONENT_LIBS += \
 	nsappshell \
 	txmgr \
 	chrome \
-	windowds \
-	intlapp \
 	commandlines \
 	toolkitcomps \
 	pipboot \
@@ -181,9 +178,19 @@ else
 DEFINES += -DMOZ_PLAINTEXT_EDITOR_ONLY
 endif
 
+ifdef MOZ_RDF
+COMPONENT_LIBS += \
+	rdf \
+	windowds \
+	intlapp \
+	$(NULL)
+endif
+
 ifeq (,$(filter beos os2 mac photon cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
+ifdef MOZ_RDF
 COMPONENT_LIBS += fileview
 DEFINES += -DMOZ_FILEVIEW
+endif
 endif
 
 ifdef MOZ_PLACES

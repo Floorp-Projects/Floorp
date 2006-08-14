@@ -149,6 +149,19 @@
 #define XPRINT_MODULES
 #endif
 
+#define XPINTL_MODULE MODULE(nsXPIntlModule)
+#define WINDOWDS_MODULE MODULE(nsWindowDataSourceModule)
+
+#ifdef MOZ_RDF
+#define RDF_MODULE MODULE(nsRDFModule)
+#else
+#undef XPINTL_MODULE
+#undef WINDOWDS_MODULE
+#define RDF_MODULE
+#define WINDOWDS_MODULE
+#define XPINTL_MODULE
+#endif
+
 #ifdef OJI
 #define OJI_MODULES MODULE(nsCJVMManagerModule)
 #else
@@ -269,7 +282,9 @@
     MODULE(nsJarModule)                      \
     MODULE(nsPrefModule)                     \
     MODULE(nsSecurityManagerModule)          \
-    MODULE(nsRDFModule)                      \
+    RDF_MODULE                               \
+    XPINTL_MODULE                            \
+    WINDOWDS_MODULE                          \
     MODULE(nsParserModule)                   \
     POSTSCRIPT_MODULES                       \
     GFX_MODULES                              \
@@ -291,8 +306,6 @@
     COMPOSER_MODULE                          \
     MODULE(nsChromeModule)                   \
     APPLICATION_MODULES                      \
-    MODULE(nsWindowDataSourceModule)         \
-    MODULE(nsXPIntlModule)                   \
     MODULE(Apprunner)                        \
     MODULE(CommandLineModule)                \
     FILEVIEW_MODULE                          \

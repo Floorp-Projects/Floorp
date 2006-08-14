@@ -57,9 +57,6 @@
 #include "nsCRT.h"
 #include "nsIViewSourceChannel.h"
 
-#include "nsRDFCID.h"
-#include "nsIRDFResource.h"
-
 #include "imgILoader.h"
 
 // plugins
