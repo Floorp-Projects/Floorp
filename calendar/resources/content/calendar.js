@@ -86,12 +86,12 @@ function calendarInit()
        deck.selectedPanel.goToDay(deck.selectedPanel.selectedDay);
    }
 
-   // tasksInView is true by default
+   // tasksInView is false by default
    if (document.getElementById("toggle_tasks_in_view").getAttribute("checked")
-       != 'true') {
+       == 'true') {
        var deck = document.getElementById("view-deck")
        for each (view in deck.childNodes) {
-           view.tasksInView = false;
+           view.tasksInView = true;
        }
        deck.selectedPanel.goToDay(deck.selectedPanel.selectedDay);
    }

@@ -122,7 +122,7 @@
         </content>
 
         <implementation implements="calIDecoratedView">
-            <field name="mTasksInView">true</field>
+            <field name="mTasksInView">false</field>
             <field name="mWorkdaysOnly">false</field>
 
             <property name="workdaysOnly">

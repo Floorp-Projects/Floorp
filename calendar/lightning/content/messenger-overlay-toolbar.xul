@@ -97,7 +97,6 @@
                          label="&calendar.onlyworkday.checkbox.label;"
                          oncommand="toggleWorkdaysOnly()"/>
                <menuitem type="checkbox"
-                         checked="true"
                          label="&calendar.displaytodos.checkbox.label;"
                          oncommand="toggleTasksInView()"/>
            </menupopup>

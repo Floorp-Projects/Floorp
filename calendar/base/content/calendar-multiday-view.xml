@@ -1671,7 +1671,7 @@
       <field name="mDefaultEndMin">20*60</field>
       <field name="mStartMin">8*60</field>
       <field name="mEndMin">20*60</field>
-      <field name="mTasksInView">true</field>
+      <field name="mTasksInView">false</field>
       <field name="mDaysOffArray">[0,6]</field>
       <field name="mTimezone">"UTC"</field>
 

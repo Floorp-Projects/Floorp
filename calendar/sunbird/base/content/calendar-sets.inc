@@ -91,7 +91,6 @@
 
   <command id="toggle_tasks_in_view" 
            oncommand="changeDisplayToDoInViewCheckbox()" 
-           checked="true" 
            persist="checked"/>
   <command id="toggle_workdays_only" 
            oncommand="changeOnlyWorkdayCheckbox()"

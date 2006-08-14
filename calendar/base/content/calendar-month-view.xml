@@ -710,7 +710,7 @@
       <field name="mSelectedDayBox">null</field>
 
       <field name="mShowDaysOutsideMonth">true</field>
-      <field name="mTasksInView">true</field>
+      <field name="mTasksInView">false</field>
       <field name="mShowFullMonth">true</field>
       <field name="mWeekStartOffset">0</field>
       <field name="mDaysOffArray">[0,6]</field>
