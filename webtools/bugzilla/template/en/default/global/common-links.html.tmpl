@@ -20,6 +20,8 @@
   #                 Svetlana Harisova <light@rathedg.com>
   #%]
 
+[% DEFAULT btn_id = "find" %]
+
 <div class="links">
   <a href="./">Home</a> |
   <a href="enter_bug.cgi">New</a> |
@@ -30,7 +32,7 @@
                   { alert('Please enter one or more search terms first.');
                     return false; } return true;">
     <input class="txt" type="text" name="quicksearch">
-    <input class="btn" type="submit" value="Find" id="find">
+    <input class="btn" type="submit" value="Find" id="[% btn_id FILTER html %]">
   </form> |
 
   <a href="report.cgi">Reports</a>
