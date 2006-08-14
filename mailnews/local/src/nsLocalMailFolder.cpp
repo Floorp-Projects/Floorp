@@ -3825,6 +3825,7 @@ nsMsgLocalMailFolder::AddMessage(const char *aMessage)
     newMailParser->SetDBFolderStream(nsnull); // stream is going away
     if (outFileStream.is_open())
         outFileStream.close();
+    newMailParser->EndMsgDownload();
   }
   ReleaseSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
   return rv;
