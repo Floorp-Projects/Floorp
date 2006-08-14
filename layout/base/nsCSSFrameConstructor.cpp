@@ -9640,7 +9640,9 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                                                  nsCSSPseudoElements::before)) {
           // Insert the new frames after the last continuation of the :before pseudo-element
           prevSibling = firstChild->GetLastContinuation();
-          parentFrame = prevSibling->GetParent();
+          nsIFrame* newParent = prevSibling->GetParent();
+          nsHTMLContainerFrame::ReparentFrameViewList(state.mPresContext, newFrame, parentFrame, newParent);
+          parentFrame = newParent;
         }
       }
       state.mFrameManager->InsertFrames(parentFrame,
