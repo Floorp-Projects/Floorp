@@ -526,6 +526,208 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 !macroend
 
 /**
+ * Checks whether we can write to the install directory. If the install
+ * directory already exists this will attempt to create a temporary file in the
+ * install directory and then delete it. If it does not exist this will attempt
+ * to create the directory and then delete it. If we can write to the install
+ * directory this will return true... if not, this will return false.
+ *
+ * IMPORTANT! $R9 will be overwritten by this macro with the return value so
+ *            protect yourself!
+ *
+ * @return  _RESULT
+ *          true if the install directory can be written to otherwise false.
+ *
+ * $R7 = temp filename in installation directory returned from GetTempFileName
+ * $R8 = filehandle to temp file used for writing
+ * $R9 = _RESULT
+ */
+!macro CanWriteToInstallDir
+
+  !ifndef ${_MOZFUNC_UN}CanWriteToInstallDir
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}CanWriteToInstallDir "!insertmacro ${_MOZFUNC_UN}CanWriteToInstallDirCall"
+
+    Function ${_MOZFUNC_UN}CanWriteToInstallDir
+      Push $R7
+      Push $R8
+
+      StrCpy $R9 "true"
+      IfFileExists "$INSTDIR" 0 checkCreateDir
+      GetTempFileName $R7 "$INSTDIR"
+      FileOpen $R8 $R7 w
+      FileWrite $R8 "Write Access Test"
+      FileClose $R8
+      IfFileExists "$R7" +3 0
+      StrCpy $R9 "false"
+      GoTo end
+
+      Delete $R7
+      GoTo end
+
+      checkCreateDir:
+      CreateDirectory "$INSTDIR"
+      IfFileExists "$INSTDIR" +3 0
+      StrCpy $R9 "false"
+      GoTo end
+
+      RmDir "$INSTDIR"
+
+      end:
+      ClearErrors
+
+      Pop $R8
+      Pop $R7
+      Push $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro CanWriteToInstallDirCall _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call CanWriteToInstallDir
+  Pop ${_RESULT}
+  !verbose pop
+!macroend
+
+!macro un.CanWriteToInstallDirCall _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call un.CanWriteToInstallDir
+  Pop ${_RESULT}
+  !verbose pop
+!macroend
+
+!macro un.CanWriteToInstallDir
+  !ifndef un.CanWriteToInstallDir
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro CanWriteToInstallDir
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+
+/**
+ * Checks whether there is sufficient free space available on the installation
+ * directory's drive. If there is sufficient free space this will return true...
+ * if not, this will return false. This will only calculate the size of the
+ * first three sections.
+ *
+ * IMPORTANT! $R9 will be overwritten by this macro with the return value so
+ *            protect yourself!
+ *
+ * @return  _RESULT
+ *          true if there is sufficient free space otherwise false.
+ *
+ * $R2 = return value from greater than comparison (0=false 1=true)
+ * $R3 = free space for the install directory's drive
+ * $R4 = install directory root
+ * $R5 = value returned from SectionGetSize
+ * $R6 = value returned from 'and' comparison of SectionGetFlags (1=selected)
+ * $R7 = value returned from SectionGetFlags
+ * $R8 = size in KB required for this installation
+ * $R9 = _RESULT
+ */
+!macro CheckDiskSpace
+
+  !ifndef ${_MOZFUNC_UN}CheckDiskSpace
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}CheckDiskSpace "!insertmacro ${_MOZFUNC_UN}CheckDiskSpaceCall"
+
+    Function ${_MOZFUNC_UN}CheckDiskSpace
+      Push $R8
+      Push $R7
+      Push $R6
+      Push $R5
+      Push $R4
+      Push $R3
+      Push $R2
+
+      StrCpy $R9 "true"
+      SectionGetSize 0 $R8
+
+      SectionGetFlags 1 $R7
+      IntOp $R6 ${SF_SELECTED} & $R7
+      IntCmp $R6 0 +3 0
+      SectionGetSize 1 $R5
+      IntOp $R8 $R8 + $R5
+
+      SectionGetFlags 2 $R7
+      IntOp $R6 ${SF_SELECTED} & $R7
+      IntCmp $R6 0 +3 0
+      SectionGetSize 2 $R5
+      IntOp $R8 $R8 + $R5
+
+      ${GetRoot} "$INSTDIR" $R4
+      ${DriveSpace} "$R4" "/D=F /S=K" $R3
+
+      System::Int64Op $R3 > $R8
+      Pop $R2
+
+      IntCmp $R2 1 end
+      StrCpy $R9 "false"
+
+      end:
+      ClearErrors
+
+      Pop $R2
+      Pop $R3
+      Pop $R4
+      Pop $R5
+      Pop $R6
+      Pop $R7
+      Pop $R8
+      Push $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro CheckDiskSpaceCall _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call CheckDiskSpace
+  Pop ${_RESULT}
+  !verbose pop
+!macroend
+
+!macro un.CheckDiskSpaceCall _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call un.CheckDiskSpace
+  Pop ${_RESULT}
+  !verbose pop
+!macroend
+
+!macro un.CheckDiskSpace
+  !ifndef un.CheckDiskSpace
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro CheckDiskSpace
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
  * Removes registry keys that reference this install location and for paths that
  * no longer exist. This uses SHCTX to determine the registry hive so you must
  * call SetShellVarContext first.
