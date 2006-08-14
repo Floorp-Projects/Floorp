@@ -1,32 +1,31 @@
 diff -u -r workspace/bmo2-20-2-tp10/enter_bug.cgi temp/bbmo-2.20.2-clean/enter_bug.cgi
 --- workspace/bmo2-20-2-tp10/enter_bug.cgi      2005-10-23 15:50:34.000000000 -0600
 +++ temp/bbmo-2.20.2-clean/enter_bug.cgi        2006-06-01 16:54:24.000000000 -0600
-@@ -587,6 +587,8 @@
-
+@@ -590,6 +590,8 @@
+ 
  $vars->{'default'} = \%default;
-
+ 
 +$vars->{'caserun_id'} = $cgi->param('caserun_id');
 +
- my $format =
-   GetFormat("bug/create/create", scalar $cgi->param('format'),
-             scalar $cgi->param('ctype'));
+ my $format = $template->get_format("bug/create/create",
+                                    scalar $cgi->param('format'), 
+                                    scalar $cgi->param('ctype'));
 diff -u -r workspace/bmo2-20-2-tp10/post_bug.cgi temp/bbmo-2.20.2-clean/post_bug.cgi
 --- workspace/bmo2-20-2-tp10/post_bug.cgi       2006-01-08 12:54:34.000000000 -0700
 +++ temp/bbmo-2.20.2-clean/post_bug.cgi 2006-06-01 16:54:24.000000000 -0600
-@@ -34,6 +34,9 @@
-
+@@ -32,6 +32,8 @@
+ use Bugzilla::Util;
+ use Bugzilla::Bug;
  use Bugzilla::User;
-
 +use Bugzilla::Testopia::TestCaseRun;
 +use Bugzilla::Testopia::Util;
-+
+ use Bugzilla::Field;
+ 
  # Shut up misguided -w warnings about "used only once". For some reason,
- # "use vars" chokes on me when I try it here.
- sub sillyness {
-@@ -476,6 +479,17 @@
+@@ -494,6 +496,18 @@
  }
  $vars->{'bug_list'} = \@bug_list;
-
+ 
 +if ($cgi->param('caserun_id')) {
 +    my $tcid = $cgi->param('caserun_id');
 +    detaint_natural($tcid);
@@ -37,6 +36,7 @@ diff -u -r workspace/bmo2-20-2-tp10/post_bug.cgi temp/bbmo-2.20.2-clean/post_bug
 +
 +    $vars->{'caserun'} = $caserun;
 +}
++
 +
  print $cgi->header();
  $template->process("bug/create/created.html.tmpl", $vars)
