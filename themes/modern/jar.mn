@@ -164,6 +164,7 @@ modern.jar:
   skin/modern/global/listbox.css                                   (global/listbox.css)
   skin/modern/global/menu.css                                      (global/menu.css)
   skin/modern/global/menulist.css                                  (global/menulist.css)
+  skin/modern/global/numberbox.css                                 (global/numberbox.css)
   skin/modern/global/netError.css                                  (global/netError.css)
   skin/modern/global/printing.css                                  (global/printing.css)
   skin/modern/global/progressmeter.css                             (global/progressmeter.css)

@@ -156,6 +156,7 @@ classic.jar:
   skin/classic/global/listbox.css                               (global/mac/listbox.css)
   skin/classic/global/menu.css                                  (global/mac/menu.css)
   skin/classic/global/menulist.css                              (global/mac/menulist.css)
+  skin/classic/global/numberbox.css                             (global/mac/numberbox.css)
   skin/classic/global/popup.css                                 (global/mac/popup.css)
   skin/classic/global/progressmeter.css                         (global/mac/progressmeter.css)
   skin/classic/global/radio.css                                 (global/mac/radio.css)
@@ -248,6 +249,7 @@ classic.jar:
   skin/classic/global/radio.css                               (global/unix/radio.css)
   skin/classic/global/button.css                              (global/unix/button.css)
   skin/classic/global/toolbarbutton.css                       (global/unix/toolbarbutton.css)
+  skin/classic/global/numberbox.css                           (global/unix/numberbox.css)
   skin/classic/global/global.css                              (global/unix/global.css)
 #else
   skin/classic/global/autocomplete.css                        (global/win/autocomplete.css)
@@ -255,6 +257,7 @@ classic.jar:
   skin/classic/global/radio.css                               (global/win/radio.css)
   skin/classic/global/button.css                              (global/win/button.css)
   skin/classic/global/toolbarbutton.css                       (global/win/toolbarbutton.css)
+  skin/classic/global/numberbox.css                           (global/win/numberbox.css)
   skin/classic/global/global.css                              (global/win/global.css)
 #endif
   skin/classic/global/browser.css                             (global/win/browser.css)

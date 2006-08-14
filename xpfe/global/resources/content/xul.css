@@ -659,6 +659,10 @@ textbox[type="timed"] {
   -moz-binding: url("chrome://global/content/bindings/textbox.xml#timed-textbox");
 }
 
+textbox[type="number"] {
+  -moz-binding: url("chrome://global/content/bindings/numberbox.xml#numberbox");
+}
+
 /********** autocomplete textbox **********/
 
 textbox[type="autocomplete"] {
@@ -827,6 +831,10 @@ statusbarpanel {
 
 spinbuttons {
   -moz-binding: url("chrome://global/content/bindings/spinbuttons.xml#spinbuttons");
+}
+
+.spinbuttons-button {
+  -moz-user-focus: ignore;
 }
 
 /********** stringbundle **********/
