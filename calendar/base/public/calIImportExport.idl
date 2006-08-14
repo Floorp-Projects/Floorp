@@ -83,8 +83,14 @@ interface calIExporter : nsISupports
 
   /**
    * Export the items into the stream
+   * 
+   * @param aStream  the stream to put the data into
+   * @param aCount   the number of items being exported
+   * @param aItems   an array of items to be exported
+   * @param aTitle   a title the exporter can choose to use
    */
   void exportToStream(in nsIOutputStream aStream,
                       in unsigned long aCount,
-                      [array, size_is(aCount)] in calIItemBase aItems);
+                      [array, size_is(aCount)] in calIItemBase aItems,
+                      in AString aTitle);
 };

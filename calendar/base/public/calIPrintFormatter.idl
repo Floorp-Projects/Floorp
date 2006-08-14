@@ -59,10 +59,18 @@ interface calIPrintFormatter : nsISupports
    * aStart and aEnd may be null, in which case the implementation can
    * show the minimal days needed to show all the events. It can skip
    * months without events, for example.
+   *
+   * @param aStream  the stream to put the html data into
+   * @param aStart   the first date that should be printed
+   * @param aEnd     the last date that should be printed
+   * @param aCount   the number of items being printed
+   * @param aItems   the items to print
+   * @param aTitle   a title for the HTML page
    */
   void formatToHtml(in nsIOutputStream aStream,
                     in calIDateTime aStart,
                     in calIDateTime aEnd,
                     in unsigned long aCount,
-                    [array, size_is(aCount)] in calIItemBase aItems);
+                    [array, size_is(aCount)] in calIItemBase aItems,
+                    in AString aTitle);
 };

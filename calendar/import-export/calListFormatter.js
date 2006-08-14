@@ -64,8 +64,8 @@ function list_getName() {
 calListFormatter.prototype.__defineGetter__("name", calListFormatter.prototype.getName);
 
 calListFormatter.prototype.formatToHtml =
-function list_formatToHtml(aStream, aStart, aEnd, aCount, aItems) {
+function list_formatToHtml(aStream, aStart, aEnd, aCount, aItems, aTitle) {
     var htmlexporter = Components.classes["@mozilla.org/calendar/export;1?type=htmllist"]
                                  .createInstance(Components.interfaces.calIExporter);
-    htmlexporter.exportToStream(aStream, aCount, aItems);
+    htmlexporter.exportToStream(aStream, aCount, aItems, aTitle);
 };

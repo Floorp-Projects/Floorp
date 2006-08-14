@@ -203,7 +203,7 @@ function OnLoadPrintEngine(){
   try {
     stream.init(gTempFile, 0x2A, 0600, 0);
     printformatter.formatToHtml(stream, args.start, args.end,
-                                args.eventList.length, args.eventList);
+                                args.eventList.length, args.eventList, args.title);
     stream.close();
   }
   catch(ex) {

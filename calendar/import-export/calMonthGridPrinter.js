@@ -60,11 +60,11 @@ function monthPrint_getName() {
 calMonthPrinter.prototype.__defineGetter__("name", calMonthPrinter.prototype.getName);
 
 calMonthPrinter.prototype.formatToHtml =
-function monthPrint_format(aStream, aStart, aEnd, aCount, aItems) {
+function monthPrint_format(aStream, aStart, aEnd, aCount, aItems, aTitle) {
     var html = <html/>
     html.appendChild(
             <head>
-                <title>HTMLTitle</title>
+                <title>{aTitle}</title>
                 <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/>
                 <style type='text/css'/>
             </head>);

@@ -65,7 +65,7 @@ function getFileTypes(aCount) {
 
 // not prototype.export. export is reserved.
 calHtmlExporter.prototype.exportToStream =
-function html_exportToStream(aStream, aCount, aItems) {
+function html_exportToStream(aStream, aCount, aItems, aTitle) {
     var dateFormatter = 
         Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
                   .getService(Components.interfaces.calIDateTimeFormatter);
@@ -73,7 +73,7 @@ function html_exportToStream(aStream, aCount, aItems) {
     var html =
         <html>
             <head>
-                <title>HTMLTitle</title>
+                <title>{aTitle}</title>
                 <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/>
                 <style type='text/css'/>
             </head>
