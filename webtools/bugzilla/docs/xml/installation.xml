@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.126 2006/07/31 22:22:51 mkanat%bugzilla.org Exp $ -->
+<!-- $Id: installation.xml,v 1.127 2006/08/14 15:54:25 lpsolit%gmail.com Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -853,7 +853,9 @@
         the Bugzilla Team recommends Apache.) Regardless of which webserver
         you are using, however, ensure that sensitive information is
         not remotely available by properly applying the access controls in
-        <xref linkend="security-webserver-access"/>.
+        <xref linkend="security-webserver-access"/>. You can run
+        <filename>testserver.pl</filename> to check if your web server serves
+        Bugzilla files as expected.
       </para>
 
       <section id="http-apache">
