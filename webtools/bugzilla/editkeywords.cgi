@@ -34,6 +34,25 @@ my $dbh = Bugzilla->dbh;
 my $template = Bugzilla->template;
 my $vars = {};
 
+sub Validate {
+    my ($name, $description) = @_;
+    if ($name eq "") {
+        ThrowUserError("keyword_blank_name");
+    }
+    if ($name =~ /[\s,]/) {
+        ThrowUserError("keyword_invalid_name");
+    }    
+    if ($description eq "") {
+        ThrowUserError("keyword_blank_description");
+    }
+    # It is safe to detaint these values as they are only
+    # used in placeholders.
+    trick_taint($name);
+    $_[0] = $name;
+    trick_taint($description);
+    $_[1] = $description;
+}
+
 sub ValidateKeyID {
     my $id = shift;
 
