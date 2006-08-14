@@ -3432,7 +3432,7 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   for (PRInt32 i = 0; i < count; i++) {
     PRUnichar* str = (PRUnichar*)tagStack.ElementAt(i);
     if (str) {
-      nsCRT::free(str);
+      NS_Free(str);
     }
   }
 
