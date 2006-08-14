@@ -92,6 +92,9 @@ public:
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
+#ifdef NS_DEBUG
+  void DEBUG_VerifyTableRelatedFrames();
+#endif
 protected:
   nsMathMLmtableOuterFrame(nsStyleContext* aContext) : nsTableOuterFrame(aContext) {}
   virtual ~nsMathMLmtableOuterFrame();

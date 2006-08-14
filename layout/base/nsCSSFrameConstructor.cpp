@@ -3546,8 +3546,14 @@ nsCSSFrameConstructor::AdjustParentFrame(nsFrameConstructorState&     aState,
        // Also need to create a pseudo-parent if the child is going to end up
        // with a frame based on something other than display.
        IsSpecialContent(aChildContent, aTag, aNameSpaceID, aChildStyle))) {
-    nsTableCreator tableCreator(aState.mPresShell);
-    nsresult rv = GetPseudoCellFrame(tableCreator, aState, *aParentFrame);
+    nsTableCreator theTableCreator(aState.mPresShell);
+    nsTableCreator* tableCreator = &theTableCreator;
+#ifdef MOZ_MATHML
+    nsMathMLmtableCreator mtableCreator(aState.mPresShell);
+    if (aNameSpaceID == kNameSpaceID_MathML)
+       tableCreator = &mtableCreator;
+#endif
+    nsresult rv = GetPseudoCellFrame(*tableCreator, aState, *aParentFrame);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -6737,7 +6743,6 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
 {
   PRBool    primaryFrameSet = PR_FALSE;
   nsIFrame* newFrame = nsnull;  // the frame we construct
-  nsTableCreator tableCreator(mPresShell); // Used to make table frames.
   PRBool    addToHashTable = PR_TRUE;
   PRBool    addedToFrameList = PR_FALSE;
   nsresult  rv = NS_OK;
@@ -6922,6 +6927,15 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
     // XXX This section now only handles table frames; should be
     // factored out probably
 
+     // Used to make table frames.
+     nsTableCreator theTableCreator(mPresShell);
+     nsTableCreator* tableCreator = &theTableCreator;
+#ifdef MOZ_MATHML
+     nsMathMLmtableCreator mtableCreator(mPresShell);
+     if (aNameSpaceID == kNameSpaceID_MathML)
+        tableCreator = &mtableCreator;
+#endif
+
     // Use the 'display' property to choose a frame type
     switch (aDisplay->mDisplay) {
     case NS_STYLE_DISPLAY_TABLE:
@@ -6934,7 +6948,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
       nsIFrame* innerTable;
       rv = ConstructTableFrame(aState, aContent, 
                                aParentFrame, aStyleContext,
-                               tableCreator, PR_FALSE, aFrameItems, newFrame,
+                               *tableCreator, PR_FALSE, aFrameItems, newFrame,
                                innerTable);
       addedToFrameList = PR_TRUE;
       // Note: table construction function takes care of initializing
@@ -6957,7 +6971,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
         }
       }
       rv = ConstructTableCaptionFrame(aState, aContent, parentFrame,
-                                      aStyleContext, tableCreator, aFrameItems,
+                                      aStyleContext, *tableCreator, aFrameItems,
                                       newFrame, aHasPseudoParent);
       if (NS_SUCCEEDED(rv) && !aHasPseudoParent) {
         aFrameItems.AddChild(newFrame);
@@ -6969,7 +6983,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
     case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
     case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
       rv = ConstructTableRowGroupFrame(aState, aContent, 
-                                       aParentFrame, aStyleContext, tableCreator, 
+                                       aParentFrame, aStyleContext, *tableCreator, 
                                        PR_FALSE, aFrameItems, newFrame, aHasPseudoParent);
       if (NS_SUCCEEDED(rv) && !aHasPseudoParent) {
         aFrameItems.AddChild(newFrame);
@@ -6978,7 +6992,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
 
     case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
       rv = ConstructTableColGroupFrame(aState, aContent, aParentFrame,
-                                       aStyleContext, tableCreator, 
+                                       aStyleContext, *tableCreator, 
                                        PR_FALSE, aFrameItems, newFrame,
                                        aHasPseudoParent);
       if (NS_SUCCEEDED(rv) && !aHasPseudoParent) {
@@ -6988,7 +7002,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
    
     case NS_STYLE_DISPLAY_TABLE_COLUMN:
       rv = ConstructTableColFrame(aState, aContent, aParentFrame,
-                                  aStyleContext, tableCreator, PR_FALSE,
+                                  aStyleContext, *tableCreator, PR_FALSE,
                                   aFrameItems, newFrame, aHasPseudoParent);
       if (NS_SUCCEEDED(rv) && !aHasPseudoParent) {
         aFrameItems.AddChild(newFrame);
@@ -6997,7 +7011,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
   
     case NS_STYLE_DISPLAY_TABLE_ROW:
       rv = ConstructTableRowFrame(aState, aContent, aParentFrame,
-                                  aStyleContext, tableCreator, PR_FALSE,
+                                  aStyleContext, *tableCreator, PR_FALSE,
                                   aFrameItems, newFrame, aHasPseudoParent);
       if (NS_SUCCEEDED(rv) && !aHasPseudoParent) {
         aFrameItems.AddChild(newFrame);
@@ -7008,7 +7022,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
       {
         nsIFrame* innerTable;
         rv = ConstructTableCellFrame(aState, aContent, aParentFrame,
-                                     aStyleContext, tableCreator, 
+                                     aStyleContext, *tableCreator, 
                                      PR_FALSE, aFrameItems, newFrame,
                                      innerTable, aHasPseudoParent);
         if (NS_SUCCEEDED(rv) && !aHasPseudoParent) {
@@ -7202,7 +7216,8 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     // <mtable> is an inline-table -- but this isn't yet supported.
     // What we do here is to wrap the table in an anonymous containing
     // block so that it can mix better with other surrounding MathML markups
-    // XXXbz this is wrong if the <mtable> is positioned or floated.
+    // This assumes that the <mtable> is not positioned or floated.
+    // (MathML does not allow/support positioned or floated elements at all.)
 
     nsStyleContext* parentContext = aParentFrame->GetStyleContext();
     nsStyleSet *styleSet = mPresShell->StyleSet();
