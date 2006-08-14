@@ -83,7 +83,9 @@
 
 #include "nsIAppStartup.h"
 
+#ifdef MOZ_XUL
 #include "nsIBrowserHistory.h"
+#endif
 #include "nsDocShellCID.h"
 
 #include "nsIObserverService.h"

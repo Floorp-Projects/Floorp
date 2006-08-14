@@ -195,10 +195,12 @@ COMPONENT_LIBS += \
 	$(NULL)
 else
 ifdef MOZ_MORK
+ifdef MOZ_XUL
 COMPONENT_LIBS += \
 	mork \
 	tkhstory \
 	$(NULL)
+endif
 endif
 endif
 
