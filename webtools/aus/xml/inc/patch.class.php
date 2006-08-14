@@ -168,11 +168,8 @@ class Patch extends AUS_Object {
      */
     function findPatch($product,$platform,$locale,$version,$build,$channel=null) {
 
-        // Determine the branch of the client's version.
-        $branchVersion = $this->getBranch($version);
-
         // If a specific update exists for the specified channel, it takes priority over the branch update.
-        if (!empty($channel) && $this->setPath($product,$platform,$locale,$branchVersion,$build,3,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
+        if (!empty($channel) && $this->setPath($product,$platform,$locale,$version,$build,3,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
             $this->setSnippet($this->path); 
             $this->setVar('isPatch',true,true);
             return true;
@@ -187,12 +184,16 @@ class Patch extends AUS_Object {
             $fallbackChannel = $buf[0];
         
             // Do a check for the fallback update.  If we find a valid fallback update, we can offer it. 
-            if (!empty($fallbackChannel) && $this->setPath($product,$platform,$locale,$branchVersion,$build,3,$fallbackChannel) && file_exists($this->path) && filesize($this->path) > 0) {
+            if (!empty($fallbackChannel) && $this->setPath($product,$platform,$locale,$version,$build,3,$fallbackChannel) && file_exists($this->path) && filesize($this->path) > 0) {
                 $this->setSnippet($this->path); 
                 $this->setVar('isPatch',true,true);
                 return true;
             }
         }
+
+        // Determine the branch of the client's version.
+        $branchVersion = $this->getBranch($version);
+
 
         // Otherwise, if it is a complete patch and a nightly channel, force the complete update to take the user to the latest build.
         if ($this->isComplete() && $this->isNightlyChannel($channel)) {
