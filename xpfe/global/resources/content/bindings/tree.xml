@@ -125,8 +125,8 @@
             // an odd number and 2 positions above its next sibling
             var cols = [];
             var i;
-            for (i = 0; i < this.columns.count; ++i)
-              cols.push(this.columns[i].element);
+            for (var col = this.columns.getFirstColumn(); col; col = col.getNext())
+              cols.push(col.element);
             for (i = 0; i < cols.length; ++i)
               cols[i].setAttribute("ordinal", (i*2)+1);
 
