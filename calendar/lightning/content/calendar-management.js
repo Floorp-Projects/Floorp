@@ -24,7 +24,7 @@ function addCalendarToTree(aCalendar)
 
 function removeCalendarFromTree(aCalendar)
 {
-    var boxobj = document.getElementById("calendarTree").treeBoxObject;
+    var calTree = document.getElementById("calendarTree")
 
     // Special trick to compare interface pointers, since normal, ==
     // comparison can fail due to javascript wrapping.
@@ -32,7 +32,15 @@ function removeCalendarFromTree(aCalendar)
                          .createInstance(Components.interfaces.nsISupportsInterfacePointer);
     sip.data = aCalendar;
     sip.dataIID = Components.interfaces.calICalendar;
-    boxobj.rowCountChanged(getCalendars().indexOf(sip.data), -1);
+    var index = getCalendars().indexOf(sip.data);
+    calTree.boxObject.rowCountChanged(index, -1);
+
+    // Just select the new last row, if we removed the last listed calendar
+    if (index == calTree.view.rowCount-1) {
+        index--;
+    }
+
+    calTree.view.selection.select(index);
 }
 
 var ltnCalendarManagerObserver = {
