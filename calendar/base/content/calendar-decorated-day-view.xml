@@ -58,18 +58,9 @@
 
         <implementation implements="calIDecoratedView">
 	    <constructor><![CDATA[
-                // get default start/end times from prefs and set on the
-                // view.
-                this.mStartMin = getPrefSafe(
-                                 "calendar.view.defaultstarthour", 8) * 60;
-                this.mEndMin = getPrefSafe(
-                               "calendar.view.defaultendhour", 17) * 60;
-
+                // We don't care about weekends in the day view
                 var viewElement = document.getAnonymousElementByAttribute(
                                   this, "anonid", "view-element");
-                viewElement.setStartEndMinutes(this.mStartMin,
-                                               this.mEndMin);
-                // We don't care about weekends in the day view
                 viewElement.daysOffArray = [];
 
                 // add a preference observer to monitor changes
@@ -88,9 +79,6 @@
                 return;
             ]]></destructor>
 
-            <field name="mStartMin">8 * 60</field>
-            <field name="mEndMin">17 * 60</field>
-
             <field name="mPrefObserver"><![CDATA[
             ({ calView: this,
                observe: function calDecWeekViewPrefChange(subj, topic, pref) {
@@ -99,21 +87,6 @@
 
                    switch (pref) {
 
-                   case "calendar.view.defaultstarthour":
-                       this.calView.mStartMin = subj.getIntPref(pref) * 60;
-                       var viewElem = document.getAnonymousElementByAttribute(
-                                      this.calView, "anonid", "view-element");
-                       viewElem.setStartEndMinutes(this.calView.mStartMin,
-                                                   this.calView.mEndMin);
-                       break;
-
-                   case "calendar.view.defaultendhour":
-                       this.calView.mEndMin = subj.getIntPref(pref) * 60;
-                       viewElem = document.getAnonymousElementByAttribute(
-                                  this.calView, "anonid", "view-element");
-                       viewElem.setStartEndMinutes(this.calView.mStartMin, 
-                                                   this.calView.mEndMin);
-                       break;
                    case "calendar.timezone.local":
                        var viewElem = document.getAnonymousElementByAttribute(
                                       this.calView, "anonid", "view-element");

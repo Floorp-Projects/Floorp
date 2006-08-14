@@ -61,8 +61,8 @@
 
     <implementation>
       <field name="mPixPerMin">0.6</field>
-      <field name="mStartMin">8*60</field>
-      <field name="mEndMin">20*60</field>
+      <field name="mStartMin">0*60</field>
+      <field name="mEndMin">24*60</field>
 
       <constructor>
         this.relayout();
@@ -92,26 +92,6 @@
       <property name="pixelsPerMinute"
         onget="return this.mPixPerMin"
         onset="if (this.mPixPerMin != val) { this.mPixPerMin = val; this.relayout(); } return val;"/>
-
-      <method name="setStartEndMinutes">
-        <parameter name="aStartMin"/>
-        <parameter name="aEndMin"/>
-        <body><![CDATA[
-          if (aStartMin < 0 || aStartMin > aEndMin)
-              throw Components.results.NS_ERROR_INVALID_ARG;
-          if (aEndMin < 0 || aEndMin > 24*60)
-              throw Components.results.NS_ERROR_INVALID_ARG;
-
-          if (this.mStartMin != aStartMin ||
-              this.mEndMin != aEndMin)
-          {
-              this.mStartMin = aStartMin;
-              this.mEndMin = aEndMin;
-
-              this.relayout();
-          }
-        ]]></body>
-      </method>
 
       <method name="relayout">
         <body><![CDATA[
@@ -282,8 +262,8 @@
 
       <!-- fields -->
       <field name="mPixPerMin">0.6</field>
-      <field name="mStartMin">8*60</field>
-      <field name="mEndMin">20*60</field>
+      <field name="mStartMin">0*60</field>
+      <field name="mEndMin">24*60</field>
       <field name="mEvents">new Array()</field>
       <field name="mEventMap">null</field>
       <field name="mCalendarView">null</field>
@@ -389,26 +369,6 @@
         onget="return this.mEvents"/>
 
       <!-- methods -->
-
-      <method name="setStartEndMinutes">
-        <parameter name="aStartMin"/>
-        <parameter name="aEndMin"/>
-        <body><![CDATA[
-          if (aStartMin < 0 || aStartMin > aEndMin)
-              throw Components.results.NS_ERROR_INVALID_ARG;
-          if (aEndMin < 0 || aEndMin > 24*60)
-              throw Components.results.NS_ERROR_INVALID_ARG;
-
-          if (this.mStartMin != aStartMin ||
-              this.mEndMin != aEndMin)
-          {
-              this.mStartMin = aStartMin;
-              this.mEndMin = aEndMin;
-
-              this.relayout();
-          }
-        ]]></body>
-      </method>
 
       <method name="selectOccurrence">
         <parameter name="aOccurrence"/>
@@ -1611,7 +1571,6 @@
         this.reorient();
       ]]></constructor>
 
-      <field name="mLastSize">0</field>
       <method name="onResize">
         <parameter name="aRealSelf"/>
         <body><![CDATA[
@@ -1619,35 +1578,21 @@
           if (aRealSelf) {
             self = aRealSelf;
           }
-
-          var timebar = document.getAnonymousElementByAttribute(self, "anonid", "timebar");
-          var daybox = document.getAnonymousElementByAttribute(self, "anonid", "daybox");
-
-          var orient = self.orient;
+          var childbox = document.getAnonymousElementByAttribute(self, "anonid", "childbox");
           var size;
-          if (self.orient == "horizontal")
-            size = daybox.boxObject.width;
-          else
-            size = daybox.boxObject.height;
-
-          if (self.mLastSize > size) {
-            self.pixelsPerMinute = 0.01;
-            self.mLastSize = size;
-
-            if (self.orient == "horizontal")
-              size = daybox.boxObject.width;
-            else
-              size = daybox.boxObject.height;
+          var minPixelsPerMinute;
+          if (self.orient == "horizontal") {
+            size = childbox.boxObject.width;
+            minPixelsPerMinute = self.mMinHorizontalPixelsPerMinute;
+          } else {
+            size = childbox.boxObject.height;
+            minPixelsPerMinute = self.mMinVerticalPixelsPerMinute;
           }
-
-          self.mLastSize = size;
-
-          //self.removeAttribute("hidden");
           var minutes = self.mEndMin - self.mStartMin;
           var ppm = size / minutes;
-          ppm = Math.round(ppm * 10) / 10;
-          if (ppm < self.mMinPPM) {
-            ppm = self.mMinPPM;
+          ppm = Math.floor(ppm * 10) / 10;
+          if (ppm < minPixelsPerMinute) {
+            ppm = minPixelsPerMinute;
           }
           self.pixelsPerMinute = ppm;
         ]]></body>
@@ -1663,14 +1608,13 @@
       <field name="mDateColumns">null</field>
       <field name="mBatchCount">0</field>
       <field name="mPixPerMin">0.6</field>
-      <field name="mMinPPM">0.4</field>
+      <field name="mMinHorizontalPixelsPerMinute">1.0</field>
+      <field name="mMinVerticalPixelsPerMinute">0.4</field>
       <field name="mSelectedItem">null</field>
       <field name="mSelectedDayCol">null</field>
 
-      <field name="mDefaultStartMin">8*60</field>
-      <field name="mDefaultEndMin">20*60</field>
-      <field name="mStartMin">8*60</field>
-      <field name="mEndMin">20*60</field>
+      <field name="mStartMin">0*60</field>
+      <field name="mEndMin">24*60</field>
       <field name="mTasksInView">false</field>
       <field name="mDaysOffArray">[0,6]</field>
       <field name="mTimezone">"UTC"</field>
@@ -1757,11 +1701,6 @@
                     this.calView.doAddEvent(occ);
                 }
 
-                var chunks = this.calView.createChunksForNonDateItems(occs);
-                if (this.calView.readjustStartEndMinutes(chunks, false)) {
-                    this.calView.propagateStartEndMinutes();
-                }
-
                 return;
             },
             onModifyItem: function onModifyItem(aNewItem, aOldItem) {
@@ -1801,8 +1740,6 @@
                 for each (var occ in occs) {
                     this.calView.doAddEvent(occ);
                 }
-
-                this.calView.readjust();
             },
             onDeleteItem: function onDeleteItem(aItem) {
                 if (this.mBatchCount) {
@@ -1823,8 +1760,6 @@
                 for each (var occ in occs) {
                     this.calView.doDeleteEvent(occ);
                 }
-
-                this.calView.readjust();
             },
             onError: function onError(aErrNo, aMessage) { },
 
@@ -1875,12 +1810,6 @@
                   return true;
               }
               aItems = aItems.filter(hasGoodDates);
-
-              var chunks = this.calView.createChunksForNonDateItems(aItems);
-
-              if (this.calView.readjustStartEndMinutes(chunks, false)) {
-                  this.calView.propagateStartEndMinutes();
-              }
 
               for each (var item in aItems) {
                   this.calView.doAddEvent(item);
@@ -2205,29 +2134,6 @@
         <setter>this.setAttribute("orient", val); return val;</setter>
       </property>
 
-      <method name="setStartEndMinutes">
-	<parameter name="aStartMin"/>
-        <parameter name="aEndMin"/>
-        <body><![CDATA[
-          if (aStartMin < 0 || aStartMin > aEndMin)
-              throw Components.results.NS_ERROR_INVALID_ARG;
-          if (aEndMin < 0 || aEndMin > 24*60)
-              throw Components.results.NS_ERROR_INVALID_ARG;
-
-          if (this.mDefaultStartMin != aStartMin || 
-              this.mDefaultEndMin != aEndMin || 
-              this.mStartMin != aStartMin || this.mEndMin != aEndMin)
-          {
-              this.mDefaultStartMin = aStartMin;
-              this.mDefaultEndMin = aEndMin;
-              this.mStartMin = aStartMin;
-              this.mEndMin = aEndMin;
-
-              this.refresh();
-          }
-	]]></body>
-      </method>
-
       <method name="setAttribute">
         <parameter name="aAttr"/>
         <parameter name="aVal"/>
@@ -2257,6 +2163,7 @@
 
       <method name="reorient">
         <body><![CDATA[
+          var firstMinute = this.getFirstVisibleMinute();
           var orient = this.getAttribute("orient");
           var otherorient = "vertical";
           if (!orient) orient = "horizontal";
@@ -2340,6 +2247,7 @@
               }
           }
           this.refresh();
+          this.scrollToMinute(firstMinute);          
         ]]></body>
       </method>
 
@@ -2347,11 +2255,6 @@
         <body><![CDATA[
           if (!this.startDate || !this.endDate)
             return;
-
-          // we're throwing out all the events and starting over, we
-          // should reset to the default size
-          this.mStartMin = this.mDefaultStartMin;
-          this.mEndMin = this.mDefaultEndMin;
 
           // recreate our columns
           this.relayout();
@@ -2379,6 +2282,7 @@
         ]]></body>
       </method>
 
+      <field name="mRelayOutCalled">false</field>
       <method name="relayout">
         <body><![CDATA[
           function createXULElement(el) {
@@ -2411,10 +2315,6 @@
           if (!computedDateList || computedDateList.length == 0)
               return;
 
-          // update timebar
-          var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
-          timebar.setStartEndMinutes(this.mStartMin, this.mEndMin);
-
           var calView = this;
           function setUpDayEventsBox(aDayBox) {
               aDayBox.setAttribute("class", "calendar-event-column-" + (counter % 2 == 0 ? "even" : "odd"));
@@ -2422,7 +2322,6 @@
               aDayBox.setAttribute("item-context", calView.getAttribute("item-context") || calView.getAttribute("context"));
               aDayBox.startLayoutBatchChange();
               aDayBox.date = d;
-              aDayBox.setStartEndMinutes(calView.mStartMin, calView.mEndMin);
               aDayBox.setAttribute("orient", orient);
               aDayBox.calendarView = calView;
           }
@@ -2541,27 +2440,14 @@
           // XXX constructor and the reorient method as soon as the views
           // XXX are constructed statically (24 hrs).
           this.adjustScrollBarSpacers();
-        ]]></body>
-      </method>
 
-      <method name="propagateStartEndMinutes">
-        <body><![CDATA[
-          // update timebar
-          var timebar = document.getAnonymousElementByAttribute(this, 
-                                                                "anonid",
-                                                                "timebar");
-          timebar.setStartEndMinutes(this.mStartMin, this.mEndMin);
-
-          // fix pixels-per-minute
-          this.onResize();
-
-          for each (var d in this.mDateColumns) {
-              // each of these calls will cause the column in question
-              // to call relayout on itself
-              d.column.setStartEndMinutes(this.mStartMin, this.mEndMin);
+          // scroll to 8 a.m. the first time relayout is called
+          // XXX As soon as working hours are available, 8 a.m. will change to
+          // XXX the first working hour.
+          if (!this.mRelayOutCalled) {
+              this.mRelayOutCalled = true;
+              this.scrollToMinute(8 * 60);
           }
-
-          return;
         ]]></body>
       </method>
 
@@ -2697,141 +2583,6 @@
         ]]></body>
       </method>
 
-      <method name="readjustStartEndMinutes">
-        <parameter name="aChunks"/>
-        <parameter name="aIsAllChunks"/>
-        <body><![CDATA[
-          var hasChanged = false;
-          const MINS_PER_HOUR = 60;
-          const DAY_START_MIN = 0 * MINS_PER_HOUR;
-          const DAY_END_MIN = 24 * MINS_PER_HOUR;
-
-          // Start at the existing boundaries if aIsAllChunks is set,
-          // since in that case, we know that the boundaries will only
-          // be expanding.  Otherwise, start at the defaults.
-          var earliestChunkStartMin = 
-              (aIsAllChunks ? this.mDefaultStartMin : this.mStartMin);
-          var latestChunkEndMin = 
-              (aIsAllChunks ? this.mDefaultEndMin : this.mEndMin);
-
-          for each (var chunk in aChunks) {
-
-              if (chunk.startMinute < earliestChunkStartMin) {
-                  earliestChunkStartMin = chunk.startMinute;
-              }
-
-              if (chunk.endMinute > latestChunkEndMin) {
-                  latestChunkEndMin = chunk.endMinute;
-              }
-
-              // break, if the start and end time match the day range
-              if (earliestChunkStartMin <= DAY_START_MIN
-                  && latestChunkEndMin >= DAY_END_MIN) {
-                  break;
-              }
-          }
-
-          // round down
-          if (earliestChunkStartMin % MINS_PER_HOUR) {
-              earliestChunkStartMin -= (earliestChunkStartMin % MINS_PER_HOUR);
-          }
-
-          // round up
-          if (latestChunkEndMin % MINS_PER_HOUR) {
-              latestChunkEndMin += MINS_PER_HOUR - 
-                                 (latestChunkEndMin % MINS_PER_HOUR);
-          }
-
-          // The only reason try/catch is necessary here is to work
-          // around XBL lossage.  Without it, control never makes it
-          // through the try block, even though no exception is ever thrown!
-          try {
-              if (aIsAllChunks) {
-                  // Since we've looked at all the in-view chunks,
-                  // it's safe to either shrink or expand the time shown.
-                  // Shrinking might be necessary when switching
-                  // weeks, or if an event has been deleted, moved or
-                  // shrunk out of the "non-default" area.
-                  if (this.mStartMin != earliestChunkStartMin) {
-                      this.mStartMin = earliestChunkStartMin;
-                      hasChanged = true;
-                  }
-                  if (this.mEndMin != latestChunkEndMin) {
-                      this.mEndMin = latestChunkEndMin;
-                      hasChanged = true;
-                  }
-              } else {
-                  // here we are doing incremental adjustment, so we 
-                  // can only expand the time shown, never shrink it
-                  if (this.mStartMin > earliestChunkStartMin) {
-                      this.mStartMin = earliestChunkStartMin;
-                      hasChanged = true;
-                  } 
-                  if (this.mEndMin < latestChunkEndMin) {
-                      this.mEndMin = latestChunkEndMin;
-                      hasChanged = true;
-                  }
-              }
-          } catch (e) {
-              Components.utils.reportError("Unexpected exception in "
-              + "readjustStartEndMinutes: " + e);
-              throw e;
-          }
-          return hasChanged;
-        ]]></body>
-      </method>
-
-      <method name="createChunksForNonDateItems">
-        <parameter name="aItems"/>
-        <body><![CDATA[
-
-          var chunks = new Array();
-          for each (var item in aItems) {
-              var startDate = item.startDate || item.entryDate;
-              if (startDate.isDate) {
-                  continue;
-              }
-
-              var cols = this.findColumnsForItem(item);
-              if (!cols.length) {
-                  continue;
-              }
-
-              // add a chunk for each date that has one
-              for each (var col in cols) {
-                  chunks.push(col.column.createChunk(item));
-              }
-          }
-
-          return chunks;
-        ]]></body>
-      </method>
-
-
-      <method name="getAllChunks">
-        <body><![CDATA[
-          var chunks = new Array();
-          for each (var col in this.mDateColumns) {
-              for each (var chunk in col.column.mEvents) {
-                  chunks.push(chunk);
-              }
-          }
-          return chunks;
-        ]]></body>
-      </method>
-
-      <method name="readjust">
-        <body><![CDATA[
-          if (this.readjustStartEndMinutes(this.getAllChunks(), true)) {
-              var selectedDay = this.selectedDay;
-              this.propagateStartEndMinutes();
-              if (selectedDay) {
-                  this.selectedDay = selectedDay;
-              }
-          }
-        ]]></body>
-      </method>
-
       <method name="today">
         <body><![CDATA[
           var date = Components.classes["@mozilla.org/calendar/datetime;1"]
@@ -2866,6 +2617,44 @@
           var labelScrollBarSpacer = document.getAnonymousElementByAttribute(
                                      this, "anonid", "labelscrollbarspacer");
           labelScrollBarSpacer.setAttribute(propertyName, propertyValue);
+        ]]></body>
+      </method>
+
+      <method name="getFirstVisibleMinute">
+        <body><![CDATA[
+          var minute = 0;
+          var childbox = document.getAnonymousElementByAttribute(this, "anonid", "childbox");
+          var scrollBoxObject = childbox.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+          if (scrollBoxObject != null) {
+            var x = {};
+            var y = {};
+            scrollBoxObject.getPosition(x, y);
+            if (childbox.getAttribute("orient") == "horizontal") {
+              minute = Math.round(y.value/this.mPixPerMin);
+            } else {
+              minute = Math.round(x.value/this.mPixPerMin);
+            }
+          }
+          return minute;
+        ]]></body>
+      </method>
+
+      <method name="scrollToMinute">
+        <parameter name="aMinute"/>
+        <body><![CDATA[
+          var childbox = document.getAnonymousElementByAttribute(this, "anonid", "childbox");
+          var scrollBoxObject = childbox.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+          if (scrollBoxObject != null) {
+            var x = {};
+            var y = {};
+            scrollBoxObject.getPosition(x, y);
+            var pos = aMinute * this.mPixPerMin;
+            if (childbox.getAttribute("orient") == "horizontal") {
+              scrollBoxObject.scrollTo(x.value, pos);
+            } else {
+              scrollBoxObject.scrollTo(pos, y.value);
+            }
+          }
         ]]></body>
       </method>
     </implementation>

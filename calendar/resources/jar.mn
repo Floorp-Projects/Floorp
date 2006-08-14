@@ -80,7 +80,6 @@ calendar.jar:
     content/calendar/preferences/timezones.js     (/calendar/base/content/preferences/timezones.js)
     content/calendar/preferences/timezones.xul    (/calendar/base/content/preferences/timezones.xul)
     content/calendar/preferences/views.xul        (/calendar/base/content/preferences/views.xul)
-    content/calendar/preferences/views.js         (/calendar/base/content/preferences/views.js)
 % skin calendar classic/1.0 %skin/classic/calendar/
 #ifdef XP_MACOSX
     skin/classic/calendar/calendar-views.css  (/calendar/base/themes/pinstripe/calendar-views.css)

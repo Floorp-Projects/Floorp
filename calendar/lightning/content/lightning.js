@@ -51,10 +51,6 @@ pref("calendar.alarms.onfortodos", 0);
 pref("calendar.alarms.todoalarmlen", 15);
 pref("calendar.alarms.todoalarmunit", "minutes");
 
-// start and end hour for day and week view
-pref("calendar.view.defaultstarthour", 8);
-pref("calendar.view.defaultendhour", 17);
-
 // 0=Sunday, 1=Monday, 2=Tuesday, etc.  One day we might want to move this to
 // a locale specific file.
 pref("calendar.week.start", 0);

@@ -54,9 +54,7 @@
 <overlay id="ViewsPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-    <prefpane id="paneViews" onpaneload="gViewsPane.init()">
-        <script type="application/x-javascript"
-                src="chrome://calendar/content/preferences/views.js"/>
+    <prefpane id="paneViews">
 
         <preferences>
             <preference id="calendar.week.start"
@@ -90,12 +88,6 @@
                         name="calendar.week.d6saturdaysoff"
                         type="bool"
                         inverted="true"/>
-            <preference id="calendar.view.defaultstarthour"
-                        name="calendar.view.defaultstarthour"
-                        type="int"/>
-            <preference id="calendar.view.defaultendhour"
-                        name="calendar.view.defaultendhour"
-                        type="int"/>
             <preference id="calendar.weeks.inview"
                         name="calendar.weeks.inview"
                         type="int"/>
@@ -163,81 +155,6 @@
                           accesskey="&day.7.Ddd.accesskey;"
                           orient="vertical"
                           preference="calendar.week.d6saturdaysoff"/>
-            </hbox>
-        </groupbox>
-
-        <groupbox>
-            <caption label="&pref.calendar.view.weekanddayview.caption;"/>
-            <hbox align="center">
-                <caption label="&pref.calendar.view.restrict.label;"
-                         accesskey="&pref.calendar.view.restrict.accesskey;"
-                         control="daystarthour"/>
-                <menulist id="daystarthour"
-                          oncommand="gViewsPane.updateViewEndMenu(this.value);"
-                          preference="calendar.view.defaultstarthour">
-                    <menupopup id="daystarthourpopup">
-                        <menuitem label="&time.midnight;" value="0"/>
-                        <menuitem label="&time.1;"        value="1"/>
-                        <menuitem label="&time.2;"        value="2"/>
-                        <menuitem label="&time.3;"        value="3"/>
-                        <menuitem label="&time.4;"        value="4"/>
-                        <menuitem label="&time.5;"        value="5"/>
-                        <menuitem label="&time.6;"        value="6"/>
-                        <menuitem label="&time.7;"        value="7"/>
-                        <menuitem label="&time.8;"        value="8"/>
-                        <menuitem label="&time.9;"        value="9"/>
-                        <menuitem label="&time.10;"       value="10"/>
-                        <menuitem label="&time.11;"       value="11"/>
-                        <menuitem label="&time.noon;"     value="12"/>
-                        <menuitem label="&time.13;"       value="13"/>
-                        <menuitem label="&time.14;"       value="14"/>
-                        <menuitem label="&time.15;"       value="15"/>
-                        <menuitem label="&time.16;"       value="16"/>
-                        <menuitem label="&time.17;"       value="17"/>
-                        <menuitem label="&time.18;"       value="18"/>
-                        <menuitem label="&time.19;"       value="19"/>
-                        <menuitem label="&time.20;"       value="20"/>
-                        <menuitem label="&time.21;"       value="21"/>
-                        <menuitem label="&time.22;"       value="22"/>
-                        <menuitem label="&time.23;"       value="23"/>
-                    </menupopup>
-                </menulist>
-                <caption label="&pref.calendar.view.endtime.label;"
-                         accesskey="&pref.calendar.view.endtime.accesskey;"
-                         control="dayendhour"/>
-                <menulist id="dayendhour"
-                          oncommand="gViewsPane.updateViewStartMenu(this.value);"
-                          preference="calendar.view.defaultendhour">
-                    <menupopup id="dayendhourpopup">
-                        <menuitem label="&time.1;"        value="1"/>
-                        <menuitem label="&time.2;"        value="2"/>
-                        <menuitem label="&time.3;"        value="3"/>
-                        <menuitem label="&time.4;"        value="4"/>
-                        <menuitem label="&time.5;"        value="5"/>
-                        <menuitem label="&time.6;"        value="6"/>
-                        <menuitem label="&time.7;"        value="7"/>
-                        <menuitem label="&time.8;"        value="8"/>
-                        <menuitem label="&time.9;"        value="9"/>
-                        <menuitem label="&time.10;"       value="10"/>
-                        <menuitem label="&time.11;"       value="11"/>
-                        <menuitem label="&time.noon;"     value="12"/>
-                        <menuitem label="&time.13;"       value="13"/>
-                        <menuitem label="&time.14;"       value="14"/>
-                        <menuitem label="&time.15;"       value="15"/>
-                        <menuitem label="&time.16;"       value="16"/>
-                        <menuitem label="&time.17;"       value="17"/>
-                        <menuitem label="&time.18;"       value="18"/>
-                        <menuitem label="&time.19;"       value="19"/>
-                        <menuitem label="&time.20;"       value="20"/>
-                        <menuitem label="&time.21;"       value="21"/>
-                        <menuitem label="&time.22;"       value="22"/>
-                        <menuitem label="&time.23;"       value="23"/>
-                        <menuitem label="&time.midnight;" value="24"/>
-                    </menupopup>
-                </menulist>
-            </hbox>
-            <hbox class="indent">
-                <description>&pref.hour.help.description;</description>
             </hbox>
         </groupbox>
 
