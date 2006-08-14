@@ -92,7 +92,7 @@ radio[pane=paneAdvanced]:hover, radio[pane=paneAdvanced][selected="true"] {
 	-moz-image-region: rect(32px, 160px, 64px, 128px)
 }
 
-/* General Pane */
+/* Main Pane */
 #browserHomePage {
   padding-top: 2px;
   padding-bottom: 3px;
