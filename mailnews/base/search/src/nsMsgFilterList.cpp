@@ -259,6 +259,9 @@ nsMsgFilterList::SetLogStream(nsIOutputStream *aLogStream)
   return NS_OK;
 }
 
+#define LOG_HEADER "<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"></head>"
+#define LOG_HEADER_LEN (strlen(LOG_HEADER))
+
 NS_IMETHODIMP
 nsMsgFilterList::GetLogStream(nsIOutputStream **aLogStream)
 {
@@ -290,6 +293,22 @@ nsMsgFilterList::GetLogStream(nsIOutputStream **aLogStream)
 
     if (!m_logStream)
       return NS_ERROR_FAILURE;
+
+    PRInt64 fileSize;
+    rv = logFile->GetFileSize(&fileSize);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    PRUint32 fileLen;;
+    LL_L2UI(fileLen, fileSize);
+    // write the header at the start
+    if (fileLen == 0)
+    {
+      PRUint32 writeCount;
+      
+      rv = m_logStream->Write(LOG_HEADER, LOG_HEADER_LEN, &writeCount);
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ASSERTION(writeCount == LOG_HEADER_LEN, "failed to write out log header");
+    }
   }
  
   NS_ADDREF(*aLogStream = m_logStream);

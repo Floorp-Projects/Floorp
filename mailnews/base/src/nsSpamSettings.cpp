@@ -56,6 +56,8 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsIStringBundle.h"
+#include "nsDateTimeFormatCID.h"
 
 nsSpamSettings::nsSpamSettings()
 {
@@ -218,6 +220,9 @@ nsSpamSettings::SetLogStream(nsIOutputStream *aLogStream)
   return NS_OK;
 }
 
+#define LOG_HEADER "<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"></head>"
+#define LOG_HEADER_LEN (strlen(LOG_HEADER))
+
 NS_IMETHODIMP
 nsSpamSettings::GetLogStream(nsIOutputStream **aLogStream)
 {
@@ -235,6 +240,22 @@ nsSpamSettings::GetLogStream(nsIOutputStream **aLogStream)
                                    PR_CREATE_FILE | PR_WRONLY | PR_APPEND,
                                    0600);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    PRInt64 fileSize;
+    rv = logFile->GetFileSize(&fileSize);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    PRUint32 fileLen;
+    LL_L2UI(fileLen, fileSize);
+    // write the header at the start
+    if (fileLen == 0)
+    {
+      PRUint32 writeCount;
+      
+      rv = mLogStream->Write(LOG_HEADER, LOG_HEADER_LEN, &writeCount);
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ASSERTION(writeCount == LOG_HEADER_LEN, "failed to write out log header");
+    }
   }
  
   NS_ADDREF(*aLogStream = mLogStream);
@@ -485,31 +506,54 @@ NS_IMETHODIMP nsSpamSettings::LogJunkHit(nsIMsgDBHdr *aMsgHdr, PRBool aMoveMessa
     return NS_OK;
 
   PRTime date;
-  char dateStr[40];	/* 30 probably not enough */
   
-  nsXPIDLCString author;
-  nsXPIDLCString subject;
+  nsXPIDLString authorValue;
+  nsXPIDLString subjectValue;
+  nsXPIDLString dateValue;
   
-  rv = aMsgHdr->GetDate(&date);
+  (void)aMsgHdr->GetDate(&date);
   PRExplodedTime exploded;
   PR_ExplodeTime(date, PR_LocalTimeParameters, &exploded);
-  // XXX Temporary until logging is fully localized
-  PR_FormatTimeUSEnglish(dateStr, sizeof(dateStr), "%Y-%m-%d %H:%M:%S", &exploded);
+
+  if (!mDateFormatter)
+  {
+    mDateFormatter = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!mDateFormatter)
+    {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  mDateFormatter->FormatPRExplodedTime(nsnull, kDateFormatShort,
+                                      kTimeFormatSeconds, &exploded, 
+                                      dateValue);
   
-  aMsgHdr->GetAuthor(getter_Copies(author));
-  aMsgHdr->GetSubject(getter_Copies(subject));
+  (void)aMsgHdr->GetMime2DecodedAuthor(getter_Copies(authorValue));
+  (void)aMsgHdr->GetMime2DecodedSubject(getter_Copies(subjectValue));
   
   nsCString buffer;
   // this is big enough to hold a log entry.  
   // do this so we avoid growing and copying as we append to the log.
   buffer.SetCapacity(512);  
   
-  buffer = "Detected junk message from ";
-  buffer +=  (const char*)author;
-  buffer +=  " - ";
-  buffer +=  (const char *)subject;
-  buffer +=  " at ";
-  buffer +=  dateStr;
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = bundleService->CreateBundle("chrome://messenger/locale/filter.properties",
+    getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  const PRUnichar *junkLogDetectFormatStrings[3] = { authorValue.get(), subjectValue.get(), dateValue.get() };
+  nsXPIDLString junkLogDetectStr;
+  rv = bundle->FormatStringFromName(
+    NS_LITERAL_STRING("junkLogDetectStr").get(),
+    junkLogDetectFormatStrings, 3,
+    getter_Copies(junkLogDetectStr));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  buffer += NS_ConvertUTF16toUTF8(junkLogDetectStr);
   buffer +=  "\n";
   
   if (aMoveMessage) {
@@ -518,12 +562,20 @@ NS_IMETHODIMP nsSpamSettings::LogJunkHit(nsIMsgDBHdr *aMsgHdr, PRBool aMoveMessa
     
     nsXPIDLCString junkFolderURI;
     rv = GetSpamFolderURI(getter_Copies(junkFolderURI));
-    NS_ENSURE_SUCCESS(rv,rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    buffer += "Move message id = ";
-    buffer += msgId.get();
-    buffer += " to ";
-    buffer += junkFolderURI.get();
+    NS_ConvertASCIItoUTF16 msgIdValue(msgId);
+    NS_ConvertASCIItoUTF16 junkFolderURIValue(junkFolderURI);
+    
+    const PRUnichar *logMoveFormatStrings[2] = { msgIdValue.get(), junkFolderURIValue.get() };
+    nsXPIDLString logMoveStr;
+    rv = bundle->FormatStringFromName(
+      NS_LITERAL_STRING("logMoveStr").get(),
+      logMoveFormatStrings, 2,
+      getter_Copies(logMoveStr));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    buffer += NS_ConvertUTF16toUTF8(logMoveStr);
     buffer += "\n";
   }
 

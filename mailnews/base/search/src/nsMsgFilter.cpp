@@ -59,7 +59,8 @@
 #include "nsIImportService.h"
 #include "nsISupportsObsolete.h"
 #include "nsIOutputStream.h"
-#include "nsEscape.h"
+#include "nsIStringBundle.h"
+#include "nsDateTimeFormatCID.h"
 
 static const char *kImapPrefix = "//imap:";
 static const char *kWhitespace = "\b\t\r\n ";
@@ -425,59 +426,95 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgRuleAction *aFilterAction, nsIMsgDBH
     NS_ENSURE_SUCCESS(rv,rv);
   
     PRTime date;
-    char dateStr[40];	/* 30 probably not enough */
     nsMsgRuleActionType actionType;
     
-    nsXPIDLCString author;
-    nsXPIDLCString subject;
+    nsXPIDLString authorValue;
+    nsXPIDLString subjectValue;
     nsXPIDLString filterName;
+    nsXPIDLString dateValue;
 
     GetFilterName(getter_Copies(filterName));
     aFilterAction->GetType(&actionType);
-    rv = aMsgHdr->GetDate(&date);
+    (void)aMsgHdr->GetDate(&date);
     PRExplodedTime exploded;
     PR_ExplodeTime(date, PR_LocalTimeParameters, &exploded);
-    // XXX Temporary until logging is fully localized
-    PR_FormatTimeUSEnglish(dateStr, sizeof(dateStr), "%Y-%m-%d %H:%M:%S", &exploded);
 
-    aMsgHdr->GetAuthor(getter_Copies(author));
-    aMsgHdr->GetSubject(getter_Copies(subject));
+    if (!mDateFormatter)
+    {
+      mDateFormatter = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!mDateFormatter)
+      {
+        return NS_ERROR_FAILURE;
+      }
+    }
+    mDateFormatter->FormatPRExplodedTime(nsnull, kDateFormatShort,
+                                         kTimeFormatSeconds, &exploded, 
+                                         dateValue);
+  
+    (void)aMsgHdr->GetMime2DecodedAuthor(getter_Copies(authorValue));
+    (void)aMsgHdr->GetMime2DecodedSubject(getter_Copies(subjectValue));
 
     nsCString buffer;
     // this is big enough to hold a log entry.  
     // do this so we avoid growing and copying as we append to the log.
     buffer.SetCapacity(512);  
     
-    buffer = "Applied filter \"";
-    AppendUTF16toUTF8(filterName, buffer);
-    buffer +=  "\" to message from ";
-    buffer +=  (const char*)author;
-    buffer +=  " - ";
-    buffer +=  (const char *)subject;
-    buffer +=  " at ";
-    buffer +=  dateStr;
+    nsCOMPtr<nsIStringBundleService> bundleService =
+      do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsCOMPtr<nsIStringBundle> bundle;
+    rv = bundleService->CreateBundle("chrome://messenger/locale/filter.properties",
+      getter_AddRefs(bundle));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    const PRUnichar *filterLogDetectFormatStrings[4] = { filterName.get(), authorValue.get(), subjectValue.get(), dateValue.get() };
+    nsXPIDLString filterLogDetectStr;
+    rv = bundle->FormatStringFromName(
+      NS_LITERAL_STRING("filterLogDetectStr").get(),
+      filterLogDetectFormatStrings, 4,
+      getter_Copies(filterLogDetectStr));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    buffer += NS_ConvertUTF16toUTF8(filterLogDetectStr);
     buffer +=  "\n";
-    const char *actionStr = GetActionStr(actionType);
-    buffer +=  "Action = ";
-    buffer +=  actionStr;
-    buffer +=  " ";
         
     if (actionType == nsMsgFilterAction::MoveToFolder ||
-        actionType == nsMsgFilterAction::CopyToFolder) {
+        actionType == nsMsgFilterAction::CopyToFolder)
+    {
       nsXPIDLCString actionFolderUri;
       aFilterAction->GetTargetFolderUri(getter_Copies(actionFolderUri));
-      buffer += actionFolderUri.get();
-    } 
+      NS_ConvertASCIItoUTF16 actionFolderUriValue(actionFolderUri);
          
-    buffer += "\n";
-    if (actionType == nsMsgFilterAction::MoveToFolder ||
-        actionType == nsMsgFilterAction::CopyToFolder) {
       nsXPIDLCString msgId;
       aMsgHdr->GetMessageId(getter_Copies(msgId));
-      buffer += " id = ";
-      buffer += (const char*)msgId;
-      buffer += "\n";
+      NS_ConvertASCIItoUTF16 msgIdValue(msgId);
+
+      const PRUnichar *logMoveFormatStrings[2] = { msgIdValue.get(), actionFolderUriValue.get() };
+      nsXPIDLString logMoveStr;
+      rv = bundle->FormatStringFromName(
+        (actionType == nsMsgFilterAction::MoveToFolder) ?
+          NS_LITERAL_STRING("logMoveStr").get() :
+          NS_LITERAL_STRING("logCopyStr").get(),
+        logMoveFormatStrings, 2,
+        getter_Copies(logMoveStr));
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+      buffer += NS_ConvertUTF16toUTF8(logMoveStr);
     }
+    else 
+    {
+      nsXPIDLString actionValue;
+      nsAutoString filterActionID;
+      filterActionID = NS_LITERAL_STRING("filterAction");
+      filterActionID.AppendInt(actionType);
+      rv = bundle->GetStringFromName(filterActionID.get(), getter_Copies(actionValue));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      buffer += NS_ConvertUTF16toUTF8(actionValue);
+    }
+    buffer += "\n";
     
     PRUint32 writeCount;
 

@@ -62,6 +62,8 @@ typedef long nsMsgRuleActionType;
 [scriptable, uuid(59af7696-1e28-4642-a400-fa327ae0b8d8)]
 interface nsMsgFilterAction {
   
+    /* if you change these, you need to update filter.properties,
+       look for filterActionX */
     /* these longs are all actually of type nsMsgFilterActionType */
     const long None=0;				/* uninitialized state */
     const long MoveToFolder=1;

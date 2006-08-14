@@ -47,6 +47,7 @@
 #include "nsIOutputStream.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIUrlListener.h"
+#include "nsIDateTimeFormat.h"
 
 class nsSpamSettings : public nsISpamSettings, public nsIUrlListener
 {
@@ -78,6 +79,8 @@ private:
 
   nsCString mServerFilterName;
   PRInt32  mServerFilterTrustFlags;
+
+  nsCOMPtr<nsIDateTimeFormat> mDateFormatter;
 
   // helper routine used by Initialize which unsets the junk flag on the previous junk folder
   // for this account, and sets it on the new junk folder.
