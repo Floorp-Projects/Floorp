@@ -41,7 +41,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.18 2004/04/25 15:03:18 gerv%gerv.net Exp $
+ * $Id: secport.c,v 1.19 2006/08/14 16:56:39 wtchang%redhat.com Exp $
  */
 
 #include "seccomon.h"
@@ -271,7 +271,6 @@ PORT_ArenaZAlloc(PLArenaPool *arena, size_t size)
     return(p);
 }
 
-/* XXX - need to zeroize!! - jsw */
 void
 PORT_FreeArena(PLArenaPool *arena, PRBool zero)
 {
@@ -301,6 +300,13 @@ PORT_FreeArena(PLArenaPool *arena, PRBool zero)
 	    (pvd->vMajor == 4 && pvd->vMinor == 1 && pvd->vPatch >= 1)) {
 	    const char *ev = PR_GetEnv("NSS_DISABLE_ARENA_FREE_LIST");
 	    if (!ev) doFreeArenaPool = PR_TRUE;
+	}
+    }
+    if (zero) {
+	PLArena *a;
+	for (a = arena->first.next; a; a = a->next) {
+	    PR_ASSERT(a->base <= a->avail && a->avail <= a->limit);
+	    memset((void *)a->base, 0, a->avail - a->base);
 	}
     }
     if (doFreeArenaPool) {
