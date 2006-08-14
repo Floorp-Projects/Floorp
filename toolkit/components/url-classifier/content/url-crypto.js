@@ -62,7 +62,8 @@ function PROT_UrlCrypto() {
   this.debugZone = "urlcrypto";
   this.hasher_ = new G_CryptoHasher();
   this.base64_ = new G_Base64();
-  this.rc4_ = new ARC4();
+  this.streamCipher_ = Cc["@mozilla.org/security/streamcipher;1"]
+                       .createInstance(Ci.nsIStreamCipher);
 
   if (!this.manager_) {
     // Create a UrlCryptoKeyManager to reads keys from profile directory if
@@ -171,7 +172,7 @@ PROT_UrlCrypto.prototype.maybeCryptParams = function(params) {
   var encrypted = this.encryptV1(clientKeyArray, 
                                  this.VERSION,
                                  counter,
-                                 this.base64_.arrayifyString(queryString));
+                                 queryString);
 
   params = {};
   params[this.VERSION_QUERY_PARAM_NAME] = this.VERSION;
@@ -183,11 +184,9 @@ PROT_UrlCrypto.prototype.maybeCryptParams = function(params) {
 }
 
 /**
- * Encrypt something IN PLACE. Did you hear that? It works IN PLACE.
- * That is, it replaces the plaintext with ciphertext. It also returns
- * the websafe base64-encoded ciphertext. The client key is untouched.
+ * Encrypts text and returns a base64 string of the results.
  *
- * This method runs in about ~5ms on a 2Ghz P4. (Turn debugging off if
+ * This method runs in about ~2ms on a 2Ghz P4. (Turn debugging off if
  * you see it much slower).
  *
  * @param clientKeyArray Array of bytes (numbers in [0,255]) composing K_C
@@ -196,15 +195,14 @@ PROT_UrlCrypto.prototype.maybeCryptParams = function(params) {
  *
  * @param counter Number that acts as a nonce for this encryption
  *
- * @param inOutArray Array of plaintext bytes that will be replaced
- *                   with the array of ciphertext bytes
+ * @param text String to be encrypted
  *
  * @returns String containing the websafe base64-encoded ciphertext
  */
 PROT_UrlCrypto.prototype.encryptV1 = function(clientKeyArray,
                                               version, 
                                               counter,
-                                              inOutArray) {
+                                              text) {
 
   // We're a version1 encrypter, after all
   if (version != "1") 
@@ -212,15 +210,17 @@ PROT_UrlCrypto.prototype.encryptV1 = function(clientKeyArray,
 
   var key = this.deriveEncryptionKey(clientKeyArray, counter);
 
-  this.rc4_.setKey(key, key.length);
+  this.streamCipher_.init(key);
 
   if (this.RC4_DISCARD_BYTES > 0)
-    this.rc4_.discard(this.RC4_DISCARD_BYTES);
+    this.streamCipher_.discard(this.RC4_DISCARD_BYTES);
   
-  // The crypt() method works in-place
-  this.rc4_.crypt(inOutArray, inOutArray.length);
+  this.streamCipher_.updateFromString(text);
+
+  var encrypted = this.streamCipher_.finish(true /* base64 encoded */);
+  // The base64 version we get has new lines, we want to remove those.
   
-  return this.base64_.encodeByteArray(inOutArray, true /* websafe */);
+  return encrypted.replace(/\r\n/g, "");
 }
   
 /**
@@ -230,7 +230,7 @@ PROT_UrlCrypto.prototype.encryptV1 = function(clientKeyArray,
  *
  * @param count Number that acts as a nonce for this key
  *
- * @returns Array of bytes containing the encryption key
+ * @return nsIKeyObject
  */
 PROT_UrlCrypto.prototype.deriveEncryptionKey = function(clientKeyArray, 
                                                         count) {
@@ -249,7 +249,12 @@ PROT_UrlCrypto.prototype.deriveEncryptionKey = function(clientKeyArray,
   this.hasher_.updateFromArray(clientKeyArray);
   this.hasher_.updateFromArray(paddingArray);
 
-  return this.base64_.arrayifyString(this.hasher_.digestRaw());
+  // Create the nsIKeyObject
+  var keyFactory = Cc["@mozilla.org/security/keyobjectfactory;1"]
+                   .getService(Ci.nsIKeyObjectFactory);
+  var key = keyFactory.keyFromString(Ci.nsIKeyObject.RC4,
+                                     this.hasher_.digestRaw());
+  return key;
 }
 
 /**

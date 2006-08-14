@@ -44,7 +44,6 @@ const Ci = Components.interfaces;
 const G_GDEBUG = false;
 
 // TODO: get rid of application.js and filesystem.js (not used much)
-#include ../content/js/arc4.js
 #include ../content/js/lang.js
 
 #include ../content/moz/preferences.js
