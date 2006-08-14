@@ -361,11 +361,18 @@ InitExceptionObject(JSContext *cx, JSObject *obj, JSString *message,
     stacklen = stackmax = 0;
     ok = JS_TRUE;
 
+/* Limit the stackbuf length to a reasonable value to avoid overflow checks. */
+#define STACK_LENGTH_LIMIT JS_BIT(20)
+
 #define APPEND_CHAR_TO_STACK(c)                                               \
     JS_BEGIN_MACRO                                                            \
         if (stacklen == stackmax) {                                           \
             void *ptr_;                                                       \
+            if (stackmax >= STACK_LENGTH_LIMIT)                               \
+                goto done;                                                    \
             stackmax = stackmax ? 2 * stackmax : 64;                          \
+            if (stackmax >= STACK_LENGTH_LIMIT)                               \
+                goto done;                                                    \
             ptr_ = JS_realloc(cx, stackbuf, (stackmax+1) * sizeof(jschar));   \
             if (!ptr_) {                                                      \
                 ok = JS_FALSE;                                                \
@@ -380,9 +387,15 @@ InitExceptionObject(JSContext *cx, JSObject *obj, JSString *message,
     JS_BEGIN_MACRO                                                            \
         JSString *str_ = str;                                                 \
         size_t length_ = JSSTRING_LENGTH(str_);                               \
-        if (stacklen + length_ > stackmax) {                                  \
+        if (length_ > stackmax - stacklen) {                                  \
+            if (stackmax >= STACK_LENGTH_LIMIT ||                             \
+                length_ >= STACK_LENGTH_LIMIT) {                              \
+                goto done;                                                    \
+            }                                                                 \
             void *ptr_;                                                       \
             stackmax = JS_BIT(JS_CeilingLog2(stacklen + length_));            \
+            if (stackmax >= STACK_LENGTH_LIMIT)                               \
+                goto done;                                                    \
             ptr_ = JS_realloc(cx, stackbuf, (stackmax+1) * sizeof(jschar));   \
             if (!ptr_) {                                                      \
                 ok = JS_FALSE;                                                \
@@ -471,6 +484,7 @@ InitExceptionObject(JSContext *cx, JSObject *obj, JSString *message,
 
 #undef APPEND_CHAR_TO_STACK
 #undef APPEND_STRING_TO_STACK
+#undef STACK_LENGTH_LIMIT
 
 done:
     if (ok)
