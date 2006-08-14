@@ -77,6 +77,8 @@ CRCCheck on
 !insertmacro GetParameters
 !insertmacro un.GetParameters
 !insertmacro GetOptions
+!insertmacro GetRoot
+!insertmacro DriveSpace
 
 ; Use the pre-processor where ever possible
 ; Remember that !define's create smaller packages than Var's!
@@ -107,6 +109,8 @@ Var fhUninstallLog
 !insertmacro WriteRegStrHKCR
 !insertmacro CreateRegKey
 !insertmacro un.GetSecondInstallPath
+!insertmacro CanWriteToInstallDir
+!insertmacro CheckDiskSpace
 
 !include overrides.nsh
 !insertmacro LocateNoDetails
@@ -168,7 +172,9 @@ Page custom preComponents checkComponents
 ;!insertmacro MUI_PAGE_COMPONENTS
 
 ; Select Install Directory Page
-!define MUI_PAGE_CUSTOMFUNCTION_PRE CheckCustom
+!define MUI_PAGE_CUSTOMFUNCTION_PRE preCheckInstallDir
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE leaveCheckInstallDir
+!define MUI_DIRECTORYPAGE_VERIFYONLEAVE
 !insertmacro MUI_PAGE_DIRECTORY
 
 ; Custom Shortcuts Page - CheckCustom is Called in Shortcuts
@@ -220,7 +226,7 @@ Page custom preShortcuts ChangeShortcuts
 !define MUI_FINISHPAGE_SHOWREADME_FUNCTION un.survey
 !endif
 
-!insertmacro MUI_UNPAGE_FINISH\
+!insertmacro MUI_UNPAGE_FINISH
 
 /**
  * Adds a section divider to the human readable log.
@@ -259,6 +265,32 @@ FunctionEnd
 ; custom install don't display the custom pages).
 Function CheckCustom
   ${If} $InstallType != 4
+    Abort
+  ${EndIf}
+FunctionEnd
+
+Function preCheckInstallDir
+  ${If} $InstallType != 4
+    ${CheckDiskSpace} $R9
+    ${If} $R9 != "false"
+      ${CanWriteToInstallDir} $R9
+      ${If} $R9 != "false"
+        Abort
+      ${EndIf}
+    ${EndIf}
+  ${EndIf}
+FunctionEnd
+
+Function leaveCheckInstallDir
+  ${CheckDiskSpace} $R9
+  ${If} $R9 == "false"
+    MessageBox MB_OK "$(WARN_DISK_SPACE)"
+    Abort
+  ${EndIf}
+
+  ${CanWriteToInstallDir} $R9
+  ${If} $R9 == "false"
+    MessageBox MB_OK "$(WARN_WRITE_ACCESS)"
     Abort
   ${EndIf}
 FunctionEnd
