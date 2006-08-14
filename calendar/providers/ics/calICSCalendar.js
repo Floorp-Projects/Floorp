@@ -602,7 +602,13 @@ calICSCalendar.prototype = {
             for (i = 0; i < filteredFiles.length - numBackupFiles; ++i) {
                 file = backupDir.clone();
                 file.append(filteredFiles[i].name);
-                file.remove(false);
+
+                // This can fail because of some crappy code in nsILocalFile.
+                // That's not the end of the world.  We can try to remove the
+                // file the next time around.
+                try {
+                    file.remove(false);
+                } catch(ex) {}
             }
             return;
         }
