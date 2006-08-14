@@ -1606,14 +1606,20 @@
         <menuseparator id="threadItemsSeparator"/>
         <menuitem label="&killThreadMenu.label;"
             accesskey="&killThreadMenu.accesskey;"
-            key="key_killThread"
             id="killThread"
-            observes="cmd_killThread"/>
+            observes="cmd_killThread"
+#ifndef XP_MACOSX
+            key="key_killThread"
+#endif
+        />
         <menuitem label="&watchThreadMenu.label;"
             accesskey="&watchThreadMenu.accesskey;"
-            key="key_watchThread"
             id="watchThread"
-            observes="cmd_watchThread"/>
+            observes="cmd_watchThread"
+#ifndef XP_MACOSX
+            key="key_watchThread"
+#endif
+          />
         </menupopup>
       </menu>
       
