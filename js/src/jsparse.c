@@ -2923,7 +2923,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
             do {
                 /* Check for another catch after unconditional catch. */
-                if (lastCatch && !lastCatch->pn_kid1->pn_expr) {
+                if (lastCatch && !lastCatch->pn_kid2) {
                     js_ReportCompileErrorNumber(cx, ts,
                                                 JSREPORT_TS | JSREPORT_ERROR,
                                                 JSMSG_CATCH_AFTER_GENERAL);
