@@ -752,6 +752,8 @@ NS_IMETHODIMP nsMsgGroupView::LoadMessageByViewIndex(nsMsgViewIndex aViewIndex)
     nsCOMPtr <nsIMsgWindowCommands> windowCommands;
     if (mMsgWindow && NS_SUCCEEDED(mMsgWindow->GetWindowCommands(getter_AddRefs(windowCommands))) && windowCommands)
       windowCommands->ClearMsgPane();
+    // since we are selecting a dummy row, we should also clear out m_currentlyDisplayedMsgUri
+    m_currentlyDisplayedMsgUri.Truncate();
     return NS_OK;
   }
   else
