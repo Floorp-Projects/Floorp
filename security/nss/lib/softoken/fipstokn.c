@@ -484,7 +484,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
     CK_RV crv;
 
     crv = NSC_GetTokenInfo(slotID,pInfo);
-    pInfo->flags |= CKF_RNG | CKF_LOGIN_REQUIRED;
+    pInfo->flags |= CKF_LOGIN_REQUIRED;
     return crv;
 
 }
