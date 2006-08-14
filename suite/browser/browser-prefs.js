@@ -36,16 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* The prefs in this file are specific to the seamonkey browser.
+/* The prefs in this file are specific to the seamonkey (toolkit) browser.
  * Generic default prefs that would be useful to embedders belong in
  * modules/libpref/src/init/all.js
  */
 
 pref("startup.homepage_override_url","chrome://navigator-region/locale/region.properties");
-// XXX When SeaMonkey becomes a full xul app this can be set without an ifdef
-#ifdef MOZ_XUL_APP
 pref("general.skins.selectedSkin", "classic/1.0");
-#endif
 
 pref("browser.chromeURL","chrome://navigator/content/navigator.xul");
 
@@ -193,8 +190,6 @@ pref("news.directory",                  "");
 pref("browser.editor.disabled", false);
 pref("spellchecker.dictionary", "");
 
-// XXX When SeaMonkey becomes a full xul app this can be set without an ifdef
-#ifdef MOZ_XUL_APP
 // App-specific update preferences
 
 // Whether or not app updates are enabled - false initally for SeaMonkey
@@ -299,16 +294,6 @@ pref("xpinstall.dialog.progress.type.skin", "Extension:Manager");
 pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager");
 
 pref("xpinstall.whitelist.add.103", "addons.mozilla.org");
-
-#else
-
-pref("xpinstall.dialog.confirm",        "chrome://communicator/content/xpinstall/institems.xul");
-pref("xpinstall.dialog.progress.chrome","chrome://communicator/content/xpinstall/xpistatus.xul");
-pref("xpinstall.dialog.progress.skin",  "chrome://communicator/content/xpinstall/xpistatus.xul");
-pref("xpinstall.dialog.progress.type.chrome", "");
-pref("xpinstall.dialog.progress.type.skin",   "");
-
-#endif
 
 pref("xpinstall.whitelist.add", "update.mozilla.org");
 pref("xpinstall.whitelist.required", false);
