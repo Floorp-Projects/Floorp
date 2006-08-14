@@ -434,12 +434,45 @@ nsMathMLmtableOuterFrame::GetRowFrameAt(nsPresContext* aPresContext,
   return nsnull;
 }
 
+#ifdef NS_DEBUG
+void
+nsMathMLmtableOuterFrame::DEBUG_VerifyTableRelatedFrames()
+{
+  PRInt32 rowCount, colCount;
+  GetTableSize(rowCount, colCount);
+  nsTableIteration dir = eTableLTR;
+  nsIFrame* innerTableFrame = mFrames.FirstChild();
+  nsTableIterator rowgroupIter(*innerTableFrame, dir);
+  nsIFrame* rowgroupFrame = rowgroupIter.First();
+  for ( ; rowgroupFrame; rowgroupFrame = rowgroupIter.Next()) {
+    nsTableIterator rowIter(*rowgroupFrame, dir);
+    nsIFrame* rowFrame = rowIter.First();
+    for ( ; rowFrame; rowFrame = rowIter.Next()) {
+      DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TABLE_ROW);
+      //XXX uncomment this if <mtr> ever gets its own MathML frame implementation
+      //NS_ASSERTION(rowFrame->IsFrameOfType(nsIFrame::eMathML), 
+      //             "non MathML row frame");
+      nsTableIterator cellIter(*rowFrame, dir);
+      nsIFrame* cellFrame = cellIter.First();
+      for ( ; cellFrame; cellFrame = cellIter.Next()) {
+        DEBUG_VERIFY_THAT_FRAME_IS(cellFrame, TABLE_CELL);
+        NS_ASSERTION(cellFrame->IsFrameOfType(nsIFrame::eMathML), 
+                     "non MathML cell frame");
+      }
+    }
+  }
+}
+#endif
+
 NS_IMETHODIMP
 nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
                                  nsHTMLReflowMetrics&     aDesiredSize,
                                  const nsHTMLReflowState& aReflowState,
                                  nsReflowStatus&          aStatus)
 {
+#ifdef NS_DEBUG
+  DEBUG_VerifyTableRelatedFrames();
+#endif
   nsresult rv;
   nsAutoString value;
   // we want to return a table that is anchored according to the align attribute
