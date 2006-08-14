@@ -50,6 +50,9 @@ class nsMathMLmrowFrame : public nsMathMLContainerFrame {
 public:
   friend nsIFrame* NS_NewMathMLmrowFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
+  virtual nsIFrame*
+  GetContentInsertionFrame();
+
   NS_IMETHOD
   InheritAutomaticData(nsIFrame* aParent);
 
