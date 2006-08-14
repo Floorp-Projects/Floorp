@@ -90,6 +90,11 @@ nsUUIDGenerator::Init()
         bytes += nbytes;
     }
 
+    // call random once for the side effect of initializing
+    // glibc's internal state, so that initstate doesn't
+    // return NULL
+    random();
+
     /* Initialize a new RNG state, and immediately switch
      * back to the previous one -- we want to use mState
      * only for our own calls to random().
