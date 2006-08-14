@@ -108,29 +108,18 @@ sub _init {
       bug_file_loc, short_desc, target_milestone,
       qa_contact AS qa_contact_id, status_whiteboard, " .
       $dbh->sql_date_format('creation_ts', '%Y.%m.%d %H:%i') . ",
-      delta_ts, COALESCE(SUM(votes.vote_count), 0), everconfirmed,
-      reporter_accessible, cclist_accessible,
+      delta_ts, everconfirmed, reporter_accessible, cclist_accessible,
       estimated_time, remaining_time, " .
       $dbh->sql_date_format('deadline', '%Y-%m-%d') .
       $custom_fields . "
     FROM bugs
-       LEFT JOIN votes
-              ON bugs.bug_id = votes.bug_id
       INNER JOIN components
               ON components.id = bugs.component_id
       INNER JOIN products
               ON products.id = bugs.product_id
       INNER JOIN classifications
               ON classifications.id = products.classification_id
-      WHERE bugs.bug_id = ? " .
-    $dbh->sql_group_by('bugs.bug_id', "alias, products.classification_id,
-      classifications.name, bugs.product_id, products.name, version,
-      rep_platform, op_sys, bug_status, resolution, priority,
-      bug_severity, bugs.component_id, components.name, assigned_to,
-      reporter, bug_file_loc, short_desc, target_milestone,
-      qa_contact, status_whiteboard, everconfirmed, creation_ts, 
-      delta_ts, reporter_accessible, cclist_accessible,
-      estimated_time, remaining_time, deadline $custom_fields");
+      WHERE bugs.bug_id = ?";
 
   my $bug_sth = $dbh->prepare($query);
   $bug_sth->execute($bug_id);
@@ -146,7 +135,7 @@ sub _init {
                        "assigned_to_id", "reporter_id", 
                        "bug_file_loc", "short_desc",
                        "target_milestone", "qa_contact_id", "status_whiteboard",
-                       "creation_ts", "delta_ts", "votes", "everconfirmed",
+                       "creation_ts", "delta_ts", "everconfirmed",
                        "reporter_accessible", "cclist_accessible",
                        "estimated_time", "remaining_time", "deadline",
                        Bugzilla->custom_field_names)
@@ -656,6 +645,20 @@ sub settable_resolutions {
         splice(@$resolutions, $pos, 1);
     }
     return $resolutions;
+}
+
+sub votes {
+    my ($self) = @_;
+    return 0 if $self->{error};
+    return $self->{votes} if defined $self->{votes};
+
+    my $dbh = Bugzilla->dbh;
+    $self->{votes} = $dbh->selectrow_array(
+        'SELECT SUM(vote_count) FROM votes
+          WHERE bug_id = ? ' . $dbh->sql_group_by('bug_id'),
+        undef, $self->bug_id);
+    $self->{votes} ||= 0;
+    return $self->{votes};
 }
 
 # Convenience Function. If you need speed, use this. If you need
