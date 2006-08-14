@@ -231,7 +231,7 @@
     MODULE(mozStorageModule)                 \
     MODULE(nsPlacesModule)
 #else
-#ifdef MOZ_MORK
+#if (defined(MOZ_MORK) && defined(MOZ_XUL))
 #define PLACES_MODULES \
     MODULE(nsMorkModule)                     \
     MODULE(nsToolkitHistory)
