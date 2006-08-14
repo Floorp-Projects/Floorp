@@ -79,11 +79,11 @@ CPPSRCS = \
   nsMaiInterfaceTable.cpp \
   $(NULL)
 
-#ifdef MOZ_XUL
+ifdef MOZ_XUL
 CPPSRCS += \
   nsXULTreeAccessibleWrap.cpp \
   $(NULL)
-#endif
+endif
 
 EXPORTS = \
   nsAccessNodeWrap.h \

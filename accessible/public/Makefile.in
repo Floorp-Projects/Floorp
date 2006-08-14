@@ -60,7 +60,6 @@ XPIDLSRCS = \
       nsPIAccessibleDocument.idl \
       nsIAccessibleProvider.idl \
       nsIAccessibleSelectable.idl \
-      nsIAccessibleTreeCache.idl \
       nsIAccessNode.idl \
       nsPIAccessNode.idl \
       nsIAccessibleEvent.idl \
@@ -71,6 +70,12 @@ XPIDLSRCS = \
       nsIAccessibleText.idl \
       nsIAccessibleValue.idl \
       $(NULL)
+
+ifdef MOZ_XUL
+XPIDLSRCS += \
+      nsIAccessibleTreeCache.idl \
+      $(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
 
