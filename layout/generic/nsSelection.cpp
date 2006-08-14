@@ -1988,20 +1988,27 @@ nsFrameSelection::GetPrevNextBidiLevels(nsIContent *aNode,
   if (NS_SUCCEEDED(rv))
     newFrame = pos.mResultFrame;
 
-  if (direction == eDirNext) {
-    levels.SetData(currentFrame, newFrame,
-                   NS_GET_EMBEDDING_LEVEL(currentFrame),
-                   newFrame ? NS_GET_EMBEDDING_LEVEL(newFrame) :
-                              NS_GET_BASE_LEVEL(currentFrame));
-    return levels;
+  PRUint8 baseLevel = NS_GET_BASE_LEVEL(currentFrame);
+  PRUint8 currentLevel = NS_GET_EMBEDDING_LEVEL(currentFrame);
+  PRUint8 newLevel = newFrame ? NS_GET_EMBEDDING_LEVEL(newFrame) : baseLevel;
+  
+  // If not jumping lines, disregard br frames, since they might be positioned incorrectly.
+  // XXX This could be removed once bug 339786 is fixed.
+  if (!aJumpLines) {
+    if (currentFrame->GetType() == nsLayoutAtoms::brFrame) {
+      currentFrame = nsnull;
+      currentLevel = baseLevel;
+    }
+    if (newFrame && newFrame->GetType() == nsLayoutAtoms::brFrame) {
+      newFrame = nsnull;
+      newLevel = baseLevel;
+    }
   }
-  else {
-    levels.SetData(newFrame, currentFrame,
-                   newFrame ? NS_GET_EMBEDDING_LEVEL(newFrame) : 
-                              NS_GET_BASE_LEVEL(currentFrame),
-                   NS_GET_EMBEDDING_LEVEL(currentFrame));
-    return levels;
-  }
+  
+  if (direction == eDirNext)
+    levels.SetData(currentFrame, newFrame, currentLevel, newLevel);
+  else
+    levels.SetData(newFrame, currentFrame, newLevel, currentLevel);
 
   return levels;
 }
