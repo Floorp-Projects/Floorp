@@ -580,8 +580,6 @@ sub sendMail {
 
     my $isnew = !$start;
     
-    my %substs;
-
     # If an attachment was created, then add an URL. (Note: the 'g'lobal
     # replace should work with comments with multiple attachments.)
 
@@ -593,25 +591,13 @@ sub sendMail {
         $newcomments =~ s/(Created an attachment \(id=([0-9]+)\))/$1\n --> \(${showattachurlbase}$2\)/g;
     }
 
-    $substs{"neworchanged"} = $isnew ? 'New: ' : '';
-    $substs{"to"} = $user->email;
-    $substs{"cc"} = '';
-    $substs{"bugid"} = $id;
+    my $diffs;
     if ($isnew) {
-      $substs{"diffs"} = $head . "\n\n" . $newcomments;
+        $diffs = $head . "\n\n" . $newcomments;
     } else {
-      $substs{"diffs"} = $difftext . "\n\n" . $newcomments;
+        $diffs = $difftext . "\n\n" . $newcomments;
     }
-    $substs{"product"} = $values{'product'};
-    $substs{"component"} = $values{'component'};
-    $substs{"keywords"} = $values{'keywords'};
-    $substs{"severity"} = $values{'bug_severity'};
-    $substs{"status"} = $values{'bug_status'};
-    $substs{"priority"} = $values{'priority'};
-    $substs{"assignedto"} = $values{'assigned_to'};
-    $substs{"targetmilestone"} = $values{'target_milestone'};
-    $substs{"changedfields"} = $values{'changed_fields'};
-    $substs{"summary"} = $values{'short_desc'};
+
     my (@headerrel, @watchingrel);
     while (my ($rel, $bits) = each %{$relRef}) {
         push @headerrel, (REL_NAMES->{$rel}) if ($bits & BIT_DIRECT);
@@ -620,13 +606,6 @@ sub sendMail {
     push @headerrel, 'None' if !scalar(@headerrel);
     push @watchingrel, 'None' if !scalar(@watchingrel);
     push @watchingrel, map { user_id_to_login($_) } @$watchingRef;
-    $substs{"reasonsheader"} = join(" ", @headerrel);
-    $substs{"reasonswatchheader"} = join(" ", @watchingrel);
-
-    $substs{"reasonsbody"} = $reasonsbody;
-    $substs{"space"} = " ";
-    $substs{"changer"} = $values{'changer'};
-    $substs{"changername"} = $values{'changername'};
 
     my $sitespec = '@' . Bugzilla->params->{'urlbase'};
     $sitespec =~ s/:\/\//\./; # Make the protocol look like part of the domain
@@ -634,17 +613,41 @@ sub sendMail {
     if ($2) {
         $sitespec = "-$2$sitespec"; # Put the port number back in, before the '@'
     }
+    my $threadingmarker;
     if ($isnew) {
-        $substs{'threadingmarker'} = "Message-ID: <bug-$id-" . 
-                                     $user->id . "$sitespec>";
+        $threadingmarker = "Message-ID: <bug-$id-" . $user->id . "$sitespec>";
     } else {
-        $substs{'threadingmarker'} = "In-Reply-To: <bug-$id-" . 
-                                     $user->id . "$sitespec>";
+        $threadingmarker = "In-Reply-To: <bug-$id-" . $user->id . "$sitespec>";
     }
     
-    my $template = Bugzilla->params->{"newchangedmail"};
-    
-    my $msg = perform_substs($template, \%substs);
+
+    my $vars = {
+        neworchanged => $isnew ? 'New: ' : '',
+        to => $user->email,
+        bugid => $id,
+        product => $values{'product'},
+        comp => $values{'component'},
+        keywords => $values{'keywords'},
+        severity => $values{'bug_severity'},
+        status => $values{'bug_status'},
+        priority => $values{'priority'},
+        assignedto => $values{'assigned_to'},
+        targetmilestone => $values{'target_milestone'},
+        changedfields => $values{'changed_fields'},
+        summary => $values{'short_desc'},
+        reasonsheader => join(" ", @headerrel),
+        reasonswatchheader => join(" ", @watchingrel),
+        reasonsbody => $reasonsbody,
+        changer => $values{'changer'},
+        changername => $values{'changername'},
+        diffs => $diffs,
+        threadingmarker => $threadingmarker
+    };
+
+    my $msg;
+    my $template = Bugzilla::Template->create();
+    $template->process("email/newchangedmail.txt.tmpl", $vars, \$msg)
+      || ThrowTemplateError($template->error());
 
     MessageToMTA($msg);
 

@@ -54,25 +54,6 @@
 
   smtpserver => "The SMTP server address (if using SMTP for mail delivery).",
 
-  newchangedmail => "The email that gets sent to people when a $terms.bug changes. Within " _
-                    "this text, %to% gets replaced with the e-mail address of the " _
-                    "person receiving the mail. %bugid% gets replaced by the $terms.bug " _
-                    "number. %diffs% gets replaced with what has changed. " _
-                    "%neworchanged% is 'New:' if this mail is reporting a new $terms.bug or " _
-                    "empty if changes were made to an existing one. %summary% gets " _
-                    "replaced by the summary of this ${terms.bug}. %reasonsheader% is " _
-                    "replaced by an abbreviated list of reasons why the user is " _
-                    "getting the email, suitable for use in an email header (such " _
-                    "as X-Bugzilla-Reason). %reasonsbody% is replaced by text that " _
-                    "explains why the user is getting the email in more user " _
-                    "friendly text than %reasonsheader%. " _
-                    "%threadingmarker% will become either a Message-ID line (for " _
-                    "new-${terms.bug} messages) or a In-Reply-To line (for ${terms.bug}-change " _
-                    "messages). " _
-                    "%<i>anythingelse</i>% gets " _
-                    "replaced by the definition of that parameter (as defined on " _
-                    "this page).",
-
   whinedays => "The number of days that we'll let a $terms.bug sit untouched in a NEW " _
                "state before our cronjob will whine at the owner.<br> " _
                "Set to 0 to disable whining." }

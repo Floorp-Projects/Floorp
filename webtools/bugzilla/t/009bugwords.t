@@ -77,7 +77,7 @@ foreach my $file (@testitems) {
         }
 
         # "Bugzilla"
-        if (grep /Bugzilla[^_]/, $text) {
+        if (grep /(?<!X\-)Bugzilla(?!_)/, $text) {
             # Exclude JS comments, hyperlinks, USE and variable assignment.
             unless (grep /(\/\/.*|org.*>|USE |= )Bugzilla/, $text) {
                 push(@errors, [$lineno, $text]);

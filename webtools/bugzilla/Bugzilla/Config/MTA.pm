@@ -63,35 +63,6 @@ sub get_param_list {
   },
 
   {
-   name => 'newchangedmail',
-   type => 'l',
-   default => 'From: bugzilla-daemon
-To: %to%
-Subject: [Bug %bugid%] %neworchanged%%summary%
-%threadingmarker%
-X-Bugzilla-Reason: %reasonsheader%
-X-Bugzilla-Watch-Reason: %reasonswatchheader%
-X-Bugzilla-Product: %product%
-X-Bugzilla-Component: %component%
-X-Bugzilla-Keywords: %keywords%
-X-Bugzilla-Severity: %severity%
-X-Bugzilla-Who: %changer%
-X-Bugzilla-Status: %status%
-X-Bugzilla-Priority: %priority%
-X-Bugzilla-Assigned-To: %assignedto%
-X-Bugzilla-Target-Milestone: %targetmilestone%
-X-Bugzilla-Changed-Fields: %changedfields%
-
-%urlbase%show_bug.cgi?id=%bugid%
-
-%diffs%
-
---%space%
-Configure bugmail: %urlbase%userprefs.cgi?tab=email
-%reasonsbody%'
-  },
-
-  {
    name => 'whinedays',
    type => 't',
    default => 7,
