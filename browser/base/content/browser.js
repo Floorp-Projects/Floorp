@@ -4973,12 +4973,17 @@ nsContextMenu.prototype = {
         savedmenu.toggleImageBlocking(!aBlock);
       }
 
+      var uri = gBrowser.selectedBrowser.webNavigation.currentURI;
+      var brandBundle = document.getElementById("bundle_brand");
+      var app = brandBundle.getString("brandShortName");
       var bundle_browser = document.getElementById("bundle_browser");
       var message;
       if (aBlock)
-        message = bundle_browser.getString("imageWarningBlocked");
+        message = bundle_browser.getFormattedString("imageBlockedWarning",
+                                                    [app, uri.host]);
       else 
-        message = bundle_browser.getString("imageWarningAllowed");
+        message = bundle_browser.getFormattedString("imageAllowedWarning",
+                                                    [app, uri.host]);
 
       var notificationBox = gBrowser.getNotificationBox();
       var notification = notificationBox.getNotificationWithValue("images-blocked");
