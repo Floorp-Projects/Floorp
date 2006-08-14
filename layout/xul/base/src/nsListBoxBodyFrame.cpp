@@ -1223,6 +1223,13 @@ nsListBoxBodyFrame::GetNextItemBox(nsIBox* aBox, PRInt32 aOffset,
 PRBool
 nsListBoxBodyFrame::ContinueReflow(nscoord height) 
 { 
+  nsPresContext* presContext = GetPresContext();
+  if (presContext->PresShell()->IsAccessibilityActive()) {
+    // Create all the frames at once so screen readers and
+    // onscreen keyboards can see the full list right away
+    return PR_TRUE;
+  }
+
   if (height <= 0) {
     nsIFrame* lastChild = GetLastFrame();
     nsIFrame* startingPoint = mBottomFrame;
