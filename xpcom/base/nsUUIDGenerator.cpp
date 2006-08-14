@@ -90,7 +90,12 @@ nsUUIDGenerator::Init()
         bytes += nbytes;
     }
 
-    initstate(seed, mState, sizeof(mState));
+    /* Initialize a new RNG state, and immediately switch
+     * back to the previous one -- we want to use mState
+     * only for our own calls to random().
+     */
+    char *oldstate = initstate(seed, mState, sizeof(mState));
+    setstate(oldstate);
 
     mRBytes = 4;
 #ifdef RAND_MAX
@@ -147,6 +152,9 @@ nsUUIDGenerator::GenerateUUIDInPlace(nsID* id)
 
     CFRelease(uuid);
 #else /* not windows or OS X; generate randomness using random(). */
+    /* Switch to our RNG state, and save off the old one */
+    char *oldstate = setstate(mState);
+
     PRSize bytesLeft = sizeof(nsID);
     while (bytesLeft > 0) {
         long rval = random();
@@ -172,6 +180,9 @@ nsUUIDGenerator::GenerateUUIDInPlace(nsID* id)
     /* Put in the variant */
     id->m3[0] &= 0x3f;
     id->m3[0] |= 0x80;
+
+    /* Restore the previous RNG state */
+    setstate(oldstate);
 #endif
 
     return NS_OK;
