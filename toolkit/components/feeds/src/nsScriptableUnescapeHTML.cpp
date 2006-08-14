@@ -35,7 +35,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsString.h"
-#include "nsCRT.h"
 #include "nsISupportsArray.h"
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
@@ -133,7 +132,7 @@ nsScriptableUnescapeHTML::ParseFragment(const nsAString &aFragment,
   contextNode->GetOwnerDocument(getter_AddRefs(domDocument));
   document = do_QueryInterface(domDocument);
   NS_ENSURE_TRUE(document, NS_ERROR_NOT_AVAILABLE);
-  
+
   // stop scripts
   nsCOMPtr<nsIScriptLoader> loader;
   PRBool scripts_enabled = PR_FALSE;
@@ -208,7 +207,7 @@ nsScriptableUnescapeHTML::ParseFragment(const nsAString &aFragment,
   for (PRInt32 i = 0; i < count; i++) {
     PRUnichar* str = (PRUnichar*)tagStack.ElementAt(i);
     if (str)
-      nsCRT::free(str);
+      NS_Free(str);
   }
 
   if (scripts_enabled)
