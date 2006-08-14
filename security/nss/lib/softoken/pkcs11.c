@@ -3253,6 +3253,7 @@ CK_RV NSC_GetTokenInfo(CK_SLOT_ID slotID,CK_TOKEN_INFO_PTR pInfo)
     PORT_Memcpy(pInfo->manufacturerID,manufacturerID,32);
     PORT_Memcpy(pInfo->model,"NSS 3           ",16);
     PORT_Memcpy(pInfo->serialNumber,"0000000000000000",16);
+    PORT_Memcpy(pInfo->utcTime,"0000000000000000",16);
     pInfo->ulMaxSessionCount = 0; /* arbitrarily large */
     pInfo->ulSessionCount = slot->sessionCount;
     pInfo->ulMaxRwSessionCount = 0; /* arbitarily large */
@@ -3261,8 +3262,9 @@ CK_RV NSC_GetTokenInfo(CK_SLOT_ID slotID,CK_TOKEN_INFO_PTR pInfo)
     pInfo->firmwareVersion.minor = 0;
     PORT_Memcpy(pInfo->label,slot->tokDescription,32);
     handle = sftk_getKeyDB(slot);
+    pInfo->flags = CKF_RNG | CKF_THREAD_SAFE;
     if (handle == NULL) {
-        pInfo->flags= CKF_RNG | CKF_WRITE_PROTECTED | CKF_THREAD_SAFE;
+	pInfo->flags |= CKF_WRITE_PROTECTED;
 	pInfo->ulMaxPinLen = 0;
 	pInfo->ulMinPinLen = 0;
 	pInfo->ulTotalPublicMemory = 0;
@@ -3282,12 +3284,11 @@ CK_RV NSC_GetTokenInfo(CK_SLOT_ID slotID,CK_TOKEN_INFO_PTR pInfo)
 	 *   we will need to prompt for it.
 	 */
 	if (nsslowkey_HasKeyDBPassword(handle) == SECFailure) {
-	    pInfo->flags = CKF_THREAD_SAFE | CKF_LOGIN_REQUIRED;
+	    pInfo->flags |= CKF_LOGIN_REQUIRED;
 	} else if (!sftk_checkNeedLogin(slot,handle)) {
-	    pInfo->flags = CKF_THREAD_SAFE | CKF_USER_PIN_INITIALIZED;
+	    pInfo->flags |= CKF_USER_PIN_INITIALIZED;
 	} else {
-	    pInfo->flags = CKF_THREAD_SAFE | 
-				CKF_LOGIN_REQUIRED | CKF_USER_PIN_INITIALIZED;
+	    pInfo->flags |= CKF_LOGIN_REQUIRED | CKF_USER_PIN_INITIALIZED;
 	}
 	pInfo->ulMaxPinLen = SFTK_MAX_PIN;
 	pInfo->ulMinPinLen = (CK_ULONG)slot->minimumPinLen;
