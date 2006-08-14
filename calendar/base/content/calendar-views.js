@@ -94,6 +94,9 @@ var calendarViewController = {
         var itemToEdit;
         if (aNewStartTime && aNewEndTime) {
             itemToEdit = getOccurrenceOrParent(aOccurrence);
+            if (!itemToEdit) {
+                return;
+            }
             var instance = itemToEdit.clone();
 
             // if we're about to modify the parentItem, we need to account
@@ -143,6 +146,9 @@ var calendarViewController = {
 
     deleteOccurrence: function (aOccurrence) {
         var itemToDelete = getOccurrenceOrParent(aOccurrence);
+        if (!itemToDelete) {
+            return;
+        }
         if (!itemToDelete.parentItem.hasSameIds(itemToDelete)) {
             var event = itemToDelete.parentItem.clone();
             event.recurrenceInfo.removeOccurrenceAt(itemToDelete.recurrenceId);

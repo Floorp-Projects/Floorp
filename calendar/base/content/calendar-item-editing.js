@@ -180,6 +180,7 @@ function openEventDialog(calendarItem, calendar, mode, callback)
 // whether the user wants to edit all instances, or just this one.  This
 // function prompts this question (if the item is actually an instance of a
 // recurring event) and returns the appropriate item that should be modified.
+// Returns null if the prompt was cancelled.
 function getOccurrenceOrParent(occurrence) {
     // Check if this actually is an instance of a recurring event
     if (occurrence == occurrence.parentItem) {
