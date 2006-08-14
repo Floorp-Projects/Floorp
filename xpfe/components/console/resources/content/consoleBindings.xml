@@ -261,12 +261,9 @@
         <parameter name="aChar"/>
         <parameter name="aCol"/>
         <body><![CDATA[
-          var str = "";
-          if (aCol)
-            for (var i = 1; i < aCol; ++i)
-              str += aChar;
-          
-          return str;
+          var ary = [];
+          ary[aCol] = '';
+          return ary.join(aChar);
         ]]></body>
       </method>
           
