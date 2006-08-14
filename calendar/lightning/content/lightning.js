@@ -72,3 +72,4 @@ pref("calendar.week.d6saturdaysoff", true);
 //pref("calendar.timezone.local", "");
 
 pref("calendar.prototypes.wcap", false);
+pref("calendar.wcap.enabled", false);

@@ -73,7 +73,7 @@
    <wizardpage pageid="locationPage" 
                next="customizePage"
                label="&wizard.label;"
-               onpageshow="checkRequired();"
+               onpageshow="initLocationPage();"
                description="&wizard.description;">
         <description>&locationpage.description;</description>
         <grid>
@@ -87,6 +87,7 @@
                     <radiogroup id="calendar-format">
                         <radio value="ics" label="&calendarproperties.webdav.label;" selected="true" />
                         <radio value="caldav" label="&calendarproperties.caldav.label;"/>
+                        <radio id="wcap-radio" value="wcap" label="&calendarproperties.wcap.label;"/>
                     </radiogroup>
                 </row>
                 <row align="center">

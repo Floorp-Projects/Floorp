@@ -190,3 +190,4 @@ pref("browser.preferences.animateFadeIn", true);
 pref("browser.preferences.animateFadeIn", false);
 #endif
 
+pref("calendar.wcap.enabled", false);

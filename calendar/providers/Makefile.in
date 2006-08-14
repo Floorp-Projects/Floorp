@@ -45,6 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = calprovs
 MODULE_NAME = calProviderModule
 
-DIRS = memory storage composite caldav ics
+DIRS = memory storage composite caldav ics wcap
 
 include $(topsrcdir)/config/rules.mk

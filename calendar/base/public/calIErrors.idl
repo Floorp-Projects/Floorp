@@ -92,5 +92,12 @@ interface calIErrors : nsISupports
   const unsigned long ICS_USAGE = ICS_ERROR_BASE + 8;
   const unsigned long ICS_UNIMPLEMENTED = ICS_ERROR_BASE + 9;
   const unsigned long ICS_UNKNOWN = ICS_ERROR_BASE + 10;
+  
+  /**
+   * WCAP specific errors, defined in
+   * calendar/providers/wcap/public/calIWcapErrors.idl
+   * Range claimed is [ERROR_BASE + 0x200, ERROR_BASE + 0x300)
+   */
+  const unsigned long WCAP_ERROR_BASE = ERROR_BASE + 0x200;
 };
 
