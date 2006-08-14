@@ -51,7 +51,7 @@ static const PRUint16 *g_EUCKRMappingTable[3] = {
 
 static const uScanClassID g_EUCKRScanCellIDTable[3] =  {
   u1ByteCharset,
-  u2BytesCharset,
+  u2BytesGRCharset,
   uDecomposedHangulCharset
 };
 
