@@ -4040,6 +4040,7 @@ MOZ_PYTHON_LIBS=
 MOZ_PYTHON_PREFIX=
 MOZ_PYTHON_VER=
 MOZ_PYTHON_VER_DOTTED=
+MOZ_RDF=1
 MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
 MOZ_SINGLE_PROFILE=
@@ -4227,6 +4228,7 @@ minimal)
   MOZ_XPINSTALL=
   MOZ_XTF=
   MOZ_XUL=
+  MOZ_RDF=
   MOZ_XUL_APP=1
   NECKO_DISK_CACHE=
   NECKO_PROTOCOLS_DEFAULT="about data http file res"
@@ -7255,6 +7257,17 @@ if test "$MOZ_PROFILELOCKING"; then
   AC_DEFINE(MOZ_PROFILELOCKING)
 fi
 
+dnl ========================================================
+dnl disable rdf services
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(rdf,
+[  --disable-rdf           Disable RDF],
+    MOZ_RDF= )
+if test "$MOZ_RDF"; then
+  AC_DEFINE(MOZ_RDF)
+fi
+
+AC_SUBST(MOZ_RDF)
 
 dnl ========================================================
 dnl necko configuration options

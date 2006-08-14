@@ -37,10 +37,13 @@
 
 #include "nsIGenericFactory.h"
 #include "nsICategoryManager.h"
-#include "rdf.h"
+#include "nsNetUtil.h"
 #include "nsXPIDLString.h"
 #include "nsDirectoryViewer.h"
+#ifdef MOZ_RDF
+#include "rdf.h"
 #include "nsRDFCID.h"
+#endif
 
 #ifdef MOZ_SUITE
 #include "nsRelatedLinksHandlerImpl.h"
@@ -81,8 +84,10 @@
 #define NS_GLOBALHISTORY_DATASOURCE_CONTRACTID \
     "@mozilla.org/rdf/datasource;1?name=history"
 
+#ifdef MOZ_RDF
 // Factory constructors
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPIndex, Init)
+#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDirectoryViewerFactory)
 
 #if !defined(MOZ_MACBROWSER)
@@ -156,10 +161,12 @@ static const nsModuleComponentInfo components[] = {
    { "Directory Viewer", NS_DIRECTORYVIEWERFACTORY_CID,
       "@mozilla.org/xpfe/http-index-format-factory-constructor",
       nsDirectoryViewerFactoryConstructor, RegisterProc, UnregisterProc  },
+#ifdef MOZ_RDF
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_SERVICE_CONTRACTID,
       nsHTTPIndexConstructor },
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_DATASOURCE_CONTRACTID,
       nsHTTPIndexConstructor },
+#endif
 
 #ifdef MOZ_SUITE
     { "Download Manager", NS_DOWNLOADMANAGER_CID, NS_DOWNLOADMANAGER_CONTRACTID,

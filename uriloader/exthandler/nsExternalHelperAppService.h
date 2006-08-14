@@ -67,8 +67,10 @@
 #include "nsIChannel.h"
 #include "nsITimer.h"
 
+#ifdef MOZ_RDF
 #include "nsIRDFDataSource.h"
 #include "nsIRDFResource.h"
+#endif
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsCOMArray.h"
@@ -194,6 +196,7 @@ protected:
    * Pointer to the datasource that contains the user override information.
    * @see InitDataSource
    */
+#ifdef MOZ_RDF
   nsCOMPtr<nsIRDFDataSource> mOverRideDataSource;
 
   nsCOMPtr<nsIRDFResource> kNC_Description;
@@ -205,6 +208,7 @@ protected:
   nsCOMPtr<nsIRDFResource> kNC_AlwaysAsk;
   nsCOMPtr<nsIRDFResource> kNC_HandleInternal;
   nsCOMPtr<nsIRDFResource> kNC_PrettyName;
+#endif
 
   /**
    * Whether mOverRideDataSource is initialized
@@ -216,6 +220,7 @@ protected:
    * object for a given content type inside that data source.
    * The content type of the MIME Info will not be changed.
    */
+#ifdef MOZ_RDF
   NS_HIDDEN_(nsresult) FillTopLevelProperties(nsIRDFResource * aContentTypeNodeResource, 
                                               nsIRDFService * aRDFService,
                                               nsIMIMEInfo * aMIMEInfo);
@@ -235,6 +240,7 @@ protected:
   NS_HIDDEN_(nsresult) FillLiteralValueFromTarget(nsIRDFResource * aSource,
                                                   nsIRDFResource * aProperty,
                                                   const PRUnichar ** aLiteralValue);
+#endif
 
   /**
    * Searches the "extra" array of MIMEInfo objects for an object

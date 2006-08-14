@@ -58,18 +58,20 @@
 #include "nsCRT.h"
 #include "nsEscape.h"
 #include "nsIEnumerator.h"
+#ifdef MOZ_RDF
 #include "nsIRDFService.h"
+#include "nsRDFCID.h"
+#include "rdf.h"
+#endif
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsIXPConnect.h"
 #include "nsEnumeratorUtils.h"
-#include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "rdf.h"
 #include "nsITextToSubURI.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -98,7 +100,9 @@ static const int FORMAT_XUL = 3;
 // Common CIDs
 //
 
+#ifdef MOZ_RDF
 static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
+#endif
 
 // Various protocols we have to special case
 static const char               kFTPProtocol[] = "ftp://";
@@ -109,6 +113,7 @@ static const char               kGopherProtocol[] = "gopher://";
 // nsHTTPIndex
 //
 
+#ifdef MOZ_RDF
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsHTTPIndex,
                               nsIHTTPIndex,
                               nsIRDFDataSource,
@@ -1337,6 +1342,7 @@ nsHTTPIndex::GetAllCmds(nsIRDFResource *aSource, nsISimpleEnumerator **_retval)
 	return(rv);
 }
 
+#endif /* MOZ_RDF */
 
 
 //----------------------------------------------------------------------
@@ -1374,14 +1380,15 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
   nsCOMPtr<nsIPrefBranch> prefSrv = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  PRBool useXUL = PR_FALSE;
+  PRBool useXUL = PR_FALSE;  
+  PRBool viewSource = (PL_strstr(aContentType,"view-source") != 0);
+  
+#ifdef MOZ_RDF
   PRInt32 dirPref;
   rv = prefSrv->GetIntPref("network.dir.format", &dirPref);
   if (NS_SUCCEEDED(rv) && dirPref == FORMAT_XUL) {
     useXUL = PR_TRUE;
   }
-
-  PRBool viewSource = (PL_strstr(aContentType,"view-source") != 0);
 
   if ((NS_FAILED(rv) || useXUL) && !viewSource) {
     // ... and setup the original channel's content type
@@ -1441,6 +1448,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
     
     return NS_OK;
   }
+#endif
 
   // setup the original channel's content type
   (void)aChannel->SetContentType(NS_LITERAL_CSTRING("text/html"));

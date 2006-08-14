@@ -66,9 +66,14 @@ endif
 
 DIRS = \
         find \
+        $(NULL)
+
+ifdef MOZ_RDF
+DIRS += \
         intl \
         windowds \
         $(NULL)
+endif
 
 ifdef MOZ_HAVE_BROWSER
 DIRS += \

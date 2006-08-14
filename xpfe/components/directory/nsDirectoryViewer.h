@@ -44,13 +44,15 @@
 #include "nsIStreamListener.h"
 #include "nsIContentViewer.h"
 #include "nsIDocument.h"
+#ifdef MOZ_RDF
 #include "nsIHTTPIndex.h"
 #include "nsIRDFService.h"
 #include "nsIRDFDataSource.h"
+#include "nsIRDFLiteral.h"
+#endif
 #include "nsIDocumentLoaderFactory.h"
 #include "nsITimer.h"
 #include "nsISupportsArray.h"
-#include "nsIRDFLiteral.h"
 #include "nsXPIDLString.h"
 #include "nsIDirIndexListener.h"
 #include "nsIFTPChannel.h"
@@ -66,7 +68,7 @@ public:
     NS_DECL_NSIDOCUMENTLOADERFACTORY
 };
 
-
+#ifdef MOZ_RDF
 class nsHTTPIndex : public nsIHTTPIndex,
                     public nsIRDFDataSource,
                     public nsIStreamListener,
@@ -76,8 +78,8 @@ class nsHTTPIndex : public nsIHTTPIndex,
 {
 private:
 
-	// note: these are NOT statics due to the native of nsHTTPIndex
-	// where it may or may not be treated as a singleton
+    // note: these are NOT statics due to the native of nsHTTPIndex
+    // where it may or may not be treated as a singleton
 
     nsCOMPtr<nsIRDFResource>     kNC_Child;
     nsCOMPtr<nsIRDFResource>     kNC_Comment;
@@ -92,31 +94,31 @@ private:
     nsCOMPtr<nsIRDFLiteral>      kTrueLiteral;
     nsCOMPtr<nsIRDFLiteral>      kFalseLiteral;
 
-	nsCOMPtr<nsIRDFService>      mDirRDF;
+    nsCOMPtr<nsIRDFService>      mDirRDF;
 
 protected:
-	// We grab a reference to the content viewer container (which
-	// indirectly owns us) so that we can insert ourselves as a global
-	// in the script context _after_ the XUL doc has been embedded into
-	// content viewer. We'll know that this has happened once we receive
-	// an OnStartRequest() notification
+    // We grab a reference to the content viewer container (which
+    // indirectly owns us) so that we can insert ourselves as a global
+    // in the script context _after_ the XUL doc has been embedded into
+    // content viewer. We'll know that this has happened once we receive
+    // an OnStartRequest() notification
 
-	nsCOMPtr<nsIRDFDataSource>	 mInner;
-	nsCOMPtr<nsISupportsArray>	 mConnectionList;
-	nsCOMPtr<nsISupportsArray>   mNodeList;
-	nsCOMPtr<nsITimer>		     mTimer;
+    nsCOMPtr<nsIRDFDataSource>   mInner;
+    nsCOMPtr<nsISupportsArray>   mConnectionList;
+    nsCOMPtr<nsISupportsArray>   mNodeList;
+    nsCOMPtr<nsITimer>           mTimer;
     nsCOMPtr<nsIDirIndexParser>  mParser;
-	nsCString			         mBaseURL;
-	nsCString                    mEncoding;
+    nsCString mBaseURL;
+    nsCString                    mEncoding;
     PRBool                       mBindToGlobalObject;
     nsIInterfaceRequestor*       mRequestor; // WEAK
     nsCOMPtr<nsIRDFResource>     mDirectory;
 
     nsHTTPIndex(nsIInterfaceRequestor* aRequestor);
-	nsresult	CommonInit(void);
-	nsresult 	Init(nsIURI* aBaseURL);
+    nsresult CommonInit(void);
+    nsresult Init(nsIURI* aBaseURL);
     void        GetDestination(nsIRDFResource* r, nsXPIDLCString& dest);
-	PRBool		isWellknownContainerURI(nsIRDFResource *r);
+    PRBool      isWellknownContainerURI(nsIRDFResource *r);
     nsresult    AddElement(nsIRDFResource *parent, nsIRDFResource *prop,
                            nsIRDFNode *child);
 
@@ -124,17 +126,17 @@ protected:
 
 public:
     nsHTTPIndex();
-	virtual		~nsHTTPIndex();
-	nsresult	Init(void);
+    virtual ~nsHTTPIndex();
+    nsresult Init(void);
 
-    static	nsresult	Create(nsIURI* aBaseURI, nsIInterfaceRequestor* aContainer,
-                               nsIHTTPIndex** aResult);
+    static nsresult Create(nsIURI* aBaseURI, nsIInterfaceRequestor* aContainer,
+                           nsIHTTPIndex** aResult);
 
-	// nsIHTTPIndex interface
-	NS_DECL_NSIHTTPINDEX
+    // nsIHTTPIndex interface
+    NS_DECL_NSIHTTPINDEX
 
-	// NSIRDFDataSource interface
-	NS_DECL_NSIRDFDATASOURCE
+    // NSIRDFDataSource interface
+    NS_DECL_NSIRDFDATASOURCE
 
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
@@ -143,9 +145,10 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIFTPEVENTSINK
 
-	// nsISupports interface
-	NS_DECL_ISUPPORTS
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
 };
+#endif
 
 // {82776710-5690-11d3-BE36-00104BDE6048}
 #define NS_DIRECTORYVIEWERFACTORY_CID \

@@ -154,8 +154,6 @@ const PRInt32 kBackward = 1;
 #define ID_NOT_IN_DOCUMENT ((nsIContent *)2)
 #define NAME_NOT_VALID ((nsBaseContentList*)1)
 
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-
 // Returns the name atom of aContent, if the content is a named item
 // and has a name atom.
 static nsIAtom* IsNamedItem(nsIContent* aContent);

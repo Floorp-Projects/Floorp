@@ -42,7 +42,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef MOZ_RDF
 include $(topsrcdir)/rdf/util/src/objs.mk
+endif
 include $(topsrcdir)/intl/unicharutil/util/objs.mk
 
 MODULE = libxul
@@ -111,28 +113,42 @@ include $(srcdir)/libxul-config.mk
 EXTRA_DEPS += \
 	$(srcdir)/libxul-config.mk \
 	$(srcdir)/libxul-rules.mk \
-	$(topsrcdir)/rdf/util/src/objs.mk \
 	$(topsrcdir)/intl/unicharutil/util/objs.mk \
 	$(NULL)
 
 REQUIRES += \
-	rdf \
-	rdfutil \
 	uconv \
 	unicharutil \
 	$(NULL)
 
 CPPSRCS += \
-	$(RDF_UTIL_SRC_LCPPSRCS) \
 	$(INTL_UNICHARUTIL_UTIL_LCPPSRCS) \
 	$(NULL)
 
 GARBAGE	+= \
-	$(RDF_UTIL_SRC_LCPPSRCS) \
 	$(INTL_UNICHARUTIL_UTIL_LCPPSRCS) \
 	$(wildcard *.$(OBJ_SUFFIX)) \
 	dlldeps-javaxpcom.cpp \
 	$(NULL)
+
+ifdef MOZ_RDF
+EXTRA_DEPS += \
+	$(topsrcdir)/rdf/util/src/objs.mk \
+	$(NULL)
+
+REQUIRES += \
+	rdf \
+	rdfutil \
+	$(NULL)
+
+CPPSRCS += \
+	$(RDF_UTIL_SRC_LCPPSRCS) \
+	$(NULL)
+
+GARBAGE += \
+	$(RDF_UTIL_SRC_LCPPSRCS) \
+	$(NULL)
+endif
 else
 ifdef NS_TRACE_MALLOC
 EXTRA_DSO_LIBS += tracemalloc

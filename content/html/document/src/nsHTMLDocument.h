@@ -47,9 +47,7 @@
 #include "nsIDOMHTMLCollection.h"
 #include "nsIScriptElement.h"
 #include "jsapi.h"
-#include "rdf.h"
-#include "nsRDFCID.h"
-#include "nsIRDFService.h"
+
 #include "pldhash.h"
 #include "nsIHttpChannel.h"
 #include "nsHTMLStyleSheet.h"

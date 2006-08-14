@@ -65,10 +65,12 @@
 #include "nsAutoPtr.h"
 
 // used to manage our in memory data source of helper applications
+#ifdef MOZ_RDF
 #include "nsRDFCID.h"
 #include "rdf.h"
 #include "nsIRDFService.h"
 #include "nsIRDFRemoteDataSource.h"
+#endif //MOZ_RDF
 #include "nsHelperAppRDF.h"
 #include "nsIMIMEInfo.h"
 #include "nsDirectoryServiceDefs.h"
@@ -132,7 +134,9 @@ static const char NEVER_ASK_PREF_BRANCH[] = "browser.helperApps.neverAsk.";
 static const char NEVER_ASK_FOR_SAVE_TO_DISK_PREF[] = "saveToDisk";
 static const char NEVER_ASK_FOR_OPEN_FILE_PREF[]    = "openFile";
 
+#ifdef MOZ_RDF
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+#endif
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 /**
@@ -515,6 +519,7 @@ nsExternalHelperAppService::~nsExternalHelperAppService()
 
 nsresult nsExternalHelperAppService::InitDataSource()
 {
+#ifdef MOZ_RDF
   nsresult rv = NS_OK;
 
   // don't re-initialize the data source if we've already done so...
@@ -567,6 +572,9 @@ nsresult nsExternalHelperAppService::InitDataSource()
   mDataSourceInitialized = PR_TRUE;
 
   return rv;
+#else
+  return NS_ERROR_NOT_AVAILABLE;
+#endif
 }
 
 NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeContentType,
@@ -706,6 +714,7 @@ NS_IMETHODIMP nsExternalHelperAppService::ApplyDecodingForExtension(const nsACSt
   return NS_OK;
 }
 
+#ifdef MOZ_RDF
 nsresult nsExternalHelperAppService::FillTopLevelProperties(nsIRDFResource * aContentTypeNodeResource, 
                                                             nsIRDFService * aRDFService, nsIMIMEInfo * aMIMEInfo)
 {
@@ -854,9 +863,11 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * a
 
   return rv;
 }
+#endif /* MOZ_RDF */
 
 PRBool nsExternalHelperAppService::MIMETypeIsInDataSource(const char * aContentType)
 {
+#ifdef MOZ_RDF
   nsresult rv = InitDataSource();
   if (NS_FAILED(rv)) return PR_FALSE;
   
@@ -888,11 +899,13 @@ PRBool nsExternalHelperAppService::MIMETypeIsInDataSource(const char * aContentT
     
     if (NS_SUCCEEDED(rv) && exists) return PR_TRUE;
   }
+#endif
   return PR_FALSE;
 }
 
 nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const nsACString& aContentType, nsIMIMEInfo * aMIMEInfo)
 {
+#ifdef MOZ_RDF
   NS_ENSURE_ARG_POINTER(aMIMEInfo);
   nsresult rv = InitDataSource();
   if (NS_FAILED(rv)) return rv;
@@ -941,6 +954,9 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const nsACStri
   }
 
   return rv;
+#else
+  return NS_ERROR_NOT_AVAILABLE;
+#endif /* MOZ_RDF */
 }
 
 nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromDS(const nsACString& aFileExtension, nsIMIMEInfo * aMIMEInfo)
@@ -956,6 +972,7 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromDS(const nsACStr
 PRBool nsExternalHelperAppService::GetTypeFromDS(const nsACString& aExtension,
                                                  nsACString& aType)
 {
+#ifdef MOZ_RDF
   nsresult rv = InitDataSource();
   if (NS_FAILED(rv))
     return PR_FALSE;
@@ -989,6 +1006,7 @@ PRBool nsExternalHelperAppService::GetTypeFromDS(const nsACString& aExtension,
       return PR_TRUE;
     }
   }  // if we have a node in the graph for this extension
+#endif /* MOZ_RDF */
   return PR_FALSE;
 }
 
@@ -1314,11 +1332,13 @@ nsExternalHelperAppService::Observe(nsISupports *aSubject, const char *aTopic, c
 {
   if (!strcmp(aTopic, "profile-before-change")) {
     ExpungeTemporaryFiles();
+#ifdef MOZ_RDF
     nsCOMPtr <nsIRDFRemoteDataSource> flushableDataSource = do_QueryInterface(mOverRideDataSource);
     if (flushableDataSource)
       flushableDataSource->Flush();
     mOverRideDataSource = nsnull;
     mDataSourceInitialized = PR_FALSE;
+#endif
   }
   return NS_OK;
 }
