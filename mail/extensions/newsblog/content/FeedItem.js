@@ -420,8 +420,10 @@ FeedItem.prototype =
     // Get the folder and database storing the feed's messages and headers.
     folder = this.feed.folder.QueryInterface(Components.interfaces.nsIMsgLocalMailFolder);
 
+    this.feed.folder.gettingNewMessages = true;
     // source is a unicode string, we want to save a char * string in the original charset. So convert back
     folder.addMessage(this.mUnicodeConverter.ConvertFromUnicode(source));
+    this.feed.folder.gettingNewMessages = false;
     this.markStored();
   }
 };
