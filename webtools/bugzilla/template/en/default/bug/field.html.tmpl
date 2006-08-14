@@ -37,14 +37,11 @@
   [% '</label>' IF editable %]
 </th>
 
-<td class="field_value">
+<td class="field_value" [% "colspan=\"$value_span\"" FILTER none IF value_span %]>
 [% IF editable %]
   [% SWITCH field.type %]
     [% CASE constants.FIELD_TYPE_FREETEXT %]
-        <input name="[% field.name FILTER html %]"
-               value="[% value FILTER html %]"
-               [% "colspan=\"$value_span\"" FILTER none IF value_span %]
-               size="60">
+        <input name="[% field.name FILTER html %]" value="[% value FILTER html %]" size="60">
   [% END %]
 [% ELSE %]
   [% value FILTER html %]

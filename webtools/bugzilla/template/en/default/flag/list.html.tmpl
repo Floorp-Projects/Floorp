@@ -72,7 +72,9 @@
   # on a single bug/attachment).
   #%]
 
-<table id="flags">
+[% DEFAULT flag_table_id = "flags" %]
+
+<table id="[% flag_table_id FILTER html %]">
   <tr>
     <th colspan="3">
       Flags:

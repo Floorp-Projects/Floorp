@@ -265,6 +265,7 @@ function handleWantsAttachment(wants_attachment) {
       [% IF product.flag_types.bug.size > 0 %]
         [% PROCESS "flag/list.html.tmpl" flag_types = product.flag_types.bug
                                          any_flags_requesteeble = 1
+                                         flag_table_id = "bug_flags"
         %]
       [% END %]
     </td>
@@ -365,7 +366,7 @@ function handleWantsAttachment(wants_attachment) {
                                            enter_bug => 1 }) %]
     [% SET value = ${field.name} IF ${field.name}.defined %]
     <tr>
-      [% PROCESS bug/field.html.tmpl editable=1 value_span=3 %]
+      [% PROCESS bug/field.html.tmpl editable=1 value_span=2 %]
     </tr>
   [% END %]
 
@@ -425,8 +426,8 @@ function handleWantsAttachment(wants_attachment) {
                       +          'onClick="handleWantsAttachment(true)"> '
                       +   '<em style="display: none">This button has no '
                       +   'functionality for you because your browser does '
-                      +   'not support CSS or does not use it.</em>'
-                      + '</div>'
+                      +   'not support CSS or does not use it.<\/em>'
+                      + '<\/div>'
                       + '<div id="attachment_true" style="display: none">'
                       +   '<input type="button" '
                       +          'value="Don\'t add an attachment " '
@@ -437,12 +438,13 @@ function handleWantsAttachment(wants_attachment) {
           <legend>Add an attachment</legend>
           <table class="attachment_entry">
             [% PROCESS attachment/createformcontents.html.tmpl
-                       flag_types = product.flag_types.attachment %]
+                       flag_types = product.flag_types.attachment
+                       flag_table_id ="attachment_flags" %]
           </table>
         </fieldset>
       <script type="text/javascript">
         <!--
-        document.write('</div>');
+        document.write('<\/div>');
         //-->
       </script>
     </td>
