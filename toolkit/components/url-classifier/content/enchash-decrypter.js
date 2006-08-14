@@ -64,7 +64,8 @@ function PROT_EnchashDecrypter() {
   this.REs_ = PROT_EnchashDecrypter.REs;
   this.hasher_ = new G_CryptoHasher();
   this.base64_ = new G_Base64();
-  this.rc4_ = new ARC4();
+  this.streamCipher_ = Cc["@mozilla.org/security/streamcipher;1"]
+                       .createInstance(Ci.nsIStreamCipher);
 }
 
 PROT_EnchashDecrypter.DATABASE_SALT = "oU3q.72p";
@@ -166,10 +167,16 @@ PROT_EnchashDecrypter.prototype.parseRegExps = function(data) {
 }
 
 PROT_EnchashDecrypter.prototype.getCanonicalHost = function(str) {
-  var urlObj = Cc["@mozilla.org/network/standard-url;1"]
-               .createInstance(Ci.nsIURL);
-  urlObj.spec = str;
-  var asciiHost = urlObj.asciiHost;
+  var ioservice = Cc["@mozilla.org/network/io-service;1"]
+                  .getService(Ci.nsIIOService);
+                  
+  var urlObj = ioservice.newURI(str, null, null);
+  var asciiHost = '';
+  try {
+    asciiHost = urlObj.asciiHost;
+  } catch (e) {
+    return asciiHost;
+  }
 
   var unescaped = this.hexDecode_(asciiHost);
 
@@ -290,24 +297,26 @@ PROT_EnchashDecrypter.prototype.getLookupKey = function(host) {
 }
 
 PROT_EnchashDecrypter.prototype.decryptData = function(data, host) {
+  // XXX: base 64 decoding should be done in C++
+  var asciiArray = this.base64_.decodeString(data);
+  var ascii = this.base64_.stringifyArray(asciiArray);
 
-  var ascii = this.base64_.decodeString(data);
   var random_salt = ascii.slice(0, PROT_EnchashDecrypter.SALT_LENGTH);
   var encrypted_data = ascii.slice(PROT_EnchashDecrypter.SALT_LENGTH);
-  var temp_decryption_key = 
-    this.base64_.arrayifyString(PROT_EnchashDecrypter.DATABASE_SALT);
-  temp_decryption_key = temp_decryption_key.concat(random_salt);
-  temp_decryption_key = 
-    temp_decryption_key.concat(this.base64_.arrayifyString(host));
-                               
+  var temp_decryption_key = PROT_EnchashDecrypter.DATABASE_SALT
+      + random_salt + host;
   this.hasher_.init(G_CryptoHasher.algorithms.MD5);
-  this.hasher_.updateFromArray(temp_decryption_key);
-  var decryption_key = this.base64_.arrayifyString(this.hasher_.digestRaw());
+  this.hasher_.updateFromString(temp_decryption_key);
 
-  this.rc4_.setKey(decryption_key, decryption_key.length);
-  this.rc4_.crypt(encrypted_data, encrypted_data.length);   // Works in-place
-  
-  return this.base64_.stringifyArray(encrypted_data);
+  var keyFactory = Cc["@mozilla.org/security/keyobjectfactory;1"]
+                   .getService(Ci.nsIKeyObjectFactory);
+  var key = keyFactory.keyFromString(Ci.nsIKeyObject.RC4,
+                                     this.hasher_.digestRaw());
+
+  this.streamCipher_.init(key);
+  this.streamCipher_.updateFromString(encrypted_data);
+
+  return this.streamCipher_.finish(false /* no base64 */);
 }
 
 #ifdef DEBUG
