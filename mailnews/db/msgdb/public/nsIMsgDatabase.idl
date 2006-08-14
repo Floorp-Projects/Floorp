@@ -118,7 +118,7 @@ interface nsIMsgDBService : nsISupports
     void unregisterPendingListener(in nsIDBChangeListener aListener);
 };
 
-[scriptable, uuid(6393FEF1-D6C6-444A-90B8-BEC84E8BD8D7)]
+[scriptable, uuid(6c8db586-57ff-4a1b-bb7e-acff79d6a4ce)]
 
 interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   void Open(in nsIFileSpec aFolderName, in boolean aCreate, in boolean aLeaveInvalidDB);
@@ -287,6 +287,7 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   // news can be threaded by default)
   readonly attribute nsMsgViewFlagsTypeValue defaultViewFlags;
   readonly attribute nsMsgViewSortTypeValue  defaultSortType;
+  readonly attribute nsMsgViewSortOrderValue defaultSortOrder;
 
   // for msg hdr hash table allocation. controllable by caller to improve folder loading preformance.
   attribute unsigned long msgHdrCacheSize;

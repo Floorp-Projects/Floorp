@@ -366,6 +366,19 @@ NS_IMETHODIMP
 nsNewsDatabase::GetDefaultSortType(nsMsgViewSortTypeValue *aDefaultSortType)
 {
   NS_ENSURE_ARG_POINTER(aDefaultSortType);
-  *aDefaultSortType = nsMsgViewSortType::byThread;
+  GetIntPref("mailnews.default_news_sort_type", aDefaultSortType);
+  if (*aDefaultSortType < nsMsgViewSortType::byDate ||
+      *aDefaultSortType > nsMsgViewSortType::byAccount)
+    *aDefaultSortType = nsMsgViewSortType::byThread;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNewsDatabase::GetDefaultSortOrder(nsMsgViewSortOrderValue *aDefaultSortOrder)
+{
+  NS_ENSURE_ARG_POINTER(aDefaultSortOrder);
+  GetIntPref("mailnews.default_news_sort_order", aDefaultSortOrder);
+  if (*aDefaultSortOrder != nsMsgViewSortOrder::descending)
+    *aDefaultSortOrder = nsMsgViewSortOrder::ascending;
   return NS_OK;
 }

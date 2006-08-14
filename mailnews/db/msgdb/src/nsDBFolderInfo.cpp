@@ -826,8 +826,12 @@ NS_IMETHODIMP nsDBFolderInfo::SetSortType(nsMsgViewSortTypeValue aSortType)
 /* attribute nsMsgViewSortOrderValue sortOrder; */
 NS_IMETHODIMP nsDBFolderInfo::GetSortOrder(nsMsgViewSortOrderValue *aSortOrder)
 {
+  nsMsgViewSortOrderValue defaultSortOrder;
+  nsresult rv = m_mdb->GetDefaultSortOrder(&defaultSortOrder);
+  NS_ENSURE_SUCCESS(rv,rv);
+
   PRUint32 sortOrderValue;
-  nsresult rv = GetUint32Property("sortOrder", nsMsgViewSortOrder::ascending, &sortOrderValue);
+  rv = GetUint32Property("sortOrder", defaultSortOrder, &sortOrderValue);
   *aSortOrder = sortOrderValue;
   return rv;
 }
