@@ -122,13 +122,12 @@ gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
 
     mMetrics.maxAscent = atsMetrics.ascent * size;
     mMetrics.maxDescent = - (atsMetrics.descent * size);
-    mMetrics.height = mMetrics.maxAscent + mMetrics.maxDescent;
 
     mMetrics.internalLeading = atsMetrics.leading * size;
     mMetrics.externalLeading = 0.0;
 
-    mMetrics.maxHeight = mMetrics.height;
-    mMetrics.emAscent = mMetrics.maxAscent * mMetrics.emHeight / mMetrics.height;
+    mMetrics.maxHeight = mMetrics.maxAscent + mMetrics.maxDescent;
+    mMetrics.emAscent = mMetrics.maxAscent * mMetrics.emHeight / mMetrics.maxHeight;
     mMetrics.emDescent = mMetrics.emHeight - mMetrics.emAscent;
 
     mMetrics.maxAdvance = atsMetrics.maxAdvanceWidth * size;
@@ -154,7 +153,7 @@ gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
     fprintf (stderr, "Font: %p size: %f", this, size);
     fprintf (stderr, "    emHeight: %f emAscent: %f emDescent: %f\n", mMetrics.emHeight, mMetrics.emAscent, mMetrics.emDescent);
     fprintf (stderr, "    maxAscent: %f maxDescent: %f maxAdvance: %f\n", mMetrics.maxAscent, mMetrics.maxDescent, mMetrics.maxAdvance);
-    fprintf (stderr, "    height: %f internalLeading: %f externalLeading: %f\n", mMetrics.height, mMetrics.externalLeading, mMetrics.internalLeading);
+    fprintf (stderr, "    internalLeading: %f externalLeading: %f\n", mMetrics.externalLeading, mMetrics.internalLeading);
     fprintf (stderr, "    spaceWidth: %f aveCharWidth: %f xHeight: %f\n", mMetrics.spaceWidth, mMetrics.aveCharWidth, mMetrics.xHeight);
     fprintf (stderr, "    uOff: %f uSize: %f stOff: %f stSize: %f suOff: %f suSize: %f\n", mMetrics.underlineOffset, mMetrics.underlineSize, mMetrics.strikeoutOffset, mMetrics.strikeoutSize, mMetrics.superscriptOffset, mMetrics.subscriptOffset);
 #endif
