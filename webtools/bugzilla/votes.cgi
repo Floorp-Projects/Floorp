@@ -74,14 +74,14 @@ ValidateBugID($bug_id) if defined $bug_id;
 ################################################################################
 
 if ($action eq "show_bug") {
-    show_bug();
+    show_bug($bug_id);
 } 
 elsif ($action eq "show_user") {
-    show_user();
+    show_user($bug_id);
 }
 elsif ($action eq "vote") {
     record_votes() if Bugzilla->params->{'usevotes'};
-    show_user();
+    show_user($bug_id);
 }
 else {
     ThrowCodeError("unknown_action", {action => $action});
@@ -91,10 +91,10 @@ exit;
 
 # Display the names of all the people voting for this one bug.
 sub show_bug {
+    my ($bug_id) = @_;
     my $cgi = Bugzilla->cgi;
     my $dbh = Bugzilla->dbh;
     my $template = Bugzilla->template;
-    my $bug_id = $cgi->param('bug_id');
 
     ThrowCodeError("missing_bug_id") unless defined $bug_id;
 
@@ -115,11 +115,11 @@ sub show_bug {
 # Display all the votes for a particular user. If it's the user
 # doing the viewing, give them the option to edit them too.
 sub show_user {
+    my ($bug_id) = @_;
     my $cgi = Bugzilla->cgi;
     my $dbh = Bugzilla->dbh;
     my $user = Bugzilla->user;
     my $template = Bugzilla->template;
-    my $bug_id = $cgi->param('bug_id');
 
     # If a bug_id is given, and we're editing, we'll add it to the votes list.
     $bug_id ||= "";
