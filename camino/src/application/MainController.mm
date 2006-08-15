@@ -1452,11 +1452,16 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
         /* ... many more items go here ... */
         action == @selector(pageSetup:) ||
         action == @selector(findInPage:) ||
-        action == @selector(doReload:) ||
         action == @selector(savePage:))
   {
     return (browserController && ![browserController bookmarkManagerIsVisible]);
   }
+
+  if (action == @selector(doReload:))
+    return (browserController && [[browserController getBrowserWrapper] canReload]);
+
+  if (action == @selector(doReloadAllTabs:))
+    return (browserController != nil);
 
   // disable open menu items if a sheet is up (maybe disable others too)
   if (action == @selector(openFile:) ||
@@ -1498,8 +1503,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
 
   // only activate if we've got multiple tabs open.
   if (action == @selector(nextTab:) ||
-      action == @selector(previousTab:) ||
-      action == @selector(doReloadAllTabs:))
+      action == @selector(previousTab:))
   {
     return (browserController && [[browserController getTabBrowser] numberOfTabViewItems] > 1);
   }
@@ -1545,10 +1549,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
   }
 
   if (action == @selector(sendURL:))
-  {
-    NSString* urlString = [[[self getMainWindowBrowserController] getBrowserWrapper] getCurrentURI];
-    return ![MainController isBlankURL:urlString];
-  }
+    return ![[browserController getBrowserWrapper] isEmpty];
 
   // default return
   return YES;

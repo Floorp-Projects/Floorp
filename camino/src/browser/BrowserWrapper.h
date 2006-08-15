@@ -186,6 +186,7 @@ class nsIArray;
 - (CHBrowserView*)getBrowserView;
 - (BOOL)isBusy;
 - (BOOL)isEmpty;                      // is about:blank loaded?
+- (BOOL)canReload;
 
 - (NSString*)windowTitle;
 - (NSString*)pageTitle;
