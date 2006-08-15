@@ -1375,6 +1375,34 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     todo = -2;
                     break;
 
+                  case SRC_DECL:
+                    /* This pop is at the end of the head of a let form. */
+                    pc += js_CodeSpec[JSOP_POP].length;
+                    len = js_GetSrcNoteOffset(sn, 0);
+                    if (pc[len] == JSOP_LEAVEBLOCK) {
+                        js_printf(jp, "\tlet (%s) {\n", POP_STR());
+                        jp->indent += 4;
+                        DECOMPILE_CODE(pc, len);
+                        jp->indent -= 4;
+                        js_printf(jp, "\t}\n");
+                        todo = -2;
+                    } else {
+                        JS_ASSERT(pc[len] == JSOP_LEAVEBLOCKEXPR);
+
+                        lval = JS_strdup(cx, POP_STR());
+                        if (!lval)
+                            return JS_FALSE;
+
+                        if (!Decompile(ss, pc, len)) {
+                            JS_free(cx, (char *)lval);
+                            return JS_FALSE;
+                        }
+                        rval = POP_STR();
+                        todo = Sprint(&ss->sprinter, "let (%s) %s", lval, rval);
+                        JS_free(cx, (char *)lval);
+                    }
+                    break;
+
                   default:
                     rval = POP_STR();
                     if (*rval != '\0')
