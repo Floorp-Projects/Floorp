@@ -107,6 +107,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsDOMString.h"
 #include "nsNodeInfoManager.h"
+#include "nsIXBLService.h"
 #include "nsCRT.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
@@ -1383,6 +1384,57 @@ nsContentUtils::ComparePosition(nsINode* aNode1,
      nsIDOM3Node::DOCUMENT_POSITION_CONTAINS) :
     (nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING |
      nsIDOM3Node::DOCUMENT_POSITION_CONTAINED_BY);    
+}
+
+nsIContent*
+nsContentUtils::FindFirstChildWithResolvedTag(nsIContent* aParent,
+                                              PRInt32 aNamespace,
+                                              nsIAtom* aTag)
+{
+  if (!aParent) {
+    return nsnull;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsIXBLService> xblService = 
+           do_GetService("@mozilla.org/xbl;1", &rv);
+  PRInt32 namespaceID;
+  PRUint32 count = aParent->GetChildCount();
+
+  nsCOMPtr<nsIAtom> tag;
+  for (PRUint32 i = 0; i < count; i++) {
+    nsIContent *child = aParent->GetChildAt(i);
+    xblService->ResolveTag(child, &namespaceID, getter_AddRefs(tag));
+    if (tag == aTag && namespaceID == aNamespace) {
+      return child;
+    }
+  }
+
+  // now look for children in XBL
+  nsIDocument* doc = aParent->GetDocument();
+  if (!doc) {
+    return nsnull;
+  }
+
+  nsCOMPtr<nsIDOMNodeList> children;
+  doc->BindingManager()->GetXBLChildNodesFor(aParent, getter_AddRefs(children));
+  if (!children) {
+    return nsnull;
+  }
+
+  PRUint32 length;
+  children->GetLength(&length);
+  for (PRUint32 i = 0; i < length; i++) {
+    nsCOMPtr<nsIDOMNode> childNode;
+    children->Item(i, getter_AddRefs(childNode));
+    nsCOMPtr<nsIContent> childContent = do_QueryInterface(childNode);
+    xblService->ResolveTag(childContent, &namespaceID, getter_AddRefs(tag));
+    if (tag == aTag && namespaceID == aNamespace) {
+      return childContent;
+    }
+  }
+
+  return nsnull;
 }
 
 inline PRBool

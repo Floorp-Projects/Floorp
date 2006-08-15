@@ -71,7 +71,6 @@
 #include "nsIViewManager.h"
 #include "nsIBindingManager.h"
 #include "nsIServiceManager.h"
-#include "nsIXBLService.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIScrollableView.h"
@@ -924,28 +923,10 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
 void
 nsMenuFrame::GetMenuChildrenElement(nsIContent** aResult)
 {
-  if (!mContent)
-  {
-    *aResult = nsnull;
-    return;
-  }
-  
-  nsresult rv;
-  nsCOMPtr<nsIXBLService> xblService = 
-           do_GetService("@mozilla.org/xbl;1", &rv);
-  PRInt32 dummy;
-  PRUint32 count = mContent->GetChildCount();
-
-  for (PRUint32 i = 0; i < count; i++) {
-    nsIContent *child = mContent->GetChildAt(i);
-    nsCOMPtr<nsIAtom> tag;
-    xblService->ResolveTag(child, &dummy, getter_AddRefs(tag));
-    if (tag == nsXULAtoms::menupopup) {
-      *aResult = child;
-      NS_ADDREF(*aResult);
-      return;
-    }
-  }
+  *aResult = nsContentUtils::FindFirstChildWithResolvedTag(mContent,
+                                                           kNameSpaceID_XUL,
+                                                           nsXULAtoms::menupopup);
+  NS_IF_ADDREF(*aResult);
 }
 
 PRBool

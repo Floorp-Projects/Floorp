@@ -242,6 +242,20 @@ public:
   }
 
   /**
+   * Find the first child of aParent with a resolved tag matching
+   * aNamespace and aTag. Both the explicit and anonymous children of
+   * aParent are examined. The return value is not addrefed.
+   *
+   * XXXndeakin this should return the first child whether in anonymous or
+   * explicit children, but currently XBL doesn't tell us the relative
+   * ordering of anonymous vs explicit children, so instead it searches
+   * the explicit children first then the anonymous children.
+   */
+  static nsIContent* FindFirstChildWithResolvedTag(nsIContent* aParent,
+                                                   PRInt32 aNamespace,
+                                                   nsIAtom* aTag);
+
+  /**
    * Brute-force search of the element subtree rooted at aContent for
    * an element with the given id.  aId must be nonempty, otherwise
    * this method may return nodes even if they have no id!
