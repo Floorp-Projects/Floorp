@@ -303,6 +303,7 @@ sub init {
         } else {
             my $bug_creation_clause;
             my @list;
+            my @actlist;
             foreach my $f (@chfield) {
                 if ($f eq "[Bug creation]") {
                     # Treat [Bug creation] differently because we need to look
@@ -312,14 +313,15 @@ sub init {
                     push(@l, "bugs.creation_ts <= $sql_chto") if($sql_chto);
                     $bug_creation_clause = "(" . join(' AND ', @l) . ")";
                 } else {
-                    push(@list, "\nactcheck.fieldid = " . get_field_id($f));
+                    push(@actlist, "actcheck.fieldid = " . get_field_id($f));
                 }
             }
 
-            # @list won't have any elements if the only field being searched
+            # @actlist won't have any elements if the only field being searched
             # is [Bug creation] (in which case we don't need bugs_activity).
-            if(@list) {
-                my $extra = "";
+            if(@actlist) {
+                my $extra = " AND actcheck.bug_id = bugs.bug_id";
+                push(@list, "(actcheck.bug_when IS NOT NULL)");
                 if($sql_chfrom) {
                     $extra .= " AND actcheck.bug_when >= $sql_chfrom";
                 }
@@ -329,8 +331,8 @@ sub init {
                 if($sql_chvalue) {
                     $extra .= " AND actcheck.added = $sql_chvalue";
                 }
-                push(@supptables, "INNER JOIN bugs_activity AS actcheck " .
-                                   "ON actcheck.bug_id = bugs.bug_id $extra");
+                push(@supptables, "LEFT JOIN bugs_activity AS actcheck " .
+                                  "ON (" . join(" OR ", @actlist) . "$extra )");
             }
 
             # Now that we're done using @list to determine if there are any
