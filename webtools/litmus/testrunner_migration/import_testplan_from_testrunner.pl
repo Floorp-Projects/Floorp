@@ -138,10 +138,10 @@ if (!$new_testgroup_id) {
   die "Unable to lookup new testgroup ID";
 }
 
-my $subgroup_sql = "INSERT INTO subgroups (name,testrunner_group_id,enabled) VALUES (?,?,1)";
+my $subgroup_sql = "INSERT INTO subgroups (name,testrunner_group_id,enabled,product_id) VALUES (?,?,1,?)";
 my $new_subgroup_id_sql = "SELECT MAX(subgroup_id) FROM subgroups";
 my $subgroup_testgroups_sql = "INSERT INTO subgroup_testgroups (subgroup_id, testgroup_id, sort_order) VALUES (?,?,?)";
-my $test_sql = "INSERT INTO testcases (summary, details, community_enabled, steps, expected_results, author_id, creation_date, last_updated, testrunner_case_id, testrunner_case_version, enabled) VALUES (?,?,1,?,?,?,NOW(),NOW(),?,1,1)";
+my $test_sql = "INSERT INTO testcases (summary, details, community_enabled, steps, expected_results, author_id, creation_date, last_updated, testrunner_case_id, testrunner_case_version, enabled, product_id) VALUES (?,?,1,?,?,?,NOW(),NOW(),?,1,1,?)";
 my $testcase_subgroups_sql = "INSERT INTO testcase_subgroups (testcase_id, subgroup_id, sort_order) VALUES (?,?,?)";
 my $new_testcase_id_sql = "SELECT MAX(testcase_id) FROM testcases";
 my $group_sort_order=1;
@@ -150,6 +150,7 @@ foreach my $subgroup (@subgroups) {
                   undef,  
                   $subgroup->{'name'}, 
                   $subgroup->{'group_id'},            
+                  $product_id
                  );
 
   $sth = $litmus_dbh->prepare($new_subgroup_id_sql);
@@ -174,7 +175,8 @@ foreach my $subgroup (@subgroups) {
                     $test->{'action'},
                     $test->{'effect'},
                     $author_id,
-                    $test->{'case_id'}
+                    $test->{'case_id'},
+                    $product_id
                    );
     $sth = $litmus_dbh->prepare($new_testcase_id_sql);
     $sth->execute();
