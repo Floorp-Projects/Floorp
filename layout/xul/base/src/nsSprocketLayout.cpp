@@ -803,8 +803,12 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
   currentBox = aBoxSizes;
   nsBoxSize* last = nsnull;
 
+  nscoord maxFlex = 0;
+  PRInt32 childCount = 0;
+
   while(child)
   {
+    ++childCount;
     nsSize pref(0,0);
     nsSize min(0,0);
     nsSize max(NS_INTRINSICSIZE,NS_INTRINSICSIZE);
@@ -864,10 +868,15 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
       child->GetFlex(aState, flex);
 
       // set them if you collapsed you are not flexible.
-      if (collapsed)
-         currentBox->flex = 0;
-      else
-         currentBox->flex = flex;
+      if (collapsed) {
+        currentBox->flex = 0;
+      }
+      else {
+        if (flex > maxFlex) {
+          maxFlex = flex;
+        }
+        currentBox->flex = flex;
+      }
 
       // we specified all our children are equal size;
       if (frameState & NS_STATE_EQUAL_SIZE) {
@@ -915,6 +924,24 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
     currentBox = currentBox->next;
 
   }
+
+  if (childCount > 0) {
+    nscoord maxAllowedFlex = nscoord_MAX / childCount;
+  
+    if (NS_UNLIKELY(maxFlex > maxAllowedFlex)) {
+      // clamp all the flexes
+      currentBox = aBoxSizes;
+      while (currentBox) {
+        currentBox->flex = PR_MIN(currentBox->flex, maxAllowedFlex);
+        currentBox = currentBox->next;      
+      }
+    }
+  }
+#ifdef DEBUG
+  else {
+    NS_ASSERTION(maxFlex == 0, "How did that happen?");
+  }
+#endif
 
   // we specified all our children are equal size;
   if (frameState & NS_STATE_EQUAL_SIZE) {
