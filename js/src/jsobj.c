@@ -2006,7 +2006,7 @@ block_xdrObject(JSXDRState *xdr, JSObject **objp)
     JSContext *cx;
     jsatomid parentId;
     JSAtomMap *atomMap;
-    JSObject *parent;
+    JSObject *obj, *parent;
     uint16 depth, count, i;
     uint32 tmp;
     JSTempValueRooter tvr;
@@ -2020,10 +2020,11 @@ block_xdrObject(JSXDRState *xdr, JSObject **objp)
 
     atomMap = &xdr->script->atomMap;
     if (xdr->mode == JSXDR_ENCODE) {
-        parent = OBJ_GET_PARENT(cx, *objp);
+        obj = *objp;
+        parent = OBJ_GET_PARENT(cx, obj);
         parentId = FindObjectAtomIndex(atomMap, parent);
-        depth = OBJ_BLOCK_DEPTH(cx, *objp);
-        count = OBJ_BLOCK_COUNT(cx, *objp);
+        depth = OBJ_BLOCK_DEPTH(cx, obj);
+        count = OBJ_BLOCK_COUNT(cx, obj);
         tmp = (uint32)(depth << 16) | count;
     }
 #ifdef __GNUC__ /* suppress bogus gcc warnings */
@@ -2035,24 +2036,27 @@ block_xdrObject(JSXDRState *xdr, JSObject **objp)
         return JS_FALSE;
 
     if (xdr->mode == JSXDR_DECODE) {
-        *objp = js_NewBlockObject(cx);
-        if (!*objp)
+        obj = js_NewBlockObject(cx);
+        if (!obj)
             return JS_FALSE;
+        *objp = obj;
 
         /*
          * If there's a parent id, then get the parent out of our script's
          * atomMap. We know that we XDR block object in outer-to-inner order,
          * which means that getting the parent now will work.
          */
-        if (parentId != NO_PARENT_INDEX) {
+        if (parentId == NO_PARENT_INDEX) {
+            parent = NULL;
+        } else {
             atom = js_GetAtom(cx, atomMap, parentId);
             JS_ASSERT(ATOM_IS_OBJECT(atom));
             parent = ATOM_TO_OBJECT(atom);
-            OBJ_SET_PARENT(cx, *objp, parent);
         }
+        obj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent);
     }
 
-    JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(*objp), &tvr);
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(obj), &tvr);
 
     if (!JS_XDRUint32(xdr, &tmp)) {
         JS_POP_TEMP_ROOT(cx, &tvr);
@@ -2062,7 +2066,7 @@ block_xdrObject(JSXDRState *xdr, JSObject **objp)
     if (xdr->mode == JSXDR_DECODE) {
         depth = (uint16)(tmp >> 16);
         count = (uint16)tmp;
-        OBJ_SET_BLOCK_DEPTH(cx, *objp, depth);
+        obj->slots[JSSLOT_BLOCK_DEPTH] = INT_TO_JSVAL(depth);
     }
 
     /*
@@ -2077,7 +2081,7 @@ block_xdrObject(JSXDRState *xdr, JSObject **objp)
             /* Find a property to XDR. */
             do {
                 /* If sprop is NULL, this is the first property. */
-                sprop = sprop ? sprop->parent : OBJ_SCOPE(*objp)->lastProp;
+                sprop = sprop ? sprop->parent : OBJ_SCOPE(obj)->lastProp;
             } while (!(sprop->flags & SPROP_HAS_SHORTID));
 
             JS_ASSERT(sprop->getter == js_BlockClass.getProperty);
@@ -2096,7 +2100,7 @@ block_xdrObject(JSXDRState *xdr, JSObject **objp)
         }
 
         if (xdr->mode == JSXDR_DECODE) {
-            if (!js_DefineNativeProperty(cx, *objp, ATOM_TO_JSID(atom),
+            if (!js_DefineNativeProperty(cx, obj, ATOM_TO_JSID(atom),
                                          JSVAL_VOID, NULL, NULL,
                                          JSPROP_ENUMERATE | JSPROP_PERMANENT,
                                          SPROP_HAS_SHORTID, shortid, NULL)) {
