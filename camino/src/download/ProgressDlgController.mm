@@ -859,7 +859,7 @@ static id gSharedProgressController = nil;
     if ((![curController isActive]) || [curController isCanceled])
       return NO;
   }
-  return [[self window] isKeyWindow]; // disable if not key window
+  return YES;
 }
 
 -(BOOL)shouldAllowRemoveAction
@@ -872,7 +872,7 @@ static id gSharedProgressController = nil;
     if ([curController isActive])
       return NO;
   }
-  return [[self window] isKeyWindow];
+  return YES;
 }
 
 -(BOOL)shouldAllowMoveToTrashAction
@@ -1000,14 +1000,14 @@ static id gSharedProgressController = nil;
 -(BOOL)validateToolbarItem:(NSToolbarItem *)theItem
 {
   SEL action = [theItem action];
-  
-  // return true if the action is validating showWindow:
-  // you can always do that from the toolbar
+
+  // validate items not dependent on the current selection.  Must include all such items.
   if (action == @selector(showWindow:))
     return YES;
-  
-  // validate items not dependent on the current selection
-  if (action == @selector(cleanUpDownloads:)) {
+  else if (action == @selector(cleanUpDownloads:)) {
+    if (![[self window] isKeyWindow])
+      return NO; //XXX Get rid of me once we can resume cancelled/failed downloads
+
     unsigned pcControllersCount = [mProgressViewControllers count];
     for (unsigned i = 0; i < pcControllersCount; i++)
     {
@@ -1017,13 +1017,13 @@ static id gSharedProgressController = nil;
     }
     return NO;
   }
-  
+
   // validate items that depend on current selection
   if ([[self selectedProgressViewControllers] count] == 0) {
     return NO;
   }
   else if (action == @selector(remove:)) {
-    return [self shouldAllowRemoveAction];
+    return [self shouldAllowRemoveAction] && [[self window] isKeyWindow];
   }
   else if (action == @selector(open:)) { 
     return [self shouldAllowOpenAction];
@@ -1032,12 +1032,15 @@ static id gSharedProgressController = nil;
     return [self fileExistsForSelectedItems];
   }
   else if (action == @selector(cancel:)) {
-    return [self shouldAllowCancelAction];
+    return [self shouldAllowCancelAction] && [[self window] isKeyWindow];
   }
   else if (action == @selector(pause:) || action == @selector(resume:)) {
     return [self setPauseResumeToolbarItem:theItem];
   }
-  
+  else if (action == @selector(deleteDownloads:)) {
+    return [self shouldAllowMoveToTrashAction] && [[self window] isKeyWindow];
+  }
+
   return YES;
 }
 

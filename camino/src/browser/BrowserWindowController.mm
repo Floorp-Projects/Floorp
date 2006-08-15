@@ -1427,13 +1427,12 @@ enum BWCOpenDest {
   else if (action == @selector(newTab:))
     return YES;
   else if (action == @selector(closeCurrentTab:))
-    return ([mTabBrowser numberOfTabViewItems] > 1);
+    return ([mTabBrowser numberOfTabViewItems] > 1 && [[self window] isKeyWindow]);
   else if (action == @selector(sendURL:)) {
     NSString* curURL = [[self getBrowserWrapper] getCurrentURI];
     return ![MainController isBlankURL:curURL];
   }
   else if (action == @selector(viewSource:)) {
-    NSString* curURL = [[self getBrowserWrapper] getCurrentURI];
     return (![self bookmarkManagerIsVisible] &&
             [[[self getBrowserWrapper] getBrowserView] isTextBasedContent]);
   }
