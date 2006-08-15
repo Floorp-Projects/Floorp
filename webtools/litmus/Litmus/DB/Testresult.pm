@@ -177,7 +177,7 @@ sub getTestResults($\@\@$) {
     my $limit = 'LIMIT ';
 
     foreach my $criterion (@$where_criteria) {
-         $criterion->{'value'} =~ s/'/\'/g;
+         $criterion->{'value'} =~ s/'/\\\'/g;
         if ($criterion->{'field'} eq 'branch') {
             $where .= " AND b.name='" . $criterion->{'value'} . "'";
         } elsif ($criterion->{'field'} eq 'locale') {
