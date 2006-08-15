@@ -289,6 +289,12 @@ nsSelectMoveScrollCommand::DoCommandBrowseWithCaretOn(const char *aCommandName,
     rv = aSelectionController->PageMove(PR_FALSE, PR_FALSE);
   else if (!nsCRT::strcmp(aCommandName, sMovePageDownString))
     rv = aSelectionController->PageMove(PR_TRUE, PR_FALSE);
+  // cmd_ScrollPageUp/Down are used on Mac, and for the spacebar on all platforms.
+  // They do not move the caret in caret browsing mode.
+  else if (!nsCRT::strcmp(aCommandName, sScrollPageUpString))
+    rv = aSelectionController->ScrollPage(PR_FALSE);
+  else if (!nsCRT::strcmp(aCommandName, sScrollPageDownString))
+    rv = aSelectionController->ScrollPage(PR_TRUE);
   else if (!nsCRT::strcmp(aCommandName, sScrollLineUpString))
     rv = aSelectionController->LineMove(PR_FALSE, PR_FALSE);
   else if (!nsCRT::strcmp(aCommandName, sScrollLineDownString))
