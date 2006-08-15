@@ -642,7 +642,7 @@
     <content>
       <xul:hbox class="headerNameBox" align="start" pack="end">
         <xul:image class="addresstwisty" anonid="toggleIcon"
-                   onclick="toggleWrap();"/>
+                   collapsed="true" onclick="toggleWrap();"/>
         <xul:label class="headerName" xbl:inherits="value=label"/>
       </xul:hbox>
 
@@ -849,7 +849,6 @@
           <![CDATA[
             // clear out our local state
             this.mAddresses = new Array; 
-            this.toggleIcon.collapsed = true;
             this.toggleIcon.removeAttribute("open");
             this.longEmailAddresses.setAttribute("singleline", "true");
 
