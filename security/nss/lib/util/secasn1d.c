@@ -38,7 +38,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.35 2006/06/08 21:40:30 nelson%bolyard.com Exp $
+ * $Id: secasn1d.c,v 1.36 2006/08/15 23:56:01 wtchang%redhat.com Exp $
  */
 
 /* #define DEBUG_ASN1D_STATES 1 */
@@ -1414,7 +1414,7 @@ sec_asn1d_free_child (sec_asn1d_state *state, PRBool error)
     if (state->child != NULL) {
 	PORT_Assert (error || state->child->consumed == 0);
 	PORT_Assert (state->our_mark != NULL);
-	PORT_ArenaRelease (state->top->our_pool, state->our_mark);
+	PORT_ArenaZRelease (state->top->our_pool, state->our_mark);
 	if (error && state->top->their_pool == NULL) {
 	    /*
 	     * XXX We need to free anything allocated.
@@ -2849,7 +2849,7 @@ SEC_ASN1DecoderFinish (SEC_ASN1DecoderContext *cx)
      * XXX anything else that needs to be finished?
      */
 
-    PORT_FreeArena (cx->our_pool, PR_FALSE);
+    PORT_FreeArena (cx->our_pool, PR_TRUE);
 
     return rv;
 }
