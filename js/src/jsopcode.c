@@ -793,7 +793,9 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
             jp->indent -= 4;
         }
 
-        caseExprOff = isCondSwitch ? JSOP_CONDSWITCH_LENGTH : 0;
+        caseExprOff = isCondSwitch
+                      ? (ptrdiff_t) js_CodeSpec[JSOP_CONDSWITCH].length
+                      : 0;
 
         for (i = 0; i < tableLength; i++) {
             off = table[i].offset;
@@ -938,6 +940,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #endif
     jsval val;
 
+    static const char catch_cookie[]     = "/*CATCH*/";
     static const char finally_cookie[]   = "/*FINALLY*/";
     static const char iter_cookie[]      = "/*ITER*/";
     static const char with_cookie[]      = "/*WITH*/";
@@ -1153,6 +1156,55 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     js_printf(jp, "\t}\n");
                     break;
 
+                  case SRC_CATCH:
+                    jp->indent -= 4;
+                    sn = js_GetSrcNote(jp->script, pc);
+                    pc += oplen;
+                    js_printf(jp, "\t} catch (");
+
+                    LOCAL_ASSERT(*pc == JSOP_NAME);
+                    pc += js_CodeSpec[JSOP_NAME].length;
+                    LOCAL_ASSERT(*pc == JSOP_PUSHOBJ);
+                    pc += js_CodeSpec[JSOP_PUSHOBJ].length;
+                    LOCAL_ASSERT(*pc == JSOP_NEWINIT);
+                    pc += js_CodeSpec[JSOP_NEWINIT].length;
+                    LOCAL_ASSERT(*pc == JSOP_EXCEPTION);
+                    pc += js_CodeSpec[JSOP_EXCEPTION].length;
+                    if (*pc == JSOP_LITOPX) {
+                        atomIndex = GET_LITERAL_INDEX(pc);
+                        pc += 1 + LITERAL_INDEX_LEN;
+                        LOCAL_ASSERT(*pc == JSOP_INITCATCHVAR);
+                        ++pc;
+                    } else {
+                        LOCAL_ASSERT(*pc == JSOP_INITCATCHVAR);
+                        atomIndex = GET_ATOM_INDEX(pc);
+                        pc += js_CodeSpec[JSOP_INITCATCHVAR].length;
+                    }
+                    atom = js_GetAtom(cx, &jp->script->atomMap, atomIndex);
+                    rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
+                    if (!rval)
+                        return JS_FALSE;
+                    RETRACT(&ss->sprinter, rval);
+                    js_printf(jp, "%s", rval);
+                    LOCAL_ASSERT(*pc == JSOP_ENTERWITH);
+                    pc += js_CodeSpec[JSOP_ENTERWITH].length;
+
+                    len = js_GetSrcNoteOffset(sn, 0);
+                    if (len) {
+                        js_printf(jp, " if ");
+                        DECOMPILE_CODE(pc, len);
+                        js_printf(jp, "%s", POP_STR());
+                        pc += len;
+                        LOCAL_ASSERT(*pc == JSOP_IFEQ || *pc == JSOP_IFEQX);
+                        pc += js_CodeSpec[*pc].length;
+                    }
+
+                    js_printf(jp, ") {\n");
+                    jp->indent += 4;
+                    todo = Sprint(&ss->sprinter, catch_cookie);
+                    len = 0;
+                    break;
+
                   case SRC_FUNCDEF:
                     atom = js_GetAtom(cx, &jp->script->atomMap,
                                       (jsatomid) js_GetSrcNoteOffset(sn, 0));
@@ -1275,9 +1327,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_EXCEPTION:
                 /*
                  * The only other JSOP_EXCEPTION cases occur as part of a code
-                 * sequence that follows a SRC_CATCH-annotated JSOP_ENTERBLOCK
-                 * or that precedes a SRC_HIDDEN-annotated JSOP_POP emitted
-                 * when returning from within a finally clause.
+                 * sequence that follows a SRC_CATCH-annotated JSOP_NOP or
+                 * precedes a SRC_HIDDEN-annotated JSOP_POP emitted when
+                 * returning from within a finally clause.
                  */
                 sn = js_GetSrcNote(jp->script, pc);
                 LOCAL_ASSERT(sn && SN_TYPE(sn) == SRC_HIDDEN);
@@ -1392,6 +1444,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 if (sn && SN_TYPE(sn) == SRC_HIDDEN)
                     break;
                 rval = POP_STR();
+                if (sn && SN_TYPE(sn) == SRC_CATCH) {
+                    LOCAL_ASSERT(strcmp(rval, catch_cookie) == 0);
+                    LOCAL_ASSERT((uintN) js_GetSrcNoteOffset(sn, 0) == ss->top);
+                    break;
+                }
                 LOCAL_ASSERT(strcmp(rval, with_cookie) == 0);
                 jp->indent -= 4;
                 js_printf(jp, "\t}\n");
@@ -1414,7 +1471,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         return JS_FALSE;
                 }
 
-                /* From here on, control must flow through enterblock_out. */
                 for (sprop = OBJ_SCOPE(obj)->lastProp; sprop;
                      sprop = sprop->parent) {
                     if (!(sprop->flags & SPROP_HAS_SHORTID))
@@ -1429,54 +1485,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     if (!rval ||
                         !PushOff(ss, STR2OFF(&ss->sprinter, rval), op)) {
                         ok = JS_FALSE;
-                        goto enterblock_out;
+                        break;
                     }
                 }
 
-                sn = js_GetSrcNote(jp->script, pc);
-                if (sn && SN_TYPE(sn) == SRC_CATCH) {
-                    jp->indent -= 4;
-                    js_printf(jp, "\t} catch (");
-
-                    pc += oplen;
-                    LOCAL_ASSERT(*pc == JSOP_EXCEPTION);
-                    pc += JSOP_EXCEPTION_LENGTH;
-                    LOCAL_ASSERT(*pc == JSOP_INITCATCHVAR);
-                    i = GET_UINT16(pc);
-                    pc += JSOP_INITCATCHVAR_LENGTH;
-                    str = ATOM_TO_STRING(atomv[i]);
-                    rval = QuoteString(&ss->sprinter, str, 0);
-                    if (!rval) {
-                        ok = JS_FALSE;
-                        goto enterblock_out;
-                    }
-                    RETRACT(&ss->sprinter, rval);
-                    js_printf(jp, "%s", rval);
-
-                    len = js_GetSrcNoteOffset(sn, 0);
-                    if (len) {
-                        js_printf(jp, " if ");
-                        ok = Decompile(ss, pc, len);
-                        if (!ok)
-                            goto enterblock_out;
-                        js_printf(jp, "%s", POP_STR());
-                        pc += len;
-                        LOCAL_ASSERT(*pc == JSOP_IFEQ || *pc == JSOP_IFEQX);
-                        pc += js_CodeSpec[*pc].length;
-                    }
-
-                    js_printf(jp, ") {\n");
-                    jp->indent += 4;
-                    len = 0;
-                }
-
-                todo = -2;
-
-              enterblock_out:
                 if (atomv != smallv)
                     JS_free(cx, atomv);
                 if (!ok)
                     return JS_FALSE;
+                todo = -2;
                 break;
               }
 
@@ -1487,12 +1504,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
                 sn = js_GetSrcNote(jp->script, pc);
                 todo = -2;
-                if (sn) {
+                if (sn && SN_TYPE(sn) == SRC_HIDDEN) {
                     JS_ASSERT(op == JSOP_LEAVEBLOCK);
-                    if (SN_TYPE(sn) == SRC_HIDDEN)
-                        break;
-                    LOCAL_ASSERT(SN_TYPE(sn) == SRC_CATCH);
-                    LOCAL_ASSERT((uintN)js_GetSrcNoteOffset(sn, 0) == ss->top);
+                    break;
                 }
                 if (op == JSOP_LEAVEBLOCKEXPR)
                     rval = POP_STR();
