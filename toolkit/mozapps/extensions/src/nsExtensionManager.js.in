@@ -527,9 +527,10 @@ function removeDirRecursive(dir) {
  *          The string to write to the error console..
  */  
 function LOG(string) {
-  if (gLoggingEnabled)  
+  if (gLoggingEnabled) {
     dump("*** " + string + "\n");
-  gConsole.logStringMessage(string);
+    gConsole.logStringMessage(string);
+  }
 }
 
 /** 
