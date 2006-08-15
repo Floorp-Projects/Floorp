@@ -267,3 +267,7 @@ a:link[href*="click.mp3"] img,
 iframe[src*="mozilla.org"]
 
 { display: inline ! important }
+
+@-moz-document domain(mail.google.com) {
+div[id^="ad_"] {display: block ! important }
+}
