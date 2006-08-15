@@ -113,8 +113,8 @@
       <field name="mDateFormatter">null</field>
       <field name="mStartDate">null</field>
       <field name="mEndDate">null</field>
-      <field name="mStartHour">0</field>
-      <field name="mEndHour">24</field>
+      <field name="mStartHour">8</field>
+      <field name="mEndHour">19</field>
 
       <constructor>
         <![CDATA[
@@ -240,8 +240,8 @@
       <field name="mEndDate">null</field>
       <field name="mDayOffset">0</field>
       <field name="mScrollOffset">0</field>
-      <field name="mStartHour">0</field>
-      <field name="mEndHour">24</field>
+      <field name="mStartHour">8</field>
+      <field name="mEndHour">19</field>
 
       <property name="contentWidth">
         <getter>
@@ -480,8 +480,8 @@
       <field name="mStartDate">null</field>
       <field name="mEndDate">null</field>
       <field name="mRange">0</field>
-      <field name="mStartHour">0</field>
-      <field name="mEndHour">24</field>
+      <field name="mStartHour">8</field>
+      <field name="mEndHour">19</field>
 
       <property name="startDate">
         <setter>
@@ -888,8 +888,8 @@
       <field name="mEndDate">null</field>
       <field name="mScrollOffset">0</field>
       <field name="mRange">0</field>
-      <field name="mStartHour">0</field>
-      <field name="mEndHour">24</field>
+      <field name="mStartHour">8</field>
+      <field name="mEndHour">19</field>
 
       <field name="mFreeBusyListener">
         <![CDATA[

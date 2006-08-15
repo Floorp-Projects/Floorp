@@ -497,8 +497,6 @@
             // update alarm checkbox/label/settings button
             this.updateAlarm();
 
-            this.updateURL(item.getProperty("URL"));
-
             // hide rows based on if this is an event or todo
             this.updateStyle();
             
@@ -510,6 +508,8 @@
             this.updateAllDay();
 
             this.onChangeCalendar();
+
+            this.updateURL(item.getProperty("URL"));
 
             document.getElementById("item-title").focus();
         ]]>
@@ -904,6 +904,10 @@
             var button = document.getElementById("load-url-button");
             button.setAttribute("disabled", true)
 
+            if (this.mIsReadOnly) {
+              return;
+            }
+
             if (!aValue) {
                 return;
             }
@@ -1023,9 +1027,9 @@
 
             var kDefaultTimezone = calendarDefaultTimezone();
 
-            var title = getElementValue("item-title");
-            if (title.length == 0)
-                enableAccept = false;
+            //var title = getElementValue("item-title");
+            //if (title.length == 0)
+                //enableAccept = false;
 
             // don't allow for end dates to be before start dates
             var startDate;

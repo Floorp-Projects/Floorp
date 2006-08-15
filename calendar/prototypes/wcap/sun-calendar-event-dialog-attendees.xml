@@ -1322,6 +1322,10 @@
                   this.deleteHit(event.originalTarget);
                 event.stopPropagation();
                 break;
+              case 13:
+                event.stopPropagation();
+                event.preventDefault();
+                break;
             }
         }
         ]]>
@@ -1340,6 +1344,10 @@
             case KeyEvent.DOM_VK_DOWN:
               this.arrowHit(event.originalTarget, 1);
               event.stopPropagation();
+              break;
+            case KeyEvent.DOM_VK_RETURN:
+              event.stopPropagation();
+              event.preventDefault();
               break;
           }
         }
