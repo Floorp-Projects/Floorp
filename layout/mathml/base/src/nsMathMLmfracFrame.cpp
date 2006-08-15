@@ -115,11 +115,11 @@ nsMathMLmfracFrame::Init(nsIContent*      aContent,
   return rv;
 }
 
-nsIAtom*
-nsMathMLmfracFrame::GetType() const
+eMathMLFrameType
+nsMathMLmfracFrame::GetMathMLFrameType()
 {
   // frac is "inner" in TeXBook, Appendix G, rule 15e. See also page 170.
-  return nsMathMLAtoms::innerMathMLFrame;
+  return eMathMLFrameType_Inner;
 }
 
 NS_IMETHODIMP

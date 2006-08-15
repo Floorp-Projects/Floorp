@@ -1348,15 +1348,6 @@ GK_ATOM(svgTextPathFrame, "SVGTextPathFrame")
 GK_ATOM(svgTSpanFrame, "SVGTSpanFrame")
 GK_ATOM(svgUseFrame, "SVGUseFrame")
 #endif
-#ifdef MOZ_MATHML
-GK_ATOM(ordinaryMathMLFrame, "OrdinaryMathMLFrame")
-GK_ATOM(operatorOrdinaryMathMLFrame, "OperatorOrdinaryMathMLFrame")
-GK_ATOM(operatorInvisibleMathMLFrame, "OperatorInvisibleMathMLFrame")
-GK_ATOM(operatorUserDefinedMathMLFrame, "OperatorUserDefinedMathMLFrame")
-GK_ATOM(innerMathMLFrame, "InnerMathMLFrame") // 'inner' in TeX
-GK_ATOM(italicIdentifierMathMLFrame, "ItalicIdentifierMathMLFrame")
-GK_ATOM(uprightIdentifierMathMLFrame, "UprightIdentifierMathMLFrame")
-#endif
 
 // Frame property names
 GK_ATOM(boxMetricsProperty, "BoxMetricsProperty") // nsBoxLayoutMetrics*

@@ -93,7 +93,7 @@ public:
   virtual nsStyleContext*
   GetAdditionalStyleContext(PRInt32 aIndex) const;
 
-  virtual nsIAtom* GetType() const;
+  virtual eMathMLFrameType GetMathMLFrameType();
 
   NS_IMETHOD
   AttributeChanged(PRInt32         aNameSpaceID,
