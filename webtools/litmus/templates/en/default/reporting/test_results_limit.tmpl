@@ -67,21 +67,15 @@ function checkSearchForm(f)
         <option[% IF order_bys.testcase_id == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
       </select></td>
 
-  [% colspan=7 %]
+  [% colspan=6 %]
   [% IF show_admin==1 %]
-  [% colspan=8 %]
+  [% colspan=7 %]
   <td class="search"><select name="order_by_email">
         <option value="">-Sort-</option>
         <option[% IF order_bys.email == 'ASC' %] selected[% END %] value="ASC">A->Z</option>
         <option[% IF order_bys.email == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
       </select></td>
   [% END %]
-
-  <td class="search"><select name="order_by_test_group">
-        <option value="">-Sort-</option>
-        <option[% IF order_bys.test_group == 'ASC' %] selected[% END %] value="ASC">A->Z</option>
-        <option[% IF order_bys.test_group == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
-      </select></td>
 
   <td class="search"><select name="order_by_product">
         <option value="">-Sort-</option>
@@ -116,7 +110,6 @@ function checkSearchForm(f)
   <td class="search"></td>
   <td class="search">[% INCLUDE form_widgets/input_summary.tmpl %]</td>
   [% IF show_admin==1 %]<td class="search">[% INCLUDE form_widgets/input_email.tmpl %]</td>[% END %]
-  <td class="search">[% INCLUDE form_widgets/select_test_group.tmpl name="test_group" placeholder=1 %]</td>
   <td class="search">[% INCLUDE form_widgets/select_product.tmpl name="product" placeholder=1 %]</td>
   <td class="search">[% INCLUDE form_widgets/select_unique_platform.tmpl name="platform" placeholder=1 %]</td>
   <td class="search">[% INCLUDE form_widgets/select_branch.tmpl name="branch" placeholder=1 %]</td>
