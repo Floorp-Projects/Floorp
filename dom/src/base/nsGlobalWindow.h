@@ -237,6 +237,7 @@ public:
   virtual NS_HIDDEN_(nsIFocusController*) GetRootFocusController();
 
   virtual NS_HIDDEN_(void) SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal);
+  virtual NS_HIDDEN_(nsIPrincipal*) GetOpenerScriptPrincipal();
 
   virtual NS_HIDDEN_(PopupControlState) PushPopupControlState(PopupControlState state, PRBool aForce) const;
   virtual NS_HIDDEN_(void) PopPopupControlState(PopupControlState state) const;

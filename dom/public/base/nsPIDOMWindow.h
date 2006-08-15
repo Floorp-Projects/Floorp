@@ -72,9 +72,8 @@ class nsPresContext;
 struct nsTimeout;
 
 #define NS_PIDOMWINDOW_IID \
-{ /* 4602B87E-879E-49D1-96FE-C87FDD915348} */ \
-  0x4602b87e, 0x879e, 0x49d1, \
-  { 0x96, 0xfe, 0xc8, 0x7f, 0xdd, 0x91, 0x53, 0x48 } }
+{ 0xbebce53b, 0xa4ec, 0x49e5, \
+ { 0x82, 0x8e, 0x23, 0x08, 0x61, 0x2b, 0x41, 0x9b } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -245,7 +244,14 @@ public:
     return win->mIsHandlingResizeEvent;
   }
 
+  // Tell this window who opened it.  This only has an effect if there is
+  // either no document currently in the window or if the document is the
+  // original document this window came with (an about:blank document either
+  // preloaded into it when it was created, or created by
+  // CreateAboutBlankContentViewer()).
   virtual void SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal) = 0;
+  // Ask this window who opened it.
+  virtual nsIPrincipal* GetOpenerScriptPrincipal() = 0;
 
   virtual PopupControlState PushPopupControlState(PopupControlState aState,
                                                   PRBool aForce) const = 0;

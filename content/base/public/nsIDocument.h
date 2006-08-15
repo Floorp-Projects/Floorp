@@ -91,8 +91,8 @@ class nsIDocumentObserver;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x63f0c69a, 0x255a, 0x432f, \
-  { 0xa7, 0xe4, 0xaf, 0x81, 0x10, 0x56, 0x28, 0xef } }
+{ 0x3a5ce97e, 0x4f41, 0x42ef, \
+ { 0xa7, 0xc9, 0xcc, 0x3d, 0x4e, 0x7a, 0x3d, 0x00 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -112,6 +112,7 @@ public:
     : nsINode(nsnull),
       mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
       mNodeInfoManager(nsnull),
+      mIsInitialDocumentInWindow(PR_FALSE),
       mPartID(0)
   {
     mParentPtrBits |= PARENT_BIT_INDOCUMENT;
@@ -285,6 +286,24 @@ public:
   {
     mBidiEnabled = aBidiEnabled;
   }
+
+  /**
+   * Ask this document whether it's the initial document in its window.
+   */
+  PRBool IsInitialDocument() const
+  {
+    return mIsInitialDocumentInWindow;
+  }
+  
+  /**
+   * Tell this document that it's the initial document in its window.  See
+   * comments on mIsInitialDocumentInWindow for when this should be called.
+   */
+  void SetIsInitialDocument(PRBool aIsInitialDocument)
+  {
+    mIsInitialDocumentInWindow = aIsInitialDocument;
+  }
+  
 
   /**
    * Get the bidi options for this document.
@@ -829,7 +848,13 @@ protected:
   nsPropertyTable mPropertyTable;
 
   // True if BIDI is enabled.
-  PRBool mBidiEnabled;
+  PRPackedBool mBidiEnabled;
+
+  // True if this document is the initial document for a window.  This should
+  // basically be true only for documents that exist in newly-opened windows or
+  // documents created to satisfy a GetDocument() on a window when there's no
+  // document in it.
+  PRPackedBool mIsInitialDocumentInWindow;
 
   // The bidi options for this document.  What this bitfield means is
   // defined in nsBidiUtils.h

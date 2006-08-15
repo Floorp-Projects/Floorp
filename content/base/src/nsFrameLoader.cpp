@@ -189,6 +189,13 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
     // load instead of just forcing the system principal.  That way if we have
     // something loaded already the principal used will be that of what we
     // already have loaded.
+
+    // XXX bz I'd love to nix this, but the problem is chrome calling
+    // setAttribute() on an iframe or browser and passing in a javascript: URI.
+    // We probably don't want to run that with chrome privileges... Though in
+    // similar circumstances, if one sets window.location.href from chrome we
+    // _do_ run that with chrome privileges, so maybe we should do the same
+    // here?
     loadInfo->SetInheritOwner(PR_TRUE);
 
     // Also, in this case we don't set a referrer, just in case.
