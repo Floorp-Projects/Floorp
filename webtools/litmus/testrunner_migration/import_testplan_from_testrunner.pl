@@ -117,7 +117,7 @@ $sth->finish;
 
 # Create our top-level test group
 my $rv;
-$rv = $litmus_dbh->do("INSERT INTO test_groups (product_id,name,testrunner_plan_id,enabled) VALUES (?,?,?,1)",
+$rv = $litmus_dbh->do("INSERT INTO testgroups (product_id,name,testrunner_plan_id,enabled) VALUES (?,?,?,1)",
                       undef,
                       $product_id,
                       $new_testgroup_name,
@@ -128,7 +128,7 @@ if ($rv<=0) {
   die "Failed to insert new testgroup.";
 }
 
-$sql = "SELECT MAX(testgroup_id) FROM test_groups";
+$sql = "SELECT MAX(testgroup_id) FROM testgroups";
 $sth = $litmus_dbh->prepare($sql);
 $sth->execute();
 my ($new_testgroup_id) =  $sth->fetchrow_array;
@@ -138,23 +138,30 @@ if (!$new_testgroup_id) {
   die "Unable to lookup new testgroup ID";
 }
 
-my $subgroup_sql = "INSERT INTO subgroups (testgroup_id,name,sort_order,testrunner_group_id) VALUES (?,?,?,?)";
-my $new_id_sql = "SELECT MAX(subgroup_id) FROM subgroups";
-my $test_sql = "INSERT INTO tests (subgroup_id, summary, details, community_enabled, steps, expected_results, sort_order, author_id, creation_date, last_updated, testrunner_case_id, testrunner_case_version, enabled) VALUES (?,?,?,1,?,?,?,?,NOW(),NOW(),?,1,1)";
+my $subgroup_sql = "INSERT INTO subgroups (name,testrunner_group_id,enabled) VALUES (?,?,1)";
+my $new_subgroup_id_sql = "SELECT MAX(subgroup_id) FROM subgroups";
+my $subgroup_testgroups_sql = "INSERT INTO subgroup_testgroups (subgroup_id, testgroup_id, sort_order) VALUES (?,?,?)";
+my $test_sql = "INSERT INTO testcases (summary, details, community_enabled, steps, expected_results, author_id, creation_date, last_updated, testrunner_case_id, testrunner_case_version, enabled) VALUES (?,?,1,?,?,?,NOW(),NOW(),?,1,1)";
+my $testcase_subgroups_sql = "INSERT INTO testcase_subgroups (testcase_id, subgroup_id, sort_order) VALUES (?,?,?)";
+my $new_testcase_id_sql = "SELECT MAX(testcase_id) FROM testcases";
 my $group_sort_order=1;
 foreach my $subgroup (@subgroups) {
   $litmus_dbh->do($subgroup_sql,
-                  undef, 
-                  $new_testgroup_id, 
+                  undef,  
                   $subgroup->{'name'}, 
-                  $group_sort_order,
                   $subgroup->{'group_id'},            
                  );
 
-  $sth = $litmus_dbh->prepare($new_id_sql);
+  $sth = $litmus_dbh->prepare($new_subgroup_id_sql);
   $sth->execute();
   ($subgroup->{'subgroup_id'}) =  $sth->fetchrow_array;
   $sth->finish;
+  $litmus_dbh->do($subgroup_testgroups_sql,
+                  undef,  
+                  $subgroup->{'subgroup_id'},
+                  $new_testgroup_id,
+                  $group_sort_order
+                 );
   $group_sort_order++;
 
   $sth = $litmus_dbh->prepare($test_sql);
@@ -162,15 +169,24 @@ foreach my $subgroup (@subgroups) {
   foreach my $test (@{$tests->{$subgroup->{'group_id'}}}) {
     $litmus_dbh->do($test_sql, 
                     undef,
-                    $subgroup->{'subgroup_id'},
                     $test->{'summary'},
                     $test->{'summary'},
                     $test->{'action'},
                     $test->{'effect'},
-                    $test_sort_order,
                     $author_id,
                     $test->{'case_id'}
                    );
+    $sth = $litmus_dbh->prepare($new_testcase_id_sql);
+    $sth->execute();
+    ($test->{'testcase_id'}) =  $sth->fetchrow_array;
+    $sth->finish;
+
+    $litmus_dbh->do($testcase_subgroups_sql,
+                    undef,  
+                    $test->{'testcase_id'},
+                    $subgroup->{'subgroup_id'},
+                    $test_sort_order
+                   );    
     $test_sort_order++;
   }
 }
