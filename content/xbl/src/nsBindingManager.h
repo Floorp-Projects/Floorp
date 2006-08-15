@@ -61,11 +61,12 @@ class nsStyleSet;
 
 class nsBindingManager : public nsIBindingManager,
                          public nsIStyleRuleSupplier,
-                         public nsStubDocumentObserver
+                         public nsIDocumentObserver
 {
-  NS_DECL_ISUPPORTS
-
 public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOCUMENTOBSERVER
+
   nsBindingManager();
   ~nsBindingManager();
 
@@ -123,24 +124,15 @@ public:
 
   NS_IMETHOD ShouldBuildChildFrames(nsIContent* aContent, PRBool* aResult);
 
+  virtual NS_HIDDEN_(void) AddObserver(nsIDocumentObserver* aObserver);
+
+  virtual NS_HIDDEN_(PRBool) RemoveObserver(nsIDocumentObserver* aObserver);  
+
   // nsIStyleRuleSupplier
   NS_IMETHOD WalkRules(nsStyleSet* aStyleSet, 
                        nsIStyleRuleProcessor::EnumFunc aFunc,
                        RuleProcessorData* aData,
                        PRBool* aCutOffInheritance);
-
-  // nsIDocumentObserver
-  virtual void ContentAppended(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               PRInt32     aNewIndexInContainer);
-  virtual void ContentInserted(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer);
-  virtual void ContentRemoved(nsIDocument* aDocument,
-                              nsIContent* aContainer,
-                              nsIContent* aChild,
-                              PRInt32 aIndexInContainer);
 
 protected:
   nsresult GetXBLChildNodesInternal(nsIContent* aContent,
@@ -155,6 +147,10 @@ protected:
   }
 
   nsresult GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult);
+
+#define NS_BINDINGMANAGER_NOTIFY_OBSERVERS(func_, params_) \
+  NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(mObservers, nsIDocumentObserver, \
+                                     func_, params_);
 
 // MEMBER VARIABLES
 protected: 
@@ -200,6 +196,11 @@ protected:
   // table is the currently loading binding docs.  If they're in this
   // table, they have not yet finished loading.
   nsInterfaceHashtable<nsURIHashKey,nsIStreamListener> mLoadingDocTable;
+
+  // Array of document observers who would like to be notified of content
+  // appends/inserts after we update our data structures and of content removes
+  // before we do so.
+  nsTObserverArray<nsIDocumentObserver> mObservers;
 
   // A queue of binding attached event handlers that are awaiting execution.
   nsVoidArray mAttachedStack;

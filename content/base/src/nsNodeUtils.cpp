@@ -42,7 +42,8 @@
 #include "nsIMutationObserver.h"
 #include "nsIDocument.h"
 
-#define IMPL_MUTATION_NOTIFICATION_FW(func_, content_, params_)   \
+#define IMPL_MUTATION_NOTIFICATION(func_, content_, params_)      \
+  PR_BEGIN_MACRO                                                  \
   nsINode* node = content_;                                       \
   nsINode* prev;                                                  \
   do {                                                            \
@@ -50,12 +51,9 @@
     if (slots && !slots->mMutationObservers.IsEmpty()) {          \
       /* No need to explicitly notify the first observer first    \
          since that'll happen anyway. */                          \
-      nsTObserverArray<nsIMutationObserver>::ForwardIterator      \
-        iter_(slots->mMutationObservers);                         \
-      nsCOMPtr<nsIMutationObserver> obs_;                         \
-      while ((obs_ = iter_.GetNext())) {                          \
-        obs_-> func_ params_;                                     \
-      }                                                           \
+      NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(                         \
+        slots->mMutationObservers, nsIMutationObserver,           \
+        func_, params_);                                          \
     }                                                             \
     prev = node;                                                  \
     node = node->GetNodeParent();                                 \
@@ -66,51 +64,16 @@
          need to notify the document */                           \
       node = NS_STATIC_CAST(nsIContent*, prev)->GetCurrentDoc();  \
     }                                                             \
-  } while (node);
-
-
-
-#define IMPL_MUTATION_NOTIFICATION_BW(func_, content_, params_)   \
-  nsINode* node = content_;                                       \
-  nsINode* prev;                                                  \
-  do {                                                            \
-    nsINode::nsSlots* slots = node->GetExistingSlots();           \
-    if (slots && !slots->mMutationObservers.IsEmpty()) {          \
-      /*                                                          \
-       * Notify the first observer first even if we're doing a    \
-       * reverse walk. This is since we want to notify the        \
-       * document first when |node| is a document.                \
-       * This may not actually be needed, but it's safer for now. \
-       * This can be removed once we always walk forward          \
-       */                                                         \
-      nsIMutationObserver* first =                                \
-        slots->mMutationObservers.SafeObserverAt(0);              \
-      first-> func_ params_;                                      \
-      nsTObserverArray<nsIMutationObserver>::ReverseIterator      \
-        iter_(slots->mMutationObservers);                         \
-      nsCOMPtr<nsIMutationObserver> obs_;                         \
-      while ((obs_ = iter_.GetNext()) != first) {                 \
-        obs_-> func_ params_;                                     \
-      }                                                           \
-    }                                                             \
-    prev = node;                                                  \
-    node = node->GetNodeParent();                                 \
-                                                                  \
-    if (!node && prev->IsNodeOfType(nsINode::eXUL)) {             \
-      /* XUL elements can have the in-document flag set, but      \
-         still be in an orphaned subtree. In this case we         \
-         need to notify the document */                           \
-      node = NS_STATIC_CAST(nsIContent*, prev)->GetCurrentDoc();  \
-    }                                                             \
-  } while (node);
+  } while (node);                                                 \
+  PR_END_MACRO
 
 
 void
 nsNodeUtils::CharacterDataChanged(nsIContent* aContent, PRBool aAppend)
 {
   nsIDocument* doc = aContent->GetOwnerDoc();
-  IMPL_MUTATION_NOTIFICATION_BW(CharacterDataChanged, aContent,
-                                (doc, aContent, aAppend));
+  IMPL_MUTATION_NOTIFICATION(CharacterDataChanged, aContent,
+                             (doc, aContent, aAppend));
 }
 
 void
@@ -120,9 +83,9 @@ nsNodeUtils::AttributeChanged(nsIContent* aContent,
                               PRInt32 aModType)
 {
   nsIDocument* doc = aContent->GetOwnerDoc();
-  IMPL_MUTATION_NOTIFICATION_BW(AttributeChanged, aContent,
-                                (doc, aContent, aNameSpaceID, aAttribute,
-                                 aModType));
+  IMPL_MUTATION_NOTIFICATION(AttributeChanged, aContent,
+                             (doc, aContent, aNameSpaceID, aAttribute,
+                              aModType));
 }
 
 void
@@ -131,14 +94,8 @@ nsNodeUtils::ContentAppended(nsIContent* aContainer,
 {
   nsIDocument* document = aContainer->GetOwnerDoc();
 
-  // XXXdwh There is a hacky ordering dependency between the binding
-  // manager and the frame constructor that forces us to walk the
-  // observer list in a forward order
-  // XXXldb So one should notify the other rather than both being
-  // registered.
-
-  IMPL_MUTATION_NOTIFICATION_FW(ContentAppended, aContainer,
-                                (document, aContainer, aNewIndexInContainer));
+  IMPL_MUTATION_NOTIFICATION(ContentAppended, aContainer,
+                             (document, aContainer, aNewIndexInContainer));
 }
 
 void
@@ -160,14 +117,8 @@ nsNodeUtils::ContentInserted(nsINode* aContainer,
     document = NS_STATIC_CAST(nsIDocument*, aContainer);
   }
 
-  // XXXdwh There is a hacky ordering dependency between the binding manager
-  // and the frame constructor that forces us to walk the observer list
-  // in a forward order
-  // XXXldb So one should notify the other rather than both being
-  // registered.
-
-  IMPL_MUTATION_NOTIFICATION_FW(ContentInserted, aContainer,
-                                (document, container, aChild, aIndexInContainer));
+  IMPL_MUTATION_NOTIFICATION(ContentInserted, aContainer,
+                             (document, container, aChild, aIndexInContainer));
 }
 
 void
@@ -189,15 +140,8 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
     document = NS_STATIC_CAST(nsIDocument*, aContainer);
   }
 
-  // XXXdwh There is a hacky ordering dependency between the binding
-  // manager and the frame constructor that forces us to walk the
-  // observer list in a reverse order
-  // XXXldb So one should notify the other rather than both being
-  // registered.
-
-
-  IMPL_MUTATION_NOTIFICATION_BW(ContentRemoved, aContainer,
-                                (document, container, aChild, aIndexInContainer));
+  IMPL_MUTATION_NOTIFICATION(ContentRemoved, aContainer,
+                             (document, container, aChild, aIndexInContainer));
 }
 
 void
@@ -206,12 +150,9 @@ nsNodeUtils::NodeWillBeDestroyed(nsINode* aNode)
   nsINode::nsSlots* slots = aNode->GetExistingSlots();
   if (slots) {
     if (!slots->mMutationObservers.IsEmpty()) {
-      nsTObserverArray<nsIMutationObserver>::ForwardIterator
-        iter(slots->mMutationObservers);
-      nsCOMPtr<nsIMutationObserver> obs;
-      while ((obs = iter.GetNext())) {
-        obs->NodeWillBeDestroyed(aNode);
-      }
+      NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(slots->mMutationObservers,
+                                         nsIMutationObserver,
+                                         NodeWillBeDestroyed, (aNode));
     }
 
     PtrBits flags = slots->mFlags | NODE_DOESNT_HAVE_SLOTS;

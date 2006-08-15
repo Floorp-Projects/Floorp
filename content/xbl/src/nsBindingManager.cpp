@@ -1138,51 +1138,127 @@ nsBindingManager::GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChil
   return NS_OK;
 }
 
+// Note: We don't hold a reference to the document observer; we assume
+// that it has a live reference to the document.
+void
+nsBindingManager::AddObserver(nsIDocumentObserver* aObserver)
+{
+  // The array makes sure the observer isn't already in the list
+  mObservers.AppendObserver(aObserver);
+}
+
+PRBool
+nsBindingManager::RemoveObserver(nsIDocumentObserver* aObserver)
+{
+  return mObservers.RemoveObserver(aObserver);
+}
+
+void
+nsBindingManager::BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)
+{
+  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(BeginUpdate, (aDocument, aUpdateType));
+}
+
+void
+nsBindingManager::EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)
+{
+  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(EndUpdate, (aDocument, aUpdateType));
+}
+
+void
+nsBindingManager::BeginLoad(nsIDocument* aDocument)
+{
+  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(BeginLoad, (aDocument));
+}
+
+void
+nsBindingManager::EndLoad(nsIDocument* aDocument)
+{
+  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(EndLoad, (aDocument));
+}
+
+void
+nsBindingManager::CharacterDataChanged(nsIDocument* aDocument,
+                                       nsIContent* aContent,
+                                       PRBool aAppend)
+{
+  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(CharacterDataChanged,
+                                     (aDocument, aContent, aAppend));
+}
+
+void
+nsBindingManager::ContentStatesChanged(nsIDocument* aDocument,
+                                       nsIContent* aContent1,
+                                       nsIContent* aContent2,
+                                       PRInt32 aStateMask)
+{
+  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(ContentStatesChanged,
+                                     (aDocument, aContent1, aContent2,
+                                      aStateMask));
+}
+
+void
+nsBindingManager::AttributeChanged(nsIDocument* aDocument,
+                                   nsIContent* aContent,
+                                   PRInt32 aNameSpaceID,
+                                   nsIAtom* aAttribute,
+                                   PRInt32 aModType)
+{
+  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(AttributeChanged,
+                                     (aDocument, aContent, aNameSpaceID,
+                                      aAttribute, aModType));
+}
+
 void
 nsBindingManager::ContentAppended(nsIDocument* aDocument,
                                   nsIContent* aContainer,
                                   PRInt32     aNewIndexInContainer)
 {
   // XXX This is hacked and not quite correct. See below.
-  if (aNewIndexInContainer == -1 || !mContentListTable.ops)
-    // It's anonymous.
-    return;
+  if (aNewIndexInContainer != -1 && mContentListTable.ops) {
+    // It's not anonymous.
+    PRInt32 childCount = aContainer->GetChildCount();
 
-  PRInt32 childCount = aContainer->GetChildCount();
+    nsIContent *child = aContainer->GetChildAt(aNewIndexInContainer);
 
-  nsIContent *child = aContainer->GetChildAt(aNewIndexInContainer);
+    nsCOMPtr<nsIContent> ins;
+    GetNestedInsertionPoint(aContainer, child, getter_AddRefs(ins));
 
-  nsCOMPtr<nsIContent> ins;
-  GetNestedInsertionPoint(aContainer, child, getter_AddRefs(ins));
+    if (ins) {
+      nsCOMPtr<nsIDOMNodeList> nodeList;
+      PRBool isAnonymousContentList;
+      GetXBLChildNodesInternal(ins, getter_AddRefs(nodeList),
+                               &isAnonymousContentList);
 
-  if (ins) {
-    nsCOMPtr<nsIDOMNodeList> nodeList;
-    PRBool isAnonymousContentList;
-    GetXBLChildNodesInternal(ins, getter_AddRefs(nodeList),
-                             &isAnonymousContentList);
+      if (nodeList && isAnonymousContentList) {
+        // Find a non-pseudo-insertion point and just jam ourselves in.
+        // This is not 100% correct.  Hack city, baby.
+        nsAnonymousContentList* contentList =
+          NS_STATIC_CAST(nsAnonymousContentList*,
+                         NS_STATIC_CAST(nsIDOMNodeList*, nodeList.get()));
 
-    if (nodeList && isAnonymousContentList) {
-      // Find a non-pseudo-insertion point and just jam ourselves in.
-      // This is not 100% correct.  Hack city, baby.
-      nsAnonymousContentList* contentList = NS_STATIC_CAST(nsAnonymousContentList*, NS_STATIC_CAST(nsIDOMNodeList*, nodeList.get()));
-
-      PRInt32 count = contentList->GetInsertionPointCount();
-      for (PRInt32 i = 0; i < count; i++) {
-        nsXBLInsertionPoint* point = contentList->GetInsertionPointAt(i);
-        PRInt32 index = point->GetInsertionIndex();
-        if (index != -1) {
-          // We're real. Jam all the kids in.
-          // XXX Check the filters to find the correct points.
-          for (PRInt32 j = aNewIndexInContainer; j < childCount; j++) {
-            child = aContainer->GetChildAt(j);
-            point->AddChild(child);
-            SetInsertionParent(child, ins);
+        PRInt32 count = contentList->GetInsertionPointCount();
+        for (PRInt32 i = 0; i < count; i++) {
+          nsXBLInsertionPoint* point = contentList->GetInsertionPointAt(i);
+          PRInt32 index = point->GetInsertionIndex();
+          if (index != -1) {
+            // We're real. Jam all the kids in.
+            // XXX Check the filters to find the correct points.
+            for (PRInt32 j = aNewIndexInContainer; j < childCount; j++) {
+              child = aContainer->GetChildAt(j);
+              point->AddChild(child);
+              SetInsertionParent(child, ins);
+            }
+            break;
           }
-          break;
         }
       }
     }
   }
+
+  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(ContentAppended,
+                                     (aDocument, aContainer,
+                                      aNewIndexInContainer));
 }
 
 void
@@ -1191,66 +1267,71 @@ nsBindingManager::ContentInserted(nsIDocument* aDocument,
                                   nsIContent* aChild,
                                   PRInt32 aIndexInContainer)
 {
-// XXX This is hacked just to make menus work again.
-  if (aIndexInContainer == -1 || !mContentListTable.ops)
-    // It's anonymous.
-    return;
+  // XXX This is hacked just to make menus work again.
+  if (aIndexInContainer != -1 && mContentListTable.ops) {
+    // It's not anonymous.
+    nsCOMPtr<nsIContent> ins;
+    GetNestedInsertionPoint(aContainer, aChild, getter_AddRefs(ins));
 
-  nsCOMPtr<nsIContent> ins;
-  GetNestedInsertionPoint(aContainer, aChild, getter_AddRefs(ins));
+    if (ins) {
+      nsCOMPtr<nsIDOMNodeList> nodeList;
+      PRBool isAnonymousContentList;
+      GetXBLChildNodesInternal(ins, getter_AddRefs(nodeList),
+                               &isAnonymousContentList);
 
-  if (ins) {
-    nsCOMPtr<nsIDOMNodeList> nodeList;
-    PRBool isAnonymousContentList;
-    GetXBLChildNodesInternal(ins, getter_AddRefs(nodeList),
-                             &isAnonymousContentList);
+      if (nodeList && isAnonymousContentList) {
+        // Find a non-pseudo-insertion point and just jam ourselves in.
+        // This is not 100% correct.  Hack city, baby.
+        nsAnonymousContentList* contentList =
+          NS_STATIC_CAST(nsAnonymousContentList*,
+                         NS_STATIC_CAST(nsIDOMNodeList*, nodeList.get()));
 
-    if (nodeList && isAnonymousContentList) {
-      // Find a non-pseudo-insertion point and just jam ourselves in.
-      // This is not 100% correct.  Hack city, baby.
-      nsAnonymousContentList* contentList = NS_STATIC_CAST(nsAnonymousContentList*, NS_STATIC_CAST(nsIDOMNodeList*, nodeList.get()));
+        PRInt32 count = contentList->GetInsertionPointCount();
+        for (PRInt32 i = 0; i < count; i++) {
+          nsXBLInsertionPoint* point = contentList->GetInsertionPointAt(i);
+          if (point->GetInsertionIndex() != -1) {
+            // We're real. Jam the kid in.
+            // XXX Check the filters to find the correct points.
 
-      PRInt32 count = contentList->GetInsertionPointCount();
-      for (PRInt32 i = 0; i < count; i++) {
-        nsXBLInsertionPoint* point = contentList->GetInsertionPointAt(i);
-        if (point->GetInsertionIndex() != -1) {
-          // We're real. Jam the kid in.
-          // XXX Check the filters to find the correct points.
-
-          // Find the right insertion spot.  Can't just insert in the insertion
-          // point at aIndexInContainer since the point may contain anonymous
-          // content, not all of aContainer's kids, etc.  So find the last
-          // child of aContainer that comes before aIndexInContainer and is in
-          // the insertion point and insert right after it.
-          PRInt32 pointSize = point->ChildCount();
-          PRBool inserted = PR_FALSE;
-          for (PRInt32 parentIndex = aIndexInContainer - 1;
-               parentIndex >= 0 && !inserted; --parentIndex) {
-            nsIContent* currentSibling = aContainer->GetChildAt(parentIndex);
-            for (PRInt32 pointIndex = pointSize - 1; pointIndex >= 0;
-                 --pointIndex) {
-              nsCOMPtr<nsIContent> currContent = point->ChildAt(pointIndex);
-              if (currContent == currentSibling) {
-                point->InsertChildAt(pointIndex + 1, aChild);
-                inserted = PR_TRUE;
-                break;
+            // Find the right insertion spot.  Can't just insert in the insertion
+            // point at aIndexInContainer since the point may contain anonymous
+            // content, not all of aContainer's kids, etc.  So find the last
+            // child of aContainer that comes before aIndexInContainer and is in
+            // the insertion point and insert right after it.
+            PRInt32 pointSize = point->ChildCount();
+            PRBool inserted = PR_FALSE;
+            for (PRInt32 parentIndex = aIndexInContainer - 1;
+                 parentIndex >= 0 && !inserted; --parentIndex) {
+              nsIContent* currentSibling = aContainer->GetChildAt(parentIndex);
+              for (PRInt32 pointIndex = pointSize - 1; pointIndex >= 0;
+                   --pointIndex) {
+                nsCOMPtr<nsIContent> currContent = point->ChildAt(pointIndex);
+                if (currContent == currentSibling) {
+                  point->InsertChildAt(pointIndex + 1, aChild);
+                  inserted = PR_TRUE;
+                  break;
+                }
               }
             }
+            if (!inserted) {
+              // None of our previous siblings are in here... just stick
+              // ourselves in at the beginning of the insertion point.
+              // XXXbz if we ever start doing the filter thing right, this may be
+              // no good, since we may _still_ have anonymous kids in there and
+              // may need to get the ordering with those right.
+              point->InsertChildAt(0, aChild);
+            }
+            SetInsertionParent(aChild, ins);
+            break;
           }
-          if (!inserted) {
-            // None of our previous siblings are in here... just stick
-            // ourselves in at the beginning of the insertion point.
-            // XXXbz if we ever start doing the filter thing right, this may be
-            // no good, since we may _still_ have anonymous kids in there and
-            // may need to get the ordering with those right.
-            point->InsertChildAt(0, aChild);
-          }
-          SetInsertionParent(aChild, ins);
-          break;
         }
       }
     }
   }
+
+  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(ContentInserted,
+                                     (aDocument, aContainer, aChild,
+                                      aIndexInContainer));  
 }
 
 void
@@ -1259,6 +1340,10 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
                                  nsIContent* aChild,
                                  PRInt32 aIndexInContainer)
 {
+  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(ContentRemoved,
+                                     (aDocument, aContainer, aChild,
+                                      aIndexInContainer));  
+
   if (aIndexInContainer == -1 || !mContentListTable.ops)
     // It's anonymous.
     return;
@@ -1285,3 +1370,66 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
     }
   }
 }
+
+void
+nsBindingManager::NodeWillBeDestroyed(const nsINode *aNode)
+{
+  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(NodeWillBeDestroyed, (aNode));
+}
+
+void
+nsBindingManager::StyleSheetAdded(nsIDocument* aDocument,
+                                  nsIStyleSheet* aStyleSheet,
+                                  PRBool aDocumentSheet)
+{
+  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(StyleSheetAdded,
+                                     (aDocument, aStyleSheet, aDocumentSheet));
+}
+
+void
+nsBindingManager::StyleSheetRemoved(nsIDocument* aDocument,
+                                    nsIStyleSheet* aStyleSheet,
+                                    PRBool aDocumentSheet)
+{
+  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(StyleSheetRemoved,
+                                     (aDocument, aStyleSheet, aDocumentSheet));
+}
+
+void
+nsBindingManager::StyleSheetApplicableStateChanged(nsIDocument* aDocument,
+                                                   nsIStyleSheet* aStyleSheet,
+                                                   PRBool aApplicable)
+{
+  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(StyleSheetApplicableStateChanged,
+                                     (aDocument, aStyleSheet, aApplicable));
+}
+
+void
+nsBindingManager::StyleRuleChanged(nsIDocument* aDocument,
+                                   nsIStyleSheet* aStyleSheet,
+                                   nsIStyleRule* aOldStyleRule,
+                                   nsIStyleRule* aNewStyleRule)
+{
+  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(StyleRuleChanged,
+                                     (aDocument, aStyleSheet, aOldStyleRule,
+                                      aNewStyleRule));
+}
+
+void
+nsBindingManager::StyleRuleAdded(nsIDocument* aDocument,
+                                 nsIStyleSheet* aStyleSheet,
+                                 nsIStyleRule* aStyleRule)
+{
+  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(StyleRuleAdded,
+                                     (aDocument, aStyleSheet, aStyleRule));
+}
+
+void
+nsBindingManager::StyleRuleRemoved(nsIDocument* aDocument,
+                                   nsIStyleSheet* aStyleSheet,
+                                   nsIStyleRule* aStyleRule)
+{
+  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(StyleRuleRemoved,
+                                     (aDocument, aStyleSheet, aStyleRule));
+}
+
