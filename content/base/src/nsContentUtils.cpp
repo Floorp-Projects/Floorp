@@ -1401,8 +1401,10 @@ nsContentUtils::FindFirstChildWithResolvedTag(nsIContent* aParent,
   PRInt32 namespaceID;
   PRUint32 count = aParent->GetChildCount();
 
+  PRUint32 i;
+
   nsCOMPtr<nsIAtom> tag;
-  for (PRUint32 i = 0; i < count; i++) {
+  for (i = 0; i < count; i++) {
     nsIContent *child = aParent->GetChildAt(i);
     xblService->ResolveTag(child, &namespaceID, getter_AddRefs(tag));
     if (tag == aTag && namespaceID == aNamespace) {
@@ -1424,7 +1426,7 @@ nsContentUtils::FindFirstChildWithResolvedTag(nsIContent* aParent,
 
   PRUint32 length;
   children->GetLength(&length);
-  for (PRUint32 i = 0; i < length; i++) {
+  for (i = 0; i < length; i++) {
     nsCOMPtr<nsIDOMNode> childNode;
     children->Item(i, getter_AddRefs(childNode));
     nsCOMPtr<nsIContent> childContent = do_QueryInterface(childNode);
