@@ -274,10 +274,10 @@ OPDEF(JSOP_ANONFUNOBJ,  128, "anonfunobj",  NULL,     3,  0,  1, 13,  JOF_CONST)
 OPDEF(JSOP_NAMEDFUNOBJ, 129, "namedfunobj", NULL,     3,  0,  1, 13,  JOF_CONST)
 
 /*
- * Like JSOP_SETLOCAL, but specialized to avoid requiring JSOP_POP immediately
- * after to throw away the exception value.
+ * Like JSOP_INITPROP, but specialized to make a DontDelete property for ECMA
+ * Edition 3 catch variables.
  */
-OPDEF(JSOP_INITCATCHVAR,130, "initcatchvar",NULL,     3,  1,  0,  0,  JOF_LOCAL|JOF_NAME|JOF_SET)
+OPDEF(JSOP_INITCATCHVAR,130, "initcatchvar",NULL,     3,  1,  0,  0,  JOF_CONST)
 
 /* ECMA-mandated parenthesization opcode, which nulls the reference base register, obj; see jsinterp.c. */
 OPDEF(JSOP_GROUP,       131, "group",       NULL,     1,  0,  0,  0,  JOF_BYTE)
@@ -416,7 +416,7 @@ OPDEF(JSOP_TYPEOFEXPR,    198,js_typeof_str, NULL,    1,  1,  1, 10,  JOF_BYTE|J
 OPDEF(JSOP_ENTERBLOCK,    199,"enterblock",  NULL,    3,  0,  0,  0,  JOF_CONST)
 OPDEF(JSOP_LEAVEBLOCK,    200,"leaveblock",  NULL,    3,  0,  0,  0,  JOF_UINT16)
 OPDEF(JSOP_GETLOCAL,      201,"getlocal",    NULL,    3,  0,  1, 13,  JOF_LOCAL|JOF_NAME)
-OPDEF(JSOP_SETLOCAL,      202,"setlocal",    NULL,    3,  1,  1,  1,  JOF_LOCAL|JOF_NAME|JOF_SET)
+OPDEF(JSOP_SETLOCAL,      202,"setlocal",    NULL,    3,  1,  1,  1,  JOF_LOCAL|JOF_NAME|JOF_SET|JOF_ASSIGNING|JOF_DETECTING)
 OPDEF(JSOP_INCLOCAL,      203,"inclocal",    NULL,    3,  0,  1, 10,  JOF_LOCAL|JOF_NAME|JOF_INC)
 OPDEF(JSOP_DECLOCAL,      204,"declocal",    NULL,    3,  0,  1, 10,  JOF_LOCAL|JOF_NAME|JOF_DEC)
 OPDEF(JSOP_LOCALINC,      205,"localinc",    NULL,    3,  0,  1, 10,  JOF_LOCAL|JOF_NAME|JOF_INC|JOF_POST)

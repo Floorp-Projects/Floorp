@@ -1981,6 +1981,14 @@ InternNonIntElementId(JSContext *cx, jsval idval, jsid *idp)
 # undef JS_THREADED_INTERP
 #endif
 
+typedef enum JSOpLength {
+#define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
+    op##_LENGTH = length,
+#include "jsopcode.tbl"
+#undef OPDEF
+    JSOP_LIMIT_LENGTH
+} JSOpLength;
+
 JSBool
 js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 {
@@ -4248,6 +4256,7 @@ interrupt:
               case JSOP_GETMETHOD:    goto do_JSOP_GETMETHOD;
               case JSOP_SETMETHOD:    goto do_JSOP_SETMETHOD;
 #endif
+              case JSOP_INITCATCHVAR: goto do_JSOP_INITCATCHVAR;
               case JSOP_NAMEDFUNOBJ:  goto do_JSOP_NAMEDFUNOBJ;
               case JSOP_NUMBER:       goto do_JSOP_NUMBER;
               case JSOP_OBJECT:       goto do_JSOP_OBJECT;
@@ -5488,16 +5497,41 @@ interrupt:
             /* let the code at out try to catch the exception. */
             goto out;
 
-          BEGIN_CASE(JSOP_INITCATCHVAR)
-            /*
-             * The stack must have a block with at least one local slot below
-             * the exception object.
-             */
+          BEGIN_LITOPX_CASE(JSOP_INITCATCHVAR, 0)
+            /* Load the value into rval, while keeping it live on stack. */
             JS_ASSERT(sp - fp->spbase >= 2);
-            slot = GET_UINT16(pc);
-            JS_ASSERT(slot + 1 < (uintN)depth);
-            fp->spbase[slot] = POP_OPND();
-          END_CASE(JSOP_INITCATCHVAR)
+            rval = FETCH_OPND(-1);
+
+            /* Get the immediate catch variable name into id. */
+            id   = ATOM_TO_JSID(atom);
+
+            /* Find the object being initialized at top of stack. */
+            lval = FETCH_OPND(-2);
+            JS_ASSERT(JSVAL_IS_OBJECT(lval));
+            obj = JSVAL_TO_OBJECT(lval);
+
+            SAVE_SP_AND_PC(fp);
+
+            /*
+             * It's possible for an evil script to substitute a random object
+             * for the new object. Check to make sure that we don't override a
+             * readonly property with the below OBJ_DEFINE_PROPERTY.
+             */
+            ok = OBJ_GET_ATTRIBUTES(cx, obj, id, NULL, &attrs);
+            if (!ok)
+                goto out;
+            if (!(attrs & (JSPROP_READONLY | JSPROP_PERMANENT |
+                           JSPROP_GETTER | JSPROP_SETTER))) {
+                /* Define obj[id] to contain rval and to be permanent. */
+                ok = OBJ_DEFINE_PROPERTY(cx, obj, id, rval, NULL, NULL,
+                                         JSPROP_PERMANENT, NULL);
+                if (!ok)
+                    goto out;
+            }
+
+            /* Now that we're done with rval, pop it. */
+            sp--;
+          END_LITOPX_CASE(JSOP_INITCATCHVAR)
 
           BEGIN_CASE(JSOP_INSTANCEOF)
             SAVE_SP_AND_PC(fp);
@@ -5960,11 +5994,7 @@ interrupt:
             JS_ASSERT(op == JSOP_LEAVEBLOCKEXPR
                       ? fp->spbase + OBJ_BLOCK_DEPTH(cx, obj) == sp - 1
                       : fp->spbase + OBJ_BLOCK_DEPTH(cx, obj) == sp);
-
             *chainp = OBJ_GET_PARENT(cx, obj);
-            JS_ASSERT(chainp != &fp->blockChain ||
-                      !*chainp ||
-                      OBJ_GET_CLASS(cx, *chainp) == &js_BlockClass);
           }
           END_CASE(JSOP_LEAVEBLOCK)
 
