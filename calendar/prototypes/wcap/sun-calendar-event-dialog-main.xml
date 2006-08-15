@@ -324,32 +324,35 @@
             // add calendars to the calendar menulist
             var calendarList = document.getElementById("item-calendar");
             var calendars = getCalendarManager().getCalendars({});
+            var calendarToUse = item.calendar || window.arguments[0].calendar
+            var selectIndex = 0;
             for (i in calendars) {
                 var calendar = calendars[i];
                 if (calendar == item.calendar || calendar == window.arguments[0].calendar) {
                   var menuitem = calendarList.appendItem(calendar.name, i);
                   menuitem.calendar = calendar;
+                  if(calendarToUse) {
+                    if (calendarToUse.uri.equals(calendar.uri)) {
+                      calendarList.selectedIndex = selectIndex;
+                    }
+                  }
+                  selectIndex++;
                 } else if (calendar && !calendar.readOnly) {
                   var menuitem = calendarList.appendItem(calendar.name, i);
                   menuitem.calendar = calendar;
+                  if(calendarToUse) {
+                    if (calendarToUse.uri.equals(calendar.uri)) {
+                      calendarList.selectedIndex = selectIndex;
+                    }
+                  }
+                  selectIndex++;
                 }
             }
-
-            // item default calendar
-            // If this is a new item, it might not have a calendar, but a default
-            // option could well have been passed in.
-            var calendarToUse = item.calendar || window.arguments[0].calendar
-            if (calendarToUse) {
-                var calendarList = document.getElementById("item-calendar");
-                var calendars = getCalendarManager().getCalendars({});
-                for (i in calendars) {
-                    if (calendarToUse.uri.equals(calendars[i].uri))
-                        calendarList.selectedIndex = i;
-                }
-            } else {
-                // no calendar attached to item
-                // select first entry in calendar list as default
-                document.getElementById("item-calendar").selectedIndex = 0;
+            
+            // no calendar attached to item
+            // select first entry in calendar list as default
+            if (!calendarToUse) {
+              document.getElementById("item-calendar").selectedIndex = 0;
             }
 
             // Categories
@@ -507,9 +510,9 @@
             // update datetime pickers
             this.updateAllDay();
 
-            this.onChangeCalendar();
-
             this.updateURL(item.getProperty("URL"));
+
+            this.onChangeCalendar();
 
             document.getElementById("item-title").focus();
         ]]>
@@ -685,6 +688,15 @@
               for (i=0;i<enableElements.length;i++) {
                 enableElements[i].removeAttribute('disabled');
               }
+
+              // update datetime pickers
+              this.updateDueDate();
+              this.updateEntryDate();
+
+              // update datetime pickers
+              this.updateAllDay();
+
+              this.updateURL(getElementValue("item-url"));
             }
 
             var event = document.createEvent('Events'); 
