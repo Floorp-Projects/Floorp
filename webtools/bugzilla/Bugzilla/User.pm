@@ -1132,7 +1132,7 @@ sub wants_bug_mail {
     # from the point of view of this user.    
     my %events;    
     foreach my $ref (@$fieldDiffs) {
-        my ($who, $fieldName, $when, $old, $new) = @$ref;
+        my ($who, $whoname, $fieldName, $when, $old, $new) = @$ref;
         # A change to any of the above fields sets the corresponding event
         if (defined($names_to_events{$fieldName})) {
             $events{$names_to_events{$fieldName}} = 1;

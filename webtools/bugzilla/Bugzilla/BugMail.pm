@@ -354,7 +354,7 @@ sub ProcessOneBug {
     # The last relevant set of people are those who are being removed from 
     # their roles in this change. We get their names out of the diffs.
     foreach my $ref (@$diffs) {
-        my ($who, $what, $when, $old, $new) = (@$ref);
+        my ($who, $whoname, $what, $when, $old, $new) = (@$ref);
         if ($old) {
             # You can't stop being the reporter, and mail isn't sent if you
             # remove your vote.
