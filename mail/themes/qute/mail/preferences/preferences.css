@@ -40,59 +40,52 @@
 
 /* Global Styles */
 
+radiogroup.paneSelector {
+  background-color: rgb(90, 116, 164);
+  color: white;
+  background-image: url("chrome://messenger/skin/preferences/background.png");
+  background-position: center bottom;
+  background-repeat: repeat-x;
+}
+
 radio[pane] {
-  list-style-image: url("chrome://messenger/skin/preferences/mail-options.png"); 
   -moz-appearance: none;
-  border: 1px solid transparent;
   background-color: transparent;
-  margin: 1px;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  min-width: 80px;
 }
 
 radio[pane]:hover {
-  border: 1px solid;
-  -moz-border-left-colors: #98B4E2;
-  -moz-border-top-colors: #98B4E2;
-  -moz-border-right-colors: #98B4E2;
-  -moz-border-bottom-colors: #98B4E2;
-  background-color: #E0E8F6;
+  background-color: rgb(95, 130, 189);
+  background-image: url("chrome://messenger/skin/preferences/hover.png");
+  color: white;
 }
 
 radio[pane][selected="true"] {
-  border: 1px solid;
-  -moz-border-left-colors: #316AC5;
-  -moz-border-top-colors: #316AC5;
-  -moz-border-right-colors: #316AC5;
-  -moz-border-bottom-colors: #316AC5;
-  background-color: #C1D2EE;
+  background-color: white;
+  background-image: none;
+  background-image: url("chrome://messenger/skin/preferences/selected.png");
+  color: black;
 }
 
 radio[pane=paneGeneral] {
-	-moz-image-region: rect(0px, 32px, 32px, 0px)
+  list-style-image: url("chrome://messenger/skin/preferences/general.png");
 }
-
 radio[pane=paneDisplay] {
-	-moz-image-region: rect(0px, 64px, 32px, 32px)
+  list-style-image: url("chrome://messenger/skin/preferences/display.png");
 }
-
 radio[pane=paneCompose] {
-	-moz-image-region: rect(0px, 96px, 32px, 64px)
+  list-style-image: url("chrome://messenger/skin/preferences/composition.png");
 }
-
 radio[pane=panePrivacy] {
   list-style-image: url("chrome://messenger/skin/preferences/privacy.png");
 }
-
-radio[pane=panePrivacy] > .paneButtonIcon
-{
-  width: 27px;
-}
-
 radio[pane=paneDownloads] {
-	-moz-image-region: rect(0px 128px 32px 96px);
+  list-style-image: url("chrome://messenger/skin/preferences/attachments.png");
 }
-
 radio[pane=paneAdvanced] {
-	-moz-image-region: rect(0px, 192px, 32px, 160px)
+  list-style-image: url("chrome://messenger/skin/preferences/advanced.png");
 }
 
 /* General Pane */

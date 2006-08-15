@@ -52,10 +52,6 @@
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu-vertical");
 }
 
-toolbar[mode="full"] .toolbarbutton-1 {
-  min-width: 47px;
-}
-
 #button-getmsg {
   -moz-image-region: rect(0px 24px 24px 0px);
 }
@@ -225,17 +221,16 @@ toolbar[mode="full"] .toolbarbutton-1 {
   -moz-image-region: rect(48px 336px 72px 312px) !important;
 } 
 
-/* Temporary tag button...re-use the mark button */
 #button-tag {
-  -moz-image-region: rect(0px 336px 24px 312px);
+  -moz-image-region: rect(0px 360px 24px 336px);
 }
 
 #button-tag:hover {
-  -moz-image-region: rect(24px 336px 48px 312px);
+  -moz-image-region: rect(24px 360px 48px 336px);
 } 
 
 #button-tag[disabled] {
-  -moz-image-region: rect(48px 336px 72px 312px) !important;
+  -moz-image-region: rect(48px 360px 72px 336px) !important;
 } 
 
 /* ::::: small primary toolbar buttons ::::: */
@@ -437,17 +432,16 @@ toolbar[iconsize="small"] #button-mark[disabled] {
   -moz-image-region: rect(32px 224px 48px 208px) !important;
 }
 
-/* temporary tag button, re-use the mark button */
 toolbar[iconsize="small"] #button-tag {
-  -moz-image-region: rect(0px 224px 16px 208px);
+  -moz-image-region: rect(0px 240px 16px 224px);
 }
 
 toolbar[iconsize="small"] #button-tag:hover {
-  -moz-image-region: rect(16px 224px 32px 208px);
+  -moz-image-region: rect(16px 240px 32px 224px);
 } 
 
 toolbar[iconsize="small"] #button-tag[disabled] {
-  -moz-image-region: rect(32px 224px 48px 208px) !important;
+  -moz-image-region: rect(32px 240px 48px 224px) !important;
 }
 
 /* ::::: end small primary toolbar buttons ::::: */
@@ -466,8 +460,7 @@ toolbar[iconsize="small"] #button-tag[disabled] {
 }
 
 #junkBarImage {
-  list-style-image: url("chrome://messenger/skin/icons/mail-toolbar-small.png");
-  -moz-image-region: rect(0px 128px 16px 112px);
+  list-style-image: url("chrome://messenger/skin/icons/junk.png");
 }
 
 #junkIcon {
@@ -479,6 +472,5 @@ toolbar[iconsize="small"] #button-tag[disabled] {
 }
 
 #phishingBarImage {
-/* for now, temporarily use the alert icon until we can get a new one */
-  list-style-image: url("chrome://global/skin/icons/Warning.png"); 
+  list-style-image: url("chrome://global/skin/icons/phishing.png");
 }

@@ -1270,7 +1270,7 @@ function setApplicationIconForAttachment(attachment, listitem, largeView)
   var iconSize = largeView ? kLargeIcon : kSmallIcon;
   // generate a moz-icon url for the attachment so we'll show a nice icon next to it.
   if ( attachment.contentType == 'text/x-moz-deleted' )
-    listitem.setAttribute('image', 'chrome://messenger/skin/icons/message-mail-attach-del.gif');
+    listitem.setAttribute('image', 'chrome://messenger/skin/icons/message-mail-attach-del.png');
   else
     listitem.setAttribute('image', "moz-icon:" + "//" + attachment.displayName + "?size=" + iconSize + "&contentType=" + attachment.contentType);
 }

@@ -94,7 +94,7 @@
 }
 
 #closeButton {
-  list-style-image: url("chrome://messenger/skin/icons/quick-search-clear.png");
+  list-style-image: url("chrome://messenger/skin/icons/close-button.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
   -moz-appearance: none;
   border: none !important;

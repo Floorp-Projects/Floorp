@@ -41,10 +41,11 @@
 treechildren::-moz-tree-image(folderNameCol, serverType-rss),
 .folderMenuItem[ServerType="rss"] {
   list-style-image: url("chrome://messenger-newsblog/skin/icons/rss-feed.png");
+  -moz-image-region: rect(0 16px 16px 0);
 }
 
 treechildren::-moz-tree-image(folderNameCol, serverType-rss, newMessages-true) {
-  list-style-image: url("chrome://messenger-newsblog/skin/icons/rss-feed-new.png");
+  -moz-image-region: rect(16px 16px 32px 0);
 }
 
 treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-rss),
@@ -54,21 +55,17 @@ treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-rss),
 
 treechildren::-moz-tree-image(folderNameCol, specialFolder-Trash),
 .folderMenuItem[SpecialFolder="Trash"] {
-  list-style-image: url("chrome://messenger/skin/icons/folder-trash.png");
+  list-style-image: url("chrome://messenger/skin/icons/folder.png");
+  -moz-image-region: rect(0 144px 16px 128px);
 }
 
 /* ..... Saved Search Folder, Hack to force the saved search artwork to show up for virtual folders in RSS accounts ..... */
 
 treechildren::-moz-tree-image(folderNameCol, serverType-rss, specialFolder-Virtual) {
-  list-style-image: url("chrome://messenger-newsblog/skin/icons/folder-search-rss.png");
+  list-style-image: url("chrome://messenger/skin/icons/folder.png");
+  -moz-image-region: rect(0 176px 16px 160px);
 }
 
-/* ::::: Thread Pane icons :::::: */
-
-treechildren::-moz-tree-image(subjectCol, rss) {
-  list-style-image: url("chrome://messenger/skin/icons/message-news.png");
-}
-
-treechildren::-moz-tree-image(subjectCol, rss, new) {
-  list-style-image: url("chrome://messenger/skin/icons/message-news-new.png");
+treechildren::-moz-tree-image(folderNameCol, serverType-rss, specialFolder-Virtual, newMessages-true) {
+  -moz-image-region: rect(16px 176px 32px 160px);
 }

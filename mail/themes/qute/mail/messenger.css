@@ -60,3 +60,57 @@ list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
 #offline-status {
   list-style-image: url("chrome://messenger/skin/icons/online.png");
 }
+
+/* ::::: toolbarbutton ::::: */
+
+toolbarbutton {
+  padding-top: 5px;
+  padding-bottom: 6px;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 5px;
+}
+
+.toolbarbutton-icon {
+  -moz-margin-end: 0;
+}
+
+.toolbarbutton-menu-dropmarker {
+  -moz-padding-start: 3px;
+}
+
+
+.toolbarbutton-text {
+  margin: 0 !important;
+  text-align: center;
+}
+
+toolbarbutton:hover:active,
+toolbarbutton[open="true"] {
+  padding-top: 6px;
+  padding-bottom: 5px;
+  -moz-padding-start: 5px;
+  -moz-padding-end: 4px;
+}
+
+toolbarbutton[disabled="true"],
+toolbarbutton[disabled="true"]:hover,
+toolbarbutton[disabled="true"]:hover:active,
+toolbarbutton[disabled="true"][open="true"] {
+  padding-top: 5px;
+  padding-bottom: 6px;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 5px;
+}
+
+toolbar[mode="full"] .toolbarbutton-1 {
+  min-width: 50px;
+}
+
+/* ..... checked state ..... */
+
+toolbarbutton[checked="true"] {
+  padding-top: 6px !important;
+  padding-bottom: 5px !important;
+  -moz-padding-start: 5px !important;
+  -moz-padding-end: 4px !important;
+}

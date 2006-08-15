@@ -430,18 +430,12 @@ treechildren::-moz-tree-image(remote-err) {
 #DecreaseFontSizeButton {
   -moz-image-region: rect(0px 16px 16px 0px);
 }
-#DecreaseFontSizeButton:hover {
-  -moz-image-region: rect(16px 16px 32px 0px);
-}
 #DecreaseFontSizeButton[disabled="true"] {
   -moz-image-region: rect(32px 16px 48px 0px) !important;
 }
 
 #IncreaseFontSizeButton {
   -moz-image-region: rect(0px 32px 16px 16px);
-}
-#IncreaseFontSizeButton:hover {
-  -moz-image-region: rect(16px 32px 32px 16px);
 }
 #IncreaseFontSizeButton[disabled="true"] {
   -moz-image-region: rect(32px 32px 48px 16px) !important;
@@ -450,18 +444,12 @@ treechildren::-moz-tree-image(remote-err) {
 #boldButton {
   -moz-image-region: rect(0px 48px 16px 32px);
 }
-#boldButton:hover, #boldButton[checked="true"] {
-  -moz-image-region: rect(16px 48px 32px 32px);
-}
 #boldButton[disabled="true"] {
   -moz-image-region: rect(32px 48px 48px 32px) !important;
 }
 
 #italicButton {
   -moz-image-region: rect(0px 64px 16px 48px);
-}
-#italicButton:hover, #italicButton[checked="true"] {
-  -moz-image-region: rect(16px 64px 32px 48px);
 }
 #italicButton[disabled="true"] {
   -moz-image-region: rect(32px 64px 48px 48px) !important;
@@ -470,19 +458,12 @@ treechildren::-moz-tree-image(remote-err) {
 #underlineButton {
   -moz-image-region: rect(0px 80px 16px 64px);
 }
-#underlineButton:hover, #underlineButton[checked="true"] {
-  -moz-image-region: rect(16px 80px 32px 64px);
-}
-
 #underlineButton[disabled="true"] {
   -moz-image-region: rect(32px 80px 48px 64px) !important;
 }
 
 #ulButton {
   -moz-image-region: rect(0px 96px 16px 80px);
-}
-#ulButton:hover, #ulButton[checked="true"] {
-  -moz-image-region: rect(16px 96px 32px 80px);
 }
 #ulButton[disabled="true"] {
   -moz-image-region: rect(32px 96px 48px 80px) !important;
@@ -491,18 +472,12 @@ treechildren::-moz-tree-image(remote-err) {
 #olButton {
   -moz-image-region: rect(0px 112px 16px 96px);
 }
-#olButton:hover, #olButton[checked="true"] {
-  -moz-image-region: rect(16px 112px 32px 96px);
-}
 #olButton[disabled="true"] {
   -moz-image-region: rect(32px 112px 48px 96px) !important;
 }
 
 #outdentButton {
   -moz-image-region: rect(0px 128px 16px 112px);
-}
-#outdentButton:hover {
-  -moz-image-region: rect(16px 128px 32px 112px);
 }
 #outdentButton[disabled="true"] {
   -moz-image-region: rect(32px 128px 48px 112px) !important;
@@ -511,18 +486,12 @@ treechildren::-moz-tree-image(remote-err) {
 #indentButton {
   -moz-image-region: rect(0px 144px 16px 128px);
 }
-#indentButton:hover {
-  -moz-image-region: rect(16px 144px 32px 128px);
-}
 #indentButton[disabled="true"] {
   -moz-image-region: rect(32px 144px 48px 128px) !important;
 }
 
 #AlignPopupButton {
   -moz-image-region: rect(0px 176px 16px 160px);
-}
-#AlignPopupButton:hover, #AlignPopupButton[open="true"] {
-  -moz-image-region: rect(16px 176px 32px 160px);
 }
 #AlignPopupButton[disabled="true"] {
   -moz-image-region: rect(32px 176px 48px 160px) !important;
@@ -531,18 +500,12 @@ treechildren::-moz-tree-image(remote-err) {
 #InsertPopupButton {
   -moz-image-region: rect(0px 256px 16px 240px);
 }
-#InsertPopupButton:hover, #InsertPopupButton[open="true"] {
-  -moz-image-region: rect(16px 256px 32px 240px);
-}
 #InsertPopupButton[disabled="true"] {
   -moz-image-region: rect(32px 256px 48px 240px) !important;
 }
 
 #smileButtonMenu {
   -moz-image-region: rect(0px 304px 16px 288px);
-}
-#smileButtonMenu:hover, #smileButtonMenu[open="true"] {
-  -moz-image-region: rect(16px 304px 32px 288px);
 }
 #smileButtonMenu[disabled="true"] {
   -moz-image-region: rect(32px 304px 48px 288px) !important;

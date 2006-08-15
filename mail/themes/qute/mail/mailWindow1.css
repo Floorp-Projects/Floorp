@@ -160,7 +160,7 @@ treecol.readColumnHeader {
 }
 
 treechildren::-moz-tree-image(unreadButtonColHeader) {
-  list-style-image: url("chrome://messenger/skin/icons/readmail.gif");
+  list-style-image: url("chrome://messenger/skin/icons/readmail.png");
 }
 
 treechildren::-moz-tree-image(unreadButtonColHeader, dummy) {
@@ -190,7 +190,7 @@ treecol.flagColumnHeader {
 }
 
 treechildren::-moz-tree-image(flaggedCol) {
-  list-style-image: url("chrome://messenger/skin/icons/readmail.gif");
+  list-style-image: url("chrome://messenger/skin/icons/readmail.png");
 }
 
 treechildren::-moz-tree-image(flaggedCol, dummy) {
@@ -210,12 +210,13 @@ treecol.junkStatusHeader {
 
 /* "unknown" now looks like "not junk".  see bug #182386 */
 treechildren::-moz-tree-image(junkStatusCol) {
-  list-style-image: url("chrome://messenger/skin/icons/readmail.gif");
+  list-style-image: url("chrome://messenger/skin/icons/readmail.png");
   -moz-padding-start: 0px;
 }
 
 treechildren::-moz-tree-image(junkStatusCol, junk) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-junk.png");
+  list-style-image: url("chrome://messenger/skin/icons/folder.png");
+  -moz-image-region: rect(0 128px 16px 112px);
 }
 
 treechildren::-moz-tree-image(junkStatusCol, dummy) {
@@ -223,50 +224,33 @@ treechildren::-moz-tree-image(junkStatusCol, dummy) {
 }
 
 treechildren::-moz-tree-image(junkStatusCol, notjunk) {
-  list-style-image: url("chrome://messenger/skin/icons/readmail.gif");
+  list-style-image: url("chrome://messenger/skin/icons/readmail.png");
   -moz-padding-start: 0px;
 }
 /* ..... subject column ..... */
 
 treechildren::-moz-tree-image(subjectCol) {
   -moz-margin-end: 2px;
-  list-style-image: url("chrome://messenger/skin/icons/message-mail.png ");
 }
 
 treechildren::-moz-tree-image(subjectCol, dummy) {
   list-style-image: none;
 }
 
-treechildren::-moz-tree-image(subjectCol, read) {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail-read.png");
-}
-
-treechildren::-moz-tree-image(subjectCol, new) {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail-new.png");
-}
-
 treechildren::-moz-tree-image(subjectCol, forwarded) {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail-forwarded.png");
-}
-
-treechildren::-moz-tree-image(subjectCol, forwarded, read) {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail-forwarded-read.png");
+  list-style-image: url("chrome://messenger/skin/icons/message-forwarded.png");
 }
 
 treechildren::-moz-tree-image(subjectCol, replied) {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail-replied.png");
-}
-
-treechildren::-moz-tree-image(subjectCol, replied, read) {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail-replied-read.png");
+  list-style-image: url("chrome://messenger/skin/icons/message-replied.png");
 }
 
 treechildren::-moz-tree-image(subjectCol, replied, forwarded) {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail-replied-forw.png");
+  list-style-image: url("chrome://messenger/skin/icons/message-replied-forw.png");
 }
 
-treechildren::-moz-tree-image(subjectCol, replied, forwarded,read) {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail-replied-forw-read.png");
+treechildren::-moz-tree-image(subjectCol, new) {
+  list-style-image: url("chrome://messenger/skin/icons/message-new.png");
 }
 
 
@@ -275,30 +259,6 @@ treechildren::-moz-tree-image(subjectCol, replied, forwarded,read) {
 
 treechildren::-moz-tree-image(subjectCol, imapdeleted) {
   list-style-image: url("chrome://messenger/skin/icons/message-mail-imapdelete.png");
-}
-
-/* IMPORTANT: make sure our style rules for news articles always come after the message replied/forward style rules.
-   This ensures that we show news post artwork even when the article is replied to. We could probably also fix this
-   by adding more qualifiers to our CSS */
-
-treechildren::-moz-tree-image(subjectCol, news) {
-  list-style-image: url("chrome://messenger/skin/icons/message-news.png");
-}
-
-treechildren::-moz-tree-image(subjectCol, news, forwarded) {
-  list-style-image: url("chrome://messenger/skin/icons/message-news-forwarded.png");
-}
-
-treechildren::-moz-tree-image(subjectCol, news, replied) {
-  list-style-image: url("chrome://messenger/skin/icons/message-news-replied.png");
-}
-
-treechildren::-moz-tree-image(subjectCol, news, replied, forwarded) {
-  list-style-image: url("chrome://messenger/skin/icons/message-news-replied-forw.png");
-}
-
-treechildren::-moz-tree-image(subjectCol, news, new) {
-  list-style-image: url("chrome://messenger/skin/icons/message-news-new.png");
 }
 
 
@@ -312,29 +272,6 @@ treechildren::-moz-tree-image(news, threadCol, ignore) {
   list-style-image: url("chrome://messenger/skin/icons/thread-ignored.png");
 }
 
-treechildren::-moz-tree-image(news, threadCol, container, hasUnread, watch) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-watched-new.png");
-}
-
-treechildren::-moz-tree-image(news, threadCol, container, hasUnread, ignore) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-ignored-new.png");
-}
-
-treechildren::-moz-tree-image(news, threadCol, container, hasUnread, watch, open) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-watched-new.png");
-}
-
-treechildren::-moz-tree-image(news, threadCol, container, hasUnread, ignore, open) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-ignored-new.png");
-}
-
-treechildren::-moz-tree-image(news, threadCol, container, watch, open) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-watched.png");
-}
-
-treechildren::-moz-tree-image(news, threadCol, container, ignore, open) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-ignored.png");
-}
 
 #sizeCol,
 #unreadCol,
@@ -919,4 +856,11 @@ treechildren::-moz-tree-cell-text(lc-black, selected, focus) {
 
 #checkForUpdates[loading="true"] {
   list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+}
+
+
+#threadTree treechildren::-moz-tree-row(odd) {
+  background-image: url("chrome://messenger/skin/icons/row.png");
+  background-position: bottom;
+  background-repeat: repeat-x;
 }
