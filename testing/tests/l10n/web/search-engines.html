@@ -42,18 +42,25 @@
   <head>
     <title>l10n search engines</title>
       <link rel="stylesheet" type="text/css" href="yui/examples/treeview/css/local/tree.css">
-      <link rel="stylesheet" type="text/css" href="yui/build/calendar/assets/calendar.css">
+      <link rel="stylesheet" type="text/css" href="yui/build/container/assets/container.css">
       <link rel="stylesheet" type="text/css" href="layout.css">
       <script type="text/javascript" src="yui/build/yahoo/yahoo.js"></script>
       <script type="text/javascript" src="yui/build/dom/dom.js"></script>
       <script type="text/javascript" src="yui/build/event/event.js"></script>
       <script type="text/javascript" src="yui/build/logger/Logger.js"></script>
       <script type="text/javascript" src="yui/build/treeview/treeview.js"></script>
-      <script type="text/javascript" src="yui/build/calendar/calendar.js"></script>
+      <script type="text/javascript" src="yui/build/dragdrop/dragdrop.js"></script>
+      <script type="text/javascript" src="yui/build/container/container.js"></script>
       <script type="application/javascript" src="results/search-results.js"></script>
       <script type="application/javascript" src="search-code.js"></script>
       <style type="text/css">
         td.ordered {border: 2px solid black;}
+        td.error {background-color: coral;}
+      </style>
+      <style type="text/css">
+        .Tier-1 {display: table-row;}
+        .Tier-2 {display: table-row;}
+        .Tier-3 {display: table-row;}
       </style>
   </head>
   <body onload="return onLoad(event)">
@@ -61,9 +68,9 @@
     <p><strong>Legend:</strong> For each locale, this chart shows search engine name.</p>
     <div id="calContainer">
       <p id="checks">
-        <input type="checkbox" name="Tier-1" checked> Tier 1<br>
-        <input type="checkbox" name="Tier-2" checked> Tier 2<br>
-        <input type="checkbox" name="Tier-3" checked> Tier 3<br>
+        <input type="checkbox" name="0" checked> Tier 1<br>
+        <input type="checkbox" name="1" checked> Tier 2<br>
+        <input type="checkbox" name="2" checked> Tier 3<br>
       </p>
     </div>
     <table>

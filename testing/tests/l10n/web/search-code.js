@@ -86,35 +86,99 @@ view = {
         }
         lst = explicit.concat(implicit);
       }
-      var content = '';
+      row.innerHTML = '<td class="locale">' + loc + '</td>';
       for each (var path in lst) {
-        YAHOO.widget.Logger.log('testing ' + path);
-        var shortName = results.details[path].ShortName;
+        //YAHOO.widget.Logger.log('testing ' + path);
+        var innerContent;
         var cl = '';
-        if (results.locales[loc].orders && results.locales[loc].orders[shortName]) {
-          cl = " ordered";
+        if (results.details[path].error) {
+          innerContent = 'error in ' + path.substr(path.lastIndexOf('/') + 1);
+          cl = ' error';
         }
-        content += '<td class="searchplugin' + cl + '">' + shortName + '</td>';
+        else {
+          var shortName = results.details[path].ShortName;
+          var img = results.details[path].Image;
+          if (results.locales[loc].orders && results.locales[loc].orders[shortName]) {
+            cl = " ordered";
+          }
+          innerContent = '<img src="' + img + '">' + shortName;
+        }
+        var td = document.createElement('td');
+        td.className = 'searchplugin' + cl;
+        td.innerHTML = innerContent;
+        row.appendChild(td);
+        td.details = results.details[path];
       }
-      row.innerHTML = '<td class="locale">' + loc + '</td>' + content;
     }
   },
+  onMouseOver: function(event) {
+    if (!event.target.details)
+      return;
+    var _e = {
+      details: event.target.details,
+      clientX: event.clientX,
+      clientY: event.clientY
+    };
+    view.pending = setTimeout(function(){view.showDetail(_e);}, 500);
+  },
+  onMouseOut: function(event) {
+    if (view.pending) {
+      clearTimeout(view.pending);
+      delete view.pending;
+      return;
+    }
+    if (!event.target.details)
+      return;
+  },
+  showDetail: function(event) {
+    delete view.pending;
+    if (!view._dv) {
+      view._dv = new YAHOO.widget.Panel('dv', {visible:true,draggable:true,constraintoviewport:true});
+      view._dv.beforeHideEvent.subscribe(function(){delete view._dv;}, null);
+    }
+    var dt = event.details;
+    if (dt.error) {
+      view._dv.setHeader("Error");
+      view._dv.setBody(dt.error);
+    }
+    else {
+      view._dv.setHeader("Details");
+      var c = '';
+      var q = 'test';
+      var len = 0;
+      for each (var url in dt.urls) {
+        var uc = url.template;
+        var sep = (uc.indexOf('?') > -1) ? '&amp;' : '?';
+        for (var p in url.params) {
+          uc += sep + p + '=' + url.params[p];
+          sep = '&amp;';
+        }
+        uc = uc.replace('{searchTerms}', q);
+        c += '<button onclick="window.open(this.textContent)">' + uc + '</button><br>';
+        len  = len < c.length ? c.length : len;
+      }
+      view._dv.setBody(c);
+    }
+    view._dv.render(document.body);
+    view._dv.moveTo(event.clientX + window.scrollX, event.clientY + window.scrollY);
+  },
   onClickDisplay: function(event) {
-    YAHOO.util.Event.stopEvent(event);
     if (event.target.localName != 'INPUT') {
       return false;
     }
+    YAHOO.widget.Logger.log('clicking ' + event);
     var handler = function() {return function(){view.onCDReal(event.target)}};
     window.setTimeout(handler(),0);
     return false;
   },
   onCDReal: function(target) {
-    var dsp = !target.checked;
+    var dsp = target.checked;
     target.checked = dsp;
-    dsp = dsp ? 'block' : 'none';
-    var layout = document.styleSheets[2];
-    layout.insertRule('div.' + target.name + ' {display: ' + dsp + ';}',
-                      layout.cssRules.length);
+    dsp = dsp ? 'table-row' : 'none';
+    var layout = document.styleSheets[document.styleSheets.length - 1];
+    var i = Number(target.name);
+    layout.deleteRule(i);
+    layout.insertRule('.Tier-' + (i+1) + ' {display: ' + dsp + ';}', i);
     return false;
   }
 };
@@ -127,5 +191,7 @@ function onLoad(event) {
   document.removeEventListener("load", onLoad, true);
   document.getElementById("checks").addEventListener("click", view.onClickDisplay, true);
   view.updateView();
+  document.getElementById("view").addEventListener("mouseover", view.onMouseOver, true);
+  document.getElementById("view").addEventListener("mouseout", view.onMouseOut, true);
   return true;
 }
