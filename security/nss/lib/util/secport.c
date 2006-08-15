@@ -41,7 +41,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.19 2006/08/14 16:56:39 wtchang%redhat.com Exp $
+ * $Id: secport.c,v 1.20 2006/08/15 23:56:01 wtchang%redhat.com Exp $
  */
 
 #include "seccomon.h"
@@ -271,6 +271,9 @@ PORT_ArenaZAlloc(PLArenaPool *arena, size_t size)
     return(p);
 }
 
+/*
+ * If zero is true, zeroize the arena memory before freeing it.
+ */
 void
 PORT_FreeArena(PLArenaPool *arena, PRBool zero)
 {
@@ -391,8 +394,32 @@ PORT_ArenaMark(PLArenaPool *arena)
     return result;
 }
 
-void
-PORT_ArenaRelease(PLArenaPool *arena, void *mark)
+static void
+port_ArenaZeroAfterMark(PLArenaPool *arena, void *mark)
+{
+    PLArena *a = arena->current;
+    if (a->base <= (PRUword)mark && (PRUword)mark <= a->avail) {
+	/* fast path: mark falls in the current arena */
+	memset(mark, 0, a->avail - (PRUword)mark);
+    } else {
+	/* slow path: need to find the arena that mark falls in */
+	for (a = arena->first.next; a; a = a->next) {
+	    PR_ASSERT(a->base <= a->avail && a->avail <= a->limit);
+	    if (a->base <= (PRUword)mark && (PRUword)mark <= a->avail) {
+		memset(mark, 0, a->avail - (PRUword)mark);
+		a = a->next;
+		break;
+	    }
+	}
+	for (; a; a = a->next) {
+	    PR_ASSERT(a->base <= a->avail && a->avail <= a->limit);
+	    memset((void *)a->base, 0, a->avail - a->base);
+	}
+    }
+}
+
+static void
+port_ArenaRelease(PLArenaPool *arena, void *mark, PRBool zero)
 {
     PORTArenaPool *pool = (PORTArenaPool *)arena;
     if (ARENAPOOL_MAGIC == pool->magic ) {
@@ -424,6 +451,9 @@ PORT_ArenaRelease(PLArenaPool *arena, void *mark)
 	    tm = *pw;
 	    *pw = (threadmark_mark *)NULL;
 
+	    if (zero) {
+		port_ArenaZeroAfterMark(arena, mark);
+	    }
 	    PL_ARENA_RELEASE(arena, mark);
 
 	    if (! pool->first_mark ) {
@@ -431,12 +461,33 @@ PORT_ArenaRelease(PLArenaPool *arena, void *mark)
 	    }
 	}
 #else /* THREADMARK */
+	if (zero) {
+	    port_ArenaZeroAfterMark(arena, mark);
+	}
 	PL_ARENA_RELEASE(arena, mark);
 #endif /* THREADMARK */
 	PZ_Unlock(pool->lock);
     } else {
+	if (zero) {
+	    port_ArenaZeroAfterMark(arena, mark);
+	}
 	PL_ARENA_RELEASE(arena, mark);
     }
+}
+
+void
+PORT_ArenaRelease(PLArenaPool *arena, void *mark)
+{
+    port_ArenaRelease(arena, mark, PR_FALSE);
+}
+
+/*
+ * Zeroize the arena memory before releasing it.
+ */
+void
+PORT_ArenaZRelease(PLArenaPool *arena, void *mark)
+{
+    port_ArenaRelease(arena, mark, PR_TRUE);
 }
 
 void
