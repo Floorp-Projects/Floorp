@@ -231,7 +231,18 @@ protected:
     void SetupReferrerFromChannel(nsIChannel * aChannel);
     
     NS_IMETHOD GetEldestPresContext(nsPresContext** aPresContext);
-    void GetCurrentDocumentOwner(nsISupports ** aOwner);
+
+    // Get the principal that we'll set on the channel if we're inheriting.  If
+    // aConsiderCurrentDocument is true, we try to use the current document if
+    // at all possible.  If that fails, we fall back on the parent document.
+    // If that fails too, we force creation of a content viewer and use the
+    // resulting principal.  If aConsiderCurrentDocument is false, we just look
+    // at the parent.
+    nsIPrincipal* GetInheritedPrincipal(PRBool aConsiderCurrentDocument);
+
+    // Actually open a channel and perform a URI load.  Note: whatever owner is
+    // passed to this function will be set on the channel.  Callers who wish to
+    // not have an owner on the channel should just pass null.
     virtual nsresult DoURILoad(nsIURI * aURI,
                                nsIURI * aReferrer,
                                PRBool aSendReferrer,
@@ -462,6 +473,9 @@ protected:
 
     // Check whether aURI should inherit our security context
     static nsresult URIInheritsSecurityContext(nsIURI* aURI, PRBool* aResult);
+
+    // Check whether aURI is about:blank
+    static PRBool IsAboutBlank(nsIURI* aURI);
     
 protected:
     // Override the parent setter from nsDocLoader

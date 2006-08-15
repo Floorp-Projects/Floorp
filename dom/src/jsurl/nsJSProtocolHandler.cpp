@@ -200,10 +200,8 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         if (!principal)
             return NS_ERROR_FAILURE;
 
-        //-- Don't run if the script principal is different from the
-        //   principal of the context, with two exceptions: we allow
-        //   the script to run if the script has the system principal
-        //   or the context is about:blank.
+        //-- Don't run if the script principal is different from the principal
+        //   of the context, unless the script has the system principal.
         nsCOMPtr<nsIPrincipal> objectPrincipal;
         rv = securityManager->GetObjectPrincipal(
                                 (JSContext*)scriptContext->GetNativeContext(),
@@ -231,38 +229,12 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         }
     }
     else {
-        // No owner from channel, use the object principals.
-        rv = securityManager->GetObjectPrincipal(
-                                (JSContext*)scriptContext->GetNativeContext(),
-                                globalJSObject,
-                                getter_AddRefs(principal));
-
-        // Paranoia check: If we don't have an owner, make sure that we're
-        // not giving this javascript URL the principals of some other
-        // random page, so if the principals aren't for about:blank, don't use
-        // them.
-        // XXX We can't just create new about:blank principals since caps
-        // refuses to treat two about:blank principals as equal.
-        if (principal) {
-            nsCOMPtr<nsIURI> uri;
-            rv = principal->GetURI(getter_AddRefs(uri));
-            if (!uri) {
-                rv = NS_ERROR_NOT_AVAILABLE;
-            }
-            
-            if (NS_SUCCEEDED(rv)) {
-                nsCAutoString spec;
-                uri->GetSpec(spec);
-                if (!spec.EqualsLiteral("about:blank")) {
-                    rv = NS_ERROR_FAILURE;
-                }
-            }
-        }
-
-        if (NS_FAILED(rv) || !principal) {
-            // If all else fails, use a null principal
-            principal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
-        }
+        // No owner from channel, use the null principal for lack of anything
+        // better.  Note that we do not use the object principal here because
+        // that would give the javascript: URL the principals of whatever page
+        // we might be remotely associated with, which is a good recipe for XSS
+        // issues.
+        principal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
 
         if (NS_FAILED(rv) || !principal) {
             return NS_ERROR_FAILURE;

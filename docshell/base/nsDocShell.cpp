@@ -3245,21 +3245,20 @@ nsDocShell::Reload(PRUint32 aReloadFlags)
         rv = LoadHistoryEntry(mLSHE, loadType);
     }
     else {
+        nsCOMPtr<nsIDOMDocument> domDoc(do_GetInterface(GetAsSupports(this)));
+        nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+
+        nsIPrincipal* principal = nsnull;
         nsAutoString contentTypeHint;
-        nsCOMPtr<nsIDOMWindow> window(do_GetInterface((nsIDocShell*)this));
-        if (window) {
-            nsCOMPtr<nsIDOMDocument> document;
-            window->GetDocument(getter_AddRefs(document));
-            nsCOMPtr<nsIDOMNSDocument> doc(do_QueryInterface(document));
-            if (doc) {
-                doc->GetContentType(contentTypeHint);
-            }
+        if (doc) {
+            principal = doc->NodePrincipal();
+            doc->GetContentType(contentTypeHint);
         }
 
         rv = InternalLoad(mCurrentURI,
                           mReferrerURI,
-                          nsnull,         // No owner
-                          INTERNAL_LOAD_FLAGS_INHERIT_OWNER, // Inherit owner from document
+                          principal,
+                          INTERNAL_LOAD_FLAGS_NONE, // Do not inherit owner from document
                           nsnull,         // No window target
                           NS_LossyConvertUTF16toASCII(contentTypeHint).get(),
                           nsnull,         // No post data
@@ -4919,7 +4918,35 @@ nsDocShell::EnsureContentViewer()
     if (mIsBeingDestroyed)
         return NS_ERROR_FAILURE;
 
-    return CreateAboutBlankContentViewer();
+    nsIPrincipal* principal = nsnull;
+
+    nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(mScriptGlobal));
+    if (piDOMWindow) {
+        principal = piDOMWindow->GetOpenerScriptPrincipal();
+    }
+
+    if (!principal) {
+        principal = GetInheritedPrincipal(PR_FALSE);
+    }
+
+    nsresult rv = CreateAboutBlankContentViewer();
+
+    if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIDOMDocument> domDoc;
+        mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
+        nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+        NS_ASSERTION(doc,
+                     "Should have doc if CreateAboutBlankContentViewer "
+                     "succeeded!");
+
+        doc->SetIsInitialDocument(PR_TRUE);
+
+        if (principal) {
+            doc->SetPrincipal(principal);
+        }
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -6328,10 +6355,23 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 
     nsCOMPtr<nsISupports> owner(aOwner);
     //
-    // Get an owner from the current document if necessary
+    // Get an owner from the current document if necessary.  Note that we only
+    // do this for URIs that inherit a security context; in particular we do
+    // NOT do this for about:blank.  This way, random about:blank loads that
+    // have no owner (which basically means they were done by someone from
+    // chrome manually messing with our nsIWebNavigation or by C++ setting
+    // document.location) don't get a funky principal.  If callers want
+    // something interesting to happen with the about:blank principal in this
+    // case, they should pass an owner in.
     //
-    if (!owner && (aFlags & INTERNAL_LOAD_FLAGS_INHERIT_OWNER))
-        GetCurrentDocumentOwner(getter_AddRefs(owner));
+    {
+        PRBool inherits;
+        if (!owner && (aFlags & INTERNAL_LOAD_FLAGS_INHERIT_OWNER) &&
+            NS_SUCCEEDED(URIInheritsSecurityContext(aURI, &inherits)) &&
+            inherits) {
+            owner = GetInheritedPrincipal(PR_TRUE);
+        }
+    }
 
     //
     // Resolve the window target before going any further...
@@ -6339,6 +6379,11 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // load to it...
     //
     if (aWindowTarget && *aWindowTarget) {
+        // We've already done our owner-inheriting.  Mask out that bit, so we
+        // don't try inheriting an owner from the target window if we came up
+        // with a null owner above.
+        aFlags = aFlags & ~INTERNAL_LOAD_FLAGS_INHERIT_OWNER;
+        
         // Locate the target DocShell.
         // This may involve creating a new toplevel window - if necessary.
         //
@@ -6724,42 +6769,51 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     return rv;
 }
 
-void
-nsDocShell::GetCurrentDocumentOwner(nsISupports ** aOwner)
+nsIPrincipal*
+nsDocShell::GetInheritedPrincipal(PRBool aConsiderCurrentDocument)
 {
-    *aOwner = nsnull;
     nsCOMPtr<nsIDocument> document;
-    //-- Get the current document
-    if (mContentViewer) {
+
+    if (aConsiderCurrentDocument && mContentViewer) {
         nsCOMPtr<nsIDocumentViewer>
             docViewer(do_QueryInterface(mContentViewer));
         if (!docViewer)
-            return;
+            return nsnull;
         docViewer->GetDocument(getter_AddRefs(document));
     }
-    else //-- If there's no document loaded yet, look at the parent (frameset)
-    {
+
+    if (!document) {
         nsCOMPtr<nsIDocShellTreeItem> parentItem;
         GetSameTypeParent(getter_AddRefs(parentItem));
-        if (!parentItem)
-            return;
-        nsCOMPtr<nsIDOMWindowInternal>
-            parentWindow(do_GetInterface(parentItem));
-        if (!parentWindow)
-            return;
-        nsCOMPtr<nsIDOMDocument> parentDomDoc;
-        parentWindow->GetDocument(getter_AddRefs(parentDomDoc));
-        if (!parentDomDoc)
-            return;
-        document = do_QueryInterface(parentDomDoc);
+        if (parentItem) {
+            nsCOMPtr<nsIDOMDocument> parentDomDoc(do_GetInterface(parentItem));
+            document = do_QueryInterface(parentDomDoc);
+        }
+    }
+
+    if (!document) {
+        if (!aConsiderCurrentDocument) {
+            return nsnull;
+        }
+
+        // Make sure we end up with _something_ as the principal no matter
+        // what.
+        EnsureContentViewer();  // If this fails, we'll just get a null
+                                // docViewer and bail.
+
+        nsCOMPtr<nsIDocumentViewer>
+            docViewer(do_QueryInterface(mContentViewer));
+        if (!docViewer)
+            return nsnull;
+        docViewer->GetDocument(getter_AddRefs(document));
     }
 
     //-- Get the document's principal
     if (document) {
-        *aOwner = document->NodePrincipal();
+        return document->NodePrincipal();
     }
 
-    NS_IF_ADDREF(*aOwner);
+    return nsnull;
 }
 
 nsresult
@@ -6927,19 +6981,22 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     // provide their own security context.
     //
     // XXX: Is seems wrong that the owner is ignored - even if one is
-    //      supplied) unless the URI is javascript or data.
+    //      supplied) unless the URI is javascript or data or about:blank.
     // XXX: If this is ever changed, check all callers for what owners they're
     //      passing in.  In particular, see the code and comments in LoadURI
-    //      where we get the current document principal as the owner if called
+    //      where we fall back on inheriting the owner if called
     //      from chrome.  That would be very wrong if this code changed
     //      anything but channels that can't provide their own security context!
     //
     //      (Currently chrome URIs set the owner when they are created!
     //      So setting a NULL owner would be bad!)
     //
+
     PRBool inherit;
+    // We expect URIInheritsSecurityContext to return success for an
+    // about:blank URI, so don't call IsAboutBlank() if this call fails.
     rv = URIInheritsSecurityContext(aURI, &inherit);
-    if (NS_SUCCEEDED(rv) && inherit) {
+    if (NS_SUCCEEDED(rv) && (inherit || IsAboutBlank(aURI))) {
         channel->SetOwner(aOwner);
     }
 
@@ -8815,9 +8872,27 @@ nsDocShell::Observe(nsISupports *aSubject, const char *aTopic,
 nsresult
 nsDocShell::URIInheritsSecurityContext(nsIURI* aURI, PRBool* aResult)
 {
-    // Need to add explicit check for about:blank here too, in the
-    // future.  See bug 332182.
+    // Note: about:blank URIs do NOT inherit the security context from the
+    // current document, which is what this function tests for...
     return NS_URIChainHasFlags(aURI,
                                nsIProtocolHandler::URI_HAS_NO_SECURITY_CONTEXT,
                                aResult);
 }
+
+/* static */
+PRBool
+nsDocShell::IsAboutBlank(nsIURI* aURI)
+{
+    NS_PRECONDITION(aURI, "Must have URI");
+    
+    // GetSpec can be expensive for some URIs, so check the scheme first.
+    PRBool isAbout = PR_FALSE;
+    if (NS_FAILED(aURI->SchemeIs("about", &isAbout)) || !isAbout) {
+        return PR_FALSE;
+    }
+    
+    nsCAutoString str;
+    aURI->GetSpec(str);
+    return str.EqualsLiteral("about:blank");
+}
+                                     

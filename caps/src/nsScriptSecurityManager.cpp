@@ -264,19 +264,10 @@ nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
         return NS_OK;
     }
 
-    if (!aTargetURI) 
+    if (!aTargetURI || !aSourceURI) 
     {
         // return false
         return NS_OK;
-    }
-
-    if (!aSourceURI)
-    {
-        // Throw.  If we don't, we might in some cases consider a system
-        // principal as same-origin with an about:blank (see
-        // CheckSameOriginPrincipalInternal).  The fact that these methods are
-        // asymmetric is highly unfortunate.
-        return NS_ERROR_NOT_AVAILABLE;
     }
 
     // If either URI is a nested URI, get the base URI
@@ -852,8 +843,14 @@ nsScriptSecurityManager::CheckSameOriginPrincipalInternal(nsIPrincipal* aSubject
     if (aSubject == aObject)
         return NS_OK;
 
+    // These booleans are only used when !aIsCheckConnect.  Default
+    // them to false, and change if that turns out wrong.
+    PRBool subjectSetDomain = PR_FALSE;
+    PRBool objectSetDomain = PR_FALSE;
+    
     nsCOMPtr<nsIURI> subjectURI;
     nsCOMPtr<nsIURI> objectURI;
+
     if (aIsCheckConnect)
     {
         // Don't use domain for CheckConnect calls, since that's called for
@@ -864,12 +861,18 @@ nsScriptSecurityManager::CheckSameOriginPrincipalInternal(nsIPrincipal* aSubject
     else
     {
         aSubject->GetDomain(getter_AddRefs(subjectURI));
-        if (!subjectURI)
+        if (!subjectURI) {
             aSubject->GetURI(getter_AddRefs(subjectURI));
+        } else {
+            subjectSetDomain = PR_TRUE;
+        }
 
         aObject->GetDomain(getter_AddRefs(objectURI));
-        if (!objectURI)
+        if (!objectURI) {
             aObject->GetURI(getter_AddRefs(objectURI));
+        } else {
+            objectSetDomain = PR_TRUE;
+        }
     }
 
     PRBool isSameOrigin = PR_FALSE;
@@ -888,37 +891,8 @@ nsScriptSecurityManager::CheckSameOriginPrincipalInternal(nsIPrincipal* aSubject
         if (aIsCheckConnect)
             return NS_OK;
 
-        nsCOMPtr<nsIURI> subjectDomain;
-        aSubject->GetDomain(getter_AddRefs(subjectDomain));
-
-        nsCOMPtr<nsIURI> objectDomain;
-        aObject->GetDomain(getter_AddRefs(objectDomain));
-
         // If both or neither explicitly set their domain, allow the access
-        if (!subjectDomain == !objectDomain)
-            return NS_OK;
-    }
-
-    // Allow access to about:blank, except from null principals (which
-    // never have access to anything but themselves).  If SchemeIs
-    // fails, just deny access -- better safe than sorry.
-    // XXXbz when this gets removed, also remove the asymmetry between
-    // aSourceURI and aTargetURI in SecurityCompareURIs.    
-    // XXXbz once this is removed, we can probably just make
-    // nsPrincipal::Equals call CheckSameOriginPrincipal(), which will also
-    // make sure it hits the domain check above.  At the same time as we remove
-    // this we should also be able to remove the about:blank hackery in
-    // nsPrincipal::Subsumes.
-    PRBool nullSubject = PR_FALSE;
-    // Subject URI could be null here.... 
-    if (subjectURI) {
-        rv = subjectURI->SchemeIs(NS_NULLPRINCIPAL_SCHEME, &nullSubject);
-    }
-    if (NS_SUCCEEDED(rv) && !nullSubject) {
-        nsXPIDLCString origin;
-        rv = aObject->GetOrigin(getter_Copies(origin));
-        NS_ENSURE_SUCCESS(rv, rv);
-        if (nsCRT::strcasecmp(origin, "moz-safe-about:blank") == 0)
+        if (subjectSetDomain == objectSetDomain)
             return NS_OK;
     }
 

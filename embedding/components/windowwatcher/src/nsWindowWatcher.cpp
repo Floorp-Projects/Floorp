@@ -53,11 +53,13 @@
 #include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
+#include "nsIDocumentLoader.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIScriptObjectPrincipal.h"
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
 #include "nsIScriptContext.h"
@@ -793,6 +795,42 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
     }
   }
 
+  // Now we have to set the right opener principal on the new window.  Note
+  // that we have to do this _before_ starting any URI loads, thanks to the
+  // sync nature of javascript: loads.  Since this is the only place where we
+  // set said opener principal, we need to do it for all URIs, including
+  // chrome ones.  So to deal with the mess that is bug 79775, just press on in
+  // a reasonable way even if GetSubjectPrincipal fails.  In that case, just
+  // use a null subjectPrincipal.
+  nsCOMPtr<nsIPrincipal> subjectPrincipal;
+  if (NS_FAILED(sm->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal)))) {
+    subjectPrincipal = nsnull;
+  }
+
+  if (windowIsNew) {
+    // Now set the opener principal on the new window.  Note that we need to do
+    // this no matter whether we were opened from JS; if there is nothing on
+    // the JS stack, just use the principal of our parent window.  In those
+    // cases we do _not_ set the parent window principal as the owner of the
+    // load--since we really don't know who the owner is, just leave it null.
+    nsIPrincipal* newWindowPrincipal = subjectPrincipal;
+    if (!newWindowPrincipal && aParent) {
+      nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(aParent));
+      if (sop) {
+        newWindowPrincipal = sop->GetPrincipal();
+      }
+    }
+
+    nsCOMPtr<nsPIDOMWindow> newWindow = do_QueryInterface(*_retval);
+#ifdef DEBUG
+    nsCOMPtr<nsPIDOMWindow> newDebugWindow = do_GetInterface(newDocShell);
+    NS_ASSERTION(newWindow == newDebugWindow, "Different windows??");
+#endif
+    if (newWindow) {
+      newWindow->SetOpenerScriptPrincipal(newWindowPrincipal);
+    }
+  }
+
   if (uriToLoad) { // get the script principal and pass it to docshell
     JSContextAutoPopper contextGuard;
 
@@ -812,15 +850,8 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
     newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
     NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
-    if (!uriToLoadIsChrome) {
-      nsCOMPtr<nsIPrincipal> principal;
-      if (NS_FAILED(sm->GetSubjectPrincipal(getter_AddRefs(principal))))
-        return NS_ERROR_FAILURE;
-
-      if (principal) {
-        nsCOMPtr<nsISupports> owner(do_QueryInterface(principal));
-        loadInfo->SetOwner(owner);
-      }
+    if (subjectPrincipal) {
+      loadInfo->SetOwner(subjectPrincipal);
     }
 
     // Set the new window's referrer from the calling context's document:
@@ -1625,6 +1656,27 @@ nsWindowWatcher::ReadyOpenedDocShellItem(nsIDocShellTreeItem *aOpenedItem,
     if (aParent) {
       nsCOMPtr<nsIDOMWindowInternal> internalParent(do_QueryInterface(aParent));
       piOpenedWindow->SetOpenerWindow(internalParent, aWindowIsNew); // damnit
+
+      if (aWindowIsNew) {
+#ifdef DEBUG
+        // Assert that we're not loading things right now.  If we are, when
+        // that load completes it will clobber whatever principals we set up
+        // on this new window!
+        nsCOMPtr<nsIDocumentLoader> docloader =
+          do_QueryInterface(aOpenedItem);
+        NS_ASSERTION(docloader, "How can we not have a docloader here?");
+
+        nsCOMPtr<nsIChannel> chan;
+        docloader->GetDocumentChannel(getter_AddRefs(chan));
+        NS_ASSERTION(!chan, "Why is there a document channel?");
+#endif
+
+        nsCOMPtr<nsIDocument> doc =
+          do_QueryInterface(piOpenedWindow->GetExtantDocument());
+        if (doc) {
+          doc->SetIsInitialDocument(PR_TRUE);
+        }
+      }
     }
     rv = CallQueryInterface(piOpenedWindow, aOpenedWindow);
   }

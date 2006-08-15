@@ -63,6 +63,7 @@ REQUIRES	= xpcom \
 		  embed_base \
 		  intl \
 		  layout \
+		  uriloader \
 		  $(NULL)
 
 CPPSRCS		= nsPrompt.cpp \
