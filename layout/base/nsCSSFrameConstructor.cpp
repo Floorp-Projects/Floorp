@@ -11535,14 +11535,9 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIFrame*     aParentFrame,
     }
     nsIFrame* insertionPoint = mPresShell->GetPrimaryFrameFor(insertionElement);
     if (insertionPoint) {
-      // If the insertion point is a scrollable, then walk ``through''
-      // it to get the scrolled frame.
-      nsIScrollableFrame* scroll = nsnull;
-      CallQueryInterface(insertionPoint, &scroll);
-      if (scroll)
-        insertionPoint = scroll->GetScrolledFrame();
-
-      if (insertionPoint != aParentFrame) 
+      // Use the content insertion frame of the insertion point.
+      insertionPoint = insertionPoint->GetContentInsertionFrame();
+      if (insertionPoint && insertionPoint != aParentFrame) 
         GetInsertionPoint(insertionPoint, aChildContent, aInsertionPoint, aMultiple);
     }
     else {
