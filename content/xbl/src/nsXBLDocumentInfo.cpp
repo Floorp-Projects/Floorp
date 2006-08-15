@@ -179,7 +179,7 @@ nsXBLDocGlobalObject_resolve(JSContext *cx, JSObject *obj, jsval id)
 
 JSClass nsXBLDocGlobalObject::gSharedGlobalClass = {
     "nsXBLPrototypeScript compilation scope",
-    JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
+    JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,  JS_PropertyStub,
     nsXBLDocGlobalObject_getProperty, nsXBLDocGlobalObject_setProperty,
     JS_EnumerateStub, nsXBLDocGlobalObject_resolve,
