@@ -4423,7 +4423,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kBoxDirectionKTable);
   case eCSSProperty_box_flex:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HN, nsnull);
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HN, nsnull);
   case eCSSProperty_box_orient:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kBoxOrientKTable);
