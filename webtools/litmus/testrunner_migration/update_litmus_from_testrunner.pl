@@ -57,7 +57,7 @@ $tr_dbh = &connect_testrunner() or die;
 
 my ($sql,$sth);
 
-$sql="SELECT name,testgroup_id,testrunner_plan_id FROM test_groups WHERE testrunner_plan_id is not NULL";
+$sql="SELECT name,testgroup_id,testrunner_plan_id FROM testgroups WHERE testrunner_plan_id is not NULL";
 
 $sth = $litmus_dbh->prepare($sql);
 $sth->execute();
@@ -71,7 +71,7 @@ $sth->finish;
 my $testcases_updated = 0;
 foreach my $id (keys %$testgroups) {
   # Get existing Litmus subgroups.
-  $sql="SELECT name,subgroup_id,testrunner_group_id FROM subgroups WHERE testgroup_id=?";
+  $sql="SELECT sg.name,sg.subgroup_id,sg.testrunner_group_id FROM subgroups sg, subgroup_testgroups sgtg WHERE sg.subgroup_id=sgtg.subgroup_id AND sgtg.testgroup_id=?";
   $sth = $litmus_dbh->prepare($sql);
   $sth->execute($id);
   my $subgroups;
@@ -110,7 +110,7 @@ foreach my $id (keys %$testgroups) {
   
   # Get testcases for each subgroup.
   foreach my $tr_g_id (keys %$subgroups) {
-    $sql="SELECT test_id,summary,steps,expected_results,author_id,version,testrunner_case_id,testrunner_case_version FROM tests WHERE subgroup_id=?";
+    $sql="SELECT t.testcase_id,t.summary,t.steps,t.expected_results,t.author_id,t.version,t.testrunner_case_id,t.testrunner_case_version FROM testcases t, testcase_subgroups tsg WHERE t.testcase_id=tsg.testcase_id AND tsg.subgroup_id=?";
     $sth = $litmus_dbh->prepare($sql);
     $sth->execute($subgroups->{$tr_g_id}->{'s_id'});
     my @testcases;
@@ -121,7 +121,7 @@ foreach my $id (keys %$testgroups) {
 
     foreach my $testcase (@testcases) {
       if (!$testcase->{'testrunner_case_id'}) {
-        print "# No TR info for testcase ID: " . $testcase->{'test_id'} . ", " . $testcase->{'summary'} . ", tr_g_id: $tr_g_id\n";
+        print "# No TR info for testcase ID: " . $testcase->{'testcase_id'} . ", " . $testcase->{'summary'} . ", tr_g_id: $tr_g_id\n";
         next;
       }
       
@@ -145,7 +145,7 @@ foreach my $id (keys %$testgroups) {
 	  $testcase->{'version'} > $testcase->{'testrunner_case_version'} and
           $tr_testcase->{'case_version'} > $testcase->{'testrunner_case_version'}) {
         print "# Testcase update collision detected.\n";
-        print "# Litmus testcase ID#: " . $testcase->{'test_id'} . "; TR case ID#: " . $tr_testcase->{'case_id'} . "\n";
+        print "# Litmus testcase ID#: " . $testcase->{'testcase_id'} . "; TR case ID#: " . $tr_testcase->{'case_id'} . "\n";
         next;
       }
       
@@ -161,13 +161,13 @@ foreach my $id (keys %$testgroups) {
       $tr_testcase->{'summary'} =~ s/\s+$//g;
       $tr_testcase->{'action'} =~ s/\s+$//g;
       $tr_testcase->{'effect'} =~ s/\s+$//g;
-      my $update_cmd = "UPDATE tests SET version=" . $tr_testcase->{'case_version'} .
+      my $update_cmd = "UPDATE testcases SET version=" . $tr_testcase->{'case_version'} .
         ",testrunner_case_version=" . $tr_testcase->{'case_version'} .
           ",summary='" . $tr_testcase->{'summary'} .
             "',steps='" . $tr_testcase->{'action'} .
               "',expected_results='" . $tr_testcase->{'effect'} .
-                "',last_updated=NOW() WHERE test_id=" . 
-                  $testcase->{'test_id'} . ";\n";
+                "',last_updated=NOW() WHERE testcase_id=" . 
+                  $testcase->{'testcase_id'} . ";\n";
       print $update_cmd;
       $testcases_updated++;
     }
