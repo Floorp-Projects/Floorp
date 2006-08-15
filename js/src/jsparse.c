@@ -2922,9 +2922,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             lastCatch = NULL;
 
             do {
-                JSParseNode *pnblock;
-                BindData data;
-
                 /* Check for another catch after unconditional catch. */
                 if (lastCatch && !lastCatch->pn_kid2) {
                     js_ReportCompileErrorNumber(cx, ts,
@@ -2932,15 +2929,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                                                 JSMSG_CATCH_AFTER_GENERAL);
                     return NULL;
                 }
-
-                /*
-                 * Create a lexical scope node around the whole catch clause,
-                 * including the head.
-                 */
-                pnblock = PushLexicalScope(cx, ts, tc, &stmtInfo);
-                if (!pnblock)
-                    return NULL;
-                stmtInfo.type = STMT_CATCH;
 
                 /*
                  * Legal catch forms are:
@@ -2952,38 +2940,21 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 pn2 = NewParseNode(cx, ts, PN_TERNARY, tc);
                 if (!pn2)
                     return NULL;
-                pnblock->pn_expr = pn2;
 
                 /*
                  * We use a PN_NAME for the variable node, in pn2->pn_kid1.
                  * If there is a guard expression, it goes in pn2->pn_kid2.
-                 * Contrary to ECMA Ed. 3, the catch variable is lexically
-                 * scoped, not a property of a new Object instance.  This is
-                 * an intentional change that anticipates ECMA Ed. 4.
                  */
                 MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_CATCH);
                 MUST_MATCH_TOKEN(TOK_NAME, JSMSG_CATCH_IDENTIFIER);
-                label = CURRENT_TOKEN(ts).t_atom;
-
-                data.pn = NULL;
-                data.ts = ts;
-                data.obj = ATOM_TO_OBJECT(pnblock->pn_atom);
-                data.op = JSOP_NOP;
-                data.binder = BindLet;
-                data.u.let.index = 0;
-                data.u.let.overflow = JSMSG_TOO_MANY_CATCH_VARS;
-                if (!data.binder(cx, &data, label, tc))
-                    return NULL;
-
                 pn3 = NewParseNode(cx, ts, PN_NAME, tc);
                 if (!pn3)
                     return NULL;
-                pn3->pn_atom = label;
+
+                pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
                 pn3->pn_expr = NULL;
-                pn3->pn_slot = 0;
                 pn2->pn_kid1 = pn3;
                 pn2->pn_kid2 = NULL;
-
 #if JS_HAS_CATCH_GUARD
                 /*
                  * We use 'catch (x if x === 5)' (not 'catch (x : x === 5)')
@@ -2996,16 +2967,19 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                         return NULL;
                 }
 #endif
+
                 MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_CATCH);
 
                 MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_CATCH);
+                js_PushStatement(tc, &stmtInfo, STMT_CATCH, -1);
+                stmtInfo.atom = pn3->pn_atom;
                 pn2->pn_kid3 = Statements(cx, ts, tc);
                 if (!pn2->pn_kid3)
                     return NULL;
                 MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_CATCH);
                 js_PopStatement(tc);
 
-                PN_APPEND(catchList, pnblock);
+                PN_APPEND(catchList, pn2);
                 lastCatch = pn2;
             } while ((tt = js_GetToken(cx, ts)) == TOK_CATCH);
         }
@@ -3212,14 +3186,13 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         } else {
             if (!stmt) {
                 /*
-                 * FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=346749
-                 *
-                 * This is a hard case that requires more work. In particular,
-                 * in many cases, we're trying to emit code as we go. However,
-                 * this means that we haven't necessarily finished processing
-                 * all let declarations in the implicit top-level block when
-                 * we emit a reference to one of them.  For now, punt on this
-                 * and pretend this is a var declaration.
+                 * XXX This is a hard case that requires more work. In
+                 * particular, in many cases, we're trying to emit code as
+                 * we go. However, this means that we haven't necessarily
+                 * finished processing all let declarations in the
+                 * implicit top-level block when we emit a reference to
+                 * one of them.  For now, punt on this and pretend this is
+                 * a var declaration.
                  */
                 CURRENT_TOKEN(ts).type = TOK_VAR;
                 CURRENT_TOKEN(ts).t_op = JSOP_DEFVAR;
@@ -5482,17 +5455,22 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             } else {
                 JSAtomListElement *ale;
                 JSStackFrame *fp;
-                JSBool loopy;
+                JSStmtInfo *stmt;
 
                 /* Measure optimizable global variable uses. */
                 ATOM_LIST_SEARCH(ale, &tc->decls, pn->pn_atom);
                 if (ale &&
                     !(fp = cx->fp)->fun &&
                     fp->scopeChain == fp->varobj &&
-                    js_IsGlobalReference(tc, pn->pn_atom, &loopy)) {
+                    !js_InWithStatement(tc) &&
+                    !js_InCatchBlock(tc, pn->pn_atom)) {
                     tc->globalUses++;
-                    if (loopy)
-                        tc->loopyGlobalUses++;
+                    for (stmt = tc->topStmt; stmt; stmt = stmt->down) {
+                        if (STMT_IS_LOOP(stmt)) {
+                            tc->loopyGlobalUses++;
+                            break;
+                        }
+                    }
                 }
             }
         }
