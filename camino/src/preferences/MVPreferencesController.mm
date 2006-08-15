@@ -342,6 +342,7 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
   NSToolbarItem *toolbarItem = [[[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier] autorelease];
 
   [toolbarItem setLabel:[self labelForPane:itemIdentifier]];
+  [toolbarItem setToolTip:[self labelForPane:itemIdentifier]];
   [toolbarItem setImage:[self imageForPane:itemIdentifier]];
   [toolbarItem setTarget:self];
   [toolbarItem setAction:@selector( selectPreferencePane: )];
