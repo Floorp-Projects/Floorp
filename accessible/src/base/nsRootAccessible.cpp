@@ -985,7 +985,11 @@ NS_IMETHODIMP nsRootAccessible::GetAccessibleRelated(PRUint32 aRelationType,
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShellTreeItemFor(mDOMNode);   
   nsCOMPtr<nsIDocShellTreeItem> contentTreeItem = GetContentDocShell(treeItem);
-  nsCOMPtr<nsIAccessibleDocument> accDoc = GetDocAccessibleFor(contentTreeItem);
-  return accDoc->QueryInterface(NS_GET_IID(nsIAccessible), (void**)aRelated);
+  // there may be no content area, so we need a null check
+  if (contentTreeItem) {
+    nsCOMPtr<nsIAccessibleDocument> accDoc = GetDocAccessibleFor(contentTreeItem);
+    return accDoc->QueryInterface(NS_GET_IID(nsIAccessible), (void**)aRelated);
+  }
+  return NS_OK;
 }
 
