@@ -188,7 +188,7 @@ if ($status and $message) {
 }
 
 if ($rebuild_cache) {
-  rebuildCache();
+  Litmus::Cache::rebuildCache();
 }
 
 my $testcases = Litmus::FormWidget->getTestcases();

@@ -167,7 +167,7 @@ if ($status and $message) {
 }
 
 if ($rebuild_cache) {
-  rebuildCache();
+  Litmus::Cache::rebuildCache();
 }
 
 my $testgroups = Litmus::FormWidget->getTestgroups;

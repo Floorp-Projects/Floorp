@@ -312,7 +312,7 @@ if ($c->param) {
 }
 
 if ($rebuild_cache) {
-  rebuildCache();
+  Litmus::Cache::rebuildCache();
 }
 
 my $products = Litmus::FormWidget->getProducts();
