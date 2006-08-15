@@ -902,12 +902,45 @@ refChildCB(AtkObject *aAtkObj, gint aChildIndex)
 gint
 getIndexInParentCB(AtkObject *aAtkObj)
 {
+    // This does not use nsIAccessible::GetIndexInParent() because
+    // we only count embedded objects as children (e.g. not TEXT_LEAF nodes)
     NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), -1);
     nsAccessibleWrap *accWrap =
         NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
-    PRInt32 currentIndex = -1;
-    accWrap->GetIndexInParent(&currentIndex);
+    if (!mWeakShell) {
+        return -1;
+    }
+
+    nsCOMPtr<nsIAccessible> parent;
+    accWrap->GetParent(getter_AddRefs(parent));
+    if (!parent) {
+        return -1; // No parent
+    }
+
+    nsCOMPtr<nsIAccessible> sibling;
+    parent->GetFirstChild(getter_AddRefs(sibling));
+    if (!sibling) {
+        return -1;  // Error, parent has no children
+    }
+
+    PRInt32 currentIndex = 0;
+
+    while (!SameCOMIdentity(sibling, accWrap)) {
+      NS_ASSERTION(sibling, "Never ran into the same child that we started from");
+
+      if (!sibling) {
+          return -1;
+      }
+      if (IsEmbeddedObject(sibling)) {
+        ++ currentIndex;
+      }
+
+      nsCOMPtr<nsIAccessible> tempAccessible;
+      sibling->GetNextSibling(getter_AddRefs(tempAccessible));
+      sibling.swap(tempAccessible);
+    }
+
     return currentIndex;
 }
 
