@@ -51,7 +51,6 @@
     <td class="header">Result ID#</td>    
     <td class="header">Testcase ID#: Summary</td>
     [% IF show_admin==1 %]<td class="header">Submitted By</td>[% END %]
-    <td class="header">Testgroup</td>
     <td class="header">Product</td>
     <td class="header">Platform</td>
     <td class="header">Branch</td>
@@ -78,7 +77,6 @@
   <td align="left"><a href="show_test.cgi?id=[% result.testcase_id | html | uri %]">
     [% result.testcase_id | html %]</a>: [% result.summary | html %]</td> 
   [% IF show_admin==1 %]<td align="center">[% result.email | html | uri | email %]</td>[% END %]
-  <td align="center">[% result.test_group_name | html %]</td>
   <td align="center">[% result.product_name | html %]</td>
   <td align="center">[% result.platform_name | html %]</td>
   <td align="center">[% result.branch_name | html %]</td>
