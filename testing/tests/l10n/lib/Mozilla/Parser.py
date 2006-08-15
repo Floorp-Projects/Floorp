@@ -54,6 +54,8 @@ class Parser:
     return m
   def compareEntries(self, en, l10n):
     return None
+  def postProcessValue(self, val):
+    return val
   def __iter__(self):
     self.offset = 0
     return self
@@ -67,7 +69,7 @@ class Parser:
       self.offset = cm.end()
       return self.next()
     self.offset = m.end()
-    return (m.group(1), m.group(2))
+    return (unicode(m.group(1)), self.postProcessValue(m.group(2)))
 
 def getParser(path):
   ext = path.rsplit('.',1)[1]
@@ -88,8 +90,19 @@ class PropertiesParser(Parser):
   def __init__(self):
     self.key = re.compile('^\s*([^#!\s\r\n][^=:\r\n]*?)\s*[:=][ \t]*(.*?)[ \t]*$',re.M)
     self.comment = re.compile('^\s*[#!].*$',re.M)
+    self._post = re.compile('\\\\u([0-9a-f]+)')
     Parser.__init__(self)
   _arg_re = re.compile('%(?:(?P<cn>[0-9]+)\$)?(?P<width>[0-9]+)?(?:.(?P<pres>[0-9]+))?(?P<size>[hL]|(?:ll?))?(?P<type>[dciouxXefgpCSsn])')
+  def postProcessValue(self, val):
+    m = self._post.search(val)
+    if not m:
+      return val
+    val = unicode(val)
+    while m:
+      uChar = unichr(int(m.group(1), 16))
+      val = val.replace(m.group(), uChar)
+      m = self._post.search(val)
+    return val
 
 class DefinesParser(Parser):
   def __init__(self):
