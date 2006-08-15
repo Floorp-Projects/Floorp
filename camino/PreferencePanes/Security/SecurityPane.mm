@@ -41,10 +41,11 @@
 #include "nsIPref.h"
 
 // prefs for showing security dialogs
-#define WEAK_SITE_PREF       "security.warn_entering_weak"
 #define LEAVE_SITE_PREF      "security.warn_leaving_secure"
 #define MIXEDCONTENT_PREF    "security.warn_viewing_mixed"
 
+const unsigned int kSelectAutomaticallyMatrixRowValue = 0;
+const unsigned int kAskEveryTimeMatrixRowValue        = 1;
 
 @implementation OrgMozillaChimeraPreferenceSecurity
 
@@ -59,14 +60,20 @@
   PRBool leaveEncrypted = PR_TRUE;
   mPrefService->GetBoolPref(LEAVE_SITE_PREF, &leaveEncrypted);
   [mLeaveEncrypted setState:(leaveEncrypted ? NSOnState : NSOffState)];
-  
-  PRBool loadLowGrade = PR_TRUE;
-  mPrefService->GetBoolPref(WEAK_SITE_PREF, &loadLowGrade);
-  [mLoadLowGrade setState:(loadLowGrade ? NSOnState : NSOffState)];
 
   PRBool viewMixed = PR_TRUE;
   mPrefService->GetBoolPref(MIXEDCONTENT_PREF, &viewMixed);
   [mViewMixed setState:(viewMixed ? NSOnState : NSOffState)];
+
+  BOOL gotPref;
+  NSString* certificateBehavior = [self getStringPref:"security.default_personal_cert" withSuccess:&gotPref];
+  if (gotPref) {
+    if ([certificateBehavior isEqual:@"Select Automatically"])
+      [mCertificateBehavior selectCellAtRow:kSelectAutomaticallyMatrixRowValue column:0];
+    else if ([certificateBehavior isEqual:@"Ask Every Time"])
+      [mCertificateBehavior selectCellAtRow:kAskEveryTimeMatrixRowValue column:0];
+  }
+
 }
 
 
@@ -96,14 +103,19 @@
   [self setPref:MIXEDCONTENT_PREF toBoolean:[sender state] == NSOnState];
 }
 
--(IBAction) clickEnableLoadLowGrade:(id)sender
-{
-  [self setPref:WEAK_SITE_PREF toBoolean:[sender state] == NSOnState];
-}
-
 -(IBAction) clickEnableLeaveEncrypted:(id)sender
 {
   [self setPref:LEAVE_SITE_PREF toBoolean:[sender state] == NSOnState];
+}
+
+-(IBAction)clickCertificateSelectionBehavior:(id)sender
+{
+  unsigned int row = [mCertificateBehavior selectedRow];
+
+  if (row == kSelectAutomaticallyMatrixRowValue)
+    [self setPref:"security.default_personal_cert" toString:@"Select Automatically"];
+  else // row == kAskEveryTimeMatrixRowValue
+    [self setPref:"security.default_personal_cert" toString:@"Ask Every Time"];
 }
 
 -(IBAction)showCertificates:(id)sender

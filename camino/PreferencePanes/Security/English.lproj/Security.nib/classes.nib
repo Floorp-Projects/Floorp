@@ -14,6 +14,7 @@
         }, 
         {
             ACTIONS = {
+                clickCertificateSelectionBehavior = id; 
                 clickEnableLeaveEncrypted = id; 
                 clickEnableLoadLowGrade = id; 
                 clickEnableViewMixed = id; 
@@ -21,7 +22,12 @@
             }; 
             CLASS = OrgMozillaChimeraPreferenceSecurity; 
             LANGUAGE = ObjC; 
-            OUTLETS = {mLeaveEncrypted = NSButton; mLoadLowGrade = NSButton; mViewMixed = NSButton; }; 
+            OUTLETS = {
+                mCertificateBehavior = NSMatrix; 
+                mLeaveEncrypted = NSButton; 
+                mLoadLowGrade = NSButton; 
+                mViewMixed = NSButton; 
+            }; 
             SUPERCLASS = PreferencePaneBase; 
         }, 
         {CLASS = PreferencePaneBase; LANGUAGE = ObjC; SUPERCLASS = NSPreferencePane; }

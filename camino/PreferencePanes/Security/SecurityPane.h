@@ -47,12 +47,15 @@ class nsIPref;
   IBOutlet NSButton* mLeaveEncrypted;
   IBOutlet NSButton* mLoadLowGrade;
   IBOutlet NSButton* mViewMixed;  
+
+  IBOutlet NSMatrix* mCertificateBehavior;
 }
 
 -(IBAction) clickEnableLeaveEncrypted:(id)sender;
 -(IBAction) clickEnableLoadLowGrade:(id)sender;
 -(IBAction) clickEnableViewMixed:(id)sender;
 
+-(IBAction)clickCertificateSelectionBehavior:(id)sender;
 -(IBAction)showCertificates:(id)sender;
 
 @end
