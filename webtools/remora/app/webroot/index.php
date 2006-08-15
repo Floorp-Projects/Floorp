@@ -1,5 +1,5 @@
 <?php
-/* SVN FILE: $Id: index.php,v 1.1 2006/08/14 23:54:57 sancus%off.net Exp $ */
+/* SVN FILE: $Id: index.php,v 1.2 2006/08/15 03:12:10 sancus%off.net Exp $ */
 /**
  * Short description for file.
  *
@@ -21,9 +21,9 @@
  * @package			cake
  * @subpackage		cake.app.webroot
  * @since			CakePHP v 0.2.9
- * @version			$Revision: 1.1 $
+ * @version			$Revision: 1.2 $
  * @modifiedby		$LastChangedBy: phpnut $
- * @lastmodified	$Date: 2006/08/14 23:54:57 $
+ * @lastmodified	$Date: 2006/08/15 03:12:10 $
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 /**
@@ -45,7 +45,7 @@
 	}
 	if (!defined('APP_DIR')) {
 		 //define('APP_DIR', 'DIRECTORY NAME OF APPLICATION';
-		 define('APP_DIR', 'remora');
+		 define('APP_DIR', 'app');
 	}
 /**
  * This only needs to be changed if the cake installed libs are located
