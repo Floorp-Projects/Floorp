@@ -403,7 +403,6 @@ nsGenericDOMDataNode::AppendData(const nsAString& aData)
   // Apparently this is called often enough that we don't want to just simply
   // call SetText like ReplaceData does. See bug 77585 and comment in
   // ReplaceData.
-  nsIDocument *document = GetCurrentDoc();
   
   // FIXME, but 330872: We can't call BeginUpdate here because it confuses the
   // poor little nsHTMLContentSink.

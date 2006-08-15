@@ -196,29 +196,17 @@ class nsTObserverArray : public nsTObserverArray_base {
           return NS_STATIC_CAST(T*, GetSafeElementAt(mPosition++));
         }
     };
-
-    class ReverseIterator;
-    friend class ReverseIterator;
-
-    // Iterates the array backwards from end to beginning
-    // mPosition points to the element that was returned from last call to
-    // GetNext
-    class ReverseIterator : public nsTObserverArray_base::Iterator_base {
-      public:
-        ReverseIterator(nsTObserverArray<T>& aArray)
-          : Iterator_base(aArray.mObservers.Count(), aArray) {
-        }
-
-        /**
-         * Returns the next element and steps one step.
-         * Returns null if there are no more observers. Once null is returned
-         * the iterator becomes invalid and GetNext must not be called any more.
-         * @return The next observer.
-         */
-        T* GetNext() {
-          return NS_STATIC_CAST(T*, GetSafeElementAt(--mPosition));
-        }
-    };
 };
+
+// XXXbz I wish I didn't have to pass in the observer type, but I
+// don't see a way to get it out of array_.
+#define NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(array_, obstype_, func_, params_) \
+  PR_BEGIN_MACRO                                                             \
+    nsTObserverArray<obstype_>::ForwardIterator iter_(array_);               \
+    nsCOMPtr<obstype_> obs_;                                                 \
+    while ((obs_ = iter_.GetNext())) {                                       \
+      obs_ -> func_ params_ ;                                                \
+    }                                                                        \
+  PR_END_MACRO
 
 #endif // nsTObserverArray_h___

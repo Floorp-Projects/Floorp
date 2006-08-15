@@ -57,9 +57,11 @@ class nsIURI;
 class nsIXPConnectWrappedJS;
 class nsIDOMNodeList;
 class nsVoidArray;
+class nsIDocumentObserver;
 
 #define NS_IBINDING_MANAGER_IID \
-{ 0x92281eaa, 0x89c4, 0x4457, { 0x8f, 0x8d, 0xca, 0x92, 0xbf, 0xbe, 0x0f, 0x50 } }
+{ 0x8186980b, 0x35b8, 0x469f,   \
+ { 0x8b, 0xc5, 0x33, 0xad, 0x3c, 0x35, 0x90, 0x98 } }
 
 class nsIBindingManager : public nsISupports
 {
@@ -176,6 +178,22 @@ public:
   NS_IMETHOD GetBindingImplementation(nsIContent* aContent, REFNSIID aIID, void** aResult)=0;
 
   NS_IMETHOD ShouldBuildChildFrames(nsIContent* aContent, PRBool* aResult) = 0;
+  
+  /**
+   * Add a new observer of document change notifications. Whenever content is
+   * changed, appended, inserted or removed the observers are informed.  This
+   * is like nsIDocument::AddObserver, but these observers will be notified
+   * after the XBL data structures are updated for
+   * ContentInserted/ContentAppended and before they're updated for
+   * ContentRemoved.
+   */
+  virtual void AddObserver(nsIDocumentObserver* aObserver) = 0;
+
+  /**
+   * Remove an observer of document change notifications. This will
+   * return false if the observer cannot be found.
+   */
+  virtual PRBool RemoveObserver(nsIDocumentObserver* aObserver) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIBindingManager, NS_IBINDING_MANAGER_IID)

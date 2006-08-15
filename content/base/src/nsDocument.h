@@ -672,28 +672,10 @@ protected:
   // Dispatch an event to the ScriptGlobalObject for this document
   void DispatchEventToWindow(nsEvent *aEvent);
 
-  // NS_DOCUMENT_NOTIFY_OBSERVERS goes backwards for now for backwards compat.
-  // If you change this, update ContentAppended/Inserted/Removed accordingly.
-#define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                          \
-  do {                                                                        \
-    nsTObserverArray<nsIDocumentObserver>::ReverseIterator                    \
-      iter_(mObservers);                                                      \
-    nsCOMPtr<nsIDocumentObserver> obs_;                                       \
-    while ((obs_ = iter_.GetNext())) {                                        \
-      obs_ -> func_ params_ ;                                                 \
-    }                                                                         \
-  } while (0)
-
-#define NS_DOCUMENT_FORWARD_NOTIFY_OBSERVERS(func_, params_)                  \
-  do {                                                                        \
-    nsTObserverArray<nsIDocumentObserver>::ForwardIterator                    \
-      iter_(mObservers);                                                      \
-    nsCOMPtr<nsIDocumentObserver> obs_;                                       \
-    while ((obs_ = iter_.GetNext())) {                                        \
-      obs_ -> func_ params_ ;                                                 \
-    }                                                                         \
-  } while (0)
- 
+#define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                  \
+  NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(mObservers, nsIDocumentObserver, \
+                                     func_, params_);
+  
 #ifdef DEBUG
   void VerifyRootContentState();
 #endif
