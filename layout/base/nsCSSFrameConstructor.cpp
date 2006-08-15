@@ -10068,9 +10068,9 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
 
       // Remove the placeholder frame first (XXX second for now) (so
       // that it doesn't retain a dangling pointer to memory)
-      parentFrame = placeholderFrame->GetParent();
+      nsIFrame* placeholderParent = placeholderFrame->GetParent();
       ::DeletingFrameSubtree(frameManager, placeholderFrame);
-      rv |= frameManager->RemoveFrame(parentFrame,
+      rv |= frameManager->RemoveFrame(placeholderParent,
                                       nsnull, placeholderFrame);
     } else {
       // Notify the parent frame that it should delete the frame
@@ -10091,9 +10091,11 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
     }
 
     if (haveFLS && mInitialContainingBlock) {
+      NS_ASSERTION(containingBlock == GetFloatContainingBlock(parentFrame),
+                   "What happened here?");
       nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
                                     GetAbsoluteContainingBlock(parentFrame),
-                                    GetFloatContainingBlock(parentFrame));
+                                    containingBlock);
       RecoverLetterFrames(state, containingBlock);
     }
 
