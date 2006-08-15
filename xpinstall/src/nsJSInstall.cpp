@@ -81,7 +81,7 @@ FinalizeInstall(JSContext *cx, JSObject *obj);
 //
 JSClass InstallClass = {
   "Install",
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_GLOBAL_FLAGS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetInstallProperty,
