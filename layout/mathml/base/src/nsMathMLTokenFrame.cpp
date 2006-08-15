@@ -62,20 +62,20 @@ nsMathMLTokenFrame::~nsMathMLTokenFrame()
 {
 }
 
-nsIAtom*
-nsMathMLTokenFrame::GetType() const
+eMathMLFrameType
+nsMathMLTokenFrame::GetMathMLFrameType()
 {
   // treat everything other than <mi> as ordinary...
   if (mContent->Tag() != nsMathMLAtoms::mi_) {
-    return nsMathMLAtoms::ordinaryMathMLFrame;
+    return eMathMLFrameType_Ordinary;
   }
 
   // for <mi>, distinguish between italic and upright...
   // treat invariant the same as italic to inherit its inter-space properties
   return mContent->AttrValueIs(kNameSpaceID_None, nsMathMLAtoms::MOZfontstyle,
                                nsMathMLAtoms::normal, eCaseMatters)
-    ? nsMathMLAtoms::uprightIdentifierMathMLFrame
-    : nsMathMLAtoms::italicIdentifierMathMLFrame;
+    ? eMathMLFrameType_UprightIdentifier
+    : eMathMLFrameType_ItalicIdentifier;
 }
 
 static void

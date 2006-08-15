@@ -116,7 +116,6 @@ public:
   // --------------------------------------------------------------------------
   // Overloaded nsHTMLContainerFrame methods -- see documentation in nsIFrame.h
 
-  virtual nsIAtom* GetType() const;
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
   NS_IMETHOD
@@ -245,14 +244,17 @@ public:
   FinalizeReflow(nsIRenderingContext& aRenderingContext,
                  nsHTMLReflowMetrics& aDesiredSize);
 
-  // helper method to facilitate getting the reflow and bounding metrics
+  // helper method to facilitate getting the reflow and bounding metrics.
+  // The argument aMathMLFrameType, when non null, will return the 'type' of
+  // the frame, which is used to determine the inter-frame spacing.
   // IMPORTANT: This function is only meant to be called in Place() methods 
   // where it is assumed that the frame's rect is still acting as place holder
   // for the frame's ascent and descent information
   static void
   GetReflowAndBoundingMetricsFor(nsIFrame*            aFrame,
                                  nsHTMLReflowMetrics& aReflowMetrics,
-                                 nsBoundingMetrics&   aBoundingMetrics);
+                                 nsBoundingMetrics&   aBoundingMetrics,
+                                 eMathMLFrameType*    aMathMLFrameType = nsnull);
 
   // helper to let the scriptstyle re-resolution pass through
   // a subtree that may contain non-MathML container frames
