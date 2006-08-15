@@ -197,7 +197,7 @@ sub FILESYSTEM {
     foreach my $standard (<skins/standard/*.css>) {
         my $custom = $standard;
         $custom =~ s|^skins/standard|skins/custom|;
-        $files{$custom} = { perms => $ws_readable, contents => <<EOT
+        $create_files{$custom} = { perms => $ws_readable, contents => <<EOT
 /*
  * Custom rules for $standard.
  * The rules you put here override rules in that stylesheet.
