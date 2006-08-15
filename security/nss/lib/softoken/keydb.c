@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: keydb.c,v 1.46 2006/07/31 18:10:17 wtchang%redhat.com Exp $ */
+/* $Id: keydb.c,v 1.47 2006/08/15 01:34:38 wtchang%redhat.com Exp $ */
 
 #include "lowkeyi.h"
 #include "seccomon.h"
@@ -1425,50 +1425,6 @@ nsslowkey_DeriveKeyDBPassword(NSSLOWKEYDBHandle *keydb, char *pw)
     return nsslowkey_HashPassword(pw, keydb->global_salt);
 }
 
-#if 0
-/* Appears obsolete - TNH */
-/* get the algorithm with which a private key
- * is encrypted.
- */
-SECOidTag 
-seckey_get_private_key_algorithm(NSSLOWKEYDBHandle *keydb, DBT *index)   
-{
-    NSSLOWKEYDBKey *dbkey = NULL;
-    SECOidTag algorithm = SEC_OID_UNKNOWN;
-    NSSLOWKEYEncryptedPrivateKeyInfo *epki = NULL;
-    PLArenaPool *poolp = NULL;
-    SECStatus rv;
-
-    poolp = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if(poolp == NULL)
-	return (SECOidTag)SECFailure;  /* TNH - this is bad */
-
-    dbkey = get_dbkey(keydb, index);
-    if(dbkey == NULL)
-	return (SECOidTag)SECFailure;
-
-    epki = (NSSLOWKEYEncryptedPrivateKeyInfo *)PORT_ArenaZAlloc(poolp, 
-	sizeof(NSSLOWKEYEncryptedPrivateKeyInfo));
-    if(epki == NULL)
-	goto loser;
-    rv = SEC_ASN1DecodeItem(poolp, epki, 
-	nsslowkey_EncryptedPrivateKeyInfoTemplate, &dbkey->derPK);
-    if(rv == SECFailure)
-	goto loser;
-
-    algorithm = SECOID_GetAlgorithmTag(&epki->algorithm);
-
-    /* let success fall through */
-loser:
-    if(poolp != NULL)
-	PORT_FreeArena(poolp, PR_TRUE);\
-    if(dbkey != NULL)
-	sec_destroy_dbkey(dbkey);
-
-    return algorithm;
-}
-#endif
-	
 /*
  * Derive an RC4 key from a password key and a salt.  This
  * was the method to used to encrypt keys in the version 2?

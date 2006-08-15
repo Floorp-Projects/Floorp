@@ -4132,13 +4132,13 @@ sftk_unwrapPrivateKey(SFTKObject *key, SECItem *bpki)
     pki = (NSSLOWKEYPrivateKeyInfo*)PORT_ArenaZAlloc(arena, 
 					sizeof(NSSLOWKEYPrivateKeyInfo));
     if(!pki) {
-	PORT_FreeArena(arena, PR_TRUE);
+	PORT_FreeArena(arena, PR_FALSE);
 	return SECFailure;
     }
 
     if(SEC_ASN1DecodeItem(arena, pki, nsslowkey_PrivateKeyInfoTemplate, bpki) 
 				!= SECSuccess) {
-	PORT_FreeArena(arena, PR_FALSE);
+	PORT_FreeArena(arena, PR_TRUE);
 	return SECFailure;
     }
 

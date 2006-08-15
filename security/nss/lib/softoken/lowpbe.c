@@ -824,7 +824,7 @@ void
 nsspkcs5_DestroyPBEParameter(NSSPKCS5PBEParameter *pbe_param)
 {
     if (pbe_param != NULL) {
-	PORT_FreeArena(pbe_param->poolp, PR_TRUE);
+	PORT_FreeArena(pbe_param->poolp, PR_FALSE);
     }
 }
 

@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: secdig.c,v 1.5 2004/04/27 23:04:40 gerv%gerv.net Exp $ */
+/* $Id: secdig.c,v 1.6 2006/08/15 01:34:38 wtchang%redhat.com Exp $ */
 #include "secdig.h"
 
 #include "secoid.h"
@@ -180,7 +180,7 @@ SGN_DecodeDigestInfo(SECItem *didata)
 	
     if((di == NULL) || (rv != SECSuccess))
     {
-	PORT_FreeArena(arena, PR_TRUE);
+	PORT_FreeArena(arena, PR_FALSE);
 	di = NULL;
     }
 
