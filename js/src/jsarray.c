@@ -1098,20 +1098,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         ++newlen;
     }
 
-    /*
-     * Here len == newlen + undefs + number_of_holes. We want to shrink the
-     * array to relieve the memory pressure from VM in case of many holes.
-     */
-    if (newlen != len) {
-        vec = JS_realloc(cx, vec, newlen * sizeof vec[0]);
-        if (!vec) {
-            /* realloc that can not shrink. */
-            vec = tvr.u.array;
-        } else {
-            tvr.u.array = vec;
-        }
-    }
-
+    /* Here len == newlen + undefs + number_of_holes. */
     ca.context = cx;
     ca.fval = fval;
     ca.localroot = argv + argc;       /* local GC root for temporary string */
