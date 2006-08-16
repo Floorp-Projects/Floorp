@@ -144,36 +144,43 @@ var gSecurityPane = {
 
   /**
    * Displays the currently-used phishing provider's EULA and offers the user
-   * the choice of cancelling the enabling of phishing.
+   * the choice of cancelling the enabling of phishing, but only if the user has
+   * not previously agreed to the provider's EULA before.
    *
+   * @param   providerNum
+   *          the number of the provider whose policy should be displayed
    * @returns bool
    *          true if the user still wants to enable phishing protection with
    *          the current provider, false otherwise
    */
-  _userAgreedToPhishingEULA: function ()
+  _userAgreedToPhishingEULA: function (providerNum)
   {
-    // XXX this is hackish, and there's no nice URL support -- window with
-    //     HTML file provided by anti-phishing provider later?
+    // create the opt-in preference element for the provider
+    const prefName = "browser.safebrowsing.provider." +
+                     providerNum +
+                     ".privacy.optedIn";
+    var pref = document.createElement("preference");
+    pref.setAttribute("type", "bool");
+    pref.id = prefName;
+    pref.setAttribute("name", prefName);
+    document.getElementById("securityPreferences").appendChild(pref);
 
-    // XXX cache the EULAs to which the user has agreed so switching from
-    //     "foo"->"bar" shows the EULA, but then a "bar"->"foo" check
-    //     doesn't display the EULA again
+    // only show privacy policy if it hasn't already been shown or the user
+    // hasn't agreed to it
+    if (!pref.value) {
+      var rv = { userAgreed: false, providerNum: providerNum };
+      document.documentElement.openSubDialog("chrome://browser/content/preferences/phishEULA.xul",
+                                             "resizable", rv);
 
-    const Cc = Components.classes, Ci = Components.interfaces;
-    const IPS = Ci.nsIPromptService;
-    var ips = Cc["@mozilla.org/embedcomp/prompt-service;1"]
-                .getService(IPS);
-    var bundle = document.getElementById("bundlePreferences");
-    var btnPressed = ips.confirmEx(window,
-                                   bundle.getString("phishEULATitle"),
-                                   bundle.getString("phishEULAText"),
-                                   IPS.BUTTON_POS_0 * IPS.BUTTON_TITLE_IS_STRING +
-                                     IPS.BUTTON_POS_1 * IPS.BUTTON_TITLE_IS_STRING,
-                                   bundle.getString("phishEULAOK"),
-                                   bundle.getString("phishEULACancel"),
-                                   "",
-                                   "", {});
-    return (btnPressed == 0);
+      // mark this provider as having had its privacy policy accepted if it was
+      if (rv.userAgreed)
+        pref.value = true;
+
+      return rv.userAgreed;
+    }
+
+    // user has previously agreed
+    return true;
   },
 
   /**
@@ -202,9 +209,11 @@ var gSecurityPane = {
   writePhishChoice: function ()
   {
     var radio = document.getElementById("checkPhishChoice");
+    var provider = document.getElementById("browser.safebrowsing.dataProvider");
 
     // display a privacy policy if onload checking is being enabled
-    if (radio.value == "true" && !this._userAgreedToPhishingEULA()) {
+    if (radio.value == "true" &&
+        !this._userAgreedToPhishingEULA(provider.value)) {
       radio.value = "false";
       return false;
     }
@@ -224,32 +233,62 @@ var gSecurityPane = {
     var popup = document.getElementById(onloadPopupId);
 
     if (!popup) {
-      var providers = Cc["@mozilla.org/preferences-service;1"]
-                        .getService(Ci.nsIPrefService)
-                        .getBranch("browser.safebrowsing.provider.");
+      var providerBranch = Cc["@mozilla.org/preferences-service;1"]
+                             .getService(Ci.nsIPrefService)
+                             .getBranch("browser.safebrowsing.provider.");
 
-      // fill in onload phishing list data
-      var kids = providers.getChildList("", {});
+      // fill in onload phishing list data -- but require a privacy policy
+      // URL be provided, and require it to be at a chrome URL so it's always
+      // available
+      var kids = providerBranch.getChildList("", {});
+      var providers = [];
+      var hasPrivacyPolicy = {};
       for (var i = 0; i < kids.length; i++) {
         var curr = kids[i];
-        var matches = curr.match(/^(\d+)\.name$/);
+        var matchesName = curr.match(/^(\d+)\.name$/);
+        var matchesPolicy = curr.match(/^(\d+)\.privacy\.url$/);
 
-        // skip preferences not of form "##.name"
-        if (!matches)
+        // skip preferences which aren't names or privacy URLs
+        if (!matchesName && !matchesPolicy)
           continue;
+
+        if (matchesName)
+          providers.push(matchesName[1]);
+        else
+          hasPrivacyPolicy[matchesPolicy[1]] = true;
+      }
+
+      // construct the menu only from the providers with policies
+      for (var i = 0; i < providers.length; i++) {
+        // skip providers without a privacy policy
+        if (!(providers[i] in hasPrivacyPolicy))
+          continue;
+
+        // ensure privacy URL is a chrome URL
+        try {
+          var providerNum = providers[i];
+          var url = providerBranch.getCharPref(providerNum + ".privacy.url");
+          var scheme = Cc["@mozilla.org/network/io-service;1"].
+                       getService(Ci.nsIIOService).
+                       extractScheme(url);
+          if (scheme != "chrome")
+            throw "scheme must be chrome";
+        }
+        catch (e) {
+          // don't add this provider
+          continue;
+        }
 
         if (!popup) {
           popup = document.createElement("menupopup");
           popup.id = onloadPopupId;
         }
 
-        var providerNum = matches[1];
-        var providerName = providers.getCharPref(curr);
+        var providerName = providerBranch.getCharPref(providerNum + ".name");
 
         var item = document.createElement("menuitem");
         item.setAttribute("value", providerNum);
         item.setAttribute("label", providerName);
-
         popup.appendChild(item);
       }
 
@@ -267,7 +306,8 @@ var gSecurityPane = {
    */
   onProviderChanged: function ()
   {
-    if (!this._userAgreedToPhishingEULA()) {
+    var pref = document.getElementById("browser.safebrowsing.dataProvider");
+    if (!this._userAgreedToPhishingEULA(pref.value)) {
       this._disableOnloadPhishChecks();
     }
   },

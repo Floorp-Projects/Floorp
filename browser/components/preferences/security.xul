@@ -50,14 +50,16 @@
   <prefpane id="paneSecurity" onpaneload="gSecurityPane.init();"
             helpTopic="prefs-security" helpURI="chrome://browser/locale/help/help.rdf">
 
-    <preferences>
+    <preferences id="securityPreferences">
       <!-- XXX buttons -->
       <preference id="pref.privacy.disable_button.view_passwords"
                   name="pref.privacy.disable_button.view_passwords"
                   type="bool"/>
 
       <!-- Add-ons, phishing -->
-      <preference id="xpinstall.whitelist.required"   name="xpinstall.whitelist.required"   type="bool"/>
+      <preference id="xpinstall.whitelist.required"
+                  name="xpinstall.whitelist.required"
+                  type="bool"/>
       <preference id="browser.safebrowsing.enabled"
                   name="browser.safebrowsing.enabled"
                   type="bool"/>
