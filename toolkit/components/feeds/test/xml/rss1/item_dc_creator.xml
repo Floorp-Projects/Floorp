@@ -2,7 +2,7 @@
 <!--
 
 Description: RSS1 feed w/ item dc:description
-Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).fields.getProperty('dc:description') == 'XML is placing increasingly heavy loads on the existing technical infrastructure of the Internet.'
+Expect: var author = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).authors.queryElementAt(0, Components.interfaces.nsIFeedPerson); (author.name == "Simon St.Laurent" && author.email == "simonstl@simonstl.com")
 
 -->
 <rdf:RDF 
@@ -20,10 +20,9 @@ Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).fields.
    <dc:description>
       XML is placing increasingly heavy loads on the existing technical infrastructure of the Internet.
     </dc:description>
-   <!--
     <dc:creator>Simon St.Laurent (mailto:simonstl@simonstl.com)</dc:creator>
     <dc:rights>Copyright &#169; 2000 O'Reilly &amp; Associates, Inc.</dc:rights>
-    <dc:subject>XML</dc:subject>-->
+    <dc:subject>XML</dc:subject>
   </item> 
   <item>
     <dc:publisher>The O'Reilly Network</dc:publisher>

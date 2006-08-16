@@ -12,14 +12,13 @@
 * for the specific language governing rights and limitations under the
 * License.
 *
-* The Original Code is the Feed Processor.
+* The Original Code is mozilla.org code.
 *
-* The Initial Developer of the Original Code is Google Inc.
+* The Initial Developer of the Original Code is the Mozilla Corporation.
 * Portions created by the Initial Developer are Copyright (C) 2006
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
-*   Ben Goodger <beng@google.com>
 *   Robert Sayre <sayrer@gmail.com>
 *
 * Alternatively, the contents of this file may be used under the terms of
@@ -36,49 +35,28 @@
 *
 * ***** END LICENSE BLOCK ***** */
 
-#include "nsIFeedContainer.idl"
-interface nsIArray;
+#include "nsIFeedElementBase.idl"
+
+interface nsIURI;
 
 /**
- * An nsIFeedEntry represents an Atom or RSS entry/item. Summary
- * and/or full-text content may be available, but callers will have to
- * check both.
- */
-[scriptable, uuid(305ab161-d23d-44a0-89ce-f7c78683deec)]
-interface nsIFeedEntry : nsIFeedContainer {
-
+ *  An nsIFeedGenerator represents the software used to create a feed.
+ */ 
+[scriptable, uuid(0fecd56b-bd92-481b-a486-b8d489cdd385)]
+interface nsIFeedGenerator : nsIFeedElementBase
+{
   /**
-  * Parent Feed, Entry, or Item.
-  */
-  attribute nsIFeedContainer parent;
-
-  /**
-  * Uses description, subtitle, summary, content and extensions
-  * to generate a summary. 
-  * 
-  */
-  attribute nsIFeedTextConstruct summary;
-
-  /**
-   * The date the entry was published, in RFC822 form. Parsable by JS
-   * and mail code.
+   * The name of the software.
    */
-  attribute AString published;
+  attribute AString agent;
 
   /**
-  * Uses atom:content and content:encoded to provide
-  * a 'full text' view of an entry.
-  *
-  */
-  attribute nsIFeedTextConstruct content;
+   * The version of the software.
+   */
+  attribute AString version;
 
   /**
-  * Enclosures are podcasts, photocasts, etc.
-  */
-  attribute nsIArray enclosures;
-
-  /**
-  * Enclosures, etc. that might be displayed inline.
-  */
-  attribute nsIArray mediaContent;
+   * A URI associated with the software.
+   */
+  attribute nsIURI uri;
 };

@@ -2,7 +2,7 @@
 <!--
 
 Description: channel copyright works 
-Expect:      feed.fields.getProperty('dc:contributor') == 'them'
+Expect:      feed.contributors.queryElementAt(0, Components.interfaces.nsIFeedPerson).name == 'them';
 
 -->
 <rss version="2.0" >
