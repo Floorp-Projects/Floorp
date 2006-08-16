@@ -623,10 +623,15 @@
             this.hidden = false;
             this.notifyData = aNotifyData ? aNotifyData : null;
             this.closeButton = aShowCloseButton;
-            // Fire event for accessibility APIs
-            var event = document.createEvent("Events");
-            event.initEvent("AlertActive", true, true);
-            this.dispatchEvent(event);
+            // Fire event for accessibility APIs after reflow,
+            // so that accessibility code sees visible frame for
+            // the notification and can create accessible object for it
+            function fireA11yAlertEvent(self) {
+              var event = self.ownerDocument.createEvent("Events");
+              event.initEvent("AlertActive", true, true);
+              self.dispatchEvent(event);              
+            }
+            setTimeout(fireA11yAlertEvent, 0, this);
           ]]>
         </body>
       </method>
