@@ -3168,10 +3168,8 @@ NS_IMETHODIMP nsImapMailFolder::CopyDataToOutputStreamForAppend(nsIInputStream *
       start++;
     m_copyState->m_eatLF = PR_FALSE;
   }
-  end = PL_strchr(start, '\r');
-  if (!end)
-    end = PL_strchr(start, '\n');
-  else if (*(end+1) == nsCRT::LF)
+  end = PL_strpbrk(start, "\r\n");
+  if (end && *end == '\r' && *(end+1) == '\n')
     linebreak_len = 2;
 
   while (start && end)
@@ -3194,13 +3192,14 @@ NS_IMETHODIMP nsImapMailFolder::CopyDataToOutputStreamForAppend(nsIInputStream *
     }
     linebreak_len = 1;
 
-    end = PL_strchr(start, '\r');
-    if (!end)
-      end = PL_strchr(start, '\n');
-    else if (*(end+1) == nsCRT::LF)
-      linebreak_len = 2;
-    else if (! *(end+1)) // block might have split CRLF so remember if
-      m_copyState->m_eatLF = PR_TRUE; // we should eat LF
+    end = PL_strpbrk(start, "\r\n");
+    if (end && *end == '\r')
+    {
+      if (*(end+1) == '\n')
+        linebreak_len = 2;
+      else if (! *(end+1)) // block might have split CRLF so remember if
+        m_copyState->m_eatLF = PR_TRUE; // we should eat LF
+    }
 
     if (start && !end)
     {
