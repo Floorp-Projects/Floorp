@@ -547,7 +547,7 @@ sub open_showbuilds_href_target {
 
 sub query_ref {
   my ($td, $mindate, $maxdate, $who) = @_;
-  my $output = '';
+  my $output = '<a><!-- query system not configured -->';
 
   if ($use_viewvc) {
       $output = "<a href=\"${viewvc_url}?view=query&who_match=exact";
@@ -584,7 +584,7 @@ sub who_menu {
   require "$tree/treedata.pl";
 
   my $qr = '';
-  my $ret = '';
+  my $ret = '<a><!-- no query system configured -->';
   if ($use_viewvc) {
       $qr = "${viewvc_url}?view=query&who_match=exact&who=" . 
           &url_encode($who) . "&querysort=date&date=explicit" .
