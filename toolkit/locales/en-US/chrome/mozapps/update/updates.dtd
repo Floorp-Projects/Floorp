@@ -57,8 +57,8 @@
                                            &brandShortName; will try again by downloading a complete Update.">
 
 <!ENTITY  finished.title                  "Update Downloaded">
-<!ENTITY  finished.text                   "The update was successfully downloaded and verified, and will be installed
-                                           the next time &brandShortName; starts.">
+<!ENTITY  finished.text                   "The update was successfully downloaded and verified, and it will
+                                           be installed the next time &brandShortName; starts.">
 
 <!ENTITY  finishedBackground.title        "Update Ready to Install">
 <!ENTITY  finishedBackground.text         "&brandShortName; has downloaded and verified an important update. 
