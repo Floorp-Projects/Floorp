@@ -272,9 +272,6 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
     var icsClass = ((item.privacy != null && item.privacy != "")
                     ? item.privacy : "PUBLIC");
     url += ("&icsClass="+ icsClass);
-    // xxx todo: force exclusion from free-busy calc for PRIVATE items
-    //           until user can check this on/off in UI:
-    url += ("&transparent=" + (icsClass == "PRIVATE" ? "1" : "0"));
     
     if (!bIsEvent && item.isCompleted) {
         url += "&status=4"; // force to COMPLETED
@@ -343,6 +340,7 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
     
     var dtstart = null;
     var dtend = null;
+    var bIsAllDay = false;
     
     if (bIsEvent) {
         dtstart = item.startDate;
@@ -350,8 +348,7 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
         url += ("&dtend=" + getIcalUTC(dtend));
 //         url += ("&X-NSCP-DTEND-TZID=" + 
 //                 encodeURIComponent(this.getAlignedTimezone(dtend.timezone)));
-        if (dtstart.isDate && dtend.isDate)
-            url += "&isAllDay=1";
+        bIsAllDay = (dtstart.isDate && dtend.isDate);
     }
     else { // calITodo:
         // xxx todo: dtstart is mandatory for cs, so if this is
@@ -363,8 +360,7 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
 //         url += ("&X-NSCP-DUE-TZID=" + encodeURIComponent(
 //                     this.getAlignedTimezone(dtend.timezone)));
         }
-        if (dtstart && dtstart.isDate)
-            url += "&isAllDay=1";
+        bIsAllDay = (dtstart && dtstart.isDate);
         if (item.isCompleted)
             url += "&percent=100";
         else
@@ -379,6 +375,13 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
             url += "0"; // not yet completed
         // xxx todo: sentBy sentUID fields in cs: missing in cal api
     }
+    
+    // xxx todo: force exclusion from free-busy calc for PRIVATE items
+    //           until user can check this on/off in UI:
+    url += ("&transparent=" +
+            (((icsClass == "PRIVATE") || bIsAllDay) ? "1" : "0"));
+    if (bIsAllDay)
+        url += "&isAllDay=1";
     
     if (dtstart) {
         // important to provide tz info with entry date for proper
