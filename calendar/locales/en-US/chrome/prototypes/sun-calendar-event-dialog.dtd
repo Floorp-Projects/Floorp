@@ -42,6 +42,10 @@
 <!ENTITY event.tab.attendees.label                      "Attendees">
 <!ENTITY event.tab.timezone.label                       "Timezone">
 
+<!ENTITY event.private.label      "Private" >
+<!ENTITY event.public.label       "Public" >
+<!ENTITY event.confidential.label "Time and Date Only" >
+
 <!-- Recurrence page -->
 <!ENTITY event.recurrence.pattern.label                 "Recurrence pattern">
 <!ENTITY event.recurrence.occurs.label                  "Repeat" >
