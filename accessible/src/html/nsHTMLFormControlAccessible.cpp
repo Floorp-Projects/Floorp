@@ -237,7 +237,7 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetName(nsAString& aName)
 // ----- HTML 4 Button: can contain arbitrary HTML content -----
 
 nsHTML4ButtonAccessible::nsHTML4ButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsLeafAccessible(aNode, aShell)
+nsHyperTextAccessible(aNode, aShell)
 { 
 }
 

@@ -76,7 +76,7 @@ public:
   NS_IMETHOD DoAction(PRUint8 index);
 };
 
-class nsHTML4ButtonAccessible : public nsLeafAccessible
+class nsHTML4ButtonAccessible : public nsHyperTextAccessible
 {
 
 public:

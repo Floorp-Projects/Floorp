@@ -446,9 +446,6 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
   else if (tag == nsAccessibilityAtoms::a) {
     *aAccessible = new nsHTMLLinkAccessible(aNode, aWeakShell, NS_STATIC_CAST(nsIFrame*, aFrame));
   }
-  else if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::onclick)) {
-    *aAccessible = new nsLinkableAccessible(aNode, aWeakShell);
-  }
   else if (tag == nsAccessibilityAtoms::li) {
     // Normally this is created by the list item frame which knows about the bullet frame
     // However, in this case the list item must have been styled using display: foo
@@ -474,7 +471,7 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
            tag == nsAccessibilityAtoms::thead ||
 #endif
            tag == nsAccessibilityAtoms::q) {
-    *aAccessible = new nsHyperTextAccessible(aNode, aWeakShell);
+    return CreateHyperTextAccessible(aFrame, aAccessible);
   }
   NS_IF_ADDREF(*aAccessible);
   return NS_OK;
@@ -504,7 +501,7 @@ nsAccessibilityService::CreateHTMLLIAccessible(nsISupports *aFrame,
 }
 
 NS_IMETHODIMP
-nsAccessibilityService::CreateHyperTextAccessible(nsISupports *aFrame, nsIAccessible **_retval)
+nsAccessibilityService::CreateHyperTextAccessible(nsISupports *aFrame, nsIAccessible **aAccessible)
 {
   nsIFrame* frame;
   nsCOMPtr<nsIDOMNode> node;
@@ -513,11 +510,20 @@ nsAccessibilityService::CreateHyperTextAccessible(nsISupports *aFrame, nsIAccess
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = new nsHyperTextAccessible(node, weakShell);
-  if (! *_retval) 
+  nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+  if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::onclick)) {
+    // nsLinkableAccessible inherits from nsHyperTextAccessible, but
+    // it also includes code for dealing with the onclick
+    *aAccessible = new nsLinkableAccessible(node, weakShell);
+  }
+  else {
+    *aAccessible = new nsHyperTextAccessible(node, weakShell);
+  }
+  if (nsnull == *aAccessible)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(*_retval);
+  NS_ADDREF(*aAccessible);
   return NS_OK;
 }
 
@@ -1243,6 +1249,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   // of some property that makes this object interesting
   if (!newAcc &&
       (content->IsFocusable() ||
+       content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::onclick) ||
        content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::describedby) ||
        content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::labelledby) ||
        content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::required) ||
@@ -1254,7 +1261,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     // other accessibles can point to it, or so that it can hold a state, etc.
     if (content->IsNodeOfType(nsINode::eHTML)) {
       // Interesting HTML container which may have selectable text and/or embedded objects
-      newAcc = new nsHyperTextAccessible(aNode, aWeakShell);
+      CreateHyperTextAccessible(frame, getter_AddRefs(newAcc));
     }
     else {  // XUL, SVG, MathML etc.
       // Interesting generic non-HTML container

@@ -237,12 +237,14 @@ void nsLinkableAccessible::CacheActionContent()
       if (uri) {
         mActionContent = walkUpContent;
         mIsLink = PR_TRUE;
+        break;
       }
     }
     if (walkUpContent->HasAttr(kNameSpaceID_None,
                             nsAccessibilityAtoms::onclick)) {
       mActionContent = walkUpContent;
       mIsOnclick = PR_TRUE;
+      break;
     }
   }
 }
