@@ -172,13 +172,13 @@
   <wizardpage id="finished" pageid="finished"
               label="&finished.title;" object="gFinishedPage"
               onpageshow="gFinishedPage.onPageShow();">
-    <label>&finished.intro;</label>
+    <label>&finished.text;</label>
   </wizardpage>
   
   <wizardpage id="finishedBackground" pageid="finishedBackground"
               label="&finishedBackground.title;" object="gFinishedPage"
               onpageshow="gFinishedPage.onPageShowBackground();">
-    <label>&finishedBackground.intro;</label>
+    <label>&finishedBackground.text;</label>
     <separator/>
     <hbox align="center">
       <label>&finishedBackground.name;</label>
@@ -186,9 +186,9 @@
       <label id="finishedBackgroundLink" class="text-link" value="&details.link;"/>
     </hbox>
     <spacer flex="1"/>
-    <label>&finishedBackground.instruction1;</label>
+    <label>&finishedBackground.detail1;</label>
     <separator class="thin"/>
-    <label>&finishedBackground.instruction2;</label>
+    <label>&finishedBackground.detail2;</label>
   </wizardpage>
   
   <wizardpage id="installed" pageid="installed"
