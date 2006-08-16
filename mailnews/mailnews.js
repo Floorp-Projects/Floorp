@@ -174,7 +174,7 @@ pref("mail.html_compose",                   true);
 // this will show up in the address picker in the compose window
 // examples: "X-Face" or "Approved,X-No-Archive"
 pref("mail.compose.other.header",	    "");
-pref("mail.compose.autosave", false);
+pref("mail.compose.autosave", true);
 pref("mail.compose.autosaveinterval", 5); // in minutes
 pref("mail.fcc_folder",                     "");
 pref("mail.encrypt_outgoing_mail",          false);
