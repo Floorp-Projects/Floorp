@@ -4631,16 +4631,23 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       {
         ptrdiff_t guardJump;
 
+        /* Morph STMT_BLOCK to STMT_CATCH and save the block object atom. */
         stmt = cg->treeContext.topStmt;
-        JS_ASSERT(stmt->type == STMT_BLOCK);
+        JS_ASSERT(stmt->type == STMT_BLOCK && (stmt->flags & SIF_SCOPE));
         stmt->type = STMT_CATCH;
+        atom = stmt->atom;
         stmt = stmt->down;
         JS_ASSERT(stmt->type == STMT_TRY || stmt->type == STMT_FINALLY);
 
-        /* Pick up the pending exception and bind it to the catch variable. */
+        /*
+         * Pick up the pending exception and bind it to the catch variable.
+         * Inline BindNameToSlot, fixing up the slot by adding block depth.
+         */
         if (js_Emit1(cx, cg, JSOP_EXCEPTION) < 0)
             return JS_FALSE;
-        EMIT_UINT16_IMM_OP(JSOP_INITCATCHVAR, pn->pn_kid1->pn_slot);
+        pn2 = pn->pn_kid1;
+        pn2->pn_slot += OBJ_BLOCK_DEPTH(cx, ATOM_TO_OBJECT(atom));
+        EMIT_UINT16_IMM_OP(JSOP_INITCATCHVAR, pn2->pn_slot);
 
         /* Emit the guard expression, if there is one. */
         if (pn->pn_kid2) {
