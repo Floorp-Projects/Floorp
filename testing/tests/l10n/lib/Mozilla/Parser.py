@@ -36,16 +36,23 @@
 # ***** END LICENSE BLOCK *****
 
 import re
+import codecs
+import logging
 
 __statics = {}
 __constructors = {}
 
 class Parser:
   def __init__(self):
+    if not hasattr(self, 'encoding'):
+      self.encoding = 'utf-8';
     pass
   def read(self, file):
-    f = open(file)
-    self.contents = f.read()
+    f = codecs.open(file, 'r', self.encoding)
+    try:
+      self.contents = f.read()
+    except UnicodeDecodeError, e:
+      logging.error(" Can't read file: " + file + '; ' + str(e))
     f.close()
   def mapping(self):
     m = {}
@@ -69,7 +76,7 @@ class Parser:
       self.offset = cm.end()
       return self.next()
     self.offset = m.end()
-    return (unicode(m.group(1)), self.postProcessValue(m.group(2)))
+    return (m.group(1), self.postProcessValue(m.group(2)))
 
 def getParser(path):
   ext = path.rsplit('.',1)[1]
@@ -90,14 +97,13 @@ class PropertiesParser(Parser):
   def __init__(self):
     self.key = re.compile('^\s*([^#!\s\r\n][^=:\r\n]*?)\s*[:=][ \t]*(.*?)[ \t]*$',re.M)
     self.comment = re.compile('^\s*[#!].*$',re.M)
-    self._post = re.compile('\\\\u([0-9a-f]+)')
+    self._post = re.compile('\\\\u([0-9a-fA-F]{4})')
     Parser.__init__(self)
   _arg_re = re.compile('%(?:(?P<cn>[0-9]+)\$)?(?P<width>[0-9]+)?(?:.(?P<pres>[0-9]+))?(?P<size>[hL]|(?:ll?))?(?P<type>[dciouxXefgpCSsn])')
   def postProcessValue(self, val):
     m = self._post.search(val)
     if not m:
       return val
-    val = unicode(val)
     while m:
       uChar = unichr(int(m.group(1), 16))
       val = val.replace(m.group(), uChar)

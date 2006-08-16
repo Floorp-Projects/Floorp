@@ -180,7 +180,7 @@ def compare(testLocales=[]):
     try:
       parser = Parser.getParser(path)
     except UserWarning:
-      logging.warning(" Can't compare " + path + " in " + mod + " for " + str(locales))
+      logging.warning(" Can't compare " + path + " in " + mod)
       continue
     parser.read(Paths.get_path(mod, 'en-US', path))
     enMap = parser.mapping()
