@@ -267,7 +267,7 @@ sub record_votes {
         # XXX - We really need a $bug->product() method.
         foreach my $bug_id (@buglist) {
             my $bug = new Bugzilla::Bug($bug_id);
-            my $prod = $bug->{'product'};
+            my $prod = $bug->product;
             $products{$prod} ||= new Bugzilla::Product({name => $prod});
             $prodcount{$prod} ||= 0;
             $prodcount{$prod} += $votes{$bug_id};

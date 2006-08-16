@@ -346,7 +346,7 @@ foreach my $field (@enter_bug_fields) {
 
 if ($cloned_bug_id) {
 
-    $default{'component_'}    = $cloned_bug->{'component'};
+    $default{'component_'}    = $cloned_bug->component;
     $default{'priority'}      = $cloned_bug->{'priority'};
     $default{'bug_severity'}  = $cloned_bug->{'bug_severity'};
     $default{'rep_platform'}  = $cloned_bug->{'rep_platform'};
@@ -431,7 +431,7 @@ else {
 $vars->{'version'} = [map($_->name, @{$product->versions})];
 
 if ( ($cloned_bug_id) &&
-     ($product->name eq $cloned_bug->{'product'} ) ) {
+     ($product->name eq $cloned_bug->product ) ) {
     $default{'version'} = $cloned_bug->{'version'};
 } elsif (formvalue('version')) {
     $default{'version'} = formvalue('version');
@@ -518,7 +518,7 @@ foreach my $row (@$grouplist) {
     #   set a groups's checkbox based on the group control map
     #
     if ( ($cloned_bug_id) &&
-         ($product->name eq $cloned_bug->{'product'} ) ) {
+         ($product->name eq $cloned_bug->product ) ) {
         foreach my $i (0..(@{$cloned_bug->{'groups'}}-1) ) {
             if ($cloned_bug->{'groups'}->[$i]->{'bit'} == $id) {
                 $check = $cloned_bug->{'groups'}->[$i]->{'ison'};

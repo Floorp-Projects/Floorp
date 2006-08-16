@@ -100,10 +100,9 @@ sub _init {
 
   my $query = "
     SELECT
-      bugs.bug_id, alias, products.classification_id, classifications.name,
-      bugs.product_id, products.name, version,
+      bugs.bug_id, alias, bugs.product_id, version,
       rep_platform, op_sys, bug_status, resolution, priority,
-      bug_severity, bugs.component_id, components.name, 
+      bug_severity, bugs.component_id,
       assigned_to AS assigned_to_id, reporter AS reporter_id,
       bug_file_loc, short_desc, target_milestone,
       qa_contact AS qa_contact_id, status_whiteboard, " .
@@ -112,14 +111,7 @@ sub _init {
       estimated_time, remaining_time, " .
       $dbh->sql_date_format('deadline', '%Y-%m-%d') .
       $custom_fields . "
-    FROM bugs
-      INNER JOIN components
-              ON components.id = bugs.component_id
-      INNER JOIN products
-              ON products.id = bugs.product_id
-      INNER JOIN classifications
-              ON classifications.id = products.classification_id
-      WHERE bugs.bug_id = ?";
+    FROM bugs WHERE bugs.bug_id = ?";
 
   my $bug_sth = $dbh->prepare($query);
   $bug_sth->execute($bug_id);
@@ -128,10 +120,9 @@ sub _init {
   if (@row = $bug_sth->fetchrow_array) {
     my $count = 0;
     my %fields;
-    foreach my $field ("bug_id", "alias", "classification_id", "classification",
-                       "product_id", "product", "version", 
+    foreach my $field ("bug_id", "alias", "product_id", "version", 
                        "rep_platform", "op_sys", "bug_status", "resolution", 
-                       "priority", "bug_severity", "component_id", "component",
+                       "priority", "bug_severity", "component_id",
                        "assigned_to_id", "reporter_id", 
                        "bug_file_loc", "short_desc",
                        "target_milestone", "qa_contact_id", "status_whiteboard",
@@ -368,6 +359,36 @@ sub cc {
     return $self->{'cc'};
 }
 
+sub component {
+    my ($self) = @_;
+    return $self->{component} if exists $self->{component};
+    return '' if $self->{error};
+    ($self->{component}) = Bugzilla->dbh->selectrow_array(
+        'SELECT name FROM components WHERE id = ?',
+        undef, $self->{component_id});
+    return $self->{component};
+}
+
+sub classification_id {
+    my ($self) = @_;
+    return $self->{classification_id} if exists $self->{classification_id};
+    return 0 if $self->{error};
+    ($self->{classification_id}) = Bugzilla->dbh->selectrow_array(
+        'SELECT classification_id FROM products WHERE id = ?',
+        undef, $self->{product_id});
+    return $self->{classification_id};
+}
+
+sub classification {
+    my ($self) = @_;
+    return $self->{classification} if exists $self->{classification};
+    return '' if $self->{error};
+    ($self->{classification}) = Bugzilla->dbh->selectrow_array(
+        'SELECT name FROM classifications WHERE id = ?',
+        undef, $self->classification_id);
+    return $self->{classification};
+}
+
 sub dependson {
     my ($self) = @_;
     return $self->{'dependson'} if exists $self->{'dependson'};
@@ -432,9 +453,19 @@ sub milestoneurl {
     return $self->{'milestoneurl'} if exists $self->{'milestoneurl'};
     return '' if $self->{'error'};
 
-    $self->{'prod_obj'} ||= new Bugzilla::Product({name => $self->{'product'}});
+    $self->{'prod_obj'} ||= new Bugzilla::Product({name => $self->product});
     $self->{'milestoneurl'} = $self->{'prod_obj'}->milestone_url;
     return $self->{'milestoneurl'};
+}
+
+sub product {
+    my ($self) = @_;
+    return $self->{product} if exists $self->{product};
+    return '' if $self->{error};
+    ($self->{product}) = Bugzilla->dbh->selectrow_array(
+        'SELECT name FROM products WHERE id = ?',
+        undef, $self->{product_id});
+    return $self->{product};
 }
 
 sub qa_contact {
@@ -490,7 +521,7 @@ sub use_votes {
     my ($self) = @_;
     return 0 if $self->{'error'};
 
-    $self->{'prod_obj'} ||= new Bugzilla::Product({name => $self->{'product'}});
+    $self->{'prod_obj'} ||= new Bugzilla::Product({name => $self->product});
 
     return Bugzilla->params->{'usevotes'} 
            && $self->{'prod_obj'}->votes_per_user > 0;
@@ -601,13 +632,13 @@ sub choices {
     return {} if $self->{'error'};
 
     $self->{'choices'} = {};
-    $self->{prod_obj} ||= new Bugzilla::Product({name => $self->{product}});
+    $self->{prod_obj} ||= new Bugzilla::Product({name => $self->product});
 
     my @prodlist = map {$_->name} @{Bugzilla->user->get_enterable_products};
     # The current product is part of the popup, even if new bugs are no longer
     # allowed for that product
-    if (lsearch(\@prodlist, $self->{'product'}) < 0) {
-        push(@prodlist, $self->{'product'});
+    if (lsearch(\@prodlist, $self->product) < 0) {
+        push(@prodlist, $self->product);
         @prodlist = sort @prodlist;
     }
 
