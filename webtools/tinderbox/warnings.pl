@@ -30,7 +30,10 @@
 #
 
 use FileHandle;
+use Compress::Zlib;
 use lib "@TINDERBOX_DIR@";
+
+require 'tbglobals.pl';
 
 # A few global variables are used in the program.
 #
@@ -95,9 +98,7 @@ $log_file = shift @ARGV;
 ($tree, $log_file) = split '/', $log_file;
 $form{tree} = $tree;
 
-&usage, die "Tree does not exist, $tree\n" unless -d $tree;
-
-require 'tbglobals.pl';
+&require_only_one_tree();
 require "$tree/treedata.pl";
 
 $source_root = 'mozilla';
@@ -145,7 +146,8 @@ $source_root = 'mozilla';
 #   paths to files.
 #
 print STDERR "Building hash of file names...";
-($file_bases, $file_fullpaths) = build_file_hash($cvs_root, @cvs_modules);
+($file_bases, $file_fullpaths) = build_file_hash($cvs_root, @cvs_modules)
+    if ($cvs_module ne '');
 print STDERR "done.\n";
 
 # Find the build we want and generate warnings for it
@@ -162,18 +164,18 @@ $total_ignored_count = 0;
   #
   warn "Parsing $br->{buildname}, $log_file\n";
 
-  $fh = new FileHandle "gunzip -c $tree/$log_file |" 
-    or die "Unable to open $tree/$log_file\n";
+  my $gz = gzopen("$tree/$log_file", "rb") or 
+    die "gzopen($tree/$log_file): $!\n";
   if ($br->{errorparser} eq 'unix') {
-    gcc_parser($fh, $cvs_root, $tree, $log_file, $file_bases, $file_fullpaths);
+    gcc_parser($gz, $cvs_root, $tree, $log_file, $file_bases, $file_fullpaths);
   } elsif ($br->{errorparser} eq 'mac') {
-    mac_parser($fh, $cvs_root, $tree, $log_file, $file_bases, $file_fullpaths);
+    mac_parser($gz, $cvs_root, $tree, $log_file, $file_bases, $file_fullpaths);
   }
-  $fh->close;
+  $gz->gzclose();
 
   # Attach blame to all the warnings
   #   (Yes, global variables are flying around.)
-  &build_blame($cvs_root, $file_fullpaths);
+  &build_blame($cvs_root, $file_fullpaths) if ($cvs_module ne '');
 
   # Come up with the temporary filenames for the output
   #
@@ -184,6 +186,7 @@ $total_ignored_count = 0;
 
   # Write the warnings indexed by who
   #
+  $fh = new FileHandle;
   $fh->open($warn_file, ">") or die "Unable to open $warn_file: $!\n";
   my $time_str = print_html_by_who($fh, $br);
   $fh->close;
@@ -322,11 +325,13 @@ sub find_build_record {
 }
 
 sub gcc_parser {
-  my ($fh, $cvs_root, $tree, $log_file, $file_bases, $file_fullnames) = @_;
+  my ($gz, $cvs_root, $tree, $log_file, $file_bases, $file_fullnames) = @_;
   my $build_dir = '';
   my $ignore_pat = "(?:".join('|',@ignore).")";
+  my ($bytesread, $line);
 
- PARSE_TOP: while (<$fh>) {
+ PARSE_TOP: while (defined($gz) && (($bytesread=$gz->gzreadline($line)) > 0)) {
+    $_ = $line ;
     # Directory
     #
     if (/^gmake\[\d\]: Entering directory \`(.*)\'$/) {
@@ -402,12 +407,13 @@ sub gcc_parser {
 }
 
 sub mac_parser {
-  my ($fh, $cvs_root, $tree, $log_file, $file_bases, $file_fullnames) = @_;
+  my ($gz, $cvs_root, $tree, $log_file, $file_bases, $file_fullnames) = @_;
   my $build_dir = '';
 
   my $ignore_pat = "(?:".join('|',@mac_ignore).")";
 
- PARSE_TOP: while (<$fh>) {
+ PARSE_TOP: while (defined($gz) && (($bytesred=$gz->gzreadline($line)) > 0)) {
+    $_ = $line ;
     # Now only match lines with "warning:"
     next unless /^Warning :/;
 #print STDERR "Found a warning: $_";

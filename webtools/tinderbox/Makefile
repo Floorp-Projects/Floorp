@@ -60,16 +60,16 @@ EXE_FILES = \
 	clean.pl \
 	doadmin.cgi \
 	fixupimages.pl \
+	scrape.pl \
 	showbuilds.cgi \
 	showimages.cgi \
 	showlog.cgi \
+	warnings.pl \
 	$(NULL)
 
 SETUID_SCRIPTS = \
 	handlemail.pl \
 	processbuild.pl	\
-	scrape.pl \
-	warnings.pl \
 	$(NULL)
 
 FILES = \

@@ -104,7 +104,8 @@ require "$tinderbox{tree}/treedata.pl" if -r "$tinderbox{tree}/treedata.pl";
 if (defined $warning_buildnames_pat
     and $tinderbox{build} =~ /^$warning_buildnames_pat$/
     and $tinderbox{status} ne 'failed') {
-  system("./warnings.pl", "$tinderbox{tree}/$tinderbox{logfile}");
+    $err = system("./warnings.pl", "$tinderbox{tree}/$tinderbox{logfile}");
+    die "warnings.pl returned an error\n" if ($err);
 }
 
 # Scrape data
@@ -112,7 +113,8 @@ if (defined $warning_buildnames_pat
 require "$tinderbox{tree}/scrapebuilds.pl" if -r "$tinderbox{tree}/scrapebuilds.pl";
 if ($scrape_builds->{$tinderbox{build}}
     and $tinderbox{status} ne 'building') {
-  system("./scrape.pl", "$tinderbox{tree}", "$tinderbox{logfile}");
+    $err = system("./scrape.pl", "$tinderbox{tree}", "$tinderbox{logfile}");
+    die "scrape.pl returned an error\n" if ($err);
 }
 
 # Static pages

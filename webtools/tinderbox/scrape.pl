@@ -30,10 +30,10 @@ sub usage {
   warn "./scrape.pl <tree> <logfile>";
 }
 
-use FileHandle;
+use Compress::Zlib;
 use lib "@TINDERBOX_DIR@";
+require "tbglobals.pl";
 
-# This is for gunzip (Should add a configure script to handle this).
 $ENV{PATH} = "@SETUID_PATH@";
 
 unless ($#ARGV == 1) {
@@ -43,22 +43,27 @@ unless ($#ARGV == 1) {
 
 ($tree, $logfile) = @ARGV;
 
+$tree = &trick_taint($tree);
+$logfile = &trick_taint($logfile);
+
 die "Error: No tree named $tree" unless -r "$tree/treedata.pl";
 require "$tree/treedata.pl";
 
 # Seach the build log for the scrape data
 #
-$fh = new FileHandle "gunzip -c $tree/$logfile |"
-  or die "Unable to open $tree/$logfile\n";
-@scrape_data = find_scrape_data($fh);
+my $gz = gzopen("$tree/$logfile", "rb")
+  or die "gzopen($tree/$logfile): $!\n";
+@scrape_data = find_scrape_data($gz);
+$gz->gzclose();
 
-$fh->close;
-
-die "No scrape data found in log.\n" unless @scrape_data;
+if (!defined(@scrape_data)) {
+    print "No scrape data found in log.\n";
+    exit(0);
+}
 
 # Save the scrape data to 'scrape.dat'
 #
-open(SCRAPE, ">>", $tree/scrape.dat") or die "Unable to open $tree/scrape.dat";
+open(SCRAPE, ">>", "$tree/scrape.dat") or die "Unable to open $tree/scrape.dat";
 print SCRAPE "$logfile|".join('|', @scrape_data)."\n";
 close SCRAPE;
 
@@ -74,25 +79,26 @@ close SCRAPE;
 #============================================================
 
 sub find_scrape_data {
-  my ($fh) = $_[0];
+  my ($gz) = $_[0];
   local $_;
   my @rv;
   my @line;
-  while (<$fh>) {
-    if (/TinderboxPrint:/) {
-      # Line format:
-      #  TinderboxPrint:<general html>
-
-      # Strip off the TinderboxPrint: part of the line
-      chomp;
-      s/.*TinderboxPrint://;
-
-      # No longer use ; to create separate lines.
-      #@line = split(';', $_);
-
-      $line[0] = $_;
-      push(@rv, @line);
-    }
+  my ($bytesread, $gzline);
+  while (defined($gz) && (($bytesread = $gz->gzreadline($gzline)) > 0)) {
+      if ($gzline =~ m/TinderboxPrint:/) {
+          # Line format:
+          #  TinderboxPrint:<general html>
+          
+          # Strip off the TinderboxPrint: part of the line
+          chomp($gzline);
+          $gzline =~ s/.*TinderboxPrint://;
+          
+          # No longer use ; to create separate lines.
+          #@line = split(';', $_);
+          
+          $line[0] = $gzline;
+          push(@rv, @line);
+      }
   }
   return @rv;
 }
