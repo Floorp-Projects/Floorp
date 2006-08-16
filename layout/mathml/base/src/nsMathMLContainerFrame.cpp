@@ -865,17 +865,16 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIFrame* aParentFrame)
 nsresult
 nsMathMLContainerFrame::ChildListChanged(PRInt32 aModType)
 {
-  mState |= NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN;
-
   // If this is an embellished frame we need to rebuild the
   // embellished hierarchy by walking-up to the parent of the
   // outermost embellished container.
   nsIFrame* frame = this;
   if (mEmbellishData.coreFrame) {
+    nsIFrame* parent = mParent;
     nsEmbellishData embellishData;
-    for (frame = mParent; frame; frame = frame->GetParent()) {
+    for ( ; parent; frame = parent, parent = parent->GetParent()) {
       frame->AddStateBits(NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
-      GetEmbellishDataFrom(frame, embellishData);
+      GetEmbellishDataFrom(parent, embellishData);
       if (embellishData.coreFrame != mEmbellishData.coreFrame)
         break;
     }
