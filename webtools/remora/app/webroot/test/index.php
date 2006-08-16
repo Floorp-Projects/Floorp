@@ -1,5 +1,5 @@
 <?php
-/* SVN FILE: $Id: index.php,v 1.1 2006/08/14 23:54:57 sancus%off.net Exp $ */
+/* SVN FILE: $Id: index.php,v 1.2 2006/08/16 04:03:12 sancus%off.net Exp $ */
 
 /**
  * Short description for file.
@@ -28,9 +28,9 @@
  * @link         http://www.phpnut.com/projects/
  * @package      tests
  * @since        CakePHP Test Suite v 1.0.0.0
- * @version      $Revision: 1.1 $
+ * @version      $Revision: 1.2 $
  * @modifiedby   $LastChangedBy: phpnut $
- * @lastmodified $Date: 2006/08/14 23:54:57 $
+ * @lastmodified $Date: 2006/08/16 04:03:12 $
  * @license      http://www.opensource.org/licenses/opengroup.php The Open Group Test Suite License
  */
 
@@ -57,6 +57,7 @@ if (!defined('APP_DIR'))
 {
 //define('APP_DIR', 'DIRECTORY NAME OF APPLICATION';
     define ('APP_DIR', basename(dirname(dirname(dirname(__FILE__)))).DS);
+    //define('APP_DIR', 'remora'.DS);
 }
 
 /**
@@ -76,6 +77,15 @@ if (!defined('WEBROOT_DIR'))
 }
 
 define('WWW_ROOT', dirname(dirname(__FILE__)));
+
+if (function_exists('ini_set')) {
+                ini_set('include_path', ini_get('include_path') . PATH_SEPARATOR . CAKE_CORE_INCLUDE_PATH . PATH_SEPARATOR . ROOT . DS . APP_DIR . DS);
+                define('APP_PATH', null);
+                define('CORE_PATH', null);
+        } else {
+                define('APP_PATH', ROOT . DS . APP_DIR . DS);
+                define('CORE_PATH', CAKE_CORE_INCLUDE_PATH . DS);
+        }
 
 ini_set('include_path',ini_get('include_path').PATH_SEPARATOR.CAKE_CORE_INCLUDE_PATH.PATH_SEPARATOR.ROOT.DS.APP_DIR.DS);
 
