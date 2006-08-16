@@ -97,7 +97,8 @@ nsGenericDOMDataNode::~nsGenericDOMDataNode()
 
 
 NS_IMPL_ADDREF(nsGenericDOMDataNode)
-NS_IMPL_RELEASE(nsGenericDOMDataNode)
+NS_IMPL_RELEASE_WITH_DESTROY(nsGenericDOMDataNode,
+                             nsNodeUtils::LastRelease(this))
 
 NS_INTERFACE_MAP_BEGIN(nsGenericDOMDataNode)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)

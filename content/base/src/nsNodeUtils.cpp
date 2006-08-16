@@ -36,11 +36,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsNodeUtils.h"
+#include "nsContentUtils.h"
 #include "nsINode.h"
 #include "nsIContent.h"
 #include "nsTArray.h"
 #include "nsIMutationObserver.h"
 #include "nsIDocument.h"
+#include "nsIDOMUserDataHandler.h"
 
 #define IMPL_MUTATION_NOTIFICATION(func_, content_, params_)      \
   PR_BEGIN_MACRO                                                  \
@@ -160,3 +162,19 @@ nsNodeUtils::NodeWillBeDestroyed(nsINode* aNode)
     aNode->mFlagsOrSlots = flags;
   }
 }
+
+void
+nsNodeUtils::LastRelease(nsINode* aNode)
+{
+  if (aNode->HasProperties()) {
+    nsIDocument* document = aNode->GetOwnerDoc();
+    if (document) {
+      nsContentUtils::CallUserDataHandler(document,
+                                          nsIDOMUserDataHandler::NODE_DELETED,
+                                          aNode, nsnull, nsnull);
+      document->PropertyTable()->DeleteAllPropertiesFor(aNode);
+    }
+  }
+  delete aNode;
+}
+

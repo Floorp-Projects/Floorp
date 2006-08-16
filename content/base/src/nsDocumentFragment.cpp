@@ -213,8 +213,8 @@ NS_INTERFACE_MAP_BEGIN(nsDocumentFragment)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF(nsDocumentFragment)
-NS_IMPL_RELEASE(nsDocumentFragment)
+NS_IMPL_ADDREF_INHERITED(nsDocumentFragment, nsGenericElement)
+NS_IMPL_RELEASE_INHERITED(nsDocumentFragment, nsGenericElement)
 
 NS_IMETHODIMP    
 nsDocumentFragment::GetNodeType(PRUint16* aNodeType)

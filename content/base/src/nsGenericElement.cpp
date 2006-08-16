@@ -145,14 +145,6 @@ nsINode::~nsINode()
 {
   NS_ASSERTION(!HasSlots(), "Don't know how to kill the slots");
 
-  nsIDocument *document = GetOwnerDoc();
-  if (document && HasProperties()) {
-    nsContentUtils::CallUserDataHandler(document,
-                                        nsIDOMUserDataHandler::NODE_DELETED,
-                                        this, nsnull, nsnull);
-    document->PropertyTable()->DeleteAllPropertiesFor(this);
-  }
-
   if (HasFlag(NODE_HAS_RANGELIST)) {
 #ifdef DEBUG
     if (!nsContentUtils::LookupRangeList(this) &&
@@ -3099,7 +3091,8 @@ NS_INTERFACE_MAP_BEGIN(nsGenericElement)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsGenericElement)
-NS_IMPL_RELEASE(nsGenericElement)
+NS_IMPL_RELEASE_WITH_DESTROY(nsGenericElement,
+                             nsNodeUtils::LastRelease(this))
 
 nsresult
 nsGenericElement::PostQueryInterface(REFNSIID aIID, void** aInstancePtr)

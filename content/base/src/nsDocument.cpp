@@ -748,6 +748,10 @@ nsDocument::~nsDocument()
     NS_RELEASE(mCSSLoader);
   }
 
+  // Delete properties before dropping the document reference from
+  // NodeInfoManager!
+  mPropertyTable.DeleteAllProperties();
+
   // XXX Ideally we'd do this cleanup in the nsIDocument destructor.
   if (mNodeInfoManager) {
     mNodeInfoManager->DropDocumentReference();
@@ -809,7 +813,8 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsDocument)
-NS_IMPL_RELEASE(nsDocument)
+NS_IMPL_RELEASE_WITH_DESTROY(nsDocument,
+                             nsNodeUtils::LastRelease(this))
 
 nsresult
 nsDocument::Init()
