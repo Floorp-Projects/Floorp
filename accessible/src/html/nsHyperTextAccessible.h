@@ -85,7 +85,9 @@ protected:
                          nsAString & aText);
   PRInt32 GetRelativeOffset(nsIPresShell *aPresShell, nsIFrame *aFromFrame, PRInt32 aFromOffset,
                             nsSelectionAmount amount, nsDirection direction, PRBool aNeedsStart);
-  nsIFrame* GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset, nsAString *aText = nsnull, nsIFrame **aEndFrame = nsnull);
+  nsIFrame* GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset, nsAString *aText = nsnull,
+                          nsIFrame **aEndFrame = nsnull, nsIntRect *aBoundsRect = nsnull);
+  nsresult DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset, PRInt32 *aResult);
 
   // Editor helpers, subclasses of nsHyperTextAccessible may have editor
   virtual void SetEditor(nsIEditor *aEditor) { return; }
@@ -99,6 +101,6 @@ protected:
   nsresult FireTextChangeEvent(AtkTextChange *aTextData);
 
   // Static helpers
-  nsresult DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset, PRInt32 *aResult);
+  static nsIntRect GetBoundsForString(nsIFrame *aFrame, PRInt32 aStartOffset, PRInt32 aLength);
 };
 #endif  // _nsHyperTextAccessible_H_

@@ -70,6 +70,11 @@ void getCharacterExtentsCB(AtkText *aText, gint aOffset,
                            gint *aX, gint *aY,
                            gint *aWidth, gint *aHeight,
                            AtkCoordType aCoords);
+#ifdef USE_ATK_GET_RANGE_EXTENTS
+void getRangeExtentsCB(AtkText *aText, gint aStartOffset,
+                       gint aEndOffset, AtkCoordType aCoords,
+                       AtkTextRectangle *aRect);
+#endif
 gint getCharacterCountCB(AtkText *aText);
 gint getOffsetAtPointCB(AtkText *aText,
                         gint aX, gint aY,

@@ -58,6 +58,9 @@ textInterfaceInitCB(AtkTextIface *aIface)
     aIface->get_run_attributes = getRunAttributesCB;
     aIface->get_default_attributes = getDefaultAttributesCB;
     aIface->get_character_extents = getCharacterExtentsCB;
+#ifdef USE_ATK_GET_RANGE_EXTENTS
+    aIface->get_range_extents = getRangeExtentsCB;
+#endif
     aIface->get_character_count = getCharacterCountCB;
     aIface->get_offset_at_point = getOffsetAtPointCB;
     aIface->get_n_selections = getTextSelectionCountCB;
@@ -272,7 +275,7 @@ getCharacterExtentsCB(AtkText *aText, gint aOffset,
                       AtkCoordType aCoords)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-    if(!accWrap)
+    if(!accWrap || !aX || !aY || !aWidth || !aHeight)
         return;
 
     nsCOMPtr<nsIAccessibleText> accText;
@@ -293,6 +296,36 @@ getCharacterExtentsCB(AtkText *aText, gint aOffset,
     NS_ASSERTION(NS_SUCCEEDED(rv),
                  "MaiInterfaceText::GetCharacterExtents, failed\n");
 }
+
+#ifdef USE_ATK_GET_RANGE_EXTENTS
+void
+getRangeExtentsCB(AtkText *aText, gint aStartOffset, gint aEndOffset,
+                  AtkCoordType aCoords, AtkTextRectangle *aRect)
+{
+    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
+    if(!accWrap || !aRect)
+        return;
+
+    nsCOMPtr<nsIAccessibleText> accText;
+    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
+                            getter_AddRefs(accText));
+    if (!accText)
+        return;
+
+    PRInt32 extY = 0, extX = 0;
+    PRInt32 extWidth = 0, extHeight = 0;
+    nsresult rv = accText->GetRangeExtents(aStartOffset, aEndOffset,
+                                           &extX, &extY,
+                                           &extWidth, &extHeight,
+                                           aCoords);
+    aRect->x = extX;
+    aRect->y = extY;
+    aRect->width = extWidth;
+    aRect->height = extHeight;
+    NS_ASSERTION(NS_SUCCEEDED(rv),
+                 "MaiInterfaceText::GetRangeExtents, failed\n");
+}
+#endif
 
 gint
 getCharacterCountCB(AtkText *aText)
