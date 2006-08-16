@@ -96,7 +96,8 @@ NS_IMPL_ISUPPORTS1(nsHTMLStyleSheet::TableFormRule, nsIStyleRule)
 NS_IMETHODIMP
 nsHTMLStyleSheet::TableFormRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  if (aRuleData->mSID == eStyleStruct_Display) {
+  if (aRuleData->mSID == eStyleStruct_Display &&
+      aRuleData->mDisplayData->mDisplay.GetUnit() == eCSSUnit_Null) {
     nsCSSValue none(NS_STYLE_DISPLAY_NONE, eCSSUnit_Enumerated);
     aRuleData->mDisplayData->mDisplay = none;
   }
