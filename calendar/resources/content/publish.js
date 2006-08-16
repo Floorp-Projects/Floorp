@@ -194,7 +194,7 @@ function publishItemArray(aItemArray, aPath, aProgressDialog) {
     var exporter = Components.classes["@mozilla.org/calendar/export;1?type=ics"]
                              .getService(Components.interfaces.calIExporter);
     exporter.exportToStream(outputStream,
-                            aItemArray.length, aItemArray);
+                            aItemArray.length, aItemArray, null);
     outputStream.close();
 
     inputStream = storageStream.newInputStream(0);

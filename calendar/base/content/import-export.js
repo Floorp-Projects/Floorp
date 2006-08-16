@@ -284,7 +284,7 @@ function saveEventsToFile(calendarEventArray, aDefaultFileName)
          outputStream.init(localFileInstance, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0664, 0);
          // XXX Do the right thing with unicode and stuff. Or, again, should the
          //     exporter handle that?
-         exporter.exportToStream(outputStream, calendarEventArray.length, calendarEventArray);
+         exporter.exportToStream(outputStream, calendarEventArray.length, calendarEventArray, null);
          outputStream.close();
       }
       catch(ex)
