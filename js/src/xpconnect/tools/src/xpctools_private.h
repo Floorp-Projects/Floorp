@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -62,11 +62,11 @@
 #include "jsdbgapi.h"
 
 #include "nsILocalFile.h"
-#include "nsCRT.h"
 
 #include "nsIJSRuntimeService.h"
-#include "nsHashtable.h"
-#include "nsAutoLock.h"
+#include "nsClassHashtable.h"
+#include "nsDataHashtable.h"
+#include "nsServiceManagerUtils.h"
 
 #include "nsIXPCToolsCompiler.h"
 #include "nsIXPCToolsProfiler.h"
@@ -84,27 +84,7 @@ public:
 
 /***************************************************************************/
 
-class ProfilerFunction;
-
-class ProfilerFile
-{
-public:
-    ProfilerFile(const char* filename);
-    ~ProfilerFile();
-
-    
-    ProfilerFunction* FindOrAddFunction(const char* aName,
-                                        uintN aBaseLineNumber,
-                                        uintN aLineExtent,
-                                        size_t aTotalSize);
-    void EnumerateFunctions(nsHashtableEnumFunc aEnumFunc, void* closure);
-    const char* GetName() const {return mName;}
-
-    ProfilerFile(); // not implemented
-private:
-    char*           mName;
-    nsHashtable*    mFunctionTable;
-};
+class ProfilerFile;
 
 class ProfilerFunction
 {
@@ -158,6 +138,72 @@ private:
     PRUint32        mSum;
 };
 
+struct FunctionID
+{
+    uintN lineno;
+    uintN extent;
+
+    FunctionID(uintN aLineno, uintN aExtent) :
+        lineno(aLineno), extent(aExtent) { }
+
+    PRBool operator==(const FunctionID &aOther) const {
+        return aOther.lineno == this->lineno &&
+            aOther.extent == this->extent;
+    }
+};
+
+class FunctionKey : public PLDHashEntryHdr
+{
+public:
+    typedef const FunctionID &KeyType;
+    typedef const FunctionID *KeyTypePointer;
+
+    FunctionKey(KeyTypePointer aF) : mF(*aF) { }
+    FunctionKey(const FunctionKey &toCopy) : mF(toCopy.mF) { }
+    ~FunctionKey() { }
+
+    KeyType GetKey() const { return mF; }
+    KeyTypePointer GetKeyPointer() const { return &mF; }
+    PRBool KeyEquals(const KeyTypePointer aKey) const
+    {
+        return mF == *aKey;
+    }
+
+    static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+    static PLDHashNumber HashKey(const KeyTypePointer aKey) {
+        return (aKey->lineno * 17) | (aKey->extent * 7);
+    }
+
+    enum { ALLOW_MEMMOVE = PR_TRUE };
+
+private:
+    const FunctionID mF;
+};
+
+class ProfilerFile
+{
+public:
+    ProfilerFile(const char* filename);
+    ~ProfilerFile();
+
+    
+    ProfilerFunction* FindOrAddFunction(const char* aName,
+                                        uintN aBaseLineNumber,
+                                        uintN aLineExtent,
+                                        size_t aTotalSize);
+
+    typedef nsClassHashtable<FunctionKey, ProfilerFunction> FunctionTableType;
+    typedef FunctionTableType::EnumReadFunction EnumeratorType;
+
+    void EnumerateFunctions(EnumeratorType aFunc,
+                            void *aClosure) const;
+
+    const char* GetName() const {return mName;}
+
+private:
+    char*             mName;
+    FunctionTableType mFunctionTable;
+};
 
 class nsXPCToolsProfiler : public nsIXPCToolsProfiler
 {
@@ -179,9 +225,8 @@ private:
 public:
     PRLock*         mLock;
     JSRuntime*      mRuntime;
-    nsHashtable*    mFileTable;
-    nsHashtable*    mScriptTable;
+    nsClassHashtable<nsCharPtrHashKey, ProfilerFile> mFileTable;
+    nsDataHashtable<nsVoidPtrHashKey, ProfilerFunction*> mScriptTable;
 };
-
 
 #endif /* xpctoolsprivate_h___ */

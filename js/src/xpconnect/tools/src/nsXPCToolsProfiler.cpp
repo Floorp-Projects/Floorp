@@ -44,41 +44,16 @@
 
 /***************************************************************************/
 
-class FunctionKey : public nsHashKey {
-protected:
-    uintN         mLineno;
-    uintN         mExtent;
-
-public:
-    FunctionKey(uintN         aLineno,
-                uintN         aExtent)
-        : mLineno(aLineno), mExtent(aExtent) {}
-    ~FunctionKey(void) {}
-
-    PRUint32 HashCode(void) const 
-        {return (17*mLineno) + (7*mExtent);}
-    PRBool Equals(const nsHashKey* aKey) const
-        {const FunctionKey* o = (const FunctionKey*) aKey; 
-         return (mLineno == o->mLineno) && (mExtent == o->mExtent);}
-    nsHashKey* Clone() const
-        {return new FunctionKey(mLineno, mExtent);}
-};
-
-/***************************************************************************/
-
 ProfilerFile::ProfilerFile(const char* filename)
-    :   mName(filename ? nsCRT::strdup(filename) : nsnull),
-        mFunctionTable(new nsHashtable(16, PR_FALSE))
+    :   mName(filename ? strdup(filename) : nsnull)
 {
-    // empty
+    mFunctionTable.Init();
 }
 
 ProfilerFile::~ProfilerFile()
 {
     if(mName)
-        nsCRT::free(mName);
-    if(mFunctionTable)
-        delete mFunctionTable;            
+        free(mName);
 }
 
 ProfilerFunction* 
@@ -87,33 +62,29 @@ ProfilerFile::FindOrAddFunction(const char* aName,
                                 uintN aLineExtent,
                                 size_t aTotalSize)
 {
-    if(!mFunctionTable)
-        return nsnull;
-    FunctionKey key(aBaseLineNumber, aLineExtent);
-    ProfilerFunction* fun = (ProfilerFunction*) mFunctionTable->Get(&key);
-    if(!fun)
+    FunctionID key(aBaseLineNumber, aLineExtent);
+    ProfilerFunction* fun;
+
+    if (!mFunctionTable.Get(key, &fun))
     {
         fun = new ProfilerFunction(aName, aBaseLineNumber, aLineExtent,
                                    aTotalSize, this);
         if(fun)
-            mFunctionTable->Put(&key, fun);
+            mFunctionTable.Put(key, fun);
     }
-    return fun; 
+    return fun;
 }
 
-void ProfilerFile::EnumerateFunctions(nsHashtableEnumFunc aEnumFunc, void* closure)
+void
+ProfilerFile::EnumerateFunctions(EnumeratorType aFunc, void *aClosure) const
 {
-    if(mFunctionTable)
-        mFunctionTable->Enumerate(aEnumFunc, closure);
-            
+    mFunctionTable.EnumerateRead(aFunc, aClosure);
 }
-
-/***************************************************************************/
 
 ProfilerFunction::ProfilerFunction(const char* name, 
                                    uintN lineno, uintn extent, size_t totalsize,
                                    ProfilerFile* file)
-    :   mName(name ? nsCRT::strdup(name) : nsnull),
+    :   mName(name ? strdup(name) : nsnull),
         mBaseLineNumber(lineno),
         mLineExtent(extent),
         mTotalSize(totalsize),
@@ -131,7 +102,7 @@ ProfilerFunction::ProfilerFunction(const char* name,
 ProfilerFunction::~ProfilerFunction()
 {
     if(mName)
-        nsCRT::free(mName);
+        free(mName);
 }
 
 /***************************************************************************/
@@ -141,44 +112,18 @@ NS_IMPL_ISUPPORTS1(nsXPCToolsProfiler, nsIXPCToolsProfiler)
 
 nsXPCToolsProfiler::nsXPCToolsProfiler()
     :   mLock(PR_NewLock()),
-        mRuntime(nsnull),
-        mFileTable(new nsHashtable(128, PR_FALSE)),
-        mScriptTable(new nsHashtable(256, PR_FALSE))
+        mRuntime(nsnull)
 {
     InitializeRuntime();
+    mFileTable.Init();
+    mScriptTable.Init();
 }
-
-JS_STATIC_DLL_CALLBACK(PRBool)
-xpctools_ProfilerFunctionDeleter(nsHashKey *aKey, void *aData, void* closure)
-{
-    delete (ProfilerFunction*) aData;
-    return PR_TRUE;        
-}        
-
-JS_STATIC_DLL_CALLBACK(PRBool)
-xpctools_ProfilerFileDeleter(nsHashKey *aKey, void *aData, void* closure)
-{
-    ProfilerFile* file = (ProfilerFile*) aData;
-    file->EnumerateFunctions(xpctools_ProfilerFunctionDeleter, closure);
-    delete file;
-    return PR_TRUE;        
-}        
 
 nsXPCToolsProfiler::~nsXPCToolsProfiler()
 {
     Stop();
     if(mLock)
         PR_DestroyLock(mLock);
-    if(mFileTable)
-    {
-        mFileTable->Reset(xpctools_ProfilerFileDeleter, this);
-        delete mFileTable;
-    }
-    if(mScriptTable)
-    {
-        // elements not owned - don't purge them
-        delete mScriptTable;
-    }
 }
 
 /***************************************************************************/
@@ -198,37 +143,32 @@ xpctools_JSNewScriptHook(JSContext  *cx,
     if(!filename)
         filename = "<<<!!! has no name so may represent many different pages !!!>>>";
     nsXPCToolsProfiler* self = (nsXPCToolsProfiler*) callerdata;    
-    nsAutoLock lock(self->mLock);
 
-    if(self->mFileTable)
+    PR_Lock(self->mLock);
+
+    ProfilerFile* file;
+    if (self->mFileTable.Get(filename, &file))
     {
-        nsCStringKey key(filename);
-        ProfilerFile* file = (ProfilerFile*) self->mFileTable->Get(&key);
-        if(!file)
+        file = new ProfilerFile(filename);
+        if (file)
+            self->mFileTable.Put(filename, file);
+    }
+    if(file)
+    {
+        ProfilerFunction* function = 
+            file->FindOrAddFunction(fun ? JS_GetFunctionName(fun) : nsnull, 
+                                    JS_GetScriptBaseLineNumber(cx, script),
+                                    JS_GetScriptLineExtent(cx, script),
+                                    fun
+                                    ? JS_GetFunctionTotalSize(cx, fun)
+                                    : JS_GetScriptTotalSize(cx, script));
+        if(function)
         {
-            file = new ProfilerFile(filename);
-            self->mFileTable->Put(&key, file);
-        }
-        if(file)
-        {
-            ProfilerFunction* function = 
-                file->FindOrAddFunction(fun ? JS_GetFunctionName(fun) : nsnull, 
-                                        JS_GetScriptBaseLineNumber(cx, script),
-                                        JS_GetScriptLineExtent(cx, script),
-                                        fun
-                                        ? JS_GetFunctionTotalSize(cx, fun)
-                                        : JS_GetScriptTotalSize(cx, script));
-            if(function)
-            {
-                function->IncrementCompileCount();
-                if(self->mScriptTable)
-                {
-                    nsVoidKey scriptkey(script);
-                    self->mScriptTable->Put(&scriptkey, function);
-                }
-            }
+            function->IncrementCompileCount();
+            self->mScriptTable.Put(script, function);
         }
     }
+    PR_Unlock(self->mLock);
 }
 
 /* called just before script destruction */
@@ -239,13 +179,11 @@ xpctools_JSDestroyScriptHook(JSContext  *cx,
 {
     if(!script)
         return;
-    nsXPCToolsProfiler* self = (nsXPCToolsProfiler*) callerdata;    
-    nsAutoLock lock(self->mLock);
-    if(self->mScriptTable)
-    {
-        nsVoidKey scriptkey(script);
-        self->mScriptTable->Remove(&scriptkey);
-    }
+    nsXPCToolsProfiler* self = (nsXPCToolsProfiler*) callerdata;
+
+    PR_Lock(self->mLock);
+    self->mScriptTable.Remove(script);
+    PR_Unlock(self->mLock);
 }
 
 
@@ -261,25 +199,24 @@ xpctools_InterpreterHook(JSContext *cx, JSStackFrame *fp, JSBool before,
     if(script)
     {
         nsXPCToolsProfiler* self = (nsXPCToolsProfiler*) closure;    
-        nsAutoLock lock(self->mLock);
-        if(self->mScriptTable)
+
+        PR_Lock(self->mLock);
+
+        ProfilerFunction* fun;
+        if (self->mScriptTable.Get(script, &fun))
         {
-            nsVoidKey scriptkey(script);
-            ProfilerFunction* fun = 
-                (ProfilerFunction*) self->mScriptTable->Get(&scriptkey);
-            if(fun)
+            if(before == PR_TRUE)
             {
-                if(before == PR_TRUE)
-                {
-                    fun->IncrementCallCount();
-                    fun->SetStartTime();
-                }
-                else
-                {
-                    fun->SetEndTime();
-                }
+                fun->IncrementCallCount();
+                fun->SetStartTime();
+            }
+            else
+            {
+                fun->SetEndTime();
             }
         }
+
+        PR_Unlock(self->mLock);
     }   
     return closure;
 }
@@ -290,25 +227,34 @@ xpctools_InterpreterHook(JSContext *cx, JSStackFrame *fp, JSBool before,
 /* void start (); */
 NS_IMETHODIMP nsXPCToolsProfiler::Start()
 {
-    nsAutoLock lock(mLock);
+    PR_Lock(mLock);
+
     if(!VerifyRuntime())
+    {
+        PR_Unlock(mLock);
         return NS_ERROR_UNEXPECTED; 
-    
+    }
+
     JS_SetNewScriptHook(mRuntime, xpctools_JSNewScriptHook, this);
     JS_SetDestroyScriptHook(mRuntime, xpctools_JSDestroyScriptHook, this);
     JS_SetExecuteHook(mRuntime, xpctools_InterpreterHook, this);
     JS_SetCallHook(mRuntime, xpctools_InterpreterHook, this);
 
+    PR_Unlock(mLock);
     return NS_OK;
 }
 
 /* void stop (); */
 NS_IMETHODIMP nsXPCToolsProfiler::Stop()
 {
-    nsAutoLock lock(mLock);
+    PR_Lock(mLock);
+
     if(!VerifyRuntime())
+    {
+        PR_Unlock(mLock);
         return NS_ERROR_UNEXPECTED; 
-    
+    }
+
     JS_SetNewScriptHook(mRuntime, nsnull, nsnull);
     JS_SetDestroyScriptHook(mRuntime, nsnull, nsnull);
     JS_SetExecuteHook(mRuntime, nsnull, this);
@@ -325,10 +271,10 @@ NS_IMETHODIMP nsXPCToolsProfiler::Clear()
 }
 
 
-JS_STATIC_DLL_CALLBACK(PRBool)
-xpctools_FunctionNamePrinter(nsHashKey *aKey, void *aData, void* closure)
+static PLDHashOperator
+xpctools_FunctionNamePrinter(const FunctionID &aKey,
+                             ProfilerFunction* fun, void* closure)
 {
-    ProfilerFunction* fun = (ProfilerFunction*) aData;
     FILE* out = (FILE*) closure;
     const char* name = fun->GetName();
     PRUint32 average;
@@ -355,31 +301,32 @@ xpctools_FunctionNamePrinter(nsHashKey *aKey, void *aData, void* closure)
             (unsigned long) average);
     else
         fprintf(out, "\n" );
-    return PR_TRUE;        
+    return PL_DHASH_NEXT;
 }        
 
-JS_STATIC_DLL_CALLBACK(PRBool)
-xpctools_FilenamePrinter(nsHashKey *aKey, void *aData, void* closure)
+static PLDHashOperator
+xpctools_FilenamePrinter(const char *keyname, ProfilerFile* file,
+                         void *closure)
 {
-    ProfilerFile* file = (ProfilerFile*) aData;
     FILE* out = (FILE*) closure;
     fprintf(out, "%s\n", file->GetName());
     file->EnumerateFunctions(xpctools_FunctionNamePrinter, closure);
-    return PR_TRUE;        
+    return PL_DHASH_NEXT;
 }        
 
 /* void writeResults (in nsILocalFile aFile); */
 NS_IMETHODIMP nsXPCToolsProfiler::WriteResults(nsILocalFile *aFile)
 {
-    nsAutoLock lock(mLock);
-    if(!aFile)
-        return NS_ERROR_FAILURE;
+    NS_ENSURE_ARG(aFile);
+
     FILE* out;
     if(NS_FAILED(aFile->OpenANSIFileDesc("w", &out)) || ! out)
         return NS_ERROR_FAILURE;
 
-    if(mFileTable)
-        mFileTable->Enumerate(xpctools_FilenamePrinter, out);
+    PR_Lock(mLock);
+    mFileTable.EnumerateRead(xpctools_FilenamePrinter, out);
+    PR_Unlock(mLock);
+    
     return NS_OK;
 }
 
