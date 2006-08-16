@@ -69,6 +69,12 @@
 #define USE_ATK_EMBED_RELATIONS
 #endif
 
+// ATK 1.3.0 or later
+#if ATK_MAJOR_VERSION >=2 || \
+    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 3)
+#define USE_ATK_GET_RANGE_EXTENTS
+#endif
+
 // ATK 1.3.3 or later
 #if ATK_MAJOR_VERSION >=2 || \
     (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 4) || \

@@ -46,7 +46,7 @@ typedef long nsAccessibleCoordType;
 
 interface nsIAccessible;
 
-[scriptable, uuid(E44D3FA6-9CB2-432A-8BDB-69D72B6ADA00)]
+[scriptable, uuid(c3a9526c-4834-4237-822c-c02ef5b6b8b1)]
 interface nsIAccessibleText : nsISupports
 {
   const nsAccessibleTextBoundary BOUNDARY_CHAR = 0;
@@ -110,6 +110,14 @@ interface nsIAccessibleText : nsISupports
                             out long width,
                             out long height,
                             in nsAccessibleCoordType coordType);
+
+  void getRangeExtents (in long startOffset,
+                        in long endOffset,
+                        out long x,
+                        out long y,
+                        out long width,
+                        out long height,
+                        in nsAccessibleCoordType coordType);
 
   long getOffsetAtPoint (in long x, in long y,
                          in nsAccessibleCoordType coordType);
