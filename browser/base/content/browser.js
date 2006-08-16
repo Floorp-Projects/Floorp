@@ -3222,8 +3222,8 @@ function FillHistoryMenu(aParent, aMenu, aInsertBefore)
           break;
       }
 
-  // enable/disable RCT sub menu
-  HistoryMenu.toggleRecentlyClosedTabs();
+    // enable/disable RCT sub menu
+    HistoryMenu.toggleRecentlyClosedTabs();
 
     return true;
   }
