@@ -204,7 +204,7 @@ nsIntRect nsHyperTextAccessible::GetBoundsForString(nsIFrame *aFrame, PRInt32 aS
                                                       &startOffsetInFrame, &frame);
   NS_ENSURE_SUCCESS(rv, screenRect);
 
-  nsIPresShell *shell = frame->GetPresContext()->GetPresShell();
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
   NS_ENSURE_TRUE(shell, screenRect);
 
   nsCOMPtr<nsIRenderingContext> rc;
