@@ -2,7 +2,7 @@
 <!--
 
 Description: atom author name works
-Expect: feed.authors.queryElementAt(0, Components.interfaces.nsIFeedPerson).name=='John Doe';
+Expect: var authors = feed.fields.getProperty('author'); authors.QueryInterface(Components.interfaces.nsIArray); authors.queryElementAt(0, Components.interfaces.nsIPropertyBag).getProperty('atom:name')=='John Doe';
 
 -->
 

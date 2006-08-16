@@ -2,7 +2,7 @@
 <!--
 
 Description: channel managingEditor works 
-Expect:      feed.authors.queryElementAt(0, Components.interfaces.nsIFeedPerson).email == 'example@example.com'
+Expect:      feed.fields.getProperty('managingEditor') == 'example@example.com'
 
 -->
 <rss version="2.0" >

@@ -44,7 +44,7 @@ interface nsIArray;
  * and/or full-text content may be available, but callers will have to
  * check both.
  */
-[scriptable, uuid(305ab161-d23d-44a0-89ce-f7c78683deec)]
+[scriptable, uuid(364dc1e5-20fe-4315-bff7-33d2efcf2541)]
 interface nsIFeedEntry : nsIFeedContainer {
 
   /**
@@ -58,12 +58,6 @@ interface nsIFeedEntry : nsIFeedContainer {
   * 
   */
   attribute nsIFeedTextConstruct summary;
-
-  /**
-   * The date the entry was published, in RFC822 form. Parsable by JS
-   * and mail code.
-   */
-  attribute AString published;
 
   /**
   * Uses atom:content and content:encoded to provide

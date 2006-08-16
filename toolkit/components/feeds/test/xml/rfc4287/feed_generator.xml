@@ -2,7 +2,7 @@
 <!--
 
 Description: atom generator works
-Expect: feed.generator.agent == 'Hmm';
+Expect: var gen = feed.fields.getProperty('generator'); gen.QueryInterface(Components.interfaces.nsIPropertyBag2); gen.getProperty('agent') == 'Hmm';
 
 -->
 <feed xmlns="http://www.w3.org/2005/Atom">

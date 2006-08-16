@@ -26,8 +26,8 @@ Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).fields.
     <dc:subject>XML</dc:subject>-->
   </item> 
   <item>
-    <dc:publisher>The O'Reilly Network</dc:publisher>
-    <dc:description>
+ <dc:publisher>The O'Reilly Network</dc:publisher>
+   <dc:description>
       XML is placing increasingly heavy loads on the existing technical infrastructure of the Internet 2.
     </dc:description>
     <title>XML: A Disruptive Technology</title> 

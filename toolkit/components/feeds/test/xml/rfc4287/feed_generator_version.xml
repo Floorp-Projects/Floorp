@@ -2,7 +2,7 @@
 <!--
 
 Description: atom generator works
-Expect: feed.generator.version == "1.1"
+Expect: var gen = feed.fields.getProperty('generator'); gen.QueryInterface(Components.interfaces.nsIPropertyBag2); gen.getProperty('version') == '1.1';
 
 -->
 <feed xmlns="http://www.w3.org/2005/Atom">

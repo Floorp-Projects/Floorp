@@ -2,7 +2,7 @@
 <!--
 
 Description: item author works
-Expect: var authors = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).authors; var author = authors.queryElementAt(0, Components.interfaces.nsIFeedPerson); ((author.name == 'Joe Bob Briggs'));
+Expect: var authors = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).fields.getProperty('authors'); authors.QueryInterface(Components.interfaces.nsIArray); var author = authors.queryElementAt(0, Components.interfaces.nsIPropertyBag); ((author.getProperty('name') == 'Joe Bob Briggs') && (author.getProperty('email') == 'jbb@dallas.example.com'));
 
 -->
 <rss version="2.0" >
