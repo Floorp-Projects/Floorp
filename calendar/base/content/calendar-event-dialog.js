@@ -110,6 +110,10 @@ function onAccept()
 
     window.onAcceptCallback(item, calendar, originalItem);
 
+    // We already set persist="collapsed" in the xul file, but because
+    // of a bug on 1_8_BRANCH we need this to make it really persist.
+    document.persist("description-row", "collapsed");
+
     return true;
 }
 
