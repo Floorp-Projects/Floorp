@@ -204,8 +204,8 @@
                       preference="app.update.enabled"
                       xhtml2:role="wairole:checkbox" aaa:describedby="updateInfo"/>
             <checkbox id="enableAddonUpdate"
-                      label="&enableExtensionUpdate.label;"
-                      accesskey="&enableExtensionUpdate.accesskey;"
+                      label="&enableAddonsUpdate.label;"
+                      accesskey="&enableAddonsUpdate.accesskey;"
                       preference="extensions.update.enabled"
                       xhtml2:role="wairole:checkbox" aaa:describedby="updateInfo"/>
           </vbox>
@@ -221,7 +221,7 @@
                    accesskey="&modeAutomatic.accesskey;"/>
             <hbox class="indent">
               <checkbox id="warnIncompatible" 
-                        label="&modeAutoWarn.label;" accesskey="&modeAutoWarn.accesskey;"
+                        label="&modeAutoAddonWarn.label;" accesskey="&modeAutoAddonWarn.accesskey;"
                         preference="app.update.mode"
                         onsyncfrompreference="return gAdvancedPane.addonWarnSyncFrom();"
                         onsynctopreference="return gAdvancedPane.addonWarnSyncTo();"/>

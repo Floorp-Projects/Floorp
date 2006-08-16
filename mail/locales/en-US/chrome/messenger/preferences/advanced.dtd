@@ -33,19 +33,17 @@
 <!-- Update -->
 <!ENTITY autoCheck.label                "Automatically check for updates to:">
 <!ENTITY enableAppUpdate.label          "&brandShortName;">
-<!ENTITY enableAppUpdate.accesskey      "T">
-<!ENTITY enableExtensionUpdate.label    "Installed Extensions and Themes">
-<!ENTITY enableExtensionUpdate.accesskey "x">
+<!ENTITY enableAppUpdate.accesskey      "h">
+<!ENTITY enableAddonsUpdate.label       "Installed Add-ons">
+<!ENTITY enableAddonsUpdate.accesskey   "t">
 <!ENTITY checkNow.label                 "Check Now...">
-<!ENTITY appCheckNow.accesskey          "k">
-<!ENTITY extensionsCheckNow.accesskey   "h">
 <!ENTITY whenUpdatesFound.label         "When updates to &brandShortName; are found,">
 <!ENTITY modeAskMe.label                "Ask me what I want to do">
-<!ENTITY modeAskMe.accesskey            "A">
+<!ENTITY modeAskMe.accesskey            "k">
 <!ENTITY modeAutomatic.label            "Automatically download and install the update">
-<!ENTITY modeAutomatic.accesskey        "d">
-<!ENTITY modeAutoWarn.label             "Warn me if this will disable extensions or themes">
-<!ENTITY modeAutoWarn.accesskey         "W">
+<!ENTITY modeAutomatic.accesskey        "m">
+<!ENTITY modeAutoAddonWarn.label        "Warn me if this will disable any of my add-ons">
+<!ENTITY modeAutoAddonWarn.accesskey    "W">
 <!ENTITY showUpdates.label              "Show Update History">
 <!ENTITY showUpdates.accesskey          "U">
 
@@ -57,7 +55,7 @@
 <!ENTITY radioAskMe "Ask me for online state at startup">
 <!ENTITY radioAskMe.accesskey "u">
 <!ENTITY radioAlwaysOnline "Always start up online">
-<!ENTITY radioAlwaysOnline.accesskey "l">
+<!ENTITY radioAlwaysOnline.accesskey "l"> 
 
 <!ENTITY textGoingOnline "Send unsent messages when going online?">
 <!ENTITY radioAutoSend "Yes">
