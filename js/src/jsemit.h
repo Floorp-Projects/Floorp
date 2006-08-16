@@ -103,21 +103,25 @@ struct JSStmtInfo {
     ptrdiff_t       update;         /* loop update offset (top if none) */
     ptrdiff_t       breaks;         /* offset of last break in loop */
     ptrdiff_t       continues;      /* offset of last continue in loop */
-    JSAtom          *atom;          /* name of LABEL or CATCH var */
+    JSAtom          *atom;          /* name of LABEL, or block scope object */
     JSStmtInfo      *down;          /* info for enclosing statement */
     JSStmtInfo      *downScope;     /* next enclosing lexical scope */
 };
 
-#define SIF_BODY_BLOCK  0x0001      /* STMT_BLOCK type is a function body */
-#define SIF_SCOPE       0x0002      /* This statement contains a scope. */
+#define SIF_SCOPE        0x0002     /* statement has its own lexical scope */
+#define SIF_BODY_BLOCK   0x0001     /* STMT_BLOCK type is a function body */
 
 /*
  * To reuse space in JSStmtInfo, rename breaks and continues for use during
  * try/catch/finally code generation and backpatching.  To match most common
- * use cases, the macro argument is a struct, not a struct pointer.
+ * use cases, the macro argument is a struct, not a struct pointer.  Only a
+ * loop, switch, or label statement info record can have breaks and continues,
+ * and only a for loop has an update backpatch chain, so it's safe to overlay
+ * these for the "trying" JSStmtTypes.
  */
+#define CATCHNOTE(stmt)  ((stmt).update)
 #define GOSUBS(stmt)     ((stmt).breaks)
-#define CATCHJUMPS(stmt) ((stmt).continues)
+#define GUARDJUMP(stmt)  ((stmt).continues)
 
 #define AT_TOP_LEVEL(tc)                                                      \
     (!(tc)->topStmt || ((tc)->topStmt->flags & SIF_BODY_BLOCK))
@@ -361,9 +365,13 @@ js_InStatement(JSTreeContext *tc, JSStmtType type);
 /* Test whether we're in a with statement. */
 #define js_InWithStatement(tc)      js_InStatement(tc, STMT_WITH)
 
-/* Test whether we're in a catch block with exception named by atom. */
+/*
+ * Test whether atom refers to a global variable (or is a reference error).
+ * Return true in *loopyp if any loops enclose the lexical reference, false
+ * otherwise.
+ */
 extern JSBool
-js_InCatchBlock(JSTreeContext *tc, JSAtom *atom);
+js_IsGlobalReference(JSTreeContext *tc, JSAtom *atom, JSBool *loopyp);
 
 /*
  * Push the C-stack-allocated struct at stmt onto the stmtInfo stack.
