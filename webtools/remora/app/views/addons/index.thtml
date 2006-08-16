@@ -1,1 +1,3 @@
-<?php pr($addons); ?>
+<?php
+    pr($addons);
+?>
