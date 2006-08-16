@@ -1131,9 +1131,6 @@ function delayedStartup()
 
   // browser-specific tab augmentation
   AugmentTabs.init();
-
-  // set up history menu
-  HistoryMenu.init();
 }
 
 function BrowserShutdown()
@@ -1741,6 +1738,9 @@ function updateGoMenu(aEvent, goMenu)
 
   if (showSep)
     endSep.hidden = false;
+
+  // enable/disable RCT sub menu
+  HistoryMenu.toggleRecentlyClosedTabs();
 }
  
 function addBookmarkAs(aBrowser, aBookmarkAllTabs, aIsWebPanel)
@@ -3221,6 +3221,10 @@ function FillHistoryMenu(aParent, aMenu, aInsertBefore)
             }
           break;
       }
+
+  // enable/disable RCT sub menu
+  HistoryMenu.toggleRecentlyClosedTabs();
+
     return true;
   }
 
@@ -6836,17 +6840,18 @@ var AugmentTabs = {
 var HistoryMenu = {};
 #endif
 
-HistoryMenu.init = function PHM_init() {
-  this.initializeUndoSubmenu();
-}
+HistoryMenu.toggleRecentlyClosedTabs = function PHM_toggleRecentlyClosedTabs() {
+  // enable/disable the Recently Closed Tabs sub menu
+  var undoPopup = document.getElementById("historyUndoPopup");
 
-/**
- * Initialize the "Undo Close Tabs" menu
- */
-HistoryMenu.initializeUndoSubmenu = function PHM_initializeUndoSubmenu() {
-  // get history menupopup 
-  var histMenu = document.getElementById("goPopup");
-  histMenu.addEventListener("popupshowing", function() { HistoryMenu.populateUndoSubmenu(); }, false);
+  // get closed-tabs from nsSessionStore
+  var ss = Cc["@mozilla.org/browser/sessionstore;1"].
+           getService(Ci.nsISessionStore);
+  // no restorable tabs, so disable menu
+  if (ss.getClosedTabCount(window) == 0)
+    undoPopup.parentNode.setAttribute("disabled", true);
+  else
+    undoPopup.parentNode.removeAttribute("disabled");
 }
 
 /**

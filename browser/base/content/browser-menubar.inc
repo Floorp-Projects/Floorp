@@ -364,7 +364,7 @@
                 <menuseparator id="startTabHistorySeparator"/>
                 <menuseparator hidden="true" id="endTabHistorySeparator"/>
                 <menu id="historyUndoMenu" label="&historyUndoMenu.label;" disabled="true">
-                  <menupopup id="historyUndoPopup"/>
+                  <menupopup id="historyUndoPopup" onpopupshowing="HistoryMenu.populateUndoSubmenu();"/>
                 </menu>
                 <menuseparator id="endUndoSeparator"/>
                 <menuitem id="sanitizeItem" 
@@ -406,7 +406,7 @@
                 <menuseparator id="startHistorySeparator"/>
                 <menuseparator hidden="true" id="endHistorySeparator"/>
                 <menu id="historyUndoMenu" label="&historyUndoMenu.label;" disabled="true">
-                  <menupopup id="historyUndoPopup"/>
+                  <menupopup id="historyUndoPopup" onpopupshowing="HistoryMenu.populateUndoSubmenu();"/>
                 </menu>
                 <menuseparator id="endUndoSeparator"/>
                 <menuitem observes="viewHistorySidebar" label="&historyShowSidebarCmd.label;"
