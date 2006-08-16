@@ -193,7 +193,7 @@
             <xul:separator class="groove"/>
 
             <!-- Reminder -->
-            <xul:row align="center">
+            <xul:row align="center" class="event-only">
               <xul:label value="&newevent.alarm.label;" disable-on-readonly="true"/>
               <xul:hbox align="center">
                 <xul:menulist id="item-alarm" oncommand="updateAlarm()" disable-on-readonly="true">
@@ -210,7 +210,7 @@
             </xul:row>
 
             <!-- Reminder-Details -->
-            <xul:row id="alarm-details">
+            <xul:row id="alarm-details" class="event-only">
               <xul:spacer flex="1"/>
               <xul:vbox>
                 <xul:hbox>
@@ -232,7 +232,7 @@
               </xul:vbox>
             </xul:row>
 
-            <xul:separator class="groove"/>
+            <xul:separator class="groove event-only"/>
 
             <!-- Description -->
             <xul:row id="description-row" flex="1">
