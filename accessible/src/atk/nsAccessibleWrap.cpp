@@ -54,6 +54,9 @@
 #include "nsMaiInterfaceValue.h"
 #include "nsMaiInterfaceHypertext.h"
 #include "nsMaiInterfaceTable.h"
+#ifdef USE_ATK_TYPE_DOCUMENT
+#include "nsMaiInterfaceDocument.h"
+#endif
 
 /* MaiAtkObject */
 
@@ -77,7 +80,8 @@ enum MaiInterfaceType {
     MAI_INTERFACE_HYPERTEXT,
     MAI_INTERFACE_SELECTION,
     MAI_INTERFACE_TABLE,
-    MAI_INTERFACE_TEXT /* 7 */
+    MAI_INTERFACE_TEXT,
+    MAI_INTERFACE_DOCUMENT /* 8 */
 };
 
 static GType GetAtkTypeForMai(MaiInterfaceType type)
@@ -99,6 +103,10 @@ static GType GetAtkTypeForMai(MaiInterfaceType type)
       return ATK_TYPE_TABLE;
     case MAI_INTERFACE_TEXT:
       return ATK_TYPE_TEXT;
+#ifdef USE_ATK_TYPE_DOCUMENT
+    case MAI_INTERFACE_DOCUMENT:
+      return ATK_TYPE_DOCUMENT;
+#endif
   }
   return G_TYPE_INVALID;
 }
@@ -119,6 +127,10 @@ static const GInterfaceInfo atk_if_infos[] = {
     {(GInterfaceInitFunc)tableInterfaceInitCB,
      (GInterfaceFinalizeFunc) NULL, NULL},
     {(GInterfaceInitFunc)textInterfaceInitCB,
+#ifdef USE_ATK_TYPE_DOCUMENT
+     (GInterfaceFinalizeFunc) NULL, NULL},
+    {(GInterfaceInitFunc)documentInterfaceInitCB,
+#endif
      (GInterfaceFinalizeFunc) NULL, NULL}
 };
 
@@ -367,6 +379,16 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
     if (accessInterfaceTable) {
         interfacesBits |= 1 << MAI_INTERFACE_TABLE;
     }
+
+#ifdef USE_ATK_TYPE_DOCUMENT
+    //nsIAccessibleDocument
+    nsCOMPtr<nsIAccessibleDocument> accessInterfaceDocument;
+    QueryInterface(NS_GET_IID(nsIAccessibleDocument),
+                              getter_AddRefs(accessInterfaceDocument));
+    if (accessInterfaceDocument) {
+        interfacesBits |= 1 << MAI_INTERFACE_DOCUMENT;
+    }
+#endif
 
     return interfacesBits;
 }
