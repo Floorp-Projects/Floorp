@@ -95,6 +95,58 @@
   </binding>
 
 
+  <!-- OUTPUT: <MEDIATYPE="image/*", TYPE="xsd:anyURI"> -->
+  <binding id="xformswidget-output-mediatype-anyURI"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-output-base">
+    <content>
+      <children includes="label"/>
+      <xul:image class="xf-value" anonid="control"/>
+      <children/>
+    </content>
+
+    <implementation>
+      <method name="getControlElement">
+        <body>
+          return {
+            __proto__: this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "control"),
+
+            set value(val) {
+              this.src = val;
+            }
+          };
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+
+  <!-- OUTPUT: <MEDIATYPE="image/*", TYPE="xsd:base64Binary"> -->
+  <binding id="xformswidget-output-mediatype-base64Binary"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-output-base">
+    <content>
+      <children includes="label"/>
+      <xul:image class="xf-value" anonid="control"/>
+      <children/>
+    </content>
+
+    <implementation>
+      <method name="getControlElement">
+        <body>
+          return {
+            __proto__: this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "control"),
+
+            set value(val) {
+              this.src = "data:[image/*][;base64]," + val;
+            }
+          };
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+
   <!-- LABEL: <DEFAULT> -->
   <binding id="xformswidget-label"
            extends="chrome://xforms/content/xforms.xml#xformswidget-label-base">

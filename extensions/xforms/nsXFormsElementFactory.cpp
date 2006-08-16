@@ -86,9 +86,13 @@ NS_HIDDEN_(nsresult) NS_NewXFormsSetValueElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsSetIndexElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsMessageElement(nsIXTFElement **aResult);
 
+// XForms Controls. Additional Elements.
+NS_HIDDEN_(nsresult) NS_NewXFormsMediatypeElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsHintElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsHelpElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsAlertElement(nsIXTFElement **aResult);
+
+// XForms User Interface. The XForms Switch Module.
 NS_HIDDEN_(nsresult) NS_NewXFormsToggleElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsCaseElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsSwitchElement(nsIXTFElement **aResult);
@@ -177,6 +181,8 @@ nsXFormsElementFactory::CreateElement(const nsAString& aTagName,
     return NS_NewXFormsHelpElement(aElement);
   if (aTagName.EqualsLiteral("alert"))
     return NS_NewXFormsAlertElement(aElement);
+  if (aTagName.EqualsLiteral("mediatype"))
+    return NS_NewXFormsMediatypeElement(aElement);
   if (aTagName.EqualsLiteral("submission"))
     return NS_NewXFormsSubmissionElement(aElement);
   if (aTagName.EqualsLiteral("trigger"))

@@ -109,6 +109,11 @@ message, alert, help {
   display: none;
 }
 
+mediatype {
+  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-mediatype');
+  display: none;
+}
+
 html|*:root message[level="ephemeral"], html|*:root hint {
   position: absolute;
   z-index: 2147481647;
@@ -195,6 +200,24 @@ xul|*:root output[mozType|type="http://www.w3.org/2001/XMLSchema#date"][appearan
 xul|*:root output[mozType|type="http://www.w3.org/2001/XMLSchema#date"][appearance="full"]
     xul|box[mozType|calendar] {
   -moz-binding: url('chrome://xforms/content/widgets-xul.xml#calendar-full');
+}
+
+  /* output mediatype="image/*"
+    XXX: We should support controls for derived types too (bug 316691).
+  */
+
+html|*:root output[mozType|type="http://www.w3.org/2001/XMLSchema#anyURI"][mozType|mediatype^="image"] {
+  -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-output-mediatype-anyURI');
+}
+html|*:root output[mozType|type="http://www.w3.org/2001/XMLSchema#base64Binary"][mozType|mediatype^="image"] {
+  -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-output-mediatype-base64Binary');
+}
+
+xul|*:root output[mozType|type="http://www.w3.org/2001/XMLSchema#anyURI"][mozType|mediatype^="image"] {
+  -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-output-mediatype-anyURI');
+}
+xul|*:root output[mozType|type="http://www.w3.org/2001/XMLSchema#base64Binary"][mozType|mediatype^="image"] {
+  -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-output-mediatype-base64Binary');
 }
 
 /* range widgets */

@@ -77,6 +77,12 @@
         </getter>
       </property>
 
+      <property name="MOZTYPE_NS" readonly="true">
+        <getter>
+          return "http://www.mozilla.org/projects/xforms/2005/type";
+        </getter>
+      </property>
+
       <!-- Dispatch UI Event to the control itself -->
       <method name="dispatchDOMUIEvent">
         <parameter name="aType"/>
@@ -239,7 +245,31 @@
           return true;
         </body>
       </method>
+
+      <constructor>
+        this.setMediatype();
+      </constructor>
+
+      <method name="setMediatype">
+        <body>
+          if (this.hasAttribute("mediatype")) {
+            this.setAttributeNS(this.MOZTYPE_NS, "mediatype",
+                                this.getAttribute("mediatype"));
+          }
+        </body>
+      </method>
     </implementation>
+
+    <handlers>
+      <handler event="DOMAttrModified">
+      <![CDATA[
+        if (event.attrName == "mediatype" &&
+            event.relatedNode.namespaceURI == "") {
+          this.setMediatype();
+        }
+      ]]>
+      </handler>
+    </handlers>
   </binding>
 
 
@@ -478,6 +508,38 @@
         <children/>
       </xforms:repeat>
     </content>
+  </binding>
+
+
+  <!-- MEDIATYPE -->
+  <binding id="xformswidget-mediatype" extends="#xformswidget-base">
+    <implementation implements="nsIXFormsUIWidget">
+      <method name="refresh">
+        <body>
+          this.setMediatype();
+        </body>
+      </method>
+
+      <method name="setMediatype">
+        <body>
+        <![CDATA[
+          var parent = this.parentNode;
+          if (parent.namespaceURI == this.XFORMS_NS &&
+              parent.localName == "output" &&
+              !parent.hasAttribute("mediatype")) {
+            parent.setAttributeNS(this.MOZTYPE_NS, "mediatype",
+                                  this.stringValue);
+          }
+        ]]>
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="DOMCharacterDataModified">
+        this.setMediatype();
+      </handler>
+    </handlers>
   </binding>
 
 </bindings>
