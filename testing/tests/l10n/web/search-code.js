@@ -87,7 +87,7 @@ view = {
         }
         lst = explicit.concat(implicit);
       }
-      row.innerHTML = '<td class="locale"><a href="https://bugzilla.mozilla.org/buglist.cgi?query_format=advanced&amp;short_desc_type=casesubstring&amp;short_desc=' + loc + '&amp;chfieldto=Now&amp;field0-0-0=blocked&amp;type0-0-0=substring&amp;value0-0-0=347914">' + loc + '</a></td>';
+      row.innerHTML = '<td class="locale"><a href="https://bugzilla.mozilla.org/buglist.cgi?query_format=advanced&amp;short_desc_type=regexp&amp;short_desc=' + loc + '%5B%20-%5D&amp;chfieldto=Now&amp;field0-0-0=blocked&amp;type0-0-0=substring&amp;value0-0-0=347914">' + loc + '</a></td>';
       for each (var path in lst) {
         //YAHOO.widget.Logger.log('testing ' + path);
         var innerContent;
