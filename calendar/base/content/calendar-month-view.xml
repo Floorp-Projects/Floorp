@@ -291,7 +291,7 @@
         <parameter name="aItem"/>
         <body><![CDATA[
           for each (var itd in this.mItemData) {
-              if (itd.item.id == aItem.id) {
+              if (itd.item.hasSameIds(aItem)) {
                   itd.box.selected = true;
               }
           }
@@ -302,7 +302,7 @@
         <parameter name="aItem"/>
         <body><![CDATA[
           for each (var itd in this.mItemData) {
-              if (itd.item.id == aItem.id) {
+              if (itd.item.hasSameIds(aItem)) {
                   itd.box.selected = false;
               }
           }

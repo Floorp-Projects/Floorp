@@ -1340,7 +1340,7 @@
         <parameter name="aItem"/>
         <body><![CDATA[
           for (var i in this.mItemBoxes) {
-            if (this.mItemBoxes[i].occurrence.id == aItem.id) {
+            if (this.mItemBoxes[i].occurrence.hasSameIds(aItem)) {
               this.mainbox.removeChild(this.mItemBoxes[i]);
               this.mItemBoxes.splice(i, 1);
             }
@@ -1352,7 +1352,7 @@
         <parameter name="aItem"/>
         <body><![CDATA[
           for each (itemBox in this.mItemBoxes) {
-            if (aItem && itemBox.occurrence.id == aItem.id) {
+            if (aItem && itemBox.occurrence.hasSameIds(aItem)) {
               itemBox.selected = true;
             } else {
               itemBox.selected = false;
