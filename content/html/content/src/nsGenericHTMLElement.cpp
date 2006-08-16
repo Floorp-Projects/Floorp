@@ -3015,8 +3015,14 @@ nsGenericHTMLFormElement::nsGenericHTMLFormElement(nsINodeInfo *aNodeInfo)
 
 nsGenericHTMLFormElement::~nsGenericHTMLFormElement()
 {
+  // Check that this element is still not the default content
+  // of its parent form.
+  NS_ASSERTION(!mForm || mForm->GetDefaultSubmitElement() != this,
+               "Content being destroyed is the default content");
+
   // Clean up.  Set the form to nsnull so it knows we went away.
-  SetForm(nsnull);
+  // Do not notify as the content is being destroyed.
+  SetForm(nsnull, PR_TRUE, PR_FALSE);
 }
 
 NS_INTERFACE_MAP_BEGIN(nsGenericHTMLFormElement)
@@ -3032,7 +3038,8 @@ nsGenericHTMLFormElement::IsNodeOfType(PRUint32 aFlags) const
 
 NS_IMETHODIMP
 nsGenericHTMLFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
-                                  PRBool aRemoveFromForm)
+                                  PRBool aRemoveFromForm,
+                                  PRBool aNotify)
 {
   nsAutoString nameVal, idVal;
 
@@ -3042,7 +3049,7 @@ nsGenericHTMLFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
   }
 
   if (mForm && aRemoveFromForm) {
-    mForm->RemoveElement(this);
+    mForm->RemoveElement(this, aNotify);
 
     if (!nameVal.IsEmpty()) {
       mForm->RemoveElementFromTable(this, nameVal);
@@ -3062,7 +3069,7 @@ nsGenericHTMLFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
   }
 
   if (mForm) {
-    mForm->AddElement(this);
+    mForm->AddElement(this, aNotify);
 
     if (!nameVal.IsEmpty()) {
       mForm->AddElementToTable(this, nameVal);
@@ -3182,12 +3189,12 @@ nsGenericHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     // Might need to unset mForm
     if (aNullParent) {
       // No more parent means no more form
-      SetForm(nsnull);
+      SetForm(nsnull, PR_TRUE, PR_TRUE);
     } else {
       // Recheck whether we should still have an mForm.
       nsCOMPtr<nsIDOMHTMLFormElement> form = FindForm(mForm);
       if (!form) {
-        SetForm(nsnull);
+        SetForm(nsnull, PR_TRUE, PR_TRUE);
       }
     }
   }
@@ -3225,7 +3232,7 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         mForm->RemoveElementFromTable(this, tmp);
       }
 
-      mForm->RemoveElement(this);
+      mForm->RemoveElement(this, aNotify);
     }
   }
 
@@ -3262,7 +3269,7 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         mForm->AddElementToTable(this, tmp);
       }
 
-      mForm->AddElement(this);
+      mForm->AddElement(this, aNotify);
     }
 
     // And notify on content state changes, if any
@@ -3306,12 +3313,21 @@ nsGenericHTMLFormElement::CanBeDisabled() const
     type != NS_FORM_OBJECT;
 }
 
+PRBool
+nsGenericHTMLFormElement::IsSubmitControl() const
+{
+  PRInt32 type = GetType();
+  return type == NS_FORM_INPUT_SUBMIT ||
+         type == NS_FORM_BUTTON_SUBMIT ||
+         type == NS_FORM_INPUT_IMAGE;
+}
+
 void
 nsGenericHTMLFormElement::FindAndSetForm()
 {
   nsCOMPtr<nsIDOMHTMLFormElement> form = FindForm();
   if (form) {
-    SetForm(form);  // always succeeds
+    SetForm(form, PR_TRUE, PR_TRUE);  // always succeeds
   }
 }
 
@@ -3331,6 +3347,13 @@ nsGenericHTMLFormElement::IntrinsicState() const
       state &= ~NS_EVENT_STATE_DISABLED;
       state |= NS_EVENT_STATE_ENABLED;
     }
+  }
+  
+  if (mForm && mForm->GetDefaultSubmitElement() == this) {
+      NS_ASSERTION(IsSubmitControl(),
+                   "Default submit element that isn't a submit control.");
+      // We are the default submit element (:default)
+      state |= NS_EVENT_STATE_DEFAULT;
   }
 
   return state;

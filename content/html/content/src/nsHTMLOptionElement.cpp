@@ -427,6 +427,12 @@ nsHTMLOptionElement::IntrinsicState() const
     state |= NS_EVENT_STATE_CHECKED;
   }
 
+  // Also calling a non-const interface method (for :default)
+  NS_CONST_CAST(nsHTMLOptionElement*, this)->GetDefaultSelected(&selected);
+  if (selected) {
+    state |= NS_EVENT_STATE_DEFAULT;
+  }
+
   PRBool disabled;
   GetBoolAttr(nsHTMLAtoms::disabled, &disabled);
   if (disabled) {
@@ -463,12 +469,18 @@ nsHTMLOptionElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                   const nsAString* aValue, PRBool aNotify)
 {
   if (aNotify && aNameSpaceID == kNameSpaceID_None &&
-      aName == nsHTMLAtoms::disabled) {
+      (aName == nsHTMLAtoms::disabled || aName == nsHTMLAtoms::selected)) {
+    PRInt32 states;
+    if (aName == nsHTMLAtoms::disabled) {
+      states = NS_EVENT_STATE_DISABLED | NS_EVENT_STATE_ENABLED;
+    } else {
+      states = NS_EVENT_STATE_DEFAULT;
+    }
+    
     nsIDocument* document = GetCurrentDoc();
     if (document) {
       mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, PR_TRUE);
-      document->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_DISABLED |
-                                     NS_EVENT_STATE_ENABLED);
+      document->ContentStatesChanged(this, nsnull, states);
     }
   }
 

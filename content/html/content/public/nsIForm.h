@@ -55,8 +55,8 @@ class nsIURI;
 
 // IID for the nsIFormManager interface
 #define NS_IFORM_IID    \
-{ 0xb7e94510, 0x4c19, 0x11d2,  \
-  { 0x80, 0x3f, 0x0, 0x60, 0x8, 0x15, 0xa7, 0x91 } }
+{ 0xab592735, 0x31d6, 0x4e28, \
+  {0xaa, 0x1c, 0x77, 0x10, 0xf6, 0x01, 0xb8, 0x45} }
 
 
 /**
@@ -74,9 +74,11 @@ public:
    * Add an element to end of this form's list of elements
    *
    * @param aElement the element to add
+   * @param aNotify If true, send nsIDocumentObserver notifications as needed.
    * @return NS_OK if the element was successfully added
    */
-  NS_IMETHOD AddElement(nsIFormControl* aElement) = 0;
+  NS_IMETHOD AddElement(nsIFormControl* aElement,
+                        PRBool aNotify) = 0;
 
   /**    
    * Add an element to the lookup table mainted by the form.
@@ -110,9 +112,11 @@ public:
    * Remove an element from this form's list of elements
    *
    * @param aElement the element to remove
+   * @param aNotify If true, send nsIDocumentObserver notifications as needed.
    * @return NS_OK if the element was successfully removed.
    */
-  NS_IMETHOD RemoveElement(nsIFormControl* aElement) = 0;
+  NS_IMETHOD RemoveElement(nsIFormControl* aElement,
+                           PRBool aNotify) = 0;
 
   /**
    * Remove an element from the lookup table mainted by the form.
@@ -184,6 +188,11 @@ public:
    */
   NS_IMETHOD GetActionURL(nsIURI** aActionURL) = 0;
 
+  /**
+   * Get the default submit element. If there's no default submit element,
+   * return null.
+   */
+   NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIForm, NS_IFORM_IID)
