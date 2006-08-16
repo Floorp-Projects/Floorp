@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" dir="ltr">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="keywords" content="Build:Nightly deliverables:Thunderbird mozilla1.8.0" />
+<link rel="shortcut icon" href="/favicon.ico" />
+	<title>Build:Nightly deliverables:Thunderbird mozilla1.8.0 - MozillaWiki</title>
+	<style type="text/css" media="screen,projection">/*<![CDATA[*/ @import "/skins/cavendish/main.css"; /*]]>*/</style>
+	<link rel="stylesheet" type="text/css" media="print" href="/skins/common/commonPrint.css" />
+	<script type="text/javascript" src="/index.php?title=-&amp;action=raw&amp;gen=js"></script>	<script type="text/javascript" src="/skins/common/wikibits.js"></script>
+	<style type="text/css">/*<![CDATA[*/
+@import "/index.php?title=MediaWiki:Common.css&action=raw&ctype=text/css&smaxage=18000";
+@import "/index.php?title=MediaWiki:Cavendish.css&action=raw&ctype=text/css&smaxage=18000";
+@import "/index.php?title=-&action=raw&gen=css&maxage=18000";
+/*]]>*/</style>		</head>
+
+<body       class="ns-0">
+
+<div id="internal"></div>
+<div id="container">
+
+	<div id="mozilla-org"><a href="http://www.mozilla.org/">Visit Mozilla.org</a></div>
+
+		<div id="header">
+		<a name="top" id="contentTop"></a>
+		<h1><a
+	    href="/Main_Page"
+	    title="Main Page">Build:Nightly deliverables:Thunderbird mozilla1.8.0</a></h1>
+		<ul>
+		   	<li
+		       class="selected"		       ><a href="/Build:Nightly_deliverables:Thunderbird_mozilla1.8.0">Article</a></li><li
+		       class="new"		       ><a href="/index.php?title=Talk:Build:Nightly_deliverables:Thunderbird_mozilla1.8.0&amp;action=edit">Discussion</a></li><li
+		       		       ><a href="/index.php?title=Build:Nightly_deliverables:Thunderbird_mozilla1.8.0&amp;action=edit">Edit</a></li><li
+		       		       ><a href="/index.php?title=Build:Nightly_deliverables:Thunderbird_mozilla1.8.0&amp;action=history">History</a></li>		</ul>
+		<form name="searchform" action="/Special:Search" id="search">
+			<div>
+			<label for="q">Search</label>
+			<input id="q" name="search" type="text"
+			accesskey="f" value="" />
+			<input type="submit" name="go" class="searchButton" id="searchGoButton"
+	        value="Go"
+	        />&nbsp;<input type="submit" name="fulltext"
+	        class="searchButton"
+	        value="Search" />
+	       </div>
+		</form>
+	</div>
+
+	<div id="mBody">
+	
+		<div id="side">
+			<ul id="nav">
+				<li><span>Personal tools</span>
+					<ul>
+					<li id="pt-login"><a href="/index.php?title=Special:Userlogin&amp;returnto=Build:Nightly_deliverables:Thunderbird_mozilla1.8.0">Log in / create account</a></li>					</ul>
+				</li>
+				<li><span>Navigation</span>
+					<ul>
+				       					   					     <li id="n-mainpage"><a href="/Main_Page">Main Page</a></li>
+					    					     <li id="n-portal"><a href="/MozillaWiki:Community_Portal">Community portal</a></li>
+					    					     <li id="n-currentevents"><a href="http://www.mozillazine.org/">Mozilla News</a></li>
+					    					     <li id="n-recentchanges"><a href="/Special:Recentchanges">Recent changes</a></li>
+					    					     <li id="n-randompage"><a href="/Special:Random">Random page</a></li>
+					    					     <li id="n-help"><a href="/Help:Contents">Help</a></li>
+					    					     <li id="n-sitesupport"><a href="/MozillaWiki:Site_support">Donations</a></li>
+					    				
+					</ul>
+				</li>
+				<li><span>Toolbox</span>
+					<ul>
+					  					  <li id="t-whatlinkshere"><a href="/Special:Whatlinkshere/Build:Nightly_deliverables:Thunderbird_mozilla1.8.0">What links here</a></li>
+					  					  <li id="t-recentchangeslinked"><a href="/Special:Recentchangeslinked/Build:Nightly_deliverables:Thunderbird_mozilla1.8.0">Related changes</a></li>
+					  				      				      				      				      				      				      				      <li id="t-upload"><a href="/Special:Upload">Upload file</a></li>				      				      <li id="t-specialpages"><a href="/Special:Specialpages">Special pages</a></li>				      					</ul>
+				</li>
+							</ul>
+		</div><!-- end of SIDE div -->
+		
+		<div id="mainContent">
+			
+			<h1>Build:Nightly deliverables:Thunderbird mozilla1.8.0</h1>
+			<h3 id="siteSub">From MozillaWiki</h3>
+			<div id="contentSub"></div>
+									<!-- start content -->
+			<p>/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8.0/windows-xpi/newsblog.xpi
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8.0/windows-xpi/mail.xpi
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8.0/windows-xpi/UninstallThunderbird.zip
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8.0/windows-xpi/en-US.xpi
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8.0/windows-xpi/offline.xpi
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8.0/windows-xpi/talkback.xpi
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8.0/windows-xpi/xpcom.xpi
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8.0/thunderbird-1.5.0.2.en-US.linux-i686.mar
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8.0/thunderbird-1.5.0.2.en-US.mac.dmg
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8.0/thunderbird-1.5.0.2.en-US.mac.mar
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8.0/thunderbird-1.5.0.2.en-US.win32.mar
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8.0/thunderbird-1.5.0.2.en-US.win32.installer.exe
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8.0/thunderbird-1.5.0.2.en-US.win32.zip
+/pub/mozilla.org/thunderbird/nightly/latest-mozilla1.8.0/thunderbird-1.5.0.2.en-US.linux-i686.tar.gz
+</p><div class="printfooter">
+Retrieved from "<a href="http://wiki.mozilla.org/Build:Nightly_deliverables:Thunderbird_mozilla1.8.0">http://wiki.mozilla.org/Build:Nightly_deliverables:Thunderbird_mozilla1.8.0</a>"</div>
+						<!-- end content -->
+
+		</div><!-- end of MAINCONTENT div -->	
+	
+	</div><!-- end of MBODY div -->
+
+	<div id="footer">
+				<span id="f-lastmod"> This page was last modified 16:50, 13 June 2006.</span>		<span id="f-viewcount">This page has been accessed 92 times. </span>		<ul id="f-list">
+									<li id="f-about"><a href="/MozillaWiki:About" title="MozillaWiki:About">About MozillaWiki</a></li>			<li id="f-disclaimer"><a href="/MozillaWiki:General_disclaimer" title="MozillaWiki:General disclaimer">Disclaimers</a></li>		</ul>
+		<div id="f-poweredbyico"><a href="http://www.mediawiki.org/"><img src="/skins/common/images/poweredby_mediawiki_88x31.png" alt="MediaWiki" /></a></div>	</div><!-- end of the FOOTER div -->
+</div><!-- end of the CONTAINER div -->
+
+<!-- Served by mrapp06.mozilla.org in 0.28 secs. -->
+</body>
+<!-- Cached 20060816213356 -->
+</html>
