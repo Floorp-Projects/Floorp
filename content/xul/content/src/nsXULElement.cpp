@@ -2343,7 +2343,8 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     rv = SetProperty(nsXULAtoms::popuplistener, popupListener,
                      PopupListenerPropertyDtor);
     NS_ENSURE_SUCCESS(rv, rv);
-    NS_ADDREF(popupListener);
+    nsIXULPopupListener* listener = popupListener;
+    NS_ADDREF(listener);
     target->AddEventListener(NS_LITERAL_STRING("mousedown"), eventListener, PR_FALSE);
     target->AddEventListener(NS_LITERAL_STRING("contextmenu"), eventListener, PR_FALSE);
     return NS_OK;
