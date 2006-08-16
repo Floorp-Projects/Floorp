@@ -32,7 +32,7 @@ sub EmitHtmlTitleAndHeader {
     if (open(BANNER, "<", "data/banner.html")) {
         while (<BANNER>) { print; }
         close BANNER;
-    } elsif (open(BANNER, "<", "../bonsai/data/banner.html")) {
+    } elsif (open(BANNER, "<", "$bonsai_dir/data/banner.html")) {
         while (<BANNER>) { print; }
         close BANNER;
     }

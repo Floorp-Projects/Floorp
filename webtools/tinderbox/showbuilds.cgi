@@ -31,9 +31,6 @@ umask 002;
 %form = ();
 &split_cgi_args();
 
-# Hack this until I can figure out how to do get default root. -slamm
-$default_root = '/cvsroot';
-
 # Show 12 hours by default
 #
 $nowdate = time; 

@@ -21,13 +21,10 @@
 # Contributor(s): 
 # timeless@mac.com, zach
 
-use lib '../bonsai';
+use lib "@BONSAI_DIR@";
 require 'tbglobals.pl';
 require 'lloydcgi.pl';
 require 'imagelog.pl';
-
-# Hack this until I can figure out how to do get default root. -slamm
-$default_root = '/cvsroot';
 
 $::tree = $form{tree};
 
@@ -340,12 +337,12 @@ sub print_table_header {
 
     local $_;
     $::BatchID='';
-    eval qq(require "../bonsai/data/$bonsai_tree/batchid.pl");
+    eval qq(require "$bonsai_dir/data/$bonsai_tree/batchid.pl");
     if ($::BatchID eq '') {
-      warn "No BatchID in ../bonsai/data/$bonsai_tree/batchid.pl\n";
+      warn "No BatchID in $bonsai_dir/data/$bonsai_tree/batchid.pl\n";
       return;
     }
-    open(BATCH, "<", "../bonsai/data/$bonsai_tree/batch-$::BatchID.pl")
+    open(BATCH, "<", "$bonsai_dir/data/$bonsai_tree/batch-$::BatchID.pl")
       or print "can't open batch-$::BatchID.pl<br>";
     while (<BATCH>) { 
       if (/^\$::TreeOpen = '(\d+)';/) {

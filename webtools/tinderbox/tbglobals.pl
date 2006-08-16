@@ -47,6 +47,12 @@ $::CI_LOG=11;
 # Global variables
 #
 
+# Variables set from Makefile
+$bonsai_dir = "@BONSAI_DIR@";
+$bonsai_url = "@BONSAI_URL@";
+$default_cvsroot = "@CVSROOT@";
+$registry_url = "@REGISTRY_URL@";
+
 # From load_data()
 $ignore_builds = {};
 $scrape_builds = {};

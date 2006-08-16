@@ -48,7 +48,7 @@ $tree = &trick_taint(shift);
 #   $cvs_module:  The checkout module
 #   $cvs_branch:  The current branch
 #   $cvs_root:    The path to the cvs root
-#   $bonsai_tree: The data directory for this tree in ../bonsai
+#   $bonsai_tree: The data directory for this tree in $bonsai_dir
 #   $viewvc_repository: Repository path used by viewvc for this tree
 require "$tree/treedata.pl";
 
@@ -65,7 +65,7 @@ if ($use_bonsai) {
     # Setup global variables for bonsai query
     #
     if ($cvs_root eq '') {
-        $CVS_ROOT = '/m/src';
+        $CVS_ROOT = "$default_cvsroot";
     } else {
         $CVS_ROOT = $cvs_root;
     }
@@ -73,10 +73,10 @@ if ($use_bonsai) {
     $CVS_REPOS_SUFIX = $CVS_ROOT;
     $CVS_REPOS_SUFIX =~ s/\//_/g;
     
-    $CHECKIN_DATA_FILE = "/d/webdocs/projects/bonsai/data/checkinlog${CVS_REPOS_SUFIX}";
-    $CHECKIN_INDEX_FILE = "/d/webdocs/projects/bonsai/data/index${CVS_REPOS_SUFIX}";
+    $CHECKIN_DATA_FILE = "$bonsai_dir/data/checkinlog${CVS_REPOS_SUFIX}";
+    $CHECKIN_INDEX_FILE = "$bonsai_dir/data/index${CVS_REPOS_SUFIX}";
 
-    use lib "/d/webdocs/projects/bonsai";
+    use lib "@BONSAI_DIR@";
     require 'cvsquery.pl';
 
     print "cvsroot='$CVS_ROOT'\n" if $F_DEBUG;
@@ -140,7 +140,7 @@ sub build_who {
     open(WHOLOG, ">", "$temp_who_file");
 
     if ($use_bonsai) {
-        chdir "../bonsai";
+        chdir $bonsai_dir;
         $::TreeID = $bonsai_tree;
     }
     my $result = &query_checkins(%mod_map);
@@ -156,7 +156,7 @@ sub build_who {
     }
     close (WHOLOG);
     if ($use_bonsai) {
-        chdir "../tinderbox";
+        chdir "@TINDERBOX_DIR@";
     }
     move($temp_who_file, $who_file);
 }

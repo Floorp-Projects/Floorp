@@ -37,6 +37,7 @@
 #USE_BONSAI = 1
 #BONSAI_DIR = /var/www/html/bonsai
 #BONSAI_URL = /bonsai
+#REGISTRY_URL = /registry
 
 # Set these to the user/group that will run the tinderbox processes
 #TINDERBOX_USER = tinderbox
@@ -112,6 +113,9 @@ endif
 ifeq (,$(strip $(BONSAI_URL)))
 $(error BONSAI_URL must be set for bonsai support to work)
 endif
+ifeq (,$(strip $(REGISTRY_URL)))
+$(error REGISTRY_URL must be set for bonsai support to work)
+endif
 endif
 
 install:
@@ -121,10 +125,10 @@ install:
 	for I in $(FILES) $(EXE_FILES) $(SETUID_SCRIPTS); do \
 	  echo Installing $$I && \
           sed -e s#/usr/bonsaitools/bin/perl#$(PERL)#g \
-              -e s#/tools/ns/bin/perl5#$(PERL)#g \
-              -e s#/m/src#$(CVSROOT)#g \
-              -e s#/d/webdocs/projects/bonsai#$(BONSAI_DIR)#g \
-              -e s#\.\./bonsai#$(BONSAI_URL)#g \
+              -e s#@CVSROOT@#$(CVSROOT)#g \
+              -e s#@BONSAI_DIR@#$(BONSAI_DIR)#g \
+              -e s#@BONSAI_URL@#$(BONSAI_URL)#g \
+              -e s#@REGISTRY_URL@#$(REGISTRY_URL)#g \
               -e s#@TINDERBOX_DIR@#$(TINDERBOX_DIR)#g \
               -e s#@SETUID_PATH@#$(SETUID_PATH)#g \
               $$I > $(TINDERBOX_DIR)/$$I && \

@@ -475,7 +475,7 @@ sub mac_parser {
 sub build_blame {
   my ($cvs_root, $tags) = @_;
 
-  use lib '/d/webdocs/projects/bonsai';
+  use lib "@BONSAI_DIR@";
   require 'cvsblame.pl';
 
   while (($file, $lines_hash) = each %warnings) {
@@ -830,7 +830,7 @@ sub build_url {
 sub file_url {
   my ($file, $linenum) = @_;
 
-  return "http://bonsai.mozilla.org/cvsblame.cgi"
+  return "$bonsai_url/cvsblame.cgi"
         ."?file=mozilla/$file&mark=$linenum#".($linenum-10);
 
 }
