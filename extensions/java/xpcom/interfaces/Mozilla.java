@@ -295,8 +295,8 @@ public class Mozilla implements IGRE, IXPCOM, IXPCOMError {
 
     Process proc;
     try {
-      proc = Runtime.getRuntime().exec("regedit /e " + tempFile.getPath() +
-                                       " \"" + aRegKey + "\"");
+      proc = Runtime.getRuntime().exec("regedit /e " + "\"" + tempFile.getPath()
+              + "\" \"" + aRegKey + "\"");
       proc.waitFor();
     } catch (Exception e) {
       // Failed to run regedit.exe.  Length of temp file is zero, and that's
