@@ -3349,7 +3349,10 @@ nsGenericHTMLFormElement::IntrinsicState() const
     }
   }
   
-  if (mForm && mForm->GetDefaultSubmitElement() == this) {
+  if (mForm &&
+      // XXXbz Need the cast to make VC++6 happy.
+      NS_STATIC_CAST(const nsIFormControl*,
+                     mForm->GetDefaultSubmitElement()) == this) {
       NS_ASSERTION(IsSubmitControl(),
                    "Default submit element that isn't a submit control.");
       // We are the default submit element (:default)
