@@ -566,7 +566,7 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
   // before we go on, make sure that target node still has a window
   nsCOMPtr<nsIDocument> document = aTarget->GetDocument();
   if (!document) {
-    NS_ERROR("Unable to retrieve the tooltip node document.");
+    NS_WARNING("Unable to retrieve the tooltip node document.");
     return NS_ERROR_FAILURE;
   }
   nsCOMPtr<nsPIDOMWindow> window = document->GetWindow();
