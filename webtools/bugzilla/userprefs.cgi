@@ -205,7 +205,7 @@ sub DoEmail {
             " ON watch.watched = profiles.userid" .
             " WHERE watcher = ?",
             undef, $user->id);
-        $vars->{'watchedusers'} = join(',', @$watched_ref);
+        $vars->{'watchedusers'} = $watched_ref;
 
         my $watcher_ids = $dbh->selectcol_arrayref(
             "SELECT watcher FROM watch WHERE watched = ?",
@@ -298,7 +298,8 @@ sub SaveEmail {
     # User watching
     ###########################################################################
     if (Bugzilla->params->{"supportwatchers"} 
-        && defined $cgi->param('watchedusers')) 
+        && (defined $cgi->param('new_watchedusers')
+            || defined $cgi->param('remove_watched_users'))) 
     {
         # Just in case.  Note that this much locking is actually overkill:
         # we don't really care if anyone reads the watch table.  So 
@@ -306,32 +307,42 @@ sub SaveEmail {
         # using user-defined locks rather than table locking.
         $dbh->bz_lock_tables('watch WRITE', 'profiles READ');
 
-        # what the db looks like now
+        # Use this to protect error messages on duplicate submissions
         my $old_watch_ids =
             $dbh->selectcol_arrayref("SELECT watched FROM watch"
                                    . " WHERE watcher = ?", undef, $user->id);
- 
-       # The new information given to us by the user.
-        my @new_watch_names = split(/[,\s]+/, $cgi->param('watchedusers'));
+
+        # The new information given to us by the user.
+        my @new_watch_names = split(/[,\s]+/, $cgi->param('new_watchedusers'));
         my %new_watch_ids;
+
         foreach my $username (@new_watch_names) {
             my $watched_userid = login_to_id(trim($username), THROW_ERROR);
             $new_watch_ids{$watched_userid} = 1;
-        }
-        my ($removed, $added) = diff_arrays($old_watch_ids, [keys %new_watch_ids]);
-
-        # Remove people who were removed.
-        my $delete_sth = $dbh->prepare('DELETE FROM watch WHERE watched = ?'
-                                     . ' AND watcher = ?');
-        foreach my $remove_me (@$removed) {
-            $delete_sth->execute($remove_me, $user->id);
         }
 
         # Add people who were added.
         my $insert_sth = $dbh->prepare('INSERT INTO watch (watched, watcher)'
                                      . ' VALUES (?, ?)');
-        foreach my $add_me (@$added) {
+        foreach my $add_me (keys(%new_watch_ids)) {
+            next if grep($_ == $add_me, @$old_watch_ids);
             $insert_sth->execute($add_me, $user->id);
+        }
+
+        if (defined $cgi->param('remove_watched_users')) {
+            my @removed = $cgi->param('watched_by_you');
+            # Remove people who were removed.
+            my $delete_sth = $dbh->prepare('DELETE FROM watch WHERE watched = ?'
+                                         . ' AND watcher = ?');
+            
+            my %remove_watch_ids;
+            foreach my $username (@removed) {
+                my $watched_userid = login_to_id(trim($username), THROW_ERROR);
+                $remove_watch_ids{$watched_userid} = 1;
+            }
+            foreach my $remove_me (keys(%remove_watch_ids)) {
+                $delete_sth->execute($remove_me, $user->id);
+            }
         }
 
         $dbh->bz_unlock_tables();
