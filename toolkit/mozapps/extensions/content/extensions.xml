@@ -178,7 +178,7 @@
           <xul:hbox anonid="addonNameVersion" class="addon-name-version" xbl:inherits="name, version"/>
           <xul:label anonid="addonDescriptionWrap" class="descriptionWrap" xbl:inherits="xbl:text=description"/>
           <xul:vbox anonid="addonSelectedStatusMsgs" class="selectedStatusMsgs">
-            <xul:hbox class="addon-optype attention" align="center"/>
+            <xul:hbox anonid="addonOpType" class="addon-optype attention" align="center"/>
             <xul:hbox flex="1" class="updateAvailableBox attention">
               <xul:label xbl:inherits="value=updateAvailableMsg" crop="end"/>
             </xul:hbox>
@@ -266,6 +266,10 @@
         document.getAnonymousElementByAttribute(this, "anonid", "addonSelectedStatusMsgs");
       </field>
 
+      <field name="_opType">
+        document.getAnonymousElementByAttribute(this, "anonid", "addonOpType");
+      </field>
+
       <property name="label" readonly="true">
         <getter>
           <![CDATA[
@@ -277,6 +281,25 @@
 
             // Add description
             labelPieces.push(this._descriptionWrap.textContent);
+
+            // Add operation message (if any)
+            // Note 1: must handle this separately from other the labels
+            // because this message is in an anonymous content node
+            // within an hbox which is dynamically bound to a different
+            // "addon-needs-*" binding based on the operation type.
+            // Note 2: must check hbox's CSS "display" property with
+            // getComputedStyle, because the XUL "hidden" attribute
+            // never changes.
+            // Note 3: can't just check whether the hbox has anonymous
+            // child nodes.  If (for example) you disable an extension,
+            // the hbox gets bound to "addon-needs-disable".  But if
+            // you then immediately re-enable the same extension without
+            // closing the Add-ons window, the hbox is still bound to
+            // "addon-needs-disable" (and thus still has the anonymous
+            // content child nodes with the label containing the now-unused
+            // &toBeDisabled.label text), but the hbox is no longer visible.
+            if (document.defaultView.getComputedStyle(this._opType, '').display != 'none')
+              labelPieces.push(document.getAnonymousNodes(this._opType)[0].value);
 
             // Add selected status messages, if any are visible.
             // Note 1: visibility of status messages is set by CSS rule,
