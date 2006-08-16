@@ -43,6 +43,7 @@
 [
   <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" >  %dtd1;
   <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" >  %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://calendar/locale/sun-calendar-event-dialog.dtd" > %dtd3;
 ]>
 
 <bindings xmlns="http://www.mozilla.org/xbl"
@@ -129,9 +130,9 @@
               <xul:label value="&newevent.privacy.label;" disable-on-readonly="true"/>
               <xul:menulist id="privacy-menulist" crop="none" disable-on-readonly="true">
                 <xul:menupopup>
-                  <xul:menuitem label="&newevent.public.label;" value="PUBLIC"/>
-                  <xul:menuitem label="&newevent.private.label;" value="PRIVATE"/>
-                  <xul:menuitem label="&newevent.confidential.label;" value="CONFIDENTIAL"/>
+                  <xul:menuitem label="&event.public.label;" value="PUBLIC"/>
+                  <xul:menuitem label="&event.confidential.label;" value="CONFIDENTIAL"/>
+                  <xul:menuitem label="&event.private.label;" value="PRIVATE"/>
                 </xul:menupopup>
               </xul:menulist>
             </xul:row>
@@ -166,7 +167,7 @@
               </xul:menulist>
             </xul:row>
 
-            <xul:row class="todo-only">
+            <xul:row class="todo-only" align="center">
               <xul:label id="todo-status-label" value="&newevent.status.label;" disable-on-readonly="true"/>
               <xul:hbox align="center">
                 <xul:menulist id="todo-status" class="todo-only" oncommand="updateToDoStatus(this.value);" disable-on-readonly="true">
@@ -688,6 +689,16 @@
               for (i=0;i<enableElements.length;i++) {
                 enableElements[i].removeAttribute('disabled');
               }
+
+              // Task completed date
+              if (item.completedDate) {
+                  this.updateToDoStatus(item.status, item.completedDate.jsDate);
+              } else {
+                  this.updateToDoStatus(item.status);
+              }
+
+              // update alarm fields
+              this.updateAlarm();
 
               // update datetime pickers
               this.updateDueDate();
