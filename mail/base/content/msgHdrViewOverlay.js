@@ -934,8 +934,8 @@ function AddExtraAddressProcessing(emailAddress, addressNode)
 
   if (condenseName && gShowCondensedEmailAddresses && displayName)
   {
-    useDisplayNameForAddress(emailAddress);
-    addressNode.setAttribute("label", displayName);
+    if (useDisplayNameForAddress(emailAddress))
+      addressNode.setAttribute("label", displayName);
     addressNode.setAttribute("tooltiptext", mailAddress);
     addressNode.setAttribute("tooltip", "emailAddressTooltip");
   }
