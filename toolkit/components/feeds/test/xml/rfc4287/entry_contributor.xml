@@ -2,7 +2,7 @@
 <!--
 
 Description: atom author name works
-Expect: feed.authors.queryElementAt(0, Components.interfaces.nsIFeedPerson).name=='John Doe';
+Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).contributors.queryElementAt(0, Components.interfaces.nsIFeedPerson).name=='John Doe Entry';
 
 -->
 
@@ -22,6 +22,9 @@ Expect: feed.authors.queryElementAt(0, Components.interfaces.nsIFeedPerson).name
     <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
     <updated>2003-12-13T18:30:02Z</updated>
     <summary>Some text.</summary>
+    <contributor>
+      <name>John Doe Entry</name>
+    </contributor>
   </entry>
   
 </feed>

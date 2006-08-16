@@ -2,7 +2,7 @@
 <!--
 
 Description: atom author count works
-Expect: var authors = feed.fields.getProperty('author'); authors.QueryInterface(Components.interfaces.nsIArray); authors.length == 2;
+Expect: feed.authors.length == 2
 
 -->
 <feed xmlns="http://www.w3.org/2005/Atom">

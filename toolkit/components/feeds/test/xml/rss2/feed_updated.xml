@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: channel pubDate works 
+Expect:      feed.updated == 'Sat, 07 Sep 2002 00:00:01 GMT'
+
+-->
+<rss version="2.0" >
+<channel>
+<pubDate>Sat, 07 Sep 2002 00:00:01 GMT</pubDate>
+</channel>
+</rss>
