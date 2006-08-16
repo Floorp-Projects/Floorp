@@ -60,7 +60,7 @@ NS_WD_GetElementByTagName(nsIDOMElement *parentElt, const nsAString &tagName,
     nsresult rv;
 
     nsCOMPtr<nsIDOMNodeList> list;
-    rv = parentElt->GetElementsByTagName(tagName, getter_AddRefs(list));
+    rv = parentElt->GetElementsByTagNameNS(NS_LITERAL_STRING("DAV:"), tagName, getter_AddRefs(list));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIDOMNode> node;
