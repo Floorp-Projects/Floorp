@@ -114,6 +114,8 @@ typedef jarray jobjectArray;
 
 #endif
 
+typedef jobject jweak;
+
 #if 0	/* moved to jri_md.h */
 typedef jobject jref; /* For transition---not meant to be part of public 
 			 API anymore.*/
@@ -148,8 +150,13 @@ typedef struct _jmethodID *jmethodID;
  * possible return values for JNI functions.
  */
 
-#define JNI_OK 0
-#define JNI_ERR (-1)
+#define JNI_OK           0                 /* success */
+#define JNI_ERR          (-1)              /* unknown error */
+#define JNI_EDETACHED    (-2)              /* thread detached from the VM */
+#define JNI_EVERSION     (-3)              /* JNI version error */
+#define JNI_ENOMEM       (-4)              /* not enough memory */
+#define JNI_EEXIST       (-5)              /* VM already created */
+#define JNI_EINVAL       (-6)              /* invalid arguments */
 
 /*
  * used in ReleaseScalarArrayElements
@@ -211,16 +218,21 @@ struct JNINativeInterface_ {
     jclass (JNICALL *FindClass)
       (JNIEnv *env, const char *name);
 
-    void *reserved4;
-    void *reserved5;
-    void *reserved6;
+    jmethodID (JNICALL *FromReflectedMethod)
+      (JNIEnv *env, jobject method);
+    jfieldID (JNICALL *FromReflectedField)
+      (JNIEnv *env, jobject field);
+
+    jobject (JNICALL *ToReflectedMethod)
+      (JNIEnv *env, jclass cls, jmethodID methodID, jboolean isStatic);
 
     jclass (JNICALL *GetSuperclass)
       (JNIEnv *env, jclass sub);
     jboolean (JNICALL *IsAssignableFrom)
       (JNIEnv *env, jclass sub, jclass sup);
-    void *reserved7;
 
+    jobject (JNICALL *ToReflectedField)
+      (JNIEnv *env, jclass cls, jfieldID fieldID, jboolean isStatic);
 
     jint (JNICALL *Throw)
       (JNIEnv *env, jthrowable obj);
@@ -234,8 +246,11 @@ struct JNINativeInterface_ {
       (JNIEnv *env);
     void (JNICALL *FatalError)
       (JNIEnv *env, const char *msg);
-    void *reserved8;
-    void *reserved9;
+
+    jint (JNICALL *PushLocalFrame)
+      (JNIEnv *env, jint capacity);
+    jobject (JNICALL *PopLocalFrame)
+      (JNIEnv *env, jobject result);
 
     jobject (JNICALL *NewGlobalRef)
       (JNIEnv *env, jobject lobj);
@@ -245,8 +260,10 @@ struct JNINativeInterface_ {
       (JNIEnv *env, jobject obj);
     jboolean (JNICALL *IsSameObject)
       (JNIEnv *env, jobject obj1, jobject obj2);
-    void *reserved10;
-    void *reserved11;
+    jobject (JNICALL *NewLocalRef)
+      (JNIEnv *env, jobject ref);
+    jint (JNICALL *EnsureLocalCapacity)
+      (JNIEnv *env, jint capacity);
 
     jobject (JNICALL *AllocObject)
       (JNIEnv *env, jclass clazz);
@@ -706,6 +723,36 @@ struct JNINativeInterface_ {
  
     jint (JNICALL *GetJavaVM)
       (JNIEnv *env, JavaVM **vm);
+
+    void (JNICALL *GetStringRegion)
+      (JNIEnv *env, jstring str, jsize start, jsize len, jchar *buf);
+    void (JNICALL *GetStringUTFRegion)
+      (JNIEnv *env, jstring str, jsize start, jsize len, char *buf);
+
+    void * (JNICALL *GetPrimitiveArrayCritical)
+      (JNIEnv *env, jarray array, jboolean *isCopy);
+    void (JNICALL *ReleasePrimitiveArrayCritical)
+      (JNIEnv *env, jarray array, void *carray, jint mode);
+
+    const jchar * (JNICALL *GetStringCritical)
+      (JNIEnv *env, jstring string, jboolean *isCopy);
+    void (JNICALL *ReleaseStringCritical)
+      (JNIEnv *env, jstring string, const jchar *cstring);
+
+    jweak (JNICALL *NewWeakGlobalRef)
+       (JNIEnv *env, jobject obj);
+    void (JNICALL *DeleteWeakGlobalRef)
+       (JNIEnv *env, jweak ref);
+
+    jboolean (JNICALL *ExceptionCheck)
+       (JNIEnv *env);
+
+    jobject (JNICALL *NewDirectByteBuffer)
+       (JNIEnv* env, void* address, jlong capacity);
+    void* (JNICALL *GetDirectBufferAddress)
+       (JNIEnv* env, jobject buf);
+    jlong (JNICALL *GetDirectBufferCapacity)
+       (JNIEnv* env, jobject buf);
 };
 
 /*
@@ -722,8 +769,6 @@ struct JNINativeInterface_ {
 
 struct JNIEnv_ {
     const struct JNINativeInterface_ *functions;
-    void *reserved0;
-    void *reserved1[6];
 #ifdef __cplusplus
 
     jint GetVersion() {
@@ -736,11 +781,26 @@ struct JNIEnv_ {
     jclass FindClass(const char *name) {
         return functions->FindClass(this, name);
     }
+    jmethodID FromReflectedMethod(jobject method) {
+        return functions->FromReflectedMethod(this,method);
+    }
+    jfieldID FromReflectedField(jobject field) {
+        return functions->FromReflectedField(this,field);
+    }
+
+    jobject ToReflectedMethod(jclass cls, jmethodID methodID, jboolean isStatic) {
+        return functions->ToReflectedMethod(this, cls, methodID, isStatic);
+    }
+
     jclass GetSuperclass(jclass sub) {
         return functions->GetSuperclass(this, sub);
     }
     jboolean IsAssignableFrom(jclass sub, jclass sup) {
         return functions->IsAssignableFrom(this, sub, sup);
+    }
+
+    jobject ToReflectedField(jclass cls, jfieldID fieldID, jboolean isStatic) {
+        return functions->ToReflectedField(this,cls,fieldID,isStatic);
     }
 
     jint Throw(jthrowable obj) {
@@ -762,6 +822,13 @@ struct JNIEnv_ {
         functions->FatalError(this, msg);
     }
 
+    jint PushLocalFrame(jint capacity) {
+        return functions->PushLocalFrame(this,capacity);
+    }
+    jobject PopLocalFrame(jobject result) {
+        return functions->PopLocalFrame(this,result);
+    }
+
     jobject NewGlobalRef(jobject lobj) {
         return functions->NewGlobalRef(this,lobj);
     }
@@ -774,6 +841,13 @@ struct JNIEnv_ {
 
     jboolean IsSameObject(jobject obj1, jobject obj2) {
         return functions->IsSameObject(this,obj1,obj2);
+    }
+
+    jobject NewLocalRef(jobject ref) {
+        return functions->NewLocalRef(this,ref);
+    }
+    jint EnsureLocalCapacity(jint capacity) {
+        return functions->EnsureLocalCapacity(this,capacity);
     }
 
     jobject AllocObject(jclass clazz) {
@@ -1726,8 +1800,70 @@ struct JNIEnv_ {
         return functions->GetJavaVM(this,vm);
     }
   
+    void GetStringRegion(jstring str, jsize start, jsize len, jchar *buf) {
+        functions->GetStringRegion(this,str,start,len,buf);
+    }
+    void GetStringUTFRegion(jstring str, jsize start, jsize len, char *buf) {
+        functions->GetStringUTFRegion(this,str,start,len,buf);
+    }
+
+    void * GetPrimitiveArrayCritical(jarray array, jboolean *isCopy) {
+        return functions->GetPrimitiveArrayCritical(this,array,isCopy);
+    }
+    void ReleasePrimitiveArrayCritical(jarray array, void *carray, jint mode) {
+        functions->ReleasePrimitiveArrayCritical(this,array,carray,mode);
+    }
+
+    const jchar * GetStringCritical(jstring string, jboolean *isCopy) {
+        return functions->GetStringCritical(this,string,isCopy);
+    }
+    void ReleaseStringCritical(jstring string, const jchar *cstring) {
+        functions->ReleaseStringCritical(this,string,cstring);
+    }
+
+    jweak NewWeakGlobalRef(jobject obj) {
+        return functions->NewWeakGlobalRef(this,obj);
+    }
+    void DeleteWeakGlobalRef(jweak ref) {
+        functions->DeleteWeakGlobalRef(this,ref);
+    }
+
+    jboolean ExceptionCheck() {
+	return functions->ExceptionCheck(this);
+    }
+
+    jobject NewDirectByteBuffer(void* address, jlong capacity) {
+        return functions->NewDirectByteBuffer(this, address, capacity);
+    }
+    void* GetDirectBufferAddress(jobject buf) {
+        return functions->GetDirectBufferAddress(this, buf);
+    }
+    jlong GetDirectBufferCapacity(jobject buf) {
+        return functions->GetDirectBufferCapacity(this, buf);
+    }
+
 #endif /* __cplusplus */
 };
+
+typedef struct JavaVMOption {
+    char *optionString;
+    void *extraInfo;
+} JavaVMOption;
+
+typedef struct JavaVMInitArgs {
+    jint version;
+
+    jint nOptions;
+    JavaVMOption *options;
+    jboolean ignoreUnrecognized;
+} JavaVMInitArgs;
+
+typedef struct JavaVMAttachArgs {
+    jint version;
+
+    char *name;
+    jobject group;
+} JavaVMAttachArgs;
 
 /* These structures will be VM-specific. */
 
@@ -1745,7 +1881,7 @@ typedef struct JDK1_1InitArgs {
 
     jint (JNICALL *vfprintf)(FILE *fp, const char *format, va_list args);
     void (JNICALL *exit)(jint code);
-    void (JNICALL *abort)();
+    void (JNICALL *abort)(void);
     
     jint enableClassGC;
     jint enableVerboseGC;
@@ -1759,6 +1895,9 @@ typedef struct JDK1_1AttachArgs {
     void * __padding; /* C compilers don't allow empty structures. */
 } JDK1_1AttachArgs;
 
+#define JDK1_2
+#define JDK1_4
+
 /* End VM-specific. */
 
 struct JNIInvokeInterface_ {
@@ -1768,38 +1907,62 @@ struct JNIInvokeInterface_ {
 
     jint (JNICALL *DestroyJavaVM)(JavaVM *vm);
 
-    jint (JNICALL *AttachCurrentThread)
-      (JavaVM *vm, JNIEnv **penv, void *args);
+    jint (JNICALL *AttachCurrentThread)(JavaVM *vm, void **penv, void *args);
 
     jint (JNICALL *DetachCurrentThread)(JavaVM *vm);
+
+    jint (JNICALL *GetEnv)(JavaVM *vm, void **penv, jint version);
+
+    jint (JNICALL *AttachCurrentThreadAsDaemon)(JavaVM *vm, void **penv, void *args);
 };
 
 struct JavaVM_ {
     const struct JNIInvokeInterface_ *functions;
-    void *reserved0;
-    void *reserved1;
-    void *reserved2;
 #ifdef __cplusplus
 
     jint DestroyJavaVM() {
         return functions->DestroyJavaVM(this);
     }
-    jint AttachCurrentThread(JNIEnv **penv, void *args) {
+    jint AttachCurrentThread(void **penv, void *args) {
         return functions->AttachCurrentThread(this, penv, args);
     }
     jint DetachCurrentThread() {
         return functions->DetachCurrentThread(this);
     }
 
+    jint GetEnv(void **penv, jint version) {
+        return functions->GetEnv(this, penv, version);
+    }
+    jint AttachCurrentThreadAsDaemon(void **penv, void *args) {
+        return functions->AttachCurrentThreadAsDaemon(this, penv, args);
+    }
 #endif
 };
 
-JNI_PUBLIC_API(void) JNI_GetDefaultJavaVMInitArgs(void *);
+#ifdef _JNI_IMPLEMENTATION_
+#define _JNI_IMPORT_OR_EXPORT_ JNIEXPORT
+#else
+#define _JNI_IMPORT_OR_EXPORT_ JNIIMPORT
+#endif
+_JNI_IMPORT_OR_EXPORT_ jint JNICALL
+JNI_GetDefaultJavaVMInitArgs(void *args);
 
-JNI_PUBLIC_API(jint) JNI_CreateJavaVM(JavaVM **, JNIEnv **, void *);
+_JNI_IMPORT_OR_EXPORT_ jint JNICALL
+JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *args);
 
-JNI_PUBLIC_API(jint) JNI_GetCreatedJavaVMs(JavaVM **, jsize, jsize *);
-JNI_PUBLIC_API(jref) JNI_MakeLocalRef(JNIEnv *pJNIEnv, void *pHObject);
+_JNI_IMPORT_OR_EXPORT_ jint JNICALL
+JNI_GetCreatedJavaVMs(JavaVM **, jsize, jsize *);
+
+/* Defined by native libraries. */
+JNIEXPORT jint JNICALL
+JNI_OnLoad(JavaVM *vm, void *reserved);
+
+JNIEXPORT void JNICALL
+JNI_OnUnload(JavaVM *vm, void *reserved);
+
+#define JNI_VERSION_1_1 0x00010001
+#define JNI_VERSION_1_2 0x00010002
+#define JNI_VERSION_1_4 0x00010004
 
 #ifdef __cplusplus
 } /* extern "C" */

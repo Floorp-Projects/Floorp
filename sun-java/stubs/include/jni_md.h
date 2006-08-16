@@ -140,6 +140,7 @@
 #	endif
 	/*  This is the stuff inherited from JavaSoft .. */
 #	define JNIEXPORT __declspec(dllexport)
+#	define JNIIMPORT __declspec(dllimport)
 
 /* OS/2 */
 #elif defined(XP_OS2)
@@ -148,17 +149,20 @@
 #		define JNI_PUBLIC_VAR(VarType)		VarType
 #		define JNICALL				_Optlink
 #		define JNIEXPORT
+#		define JNIIMPORT
 #	elif defined(__declspec)
 #		define JNI_PUBLIC_API(ResultType)	__declspec(dllexport) ResultType
 #		define JNI_PUBLIC_VAR(VarType)		VarType
 #		define JNI_NATIVE_STUB(ResultType)	__declspec(dllexport) ResultType
 #		define JNICALL
 #		define JNIEXPORT
+#		define JNIIMPORT
 #	else
 #		define JNI_PUBLIC_API(ResultType)	ResultType
 #		define JNI_PUBLIC_VAR(VarType)		VarType
 #		define JNICALL
 #		define JNIEXPORT
+#		define JNIIMPORT
 #	endif
 #	ifndef IS_LITTLE_ENDIAN
 #		define IS_LITTLE_ENDIAN
@@ -188,6 +192,7 @@
 #	define JNICALL
 	/*  This is the stuff inherited from JavaSoft .. */
 #	define JNIEXPORT
+#	define JNIIMPORT
 
 /* Unix or else */
 #else
@@ -197,6 +202,7 @@
 #	define JNICALL
 	/*  This is the stuff inherited from JavaSoft .. */
 #	define JNIEXPORT
+#	define JNIIMPORT
 #endif
 
 #ifndef FAR		/* for non-Win16 */
