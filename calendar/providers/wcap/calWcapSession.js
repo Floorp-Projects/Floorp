@@ -206,7 +206,7 @@ calWcapSession.prototype = {
             this.m_sessionId != null)
         {
             var url = this.sessionUri.spec +
-                "get_all_timezones.wcap?appid=mozilla-lightning" +
+                "get_all_timezones.wcap?appid=mozilla-calendar" +
                 "&fmt-out=text%2Fcalendar&id=" + this.m_sessionId;
             var str = issueSyncRequest( url );
             var icalRootComp = getIcsService().parseICS( str );
@@ -251,7 +251,7 @@ calWcapSession.prototype = {
             this.m_sessionId != null) {
             var url = this.sessionUri.spec +
                 // xxx todo: assuming same diff for all calids:
-                "gettime.wcap?appid=mozilla-lightning" +
+                "gettime.wcap?appid=mozilla-calendar" +
                 "&fmt-out=text%2Fcalendar&id=" + this.m_sessionId;
             // xxx todo: this is no solution!
             var localTime = getTime();
@@ -594,7 +594,7 @@ calWcapSession.prototype = {
         // (calId defaults to userId) if not set:
         this.getSessionId();
         return (this.sessionUri.spec +
-                wcapCommand + ".wcap?appid=mozilla-lightning");
+                wcapCommand + ".wcap?appid=mozilla-calendar");
     },
     
     issueRequest:
@@ -722,6 +722,7 @@ calWcapSession.prototype = {
             this.m_sessionId = null;
         }
         this.m_userId = null;
+        this.m_userPrefs = null; // reread prefs
         this.m_bNoLoginsAnymore = false;
     },
     
@@ -895,11 +896,11 @@ calWcapSession.prototype = {
     },
     
     getFreeBusyTimes_resp:
-    function( wcapResponse, calId, iListener, requestId )
+    function( wcapResponse, calId, listener, requestId )
     {
         try {
             var xml = wcapResponse.data; // first statement, may throw
-            if (iListener != null) {
+            if (listener != null) {
                 var ret = [];
                 var nodeList = xml.getElementsByTagName("FB");
                 for ( var i = 0; i < nodeList.length; ++i ) {
@@ -919,7 +920,7 @@ calWcapSession.prototype = {
                     };
                     ret.push( entry );
                 }
-                iListener.onGetFreeBusyTimes(
+                listener.onGetFreeBusyTimes(
                     Components.results.NS_OK,
                     requestId, calId, ret.length, ret );
             }
@@ -941,13 +942,13 @@ calWcapSession.prototype = {
                 this.notifyError( exc );
                 break;
             }
-            if (iListener != null)
-                iListener.onGetFreeBusyTimes( exc, requestId, calId, 0, [] );
+            if (listener != null)
+                listener.onGetFreeBusyTimes( exc, requestId, calId, 0, [] );
         }
     },
     
     getFreeBusyTimes:
-    function( calId, rangeStart, rangeEnd, bBusyOnly, iListener,
+    function( calId, rangeStart, rangeEnd, bBusyOnly, listener,
               bAsync, requestId )
     {
         try {
@@ -975,7 +976,7 @@ calWcapSession.prototype = {
             var this_ = this;
             function resp( wcapResponse ) {
                 this_.getFreeBusyTimes_resp(
-                    wcapResponse, calId, iListener, requestId );
+                    wcapResponse, calId, listener, requestId );
             }
             if (bAsync)
                 this.issueAsyncRequest( url, stringToXml, resp );
@@ -984,8 +985,8 @@ calWcapSession.prototype = {
         }
         catch (exc) {
             this.notifyError( exc );
-            if (iListener != null)
-                iListener.onGetFreeBusyTimes( exc, requestId, calId, 0, [] );
+            if (listener != null)
+                listener.onGetFreeBusyTimes( exc, requestId, calId, 0, [] );
             throw exc;
         }
     }

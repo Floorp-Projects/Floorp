@@ -149,6 +149,17 @@ function isEvent( item )
     return (item instanceof Components.interfaces.calIEvent);
 }
 
+function isParent( item )
+{
+    if (item.id != item.parentItem.id)
+        throw new Error("proxy has different id than its parent!");
+    if (item.parentItem.recurrenceId) {
+        throw new Error("parent has recurrenceId: " +
+                        item.parentItem.recurrenceId);
+    }
+    return (!item.recurrenceId);
+}
+
 function forEachIcalComponent( icalRootComp, componentType, func, maxResult )
 {
     var itemCount = 0;

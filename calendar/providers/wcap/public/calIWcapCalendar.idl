@@ -166,7 +166,7 @@ interface calIWcapCalendar : calICalendar
 
     /**
      * Syncs in changes since time <code>dtFrom</code>.
-     * The passed <code>iListener</code> receives a
+     * The passed <code>listener</code> receives a
      * <code>SYNC</code> with timestamp as detail.
      *
      * @param destCal destination calendar to write changes to (may be null)
@@ -174,14 +174,14 @@ interface calIWcapCalendar : calICalendar
      *                   ITEM_FILTER_CLASS_OCCURRENCES not allowed
      * @param dtFrom start time to sync changes from,
      *               if null all items are synced in
-     * @param iListener operation listener for SYNC operation
-     *                  (may optionally implemented calIObserver to receive
-     *                  onAddItem(), onModifyItem() or onDeleteItem() calls)
+     * @param listener operation listener for SYNC operation
+     *                 (may optionally implemented calIObserver to receive
+     *                 onAddItem(), onModifyItem() or onDeleteItem() calls)
      */
     void syncChangesTo(
         in calICalendar destCal,
         in unsigned long itemFilter,
         in calIDateTime dtFrom,
-        in calIOperationListener iListener );
+        in calIOperationListener listener );
 };
 

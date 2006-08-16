@@ -45,6 +45,7 @@
 var CalEvent;
 var CalTodo;
 var CalDateTime;
+var CalDuration;
 var XmlHttpRequest;
 
 // some string resources:
@@ -77,6 +78,8 @@ function initWcapProvider()
             "@mozilla.org/calendar/todo;1", "calITodo" );
         CalDateTime = new Components.Constructor(
             "@mozilla.org/calendar/datetime;1", "calIDateTime" );
+        CalDuration = new Components.Constructor(
+            "@mozilla.org/calendar/duration;1", "calIDuration" );
         XmlHttpRequest = new Components.Constructor(
             "@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttpRequest" );
         

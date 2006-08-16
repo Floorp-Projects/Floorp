@@ -294,41 +294,41 @@ calWcapCachedCalendar.prototype = {
     },
     
     adoptItem:
-    function( item, iListener )
+    function( item, listener )
     {
-        this.remoteCal.adoptItem( item, iListener );
+        this.remoteCal.adoptItem( item, listener );
     },
     
     addItem:
-    function( item, iListener )
+    function( item, listener )
     {
-        this.remoteCal.addItem( item, iListener );
+        this.remoteCal.addItem( item, listener );
     },
     
     modifyItem:
-    function( newItem, oldItem, iListener )
+    function( newItem, oldItem, listener )
     {
-        this.remoteCal.modifyItem( newItem, oldItem, iListener );
+        this.remoteCal.modifyItem( newItem, oldItem, listener );
     },
     
     deleteItem:
-    function( item, iListener )
+    function( item, listener )
     {
-        this.remoteCal.deleteItem( item, iListener );
+        this.remoteCal.deleteItem( item, listener );
     },
     
     getItem:
-    function( id, iListener )
+    function( id, listener )
     {
         // xxx todo: testing
         this.log( ">>>>>>>>>>>>>>>> getItem() call!");
         this.refresh();
-        this.localCal.getItem( id, iListener );
+        this.localCal.getItem( id, listener );
         this.log( "getItem() returning." );
     },
     
     getItems:
-    function( itemFilter, maxResult, rangeStart, rangeEnd, iListener )
+    function( itemFilter, maxResult, rangeStart, rangeEnd, listener )
     {
         this.log( "getItems():\n\titemFilter=" + itemFilter +
                   ",\n\tmaxResult=" + maxResult +
@@ -340,17 +340,17 @@ calWcapCachedCalendar.prototype = {
                 onOperationComplete:
                 function( calendar, status, opType, id, detail )
                 {
-                    if (iListener != null) {
+                    if (listener != null) {
                         if (status == Components.results.NS_OK) {
                             // delegate to local cal:
                             this_.log("begin localCal.getItems().");
                             this_.localCal.getItems(
                                 itemFilter, maxResult, rangeStart, rangeEnd,
-                                iListener );
+                                listener );
                             this_.log("end localCal.getItems().");
                         }
                         else {
-                            iListener.onOperationComplete(
+                            listener.onOperationComplete(
                                 calendar, status, opType, id, detail );
                         }
                     }
@@ -364,7 +364,7 @@ calWcapCachedCalendar.prototype = {
     },
     
     syncChangesTo:
-    function( destCal, itemFilter, dtFrom, iListener )
+    function( destCal, itemFilter, dtFrom, listener )
     {
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
@@ -426,18 +426,18 @@ calWcapCachedCalendar.prototype = {
     
     m_syncQueue: null,
     sync:
-    function( iListener )
+    function( listener )
     {
         this.log( "sync(): queueing request." );
         // serialize sync() calls into queue:
         var this_ = this;
         this.m_syncQueue.postRequest(
             function( requestToken ) {
-                this_.sync_req( requestToken, iListener );
+                this_.sync_req( requestToken, listener );
             } );
     },
     sync_req:
-    function( requestToken, iListener )
+    function( requestToken, listener )
     {
         try {
             var this_ = this;
@@ -464,8 +464,8 @@ calWcapCachedCalendar.prototype = {
                                         dtFrom.compare(detail) != 0) {
                                         this_.updateStamp( detail );
                                     }
-                                    if (iListener != null) {
-                                        iListener.onOperationComplete(
+                                    if (listener != null) {
+                                        listener.onOperationComplete(
                                             this_.superCalendar,
                                             Components.results.NS_OK,
                                             SYNC, null, null );
@@ -478,8 +478,8 @@ calWcapCachedCalendar.prototype = {
                                 }
                             }
                             else {
-                                if (iListener != null) // forward errors:
-                                    iListener.onOperationComplete(
+                                if (listener != null) // forward errors:
+                                    listener.onOperationComplete(
                                         calendar, status,
                                         opType, id, detail );
                                 // already notified in wcap cal:
@@ -487,8 +487,8 @@ calWcapCachedCalendar.prototype = {
                             }
                         }
                         catch (exc) {
-                            if (iListener != null) {
-                                iListener.onOperationComplete(
+                            if (listener != null) {
+                                listener.onOperationComplete(
                                     this_.superCalendar,
                                     Components.results.NS_ERROR_FAILURE,
                                     SYNC, null, exc );
@@ -506,8 +506,8 @@ calWcapCachedCalendar.prototype = {
                 } );
         }
         catch (exc) {
-            if (iListener != null) {
-                iListener.onOperationComplete(
+            if (listener != null) {
+                listener.onOperationComplete(
                     this.superCalendar, Components.results.NS_ERROR_FAILURE,
                     SYNC, null, exc );
             }

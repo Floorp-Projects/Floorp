@@ -218,7 +218,7 @@ interface calIWcapSession : nsISupports
      * @param dtRangeStart start time of free-busy search
      * @param dtRangeEnd end time of free-busy search
      * @param bBusyOnly whether to return busy entries only
-     * @param iListener listener receiving results
+     * @param listener listener receiving results
      * @param bAsync whether the listener receives results asynchronously
      * @param requestId request id to distinguish asynchronous requests
      */
@@ -227,7 +227,7 @@ interface calIWcapSession : nsISupports
         in calIDateTime dtRangeStart,
         in calIDateTime dtRangeEnd,
         in boolean bBusyOnly,
-        in calIWcapFreeBusyListener iListener,
+        in calIWcapFreeBusyListener listener,
         in boolean bAsync,
         in unsigned long requestId );
 };

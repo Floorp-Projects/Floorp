@@ -223,7 +223,7 @@ calWcapCalendar.prototype = {
     
     get ownerId() {
         var ar = this.getCalendarProperties("X-NSCP-CALPROPS-PRIMARY-OWNER",{});
-        if (ar.length < 1) {
+        if (ar.length < 1 || ar[0].length == 0) {
             this.notifyError(
                 "cannot determine primary owner of calendar " + this.calId );
             // fallback to userId:
@@ -234,7 +234,7 @@ calWcapCalendar.prototype = {
     
     get description() {
         var ar = this.getCalendarProperties("X-NSCP-CALPROPS-DESCRIPTION", {});
-        if (ar.length < 1) {
+        if (ar.length < 1 || ar[0].length == 0) {
             // fallback to display name:
             return this.displayName;
         }
@@ -243,7 +243,7 @@ calWcapCalendar.prototype = {
     
     get displayName() {
         var ar = this.getCalendarProperties("X-NSCP-CALPROPS-NAME", {});
-        if (ar.length < 1) {
+        if (ar.length < 1 || ar[0].length == 0) {
             // fallback to common name:
             ar = this.getCalendarProperties(
                 "X-S1CS-CALPROPS-COMMON-NAME", {});
@@ -312,7 +312,7 @@ calWcapCalendar.prototype = {
     
     get defaultTimezone() {
         var tzid = this.getCalendarProperties("X-NSCP-CALPROPS-TZID", {});
-        if (tzid.length < 1) {
+        if (tzid.length < 1 || tzid[0].length == 0) {
             return "UTC"; // fallback
         }
         return tzid[0];
