@@ -44,6 +44,7 @@ var loc;
 for each (loc in Tier1) tierMap[loc] = 'Tier-1';
 for each (loc in Tier2) tierMap[loc] = 'Tier-2';
 
+var view;
 view = {
   updateView: function() {
     this._gView = document.getElementById("view");
@@ -86,7 +87,7 @@ view = {
         }
         lst = explicit.concat(implicit);
       }
-      row.innerHTML = '<td class="locale">' + loc + '</td>';
+      row.innerHTML = '<td class="locale"><a href="https://bugzilla.mozilla.org/buglist.cgi?query_format=advanced&amp;short_desc_type=casesubstring&amp;short_desc=' + loc + '&amp;chfieldto=Now&amp;field0-0-0=blocked&amp;type0-0-0=substring&amp;value0-0-0=347914">' + loc + '</a></td>';
       for each (var path in lst) {
         //YAHOO.widget.Logger.log('testing ' + path);
         var innerContent;
