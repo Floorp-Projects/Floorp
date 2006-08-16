@@ -1545,7 +1545,7 @@ var gFinishedPage = {
   onWizardCancel: function() {
     var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                        .getService(Components.interfaces.nsIPromptService);
-    var message = gUpdates.strings.getFormattedString("restartLaterMessage",
+    var message = gUpdates.strings.getFormattedString("restartLaterMsg",
       [gUpdates.brandName]);
     ps.alert(window, gUpdates.strings.getString("restartLaterTitle"), 
              message);
