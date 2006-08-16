@@ -30,16 +30,23 @@
   title="Request Queue"
   style = "
     table.requests th { text-align: left; }
-    table#filter th { text-align: right; }
+    table#filtering th { text-align: right; }
   "
   onload="selectProduct(document.forms[0], 'product', 'component', 'Any');"
   javascript_urls=["productmenu.js"]
 %]
 
+<p>
+When you are logged in, only requests made by you or addressed to you
+are shown by default.  You can change the criteria using the form below.
+When you are logged out, all pending requests that are not restricted
+to some group are shown by default.
+</p>
+
 <form action="request.cgi" method="get">
   <input type="hidden" name="action" value="queue">
 
-  <table id="filter">
+  <table id="filtering">
     <tr>
       <th>Requester:</th>
       <td><input type="text" name="requester" value="[% cgi.param('requester') FILTER html %]" size="20" 
