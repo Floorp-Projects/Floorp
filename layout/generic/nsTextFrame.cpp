@@ -2192,12 +2192,9 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
     aTX.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed);
     // we trip this assertion in bug 31053, but I think it's unnecessary
     //NS_ASSERTION(isWhitespace, "mState and content are out of sync");
-#ifdef IBMBIDI
-    if (mState & NS_FRAME_IS_BIDI
-        && contentLen > mContentLength) {
-      contentLen = mContentLength;
+    if (contentLen > n) {
+      contentLen = n;
     }
-#endif // IBMBIDI
 
     if (isWhitespace) {
       if (nsnull != indexp) {
@@ -2246,16 +2243,14 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
       }
       break;
     }
-    // for ::first-letter or bidi, the content may be chopped
-    if (mState & (TEXT_FIRST_LETTER | NS_FRAME_IS_BIDI)) {
-      // XXX: doesn't support the case where the first-letter expands, e.g.,
-      // with text-transform:capitalize, the German szlig; becomes SS.
-      if (contentLen > n) {
-        contentLen = n;
-      }
-      if (wordLen > n) {
-        wordLen = n;
-      }
+    // the frame may not map the entire word
+    // XXX: doesn't support the case where the first-letter expands, e.g.,
+    // with text-transform:capitalize, the German szlig; becomes SS.
+    if (contentLen > n) {
+      contentLen = n;
+    }
+    if (wordLen > n) {
+      wordLen = n;
     }
     inWord = PR_FALSE;
     if (isWhitespace) {
