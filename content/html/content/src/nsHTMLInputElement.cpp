@@ -517,18 +517,28 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     //
     // Checked must be set no matter what type of control it is, since
     // GetChecked() must reflect the new value
-    //
-    if (aName == nsHTMLAtoms::checked &&
-        !GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED)) {
-      // Delay setting checked if the parser is creating this element
-      // (wait until everything is set)
-      if (GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
-        SET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED, PR_TRUE);
-      } else {
-        PRBool defaultChecked;
-        GetDefaultChecked(&defaultChecked);
-        DoSetChecked(defaultChecked);
-        SetCheckedChanged(PR_FALSE);
+    if (aName == nsHTMLAtoms::checked) {
+      if (aNotify &&
+          (mType == NS_FORM_INPUT_RADIO || mType == NS_FORM_INPUT_CHECKBOX)) {
+        // the checked attribute being changed, no matter the current checked
+        // state, influences the :default state, so notify about changes
+        nsIDocument* document = GetCurrentDoc();
+        if (document) {
+          MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, aNotify);
+          document->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_DEFAULT);
+        }
+      }
+      if (!GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED)) {
+        // Delay setting checked if the parser is creating this element (wait
+        // until everything is set)
+        if (GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
+          SET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED, PR_TRUE);
+        } else {
+          PRBool defaultChecked;
+          GetDefaultChecked(&defaultChecked);
+          DoSetChecked(defaultChecked);
+          SetCheckedChanged(PR_FALSE);
+        }
       }
     }
 
@@ -1012,53 +1022,48 @@ nsHTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext)
     return NS_OK;
   }
   
-  // Find the first submit control in elements[]
-  // and also check how many text controls we have in the form
-  nsCOMPtr<nsIContent> submitControl;
-  PRInt32 numTextControlsFound = 0;
+  nsIPresShell* shell = aPresContext->GetPresShell();
+  if (!shell) {
+    return NS_OK;
+  }
 
-  nsCOMPtr<nsISimpleEnumerator> formControls;
-  mForm->GetControlEnumerator(getter_AddRefs(formControls));
+  // Get the default submit element
+  nsIFormControl* submitControl = mForm->GetDefaultSubmitElement();
+  if (submitControl) {
+    nsCOMPtr<nsIContent> submitContent(do_QueryInterface(submitControl));
+    NS_ASSERTION(submitContent, "Form control not implementing nsIContent?!");
+    // Fire the button's onclick handler and let the button handle
+    // submitting the form.
+    nsMouseEvent event(PR_TRUE, NS_MOUSE_LEFT_CLICK, nsnull,
+                       nsMouseEvent::eReal);
+    nsEventStatus status = nsEventStatus_eIgnore;
+    shell->HandleDOMEventWithTarget(submitContent, &event, &status);
+  } else {
+    PRInt32 numTextControlsFound = 0;
+    // No default submit, find the number of text controls.
+    nsCOMPtr<nsISimpleEnumerator> formControls;
+    mForm->GetControlEnumerator(getter_AddRefs(formControls));
 
-  nsCOMPtr<nsISupports> currentControlSupports;
-  nsCOMPtr<nsIFormControl> currentControl;
-  PRBool hasMoreElements;
-  nsresult rv;
-  while (NS_SUCCEEDED(rv = formControls->HasMoreElements(&hasMoreElements)) &&
-         hasMoreElements) {
-    rv = formControls->GetNext(getter_AddRefs(currentControlSupports));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsISupports> currentControlSupports;
+    nsCOMPtr<nsIFormControl> currentControl;
+    PRBool hasMoreElements;
+    nsresult rv;
+    while (NS_SUCCEEDED(rv = formControls->HasMoreElements(&hasMoreElements)) &&
+           hasMoreElements && numTextControlsFound < 2) {
+      rv = formControls->GetNext(getter_AddRefs(currentControlSupports));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    currentControl = do_QueryInterface(currentControlSupports);
-    if (currentControl) {
-      PRInt32 type = currentControl->GetType();
-      if (!submitControl &&
-          (type == NS_FORM_INPUT_SUBMIT ||
-           type == NS_FORM_BUTTON_SUBMIT ||
-           type == NS_FORM_INPUT_IMAGE)) {
-        submitControl = do_QueryInterface(currentControl);
-        // We know as soon as we find a submit control that it no
-        // longer matters how many text controls there are--we are
-        // going to fire the onClick handler.
-        break;
-      } else if (type == NS_FORM_INPUT_TEXT ||
-                 type == NS_FORM_INPUT_PASSWORD) {
-        numTextControlsFound++;
+      currentControl = do_QueryInterface(currentControlSupports);
+      if (currentControl) {
+        PRInt32 type = currentControl->GetType();
+        if (type == NS_FORM_INPUT_TEXT ||
+            type == NS_FORM_INPUT_PASSWORD) {
+          numTextControlsFound++;
+        }
       }
     }
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-            
-  nsIPresShell* shell = aPresContext->GetPresShell();
-  if (shell) {
-    if (submitControl) {
-      // Fire the button's onclick handler and let the button handle
-      // submitting the form.
-      nsMouseEvent event(PR_TRUE, NS_MOUSE_LEFT_CLICK, nsnull,
-                         nsMouseEvent::eReal);
-      nsEventStatus status = nsEventStatus_eIgnore;
-      shell->HandleDOMEventWithTarget(submitControl, &event, &status);
-    } else if (numTextControlsFound == 1) {
+
+    if (numTextControlsFound == 1) {
       // If there's only one text control, just submit the form
       nsCOMPtr<nsIContent> form = do_QueryInterface(mForm);
       nsFormEvent event(PR_TRUE, NS_FORM_SUBMIT);
@@ -2561,13 +2566,24 @@ PRInt32
 nsHTMLInputElement::IntrinsicState() const
 {
   PRInt32 state = nsGenericHTMLFormElement::IntrinsicState();
-  if (GET_BOOLBIT(mBitField, BF_CHECKED) &&
-      (mType == NS_FORM_INPUT_CHECKBOX ||
-       mType == NS_FORM_INPUT_RADIO)) {
-    state |= NS_EVENT_STATE_CHECKED;
+  if (mType == NS_FORM_INPUT_CHECKBOX || mType == NS_FORM_INPUT_RADIO) {
+    // Check current checked state (:checked)
+    if (GET_BOOLBIT(mBitField, BF_CHECKED)) {
+      state |= NS_EVENT_STATE_CHECKED;
+    }
+
+    // Check whether we are the default checked element (:default)
+    // The call is to an interface function, which makes it non-const, so we
+    // use a nasty hack :(
+    PRBool defaultState = PR_FALSE;
+    NS_CONST_CAST(nsHTMLInputElement*, this)->GetDefaultChecked(&defaultState);
+    if (defaultState) {
+      state |= NS_EVENT_STATE_DEFAULT;
+    }
   } else if (mType == NS_FORM_INPUT_IMAGE) {
     state |= nsImageLoadingContent::ImageState();
   }
+
   return state;
 }
 

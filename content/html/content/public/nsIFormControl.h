@@ -69,8 +69,8 @@ class nsIFormSubmission;
 #define NS_FORM_OBJECT         21
 
 #define NS_IFORMCONTROL_IID   \
-{ 0xfcf27549, 0xbd77, 0x455a, \
-  {0x8c, 0x3e, 0xbb, 0x20, 0xc5, 0xaf, 0x7b, 0x86} }
+{ 0x119c5ce8, 0xf4b0, 0x456c, \
+  {0x83, 0x4d, 0xb1, 0x90, 0x3d, 0x99, 0x9f, 0xb3} }
 
 
 /**
@@ -95,9 +95,11 @@ public:
    * @param aForm the form
    * @param aRemoveFromForm set false if you do not want this element removed
    *        from the form.  (Used by nsFormControlList::Clear())
+   * @param aNofify If true, send nsIDocumentObserver notifications as needed.
    */
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
-                     PRBool aRemoveFromForm = PR_TRUE) = 0;
+                     PRBool aRemoveFromForm,
+                     PRBool aNotify) = 0;
 
   /**
    * Get the type of this control as an int (see NS_FORM_* above)
@@ -141,6 +143,13 @@ public:
   virtual PRBool RestoreState(nsPresState* aState) = 0;
 
   virtual PRBool AllowDrop() = 0;
+
+  /**
+   * Returns true if this is a control which submits the form when
+   * activated by the user.
+   * @return Whether this is a submit control.
+   */
+  virtual PRBool IsSubmitControl() const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormControl, NS_IFORMCONTROL_IID)

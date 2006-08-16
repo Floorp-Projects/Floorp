@@ -765,7 +765,7 @@ MaybeSetForm(nsGenericHTMLElement* aContent, nsHTMLTag aNodeType,
   NS_ASSERTION(!form || formElement,
                "nsGenericHTMLElement didn't implement nsIDOMHTMLFormElement");
 
-  formControl->SetForm(formElement);
+  formControl->SetForm(formElement, PR_TRUE, PR_FALSE);
 }
 
 static already_AddRefed<nsGenericHTMLElement>

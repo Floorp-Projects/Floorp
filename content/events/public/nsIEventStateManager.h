@@ -170,18 +170,19 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventStateManager, NS_IEVENTSTATEMANAGER_IID)
 // these two are temporary (see bug 302188)
 #define NS_EVENT_STATE_MOZ_READONLY  0x00008000 // CSS3-UI
 #define NS_EVENT_STATE_MOZ_READWRITE 0x00010000 // CSS3-UI
+#define NS_EVENT_STATE_DEFAULT       0x00020000 // CSS3-UI
 
 // Content could not be rendered (image/object/etc).
-#define NS_EVENT_STATE_BROKEN        0x00020000
+#define NS_EVENT_STATE_BROKEN        0x00040000
 // Content disabled by the user (images turned off, say)
-#define NS_EVENT_STATE_USERDISABLED  0x00040000
+#define NS_EVENT_STATE_USERDISABLED  0x00080000
 // Content suppressed by the user (ad blocking, etc)
-#define NS_EVENT_STATE_SUPPRESSED    0x00080000
+#define NS_EVENT_STATE_SUPPRESSED    0x00100000
 // Content is still loading such that there is nothing to show the
 // user (eg an image which hasn't started coming in yet)
-#define NS_EVENT_STATE_LOADING       0x00100000
+#define NS_EVENT_STATE_LOADING       0x00200000
 // Content is of a type that gecko can't handle
 #define NS_EVENT_STATE_TYPE_UNSUPPORTED \
-                                     0x00200000
+                                     0x00400000
 
 #endif // nsIEventStateManager_h__

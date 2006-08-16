@@ -164,12 +164,14 @@ public:
   NS_DECL_NSIWEBPROGRESSLISTENER
 
   // nsIForm
-  NS_IMETHOD AddElement(nsIFormControl* aElement);
+  NS_IMETHOD AddElement(nsIFormControl* aElement,
+                        PRBool aNotify);
   NS_IMETHOD AddElementToTable(nsIFormControl* aChild,
                                const nsAString& aName);
   NS_IMETHOD GetElementAt(PRInt32 aIndex, nsIFormControl** aElement) const;
   NS_IMETHOD GetElementCount(PRUint32* aCount) const;
-  NS_IMETHOD RemoveElement(nsIFormControl* aElement);
+  NS_IMETHOD RemoveElement(nsIFormControl* aElement,
+                           PRBool aNotify);
   NS_IMETHOD RemoveElementFromTable(nsIFormControl* aElement,
                                     const nsAString& aName);
   NS_IMETHOD ResolveName(const nsAString& aName,
@@ -181,6 +183,7 @@ public:
   NS_IMETHOD FlushPendingSubmission();
   NS_IMETHOD ForgetPendingSubmission();
   NS_IMETHOD GetActionURL(nsIURI** aActionURL);
+  NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const;
 
   // nsIRadioGroupContainer
   NS_IMETHOD SetCurrentRadioButton(const nsAString& aName,
@@ -304,6 +307,18 @@ protected:
    */
   nsresult DoResolveName(const nsAString& aName, PRBool aFlushContent,
                          nsISupports** aReturn);
+
+  /**
+   * Reset the default submit element after the previous default submit control
+   * is removed.
+   *
+   * Note that this, in the worst case, needs to run through all the form's
+   * controls.
+   *
+   * @param aNotify If true, send nsIDocumentObserver notifications on the
+   *                new and previous default elements.
+   */
+  nsresult ResetDefaultSubmitElement(PRBool aNotify);
   
   //
   // Data members
@@ -335,6 +350,9 @@ protected:
   nsCOMPtr<nsIRequest> mSubmittingRequest;
   /** The web progress object we are currently listening to */
   nsCOMPtr<nsIWebProgress> mWebProgress;
+
+  /** The default submit element -- WEAK */
+  nsIFormControl* mDefaultSubmitElement;
 
   friend class nsFormControlEnumerator;
 
@@ -494,7 +512,8 @@ nsHTMLFormElement::nsHTMLFormElement(nsINodeInfo *aNodeInfo)
     mSubmitPopupState(openAbused),
     mSubmitInitiatedFromUserInput(PR_FALSE),
     mPendingSubmission(nsnull),
-    mSubmittingRequest(nsnull)
+    mSubmittingRequest(nsnull),
+    mDefaultSubmitElement(nsnull)
 {
 }
 
@@ -1196,8 +1215,10 @@ static PRInt32 CompareFormControlPosition(nsIFormControl *control1, nsIFormContr
 }
 
 NS_IMETHODIMP
-nsHTMLFormElement::AddElement(nsIFormControl* aChild)
+nsHTMLFormElement::AddElement(nsIFormControl* aChild,
+                              PRBool aNotify)
 {
+  PRBool lastElement = PR_FALSE;
   if (ShouldBeInElements(aChild)) {
     PRUint32 count = ElementCount();
 
@@ -1216,6 +1237,7 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild)
     if (position >= 0 || count == 0) {
       // WEAK - don't addref
       mControls->mElements.AppendElement(aChild);
+      lastElement = PR_TRUE;
     }
     else {
       PRInt32 low = 0, mid, high;
@@ -1261,6 +1283,34 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild)
                                   nsnull,
                                   NS_PASSWORDMANAGER_CATEGORY);
   }
+ 
+  // Default submit element handling
+  if (aChild->IsSubmitControl()) {
+    // The new child is the default submit if there was not previously
+    // a default submit element, or if the new child is before the old
+    // default submit element. To speed up parsing, the special case
+    // of the last element in a form that already has a default submit
+    // element is ignored as it cannot be the default submit element.
+    nsIFormControl* oldControl = mDefaultSubmitElement;
+    if (!mDefaultSubmitElement || (!lastElement && 
+        CompareFormControlPosition(aChild, mDefaultSubmitElement) < 0)) {
+      mDefaultSubmitElement = aChild;
+    }
+
+    // Notify that the states of the new default submit and the previous
+    // default submit element have changed if the element which is the 
+    // default submit element has changed.
+    if (aNotify && oldControl != mDefaultSubmitElement) {
+      nsIDocument* document = GetCurrentDoc();
+      if (document) {
+        MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);
+        nsCOMPtr<nsIContent> oldElement(do_QueryInterface(oldControl));
+        nsCOMPtr<nsIContent> newElement(do_QueryInterface(mDefaultSubmitElement));
+        document->ContentStatesChanged(oldElement, newElement,
+                                       NS_EVENT_STATE_DEFAULT);
+      }
+    }
+  }
 
   return NS_OK;
 }
@@ -1274,14 +1324,16 @@ nsHTMLFormElement::AddElementToTable(nsIFormControl* aChild,
 
 
 NS_IMETHODIMP 
-nsHTMLFormElement::RemoveElement(nsIFormControl* aChild) 
+nsHTMLFormElement::RemoveElement(nsIFormControl* aChild,
+                                 PRBool aNotify) 
 {
   //
   // Remove it from the radio group if it's a radio button
   //
+  nsresult rv = NS_OK;
   if (aChild->GetType() == NS_FORM_INPUT_RADIO) {
     nsCOMPtr<nsIRadioControlElement> radio = do_QueryInterface(aChild);
-    nsresult rv = radio->WillRemoveFromRadioGroup();
+    rv = radio->WillRemoveFromRadioGroup();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1291,8 +1343,57 @@ nsHTMLFormElement::RemoveElement(nsIFormControl* aChild)
     mControls->mNotInElements.RemoveElement(aChild);
   }
 
-  return NS_OK;
+  if (aChild == mDefaultSubmitElement) {
+    // We are removing the default submit, find the new default
+    rv = ResetDefaultSubmitElement(aNotify);
+  }
+
+  return rv;
 }
+
+nsresult
+nsHTMLFormElement::ResetDefaultSubmitElement(PRBool aNotify)
+{
+  nsIFormControl* oldDefaultSubmit = mDefaultSubmitElement;
+  mDefaultSubmitElement = nsnull;
+
+  nsCOMPtr<nsISimpleEnumerator> formControls;
+  GetControlEnumerator(getter_AddRefs(formControls));
+
+  nsCOMPtr<nsISupports> currentControlSupports;
+  nsCOMPtr<nsIFormControl> currentControl;
+
+  // Find default submit element
+  PRBool hasMoreElements;
+  nsresult rv;
+  while (NS_SUCCEEDED(rv = formControls->HasMoreElements(&hasMoreElements)) &&
+         hasMoreElements) {
+    rv = formControls->GetNext(getter_AddRefs(currentControlSupports));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    currentControl = do_QueryInterface(currentControlSupports);
+    if (currentControl && currentControl->IsSubmitControl()) {
+        mDefaultSubmitElement = currentControl;
+        break;
+    }
+  }
+
+  // Inform about change.
+  if (aNotify && (oldDefaultSubmit || mDefaultSubmitElement)) {
+    NS_ASSERTION(mDefaultSubmitElement != oldDefaultSubmit,
+                 "Notifying but elements haven't changed.");
+    nsIDocument* document = GetCurrentDoc();
+    if (document) {
+      MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);
+      nsCOMPtr<nsIContent> oldElement(do_QueryInterface(oldDefaultSubmit));
+      nsCOMPtr<nsIContent> newElement(do_QueryInterface(mDefaultSubmitElement));
+      document->ContentStatesChanged(oldElement, newElement,
+                                     NS_EVENT_STATE_DEFAULT);
+    }
+  }
+
+  return rv;
+ }
 
 NS_IMETHODIMP
 nsHTMLFormElement::RemoveElementFromTable(nsIFormControl* aElement,
@@ -1455,6 +1556,12 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
   NS_ADDREF(*aActionURL);
 
   return rv;
+}
+
+NS_IMETHODIMP_(nsIFormControl*)
+nsHTMLFormElement::GetDefaultSubmitElement() const
+{
+  return mDefaultSubmitElement;
 }
 
 NS_IMETHODIMP
@@ -1826,7 +1933,7 @@ nsFormControlList::Clear()
     nsIFormControl* f = NS_STATIC_CAST(nsIFormControl *,
                                        mElements.ElementAt(i));
     if (f) {
-      f->SetForm(nsnull, PR_FALSE); 
+      f->SetForm(nsnull, PR_FALSE, PR_TRUE); 
     }
   }
   mElements.Clear();
@@ -1835,7 +1942,7 @@ nsFormControlList::Clear()
     nsIFormControl* f = NS_STATIC_CAST(nsIFormControl*,
                                        mNotInElements.ElementAt(i));
     if (f) {
-      f->SetForm(nsnull, PR_FALSE);
+      f->SetForm(nsnull, PR_FALSE, PR_TRUE);
     }
   }
   mNotInElements.Clear();

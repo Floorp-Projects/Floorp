@@ -1229,6 +1229,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
     else if (nsCSSPseudoClasses::mozTypeUnsupported == pseudoClass->mAtom) {
       stateToCheck = NS_EVENT_STATE_TYPE_UNSUPPORTED;
     }
+    else if (nsCSSPseudoClasses::defaultPseudo == pseudoClass->mAtom) {
+      stateToCheck = NS_EVENT_STATE_DEFAULT;
+    }
     else if (nsCSSPseudoClasses::required == pseudoClass->mAtom) {
       stateToCheck = NS_EVENT_STATE_REQUIRED;
     }
@@ -1827,7 +1830,8 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
         (pseudoClass->mAtom == nsCSSPseudoClasses::inRange) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::outOfRange) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::mozReadOnly) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::mozReadWrite)) {
+        (pseudoClass->mAtom == nsCSSPseudoClasses::mozReadWrite) ||
+        (pseudoClass->mAtom == nsCSSPseudoClasses::defaultPseudo)) {
       return PR_TRUE;
     }
   }

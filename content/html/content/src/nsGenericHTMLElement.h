@@ -788,7 +788,9 @@ public:
   // nsIFormControl
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
-                     PRBool aRemoveFromForm = PR_TRUE);
+                     PRBool aRemoveFromForm,
+                     PRBool aNotify);
+
   NS_IMETHOD SaveState()
   {
     return NS_OK;
@@ -801,6 +803,8 @@ public:
   {
     return PR_TRUE;
   }
+  
+  virtual PRBool IsSubmitControl() const;
 
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
