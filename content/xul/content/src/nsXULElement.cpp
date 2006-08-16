@@ -865,43 +865,37 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                 rv = slots->mAttributeMap->SetOwnerDocument(newOwnerDocument);
                 NS_ENSURE_SUCCESS(rv, rv);
             }
-        }
-    }
 
-    if (aDocument) {
-        // we need to (re-)initialize several attributes that are dependant on
-        // the document. Do that now.
-        // XXXbz why do we have attributes depending on the current document?
-        // Shouldn't they depend on the owner document?  Or is this code just
-        // misplaced, basically?
-
-        PRInt32 count = mAttrsAndChildren.AttrCount();
-        PRBool haveLocalAttributes = (count > 0);
-        PRInt32 i;
-        for (i = 0; i < count; i++) {
-            AddListenerFor(*mAttrsAndChildren.AttrNameAt(i),
-                           aCompileEventHandlers);
-        }
-
-        if (mPrototype) {
-            // If we have a prototype, the node we are binding to should
-            // have the same script-type - otherwise we will compile the
-            // event handlers incorrectly.
-            NS_ASSERTION(mPrototype->mScriptTypeID == GetScriptTypeID(),
-                         "Prototype and node confused about default language?");
-            PRInt32 count = mPrototype->mNumAttributes;
+            // we need to (re-)initialize several attributes that are dependant on
+            // the document. Do that now.
+            PRInt32 count = mAttrsAndChildren.AttrCount();
+            PRBool haveLocalAttributes = (count > 0);
+            PRInt32 i;
             for (i = 0; i < count; i++) {
-                nsXULPrototypeAttribute *protoattr =
-                    &mPrototype->mAttributes[i];
+                AddListenerFor(*mAttrsAndChildren.AttrNameAt(i),
+                               aCompileEventHandlers);
+            }
 
-                // Don't clobber a locally modified attribute.
-                if (haveLocalAttributes &&
-                    mAttrsAndChildren.GetAttr(protoattr->mName.LocalName(), 
-                                              protoattr->mName.NamespaceID())) {
-                    continue;
+            if (mPrototype) {
+                // If we have a prototype, the node we are binding to should
+                // have the same script-type - otherwise we will compile the
+                // event handlers incorrectly.
+                NS_ASSERTION(mPrototype->mScriptTypeID == GetScriptTypeID(),
+                             "Prototype and node confused about default language?");
+                PRInt32 count = mPrototype->mNumAttributes;
+                for (i = 0; i < count; i++) {
+                    nsXULPrototypeAttribute *protoattr =
+                        &mPrototype->mAttributes[i];
+
+                    // Don't clobber a locally modified attribute.
+                    if (haveLocalAttributes &&
+                        mAttrsAndChildren.GetAttr(protoattr->mName.LocalName(), 
+                                                  protoattr->mName.NamespaceID())) {
+                        continue;
+                    }
+
+                    AddListenerFor(protoattr->mName, aCompileEventHandlers);
                 }
-
-                AddListenerFor(protoattr->mName, aCompileEventHandlers);
             }
         }
     }
@@ -963,13 +957,6 @@ nsXULElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     nsDOMSlots* slots = GetExistingDOMSlots();
     if (slots) {
         NS_IF_RELEASE(slots->mControllers);
-    }
-
-    // XXXbz why are we nuking our listener manager?  We can get events while
-    // not in a document!
-    if (mListenerManager) {
-        mListenerManager->Disconnect();
-        mListenerManager = nsnull;
     }
 
     // Unset things in the reverse order from how we set them in BindToTree
@@ -2300,14 +2287,41 @@ nsXULElement::IsNodeOfType(PRUint32 aFlags) const
     return !(aFlags & ~(eCONTENT | eELEMENT | eXUL));
 }
 
+static void
+PopupListenerPropertyDtor(void* aObject, nsIAtom* aPropertyName,
+                          void* aPropertyValue, void* aData)
+{
+  nsIXULPopupListener* listener =
+    NS_STATIC_CAST(nsIXULPopupListener*, aPropertyValue);
+  if (!listener) {
+    return;
+  }
+  nsCOMPtr<nsIDOMEventListener> eventListener = do_QueryInterface(listener);
+  nsCOMPtr<nsIDOMEventTarget> target =
+    do_QueryInterface(NS_STATIC_CAST(nsINode*, aObject));
+  if (target) {
+    target->RemoveEventListener(NS_LITERAL_STRING("mousedown"), eventListener,
+                                PR_FALSE);
+    target->RemoveEventListener(NS_LITERAL_STRING("contextmenu"), eventListener,
+                                PR_FALSE);
+  }
+  NS_RELEASE(listener);
+}
+
 nsresult
 nsXULElement::AddPopupListener(nsIAtom* aName)
 {
+    nsCOMPtr<nsIXULPopupListener> popupListener =
+        NS_STATIC_CAST(nsIXULPopupListener*,
+                       GetProperty(nsXULAtoms::popuplistener));
+    if (popupListener) {
+        // Popup listener is already installed.
+        return NS_OK;
+    }
     // Add a popup listener to the element
     nsresult rv;
 
-    nsCOMPtr<nsIXULPopupListener> popupListener =
-        do_CreateInstance(kXULPopupListenerCID, &rv);
+    popupListener = do_CreateInstance(kXULPopupListenerCID, &rv);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to create an instance of the popup listener object.");
     if (NS_FAILED(rv)) return rv;
 
@@ -2326,9 +2340,12 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     nsCOMPtr<nsIDOMEventListener> eventListener = do_QueryInterface(popupListener);
     nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
     NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
+    rv = SetProperty(nsXULAtoms::popuplistener, popupListener,
+                     PopupListenerPropertyDtor);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ADDREF(popupListener);
     target->AddEventListener(NS_LITERAL_STRING("mousedown"), eventListener, PR_FALSE);
     target->AddEventListener(NS_LITERAL_STRING("contextmenu"), eventListener, PR_FALSE);
-
     return NS_OK;
 }
 

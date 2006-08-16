@@ -61,6 +61,7 @@
 #include "nsIContent.h"
 #include "nsXULTooltipListener.h"
 #include "nsFrameManager.h"
+#include "nsXULAtoms.h"
 
 // Interface IDs
 
@@ -318,17 +319,40 @@ nsRootBoxFrame::SetDefaultTooltip(nsIContent* aTooltip)
   mDefaultTooltip = aTooltip;
 }
 
+static void
+TooltipListenerPropertyDtor(void *aObject, nsIAtom *aPropertyName,
+                            void *aPropertyValue, void *aData)
+{
+  nsXULTooltipListener* listener =
+    NS_STATIC_CAST(nsXULTooltipListener*, aPropertyValue);
+  if (listener) {
+    listener->RemoveTooltipSupport(NS_STATIC_CAST(nsIContent*, aObject));
+    NS_RELEASE(listener);
+  }
+}
+
 nsresult
 nsRootBoxFrame::AddTooltipSupport(nsIContent* aNode)
 {
-  // listener will be refcounted by dom event targets that
-  // it will add itself to, and destroyed when those targets
-  // are destroyed
-  nsXULTooltipListener* listener = new nsXULTooltipListener();
+  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
+  nsRefPtr<nsXULTooltipListener> listener =
+    NS_STATIC_CAST(nsXULTooltipListener*,
+                   aNode->GetProperty(nsXULAtoms::tooltiplistener));
+  if (listener) {
+    // Tooltip listener is already installed.
+    return NS_OK;
+  }
+
+  listener = new nsXULTooltipListener();
   if (!listener)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  listener->Init(aNode);
+  if (NS_SUCCEEDED(listener->Init(aNode))) {
+    nsresult rv = aNode->SetProperty(nsXULAtoms::tooltiplistener, listener,
+                                     TooltipListenerPropertyDtor);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ADDREF(listener);
+  }
   return NS_OK;
 }
 

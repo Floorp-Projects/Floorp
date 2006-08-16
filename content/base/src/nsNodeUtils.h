@@ -108,6 +108,12 @@ public:
    * @see nsIMutationObserver::NodeWillBeDestroyed
    */
   static void NodeWillBeDestroyed(nsINode* aNode);
+
+  /**
+   * To be called when reference count of aNode drops to zero.
+   * @param aNode The node which is going to be deleted.
+   */
+  static void LastRelease(nsINode* aNode);
 };
 
 #endif // nsNodeUtils_h___

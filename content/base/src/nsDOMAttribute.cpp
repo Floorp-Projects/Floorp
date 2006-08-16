@@ -98,7 +98,8 @@ NS_INTERFACE_MAP_END
 
 
 NS_IMPL_ADDREF(nsDOMAttribute)
-NS_IMPL_RELEASE(nsDOMAttribute)
+NS_IMPL_RELEASE_WITH_DESTROY(nsDOMAttribute,
+                             nsNodeUtils::LastRelease(this))
 
 // nsIDOMGCParticipant methods
 nsIDOMGCParticipant*
