@@ -145,7 +145,7 @@
     </groupbox>
 
     <!-- Fonts and Colors -->
-    <groupbox>
+    <groupbox id="fontsGroup">
       <caption label="&fontsAndColors.label;"/>
 
       <grid id="fontsGrid">
