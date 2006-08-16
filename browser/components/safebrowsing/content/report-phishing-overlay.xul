@@ -48,8 +48,8 @@
   </broadcasterset>
   <menupopup id="menu_HelpPopup">
     <menuitem id="menu_HelpPopup_reportPhishingtoolmenu"
-              label="&reportPhishingMenu.title;..."
-              accesskey="&reportPhishingMenu.accesskey;"
+              label="&reportPhishSiteMenu.title;..."
+              accesskey="&reportPhishSiteMenu.accesskey;"
               insertbefore="aboutSeparator"
               observes="reportPhishingBroadcaster"
               oncommand="openUILinkIn(safebrowsing.getReportPhishingURL(), 'tab');"
