@@ -82,4 +82,5 @@ class RdfComponent extends Object {
             // save it anyway
             $data[$subject][$predicate] = $object;
         }
+    }
 }
