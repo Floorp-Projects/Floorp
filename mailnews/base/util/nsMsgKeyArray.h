@@ -75,8 +75,8 @@ public:
 	void InsertAt(PRUint32 nIndex, const nsMsgKeyArray *idArray) {
 	  nsUInt32Array::InsertAt(nIndex, idArray);
 	}
-	PRUint32 Add(nsMsgKey id) {
-	  return(nsUInt32Array::Add((uint32)id));
+	PRUint32 Add(nsMsgKey key) {
+	  return(nsUInt32Array::Add((uint32)key));
 	}
 	PRUint32 Add(nsMsgKey *elementPtr, PRUint32 numElements) {
 	  return nsUInt32Array::Add((PRUint32 *) elementPtr, numElements);
