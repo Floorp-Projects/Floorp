@@ -50,7 +50,7 @@ class VersionCompareComponent extends Object {
      * Parse a version part. 
      * @return array $r parsed version part.
      */
-    function NS_ParseVersionPart($p) {
+    function ParseVersionPart($p) {
         if ($p == '*') {
             return array('numA'   => 2147483647,
                          'strB'   => '',
@@ -79,7 +79,7 @@ class VersionCompareComponent extends Object {
      * @param string $bp
      * @return int $r
      */
-    function NS_cmp($an, $bn) {
+    function cmp($an, $bn) {
         if ($an < $bn)
             return -1;
 
@@ -95,7 +95,7 @@ class VersionCompareComponent extends Object {
      * @param string $bs
      * @return int $r
      */
-    function NS_strcmp($as, $bs) {
+    function strcmp($as, $bs) {
         if ($as == $bs)
             return 0;
 
@@ -114,23 +114,23 @@ class VersionCompareComponent extends Object {
      * @param string $bp
      * @return int $r -1|0|1
      */
-    function NS_CompareVersionParts($ap, $bp) {
-        $avp = NS_ParseVersionPart($ap);
-        $bvp = NS_ParseVersionPart($bp);
+    function CompareVersionParts($ap, $bp) {
+        $avp = $this->ParseVersionPart($ap);
+        $bvp = $this->ParseVersionPart($bp);
     
-        $r = NS_cmp($avp['numA'], $bvp['numA']);
+        $r = $this->cmp($avp['numA'], $bvp['numA']);
         if ($r)
             return $r;
     
-        $r = NS_strcmp($avp['strB'], $bvp['strB']);
+        $r = $this->strcmp($avp['strB'], $bvp['strB']);
         if ($r)
             return $r;
     
-        $r = NS_cmp($avp['numC'], $bvp['numC']);
+        $r = $this->cmp($avp['numC'], $bvp['numC']);
         if ($r)
             return $r;
     
-        return NS_strcmp($avp['extraD'], $bvp['extraD']);
+        return $this->strcmp($avp['extraD'], $bvp['extraD']);
     }
 
     /**
@@ -139,7 +139,7 @@ class VersionCompareComponent extends Object {
      * @param string $b complete version string.
      * @return int $r -1|0|1
      */
-    function NS_CompareVersions($a, $b) {
+    function CompareVersions($a, $b) {
         $al = explode('.', $a);
         $bl = explode('.', $b);
     
@@ -147,10 +147,10 @@ class VersionCompareComponent extends Object {
             $ap = array_shift($al);
             $bp = array_shift($bl);
     
-            $r = NS_CompareVersionParts($ap, $bp);
+            $r = $this->CompareVersionParts($ap, $bp);
             if ($r != 0)
                 return $r;
-            }
+        }
     
         return 0;
     }

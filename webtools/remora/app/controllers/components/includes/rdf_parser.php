@@ -12,6 +12,8 @@
 // History:
 // 06-13-2002                : First version of this class.
 // 07-17-2002                  Minor bugfix (Leandro Mariano Lopez)
+// 08-16-2006                  Allowed for user callback function to be in a class
+//                             (Justin Scott)
 // ##################################################################################
 // To-Dos:
 //
@@ -560,9 +562,9 @@ function _report_statement( $subject_type, $subject, $predicate, $ordinal, $obje
 
     if( $this->rdf_parser["statement_handler"] )
     {
-        $this->rdf_parser["statement_handler"]($this->rdf_parser["user_data"],$subject_type,$subject,$predicate,$ordinal,$object_type,$object,$xml_lang );
-
-        if( $bag_id )
+        $this->rdf_parser["user_data"] = call_user_func($this->rdf_parser["statement_handler"], $this->rdf_parser["user_data"], $subject_type, $subject, $predicate, $ordinal, $object_type, $object, $xml_lang);
+       // $this->rdf_parser["statement_handler"]($this->rdf_parser["user_data"],$subject_type,$subject,$predicate,$ordinal,$object_type,$object,$xml_lang )
+     if( $bag_id )
         {
             if( $statements == '' )
             {

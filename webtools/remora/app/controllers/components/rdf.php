@@ -15,16 +15,16 @@ class RdfComponent extends Object {
         $rdf = new Rdf_parser();
         $rdf->rdf_parser_create(null);
         $rdf->rdf_set_user_data($data);
-        $rdf->rdf_set_statement_handler($this->mfStatementHandler);
+        $rdf->rdf_set_statement_handler(array('RdfComponent', 'mfStatementHandler'));
         $rdf->rdf_set_base("");
 
         if (!$rdf->rdf_parse($manifestData, strlen($manifestData), true)) {
-           return null;
+            return xml_error_string(xml_get_error_code($rdf->rdf_parser["xml_parser"]));
         }
 
         // Set the targetApplication data
         $targetArray = array();
-        if (is_array($data["manifest"]["targetApplication"])) {
+        if (@is_array($data["manifest"]["targetApplication"])) {
             foreach ($data["manifest"]["targetApplication"] as $targetApp) {
                 $id = $data[$targetApp][EM_NS."id"];
                 $targetArray[$id]["minVersion"] = $data[$targetApp][EM_NS."minVersion"];
@@ -51,7 +51,7 @@ class RdfComponent extends Object {
      * @param string $xmlLang
      */
     function mfStatementHandler(&$data, $subjectType, $subject, $predicate,
-                                $ordinal, $objectType, $object, $xmlLang) {
+                                $ordinal, $objectType, $object, $xmlLang) {     
         // single properties - ignoring: iconURL, optionsURL, aboutURL, and anything not listed
         $singleProps = array("id" => 1, "version" => 1, "creator" => 1, "homepageURL" => 1, "updateURL" => 1);
         // multiple properties - ignoring: File
@@ -66,13 +66,13 @@ class RdfComponent extends Object {
             if (strncmp($predicate, EM_NS, $length) == 0) {
                 $prop = substr($predicate, $length, strlen($predicate)-$length);
 
-                if ($singleProps[$prop]) {
+                if (array_key_exists($prop, $singleProps) ) {
                     $data["manifest"][$prop] = $object;
                 }
-                elseif ($multiProps[$prop]) {
+                elseif (array_key_exists($prop, $multiProps)) {
                     $data["manifest"][$prop][] = $object;
                 }
-                elseif ($l10nProps[$prop]) {
+                elseif (array_key_exists($prop, $l10nProps)) {
                     $lang = ($xmlLang) ? $xmlLang : "en-US";
                     $data["manifest"][$prop][$lang] = $object;
                 }
@@ -82,5 +82,6 @@ class RdfComponent extends Object {
             // save it anyway
             $data[$subject][$predicate] = $object;
         }
+        return $data;
     }
 }
