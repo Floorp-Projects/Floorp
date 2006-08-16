@@ -352,6 +352,20 @@ void nsView::DoResetWidgetBounds(PRBool aMoveOnly,
   if (mViewManager->GetRootView() == this) {
     return;
   }
+  
+  nsRect curBounds;
+  mWindow->GetBounds(curBounds);
+  nsWindowType type;
+  mWindow->GetWindowType(type);
+
+  if (curBounds.IsEmpty() && mDimBounds.IsEmpty() && type == eWindowType_popup) {
+    // Don't manipulate empty popup widgets. For example there's no point
+    // moving hidden comboboxes around, or doing X server roundtrips
+    // to compute their true screen position. This could mean that WidgetToScreen
+    // operations on these widgets don't return up-to-date values, but popup
+    // positions aren't reliable anyway because of correction to be on or off-screen.
+    return;
+  }
 
   NS_PRECONDITION(mWindow, "Why was this called??");
   nsIDeviceContext  *dx;
@@ -365,9 +379,7 @@ void nsView::DoResetWidgetBounds(PRBool aMoveOnly,
   nsPoint offset(0, 0);
   if (GetParent()) {
     nsIWidget* parentWidget = GetParent()->GetNearestWidget(&offset);
-
-    nsWindowType type;
-    mWindow->GetWindowType(type);
+    
     if (type == eWindowType_popup) {
       // put offset into screen coordinates
       nsRect screenRect(0,0,1,1);
@@ -387,8 +399,6 @@ void nsView::DoResetWidgetBounds(PRBool aMoveOnly,
   if (!(mVFlags & NS_VIEW_FLAG_HAS_POSITIONED_WIDGET)) {
     mVFlags |= NS_VIEW_FLAG_HAS_POSITIONED_WIDGET;
   } else {
-    nsRect curBounds;
-    mWindow->GetBounds(curBounds);
     changedPos = curBounds.TopLeft() != newBounds.TopLeft();
     changedSize = curBounds.Size() != newBounds.Size();
   }
