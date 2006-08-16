@@ -34,7 +34,7 @@
 *
 * ***** END LICENSE BLOCK ***** */
 
-#include "nsIFeedElementBase.idl"
+#include "nsISupports.idl"
 
 interface nsIURI;
 interface nsIWritablePropertyBag2;
@@ -46,14 +46,19 @@ interface nsIFeedTextConstruct;
 * but they have some divergent attributes and require
 * different convenience methods.
 */ 
-[scriptable, uuid(6f155937-011a-44ec-8833-b97917678aa4)]
-interface nsIFeedContainer : nsIFeedElementBase
+[scriptable, uuid(56877da5-598b-41dd-bf3e-72fe713c7820)]
+interface nsIFeedContainer : nsISupports
 {
   /**
   * Many feeds contain an ID distinct from their URI, and
   * entries have standard fields for this in all major formats.
   */
   attribute AString id;
+
+  /**
+   * The baseURI for the Entry or Feed.
+   */
+  attribute nsIURI baseURI;
 
   /**
   * The fields found in the document. Common Atom
@@ -89,28 +94,7 @@ interface nsIFeedContainer : nsIFeedElementBase
   attribute nsIArray categories;
 
   /**
-   * The rights or license associated with a feed or entry.
-   */
-  attribute nsIFeedTextConstruct rights;
-
-  /**
-   * A list of nsIFeedPersons that authored the feed.
-   */
-  attribute nsIArray authors;
-
-  /**
-   * A list of nsIFeedPersons that contributed to the feed.
-   */
-  attribute nsIArray contributors;
-
-  /**
-   * The date the feed was updated, in RFC822 form. Parsable by JS
-   * and mail code.
-   */
-  attribute AString updated;
-
-  /**
-  * Syncs a container's fields with its convenience attributes.
+  * Syncs a container's fields with its convience attributes.
   */
   void normalize();
 };
