@@ -186,9 +186,9 @@
       <label id="finishedBackgroundLink" class="text-link" value="&details.link;"/>
     </hbox>
     <spacer flex="1"/>
-    <label>&finishedBackground.detail1;</label>
+    <label>&finishedBackground.more1;</label>
     <separator class="thin"/>
-    <label>&finishedBackground.detail2;</label>
+    <label>&finishedBackground.more2;</label>
   </wizardpage>
   
   <wizardpage id="installed" pageid="installed"

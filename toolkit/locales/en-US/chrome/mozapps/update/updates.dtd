@@ -64,8 +64,8 @@
 <!ENTITY  finishedBackground.text         "&brandShortName; has downloaded and verified an important update. 
                                            Click the link below for more details.">
 <!ENTITY  finishedBackground.name         "Update:">
-<!ENTITY  finishedBackground.detail1      "Click Restart &brandShortName; Now to install the update now.">
-<!ENTITY  finishedBackground.detail2      "Click Later to close this dialog and continue browsing. &brandShortName;
+<!ENTITY  finishedBackground.more1        "Click Restart &brandShortName; Now to install the update now.">
+<!ENTITY  finishedBackground.more2        "Click Later to close this dialog and continue working. &brandShortName;
                                            will install the update the next time it starts.">
 
 <!ENTITY  installed.title                 "Update Installed">
