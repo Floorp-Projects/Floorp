@@ -329,6 +329,13 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
         mimeCType.AssignLiteral("text/html");
       }
     }
+
+    // Flush out frame construction to make sure that the subframe's
+    // presshell is set up if it needs to be.
+    nsCOMPtr<nsIDocument> document(do_QueryInterface(doc));
+    if (document) {
+      document->FlushPendingNotifications(Flush_Frames);
+    }
   }
   PRBool needHTMLController = PR_FALSE;
 
@@ -388,13 +395,6 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   //  only if we haven't found some error above,
   nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
   if (!docShell) return NS_ERROR_FAILURE;  
-
-  // Flush out frame construction to make sure that the subframe's
-  // presshell is set up if it needs to be.
-  nsCOMPtr<nsIDocument> document(do_QueryInterface(doc));
-  if (document) {
-    document->FlushPendingNotifications(Flush_Frames);
-  }
 
   // Disable animation of images in this document:
   nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));
