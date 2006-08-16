@@ -315,6 +315,9 @@ sub packit {
         TinderUtils::run_shell_command("cp -r $package_location/xpi $stagedir/windows-xpi");
       }
     } elsif (TinderUtils::is_linux()) {
+      # XXX: this seems to be removed by the packaging process above
+      mkdir($stagedir, 0775);
+
       if ($Settings::stub_installer) {
         TinderUtils::run_shell_command("cp $package_location/stub/*.tar.* $stagedir/");
       }
