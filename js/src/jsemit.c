@@ -3130,10 +3130,17 @@ EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 return JS_FALSE;
             break;
 
+          case JSOP_SETLOCAL:
+            if (wantpop) {
+                slot = (jsuint) pn->pn_slot;
+                EMIT_UINT16_IMM_OP(JSOP_SETLOCALPOP, slot);
+                break;
+            }
+            /* FALL THROUGH */
+
           case JSOP_SETARG:
           case JSOP_SETVAR:
           case JSOP_SETGVAR:
-          case JSOP_SETLOCAL:
             slot = (jsuint) pn->pn_slot;
             EMIT_UINT16_IMM_OP(pn->pn_op, slot);
             if (wantpop && js_Emit1(cx, cg, JSOP_POP) < 0)
@@ -4386,17 +4393,14 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             /*
              * The emitted code for a catch block looks like:
              *
-             * [ popscope ]                        only if 2nd+ catch block
-             * name Object
-             * pushobj
-             * newinit
+             * [ leaveblock ]                      only if 2nd+ catch block
+             * enterblock                          with SRC_CATCH
              * exception
-             * initcatchvar <atom>
-             * enterwith
+             * setlocalpop <slot>                  or destructuring code
              * [< catchguard code >]               if there's a catchguard
              * [ifeq <offset to next catch block>]         " "
              * < catch block contents >
-             * leavewith
+             * leaveblock
              * goto <end of catch blocks>          non-local; finally applies
              *
              * If there's no catch block without a catchguard, the last
@@ -4639,15 +4643,30 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         stmt = stmt->down;
         JS_ASSERT(stmt->type == STMT_TRY || stmt->type == STMT_FINALLY);
 
-        /*
-         * Pick up the pending exception and bind it to the catch variable.
-         * Inline BindNameToSlot, fixing up the slot by adding block depth.
-         */
+        /* Pick up the pending exception and bind it to the catch variable. */
         if (js_Emit1(cx, cg, JSOP_EXCEPTION) < 0)
             return JS_FALSE;
         pn2 = pn->pn_kid1;
-        pn2->pn_slot += OBJ_BLOCK_DEPTH(cx, ATOM_TO_OBJECT(atom));
-        EMIT_UINT16_IMM_OP(JSOP_INITCATCHVAR, pn2->pn_slot);
+        switch (pn2->pn_type) {
+#if JS_HAS_DESTRUCTURING
+          case TOK_RB:
+          case TOK_RC:
+            if (!EmitDestructuringOps(cx, cg, JSOP_NOP, pn2))
+                return JS_FALSE;
+            if (js_Emit1(cx, cg, JSOP_POP) < 0)
+                return JS_FALSE;
+            break;
+#endif
+
+          case TOK_NAME:
+            /* Inline BindNameToSlot, adding block depth to pn2->pn_slot. */
+            pn2->pn_slot += OBJ_BLOCK_DEPTH(cx, ATOM_TO_OBJECT(atom));
+            EMIT_UINT16_IMM_OP(JSOP_SETLOCALPOP, pn2->pn_slot);
+            break;
+
+          default:
+            JS_ASSERT(0);
+        }
 
         /* Emit the guard expression, if there is one. */
         if (pn->pn_kid2) {
@@ -5022,7 +5041,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             break;
 #endif
-          default:;
+          default:
+            JS_ASSERT(0);
         }
         break;
 
@@ -5421,11 +5441,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (!js_EmitTree(cx, cg, pn->pn_expr))
             return JS_FALSE;
 
-        op = (pn->pn_extra & PNX_BLOCKEXPR)
-             ? JSOP_LEAVEBLOCKEXPR
-             : JSOP_LEAVEBLOCK;
-        EMIT_UINT16_IMM_OP(op, count);
-
+        /* Emit the JSOP_LEAVEBLOCK or JSOP_LEAVEBLOCKEXPR opcode. */
+        EMIT_UINT16_IMM_OP(pn->pn_op, count);
         cg->stackDepth -= count;
 
         ok = js_PopStatementCG(cx, cg);

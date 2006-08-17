@@ -106,8 +106,8 @@ JS_BEGIN_EXTERN_C
  *                          TOK_LEXICALSCOPE nodes, each with pn_expr pointing
  *                          to a TOK_CATCH node
  *                          pn_kid3: null or finally block
- * TOK_CATCH    ternary     pn_kid1: TOK_NAME, TOK_LB, or TOK_LC catch var node
- *                                   (TOK_LB or TOK_LC if destructuring)
+ * TOK_CATCH    ternary     pn_kid1: TOK_NAME, TOK_RB, or TOK_RC catch var node
+ *                                   (TOK_RB or TOK_RC if destructuring)
  *                          pn_kid2: null or the catch guard expression
  *                          pn_kid3: catch block statements
  * TOK_BREAK    name        pn_atom: label or null
@@ -245,7 +245,8 @@ JS_BEGIN_EXTERN_C
  *
  * Label              Variant   Members
  * -----              -------   -------
- * TOK_LEXICALSCOPE   name      pn_atom: block object
+ * TOK_LEXICALSCOPE   name      pn_op: JSOP_LEAVEBLOCK or JSOP_LEAVEBLOCKEXPR
+ *                              pn_atom: block object
  *                              pn_expr: block body
  * TOK_ARRAYCOMP      list      pn_head: list of pn_count (1 or 2) elements
  *                              if pn_count is 2, first element is #n=[...]
@@ -283,7 +284,7 @@ struct JSParseNode {
             JSParseNode *head;          /* first node in list */
             JSParseNode **tail;         /* ptr to ptr to last node in list */
             uint32      count;          /* number of nodes in list */
-            uint32      extra;          /* extra comma flag for [1,2,,] */
+            uint32      extra;          /* extra flags, see below */
         } list;
         struct {                        /* ternary: if, for(;;), ?: */
             JSParseNode *kid1;          /* condition, discriminant, etc. */
@@ -350,8 +351,7 @@ struct JSParseNode {
                                            which is left kid of TOK_FOR */
 #define PNX_ENDCOMMA    0x10            /* array literal has comma at end */
 #define PNX_XMLROOT     0x20            /* top-most node in XML literal tree */
-#define PNX_BLOCKEXPR   0x40            /* this block is an expression */
-#define PNX_GROUPINIT   0x80            /* var [a, b] = [c, d]; unit list */
+#define PNX_GROUPINIT   0x40            /* var [a, b] = [c, d]; unit list */
 
 /*
  * Move pn2 into pn, preserving pn->pn_pos and pn->pn_offset and handing off
