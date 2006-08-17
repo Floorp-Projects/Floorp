@@ -90,6 +90,12 @@ NS_COM_GLUE PRUnichar*
 NS_strdup(const PRUnichar *aString);
 
 /**
+ * "strdup", but using the NS_Alloc allocator.
+ */
+NS_COM_GLUE char*
+NS_strdup(const char *aString);
+
+/**
  * strndup for PRUnichar strings... this function will ensure that the
  * new string is null-terminated. Uses the NS_Alloc allocator.
  */

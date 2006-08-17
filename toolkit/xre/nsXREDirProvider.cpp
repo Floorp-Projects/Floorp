@@ -112,28 +112,12 @@ nsresult
 nsXREDirProvider::Initialize(nsIFile *aXULAppDir,
                              nsILocalFile *aGREDir,
                              nsIDirectoryServiceProvider* aAppProvider)
-{ 
+{
+  NS_ENSURE_ARG(aGREDir);
+
   mAppProvider = aAppProvider;
   mXULAppDir = aXULAppDir;
-
-  if (aGREDir) {
-    mGREDir = aGREDir;
-  }
-  else {
-    nsCOMPtr<nsILocalFile> lf;
-    nsresult rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsCOMPtr<nsIFile> greDir;
-    rv = lf->GetParent(getter_AddRefs(greDir));
-    if (NS_FAILED(rv))
-      return rv;
-
-    mGREDir = do_QueryInterface(greDir);
-    if (!mGREDir)
-      return NS_ERROR_FAILURE;
-  }
+  mGREDir = aGREDir;
 
   return NS_OK;
 }
