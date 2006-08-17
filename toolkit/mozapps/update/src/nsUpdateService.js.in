@@ -2642,8 +2642,8 @@ UpdatePrompt.prototype = {
             getService(Components.interfaces.nsIStringBundleService);
         var updateBundle = sbs.createBundle(URI_UPDATES_PROPERTIES);
         var title = updateBundle.GetStringFromName("updaterIOErrorTitle");
-        var text = updateBundle.formatStringFromName("updaterIOErrorText",
-                                                     [gApp.name], 1);
+        var text = updateBundle.formatStringFromName("updaterIOErrorMsg",
+                                                     [gApp.name, gApp.name], 2);
         var ww =
             Components.classes["@mozilla.org/embedcomp/window-watcher;1"].
             getService(Components.interfaces.nsIWindowWatcher);
