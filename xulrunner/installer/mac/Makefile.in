@@ -119,14 +119,20 @@ libs:: Info.plist Description.plist
 	$(SIGN_NSS)
 	chmod -R a+rX,u+w,go-w,-s,-t $(DIST)/package-stage
 # For some unknown reason, PackageMaker requires absolute paths to everything.
+# For other poor reasons, PackageMaker returns an exit code of "1" if the
+# version string has any letters in it (e.g. 1.9a1).
 	unset NEXT_ROOT; \
 	$(CHOWN_ROOT) $(DIST)/package-stage && \
-	  /Developer/Applications/Utilities/PackageMaker.app/Contents/MacOS/PackageMaker -build \
+	  /Developer/Applications/Utilities/PackageMaker.app/Contents/MacOS/PackageMaker -build -v \
 	    -p $(_ABS_DIST)/$(PKG_BASENAME).pkg \
 	    -f $(_ABS_DIST)/package-stage \
 	    -r $(_ABS_OBJDIR)/resource-stage \
 	    -i $(_ABS_OBJDIR)/Info.plist \
-	    -d $(_ABS_OBJDIR)/Description.plist; \
+	    -d $(_ABS_OBJDIR)/Description.plist > packagemaker.log; \
 	SAVED=$$?; \
+	if [ "$$SAVED" == "1" -a \
+	     `grep -c 'was completed with the following non-fatal errors' < packagemaker.log` -gt 0 ]; then \
+	  SAVED=0; \
+	fi; \
 	$(CHOWN_REVERT) $(DIST)/package-stage; \
 	exit $$SAVED
