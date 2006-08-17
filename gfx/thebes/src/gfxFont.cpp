@@ -233,6 +233,11 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint8 aVariant,
     familyNameQuirks(aFamilyNameQuirks), weight(aWeight),
     decorations(aDecoration), size(PR_MIN(aSize, 5000)), langGroup(aLangGroup), sizeAdjust(aSizeAdjust)
 {
+    if (weight > 900)
+        weight = 900;
+    if (weight < 100)
+        weight = 100;
+
     if (langGroup.IsEmpty()) {
         NS_WARNING("empty langgroup");
         langGroup.Assign("x-western");
