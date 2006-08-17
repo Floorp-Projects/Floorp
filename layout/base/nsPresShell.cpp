@@ -5265,6 +5265,15 @@ PresShell::CharacterDataChanged(nsIDocument *aDocument,
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
 
   WillCauseReflow();
+  if (mCaret) {
+    // Invalidate the caret's current location before we call into the frame
+    // constructor. It is important to do this now, and not wait until the
+    // resulting reflow, because this call causes continuation frames of the
+    // text frame the caret is in to forget what part of the content they
+    // refer to, making it hard for them to return the correct continuation
+    // frame to the caret.
+    mCaret->InvalidateOutsideCaret();
+  }
   mFrameConstructor->CharacterDataChanged(aContent, aAppend);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
