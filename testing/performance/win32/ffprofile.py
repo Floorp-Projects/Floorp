@@ -71,7 +71,14 @@ def PrefString(name, value, newline):
     String containing 'user_pref("name", value);<newline>'
   """
 
-  return 'user_pref("' + name + '", ' + str(value) + ');' + newline
+  out_value = str(value)
+  if type(value) == bool:
+    # Write bools as "true"/"false", not "True"/"False".
+    out_value = out_value.lower()
+  if type(value) == str:
+    # Write strings with quotes around them.
+    out_value = '"%s"' % value
+  return 'user_pref("%s", %s);%s' % (name, out_value, newline)
 
 
 def MakeDirectoryContentsWritable(dirname):
@@ -111,29 +118,12 @@ def CreateTempProfileDir(source_profile, prefs, extensions):
   shutil.copytree(source_profile, profile_dir)
   MakeDirectoryContentsWritable(profile_dir)
 
-  # Make sure all the preferences are set correctly in the prefs.js file
-  pref_filename = os.path.join(profile_dir, 'prefs.js')
-  pref_file = open(pref_filename, 'rU')
-  pref_lines = pref_file.readlines()
-  newline = pref_file.newlines
-  pref_file.close()
-  pref_re = re.compile('user_pref\(\"([^\"]*)\"\,\s*([^\)]*)\);')
+  # Copy the user-set prefs to user.js
+  user_js_filename = os.path.join(profile_dir, 'user.js')
+  user_js_file = open(user_js_filename, 'w')
   for pref in prefs:
-    # Check each line to check if the pref is already there.
-    found = False
-    for i in range(0, len(pref_lines)):
-      match = pref_re.search(pref_lines[i])
-      if match and match.group(1) == pref:
-        pref_lines[i] = PrefString(pref, prefs[pref], newline)
-        found = True
-        break
-    if not found:
-      pref_lines.append(PrefString(pref, prefs[pref], newline))
-  # Write the prefs back out
-  pref_file = open(pref_filename, 'w')
-  for line in pref_lines:
-    pref_file.write(line)
-  pref_file.close()
+    user_js_file.write(PrefString(pref, prefs[pref], '\n'))
+  user_js_file.close()
 
   # Add links to all the extensions.
   extension_dir = os.path.join(profile_dir, "extensions")
