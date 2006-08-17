@@ -5853,6 +5853,45 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 
 #endif /* JS_HAS_XML_SUPPORT */
 
+static JSBool
+StartsWith(JSParseNode *pn, JSTokenType tt)
+{
+#define TAIL_RECURSE(pn2) JS_BEGIN_MACRO pn = (pn2); goto recur; JS_END_MACRO
+
+recur:
+    if (pn->pn_type == tt)
+        return JS_TRUE;
+    switch (pn->pn_arity) {
+      case PN_FUNC:
+        return  tt == TOK_FUNCTION;
+      case PN_LIST:
+        if (pn->pn_head)
+            TAIL_RECURSE(pn->pn_head);
+        break;
+      case PN_TERNARY:
+        if (pn->pn_kid1)
+            TAIL_RECURSE(pn->pn_kid1);
+        break;
+      case PN_BINARY:
+        if (pn->pn_left)
+            TAIL_RECURSE(pn->pn_left);
+        break;
+      case PN_UNARY:
+        /* A parenthesized expression starts with a left parenthesis. */
+        if (pn->pn_type == TOK_RP)
+            return tt == TOK_LP;
+        if (pn->pn_kid)
+            TAIL_RECURSE(pn->pn_kid);
+        break;
+      case PN_NAME:
+        if (pn->pn_type == TOK_DOT || pn->pn_type == TOK_DBLDOT)
+            TAIL_RECURSE(pn->pn_expr);
+        /* FALL THROUGH */
+    }
+    return JS_FALSE;
+#undef TAIL_RECURSE
+}
+
 JSBool
 js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 {
@@ -6007,10 +6046,24 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
         }
 
         if (pn2) {
-            /* pn2 is the then- or else-statement subtree to compile. */
-            PN_MOVE_NODE(pn, pn2);
+            /*
+             * pn2 is the then- or else-statement subtree to compile.  Take
+             * care not to expose an object initialiser, which would be parsed
+             * as a block, to the Statement parser via eval(uneval(e)) where e
+             * is '1 ? {p:2, q:3}[i] : r;' or the like.
+             */
+            if (pn->pn_type == TOK_HOOK && StartsWith(pn2, TOK_RC)) {
+                pn->pn_type = TOK_RP;
+                pn->pn_arity = PN_UNARY;
+                pn->pn_kid = pn2;
+            } else {
+                PN_MOVE_NODE(pn, pn2);
+            }
         } else {
-            /* False condition and no else: make pn an empty statement. */
+            /*
+             * False condition and no else: make pn an empty statement.  Here,
+             * pn must be a TOK_IF, since TOK_HOOK can never have a null kid.
+             */
             pn->pn_type = TOK_SEMI;
             pn->pn_arity = PN_UNARY;
             pn->pn_kid = NULL;
