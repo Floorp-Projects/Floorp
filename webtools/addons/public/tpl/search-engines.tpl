@@ -9,7 +9,7 @@
 <dt><img src="{$config.webpath}/search-engines-static/ask.gif" alt=""/> <a href="javascript:addEngine('ask','gif','General','0')">Ask.com</a></dt><dd>Better search results with keywords or questions.</dd>
 <dt><img src="{$config.webpath}/search-engines-static/bbcnews.png" alt=""/> <a href="javascript:addEngine('bbcnews','png','News','0')">BBC News</a></dt><dd>Search for the latest news on BBC.</dd>
 <dt><img src="{$config.webpath}/search-engines-static/businesscom.gif" alt=""/>
-<a href="javascript:addEngine('businesscom','png','News','0')">Business.com</a></dt><dd>Find information to help manage and grow your business.</dd>
+<a href="javascript:addEngine('businesscom','gif','News','0')">Business.com</a></dt><dd>Find information to help manage and grow your business.</dd>
 <dt><img src="{$config.webpath}/search-engines-static/del.icio.us.png" alt=""/> <a href="javascript:addEngine('del.icio.us','png','General','1091')">del.icio.us</a></dt><dd>Search through most bookmarked sites.</dd>
 <dt><img src="{$config.webpath}/search-engines-static/espn.png" alt=""/> <a href="javascript:addEngine('espn','png','Recreation','0')">ESPN</a></dt><dd>Get the latest sports news, scores, and highlights.</dd>
 <dt><img src="{$config.webpath}/search-engines-static/expediadotcom.png" alt=""/> <a href="javascript:addEngine('expediadotcom','png','Travel','0')">Expedia</a></dt><dd>Search for hotels by destination with Expedia's Best Price Guarantee.</dd>
