@@ -9772,7 +9772,8 @@ DoDeletingFrameSubtree(nsFrameManager* aFrameManager,
   
         // Remove the mapping from the out-of-flow frame to its placeholder.
         aFrameManager->UnregisterPlaceholderFrame((nsPlaceholderFrame*)childFrame);
-        ((nsPlaceholderFrame*)childFrame)->SetOutOfFlowFrame(nsnull);
+        // Don't SetOutOfFlowFrame(nsnull) here because the float cache depends
+        // on it when the float is removed later on, see bug 348688 comment 6.
         
         // Queue the out-of-flow frame to be destroyed only if aRemovedFrame is _not_
         // one of its ancestor frames or if it is a popup frame. 
