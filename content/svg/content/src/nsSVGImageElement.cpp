@@ -88,6 +88,10 @@ public:
                                     nsISVGValue::modificationType aModType);
 
   // nsIContent interface
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+
   virtual PRInt32 IntrinsicState() const;
 
   NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
@@ -301,6 +305,28 @@ nsSVGImageElement::DidModifySVGObservable(nsISVGValue* aObservable,
 
 //----------------------------------------------------------------------
 // nsIContent methods:
+
+nsresult
+nsSVGImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers)
+{
+  nsresult rv = nsSVGImageElementBase::BindToTree(aDocument, aParent,
+                                                  aBindingParent,
+                                                  aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Our base URI may have changed; claim that our URI changed, and the
+  // nsImageLoadingContent will decide whether a new image load is warranted.
+  nsAutoString href;
+  if (GetAttr(kNameSpaceID_XLink, nsSVGAtoms::href, href)) {
+    // Note: no need to notify here; since we're just now being bound
+    // we don't have any frames or anything yet.
+    LoadImage(href, PR_FALSE, PR_FALSE);
+  }
+
+  return rv;
+}
 
 PRInt32
 nsSVGImageElement::IntrinsicState() const
