@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Norris Boyd
+ * Cameron McCormack
  * Frank Mitchell
  * Mike Shaver
  * Kurt Westerfeld
@@ -459,19 +460,22 @@ class JavaMembers
 
                     // If we already have a member by this name, don't do this
                     // property.
-                    if (ht.containsKey(beanPropertyName))
+                    if (ht.containsKey(beanPropertyName)
+                            || toAdd.containsKey(beanPropertyName)) {
                         continue;
+                    }
 
-                    // Get the method by this name.
-                    Object member = ht.get(name);
-                    if (!(member instanceof NativeJavaMethod))
-                        continue;
+                    // Find the getter method, or if there is none, the is-
+                    // method.
+                    MemberBox getter = null;
+                    String getterName = "get".concat(nameComponent);
+                    String isName = "is".concat(nameComponent);
+                    getter = findGetter(isStatic, ht, getterName);
+                    // If there was no valid getter, check for an is- method.
+                    if (getter == null) {
+                        getter = findGetter(isStatic, ht, isName);
+                    }
 
-                    // getter
-                    NativeJavaMethod njmGet = (NativeJavaMethod)member;
-                    MemberBox getter
-                        = extractGetMethod(njmGet.methods, isStatic);
-                    
                     // setter
                     MemberBox setter = null;
                     NativeJavaMethod setters = null;
@@ -479,7 +483,7 @@ class JavaMembers
 
                     if (ht.containsKey(setterName)) {
                         // Is this value a method?
-                        member = ht.get(setterName);
+                        Object member = ht.get(setterName);
                         if (member instanceof NativeJavaMethod) {
                             NativeJavaMethod njmSet = (NativeJavaMethod)member;
                             if (getter != null) {
@@ -519,6 +523,19 @@ class JavaMembers
         for (int i = 0; i != constructors.length; ++i) {
             ctors[i] = new MemberBox(constructors[i]);
         }
+    }
+
+    private MemberBox findGetter(boolean isStatic, Hashtable ht, String getterName)
+    {
+        if (ht.containsKey(getterName)) {
+            // Check that the getter is a method.
+            Object member = ht.get(getterName);
+            if (member instanceof NativeJavaMethod) {
+                NativeJavaMethod njmGet = (NativeJavaMethod) member;
+                return extractGetMethod(njmGet.methods, isStatic);
+            }
+        }
+        return null;
     }
 
     private static MemberBox extractGetMethod(MemberBox[] methods,
