@@ -164,7 +164,7 @@ interface nsIAccessible : nsISupports
   readonly attribute nsIAccessible focusedChild;
 
   /**
-   * Accessible child which contains the coordinate at x,y
+   * Accessible child which contains the coordinate at (x, y) in screen pixels.
    */
   nsIAccessible getChildAtPoint(in long x, in long y);
 
