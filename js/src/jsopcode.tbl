@@ -110,7 +110,7 @@ OPDEF(JSOP_DIV,       30, "div",        "/",          1,  2,  1,  9,  JOF_BYTE|J
 OPDEF(JSOP_MOD,       31, "mod",        "%",          1,  2,  1,  9,  JOF_BYTE|JOF_LEFTASSOC)
 OPDEF(JSOP_NOT,       32, "not",        "!",          1,  1,  1, 10,  JOF_BYTE|JOF_DETECTING)
 OPDEF(JSOP_BITNOT,    33, "bitnot",     "~",          1,  1,  1, 10,  JOF_BYTE)
-OPDEF(JSOP_NEG,       34, "neg",        "-",          1,  1,  1, 10,  JOF_BYTE)
+OPDEF(JSOP_NEG,       34, "neg",        "- ",         1,  1,  1, 10,  JOF_BYTE)
 OPDEF(JSOP_NEW,       35, js_new_str,   NULL,         3, -1,  1, 10,  JOF_UINT16)
 OPDEF(JSOP_DELNAME,   36, "delname",    NULL,         3,  0,  1, 10,  JOF_CONST|JOF_NAME|JOF_DEL)
 OPDEF(JSOP_DELPROP,   37, "delprop",    NULL,         3,  1,  1, 10,  JOF_CONST|JOF_PROP|JOF_DEL)
@@ -172,7 +172,7 @@ OPDEF(JSOP_OBJECT,    80, "object",     NULL,         3,  0,  1, 13,  JOF_CONST)
 OPDEF(JSOP_POP,       81, "pop",        NULL,         1,  1,  0,  0,  JOF_BYTE)
 
 /* Convert value to number, for unary +. */
-OPDEF(JSOP_POS,       82, "pos",        "+",          1,  1,  1, 10,  JOF_BYTE)
+OPDEF(JSOP_POS,       82, "pos",        "+ ",         1,  1,  1, 10,  JOF_BYTE)
 
 /* Trap into debugger for breakpoint, etc. */
 OPDEF(JSOP_TRAP,      83, "trap",       NULL,         1,  0,  0,  0,  JOF_BYTE)
