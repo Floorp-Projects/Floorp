@@ -431,12 +431,10 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
 
   SetupCairoStrokeGeometry(ctx);
   cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
-  if (!IsDegeneratePath(xmin, ymin, xmax, ymax)) {
-    cairo_user_to_device(ctx, &xmin, &ymin);
-    cairo_user_to_device(ctx, &xmax, &ymax);
-
+  cairo_user_to_device(ctx, &xmin, &ymin);
+  cairo_user_to_device(ctx, &xmax, &ymax);
+  if (!IsDegeneratePath(xmin, ymin, xmax, ymax))
     mRect = nsSVGUtils::ToBoundingPixelRect(xmin, ymin, xmax, ymax);
-  }
 
   cairo_destroy(ctx);
 
@@ -502,14 +500,17 @@ nsSVGPathGeometryFrame::GetBBox(nsIDOMSVGRect **_retval)
 
   cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
 
+  cairo_user_to_device(ctx, &xmin, &ymin);
+  cairo_user_to_device(ctx, &xmax, &ymax);
+
   if (IsDegeneratePath(xmin, ymin, xmax, ymax)) {
     /* cairo_stroke_extents doesn't work with stroke width zero, fudge */
     cairo_set_line_width(ctx, 0.0001);
     cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
-  }
 
-  cairo_user_to_device(ctx, &xmin, &ymin);
-  cairo_user_to_device(ctx, &xmax, &ymax);
+    cairo_user_to_device(ctx, &xmin, &ymin);
+    cairo_user_to_device(ctx, &xmax, &ymax);
+  }
 
   cairo_destroy(ctx);
 
