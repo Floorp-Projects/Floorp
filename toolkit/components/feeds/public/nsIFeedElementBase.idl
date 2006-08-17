@@ -12,14 +12,13 @@
 * for the specific language governing rights and limitations under the
 * License.
 *
-* The Original Code is the Feed Processor.
+* The Original Code is mozilla.org code.
 *
-* The Initial Developer of the Original Code is Google Inc.
+* The Initial Developer of the Original Code is the Mozilla Corporation.
 * Portions created by the Initial Developer are Copyright (C) 2006
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
-*   Ben Goodger <beng@google.com>
 *   Robert Sayre <sayrer@gmail.com>
 *
 * Alternatively, the contents of this file may be used under the terms of
@@ -36,49 +35,26 @@
 *
 * ***** END LICENSE BLOCK ***** */
 
-#include "nsIFeedContainer.idl"
-interface nsIArray;
+#include "nsISupports.idl"
+
+interface nsISAXAttributes;
+interface nsIURI;
 
 /**
- * An nsIFeedEntry represents an Atom or RSS entry/item. Summary
- * and/or full-text content may be available, but callers will have to
- * check both.
- */
-[scriptable, uuid(31bfd5b4-8ff5-4bfd-a8cb-b3dfbd4f0a5b)]
-interface nsIFeedEntry : nsIFeedContainer {
-
+ *  An nsIFeedGenerator represents the software used to create a feed.
+ */ 
+[scriptable, uuid(5215291e-fa0a-40c2-8ce7-e86cd1a1d3fa)]
+interface nsIFeedElementBase : nsISupports
+{
   /**
-  * Parent Feed, Entry, or Item.
-  */
-  attribute nsIFeedContainer parent;
-
-  /**
-  * Uses description, subtitle, summary, content and extensions
-  * to generate a summary. 
-  * 
-  */
-  attribute nsIFeedTextConstruct summary;
-
-  /**
-   * The date the entry was published, in RFC822 form. Parsable by JS
-   * and mail code.
+   * The attributes found on the element. Most interfaces provide convenience
+   * accessors for their standard fields, so this useful only when looking for
+   * an extension.
    */
-  attribute AString published;
+  attribute nsISAXAttributes attributes;
 
   /**
-  * Uses atom:content and content:encoded to provide
-  * a 'full text' view of an entry.
-  *
-  */
-  attribute nsIFeedTextConstruct content;
-
-  /**
-  * Enclosures are podcasts, photocasts, etc.
-  */
-  attribute nsIArray enclosures;
-
-  /**
-  * Enclosures, etc. that might be displayed inline.
-  */
-  attribute nsIArray mediaContent;
+   * The baseURI for the Entry or Feed.
+   */
+  attribute nsIURI baseURI;
 };

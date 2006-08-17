@@ -2,10 +2,10 @@
 <!--
 
 Description: atom generator works
-Expect: feed.generator.agent == 'Hmm';
+Expect: feed.generator.uri.spec == 'http://example.org/gen/';
 
 -->
-<feed xmlns="http://www.w3.org/2005/Atom">
+<feed xml:base="http://example.org/" xmlns="http://www.w3.org/2005/Atom">
 
 <author>
 <email>hmm@example.com</email>
@@ -13,7 +13,7 @@ Expect: feed.generator.agent == 'Hmm';
 </author>
 
 
-  <generator>Hmm</generator>
+  <generator uri="/gen/">Hmm</generator>
 
 <author>
 <email>bar@example.com</email>

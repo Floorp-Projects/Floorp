@@ -184,6 +184,11 @@ function makePropGetter(key) {
  * grok.  For info, see
  * http://lxr.mozilla.org/mozilla/source/js/src/jsdate.c#1526.
  */
+const HOURS_TO_MINUTES = 60;
+const MINUTES_TO_SECONDS = 60;
+const SECONDS_TO_MILLISECONDS = 1000;
+const MINUTES_TO_MILLISECONDS = MINUTES_TO_SECONDS * SECONDS_TO_MILLISECONDS;
+const HOURS_TO_MILLISECONDS = HOURS_TO_MINUTES * MINUTES_TO_MILLISECONDS;
 function W3CToIETFDate(dateString) {
 
   var parts = dateString.match(/(\d\d\d\d)(-(\d\d))?(-(\d\d))?(T(\d\d):(\d\d)(:(\d\d)(\.(\d+))?)?(Z|([+-])(\d\d):(\d\d))?)?/);
@@ -260,14 +265,17 @@ function W3CToIETFDate(dateString) {
   return date.toUTCString();
 }
 
+const RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 // namespace map
 var gNamespaces = {
+  "http://webns.net/mvcb/":"admin",
   "http://backend.userland.com/rss":"",
   "http://blogs.law.harvard.edu/tech/rss":"",
   "http://www.w3.org/2005/Atom":"atom",
   "http://purl.org/atom/ns#":"atom03",
   "http://purl.org/rss/1.0/modules/content/":"content",
   "http://purl.org/dc/elements/1.1/":"dc",
+  "http://purl.org/dc/terms/":"dcterms",
   "http://www.w3.org/1999/02/22-rdf-syntax-ns#":"rdf",
   "http://purl.org/rss/1.0/":"rss1",
   "http://my.netscape.com/rdf/simple/0.9/":"rss1",
@@ -276,24 +284,6 @@ var gNamespaces = {
   "http://www.w3.org/XML/1998/namespace":"xml"
 }
 
-// lets us know to ignore extraneous attributes like 
-// <id foo:bar="baz">http://example.org</id>
-var gKnownTextElements = ["title","link","description","language","copyright",
-                          "managingEditor","webMaster","pubDate",
-                          "lastBuildDate","docs","ttl","rating",
-                          "rss1:title","rss1:link","rss1:description",
-                          "rss1:url","rss1:name","dc:creator", "dc:subject",
-                          "dc:description", "dc:publisher", "dc:contributor",
-                          "dc:date", "dc:type", "dc:format", "dc:identifier",
-                          "dc:source","dc:language","dc:relation",
-                          "dc:coverage","dc:rights", "atom:id", "atom:name",
-                          "atom:uri", "atom:content", "atom:email",
-                          "atom:logo", "atom:published", "atom:updated", 
-                          "wfw:comment", "wfw:commentRss", "wiki:version", 
-                          "wiki:status", "wiki:importance","wiki:diff", 
-                          "wiki:history","content:encoded",  "atom:icon",
-                          "atom03:title", "atom03:summary", "atom03:content",
-                          "atom03:tagline", "atom:title"];
 
 function FeedResult() {}
 FeedResult.prototype = {
@@ -320,9 +310,12 @@ FeedResult.prototype = {
 function Feed() {
   this.subtitle = null;
   this.title = null;
-  this.items = [];
+  this.items = Cc[ARRAY_CONTRACTID].createInstance(Ci.nsIMutableArray);
   this.link = null;
   this.id = null;
+  this.generator = null;
+  this.authors = Cc[ARRAY_CONTRACTID].createInstance(Ci.nsIMutableArray);
+  this.contributors = Cc[ARRAY_CONTRACTID].createInstance(Ci.nsIMutableArray);
   this.baseURI = null;
 }
 
@@ -333,14 +326,20 @@ Feed.prototype = {
                "atom03:tagline","atom:subtitle"],
     items: ["items","atom03_entries","entries"],
     id: ["atom:id","rdf:about"],
+    generator: ["generator"],
+    authors : ["authors"],
+    contributors: ["contributors"],
     title: ["title","rss1:title", "atom03:title","atom:title"],
     link:  [["link",strToURI],["rss1:link",strToURI]],
     categories: ["categories", "dc:subject"],
+    rights: ["atom03:rights","atom:rights"],
     cloud: ["cloud"],
     image: ["image", "rss1:image"],
     textInput: ["textInput", "rss1:textinput"],
     skipDays: ["skipDays"],
-    skipHours: ["skipHours"]
+    skipHours: ["skipHours"],
+    updated: ["pubDate", "atom03:modified", "dc:date", "dcterms:modified",
+              "atom:updated"]
   },
 
   normalize: function Feed_normalize() {
@@ -349,11 +348,14 @@ Feed.prototype = {
       this.skipDays = this.skipDays.getProperty("days");
     if (this.skipHours)
       this.skipHours = this.skipHours.getProperty("hours");
-  
+
+    if (this.updated)
+      this.updated = dateParse(this.updated);
+
     // Assign Atom link if needed
     if (bagHasKey(this.fields, "links"))
       this._atomLinksToURI();
-    LOG("authors: " + this.authors.length);
+
     this._resetBagMembersToRawText([this.searchLists.subtitle, 
                                     this.searchLists.title]);
   },
@@ -409,6 +411,10 @@ function Entry() {
   this.link = null;
   this.id = null;
   this.baseURI = null;
+  this.updated = null;
+  this.published = null;
+  this.authors = Cc[ARRAY_CONTRACTID].createInstance(Ci.nsIMutableArray);
+  this.contributors = Cc[ARRAY_CONTRACTID].createInstance(Ci.nsIMutableArray);
 }
   
 Entry.prototype = {
@@ -421,9 +427,15 @@ Entry.prototype = {
     link: [["link",strToURI],["rss1:link",strToURI]],
     id: [["guid", makePropGetter("guid")], "rdf:about",
          "atom03:id", "atom:id"],
+    authors : ["authors"],
+    contributors: ["contributors"],
     summary: ["description", "rss1:description", "dc:description",
               "atom03:summary", "atom:summary"],
-    content: ["content:encoded","atom03:content","atom:content"]
+    content: ["content:encoded","atom03:content","atom:content"],
+    rights: ["atom03:rights","atom:rights"],
+    published: ["atom03:issued", "dcterms:issued", "atom:published"],
+    updated: ["pubDate", "atom03:modified", "dc:date", "dcterms:modified",
+              "atom:updated"]
   },
   
   normalize: function Entry_normalize() {
@@ -444,6 +456,11 @@ Entry.prototype = {
       if (guid && isPermaLink)
         this.link = strToURI(guid.getProperty("guid"));
     }
+
+    if (this.updated)
+      this.updated = dateParse(this.updated);
+    if (this.published)
+      this.published = dateParse(this.published);
 
     this._resetBagMembersToRawText([this.searchLists.content, 
                                     this.searchLists.summary, 
@@ -508,6 +525,70 @@ TextConstruct.prototype = {
   }
 }
 
+// Generator represents the software that produced the feed
+function Generator() {
+  this.lang = null;
+  this.agent = null;
+  this.version = null;
+  this.uri = null;
+
+  // nsIFeedElementBase
+  this._attributes = null;
+  this.baseURI = null;
+}
+
+Generator.prototype = {
+
+  get attributes() {
+    return this._attributes;
+  },
+
+  set attributes(value) {
+    this._attributes = value;
+    this.version = this._attributes.getValueFromName("","version");
+    var uriAttribute = this._attributes.getValueFromName("","uri") ||
+                       this._attributes.getValueFromName("","url");
+    this.uri = strToURI(uriAttribute, this.baseURI);
+
+    // RSS1
+    uriAttribute = this._attributes.getValueFromName(RDF_NS,"resource");
+    if (uriAttribute) {
+      this.agent = uriAttribute;
+      this.uri = strToURI(uriAttribute, this.baseURI);
+    }
+  },
+
+  QueryInterface: function(iid) {
+    if (iid.equals(Ci.nsIFeedGenerator) ||
+        iid.equals(Ci.nsIFeedElementBase) ||
+        iid.equals(Ci.nsISupports))
+    return this;
+
+    throw Cr.NS_ERROR_NOINTERFACE;
+  }
+}
+
+function Person() {
+  this.name = null;
+  this.uri = null;
+  this.email = null;
+
+  // nsIFeedElementBase
+  this.attributes = null;
+  this.baseURI = null;
+}
+
+Person.prototype = {
+  QueryInterface: function(iid) {
+    if (iid.equals(Ci.nsIFeedPerson) ||
+        iid.equals(Ci.nsIFeedElementBase) ||
+        iid.equals(Ci.nsISupports))
+    return this;
+
+    throw Cr.NS_ERROR_NOINTERFACE;
+  }
+}
+
 /** 
  * Map a list of fields into properties on a container.
  *
@@ -527,7 +608,7 @@ function fieldsToObj(container, fields) {
       try {
         prop = container.fields.getProperty(field);
       } 
-      catch(e) {
+      catch(e) { 
       }
       if (prop) {
         prop = isArray(props) ? props[1](prop) : prop;
@@ -548,10 +629,10 @@ function LC(element) {
 }
 
 // TODO move these post-processor functions
-//
-// Handle atom:generator
+// create a generator element
 function atomGenerator(s, generator) {
-  generator.setPropertyAsAString("agent", trimString(s));
+  generator.QueryInterface(Ci.nsIFeedGenerator);
+  generator.agent = trimString(s);
   return generator;
 } 
 
@@ -574,22 +655,45 @@ function rssGuid(s, guid) {
 // 
 //  <author>lawyer@boyer.net (Lawyer Boyer)</author>
 //
+// or, delightfully, a field like this:
+//
+//  <dc:creator>Simon St.Laurent (mailto:simonstl@simonstl.com)</dc:creator>
+//
 // We want to split this up and assign it to corresponding Atom
 // fields.
 //
 function rssAuthor(s,author) {
-  author.QueryInterface(Ci.nsIWritablePropertyBag2);
-  var open = s.indexOf("(");
-  var close = s.indexOf(")");
-  var email = trimString(s.substring(0,open)) || null;
-  author.setPropertyAsAString("email", email);
-  var name = null; 
-  if (open >= 0 && close > open) 
-    name = trimString(s.substring(open+1,close));
-  author.setPropertyAsAString("name", name);
+  author.QueryInterface(Ci.nsIFeedPerson);
+  // check for RSS2 string format
+  var chars = trimString(s);
+  var matches = chars.match(/(.*)\((.*)\)/);
+  var emailCheck = 
+    /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+  if (matches) {
+    var match1 = trimString(matches[1]);
+    var match2 = trimString(matches[2]);
+    if (match2.indexOf("mailto:") == 0)
+      match2 = match2.substring(7);
+    if (emailCheck.test(match1)) {
+      author.email = match1;
+      author.name = match2;
+    }
+    else if (emailCheck.test(match2)) {
+      author.email = match2;
+      author.name = match1;
+    }
+    else {
+      // put it back together
+      author.name = match1 + " (" + match2 + ")";
+    }
+  }
+  else {
+    author.name = chars;
+    if (chars.indexOf('@'))
+      author.email = chars;
+  }
   return author;
 }
-
 
 //
 // skipHours and skipDays map to arrays, so we need to change the
@@ -742,9 +846,7 @@ XHTMLHandler.prototype = {
 function ExtensionHandler(processor) {
   this._buf = "";
   this._depth = 0;
-
-  // Tracks whether the content model is something understandable
-  this._isSimple = true;
+  this._hasChildElements = false;
 
   // The FeedProcessor
   this._processor = processor;
@@ -763,34 +865,30 @@ ExtensionHandler.prototype = {
   },
   startElement: function EH_startElement(uri, localName, qName, attrs) {
     ++this._depth;
-    var key =  this._processor._prefixForNS(uri) + localName;
-    if (attrs.length > 0 && !arrayContains(gKnownTextElements, key)) 
-      this._isSimple = false;
+    var prefix = gNamespaces[uri] ? gNamespaces[uri] + ":" : "";
+    var key =  prefix + localName;
+    
     if (this._depth == 1) {
       this._uri = uri;
       this._localName = localName;
       this._qName = qName;
       this._attrs = attrs;
     }
-    else {
-      this._isSimple = false;
-    }
+    
+    // if we descend into another element, we won't send text
+    this._hasChildElements = (this._depth > 1);
+    
   },
   endElement: function EH_endElement(uri, localName, qName) {
     --this._depth;
     if (this._depth == 0) {
-      if (this._isSimple) {
-        this._processor.returnFromExtHandler(this._uri, this._localName, 
-                                             trimString(this._buf),
-                                             this._attrs);
-      }
-      else {
-        this._processor.returnFromExtHandler(null,null,null);
-      }
+      var text = this._hasChildElements ? null : trimString(this._buf);
+      this._processor.returnFromExtHandler(this._uri, this._localName, 
+                                           text, this._attrs);
     }
   },
   characters: function EH_characters(data) {
-    if (this._isSimple)
+    if (!this._hasChildElements)
       this._buf += data;
   },
   startPrefixMapping: function EH_startPrefixMapping() {
@@ -893,16 +991,33 @@ function FeedProcessor() {
 
     "IN_CHANNEL": {
       "item": new ElementInfo("items", Cc[ENTRY_CONTRACTID], null, true),
+      "managingEditor": new ElementInfo("authors", Cc[PERSON_CONTRACTID],
+                                        rssAuthor, true),
+      "dc:creator": new ElementInfo("authors", Cc[PERSON_CONTRACTID],
+                                    rssAuthor, true),
+      "dc:author": new ElementInfo("authors", Cc[PERSON_CONTRACTID],
+                                   rssAuthor, true),
+      "dc:contributor": new ElementInfo("contributors", Cc[PERSON_CONTRACTID],
+                                         rssAuthor, true),
       "category": new ElementInfo("categories", null, rssCatTerm, true),
       "cloud": new ElementInfo("cloud", null, null, false),
       "image": new ElementInfo("image", null, null, false),
       "textInput": new ElementInfo("textInput", null, null, false),
       "skipDays": new ElementInfo("skipDays", null, null, false),
-      "skipHours": new ElementInfo("skipHours", null, null, false)
+      "skipHours": new ElementInfo("skipHours", null, null, false),
+      "generator": new ElementInfo("generator", Cc[GENERATOR_CONTRACTID],
+                                   atomGenerator, false),
     },
 
     "IN_ITEMS": {
-      "author": new ElementInfo("authors", null, rssAuthor, true),
+      "author": new ElementInfo("authors", Cc[PERSON_CONTRACTID],
+                                rssAuthor, true),
+      "dc:creator": new ElementInfo("authors", Cc[PERSON_CONTRACTID],
+                                    rssAuthor, true),
+      "dc:author": new ElementInfo("authors", Cc[PERSON_CONTRACTID],
+                                   rssAuthor, true),
+      "dc:contributor": new ElementInfo("contributors", Cc[PERSON_CONTRACTID],
+                                         rssAuthor, true),
       "category": new ElementInfo("categories", null, rssCatTerm, true),
       "enclosure": new ElementInfo("enclosure", null, null, true),
       "guid": new ElementInfo("guid", null, rssGuid, false)
@@ -922,36 +1037,62 @@ function FeedProcessor() {
       "rss1:channel": new FeedElementInfo("rdf_channel", "rss1"),
       "rss1:image": new ElementInfo("image", null, null, false),
       "rss1:textinput": new ElementInfo("textInput", null, null, false),
-      "rss1:item": new ElementInfo("items", Cc[ENTRY_CONTRACTID], null, true)
+      "rss1:item": new ElementInfo("items", Cc[ENTRY_CONTRACTID], null, true),
+    },
+
+    "IN_RDF_CHANNEL": {
+      "admin:generatorAgent": new ElementInfo("generator",
+                                              Cc[GENERATOR_CONTRACTID],
+                                              null, false),
+      "dc:creator": new ElementInfo("authors", Cc[PERSON_CONTRACTID],
+                                    rssAuthor, true),
+      "dc:author": new ElementInfo("authors", Cc[PERSON_CONTRACTID],
+                                   rssAuthor, true),
+      "dc:contributor": new ElementInfo("contributors", Cc[PERSON_CONTRACTID],
+                                         rssAuthor, true),
     },
 
     /********* ATOM 1.0 **********/
     "IN_ATOM": {
-      "atom:author": new ElementInfo("author", null, null, true),
-      "atom:generator": new ElementInfo("generator", null,
+      "atom:author": new ElementInfo("authors", Cc[PERSON_CONTRACTID],
+                                     null, true),
+      "atom:generator": new ElementInfo("generator", Cc[GENERATOR_CONTRACTID],
                                         atomGenerator, false),
-      "atom:contributor": new ElementInfo("contributor", null, null, true),
+      "atom:contributor": new ElementInfo("contributors",  Cc[PERSON_CONTRACTID],
+                                          null, true),
       "atom:link": new ElementInfo("links", null, null, true),
       "atom:entry": new ElementInfo("entries", Cc[ENTRY_CONTRACTID],
                                     null, true)
     },
 
     "IN_ENTRIES": {
-      "atom:author": new ElementInfo("author", null, null, true),
-      "atom:contributor": new ElementInfo("contributor", null, null, true),
+      "atom:author": new ElementInfo("authors", Cc[PERSON_CONTRACTID],
+                                     null, true),
+      "atom:contributor": new ElementInfo("contributors", Cc[PERSON_CONTRACTID],
+                                          null, true),
       "atom:link": new ElementInfo("links", null, null, true),
     },
 
     /********* ATOM 0.3 **********/
     "IN_ATOM03": {
-      "atom03:author": new ElementInfo("author", null, null, true),
+      "atom03:author": new ElementInfo("authors", Cc[PERSON_CONTRACTID],
+                                       null, true),
+      "atom03:contributor": new ElementInfo("contributors",
+                                            Cc[PERSON_CONTRACTID],
+                                            null, true),
       "atom03:link": new ElementInfo("links", null, null, true),
       "atom03:entry": new ElementInfo("atom03_entries", Cc[ENTRY_CONTRACTID],
-                                      null, true)
+                                      null, true),
+      "atom03:generator": new ElementInfo("generator", Cc[GENERATOR_CONTRACTID],
+                                          atomGenerator, false),
     },
 
     "IN_ATOM03_ENTRIES": {
-      "atom03:author": new ElementInfo("author", null, null, true),
+      "atom03:author": new ElementInfo("authors", Cc[PERSON_CONTRACTID],
+                                       null, true),
+      "atom03:contributor": new ElementInfo("contributors",
+                                            Cc[PERSON_CONTRACTID],
+                                            null, true),
       "atom03:link": new ElementInfo("links", null, null, true),
       "atom03:entry": new ElementInfo("atom03_entries", Cc[ENTRY_CONTRACTID],
                                       null, true)
@@ -1057,6 +1198,7 @@ FeedProcessor.prototype = {
   // nsISAXContentHandler
 
   startDocument: function FP_startDocument() {
+    //LOG("----------");
   },
 
   endDocument: function FP_endDocument() {
@@ -1094,6 +1236,8 @@ FeedProcessor.prototype = {
     this._buf = "";
     ++this._depth;
     var elementInfo;
+
+    //LOG("<" + localName + ">");
 
     // Check for xml:base
     var base = attributes.getValueFromName(XMLNS, "base");
@@ -1184,7 +1328,7 @@ FeedProcessor.prototype = {
   // to distinguish endElement events from startElement events.
   endElement:  function FP_endElement(uri, localName, qName) {
     var elementInfo = this._handlerStack[this._depth];
-LOG("</" + localName + ">");
+    //LOG("</" + localName + ">");
     if (elementInfo && !elementInfo.isWrapper)
       this._closeComplexElement(elementInfo);
   
@@ -1227,24 +1371,27 @@ LOG("</" + localName + ">");
   // attributes and child elements.
   _processComplexElement:
   function FP__processComplexElement(elementInfo, attributes) {
-    var obj, props, key, prefix;
+    var obj, key, prefix;
 
     // If the container is an entry/item, it'll need to have its 
     // more esoteric properties put in the 'fields' property bag, and set its
     // parent.
-    if (elementInfo.containerClass) {
+    if (elementInfo.containerClass == Cc[ENTRY_CONTRACTID]) {
       obj = elementInfo.containerClass.createInstance(Ci.nsIFeedEntry);
       // Set the parent property of the entry.
       obj.parent = this._result.doc;
       obj.baseURI = this._xmlBaseStack[this._xmlBaseStack.length - 1];
-      props = obj.fields;
+      this._mapAttributes(obj.fields, attributes);
+    }
+    else if (elementInfo.containerClass) {
+      obj = elementInfo.containerClass.createInstance(Ci.nsIFeedElementBase);
+      obj.baseURI = this._xmlBaseStack[this._xmlBaseStack.length - 1];
+      obj.attributes = attributes; // just set the SAX attributes
     }
     else {
       obj = Cc[BAG_CONTRACTID].createInstance(Ci.nsIWritablePropertyBag2);
-      props = obj;
+      this._mapAttributes(obj, attributes);
     }
-
-    this._mapAttributes(props, attributes);
 
     // We should have a container/propertyBag that's had its
     // attributes processed. Now we need to attach it to its
@@ -1320,7 +1467,7 @@ LOG("</" + localName + ">");
 
     // If an nsIFeedContainer was on top of the stack,
     // we need to normalize it
-    if (elementInfo.containerClass)
+    if (elementInfo.containerClass == Cc[ENTRY_CONTRACTID])
       containerParent.normalize();
 
     // If it's an array, re-set the last element
@@ -1385,11 +1532,48 @@ LOG("</" + localName + ">");
       return;
 
     var container = top[0];
-
     // Grab the last element if it's an array
     if (isIArray(container)) {
-      container = container.queryElementAt(container.length - 1, 
-                                           Ci.nsIWritablePropertyBag2);
+      var contract = this._handlerStack[this._depth].containerClass;
+      // check if it's something specific, but not an entry
+      if (contract && contract != Cc[ENTRY_CONTRACTID]) {
+        var el = container.queryElementAt(container.length - 1, 
+                                          Ci.nsIFeedElementBase);
+        // XXX there must be a way to flatten these interfaces
+        if (contract == Cc[PERSON_CONTRACTID]) 
+          el.QueryInterface(Ci.nsIFeedPerson);
+        else
+          return; // don't know about this interface
+        
+        var propName = localName;
+        // synonyms
+        if ((uri == "" ||
+             (gNamespaces[uri].indexOf("atom") > -1) ||
+             (gNamespaces[uri].indexOf("rss") > -1)) && 
+            (propName == "url" || propName == "href"))
+          propName = "uri";
+        
+        try {
+          if (el[propName] !== "undefined") {
+            var propValue = chars;
+            // convert URI-bearing values to an nsIURI
+            if (propName == "uri") {
+              var base = this._xmlBaseStack[this._xmlBaseStack.length - 1];
+              propValue = strToURI(chars, base);
+            }
+            el[propName] = propValue;
+          }
+        }
+        catch(e) {
+          // ignore XPConnect errors
+        }
+        // the rest of the function deals with entry- and feed-level stuff
+        return; 
+      } 
+      else {
+        container = container.queryElementAt(container.length - 1, 
+                                             Ci.nsIWritablePropertyBag2);
+      }
     }
     
     // Make the buffer our new property
@@ -1425,16 +1609,13 @@ LOG("</" + localName + ">");
           this._handlerStack[this._depth].containerClass != ENTRY_CONTRACTID) {
         type = "text";
       }
-      LOG("propName: " + propName);
       newProp.type = type;
       newProp.base = this._xmlBaseStack[this._xmlBaseStack.length - 1];
       container.setPropertyAsInterface(propName, newProp);
     }
     else {
-      LOG("propName: " + propName);
       container.setPropertyAsAString(propName, chars);
     }
-    LOG("end of process complex");
   },
 
   // Sometimes, we'll hand off SAX handling duties to an XHTMLHandler
@@ -1498,6 +1679,13 @@ const TEXTCONSTRUCT_CONTRACTID = "@mozilla.org/feed-textconstruct;1";
 const TEXTCONSTRUCT_CLASSID =
   Components.ID("{b992ddcd-3899-4320-9909-924b3e72c922}");
 const TEXTCONSTRUCT_CLASSNAME = "Feed Text Construct";
+const GENERATOR_CONTRACTID = "@mozilla.org/feed-generator;1";
+const GENERATOR_CLASSID =
+  Components.ID("{414af362-9ad8-4296-898e-62247f25a20e}");
+const GENERATOR_CLASSNAME = "Feed Generator";
+const PERSON_CONTRACTID = "@mozilla.org/feed-person;1";
+const PERSON_CLASSID = Components.ID("{95c963b7-20b2-11db-92f6-001422106990}");
+const PERSON_CLASSNAME = "Feed Person";
 
 function GenericComponentFactory(ctor) {
   this._ctor = ctor;
@@ -1547,6 +1735,10 @@ var Module = {
       return new GenericComponentFactory(Entry);
     if (cid.equals(TEXTCONSTRUCT_CLASSID))
       return new GenericComponentFactory(TextConstruct);
+    if (cid.equals(GENERATOR_CLASSID))
+      return new GenericComponentFactory(Generator);
+    if (cid.equals(PERSON_CLASSID))
+      return new GenericComponentFactory(Person);
 
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
@@ -1568,6 +1760,12 @@ var Module = {
     // Text Construct
     cr.registerFactoryLocation(TEXTCONSTRUCT_CLASSID, TEXTCONSTRUCT_CLASSNAME,
       TEXTCONSTRUCT_CONTRACTID, file, location, type);
+    // Generator
+    cr.registerFactoryLocation(GENERATOR_CLASSID, GENERATOR_CLASSNAME,
+      GENERATOR_CONTRACTID, file, location, type);
+    // Person
+    cr.registerFactoryLocation(PERSON_CLASSID, PERSON_CLASSNAME,
+      PERSON_CONTRACTID, file, location, type);
   },
 
   unregisterSelf: function(cm, location, type) {
@@ -1582,6 +1780,10 @@ var Module = {
     cr.unregisterFactoryLocation(ENTRY_CLASSID, location);
     // Text Construct
     cr.unregisterFactoryLocation(TEXTCONSTRUCT_CLASSID, location);
+    // Generator
+    cr.unregisterFactoryLocation(GENERATOR_CLASSID, location);
+    // Person
+    cr.unregisterFactoryLocation(PERSON_CLASSID, location);
   },
 
   canUnload: function(cm) {

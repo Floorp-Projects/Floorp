@@ -2,7 +2,7 @@
 <!--
 
 Description: atom author uri works
-Expect: var authors = feed.fields.getProperty('author'); authors.QueryInterface(Components.interfaces.nsIArray); authors.queryElementAt(1, Components.interfaces.nsIPropertyBag).getProperty('atom:uri')=='http://example.com';
+Expect: feed.authors.queryElementAt(1, Components.interfaces.nsIFeedPerson).uri.spec =='http://example.com/';
 
 -->
 <feed xmlns="http://www.w3.org/2005/Atom">
@@ -15,6 +15,6 @@ Expect: var authors = feed.fields.getProperty('author'); authors.QueryInterface(
 <author>
 <email>bar@example.com</email>
 <name>foo</name>
-<uri>http://example.com</uri>
+<uri>http://example.com/</uri>
 </author>
 </feed>
