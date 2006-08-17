@@ -767,10 +767,11 @@ generator_send(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSBool ok;
     jsval junk;
 
-    if (!JS_InstanceOf(cx, obj, &js_GeneratorClass, argv))
+    gen = (JSGenerator *)
+          JS_GetInstancePrivate(cx, obj, &js_GeneratorClass, argv);
+    if (!gen)
         return JS_FALSE;
 
-    gen = (JSGenerator *)JS_GetPrivate(cx, obj);
     if (!gen || gen->state == JSGEN_CLOSED)
         return !JS_IsExceptionPending(cx) && js_ThrowStopIteration(cx, obj);
 
@@ -843,8 +844,7 @@ generator_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     JS_SetPendingException(cx, genexit);
-    if (generator_send(cx, obj, 0, argv, rval))
-        return JS_TRUE;
+    generator_send(cx, obj, 0, argv, rval);
 
     if (cx->throwing) {
         exn = cx->exception;
@@ -867,12 +867,57 @@ generator_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_FALSE;
 }
 
+/*
+ * NB: we pass (0, NULL) as (argc, argv) to js_fun_toString in both of these
+ * native methods, which tells js_fun_toString to use its obj parameter as the
+ * function to decompile.  This spares us from having to juggle argv[-2] and
+ * argv[-1] in order to make the forwarded call look like a direct native call
+ * to Function.prototype.to{Source,String} on the generator function.
+ */
+#if JS_HAS_TOSOURCE
+static JSBool
+generator_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                   jsval *rval)
+{
+    JSGenerator *gen;
+
+    gen = (JSGenerator *)
+          JS_GetInstancePrivate(cx, obj, &js_GeneratorClass, argv);
+    if (!gen)
+        return JS_FALSE;
+
+    JS_ASSERT(VALUE_IS_FUNCTION(cx, gen->frame.argv[-2]));
+    return js_fun_toString(cx, JSVAL_TO_OBJECT(gen->frame.argv[-2]),
+                           JS_DONT_PRETTY_PRINT, 0, NULL, rval);
+}
+#endif
+
+static JSBool
+generator_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                   jsval *rval)
+{
+    JSGenerator *gen;
+
+    gen = (JSGenerator *)
+          JS_GetInstancePrivate(cx, obj, &js_GeneratorClass, argv);
+    if (!gen)
+        return JS_FALSE;
+
+    JS_ASSERT(VALUE_IS_FUNCTION(cx, gen->frame.argv[-2]));
+    return js_fun_toString(cx, JSVAL_TO_OBJECT(gen->frame.argv[-2]), 0,
+                           0, NULL, rval);
+}
+
 static JSFunctionSpec generator_methods[] = {
-    {js_iterator_str, iterator_self,   0,0,0},
-    {js_next_str,     generator_next,  0,0,0},
-    {js_send_str,     generator_send,  1,0,0},
-    {js_throw_str,    generator_throw, 1,0,0},
-    {js_close_str,    generator_close, 0,JSPROP_READONLY|JSPROP_PERMANENT,0},
+#if JS_HAS_TOSOURCE
+    {js_toSource_str, generator_toSource,0,0,0},
+#endif
+    {js_toString_str, generator_toString,0,0,0},
+    {js_iterator_str, iterator_self,     0,0,0},
+    {js_next_str,     generator_next,    0,0,0},
+    {js_send_str,     generator_send,    1,0,0},
+    {js_throw_str,    generator_throw,   1,0,0},
+    {js_close_str,    generator_close,   0,JSPROP_READONLY|JSPROP_PERMANENT,0},
     {0,0,0,0,0}
 };
 
