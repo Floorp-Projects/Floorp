@@ -48,7 +48,11 @@
 #include "nsUnicodeRange.h"
 #include "nsUnicharUtils.h"
 
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsServiceManagerUtils.h"
+
+#include "nsCRT.h"
 
 #include <math.h>
 
@@ -879,6 +883,21 @@ static const struct ScriptPropertyEntry gScriptToText[] =
     { "LANG_DIVEHI",     "div" }
 };
 
+static const char *sCJKLangGroup[] = {
+    "ja",
+    "ko",
+    "zh-CN",
+    "zh-HK",
+    "zh-TW"
+};
+
+#define COUNT_OF_CJK_LANG_GROUP 5
+#define CJK_LANG_JA    sCJKLangGroup[0]
+#define CJK_LANG_KO    sCJKLangGroup[1]
+#define CJK_LANG_ZH_CN sCJKLangGroup[2]
+#define CJK_LANG_ZH_HK sCJKLangGroup[3]
+#define CJK_LANG_ZH_TW sCJKLangGroup[4]
+
 class UniscribeItem
 {
 public:
@@ -886,12 +905,14 @@ public:
                   const PRUnichar *aString, PRUint32 aLength,
                   SCRIPT_ITEM *aItem,
                   gfxWindowsFontGroup *aGroup) :
-        mContext(aContext), mDC(aDC),
-        mString(aString), mLength(aLength), mScriptItem(aItem), mGroup(aGroup),
+        mContext(aContext), mDC(aDC), mString(aString),
+        mLength(aLength), mScriptItem(aItem), mGroup(aGroup),
         mGlyphs(nsnull), mClusters(nsnull), mAttr(nsnull),
         mNumGlyphs(0), mMaxGlyphs((int)(1.5 * aLength) + 16),
         mOffsets(nsnull), mAdvances(nsnull), mSpacing(nsnull),
-        mFontIndex(0), mTriedPrefFonts(0), mTriedOtherFonts(0), mFontSelected(PR_FALSE)
+        mFontIndex(0), mTriedPrefFonts(PR_FALSE),
+        mTriedOtherFonts(PR_FALSE), mAppendedCJKFonts(PR_FALSE),
+        mFontSelected(PR_FALSE)
     {
         mGlyphs = (WORD *)malloc(mMaxGlyphs * sizeof(WORD));
         mClusters = (WORD *)malloc((mLength + 1) * sizeof(WORD));
@@ -1111,25 +1132,15 @@ TRY_AGAIN_HOPE_FOR_THE_BEST_2:
         } else if (!mTriedPrefFonts) {
             mTriedPrefFonts = PR_TRUE;
 
-            gfxWindowsPlatform *platform = gfxWindowsPlatform::GetPlatform();
-
-            nsString fonts;
-
             /* first check with the script properties to see what they think */
             const SCRIPT_PROPERTIES *sp = ScriptProperties();
-            WORD primaryId = PRIMARYLANGID(sp->langid);
-            WORD subId = SUBLANGID(sp->langid);
             if (!sp->fAmbiguousCharSet) {
+                WORD primaryId = PRIMARYLANGID(sp->langid);
                 const char *langGroup = gScriptToText[primaryId].langCode;
                 if (langGroup) {
                     if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
                         PR_LOG(gFontLog, PR_LOG_DEBUG, ("Trying to find fonts for: %s (%s)", langGroup, gScriptToText[primaryId].value));
-
-                    platform->GetPrefFonts(langGroup, fonts);
-                    if (!fonts.IsEmpty()) {
-                        const nsACString& lg = (langGroup) ? nsDependentCString(langGroup) : EmptyCString();
-                        gfxFontGroup::ForEachFont(fonts, lg, UniscribeItem::AddFontCallback, this);
-                    }
+                    AppendPrefFonts(langGroup);
                 } else if (primaryId != 0) {
 #ifdef DEBUG_pavlov
                     printf("Couldn't find anything about %d\n", primaryId);
@@ -1138,45 +1149,26 @@ TRY_AGAIN_HOPE_FOR_THE_BEST_2:
             } else {
                 for (PRUint32 i = 0; i < mLength; ++i) {
                     const PRUnichar ch = mString[i];
-                    const char *langGroup = LangGroupFromUnicodeRange(FindCharUnicodeRange(ch));
-                    if (langGroup) {
-                        if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
-                            PR_LOG(gFontLog, PR_LOG_DEBUG, ("Trying to find fonts for: %s", langGroup));
-                        platform->GetPrefFonts(langGroup, fonts);
-                        if (!fonts.IsEmpty()) {
-                            const nsACString& lg = (langGroup) ? nsDependentCString(langGroup) : EmptyCString();
-                            gfxFontGroup::ForEachFont(fonts, lg, UniscribeItem::AddFontCallback, this);
+                    PRUint32 unicodeRange = FindCharUnicodeRange(ch);
+
+                    /* special case CJK */
+                    if (unicodeRange == kRangeSetCJK) {
+                        if (!mAppendedCJKFonts) {
+                            mAppendedCJKFonts = PR_TRUE;
+
+                            if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
+                                PR_LOG(gFontLog, PR_LOG_DEBUG, ("Trying to find fonts for: CJK"));
+
+                            AppendCJKPrefFonts();
+                        }
+                    } else {
+                        const char *langGroup = LangGroupFromUnicodeRange(unicodeRange);
+                        if (langGroup) {
+                            if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
+                                PR_LOG(gFontLog, PR_LOG_DEBUG, ("Trying to find fonts for: %s", langGroup));
+                            AppendPrefFonts(langGroup);
                         }
                     }
-#if 0 // the old code does this -- i think it is sort of a hack
-                    else {
-                        platform->GetPrefFonts("ja", fonts);
-                        if (!fonts.IsEmpty()) {
-                            const nsACString& lg = (langGroup) ? nsDependentCString(langGroup) : EmptyCString();
-                            gfxFontGroup::ForEachFont(fonts, lg, UniscribeItem::AddFontCallback, this);
-                        }
-                        platform->GetPrefFonts("zh-CN", fonts);
-                        if (!fonts.IsEmpty()) {
-                            const nsACString& lg = (langGroup) ? nsDependentCString(langGroup) : EmptyCString();
-                            gfxFontGroup::ForEachFont(fonts, lg, UniscribeItem::AddFontCallback, this);
-                        }
-                        platform->GetPrefFonts("zh-TW", fonts);
-                        if (!fonts.IsEmpty()) {
-                            const nsACString& lg = (langGroup) ? nsDependentCString(langGroup) : EmptyCString();
-                            gfxFontGroup::ForEachFont(fonts, lg, UniscribeItem::AddFontCallback, this);
-                        }
-                        platform->GetPrefFonts("zh-HK", fonts);
-                        if (!fonts.IsEmpty()) {
-                            const nsACString& lg = (langGroup) ? nsDependentCString(langGroup) : EmptyCString();
-                            gfxFontGroup::ForEachFont(fonts, lg, UniscribeItem::AddFontCallback, this);
-                        }
-                        platform->GetPrefFonts("ko", fonts);
-                        if (!fonts.IsEmpty()) {
-                            const nsACString& lg = (langGroup) ? nsDependentCString(langGroup) : EmptyCString();
-                            gfxFontGroup::ForEachFont(fonts, lg, UniscribeItem::AddFontCallback, this);
-                        }
-                    }
-#endif
                 }
             }
             goto TRY_AGAIN_HOPE_FOR_THE_BEST_2;
@@ -1237,6 +1229,83 @@ TRY_AGAIN_HOPE_FOR_THE_BEST_2:
         mFontSelected = PR_TRUE;
     }
 
+
+private:
+    static PRInt32 GetCJKLangGroupIndex(const char *aLangGroup) {
+        PRInt32 i;
+        for (i = 0; i < COUNT_OF_CJK_LANG_GROUP; i++) {
+            if (!PL_strcasecmp(aLangGroup, sCJKLangGroup[i]))
+                return i;
+        }
+        return -1;
+    }
+
+    void AppendPrefFonts(const char *aLangGroup) {
+        NS_ASSERTION(aLangGroup, "aLangGroup is null");
+        gfxWindowsPlatform *platform = gfxWindowsPlatform::GetPlatform();
+        nsString fonts;
+        platform->GetPrefFonts(aLangGroup, fonts);
+        if (fonts.IsEmpty())
+            return;
+        gfxFontGroup::ForEachFont(fonts, nsDependentCString(aLangGroup),
+                                  UniscribeItem::AddFontCallback, this);
+        return;
+   }
+
+   void AppendCJKPrefFonts() {
+       nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+       if (!prefs)
+           return;
+
+       nsCOMPtr<nsIPrefBranch> prefBranch;
+       prefs->GetBranch(0, getter_AddRefs(prefBranch));
+       if (!prefBranch)
+           return;
+
+       // Add by the order of accept languages.
+       nsXPIDLCString list;
+       nsresult rv = prefBranch->GetCharPref("intl.accept_languages", getter_Copies(list));
+       if (NS_SUCCEEDED(rv) && !list.IsEmpty()) {
+           const char kComma = ',';
+           const char *p, *p_end;
+           list.BeginReading(p);
+           list.EndReading(p_end);
+           while (p < p_end) {
+               while (nsCRT::IsAsciiSpace(*p)) {
+                   if (++p == p_end)
+                       break;
+               }
+               if (p == p_end)
+                   break;
+               const char *start = p;
+               while (++p != p_end && *p != kComma)
+                   /* nothing */ ;
+               nsCAutoString lang(Substring(start, p));
+               lang.CompressWhitespace(PR_FALSE, PR_TRUE);
+               PRInt32 index = GetCJKLangGroupIndex(lang.get());
+               if (index >= 0)
+                   AppendPrefFonts(sCJKLangGroup[index]);
+               p++;
+           }
+       }
+
+       // Add the system locale
+       switch (::GetACP()) {
+           case 932: AppendPrefFonts(CJK_LANG_JA);    break;
+           case 936: AppendPrefFonts(CJK_LANG_ZH_CN); break;
+           case 949: AppendPrefFonts(CJK_LANG_KO);    break;
+           // XXX Don't we need to append CJK_LANG_ZH_HK if the codepage is 950?
+           case 950: AppendPrefFonts(CJK_LANG_ZH_TW); break;
+       }
+
+       // last resort...
+       AppendPrefFonts(CJK_LANG_JA);
+       AppendPrefFonts(CJK_LANG_KO);
+       AppendPrefFonts(CJK_LANG_ZH_CN);
+       AppendPrefFonts(CJK_LANG_ZH_HK);
+       AppendPrefFonts(CJK_LANG_ZH_TW);
+    }
+
 private:
     nsRefPtr<gfxContext> mContext;
     HDC mDC;
@@ -1263,12 +1332,13 @@ private:
 
     nsTArray< nsRefPtr<gfxWindowsFont> > mFonts;
 
+    nsRefPtr<gfxWindowsFont> mCurrentFont;
+
     PRUint32 mFontIndex;
     PRPackedBool mTriedPrefFonts;
     PRPackedBool mTriedOtherFonts;
-
-    nsRefPtr<gfxWindowsFont> mCurrentFont;
-    PRBool mFontSelected;
+    PRPackedBool mAppendedCJKFonts;
+    PRPackedBool mFontSelected;
 };
 
 class Uniscribe

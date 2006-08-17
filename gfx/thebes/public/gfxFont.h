@@ -198,6 +198,12 @@ protected:
     nsString mFamilies;
     gfxFontStyle mStyle;
     nsTArray< nsRefPtr<gfxFont> > mFonts;
+
+    static PRBool ForEachFontInternal(const nsAString& aFamilies,
+                                      const nsACString& aLangGroup,
+                                      FontCreationCallback fc,
+                                      void *closure,
+                                      PRBool aAllowRecursive);
 };
 
 
