@@ -121,9 +121,7 @@
               [% END %]
             </a></td>
             <td align="center">
-              [% isclosed = !bug.opened %]
-                <a href="show_bug.cgi?id=[% bug.id %]">
-                  [% bug.id FILTER closed(isclosed) %]</a>
+              [% bug.id FILTER bug_link(bug.id) FILTER none %]
             </td>
             <td>
               <a href="votes.cgi?action=show_bug&amp;bug_id=[% bug.id %]">
