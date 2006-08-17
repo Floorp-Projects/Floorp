@@ -1501,12 +1501,11 @@ nsTextTransformer::DoArabicShaping(PRUnichar* aText,
     aTextLength = newLen;
   } else {
     // Increasing |aTextLength| would cause a buffer overflow on |aText|
-    // by |StripZeroWidthJoinControls()| below.
+    // by the memcpy() below.
     NS_ERROR("ArabicShaping should not have increased the text length");
   }
   *aWasTransformed = PR_TRUE;
-
-  StripZeroWidthJoinControls(buffer, aText, aTextLength, aWasTransformed);
+  memcpy(aText, buffer, aTextLength * sizeof(PRUnichar));
 }
 
 void
@@ -1559,34 +1558,6 @@ nsTextTransformer::DoNumericShaping(PRUnichar* aText,
     default:
       break;
   }
-}
-
-void
-nsTextTransformer::StripZeroWidthJoinControls(PRUnichar* aSource,
-                                              PRUnichar* aTarget,
-                                              PRInt32& aTextLength, 
-                                              PRBool* aWasTransformed)
-{
-  if (aTextLength < 0) {
-    NS_ERROR("negative text length");
-    aTextLength = 0;
-    return;
-  }
-
-  const PRUnichar* src = aSource;
-  const PRUnichar* const end = aSource + aTextLength;
-  PRUnichar* dest = aTarget;
-
-  while (src != end) {
-    if (*src == CH_ZWNJ || *src == CH_ZWJ) {
-      ++src;
-      *aWasTransformed = PR_TRUE;
-      continue;
-    }
-    *dest++ = *src++;
-  }
-
-  aTextLength = dest - aTarget;
 }
 
 //----------------------------------------------------------------------
