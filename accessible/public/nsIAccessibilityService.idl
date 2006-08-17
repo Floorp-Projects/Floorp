@@ -45,7 +45,7 @@ interface nsIFrame;
 interface nsObjectFrame;
 interface nsIContent;
 
-[scriptable, uuid(e9f2dd1f-5660-4084-bc5d-9e86e0647232)]
+[scriptable, uuid(7b2dc92f-bd14-4f0c-bdff-1caa0621fea5)]
 interface nsIAccessibilityService : nsIAccessibleRetrieval
 {
   nsIAccessible createOuterDocAccessible(in nsIDOMNode aNode);
@@ -56,7 +56,7 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   nsIAccessible createHyperTextAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLBRAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLButtonAccessible(in nsISupports aFrame);
-  nsIAccessible createHTMLAccessibleByMarkup(in nsISupports aFrame, in nsIWeakReference aWeakShell, in nsIDOMNode aDOMNode, in AString aRole);
+  [noscript] nsIAccessible createHTMLAccessibleByMarkup(in nsIFrame aFrame, in nsIWeakReference aWeakShell, in nsIDOMNode aDOMNode, in AString aRole);
   nsIAccessible createHTMLLIAccessible(in nsISupports aFrame, in nsISupports aBulletFrame, in AString aBulletText);
   nsIAccessible createHTMLCheckboxAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLComboboxAccessible(in nsIDOMNode aNode, in nsIWeakReference aPresShell);

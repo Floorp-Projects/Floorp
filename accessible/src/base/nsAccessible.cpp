@@ -2710,12 +2710,8 @@ nsresult nsAccessible::GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset)
   PRInt32 characterCount = 0;
 
   while (NextChild(accessible)) {
-    if (Role(accessible) == ROLE_TEXT_LEAF) {
-      nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
-      nsIFrame *frame = accessNode->GetFrame();
-      if (frame) {
-        characterCount += frame->GetContent()->TextLength();
-      }
+    if (IsText(accessible)) {
+      characterCount += TextLength(accessible);
     }
     else if (accessible == this) {
       *aStartOffset = characterCount;
@@ -2730,3 +2726,25 @@ nsresult nsAccessible::GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset)
   return NS_ERROR_FAILURE;
 }
 
+PRInt32 nsAccessible::TextLength(nsIAccessible *aAccessible)
+{
+  if (!IsText(aAccessible)) {
+    return 1;
+  }
+  nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(aAccessible));
+  nsIFrame *frame = accessNode->GetFrame();
+  if (!frame) {
+    return 0;
+  }
+  PRInt32 textLength = frame->GetContent()->TextLength();
+  if (!textLength) {
+    // This is exception to the frame owns the text.
+    // The only known case where this occurs is for list bullets
+    // We could do this for all accessibles but it's not as performant
+    // as dealing with nsIContent directly
+    nsAutoString childText;
+    aAccessible->GetName(childText);
+    textLength = childText.Length();
+  }
+  return textLength;
+}

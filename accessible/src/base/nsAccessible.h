@@ -145,7 +145,9 @@ public:
   static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
   static PRUint32 State(nsIAccessible *aAcc) { PRUint32 state; aAcc->GetFinalState(&state); return state; }
   static PRUint32 Role(nsIAccessible *aAcc) { PRUint32 role; aAcc->GetFinalRole(&role); return role; }
-  static PRBool IsEmbeddedObject(nsIAccessible *aAcc) { PRUint32 role = Role(aAcc); return role != ROLE_TEXT_LEAF && role != ROLE_WHITESPACE; }
+  static PRBool IsText(nsIAccessible *aAcc) { PRUint32 role = Role(aAcc); return role == ROLE_TEXT_LEAF || role == ROLE_STATICTEXT; }
+  static PRBool IsEmbeddedObject(nsIAccessible *aAcc) { PRUint32 role = Role(aAcc); return role != ROLE_TEXT_LEAF && role != ROLE_WHITESPACE && role != ROLE_STATICTEXT; }
+  static PRInt32 TextLength(nsIAccessible *aAccessible);
 
 protected:
   PRBool MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut, nsStateMapEntry *aStateMapEntry);
