@@ -86,6 +86,7 @@ $(CONFIG_DIR)/setup.exe::
 	$(INSTALL) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) $(CONFIG_DIR)
 	$(INSTALL) $(addprefix $(DIST)/branding/,$(BRANDING_FILES)) $(CONFIG_DIR)
 	cp $(topsrcdir)/browser/EULA $(CONFIG_DIR)/license.txt
+	cp $(topsrcdir)/browser/EULA.rtf $(CONFIG_DIR)/license.rtf
 	$(EXIT_ON_ERROR) \
 	for i in $(PP_LOCALIZED_FILES); do \
 	  $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(srcdir)/$$i > $(CONFIG_DIR)/$$i; \
