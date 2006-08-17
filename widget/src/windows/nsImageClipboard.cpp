@@ -139,9 +139,57 @@ nsImageToClipboard::CalcSpanLength(PRUint32 aWidth, PRUint32 aBitCount)
 nsresult
 nsImageToClipboard::CreateFromImage ( nsIImage* inImage, HANDLE* outBitmap )
 {
-  nsresult result = NS_OK;
-  *outBitmap = nsnull;
-  
+    nsresult result = NS_OK;
+    *outBitmap = nsnull;
+
+#ifdef MOZ_CAIRO_GFX
+    inImage->LockImagePixels(PR_FALSE);
+
+    const PRUint32 imageSize = inImage->GetLineStride() * inImage->GetHeight();
+    const PRInt32 bitmapSize = sizeof(BITMAPINFOHEADER) + imageSize;
+
+    HGLOBAL glob = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE | GMEM_ZEROINIT, bitmapSize);
+    if (!glob) {
+        inImage->UnlockImagePixels(PR_FALSE);
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Create the buffer where we'll copy the image bits (and header) into and lock it
+    void *data = (void*)::GlobalLock(glob);
+
+    BITMAPINFOHEADER *header = (BITMAPINFOHEADER*)data;
+    header->biSize          = sizeof(BITMAPINFOHEADER);
+    header->biWidth         = inImage->GetWidth();
+    header->biHeight        = inImage->GetHeight();
+
+    header->biPlanes        = 1;
+    header->biBitCount      = inImage->GetBytesPix() * 8;
+    header->biCompression   = BI_RGB;
+    header->biSizeImage     = imageSize;
+
+    const PRUint32 bpr = inImage->GetLineStride();
+
+    BYTE *dstBits = (BYTE*)data + sizeof(BITMAPINFOHEADER);
+    BYTE *srcBits = inImage->GetBits();
+    for (PRInt32 i = 0; i < header->biHeight; ++i) {
+        PRUint32 srcOffset = imageSize - (bpr * (i + 1));
+        PRUint32 dstOffset = i * bpr;
+        ::CopyMemory(dstBits + dstOffset, srcBits + srcOffset, bpr);
+    }
+    
+    ::GlobalUnlock(glob);
+
+    *outBitmap = (HANDLE)glob;
+
+    inImage->UnlockImagePixels(PR_FALSE);
+    return NS_OK;
+
+    // Wow the old code is broken.  I'm not touching it.
+    // It should probably lock/unlock the same object....
+#else
+
+
+
 /*
   //pHead = (BITMAPINFOHEADER*)pImage->GetBitInfo();
   //pImage->GetNativeData((void**)&hBitMap);
@@ -252,6 +300,7 @@ nsImageToClipboard::CreateFromImage ( nsIImage* inImage, HANDLE* outBitmap )
   
   inImage->UnlockImagePixels ( PR_FALSE );
   return result;
+#endif
 }
 
 
