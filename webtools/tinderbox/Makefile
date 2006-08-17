@@ -58,6 +58,7 @@ EXE_FILES = \
 	admintree.cgi \
 	buildwho.pl \
 	clean.pl \
+	checksetup.pl \
 	doadmin.cgi \
 	fixupimages.pl \
 	scrape.pl \
@@ -117,6 +118,9 @@ ifeq (,$(strip $(REGISTRY_URL)))
 $(error REGISTRY_URL must be set for bonsai support to work)
 endif
 endif
+
+# Avoid warnings in various scripts by setting BONSAI_DIR to a secure default
+BONSAI_DIR ?= $(TINDERBOX_DIR)
 
 install:
 	$(foreach u,$(ALL_UTILS),$(if $($u),,$(error $u must be set to the full path of the utility)))

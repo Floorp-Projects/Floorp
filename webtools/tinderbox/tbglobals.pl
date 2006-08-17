@@ -22,6 +22,7 @@
 # Reading the log backwards saves time when we only want the tail.
 use Backwards;
 use Digest::MD5 qw(md5_hex);
+use Tie::IxHash;
 
 #
 # Global variabls and functions for tinderbox
@@ -77,6 +78,26 @@ $data_dir='data';
 # Set this to show real end times for builds instead of just using
 # the start of the next build as the end time.
 $display_accurate_build_end_times = 1;
+
+# Format version of treedata.pl
+# Use Tie::IxHash to keep order of treedata variables
+tie %default_treedata => 'Tie::IxHash',
+    treedata_version => 1,
+    who_days => 14,
+    use_bonsai => 1,
+    use_viewvc => 0,
+    cvs_module => '',
+    cvs_branch => '',
+    cvs_root => '',
+    bonsai_tree => '',
+    viewvc_url => '',
+    viewvc_repository => '',
+    viewvc_dbdriver => '',
+    viewvc_dbhost => '',
+    viewvc_dbport => '',
+    viewvc_dbname => '',
+    viewvc_dbuser => '',
+    viewvc_dbpasswd => '';
 
 1;
 
@@ -522,6 +543,24 @@ sub tb_find_build_record {
     td          => undef
   };
   return $buildrec;
+}
+
+sub write_treedata() {
+    my ($file, $treedata) = @_;
+
+    open( F, ">", "$file") or die ("$file: $!\n");
+    for my $var (keys %$treedata) {
+        my $value;
+        if ("$var" eq "treedata_version" || "$var" eq "who_days" || 
+            "$var" eq "use_bonsai" || "$var" eq "use_viewvc") {
+            $value = $treedata->{$var};
+        } else {
+            $value = "\'$treedata->{$var}\'";
+        }
+        print F "\$${var}=$value;\n";
+    }
+    print F "1;\n";
+    close( F );
 }
 
 # end of public functions

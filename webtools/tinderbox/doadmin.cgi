@@ -20,6 +20,7 @@
 #
 # Contributor(s): 
 
+use Tie::IxHash;
 
 require 'tbglobals.pl';
 
@@ -118,32 +119,38 @@ sub trim_logs {
 }
 
 sub create_tree {
+    tie my %treedata => 'Tie::IxHash';
+    # make a copy of default_treedata to preserve order
+    %treedata = %default_treedata;
+    $treedata{who_days} = $form{'who_days'};
+    $treedata{cvs_root} = $form{'repository'};
+    $treedata{cvs_module} = $form{'modulename'};
+    $treedata{cvs_branch}= $form{'branchname'};
+    $treedata{bonsai_tree} = $form{'bonsaitreename'};
+    $treedata{viewvc_url} = $form{'viewvc_url'};
+    $treedata{viewvc_repository} = $form{'viewvc_repository'};
+    $treedata{viewvc_dbdriver} = $form{'viewvc_dbdriver'};
+    $treedata{viewvc_dbhost} = $form{'viewvc_dbhost'};
+    $treedata{viewvc_dbport} = $form{'viewvc_dbport'};
+    $treedata{viewvc_dbname} = $form{'viewvc_dbname'};
+    $treedata{viewvc_dbuser} = $form{'viewvc_dbuser'};
+    $treedata{viewvc_dbpasswd} = $form{'viewvc_dbpasswd'};
+
+    $treedata{use_bonsai} = $treedata{use_viewvc} = 0;
+
     $treename = $form{'treename'};
-    $who_days = $form{'who_days'};
-    my $repository = $form{'repository'};
-    $modulename = $form{'modulename'};
-    $branchname = $form{'branchname'};
-    $bonsaitreename = $form{'bonsaitreename'};
-    $viewvc_url = $form{'viewvc_url'};
-    $viewvc_repository = $form{'viewvc_repository'};
-    $viewvc_dbdriver = $form{'viewvc_dbdriver'};
-    $viewvc_dbhost = $form{'viewvc_dbhost'};
-    $viewvc_dbport = $form{'viewvc_dbport'};
-    $viewvc_dbname = $form{'viewvc_dbname'};
-    $viewvc_dbuser = $form{'viewvc_dbuser'};
-    $viewvc_dbpasswd = $form{'viewvc_dbpasswd'};
 
-    $use_bonsai = $use_viewvc = 0;
-
-    my $all_bonsai_vars = "${modulename}${branchname}${bonsaitreename}";
-    my $all_viewvc_vars = "${viewvc_url}${viewvc_repository}" .
-        "${viewvc_dbdriver}${viewvc_dbhost}${viewvc_dbport}" .
-        "${viewvc_dbname}${viewvc_user}${viewvc_passwd}";
-
-    $use_bonsai++ if ("$all_bonsai_vars" ne "");
-    $use_viewvc++ if ("$all_viewvc_vars" ne "");
-
-    if ($use_bonsai && $use_viewvc) {
+    for my $var ( 'cvs_module', 'cvs_branch', 'bonsai_tree') {
+        $treedata{use_bonsai}++ if (defined($treedata{$var}) && 
+                                    "$treedata{$var}" ne "");
+    }
+    for my $var ('viewvc_url','viewvc_repository',
+                 '{viewvc_dbdriver', 'viewvc_dbhost', 'viewvc_dbport',
+                 'viewvc_dbname', 'viewvc_user', 'viewvc_passwd') {
+        $treedata{use_viewvc}++ if (defined($treedata{$var}) && 
+                                    "$treedata{$var}" ne "");
+    }
+    if ($treedata{use_bonsai} && $treedata{use_viewvc}) {
         my $errmsg = "Cannot configure tinderbox to use bonsai & viewvc at the same time.";
         print "<h1>$errmsg</h1>\n";
         die "$errmsg";
@@ -153,28 +160,9 @@ sub create_tree {
         chmod(oct($dir_perm), $treename);
     }
     else {
-        mkdir( $treename, oct($dir_perm)) || die "<h1> Cannot mkdir $treename</h1>";
+        mkdir( $treename, oct($dir_perm)) || die "<h1> Cannot mkdir $treename</h1>"; 
     }
-    open( F, ">", "$treename/treedata.pl" );
-    print F "\$who_days=$who_days;\n";
-    print F "\$use_bonsai=$use_bonsai;\n";
-    print F "\$use_viewvc=$use_viewvc;\n";
-    print F "\$cvs_module='$modulename';\n";
-    print F "\$cvs_branch='$branchname';\n";
-    print F "\$bonsai_tree='$bonsaitreename';\n";
-    print F "\$viewvc_url='$viewvc_url';\n";
-    print F "\$viewvc_repository='$viewvc_repository';\n";
-    print F "\$viewvc_dbdriver='$viewvc_dbdriver';\n";
-    print F "\$viewvc_dbhost='$viewvc_dbhost';\n";
-    print F "\$viewvc_dbport='$viewvc_dbport';\n";
-    print F "\$viewvc_dbname='$viewvc_dbname';\n";
-    print F "\$viewvc_dbuser='$viewvc_dbuser';\n";
-    print F "\$viewvc_dbpasswd='$viewvc_dbpasswd';\n";
-    if ($repository ne "") {
-        print F "\$cvs_root='$repository';\n";
-    }
-    print F "1;\n";
-    close( F );
+    &write_treedata("$treename/treedata.pl", \%treedata);
 
     open( F, ">", "$treename/build.dat" );
     close( F );
