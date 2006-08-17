@@ -107,6 +107,7 @@ CPPSRCS = \
 	nsConsoleWriter.cpp \
 	nsXREDirProvider.cpp \
 	nsNativeAppSupportBase.cpp \
+	nsAppData.cpp \
 	$(NULL)
 
 DEFINES += -DIMPL_XREAPI

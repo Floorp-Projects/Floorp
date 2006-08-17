@@ -44,23 +44,21 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE    = xulrunner
 
-REQUIRES  = xpcom
+REQUIRES  = xpcom xulapp
+
+CPPSRCS   = nsXULStub.cpp
 
 ifeq ($(OS_ARCH),Darwin)
 
 PROGRAM   = xulrunner$(BIN_SUFFIX)
 
-CPPSRCS   = nsXULStubOSX.cpp
-
 else
 
 PROGRAM   = xulrunner-stub$(BIN_SUFFIX)
 
-CPPSRCS   = nsXULStub.cpp
+endif # OS_ARCH
 
 LOCAL_INCLUDES = -I$(topsrcdir)/xpcom/build
-
-endif # OS_ARCH
 
 DEFINES  += -DXPCOM_GLUE
 

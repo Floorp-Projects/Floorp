@@ -132,6 +132,18 @@ NS_strndup(const PRUnichar *aString, PRUint32 aLen)
   return newBuf;
 }
 
+char*
+NS_strdup(const char *aString)
+{
+  PRUint32 len = strlen(aString);
+  char *str = (char*) NS_Alloc(len + 1);
+  if (str) {
+    memcpy(str, aString, len);
+    str[len] = '\0';
+  }
+  return str;
+}
+
 // This table maps uppercase characters to lower case characters;
 // characters that are neither upper nor lower case are unaffected.
 const unsigned char nsLowerUpperUtils::kUpper2Lower[256] = {

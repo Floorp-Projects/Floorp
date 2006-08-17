@@ -49,8 +49,14 @@
 /**
  * Application-specific data needed to start the apprunner.
  *
- * @status UNDER_REVIEW - This API is under review to be frozen, but isn't
- *                        frozen yet. Use with caution.
+ * @status FROZEN - This API is stable. Additional fields may be added to the
+ *                  end of the structure in the future. Runtime detection
+ *                  of the version of nsXREAppData can be determined by
+ *                  examining the "size" field.
+ *
+ * @note When this structure is allocated and manipulated by XRE_CreateAppData,
+ *       string fields will be allocated with NS_Alloc, and interface pointers
+ *       are strong references.
  */
 struct nsXREAppData
 {
@@ -115,6 +121,18 @@ struct nsXREAppData
    * Combination of NS_XRE_ prefixed flags (defined below).
    */
   PRUint32 flags;
+
+  /**
+   * The location of the XRE. XRE_main may not be able to figure this out
+   * programatically.
+   */
+  nsILocalFile* xreDirectory;
+
+  /**
+   * The minimum/maximum compatible XRE version.
+   */
+  const char *minVersion;
+  const char *maxVersion;
 };
 
 /**
@@ -306,5 +324,34 @@ XRE_API(void,
  */
 XRE_API(void,
         XRE_TermEmbedding, ())
+
+/**
+ * Create a new nsXREAppData structure from an application.ini file.
+ *
+ * @param aINIFile The application.ini file to parse.
+ * @param aAppData A newly-allocated nsXREAppData structure. The caller is
+ *                 responsible for freeing this structure using
+ *                 XRE_FreeAppData.
+ */
+XRE_API(nsresult,
+        XRE_CreateAppData, (nsILocalFile* aINIFile,
+                            nsXREAppData **aAppData))
+
+/**
+ * Parse an INI file (application.ini or override.ini) into an existing
+ * nsXREAppData structure.
+ *
+ * @param aINIFile The INI file to parse
+ * @param aAppData The nsXREAppData structure to fill.
+ */
+XRE_API(nsresult,
+        XRE_ParseAppData, (nsILocalFile* aINIFile,
+                           nsXREAppData *aAppData))
+
+/**
+ * Free a nsXREAppData structure that was allocated with XRE_CreateAppData.
+ */
+XRE_API(void,
+        XRE_FreeAppData, (nsXREAppData *aAppData))
 
 #endif // _nsXULAppAPI_h__

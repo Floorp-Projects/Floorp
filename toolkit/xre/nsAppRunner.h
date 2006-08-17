@@ -53,6 +53,7 @@
 #endif
 
 #include "nscore.h"
+#include "nsXULAppAPI.h"
 
 // This directory service key is a lot like NS_APP_LOCALSTORE_50_FILE,
 // but it is always the "main" localstore file, even when we're in safe mode
@@ -60,7 +61,6 @@
 #define NS_LOCALSTORE_UNSAFE_FILE "LStoreS"
 
 class nsACString;
-struct nsXREAppData;
 struct nsStaticModuleInfo;
 
 class nsINativeAppSupport;
@@ -72,6 +72,10 @@ class nsIProfileLock;
 class nsIProfileUnlocker;
 
 extern nsXREDirProvider* gDirServiceProvider;
+
+// NOTE: gAppData will be null in embedded contexts. The "size" parameter
+// will be the size of the original structure passed to XRE_main, but the
+// structure will have all of the members available.
 extern const nsXREAppData* gAppData;
 extern PRBool gSafeMode;
 
@@ -119,5 +123,45 @@ WinLaunchChild(const char *exePath, int argc, char **argv);
 #endif
 
 #define NS_NATIVEAPPSUPPORT_CONTRACTID "@mozilla.org/toolkit/native-app-support;1"
+
+// Like nsXREAppData, but releases all strong refs/allocated memory
+// in the destructor.
+class ScopedAppData : public nsXREAppData
+{
+public:
+  ScopedAppData() { Zero(); this->size = sizeof(*this); }
+
+  ScopedAppData(const nsXREAppData* aAppData);
+
+  void Zero() { memset(this, 0, sizeof(*this)); }
+
+  ~ScopedAppData();
+};
+
+/**
+ * Given "str" is holding a string allocated with NS_Alloc, or null:
+ * replace the value in "str" with a new value.
+ *
+ * @param newvalue Null is permitted. The string is cloned with
+ *                 NS_strdup
+ */
+void SetAllocatedString(const char *&str, const char *newvalue);
+
+/**
+ * Given "str" is holding a string allocated with NS_Alloc, or null:
+ * replace the value in "str" with a new value.
+ *
+ * @param newvalue If "newvalue" is the empty string, "str" will be set
+ *                 to null.
+ */
+void SetAllocatedString(const char *&str, const nsACString &newvalue);
+
+template<class T>
+void SetStrongPtr(T *&ptr, T* newvalue)
+{
+  NS_IF_RELEASE(ptr);
+  ptr = newvalue;
+  NS_IF_ADDREF(ptr);
+}
 
 #endif // nsAppRunner_h__

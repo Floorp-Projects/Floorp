@@ -46,4 +46,7 @@ void xxxNeverCalledXUL()
   XRE_InitEmbedding(nsnull, nsnull, nsnull, nsnull, 0);
   XRE_NotifyProfile();
   XRE_TermEmbedding();
+  XRE_CreateAppData(nsnull, nsnull);
+  XRE_ParseAppData(nsnull, nsnull);
+  XRE_FreeAppData(nsnull);
 }

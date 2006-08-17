@@ -106,6 +106,7 @@
 #include "nsXPCOM.h"
 #include "nsXPIDLString.h"
 #include "nsXPFEComponentsCID.h"
+#include "nsVersionComparator.h"
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXULAppAPI.h"
@@ -292,6 +293,39 @@ strimatch(const char* lowerstr, const char* mixedstr)
   if (*mixedstr) return PR_FALSE; // lowerstr is shorter
 
   return PR_TRUE;
+}
+
+/**
+ * Output a string to the user.  This method is really only meant to be used to
+ * output last-ditch error messages designed for developers NOT END USERS.
+ *
+ * @param isError
+ *        Pass true to indicate severe errors.
+ * @param fmt
+ *        printf-style format string followed by arguments.
+ */
+static void Output(PRBool isError, const char *fmt, ... )
+{
+  va_list ap;
+  va_start(ap, fmt);
+
+#if defined(XP_WIN) && !MOZ_WINCONSOLE
+  char *msg = PR_vsmprintf(fmt, ap);
+  if (msg)
+  {
+    UINT flags = MB_OK;
+    if (isError)
+      flags |= MB_ICONERROR;
+    else 
+      flags |= MB_ICONINFORMATION;
+    MessageBox(NULL, msg, "XULRunner", flags);
+    PR_smprintf_free(msg);
+  }
+#else
+  vfprintf(stderr, fmt, ap);
+#endif
+
+  va_end(ap);
 }
 
 enum ArgResult {
@@ -733,7 +767,7 @@ static void DumpArbitraryHelp()
 
   {
     nsXREDirProvider dirProvider;
-    dirProvider.Initialize(nsnull);
+    dirProvider.Initialize(nsnull, gAppData->xreDirectory);
 
     ScopedXPCOMStartup xpcom;
     xpcom.Initialize();
@@ -1914,14 +1948,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   gArgc = argc;
   gArgv = argv;
 
-  NS_ASSERTION(aAppData, "must specify XUL app data");
-
-  // In the future when nsXREAppData is extended, this check will need to
-  // have more finesse.
-  if (aAppData->size < sizeof(nsXREAppData)) {
-    NS_ERROR("aAppdata.size isn't set properly!");
-    return 1;
-  }
+  NS_ENSURE_TRUE(aAppData, 2);
 
 #ifdef XP_MACOSX
   // The xulrunner stub executable tricks CFBundleGetMainBundle on
@@ -1931,7 +1958,57 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   if (gBinaryPath && !*gBinaryPath)
     gBinaryPath = nsnull;
+#endif
 
+  ScopedAppData appData(aAppData);
+  gAppData = &appData;
+
+  // Check sanity and correctness of app data.
+
+  if (!appData.name) {
+    Output(PR_TRUE, "Error: App:Name not specified in application.ini\n");
+    return 1;
+  }
+  if (!appData.buildID) {
+    Output(PR_TRUE, "Error: App:BuildID not specified in application.ini\n");
+    return 1;
+  }
+  if (!appData.minVersion) {
+    Output(PR_TRUE, "Error: Gecko:MinVersion not specified in application.ini\n");
+    return 1;
+  }
+
+  if (!appData.maxVersion) {
+    // If no maxVersion is specified, we assume the app is only compatible
+    // with the initial preview release. Do not increment this number ever!
+    SetAllocatedString(appData.maxVersion, "1.*");
+  }
+
+  if (NS_CompareVersions(appData.minVersion, TOOLKIT_EM_VERSION) > 0 ||
+      NS_CompareVersions(appData.maxVersion, TOOLKIT_EM_VERSION) < 0) {
+    Output(PR_TRUE, "Error: Platform version " TOOLKIT_EM_VERSION " is not compatible with\n"
+           "minVersion >= %s\nmaxVersion <= %s\n",
+           appData.minVersion, appData.maxVersion);
+    return 1;
+  }
+
+  if (!appData.xreDirectory) {
+    nsCOMPtr<nsILocalFile> lf;
+    rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
+    if (NS_FAILED(rv))
+      return 2;
+
+    nsCOMPtr<nsIFile> greDir;
+    rv = lf->GetParent(getter_AddRefs(greDir));
+    if (NS_FAILED(rv))
+      return 2;
+    
+    rv = CallQueryInterface(greDir, &appData.xreDirectory);
+    if (NS_FAILED(rv))
+      return 2;
+  }
+
+#ifdef XP_MACOSX
   if (PR_GetEnv("MOZ_LAUNCHED_CHILD")) {
     // When the app relaunches, the original process exits.  This causes
     // the dock tile to stop bouncing, lose the "running" triangle, and
@@ -1956,8 +2033,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
   PR_SetEnv("MOZ_LAUNCHED_CHILD=");
-
-  gAppData = aAppData;
 
   gRestartArgc = gArgc;
   gRestartArgv = (char**) malloc(sizeof(char*) * (gArgc + 1));
@@ -2008,7 +2083,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   {
     nsXREDirProvider dirProvider;
-    rv = dirProvider.Initialize(gAppData->directory);
+    rv = dirProvider.Initialize(gAppData->directory, gAppData->xreDirectory);
     if (NS_FAILED(rv))
       return 1;
 

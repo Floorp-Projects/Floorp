@@ -60,7 +60,7 @@ public:
 
   // if aXULAppDir is null, use gArgv[0]
   nsresult Initialize(nsIFile *aXULAppDir,
-                      nsILocalFile *aGREDir = nsnull,
+                      nsILocalFile *aGREDir,
                       nsIDirectoryServiceProvider* aAppProvider = nsnull);
   ~nsXREDirProvider();
 
