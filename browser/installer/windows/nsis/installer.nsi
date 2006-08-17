@@ -158,7 +158,7 @@ ReserveFile components.ini
 
 ; License Page
 !define MUI_LICENSEPAGE_RADIOBUTTONS
-!insertmacro MUI_PAGE_LICENSE license.txt
+!insertmacro MUI_PAGE_LICENSE license.rtf
 
 ; Custom Options Page
 Page custom preOptions ChangeOptions
