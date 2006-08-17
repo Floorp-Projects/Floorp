@@ -46,6 +46,7 @@ for each (loc in Tier2) tierMap[loc] = 'Tier-2';
 
 var view;
 view = {
+  hashes: {},
   updateView: function() {
     this._gView = document.getElementById("view");
     var cmp = function(l,r) {
@@ -92,15 +93,19 @@ view = {
         //YAHOO.widget.Logger.log('testing ' + path);
         var innerContent;
         var cl = '';
+        if (path.match(/^mozilla/)) {
+          cl += ' enUS';
+        }
+        var localName = path.substr(path.lastIndexOf('/') + 1)
         if (results.details[path].error) {
-          innerContent = 'error in ' + path.substr(path.lastIndexOf('/') + 1);
-          cl = ' error';
+          innerContent = 'error in ' + localName;
+          cl += ' error';
         }
         else {
           var shortName = results.details[path].ShortName;
           var img = results.details[path].Image;
           if (results.locales[loc].orders && results.locales[loc].orders[shortName]) {
-            cl = " ordered";
+            cl += " ordered";
           }
           innerContent = '<img src="' + img + '">' + shortName;
         }
@@ -109,7 +114,37 @@ view = {
         td.innerHTML = innerContent;
         row.appendChild(td);
         td.details = results.details[path];
+        // test the hash code
+        if (td.details.error) {
+          // ignore errorenous plugins
+          continue;
+        }
+        if (this.hashes[localName]) {
+          this.hashes[localName].nodes.push(td);
+          if (this.hashes[localName].conflict) {
+            td.className += ' conflict';
+          }
+          else if (this.hashes[localName].key != td.details.md5) {
+            this.hashes[localName].conflict = true;
+            for each (td in this.hashes[localName].nodes) {
+              td.className += ' conflict';
+            }
+          }
+        }
+        else {
+          this.hashes[localName] =  {key: td.details.md5, nodes: [td]};
+        }
       }
+    }
+    for (localName in this.hashes) {
+      if ( ! ('conflict' in this.hashes[localName])) {
+        continue;
+      }
+      locs = [];
+      for each (var td in this.hashes[localName].nodes) {
+        locs.push(td.parentNode.firstChild.textContent);
+      }
+      YAHOO.widget.Logger.log('difference in ' + localName + ' for ' + locs.join(', '));
     }
   },
   onMouseOver: function(event) {
