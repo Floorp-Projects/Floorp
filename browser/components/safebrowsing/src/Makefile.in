@@ -55,7 +55,4 @@ REQUIRES = \
 
 CPPSRCS = nsDocNavStartProgressListener.cpp
 
-# EXTRA_COMPONENTS installs components written in JS to dist/bin/components
-EXTRA_PP_COMPONENTS = nsSafebrowsingApplication.js
-
 include $(topsrcdir)/config/rules.mk

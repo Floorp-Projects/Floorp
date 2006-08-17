@@ -181,8 +181,8 @@ pref("general.autoScroll", true);
 // is the default browser.
 pref("browser.shell.checkDefaultBrowser", true);
 
-// 0 = blank, 1 = home (browser.startup.homepage), 2 = last
-// XXXBlake Remove this stupid pref
+// 0 = blank, 1 = home (browser.startup.homepage), 2 = last visited page, 3 = resume previous browser session
+// The behavior of option 3 is detailed at: http://wiki.mozilla.org/Session_Restore
 pref("browser.startup.page",                1);
 pref("browser.startup.homepage",	          "resource:/browserconfig.properties");
 
@@ -262,7 +262,7 @@ pref("browser.tabs.loadFolderAndReplace", true);
 pref("browser.tabs.opentabfor.middleclick", true);
 pref("browser.tabs.loadDivertedInBackground", false);
 pref("browser.tabs.loadBookmarksInBackground", false);
-pref("browser.tabs.tabMinWidth", 100);
+pref("browser.tabs.tabMinWidth", 100);                                        
 pref("browser.tabs.tabClipWidth", 140);
 pref("browser.tabs.disableBackgroundClose", false);
 
@@ -279,12 +279,7 @@ pref("browser.bookmarks.sort.resource", "rdf:http://home.netscape.com/NC-rdf#Nam
 
 // Scripts & Windows prefs
 pref("dom.disable_open_during_load",              true);
-#ifdef DEBUG
-pref("javascript.options.showInConsole",          true);
-#else
 pref("javascript.options.showInConsole",          false);
-#endif
-
 // Make the status bar reliably present and unaffected by pages
 pref("dom.disable_window_open_feature.status",    true);
 // This is the pref to control the location bar, change this to true to 
@@ -468,8 +463,6 @@ pref("layout.spellcheckDefault", 1);
 pref("view_source.editor.path", "");
 pref("view_source.editor.external", false);
 
-pref("browser.send_pings", true);
-
 #ifdef MOZ_FEEDS
 pref("browser.contentHandlers.types.0.title", "chrome://browser-region/locale/region.properties");
 pref("browser.contentHandlers.types.0.uri", "chrome://browser-region/locale/region.properties");
@@ -499,21 +492,18 @@ pref("browser.safebrowsing.enabled", true);
 pref("browser.safebrowsing.remoteLookups", false);
 
 // Non-enhanced mode (local url lists) URL list to check for updates
-pref("browser.safebrowsing.provider.0.updateURL", "http://sb.google.com/safebrowsing/update?client=navclient-auto-ffox2&");
+pref("browser.safebrowsing.provider.0.updateURL", "http://sb.google.com/safebrowsing/update?client={moz:client}&mozver={moz:version}-{moz:buildid}&");
 
 pref("browser.safebrowsing.dataProvider", 0);
 
 // Does the provider name need to be localizable?
 pref("browser.safebrowsing.provider.0.name", "Google");
-pref("browser.safebrowsing.provider.0.lookupURL", "http://sb.google.com/safebrowsing/lookup?sourceid=firefox-antiphish&features=TrustRank&client=navclient-auto-ffox2&");
+pref("browser.safebrowsing.provider.0.lookupURL", "http://sb.google.com/safebrowsing/lookup?sourceid=firefox-antiphish&features=TrustRank&client={moz:client}&mozver={moz:version}-{moz:buildid}&");
 pref("browser.safebrowsing.provider.0.keyURL", "https://www.google.com/safebrowsing/getkey?");
 pref("browser.safebrowsing.provider.0.reportURL", "http://sb.google.com/safebrowsing/report?");
 
-// privacy policy -- must be chrome URL
-pref("browser.safebrowsing.provider.0.privacy.url", "chrome://browser/content/preferences/phishEULA.xhtml");
-
 // HTML report pages
-pref("browser.safebrowsing.provider.0.reportGenericURL", "http://{moz:locale}.phish-generic.mozilla.com/?hl={moz:locale}");
-pref("browser.safebrowsing.provider.0.reportErrorURL", "http://{moz:locale}.phish-error.mozilla.com/?hl={moz:locale}");
-pref("browser.safebrowsing.provider.0.reportPhishURL", "http://{moz:locale}.phish-report.mozilla.com/?hl={moz:locale}");
+pref("browser.safebrowsing.provider.0.reportGenericURL", "http://www.mozilla.org/projects/bonecho/anti-phishing/report_general/?hl={moz:locale}");
+pref("browser.safebrowsing.provider.0.reportErrorURL", "http://www.mozilla.org/projects/bonecho/anti-phishing/report_error/?hl={moz:locale}");
+pref("browser.safebrowsing.provider.0.reportPhishURL", "http://www.mozilla.org/projects/bonecho/anti-phishing/report_phish/?hl={moz:locale}");
 #endif
