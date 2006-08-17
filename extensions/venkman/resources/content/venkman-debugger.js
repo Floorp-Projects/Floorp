@@ -140,10 +140,12 @@ function initDebugger()
 
     dispatch ("tmode", {mode: console.prefs["lastThrowMode"]});
     dispatch ("emode", {mode: console.prefs["lastErrorMode"]});
-    
+
+    console.enumeratingScripts = true;
     var enumer = { enumerateScript: console.scriptHook.onScriptCreated };
     console.jsds.scriptHook = console.scriptHook;
     console.jsds.enumerateScripts(enumer);
+    delete console.enumeratingScripts;
 
     console.jsds.breakpointHook = console.executionHook;
     console.jsds.debuggerHook   = console.executionHook;
@@ -1151,10 +1153,13 @@ function sw_addmap (lineMap)
 {    
     var jsdScript = this.jsdScript;
     var end = jsdScript.baseLineNumber + jsdScript.lineExtent;
-    for (var i = jsdScript.baseLineNumber; i < end; ++i)
+    if (!("enumeratingScripts" in console))
     {
-        if (jsdScript.isLineExecutable(i, PCMAP_SOURCETEXT))
-            arrayOrFlag (lineMap, i - 1, LINE_BREAKABLE);
+        for (var i = jsdScript.baseLineNumber; i < end; ++i)
+        {
+            if (jsdScript.isLineExecutable(i, PCMAP_SOURCETEXT))
+                arrayOrFlag (lineMap, i - 1, LINE_BREAKABLE);
+        }
     }
 
     for (i in this.breaks)
