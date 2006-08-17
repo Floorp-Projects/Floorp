@@ -585,11 +585,6 @@
        <rdf:Description ID="encryption:status_of_web_page"
          nc:name="security of a web page"
          nc:link="using_certs_help.xhtml#checking_security_for_a_web_page"/>
-     </rdf:li>
-     <rdf:li>
-       <rdf:Description ID="encryption:technologies"
-         nc:name="cipher technologies"
-         nc:link="ssl_help.xhtml#edit_ciphers"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>

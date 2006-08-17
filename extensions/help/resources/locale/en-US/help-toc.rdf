@@ -1022,7 +1022,6 @@ nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li><rdf:Description ID="ssl_prefs" nc:name="SSL Preferences" nc:link="ssl_help.xhtml#privacy_and_security_preferences_ssl"/> </rdf:li>
-        <rdf:li><rdf:Description ID="cipher_help" nc:name="Edit Ciphers" nc:link="ssl_help.xhtml#edit_ciphers"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
