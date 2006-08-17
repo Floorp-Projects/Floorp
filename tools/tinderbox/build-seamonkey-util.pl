@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.337 $ ';
+$::UtilsVersion = '$Revision: 1.338 $ ';
 
 package TinderUtils;
 
@@ -43,14 +43,11 @@ require "gettime.pl";
 # (MacOSX, Linux, Win2k):
 #
 # Time::HiRes      for higher timer resolution
-# Bundle::LWP      for http (to report data to graph)
 #
 # The "CPAN" way of installing this is to start here:
 #   % sudo perl -MCPAN -e shell
 #   <take defaults..>
 #   cpan> install Time::HiRes
-#   [...]
-#   cpan> install Bundle::LWP
 #
 
 ##
@@ -1829,30 +1826,20 @@ sub send_results_to_server {
 
     print_log "send_results_to_server(): \n";
     print_log "tmpurl = $tmpurl\n";
-
-    # libwww-perl has process control problems on windows,
-    # spawn wget instead.
-    if ($Settings::OS =~ /^WIN/) {
-        system ("wget", "-O", "/dev/null", $tmpurl);
-        print_log "send_results_to_server() succeeded.\n";
+    
+    # Use wget for result submission on all platforms
+    my $rv = system ("wget", "-O", "/dev/null", $tmpurl);
+    if ($rv) {
+        # Yay perl system calls.
+        $rv = $rv/256;    
+        warn "Failed to submit startup results: $rv";
+        print_log "send_results_to_server() failed.\n";
+        return 0;
     } else {
-        my $res = eval q{
-            use LWP::UserAgent;
-            use HTTP::Request;
-            my $ua  = LWP::UserAgent->new;
-            $ua->timeout(10); # seconds
-            my $req = HTTP::Request->new(GET => $tmpurl);
-            my $res = $ua->request($req);
-            return $res;
-        };
-        if ($@) {
-            warn "Failed to submit startup results: $@";
-            print_log "send_results_to_server() failed: $@\n";
-        } else {
-            print_log "Results submitted to server: \n" .
-              $res->status_line . "\n" . $res->content . "\n";
-            print_log "send_results_to_server() succeeded.\n";
-        }
+        print_log "Results submitted to server:\n";
+        print_log "$tmpurl\n";
+        print_log "send_results_to_server() succeeded.\n";
+        return 1;
     }
 }
 
