@@ -272,14 +272,25 @@ NS_IMETHODIMP nsAccessibleTreeWalker::GetFirstChild()
 
 void nsAccessibleTreeWalker::UpdateFrame(PRBool aTryFirstChild)
 {
-  if (mState.frame) {
-    mState.frame = aTryFirstChild? mState.frame->GetFirstChild(nsnull) : 
-                                   mState.frame->GetNextSibling();
-    if (mState.frame && mState.siblingIndex < 0 && 
-        mState.frame->GetContent()->IsNativeAnonymous()) {
+  if (!mState.frame) {
+    return;
+  }
+  if (aTryFirstChild) {
+    nsIFrame *parentFrame = mState.frame;
+    mState.frame = mState.frame->GetFirstChild(nsnull);
+    if (mState.frame && mState.siblingIndex < 0  && 
+        (parentFrame->GetType() == nsAccessibilityAtoms::blockFrame ||
+        parentFrame->GetType() == nsAccessibilityAtoms::inlineFrame  ||
+        parentFrame->GetType() == nsAccessibilityAtoms::inlineBlockFrame)) {
+      // Container frames can contain generated content frames from
+      // :before and :after style rules, so we walk their frame trees
+      // instead of content trees
       mState.domNode = do_QueryInterface(mState.frame->GetContent());
       mState.siblingIndex = eSiblingsWalkFrames;
     }
+  }
+  else {
+    mState.frame = mState.frame->GetNextSibling();
   }
 }
 
