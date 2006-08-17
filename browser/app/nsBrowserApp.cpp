@@ -44,7 +44,7 @@
 #include "nsBuildID.h"
 
 static const nsXREAppData kAppData = {
-  sizeof(nsXREAppData),
+  offsetof(nsXREAppData, xreDirectory),
   nsnull,
   "Mozilla",
   "Firefox",

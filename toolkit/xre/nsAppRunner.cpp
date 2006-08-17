@@ -1973,23 +1973,26 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     Output(PR_TRUE, "Error: App:BuildID not specified in application.ini\n");
     return 1;
   }
-  if (!appData.minVersion) {
-    Output(PR_TRUE, "Error: Gecko:MinVersion not specified in application.ini\n");
-    return 1;
-  }
 
-  if (!appData.maxVersion) {
-    // If no maxVersion is specified, we assume the app is only compatible
-    // with the initial preview release. Do not increment this number ever!
-    SetAllocatedString(appData.maxVersion, "1.*");
-  }
+  if (appData.size > offsetof(nsXREAppData, minVersion)) {
+    if (!appData.minVersion) {
+      Output(PR_TRUE, "Error: Gecko:MinVersion not specified in application.ini\n");
+      return 1;
+    }
 
-  if (NS_CompareVersions(appData.minVersion, TOOLKIT_EM_VERSION) > 0 ||
-      NS_CompareVersions(appData.maxVersion, TOOLKIT_EM_VERSION) < 0) {
-    Output(PR_TRUE, "Error: Platform version " TOOLKIT_EM_VERSION " is not compatible with\n"
-           "minVersion >= %s\nmaxVersion <= %s\n",
-           appData.minVersion, appData.maxVersion);
-    return 1;
+    if (!appData.maxVersion) {
+      // If no maxVersion is specified, we assume the app is only compatible
+      // with the initial preview release. Do not increment this number ever!
+      SetAllocatedString(appData.maxVersion, "1.*");
+    }
+
+    if (NS_CompareVersions(appData.minVersion, TOOLKIT_EM_VERSION) > 0 ||
+        NS_CompareVersions(appData.maxVersion, TOOLKIT_EM_VERSION) < 0) {
+      Output(PR_TRUE, "Error: Platform version " TOOLKIT_EM_VERSION " is not compatible with\n"
+             "minVersion >= %s\nmaxVersion <= %s\n",
+             appData.minVersion, appData.maxVersion);
+      return 1;
+    }
   }
 
   if (!appData.xreDirectory) {

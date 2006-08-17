@@ -45,7 +45,7 @@
 #include "prtypes.h"
 
 static const nsXREAppData kAppData = {
-  sizeof(nsXREAppData),
+  offsetof(nsXREAppData, xreDirectory),
   nsnull,
   "mozilla.org",
   "SeaMonkey",
