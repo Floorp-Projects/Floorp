@@ -242,11 +242,35 @@ calEvent.prototype = {
             return this.recurrenceInfo.getOccurrences(aStartDate, aEndDate, 0, aCount);
         }
 
-        if ((this.startDate.compare(aStartDate) >= 0 && this.startDate.compare(aEndDate) <= 0) ||
-            (this.endDate.compare(aStartDate) >= 0 && this.endDate.compare(aEndDate) <= 0))
-        {
-            aCount.value = 1;
-            return ([ this ]);
+        // We need to convert dates to regular datetime-objects
+        // here in order to correctly handle allday-events that
+        // don't match day borders.
+        function convertDate(date) {
+          if (date.isDate) {
+            var newDate = date.clone();
+            newDate.hour = 0;
+            newDate.minute = 0;
+            newDate.second = 0;
+            newDate.isDate = false;
+            return newDate;
+          } else {
+            return date;
+          }
+        }
+
+        var start = convertDate(this.startDate);
+        var end = convertDate(this.endDate);
+
+        var isZeroLength = !start.compare(end);
+        if ((isZeroLength &&
+             start.compare(aStartDate) >= 0 &&
+             start.compare(aEndDate) < 0) ||
+            (!isZeroLength &&
+             start.compare(aEndDate) < 0 &&
+             end.compare(aStartDate) > 0)) {
+            
+          aCount.value = 1;
+          return ([ this ]);
         }
 
         aCount.value = 0;

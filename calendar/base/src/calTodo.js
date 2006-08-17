@@ -247,11 +247,40 @@ calTodo.prototype = {
         if (!this.entryDate && !this.dueDate)
             return null;
 
-        if ((this.entryDate && this.entryDate.compare(aStartDate) >= 0 && this.entryDate.compare(aEndDate) <= 0) ||
-            (this.dueDate && this.dueDate.compare(aStartDate) >= 0 && this.dueDate.compare(aEndDate) <= 0))
-        {
-            aCount.value = 1;
-            return ([ this ]);
+        // We need to convert dates to regular datetime-objects
+        // here in order to correctly handle allday-todos that
+        // don't match day borders.
+        function convertDate(date) {
+          if (!date)
+            return null;
+          if (date.isDate) {
+            var newDate = date.clone();
+            newDate.hour = 0;
+            newDate.minute = 0;
+            newDate.second = 0;
+            newDate.isDate = false;
+            return newDate;
+          } else {
+            return date;
+          }
+        }
+
+        var entry = convertDate(this.entryDate);
+        var due = convertDate(this.dueDate);
+
+        var isInterval = entry && due;
+        var isZeroLength = isInterval ? !entry.compare(due) : true;
+        var dateTime = entry ? entry : due;
+        
+        if ((isZeroLength &&
+             dateTime.compare(aStartDate) >= 0 &&
+             dateTime.compare(aEndDate) < 0) ||
+            (!isZeroLength &&
+             entry.compare(aEndDate) < 0 &&
+             due.compare(aStartDate) > 0)) {
+            
+          aCount.value = 1;
+          return ([ this ]);
         }
 
         aCount.value = 0;
