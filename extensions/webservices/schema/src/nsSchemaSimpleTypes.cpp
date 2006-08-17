@@ -182,7 +182,7 @@ nsSchemaBuiltinType::GetName(nsAString& aName)
       aName.AssignLiteral("gMonthDay");
       break;
     case BUILTIN_TYPE_NAME:
-      aName.AssignLiteral("name");
+      aName.AssignLiteral("Name");
       break;
     case BUILTIN_TYPE_QNAME:
       aName.AssignLiteral("QName");
