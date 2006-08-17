@@ -108,6 +108,7 @@ classic.jar:
 +  skin/classic/global/icons/menuselected.png                         (icons/menuselected.png)
 +  skin/classic/global/icons/minimize.gif                             (icons/minimize.gif)
 +  skin/classic/global/icons/notloading_16.png                        (icons/notloading_16.png)
++  skin/classic/global/icons/notfound.png                             (icons/notfound.png)
 +  skin/classic/global/icons/popup-icon-spacer.png                    (icons/popup-icon-spacer.png)
 +  skin/classic/global/icons/popup-overlay.png                        (icons/popup-overlay.png)
 +  skin/classic/global/icons/question-mark.png                        (icons/question-mark.png)
