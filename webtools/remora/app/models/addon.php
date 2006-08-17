@@ -68,5 +68,10 @@ class Addon extends AppModel
                                       )
 
                                );
+    var $validate = array(
+        'guid' => VALID_NOT_EMPTY,
+        'name' => VALID_NOT_EMPTY,
+        'description' => VALID_NOT_EMPTY,
+    );
 }
 ?>

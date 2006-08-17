@@ -1,0 +1,5 @@
+<?=$html->formTag('/addons/add/')?>
+<?=$html->hidden('Addon/add_step2')?>
+<?=$html->input('Addon/Name')?>
+<?=$html->tagErrorMsg('Addon/Name', 'Please upload your add-on file.')?>
+<?=$html->submit()?>

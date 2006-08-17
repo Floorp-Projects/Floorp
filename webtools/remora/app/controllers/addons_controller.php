@@ -18,7 +18,18 @@ class AddonsController extends AppController
     * @param int $id
     */
     function add($id = 0) {
-
+        if (isset($this->data['Addon']['add_step1'])) {
+            $this->render('add_step2');
+        }
+        elseif (isset($this->data['Addon']['add_step2'])) {
+            $this->render('add_step3');
+        }
+        elseif (isset($this->data['Addon']['add_step3'])) {
+            $this->render('add_step4');
+        }
+        else {
+            $this->render('add_step1');
+        }
     }
 
    /**
