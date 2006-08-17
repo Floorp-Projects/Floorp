@@ -2317,13 +2317,13 @@ PRBool nsBidi::IsBidiCategory(PRUint32 aChar, eBidiCategory aBidiCategory)
   return (GetBidiCategory(aChar) == aBidiCategory);
 }
 
-#define ZWNJ 0x200c
+#define LRM_CHAR 0x200e
 PRBool nsBidi::IsBidiControl(PRUint32 aChar)
 {
   // This method is used when stripping Bidi control characters for
-  // display, so it will return TRUE for LRM, RLM, ZWJ and ZWNJ as
+  // display, so it will return TRUE for LRM and RLM as
   // well as the characters with category eBidiCat_CC
-  return (eBidiCat_CC == GetBidiCat(aChar) || ((aChar)&0xfffffc)==ZWNJ);
+  return (eBidiCat_CC == GetBidiCat(aChar) || ((aChar)&0xfffffe)==LRM_CHAR);
 }
 
 nsCharType nsBidi::GetCharType(PRUint32 aChar)
