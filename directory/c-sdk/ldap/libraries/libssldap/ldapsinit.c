@@ -500,25 +500,27 @@ ldaptls_complete(LDAP *ld)
     PRLDAPSessionInfo	sei;
     PRLDAPSocketInfo	soi;
     LDAPSSLSocketInfo	*ssoip = NULL;
-    LDAPSSLSessionInfo	*sseip;
+    LDAPSSLSessionInfo	*sseip = NULL;
     PRFileDesc		*sslfd = NULL;
     int 		intfd = -1;
     int			rc = LDAP_LOCAL_ERROR;
-    char 		*hostlist;
-    struct lextiof_socket_private *socketargp;
+    char 		*hostlist = NULL;
+    struct lextiof_socket_private *socketargp = NULL;
         
     /*
      * Get hostlist from LDAP Handle
      */
     if ( ldap_get_option(ld, LDAP_OPT_HOST_NAME, &hostlist) < 0 ) {
-	 return( ldap_get_lderrno( ld, NULL, NULL ));
+	rc = ldap_get_lderrno( ld, NULL, NULL );
+	goto close_socket_and_exit_with_error;
     }
      
     /*
      * Get File Desc from current connection
      */
     if ( ldap_get_option(ld, LDAP_OPT_DESC, &intfd) < 0 ) {
-	 return( ldap_get_lderrno( ld, NULL, NULL ));
+	rc = ldap_get_lderrno( ld, NULL, NULL );
+	goto close_socket_and_exit_with_error;
     }
 
      
@@ -526,7 +528,8 @@ ldaptls_complete(LDAP *ld)
       * Get Socket Arg Pointer
       */
     if ( ldap_get_option(ld, LDAP_X_OPT_SOCKETARG, &socketargp) < 0 ) {
-	 return( ldap_get_lderrno( ld, NULL, NULL ));
+	rc = ldap_get_lderrno( ld, NULL, NULL );
+	goto close_socket_and_exit_with_error;
     }
 
 
@@ -537,7 +540,7 @@ ldaptls_complete(LDAP *ld)
     memset( &sei, 0, sizeof(sei));
     sei.seinfo_size = PRLDAP_SESSIONINFO_SIZE;
     if (LDAP_SUCCESS != (rc = prldap_get_session_info(ld, NULL, &sei))) {
-	return( rc );
+	goto close_socket_and_exit_with_error;
     }
     sseip = (LDAPSSLSessionInfo *)sei.seinfo_appdata;
 
@@ -584,6 +587,8 @@ ldaptls_complete(LDAP *ld)
 	rc = LDAP_LOCAL_ERROR;
 	goto close_socket_and_exit_with_error;
     }
+    ldap_memfree(hostlist);
+    hostlist = NULL;
 
     /*
      * Set any SSL options that were modified by a previous call to
@@ -625,13 +630,17 @@ ldaptls_complete(LDAP *ld)
     return( LDAP_SUCCESS );	/* success */
 
   close_socket_and_exit_with_error:
+
+      ldap_memfree(hostlist);
+      hostlist = NULL;
+
       if ( NULL != sslfd && sslfd != soi.soinfo_prfd ) {
                PR_Close( sslfd );
       }
       if ( NULL != ssoip ) {
                 ldapssl_free_socket_info( &ssoip );
       }
-      if ( intfd >= 0 && NULL != socketargp ) {
+      if ( intfd >= 0 && NULL != socketargp && sseip != NULL ) {
                 (*(sseip->lssei_std_functions.lssf_close_fn))( intfd,
                 socketargp );
       }
@@ -715,8 +724,6 @@ ldap_start_tls_s(LDAP *ld,
 		 LDAPControl **clientctrls)
 {
 	int 				rc = -1;
-	struct berval			*dataptr;
-	char				*oidptr = NULL;
 	int				version = LDAP_VERSION3;
 
 	/* Error check on LDAP handle */
@@ -732,13 +739,10 @@ ldap_start_tls_s(LDAP *ld,
 	}
 		
 	/* Issue the Start TLS extended operation */
-	oidptr	= NULL;
-	dataptr	= NULL;
-	if ( ( rc = ldap_extended_operation_s( ld, LDAP_EXOP_START_TLS, NULL, serverctrls,
-		clientctrls, &oidptr, &dataptr ) ) != LDAP_SUCCESS )
+	rc = ldap_extended_operation_s( ld, LDAP_EXOP_START_TLS, NULL, serverctrls,
+									clientctrls, NULL, NULL );
+	if ( rc != LDAP_SUCCESS )
 	{
-		ber_bvfree( dataptr );
-		ldap_memfree( oidptr );
 		return( rc );
 	}
 
