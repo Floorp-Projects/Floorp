@@ -436,7 +436,8 @@ nsMenuItemX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIC
       listener->SetRebuild(PR_TRUE);
     }
     else if (aAttribute == nsWidgetAtoms::hidden ||
-             aAttribute == nsWidgetAtoms::collapsed) {
+             aAttribute == nsWidgetAtoms::collapsed ||
+             aAttribute == nsWidgetAtoms::label) {
       nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
       listener->SetRebuild(PR_TRUE);
     }
