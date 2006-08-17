@@ -52,7 +52,6 @@ function TestListener(){}
 
 TestListener.prototype = {
   handleResult: function(result){
-    print(testcase.path + ": \n");
     var feed = result.doc;    
     // QI to something
     (isIID(feed, Components.interfaces.nsIFeed));

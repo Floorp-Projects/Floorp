@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: atom entry rights works normalized
+Expect:      feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).rights.plainText() == "test rights"
+
+-->
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title type="xhtml">
+    <div xmlns="http://www.w3.org/1999/xhtml"><b>test</b> title</div>
+  </title>
+  <entry>
+    <rights type="xhtml">
+      <div xmlns="http://www.w3.org/1999/xhtml"><b>test</b> rights</div>
+    </rights>
+  </entry>
+</feed>

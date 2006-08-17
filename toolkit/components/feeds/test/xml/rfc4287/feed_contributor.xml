@@ -2,7 +2,7 @@
 <!--
 
 Description: atom contributor uri works
-Expect: var contributors = feed.fields.getProperty('contributor'); contributors.QueryInterface(Components.interfaces.nsIArray); contributors.queryElementAt(1, Components.interfaces.nsIPropertyBag).getProperty('atom:uri')=='http://example.com';
+Expect: feed.contributors.queryElementAt(1, Components.interfaces.nsIFeedPerson).uri.spec=='http://example.com/';
 
 -->
 <feed xmlns="http://www.w3.org/2005/Atom">

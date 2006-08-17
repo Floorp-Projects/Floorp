@@ -39,12 +39,12 @@
 #include "nsIFeedContainer.idl"
 
 interface nsIArray;
-
+interface nsIFeedGenerator;
 
 /**
  * An nsIFeed represents a single Atom or RSS feed.
  */
-[scriptable, uuid(9472ff5b-10dc-4aed-a861-7619d7a4b5bf)]
+[scriptable, uuid(3b8aae33-80e2-4efa-99c8-a6c5b99f76ea)]
 interface nsIFeed : nsIFeedContainer
 {
   /** 
@@ -81,6 +81,11 @@ interface nsIFeed : nsIFeedContainer
   * SOAP service.
   */
   attribute nsIWritablePropertyBag2 cloud;
+
+  /**
+  * Information about the software that produced the feed.
+  */
+  attribute nsIFeedGenerator generator;
 
   /**
   * An image url and some metadata (as defined by RSS2).

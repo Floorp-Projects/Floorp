@@ -2,7 +2,7 @@
 <!--
 
 Description: atom author name works
-Expect: var authors = feed.fields.getProperty('author'); authors.QueryInterface(Components.interfaces.nsIArray); authors.queryElementAt(1, Components.interfaces.nsIPropertyBag).getProperty('atom:email')=='bar@example.com';
+Expect: feed.authors.queryElementAt(1, Components.interfaces.nsIFeedPerson).email=='bar@example.com';
 
 -->
 <feed xmlns="http://www.w3.org/2005/Atom">

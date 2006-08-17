@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!--
 
-Description: atom author name works
-Expect: feed.authors.queryElementAt(0, Components.interfaces.nsIFeedPerson).name=='John Doe';
+Description: atom updated works
+Expect: feed.updated == 'Sat, 13 Dec 2003 18:30:02 GMT'
 
 -->
 
