@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Fritz Schneider <fritz@google.com> (original author)
+ *   J. Paul Reed <preed@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -53,7 +54,16 @@
 const kDataProviderIdPref = 'browser.safebrowsing.dataProvider';
 const kProviderBasePref = 'browser.safebrowsing.provider.';
 
-const MOZ_PARAM_LOCALE   = /\{moz:locale\}/g;
+#ifdef OFFICIAL_BUILD
+const MOZ_OFFICIAL_BUILD = true;
+#else
+const MOZ_OFFICIAL_BUILD = false;
+#endif
+
+const MOZ_PARAM_LOCALE = /\{moz:locale\}/g;
+const MOZ_PARAM_CLIENT = /\{moz:client\}/g;
+const MOZ_PARAM_BUILDID = /\{moz:buildid\}/g;
+const MOZ_PARAM_VERSION = /\{moz:version\}/g;
 
 /**
  * Information regarding the data provider.
@@ -133,8 +143,16 @@ PROT_DataProvider.prototype.updateListManager_ = function() {
 PROT_DataProvider.prototype.getUrlPref_ = function(prefName) {
   var url = this.prefs_.getPref(prefName);
 
+  var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
+                          .getService(Components.interfaces.nsIXULAppInfo);
+
+  var mozClientStr = MOZ_OFFICIAL_BUILD ? 'navclient-auto-ffox' : appInfo.name;
+
   // Parameter substitution
   url = url.replace(MOZ_PARAM_LOCALE, this.getLocale_());
+  url = url.replace(MOZ_PARAM_CLIENT, mozClientStr + appInfo.version);
+  url = url.replace(MOZ_PARAM_BUILDID, appInfo.appBuildID);
+  url = url.replace(MOZ_PARAM_VERSION, appInfo.platformVersion);
   return url;
 }
 

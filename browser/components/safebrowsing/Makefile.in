@@ -49,4 +49,14 @@ ifdef ENABLE_TESTS
 DIRS     += tests
 endif
 
+ifneq ($(origin BUILD_OFFICIAL)_$(origin MOZILLA_OFFICIAL),undefined_undefined)
+DEFINES += -DOFFICIAL_BUILD=1
+endif
+
+# EXTRA_COMPONENTS installs components written in JS to dist/bin/components
+EXTRA_PP_COMPONENTS = \
+         content/globalstore.js \
+         src/nsSafebrowsingApplication.js \
+         $(NULL)
+
 include $(topsrcdir)/config/rules.mk
