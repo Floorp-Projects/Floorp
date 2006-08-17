@@ -100,7 +100,6 @@ EXPORTS		= \
 		nsAppDirectoryServiceDefs.h \
 		nsDirectoryService.h \
 		nsEscape.h \
-		nsFastLoadPtr.h \
 		nsFastLoadService.h \
 		nsLinebreakConverter.h \
 		nsLocalFile.h \
