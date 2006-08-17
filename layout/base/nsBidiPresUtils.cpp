@@ -865,13 +865,15 @@ nsBidiPresUtils::InitContinuationStates(nsIFrame*              aFrame,
   state->mFirstVisualFrame = nsnull;
   state->mFrameCount = 0;
 
-  // Continue for child frames
-  nsIFrame* frame;
-  for (frame = aFrame->GetFirstChild(nsnull);
-       frame;
-       frame = frame->GetNextSibling()) {
-    InitContinuationStates(frame,
-                           aContinuationStates);
+  if (!IsBidiLeaf(aFrame)) {
+    // Continue for child frames
+    nsIFrame* frame;
+    for (frame = aFrame->GetFirstChild(nsnull);
+         frame;
+         frame = frame->GetNextSibling()) {
+      InitContinuationStates(frame,
+                             aContinuationStates);
+    }
   }
 }
 
