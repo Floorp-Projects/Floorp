@@ -2330,10 +2330,9 @@ PushLexicalScope(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     js_PushBlockScope(tc, stmtInfo, atom, -1);
     pn->pn_type = TOK_LEXICALSCOPE;
-    pn->pn_op = JSOP_NOP;
+    pn->pn_op = JSOP_LEAVEBLOCK;
     pn->pn_atom = atom;
     pn->pn_expr = NULL;
-    pn->pn_extra = 0;
     return pn;
 }
 
@@ -2382,6 +2381,11 @@ LetBlock(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool statement)
         pn1->pn_kid = pn;
         pn = pn1;
 
+        /*
+         * Change pnblock's opcode to the variant that propagates the last
+         * result down after popping the block, and clear statement.
+         */
+        pnblock->pn_op = JSOP_LEAVEBLOCKEXPR;
         statement = JS_FALSE;
     }
 
@@ -2391,8 +2395,6 @@ LetBlock(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool statement)
 
     if (statement)
         MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_LET);
-    else
-        pnblock->pn_extra = PNX_BLOCKEXPR;
 
     js_PopStatement(tc);
     return pn;
@@ -2892,11 +2894,11 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
          * kid2 is the catch guard or null if no guard
          * kid3 is the catch block
          *
-         * catch discriminant nodes are binary
-         * atom is the receptacle
-         * expr is the discriminant code
+         * catch lvalue nodes are either:
+         *   TOK_NAME for a single identifier
+         *   TOK_RB or TOK_RC for a destructuring left-hand side
          *
-         * finally nodes are unary (just the finally expression)
+         * finally nodes are TOK_LC Statement lists.
          */
         pn = NewParseNode(cx, ts, PN_TERNARY, tc);
         if (!pn)
@@ -2953,18 +2955,13 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 if (!pn2)
                     return NULL;
                 pnblock->pn_expr = pn2;
+                MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_CATCH);
 
                 /*
-                 * We use a PN_NAME for the variable node, in pn2->pn_kid1.
-                 * If there is a guard expression, it goes in pn2->pn_kid2.
                  * Contrary to ECMA Ed. 3, the catch variable is lexically
                  * scoped, not a property of a new Object instance.  This is
                  * an intentional change that anticipates ECMA Ed. 4.
                  */
-                MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_CATCH);
-                MUST_MATCH_TOKEN(TOK_NAME, JSMSG_CATCH_IDENTIFIER);
-                label = CURRENT_TOKEN(ts).t_atom;
-
                 data.pn = NULL;
                 data.ts = ts;
                 data.obj = ATOM_TO_OBJECT(pnblock->pn_atom);
@@ -2972,18 +2969,44 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 data.binder = BindLet;
                 data.u.let.index = 0;
                 data.u.let.overflow = JSMSG_TOO_MANY_CATCH_VARS;
-                if (!data.binder(cx, &data, label, tc))
-                    return NULL;
 
-                pn3 = NewParseNode(cx, ts, PN_NAME, tc);
-                if (!pn3)
+                tt = js_GetToken(cx, ts);
+                switch (tt) {
+#if JS_HAS_DESTRUCTURING
+                  case TOK_LB:
+                  case TOK_LC:
+                    pn3 = PrimaryExpr(cx, ts, tc, tt, JS_FALSE);
+                    if (!pn3)
+                        return NULL;
+
+                    if (!CheckDestructuring(cx, &data, pn3, NULL, tc))
+                        return NULL;
+                    break;
+#endif
+
+                  case TOK_NAME:
+                    label = CURRENT_TOKEN(ts).t_atom;
+                    if (!data.binder(cx, &data, label, tc))
+                        return NULL;
+
+                    pn3 = NewParseNode(cx, ts, PN_NAME, tc);
+                    if (!pn3)
+                        return NULL;
+                    pn3->pn_atom = label;
+                    pn3->pn_expr = NULL;
+                    pn3->pn_slot = 0;
+                    pn3->pn_attrs = 0;
+                    break;
+
+                  default:
+                    js_ReportCompileErrorNumber(cx, ts,
+                                                JSREPORT_TS | JSREPORT_ERROR,
+                                                JSMSG_CATCH_IDENTIFIER);
                     return NULL;
-                pn3->pn_atom = label;
-                pn3->pn_expr = NULL;
-                pn3->pn_slot = 0;
+                }
+
                 pn2->pn_kid1 = pn3;
                 pn2->pn_kid2 = NULL;
-
 #if JS_HAS_CATCH_GUARD
                 /*
                  * We use 'catch (x if x === 5)' (not 'catch (x : x === 5)')
@@ -3191,7 +3214,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         /* Check for a let statement or let expression. */
         if (js_PeekToken(cx, ts) == TOK_LP) {
             pn = LetBlock(cx, ts, tc, JS_TRUE);
-            if (!pn || !(pn->pn_extra & PNX_BLOCKEXPR))
+            if (!pn || pn->pn_op == JSOP_LEAVEBLOCK)
                 return pn;
             /* Let expressions require automatic semicolon insertion. */
             break;
@@ -3264,7 +3287,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             pn1->pn_pos = tc->blockNode->pn_pos;
             pn1->pn_atom = atom;
             pn1->pn_expr = tc->blockNode;
-            pn1->pn_extra = 0;
             tc->blockNode = pn1;
         }
 
@@ -3526,7 +3548,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn2->pn_atom = atom;
         pn2->pn_expr = NULL;
         pn2->pn_slot = -1;
-        pn2->pn_attrs = !let ? data.u.var.attrs : 0;
+        pn2->pn_attrs = let ? 0 : data.u.var.attrs;
         PN_APPEND(pn, pn2);
 
         if (js_MatchToken(cx, ts, TOK_ASSIGN)) {

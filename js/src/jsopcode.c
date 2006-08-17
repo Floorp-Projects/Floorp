@@ -1325,7 +1325,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
                   case SRC_DECL:
                     /* This pop is at the end of the head of a let form. */
-                    pc += js_CodeSpec[JSOP_POP].length;
+                    pc += JSOP_POP_LENGTH;
                     len = js_GetSrcNoteOffset(sn, 0);
                     if (pc[len] == JSOP_LEAVEBLOCK) {
                         js_printf(jp, "\tlet (%s) {\n", POP_STR());
@@ -1441,9 +1441,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     pc += oplen;
                     LOCAL_ASSERT(*pc == JSOP_EXCEPTION);
                     pc += JSOP_EXCEPTION_LENGTH;
-                    LOCAL_ASSERT(*pc == JSOP_INITCATCHVAR);
+                    LOCAL_ASSERT(*pc == JSOP_SETLOCALPOP);
                     i = GET_UINT16(pc);
-                    pc += JSOP_INITCATCHVAR_LENGTH;
+                    pc += JSOP_SETLOCALPOP_LENGTH;
                     str = ATOM_TO_STRING(atomv[i]);
                     rval = QuoteString(&ss->sprinter, str, 0);
                     if (!rval) {

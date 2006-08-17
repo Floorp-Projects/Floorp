@@ -2017,6 +2017,9 @@ block_xdrObject(JSXDRState *xdr, JSObject **objp)
     JSBool ok;
 
     cx = xdr->cx;
+#ifdef __GNUC__
+    obj = NULL;         /* quell GCC overwarning */
+#endif
 
     atomMap = &xdr->script->atomMap;
     if (xdr->mode == JSXDR_ENCODE) {

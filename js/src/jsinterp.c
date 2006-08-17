@@ -5488,7 +5488,7 @@ interrupt:
             /* let the code at out try to catch the exception. */
             goto out;
 
-          BEGIN_CASE(JSOP_INITCATCHVAR)
+          BEGIN_CASE(JSOP_SETLOCALPOP)
             /*
              * The stack must have a block with at least one local slot below
              * the exception object.
@@ -5497,7 +5497,7 @@ interrupt:
             slot = GET_UINT16(pc);
             JS_ASSERT(slot + 1 < (uintN)depth);
             fp->spbase[slot] = POP_OPND();
-          END_CASE(JSOP_INITCATCHVAR)
+          END_CASE(JSOP_SETLOCALPOP)
 
           BEGIN_CASE(JSOP_INSTANCEOF)
             SAVE_SP_AND_PC(fp);
