@@ -33,6 +33,14 @@
 <!ENTITY  license.instructions            "If you agree to the terms of this agreement, click I Agree 
                                            below to continue installing this update.">
 
+<!ENTITY  license.titleText               "Software License Agreement">
+<!ENTITY  license.introText               "Terms and conditions for using this software.">
+<!ENTITY  license.instructionText         "Please read the following license agreement. Use the scroll bar to view the rest of this agreement.">
+<!ENTITY  license.accept                  "I accept the terms of the License Agreement">
+<!ENTITY  license.accept.accesskey        "c">
+<!ENTITY  license.decline                 "I do NOT accept the terms of the License Agreement">
+<!ENTITY  license.decline.accesskey       "T">
+
 <!ENTITY  downloading.title               "Downloading Update">
 <!ENTITY  downloading.intro               "Downloading the update...">
 <!ENTITY  connecting.label                "Connecting to the update server...">
