@@ -78,6 +78,7 @@ classic.jar:
     skin/classic/messenger/icons/mail-toolbar.png               (icons/mail-toolbar.png)
     skin/classic/messenger/icons/mail-toolbar-small.png         (icons/mail-toolbar-small.png)
     skin/classic/messenger/icons/folder.png                     (icons/folder.png)
+    skin/classic/messenger/icons/blank16.png                    (icons/blank16.png)
     skin/classic/messenger/icons/message-replied.png            (icons/message-replied.png)
     skin/classic/messenger/icons/message-forwarded.png          (icons/message-forwarded.png)
     skin/classic/messenger/icons/message-replied-forw.png       (icons/message-replied-forw.png)

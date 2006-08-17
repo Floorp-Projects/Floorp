@@ -231,6 +231,7 @@ treechildren::-moz-tree-image(junkStatusCol, notjunk) {
 
 treechildren::-moz-tree-image(subjectCol) {
   -moz-margin-end: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/blank16.png");
 }
 
 treechildren::-moz-tree-image(subjectCol, dummy) {

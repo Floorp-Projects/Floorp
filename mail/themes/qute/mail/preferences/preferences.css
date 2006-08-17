@@ -52,18 +52,18 @@ radio[pane] {
   -moz-appearance: none;
   background-color: transparent;
   background-position: center bottom;
-  background-repeat: no-repeat;
+  background-repeat: repeat-x;
   min-width: 80px;
 }
 
 radio[pane]:hover {
-  background-color: rgb(95, 130, 189);
+  background-color: rgb(94, 138, 188);
   background-image: url("chrome://messenger/skin/preferences/hover.png");
   color: white;
 }
 
 radio[pane][selected="true"] {
-  background-color: white;
+  background-color: rgb(174, 198, 226);
   background-image: none;
   background-image: url("chrome://messenger/skin/preferences/selected.png");
   color: black;
