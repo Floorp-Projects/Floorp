@@ -106,7 +106,7 @@ function (aContentURL)
 
 function sidebarURLSecurityCheck(url)
 {
-    if (url.search(/(^http:|^ftp:|^https:)/) == -1)
+    if (!/(^http:|^ftp:|^https:)/i.test(url))
         throw "Script attempted to add sidebar panel from illegal source";
 }
 
@@ -262,7 +262,7 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
     catch(ex)
     {
         debug(ex);
-        this.promptService.alert(null, "Failed to add the search engine.");
+        this.promptService.alert(null, "Error", "Failed to add the search engine.");
         throw Components.results.NS_ERROR_INVALID_ARG;
     }
 
