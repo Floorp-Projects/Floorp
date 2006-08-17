@@ -427,11 +427,8 @@ var FeedResultService = {
     NS_ASSERT(uri != null, "null URI!");
     var resultList = this._results[uri.spec];
     for (var i = 0; i < resultList.length; ++i) {
-      /* See bug 348586 arrays with holes causing crashes on 
-         static windows builds, so comment out delete[n] for now */
       if (resultList[i].uri == uri) {
-        //delete resultList[i];
-        resultList[i] = null;
+        delete resultList[i];
         // send the null value to the end of our little list and pop
         // it off
         resultList.sort(); 
@@ -440,8 +437,7 @@ var FeedResultService = {
       }
     }
     if (resultList.length == 0)
-      this._results[uri.spec] = null;
-    //delete this._results[uri.spec];
+      delete this._results[uri.spec];
   },
 
   createInstance: function FRS_createInstance(outer, iid) {
