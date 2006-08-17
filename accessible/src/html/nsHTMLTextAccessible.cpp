@@ -286,6 +286,7 @@ nsHTMLListBulletAccessible::nsHTMLListBulletAccessible(nsIDOMNode* aDomNode,
   nsIWeakReference* aShell, nsIFrame *aFrame, const nsAString& aBulletText): 
   nsHTMLTextAccessible(aDomNode, aShell, aFrame), mWeakParent(nsnull), mBulletText(aBulletText)
 {
+  mBulletText += ' '; // Otherwise bullets are jammed up against list text
 }
 
 NS_IMETHODIMP nsHTMLListBulletAccessible::GetUniqueID(void **aUniqueID)

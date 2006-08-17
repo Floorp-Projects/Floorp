@@ -297,16 +297,26 @@ nsIFrame* nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& a
     if (!frame) {
       continue;
     }
-    if (Role(accessible) == ROLE_TEXT_LEAF) {
+    if (IsText(accessible)) {
       // Avoid string copies
       PRInt32 substringEndOffset = frame->GetContent()->TextLength();
+      nsAutoString newText;
+      if (!substringEndOffset) {
+        // This is exception to the frame owns the text.
+        // The only known case where this occurs is for list bullets
+        // We could do this for all accessibles but it's not as performant
+        // as dealing with nsIContent directly
+        accessible->GetName(newText);
+        substringEndOffset = newText.Length();
+      }
       if (startOffset < substringEndOffset) {
         // Our start is within this substring
         // XXX Can we somehow optimize further by getting the nsTextFragment
         // and use CopyTo to a PRUnichar buffer to copy it directly to
         // the string?
-        nsAutoString newText;
-        frame->GetContent()->AppendTextTo(newText);
+        if (newText.IsEmpty()) { // Don't have text yet
+          frame->GetContent()->AppendTextTo(newText);
+        }
         if (startOffset > 0 || endOffset < substringEndOffset) {
           // XXX the Substring operation is efficient, but does the 
           // reassignment to the original nsAutoString cause a copy?
@@ -402,16 +412,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetCharacterCount(PRInt32 *aCharacterCount)
   nsCOMPtr<nsIAccessible> accessible;
 
   while (NextChild(accessible)) {
-    if (Role(accessible) == ROLE_TEXT_LEAF) {
-      nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
-      nsIFrame *frame = accessNode->GetFrame();
-      if (frame) {
-        *aCharacterCount += frame->GetContent()->TextLength();
-      }
-    }
-    else {
-      ++*aCharacterCount;
-    }
+    *aCharacterCount += TextLength(accessible);
   }
   return NS_OK;
 }
@@ -464,16 +465,7 @@ nsresult nsHyperTextAccessible::DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNod
     // came after the last accessible child's node
     nsCOMPtr<nsIAccessible> accessible;
     while (NextChild(accessible) && accessible != childAccessible) {
-      if (Role(accessible) == ROLE_TEXT_LEAF) {
-        nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
-        nsIFrame *frame = accessNode->GetFrame();
-        if (frame) {
-          *aResult += frame->GetContent()->TextLength();
-        }
-      }
-      else {
-        ++ *aResult; // Embedded object or <br>
-      }
+      *aResult += TextLength(accessible);
     }
     return NS_OK;
   }
@@ -489,20 +481,11 @@ nsresult nsHyperTextAccessible::DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNod
       return NS_ERROR_FAILURE;
     }
 
-    nsIContent *content = frame->GetContent();
-
-    if (frame && SameCOMIdentity(content, aNode)) {
+    if (frame && SameCOMIdentity(frame->GetContent(), aNode)) {
       return NS_OK;
     }
 
-    if (Role(accessible) == ROLE_TEXT_LEAF) {
-      if (frame) {
-        *aResult += content->TextLength();
-      }
-    }
-    else {
-      ++ *aResult; // Increment by 1 embedded object char
-    }
+    *aResult += TextLength(accessible);
   }
 
   return NS_ERROR_FAILURE;
@@ -626,6 +609,8 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
   case BOUNDARY_ATTRIBUTE_RANGE:
     {
       // XXX We should merge identically formatted frames
+      // XXX deal with static text case
+      // XXX deal with boundary type
       nsIContent *textContent = startFrame->GetContent();
       // If not text, then it's represented by an embedded object char 
       // (length of 1)
@@ -730,20 +715,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetAttributeRange(PRInt32 aOffset, PRInt32 
   nsCOMPtr<nsIAccessible> accessible;
   
   while (NextChild(accessible)) {
-    PRInt32 length = 1;
-    if (Role(accessible) == ROLE_TEXT_LEAF) {
-      nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
-      nsIFrame *frame = accessNode->GetFrame();
-      if (frame) {
-        length = frame->GetContent()->TextLength();
-      }
-      else {
-        break;
-      }
-    }
-    else {
-      length = 1;
-    }
+    PRInt32 length = TextLength(accessible);
     if (*aRangeStartOffset + length > aOffset) {
       *aRangeEndOffset = *aRangeStartOffset + length;
       NS_ADDREF(*aAccessibleWithAttrs = accessible);
@@ -866,7 +838,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY, ns
     PRBool finished = frame->GetRect().Contains(pointInFrame);
     nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
     nsIFrame *frame = accessNode->GetFrame();
-    if (Role(accessible) == ROLE_TEXT_LEAF) {
+    if (IsText(accessible)) {
       if (frame) {
         if (finished) {
           nsCOMPtr<nsIRenderingContext> rc;
@@ -890,7 +862,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY, ns
           }
           return NS_ERROR_FAILURE;
         }
-        *aOffset += frame->GetContent()->TextLength();
+        *aOffset += TextLength(accessible);
       }
     }
     else if (finished) {
@@ -954,12 +926,8 @@ NS_IMETHODIMP nsHyperTextAccessible::GetLinkIndex(PRInt32 aCharIndex, PRInt32 *a
 
   while (NextChild(accessible) && characterCount <= aCharIndex) {
     PRUint32 role = Role(accessible);
-    if (role == ROLE_TEXT_LEAF) {
-      nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
-      nsIFrame *frame = accessNode->GetFrame();
-      if (frame) {
-        characterCount += frame->GetContent()->TextLength();
-      }
+    if (role == ROLE_TEXT_LEAF || role == ROLE_STATICTEXT) {
+      characterCount += TextLength(accessible);
     }
     else {
       if (characterCount ++ == aCharIndex) {
