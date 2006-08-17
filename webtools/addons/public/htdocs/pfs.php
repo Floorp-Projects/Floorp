@@ -266,8 +266,15 @@ if (($mimetype == 'application/x-shockwave-flash' ||
   $XPILocation = 'http://digitalwebbooks.com/reader/xpinst.xpi';
   $installerShowsUI = 'false';
   $manualInstallationURL = 'http://digitalwebbooks.com/reader/';
-}
-
+  }
+} elseif ($mimetype == 'application/x-videoegg-loader' &&
+          preg_match('/^Win/', $clientOS)) {
+  $name = 'VideoEgg Publisher';
+  $version = '1.3.1';
+  $guid = '{b8b881f0-2e07-11db-a98b-0800200c9a66}';
+  $XPILocation = 'http://update.videoegg.com/Install/Windows/Initial/VideoEggPublisher.exe';
+  $manualInstallationURL = 'http://videoegg.com/';
+  $needsRestart = 'true';
 }
 // End ridiculously huge if-else block... :\
 
