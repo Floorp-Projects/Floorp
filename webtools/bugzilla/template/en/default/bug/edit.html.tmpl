@@ -486,7 +486,7 @@
       </tr>
       <tr>
         <td colspan="7" align="right">
-          <a href="summarize_time.cgi?id=[% bug.bug_id %]&do_depends=1">
+          <a href="summarize_time.cgi?id=[% bug.bug_id %]&amp;do_depends=1">
           Summarize time (including time for [% terms.bugs %]
           blocking this [% terms.bug %])</a>
         </td>
@@ -497,13 +497,16 @@
 [%# *** Custom Fields *** %]
 
 [% USE Bugzilla %]
-<table>
-  [% FOREACH field = Bugzilla.get_fields({ obsolete => 0, custom => 1 }) %]
-    <tr>
-      [% PROCESS bug/field.html.tmpl value=bug.${field.name} editable=1 %]
-    </tr>
-  [% END %]
-</table>
+[% fields = Bugzilla.get_fields({ obsolete => 0, custom => 1 }) %]
+[% IF fields %]
+  <table>
+    [% FOREACH field = fields %]
+      <tr>
+        [% PROCESS bug/field.html.tmpl value=bug.${field.name} editable=1 %]
+      </tr>
+    [% END %]
+  </table>
+[% END %]
 
 [%# *** Attachments *** %]
 
