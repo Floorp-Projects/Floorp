@@ -454,9 +454,14 @@ ifdef ENABLE_TESTS
 tier_99_dirs	+= tools/test-harness
 endif
 
+# Don't build the Java interfaces when cross compiling since that depends on the
+# program GenerateJavaInterfaces (which doesn't work when cross compiling).
+# This ifndef can be removed when bug 333618 is checked in.
+ifndef CROSS_COMPILE
 # This should be built last, after all IDL files in the tree have been processed
 ifdef MOZ_JAVAXPCOM
 tier_99_dirs += extensions/java/xpcom/interfaces
+endif
 endif
 
 default alldep all:: $(SUBMAKEFILES)
