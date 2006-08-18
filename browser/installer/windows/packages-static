@@ -217,6 +217,8 @@ bin\components\nsBookmarkTransactionManager.js
 bin\components\nsSessionStartup.js
 bin\components\nsSessionStore.js
 bin\components\sessionstore.xpt
+bin\components\nsURLFormatter.js
+bin\components\nsIURLFormatter.xpt
 
 ; Safe Browsing
 bin\components\nsSafebrowsingApplication.js

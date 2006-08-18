@@ -6927,3 +6927,27 @@ function undoCloseTab(aIndex) {
   if (blankTabToRemove)
     tabbrowser.removeTab(blankTabToRemove);
 }
+
+/**
+ * Format a URL
+ * eg:
+ * echo formatURL("http://%LOCALE%.%SERVICE%.mozilla.org/%LOCALE%/%MYVAR%/", {SERVICE:"amo", MYVAR:"test"});
+ * > http://en-US.amo.mozilla.org/en-US/test/
+ *
+ * Currently supported built-ins are LOCALE, and any value from nsIXULAppInfo, uppercased.
+ */
+function formatURL(aFormat, aVars, aIsPref) {
+
+  var repl = null;
+  if (aVars) {
+    repl = Cc["@mozilla.org/dictionary;1"].createInstance(Ci.nsIDictionary);
+    for (var key in aVars) {
+      var val = Cc['@mozilla.org/supports-string;1'].createInstance(Ci.nsISupportsString);
+      val.data = aVars[key];
+      repl.setValue(key, val);
+    }
+  }
+
+  var formatter = Cc["@mozilla.org/browser/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+  return aIsPref ? formatter.formatURLPref(aFormat, repl) : formatter.formatURL(aFormat, repl);
+}
