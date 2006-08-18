@@ -64,29 +64,31 @@ $nightlyChannels = array(
     'nightly'
 );
 
-// This hash defines the version->patch relationships.
+// This hash defines the version->patch relationships for nightlies
 // It determines which patches are associated to which incoming client versions.
 // @todo replace this with a better datasource that can be easily managed via a GUI.
 $branchVersions = array(
-    '1.0+' => '1.5',
-    '1.4'  => '1.5',
-    '1.4.1'=> '1.5',
-    '1.5'  => '1.5',
-    '1.5.0.1' => '1.5.0.x',
-    '1.5.0.2' => '1.5.0.x',
-    '1.5.0.3' => '1.5.0.x',
-    '1.5.0.4' => '1.5.0.x',
-    '1.5.0.5' => '1.5.0.x',
-    '1.5.0.6' => '1.5.0.x',
-    '1.5.0.7' => '1.5.0.x',
-    '1.6a1'=> 'trunk',
-    '2.0'=>'2.0',
-    '2.0a1'=>'2.0',
-    '2.0a2'=>'2.0',
-    '2.0b1'=>'2.0',
-    '2.0b2'=>'2.0',
-    '2.0a3'=>'2.0',
-    '3.0a1'=>'trunk'
+    '1.0+'       =>  '1.5',
+    '1.4'        =>  '1.5',
+    '1.4.1'      =>  '1.5',
+    '1.5'        =>  '1.5',
+    '1.5.0.1'    =>  '1.5.0.x',
+    '1.5.0.2'    =>  '1.5.0.x',
+    '1.5.0.3'    =>  '1.5.0.x',
+    '1.5.0.4'    =>  '1.5.0.x',
+    '1.5.0.5'    =>  '1.5.0.x',
+    '1.5.0.6'    =>  '1.5.0.x',
+    '1.5.0.7pre' =>  '1.5.0.x',
+    '1.5.0.7'    =>  '1.5.0.x',
+    '1.5.0.8pre' =>  '1.5.0.x',
+    '1.6a1'      =>  'trunk',
+    '2.0'        =>  '2.0',
+    '2.0a1'      =>  '2.0',
+    '2.0a2'      =>  '2.0',
+    '2.0a3'      =>  '2.0',
+    '2.0b1'      =>  '2.0',
+    '2.0b2'      =>  '2.0',
+    '3.0a1'      =>  'trunk'
 );
 
 // Array that defines which %OS_VERSION% values are no longer supported.
