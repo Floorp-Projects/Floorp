@@ -71,6 +71,7 @@ public:
     if (!parent) {
       *aParentInfo = nsnull;
       *aParentMethodCount = 0;
+      *aParentConstCount = 0;
       return NS_OK;
     }
 
