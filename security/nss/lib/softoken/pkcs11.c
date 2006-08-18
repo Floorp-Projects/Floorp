@@ -3037,7 +3037,7 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
         }
     }
     crv = CKR_ARGUMENTS_BAD;
-    if ((init_args && init_args->LibraryParameters)) {
+    if ((init_args && init_args->LibraryParameters && !init_args->pReserved)) {
 	sftk_parameters paramStrings;
        
 	crv = secmod_parseParameters
