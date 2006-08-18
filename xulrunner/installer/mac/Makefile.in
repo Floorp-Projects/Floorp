@@ -58,18 +58,16 @@ NO_PKG_FILES = \
 
 include $(topsrcdir)/config/rules.mk
 
+libs:: stage-package
+
 %.plist: %.plist.in
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $< > $@
 
 PACKAGER_NO_LIBS=1
+_APPNAME = XUL.framework
+_BINPATH = /$(_APPNAME)/Versions/Current
 
-# Include this solely for additional NO_PKG_FILES
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
-
-BINARY_DIR = $(DIST)/package-stage/XUL.framework/Versions/$(MOZILLA_VERSION)
-
-SOFTOKN       = $(BINARY_DIR)/$(DLL_PREFIX)softokn3$(DLL_SUFFIX)
-FREEBL        = $(BINARY_DIR)/$(DLL_PREFIX)freebl3$(DLL_SUFFIX)
 
 _ABS_OBJDIR := $(shell pwd)
 _ABS_DIST := $(shell cd $(DIST) && pwd)
@@ -88,44 +86,17 @@ CHOWN_REVERT ?= $(error CHOWN_REVERT must be set to a setuid script.)
 libs:: Info.plist Description.plist
 	$(RM) -rf resource-stage
 	mkdir resource-stage
-	$(RM) -rf $(DIST)/package-stage
-	mkdir $(DIST)/package-stage
-	rsync --copy-unsafe-links -a $(DIST)/XUL.framework $(DIST)/package-stage
-	cd $(BINARY_DIR) && $(RM) -rf $(NO_PKG_FILES)
-	echo "Stripping package directory..."
-	find $(BINARY_DIR) ! -type d \
-	  ! -name "*.js" \
-	  ! -name "*.xpt" \
-	  ! -name "*.gif" \
-	  ! -name "*.jpg" \
-	  ! -name "*.png" \
-	  ! -name "*.xpm" \
-	  ! -name "*.txt" \
-	  ! -name "*.rdf" \
-	  ! -name "*.sh" \
-	  ! -name "*.properties" \
-	  ! -name "*.dtd" \
-	  ! -name "*.html" \
-	  ! -name "*.xul" \
-	  ! -name "*.css" \
-	  ! -name "*.xml" \
-	  ! -name "*.jar" \
-	  ! -name "*.dat" \
-	  ! -name "*.tbl" \
-	  ! -name "*.src" \
-	  ! -name "*.reg" \
-	  $(PLATFORM_EXCLUDE_LIST) \
-	  -exec $(STRIP) $(STRIP_FLAGS) {} >/dev/null 2>&1 \;
-	$(SIGN_NSS)
-	chmod -R a+rX,u+w,go-w,-s,-t $(DIST)/package-stage
+	$(RM) -rf $(DIST)/$(STAGEPATH)xulrunner-pkg
+	mkdir $(DIST)/$(STAGEPATH)xulrunner-pkg
+	chmod -R a+rX,u+w,go-w,-s,-t $(DIST)/$(STAGEPATH)$(MOZ_PKG_APPNAME)
 # For some unknown reason, PackageMaker requires absolute paths to everything.
 # For other poor reasons, PackageMaker returns an exit code of "1" if the
 # version string has any letters in it (e.g. 1.9a1).
 	unset NEXT_ROOT; \
-	$(CHOWN_ROOT) $(DIST)/package-stage && \
+	$(CHOWN_ROOT) $(DIST)/$(STAGEPATH)$(MOZ_PKG_APPNAME) && \
 	  /Developer/Applications/Utilities/PackageMaker.app/Contents/MacOS/PackageMaker -build -v \
-	    -p $(_ABS_DIST)/$(PKG_BASENAME).pkg \
-	    -f $(_ABS_DIST)/package-stage \
+	    -p $(_ABS_DIST)/$(STAGEPATH)xulrunner-pkg/$(PKG_BASENAME).pkg \
+	    -f $(_ABS_DIST)/$(STAGEPATH)$(MOZ_PKG_APPNAME) \
 	    -r $(_ABS_OBJDIR)/resource-stage \
 	    -i $(_ABS_OBJDIR)/Info.plist \
 	    -d $(_ABS_OBJDIR)/Description.plist > packagemaker.log; \
@@ -134,5 +105,5 @@ libs:: Info.plist Description.plist
 	     `grep -c 'was completed with the following non-fatal errors' < packagemaker.log` -gt 0 ]; then \
 	  SAVED=0; \
 	fi; \
-	$(CHOWN_REVERT) $(DIST)/package-stage; \
+	$(CHOWN_REVERT) $(DIST)/$(STAGEPATH)$(MOZ_PKG_APPNAME); \
 	exit $$SAVED

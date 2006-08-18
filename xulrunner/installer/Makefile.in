@@ -54,10 +54,14 @@ NO_PKG_FILES = \
 	xpt_link* \
 	$(NULL)
 
+# If we're on mac, we want to make the .pkg first, in the mac/
+# directory. Then packager.mk can put it into a DMG
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 DIRS += mac
 _APPNAME = $(PKG_BASENAME).pkg
 PKG_SKIP_STRIP = 1
+MOZ_PKG_APPNAME = xulrunner-pkg
 endif
 
 include $(topsrcdir)/config/rules.mk
