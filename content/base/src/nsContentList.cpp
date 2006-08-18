@@ -65,7 +65,7 @@ nsresult
 NS_NewPreContentIterator(nsIContentIterator** aInstancePtrResult);
 #define ASSERT_IN_SYNC AssertInSync()
 #else
-#define ASSERT_IN_SYNC
+#define ASSERT_IN_SYNC PR_BEGIN_MACRO PR_END_MACRO
 #endif
 
 
