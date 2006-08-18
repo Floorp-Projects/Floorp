@@ -176,7 +176,7 @@ class Patch extends AUS_Object {
         } 
 
         // If our channel matches our regexp for fallback channels, let's try to fallback.
-        if (preg_match('/^(release|beta)(test)?\-cck\-\w+$/',$channel)) {
+        if (preg_match('/^\w+\-cck\-\w+$/',$channel)) {
 
             // Partner fallback channel to be used if the partner-specific update doesn't exist or work.
             $buf = array();
