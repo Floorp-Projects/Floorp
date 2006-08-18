@@ -51,55 +51,62 @@ include $(OBJDIR)/config/autoconf.mk
 
 DIST = $(OBJDIR)/dist
 
-ifeq ($(MOZ_BUILD_APP),macbrowser)
-INSTALLER_DIR = camino/installer
-MOZ_PKG_APPNAME = camino
-APPNAME_BASE = Camino
-BUILDCONFIG_JAR = Contents/MacOS/chrome/embed.jar
+ifdef MOZ_DEBUG
+DBGTAG = Debug
 else
-ifeq ($(MOZ_BUILD_APP),suite)
-INSTALLER_DIR = xpinstall/packager
-else
-INSTALLER_DIR = $(MOZ_BUILD_APP)/installer
-endif
-MOZ_PKG_APPNAME = $(MOZ_APP_NAME)
-APPNAME_BASE = $(MOZ_APP_DISPLAYNAME)
-BUILDCONFIG_JAR = Contents/MacOS/chrome/toolkit.jar
+DBGTAG =
 endif
 
-ifdef MOZ_DEBUG
-APPNAME = $(APPNAME_BASE)Debug
-else
-APPNAME = $(APPNAME_BASE)
-endif
+APP_CONTENTS = Contents/MacOS
+
+ifeq ($(MOZ_BUILD_APP),macbrowser) # {
+INSTALLER_DIR = camino/installer
+MOZ_PKG_APPNAME = camino
+APPNAME = Camino.app
+BUILDCONFIG_JAR = Contents/MacOS/chrome/embed.jar
+else # } {
+MOZ_PKG_APPNAME = $(MOZ_APP_NAME)
+APPNAME = $(MOZ_APP_DISPLAYNAME)$(DBGTAG).app
+BUILDCONFIG_JAR = Contents/MacOS/chrome/toolkit.jar
+INSTALLER_DIR = $(MOZ_BUILD_APP)/installer
+ifeq ($(MOZ_BUILD_APP),suite) # {
+INSTALLER_DIR = xpinstall/packager
+endif # } suite
+ifeq ($(MOZ_BUILD_APP),xulrunner) # {
+INSTALLER_DIR = xulrunner/installer/mac
+BUILDCONFIG_JAR = Versions/Current/chrome/toolkit.jar
+APPNAME = XUL.framework
+APP_CONTENTS = Versions/Current
+endif # } xulrunner
+endif # } !camino
 
 postflight_all:
 # Build the universal package out of only the bits that would be released.
 # Call the packager to set this up.  Set UNIVERSAL_BINARY= to avoid producing
 # a universal binary too early, before the unified bits have been staged.
-# Set MAKE_PACKAGE= to avoid building a dmg.  Set SIGN_NSS= to skip shlibsign.
+# Set SIGN_NSS= to skip shlibsign.
 	$(MAKE) -C $(OBJDIR_PPC)/$(INSTALLER_DIR) \
-          UNIVERSAL_BINARY= MAKE_PACKAGE= SIGN_NSS=
+          UNIVERSAL_BINARY= SIGN_NSS= stage-package
 	$(MAKE) -C $(OBJDIR_X86)/$(INSTALLER_DIR) \
-          UNIVERSAL_BINARY= MAKE_PACKAGE= SIGN_NSS=
+          UNIVERSAL_BINARY= SIGN_NSS= stage-package
 # Remove .chk files that may have been copied from the NSS build.  These will
 # cause unify to warn or fail if present.  New .chk files that are
 # appropriate for the merged libraries will be generated when the universal
 # dmg is built.
-	rm -f $(DIST_PPC)/$(MOZ_PKG_APPNAME)/$(APPNAME).app/Contents/MacOS/*.chk \
-	      $(DIST_X86)/$(MOZ_PKG_APPNAME)/$(APPNAME).app/Contents/MacOS/*.chk
+	rm -f $(DIST_PPC)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(APP_CONTENTS)/*.chk \
+	      $(DIST_X86)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(APP_CONTENTS)/*.chk
 # The only difference betewen the two trees now should be the
 # about:buildconfig page.  Fix it up.
 	$(TOPSRCDIR)/build/macosx/universal/fix-buildconfig \
-	  $(DIST_PPC)/$(MOZ_PKG_APPNAME)/$(APPNAME).app/$(BUILDCONFIG_JAR) \
-	  $(DIST_X86)/$(MOZ_PKG_APPNAME)/$(APPNAME).app/$(BUILDCONFIG_JAR)
+	  $(DIST_PPC)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(BUILDCONFIG_JAR) \
+	  $(DIST_X86)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(BUILDCONFIG_JAR)
 	mkdir -p $(DIST_UNI)/$(MOZ_PKG_APPNAME)
 	rm -f $(DIST_X86)/universal
 	ln -s $(DIST_UNI) $(DIST_X86)/universal
-	rm -rf $(DIST_UNI)/$(MOZ_PKG_APPNAME)/$(APPNAME).app
+	rm -rf $(DIST_UNI)/$(MOZ_PKG_APPNAME)/$(APPNAME)
 	$(TOPSRCDIR)/build/macosx/universal/unify \
-	  $(DIST_PPC)/$(MOZ_PKG_APPNAME)/$(APPNAME).app \
-	  $(DIST_X86)/$(MOZ_PKG_APPNAME)/$(APPNAME).app \
-	  $(DIST_UNI)/$(MOZ_PKG_APPNAME)/$(APPNAME).app
+	  $(DIST_PPC)/$(MOZ_PKG_APPNAME)/$(APPNAME) \
+	  $(DIST_X86)/$(MOZ_PKG_APPNAME)/$(APPNAME) \
+	  $(DIST_UNI)/$(MOZ_PKG_APPNAME)/$(APPNAME)
 # A universal .dmg can now be produced by making in either architecture's
 # INSTALLER_DIR.
