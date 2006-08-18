@@ -145,7 +145,6 @@ secmod_ModuleInit(SECMODModule *mod, PRBool* alreadyLoaded)
     } else {
 	moduleArgs = secmodLockFunctions;
 	moduleArgs.LibraryParameters = (void *) mod->libraryParams;
-	moduleArgs.pReserved = NULL;
 	pInitArgs = &moduleArgs;
     }
     crv = PK11_GETTAB(mod)->C_Initialize(pInitArgs);
