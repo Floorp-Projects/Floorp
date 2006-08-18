@@ -105,6 +105,9 @@ function PROT_PhishingWarden(progressListener) {
 
   // Read state: should we be checking remote preferences?
   this.checkRemote_ = this.prefs_.getPref(kPhishWardenRemoteLookups, null);
+  
+  // true if we should use whitelists to suppress remote lookups
+  this.checkWhitelists_ = false;
 
   // Get notifications when the remote check preference changes
   var checkRemotePrefObserver = BindToObject(this.onCheckRemotePrefChanged,
@@ -181,10 +184,48 @@ PROT_PhishingWarden.prototype.maybeToggleUpdateChecking = function() {
 
   // We update and save to disk all tables if we don't have remote checking
   // enabled.
-  if (phishWardenEnabled === true && this.checkRemote_ === false) {
-    this.enableBlacklistTableUpdates();
-    this.enableWhitelistTableUpdates();
+  if (phishWardenEnabled === true) {
+    if (this.checkRemote_ === false) {
+      // Local list mode, start table updates
+      this.enableBlacklistTableUpdates();
+      this.enableWhitelistTableUpdates();
+    } else if (this.checkRemote_ === true) {
+      // Remote lookup mode
+      // We check to see if the local list update host is the same as the
+      // remote lookup host.  If they are the same, then we don't bother
+      // to do a remote url check if the url is in the whitelist.
+      var ioService = Cc["@mozilla.org/network/io-service;1"]
+                     .getService(Ci.nsIIOService);
+      var updateHost = '';
+      var lookupHost = '';
+      try {
+        var url = ioService.newURI(gDataProvider.getUpdateURL(),
+                                         null, null);
+        updateHost = url.asciiHost;
+      } catch (e) { }
+      try {
+        var url = ioService.newURI(gDataProvider.getLookupURL(),
+                                         null, null);
+        lookupHost = url.asciiHost;
+      } catch (e) { }
+
+      if (updateHost && lookupHost && updateHost == lookupHost) {
+        // The data provider for local lists and remote lookups is the
+        // same, enable whitelist lookup suppression.
+        this.checkWhitelists_ = true;
+
+        this.disableBlacklistTableUpdates();
+        this.enableWhitelistTableUpdates();
+      } else {
+        // hosts don't match, disable all tables
+        this.checkWhitelists_ = false;
+
+        this.disableBlacklistTableUpdates();
+        this.disableWhitelistTableUpdates();
+      }
+    }
   } else {
+    // Anti-phishing is off, disable table updates
     this.disableBlacklistTableUpdates();
     this.disableWhitelistTableUpdates();
   }
@@ -270,8 +311,15 @@ PROT_PhishingWarden.prototype.onDocNavStart = function(request, url) {
     // First check to see if it's a blacklist url.
     if (this.isBlacklistTestURL(url)) {
       this.houstonWeHaveAProblem_(request);
+    } else if (this.checkWhitelists_) {
+      // Use whitelists to suppress remote lookups.
+      var maybeRemoteCheck = BindToObject(this.maybeMakeRemoteCheck_,
+                                          this,
+                                          url,
+                                          request);
+      this.isWhiteURL(url, maybeRemoteCheck);
     } else {
-      // TODO: Use local whitelists to suppress remote BL lookups. 
+      // Do a remote lookup (don't check whitelists)
       this.fetcher_.get(url,
                         BindToObject(this.onTRFetchComplete,
                                      this,
@@ -285,6 +333,24 @@ PROT_PhishingWarden.prototype.onDocNavStart = function(request, url) {
                                     request);
     this.checkUrl_(url, evilCallback);
   }
+}
+
+/** 
+ * Callback from whitelist check when remote lookups is on.
+ * @param url String url to lookup
+ * @param request nsIRequest object
+ * @param status int enum from callback (PROT_ListWarden.IN_BLACKLIST,
+ *    PROT_ListWarden.IN_WHITELIST, PROT_ListWarden.NOT_FOUND)
+ */
+PROT_PhishingWarden.prototype.maybeMakeRemoteCheck_ = function(url, request, status) {
+  if (PROT_ListWarden.IN_WHITELIST == status)
+    return;
+
+  G_Debug(this, "Local whitelist lookup failed");
+  this.fetcher_.get(url,
+                    BindToObject(this.onTRFetchComplete,
+                                 this,
+                                 request));
 }
 
 /**
@@ -442,14 +508,19 @@ PROT_PhishingWarden.prototype.checkUrl_ = function(url, callback) {
     callback();
     return;
   }
-  this.isEvilURL_(url, callback);
+  this.isEvilURL(url, callback);
 }
 
 /**
  * Callback for found local blacklist match.  First we report that we have
  * a blacklist hit, then we bring up the warning dialog.
+ * @param status Number enum from callback (PROT_ListWarden.IN_BLACKLIST,
+ *    PROT_ListWarden.IN_WHITELIST, PROT_ListWarden.NOT_FOUND)
  */
-PROT_PhishingWarden.prototype.localListMatch_ = function(url, request) {
+PROT_PhishingWarden.prototype.localListMatch_ = function(url, request, status) {
+  if (PROT_ListWarden.IN_BLACKLIST != status)
+    return;
+
   // Maybe send a report
   (new PROT_Reporter).report("phishblhit", url);
   this.houstonWeHaveAProblem_(request);
