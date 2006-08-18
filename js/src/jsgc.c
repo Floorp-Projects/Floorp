@@ -934,16 +934,20 @@ FindAndMarkObjectsToClose(JSContext *cx, JSGCInvocationKind gckind)
         } else {
             *genp = gen->next;
             gen->next = NULL;
-            *rt->gcCloseState.todoTail = gen;
-            rt->gcCloseState.todoTail = &gen->next;
-            rt->gcCloseState.todoCount++;
-            if (!todo)
-                todo = gen;
-            METER(JS_ASSERT(rt->gcStats.nclose));
-            METER(rt->gcStats.nclose--);
-            METER(rt->gcStats.maxcloselater
-                  = JS_MAX(rt->gcStats.maxcloselater,
-                           rt->gcCloseState.todoCount));
+            if (gen->state != JSGEN_CLOSED) {
+                /* Generator cannot be nesting, i.e., running or closing. */
+                JS_ASSERT(gen->state <= JSGEN_OPEN);
+                *rt->gcCloseState.todoTail = gen;
+                rt->gcCloseState.todoTail = &gen->next;
+                rt->gcCloseState.todoCount++;
+                if (!todo)
+                    todo = gen;
+                METER(JS_ASSERT(rt->gcStats.nclose));
+                METER(rt->gcStats.nclose--);
+                METER(rt->gcStats.maxcloselater
+                      = JS_MAX(rt->gcStats.maxcloselater,
+                               rt->gcCloseState.todoCount));
+            }
         }
     }
 

@@ -6065,6 +6065,17 @@ interrupt:
 
           BEGIN_CASE(JSOP_YIELD)
             ASSERT_NOT_THROWING(cx);
+            if (FRAME_TO_GENERATOR(fp)->state == JSGEN_CLOSING) {
+                str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
+                                                 fp->argv[-2], NULL);
+                if (str) {
+                    JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
+                                           JSMSG_BAD_GENERATOR_YIELD,
+                                           JSSTRING_CHARS(str));
+                }
+                ok = JS_FALSE;
+                goto out;
+            }
             fp->rval = FETCH_OPND(-1);
             fp->flags |= JSFRAME_YIELDING;
             pc += JSOP_YIELD_LENGTH;
