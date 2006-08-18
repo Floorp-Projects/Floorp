@@ -869,23 +869,14 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
 }
 
 NS_IMETHODIMP
-nsTypeAheadFind::FindPrevious(PRBool aHasFocus, PRUint16* aResult)
+nsTypeAheadFind::FindAgain(PRBool aFindBackwards, PRBool aHasFocus,
+    PRUint16* aResult)
+/* Find another match in the page. */
 {
   *aResult = FIND_NOTFOUND;
 
   if (!mTypeAheadBuffer.IsEmpty())
-    FindItNow(nsnull, mLinksOnly, PR_FALSE, PR_TRUE, aHasFocus, aResult);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTypeAheadFind::FindNext(PRBool aHasFocus, PRUint16* aResult)
-{
-  *aResult = FIND_NOTFOUND;
-
-  if (!mTypeAheadBuffer.IsEmpty())
-    FindItNow(nsnull, mLinksOnly, PR_FALSE, PR_FALSE, aHasFocus, aResult);
+    FindItNow(nsnull, mLinksOnly, PR_FALSE, aFindBackwards, aHasFocus, aResult);
 
   return NS_OK;
 }

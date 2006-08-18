@@ -203,9 +203,9 @@ var gFindBar = {
       // We have to update the status because we might still have the status
       // of another tab
       if (this.highlightDoc('yellow', 'black', word))
-        this.updateStatus(Components.interfaces.nsITypeAheadFind.FIND_FOUND, false);
+        this.updateStatus(Components.interfaces.nsITypeAheadFind.FIND_FOUND);
       else
-        this.updateStatus(Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND, false);
+        this.updateStatus(Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND);
     } else {
       this.highlightDoc(null, null, null);
       this.mLastHighlightString = null;
@@ -444,7 +444,7 @@ var gFindBar = {
 
       var findField = document.getElementById("find-field");
       this.setCaseSensitivity(findField.value);
-      this.updateStatus(Components.interfaces.nsITypeAheadFind.FIND_FOUND, false);
+      this.updateStatus(Components.interfaces.nsITypeAheadFind.FIND_FOUND);
 
       return true;
     }
@@ -730,7 +730,7 @@ var gFindBar = {
       if (autostartFAYT)
         this.fireKeypressEvent(findField.inputField, evt);
       else
-        this.updateStatus(Components.interfaces.nsITypeAheadFind.FIND_FOUND, false);
+        this.updateStatus(Components.interfaces.nsITypeAheadFind.FIND_FOUND);
       evt.preventDefault();
     }
   },
@@ -752,10 +752,7 @@ var gFindBar = {
           return;
         }
 
-        if (evt.shiftKey)
-          this.findPrevious();
-        else
-          this.findNext();
+        this.findAgain(evt.shiftKey);
       }
       else {
         if (this.mFoundLink) {
@@ -863,7 +860,7 @@ var gFindBar = {
     var fastFind = getBrowser().fastFind;
     var res = fastFind.find(val, this.mFindMode == FIND_LINKS, this.mHasFocus);
     this.updateFoundLink(res);
-    this.updateStatus(res, true);
+    this.updateStatus(res, false);
 
     if (this.mFindMode != FIND_NORMAL)
       this.setFindCloseTimeout();
@@ -905,7 +902,7 @@ var gFindBar = {
     this.focusFindBar();
   },
 
-  onFindAgainCmd: function ()
+  onFindAgainCmd: function (aFindPrevious)
   {
     var findString = getBrowser().findString;
     if (!findString) {
@@ -913,7 +910,7 @@ var gFindBar = {
       return;
     }
 
-    var res = this.findNext();
+    var res = this.findAgain(aFindPrevious);
     if (res == Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND) {
       try {
         var opened = this.openFindBar(this.mUsingMinimalUI);
@@ -926,33 +923,7 @@ var gFindBar = {
         if (this.mFindMode != FIND_NORMAL)
           this.setFindCloseTimeout();
 
-        this.updateStatus(res, true);
-      }
-    }
-  },
-
-  onFindPreviousCmd: function ()
-  {
-    var findString = getBrowser().findString;
-    if (!findString) {
-      this.onFindCmd();
-      return;
-    }
-
-    var res = this.findPrevious();
-    if (res == Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND) {
-      try {
-        var opened = this.openFindBar(this.mUsingMinimalUI);
-      }
-      catch (e) {
-      }
-      if (opened) {
-        this.focusFindBar();
-        this.selectFindBar();
-        if (this.mFindMode != FIND_NORMAL)
-          this.setFindCloseTimeout();
-
-        this.updateStatus(res, false);
+        this.updateStatus(res, aFindPrevious);
       }
     }
   },
@@ -974,12 +945,12 @@ var gFindBar = {
     return !findBar.hidden;
   },
 
-  findNext: function ()
+  findAgain: function (aFindPrevious)
   {
     var fastFind = getBrowser().fastFind; 
-    var res = fastFind.findNext(this.mHasFocus);  
+    var res = fastFind.findAgain(aFindPrevious, this.mHasFocus);  
     this.updateFoundLink(res);
-    this.updateStatus(res, true);
+    this.updateStatus(res, aFindPrevious);
 
     if (this.mFindMode != FIND_NORMAL && this.isFindBarVisible())
       this.setFindCloseTimeout();
@@ -987,20 +958,7 @@ var gFindBar = {
     return res;
   },
 
-  findPrevious: function ()
-  {
-    var fastFind = getBrowser().fastFind;
-    var res = fastFind.findPrevious(this.mHasFocus);
-    this.updateFoundLink(res);
-    this.updateStatus(res, false);
-
-    if (this.mFindMode != FIND_NORMAL && this.isFindBarVisible())
-      this.setFindCloseTimeout();
-
-    return res;
-  },
-
-  updateStatus: function (res, findNext)
+  updateStatus: function (res, aFindPrevious)
   {
     var findBar = document.getElementById("FindToolbar");
     var field = document.getElementById("find-field");
@@ -1010,7 +968,7 @@ var gFindBar = {
       case Components.interfaces.nsITypeAheadFind.FIND_WRAPPED:
         statusIcon.setAttribute("status", "wrapped");      
         statusText.value =
-          findNext ? this.mWrappedToTopStr : this.mWrappedToBottomStr;
+          aFindPrevious ? this.mWrappedToBottomStr : this.mWrappedToTopStr;
         break;
       case Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND:
         statusIcon.setAttribute("status", "notfound");
