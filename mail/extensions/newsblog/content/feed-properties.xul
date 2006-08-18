@@ -55,12 +55,19 @@
   onload="onLoad();"
   ondialogaccept="return onOk();">
 
-  <popup id="copyUrlPopup" popupanchor="bottomleft">
-    <menuitem label="&copyLinkCmd.label;" accesskey="&copyLinkCmd.accesskey;" oncommand="CopyWebsiteAddress(document.popupNode)"/>
-  </popup>
-  
   <script type="application/x-javascript" src="feed-properties.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+
+  <popup id="copyUrlPopup" popupanchor="bottomleft">
+    <menuitem label="&copyLinkCmd.label;" accesskey="&copyLinkCmd.accesskey;"
+              oncommand="CopyWebsiteAddress(document.popupNode)"/>
+  </popup>
+
+  <popup id="pasteUrlPopup" popupanchor="bottomleft">
+    <menuitem label="&pasteLinkCmd.label;" accesskey="&pasteLinkCmd.accesskey;"
+              oncommand="goDoCommand('cmd_paste')"/>
+  </popup>
 
   <grid flex="1">
     <columns>
@@ -71,7 +78,7 @@
     <rows>   
       <row>
         <label value="&feedLocation.label;" accesskey="&feedLocation.accesskey;" control="feedLocation"/>
-        <textbox id="feedLocation" context="copyUrlPopup"/>
+        <textbox id="feedLocation"/>
       </row>
 
       <row>

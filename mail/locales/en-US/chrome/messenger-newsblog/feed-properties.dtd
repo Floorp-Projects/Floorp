@@ -12,5 +12,8 @@
 <!ENTITY quickMode.label          "Show the article summary instead of loading the web page">
 <!ENTITY quickMode.accesskey      "h">
 
-<!ENTITY copyLinkCmd.label        "Copy Link Location"> 
-<!ENTITY copyLinkCmd.accesskey    "C"> 
+<!ENTITY copyLinkCmd.label        "Copy Link Location">
+<!ENTITY copyLinkCmd.accesskey    "C">
+
+<!ENTITY pasteLinkCmd.label       "Paste">
+<!ENTITY pasteLinkCmd.accesskey   "P">

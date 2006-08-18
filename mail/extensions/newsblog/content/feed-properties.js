@@ -61,7 +61,10 @@ function onLoad()
     // if we are editing an existing feed, disable the top level account
     rssAccountMenuItem.setAttribute('disabled', 'true');
     feedLocationEl.setAttribute('readonly', true);
+    feedLocationEl.setAttribute('context', 'copyUrlPopup');
   }
+  else
+    feedLocationEl.setAttribute('context', 'pasteUrlPopup');
 }
 
 function onOk()
