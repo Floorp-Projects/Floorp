@@ -44,8 +44,8 @@
 
 <dialog id="phishDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="&phishDialog.title;"
-        style="width: &phishDialog.width;; height: &phishDialog.height;;"
+        title="&phishDlg.title;"
+        style="width: &phishDlg.width;; height: &phishDlg.height;;"
         persist="screenX screenY width height"
         onload="gPhishDialog.init();"
         onunload="gPhishDialog.uninit();"
@@ -69,7 +69,11 @@
 
   <separator class="thin"/>
 
-  <description id="phishAfter"/>
+  <radiogroup id="acceptOrDecline"
+              oncommand="gPhishDialog.onchangeRadio();">
+    <radio value="true" label="&acceptToS.label;"/>
+    <radio value="false" selected="true" label="&declineToS.label;"/>
+  </radiogroup>
 
   <separator class="thin"/>
 

@@ -61,6 +61,7 @@
     locale/browser/preferences/content.dtd            (%chrome/browser/preferences/content.dtd)
     locale/browser/preferences/connection.dtd         (%chrome/browser/preferences/connection.dtd)
     locale/browser/preferences/downloadactions.dtd    (%chrome/browser/preferences/downloadactions.dtd)
+    locale/browser/preferences/fallbackEULA.dtd       (%chrome/browser/preferences/fallbackEULA.dtd)
     locale/browser/preferences/feeds.dtd              (%chrome/browser/preferences/feeds.dtd)
     locale/browser/preferences/fonts.dtd              (%chrome/browser/preferences/fonts.dtd)
     locale/browser/preferences/main.dtd               (%chrome/browser/preferences/main.dtd)
