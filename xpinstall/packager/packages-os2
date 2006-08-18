@@ -138,7 +138,7 @@ bin/components/dom_xbl.xpt
 bin/components/dom_xpath.xpt
 bin/components/dom_xul.xpt
 bin/components/storage.xpt
-bin/components/strgcmp.dll
+bin/components/strgcmps.dll
 bin/components/editor.xpt
 bin/components/editor.dll
 ;bin/components/evntloop.dll
