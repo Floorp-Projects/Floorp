@@ -748,7 +748,6 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
 
     /* Register after we have properly initialized the private slot. */
     js_RegisterGeneratorObject(cx, gen);
-
     return obj;
 
   bad:
@@ -757,23 +756,34 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
 }
 
 static JSBool
-generator_send(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-               jsval *rval)
+ReportNestingGenerator(JSContext *cx, jsval *argv)
 {
-    JSGenerator *gen;
+    JSString *str;
+
+    str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, argv[-1], NULL);
+    if (str) {
+        JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
+                               JSMSG_NESTING_GENERATOR,
+                               JSSTRING_CHARS(str));
+    }
+    return JS_FALSE;
+}
+
+/*
+ * Common subroutine of generator_send and generator_close.
+ */
+static JSBool
+generator_send_sub(JSContext *cx, JSObject *obj, JSGenerator *gen,
+                   uintN argc, jsval *argv, jsval *rval)
+{
     JSString *str;
     JSStackFrame *fp;
     JSArena *arena;
     JSBool ok;
     jsval junk;
 
-    gen = (JSGenerator *)
-          JS_GetInstancePrivate(cx, obj, &js_GeneratorClass, argv);
-    if (!gen)
-        return JS_FALSE;
-
-    if (!gen || gen->state == JSGEN_CLOSED)
-        return !JS_IsExceptionPending(cx) && js_ThrowStopIteration(cx, obj);
+    if (gen->state == JSGEN_RUNNING)
+        return ReportNestingGenerator(cx, argv);
 
     if (gen->state == JSGEN_NEWBORN && argc != 0 && !JSVAL_IS_VOID(argv[0])) {
         str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, argv[0], NULL);
@@ -793,13 +803,16 @@ generator_send(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     /* Store the argument to send as the result of the yield expression. */
     gen->frame.sp[-1] = (argc != 0) ? argv[0] : JSVAL_VOID;
+    gen->state = JSGEN_RUNNING;
     ok = js_Interpret(cx, gen->frame.pc, &junk);
+    gen->state = JSGEN_OPEN;
     cx->fp = fp;
     cx->stackPool.current = arena;
 
     if (!ok) {
-        if (cx->throwing)
-            gen->state = JSGEN_CLOSED;
+        /* An error, exception, or silent termination by branch callback. */
+        JS_ASSERT(!(gen->frame.flags & JSFRAME_YIELDING));
+        gen->state = JSGEN_CLOSED;
         return JS_FALSE;
     }
 
@@ -809,10 +822,25 @@ generator_send(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return js_ThrowStopIteration(cx, obj);
     }
 
-    gen->state = JSGEN_RUNNING;
     gen->frame.flags &= ~JSFRAME_YIELDING;
     *rval = gen->frame.rval;
     return JS_TRUE;
+}
+
+static JSBool
+generator_send(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+               jsval *rval)
+{
+    JSGenerator *gen;
+
+    if (!JS_InstanceOf(cx, obj, &js_GeneratorClass, argv))
+        return JS_FALSE;
+
+    gen = (JSGenerator *) JS_GetPrivate(cx, obj);
+    if (!gen || gen->state >= JSGEN_CLOSING)
+        return !JS_IsExceptionPending(cx) && js_ThrowStopIteration(cx, obj);
+
+    return generator_send_sub(cx, obj, gen, argc, argv, rval);
 }
 
 static JSBool
@@ -834,17 +862,31 @@ static JSBool
 generator_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 jsval *rval)
 {
+    JSGenerator *gen;
     jsval genexit, exn;
     JSClass *clasp;
     JSString *str;
+
+    if (!JS_InstanceOf(cx, obj, &js_GeneratorClass, argv))
+        return JS_FALSE;
+
+    gen = (JSGenerator *) JS_GetPrivate(cx, obj);
+    if (!gen || gen->state == JSGEN_CLOSED)
+        return JS_TRUE;
+
+    if (gen->state == JSGEN_RUNNING)
+        return ReportNestingGenerator(cx, argv);
 
     if (!js_FindClassObject(cx, NULL, INT_TO_JSID(JSProto_GeneratorExit),
                             &genexit)) {
         return JS_FALSE;
     }
 
+    /* Throw GeneratorExit at the generator and ignore the returned status. */
     JS_SetPendingException(cx, genexit);
-    generator_send(cx, obj, 0, argv, rval);
+    gen->state = JSGEN_CLOSING;
+    generator_send_sub(cx, obj, gen, 0, argv, rval);
+    gen->state = JSGEN_CLOSED;
 
     if (cx->throwing) {
         exn = cx->exception;
