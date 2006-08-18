@@ -13,6 +13,7 @@ browser.jar:
 *   content/browser/preferences/connection.js
 *   content/browser/preferences/downloadactions.xul
 *   content/browser/preferences/downloadactions.js
+*   content/browser/preferences/fallbackEULA.xhtml
 *   content/browser/preferences/feeds.xul
 *   content/browser/preferences/feeds.js
 *   content/browser/preferences/fonts.xul
