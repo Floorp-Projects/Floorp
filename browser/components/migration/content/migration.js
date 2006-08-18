@@ -467,14 +467,21 @@ var MigrationWizard = {
         if (this._newHomePage) {
           try {
             // set homepage properly
-            var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
-                                       .getService(Components.interfaces.nsIPrefBranch);
+            var prefSvc = Components.classes["@mozilla.org/preferences-service;1"]
+                                    .getService(Components.interfaces.nsIPrefService);
+            var prefBranch = prefSvc.getBranch(null);
             var str = Components.classes["@mozilla.org/supports-string;1"]
                                 .createInstance(Components.interfaces.nsISupportsString);
             str.data = this._newHomePage;
             prefBranch.setComplexValue("browser.startup.homepage",
                                        Components.interfaces.nsISupportsString,
                                        str);
+
+            var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
+                                   .getService(Components.interfaces.nsIProperties);
+            var prefFile = dirSvc.get("ProfDS", Components.interfaces.nsIFile);
+            prefFile.append("prefs.js");
+            prefSvc.savePrefFile(prefFile);
           } catch(ex) { 
             dump(ex); 
           }
