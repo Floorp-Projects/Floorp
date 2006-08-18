@@ -51,6 +51,7 @@
 [% tbl_field_disp = field_descs.$tbl_field || tbl_field %]
 [% col_field_disp = field_descs.$col_field || col_field %]
 [% row_field_disp = field_descs.$row_field || row_field %]
+[% switchbase     = switchbase FILTER html %]
 
 [% title = BLOCK %]
   Report: 
@@ -125,8 +126,8 @@
                        { name => "line",  description => "Line" },
                        { name => "table", description => "Table" } ] %]
 
-        [% formaturl = "report.cgi?$switchbase&width=$width&height=$height" _ 
-                       "&action=wrap" %]
+        [% formaturl = "report.cgi?$switchbase&amp;width=$width" _ 
+                       "&amp;height=$height&amp;action=wrap" %]
         [% FOREACH other_format = formats %]
           [% NEXT IF other_format.name == "pie" AND row_field AND col_field %]
           [% UNLESS other_format.name == format %]
@@ -157,7 +158,7 @@
                    [% height - 100 %]">Shorter</a><br>
         </td>
       [% END %]
-    <tr>
+    </tr>
   </table>
 
   <p>

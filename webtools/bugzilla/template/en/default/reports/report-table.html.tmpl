@@ -37,10 +37,10 @@
 [% row_field_disp = field_descs.$row_field || row_field %]
   
 [% IF tbl == "-total-" %]
-  [% urlbase = BLOCK %]buglist.cgi?[% buglistbase %]
+  [% urlbase = BLOCK %]buglist.cgi?[% buglistbase FILTER html %]
   [% "&amp;$tbl_vals" IF tbl_vals %][% END %]
 [% ELSE %]
-  [% urlbase = BLOCK %]buglist.cgi?[% buglistbase %]&amp;
+  [% urlbase = BLOCK %]buglist.cgi?[% buglistbase FILTER html %]&amp;
   [% tbl_field FILTER url_quote %]=[% tbl FILTER url_quote %][% END %]
 [% END %]
 
@@ -154,7 +154,6 @@
           [% col_field FILTER url_quote %]=[% col FILTER url_quote %]
           [% "&amp;$row_vals" IF row_vals %]">
         [% col_totals.$col %]</a>
-      <strong>
       </td> 
     [% END %]
     <td class="ttotal" align="right">
