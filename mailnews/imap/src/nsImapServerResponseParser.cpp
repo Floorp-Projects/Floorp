@@ -297,6 +297,8 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
       }
     }
   }
+  else
+    SetConnected(PR_FALSE);
   PL_strfree(copyCurrentCommand);
 }
 
