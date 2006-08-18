@@ -3,17 +3,7 @@
 class Application extends AppModel
 {
     var $name = 'Application';
-    var $hasMany = array('Tag' =>
-                         array('className'   => 'Tag',
-                               'conditions'  => '',
-                               'order'       => '',
-                               'limit'       => '',
-                               'foreignKey'  => 'application_id',
-                               'dependent'   => true,
-                               'exclusive'   => false,
-                               'finderSql'   => ''
-                         ),
-                         'Appversion' =>
+    var $hasOne = array('Appversion' =>
                          array('className'   => 'Appversion',
                                'conditions'  => '',
                                'order'       => '',
@@ -22,7 +12,18 @@ class Application extends AppModel
                                'dependent'   => true,
                                'exclusive'   => false,
                                'finderSql'   => ''
-                         )
+                         ),
+                         'Tag' =>
+                         array('className'   => 'Tag',
+                               'conditions'  => '',
+                               'order'       => '',
+                               'limit'       => '',
+                               'foreignKey'  => 'application_id',
+                               'dependent'   => false,
+                               'exclusive'   => false,
+                               'finderSql'   => ''
+                         ),
+
                   );
     var $hasAndBelongsToMany = array('Version' =>
                                       array('className'  => 'Version',

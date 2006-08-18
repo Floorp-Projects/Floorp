@@ -3,14 +3,7 @@
 class Addon extends AppModel
 {
     var $name = 'Addon';
-    var $belongsTo = array('Addontype' =>
-                        array('className'    => 'Addontype',
-                              'conditions'   => '',
-                              'order'        => '',
-                              'dependent'    =>  false,
-                              'foreignKey'   => 'addontype_id'
-                        )
-                  );
+    var $belongsTo = array('Addontype');
     var $hasMany = array('Version' =>
                          array('className'   => 'Version',
                                'conditions'  => '',
@@ -72,6 +65,7 @@ class Addon extends AppModel
         'guid' => VALID_NOT_EMPTY,
         'name' => VALID_NOT_EMPTY,
         'description' => VALID_NOT_EMPTY,
+        'addontype_id' => VALID_NUMBER
     );
 }
 ?>

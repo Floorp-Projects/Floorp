@@ -16,18 +16,6 @@ class Tag extends AppModel
                                            'deleteQuery'=> '',
                                      )
                                );
-    var $belongsTo = array('Addontype' =>
-                           array('className'  => 'Addontype',
-                                 'conditions' => '',
-                                 'order'      => '',
-                                 'foreignKey' => 'addontype_id'
-                           ),
-                           'Application' =>
-                           array('className'  => 'Application',
-                                 'conditions' => '',
-                                 'order'      => '',
-                                 'foreignKey' => 'application_id'
-                           )
-                     );
+    var $belongsTo = array('Addontype', 'Application');
 }
 ?>

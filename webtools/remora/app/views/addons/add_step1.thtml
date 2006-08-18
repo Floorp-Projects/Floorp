@@ -1,5 +1,7 @@
 <?=$html->formTag('/addons/add/', 'post', array('enctype'=>'multipart/form-data'))?>
 <?=$html->hidden('Addon/add_step1')?>
+Add-on Type: <?=$html->selectTag('Addon/addontype_id', $addonTypes)?><BR />
+<?=$html->tagErrorMsg('Addon/addontype_id', 'Please select the type of add-on you are submitting.')?>
 Max upload size: <?=ini_get('upload_max_filesize')?><BR />
 Add-on File: <?=$html->file('Addon/file')?><BR />
 <?=$html->tagErrorMsg('Addon/file', 'File error: '.$fileError)?>
