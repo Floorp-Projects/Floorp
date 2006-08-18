@@ -23,6 +23,7 @@
    - Contributor(s):
    -   Stuart Parmenter <stuart.parmenter@oracle.com>
    -   Simon Paquet <bugzilla@babylonsounds.com>
+   -   Joey Minta <jminta@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -177,11 +178,8 @@
         <row details="true">
           <label value="&newevent.attendees.label;"/>
           <hbox flex="1">
-            <vbox flex="1">
-              <listbox id="attendees-listbox" rows="5" flex="1"/>
-              <button label="&calendar.edit.attendees;" disabled="true"/>
-            </vbox>
-
+            <calendar-attendee-list id="attendees-list" flex="1"
+                                    style="max-height: 10em;"/>
             <spacer width="10"/>
 
             <grid>

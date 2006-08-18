@@ -369,11 +369,9 @@ function saveDialog(item)
 
     /* attendence */
     item.removeAllAttendees();
-    var attendeeListBox = document.getElementById("attendees-listbox");
-    for each (kid in attendeeListBox.childNodes) {
-        if (kid.attendee) {
-            item.addAttendee(kid.attendee);
-        }
+    var attendeeListBox = document.getElementById("attendees-list");
+    for each (att in attendeeListBox.attendees) {
+        item.addAttendee(att);
     }
 
     /* alarms */
@@ -817,11 +815,17 @@ function toggleDetails() {
     this.sizeToContent();
 
     if (gDetailsShown) {
+        // Focus the description
+        document.getElementById("item-description").focus();
+
         // We've already loaded this stuff before, so we're done
         return;
     }
 
     loadDetails();
+
+    // Now focus the description
+    document.getElementById("item-description").focus();
 }
 
 function loadDetails() {
@@ -829,24 +833,8 @@ function loadDetails() {
     var item = window.calendarItem;
 
     /* attendence */
-    var attendeeString = "";
-    var attendeeListBox = document.getElementById("attendees-listbox");
-
-    var child;
-    while ((child = attendeeListBox.lastChild) && (child.tagName == "listitem")) {
-        attendeeListBox.removeChild(child);
-    }
-
-    for each (var attendee in item.getAttendees({})) {
-        var listItem = document.createElement("listitem");
-        var nameCell = document.createElement("listcell");
-        nameCell.setAttribute("label", attendee.id.split("MAILTO:")[1]);
-        listItem.appendChild(nameCell);
-
-        listItem.attendee = attendee;
-        attendeeListBox.appendChild(listItem);
-    }
-
+    var attendeeListBox = document.getElementById("attendees-list");
+    attendeeListBox.attendees = item.getAttendees({});
 
     /* Status */
     setElementValue("item-url",         item.getProperty("URL"));

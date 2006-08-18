@@ -59,6 +59,7 @@ calendar.jar:
   content/calendar/calendar-event-dialog.js	(/calendar/base/content/calendar-event-dialog.js)
   content/calendar/calendar-event-dialog.xul	(/calendar/base/content/calendar-event-dialog.xul)
   content/calendar/calendar-event-dialog.css	(/calendar/base/content/calendar-event-dialog.css)
+  content/calendar/calendar-attendee-list.xml	(/calendar/base/content/calendar-attendee-list.xml)
   content/calendar/preferences/editCategory.xul	(/calendar/base/content/preferences/editCategory.xul)
   content/calendar/calendar-recurrence-dialog.js	(/calendar/base/content/calendar-recurrence-dialog.js)
   content/calendar/calendar-recurrence-dialog.xul	(/calendar/base/content/calendar-recurrence-dialog.xul)

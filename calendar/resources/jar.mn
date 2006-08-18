@@ -19,6 +19,7 @@ calendar.jar:
     content/calendar/calendar-event-dialog.js (/calendar/base/content/calendar-event-dialog.js)
     content/calendar/calendar-event-dialog.css (/calendar/base/content/calendar-event-dialog.css)
     content/calendar/calendar-event-dialog.xul (/calendar/base/content/calendar-event-dialog.xul)
+    content/calendar/calendar-attendee-list.xml (/calendar/base/content/calendar-attendee-list.xml)
     content/calendar/calendar-item-editing.js (/calendar/base/content/calendar-item-editing.js)
     content/calendar/calendar-month-view.xml (/calendar/base/content/calendar-month-view.xml)
     content/calendar/calendar-view-bindings.css (/calendar/base/content/calendar-view-bindings.css)
