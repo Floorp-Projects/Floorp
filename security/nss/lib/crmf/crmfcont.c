@@ -105,7 +105,7 @@ crmf_add_new_control(CRMFCertRequest *inCertReq,SECOidTag inTag,
 			  
 }
 
-SECStatus
+static SECStatus
 crmf_add_secitem_control(CRMFCertRequest *inCertReq, SECItem *value,
 			 SECOidTag inTag)
 {
@@ -315,7 +315,7 @@ crmf_copy_encryptedkey(PRArenaPool       *poolp,
     return SECFailure;
 }
 
-CRMFPKIArchiveOptions*
+static CRMFPKIArchiveOptions*
 crmf_create_encr_pivkey_option(CRMFEncryptedKey *inEncryptedKey)
 {
     CRMFPKIArchiveOptions *newArchOpt;
@@ -655,7 +655,7 @@ crmf_decode_params(SECItem *inParams)
     return params;
 }
 
-int
+static int
 crmf_get_key_size_from_mech(CK_MECHANISM_TYPE mechType)
 {
     CK_MECHANISM_TYPE keyGen = PK11_GetKeyGen(mechType);
@@ -1101,7 +1101,7 @@ CRMF_CertRequestSetPKIArchiveOptions(CRMFCertRequest       *inCertReq,
     return SECFailure;
 }
 
-SECStatus
+static SECStatus
 crmf_destroy_control(CRMFControl *inControl, PRBool freeit)
 {
     PORT_Assert(inControl != NULL);
