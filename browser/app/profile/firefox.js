@@ -77,7 +77,7 @@ pref("extensions.blocklist.url", "https://addons.mozilla.org/blocklist/1/%APP_ID
 pref("extensions.blocklist.detailsURL", "http://www.mozilla.com/blocklist/");
 
 // Dictionary download preference
-pref("browser.dictionaries.download.url", "https://addons.mozilla.org/%LOCALE%/firefox/%VERSION%/dictionaries/");
+pref("browser.dictionaries.download.url", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/firefox/%VERSION%/dictionaries/");
 
 // App-specific update preferences
 

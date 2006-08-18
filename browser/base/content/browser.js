@@ -5286,7 +5286,7 @@ nsContextMenu.prototype = {
 
     addDictionaries : function()
     {
-      var uri = gPrefService.getCharPref("browser.dictionaries.download.url");
+      var uri = formatURL("browser.dictionaries.download.url", null, true);
 
       var locale = "-";
       try {
