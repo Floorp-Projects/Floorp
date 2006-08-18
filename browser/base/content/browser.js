@@ -6420,17 +6420,32 @@ var FeedHandler = {
   },
   
   /**
+   * The click handler for the Feed icon in the location bar. Opens the
+   * subscription page if user is not given a choice of feeds.
+   * (Otherwise the list of available feeds will be presented to the 
+   * user in a popup menu.)
+   */
+  onFeedButtonClick: function(event) {
+    event.stopPropagation();
+
+    if (event.target.hasAttribute("feed") &&
+        event.eventPhase == Event.AT_TARGET &&
+        (event.button == 0 || event.button == 1)) {
+        this.subscribeToFeed(null, event);
+    }
+  },
+  
+  /**
    * Called when the user clicks on the Feed icon in the location bar. 
    * Builds a menu of unique feeds associated with the page, and if there
    * is only one, shows the feed inline in the browser window. 
-   * @param   event
-   *          The popupshowing event from the feed list menupopup
+   * @param   menuPopup
+   *          The feed list menupopup to be populated.
    * @returns true if the menu should be shown, false if there was only
    *          one feed and the feed should be shown inline in the browser
    *          window (do not show the menupopup).
    */
-  buildFeedList: function(event) {
-    var menuPopup = event.target;
+  buildFeedList: function(menuPopup) {
     var feeds = gBrowser.selectedBrowser.feeds;
     if (feeds == null) {
       // XXX hack -- menu opening depends on setting of an "open"
@@ -6449,10 +6464,8 @@ var FeedHandler = {
     // Get the list of unique feeds, and if there's only one unique entry, 
     // show the feed in the browser rather than displaying a menu. 
     var feeds = this.harvestFeeds(feeds);
-    if (feeds.length == 1) {
-      this.subscribeToFeed(feeds[0].href);
+    if (feeds.length == 1)
       return false;
-    }
 
     // Build the menu showing the available feed choices for viewing. 
     for (var i = 0; i < feeds.length; ++i) {
@@ -6479,22 +6492,22 @@ var FeedHandler = {
    *   3. Page has multiple feeds and user selects from feed icon popup
    *   4. Page has multiple feeds and user selects from Subscribe submenu
    * @param   href
-   *          The feed to subscribe to
+   *          The feed to subscribe to. May be null, in which case the
+   *          event target's feed attribute is examined.
+   * @param   event
+   *          The event this method is handling. Used to decide where 
+   *          to open the preview UI. (Optional, unless href is null)
    */
-  subscribeToFeed: function(href) {
+  subscribeToFeed: function(href, event) {
+#ifdef MOZ_FEEDS
+      // Just load the feed in the content area to either subscribe or show the
+      // preview UI
+      if (!href)
+        href = event.target.getAttribute("feed");
+      this.loadFeed(href, event);
+#else
 #ifdef MOZ_PLACES
-#ifdef MOZ_FEEDS
-      // Just load the feed in the content area to either subscribe or show the
-      // preview UI
-      this.loadFeed(href);
-#else
       PlacesCommandHook.addLiveBookmark(feeds[0].href);
-#endif
-#else
-#ifdef MOZ_FEEDS
-      // Just load the feed in the content area to either subscribe or show the
-      // preview UI
-      this.loadFeed(href);
 #else
       this.addLiveBookmark(feeds[0].href);
 #endif
@@ -6580,10 +6593,10 @@ var FeedHandler = {
 #endif
   
 #ifdef MOZ_FEEDS
-  loadFeed: function(href) {
+  loadFeed: function(href, event) {
     var feeds = gBrowser.selectedBrowser.feeds;
     try {
-      loadURI(href, null, null, false);
+      openUILink(href, event, false, true, false, null);
     }
     finally {
       // We might default to a livebookmarks modal dialog, 
@@ -6608,8 +6621,8 @@ var FeedHandler = {
 
     var feeds = gBrowser.mCurrentBrowser.feeds;
     if (!feeds || feeds.length == 0) {
-      if (feedButton.hasAttribute("feeds"))
-        feedButton.removeAttribute("feeds");
+      feedButton.removeAttribute("feeds");
+      feedButton.removeAttribute("feed");
       feedButton.setAttribute("tooltiptext", 
                               gNavigatorBundle.getString("feedNoFeeds"));
       this._feedMenuitem.setAttribute("disabled", "true");
@@ -6629,7 +6642,10 @@ var FeedHandler = {
       if (feeds.length > 1) {
         this._feedMenuitem.setAttribute("hidden", "true");
         this._feedMenupopup.removeAttribute("hidden");
+        feedButton.removeAttribute("feed");
       } else {
+        feedButton.setAttribute("feed", feeds[0].href);
+        this._feedMenuitem.setAttribute("feed", feeds[0].href);
         this._feedMenuitem.removeAttribute("disabled");
         this._feedMenuitem.removeAttribute("hidden");
         this._feedMenupopup.setAttribute("hidden", "true");

@@ -253,18 +253,15 @@
                       class="plain"
                       id="feed-button"
                       chromedir="&locale.dir;"
-                      onclick="event.stopPropagation();">
+                      onclick="return FeedHandler.onFeedButtonClick(event);">
                 <menupopup position="after_end"
-                           onpopupshowing="return FeedHandler.buildFeedList(event);"
+                           onpopupshowing="return FeedHandler.buildFeedList(this);"
+#ifdef MOZ_FEEDS
+                           oncommand="return FeedHandler.subscribeToFeed(null, event);"
+                           onclick="checkForMiddleClick(this, event);"/>
+#else
 #ifdef MOZ_PLACES
-#ifdef MOZ_FEEDS
-                           oncommand="FeedHandler.loadFeed(event.target.getAttribute('feed'));" />
-#else
                            oncommand="PlacesCommandHook.addLiveBookmark(event.target.getAttribute('feed'));" />
-#endif
-#else
-#ifdef MOZ_FEEDS
-                           oncommand="FeedHandler.loadFeed(event.target.getAttribute('feed'));" />
 #else
                            oncommand="FeedHandler.addLiveBookmark(event.target.getAttribute('feed'));" />
 #endif

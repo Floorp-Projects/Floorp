@@ -440,7 +440,8 @@
 #else
                           label="&addLiveBookmarkMenuitem.label;"
 #endif
-                          oncommand="return FeedHandler.buildFeedList(event);"
+                          oncommand="return FeedHandler.subscribeToFeed(null, event);"
+                          onclick="checkForMiddleClick(this, event);"
                           disabled="true"/>
                 <menu id="subscribeToPageMenupopup"
 #ifdef MOZ_FEEDS
@@ -450,8 +451,9 @@
 #endif
                       hidden="true">
                   <menupopup id="subscribeToPageSubmenuMenupopup" 
-                             onpopupshowing="return FeedHandler.buildFeedList(event);" 
-                             oncommand="return FeedHandler.subscribeToFeed(event.target.getAttribute('feed'));"/>
+                             onpopupshowing="return FeedHandler.buildFeedList(event.target);" 
+                             oncommand="return FeedHandler.subscribeToFeed(null, event);"
+                             onclick="checkForMiddleClick(this, event);"/>
                 </menu>
                 <menuitem id="bookmarkAllCmd"
 # Accel+Shift+A-F are reserved on GTK2
@@ -489,7 +491,8 @@
 #else
                 label="&addLiveBookmarkMenuitem.label;"
 #endif
-                oncommand="return FeedHandler.buildFeedList(event);"
+                oncommand="return FeedHandler.subscribeToFeed(null, event);"
+                onclick="checkForMiddleClick(this, event);"
                 disabled="true"/>
       <menu id="subscribeToPageMenupopup"
 #ifdef MOZ_FEEDS
@@ -499,8 +502,9 @@
 #endif
             hidden="true">
         <menupopup id="subscribeToPageSubmenuMenupopup" 
-                   onpopupshowing="return FeedHandler.buildFeedList(event);" 
-                   oncommand="return FeedHandler.subscribeToFeed(event.target.getAttribute('feed'));"/>
+                   onpopupshowing="return FeedHandler.buildFeedList(event.target);" 
+                   oncommand="return FeedHandler.subscribeToFeed(null, event);"
+                   onclick="checkForMiddleClick(this, event);"/>
       </menu>
       <menuitem label="&addCurPagesCmd.label;" 
                 command="Browser:BookmarkAllTabs" key="bookmarkAllTabsKb"/>
