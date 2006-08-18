@@ -65,6 +65,12 @@ foreach my $file (@testitems) {
     $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
     next if (!$file); # skip null entries
 
+    # Skip mod_perl.pl in all cases. It doesn't compile correctly from the command line.
+    if ($file eq 'mod_perl.pl') {
+        ok(1, "Skipping mod_perl.pl");
+        next;
+    }
+
     # Check that we have a DBI module to support the DB, if this is a database
     # module (but not Schema)
     if ($file =~ m#Bugzilla/DB/([^/]+)\.pm$# && $file ne "Bugzilla/DB/Schema.pm") {
