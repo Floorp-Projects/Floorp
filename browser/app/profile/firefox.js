@@ -181,9 +181,10 @@ pref("general.autoScroll", true);
 // is the default browser.
 pref("browser.shell.checkDefaultBrowser", true);
 
-// 0 = blank, 1 = home (browser.startup.homepage), 2 = last, 3 = last session
+// 0 = blank, 1 = home (browser.startup.homepage), 2 = last
+// XXXBlake Remove this stupid pref
 pref("browser.startup.page",                1);
-pref("browser.startup.homepage",            "resource:/browserconfig.properties");
+pref("browser.startup.homepage",	          "resource:/browserconfig.properties");
 
 pref("browser.cache.disk.capacity",         50000);
 pref("browser.enable_automatic_image_resizing", true);
@@ -516,18 +517,3 @@ pref("browser.safebrowsing.provider.0.reportGenericURL", "http://{moz:locale}.ph
 pref("browser.safebrowsing.provider.0.reportErrorURL", "http://{moz:locale}.phish-error.mozilla.com/?hl={moz:locale}");
 pref("browser.safebrowsing.provider.0.reportPhishURL", "http://{moz:locale}.phish-report.mozilla.com/?hl={moz:locale}");
 #endif
-
-pref("browser.sessionstore.enabled", true);
-pref("browser.sessionstore.resume_from_crash", true);
-pref("browser.sessionstore.resume_session_once", false);
-
-// minimal interval between two save operations in milliseconds
-pref("browser.sessionstore.interval", 10000);
-// maximum amount of POSTDATA to be saved in bytes per history entry (-1 = all of it)
-// (NB: POSTDATA will either be saved entirely or not at all)
-pref("browser.sessionstore.postdata", 0);
-// on which sites to save text data, POSTDATA and cookies
-// 0 = everywhere, 1 = unencrypted sites, 2 = nowhere
-pref("browser.sessionstore.privacy_level", 1);
-// how many tabs can be reopened (per window)
-pref("browser.sessionstore.max_tabs_undo", 10);

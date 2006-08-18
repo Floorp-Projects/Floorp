@@ -6808,7 +6808,14 @@ var AugmentTabs = {
     this.tabContextMenu.addEventListener("popupshowing", this.onTabContextMenuLoad, false);
 
     // add the tab context menu for undo-close-tab (bz254021)
-    if (gPrefService.getBoolPref("browser.sessionstore.enabled")) {
+    var ssEnabled = true;
+    var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefBranch);
+    try {
+      ssEnabled = prefBranch.getBoolPref("browser.sessionstore.enabled");
+    } catch (ex) {}
+
+    if (ssEnabled)
       this._addUndoCloseTabContextMenu();
   },
 
