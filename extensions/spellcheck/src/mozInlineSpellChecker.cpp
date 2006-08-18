@@ -200,7 +200,7 @@ mozInlineSpellStatus::InitForEditorChange(
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    rv = nsrange->ComparePoint(aStartNode, aStartOffset, &cmpResult);
+    rv = nsrange->ComparePoint(aEndNode, aEndOffset, &cmpResult);
     NS_ENSURE_SUCCESS(rv, rv);
     if (cmpResult > 0) { // given range ends after
       rv = mRange->SetEnd(aEndNode, aEndOffset);
