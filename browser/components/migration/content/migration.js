@@ -87,11 +87,14 @@ var MigrationWizard = {
   // 1 - Import Source
   onImportSourcePageShow: function ()
   {
+    // Reference to the "From File" radio button 
+    var fromfile = null;
+
     //XXXquark This function is called before init, so check for bookmarks here
     if ("arguments" in window && window.arguments[0] == "bookmarks") {
       this._bookmarks = true;
 
-      var fromfile = document.getElementById("fromfile");
+      fromfile = document.getElementById("fromfile");
       fromfile.hidden = false;
 
       var importBookmarks = document.getElementById("importBookmarks");
@@ -103,8 +106,9 @@ var MigrationWizard = {
 
     this._wiz.canRewind = false;
 
-    // The migrator to select
-    var selectedMigrator = null;
+    // The migrator to select. If the "fromfile" migrator is available, use it
+    // as the default in case we have no other migrators.
+    var selectedMigrator = fromfile;
 
     // Figure out what source apps are are available to import from:
     var group = document.getElementById("importSourceGroup");
