@@ -77,6 +77,7 @@ ScopedAppData::ScopedAppData(const nsXREAppData* aAppData)
   SetAllocatedString(this->ID, aAppData->ID);
   SetAllocatedString(this->copyright, aAppData->copyright);
   SetStrongPtr(this->directory, aAppData->directory);
+  this->flags = aAppData->flags;
 
   if (aAppData->size > offsetof(nsXREAppData, xreDirectory)) {
     SetStrongPtr(this->xreDirectory, aAppData->xreDirectory);
