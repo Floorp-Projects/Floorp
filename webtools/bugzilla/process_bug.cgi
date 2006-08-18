@@ -1726,12 +1726,16 @@ foreach my $id (@idlist) {
         my @oldlist = @{$dbh->selectcol_arrayref("SELECT $target FROM dependencies
                                                   WHERE $me = ? ORDER BY $target",
                                                   undef, $id)};
-        @dependencychanged{@oldlist} = 1;
+
+        # Only bugs depending on the current one should get notification.
+        # Bugs blocking the current one never get notification, unless they
+        # are added or removed from the dependency list. This case is treated
+        # below.
+        @dependencychanged{@oldlist} = 1 if ($me eq 'dependson');
 
         if (defined $cgi->param($target)) {
             my %snapshot;
             my @newlist = sort {$a <=> $b} @{$deps{$target}};
-            @dependencychanged{@newlist} = 1;
 
             while (0 < @oldlist || 0 < @newlist) {
                 if (@oldlist == 0 || (@newlist > 0 &&
@@ -1768,6 +1772,9 @@ foreach my $id (@idlist) {
                 }
                 LogDependencyActivity($id, $oldsnap, $target, $me, $timestamp);
                 $check_dep_bugs = 1;
+                # All bugs added or removed from the dependency list
+                # must be notified.
+                @dependencychanged{@keys} = 1;
             }
         }
     }
