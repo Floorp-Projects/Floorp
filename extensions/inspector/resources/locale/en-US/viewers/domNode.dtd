@@ -50,7 +50,7 @@
 <!ENTITY namespaceTitle.XML.label "XML">
 <!ENTITY namespaceTitle.XHTML.label "XHTML">
 <!ENTITY namespaceTitle.XLink.label "XLink">
-<!ENTITY namespaceTitle.XSLT.label "XSTL">
+<!ENTITY namespaceTitle.XSLT.label "XSLT">
 <!ENTITY namespaceTitle.XBL.label "XBL">
 <!ENTITY namespaceTitle.MathML.label "MathML">
 <!ENTITY namespaceTitle.RDF.label "RDF">
