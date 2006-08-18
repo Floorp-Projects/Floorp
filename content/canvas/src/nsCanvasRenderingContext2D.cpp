@@ -151,17 +151,20 @@ _cairo_win32_surface_create_dib (cairo_format_t format,
 #include <Quickdraw.h>
 #include <CGContext.h>
 
-#ifndef kCGBitmapByteOrder32Host
+/* This has to be 0 on machines less than 10.4 (which are always PPC);
+ * otherwise the older CG gets confused if we pass in
+ * kCGBitmapByteOrder32Big since it doesn't understand it.
+ */
 #ifdef __BIG_ENDIAN__
-/* kCGBitmapByteOrder32Big */
-#define kCGBitmapByteOrder32Host (4<<12)
+#define CG_BITMAP_BYTE_ORDER_FLAG 0
 #else    /* Little endian. */
-/* kCGBitmapByteOrder32Little */
-#define kCGBitmapByteOrder32Host (2<<12)
-#endif
+/* x86, and will be a 10.4u SDK; ByteOrder32Host will be defined */
+#define CG_BITMAP_BYTE_ORDER_FLAG kCGBitmapByteOrder32Host
 #endif
 
+#ifndef MOZ_CAIRO_GFX
 #include "nsDrawingSurfaceMac.h"
+#endif
 
 #endif
 
@@ -958,7 +961,7 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
                                                  NULL);
     CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
     img = CGImageCreate (mWidth, mHeight, 8, 32, mWidth * 4, rgb,
-                         (CGImageAlphaInfo)(kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host),
+                         (CGImageAlphaInfo)(kCGImageAlphaPremultipliedFirst | CG_BITMAP_BYTE_ORDER_FLAG),
                          dataProvider, NULL, false, kCGRenderingIntentDefault);
     CGColorSpaceRelease (rgb);
     CGDataProviderRelease (dataProvider);
