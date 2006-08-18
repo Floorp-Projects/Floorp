@@ -103,8 +103,8 @@
     <command id="cmd_textZoomReduce" oncommand="ZoomManager.prototype.getInstance().reduce();"/>
     <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
     <command id="cmd_find" oncommand="gFindBar.onFindCmd();"/>
-    <command id="cmd_findAgain" oncommand="gFindBar.onFindAgainCmd();"/>
-    <command id="cmd_findPrevious" oncommand="gFindBar.onFindPreviousCmd();"/>
+    <command id="cmd_findAgain" oncommand="gFindBar.onFindAgainCmd(false);"/>
+    <command id="cmd_findPrevious" oncommand="gFindBar.onFindAgainCmd(true);"/>
     <command id="cmd_copy" oncommand="goDoCommand('cmd_copy')" disabled="true"/>
     <command id="cmd_selectAll" oncommand="goDoCommand('cmd_selectAll')"/>
   </commandset>

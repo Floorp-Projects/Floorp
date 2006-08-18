@@ -1500,10 +1500,7 @@ function MsgFind()
 }
 function MsgFindAgain(reverse)
 {
-  if (reverse)
-    gFindBar.onFindPreviousCmd();
-  else
-    gFindBar.onFindAgainCmd();
+  gFindBar.onFindAgainCmd(reverse);
 }
 
 function MsgFilters(emailAddress, folder)

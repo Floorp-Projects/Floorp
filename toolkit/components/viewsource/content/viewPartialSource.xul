@@ -89,8 +89,8 @@
   <command id="cmd_close" oncommand="window.close();"/>
   <commandset id="editMenuCommands"/>
   <command id="cmd_find" oncommand="gFindBar.onFindCmd();"/>
-  <command id="cmd_findAgain" oncommand="gFindBar.onFindAgainCmd();"/>
-  <command id="cmd_findPrevious" oncommand="gFindBar.onFindPreviousCmd();"/>    
+  <command id="cmd_findAgain" oncommand="gFindBar.onFindAgainCmd(false);"/>
+  <command id="cmd_findPrevious" oncommand="gFindBar.onFindAgainCmd(true);"/>
   <command id="cmd_goToLine" oncommand="ViewSourceGoToLine();" disabled="true"/>
   <command id="cmd_highlightSyntax" oncommand="highlightSyntax();"/>
   <command id="cmd_wrapLongLines" oncommand="wrapLongLines()"/>
