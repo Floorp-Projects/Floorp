@@ -948,6 +948,7 @@ xulrunner/app/profile/Makefile
 xulrunner/app/profile/chrome/Makefile
 xulrunner/app/profile/extensions/Makefile
 xulrunner/installer/Makefile
+xulrunner/installer/mac/Makefile
 "
 
 MAKEFILES_xulapp="
