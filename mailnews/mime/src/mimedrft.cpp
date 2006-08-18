@@ -601,8 +601,15 @@ mime_draft_process_attachments(mime_draft_data *mdd)
       {
         if (tmpFile->real_name)
           NS_MsgSACopy ( &(tmp->real_name), tmpFile->real_name );
-        else
-          NS_MsgSACopy ( &(tmp->real_name), tmpSpec.get() );
+        else {
+          if (PL_strstr(tmpFile->type, MESSAGE_RFC822))
+            // we have the odd case of processing an e-mail that had an unnamed
+            // eml message attached
+            NS_MsgSACopy( &(tmp->real_name), "ForwardedMessage.eml" );
+
+          else
+            NS_MsgSACopy ( &(tmp->real_name), tmpSpec.get() );
+        }
       }
     }
 
