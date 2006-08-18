@@ -502,6 +502,9 @@ pref("browser.safebrowsing.provider.0.lookupURL", "http://sb.google.com/safebrow
 pref("browser.safebrowsing.provider.0.keyURL", "https://www.google.com/safebrowsing/getkey?");
 pref("browser.safebrowsing.provider.0.reportURL", "http://sb.google.com/safebrowsing/report?");
 
+// privacy policy -- must be chrome URL
+pref("browser.safebrowsing.provider.0.privacy.url", "chrome://browser/content/preferences/phishEULA.xhtml");
+
 // HTML report pages
 pref("browser.safebrowsing.provider.0.reportGenericURL", "http://www.mozilla.org/projects/bonecho/anti-phishing/report_general/?hl={moz:locale}");
 pref("browser.safebrowsing.provider.0.reportErrorURL", "http://www.mozilla.org/projects/bonecho/anti-phishing/report_error/?hl={moz:locale}");
