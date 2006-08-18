@@ -5,13 +5,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" version="-//W3C//DTD XHTML 1.1//EN" xml:lang="en">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-	<link rel="stylesheet" href="css/screen.css" 
-type="text/css" media="screen" />
+	<?=$html->css('screen')?>
+	<?=$html->css('developers')?>
 	<title>Mozilla Add-ons :: Add Features to Mozilla Software</title>
 	
 </head>
 <body>
-<div style="text-align: center;"><img src="images/remora2.png" /></div>
+<div style="text-align: center;"><?=$html->image('remora2.png')?></div>
 <?php echo $content_for_layout ?>
 		<!-- included for sake of consistency with current site -->
 		<div style="clear:both"><br /></div>

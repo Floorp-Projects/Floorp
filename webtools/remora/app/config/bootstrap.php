@@ -1,5 +1,5 @@
 <?php
-/* SVN FILE: $Id: bootstrap.php,v 1.1 2006/08/14 23:54:56 sancus%off.net Exp $ */
+/* SVN FILE: $Id: bootstrap.php,v 1.2 2006/08/18 04:26:43 fligtar%gmail.com Exp $ */
 /**
  * Short description for file.
  *
@@ -21,9 +21,9 @@
  * @package			cake
  * @subpackage		cake.app.config
  * @since			CakePHP v 0.10.8.2117
- * @version			$Revision: 1.1 $
+ * @version			$Revision: 1.2 $
  * @modifiedby		$LastChangedBy: phpnut $
- * @lastmodified	$Date: 2006/08/14 23:54:56 $
+ * @lastmodified	$Date: 2006/08/18 04:26:43 $
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 /**
@@ -42,5 +42,16 @@
  * $controllerPaths = array('this path to controllers', 'second full path to controllers', 'etc...');
  *
  */
+
+//Path defines - no trailing slashes
+define('REPO_PATH', WWW_ROOT.'/files'); // XPI/JAR repository path
+define('FTP_URL', 'http://ftp.mozilla.org/pub/mozilla.org'); // FTP
+
+//Addontype ids
+define('ADDON_EXTENSION', '1');
+define('ADDON_THEME', '2');
+define('ADDON_DICTIONARY', '3');
+define('ADDON_SEARCH', '4');
+
 //EOF
 ?>
