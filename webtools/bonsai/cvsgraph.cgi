@@ -133,28 +133,28 @@ else {
     &print_top("CVS Graph for " . $file_tail);
     print <<"--endquote--" if $::use_dom;
 <script $::script_type><!--
-var r
+var r;
 function showMessage(rev) {
     if (r) {
-        r.style.display='none'
+        r.style.display='none';
     }
-    r = document.getElementById('rev_'+rev)
+    r = document.getElementById('rev_'+rev);
     if (!r)
-        return false
-    var l = document.getElementById('link_'+rev)
-    var t = l.offsetTop + 20
-    r.style.top = t
-    r.style.left = l.offsetLeft + l.offsetWidth + 20
-    r.style.display=''
-    return true
+        return false;
+    var l = document.getElementById('link_'+rev);
+    var coords = l.getAttribute("coords").split(",");
+    r.style.top = (coords[1]-0+20)+"px";
+    r.style.left = (coords[2]-0+20)+"px";
+    r.style.display='';
+    return true;
 }
 
 function hideMessage() {
     if (r) {
-        r.style.display='none'
-        return true
+        r.style.display='none';
+        return true;
     }
-    return false
+    return false;
 }
 //--></script>
 
@@ -165,7 +165,7 @@ function hideMessage() {
     background-color: #FFFFFF;
     color: #000000;
     padding: 5;
-    position: fixed;
+    position: absolute;
 }
 </style>
 --endquote--
