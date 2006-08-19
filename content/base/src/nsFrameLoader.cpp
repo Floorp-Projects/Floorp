@@ -165,8 +165,6 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
 
   // Get our principal
   nsIPrincipal* principal = mOwnerContent->NodePrincipal();
-  NS_ASSERTION(principal == doc->NodePrincipal(),
-               "Principal mismatch.  Should not happen");
 
   // Check if we are allowed to load absURL
   rv = secMan->CheckLoadURIWithPrincipal(principal, aURI,
@@ -179,38 +177,16 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
   rv = CheckForRecursiveLoad(aURI);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  // Is our principal the system principal?
-  nsCOMPtr<nsIPrincipal> sysPrin;
-  rv = secMan->GetSystemPrincipal(getter_AddRefs(sysPrin));
+  // We'll use our principal, not that of the document loaded inside us.
+  // This is very important; needed to prevent XSS attacks on documents
+  // loaded in subframes!
+  loadInfo->SetOwner(principal);
+
+  nsCOMPtr<nsIURI> referrer;
+  rv = principal->GetURI(getter_AddRefs(referrer));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (principal == sysPrin) {
-    // We're a chrome node.  Belt and braces -- inherit the principal for this
-    // load instead of just forcing the system principal.  That way if we have
-    // something loaded already the principal used will be that of what we
-    // already have loaded.
-
-    // XXX bz I'd love to nix this, but the problem is chrome calling
-    // setAttribute() on an iframe or browser and passing in a javascript: URI.
-    // We probably don't want to run that with chrome privileges... Though in
-    // similar circumstances, if one sets window.location.href from chrome we
-    // _do_ run that with chrome privileges, so maybe we should do the same
-    // here?
-    loadInfo->SetInheritOwner(PR_TRUE);
-
-    // Also, in this case we don't set a referrer, just in case.
-  } else {
-    // We'll use our principal, not that of the document loaded inside us.
-    // This is very important; needed to prevent XSS attacks on documents
-    // loaded in subframes!
-    loadInfo->SetOwner(principal);
-
-    nsCOMPtr<nsIURI> referrer;
-    rv = principal->GetURI(getter_AddRefs(referrer));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    loadInfo->SetReferrer(referrer);
-  }
+  loadInfo->SetReferrer(referrer);
 
   // Kick off the load...
   rv = mDocShell->LoadURI(aURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE,
