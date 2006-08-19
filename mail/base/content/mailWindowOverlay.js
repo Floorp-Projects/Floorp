@@ -727,6 +727,97 @@ function InitMessageTags(menuPopup)
   }
 }
 
+function backToolbarMenu_init(menuPopup)
+{
+  populateHistoryMenu(menuPopup, true);
+}
+
+var gNavDebug = true;
+function navDebug(str)
+{
+  if (gNavDebug)
+    dump(str);
+}
+
+function populateHistoryMenu(menuPopup, isBackMenu)
+{
+  
+  // remove existing entries
+  while (menuPopup.firstChild)
+    menuPopup.removeChild(menuPopup.firstChild);
+  var curPos = new Object;
+  var numEntries = new Object;
+  var historyEntries = new Object;
+  messenger.getNavigateHistory(curPos, numEntries, historyEntries);
+  curPos.value = curPos.value * 2;
+  navDebug("curPos = " + curPos.value + " numEntries = " + numEntries.value + "\n");
+  var historyArray = historyEntries.value;
+  var folder;
+  var newMenuItem;
+  if (GetLoadedMessage())
+  {
+    if (!isBackMenu)
+      curPos.value += 2;
+    else
+      curPos.value -= 2;
+  }
+  // for populating the back menu, we want the most recently visited
+  // messages first in the menu. So we go backward from curPos to 0.
+  // For the forward menu, we want to go forward from curPos to the end.
+  
+  var relPos = 0;
+  for (var i = curPos.value; (isBackMenu) ? i >= 0 : i < historyArray.length; i += ((isBackMenu) ? -2 : 2))
+  {
+    navDebug("history[" + i + "] = " + historyArray[i] + "\n");
+    navDebug("history[" + i + "] = " + historyArray[i + 1] + "\n");
+    folder = RDF.GetResource(historyArray[i + 1]).QueryInterface(Components.interfaces.nsIMsgFolder);
+    navDebug("folder URI = " + folder.URI + "pretty name " + folder.prettyName + "\n");
+    var menuText = "";
+    
+    var msgHdr = messenger.msgHdrFromURI(historyArray[i]);
+    if (!IsCurrentLoadedFolder(folder))
+      menuText = folder.prettyName + " - ";
+    menuText += msgHdr.subject;
+    menuText += ":";
+    menuText += msgHdr.author;
+    newMenuItem = document.createElement('menuitem');
+    newMenuItem.setAttribute('label', menuText);
+    relPos += isBackMenu ? -1 : 1;
+    newMenuItem.setAttribute('value',  relPos);
+    newMenuItem.setAttribute('oncommand', 'NavigateToUri(event.target); event.stopPropagation();');
+    menuPopup.appendChild(newMenuItem);
+    if (! (relPos % 20))
+      break;
+  }
+  
+}
+
+function NavigateToUri(target)
+{
+  var historyIndex = target.getAttribute('value');
+  var folderUri = messenger.getFolderUriAtNavigatePos(historyIndex);
+  var msgUri = messenger.getMsgUriAtNavigatePos(historyIndex);
+  var folder = RDF.GetResource(folderUri).QueryInterface(Components.interfaces.nsIMsgFolder);
+  var msgHdr = messenger.msgHdrFromURI(msgUri);
+  navDebug("navigating from " + messenger.navigatePos + " by " + historyIndex + " to " + msgUri + "\n");
+  // this "- 0" seems to ensure that historyIndex is treated as an int, not a string.
+  messenger.navigatePos += historyIndex - 0;
+  if (IsCurrentLoadedFolder(folder))
+  {
+    gDBView.selectMsgByKey(msgHdr.messageKey);
+  }
+  else
+  {
+    gStartMsgKey = msgHdr.messageKey;
+    SelectFolder(folderUri);
+  }
+}
+
+function forwardToolbarMenu_init(menuPopup)
+{
+  populateHistoryMenu(menuPopup, false);
+}
+
 function InitMessageMark()
 {
   var areMessagesRead = SelectedMessagesAreRead();
@@ -1896,8 +1987,6 @@ function MsgRefresh() {}
 function MsgViewPageInfo() {}
 function MsgFirstUnreadMessage() {}
 function MsgFirstFlaggedMessage() {}
-function MsgGoBack() {}
-function MsgGoForward() {}
 function MsgAddSenderToAddressBook() {}
 function MsgAddAllToAddressBook() {}
 

@@ -29,8 +29,7 @@
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
-# use your version of this file under the terms of the MPL, indicate your
-# decision by deleting the provisions above and replace them with the notice
+# use your version of this file under the terms of the MPL, indicate yourÄ
 # and other provisions required by the GPL or the LGPL. If you do not delete
 # the provisions above, a recipient may use your version of this file under
 # the terms of any one of the MPL, the GPL or the LGPL.
@@ -212,6 +211,8 @@
   <command id="cmd_previousUnreadMsg" oncommand="goDoCommand('cmd_previousUnreadMsg')" disabled="true"/>
   <command id="cmd_previousFlaggedMsg" oncommand="goDoCommand('cmd_previousFlaggedMsg')" disabled="true"/>
   <command id="cmd_goStartPage" oncommand="goDoCommand('cmd_goStartPage');"/>
+  <command id="cmd_goForward" oncommand="goDoCommand('cmd_goForward')" disabled="true"/>
+  <command id="cmd_goBack" oncommand="goDoCommand('cmd_goBack')" disabled="true"/>
 </commandset>
 
 <commandset id="mailMessageMenuItems"
@@ -246,6 +247,8 @@
   <command id="button_getNewMessages"/>
   <command id="button_print"/>
   <command id="button_next"/>
+  <command id="button_goBack"/>
+  <command id="button_goForward"/>
   <command id="button_file"/>
   <command id="cmd_delete"/>
   <command id="button_junk"/>
@@ -345,6 +348,8 @@
   <key id="key_nextUnreadThread" key="&nextUnreadThreadCmd.key;"     oncommand="goDoCommand('cmd_nextUnreadThread')"/>
   <key id="key_previousMsg" key="&previousMsgCmd.key;"               oncommand="goDoCommand('cmd_previousMsg')"/>
   <key id="key_previousUnreadMsg" key="&previousUnreadMsgCmd.key;"   oncommand="goDoCommand('cmd_previousUnreadMsg')"/>
+  <key id="key_goForward" key="&goForwardCmd.commandKey;"            oncommand="goDoCommand('cmd_goForward')"/>
+  <key id="key_goBack" key="&goBackCmd.commandKey;"                  oncommand="goDoCommand('cmd_goBack')"/>
   <key id="key_reply" key="&replyMsgCmd.key;"                        oncommand="goDoCommand('cmd_reply')" modifiers="accel"/>
   <key id="key_replyall" key="&replyToAllMsgCmd.key;"                oncommand="goDoCommand('cmd_replyall')" modifiers="accel, shift"/>
   <key id="key_forward" key="&forwardMsgCmd.key;"                    oncommand="goDoCommand('cmd_forward')" modifiers="accel"/>
@@ -1366,6 +1371,8 @@
               <menuitem label="&prevStarredMsgCmd.label;" accesskey="&prevStarredMsgCmd.accesskey;" observes="cmd_previousFlaggedMsg"/>
             </menupopup>
           </menu>
+          <menuitem label="&goForwardCmd.label;" key="key_goForward" observes="cmd_goForward"/>
+          <menuitem label="&goBackCmd.label;" key="key_goBack" observes="cmd_goBack"/>
           <menuseparator id="goNextSeparator"/>
           <menuitem id="goStartPage" label="&startPageCmd.label;" accesskey="&startPageCmd.accesskey;" command="cmd_goStartPage"/>
         </menupopup>
@@ -1830,6 +1837,20 @@
         <menupopup/>
       </toolbarbutton>
       
+      <toolbarbutton class="toolbarbutton-1" type="menu-button" id="button-goback" label="&backButton.label;" chromedir="&locale.dir;" oncommand="goDoCommand('cmd_goBack')" tooltiptext="&goBackButton.tooltip;" observes="button_goBack">
+         <menupopup onpopupshowing="backToolbarMenu_init(this)">
+          <menuitem label="&goBackCmd.label;" observes="cmd_goBack"/>
+          <menuseparator/>
+        </menupopup>
+      </toolbarbutton>  
+          
+      <toolbarbutton class="toolbarbutton-1" type="menu-button" id="button-goforward" label="&goForwardButton.label;" chromedir="&locale.dir;" oncommand="goDoCommand('cmd_goForward')" tooltiptext="&goForwardButton.tooltip;" observes="button_goForward">
+        <menupopup onpopupshowing="forwardToolbarMenu_init(this)">
+          <menuitem label="&goForwardCmd.label;" observes="cmd_goForward"/>
+          <menuseparator/>
+        </menupopup>
+      </toolbarbutton>
+
       <toolbarbutton class="toolbarbutton-1" id="button-previous" label="&previousButton.label;" chromedir="&locale.dir;" oncommand="goDoCommand('button_previous')" tooltiptext="&previousButton.tooltip;" observes="button_previous"/>      
       <toolbarbutton class="toolbarbutton-1" id="button-next"     label="&nextButton.label;" chromedir="&locale.dir;" oncommand="goDoCommand('button_next')" tooltiptext="&nextButton.tooltip;" observes="button_next"/>
 

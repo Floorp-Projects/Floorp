@@ -220,42 +220,66 @@ function GetRootFoldersInFolderPaneOrder()
 
 function CrossFolderNavigation(type)
 {
-  if (type != nsMsgNavigationType.nextUnreadMessage) {
-    // currently, only do cross folder navigation for "next unread message"
-    return;
-  }
-
-  var nextMode = pref.getIntPref("mailnews.nav_crosses_folders");
-  // 0: "next" goes to the next folder, without prompting
-  // 1: "next" goes to the next folder, and prompts (the default)
-  // 2: "next" does nothing when there are no unread messages
-
-  // not crossing folders, don't find next
-  if (nextMode == 2)
+  if (type != nsMsgNavigationType.nextUnreadMessage && type != nsMsgNavigationType.forward
+      && type != nsMsgNavigationType.back)    // currently, only do cross folder navigation for "next unread message"
     return;
 
-  var folder = FindNextFolder();
-  if (folder && (gDBView.msgFolder.URI != folder.URI)) {
-    switch (nextMode) {
-      case 0:
-        // do this unconditionally
-        gNextMessageAfterLoad = type;
-        SelectFolder(folder.URI);
-        break;
-      case 1:
-      default:
-        var promptText = gMessengerBundle.getFormattedString("advanceNextPrompt", [ folder.name ], 1); 
-        if (!promptService.confirmEx(window, promptText, promptText, 
-                                     promptService.STD_YES_NO_BUTTONS, 
-                                     null, null, null, null, {})) {
+
+  if (type == nsMsgNavigationType.nextUnreadMessage)
+  {
+    
+    var nextMode = pref.getIntPref("mailnews.nav_crosses_folders");
+    // 0: "next" goes to the next folder, without prompting
+    // 1: "next" goes to the next folder, and prompts (the default)
+    // 2: "next" does nothing when there are no unread messages
+
+    // not crossing folders, don't find next
+    if (nextMode == 2)
+      return;
+
+    var folder = FindNextFolder();
+    if (folder && (gDBView.msgFolder.URI != folder.URI)) 
+    {
+      switch (nextMode) 
+      {
+        case 0:
+          // do this unconditionally
           gNextMessageAfterLoad = type;
           SelectFolder(folder.URI);
-        }
-        break;
+          break;
+        case 1:
+        default:
+          var promptText = gMessengerBundle.getFormattedString("advanceNextPrompt", [ folder.name ], 1); 
+          if (!promptService.confirmEx(window, promptText, promptText, 
+                                       promptService.STD_YES_NO_BUTTONS, 
+                                       null, null, null, null, {}))
+          {
+            gNextMessageAfterLoad = type;
+            SelectFolder(folder.URI);
+          }
+          break;
+      }
     }
   }
-
-  return;
+  else
+  {
+    // if no message is loaded, relPos should be 0, to
+    // go back to the previously loaded message
+    var relPos = (type == nsMsgNavigationType.forward)
+      ? 1 : ((GetLoadedMessage()) ? -1 : 0);
+    var folderUri = messenger.getFolderUriAtNavigatePos(relPos);
+    var msgUri = messenger.getMsgUriAtNavigatePos(relPos);
+    // want to get rid of "-message:" and replace it with ":"
+    var msgUriStr = new String("");
+    msgUriStr = msgUri;
+    msgUriStr.replace("-message:", ":");
+    var msgHdr = messenger.msgHdrFromURI(msgUriStr);
+    gStartMsgKey = msgHdr.messageKey;
+    var curPos = messenger.navigatePos;
+    curPos += relPos;
+    messenger.navigatePos = curPos;
+    SelectFolder(folderUri);
+  }
 }
 
 

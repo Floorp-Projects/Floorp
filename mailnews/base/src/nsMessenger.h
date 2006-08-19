@@ -50,7 +50,7 @@
 #include "nsWeakReference.h"
 #include "nsIDOMWindow.h"
 
-class nsMessenger : public nsIMessenger, public nsIObserver, public nsSupportsWeakReference
+class nsMessenger : public nsIMessenger, public nsIObserver, public nsSupportsWeakReference, public nsIFolderListener
 {
   
 public:
@@ -60,6 +60,7 @@ public:
   NS_DECL_ISUPPORTS  
   NS_DECL_NSIMESSENGER
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSIFOLDERLISTENER
     
   nsresult Alert(const char * stringName);
   nsresult SaveAttachment(nsIFileSpec *fileSpec, const char* unescapedUrl,
@@ -88,6 +89,8 @@ protected:
   nsresult InitStringBundle();
   nsresult PromptIfDeleteAttachments(PRBool saveFirst, PRUint32 count, const char **displayNameArray);
 
+  void AddMsgUrlToNavigateHistory(const char *aURL);
+
 private:
   nsresult GetLastSaveDirectory(nsILocalFile **aLastSaveAsDir);
   // if aLocalFile is a dir, we use it.  otherwise, we use the parent of aLocalFile.
@@ -113,6 +116,9 @@ private:
   nsCString   mLastDisplayURI; // this used when the user attempts to force a charset reload of a message...we need to get the last displayed
                                // uri so we can re-display it..
   PRBool  mSendingUnsentMsgs;
+  nsCString mNavigatingToUri;
+  nsCStringArray mLoadedMsgHistory;
+  PRInt32 mCurHistoryPos;
 };
 
 #define NS_MESSENGER_CID \

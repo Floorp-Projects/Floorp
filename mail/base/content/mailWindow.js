@@ -382,6 +382,7 @@ nsMsgStatusFeedback.prototype =
         gTimelineService.markTimer("FolderLoading");
         gTimelineService.resetTimer("FolderLoading");
       }
+      dump("in stopMetors\n");
       this.ensureStatusFields();
       this.showStatusString(defaultStatus);
       

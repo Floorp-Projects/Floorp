@@ -780,6 +780,8 @@ var MessageWindowController =
       case "cmd_previousMsg":
       case "cmd_previousUnreadMsg":
       case "cmd_previousFlaggedMsg":
+      case "cmd_goForward":
+      case "cmd_goBack":
         return !(gDBView.keyForFirstSelectedMessage == nsMsgKey_None);
 
       case "cmd_reply":
@@ -898,6 +900,8 @@ var MessageWindowController =
 				return true;
 			case "cmd_findAgain":
 			case "cmd_findPrevious":
+                        case "cmd_goForward":
+                        case "cmd_goBack":
 				return true;
       case "cmd_search":
         var loadedFolder = GetLoadedMsgFolder();
@@ -1078,6 +1082,12 @@ var MessageWindowController =
 			case "cmd_previousFlaggedMsg":
         performNavigation(nsMsgNavigationType.previousFlagged);
 				break;
+                        case "cmd_goForward":
+                          performNavigation(nsMsgNavigationType.forward);
+                          break;
+                        case "cmd_goBack":
+                          performNavigation(nsMsgNavigationType.back);
+                          break;
 		}
 	},
 	

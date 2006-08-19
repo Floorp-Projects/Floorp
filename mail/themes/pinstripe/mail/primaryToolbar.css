@@ -225,6 +225,30 @@ toolbarbutton[type="menu-button"] > toolbarbutton {
   -moz-image-region: rect(64px 416px 96px 384px) !important;
 } 
 
+#button-goforward {
+  -moz-image-region: rect(0px 384px 32px 352px);
+}
+
+#button-goforward:hover:active {
+  -moz-image-region: rect(32px 384px 64px 352px);
+} 
+
+#button-goforward[disabled] {
+  -moz-image-region: rect(64px 384px 96px 352px) !important;
+} 
+
+#button-goback {
+  -moz-image-region: rect(0px 416px 32px 384px);
+}
+
+#button-goback:hover:active {
+  -moz-image-region: rect(32px 416px 64px 384px);
+} 
+
+#button-goback[disabled] {
+  -moz-image-region: rect(64px 416px 96px 384px) !important;
+} 
+
 #button-mark {
   -moz-image-region: rect(0px 448px 32px 416px);
 }

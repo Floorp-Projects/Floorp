@@ -233,6 +233,30 @@
   -moz-image-region: rect(48px 360px 72px 336px) !important;
 } 
 
+#button-goback, #button-goforward[chromedir="rtl"] {
+  -moz-image-region: rect(0px 384px 24px 360px);
+}
+
+#button-goback:hover, #button-goforward:hover[chromedir="rtl"]{
+  -moz-image-region: rect(24px 384px 48px 360px);
+} 
+
+#button-goback[disabled], #button-goforward[chromedir="rtl"][disabled] {
+  -moz-image-region: rect(48px 384px 72px 360px) !important;
+} 
+
+#button-goforward, #button-goback[chromedir="rtl"] {
+  -moz-image-region: rect(0px 408px 24px 384px);
+}
+
+#button-goforward:hover, #button-goback:hover[chromedir="rtl"]{
+  -moz-image-region: rect(24px 408px 48px 384px);
+} 
+
+#button-goforward[disabled], #button-goback[chromedir="rtl"][disabled] {
+  -moz-image-region: rect(48px 408px 72px 384px) !important;
+} 
+
 /* ::::: small primary toolbar buttons ::::: */
 
 toolbar[iconsize="small"] .toolbarbutton-1 {

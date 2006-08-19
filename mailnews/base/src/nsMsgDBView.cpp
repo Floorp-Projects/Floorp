@@ -139,6 +139,9 @@ nsMsgDBView::nsMsgDBView()
   mSuppressMsgDisplay = PR_FALSE;
   mSuppressCommandUpdating = PR_FALSE;
   mSuppressChangeNotification = PR_FALSE;
+  mGoForwardEnabled = PR_FALSE;
+  mGoBackEnabled = PR_FALSE;
+
   mIsNews = PR_FALSE;
   mDeleteModel = nsMsgImapDeleteModels::MoveToTrash;
   m_deletingRows = PR_FALSE;
@@ -1105,9 +1108,19 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
   // (3) it went from 1 to many
   // (4) it went from many to 1 or 0
   // (5) a different msg was selected - perhaps it was offline or not...matters only when we are offline
+  // (6) we did a forward/back, or went from having no history to having history - not sure how to tell this.
 
+  // I think we're going to need to keep track of whether forward/back were enabled/should be enabled,
+  // and when this changes, force a command update.
+  
+  PRBool enableGoForward = PR_FALSE;
+  PRBool enableGoBack = PR_FALSE;
+
+  NavigateStatus(nsMsgNavigationType::forward, &enableGoForward);
+  NavigateStatus(nsMsgNavigationType::back, &enableGoBack);
   if ((numSelected == mNumSelectedRows || 
-      (numSelected > 1 && mNumSelectedRows > 1)) && (commandsNeedDisablingBecauseOfSelection == mCommandsNeedDisablingBecauseOfSelection))
+      (numSelected > 1 && mNumSelectedRows > 1)) && (commandsNeedDisablingBecauseOfSelection == mCommandsNeedDisablingBecauseOfSelection)
+      && enableGoForward == mGoForwardEnabled && enableGoBack == mGoBackEnabled)
   {
   } 
   // don't update commands if we're suppressing them, or if we're removing rows, unless it was the last row.
@@ -1117,6 +1130,8 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
   }
   
   mCommandsNeedDisablingBecauseOfSelection = commandsNeedDisablingBecauseOfSelection;
+  mGoForwardEnabled = enableGoForward;
+  mGoBackEnabled = enableGoBack;
   mNumSelectedRows = numSelected;
   return NS_OK;
 }
@@ -5005,6 +5020,41 @@ nsresult nsMsgDBView::NavigateFromPos(nsMsgNavigationTypeValue motion, nsMsgView
                     return NS_OK;
                 }
             }
+          // check where navigate says this will take us. If we have the message in the view,
+          // return it. Otherwise, return an error.
+      case nsMsgNavigationType::back:
+      case nsMsgNavigationType::forward:
+        {
+          nsXPIDLCString folderUri, msgUri;
+          nsXPIDLCString viewFolderUri;
+          nsCOMPtr<nsIMsgFolder> curFolder = m_viewFolder ? m_viewFolder : m_folder;
+          curFolder->GetURI(getter_Copies(viewFolderUri));
+          PRInt32 relPos = (motion == nsMsgNavigationType::forward) 
+            ? 1 : (m_currentlyDisplayedMsgKey != nsMsgKey_None) ? -1 : 0;
+          PRInt32 curPos;
+          nsresult rv = mMessengerInstance->GetFolderUriAtNavigatePos(relPos, getter_Copies(folderUri));
+          NS_ENSURE_SUCCESS(rv, rv);
+          if (folderUri.Equals(viewFolderUri))
+          {
+            nsCOMPtr <nsIMsgDBHdr> msgHdr;
+            nsresult rv = mMessengerInstance->GetMsgUriAtNavigatePos(relPos, getter_Copies(msgUri));
+            NS_ENSURE_SUCCESS(rv, rv);
+            mMessengerInstance->MsgHdrFromURI(msgUri.get(), getter_AddRefs(msgHdr));
+            if (msgHdr)
+            {
+              mMessengerInstance->GetNavigatePos(&curPos);
+              curPos += relPos;
+              *pResultIndex = FindHdr(msgHdr);
+              mMessengerInstance->SetNavigatePos(curPos);
+              msgHdr->GetMessageKey(pResultKey);
+              return NS_OK;
+            }
+          }
+          *pResultIndex = nsMsgViewIndex_None;
+          *pResultKey = nsMsgKey_None;
+          break;
+          
+        }
         default:
             NS_ASSERTION(0, "unsupported motion");
             break;
@@ -5075,6 +5125,21 @@ NS_IMETHODIMP nsMsgDBView::NavigateStatus(nsMsgNavigationTypeValue motion, PRBoo
                 enable = (resultKey != nsMsgKey_None);
             }
             break;
+        case nsMsgNavigationType::forward:
+        case nsMsgNavigationType::back:
+        {
+          PRUint32 curPos;
+          PRUint32 historyCount;
+          mMessengerInstance->GetNavigateHistory(&curPos, &historyCount, nsnull);
+          PRInt32 desiredPos = (PRInt32) curPos;
+          if (motion == nsMsgNavigationType::forward)
+            desiredPos++;
+          else
+            desiredPos--; //? operator code didn't work for me
+          enable = (desiredPos >= 0 && desiredPos < (PRInt32) historyCount / 2);
+        }
+          break;
+          
         default:
             NS_ASSERTION(0,"unexpected");
             break;

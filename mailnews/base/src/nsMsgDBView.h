@@ -163,6 +163,9 @@ protected:
                         // during delete/move operations.
   PRPackedBool  mCommandsNeedDisablingBecauseOfSelection;
   PRPackedBool  mSuppressChangeNotification;
+  PRPackedBool  mGoForwardEnabled;
+  PRPackedBool  mGoBackEnabled;
+  
   virtual const char * GetViewName(void) {return "MsgDBView"; }
   nsresult FetchAuthor(nsIMsgDBHdr * aHdr, PRUnichar ** aAuthorString);
   nsresult FetchRecipients(nsIMsgDBHdr * aHdr, PRUnichar ** aRecipientsString);

@@ -279,6 +279,10 @@
 <!ENTITY prevUnreadMsgCmd.accesskey "U">
 <!ENTITY previousUnreadMsgCmd.key "p">
 <!ENTITY previousUnreadMsgCmd.accesskey "U">
+<!ENTITY forwardMsgCmd.label "Forward">
+<!ENTITY backMsgCmd.label "Back">
+<!ENTITY goBackCmd.commandKey "[">
+<!ENTITY goForwardCmd.commandKey "]">
 <!ENTITY prevStarredMsgCmd.label "Starred Message">
 <!ENTITY prevStarredMsgCmd.accesskey "S">
 <!ENTITY startPageCmd.label "Mail Start Page">
@@ -426,6 +430,8 @@
 <!ENTITY fileButton.label "File">
 <!ENTITY nextButton.label "Next">
 <!ENTITY previousButton.label "Previous">
+<!ENTITY backButton.label "Go Back">
+<!ENTITY goForwardButton.label "Go Forward">
 <!ENTITY deleteButton.label "Delete">
 <!ENTITY markButton.label "Mark">
 <!ENTITY printButton.label "Print">
@@ -450,6 +456,8 @@
 <!ENTITY fileButton.tooltip "File selected message">
 <!ENTITY nextButton.tooltip "Move to the next unread message">
 <!ENTITY previousButton.tooltip "Move to the previous unread message">
+<!ENTITY goForwardButton.tooltip "Go forward one message">
+<!ENTITY goBackButton.tooltip "Go back one message">
 <!ENTITY deleteButton.tooltip "Delete selected message or folder">
 <!ENTITY markButton.tooltip "Mark messages">
 <!ENTITY printButton.tooltip "Print this message">
