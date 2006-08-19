@@ -354,7 +354,7 @@
     [% END %]
 
   [% ELSIF error == "usage_mode_invalid" %]
-    '[% invalid_usage_mode %]' is not a valid usage mode.
+    '[% invalid_usage_mode FILTER html %]' is not a valid usage mode.
 
   [% ELSIF error == "must_be_patch" %]
     [% title = "Attachment Must Be Patch" %]
