@@ -5621,11 +5621,7 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
     return NS_FAILED(rv) ? rv : NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
-  nsCAutoString currentDomain;
-  rv = codebase->GetAsciiHost(currentDomain);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return docShell->GetSessionStorageForDomain(currentDomain, aSessionStorage);
+  return docShell->GetSessionStorageForURI(codebase, aSessionStorage);
 }
 
 NS_IMETHODIMP
@@ -6139,11 +6135,11 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
 
       if (NS_SUCCEEDED(gethostrv) && thisDomain.Equals(newDomain)) {
         nsCOMPtr<nsIDOMStorage> storage;
-        mDocShell->GetSessionStorageForDomain(thisDomain,
-                                              getter_AddRefs(storage));
+        mDocShell->GetSessionStorageForURI(currentCodebase,
+                                           getter_AddRefs(storage));
         nsCOMPtr<nsPIDOMStorage> piStorage = do_QueryInterface(storage);
         if (piStorage) {
-          nsCOMPtr<nsIDOMStorage> newstorage = piStorage->Clone();
+          nsCOMPtr<nsIDOMStorage> newstorage = piStorage->Clone(newURI);
           newDocShell->AddSessionStorage(thisDomain, newstorage);
         }
       }

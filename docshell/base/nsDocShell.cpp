@@ -1671,15 +1671,12 @@ nsDocShell::HistoryPurged(PRInt32 aNumEntries)
 }
 
 NS_IMETHODIMP
-nsDocShell::GetSessionStorageForDomain(const nsACString& aDomain,
-                                       nsIDOMStorage** aStorage)
+nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
+                                    nsIDOMStorage** aStorage)
 {
     NS_ENSURE_ARG_POINTER(aStorage);
 
     *aStorage = nsnull;
-
-    if (aDomain.IsEmpty())
-        return NS_OK;
 
     nsCOMPtr<nsIDocShellTreeItem> topItem;
     nsresult rv = GetSameTypeRootTreeItem(getter_AddRefs(topItem));
@@ -1691,9 +1688,16 @@ nsDocShell::GetSessionStorageForDomain(const nsACString& aDomain,
 
     nsCOMPtr<nsIDocShell> topDocShell = do_QueryInterface(topItem);
     if (topDocShell != this)
-        return topDocShell->GetSessionStorageForDomain(aDomain, aStorage);
-    
-    if (!mStorages.Get(aDomain, aStorage)) {
+        return topDocShell->GetSessionStorageForURI(aURI, aStorage);
+
+    nsCAutoString currentDomain;
+    rv = aURI->GetAsciiHost(currentDomain);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (currentDomain.IsEmpty())
+        return NS_OK;
+
+    if (!mStorages.Get(currentDomain, aStorage)) {
         nsCOMPtr<nsIDOMStorage> newstorage =
             do_CreateInstance("@mozilla.org/dom/storage;1");
         if (!newstorage)
@@ -1702,9 +1706,9 @@ nsDocShell::GetSessionStorageForDomain(const nsACString& aDomain,
         nsCOMPtr<nsPIDOMStorage> pistorage = do_QueryInterface(newstorage);
         if (!pistorage)
             return NS_ERROR_FAILURE;
-        pistorage->Init(NS_ConvertUTF8toUTF16(aDomain), PR_FALSE);
+        pistorage->Init(aURI, NS_ConvertUTF8toUTF16(currentDomain), PR_FALSE);
 
-        if (!mStorages.Put(aDomain, newstorage))
+        if (!mStorages.Put(currentDomain, newstorage))
             return NS_ERROR_OUT_OF_MEMORY;
 		
         *aStorage = newstorage;
@@ -6441,13 +6445,13 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 gethostrv |= aURI->GetAsciiHost(newDomain);
                 if (NS_SUCCEEDED(gethostrv) && thisDomain.Equals(newDomain)) {
                     nsCOMPtr<nsIDOMStorage> storage;
-                    GetSessionStorageForDomain(thisDomain,
-                                               getter_AddRefs(storage));
+                    GetSessionStorageForURI(currentCodebase,
+                                            getter_AddRefs(storage));
                     nsCOMPtr<nsPIDOMStorage> piStorage =
                         do_QueryInterface(storage);
                     if (piStorage) {
                         nsCOMPtr<nsIDOMStorage> newstorage =
-                            piStorage->Clone();
+                            piStorage->Clone(currentCodebase);
                         targetDocShell->AddSessionStorage(thisDomain,
                                                           newstorage);
                     }
