@@ -217,6 +217,116 @@ sub remove_from_db {
     return $self;
 }
 
+#####################################################################
+# Validators
+#####################################################################
+
+sub _check_alias {
+   my ($alias) = @_;
+   $alias = trim($alias);
+   ValidateBugAlias($alias) if (defined $alias && $alias ne '');
+   return $alias;
+}
+
+sub _check_assigned_to {
+    my ($name, $component) = @_;
+    my $user = Bugzilla->user;
+
+    $name = trim($name);
+    # Default assignee is the component owner.
+    my $id;
+    if (!$user->in_group("editbugs") || !$name) {
+        $id = $component->default_assignee->id;
+    } else {
+        $id = login_to_id($name, THROW_ERROR);
+    }
+    return $id;
+}
+
+sub _check_bug_file_loc {
+    my ($url) = @_;
+    if (!defined $url) {
+        ThrowCodeError('undefined_field', { field => 'bug_file_loc' });
+    }
+    # If bug_file_loc is "http://", the default, use an empty value instead.
+    $url = '' if $url eq 'http://';
+    return $url;
+}
+
+sub _check_comment {
+    my ($comment) = @_;
+
+    if (!defined $comment) {
+        ThrowCodeError('undefined_field', { field => 'comment' });
+    }
+
+    # Remove any trailing whitespace. Leading whitespace could be
+    # a valid part of the comment.
+    $comment =~ s/\s*$//s;
+    $comment =~ s/\r\n?/\n/g; # Get rid of \r.
+
+    ValidateComment($comment);
+
+    if (Bugzilla->params->{"commentoncreate"} && !$comment) {
+        ThrowUserError("description_required");
+    }
+
+    return $comment;
+}
+
+sub _check_component {
+    my ($name, $product) = @_;
+    $name = trim($name);
+    $name || ThrowUserError("require_component");
+    my $obj = Bugzilla::Component::check_component($product, $name);
+    # XXX Right now, post_bug needs this to return an object. However,
+    # when we move to Bugzilla::Bug->create, this should just return
+    # what it was passed.
+    return $obj;
+}
+
+sub _check_product {
+    my ($name) = @_;
+    # Check that the product exists and that the user
+    # is allowed to enter bugs into this product.
+    Bugzilla->user->can_enter_product($name, THROW_ERROR);
+    # can_enter_product already does everything that check_product
+    # would do for us, so we don't need to use it.
+    my $obj = new Bugzilla::Product({ name => $name });
+    # XXX Right now, post_bug needs this to return an object. However,
+    # when we move to Bugzilla::Bug->create, this should just return
+    # what it was passed.
+    return $obj;
+}
+
+sub _check_short_desc {
+    my ($short_desc) = @_;
+    # Set the parameter to itself, but cleaned up
+    $short_desc = clean_text($short_desc) if $short_desc;
+
+    if (!defined $short_desc || $short_desc eq '') {
+        ThrowUserError("require_summary");
+    }
+    return $short_desc;
+}
+
+sub _check_qa_contact {
+    my ($name, $component) = @_;
+    my $user = Bugzilla->user;
+
+    $name = trim($name);
+
+    my $id;
+    if (!$user->in_group("editbugs") || !$name) {
+        # We want to insert NULL into the database if we get a 0.
+        $id = $component->default_qa_contact->id || undef;
+    } else {
+        $id = login_to_id($name, THROW_ERROR);
+    }
+
+    return $id;
+}
+
 
 #####################################################################
 # Class Accessors

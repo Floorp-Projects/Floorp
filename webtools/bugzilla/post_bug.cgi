@@ -113,13 +113,9 @@ my $format = $template->get_format("bug/create/comment",
 $template->process($format->{'template'}, $vars, \$comment)
   || ThrowTemplateError($template->error());
 
-ValidateComment($comment);
-
 # Check that the product exists and that the user
 # is allowed to enter bugs into this product.
-$user->can_enter_product(scalar $cgi->param('product'), 1);
-
-my $product = Bugzilla::Product::check_product(scalar $cgi->param('product'));
+my $product = Bugzilla::Bug::_check_product($cgi->param('product'));
 
 # Set cookies
 if (defined $cgi->param('product')) {
@@ -143,35 +139,23 @@ if (defined $cgi->param('maketemplate')) {
 umask 0;
 
 # Some sanity checking
-$cgi->param('component') || ThrowUserError("require_component");
-my $component = Bugzilla::Component::check_component($product, scalar $cgi->param('component'));
+my $component = 
+    Bugzilla::Bug::_check_component(scalar $cgi->param('component'), $product);
+$cgi->param('short_desc', 
+            Bugzilla::Bug::_check_short_desc($cgi->param('short_desc')));
 
-# Set the parameter to itself, but cleaned up
-$cgi->param('short_desc', clean_text($cgi->param('short_desc')));
-
-if (!defined $cgi->param('short_desc')
-    || $cgi->param('short_desc') eq "") {
-    ThrowUserError("require_summary");
-}
-
-# Check that if required a description has been provided
 # This has to go somewhere after 'maketemplate' 
-#  or it breaks bookmarks with no comments.
-if (Bugzilla->params->{"commentoncreate"} && !trim($cgi->param('comment'))) {
-    ThrowUserError("description_required");
-}
+# or it breaks bookmarks with no comments. 
+$comment = Bugzilla::Bug::_check_comment($cgi->param('comment'));
+# If comment is all whitespace, it'll be null at this point. That's
+# OK except for the fact that it causes e-mail to be suppressed.
+$comment = $comment ? $comment : " ";
 
-# If bug_file_loc is "http://", the default, use an empty value instead.
-$cgi->param('bug_file_loc', '') if $cgi->param('bug_file_loc') eq 'http://';
-
-
-# Default assignee is the component owner.
-if (!UserInGroup("editbugs") || $cgi->param('assigned_to') eq "") {
-    $cgi->param(-name => 'assigned_to', -value => $component->default_assignee->id);
-} else {
-    $cgi->param(-name => 'assigned_to',
-                -value => login_to_id(trim($cgi->param('assigned_to')), THROW_ERROR));
-}
+$cgi->param('bug_file_loc', 
+            Bugzilla::Bug::_check_bug_file_loc($cgi->param('bug_file_loc')));
+$cgi->param('assigned_to', 
+            Bugzilla::Bug::_check_assigned_to(scalar $cgi->param('assigned_to'),
+                                              $component));
 
 
 my @enter_bug_field_names = map {$_->name} Bugzilla->get_fields({ custom => 1,
@@ -184,26 +168,18 @@ my @bug_fields = ("version", "rep_platform",
                   @enter_bug_field_names);
 
 if (Bugzilla->params->{"usebugaliases"}) {
-   my $alias = trim($cgi->param('alias') || "");
-   if ($alias ne "") {
-       ValidateBugAlias($alias);
-       $cgi->param('alias', $alias);
-       push (@bug_fields,"alias");
-   }
+    my $alias = Bugzilla::Bug::_check_alias($cgi->param('alias'));
+    if ($alias) {
+        $cgi->param('alias', $alias);
+        push(@bug_fields, "alias");
+    }
 }
 
-# Retrieve the default QA contact if the field is empty
 if (Bugzilla->params->{"useqacontact"}) {
-    my $qa_contact;
-    if (!UserInGroup("editbugs") || !defined $cgi->param('qa_contact')
-        || trim($cgi->param('qa_contact')) eq "") {
-        $qa_contact = $component->default_qa_contact->id;
-    } else {
-        $qa_contact = login_to_id(trim($cgi->param('qa_contact')), THROW_ERROR);
-    }
-
+    my $qa_contact = Bugzilla::Bug::_check_qa_contact(
+        scalar $cgi->param('qa_contact'), $component);
     if ($qa_contact) {
-        $cgi->param(-name => 'qa_contact', -value => $qa_contact);
+        $cgi->param('qa_contact', $qa_contact);
         push(@bug_fields, "qa_contact");
     }
 }
@@ -244,11 +220,6 @@ check_field('version',      scalar $cgi->param('version'),
             [map($_->name, @{$product->versions})]);
 check_field('target_milestone', scalar $cgi->param('target_milestone'),
             [map($_->name, @{$product->milestones})]);
-
-foreach my $field_name ('assigned_to', 'bug_file_loc', 'comment') {
-    defined($cgi->param($field_name))
-      || ThrowCodeError('undefined_field', { field => $field_name });
-}
 
 my $everconfirmed = ($cgi->param('bug_status') eq 'UNCONFIRMED') ? 0 : 1;
 $cgi->param(-name => 'everconfirmed', -value => $everconfirmed);
@@ -363,12 +334,6 @@ my $sql_placeholders = "?, " x scalar(@used_fields);
 my $query = qq{INSERT INTO bugs ($sql_used_fields, reporter, delta_ts,
                                  estimated_time, remaining_time, deadline)
                VALUES ($sql_placeholders ?, ?, ?, ?, ?)};
-
-$comment =~ s/\r\n?/\n/g;     # Get rid of \r.
-$comment = trim($comment);
-# If comment is all whitespace, it'll be null at this point. That's
-# OK except for the fact that it causes e-mail to be suppressed.
-$comment = $comment ? $comment : " ";
 
 push (@fields_values, $user->id);
 push (@fields_values, $timestamp);
