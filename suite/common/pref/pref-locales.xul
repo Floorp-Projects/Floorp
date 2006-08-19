@@ -160,7 +160,8 @@
 
     function DownloadRegionPacks()
     {
-      openTopWin(xlateURL("urn:clienturl:viewmenu:intlwebcontent"));
+      openTopWin(parent.hPrefWindow.getPref("localizedstring",
+                                            "extensions.getMoreLocalesURL"));
     }
   ]]>
   </script>
