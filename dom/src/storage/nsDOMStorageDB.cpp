@@ -159,7 +159,7 @@ nsDOMStorageDB::GetAllKeys(const nsAString& aDomain,
     nsSessionStorageEntry* entry = aKeys->PutEntry(key);
     NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
  
-    entry->mItem = new nsDOMStorageItem(aStorage, key, secureInt);
+    entry->mItem = new nsDOMStorageItem(aStorage, key, EmptyString(), secureInt);
     if (!entry->mItem) {
       aKeys->RawRemoveEntry(entry);
       return NS_ERROR_OUT_OF_MEMORY;

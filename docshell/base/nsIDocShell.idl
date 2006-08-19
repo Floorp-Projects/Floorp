@@ -68,7 +68,7 @@ interface nsILayoutHistoryState;
 interface nsISecureBrowserUI;
 interface nsIDOMStorage;
 
-[scriptable, uuid(51241d7c-73c9-4b85-970c-bd4f91acfbcc)]
+[scriptable, uuid(539355C0-F5C8-4929-A4AA-CB105E8F9997)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -417,7 +417,7 @@ interface nsIDocShell : nsISupports
    *
    * @param domain the domain of the storage object to retrieve
    */
-  nsIDOMStorage getSessionStorageForDomain(in ACString aDomain);
+  nsIDOMStorage getSessionStorageForURI(in nsIURI uri);
 
   /*
    * Add a WebApps session storage object to the docshell.

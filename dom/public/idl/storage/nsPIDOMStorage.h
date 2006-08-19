@@ -44,6 +44,7 @@
 #include "nsTArray.h"
 
 class nsIDOMStorage;
+class nsIURI;
 
 #define NS_PIDOMSTORAGE_IID                                 \
   { 0x2fdbb82e, 0x4b47, 0x406a,                             \
@@ -54,9 +55,9 @@ class nsPIDOMStorage : public nsISupports
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIDOMSTORAGE_IID)
 
-  virtual void Init(const nsAString &aDomain, PRBool aUseDB) = 0;
+  virtual void Init(nsIURI* aURI, const nsAString &aDomain, PRBool aUseDB) = 0;
 
-  virtual already_AddRefed<nsIDOMStorage> Clone() = 0;
+  virtual already_AddRefed<nsIDOMStorage> Clone(nsIURI* aURI) = 0;
 
   virtual nsTArray<nsString> *GetKeys() = 0;
 };
