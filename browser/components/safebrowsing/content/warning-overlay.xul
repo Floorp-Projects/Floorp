@@ -75,7 +75,6 @@
             &safeb.palm.message.p2.start;
             <label class="text-link plain"
               id="safebrowsing-palm-faq-link"
-              href="&safeb.palm.message.p2.linkURL;"
               value="&safeb.palm.message.p2.linkText;" />
             &safeb.palm.message.p2.end;
           </description>
