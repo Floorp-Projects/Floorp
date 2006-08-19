@@ -1609,7 +1609,7 @@
       <field name="mBatchCount">0</field>
       <field name="mPixPerMin">0.6</field>
       <field name="mMinHorizontalPixelsPerMinute">1.0</field>
-      <field name="mMinVerticalPixelsPerMinute">0.4</field>
+      <field name="mMinVerticalPixelsPerMinute">0.5</field>
       <field name="mSelectedItem">null</field>
       <field name="mSelectedDayCol">null</field>
 
