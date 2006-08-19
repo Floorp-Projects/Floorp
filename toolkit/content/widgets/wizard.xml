@@ -157,6 +157,7 @@
       <field name="_finishFunc">(function() { document.documentElement.advance(); })</field>
       <field name="_cancelFunc">(function() { document.documentElement.cancel(); })</field>
       <field name="_extra1Func">(function() { document.documentElement.extra1(); })</field>
+      <field name="_extra2Func">(function() { document.documentElement.extra2(); })</field>
 
       <field name="_closeHandler">(function(event) {
         if (document.documentElement.cancel())
@@ -194,6 +195,7 @@
         this._initWizardButton("finish");
         this._initWizardButton("cancel");
         this._initWizardButton("extra1");
+        this._initWizardButton("extra2");
         
         this._initPages();
         
@@ -219,6 +221,13 @@
         <body><![CDATA[
           if (this.currentPage) 
             this._fireEvent(this.currentPage, "extra1");
+        ]]></body>
+      </method>
+
+      <method name="extra2">
+        <body><![CDATA[
+          if (this.currentPage) 
+            this._fireEvent(this.currentPage, "extra2");
         ]]></body>
       </method>
 
@@ -473,6 +482,7 @@
       <xul:vbox flex="1">
         <xul:hbox class="wizard-buttons-btm">
           <xul:button class="wizard-button" dlgtype="extra1" hidden="true"/>
+          <xul:button class="wizard-button" dlgtype="extra2" hidden="true"/>
           <xul:button label="&button-cancel-mac.label;" class="wizard-button" dlgtype="cancel"/>        
           <xul:spacer flex="1"/>
           <xul:button label="&button-back-mac.label;" accesskey="&button-back-mac.accesskey;"
@@ -519,6 +529,7 @@
         <xul:separator class="wizard-buttons-separator groove"/>
         <xul:hbox class="wizard-buttons-box-2">
           <xul:button class="wizard-button" dlgtype="extra1" hidden="true"/>
+          <xul:button class="wizard-button" dlgtype="extra2" hidden="true"/>
           <xul:spacer flex="1" anonid="spacer"/>
 #ifdef XP_UNIX
           <xul:button label="&button-cancel-unix.label;" class="wizard-button"
