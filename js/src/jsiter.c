@@ -755,20 +755,6 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     return NULL;
 }
 
-static JSBool
-ReportNestingGenerator(JSContext *cx, jsval *argv)
-{
-    JSString *str;
-
-    str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, argv[-1], NULL);
-    if (str) {
-        JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
-                               JSMSG_NESTING_GENERATOR,
-                               JSSTRING_CHARS(str));
-    }
-    return JS_FALSE;
-}
-
 /*
  * Common subroutine of generator_send and generator_close.
  */
@@ -782,17 +768,30 @@ generator_send_sub(JSContext *cx, JSObject *obj, JSGenerator *gen,
     JSBool ok;
     jsval junk;
 
-    if (gen->state == JSGEN_RUNNING)
-        return ReportNestingGenerator(cx, argv);
-
-    if (gen->state == JSGEN_NEWBORN && argc != 0 && !JSVAL_IS_VOID(argv[0])) {
-        str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, argv[0], NULL);
+    if (gen->state & JSGEN_RUNNING) {
+        str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, argv[-1],
+                                         NULL);
         if (str) {
             JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
-                                   JSMSG_BAD_GENERATOR_SEND,
+                                   JSMSG_NESTING_GENERATOR,
                                    JSSTRING_CHARS(str));
         }
         return JS_FALSE;
+    }
+
+    if (gen->state == JSGEN_NEWBORN) {
+        if (argc != 0 && !JSVAL_IS_VOID(argv[0])) {
+            str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, argv[0],
+                                             NULL);
+            if (str) {
+                JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
+                                       JSMSG_BAD_GENERATOR_SEND,
+                                       JSSTRING_CHARS(str));
+            }
+            return JS_FALSE;
+        }
+
+        gen->state = JSGEN_OPEN;
     }
 
     fp = cx->fp;
@@ -803,9 +802,9 @@ generator_send_sub(JSContext *cx, JSObject *obj, JSGenerator *gen,
 
     /* Store the argument to send as the result of the yield expression. */
     gen->frame.sp[-1] = (argc != 0) ? argv[0] : JSVAL_VOID;
-    gen->state = JSGEN_RUNNING;
+    gen->state |= JSGEN_RUNNING;
     ok = js_Interpret(cx, gen->frame.pc, &junk);
-    gen->state = JSGEN_OPEN;
+    gen->state &= ~JSGEN_RUNNING;
     cx->fp = fp;
     cx->stackPool.current = arena;
 
@@ -864,6 +863,7 @@ generator_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
     JSGenerator *gen;
     jsval genexit, exn;
+    JSBool ok;
     JSClass *clasp;
     JSString *str;
 
@@ -874,9 +874,6 @@ generator_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!gen || gen->state == JSGEN_CLOSED)
         return JS_TRUE;
 
-    if (gen->state == JSGEN_RUNNING)
-        return ReportNestingGenerator(cx, argv);
-
     if (!js_FindClassObject(cx, NULL, INT_TO_JSID(JSProto_GeneratorExit),
                             &genexit)) {
         return JS_FALSE;
@@ -884,11 +881,18 @@ generator_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     /* Throw GeneratorExit at the generator and ignore the returned status. */
     JS_SetPendingException(cx, genexit);
-    gen->state = JSGEN_CLOSING;
-    generator_send_sub(cx, obj, gen, 0, argv, rval);
+    gen->state |= JSGEN_CLOSING;
+    ok = generator_send_sub(cx, obj, gen, 0, argv, rval);
     gen->state = JSGEN_CLOSED;
 
-    if (cx->throwing) {
+    if (!cx->throwing) {
+        /*
+         * If out-of-memory was reported or the branch callback canceled the
+         * generator, fail immediately.
+         */
+        if (!ok)
+            return JS_FALSE;
+    } else {
         exn = cx->exception;
         if (!JSVAL_IS_PRIMITIVE(exn)) {
             clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(exn));
