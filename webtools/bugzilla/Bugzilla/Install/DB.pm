@@ -277,6 +277,14 @@ sub update_table_definitions {
     _remove_spaces_and_commas_from_flagtypes();
     _setup_usebuggroups_backward_compatibility();
     _remove_user_series_map();
+
+    # 2006-08-03 remi_zara@mac.com bug 346241, make series.creator nullable
+    # This must happen before calling _copy_old_charts_into_database().
+    if ($dbh->bz_column_info('series', 'creator')->{NOTNULL}) {
+        $dbh->bz_alter_column('series', 'creator', {TYPE => 'INT3'});
+        $dbh->do("UPDATE series SET creator = NULL WHERE creator = 0");
+    }
+
     _copy_old_charts_into_database();
 
     _add_user_group_map_grant_type();
@@ -1877,9 +1885,8 @@ sub _copy_old_charts_into_database {
 
             foreach my $field (@fields) {
                 # Create a Series for each field in this product.
-                # user ID = 0 is used.
                 my $series = new Bugzilla::Series(undef, $product, $all_name,
-                                                  $field, 0, 1,
+                                                  $field, undef, 1,
                                                   $queries{$field}, 1);
                 $series->writeToDatabase();
                 $seriesids{$field} = $series->{'series_id'};
@@ -1890,7 +1897,7 @@ sub _copy_old_charts_into_database {
             my @openedstatuses = ("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED");
             my $query = join("&", map { "bug_status=$_" } @openedstatuses);
             my $series = new Bugzilla::Series(undef, $product, $all_name,
-                                              $open_name, 0, 1,
+                                              $open_name, undef, 1,
                                               $query_prod . $query, 1);
             $series->writeToDatabase();
             $seriesids{$open_name} = $series->{'series_id'};

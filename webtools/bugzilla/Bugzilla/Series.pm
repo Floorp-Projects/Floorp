@@ -36,8 +36,6 @@ use Bugzilla::Error;
 use Bugzilla::Util;
 use Bugzilla::User;
 
-use constant PUBLIC_USER_ID => 0;
-
 sub new {
     my $invocant = shift;
     my $class = ref($invocant) || $invocant;
@@ -201,10 +199,9 @@ sub writeToDatabase {
         # Insert the new series into the series table
         $dbh->do("INSERT INTO series (creator, category, subcategory, " .
                  "name, frequency, query, is_public) VALUES " . 
-                 "($self->{'creator'}, " . 
-                 "$category_id, $subcategory_id, " .
-                 $dbh->quote($self->{'name'}) . ", $self->{'frequency'}," .
-                 $dbh->quote($self->{'query'}) . ", $self->{'public'})");
+                 "(?, ?, ?, ?, ?, ?, ?)", undef,
+                 $self->{'creator'}, $category_id, $subcategory_id, $self->{'name'},
+                 $self->{'frequency'}, $self->{'query'}, $self->{'public'});
 
         # Retrieve series_id
         $self->{'series_id'} = $dbh->selectrow_array("SELECT MAX(series_id) " .
