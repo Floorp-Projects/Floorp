@@ -3814,13 +3814,11 @@ nsMsgLocalMailFolder::AddMessage(const char *aMessage)
   	
   if (NS_SUCCEEDED(rv))
   {
-
-//  in_server->SetServerBusy(PR_TRUE);
-
     outFileStream << aMessage;
     newMailParser->BufferInput(aMessage, strlen(aMessage));
 
     outFileStream.flush();
+    newMailParser->SetDBFolderStream(&outFileStream); 
     newMailParser->OnStopRequest(nsnull, nsnull, NS_OK);
     newMailParser->SetDBFolderStream(nsnull); // stream is going away
     if (outFileStream.is_open())
