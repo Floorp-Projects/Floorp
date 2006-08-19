@@ -93,6 +93,8 @@ use constant DB_COLUMNS => (
     'description',
     'type',
     'custom',
+    'mailhead',
+    'sortkey',
     'obsolete',
     'enter_bug',
 );
@@ -216,6 +218,31 @@ sub custom { return $_[0]->{custom} }
 
 =over
 
+=item C<in_new_bugmail>
+
+a boolean specifying whether or not the field is displayed in bugmail
+for newly-created bugs;
+
+=back
+
+=cut
+
+sub in_new_bugmail { return $_[0]->{mailhead} }
+
+=over
+
+=item C<sortkey>
+
+an integer specifying the sortkey of the field.
+
+=back
+
+=cut
+
+sub sortkey { return $_[0]->{sortkey} }
+
+=over
+
 =item C<obsolete>
 
 a boolean specifying whether or not the field is obsolete;
@@ -256,8 +283,14 @@ Params:      This function takes named parameters in a hashref:
              C<desc> - string - The field label to display in the UI.
              C<in_new_bugmail> - boolean - Whether this field appears at the
                  top of the bugmail for a newly-filed bug.
+
+             The following parameters are only available on field creation:
              C<custom> - boolean - True if this is a Custom Field. The field
                  will be added to the C<bugs> table if it does not exist.
+             C<sortkey> - integer - The sortkey of the field.
+             C<editable_on_enter_bug> - boolean - Whether this field is
+                 editable on the bug creation form.
+             C<is_obsolete> - boolean - Whether this field is obsolete.
 
 Returns:     a C<Bugzilla::Field> object.
 
@@ -267,12 +300,16 @@ Returns:     a C<Bugzilla::Field> object.
 
 sub create_or_update {
     my ($params) = @_;
-    
+
     my $custom         = $params->{custom} ? 1 : 0;
     my $name           = $params->{name};
     my $in_new_bugmail = $params->{in_new_bugmail} ? 1 : 0;
+    my $sortkey        = $params->{sortkey} || 0;
+    my $enter_bug      = $params->{editable_on_enter_bug} ? 1 : 0;
+    my $is_obsolete    = $params->{is_obsolete} ? 1 : 0;
 
     # Some day we'll allow invocants to specify the field type.
+    # We don't care about $params->{type} yet.
     my $type = $custom ? FIELD_TYPE_FREETEXT : FIELD_TYPE_UNKNOWN;
 
     my $field = new Bugzilla::Field({name => $name});
@@ -285,16 +322,15 @@ sub create_or_update {
                  undef, $params->{desc}, $in_new_bugmail, $field->id);
     }
     else {
-        # Some day we'll allow invocants to specify the sort key.
-        my ($sortkey) = $dbh->selectrow_array(
+        $sortkey ||= $dbh->selectrow_array(
             "SELECT MAX(sortkey) + 100 FROM fielddefs") || 100;
 
         # Add the field to the list of fields at this Bugzilla installation.
         $dbh->do("INSERT INTO fielddefs (name, description, sortkey, type,
-                                         custom, mailhead)
-                       VALUES (?, ?, ?, ?, ?, ?)", undef,
+                                         custom, mailhead, obsolete, enter_bug)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)", undef,
                  $name, $params->{desc}, $sortkey, $type, $custom, 
-                 $in_new_bugmail);
+                 $in_new_bugmail, $is_obsolete, $enter_bug);
     }
 
     if (!$dbh->bz_column_info('bugs', $name) && $custom) {
