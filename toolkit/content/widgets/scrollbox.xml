@@ -17,7 +17,7 @@
   </binding>
 
   <binding id="scrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
-    <content repeat="hover">
+    <content>
       <xul:box class="box-inherit scrollbox-innerbox" xbl:inherits="orient,align,pack,dir" flex="1">
         <children/>
       </xul:box>
@@ -189,7 +189,7 @@
   </binding>
 
   <binding id="autorepeatbutton" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
-    <content chromedir="&locale.dir;">
+    <content repeat="hover" chromedir="&locale.dir;">
       <xul:image class="autorepeatbutton-icon"/>
     </content>
   </binding>
