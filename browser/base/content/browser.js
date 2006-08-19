@@ -3159,7 +3159,7 @@ const BrowserSearch = {
     var newWindowPref = gPrefService.getIntPref("browser.link.open_newwindow");
     var where = newWindowPref == 3 ? "tab" : "window";
     var regionBundle = document.getElementById("bundle_browser_region");
-    var searchEnginesURL = regionBundle.getString("searchEnginesURL");
+    var searchEnginesURL = formatURL("browser.search.searchEnginesURL", null, true);
     openUILinkIn(searchEnginesURL, where);
   }
 }
