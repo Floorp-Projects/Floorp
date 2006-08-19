@@ -57,9 +57,16 @@ const kUNBundleURI         =
 
 var nsUpdateNotifier =
 {
+  mInitialized: false,
+
   onProfileStartup: function(aProfileName)
   {
     debug("onProfileStartup");
+
+    // Check if we've already been called.
+    if (this.mInitialized)
+      return;
+    this.mInitialized = true;
 
     // now wait for the first app window to open
     var observerService = Components.

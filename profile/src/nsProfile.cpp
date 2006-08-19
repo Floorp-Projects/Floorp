@@ -444,19 +444,19 @@ nsresult
 nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
 {
     nsresult rv;
-    nsCOMPtr<nsIPrefBranch> prefBranch;
     nsCOMPtr<nsIURI> profileURL;
     PRInt32 numProfiles=0;
   
-    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-    if (NS_FAILED(rv)) return rv;
-    
     GetProfileCount(&numProfiles);
 
     if (profileURLStr.IsEmpty())
     {
+        nsCOMPtr<nsIPrefBranch> prefBranch;
+        nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+        if (NS_FAILED(rv)) return rv;
+    
         // If this flag is TRUE, it makes the multiple profile case
         // just like the single profile case - the profile will be
         // set to that returned by GetCurrentProfile(). It will prevent
@@ -552,44 +552,6 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
         if (NS_FAILED(rv)) return rv;
     }
 
-    nsCOMPtr<nsICategoryManager> catman = 
-             do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-
-    if(NS_SUCCEEDED(rv) && catman) 
-    {
-        nsCOMPtr<nsISimpleEnumerator> enumItem;
-        rv = catman->EnumerateCategory(NS_PROFILE_STARTUP_CATEGORY, getter_AddRefs(enumItem));
-        if(NS_SUCCEEDED(rv) && enumItem) 
-        {
-           while (PR_TRUE) 
-           {
-               nsCOMPtr<nsISupportsCString> contractid;
-
-               rv = enumItem->GetNext(getter_AddRefs(contractid));
-               if (NS_FAILED(rv) || !contractid) break;
-
-               nsCAutoString contractidString;
-               contractid->GetData(contractidString);
-        
-               nsCOMPtr <nsIProfileStartupListener> listener = do_CreateInstance(contractidString.get(), &rv);
-        
-               if (listener) 
-                   listener->OnProfileStartup(currentProfileStr);
-           }
-        }
-    }
-
-    PRBool prefs_converted = PR_FALSE;
-    (void)prefBranch->GetBoolPref("prefs.converted-to-utf8", &prefs_converted);
-
-    if (!prefs_converted) 
-    {
-        nsCOMPtr <nsIPrefConverter> pPrefConverter = do_CreateInstance(kPrefConverterCID, &rv);
-        if (!pPrefConverter) return NS_ERROR_FAILURE;
-        rv = pPrefConverter->ConvertPrefsToUTF8();
-        if (NS_FAILED(rv)) return rv;
-    }
-    
     return NS_OK;
 }
 
@@ -1284,6 +1246,51 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     if (mProfileChangeFailed)
       return NS_ERROR_ABORT;
 
+    nsCOMPtr<nsICategoryManager> catman = 
+             do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+
+    if(NS_SUCCEEDED(rv) && catman) 
+    {
+        nsCOMPtr<nsISimpleEnumerator> enumItem;
+        rv = catman->EnumerateCategory(NS_PROFILE_STARTUP_CATEGORY, getter_AddRefs(enumItem));
+        if(NS_SUCCEEDED(rv) && enumItem) 
+        {
+           while (PR_TRUE) 
+           {
+               nsCOMPtr<nsISupportsCString> contractid;
+
+               rv = enumItem->GetNext(getter_AddRefs(contractid));
+               if (NS_FAILED(rv) || !contractid) break;
+
+               nsCAutoString contractidString;
+               contractid->GetData(contractidString);
+        
+               nsCOMPtr <nsIProfileStartupListener> listener = do_GetService(contractidString.get(), &rv);
+        
+               if (listener) 
+                   listener->OnProfileStartup(aCurrentProfile);
+           }
+        }
+    }
+
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+  
+    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool prefs_converted = PR_FALSE;
+    (void)prefBranch->GetBoolPref("prefs.converted-to-utf8", &prefs_converted);
+
+    if (!prefs_converted) 
+    {
+        nsCOMPtr <nsIPrefConverter> pPrefConverter = do_GetService(kPrefConverterCID, &rv);
+        if (!pPrefConverter) return NS_ERROR_FAILURE;
+        rv = pPrefConverter->ConvertPrefsToUTF8();
+        if (NS_FAILED(rv)) return rv;
+    }
+    
     return NS_OK;
 }
 
