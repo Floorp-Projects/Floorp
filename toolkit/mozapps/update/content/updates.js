@@ -1382,7 +1382,9 @@ var gErrorsPage = {
     
     var errorReason = document.getElementById("errorReason");
     errorReason.value = gUpdates.update.statusText;
-    var manualURL = getPref("getCharPref", PREF_UPDATE_MANUAL_URL, "");
+    var formatter = Components.classes["@mozilla.org/browser/URLFormatterService;1"]
+                              .getService(Components.interfaces.nsIURLFormatter);
+    var manualURL = formatter.formatURLPref(PREF_UPDATE_MANUAL_URL, null);
     var errorLinkLabel = document.getElementById("errorLinkLabel");
     errorLinkLabel.value = manualURL;
     errorLinkLabel.href = manualURL;

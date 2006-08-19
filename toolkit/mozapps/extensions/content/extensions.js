@@ -331,10 +331,10 @@ function showView(aView) {
                                                                           "tooltiptextextensions"));
       getMore.setAttribute("value", getMore.getAttribute(isThemes ? "valuethemes" :
                                                                     "valueextensions"));
-      var getMoreURL = gPref.getComplexValue(isThemes ? PREF_EXTENSIONS_GETMORETHEMESURL
-                                                      : PREF_EXTENSIONS_GETMOREEXTENSIONSURL,
-                                             Components.interfaces.nsIPrefLocalizedString).data;
-      getMoreURL = getMoreURL.replace(/%APPID%/g, gAppID);
+      var getMorePref = isThemes ? PREF_EXTENSIONS_GETMORETHEMESURL : PREF_EXTENSIONS_GETMOREEXTENSIONSURL;
+      var formatter = Components.classes["@mozilla.org/browser/URLFormatterService;1"]
+                                .getService(Components.interfaces.nsIURLFormatter);
+      var getMoreURL = formatter.formatURLPref(getMorePref, null);
       getMore.setAttribute("getMoreURL", getMoreURL);
       if (getMore.hidden)
         getMore.hidden = false;

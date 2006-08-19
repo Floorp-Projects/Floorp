@@ -88,10 +88,10 @@ function init() {
       items.push(args.GetString(i));
 
     var extensionsBundle = document.getElementById("extensionsBundle");
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
     try {
-      var url = pref.getCharPref("extensions.blocklist.detailsURL");
+      var formatter = Components.classes["@mozilla.org/browser/URLFormatterService;1"]
+                                .getService(Components.interfaces.nsIURLFormatter);
+      var url = formatter.formatURLPref("extensions.blocklist.detailsURL", null);
     }
     catch (e) { }
 

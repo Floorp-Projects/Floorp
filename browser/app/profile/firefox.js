@@ -48,8 +48,30 @@
 #endif
 #endif
 
-pref("startup.homepage_override_url","chrome://browser-region/locale/region.properties");
-pref("startup.homepage_welcome_url","chrome://browser-region/locale/region.properties");
+#ifdef OFFICIAL_BRANDING
+
+pref("startup.homepage_override_url","http://%LOCALE%.www.mozilla.com/%LOCALE%/firefox/%VERSION%/whatsnew/");
+pref("startup.homepage_welcome_url","http://%LOCALE%.www.mozilla.com/%LOCALE%/firefox/%VERSION%/firstrun/");
+// URL user can browse to manually if for some reason all update installation
+// attempts fail.
+pref("app.update.url.manual", "http://%LOCALE%.www.mozilla.com/%LOCALE%/products/firefox/");
+// A default value for the "More information about this update" link
+// supplied in the "An update is available" page of the update wizard. 
+pref("app.update.url.details", "http://%LOCALE%.www.mozilla.com/%LOCALE%/firefox/releases/");
+
+#else
+
+pref("startup.homepage_override_url","http://www.mozilla.org/projects/firefox/%VERSION%/whatsnew/");
+pref("startup.homepage_welcome_url","http://www.mozilla.org/projects/firefox/%VERSION%/firstrun/");
+// URL user can browse to manually if for some reason all update installation
+// attempts fail.
+pref("app.update.url.manual", "http://www.mozilla.org/products/firefox/");
+// A default value for the "More information about this update" link
+// supplied in the "An update is available" page of the update wizard. 
+pref("app.update.url.details", "http://www.mozilla.org/projects/firefox/");
+
+#endif
+
 pref("general.startup.browser", true);
 
 pref("browser.chromeURL","chrome://browser/content/");
@@ -74,7 +96,7 @@ pref("extensions.hideInstallButton", true);
 pref("extensions.blocklist.enabled", true);
 pref("extensions.blocklist.interval", 86400);
 pref("extensions.blocklist.url", "https://addons.mozilla.org/blocklist/1/%APP_ID%/%APP_VERSION%/");
-pref("extensions.blocklist.detailsURL", "http://www.mozilla.com/blocklist/");
+pref("extensions.blocklist.detailsURL", "http://%LOCALE%.www.mozilla.com/%LOCALE%/blocklist/");
 
 // Dictionary download preference
 pref("browser.dictionaries.download.url", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/firefox/%VERSION%/dictionaries/");
@@ -105,12 +127,8 @@ pref("app.update.silent", false);
 
 // Update service URL:
 pref("app.update.url", "https://aus2.mozilla.org/update/2/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/update.xml");
-// URL user can browse to manually if for some reason all update installation
-// attempts fail.  TODO: Change this URL
-pref("app.update.url.manual", "http://www.mozilla.org/products/firefox/");
-// A default value for the "More information about this update" link
-// supplied in the "An update is available" page of the update wizard. 
-pref("app.update.url.details", "chrome://browser-region/locale/region.properties");
+// app.update.url.manual is in branding section
+// app.update.url.details is in branding section
 
 // User-settable override to app.update.url for testing purposes.
 //pref("app.update.url.override", "");
@@ -154,8 +172,8 @@ pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.pro
 pref("extensions.update.interval", 86400);  // Check for updates to Extensions and 
                                             // Themes every day
 // Non-symmetric (not shared by extensions) extension-specific [update] preferences
-pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
-pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("extensions.getMoreExtensionsURL", "http://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%/%VERSION%/extensions/");
+pref("extensions.getMoreThemesURL", "http://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%/%VERSION%/themes/");
 pref("extensions.dss.enabled", false);          // Dynamic Skin Switching                                               
 pref("extensions.dss.switchPending", false);    // Non-dynamic switch pending after next
                                                 // restart.
