@@ -29,6 +29,7 @@ use strict;
 # Bundle the functions in this file together into the "Bugzilla::Token" package.
 package Bugzilla::Token;
 
+use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Mailer;
 use Bugzilla::Util;
@@ -37,15 +38,45 @@ use Date::Format;
 use Date::Parse;
 
 ################################################################################
-# Constants
-################################################################################
-
-# The maximum number of days a token will remain valid.
-use constant MAX_TOKEN_AGE => 3;
-
-################################################################################
 # Public Functions
 ################################################################################
+
+# Creates and sends a token to create a new user account.
+# It assumes that the login has the correct format and is not already in use.
+sub issue_new_user_account_token {
+    my $login_name = shift;
+    my $dbh = Bugzilla->dbh;
+    my $template = Bugzilla->template;
+    my $vars = {};
+
+    # Is there already a pending request for this login name? If yes, do not throw
+    # an error because the user may have lost his email with the token inside.
+    # But to prevent using this way to mailbomb an email address, make sure
+    # the last request is at least 10 minutes old before sending a new email.
+    trick_taint($login_name);
+
+    my $pending_requests =
+        $dbh->selectrow_array('SELECT COUNT(*)
+                                 FROM tokens
+                                WHERE tokentype = ?
+                                  AND ' . $dbh->sql_istrcmp('eventdata', '?') . '
+                                  AND issuedate > NOW() - ' . $dbh->sql_interval(10, 'MINUTE'),
+                               undef, ('account', $login_name));
+
+    ThrowUserError('too_soon_for_new_token', {'type' => 'account'}) if $pending_requests;
+
+    my ($token, $token_ts) = _create_token(undef, 'account', $login_name);
+
+    $vars->{'email'} = $login_name . Bugzilla->params->{'emailsuffix'};
+    $vars->{'token_ts'} = $token_ts;
+    $vars->{'token'} = $token;
+
+    my $message;
+    $template->process('account/email/request-new.txt.tmpl', $vars, \$message)
+      || ThrowTemplateError($template->error());
+
+    MessageToMTA($message);
+}
 
 sub IssueEmailChangeToken {
     my ($userid, $old_email, $new_email) = @_;
@@ -106,7 +137,7 @@ sub IssuePasswordToken {
                                 WHERE ' . $dbh->sql_istrcmp('login_name', '?'),
                                 undef, ('password', $loginname));
 
-    ThrowUserError('too_soon_for_new_token') if $too_soon;
+    ThrowUserError('too_soon_for_new_token', {'type' => 'password'}) if $too_soon;
 
     my ($token, $token_ts) = _create_token($userid, 'password', $::ENV{'REMOTE_ADDR'});
 
@@ -177,26 +208,25 @@ sub GenerateUniqueToken {
 sub Cancel {
     my ($token, $cancelaction, $vars) = @_;
     my $dbh = Bugzilla->dbh;
+    my $template = Bugzilla->template;
     $vars ||= {};
 
     # Get information about the token being cancelled.
     trick_taint($token);
-    my ($issuedate, $tokentype, $eventdata, $loginname, $realname) =
+    my ($issuedate, $tokentype, $eventdata, $loginname) =
         $dbh->selectrow_array('SELECT ' . $dbh->sql_date_format('issuedate') . ',
-                                      tokentype, eventdata, login_name, realname
+                                      tokentype, eventdata, login_name
                                  FROM tokens
-                           INNER JOIN profiles
+                            LEFT JOIN profiles
                                    ON tokens.userid = profiles.userid
                                 WHERE token = ?',
                                 undef, $token);
 
-    # Get the email address of the Bugzilla maintainer.
-    my $maintainer = Bugzilla->params->{'maintainer'};
-
-    my $template = Bugzilla->template;
-
+    # If we are cancelling the creation of a new user account, then there
+    # is no entry in the 'profiles' table.
+    $loginname ||= $eventdata;
     $vars->{'emailaddress'} = $loginname . Bugzilla->params->{'emailsuffix'};
-    $vars->{'maintainer'} = $maintainer;
+    $vars->{'maintainer'} = Bugzilla->params->{'maintainer'};
     $vars->{'remoteaddress'} = $::ENV{'REMOTE_ADDR'};
     $vars->{'token'} = $token;
     $vars->{'tokentype'} = $tokentype;

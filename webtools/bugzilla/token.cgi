@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Myk Melez <myk@mozilla.org>
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 ############################################################################
 # Script Initialization
@@ -35,6 +36,8 @@ use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::Token;
 use Bugzilla::User;
+
+use Date::Parse;
 
 my $dbh = Bugzilla->dbh;
 local our $cgi = Bugzilla->cgi;
@@ -86,6 +89,12 @@ if ($cgi->param('t')) {
       && ($tokentype ne 'emailnew') ) {
     Bugzilla::Token::Cancel($::token, "wrong_token_for_confirming_email_change");
     ThrowUserError("wrong_token_for_confirming_email_change");
+  }
+  if (($::action =~ /^(request|confirm|cancel)_new_account$/)
+      && ($tokentype ne 'account'))
+  {
+      Bugzilla::Token::Cancel($::token, 'wrong_token_for_creating_account');
+      ThrowUserError('wrong_token_for_creating_account');
   }
 }
 
@@ -147,6 +156,12 @@ if ($::action eq 'reqpw') {
     cancelChangeEmail();
 } elsif ($::action eq 'chgem') {
     changeEmail();
+} elsif ($::action eq 'request_new_account') {
+    request_create_account();
+} elsif ($::action eq 'confirm_new_account') {
+    confirm_create_account();
+} elsif ($::action eq 'cancel_new_account') {
+    cancel_create_account();
 } else { 
     # If the action that the user wants to take (specified in the "a" form field)
     # is none of the above listed actions, display an error telling the user 
@@ -333,3 +348,75 @@ sub cancelChangeEmail {
       || ThrowTemplateError($template->error());
 }
 
+sub request_create_account {
+    my (undef, $date, $login_name) = Bugzilla::Token::GetTokenData($::token);
+    $vars->{'token'} = $::token;
+    $vars->{'email'} = $login_name . Bugzilla->params->{'emailsuffix'};
+    $vars->{'date'} = str2time($date);
+
+    # We require a HTTPS connection if possible.
+    if (Bugzilla->params->{'sslbase'} ne ''
+        && Bugzilla->params->{'ssl'} ne 'never')
+    {
+        $cgi->require_https(Bugzilla->params->{'sslbase'});
+    }
+    print $cgi->header();
+
+    $template->process('account/email/confirm-new.html.tmpl', $vars)
+      || ThrowTemplateError($template->error());
+}
+
+sub confirm_create_account {
+    my (undef, undef, $login_name) = Bugzilla::Token::GetTokenData($::token);
+
+    (defined $cgi->param('passwd1') && defined $cgi->param('passwd2'))
+      || ThrowUserError('new_password_missing');
+    validate_password($cgi->param('passwd1'), $cgi->param('passwd2'));
+
+    my $realname = $cgi->param('realname');
+    my $password = $cgi->param('passwd1');
+
+    $dbh->bz_lock_tables('profiles WRITE', 'profiles_activity WRITE',
+                         'email_setting WRITE', 'user_group_map WRITE',
+                         'groups READ', 'tokens READ', 'fielddefs READ');
+
+    # The email syntax may have changed since the initial creation request.
+    validate_email_syntax($login_name)
+      || ThrowUserError('illegal_email_address', {addr => $login_name});
+    # Also, maybe that this user account has already been created meanwhile.
+    is_available_username($login_name)
+      || ThrowUserError('account_exists', {email => $login_name});
+
+    # Login and password are validated now, and realname is allowed to
+    # contain anything.
+    trick_taint($realname);
+    trick_taint($password);
+
+    my $otheruser = insert_new_user($login_name, $realname, $password);
+    $dbh->bz_unlock_tables();
+
+    # Now delete this token.
+    Bugzilla::Token::DeleteToken($::token);
+
+    # Let the user know that his user account has been successfully created.
+    $vars->{'message'} = 'account_created';
+    $vars->{'otheruser'} = $otheruser;
+    $vars->{'login_info'} = 1;
+
+    print $cgi->header();
+
+    $template->process('global/message.html.tmpl', $vars)
+      || ThrowTemplateError($template->error());
+}
+
+sub cancel_create_account {
+    my (undef, undef, $login_name) = Bugzilla::Token::GetTokenData($::token);
+
+    $vars->{'message'} = 'account_creation_cancelled';
+    $vars->{'account'} = $login_name;
+    Bugzilla::Token::Cancel($::token, $vars->{'message'});
+
+    print $cgi->header();
+    $template->process('global/message.html.tmpl', $vars)
+      || ThrowTemplateError($template->error());
+}

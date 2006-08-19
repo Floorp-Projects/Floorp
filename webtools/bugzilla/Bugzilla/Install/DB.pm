@@ -471,6 +471,9 @@ sub update_table_definitions {
     $dbh->bz_alter_column('keyworddefs', 'id',
         {TYPE => 'SMALLSERIAL', NOTNULL => 1, PRIMARYKEY => 1});
 
+    # 2006-08-19 LpSolit@gmail.com - Bug 87795
+    $dbh->bz_alter_column('tokens', 'userid', {TYPE => 'INT3'});
+
     ################################################################
     # New --TABLE-- changes should go *** A B O V E *** this point #
     ################################################################

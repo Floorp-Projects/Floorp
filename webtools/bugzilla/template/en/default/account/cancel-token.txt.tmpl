@@ -42,7 +42,9 @@ to [% maintainer %] if you suspect foul play.
 Cancelled Because: [% PROCESS cancelactionmessage %]
 
 [% BLOCK subject %]
-  [% IF tokentype == 'password' %]
+  [% IF tokentype == 'new_account' %]
+    User account creation request cancelled
+  [% ELSIF tokentype == 'password' %]
     Password change request cancelled
   [% ELSIF tokentype == 'emailnew' OR tokentype == 'emailold' %]
     Email change request cancelled
@@ -72,6 +74,10 @@ Cancelled Because: [% PROCESS cancelactionmessage %]
   [% ELSIF cancelaction == 'password_change_cancelled' %]
     You have requested cancellation.
 
+  [% ELSIF cancelaction == 'account_creation_cancelled' %]
+    The creation of the user account [% emailaddress %]
+    has been cancelled.
+
   [% ELSIF cancelaction == 'user_logged_in' %]
     You have logged in.
 
@@ -83,6 +89,9 @@ Cancelled Because: [% PROCESS cancelactionmessage %]
 
   [% ELSIF cancelaction == 'wrong_token_for_confirming_email_change' %]
     You have tried to use the token to confirm the email address change.
+
+  [% ELSIF cancelaction == 'wrong_token_for_creating_account' %]
+    You have tried to use the token to create a user account.
 
   [% ELSE %]
     [%# Give sensible error if the cancel-token function is used incorrectly.

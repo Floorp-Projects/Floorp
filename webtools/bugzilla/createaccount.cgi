@@ -60,21 +60,13 @@ unless ($createexp) {
 my $login = $cgi->param('login');
 
 if (defined($login)) {
-    # We've been asked to create an account.
-    my $realname = trim($cgi->param('realname'));
-
     validate_email_syntax($login)
       || ThrowUserError('illegal_email_address', {addr => $login});
 
     $vars->{'login'} = $login;
 
-    $dbh->bz_lock_tables('profiles WRITE', 'profiles_activity WRITE',
-                         'user_group_map WRITE', 'email_setting WRITE',
-                         'groups READ', 'tokens READ', 'fielddefs READ');
-
     if (!is_available_username($login)) {
         # Account already exists
-        $dbh->bz_unlock_tables();
         $template->process("account/exists.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
         exit;
@@ -83,17 +75,10 @@ if (defined($login)) {
     if ($login !~ /$createexp/) {
         ThrowUserError("account_creation_disabled");
     }
-    
-    # Create account
-    my $password = insert_new_user($login, $realname);
 
-    $dbh->bz_unlock_tables();
+    # Create and send a token for this new account.
+    Bugzilla::Token::issue_new_user_account_token($login);
 
-    # Clear out the login cookies in case the user is currently logged in.
-    Bugzilla->logout();
-
-    Bugzilla::BugMail::MailPassword($login, $password);
-    
     $template->process("account/created.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
     exit;

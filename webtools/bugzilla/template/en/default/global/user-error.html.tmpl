@@ -1318,8 +1318,13 @@
 
   [% ELSIF error == "too_soon_for_new_token" %]
     [% title = "Too Soon For New Token" %]
-    You have requested a password token too recently to request
-    another.  Please wait a while and try again.
+    You have requested
+    [% IF type == "password" %]
+      a password
+    [% ELSIF type == "account" %]
+      an account
+    [% END %]
+    token too recently to request another. Please wait a while and try again.
 
   [% ELSIF error == "unknown_keyword" %]
     [% title = "Unknown Keyword" %]
@@ -1397,6 +1402,10 @@
   [% ELSIF error == "wrong_token_for_confirming_email_change" %]
     [% title = "Wrong Token" %]
     That token cannot be used to change your email address.
+
+  [% ELSIF error == "wrong_token_for_creating_account" %]
+    [% title = "Wrong Token" %]
+    That token cannot be used to create a user account.
 
   [% ELSIF error == "zero_length_file" %]
     [% title = "File Is Empty" %]

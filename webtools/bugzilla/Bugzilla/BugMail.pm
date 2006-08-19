@@ -654,20 +654,6 @@ sub sendMail {
     return 1;
 }
 
-# Send the login name and password of the newly created account to the user.
-sub MailPassword {
-    my ($login, $password) = (@_);
-    my $template = Bugzilla->template;
-    my $vars = {
-      mailaddress => $login . Bugzilla->params->{'emailsuffix'},
-      login => $login,
-      password => $password };
-    my $msg;
-    $template->process("email/password.txt.tmpl", $vars, \$msg)
-      || ThrowTemplateError($template->error());
-    MessageToMTA($msg);
-}
-
 # Get bug comments for the given period and format them to be used in emails.
 sub get_comments_by_bug {
     my ($id, $start, $end) = @_;

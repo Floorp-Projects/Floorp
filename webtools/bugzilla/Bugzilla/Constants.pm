@@ -120,6 +120,8 @@ use File::Basename;
     DB_MODULE
     ROOT_USER
     ON_WINDOWS
+
+    MAX_TOKEN_AGE
 );
 
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
@@ -294,6 +296,9 @@ use constant SENDMAIL_EXE => '/usr/lib/sendmail.exe';
 
 use constant FIELD_TYPE_UNKNOWN   => 0;
 use constant FIELD_TYPE_FREETEXT  => 1;
+
+# The maximum number of days a token will remain valid.
+use constant MAX_TOKEN_AGE => 3;
 
 # States that are considered to be "open" for bugs.
 use constant BUG_STATE_OPEN => ('NEW', 'REOPENED', 'ASSIGNED', 

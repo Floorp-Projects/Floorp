@@ -1355,9 +1355,8 @@ sub insert_new_user {
                    VALUES (?, ?, NOW(), ?, NOW())',
                    undef, ($user->id, $who, $creation_date_fieldid));
 
-    # Return the password to the calling code so it can be included
-    # in an email sent to the user.
-    return $password;
+    # Return the newly created user account.
+    return $user;
 }
 
 sub is_available_username {
@@ -1377,15 +1376,18 @@ sub is_available_username {
     # was unsafe and required weird escaping; using substring to pull out
     # the new/old email addresses and sql_position() to find the delimiter (':')
     # is cleaner/safer
-    my $sth = $dbh->prepare(
-        "SELECT eventdata FROM tokens WHERE tokentype = 'emailold'
-        AND SUBSTRING(eventdata, 1, (" 
-        . $dbh->sql_position(q{':'}, 'eventdata') . "-  1)) = ?
-        OR SUBSTRING(eventdata, (" 
-        . $dbh->sql_position(q{':'}, 'eventdata') . "+ 1)) = ?");
-    $sth->execute($username, $username);
+    my $eventdata = $dbh->selectrow_array(
+        "SELECT eventdata
+           FROM tokens
+          WHERE (tokentype = 'emailold'
+                AND SUBSTRING(eventdata, 1, (" .
+                    $dbh->sql_position(q{':'}, 'eventdata') . "-  1)) = ?)
+             OR (tokentype = 'emailnew'
+                AND SUBSTRING(eventdata, (" .
+                    $dbh->sql_position(q{':'}, 'eventdata') . "+ 1)) = ?)",
+         undef, ($username, $username));
 
-    if (my ($eventdata) = $sth->fetchrow_array()) {
+    if ($eventdata) {
         # Allow thru owner of token
         if($old_username && ($eventdata eq "$old_username:$username")) {
             return 1;
@@ -1459,7 +1461,7 @@ Bugzilla::User - Object for a Bugzilla user
       $user->get_selectable_classifications;
 
   # Class Functions
-  $password = insert_new_user($username, $realname, $password, $disabledtext);
+  $user = insert_new_user($username, $realname, $password, $disabledtext);
 
 =head1 DESCRIPTION
 
@@ -1815,8 +1817,7 @@ Params: $username (scalar, string) - The login name for the new user.
                                           be sent depending on the user's 
                                           email preferences.
 
-Returns: The password for this user, in plain text, so it can be included
-         in an e-mail sent to the user.
+Returns: The Bugzilla::User object representing the new user account.
 
 =item C<is_available_username>
 

@@ -38,6 +38,15 @@
     [% IF groups.size %]
       You may want to edit the group settings now, using the form below.
     [% END %]
+    [% IF login_info %]
+      You can now go to the <a href="index.cgi">Log In</a> page to enter
+      this [% terms.Bugzilla %] installation.
+    [% END %]
+
+  [% ELSIF message_tag == "account_creation_cancelled" %]
+    [% title = "User Account Creation Cancelled" %]
+    The creation of the user account [% account FILTER html %] has been
+    cancelled.
 
   [% ELSIF message_tag == "account_updated" %]
     [% IF changed_fields.size

@@ -715,7 +715,7 @@ use constant ABSTRACT_SCHEMA => {
     #     for these changes.
     tokens => {
         FIELDS => [
-            userid    => {TYPE => 'INT3', NOTNULL => 1} ,
+            userid    => {TYPE => 'INT3'},
             issuedate => {TYPE => 'DATETIME', NOTNULL => 1} ,
             token     => {TYPE => 'varchar(16)', NOTNULL => 1,
                           PRIMARYKEY => 1},
