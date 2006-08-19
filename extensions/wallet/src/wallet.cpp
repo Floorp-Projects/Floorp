@@ -594,7 +594,7 @@ Wallet_CheckConfirmYN
 /*******************************************************/
 
 #include "nsISecretDecoderRing.h"
-nsISecretDecoderRing* gSecretDecoderRing;
+nsISecretDecoderRing* gSecretDecoderRing = nsnull;
 PRBool gEncryptionFailure = PR_FALSE;
 PRInt32 gReencryptionLevel = 0;
 
@@ -707,11 +707,10 @@ static nsresult DecryptString (const char * crypt, char *& text) {
 
 void
 WLLT_ExpirePassword(PRBool* status) {
-  nsresult rv = wallet_CryptSetup();
-  if (NS_SUCCEEDED(rv)) {
-    rv = gSecretDecoderRing->LogoutAndTeardown();
+  if (gSecretDecoderRing) {
+    gSecretDecoderRing->LogoutAndTeardown();
   }
-  *status = NS_SUCCEEDED(rv);
+  *status = PR_TRUE;
 }
 
 void
