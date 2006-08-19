@@ -189,6 +189,8 @@ pref("news.directory",                  "");
 pref("browser.editor.disabled", false);
 pref("spellchecker.dictionary", "");
 
+pref("extensions.getMoreLocalesURL", "chrome://branding/locale/brand.properties");
+
 pref("xpinstall.dialog.confirm",        "chrome://communicator/content/xpinstall/institems.xul");
 pref("xpinstall.dialog.progress.chrome","chrome://communicator/content/xpinstall/xpistatus.xul");
 pref("xpinstall.dialog.progress.skin",  "chrome://communicator/content/xpinstall/xpistatus.xul");
