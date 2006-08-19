@@ -58,7 +58,6 @@ const CID =         Components.ID("{e6156350-2be8-11db-a98b-0800200c9a66}");
 const CONTRACT_ID = "@mozilla.org/browser/URLFormatterService;1";
 const CLASS_NAME =  "Browser URL Formatter Service";
 
-const APPINFO =     Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
 
 /**
  * class definition
@@ -73,30 +72,37 @@ nsURLFormatterService.prototype = {
    * Built-in values
    */
   _defaults: {
+
+    get appInfo() {
+      if (!this._appInfo)
+        this._appInfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
+      return this._appInfo;
+    }, 
+
     LOCALE: function() {
       var chromereg = Cc["@mozilla.org/chrome/chrome-registry;1"].
                       getService(Ci.nsIXULChromeRegistry);
       return chromereg.getSelectedLocale('global');
     },
-    VENDOR:           function() { return APPINFO.vendor; },
-    NAME:             function() { return APPINFO.name; },
-    ID:               function() { return APPINFO.ID; },
-    VERSION:          function() { return APPINFO.version; },
-    APPBUILDID:       function() { return APPINFO.appBuildID; },
-    PLATFORMVERSION:  function() { return APPINFO.platformVersion; },
-    PLATFORMBUILDID:  function() { return APPINFO.platformBuildID; },
-    APP:              function() { return APPINFO.name.toLowerCase(); }
+    VENDOR:           function() { return this.appInfo.vendor; },
+    NAME:             function() { return this.appInfo.name; },
+    ID:               function() { return this.appInfo.ID; },
+    VERSION:          function() { return this.appInfo.version; },
+    APPBUILDID:       function() { return this.appInfo.appBuildID; },
+    PLATFORMVERSION:  function() { return this.appInfo.platformVersion; },
+    PLATFORMBUILDID:  function() { return this.appInfo.platformBuildID; },
+    APP:              function() { return this.appInfo.name.toLowerCase().replace(/ /, ""); }
   },
 
   /**
-   *
+   * nsIURLFormatter.formatURL
    */
   formatURL: function uf_formatURL(aFormat, aVars) {
     var repl = [];
     if (aVars) {
       var keys = aVars.getKeys({});
       for (var i = 0; i < keys.length; i++) {
-        var val = XPCNativeWrapper(aVars.getValue(keys[i]).QueryInterface(Ci.nsISupportsString));
+        var val = aVars.getValue(keys[i]).QueryInterface(Ci.nsISupportsString).data;
         repl[keys[i]] = val;
       }
     }
@@ -114,7 +120,7 @@ nsURLFormatterService.prototype = {
   },
 
   /**
-   *
+   * nsIURLFormatter.formatURLPref
    */
   formatURLPref: function uf_formatURLPref(aPref, aVars) {
     var format = null;
@@ -153,7 +159,6 @@ var nsURLFormatterFactory = {
 };
 
 var nsURLFormatterModule = {
-  _firstTime: true,
   registerSelf: function(aCompMgr, aFileSpec, aLocation, aType) {
     aCompMgr = aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
     aCompMgr.registerFactoryLocation(CID, CLASS_NAME, 

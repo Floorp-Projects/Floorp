@@ -42,7 +42,7 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXTRA_PP_COMPONENTS = \
+EXTRA_COMPONENTS = \
 	nsURLFormatter.js \
 	$(NULL)
 
