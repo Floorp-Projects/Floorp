@@ -56,6 +56,7 @@ const PREF_APP_UPDATE_LASTUPDATETIME_FMT  = "app.update.lastUpdateTime.%ID%";
 const PREF_APP_EXTENSIONS_VERSION         = "app.extensions.version";
 const PREF_GENERAL_USERAGENT_LOCALE       = "general.useragent.locale";
 const PREF_APP_UPDATE_INCOMPATIBLE_MODE   = "app.update.incompatible.mode";
+const PREF_UPDATE_NEVER_BRANCH            = "app.update.never."
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
 const URI_UPDATE_HISTORY_DIALOG = "chrome://mozapps/content/update/history.xul";
@@ -1213,9 +1214,11 @@ UpdateService.prototype = {
     //
     // The outcome we follow is determined as follows:
     // 
+    // Note:  all Major updates require notification and confirmation
+    // 
     // Update Type      Mode      Incompatible    Outcome
-    // Major            0         Yes or No       Auto Install
-    // Major            1         No              Auto Install
+    // Major            0         Yes or No       Notify and Confirm
+    // Major            1         No              Notify and Confirm
     // Major            1         Yes             Notify and Confirm
     // Major            2         Yes or No       Notify and Confirm
     // Minor            0         Yes or No       Auto Install
@@ -1230,17 +1233,17 @@ UpdateService.prototype = {
     // If app.update.enabled is set to false, an update check is not performed
     // at all, and so none of the decision making above is entered into.
     //
+    if (update.type == "major") {
+      LOG("Checker", "_shouldPrompt: Prompting because it is a major update");
+      return true;
+    }
+
     update.QueryInterface(Components.interfaces.nsIPropertyBag);
     try {
       var licenseAccepted = update.getProperty("licenseAccepted") == "true";
     }
     catch (e) {
       licenseAccepted = false;
-    }
-    if (update.licenseURL && !licenseAccepted) {
-      LOG("Checker", "_shouldPrompt: Prompting because of an un-accepted " + 
-          "license");
-      return true;
     }
     
     var updateEnabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true);
@@ -1264,11 +1267,9 @@ UpdateService.prototype = {
       LOG("Checker", "_shouldPrompt: Prompting if there are incompatibilities");
       return !isCompatible(update);
     case 2:
-      // Mode 2 is do not prompt only if there are no incompatibilities for 
-      // minor updates only
-      LOG("Checker", "_shouldPrompt: Prompting if major or there are " + 
-          "incompatibilities");
-      return update.type == "minor" ? !isCompatible(update) : true;
+      // Mode 2 is do not prompt only if there are no incompatibilities
+      LOG("Checker", "_shouldPrompt: Prompting if there are incompatibilities");
+      return !isCompatible(update);
     }
     // Mode 0 is do not prompt regardless of incompatibilities
     LOG("Checker", "_shouldPrompt: Not prompting the user - they choose to " +
@@ -1300,9 +1301,15 @@ UpdateService.prototype = {
         minorUpdate = newestMinor = updates[i];
     }
 
-    // If there's a major update, always try and fetch that one first, 
-    // otherwise fall back to the newest minor update.
-    return majorUpdate || minorUpdate;
+    // IMPORTANT
+    // If there's a minor update, always try and fetch that one first, 
+    // otherwise use the newest major update.
+    // selectUpdate() only returns one update.
+    // if major were to trump minor, and we said "never" to the major
+    // we'd never get the minor update, since selectUpdate()
+    // would return the major update that the user said "never" to
+    // (shadowing the important minor update with security fixes)
+    return minorUpdate || majorUpdate;
   },
   
   /**
@@ -1325,6 +1332,19 @@ UpdateService.prototype = {
     if (!update)
       return;
     
+    // check if the user said "never" to this version
+    // this check is done here, and not in selectUpdate() so that
+    // the user can get an upgrade they said "never" to if they
+    // manually do "Check for Updates..."
+    // note, selectUpdate() only returns one update.
+    // but in selectUpdate(), minor updates trump major updates
+    // if major trumps minor, and we said "never" to the major
+    // we'd never see the minor update.
+    var neverPrefName = PREF_UPDATE_NEVER_BRANCH + update.version;
+    var never = getPref("getBoolPref", neverPrefName, false);
+    if (never)
+      return;
+
     if (this._shouldPrompt(update))
       showPromptIfNoIncompatibilities(update);
     else {
