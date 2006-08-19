@@ -6065,7 +6065,7 @@ interrupt:
 
           BEGIN_CASE(JSOP_YIELD)
             ASSERT_NOT_THROWING(cx);
-            if (FRAME_TO_GENERATOR(fp)->state == JSGEN_CLOSING) {
+            if (FRAME_TO_GENERATOR(fp)->state & JSGEN_CLOSING) {
                 str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
                                                  fp->argv[-2], NULL);
                 if (str) {
