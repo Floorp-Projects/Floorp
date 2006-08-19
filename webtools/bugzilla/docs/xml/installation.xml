@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.127 2006/08/14 15:54:25 lpsolit%gmail.com Exp $ -->
+<!-- $Id: installation.xml,v 1.128 2006/08/19 17:20:24 wurblzap%gmail.com Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -387,6 +387,13 @@
 
         <listitem>
           <para>
+            <link linkend="install-modules-soap-lite">SOAP::Lite</link>
+            (&min-soap-lite-ver;) for the web service interface
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
             <link linkend="install-modules-patchreader">PatchReader</link>
             (&min-patchreader-ver;) for pretty HTML view of patches
           </para>
@@ -485,6 +492,14 @@
         XML bugs using the <filename>importxml.pl</filename>
         script. This is required to use Bugzilla's "move bugs" feature;
         you may also want to use it for migrating from another bug database.
+        </para>
+      </section>
+
+      <section id="install-modules-soap">
+        <title>SOAP::Lite (&min-soap-lite-ver;)</title>
+        <para>Installing SOAP::Lite enables your Bugzilla installation to be
+        accessible at a standardized Web Service interface (SOAP/XML-RPC)
+        by third-party applications via HTTP(S).
         </para>
       </section>
 

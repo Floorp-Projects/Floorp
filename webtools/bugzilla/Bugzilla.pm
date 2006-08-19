@@ -20,6 +20,7 @@
 # Contributor(s): Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 Erik Stambaugh <erik@dasbistro.com>
 #                 A. Karl Kornel <karl@kornel.name>
+#                 Marc Schumann <wurblzap@gmail.com>
 
 package Bugzilla;
 
@@ -263,13 +264,37 @@ sub dbh {
     return request_cache()->{dbh};
 }
 
-sub batch {
+sub error_mode {
     my $class = shift;
     my $newval = shift;
     if (defined $newval) {
-        request_cache()->{batch} = $newval;
+        request_cache()->{error_mode} = $newval;
     }
-    return request_cache()->{batch} || 0;
+    return request_cache()->{error_mode}
+        || Bugzilla::Constants::ERROR_MODE_WEBPAGE;
+}
+
+sub usage_mode {
+    my $class = shift;
+    my $newval = shift;
+    if (defined $newval) {
+        if ($newval == USAGE_MODE_BROWSER) {
+            $class->error_mode(ERROR_MODE_WEBPAGE);
+        }
+        elsif ($newval == USAGE_MODE_CMDLINE) {
+            $class->error_mode(ERROR_MODE_DIE);
+        }
+        elsif ($newval == USAGE_MODE_WEBSERVICE) {
+            $class->error_mode(ERROR_MODE_DIE_SOAP_FAULT);
+        }
+        else {
+            ThrowCodeError('usage_mode_invalid',
+                           {'invalid_usage_mode', $newval});
+        }
+        request_cache()->{usage_mode} = $newval;
+    }
+    return request_cache()->{usage_mode}
+        || Bugzilla::Constants::USAGE_MODE_BROWSER;
 }
 
 sub switch_to_shadow_db {
@@ -477,12 +502,35 @@ Essentially, causes calls to C<Bugzilla-E<gt>user> to return C<undef>. This has 
 effect of logging out a user for the current request only; cookies and
 database sessions are left intact.
 
-=item C<batch>
+=item C<error_mode>
 
-Set to true, by calling Bugzilla->batch(1), to indicate that Bugzilla is
-being called in a non-interactive manner and errors should be passed to 
-die() rather than being sent to a browser and finished with an exit().
-Bugzilla->batch will return the current state of this flag.
+Call either C<Bugzilla->error_mode(Bugzilla::Constants::ERROR_MODE_DIE)>
+or C<Bugzilla->error_mode(Bugzilla::Constants::ERROR_MODE_DIE_SOAP_FAULT)> to
+change this flag's default of C<Bugzilla::Constants::ERROR_MODE_WEBPAGE> and to
+indicate that errors should be passed to error mode specific error handlers
+rather than being sent to a browser and finished with an exit().
+
+This is useful, for example, to keep C<eval> blocks from producing wild HTML
+on errors, making it easier for you to catch them.
+(Remember to reset the error mode to its previous value afterwards, though.)
+
+C<Bugzilla->error_mode> will return the current state of this flag.
+
+Note that C<Bugzilla->error_mode> is being called by C<Bugzilla->usage_mode> on
+usage mode changes.
+
+=item C<usage_mode>
+
+Call either C<Bugzilla->usage_mode(Bugzilla::Constants::USAGE_MODE_CMDLINE)>
+or C<Bugzilla->usage_mode(Bugzilla::Constants::USAGE_MODE_WEBSERVICE)> near the
+beginning of your script to change this flag's default of
+C<Bugzilla::Constants::USAGE_MODE_BROWSER> and to indicate that Bugzilla is
+being called in a non-interactive manner.
+This influences error handling because on usage mode changes, C<usage_mode>
+calls C<Bugzilla->error_mode> to set an error mode which makes sense for the
+usage mode.
+
+C<Bugzilla->usage_mode> will return the current state of this flag.
 
 =item C<dbh>
 

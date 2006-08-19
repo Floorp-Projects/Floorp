@@ -104,7 +104,7 @@
     Unable to open the chart datafile <tt>[% filename FILTER html %]</tt>.
   
   [% ELSIF error == "chart_lines_not_installed" %]
-    [% admindocslinks = {'installation.html#install-perlmodules' => 'Installing perl modules necessary for Charting'} %]
+    [% admindocslinks = {'installation.html#install-perlmodules' => 'Installing Perl modules necessary for Charting'} %]
     Charts will not work without the Chart::Lines Perl module being installed.
     Run checksetup.pl for installation instructions.
 
@@ -137,7 +137,7 @@
     and <code>[% type FILTER html %]</code> together.
 
   [% ELSIF error == "gd_not_installed" %]
-    [% admindocslinks = {'installation.html#install-perlmodules' => 'Installing perl modules necessary for Charting'} %]
+    [% admindocslinks = {'installation.html#install-perlmodules' => 'Installing Perl modules necessary for Charting'} %]
     Charts will not work without the GD Perl module being installed.
     Run checksetup.pl for installation instructions.
 
@@ -321,6 +321,12 @@
     The value "<code>[% value FILTER html %]</code>" is not in the list of
     legal values for the <em>[% name FILTER html %]</em> setting.
 
+  [% ELSIF error == "soap_not_installed" %]
+    [% admindocslinks = {'installation.html#install-perlmodules' => 'Installing Perl modules'} %]
+    The XMLRPC interface will not work without the SOAP::Lite Perl module being
+    installed.
+    Run checksetup.pl for installation instructions.
+
   [% ELSIF error == "token_generation_error" %]
     Something is seriously wrong with the token generation system.
 
@@ -346,6 +352,9 @@
     [% ELSE %]
        I could not figure out what you wanted to do.
     [% END %]
+
+  [% ELSIF error == "usage_mode_invalid" %]
+    '[% invalid_usage_mode %]' is not a valid usage mode.
 
   [% ELSIF error == "must_be_patch" %]
     [% title = "Attachment Must Be Patch" %]
@@ -383,9 +392,11 @@
   [% END %]
 [% END %]
 
-[%# If we are in batch mode, we want the error message to be plain text, not HTML %]
+[%# If we are in ERROR_MODE_DIE, we want the error message to be plain text,
+  # not HTML
+%]
 [% USE Bugzilla %]
-[% IF Bugzilla.batch %]
+[% IF Bugzilla.error_mode == ERROR_MODE_DIE %]
   [% error_message FILTER none %]
   [% RETURN %]
 [% END %]

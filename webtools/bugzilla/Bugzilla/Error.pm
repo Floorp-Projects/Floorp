@@ -18,6 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Bradley Baetz <bbaetz@acm.org>
+#                 Marc Schumann <wurblzap@gmail.com>
 
 package Bugzilla::Error;
 
@@ -27,6 +28,7 @@ use base qw(Exporter);
 @Bugzilla::Error::EXPORT = qw(ThrowCodeError ThrowTemplateError ThrowUserError);
 
 use Bugzilla::Constants;
+use Bugzilla::WebService::Constants;
 use Bugzilla::Util;
 use Date::Format;
 
@@ -74,15 +76,21 @@ sub _throw_error {
     }
 
     my $template = Bugzilla->template;
-    if (Bugzilla->batch) {
+    if (Bugzilla->error_mode == ERROR_MODE_WEBPAGE) {
+        print Bugzilla->cgi->header();
+        $template->process($name, $vars)
+          || ThrowTemplateError($template->error());
+    }
+    elsif (Bugzilla->error_mode == ERROR_MODE_DIE) {
         my $message;
         $template->process($name, $vars, \$message)
           || ThrowTemplateError($template->error());
         die("$message\n");
-    } else {
-        print Bugzilla->cgi->header();
-        $template->process($name, $vars)
-          || ThrowTemplateError($template->error());
+    }
+    elsif (Bugzilla->error_mode == ERROR_MODE_DIE_SOAP_FAULT) {
+        die SOAP::Fault
+            ->faultcode(ERROR_GENERAL)
+            ->faultstring($error);
     }
     exit;
 }
@@ -103,7 +111,7 @@ sub ThrowTemplateError {
     Bugzilla->dbh->bz_unlock_tables(UNLOCK_ABORT);
 
     my $vars = {};
-    if (Bugzilla->batch) {
+    if (Bugzilla->error_mode == ERROR_MODE_DIE) {
         die("error: template error: $template_err");
     }
 

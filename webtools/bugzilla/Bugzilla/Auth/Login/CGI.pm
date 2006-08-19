@@ -34,6 +34,7 @@ use base qw(Bugzilla::Auth::Login);
 use constant user_can_create_account => 1;
 
 use Bugzilla::Constants;
+use Bugzilla::WebService::Constants;
 use Bugzilla::Util;
 use Bugzilla::Error;
 
@@ -57,6 +58,12 @@ sub fail_nodata {
     my ($self) = @_;
     my $cgi = Bugzilla->cgi;
     my $template = Bugzilla->template;
+
+    if (Bugzilla->error_mode == Bugzilla::Constants::ERROR_MODE_DIE_SOAP_FAULT) {
+        die SOAP::Fault
+            ->faultcode(ERROR_AUTH_NODATA)
+            ->faultstring('Login Required');
+    }
 
     # Redirect to SSL if required
     if (Bugzilla->params->{'sslbase'} ne '' 

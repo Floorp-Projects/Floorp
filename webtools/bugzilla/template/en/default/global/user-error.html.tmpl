@@ -1422,9 +1422,11 @@
   [% END %]
 [% END %]
 
-[%# If we are in batch mode, we want the error message to be plain text, not HTML %]
+[%# If we are in ERROR_MODE_DIE, we want the error message to be plain text,
+  # not HTML
+%]
 [% USE Bugzilla %]
-[% IF Bugzilla.batch %]
+[% IF Bugzilla.error_mode == ERROR_MODE_DIE %]
   [% error_message FILTER none %]
   [% RETURN %]
 [% END %]

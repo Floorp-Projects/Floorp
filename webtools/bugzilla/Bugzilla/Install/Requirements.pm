@@ -13,6 +13,7 @@
 # The Original Code is the Bugzilla Bug Tracking System.
 #
 # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
+#                 Marc Schumann <wurblzap@gmail.com>
 
 package Bugzilla::Install::Requirements;
 
@@ -115,6 +116,10 @@ use constant OPTIONAL_MODULES => [
     },
     {
         name => 'Net::LDAP',
+        version => 0
+    },
+    {
+        name => 'SOAP::Lite',
         version => 0
     },
 ];
@@ -250,6 +255,15 @@ sub check_requirements {
                   " http://www.imagemagick.org, and the Image::Magick\n",
                   "Perl module by running (as $root):\n\n",
                   "    " . install_command("Image::Magick") . "\n\n";
+        }
+
+        # Web Services
+        if (!$have_mod{'SOAP::Lite'}) {
+            print "If you want your Bugzilla installation to be accessible\n",
+                  "via its Web Service interface, you will need to install\n",
+                  "the SOAP::Lite module by running (as $root):\n\n";
+            print "    SOAP::Lite:      " .
+                  install_command("SOAP::Lite") . "\n\n";
         }
 
         # Graphical Reports

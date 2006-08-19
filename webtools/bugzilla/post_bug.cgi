@@ -559,10 +559,11 @@ if (defined($cgi->upload('data')) || $cgi->param('attachurl')) {
 
 # Add flags, if any. To avoid dying if something goes wrong
 # while processing flags, we will eval() flag validation.
-# This requires to be in batch mode.
+# This requires errors to die().
 # XXX: this can go away as soon as flag validation is able to
 #      fail without dying.
-Bugzilla->batch(1);
+my $error_mode_cache = Bugzilla->error_mode;
+Bugzilla->error_mode(ERROR_MODE_DIE);
 eval {
     # Make sure no flags have already been set for this bug.
     # Impossible? - Well, depends if you hack the URL or not.
@@ -571,7 +572,7 @@ eval {
     Bugzilla::FlagType::validate($cgi, $id);
     Bugzilla::Flag::process($bug, undef, $timestamp, $cgi);
 };
-Bugzilla->batch(0);
+Bugzilla->error_mode($error_mode_cache);
 if ($@) {
     $vars->{'message'} = 'flag_creation_failed';
     $vars->{'flag_creation_error'} = $@;

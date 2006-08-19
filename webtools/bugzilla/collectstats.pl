@@ -55,8 +55,9 @@ if (chdir("graphs")) {
     chdir("..");
 }
 
-# Let Throw*Error() work correctly outside a web browser.
-Bugzilla->batch(1);
+# This is a pure command line script.
+Bugzilla->usage_mode(USAGE_MODE_CMDLINE);
+
 my $dbh = Bugzilla->switch_to_shadow_db();
 
 # To recreate the daily statistics,  run "collectstats.pl --regenerate" .

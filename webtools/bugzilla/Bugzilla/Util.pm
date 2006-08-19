@@ -24,6 +24,7 @@
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
 #                 Frédéric Buclin <LpSolit@gmail.com>
+#                 Marc Schumann <wurblzap@gmail.com>
 
 package Bugzilla::Util;
 
@@ -63,20 +64,20 @@ sub is_tainted {
 sub trick_taint {
     require Carp;
     Carp::confess("Undef to trick_taint") unless defined $_[0];
-    my ($match) = $_[0] =~ /^(.*)$/s;
-    $_[0] = $match;
+    my $match = $_[0] =~ /^(.*)$/s;
+    $_[0] = $match ? $1 : undef;
     return (defined($_[0]));
 }
 
 sub detaint_natural {
-    my ($match) = $_[0] =~ /^(\d+)$/;
-    $_[0] = $match;
+    my $match = $_[0] =~ /^(\d+)$/;
+    $_[0] = $match ? $1 : undef;
     return (defined($_[0]));
 }
 
 sub detaint_signed {
-    my ($match) = $_[0] =~ /^([-+]?\d+)$/;
-    $_[0] = $match;
+    my $match = $_[0] =~ /^([-+]?\d+)$/;
+    $_[0] = $match ? $1 : undef;
     # Remove any leading plus sign.
     if (defined($_[0]) && $_[0] =~ /^\+(\d+)$/) {
         $_[0] = $1;

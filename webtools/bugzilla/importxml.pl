@@ -96,7 +96,7 @@ use XML::Twig;
 
 # We want to capture errors and handle them here rather than have the Template
 # code barf all over the place.
-Bugzilla->batch(1);
+Bugzilla->usage_mode(Bugzilla::Constants::USAGE_MODE_CMDLINE);
 
 my $debug = 0;
 my $mail  = '';
