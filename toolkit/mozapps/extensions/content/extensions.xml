@@ -233,7 +233,9 @@
               var blocklistMoreInfo = document.getAnonymousElementByAttribute(this, "anonid", "blocklistMoreInfo");
               var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                                     .getService(Components.interfaces.nsIPrefBranch);
-              var url = prefs.getCharPref("extensions.blocklist.detailsURL");
+              var formatter = Components.classes["@mozilla.org/browser/URLFormatterService;1"]
+                                        .getService(Components.interfaces.nsIURLFormatter);
+              var url = formatter.formatURLPref("extensions.blocklist.detailsURL", null);
               blocklistMoreInfo.setAttribute("moreInfoURL", url);
             } catch(e) {
               blocklistMoreInfo.hidden = true;
