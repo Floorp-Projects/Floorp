@@ -2381,20 +2381,24 @@ LetBlock(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool statement)
         pn1->pn_kid = pn;
         pn = pn1;
 
+        statement = JS_FALSE;
+    }
+
+    if (statement) {
+        pnlet->pn_right = Statements(cx, ts, tc);
+        if (!pnlet->pn_right)
+            return NULL;
+        MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_LET);
+    } else {
         /*
          * Change pnblock's opcode to the variant that propagates the last
          * result down after popping the block, and clear statement.
          */
         pnblock->pn_op = JSOP_LEAVEBLOCKEXPR;
-        statement = JS_FALSE;
+        pnlet->pn_right = Expr(cx, ts, tc);
+        if (!pnlet->pn_right)
+            return NULL;
     }
-
-    pnlet->pn_right = statement ? Statements(cx, ts, tc) : Expr(cx, ts, tc);
-    if (!pnlet->pn_right)
-        return NULL;
-
-    if (statement)
-        MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_LET);
 
     js_PopStatement(tc);
     return pn;
