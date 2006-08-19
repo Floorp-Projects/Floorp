@@ -42,7 +42,7 @@ use Bugzilla::Product;
 
 use List::Util qw(min);
 
-use base qw(Exporter);
+use base qw(Bugzilla::Object Exporter);
 @Bugzilla::Bug::EXPORT = qw(
     AppendComment ValidateComment
     bug_alias_to_id ValidateBugAlias ValidateBugID
@@ -56,6 +56,45 @@ use base qw(Exporter);
 # Constants
 #####################################################################
 
+use constant DB_TABLE   => 'bugs';
+use constant ID_FIELD   => 'bug_id';
+use constant NAME_FIELD => 'alias';
+use constant LIST_ORDER => ID_FIELD;
+
+# This is a sub because it needs to call other subroutines.
+sub DB_COLUMNS {
+    my $dbh = Bugzilla->dbh;
+    return qw(
+        alias
+        bug_file_loc
+        bug_id
+        bug_severity
+        bug_status
+        cclist_accessible
+        component_id
+        delta_ts
+        estimated_time
+        everconfirmed
+        op_sys
+        priority
+        product_id
+        remaining_time
+        rep_platform
+        reporter_accessible
+        resolution
+        short_desc
+        status_whiteboard
+        target_milestone
+        version
+    ),
+    'assigned_to AS assigned_to_id',
+    'reporter    AS reporter_id',
+    'qa_contact  AS qa_contact_id',
+    $dbh->sql_date_format('creation_ts', '%Y.%m.%d %H:%i') . ' AS creation_ts',
+    $dbh->sql_date_format('deadline', '%Y-%m-%d') . ' AS deadline',
+    Bugzilla->custom_field_names;
+}
+
 # Used in LogActivityEntry(). Gives the max length of lines in the
 # activity table.
 use constant MAX_LINE_LENGTH => 254;
@@ -66,87 +105,47 @@ use constant MAX_COMMENT_LENGTH => 65535;
 #####################################################################
 
 sub new {
-  my $invocant = shift;
-  my $class = ref($invocant) || $invocant;
-  my $self = {};
-  bless $self, $class;
-  $self->_init(@_);
-  return $self;
-}
+    my $invocant = shift;
+    my $class = ref($invocant) || $invocant;
+    my $param = shift;
 
-sub _init {
-  my $self = shift();
-  my ($bug_id) = (@_);
-  my $dbh = Bugzilla->dbh;
-
-  $bug_id = trim($bug_id || 0);
-
-  my $old_bug_id = $bug_id;
-
-  # If the bug ID isn't numeric, it might be an alias, so try to convert it.
-  $bug_id = bug_alias_to_id($bug_id) if $bug_id !~ /^0*[1-9][0-9]*$/;
-
-  unless ($bug_id && detaint_natural($bug_id)) {
-      # no bug number given or the alias didn't match a bug
-      $self->{'bug_id'} = $old_bug_id;
-      $self->{'error'} = "InvalidBugId";
-      return $self;
-  }
-
-    my $custom_fields = "";
-    if (scalar(Bugzilla->custom_field_names) > 0) {
-        $custom_fields = ", " . join(", ", Bugzilla->custom_field_names);
-    }
-
-  my $query = "
-    SELECT
-      bugs.bug_id, alias, bugs.product_id, version,
-      rep_platform, op_sys, bug_status, resolution, priority,
-      bug_severity, bugs.component_id,
-      assigned_to AS assigned_to_id, reporter AS reporter_id,
-      bug_file_loc, short_desc, target_milestone,
-      qa_contact AS qa_contact_id, status_whiteboard, " .
-      $dbh->sql_date_format('creation_ts', '%Y.%m.%d %H:%i') . ",
-      delta_ts, everconfirmed, reporter_accessible, cclist_accessible,
-      estimated_time, remaining_time, " .
-      $dbh->sql_date_format('deadline', '%Y-%m-%d') .
-      $custom_fields . "
-    FROM bugs WHERE bugs.bug_id = ?";
-
-  my $bug_sth = $dbh->prepare($query);
-  $bug_sth->execute($bug_id);
-  my @row;
-
-  if (@row = $bug_sth->fetchrow_array) {
-    my $count = 0;
-    my %fields;
-    foreach my $field ("bug_id", "alias", "product_id", "version", 
-                       "rep_platform", "op_sys", "bug_status", "resolution", 
-                       "priority", "bug_severity", "component_id",
-                       "assigned_to_id", "reporter_id", 
-                       "bug_file_loc", "short_desc",
-                       "target_milestone", "qa_contact_id", "status_whiteboard",
-                       "creation_ts", "delta_ts", "everconfirmed",
-                       "reporter_accessible", "cclist_accessible",
-                       "estimated_time", "remaining_time", "deadline",
-                       Bugzilla->custom_field_names)
-      {
-        $fields{$field} = shift @row;
-        if (defined $fields{$field}) {
-            $self->{$field} = $fields{$field};
+    # If we get something that looks like a word (not a number),
+    # make it the "name" param.
+    if (!ref($param) && $param !~ /^\d+$/) {
+        # But only if aliases are enabled.
+        if (Bugzilla->params->{'usebugaliases'}) {
+            $param = { name => $param };
         }
-        $count++;
+        else {
+            # Aliases are off, and we got something that's not a number.
+            my $error_self = {};
+            bless $error_self, $class;
+            $error_self->{'bug_id'} = $param;
+            $error_self->{'error'}  = 'InvalidBugId';
+            return $error_self;
+        }
     }
-  } else {
-      $self->{'bug_id'} = $bug_id;
-      $self->{'error'} = "NotFound";
-      return $self;
-  }
 
-  $self->{'isunconfirmed'} = ($self->{bug_status} eq 'UNCONFIRMED');
-  $self->{'isopened'} = is_open_state($self->{bug_status});
-  
-  return $self;
+    unshift @_, $param;
+    my $self = $class->SUPER::new(@_);
+
+    # Bugzilla::Bug->new always returns something, but sets $self->{error}
+    # if the bug wasn't found in the database.
+    if (!$self) {
+        my $error_self = {};
+        bless $error_self, $class;
+        $error_self->{'bug_id'} = ref($param) ? $param->{name} : $param;
+        $error_self->{'error'}  = 'NotFound';
+        return $error_self;
+    }
+
+    # XXX At some point these should be moved into accessors.
+    # They only are here because this is how Bugzilla::Bug
+    # originally did things, before it was a Bugzilla::Object.
+    $self->{'isunconfirmed'} = ($self->{bug_status} eq 'UNCONFIRMED');
+    $self->{'isopened'}      = is_open_state($self->{bug_status});
+
+    return $self;
 }
 
 # This is the correct way to delete bugs from the DB.
