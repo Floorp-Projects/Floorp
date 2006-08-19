@@ -5,15 +5,15 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleExecutable</key>
-	<string>MOZ_APP_NAME-bin</string>
+	<string>@MOZ_APP_NAME@-bin</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.mozilla.MOZ_APP_NAME</string>
+	<string>org.mozilla.@MOZ_APP_NAME@</string>
 	<key>CFBundleVersion</key>
-	<string>MOZ_APP_VERSION</string>
+	<string>@MOZ_APP_VERSION@</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleName</key>
-	<string>MOZ_APP_DISPLAYNAME</string>
+	<string>@MOZ_APP_DISPLAYNAME@</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleSignature</key>
@@ -21,11 +21,11 @@
 	<key>CFBundleIconFile</key>
 	<string>seamonkey.icns</string>
 	<key>CFBundleShortVersionString</key>
-	<string>MOZ_APP_VERSION</string>
+	<string>@MOZ_APP_VERSION@</string>
 	<key>CFBundleGetInfoString</key>
-	<string>MOZ_APP_DISPLAYNAME MOZ_APP_VERSION, Copyright © 1998-2006 Contributors to Mozilla.org.</string>
+	<string>@MOZ_APP_DISPLAYNAME@ @MOZ_APP_VERSION@, Copyright © 1998-2006 Contributors to mozilla.org</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 1998-2006 Contributors to Mozilla.org.</string>
+	<string>Copyright © 1998-2006 Contributors to mozilla.org</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>CFBundleDocumentTypes</key>
@@ -59,7 +59,7 @@
 
 			<dict>
 				<key>CFBundleTypeName</key>
-				<string>MOZ_APP_DISPLAYNAME Preferences File</string>
+				<string>@MOZ_APP_DISPLAYNAME@ Preferences File</string>
 				<key>CFBundleTypeRole</key>
 				<string>None</string>
 				<key>CFBundleTypeOSTypes</key>
@@ -72,7 +72,7 @@
 			
 			<dict>
 				<key>CFBundleTypeName</key>
-				<string>MOZ_APP_DISPLAYNAME Plugin</string>
+				<string>@MOZ_APP_DISPLAYNAME@ Plugin</string>
 				<key>CFBundleTypeRole</key>
 				<string>None</string>
 				<key>CFBundleTypeOSTypes</key>
@@ -91,7 +91,7 @@
 			
 			<dict>
 				<key>CFBundleTypeName</key>
-				<string>MOZ_APP_DISPLAYNAME Command Line File</string>
+				<string>@MOZ_APP_DISPLAYNAME@ Command Line File</string>
 				<key>CFBundleTypeRole</key>
 				<string>Viewer</string>
 				<key>CFBundleTypeOSTypes</key>
@@ -104,7 +104,7 @@
 			
 			<dict>
 				<key>CFBundleTypeName</key>
-				<string>MOZ_APP_DISPLAYNAME Shared Library</string>
+				<string>@MOZ_APP_DISPLAYNAME@ Shared Library</string>
 				<key>CFBundleTypeRole</key>
 				<string>None</string>
 				<key>CFBundleTypeOSTypes</key>
@@ -122,7 +122,7 @@
 
 			<dict>
 				<key>CFBundleTypeName</key>
-				<string>MOZ_APP_DISPLAYNAME Binary File</string>
+				<string>@MOZ_APP_DISPLAYNAME@ Binary File</string>
 				<key>CFBundleTypeRole</key>
 				<string>None</string>
 				<key>CFBundleTypeOSTypes</key>

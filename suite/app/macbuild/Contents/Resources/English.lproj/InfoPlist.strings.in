@@ -1,0 +1,4 @@
+/* Localized versions of Info.plist keys */
+
+CFBundleName = "@MOZ_APP_DISPLAYNAME@";
+NSHumanReadableCopyright = "Copyright © 1998-2006 Contributors to mozilla.org";
