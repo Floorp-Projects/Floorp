@@ -16,6 +16,7 @@ bin/.autoreg
 ; en-US 
 ; If you add a new directory you must explicitly call addDirectory in langenus.jst
 bin/chrome/en-US.jar
+bin/chrome/en-US.manifest
 bin/defaults/profile/en-US/*
 bin/defaults/messenger/en-US/*
 bin/searchplugins/*
@@ -54,6 +55,23 @@ bin/components/jar50.dll
 bin/components/xpinstal.dll
 
 [browser]
+; MOZ_XUL_APP=1 items
+bin/xul.dll
+bin/components/commandlines.xpt
+bin/components/feeds.xpt
+bin/components/nsUpdateService.js
+bin/components/toolkitprofile.xpt
+bin/components/update.xpt
+bin/components/cmdlines.dll
+bin/components/suite.dll
+bin/components/tkitcmps.dll
+bin/components/nsBrowserContentHandler.js
+bin/components/nsExtensionManager.js
+bin/components/pluginGlue.js
+bin/components/xulapp.xpt
+bin/components/nsURLFormatter.js
+bin/components/nsIURLFormatter.xpt
+
 ; files listed in xpcom (missing in this section) will be installed as part of the browser
 bin/README.txt,bin/readme.txt
 bin/LICENSE,bin/license.txt
@@ -299,12 +317,29 @@ bin/prldap50.dll
 bin/components/p3p.xpt
 bin/components/p3p.dll
 
+; classic theme
+bin/chrome/classic.jar
+bin/chrome/classic.manifest
+bin/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/icon.png
+bin/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/install.rdf
+bin/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/preview.png
+bin/chrome/classic/*
+
+; modern theme
+bin/chrome/modern.jar
+bin/chrome/modern/*
+bin/extensions/modern@themes.mozilla.org/chrome/modern.jar
+bin/extensions/modern@themes.mozilla.org/chrome.manifest
+bin/extensions/modern@themes.mozilla.org/icon.png
+bin/extensions/modern@themes.mozilla.org/install.rdf
+bin/extensions/modern@themes.mozilla.org/preview.png
+ 
 ; chrome stuff
 bin/chrome/help.jar
 bin/chrome/comm.jar
+bin/chrome/comm.manifest
 bin/chrome/toolkit.jar
-bin/chrome/modern.jar
-bin/chrome/classic.jar
+bin/chrome/toolkit.manifest
 bin/chrome/chromelist.txt
 bin/chrome/icons/default/bmPropsWindow.ico
 bin/chrome/icons/default/bookmark-window.ico
@@ -381,6 +416,10 @@ bin/res/rdf/folder-open.gif
 bin/res/rdf/loading.gif
 
 [mail]
+; MOZ_XUL_APP=1 addition
+bin/components/mail.dll
+
+; Original items (pre MOZ_XUL_APP=1)
 bin/msgbsutl.dll
 bin/components/addrbook.dll
 bin/components/addrbook.xpt
@@ -419,6 +458,7 @@ bin/components/impComm4xMail.xpt
 bin/components/nsAbLDAPAttributeMap.js
 bin/components/nsLDAPPrefsService.js
 bin/chrome/messenger.jar
+bin/chrome/messenger.manifest
 bin/chrome/icons/default/abcardWindow.ico
 bin/chrome/icons/default/addressbookWindow.ico
 bin/chrome/icons/default/messengerWindow.ico
@@ -467,6 +507,8 @@ bin/freebl3.dll
 bin/ssl3.dll
 bin/chrome/pipnss.jar
 bin/chrome/pippki.jar
+bin/chrome/pippki.manifest
+
 
 [inspector]
 bin/components/inspector-cmdline.js
@@ -484,6 +526,7 @@ bin/dictionaries/*
 
 [reporter]
 bin/chrome/reporter.jar
+bin/chrome/reporter.manifest
 
 [sroaming]
 bin/components/sroaming.dll
