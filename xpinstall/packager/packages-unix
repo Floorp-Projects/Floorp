@@ -66,6 +66,8 @@ bin/components/nsBrowserContentHandler.js
 bin/components/nsExtensionManager.js
 bin/components/pluginGlue.js
 bin/components/xulapp.xpt
+bin/components/nsURLFormatter.js
+bin/components/urlformatter.xpt
 
 ; Original items (pre MOZ_XUL_APP=1)
 bin/seamonkey

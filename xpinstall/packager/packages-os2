@@ -70,7 +70,7 @@ bin/components/nsExtensionManager.js
 bin/components/pluginGlue.js
 bin/components/xulapp.xpt
 bin/components/nsURLFormatter.js
-bin/components/nsIURLFormatter.xpt
+bin/components/urlformatter.xpt
 
 ; files listed in xpcom (missing in this section) will be installed as part of the browser
 bin/README.txt,bin/readme.txt
