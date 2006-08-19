@@ -654,7 +654,7 @@ generator_mark(JSContext *cx, JSObject *obj, void *arg)
 
 JSClass js_GeneratorClass = {
     js_Generator_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_IS_ANONYMOUS | JSCLASS_IS_EXTENDED |
+    JSCLASS_HAS_PRIVATE | JSCLASS_IS_ANONYMOUS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Generator),
     JS_PropertyStub,  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,  generator_finalize,
