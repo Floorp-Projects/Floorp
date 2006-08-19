@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.128 2006/08/19 17:20:24 wurblzap%gmail.com Exp $ -->
+<!-- $Id: installation.xml,v 1.129 2006/08/19 17:41:47 mozilla%colinogilvie.co.uk Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -495,7 +495,7 @@
         </para>
       </section>
 
-      <section id="install-modules-soap">
+      <section id="install-modules-soap-lite">
         <title>SOAP::Lite (&min-soap-lite-ver;)</title>
         <para>Installing SOAP::Lite enables your Bugzilla installation to be
         accessible at a standardized Web Service interface (SOAP/XML-RPC)
