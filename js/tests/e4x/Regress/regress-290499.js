@@ -47,4 +47,6 @@ printStatus (summary);
 
 var emptyList = <></>;
 
+TEST(1, expect, actual);
+
 END();
