@@ -88,6 +88,22 @@ nsHashPropertyBag::Init()
 }
 
 NS_IMETHODIMP
+nsHashPropertyBag::HasKey(const nsAString& name, PRBool *aResult)
+{
+    *aResult = mPropertyHash.Get(name, nsnull);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHashPropertyBag::Get(const nsAString& name, nsIVariant* *_retval)
+{
+    mPropertyHash.Get(name, _retval);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHashPropertyBag::GetProperty(const nsAString& name, nsIVariant* *_retval)
 {
     PRBool isFound = mPropertyHash.Get(name, _retval);

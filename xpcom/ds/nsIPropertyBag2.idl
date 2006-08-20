@@ -39,7 +39,7 @@
 
 #include "nsIPropertyBag.idl"
 
-[scriptable, uuid(9bb35f13-0096-4a31-833a-acd97001132d)]
+[scriptable, uuid(625cfd1e-da1e-4417-9ee9-dbc8e0b3fd79)]
 interface nsIPropertyBag2 : nsIPropertyBag
 {
   // Accessing a property as a different type may attempt conversion to the
@@ -61,4 +61,15 @@ interface nsIPropertyBag2 : nsIPropertyBag
   void        getPropertyAsInterface   (in AString prop,
                                         in nsIIDRef iid,
                                         [iid_is(iid), retval] out nsQIResult result);
+
+  /**
+   * This method returns null if the value does not exist,
+   * or exists but is null.
+   */
+  nsIVariant  get                      (in AString prop);
+ 
+  /**
+   * Check for the existence of a key.
+   */
+  PRBool      hasKey                   (in AString prop);
 };
