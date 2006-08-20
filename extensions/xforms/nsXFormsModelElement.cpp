@@ -2310,20 +2310,6 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
     sModelPropsList[i]->ToString(attrStr);
 
     aBindElement->GetAttribute(attrStr, propStrings[i]);
-    if (!propStrings[i].IsEmpty() &&
-        i != eModel_type &&
-        i != eModel_p3ptype) {
-      rv = nsXFormsUtils::CreateExpression(eval, propStrings[i], resolver,
-                                           aBindElement,
-                                           getter_AddRefs(props[i]));
-      if (NS_FAILED(rv)) {
-        const PRUnichar *strings[] = { propStrings[i].get() };
-        nsXFormsUtils::ReportError(NS_LITERAL_STRING("mipParseError"),
-                                   strings, 1, aBindElement, aBindElement);
-        nsXFormsUtils::DispatchEvent(mElement, eEvent_ComputeException);
-        return rv;
-      }
-    }
   }
 
   // Find the nodeset that this bind applies to.
@@ -2382,16 +2368,47 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
   // Iterate over resultset
   nsCOMArray<nsIDOMNode> deps;
   nsCOMPtr<nsIDOMNode> node;
-  PRUint32 snapItem;
-  for (snapItem = 0; snapItem < snapLen; ++snapItem) {
+
+  if (!snapLen) {
+    return NS_OK;
+  }
+
+  // We rightly assume that all the nodes in the nodeset came from the same
+  // document.  So now we'll get the xpath evaluator from that document.  We
+  // need to ensure that the context node for the evaluation of each MIP
+  // expression and the evaluator for those expressions came from the same
+  // document.  It is a rule for xpath.
+  PRUint32 snapItem = 0;
+
+  for (; snapItem < snapLen; ++snapItem) {
     rv = result->SnapshotItem(snapItem, getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
-    
-    if (!node) {
+
+    if (node){
+      break;
+    } else {
       NS_WARNING("nsXFormsModelElement::ProcessBind(): Empty node in result set.");
-      continue;
     }
-    
+  }
+
+  if (!node) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMDocument> nodesetDoc;
+  node->GetOwnerDocument(getter_AddRefs(nodesetDoc));
+
+  nsCOMPtr<nsIDOMXPathEvaluator> nodesetEval = do_QueryInterface(nodesetDoc);
+  nsCOMPtr<nsIXPathEvaluatorInternal> nodesetEvalInternal =
+    do_QueryInterface(nodesetEval);
+  NS_ENSURE_STATE(nodesetEval && nodesetEvalInternal);
+
+  // Since we've already gotten the first node in the nodeset and verified it is
+  // good to go, we'll contine on.  For this node and each subsequent node in
+  // the nodeset, we'll evaluate the MIP expressions attached to the bind
+  // element and add them to the MDG.  And also process any binds that this
+  // bind contains (aka nested binds).
+  while (node && snapItem < snapLen) {
 
     // Apply MIPs
     nsXFormsXPathParser parser;
@@ -2429,6 +2446,19 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
           NS_ENSURE_SUCCESS(rv, rv);
         }
       } else {
+
+        rv = nsXFormsUtils::CreateExpression(nodesetEvalInternal,
+                                             propStrings[j], resolver,
+                                             aBindElement,
+                                             getter_AddRefs(props[j]));
+        if (NS_FAILED(rv)) {
+          const PRUnichar *strings[] = { propStrings[j].get() };
+          nsXFormsUtils::ReportError(NS_LITERAL_STRING("mipParseError"),
+                                     strings, 1, aBindElement, aBindElement);
+          nsXFormsUtils::DispatchEvent(mElement, eEvent_ComputeException);
+          return rv;
+        }
+
         // the rest of the MIPs are given to the MDG
         nsCOMPtr<nsIDOMNSXPathExpression> expr = do_QueryInterface(props[j]);
 
@@ -2500,6 +2530,19 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
           NS_ENSURE_SUCCESS(rv, rv);
         }
       }
+    }
+
+    ++snapItem;
+    while (snapItem < snapLen) {
+      rv = result->SnapshotItem(snapItem, getter_AddRefs(node));
+      NS_ENSURE_SUCCESS(rv, rv);
+  
+      if (node) {
+        break;
+      }
+
+      NS_WARNING("nsXFormsModelElement::ProcessBind(): Empty node in result set.");
+      snapItem++;
     }
   }
 

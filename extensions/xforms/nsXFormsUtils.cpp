@@ -439,6 +439,8 @@ nsXFormsUtils::CreateExpression(nsIXPathEvaluatorInternal  *aEvaluator,
   contractid.AppendCString(NS_LITERAL_CSTRING("@mozilla.org/xforms-xpath-functions;1"));
   state.AppendObject(aState);
 
+  // if somehow the contextNode and the evaluator weren't spawned from the same
+  // document, this could fail with NS_ERROR_DOM_WRONG_DOCUMENT_ERR
   nsCOMPtr<nsIDOMXPathExpression> expression;
   return aEvaluator->CreateExpression(aExpression, aResolver, &ns, &contractid,
                                       &state, aResult);
@@ -561,6 +563,8 @@ nsXFormsUtils::EvaluateXPath(nsIXPathEvaluatorInternal  *aEvaluator,
     do_QueryInterface(expression, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // if somehow the contextNode and the evaluator weren't spawned from the same
+  // document, this could fail with NS_ERROR_DOM_WRONG_DOCUMENT_ERR
   nsCOMPtr<nsISupports> supResult;
   rv = nsExpression->EvaluateWithContext(aContextNode, aContextPosition,
                                          aContextSize, aResultType,

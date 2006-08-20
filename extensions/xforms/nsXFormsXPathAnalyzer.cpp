@@ -40,6 +40,9 @@
 #include "nsXFormsXPathAnalyzer.h"
 #include "nsIDOMXPathResult.h"
 #include "nsXFormsUtils.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMXPathEvaluator.h"
+#include "nsIXPathEvaluatorInternal.h"
 
 #ifdef DEBUG
 //#define DEBUG_XF_ANALYZER
@@ -177,7 +180,20 @@ nsXFormsXPathAnalyzer::AnalyzeRecursively(nsIDOMNode              *aContextNode,
       xp = Substring(*mCurExprString, aNode->mStartIndex,
                      aNode->mEndIndex - aNode->mStartIndex);
     }
-    rv = nsXFormsUtils::EvaluateXPath(mEvaluator, xp, aContextNode, mResolver,
+
+    // It is an error to use an evaluator from a different document than the
+    // context node.  The context node can change as we recurse and be
+    // from an different instance document than the context node we used to
+    // kick off the evaluation.  More efficient to just get the evaluator every
+    // time we recurse rather than caching it and testing.
+
+    nsCOMPtr<nsIDOMDocument> doc;
+    aContextNode->GetOwnerDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIDOMXPathEvaluator> eval = do_QueryInterface(doc);
+    nsCOMPtr<nsIXPathEvaluatorInternal> evalInternal = do_QueryInterface(eval);
+    NS_ENSURE_STATE(evalInternal);
+
+    rv = nsXFormsUtils::EvaluateXPath(evalInternal, xp, aContextNode, mResolver,
                                       mState, nsIDOMXPathResult::ANY_TYPE,
                                       mCurPosition, mCurSize, nsnull,
                                       getter_AddRefs(result));
@@ -200,7 +216,7 @@ nsXFormsXPathAnalyzer::AnalyzeRecursively(nsIDOMNode              *aContextNode,
                                                  xp.Length() - indexSize - 1); // remove final ')' too
 
       nsCOMPtr<nsIDOMXPathResult> stringRes;
-      rv = nsXFormsUtils::EvaluateXPath(mEvaluator, indexExpr, aContextNode,
+      rv = nsXFormsUtils::EvaluateXPath(evalInternal, indexExpr, aContextNode,
                                         mResolver, mState,
                                         nsIDOMXPathResult::STRING_TYPE,
                                         mCurPosition, mCurSize, nsnull,
