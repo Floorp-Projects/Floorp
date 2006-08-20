@@ -1229,6 +1229,9 @@ SessionStoreService.prototype = {
         this._windows[aWindow.__SSi].extData[key] = winData.extData[key];
       }
     }
+    if (winData._closedTabs && (root._firstTabs || aOverwriteTabs)) {
+      this._windows[aWindow.__SSi]._closedTabs = winData._closedTabs;
+    }
     
     this.restoreHistoryPrecursor(aWindow, winData.tabs, (aOverwriteTabs ?
       (parseInt(winData.selected) || 1) : 0), 0, 0);
