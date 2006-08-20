@@ -3455,7 +3455,8 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JS_ASSERT(let || CURRENT_TOKEN(ts).type == TOK_VAR);
 
     /* Make sure that Statement set the tree context up correctly. */
-    JS_ASSERT(!let || tc->topStmt == tc->topScopeStmt);
+    JS_ASSERT(!let ||
+              (tc->topScopeStmt && (tc->topScopeStmt->flags & SIF_SCOPE)));
 
     data.pn = NULL;
     data.ts = ts;
