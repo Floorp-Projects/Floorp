@@ -623,7 +623,7 @@ function getSpecialDirectory(name)
 
 function getPathFromURL (url)
 {
-    var ary = url.match(/^(.*\/)([^\/?#]+)(\?|#|$)/);
+    var ary = url.match(/^(.*\/)([^\/?#]*)(\?|#|$)/);
     if (ary)
         return ary[1];
 
