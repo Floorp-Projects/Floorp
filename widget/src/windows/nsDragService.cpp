@@ -494,6 +494,7 @@ nsDragService::EndDragSession()
 PRUint64 nsDragService::GetShellVersion()
 {
   PRUint64 lVersion = LL_INIT(0, 0);
+  PRUint64 lMinor = lVersion;
 
   // shell32.dll should be loaded already, so we ae not actually loading the library here
   PRLibrary *libShell = PR_LoadLibrary("shell32.dll");
@@ -514,9 +515,10 @@ PRUint64 nsDragService::GetShellVersion()
       break;
 
     // why is this?
-    PRUint32 maji64 = versionInfo.dwMajorVersion;
-    PRUint32 mini64 = versionInfo.dwMinorVersion;
-    lVersion = LL_INIT(maj, min);
+    LL_UI2L(lVersion, versionInfo.dwMajorVersion);
+    LL_SHL(lVersion, lVersion, 32);
+    LL_UI2L(lMinor, versionInfo.dwMinorVersion);
+    LL_OR2(lVersion, lMinor);
   } while (false);
 
   PR_UnloadLibrary(libShell);
