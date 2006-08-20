@@ -528,23 +528,23 @@
 
       <menu label="Viewer Demos">
        <menupopup>
-        <menuitem label="#0 Basic Styles"  oncommand="loadURI('resource:/res/samples/test0.html');"/>
-        <menuitem label="#1 CSS Styles"  oncommand="loadURI('resource:/res/samples/test1.html');"/>
-        <menuitem label="#2 Images"  oncommand="loadURI('resource:/res/samples/test2.html');"/>
-        <menuitem label="#3 Basic Tables"  oncommand="loadURI('resource:/res/samples/test3.html');"/>
-        <menuitem label="#4 Simple Tables"  oncommand="loadURI('resource:/res/samples/test4.html');"/>
-        <menuitem label="#5 More Styles"  oncommand="loadURI('resource:/res/samples/test5.html');"/>
-        <menuitem label="#6 Deeply Nested Tables"  oncommand="loadURI('resource:/res/samples/test6.html');"/>
-        <menuitem label="#7 Scaled Anim Image"  oncommand="loadURI('resource:/res/samples/test7.html');"/>
-        <menuitem label="#8 Form"  oncommand="loadURI('resource:/res/samples/test8.html');"/>
-        <menuitem label="#9 Frames"  oncommand="loadURI('resource:/res/samples/test9.html');"/>
-        <menuitem label="#10 Anim Images" oncommand="loadURI('resource:/res/samples/test10.html');"/>
-        <menuitem label="#11 Fixed Positioning" oncommand="loadURI('resource:/res/samples/test11.html');"/>
-        <menuitem label="#12 More Fixed Pos" oncommand="loadURI('resource:/res/samples/test12.html');"/>
-        <menuitem label="#13 DHTML" oncommand="loadURI('resource:/res/samples/test13.html');"/>
-        <menuitem label="#14 XML Sorting" oncommand="loadURI('resource:/res/samples/test14.html');"/>
-        <menuitem label="#15 XML IRS" oncommand="loadURI('resource:/res/samples/test15.html');"/>
-        <menuitem label="#16 Gfx Widgets" oncommand="loadURI('resource:/res/samples/test16.html');"/>
+        <menuitem label="#0 Basic Styles" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test0.html');"/>
+        <menuitem label="#1 CSS Styles" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test1.html');"/>
+        <menuitem label="#2 Images" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test2.html');"/>
+        <menuitem label="#3 Basic Tables" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test3.html');"/>
+        <menuitem label="#4 Simple Tables" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test4.html');"/>
+        <menuitem label="#5 More Styles" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test5.html');"/>
+        <menuitem label="#6 Deeply Nested Tables" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test6.html');"/>
+        <menuitem label="#7 Scaled Anim Image" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test7.html');"/>
+        <menuitem label="#8 Form" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test8.html');"/>
+        <menuitem label="#9 Frames" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test9.html');"/>
+        <menuitem label="#10 Anim Images" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test10.html');"/>
+        <menuitem label="#11 Fixed Positioning" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test11.html');"/>
+        <menuitem label="#12 More Fixed Pos" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test12.html');"/>
+        <menuitem label="#13 DHTML" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test13.html');"/>
+        <menuitem label="#14 XML Sorting" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test14.html');"/>
+        <menuitem label="#15 XML IRS" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test15.html');"/>
+        <menuitem label="#16 Gfx Widgets" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test16.html');"/>
        </menupopup>
       </menu>
 
