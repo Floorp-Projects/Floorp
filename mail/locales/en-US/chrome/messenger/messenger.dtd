@@ -279,10 +279,10 @@
 <!ENTITY prevUnreadMsgCmd.accesskey "U">
 <!ENTITY previousUnreadMsgCmd.key "p">
 <!ENTITY previousUnreadMsgCmd.accesskey "U">
-<!ENTITY forwardMsgCmd.label "Forward">
-<!ENTITY backMsgCmd.label "Back">
-<!ENTITY goBackCmd.commandKey "[">
+<!ENTITY goForwardCmd.label "Forward">
 <!ENTITY goForwardCmd.commandKey "]">
+<!ENTITY goBackCmd.label "Back">
+<!ENTITY goBackCmd.commandKey "[">
 <!ENTITY prevStarredMsgCmd.label "Starred Message">
 <!ENTITY prevStarredMsgCmd.accesskey "S">
 <!ENTITY startPageCmd.label "Mail Start Page">
