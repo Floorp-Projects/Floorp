@@ -70,7 +70,7 @@
   
   <groupbox id="toolbarStyleBox">
     <caption label="&showToolsLegend.label;"/>
-    <radiogroup id="toolbarStyle" align="start"
+    <radiogroup id="toolbarStyle" orient="horizontal"
                 prefstring="browser.chrome.toolbar_style">
       <radio group="toolbarStyle" value="2" label="&picsNtextRadio.label;" accesskey="&picsNtextRadio.accesskey;"/>
       <radio group="toolbarStyle" value="0" label="&picsOnlyRadio.label;" accesskey="&picsOnlyRadio.accesskey;"/>
