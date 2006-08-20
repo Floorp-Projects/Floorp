@@ -2809,6 +2809,7 @@ ExtensionManager.prototype = {
    */
   _shutdown: function() {
     gOS.removeObserver(this, "xpcom-shutdown");
+    gOS.removeObserver(this, "profile-after-change");
 
     // Release strongly held services.
     gOS = null;
