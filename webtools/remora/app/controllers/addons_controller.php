@@ -41,6 +41,7 @@ class AddonsController extends AppController
                 $fileError = $fileErrors[$this->data['Addon']['file']['error']];
                 $this->set('fileError', $fileError);
                 $this->render('add_step1');
+                die();
             }
 
             $fileName = $this->data['Addon']['file']['name'];
@@ -65,26 +66,81 @@ echo('test');
                 $this->Addon->invalidate('file');
                 $this->set('fileError', 'Could not move file');
                 $this->render('add_step1');
+                die();
             }
 
-            //Find install.rdf in the package and get contents
-            $manifestExists = false;
+            //Search plugins do not have install.rdf to parse
+            if ($this->Amo->addonTypes[$this->data['Addon']['addontype_id']] != 'Search Plugin') {
 
-            if ($zip = @zip_open($uploadedFile)) {
-                while ($zipEntry = zip_read($zip)) {
-                    if (zip_entry_name($zipEntry) == 'install.rdf') {
-                        $manifestExists = true;
-                        if (zip_entry_open($zip, $zipEntry, 'r')) {
-                            $manifestData = zip_entry_read($zipEntry, zip_entry_filesize($zipEntry));
-                            zip_entry_close($zipEntry);
+                //Find install.rdf in the package and get contents
+                $manifestExists = false;
+
+                if ($zip = @zip_open($uploadedFile)) {
+                    while ($zipEntry = zip_read($zip)) {
+                        if (zip_entry_name($zipEntry) == 'install.rdf') {
+                            $manifestExists = true;
+                            if (zip_entry_open($zip, $zipEntry, 'r')) {
+                                $fileContents = zip_entry_read($zipEntry, zip_entry_filesize($zipEntry));
+                                zip_entry_close($zipEntry);
+                            }
                         }
                     }
+                    zip_close($zip);
                 }
-                zip_close($zip);
-            }
 
-            //Parse install.rdf
-            if ($manifestExists === true) {
+                //Make sure install.rdf is there
+                if ($manifestExists !== true) {
+                    $this->Addon->invalidate('file');
+                    $this->set('fileError', 'No install.rdf present');
+                    $this->render('add_step1');
+                    die();
+                }
+
+                //Use Rdf Component to parse install.rdf
+                $manifestData = $this->Rdf->parseInstallManifest($fileContents);
+
+                //If the result is a string, it is an error message
+                if (!is_array($manifestData)) {
+                    $this->Addon->invalidate('file');
+                    $this->set('fileError', 'The following error occurred while parsing install.rdf: '.$manifestData);
+                    $this->render('add_step1');
+                    die();
+                }
+
+                //Check if install.rdf has an updateURL
+                if (isset($manifestData['updateURL'])) {
+                    $this->Addon->invalidate('file');
+                    $this->set('fileError', 'Add-ons cannot use an external updateURL. Please remove this from install.rdf and try again.');
+                    $this->render('add_step1');
+                    die();
+                }
+
+                //Check the GUID
+                if (!isset($manifestData['id']) || !preg_match('/^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i', $manifestData['id'])) {
+                    $this->Addon->invalidate('file');
+                    $this->set('fileError', 'The ID of this add-on is invalid or not set.');
+                    $this->render('add_step1');
+                    die();
+                }
+
+                //Make sure version has no spaces
+                if (!isset($manifestData['version']) || preg_match('/.*\s.*/', $manifestData['version'])) {
+                    $this->Addon->invalidate('file');
+                    $this->set('fileError', 'The version of this add-on is invalid or not set. Versions cannot contain spaces.');
+                    $this->render('add_step1');
+                    die();
+                }
+
+                //These are arrays by locale
+                $addonNames = $manifestData['name'];
+                $addonDesc = $manifestData['description'];
+
+                //If adding a new version to existing addon, check author
+                $existing = $this->Addon->findAllByGuid($manifestData['id']);
+
+            }
+            //If it is a search plugin, read the .src file
+            else {
 
             }
 
@@ -98,6 +154,10 @@ echo('test');
         }
         //Step 1: Add-on type and file upload
         else {
+            if ($id != 0) {
+                //updating add-on
+            }
+
             $this->set('fileError', '');
             $this->render('add_step1');
         }
