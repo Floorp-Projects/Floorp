@@ -898,6 +898,13 @@
         </setter>
       </property>
 
+      <!-- Advance focus to native widget. -->
+      <method name="focus">
+        <body>
+          this.control.focus();
+        </body>
+      </method>
+
       <!-- Update instance data to native control widget value.
         @param aIncremental - will be true if this function is called because
           the user selected a new value in the native control widget. It will be
@@ -987,6 +994,63 @@
       </constructor>
 
     </implementation>
+  </binding>
+
+
+  <!-- The 'controlwidget-nonativewidget-base' is the base binding for underlying
+    controls which represents the xforms control. This binding is supposed to
+    be used for underlying control that actually haven't native widget. For
+    example, underlying control for select @appearance='full' is represented by
+    checkboxes bundle.
+    This binding implements the 'focus' method to advance focus to the
+    underlying control.
+
+    The widget assumes successors bindings have additional methods:
+
+      advanceFocusToItem(aItem) - makes item focused
+        @param aItem - item element
+
+      isItemElement(aElement) - returns true if element is item
+        @param aElement - DOMElement
+  -->
+  <binding id="controlwidget-nonativewidget-base"
+           extends="#controlwidget-base">
+
+    <implementation>
+      <!-- Advance focus to native widget. -->
+      <method name="focus">
+        <body>
+        <![CDATA[
+          var item = this.currentItem;
+          if (!item) {
+            var options = this.parentControl._controlArray;
+            // If there are selected items then advance focus to first of them
+            for (var i = 0; i < options.length; i++) {
+              item = options[i].option;
+              var selected = this.isItemSelected(item);
+              if (selected)
+                break;
+            }
+            // otherwise we focus first item.
+            if (options.length && i == options.length)
+              item = options[0].option;
+          }
+
+          if (item)
+            this.advanceFocusToItem(item);
+        ]]>
+        </body>
+      </method>
+
+      <field name="currentItem">null</field>
+    </implementation>
+
+    <handlers>
+      <handler event="focus" phase="capturing">
+        if (this.isItemElement(event.originalTarget))
+          this.currentItem = event.originalTarget;
+      </handler>
+    </handlers>
   </binding>
 
 </bindings>

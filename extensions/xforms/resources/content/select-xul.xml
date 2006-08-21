@@ -230,7 +230,7 @@
 
   <!-- CONTROL WIDGET FOR SELECT APPEARANCE='FULL' -->
   <binding id="controlwidget-select-full"
-           extends="chrome://xforms/content/select.xml#controlwidget-base">
+           extends="chrome://xforms/content/select.xml#controlwidget-nonativewidget-base">
 
     <content>
       <xul:vbox xbl:inherits="orient" anonid="control"/>
@@ -335,6 +335,20 @@
         <parameter name="aItem"/>
         <body>
           return aItem.firstChild.checked;
+        </body>
+      </method>
+
+      <method name="advanceFocusToItem">
+        <parameter name="aItem"/>
+        <body>
+          aItem.firstChild.focus();
+        </body>
+      </method>
+
+      <method name="isItemElement">
+        <parameter name="aElement"/>
+        <body>
+          return aElement.getAttribute("anonid") == "wcontrol";
         </body>
       </method>
     </implementation>
