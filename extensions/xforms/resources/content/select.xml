@@ -177,6 +177,12 @@
         </body>
       </method>
 
+      <method name="getCurrentValue">
+        <body>
+          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        </body>
+      </method>
+
       <property name="incremental">
         <getter>
           <![CDATA[

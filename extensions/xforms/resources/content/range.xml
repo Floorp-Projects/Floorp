@@ -400,6 +400,12 @@
         </body>
       </method>
 
+      <method name="getCurrentValue">
+        <body>
+          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        </body>
+      </method>
+
       <!-- create new range object -->
       <method name="createRange">
         <parameter name="aCanvas"/>

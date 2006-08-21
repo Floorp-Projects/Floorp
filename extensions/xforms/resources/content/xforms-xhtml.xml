@@ -528,6 +528,9 @@
       <method name="getControlElement">
         <body>
           return {
+            get value() {
+              return this._textControl.value;
+            },
             set value(val) {
               this._textControl.value = val;
             },
@@ -598,6 +601,7 @@
       <method name="getControlElement">
         <body>
           return {
+            get value(){ return ""; }
             set value(val){},
             set readonly(val){},
             focus: function(){}

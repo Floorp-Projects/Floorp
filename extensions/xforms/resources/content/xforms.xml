@@ -225,6 +225,20 @@
           return false;
         </body>
       </method>
+
+      <!-- Method is called to get current value of xforms element.
+
+        Here the method is implemented for those xforms elements that can't be
+        used to change the bound instance value.  For example, xforms:output.
+        The rest of the xforms elements should override this implementation.
+        For example, xforms:trigger returns empty string since it actually
+        hasn't value even if it has a bound.
+      -->
+      <method name="getCurrentValue">
+        <body>
+          return this.accessors.getValue();
+        </body>
+      </method>
     </implementation>
   </binding>
 
@@ -381,6 +395,11 @@
         </body>
       </method>
 
+      <method name="getCurrentValue">
+        <body>
+          return "";
+        </body>
+      </method>
     </implementation>
   </binding>
 
@@ -458,6 +477,12 @@
         <body>
           this.control.focus();
           return true;
+        </body>
+      </method>
+
+      <method name="getCurrentValue">
+        <body>
+          return this.control.value;
         </body>
       </method>
 

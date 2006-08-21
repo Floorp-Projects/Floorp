@@ -88,6 +88,12 @@
         </body>
       </method>
 
+      <method name="getCurrentValue">
+        <body>
+          return this.control.value;
+        </body>
+      </method>
+
       <method name="updateInstanceData">
         <parameter name="aIncremental"/>
         <body>
@@ -136,6 +142,12 @@
         </body>
       </method>
 
+      <method name="getCurrentValue">
+        <body>
+          return this.control.value ? "true" : "false";
+        </body>
+      </method>
+
       <!--
         updateInstanceData updates the instance data bound to this control under
         certain conditions.
@@ -166,12 +178,7 @@
             }
           }
 
-          if (this.control.value) {
-            this.accessors.setValue("true");
-          } else {
-            this.accessors.setValue("false");
-          }
-
+          this.accessors.setValue(this.getCurrentValue());
           this.changed = false;
           ]]>
         </body>
@@ -226,15 +233,19 @@
         </body>
       </method>
 
+      <method name="getCurrentValue">
+        <body>
+          // The lexical representation for xsd:gMonth is the left and right
+          // truncated lexical representation for xsd:date: --MM.
+          return this.control.value != "" ? "--" + this.control.value : "";
+        </body>
+      </method>
+
       <method name="updateInstanceData">
         <parameter name="aIncremental"/>
         <body>
           if (!aIncremental || this.getAttribute("incremental") == "true") {
-            if (this.control.value != "") {
-              this.accessors.setValue("--" + this.control.value);
-            } else {
-              this.accessors.setValue("");
-            }
+            this.accessors.setValue(this.getCurrentValue());
           }
         </body>
       </method>
@@ -294,15 +305,19 @@
         </body>
       </method>
 
+      <method name="getCurrentValue">
+        <body>
+          // The lexical representation for xsd:gDay is the left truncated
+          // lexical representation for xsd:date: ---DD.
+          return this.control.value != "" ? "---" + this.control.value : "";
+        </body>
+      </method>
+
       <method name="updateInstanceData">
         <parameter name="aIncremental"/>
         <body>
           if (!aIncremental || this.getAttribute("incremental") == "true") {
-            if (this.control.value != "") {
-              this.accessors.setValue("---" + this.control.value);
-            } else {
-              this.accessors.setValue("");
-            }
+            this.accessors.setValue(this.getCurrentValue());
           }
         </body>
       </method>

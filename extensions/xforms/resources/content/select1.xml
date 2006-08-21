@@ -715,6 +715,12 @@
         </body>
       </method>
 
+      <method name="getCurrentValue">
+        <body>
+          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        </body>
+      </method>
+
       <method name="selectItemByValue">
         <parameter name="aValue"/>
         <body>

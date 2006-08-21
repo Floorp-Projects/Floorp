@@ -46,7 +46,7 @@
  * http://developer.mozilla.org/en/docs/XForms:Custom_Controls
  *
  */
-[scriptable, uuid(b88a1c27-47a2-4c25-be7c-170501a93643)]
+[scriptable, uuid(f636007c-cc01-4295-b3cb-d525054c4a14)]
 interface nsIXFormsUIWidget : nsIDOMElement
 {
   /**
@@ -63,4 +63,19 @@ interface nsIXFormsUIWidget : nsIDOMElement
    * During submission, the \<submit\> should be disabled.
    */
   void disable(in boolean disable); // for <submit>
+
+  /**
+   * Return "string" value of xforms element that element actually shows.
+   *
+   * From time to time current element value can be different from current value
+   * of instance node that element is bound to. For example:
+   * 1) When a XForms control has non-incremental update and its value is
+   * changed due to user interaction, then getCurrentValue will return the
+   * control's new value even though the bound node has not be updated yet.
+   * 2) If instace value is out of range then xforms element can't show it.
+   * Therefore it shows default value and getCurrentValue will return showed
+   * value.
+   */
+  AString getCurrentValue();
 };
+
