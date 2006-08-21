@@ -109,33 +109,35 @@ function openNewWindowWith(href, sourceURL, postData, allowThirdPartyFixup)
 }
 
 /**
- * urlSecurityCheck: JavaScript wrapper for CheckLoadURI.
+ * urlSecurityCheck: JavaScript wrapper for CheckLoadURIStr.
  * If |sourceURL| is not allowed to link to |url|, this function throws with an error message.
  *
  * @param url The URL a page has linked to.
  * @param sourceURL The URL of the document from which the URL came.
+ * @param flags Flags to be passed to checkLoadURIStr. If undefined,
+ *              nsIScriptSecurityManager.STANDARD will be passed to checkLoadURIStr.
  */
-function urlSecurityCheck(url, sourceURL)
+function urlSecurityCheck(url, sourceURL, flags)
 {
   const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
   var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
                          .getService(nsIScriptSecurityManager);
+  if (flags === undefined)
+    flags = nsIScriptSecurityManager.STANDARD;
+
   try {
-    secMan.checkLoadURIStr(sourceURL, url, nsIScriptSecurityManager.STANDARD);
+    secMan.checkLoadURIStr(sourceURL, url, flags);
   } catch (e) {
     throw "Load of " + url + " from " + sourceURL + " denied.";
   }
 }
 
 function webPanelSecurityCheck(aSourceURL, aDestURL) {
-  var sourceURI = makeURI(aSourceURL);
-  var destURI = makeURI(aDestURL);
-
   const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
   var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
                          .getService(nsIScriptSecurityManager);
   try {
-    secMan.checkLoadURI(sourceURI, destURI, nsIScriptSecurityManager.STANDARD);
+    secMan.checkLoadURIStr(aSourceURL, aDestURL, nsIScriptSecurityManager.STANDARD);
   } catch (e) {
     return false;
   }
