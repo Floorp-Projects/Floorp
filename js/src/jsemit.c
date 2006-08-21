@@ -5065,22 +5065,24 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (jmp < 0)
             return JS_FALSE;
         CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, beq);
+
+        /*
+         * Because each branch pushes a single value, but our stack budgeting
+         * analysis ignores branches, we now have to adjust cg->stackDepth to
+         * ignore the value pushed by the first branch.  Execution will follow
+         * only one path, so we must decrement cg->stackDepth.  Failing to do
+         * this will foil code, such as the try/catch/finally exception
+         * handling code generator, that samples cg->stackDepth for use at
+         * runtime (JSOP_SETSP) or let expressions and statements, which must
+         * use the stack depth to find locals correctly.
+         */
+        JS_ASSERT(cg->stackDepth > 0);
+        cg->stackDepth--;
         if (!js_EmitTree(cx, cg, pn->pn_kid3))
             return JS_FALSE;
         CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, jmp);
         if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 0, jmp - beq))
             return JS_FALSE;
-
-        /*
-         * Because each branch pushes a single value, but our stack budgeting
-         * analysis ignores branches, we now have two values accounted for in
-         * cg->stackDepth.  Execution will follow only one path, so we must
-         * decrement cg->stackDepth here.  Failing to do this will foil code,
-         * such as the try/catch/finally exception handling code generator,
-         * that samples cg->stackDepth for use at runtime (JSOP_SETSP).
-         */
-        JS_ASSERT(cg->stackDepth > 1);
-        cg->stackDepth--;
         break;
 
       case TOK_OR:
