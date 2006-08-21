@@ -91,6 +91,7 @@ elsif ($action eq 'new') {
     Bugzilla::Field::create_or_update($vars);
 
     $vars->{'custom_fields'} = [Bugzilla->get_fields({'custom' => 1})];
+    $vars->{'message'} = 'custom_field_created';
 
     $template->process('admin/custom_fields/list.html.tmpl', $vars)
         || ThrowTemplateError($template->error());
