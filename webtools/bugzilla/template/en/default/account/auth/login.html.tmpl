@@ -38,47 +38,39 @@
 <form name="login" action="[% target FILTER html %]" method="POST">
   <table>
     <tr>
-      <td align="right">
-        <b>Login:</b>
-      </td>
+      <th align="right"><label for="Bugzilla_login">Login:</label></th>
       <td>
-        <input size="35" name="Bugzilla_login">
+        <input size="35" id="Bugzilla_login" name="Bugzilla_login">
         [% Param('emailsuffix') FILTER html %]
       </td>
     </tr>
     <tr>
-      <td align="right">
-        <b>Password:</b>
-      </td>
+      <th align="right"><label for="Bugzilla_password">Password:</label></th>
       <td>
-        <input type="password" size="35" name="Bugzilla_password">
+        <input type="password" size="35" id="Bugzilla_password" name="Bugzilla_password">
       </td>
     </tr>
 
     [% IF Param('rememberlogin') == 'defaulton' || 
           Param('rememberlogin') == 'defaultoff' %]
       <tr>
-        <td>&nbsp;</td>
+        <th>&nbsp;</th>
         <td>
-          <input type="checkbox" name="Bugzilla_remember" value="on"
+          <input type="checkbox" id="Bugzilla_remember" name="Bugzilla_remember" value="on"
                  [% "checked" IF Param('rememberlogin') == "defaulton" %]>
-          Remember my Login
+          <label for="Bugzilla_remember">Remember my Login</label>
         </td>
       </tr>
     [% END %]
 
     [% IF Param('loginnetmask') < 32 %]
       <tr>
-        <td align="right">
-          <b>
-             Restrict this session<br>
-             to this IP address:
-          </b>
-        </td>
+        <th>&nbsp;</th>
         <td>
-          <input type="checkbox" name="Bugzilla_restrictlogin"
+          <input type="checkbox" id="Bugzilla_restrictlogin" name="Bugzilla_restrictlogin"
                  checked="checked">
-          (Using this option improves security)
+          <label for="Bugzilla_restrictlogin">Restrict this session to this IP address
+          (using this option improves security)</label>
         </td>
       </tr>
     [% END %]
