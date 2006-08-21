@@ -221,28 +221,7 @@ $cgi->param(-name => 'component_id', -value => $component->id);
 push(@used_fields, "component_id");
 
 my @cc_ids = @{Bugzilla::Bug::_check_cc([$cgi->param('cc')])};
-
-# Check for valid keywords and create list of keywords to be added to db
-# (validity routine copied from process_bug.cgi)
-my @keywordlist;
-my %keywordseen;
-
-if ($cgi->param('keywords') && UserInGroup("editbugs")) {
-    foreach my $keyword (split(/[\s,]+/, $cgi->param('keywords'))) {
-        if ($keyword eq '') {
-           next;
-        }
-        my $keyword_obj = new Bugzilla::Keyword({name => $keyword});
-        if (!$keyword_obj) {
-            ThrowUserError("unknown_keyword",
-                           { keyword => $keyword });
-        }
-        if (!$keywordseen{$keyword_obj->id}) {
-            push(@keywordlist, $keyword_obj->id);
-            $keywordseen{$keyword_obj->id} = 1;
-        }
-    }
-}
+my @keyword_ids = @{Bugzilla::Bug::_check_keywords($cgi->param('keywords'))};
 
 if (Bugzilla->params->{"strict_isolation"}) {
     my @blocked_users = ();
@@ -439,12 +418,12 @@ my @all_deps;
 my $sth_addkeyword = $dbh->prepare(q{
             INSERT INTO keywords (bug_id, keywordid) VALUES (?, ?)});
 if (UserInGroup("editbugs")) {
-    foreach my $keyword (@keywordlist) {
+    foreach my $keyword (@keyword_ids) {
         $sth_addkeyword->execute($id, $keyword);
     }
-    if (@keywordlist) {
+    if (@keyword_ids) {
         # Make sure that we have the correct case for the kw
-        my $kw_ids = join(', ', @keywordlist);
+        my $kw_ids = join(', ', @keyword_ids);
         my $list = $dbh->selectcol_arrayref(qq{
                                     SELECT name 
                                       FROM keyworddefs 

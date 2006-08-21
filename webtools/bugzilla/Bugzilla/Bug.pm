@@ -35,6 +35,7 @@ use Bugzilla::Constants;
 use Bugzilla::Field;
 use Bugzilla::Flag;
 use Bugzilla::FlagType;
+use Bugzilla::Keyword;
 use Bugzilla::User;
 use Bugzilla::Util;
 use Bugzilla::Error;
@@ -331,6 +332,21 @@ sub _check_component {
     # when we move to Bugzilla::Bug->create, this should just return
     # what it was passed.
     return $obj;
+}
+
+sub _check_keywords {
+    my ($keyword_string) = @_;
+    $keyword_string = trim($keyword_string);
+    return [] if (!$keyword_string || !Bugzilla->user->in_group('editbugs'));
+
+    my %keyword_ids;
+    foreach my $keyword (split(/[\s,]+/, $keyword_string)) {
+        next unless $keyword;
+        my $obj = new Bugzilla::Keyword({ name => $keyword });
+        ThrowUserError("unknown_keyword", { keyword => $keyword }) if !$obj;
+        $keyword_ids{$obj->id} = 1;
+    }
+    return [keys %keyword_ids];
 }
 
 sub _check_product {
