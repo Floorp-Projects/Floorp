@@ -55,7 +55,7 @@
      License is not already Covered Code governed by this License.
 
      1.10.1. "Patent Claims" means any patent claim(s), now owned or
-     hereafter acquired, including without limitation,  method, process,
+     hereafter acquired, including without limitation, method, process,
      and apparatus claims, in any patent Licensable by grantor.
 
      1.11. "Source Code" means the preferred form of the Covered Code for
@@ -68,7 +68,7 @@
      appropriate decompression or de-archiving software is widely available
      for no charge.
 
-     1.12. "You" (or "Your")  means an individual or a legal entity
+     1.12. "You" (or "Your") means an individual or a legal entity
      exercising rights under, and complying with all of the terms of, this
      License or a future version of this License issued under Section 6.1.
      For legal entities, "You" includes any entity which controls, is
@@ -85,7 +85,7 @@
      The Initial Developer hereby grants You a world-wide, royalty-free,
      non-exclusive license, subject to third party intellectual property
      claims:
-          (a)  under intellectual property rights (other than patent or
+          (a) under intellectual property rights (other than patent or
           trademark) Licensable by Initial Developer to use, reproduce,
           modify, display, perform, sublicense and distribute the Original
           Code (or portions thereof) with or without Modifications, and/or
@@ -102,7 +102,7 @@
 
           (d) Notwithstanding Section 2.1(b) above, no patent license is
           granted: 1) for code that You delete from the Original Code; 2)
-          separate from the Original Code;  or 3) for infringements caused
+          separate from the Original Code; or 3) for infringements caused
           by: i) the modification of the Original Code or ii) the
           combination of the Original Code with other software or devices.
 
@@ -110,7 +110,7 @@
      Subject to third party intellectual property claims, each Contributor
      hereby grants You a world-wide, royalty-free, non-exclusive license
 
-          (a)  under intellectual property rights (other than patent or
+          (a) under intellectual property rights (other than patent or
           trademark) Licensable by Contributor, to use, reproduce, modify,
           display, perform, sublicense and distribute the Modifications
           created by such Contributor (or portions thereof) either on an
@@ -118,7 +118,7 @@
           and/or as part of a Larger Work; and
 
           (b) under Patent Claims infringed by the making, using, or
-          selling of  Modifications made by that Contributor either alone
+          selling of Modifications made by that Contributor either alone
           and/or in combination with its Contributor Version (or portions
           of such combination), to make, use, sell, offer for sale, have
           made, and/or otherwise dispose of: 1) Modifications made by that
@@ -130,12 +130,12 @@
           effective on the date Contributor first makes Commercial Use of
           the Covered Code.
 
-          (d)    Notwithstanding Section 2.2(b) above, no patent license is
+          (d) Notwithstanding Section 2.2(b) above, no patent license is
           granted: 1) for any code that Contributor has deleted from the
-          Contributor Version; 2)  separate from the Contributor Version;
-          3)  for infringements caused by: i) third party modifications of
-          Contributor Version or ii)  the combination of Modifications made
-          by that Contributor with other software  (except as part of the
+          Contributor Version; 2) separate from the Contributor Version;
+          3) for infringements caused by: i) third party modifications of
+          Contributor Version or ii) the combination of Modifications made
+          by that Contributor with other software (except as part of the
           Contributor Version) or other devices; or 4) under Patent Claims
           infringed by Covered Code in the absence of Modifications made by
           that Contributor.
@@ -200,7 +200,7 @@
           are reasonably necessary to implement that API, Contributor must
           also include this information in the LEGAL file.
 
-               (c)    Representations.
+          (c) Representations.
           Contributor represents that, except as disclosed pursuant to
           Section 3.4(a) above, Contributor believes that Contributor's
           Modifications are Contributor's original creation(s) and/or
@@ -209,14 +209,14 @@
 
      3.5. Required Notices.
      You must duplicate the notice in Exhibit A in each file of the Source
-     Code.  If it is not possible to put such notice in a particular Source
+     Code. If it is not possible to put such notice in a particular Source
      Code file due to its structure, then You must include such notice in a
      location (such as a relevant directory) where a user would be likely
-     to look for such a notice.  If You created one or more Modification(s)
+     to look for such a notice. If You created one or more Modification(s)
      You may add your name as a Contributor to the notice described in
-     Exhibit A.  You must also duplicate this License in any documentation
+     Exhibit A. You must also duplicate this License in any documentation
      for the Source Code where You describe recipients' rights or ownership
-     rights relating to Covered Code.  You may choose to offer, and to
+     rights relating to Covered Code. You may choose to offer, and to
      charge a fee for, warranty, support, indemnity or liability
      obligations to one or more recipients of Covered Code. However, You
      may do so only on Your own behalf, and not on behalf of the Initial
@@ -318,7 +318,7 @@
 
 8. TERMINATION.
 
-     8.1.  This License and the rights granted hereunder will terminate
+     8.1. This License and the rights granted hereunder will terminate
      automatically if You fail to comply with terms herein and fail to cure
      such breach within 30 days of becoming aware of the breach. All
      sublicenses to the Covered Code which are properly granted shall
@@ -326,12 +326,12 @@
      nature, must remain in effect beyond the termination of this License
      shall survive.
 
-     8.2.  If You initiate litigation by asserting a patent infringement
+     8.2. If You initiate litigation by asserting a patent infringement
      claim (excluding declatory judgment actions) against Initial Developer
      or a Contributor (the Initial Developer or Contributor against whom
-     You file such action is referred to as "Participant")  alleging that:
+     You file such action is referred to as "Participant") alleging that:
 
-     (a)  such Participant's Contributor Version directly or indirectly
+     (a) such Participant's Contributor Version directly or indirectly
      infringes any patent, then any and all rights granted by such
      Participant to You under Sections 2.1 and/or 2.2 of this License
      shall, upon 60 days notice from Participant terminate prospectively,
@@ -339,21 +339,21 @@
      agree in writing to pay Participant a mutually agreeable reasonable
      royalty for Your past and future use of Modifications made by such
      Participant, or (ii) withdraw Your litigation claim with respect to
-     the Contributor Version against such Participant.  If within 60 days
+     the Contributor Version against such Participant. If within 60 days
      of notice, a reasonable royalty and payment arrangement are not
      mutually agreed upon in writing by the parties or the litigation claim
      is not withdrawn, the rights granted by Participant to You under
      Sections 2.1 and/or 2.2 automatically terminate at the expiration of
      the 60 day notice period specified above.
 
-     (b)  any software, hardware, or device, other than such Participant's
+     (b) any software, hardware, or device, other than such Participant's
      Contributor Version, directly or indirectly infringes any patent, then
      any rights granted to You by such Participant under Sections 2.1(b)
      and 2.2(b) are revoked effective as of the date You first made, used,
      sold, distributed, or had made, Modifications made by that
      Participant.
 
-     8.3.  If You assert a patent infringement claim against Participant
+     8.3. If You assert a patent infringement claim against Participant
      alleging that such Participant's Contributor Version directly or
      indirectly infringes any patent where such claim is resolved (such as
      by license or settlement) prior to the initiation of patent
@@ -362,7 +362,7 @@
      into account in determining the amount or value of any payment or
      license.
 
-     8.4.  In the event of termination under Sections 8.1 or 8.2 above,
+     8.4. In the event of termination under Sections 8.1 or 8.2 above,
      all end user license agreements (excluding distributors and resellers)
      which have been validly granted by You or any distributor hereunder
      prior to termination shall survive termination.
@@ -427,7 +427,7 @@
 13. MULTIPLE-LICENSED CODE.
 
      Initial Developer may designate portions of the Covered Code as
-     "Multiple-Licensed".  "Multiple-Licensed" means that the Initial
+     "Multiple-Licensed". "Multiple-Licensed" means that the Initial
      Developer permits you to utilize portions of the Covered Code under
      Your choice of the NPL or the alternative licenses, if any, specified
      by the Initial Developer in the file described in Exhibit A.
@@ -453,13 +453,13 @@ EXHIBIT A -Mozilla Public License.
      Contributor(s): ______________________________________.
 
      Alternatively, the contents of this file may be used under the terms
-     of the _____ license (the  "[___] License"), in which case the
+     of the _____ license (the "[___] License"), in which case the
      provisions of [______] License are applicable instead of those
-     above.  If you wish to allow use of your version of this file only
+     above. If you wish to allow use of your version of this file only
      under the terms of the [____] License and not to allow others to use
      your version of this file under the MPL, indicate your decision by
-     deleting  the provisions above and replace  them with the notice and
-     other provisions required by the [___] License.  If you do not delete
+     deleting the provisions above and replace them with the notice and
+     other provisions required by the [___] License. If you do not delete
      the provisions above, a recipient may use your version of this file
      under either the MPL or the [___] License."
 
@@ -474,7 +474,7 @@ EXHIBIT A -Mozilla Public License.
 
      The Netscape Public License Version 1.1 ("NPL") consists of the
      Mozilla Public License Version 1.1 with the following Amendments,
-     including Exhibit A-Netscape Public License.  Files identified with
+     including Exhibit A-Netscape Public License. Files identified with
      "Exhibit A-Netscape Public License" are governed by the Netscape
      Public License Version 1.1.
 
@@ -557,11 +557,11 @@ EXHIBIT A -Mozilla Public License.
           Alternatively, the contents of this file may be used under the
           terms of the _____ license (the "[___] License"), in which case
           the provisions of [______] License are applicable  instead of
-          those above.  If you wish to allow use of your version of this
+          those above. If you wish to allow use of your version of this
           file only under the terms of the [____] License and not to allow
           others to use your version of this file under the NPL, indicate
-          your decision by deleting  the provisions above and replace  them
+          your decision by deleting the provisions above and replace  them
           with the notice and other provisions required by the [___]
-          License.  If you do not delete the provisions above, a recipient
+          License. If you do not delete the provisions above, a recipient
           may use your version of this file under either the NPL or the
           [___] License."
