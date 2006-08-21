@@ -1,0 +1,18 @@
+#
+## hostname: galactica
+## uname: Linux galactica.mozilla.org 2.4.21-32.0.1.ELsmp #1 SMP Tue May 17 17:52:23 EDT 2005 i686 i686 i386 GNU/Linux
+#
+
+mk_add_options MOZ_CO_PROJECT=mail,calendar
+mk_add_options MOZ_MAKE_FLAGS="-j6"
+mk_add_options JS_READLINE=1
+
+ac_add_options --enable-application=mail
+ac_add_options --enable-extensions=default,lightning,inspector,venkman
+ac_add_options --disable-static
+ac_add_options --enable-shared
+ac_add_options --disable-tests
+ac_add_options --disable-debug
+
+# Use gtk2 until pango is upgraded
+ac_add_options --enable-default-toolkit=gtk2
