@@ -410,7 +410,7 @@ function openReleaseNotes(event)
   var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
                           .getService(Components.interfaces.nsIXULAppInfo);
   var regionBundle = document.getElementById("bundle_browser_region");
-  var relnotesURL = regionBundle.getFormattedString("releaseNotesURL", [appInfo.version]);
+  var relnotesURL = formatURL("app.releaseNotesURL", null, true);
   openUILink(relnotesURL, event, false, true);
 }
   
