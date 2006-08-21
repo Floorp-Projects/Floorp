@@ -1511,18 +1511,8 @@ js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
     return JS_TRUE;
 }
 
-/*
- * Find a lexically scoped variable (one declared by let, catch, or an array
- * comprehension) named by atom, looking in tc's compile-time scopes.
- *
- * If a WITH statement is reached along the scope stack, return its statement
- * info record, so callers can tell that atom is ambiguous.  If atom is found,
- * set *slotp to its stack slot, and return the statement info record in which
- * it was found directly.  Otherwise (atom was not found and no WITH statement
- * was reached) return null.
- */
-static JSStmtInfo *
-LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp)
+JSStmtInfo *
+js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp)
 {
     JSStmtInfo *stmt;
     JSObject *obj;
@@ -1530,10 +1520,9 @@ LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp)
     JSScopeProperty *sprop;
     jsval v;
 
-    *slotp = -1;
     for (stmt = tc->topScopeStmt; stmt; stmt = stmt->downScope) {
         if (stmt->type == STMT_WITH)
-            return stmt;
+            break;
 
         JS_ASSERT(stmt->flags & SIF_SCOPE);
         obj = ATOM_TO_OBJECT(stmt->atom);
@@ -1543,18 +1532,22 @@ LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp)
         if (sprop) {
             JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
 
-            /*
-             * Use LOCKED_OBJ_GET_SLOT since we know obj is single-threaded
-             * and owned by this compiler activation.
-             */
-            v = LOCKED_OBJ_GET_SLOT(obj, JSSLOT_BLOCK_DEPTH);
-            JS_ASSERT(JSVAL_IS_INT(v) && JSVAL_TO_INT(v) >= 0);
-            *slotp = JSVAL_TO_INT(v) + sprop->shortid;
+            if (slotp) {
+                /*
+                 * Use LOCKED_OBJ_GET_SLOT since we know obj is single-
+                 * threaded and owned by this compiler activation.
+                 */
+                v = LOCKED_OBJ_GET_SLOT(obj, JSSLOT_BLOCK_DEPTH);
+                JS_ASSERT(JSVAL_IS_INT(v) && JSVAL_TO_INT(v) >= 0);
+                *slotp = JSVAL_TO_INT(v) + sprop->shortid;
+            }
             return stmt;
         }
     }
 
-    return NULL;
+    if (slotp)
+        *slotp = -1;
+    return stmt;
 }
 
 JSBool
@@ -1586,7 +1579,7 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
         obj = fp->varobj;
         if (obj == fp->scopeChain) {
             /* XXX this will need revising when 'let const' is added. */
-            stmt = LexicalLookup(&cg->treeContext, atom, &slot);
+            stmt = js_LexicalLookup(&cg->treeContext, atom, &slot);
             if (stmt)
                 return JS_TRUE;
 
@@ -1878,7 +1871,7 @@ BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
      * block-locals.
      */
     atom = pn->pn_atom;
-    stmt = LexicalLookup(tc, atom, &slot);
+    stmt = js_LexicalLookup(tc, atom, &slot);
     if (stmt) {
         if (stmt->type == STMT_WITH)
             return JS_TRUE;

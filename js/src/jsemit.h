@@ -425,6 +425,23 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
                              jsval *vp);
 
 /*
+ * Find a lexically scoped variable (one declared by let, catch, or an array
+ * comprehension) named by atom, looking in tc's compile-time scopes.
+ *
+ * If a WITH statement is reached along the scope stack, return its statement
+ * info record, so callers can tell that atom is ambiguous.  If slotp is not
+ * null, then if atom is found, set *slotp to its stack slot, otherwise to -1. 
+ * This means that if slotp is not null, all the block objects on the lexical
+ * scope chain must have had their depth slots computed by the code generator,
+ * so the caller must be under js_EmitTree.
+ *
+ * In any event, directly return the statement info record in which atom was
+ * found.  Otherwise return null.
+ */
+extern JSStmtInfo *
+js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp);
+
+/*
  * Emit code into cg for the tree rooted at pn.
  */
 extern JSBool
