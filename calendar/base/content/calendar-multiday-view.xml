@@ -1542,7 +1542,9 @@
                    flex="1" equalsize="always" />
           <xul:box anonid="headerscrollbarspacer"/>
         </xul:box>
-        <xul:scrollbox anonid="childbox" flex="1">
+        <xul:scrollbox anonid="childbox" flex="1" 
+                       onoverflow="adjustScrollBarSpacers();" 
+                       onunderflow="adjustScrollBarSpacers();">
           <!-- the orient of the calendar-time-bar needs to be the opposite of the parent -->
           <xul:calendar-time-bar xbl:inherits="orient" anonid="timebar"/>
           <xul:box anonid="daybox" class="calendar-day-box" flex="1"
@@ -2670,20 +2672,6 @@
                 this.controller.deleteOccurrence(occurrence);
             }
         }
-      ]]></handler>
-
-      <handler event="DOMAttrModified"><![CDATA[
-        // when a scrollbar appears/disappears in the view,
-        // it's disabled attribute is modified
-        if (event.attrName != "disabled" ||
-            event.originalTarget.localName != "scrollbar" ||
-            event.originalTarget.parentNode.getAttribute("anonid") !=
-                "childbox") {
-            return;
-        }
-
-        // adjust scrollbar spacers
-        this.adjustScrollBarSpacers();
       ]]></handler>
     </handlers>
   </binding>
