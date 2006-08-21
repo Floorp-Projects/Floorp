@@ -177,6 +177,9 @@
 
           this.mEditing = false;
 
+          if (this.calendarView)
+            this.calendarView.activeInPlaceEdit = false;
+
           if (saveChanges && (this.eventNameTextbox.value != this.mOriginalTextLabel)) {
               var clone = this.mOccurrence.clone();
               clone.title = this.eventNameTextbox.value;
