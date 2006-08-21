@@ -260,14 +260,17 @@ calEvent.prototype = {
 
         var start = convertDate(this.startDate);
         var end = convertDate(this.endDate);
+        
+        var queryStart = convertDate(aStartDate);
+        var queryEnd = convertDate(aEndDate);
 
         var isZeroLength = !start.compare(end);
         if ((isZeroLength &&
-             start.compare(aStartDate) >= 0 &&
-             start.compare(aEndDate) < 0) ||
+             start.compare(queryStart) >= 0 &&
+             start.compare(queryEnd) < 0) ||
             (!isZeroLength &&
-             start.compare(aEndDate) < 0 &&
-             end.compare(aStartDate) > 0)) {
+             start.compare(queryEnd) < 0 &&
+             end.compare(queryStart) > 0)) {
             
           aCount.value = 1;
           return ([ this ]);

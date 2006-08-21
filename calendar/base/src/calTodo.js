@@ -268,16 +268,19 @@ calTodo.prototype = {
         var entry = convertDate(this.entryDate);
         var due = convertDate(this.dueDate);
 
+        var queryStart = convertDate(aStartDate);
+        var queryEnd = convertDate(aEndDate);
+
         var isInterval = entry && due;
         var isZeroLength = isInterval ? !entry.compare(due) : true;
         var dateTime = entry ? entry : due;
         
         if ((isZeroLength &&
-             dateTime.compare(aStartDate) >= 0 &&
-             dateTime.compare(aEndDate) < 0) ||
+             dateTime.compare(queryStart) >= 0 &&
+             dateTime.compare(queryEnd) < 0) ||
             (!isZeroLength &&
-             entry.compare(aEndDate) < 0 &&
-             due.compare(aStartDate) > 0)) {
+             entry.compare(queryEnd) < 0 &&
+             due.compare(queryStart) > 0)) {
             
           aCount.value = 1;
           return ([ this ]);
