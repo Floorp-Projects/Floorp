@@ -1439,12 +1439,31 @@ nsScriptSecurityManager::CheckLoadURIStr(const nsACString& aSourceURIStr,
                             nsnull, nsnull, sIOService);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // Note: this is not _quite_ right if aSourceURI has
+    // NS_NULLPRINCIPAL_SCHEME, but we'll just extract the scheme in
+    // CheckLoadURIWithPrincipal anyway, so this is good enough.  This method
+    // really needs to go away....
+    nsCOMPtr<nsIPrincipal> sourcePrincipal;
+    rv = CreateCodebasePrincipal(source,
+                                 getter_AddRefs(sourcePrincipal));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return CheckLoadURIStrWithPrincipal(sourcePrincipal, aTargetURIStr,
+                                        aFlags);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckLoadURIStrWithPrincipal(nsIPrincipal* aPrincipal,
+                                                      const nsACString& aTargetURIStr,
+                                                      PRUint32 aFlags)
+{
+    nsresult rv;
     nsCOMPtr<nsIURI> target;
     rv = NS_NewURI(getter_AddRefs(target), aTargetURIStr,
                    nsnull, nsnull, sIOService);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = CheckLoadURI(source, target, aFlags);
+    rv = CheckLoadURIWithPrincipal(aPrincipal, target, aFlags);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Now start testing fixup -- since aTargetURIStr is a string, not
@@ -1468,7 +1487,7 @@ nsScriptSecurityManager::CheckLoadURIStr(const nsACString& aSourceURIStr,
                                    getter_AddRefs(target));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = CheckLoadURI(source, target, aFlags);
+        rv = CheckLoadURIWithPrincipal(aPrincipal, target, aFlags);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
