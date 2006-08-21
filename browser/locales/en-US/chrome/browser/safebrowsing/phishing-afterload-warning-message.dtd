@@ -6,7 +6,6 @@
 
 <!ENTITY safeb.palm.message.p2.start "These types of web forgeries are used in scams known as phishing attacks, in which fraudulent web pages and emails are used to imitate sources you may trust. You can find out more about ">
 <!ENTITY safeb.palm.message.p2.linkText "how &brandShortName; protects you">
-<!ENTITY safeb.palm.message.p2.linkURL "http://www.mozilla.org/projects/bonecho/anti-phishing/">
 <!ENTITY safeb.palm.message.p2.end " from phishing attacks.">
 
 <!ENTITY safeb.palm.accept.label "Get me out of here!">
