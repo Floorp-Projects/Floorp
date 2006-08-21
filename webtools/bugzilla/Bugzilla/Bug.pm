@@ -102,6 +102,14 @@ use constant MAX_LINE_LENGTH => 254;
 # Used in ValidateComment(). Gives the max length allowed for a comment.
 use constant MAX_COMMENT_LENGTH => 65535;
 
+# The statuses that are valid on enter_bug.cgi and post_bug.cgi.
+# The order is important--see _check_bug_status
+use constant VALID_ENTRY_STATUS => qw(
+    UNCONFIRMED
+    NEW
+    ASSIGNED
+);
+
 #####################################################################
 
 sub new {
@@ -251,6 +259,33 @@ sub _check_bug_file_loc {
     # If bug_file_loc is "http://", the default, use an empty value instead.
     $url = '' if $url eq 'http://';
     return $url;
+}
+
+sub _check_bug_status {
+    my ($status, $product) = @_;
+    my $user = Bugzilla->user;
+
+    my @valid_statuses = VALID_ENTRY_STATUS;
+
+    if ($user->in_group('editbugs') || $user->in_group('canconfirm')) {
+       # Default to NEW if the user with privs hasn't selected another status.
+       $status ||= 'NEW';
+    }
+    elsif (!$product->votes_to_confirm) {
+        # Without privs, products that don't support UNCONFIRMED default to
+        # NEW.
+        $status = 'NEW';
+    }
+    else {
+        $status = 'UNCONFIRMED';
+    }
+
+    # UNCONFIRMED becomes an invalid status if votes_to_confirm is 0,
+    # even if you are in editbugs.
+    shift @valid_statuses if !$product->votes_to_confirm;
+
+    check_field('bug_status', $status, \@valid_statuses);
+    return $status;
 }
 
 sub _check_comment {
