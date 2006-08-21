@@ -2034,7 +2034,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 (void) PopOff(ss, op);
 
                 /* Get the callee's decompiled image in argv[0]. */
+                if (saveop == JSOP_NEW)
+                    op = saveop;
                 argv[0] = JS_strdup(cx, POP_STR());
+                op = JSOP_NOP;
                 if (!argv[i])
                     ok = JS_FALSE;
 
