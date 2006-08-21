@@ -4786,7 +4786,17 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 if (!CheckSideEffects(cx, &cg->treeContext, pn2, &useful))
                     return JS_FALSE;
             }
-            if (!useful) {
+
+            /*
+             * Don't eliminate apparently useless expressions if they are
+             * labeled expression statements.  The tc->topStmt->update test
+             * catches the case where we are nesting in js_EmitTree for a
+             * labeled compound statement.
+             */
+            if (!useful &&
+                (!cg->treeContext.topStmt ||
+                 cg->treeContext.topStmt->type != STMT_LABEL ||
+                 cg->treeContext.topStmt->update < CG_OFFSET(cg))) {
                 CG_CURRENT_LINE(cg) = pn2->pn_pos.begin.lineno;
                 if (!js_ReportCompileErrorNumber(cx, cg,
                                                  JSREPORT_CG |
