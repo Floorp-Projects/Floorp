@@ -46,7 +46,7 @@ use constant SETTINGS => {
     # 2005-10-26 wurblzap@gmail.com -- Bug 291459
     zoom_textareas     => { options => ["on", "off"], default => "on" },
     # 2005-10-21 LpSolit@gmail.com -- Bug 313020
-    per_bug_queries    => { options => ['on', 'off'], default => 'on' },
+    per_bug_queries    => { options => ['on', 'off'], default => 'off' },
     # 2006-05-01 olav@bkor.dhs.org -- Bug 7710
     state_addselfcc    => { options => ['always', 'never',  'cc_unless_role'],
                             default => 'cc_unless_role' },
