@@ -44,7 +44,7 @@ interface nsIDOMWindow;
  * is trusted so can access preferences etc, but page content isn't and so
  * cannot.
  */
-[scriptable, uuid(25ad7625-a481-493d-90d5-4fa081a76dc5)]
+[scriptable, uuid(e4a39f75-93da-4264-8bf2-1a5bfb1f2f68)]
 interface nsIFeedWriter : nsISupports
 {
   /**
@@ -56,18 +56,7 @@ interface nsIFeedWriter : nsISupports
   void write(in nsIDOMWindow window);
 
   /**
-   * Show a UI for changing feed reader and options
-   */
-  void changeOptions();
-
-  /**
    * Uninitialize the feed writer.
    */
   void close();
-
-  /**
-   * Subscribe to the current feed.
-   */
-  void subscribe();
 };
-

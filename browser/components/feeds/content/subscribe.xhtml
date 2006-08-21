@@ -14,7 +14,8 @@
 ]>
 
 <html id="feedHandler"
-      xmlns="http://www.w3.org/1999/xhtml">
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <head>
     <title>&feedPage.title;</title>
     <link rel="stylesheet" href="chrome://browser/skin/feeds/subscribe.css" 
@@ -30,28 +31,10 @@
         </p>
         <p id="feedSubscriptionInfo2">&feedSubscriptionInfo2;</p>
       </div>
-      <div id="feedSubscribeLine">
-        <div id="feedSubscribeLineHandlerChosen">
-          <button id="feedSubscribeLink" class="feedSubscribeLink" 
-                  onclick="SubscribeHandler.subscribe();">
-            <span class="feedSubscribeLinkBox">&feedSubscribeNow;</span>
-          </button>
-          &feedSubscribeUsing;
-          <span id="feedSubscribeHandler">
-            <a id="feedSubscribeHandleText"></a>
-          </span>
-          <a id="feedChangeSubscribeOptions" href="javascript:SubscribeHandler.changeOptions();">
-            &feedSubscribeChangeSubscribeOptions;</a>
-        </div>
-        <div id="feedSubscribeLineHandlerUnchosen" hidden="true">
-          <button id="feedChooseInitialReader" class="feedSubscribeLink" 
-                  onclick="SubscribeHandler.changeOptions();">
-            <span class="feedSubscribeLinkBox">&feedSubscribeChooseSubscribeOptions;</span>
-          </button>
-          &feedSubscribeChooseInfo;
-        </div>
-      </div>
-    </div>
+
+<!-- XXXmano this has to be in one line. Otherwise you would see
+     how much XUL-in-XHTML sucks, see bug 348830 -->
+<div id="feedSubscribeLine"><xul:vbox><xul:hbox align="center"><xul:description>&subscribeUsing;</xul:description><xul:menulist id="handlersMenuList"><xul:menupopup menugenerated="true" id="handlersMenuPopup"><xul:menuitem id="liveBookmarksMenuItem" label="&feedLiveBookmarks;" class="menuitem-iconic" src="chrome://browser/skin/page-livemarks.png" selected="true"/><xul:menuseparator/></xul:menupopup></xul:menulist></xul:hbox><xul:hbox><xul:checkbox id="alwaysUse" checked="false"/></xul:hbox><xul:hbox align="center"><xul:spacer flex="1"/><span><xul:button label="&feedSubscribeNow;" id="subscribeButton"/></span></xul:hbox></xul:vbox></div></div>
     
     <!-- XXXben - get rid of me when the feed processor is bug free! -->
     <div id="feedError" style="display:none;" dir="&locale.dir;">

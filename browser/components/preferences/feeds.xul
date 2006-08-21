@@ -22,6 +22,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Asaf Romano <mozilla.mano@sent.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,17 +39,17 @@
 # ***** END LICENSE BLOCK *****
 
 <!DOCTYPE overlay [
-  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
   <!ENTITY % feedsDTD SYSTEM "chrome://browser/locale/preferences/feeds.dtd">
-  %brandDTD;
   %feedsDTD;
 ]>
 
 <overlay id="FeedsPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <prefpane id="paneFeeds" onpaneload="gFeedsPane.init();"
-            helpTopic="prefs-feeds" helpURI="chrome://browser/locale/help/help.rdf">
+  <prefpane id="paneFeeds"
+            onpaneload="gFeedsPane.init();"
+            helpTopic="prefs-feeds"
+            helpURI="chrome://browser/locale/help/help.rdf">
 
     <preferences id="feedsPreferences">
       <preference id="browser.feeds.handler"
@@ -56,48 +57,58 @@
                   type="string"/>
       <preference id="browser.feeds.handler.default"
                   name="browser.feeds.handler.default"
+                  onchange="gFeedsPane.updateSelectedReader();"
                   type="string"/>
       <preference id="browser.feeds.handlers.application"
                   name="browser.feeds.handlers.application"
-                  type="file"
-                  onchange="gFeedsPane.onReaderPrefsChange();"/>
+                  onchange="gFeedsPane.updateSelectedApplicationInfo();"
+                  type="file"/>
       <preference id="browser.feeds.handlers.webservice"
                   name="browser.feeds.handlers.webservice"
-                  type="string"
-                  onchange="gFeedsPane.onReaderPrefsChange();"/>
+                  onchange="gFeedsPane.updateSelectedReader();"
+                  type="string"/>
     </preferences>
     
     <script type="application/x-javascript" src="chrome://browser/content/preferences/feeds.js"/>
 
-    <!-- to ease display of file stats, never displayed -->
-    <filefield class="indent" id="clientApp" disabled="true" collapsed="true"/>
+    <filefield class="indent" id="selectedAppFilefield" disabled="true" hidden="true"/>
+    <stringbundle id="stringbundle" src="chrome://browser/locale/preferences/feeds.properties"/>
 
-    <hbox id="chooseReaderBox" align="center">
-      <label control="chooseFeedReader"
-             accesskey="&feedReader.accesskey;">&feedReader.label;</label>
-
-      <!-- preference: browser.feeds.handler.default, added after onload
-                       because the menu is dynamically populated -->
-      <menulist id="chooseFeedReader"
-                onsyncfrompreference="return gFeedsPane.readFeedReader();"
-                onsynctopreference="return gFeedsPane.writeFeedReader();"/>
-    </hbox>
-
-    <separator class="thin"/>
-
-    <label id="feedClickLabel"
-           control="feedClick">&feedClick.label;</label>
-
-    <!-- preference: browser.feeds.handler, added after onload due to dynamic
-                     population issues -->
-    <radiogroup id="feedClick" class="indent"
-                
-                onsynctopreference="return gFeedsPane.writeFeedAction();">
-      <radio label="&ask.label;" accesskey="&ask.accesskey;" value="ask"/>
-      <radio label="&subLiveBookmark.label;" accesskey="&subLiveBookmark.accesskey;" value="bookmarks"/>
-      <radio label="&subReader.label;" accesskey="&subReader.accesskey;" value="reader"/>
+    <label value="&feedClick.label;"/>
+    <radiogroup id="readingMethod"
+                class="indent"
+                preference="browser.feeds.handler"
+                onsyncfrompreference="return gFeedsPane.onReadingMethodSyncFromPreference();"
+                onsynctopreference="return gFeedsPane.onReadingMethodSyncToPreference();"
+                onselect="gFeedsPane.onReadingMethodSelect();">
+      <radio value="ask"
+             label="&showPreview.label;"
+             accesskey="&showPreview.accesskey;"/>
+      <radio value="reader"
+             label="&subscribeUsing.label;"
+             accesskey="&subscribeUsing.accesskey;"/>
+      <hbox id="readerContainer" class="indent" flex="1">
+        <listbox id="readers" rows="5" flex="1"
+                 onselect="gFeedsPane.writeSelectedFeedReader();">
+          <listcols>
+            <listcol flex="1"/>
+            <listcol/>
+          </listcols>
+          <listitem id="liveBookmarksListItem"
+                    label="&liveBookmarks.label;"
+                    class="listitem-iconic"
+                    image="chrome://browser/skin/page-livemarks.png"/>
+          <listitem id="selectedApplicationListitem" allowevents="true">
+            <listcell id="selectedApplicationCell" class="listcell-iconic"/>
+            <listcell>
+              <button id="chooseClientApp"
+                      label="&chooseApplication.label;"
+                      accesskey="&chooseApplication.accesskey;"
+                      oncommand="gFeedsPane.chooseClientApp();"/>
+            </listcell>
+          </listitem>
+        </listbox>
+      </hbox>
     </radiogroup>
-
   </prefpane>
-
 </overlay>

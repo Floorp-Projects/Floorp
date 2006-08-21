@@ -205,8 +205,10 @@ FeedConverter.prototype = {
               // fall through -- let feed service handle error
             case "bookmarks":
             case "client":
-              feedService.addToClientReader(this._request, result.uri.spec);
-              return;
+              try {
+                feedService.addToClientReader(this._request, result.uri.spec);
+                return;
+              } catch(ex) { /* fallback to preview mode */ }
           }
         }
       }
@@ -343,13 +345,7 @@ var FeedResultService = {
 
     switch (handler) {
     case "client":
-      try {
-        var clientApp = 
-            prefs.getComplexValue(PREF_SELECTED_APP, Ci.nsILocalFile);
-      }
-      catch (e) {
-        return;
-      }
+      var clientApp = prefs.getComplexValue(PREF_SELECTED_APP, Ci.nsILocalFile);
 #ifdef XP_MACOSX
       // On OS X, the built in feed dispatcher (Safari) sends feeds to other
       // applications (When Default Reader is adjusted) in the following format:

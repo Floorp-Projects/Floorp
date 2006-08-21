@@ -1,10 +1,8 @@
-<!ENTITY  feedReader.label            "Feed Reader:">
-<!ENTITY  feedReader.accesskey        "F">
-
 <!ENTITY  feedClick.label             "When I click on a web feed:">
-<!ENTITY  ask.label                   "Ask me what to use">
-<!ENTITY  ask.accesskey               "A">
-<!ENTITY  subLiveBookmark.label       "Always subscribe with a Live Bookmark">
-<!ENTITY  subLiveBookmark.accesskey   "L">
-<!ENTITY  subReader.label             "Always subscribe using the Feed Reader">
-<!ENTITY  subReader.accesskey         "R">
+<!ENTITY  showPreview.label           "Show me a preview and ask me which Feed Reader to use">
+<!ENTITY  showPreview.accesskey       "S">
+<!ENTITY  subscribeUsing.label        "Subscribe to the feed using:">
+<!ENTITY  subscribeUsing.accesskey    "u">
+<!ENTITY  liveBookmarks.label         "Live Bookmarks">
+<!ENTITY  chooseApplication.label     "Choose Application...">
+<!ENTITY  chooseApplication.accesskey     "C">
