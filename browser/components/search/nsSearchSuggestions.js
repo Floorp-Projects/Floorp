@@ -370,6 +370,8 @@ SuggestAutoComplete.prototype = {
     } else if (!this._sentSuggestRequest) {
       // We didn't send a request, so just send back the form history results.
       this._listener.onSearchResult(this, this._formHistoryResult);
+      // don't hold onto this until component shutdown!
+      this._formHistoryResult = null;
     }
   },
 
