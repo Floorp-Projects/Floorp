@@ -471,7 +471,6 @@ enum BWCOpenDest {
 
 - (BrowserTabViewItem*)tabForBrowser:(BrowserWrapper*)inWrapper;
 - (BookmarkViewController*)bookmarkViewControllerForCurrentTab;
-- (void)bookmarkableTitle:(NSString **)outTitle URL:(NSString**)outURLString forWrapper:(BrowserWrapper*)inWrapper;
 - (void)sessionHistoryItemAtRelativeOffset:(int)indexOffset forWrapper:(BrowserWrapper*)inWrapper title:(NSString**)outTitle URL:(NSString**)outURLString;
 - (NSString *)locationToolTipWithFormat:(NSString *)format title:(NSString *)backTitle URL:(NSString *)backURL;
 
@@ -1800,28 +1799,6 @@ enum BWCOpenDest {
   return nil;
 }
 
-// this gets the previous entry in session history if bookmarks are showing
-- (void)bookmarkableTitle:(NSString**)outTitle URL:(NSString**)outURLString forWrapper:(BrowserWrapper*)inWrapper
-{
-  *outTitle = nil;
-  *outURLString = nil;
-
-  NSString* curTitle = nil;
-  NSString* curURL = nil;
-  [inWrapper getTitle:&curTitle andHref:&curURL];
-
-  // if we're currently showing history or bookmarks, hand back the last URL.
-  if ([[curURL lowercaseString] isEqualToString:@"about:bookmarks"] ||
-      [[curURL lowercaseString] isEqualToString:@"about:history"])
-  {
-    // get the previous title and URL from the session history
-    [self sessionHistoryItemAtRelativeOffset:-1 forWrapper:inWrapper title:&curTitle URL:&curURL ];
-  }
-
-  *outTitle = curTitle;
-  *outURLString = curURL;
-}
-
 // indexOffset denotes the number of entries forward or back in session history to look
 - (void)sessionHistoryItemAtRelativeOffset:(int)indexOffset forWrapper:(BrowserWrapper*)inWrapper title:(NSString**)outTitle URL:(NSString**)outURLString
 {
@@ -2480,7 +2457,7 @@ enum BWCOpenDest {
     BrowserWrapper* browserWrapper = (BrowserWrapper*)[[mTabBrowser tabViewItemAtIndex:i] view];
     NSString* curTitleString = nil;
     NSString* hrefString = nil;
-    [self bookmarkableTitle:&curTitleString URL:&hrefString forWrapper:browserWrapper];
+    [browserWrapper getTitle:&curTitleString andHref:&hrefString];
 
     NSMutableDictionary* itemInfo = [NSMutableDictionary dictionaryWithObject:hrefString forKey:kAddBookmarkItemURLKey];
 
