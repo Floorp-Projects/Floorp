@@ -714,6 +714,7 @@ sub packit_l10n {
     if (defined($Settings::LocalizationVersionFile)) {
       my $l10nVersion = read_file("$Settings::TopsrcdirFull/$Settings::LocalizationVersionFile");
       chomp($l10nVersion);
+      $l10nVersion =~ s/\r//g if (TinderUtils::is_windows()); # yay win32!
       $wgeturl =~ s/%version%/$l10nVersion/g;
     }
 
