@@ -1,6 +1,3 @@
 <!ENTITY  brandShortName        "Firefox">
 <!ENTITY  brandFullName         "Mozilla Firefox">
 <!ENTITY  vendorShortName       "Mozilla">
-
-<!-- LOCALIZATION NOTE (releaseBaseURL): The about: page appends __MOZ_APP_VERSION__.html, e.g. 2.0.html -->
-<!ENTITY  releaseBaseURL        "http://www.mozilla.com/firefox/releases/">
