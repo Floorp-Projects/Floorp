@@ -220,19 +220,8 @@ push(@used_fields, "product_id");
 $cgi->param(-name => 'component_id', -value => $component->id);
 push(@used_fields, "component_id");
 
-my %ccids;
+my @cc_ids = @{Bugzilla::Bug::_check_cc([$cgi->param('cc')])};
 
-# Create the ccid hash for inserting into the db
-# use a hash rather than a list to avoid adding users twice
-if (defined $cgi->param('cc')) {
-    foreach my $person ($cgi->param('cc')) {
-        next unless $person;
-        my $ccid = login_to_id($person, THROW_ERROR);
-        if ($ccid && !$ccids{$ccid}) {
-           $ccids{$ccid} = 1;
-        }
-    }
-}
 # Check for valid keywords and create list of keywords to be added to db
 # (validity routine copied from process_bug.cgi)
 my @keywordlist;
@@ -257,11 +246,13 @@ if ($cgi->param('keywords') && UserInGroup("editbugs")) {
 
 if (Bugzilla->params->{"strict_isolation"}) {
     my @blocked_users = ();
-    my %related_users = %ccids;
-    $related_users{$cgi->param('assigned_to')} = 1;
+    my @related_users = @cc_ids;
+    push(@related_users, $cgi->param('assigned_to'));
     if (Bugzilla->params->{'useqacontact'} && $cgi->param('qa_contact')) {
-        $related_users{$cgi->param('qa_contact')} = 1;
+        push(@related_users, $cgi->param('qa_contact'));
     }
+    # For each unique user in @related_users...
+    my %related_users = map {$_ => 1} @related_users;
     foreach my $pid (keys %related_users) {
         my $related_user = Bugzilla::User->new($pid);
         if (!$related_user->can_edit_product($product->id)) {
@@ -440,7 +431,7 @@ $dbh->do(q{INSERT INTO longdescs (bug_id, who, bug_when, thetext,isprivate)
 
 # Insert the cclist into the database
 my $sth_cclist = $dbh->prepare(q{INSERT INTO cc (bug_id, who) VALUES (?,?)});
-foreach my $ccid (keys(%ccids)) {
+foreach my $ccid (@cc_ids) {
     $sth_cclist->execute($id, $ccid);
 }
 

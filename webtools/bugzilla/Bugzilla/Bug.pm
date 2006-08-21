@@ -288,6 +288,19 @@ sub _check_bug_status {
     return $status;
 }
 
+sub _check_cc {
+    my ($ccs) = @_;
+    return [] unless $ccs;
+
+    my %cc_ids;
+    foreach my $person (@$ccs) {
+        next unless $person;
+        my $id = login_to_id($person, THROW_ERROR);
+        $cc_ids{$id} = 1;
+    }
+    return [keys %cc_ids];
+}
+
 sub _check_comment {
     my ($comment) = @_;
 
