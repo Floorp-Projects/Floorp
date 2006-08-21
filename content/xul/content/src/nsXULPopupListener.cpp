@@ -128,7 +128,6 @@ protected:
 
     virtual nsresult LaunchPopup(nsIDOMEvent* anEvent);
     virtual nsresult LaunchPopup(PRInt32 aClientX, PRInt32 aClientY) ;
-    virtual void ClosePopup();
 
 private:
 
@@ -139,7 +138,7 @@ private:
     nsIDOMElement* mElement;               // Weak ref. The element will go away first.
 
     // The popup that is getting shown on top of mElement.
-    nsIDOMElement* mPopupContent; 
+    nsCOMPtr<nsIPopupBoxObject> mPopup;
 
     // The type of the popup
     XULPopupType popupType;
@@ -149,13 +148,15 @@ private:
 ////////////////////////////////////////////////////////////////////////
       
 XULPopupListenerImpl::XULPopupListenerImpl(void)
-  : mElement(nsnull), mPopupContent(nsnull)
+  : mElement(nsnull)
 {
 }
 
 XULPopupListenerImpl::~XULPopupListenerImpl(void)
 {
-  ClosePopup();
+  if (mPopup) {
+    mPopup->HidePopup();
+  }
   
 #ifdef DEBUG_REFS
     --gInstanceCount;
@@ -389,30 +390,6 @@ XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
 }
 
 //
-// ClosePopup
-//
-// Do everything needed to shut down the popup.
-//
-// NOTE: This routine is safe to call even if the popup is already closed.
-//
-void
-XULPopupListenerImpl :: ClosePopup ( )
-{
-  if ( mPopupContent ) {
-    nsCOMPtr<nsIDOMXULElement> popupElement(do_QueryInterface(mPopupContent));
-    nsCOMPtr<nsIBoxObject> boxObject;
-    if (popupElement)
-      popupElement->GetBoxObject(getter_AddRefs(boxObject));
-    nsCOMPtr<nsIPopupBoxObject> popupObject(do_QueryInterface(boxObject));
-    if (popupObject)
-      popupObject->HidePopup();
-
-    mPopupContent = nsnull;  // release the popup
-  }
-
-} // ClosePopup
-
-//
 // LaunchPopup
 //
 nsresult
@@ -607,28 +584,28 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
 
   if (domWindow) {
     // Find out if we're anchored.
-    mPopupContent = popupContent.get();
-
     nsAutoString anchorAlignment;
-    mPopupContent->GetAttribute(NS_LITERAL_STRING("popupanchor"), anchorAlignment);
+    popupContent->GetAttribute(NS_LITERAL_STRING("popupanchor"), anchorAlignment);
 
     nsAutoString popupAlignment;
-    mPopupContent->GetAttribute(NS_LITERAL_STRING("popupalign"), popupAlignment);
+    popupContent->GetAttribute(NS_LITERAL_STRING("popupalign"), popupAlignment);
 
     PRInt32 xPos = aClientX, yPos = aClientY;
 
-    ConvertPosition(mPopupContent, anchorAlignment, popupAlignment, yPos);
+    ConvertPosition(popupContent, anchorAlignment, popupAlignment, yPos);
     if (!anchorAlignment.IsEmpty() && !popupAlignment.IsEmpty())
       xPos = yPos = -1;
 
     nsCOMPtr<nsIBoxObject> popupBox;
-    nsCOMPtr<nsIDOMXULElement> xulPopupElt(do_QueryInterface(mPopupContent));
+    nsCOMPtr<nsIDOMXULElement> xulPopupElt(do_QueryInterface(popupContent));
     xulPopupElt->GetBoxObject(getter_AddRefs(popupBox));
     nsCOMPtr<nsIPopupBoxObject> popupBoxObject(do_QueryInterface(popupBox));
-    if (popupBoxObject)
-      popupBoxObject->ShowPopup(mElement, mPopupContent, xPos, yPos, 
+    if (popupBoxObject) {
+      mPopup = popupBoxObject;
+      popupBoxObject->ShowPopup(mElement, popupContent, xPos, yPos, 
                                 type.get(), anchorAlignment.get(), 
                                 popupAlignment.get());
+    }
   }
 
   return NS_OK;
