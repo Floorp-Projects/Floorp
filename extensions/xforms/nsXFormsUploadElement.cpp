@@ -207,8 +207,55 @@ nsXFormsUploadElement::PickFile()
   rv = filePicker->Init(internal, filepickerTitle, nsIFilePicker::modeOpen);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // set filter "All Files"
-  // XXX implement "@mediatype" file filters
+  // Set the file picker filters based on the mediatype attribute.
+  nsAutoString mediaType;
+  mElement->GetAttribute(NS_LITERAL_STRING("mediatype"), mediaType);
+
+  if (!mediaType.IsEmpty()) {
+    // The mediatype attribute contains a space delimited list of mime types.
+    nsresult rv;
+    nsCOMPtr<nsIMIMEService> mimeService =
+      do_GetService("@mozilla.org/mime;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAString::const_iterator start, end, iter;
+    mediaType.BeginReading(start);
+    mediaType.BeginReading(iter);
+    mediaType.EndReading(end);
+
+    nsAutoString fileFilter;
+    nsAutoString mimeType;
+    while (iter != end) {
+      if (FindCharInReadable(' ', iter, end)) {
+         mimeType = Substring(start, iter);
+         // Skip the space.
+         ++iter;
+         // Save the starting position for the next mime type (if any).
+         start = iter;
+      } else {
+        // Only 1 media type or we've reached the end of the list.
+        mimeType = Substring(start, end);
+      }
+
+      // Map the mime type to a file extension and add the extension to the file
+      // type filter for the file dialog.
+      nsCAutoString fileExtension;
+      rv = mimeService->GetPrimaryExtension(NS_ConvertUTF16toUTF8(mimeType),
+                                            EmptyCString(), fileExtension);
+      if (NS_SUCCEEDED(rv) && !fileExtension.IsEmpty()) {
+        fileFilter.AppendLiteral("*.");
+        fileFilter.Append(NS_ConvertUTF8toUTF16(fileExtension));
+        if (iter != end) {
+          fileFilter.AppendLiteral(";");
+        }
+      }
+    }
+
+    // Append the file extension filter.
+    filePicker->AppendFilter(fileFilter, fileFilter);
+  }
+
+  // Always add 'All Files'
   filePicker->AppendFilters(nsIFilePicker::filterAll);
 
   // open dialog
