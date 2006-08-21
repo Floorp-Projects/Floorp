@@ -217,10 +217,20 @@ a[href] img {
   -moz-padding-end: 14px;
 }
 
-.feedSubscribeButton {
-  font-weight: bold;
-  list-style-image: url("chrome://browser/skin/feeds/feedIcon16.png");
+#handlersMenuList > menupopup > menuitem {
+  -moz-padding-start: 23px;
 }
-.feedSubscribeButton .button-icon {
-  -moz-margin-end: 3px;
+
+#handlersMenuList > menupopup > menuitem.menuitem-iconic {
+  -moz-padding-start: 2px;
+}
+
+#handlersMenuList > menupopup > .menuitem-iconic  > .menu-iconic-left {
+  display: -moz-box;
+  min-width: 16px;
+  -moz-padding-end: 2px;
+}
+
+#feedHeader[dir="rtl"] #handlersMenuList > menupopup {
+  direction: rtl;
 }

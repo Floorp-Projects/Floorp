@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Asaf Romano <mozilla.mano@sent.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,315 +36,198 @@
 #
 # ***** END LICENSE BLOCK *****
 
+#ifndef XP_MACOSX
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
+const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+#endif
+
+/*
+ * Preferences:
+ *
+ * browser.feeds.handler
+ * - "bookmarks", "reader" (clarified further using the .default preference),
+ *   or "ask" -- indicates the default handler being used to process feeds
+ *
+ * browser.feeds.handler.default
+ * - "bookmarks", "client" or "web" -- indicates the chosen feed reader used
+ *   to display feeds, either transiently (i.e., when the "use as default"
+ *   checkbox is unchecked, corresponds to when browser.feeds.handler=="ask")
+ *   or more permanently (i.e., the item displayed in the dropdown in Feeds
+ *   preferences)
+ *
+ * browser.feeds.handler.webservice
+ * - the URL of the currently selected web service used to read feeds
+ *
+ * browser.feeds.handlers.application
+ * - nsILocalFile, stores the current client-side feed reading app if one has
+ *   been chosen
+ */
+   
+const PREF_SELECTED_APP    = "browser.feeds.handlers.application";
+const PREF_SELECTED_WEB    = "browser.feeds.handlers.webservice";
+const PREF_SELECTED_ACTION = "browser.feeds.handler";
+const PREF_SELECTED_READER = "browser.feeds.handler.default";
 
 var gFeedsPane = {
-  /**
-   * Ensures feed reader list is initialized before Feed Reader UI is
-   * filled from preferences.
-   */
-  _feedReadersInited: false,
+  element: function(aID) {
+    return document.getElementById(aID);
+  },
 
-  _pane: null,
+  /* ........ QueryInterface .............. */
+  QueryInterface: function(aIID) {
+    if (aIID.equals(Ci.nsISupports) ||
+        aIID.equals(Ci.nsIObserver) ||
+        aIID.equals(Ci.nsISupportsWeakReference))
+      return this;
+      
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  /**
+   * See nsIObserver
+   */
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic != "nsPref:changed" || aData != PREF_SELECTED_WEB)
+      return;
+
+    if (this.element(PREF_SELECTED_ACTION).value == "reader") {
+      var wccr = 
+        Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
+        getService(Ci.nsIWebContentConverterService);
+      var handlerURL = this.element(PREF_SELECTED_WEB).valueFromPreferences;
+      var handler =
+        wccr.getWebContentHandlerByURI(TYPE_MAYBE_FEED, handlerURL);
+      if (handler)
+        wccr.setAutoHandler(TYPE_MAYBE_FEED, handler);
+    }
+  },
 
   /**
    * Initializes this.
    */
-  init: function ()
-  {
-    this._pane = document.getElementById("paneFeeds");
-
-    this._initFeedReaders();
-    this._attachPreferenceBindings();
-    this.onReaderPrefsChange();
-  },
-
-  _attachPreferenceBindings: function ()
-  {
-    var feedClick = document.getElementById("feedClick");
-    feedClick.setAttribute("preference", "browser.feeds.handler");
-
-    var reader = document.getElementById("chooseFeedReader");
-    reader.setAttribute("preference", "browser.feeds.handler.default");
-  },
-
-  /*
-   * Preferences:
-   *
-   * browser.feeds.handler
-   * - "bookmarks", "reader" (clarified further using the .default preference),
-   *   or "ask" -- indicates the default handler being used to process feeds
-   * browser.feeds.handler.default
-   * - "bookmarks", "client" or "web" -- indicates the chosen feed reader used
-   *   to display feeds, either transiently (i.e., when the "use as default"
-   *   checkbox is unchecked, corresponds to when browser.feeds.handler=="ask")
-   *   or more permanently (i.e., the item displayed in the dropdown in Feeds
-   *   preferences)
-   * browser.feeds.handler.webservice
-   * - the URL of the currently selected web service used to read feeds
-   * browser.feeds.handlers.application
-   * - nsILocalFile, stores the current client-side feed reading app if one has
-   *   been chosen
-   */
-
-  /**
-   * Converts the selected radio button into a preference value, sets any
-   * ancillary preferences (such as web/client readers), and returns the new
-   * value of browser.feeds.handler.
-   */
-  writeFeedAction: function ()
-  {
-    var app = document.getElementById("browser.feeds.handlers.application");
-    var web = document.getElementById("browser.feeds.handlers.webservice");
-    var selReader = document.getElementById("browser.feeds.handler.default");
-
-    var feedAction = document.getElementById("feedClick").value;
-    switch (feedAction) {
-      case "reader":
-        var menu = document.getElementById("chooseFeedReader");
-        var reader = menu.selectedItem;
-
-        var type = reader.getAttribute("type");
-        switch (type) {
-          case "client":
-            app.value = reader.getAttribute("value");
-            selReader.value = type;
-            break;
-
-          case "web":
-            web.value = reader.getAttribute("value");
-            selReader.value = type;
-            break;
-
-          default:
-            throw "Unhandled reader type: " + feedAction;
-        }
-        break;
-
-      default:
-        throw "Unhandled feed action: " + feedAction;
-
-      case "ask":
-      case "bookmarks":
-        break;
-
+  init: function () {
+    var _delayedPaneLoad = function(self) {
+      self._initFeedReaders();
+      self.updateSelectedReader();
     }
-    return feedAction;
+    setTimeout(_delayedPaneLoad, 0, this);
+
+    // For web readers, we need to call setAutoHandler if the
+    // preview page should be skipped (i.e. PREF_SELECTED_ACTION="reader")
+    // To do so, we've to add a pref-observer in order to be notified on
+    // actual pref-changes (i.e. not on pref changes which may not take
+    // affect when the prefwindow is closed)
+    var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+      getService(Ci.nsIPrefBranch2);
+    prefBranch.addObserver(PREF_SELECTED_WEB, this, true);
   },
 
   /**
-   * Converts the value of browser.feeds.handler.default into the appropriate
-   * menu item in the menulist of readers, returning the value of that item.
+   * Populates the UI list of available feed readers.
    */
-  readFeedReader: function ()
-  {
-    var reader = document.getElementById("browser.feeds.handler");
-    var selReader = document.getElementById("browser.feeds.handler.default");
+  _initFeedReaders: function() {
+    this.updateSelectedApplicationInfo();
 
-    var web = document.getElementById("browser.feeds.handlers.webservice");
-    var app = document.getElementById("browser.feeds.handlers.application");
-
-    var menu = document.getElementById("chooseFeedReader");
-
-    // we have the type of reader being used -- get its corresponding value
-    // and return it
-    var defaultHandler = selReader.value;
-    switch (defaultHandler) {
-      case "web":
-        return web.value;
-        break;
-
-      case "client":
-        return app.value.path || app.value;
-        break;
-
-      case "bookmarks":
-        // we could handle this case with a preference specifically for the
-        // chosen reader, but honestly -- is it really worth it?
-      default:
-        menu.selectedIndex = 0;
-        return menu.value;
-    }
-  },
-
-  /**
-   * Determines the reader displayed in the feed reader menulist and stores that
-   * reader to preferences.
-   */
-  writeFeedReader: function ()
-  {
-    var menu = document.getElementById("chooseFeedReader");
-
-    var reader = document.getElementById("browser.feeds.handler");
-    var selReader = document.getElementById("browser.feeds.handler.default");
-    var web = document.getElementById("browser.feeds.handlers.webservice");
-    var app = document.getElementById("browser.feeds.handlers.application");
-
-    var selected = menu.selectedItem;
-    var type = selected.getAttribute("type");
-    switch (type) {
-      case "web":
-        web.value = selected.value;
-        break;
-
-      case "client":
-        app.value = selected.value;
-        break;
-
-      case "add":
-        // we're choosing a new client app
-        var newApp = this._addNewReader();
-        if (newApp) {
-          this._initFeedReaders();
-          app.value = newApp;
-          type = "client";
-        } else {
-          type = selReader.value; // return to existing value
-        }
-        break;
-
-      default:
-        throw "Unhandled type: " + type;
-    }
-       return type;
-  },
-
-  /**
-   * Syncs current UI with the values stored in preferences.  This is necessary
-   * because the UI items are represented using multiple preferences, so the
-   * sync can't happen automatically without extra code.
-   */
-  onReaderPrefsChange: function ()
-  {
-    var handler = document.getElementById("browser.feeds.handler");
-    var selReader = document.getElementById("browser.feeds.handler.default");
-
-    handler.updateElements();
-    selReader.updateElements();
-  },
-
-  /**
-   * Populates the UI list of available feed readers.  The current feed reader
-   * must be manually selected in the list.
-   */
-  _initFeedReaders: function ()
-  {
-    // XXX make UI a listbox with icons, etc!
-
-    const Cc = Components.classes, Ci = Components.interfaces;
-
-    var readers = [];
-
-    // CLIENT-SIDE
-
-    // first, get the client reader in preferences
-    try {
-      var clientApp = document.getElementById("clientApp");
-      var app = document.getElementById("browser.feeds.handlers.application");
-      clientApp.file = app.value;
-
-      var client = { type: "client",
-                     path: clientApp.file.path,
-                     name: clientApp.label,
-                     icon: clientApp.image };
-      readers.push(client);
-    }
-    catch (e) { /* no client feed reader set */ }
-
-    // get any readers stored in system preferences
-#ifdef XP_WIN
-    try {
-      // look for current feed handler in the Windows registry
-      const WRK = Ci.nsIWindowsRegKey;
-      var regKey = Cc["@mozilla.org/windows-registry-key;1"]
-                     .createInstance(WRK);
-      regKey.open(WRK.ROOT_KEY_CLASSES_ROOT,
-                  "feed\\shell\\open\\command",
-                  WRK.ACCESS_READ);
-      var path = regKey.readStringValue("");
-      if (path.charAt(0) == "\"") {
-        // Everything inside the quotes
-        path = path.substr(1);
-        path = path.substr(0, path.indexOf("\""));
-      }
-      else {
-        // Everything up to the first space
-        path = path.substr(0, path.indexOf(" "));
-      }
-      var file = Cc["@mozilla.org/file/local;1"]
-                   .createInstance(Ci.nsILocalFile);
-      file.initWithPath(path);
-      clientApp.file = file;
-
-      client = { type: "client",
-                 path: clientApp.file.path,
-                 name: clientApp.label,
-                 icon: clientApp.image };
-
-      readers.push(client);
-    }
-    catch (e) { /* no feed: handler on system */ }
-#endif
-
-    // WEB SERVICES
-    const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
-    var wccr = Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"]
-                 .getService(Ci.nsIWebContentConverterService);
-    var ios = Cc["@mozilla.org/network/io-service;1"]
-                .getService(Ci.nsIIOService);
-
+    var wccr = 
+        Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
+        getService(Ci.nsIWebContentConverterService);
     var handlers = wccr.getContentHandlers(TYPE_MAYBE_FEED, {});
-    for (var i = 0; i < handlers.length; i++) {
+    if (handlers.length == 0)
+      return;
+
+    var appRow = this.element("selectedApplicationListitem");
+    var ios = 
+        Cc["@mozilla.org/network/io-service;1"].
+        getService(Ci.nsIIOService);
+    for (var i = 0; i < handlers.length; ++i) {
+      var row = document.createElementNS(kXULNS, "listitem");
+      row.className = "listitem-iconic";
+      row.setAttribute("label", handlers[i].name);
+      row.setAttribute("webhandlerurl", handlers[i].uri);
+
       var uri = ios.newURI(handlers[i].uri, null, null);
-      var webReader = { type: "web",
-                        path: uri.spec,
-                        name: handlers[i].name,
-                        icon: uri.prePath + "/favicon.ico" };
-      readers.push(webReader);
+      row.setAttribute("image", uri.prePath + "/favicon.ico");
+      
+      appRow.parentNode.appendChild(row);
     }
-
-    // Now that we have all the readers, sort them and add them to the UI
-    var menulist = document.getElementById("chooseFeedReader");
-    menulist.textContent = ""; // clear out any previous elements
-    var popup = document.createElement("menupopup");
-
-    // insert a blank item to indicate no selected preference, and an
-    // "add" item to allow addition of new readers
-
-    var bundle = document.getElementById("bundlePreferences");
-
-    readers.sort(function(a, b) { return (a.name.toLowerCase() < b.name.toLowerCase()) ? -1 : 1; });
-    for (var i = 0; i < readers.length; i++) {
-      var reader = readers[i];
-
-      item = document.createElement("menuitem");
-      item.setAttribute("label", reader.name);
-      item.setAttribute("value", reader.path);
-      item.setAttribute("type", reader.type);
-      item.setAttribute("path", reader.path);
-
-      popup.appendChild(item);
-    }
-
-    // put "add new reader" at end, since it won't be used much
-    item = document.createElement("menuitem");
-    item.setAttribute("label", bundle.getString("addReader"));
-    item.setAttribute("value", "add");
-    item.setAttribute("type", "add");
-    popup.appendChild(item);
-
-    menulist.appendChild(popup);
-
   },
 
   /**
-   * Displays a prompt from which the user may add a new (client) feed reader.
-   *
-   * @returns null if no new reader was added, or the path to the application if
-   *          one was added
+   * Updates the label and image of the client feed reader listitem
    */
-  _addNewReader: function ()
-  {
-    const Cc = Components.classes, Ci = Components.interfaces;
+  updateSelectedApplicationInfo: function() {
+    var appItemCell = this.element("selectedApplicationCell");
+    var selectedAppFilefield = this.element("selectedAppFilefield")
+    selectedAppFilefield.file = this.element(PREF_SELECTED_APP).value;
+    if (selectedAppFilefield.file) {
+      appItemCell.setAttribute("label", selectedAppFilefield.label);
+      appItemCell.setAttribute("image", selectedAppFilefield.image);
+    }
+    else {
+      var noAppString =
+        this.element("stringbundle").getString("noApplicationSelected");
+      appItemCell.setAttribute("label", noAppString);
+      appItemCell.setAttribute("image", "");
+    }
+  },
+
+  /**
+   * Selects a item in the list without triggering a preference change.
+   *
+   * @param aItem
+   *        the listitem to be selected
+   */
+  _silentSelectReader: function(aItem) {
+    var readers = this.element("readers");
+    readers.setAttribute("suppressonselect", "true");
+    readers.selectItem(aItem);
+    readers.removeAttribute("suppressonselect");
+  },
+
+  /**
+   * Helper for updateSelectedReader. Syncs the selected item in the readers
+   * list with value stored invalues stored in PREF_SELECTED_WEB
+   */
+  _updateSelectedWebHandlerItem: function() {
+    // We should select the new web handler only if the default handler
+    // is "web"
+    var readers = this.element("readers")
+    var readerElts =
+        readers.getElementsByAttribute("webhandlerurl",
+                                       this.element(PREF_SELECTED_WEB).value);
+
+    // XXXmano: handle the addition of a new web handler
+    if (readerElts.length > 0)
+      this._silentSelectReader(readerElts[0]);
+  },
+
+  /**
+   * Syncs the selected item in the readers list with the values stored in
+   * preferences.
+   */
+  updateSelectedReader: function() {
+    var defaultReader = this.element(PREF_SELECTED_READER).value ||
+                        "bookmarks";
+    switch (defaultReader) {
+      case "bookmarks":
+        this._silentSelectReader(this.element("liveBookmarksListItem"));
+        break;
+      case "client":
+        this._silentSelectReader(this.element("selectedApplicationListitem"));
+        break;
+      case "web":
+        this._updateSelectedWebHandlerItem();
+        break;
+    }
+  },
+
+  /**
+   * Displays a prompt from which the user may choose an a (client) feed reader.
+   */
+  chooseClientApp: function () {
     var fp = Cc["@mozilla.org/filepicker;1"]
                .createInstance(Ci.nsIFilePicker);
     fp.init(window, document.title, Ci.nsIFilePicker.modeOpen);
@@ -352,14 +236,79 @@ var gFeedsPane = {
       // XXXben - we need to compare this with the running instance executable
       //          just don't know how to do that via script...
       if (fp.file.leafName == "firefox.exe")
-        return null;
+        return;
 
-      var pref = document.getElementById("browser.feeds.handlers.application");
-      pref.value = fp.file;
-
-      return fp.file.path;
+      this.element(PREF_SELECTED_APP).value = fp.file;
+      this.element(PREF_SELECTED_READER).value = "client";
     }
-    return null;
+  },
 
+  /**
+   * Disables the readers list if "Show preview..." is selected, enables
+   * it otherwise.
+   */
+  onReadingMethodSelect: function() {
+    var disableList = this.element("readingMethod").value == "ask";
+    this.element("readers").disabled = disableList;
+    this.element("chooseClientApp").disabled = disableList;
+  },
+
+  /**
+   * Maps the value of PREF_SELECTED_ACTION to the parallel
+   * value in the radiogroup
+   */
+  onReadingMethodSyncFromPreference: function() {
+    var pref = this.element(PREF_SELECTED_ACTION);
+    var newVal = pref.instantApply ? pref.valueFromPreferences : pref.value;
+    if (newVal != "ask")
+      return "reader";
+
+    return "ask";
+  },
+
+  /**
+   * Returns the value to be used for PREF_SELECTED_ACTION
+   * according to the current UI state.
+   */
+  onReadingMethodSyncToPreference: function() {
+    var readers = this.element("readers");
+
+    // A reader must be choosed in order to skip the preview page
+    if (this.element("readingMethod").value == "ask" ||
+        !readers.currentItem)
+      return "ask";
+
+    if (readers.currentItem.id == "liveBookmarksListItem")
+      return "bookmarks";
+
+    return "reader";
+  },
+
+  /**
+   * Syncs PREF_SELECTED_READER with the selected item in the readers list
+   * Also updates PREF_SELECTED_ACTION if necessary
+   */
+  writeSelectedFeedReader: function() {
+    // Force update of the action pref. This is needed for the case in which
+    // the user flipped from a reader to live bookmarks or vice-versa
+    this.element(PREF_SELECTED_ACTION).value =
+      this.onReadingMethodSyncToPreference();
+
+    var currentItem = this.element("readers").currentItem;
+    if (currentItem.hasAttribute("webhandlerurl")) {
+      this.element(PREF_SELECTED_WEB).value =
+        currentItem.getAttribute("webhandlerurl");
+      this.element(PREF_SELECTED_READER).value = "web";
+    }
+    else {
+      switch (currentItem.id) {
+        case "liveBookmarksListItem":
+          this.element(PREF_SELECTED_READER).value = "bookmarks";
+          break;
+        case "selectedApplicationListitem":
+          // PREF_SELECTED_APP is saved in chooseClientApp
+          this.element(PREF_SELECTED_READER).value = "client";
+      }
+    }
   }
 };

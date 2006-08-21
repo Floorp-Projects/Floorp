@@ -21,6 +21,7 @@
 # Contributor(s):
 #   Ben Goodger <beng@google.com>
 #   Jeff Walden <jwalden+code@mit.edu>
+#   Asaf Romano <mozilla.mano@sent.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -58,6 +59,7 @@ function LOG(str) {
 
 const XML_NS = "http://www.w3.org/XML/1998/namespace"
 const HTML_NS = "http://www.w3.org/1999/xhtml";
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
 const URI_BUNDLE = "chrome://browser/locale/feeds/subscribe.properties";
 
@@ -66,6 +68,7 @@ const PREF_SELECTED_WEB = "browser.feeds.handlers.webservice";
 const PREF_SELECTED_ACTION = "browser.feeds.handler";
 const PREF_SELECTED_READER = "browser.feeds.handler.default";
 const PREF_SKIP_PREVIEW_PAGE = "browser.feeds.skip_preview_page";
+const PREF_SHOW_FIRST_RUN_UI = "browser.feeds.showFirstRunUI";
 
 const FW_CLASSID = Components.ID("{49bb6593-3aff-4eb3-a068-2712c28bd58e}");
 const FW_CLASSNAME = "Feed Writer";
@@ -311,7 +314,7 @@ FeedWriter.prototype = {
     }
 #endif
 #ifdef XP_MACOSX
-    var lfm = file.QueryInterface(Components.interfaces.nsILocalFileMac);
+    var lfm = file.QueryInterface(Components.interfaces.nsILocalFileMac_MOZILLA_1_8_BRANCH);
     try {
       return lfm.bundleDisplayName;
     }
@@ -325,91 +328,330 @@ FeedWriter.prototype = {
     var url = ios.newFileURI(file).QueryInterface(Ci.nsIURL);
     return url.fileName;
   },
-  
-  _initSelectedHandler: function FW__initSelectedHandler() {
+
+  /**
+   * Get moz-icon url for a file
+   * @param   file
+   *          A nsIFile to look up the name of
+   * @returns moz-icon url of the given file as a string
+   */
+  _getFileIconURL: function FW__getFileIconURL(file) {
+    var ios = Cc["@mozilla.org/network/io-service;1"].
+              getService(Components.interfaces.nsIIOService);
+    var fph = ios.getProtocolHandler("file")
+                 .QueryInterface(Ci.nsIFileProtocolHandler);
+    var urlSpec = fph.getURLSpecFromFile(file);
+    return "moz-icon://" + urlSpec + "?size=16";
+  },
+
+  _chooseClientApp: function FW__chooseClientApp() {
+    try {
+      var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+      fp.init(this._window,
+              this._getString("chooseApplicationDialogTitle"),
+              Ci.nsIFilePicker.modeOpen);
+      fp.appendFilters(Ci.nsIFilePicker.filterApps);
+
+      if (fp.show() == Ci.nsIFilePicker.returnOK) {
+        var selectedApp = fp.file;
+        if (selectedApp) {
+          // XXXben - we need to compare this with the running instance executable
+          //          just don't know how to do that via script...
+          // XXXmano TBD: can probably add this to nsIShellService
+#ifdef XP_WIN
+          if (fp.file.leafName != "firefox.exe") {
+#else
+#ifdef XP_MACOSX
+          if (fp.file.leafName != "Firefox.app") {
+#else
+          if (fp.file.leafName != "firefox-bin") {
+#endif
+#endif
+            var selectedAppMenuItem =
+              this._document.getElementById("selectedAppMenuItem");
+
+            selectedAppMenuItem.wrappedJSObject.file = selectedApp;
+            selectedAppMenuItem.setAttribute("label",
+                                             this._getFileDisplayName(selectedApp));
+            selectedAppMenuItem.setAttribute("src",
+                                             this._getFileIconURL(selectedApp));
+
+            // Show and select the selected application menuitem
+            selectedAppMenuItem.wrappedJSObject.hidden = false;
+            selectedAppMenuItem.doCommand();
+            return;
+          }
+        }
+      }
+    }
+    catch(ex) { }
+
+    // Select the (per-prefs) selected handler if no application was selected
+    this._setSelectedHandler();
+  },
+
+  _setAlwaysUseCheckedState: function FW__setAlwaysUseCheckedState() {
+    var checkbox = this._document.getElementById("alwaysUse");
+    if (checkbox) {
+      var alwaysUse = false;
+      try {
+        var prefs = Cc["@mozilla.org/preferences-service;1"].
+                    getService(Ci.nsIPrefBranch);
+        if (prefs.getCharPref(PREF_SELECTED_ACTION) != "ask")
+          alwaysUse = true;
+      }
+      catch(ex) { }
+      checkbox.wrappedJSObject.checked = alwaysUse;
+    }
+  },
+
+  _setAlwaysUseLabel: function FW__setAlwaysUseLabel() {
+    var checkbox = this._document.getElementById("alwaysUse");
+    if (checkbox) {
+      var handlersMenuList = this._document.getElementById("handlersMenuList");
+      if (handlersMenuList) {
+        var handlerName = handlersMenuList.wrappedJSObject.selectedItem.getAttribute("label");
+        checkbox.wrappedJSObject.label = this._getFormattedString("alwaysUse", [handlerName]);
+      }
+    }
+  },
+
+  /**
+   * See nsIDOMEventListener
+   */
+  handleEvent: function(event) {
+    if (event.target.ownerDocument != this._document) {
+      LOG("FeedWriter.handleEvent: Someone passed the feed writer as a listener to the events of another document!");
+      return;
+    }
+
+    if (event.type == "command") {
+      switch(event.target.id) {
+        case "subscribeButton":
+          this.subscribe();
+          break;
+        case "chooseApplicationMenuItem":
+          this._chooseClientApp();
+          break;
+        default:
+          this._setAlwaysUseLabel();
+      }
+    }
+  },
+
+  _setSelectedHandler: function FW__setSelectedHandler() {
     var prefs =   
         Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch);
-    var chosen = 
-        this._document.getElementById("feedSubscribeLineHandlerChosen");
-    var unchosen = 
-        this._document.getElementById("feedSubscribeLineHandlerUnchosen");
-    var ios = 
-        Cc["@mozilla.org/network/io-service;1"].
-        getService(Ci.nsIIOService);
+
+    var handler = "bookmarks";
     try {
-      var iconURI = "chrome://browser/skin/places/livemarkItem.png";
-      var handler = prefs.getCharPref(PREF_SELECTED_ACTION);
+      handler = prefs.getCharPref(PREF_SELECTED_READER);
+    }
+    catch (ex) { }
+    
+    switch (handler) {
+      case "web": {
+        var handlersMenuList = this._document.getElementById("handlersMenuList");
+        if (handlersMenuList) {
+          var url = prefs.getCharPref(PREF_SELECTED_WEB);
+          var handlers =
+            handlersMenuList.getElementsByAttribute("webhandlerurl", url);
+          if (handlers.length == 0) {
+            LOG("FeedWriter._setSelectedHandler: selected web handler isn't in the menulist")
+            return;
+          }
 
-      if (handler == "reader")
-        handler = prefs.getCharPref(PREF_SELECTED_READER);
-
-      switch (handler) {
-      case "client":
-        var selectedApp = 
-            prefs.getComplexValue(PREF_SELECTED_APP, Ci.nsILocalFile);      
-        var displayName = this._getFileDisplayName(selectedApp);
-        this._setContentText("feedSubscribeHandleText", displayName);
-        
-        var url = ios.newFileURI(selectedApp).QueryInterface(Ci.nsIURL);
-        iconURI = "moz-icon://" + url.spec;
+          handlers[0].doCommand();
+        }
         break;
+      }
+      case "client": {
+        var selectedAppMenuItem =
+          this._document.getElementById("selectedAppMenuItem");
+        if (selectedAppMenuItem) {
+          try {
+            var selectedApp = prefs.getComplexValue(PREF_SELECTED_APP,
+                                                    Ci.nsILocalFile);
+          } catch(ex) { }
 
-      case "web":
-        var webURI = prefs.getCharPref(PREF_SELECTED_WEB);
-        var wccr = 
-            Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
-            getService(Ci.nsIWebContentConverterService);
-        var title ="Unknown";
-        var handler = 
-            wccr.getWebContentHandlerByURI(TYPE_MAYBE_FEED, webURI);
-        if (handler)
-          title = handler.name;
-        var uri = ios.newURI(webURI, null, null);
-        iconURI = uri.prePath + "/favicon.ico";
-        
-        this._setContentText("feedSubscribeHandleText", title);
-        break;
+          if (selectedApp) {
+            selectedAppMenuItem.file = selectedApp;
+            selectedAppMenuItem.setAttribute("label",
+                                             this._getFileDisplayName(selectedApp));
+            selectedAppMenuItem.setAttribute("src",
+                                             this._getFileIconURL(selectedApp));
 
+            selectedAppMenuItem.wrappedJSObject.hidden = false;
+            selectedAppMenuItem.doCommand();
+
+#ifdef ENABLE_SYSTEM_FEED_READER_CODE
+            // Only show the default reader menuitem if the default reader
+            // isn't the selected application
+            var defaultHandlerMenuItem =
+            this._document.getElementById("defaultHandlerMenuItem");
+            if (defaultHandlerMenuItem) {
+              defaultHandlerMenuItem.wrappedJSObject.hidden =
+                defaultHandlerMenuItem.file.path == selectedApp.path;
+            }
+#endif
+            break;
+          }
+        }
+      }
       case "bookmarks":
-        this._setContentText("feedSubscribeHandleText", 
-                             this._getString("liveBookmarks"));
-        break;
+      default: {
+        var liveBookmarksMenuItem =
+          this._document.getElementById("liveBookmarksMenuItem");
+        if (liveBookmarksMenuItem)
+          liveBookmarksMenuItem.doCommand();
+      } 
+    }
+  },
 
-      case "ask":
-        var alwaysAsk = true;
-        break;
+  _initSubscriptionUI: function FW__initSubscriptionUI() {
+    var handlersMenuPopup =
+      this._document.getElementById("handlersMenuPopup");
+    if (!handlersMenuPopup)
+      return;
+
+    // Last-selected application
+    var selectedApp;
+    menuItem = this._document.createElementNS(XUL_NS, "menuitem");
+    menuItem.id = "selectedAppMenuItem";
+    menuItem.className = "menuitem-iconic";
+    try {
+      var prefs = Cc["@mozilla.org/preferences-service;1"].
+                  getService(Ci.nsIPrefBranch);
+      selectedApp = prefs.getComplexValue(PREF_SELECTED_APP,
+                                          Ci.nsILocalFile);
+      if (selectedApp.exists()) {
+        menuItem.setAttribute("label",
+                              this._getFileDisplayName(selectedApp));
+        menuItem.setAttribute("src",
+                              this._getFileIconURL(selectedApp));
+        menuItem.setAttribute("handlerType", "client");
+        menuItem.wrappedJSObject.file = selectedApp;
+      }
+      else {
+        // Hide the menuitem if the last selected application doesn't exist
+        menuItem.setAttribute("hidden", "true");
+      }
+    }
+    catch(ex) {
+      // Hide the menuitem until an application is selected
+      menuItem.setAttribute("hidden", "true");
+    }
+    handlersMenuPopup.appendChild(menuItem);
+
+#ifdef ENABLE_SYSTEM_FEED_READER_CODE
+    // On Windows, also list the default feed reader
+    var defaultReader;
+    try {
+      const WRK = Ci.nsIWindowsRegKey;
+      var regKey =
+          Cc["@mozilla.org/windows-registry-key;1"].createInstance(WRK);
+      regKey.open(WRK.ROOT_KEY_CLASSES_ROOT, 
+                  "feed\\shell\\open\\command", WRK.ACCESS_READ);
+      var path = regKey.readStringValue("");
+      if (path.charAt(0) == "\"") {
+        // Everything inside the quotes
+        path = path.substr(1);
+        path = path.substr(0, path.indexOf("\""));
+      }
+      else {
+        // Everything up to the first space
+        path = path.substr(0, path.indexOf(" "));
       }
 
-      if (!alwaysAsk) {
-        unchosen.setAttribute("hidden", "true");
-        chosen.removeAttribute("hidden");
-        var button = this._document.getElementById("feedSubscribeLink");
-        button.focus();
-      
-      
-        var displayArea = 
-            this._document.getElementById("feedSubscribeHandleText");
-        displayArea.style.setProperty("background-image", 
-                                      "url(\"" + iconURI + "\")", "");
-        return;
-      } else {
-        // user chose a feed reader but didn't make it the default -- fall
-        // through to "no selected handlers"
+      defaultReader = Cc["@mozilla.org/file/local;1"].
+                      createInstance(Ci.nsILocalFile);
+      defaultReader.initWithPath(path);
+
+      if (defaultReader.exists()) {
+        menuItem = this._document.createElementNS(XUL_NS, "menuitem");
+        menuItem.id = "defaultHandlerMenuItem";
+        menuItem.className = "menuitem-iconic";
+        menuItem.setAttribute("label",
+                              this._getFileDisplayName(defaultReader));
+        menuItem.setAttribute("src",
+                              this._getFileIconURL(defaultReader));
+        menuItem.setAttribute("handlerType", "client");
+        menuItem.wrappedJSObject.file = defaultReader;
+
+        // Hide the default reader item if it points to the same application
+        // as the last-selected application
+        if (defaultReader.path == selectedApp.path)
+          menuItem.setAttribute("hidden", "true");
+  
+        handlersMenuPopup.appendChild(menuItem);
       }
-    } catch (e) {
-      // prefs mismatch (e.g., handler==web but no web handler set),
-      // or (more likely) no prefs set yet
+    }
+    catch (e) {
+      LOG("No feed handler registered on system");
+    }
+#endif
+
+    // "Choose Application..." menuitem
+    menuItem = this._document.createElementNS(XUL_NS, "menuitem");
+    menuItem.id = "chooseApplicationMenuItem";
+    menuItem.setAttribute("label", this._getString("chooseApplicationMenuItem"));
+    handlersMenuPopup.appendChild(menuItem);
+
+    // separator
+    handlersMenuPopup.appendChild(this._document.createElementNS(XUL_NS,
+                                  "menuseparator"));
+
+    // List of web handlers
+    var wccr = 
+      Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
+      getService(Ci.nsIWebContentConverterService);
+    var handlers = wccr.getContentHandlers(TYPE_MAYBE_FEED, {});
+    if (handlers.length != 0) {
+      var ios = Cc["@mozilla.org/network/io-service;1"].
+                getService(Ci.nsIIOService);
+      for (var i = 0; i < handlers.length; ++i) {
+        menuItem = this._document.createElementNS(XUL_NS, "menuitem");
+        menuItem.className = "menuitem-iconic";
+        menuItem.setAttribute("label", handlers[i].name);
+        menuItem.setAttribute("handlerType", "web");
+        menuItem.setAttribute("webhandlerurl", handlers[i].uri);
+
+        var uri = ios.newURI(handlers[i].uri, null, null);
+        menuItem.setAttribute("src", uri.prePath + "/favicon.ico");
+
+        handlersMenuPopup.appendChild(menuItem);
+      }
     }
 
-    // No selected handlers, or user hasn't made his choice the default;
-    // make the user choose...
-    chosen.setAttribute("hidden", "true");
-    unchosen.removeAttribute("hidden");
-    this._document.getElementById("feedHeader").setAttribute("firstrun", "true");
-      
-    var button = this._document.getElementById("feedChooseInitialReader");
-    button.focus();
+    this._setSelectedHandler();
+
+    // "Always use..." checkbox initial state
+    this._setAlwaysUseCheckedState();
+    this._setAlwaysUseLabel();
+
+    // We update the "Always use.." checkbox label whenever the selected item
+    // in the list is changed
+    handlersMenuPopup.addEventListener("command", this, false);
+
+    // Set up the "Subscribe Now" button
+    this._document
+        .getElementById("subscribeButton")
+        .addEventListener("command", this, false);
+    
+    // first-run ui
+    var showFirstRunUI = true;
+    try {
+      showFirstRunUI = prefs.getBoolPref(PREF_SHOW_FIRST_RUN_UI);
+    }
+    catch (ex) { }
+    if (showFirstRunUI) {
+      var feedHeader = this._document.getElementById("feedHeader");
+      if (feedHeader)
+        feedHeader.setAttribute("firstrun", "true");
+
+      prefs.setBoolPref(PREF_SHOW_FIRST_RUN_UI, false);
+    }
   },
   
   /**
@@ -447,13 +689,14 @@ FeedWriter.prototype = {
       
       LOG("Subscribe Preview: feed uri = " + this._window.location.href);
       
-      // Set up the displayed handler
-      this._initSelectedHandler();
+      // Set up the subscription UI
+      this._initSubscriptionUI();
       var prefs =   
         Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch2);
       prefs.addObserver(PREF_SELECTED_ACTION, this, false);
       prefs.addObserver(PREF_SELECTED_READER, this, false);
+      prefs.addObserver(PREF_SELECTED_WEB, this, false);
       prefs.addObserver(PREF_SELECTED_APP, this, false);
       
       // Set up the feed content
@@ -474,24 +717,7 @@ FeedWriter.prototype = {
       feedService.removeFeedResult(originalURI);
     }
   },
-  
-  /**
-   * See nsIFeedWriter
-   */
-  changeOptions: function FW_changeOptions() {
-    var paramBlock = 
-        Cc["@mozilla.org/embedcomp/dialogparam;1"].
-        createInstance(Ci.nsIDialogParamBlock);
-    // Used to tell the preview page that the user chose to subscribe with
-    // a particular reader, and so it should subscribe now.
-    const PARAM_USER_SUBSCRIBED = 0;
-    paramBlock.SetInt(PARAM_USER_SUBSCRIBED, 0);
-    this._window.openDialog("chrome://browser/content/feeds/options.xul", "", 
-                            "modal,centerscreen", "subscribe", paramBlock);
-    if (paramBlock.GetInt(PARAM_USER_SUBSCRIBED) == 1)
-      this.subscribe();
-  },
-  
+
   /**
    * See nsIFeedWriter
    */
@@ -503,58 +729,93 @@ FeedWriter.prototype = {
         getService(Ci.nsIPrefBranch2);
     prefs.removeObserver(PREF_SELECTED_ACTION, this);
     prefs.removeObserver(PREF_SELECTED_READER, this);
+    prefs.removeObserver(PREF_SELECTED_WEB, this);
     prefs.removeObserver(PREF_SELECTED_APP, this);
   },
-    
+
   /**
    * See nsIFeedWriter
-   */
+   */    
   subscribe: function FW_subscribe() {
+    // Subscribe to the feed using the selected handler and save prefs
     var prefs =   
         Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch);
-    try {
-      var handler = prefs.getCharPref(PREF_SELECTED_ACTION);
-      if (handler == "reader" || handler == "ask")
-        // the actual handler will be stored in the reader preference
-        handler = prefs.getCharPref(PREF_SELECTED_READER);
-    }
-    catch (e) {
-      // Something's bogus in preferences -- make the user fix it
-      this.changeOptions();
-      return; 
-    }
+    var defaultHandler = "reader";
+    var useAsDefault = this._document.getElementById("alwaysUse")
+                                     .getAttribute("checked");
 
-    if (handler == "web") {
-      var webURI = prefs.getCharPref(PREF_SELECTED_WEB);
+    var selectedHandler = this._document.getElementById("handlersMenuList")
+                              .wrappedJSObject.selectedItem;
+    if (selectedHandler.hasAttribute("webhandlerurl")) {
+      var webURI = selectedHandler.getAttribute("webhandlerurl");
+      prefs.setCharPref(PREF_SELECTED_READER, "web");
+      prefs.setCharPref(PREF_SELECTED_WEB, webURI);
+
       var wccr = 
-          Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
-          getService(Ci.nsIWebContentConverterService);
-      var handler = 
-          wccr.getWebContentHandlerByURI(TYPE_MAYBE_FEED, webURI);
-      this._window.location.href = 
-        handler.getHandlerURI(this._window.location.href);
+        Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
+        getService(Ci.nsIWebContentConverterService);
+      var handler = wccr.getWebContentHandlerByURI(TYPE_MAYBE_FEED, webURI);
+      if (handler) {
+        if (useAsDefault)
+          wccr.setAutoHandler(TYPE_MAYBE_FEED, handler);
+
+        this._window.location.href =
+          handler.getHandlerURI(this._window.location.href);
+      }
     }
     else {
-      // handles bookmarks, client cases
-      var request = 
-          this._window.QueryInterface(Ci.nsIInterfaceRequestor).
-          getInterface(Ci.nsIWebNavigation).
-          QueryInterface(Ci.nsIDocShell).currentDocumentChannel;
-      var feedService = 
-          Cc["@mozilla.org/browser/feeds/result-service;1"].
-          getService(Ci.nsIFeedResultService);
+      switch (selectedHandler.id) {
+        case "selectedAppMenuItem":
+#ifdef ENABLE_SYSTEM_FEED_READER_CODE
+        case "defaultHandlerMenuItem":
+#endif
+          prefs.setCharPref(PREF_SELECTED_READER, "client");
+          prefs.setComplexValue(PREF_SELECTED_APP, Ci.nsILocalFile, 
+                                selectedHandler.file);
+          break;
+        case "liveBookmarksMenuItem":
+          defaultHandler = "bookmarks";
+          prefs.setCharPref(PREF_SELECTED_READER, "bookmarks");
+          break;
+      }
+
+      var request = this._window
+                        .QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIWebNavigation)
+                        .QueryInterface(Ci.nsIDocShell)
+                        .currentDocumentChannel;
+      var feedService = Cc["@mozilla.org/browser/feeds/result-service;1"].
+                        getService(Ci.nsIFeedResultService);
       feedService.addToClientReader(request, this._window.location.href);
     }
+
+    // If "Always use..." is checked, we should set PREF_SELECTED_ACTION
+    // to either "reader" (If a web reader or if an application is selected), or
+    // to "bookmarks" (if the live bookmarks option is selected).
+    // Otherwise, we should set it to "ask"
+    if (useAsDefault)
+      prefs.setCharPref(PREF_SELECTED_ACTION, defaultHandler);
+    else
+      prefs.setCharPref(PREF_SELECTED_ACTION, "ask");
   },
   
   /**
    * See nsIObserver
    */
   observe: function FW_observe(subject, topic, data) {
-    if (topic == "nsPref:changed")
-      this._initSelectedHandler();
-  },  
+    if (topic == "nsPref:changed") {
+      switch (data) {
+        case PREF_SELECTED_READER:
+        case PREF_SELECTED_WEB:
+        case PREF_SELECTED_APP:
+          this._setSelectedHandler();
+          break;
+        case PREF_SELECTED_ACTION:
+          this._setAlwaysUseCheckedState();
+      }
+    } 
+  },
   
   /**
    * See nsIClassInfo
@@ -577,6 +838,7 @@ FeedWriter.prototype = {
   QueryInterface: function FW_QueryInterface(iid) {
     if (iid.equals(Ci.nsIFeedWriter) ||
         iid.equals(Ci.nsIClassInfo) ||
+        iid.equals(Ci.nsIDOMEventListener) ||
         iid.equals(Ci.nsISupports))
       return this;
     throw Cr.NS_ERROR_NO_INTERFACE;
