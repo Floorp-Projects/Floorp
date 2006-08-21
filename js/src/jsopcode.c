@@ -1450,7 +1450,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     LOCAL_ASSERT(*pc == JSOP_SETLOCALPOP);
                     i = GET_UINT16(pc);
                     pc += JSOP_SETLOCALPOP_LENGTH;
-                    str = ATOM_TO_STRING(atomv[i]);
+                    str = ATOM_TO_STRING(atomv[i - OBJ_BLOCK_DEPTH(cx, obj)]);
                     rval = QuoteString(&ss->sprinter, str, 0);
                     if (!rval) {
                         ok = JS_FALSE;
