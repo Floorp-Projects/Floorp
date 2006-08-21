@@ -1,10 +1,8 @@
-#
-## hilo
-## Darwin hilo.local 7.9.0 Darwin Kernel Version 7.9.0: Wed Mar 30 20:11:17 PST 2005; root:xnu/xnu-517.12.7.obj~1/RELEASE_PPC  Power Macintosh powerpc
-#
 #- tinder-config.pl - Tinderbox configuration file.
 #-    Uncomment the variables you need to set.
 #-    The default values are the same as the commented variables.
+
+$ENV{CVS_RSH} = "ssh";
 
 # $ENV{MOZ_PACKAGE_MSI}
 #-----------------------------------------------------------------------------
@@ -26,7 +24,6 @@
 #- PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
 #$BuildAdministrator = "$ENV{USER}\@$ENV{HOST}";
 #$BuildAdministrator = ($ENV{USER} || "cltbld") . "\@" . ($ENV{HOST} || "dhcp");
-
 #- You'll need to change these to suit your machine's needs
 #$DisplayServer = ':0.0';
 
@@ -46,10 +43,10 @@
 # Tests
 #$CleanProfile             = 0;
 #$ResetHomeDirForTests     = 1;
-$ProductName              = "Thunderbird";
-#$VendorName               = 'Mozilla';
+$ProductName              = "Calendar";
+$VendorName               = 'Mozilla';
 
-#$RunMozillaTests          = 1;  # Allow turning off of all tests if needed.
+$RunMozillaTests          = 0;  # Allow turning off of all tests if needed.
 #$RegxpcomTest             = 1;
 #$AliveTest                = 1;
 #$JavaTest                 = 0;
@@ -131,8 +128,7 @@ $ProductName              = "Thunderbird";
 # :pserver:$ENV{USER}%netscape.com@cvs.mozilla.org:/cvsroot
 
 #$moz_cvsroot   = $ENV{CVSROOT};
-#$moz_cvsroot   = ":ext:cltbld\@cvs.mozilla.org:/cvsroot";
-$moz_cvsroot   = ":pserver:anonymous\@cvs-mirror.mozilla.org:/cvsroot";
+$moz_cvsroot   = ":ext:cltbld\@cvs.mozilla.org:/cvsroot";
 
 #- Set these proper values for your tinderbox server
 #$Tinderbox_server = 'tinderbox-daemon@tinderbox.mozilla.org';
@@ -141,10 +137,10 @@ $moz_cvsroot   = ":pserver:anonymous\@cvs-mirror.mozilla.org:/cvsroot";
 #$moz_client_mk = 'client.mk';
 
 #- Set if you want to build in a separate object tree
-$ObjDir = 'lightning-obj';
+$ObjDir = 'sunbird-obj';
 
 # Extra build name, if needed.
-$BuildNameExtra = 'Lt-Release';
+$BuildNameExtra = 'Sb-Release';
 
 # User comment, eg. ip address for dhcp builds.
 # ex: $UserComment = "ip = 208.12.36.108";
@@ -167,7 +163,7 @@ $BuildTree  = 'Sunbird';
 #$Topsrcdir = 'mozilla';
 
 #$BinaryName = 'mozilla-bin';
-$BinaryName = 'thunderbird-bin';
+$BinaryName = 'sunbird-bin';
 
 #
 # For embedding app, use:
@@ -194,8 +190,8 @@ $build_hour    = "6";
 $ssh_version   = "2";
 #$ssh_user      = "cltbld";
 #$ssh_server    = "stage.mozilla.org";
-$ftp_path      = "/home/ftp/pub/calendar/lightning/nightly";
-$url_path      = "http://ftp.mozilla.org/pub/mozilla.org/calendar/lightning/nightly";
+$ftp_path      = "/home/ftp/pub/calendar/sunbird/nightly";
+$url_path      = "http://ftp.mozilla.org/pub/mozilla.org/calendar/sunbird/nightly";
 #$tbox_ftp_path = $ftp_path;
 #$tbox_url_path = $url_path;
 #$milestone     = "trunk";
@@ -229,4 +225,3 @@ $push_raw_xpis = 0;
 # Prevent Extension Manager from spawning child processes during tests
 # - processes that tbox scripts cannot kill.
 #$ENV{NO_EM_RESTART} = '1';
-
