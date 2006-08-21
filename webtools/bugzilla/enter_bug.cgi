@@ -186,8 +186,8 @@ sub pickplatform {
             /\(.*Intel.*\)/ && do {@platform = "PC"; last;};
             /\(.*[ix0-9]86.*\)/ && do {@platform = "PC"; last;};
         #Versions of Windows that only run on Intel x86
-            /\(.*Win(?:dows )[39M].*\)/ && do {@platform = "PC"; last};
-            /\(.*Win(?:dows )16.*\)/ && do {@platform = "PC"; last;};
+            /\(.*Win(?:dows |)[39M].*\)/ && do {@platform = "PC"; last};
+            /\(.*Win(?:dows |)16.*\)/ && do {@platform = "PC"; last;};
         #Sparc
             /\(.*sparc.*\)/ && do {@platform = "Sun"; last;};
             /\(.*sun4.*\)/ && do {@platform = "Sun"; last;};
@@ -260,11 +260,11 @@ sub pickos {
             /\(.*Windows 2000.*\)/ && do {@os = "Windows 2000"; last;};
             /\(.*Windows NT 5.*\)/ && do {@os = "Windows 2000"; last;};
             /\(.*Win.*9[8x].*4\.9.*\)/ && do {@os = "Windows ME"; last;};
-            /\(.*Win(?:dows )M[Ee].*\)/ && do {@os = "Windows ME"; last;};
-            /\(.*Win(?:dows )98.*\)/ && do {@os = "Windows 98"; last;};
-            /\(.*Win(?:dows )95.*\)/ && do {@os = "Windows 95"; last;};
-            /\(.*Win(?:dows )16.*\)/ && do {@os = "Windows 3.1"; last;};
-            /\(.*Win(?:dows[ -])NT.*\)/ && do {@os = "Windows NT"; last;};
+            /\(.*Win(?:dows |)M[Ee].*\)/ && do {@os = "Windows ME"; last;};
+            /\(.*Win(?:dows |)98.*\)/ && do {@os = "Windows 98"; last;};
+            /\(.*Win(?:dows |)95.*\)/ && do {@os = "Windows 95"; last;};
+            /\(.*Win(?:dows |)16.*\)/ && do {@os = "Windows 3.1"; last;};
+            /\(.*Win(?:dows[ -]|)NT.*\)/ && do {@os = "Windows NT"; last;};
             /\(.*Windows.*NT.*\)/ && do {@os = "Windows NT"; last;};
             /\(.*32bit.*\)/ && do {@os = "Windows 95"; last;};
             /\(.*16bit.*\)/ && do {@os = "Windows 3.1"; last;};
