@@ -268,12 +268,7 @@ function CrossFolderNavigation(type)
     var relPos = (type == nsMsgNavigationType.forward)
       ? 1 : ((GetLoadedMessage()) ? -1 : 0);
     var folderUri = messenger.getFolderUriAtNavigatePos(relPos);
-    var msgUri = messenger.getMsgUriAtNavigatePos(relPos);
-    // want to get rid of "-message:" and replace it with ":"
-    var msgUriStr = new String("");
-    msgUriStr = msgUri;
-    msgUriStr.replace("-message:", ":");
-    var msgHdr = messenger.msgHdrFromURI(msgUriStr);
+    var msgHdr = messenger.msgHdrFromURI(messenger.getMsgUriAtNavigatePos(relPos));
     gStartMsgKey = msgHdr.messageKey;
     var curPos = messenger.navigatePos;
     curPos += relPos;
