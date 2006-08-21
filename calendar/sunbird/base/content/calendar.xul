@@ -90,30 +90,37 @@
 
   <menuitem label="&calendar.context.newevent.label;"
             accesskey="&calendar.context.newevent.accesskey;"
+            id="general-context-menu-newevent"
             observes="new_command"/>
   <menuitem label="&calendar.context.newtodo.label;"
             accesskey="&calendar.context.newtodo.accesskey;"
+            id="general-context-menu-newtodo"
             observes="new_todo_command"/>
   <menuitem label="&calendar.context.modifyevent.label;"
             accesskey="&calendar.context.modifyevent.accesskey;"
+            id="general-context-menu-modify"
             observes="modify_command" />
   <menuitem label="&calendar.context.deleteevent.label;"
             accesskey="&calendar.context.deleteevent.accesskey;"
+            id="general-context-menu-delete"
             observes="delete_command"/>
 
   <menuseparator/>
   <menuitem label="&calendar.context.cutevent.label;"
             accesskey="&calendar.context.cutevent.accesskey;"
+            id="general-context-menu-cut"
             observes="cut_command">
     <observes element="is_editable" attribute="hidden"/>
   </menuitem>
   <menuitem label="&calendar.context.copyevent.label;"
             accesskey="&calendar.context.copyevent.accesskey;"
+            id="general-context-menu-copy"
             observes="copy_command">
     <observes element="is_editable" attribute="hidden"/>
   </menuitem>
   <menuitem label="&calendar.context.pasteevent.label;"
             accesskey="&calendar.context.pasteevent.accesskey;"
+            id="general-context-menu-paste"
             observes="paste_command">
     <observes element="is_editable" attribute="hidden"/>
   </menuitem>
@@ -122,6 +129,7 @@
   </menuseparator>
   <menuitem label="&calendar.context.selectall.label;"
             accesskey="&calendar.context.selectall.accesskey;"
+            id="general-context-menu-selectall"
             observes="select_all_command">
     <observes element="is_editable" attribute="hidden"/>
   </menuitem>
@@ -130,6 +138,7 @@
   </menuseparator>
   <menuitem label="&calendar.context.gototoday.label;"
             accesskey="&calendar.context.gototoday.accesskey;"
+            id="general-context-menu-gototoday"
             observes="go_today_command"/>
   <menuseparator/>
   <menuitem id="only-workday-checkbox-2"
@@ -155,6 +164,7 @@
 <popup id="taskitem-context-menu" onpopupshowing="changeContextMenuForToDo( event );">
   <menuitem label="&calendar.context.newtodo.label;"
             accesskey="&calendar.context.newtodo.accesskey;"
+            id="task-context-menu-new"
             observes="new_todo_command"/>
   <menuitem id="task-context-menu-modify"
             label="&calendar.context.modifytask.label;"
@@ -162,9 +172,11 @@
             oncommand="modifyTaskFromContext()"/>
   <menuitem label="&calendar.context.deletetask.label;"
             accesskey="&calendar.context.deletetask.accesskey;"
+            id="task-context-menu-delete"
             observes="delete_todo_command"/>
   <menu label="&calendar.context.progress.label;"
         accesskey="&calendar.context.progress.accesskey;"
+        id="task-context-menu-progress"
         observes="is_editable">
     <menupopup>
       <menuitem type="checkbox"
@@ -196,6 +208,7 @@
   </menu>
   <menu label="&calendar.context.priority.label;"
         accesskey="&calendar.context.priority.accesskey;"
+        id="task-context-menu-priority"
         observes="is_editable">
     <menupopup>
       <menuitem type="checkbox"
@@ -255,6 +268,7 @@
 
 <popup id="toolbar-context-menu">
   <menuitem command="cmd_CustomizeToolbars"
+            id="toolbar-context-menu-customize"
             label="&calendar.context.customize.label;"
             accesskey="&calendar.context.customize.accesskey;"/>
 </popup>
