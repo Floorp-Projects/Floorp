@@ -1,5 +1,10 @@
 <?=$html->formTag('/addons/add/')?>
 <?=$html->hidden('Addon/add_step2')?>
-<?=$html->input('Addon/Name')?>
-<?=$html->tagErrorMsg('Addon/Name', 'Please upload your add-on file.')?>
+Name: <?=$html->input('Addon/Name', array('value'=>$manifestData['name']['en-US']))?>
+<?=$html->tagErrorMsg('Addon/Name', 'Please enter the name of your add-on.')?>
+Homepage: <?=$html->input('Addon/Homepage', array('value'=>$manifestData['homepageURL']))?>
+<?=$html->tagErrorMsg('Addon/Homepage', 'Please enter the homepage of your add-on.')?><BR />
+Description: <?=$html->input('Addon/Description', array('value'=>$manifestData['description']['en-US']))?>
+<?=$html->tagErrorMsg('Addon/Description', 'Please enter a description of your add-on.')?><BR />
+
 <?=$html->submit()?>

@@ -1,4 +1,5 @@
 <?php
+require_once('Archive/Zip.php');
 
 class AddonsController extends AppController
 {
@@ -54,7 +55,7 @@ class AddonsController extends AppController
                 $this->render('add_step1');
                 die();
             }
-echo('test');
+
             //Move temporary file to repository
             $uploadedFile = $this->data['Addon']['file']['tmp_name'];
             $tempLocation = REPO_PATH.'/temp/'.$fileName;
@@ -72,24 +73,15 @@ echo('test');
             //Search plugins do not have install.rdf to parse
             if ($this->Amo->addonTypes[$this->data['Addon']['addontype_id']] != 'Search Plugin') {
 
-                //Find install.rdf in the package and get contents
-                $manifestExists = false;
+                //Extract install.rdf from the package
+                $zip = new Archive_Zip($uploadedFile);
+                $extraction = $zip->extract(array('extract_as_string' => true, 'by_name' => array('install.rdf')));
 
-                if ($zip = @zip_open($uploadedFile)) {
-                    while ($zipEntry = zip_read($zip)) {
-                        if (zip_entry_name($zipEntry) == 'install.rdf') {
-                            $manifestExists = true;
-                            if (zip_entry_open($zip, $zipEntry, 'r')) {
-                                $fileContents = zip_entry_read($zipEntry, zip_entry_filesize($zipEntry));
-                                zip_entry_close($zipEntry);
-                            }
-                        }
-                    }
-                    zip_close($zip);
+                //Make sure install.rdf is present
+                if ($extraction !== 0) {
+                    $fileContents = $extraction[0]['content'];
                 }
-
-                //Make sure install.rdf is there
-                if ($manifestExists !== true) {
+                else {
                     $this->Addon->invalidate('file');
                     $this->set('fileError', 'No install.rdf present');
                     $this->render('add_step1');
@@ -98,7 +90,7 @@ echo('test');
 
                 //Use Rdf Component to parse install.rdf
                 $manifestData = $this->Rdf->parseInstallManifest($fileContents);
-
+pr($manifestData);
                 //If the result is a string, it is an error message
                 if (!is_array($manifestData)) {
                     $this->Addon->invalidate('file');
@@ -144,6 +136,7 @@ echo('test');
 
             }
 
+            $this->set('manifestData', $manifestData);
             $this->render('add_step2');
         }
         elseif (isset($this->data['Addon']['add_step2'])) {
