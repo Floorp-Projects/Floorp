@@ -8,10 +8,13 @@ import cgi
 import time
 import re
 import gzip
+import minjson as json
 
 import cStringIO
 
 from pysqlite2 import dbapi2 as sqlite
+
+DBPATH = "db/data.sqlite"
 
 #
 # All objects are returned in the form:
@@ -59,40 +62,36 @@ def doError(errCode):
 
 db = None
 
-def doListTinderboxes(fo):
-    fo.write ("{ resultcode: 0, results: [")
-    for f in os.listdir("db"):
-        if f[-7:] == ".sqlite":
-            fo.write ("'" + f[:-7] + "',")
-    fo.write ("] }")
-
 def doListTests(fo, tbox):
-    fo.write ("{ resultcode: 0, results: [")
+    results = []
     
     cur = db.cursor()
-    cur.execute("SELECT DISTINCT(test_name) FROM test_results")
+    cur.execute("SELECT id, machine, test, test_type, extra_data FROM dataset_info")
     for row in cur:
-        fo.write ("'" + row[0] + "',")
+        results.append( {"id": row[0],
+                         "machine": row[1],
+                         "test": row[2],
+                         "test_type": row[3],
+                         "extra_data": row[4]} )
     cur.close()
-    fo.write ("] }")
+    fo.write (json.write( {"resultcode": 0, "results": results} ))
 
-def doSendResults(fo, tbox, test, starttime, endtime, raw):
+def doSendResults(fo, testid, starttime, endtime, raw):
     raws = ""
     if raw is not None:
-        raws = ", test_data"
+        raws = ", extra"
     s1 = ""
     s2 = ""
     if starttime is not None:
-        s1 = " AND test_time >= " + starttime
+        s1 = " AND time >= " + starttime
     if endtime is not None:
-        s2 = " AND test_time <= " + endtime
+        s2 = " AND time <= " + endtime
 
-    stmt = "SELECT test_time, test_value" + raws + " FROM test_results WHERE test_name = '" + test + "' " + s1 + s2 + " ORDER BY test_time";
-
-    fo.write ("{ resultcode: 0, results: [")
+    fo.write ("{ resultcode: 0,")
 
     cur = db.cursor()
-    cur.execute(stmt)
+    cur.execute("SELECT time, value" + raws + " FROM datasets WHERE dataset_id = ? " + s1 + s2 + " ORDER BY time", (testid))
+    fo.write ("results: [")
     for row in cur:
         if row[1] == 'nan':
             continue
@@ -104,20 +103,14 @@ def doSendResults(fo, tbox, test, starttime, endtime, raw):
     fo.write ("],")
 
     cur = db.cursor()
-    if starttime is not None and endtime is not None:
-        cur.execute("SELECT anno_time, anno_string FROM annotations WHERE anno_time >= " + starttime + " AND anno_time <= " + endtime + " ORDER BY anno_time")
-    elif starttime is not None:
-        cur.execute("SELECT anno_time, anno_string FROM annotations WHERE anno_time >= " + starttime + " ORDER BY anno_time")
-    elif endtime is not None:
-        cur.execute("SELECT anno_time, anno_string FROM annotations WHERE anno_time <= " + endtime + " ORDER BY anno_time")
-    else:
-        cur.execute("SELECT anno_time, anno_string FROM annotations ORDER BY anno_time")
+    cur.execute("SELECT time, value FROM annotations WHERE dataset_id = ? " + s1 + s2 + " ORDER BY time", (testid))
     fo.write ("annotations: [")
-    
     for row in cur:
         fo.write("%s,'%s'," % (row[0], row[1]))
     cur.close()
-    fo.write ("] }")
+    fo.write ("],")
+
+    fo.write ("}")
 
 def main():
     doGzip = 0
@@ -129,8 +122,7 @@ def main():
 
     form = cgi.FieldStorage()
 
-    tbox = form.getfirst("tbox")
-    test = form.getfirst("test")
+    setid = form.getfirst("setid")
     raw = form.getfirst("raw")
     starttime = form.getfirst("starttime")
     endtime = form.getfirst("endtime")
@@ -140,26 +132,13 @@ def main():
     if doGzip == 1:
         zfile = gzip.GzipFile(mode = 'wb', fileobj = zbuf, compresslevel = 5)
 
-    if tbox is None:
-        doListTinderboxes(zfile)
-    else:
-        if re.match(r"[^A-Za-z0-9]", tbox):
-            doError(-1)
-            return
-
-        dbfile = "db/" + tbox + ".sqlite"
-        if not os.path.isfile(dbfile):
-            doError(-1)
-            return
-
-        global db
-        db = sqlite.connect(dbfile)
-        db.text_factory = sqlite.OptimizedUnicode
+    global db
+    db = sqlite.connect(dbfile)
     
-        if test is None:
-            doListTests(zfile, tbox)
-        else:
-            doSendResults(zfile, tbox, test, starttime, endtime, raw)
+    if setid is None:
+        doListTests(zfile)
+    else:
+        doSendResults(zfile, setid, starttime, endtime, raw)
 
     sys.stdout.write("Content-Type: text/plain\n")
     if doGzip == 1:

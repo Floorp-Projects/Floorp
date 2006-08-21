@@ -17,29 +17,31 @@ my %query = ();
   }
 }
 
-if (defined($query{"tbox"}) && defined($query{"test"})) {
-  my $tbox = $query{"tbox"};
-  my $test = $query{"test"};
+if (defined($query{"setid"})) {
+  my $testid = $query{"setid"};
 
   print "{ resultcode: 0, results: [";
 
   srand();
 
   my $lv = 200 + rand (100);
-  foreach my $k (1 .. 200) {
+  foreach my $k (1 .. 500) {
     #my $kv = $k;
     #my $v = $k;
-    my $kv = 1148589000 + ($k*60*5);
+    my $kv = 1148589000 + ($k*60*20);
     my $v = $lv;
     $lv = $lv + (rand(10) - 5);
     print "$kv, $v, ";
   }
   print "] }";
-} elsif (defined($query{"tbox"})) {
-  my $tbox = $query{"tbox"};
-
-  print "{ resultcode: 0, results: ['$tbox-test1', '$tbox-test2', '$tbox-test3'] }";
 } else {
-  print "{ resultcode: 0, results: ['tbox1', 'tbox2', 'tbox3'] }";
+  print "{ resultcode: 0, results: [
+{ id: 1, machine: 'tbox1', test: 'test1', test_type: 'perf', extra_data: null },
+{ id: 4, machine: 'tbox2', test: 'test1', test_type: 'perf', extra_data: null },
+{ id: 3, machine: 'tbox1', test: 'test3', test_type: 'perf', extra_data: null },
+{ id: 6, machine: 'tbox3', test: 'test3', test_type: 'perf', extra_data: null },
+{ id: 2, machine: 'tbox1', test: 'test2', test_type: 'perf', extra_data: null },
+{ id: 5, machine: 'tbox2', test: 'test2', test_type: 'perf', extra_data: null },
+] }";
 }
 

@@ -1,5 +1,5 @@
 
-form.graphform { 
+.graphconfig { 
   background-color: #cccccc;
   -moz-border-radius: 10px;
   padding: 10px;
@@ -15,6 +15,7 @@ form.graphform {
 /*  font-weight: bold; */
 }
 
+/*
 #graphforms div .bd .graphform-line .graphform-first-span:after {
   content: "For ";
 }
@@ -22,6 +23,7 @@ form.graphform {
 .module + .module .bd .graphform-line .graphform-first-span:after {
   content: "and " ! important;
 }
+*/
 
 select.tinderbox, select.testname {
   width: 200px
@@ -30,6 +32,10 @@ select.tinderbox, select.testname {
 .plusminus {
   padding: 3px;
   vertical-align: middle;
+}
+
+.plusminus:hover { 
+  background: #999;
 }
 
 .plusminushidden {
@@ -56,3 +62,6 @@ select.tinderbox, select.testname {
 .status {
   color: blue;
 }
+
+/* debug */
+/*div { border: 1px solid blue; }*/
