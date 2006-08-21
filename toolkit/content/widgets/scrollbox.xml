@@ -173,6 +173,7 @@
           if (childNodes && childNodes.length) {
             if (childNodes.length > 0)
               this.ensureElementIsVisible(childNodes[0]);
+          }
         }
         catch(e) {
           this._scrollButtonUp.collapsed = false;
