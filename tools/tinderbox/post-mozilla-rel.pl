@@ -708,14 +708,16 @@ sub packit_l10n {
 
   TinderUtils::print_log("Starting l10n builds\n");
 
-  foreach my $wgeturl (keys(%Settings::WGetFiles)) {
+  foreach my $urlKey (keys(%Settings::WGetFiles)) {
+    # We do this in case we need to munge $wgeturl in the if-branch below.
+    my $wgeturl = $urlKey;
     if (defined($Settings::LocalizationVersionFile)) {
       my $l10nVersion = read_file("$Settings::TopsrcdirFull/$Settings::LocalizationVersionFile");
       chomp($l10nVersion);
       $wgeturl =~ s/%version%/$l10nVersion/g;
     }
 
-    my $status = TinderUtils::run_shell_command_with_timeout("wget -nv --output-document \"$Settings::WGetFiles{$wgeturl}\" $wgeturl",
+    my $status = TinderUtils::run_shell_command_with_timeout("wget -nv --output-document \"$Settings::WGetFiles{$urlKey}\" $wgeturl",
                                                              $Settings::WGetTimeout);
     if ($status->{exit_value} != 0) {
       TinderUtils::print_log("Error: wget failed or timed out.\n");
