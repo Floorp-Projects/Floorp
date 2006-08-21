@@ -127,15 +127,15 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 
-static NSString* const BrowserToolbarIdentifier	        = @"Browser Window Toolbar Combined";
-static NSString* const BackToolbarItemIdentifier	      = @"Back Toolbar Item";
-static NSString* const ForwardToolbarItemIdentifier	    = @"Forward Toolbar Item";
-static NSString* const ReloadToolbarItemIdentifier	    = @"Reload Toolbar Item";
-static NSString* const StopToolbarItemIdentifier	      = @"Stop Toolbar Item";
-static NSString* const HomeToolbarItemIdentifier	      = @"Home Toolbar Item";
+static NSString* const BrowserToolbarIdentifier         = @"Browser Window Toolbar Combined";
+static NSString* const BackToolbarItemIdentifier        = @"Back Toolbar Item";
+static NSString* const ForwardToolbarItemIdentifier     = @"Forward Toolbar Item";
+static NSString* const ReloadToolbarItemIdentifier      = @"Reload Toolbar Item";
+static NSString* const StopToolbarItemIdentifier        = @"Stop Toolbar Item";
+static NSString* const HomeToolbarItemIdentifier        = @"Home Toolbar Item";
 static NSString* const CombinedLocationToolbarItemIdentifier  = @"Combined Location Toolbar Item";
-static NSString* const BookmarksToolbarItemIdentifier	  = @"Sidebar Toolbar Item";    // note legacy name
-static NSString* const PrintToolbarItemIdentifier	      = @"Print Toolbar Item";
+static NSString* const BookmarksToolbarItemIdentifier   = @"Sidebar Toolbar Item";    // note legacy name
+static NSString* const PrintToolbarItemIdentifier       = @"Print Toolbar Item";
 static NSString* const ThrobberToolbarItemIdentifier    = @"Throbber Toolbar Item";
 static NSString* const SearchToolbarItemIdentifier      = @"Search Toolbar Item";
 static NSString* const ViewSourceToolbarItemIdentifier  = @"View Source Toolbar Item";
@@ -233,7 +233,7 @@ public:
 //////////////////////////////////////
 @interface AutoCompleteTextFieldEditor : NSTextView
 {
-  NSFont* mDefaultFont;	// will be needed if editing empty field
+  NSFont* mDefaultFont; // will be needed if editing empty field
   NSUndoManager *mUndoManager; //we handle our own undo to avoid stomping on bookmark undo
 }
 - (id)initWithFrame:(NSRect)bounds defaultFont:(NSFont*)defaultFont;
@@ -271,7 +271,7 @@ public:
       if ([self shouldChangeTextInRange:aRange replacementString:newText]) {
         [[self textStorage] replaceCharactersInRange:aRange withString:newText];
         if (NSMaxRange(aRange) == 0 && mDefaultFont) // will only be true if the field is empty
-          [self setFont:mDefaultFont];	// wrong font will be used otherwise
+          [self setFont:mDefaultFont]; // wrong font will be used otherwise
         [self didChangeText];
       }
       // after a paste, the insertion point should be after the pasted text
@@ -555,7 +555,7 @@ enum BWCOpenDest {
   if ([self isResponderGeckoView:[[self window] firstResponder]])
   {
     BrowserWindow* browserWin = (BrowserWindow*)[self window];
-    [browserWin setSuppressMakeKeyFront:YES];	// prevent gecko focus bringing the window to the front
+    [browserWin setSuppressMakeKeyFront:YES]; // prevent gecko focus bringing the window to the front
     [mBrowserView setBrowserActive:inActive];
     [browserWin setSuppressMakeKeyFront:NO];
   }
@@ -953,9 +953,9 @@ enum BWCOpenDest {
 
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)proposedFrameSize
 {
-	//if ( mChromeMask && !(mChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) )
+  //if ( mChromeMask && !(mChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) )
   //  return [[self window] frame].size;
-	return proposedFrameSize;
+  return proposedFrameSize;
 }
 
 #pragma mark -
@@ -1892,7 +1892,7 @@ enum BWCOpenDest {
 - (void)focusURLBar
 {
   [mBrowserView setBrowserActive:NO];
-	[mURLBar selectText:self];
+  [mURLBar selectText:self];
 }
 
 - (void)beginLocationSheet
@@ -2708,7 +2708,7 @@ enum BWCOpenDest {
 - (NSString*)getContextMenuNodeDocumentURL
 {
   if (!mDataOwner->mContextMenuNode) return @"";
-  
+
   nsCOMPtr<nsIDOMDocument> ownerDoc;
   mDataOwner->mContextMenuNode->GetOwnerDocument(getter_AddRefs(ownerDoc));
 
@@ -2718,7 +2718,7 @@ enum BWCOpenDest {
   nsCOMPtr<nsIDOMLocation> location;
   nsDoc->GetLocation(getter_AddRefs(location));
   if (!location) return @"";
-	
+
   nsAutoString urlStr;
   location->GetHref(urlStr);
   return [NSString stringWith_nsAString:urlStr];
@@ -3182,7 +3182,7 @@ enum BWCOpenDest {
   if (aLoadInBG)
   {
     BrowserWindow* browserWin = (BrowserWindow*)[browser window];
-    [browserWin setSuppressMakeKeyFront:YES];	// prevent gecko focus bringing the window to the front
+    [browserWin setSuppressMakeKeyFront:YES]; // prevent gecko focus bringing the window to the front
     [browserWin orderWindow: NSWindowBelow relativeTo: [[self window] windowNumber]];
     [browserWin setSuppressMakeKeyFront:NO];
   }
@@ -3279,8 +3279,8 @@ enum BWCOpenDest {
 
 - (void)openURLArray:(NSArray*)urlArray tabOpenPolicy:(ETabOpenPolicy)tabPolicy allowPopups:(BOOL)inAllowPopups
 {
-  int curNumTabs	 = [mTabBrowser numberOfTabViewItems];
-  int numItems 		 = (int)[urlArray count];
+  int curNumTabs = [mTabBrowser numberOfTabViewItems];
+  int numItems   = (int)[urlArray count];
   int selectedTabIndex = [[mTabBrowser tabViewItems] indexOfObject:[mTabBrowser selectedTabViewItem]];
   BrowserTabViewItem* tabViewToSelect = nil;
   
@@ -3592,7 +3592,7 @@ enum BWCOpenDest {
     menuPrototype = mPageMenu;
     [mBackItem    setEnabled: [[mBrowserView getBrowserView] canGoBack]];
     [mForwardItem setEnabled: [[mBrowserView getBrowserView] canGoForward]];
-    [mCopyItem		setEnabled:hasSelection];
+    [mCopyItem    setEnabled:hasSelection];
   }
     
   if (mDataOwner->mContextMenuNode) {
