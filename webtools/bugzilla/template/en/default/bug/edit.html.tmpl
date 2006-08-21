@@ -403,6 +403,19 @@
             </tr>
           [% END %]
 
+          [%# *** Custom Fields *** %]
+
+          [% USE Bugzilla %]
+          [% fields = Bugzilla.get_fields({ obsolete => 0, custom => 1 }) %]
+          [% IF fields %]
+            [% FOREACH field = fields %]
+              <tr>
+                [% PROCESS bug/field.html.tmpl value=bug.${field.name}
+                                               editable=1 %]
+              </tr>
+            [% END %]
+          [% END %]
+
         </table>
       </td>
 
@@ -493,20 +506,6 @@
       </tr>
     </table>
   [% END %]
-
-[%# *** Custom Fields *** %]
-
-[% USE Bugzilla %]
-[% fields = Bugzilla.get_fields({ obsolete => 0, custom => 1 }) %]
-[% IF fields %]
-  <table>
-    [% FOREACH field = fields %]
-      <tr>
-        [% PROCESS bug/field.html.tmpl value=bug.${field.name} editable=1 %]
-      </tr>
-    [% END %]
-  </table>
-[% END %]
 
 [%# *** Attachments *** %]
 
