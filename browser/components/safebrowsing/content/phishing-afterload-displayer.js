@@ -649,8 +649,6 @@ PROT_PhishMsgDisplayerCanvas.prototype.showMessageAfterOverlay_ = function() {
   // (6)
   var link = this.doc_.getElementById('safebrowsing-palm-falsepositive-link');
   link.href = this.getReportErrorURL_();
-  link = this.doc_.getElementById('safebrowsing-palm-report-link');
-  link.href = this.getReportGenericURL_();
 
   // (7)
   this.doc_.getElementById(this.messageContentId_).focus();

@@ -70,21 +70,12 @@
 
         <vbox id="safebrowsing-palm-extended-message" hidden="true"
           class="safebrowsing-palm-fixed-width">
-
           <description class="safebrowsing-palm-paragraph">
             &safeb.palm.message.p2.start;
             <label class="text-link plain"
               id="safebrowsing-palm-faq-link"
               value="&safeb.palm.message.p2.linkText;" />
             &safeb.palm.message.p2.end;
-          </description>
-
-          <description class="safebrowsing-palm-paragraph">
-            &safeb.palm.message.p3.start;
-            <label class="text-link plain"
-              id="safebrowsing-palm-falsepositive-link"
-              value="&safeb.palm.message.p3.linkText;" />&safeb.palm.message.p3.end;
-
           </description>
         </vbox>
 
@@ -118,9 +109,9 @@
           <spacer flex="1" />
           <description>
             [
-            <label id="safebrowsing-palm-report-link"
+            <label id="safebrowsing-palm-falsepositive-link"
               class="safebrowsing-palm-smalltext text-link plain"
-              value="&safeb.palm.sendreport.label;" />
+              value="&safeb.palm.notforgery.label;" />
             ]
           </description>
         </hbox>
