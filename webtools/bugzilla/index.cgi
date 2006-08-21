@@ -57,6 +57,13 @@ my $vars = {};
 print $cgi->header();
 
 if ($user->in_group('admin')) {
+    # If 'urlbase' is not set, display the Welcome page.
+    unless (Bugzilla->params->{'urlbase'}) {
+        $template->process('welcome-admin.html.tmpl')
+          || ThrowTemplateError($template->error());
+        exit;
+    }
+    # Inform the administrator about new releases, if any.
     $vars->{'release'} = Bugzilla::Update::get_notifications();
 }
 

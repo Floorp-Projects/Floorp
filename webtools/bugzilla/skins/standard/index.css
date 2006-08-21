@@ -79,4 +79,9 @@
         font-size: 80%;
         font-weight: normal;
     }
+
+    #welcome-admin a
+    {
+        font-weight: bold;
+    }
 /* index page (end) */
