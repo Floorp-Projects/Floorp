@@ -181,12 +181,13 @@ $BinaryName = 'sunbird-bin';
 # Release build options
 $ReleaseBuild  = 1;
 #$LocaleProduct = "browser";
-$shiptalkback  = 0;
+$shiptalkback  = 1;
 #$ReleaseToLatest = 1; # Push the release to latest-<milestone>?
 #$ReleaseToDated = 1; # Push the release to YYYY-MM-DD-HH-<milestone>?
 $build_hour    = "6";
 #$package_creation_path = "/xpinstall/packager";
-# needs setting for mac + talkback: $mac_bundle_path = "/browser/app";
+# needs setting for mac + talkback:
+$mac_bundle_path = "/calendar/sunbird/app";
 $ssh_version   = "2";
 #$ssh_user      = "cltbld";
 #$ssh_server    = "stage.mozilla.org";
