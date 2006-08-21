@@ -15,28 +15,79 @@
   #%]
 
 [% IF user.id && user.settings.per_bug_queries.value == "on" %]
+  <script type="text/javascript">
+    <!--
+    function update_text() {
+      // 'lob' means list_of_bugs.
+      var lob_action = document.getElementById('lob_action');
+      var action = lob_action.options[lob_action.selectedIndex].value;
+      var text = document.getElementById('lob_direction');
+      var new_query_text = document.getElementById('lob_new_query_text');
+
+      if (action == "add") {
+        text.innerHTML = "to";
+        new_query_text.style.display = 'inline';
+      }
+      else {
+        text.innerHTML = "from";
+        new_query_text.style.display = 'none';
+      }
+    }
+
+    function manage_old_lists() {
+      var old_lists = document.getElementById('oldqueryname');
+      // If there is no saved searches available, returns.
+      if (!old_lists) return;
+
+      var new_query = document.getElementById('newqueryname').value;
+
+      if (new_query != "") {
+        old_lists.disabled = true;
+      }
+      else {
+        old_lists.disabled = false;
+      }
+    }
+    //-->
+  </script>
+
+  [%# Get existing lists of bugs for this user %]
+  [% lists_of_bugs = [] %]
+  [% FOREACH q = user.queries %]
+    [% NEXT UNLESS q.query_type == constants.LIST_OF_BUGS %]
+    [% lists_of_bugs.push(q.name) %]
+  [% END %]
+
   <div id="links-special">
     <div class="label">&nbsp;</div>
     <div class="links">
-      <form action="buglist.cgi" method="get">
+      <hr>
+      <form id="list_of_bugs" action="buglist.cgi" method="get">
         <input type="hidden" name="cmdtype" value="doit">
         <input type="hidden" name="remtype" value="asnamed">
-        <input type="hidden" name="add_bugids" value="1">
-        <input type="submit" value="Add" id="add"> [% terms.bugs %]
-        <input type="text" name="bug_ids" size="8" maxlength="80"> to
-        [% foundq = 0 %]
-        [% FOREACH q = user.queries %]
-          [% NEXT UNLESS q.query_type == constants.LIST_OF_BUGS %]
-          [% IF !foundq %]
-            [% foundq = 1 %]
-            <select name="oldqueryname">
+        <input type="hidden" name="list_of_bugs" value="1">
+        <select id="lob_action" name="action" onchange="update_text();">
+          <option value="add">Add</option>
+          [% IF lists_of_bugs.size %]
+            <option value="remove">Remove</option>
           [% END %]
-          <option value="[% q.name FILTER html %]">
-            [% q.name FILTER html %]</option>
+        </select>
+        [%+ terms.bugs %]
+        <input type="text" name="bug_ids" size="12" maxlength="80">
+        <span id="lob_direction">to</span>
+        [% IF lists_of_bugs.size %]
+          <select id="oldqueryname" name="oldqueryname">
+            [% FOREACH query = lists_of_bugs %]
+              <option value="[% query FILTER html %]">[% query FILTER html %]</option>
+            [% END %]
+          </select>
         [% END %]
-        [% "</select> or to " IF foundq %]
-        the new saved search:
-        <input type="text" name="newqueryname" size="20" maxlength="64">
+        <span id="lob_new_query_text">
+          [% " or to" IF lists_of_bugs.size %] the new saved search:
+          <input type="text" id="newqueryname" name="newqueryname" size="20" maxlength="64"
+                 onkeyup="manage_old_lists();">
+        </span>
+        <input type="submit" value="Commit" id="commit_list_of_bugs">
       </form>
     </div>
   </div>

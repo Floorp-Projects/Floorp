@@ -1002,7 +1002,21 @@
 
   [% ELSIF error == "no_bug_ids" %]
     [% title = BLOCK %]No [% terms.Bugs %] Chosen[% END %]
-    You didn't choose any [% terms.bugs %] to add to the saved search.
+    You didn't choose any [% terms.bugs %] to
+    [% IF action == "add" %] add to [% ELSE %] remove from [% END %]
+    the saved search.
+
+  [% ELSIF error == "no_bugs_in_list" %]
+    [% title = "Delete Saved Search?" %]
+    You are going to remove all [% terms.bugs %] from the '[% saved_search FILTER html %]'
+    saved search. This will delete this saved search completely. Click
+    <a href="buglist.cgi?cmdtype=dorem&amp;remaction=forget&amp;namedcmd=
+    [%- saved_search FILTER url_quote %]">here</a> if you really want to
+    remove it.
+
+  [% ELSIF error == "no_bugs_to_remove" %]
+    [% title = "No Saved Search Selected" %]
+    You didn't select any saved search to remove [% terms.bugs %] from.
 
   [% ELSIF error == "no_component_change_for_multiple_products" %]
     [% title = "Action Not Permitted" %]

@@ -504,28 +504,49 @@ elsif (($cgi->param('cmdtype') eq "doit") && defined $cgi->param('remtype')) {
         my $query_name = $cgi->param('newqueryname');
         my $new_query = $cgi->param('newquery');
         my $query_type = QUERY_LIST;
-        # If add_bugids is true, we are adding individual bugs to a saved
-        # search. We get the existing list of bug IDs (if any) and append
-        # the new ones.
-        if ($cgi->param('add_bugids')) {
-            my %bug_ids;
-            foreach my $bug_id (split(/[\s,]+/, $cgi->param('bug_ids'))) {
-                next unless $bug_id;
-                ValidateBugID($bug_id);
-                $bug_ids{$bug_id} = 1;
-            }
-            ThrowUserError("no_bug_ids") unless scalar(keys %bug_ids);
+        # If list_of_bugs is true, we are adding/removing individual bugs
+        # to a saved search. We get the existing list of bug IDs (if any)
+        # and add/remove the passed ones.
+        if ($cgi->param('list_of_bugs')) {
+            # We add or remove bugs based on the action choosen.
+            my $action = trim($cgi->param('action') || '');
+            $action =~ /^(add|remove)$/
+              || ThrowCodeError('unknown_action', {'action' => $action});
 
-            if (!trim($query_name)) {
-                # No new query name has been given. We append new bug IDs
-                # to the existing list.
+            # If we are removing bugs, then we must have an existing
+            # saved search selected.
+            if ($action eq 'remove') {
+                $query_name && ThrowUserError('no_bugs_to_remove');
+            }
+
+            my %bug_ids;
+            unless ($query_name) {
+                # No new query name has been given. We retrieve bug IDs
+                # currently set in the selected saved search.
                 $query_name = $cgi->param('oldqueryname');
                 my $old_query = LookupNamedQuery($query_name);
                 foreach my $bug_id (split(/[\s,=]+/, $old_query)) {
                     $bug_ids{$bug_id} = 1 if detaint_natural($bug_id);
                 }
             }
-            $new_query = "bug_id=" . join(',', sort {$a <=> $b} keys %bug_ids);
+
+            my $keep_bug = ($action eq 'add') ? 1 : 0;
+            my $changes = 0;
+            foreach my $bug_id (split(/[\s,]+/, $cgi->param('bug_ids'))) {
+                next unless $bug_id;
+                ValidateBugID($bug_id);
+                $bug_ids{$bug_id} = $keep_bug;
+                $changes = 1;
+            }
+            ThrowUserError('no_bug_ids', {'action' => $action}) unless $changes;
+
+            # Only keep bug IDs we want to add/keep. Disregard deleted ones.
+            my @bug_ids = grep { $bug_ids{$_} == 1 } keys %bug_ids;
+            # If the list is now empty, we could as well delete it completely.
+            ThrowUserError('no_bugs_in_list', {'saved_search' => $query_name})
+              unless scalar(@bug_ids);
+
+            $new_query = "bug_id=" . join(',', sort {$a <=> $b} @bug_ids);
             $query_type = LIST_OF_BUGS;
         }
         my $tofooter = 1;
