@@ -67,7 +67,7 @@
                  onblur="this.parentNode.parentNode.handleBlur(); this.parentNode.parentNode.dispatchDOMUIEvent('DOMFocusOut');"
                  onclick="this.parentNode.parentNode.handleControlClick();"
                  onkeypress="this.parentNode.parentNode.handleKeyPress(event);"
-                 onkeyup="this.parentNode.parentNode.handleKeyUp(event);"
+                 oninput="this.parentNode.parentNode.handleInput();"
       /><html:input class="-moz-xforms-select1-dropdown"
                     type="button"
                     anonid="dropmarker"
@@ -169,11 +169,17 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-          if (this.selectionOpen && !this._selected && this.incremental) {
-            this._handleSelection(false);
-          } else {
-            this.togglePopup();
+          if (this.selectionOpen) {
+            if (!this._selected && this.incremental) {
+              this._handleSelection(false);
+              return;
+            }
+            if (this.popupOpen) {
+              this.hidePopup();
+            }
+            return;
           }
+          this.togglePopup();
           ]]>
         </body>
       </method>
@@ -201,6 +207,9 @@
                 aEvent.preventDefault();
               }
             } else if (key == aEvent.DOM_VK_UP || key == aEvent.DOM_VK_DOWN) {
+              if (this.selectionOpen && !this.popupOpen) {
+                this.togglePopup();
+              }
               this.internalScroll(aEvent.keyCode == aEvent.DOM_VK_DOWN);
               if (this._selected && this.popupOpen) {
                 var el = this._selected.QueryInterface(Components.interfaces.nsIDOMElement);
@@ -215,6 +224,7 @@
                 }
                 this._handleSelection(true);
               }
+              aEvent.preventDefault();
             } else if (key == aEvent.DOM_VK_TAB) {
               // Hiding popup when user uses keyboard to focus out
               // from <select1>. No need to update the value of the control
@@ -234,20 +244,9 @@
         </body>
       </method>
 
-      <method name="handleKeyUp">
-        <parameter name="aEvent"/>
+      <method name="handleInput">
         <body>
           <![CDATA[
-            // These events are handled in handleKeyPress...
-            if (aEvent.keyCode == aEvent.DOM_VK_RETURN ||
-                aEvent.keyCode == aEvent.DOM_VK_ENTER ||
-                aEvent.keyCode == aEvent.DOM_VK_UP ||
-                aEvent.keyCode == aEvent.DOM_VK_DOWN) {
-              return true;
-            }
-
-            // ..other key events are handled in keyUp, because otherwise
-            // this.inputField.value doesn't show the just updated value.
             if (this.selectionOpen) {
               if (this._selected) {
                 this._selected.setActive(false);
@@ -353,7 +352,7 @@
                   node.localName == "label") {
                 label = node;
                 break;
-              }       
+              }
               node = node.nextSibling;
             }
 
@@ -377,17 +376,10 @@
               if (nextItem) {
                 this._selected = nextItem;
                 this._selected.setActive(true);
-                this.updateInputField();
+                if (!this.selectionOpen)
+                  this.updateInputField();
               }
               return true;
-            }
-
-            if (!aDown && this.selectionOpen) {
-              if (this._selected) {
-                this._selected.setActive(false);
-                this._selected = null;
-              }
-              this.inputField.value = "";
             }
           ]]>
         </body>
@@ -936,8 +928,6 @@
             this.accessors.setContent(contentEnvelope, true);
             this._outOfRange = false;
             this.accessors.setInRange(true);
-          }
-
           }
           ]]>
         </body>
