@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 //-----------------------------------------------------------------------------
 var bug = 349482;
-var summary = 'Decompiling try/catch in for..in should not crash';
+var summary = 'Decompiling try/catch in with() should not crash';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
