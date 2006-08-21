@@ -435,7 +435,8 @@ sub bz_add_column {
         my @statements = $self->_bz_real_schema->get_add_column_ddl(
             $table, $name, $new_def, 
             defined $init_value ? $self->quote($init_value) : undef);
-        print "Adding new column $name to table $table ...\n";
+        print "Adding new column $name to table $table ...\n"
+          unless i_am_cgi();
         foreach my $sql (@statements) {
             $self->do($sql);
         }
