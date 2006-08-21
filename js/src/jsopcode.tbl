@@ -439,4 +439,8 @@ OPDEF(JSOP_FOREACHKEYVAL, 213,"foreachkeyval",NULL,   1,  0,  0,  0,  JOF_BYTE)
  */
 OPDEF(JSOP_ENUMCONSTELEM, 214,"enumconstelem",NULL,   1,  3,  0,  1,  JOF_BYTE|JOF_SET|JOF_ASSIGNING)
 
-OPDEF(JSOP_LEAVEBLOCKEXPR,215,"leaveblockexpr",NULL,  3,  0,  0,  0,  JOF_UINT16)
+/*
+ * LEAVEBLOCKEXPR's precedence is 1 to help the decompiler with new let (...)
+ * expressions. See bug 349499.
+ */
+OPDEF(JSOP_LEAVEBLOCKEXPR,215,"leaveblockexpr",NULL,  3,  0,  0,  1,  JOF_UINT16)
