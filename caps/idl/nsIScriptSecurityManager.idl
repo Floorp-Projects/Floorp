@@ -41,7 +41,7 @@
 interface nsIURI;
 
 
-[scriptable, uuid(6c86a0d8-7a19-42a4-be18-d282a26388fd)]
+[scriptable, uuid(5a46e611-cf4a-4407-a5b4-002fcf051120)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -99,7 +99,7 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * Will return error code NS_ERROR_DOM_BAD_URI if the load request 
      * should be denied.
      *
-     * @param aPrincipal the URI causing the load
+     * @param aPrincipal the principal identifying the actor causing the load
      * @param uri the URI that is being loaded
      * @param flags the permission set, see above
      */
@@ -116,13 +116,30 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * @param from the URI causing the load
      * @param uri the URI that is being loaded
      * @param flags the permission set, see above
+     *
+     * @deprecated Use checkLoadURIWithPrincipal instead of this function.
      */
     void checkLoadURI(in nsIURI from, in nsIURI uri, 
                       in unsigned long flags);
 
     /**
+     * Similar to checkLoadURIWithPrincipal but there are two differences:
+     *
+     * 1) The URI is a string, not a URI object.
+     * 2) This function assumes that the URI may still be subject to fixup (and
+     * hence will check whether fixed-up versions of the URI are allowed to
+     * load as well); if any of the versions of this URI is not allowed, this
+     * function will return error code NS_ERROR_DOM_BAD_URI.
+     */
+    void checkLoadURIStrWithPrincipal(in nsIPrincipal aPrincipal,
+                                      in AUTF8String uri, 
+                                      in unsigned long flags);     
+    
+    /**
      * Same as CheckLoadURI but takes string arguments for ease of use
      * by scripts
+     *
+     * @deprecated Use checkLoadURIStrWithPrincipal instead of this function.
      */
     void checkLoadURIStr(in AUTF8String from, in AUTF8String uri, 
                          in unsigned long flags);
