@@ -9,15 +9,11 @@
 <!ENTITY safeb.palm.message.p2.linkURL "http://www.mozilla.org/projects/bonecho/anti-phishing/">
 <!ENTITY safeb.palm.message.p2.end " from phishing attacks.">
 
-<!ENTITY safeb.palm.message.p3.start "If you believe this page has been falsely reported as a web forgery, you can ">
-<!ENTITY safeb.palm.message.p3.linkText "let us know">
-<!ENTITY safeb.palm.message.p3.end ".">
-
 <!ENTITY safeb.palm.accept.label "Get me out of here!">
 <!ENTITY safeb.palm.accept.statustext "Navigate to my home page">
 <!ENTITY safeb.palm.decline.label "Ignore this warning">
 <!ENTITY safeb.palm.decline.statustext "Close warning" >
-<!ENTITY safeb.palm.sendreport.label "Send report">
+<!ENTITY safeb.palm.notforgery.label "This isn't a web forgery">
 
 <!ENTITY safeb.palm.addbutton.label "Add to blacklist">
 <!ENTITY safeb.palm.addbutton.tooltip "Add to blacklist">
