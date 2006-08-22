@@ -191,15 +191,16 @@ if (!defined $cgi->param('target_milestone')) {
     $cgi->param(-name => 'target_milestone', -value => $product->default_milestone);
 }
 
-if (!Bugzilla->params->{'letsubmitterchoosepriority'}) {
-    $cgi->param(-name => 'priority', -value => Bugzilla->params->{'defaultpriority'});
-}
-
 # Some more sanity checking
-check_field('rep_platform', scalar $cgi->param('rep_platform'));
-check_field('bug_severity', scalar $cgi->param('bug_severity'));
-check_field('priority',     scalar $cgi->param('priority'));
-check_field('op_sys',       scalar $cgi->param('op_sys'));
+$cgi->param(-name => 'priority', -value => Bugzilla::Bug::_check_priority(
+    $cgi->param('priority')));
+$cgi->param(-name  => 'rep_platform', 
+    -value => Bugzilla::Bug::_check_rep_platform($cgi->param('rep_platform')));
+$cgi->param(-name => 'bug_severity', 
+    -value => Bugzilla::Bug::_check_bug_severity($cgi->param('bug_severity')));
+$cgi->param(-name => 'op_sys', -value => Bugzilla::Bug::_check_op_sys(
+    $cgi->param('op_sys')));
+ 
 check_field('version',      scalar $cgi->param('version'),
             [map($_->name, @{$product->versions})]);
 check_field('target_milestone', scalar $cgi->param('target_milestone'),

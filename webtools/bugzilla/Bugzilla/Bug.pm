@@ -262,6 +262,13 @@ sub _check_bug_file_loc {
     return $url;
 }
 
+sub _check_bug_severity {
+    my ($severity) = @_;
+    $severity = trim($severity);
+    check_field('bug_severity', $severity);
+    return $severity;
+}
+
 sub _check_bug_status {
     my ($status, $product) = @_;
     my $user = Bugzilla->user;
@@ -361,6 +368,31 @@ sub _check_product {
     # when we move to Bugzilla::Bug->create, this should just return
     # what it was passed.
     return $obj;
+}
+
+sub _check_op_sys {
+    my ($op_sys) = @_;
+    $op_sys = trim($op_sys);
+    check_field('op_sys', $op_sys);
+    return $op_sys;
+}
+
+sub _check_priority {
+    my ($priority) = @_;
+    if (!Bugzilla->params->{'letsubmitterchoosepriority'}) {
+        $priority = Bugzilla->params->{'defaultpriority'};
+    }
+    $priority = trim($priority);
+    check_field('priority', $priority);
+
+    return $priority;
+}
+
+sub _check_rep_platform {
+    my ($platform) = @_;
+    $platform = trim($platform);
+    check_field('rep_platform', $platform);
+    return $platform;
 }
 
 sub _check_short_desc {
