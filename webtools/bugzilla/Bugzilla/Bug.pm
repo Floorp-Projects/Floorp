@@ -406,6 +406,37 @@ sub _check_short_desc {
     return $short_desc;
 }
 
+# Unlike other checkers, this one doesn't return anything.
+sub _check_strict_isolation {
+    my ($product, $cc_ids, $assignee_id, $qa_contact_id) = @_;
+
+    return unless Bugzilla->params->{'strict_isolation'};
+
+    my @related_users = @$cc_ids;
+    push(@related_users, $assignee_id);
+
+    if (Bugzilla->params->{'useqacontact'} && $qa_contact_id) {
+        push(@related_users, $qa_contact_id);
+    }
+
+    # For each unique user in @related_users...(assignee and qa_contact
+    # could be duplicates of users in the CC list)
+    my %unique_users = map {$_ => 1} @related_users;
+    my @blocked_users;
+    foreach my $pid (keys %unique_users) {
+        my $related_user = Bugzilla::User->new($pid);
+        if (!$related_user->can_edit_product($product->id)) {
+            push (@blocked_users, $related_user->login);
+        }
+    }
+    if (scalar(@blocked_users)) {
+        ThrowUserError("invalid_user_group",
+            {'users' => \@blocked_users,
+             'new' => 1,
+             'product' => $product->name});
+    }
+}
+
 sub _check_qa_contact {
     my ($name, $component) = @_;
     my $user = Bugzilla->user;

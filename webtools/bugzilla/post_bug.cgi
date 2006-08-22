@@ -221,32 +221,11 @@ push(@used_fields, "product_id");
 $cgi->param(-name => 'component_id', -value => $component->id);
 push(@used_fields, "component_id");
 
-my @cc_ids = @{Bugzilla::Bug::_check_cc([$cgi->param('cc')])};
+my $cc_ids = Bugzilla::Bug::_check_cc([$cgi->param('cc')]);
 my @keyword_ids = @{Bugzilla::Bug::_check_keywords($cgi->param('keywords'))};
 
-if (Bugzilla->params->{"strict_isolation"}) {
-    my @blocked_users = ();
-    my @related_users = @cc_ids;
-    push(@related_users, $cgi->param('assigned_to'));
-    if (Bugzilla->params->{'useqacontact'} && $cgi->param('qa_contact')) {
-        push(@related_users, $cgi->param('qa_contact'));
-    }
-    # For each unique user in @related_users...
-    my %related_users = map {$_ => 1} @related_users;
-    foreach my $pid (keys %related_users) {
-        my $related_user = Bugzilla::User->new($pid);
-        if (!$related_user->can_edit_product($product->id)) {
-            push (@blocked_users, $related_user->login);
-        }
-    }
-    if (scalar(@blocked_users)) {
-        ThrowUserError("invalid_user_group", 
-            {'users' => \@blocked_users,
-             'new' => 1,
-             'product' => $product->name
-            });
-    }
-}
+Bugzilla::Bug::_check_strict_isolation($product, $cc_ids, 
+    $cgi->param('assigned_to'), $cgi->param('qa_contact'));
 
 # Check for valid dependency info. 
 foreach my $field ("dependson", "blocked") {
@@ -411,7 +390,7 @@ $dbh->do(q{INSERT INTO longdescs (bug_id, who, bug_when, thetext,isprivate)
 
 # Insert the cclist into the database
 my $sth_cclist = $dbh->prepare(q{INSERT INTO cc (bug_id, who) VALUES (?,?)});
-foreach my $ccid (@cc_ids) {
+foreach my $ccid (@$cc_ids) {
     $sth_cclist->execute($id, $ccid);
 }
 
