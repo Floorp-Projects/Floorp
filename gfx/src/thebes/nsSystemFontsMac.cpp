@@ -35,22 +35,158 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <Carbon/Carbon.h>
+
 #include "nsSystemFontsMac.h"
 
 nsSystemFontsMac::nsSystemFontsMac(float aPixelsToTwips)
+    : mPixelsToTwips(aPixelsToTwips)
 {
 }
 
-nsresult
-nsSystemFontsMac::GetSystemFont(nsSystemFontID anID, nsFont *aFont) const
+// helper function to get the system font for a specific script
+#define FONTNAME_MAX_UNICHRS sizeof(fontName255) * 2
+nsresult 
+GetSystemFontForScript(ThemeFontID aFontID, ScriptCode aScriptCode,
+                       nsAFlatString& aFontName, SInt16& aFontSize,
+                       Style& aFontStyle)
 {
-    // hack for now
-    aFont->style       = NS_FONT_STYLE_NORMAL;
-    aFont->weight      = NS_FONT_WEIGHT_NORMAL;
-    aFont->decorations = NS_FONT_DECORATION_NONE;
+    Str255 fontName255;
+    ::GetThemeFont(aFontID, aScriptCode, fontName255, &aFontSize, &aFontStyle);
+    if (fontName255[0] == 255) {
+        NS_WARNING("Too long fong name (> 254 chrs)");
+        return NS_ERROR_FAILURE;
+    }
+    fontName255[fontName255[0]+1] = 0;
+        
+    OSStatus err;
 
-    aFont->name.AssignLiteral("sans-serif");
-    aFont->size = NSToCoordRound(aFont->size * 0.875f);
+    // the theme font could contains font name in different encoding. 
+    // we need to covert them to unicode according to the font's text encoding.
+    TECObjectRef converter = 0;
+    TextEncoding unicodeEncoding = 
+        ::CreateTextEncoding(kTextEncodingUnicodeDefault, 
+                             kTextEncodingDefaultVariant,
+                             kTextEncodingDefaultFormat);
+                                                              
+    FMFontFamily fontFamily;
+    TextEncoding fontEncoding = 0;
+    fontFamily = ::FMGetFontFamilyFromName(fontName255);
+
+    err = ::FMGetFontFamilyTextEncoding(fontFamily, &fontEncoding);
+    if (err != noErr) {
+        NS_WARNING("Could not get the encoding for the font.");
+        return NS_ERROR_FAILURE;
+    }
+
+    err = ::TECCreateConverter(&converter, fontEncoding, unicodeEncoding);
+    if (err != noErr) {
+        NS_WARNING("Could not create the converter.");
+        return NS_ERROR_FAILURE;
+    }
+
+    PRUnichar unicodeFontName[FONTNAME_MAX_UNICHRS + 1];
+    ByteCount actualInputLength, actualOutputLength;
+    err = ::TECConvertText(converter, &fontName255[1], fontName255[0], 
+                           &actualInputLength, 
+                           (TextPtr)unicodeFontName,
+                           FONTNAME_MAX_UNICHRS * sizeof(PRUnichar),
+                           &actualOutputLength);
+
+    if (err != noErr) {
+        NS_WARNING("Could not convert the font name.");
+        return NS_ERROR_FAILURE;
+    }
+
+    ::TECDisposeConverter(converter);
+
+    unicodeFontName[actualOutputLength / sizeof(PRUnichar)] = PRUnichar('\0');
+    aFontName = nsDependentString(unicodeFontName);
+    return NS_OK;
+}
+
+nsresult
+nsSystemFontsMac::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
+{
+    nsresult rv;
+
+    // hack for now
+    if (aID == eSystemFont_Window ||
+        aID == eSystemFont_Document)
+    {
+        aFont->style       = NS_FONT_STYLE_NORMAL;
+        aFont->weight      = NS_FONT_WEIGHT_NORMAL;
+        aFont->decorations = NS_FONT_DECORATION_NONE;
+
+        aFont->name.AssignLiteral("sans-serif");
+        aFont->size = NSToCoordRound(aFont->size * 0.875f);
+        aFont->systemFont = PR_TRUE;
+
+        return NS_OK;
+    }
+
+    ThemeFontID fontID = kThemeViewsFont;
+    switch (aID) {
+        // css2
+        case eSystemFont_Caption:       fontID = kThemeSystemFont;         break;
+        case eSystemFont_Icon:          fontID = kThemeViewsFont;          break;
+        case eSystemFont_Menu:          fontID = kThemeSystemFont;         break;
+        case eSystemFont_MessageBox:    fontID = kThemeSmallSystemFont;    break;
+        case eSystemFont_SmallCaption:  fontID = kThemeSmallEmphasizedSystemFont;  break;
+        case eSystemFont_StatusBar:     fontID = kThemeSmallSystemFont;    break;
+        // css3
+        //case eSystemFont_Window:      = 'sans-serif'
+        //case eSystemFont_Document:    = 'sans-serif'
+        case eSystemFont_Workspace:     fontID = kThemeViewsFont;          break;
+        case eSystemFont_Desktop:       fontID = kThemeViewsFont;          break;
+        case eSystemFont_Info:          fontID = kThemeViewsFont;          break;
+        case eSystemFont_Dialog:        fontID = kThemeSystemFont;         break;
+        case eSystemFont_Button:        fontID = kThemePushButtonFont;     break;
+        case eSystemFont_PullDownMenu:  fontID = kThemeMenuItemFont;       break;
+        case eSystemFont_List:          fontID = kThemeSystemFont;         break;
+        case eSystemFont_Field:         fontID = kThemeApplicationFont;    break;
+        // moz
+        case eSystemFont_Tooltips:      fontID = kThemeSmallSystemFont;    break;
+        case eSystemFont_Widget:        fontID = kThemeSmallSystemFont;    break;
+        default:
+            // should never hit this
+            return NS_ERROR_FAILURE;
+    }
+
+    nsAutoString fontName;
+    SInt16 fontSize;
+    Style fontStyle;
+
+    ScriptCode sysScript = GetScriptManagerVariable(smSysScript);
+    rv = GetSystemFontForScript(fontID, smRoman, fontName, fontSize, fontStyle);
+    if (NS_FAILED(rv))
+        fontName = NS_LITERAL_STRING("Lucida Grande");
+
+    if (sysScript != smRoman) {
+        SInt16 localFontSize;
+        Style localFontStyle;
+        nsAutoString localSysFontName;
+        rv = GetSystemFontForScript(fontID, sysScript,
+                                    localSysFontName,
+                                    localFontSize, localFontStyle);
+        if (NS_SUCCEEDED(rv) && !fontName.Equals(localSysFontName)) {
+            fontName += NS_LITERAL_STRING(",") + localSysFontName;
+            fontSize = localFontSize;
+            fontStyle = localFontStyle;
+        }
+    }
+
+    aFont->name = fontName; 
+    aFont->size = NSToCoordRound(float(fontSize) * mPixelsToTwips);
+
+    if (fontStyle & bold)
+        aFont->weight = NS_FONT_WEIGHT_BOLD;
+    if (fontStyle & italic)
+        aFont->style = NS_FONT_STYLE_ITALIC;
+    if (fontStyle & underline)
+        aFont->decorations = NS_FONT_DECORATION_UNDERLINE;
+
+    aFont->systemFont = PR_TRUE;
 
     return NS_OK;
 }

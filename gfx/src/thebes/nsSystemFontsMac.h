@@ -47,6 +47,8 @@ public:
      nsSystemFontsMac(float aPixelsToTwips);
 
      nsresult GetSystemFont(nsSystemFontID anID, nsFont *aFont) const;
+protected:
+    float mPixelsToTwips;
 };
 
 #endif /* _NS_SYSTEMFONTSMAC_H_ */
