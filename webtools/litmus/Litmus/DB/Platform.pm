@@ -43,7 +43,8 @@ Litmus::DB::Platform->columns(Essential => qw/platform_id name detect_regexp ico
 
 Litmus::DB::Platform->column_alias("platform_id", "platformid");
 
-Litmus::DB::Platform->has_many(opsyses => "Litmus::DB::Opsys");
+Litmus::DB::Platform->has_many(opsyses => "Litmus::DB::Opsys",
+                              {order_by => 'name ASC'});
 
 Litmus::DB::Platform->set_sql(ByProduct => qq{
                                               SELECT pl.* 
