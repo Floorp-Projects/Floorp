@@ -2145,8 +2145,23 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
              * is another assignment overwriting this one's ostensible effect,
              * because the left operand may be a property with a setter that
              * has side effects.
+             *
+             * The only exception is assignment of a useless value to a const
+             * declared in the function currently being compiled.
              */
-            *answer = JS_TRUE;
+            pn2 = pn->pn_left;
+            if (pn2->pn_type != TOK_NAME) {
+                *answer = JS_TRUE;
+            } else {
+                if (!BindNameToSlot(cx, tc, pn2))
+                    return JS_FALSE;
+                if (!CheckSideEffects(cx, tc, pn->pn_right, answer))
+                    return JS_FALSE;
+                if (!*answer &&
+                    (pn2->pn_slot < 0 || !(pn2->pn_attrs & JSPROP_READONLY))) {
+                    *answer = JS_TRUE;
+                }
+            }
         } else {
             if (pn->pn_type == TOK_LB) {
                 pn2 = pn->pn_left;
@@ -4999,10 +5014,20 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         /* If += etc., emit the binary operator with a decompiler note. */
         if (op != JSOP_NOP) {
-            if (js_NewSrcNote(cx, cg, SRC_ASSIGNOP) < 0 ||
-                js_Emit1(cx, cg, op) < 0) {
-                return JS_FALSE;
+            /*
+             * Take care to avoid SRC_ASSIGNOP if the left-hand side is a
+             * const declared in a function (i.e., with non-negative pn_slot
+             * and JSPROP_READONLY in pn_attrs), as in this case (just a bit
+             * further below) we will avoid emitting the assignment op.
+             */
+            if (pn2->pn_type != TOK_NAME ||
+                pn2->pn_slot < 0 ||
+                !(pn2->pn_attrs & JSPROP_READONLY)) {
+                if (js_NewSrcNote(cx, cg, SRC_ASSIGNOP) < 0)
+                    return JS_FALSE;
             }
+            if (js_Emit1(cx, cg, op) < 0)
+                return JS_FALSE;
         }
 
         /* Left parts such as a.b.c and a[b].c need a decompiler note. */
