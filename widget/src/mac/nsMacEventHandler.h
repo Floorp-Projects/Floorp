@@ -167,6 +167,7 @@ protected:
 		                           const Point& aMouseLoc,
 		                           nsWindow* aWindow,
 		                           PRUint32 aModifiers);
+		void ClearLastMouseUp();
 
 protected:
 	nsMacEventDispatchHandler* mEventDispatchHandler;
@@ -175,6 +176,9 @@ protected:
 	TSMDocumentID	mTSMDocument;
 	nsPoint 		mIMEPos;
 	nsAutoString		*mIMECompositionStr;
+	Point				mLastMouseUpWhere;
+	UInt32				mLastMouseUpWhen;
+	PRUint32			mClickCount;
 	PRUint32			mLastModifierState;
 	PRPackedBool			mIMEIsComposing;
 	PRPackedBool			mKeyIgnore;
