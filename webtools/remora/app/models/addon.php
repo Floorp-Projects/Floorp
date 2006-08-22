@@ -65,7 +65,9 @@ class Addon extends AppModel
         'guid' => VALID_NOT_EMPTY,
         'name' => VALID_NOT_EMPTY,
         'description' => VALID_NOT_EMPTY,
-        'addontype_id' => VALID_NUMBER
+        'addontype_id' => VALID_NUMBER,
+        'os' => VALID_NOT_EMPTY,
+        'tags' => VALID_NOT_EMPTY
     );
 }
 ?>

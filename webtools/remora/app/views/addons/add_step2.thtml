@@ -1,10 +1,41 @@
 <?=$html->formTag('/addons/add/')?>
 <?=$html->hidden('Addon/add_step2')?>
-Name: <?=$html->input('Addon/Name', array('value'=>$manifestData['name']['en-US']))?>
-<?=$html->tagErrorMsg('Addon/Name', 'Please enter the name of your add-on.')?>
-Homepage: <?=$html->input('Addon/Homepage', array('value'=>$manifestData['homepageURL']))?>
-<?=$html->tagErrorMsg('Addon/Homepage', 'Please enter the homepage of your add-on.')?><BR />
-Description: <?=$html->input('Addon/Description', array('value'=>$manifestData['description']['en-US']))?>
-<?=$html->tagErrorMsg('Addon/Description', 'Please enter a description of your add-on.')?><BR />
-
-<?=$html->submit()?>
+<table>
+    <tr>
+        <td>Name</td>
+        <td><?=$html->input('Addon/Name', array('value'=>$manifestData['name']['en-US']))?></td>
+    </tr>
+    <tr>
+        <td>Version</td>
+        <td><?=$manifestData['version']?></td>
+    </tr>
+    <tr>
+        <td>File</td>
+        <td><?=$fileName.' ('.$fileSize.' KB)'?></td>
+    </tr>
+    <tr>
+        <td>Author(s)</td>
+        <td><?=$html->input('Addon/Author')?></td>
+    </tr>
+    <tr>
+        <td>OS</td>
+        <td><?=$html->selectTag('Addon/OS')?></td>
+    </tr>
+    <tr>
+        <td colspan=2>Target Application(s)</td>
+    </tr>
+    <tr>
+        <td>Homepage</td>
+        <td><?=$html->input('Addon/Homepage', array('value'=>$manifestData['homepageURL']))?></td>
+    </tr>
+    <tr>
+        <td>Description</td>
+        <td><?=$html->textarea('Addon/Description', array('value' => $manifestData['description']['en-US'],
+                                                          'rows' => 3,
+                                                          'cols' => 55
+                                                    ))?></td>
+    </tr>
+    <tr>
+        <td colspan=2><?=$html->submit()?></td>
+    </tr>
+</table>

@@ -46,6 +46,7 @@ class AddonsController extends AppController
             }
 
             $fileName = $this->data['Addon']['file']['name'];
+            $fileSize = round($this->data['Addon']['file']['size']/1024, 1); //in KB
             $fileExtension = substr($fileName, strrpos($fileName, '.'));
             $allowedExtensions = array('.xpi', '.jar', '.src');
             //Check for file extenion match
@@ -136,6 +137,9 @@ pr($manifestData);
 
             }
 
+
+            $this->set('fileName', $fileName);
+            $this->set('fileSize', $fileSize);
             $this->set('manifestData', $manifestData);
             $this->render('add_step2');
         }
