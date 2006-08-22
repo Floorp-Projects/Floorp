@@ -191,6 +191,7 @@ $shiptalkback  = 0;
 $build_hour    = "6";
 #$package_creation_path = "/xpinstall/packager";
 # needs setting for mac + talkback: $mac_bundle_path = "/browser/app";
+$mac_bundle_path = "/mail/app";
 $ssh_version   = "2";
 #$ssh_user      = "cltbld";
 #$ssh_server    = "stage.mozilla.org";
