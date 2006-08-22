@@ -70,6 +70,23 @@ CG_EXTERN void CGContextSetCTM (CGContextRef, CGAffineTransform);
 CG_EXTERN void CGContextResetClip (CGContextRef);
 CG_EXTERN CGSize CGContextGetPatternPhase (CGContextRef);
 
+/* We need to work with the 10.3 SDK as well (and 10.3 machines; luckily, 10.3.9
+ * has all the stuff we care about, just some of it isn't exported in the SDK.
+ */ 
+#ifndef kCGBitmapByteOrder32Host
+#define USE_10_3_WORKAROUNDS
+#define kCGBitmapAlphaInfoMask 0x1F
+#define kCGBitmapByteOrderMask 0x7000
+#define kCGBitmapByteOrder32Host 0
+
+typedef uint32_t CGBitmapInfo;
+
+/* public in 10.4, present in 10.3.9 */
+CG_EXTERN void CGContextReplacePathWithStrokedPath (CGContextRef);
+CG_EXTERN CGImageRef CGBitmapContextCreateImage (CGContextRef);
+#endif
+
+
 typedef struct cairo_quartzgl_surface {
     cairo_surface_t base;
 
@@ -474,7 +491,7 @@ SurfacePatternDrawFunc (void *info, CGContextRef context)
 	quartz_surf = (cairo_quartzgl_surface_t*) pat_surf;
     }
 
-    /* this is a 10.4 API */
+    /* this is a 10.4 API, present in 10.3.9 */
     img = CGBitmapContextCreateImage (quartz_surf->cgContext);
     if (!img)
 	//fprintf (stderr, "CGBitmapContextCreateImage failed\n");
@@ -729,7 +746,7 @@ _cairo_quartzgl_get_image (cairo_quartzgl_surface_t *surface,
 	    *data_out = imageData;
 	else
 	    _cairo_image_surface_assume_ownership_of_data (isurf);
-    } else if (CGBitmapContextGetBitmapInfo(surface->cgContext) != 0) {
+    } else if (CGBitmapContextGetBitsPerPixel(surface->cgContext) != 0) {
 	unsigned int stride;
 	unsigned int bitinfo;
 	unsigned int bpc, bpp;
@@ -737,7 +754,11 @@ _cairo_quartzgl_get_image (cairo_quartzgl_surface_t *surface,
 	unsigned int color_comps;
 
 	imageData = (unsigned char *) CGBitmapContextGetData(surface->cgContext);
+#ifdef USE_10_3_WORKAROUNDS
+	bitinfo = CGBitmapContextGetAlphaInfo (surface->cgContext);
+#else
 	bitinfo = CGBitmapContextGetBitmapInfo (surface->cgContext);
+#endif
 	stride = CGBitmapContextGetBytesPerRow (surface->cgContext);
 	bpp = CGBitmapContextGetBitsPerPixel (surface->cgContext);
 	bpc = CGBitmapContextGetBitsPerComponent (surface->cgContext);
@@ -1203,8 +1224,7 @@ _cairo_quartzgl_surface_stroke (void *abstract_surface,
 	// we have to clip and then paint the shading; first we have to convert
 	// the stroke to a path that we can fill
 
-	// this is a 10.4-only method; we could probably fall back to
-	// CGPattern usage if it's not available
+	// this is a 10.4-only method, but it's present in 10.3.9
 	CGContextReplacePathWithStrokedPath (surface->cgContext);
 	CGContextClip (surface->cgContext);
 
