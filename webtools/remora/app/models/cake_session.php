@@ -4,7 +4,7 @@ class Cake_Session extends AppModel
 {
     var $name = 'Cake_Session';
     var $useTable = 'cake_sessions';
-    var $belongsTo = array('User' =>
+    var $hasOne = array('User' =>
                            array('className'  => 'User',
                                  'conditions' => '',
                                  'order'      => '',

@@ -16,14 +16,7 @@ class User extends AppModel
                                            'deleteQuery'=> '',
                                )
                                );
-    var $hasOne = array('Cake_Session' =>
-                        array('className'    => 'Cake_Session',
-                              'conditions'   => '',
-                              'order'        => '',
-                              'dependent'    =>  true,
-                              'foreignKey'   => 'cake_session_id'
-                        )
-                  );
+    var $belongsTo = array('Cake_Session');
     var $hasMany = array('Approval' =>
                          array('className'   => 'Approval',
                                'conditions'  => '',
