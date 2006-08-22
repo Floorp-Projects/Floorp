@@ -33,6 +33,8 @@ tbox = form.getfirst("tbox")
 testname = form.getfirst("testname")
 timeval = form.getfirst("time")
 branch = form.getfirst("branch")
+if not branch:
+    branch = ""
 
 if timeval is None:
     timeval = int(time.time())
@@ -56,10 +58,11 @@ db = sqlite.connect(DBPATH)
 # if we need to.
 try:
     db.execute("CREATE TABLE dataset_info (id INTEGER PRIMARY KEY AUTOINCREMENT, machine STRING, test STRING, test_type STRING, extra_data STRING);")
-    db.execute("CREATE TABLE datasets (dataset_id INTEGER, time INTEGER, value FLOAT, extra BLOB);")
+    db.execute("CREATE TABLE dataset_values (dataset_id INTEGER, time INTEGER, value FLOAT);")
+    db.execute("CREATE TABLE dataset_extra_data (dataset_id INTEGER, time INTEGER, data BLOB);");
     db.execute("CREATE TABLE annotations (dataset_id INTEGER, time INTEGER, value STRING);")
-    db.execute("CREATE INDEX datasets_id_idx ON datasets(dataset_id);")
-    db.execute("CREATE INDEX datasets_time_idx ON datasets(time);")
+    db.execute("CREATE INDEX datasets_id_idx ON dataset_values(dataset_id);")
+    db.execute("CREATE INDEX datasets_time_idx ON dataset_values(time);")
 except:
     pass
 
@@ -77,9 +80,11 @@ while setid == -1:
         db.execute("INSERT INTO dataset_info (machine, test, test_type, extra) VALUES (?,?,?,?)",
                    (tbox, testname, "perf", "branch="+branch))
     else:
-        setid = res[0]
+        setid = res[0][0]
 
-db.execute("INSERT INTO datasets (dataset_id, time, value, extra) VALUES (?,?,?,?)", (setid, timeval, value, data))
+db.execute("INSERT INTO dataset_values (dataset_id, time, value) VALUES (?,?,?)", (setid, timeval, value))
+if data and data != "":
+    db.execute("INSERT INTO dataset_extra_data (dataset_id, time, data) VALUES (?,?,?)", (setid, timeval, data))
 
 db.commit()
 

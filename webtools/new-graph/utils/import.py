@@ -21,29 +21,31 @@ db = sqlite.connect(DBPATH)
 
 try:
     db.execute("CREATE TABLE dataset_info (id INTEGER PRIMARY KEY AUTOINCREMENT, machine STRING, test STRING, test_type STRING, extra_data STRING);")
-    db.execute("CREATE TABLE datasets (dataset_id INTEGER, time INTEGER, value FLOAT, extra BLOB);")
+    db.execute("CREATE TABLE dataset_values (dataset_id INTEGER, time INTEGER, value FLOAT);")
+    db.execute("CREATE TABLE dataset_extra_data (dataset_id INTEGER, time INTEGER, data BLOB);");
     db.execute("CREATE TABLE annotations (dataset_id INTEGER, time INTEGER, value STRING);")
-    db.execute("CREATE INDEX datasets_id_idx ON datasets(dataset_id);")
-    db.execute("CREATE INDEX datasets_time_idx ON datasets(time);")
+    db.execute("CREATE INDEX datasets_id_idx ON dataset_values(dataset_id);")
+    db.execute("CREATE INDEX datasets_time_idx ON dataset_values(time);")
 except:
     pass
 
 setid = -1
 while setid == -1:
     cur = db.cursor()
-    cur.execute("SELECT id FROM dataset_info WHERE machine=? AND test=? AND test_type=? AND extra=?",
-                (tbox, testname, "perf", "branch="+branch))
+    cur.execute("SELECT id FROM dataset_info WHERE machine=? AND test=? AND test_type=?",
+                (tbox, testname, "perf"))
     res = cur.fetchall()
     cur.close()
 
     if len(res) == 0:
-        db.execute("INSERT INTO dataset_info (machine, test, test_type, extra) VALUES (?,?,?,?)",
-                   (tbox, testname, "perf", "branch="+branch))
+        db.execute("INSERT INTO dataset_info (machine, test, test_type, extra) VALUES (?,?,?)",
+                   (tbox, testname, "perf"))
     else:
-        setid = res[0]
+        setid = res[0][0]
 
 if replace:
-    db.execute("DELETE FROM datasets WHERE dataset_id = ?", (setid))
+    db.execute("DELETE FROM dataset_values WHERE dataset_id = ?", (setid,))
+    db.execute("DELETE FROM dataset_extra_data WHERE dataset_id = ?", (setid,))
 
 count = 0
 line = sys.stdin.readline()
@@ -61,7 +63,8 @@ while line is not None:
 
     timeval = time.mktime(map(int, string.split(datestr, ":")) + [0, 0, 0])
 
-    db.execute("INSERT INTO datasets (dataset_id,time,value,extra) VALUES (?,?,?,?)", (setid, timeval, val, data))
+    db.execute("INSERT INTO dataset_values (dataset_id,time,value) VALUES (?,?,?)", (setid, timeval, val))
+    db.execute("INSERT INTO dataset_extra_data (dataset_id,time,data) VALUES (?,?,?)", (setid, timeval, data))
     count = count + 1
     line = sys.stdin.readline()
 

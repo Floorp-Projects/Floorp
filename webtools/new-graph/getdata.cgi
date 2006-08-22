@@ -41,10 +41,10 @@ DBPATH = "db/data.sqlite"
 #  test name
 #
 # Returns results for that test in .results, in array of [time0, value0, time1, value1, ...]
-# Also reteurns .annotations, in array of [time0, string0, time1, string1, ...]
+# Also returns .annotations for that dataset, in array of [time0, string0, time1, string1, ...]
 #
 # raw=1
-# Same as full results, but includes raw data for test, in form [time0, value0, rawresult0, ...]
+# Same as full results, but includes raw data for test in .rawdata, in form [time0, rawdata0, ...]
 #
 # starttime=tval
 #  Start time to return results from, in seconds since GMT epoch
@@ -76,10 +76,7 @@ def doListTests(fo, tbox):
     cur.close()
     fo.write (json.write( {"resultcode": 0, "results": results} ))
 
-def doSendResults(fo, testid, starttime, endtime, raw):
-    raws = ""
-    if raw is not None:
-        raws = ", extra"
+def doSendResults(fo, setid, starttime, endtime, raw):
     s1 = ""
     s2 = ""
     if starttime is not None:
@@ -90,32 +87,43 @@ def doSendResults(fo, testid, starttime, endtime, raw):
     fo.write ("{ resultcode: 0,")
 
     cur = db.cursor()
-    cur.execute("SELECT time, value" + raws + " FROM datasets WHERE dataset_id = ? " + s1 + s2 + " ORDER BY time", (testid))
+    cur.execute("SELECT time, value FROM dataset_values WHERE dataset_id = ? " + s1 + s2 + " ORDER BY time", (setid,))
     fo.write ("results: [")
     for row in cur:
         if row[1] == 'nan':
             continue
-        if raw:
-            fo.write ("%s,%s,'%s'," % (row[0], row[1], row[2]))
-        else:
-            fo.write ("%s,%s," % (row[0], row[1]))
+        fo.write ("%s,%s," % (row[0], row[1]))
     cur.close()
     fo.write ("],")
 
     cur = db.cursor()
-    cur.execute("SELECT time, value FROM annotations WHERE dataset_id = ? " + s1 + s2 + " ORDER BY time", (testid))
+    cur.execute("SELECT time, value FROM annotations WHERE dataset_id = ? " + s1 + s2 + " ORDER BY time", (setid,))
     fo.write ("annotations: [")
     for row in cur:
         fo.write("%s,'%s'," % (row[0], row[1]))
     cur.close()
     fo.write ("],")
 
+    if raw:
+        cur = db.cursor()
+        cur.execute("SELECT time, data FROM dataset_extra_data WHERE dataset_id = ? " + s1 + s2 + " ORDER BY time", (setid,))
+        fo.write ("rawdata: [")
+        for row in cur:
+            blob = row[1]
+            if "\\" in blob:
+                blob = blob.replace("\\", "\\\\")
+            if "'" in blob:
+                blob = blob.replace("'", "\\'")
+            fo.write("%s,'%s'," % (row[0], blob))
+        cur.close()
+        fo.write ("],")
+
     fo.write ("}")
 
 def main():
     doGzip = 0
     try:
-        if string.find(os.environ["HTTP_ACCEPT_ENCODING"], "gzip") != -1:
+        if "gzip" in os.environ["HTTP_ACCEPT_ENCODING"]:
             doGzip = 1
     except:
         pass
