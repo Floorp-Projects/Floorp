@@ -4084,9 +4084,9 @@ enum BWCOpenDest {
 //
 - (BOOL)loadBookmarkBarIndex:(unsigned short)inIndex openBehavior:(EBookmarkOpenBehavior)inBehavior
 {
-  NSArray* bookmarkBarChildren     = [[[BookmarkManager sharedBookmarkManager] toolbarFolder] childArray];
-  unsigned int loadableItemIndex   = 0; // holds the number of loadable items we've cycled through
-  NSEnumerator* enumerator         = [bookmarkBarChildren objectEnumerator];
+  NSArray* bookmarkBarChildren   = [[[BookmarkManager sharedBookmarkManager] toolbarFolder] childArray];
+  unsigned int loadableItemIndex = 0; // holds the number of loadable items we've cycled through
+  NSEnumerator* enumerator       = [bookmarkBarChildren objectEnumerator];
   id item;
 
   // We cycle through all the toolbar items.  When we've skipped enough loadable items
@@ -4099,7 +4099,7 @@ enum BWCOpenDest {
   }
 
   if (item)
-    [[NSApp delegate] loadBookmark:item withWindowController:self openBehavior:inBehavior];
+    [[NSApp delegate] loadBookmark:item withBWC:self openBehavior:inBehavior reverseBgToggle:NO];
   else // We ran out of toolbar items before finding the nth loadable one
     NSBeep();
 

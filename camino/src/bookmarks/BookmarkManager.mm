@@ -114,6 +114,8 @@ enum {
 
 - (BOOL)readOperaFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
 
+- (NSMenuItem*)shiftAlternateMenuItemWithTitle:(NSString*)title action:(SEL)action andTarget:(id)target;
+
 + (void)addItem:(id)inBookmark toURLMap:(NSMutableDictionary*)urlMap usingURL:(NSString*)inURL;
 + (void)removeItem:(id)inBookmark fromURLMap:(NSMutableDictionary*)urlMap usingURL:(NSString*)inURL;  // url may be nil, in which case exhaustive search is used
 + (NSEnumerator*)enumeratorForBookmarksInMap:(NSMutableDictionary*)urlMap matchingURL:(NSString*)inURL;
@@ -734,15 +736,24 @@ static BookmarkManager* gBookmarkManager = nil;
 
   NSMenuItem *menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarkInNewWindow:) keyEquivalent:@""] autorelease];
   [menuItem setTarget:target];
+  [menuItem setKeyEquivalentModifierMask:0]; //Needed since by default NSMenuItems have NSCommandKeyMask
   [contextMenu addItem:menuItem];
-  
+
+  NSMenuItem *shiftMenuItem = [self shiftAlternateMenuItemWithTitle:menuTitle action:@selector(openBookmarkInNewWindow:) andTarget:target];
+  [contextMenu addItem:shiftMenuItem];
+
   // open in new tabs in new window
   if (multipleItems)
   {
     menuTitle = NSLocalizedString(@"Open in Tabs in New Window", @"");
+
     menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarksInTabsInNewWindow:) keyEquivalent:@""] autorelease];
+    [menuItem setKeyEquivalentModifierMask:0];
     [menuItem setTarget:target];
     [contextMenu addItem:menuItem];
+
+    shiftMenuItem = [self shiftAlternateMenuItemWithTitle:menuTitle action:@selector(openBookmarksInTabsInNewWindow:) andTarget:target];
+    [contextMenu addItem:shiftMenuItem];
   }
 
   // open in new tab in current window
@@ -750,9 +761,14 @@ static BookmarkManager* gBookmarkManager = nil;
     menuTitle = NSLocalizedString(@"Open in New Tabs", @"");
   else
     menuTitle = NSLocalizedString(@"Open in New Tab", @"");
+
   menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarkInNewTab:) keyEquivalent:@""] autorelease];
+  [menuItem setKeyEquivalentModifierMask:0];
   [menuItem setTarget:target];
   [contextMenu addItem:menuItem];
+  
+  shiftMenuItem = [self shiftAlternateMenuItemWithTitle:menuTitle action:@selector(openBookmarkInNewTab:) andTarget:target];
+  [contextMenu addItem:shiftMenuItem];
 
   if (!outlineView || ([items count] == 1)) {
     menuTitle = NSLocalizedString(@"Get Info", @"");
@@ -860,6 +876,15 @@ static BookmarkManager* gBookmarkManager = nil;
   return contextMenu;
 }
 
+- (NSMenuItem*)shiftAlternateMenuItemWithTitle:(NSString*)title action:(SEL)action andTarget:(id)target
+{
+  NSMenuItem* shiftMenuItem = [[[NSMenuItem alloc] initWithTitle:title action:action keyEquivalent:@""] autorelease];
+  [shiftMenuItem setTarget:target];
+  [shiftMenuItem setKeyEquivalentModifierMask:NSShiftKeyMask];
+  [shiftMenuItem setAlternate:YES];
+
+  return shiftMenuItem;
+}
 
 //
 // Copy a set of bookmarks URLs to the specified pasteboard.

@@ -52,8 +52,9 @@
 
 typedef enum EBookmarkOpenBehavior
 {
-  eBookmarkOpenBehavior_Preferred,        // opens the bookmark based on key combo and prefs
-  eBookmarkOpenBehavior_ForceReuse,       // ignore prefs and key combo, reuse the current browser 
+  eBookmarkOpenBehavior_Preferred,     // Reuse current window/tab, unless there isn't one, then open a new one
+  eBookmarkOpenBehavior_NewPreferred,  // Open in new window or tab based on prefs
+  eBookmarkOpenBehavior_ForceReuse,
   eBookmarkOpenBehavior_NewWindow,
   eBookmarkOpenBehavior_NewTab
 };
@@ -187,8 +188,7 @@ typedef enum EBookmarkOpenBehavior
 - (NSView*)getSavePanelView;
 - (NSWindow*)getFrontmostBrowserWindow;
 
-- (void)loadBookmark:(BookmarkItem*)item withWindowController:(BrowserWindowController*)browserWindowController openBehavior:(EBookmarkOpenBehavior)behavior;
-
+- (void)loadBookmark:(BookmarkItem*)item withBWC:(BrowserWindowController*)browserWindowController openBehavior:(EBookmarkOpenBehavior)behavior reverseBgToggle:(BOOL)reverseBackgroundPref;
 - (void)displayPreferencesWindow:(id)sender;
 - (BOOL)isMainWindowABrowserWindow;
 

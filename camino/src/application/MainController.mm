@@ -494,8 +494,11 @@ const int kReuseWindowOnAE = 2;
   [mDockMenu setBookmarkFolder:[[BookmarkManager sharedBookmarkManager] dockMenuFolder]];
 }
 
-// a central place for bookmark opening logic.
-- (void)loadBookmark:(BookmarkItem*)item withWindowController:(BrowserWindowController*)browserWindowController openBehavior:(EBookmarkOpenBehavior)behavior
+// a central place for bookmark opening logic
+- (void)loadBookmark:(BookmarkItem*)item
+             withBWC:(BrowserWindowController*)browserWindowController
+        openBehavior:(EBookmarkOpenBehavior)behavior
+     reverseBgToggle:(BOOL)reverseBackgroundPref
 {
   if (!browserWindowController)
     browserWindowController = [self getMainWindowBrowserController];
@@ -503,30 +506,26 @@ const int kReuseWindowOnAE = 2;
   BOOL openInNewWindow = (browserWindowController == nil);
   BOOL openInNewTab = NO;
   BOOL newTabInBackground = NO;
-  
+
   BOOL loadNewTabsInBackgroundPref = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
-  
-  // if shift is held down, reverse the "open new tab/window with focus"-behavior.
-  if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
+
+  // if the caller requests it, reverse the "open new tab/window in background" behavior.
+  if (reverseBackgroundPref)
     loadNewTabsInBackgroundPref = !loadNewTabsInBackgroundPref;
-  
+
   NSWindow* behindWindow = nil;
 
+  // eBookmarkOpenBehavior_Preferred not specified, since it uses all the default behaviors
   switch (behavior)
   {
-    case eBookmarkOpenBehavior_Preferred:
-      {
-        BOOL cmdKeyDown = (([[NSApp currentEvent] modifierFlags] & NSCommandKeyMask) != 0);
-        if (cmdKeyDown)
-          if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL]) {
-            openInNewTab = YES;
-            newTabInBackground = loadNewTabsInBackgroundPref;
-          }
-          else {
-            openInNewWindow = YES;
-            if (loadNewTabsInBackgroundPref)
-              behindWindow = [browserWindowController window];
-          }
+    case eBookmarkOpenBehavior_NewPreferred:
+      if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL]) {
+        openInNewTab = YES;
+        newTabInBackground = loadNewTabsInBackgroundPref;
+      } else {
+        openInNewWindow = YES;
+        if (loadNewTabsInBackgroundPref)
+          behindWindow = [browserWindowController window];
       }
       break;
 
@@ -535,7 +534,7 @@ const int kReuseWindowOnAE = 2;
       openInNewWindow = NO;
       newTabInBackground = NO;
       break;
-      
+
     case eBookmarkOpenBehavior_NewTab:
       openInNewTab = YES;
       newTabInBackground = browserWindowController && loadNewTabsInBackgroundPref;
@@ -1228,7 +1227,16 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
 -(IBAction) openMenuBookmark:(id)aSender
 {
   BookmarkItem*  item = [aSender representedObject];
-  [self loadBookmark:item withWindowController:[self getMainWindowBrowserController] openBehavior:eBookmarkOpenBehavior_Preferred];
+  EBookmarkOpenBehavior openBehavior = eBookmarkOpenBehavior_Preferred;
+  BOOL reverseBackgroundPref = NO;
+
+  if ([aSender isAlternate]) {
+    reverseBackgroundPref = ([aSender keyEquivalentModifierMask] & NSShiftKeyMask) != 0;
+    if ([aSender keyEquivalentModifierMask] & NSCommandKeyMask)
+      openBehavior = eBookmarkOpenBehavior_NewPreferred;
+  }
+
+  [self loadBookmark:item withBWC:[self getMainWindowBrowserController] openBehavior:openBehavior reverseBgToggle:reverseBackgroundPref];
 }
 
 //

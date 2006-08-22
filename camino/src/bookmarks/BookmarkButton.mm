@@ -165,24 +165,30 @@
 {
   BrowserWindowController* brController = [[self window] windowController];
   BookmarkItem *item = [self bookmarkItem];
+  BOOL reverseBGPref = ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask) != 0;
+  EBookmarkOpenBehavior openBehavior = eBookmarkOpenBehavior_Preferred;
+  if (([[NSApp currentEvent] modifierFlags] & NSCommandKeyMask) != 0)
+    openBehavior = eBookmarkOpenBehavior_NewPreferred;
 
-  [[NSApp delegate] loadBookmark:item withWindowController:brController openBehavior:eBookmarkOpenBehavior_Preferred];
+  [[NSApp delegate] loadBookmark:item withBWC:brController openBehavior:openBehavior reverseBgToggle:reverseBGPref];
 }
 
 -(IBAction)openBookmarkInNewTab:(id)aSender
 {
   BrowserWindowController* brController = [[self window] windowController];
   BookmarkItem *item = [self bookmarkItem];
+  BOOL reverseBGPref = ([aSender keyEquivalentModifierMask] & NSShiftKeyMask) != 0;
 
-  [[NSApp delegate] loadBookmark:item withWindowController:brController openBehavior:eBookmarkOpenBehavior_NewTab];
+  [[NSApp delegate] loadBookmark:item withBWC:brController openBehavior:eBookmarkOpenBehavior_NewTab reverseBgToggle:reverseBGPref];
 }
 
 -(IBAction)openBookmarkInNewWindow:(id)aSender
 {
   BrowserWindowController* brController = [[self window] windowController];
   BookmarkItem *item = [self bookmarkItem];
+  BOOL reverseBGPref = ([aSender keyEquivalentModifierMask] & NSShiftKeyMask) != 0;
 
-  [[NSApp delegate] loadBookmark:item withWindowController:brController openBehavior:eBookmarkOpenBehavior_NewWindow];
+  [[NSApp delegate] loadBookmark:item withBWC:brController openBehavior:eBookmarkOpenBehavior_NewWindow reverseBgToggle:reverseBGPref];
 }
 
 - (IBAction)copyURLs:(id)aSender

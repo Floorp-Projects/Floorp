@@ -503,7 +503,13 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     else
     {
       // otherwise follow the standard bookmark opening behavior
-      [[NSApp delegate] loadBookmark:curItem withWindowController:mBrowserWindowController openBehavior:eBookmarkOpenBehavior_Preferred];
+      BOOL shiftKeyDown = ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask) != 0;
+      EBookmarkOpenBehavior behavior = eBookmarkOpenBehavior_Preferred;
+      // if command is down, open in new tab/window
+      if (([[NSApp currentEvent] modifierFlags] & NSCommandKeyMask) != 0)
+        behavior = eBookmarkOpenBehavior_NewPreferred;
+
+      [[NSApp delegate] loadBookmark:curItem withBWC:mBrowserWindowController openBehavior:behavior reverseBgToggle:shiftKeyDown];
     }
   }
 }
@@ -529,7 +535,11 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     else
     {
       // otherwise follow the standard bookmark opening behavior
-      [[NSApp delegate] loadBookmark:curItem withWindowController:mBrowserWindowController openBehavior:eBookmarkOpenBehavior_NewTab];
+      BOOL reverseBackgroundPref = NO;
+      if ([aSender isAlternate])
+        reverseBackgroundPref = ([aSender keyEquivalentModifierMask] & NSShiftKeyMask) != 0;
+
+      [[NSApp delegate] loadBookmark:curItem withBWC:mBrowserWindowController openBehavior:eBookmarkOpenBehavior_NewTab reverseBgToggle:reverseBackgroundPref];
     }
   }
 }
@@ -595,7 +605,11 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     else
     {
       // otherwise follow the standard bookmark opening behavior
-      [[NSApp delegate] loadBookmark:curItem withWindowController:mBrowserWindowController openBehavior:eBookmarkOpenBehavior_NewWindow];
+      BOOL reverseBackgroundPref = NO;
+      if ([aSender isAlternate])
+        reverseBackgroundPref = ([aSender keyEquivalentModifierMask] & NSShiftKeyMask) != 0;
+
+      [[NSApp delegate] loadBookmark:curItem withBWC:mBrowserWindowController openBehavior:eBookmarkOpenBehavior_NewWindow reverseBgToggle:reverseBackgroundPref];
     }
   }
 }

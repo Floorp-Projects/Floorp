@@ -164,7 +164,7 @@ const long kOpenInTabsTag = 0xBEEF;
     {
       [self appendBookmarkItem:curItem buildingSubmenus:includeSubmenus];
     }
-    
+
     [self addLastItems];
     mDirty = NO;
   }
@@ -192,14 +192,37 @@ const long kOpenInTabsTag = 0xBEEF;
   {
     if (![(Bookmark *)inItem isSeparator])  // normal bookmark
     {
-      menuItem = [[NSMenuItem alloc] initWithTitle:title action: NULL keyEquivalent: @""];
+      menuItem                     = [[NSMenuItem alloc] initWithTitle:title action: NULL keyEquivalent: @""];
+      NSMenuItem *cmdMenuItem      = [[NSMenuItem alloc] initWithTitle:title action:@selector(openMenuBookmark:) keyEquivalent: @""];
+      NSMenuItem *cmdShiftMenuItem = [[NSMenuItem alloc] initWithTitle:title action:@selector(openMenuBookmark:) keyEquivalent: @""];
+
       [menuItem setTarget:[NSApp delegate]];
       [menuItem setAction:@selector(openMenuBookmark:)];
       [menuItem setImage:[inItem icon]];
+      [menuItem setKeyEquivalentModifierMask:0]; //Needed since by default NSMenuItems have NSCommandKeyMask
+
+      [cmdMenuItem setTarget:[NSApp delegate]];
+      [cmdMenuItem setImage:[inItem icon]];
+      [cmdMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask];
+      [cmdMenuItem setRepresentedObject:inItem];
+      [cmdMenuItem setAlternate:YES];
+
+      [cmdShiftMenuItem setTarget:[NSApp delegate]];
+      [cmdShiftMenuItem setImage:[inItem icon]];
+      [cmdShiftMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask | NSShiftKeyMask];
+      [cmdShiftMenuItem setRepresentedObject:inItem];
+      [cmdShiftMenuItem setAlternate:YES];
+
+      [self addItem:menuItem];
+      [self addItem:cmdMenuItem];
+      [cmdMenuItem release];
+      [self addItem:cmdShiftMenuItem];
+      [cmdShiftMenuItem release];
     }
     else    //separator
     {
       menuItem = [[NSMenuItem separatorItem] retain];
+      [self addItem:menuItem];
     }
   }
   else if ([inItem isKindOfClass:[BookmarkFolder class]])
@@ -225,10 +248,11 @@ const long kOpenInTabsTag = 0xBEEF;
       [menuItem setAction:@selector(openMenuBookmark:)];
       [menuItem setImage:[inItem icon]];      
     }
+
+    [self addItem:menuItem];
   }
 
   [menuItem setRepresentedObject:inItem];
-  [self addItem:menuItem];
   [menuItem release];
 }
 
