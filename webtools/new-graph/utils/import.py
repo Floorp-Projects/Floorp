@@ -38,7 +38,7 @@ while setid == -1:
     cur.close()
 
     if len(res) == 0:
-        db.execute("INSERT INTO dataset_info (machine, test, test_type, extra) VALUES (?,?,?)",
+        db.execute("INSERT INTO dataset_info (machine, test, test_type) VALUES (?,?,?)",
                    (tbox, testname, "perf"))
     else:
         setid = res[0][0]
