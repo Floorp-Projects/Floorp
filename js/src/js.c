@@ -927,6 +927,7 @@ SrcNotes(JSContext *cx, JSScript *script)
           case SRC_WHILE:
           case SRC_PCBASE:
           case SRC_PCDELTA:
+          case SRC_DECL:
             fprintf(gOutFile, " offset %u", (uintN) js_GetSrcNoteOffset(sn, 0));
             break;
           case SRC_LABEL:
