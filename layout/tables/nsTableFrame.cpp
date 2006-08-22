@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -3289,10 +3290,13 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
             // frame. This hooks the child into the flow
             nsIFrame*     continuingFrame;
 
-            presContext->PresShell()->FrameConstructor()->
+            rv = presContext->PresShell()->FrameConstructor()->
               CreateContinuingFrame(presContext, kidFrame, this,
                                     &continuingFrame);
-  
+            if (NS_FAILED(rv)) {
+              aStatus = NS_FRAME_COMPLETE;
+              break;
+            }
             // Add the continuing frame to the sibling list
             continuingFrame->SetNextSibling(kidFrame->GetNextSibling());
             kidFrame->SetNextSibling(continuingFrame);
