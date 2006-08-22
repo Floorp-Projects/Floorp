@@ -38,7 +38,7 @@
 #define PKISTORE_H
 
 #ifdef DEBUG
-static const char PKISTORE_CVS_ID[] = "@(#) $RCSfile: pkistore.h,v $ $Revision: 1.9 $ $Date: 2006/04/19 19:04:23 $";
+static const char PKISTORE_CVS_ID[] = "@(#) $RCSfile: pkistore.h,v $ $Revision: 1.10 $ $Date: 2006/08/22 03:30:14 $";
 #endif /* DEBUG */
 
 #ifndef NSSPKIT_H
@@ -81,11 +81,14 @@ nssCertificateStore_Destroy
   nssCertificateStore *store
 );
 
-NSS_EXTERN PRStatus
-nssCertificateStore_Add
+/* Atomic Find cert in store, or add this cert to the store.
+** Ref counts properly maintained.
+*/
+NSS_EXTERN NSSCertificate *
+nssCertificateStore_FindOrAdd 
 (
   nssCertificateStore *store,
-  NSSCertificate *cert
+  NSSCertificate *c
 );
 
 NSS_EXTERN void

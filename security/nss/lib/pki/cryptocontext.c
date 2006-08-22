@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.15 $ $Date: 2006/04/07 05:49:04 $";
+static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.16 $ $Date: 2006/08/22 03:30:14 $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -65,6 +65,7 @@ struct NSSCryptoContextStr
 #endif
 
 extern const NSSError NSS_ERROR_NOT_FOUND;
+extern const NSSError NSS_ERROR_INVALID_ARGUMENT;
 
 NSS_IMPLEMENT NSSCryptoContext *
 nssCryptoContext_Create (
@@ -142,22 +143,33 @@ NSSCryptoContext_GetTrustDomain (
     return NULL;
 }
 
-NSS_IMPLEMENT PRStatus
-NSSCryptoContext_ImportCertificate (
+
+NSS_IMPLEMENT NSSCertificate *
+NSSCryptoContext_FindOrImportCertificate (
   NSSCryptoContext *cc,
   NSSCertificate *c
 )
 {
-    PRStatus nssrv;
+    NSSCertificate *rvCert = NULL;
+
     PORT_Assert(cc->certStore);
     if (!cc->certStore) {
-	return PR_FAILURE;
+	nss_SetError(NSS_ERROR_INVALID_ARGUMENT);
+	return rvCert;
     }
-    nssrv = nssCertificateStore_Add(cc->certStore, c);
-    if (nssrv == PR_SUCCESS) {
+    rvCert = nssCertificateStore_FindOrAdd(cc->certStore, c);
+    if (rvCert == c && c->object.cryptoContext != cc) {
+	PORT_Assert(!c->object.cryptoContext);
 	c->object.cryptoContext = cc;
+    } 
+    if (rvCert) {
+	/* an NSSCertificate cannot be part of two crypto contexts
+	** simultaneously.  If this assertion fails, then there is 
+	** a serious Stan design flaw.
+	*/
+	PORT_Assert(cc == c->object.cryptoContext);
     }
-    return nssrv;
+    return rvCert;
 }
 
 NSS_IMPLEMENT NSSCertificate *

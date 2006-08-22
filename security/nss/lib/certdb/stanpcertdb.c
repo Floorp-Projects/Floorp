@@ -229,7 +229,7 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
     PRStatus nssrv;
     NSSCertificate *c;
     CERTCertificate *cc;
-    NSSCertificate *tempCert;
+    NSSCertificate *tempCert = NULL;
     nssPKIObject *pkio;
     NSSCryptoContext *gCC = STAN_GetDefaultCryptoContext();
     NSSTrustDomain *gTD = STAN_GetDefaultTrustDomain();
@@ -311,33 +311,26 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
 	                          (NSSUTF8 *)cc->emailAddr, 
 	                          PORT_Strlen(cc->emailAddr));
     }
-    /* this function cannot detect if the cert exists as a temp cert now, but
-     * didn't when CERT_NewTemp was first called.
-     */
-    nssrv = NSSCryptoContext_ImportCertificate(gCC, c);
-    if (nssrv != PR_SUCCESS) {
+
+    tempCert = NSSCryptoContext_FindOrImportCertificate(gCC, c);
+    if (!tempCert) {
 	goto loser;
     }
-    /* so find the entry in the temp store */
-    tempCert = NSSCryptoContext_FindCertificateByIssuerAndSerialNumber(gCC,
-                                                                   &c->issuer,
-                                                                   &c->serial);
-    /* destroy the copy */
+    /* destroy our copy */
     NSSCertificate_Destroy(c);
-    if (tempCert) {
-	/* and use the "official" entry */
-	c = tempCert;
-    	cc = STAN_GetCERTCertificateOrRelease(c);
-        if (!cc) {
-            return NULL;
-        }
-    } else {
+    /* and use the stored entry */
+    c = tempCert;
+    cc = STAN_GetCERTCertificateOrRelease(c);
+    if (!cc) {
+	/* STAN_GetCERTCertificateOrRelease destroys c on failure. */
 	return NULL;
     }
+
     cc->istemp = PR_TRUE;
     cc->isperm = PR_FALSE;
     return cc;
 loser:
+    /* Perhaps this should be nssCertificate_Destroy(c) */
     nssPKIObject_Destroy(&c->object);
     return NULL;
 }
