@@ -88,6 +88,7 @@ sub coverage {
   my $locale = shift;
   my $community_only = shift;
   my $user = shift;
+  my $trusted = shift;
 
   my $percent_completed = 0;
 
@@ -100,6 +101,7 @@ sub coverage {
                                                $locale,
                                                $community_only,
                                                $user,
+                                               $trusted,
                                               );
     if ($subgroup_percent eq "N/A") {
       $num_empty_subgroups++;

@@ -61,12 +61,7 @@ Litmus::DB::Testcase->has_a("format" => "Litmus::DB::Format");
 Litmus::DB::Testcase->has_a("author" => "Litmus::DB::User");
 Litmus::DB::Testcase->has_a("product" => "Litmus::DB::Product");
 
-__PACKAGE__->set_sql(EnabledBySubgroup => qq{
-				             SELECT t.* 
-					     FROM testcases t, testcase_subgroups tsg
-					     WHERE tsg.subgroup_id=? AND tsg.testcase_id=t.testcase_id AND t.enabled=1 
-					     ORDER BY tsg.sort_order ASC
-});
+Litmus::DB::Testcase->has_many(test_results => "Litmus::DB::Testresult", {order_by => 'submission_time DESC'});
 
 __PACKAGE__->set_sql(BySubgroup => qq{
 SELECT t.* 
@@ -87,17 +82,26 @@ WHERE
   ORDER BY tsg.sort_order ASC
 });
 
-__PACKAGE__->set_sql(CommunityEnabledBySubgroup => qq{
-                                                      SELECT t.* 
-                                                      FROM testcases t, testcase_subgroups tsg
-						      WHERE tsg.subgroup_id=? AND tsg.testcase_id=t.testcase_id AND t.enabled=1 AND t.community_enabled=1
-						      ORDER BY tsg.sort_order ASC, t.testcase_id ASC
+__PACKAGE__->set_sql(EnabledBySubgroup => qq{
+SELECT t.* 
+FROM testcases t, testcase_subgroups tsg
+WHERE 
+  tsg.subgroup_id=? AND 
+  tsg.testcase_id=t.testcase_id AND 
+  t.enabled=1 
+  ORDER BY tsg.sort_order ASC
 });
 
-Litmus::DB::Testcase->has_many(test_results => "Litmus::DB::Testresult", {order_by => 'submission_time DESC'});
-
-Litmus::DB::Testcase->has_many(subgroups => 
-	["Litmus::DB::TestcaseSubgroup" => 'subgroup']);
+__PACKAGE__->set_sql(CommunityEnabledBySubgroup => qq{
+SELECT t.* 
+FROM testcases t, testcase_subgroups tsg
+WHERE 
+  tsg.subgroup_id=? AND 
+  tsg.testcase_id=t.testcase_id AND 
+  t.enabled=1 AND 
+  t.community_enabled=1
+ORDER BY tsg.sort_order ASC, t.testcase_id ASC
+});
 
 #########################################################################
 # is_completed($$$$$)
@@ -112,9 +116,17 @@ sub is_completed {
   my $build_id = shift;
   my $locale = shift;
   my $user = shift;        # optional
+  my $trusted = shift;        # optional
 
   my @results;
-  if ($user) {
+  if ($trusted) {
+    @results = Litmus::DB::Testresult->search_CompletedByTrusted(
+                                                                 $self->{'testcase_id'},
+                                                                 $build_id,
+                                                                 $locale->{'abbrev'},
+                                                                 $platform->{'platform_id'},
+                                                                );
+  } elsif ($user) {
     @results = Litmus::DB::Testresult->search_CompletedByUser(
                                                               $self->{'testcase_id'},
                                                               $build_id,

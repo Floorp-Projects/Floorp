@@ -1060,6 +1060,9 @@ ol {
 .completegroup {
     background-color: #999999;
 }
+.trustedcompletegroup {
+    background-color: #66CC66;
+}
 .confirmedgroup {
     background-color: #666666;
 }

@@ -48,42 +48,60 @@ Litmus::DB::Subgroup->column_alias("subgroup_id", "subgroupid");
 Litmus::DB::Subgroup->has_a(product => "Litmus::DB::Product");
 
 __PACKAGE__->set_sql(EnabledByTestgroup => qq{
-                                              SELECT sg.* 
-                                              FROM subgroups sg, subgroup_testgroups sgtg 
-                                              WHERE sgtg.testgroup_id=? AND sgtg.subgroup_id=sg.subgroup_id AND sg.enabled=1 
-                                              ORDER BY sgtg.sort_order ASC
+SELECT sg.* 
+FROM subgroups sg, subgroup_testgroups sgtg 
+WHERE 
+  sgtg.testgroup_id=? AND 
+  sgtg.subgroup_id=sg.subgroup_id AND 
+  sg.enabled=1 
+ORDER BY sgtg.sort_order ASC
 });
 
 __PACKAGE__->set_sql(ByTestgroup => qq{
-                                       SELECT sg.* 
-                                       FROM subgroups sg, subgroup_testgroups sgtg 
-                                       WHERE sgtg.testgroup_id=? AND sgtg.subgroup_id=sg.subgroup_id
-                                       ORDER BY sgtg.sort_order ASC
+SELECT sg.* 
+FROM subgroups sg, subgroup_testgroups sgtg 
+WHERE 
+  sgtg.testgroup_id=? AND 
+  sgtg.subgroup_id=sg.subgroup_id
+ORDER BY sgtg.sort_order ASC
 });
 
 __PACKAGE__->set_sql(NumCommunityEnabledTestcases => qq{
-                                               SELECT count(tc.testcase_id) as num_testcases
-                                               FROM testcases tc, testcase_subgroups tcsg
-                                               WHERE tcsg.subgroup_id=? AND tcsg.testcase_id=tc.testcase_id AND tc.enabled=1 AND tc.community_enabled=1 
+SELECT count(tc.testcase_id) AS num_testcases
+FROM testcases tc, testcase_subgroups tcsg
+WHERE 
+  tcsg.subgroup_id=? AND 
+  tcsg.testcase_id=tc.testcase_id AND 
+  tc.enabled=1 AND 
+  tc.community_enabled=1 
 });
+
 __PACKAGE__->set_sql(NumEnabledTestcases => qq{
-                                               SELECT count(tc.testcase_id) as num_testcases
-                                               FROM testcases tc, testcase_subgroups tcsg
-                                               WHERE tcsg.subgroup_id=? AND tcsg.testcase_id=tc.testcase_id AND tc.enabled=1 
+SELECT count(tc.testcase_id) AS num_testcases
+FROM testcases tc, testcase_subgroups tcsg
+WHERE 
+  tcsg.subgroup_id=? AND 
+  tcsg.testcase_id=tc.testcase_id AND 
+  tc.enabled=1 
 });
 
 __PACKAGE__->set_sql(EnabledByTestcase => qq{
-                                             SELECT sg.* 
-                                             FROM subgroups sg, testcase_subgroups tcsg
-                                             WHERE tcsg.testcase_id=? AND tcsg.subgroup_id=sg.subgroup_id AND sg.enabled=1 
-                                             ORDER by sg.name ASC
+SELECT sg.* 
+FROM subgroups sg, testcase_subgroups tcsg
+WHERE 
+  tcsg.testcase_id=? AND 
+  tcsg.subgroup_id=sg.subgroup_id AND 
+  sg.enabled=1 
+ORDER by sg.name ASC
 });
 
 __PACKAGE__->set_sql(ByTestcase => qq{
-                                      SELECT sg.* 
-                                      FROM subgroups sg, testcase_subgroups tcsg
-                                      WHERE tcsg.testcase_id=? AND tcsg.subgroup_id=sg.subgroup_id 
-                                      ORDER by sg.name ASC
+SELECT sg.* 
+FROM subgroups sg, testcase_subgroups tcsg
+WHERE 
+  tcsg.testcase_id=? AND 
+  tcsg.subgroup_id=sg.subgroup_id 
+ORDER by sg.name ASC
 });
 
 #########################################################################
@@ -94,6 +112,7 @@ sub coverage() {
   my $locale = shift;
   my $community_only = shift;
   my $user = shift;
+  my $trusted = shift;
 
   my $sql = "SELECT COUNT(t.testcase_id) FROM testcase_subgroups tsg, testcases t WHERE tsg.subgroup_id=? AND tsg.testcase_id=t.testcase_id AND t.enabled=1";
   if ($community_only) {
@@ -111,15 +130,21 @@ sub coverage() {
   if (!$num_testcases or 
       $num_testcases == 0) { return "N/A" }
 
-
+  
   $sql = "SELECT t.testcase_id, count(tr.testresult_id) AS num_results
-             FROM testcase_subgroups tsg JOIN testcases t ON (tsg.testcase_id=t.testcase_id) LEFT JOIN test_results tr ON (tr.testcase_id=t.testcase_id) JOIN opsyses o ON (tr.opsys_id=o.opsys_id)
-             WHERE tsg.subgroup_id=? AND tr.build_id=? AND tr.locale_abbrev=? AND o.platform_id=?";
+          FROM testcase_subgroups tsg JOIN testcases t ON (tsg.testcase_id=t.testcase_id) LEFT JOIN test_results tr ON (tr.testcase_id=t.testcase_id) JOIN opsyses o ON (tr.opsys_id=o.opsys_id)";
+  if ($trusted) {
+    $sql .= ", users u";
+  } 
+  $sql .= " WHERE tsg.subgroup_id=? AND tr.build_id=? AND tr.locale_abbrev=? AND o.platform_id=?";
   if ($community_only) {
     $sql .= " AND t.community_enabled=1";
   }
   if ($user) {
     $sql .= " AND tr.user_id=" . $user->{'user_id'};
+  }
+  if ($trusted) {
+    $sql .= " AND tr.user_id=u.user_id AND u.is_admin=1";
   }
   
   $sql .= " GROUP BY tr.testcase_id";
@@ -150,6 +175,24 @@ sub coverage() {
   }
 
   return sprintf("%d",$result);  
+}
+
+#########################################################################
+sub getNumEnabledTestcases {
+  my $self = shift;
+  
+  my ($count) = $self->search_NumEnabledTestcases($self->subgroup_id);
+
+  return $count->{'num_testcases'};
+}
+
+#########################################################################
+sub getNumCommunityEnabledTestcases {
+  my $self = shift;
+
+  my ($count) = $self->search_NumCommunityEnabledTestcases($self->subgroup_id);
+
+  return $count->{'num_testcases'};
 }
 
 #########################################################################

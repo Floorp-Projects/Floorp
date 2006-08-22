@@ -48,6 +48,7 @@ Litmus::DB::Testresult->columns(All => qw/testresult_id testcase_id last_updated
 
 Litmus::DB::Testresult->column_alias("testcase_id", "testcase");
 Litmus::DB::Testresult->column_alias("submission_time", "timestamp");
+Litmus::DB::Testresult->column_alias("submission_time", "created");
 Litmus::DB::Testresult->column_alias("user_id", "user");
 Litmus::DB::Testresult->column_alias("opsys_id", "opsys");
 Litmus::DB::Testresult->column_alias("branch_id", "branch");
@@ -116,6 +117,19 @@ Litmus::DB::Testresult->set_sql(CompletedByUser => qq{
         tr.opsys_id=o.opsys_id AND
         o.platform_id=? AND
         tr.user_id=?
+    ORDER BY tr.submission_time DESC
+});
+
+Litmus::DB::Testresult->set_sql(CompletedByTrusted => qq{
+    SELECT tr.*
+    FROM test_results tr, opsyses o, users u
+    WHERE tr.testcase_id=? AND 
+        tr.build_id=? AND 
+        tr.locale_abbrev=? AND
+        tr.opsys_id=o.opsys_id AND
+        o.platform_id=? AND
+        tr.user_id=u.user_id AND
+        u.is_admin=1
     ORDER BY tr.submission_time DESC
 });
 

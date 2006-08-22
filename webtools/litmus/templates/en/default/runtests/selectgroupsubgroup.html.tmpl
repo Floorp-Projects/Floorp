@@ -71,6 +71,9 @@ Select Testing Group
 <th>Name</th>
 <th>Personal Testing Coverage</th>
 <th>Community Testing Coverage</th>
+[% IF show_admin %]
+<th>Trusted Coverage</th>
+[% END %]
 </tr>
 
 [% IF defaultgroup.testgroup_id=="" %]
@@ -82,7 +85,8 @@ Select Testing Group
 
   [% community_completed = curgroup.coverage(sysconfig.platform, sysconfig.build_id, sysconfig.locale, 0) %]
   [% personal_completed = curgroup.coverage(sysconfig.platform, sysconfig.build_id, sysconfig.locale, 0, user) %]
-
+  [% trusted_completed = curgroup.coverage(sysconfig.platform, sysconfig.build_id, sysconfig.locale, 0, 0, 1) %]
+  
   [% IF community_completed == 100 OR completed == 'N/A' %]
     [% groupstyle = 'completegroup' %]
   [% ELSE %]
@@ -90,6 +94,12 @@ Select Testing Group
       [% groupstyle = 'even' %]
     [% ELSE %]
       [% groupstyle = 'odd' %]
+    [% END %]
+  [% END %]
+
+  [% IF show_admin %]
+    [% IF trusted_completed == 100 %]
+      [% groupstyle = 'trustedcompletegroup' %]
     [% END %]
   [% END %]
 
@@ -110,6 +120,9 @@ Select Testing Group
          [% curgroup.name FILTER html %]</td>
     <td align="center">[% personal_completed FILTER html %][% IF personal_completed != 'N/A' %]%[% END %]</td>
     <td align="center">[% community_completed FILTER html %][% IF community_completed != 'N/A' %]%[% END %]</td>
+    [% IF show_admin %]
+    <td align="center">[% trusted_completed FILTER html %][% IF trusted_completed != 'N/A' %]%[% END %]</td>
+    [% END %]
 </tr>
 [% END %]
 
@@ -134,13 +147,19 @@ Select Subgroup
   </div>
   <div class="section-content">
 <p>
-[% headerrow = '<tr><th>Name</th><th>Number of Tests</th><th>Personal Testing Coverage</th><th>Community Testing Coverage</th></tr>' %]
+[% IF show_admin %]
+  [% headerrow = '<tr><th>Name</th><th>Number of Tests</th><th>Personal Testing Coverage</th><th>Community Testing Coverage</th><th>Trusted Coverage</th></tr>' %]
+  [% colspan = 5 %]
+[% ELSE %]
+  [% headerrow = '<tr><th>Name</th><th>Number of Tests</th><th>Personal Testing Coverage</th><th>Community Testing Coverage</th></tr>' %]
+  [% colspan = 4 %]
+[% END %]
     
 <div id="divsubgroup_null" style="visibility: visible;">
 <table class="run-tests">
 [% headerrow | none %]
 <tr>
-<td colspan="4" class="no-results">
+<td colspan="[% colspan %]" class="no-results">
 Please select a testing group with testcases, or that has not yet been tested in its entirety.
 </td>
 </tr>
@@ -160,29 +179,40 @@ Please select a testing group with testcases, or that has not yet been tested in
 
             [% community_completed = cursubgroup.coverage(sysconfig.platform, sysconfig.build_id, sysconfig.locale, 0) %]
             [% personal_completed = cursubgroup.coverage(sysconfig.platform, sysconfig.build_id, sysconfig.locale, 0, user) %]
+            [% trusted_completed = cursubgroup.coverage(sysconfig.platform, sysconfig.build_id, sysconfig.locale, 0, 0, 1) %]
 
             [% IF community_completed == 100 OR completed == 'N/A' %]
-                [% groupstyle = 'completegroup' %]
+              [% groupstyle = 'completegroup' %]
             [% ELSE %]
-        [% IF not (loop.count % 2) %]
-                    [% groupstyle = 'even' %]
-        [% ELSE %]
-                    [% groupstyle = 'odd' %]
-        [% END %]
+              [% IF not (loop.count % 2) %]
+                [% groupstyle = 'even' %]
+              [% ELSE %]
+                [% groupstyle = 'odd' %]
+              [% END %]
+            [% END %]
+
+            [% IF show_admin %]
+              [% IF trusted_completed == 100 %]
+                [% groupstyle = 'trustedcompletegroup' %]
+              [% END %]
             [% END %]
             
             [% IF show_admin %]
-              [% counttests = cursubgroup.search_NumCommunityEnabledTestcases(cursubgroup.subgroup_id) %]
+                [% counttests = cursubgroup.getNumEnabledTestcases() %]
             [% ELSE %]
-              [% counttests = cursubgroup.search_NumCommunityEnabledTestcases(cursubgroup.subgroup_id) %]
+                [% counttests = cursubgroup.getNumCommunityEnabledTestcases() %]
             [% END %] 
+            
             <tr class="[% groupstyle | none %]">
-                <td align="left"><input [% IF ! counttests.num_testcases %]disabled [% ELSIF select_first_avail_subgroup==1 %][% select_first_avail_subgroup=0 %]checked [% END %]type="radio" name="subgroup_[% curgroup FILTER html %]" 
+                <td align="left"><input [% IF ! counttests %]disabled [% ELSIF select_first_avail_subgroup==1 %][% select_first_avail_subgroup=0 %]checked [% END %]type="radio" name="subgroup_[% curgroup FILTER html %]" 
                     value="[% cursubgroup.id FILTER html %]">
                     [% cursubgroup.name FILTER html %]</input></td>
-                <td align="center">[% IF ! counttests.num_testcases %] 0 [% ELSE %] [% counttests.num_testcases %] [% END %]</td>
+                <td align="center">[% IF ! counttests %] 0 [% ELSE %] [% counttests %] [% END %]</td>
                 <td align="center">[% personal_completed FILTER html %][% IF personal_completed != 'N/A' %]%[% END %]</td>
                 <td align="center">[% community_completed FILTER html %][% IF community_completed != 'N/A' %]%[% END %]</td>
+                [% IF show_admin %]
+                <td align="center">[% trusted_completed FILTER html %][% IF trusted_completed != 'N/A' %]%[% END %]</td>
+                [% END %]
             </tr>
             [% END %]
         </table>
