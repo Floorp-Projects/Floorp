@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.27 $ $Date: 2006/04/07 05:49:04 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.28 $ $Date: 2006/08/22 03:30:14 $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -88,6 +88,14 @@ struct certificate_hash_entry_str
     NSSTrust *trust;
     nssSMIMEProfile *profile;
 };
+
+/* forward static declarations */
+static NSSCertificate *
+nssCertStore_FindCertByIssuerAndSerialNumberLocked (
+  nssCertificateStore *store,
+  NSSDER *issuer,
+  NSSDER *serial
+);
 
 NSS_IMPLEMENT nssCertificateStore *
 nssCertificateStore_Create (
@@ -225,27 +233,44 @@ remove_certificate_entry (
   NSSCertificate *cert
 );
 
-NSS_IMPLEMENT PRStatus
-nssCertificateStore_Add (
+/* Caller must hold store->lock */
+static PRStatus
+nssCertificateStore_AddLocked (
   nssCertificateStore *store,
   NSSCertificate *cert
 )
 {
-    PRStatus nssrv;
-    PZ_Lock(store->lock);
-    if (nssHash_Exists(store->issuer_and_serial, cert)) {
-	PZ_Unlock(store->lock);
-	return PR_SUCCESS;
-    }
-    nssrv = add_certificate_entry(store, cert);
+    PRStatus nssrv = add_certificate_entry(store, cert);
     if (nssrv == PR_SUCCESS) {
 	nssrv = add_subject_entry(store, cert);
 	if (nssrv == PR_FAILURE) {
 	    remove_certificate_entry(store, cert);
 	}
     }
-    PZ_Unlock(store->lock);
     return nssrv;
+}
+
+
+NSS_IMPLEMENT NSSCertificate *
+nssCertificateStore_FindOrAdd (
+  nssCertificateStore *store,
+  NSSCertificate *c
+)
+{
+    PRStatus nssrv;
+    NSSCertificate *rvCert = NULL;
+
+    PZ_Lock(store->lock);
+    rvCert = nssCertStore_FindCertByIssuerAndSerialNumberLocked(
+					   store, &c->issuer, &c->serial);
+    if (!rvCert) {
+	nssrv = nssCertificateStore_AddLocked(store, c);
+	if (PR_SUCCESS == nssrv) {
+	    rvCert = nssCertificate_AddRef(c);
+	}
+    }
+    PZ_Unlock(store->lock);
+    return rvCert;
 }
 
 static void
@@ -524,6 +549,28 @@ nssCertificateStore_FindCertificatesByEmail (
     return rvArray;
 }
 
+/* Caller holds store->lock */
+static NSSCertificate *
+nssCertStore_FindCertByIssuerAndSerialNumberLocked (
+  nssCertificateStore *store,
+  NSSDER *issuer,
+  NSSDER *serial
+)
+{
+    certificate_hash_entry *entry;
+    NSSCertificate *rvCert = NULL;
+    NSSCertificate index;
+
+    index.issuer = *issuer;
+    index.serial = *serial;
+    entry = (certificate_hash_entry *)
+                           nssHash_Lookup(store->issuer_and_serial, &index);
+    if (entry) {
+	rvCert = nssCertificate_AddRef(entry->cert);
+    }
+    return rvCert;
+}
+
 NSS_IMPLEMENT NSSCertificate *
 nssCertificateStore_FindCertificateByIssuerAndSerialNumber (
   nssCertificateStore *store,
@@ -531,17 +578,11 @@ nssCertificateStore_FindCertificateByIssuerAndSerialNumber (
   NSSDER *serial
 )
 {
-    certificate_hash_entry *entry;
-    NSSCertificate index;
     NSSCertificate *rvCert = NULL;
-    index.issuer = *issuer;
-    index.serial = *serial;
+
     PZ_Lock(store->lock);
-    entry = (certificate_hash_entry *)
-                           nssHash_Lookup(store->issuer_and_serial, &index);
-    if (entry) {
-	rvCert = nssCertificate_AddRef(entry->cert);
-    }
+    rvCert = nssCertStore_FindCertByIssuerAndSerialNumberLocked (
+                           store, issuer, serial);
     PZ_Unlock(store->lock);
     return rvCert;
 }
