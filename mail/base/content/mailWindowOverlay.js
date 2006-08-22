@@ -777,9 +777,9 @@ function populateHistoryMenu(menuPopup, isBackMenu)
     var msgHdr = messenger.msgHdrFromURI(historyArray[i]);
     if (!IsCurrentLoadedFolder(folder))
       menuText = folder.prettyName + " - ";
-    menuText += msgHdr.subject;
+    menuText += msgHdr.mime2DecodedSubject;
     menuText += ":";
-    menuText += msgHdr.author;
+    menuText += msgHdr.mime2DecodedAuthor;
     newMenuItem = document.createElement('menuitem');
     newMenuItem.setAttribute('label', menuText);
     relPos += isBackMenu ? -1 : 1;
