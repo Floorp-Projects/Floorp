@@ -47,7 +47,7 @@ ac_add_app_options ppc  --target=powerpc-apple-darwin$DARWIN_VERSION
 ac_add_app_options i386 --target=i386-apple-darwin$DARWIN_VERSION
 
 # ppc builds run on older systems.  The minimum SDK for x86 is 10.4u.
-ac_add_app_options ppc  --with-macos-sdk=/Developer/SDKs/MacOSX10.2.8.sdk
+ac_add_app_options ppc  --with-macos-sdk=/Developer/SDKs/MacOSX10.3.9.sdk
 ac_add_app_options i386 --with-macos-sdk=/Developer/SDKs/MacOSX10.4u.sdk
 
 # $MOZ_BUILD_APP is only defined when sourced by configure.  That's not a
