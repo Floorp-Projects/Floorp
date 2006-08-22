@@ -9638,11 +9638,15 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
         if (firstChild &&
             nsLayoutUtils::IsGeneratedContentFor(aContainer, firstChild,
                                                  nsCSSPseudoElements::before)) {
-          // Insert the new frames after the last continuation of the :before pseudo-element
+          // Insert the new frames after the last continuation of the :before
           prevSibling = firstChild->GetLastContinuation();
           nsIFrame* newParent = prevSibling->GetParent();
-          nsHTMLContainerFrame::ReparentFrameViewList(state.mPresContext, newFrame, parentFrame, newParent);
-          parentFrame = newParent;
+          if (newParent != parentFrame) {
+            nsHTMLContainerFrame::ReparentFrameViewList(state.mPresContext,
+                                                        newFrame, parentFrame,
+                                                        newParent);
+            parentFrame = newParent;
+          }
         }
       }
       state.mFrameManager->InsertFrames(parentFrame,
