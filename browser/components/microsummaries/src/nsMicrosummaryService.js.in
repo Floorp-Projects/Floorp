@@ -2186,11 +2186,18 @@ MicrosummaryResource.prototype = {
     this._iframe.setAttribute("collapsed", true);
     this._iframe.setAttribute("type", "content");
   
-    // Insert the iframe into the window, creating the doc shell, then turn off
-    // JavaScript and auth dialogs for security and turn off other things
+    // Insert the iframe into the window, creating the doc shell.
+    rootElement.appendChild(this._iframe);
+
+    // When we insert the iframe into the window, it immediately starts loading
+    // about:blank, which we don't need and could even hurt us (for example
+    // by triggering bugs like bug 344305), so cancel that load.
+    var webNav = this._iframe.docShell.QueryInterface(Ci.nsIWebNavigation);
+    webNav.stop(Ci.nsIWebNavigation.STOP_NETWORK);
+
+    // Turn off JavaScript and auth dialogs for security and other things
     // to reduce network load.
     // XXX We should also turn off CSS.
-    rootElement.appendChild(this._iframe);
     this._iframe.docShell.allowJavascript = false;
     this._iframe.docShell.allowAuth = false;
     this._iframe.docShell.allowPlugins = false;
@@ -2201,12 +2208,6 @@ MicrosummaryResource.prototype = {
     var parseHandler = {
       _self: this,
       handleEvent: function MSR_parseHandler_handleEvent(event) {
-        // Appending a new iframe to a XUL window makes it immediately start
-        // loading "about:blank", and we'll probably get notified about that
-        // first, so make sure we check for that and drop it on the floor.
-        if (event.originalTarget.location == "about:blank")
-          return;
-
         event.target.removeEventListener("DOMContentLoaded", this, false);
         try     { this._self._handleParse(event) }
         finally { this._self = null }
