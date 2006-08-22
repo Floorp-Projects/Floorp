@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.52 $ $Date: 2006/06/13 21:36:29 $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.53 $ $Date: 2006/08/22 22:54:11 $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -1222,7 +1222,7 @@ nssTrustDomain_FindTrustForCertificate (
 	                                      nssTokenSearchType_TokenOnly);
 	    if (to) {
 		if (!pkio) {
-		    pkio = nssPKIObject_Create(NULL, to, td, NULL);
+		    pkio = nssPKIObject_Create(NULL, to, td, NULL, nssPKILock);
 		    if (!pkio) {
 			nssToken_Destroy(token);
 			nssCryptokiObject_Destroy(to);

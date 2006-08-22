@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.88 $ $Date: 2006/06/13 21:36:29 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.89 $ $Date: 2006/08/22 22:54:11 $";
 #endif /* DEBUG */
 
 /*
@@ -713,10 +713,18 @@ STAN_GetCERTCertificateName(PLArenaPool *arenaOpt, NSSCertificate *c)
 static void
 fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc, PRBool forced)
 {
+    CERTCertTrust* trust = NULL;
     NSSTrust *nssTrust;
     NSSCryptoContext *context = c->object.cryptoContext;
-    nssCryptokiInstance *instance = get_cert_instance(c);
+    nssCryptokiInstance *instance;
     NSSUTF8 *stanNick = NULL;
+
+    /* We are holding the base class object's lock on entry of this function
+     * This lock protects writes to fields of the CERTCertificate .
+     * It is also needed by some functions to compute values such as trust.
+     */
+    instance = get_cert_instance(c);
+
     if (instance) {
 	stanNick = instance->label;
     } else if (context) {
@@ -738,15 +746,16 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc, PRBool forced
 	if (stanNick) {
 	    nicklen = nssUTF8_Size(stanNick, &nssrv);
 	    len = tokenlen + nicklen;
-	    cc->nickname = PORT_ArenaAlloc(cc->arena, len);
-	    nick = cc->nickname;
+	    nick = PORT_ArenaAlloc(cc->arena, len);
 	    if (tokenName) {
 		memcpy(nick, tokenName, tokenlen-1);
-		nick += tokenlen-1;
-		*nick++ = ':';
+		nick[tokenlen-1] = ':';
+		memcpy(nick+tokenlen, stanNick, nicklen-1);
+	    } else {
+		memcpy(nick, stanNick, nicklen-1);
 	    }
-	    memcpy(nick, stanNick, nicklen-1);
-	    cc->nickname[len-1] = '\0';
+	    nick[len-1] = '\0';
+            cc->nickname = nick;
 	} else {
 	    cc->nickname = NULL;
 	}
@@ -755,7 +764,13 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc, PRBool forced
 	/* trust */
 	nssTrust = nssCryptoContext_FindTrustForCertificate(context, c);
 	if (nssTrust) {
-	    cc->trust = cert_trust_from_stan_trust(nssTrust, cc->arena);
+            trust = cert_trust_from_stan_trust(nssTrust, cc->arena);
+            if (trust) {
+                /* we should destroy cc->trust before replacing it, but it's
+                   allocated in cc->arena, so memory growth will occur on each
+                   refresh */
+                cc->trust = trust;
+            }
 	    nssTrust_Destroy(nssTrust);
 	}
     } else if (instance) {
@@ -770,7 +785,13 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc, PRBool forced
 	/* pkcs11ID */
 	cc->pkcs11ID = instance->handle;
 	/* trust */
-	cc->trust = nssTrust_GetCERTCertTrustForCert(c, cc);
+	trust = nssTrust_GetCERTCertTrustForCert(c, cc);
+        if (trust) {
+            /* we should destroy cc->trust before replacing it, but it's
+               allocated in cc->arena, so memory growth will occur on each
+               refresh */
+            cc->trust = trust;
+        }
 	nssCryptokiObject_Destroy(instance);
     } 
     /* database handle is now the trust domain */
@@ -786,52 +807,54 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc, PRBool forced
 static CERTCertificate *
 stan_GetCERTCertificate(NSSCertificate *c, PRBool forceUpdate)
 {
-    nssDecodedCert *dc = c->decoding;
-    CERTCertificate *cc;
+    nssDecodedCert *dc = NULL;
+    CERTCertificate *cc = NULL;
 
-    /* There is a race in assigning c->decoding.  
-    ** This is a workaround.  Bugzilla bug 225525.
-    */
+    nssPKIObject_Lock(&c->object);
+
+    dc = c->decoding;
     if (!dc) {
 	dc = nssDecodedPKIXCertificate_Create(NULL, &c->encoding);
-	if (!dc) 
-	    return NULL;
+	if (!dc) {
+            goto loser;
+        }
 	cc = (CERTCertificate *)dc->data;
 	PORT_Assert(cc); /* software error */
 	if (!cc) {
 	    nssDecodedPKIXCertificate_Destroy(dc);
 	    nss_SetError(NSS_ERROR_INTERNAL_ERROR);
-	    return NULL;
+	    goto loser;
 	}
-	/* Once this race is fixed, an assertion should be put 
-	** here to detect any regressions. 
     	PORT_Assert(!c->decoding); 
-	*/
 	if (!c->decoding) {
 	    c->decoding = dc;
 	} else { 
-	    /* Reduce the leaks here, until the race is fixed.  */
+            /* this should never happen. Fail. */
 	    nssDecodedPKIXCertificate_Destroy(dc);
-	    dc = c->decoding;
+	    nss_SetError(NSS_ERROR_INTERNAL_ERROR);
+            goto loser;
 	}
     }
     cc = (CERTCertificate *)dc->data;
     PORT_Assert(cc);
-    /* When c->decoding is non-NULL on input, but dc->data is
-     * NULL, we don't destroy dc because some other errant 
-     * code allocated it .
-     */
-    if (cc) {
-	if (!cc->nssCertificate || forceUpdate) {
-	    fill_CERTCertificateFields(c, cc, forceUpdate);
-	} else if (!cc->trust && !c->object.cryptoContext) {
-	    /* if it's a perm cert, it might have been stored before the
-	     * trust, so look for the trust again.  But a temp cert can be
-	     * ignored.
-	     */
-	    cc->trust = nssTrust_GetCERTCertTrustForCert(c, cc);
-	}
+    if (!cc) {
+        nss_SetError(NSS_ERROR_INTERNAL_ERROR);
+        goto loser;
     }
+    if (!cc->nssCertificate || forceUpdate) {
+        fill_CERTCertificateFields(c, cc, forceUpdate);
+    } else if (!cc->trust && !c->object.cryptoContext) {
+        /* if it's a perm cert, it might have been stored before the
+         * trust, so look for the trust again.  But a temp cert can be
+         * ignored.
+         */
+        CERTCertTrust* trust = NULL;
+        trust = nssTrust_GetCERTCertTrustForCert(c, cc);
+        cc->trust = trust;
+    }
+
+  loser:
+    nssPKIObject_Unlock(&c->object);
     return cc;
 }
 
@@ -916,7 +939,7 @@ STAN_GetNSSCertificate(CERTCertificate *cc)
     }
     NSSITEM_FROM_SECITEM(&c->encoding, &cc->derCert);
     c->type = NSSCertificateType_PKIX;
-    pkiob = nssPKIObject_Create(arena, NULL, cc->dbhandle, NULL);
+    pkiob = nssPKIObject_Create(arena, NULL, cc->dbhandle, NULL, nssPKIMonitor);
     if (!pkiob) {
 	nssArena_Destroy(arena);
 	return NULL;
@@ -1036,7 +1059,7 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
     arena = nssArena_Create();
     if (!arena) return PR_FAILURE;
     nssTrust = nss_ZNEW(arena, NSSTrust);
-    pkiob = nssPKIObject_Create(arena, NULL, cc->dbhandle, NULL);
+    pkiob = nssPKIObject_Create(arena, NULL, cc->dbhandle, NULL, nssPKILock);
     if (!pkiob) {
 	nssArena_Destroy(arena);
 	return PR_FAILURE;

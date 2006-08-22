@@ -260,7 +260,7 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
 	    return cc;
 	}
     }
-    pkio = nssPKIObject_Create(NULL, NULL, gTD, gCC);
+    pkio = nssPKIObject_Create(NULL, NULL, gTD, gCC, nssPKIMonitor);
     if (!pkio) {
 	return NULL;
     }

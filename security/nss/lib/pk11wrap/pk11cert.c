@@ -273,7 +273,7 @@ static CERTCertificate
     }
 
     /* Create a PKI object from the cryptoki instance */
-    pkio = nssPKIObject_Create(NULL, co, td, NULL);
+    pkio = nssPKIObject_Create(NULL, co, td, NULL, nssPKIMonitor);
     if (!pkio) {
 	nssCryptokiObject_Destroy(co);
 	return NULL;
@@ -1203,7 +1203,7 @@ PK11_FindCertByIssuerAndSNOnToken(PK11SlotInfo *slot,
     if (!instance) {
 	goto loser;
     }
-    object = nssPKIObject_Create(NULL, instance, td, NULL);
+    object = nssPKIObject_Create(NULL, instance, td, NULL, nssPKIMonitor);
     if (!object) {
 	goto loser;
     }

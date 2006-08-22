@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.58 $ $Date: 2006/05/18 23:29:19 $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.59 $ $Date: 2006/08/22 22:54:11 $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -79,6 +79,7 @@ nssCertificate_Create (
     /* mark? */
     NSSArena *arena = object->arena;
     PR_ASSERT(object->instances != NULL && object->numInstances > 0);
+    PR_ASSERT(object->lockType == nssPKIMonitor);
     rvCert = nss_ZNEW(arena, NSSCertificate);
     if (!rvCert) {
 	return (NSSCertificate *)NULL;
@@ -155,7 +156,7 @@ nssCertificate_Destroy (
 	    for (i=0; i<c->object.numInstances; i++) {
 		nssCryptokiObject_Destroy(c->object.instances[i]);
 	    }
-	    PZ_DestroyLock(c->object.lock);
+	    nssPKIObject_DestroyLock(&c->object);
 	    nssArena_Destroy(c->object.arena);
 	    nssDecodedCert_Destroy(dc);
 	} else {
@@ -318,25 +319,17 @@ nssCertificate_GetDecoding (
   NSSCertificate *c
 )
 {
-    /* There is a race in assigning c->decoding.  
-    ** This is a workaround.  Bugzilla bug 225525.
-    */
+    nssDecodedCert* deco = NULL;
+    nssPKIObject_Lock(&c->object);
     if (!c->decoding) {
-	nssDecodedCert * deco =
-	    nssDecodedCert_Create(NULL, &c->encoding, c->type);
-	/* Once this race is fixed, an assertion should be put 
-	** here to detect any regressions. 
+	deco = nssDecodedCert_Create(NULL, &c->encoding, c->type);
     	PORT_Assert(!c->decoding); 
-	*/
-	if (!c->decoding) {
-	    /* we won the race. Use our copy. */
-	    c->decoding = deco;
-        } else {
-	    /* we lost the race.  discard deco. */
-	    nssDecodedCert_Destroy(deco);
-	}
+        c->decoding = deco;
+    } else {
+        deco = c->decoding;
     }
-    return c->decoding;
+    nssPKIObject_Unlock(&c->object);
+    return deco;
 }
 
 static NSSCertificate **
@@ -910,7 +903,7 @@ nssSMIMEProfile_Create (
     if (!arena) {
 	return NULL;
     }
-    object = nssPKIObject_Create(arena, NULL, td, cc);
+    object = nssPKIObject_Create(arena, NULL, td, cc, nssPKILock);
     if (!object) {
 	goto loser;
     }
@@ -1006,7 +999,7 @@ nssTrust_Create (
     sha1_hash.data = sha1_hashin;
     sha1_hash.size = sizeof (sha1_hashin);
     /* trust has to peek into the base object members */
-    PZ_Lock(object->lock);
+    nssPKIObject_Lock(object);
     for (i=0; i<object->numInstances; i++) {
 	instance = object->instances[i];
 	myTrustOrder = nssToken_GetTrustOrder(instance->token);
@@ -1018,11 +1011,11 @@ nssTrust_Create (
 	                                        &emailProtection,
 	                                        &stepUp);
 	if (status != PR_SUCCESS) {
-	    PZ_Unlock(object->lock);
+	    nssPKIObject_Unlock(object);
 	    return (NSSTrust *)NULL;
 	}
 	if (PORT_Memcmp(sha1_hashin,sha1_hashcmp,SHA1_LENGTH) != 0) {
-	    PZ_Unlock(object->lock);
+	    nssPKIObject_Unlock(object);
 	    return (NSSTrust *)NULL;
 	}
 	if (rvt->serverAuth == nssTrustLevel_Unknown ||
@@ -1048,7 +1041,7 @@ nssTrust_Create (
 	rvt->stepUpApproved = stepUp;
 	lastTrustOrder = myTrustOrder;
     }
-    PZ_Unlock(object->lock);
+    nssPKIObject_Unlock(object);
     return rvt;
 }
 
