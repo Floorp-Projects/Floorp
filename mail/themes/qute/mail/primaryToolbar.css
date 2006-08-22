@@ -468,6 +468,30 @@ toolbar[iconsize="small"] #button-tag[disabled] {
   -moz-image-region: rect(32px 240px 48px 224px) !important;
 }
 
+toolbar[iconsize="small"] #button-goback {
+  -moz-image-region: rect(0px 256px 16px 240px);
+}
+
+toolbar[iconsize="small"] #button-goback:hover {
+  -moz-image-region: rect(16px 256px 32px 240px);
+} 
+
+toolbar[iconsize="small"] #button-goback[disabled] {
+  -moz-image-region: rect(32px 256px 48px 240px) !important;
+}
+
+toolbar[iconsize="small"] #button-goforward {
+  -moz-image-region: rect(0px 272px 16px 256px);
+}
+
+toolbar[iconsize="small"] #button-goforward:hover {
+  -moz-image-region: rect(16px 272px 32px 256px);
+} 
+
+toolbar[iconsize="small"] #button-goforward[disabled] {
+  -moz-image-region: rect(32px 272px 48px 256px) !important;
+}
+
 /* ::::: end small primary toolbar buttons ::::: */
 
 /* ::::: message notification bar style rules ::::: */
