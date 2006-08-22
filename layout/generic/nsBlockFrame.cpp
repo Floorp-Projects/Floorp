@@ -7135,13 +7135,13 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
 
 // This is used to scan frames for any float placeholders, add their
 // floats to the list represented by aHead and aTail, and remove the
-// floats from whatever list they might be in. We only search the
-// inline descendants. The floats must be children of 'this'.
+// floats from whatever list they might be in. We don't search descendants
+// that are float containing blocks. The floats must be children of 'this'.
 void nsBlockFrame::CollectFloats(nsIFrame* aFrame, nsFrameList& aList, nsIFrame** aTail,
                                  PRBool aFromOverflow) {
   while (aFrame) {
-    // Don't descend into block children
-    if (!aFrame->GetStyleDisplay()->IsBlockLevel()) {
+    // Don't descend into float containing blocks.
+    if (!aFrame->IsFloatContainingBlock()) {
       nsIFrame *outOfFlowFrame = nsLayoutUtils::GetFloatFromPlaceholder(aFrame);
       if (outOfFlowFrame) {
         // Make sure that its parent is us. Otherwise we don't want
