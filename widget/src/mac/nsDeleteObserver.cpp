@@ -34,13 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "nsDeleteObserver.h"
 #include "nsVoidArray.h"
 
-
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
 
 nsDeleteObserved::nsDeleteObserved(void* aObject)
 {
@@ -48,48 +45,38 @@ nsDeleteObserved::nsDeleteObserved(void* aObject)
 	mObject = (aObject ? aObject : this);
 }
 
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
 
 nsDeleteObserved::~nsDeleteObserved()
 {
-	if (mDeleteObserverArray)
-	{
+	if (mDeleteObserverArray) {
 		// notify observers of the delete
-		for (PRInt32 i = mDeleteObserverArray->Count() - 1; i >= 0; --i)
-		{
+		for (PRInt32 i = mDeleteObserverArray->Count() - 1; i >= 0; --i) {
 			nsDeleteObserver* deleteObserver = static_cast<nsDeleteObserver*>(mDeleteObserverArray->ElementAt(i));
 			if (deleteObserver)
 				deleteObserver->NotifyDelete(mObject);
 		}
-
 		delete mDeleteObserverArray;
 		mDeleteObserverArray = nsnull;
 	}
 }
 
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
 
 PRBool nsDeleteObserved::AddDeleteObserver(nsDeleteObserver* aDeleteObserver)
 {
-	if (! mDeleteObserverArray)
+	if (!mDeleteObserverArray)
 		mDeleteObserverArray = new nsVoidArray();
 
 	if (mDeleteObserverArray)
 		return mDeleteObserverArray->AppendElement(aDeleteObserver);
+
 	return PR_FALSE;
 }
 
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
 
 PRBool nsDeleteObserved::RemoveDeleteObserver(nsDeleteObserver* aDeleteObserver)
 {
 	if (mDeleteObserverArray)
 		return mDeleteObserverArray->RemoveElement(aDeleteObserver);
+
 	return PR_FALSE;
 }
