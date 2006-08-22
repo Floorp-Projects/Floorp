@@ -386,7 +386,7 @@ elsif( $show_xml ) {
         print " <log>$ci_log</log>\n";
         if (!$xml_nofiles) {
             print " <files>\n";
-            for (my $f = 0; $f != $#ci_files; $f++) {
+            for (my $f = 0; $f <= $#ci_files; $f++) {
                 print "  <f rev=\"" . $ci_revs[$f] . "\">" . &html_log($ci_files[$f]) . "</f>\n";
             }
             print " </files>\n";
