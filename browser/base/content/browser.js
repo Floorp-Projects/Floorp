@@ -4810,12 +4810,14 @@ nsContextMenu.prototype = {
     },
     // Open clicked-in frame in the same window.
     showOnlyThisFrame : function () {
-        try {
-          var frameURL = this.target.ownerDocument.location.href;
-          urlSecurityCheck(frameURL, gBrowser.currentURI.spec,
-                           nsIScriptSecMan.DISALLOW_SCRIPT);
-          window.loadURI(frameURL, null, null, false);
-        } catch(e) {}
+      const nsIScriptSecMan = Components.interfaces.nsIScriptSecurityManager;
+      var frameURL = this.target.ownerDocument.location.href;
+
+      try {
+        urlSecurityCheck(frameURL, gBrowser.currentURI.spec,
+                         nsIScriptSecMan.DISALLOW_SCRIPT);
+        window.loadURI(frameURL, null, null, false);
+      } catch(e) {}
     },
     // View Partial Source
     viewPartialSource : function ( context ) {
