@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.43 $ $Date: 2006/05/17 20:38:59 $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.44 $ $Date: 2006/08/22 22:54:11 $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -429,7 +429,7 @@ remove_token_certs(const void *k, void *v, void *a)
     nssPKIObject *object = &c->object;
     struct token_cert_dtor *dtor = a;
     PRUint32 i;
-    PZ_Lock(object->lock);
+    nssPKIObject_Lock(object);
     for (i=0; i<object->numInstances; i++) {
 	if (object->instances[i]->token == dtor->token) {
 	    nssCryptokiObject_Destroy(object->instances[i]);
@@ -446,7 +446,7 @@ remove_token_certs(const void *k, void *v, void *a)
 	    break;
 	}
     }
-    PZ_Unlock(object->lock);
+    nssPKIObject_Unlock(object);
     return;
 }
 
