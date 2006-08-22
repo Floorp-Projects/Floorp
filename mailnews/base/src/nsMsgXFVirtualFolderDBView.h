@@ -73,7 +73,6 @@ public:
 
 protected:
 
-  nsCOMPtr <nsIMsgFolder> m_viewFolder;
   PRUint32 m_cachedFolderArrayIndex; // array index of next folder with cached hits to deal with.
   nsCOMArray<nsIMsgFolder> m_foldersWithNonVerifiedCachedHits;
   nsCOMArray<nsIMsgDBHdr> m_hdrHits;

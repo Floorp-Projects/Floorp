@@ -5069,9 +5069,12 @@ NS_IMETHODIMP nsMsgDBView::NavigateStatus(nsMsgNavigationTypeValue motion, PRBoo
     PRBool enable = PR_FALSE;
     nsresult rv = NS_ERROR_FAILURE;
     nsMsgKey resultKey = nsMsgKey_None;
-    PRInt32 index;
+    PRInt32 index = nsMsgKey_None;
     nsMsgViewIndex resultIndex = nsMsgViewIndex_None;
-    rv = mTreeSelection->GetCurrentIndex(&index);
+    if (mTreeSelection)
+      (void) mTreeSelection->GetCurrentIndex(&index);
+    else
+      index = FindViewIndex(m_currentlyDisplayedMsgKey);
 
     // warning - we no longer validate index up front because fe passes in -1 for no
     // selection, so if you use index, be sure to validate it before using it
@@ -5794,6 +5797,8 @@ nsresult nsMsgDBView::CopyDBView(nsMsgDBView *aNewMsgDBView, nsIMessenger *aMess
   NS_ENSURE_ARG_POINTER(aNewMsgDBView);
 
   aNewMsgDBView->mMsgWindow = aMsgWindow;
+  if (aMsgWindow)
+    aMsgWindow->SetOpenFolder(m_viewFolder? m_viewFolder : m_folder);
   aNewMsgDBView->mMessengerInstance = aMessengerInstance;
   aNewMsgDBView->mCommandUpdater = aCmdUpdater;
   aNewMsgDBView->m_folder = m_folder;

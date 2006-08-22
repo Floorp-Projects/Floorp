@@ -118,7 +118,7 @@ nsMsgXFVirtualFolderDBView::CopyDBView(nsMsgDBView *aNewMsgDBView, nsIMessenger 
   newMsgDBView->m_viewFolder = m_viewFolder;
   newMsgDBView->m_numUnread = m_numUnread;
   newMsgDBView->m_numTotal = m_numTotal;
-
+  newMsgDBView->m_searchSession = m_searchSession;
   return NS_OK;
 }
 
