@@ -2659,7 +2659,10 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
           cellMap->AddColsAtEnd(numColsNotRemoved);
         }
       }
-      else NS_ASSERTION(numColsInCache == numColsInMap, "cell map has too many cols");
+      else if (numColsInCache < numColsInMap) {
+        CreateAnonymousColFrames(numColsInMap - numColsInCache,
+                                 eColAnonymousCell, PR_TRUE);
+      }
       // XXX This could probably be optimized with much effort
       SetNeedStrategyInit(PR_TRUE);
       AppendDirtyReflowCommand(this);
