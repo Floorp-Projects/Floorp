@@ -176,6 +176,8 @@ nsMsgDBViewCommandUpdater.prototype =
     gCurrentMessageUri = gDBView.URIForFirstSelectedMessage;
     UpdateStandAloneMessageCounts();
     goUpdateCommand("button_junk");
+    goUpdateCommand("button_goBack");
+    goUpdateCommand("button_goForward");
   },
 
   updateNextMessageAfterDelete : function()
@@ -782,6 +784,8 @@ var MessageWindowController =
       case "cmd_previousFlaggedMsg":
       case "cmd_goForward":
       case "cmd_goBack":
+      case "button_goForward":
+      case "button_goBack":
         return !(gDBView.keyForFirstSelectedMessage == nsMsgKey_None);
 
       case "cmd_reply":
@@ -903,6 +907,14 @@ var MessageWindowController =
                         case "cmd_goForward":
                         case "cmd_goBack":
 				return true;
+      case "button_goForward":
+      case "button_goBack":
+      case "cmd_goForward":
+      case "cmd_goBack":
+        return gDBView && 
+            gDBView.navigateStatus((command == "cmd_goBack" || 
+                                    command == "button_goBack") 
+                                    ? nsMsgNavigationType.back : nsMsgNavigationType.forward);
       case "cmd_search":
         var loadedFolder = GetLoadedMsgFolder();
         if (!loadedFolder)
@@ -928,24 +940,24 @@ var MessageWindowController =
 
     var navigationType = nsMsgNavigationType.nextUnreadMessage;
 
-		switch ( command )
-		{
-			case "cmd_close":
-				CloseMailWindow();
-				break;
-			case "cmd_getNewMessages":
-				MsgGetMessage();
-				break;
-            case "cmd_undo":
-                messenger.Undo(msgWindow);
-                break;
-            case "cmd_redo":
-                messenger.Redo(msgWindow);
-                break;
-      case "cmd_getMsgsForAuthAccounts":
-        MsgGetMessagesForAllAuthenticatedAccounts();
-        break;
-			case "cmd_getNextNMessages":
+	switch ( command )
+	{
+		case "cmd_close":
+			CloseMailWindow();
+			break;
+		case "cmd_getNewMessages":
+			MsgGetMessage();
+			break;
+        case "cmd_undo":
+            messenger.Undo(msgWindow);
+            break;
+        case "cmd_redo":
+            messenger.Redo(msgWindow);
+            break;
+        case "cmd_getMsgsForAuthAccounts":
+          MsgGetMessagesForAllAuthenticatedAccounts();
+          break;
+        case "cmd_getNextNMessages":
 				MsgGetNextNMessages();
 				break;
 			case "cmd_reply":
@@ -1063,7 +1075,7 @@ var MessageWindowController =
       case "button_next":
         performNavigation(nsMsgNavigationType.nextUnreadMessage);
         break;
-			case "cmd_nextUnreadThread":      
+      case "cmd_nextUnreadThread":      
         performNavigation(nsMsgNavigationType.nextUnreadThread);
 				break;
 			case "cmd_nextMsg":
@@ -1076,19 +1088,19 @@ var MessageWindowController =
         performNavigation(nsMsgNavigationType.previousMessage);
 				break;
       case "button_previous":
-			case "cmd_previousUnreadMsg":
+      case "cmd_previousUnreadMsg":
         performNavigation(nsMsgNavigationType.previousUnreadMessage);
-				break;
-			case "cmd_previousFlaggedMsg":
+		break;
+      case "cmd_previousFlaggedMsg":
         performNavigation(nsMsgNavigationType.previousFlagged);
-				break;
-                        case "cmd_goForward":
-                          performNavigation(nsMsgNavigationType.forward);
-                          break;
-                        case "cmd_goBack":
-                          performNavigation(nsMsgNavigationType.back);
-                          break;
-		}
+        break;
+      case "cmd_goForward":
+        performNavigation(nsMsgNavigationType.forward);
+        break;
+      case "cmd_goBack":
+        performNavigation(nsMsgNavigationType.back);
+        break;
+      }
 	},
 	
 	onEvent: function(event)
