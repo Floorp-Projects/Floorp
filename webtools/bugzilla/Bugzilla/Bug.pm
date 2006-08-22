@@ -341,6 +341,35 @@ sub _check_component {
     return $obj;
 }
 
+# Takes two comma/space-separated strings and returns arrayrefs
+# of valid bug IDs.
+sub _check_dependencies {
+    my ($depends_on, $blocks) = @_;
+
+    # Only editbugs users can set dependencies on bug entry.
+    return ([], []) unless Bugzilla->user->in_group('editbugs');
+
+    $depends_on ||= '';
+    $blocks     ||= '';
+
+    # Make sure all the bug_ids are valid.
+    my @results;
+    foreach my $string ($depends_on, $blocks) {
+        my @array = split(/[\s,]+/, $string);
+        # Eliminate nulls
+        @array = grep($_, @array);
+        # $field is not passed to ValidateBugID to prevent adding new
+        # dependencies on inaccessible bugs.
+        ValidateBugID($_) foreach (@array);
+        push(@results, \@array);
+    }
+
+    #                               dependson    blocks
+    my %deps = ValidateDependencies($results[0], $results[1]);
+
+    return ($deps{'dependson'}, $deps{'blocked'});
+}
+
 sub _check_keywords {
     my ($keyword_string) = @_;
     $keyword_string = trim($keyword_string);
@@ -1633,6 +1662,7 @@ sub ValidateBugAlias {
 # Validate and return a hash of dependencies
 sub ValidateDependencies {
     my $fields = {};
+    # These can be arrayrefs or they can be strings.
     $fields->{'dependson'} = shift;
     $fields->{'blocked'} = shift;
     my $id = shift || 0;
@@ -1653,7 +1683,9 @@ sub ValidateDependencies {
         next unless $fields->{$target};
 
         my %seen;
-        foreach my $i (split('[\s,]+', $fields->{$target})) {
+        my $target_array = ref($fields->{$target}) ? $fields->{$target}
+                           : [split(/[\s,]+/, $fields->{$target})];
+        foreach my $i (@$target_array) {
             if ($id == $i) {
                 ThrowUserError("dependency_loop_single");
             }

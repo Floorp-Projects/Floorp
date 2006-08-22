@@ -227,26 +227,8 @@ my @keyword_ids = @{Bugzilla::Bug::_check_keywords($cgi->param('keywords'))};
 Bugzilla::Bug::_check_strict_isolation($product, $cc_ids, 
     $cgi->param('assigned_to'), $cgi->param('qa_contact'));
 
-# Check for valid dependency info. 
-foreach my $field ("dependson", "blocked") {
-    if (UserInGroup("editbugs") && $cgi->param($field)) {
-        my @validvalues;
-        foreach my $id (split(/[\s,]+/, $cgi->param($field))) {
-            next unless $id;
-            # $field is not passed to ValidateBugID to prevent adding new 
-            # dependencies on inaccessible bugs.
-            ValidateBugID($id);
-            push(@validvalues, $id);
-        }
-        $cgi->param(-name => $field, -value => join(",", @validvalues));
-    }
-}
-# Gather the dependency list, and make sure there are no circular refs
-my %deps;
-if (UserInGroup("editbugs")) {
-    %deps = Bugzilla::Bug::ValidateDependencies(scalar($cgi->param('dependson')),
-                                                scalar($cgi->param('blocked')));
-}
+my ($depends_on_ids, $blocks_ids) = Bugzilla::Bug::_check_dependencies(
+    scalar $cgi->param('dependson'), scalar $cgi->param('blocked'));
 
 # get current time
 my $timestamp = $dbh->selectrow_array(q{SELECT NOW()});
@@ -415,6 +397,7 @@ if (UserInGroup("editbugs")) {
                     WHERE bug_id = ?}, undef, ($timestamp, $kw_list, $id));
     }
     if ($cgi->param('dependson') || $cgi->param('blocked')) {
+        my %deps = (dependson => $depends_on_ids, blocked => $blocks_ids);
         foreach my $pair (["blocked", "dependson"], ["dependson", "blocked"]) {
             my ($me, $target) = @{$pair};
             my $sth_dep = $dbh->prepare(qq{
