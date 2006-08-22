@@ -124,9 +124,8 @@
               [% bug.id FILTER bug_link(bug.id) FILTER none %]
             </td>
             <td>
-              <a href="votes.cgi?action=show_bug&amp;bug_id=[% bug.id %]">
-                [% bug.summary FILTER html %]
-              </a>
+              [% bug.summary FILTER html %]
+              (<a href="votes.cgi?action=show_bug&amp;bug_id=[% bug.id %]">Voters</a>)
             </td>
           </tr>
         [% END %]
