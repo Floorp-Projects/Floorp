@@ -113,7 +113,7 @@ nsURLFormatterService.prototype = {
         return repl[aKey];
       if (_this._defaults[aKey]) // supported defaults
         return _this._defaults[aKey]();
-      dump(aKey + " not found");
+      Components.utils.reportError("formatURL: Couldn't find value for key: " + aKey);
       return '';
     }
     return aFormat.replace(/%([A-Z]+)%/gi, replacer);
@@ -126,16 +126,20 @@ nsURLFormatterService.prototype = {
     var format = null;
     var PS = Cc['@mozilla.org/preferences-service;1'].
              getService(Ci.nsIPrefBranch);
+
     try {
       format = PS.getComplexValue(aPref, Ci.nsIPrefLocalizedString).data;
-    } catch(ex) { dump(ex + "\n"); }
+    } catch(ex) {}
+
     if (!format) {
-      format = PS.getComplexValue(aPref, Ci.nsISupportsString).data;
+      try {
+        format = PS.getComplexValue(aPref, Ci.nsISupportsString).data;
+      } catch(ex) {
+        Components.utils.reportError("formatURLPref: Couldn't get pref: " + aPref);
+        return "about:blank";
+      }
     }
-    if (!format) {
-      dump(aPref + " not found");
-      return 'about:blank';
-    }
+
     return this.formatURL(format, aVars);
   },
 
