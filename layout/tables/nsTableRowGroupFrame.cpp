@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -883,9 +884,12 @@ nsTableRowGroupFrame::CreateContinuingRowFrame(nsPresContext& aPresContext,
   // XXX what is the row index?
   if (!aContRowFrame) {NS_ASSERTION(PR_FALSE, "bad call"); return;}
   // create the continuing frame which will create continuing cell frames
-  aPresContext.PresShell()->FrameConstructor()->
+  nsresult rv = aPresContext.PresShell()->FrameConstructor()->
     CreateContinuingFrame(&aPresContext, &aRowFrame, this, aContRowFrame);
-  if (!*aContRowFrame) return;
+  if (NS_FAILED(rv)) {
+    *aContRowFrame = nsnull;
+    return;
+  }
 
   // Add the continuing row frame to the child list
   nsIFrame* nextRow;

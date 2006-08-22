@@ -348,17 +348,16 @@ nsHTMLContainerFrame::CreateNextInFlow(nsPresContext* aPresContext,
     // into our lines child list.
     nsIFrame* nextFrame = aFrame->GetNextSibling();
 
-    aPresContext->PresShell()->FrameConstructor()->
+    nsresult rv = aPresContext->PresShell()->FrameConstructor()->
       CreateContinuingFrame(aPresContext, aFrame, aOuterFrame, &nextInFlow);
-
-    if (nsnull == nextInFlow) {
-      return NS_ERROR_OUT_OF_MEMORY;
+    if (NS_FAILED(rv)) {
+      return rv;
     }
     aFrame->SetNextSibling(nextInFlow);
     nextInFlow->SetNextSibling(nextFrame);
 
     NS_FRAME_LOG(NS_FRAME_TRACE_NEW_FRAMES,
-       ("nsHTMLContainerFrame::MaybeCreateNextInFlow: frame=%p nextInFlow=%p",
+       ("nsHTMLContainerFrame::CreateNextInFlow: frame=%p nextInFlow=%p",
         aFrame, nextInFlow));
 
     aNextInFlowResult = nextInFlow;

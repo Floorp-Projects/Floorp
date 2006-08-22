@@ -108,10 +108,12 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
     // Create a continuing child of the previous page's last child
     nsIFrame*     newFrame;
 
-    aPresContext->PresShell()->FrameConstructor()->
+    nsresult rv = aPresContext->PresShell()->FrameConstructor()->
       CreateContinuingFrame(aPresContext, prevLastChild,
                             contentPage, &newFrame);
-
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
     // Make the new area frame the 1st child of the page content frame. There may already be
     // children placeholders which don't get reflowed but must not be destroyed until the 
     // page content frame is destroyed.

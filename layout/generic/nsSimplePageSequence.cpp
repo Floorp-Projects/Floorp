@@ -328,9 +328,12 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
       } else if (nsnull == kidNextInFlow) {
         // The page isn't complete and it doesn't have a next-in-flow, so
         // create a continuing page
-        nsIFrame*     continuingPage;
-        CreateContinuingPageFrame(aPresContext, kidFrame, &continuingPage);
-
+        nsIFrame* continuingPage;
+        nsresult rv = CreateContinuingPageFrame(aPresContext, kidFrame,
+                                                &continuingPage);
+        if (NS_FAILED(rv)) {
+          break;
+        }
         // Add it to our child list
         kidFrame->SetNextSibling(continuingPage);
         reflowReason = eReflowReason_Initial;
