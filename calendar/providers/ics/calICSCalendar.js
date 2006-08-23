@@ -327,6 +327,8 @@ calICSCalendar.prototype = {
 
     doWriteICS: function () {
         var savedthis = this;
+        var appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"]
+                                   .getService(Components.interfaces.nsIAppStartup);
         var listener =
         {
             onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail)
@@ -354,9 +356,10 @@ calICSCalendar.prototype = {
 
                     uploadChannel.setUploadStream(icsStream, "text/calendar",
                                                   -1);
-
+                    appStartup.enterLastWindowClosingSurvivalArea();
                     channel.asyncOpen(savedthis, savedthis);
                 } catch (ex) {
+                    appStartup.exitLastWindowClosingSurvivalArea();
                     savedthis.mObserver.onError(
                         ex.result, "The calendar could not be saved; there " +
                         "was a failure: 0x" + ex.result.toString(16));
@@ -431,6 +434,9 @@ calICSCalendar.prototype = {
         ctxt.mHooks.onAfterPut(channel);
 
         ctxt.unlock();
+        var appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"]
+                                   .getService(Components.interfaces.nsIAppStartup);
+        appStartup.exitLastWindowClosingSurvivalArea();
     },
 
     addObserver: function (aObserver) {
