@@ -35,9 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const getdatacgi = "getdata-fake.cgi?";
+//const getdatacgi = "getdata-fake.cgi?";
 //const getdatacgi = "http://localhost:9050/getdata.cgi?";
-//const getdatacgi = "getdata.cgi?";
+const getdatacgi = "getdata.cgi?";
 
 
 function checkErrorReturn(obj) {

@@ -12,9 +12,9 @@ if len(sys.argv) < 3 or len(sys.argv) > 4:
     sys.exit()
 
 (testname, tbox) = sys.argv[1:3]
-replace = false
+replace = False
 if len(sys.argv) == 4:
-    replace = true
+    replace = True
 
 DBPATH = "db/data.sqlite"
 db = sqlite.connect(DBPATH)

@@ -218,6 +218,13 @@ function onGraphLoadRemainder(baselineDataSet) {
             SmallPerfGraph.selectionStartTime &&
             SmallPerfGraph.selectionEndTime)
         {
+            if (SmallPerfGraph.selectionStartTime < gCurrentLoadRange[0] ||
+                SmallPerfGraph.selectionEndTime > gCurrentLoadRange[1])
+            {
+                SmallPerfGraph.selectionStartTime = Math.max (SmallPerfGraph.selectionStartTime, gCurrentLoadRange[0]);
+                SmallPerfGraph.selectionEndTime = Math.min (SmallPerfGraph.selectionEndTime, gCurrentLoadRange[1]);
+            }
+
             BigPerfGraph.setTimeRange (SmallPerfGraph.selectionStartTime, SmallPerfGraph.selectionEndTime);
             autoExpand = false;
         }
@@ -247,8 +254,11 @@ function onGraphLoadRemainder(baselineDataSet) {
                         g.addDataSet(ds);
                         if (avgds)
                             g.addDataSet(avgds);
-                        if (g == SmallPerfGraph || autoExpand)
-                            g.expandTimeRange(ds.firstTime, ds.lastTime);
+                        if (g == SmallPerfGraph || autoExpand) {
+                            g.expandTimeRange(Math.max(ds.firstTime, gCurrentLoadRange ? gCurrentLoadRange[0] : ds.firstTime),
+                                              Math.min(ds.lastTime, gCurrentLoadRange ? gCurrentLoadRange[1] : ds.lastTime));
+                        }
+
                         g.autoScale();
 
                         g.redraw();

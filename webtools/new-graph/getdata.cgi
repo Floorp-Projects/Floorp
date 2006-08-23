@@ -62,7 +62,7 @@ def doError(errCode):
 
 db = None
 
-def doListTests(fo, tbox):
+def doListTests(fo):
     results = []
     
     cur = db.cursor()
@@ -141,7 +141,7 @@ def main():
         zfile = gzip.GzipFile(mode = 'wb', fileobj = zbuf, compresslevel = 5)
 
     global db
-    db = sqlite.connect(dbfile)
+    db = sqlite.connect(DBPATH)
     
     if setid is None:
         doListTests(zfile)
