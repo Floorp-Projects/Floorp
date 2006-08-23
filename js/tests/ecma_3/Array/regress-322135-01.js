@@ -39,7 +39,7 @@
 var bug = 322135;
 var summary = 'Array.prototype.push on Array with length 2^32-1';
 var actual = '';
-var expect = '';
+var expect = 'No error';
 
 printBugNumber (bug);
 printStatus (summary);
@@ -49,7 +49,6 @@ var array = new Array(length);
 
 printStatus('before array.length = ' + array.length);
 
-expect = 'RangeError';
 try
 {
   array.push('Kibo');
