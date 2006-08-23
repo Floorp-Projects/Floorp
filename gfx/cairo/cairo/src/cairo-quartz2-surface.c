@@ -36,8 +36,10 @@
 
 #include <Carbon/Carbon.h>
 
+#ifdef CAIRO_QUARTZ2_SUPPORT_AGL
 #include <AGL/agl.h>
 #include <OpenGL/gl.h>
+#endif
 
 #include "cairoint.h"
 #include "cairo-private.h"
@@ -94,7 +96,6 @@ typedef struct cairo_quartzgl_surface {
 
     cairo_bool_t y_grows_down;
 
-    AGLContext aglContext;
     CGContextRef cgContext;
 
     cairo_rectangle_int16_t extents;
@@ -105,6 +106,11 @@ typedef struct cairo_quartzgl_surface {
     CGImageRef sourceImage;
     CGShadingRef sourceShading;
     CGPatternRef sourcePattern;
+#ifdef CAIRO_QUARTZ2_SUPPORT_AGL
+    AGLContext aglContext;
+#else
+    void *_unused;
+#endif
 } cairo_quartzgl_surface_t;
 
 /**
@@ -701,6 +707,7 @@ _cairo_quartzgl_get_image (cairo_quartzgl_surface_t *surface,
      * or a CCGBitmapContext, then we have no way
      * of doing this
      */
+#ifdef CAIRO_QUARTZ2_SUPPORT_AGL
     if (surface->aglContext) {
 	AGLContext oldContext;
 	cairo_format_masks_t masks = { 32, 0xff << 24, 0xff << 16, 0xff << 8, 0xff << 0 };
@@ -746,6 +753,10 @@ _cairo_quartzgl_get_image (cairo_quartzgl_surface_t *surface,
 	    *data_out = imageData;
 	else
 	    _cairo_image_surface_assume_ownership_of_data (isurf);
+#else
+    /* no AGL */
+    if (0) {
+#endif
     } else if (CGBitmapContextGetBitsPerPixel(surface->cgContext) != 0) {
 	unsigned int stride;
 	unsigned int bitinfo;
@@ -828,17 +839,21 @@ _cairo_quartzgl_surface_finish (void *abstract_surface)
 
     //fprintf (stderr, "%p _cairo_quartzgl_surface_finish\n", surface);
 
+#ifdef CAIRO_QUARTZ2_SUPPORT_AGL
     if (surface->aglContext)
 	aglSetCurrentContext(surface->aglContext);
+#endif
 
     CGContextFlush (surface->cgContext);
     CGContextRelease (surface->cgContext);
     surface->cgContext = NULL;
 
+#ifdef CAIRO_QUARTZ2_SUPPORT_AGL
     if (surface->aglContext)
 	glFlush();
 
     surface->aglContext = NULL;
+#endif
 
     if (surface->imageData) {
 	free (surface->imageData);
@@ -1473,7 +1488,11 @@ cairo_surface_is_quartzgl (cairo_surface_t *surf)
 
 static cairo_quartzgl_surface_t *
 _cairo_quartzgl_surface_create_internal (CGContextRef cgContext,
+#ifdef CAIRO_QUARTZ2_SUPPORT_AGL
 					 AGLContext aglContext,
+#else
+					 void * unused,
+#endif
 					 unsigned int width,
 					 unsigned int height,
 					 cairo_bool_t y_grows_down)
@@ -1507,13 +1526,16 @@ _cairo_quartzgl_surface_create_internal (CGContextRef cgContext,
     CGContextSaveGState (cgContext);
 
     surface->y_grows_down = y_grows_down;
+#ifdef CAIRO_QUARTZ2_SUPPORT_AGL
     surface->aglContext = aglContext;
+#endif
     surface->cgContext = cgContext;
     surface->imageData = NULL;
 
     return surface;
 }
 					 
+#ifdef CAIRO_QUARTZ2_SUPPORT_AGL
 cairo_surface_t *
 cairo_quartzgl_surface_create_for_agl_context (AGLContext aglContext,
 					       unsigned int width,
@@ -1539,6 +1561,7 @@ cairo_quartzgl_surface_create_for_agl_context (AGLContext aglContext,
 
     return (cairo_surface_t *) surf;
 }
+#endif
 
 cairo_surface_t *
 cairo_quartzgl_surface_create_for_cg_context (CGContextRef cgContext,
