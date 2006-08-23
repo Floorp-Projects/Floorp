@@ -2962,6 +2962,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_TOXMLLIST:
+                op = JSOP_NOP;           /* turn off parens */
                 todo = Sprint(&ss->sprinter, "<>%s</>", POP_STR());
                 inXML = JS_FALSE;
                 break;
