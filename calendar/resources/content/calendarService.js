@@ -123,16 +123,18 @@ CLineService.prototype = {
     /* nsICommandLineHandler */
 
     handle : function service_handle(cmdLine) {
-        if (cmdLine.handleFlag("calendar", false)) {
-            wwatch = Components.classes[WINDOWWATCHER_CONTRACTID]
-                               .getService(nsIWindowWatcher);
-            wwatch.openWindow(null, "chrome://calendar/content/",
+        // just pass all arguments on to the Sunbird window
+        wwatch = Components.classes[WINDOWWATCHER_CONTRACTID]
+                           .getService(nsIWindowWatcher);
+        wwatch.openWindow(null, "chrome://calendar/content/",
                               "_blank", "chrome,dialog=no,all", cmdLine);
-            cmdLine.preventDefault = true;
-        }
+        cmdLine.preventDefault = true;
     },
 
-    helpInfo : "  -calendar            Start with the calendar.\n"
+    helpInfo : "  -subscribe           Pass in a path pointing to a calendar\n" +
+               "                       to subscribe to.\n" +
+               "  -showdate            Pass in a value for a javascript date\n" +
+               "                       to show this date on startup.\n"
 };
 
 /* factory for command line handler service (CLineService) */

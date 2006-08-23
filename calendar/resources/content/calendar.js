@@ -131,6 +131,50 @@ function calendarInit()
 
    document.getElementById("view-deck")
            .addEventListener("dayselect", observeViewDaySelect, false);
+
+   // Handle commandline args
+   for (var i=0; i < window.arguments.length; i++) {
+       try {
+           var cl = window.arguments[i].QueryInterface(Components.interfaces.nsICommandLine);
+       } catch(ex) {
+           dump("unknown argument passed to main window\n");
+           continue;
+       }
+       handleCommandLine(cl);
+   }
+}
+
+function handleCommandLine(aComLine) {
+    var calurl;
+    try {
+        calurl = aComLine.handleFlagWithParam("subscribe", false);
+    } catch(ex) {}
+    if (calurl) {
+        var uri = makeURL(calurl);
+        var cal = getCalendarManager().createCalendar('ics', uri);
+        getCalendarManager().registerCalendar(cal);
+
+        // Strip ".ics" from filename for use as calendar name, taken from 
+        // calendarCreation.js
+        var fullPathRegex = new RegExp("([^/:]+)[.]ics$");
+        var prettyName = calurl.match(fullPathRegex);
+        var name;
+
+        if (prettyName && prettyName.length >= 1) {
+            name = decodeURIComponent(prettyName[1]);
+        } else {
+            name = calGetString("calendar", "untitledCalendarName");
+        }
+        cal.name = name;
+    }
+
+    var date;
+    try {
+        date = aComLine.handleFlagWithParam("showdate", false);
+    } catch(ex) {}
+    if (date) {
+        currentView().goToDay(jsDateToDateTime(new Date(date)));
+    }
 }
 
 /* Called at midnight to tell us to update the views and other ui bits */
