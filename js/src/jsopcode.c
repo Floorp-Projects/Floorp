@@ -2363,12 +2363,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_GETGVAR:
                 atom = GET_ATOM(cx, jp->script, pc);
               do_name:
+                lval = "";
+              do_qname:
                 sn = js_GetSrcNote(jp->script, pc);
                 rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                 if (!rval)
                     return JS_FALSE;
                 RETRACT(&ss->sprinter, rval);
-                todo = Sprint(&ss->sprinter, ss_format, VarPrefix(sn), rval);
+                todo = Sprint(&ss->sprinter, "%s%s%s",
+                              VarPrefix(sn), lval, rval);
                 break;
 
               case JSOP_UINT16:
@@ -2888,6 +2891,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               BEGIN_LITOPX_CASE(JSOP_QNAMEPART)
+                if (pc[JSOP_QNAMEPART_LENGTH] == JSOP_TOATTRNAME) {
+                    len += JSOP_TOATTRNAME_LENGTH;
+                    lval = "@";
+                    goto do_qname;
+                }
                 goto do_name;
               END_LITOPX_CASE
 
@@ -2907,8 +2915,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_TOATTRNAME:
+                op = JSOP_NOP;           /* turn off parens */
                 rval = POP_STR();
-                todo = Sprint(&ss->sprinter, "@%s", rval);
+                todo = Sprint(&ss->sprinter, "@[%s]", rval);
                 break;
 
               case JSOP_TOATTRVAL:
