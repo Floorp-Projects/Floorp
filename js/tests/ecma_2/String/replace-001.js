@@ -56,6 +56,6 @@ startTest();
  */
 
 
-//	testcases[0] = { expect:"PASSED", actual:"PASSED", description:"NO TESTS EXIST" };
+AddTestCase( "NO TESTS EXIST", "PASSED", "Test not implemented");
 
 test();
