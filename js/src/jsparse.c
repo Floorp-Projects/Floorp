@@ -3408,6 +3408,13 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             if (!pn)
                 return NULL;
 
+            /* Normalize empty statement to empty block for the decompiler. */
+            if (pn->pn_type == TOK_SEMI && !pn->pn_kid) {
+                pn->pn_type = TOK_LC;
+                pn->pn_arity = PN_LIST;
+                PN_INIT_LIST(pn);
+            }
+
             /* Pop the label, set pn_expr, and return early. */
             js_PopStatement(tc);
             pn2->pn_type = TOK_COLON;
@@ -6075,12 +6082,13 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
             }
         } else {
             /*
-             * False condition and no else: make pn an empty statement.  Here,
-             * pn must be a TOK_IF, since TOK_HOOK can never have a null kid.
+             * False condition and no else: make pn an empty block (not an
+             * empty statement, which does not decompile, even when labeled).
+             * NB: pn must be a TOK_IF as TOK_HOOK can never have a null kid.
              */
-            pn->pn_type = TOK_SEMI;
-            pn->pn_arity = PN_UNARY;
-            pn->pn_kid = NULL;
+            pn->pn_type = TOK_LC;
+            pn->pn_arity = PN_LIST;
+            PN_INIT_LIST(pn);
         }
         RecycleTree(pn2, tc);
         if (pn3 && pn3 != pn2)
