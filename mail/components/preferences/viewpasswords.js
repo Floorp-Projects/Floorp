@@ -248,9 +248,21 @@ function DeleteSignon() {
 }
 
 function DeleteAllSignons() {
+  var prompter = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                           .getService(Components.interfaces.nsIPromptService);
+
+  // Confirm the user wants to remove all passwords
+  var dummy = { value: false };
+  if (prompter.confirmEx(window,
+                         kSignonBundle.getString("removeAllPasswordsTitle"),
+                         kSignonBundle.getString("removeAllPasswordsPrompt"),
+                         prompter.STD_YES_NO_BUTTONS + prompter.BUTTON_POS_1_DEFAULT,
+                         null, null, null, null, dummy) == 1) // 1 == "No" button
+    return;
+    
   DeleteAllFromTree(signonsTree, signonsTreeView,
-                        signons, deletedSignons,
-                        "removeSignon", "removeAllSignons");
+                    signons, deletedSignons,
+                    "removeSignon", "removeAllSignons");
   FinalizeSignonDeletions();
 }
 

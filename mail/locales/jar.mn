@@ -155,8 +155,8 @@
   locale/@AB_CD@/communicator/utilityOverlay.properties      (%chrome/communicator/utilityOverlay.properties)
 * locale/@AB_CD@/communicator/utilityOverlay.dtd             (%chrome/communicator/utilityOverlay.dtd)
   locale/@AB_CD@/communicator/wallet/wallet.properties       (%chrome/communicator/wallet/wallet.properties)
-  locale/@AB_CD@/communicator/wallet/SignonViewer.properties (%chrome/communicator/wallet/SignonViewer.properties)
-  locale/@AB_CD@/communicator/wallet/SignonViewer.dtd        (%chrome/communicator/wallet/SignonViewer.dtd)
++ locale/@AB_CD@/communicator/wallet/SignonViewer.properties (%chrome/communicator/wallet/SignonViewer.properties)
++ locale/@AB_CD@/communicator/wallet/SignonViewer.dtd        (%chrome/communicator/wallet/SignonViewer.dtd)
 + locale/@AB_CD@/global/charset.dtd                 (%chrome/global/charset.dtd)
   locale/@AB_CD@/global-platform/win/nsWindowsHooks.properties (%chrome/global-platform/win/nsWindowsHooks.properties)
 #ifdef MOZ_USE_GENERIC_BRANDING
