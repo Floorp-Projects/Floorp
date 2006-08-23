@@ -166,8 +166,13 @@ SessionStoreService.prototype = {
    * Initialize the component
    */
   init: function sss_init(aWindow) {
-    if (!aWindow || this._loadState == STATE_RUNNING)
+    if (!aWindow || this._loadState == STATE_RUNNING) {
+      // make sure that all browser windows which try to initialize
+      // SessionStore are really tracked by it
+      if (aWindow && (!aWindow.__SSi || !this._windows[aWindow.__SSi]))
+        this.onLoad(aWindow);
       return;
+    }
 
     this._prefBranch = Cc["@mozilla.org/preferences-service;1"].
                        getService(Ci.nsIPrefService).getBranch("browser.");
