@@ -90,8 +90,6 @@ class XRemoteService : public nsISuiteRemoteService
                    nsIDOMWindow* aParent,
                    PRBool aOpenBrowser);
 
-  nsresult OpenURLDialog(nsIDOMWindow* aParent);
-
   // handle xfe commands
   nsresult XfeDoCommand(nsCString &aArgument,
                         nsIDOMWindow* aParent);

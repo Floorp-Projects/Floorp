@@ -63,7 +63,7 @@ function editDocument(aDocument)
   if (!aDocument)
     aDocument = window.content.document;
 
-  editPage(aDocument.URL, window, false); 
+  editPage(aDocument.URL); 
 }
 
 function editPageOrFrame()
@@ -72,33 +72,16 @@ function editPageOrFrame()
 
   // if the uri is a specific frame, grab it, else use the frameset uri 
   // and let Composer handle error if necessary
-  var url = getContentFrameURI(focusedWindow);
-  editPage(url, window, false)
+  editPage(getContentFrameURI(focusedWindow));
 }
 
 // Any non-editor window wanting to create an editor with a URL
 //   should use this instead of "window.openDialog..."
 //  We must always find an existing window with requested URL
-// (When calling from a dialog, "launchWindow" is dialog's "opener"
-//   and we need a delay to let dialog close)
-function editPage(url, launchWindow, delay)
+function editPage(url)
 {
   // Always strip off "view-source:" and #anchors
   url = url.replace(/^view-source:/, "").replace(/#.*/, "");
-
-  // User may not have supplied a window
-  if (!launchWindow)
-  {
-    if (window)
-    {
-      launchWindow = window;
-    }
-    else
-    {
-      dump("No window to launch an editor from!\n");
-      return;
-    }
-  }
 
   // if the current window is a browser window, then extract the current charset menu setting from the current 
   // document and use it to initialize the new composer window...
@@ -106,8 +89,8 @@ function editPage(url, launchWindow, delay)
   var wintype = document.documentElement.getAttribute('windowtype');
   var charsetArg;
 
-  if (launchWindow && (wintype == "navigator:browser") && launchWindow.content.document)
-    charsetArg = "charset=" + launchWindow.content.document.characterSet;
+  if (wintype == "navigator:browser" && content.document)
+    charsetArg = "charset=" + content.document.characterSet;
 
   try {
     var uri = createURI(url, null, null);
@@ -146,12 +129,7 @@ function editPage(url, launchWindow, delay)
     }
 
     // Create new Composer window
-    if (delay)
-    {
-      launchWindow.delayedOpenWindow("chrome://editor/content", "chrome,all,dialog=no", url);
-    }
-    else
-      launchWindow.openDialog("chrome://editor/content", "_blank", "chrome,all,dialog=no", url, charsetArg);
+    openDialog("chrome://editor/content", "_blank", "chrome,all,dialog=no", url, charsetArg);
 
   } catch(e) {}
 }

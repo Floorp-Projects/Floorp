@@ -2173,12 +2173,32 @@ var nsOpenRemoteCommand =
 
   doCommand: function(aCommand)
   {
-	  /* The last parameter is the current browser window.
-	     Use 0 and the default checkbox will be to load into an editor
-	     and loading into existing browser option is removed
-	   */
-	  window.openDialog( "chrome://communicator/content/openLocation.xul", "_blank", "chrome,modal,titlebar", 0);
-    window.content.focus();
+    var params = { browser: null, action: null, url: "" };
+    openDialog( "chrome://communicator/content/openLocation.xul", "_blank", "chrome,modal,titlebar", params);
+    var win = getTopWin();
+    switch (params.action) {
+      case "0": // current window
+        win.focus();
+        win.loadURI(params.url, null,
+                    nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP);
+        break;
+      case "1": // new window
+        openDialog(getBrowserURL(), "_blank", "all,dialog=no", params.url, null,
+                   null, nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP);
+        break;
+      case "2": // edit
+        editPage(params.url);
+        break;
+      case "3": // new tab
+        win.focus();
+        var browser = win.getBrowser();
+        browser.selectedTab = browser.addTab(params.url, null, null, false,
+                nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP);
+        break;
+      default:
+        window.content.focus();
+        break;
+    }
   }
 };
 

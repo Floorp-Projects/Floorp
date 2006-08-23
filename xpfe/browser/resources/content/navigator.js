@@ -1258,7 +1258,25 @@ function BrowserSearchInternet()
 function BrowserOpenWindow()
 {
   //opens a window where users can select a web location to open
-  openDialog("chrome://communicator/content/openLocation.xul", "_blank", "chrome,modal,titlebar", window);
+  var params = { browser: window, action: null, url: "" };
+  openDialog("chrome://communicator/content/openLocation.xul", "_blank", "chrome,modal,titlebar", params);
+  var url = getShortcutOrURI(params.url);
+  switch (params.action) {
+    case "0": // current window
+      loadURI(url, null, nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP);
+      break;
+    case "1": // new window
+      openDialog(getBrowserURL(), "_blank", "all,dialog=no", url, null, null,
+                 nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP);
+      break;
+    case "2": // edit
+      editPage(url);
+      break;
+    case "3": // new tab
+      gBrowser.selectedTab = gBrowser.addTab(url, null, null, false,
+               nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP);
+      break;
+  }
 }
 
 function BrowserOpenTab()
@@ -1296,22 +1314,6 @@ function BrowserOpenTab()
     else
       setTimeout("content.focus();", 0);
   }
-}
-
-/* Called from the openLocation dialog. This allows that dialog to instruct
-   its opener to open a new window and then step completely out of the way.
-   Anything less byzantine is causing horrible crashes, rather believably,
-   though oddly only on Linux. */
-function delayedOpenWindow(chrome,flags,url)
-{
-  setTimeout("openDialog('"+chrome+"','_blank','"+flags+"','"+url+"')", 10);
-}
-
-/* Required because the tab needs time to set up its content viewers and get the load of
-   the URI kicked off before becoming the active content area. */
-function delayedOpenTab(url)
-{
-  setTimeout(function(aTabElt) { getBrowser().selectedTab = aTabElt; }, 0, getBrowser().addTab(url));
 }
 
 /* Show file picker dialog configured for opening a file, and return 

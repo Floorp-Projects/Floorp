@@ -832,14 +832,6 @@ function CheckAndSaveDocument(command, allowDontSave)
 
 // --------------------------- File menu ---------------------------
 
-
-// used by openLocation. see openLocation.js for additional notes.
-function delayedOpenWindow(chrome, flags, url)
-{
-  dump("setting timeout\n");
-  setTimeout("window.openDialog('"+chrome+"','_blank','"+flags+"','"+url+"')", 10);
-}
-
 function EditorNewPlaintext()
 {
   window.openDialog( "chrome://editor/content/TextEditorAppShell.xul",
