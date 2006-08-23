@@ -98,22 +98,13 @@ public:
   static void ContentRemoved(nsINode* aContainer,
                              nsIContent* aChild,
                              PRInt32 aIndexInContainer);
-  
-  /**
-   * Call this before starting to tear down a node. The node should still
-   * have children and attributes accessible.
-   * The function will notify nsIMutationObservers as well as delete the
-   * slots structure.
-   * @param aNode  Node that is being destroyed
-   * @see nsIMutationObserver::NodeWillBeDestroyed
-   */
-  static void NodeWillBeDestroyed(nsINode* aNode);
 
   /**
    * To be called when reference count of aNode drops to zero.
    * @param aNode The node which is going to be deleted.
+   * @param aDelete If PR_TRUE, calling this method also deletes aNode.
    */
-  static void LastRelease(nsINode* aNode);
+  static void LastRelease(nsINode* aNode, PRBool aDelete);
 };
 
 #endif // nsNodeUtils_h___

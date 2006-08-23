@@ -891,12 +891,14 @@ protected:
    * objects for each of these instance variables, we put them off
    * in a side structure that's only allocated when the content is
    * accessed through the DOM.
+   *
+   * @note Any properties in this class has to be cleared in the
+   *       nsGenericElement or nsXULElement destructor.
    */
   class nsDOMSlots : public nsINode::nsSlots
   {
   public:
     nsDOMSlots(PtrBits aFlags);
-    virtual ~nsDOMSlots();
 
     /**
      * An object implementing nsIDOMNodeList for this content (childNodes)
