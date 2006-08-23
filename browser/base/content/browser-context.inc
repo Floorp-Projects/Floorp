@@ -241,6 +241,10 @@
                 type="checkbox"
                 accesskey="&spellEnable.accesskey;"
                 oncommand="InlineSpellCheckerUI.toggleEnabled();"/>
+      <menuitem id="spell-add-dictionaries-main"
+                label="&spellAddDictionaries.label;"
+                accesskey="&spellAddDictionaries.accesskey;"
+                oncommand="gContextMenu.addDictionaries();"/>
       <menu id="spell-dictionaries"
             label="&spellDictionaries.label;"
             accesskey="&spellDictionaries.accesskey;">
