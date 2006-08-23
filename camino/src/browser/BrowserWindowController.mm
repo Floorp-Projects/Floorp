@@ -2040,39 +2040,41 @@ enum BWCOpenDest {
 {
   // trim off any whitespace around url
   NSString *theURL = [[inURLField stringValue] stringByTrimmingWhitespace];
-  
+
   if ([theURL length] == 0)
   {
     // re-focus the url bar if it's visible (might be in sheet?)
     if ([inURLField window] == [self window])
       [[self window] makeFirstResponder:inURLField];
-    
+
     return;
   }
 
   // look for bookmarks keywords match
   NSArray *resolvedURLs = [[BookmarkManager sharedBookmarkManager] resolveBookmarksKeyword:theURL];
-  
-  NSString* resolvedURL = nil;
-  if ([resolvedURLs count] == 1) {
-    resolvedURL = [resolvedURLs lastObject];
+
+  NSString* targetURL = nil;
+  if (!resolvedURLs || [resolvedURLs count] == 1) {
+    targetURL = resolvedURLs ? [resolvedURLs lastObject] : theURL;
+    BOOL allowPopups = resolvedURLs ? YES : NO; //Allow popups if it's a bookmark keyword
     if (inDest == kDestinationNewTab)
-      [self openNewTabWithURL:resolvedURL referrer:nil loadInBackground:inLoadInBG allowPopups:NO setJumpback:NO];
+      [self openNewTabWithURL:targetURL referrer:nil loadInBackground:inLoadInBG allowPopups:allowPopups setJumpback:NO];
     else if (inDest == kDestinationNewWindow)
-      [self openNewWindowWithURL:resolvedURL referrer:nil loadInBackground:inLoadInBG allowPopups:NO];
+      [self openNewWindowWithURL:targetURL referrer:nil loadInBackground:inLoadInBG allowPopups:allowPopups];
     else // if it's not a new window or a new tab, load into the current view
-      [self loadURL:resolvedURL];
-  } else {
-    if (inDest == kDestinationNewTab || inDest == kDestinationNewWindow)
-      [self openURLArray:resolvedURLs tabOpenPolicy:eAppendTabs allowPopups:NO];
-    else
-      [self openURLArray:resolvedURLs tabOpenPolicy:eReplaceTabs allowPopups:NO];
+      [self loadURL:targetURL referrer:nil focusContent:YES allowPopups:allowPopups];
   }
-  
+  else {
+    if (inDest == kDestinationNewTab || inDest == kDestinationNewWindow)
+      [self openURLArray:resolvedURLs tabOpenPolicy:eAppendTabs allowPopups:YES];
+    else
+      [self openURLArray:resolvedURLs tabOpenPolicy:eReplaceTabs allowPopups:YES];
+  }
+
   // global history needs to know the user typed this url so it can present it
   // in autocomplete. We use the URI fixup service to strip whitespace and remove
   // invalid protocols, etc. Don't save keyword-expanded urls.
-  if (resolvedURL && [theURL isEqualToString:resolvedURL] &&
+  if (!resolvedURLs &&
       mDataOwner &&
       mDataOwner->mGlobalHistory &&
       mDataOwner->mURIFixer && [theURL length] > 0)
@@ -2080,7 +2082,7 @@ enum BWCOpenDest {
     nsAutoString url;
     [theURL assignTo_nsAString:url];
     NS_ConvertUTF16toUTF8 utf8URL(url);
-    
+
     nsCOMPtr<nsIURI> fixedURI;
     mDataOwner->mURIFixer->CreateFixupURI(utf8URL, 0, getter_AddRefs(fixedURI));
     if (fixedURI)

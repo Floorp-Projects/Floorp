@@ -658,9 +658,7 @@ static BookmarkManager* gBookmarkManager = nil;
     }
     resolvedArray = [[self rootBookmarks] resolveKeyword:firstWord withArgs:secondWord];
   }
-  if (resolvedArray)
-    return resolvedArray;
-  return [NSArray arrayWithObject:keyword];
+  return resolvedArray;
 }
 
 // a null container indicates to search all bookmarks
