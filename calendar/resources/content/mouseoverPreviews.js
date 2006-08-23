@@ -61,24 +61,14 @@ function onMouseOverItem( occurrenceBoxMouseEvent )
   if ("occurrence" in occurrenceBoxMouseEvent.currentTarget) {
     // occurrence of repeating event or todo
     var occurrence = occurrenceBoxMouseEvent.currentTarget.occurrence;
-    var item = occurrence;
-    var start;
-    var endEx;
-    if (occurrence.startDate) {
-        start = occurrence.startDate.jsDate;
-        endEx = occurrence.endDate.jsDate;
-    }
-    if (occurrence.entryDate) {
-        start = occurrence.entryDate.jsDate;
-        endEx = occurrence.dueDate.jsDate;
-    }
 
     const toolTip = document.getElementById("itemTooltip");
-    var holderBox = null;
-    if (isEvent(item)) {
-      holderBox = getPreviewForEvent(item, start, endEx);
-    } else if (isToDo(item)) {
-      holderBox = getPreviewForTask(item, start, endEx);
+
+    var holderBox;
+    if (isEvent(occurrence)) {
+      holderBox = getPreviewForEvent(occurrence, occurrence.startDate, occurrence.endDate);
+    } else if (isToDo(occurrence)) {
+      holderBox = getPreviewForTask(occurrence);
     }
     if (holderBox) {
       setToolTipContent(toolTip, holderBox);
@@ -247,12 +237,6 @@ function getPreviewForEvent( event, instStartDate, instEndDate )
 
     if (event.startDate || instStartDate)
     {
-      var eventStart = new Date(event.startDate.jsDate);
-      var eventEnd = event.endDate && new Date(event.endDate.jsDate);
-      if (event.startDate.isDate && eventEnd) { 
-        eventEnd.setDate(eventEnd.getDate() - 1);
-      }
-
       var startDate, endDate;
       if (instStartDate && instEndDate) {
         startDate = instStartDate;
@@ -260,11 +244,9 @@ function getPreviewForEvent( event, instStartDate, instEndDate )
       } else {
         // Event may be recurrent event.   If no displayed instance specified,
         // use next instance, or previous instance if no next instance.
-        startDate = instStartDate || getCurrentNextOrPreviousRecurrence(event);
-        var eventDuration = (event.endDate
-                             ? event.endDate.jsDate - event.startDate.jsDate
-                             : 0);
-        endDate = new Date(startDate.getTime() + eventDuration);
+        var occ = getCurrentNextOrPreviousRecurrence(event);
+        startDate = instStartDate || occ.startDate;
+        endDate = occ.endDate;
       }
       boxAppendLabeledDateTimeInterval(vbox, "tooltipDate", startDate, endDate);
     }
@@ -379,10 +361,14 @@ function boxAppendLabeledDateTimeInterval(box, labelProperty, start, end)
                                 .getService(Components.interfaces.calIDateTimeFormatter);
   var startString = new Object();
   var endString = new Object();
-  start = jsDateToDateTime(start).getInTimezone(calendarDefaultTimezone());
-  end = jsDateToDateTime(end).getInTimezone(calendarDefaultTimezone());
+  start = start.getInTimezone(calendarDefaultTimezone());
+  end = end.getInTimezone(calendarDefaultTimezone());
   dateFormatter.formatInterval(start, end, startString, endString);
-  boxAppendLabeledText(box, labelProperty, startString.value + ' - ' + endString.value);
+  if (endString.value != "") {
+    boxAppendLabeledText(box, labelProperty, startString.value + ' - ' + endString.value);
+  } else {
+    boxAppendLabeledText(box, labelProperty, startString.value);
+  }
 }
 
 function boxInitializeHeaderGrid(box)

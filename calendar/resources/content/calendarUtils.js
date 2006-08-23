@@ -250,34 +250,29 @@ function calGetString(aBundleName, aStringName)
     Otherwise return the previous ocurrence. **/
 function getCurrentNextOrPreviousRecurrence(calendarEvent)
 {
-    var isValid = false;
-    var eventStartDate;
-
-    if (calendarEvent.recur) {
-        var now = new Date();
-        var result = new Object();
-        var dur = calendarEvent.endDate.jsDate - calendarEvent.startDate.jsDate;
-
-        // To find current event when now is during event, look for occurrence
-        // starting duration ago.
-        var probeTime = now.getTime() - dur;
-        isValid = calendarEvent.getNextRecurrence(probeTime, result);
-
-        if (isValid) {
-            eventStartDate = new Date(result.value);
-        } else {
-            isValid = calendarEvent.getPreviousOccurrence(probeTime, result);
-            if (isValid) {
-                eventStartDate = new Date(result.value);
-            }
-        }
+    if (!calendarEvent.recurrenceInfo) {
+        return calendarEvent;
     }
-   
-    if (!isValid) {
-        eventStartDate = new Date( calendarEvent.startDate.jsDate );
+
+    var dur = calendarEvent.duration.clone();
+    dur.isNegative = true;
+
+    // To find current event when now is during event, look for occurrence
+    // starting duration ago.
+    var probeTime = now();
+    probeTime.addDuration(dur);
+    //XXX getNextOccurrence doesn't work, bug 337346
+    //var occ = calendarEvent.recurrenceInfo.getNextOccurrence(probeTime);
+    var occtime = calendarEvent.recurrenceInfo.getNextOccurrenceDate(probeTime);
+
+    var occ;
+    if (!occtime) {
+        var occs = calendarEvent.recurrenceInfo.getOccurrences(calendarEvent.startDate, probeTime, {});
+        occ = occs[occs.length -1];
+    } else {
+        occ = calendarEvent.recurrenceInfo.getOccurrenceFor(occtime);
     }
-      
-    return eventStartDate;
+    return occ;
 }
 
 //
