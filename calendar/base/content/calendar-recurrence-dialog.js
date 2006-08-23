@@ -90,9 +90,15 @@ function loadDialog()
     // Set label to 'second week of the month'
     // Note that the date here needs to be 0 based to work properly
     var monthWeekNum = Math.floor((window.startDate.day - 1) / 7) + 1;
-    nthstr = props.GetStringFromName("ordinal.name."+monthWeekNum);
-    var daystr = props.GetStringFromName("day."+(window.startDate.weekday+1)+".name");
-    str = props.formatStringFromName("recurNthWeek", [nthstr, daystr], 2);
+
+    // In order to remain somewhat sane for l10n, turns a number into a word
+    var numWordMap = ["", "first", "second", "third", "fourth", "fifth"];
+    var numDayMap = ["sunday", "monday", "tuesday", "wednesday",
+                     "thursday", "friday", "saturday"];
+
+    str = calGetString("dateFormat", 
+                       "recur." + numWordMap[monthWeekNum] + "." + 
+                       numDayMap[window.startDate.weekday]);
     document.getElementById("monthly-nth-week").label = str;
 
     // Set two values needed to create the real rrule later
@@ -107,7 +113,7 @@ function loadDialog()
     var isLastDay = (monthLength == window.startDate.day);
     document.getElementById("monthly-last-day").hidden = !isLastDay;
     if (isLastWeek) {
-        str = props.formatStringFromName("recurLast", [daystr], 1);
+        str = calGetString("dateFormat", "recur.last." + numDayMap[window.startDate.weekday]);
         document.getElementById("monthly-last-week").label = str;
     }
 
