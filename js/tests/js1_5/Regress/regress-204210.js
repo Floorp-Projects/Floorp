@@ -143,3 +143,5 @@ function h()
   eval(s);
 }
 h();
+
+reportCompare('No Crash', 'No Crash', '');

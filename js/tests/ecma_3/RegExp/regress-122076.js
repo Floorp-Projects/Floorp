@@ -103,3 +103,5 @@ for (var i=0; i<STRESS; i++)
   {
   }
 }
+
+reportCompare('No Crash', 'No Crash', '');

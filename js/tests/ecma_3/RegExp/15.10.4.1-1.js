@@ -104,13 +104,7 @@ function test()
     obj1 = new RegExp(s); 
     obj2 = new RegExp(obj1); 
   
-    for (prop in obj2)
-    { 
-      msg  = status +  quote(prop); 
-      actual = obj2[prop]; 
-      expect = obj1[prop];
-      reportCompare (expect, actual, msg);
-    }
+    reportCompare (obj1 + '', obj2 + '', status);
   }
 
   exitFunc ('test');

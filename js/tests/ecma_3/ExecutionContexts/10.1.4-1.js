@@ -50,11 +50,18 @@
           variable object and using empty property attributes.
 */
 
+var bug = '(none)';
+var summary = '10.1.4.1 Entering An Execution Context';
+var actual = '';
+var expect = '';
+
 test();
 
 function test()
 {
     enterFunc ("test");
+    printBugNumber (bug);
+    printStatus (summary);
 
     var y;
     eval("var x = 1");
@@ -69,6 +76,8 @@ function test()
     
     if (!delete x)
         reportFailure ("Expected to be able to delete x");
+
+    reportCompare('PASS', 'PASS', '10.1.4.1 Entering An Execution Context');
 
     exitFunc("test");        
 }

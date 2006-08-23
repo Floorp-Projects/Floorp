@@ -106,7 +106,10 @@ new TestCase( SECTION, "String.prototype.indexOf.length = null; String.prototype
 new TestCase( SECTION, "delete String.prototype.indexOf.length",                                        false,  delete String.prototype.indexOf.length );
 new TestCase( SECTION, "delete String.prototype.indexOf.length; String.prototype.indexOf.length",       1,      eval("delete String.prototype.indexOf.length; String.prototype.indexOf.length") );
 
-new TestCase( SECTION, "var s = new String(); s.indexOf()",     -1,     eval("var s = new String(); s.indexOf()") );
+new TestCase( SECTION, 
+              "var s = new String(); s.indexOf()",     
+              -1,     
+              eval("var s = new String(); s.indexOf()") );
 
 // some Unicode tests.
 

@@ -81,5 +81,7 @@ function test()
                        "be visible in the function scope (x = '" +
                        x + "'.)");
 
+    reportCompare('PASS', 'PASS', '');
+
     exitFunc ("test");
 }

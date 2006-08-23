@@ -62,6 +62,8 @@ function test()
   testThis(500, NO_BACKREFS, 'hello', 'goodbye');
   testThis(500, DO_BACKREFS, 'hello', 'goodbye');
 
+  reportCompare('No Crash', 'No Crash', '');
+
   exitFunc('test');
 }
 

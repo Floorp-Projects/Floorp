@@ -45,7 +45,12 @@ var expect = 'No Crash';
 
 printBugNumber (bug);
 printStatus (summary);
-
+if (typeof document == 'undefined')
+{
+    printStatus ("Expect possible out of memory error");
+    expectExitCode(0);
+    expectExitCode(3);
+}
 var str = '<fu>x</fu>';
 
 for (var icount = 0; icount < 20; icount++)

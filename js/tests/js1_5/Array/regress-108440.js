@@ -103,3 +103,5 @@ try
 catch(e)
 {
 }
+
+reportCompare('No Crash', 'No Crash', '');

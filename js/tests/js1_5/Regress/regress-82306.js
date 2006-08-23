@@ -73,5 +73,7 @@ function test()
   // Just testing that we don't crash on this
   encodeURI(URI);
 
+  reportCompare('No Crash', 'No Crash', '');
+
   exitFunc ('test');
 }

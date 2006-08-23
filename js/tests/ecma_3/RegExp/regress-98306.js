@@ -73,6 +73,7 @@ function test()
   s = 're = /[//]/';
   tryThis(s);
 
+  reportCompare('No Crash', 'No Crash', '');
   exitFunc ('test');
 }
 

@@ -56,6 +56,7 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
   tryThis();
+  reportCompare('No Crash', 'No Crash', 'Should not crash');
   exitFunc ('test');
 }
 

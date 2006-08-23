@@ -322,3 +322,5 @@ function compte() {
         }
     }
 }
+
+reportCompare('No Crash', 'No Crash', '');
