@@ -146,10 +146,7 @@ XRemoteService::ParseCommand(const char *aCommand, nsIDOMWindow* aWindow)
   */
 
   if (action.Equals("openurl") || action.Equals("openfile")) {
-    if (argument.IsEmpty())
-      rv = OpenURLDialog(aWindow);
-    else
-      rv = OpenURL(argument, aWindow, PR_TRUE);
+    rv = OpenURL(argument, aWindow, PR_TRUE);
   }
 
   /*
@@ -642,41 +639,6 @@ XRemoteService::OpenURL(nsCString &aArgument,
 
   }
 
-  return rv;
-}
-
-nsresult
-XRemoteService::OpenURLDialog(nsIDOMWindow *aParent)
-{
-  nsresult rv;
-
-  nsIDOMWindow *finalParent = aParent;
-  nsCOMPtr<nsIDOMWindow> window;
-
-  // if there's no parent then create a new browser window to be the
-  // parent.
-  if (!finalParent) {
-    nsXPIDLCString urlString;
-    GetBrowserLocation(getter_Copies(urlString));
-    if (!urlString)
-      return NS_ERROR_FAILURE;
-    
-    rv = OpenChromeWindow(nsnull, urlString, "chrome,all,dialog=no",
-			  nsnull, getter_AddRefs(window));
-    if (NS_FAILED(rv))
-      return rv;
-
-    finalParent = window.get();
-
-  }
-
-  nsCOMPtr<nsIDOMWindow> newWindow;
-  rv = OpenChromeWindow(finalParent,
-			"chrome://communicator/content/openLocation.xul",
-			"chrome,all",
-			finalParent,
-			getter_AddRefs(newWindow));
-  
   return rv;
 }
 
