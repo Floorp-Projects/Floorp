@@ -3518,7 +3518,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 cg->treeContext.flags &= ~TCF_IN_FOR_INIT;
                 if (!js_EmitTree(cx, cg, pn3))
                     return JS_FALSE;
-                cg->treeContext.flags = oldflags;
+                cg->treeContext.flags |= oldflags & TCF_IN_FOR_INIT;
 
                 if (popScope) {
                     tc->topStmt = stmt;
@@ -5213,7 +5213,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!js_EmitTree(cx, cg, pn->pn_right))
                 return JS_FALSE;
 #if JS_HAS_XML_SUPPORT
-            cg->treeContext.flags = oldflags;
+            cg->treeContext.flags |= oldflags & TCF_IN_FOR_INIT;
 #endif
             if (js_Emit1(cx, cg, pn->pn_op) < 0)
                 return JS_FALSE;
@@ -5244,7 +5244,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         cg->treeContext.flags &= ~TCF_IN_FOR_INIT;
         if (!js_EmitTree(cx, cg, pn2))
             return JS_FALSE;
-        cg->treeContext.flags = oldflags;
+        cg->treeContext.flags |= oldflags & TCF_IN_FOR_INIT;
 #if JS_HAS_XML_SUPPORT
         if (op == JSOP_XMLNAME &&
             js_NewSrcNote2(cx, cg, SRC_PCBASE,
@@ -5716,7 +5716,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         cg->treeContext.flags &= ~TCF_IN_FOR_INIT;
         if (!js_EmitTree(cx, cg, pn->pn_kid))
             return JS_FALSE;
-        cg->treeContext.flags = oldflags;
+        cg->treeContext.flags |= oldflags & TCF_IN_FOR_INIT;
         if (js_Emit1(cx, cg, JSOP_GROUP) < 0)
             return JS_FALSE;
         break;
