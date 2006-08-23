@@ -141,6 +141,11 @@ PROT_BrowserView.prototype.getFirstUnhandledDocWithURL_ = function(url) {
     return null;
 
   for (var i = 0; i < docs.length; i++) {
+    // We only care about top level documents (i.e., we don't care about
+    // frames).
+    if (docs[i].defaultView.top != docs[i].defaultView)
+      continue;
+
     var browser = this.tabWatcher_.getBrowserFromDocument(docs[i]);
     G_Assert(this, !!browser, "Found doc but can't find browser???");
     var alreadyHandled = this.getProblem_(docs[i], browser);
