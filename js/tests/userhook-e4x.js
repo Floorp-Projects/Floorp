@@ -46,7 +46,7 @@ var gCheckInterval = 1000;
 function userOnBeforePage()
 {
   dlog('userOnBeforePage');
-
+  registerDialogCloser();
 }
 
 var gReport;
@@ -54,6 +54,8 @@ var gReport;
 function userOnAfterPage()
 {
   dlog('userOnAfterPage');
+  unregisterDialogCloser();
+
   var win = gSpider.mDocument.defaultView;
   if (win.wrappedJSObject)
   {
@@ -70,6 +72,10 @@ function userOnAfterPage()
         testwin = testwin.wrappedJSObject;
       }
       var testcases = testwin.testcases;
+      if (typeof testcases == 'undefined')
+      {
+        return;
+      }
       for (var i = 0; i < testcases.length; i++)
       {
         var testcase = testcases[i];
