@@ -39,7 +39,7 @@
 var bug = 322135;
 var summary = 'Array.prototype.concat on Array with length 2^32-1';
 var actual = '';
-var expect = '';
+var expect = 'No error';
 
 printBugNumber (bug);
 printStatus (summary);
@@ -49,7 +49,6 @@ var array1 = new Array(length);
 var array2 = ['Kibo'];
 var array;
 
-expect = 'RangeError';
 try
 {
   array = array1.concat(array2);
@@ -61,7 +60,3 @@ catch(ex)
   actual = ex.name;
 }
 reportCompare(expect, actual, summary + ': RangeError');
-
-expect = undefined;
-actual = array;
-reportCompare(expect, actual, summary + ': concat does not return');
