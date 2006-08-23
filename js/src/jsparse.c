@@ -1614,13 +1614,11 @@ static JSBool
 BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
 {
     JSObject *blockObj;
-    JSScope *scope;
     JSScopeProperty *sprop;
     JSAtomListElement *ale;
 
     blockObj = data->obj;
-    scope = OBJ_SCOPE(blockObj);
-    sprop = SCOPE_GET_PROPERTY(scope, ATOM_TO_JSID(atom));
+    sprop = SCOPE_GET_PROPERTY(OBJ_SCOPE(blockObj), ATOM_TO_JSID(atom));
     ATOM_LIST_SEARCH(ale, &tc->decls, atom);
     if (sprop || (ale && ALE_JSOP(ale) == JSOP_DEFCONST)) {
         const char *name;
@@ -1628,7 +1626,6 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
         if (sprop) {
             JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
             JS_ASSERT((uint16)sprop->shortid < data->u.let.index);
-            OBJ_DROP_PROPERTY(cx, blockObj, (JSProperty *) sprop);
         }
 
         name = js_AtomToPrintableString(cx, atom);
