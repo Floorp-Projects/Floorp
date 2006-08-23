@@ -379,6 +379,9 @@ num_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
         *tmpDest++ = '\0';
     }
 
+    if (cx->localeCallbacks && cx->localeCallbacks->localeToUnicode)
+        return cx->localeCallbacks->localeToUnicode(cx, buf, rval);
+    
     str = JS_NewString(cx, buf, size);
     if (!str) {
         JS_free(cx, buf);
