@@ -46,6 +46,7 @@
 ]>
 
 <wizard id="reportWizard" title="&reportWizard.title;"
+        style="min-width: 535px; min-height: 442px;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/x-javascript" src="chrome://reporter/content/reportWizard.js"/>
   <stringbundle id="strings" src="chrome://reporter/locale/reportWizard.properties"/>

@@ -77,7 +77,7 @@ function onBrowserLoad() {
 
 function loadReporterWizard() {
   window.openDialog("chrome://reporter/content/reportWizard.xul", "",
-                    "chrome,centerscreen,dialog,resizable=no,width=535,height=442",
+                    "chrome,centerscreen,dialog",
                     getBrowser().currentURI.spec);
   return true;
 }
