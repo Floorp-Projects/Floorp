@@ -44,6 +44,7 @@
 
 const char *const kDocTypeName = "W3C-doctype";
 const char *const kDocUrlName = "DocURL";
+const char *const kMimeTypeName = "MimeType";
 
 void
 documentInterfaceInitCB(AtkDocumentIface *aIface)
@@ -54,8 +55,9 @@ documentInterfaceInitCB(AtkDocumentIface *aIface)
 
     /*
      * We don't support get_document, get_locale and set_attribute right now.
+     * get_document_type is deprecated, we return DocType in
+     * get_document_attribute_value and get_document_attributes instead.
      */
-    aIface->get_document_type = getDocumentTypeCB;
     aIface->get_document_attributes = getDocumentAttributesCB;
     aIface->get_document_attribute_value = getDocumentAttributeValueCB;
 }
@@ -77,6 +79,16 @@ getDocumentTypeCB(AtkDocument *aDocument)
     return nsAccessibleWrap::ReturnString(aMimeType);
 }
 
+static inline GSList *
+prependToList(GSList *aList, const char *const aName, const nsAutoString &aValue)
+{
+    // libspi will free these
+    AtkAttribute *atkAttr = (AtkAttribute *)g_malloc(sizeof(AtkAttribute));
+    atkAttr->name = g_strdup(aName);
+    atkAttr->value = g_strdup(NS_ConvertUTF16toUTF8(aValue).get());
+    return g_slist_prepend(aList, atkAttr);
+}
+
 AtkAttributeSet *
 getDocumentAttributesCB(AtkDocument *aDocument)
 {
@@ -91,23 +103,20 @@ getDocumentAttributesCB(AtkDocument *aDocument)
     // according to atkobject.h, AtkAttributeSet is a GSList
     GSList *attributes = nsnull;
 
-    nsAutoString aURL, aW3CDocType;
+    nsAutoString aURL;
     nsresult rv = accDocument->GetURL(aURL);
     if (NS_SUCCEEDED(rv)) {
-        // libspi will free these
-        AtkAttribute *attrURL = (AtkAttribute *)g_malloc(sizeof(AtkAttribute));
-        attrURL->name = g_strdup(kDocUrlName);
-        attrURL->value = g_strdup(NS_ConvertUTF16toUTF8(aURL).get());
-        attributes = g_slist_prepend(attributes, attrURL);
+        attributes = prependToList(attributes, kDocUrlName, aURL);
     }
-
+    nsAutoString aW3CDocType;
     rv = accDocument->GetDocType(aW3CDocType);
     if (NS_SUCCEEDED(rv)) {
-        // libspi will free these
-        AtkAttribute *attrDocType = (AtkAttribute *)g_malloc(sizeof(AtkAttribute));
-        attrDocType->name = g_strdup(kDocTypeName);
-        attrDocType->value = g_strdup(NS_ConvertUTF16toUTF8(aW3CDocType).get());
-        attributes = g_slist_prepend(attributes, attrDocType);
+        attributes = prependToList(attributes, kDocTypeName, aW3CDocType);
+    }
+    nsAutoString aMimeType;
+    rv = accDocument->GetMimeType(aMimeType);
+    if (NS_SUCCEEDED(rv)) {
+        attributes = prependToList(attributes, kMimeTypeName, aMimeType);
     }
     
     return attributes;
@@ -133,6 +142,10 @@ getDocumentAttributeValueCB(AtkDocument *aDocument,
     }
     else if (!g_ascii_strcasecmp(aAttrName, kDocUrlName)) {
         rv = accDocument->GetURL(attrValue);
+        NS_ENSURE_SUCCESS(rv, nsnull);
+    }
+    else if (!g_ascii_strcasecmp(aAttrName, kMimeTypeName)) {
+        rv = accDocument->GetMimeType(attrValue);
         NS_ENSURE_SUCCESS(rv, nsnull);
     }
     else {
