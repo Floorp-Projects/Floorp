@@ -78,6 +78,11 @@ function writeLineToLog( string ) {
   string = String(string);
   string = string.replace(/[<>&]/g, htmlesc);
   DocumentWrite(string);
+
+  if (typeof dump == 'function')
+  {
+    dump( string + '\n');
+  }
 }
 
 var testcases = new Array();
