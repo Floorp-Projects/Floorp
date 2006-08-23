@@ -81,7 +81,12 @@ function writeLineToLog( string ) {
   string = String(string);
   string = string.replace(/[<>&]/g, htmlesc);
   string = string.replace(/[<>&]/g, htmlesc);
-  document.write( string + "<br>\n");
+  DocumentWrite( string + "<br>\n");
+
+  if (typeof dump == 'function')
+  {
+    dump( string + '\n');
+  }
 }
 
 function writeHeaderToLog( string ) {
@@ -96,6 +101,11 @@ function writeFormattedResult( expect, actual, string, passed ) {
   s += ( passed ) ? "<font color=#009900> &nbsp;" + PASSED
     : "<font color=#aa0000>&nbsp;" +  FAILED + expect + "</tt>";
   DocumentWrite( s + "</font></b></tt><br>" );
+
+  if (typeof dump == 'function')
+  {
+    dump( string + '\n');
+  }
   return passed;
 }
 
