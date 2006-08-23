@@ -1326,7 +1326,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
         if (aData->mMarginData->mBorderColor.mBottom.GetUnit() == eCSSUnit_Null)
           aData->mMarginData->mBorderColor.mBottom.SetColorValue(color);
 
-        borderStyle = NS_STYLE_BORDER_STYLE_OUTSET; // use css outset
+        borderStyle = NS_STYLE_BORDER_STYLE_SOLID; // compat, see bug 349655
       }
       else if (NS_STYLE_BORDER_COLLAPSE == tableStyle->mBorderCollapse) {
         // make the color grey
