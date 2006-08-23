@@ -436,12 +436,6 @@ function closeCalendar()
    self.close();
 }
 
-function calPrint()
-{
-    window.openDialog("chrome://calendar/content/printDialog.xul",
-                      "printdialog","chrome");
-}
-
 /* Change the only-workday checkbox */
 function changeOnlyWorkdayCheckbox() {
     var oldValue = (document.getElementById("toggle_workdays_only")

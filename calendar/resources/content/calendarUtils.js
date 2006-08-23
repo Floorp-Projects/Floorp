@@ -531,3 +531,12 @@ function setDefaultAlarmValues(aItem)
         }
     }
 }
+
+/**
+ * Opens the print dialog
+ */
+function calPrint()
+{
+    window.openDialog("chrome://calendar/content/printDialog.xul", "Print",
+                      "centerscreen,chrome,resizable");
+}

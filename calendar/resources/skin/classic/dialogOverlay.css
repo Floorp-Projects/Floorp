@@ -35,12 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* the main content of the dialog */
-#standard-dialog-content
-{
-       padding: 10px;
-}
-
 #calendar-serverwindow
 {
        width: 60em;

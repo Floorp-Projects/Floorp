@@ -26,6 +26,7 @@
  *                 Chris Allen
  *                 Eric Belhaire <belhaire@ief.u-psud.fr>
  *                 Michiel van Leeuwen <mvl@exedo.nl>
+ *                 Matthew Willis <mattwillis@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,40 +42,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-
-/***** calendar/printDialog.js
-* PRIMARY AUTHOR
-*   Chris Allen
-*   
-* NOTES
-*   Code for the calendar's print dialog.
-*
-* IMPLEMENTATION NOTES
-**********
-*/
+var gTempFile = null;
 
 var gPrintSettings = null;
 var gCalendarWindow = window.opener.gCalendarWindow;
 
-/*-----------------------------------------------------------------
- *   W I N D O W      F U N C T I O N S
- */
-
-/*-----------------------------------------------------------------
- *   Called when the dialog is loaded.
- */
-
 function loadCalendarPrintDialog()
 {
-    // set the date to the currently selected date
-    document.getElementById("start-date-picker").value = 
-        window.opener.document.getElementById("view-deck").selectedPanel.startDay.jsDate;
-    document.getElementById("end-date-picker").value = 
-        window.opener.document.getElementById("view-deck").selectedPanel.endDay.jsDate;
-
-    // start focus on title
-    var firstFocus = document.getElementById( "title-field" ).focus();
+    // set the datepickers to the currently selected dates
+    var theView = window.opener.currentView();
+    document.getElementById("start-date-picker").value = theView.startDay.jsDate;
+    document.getElementById("end-date-picker").value = theView.endDay.jsDate;
 
     // Get a list of formatters
     var contractids = new Array();
@@ -82,36 +60,48 @@ function loadCalendarPrintDialog()
                            .getService(Components.interfaces.nsICategoryManager);
     var catenum = catman.enumerateCategory('cal-print-formatters');
 
-    // Walk the list, adding item to the layout menupopup
+    // Walk the list, adding items to the layout menupopup
     var layoutList = document.getElementById("layout-field");
     while (catenum.hasMoreElements()) {
         var entry = catenum.getNext();
         entry = entry.QueryInterface(Components.interfaces.nsISupportsCString);
         var contractid = catman.getCategoryEntry('cal-print-formatters', entry);
         var formatter = Components.classes[contractid]
-                                 .getService(Components.interfaces.calIPrintFormatter);
+                                  .getService(Components.interfaces.calIPrintFormatter);
         // Use the contractid as value
         layoutList.appendItem(formatter.name, contractid);
     }
     layoutList.selectedIndex = 0;
 
-    opener.setCursor( "auto" );
+    opener.setCursor("auto");
+
+    refreshHtml();
 
     self.focus();
 }
 
+function unloadCalendarPrintDialog()
+{
+    gTempFile.remove(false);
+}
 
-function printCalendar() {
+/**
+ * Gets the settings from the dialog's UI widgets.
+ * @returns an Object with title, layoutCId, eventList, start, and end
+ *          properties containing the appropriate values.
+ */
+function getDialogSettings()
+{
+    var settings = new Object();
     var ccalendar = window.opener.getCompositeCalendar();
-    var start;
-    var end;
-    var eventList;
 
     var listener = {
         mEventArray: new Array(),
 
         onOperationComplete: function (aCalendar, aStatus, aOperationType, aId, aDateTime) {
-            printInitWindow(listener.mEventArray, start, end); 
+            settings.eventList = listener.mEventArray;
+            settings.start = start;
+            settings.end = end;
         },
 
         onGetResult: function (aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
@@ -126,16 +116,18 @@ function printCalendar() {
 
     var start;
     var end;
+    var eventList;
     switch (document.getElementById("view-field").selectedItem.value) {
         case 'currentview':
         case '': //just in case
-            start = window.opener.document.getElementById("view-deck").selectedPanel.startDay;
-            end   = window.opener.document.getElementById("view-deck").selectedPanel.endDay;
+            var theView = window.opener.currentView();
+            start = theView.startDay;
+            end   = theView.endDay;
             break;
-        case 'selected' :
+        case 'selected':
             eventList = gCalendarWindow.EventSelection.selectedEvents;
             break;
-        case 'custom' :
+        case 'custom':
             start = jsDateToDateTime(document.getElementById("start-date-picker").value);
             end   = jsDateToDateTime(document.getElementById("end-date-picker").value);
             break ;
@@ -149,29 +141,73 @@ function printCalendar() {
         end.normalize();
         ccalendar.getItems(filter, 0, start, end, listener);
     } else {
-        printInitWindow(eventList, null, null);
+        settings.eventList = eventList;
+        settings.start = null;
+        settings.end = null;
     }
+
+    var tempTitle = document.getElementById("title-field").value;
+    settings.title = (tempTitle || calGetString("calendar", "Untitled"));
+    settings.layoutCId = document.getElementById("layout-field").value;
+    return settings;
 }
 
-function printInitWindow(aEventList, aStart, aEnd) {
-    var args = new Object();
-    args.title = document.getElementById("title-field").value;
-    args.layoutContractid = document.getElementById("layout-field").value;
-    args.eventList = aEventList;
-    args.start = aStart;
-    args.end = aEnd;
-
-    window.openDialog("chrome://calendar/content/calPrintEngine.xul",
-                      "CalendarPrintWindow",
-                      "chrome,dialog=no,all,centerscreen",
-                      args);
-}
-
-/*-----------------------------------------------------------------
- *   Called when a datepicker is finished, and a date was picked.
+/**
+ * Looks at the selections the user has made (start date, layout, etc.), and
+ * updates the HTML in the iframe accordingly. This is also called when a
+ * dialog UI element has changed, since we'll want to refresh the preview.
  */
+function refreshHtml()
+{
+    var settings = getDialogSettings();
 
+    // I'd like to use calGetString, but it can't do "formatStringFromName".
+    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService);
+
+    var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
+    document.title = props.formatStringFromName("PrintPreviewWindowTitle",
+                                                [settings.title], 1);
+
+    var printformatter = Components.classes[settings.layoutCId]
+                                   .createInstance(Components.interfaces.calIPrintFormatter);
+
+    // Fail-safe check to not init twice, to prevent leaking files
+    if (gTempFile) {
+        gTempFile.remove(false);
+    }
+    const nsIFile = Components.interfaces.nsIFile;
+    var dirService = Components.classes["@mozilla.org/file/directory_service;1"]
+                               .getService(Components.interfaces.nsIProperties);
+    gTempFile = dirService.get("TmpD", nsIFile);
+    gTempFile.append("calendarPrint.html");
+    gTempFile.createUnique(nsIFile.NORMAL_FILE_TYPE, 0600); // 0600 = -rw-------
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(Components.interfaces.nsIIOService);
+    var tempUri = ioService.newFileURI(gTempFile); 
+
+    var stream = Components.classes["@mozilla.org/network/file-output-stream;1"]
+                           .createInstance(Components.interfaces.nsIFileOutputStream);
+
+    try {
+        // 0x2A = PR_TRUNCATE, PR_CREATE_FILE, PR_WRONLY
+        // 0600 = -rw-------
+        stream.init(gTempFile, 0x2A, 0600, 0);
+        printformatter.formatToHtml(stream, settings.start, settings.end,
+                                    settings.eventList.length,
+                                    settings.eventList, settings.title);
+        stream.close();
+    } catch (e) {
+        dump("printDialog::refreshHtml:"+e+"\n");
+    }
+
+    document.getElementById("content").contentWindow.location = gTempUri.spec;
+}
+
+/**
+ * Called when once a date has been selected in the datepicker.
+ */
 function onDatePick() {
     radioGroupSelectItem("view-field", "custom-range");
+    refreshHtml();
 }
-
