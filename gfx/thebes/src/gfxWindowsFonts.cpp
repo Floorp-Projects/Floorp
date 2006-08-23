@@ -906,7 +906,8 @@ public:
                   SCRIPT_ITEM *aItem,
                   gfxWindowsFontGroup *aGroup) :
         mContext(aContext), mDC(aDC), mString(aString),
-        mLength(aLength), mScriptItem(aItem), mGroup(aGroup),
+        mLength(aLength), mScriptItem(aItem),
+        mScript(aItem->a.eScript), mGroup(aGroup),
         mGlyphs(nsnull), mClusters(nsnull), mAttr(nsnull),
         mNumGlyphs(0), mMaxGlyphs((int)(1.5 * aLength) + 16),
         mOffsets(nsnull), mAdvances(nsnull), mSpacing(nsnull),
@@ -1084,7 +1085,7 @@ public:
         if (gMaxScript == -1) {
             ScriptGetProperties(&gScriptProperties, &gMaxScript);
         }
-        return gScriptProperties[mScriptItem->a.eScript];
+        return gScriptProperties[mScript];
     }
 
     cairo_glyph_t *GetCairoGlyphs(const gfxPoint& pt, gfxFloat &offset, PRUint32 *nglyphs) {
@@ -1311,6 +1312,7 @@ private:
     HDC mDC;
 
     SCRIPT_ITEM *mScriptItem;
+    WORD mScript;
 
     const PRUnichar *mString;
     const PRUint32 mLength;
