@@ -1293,7 +1293,7 @@ static SECStatus
 sftk_HMACCmp(CK_ULONG *copyLen,unsigned char *sig,unsigned int sigLen,
 				unsigned char *hash, unsigned int hashLen)
 {
-    return PORT_Memcmp(sig,hash,*copyLen) ? SECSuccess : SECFailure ;
+    return (PORT_Memcmp(sig,hash,*copyLen) == 0) ? SECSuccess : SECFailure ; 
 }
 
 /*
