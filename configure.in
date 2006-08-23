@@ -3012,7 +3012,8 @@ case "$target" in
         case "${target_cpu}" in
             powerpc*)
                 dnl Architecture minimum 10.3
-                export MACOSX_DEPLOYMENT_TARGET=10.3
+                dnl export MACOSX_DEPLOYMENT_TARGET=10.3
+                export MACOSX_DEPLOYMENT_TARGET=10.2
                 ;;
             i*86*)
                 dnl Architecture minimum 10.4
