@@ -177,10 +177,25 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
   rv = CheckForRecursiveLoad(aURI);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  // We'll use our principal, not that of the document loaded inside us.
-  // This is very important; needed to prevent XSS attacks on documents
-  // loaded in subframes!
-  loadInfo->SetOwner(principal);
+  // We'll use our principal, not that of the document loaded inside us.  This
+  // is very important; needed to prevent XSS attacks on documents loaded in
+  // subframes!  But only use our principal if our docshell's type is the same
+  // as the type of our ownerDocument's docshell.  Note that we could try
+  // checking GetSameTypeParent() on mDocShell, but that might break if we ever
+  // support docshells loaded inside disconnected nodes...
+  nsCOMPtr<nsISupports> container = doc->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> parentItem = do_QueryInterface(container);
+  nsCOMPtr<nsIDocShellTreeItem> ourItem = do_QueryInterface(mDocShell);
+  NS_ASSERTION(ourItem, "Must have item");
+  if (parentItem) {
+    PRInt32 parentType;
+    rv = parentItem->GetItemType(&parentType);
+    PRInt32 ourType;
+    nsresult rv2 = ourItem->GetItemType(&ourType);
+    if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(rv2) && ourType == parentType) {
+      loadInfo->SetOwner(principal);
+    }
+  }
 
   nsCOMPtr<nsIURI> referrer;
   rv = principal->GetURI(getter_AddRefs(referrer));
