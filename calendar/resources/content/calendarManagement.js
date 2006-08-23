@@ -277,8 +277,7 @@ function initCalendarManager()
     if (calMgr.getCalendars({}).length == 0) {
         var homeCalendar = calMgr.createCalendar("storage", makeURL("moz-profile-calendar://"));
         calMgr.registerCalendar(homeCalendar);
-        var name = srGetStrBundle("chrome://calendar/locale/calendar.properties")
-                                 .GetStringFromName("homeCalendarName");
+        var name = calGetString("calendar", "homeCalendarName");
                                  
         homeCalendar.name = name;
         composite.addCalendar(homeCalendar);
