@@ -48,7 +48,9 @@ var emailStringBundle;
  
 function checkForMailNews()
 {
-	emailStringBundle = srGetStrBundle("chrome://calendar/locale/email.properties");
+    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService);
+    emailStringBundle = sbs.createBundle("chrome://calendar/locale/email.properties");
    
    var AccountManagerComponent;
 	var AccountManagerService;
@@ -516,6 +518,8 @@ function hasDefaultAccount()
 		var AccountManager = AccountManagerService.QueryInterface(Components.interfaces.nsIMsgAccountManager);
 		var DefaultAccount = AccountManager.defaultAccount;
 		var DefaultIncomingServer = DefaultAccount.incomingServer;
+                var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                    .getService(Components.interfaces.nsIStringBundleService);
 		emailStringBundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
       var LocalFolders = emailStringBundle.GetStringFromName( "localFolders" );
       if (DefaultIncomingServer.hostName == LocalFolders)

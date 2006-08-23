@@ -204,11 +204,13 @@ function publishItemArray(aItemArray, aPath, aProgressDialog) {
     try {
         channel.asyncOpen(publishingListener, aProgressDialog);
     } catch (e) {
-        var calendarStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+        var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService);
+        var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
         var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                       .getService(Components.interfaces.nsIPromptService);
-        promptService.alert(null, calendarStringBundle.GetStringFromName('errorTitle'),
-                            calendarStringBundle.formatStringFromName('otherPutError',[e.message],1));
+        promptService.alert(null, calGetString("calendar", "errorTitle"),
+                            props.formatStringFromName('otherPutError',[e.message],1));
     }
 }
 
@@ -250,7 +252,9 @@ var publishingListener =
         ctxt.wrappedJSObject.onStopUpload();
 
         var channel;
-        var calendarStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+        var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService);
+        var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
         var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                       .getService(Components.interfaces.nsIPromptService);
         try {
@@ -259,13 +263,13 @@ var publishingListener =
         } catch(e) {
         }
         if (channel && !channel.requestSucceeded) {
-            promptService.alert(null, calendarStringBundle.GetStringFromName('errorTitle'),
-                                calendarStringBundle.formatStringFromName('httpPutError',[channel.responseStatus, channel.responseStatusText],2));
+            promptService.alert(null, calGetString("calenar", 'errorTitle'),
+                                props.formatStringFromName('httpPutError',[channel.responseStatus, channel.responseStatusText],2));
         }
         else if (!channel && !Components.isSuccessCode(request.status)) {
             // XXX this should be made human-readable.
-            promptService.alert(null, calendarStringBundle.GetStringFromName('errorTitle'),
-                                calendarStringBundle.formatStringFromName('otherPutError',[request.status.toString(16)],1));
+            promptService.alert(null, calGetString("calenar", 'errorTitle'),
+                                props.formatStringFromName('otherPutError',[request.status.toString(16)],1));
         }
     },
 
