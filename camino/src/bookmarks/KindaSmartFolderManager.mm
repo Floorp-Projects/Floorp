@@ -178,11 +178,9 @@ const unsigned kNumTop10Items = 10;   // well, 10, duh!
   }
   else if (visitCount >= currentMinVisits)
   {
-    // If bookmark is an about:URI, ignore it
     NSString* newItemURL = [aBookmark url];
-    NSRange firstColon = [newItemURL rangeOfString:@":"];
-    // If there's a colon in the URI and everything up to it is "about", return
-    if((firstColon.location != NSNotFound) && [[newItemURL substringToIndex:firstColon.location] isEqual:@"about"])
+
+    if ([newItemURL hasPrefix:@"about:"])
       return;
 
     // enter it into the list using insertion sort. it will go before other items with the same visit

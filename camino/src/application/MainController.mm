@@ -1557,7 +1557,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
   }
 
   if (action == @selector(sendURL:))
-    return ![[browserController getBrowserWrapper] isEmpty];
+    return ![[[browserController getBrowserWrapper] getCurrentURI] hasPrefix:@"about:"];
 
   // default return
   return YES;

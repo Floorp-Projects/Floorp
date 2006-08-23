@@ -971,7 +971,7 @@ enum BWCOpenDest {
 {
   NSToolbar *toolbar = [[[NSToolbar alloc] initWithIdentifier:BrowserToolbarIdentifier] autorelease];
   
-  [toolbar setDisplayMode:NSToolbarDisplayModeDefault];
+  [toolbar setDisplayMode:NSToolbarDisplayModeIconOnly];
   [toolbar setAllowsUserCustomization:YES];
   [toolbar setAutosavesConfiguration:YES];
   [toolbar setDelegate:self];
@@ -1371,10 +1371,8 @@ enum BWCOpenDest {
     return YES;
   else if (action == @selector(closeCurrentTab:))
     return ([mTabBrowser numberOfTabViewItems] > 1 && [[self window] isKeyWindow]);
-  else if (action == @selector(sendURL:)) {
-    NSString* curURL = [[self getBrowserWrapper] getCurrentURI];
-    return ![MainController isBlankURL:curURL];
-  }
+  else if (action == @selector(sendURL:) || action == @selector(fillForm:))
+    return ![[[self getBrowserWrapper] getCurrentURI] hasPrefix:@"about:"];
   else if (action == @selector(viewSource:)) {
     return (![self bookmarkManagerIsVisible] &&
             [[[self getBrowserWrapper] getBrowserView] isTextBasedContent]);
@@ -1479,9 +1477,6 @@ enum BWCOpenDest {
       action == @selector(closeOtherTabs:))
     return ([mTabBrowser numberOfTabViewItems] > 1);
 
-  if (action == @selector(fillForm:))
-    return ![self bookmarkManagerIsVisible];
-
   if (action == @selector(reloadSendersTab:)) {
     BrowserTabViewItem* sendersTab = [[self getTabBrowser] itemWithTag:[aMenuItem tag]];
     return [[sendersTab view] canReload];
@@ -1489,6 +1484,9 @@ enum BWCOpenDest {
 
   if (action == @selector(reload:))
     return [[self getBrowserWrapper] canReload];
+
+  if (action == @selector(fillForm:))
+    return ![[[self getBrowserWrapper] getCurrentURI] hasPrefix:@"about:"];
 
 
   return YES;
