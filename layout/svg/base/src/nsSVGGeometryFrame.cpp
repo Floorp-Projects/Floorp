@@ -113,6 +113,25 @@ nsSVGGeometryFrame::InitSVG()
 }
 
 NS_IMETHODIMP
+nsSVGGeometryFrame::Init(nsIContent* aContent,
+                         nsIFrame* aParent,
+                         nsIFrame* aPrevInFlow)
+{
+  mContent = aContent;
+  NS_IF_ADDREF(mContent);
+  mParent = aParent;
+
+  if (mContent) {
+    mContent->SetMayHaveFrame(PR_TRUE);
+  }
+
+  InitSVG();
+  DidSetStyleContext();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSVGGeometryFrame::DidSetStyleContext()
 {
   // One of the styles that might have been changed are the urls that

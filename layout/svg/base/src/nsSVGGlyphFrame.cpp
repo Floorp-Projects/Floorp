@@ -52,6 +52,9 @@
 #include "nsSVGPoint.h"
 #include "nsSVGRect.h"
 #include "nsDOMError.h"
+#include "nsSVGMatrix.h"
+#include "nsISVGCairoCanvas.h"
+#include "cairo.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -81,7 +84,6 @@ nsSVGGlyphFrame::nsSVGGlyphFrame(nsStyleContext* aContext)
 // nsISupports methods
 
 NS_INTERFACE_MAP_BEGIN(nsSVGGlyphFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGGlyphGeometrySource)
   NS_INTERFACE_MAP_ENTRY(nsISVGGlyphFragmentLeaf)
   NS_INTERFACE_MAP_ENTRY(nsISVGGlyphFragmentNode)
   NS_INTERFACE_MAP_ENTRY(nsISVGChildFrame)
@@ -89,43 +91,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGGlyphFrameBase)
 
 //----------------------------------------------------------------------
 // nsIFrame methods
-
-NS_IMETHODIMP
-nsSVGGlyphFrame::Init(nsIContent*      aContent,
-                      nsIFrame*        aParent,
-                      nsIFrame*        aPrevInFlow)
-{
-//  rv = nsSVGGlyphFrameBase::Init(aPresContext, aContent, aParent, aPrevInFlow);
-
-  mContent = aContent;
-  NS_IF_ADDREF(mContent);
-  mParent = aParent;
-
-  if (mContent) {
-    mContent->SetMayHaveFrame(PR_TRUE);
-  }
-  
-  // construct our glyphmetrics & glyphgeometry objects:
-  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-  if (!outerSVGFrame) {
-    NS_ERROR("No outerSVGFrame");
-    DidSetStyleContext();
-    return NS_ERROR_FAILURE;
-  }
-  nsCOMPtr<nsISVGRenderer> renderer;
-  outerSVGFrame->GetRenderer(getter_AddRefs(renderer));
-  if (renderer) {
-    renderer->CreateGlyphGeometry(getter_AddRefs(mGeometry));
-  }
-
-  nsSVGGlyphFrameBase::InitSVG();
-  DidSetStyleContext();
-
-  if (!renderer || !mGeometry)
-    return NS_ERROR_FAILURE;
-    
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsSVGGlyphFrame::CharacterDataChanged(nsPresContext*  aPresContext,
@@ -230,16 +195,112 @@ nsSVGGlyphFrame::IsFrameOfType(PRUint32 aFlags) const
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods
 
+static void
+LoopCharacters(cairo_t *aCtx, nsAString &aText, nsSVGCharacterPosition *aCP,
+               void (*aFunc)(cairo_t *cr, const char *utf8))
+{
+  if (!aCP) {
+    aFunc(aCtx, NS_ConvertUTF16toUTF8(aText).get());
+  } else {
+    for (PRUint32 i = 0; i < aText.Length(); i++) {
+      /* character actually on the path? */
+      if (aCP[i].draw == PR_FALSE)
+        continue;
+      cairo_matrix_t matrix;
+      cairo_get_matrix(aCtx, &matrix);
+      cairo_move_to(aCtx, aCP[i].x, aCP[i].y);
+      cairo_rotate(aCtx, aCP[i].angle);
+      aFunc(aCtx, NS_ConvertUTF16toUTF8(Substring(aText, i, 1)).get());
+      cairo_set_matrix(aCtx, &matrix);
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsSVGGlyphFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
 {
-#ifdef DEBUG
-  //printf("nsSVGGlyphFrame(%p)::Paint\n", this);
-#endif
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
 
-  mGeometry->Render(this, canvas);
+  nsCOMPtr<nsISVGCairoCanvas> cairoCanvas = do_QueryInterface(canvas);
+  NS_ASSERTION(cairoCanvas, "wrong svg render context for geometry!");
+  if (!cairoCanvas) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoString text;
+  GetCharacterData(text);
+
+  if (text.IsEmpty()) {
+    return NS_OK;
+  }
+
+  nsAutoArrayPtr<nsSVGCharacterPosition> cp;
+
+  cairo_t *ctx = cairoCanvas->GetContext();
+
+  SelectFont(ctx);
+
+  nsresult rv = GetCharacterPosition(ctx, getter_Transfers(cp));
+
+  PRUint16 renderMode;
+  cairo_matrix_t matrix;
+  canvas->GetRenderMode(&renderMode);
+  if (renderMode == nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL) {
+    /* save/pop the state so we don't screw up the xform */
+    cairo_save(ctx);
+  }
+  else {
+    cairo_get_matrix(ctx, &matrix);
+  }
+
+  rv = GetGlobalTransform(ctx, cairoCanvas);
+  if (NS_FAILED(rv)) {
+    if (renderMode == nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL)
+      cairo_restore(ctx);
+    return rv;
+  }
+
+  if (!cp)
+    cairo_move_to(ctx, mX, mY);
+
+  if (renderMode != nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL) {
+    if (GetClipRule() == NS_STYLE_FILL_RULE_EVENODD)
+      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_EVEN_ODD);
+    else
+      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_WINDING);
+
+    if (renderMode == nsISVGRendererCanvas::SVG_RENDER_MODE_CLIP_MASK) {
+      cairo_set_antialias(ctx, CAIRO_ANTIALIAS_NONE);
+      cairo_set_source_rgba(ctx, 1.0f, 1.0f, 1.0f, 1.0f);
+      LoopCharacters(ctx, text, cp, cairo_show_text);
+    } else {
+      LoopCharacters(ctx, text, cp, cairo_text_path);
+    }
+
+    cairo_set_matrix(ctx, &matrix);
+
+    return NS_OK;
+  }
+
+  void *closure;
+  if (HasFill() && NS_SUCCEEDED(SetupCairoFill(canvas, ctx, &closure))) {
+    LoopCharacters(ctx, text, cp, cairo_show_text);
+    CleanupCairoFill(ctx, closure);
+  }
+
+  if (HasStroke() && NS_SUCCEEDED(SetupCairoStroke(canvas, ctx, &closure))) {
+    cairo_new_path(ctx);
+    if (!cp)
+      cairo_move_to(ctx, mX, mY);
+    LoopCharacters(ctx, text, cp, cairo_text_path);
+    cairo_stroke(ctx);
+    CleanupCairoStroke(ctx, closure);
+    cairo_new_path(ctx);
+  }
+
+  cairo_restore(ctx);
+
   return NS_OK;
 }
 
@@ -252,7 +313,7 @@ nsSVGGlyphFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
   // test for hit:
   *hit = nsnull;
 
-  if (!mRect.Contains(x, y))
+  if (!mRect.Contains(nscoord(x), nscoord(y)))
     return NS_OK;
 
   PRBool events = PR_FALSE;
@@ -289,8 +350,7 @@ nsSVGGlyphFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
   if (!events)
     return NS_OK;
 
-  PRBool isHit;
-  mGeometry->ContainsPoint(this, x, y, &isHit);
+  PRBool isHit = ContainsPoint(x, y);
   if (isHit) 
     *hit = this;
   
@@ -306,7 +366,85 @@ nsSVGGlyphFrame::GetCoveredRegion()
 NS_IMETHODIMP
 nsSVGGlyphFrame::UpdateCoveredRegion()
 {
-  mGeometry->GetCoveredRegion(this, &mRect);
+  mRect.Empty();
+
+  PRBool hasFill = HasFill();
+  PRBool hasStroke = HasStroke();
+
+  if (!hasFill && !hasStroke) {
+    return NS_OK;
+  }
+
+  nsAutoString text;
+  GetCharacterData(text);
+
+  if (text.IsEmpty()) {
+    return NS_OK;
+  }
+
+  nsAutoArrayPtr<nsSVGCharacterPosition> cp;
+
+  nsSVGAutoGlyphHelperContext ctx(this);
+
+  nsresult rv = GetCharacterPosition(ctx, getter_Transfers(cp));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = GetGlobalTransform(ctx, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!cp)
+    cairo_move_to(ctx, mX, mY);
+
+  if (!cp) {
+    if (hasStroke) {
+      cairo_text_path(ctx, NS_ConvertUTF16toUTF8(text).get());
+    } else {
+      cairo_text_extents_t extent;
+      cairo_text_extents(ctx,
+                         NS_ConvertUTF16toUTF8(text).get(),
+                         &extent);
+      cairo_rectangle(ctx, mX + extent.x_bearing, mY + extent.y_bearing,
+                      extent.width, extent.height);
+    }
+  } else {
+    cairo_matrix_t matrix;
+    for (PRUint32 i=0; i<text.Length(); i++) {
+      /* character actually on the path? */
+      if (cp[i].draw == PR_FALSE)
+        continue;
+      cairo_get_matrix(ctx, &matrix);
+      cairo_move_to(ctx, cp[i].x, cp[i].y);
+      cairo_rotate(ctx, cp[i].angle);
+      if (hasStroke) {
+        cairo_text_path(ctx, NS_ConvertUTF16toUTF8(Substring(text, i, 1)).get());
+      } else {
+        cairo_text_extents_t extent;
+        cairo_text_extents(ctx,
+                           NS_ConvertUTF16toUTF8(Substring(text, i, 1)).get(),
+                           &extent);
+        cairo_rel_move_to(ctx, extent.x_bearing, extent.y_bearing);
+        cairo_rel_line_to(ctx, extent.width, 0);
+        cairo_rel_line_to(ctx, 0, extent.height);
+        cairo_rel_line_to(ctx, -extent.width, 0);
+        cairo_close_path(ctx);
+      }
+      cairo_set_matrix(ctx, &matrix);
+    }
+  }
+
+  double xmin, ymin, xmax, ymax;
+
+  if (hasStroke) {
+    SetupCairoStrokeGeometry(ctx);
+    cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+  } else {
+    cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+  }
+
+  cairo_user_to_device(ctx, &xmin, &ymin);
+  cairo_user_to_device(ctx, &xmax, &ymax);
+
+  mRect = nsSVGUtils::ToBoundingPixelRect(xmin, ymin, xmax, ymax);
 
   return NS_OK;
 }
@@ -348,9 +486,35 @@ nsSVGGlyphFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
   *_retval = nsnull;
 
-  if (mGeometry)
-    return mGeometry->GetBoundingBox(this, _retval);
-  return NS_ERROR_FAILURE;
+  nsAutoString text;
+  GetCharacterData(text);
+
+  if (text.IsEmpty())
+    return NS_OK;
+
+  nsAutoArrayPtr<nsSVGCharacterPosition> cp;
+
+  nsSVGAutoGlyphHelperContext ctx(this);
+
+  nsresult rv = GetCharacterPosition(ctx, getter_Transfers(cp));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = GetGlobalTransform(ctx, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!cp)
+    cairo_move_to(ctx, mX, mY);
+
+  LoopCharacters(ctx, text, cp, cairo_text_path);
+
+  double xmin, ymin, xmax, ymax;
+
+  cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+
+  cairo_user_to_device(ctx, &xmin, &ymin);
+  cairo_user_to_device(ctx, &xmax, &ymax);
+
+  return NS_NewSVGRect(_retval, xmin, ymin, xmax - xmin, ymax - ymin);
 }
 
 //----------------------------------------------------------------------
@@ -453,37 +617,11 @@ nsSVGGlyphFrame::GetCharacterPosition(cairo_t *ctx,
 }
 
 //----------------------------------------------------------------------
-// nsISVGGlyphGeometrySource methods:
-
-/* readonly attribute float x; */
-NS_IMETHODIMP
-nsSVGGlyphFrame::GetX(float *aX)
-{
-  *aX = mX;
-  return NS_OK;
-}
-
-/* readonly attribute float y; */
-NS_IMETHODIMP
-nsSVGGlyphFrame::GetY(float *aY)
-{
-  *aY = mY;
-  return NS_OK;
-}
-
-/* readonly attribute boolean hasHighlight; */
-NS_IMETHODIMP
-nsSVGGlyphFrame::GetHasHighlight(PRBool *aHasHighlight)
-{
-  *aHasHighlight = (mState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
-
-  return NS_OK;
-}
-
 
 // Utilities for converting from indices in the uncompressed content
 // element strings to compressed frame string and back:
-int CompressIndex(int index, const nsTextFragment*fragment)
+static int
+CompressIndex(int index, const nsTextFragment*fragment)
 {
   int ci=0;
   if (fragment->Is2b()) {
@@ -522,23 +660,24 @@ int CompressIndex(int index, const nsTextFragment*fragment)
   return ci;
 }
 
-int UncompressIndex(int index, PRBool bRightAffinity, const nsTextFragment*fragment)
+static int
+UncompressIndex(int index, PRBool bRightAffinity, const nsTextFragment*fragment)
 {
   // XXX
   return index;
 }
 
-/* [noscript] void getHighlight (out unsigned long charnum, out unsigned long nchars, out nscolor foreground, out nscolor background); */
-NS_IMETHODIMP
-nsSVGGlyphFrame::GetHighlight(PRUint32 *charnum, PRUint32 *nchars, nscolor *foreground, nscolor *background)
+nsresult
+nsSVGGlyphFrame::GetHighlight(PRUint32 *charnum, PRUint32 *nchars,
+                              nscolor *foreground, nscolor *background)
 {
   *foreground = NS_RGB(255,255,255);
   *background = NS_RGB(0,0,0); 
   *charnum=0;
   *nchars=0;
 
-    PRBool hasHighlight;
-  GetHasHighlight(&hasHighlight);
+  PRBool hasHighlight =
+    (mState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
 
   if (!hasHighlight) {
     NS_ERROR("nsSVGGlyphFrame::GetHighlight() called by renderer when there is no highlight");
@@ -1232,7 +1371,7 @@ void nsSVGGlyphFrame::UpdateGeometry(PRBool bRedraw,
       return;
 
     outerSVGFrame->InvalidateRect(mRect);
-    mGeometry->GetCoveredRegion(this, &mRect);
+    UpdateCoveredRegion();
 
     nsRect filterRect;
     filterRect = nsSVGUtils::FindFilterInvalidation(this);
@@ -1274,6 +1413,92 @@ nsSVGGlyphFrame::GetTextFrame()
   }
 
   return containerFrame->GetTextFrame();
+}
+
+PRBool
+nsSVGGlyphFrame::ContainsPoint(float x, float y)
+{
+  nsAutoString text;
+  GetCharacterData(text);
+
+  if (text.IsEmpty())
+    return PR_FALSE;
+
+  nsAutoArrayPtr<nsSVGCharacterPosition> cp;
+
+  nsSVGAutoGlyphHelperContext ctx(this);
+
+  nsresult rv = GetCharacterPosition(ctx, getter_Transfers(cp));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  rv = GetGlobalTransform(ctx, nsnull);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  float xx = 0, yy = 0;
+  if (!cp) {
+    xx = mX;
+    yy = mY;
+  }
+
+  cairo_matrix_t matrix;
+
+  for (PRUint32 i = 0; i < text.Length(); i++) {
+    /* character actually on the path? */
+    if (cp && cp[i].draw == PR_FALSE)
+      continue;
+
+    cairo_get_matrix(ctx, &matrix);
+
+    if (cp) {
+      cairo_move_to(ctx, cp[i].x, cp[i].y);
+      cairo_rotate(ctx, cp[i].angle);
+    } else {
+      cairo_move_to(ctx, xx, yy);
+    }
+
+    cairo_text_extents_t extent;
+    cairo_text_extents(ctx,
+                       NS_ConvertUTF16toUTF8(Substring(text, i, 1)).get(),
+                       &extent);
+    cairo_rel_move_to(ctx, extent.x_bearing, extent.y_bearing);
+    cairo_rel_line_to(ctx, extent.width, 0);
+    cairo_rel_line_to(ctx, 0, extent.height);
+    cairo_rel_line_to(ctx, -extent.width, 0);
+    cairo_close_path(ctx);
+
+    cairo_set_matrix(ctx, &matrix);
+
+    if (!cp) {
+      xx += extent.x_advance;
+      yy += extent.y_advance;
+    }
+  }
+
+  cairo_identity_matrix(ctx);
+  return cairo_in_fill(ctx, x, y);
+}
+
+nsresult
+nsSVGGlyphFrame::GetGlobalTransform(cairo_t *ctx,
+                                    nsISVGCairoCanvas* aCanvas)
+{
+  nsCOMPtr<nsIDOMSVGMatrix> ctm;
+  GetCanvasTM(getter_AddRefs(ctm));
+  NS_ASSERTION(ctm, "graphic source didn't specify a ctm");
+
+  cairo_matrix_t matrix = NS_ConvertSVGMatrixToCairo(ctm);
+  if (aCanvas) {
+    aCanvas->AdjustMatrixForInitialTransform(&matrix);
+  }
+
+  cairo_matrix_t inverse = matrix;
+  if (cairo_matrix_invert(&inverse)) {
+    cairo_identity_matrix(ctx);
+    return NS_ERROR_FAILURE;
+  }
+
+  cairo_set_matrix(ctx, &matrix);
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

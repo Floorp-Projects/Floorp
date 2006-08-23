@@ -98,13 +98,6 @@ NS_IMPL_ISUPPORTS1(nsSVGRendererCairo, nsISVGRenderer)
 //----------------------------------------------------------------------
 // nsISVGRenderer methods
 
-/** Implements nsISVGRendererGlyphGeometry createGlyphGeometry; */
-NS_IMETHODIMP
-nsSVGRendererCairo::CreateGlyphGeometry(nsISVGRendererGlyphGeometry **_retval)
-{
-  return NS_NewSVGCairoGlyphGeometry(_retval);
-}
-
 /** Implements [noscript] nsISVGRendererCanvas createCanvas(in nsIRenderingContext ctx,
     in nsPresContext presContext, const in nsRectRef dirtyRect); */
 NS_IMETHODIMP
