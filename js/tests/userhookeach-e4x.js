@@ -48,7 +48,7 @@ var gCheckInterval = 1000;
 function userOnBeforePage()
 {
   dlog('userOnBeforePage');
-
+  registerDialogCloser();
 }
 
 var gReport;
@@ -68,9 +68,15 @@ function checkTestCompleted()
   }
   if (win.gPageCompleted)
   {
+    unregisterDialogCloser();
     gPageCompleted = true;
 
     var testcases = win.testcases;
+    if (typeof testcases == 'undefined')
+    {
+      return;
+    }
+
     for (var i = 0; i < testcases.length; i++)
     {
       var testcase = testcases[i];
