@@ -122,6 +122,7 @@ static const char kEventCountPref[] = "metrics.event-count";
 static const char kEnablePref[] = "metrics.upload.enable";
 
 const PRUint32 nsMetricsService::kMaxRetries = 3;
+const PRUint32 nsMetricsService::kMetricsVersion = 1;
 
 //-----------------------------------------------------------------------------
 
@@ -1280,7 +1281,6 @@ nsMetricsService::UploadData()
     return NS_ERROR_ABORT;
   }
  
-  PRBool enable = PR_FALSE;
   nsCString spec;
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
@@ -1436,7 +1436,8 @@ nsMetricsService::OpenCompleteXMLStream(nsILocalFile *dataFile,
 
   static const char METRICS_XML_HEAD[] =
       "<?xml version=\"1.0\"?>\n"
-      "<log xmlns=\"" NS_METRICS_NAMESPACE "\" clientid=\"%s\">\n";
+      "<log xmlns=\"" NS_METRICS_NAMESPACE "\" "
+           "version=\"%d\" clientid=\"%s\">\n";
   static const char METRICS_XML_TAIL[] = "</log>";
 
   nsCOMPtr<nsIFileInputStream> fileStream =
@@ -1454,7 +1455,7 @@ nsMetricsService::OpenCompleteXMLStream(nsILocalFile *dataFile,
       do_CreateInstance("@mozilla.org/io/string-input-stream;1");
   NS_ENSURE_STATE(stringStream);
 
-  char *head = PR_smprintf(METRICS_XML_HEAD, clientID.get());
+  char *head = PR_smprintf(METRICS_XML_HEAD, kMetricsVersion, clientID.get());
   rv = stringStream->SetData(head, -1);
   PR_smprintf_free(head);
   NS_ENSURE_SUCCESS(rv, rv);
