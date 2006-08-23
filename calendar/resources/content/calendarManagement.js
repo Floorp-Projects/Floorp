@@ -75,12 +75,18 @@ var calCalendarManagerObserver = {
         var item = getListItem(aCalendar);
         if (item) {
             var listbox = document.getElementById("list-calendars-listbox");
+            var oldIndex = listbox.selectedIndex;
+            if (item == listbox.lastChild) {
+                oldIndex--;
+            }
             listbox.removeChild(item);
             // This is called before the calendar is actually deleted, so ==1 is correct
             if (getCalendarManager().getCalendars({}).length <= 1) {
                 // If there are no calendars, you can't create events/tasks
                 document.getElementById("new_command").setAttribute("disabled", true);
                 document.getElementById("new_todo_command").setAttribute("disabled", true);
+            } else {
+                listbox.selectedIndex = oldIndex;
             }
         }
 
@@ -202,6 +208,10 @@ function onCalendarCheckboxClick(event) {
 function setCalendarManagerUI()
 {
     var calendarList = document.getElementById("list-calendars-listbox");
+    var oldSelection = calendarList.selectedIndex;
+    if (!oldSelection || oldSelection < 0) {
+        oldSelection = 0;
+    }
     var child;
     while ((child = calendarList.lastChild) && (child.tagName == "listitem")) {
         calendarList.removeChild(child);
@@ -210,6 +220,9 @@ function setCalendarManagerUI()
     var composite = getCompositeCalendar();
     var calmgr = getCalendarManager();
     var calendars = calmgr.getCalendars({});
+    if (oldSelection >= calendars.length) {
+        oldSelection = calendars.length-1;
+    }
     var hasRefreshableCal = false;
     for each (var calendar in calendars) {
         if (calendar.canRefresh) {
@@ -239,10 +252,8 @@ function setCalendarManagerUI()
 
         listItem.calendar = calendar;
         calendarList.appendChild(listItem);
-
-        if (calendarList.selectedIndex == -1)
-            calendarList.selectedIndex = 0;    
     }
+    calendarList.selectedIndex = oldSelection;
     var remoteCommand = document.getElementById("reload_remote_calendars");
     if (!hasRefreshableCal) {
         remoteCommand.setAttribute("disabled", true);
