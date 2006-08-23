@@ -3227,7 +3227,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 return pn;
 
             /* Let expressions require automatic semicolon insertion. */
-            JS_ASSERT(pn->pn_op == JSOP_LEAVEBLOCKEXPR);
+            JS_ASSERT(pn->pn_type == TOK_SEMI ||
+                      pn->pn_op == JSOP_LEAVEBLOCKEXPR);
             break;
         }
 
