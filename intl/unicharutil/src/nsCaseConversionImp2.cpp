@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Ben Turner <mozilla@songbirdnest.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,7 +40,6 @@
 #include "nsUUDll.h"
 #include "nsCaseConversionImp2.h"
 #include "casetable.h"
-
 
 // For gUpperToTitle 
 enum {
@@ -64,40 +64,35 @@ enum {
   
 // Size of Tables
 
-
 #define CASE_MAP_CACHE_SIZE 0x40
 #define CASE_MAP_CACHE_MASK 0x3F
 
 class nsCompressedMap {
 public:
-   nsCompressedMap(const PRUnichar *aTable, PRUint32 aSize);
-   ~nsCompressedMap();
+   void Initialize(const PRUnichar *aTable, PRUint32 aSize);
    PRUnichar Map(PRUnichar aChar);
+
 protected:
    PRUnichar Lookup(PRUint32 l, PRUint32 m, PRUint32 r, PRUnichar aChar);
 
-private: 
+private:
+   // Not meant to be implemented
+   static void* operator new(size_t /*size*/) CPP_THROW_NEW;
+
    const PRUnichar *mTable;
    PRUint32 mSize;
-   PRUint32 *mCache;
+   PRUint32 mCache[CASE_MAP_CACHE_SIZE];
    PRUint32 mLastBase;
 };
 
-nsCompressedMap::nsCompressedMap(const PRUnichar *aTable, PRUint32 aSize)
+void nsCompressedMap::Initialize(const PRUnichar *aTable,
+                                 PRUint32 aSize)
 {
-   MOZ_COUNT_CTOR(nsCompressedMap);
    mTable = aTable;
    mSize = aSize;
    mLastBase = 0;
-   mCache = new PRUint32[CASE_MAP_CACHE_SIZE];
    for(int i = 0; i < CASE_MAP_CACHE_SIZE; i++)
-      mCache[i] = 0;
-}
-
-nsCompressedMap::~nsCompressedMap()
-{
-   MOZ_COUNT_DTOR(nsCompressedMap);
-   delete[] mCache;
+     mCache[i] = 0;
 }
 
 PRUnichar nsCompressedMap::Map(PRUnichar aChar)
@@ -175,12 +170,8 @@ PRUnichar nsCompressedMap::Lookup(
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsCaseConversionImp2, nsICaseConversion)
 
-static nsCompressedMap
-  gUpperMap(NS_REINTERPRET_CAST(const PRUnichar*, &gToUpper[0]),
-                                gToUpperItems);
-static nsCompressedMap
-  gLowerMap(NS_REINTERPRET_CAST(const PRUnichar*, &gToLower[0]),
-                                gToLowerItems);
+static nsCompressedMap gUpperMap;
+static nsCompressedMap gLowerMap;
 
 nsresult nsCaseConversionImp2::ToUpper(
   PRUnichar aChar, PRUnichar* aReturn
@@ -215,16 +206,13 @@ static PRUnichar FastToLower(
         return aChar + 0x0020;
      else
         return aChar;
-  } 
+  }
   else if( IS_NOCASE_CHAR(aChar)) // optimize for block which have no case
   {
-    return aChar;
-  } 
-  else
-  {
-    return gLowerMap.Map(aChar);
-  } 
-  return NS_OK;
+     return aChar;
+  }
+
+  return gLowerMap.Map(aChar);
 }
 
 nsresult nsCaseConversionImp2::ToLower(
@@ -234,6 +222,7 @@ nsresult nsCaseConversionImp2::ToLower(
   *aReturn = FastToLower(aChar);
   return NS_OK;
 }
+
 nsresult nsCaseConversionImp2::ToTitle(
   PRUnichar aChar, PRUnichar* aReturn
 )
@@ -260,8 +249,7 @@ nsresult nsCaseConversionImp2::ToTitle(
       }
     }
 
-    PRUnichar upper;
-    upper = gUpperMap.Map(aChar);
+    PRUnichar upper = gUpperMap.Map(aChar);
     
     if( 0x01C0 == ( upper & 0xFFC0)) // 0x01Cx - 0x01Fx
     {
@@ -389,6 +377,14 @@ nsCaseConversionImp2::CaseInsensitiveCompare(const PRUnichar *aLeft,
     } while (--aCount != 0);
   }
   return NS_OK;
+}
+
+nsCaseConversionImp2::nsCaseConversionImp2()
+{
+  gUpperMap.Initialize(NS_REINTERPRET_CAST(const PRUnichar*, &gToUpper[0]),
+                       gToUpperItems);
+  gLowerMap.Initialize(NS_REINTERPRET_CAST(const PRUnichar*, &gToLower[0]),
+                       gToLowerItems);
 }
 
 nsresult NS_NewCaseConversion(nsICaseConversion** oResult)
