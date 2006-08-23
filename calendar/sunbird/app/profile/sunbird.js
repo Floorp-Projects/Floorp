@@ -84,7 +84,7 @@ pref("app.update.enabled", false);
 //  extensions.{GUID}.update.interval
 //  .. etc ..
 //
-pref("extensions.update.enabled", false);
+pref("extensions.update.enabled", true);
 pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.update.interval", 86400);
 
