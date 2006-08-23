@@ -159,15 +159,24 @@ function getPrefSafe(aPrefName, aDefault) {
     const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
     const prefB = Components.classes["@mozilla.org/preferences-service;1"]
                             .getService(nsIPrefBranch);
-    switch (prefB.getPrefType(aPrefName)) {
-        case nsIPrefBranch.PREF_BOOL:
-            return prefB.getBoolPref(aPrefName);
-        case nsIPrefBranch.PREF_INT:
-            return prefB.getIntPref(aPrefName);
-        case nsIPrefBranch.PREF_STRING:
-            return prefB.getCharPref(aPrefName);
-        default: // includes nsIPrefBranch.PREF_INVALID
-            return aDefault;
+    var value;
+    try {
+        switch (prefB.getPrefType(aPrefName)) {
+            case nsIPrefBranch.PREF_BOOL:
+                value = prefB.getBoolPref(aPrefName);
+                break;
+            case nsIPrefBranch.PREF_INT:
+                value = prefB.getIntPref(aPrefName);
+                break;
+            case nsIPrefBranch.PREF_STRING:
+                value = prefB.getCharPref(aPrefName);
+                break;
+            default: // includes nsIPrefBranch.PREF_INVALID
+                return aDefault;
+        }
+        return value;
+    } catch(ex) {
+        return aDefault;
     }
 }
 

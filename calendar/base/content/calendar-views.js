@@ -243,7 +243,7 @@ function updateStyleSheetForObject(aObject, aSheet) {
         // This is a calendar, so we're going to set the background color
         name = aObject.uri.spec;
         selectorPrefix = "item-calendar=";
-        ruleUpdaterFunc = function calendarRuleFunc(aRule) {
+        ruleUpdaterFunc = function calendarRuleFunc(aRule, aIndex) {
             var color = getCalendarManager().getCalendarPref(aObject, 'color');
             if (!color) {
                 color = "#A8C2E1";
@@ -256,10 +256,12 @@ function updateStyleSheetForObject(aObject, aSheet) {
         // use the ~= selector, since there could be multiple categories
         name = aObject.replace(' ','_');
         selectorPrefix = "item-category~=";
-        ruleUpdaterFunc = function categoryRuleFunc(aRule) {
+        ruleUpdaterFunc = function categoryRuleFunc(aRule, aIndex) {
             var color = getPrefSafe("calendar.category.color."+aObject, null);
             if (color) {
                 aRule.style.border = color + " solid 2px";
+            } else {
+                aSheet.deleteRule(aIndex);
             }
         };
     }
@@ -267,11 +269,12 @@ function updateStyleSheetForObject(aObject, aSheet) {
     var selector = '.calendar-item[' + selectorPrefix + '"' + name + '"]';
 
     // Now go find our rule
-    var rule;
+    var rule, ruleIndex;
     for (var i = 0; i < aSheet.cssRules.length; i++) {
         var maybeRule = aSheet.cssRules[i];
         if (maybeRule.selectorText && (maybeRule.selectorText == selector)) {
             rule = maybeRule;
+            ruleIndex = i;
             break;
         }
     }
@@ -281,7 +284,7 @@ function updateStyleSheetForObject(aObject, aSheet) {
         rule = aSheet.cssRules[aSheet.cssRules.length-1];
     }
 
-    ruleUpdaterFunc(rule);
+    ruleUpdaterFunc(rule, ruleIndex);
 }
 
 /** 
