@@ -132,12 +132,11 @@ span.moz-txt-formfeed {
 } 
 
 .moz-vcard-badge {
-  height: 30px;
-  width: 30px;
+  height: 24px;
+  width: 24px;
   background-color: transparent;
   display: block;
   background-image: url("chrome://messenger/skin/addressbook/icons/abcard-large.png");
-  -moz-image-region: rect(0px 30px 30px 0px);
 }
 
 .moz-vcard-badge:hover {
