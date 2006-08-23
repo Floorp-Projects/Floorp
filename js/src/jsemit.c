@@ -1386,7 +1386,6 @@ EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
           default:;
         }
 
-#if JS_HAS_BLOCK_SCOPE
         if (stmt->flags & SIF_SCOPE) {
             uintN i;
 
@@ -1396,7 +1395,6 @@ EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
             i = OBJ_BLOCK_COUNT(cx, ATOM_TO_OBJECT(stmt->atom));
             EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, i);
         }
-#endif
     }
 
     cg->stackDepth = depth;
@@ -3395,6 +3393,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     JSTreeContext *tc;
     JSStmtInfo *stmt, *scopeStmt;
     JSObject *blockObj;
+    uintN oldflags;
 #ifdef DEBUG
     JSBool varOrConst = (pn->pn_op != JSOP_NOP);
 #endif
@@ -3515,8 +3514,11 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 }
 #endif
 
+                oldflags = cg->treeContext.flags;
+                cg->treeContext.flags &= ~TCF_IN_FOR_INIT;
                 if (!js_EmitTree(cx, cg, pn3))
                     return JS_FALSE;
+                cg->treeContext.flags = oldflags;
 
                 if (popScope) {
                     tc->topStmt = stmt;
@@ -5185,6 +5187,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             }
         } else {
 #if JS_HAS_XML_SUPPORT
+            uintN oldflags;
+
       case TOK_DBLCOLON:
             if (pn->pn_arity == PN_NAME) {
                 if (!js_EmitTree(cx, cg, pn->pn_expr))
@@ -5193,12 +5197,24 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     return JS_FALSE;
                 break;
             }
+
+            /*
+             * Binary :: has a right operand that brackets arbitrary code,
+             * possibly including a let (a = b) ... expression.  We must clear
+             * TCF_IN_FOR_INIT to avoid mis-compiling such beasts.
+             */
+            oldflags = cg->treeContext.flags;
+            cg->treeContext.flags &= ~TCF_IN_FOR_INIT;
 #endif
+
             /* Binary operators that evaluate both operands unconditionally. */
             if (!js_EmitTree(cx, cg, pn->pn_left))
                 return JS_FALSE;
             if (!js_EmitTree(cx, cg, pn->pn_right))
                 return JS_FALSE;
+#if JS_HAS_XML_SUPPORT
+            cg->treeContext.flags = oldflags;
+#endif
             if (js_Emit1(cx, cg, pn->pn_op) < 0)
                 return JS_FALSE;
         }
@@ -5212,6 +5228,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         /* FALL THROUGH */
 #endif
       case TOK_UNARYOP:
+      {
+        uintN oldflags;
+
         /* Unary op, including unary +/-. */
         pn2 = pn->pn_kid;
         op = pn->pn_op;
@@ -5221,8 +5240,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (pn3->pn_type != TOK_NAME)
                 op = JSOP_TYPEOFEXPR;
         }
+        oldflags = cg->treeContext.flags;
+        cg->treeContext.flags &= ~TCF_IN_FOR_INIT;
         if (!js_EmitTree(cx, cg, pn2))
             return JS_FALSE;
+        cg->treeContext.flags = oldflags;
 #if JS_HAS_XML_SUPPORT
         if (op == JSOP_XMLNAME &&
             js_NewSrcNote2(cx, cg, SRC_PCBASE,
@@ -5233,6 +5255,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (js_Emit1(cx, cg, op) < 0)
             return JS_FALSE;
         break;
+      }
 
       case TOK_INC:
       case TOK_DEC:
@@ -5447,7 +5470,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
         break;
 
-#if JS_HAS_BLOCK_SCOPE
       case TOK_LEXICALSCOPE:
       {
         JSObject *obj;
@@ -5479,6 +5501,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         break;
       }
 
+#if JS_HAS_BLOCK_SCOPE
       case TOK_LET:
       {
         JSBool popScope;
@@ -5681,16 +5704,23 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #endif /* JS_HAS_SHARP_VARS */
 
       case TOK_RP:
+      {
+        uintN oldflags;
+
         /*
          * The node for (e) has e as its kid, enabling users who want to nest
          * assignment expressions in conditions to avoid the error correction
          * done by Condition (from x = y to x == y) by double-parenthesizing.
          */
+        oldflags = cg->treeContext.flags;
+        cg->treeContext.flags &= ~TCF_IN_FOR_INIT;
         if (!js_EmitTree(cx, cg, pn->pn_kid))
             return JS_FALSE;
+        cg->treeContext.flags = oldflags;
         if (js_Emit1(cx, cg, JSOP_GROUP) < 0)
             return JS_FALSE;
         break;
+      }
 
       case TOK_NAME:
         if (!BindNameToSlot(cx, &cg->treeContext, pn))

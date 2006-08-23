@@ -2609,9 +2609,7 @@ interrupt:
 
           BEGIN_CASE(JSOP_FORARG)
           BEGIN_CASE(JSOP_FORVAR)
-#if JS_HAS_BLOCK_SCOPE
           BEGIN_CASE(JSOP_FORLOCAL)
-#endif
             /*
              * JSOP_FORARG and JSOP_FORVAR don't require any lval computation
              * here, because they address slots on the stack (in fp->args and
@@ -2853,7 +2851,6 @@ interrupt:
                 fp->vars[slot] = rval;
                 break;
 
-#if JS_HAS_BLOCK_SCOPE
               case JSOP_FORLOCAL:
                 slot = GET_UINT16(pc);
                 JS_ASSERT(slot < (uintN)depth);
@@ -2861,7 +2858,6 @@ interrupt:
                 GC_POKE(cx, *vp);
                 *vp = rval;
                 break;
-#endif
 
               case JSOP_FORELEM:
                 /* FORELEM is not a SET operation, it's more like BINDNAME. */
@@ -4264,9 +4260,7 @@ interrupt:
               case JSOP_XMLOBJECT:    goto do_JSOP_XMLOBJECT;
               case JSOP_XMLPI:        goto do_JSOP_XMLPI;
 #endif
-#if JS_HAS_BLOCK_SCOPE
               case JSOP_ENTERBLOCK:   goto do_JSOP_ENTERBLOCK;
-#endif
               default:                JS_ASSERT(0);
             }
             /* NOTREACHED */
@@ -5887,7 +5881,6 @@ interrupt:
           END_CASE(JSOP_GETFUNNS)
 #endif /* JS_HAS_XML_SUPPORT */
 
-#if JS_HAS_BLOCK_SCOPE
           BEGIN_LITOPX_CASE(JSOP_ENTERBLOCK, 0)
             obj = ATOM_TO_OBJECT(atom);
             JS_ASSERT(fp->spbase + OBJ_BLOCK_DEPTH(cx, obj) == sp);
@@ -6015,8 +6008,6 @@ interrupt:
 
 #undef FAST_LOCAL_INCREMENT_OP
 
-#endif /* JS_HAS_BLOCK_SCOPE */
-
 #if JS_HAS_GENERATORS
           BEGIN_CASE(JSOP_STARTITER)
             /*
@@ -6101,19 +6092,6 @@ interrupt:
             --sp;
           END_CASE(JSOP_ARRAYPUSH)
 #endif /* JS_HAS_GENERATORS */
-
-#if !JS_HAS_BLOCK_SCOPE
-          L_JSOP_ENTERBLOCK:
-          L_JSOP_LEAVEBLOCK:
-          L_JSOP_LEAVEBLOCKEXPR:
-          L_JSOP_GETLOCAL:
-          L_JSOP_SETLOCAL:
-          L_JSOP_INCLOCAL:
-          L_JSOP_DECLOCAL:
-          L_JSOP_LOCALINC:
-          L_JSOP_LOCALDEC:
-          L_JSOP_FORLOCAL:
-#endif
 
 #if !JS_HAS_GENERATORS
           L_JSOP_STARTITER:
