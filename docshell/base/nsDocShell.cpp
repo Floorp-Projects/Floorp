@@ -6411,14 +6411,16 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                            getter_AddRefs(newWin));
 
             // In some cases the Open call doesn't actually result in a new
-            // window being opened (i.e. browser.link.open_newwindow is set
-            // to 1, forcing us to reuse the current window).  This will
-            // protect us against that use case but still isn't totally
-            // ideal since perhaps in some future use case newWin could be
-            // some other, already open window.
-            if (win != newWin) {
-                isNewWindow = PR_TRUE;
-                aFlags |= INTERNAL_LOAD_FLAGS_FIRST_LOAD;
+            // window being opened.  We can detect these cases by examining the
+            // document in |newWin|, if any.
+            nsCOMPtr<nsPIDOMWindow> piNewWin = do_QueryInterface(newWin);
+            if (piNewWin) {
+                nsCOMPtr<nsIDocument> newDoc =
+                    do_QueryInterface(piNewWin->GetExtantDocument());
+                if (!newDoc || newDoc->IsInitialDocument()) {
+                    isNewWindow = PR_TRUE;
+                    aFlags |= INTERNAL_LOAD_FLAGS_FIRST_LOAD;
+                }
             }
 
             nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(newWin);
