@@ -52,11 +52,13 @@ cairo_quartzgl_surface_create (cairo_format_t format,
                                unsigned int height,
                                cairo_bool_t y_grows_down);
 
+#ifdef CAIRO_QUARTZ2_SUPPORT_AGL
 cairo_surface_t *
 cairo_quartzgl_surface_create_for_agl_context (AGLContext aglContext,
                                                unsigned int width,
                                                unsigned int height,
                                                cairo_bool_t y_grows_down);
+#endif
 
 cairo_surface_t *
 cairo_quartzgl_surface_create_for_cg_context (CGContextRef cgContext,
