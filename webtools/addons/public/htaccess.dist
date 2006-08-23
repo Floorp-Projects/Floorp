@@ -18,6 +18,9 @@ RewriteBase /YOURPATH/public/htdocs
 RewriteRule ^update/VersionCheck.php(.*)$ update.php$1
 RewriteRule ^rss/index.php(.*)$ rss.php$1
 
+# Send search-engine requests to search-engines.php.
+RewriteRule ^search-engines[/]{0,1}$ search-engines.php [L]
+
 # Compatibility for v1 extension and theme links.
 # Old example URLs:
 #   /extensions/moreinfo.php?application=thunderbird&id=123
