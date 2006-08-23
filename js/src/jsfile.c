@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=80:
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -187,14 +187,14 @@ JSFile_GetErrorMessage(void *userRef, const char *locale,
 #define JSFILE_CHECK_OPEN(op)                                                 \
     if (!file->isOpen) {                                                      \
         JS_ReportErrorNumber(cx, JSFile_GetErrorMessage, NULL,                \
-                             JSFILEMSG_FILE_MUST_BE_CLOSED, op);              \
+                             JSFILEMSG_FILE_MUST_BE_OPEN, op);                \
         goto out;                                                             \
     }
 
 #define JSFILE_CHECK_CLOSED(op)                                               \
     if (file->isOpen) {                                                       \
         JS_ReportErrorNumber(cx, JSFile_GetErrorMessage, NULL,                \
-            JSFILEMSG_FILE_MUST_BE_OPEN, op);                                 \
+                             JSFILEMSG_FILE_MUST_BE_CLOSED, op);              \
         goto out;                                                             \
     }
 
