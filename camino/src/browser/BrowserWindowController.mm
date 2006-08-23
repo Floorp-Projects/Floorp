@@ -40,6 +40,7 @@
 
 #import "NSString+Utils.h"
 #import "NSSplitView+Utils.h"
+#import "NSMenu+Utils.h"
 
 #import "BrowserWindowController.h"
 #import "BrowserWindow.h"
@@ -137,7 +138,6 @@ static NSString* const CombinedLocationToolbarItemIdentifier  = @"Combined Locat
 static NSString* const BookmarksToolbarItemIdentifier   = @"Sidebar Toolbar Item";    // note legacy name
 static NSString* const PrintToolbarItemIdentifier       = @"Print Toolbar Item";
 static NSString* const ThrobberToolbarItemIdentifier    = @"Throbber Toolbar Item";
-static NSString* const SearchToolbarItemIdentifier      = @"Search Toolbar Item";
 static NSString* const ViewSourceToolbarItemIdentifier  = @"View Source Toolbar Item";
 static NSString* const BookmarkToolbarItemIdentifier    = @"Bookmark Toolbar Item";
 static NSString* const TextBiggerToolbarItemIdentifier  = @"Text Bigger Toolbar Item";
@@ -509,8 +509,6 @@ enum BWCOpenDest {
     mThrobberHandler = nil;
     mURLFieldEditor = nil;
     mProgressSuperview = nil;
-    mBookmarkToolbarItem = nil;
-    mSidebarToolbarItem = nil;
   
     // register for services
     NSArray* sendTypes = [NSArray arrayWithObjects:NSStringPboardType, nil];
@@ -933,18 +931,6 @@ enum BWCOpenDest {
       [[self window] setFrameOrigin: testBrowserFrame.origin];
     }
     
-    // if the search field is not on the toolbar, nil out the nextKeyView of the
-    // url bar so that we know to break off the toolbar when tabbing. If it is,
-    // and we're running on pre-panther, set the search bar as the tab view. We
-    // don't want to do this on panther because it will do it for us.
-    if (![mSearchBar window])
-      [mURLBar setNextKeyView:nil];
-    else {
-      const float kPantherAppKit = 743.0;
-      if (NSAppKitVersionNumber < kPantherAppKit)
-        [mURLBar setNextKeyView:mSearchBar];
-    }
-    
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(newTab:)
                                         name:kTabBarBackgroundDoubleClickedNotification object:mTabBrowser];
 
@@ -1003,48 +989,23 @@ enum BWCOpenDest {
 // toolbarWillAddItem: (toolbar delegate method)
 //
 // Called when a button is about to be added to a toolbar. This is where we should
-// cache items we may need later. For instance, we want to hold onto the sidebar
-// toolbar item so we can change it when the drawer opens and closes.
-- (void)toolbarWillAddItem:(NSNotification *)notification
-{
-  NSToolbarItem* item = [[notification userInfo] objectForKey:@"item"];
-  if ( [[item itemIdentifier] isEqual:BookmarksToolbarItemIdentifier] )
-    mSidebarToolbarItem = item;
-  else if ( [[item itemIdentifier] isEqual:BookmarkToolbarItemIdentifier] )
-    mBookmarkToolbarItem = item;
-  else if ( [[item itemIdentifier] isEqual:SearchToolbarItemIdentifier] ) {
-    // restore the next key view of the url bar to the search bar, but only
-    // if we're on jaguar. On panther, we really don't know that it should
-    // be the search toolbar (it could be another toolbar button if full keyboard
-    // access is enabled) but it will fix itself automatically.
-    const float kPantherAppKit = 743.0;
-    if (NSAppKitVersionNumber < kPantherAppKit)
-      [mURLBar setNextKeyView:mSearchBar];
-  }
-}
+// cache items we may need later.
+// (void)toolbarWillAddItem:(NSNotification *)notification
+//{
+//  (Nothing needed at the moment.)
+//}
 
 //
 // toolbarDidRemoveItem: (toolbar delegate method)
 //
 // Called when a button is about to be removed from a toolbar. This is where we should
-// uncache items so we don't access them after they're gone. For instance, we want to
-// clear our ref to the sidebar toolbar item.
+// uncache items so we don't access them after they're gone.
 //
 - (void)toolbarDidRemoveItem:(NSNotification *)notification
 {
   NSToolbarItem* item = [[notification userInfo] objectForKey:@"item"];
-  if ( [[item itemIdentifier] isEqual:BookmarksToolbarItemIdentifier] )
-    mSidebarToolbarItem = nil;
-  else if ( [[item itemIdentifier] isEqual:ThrobberToolbarItemIdentifier] )
+  if ( [[item itemIdentifier] isEqual:ThrobberToolbarItemIdentifier] )
     [self stopThrobber];
-  else if ( [[item itemIdentifier] isEqual:BookmarkToolbarItemIdentifier] )
-    mBookmarkToolbarItem = nil;
-  else if ( [[item itemIdentifier] isEqual:SearchToolbarItemIdentifier] ) {
-    // search bar removed, set next key view of url bar to nil which tells
-    // it to break out of the toolbar tab ring on a tab.
-    [mURLBar setNextKeyView:nil];
-  }
-
 }
 
 - (NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
@@ -1218,24 +1179,6 @@ enum BWCOpenDest {
     [toolbarItem setImage:[NSImage imageNamed:@"manager"]];
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(manageBookmarks:)];
-  }
-  else if ( [itemIdent isEqual:SearchToolbarItemIdentifier] ) {
-    NSMenuItem *menuFormRep = [[[NSMenuItem alloc] init] autorelease];
-
-    [toolbarItem setLabel:NSLocalizedString(@"Search", @"Search")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"Search", @"Search")];
-    [toolbarItem setToolTip:NSLocalizedString(@"SearchToolTip", @"Search the Internet")];
-    [toolbarItem setView:mSearchBar];
-    [toolbarItem setMinSize:NSMakeSize(128, NSHeight([mSearchBar frame]))];
-    [toolbarItem setMaxSize:NSMakeSize(150, NSHeight([mSearchBar frame]))];
-    [toolbarItem setTarget:self];
-    [toolbarItem setAction:@selector(performSearch:)];
-
-    [menuFormRep setTarget:self];
-    [menuFormRep setAction:@selector(beginSearchSheet)];
-    [menuFormRep setTitle:[toolbarItem label]];
-
-    [toolbarItem setMenuFormRepresentation:menuFormRep];
   }
   else if ([itemIdent isEqual:ThrobberToolbarItemIdentifier]) {
     [toolbarItem setLabel:@""];
@@ -3174,7 +3117,7 @@ enum BWCOpenDest {
 -(void)openNewTabWithURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground:(BOOL)aLoadInBG 
         allowPopups:(BOOL)inAllowPopups setJumpback:(BOOL)inSetJumpback
 {
-  BrowserTabViewItem* previouslySelected = [mTabBrowser selectedTabViewItem];
+  BrowserTabViewItem* previouslySelected = (BrowserTabViewItem*)[mTabBrowser selectedTabViewItem];
   BrowserTabViewItem* newTab             = [self openNewTab:aLoadInBG];
   BOOL focusURLBar                       = [MainController isBlankURL:aURLSpec];
 
@@ -3197,7 +3140,7 @@ enum BWCOpenDest {
 //
 - (CHBrowserView*)createNewTabBrowser:(BOOL)inLoadInBG
 {
-  BrowserTabViewItem* previouslySelected = [mTabBrowser selectedTabViewItem];
+  BrowserTabViewItem* previouslySelected = (BrowserTabViewItem*)[mTabBrowser selectedTabViewItem];
   BrowserTabViewItem* newTab = [self openNewTab:inLoadInBG];
  
   // tell the tab browser to remember the currently selected tab to

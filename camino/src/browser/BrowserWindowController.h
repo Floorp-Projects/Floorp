@@ -108,7 +108,7 @@ typedef enum
 @class ExtendedSplitView;
 
 
-@interface BrowserWindowController : NSWindowController<Find, BrowserUIDelegate>
+@interface BrowserWindowController : NSWindowController<Find, BrowserUIDelegate, BrowserUICreationDelegate>
 {
   IBOutlet BrowserTabView*    mTabBrowser;
   IBOutlet ExtendedSplitView* mLocationToolbarView;     // parent splitter of location and search, strong
@@ -142,9 +142,6 @@ typedef enum
   IBOutlet NSMenuItem*          mForwardItem;
   IBOutlet NSMenuItem*          mCopyItem;
   
-  NSToolbarItem*                mSidebarToolbarItem;
-  NSToolbarItem*                mBookmarkToolbarItem;
-
   BOOL mInitialized;
 
   NSString* mPendingURL;
@@ -264,6 +261,8 @@ typedef enum
 
 - (BrowserWindowController*)openNewWindowWithURL: (NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG allowPopups:(BOOL)inAllowPopups;
 - (void)openNewTabWithURL: (NSString*)aURLSpec referrer: (NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG allowPopups:(BOOL)inAllowPopups setJumpback:(BOOL)inSetJumpback;
+
+- (CHBrowserView*)createNewTabBrowser:(BOOL)inLoadInBG;
 
 - (void)openURLArray:(NSArray*)urlArray tabOpenPolicy:(ETabOpenPolicy)tabPolicy allowPopups:(BOOL)inAllowPopups;
 - (void)openURLArrayReplacingTabs:(NSArray*)urlArray closeExtraTabs:(BOOL)closeExtra allowPopups:(BOOL)inAllowPopups;
