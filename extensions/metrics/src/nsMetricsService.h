@@ -279,6 +279,14 @@ private:
   // for several hours.
   static const PRUint32 kMaxRetries;
 
+  // This is the logging format version that is sent with each upload.
+  // The version should be incremented whenver a change is made that
+  // affects the log output, including but not limited to:
+  //  - adding or removing a collector
+  //  - adding or removing a property
+  //  - changing the meaning or interpretation of a property value
+  static const PRUint32 kMetricsVersion;
+
   PRInt32 mEventCount;
   PRInt32 mSuspendCount;
   PRBool mUploading;
