@@ -27,12 +27,6 @@ e4x/Regress/regress-278112.js
 #
 js1_5/Regress/regress-173067.js
 #
-# The following tests are excluded from normal
-# runs as they are not fixed and cause the shell/browser
-# to hang.
-#
-ecma_3/RegExp/regress-307456.js
-#
 # per comment in bug, this test is obsolete
 # for spidermonkey and rhino.
 #
@@ -63,3 +57,27 @@ js1_3/Script/delete-001.js
 js1_3/Script/function-001-n.js
 js1_3/regress/delete-001.js
 js1_3/regress/function-001-n.js
+#
+# tests not yet implemented
+#
+e4x/TypeConversion/10.5.1.js
+e4x/TypeConversion/10.5.js
+e4x/TypeConversion/10.6.1.js
+e4x/TypeConversion/10.6.js
+e4x/Types/9.1.1.10.js
+e4x/Types/9.1.1.11.js
+e4x/Types/9.1.1.12.js
+e4x/Types/9.1.1.13.js
+e4x/Types/9.1.1.4.js
+e4x/Types/9.1.1.5.js
+e4x/Types/9.1.1.7.js
+e4x/Types/9.1.1.8.js
+e4x/Types/9.2.1.10.js
+e4x/Types/9.2.1.3.js
+e4x/Types/9.2.1.4.js
+e4x/Types/9.2.1.5.js
+e4x/Types/9.2.1.6.js
+e4x/Types/9.2.1.7.js
+e4x/XML/13.4.4.1.js
+ecma_2/RegExp/exec-001.js
+ecma_2/String/replace-001.js
