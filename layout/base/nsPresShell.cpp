@@ -6516,8 +6516,8 @@ PresShell::WillDoReflow()
 {
   // We just reflowed, tell the caret that its frame might have moved.
   if (mCaret) {
-    mCaret->UpdateCaretPosition();
     mCaret->InvalidateOutsideCaret();
+    mCaret->UpdateCaretPosition();
   }
 }
 
@@ -6531,8 +6531,12 @@ PresShell::DidDoReflow()
   // bugs 244435 and 238546.
   if (!mPaintingSuppressed && mViewManager)
     mViewManager->SynthesizeMouseMove(PR_FALSE);
-  if (mCaret)
+  if (mCaret) {
+    // Update the caret's position now to account for any changes created by
+    // the reflow.
     mCaret->InvalidateOutsideCaret();
+    mCaret->UpdateCaretPosition();
+  }
 }
 
 nsresult
