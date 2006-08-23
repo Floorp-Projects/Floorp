@@ -46,6 +46,9 @@ var expect = 'No Crash';
 printBugNumber (bug);
 printStatus (summary);
 
+expectExitCode(0);
+expectExitCode(3);
+
 var str = '0123456789';
 
 for (var icount = 0; icount < 24; icount++)

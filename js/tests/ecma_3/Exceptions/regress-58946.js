@@ -1,4 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -38,26 +40,30 @@
 var bug = '58946';
 var stat =  'Testing a return statement inside a catch statement inside a function';
 
-
 test();
-
 
 function test() {
   enterFunc ("test"); 
   printBugNumber (bug);
   printStatus (stat);
 
+  expect = 'PASS';
 
-  try 
+  function f()
   {
-    throw 'PASS'; 
-   }
- 
-  catch(e) 
-  {
-     return e;
+      try 
+      {
+          throw 'PASS'; 
+      }
+      catch(e) 
+      {
+          return e;
+      }
   }
 
+  actual = f();
+
+  reportCompare(expect, actual, stat);
 
   exitFunc ("test");
 }

@@ -104,6 +104,7 @@ function test()
       throw e;
   }
 
+  writeLineToLog('Done');
   expect = true;
   actual = true;
   reportCompare(expect, true, summary);

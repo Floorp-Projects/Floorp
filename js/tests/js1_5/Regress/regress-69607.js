@@ -69,3 +69,5 @@ if(false)
   var3 = 0;
 }
 
+reportCompare('No Crash', 'No Crash', '');
+

@@ -43,6 +43,9 @@ var expect = 'No Crash';
 printBugNumber (bug);
 printStatus (summary);
 
+expectExitCode(0);
+expectExitCode(3);
+
 var nestingLevel = 1000;
 
 function buildTestFunction(N) {

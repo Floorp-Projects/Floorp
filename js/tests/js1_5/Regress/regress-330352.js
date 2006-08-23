@@ -43,6 +43,9 @@ var expect = 'No Crash';
 printBugNumber (bug);
 printStatus (summary);
 
+expectExitCode(0);
+expectExitCode(3);
+
 if ("AB".match(/(.*?)*?B/))
 {
   printStatus(RegExp.lastMatch);

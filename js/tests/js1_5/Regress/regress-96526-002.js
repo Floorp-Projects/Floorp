@@ -56,3 +56,5 @@ for(i=0;i<20000;i++)
   s += a;
 try {eval(s);}
 catch (e) {};
+
+reportCompare('No Crash', 'No Crash', '');

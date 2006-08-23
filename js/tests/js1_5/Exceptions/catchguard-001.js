@@ -76,5 +76,6 @@ function test()
                        "not be visible in the function scope (e = '" +
                        e + "'.)");
 
+    reportCompare('PASS', 'PASS', '');
     exitFunc ("test");
 }

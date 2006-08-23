@@ -530,3 +530,5 @@ function setaction(jumpto)
    else if (jumpto == [474]) window.location = "http://www.newyankee.com/GetYankees2.cgi?wiweswolfrom.jpg";
    else if (jumpto == [475]) window.location = "http://www.newyankee.com/GetYankees2.cgi?wvdannorby.jpg";
 }
+
+reportCompare('No Crash', 'No Crash', '');

@@ -55,6 +55,8 @@ printStatus (summary);
 F();
 G(); 
 
+reportCompare('No Crash', 'No Crash', '');
+
 function F(obj)
 {
   if(!obj)

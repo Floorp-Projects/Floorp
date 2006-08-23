@@ -161,6 +161,8 @@ function test()
     getResults();
   }
 
+  reportCompare('No Crash', 'No Crash', '');
+
   exitFunc ('test');
 }
 

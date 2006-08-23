@@ -67,6 +67,8 @@ function test()
   testThis(this);
   testThis(obj1);
   testThis(obj2);
+
+  reportCompare('No Crash', 'No Crash', '');
  
   exitFunc ('test');
 }

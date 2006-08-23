@@ -84,6 +84,10 @@ if (typeof clone == 'function')
   expect = '5,6';
   addThis();
 }
+else
+{
+  reportCompare('Test not run', 'Test not run', 'shell only test requires clone()');
+}
 
 
 

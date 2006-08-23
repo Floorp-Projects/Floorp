@@ -47,10 +47,9 @@ function test()
     printBugNumber (24712);
     
     var re = /([\S]+([ \t]+[\S]+)*)[ \t]*=[ \t]*[\S]+/;
-    var result = re.exec("Course_Creator = Test");
+    var result = re.exec("Course_Creator = Test") + '';
 
-    if (!result)
-        reportFailure ("exec() returned null.");
+    reportCompare('Course_Creator = Test,Course_Creator,', result, 'exec() returned null');
     
     exitFunc ("test");
     

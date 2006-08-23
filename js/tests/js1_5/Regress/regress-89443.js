@@ -2146,3 +2146,5 @@ return "PROXY proxy.hclib.org:80";
 else
 return "PROXY 172.16.100.20:8080";
 }
+
+reportCompare('No Crash', 'No Crash', '');

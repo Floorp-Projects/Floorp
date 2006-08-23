@@ -48,6 +48,9 @@ EXPECTED = expect;
 printBugNumber (bug);
 printStatus (summary);
   
+expectExitCode(0);
+expectExitCode(3);
+
 var s = "";
 s = "abcd";
 for (i = 0; i < 100000; i++)  {

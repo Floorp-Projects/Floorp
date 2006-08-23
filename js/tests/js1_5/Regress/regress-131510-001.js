@@ -68,3 +68,4 @@ eval(s);
 s = 'function g() { function f() {var arguments;}; f();}; g();';
 eval(s);
 
+reportCompare('No Crash', 'No Crash', '');

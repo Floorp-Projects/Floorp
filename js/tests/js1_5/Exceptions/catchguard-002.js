@@ -71,6 +71,7 @@ function test()
     if (!caught)
         reportFailure ("Exception was never caught.");
     
+    reportCompare('PASS', 'PASS', '');
 
     exitFunc ("test");
 }

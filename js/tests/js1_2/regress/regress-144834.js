@@ -76,3 +76,6 @@ s += '    case MinBound :';
 s += '  }';
 s += '}';
 eval(s);
+
+AddTestCase('Do not crash', 'No Crash', 'No Crash');
+test();

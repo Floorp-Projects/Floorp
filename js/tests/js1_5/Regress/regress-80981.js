@@ -3137,3 +3137,5 @@ function b_after()
 {
   writeLineToLog('Visited b_after');
 }
+
+reportCompare('No Error', 'No Error', '');

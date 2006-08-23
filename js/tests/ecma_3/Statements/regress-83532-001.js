@@ -62,5 +62,7 @@ function test()
   f();
   g();
   h();
+  reportCompare('No Crash', 'No Crash', '');
+
   exitFunc ('test');
 }

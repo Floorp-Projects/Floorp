@@ -64,7 +64,11 @@ catch (e)
 
 printStatus('UTF-8 is ' + (utf8Enabled?'':'not ') + 'enabled');
 
-if (utf8Enabled)
+if (!utf8Enabled)
+{
+  reportCompare('Not run', 'Not run', 'utf8 is not enabled');
+}
+else
 {
     status = summary + ': Throw Error with Unicode message';
     expect = 'test \u0440\u0441';

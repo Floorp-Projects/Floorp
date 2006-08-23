@@ -63,6 +63,8 @@ function test()
 
   tryThis(cnTest); // Just testing that we don't crash on this
 
+  reportCompare('No Crash', 'No Crash', '');
+
   exitFunc ('test');
 }
 

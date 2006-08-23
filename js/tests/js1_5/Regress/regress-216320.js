@@ -1034,3 +1034,5 @@ function putVal2ck()
 function setValuesFromCookie()
 {
 }
+
+reportCompare('No Crash', 'No Crash', '');

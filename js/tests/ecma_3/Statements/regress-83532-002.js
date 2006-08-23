@@ -65,5 +65,7 @@ function test()
   sToEval += 'h();';
   eval(sToEval);
 
+  reportCompare('No Crash', 'No Crash', '');
+
   exitFunc ('test');
 }
