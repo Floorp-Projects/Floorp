@@ -1610,8 +1610,6 @@ ImportExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 }
 #endif /* JS_HAS_EXPORT_IMPORT */
 
-#if JS_HAS_BLOCK_SCOPE
-
 static JSBool
 BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
 {
@@ -1662,8 +1660,6 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
                                    (intN)data->u.let.index++,
                                    NULL);
 }
-
-#endif
 
 static JSBool
 BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
@@ -2302,8 +2298,6 @@ ReturnOrYield(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     return pn;
 }
 
-#if JS_HAS_BLOCK_SCOPE
-
 static JSStmtInfo *
 FindMaybeScopeStatement(JSTreeContext *tc)
 {
@@ -2346,6 +2340,8 @@ PushLexicalScope(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     return pn;
 }
 
+#if JS_HAS_BLOCK_SCOPE
+
 static JSParseNode *
 LetBlock(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool statement)
 {
@@ -2361,7 +2357,7 @@ LetBlock(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool statement)
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_LET);
 
-    /* This is a let block of the form: let (a, b, c) { ... }. */
+    /* This is a let block or expression of the form: let (a, b, c) .... */
     pnblock = PushLexicalScope(cx, ts, tc, &stmtInfo);
     if (!pnblock)
         return NULL;
@@ -2376,20 +2372,17 @@ LetBlock(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool statement)
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_LET);
 
     if (statement && !js_MatchToken(cx, ts, TOK_LC)) {
-        JSParseNode *pn1;
-
         /*
          * If this is really an expression in let statement guise, then we
          * need to wrap the TOK_LET node in a TOK_SEMI node so that we pop
          * the return value of the expression.
          */
-        pn1 = NewParseNode(cx, ts, PN_UNARY, tc);
-        if (!pn1)
+        pn = NewParseNode(cx, ts, PN_UNARY, tc);
+        if (!pn)
             return NULL;
-        pn1->pn_type = TOK_SEMI;
-        pn1->pn_num = -1;
-        pn1->pn_kid = pn;
-        pn = pn1;
+        pn->pn_type = TOK_SEMI;
+        pn->pn_num = -1;
+        pn->pn_kid = pnblock;
 
         statement = JS_FALSE;
     }
@@ -2978,7 +2971,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                  */
                 data.pn = NULL;
                 data.ts = ts;
-                data.obj = ATOM_TO_OBJECT(pnblock->pn_atom);
+                data.obj = tc->blockChain;
                 data.op = JSOP_NOP;
                 data.binder = BindLet;
                 data.u.let.index = 0;
@@ -3230,7 +3223,9 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             pn = LetBlock(cx, ts, tc, JS_TRUE);
             if (!pn || pn->pn_op == JSOP_LEAVEBLOCK)
                 return pn;
+
             /* Let expressions require automatic semicolon insertion. */
+            JS_ASSERT(pn->pn_op == JSOP_LEAVEBLOCKEXPR);
             break;
         }
 
@@ -3244,8 +3239,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
          */
         stmt = FindMaybeScopeStatement(tc);
         if (stmt && (stmt->flags & SIF_SCOPE)) {
-            JS_ASSERT(stmt->atom);
-            obj = ATOM_TO_OBJECT(stmt->atom);
+            JS_ASSERT(tc->blockChain == ATOM_TO_OBJECT(stmt->atom));
+            obj = tc->blockChain;
         } else {
             if (!stmt) {
                 /*
@@ -3312,7 +3307,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn->pn_extra = PNX_POPVAR;
         break;
       }
-#endif
+#endif /* JS_HAS_BLOCK_SCOPE */
 
       case TOK_RETURN:
         pn = ReturnOrYield(cx, ts, tc, Expr);
@@ -3447,11 +3442,11 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 static JSParseNode *
 Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
-    BindData data;
+    JSTokenType tt;
     JSBool let;
+    BindData data;
     JSParseNode *pn, *pn2;
     JSStackFrame *fp;
-    JSTokenType tt;
     JSAtom *atom;
 
     /*
@@ -3460,9 +3455,9 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
      * - TOK_LP: We are parsing the head of a let block.
      * - Otherwise, we're parsing var declarations.
      */
-    let = (CURRENT_TOKEN(ts).type == TOK_LET ||
-           CURRENT_TOKEN(ts).type == TOK_LP);
-    JS_ASSERT(let || CURRENT_TOKEN(ts).type == TOK_VAR);
+    tt = CURRENT_TOKEN(ts).type;
+    let = (tt == TOK_LET || tt == TOK_LP);
+    JS_ASSERT(let || tt == TOK_VAR);
 
     /* Make sure that Statement set the tree context up correctly. */
     JS_ASSERT(!let ||
@@ -3489,7 +3484,8 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
      */
     fp = cx->fp;
     if (let) {
-        data.obj = ATOM_TO_OBJECT(tc->topScopeStmt->atom);
+        JS_ASSERT(tc->blockChain == ATOM_TO_OBJECT(tc->topScopeStmt->atom));
+        data.obj = tc->blockChain;
         data.u.let.index = OBJ_BLOCK_COUNT(cx, data.obj);
         data.u.let.overflow = JSMSG_TOO_MANY_FUN_VARS;
     } else {
@@ -5151,7 +5147,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
                 data.pn = NULL;
                 data.ts = ts;
-                data.obj = ATOM_TO_OBJECT(pntop->pn_atom);
+                data.obj = tc->blockChain;
                 data.op = JSOP_NOP;
                 data.binder = BindLet;
                 data.u.let.index = 0;
@@ -5274,7 +5270,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         if (!pn)
             return NULL;
         break;
-#endif /* JS_HAS_BLOCK_SCOPE */
+#endif
 
       case TOK_LC:
         pn = NewParseNode(cx, ts, PN_LIST, tc);
