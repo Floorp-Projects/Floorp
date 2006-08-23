@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Matthew Willis <mattwillis@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -68,11 +69,11 @@ function monthPrint_format(aStream, aStart, aEnd, aCount, aItems, aTitle) {
                 <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/>
                 <style type='text/css'/>
             </head>);
-    html.head.style = ".main-table {font-size:26px; font-weight:bold;}\n";
-    html.head.style += ".day-name {border:1px solid black; background-color: #e0e0e0;FONT-SIZE:12px; FONT-WEIGHT: bold }\n";
-    html.head.style += ".day-box {border:1px solid black;vertical-align:top;}\n";
-    html.head.style += ".out-of-month {background: gray !important;}\n";
-    html.head.style += ".day-off {background: #D3D3D3 !important;}\n";
+    html.head.style = ".main-table { font-size: 26px; font-weight: bold; }\n";
+    html.head.style += ".day-name { border: 1px solid black; background-color: #e0e0e0; font-size: 12px; font-weight: bold; }\n";
+    html.head.style += ".day-box { border: 1px solid black; vertical-align: top; }\n";
+    html.head.style += ".out-of-month { background-color: gray !important; }\n";
+    html.head.style += ".day-off { background-color: #D3D3D3 !important; }\n";
 
     // Play around with aStart and aEnd to determine the minimal number of
     // months we can show to still technically meet their requirements.  This
@@ -238,7 +239,7 @@ function makeHTMLWeek(date, sortedList, targetMonth) {
             myClass += ' day-off';
         }
         var day = <td align='left' valign='top' class={myClass} height='100' width='100'/>
-        var innerTable = <table valign='top' style='font-size:10px;'/>
+        var innerTable = <table valign='top' style='font-size: 10px;'/>
         var dateLabel = <tr valign='top'>
                             <td valign='top' align='right'>{date.day}</td>
                         </tr>
@@ -291,8 +292,10 @@ function makeHTMLWeek(date, sortedList, targetMonth) {
                 catColor = pb2.getCharPref("calendar.category.color."+item.getProperty("CATEGORIES").toLowerCase());
             } catch(ex) {}
 
-            var style = 'font-size:11px; background-color:' + calColor + 
-                        '; border: solid ' + catColor + ' 2px;';
+            var style = 'font-size: 11px; background-color: ' + calColor + ';';
+            if (catColor) {
+                style += ' border: solid ' + catColor + ' 2px;';
+            }
             var item = <tr>
                            <td valign='top' align='center' style={style}>{time} {item.title}</td>
                        </tr>;
