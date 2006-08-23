@@ -337,6 +337,20 @@ calRecurrenceInfo.prototype = {
         if (!this.mBaseItem)
             throw Components.results.NS_ERROR_NOT_INITIALIZED;
 
+        // If aRangeStart falls in the middle of an occurrence, libical will
+        // not return that occurrence when we go and ask for an
+        // icalrecur_iterator_new.  This actually seems fairly rational, so 
+        // instead of hacking libical, I'm going to move aRangeStart back far
+        // enough to make sure we get the occurrences we might miss.
+        var searchStart = aRangeStart.clone();
+        try {
+            var duration = this.mBaseItem.duration.clone();
+            duration.isNegative = true;
+            searchStart.addDuration(duration);
+        } catch(ex) {
+            dump("recurrence tweaking exception:"+ex+'\n');
+        }
+
         var startDate = this.mBaseItem.recurrenceStartDate;
         var dates = [];
         
@@ -398,9 +412,9 @@ calRecurrenceInfo.prototype = {
             // to make sure we catch all possible exceptions.  If aRangeEnd isn't specified,
             // then we have to ask for aMaxCount, and hope for the best.
             if (aRangeStart && aRangeEnd)
-                cur_dates = ritem.getOccurrences(startDate, aRangeStart, aRangeEnd, 0, {});
+                cur_dates = ritem.getOccurrences(startDate, searchStart, aRangeEnd, 0, {});
             else
-                cur_dates = ritem.getOccurrences(startDate, aRangeStart, aRangeEnd, aMaxCount, {});
+                cur_dates = ritem.getOccurrences(startDate, searchStart, aRangeEnd, aMaxCount, {});
 
             if (cur_dates.length == 0)
                 continue;
