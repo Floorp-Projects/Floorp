@@ -2371,6 +2371,7 @@ LetBlock(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool statement)
 
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_LET);
 
+    ts->flags |= TSF_OPERAND;
     if (statement && !js_MatchToken(cx, ts, TOK_LC)) {
         /*
          * If this is really an expression in let statement guise, then we
@@ -2386,6 +2387,7 @@ LetBlock(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool statement)
 
         statement = JS_FALSE;
     }
+    ts->flags &= ~TSF_OPERAND;
 
     if (statement) {
         pnlet->pn_right = Statements(cx, ts, tc);
@@ -3283,9 +3285,10 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             tc->blockChain = obj;
             stmt->atom = atom;
 
+#ifdef DEBUG
             pn1 = tc->blockNode;
-            JS_ASSERT(!tc->blockNode ||
-                      tc->blockNode->pn_type != TOK_LEXICALSCOPE);
+            JS_ASSERT(!pn1 || pn1->pn_type != TOK_LEXICALSCOPE);
+#endif
 
             /* Create a new lexical scope node for these statements. */
             pn1 = NewParseNode(cx, ts, PN_NAME, tc);
@@ -3299,7 +3302,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             pn1->pn_expr = tc->blockNode;
             tc->blockNode = pn1;
         }
-
 
         pn = Variables(cx, ts, tc);
         if (!pn)
