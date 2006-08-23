@@ -46,6 +46,10 @@
     <binding id="calendar-todo-list" extends="chrome://global/content/bindings/richlistbox.xml#richlistbox"
              implements="calIObserver, calICompositeObserver, calIOperationListener">
         <implementation>
+        <destructor><![CDATA[
+          if (this.mCalendar)
+              this.mCalendar.removeObserver(this.mOperationListener);
+        ]]></destructor>
 
         <field name="mCalendar">null</field>
         <field name="mOperationListener"><![CDATA[

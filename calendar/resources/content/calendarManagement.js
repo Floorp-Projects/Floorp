@@ -307,6 +307,7 @@ function finishCalendarManager() {
     var calendarList = document.getElementById("list-calendars-listbox");
     calendarList.removeEventListener("select", onCalendarListSelect, true);
 
+    getCalendarManager().removeObserver(calCalendarManagerObserver);
 }
 
 function getDefaultCalendar()

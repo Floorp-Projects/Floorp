@@ -295,6 +295,10 @@ function ltnFinish() {
     var pb2 = prefService.getBranch("");
     pb2 = pb2.QueryInterface(Components.interfaces.nsIPrefBranch2);
     pb2.removeObserver("calendar.", ltnPrefObserver);
+
+    getCompositeCalendar().removeObserver(agendaTreeView.calendarObserver);
+    getCompositeCalendar().removeObserver(ltnCompositeCalendarObserver);
+    getCalendarManager().removeObserver(ltnCalendarManagerObserver);
     return;
 }
 

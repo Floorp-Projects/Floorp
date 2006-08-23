@@ -1573,6 +1573,11 @@
         this.reorient();
       ]]></constructor>
 
+      <destructor><![CDATA[
+        if (this.mCalendar)
+            this.mCalendar.removeObserver(this.mObserver);
+      ]]></destructor>
+
       <method name="onResize">
         <parameter name="aRealSelf"/>
         <body><![CDATA[

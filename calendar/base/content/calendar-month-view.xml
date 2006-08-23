@@ -697,6 +697,11 @@
           }
       ]]></constructor>
 
+      <destructor><![CDATA[
+        if (this.mCalendar)
+            this.mCalendar.removeObserver(this.mObserver);
+      ]]></destructor>
+
       <!-- fields -->
 
       <field name="mCalendar">null</field>
