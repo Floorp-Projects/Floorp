@@ -205,6 +205,7 @@ calendar-event-gripbar[parentorient="horizontal"] {
   color: #3F7D91;
   background: #E7EEEC;
   text-align: right;
+  overflow: hidden;
 }
 
 .calendar-time-bar-box-odd[orient="horizontal"],
