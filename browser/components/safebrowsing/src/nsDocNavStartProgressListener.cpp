@@ -87,7 +87,7 @@ nsDocNavStartProgressListener::AttachListeners()
   NS_ENSURE_SUCCESS(rv, rv);
 
   return webProgressService->AddProgressListener(this,
-      nsIWebProgress::NOTIFY_STATE_REQUEST);
+      nsIWebProgress::NOTIFY_LOCATION);
 }
 
 
@@ -111,10 +111,12 @@ nsDocNavStartProgressListener::GetRequestUri(nsIRequest* aReq, nsIURI** uri)
   nsCOMPtr<nsIChannel> channel;
   nsresult rv;
   channel = do_QueryInterface(aReq, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv))
+    return rv;
 
   rv = channel->GetURI(uri);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv))
+    return rv;
   return NS_OK;
 }
 
@@ -194,7 +196,8 @@ nsDocNavStartProgressListener::IsSpurious(nsIURI* aURI, PRBool* isSpurious)
 
   *isSpurious = scheme.Equals("about") ||
                 scheme.Equals("chrome") ||
-                scheme.Equals("file");
+                scheme.Equals("file") ||
+                scheme.Equals("javascript");
 
   if (!*isSpurious) {
     // If there's a nested URI, we want to check the inner URI's scheme
@@ -221,40 +224,6 @@ nsDocNavStartProgressListener::OnStateChange(nsIWebProgress *aWebProgress,
                                             PRUint32 aStateFlags,
                                             nsresult aStatus)
 {
-  if (mEnabled && aStateFlags & STATE_START && aStateFlags & STATE_IS_REQUEST) {
-    // We only care about document loads, check load flags.
-    nsresult rv;
-    nsLoadFlags loadFlags;
-    rv = aRequest->GetLoadFlags(&loadFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!(loadFlags & nsIChannel::LOAD_DOCUMENT_URI))
-      return NS_OK;
-
-    // ignore requests with no URI
-    nsCOMPtr<nsIURI> uri;
-    rv = GetRequestUri(aRequest, getter_AddRefs(uri));
-    if (NS_FAILED(rv))
-      return NS_OK;
-
-    nsCAutoString uriString;
-    rv = uri->GetAsciiSpec(uriString);
-    if (NS_FAILED(rv))
-      return NS_OK;
-
-    // We store the request and a timer in queue.  When the timer fires,
-    // we use the request in the front of the queue.
-
-    nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    NS_ENSURE_TRUE(timer, rv);
-
-    rv = timer->Init(this, mDelay, nsITimer::TYPE_ONE_SHOT);
-    if (NS_SUCCEEDED(rv)) {
-      mRequests.AppendObject(aRequest);
-      mTimers.AppendObject(timer);
-    } else {
-      return NS_ERROR_FAILURE;
-    }
-  }
   return NS_OK;
 }
 
@@ -279,6 +248,29 @@ nsDocNavStartProgressListener::OnLocationChange(nsIWebProgress *aWebProgress,
                                                nsIRequest *aRequest,
                                                nsIURI *aLocation)
 {
+  nsresult rv;
+  nsCAutoString uriString;
+  nsCOMPtr<nsIURI> uri;
+
+  // ignore requests with no URI
+  rv = GetRequestUri(aRequest, getter_AddRefs(uri));
+  if (NS_FAILED(rv))
+    return NS_OK;
+  rv = uri->GetAsciiSpec(uriString);
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  // We store the request and a timer in queue.  When the timer fires,
+  // we use the request in the front of the queue.
+  nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+  NS_ENSURE_TRUE(timer, rv);
+
+  rv = timer->Init(this, mDelay, nsITimer::TYPE_ONE_SHOT);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mRequests.AppendObject(aRequest);
+  mTimers.AppendObject(timer);
+
   return NS_OK;
 }
 
