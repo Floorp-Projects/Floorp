@@ -484,6 +484,8 @@ components/nsExtensionManager.js
 components/nsUpdateService.js 
 components/extensions.xpt
 components/update.xpt
+components/nsURLFormatter.js
+components/urlformatter.xpt
 
 ; talkback
 components/libqfaservices.so

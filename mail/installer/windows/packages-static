@@ -286,7 +286,9 @@ bin\components\nsPostUpdateWin.js
 bin\components\extensions.xpt
 bin\components\update.xpt
 bin\components\websrvcs.xpt
-            
+bin\components\nsURLFormatter.js
+bin\components\urlformatter.xpt
+
 ; psm2
 ; Optional - only if you need HTTPS support
 bin\components\pipboot.xpt

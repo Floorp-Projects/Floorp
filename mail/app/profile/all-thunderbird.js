@@ -105,7 +105,7 @@ pref("app.update.showInstalledUI", false);
 pref("extensions.blocklist.enabled", true);
 pref("extensions.blocklist.interval", 86400);
 pref("extensions.blocklist.url", "https://addons.mozilla.org/blocklist/1/%APP_ID%/%APP_VERSION%/");
-pref("extensions.blocklist.detailsURL", "http://www.mozilla.com/blocklist/");
+pref("extensions.blocklist.detailsURL", "http://%LOCALE%.www.mozilla.com/%LOCALE%/blocklist/");
 
 // Developers can set this to |true| if they are constantly changing files in their
 // extensions directory so that the extension system does not constantly think that
@@ -127,8 +127,8 @@ pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.pro
 pref("extensions.update.interval", 86400);  // Check for updates to Extensions and 
                                             // Themes every week
 // Non-symmetric (not shared by extensions) extension-specific [update] preferences
-pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
-pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("extensions.getMoreExtensionsURL", "http://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%/%VERSION%/extensions/");
+pref("extensions.getMoreThemesURL", "http://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%/%VERSION%/themes/");
 pref("extensions.dss.enabled", false);          // Dynamic Skin Switching                                               
 pref("extensions.dss.switchPending", false);    // Non-dynamic switch pending after next
 
