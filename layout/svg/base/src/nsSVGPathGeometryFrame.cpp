@@ -122,25 +122,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPathGeometryFrameBase)
 // nsIFrame methods
 
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::Init(nsIContent*      aContent,
-                             nsIFrame*        aParent,
-                             nsIFrame*        aPrevInFlow)
-{
-  mContent = aContent;
-  NS_IF_ADDREF(mContent);
-  mParent = aParent;
-
-  if (mContent) {
-    mContent->SetMayHaveFrame(PR_TRUE);
-  }
-
-  InitSVG();
-  DidSetStyleContext();
-    
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSVGPathGeometryFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                          nsIAtom*        aAttribute,
                                          PRInt32         aModType)

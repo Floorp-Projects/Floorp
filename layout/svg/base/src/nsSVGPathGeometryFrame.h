@@ -72,11 +72,6 @@ public:
   NS_IMETHOD_(nsrefcnt) Release() { return 1; }
 
   // nsIFrame interface:
-  NS_IMETHOD
-  Init(nsIContent*      aContent,
-       nsIFrame*        aParent,
-       nsIFrame*        aPrevInFlow);
-
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);

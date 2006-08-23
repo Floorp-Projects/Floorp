@@ -62,6 +62,9 @@ public:
   virtual void Destroy();
 
   // nsIFrame interface:
+  NS_IMETHOD Init(nsIContent* aContent,
+                  nsIFrame* aParent,
+                  nsIFrame* aPrevInFlow);
   NS_IMETHOD DidSetStyleContext();
 
   // nsISupports interface:

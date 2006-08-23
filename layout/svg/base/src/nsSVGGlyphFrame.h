@@ -40,13 +40,12 @@
 #define __NS_SVGGLYPHFRAME_H__
 
 #include "nsSVGGeometryFrame.h"
-#include "nsISVGGlyphGeometrySource.h"
 #include "nsISVGGlyphFragmentLeaf.h"
 #include "nsISVGChildFrame.h"
-#include "nsISVGRendererGlyphGeometry.h"
 
 class nsSVGTextFrame;
 class nsSVGGlyphFrame;
+class nsISVGCairoCanvas;
 
 struct nsSVGCharacterPosition {
   PRBool draw;
@@ -77,7 +76,6 @@ private:
 typedef nsSVGGeometryFrame nsSVGGlyphFrameBase;
 
 class nsSVGGlyphFrame : public nsSVGGlyphFrameBase,
-                        public nsISVGGlyphGeometrySource,
                         public nsISVGGlyphFragmentLeaf, // : nsISVGGlyphFragmentNode
                         public nsISVGChildFrame
 {
@@ -94,11 +92,6 @@ public:
   NS_IMETHOD_(nsrefcnt) Release() { return 1; }
 
   // nsIFrame interface:
-  NS_IMETHOD
-  Init(nsIContent*      aContent,
-       nsIFrame*        aParent,
-       nsIFrame*        aPrevInFlow);
-
   NS_IMETHOD  CharacterDataChanged(nsPresContext*  aPresContext,
                                    nsIContent*     aChild,
                                    PRBool          aAppend);
@@ -146,9 +139,6 @@ public:
   NS_IMETHOD GetCanvasTM(nsIDOMSVGMatrix * *aCTM);
   virtual nsresult UpdateGraphic(PRBool suppressInvalidation = PR_FALSE);
 
-  // nsISVGGlyphGeometrySource interface:
-  NS_DECL_NSISVGGLYPHGEOMETRYSOURCE
-
   // nsISVGGlyphFragmentLeaf interface:
   NS_IMETHOD GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval);
   NS_IMETHOD GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval);
@@ -190,8 +180,11 @@ protected:
   void UpdateMetrics();
   void UpdateFragmentTree();
   nsSVGTextFrame *GetTextFrame();
-  
-  nsCOMPtr<nsISVGRendererGlyphGeometry> mGeometry;
+  PRBool ContainsPoint(float x, float y);
+  nsresult GetGlobalTransform(cairo_t *ctx, nsISVGCairoCanvas *aCanvas);
+  nsresult GetHighlight(PRUint32 *charnum, PRUint32 *nchars,
+                        nscolor *foreground, nscolor *background);
+
   float mX, mY;
   PRUint8      mWhitespaceHandling;
   PRPackedBool mFragmentTreeDirty;
