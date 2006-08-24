@@ -213,6 +213,12 @@ nsHTMLScrollFrame::RemoveFrame(nsIAtom*  aListName,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLScrollFrame::IsSplittable(nsSplittableType& aIsSplittable) const
+{
+  aIsSplittable = NS_FRAME_NOT_SPLITTABLE;
+  return NS_OK;
+}
 
 PRIntn
 nsHTMLScrollFrame::GetSkipSides() const
@@ -1047,6 +1053,12 @@ nsXULScrollFrame::RemoveFrame(nsIAtom*        aListName,
   return rv;
 }
 
+NS_IMETHODIMP
+nsXULScrollFrame::IsSplittable(nsSplittableType& aIsSplittable) const
+{
+  aIsSplittable = NS_FRAME_NOT_SPLITTABLE;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsXULScrollFrame::GetPadding(nsMargin& aMargin)
