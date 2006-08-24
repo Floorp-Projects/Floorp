@@ -138,7 +138,10 @@ function bookmarkTransactionManager() {
              rdfService.GetResource("http://home.netscape.com/NC-rdf#ShortcutURL"),
              rdfService.GetResource("http://home.netscape.com/NC-rdf#Description"),
              rdfService.GetResource("http://home.netscape.com/NC-rdf#WebPanel"),
-             rdfService.GetResource("http://home.netscape.com/NC-rdf#FeedURL")];
+             rdfService.GetResource("http://home.netscape.com/NC-rdf#FeedURL"),
+             rdfService.GetResource("http://home.netscape.com/NC-rdf#MicsumGenURI"),
+             rdfService.GetResource("http://home.netscape.com/NC-rdf#MicsumExpiration"),
+             rdfService.GetResource("http://home.netscape.com/NC-rdf#GeneratedTitle")];
 
     function bkmkInsertTxn(aAction) {
         this.type = "insert";

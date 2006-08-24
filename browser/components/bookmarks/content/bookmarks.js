@@ -146,7 +146,10 @@ function initServices()
                        RDF.GetResource(gNC_NS+"ShortcutURL"),
                        RDF.GetResource(gNC_NS+"Description"),
                        RDF.GetResource(gNC_NS+"WebPanel"),
-                       RDF.GetResource(gNC_NS+"FeedURL")];
+                       RDF.GetResource(gNC_NS+"FeedURL"),
+                       RDF.GetResource(gNC_NS+"MicsumGenURI"),
+                       RDF.GetResource(gNC_NS+"MicsumExpiration"),
+                       RDF.GetResource(gNC_NS+"GeneratedTitle")];
   gBkmkTxnSvc = Components.classes["@mozilla.org/bookmarks/transactionmanager;1"]
                           .getService(Components.interfaces.nsIBookmarkTransactionManager);
 }
@@ -477,7 +480,7 @@ var BookmarksCommand = {
       // (if the selection is folder or livemark save all childs property)
       var aType = BookmarksUtils.resolveType(aSelection.item[i]);
       if (aType == "Livemark") {
-        sBookmarkItem += "\n\n\n\n\n\n"; // don't change livemark properties
+        sBookmarkItem += "\n\n\n\n\n\n\n\n\n"; // don't change livemark properties
       } else {
          for (var j = 0; j < gBmProperties.length; ++j) {
             var itemValue = BMDS.GetTarget(aSelection.item[i], gBmProperties[j], true);
