@@ -201,7 +201,7 @@ function refreshHtml()
         dump("printDialog::refreshHtml:"+e+"\n");
     }
 
-    document.getElementById("content").contentWindow.location = gTempUri.spec;
+    document.getElementById("content").contentWindow.location = tempUri.spec;
 }
 
 /**
