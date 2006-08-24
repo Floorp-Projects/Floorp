@@ -125,6 +125,11 @@ function PROT_ListManager() {
 
   // Lazily create urlCrypto (see tr-fetcher.js)
   this.urlCrypto_ = null;
+  
+  this.requestBackoff_ = new RequestBackoff(3 /* num errors */,
+                                   10*60*1000 /* error time, 10min */,
+                                   60*60*1000 /* backoff interval, 60min */,
+                                   6*60*60*1000 /* max backoff, 6hr */);
 }
 
 /**
@@ -150,6 +155,7 @@ PROT_ListManager.prototype.setUpdateUrl = function(url) {
   G_Debug(this, "Set update url: " + url);
   if (url != this.updateserverURL_) {
     this.updateserverURL_ = url;
+    this.requestBackoff_.reset();
     
     // Remove old tables which probably aren't valid for the new provider.
     for (var name in this.tablesData) {
@@ -374,6 +380,11 @@ PROT_ListManager.prototype.setTableVersion_ = function(versionString) {
     if (!this.tablesData[tableName])
       this.tablesData[tableName] = newUrlClassifierTable(tableName);
   }
+
+  // Since this is called from the update server, it means there was
+  // a successful http request.  Make sure to notify the request backoff
+  // object.
+  this.requestBackoff_.noteServerResponse(200 /* ok */);
 }
 
 /**
@@ -439,6 +450,11 @@ PROT_ListManager.prototype.checkForUpdates = function() {
     G_Debug(this, 'checkForUpdates: no update server url');
     return false;
   }
+
+  // See if we've triggered the request backoff logic.
+  if (!this.requestBackoff_.canMakeRequest())
+    return false;
+
   // Check to make sure our tables still exist (maybe the db got corrupted or
   // the user deleted the file).  If not, we need to reset the table version
   // before sending the update check.
@@ -481,9 +497,29 @@ PROT_ListManager.prototype.makeUpdateRequest_ = function(tableNames) {
     return;
   }
 
-  if (!streamer.downloadUpdates(BindToObject(this.setTableVersion_, this))) {
+  if (!streamer.downloadUpdates(BindToObject(this.setTableVersion_, this),
+                                BindToObject(this.downloadError_, this))) {
     G_Debug(this, "pending update, wait until later");
   }
+}
+
+/**
+ * Callback function if there's a download error.
+ * @param status String http status or an empty string if connection refused.
+ */
+PROT_ListManager.prototype.downloadError_ = function(status) {
+  G_Debug(this, "download error: " + status);
+  // If status is empty, then we assume that we got an NS_CONNECTION_REFUSED
+  // error.  In this case, we treat this is a http 500 error.
+  if (!status) {
+    status = 500;
+  }
+  status = parseInt(status, 10);
+  this.requestBackoff_.noteServerResponse(status);
+
+  // Try again in a minute
+  this.currentUpdateChecker_ =
+    new G_Alarm(BindToObject(this.checkForUpdates, this), 60000);
 }
 
 PROT_ListManager.prototype.QueryInterface = function(iid) {
