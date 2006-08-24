@@ -1,3 +1,4 @@
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -14,12 +15,12 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   John Gaunt (jgaunt@netscape.com)
+#   Alexander Surkov <surkov.alexander@gmail.com> (original author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -43,53 +44,30 @@ VPATH = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = accessibility
-LIBRARY_NAME = accessibility_base_s
+LIBRARY_NAME = accessibility_xforms_s
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= commandhandler \
-		  composer \
-		  content \
-		  docshell \
-		  dom \
-		  editor \
-		  gfx \
-		  intl \
-		  layout \
-		  locale \
-		  necko \
-		  plugin \
-		  pref \
-		  string \
-		  unicharutil \
-		  uriloader \
-		  view \
-		  webshell \
-		  widget \
-		  xpcom \
-		  xuldoc \
-		  imglib2 \
-		  $(NULL)
+REQUIRES	= content \
+      docshell \
+      dom \
+      gfx \
+      intl \
+      layout \
+      locale \
+      necko \
+      pref \
+      string \
+      widget \
+      xpcom \
+      $(NULL)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+REQUIRES += editor
+endif
 
 CPPSRCS = \
-  nsAccessNode.cpp \
-  nsAccessibleEventData.cpp \
-  nsDocAccessible.cpp \
-  nsOuterDocAccessible.cpp \
-  nsAccessibilityAtoms.cpp \
-  nsAccessibilityService.cpp \
-  nsAccessible.cpp \
-  nsAccessibleTreeWalker.cpp \
-  nsBaseWidgetAccessible.cpp \
-  nsFormControlAccessible.cpp \
-  nsRootAccessible.cpp \
-  nsCaretAccessible.cpp \
-  nsTextAccessible.cpp \
-  $(NULL)
-
-EXPORTS = \
-  nsRootAccessible.h \
-  nsAccessibleEventData.h \
-  nsAccessNode.h \
+  nsXFormsAccessible.cpp \
+  nsXFormsFormControlsAccessible.cpp \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
@@ -97,20 +75,8 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES += \
+LOCAL_INCLUDES = \
   -I$(srcdir) \
-  -I$(srcdir)/../html \
-  -I$(srcdir)/../xul \
-  -I$(srcdir)/../../../layout/generic \
-  -I$(srcdir)/../../../layout/xul/base/src \
+  -I$(srcdir)/../base \
   $(NULL)
 
-ifndef DISABLE_XFORMS_HOOKS
-LOCAL_INCLUDES += -I$(srcdir)/../xforms
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-LOCAL_INCLUDES += \
-  -I$(srcdir)/../atk \
-  $(NULL)
-endif
