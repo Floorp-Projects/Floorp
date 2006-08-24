@@ -264,17 +264,6 @@ sub validate {
     # because the bug may be moved into another product meanwhile.
     # This check will be done later when creating new flags, see FormToNewFlags().
 
-    # All new flags must belong to active flag types.
-    if (scalar(@flagtype_ids)) {
-        my $inactive_flagtypes =
-            $dbh->selectrow_array('SELECT 1 FROM flagtypes
-                                   WHERE id IN (' . join(',', @flagtype_ids) . ')
-                                   AND is_active = 0 ' .
-                                   $dbh->sql_limit(1));
-
-        ThrowCodeError('flag_type_inactive') if $inactive_flagtypes;
-    }
-
     if (scalar(@flag_ids)) {
         # No reference to existing flags should exist when creating a new
         # attachment.
@@ -314,6 +303,11 @@ sub validate {
         # Make sure the flag type exists.
         my $flag_type = new Bugzilla::FlagType($id);
         $flag_type || ThrowCodeError('flag_type_nonexistent', { id => $id });
+
+        # Make sure the flag type is active.
+        unless ($flag_type->is_active) {
+            ThrowCodeError('flag_type_inactive', {'type' => $flag_type->name});
+        }
 
         _validate(undef, $flag_type, $status, \@requestees, $private_attachment,
                   $bug_id, $attach_id);
