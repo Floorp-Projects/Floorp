@@ -734,6 +734,11 @@
               this._paneDeck.setAttribute("selectedIndex", i);
               
               if (this.type != "child") {
+                // Don't let the new pane content flex to the current window
+                // height if we're animating
+                if (this._shouldAnimate)
+                  aPaneElement.removeAttribute("flex");
+
                 var oldPane = this.lastSelected ? document.getElementById(this.lastSelected) : this.preferencePanes[0];
                 oldPane.selected = !(aPaneElement.selected = true);
                 if (!this._initialized || oldPane.id != aPaneElement.id) {
