@@ -237,8 +237,6 @@ function showCalendarView(type)
         view.tasksInView = (tasksMenu.getAttribute("checked") == 'true');
     }
 
-    switchToView(type);
-
     document.getElementById("displayDeck").selectedPanel =  calendarViewBox;
     switchToView(type);
 
