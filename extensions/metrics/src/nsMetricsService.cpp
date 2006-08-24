@@ -92,6 +92,8 @@
 #include "nsIX509Cert.h"
 #include "nsAutoPtr.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMDocumentView.h"
+#include "nsIDOMAbstractView.h"
 
 // We need to suppress inclusion of nsString.h
 #define nsString_h___
@@ -1767,4 +1769,25 @@ nsMetricsUtils::IsSubframe(nsIDocShellTreeItem* docShell)
   nsCOMPtr<nsIDocShellTreeItem> parent;
   docShell->GetSameTypeParent(getter_AddRefs(parent));
   return (parent != nsnull);
+}
+
+
+/* static */ PRUint32
+nsMetricsUtils::FindWindowForNode(nsIDOMNode *node)
+{
+  nsCOMPtr<nsIDOMDocument> ownerDoc;
+  node->GetOwnerDocument(getter_AddRefs(ownerDoc));
+  NS_ENSURE_STATE(ownerDoc);
+
+  nsCOMPtr<nsIDOMDocumentView> docView = do_QueryInterface(ownerDoc);
+  NS_ENSURE_STATE(docView);
+
+  nsCOMPtr<nsIDOMAbstractView> absView;
+  docView->GetDefaultView(getter_AddRefs(absView));
+  NS_ENSURE_STATE(absView);
+
+  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(absView);
+  NS_ENSURE_STATE(window);
+
+  return nsMetricsService::GetWindowID(window);
 }

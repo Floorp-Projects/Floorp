@@ -321,6 +321,10 @@ public:
 
   // Returns true if the docshell should be considered a subframe.
   static PRBool IsSubframe(nsIDocShellTreeItem *docShell);
+
+  // Finds the window id for the DOMWindow containing |node|.
+  // Returns 0 if the window could not be found.
+  static PRUint32 FindWindowForNode(nsIDOMNode *node);
 };
 
 #endif  // nsMetricsService_h__
