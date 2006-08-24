@@ -92,6 +92,13 @@ nsPlaceholderFrame::Destroy()
   nsSplittableFrame::Destroy();
 }
 
+NS_IMETHODIMP
+nsPlaceholderFrame::IsSplittable(nsSplittableType& aIsSplittable) const
+{
+  NS_ASSERTION(mOutOfFlowFrame, "IsSplittable called at the wrong time");
+  return mOutOfFlowFrame->IsSplittable(aIsSplittable);
+}
+
 nsIAtom*
 nsPlaceholderFrame::GetType() const
 {

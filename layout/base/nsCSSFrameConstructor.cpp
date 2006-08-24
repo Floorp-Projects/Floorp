@@ -10984,6 +10984,13 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
   nsIAtom* frameType = aFrame->GetType();
   nsIContent* content = aFrame->GetContent();
 
+#ifdef NS_DEBUG
+    nsSplittableType splitType;
+    aFrame->IsSplittable(splitType);
+    NS_ASSERTION(splitType != NS_FRAME_NOT_SPLITTABLE,
+                 "why CreateContinuingFrame for a non-splittable frame?");
+#endif
+  
   if (nsLayoutAtoms::textFrame == frameType) {
     newFrame = NS_NewContinuingTextFrame(shell, styleContext);
 

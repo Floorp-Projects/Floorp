@@ -72,6 +72,7 @@ public:
                     nsReflowStatus& aStatus);
 
   virtual void Destroy();
+  NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
 
   // nsIFrame overrides
 #ifdef DEBUG
