@@ -51,9 +51,6 @@
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMXULCommandEvent.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMDocumentView.h"
-#include "nsIDOMAbstractView.h"
 #include "nsIDOMWindow.h"
 #include "nsDataHashtable.h"
 #ifndef MOZ_PLACES
@@ -299,27 +296,13 @@ nsUICommandCollector::HandleEvent(nsIDOMEvent* event)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMDocument> ownerDoc;
-  targetNode->GetOwnerDocument(getter_AddRefs(ownerDoc));
-  NS_ENSURE_STATE(ownerDoc);
-
-  nsCOMPtr<nsIDOMDocumentView> docView = do_QueryInterface(ownerDoc);
-  NS_ENSURE_STATE(docView);
-
-  nsCOMPtr<nsIDOMAbstractView> absView;
-  docView->GetDefaultView(getter_AddRefs(absView));
-  NS_ENSURE_STATE(absView);
-
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(absView);
-  NS_ENSURE_STATE(window);
-
   // Fill a property bag with what we want to log
   nsCOMPtr<nsIWritablePropertyBag2> properties;
   nsMetricsUtils::NewPropertyBag(getter_AddRefs(properties));
   NS_ENSURE_STATE(properties);
 
-  rv = properties->SetPropertyAsUint32(NS_LITERAL_STRING("window"),
-                                       nsMetricsService::GetWindowID(window));
+  PRInt32 window = nsMetricsUtils::FindWindowForNode(targetNode);
+  rv = properties->SetPropertyAsUint32(NS_LITERAL_STRING("window"), window);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = properties->SetPropertyAsAString(NS_LITERAL_STRING("action"),
