@@ -2242,8 +2242,13 @@ function InitLanguageMenu()
       // English (US) and English (UK)
       if (!langLabel)
         langLabel = langId;
-      else if (isoStrArray.length > 1 && isoStrArray[1]) // if we have a language ID like US or UK, append it to the menu item
-        langLabel += ' (' + isoStrArray[1] + ')';
+      // if we have a language ID like US or UK, append it to the menu item, and any sub-variety
+      else if (isoStrArray.length > 1 && isoStrArray[1]) {
+        langLabel += ' (' + isoStrArray[1];
+        if (isoStrArray.length > 2 && isoStrArray[2])
+          langLabel += '-' + isoStrArray[2];
+        langLabel += ')';
+      }
     }
     catch (ex)
     {
