@@ -159,16 +159,20 @@ nsFilePicker::LoadSymbolsGTK24()
     return NS_OK;
   }
 
-  initialized = PR_TRUE;
-
-  #define GET_LIBGTK_FUNC(func) \
+  #define GET_LIBGTK_FUNC_BASE(func, onerr)                  \
     PR_BEGIN_MACRO \
     _##func = (_##func##_fn) PR_FindFunctionSymbol(mGTK24, #func); \
     if (!_##func) { \
-      NS_WARNING("Can't load ##func##"); \
-      return NS_ERROR_NOT_AVAILABLE; \
+      NS_WARNING("Can't load gtk symbol " #func); \
+      onerr \
     } \
     PR_END_MACRO
+
+  #define GET_LIBGTK_FUNC(func) \
+    GET_LIBGTK_FUNC_BASE(func, return NS_ERROR_NOT_AVAILABLE;)
+
+  #define GET_LIBGTK_FUNC_OPT(func) \
+    GET_LIBGTK_FUNC_BASE(func, ;)
 
   PRFuncPtr func = PR_FindFunctionSymbolAndLibrary("gtk_file_chooser_get_filename",
                                                    &mGTK24);
@@ -186,7 +190,7 @@ nsFilePicker::LoadSymbolsGTK24()
   GET_LIBGTK_FUNC(gtk_file_chooser_get_filenames);
   GET_LIBGTK_FUNC(gtk_file_chooser_dialog_new);
   GET_LIBGTK_FUNC(gtk_file_chooser_set_select_multiple);
-  GET_LIBGTK_FUNC(gtk_file_chooser_set_do_overwrite_confirmation);
+  GET_LIBGTK_FUNC_OPT(gtk_file_chooser_set_do_overwrite_confirmation);
   GET_LIBGTK_FUNC(gtk_file_chooser_set_current_name);
   GET_LIBGTK_FUNC(gtk_file_chooser_set_current_folder);
   GET_LIBGTK_FUNC(gtk_file_chooser_add_filter);
@@ -196,6 +200,8 @@ nsFilePicker::LoadSymbolsGTK24()
   GET_LIBGTK_FUNC(gtk_file_filter_new);
   GET_LIBGTK_FUNC(gtk_file_filter_add_pattern);
   GET_LIBGTK_FUNC(gtk_file_filter_set_name);
+
+  initialized = PR_TRUE;
 
   // Woot.
   return NS_OK;
