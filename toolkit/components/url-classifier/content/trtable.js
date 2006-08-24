@@ -118,6 +118,8 @@ UrlClassifierTableDomain.inherits(UrlClassifierTable);
 
 /**
  * Look up a URL in a domain table
+ * We also try to lookup domain + first path component (e.g.,
+ * www.mozilla.org/products).
  *
  * @returns Boolean true if the url domain is in the table
  */
@@ -127,14 +129,32 @@ UrlClassifierTableDomain.prototype.exists = function(url, callback) {
   try {
     host = urlObj.host;
   } catch (e) { }
-  var components = host.split(".");
+  var hostComponents = host.split(".");
+
+  // Try to get the path of the URL.  Pseudo urls (like wyciwyg:) throw
+  // errors when trying to convert to an nsIURL so we wrap in a try/catch
+  // block.
+  var path = ""
+  try {
+    urlObj.QueryInterface(Ci.nsIURL);
+    path = urlObj.filePath;
+  } catch (e) { }
+
+  var pathComponents = path.split("/");
 
   // We don't have a good way map from hosts to domains, so we instead try
   // each possibility. Could probably optimize to start at the second dot?
   var possible = [];
-  for (var i = 0; i < components.length - 1; i++) {
-    host = components.slice(i).join(".");
+  for (var i = 0; i < hostComponents.length - 1; i++) {
+    host = hostComponents.slice(i).join(".");
     possible.push(host);
+
+    // The path starts with a "/", so we are interested in the second path
+    // component if it is available
+    if (pathComponents.length >= 2 && pathComponents[1].length > 0) {
+      host = host + "/" + pathComponents[1];
+      possible.push(host);
+    }
   }
 
   // Run the possible domains against the db.
