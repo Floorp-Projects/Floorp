@@ -44,7 +44,7 @@ var expect = '';
 printBugNumber (bug);
 printStatus (summary);
 
-expect = 'function () {\n    return x.@(2);\n}';
+expect = 'function () {\n    return x[@[2]];\n}';
 
 try
 {
