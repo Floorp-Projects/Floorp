@@ -588,7 +588,10 @@ PRBool PR_CALLBACK InstantiateInsertionPoint(nsHashKey* aKey, void* aData, void*
   if (!insertionPoint) {
     // We need to make a new insertion point.
     insertionPoint = new nsXBLInsertionPoint(realContent, index, defContent);
-    points->InsertElementAt(insertionPoint, i);
+    if (insertionPoint) {
+      NS_ADDREF(insertionPoint);
+      points->InsertElementAt(insertionPoint, i);
+    }
   }
 
   return PR_TRUE;

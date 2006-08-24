@@ -51,6 +51,19 @@ nsXBLInsertionPoint::~nsXBLInsertionPoint()
 {
 }
 
+nsrefcnt
+nsXBLInsertionPoint::Release()
+{
+  --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "nsXBLInsertionPoint");
+  if (mRefCnt == 0) {
+    mRefCnt = 1;
+    delete this;
+    return 0;
+  }
+  return mRefCnt;
+}
+
 already_AddRefed<nsIContent>
 nsXBLInsertionPoint::GetInsertionParent()
 {
