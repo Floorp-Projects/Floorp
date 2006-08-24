@@ -615,9 +615,11 @@ nsHTMLCSSUtils::GetDefaultViewCSS(nsIDOMNode *aNode, nsIDOMViewCSS **aViewCSS)
       // from the document, get the abtractView
       res = documentView->GetDefaultView(getter_AddRefs(abstractView));
       if (NS_FAILED(res)) return res;
-      // from the abstractView, get the CSS view
-      CallQueryInterface(abstractView, aViewCSS);
-      return NS_OK;
+      if (abstractView) {
+        // from the abstractView, get the CSS view
+        CallQueryInterface(abstractView, aViewCSS);
+        return NS_OK;
+      }
     }
   }
   *aViewCSS = nsnull;
