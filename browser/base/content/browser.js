@@ -6607,8 +6607,6 @@ var FeedHandler = {
    */
   updateFeeds: function() {
     var feedButton = document.getElementById("feed-button");
-    if (!feedButton)
-      return;
     if (!this._feedMenuitem)
       this._feedMenuitem = document.getElementById("subscribeToPageMenuitem");
     if (!this._feedMenupopup)
@@ -6616,30 +6614,37 @@ var FeedHandler = {
 
     var feeds = gBrowser.mCurrentBrowser.feeds;
     if (!feeds || feeds.length == 0) {
-      feedButton.removeAttribute("feeds");
-      feedButton.removeAttribute("feed");
-      feedButton.setAttribute("tooltiptext", 
-                              gNavigatorBundle.getString("feedNoFeeds"));
+      if (feedButton) {
+        feedButton.removeAttribute("feeds");
+        feedButton.removeAttribute("feed");
+        feedButton.setAttribute("tooltiptext", 
+                                gNavigatorBundle.getString("feedNoFeeds"));
+      }
       this._feedMenuitem.setAttribute("disabled", "true");
       this._feedMenupopup.setAttribute("hidden", "true");
       this._feedMenuitem.removeAttribute("hidden");
     } else {
-      feedButton.setAttribute("feeds", "true");
-      feedButton.setAttribute("tooltiptext", 
+      if (feedButton) {
+        feedButton.setAttribute("feeds", "true");
+        feedButton.setAttribute("tooltiptext", 
 #ifdef MOZ_FEEDS
-                              gNavigatorBundle.getString("feedHasFeedsNew"));
+                                gNavigatorBundle.getString("feedHasFeedsNew"));
 #else
-                              gNavigatorBundle.getString("feedHasFeeds"));
+                                gNavigatorBundle.getString("feedHasFeeds"));
 #endif
+      }
       // check for dupes before we pick which UI to expose
       feeds = this.harvestFeeds(feeds);
       
       if (feeds.length > 1) {
         this._feedMenuitem.setAttribute("hidden", "true");
         this._feedMenupopup.removeAttribute("hidden");
-        feedButton.removeAttribute("feed");
+        if (feedButton)
+          feedButton.removeAttribute("feed");
       } else {
-        feedButton.setAttribute("feed", feeds[0].href);
+        if (feedButton)
+          feedButton.setAttribute("feed", feeds[0].href);
+
         this._feedMenuitem.setAttribute("feed", feeds[0].href);
         this._feedMenuitem.removeAttribute("disabled");
         this._feedMenuitem.removeAttribute("hidden");
