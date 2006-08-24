@@ -844,6 +844,12 @@ treechildren::-moz-tree-cell-text(lc-black, selected, focus) {
   border: 1px solid ThreeDShadow; 
 }
 
+/* ..... folder location toolbar button adjustments ..... */
+
+#locationFolders {
+  width: 20em;
+}
+
 /* ..... message pane adjustments ..... */
 
 #messagepanebox {

@@ -908,6 +908,12 @@ splitter {
   border: 1px solid transparent; 
 }
 
+/* ..... folder location toolbar button adjustments ..... */
+
+#locationFolders {
+  width: 25em;
+}
+
 /* ..... message pane adjustments ..... */
 
 #messagepanebox {

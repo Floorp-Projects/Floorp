@@ -165,6 +165,12 @@ dummy.usesMailWidgets {
   -moz-binding: url("chrome://messenger/content/mailWidgets.xml#searchpopup");
 }
 
+.folderLocationPopup {
+  display: -moz-popup;
+  -moz-binding: url("chrome://messenger/content/mailWidgets.xml#locationpopup");
+  visibility: visible;
+}
+
 .folderSummaryPopup
 {
   -moz-binding: url("chrome://messenger/content/mailWidgets.xml#folderSummary-popup");

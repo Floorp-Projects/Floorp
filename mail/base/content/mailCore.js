@@ -72,6 +72,13 @@ function MailToolboxCustomizeDone(aToolboxChanged)
   // make sure the mail views search box is initialized
   if (document.getElementById("mailviews-container"))
     viewPickerOnLoad();
+    
+  // make sure the folder location picker is initialized
+  if (document.getElementById("folder-location-container"))
+  {
+    loadFolderViewForTree(gCurrentFolderView, document.getElementById('folderLocationPopup').tree);
+    UpdateFolderLocationPicker(gMsgFolderSelected);
+  }
  
   gSearchInput = null;
   if (document.getElementById("search-container"))

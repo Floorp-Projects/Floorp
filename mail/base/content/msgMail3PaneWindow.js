@@ -174,6 +174,7 @@ var folderListener = {
       if (item == msgWindow.openFolder) {
         if(property.toString() == "TotalMessages" || property.toString() == "TotalUnreadMessages") {
           UpdateStatusMessageCounts(gMsgFolderSelected);
+          UpdateFolderLocationPicker(item);
         }      
       }
     },
@@ -1087,14 +1088,13 @@ function UpdateFolderColumnVisibility()
   }
 } 
 
-function loadFolderView(aNewFolderView)
+// loadFolderViewForTree -- a helper routine split away from
+// loadFolderView.
+// returns a localized string corresponding to the name of the new view
+function loadFolderViewForTree(aNewFolderView, aFolderTree)
 {
-  if (gCurrentFolderView && (gCurrentFolderView == aNewFolderView))
-    return;
-
   var folderPaneHeader = document.getElementById('folderpane-title');
-  var folderTree = GetFolderTree();
-  var database = GetFolderDatasource();
+  var database = aFolderTree.database;
   var nsIRDFDataSource = Components.interfaces.nsIRDFDataSource;
 
   // Each folder pane view has the following properties: 
@@ -1127,10 +1127,31 @@ function loadFolderView(aNewFolderView)
     msgDS.window = msgWindow;
   }
 
-  folderTree.setAttribute('ref', folderViews[aNewFolderView].ref);
-  folderPaneHeader.value = gMessengerBundle.getString(folderViews[aNewFolderView].label);
+  aFolderTree.setAttribute('ref', folderViews[aNewFolderView].ref);
+  return gMessengerBundle.getString(folderViews[aNewFolderView].label);
+}
 
-  // reflect the new value back into prefs
+function loadFolderView(aNewFolderView)
+{
+  if (gCurrentFolderView && (gCurrentFolderView == aNewFolderView))
+    return;
+    
+  var folderTree = GetFolderTree();
+
+  var folderPaneHeader = document.getElementById('folderpane-title');
+  var folderTree = GetFolderTree();
+  var database = GetFolderDatasource();
+  
+  // load the folder view into the folder pane
+  folderPaneHeader.value = loadFolderViewForTree(aNewFolderView, GetFolderTree());
+  
+  // if the folder location picker is visible, load the folder view into the location
+  // picker as well. 
+  var folderLocationPicker = document.getElementById('folder-location-container');
+  if (folderLocationPicker)
+    loadFolderViewForTree(aNewFolderView, document.getElementById('folderLocationPopup').tree);
+
+  // now reflect the new value back into prefs
   pref.setIntPref('mail.ui.folderpane.view', gCurrentFolderView = aNewFolderView);
 }
 
@@ -1210,7 +1231,47 @@ function UpgradeThreadPaneUI()
 
 function OnLoadThreadPane()
 {
-    UpgradeThreadPaneUI();
+  UpgradeThreadPaneUI();
+}
+
+// folderLocationPickerOnLoad can be called multiple times
+// and it can be called when the location picker isn't in the toolbar
+function folderLocationPickerOnLoad()
+{
+  var folderLocationPicker = document.getElementById('folder-location-container');
+  if (!folderLocationPicker) 
+    return;
+  
+  var locationTree = document.getElementById('folderLocationPopup').tree;
+  locationTree.database.AddDataSource(accountManagerDataSource);
+  locationTree.database.AddDataSource(folderDataSource);
+  locationTree.setAttribute("ref", "msgaccounts:/");
+}
+
+function OnLocationTreeSelect(menulist)
+{
+  SelectFolder(menulist.getAttribute('uri'));
+}
+
+function UpdateFolderLocationPicker(resource)
+{
+  var folderLocationPicker = document.getElementById('folder-location-container');
+  if (!folderLocationPicker) 
+    return;
+  
+  var tree = GetFolderTree();
+  var folders = document.getElementById('locationFolders');
+  var properties = ['BiffState', 'NewMessages', 'HasUnreadMessages',
+                    'SpecialFolder', 'IsServer', 'IsSecure', 'ServerType', 'NoSelect'];
+  var label = GetFolderAttribute(tree, resource, 'FolderTreeName');
+  folders.setAttribute("label", label);
+  for (var i in properties) 
+  {
+    var property = properties[i];
+    var value = GetFolderAttribute(tree, resource, property);
+    folders.setAttribute(property, value);
+  }
+  folders.setAttribute('uri', resource.Value);
 }
 
 function GetFolderDatasource()

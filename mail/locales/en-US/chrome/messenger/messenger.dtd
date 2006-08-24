@@ -443,6 +443,7 @@
 <!ENTITY addressBookButton.label "Address Book">
 <!ENTITY searchItem.title "Quick Search">
 <!ENTITY mailViewsToolbarItem.title "Mail Views">
+<!ENTITY folderLocationToolbarItem.title "Folder Location">
 <!ENTITY tagButton.label "Tag">
 
 <!-- Mail Toolbar Tooltips-->

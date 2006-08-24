@@ -336,9 +336,8 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
   }
   // that should have initialized gDBView, now re-root the thread pane
   RerootThreadPane();
-
   SetUpToolbarButtons(uri);
-
+  UpdateFolderLocationPicker(gMsgFolderSelected);
   UpdateStatusMessageCounts(gMsgFolderSelected);
   
   // hook for extra toolbar items
@@ -790,8 +789,9 @@ function FolderPaneSelectionChange()
         if (msgFolder == gMsgFolderSelected)
            return;
 
-	gPrevSelectedFolder = gMsgFolderSelected;
+	      gPrevSelectedFolder = gMsgFolderSelected;
         gMsgFolderSelected = msgFolder;
+        UpdateFolderLocationPicker(gMsgFolderSelected);
         var folderFlags = msgFolder.flags;
         // if this is same folder, and we're not showing a virtual folder
         // then do nothing.
