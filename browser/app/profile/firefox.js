@@ -531,7 +531,7 @@ pref("browser.safebrowsing.dataProvider", 0);
 // Does the provider name need to be localizable?
 pref("browser.safebrowsing.provider.0.name", "Google");
 pref("browser.safebrowsing.provider.0.lookupURL", "http://sb.google.com/safebrowsing/lookup?sourceid=firefox-antiphish&features=TrustRank&client={moz:client}&mozver={moz:version}-{moz:buildid}&");
-pref("browser.safebrowsing.provider.0.keyURL", "https://www.google.com/safebrowsing/getkey?");
+pref("browser.safebrowsing.provider.0.keyURL", "https://www.google.com/safebrowsing/getkey?client={moz:client}&");
 pref("browser.safebrowsing.provider.0.reportURL", "http://sb.google.com/safebrowsing/report?");
 
 // privacy policy -- must be chrome URL
