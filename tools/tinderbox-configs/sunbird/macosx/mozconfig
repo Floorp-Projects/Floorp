@@ -12,4 +12,5 @@ ac_add_options --disable-shared
 ac_add_options --disable-installer
 ac_add_options --disable-tests
 ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.2.8.sdk
-
+# Use Carbon widgets, regardless of what trunk's default is
+ac_add_options --enable-default-toolkit=mac
