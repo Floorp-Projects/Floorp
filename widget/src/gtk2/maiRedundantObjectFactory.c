@@ -41,8 +41,6 @@
 #include <atk/atk.h>
 #include "maiRedundantObjectFactory.h"
 
-#ifdef USE_ATK_ROLE_REDUNDANT_OBJECT
-
 static void mai_redundant_object_factory_class_init (
                               maiRedundantObjectFactoryClass *klass);
 
@@ -130,5 +128,3 @@ mai_redundant_object_factory_get_accessible_type ()
 {
   return mai_redundant_object_factory_get_type();
 }
-
-#endif /* USE_ATK_ROLE_REDUNDANT_OBJECT */

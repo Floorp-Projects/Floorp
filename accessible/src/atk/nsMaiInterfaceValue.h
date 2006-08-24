@@ -51,9 +51,7 @@ void valueInterfaceInitCB(AtkValueIface *aIface);
 void getCurrentValueCB(AtkValue *obj, GValue *value);
 void getMaximumValueCB(AtkValue *obj, GValue *value);
 void getMinimumValueCB(AtkValue *obj, GValue *value);
-#ifdef USE_ATK_VALUE_MINIMUMINCREMENT
 void getMinimumIncrementCB(AtkValue *obj, GValue *minIncrement);
-#endif
 gboolean setCurrentValueCB(AtkValue *obj, const GValue *value);
 
 G_END_DECLS

@@ -41,7 +41,7 @@
 #include <atk/atk.h>
 #include "nsAccessibleWrap.h"
 
-const PRUint32 ROLE_ATK_LAST_ENTRY = 0xffffffff;
+const PRUint32 kROLE_ATK_LAST_ENTRY = 0xffffffff;
 
 // Map array from cross platform roles to  ATK roles
 PRUint32 atkRoleMap[] = {
@@ -60,22 +60,10 @@ PRUint32 atkRoleMap[] = {
     ATK_ROLE_MENU,                // nsIAccessible::ROLE_MENUPOPUP         11
     ATK_ROLE_MENU_ITEM,           // nsIAccessible::ROLE_MENUITEM          12
     ATK_ROLE_TOOL_TIP,            // nsIAccessible::ROLE_TOOLTIP           13
-#ifdef USE_ATK_ROLE_EMBEDDED
     ATK_ROLE_EMBEDDED,            // nsIAccessible::ROLE_APPLICATION       14
-#else
-    ATK_ROLE_PANEL,               // nsIAccessible::ROLE_APPLICATION       14
-#endif
-#ifdef USE_ATK_ROLE_DOCUMENT_FRAME 
     ATK_ROLE_DOCUMENT_FRAME,      // nsIAccessible::ROLE_DOCUMENT          15
-#else
-    ATK_ROLE_HTML_CONTAINER,      // nsIAccessible::ROLE_DOCUMENT          15
-#endif
     ATK_ROLE_PANEL,               // nsIAccessible::ROLE_PANE              16
-#ifdef USE_ATK_ROLE_CHART
     ATK_ROLE_CHART,               // nsIAccessible::ROLE_CHART             17
-#else
-    ATK_ROLE_PANEL,               // nsIAccessible::ROLE_CHART             17
-#endif
     ATK_ROLE_DIALOG,              // nsIAccessible::ROLE_DIALOG            18
     ATK_ROLE_UNKNOWN,             // nsIAccessible::ROLE_BORDER            19
     ATK_ROLE_PANEL,               // nsIAccessible::ROLE_GROUPING          20
@@ -88,11 +76,7 @@ PRUint32 atkRoleMap[] = {
     ATK_ROLE_UNKNOWN,             // nsIAccessible::ROLE_COLUMN            27
     ATK_ROLE_UNKNOWN,             // nsIAccessible::ROLE_ROW               28
     ATK_ROLE_TABLE_CELL,          // nsIAccessible::ROLE_CELL              29
-#ifdef USE_ATK_ROLE_LINK
     ATK_ROLE_LINK,                // nsIAccessible::ROLE_LINK              30
-#else
-    ATK_ROLE_PUSH_BUTTON,         // nsIAccessible::ROLE_LINK              30
-#endif
     ATK_ROLE_UNKNOWN,             // nsIAccessible::ROLE_HELPBALLOON       31
     ATK_ROLE_IMAGE,               // nsIAccessible::ROLE_CHARACTER         32
     ATK_ROLE_LIST,                // nsIAccessible::ROLE_LIST              33
@@ -160,92 +144,24 @@ PRUint32 atkRoleMap[] = {
     ATK_ROLE_TOGGLE_BUTTON,       // nsIAccessible::ROLE_TOGGLE_BUTTON     95
     ATK_ROLE_TREE_TABLE,          // nsIAccessible::ROLE_TREE_TABLE        96
     ATK_ROLE_VIEWPORT,            // nsIAccessible::ROLE_VIEWPORT          97
-#ifdef USE_ATK_ROLE_HEADER
     ATK_ROLE_HEADER,              // nsIAccessible::ROLE_HEADER            98
-#else
-    ATK_ROLE_TEXT,                // nsIAccessible::ROLE_HEADER            98
-#endif
-#ifdef USE_ATK_ROLE_FOOTER
     ATK_ROLE_FOOTER,              // nsIAccessible::ROLE_FOOTER            99
-#else
-    ATK_ROLE_TEXT,                // nsIAccessible::ROLE_FOOTER            99
-#endif
-#ifdef USE_ATK_ROLE_PARAGRAPH
     ATK_ROLE_PARAGRAPH,           // nsIAccessible::ROLE_PARAGRAPH         100
-#else
-    ATK_ROLE_TEXT,                // nsIAccessible::ROLE_PARAGRAPH         100
-#endif
-#ifdef USE_ATK_ROLE_RULER
     ATK_ROLE_RULER,               // nsIAccessible::ROLE_RULER             101
-#else
-    ATK_ROLE_UNKNOWN,             // nsIAccessible::ROLE_RULER             101
-#endif
-#ifdef USE_ATK_ROLE_AUTOCOMPLETE
     ATK_ROLE_AUTOCOMPLETE,        // nsIAccessible::ROLE_AUTOCOMPLETE      102
-#else
-    ATK_ROLE_COMBO_BOX,           // nsIAccessible::ROLE_AUTOCOMPLETE      102
-#endif
-#ifdef USE_ATK_ROLE_EDITBAR
     ATK_ROLE_EDITBAR,             // nsIAccessible::ROLE_EDITBAR           103
-#else
-    ATK_ROLE_TEXT,                // nsIAccessible::ROLE_EDITBAR           103
-#endif
-#ifdef USE_ATK_ROLE_EMBEDDED
     ATK_ROLE_EMBEDDED,            // nsIAccessible::ROLE_EMBEDDED          104
-#else
-    ATK_ROLE_UNKNOWN,             // nsIAccessible::ROLE_EMBEDDED          104
-#endif
-#ifdef USE_ATK_ROLE_ENTRY
     ATK_ROLE_ENTRY,               // nsIAccessible::ROLE_ENTRY             105
-#else
-    ATK_ROLE_TEXT,                // nsIAccessible::ROLE_ENTRY             105
-#endif
-#ifdef USE_ATK_ROLE_CAPTION
     ATK_ROLE_CAPTION,             // nsIAccessible::ROLE_CAPTION           106
-#else
-    ATK_ROLE_LABEL,               // nsIAccessible::ROLE_CAPTION           106
-#endif
-#ifdef USE_ATK_ROLE_DOCUMENT_FRAME
     ATK_ROLE_DOCUMENT_FRAME,      // nsIAccessible::ROLE_DOCUMENT_FRAME    107
-#else
-    ATK_ROLE_PANEL,               // nsIAccessible::ROLE_DOCUMENT_FRAME    107
-#endif
-#ifdef USE_ATK_ROLE_HEADING
     ATK_ROLE_HEADING,             // nsIAccessible::ROLE_HEADING           108
-#else
-    ATK_ROLE_TEXT,                 // nsIAccessible::ROLE_HEADING           108
-#endif
-#ifdef USE_ATK_ROLE_PAGE
     ATK_ROLE_PAGE,                // nsIAccessible::ROLE_PAGE              109
-#else
-    ATK_ROLE_TEXT,                // nsIAccessible::ROLE_PAGE              109
-#endif
-#ifdef USE_ATK_ROLE_SECTION
     ATK_ROLE_SECTION,             // nsIAccessible::ROLE_SECTION           110
-#else
-    ATK_ROLE_TEXT,                // nsIAccessible::ROLE_SECTION           110
-#endif
-#ifdef USE_ATK_ROLE_REDUNDANT_OBJECT
     ATK_ROLE_REDUNDANT_OBJECT,    // nsIAccessible::ROLE_REDUNDANT_OBJECT  111
-#else
-    ATK_ROLE_INVALID,             // nsIAccessible::ROLE_REDUNDANT_OBJECT  111
-#endif
-#ifdef USE_ATK_ROLE_FORM
     ATK_ROLE_FORM,                // nsIAccessible::ROLE_FORM              112
-#else
-    ATK_ROLE_PANEL,               // nsIAccessible::ROLE_FORM              112
-#endif
-#ifdef USE_ATK_ROLE_INPUT_METHOD_WINDOW
     ATK_ROLE_INPUT_METHOD_WINDOW, // nsIAccessible::ROLE_IME               113
-#else
-    ATK_ROLE_INVALID,             // nsIAccessible::ROLE_IME               113
-#endif
-#ifdef USE_ATK_ROLE_APPLICATION
     ATK_ROLE_APPLICATION,         // nsIAccessible::ROLE_APP_ROOT          114
-#else
-    ATK_ROLE_PANEL,               // nsIAccessible::ROLE_APP_ROOT          114
-#endif
     ATK_ROLE_MENU,                // nsIAccessible::ROLE_PARENT_MENUITEM   115
-    ROLE_ATK_LAST_ENTRY           // nsIAccessible::ROLE_LAST_ENTRY
+    kROLE_ATK_LAST_ENTRY          // nsIAccessible::ROLE_LAST_ENTRY
 };
 
