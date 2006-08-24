@@ -53,6 +53,7 @@
 #include "prlog.h"
 
 #ifdef XP_MACOSX
+#include "nsILocalFileMac.h"
 #include "nsCommandLineServiceMac.h"
 #endif
 
@@ -124,6 +125,48 @@ GetCurrentWorkingDir(char *buf, size_t size)
 #endif
   return NS_OK;
 }
+
+#if defined(XP_MACOSX)
+
+// This is a copy of OS X's XRE_GetBinaryPath from nsAppRunner.cpp with the
+// gBinaryPath check removed so that the updater can reload the stub executable
+// instead of xulrunner-bin. See bug 349737.
+static nsresult
+GetXULRunnerStubPath(const char* argv0, nsILocalFile* *aResult)
+{
+  nsresult rv;
+  nsCOMPtr<nsILocalFile> lf;
+
+  NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(lf));
+  nsCOMPtr<nsILocalFileMac> lfm (do_QueryInterface(lf));
+  if (!lfm)
+    return NS_ERROR_FAILURE;
+
+  // Works even if we're not bundled.
+  CFBundleRef appBundle = CFBundleGetMainBundle();
+  if (!appBundle)
+    return NS_ERROR_FAILURE;
+
+  CFURLRef bundleURL = CFBundleCopyExecutableURL(appBundle);
+  if (!bundleURL)
+    return NS_ERROR_FAILURE;
+
+  FSRef fileRef;
+  if (!CFURLGetFSRef(bundleURL, &fileRef)) {
+    CFRelease(bundleURL);
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = lfm->InitWithFSRef(&fileRef);
+  CFRelease(bundleURL);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  NS_ADDREF(*aResult = lf);
+  return NS_OK;
+}
+#endif /* XP_MACOSX */
 
 PR_STATIC_CALLBACK(int)
 ScanDirComparator(nsIFile *a, nsIFile *b, void *unused)
@@ -299,7 +342,15 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
   // We need to use the value returned from XRE_GetBinaryPath when attempting
   // to restart the running application.
   nsCOMPtr<nsILocalFile> appFile;
+
+#if defined(XP_MACOSX)
+  // On OS X we need to pass the location of the xulrunner-stub executable
+  // rather than xulrunner-bin. See bug 349737.
+  GetXULRunnerStubPath(appArgv[0], getter_AddRefs(appFile));
+#else
   XRE_GetBinaryPath(appArgv[0], getter_AddRefs(appFile));
+#endif
+
   if (!appFile)
     return;
   nsCAutoString appFilePath;
