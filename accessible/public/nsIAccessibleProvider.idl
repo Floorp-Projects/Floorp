@@ -103,6 +103,18 @@ interface nsIAccessibleProvider : nsISupports
   const long XULToolbarSeparator = 0x00001031;
   const long XULTooltip = 0x00001032;
 
+
+  /**
+   * Constants set is used by XForms elements.
+   */
+
+   /** Used for label element */
+   const long XFormsLabel = 0x00002001;
+   /** Used for output element */
+   const long XFormsOuput = 0x00002002;
+   /** Used for trigger and submit elements */
+   const long XFormsTrigger = 0x00002003;
+
   /**
    * Return one of constants declared above.
    */

@@ -252,7 +252,13 @@
   -->
   <binding id="xformswidget-output-base"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
-    <implementation implements="nsIXFormsUIWidget">
+    <implementation implements="nsIXFormsUIWidget, nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsOuput;
+        </getter>
+      </property>
+
       <method name="refresh">
         <body>
           this.control.value = this.stringValue;
@@ -299,7 +305,13 @@
   <binding id="xformswidget-label-base"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
 
-    <implementation implements="nsIXFormsUIWidget">
+    <implementation implements="nsIXFormsUIWidget, nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsLabel;
+        </getter>
+      </property>
+
       <method name="refresh">
         <body>
           // the label control hides/unhides anonymous content based on the
@@ -380,7 +392,13 @@
   <binding id="xformswidget-trigger-base"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
 
-    <implementation implements="nsIXFormsUIWidget">
+    <implementation implements="nsIXFormsUIWidget, nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsTrigger;
+        </getter>
+      </property>
+
       <method name="disable">
         <parameter name="aDisable"/>
         <body>

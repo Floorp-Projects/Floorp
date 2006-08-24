@@ -12,20 +12,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla XForms support.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Aaron Reed <aaronr@us.ibm.com> (original author)
- *  Alexander Surkov <surkov.alexander@gmail.com>
+ *   Alexander Surkov <surkov.alexander@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -37,24 +36,55 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIXFormsUtilityService.h"
+#ifndef _nsXFormsFormControlsAccessible_H_
+#define _nsXFormsFormControlsAccessible_H_
+
+#include "nsXFormsAccessible.h"
 
 /**
- * The class implements "@mozilla.org/xforms-utility-service;1" XPCOM object
- * that is used outside XForms extension by core modules, for example by
- * accessibility.
+ * Accessible object for xforms:label.
  */
 
-class nsXFormsUtilityService : public nsIXFormsUtilityService
+class nsXFormsLabelAccessible : public nsXFormsAccessible
 {
 public:
-  NS_DECL_ISUPPORTS
+  nsXFormsLabelAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell);
 
-  // nsIXFormsUtilityService
-  NS_IMETHOD IsReadonly(nsIDOMNode *aElement, PRBool *aState);
-  NS_IMETHOD IsRelevant(nsIDOMNode *aElement, PRBool *aState);
-  NS_IMETHOD IsRequired(nsIDOMNode *aElement, PRBool *aState);
-  NS_IMETHOD IsValid(nsIDOMNode *aElement, PRBool *aState);
-  NS_IMETHOD GetValue(nsIDOMNode *aElement, nsAString& aValue);
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+  NS_IMETHOD GetName(nsAString& aName);
+  NS_IMETHOD GetDescription(nsAString& aDescription);
 };
+
+/**
+ * Accessible object for xforms:output.
+ */
+
+class nsXFormsOutputAccessible : public nsXFormsAccessible
+{
+public:
+  nsXFormsOutputAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell);
+
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+};
+
+/**
+ * Accessible object for xforms:trigger and xforms:submit.
+ */
+
+class nsXFormsTriggerAccessible : public nsXFormsAccessible
+{
+public:
+  enum { eAction_Click = 0 };
+
+  nsXFormsTriggerAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell);
+
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+  NS_IMETHOD GetValue(nsAString& aValue);
+
+  NS_IMETHOD GetNumActions(PRUint8 *aCount);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
+  NS_IMETHOD DoAction(PRUint8 aIndex);
+};
+
+#endif
 

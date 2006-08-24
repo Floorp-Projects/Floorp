@@ -20,7 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Aaron Reed <aaronr@us.ibm.com>
+ *  Aaron Reed <aaronr@us.ibm.com> (original author)
+ *  Alexander Surkov <surkov.alexander@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,4 +39,60 @@
 
 #include "nsXFormsUtilityService.h"
 
+#include "nsIXFormsDelegate.h"
+#include "nsIXFormsAccessors.h"
+#include "nsXFormsUtils.h"
+
 NS_IMPL_ISUPPORTS1(nsXFormsUtilityService, nsIXFormsUtilityService)
+
+#define GET_XFORMS_ACCESSORS \
+NS_ENSURE_ARG_POINTER(aElement);\
+nsCOMPtr<nsIXFormsDelegate> delegate(do_QueryInterface(aElement));\
+NS_ENSURE_TRUE(delegate, NS_ERROR_FAILURE);\
+nsCOMPtr<nsIXFormsAccessors> accessors;\
+delegate->GetXFormsAccessors(getter_AddRefs(accessors));\
+NS_ENSURE_TRUE(accessors, NS_ERROR_FAILURE);
+
+NS_IMETHODIMP
+nsXFormsUtilityService::IsReadonly(nsIDOMNode *aElement, PRBool *aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  GET_XFORMS_ACCESSORS
+  return accessors->IsReadonly(aState);
+}
+
+NS_IMETHODIMP
+nsXFormsUtilityService::IsRelevant(nsIDOMNode *aElement, PRBool *aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  GET_XFORMS_ACCESSORS
+  return accessors->IsRelevant(aState);
+}
+
+NS_IMETHODIMP
+nsXFormsUtilityService::IsRequired(nsIDOMNode *aElement, PRBool *aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  GET_XFORMS_ACCESSORS
+  return accessors->IsRequired(aState);
+}
+
+NS_IMETHODIMP
+nsXFormsUtilityService::IsValid(nsIDOMNode *aElement, PRBool *aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  GET_XFORMS_ACCESSORS
+  return accessors->IsValid(aState);
+}
+
+NS_IMETHODIMP
+nsXFormsUtilityService::GetValue(nsIDOMNode *aElement, nsAString& aValue)
+{
+  GET_XFORMS_ACCESSORS
+  return accessors->GetValue(aValue);
+}
+

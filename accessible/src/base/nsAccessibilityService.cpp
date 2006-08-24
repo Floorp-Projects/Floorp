@@ -96,6 +96,10 @@
 #include "nsHTMLWin32ObjectAccessible.h"
 #endif
 
+#ifndef DISABLE_XFORMS_HOOKS
+#include "nsXFormsFormControlsAccessible.h"
+#endif
+
 nsAccessibilityService *nsAccessibilityService::gAccessibilityService = nsnull;
 
 /**
@@ -1290,12 +1294,12 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
   if (type == nsIAccessibleProvider::OuterDoc)
     return CreateOuterDocAccessible(aNode, aAccessible);
 
-#ifdef MOZ_XUL
   nsCOMPtr<nsIWeakReference> weakShell;
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
 
   switch (type)
   {
+#ifdef MOZ_XUL
     // XUL controls
     case nsIAccessibleProvider::XULAlert:
       *aAccessible = new nsXULAlertAccessible(aNode, weakShell);
@@ -1422,6 +1426,21 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XULTooltip:
       *aAccessible = new nsXULTooltipAccessible(aNode, weakShell);
       break;
+#endif // MOZ_XUL
+
+#ifndef DISABLE_XFORMS_HOOKS
+    // XForms elements
+    case nsIAccessibleProvider::XFormsLabel:
+      *aAccessible = new nsXFormsLabelAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XFormsOuput:
+      *aAccessible = new nsXFormsOutputAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XFormsTrigger:
+      *aAccessible = new nsXFormsTriggerAccessible(aNode, weakShell);
+      break;
+#endif
+
     default:
       return NS_OK;
   }
@@ -1430,9 +1449,6 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(*aAccessible);
-
-#endif // MOZ_XUL
-
   return NS_OK;
 }
 

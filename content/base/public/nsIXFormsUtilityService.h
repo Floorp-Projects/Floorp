@@ -39,8 +39,8 @@
 #ifndef nsIXFormsUtilityService_h
 #define nsIXFormsUtilityService_h
 
+#include "nsIDOMNode.h"
 
-#include "nsISupports.h"
 
 /* For IDL files that don't want to include root IDL files. */
 #ifndef NS_NO_VTABLE
@@ -61,6 +61,32 @@ class NS_NO_VTABLE nsIXFormsUtilityService : public nsISupports {
 public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXFORMSUTILITYSERVICE_IID)
+
+  /**
+   * Return true if instance node that element is bound to is readonly.
+   */
+  NS_IMETHOD IsReadonly(nsIDOMNode *aElement, PRBool *aState) = 0;
+
+  /**
+   * Return true if instance node that element is bound to is relevant.
+   */
+  NS_IMETHOD IsRelevant(nsIDOMNode *aElement, PRBool *aState) = 0;
+
+  /**
+   * Return true if instance node that element is bound to is required.
+   */
+  NS_IMETHOD IsRequired(nsIDOMNode *aElement, PRBool *aState) = 0;
+
+  /**
+   * Return true if instance node that element is bound to is valid.
+   */
+  NS_IMETHOD IsValid(nsIDOMNode *aElement, PRBool *aState) = 0;
+
+  /**
+   * Return value of instance node that element is bound to.
+   */
+  NS_IMETHOD GetValue(nsIDOMNode *aElement, nsAString& aValue) = 0;
+
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIXFormsUtilityService,
