@@ -205,9 +205,6 @@ start_selfserv()
   else
       ECC_OPTIONS=""
   fi
-  if [ "$1" = "mixed" ]; then
-      ECC_OPTIONS="-e ${HOSTADDR}-ecmixed"
-  fi
   echo "selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} ${SERVER_OPTIONS} \\"
   echo "         ${ECC_OPTIONS} -w nss ${sparam} -i ${R_SERVERPID} $verbose &"
   echo "selfserv started at `date`"
@@ -248,8 +245,6 @@ ssl_cov()
   else
       sparam="$CSHORT"
   fi
-
-  mixed=0
   start_selfserv # Launch the server
                
   p=""
@@ -269,34 +264,7 @@ ssl_cov()
               TLS_FLAG=""
           fi
 
-# These five tests need an EC cert signed with RSA
-# This requires a different certificate loaded in selfserv
-# due to a (current) NSS limitation of only loaded one cert
-# per type so the default selfserv setup will not work.
-#:C00B TLS ECDH RSA WITH NULL SHA
-#:C00C TLS ECDH RSA WITH RC4 128 SHA
-#:C00D TLS ECDH RSA WITH 3DES EDE CBC SHA
-#:C00E TLS ECDH RSA WITH AES 128 CBC SHA
-#:C00F TLS ECDH RSA WITH AES 256 CBC SHA
-
-          if [ $mixed -eq 0 ]; then
-            if [ "${param}" = ":C00B" -o "${param}" = ":C00C" -o "${param}" = ":C00D" -o "${param}" = ":C00E" -o "${param}" = ":C00F" ]; then
-              kill_selfserv
-              start_selfserv mixed
-              mixed=1
-            else
-              is_selfserv_alive
-            fi
-          else 
-            if [ "${param}" = ":C00B" -o "${param}" = ":C00C" -o "${param}" = ":C00D" -o "${param}" = ":C00E" -o "${param}" = ":C00F" ]; then
-              is_selfserv_alive
-            else
-              kill_selfserv
-              start_selfserv
-              mixed=0
-            fi
-          fi
-
+          is_selfserv_alive
           echo "tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} ${TLS_FLAG} ${CLIENT_OPTIONS} \\"
           echo "        -f -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}"
 
@@ -371,15 +339,7 @@ ssl_stress()
           echo "$SCRIPTNAME: skipping  $testname (ECC only)"
       elif [ "$ectype" != "#" ]; then
           cparam=`echo $cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
-
-# This test needs the mixed cert 
-# Stress TLS ECDH-RSA AES 128 CBC with SHA (no reuse)
-          if [ "${sparam}" = "-c_:C00E" ]; then
-              start_selfserv mixed
-          else
-              start_selfserv
-          fi
-
+          start_selfserv
           if [ "`uname -n`" = "sjsu" ] ; then
               echo "debugging disapering selfserv... ps -ef | grep selfserv"
               ps -ef | grep selfserv
