@@ -153,7 +153,9 @@
                 ]]></getter>
                 <setter><![CDATA[
                     this.mWeeksInView = val;
-                    this.goToDay(this.selectedDay);
+                    if (this.selectedDay) {
+                        this.goToDay(this.selectedDay);
+                    }
                 ]]></setter>
             </property>
 
