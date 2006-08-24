@@ -18,8 +18,8 @@
         <td><?=$html->input('Addon/Author')?></td>
     </tr>
     <tr>
-        <td>OS</td>
-        <td><?=$html->selectTag('Addon/OS')?></td>
+        <td>Platforms</td>
+        <td><?=$html->selectTag('Addon/Platform', $platforms, null, null, null, false)?></td>
     </tr>
     <tr>
         <td colspan=2>Target Application(s)</td>

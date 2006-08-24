@@ -4,14 +4,15 @@ require_once('Archive/Zip.php');
 class AddonsController extends AppController
 {
     var $name = 'Addons';
+    var $uses = array('Addon', 'Platform', 'Application', 'Appversion');
     var $components = array('Amo', 'Rdf', 'Versioncompare');
-
+    var $scaffold;
    /**
     *
-    */
+    *
     function index() {
         $this->set('addons', $this->Amo->addonTypes);
-    }
+    }*/
 
    /**
     * Add new or new version of an add-on
@@ -131,13 +132,66 @@ pr($manifestData);
                 //If adding a new version to existing addon, check author
                 $existing = $this->Addon->findAllByGuid($manifestData['id']);
 
+                //Initialize targetApp checking
+                $noMozApps = true;
+                $versionErrors = array();
+
+                if(count($manifestData['targetApplication']) > 0) {
+                    //Iterate through each target app and find it in the DB
+                    foreach($manifestData['targetApplication'] as $appKey => $appVal) {
+                        if($matchingApp = $this->Application->find(array('guid' => $appKey), null, null, -1)) {
+                            $noMozApps = false;
+
+                            //Check if the minVersion is valid
+                            if(!$matchingMinVers = $this->Appversion->find(array(
+                                                                          'application_id' => $matchingApp['Application']['id'],
+                                                                          'version' => $appVal['minVersion'],
+                                                                          'public' => 1
+                                                                          ), null, null, -1)) {
+                                $versionErrors[] = $appVal['minVersion'].' is not a valid version for '.$matchingApp['Application']['name'];
+                            }
+
+                            //Check if the maxVersion is valid
+                            if(!$matchingMaxVers = $this->Appversion->find(array(
+                                                                          'application_id' => $matchingApp['Application']['id'],
+                                                                          'version' => $appVal['maxVersion'],
+                                                                          'public' => 1
+                                                                          ), null, null, -1)) {
+                                $versionErrors[] = $appVal['maxVersion'].' is not a valid version for '.$matchingApp['Application']['name'];
+                            }
+                        }
+                    }
+                }
+
+                //Must have at least one mozilla app
+                if($noMozApps === true) {
+                    $this->Addon->invalidate('file');
+                    $this->set('fileError', 'You must have at least one valid Mozilla Target Application.');
+                    $this->render('add_step1');
+                    die();
+                }
+
+                //Max/min version errors
+                if(count($versionErrors) > 0) {
+                    $this->Addon->invalidate('file');
+                    $errorStr = implode($versionErrors, '<br />');
+                    $this->set('fileError', 'The following errors were found in install.rdf:'.$errorStr);
+                    $this->render('add_step1');
+                    die();
+                }
+
+                //Get Platforms list
+                $platformQry = $this->Platform->findAll();
+                foreach($platformQry as $k => $v) {
+                    $platforms[$platformQry[$k]['Platform']['id']] = $platformQry[$k]['Platform']['name'];
+                }
             }
             //If it is a search plugin, read the .src file
             else {
 
             }
 
-
+            $this->set('platforms', $platforms);
             $this->set('fileName', $fileName);
             $this->set('fileSize', $fileSize);
             $this->set('manifestData', $manifestData);
