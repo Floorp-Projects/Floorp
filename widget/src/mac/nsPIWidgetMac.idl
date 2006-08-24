@@ -39,9 +39,15 @@
 
 #include "nsISupports.idl"
 
+%{ C++
+class nsMacWindow;
+class nsMacEventDispatchHandler;
+%}
+
+[ptr] native nsMacWindowPtr(nsMacWindow);
+[ptr] native nsMacEventDispatchHandlerPtr(nsMacEventDispatchHandler);
+
 interface nsIMenuBar;
-interface nsMacWindow;
-interface nsMacEventDispatchHandler;
 
 //
 // nsPIWidgetMac
@@ -49,7 +55,7 @@ interface nsMacEventDispatchHandler;
 // A private interface (unfrozen, private to the widget implementation) that
 // gives us access to some extra features on a widget/window.
 //
-[scriptable, uuid(5DE488F0-C9B1-427C-938F-D3D13DEFF987)]
+[uuid(5DE488F0-C9B1-427C-938F-D3D13DEFF987)]
 interface nsPIWidgetMac : nsISupports
 {
     // Like OS ::BringToFront, but constrains the window to its z-level
@@ -64,13 +70,13 @@ interface nsPIWidgetMac : nsISupports
 
     // Find the displayed child sheet (if aShown) or a child sheet that
     // wants to be displayed (if !aShown)
-  nsMacWindow GetChildSheet ( in boolean aShown );
+  nsMacWindowPtr GetChildSheet ( in boolean aShown );
 
     // True if window is a sheet
   readonly attribute boolean isSheet;
 
     // The event dispatch handler associated with a window
-  readonly attribute nsMacEventDispatchHandler eventDispatchHandler;
+  readonly attribute nsMacEventDispatchHandlerPtr eventDispatchHandler;
   
 }; // nsPIWidgetMac
 
