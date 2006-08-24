@@ -368,8 +368,6 @@ protected:
 
   void DoNumericShaping(PRUnichar* aText, PRInt32& aTextLength, PRBool* aWasTransformed);
 
-  void StripZeroWidthJoinControls(PRUnichar* aSource, PRUnichar* aTarget, PRInt32& aTextLength, PRBool* aWasTransformed);
-
   // The text fragment that we are looking at
   const nsTextFragment* mFrag;
 
