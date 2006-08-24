@@ -520,7 +520,10 @@ sub process {
             AND i.type_id IS NULL",
         undef, $bug_id);
 
-    foreach my $flag_id (@$flag_ids) { clear($flag_id, $bug, $attachment) }
+    foreach my $flag_id (@$flag_ids) {
+        my $is_retargetted = retarget($flag_id, $bug, $attachment);
+        clear($flag_id, $bug, $attachment) unless $is_retargetted;
+    }
 
     $flag_ids = $dbh->selectcol_arrayref(
         "SELECT DISTINCT flags.id
@@ -532,7 +535,10 @@ sub process {
         AND (bugs.component_id = e.component_id OR e.component_id IS NULL)",
         undef, $bug_id);
 
-    foreach my $flag_id (@$flag_ids) { clear($flag_id, $bug, $attachment) }
+    foreach my $flag_id (@$flag_ids) {
+        my $is_retargetted = retarget($flag_id, $bug, $attachment);
+        clear($flag_id, $bug, $attachment) unless $is_retargetted;
+    }
 
     # Take a snapshot of flags after changes.
     my @new_summaries = snapshot($bug_id, $attach_id);
@@ -753,6 +759,84 @@ sub modify {
     }
 
     return \@flags;
+}
+
+=pod
+
+=over
+
+=item C<retarget($flag_id, $bug, $attachment)>
+
+Change the type of the flag, if possible. The new flag type must have
+the same name as the current flag type, must exist in the product and
+attachment the bug is in, and the current settings of the flag must pass
+validation. If no such flag type can be found, the type remains unchanged.
+
+Retargetting flags is a good way to keep flags when moving bugs from one
+product where a flag type is available to another product where the flag
+type is unavailable, but another flag type having the same name exists.
+Most of the time, if they have the same name, this means that they have
+the same meaning, but with different settings.
+
+=back
+
+=cut
+
+sub retarget {
+    my ($flag_id, $bug, $attachment) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    my $flag = new Bugzilla::Flag($flag_id);
+    # We are looking for flagtypes having the same name as the flagtype
+    # to which the current flag belongs, and being in the new product and
+    # component of the bug.
+    my $flagtypes = Bugzilla::FlagType::match(
+                        {'name'         => $flag->name,
+                         'target_type'  => $attachment ? 'attachment' : 'bug',
+                         'is_active'    => 1,
+                         'product_id'   => $bug->product_id,
+                         'component_id' => $bug->component_id});
+
+    # If we found no flagtype, the flag will be deleted.
+    return 0 unless scalar(@$flagtypes);
+
+    # If we found at least one, change the type of the flag,
+    # assuming the setter/requester is allowed to set/request flags
+    # belonging to this flagtype.
+    my $is_retargetted = 0;
+    foreach my $flagtype (@$flagtypes) {
+        # Get the number of flags of this type already set for this target.
+        my $has_flags = count(
+            { 'type_id'     => $flag->type->id,
+              'target_type' => $attachment ? 'attachment' : 'bug',
+              'bug_id'      => $bug->bug_id,
+              'attach_id'   => $attachment ? $attachment->id : undef });
+
+        # Do not create a new flag of this type if this flag type is
+        # not multiplicable and already has a flag set.
+        next if (!$flag->type->is_multiplicable && $has_flags);
+
+        # Check user privileges.
+        my $error_mode_cache = Bugzilla->error_mode;
+        Bugzilla->error_mode(ERROR_MODE_DIE);
+        eval {
+            my $requestee = $flag->requestee ? [$flag->requestee->login] : [];
+            my $is_private = $attachment ? $attachment->isprivate : 0;
+            _validate($flag, $flag->type, $flag->status, $flag->setter,
+                      $requestee, $is_private);
+        };
+        Bugzilla->error_mode($error_mode_cache);
+        # If the validation failed, then we cannot use this flagtype.
+        next if ($@);
+
+        # Checks are successful, we can retarget the flag to this flagtype.
+        $dbh->do('UPDATE flags SET type_id = ? WHERE id = ?',
+                  undef, ($flagtype->id, $flag->id));
+
+        $is_retargetted = 1;
+        last;
+    }
+    return $is_retargetted;
 }
 
 =pod

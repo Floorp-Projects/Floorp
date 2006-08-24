@@ -1748,7 +1748,7 @@ sub _validate_attribute {
 
     my @valid_attributes = (
         # Miscellaneous properties and methods.
-        qw(error groups
+        qw(error groups product_id component_id
            longdescs milestoneurl attachments
            isopened isunconfirmed
            flag_types num_attachment_flag_types
