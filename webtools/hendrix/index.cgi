@@ -37,15 +37,16 @@ use Email::Send qw(NNTP);
 # use CGI::Carp qw(fatalsToBrowser);
 
 # Configuration
-my $newsgroup = "mozilla.feedback";
-my $server    = "news.mozilla.org";
+my $newsgroup = $::ENV{'HENDRIX_NEWSGROUP'} || "mozilla.feedback";
+my $server    = $::ENV{'HENDRIX_NNTP_SERVER'} || "news.mozilla.org";
+my $skin      = $::ENV{'HENDRIX_SKIN'} || "skin/planet.css";
 
 my $cgi = new CGI;
 my $form = $cgi->Vars;
 my $vars;
 $vars->{'form'} = $form;
 $vars->{'newsgroup'} = $newsgroup;
-$vars->{'stylesheet'} = "skin/planet.css";
+$vars->{'stylesheet'} = $skin;
 
 my $template = Template->new({
     INCLUDE_PATH => ["template"],
