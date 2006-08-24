@@ -757,6 +757,58 @@ if (defined $cgi->param('rebuildkeywordcache')) {
 }
 
 ###########################################################################
+# Check for flags being in incorrect products and components
+###########################################################################
+
+Status('Checking for flags being in the wrong product/component');
+
+my $invalid_flags = $dbh->selectall_arrayref(
+       'SELECT DISTINCT flags.id, flags.bug_id, flags.attach_id
+          FROM flags
+    INNER JOIN bugs
+            ON flags.bug_id = bugs.bug_id
+     LEFT JOIN flaginclusions AS i
+            ON flags.type_id = i.type_id
+           AND (bugs.product_id = i.product_id OR i.product_id IS NULL)
+           AND (bugs.component_id = i.component_id OR i.component_id IS NULL)
+         WHERE i.type_id IS NULL');
+
+my @invalid_flags = @$invalid_flags;
+
+$invalid_flags = $dbh->selectall_arrayref(
+       'SELECT DISTINCT flags.id, flags.bug_id, flags.attach_id
+          FROM flags
+    INNER JOIN bugs
+            ON flags.bug_id = bugs.bug_id
+    INNER JOIN flagexclusions AS e
+            ON flags.type_id = e.type_id
+         WHERE (bugs.product_id = e.product_id OR e.product_id IS NULL)
+           AND (bugs.component_id = e.component_id OR e.component_id IS NULL)');
+
+push(@invalid_flags, @$invalid_flags);
+
+if (scalar(@invalid_flags)) {
+    if ($cgi->param('remove_invalid_flags')) {
+        Status("OK, now deleting invalid flags.");
+        my @flag_ids = map {$_->[0]} @invalid_flags;
+        $dbh->bz_lock_tables('flags WRITE');
+        # Silently delete these flags, with no notification to requesters/setters.
+        $dbh->do('DELETE FROM flags WHERE id IN (' . join(',', @flag_ids) .')');
+        $dbh->bz_unlock_tables();
+        Status("Invalid flags deleted.");
+    }
+    else {
+        foreach my $flag (@$invalid_flags) {
+            my ($flag_id, $bug_id, $attach_id) = @$flag;
+            Alert("Invalid flag $flag_id for " .
+                  ($attach_id ? "attachment $attach_id in bug " : "bug ") . BugLink($bug_id));
+        }
+        print qq{<a href="sanitycheck.cgi?remove_invalid_flags=1">Click
+                 here to delete invalid flags</a><p>\n};
+    }
+}
+
+###########################################################################
 # General bug checks
 ###########################################################################
 
