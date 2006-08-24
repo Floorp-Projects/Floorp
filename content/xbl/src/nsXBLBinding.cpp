@@ -97,6 +97,7 @@
 
 #include "nsXBLPrototypeBinding.h"
 #include "nsXBLBinding.h"
+#include "nsBindingManager.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIEventListenerManager.h"
@@ -322,6 +323,7 @@ BuildContentLists(nsHashKey* aKey, void* aData, void* aClosure)
     nsCOMPtr<nsIContent> child(do_QueryInterface(node));
     if (((PRInt32)i) == currIndex) {
       // Add the currPoint to the supports array.
+      NS_IF_ADDREF(currPoint);
       contentList->AppendElement(currPoint);
 
       // Get the next real insertion point and update our currIndex.
@@ -337,15 +339,20 @@ BuildContentLists(nsHashKey* aKey, void* aData, void* aClosure)
     
     if (!pseudoPoint) {
       pseudoPoint = new nsXBLInsertionPoint(parent, (PRUint32) -1, nsnull);
-      contentList->AppendElement(pseudoPoint);
+      if (pseudoPoint) {
+        NS_ADDREF(pseudoPoint);
+        contentList->AppendElement(pseudoPoint);
+      }
     }
-
-    pseudoPoint->AddChild(child);
+    if (pseudoPoint) {
+      pseudoPoint->AddChild(child);
+    }
   }
 
   // Add in all the remaining insertion points.
   for ( ; j < count; j++) {
     currPoint = NS_STATIC_CAST(nsXBLInsertionPoint*, arr->ElementAt(j));
+    NS_IF_ADDREF(currPoint);
     contentList->AppendElement(currPoint);
   }
   
@@ -1230,7 +1237,11 @@ nsXBLBinding::AllowScripts()
 PR_STATIC_CALLBACK(PRBool)
 DeleteVoidArray(nsHashKey* aKey, void* aData, void* aClosure)
 {
-  delete NS_STATIC_CAST(nsVoidArray*, aData);
+  nsVoidArray* array = NS_STATIC_CAST(nsVoidArray*, aData);
+  if (array) {
+    array->EnumerateForwards(ReleaseInsertionPoint, nsnull);
+    delete array;
+  }
   return PR_TRUE;
 }
 

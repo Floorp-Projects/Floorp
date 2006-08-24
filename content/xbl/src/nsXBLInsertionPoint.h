@@ -48,7 +48,17 @@ class nsXBLInsertionPoint
 public:
   nsXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex, nsIContent* aDefContent);
   ~nsXBLInsertionPoint();
-  
+
+  nsrefcnt AddRef()
+  {
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "nsXBLInsertionPoint",
+                  sizeof(nsXBLInsertionPoint));
+    return mRefCnt;
+  }
+
+  nsrefcnt Release();
+
   already_AddRefed<nsIContent> GetInsertionParent();
   PRInt32 GetInsertionIndex() { return mIndex; }
 
@@ -69,6 +79,7 @@ public:
   PRBool Matches(nsIContent* aContent, PRUint32 aIndex);
 
 protected:
+  nsAutoRefCnt mRefCnt;
   nsIContent* mParentElement;            // This ref is weak.  The parent of the <children> element.
   PRInt32 mIndex;                        // The index of this insertion point. -1 is a pseudo-point.
   nsCOMArray<nsIContent> mElements;      // An array of elements present at the insertion point.
