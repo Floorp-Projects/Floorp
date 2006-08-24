@@ -43,6 +43,7 @@
 #include "nsIX509CertDB.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSCertHelper.h"
 #include "nsINSSCertCache.h"
@@ -1088,7 +1089,7 @@ nsCertTree::CmpByCrit(nsIX509Cert *a, CompareCacheHashEntry *ace,
 
   PRInt32 result;
   if (str_a && str_b)
-    result = Compare(str_a, str_b);
+    result = Compare(str_a, str_b, nsCaseInsensitiveStringComparator());
   else
     result = !str_a ? (!str_b ? 0 : -1) : 1;
 
