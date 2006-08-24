@@ -18,6 +18,11 @@ verify.sh
   file named all-locales, but does not (yet) handle platform exceptions, so 
   these should be removed from the locales file.
 
+  prints errors on both STDOUT and STDIN, the intention is to run the
+  script with STDOUT redirected to an output log. If there is not output
+  on the console and an exit code of 0 then all tests pass; otherwise one
+  or more tests failed.
+
   Does the following:
 
   1) download update.xml from AUS for a particular release
