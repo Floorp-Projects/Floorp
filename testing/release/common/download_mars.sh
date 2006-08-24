@@ -3,7 +3,7 @@ download_mars () {
     only="$2"
 
     echo "Using  $update_url"
-    curl -s $update_url > update.xml
+    curl -sk $update_url > update.xml
 
     mkdir -p update/
     if [ -z $only ]; then

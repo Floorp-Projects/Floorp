@@ -4,24 +4,24 @@
 . ../common/unpack.sh 
 . ../common/download_mars.sh
 
-build_id="2006050817"
-product="Firefox"
-release="1.5.0.4"
-channel="release"
-
-
-for build_platform in Darwin_Universal-gcc3 # WINNT_x86-msvc Darwin_Universal-gcc3 Linux_x86-gcc3
-do
-
-  for locale in `cat all-locales`
-  #for locale in ko ja ja-JP-mac zh-CN zh-TW
-  #for locale in en-US
+verify_aus() {
+  for build_platform in $build_platforms
   do
-
-    echo "checking $build_platform $locale"
-
-    download_mars "https://aus2.mozilla.org/update/1/$product/$release/$build_id/$build_platform/$locale/$channel/update.xml"
-
+    for locale in $locales
+    do
+      echo "checking $build_platform $locale"
+      download_mars "https://aus2-staging.mozilla.org/update/1/$product/$release/$build_id/$build_platform/$locale/$channel/update.xml"
+    done
   done
-  
-done
+}
+
+while read entry
+do
+  product="Firefox"
+  channel="release"
+  release=`echo $entry | awk '{print $1}'`
+  build_platforms=`echo $entry | awk '{print $2}'`
+  build_id=`echo $entry | awk '{print $3}'`
+  locales=`cat all-locales`
+  verify_aus
+done < updates.cfg
