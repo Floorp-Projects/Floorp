@@ -37,21 +37,23 @@ download_builds() {
   pushd downloads > /dev/null
   if [ -f "$source_file" ]; then rm "$source_file"; fi
   wget -nv $PARAMS "$build_url" 2>&1
-  popd > /dev/null
   if [ $? != 0 ]; then
     echo "FAIL: Could not download source $source_file from $build_url" |tee /dev/stderr
     echo "skipping.."
     continue
+    popd > /dev/null
   fi
+  popd > /dev/null
   if [ -f "$target_file" ]; then rm "$target_file"; fi
   build_url="http://stage.mozilla.org/pub/mozilla.org/`echo $product | tr '[A-Z]' '[a-z]'`/releases/$latest/$dirname/$locale/$target_file" 
   pushd downloads > /dev/null
   if [ -f "$target_file" ]; then rm "$target_file"; fi
   wget -nv $PARAMS "$build_url" 2>&1
-  popd > /dev/null
   if [ $? != 0 ]; then
     echo "FAIL: Could not download target $target_file from $build_url" |tee /dev/stderr
     echo "skipping.."
     continue
+    popd > /dev/null
   fi
+  popd > /dev/null
 }
