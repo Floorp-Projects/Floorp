@@ -333,6 +333,34 @@ cert_add_cert()
             return $RET
 	fi
 	cert_log "SUCCESS: $CERTNAME's EC Cert Created"
+
+#    Generate EC certificate signed with RSA
+	CU_ACTION="Generate mixed EC Cert Request for $CERTNAME"
+	CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ecmixed@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+	certu -R -k ec -q "${CURVE}" -d "${PROFILEDIR}" -f "${R_PWFILE}" \
+	    -z "${R_NOISE_FILE}" -o req  2>&1
+	if [ "$RET" -ne 0 ]; then
+            return $RET
+	fi
+
+	CU_ACTION="Sign ${CERTNAME}'s EC Request with RSA"
+# Avoid conflicting serial numbers with TestCA issuer by keeping
+# this set far away. A smaller number risks colliding with the
+# extended ssl user certificates.
+	NEWSERIAL=`expr ${CERTSERIAL} + 10000`
+        certu -C -c "TestCA" -m "$NEWSERIAL" -v 60 -d "${P_R_CADIR}" \
+            -i req -o "${CERTNAME}-ecmixed.cert" -f "${R_PWFILE}" "$1" 2>&1
+	if [ "$RET" -ne 0 ]; then
+            return $RET
+	fi
+
+	CU_ACTION="Import $CERTNAME's mixed EC Cert"
+	certu -A -n "${CERTNAME}-ecmixed" -t "u,u,u" -d "${PROFILEDIR}" \
+	    -f "${R_PWFILE}" -i "${CERTNAME}-ecmixed.cert" 2>&1
+	if [ "$RET" -ne 0 ]; then
+            return $RET
+	fi
+	cert_log "SUCCESS: $CERTNAME's mixed EC Cert Created"
     fi
 
     return 0
@@ -695,6 +723,27 @@ cert_extended_ssl()
 #
 #     done with EC certs
 #
+#     Repeat again for mixed EC certs
+#
+      EC_CURVE="secp256r1"
+      CU_ACTION="Generate mixed EC Cert Request for $CERTNAME (ext)"
+      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ecmixed@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+      certu -R -d "${PROFILEDIR}" -k ec -q "${EC_CURVE}" -f "${R_PWFILE}" \
+	  -z "${R_NOISE_FILE}" -o req 2>&1
+
+      CU_ACTION="Sign ${CERTNAME}'s mixed EC Request (ext)"
+      cp ${CERTDIR}/req ${SERVER_CADIR}
+      certu -C -c "chain-2-serverCA" -m 201 -v 60 -d "${P_SERVER_CADIR}" \
+          -i req -o "${CERTNAME}-ecmixed.cert" -f "${R_PWFILE}" 2>&1
+
+      CU_ACTION="Import $CERTNAME's mixed EC Cert  -t u,u,u (ext)"
+      certu -A -n "${CERTNAME}-ecmixed" -t "u,u,u" -d "${PROFILEDIR}" \
+	  -f "${R_PWFILE}" -i "${CERTNAME}-ecmixed.cert" 2>&1
+
+#      CU_ACTION="Import Client mixed EC Root CA -t T,, for $CERTNAME (ext.)"
+#      certu -A -n "clientCA-ecmixed" -t "T,," -f "${R_PWFILE}" \
+#	  -d "${PROFILEDIR}" -i "${CLIENT_CADIR}/clientCA-ecmixed.ca.cert" \
+#	  2>&1
   fi
 
   echo "Importing all the server's own CA chain into the servers DB"
@@ -757,6 +806,29 @@ cert_extended_ssl()
 	  -d "${PROFILEDIR}" -i "${SERVER_CADIR}/serverCA-ec.ca.cert" 2>&1
 #
 # done with EC certs
+#
+#
+#     Repeat the above for mixed EC certs
+#
+      CU_ACTION="Generate mixed EC Cert Request for $CERTNAME (ext)"
+      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ecmixed@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+      certu -R -d "${PROFILEDIR}" -k ec -q "${EC_CURVE}" -f "${R_PWFILE}" \
+	  -z "${R_NOISE_FILE}" -o req 2>&1
+
+      CU_ACTION="Sign ${CERTNAME}'s mixed EC Request (ext)"
+      cp ${CERTDIR}/req ${CLIENT_CADIR}
+      certu -C -c "chain-2-clientCA" -m 301 -v 60 -d "${P_CLIENT_CADIR}" \
+          -i req -o "${CERTNAME}-ecmixed.cert" -f "${R_PWFILE}" 2>&1
+
+      CU_ACTION="Import $CERTNAME's mixed EC Cert -t u,u,u (ext)"
+      certu -A -n "${CERTNAME}-ecmixed" -t "u,u,u" -d "${PROFILEDIR}" \
+	  -f "${R_PWFILE}" -i "${CERTNAME}-ecmixed.cert" 2>&1
+
+#      CU_ACTION="Import Server EC Root CA -t C,C,C for $CERTNAME (ext.)"
+#      certu -A -n "serverCA-ec" -t "C,C,C" -f "${R_PWFILE}" \
+#	  -d "${PROFILEDIR}" -i "${SERVER_CADIR}/serverCA-ec.ca.cert" 2>&1
+#
+# done with mixed EC certs
 #
   fi
 
