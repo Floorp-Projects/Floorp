@@ -373,9 +373,10 @@ nsSocketTransportService::Init()
         // event object).  if we can't create a pollable event, then we'll
         // have to "busy wait" to implement the socket event queue :-(
         //
-        NS_WARN_IF_FALSE(mThreadEvent,
-                "running socket transport thread without a pollable event");
-        LOG(("running socket transport thread without a pollable event"));
+        if (!mThreadEvent) {
+            NS_WARNING("running socket transport thread without a pollable event");
+            LOG(("running socket transport thread without a pollable event"));
+        }
     }
 
     nsresult rv = NS_NewThread(&mThread, this);
