@@ -3217,7 +3217,6 @@ CK_RV NSC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo)
     return CKR_OK;
 }
 
-#define CKF_THREAD_SAFE 0x8000 /* for now */
 /*
  * check the current state of the 'needLogin' flag in case the database has
  * been changed underneath us.
@@ -3262,7 +3261,7 @@ CK_RV NSC_GetTokenInfo(CK_SLOT_ID slotID,CK_TOKEN_INFO_PTR pInfo)
     pInfo->firmwareVersion.minor = 0;
     PORT_Memcpy(pInfo->label,slot->tokDescription,32);
     handle = sftk_getKeyDB(slot);
-    pInfo->flags = CKF_RNG | CKF_THREAD_SAFE;
+    pInfo->flags = CKF_RNG | CKF_DUAL_CRYPTO_OPERATIONS;
     if (handle == NULL) {
 	pInfo->flags |= CKF_WRITE_PROTECTED;
 	pInfo->ulMaxPinLen = 0;
@@ -3299,6 +3298,18 @@ CK_RV NSC_GetTokenInfo(CK_SLOT_ID slotID,CK_TOKEN_INFO_PTR pInfo)
 	pInfo->hardwareVersion.major = CERT_DB_FILE_VERSION;
 	pInfo->hardwareVersion.minor = handle->version;
         sftk_freeKeyDB(handle);
+    }
+    /*
+     * CKF_LOGIN_REQUIRED CKF_USER_PIN_INITIALIZED  how CKF_TOKEN_INITIALIZED
+     *                                              should be set
+     *         0                   0                           1
+     *         1                   0                           0
+     *         0                   1                           1
+     *         1                   1                           1
+     */
+    if (!(pInfo->flags & CKF_LOGIN_REQUIRED) ||
+	(pInfo->flags & CKF_USER_PIN_INITIALIZED)) {
+	pInfo->flags |= CKF_TOKEN_INITIALIZED;
     }
     return CKR_OK;
 }
