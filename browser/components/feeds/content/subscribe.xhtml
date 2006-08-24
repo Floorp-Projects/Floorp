@@ -23,7 +23,7 @@
     <script type="application/x-javascript"
             src="chrome://browser/content/feeds/subscribe.js"/>
   </head>
-  <body onload="SubscribeHandler.init();" onpagehide="SubscribeHandler.uninit();">
+  <body onload="SubscribeHandler.init();" onunload="SubscribeHandler.uninit();">
     <div id="feedHeader" dir="&locale.dir;">
       <div id="feedIntroText">
         <p id="feedSubscriptionInfo1">
