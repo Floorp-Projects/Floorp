@@ -75,6 +75,24 @@ function monthPrint_format(aStream, aStart, aEnd, aCount, aItems, aTitle) {
     html.head.style += ".out-of-month { background-color: gray !important; }\n";
     html.head.style += ".day-off { background-color: #D3D3D3 !important; }\n";
 
+    // If aStart or aEnd weren't passed in, we need to calculate them based on
+    // aItems data.
+
+    var start = aStart;
+    var end = aEnd;
+    if (!start || !end) {
+        for each (var item in aItems) {
+            var itemStart = item.startDate || item.entryDate;
+            var itemEnd = item.endDate || item.dueDate;
+            if (!start || (itemStart && start.compare(itemStart) == 1)) {
+                start = itemStart;
+            }
+            if (!end || (itemEnd && end.compare(itemEnd) == -1)) {
+                end = itemEnd;
+            }
+        }
+    }
+
     // Play around with aStart and aEnd to determine the minimal number of
     // months we can show to still technically meet their requirements.  This
     // is most useful when someone printed 'Current View' in the month view. If
@@ -86,9 +104,9 @@ function monthPrint_format(aStream, aStart, aEnd, aCount, aItems, aTitle) {
     // Feb 1), and similarly whether aEnd falls in the same week as the end of
     // a month.
     var weekStart = getPrefSafe("calendar.week.start", 0);
-    maybeNewStart = aStart.clone();
+    maybeNewStart = start.clone();
     maybeNewStart.day = 1;
-    maybeNewStart.month = aStart.month+1;
+    maybeNewStart.month = start.month+1;
     maybeNewStart.normalize();
     var firstDate = maybeNewStart.startOfWeek;
     firstDate.day += weekStart;
@@ -99,12 +117,12 @@ function monthPrint_format(aStream, aStart, aEnd, aCount, aItems, aTitle) {
         firstDate.normalize();
     }
     if (firstDate.compare(aStart) != 1) {
-        aStart = maybeNewStart;
+        start = maybeNewStart;
     }
 
-    var maybeNewEnd = aEnd.clone();
+    var maybeNewEnd = end.clone();
     maybeNewEnd.day = 1;
-    maybeNewEnd.month = aEnd.month-1;
+    maybeNewEnd.month = end.month-1;
     maybeNewEnd.normalize();
 
     var lastDate = maybeNewEnd.endOfMonth.endOfWeek;
@@ -119,18 +137,18 @@ function monthPrint_format(aStream, aStart, aEnd, aCount, aItems, aTitle) {
     lastDate.day += 1;
     lastDate.normalize();
     if (lastDate.compare(aEnd) != -1) {
-        aEnd = maybeNewEnd;
+        end = maybeNewEnd;
     }
 
 
-    var date = aStart.clone();
+    var date = start.clone();
     date.day = 1;
 
     var body = <body/>
 
     while (date.month <= aEnd.month) {
         var monthName = calGetString("dateFormat", "month." + (date.month +1)+ ".name");
-        monthName += " " + aStart.year;
+        monthName += " " + start.year;
         body.appendChild(
                      <table border='0' width='100%' class='main-table'>
                          <tr> 
