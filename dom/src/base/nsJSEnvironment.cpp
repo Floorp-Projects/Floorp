@@ -1693,7 +1693,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
         nsIScriptGlobalObject* global = ownerDoc->GetScriptGlobalObject();
         if (global) {
           nsIScriptContext* context =
-            global->GetScriptContext(nsIProgrammingLanguage::JAVASCRIPT);
+            global->GetScriptContext(JAVASCRIPT);
           if (context && context != this) {
             JSContext* cx =
               NS_STATIC_CAST(JSContext*, context->GetNativeContext());
