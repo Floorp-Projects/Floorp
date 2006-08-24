@@ -94,9 +94,13 @@
          <menu label="&viewMenu.label;">
             <menupopup>
                <menuitem type="checkbox"
+                         id="ltn-workdays-only"
+                         persist="checked"
                          label="&calendar.onlyworkday.checkbox.label;"
                          oncommand="toggleWorkdaysOnly()"/>
                <menuitem type="checkbox"
+                         id="ltn-tasks-in-view"
+                         persist="checked"
                          label="&calendar.displaytodos.checkbox.label;"
                          oncommand="toggleTasksInView()"/>
            </menupopup>

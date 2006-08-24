@@ -116,9 +116,9 @@ function ltnMinimonthPick(minimonth)
         document.getElementById("calendar-view-box")) {
         var view = currentView();
 
-        // We set the display calendar on the views in showCalendarView 
-        // the first time they are shown.
-        if (!view.displayCalendar) {
+        // If we've never shown the view before, we need to do some special
+        // things here.
+        if (!view.initialized) {
             showCalendarView('month');
             view = currentView();
             cdt.timezone = view.timezone;
@@ -193,7 +193,7 @@ function refreshUIBits() {
 
     // refresh the current view, if it has ever been shown
     var cView = currentView();
-    if (cView.displayCalendar) {
+    if (cView.initialized) {
         cView.goToDay(cView.selectedDay);
     }
 
@@ -226,6 +226,19 @@ function showCalendarView(type)
         gMsgFolderSelected = null;
         msgWindow.openFolder = null;
     }
+
+    var view = document.getElementById(type+"-view");
+    if (!view.initialized) {
+        // Set up this view with the current view-checkbox values
+        var workdaysMenu = document.getElementById("ltn-workdays-only");
+        view.workdaysOnly = (workdaysMenu.getAttribute("checked") == 'true');
+
+        var tasksMenu = document.getElementById("ltn-tasks-in-view")
+        view.tasksInView = (tasksMenu.getAttribute("checked") == 'true');
+    }
+
+    switchToView(type);
+
     document.getElementById("displayDeck").selectedPanel =  calendarViewBox;
     switchToView(type);
 

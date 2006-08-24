@@ -134,6 +134,21 @@
                 ]]></setter>
             </property>
 
+            <property name="initialized">
+                <getter><![CDATA[
+                    var retval;
+
+                    // Some views throw when accessing an uninitialized startDay
+                    try {
+                        retval = this.displayCalendar && this.startDay 
+                                 && this.endDay;
+                    } catch(ex) {
+                        return false;
+                    }
+                    return retval;
+                ]]></getter>
+            </property>
+
             <property name="selectedItem">
                 <getter><![CDATA[
                     return document.getAnonymousElementByAttribute(this, "anonid", "view-element").selectedItem;
