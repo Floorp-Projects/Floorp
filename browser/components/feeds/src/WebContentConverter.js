@@ -399,12 +399,12 @@ var WebContentConverterRegistrar = {
     // XXXben - for Firefox 2 we only support feed types
     contentType = this._resolveContentType(contentType);
     if (contentType != TYPE_MAYBE_FEED)
-      return;    
+      return;
 
     if (!this._checkForDuplicateContentType(contentType, uri, title) ||
         !this._confirmAddHandler(contentType, title, uri))
       return;
-    
+
     // Reset the auto handler so that the user is asked again the next time
     // they load content of this type.
     if (this.getAutoHandler(contentType)) 
@@ -543,49 +543,24 @@ var WebContentConverterRegistrar = {
    */
   resetHandlersForType: 
   function WCCR_resetHandlersForType(contentType) {
-    contentType = this._resolveContentType(contentType);
-    var ps = 
-        Cc["@mozilla.org/preferences-service;1"].
-        getService(Ci.nsIPrefService);
-    try {
-      var i = 0;
-      while (true) {
-        var handlerBranch = 
-          ps.getBranch(PREF_CONTENTHANDLERS_BRANCH + i + ".");
-        try {
-          if (handlerBranch.getCharPref("type") == contentType)
-            handlerBranch.resetBranch("");
-          var defaultBranch = 
-              ps.getDefaultBranch(PREF_CONTENTHANDLERS_BRANCH + i + ".");
-          if (!this._registerContentHandlerWithBranch(defaultBranch))
-            break;
-          ++i;
-        }
-        catch (e) {
-        }
-      }
-    }
-    catch (e) {
-    }
-    ps.savePrefFile(null);
+    // currently unused within the tree, so only useful for extensions; previous
+    // impl. was buggy (and even infinite-looped!), so I argue that this is a
+    // definite improvement
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
   
   /**
-   * Registers a handler from the settings on a branch
+   * Registers a handler from the settings on a preferences branch.
+   *
+   * @param branch
+   *        an nsIPrefBranch containing "type", "uri", and "title" preferences
+   *        corresponding to the content handler to be registered
    */
   _registerContentHandlerWithBranch: function(branch) {
-    try {
-      var type = branch.getCharPref("type");
-      var uri = 
-          branch.getComplexValue("uri", Ci.nsIPrefLocalizedString).data;
-      var title = 
-          branch.getComplexValue("title", Ci.nsIPrefLocalizedString).data;
-      this._registerContentHandler(type, uri, title);
-    }
-    catch (e) {
-      return false;
-    }
-    return true;
+    var type  = branch.getCharPref("type");
+    var uri   = branch.getComplexValue("uri", Ci.nsIPrefLocalizedString).data;
+    var title = branch.getComplexValue("title", Ci.nsIPrefLocalizedString).data;
+    this._registerContentHandler(type, uri, title);
   },
   
   /**
@@ -596,18 +571,24 @@ var WebContentConverterRegistrar = {
     var ps = 
         Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefService);
-    try {
-      var i = 0;
-      while (true) {
-        var handlerBranch = 
-          ps.getBranch(PREF_CONTENTHANDLERS_BRANCH + (i++) + ".");
-        if (!this._registerContentHandlerWithBranch(handlerBranch))
-          break;
-      }
+
+    var kids = ps.getBranch(PREF_CONTENTHANDLERS_BRANCH)
+                 .getChildList("", {});
+
+    // first get the numbers of the providers by getting all ###.uri prefs
+    var nums = [];
+    for (var i = 0; i < kids.length; i++) {
+      var match = /^(\d+)\.uri$/.exec(kids[i]);
+      if (!match)
+        continue;
+      else
+        nums.push(match[1]);
     }
-    catch (e) {
-      // No content handlers yet, that's fine
-      //LOG("WCCR.init: There are no content handlers registered in preferences (benign).");
+
+    // now register them
+    for (var i = 0; i < nums.length; i++) {
+      var branch = ps.getBranch(PREF_CONTENTHANDLERS_BRANCH + nums[i] + ".");
+      this._registerContentHandlerWithBranch(branch);
     }
 
     // We need to do this _after_ registering all of the available handlers, 
@@ -629,7 +610,7 @@ var WebContentConverterRegistrar = {
       //LOG("WCCR.init: There is no auto branch, benign");
     }
   },
-  
+
   /**
    * See nsIObserver
    */
