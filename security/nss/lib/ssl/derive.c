@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: derive.c,v 1.3 2005/11/08 22:00:46 wtchang%redhat.com Exp $ */
+/* $Id: derive.c,v 1.4 2006/08/24 22:10:03 nelson%bolyard.com Exp $ */
 
 #include "ssl.h" 	/* prereq to sslimpl.h */
 #include "certt.h"	/* prereq to sslimpl.h */
@@ -52,6 +52,7 @@ buildSSLKey(unsigned char * keyBlock, unsigned int keyLen, SECItem * result)
     result->type = siBuffer;
     result->data = keyBlock;
     result->len  = keyLen;
+    PRINT_BUF(100, (NULL, "key value", keyBlock, keyLen));
 }
 #else
 #define buildSSLKey(keyBlock, keyLen, result) \
@@ -59,6 +60,7 @@ buildSSLKey(unsigned char * keyBlock, unsigned int keyLen, SECItem * result)
     (result)->type = siBuffer; \
     (result)->data = keyBlock; \
     (result)->len  = keyLen; \
+    PRINT_BUF(100, (NULL, "key value", keyBlock, keyLen)); \
 }
 #endif
 
@@ -122,6 +124,9 @@ ssl3_KeyAndMacDeriveBypass(
 	return rv;
     }
 
+    PRINT_BUF(100, (NULL, "Master Secret", pwSpec->msItem.data, 
+                                           pwSpec->msItem.len));
+
     /* figure out how much is needed */
     macSize    = pwSpec->mac_size;
     keySize    = cipher_def->key_size;
@@ -153,6 +158,7 @@ ssl3_KeyAndMacDeriveBypass(
     crsr.len    = sizeof crsrdata;
     PORT_Memcpy(crsrdata, cr, SSL3_RANDOM_LENGTH);
     PORT_Memcpy(crsrdata + SSL3_RANDOM_LENGTH, sr, SSL3_RANDOM_LENGTH);
+    PRINT_BUF(100, (NULL, "Key & MAC CRSR", crsr.data, crsr.len));
 
     /*
      * generate the key material:
@@ -203,6 +209,7 @@ ssl3_KeyAndMacDeriveBypass(
     }
     PORT_Assert(block_bytes >= block_needed);
     PORT_Assert(block_bytes <= sizeof pwSpec->key_block);
+    PRINT_BUF(100, (NULL, "key block", key_block, block_bytes));
 
     /*
      * Put the key material where it goes.
@@ -395,7 +402,9 @@ key_and_mac_derive_fail:
 
 
 /* derive the Master Secret from the PMS */
-/* Presently, this is only done wtih RSA PMS, os isRSA is always true. */
+/* Presently, this is only done wtih RSA PMS, and only on the server side,
+ * so isRSA is always true. 
+ */
 SECStatus
 ssl3_MasterKeyDeriveBypass( 
     ssl3CipherSpec *      pwSpec,
@@ -434,6 +443,7 @@ ssl3_MasterKeyDeriveBypass(
     crsr.len    = sizeof crsrdata;
     PORT_Memcpy(crsrdata, cr, SSL3_RANDOM_LENGTH);
     PORT_Memcpy(crsrdata + SSL3_RANDOM_LENGTH, sr, SSL3_RANDOM_LENGTH);
+    PRINT_BUF(100, (NULL, "Master Secret CRSR", crsr.data, crsr.len));
 
     /* finally do the key gen */
     if (isTLS) {
@@ -474,6 +484,8 @@ ssl3_MasterKeyDeriveBypass(
 		SSL3_MASTER_SECRET_LENGTH);
     pwSpec->msItem.data = pwSpec->raw_master_secret;
     pwSpec->msItem.len  = SSL3_MASTER_SECRET_LENGTH;
+    PRINT_BUF(100, (NULL, "Master Secret", pwSpec->msItem.data, 
+                                           pwSpec->msItem.len));
 
     return rv;
 }
