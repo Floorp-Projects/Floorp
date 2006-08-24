@@ -258,7 +258,8 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
 
 #ifdef MOZ_CAIRO_GFX
             PRUint32 *ar = ((PRUint32*)mAlphaRow) + mCurCol;
-            for (int i = 0; i < 8; i++) {
+            const int alphas = PR_MIN(8, mWidth - mCurCol);
+            for (int i = 0; i < alphas; i++) {
                 const PRUint8 val = ((pixel & (1 << i)) >> i) ? 255 : 0;
                 *ar++ = (val << 24) | 0;
             }
