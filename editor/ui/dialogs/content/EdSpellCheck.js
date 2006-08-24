@@ -208,6 +208,9 @@ function InitLanguageMenu(aCurLang)
           langLabel += "/" + menuStr2;
       }
 
+      if (langLabel && isoStrArray.length > 2 && isoStrArray[2])
+        langLabel += " (" + isoStrArray[2] + ")";
+
       if (!langLabel)
         langLabel = langId;
     }
