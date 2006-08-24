@@ -220,6 +220,7 @@ PRInt16 nsSSLThread::requestPoll(nsNSSSocketInfo *si, PRInt16 in_flags, PRInt16 
   *out_flags = 0;
 
   PRBool want_sleep_and_wakeup_on_any_socket_activity = PR_FALSE;
+  PRBool handshake_timeout = PR_FALSE;
   
   {
     nsAutoLock threadLock(ssl_thread_singleton->mMutex);
@@ -302,6 +303,8 @@ PRInt16 nsSSLThread::requestPoll(nsNSSSocketInfo *si, PRInt16 in_flags, PRInt16 
         
         case nsSSLSocketThreadData::ssl_idle:
         {
+          handshake_timeout = si->HandshakeTimeout();
+
           if (si != ssl_thread_singleton->mBusySocket)
           {
             // Some other socket is currently busy on the SSL thread.
@@ -326,6 +329,18 @@ PRInt16 nsSSLThread::requestPoll(nsNSSSocketInfo *si, PRInt16 in_flags, PRInt16 
         default:
           break;
       }
+    }
+    else
+    {
+      handshake_timeout = si->HandshakeTimeout();
+    }
+
+    if (handshake_timeout)
+    {
+      NS_ASSERTION(in_flags & PR_POLL_EXCEPT, "nsSSLThread::requestPoll handshake timeout, but caller did not poll for EXCEPT");
+
+      *out_flags |= PR_POLL_EXCEPT;
+      return in_flags;
     }
   }
 
@@ -462,6 +477,14 @@ PRInt32 nsSSLThread::requestRead(nsNSSSocketInfo *si, void *buf, PRInt32 amount)
     else if (ssl_thread_singleton->mBusySocket)
     {
       some_other_socket_is_busy = PR_TRUE;
+    }
+
+    if (!this_socket_is_busy && si->HandshakeTimeout())
+    {
+      restoreOriginalSocket_locked(si);
+      PR_SetError(PR_CONNECT_RESET_ERROR, 0);
+      checkHandshake(-1, si->mFd->lower, si);
+      return -1;
     }
   }
 
@@ -664,6 +687,14 @@ PRInt32 nsSSLThread::requestWrite(nsNSSSocketInfo *si, const void *buf, PRInt32 
     else if (ssl_thread_singleton->mBusySocket)
     {
       some_other_socket_is_busy = PR_TRUE;
+    }
+
+    if (!this_socket_is_busy && si->HandshakeTimeout())
+    {
+      restoreOriginalSocket_locked(si);
+      PR_SetError(PR_CONNECT_RESET_ERROR, 0);
+      checkHandshake(-1, si->mFd->lower, si);
+      return -1;
     }
   }
 

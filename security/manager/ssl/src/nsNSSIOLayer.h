@@ -156,8 +156,9 @@ public:
   void SetHasCleartextPhase(PRBool aHasCleartextPhase);
   PRBool GetHasCleartextPhase();
   
-  void SetHandshakeInProgress(PRBool aIsIn) { mHandshakeInProgress = aIsIn; }
+  void SetHandshakeInProgress(PRBool aIsIn);
   PRBool GetHandshakeInProgress() { return mHandshakeInProgress; }
+  PRBool HandshakeTimeout();
 
   nsresult RememberCAChain(CERTCertList *aCertList);
 
@@ -176,6 +177,7 @@ protected:
   PRPackedBool mCanceled;
   PRPackedBool mHasCleartextPhase;
   PRPackedBool mHandshakeInProgress;
+  PRIntervalTime mHandshakeStartTime;
   PRInt32 mPort;
   nsXPIDLCString mHostName;
   CERTCertList *mCAChain;

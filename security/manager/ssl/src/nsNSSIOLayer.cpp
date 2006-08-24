@@ -182,6 +182,7 @@ nsNSSSocketInfo::nsNSSSocketInfo()
     mCanceled(PR_FALSE),
     mHasCleartextPhase(PR_FALSE),
     mHandshakeInProgress(PR_FALSE),
+    mHandshakeStartTime(0),
     mPort(0),
     mCAChain(nsnull)
 {
@@ -457,6 +458,27 @@ nsresult nsNSSSocketInfo::SetSSLStatus(nsISSLStatus *aSSLStatus)
   mSSLStatus = aSSLStatus;
 
   return NS_OK;
+}
+
+void nsNSSSocketInfo::SetHandshakeInProgress(PRBool aIsIn)
+{
+  mHandshakeInProgress = aIsIn;
+
+  if (mHandshakeInProgress && !mHandshakeStartTime)
+  {
+    mHandshakeStartTime = PR_IntervalNow();
+  }
+}
+
+#define HANDSHAKE_TIMEOUT_SECONDS 8
+
+PRBool nsNSSSocketInfo::HandshakeTimeout()
+{
+  if (!mHandshakeInProgress)
+    return PR_FALSE;
+
+  return ((PRIntervalTime)(PR_IntervalNow() - mHandshakeStartTime)
+          > PR_SecondsToInterval(HANDSHAKE_TIMEOUT_SECONDS));
 }
 
 void nsSSLIOLayerHelpers::Cleanup()
@@ -1076,6 +1098,18 @@ nsSSLThread::checkHandshake(PRInt32 bytesTransfered, PRFileDesc* ssl_layer_fd, n
   // side to dumb down to a lower level of the protocol.  Unfortunately,
   // there are enough broken servers out there that such a gross work-around
   // is necessary.  :(
+
+  // Additional comment added in August 2006:
+  // When we begun to use TLS hello extensions, we encountered a new class of
+  // broken server, which simply stall for a very long time.
+  // We would like to shorten the timeout, but limit this shorter timeout 
+  // to the handshake phase.
+  // When we arrive here for the first time (for a given socket),
+  // we know the connection is established, and the application code
+  // tried the first read or write. This triggers the beginning of the
+  // SSL handshake phase at the SSL FD level.
+  // We'll make a note of the current time,
+  // and use this to measure the elapsed time since handshake begin.
 
   PRBool handleHandshakeResultNow;
   socketInfo->GetHandshakePending(&handleHandshakeResultNow);
