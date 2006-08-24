@@ -105,7 +105,7 @@ moz_container_get_type(void)
         moz_container_type = g_type_register_static (GTK_TYPE_CONTAINER,
                                                      "MozContainer",
                                                      &moz_container_info, 0);
-#if defined(ACCESSIBILITY) && defined(USE_ATK_ROLE_REDUNDANT_OBJECT)
+#ifdef ACCESSIBILITY
         /* Set a factory to return accessible object with ROLE_REDUNDANT for
          * MozContainer, so that gail won't send focus notification for it */
         atk_registry_set_factory_type(atk_get_default_registry(),

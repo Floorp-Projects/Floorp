@@ -112,4 +112,5 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../base \
   -I$(srcdir)/../html \
   -I$(srcdir)/../xul \
+  -I$(topsrcdir)/other-licenses/atk-1.0 \
   $(NULL)

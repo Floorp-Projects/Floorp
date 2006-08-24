@@ -56,7 +56,7 @@ gchar *getTextAfterOffsetCB(AtkText *aText, gint aOffset,
                             gint *aStartOffset, gint *aEndOffset);
 gchar *getTextAtOffsetCB(AtkText *aText, gint aOffset,
                          AtkTextBoundary aBoundaryType,
-                                gint *aStartOffset, gint *aEndOffset);
+                         gint *aStartOffset, gint *aEndOffset);
 gunichar getCharacterAtOffsetCB(AtkText *aText, gint aOffset);
 gchar *getTextBeforeOffsetCB(AtkText *aText, gint aOffset,
                              AtkTextBoundary aBoundaryType,
@@ -70,11 +70,9 @@ void getCharacterExtentsCB(AtkText *aText, gint aOffset,
                            gint *aX, gint *aY,
                            gint *aWidth, gint *aHeight,
                            AtkCoordType aCoords);
-#ifdef USE_ATK_GET_RANGE_EXTENTS
 void getRangeExtentsCB(AtkText *aText, gint aStartOffset,
                        gint aEndOffset, AtkCoordType aCoords,
                        AtkTextRectangle *aRect);
-#endif
 gint getCharacterCountCB(AtkText *aText);
 gint getOffsetAtPointCB(AtkText *aText,
                         gint aX, gint aY,

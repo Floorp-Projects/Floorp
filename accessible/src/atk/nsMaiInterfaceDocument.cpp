@@ -39,7 +39,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccessibleWrap.h"
-#ifdef USE_ATK_TYPE_DOCUMENT
 #include "nsMaiInterfaceDocument.h"
 
 const char *const kDocTypeName = "W3C-doctype";
@@ -153,4 +152,3 @@ getDocumentAttributeValueCB(AtkDocument *aDocument,
     }
     return nsAccessibleWrap::ReturnString(attrValue);
 }
-#endif /* USE_ATK_TYPE_DOCUMENT */

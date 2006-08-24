@@ -54,9 +54,7 @@
 #include "nsMaiInterfaceValue.h"
 #include "nsMaiInterfaceHypertext.h"
 #include "nsMaiInterfaceTable.h"
-#ifdef USE_ATK_TYPE_DOCUMENT
 #include "nsMaiInterfaceDocument.h"
-#endif
 
 /* MaiAtkObject */
 
@@ -103,10 +101,8 @@ static GType GetAtkTypeForMai(MaiInterfaceType type)
       return ATK_TYPE_TABLE;
     case MAI_INTERFACE_TEXT:
       return ATK_TYPE_TEXT;
-#ifdef USE_ATK_TYPE_DOCUMENT
     case MAI_INTERFACE_DOCUMENT:
       return ATK_TYPE_DOCUMENT;
-#endif
   }
   return G_TYPE_INVALID;
 }
@@ -127,10 +123,8 @@ static const GInterfaceInfo atk_if_infos[] = {
     {(GInterfaceInitFunc)tableInterfaceInitCB,
      (GInterfaceFinalizeFunc) NULL, NULL},
     {(GInterfaceInitFunc)textInterfaceInitCB,
-#ifdef USE_ATK_TYPE_DOCUMENT
      (GInterfaceFinalizeFunc) NULL, NULL},
     {(GInterfaceInitFunc)documentInterfaceInitCB,
-#endif
      (GInterfaceFinalizeFunc) NULL, NULL}
 };
 
@@ -380,7 +374,6 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
         interfacesBits |= 1 << MAI_INTERFACE_TABLE;
     }
 
-#ifdef USE_ATK_TYPE_DOCUMENT
     //nsIAccessibleDocument
     nsCOMPtr<nsIAccessibleDocument> accessInterfaceDocument;
     QueryInterface(NS_GET_IID(nsIAccessibleDocument),
@@ -388,7 +381,6 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
     if (accessInterfaceDocument) {
         interfacesBits |= 1 << MAI_INTERFACE_DOCUMENT;
     }
-#endif
 
     return interfacesBits;
 }
@@ -544,37 +536,25 @@ nsAccessibleWrap::TranslateStates(PRUint32 aState, PRUint32 aExtState, void *aAt
         atk_state_set_add_state (state_set, ATK_STATE_SENSITIVE);
     }
 
-#ifdef USE_ATK_STATE_INVALID_ENTRY
     if (aState & nsIAccessible::STATE_INVALID)
         atk_state_set_add_state (state_set, ATK_STATE_INVALID_ENTRY);
-#endif
 
-#ifdef USE_ATK_STATE_DEFAULT
     if (aState & nsIAccessible::STATE_DEFAULT)
         atk_state_set_add_state (state_set, ATK_STATE_DEFAULT);
-#endif
 
-#ifdef USE_ATK_STATE_REQUIRED
     if (aState & nsIAccessible::STATE_REQUIRED)
         atk_state_set_add_state (state_set, ATK_STATE_REQUIRED);
-#endif
 
-#ifdef USE_ATK_STATE_VISITED
     if (aState & nsIAccessible::STATE_TRAVERSED)
         atk_state_set_add_state (state_set, ATK_STATE_VISITED);
-#endif
 
-#ifdef USE_ATK_STATE_ANIMATED
     if (aState & nsIAccessible::STATE_ANIMATED)
         atk_state_set_add_state (state_set, ATK_STATE_ANIMATED);
-#endif
 
     // The following state is
     // Extended state flags (for now non-MSAA, for Java and Gnome/ATK support)
-#ifdef USE_ATK_STATE_SELECTABLE_TEXT
     if (aExtState & nsIAccessible::EXT_STATE_SELECTABLE_TEXT)
         atk_state_set_add_state (state_set, ATK_STATE_SELECTABLE_TEXT);
-#endif
 
     if (aExtState & nsIAccessible::EXT_STATE_ACTIVE)
         atk_state_set_add_state (state_set, ATK_STATE_ACTIVE);
@@ -817,7 +797,7 @@ getRoleCB(AtkObject *aAtkObj)
 
         atkRole = atkRoleMap[accRole]; // map to the actual value
         NS_ASSERTION(atkRoleMap[nsIAccessible::ROLE_LAST_ENTRY] ==
-                     ROLE_ATK_LAST_ENTRY, "ATK role map skewed");
+                     kROLE_ATK_LAST_ENTRY, "ATK role map skewed");
         aAtkObj->role = NS_STATIC_CAST(AtkRole, atkRole);
     }
     return aAtkObj->role;
@@ -1005,15 +985,11 @@ refRelationSetCB(AtkObject *aAtkObj)
                                nsIAccessible::RELATION_NODE_CHILD_OF,
                                nsIAccessible::RELATION_CONTROLLED_BY,
                                nsIAccessible::RELATION_CONTROLLER_FOR,
-#ifdef USE_ATK_EMBED_RELATIONS
                                nsIAccessible::RELATION_EMBEDS,
-#endif
                                nsIAccessible::RELATION_FLOWS_TO,
                                nsIAccessible::RELATION_FLOWS_FROM,
-#ifdef USE_ATK_DESCRIPTION_RELATIONS
                                nsIAccessible::RELATION_DESCRIBED_BY,
                                nsIAccessible::RELATION_DESCRIPTION_FOR,
-#endif
                                };
 
     for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(relationType); i++) { 

@@ -58,9 +58,7 @@ textInterfaceInitCB(AtkTextIface *aIface)
     aIface->get_run_attributes = getRunAttributesCB;
     aIface->get_default_attributes = getDefaultAttributesCB;
     aIface->get_character_extents = getCharacterExtentsCB;
-#ifdef USE_ATK_GET_RANGE_EXTENTS
     aIface->get_range_extents = getRangeExtentsCB;
-#endif
     aIface->get_character_count = getCharacterCountCB;
     aIface->get_offset_at_point = getOffsetAtPointCB;
     aIface->get_n_selections = getTextSelectionCountCB;
@@ -297,7 +295,6 @@ getCharacterExtentsCB(AtkText *aText, gint aOffset,
                  "MaiInterfaceText::GetCharacterExtents, failed\n");
 }
 
-#ifdef USE_ATK_GET_RANGE_EXTENTS
 void
 getRangeExtentsCB(AtkText *aText, gint aStartOffset, gint aEndOffset,
                   AtkCoordType aCoords, AtkTextRectangle *aRect)
@@ -325,7 +322,6 @@ getRangeExtentsCB(AtkText *aText, gint aStartOffset, gint aEndOffset,
     NS_ASSERTION(NS_SUCCEEDED(rv),
                  "MaiInterfaceText::GetRangeExtents, failed\n");
 }
-#endif
 
 gint
 getCharacterCountCB(AtkText *aText)

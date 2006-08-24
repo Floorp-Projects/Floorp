@@ -41,13 +41,6 @@
 #ifndef __MAI_REDUNDANT_OBJECT_FACTORY_H__
 #define __MAI_REDUNDANT_OBJECT_FACTORY_H__
 
-/*  atk 1.11.0 or later */
-#if ATK_MAJOR_VERSION >=2 || \
-    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 11)
-#define USE_ATK_ROLE_REDUNDANT_OBJECT
-#endif
-
-#ifdef USE_ATK_ROLE_REDUNDANT_OBJECT
 G_BEGIN_DECLS
 
 typedef struct _maiRedundantObjectFactory       maiRedundantObjectFactory;
@@ -68,7 +61,5 @@ GType mai_redundant_object_factory_get_type();
 AtkObjectFactory *mai_redundant_object_factory_new();
 
 G_END_DECLS
-
-#endif /* USE_ATK_ROLE_REDUNDANT_OBJECT */
 
 #endif /* __NS_MAI_REDUNDANT_OBJECT_FACTORY_H__ */
