@@ -729,8 +729,8 @@ sub insert_attachment_for_bug {
         $isurl = 0;
     }
 
-    # The order of these function calls is important, as both Flag::validate
-    # and FlagType::validate assume User::match_field has ensured that the
+    # The order of these function calls is important, as Flag::validate
+    # assumes User::match_field has ensured that the
     # values in the requestee fields are legitimate user email addresses.
     my $match_status = Bugzilla::User::match_field($cgi, {
         '^requestee(_type)?-(\d+)$' => { 'type' => 'multi' },
@@ -744,13 +744,11 @@ sub insert_attachment_for_bug {
         $$hr_vars->{'message'} = 'user_match_multiple';
     }
 
-    # FlagType::validate() and Flag::validate() should not detect
-    # any reference to existing flags when creating a new attachment.
-    # Setting the third param to -1 will force this function to check this
-    # point.
+    # Flag::validate() should not detect any reference to existing flags
+    # when creating a new attachment. Setting the third param to -1 will
+    # force this function to check this point.
     # XXX needs $throw_error treatment
     Bugzilla::Flag::validate($cgi, $bug->bug_id, -1);
-    Bugzilla::FlagType::validate($cgi, $bug->bug_id, -1);
 
     # Escape characters in strings that will be used in SQL statements.
     my $description = $cgi->param('description');

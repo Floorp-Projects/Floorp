@@ -54,10 +54,7 @@ use Bugzilla::Field;
 use Bugzilla::Product;
 use Bugzilla::Component;
 use Bugzilla::Keyword;
-
-# Use the Flag module to modify flag data if the user set flags.
 use Bugzilla::Flag;
-use Bugzilla::FlagType;
 
 my $user = Bugzilla->login(LOGIN_REQUIRED);
 local our $whoid = $user->id;
@@ -214,8 +211,8 @@ foreach my $field ("dependson", "blocked") {
 
 # do a match on the fields if applicable
 
-# The order of these function calls is important, as both Flag::validate
-# and FlagType::validate assume User::match_field has ensured that the values
+# The order of these function calls is important, as Flag::validate
+# assumes User::match_field has ensured that the values
 # in the requestee fields are legitimate user email addresses.
 &Bugzilla::User::match_field($cgi, {
     'qa_contact'                => { 'type' => 'single' },
@@ -228,7 +225,6 @@ foreach my $field ("dependson", "blocked") {
 # Validate flags in all cases. validate() should not detect any
 # reference to flags if $cgi->param('id') is undefined.
 Bugzilla::Flag::validate($cgi, $cgi->param('id'));
-Bugzilla::FlagType::validate($cgi, $cgi->param('id'));
 
 ######################################################################
 # End Data/Security Validation

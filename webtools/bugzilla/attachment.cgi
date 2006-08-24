@@ -643,14 +643,13 @@ sub update
     validatePrivate();
     my $dbh = Bugzilla->dbh;
 
-    # The order of these function calls is important, as both Flag::validate
-    # and FlagType::validate assume User::match_field has ensured that the
-    # values in the requestee fields are legitimate user email addresses.
+    # The order of these function calls is important, as Flag::validate
+    # assumes User::match_field has ensured that the values in the
+    # requestee fields are legitimate user email addresses.
     Bugzilla::User::match_field($cgi, {
         '^requestee(_type)?-(\d+)$' => { 'type' => 'multi' }
     });
     Bugzilla::Flag::validate($cgi, $bugid, $attach_id);
-    Bugzilla::FlagType::validate($cgi, $bugid, $attach_id);
 
     my $bug = new Bugzilla::Bug($bugid);
     # Lock database tables in preparation for updating the attachment.

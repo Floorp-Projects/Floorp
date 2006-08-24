@@ -96,6 +96,14 @@ Returns the ID of the flag.
 
 Returns the name of the flagtype the flag belongs to.
 
+=item C<bug_id>
+
+Returns the ID of the bug this flag belongs to.
+
+=item C<attach_id>
+
+Returns the ID of the attachment this flag belongs to, if any.
+
 =item C<status>
 
 Returns the status '+', '-', '?' of the flag.
@@ -106,6 +114,8 @@ Returns the status '+', '-', '?' of the flag.
 
 sub id     { return $_[0]->{'id'};     }
 sub name   { return $_[0]->type->name; }
+sub bug_id { return $_[0]->{'bug_id'}; }
+sub attach_id { return $_[0]->{'attach_id'}; }
 sub status { return $_[0]->{'status'}; }
 
 ###############################
@@ -235,152 +245,203 @@ to -1 to force its check anyway.
 sub validate {
     my ($cgi, $bug_id, $attach_id) = @_;
 
-    my $user = Bugzilla->user;
     my $dbh = Bugzilla->dbh;
 
     # Get a list of flags to validate.  Uses the "map" function
     # to extract flag IDs from form field names by matching fields
-    # whose name looks like "flag-nnn", where "nnn" is the ID,
-    # and returning just the ID portion of matching field names.
-    my @ids = map(/^flag-(\d+)$/ ? $1 : (), $cgi->param());
+    # whose name looks like "flag_type-nnn" (new flags) or "flag-nnn"
+    # (existing flags), where "nnn" is the ID, and returning just
+    # the ID portion of matching field names.
+    my @flagtype_ids = map(/^flag_type-(\d+)$/ ? $1 : (), $cgi->param());
+    my @flag_ids = map(/^flag-(\d+)$/ ? $1 : (), $cgi->param());
 
-    return unless scalar(@ids);
-    
+    return unless (scalar(@flagtype_ids) || scalar(@flag_ids));
+
     # No flag reference should exist when changing several bugs at once.
     ThrowCodeError("flags_not_available", { type => 'b' }) unless $bug_id;
 
-    # No reference to existing flags should exist when creating a new
-    # attachment.
-    if ($attach_id && ($attach_id < 0)) {
-        ThrowCodeError("flags_not_available", { type => 'a' });
+    # We don't check that these new flags are valid for this bug/attachment,
+    # because the bug may be moved into another product meanwhile.
+    # This check will be done later when creating new flags, see FormToNewFlags().
+
+    # All new flags must belong to active flag types.
+    if (scalar(@flagtype_ids)) {
+        my $inactive_flagtypes =
+            $dbh->selectrow_array('SELECT 1 FROM flagtypes
+                                   WHERE id IN (' . join(',', @flagtype_ids) . ')
+                                   AND is_active = 0 ' .
+                                   $dbh->sql_limit(1));
+
+        ThrowCodeError('flag_type_inactive') if $inactive_flagtypes;
     }
 
-    # Make sure all flags belong to the bug/attachment they pretend to be.
-    my $field = ($attach_id) ? "attach_id" : "bug_id";
-    my $field_id = $attach_id || $bug_id;
-    my $not = ($attach_id) ? "" : "NOT";
+    if (scalar(@flag_ids)) {
+        # No reference to existing flags should exist when creating a new
+        # attachment.
+        if ($attach_id && ($attach_id < 0)) {
+            ThrowCodeError('flags_not_available', { type => 'a' });
+        }
 
-    my $invalid_data =
-        $dbh->selectrow_array("SELECT 1 FROM flags
-                               WHERE id IN (" . join(',', @ids) . ")
-                               AND ($field != ? OR attach_id IS $not NULL) " .
-                               $dbh->sql_limit(1),
-                               undef, $field_id);
+        # Make sure all existing flags belong to the bug/attachment
+        # they pretend to be.
+        my $field = ($attach_id) ? "attach_id" : "bug_id";
+        my $field_id = $attach_id || $bug_id;
+        my $not = ($attach_id) ? "" : "NOT";
 
-    if ($invalid_data) {
-        ThrowCodeError("invalid_flag_association",
-                       { bug_id    => $bug_id,
-                         attach_id => $attach_id });
+        my $invalid_data =
+            $dbh->selectrow_array("SELECT 1 FROM flags
+                                   WHERE id IN (" . join(',', @flag_ids) . ")
+                                   AND ($field != ? OR attach_id IS $not NULL) " .
+                                   $dbh->sql_limit(1),
+                                   undef, $field_id);
+
+        if ($invalid_data) {
+            ThrowCodeError('invalid_flag_association',
+                           { bug_id    => $bug_id,
+                             attach_id => $attach_id });
+        }
     }
 
-    foreach my $id (@ids) {
+    # Validate new flags.
+    foreach my $id (@flagtype_ids) {
+        my $status = $cgi->param("flag_type-$id");
+        my @requestees = $cgi->param("requestee_type-$id");
+        my $private_attachment = $cgi->param('isprivate') ? 1 : 0;
+
+        # Don't bother validating types the user didn't touch.
+        next if $status eq 'X';
+
+        # Make sure the flag type exists.
+        my $flag_type = new Bugzilla::FlagType($id);
+        $flag_type || ThrowCodeError('flag_type_nonexistent', { id => $id });
+
+        _validate(undef, $flag_type, $status, \@requestees, $private_attachment,
+                  $bug_id, $attach_id);
+    }
+
+    # Validate existing flags.
+    foreach my $id (@flag_ids) {
         my $status = $cgi->param("flag-$id");
         my @requestees = $cgi->param("requestee-$id");
+        my $private_attachment = $cgi->param('isprivate') ? 1 : 0;
 
         # Make sure the flag exists.
         my $flag = new Bugzilla::Flag($id);
         $flag || ThrowCodeError("flag_nonexistent", { id => $id });
 
-        # Make sure the user chose a valid status.
-        grep($status eq $_, qw(X + - ?))
-          || ThrowCodeError("flag_status_invalid", 
-                            { id => $id, status => $status });
-
-        # Make sure the user didn't request the flag unless it's requestable.
-        # If the flag was requested before it became unrequestable, leave it
-        # as is.
-        if ($status eq '?'
-            && $flag->status ne '?'
-            && !$flag->type->is_requestable)
-        {
-            ThrowCodeError("flag_status_invalid", 
-                           { id => $id, status => $status });
-        }
-
-        # Make sure the user didn't specify a requestee unless the flag
-        # is specifically requestable. If the requestee was set before
-        # the flag became specifically unrequestable, don't let the user
-        # change the requestee, but let the user remove it by entering
-        # an empty string for the requestee.
-        if ($status eq '?' && !$flag->type->is_requesteeble) {
-            my $old_requestee = $flag->requestee ? $flag->requestee->login : '';
-            my $new_requestee = join('', @requestees);
-            if ($new_requestee && $new_requestee ne $old_requestee) {
-                ThrowCodeError("flag_requestee_disabled",
-                               { type => $flag->type });
-            }
-        }
-
-        # Make sure the user didn't enter multiple requestees for a flag
-        # that can't be requested from more than one person at a time.
-        if ($status eq '?'
-            && !$flag->type->is_multiplicable
-            && scalar(@requestees) > 1)
-        {
-            ThrowUserError("flag_not_multiplicable", { type => $flag->type });
-        }
-
-        # Make sure the requestees are authorized to access the bug.
-        # (and attachment, if this installation is using the "insider group"
-        # feature and the attachment is marked private).
-        if ($status eq '?' && $flag->type->is_requesteeble) {
-            my $old_requestee = $flag->requestee ? $flag->requestee->login : '';
-            foreach my $login (@requestees) {
-                next if $login eq $old_requestee;
-
-                # We know the requestee exists because we ran
-                # Bugzilla::User::match_field before getting here.
-                my $requestee = new Bugzilla::User({ name => $login });
-                
-                # Throw an error if the user can't see the bug.
-                # Note that if permissions on this bug are changed,
-                # can_see_bug() will refer to old settings.
-                if (!$requestee->can_see_bug($bug_id)) {
-                    ThrowUserError("flag_requestee_unauthorized",
-                                   { flag_type  => $flag->type,
-                                     requestee  => $requestee,
-                                     bug_id     => $bug_id,
-                                     attach_id  => $attach_id
-                                   });
-                }
-    
-                # Throw an error if the target is a private attachment and
-                # the requestee isn't in the group of insiders who can see it.
-                if ($attach_id
-                    && $cgi->param('isprivate')
-                    && Bugzilla->params->{"insidergroup"}
-                    && !$requestee->in_group(Bugzilla->params->{"insidergroup"}))
-                {
-                    ThrowUserError("flag_requestee_unauthorized_attachment",
-                                   { flag_type  => $flag->type,
-                                     requestee  => $requestee,
-                                     bug_id     => $bug_id,
-                                     attach_id  => $attach_id
-                                   });
-                }
-            }
-        }
-
-        # Make sure the user is authorized to modify flags, see bug 180879
-        # - The flag is unchanged
-        next if ($status eq $flag->status);
-
-        # - User in the request_group can clear pending requests and set flags
-        #   and can rerequest set flags.
-        next if (($status eq 'X' || $status eq '?')
-                 && (!$flag->type->request_group
-                     || $user->in_group_id($flag->type->request_group->id)));
-
-        # - User in the grant_group can set/clear flags, including "+" and "-".
-        next if (!$flag->type->grant_group
-                 || $user->in_group_id($flag->type->grant_group->id));
-
-        # - Any other flag modification is denied
-        ThrowUserError("flag_update_denied",
-                        { name       => $flag->type->name,
-                          status     => $status,
-                          old_status => $flag->status });
+        _validate($flag, $flag->type, $status, \@requestees, $private_attachment);
     }
+}
+
+sub _validate {
+    my ($flag, $flag_type, $status, $requestees, $private_attachment,
+        $bug_id, $attach_id) = @_;
+
+    my $user = Bugzilla->user;
+
+    my $id = $flag ? $flag->id : $flag_type->id; # Used in the error messages below.
+    $bug_id ||= $flag->bug_id;
+    $attach_id ||= $flag->attach_id if $flag; # Maybe it's a bug flag.
+
+    # Make sure the user chose a valid status.
+    grep($status eq $_, qw(X + - ?))
+      || ThrowCodeError('flag_status_invalid',
+                        { id => $id, status => $status });
+
+    # Make sure the user didn't request the flag unless it's requestable.
+    # If the flag existed and was requested before it became unrequestable,
+    # leave it as is.
+    if ($status eq '?'
+        && (!$flag || $flag->status ne '?')
+        && !$flag_type->is_requestable)
+    {
+        ThrowCodeError('flag_status_invalid',
+                       { id => $id, status => $status });
+    }
+
+    # Make sure the user didn't specify a requestee unless the flag
+    # is specifically requestable. For existing flags, if the requestee
+    # was set before the flag became specifically unrequestable, don't
+    # let the user change the requestee, but let the user remove it by
+    # entering an empty string for the requestee.
+    if ($status eq '?' && !$flag_type->is_requesteeble) {
+        my $old_requestee = ($flag && $flag->requestee) ?
+                                $flag->requestee->login : '';
+        my $new_requestee = join('', @$requestees);
+        if ($new_requestee && $new_requestee ne $old_requestee) {
+            ThrowCodeError('flag_requestee_disabled',
+                           { type => $flag_type });
+        }
+    }
+
+    # Make sure the user didn't enter multiple requestees for a flag
+    # that can't be requested from more than one person at a time.
+    if ($status eq '?'
+        && !$flag_type->is_multiplicable
+        && scalar(@$requestees) > 1)
+    {
+        ThrowUserError('flag_not_multiplicable', { type => $flag_type });
+    }
+
+    # Make sure the requestees are authorized to access the bug
+    # (and attachment, if this installation is using the "insider group"
+    # feature and the attachment is marked private).
+    if ($status eq '?' && $flag_type->is_requesteeble) {
+        my $old_requestee = ($flag && $flag->requestee) ?
+                                $flag->requestee->login : '';
+        foreach my $login (@$requestees) {
+            next if $login eq $old_requestee;
+
+            # We know the requestee exists because we ran
+            # Bugzilla::User::match_field before getting here.
+            my $requestee = new Bugzilla::User({ name => $login });
+
+            # Throw an error if the user can't see the bug.
+            # Note that if permissions on this bug are changed,
+            # can_see_bug() will refer to old settings.
+            if (!$requestee->can_see_bug($bug_id)) {
+                ThrowUserError('flag_requestee_unauthorized',
+                               { flag_type  => $flag_type,
+                                 requestee  => $requestee,
+                                 bug_id     => $bug_id,
+                                 attach_id  => $attach_id });
+            }
+
+            # Throw an error if the target is a private attachment and
+            # the requestee isn't in the group of insiders who can see it.
+            if ($attach_id
+                && $private_attachment
+                && Bugzilla->params->{'insidergroup'}
+                && !$requestee->in_group(Bugzilla->params->{'insidergroup'}))
+            {
+                ThrowUserError('flag_requestee_unauthorized_attachment',
+                               { flag_type  => $flag_type,
+                                 requestee  => $requestee,
+                                 bug_id     => $bug_id,
+                                 attach_id  => $attach_id });
+            }
+        }
+    }
+
+    # Make sure the user is authorized to modify flags, see bug 180879
+    # - The flag exists and is unchanged.
+    return if ($flag && ($status eq $flag->status));
+
+    # - User in the request_group can clear pending requests and set flags
+    #   and can rerequest set flags.
+    return if (($status eq 'X' || $status eq '?')
+               && (!$flag_type->request_group
+                   || $user->in_group_id($flag_type->request_group->id)));
+
+    # - User in the grant_group can set/clear flags, including "+" and "-".
+    return if (!$flag_type->grant_group
+               || $user->in_group_id($flag_type->grant_group->id));
+
+    # - Any other flag modification is denied
+    ThrowUserError('flag_update_denied',
+                    { name       => $flag_type->name,
+                      status     => $status,
+                      old_status => $flag ? $flag->status : 'X' });
 }
 
 sub snapshot {

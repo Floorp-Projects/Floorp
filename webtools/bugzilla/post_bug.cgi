@@ -39,6 +39,7 @@ use Bugzilla::Product;
 use Bugzilla::Component;
 use Bugzilla::Keyword;
 use Bugzilla::Token;
+use Bugzilla::Flag;
 
 my $user = Bugzilla->login(LOGIN_REQUIRED);
 
@@ -447,11 +448,7 @@ if (defined($cgi->upload('data')) || $cgi->param('attachurl')) {
 my $error_mode_cache = Bugzilla->error_mode;
 Bugzilla->error_mode(ERROR_MODE_DIE);
 eval {
-    # Make sure no flags have already been set for this bug.
-    # Impossible? - Well, depends if you hack the URL or not.
-    # Passing a bug ID of 0 will make it complain if it finds one.
-    Bugzilla::Flag::validate($cgi, 0);
-    Bugzilla::FlagType::validate($cgi, $id);
+    Bugzilla::Flag::validate($cgi, $id);
     Bugzilla::Flag::process($bug, undef, $timestamp, $cgi);
 };
 Bugzilla->error_mode($error_mode_cache);
