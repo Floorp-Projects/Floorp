@@ -3,6 +3,6 @@
 class VersionsController extends AppController
 {
     var $name = 'Versions';
-    var $scaffolds;
-
+    var $scaffold;
+}
 ?>
