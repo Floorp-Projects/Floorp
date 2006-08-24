@@ -55,13 +55,14 @@
 //
 // We implement the following policy:
 // 
-// - The extension will issue at most two HTTPS getkey requests per session
-// - The extension will issue one HTTPS getkey request at startup
-// - The extension will serialize to disk any key it gets
-// - The extension will fall back on this serialized key until it has a
+// - Firefox will issue at most two HTTPS getkey requests per session
+// - Firefox will issue one HTTPS getkey request at startup if more than 24
+//   hours has passed since the last getkey request.
+// - Firefox will serialize to disk any key it gets
+// - Firefox will fall back on this serialized key until it has a
 //   fresh key
 // - The front-end can respond with a flag in a lookup request that tells
-//   the client to re-key. The client will issue a new HTTPS getkey request
+//   the client to re-key. Firefox will issue a new HTTPS getkey request
 //   at this time if it has only issued one before
 
 // We store the user key in this file.  The key can be used to verify signed
@@ -120,6 +121,13 @@ function PROT_UrlCryptoKeyManager(opt_keyFilename, opt_testing) {
 // Do ***** NOT ***** set this higher; HTTPS is expensive
 PROT_UrlCryptoKeyManager.MAX_REKEY_TRIES = 2;
 
+// Base pref for keeping track of when we updated our key.
+// We store the time as seconds since the epoch.
+PROT_UrlCryptoKeyManager.NEXT_REKEY_PREF = "urlclassifier.keyupdatetime.";
+
+// Once a day (interval in seconds)
+PROT_UrlCryptoKeyManager.KEY_MIN_UPDATE_TIME = 24 * 60 * 60;
+
 // These are the names the server will respond with in protocol4 format
 PROT_UrlCryptoKeyManager.CLIENT_KEY_NAME = "clientkey";
 PROT_UrlCryptoKeyManager.WRAPPED_KEY_NAME = "wrappedkey";
@@ -156,7 +164,13 @@ PROT_UrlCryptoKeyManager.prototype.setKeyUrl = function(keyUrl) {
 
   this.keyUrl_ = keyUrl;
   this.rekeyTries_ = 0;
-  this.reKey();
+
+  // Check to see if we should make a new getkey request.
+  var prefs = new G_Preferences(PROT_UrlCryptoKeyManager.NEXT_REKEY_PREF);
+  var nextRekey = prefs.getPref(this.keyUrl_, 0);
+  if (nextRekey < parseInt(Date.now() / 1000, 10)) {
+    this.reKey();
+  }
 }
 
 /**
@@ -173,11 +187,17 @@ PROT_UrlCryptoKeyManager.prototype.reKey = function() {
   this.rekeyTries_++;
 
   G_Debug(this, "Attempting to re-key");
-  var prefs = new G_Preferences();
   // If the keyUrl isn't set, we don't do anything.
-  if (!this.testing_ && this.keyUrl_)
+  if (!this.testing_ && this.keyUrl_) {
     (new PROT_XMLFetcher()).get(this.keyUrl_,
                                 BindToObject(this.onGetKeyResponse, this));
+
+    // Calculate the next time we're allowed to re-key.
+    var prefs = new G_Preferences(PROT_UrlCryptoKeyManager.NEXT_REKEY_PREF);
+    var nextRekey = parseInt(Date.now() / 1000, 10)
+                  + PROT_UrlCryptoKeyManager.KEY_MIN_UPDATE_TIME;
+    prefs.setPref(this.keyUrl_, nextRekey);
+  }
 }
 
 /**
