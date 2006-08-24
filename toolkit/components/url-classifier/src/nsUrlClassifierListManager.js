@@ -57,6 +57,7 @@ function Init() {
   modScope.BindToObject = jslib.BindToObject;
   modScope.PROT_XMLFetcher = jslib.PROT_XMLFetcher;
   modScope.PROT_UrlCrypto = jslib.PROT_UrlCrypto;
+  modScope.RequestBackoff = jslib.RequestBackoff;
 
   // We only need to call Init once.
   modScope.Init = function() {};

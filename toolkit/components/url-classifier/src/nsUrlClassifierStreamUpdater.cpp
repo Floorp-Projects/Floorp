@@ -60,7 +60,8 @@ class nsUrlClassifierStreamUpdater;
 class TableUpdateListener : public nsIStreamListener
 {
 public:
-  TableUpdateListener(nsIUrlClassifierCallback *c);
+  TableUpdateListener(nsIUrlClassifierCallback *aTableCallback,
+                      nsIUrlClassifierCallback *aErrorCallback);
   nsCOMPtr<nsIUrlClassifierDBService> mDBService;
 
   NS_DECL_ISUPPORTS
@@ -71,12 +72,16 @@ private:
   ~TableUpdateListener() {};
 
   // Callback when table updates complete.
-  nsCOMPtr<nsIUrlClassifierCallback> mCallback;
+  nsCOMPtr<nsIUrlClassifierCallback> mTableCallback;
+  nsCOMPtr<nsIUrlClassifierCallback> mErrorCallback;
 };
 
-TableUpdateListener::TableUpdateListener(nsIUrlClassifierCallback *c)
+TableUpdateListener::TableUpdateListener(
+                                nsIUrlClassifierCallback *aTableCallback,
+                                nsIUrlClassifierCallback *aErrorCallback)
 {
-  mCallback = c;
+  mTableCallback = aTableCallback;
+  mErrorCallback = aErrorCallback;
 }
 
 NS_IMPL_ISUPPORTS2(TableUpdateListener, nsIStreamListener, nsIRequestObserver)
@@ -89,6 +94,19 @@ TableUpdateListener::OnStartRequest(nsIRequest *request, nsISupports* context)
     mDBService = do_GetService(NS_URLCLASSIFIERDBSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
+  NS_ENSURE_STATE(httpChannel);
+
+  nsresult status;
+  rv = httpChannel->GetStatus(&status);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_ERROR_CONNECTION_REFUSED == status) {
+    // Assume that we're overloading the server and trigger backoff.
+    mErrorCallback->HandleEvent(nsCString());
+    return NS_ERROR_ABORT;
+  }
+
   return NS_OK;
 }
 
@@ -108,15 +126,25 @@ TableUpdateListener::OnDataAvailable(nsIRequest *request,
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
   NS_ENSURE_STATE(httpChannel);
 
+  nsresult rv;
   PRBool succeeded = PR_FALSE;
-  httpChannel->GetRequestSucceeded(&succeeded);
+  rv = httpChannel->GetRequestSucceeded(&succeeded);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (!succeeded) {
-    // 404 or other error, give up
-    LOG(("HTTP request returned failure code.  Ignoring."));
+    // 404 or other error, pass error status back
+    LOG(("HTTP request returned failure code."));
+
+    PRUint32 status;
+    rv = httpChannel->GetResponseStatus(&status);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCAutoString strStatus;
+    strStatus.AppendInt(status);
+    mErrorCallback->HandleEvent(strStatus);
     return NS_ERROR_ABORT;
   }
 
-  nsresult rv;
   // Copy the data into a nsCString
   nsCString chunk;
   rv = NS_ConsumeStream(aIStream, aLength, chunk);
@@ -142,7 +170,7 @@ TableUpdateListener::OnStopRequest(nsIRequest *request, nsISupports* context,
   // If we got the whole stream, call Finish to commit the changes.
   // Otherwise, call Cancel to rollback the changes.
   if (NS_SUCCEEDED(aStatus))
-    mDBService->Finish(mCallback);
+    mDBService->Finish(mTableCallback);
   else
     mDBService->CancelStream();
 
@@ -190,8 +218,10 @@ nsUrlClassifierStreamUpdater::SetUpdateUrl(const nsACString & aUpdateUrl)
 }
 
 NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::DownloadUpdates(nsIUrlClassifierCallback *c,
-                                              PRBool *_retval)
+nsUrlClassifierStreamUpdater::DownloadUpdates(
+                                nsIUrlClassifierCallback *aTableCallback,
+                                nsIUrlClassifierCallback *aErrorCallback,
+                                PRBool *_retval)
 {
   if (mIsUpdating) {
     LOG(("already updating, skipping update"));
@@ -210,9 +240,8 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(nsIUrlClassifierCallback *c,
   rv = NS_NewChannel(getter_AddRefs(channel), mUpdateUrl);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!mListener) {
-    mListener = new TableUpdateListener(c);
-  }
+  // Bind to a different callback each time we invoke this method.
+  mListener = new TableUpdateListener(aTableCallback, aErrorCallback);
 
   // Make the request
   rv = channel->AsyncOpen(mListener.get(), this);
