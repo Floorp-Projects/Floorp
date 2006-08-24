@@ -83,6 +83,7 @@
 #include "jscntxt.h"
 #include "nsEventDispatcher.h"
 #include "nsIDOMGCParticipant.h"
+#include "nsIContent.h"
 
 // For locale aware string methods
 #include "plstr.h"
@@ -1680,6 +1681,39 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
 
   // check if the event handler can be run on the object in question
   rv = sSecurityManager->CheckFunctionAccess(mContext, aHandler, target);
+  if (NS_SUCCEEDED(rv)) {
+    // We're not done yet!  Some event listeners are confused about their
+    // script context, so check whether we might actually be the wrong script
+    // context.  To be safe, do CheckFunctionAccess checks for both.
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aTarget);
+    if (content) {
+      // XXXbz XBL2/sXBL issue
+      nsIDocument* ownerDoc = content->GetOwnerDoc();
+      if (ownerDoc) {
+        nsIScriptGlobalObject* global = ownerDoc->GetScriptGlobalObject();
+        if (global) {
+          nsIScriptContext* context =
+            global->GetScriptContext(nsIProgrammingLanguage::JAVASCRIPT);
+          if (context && context != this) {
+            JSContext* cx =
+              NS_STATIC_CAST(JSContext*, context->GetNativeContext());
+            rv = stack->Push(cx);
+            if (NS_SUCCEEDED(rv)) {
+              rv = sSecurityManager->CheckFunctionAccess(cx, aHandler,
+                                                         target);
+              // Here we lose no matter what; we don't want to leave the wrong
+              // cx on the stack.  I guess default to leaving mContext, to
+              // cover those cases when we really do have a different context
+              // for the handler and the node.  That's probably safer.
+              if (NS_FAILED(stack->Pop(nsnull))) {
+                return NS_ERROR_FAILURE;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 
   nsJSContext::TerminationFuncHolder holder(this);
 
