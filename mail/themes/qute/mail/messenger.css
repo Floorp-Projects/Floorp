@@ -63,29 +63,22 @@ list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
 
 /* ::::: toolbarbutton ::::: */
 
-.toolbarbutton-1 {
+.toolbarbutton-1,
+.toolbarbutton-menubutton-button {
   padding-top: 5px;
   padding-bottom: 6px;
   -moz-padding-start: 4px;
   -moz-padding-end: 5px;
 }
 
-.toolbarbutton-1:hover:active,
-.toolbarbutton-1[open="true"] {
+.toolbarbutton-1:hover:active:not([disabled]),
+.toolbarbutton-1[open="true"],
+.toolbarbutton-menubutton-button:hover:active:not([disabled]),
+.toolbarbutton-menubutton-button[open="true"] {
   padding-top: 6px;
   padding-bottom: 5px;
   -moz-padding-start: 5px;
   -moz-padding-end: 4px;
-}
-
-.toolbarbutton-1[disabled="true"],
-.toolbarbutton-1[disabled="true"]:hover,
-.toolbarbutton-1[disabled="true"]:hover:active,
-.toolbarbutton-1[disabled="true"][open="true"] {
-  padding-top: 5px;
-  padding-bottom: 6px;
-  -moz-padding-start: 4px;
-  -moz-padding-end: 5px;
 }
 
 .toolbarbutton-1[checked="true"] {
@@ -105,5 +98,5 @@ list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
 }
 
 toolbar[mode="full"] .toolbarbutton-1 {
-  min-width: 50px;
+  min-width: 55px;
 }

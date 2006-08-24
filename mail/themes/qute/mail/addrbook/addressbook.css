@@ -46,12 +46,6 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-/* ::::: tools menu icon ::::: */
-
-.icon-mail16 {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail.png");
-}
-
 /* ::::: primary toolbar buttons ::::: */
 
 .toolbarbutton-1 {

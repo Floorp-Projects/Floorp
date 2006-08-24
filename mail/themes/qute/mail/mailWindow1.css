@@ -127,28 +127,26 @@ treecol.threadColumnHeader {
   -moz-padding-end: 3px; 
 }
 
+/*
 treecol.threadColumnHeader[sortDirection="ascending"]  {
-  list-style-image: url("chrome://messenger/skin/icons/thread-col.png");
+  list-style-image: url("chrome://messenger/skin/icons/thread-col-sorta.png");
 }
 
 treecol.threadColumnHeader[sortDirection="descending"] {
-  list-style-image: url("chrome://messenger/skin/icons/thread-col.png");
+  list-style-image: url("chrome://messenger/skin/icons/thread-col-sortd.png");
 }
+*/
 
 treechildren::-moz-tree-image(threadCol, container) {
   list-style-image: url("chrome://messenger/skin/icons/thread.png");
 }
 
-treechildren::-moz-tree-image(threadCol, container, open) {
-  list-style-image: url("chrome://messenger/skin/icons/thread.png");
+treechildren::-moz-tree-image(news, threadCol, watch) {
+  list-style-image: url("chrome://messenger/skin/icons/thread-watched.png");
 }
 
-treechildren::-moz-tree-image(threadCol, container, hasUnread) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-new.png");
-}
-
-treechildren::-moz-tree-image(threadCol, container, hasUnread, open) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-new.png");
+treechildren::-moz-tree-image(news, threadCol, ignore) {
+  list-style-image: url("chrome://messenger/skin/icons/thread-ignored.png");
 }
 
 /* ..... read column ..... */
@@ -231,7 +229,8 @@ treechildren::-moz-tree-image(junkStatusCol, notjunk) {
 
 treechildren::-moz-tree-image(subjectCol) {
   -moz-margin-end: 2px;
-  list-style-image: url("chrome://messenger/skin/icons/blank16.png");
+  list-style-image: url("chrome://messenger/skin/icons/message.png");
+  -moz-image-region: rect(0 16px 16px 0);
 }
 
 treechildren::-moz-tree-image(subjectCol, dummy) {
@@ -239,19 +238,19 @@ treechildren::-moz-tree-image(subjectCol, dummy) {
 }
 
 treechildren::-moz-tree-image(subjectCol, forwarded) {
-  list-style-image: url("chrome://messenger/skin/icons/message-forwarded.png");
+  -moz-image-region: rect(0 48px 16px 32px);
 }
 
 treechildren::-moz-tree-image(subjectCol, replied) {
-  list-style-image: url("chrome://messenger/skin/icons/message-replied.png");
+  -moz-image-region: rect(0 32px 16px 16px);
 }
 
 treechildren::-moz-tree-image(subjectCol, replied, forwarded) {
-  list-style-image: url("chrome://messenger/skin/icons/message-replied-forw.png");
+  -moz-image-region: rect(0 64px 16px 48px);
 }
 
 treechildren::-moz-tree-image(subjectCol, new) {
-  list-style-image: url("chrome://messenger/skin/icons/message-new.png");
+  -moz-image-region: rect(0 96px 16px 80px);
 }
 
 
@@ -259,18 +258,7 @@ treechildren::-moz-tree-image(subjectCol, new) {
    This ensures that we show that the message is marked as deleted over status information. */
 
 treechildren::-moz-tree-image(subjectCol, imapdeleted) {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail-imapdelete.png");
-}
-
-
-/* ..... new thread icons for watch and ignore ..... */
-
-treechildren::-moz-tree-image(news, threadCol, watch) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-watched.png");
-}
-
-treechildren::-moz-tree-image(news, threadCol, ignore) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-ignored.png");
+  -moz-image-region: rect(0 80px 16px 64px);
 }
 
 
