@@ -1086,20 +1086,19 @@
             if (aTab.localName != "tab")
               aTab = this.mCurrentTab;
 
-            var l = this.mTabs.length;
-            if (l == 1) {
-              // hide the tab bar
-              this.mPrefs.setBoolPref("browser.tabs.forceHide", true);
-              this.mStrip.collapsed = true;
-              return;
-            }
-
             var ds = aTab.linkedBrowser.docShell;
 
             if (ds.contentViewer && !ds.contentViewer.permitUnload())
               return;
 
-            if (l == 2) {
+            var l = this.mTabs.length;
+            if (l == 1) {
+              // add a new blank tab to replace the one we're about to close
+              // (this ensures that the remaining tab is as good as new)
+              this.addTab("about:blank");
+              l++;
+            }
+            else if (l == 2) {
               if (this.mPrefs.getBoolPref("browser.tabs.autoHide"))
                 this.mStrip.collapsed = true;
             }
