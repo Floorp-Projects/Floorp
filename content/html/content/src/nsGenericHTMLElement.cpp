@@ -1704,10 +1704,7 @@ nsGenericHTMLElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else if (aNotify && aName == nsHTMLAtoms::spellcheck) {
-      nsCOMPtr<nsIEditor> editor = GetAssociatedEditor();
-      if (editor) {
-        editor->SyncRealTimeSpell();
-      }
+      SyncEditorsOnSubtree(this);
     }
   }
 
@@ -4145,4 +4142,29 @@ nsGenericHTMLElement::IsCurrentBodyElement()
   nsCOMPtr<nsIDOMHTMLElement> htmlElement;
   htmlDocument->GetBody(getter_AddRefs(htmlElement));
   return htmlElement == bodyElement;
+}
+
+// static
+void
+nsGenericHTMLElement::SyncEditorsOnSubtree(nsIContent* content)
+{
+  /* Sync this node */
+  nsGenericHTMLElement* element = FromContent(content);
+  if (element) {
+    nsCOMPtr<nsIEditor> editor = element->GetAssociatedEditor();
+    if (editor) {
+      editor->SyncRealTimeSpell();
+    }
+  }
+
+  /* Sync all children */
+  PRUint32 childCount = content->GetChildCount();
+  for (PRUint32 i = 0; i < childCount; ++i) {
+    nsIContent* childContent = content->GetChildAt(i);
+    NS_ASSERTION(childContent,
+                 "DOM mutated unexpectedly while syncing editors!");
+    if (childContent) {
+      SyncEditorsOnSubtree(childContent);
+    }
+  }
 }
