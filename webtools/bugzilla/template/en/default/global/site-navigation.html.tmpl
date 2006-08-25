@@ -57,6 +57,11 @@
     [% END %]
   [% END %]
 
+  [%# *** Attachment *** %]
+  [% IF attachment && attachment.bug_id %]
+    <link rel="Up" href="show_bug.cgi?id=[% attachment.bug_id FILTER none %]">
+  [% END %]
+
 
   [%# *** Dependencies, Votes, Activity, Print-version *** %]
   [% IF bug %]
