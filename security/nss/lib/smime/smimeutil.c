@@ -37,7 +37,7 @@
 /*
  * Stuff specific to S/MIME policy and interoperability.
  *
- * $Id: smimeutil.c,v 1.17 2006/04/29 00:18:42 julien.pierre.bugs%sun.com Exp $
+ * $Id: smimeutil.c,v 1.18 2006/08/25 22:26:18 alexei.volkov.bugs%sun.com Exp $
  */
 
 #include "secmime.h"
@@ -125,7 +125,7 @@ static const SEC_ASN1Template smime_encryptionkeypref_template[] = {
           | SEC_ASN1_CONSTRUCTED,
 	  offsetof(NSSSMIMEEncryptionKeyPreference,id.recipientKeyID),
 	  NSSCMSRecipientKeyIdentifierTemplate,
-	  NSSSMIMEEncryptionKeyPref_IssuerSN },
+	  NSSSMIMEEncryptionKeyPref_RKeyID },
     { SEC_ASN1_POINTER | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_XTRN | 2
           | SEC_ASN1_CONSTRUCTED,
 	  offsetof(NSSSMIMEEncryptionKeyPreference,id.subjectKeyID),
