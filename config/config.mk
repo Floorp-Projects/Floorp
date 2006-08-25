@@ -62,12 +62,6 @@ include $(topsrcdir)/config/insure.mk
 endif
 endif
 
-# SUBMAKEFILES: List of Makefiles for next level down.
-#   This is used to update or create the Makefiles before invoking them.
-ifneq ($(DIRS)$(TOOL_DIRS),)
-SUBMAKEFILES		:= $(addsuffix /Makefile, $(TOOL_DIRS) $(filter-out $(STATIC_MAKEFILES), $(DIRS)))
-endif
-
 # FINAL_TARGET specifies the location into which we copy end-user-shipped
 # build products (typelibs, components, chrome).
 #

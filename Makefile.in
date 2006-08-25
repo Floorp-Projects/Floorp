@@ -44,34 +44,45 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/build/unix/modules.mk
 
+include $(topsrcdir)/config/config.mk
+
 ifneq ($(MOZ_STANDALONE_BUILD),1) # {
 #
 # And now for something completely different...
 # Divide the default build into tiers. 
 # Tiers must be defined on module boundaries 
 #
-SUPPRESS_DEFAULT_RULES = 1
-
-# Make sure that the existing rulesets work
-
-DIRS += $(tier_0_dirs)
 
 ifndef LIBXUL_SDK
-# only build gecko if --with-libxul-sdk isn't passed
-DIRS += \
-	$(tier_1_dirs) \
-	$(tier_2_dirs) \
-	$(tier_9_dirs) \
-	$(tier_50_dirs) \
-	$(NULL)
-
-endif # LIBXUL_SDK
-
-ifdef GC_LEAK_DETECTOR
-DIRS += gc/boehm
+TIERS += nspr
 endif
 
-DIRS += $(tier_99_dirs)
+TIERS += 0
+
+ifndef LIBXUL_SDK
+TIERS += \
+	1 \
+	2 \
+	9 \
+	50 \
+	$(NULL)
+endif
+
+TIERS += \
+	99 \
+	$(NULL)
+
+#
+# tier NSPR
+#
+
+ifdef GC_LEAK_DETECTOR
+tier_nspr_staticdirs = gc/boehm
+endif
+
+ifndef MOZ_NATIVE_NSPR
+tier_nspr_staticdirs += nsprpub
+endif
 
 #
 # tier 0 - base build config dirs
@@ -312,6 +323,7 @@ tier_50_dirs += tools/trace-malloc
 endif
 
 ifdef MOZ_LDAP_XPCOM
+tier_50_staticdirs += directory/c-sdk
 tier_50_dirs	+= directory/xpcom
 endif
 
@@ -464,24 +476,10 @@ tier_99_dirs += extensions/java/xpcom/interfaces
 endif
 endif
 
-default alldep all:: $(SUBMAKEFILES)
+default alldep all::
 	$(RM) -rf $(DIST)/sdk
 	$(RM) -rf $(DIST)/include
 	$(MAKE) -C config export
-ifndef LIBXUL_SDK
-	$(MAKE) nspr
-endif
-	$(MAKE) ldap
-	$(MAKE) tier_0
-ifndef LIBXUL_SDK
-	$(MAKE) tier_1
-	$(MAKE) tier_2
-	$(MAKE) tier_9
-	$(MAKE) tier_50
-endif
-	$(MAKE) tier_99
-
-include $(topsrcdir)/config/config.mk
 
 else # } { MOZ_STANDALONE_BUILD
 
@@ -528,8 +526,6 @@ default:: $(SUBMAKEFILES)
 
 endif # } BUILD_MODULES == all or MOZ_STANDALONE
 
-STATIC_MAKEFILES := nsprpub directory/c-sdk security/nss
-
 GARBAGE_DIRS += dist
 DIST_GARBAGE = config.cache config.log config.status config-defs.h \
    dependencies.beos config/autoconf.mk config/myrules.mk config/myconfig.mk \
@@ -541,8 +537,7 @@ DIST_GARBAGE = config.cache config.log config.status config-defs.h \
 export::
 	$(RM) -rf $(DIST)/sdk
 	$(MAKE) -C config export
-	$(MAKE) nspr
-	$(MAKE) ldap
+	$(MAKE) tier_nspr
 ifneq ($(BUILD_MODULES),all)
 ifneq (,$(findstring xpcom, $(BUILD_MODULE_DIRS)))
 	$(MAKE) -C xpcom/typelib
@@ -562,73 +557,19 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-# Clean up after pseudo-external modules
-clean clobber realclean clobber_all distclean::
-ifndef MOZ_NATIVE_NSPR
-	$(MAKE) -C nsprpub $@
-endif
-ifdef MOZ_LDAP_XPCOM
-	$(MAKE) -C directory/c-sdk $@
-endif
-
-# Map mozilla targets to standard automake target
-
-export_tier_%:
-	@echo "$@" $(if $(tier_$*_dirs),,$(error Tier $* not present))
-	@$(MAKE) $(addsuffix /Makefile,$(filter-out $(STATIC_MAKEFILES),$(tier_$*_dirs)))
-	@$(EXIT_ON_ERROR) \
-	for d in $(tier_$*_dirs); do \
-	  $(UPDATE_TITLE) \
-	  $(MAKE) -C $$d export; \
-	done
-
-libs_tier_%:
-	@echo "$@" $(if $(tier_$*_dirs),,$(error Tier $* not present))
-	@$(MAKE) $(addsuffix /Makefile,$(filter-out $(STATIC_MAKEFILES),$(tier_$*_dirs)))
-	@$(EXIT_ON_ERROR) \
-	for d in $(tier_$*_dirs); do \
-	  $(UPDATE_TITLE) \
-	  $(MAKE) -C $$d libs; \
-	done
-
-tools_tier_%:
-	@echo "$@" $(if $(tier_$*_dirs),,$(error Tier $* not present))
-	@$(MAKE) $(addsuffix /Makefile,$(filter-out $(STATIC_MAKEFILES),$(tier_$*_dirs)))
-	@$(EXIT_ON_ERROR) \
-	for d in $(tier_$*_dirs); do \
-	  $(UPDATE_TITLE) \
-	  $(MAKE) -C $$d tools; \
-	done
-
-tier_50:
-	@echo "$@: $($@_dirs)"
-	$(MAKE) export_tier_50
-	$(MAKE) libs_tier_50
+# After we build tier 50, go back and build the tools from previous dirs
+tier_50::
 	$(MAKE) tools_tier_2
 	$(MAKE) tools_tier_9
 	$(MAKE) tools_tier_50
 
-tier_%:
-	@echo "$@: $(if $($@_dirs),$($@_dirs),$(error Tier $* not present.))"
-	$(MAKE) export_$@
-	$(MAKE) libs_$@
-
-#
-# Individual modules
-#
-boehm:
-ifdef GC_LEAK_DETECTOR
-	$(MAKE) -C gc/boehm
+# Clean up after pseudo-external modules
+clean clobber realclean clobber_all distclean::
+ifneq (,$(MOZ_NATIVE_NSPR)$(LIBXUL_SDK))
+	$(MAKE) -C nsprpub $@
 endif
-
-nspr: boehm
-ifndef MOZ_NATIVE_NSPR
-	$(MAKE) -C nsprpub
-endif
-
-ldap:
 ifdef MOZ_LDAP_XPCOM
-	$(MAKE) -C directory/c-sdk
+	$(MAKE) -C directory/c-sdk $@
 endif
 
 distclean::

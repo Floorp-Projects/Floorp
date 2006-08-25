@@ -338,34 +338,16 @@ ifdef MOZ_UPDATE_XTERM
 # Its good not to have a newline at the end of the titlebar string because it
 # makes the make -s output easier to read.  Echo -n does not work on all
 # platforms, but we can trick sed into doing it.
-UPDATE_TITLE = sed -e "s!Y!$@ in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$$d!" $(MOZILLA_DIR)/config/xterm.str;
+UPDATE_TITLE = sed -e "s!Y!$@ in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$(dir)!" $(MOZILLA_DIR)/config/xterm.str;
 endif
 
-ifdef DIRS
 LOOP_OVER_DIRS = \
     @$(EXIT_ON_ERROR) \
-    for d in $(DIRS); do \
-        $(UPDATE_TITLE) \
-        $(MAKE) -C $$d $@; \
-    done
+    $(foreach dir,$(DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; )
 
-LOOP_OVER_MOZ_DIRS = \
-    @$(EXIT_ON_ERROR) \
-    for d in $(filter-out $(STATIC_MAKEFILES), $(DIRS)); do \
-        $(UPDATE_TITLE) \
-        $(MAKE) -C $$d $@; \
-    done
-
-endif
-
-ifdef TOOL_DIRS
 LOOP_OVER_TOOL_DIRS = \
     @$(EXIT_ON_ERROR) \
-    for d in $(TOOL_DIRS); do \
-	    $(UPDATE_TITLE) \
-	    $(MAKE) -C $$d $@; \
-	done
-endif
+    $(foreach dir,$(TOOL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; )
 
 #
 # Now we can differentiate between objects used to build a library, and
@@ -569,13 +551,29 @@ endif
 
 ################################################################################
 
+# SUBMAKEFILES: List of Makefiles for next level down.
+#   This is used to update or create the Makefiles before invoking them.
+SUBMAKEFILES += $(addsuffix /Makefile, $(DIRS) $(TOOL_DIRS))
+
 # The root makefile doesn't want to do a plain export/libs, because
 # of the tiers and because of libxul. Suppress the default rules in favor
 # of something else. Makefiles which use this var *must* provide a sensible
 # default rule before including rules.mk
 ifndef SUPPRESS_DEFAULT_RULES
+ifdef TIERS
 
-all:: 
+DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_dirs))
+STATIC_DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_staticdirs))
+
+default all alldep::
+	$(EXIT_ON_ERROR) \
+	$(foreach tier,$(TIERS),$(MAKE) tier_$(tier); )
+
+else
+
+default all::
+	@$(EXIT_ON_ERROR) \
+	$(foreach dir,$(STATIC_DIRS),$(MAKE) -C $(dir); )
 	$(MAKE) export
 	$(MAKE) libs
 	$(MAKE) tools
@@ -587,7 +585,31 @@ alldep::
 	$(MAKE) libs
 	$(MAKE) tools
 
+endif # TIERS
 endif # SUPPRESS_DEFAULT_RULES
+
+MAKE_TIER_SUBMAKEFILES = $(if $(tier_$*_dirs),$(MAKE) $(addsuffix /Makefile,$(tier_$*_dirs)))
+
+export_tier_%: 
+	@$(MAKE_TIER_SUBMAKEFILES)
+	@$(EXIT_ON_ERROR) \
+	$(foreach dir,$(tier_$*_dirs),$(MAKE) -C $(dir) export; )
+
+libs_tier_%:
+	@$(MAKE_TIER_SUBMAKEFILES)
+	@$(EXIT_ON_ERROR) \
+	$(foreach dir,$(tier_$*_dirs),$(MAKE) -C $(dir) libs; )
+
+tools_tier_%:
+	@$(MAKE_TIER_SUBMAKEFILES)
+	@$(EXIT_ON_ERROR) \
+	$(foreach dir,$(tier_$*_dirs),$(MAKE) -C $(dir) tools; )
+
+$(foreach tier,$(TIERS),tier_$(tier))::
+	@$(EXIT_ON_ERROR) \
+	$(foreach dir,$($@_staticdirs),$(MAKE) -C $(dir); )
+	$(MAKE) export_$@
+	$(MAKE) libs_$@
 
 # Do everything from scratch
 everything::
@@ -616,10 +638,8 @@ endif
 # Target to only regenerate makefiles
 makefiles: $(SUBMAKEFILES)
 ifneq (,$(DIRS)$(TOOL_DIRS))
-	@for d in $(TOOL_DIRS) $(filter-out $(STATIC_MAKEFILES), $(DIRS)); do\
-		$(UPDATE_TITLE) 				\
-		$(MAKE) -C $$d $@;				\
-	done
+	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_TOOL_DIRS)
 endif
 
 export:: $(SUBMAKEFILES) $(MAKE_DIRS) $(if $(EXPORTS)$(XPIDLSRCS)$(SDK_HEADERS)$(SDK_XPIDLSRCS),$(PUBLIC)) $(if $(SDK_HEADERS)$(SDK_XPIDLSRCS),$(SDK_PUBLIC)) $(if $(XPIDLSRCS),$(IDL_DIR)) $(if $(SDK_XPIDLSRCS),$(SDK_IDL_DIR))
@@ -630,10 +650,7 @@ tools:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	+$(LOOP_OVER_DIRS)
 ifdef TOOL_DIRS
 	@$(EXIT_ON_ERROR) \
-	for d in $(TOOL_DIRS); do \
-	    $(UPDATE_TITLE) \
-	    $(MAKE) -C $$d libs; \
-	done
+	$(foreach dir,$(TOOL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) libs; )
 endif
 
 #
@@ -1545,7 +1562,7 @@ JAR_MANIFEST := $(srcdir)/jar.mn
 
 chrome::
 	$(MAKE) realchrome
-	+$(LOOP_OVER_MOZ_DIRS)
+	+$(LOOP_OVER_DIRS)
 	+$(LOOP_OVER_TOOL_DIRS)
 
 libs realchrome:: $(CHROME_DEPS)
@@ -1867,7 +1884,7 @@ ifneq (,$(filter $(PROGRAM) $(HOST_PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $
 	@echo "DEPENDENT_LIBS      = $(DEPENDENT_LIBS)"
 	@echo --------------------------------------------------------------------------------
 endif
-	+$(LOOP_OVER_MOZ_DIRS)
+	+$(LOOP_OVER_DIRS)
 
 showbuild:
 	@echo "MOZ_BUILD_ROOT     = $(MOZ_BUILD_ROOT)"
@@ -1922,7 +1939,7 @@ zipmakes:
 ifneq (,$(filter $(PROGRAM) $(SIMPLE_PROGRAMS) $(LIBRARY) $(SHARED_LIBRARY),$(TARGETS)))
 	zip $(DEPTH)/makefiles $(subst $(topsrcdir),$(MOZ_SRC)/mozilla,$(srcdir)/Makefile.in)
 endif
-	+$(LOOP_OVER_MOZ_DIRS)
+	+$(LOOP_OVER_DIRS)
 
 documentation:
 	@cd $(DEPTH)
