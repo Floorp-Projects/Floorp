@@ -28,8 +28,6 @@
       <input size="64" maxlength="255" name="login" 
              id="login" value="[% otheruser.login FILTER html %]" />
       [% IF editform %]
-        <input type="hidden" name="loginold"
-               value="[% otheruser.login FILTER html %]" />
         [% IF !otheruser.groups.bz_sudo_protect %]
           <br />
           <a href="relogin.cgi?action=prepare-sudo&amp;target_login=
@@ -48,10 +46,6 @@
       <input size="64" maxlength="255" name="name"
              autocomplete="off"
              id="name" value="[% otheruser.name FILTER html %]" />
-      [% IF editform %]
-        <input type="hidden" name="nameold"
-               value="[% otheruser.name FILTER html %]" />
-      [% END %]
     [% ELSE %]
       [% otheruser.name FILTER html %]
     [% END %]
@@ -76,15 +70,6 @@
       [% IF otheruser.email_disabled %] checked="checked" [% END %] />
       (This affects bugmail and whinemail, not password-reset or other 
       non-bug-related emails)
-      [% IF editform %]
-        <input type="hidden" name="disable_mail_old"
-          [% IF otheruser.email_disabled %]
-            value="1"
-          [% ELSE %]
-            value="0" 
-          [% END %]
-        />
-      [% END %]
     </td>
   </tr>
   <tr>
@@ -101,10 +86,6 @@
        %]<br>
       (If non-empty, then the account will be disabled, and this text should
       explain why.)
-      [% IF editform %]
-        <input type="hidden" name="disabledtextold"
-               value="[% otheruser.disabledtext FILTER html %]" />
-      [% END %]
     </td>
   </tr>
 [% END %]
