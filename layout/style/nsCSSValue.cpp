@@ -126,7 +126,7 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
 {
   if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Attr)) {
     if (nsnull != aCopy.mValue.mString) {
-      mValue.mString = nsCRT::strdup(aCopy.mValue.mString);
+      mValue.mString = NS_strdup(aCopy.mValue.mString);
     }
     else {
       mValue.mString = nsnull;
@@ -179,7 +179,7 @@ PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
         }
       }
       else if (nsnull != aOther.mValue.mString) {
-        return (nsCRT::strcmp(mValue.mString, aOther.mValue.mString) == 0);
+        return (NS_strcmp(mValue.mString, aOther.mValue.mString) == 0);
       }
     }
     else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
