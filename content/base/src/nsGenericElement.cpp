@@ -3411,7 +3411,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
       mutation.mPrevAttrValue = do_GetAtom(aOldValue);
     }
     mutation.mAttrChange = modType;
-    nsEventDispatcher::Dispatch(this, nsnull, &mutation;
+    nsEventDispatcher::Dispatch(this, nsnull, &mutation);
   }
 
   if (aNotify) {
