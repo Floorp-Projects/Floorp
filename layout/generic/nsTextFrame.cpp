@@ -754,7 +754,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  void AddFrame(nsPresContext* aPresContext, nsIFrame* aFrame);
+  void AddFrame(nsIFrame* aFrame);
 
   PRBool RemoveFrame(nsIFrame* aFrame);
 
@@ -773,19 +773,8 @@ public:
   
 protected:
 
-  struct FrameData {
-    nsPresContext* mPresContext;  // pres context associated with the frame
-    nsIFrame*       mFrame;
-
-
-    FrameData(nsPresContext* aPresContext,
-              nsIFrame*       aFrame)
-      : mPresContext(aPresContext), mFrame(aFrame) {}
-  };
-
   nsCOMPtr<nsITimer> mTimer;
   nsVoidArray     mFrames;
-  nsPresContext* mPresContext;
 
 protected:
 
@@ -829,27 +818,15 @@ void nsBlinkTimer::Stop()
 
 NS_IMPL_ISUPPORTS1(nsBlinkTimer, nsITimerCallback)
 
-void nsBlinkTimer::AddFrame(nsPresContext* aPresContext, nsIFrame* aFrame) {
-  FrameData* frameData = new FrameData(aPresContext, aFrame);
-  mFrames.AppendElement(frameData);
+void nsBlinkTimer::AddFrame(nsIFrame* aFrame) {
+  mFrames.AppendElement(aFrame);
   if (1 == mFrames.Count()) {
     Start();
   }
 }
 
 PRBool nsBlinkTimer::RemoveFrame(nsIFrame* aFrame) {
-  PRInt32 i, n = mFrames.Count();
-  PRBool rv = PR_FALSE;
-  for (i = 0; i < n; i++) {
-    FrameData* frameData = (FrameData*) mFrames.ElementAt(i);
-
-    if (frameData->mFrame == aFrame) {
-      rv = mFrames.RemoveElementAt(i);
-      delete frameData;
-      break;
-    }
-  }
-  
+  PRBool rv = mFrames.RemoveElement(aFrame);
   if (0 == mFrames.Count()) {
     Stop();
   }
@@ -882,12 +859,12 @@ NS_IMETHODIMP nsBlinkTimer::Notify(nsITimer *timer)
 
   PRInt32 i, n = mFrames.Count();
   for (i = 0; i < n; i++) {
-    FrameData* frameData = (FrameData*) mFrames.ElementAt(i);
+    nsIFrame* frame = (nsIFrame*) mFrames.ElementAt(i);
 
     // Determine damaged area and tell view manager to redraw it
     // blink doesn't blink outline ... I hope
-    nsRect bounds(nsPoint(0, 0), frameData->mFrame->GetSize());
-    frameData->mFrame->Invalidate(bounds, PR_FALSE);
+    nsRect bounds(nsPoint(0, 0), frame->GetSize());
+    frame->Invalidate(bounds, PR_FALSE);
   }
   return NS_OK;
 }
@@ -904,7 +881,7 @@ nsresult nsBlinkTimer::AddBlinkFrame(nsPresContext* aPresContext, nsIFrame* aFra
   
   NS_ADDREF(sTextBlinker);
 
-  sTextBlinker->AddFrame(aPresContext, aFrame);
+  sTextBlinker->AddFrame(aFrame);
   return NS_OK;
 }
 
