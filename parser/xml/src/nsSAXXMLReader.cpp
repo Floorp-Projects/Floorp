@@ -291,13 +291,22 @@ nsSAXXMLReader::HandleXMLDeclaration(const PRUnichar *aVersion,
 NS_IMETHODIMP
 nsSAXXMLReader::ReportError(const PRUnichar* aErrorText,
                             const PRUnichar* aSourceText,
-                            PRInt32 aLineNumber,
-                            PRInt32 aColumnNumber)
+                            nsIScriptError *aError,
+                            PRBool *_retval)
 {
+  NS_PRECONDITION(aError && aSourceText && aErrorText, "Check arguments!!!");
+  // Normally, the expat driver should report the error.
+  *_retval = PR_TRUE;
+
   /// XXX need to settle what to do about the input setup, so I have
   /// coherent values for the nsISAXLocator here. nsnull for now.
-  if (mErrorHandler)
-    return mErrorHandler->FatalError(nsnull, nsDependentString(aErrorText));
+  if (mErrorHandler) {
+    nsresult rv = mErrorHandler->FatalError(nsnull, nsDependentString(aErrorText));
+    if (NS_SUCCEEDED(rv)) {
+      // The error handler has handled the script error.  Don't log to console.
+      *_retval = PR_FALSE;
+    }
+  }
 
   return NS_OK;
 }

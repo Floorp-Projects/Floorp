@@ -108,6 +108,7 @@
 #include "nsXMLContentSink.h"
 #include "nsLayoutAtoms.h"
 #include "nsIConsoleService.h"
+#include "nsIScriptError.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gLog;
@@ -998,9 +999,14 @@ XULContentSinkImpl::HandleXMLDeclaration(const PRUnichar *aVersion,
 NS_IMETHODIMP
 XULContentSinkImpl::ReportError(const PRUnichar* aErrorText, 
                                 const PRUnichar* aSourceText,
-                                PRInt32 aLineNumber,
-                                PRInt32 aColumnNumber)
+                                nsIScriptError *aError,
+                                PRBool *_retval)
 {
+  NS_PRECONDITION(aError && aSourceText && aErrorText, "Check arguments!!!");
+
+  // The expat driver should report the error.
+  *_retval = PR_TRUE;
+
   nsresult rv = NS_OK;
 
   // make sure to empty the context stack so that
@@ -1030,11 +1036,7 @@ XULContentSinkImpl::ReportError(const PRUnichar* aErrorText,
 
   nsCOMPtr<nsIXULDocument> doc = do_QueryReferent(mDocument);
   if (doc && !doc->OnDocumentParserError()) {
-    // Report the error to the error console.
-    nsCOMPtr<nsIConsoleService> consoleService =
-      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-    if (consoleService)
-      consoleService->LogStringMessage(aErrorText);
+    // The overlay was broken.  Don't add a messy element to the master doc.
     return NS_OK;
   }
 

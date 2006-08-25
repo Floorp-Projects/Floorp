@@ -95,6 +95,7 @@
 #include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsStaticAtom.h"
+#include "nsIScriptError.h"
 
 ////////////////////////////////////////////////////////////////////////
 // XPCOM IIDs
@@ -592,9 +593,13 @@ RDFContentSinkImpl::HandleXMLDeclaration(const PRUnichar *aVersion,
 NS_IMETHODIMP
 RDFContentSinkImpl::ReportError(const PRUnichar* aErrorText, 
                                 const PRUnichar* aSourceText,
-                                PRInt32 aLineNumber,
-                                PRInt32 aColumnNumber)
+                                nsIScriptError *aError,
+                                PRBool *_retval)
 {
+  NS_PRECONDITION(aError && aSourceText && aErrorText, "Check arguments!!!");
+
+  // The expat driver should report the error.
+  *_retval = PR_TRUE;
   return NS_OK;
 }
 
