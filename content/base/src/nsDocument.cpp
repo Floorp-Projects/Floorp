@@ -4347,8 +4347,7 @@ nsDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =
     nsEventDispatcher::DispatchDOMEvent(NS_STATIC_CAST(nsINode*, this),
-                                        nsnull, aEvent, context, &status,
-                                        PR_FALSE);
+                                        nsnull, aEvent, context, &status);
 
   *_retval = (status != nsEventStatus_eConsumeNoDefault);
   return rv;
