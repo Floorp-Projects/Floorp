@@ -4347,7 +4347,8 @@ nsDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =
     nsEventDispatcher::DispatchDOMEvent(NS_STATIC_CAST(nsINode*, this),
-                                        nsnull, aEvent, context, &status);
+                                        nsnull, aEvent, context, &status,
+                                        PR_FALSE);
 
   *_retval = (status != nsEventStatus_eConsumeNoDefault);
   return rv;
@@ -5151,6 +5152,8 @@ nsDocument::Destroy()
   }
 
   mLayoutHistoryState = nsnull;
+
+  nsContentList::OnDocumentDestroy(this);
 }
 
 already_AddRefed<nsILayoutHistoryState>

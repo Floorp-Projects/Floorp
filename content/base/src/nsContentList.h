@@ -45,7 +45,7 @@
 #define nsContentList_h___
 
 #include "nsISupports.h"
-#include "nsVoidArray.h"
+#include "nsCOMArray.h"
 #include "nsString.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMNodeList.h"
@@ -89,7 +89,7 @@ public:
   static void Shutdown();
 
 protected:
-  nsAutoVoidArray mElements;
+  nsCOMArray<nsIContent> mElements;
 };
 
 
@@ -101,12 +101,6 @@ class nsFormContentList : public nsBaseContentList
 public:
   nsFormContentList(nsIDOMHTMLFormElement *aForm,
                     nsBaseContentList& aContentList);
-  virtual ~nsFormContentList();
-
-  virtual void AppendElement(nsIContent *aContent);
-  virtual void RemoveElement(nsIContent *aContent);
-
-  virtual void Reset();
 };
 
 /**
@@ -235,6 +229,8 @@ public:
   virtual void ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
                               nsIContent* aChild, PRInt32 aIndexInContainer);
   virtual void NodeWillBeDestroyed(const nsINode *aNode);
+
+  static void OnDocumentDestroy(nsIDocument *aDocument);
 
 protected:
   /**

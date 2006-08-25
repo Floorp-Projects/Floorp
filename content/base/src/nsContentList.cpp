@@ -77,8 +77,6 @@ nsBaseContentList::nsBaseContentList()
 
 nsBaseContentList::~nsBaseContentList()
 {
-  // mElements only has weak references to the content objects so we
-  // don't need to do any cleanup here.
 }
 
 
@@ -105,8 +103,8 @@ nsBaseContentList::GetLength(PRUint32* aLength)
 NS_IMETHODIMP
 nsBaseContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
-  nsISupports *tmp = NS_REINTERPRET_CAST(nsISupports *,
-                                         mElements.SafeElementAt(aIndex));
+  nsISupports *tmp = mElements.SafeObjectAt(aIndex);
+
   if (!tmp) {
     *aReturn = nsnull;
 
@@ -119,15 +117,13 @@ nsBaseContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 void
 nsBaseContentList::AppendElement(nsIContent *aContent)
 {
-  // Shouldn't hold a reference since we'll be told when the content
-  // leaves the root or the root will be destroyed.
-  mElements.AppendElement(aContent);
+  mElements.AppendObject(aContent);
 }
 
 void
 nsBaseContentList::RemoveElement(nsIContent *aContent)
 {
-  mElements.RemoveElement(aContent);
+  mElements.RemoveObject(aContent);
 }
 
 PRInt32
@@ -173,47 +169,6 @@ nsFormContentList::nsFormContentList(nsIDOMHTMLFormElement *aForm,
       AppendElement(c);
     }
   }
-}
-
-nsFormContentList::~nsFormContentList()
-{
-  Reset();
-}
-
-void
-nsFormContentList::AppendElement(nsIContent *aContent)
-{
-  NS_ADDREF(aContent);
-
-  nsBaseContentList::AppendElement(aContent);
-}
-
-void
-nsFormContentList::RemoveElement(nsIContent *aContent)
-{
-  PRInt32 i = mElements.IndexOf(aContent);
-
-  if (i >= 0) {
-    nsIContent *content = NS_STATIC_CAST(nsIContent *, mElements.ElementAt(i));
-
-    NS_RELEASE(content);
-
-    mElements.RemoveElementAt(i);
-  }
-}
-
-void
-nsFormContentList::Reset()
-{
-  PRInt32 i, length = mElements.Count();
-
-  for (i = 0; i < length; i++) {
-    nsIContent *content = NS_STATIC_CAST(nsIContent *, mElements.ElementAt(i));
-
-    NS_RELEASE(content);
-  }
-
-  nsBaseContentList::Reset();
 }
 
 // Hashtable for storing nsContentLists
@@ -439,7 +394,7 @@ nsContentList::Item(PRUint32 aIndex, PRBool aDoFlush)
   NS_ASSERTION(!mRootNode || mState != LIST_DIRTY,
                "PopulateSelf left the list in a dirty (useless) state!");
 
-  return NS_STATIC_CAST(nsIContent *, mElements.SafeElementAt(aIndex));
+  return mElements.SafeObjectAt(aIndex);
 }
 
 nsIContent *
@@ -454,8 +409,7 @@ nsContentList::NamedItem(const nsAString& aName, PRBool aDoFlush)
   NS_ENSURE_TRUE(name, nsnull);
 
   for (i = 0; i < count; i++) {
-    nsIContent *content = NS_STATIC_CAST(nsIContent *,
-                                         mElements.ElementAt(i));
+    nsIContent *content = mElements[i];
     // XXX Should this pass eIgnoreCase?
     if (content &&
         (content->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::name,
@@ -492,6 +446,21 @@ nsContentList::NodeWillBeDestroyed(const nsINode* aNode)
   // Call Reset() to prevent getting bogus (or eveng dangling) items since
   // PopulateSelf() will be a no-op after mRootNode was nulled out above
   Reset();
+}
+
+// static
+void
+nsContentList::OnDocumentDestroy(nsIDocument *aDocument)
+{
+  // If our content list cache holds a list used for a document that's
+  // now being destroyed, free the cache to prevent the list from
+  // staying around until the next use of content lists ends up
+  // replacing what's in the cache.
+
+  if (gCachedContentList && gCachedContentList->mRootNode &&
+      gCachedContentList->mRootNode->GetOwnerDoc() == aDocument) {
+    NS_RELEASE(gCachedContentList);
+  }
 }
 
 NS_IMETHODIMP
@@ -553,10 +522,11 @@ nsContentList::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
       mState = LIST_DIRTY;
     }
   } else {
-    // We no longer match aContent.  Remove it from our list.  If
-    // it's already not there, this is a no-op, which is fine.
-    // Either way, no change of mState is required here.
-    mElements.RemoveElement(aContent);
+    // We no longer match aContent.  Remove it from our list.  If it's
+    // already not there, this is a no-op (though a potentially
+    // expensive one).  Either way, no change of mState is required
+    // here.
+    mElements.RemoveObject(aContent);
   }
 }
 
@@ -593,8 +563,7 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
     if (ourCount == 0) {
       appendToList = PR_TRUE;
     } else {
-      nsIContent* ourLastContent =
-        NS_STATIC_CAST(nsIContent*, mElements.ElementAt(ourCount - 1));
+      nsIContent* ourLastContent = mElements[ourCount - 1];
       /*
        * We want to append instead of invalidating if the first thing
        * that got appended comes after ourLastContent.
@@ -748,7 +717,7 @@ nsContentList::PopulateWith(nsIContent *aContent, PRUint32& aElementsToAppend)
                   "We should never be trying to match mRootNode");
 
   if (Match(aContent)) {
-    mElements.AppendElement(aContent);
+    mElements.AppendObject(aContent);
     --aElementsToAppend;
     if (aElementsToAppend == 0)
       return;
@@ -838,8 +807,7 @@ nsContentList::PopulateSelf(PRUint32 aNeededLength)
 
   // If we already have nodes start searching at the last one, otherwise
   // start searching at the root.
-  nsINode* startRoot = count == 0 ? mRootNode :
-    NS_STATIC_CAST(nsIContent*, mElements.ElementAt(count - 1));
+  nsINode* startRoot = count == 0 ? mRootNode : mElements[count - 1];
 
   PopulateWithStartingAfter(startRoot, nsnull, elementsToAppend);
   NS_ASSERTION(elementsToAppend + mElements.Count() == invariant,
