@@ -2886,7 +2886,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_ANYNAME:
-                todo = SprintPut(&ss->sprinter, "*", 1);
+                if (pc[JSOP_ANYNAME_LENGTH] == JSOP_TOATTRNAME) {
+                    len += JSOP_TOATTRNAME_LENGTH;
+                    todo = SprintPut(&ss->sprinter, "@*", 2);
+                } else {
+                    todo = SprintPut(&ss->sprinter, "*", 1);
+                }
                 break;
 
               BEGIN_LITOPX_CASE(JSOP_QNAMEPART)
