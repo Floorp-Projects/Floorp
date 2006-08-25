@@ -60,17 +60,8 @@ unless ($createexp) {
 my $login = $cgi->param('login');
 
 if (defined($login)) {
-    validate_email_syntax($login)
-      || ThrowUserError('illegal_email_address', {addr => $login});
-
+    $login = Bugzilla::User::check_login_name_for_creation($login);
     $vars->{'login'} = $login;
-
-    if (!is_available_username($login)) {
-        # Account already exists
-        $template->process("account/exists.html.tmpl", $vars)
-          || ThrowTemplateError($template->error());
-        exit;
-    }
 
     if ($login !~ /$createexp/) {
         ThrowUserError("account_creation_disabled");

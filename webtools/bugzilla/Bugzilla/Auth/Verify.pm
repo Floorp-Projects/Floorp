@@ -77,8 +77,13 @@ sub create_or_update_user {
               || return { failure => AUTH_ERROR, 
                           error   => 'auth_invalid_email',
                           details => {addr => $username} };
-            insert_new_user($username, $real_name, $password);
-            $username_user_id = login_to_id($username);
+            # XXX Theoretically this could fail with an error, but the fix for
+            # that is too involved to be done right now.
+            my $user = Bugzilla::User->create({ 
+                login_name    => $username, 
+                cryptpassword => $password,
+                realname      => $real_name});
+            $username_user_id = $user->id;
         }
 
         # If we have a valid username id and an extern_id, but no valid

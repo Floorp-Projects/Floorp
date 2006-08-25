@@ -369,31 +369,13 @@ sub request_create_account {
 sub confirm_create_account {
     my (undef, undef, $login_name) = Bugzilla::Token::GetTokenData($::token);
 
-    (defined $cgi->param('passwd1') && defined $cgi->param('passwd2'))
-      || ThrowUserError('new_password_missing');
-    validate_password($cgi->param('passwd1'), $cgi->param('passwd2'));
+    validate_password($cgi->param('passwd1') || '', 
+                      $cgi->param('passwd2') || '');
 
-    my $realname = $cgi->param('realname');
-    my $password = $cgi->param('passwd1');
-
-    $dbh->bz_lock_tables('profiles WRITE', 'profiles_activity WRITE',
-                         'email_setting WRITE', 'user_group_map WRITE',
-                         'groups READ', 'tokens READ', 'fielddefs READ');
-
-    # The email syntax may have changed since the initial creation request.
-    validate_email_syntax($login_name)
-      || ThrowUserError('illegal_email_address', {addr => $login_name});
-    # Also, maybe that this user account has already been created meanwhile.
-    is_available_username($login_name)
-      || ThrowUserError('account_exists', {email => $login_name});
-
-    # Login and password are validated now, and realname is allowed to
-    # contain anything.
-    trick_taint($realname);
-    trick_taint($password);
-
-    my $otheruser = insert_new_user($login_name, $realname, $password);
-    $dbh->bz_unlock_tables();
+    my $otheruser = Bugzilla::User->create({
+        login_name => $login_name, 
+        realname   => $cgi->param('realname'), 
+        cryptpassword => $cgi->param('passwd1')});
 
     # Now delete this token.
     Bugzilla::Token::DeleteToken($::token);

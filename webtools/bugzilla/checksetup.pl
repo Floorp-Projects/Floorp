@@ -326,7 +326,6 @@ import Bugzilla::Util qw(bz_crypt trim html_quote is_7bit_clean
                          clean_text url_quote);
 
 require Bugzilla::User;
-import Bugzilla::User qw(insert_new_user);
 
 require Bugzilla::Bug;
 import Bugzilla::Bug qw(is_open_state);
@@ -756,7 +755,10 @@ if ($sth->rows == 0) {
         $SIG{QUIT} = 'DEFAULT';
         $SIG{TERM} = 'DEFAULT';
 
-        insert_new_user($login, $realname, $pass1);
+        Bugzilla::User->create({
+            login_name => $login, 
+            realname   => $realname, 
+            cryptpassword => $pass1});
     }
 
     # Put the admin in each group if not already    

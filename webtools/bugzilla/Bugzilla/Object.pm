@@ -153,7 +153,7 @@ sub create {
     chop($qmarks);
     $dbh->do("INSERT INTO $table (" . join(', ', @field_names) 
              . ") VALUES ($qmarks)", undef, @values);
-    my $id = $dbh->bz_last_key($table, 'id');
+    my $id = $dbh->bz_last_key($table, $class->ID_FIELD);
 
     return $class->new($id);
 }
@@ -303,7 +303,7 @@ Params:      C<$params> - hashref - A value to put in each database
 Returns:     The Object just created in the database.
 
 Notes:       In order for this function to work in your subclass,
-             your subclass's C<id> field must be of C<SERIAL>
+             your subclass's L</ID_FIELD> must be of C<SERIAL>
              type in the database. Your subclass also must
              define L</REQUIRED_CREATE_FIELDS> and L</VALIDATORS>.
 

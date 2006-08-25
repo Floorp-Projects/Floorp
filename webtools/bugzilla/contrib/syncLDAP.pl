@@ -273,7 +273,10 @@ if($readonly == 0) {
    print "Phase 3: creating new users... " unless $quiet;
    if($nocreate == 0) {
       while( my ($key, $value) = each(%create_users) ) {
-        insert_new_user($key, @$value{'realname'});
+        Bugzilla::User->create({
+            login_name => $key, 
+            realname   => @$value{'realname'},
+            password   => '*'});
       }
       print "done!\n" unless $quiet;
    }

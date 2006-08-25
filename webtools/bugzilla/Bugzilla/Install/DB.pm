@@ -485,6 +485,12 @@ sub update_table_definitions {
         $dbh->bz_add_index('bugs', 'bugs_short_desc_idx', [qw(short_desc)]);
     }
 
+    # The profiles table was missing some defaults.
+    $dbh->bz_alter_column('profiles', 'disabledtext',
+        {TYPE => 'MEDIUMTEXT', NOTNULL => 1, DEFAULT => "''"});
+    $dbh->bz_alter_column('profiles', 'realname',
+        {TYPE => 'varchar(255)', NOTNULL => 1, DEFAULT => "''"});
+
     ################################################################
     # New --TABLE-- changes should go *** A B O V E *** this point #
     ################################################################

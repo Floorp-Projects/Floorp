@@ -191,36 +191,14 @@ if ($action eq 'search') {
                                                   action => "add",
                                                   object => "users"});
 
-    my $login        = $cgi->param('login');
-    my $password     = $cgi->param('password');
-    my $realname     = trim($cgi->param('name')         || '');
-    my $disabledtext = trim($cgi->param('disabledtext') || '');
-    my $disable_mail = $cgi->param('disable_mail') ? 1 : 0;
+    my $new_user = Bugzilla::User->create({
+        login_name    => $cgi->param('login'),
+        cryptpassword => $cgi->param('password'),
+        realname      => $cgi->param('name'),
+        disabledtext  => $cgi->param('disabledtext'),
+        disable_mail  => $cgi->param('disable_mail')});
 
-    # Lock tables during the check+creation session.
-    $dbh->bz_lock_tables('profiles WRITE', 'profiles_activity WRITE',
-                         'email_setting WRITE', 'user_group_map WRITE',
-                         'groups READ', 'tokens READ', 'fielddefs READ');
-
-    # Validity checks
-    $login || ThrowUserError('user_login_required');
-    validate_email_syntax($login)
-      || ThrowUserError('illegal_email_address', {addr => $login});
-    is_available_username($login)
-      || ThrowUserError('account_exists', {email => $login});
-    validate_password($password);
-
-    # Login and password are validated now, and realname and disabledtext
-    # are allowed to contain anything
-    trick_taint($login);
-    trick_taint($realname);
-    trick_taint($password);
-    trick_taint($disabledtext);
-
-    insert_new_user($login, $realname, $password, $disabledtext, $disable_mail);
-    my $new_user_id = $dbh->bz_last_key('profiles', 'userid');
-    $dbh->bz_unlock_tables();
-    userDataToVars($new_user_id);
+    userDataToVars($new_user->id);
 
     $vars->{'message'} = 'account_created';
     $template->process('admin/users/edit.html.tmpl', $vars)

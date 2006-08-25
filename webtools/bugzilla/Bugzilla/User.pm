@@ -49,7 +49,7 @@ use Bugzilla::Classification;
 use Bugzilla::Field;
 
 use base qw(Bugzilla::Object Exporter);
-@Bugzilla::User::EXPORT = qw(insert_new_user is_available_username
+@Bugzilla::User::EXPORT = qw(is_available_username
     login_to_id user_id_to_login validate_password
     UserInGroup
     USER_MATCH_MULTIPLE USER_MATCH_FAILED USER_MATCH_SUCCESS
@@ -92,6 +92,16 @@ use constant DB_COLUMNS => (
 use constant NAME_FIELD => 'login_name';
 use constant ID_FIELD   => 'userid';
 
+use constant REQUIRED_CREATE_FIELDS => qw(login_name cryptpassword);
+
+use constant VALIDATORS => {
+    cryptpassword => \&_check_password,
+    disable_mail  => \&_check_disable_mail,
+    disabledtext  => \&_check_disabledtext,
+    login_name    => \&check_login_name_for_creation,
+    realname      => \&_check_realname,
+};
+
 ################################################################################
 # Functions
 ################################################################################
@@ -107,6 +117,45 @@ sub new {
 
     return $class->SUPER::new(@_);
 }
+
+################################################################################
+# Validators
+################################################################################
+
+sub _check_disable_mail { return $_[0] ? 1 : 0; }
+sub _check_disabledtext { return trim($_[0]) || ''; }
+
+# This is public since createaccount.cgi needs to use it before issuing
+# a token for account creation.
+sub check_login_name_for_creation {
+    my ($name) = @_;
+    $name = trim($name);
+    $name || ThrowUserError('user_login_required');
+    validate_email_syntax($name)
+        || ThrowUserError('illegal_email_address', { addr => $name });
+    is_available_username($name) 
+        || ThrowUserError('account_exists', { email => $name });
+    return $name;
+}
+
+sub _check_password {
+    my ($pass) = @_;
+
+    # If the password is '*', do not encrypt it or validate it further--we 
+    # are creating a user who should not be able to log in using DB 
+    # authentication.
+    return $pass if $pass eq '*';
+
+    validate_password($pass);
+    my $cryptpassword = bz_crypt($pass);
+    return $cryptpassword;
+}
+
+sub _check_realname { return trim($_[0]) || ''; }
+
+################################################################################
+# Methods
+################################################################################
 
 # Accessors for user attributes
 sub login { $_[0]->{login}; }
@@ -1292,36 +1341,18 @@ sub get_userlist {
     return $self->{'userlist'};
 }
 
-sub insert_new_user {
-    my ($username, $realname, $password, $disabledtext, $disable_mail) = (@_);
+sub create {
+    my $invocant = shift;
+    my $class = ref($invocant) || $invocant;
     my $dbh = Bugzilla->dbh;
 
-    $disabledtext ||= '';
-    $disable_mail ||= 0;
+    $dbh->bz_lock_tables('profiles WRITE', 'profiles_activity WRITE',
+        'user_group_map WRITE', 'email_setting WRITE', 'groups READ', 
+        'tokens READ', 'fielddefs READ');
 
-    # If not specified, generate a new random password for the user.
-    # If the password is '*', do not encrypt it; we are creating a user
-    # based on the ENV auth method.
-    $password ||= generate_random_password();
-    my $cryptpassword = ($password ne '*') ? bz_crypt($password) : $password;
-
-    # XXX - These should be moved into is_available_username or validate_email_syntax
-    #       At the least, they shouldn't be here. They're safe for now, though.
-    trick_taint($username);
-    trick_taint($realname);
-
-    # Insert the new user record into the database.
-    $dbh->do("INSERT INTO profiles 
-                          (login_name, realname, cryptpassword, disabledtext,
-                           disable_mail) 
-                   VALUES (?, ?, ?, ?, ?)",
-             undef, 
-             ($username, $realname, $cryptpassword, $disabledtext, 
-              $disable_mail));
+    my $user = $class->SUPER::create(@_);
 
     # Turn on all email for the new user
-    my $new_userid = $dbh->bz_last_key('profiles', 'userid');
-
     foreach my $rel (RELATIONSHIPS) {
         foreach my $event (POS_EVENTS, NEG_EVENTS) {
             # These "exceptions" define the default email preferences.
@@ -1332,16 +1363,15 @@ sub insert_new_user {
             next if (($event == EVT_CC) && ($rel != REL_REPORTER));
 
             $dbh->do('INSERT INTO email_setting (user_id, relationship, event)
-                      VALUES (?, ?, ?)', undef, ($new_userid, $rel, $event));
+                      VALUES (?, ?, ?)', undef, ($user->id, $rel, $event));
         }
     }
 
     foreach my $event (GLOBAL_EVENTS) {
         $dbh->do('INSERT INTO email_setting (user_id, relationship, event)
-                  VALUES (?, ?, ?)', undef, ($new_userid, REL_ANY, $event));
+                  VALUES (?, ?, ?)', undef, ($user->id, REL_ANY, $event));
     }
 
-    my $user = new Bugzilla::User($new_userid);
     $user->derive_regexp_groups();
 
     # Add the creation date to the profiles_activity table.
@@ -1354,6 +1384,8 @@ sub insert_new_user {
                           (userid, who, profiles_when, fieldid, newvalue)
                    VALUES (?, ?, NOW(), ?, NOW())',
                    undef, ($user->id, $who, $creation_date_fieldid));
+
+    $dbh->bz_unlock_tables();
 
     # Return the newly created user account.
     return $user;
@@ -1461,7 +1493,12 @@ Bugzilla::User - Object for a Bugzilla user
       $user->get_selectable_classifications;
 
   # Class Functions
-  $user = insert_new_user($username, $realname, $password, $disabledtext);
+  $user = Bugzilla::User->create({ 
+      login_name    => $username, 
+      realname      => $realname, 
+      cryptpassword => $plaintext_password, 
+      disabledtext  => $disabledtext,
+      disable_mail  => 0});
 
 =head1 DESCRIPTION
 
@@ -1797,27 +1834,21 @@ called "statically," just like a normal procedural function.
 
 =over 4
 
-=item C<insert_new_user>
+=item C<create>
 
-Creates a new user in the database.
+The same as L<Bugzilla::Object/create>.
 
-Params: $username (scalar, string) - The login name for the new user.
-        $realname (scalar, string) - The full name for the new user.
-        $password (scalar, string) - Optional. The password for the new user;
-                                     if not given, a random password will be
-                                     generated.
-        $disabledtext (scalar, string) - Optional. The disable text for the new
-                                         user; if not given, it will be empty.
-                                         If given, the user will be disabled,
-                                         meaning the account will be
-                                         unavailable for login.
-        $disable_mail (scalar, boolean) - Optional, defaults to 0.
-                                          If 1, bug-related mail will not be 
-                                          sent to this user; if 0, mail will
-                                          be sent depending on the user's 
-                                          email preferences.
-
-Returns: The Bugzilla::User object representing the new user account.
+Params: login_name - B<Required> The login name for the new user.
+        realname - The full name for the new user.
+        cryptpassword  - B<Required> The password for the new user.
+            Even though the name says "crypt", you should just specify
+            a plain-text password. If you specify '*', the user will not
+            be able to log in using DB authentication.
+        disabledtext - The disable-text for the new user. If given, the user 
+            will be disabled, meaning he cannot log in. Defaults to an
+            empty string.
+        disable_mail - If 1, bug-related mail will not be  sent to this user; 
+            if 0, mail will be sent depending on the user's  email preferences.
 
 =item C<is_available_username>
 
