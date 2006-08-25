@@ -52,6 +52,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsDOMError.h"
 #include "nsIConsoleService.h"
+#include "nsIScriptError.h"
 #include "nsServiceManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
@@ -83,8 +84,8 @@ public:
                                   PRInt32 aStandalone);
   NS_IMETHOD ReportError(const PRUnichar* aErrorText, 
                          const PRUnichar* aSourceText,
-                         PRInt32 aLineNumber,
-                         PRInt32 aColumnNumber);
+                         nsIScriptError *aError,
+                         PRBool *_retval);
 
   // nsIContentSink
   NS_IMETHOD WillBuildModel(void);
@@ -314,17 +315,15 @@ nsXMLFragmentContentSink::HandleXMLDeclaration(const PRUnichar *aVersion,
 NS_IMETHODIMP
 nsXMLFragmentContentSink::ReportError(const PRUnichar* aErrorText, 
                                       const PRUnichar* aSourceText,
-                                      PRInt32 aLineNumber,
-                                      PRInt32 aColumnNumber)
+                                      nsIScriptError *aError,
+                                      PRBool *_retval)
 {
-  mParseError = PR_TRUE;
-  // The following error reporting is copied from nsXBLContentSink::ReportError()
+  NS_PRECONDITION(aError && aSourceText && aErrorText, "Check arguments!!!");
 
-  nsCOMPtr<nsIConsoleService> consoleService =
-    do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-  if (consoleService) {
-    consoleService->LogStringMessage(aErrorText);
-  }
+  // The expat driver should report the error.
+  *_retval = PR_TRUE;
+
+  mParseError = PR_TRUE;
 
 #ifdef DEBUG
   // Report the error to stderr.

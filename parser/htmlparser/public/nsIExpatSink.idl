@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+interface nsIScriptError;
 
 /**
  * This interface should be implemented by any content sink that wants
@@ -43,7 +44,7 @@
  * by any sink that handles some sort of XML dialect.
  */
 
-[scriptable, uuid(34CB3B34-7F15-4971-B262-370CE61ADE4D)]
+[scriptable, uuid(f61c56b5-ea5b-42b4-ad3c-17416e72e238)]
 interface nsIExpatSink : nsISupports 
 {
   /**
@@ -129,8 +130,16 @@ interface nsIExpatSink : nsISupports
                             in wstring aEncoding,
                             in long aStandalone);
 
-  void ReportError(in wstring aErrorText,
-                   in wstring aSourceText,
-                   in long aLineNumber,
-                   in long aColumnNumber);
+  /**
+   * Ask the content sink if the expat driver should log an error to the console.
+   *
+   * @param aErrorText  Error message to pass to content sink.
+   * @param aSourceText Source text of the document we're parsing.
+   * @param aError      Script error object with line number & column number
+   *
+   * @retval True if the expat driver should report the error.
+   */
+  boolean ReportError(in wstring aErrorText,
+                      in wstring aSourceText,
+                      in nsIScriptError aError);
 }; 

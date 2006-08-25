@@ -67,6 +67,7 @@
 #include "txStylesheetCompiler.h"
 #include "txXMLUtils.h"
 #include "nsAttrName.h"
+#include "nsIScriptError.h"
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
@@ -233,9 +234,14 @@ txStylesheetSink::HandleXMLDeclaration(const PRUnichar *aVersion,
 NS_IMETHODIMP
 txStylesheetSink::ReportError(const PRUnichar *aErrorText,
                               const PRUnichar *aSourceText,
-                              PRInt32 aLineNumber,
-                              PRInt32 aColumnNumber)
+                              nsIScriptError *aError,
+                              PRBool *_retval)
 {
+    NS_PRECONDITION(aError && aSourceText && aErrorText, "Check arguments!!!");
+
+    // The expat driver should report the error.
+    *_retval = PR_TRUE;
+
     mCompiler->cancel(NS_ERROR_FAILURE, aErrorText, aSourceText);
 
     return NS_OK;

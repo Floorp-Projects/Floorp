@@ -1279,10 +1279,14 @@ nsXMLContentSink::HandleXMLDeclaration(const PRUnichar *aVersion,
 NS_IMETHODIMP
 nsXMLContentSink::ReportError(const PRUnichar* aErrorText, 
                               const PRUnichar* aSourceText,
-                              PRInt32 aLineNumber,
-                              PRInt32 aColumnNumber)
+                              nsIScriptError *aError,
+                              PRBool *_retval)
 {
+  NS_PRECONDITION(aError && aSourceText && aErrorText, "Check arguments!!!");
   nsresult rv = NS_OK;
+
+  // The expat driver should report the error.  We're just cleaning up the mess.
+  *_retval = PR_TRUE;
   
   mPrettyPrintXML = PR_FALSE;
 

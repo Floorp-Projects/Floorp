@@ -204,26 +204,18 @@ nsXBLContentSink::FlushText(PRBool aCreateTextNode,
 NS_IMETHODIMP
 nsXBLContentSink::ReportError(const PRUnichar* aErrorText, 
                               const PRUnichar* aSourceText,
-                              PRInt32 aLineNumber,
-                              PRInt32 aColumnNumber)
+                              nsIScriptError *aError,
+                              PRBool *_retval)
 {
+  NS_PRECONDITION(aError && aSourceText && aErrorText, "Check arguments!!!");
+
+  // XXX FIXME This function overrides and calls on
+  // nsXMLContentSink::ReportError, and probably should die.  See bug 347826.
+
   // XXX We should make sure the binding has no effect, but that it also
   // gets destroyed properly without leaking.  Perhaps we should even
   // ensure that the content that was bound is displayed with no
   // binding.
-
-  // Report the error to the error console.
-  nsCOMPtr<nsIConsoleService> consoleService =
-    do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-  if (consoleService) {
-    // XXX It would be nice if the parser didn't pre-format it for us,
-    // because then we could create a instance of nsIScriptError and the
-    // error console would format this much more nicely for us.
-    // However, that would require duplicating even more code between
-    // the XML content sink and the XUL content sink.
-
-    consoleService->LogStringMessage(aErrorText);
-  }
 
 #ifdef DEBUG
   // Report the error to stderr.
@@ -234,10 +226,11 @@ nsXBLContentSink::ReportError(const PRUnichar* aErrorText,
 #endif
 
   // Most of what this does won't be too useful, but whatever...
+  // nsXMLContentSink::ReportError will handle the console logging.
   return nsXMLContentSink::ReportError(aErrorText, 
                                        aSourceText, 
-                                       aLineNumber,
-                                       aColumnNumber);
+                                       aError,
+                                       _retval);
 }
 
 nsresult

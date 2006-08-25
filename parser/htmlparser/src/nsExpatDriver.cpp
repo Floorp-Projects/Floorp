@@ -911,27 +911,41 @@ nsExpatDriver::HandleError()
   CreateErrorText(description.get(), XML_GetBase(mExpatParser), lineNumber,
                   colNumber, errorText);
 
-  nsCOMPtr<nsIConsoleService> cs
-    (do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-  nsCOMPtr<nsIScriptError> serr(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
-  if (serr && cs) {
-    if (NS_SUCCEEDED(serr->Init(description.get(),
-                                mURISpec.get(),
-                                mLastLine.get(),
-                                lineNumber, colNumber,
-                                nsIScriptError::errorFlag, "malformed-xml")))
-      cs->LogMessage(serr);
-  }
+  NS_ASSERTION(mSink, "no sink?");
 
   nsAutoString sourceText(mLastLine);
   AppendErrorPointer(colNumber, mLastLine.get(), sourceText);
 
-  NS_ASSERTION(mSink, "no sink?");
-  if (mSink) {
-    mSink->ReportError(errorText.get(), 
-                       sourceText.get(), 
-                       lineNumber, 
-                       colNumber);
+  // Try to create and initialize the script error.
+  nsCOMPtr<nsIScriptError> serr(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
+  nsresult rv = NS_ERROR_FAILURE;
+  if (serr) {
+    rv = serr->Init(description.get(),
+                    mURISpec.get(),
+                    mLastLine.get(),
+                    lineNumber, colNumber,
+                    nsIScriptError::errorFlag, "malformed-xml");
+  }
+
+  // If it didn't initialize, we can't do any logging.
+  PRBool shouldReportError = NS_SUCCEEDED(rv);
+
+  if (mSink && shouldReportError) {
+    rv = mSink->ReportError(errorText.get(), 
+                            sourceText.get(), 
+                            serr, 
+                            &shouldReportError);
+    if (NS_FAILED(rv)) {
+      shouldReportError = PR_TRUE;
+    }
+  }
+
+  if (shouldReportError) {
+    nsCOMPtr<nsIConsoleService> cs
+      (do_GetService(NS_CONSOLESERVICE_CONTRACTID));  
+    if (cs) {
+      cs->LogMessage(serr);
+    }
   }
 
   return NS_ERROR_HTMLPARSER_STOPPARSING;
