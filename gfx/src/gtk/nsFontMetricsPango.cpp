@@ -823,40 +823,33 @@ nsFontMetricsPango::GetBoundingMetrics(const PRUnichar *aString,
         NS_WARNING("nsFontMetricsPango::GetBoundingMetrics invalid unicode to follow");
         DUMP_PRUNICHAR(aString, aLength)
 #endif
-        aBoundingMetrics.leftBearing = 0;
-        aBoundingMetrics.rightBearing = 0;
-        aBoundingMetrics.width = 0;
-        aBoundingMetrics.ascent = 0;
-        aBoundingMetrics.descent = 0;
+        aBoundingMetrics.Clear();
 
         rv = NS_ERROR_FAILURE;
         goto loser;
     }
 
-    pango_layout_set_text(layout, text, strlen(text));
+    pango_layout_set_text(layout, text, -1);
     FixupSpaceWidths(layout, text);
 
-    // Get the logical extents
     PangoLayoutLine *line;
     if (pango_layout_get_line_count(layout) != 1) {
         printf("Warning: more than one line!\n");
     }
     line = pango_layout_get_line(layout, 0);
 
-    // Get the ink extents
-    PangoRectangle rect;
-    pango_layout_line_get_extents(line, NULL, &rect);
+    // Get the ink and logical extents
+    PangoRectangle ink, logical;
+    pango_layout_line_get_extents(line, &ink, &logical);
 
     float P2T;
     P2T = mDeviceContext->DevUnitsToAppUnits();
 
-    aBoundingMetrics.leftBearing =
-        NSToCoordRound(rect.x * P2T / PANGO_SCALE);
-    aBoundingMetrics.rightBearing =
-        NSToCoordRound(rect.width * P2T / PANGO_SCALE);
-    aBoundingMetrics.width = NSToCoordRound((rect.x + rect.width) * P2T / PANGO_SCALE);
-    aBoundingMetrics.ascent = NSToCoordRound(rect.y * P2T / PANGO_SCALE);
-    aBoundingMetrics.descent = NSToCoordRound(rect.height * P2T / PANGO_SCALE);
+    aBoundingMetrics.leftBearing  = NSToCoordRound(PANGO_LBEARING(ink) * P2T / PANGO_SCALE);
+    aBoundingMetrics.rightBearing = NSToCoordRound(PANGO_RBEARING(ink) * P2T / PANGO_SCALE);
+    aBoundingMetrics.ascent       = NSToCoordRound(PANGO_ASCENT(ink)   * P2T / PANGO_SCALE);
+    aBoundingMetrics.descent      = NSToCoordRound(PANGO_DESCENT(ink)  * P2T / PANGO_SCALE);
+    aBoundingMetrics.width        = NSToCoordRound(logical.width       * P2T / PANGO_SCALE);
 
  loser:
     g_free(text);
