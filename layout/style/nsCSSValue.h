@@ -42,13 +42,13 @@
 
 #include "nsColor.h"
 #include "nsString.h"
-#include "nsCRT.h"
 #include "nsCoord.h"
 #include "nsCSSProperty.h"
 #include "nsUnitConversion.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
+#include "nsCRTGlue.h"
 
 class imgIRequest;
 class nsIDocument;
@@ -252,7 +252,7 @@ public:
   {
     if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Attr) &&
         (nsnull != mValue.mString)) {
-      nsCRT::free(mValue.mString);
+      NS_Free(mValue.mString);
     } else if (eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Counters) {
       mValue.mArray->Release();
     } else if (eCSSUnit_URL == mUnit) {
@@ -376,7 +376,7 @@ public:
     // |mString| fails.
     URL(nsIURI* aURI, const PRUnichar* aString, nsIURI* aReferrer)
       : mURI(aURI),
-        mString(nsCRT::strdup(aString)),
+        mString(NS_strdup(aString)),
         mReferrer(aReferrer),
         mRefCnt(0)
     {
@@ -388,14 +388,14 @@ public:
       // null |mString| isn't valid normally, but is checked by callers
       // of the constructor
       if (mString)
-        nsCRT::free(mString);
+        NS_Free(mString);
       MOZ_COUNT_DTOR(nsCSSValue::URL);
     }
 
     PRBool operator==(const URL& aOther)
     {
       PRBool eq;
-      return nsCRT::strcmp(mString, aOther.mString) == 0 &&
+      return NS_strcmp(mString, aOther.mString) == 0 &&
              (mURI == aOther.mURI || // handles null == null
               (mURI && aOther.mURI &&
                NS_SUCCEEDED(mURI->Equals(aOther.mURI, &eq)) &&
