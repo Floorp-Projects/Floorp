@@ -1948,7 +1948,7 @@
 
       <toolbaritem id ="folder-location-container" title="&folderLocationToolbarItem.title;"
                    align="center" class="chromeclass-toolbar-additional">
-          <menulist id="locationFolders" class="folderMenuItem" label=" " crop="center">
+          <menulist id="locationFolders" class="folderMenuItem" label=" " width="170" crop="center">
             <menupopup id="folderLocationPopup" class="folderLocationPopup" height="400" flex="1" 
                        oncommand="OnLocationTreeSelect(this);"/>
           </menulist>
