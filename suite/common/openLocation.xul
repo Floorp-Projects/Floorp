@@ -88,8 +88,8 @@
         <menulist id="openAppList">
           <menupopup>
             <menuitem value="0" id="currentWindow" label="&topWindow.label;"/>
-            <menuitem value="1" label="&newWindow.label;"/>
-            <menuitem value="3" label="&newTab.label;"/>
+            <menuitem value="1" id="newWindow" label="&newWindow.label;"/>
+            <menuitem value="3" id="newTab" label="&newTab.label;"/>
             <menuseparator/>
             <menuitem value="2" id="editWindow" label="&editNewWindow.label;"/>
           </menupopup>
