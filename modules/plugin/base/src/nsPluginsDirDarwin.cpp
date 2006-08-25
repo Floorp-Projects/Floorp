@@ -112,6 +112,29 @@ static nsresult toCFURLRef(nsIFile* file, CFURLRef& outURL)
   return rv;
 }
 
+
+// Opens the resource fork for the plugin
+// Also checks if the plugin is a CFBundle and opens gets the correct resource
+static short OpenPluginResourceFork(nsIFile *pluginFile)
+{
+    FSSpec spec;
+    OSErr err = toFSSpec(pluginFile, spec);
+    Boolean targetIsFolder, wasAliased;
+    err = ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
+    short refNum = ::FSpOpenResFile(&spec, fsRdPerm);
+    if (refNum < 0) {
+        nsCString path;
+        pluginFile->GetNativePath(path);
+        CFBundleRef bundle = getPluginBundle(path.get());
+        if (bundle) {
+            refNum = CFBundleOpenBundleResourceMap(bundle);
+            CFRelease(bundle);
+        }
+    }
+    
+    return refNum;
+}
+
 // function to test whether or not this is a loadable plugin
 static PRBool IsLoadablePlugin(CFURLRef aURL)
 {
@@ -169,6 +192,18 @@ PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
         CFRelease(executableURL);
       }
     }
+  
+    // some WebKit plugins that we can't use don't have resource forks 
+    short refNum;
+    if (isPluginFile) {
+      refNum = OpenPluginResourceFork(file);
+      if (refNum < 0) {
+        isPluginFile = PR_FALSE;
+      } else {
+        ::CloseResFile(refNum); 
+      }
+    }
+  
     CFRelease(pluginBundle);
   }
   else {
@@ -245,28 +280,9 @@ static char* GetPluginString(short id, short index)
     return p2cstrdup(str);
 }
 
-// Opens the resource fork for the plugin
-// Also checks if the plugin is a CFBundle and opens gets the correct resource
 short nsPluginFile::OpenPluginResource()
 {
-    FSSpec spec;
-    OSErr err = toFSSpec(mPlugin, spec);
-    Boolean targetIsFolder, wasAliased;
-    err = ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
-    short refNum = ::FSpOpenResFile(&spec, fsRdPerm);
-  
-    if (refNum == -1) {
-
-        nsCString path;
-        mPlugin->GetNativePath(path);
-        CFBundleRef bundle = getPluginBundle(path.get());
-        if (bundle) {
-            refNum = CFBundleOpenBundleResourceMap(bundle);
-            CFRelease(bundle);
-        }
-    }
-  
-    return refNum;
+    return OpenPluginResourceFork(mPlugin);
 }
 
 /**
@@ -280,7 +296,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     // need to open the plugin's resource file and read some resources.
     short refNum = OpenPluginResource();
 
-    if (refNum != -1) {
+    if (refNum >= 0) {
         if (info.fPluginInfoSize >= sizeof(nsPluginInfo)) {
             // 'STR#', 126, 2 => plugin name.
             info.fName = GetPluginString(126, 2);
