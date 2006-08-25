@@ -1768,99 +1768,6 @@ static const char *V6AddrToString(
 
 #endif /* !_PR_HAVE_INET_NTOP */
 
-PR_IMPLEMENT(PRStatus) PR_StringToNetAddr(const char *string, PRNetAddr *addr)
-{
-    PRStatus status = PR_SUCCESS;
-    PRIntn rv;
-
-#if defined(_PR_HAVE_INET_NTOP)
-    rv = inet_pton(AF_INET6, string, &addr->ipv6.ip);
-    if (1 == rv)
-    {
-        addr->raw.family = PR_AF_INET6;
-    }
-    else
-    {
-        PR_ASSERT(0 == rv);
-        /* clean up after the failed inet_pton() call */
-        memset(&addr->ipv6.ip, 0, sizeof(addr->ipv6.ip));
-        rv = inet_pton(AF_INET, string, &addr->inet.ip);
-        if (1 == rv)
-        {
-            addr->raw.family = AF_INET;
-        }
-        else
-        {
-            PR_ASSERT(0 == rv);
-            PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-            status = PR_FAILURE;
-        }
-    }
-#else /* _PR_HAVE_INET_NTOP */
-    rv = StringToV6Addr(string, &addr->ipv6.ip);
-    if (1 == rv) {
-        addr->raw.family = PR_AF_INET6;
-        return PR_SUCCESS;
-    }
-    PR_ASSERT(0 == rv);
-    /* clean up after the failed StringToV6Addr() call */
-    memset(&addr->ipv6.ip, 0, sizeof(addr->ipv6.ip));
-
-    addr->inet.family = AF_INET;
-#ifdef XP_OS2_VACPP
-    addr->inet.ip = inet_addr((char *)string);
-#else
-    addr->inet.ip = inet_addr(string);
-#endif
-    if ((PRUint32) -1 == addr->inet.ip)
-    {
-        /*
-         * The string argument is a malformed address string.
-         */
-        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-        status = PR_FAILURE;
-    }
-#endif /* _PR_HAVE_INET_NTOP */
-
-    return status;
-}
-
-PR_IMPLEMENT(PRStatus) PR_NetAddrToString(
-    const PRNetAddr *addr, char *string, PRUint32 size)
-{
-    if (PR_AF_INET6 == addr->raw.family)
-    {
-#if defined(_PR_HAVE_INET_NTOP)
-        if (NULL == inet_ntop(AF_INET6, &addr->ipv6.ip, string, size))
-#else
-        if (NULL == V6AddrToString(&addr->ipv6.ip, string, size))
-#endif
-        {
-            /* the size of the result buffer is inadequate */
-            PR_SetError(PR_BUFFER_OVERFLOW_ERROR, 0);
-            return PR_FAILURE;
-        }
-    }
-    else
-    {
-        if (size < 16) goto failed;
-        if (AF_INET != addr->raw.family) goto failed;
-        else
-        {
-            unsigned char *byte = (unsigned char*)&addr->inet.ip;
-            PR_snprintf(string, size, "%u.%u.%u.%u",
-                byte[0], byte[1], byte[2], byte[3]);
-        }
-    }
-
-    return PR_SUCCESS;
-
-failed:
-    PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-    return PR_FAILURE;
-
-}  /* PR_NetAddrToString */
-
 /*
  * Convert an IPv4 addr to an (IPv4-mapped) IPv6 addr
  */
@@ -2197,3 +2104,96 @@ PR_IMPLEMENT(const char *) PR_GetCanonNameFromAddrInfo(const PRAddrInfo *ai)
     return fb->has_cname ? fb->hostent.h_name : NULL;
 #endif
 }
+
+PR_IMPLEMENT(PRStatus) PR_StringToNetAddr(const char *string, PRNetAddr *addr)
+{
+    PRStatus status = PR_SUCCESS;
+    PRIntn rv;
+
+#if defined(_PR_HAVE_INET_NTOP)
+    rv = inet_pton(AF_INET6, string, &addr->ipv6.ip);
+    if (1 == rv)
+    {
+        addr->raw.family = PR_AF_INET6;
+    }
+    else
+    {
+        PR_ASSERT(0 == rv);
+        /* clean up after the failed inet_pton() call */
+        memset(&addr->ipv6.ip, 0, sizeof(addr->ipv6.ip));
+        rv = inet_pton(AF_INET, string, &addr->inet.ip);
+        if (1 == rv)
+        {
+            addr->raw.family = AF_INET;
+        }
+        else
+        {
+            PR_ASSERT(0 == rv);
+            PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+            status = PR_FAILURE;
+        }
+    }
+#else /* _PR_HAVE_INET_NTOP */
+    rv = StringToV6Addr(string, &addr->ipv6.ip);
+    if (1 == rv) {
+        addr->raw.family = PR_AF_INET6;
+        return PR_SUCCESS;
+    }
+    PR_ASSERT(0 == rv);
+    /* clean up after the failed StringToV6Addr() call */
+    memset(&addr->ipv6.ip, 0, sizeof(addr->ipv6.ip));
+
+    addr->inet.family = AF_INET;
+#ifdef XP_OS2_VACPP
+    addr->inet.ip = inet_addr((char *)string);
+#else
+    addr->inet.ip = inet_addr(string);
+#endif
+    if ((PRUint32) -1 == addr->inet.ip)
+    {
+        /*
+         * The string argument is a malformed address string.
+         */
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        status = PR_FAILURE;
+    }
+#endif /* _PR_HAVE_INET_NTOP */
+
+    return status;
+}
+
+PR_IMPLEMENT(PRStatus) PR_NetAddrToString(
+    const PRNetAddr *addr, char *string, PRUint32 size)
+{
+    if (PR_AF_INET6 == addr->raw.family)
+    {
+#if defined(_PR_HAVE_INET_NTOP)
+        if (NULL == inet_ntop(AF_INET6, &addr->ipv6.ip, string, size))
+#else
+        if (NULL == V6AddrToString(&addr->ipv6.ip, string, size))
+#endif
+        {
+            /* the size of the result buffer is inadequate */
+            PR_SetError(PR_BUFFER_OVERFLOW_ERROR, 0);
+            return PR_FAILURE;
+        }
+    }
+    else
+    {
+        if (size < 16) goto failed;
+        if (AF_INET != addr->raw.family) goto failed;
+        else
+        {
+            unsigned char *byte = (unsigned char*)&addr->inet.ip;
+            PR_snprintf(string, size, "%u.%u.%u.%u",
+                byte[0], byte[1], byte[2], byte[3]);
+        }
+    }
+
+    return PR_SUCCESS;
+
+failed:
+    PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+    return PR_FAILURE;
+
+}  /* PR_NetAddrToString */
