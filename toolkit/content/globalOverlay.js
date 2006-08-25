@@ -224,8 +224,16 @@ function visitLink(aEvent) {
   while (node.nodeType != Node.ELEMENT_NODE)
     node = node.parentNode;
   var url = node.getAttribute("link");
-  if (url != "")
-    top.opener.openNewWindowWith(url, null, false, false);
+  if (!url)
+    return;
+
+  var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                     .getService(Components.interfaces.nsIWindowWatcher);
+  var argstring = Components.classes["@mozilla.org/supports-string;1"]
+                            .createInstance(Components.interfaces.nsISupportsString);
+  argstring.data = url;
+  ww.openWindow(null, "chrome://browser/content/browser.xul", "_blank",
+                "chrome,all,dialog=no", argstring);
 }
 
 function isValidLeftClick(aEvent, aName)
