@@ -218,14 +218,6 @@ function setHeaderFooter( node, value )
   }
 }
 
-//---------------------------------------------------
-function getDoubleStr(val, dec)
-{
-  var str = val.toString();
-  var inx = str.indexOf(".");
-  return str.substring(0, inx+dec+1);
-}
-
 var gHFValues = new Array;
 gHFValues[ "&T" ] = 1;
 gHFValues[ "&U" ] = 2;
@@ -360,10 +352,10 @@ function loadDialog()
   // from landscape to portrait, the content grows and the buttons are clipped.
   setTimeout( setOrientation, 0 );
 
-  gDialog.topInput.value    = getDoubleStr(print_margin_top, 1);
-  gDialog.bottomInput.value = getDoubleStr(print_margin_bottom, 1);
-  gDialog.leftInput.value   = getDoubleStr(print_margin_left, 1);
-  gDialog.rightInput.value  = getDoubleStr(print_margin_right, 1);
+  gDialog.topInput.value    = print_margin_top.toFixed(1);
+  gDialog.bottomInput.value = print_margin_bottom.toFixed(1);
+  gDialog.leftInput.value   = print_margin_left.toFixed(1);
+  gDialog.rightInput.value  = print_margin_right.toFixed(1);
   changeMargins();
 
   setHeaderFooter( gDialog.hLeftOption, gPrintSettings.headerStrLeft );
@@ -374,7 +366,7 @@ function loadDialog()
   setHeaderFooter( gDialog.fCenterOption, gPrintSettings.footerStrCenter );
   setHeaderFooter( gDialog.fRightOption, gPrintSettings.footerStrRight );
 
-  gDialog.scalingInput.value  = getDoubleStr(gPrintSettings.scaling * 100.0, 3);
+  gDialog.scalingInput.value = (gPrintSettings.scaling * 100).toFixed(0);
 
   // Enable/disable widgets based in the information whether the selected
   // printer supports the matching feature or not
