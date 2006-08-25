@@ -310,7 +310,7 @@ sub _create_token {
     my ($userid, $tokentype, $eventdata) = @_;
     my $dbh = Bugzilla->dbh;
 
-    detaint_natural($userid);
+    detaint_natural($userid) if defined $userid;
     trick_taint($tokentype);
     trick_taint($eventdata);
 
