@@ -2198,11 +2198,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 lval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                 if (!lval)
                     return JS_FALSE;
+                RETRACT(&ss->sprinter, lval);
               do_lvalinc:
-                todo = STR2OFF(&ss->sprinter, lval);
-                SprintPut(&ss->sprinter,
-                          js_incop_strs[!(cs->format & JOF_INC)],
-                          2);
+                todo = Sprint(&ss->sprinter, ss_format,
+                              lval, js_incop_strs[!(cs->format & JOF_INC)]);
                 break;
 
               case JSOP_PROPINC:
