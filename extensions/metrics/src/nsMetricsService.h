@@ -39,11 +39,6 @@
 #ifndef nsMetricsService_h__
 #define nsMetricsService_h__
 
-// This must be before any #includes to enable logging in release builds
-#ifdef MOZ_LOGGING
-#define FORCE_PR_LOG
-#endif
-
 #include "nsIMetricsService.h"
 #include "nsMetricsModule.h"
 #include "nsMetricsConfig.h"

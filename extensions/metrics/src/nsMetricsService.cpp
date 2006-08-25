@@ -36,11 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// This must be before any #includes to enable logging in release builds
-#ifdef MOZ_LOGGING
-#define FORCE_PR_LOG
-#endif
-
 #include "nsMetricsService.h"
 #include "nsMetricsEventItem.h"
 #include "nsIMetricsCollector.h"
