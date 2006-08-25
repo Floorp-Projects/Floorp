@@ -647,12 +647,18 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsChildView::IsVisible(PRBool& outState)
 {
-  if (!mVisible)
+  if (!mVisible) {
     outState = mVisible;
-  else
+  }
+  else {
     // mVisible does not accurately reflect the state of a hidden tabbed view
     // so verify that the view has a window as well
     outState = ([mView window] != nil);
+    // now check native widget hierarchy visibility
+    if (outState && NSIsEmptyRect([mView visibleRect])) {
+      outState = PR_FALSE;
+    }
+  }
 
   return NS_OK;
 }
@@ -980,14 +986,15 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsRect& outClipRect, nsPoint& outOr
   outClipRect.x      = (nscoord)clipOrigin.x;
   outClipRect.y      = (nscoord)clipOrigin.y;
   
-  if ([mView window] != nil)
-  {
+  
+  PRBool isVisible;
+  IsVisible(isVisible);
+  if (isVisible && [mView window] != nil) {
     outClipRect.width  = (nscoord)visibleBounds.size.width;
     outClipRect.height = (nscoord)visibleBounds.size.height;
     outWidgetVisible = PR_TRUE;
   }
-  else
-  {
+  else {
     outClipRect.width = 0;
     outClipRect.height = 0;
     outWidgetVisible = PR_FALSE;
