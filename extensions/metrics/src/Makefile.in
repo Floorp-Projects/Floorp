@@ -111,6 +111,11 @@ EXTRA_DSO_LDOPTS += -NODEFAULTLIB:MSVCRT \
 		    $(NULL)
 endif
 
+# Enable logging in release builds
+ifneq (,$(findstring -DMOZ_LOGGING=1, $(ACDEFINES)))
+DEFINES += -DFORCE_PR_LOG
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 export:: $(topsrcdir)/security/nss/lib/freebl/md5.c
