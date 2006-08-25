@@ -51,19 +51,17 @@
 <dialog xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="aboutDialog"
-        buttons="accept,extra2"
         onload="init(event);" onunload="uninit(event);"
-        title="&aboutDialog.title;" creditslabel="&copyright;" aboutlabel="&aboutLink;"
+#ifdef XP_MACOSX
+        buttons="extra2"
+        align="end"
+#else
+        title="&aboutDialog.title;"
+        buttons="accept,extra2"
+#endif
+        creditslabel="&copyright;"
+        aboutlabel="&aboutLink;
         style="width: 299px;height: 435px;">
-
-  <script type="application/x-javascript">
-    <![CDATA[
-      function onLoad() {
-        var userAgentField = document.getElementById("userAgent");
-        userAgentField.value = navigator.userAgent;
-      }
-    ]]>
-  </script>
 
   <script type="application/x-javascript" src="chrome://calendar/content/aboutDialog.js"/>
 
@@ -82,4 +80,14 @@
     </vbox>
   </deck>
   <separator class="groove" id="groove"/>
+
+# manually add Cmd+W until we add a menubar on mac
+#ifdef XP_MACOSX
+  <keyset id="mainKeyset">
+    <key id="keyClose"
+         modifiers="accel"
+         key="&cmdClose.macKey;"
+         oncommand="window.close();"/>
+  </keyset>
+#endif
 </dialog>

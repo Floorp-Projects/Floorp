@@ -472,12 +472,6 @@ function changeDisplayToDoInViewCheckbox() {
     currentView.goToDay(currentView.selectedDay);
 }
 
-// about Sunbird dialog
-function openAboutDialog()
-{
-  window.openDialog("chrome://calendar/content/aboutDialog.xul", "About", "modal,centerscreen,chrome,resizable=no");
-}
-
 function openPreferences() {
     // Check to see if the prefwindow is already open
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]

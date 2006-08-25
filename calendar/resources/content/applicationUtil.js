@@ -37,6 +37,21 @@
 
 const nsIWindowMediator = Components.interfaces.nsIWindowMediator;
 
+// "About Sunbird" dialog
+function openAboutDialog()
+{
+  var url = "chrome://calendar/content/aboutDialog.xul";
+  var name = "About";
+
+#ifdef XP_MACOSX
+  // Define minimizable=no although it does nothing on OS X (bug 287162).
+  // Remove this comment once bug 287162 is fixed
+  window.open(url, name, "centerscreen,chrome,resizable=no,minimizable=no");
+#else
+  window.openDialog(url, name, "modal,centerscreen,chrome,resizable=no");
+#endif
+}
+
 function toOpenWindowByType(inType, uri)
 {
     var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
