@@ -414,6 +414,15 @@ sub _validate {
                                  bug_id     => $bug_id,
                                  attach_id  => $attach_id });
             }
+
+            # Throw an error if the user won't be allowed to set the flag.
+            if ($flag_type->grant_group
+                && !$requestee->in_group_id($flag_type->grant_group->id))
+            {
+                ThrowUserError('flag_requestee_needs_privs',
+                               {'requestee' => $requestee,
+                                'flagtype'  => $flag_type});
+            }
         }
     }
 

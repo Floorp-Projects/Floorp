@@ -475,7 +475,13 @@
                     'flags.html' => 'Using Flags'} %]
     You can't ask more than one person at a time for
     <em>[% type.name FILTER html %]</em>.
-  
+
+  [% ELSIF error == "flag_requestee_needs_privs" %]
+    [% title = "Flag Requestee Needs Privileges" %]
+    [% requestee.identity FILTER html %] does not have permission to set the
+    <em>[% flagtype.name FILTER html %]</em> flag. Please select a user who is
+    a member of the <em>[% flagtype.grant_group.name FILTER html %]</em> group.
+
   [% ELSIF error == "flag_requestee_unauthorized" %]
     [% title = "Flag Requestee Not Authorized" %]
     [% admindocslinks = {'flags-overview.html#flags-admin'  => 'Administering Flags',
