@@ -143,7 +143,36 @@ nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 
 nsINode::~nsINode()
 {
-  delete GetExistingSlots();
+  NS_ASSERTION(!HasSlots(), "Don't know how to kill the slots");
+
+  if (HasFlag(NODE_HAS_RANGELIST)) {
+#ifdef DEBUG
+    if (!nsContentUtils::LookupRangeList(this) &&
+        nsContentUtils::IsInitialized()) {
+      NS_ERROR("Huh, our bit says we have a range list, but there's nothing "
+               "in the hash!?!!");
+    }
+#endif
+
+    nsContentUtils::RemoveRangeList(this);
+  }
+
+  if (HasFlag(NODE_HAS_LISTENERMANAGER)) {
+#ifdef DEBUG
+    if (nsContentUtils::IsInitialized()) {
+      nsCOMPtr<nsIEventListenerManager> manager;
+      PRBool created;
+      nsContentUtils::GetListenerManager(this, PR_FALSE,
+                                         getter_AddRefs(manager), &created);
+      if (!manager) {
+        NS_ERROR("Huh, our bit says we have a listener manager list, "
+                 "but there's nothing in the hash!?!!");
+      }
+    }
+#endif
+
+    nsContentUtils::RemoveListenerManager(this);
+  }
 }
 
 void*
@@ -963,6 +992,21 @@ nsGenericElement::nsDOMSlots::nsDOMSlots(PtrBits aFlags)
 {
 }
 
+nsGenericElement::nsDOMSlots::~nsDOMSlots()
+{
+  if (mChildNodes) {
+    mChildNodes->DropReference();
+  }
+
+  if (mStyle) {
+    mStyle->DropReference();
+  }
+
+  if (mAttributeMap) {
+    mAttributeMap->DropReference();
+  }
+}
+
 nsGenericElement::nsGenericElement(nsINodeInfo *aNodeInfo)
   : nsIXMLContent(aNodeInfo)
 {
@@ -975,18 +1019,8 @@ nsGenericElement::~nsGenericElement()
 {
   NS_PRECONDITION(!IsInDoc(),
                   "Please remove this from the document properly");
-  nsDOMSlots* slots = GetExistingDOMSlots();
-  if (slots) {
-    if (slots->mChildNodes) {
-      slots->mChildNodes->DropReference();
-    }
-    if (slots->mStyle) {
-      slots->mStyle->DropReference();
-    }
-    if (slots->mAttributeMap) {
-      slots->mAttributeMap->DropReference();
-    }
-  }
+
+  nsNodeUtils::NodeWillBeDestroyed(this);
 }
 
 /**
@@ -3058,7 +3092,7 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsGenericElement)
 NS_IMPL_RELEASE_WITH_DESTROY(nsGenericElement,
-                             nsNodeUtils::LastRelease(this, PR_TRUE))
+                             nsNodeUtils::LastRelease(this))
 
 nsresult
 nsGenericElement::PostQueryInterface(REFNSIID aIID, void** aInstancePtr)
