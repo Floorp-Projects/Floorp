@@ -137,6 +137,28 @@ function LOG(module, string) {
 }
 
 /**
+ * Only allow built-in certs for HTTPS connections.  See bug 340198.
+ */
+function checkCert(channel) {
+  if (!channel.originalURI.schemeIs("https"))  // bypass
+    return;
+
+  const Ci = Components.interfaces;  
+  var cert =
+      channel.securityInfo.QueryInterface(Ci.nsISSLStatusProvider).
+      SSLStatus.QueryInterface(Ci.nsISSLStatus).serverCert;
+
+  var issuer = cert.issuer;
+  while (issuer && !cert.equals(issuer)) {
+    cert = issuer;
+    issuer = cert.issuer;
+  }
+
+  if (!issuer || issuer.tokenName != "Builtin Object Token")
+    throw "cert issuer is not built-in";
+}
+
+/**
  * Convert a string containing binary values to hex.
  */
 function binaryToHex(input) {
@@ -1719,10 +1741,20 @@ BadCertHandler.prototype = {
   },
 
   /**
+   * See nsIChannelEventSink
+   */
+  onChannelRedirect: function(oldChannel, newChannel, flags) {
+    // make sure the certificate of the old channel checks out before we follow
+    // a redirect from it.  See bug 340198.
+    checkCert(oldChannel);
+  },
+
+  /**
    * See nsIInterfaceRequestor
    */
   getInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsIBadCertListener))
+    if (iid.equals(Components.interfaces.nsIBadCertListener) ||
+        iid.equals(Components.interfaces.nsIChannelEventSink))
       return this;
 
     Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
@@ -1734,6 +1766,7 @@ BadCertHandler.prototype = {
    */
   QueryInterface: function(iid) {
     if (!iid.equals(Components.interfaces.nsIBadCertListener) &&
+        !iid.equals(Components.interfaces.nsIChannelEventSink) &&
         !iid.equals(Components.interfaces.nsIInterfaceRequestor) &&
         !iid.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
@@ -1881,8 +1914,10 @@ Checker.prototype = {
   onLoad: function(event) {
     LOG("Checker", "onLoad: request completed downloading document");
     
-    // Analyze the resulting DOM and determine the set of updates to install
     try {
+      checkCert(this._request.channel);
+
+      // Analyze the resulting DOM and determine the set of updates to install
       var updates = this._updates;
       
       LOG("Checker", "Updates available: " + updates.length);
