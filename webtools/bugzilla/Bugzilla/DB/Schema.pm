@@ -219,7 +219,6 @@ use constant ABSTRACT_SCHEMA => {
             bugs_target_milestone_idx => ['target_milestone'],
             bugs_qa_contact_idx       => ['qa_contact'],
             bugs_votes_idx            => ['votes'],
-            bugs_short_desc_idx       => ['short_desc'],
         ],
     },
 
