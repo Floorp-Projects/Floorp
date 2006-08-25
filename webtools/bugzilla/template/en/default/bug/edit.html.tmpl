@@ -590,7 +590,7 @@
            IF user.settings.state_addselfcc.value == 'always'
               || (!has_role
                   && user.settings.state_addselfcc.value == 'cc_unless_role') %]>
-    <label for="addselfcc">Add [% user.login FILTER html %] to CC list</label>
+    <label for="addselfcc">Add [% user.identity FILTER html %] to CC list</label>
   [% END %]
   <br>
 
