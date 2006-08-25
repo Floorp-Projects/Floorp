@@ -591,7 +591,7 @@ sub init {
 
              # short_desc searching for the WHERE clause
              my @words = _split_words_into_like('bugs.short_desc', $v);
-             my $term2_where = join(' AND ', @words);
+             my $term2_where = join(' OR ', @words);
 
              # short_desc relevance
              my $factor = SUMMARY_RELEVANCE_FACTOR;
@@ -605,18 +605,10 @@ sub init {
              # we SELECT the relevance value and give it an alias so we can
              # add it to the SORT BY clause when we build it in buglist.cgi.
              #
-             # Note: MySQL calculates relevance for each comment separately,
-             # so we need to do some additional calculations to get an overall
-             # relevance value, which we do by calculating the average (mean)
-             # comment relevance and then adding the summary relevance, if any.
-             # This weights summary relevance heavily, which makes sense
-             # since summaries are short and thus highly significant.
-             #
-             # Note: We should be calculating the average relevance of all
+             # Note: We should be calculating the relevance based on all
              # comments for a bug, not just matching comments, but that's hard
              # (see http://bugzilla.mozilla.org/show_bug.cgi?id=145588#c35).
-             my $select_term = "(SUM($term1)/COUNT(${table}.comment_id)"
-                             . " + $term2_select) AS relevance";
+             my $select_term = "(SUM($term1) + $term2_select) AS relevance";
 
              # add the column not used in aggregate function explicitly
              push(@groupby, 'bugs.short_desc');
