@@ -2422,8 +2422,7 @@ nsGenericElement::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
           NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
       nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED);
       mutation.mRelatedNode = do_QueryInterface(container);
-      nsEventDispatcher::Dispatch(aKid, nsnull, &mutation, nsnull, nsnull,
-                                  nsnull, PR_FALSE, PR_FALSE);
+      nsEventDispatcher::Dispatch(aKid, nsnull, &mutation);
     }
   }
 
@@ -2472,8 +2471,7 @@ nsGenericElement::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
         NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
     nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED);
     mutation.mRelatedNode = do_QueryInterface(container);
-    nsEventDispatcher::Dispatch(aKid, nsnull, &mutation, nsnull, nsnull,
-                                nsnull, PR_FALSE, PR_FALSE);
+    nsEventDispatcher::Dispatch(aKid, nsnull, &mutation, nsnull, nsnull);
   }
 
   // Someone may have removed the kid or any of its siblings while that event
@@ -3413,8 +3411,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
       mutation.mPrevAttrValue = do_GetAtom(aOldValue);
     }
     mutation.mAttrChange = modType;
-    nsEventDispatcher::Dispatch(this, nsnull, &mutation, nsnull, nsnull,
-                                nsnull, PR_FALSE, PR_FALSE);
+    nsEventDispatcher::Dispatch(this, nsnull, &mutation;
   }
 
   if (aNotify) {
@@ -3614,8 +3611,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       mutation.mPrevAttrValue = do_GetAtom(value);
     mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
-    nsEventDispatcher::Dispatch(this, nsnull, &mutation, nsnull, nsnull, nsnull,
-                                PR_FALSE, PR_FALSE);
+    nsEventDispatcher::Dispatch(this, nsnull, &mutation);
   }
 
   // Clear binding to nsIDOMNamedNodeMap
