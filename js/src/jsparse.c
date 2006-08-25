@@ -6095,6 +6095,19 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
             RecycleTree(pn3, tc);
         break;
 
+      case TOK_ASSIGN:
+        /*
+         * Compound operators such as *= should be subject to folding, in case
+         * the left-hand side is constant, and so that the decompiler produces
+         * the same string that you get from decompiling a script or function
+         * compiled from that same string.  As with +, += is special.
+         */
+        if (pn->pn_op == JSOP_NOP)
+            break;
+        if (pn->pn_op != JSOP_ADD)
+            goto do_binary_op;
+        /* FALL THROUGH */
+
       case TOK_PLUS:
         if (pn->pn_arity == PN_LIST) {
             size_t length, length2;
@@ -6197,6 +6210,8 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
             for (pn2 = pn1; pn2; pn2 = pn2->pn_next) {
                 if (!FoldType(cx, pn2, TOK_NUMBER))
                     return JS_FALSE;
+            }
+            for (pn2 = pn1; pn2; pn2 = pn2->pn_next) {
                 /* XXX fold only if all operands convert to number */
                 if (pn2->pn_type != TOK_NUMBER)
                     break;
