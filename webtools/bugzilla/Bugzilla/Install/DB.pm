@@ -480,7 +480,7 @@ sub update_table_definitions {
     $dbh->bz_alter_column('tokens', 'userid', {TYPE => 'INT3'});
 
     my $sd_index = $dbh->bz_index_info('bugs', 'bugs_short_desc_idx');
-    if ($sd_index && $sd_index->{TYPE} eq 'FULLTEXT') {
+    if (!$sd_index || ($sd_index->{TYPE}  && $sd_index->{TYPE} eq 'FULLTEXT')) {
         $dbh->bz_drop_index('bugs', 'bugs_short_desc_idx');
         $dbh->bz_add_index('bugs', 'bugs_short_desc_idx', [qw(short_desc)]);
     }
