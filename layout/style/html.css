@@ -252,6 +252,13 @@ th {
   padding: 1px;
 }
 
+tr > form:-moz-is-html, tbody > form:-moz-is-html,
+thead > form:-moz-is-html, tfoot > form:-moz-is-html,
+table > form:-moz-is-html {
+  /* Important: don't show these forms in HTML */
+  display: none !important;
+}
+
 /* inlines */
 
 q:before {

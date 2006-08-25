@@ -125,23 +125,6 @@ private:
   };
 
 
-  // this rule supresses forms inside table tags in html
-  class TableFormRule;
-  friend class TableFormRule;
-  class TableFormRule: public nsIStyleRule {
-  public:
-    TableFormRule() {}
-    
-     NS_DECL_ISUPPORTS
-
-    // nsIStyleRule interface
-    NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
-  #ifdef DEBUG
-    NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-  #endif
-  };
-
-
   class GenericTableRule;
   friend class GenericTableRule;
   class GenericTableRule: public nsIStyleRule {
@@ -214,7 +197,6 @@ private:
   HTMLColorRule*       mVisitedRule;
   HTMLColorRule*       mActiveRule;
   HTMLColorRule*       mDocumentColorRule;
-  TableFormRule*       mTableFormRule;
   TableTbodyRule*      mTableTbodyRule;
   TableRowRule*        mTableRowRule;
   TableColgroupRule*   mTableColgroupRule;
