@@ -4871,10 +4871,10 @@ nsBlockFrame::HandleOverflowPlaceholdersForPulledFrame(
   nsBlockReflowState& aState, nsIFrame* aFrame)
 {
   if (nsLayoutAtoms::placeholderFrame != aFrame->GetType()) {
-    // Check the in-flow inline children. We should encounter only
-    // first-in-flow placeholders, so the frame subtree rooted at
-    // aFrame should not change.
-    if (!aFrame->GetStyleDisplay()->IsBlockLevel()) {
+    // Descend into children that are not float containing blocks.
+    // We should encounter only first-in-flow placeholders, so the
+    // frame subtree rooted at aFrame should not change.
+    if (!aFrame->IsFloatContainingBlock()) {
       for (nsIFrame* f = aFrame->GetFirstChild(nsnull); f; f = f->GetNextSibling()) {
 #ifdef DEBUG
         PRBool changed =
