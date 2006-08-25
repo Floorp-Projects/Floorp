@@ -231,8 +231,11 @@ sub update_table_definitions {
 
     _update_bugs_activity_to_only_record_changes();
 
-    $dbh->bz_alter_column("profiles", "disabledtext",
-                          {TYPE => 'MEDIUMTEXT', NOTNULL => 1}, '');
+    # bug 90933: Make disabledtext NOT NULL
+    if (!$dbh->bz_column_info('profiles', 'disabledtext')->{NOTNULL}) {
+        $dbh->bz_alter_column("profiles", "disabledtext",
+                              {TYPE => 'MEDIUMTEXT', NOTNULL => 1}, '');
+    }
 
     $dbh->bz_add_column("bugs", "reporter_accessible",
                         {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'TRUE'});
