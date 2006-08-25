@@ -5360,8 +5360,9 @@ void nsImapProtocol::OnAppendMsgFromFile()
     {
       imapMessageFlagsType flagsToSet = 0;
       PRUint32 msgFlags = 0;
+      PRTime date = 0;
       if (m_imapMessageSink)
-        m_imapMessageSink->GetCurMoveCopyMessageFlags(m_runningUrl, &msgFlags);
+        m_imapMessageSink->GetCurMoveCopyMessageInfo(m_runningUrl, &date, &msgFlags);
       
       if (msgFlags & MSG_FLAG_READ)
         flagsToSet |= kImapMsgSeenFlag;
@@ -5370,7 +5371,7 @@ void nsImapProtocol::OnAppendMsgFromFile()
       // convert msg flag label (0xE000000) to imap flag label (0x0E00)
       if (msgFlags & MSG_FLAG_LABELS)
         flagsToSet |= (msgFlags & MSG_FLAG_LABELS) >> 16;
-      UploadMessageFromFile(fileSpec, mailboxName, flagsToSet);
+      UploadMessageFromFile(fileSpec, mailboxName, date, flagsToSet);
       PR_Free( mailboxName );
     }
     else
@@ -5382,6 +5383,7 @@ void nsImapProtocol::OnAppendMsgFromFile()
 
 void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
                                             const char* mailboxName,
+                                            PRTime date,
                                             imapMessageFlagsType flags)
 {
   if (!fileSpec || !mailboxName) return;
@@ -5414,6 +5416,32 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
         GetServerStateParser().SupportsUserFlags());
       command.Append(flagString);
       command.Append(")");
+    }
+    
+    // date should never be 0, but just in case...
+    if (date)
+    {
+      /* Use PR_FormatTimeUSEnglish() to format the date in US English format,
+        then figure out what our local GMT offset is, and append it (since
+        PR_FormatTimeUSEnglish() can't do that.) Generate four digit years as
+        per RFC 1123 (superceding RFC 822.)
+        */
+      char szDateTime[64];
+      char dateStr[100];
+      PRExplodedTime exploded;
+      PR_ExplodeTime(date, PR_LocalTimeParameters, &exploded);
+      PR_FormatTimeUSEnglish(szDateTime, sizeof(szDateTime), "%d-%b-%Y %H:%M:%S", &exploded);
+      PRExplodedTime now;
+      PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &now);
+      int gmtoffset = (now.tm_params.tp_gmt_offset + now.tm_params.tp_dst_offset) / 60;
+      PR_snprintf(dateStr, sizeof(dateStr),
+                            " \"%s %c%02d%02d\"",
+                            szDateTime,
+                            (gmtoffset >= 0 ? '+' : '-'),
+                            ((gmtoffset >= 0 ? gmtoffset : -gmtoffset) / 60),
+                            ((gmtoffset >= 0 ? gmtoffset : -gmtoffset) % 60));
+      
+      command.Append(dateStr);
     }
     command.Append(" {");
     

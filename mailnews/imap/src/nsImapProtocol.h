@@ -407,7 +407,7 @@ private:
   void WaitForPotentialListOfMsgsToFetch(PRUint32 **msgIdList, PRUint32 &msgCount);
   void WaitForPotentialListOfBodysToFetch(PRUint32 **msgIdList, PRUint32 &msgCount);
   void HeaderFetchCompleted();
-  void UploadMessageFromFile(nsIFileSpec* fileSpec, const char* mailboxName,
+  void UploadMessageFromFile(nsIFileSpec* fileSpec, const char* mailboxName, PRTime date,
     imapMessageFlagsType flags);
   
   // mailbox name utilities.
