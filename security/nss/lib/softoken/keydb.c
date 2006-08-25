@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: keydb.c,v 1.47 2006/08/15 01:34:38 wtchang%redhat.com Exp $ */
+/* $Id: keydb.c,v 1.48 2006/08/25 23:04:15 alexei.volkov.bugs%sun.com Exp $ */
 
 #include "lowkeyi.h"
 #include "seccomon.h"
@@ -1769,7 +1769,7 @@ seckey_put_private_key(NSSLOWKEYDBHandle *keydb, DBT *index, SECItem *pwitem,
 {
     NSSLOWKEYDBKey *dbkey = NULL;
     NSSLOWKEYEncryptedPrivateKeyInfo *epki = NULL;
-    PLArenaPool *temparena = NULL, *permarena = NULL;
+    PLArenaPool  *arena = NULL;
     SECItem *dummy = NULL;
     SECItem *salt = NULL;
     SECStatus rv = SECFailure;
@@ -1778,14 +1778,14 @@ seckey_put_private_key(NSSLOWKEYDBHandle *keydb, DBT *index, SECItem *pwitem,
 	(pk == NULL))
 	return SECFailure;
 	
-    permarena = PORT_NewArena(SEC_ASN1_DEFAULT_ARENA_SIZE);
-    if(permarena == NULL)
+    arena = PORT_NewArena(SEC_ASN1_DEFAULT_ARENA_SIZE);
+    if(arena == NULL)
 	return SECFailure;
 
-    dbkey = (NSSLOWKEYDBKey *)PORT_ArenaZAlloc(permarena, sizeof(NSSLOWKEYDBKey));
+    dbkey = (NSSLOWKEYDBKey *)PORT_ArenaZAlloc(arena, sizeof(NSSLOWKEYDBKey));
     if(dbkey == NULL)
 	goto loser;
-    dbkey->arena = permarena;
+    dbkey->arena = arena;
     dbkey->nickname = nickname;
 
     /* TNH - for RC4, the salt should be created here */
@@ -1793,15 +1793,14 @@ seckey_put_private_key(NSSLOWKEYDBHandle *keydb, DBT *index, SECItem *pwitem,
     epki = seckey_encrypt_private_key(pk, pwitem, keydb, algorithm, &salt);
     if(epki == NULL)
 	goto loser;
-    temparena = epki->arena;
 
     if(salt != NULL)
     {
-	rv = SECITEM_CopyItem(permarena, &(dbkey->salt), salt);
+	rv = SECITEM_CopyItem(arena, &(dbkey->salt), salt);
 	SECITEM_ZfreeItem(salt, PR_TRUE);
     }
 
-    dummy = SEC_ASN1EncodeItem(permarena, &(dbkey->derPK), epki, 
+    dummy = SEC_ASN1EncodeItem(arena, &(dbkey->derPK), epki, 
 	nsslowkey_EncryptedPrivateKeyInfoTemplate);
     if(dummy == NULL)
 	rv = SECFailure;
@@ -1810,11 +1809,10 @@ seckey_put_private_key(NSSLOWKEYDBHandle *keydb, DBT *index, SECItem *pwitem,
 
     /* let success fall through */
 loser:
-    if(rv != SECSuccess)
-	if(permarena != NULL)
-	    PORT_FreeArena(permarena, PR_TRUE);
-    if(temparena != NULL)
-	PORT_FreeArena(temparena, PR_TRUE);
+    if(arena != NULL)
+        PORT_FreeArena(arena, PR_TRUE);
+    if(epki != NULL)
+        PORT_FreeArena(epki->arena, PR_TRUE);
 
     return rv;
 }
