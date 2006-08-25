@@ -151,6 +151,7 @@ bin\components\uconv.xpt
 bin\components\unicharutil.xpt
 bin\components\update.xpt
 bin\components\uriloader.xpt
+bin\components\urlformatter.xpt
 bin\components\webBrowser_core.xpt
 bin\components\webbrowserpersist.xpt
 bin\components\webdav.xpt
@@ -184,6 +185,7 @@ bin\components\nsProgressDialog.js
 bin\components\nsSetDefaultMail.js
 bin\components\nsUnsetDefaultMail.js
 bin\components\nsUpdateService.js
+bin\components\nsURLFormatter.js
 bin\components\nsHelperAppDlg.js
 bin\components\nsProxyAutoConfig.js
 bin\components\nsExtensionManager.js
