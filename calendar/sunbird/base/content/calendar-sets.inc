@@ -155,6 +155,10 @@
 
 #ifdef XP_MACOSX
   <key id="key_minimizeWindow"   key="&minimizeWindow.key;"              command="minimizeWindow"               modifiers="accel"/>
+  <key id="key_preferencesCmdMac" key="&preferencesCmdMac.commandkey;" modifiers="&preferencesCmdMac.modifiers;"/>
+  <key id="key_quitCmdMac" key="&calendar.quit.key.mac;" modifiers="&calendar.quit.modifiers.mac;"/>
+  <key id="key_hideThisAppCmdMac" key="&hideThisAppCmdMac.commandkey;" modifiers="&hideThisAppCmdMac.modifiers;"/>
+  <key id="key_hideOtherAppsCmdMac" key="&hideOtherAppsCmdMac.commandkey;" modifiers="&hideOtherAppsCmdMac.modifiers;"/>
 #endif
 </keyset>
 

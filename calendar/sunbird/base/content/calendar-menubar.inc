@@ -82,8 +82,12 @@
                      observes="modify_command"/>
            <menuitem id="calendar-close"
                      key="key_close"
+#ifdef XP_MACOSX
+                     label="&calendar.menu.options.close.mac;"
+#else
                      label="&calendar.menu.options.close;"
                      accesskey="&calendar.menu.options.close.accesskey;"
+#endif
                      observes="close_calendar_command"/>
            <menuseparator/>
 
@@ -130,13 +134,18 @@
                      label="&calendar.print.label;"
                      accesskey="&calendar.print.accesskey;"
                      observes="print_command"/>
-#ifndef XP_MACOSX
+#ifdef XP_MACOSX
+           <menuitem id="menu_FileQuitItem"
+                     label="&calendar.quit.label.mac;"
+                     key="key_quitCmdMac"
+                     oncommand="goQuitApplication()"/>
+#else
            <menuseparator id="calendar-print-sep"/>
-#endif
            <menuitem id="calendar-quit-menu"
                      label="&calendar.quit.label;"
                      accesskey="&calendar.quit.accesskey;"
                      oncommand="goQuitApplication()"/>
+#endif
          </menupopup>
        </menu>
 
@@ -375,8 +384,8 @@
 # -- ifdef UNIX also covers Mac OS X, so we have to explicitly enable this menuitem
            <menuseparator id="menu_PrefsSeparator"/>
                <menuitem id="menu_preferences"
-                         label="&optionsCmd.label;"
-                         accesskey="&optionsCmd.accesskey;"
+                         label="&preferencesCmdMac.label;"
+                         key="key_preferencesCmdMac"
                          oncommand="openPreferences();"/>
 #endif
          </menupopup>
@@ -415,6 +424,24 @@
                      disabled="true"/>
            <menuseparator id="sep-window-list"/>
          </menupopup>
+# We just need this node to exist in order to get Gecko to create a Services
+# menu for us under Cocoa widgets. It will be automatically hidden.
+         <menuitem id="menu_mac_services"
+                   label="&servicesMenuMac.label;"/>
+# We just need this node to exist in order to get Gecko to create a "Hide [app]"
+# menu for us under Cocoa widgets. It will be automatically hidden.
+         <menuitem id="menu_mac_hide_app"
+                   label="&hideThisAppCmdMac.label;"
+                   key="key_hideThisAppCmdMac"/>
+# We just need this node to exist in order to get Gecko to create a "Hide Others"
+# menu for us under Cocoa widgets. It will be automatically hidden.
+         <menuitem id="menu_mac_hide_others"
+                   label="&hideOtherAppsCmdMac.label;"
+                   key="key_hideOtherAppsCmdMac"/>
+# We just need this node to exist in order to get Gecko to create a "Show All"
+# menu for us under Cocoa widgets. It will be automatically hidden.
+         <menuitem id="menu_mac_show_all"
+                   label="&showAllAppsCmdMac.label;"/>
        </menu>
 #endif
 

@@ -107,6 +107,9 @@
 
 <!ENTITY calendar.quit.label                    "Quit">
 <!ENTITY calendar.quit.accesskey                "Q">
+<!ENTITY calendar.quit.label.mac                "Quit &brandShortName;">
+<!ENTITY calendar.quit.key.mac                  "Q">
+<!ENTITY calendar.quit.modifiers.mac            "accel">
 
 <!ENTITY calendar.about.label                   "About Calendar">
 <!ENTITY calendar.about.accesskey               "C">
@@ -228,6 +231,9 @@
 <!ENTITY optionsCmd.accesskey                   "O">
 <!ENTITY preferencesCmd.label                   "Preferences">
 <!ENTITY preferencesCmd.accesskey               "n">
+<!ENTITY preferencesCmdMac.label                "Preferences…">
+<!ENTITY preferencesCmdMac.commandkey           ",">
+<!ENTITY preferencesCmdMac.modifiers            "accel">
 
 <!ENTITY viewMenu.label                         "View">
 <!ENTITY viewMenu.accesskey                     "V">
@@ -243,3 +249,13 @@
 <!ENTITY zoomWindow.label                       "Zoom">
 <!ENTITY minimizeWindow.key                     "M">
 <!ENTITY bringAllToFront.label                  "Bring All to Front">
+
+<!-- Mac OS X Application menu items -->
+<!ENTITY servicesMenuMac.label          "Services">
+<!ENTITY hideThisAppCmdMac.label        "Hide &brandShortName;">
+<!ENTITY hideThisAppCmdMac.commandkey   "H">
+<!ENTITY hideThisAppCmdMac.modifiers    "accel">
+<!ENTITY hideOtherAppsCmdMac.label      "Hide Others">
+<!ENTITY hideOtherAppsCmdMac.commandkey "H">
+<!ENTITY hideOtherAppsCmdMac.modifiers  "accel,alt">
+<!ENTITY showAllAppsCmdMac.label        "Show All">
