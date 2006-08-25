@@ -259,11 +259,11 @@ if (!empty($mimetype) &&
         $manualInstallationURL = 'http://digitalwebbooks.com/reader/';
     } elseif ($mimetype == 'application/x-videoegg-loader' && preg_match('/^Win/', $clientOS)) {
         $name = 'VideoEgg Publisher';
-        $version = '1.3.1';
         $guid = '{b8b881f0-2e07-11db-a98b-0800200c9a66}';
-        $XPILocation = 'http://update.videoegg.com/Install/Windows/Initial/VideoEggPublisher.exe';
-        $manualInstallationURL = 'http://videoegg.com/';
-        $needsRestart = 'true';
+        $iconUrl = 'http://videoegg.com/favicon.ico';
+        $XPILocation = 'http://update.videoegg.com/Install/Windows/Initial/VideoEggPublisher.xpi';
+        $installerShowsUI = 'true';
+        $manualInstallationURL = 'http://www.videoegg.com/';
     }
     // End ridiculously huge and embarrassing if-else block.
 
