@@ -22,7 +22,6 @@ bin\defaults\profile\prefs.js
 bin\defaults\profile\chrome\*
 bin\updater.ini
 
-
 [xpcom]
 bin\js3250.dll
 bin\plc4.dll
@@ -174,6 +173,7 @@ bin\components\xpinstall.xpt
 bin\components\xulapp.xpt
 bin\components\xuldoc.xpt
 bin\components\xultmpl.xpt
+bin\components\wcap.xpt
 ; JavaScript components
 bin\components\nsDefaultCLH.js
 bin\components\nsSetDefaultBrowser.js
@@ -187,8 +187,6 @@ bin\components\nsUpdateService.js
 bin\components\nsHelperAppDlg.js
 bin\components\nsProxyAutoConfig.js
 bin\components\nsExtensionManager.js
-bin\components\extensions.xpt
-bin\components\update.xpt
 bin\components\calendarService.js
 bin\components\calAlarmMonitor.js
 bin\components\calCompositeCalendar.js
@@ -198,6 +196,7 @@ bin\components\calImportExportModule.js
 bin\components\calItemModule.js
 bin\components\calMemoryCalendar.js
 bin\components\calStorageCalendar.js
+bin\components\calWcapCalendarModule.js
 bin\components\FeedProcessor.js
 bin\components\pluginGlue.js
 bin\js\calAlarmService.js
@@ -216,6 +215,13 @@ bin\js\calRecurrenceInfo.js
 bin\js\calTodo.js
 bin\js\calUtils.js
 bin\js\calWeekTitleService.js
+bin\js\calWcapCachedCalendar.js
+bin\js\calWcapCalendar.js
+bin\js\calWcapCalendarItems.js
+bin\js\calWcapErrors.js
+bin\js\calWcapRequest.js
+bin\js\calWcapSession.js
+bin\js\calWcapUtils.js
 
 ; [Calendar Chrome Files]
 bin\chrome\calendar.jar
