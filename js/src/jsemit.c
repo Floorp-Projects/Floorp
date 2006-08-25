@@ -2195,7 +2195,12 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
         break;
 
       case PN_NAME:
-        if (pn->pn_type == TOK_NAME) {
+        /*
+         * Take care to avoid trying to bind a label name (labels, both for
+         * statements and property values in object initialisers, have pn_op
+         * defaulted to JSOP_NOP).
+         */
+        if (pn->pn_type == TOK_NAME && pn->pn_op != JSOP_NOP) {
             if (!BindNameToSlot(cx, tc, pn))
                 return JS_FALSE;
             if (pn->pn_slot < 0 && pn->pn_op != JSOP_ARGUMENTS) {

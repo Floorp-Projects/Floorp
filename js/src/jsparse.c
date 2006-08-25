@@ -5323,6 +5323,8 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                                 return NULL;
                             pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
                             pn3->pn_expr = NULL;
+                            pn3->pn_slot = -1;
+                            pn3->pn_attrs = 0;
 
                             /* We have to fake a 'function' token here. */
                             CURRENT_TOKEN(ts).t_op = JSOP_NOP;
