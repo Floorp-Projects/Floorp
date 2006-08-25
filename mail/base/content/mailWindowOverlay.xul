@@ -1199,6 +1199,10 @@
                         accesskey="&messagePaneWide.accesskey;" oncommand="ChangeMailLayout(kWideMailLayout);"/>
               <menuitem id="messagePaneVertical" type="radio" label="&messagePaneVertical.label;" name="viewlayoutgroup"
                         accesskey="&messagePaneVertical.accesskey;" oncommand="ChangeMailLayout(kVerticalMailLayout);"/>
+<!--
+              <menuitem id="threadPaneWide" type="radio" label="&threadPaneWide.label;" name="viewlayoutgroup"
+                        accesskey="&threadPaneWide.accesskey;" oncommand="ChangeMailLayout(kWideThreadPaneConfig);"/>
+-->
               <menuseparator/>
               <menuitem id="menu_showMessage" type="checkbox" label="&showMessageCmd.label;" key="key_toggleMessagePane"
                         accesskey="&showMessageCmd.accesskey;" oncommand="MsgToggleMessagePane();"/>

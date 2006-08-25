@@ -51,6 +51,7 @@ const kMailCheckOncePrefName = "mail.startup.enabledMailCheckOnce";
 const kStandardPaneConfig = 0;
 const kWidePaneConfig = 1;
 const kVerticalPaneConfig = 2;
+const kWideThreadPaneConfig = 3;
 
 const kNumFolderViews = 4; // total number of folder views
 
@@ -671,21 +672,20 @@ function UpdateMailPaneConfig(aMsgWindowInitialized) {
     document.getElementById('messagepanebox').setAttribute('flex', 1);
   else 
     document.getElementById('messagepanebox').removeAttribute('flex');
-    
-  
+      
   // don't do anything if we are already in the correct configuration
   if (paneConfig == gCurrentPaneConfig)
     return;
 
   var mailContentWrapper = document.getElementById("mailContentWrapper");
   var messagesBox = document.getElementById("messagesBox");
+  var messengerBox = document.getElementById("messengerBox");
   var messagePaneBox = GetMessagePane();
   var msgPaneReRooted = false;
-
   var threadPaneSplitter = GetThreadAndMessagePaneSplitter();
 
   // the only element we need to re-root is the message pane.
-  var desiredMsgPaneParentId = (paneConfig == "0" || paneConfig == "2") ? "messagesBox" : "mailContentWrapper";
+  var desiredMsgPaneParentId = (paneConfig == "0" || paneConfig == "2" || paneConfig == "3") ? "messagesBox" : "mailContentWrapper";
 
   if (messagePaneBox.parentNode.id != desiredMsgPaneParentId)
   {
@@ -698,6 +698,20 @@ function UpdateMailPaneConfig(aMsgWindowInitialized) {
      messagePaneNewParent.appendChild(messagePaneBox); 
      msgPaneReRooted = true;
   }
+  
+  /* this code doesn't work yet, see the comment below about kWideThreadPaneConfig
+  if (gCurrentPaneConfig == kWideThreadPaneConfig)
+  {   
+    threadPaneSplitter.setAttribute("orient", "vertical");
+    mailContentWrapper.setAttribute("orient", "horizontal");
+    mailContentWrapper.removeChild(threadPaneSplitter);
+    mailContentWrapper.removeChild(messagePaneBox);
+    messagesBox.insertBefore(threadPaneSplitter, messagesBox.firstChild);
+    messagesBox.insertBefore(messengerBox, messagesBox.firstChild);
+    messagePaneBox.removeAttribute("flex");
+    msgPaneReRooted = true;
+  }
+  */
 
   // now for each config, handle any extra clean up to create that view (such as changing a box orientation)
   if (paneConfig == kStandardPaneConfig) // standard 3-Pane Layout
@@ -708,7 +722,6 @@ function UpdateMailPaneConfig(aMsgWindowInitialized) {
     mailContentWrapper.setAttribute("orient", "horizontal");
     messagesBox.setAttribute("orient", "vertical");
   }
-
   else if (paneConfig == kWidePaneConfig)  // "Wide" Window Pane Layout
   {     
     threadPaneSplitter.setAttribute("orient", "vertical");
@@ -716,14 +729,29 @@ function UpdateMailPaneConfig(aMsgWindowInitialized) {
     // finally, make sure mailContentWrapper has the correct orientation
     mailContentWrapper.setAttribute("orient", "vertical");
     messagesBox.setAttribute("orient", "vertical");
-  }
-  
+  }  
   else if (paneConfig == kVerticalPaneConfig) // Vertical Pane Layout
   {
     messagesBox.setAttribute("orient", "horizontal");
     threadPaneSplitter.removeAttribute("orient");
     // finally, make sure mailContentWrapper has the correct orientation
     mailContentWrapper.setAttribute("orient", "horizontal");
+  }
+  else if (paneConfig == kWideThreadPaneConfig) 
+  {
+    // kWideThreadPaneConfig is a easter egg layout which isn't fully polished. So 
+    // the menu item for selecting it is hidden from the UI.
+    // If you change from kWideThreadPaneConfig to another layout, you have to restart
+    // Thunderbird before things look right. Loading account central looks really bad.
+    // When you change into this layout, the thread pane gets re-rooted and we don't
+    // handle that properly, the user must re-select the folder before the thread pane
+    // relists the messages in it.
+    mailContentWrapper.insertBefore(threadPaneSplitter, mailContentWrapper.firstChild);
+    mailContentWrapper.insertBefore(messengerBox, mailContentWrapper.firstChild);
+
+    mailContentWrapper.setAttribute("orient", "vertical");
+    threadPaneSplitter.setAttribute("orient", "vertical");
+    messagePaneBox.setAttribute("flex", "1");
   }
 
   // re-rooting the message pane causes the docshell to get destroyed 
