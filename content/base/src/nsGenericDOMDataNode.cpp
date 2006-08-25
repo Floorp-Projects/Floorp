@@ -428,7 +428,8 @@ nsGenericDOMDataNode::AppendData(const nsAString& aData)
     mutation.mPrevAttrValue = oldValue;
     mutation.mNewAttrValue = GetCurrentValueAtom();
 
-    nsEventDispatcher::Dispatch(this, nsnull, &mutation);
+    nsEventDispatcher::Dispatch(this, nsnull, &mutation, nsnull, nsnull, nsnull,
+                                PR_FALSE, PR_FALSE);
   }
 
   // Notify observers
@@ -1000,7 +1001,8 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
         do_GetAtom(Substring(aBuffer, aBuffer + aLength));
     }
 
-    nsEventDispatcher::Dispatch(this, nsnull, &mutation);
+    nsEventDispatcher::Dispatch(this, nsnull, &mutation, nsnull, nsnull, nsnull,
+                                PR_FALSE, PR_FALSE);
   }
 
   // Trigger a reflow

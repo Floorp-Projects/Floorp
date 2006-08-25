@@ -64,7 +64,6 @@ nsCOMArray_base::~nsCOMArray_base()
 
 PRInt32
 nsCOMArray_base::IndexOfObject(nsISupports* aObject) const {
-    NS_ENSURE_TRUE(aObject, -1);
     nsCOMPtr<nsISupports> supports = do_QueryInterface(aObject);
     NS_ENSURE_TRUE(supports, -1);
 
