@@ -44,7 +44,6 @@
 #include "nsILocalFile.h"
 
 #include <stdarg.h>
-#include <unistd.h>
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -57,6 +56,7 @@
 #include <CFBundle.h>
 #define PATH_SEPARATOR_CHAR '/'
 #else
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #define PATH_SEPARATOR_CHAR '/'
