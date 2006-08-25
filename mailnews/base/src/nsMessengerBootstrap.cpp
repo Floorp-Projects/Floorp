@@ -55,6 +55,7 @@
 #include "nsString.h"
 #include "nsIURI.h"
 #include "nsIDialogParamBlock.h"
+#include "nsUnicharUtils.h"
 #ifdef MOZ_XUL_APP
 #include "nsICommandLine.h"
 #include "nsILocalFile.h"
@@ -133,7 +134,7 @@ nsMessengerBootstrap::Handle(nsICommandLine* aCmdLine)
   {
     nsAutoString arg;
     aCmdLine->GetArgument(0, arg);
-    if (StringEndsWith(arg, NS_LITERAL_STRING(".eml")))
+    if (StringEndsWith(arg, NS_LITERAL_STRING(".eml"), nsCaseInsensitiveStringComparator()))
     {
       nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
       NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
