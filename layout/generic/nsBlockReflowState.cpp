@@ -233,9 +233,10 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
   // text controls are not splittable
   // XXXldb Why not just set the frame state bit?
 
-  if ((NS_FRAME_SPLITTABLE_NON_RECTANGULAR == aSplitType ||   // normal blocks 
-       NS_FRAME_NOT_SPLITTABLE == aSplitType) &&              // things like images mapped to display: block
-      !(aFrame->GetStateBits() & NS_FRAME_REPLACED_ELEMENT))  // but not replaced elements
+  if ((NS_FRAME_SPLITTABLE_NON_RECTANGULAR == aSplitType ||    // normal blocks 
+       NS_FRAME_NOT_SPLITTABLE == aSplitType) &&               // things like images mapped to display: block
+      !(aFrame->GetStateBits() & NS_FRAME_REPLACED_ELEMENT) && // but not replaced elements
+      aFrame->GetType() != nsLayoutAtoms::scrollFrame)         // or scroll frames
   {
     if (mBand.GetFloatCount()) {
       // Use the float-edge property to determine how the child block
