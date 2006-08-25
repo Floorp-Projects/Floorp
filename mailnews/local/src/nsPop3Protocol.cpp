@@ -1370,13 +1370,18 @@ PRInt32 nsPop3Protocol::SendTLSResponse()
     {
       m_pop3ConData->next_state = POP3_SEND_AUTH;
       m_tlsEnabled = PR_TRUE;
+
+      // certain capabilities like POP3_HAS_AUTH_APOP should be 
+      // preserved across the connections.
+      PRUint32 preservedCapFlags = m_pop3ConData->capability_flags & POP3_HAS_AUTH_APOP;
       m_pop3ConData->capability_flags =     // resetting the flags
         POP3_AUTH_MECH_UNDEFINED |
         POP3_HAS_AUTH_USER |                // should be always there
         POP3_GURL_UNDEFINED |
         POP3_UIDL_UNDEFINED |
         POP3_TOP_UNDEFINED |
-        POP3_XTND_XLST_UNDEFINED;
+        POP3_XTND_XLST_UNDEFINED | 
+        preservedCapFlags;
       m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
       return rv;
     }
