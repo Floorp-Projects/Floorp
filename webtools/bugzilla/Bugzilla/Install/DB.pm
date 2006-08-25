@@ -328,9 +328,6 @@ sub update_table_definitions {
         $dbh->do('UPDATE quips SET userid = NULL WHERE userid = 0');
     }
 
-    $dbh->bz_add_index('bugs', 'bugs_short_desc_idx',
-                       {TYPE => 'FULLTEXT', FIELDS => [qw(short_desc)]});
-
     # Right now, we only create the "thetext" index on MySQL.
     if ($dbh->isa('Bugzilla::DB::Mysql')) {
         $dbh->bz_add_index('longdescs', 'longdescs_thetext_idx',
@@ -481,6 +478,12 @@ sub update_table_definitions {
 
     # 2006-08-19 LpSolit@gmail.com - Bug 87795
     $dbh->bz_alter_column('tokens', 'userid', {TYPE => 'INT3'});
+
+    my $sd_index = $dbh->bz_index_info('bugs', 'bugs_short_desc_idx');
+    if ($sd_index && $sd_index->{TYPE} eq 'FULLTEXT') {
+        $dbh->bz_drop_index('bugs', 'bugs_short_desc_idx');
+        $dbh->bz_add_index('bugs', 'bugs_short_desc_idx', [qw(short_desc)]);
+    }
 
     ################################################################
     # New --TABLE-- changes should go *** A B O V E *** this point #

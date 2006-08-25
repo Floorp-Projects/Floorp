@@ -46,6 +46,11 @@ use Bugzilla::Keyword;
 use Date::Format;
 use Date::Parse;
 
+# How much we should add to the relevance, for each word that matches
+# in bugs.short_desc, during fulltext search. This is high because
+# we want summary matches to be *very* relevant, by default.
+use constant SUMMARY_RELEVANCE_FACTOR => 7;
+
 # Some fields are not sorted on themselves, but on other fields. 
 # We need to have a list of these fields and what they map to.
 # Each field points to an array that contains the fields mapped 
@@ -387,15 +392,7 @@ sub init {
     }
 
     if (defined $params->param('content')) {
-        # Append a new chart implementing content quicksearch
-        my $chart;
-        for ($chart = 0 ; $params->param("field$chart-0-0") ; $chart++) {};
-        $params->param("field$chart-0-0", 'content');
-        $params->param("type$chart-0-0", 'matches');
-        $params->param("value$chart-0-0", $params->param('content'));
-        $params->param("field$chart-0-1", 'short_desc');
-        $params->param("type$chart-0-1", 'allwords');
-        $params->param("value$chart-0-1", $params->param('content'));
+        push(@specialchart, ['content', 'matches', $params->param('content')]);
     }
 
     my $chartid;
@@ -590,13 +587,19 @@ sub init {
 
              # Create search terms to add to the SELECT and WHERE clauses.
              # $term1 searches comments.
-             # $term2 searches summaries, which contributes to the relevance
-             # ranking in SELECT but doesn't limit which bugs get retrieved.
              my $term1 = $dbh->sql_fulltext_search("${table}.thetext", $v);
-             my $term2 = $dbh->sql_fulltext_search("bugs.short_desc", $v);
+
+             # short_desc searching for the WHERE clause
+             my @words = _split_words_into_like('bugs.short_desc', $v);
+             my $term2_where = join(' AND ', @words);
+
+             # short_desc relevance
+             my $factor = SUMMARY_RELEVANCE_FACTOR;
+             my @s_words = map("CASE WHEN $_ THEN $factor ELSE 0 END", @words);
+             my $term2_select = join(' + ', @s_words);
 
              # The term to use in the WHERE clause.
-             $term = "$term1 > 0";
+             $term = "$term1 > 0 OR ($term2_where)";
 
              # In order to sort by relevance (in case the user requests it),
              # we SELECT the relevance value and give it an alias so we can
@@ -612,8 +615,8 @@ sub init {
              # Note: We should be calculating the average relevance of all
              # comments for a bug, not just matching comments, but that's hard
              # (see http://bugzilla.mozilla.org/show_bug.cgi?id=145588#c35).
-             my $select_term =
-               "(SUM($term1)/COUNT($term1) + $term2) AS relevance";
+             my $select_term = "(SUM($term1)/COUNT(${table}.comment_id)"
+                             . " + $term2_select) AS relevance";
 
              # add the column not used in aggregate function explicitly
              push(@groupby, 'bugs.short_desc');
@@ -1710,5 +1713,20 @@ sub BuildOrderBy {
     }
 
     push(@$stringlist, trim($orderfield . ' ' . $orderdirection));
+}
+
+# This is a helper for fulltext search
+sub _split_words_into_like {
+    my ($field, $text) = @_;
+    my $dbh = Bugzilla->dbh;
+    # This code is very similar to Bugzilla::DB::sql_fulltext_search,
+    # so you can look there if you'd like an explanation of what it's
+    # doing.
+    my $lower_text = lc($text);
+    my @words = split(/\s+/, $lower_text);
+    @words = map($dbh->quote("%$_%"), @words);
+    map(trick_taint($_), @words);
+    @words = map($dbh->sql_istrcmp($field, $_, 'LIKE'), @words);
+    return @words;
 }
 1;
