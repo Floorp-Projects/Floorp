@@ -141,7 +141,7 @@ void
 js_ClearContextThread(JSContext *cx)
 {
     cx->thread = NULL;
-    JS_REMOVE_LINK(&cx->threadLinks);
+    JS_REMOVE_AND_INIT_LINK(&cx->threadLinks);
 }
 
 #endif /* JS_THREADSAFE */
