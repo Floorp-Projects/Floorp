@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Darin Fisher <darin@meer.net> (original author)
  *   Christian Biesinger <cbiesinger@web.de>
+ *   Google Inc.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,7 +47,8 @@
 #include "nsHttpResponseHead.h"
 #include "nsHttp.h"
 #include "nsIHttpAuthenticator.h"
-#include "nsIAuthPrompt.h"
+#include "nsIAuthInformation.h"
+#include "nsIAuthPrompt2.h"
 #include "nsIAuthPromptProvider.h"
 #include "nsIStringBundle.h"
 #include "nsXPCOM.h"
@@ -2117,7 +2119,7 @@ SetIdent(nsHttpAuthIdentity &ident,
 // helper function for getting an auth prompt from an interface requestor
 static void
 GetAuthPrompt(nsIInterfaceRequestor *ifreq, PRBool proxyAuth,
-              nsIAuthPrompt **result)
+              nsIAuthPrompt2 **result)
 {
     if (!ifreq)
         return;
@@ -2130,9 +2132,11 @@ GetAuthPrompt(nsIInterfaceRequestor *ifreq, PRBool proxyAuth,
 
     nsCOMPtr<nsIAuthPromptProvider> promptProvider = do_GetInterface(ifreq);
     if (promptProvider)
-        promptProvider->GetAuthPrompt(promptReason, result);
+        promptProvider->GetAuthPrompt(promptReason,
+                                      NS_GET_IID(nsIAuthPrompt2),
+                                      NS_REINTERPRET_CAST(void**, result));
     else
-        CallGetInterface(ifreq, result);
+        NS_QueryAuthPrompt2(ifreq, result);
 }
 
 // generate credentials for the given challenge, and update the auth cache.
@@ -2655,6 +2659,101 @@ nsHttpChannel::ParseRealm(const char *challenge, nsACString &realm)
     }
 }
 
+class nsAuthInformationHolder : public nsIAuthInformation {
+public:
+    // aAuthType must be ASCII
+    nsAuthInformationHolder(PRUint32 aFlags, const nsString& aRealm,
+                            const nsCString& aAuthType)
+        : mFlags(aFlags), mRealm(aRealm), mAuthType(aAuthType) {}
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIAUTHINFORMATION
+
+    void SetToHttpAuthIdentity(PRUint32 authFlags, nsHttpAuthIdentity& identity);
+private:
+    nsString mUser;
+    nsString mPassword;
+    nsString mDomain;
+
+    PRUint32 mFlags;
+    nsString mRealm;
+    nsCString mAuthType;
+};
+
+NS_IMPL_ISUPPORTS1(nsAuthInformationHolder, nsIAuthInformation)
+
+NS_IMETHODIMP
+nsAuthInformationHolder::GetFlags(PRUint32* aFlags)
+{
+    *aFlags = mFlags;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAuthInformationHolder::GetRealm(nsAString& aRealm)
+{
+    aRealm = mRealm;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAuthInformationHolder::GetAuthenticationScheme(nsACString& aScheme)
+{
+    aScheme = mAuthType;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAuthInformationHolder::GetUsername(nsAString& aUserName)
+{
+    aUserName = mUser;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAuthInformationHolder::SetUsername(const nsAString& aUserName)
+{
+    if (!(mFlags & ONLY_PASSWORD))
+        mUser = aUserName;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAuthInformationHolder::GetPassword(nsAString& aPassword)
+{
+    aPassword = mPassword;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAuthInformationHolder::SetPassword(const nsAString& aPassword)
+{
+    mPassword = aPassword;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAuthInformationHolder::GetDomain(nsAString& aDomain)
+{
+    aDomain = mDomain;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAuthInformationHolder::SetDomain(const nsAString& aDomain)
+{
+    if (mFlags & NEED_DOMAIN)
+        mDomain = aDomain;
+    return NS_OK;
+}
+
+void
+nsAuthInformationHolder::SetToHttpAuthIdentity(PRUint32 authFlags, nsHttpAuthIdentity& identity)
+{
+    SetIdent(identity, authFlags, ToNewUnicode(mUser), ToNewUnicode(mPassword));
+    identity.Set(mDomain.get(), mUser.get(), mPassword.get());
+}
+
 nsresult
 nsHttpChannel::PromptForIdentity(const char *scheme,
                                  const char *host,
@@ -2667,11 +2766,7 @@ nsHttpChannel::PromptForIdentity(const char *scheme,
 {
     LOG(("nsHttpChannel::PromptForIdentity [this=%x]\n", this));
 
-    // XXX authType should be included in the prompt
-
-    // XXX i18n: IDN not supported.
-
-    nsCOMPtr<nsIAuthPrompt> authPrompt;
+    nsCOMPtr<nsIAuthPrompt2> authPrompt;
     GetAuthPrompt(mCallbacks, proxyAuth, getter_AddRefs(authPrompt));
     if (!authPrompt && mLoadGroup) {
         nsCOMPtr<nsIInterfaceRequestor> cbs;
@@ -2684,93 +2779,38 @@ nsHttpChannel::PromptForIdentity(const char *scheme,
     // XXX i18n: need to support non-ASCII realm strings (see bug 41489)
     NS_ConvertASCIItoUTF16 realmU(realm);
 
-    //
-    // construct the single signon key
-    //
-    // we always add the port to domain since it is used as the key for storing
-    // in password maanger.  THE FORMAT OF THIS KEY IS SACROSANCT!!  do not
-    // even think about changing the format of this key.
-    //
-    // XXX we need to prefix this with "scheme://" at some point.  however, that
-    // has to be done very carefully and probably with some cooperation from the
-    // password manager to ensure that passwords remembered under the old key
-    // format are not lost.
-    //
-    nsAutoString key;
-    CopyASCIItoUTF16(host, key); // XXX IDN?
-    key.Append(PRUnichar(':'));
-    key.AppendInt(port);
-    key.AppendLiteral(" (");
-    key.Append(realmU);
-    key.Append(PRUnichar(')'));
-
     nsresult rv;
 
-    // construct the message string
-    nsCOMPtr<nsIStringBundleService> bundleSvc =
-            do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIStringBundle> bundle;
-    rv = bundleSvc->CreateBundle(NECKO_MSGS_URL, getter_AddRefs(bundle));
-    if (NS_FAILED(rv)) return rv;
-
-    // figure out what message to display...
-    nsAutoString displayHost;
-    CopyASCIItoUTF16(host, displayHost); // XXX IDN?
-    // If not proxy auth then add port only if it was originally specified
-    // in the URI.
-    PRInt32 uriPort = -1;
-    if (proxyAuth || (NS_SUCCEEDED(mURI->GetPort(&uriPort)) && uriPort != -1)) {
-        displayHost.Append(PRUnichar(':'));
-        displayHost.AppendInt(port);
-    }
-
-    nsXPIDLString message;
-    {
-        NS_NAMED_LITERAL_STRING(proxyText, "EnterUserPasswordForProxy");
-        NS_NAMED_LITERAL_STRING(originText, "EnterUserPasswordForRealm");
-
-        const PRUnichar *text;
-        if (proxyAuth) {
-            text = proxyText.get();
-        } else {
-            text = originText.get();
-
-            // prepend "scheme://"
-            nsAutoString schemeU; 
-            CopyASCIItoUTF16(scheme, schemeU);
-            schemeU.AppendLiteral("://");
-            displayHost.Insert(schemeU, 0);
-        }
-
-        const PRUnichar *strings[] = { realmU.get(), displayHost.get() };
-
-        rv = bundle->FormatStringFromName(text, strings, 2,
-                                          getter_Copies(message));
-    }
-    if (NS_FAILED(rv)) return rv;
-
     // prompt the user...
+    PRUint32 promptFlags = 0;
+    if (proxyAuth)
+        promptFlags |= nsIAuthInformation::AUTH_PROXY;
+    else
+        promptFlags |= nsIAuthInformation::AUTH_HOST;
+
+    if (authFlags & nsIHttpAuthenticator::IDENTITY_INCLUDES_DOMAIN)
+        promptFlags |= nsIAuthInformation::NEED_DOMAIN;
+
+    nsRefPtr<nsAuthInformationHolder> holder =
+        new nsAuthInformationHolder(promptFlags, realmU, nsDependentCString(authType));
+    if (!holder)
+        return NS_ERROR_OUT_OF_MEMORY;
     PRBool retval = PR_FALSE;
-    PRUnichar *user = nsnull, *pass = nsnull;
-    rv = authPrompt->PromptUsernameAndPassword(nsnull, message.get(),
-                                               key.get(),
-                                               nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
-                                               &user, &pass, &retval);
-    if (NS_FAILED(rv)) return rv;
+    rv = authPrompt->PromptAuth(this,
+                                nsIAuthPrompt2::LEVEL_NONE,
+                                holder, &retval);
+    if (NS_FAILED(rv))
+        return rv;
 
     // remember that we successfully showed the user an auth dialog
     if (!proxyAuth)
         mSuppressDefensiveAuth = PR_TRUE;
 
-    if (!retval || !user || !pass)
+    if (!retval)
         rv = NS_ERROR_ABORT;
     else
-        SetIdent(ident, authFlags, user, pass);
+        holder->SetToHttpAuthIdentity(authFlags, ident);
   
-    if (user) nsMemory::Free(user);
-    if (pass) nsMemory::Free(pass);
     return rv;
 }
 

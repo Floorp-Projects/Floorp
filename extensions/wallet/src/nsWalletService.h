@@ -43,17 +43,22 @@
 #include "nsIFormSubmitObserver.h"
 #include "nsWeakReference.h"
 #include "nsIPrompt.h"
+#include "nsIPromptService2.h"
+#include "nsIDOMWindow.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIURI.h"
 #include "nsIWebProgressListener.h"
 #include "nsIComponentManager.h"
 #include "nsIGenericFactory.h"
 #include "nsIAuthPromptWrapper.h"
+#include "nsIAuthPrompt2.h"
+#include "nsIPromptFactory.h"
 
 class nsWalletlibService : public nsIWalletService,
                            public nsIObserver,
                            public nsIFormSubmitObserver,
                            public nsIWebProgressListener,
+                           public nsIPromptFactory,
                            public nsSupportsWeakReference {
 
 public:
@@ -61,6 +66,7 @@ public:
   NS_DECL_NSIWALLETSERVICE
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_DECL_NSIPROMPTFACTORY
   // NS_DECL_NSSUPPORTSWEAKREFERENCE
 
   nsWalletlibService();
@@ -104,5 +110,22 @@ protected:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+
+class nsWalletAuthPromptWrapper : public nsIAuthPrompt2
+{
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIAUTHPROMPT2
+
+    nsWalletAuthPromptWrapper(nsIPromptService2* aService,
+                              nsIDOMWindow* aParent)
+      : mService(aService), mParent(aParent) {}
+  private:
+    ~nsWalletAuthPromptWrapper() {}
+
+    nsCOMPtr<nsIPromptService2> mService;
+    nsCOMPtr<nsIDOMWindow> mParent;
+};
+
 
 #endif /* nsWalletService_h___ */

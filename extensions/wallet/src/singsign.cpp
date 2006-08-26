@@ -65,7 +65,15 @@
 #include "nsReadableUtils.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
+#include "nsIPromptService2.h"
+#include "nsIWindowWatcher.h"
+#include "nsIAuthInformation.h"
+#include "nsIProxiedChannel.h"
+#include "nsIProxyInfo.h"
+#include "nsIIDNService.h"
+#include "nsNetCID.h"
 #include "nsCRT.h"
+#include "nsPromptUtils.h"
 
 //#define SINGSIGN_LOGGING
 #ifdef SINGSIGN_LOGGING
@@ -576,6 +584,36 @@ si_CheckGetUsernamePassword
     return NS_ERROR_FAILURE; /* user pressed cancel */
   }
 }
+
+static nsresult
+si_CheckPromptAuth
+  (nsIPromptService2* aService, nsIDOMWindow* aParent, nsIChannel* aChannel,
+   PRUint32 aLevel, nsIAuthInformation* aAuthInfo, PRBool* remembered)
+{
+  PRUnichar* check_string;
+  if (SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
+    check_string = Wallet_Localize("SaveTheseValuesEncrypted");
+  } else {
+    check_string = Wallet_Localize("SaveTheseValuesObscured");
+  }
+
+  PRBool confirmed = PR_FALSE;  
+  nsresult rv = aService->PromptAuth(aParent, aChannel, aLevel,
+                                     aAuthInfo, check_string,
+                                     remembered, &confirmed);
+  if (check_string)
+    Recycle(check_string);
+  
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (confirmed) {
+    return NS_OK;
+  } else {
+    return NS_ERROR_FAILURE; /* user pressed cancel */
+  }
+}
+
 
 
 /********************
@@ -2493,7 +2531,7 @@ si_RememberSignonDataFromBrowser(const char* passwordRealm, const nsString& user
  * Check for remembered data from a previous browser-generated password dialog
  * restore it if so
  */
-static void
+static PRBool
 si_RestoreOldSignonDataFromBrowser
     (nsIPrompt* dialog, const char* passwordRealm, PRBool pickFirstUser, nsString& username, nsString& password) {
   si_SignonUserStruct* user;
@@ -2512,7 +2550,7 @@ si_RestoreOldSignonDataFromBrowser
     /* username = 0; */
     /* *password = 0; */
     si_unlock_signon_list();
-    return;
+    return PR_FALSE;
   }
 
   /* restore the data from previous time this URL was visited */
@@ -2529,6 +2567,7 @@ si_RestoreOldSignonDataFromBrowser
     }
   }
   si_unlock_signon_list();
+  return PR_TRUE;
 }
 
 PRBool
@@ -2776,6 +2815,81 @@ SINGSIGN_Prompt
   *pressedOK = PR_TRUE;
   return NS_OK;
 }
+
+nsresult
+SINGSIGN_PromptAuth
+    (nsIPromptService2* aService, nsIDOMWindow* aParent, nsIChannel* aChannel,
+     PRUint32 aLevel, nsIAuthInformation* aAuthInfo, PRBool* retval) {
+
+  nsCAutoString key;
+  NS_GetAuthKey(aChannel, aAuthInfo, key);
+
+  /* do only the dialog if signon preference is not enabled */
+  if (!si_GetSignonRememberingPref()){
+    return aService->PromptAuth(aParent, aChannel, aLevel,
+                                aAuthInfo, nsnull, nsnull,
+                                retval);
+  }
+
+  /* prefill with previous username/password if any */
+  /* this needs a dialog to choose between multiple usernames */
+  nsCOMPtr<nsIPrompt> prompt;
+  nsresult rv;
+  nsCOMPtr<nsIWindowWatcher> wwatcher =
+    do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+  wwatcher->GetNewPrompter(aParent, getter_AddRefs(prompt));
+
+  // If we have a domain, insert a "domain\" in front of the username
+  // for the lookup
+  nsAutoString domain, username, password;
+  aAuthInfo->GetDomain(domain);
+  aAuthInfo->GetUsername(username);
+  if (!domain.IsEmpty()) {
+    domain.Append(PRUnichar('\\'));
+    username.Insert(domain, 0);
+  }
+  // Offer saving the data iff we had previously stored information
+  PRBool checked = si_RestoreOldSignonDataFromBrowser(prompt,
+                                                      key.get(),
+                                                      PR_FALSE,
+                                                      username,
+                                                      password);
+
+  if (checked) {
+    NS_SetAuthInfo(aAuthInfo, username, password);
+  }
+
+  PRBool remembered = checked;
+  rv = si_CheckPromptAuth(aService, aParent, aChannel, aLevel,
+                          aAuthInfo, &checked);
+  if (NS_FAILED(rv)) {
+    /* user pressed Cancel */
+    *retval = PR_FALSE;
+    return NS_OK;
+  }
+
+  /* Get the newly entered data back */
+  aAuthInfo->GetDomain(domain);
+  aAuthInfo->GetUsername(username);
+  aAuthInfo->GetPassword(password);
+  if (!domain.IsEmpty()) {
+    domain.Append(PRUnichar('\\'));
+    username.Insert(domain, 0);
+  }
+
+  if (checked) {
+    Wallet_GiveCaveat(nsnull, prompt);
+    si_RememberSignonDataFromBrowser (key.get(), username, password);
+  } else if (remembered) {
+    /* a login was remembered but user unchecked the box; we forget the remembered login */
+    si_RemoveUser(key.get(), username, PR_TRUE, PR_FALSE, PR_TRUE);  
+  }
+
+  /* cleanup and return */
+  *retval = PR_TRUE;
+  return NS_OK;
+}
+
 
 /*****************
  * Signon Viewer *

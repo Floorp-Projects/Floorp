@@ -66,6 +66,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  unicharutil \
 		  windowwatcher \
+		  embed_base \
 		  $(NULL)
 
 CPPSRCS		= \

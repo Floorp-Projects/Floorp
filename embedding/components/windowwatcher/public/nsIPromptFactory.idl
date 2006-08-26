@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org embedding code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Christian Biesinger <cbiesinger@web.de> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,47 +35,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsPromptService_h
-#define __nsPromptService_h
+#include "nsISupports.idl"
 
-// {A2112D6A-0E28-421f-B46A-25C0B308CBD0}
-#define NS_PROMPTSERVICE_CID \
- {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
-// {150E7415-72D7-11DA-A924-00039386357A}
-#define NS_NONBLOCKINGALERTSERVICE_CID \
- {0x150e7415, 0x72d7, 0x11da, {0xa9, 0x24, 0x00, 0x03, 0x93, 0x86, 0x35, 0x7a}}
+interface nsIDOMWindow;
 
-#include "nsCOMPtr.h"
-#include "nsIPromptService2.h"
-#include "nsPIPromptService.h"
-#include "nsINonBlockingAlertService.h"
-#include "nsIWindowWatcher.h"
-
-class nsIDOMWindow;
-class nsIDialogParamBlock;
-
-class nsPromptService: public nsIPromptService2,
-                       public nsPIPromptService,
-                       public nsINonBlockingAlertService {
-
-public:
-
-  nsPromptService();
-  virtual ~nsPromptService();
-
-  nsresult Init();
-
-  NS_DECL_NSIPROMPTSERVICE
-  NS_DECL_NSIPROMPTSERVICE2
-  NS_DECL_NSPIPROMPTSERVICE
-  NS_DECL_NSINONBLOCKINGALERTSERVICE
-  NS_DECL_ISUPPORTS
-
-private:
-  nsresult GetLocaleString(const char *aKey, PRUnichar **aResult);
-
-  nsCOMPtr<nsIWindowWatcher> mWatcher;
+/**
+ * This interface allows creating various prompts that have a specific parent.
+ */
+[scriptable, uuid(2532b748-75db-4732-9173-78d3bf34f694)]
+interface nsIPromptFactory : nsISupports
+{
+  /**
+   * Returns an object implementing the specified interface that creates
+   * prompts parented to aParent.
+   */
+  void getPrompt(in nsIDOMWindow aParent, in nsIIDRef iid,
+                 [iid_is(iid),retval] out nsQIResult result);
 };
-
-#endif
 

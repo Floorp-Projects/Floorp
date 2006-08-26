@@ -50,6 +50,9 @@
 #include "nsIDOMWindowInternal.h"
 
 class nsIURI;
+class nsIPromptService2;
+class nsIChannel;
+class nsIAuthInformation;
 
 /* Duplicates defines as in nsIPrompt.idl -- keep in sync! */
 #define SINGSIGN_SAVE_PASSWORD_NEVER 0
@@ -95,6 +98,11 @@ SINGSIGN_Prompt
     (const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **resultText,
      const char* passwordRealm, nsIPrompt* dialog, PRBool *returnValue,
      PRUint32 savePassword = SINGSIGN_SAVE_PASSWORD_PERMANENTLY);
+
+extern nsresult
+SINGSIGN_PromptAuth
+    (nsIPromptService2* aService, nsIDOMWindow* aParent, nsIChannel* aChannel,
+     PRUint32 aLevel, nsIAuthInformation* aAuthInfo, PRBool* retval);
 
 extern nsresult
 SINGSIGN_RemoveUser

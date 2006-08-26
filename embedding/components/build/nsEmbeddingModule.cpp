@@ -149,6 +149,7 @@ static const nsModuleComponentInfo gComponents[] = {
 #endif
 #endif
   { "Window Watcher", NS_WINDOWWATCHER_CID, NS_WINDOWWATCHER_CONTRACTID, nsWindowWatcherConstructor },
+  { "Window Watcher", NS_WINDOWWATCHER_CID, NS_AUTHPROMPT_ADAPTER_FACTORY_CONTRACTID, nsWindowWatcherConstructor },
   { "Find",           NS_FIND_CID, NS_FIND_CONTRACTID, nsFindConstructor },
   { "WebBrowserFind",           NS_WEB_BROWSER_FIND_CID, NS_WEB_BROWSER_FIND_CONTRACTID, nsWebBrowserFindConstructor },
   { NS_APPSTARTUPNOTIFIER_CLASSNAME, NS_APPSTARTUPNOTIFIER_CID, NS_APPSTARTUPNOTIFIER_CONTRACTID, nsAppStartupNotifierConstructor },

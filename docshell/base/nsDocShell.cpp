@@ -76,6 +76,7 @@
 #include "nsIObserverService.h"
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
+#include "nsIAuthPrompt2.h"
 #include "nsTextFormatter.h"
 #include "nsIChannelEventSink.h"
 #include "nsIUploadChannel.h"
@@ -127,6 +128,7 @@
 #include "nsIHistoryEntry.h"
 #include "nsISHistoryListener.h"
 #include "nsIWindowWatcher.h"
+#include "nsIPromptFactory.h"
 #include "nsIObserver.h"
 #include "nsINestedURI.h"
 
@@ -455,11 +457,11 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
         *aSink = prompt;
         return NS_OK;
     }
-    else if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
+    else if (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) ||
+             aIID.Equals(NS_GET_IID(nsIAuthPrompt2))) {
         return NS_SUCCEEDED(
-                GetAuthPrompt(PROMPT_NORMAL, (nsIAuthPrompt **) aSink)) ?
+                GetAuthPrompt(PROMPT_NORMAL, aIID, aSink)) ?
                 NS_OK : NS_NOINTERFACE;
-
     }
     else if (aIID.Equals(NS_GET_IID(nsISHistory))) {
         nsCOMPtr<nsISHistory> shistory;
@@ -8820,8 +8822,9 @@ nsDocShell::SetBaseUrlForWyciwyg(nsIContentViewer * aContentViewer)
 // nsDocShell::nsIAuthPromptProvider
 //*****************************************************************************
 
-nsresult
-nsDocShell::GetAuthPrompt(PRUint32 aPromptReason, nsIAuthPrompt **aResult)
+NS_IMETHODIMP
+nsDocShell::GetAuthPrompt(PRUint32 aPromptReason, const nsIID& iid,
+                          void** aResult)
 {
     // a priority prompt request will override a false mAllowAuth setting
     PRBool priorityPrompt = (aPromptReason == PROMPT_PROXY);
@@ -8831,7 +8834,7 @@ nsDocShell::GetAuthPrompt(PRUint32 aPromptReason, nsIAuthPrompt **aResult)
 
     // we're either allowing auth, or it's a proxy request
     nsresult rv;
-    nsCOMPtr<nsIWindowWatcher> wwatch =
+    nsCOMPtr<nsIPromptFactory> wwatch =
       do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -8843,7 +8846,8 @@ nsDocShell::GetAuthPrompt(PRUint32 aPromptReason, nsIAuthPrompt **aResult)
     // Get the an auth prompter for our window so that the parenting
     // of the dialogs works as it should when using tabs.
 
-    return wwatch->GetNewAuthPrompter(window, aResult);
+    return wwatch->GetPrompt(window, iid,
+                             NS_REINTERPRET_CAST(void**, aResult));
 }
 
 //*****************************************************************************

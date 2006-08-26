@@ -36,13 +36,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef NSSINGLESIGNONPROMPT_H_
+#define NSSINGLESIGNONPROMPT_H_
+
 #include "nsIAuthPromptWrapper.h"
 #include "nsCOMPtr.h"
 #include "nsIPrompt.h"
+#include "nsIAuthPrompt2.h"
 
 /* 1baf3398-f759-4a72-a21f-0abdc9cc9960 */
 #define NS_SINGLE_SIGNON_PROMPT_CID \
 {0x1baf3398, 0xf759, 0x4a72, {0xa2, 0x1f, 0x0a, 0xbd, 0xc9, 0xcc, 0x99, 0x60}}
+
+class nsIDOMWindow;
+class nsIPromptService2;
 
 // Our wrapper for username/password prompts - this allows us to prefill
 // the password dialog and add a "remember this password" checkbox.
@@ -62,3 +69,24 @@ protected:
 
   nsCOMPtr<nsIPrompt> mPrompt;
 };
+
+// A wrapper for the newer nsIAuthPrompt2 interface
+// Its purpose is the same as nsSingleSignonPrompt, but wraps an nsIDOMWindow
+// instead of an nsIPrompt.
+
+class nsSingleSignonPrompt2 : public nsIAuthPrompt2
+{
+  public:
+    nsSingleSignonPrompt2(nsIPromptService2* aService, nsIDOMWindow* aParent);
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIAUTHPROMPT2
+
+  private:
+    ~nsSingleSignonPrompt2();
+
+    nsCOMPtr<nsIPromptService2> mService;
+    nsCOMPtr<nsIDOMWindow> mParent;
+};
+
+#endif // NSSINGLESIGNONPROMPT_H_

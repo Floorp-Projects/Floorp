@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPasswordManager.h"
+#include "nsSingleSignonPrompt.h"
 #include "nsIFile.h"
 #include "nsNetUtil.h"
 #include "nsILineInputStream.h"
@@ -44,6 +45,7 @@
 #include "nsISecretDecoderRing.h"
 #include "nsIPasswordInternal.h"
 #include "nsIPrompt.h"
+#include "nsIPromptService2.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
@@ -72,6 +74,7 @@
 #include "nsIPK11Token.h"
 #include "nsUnicharUtils.h"
 #include "nsCOMArray.h"
+#include "nsEmbedCID.h"
 
 static const char kPMPropertiesURL[] = "chrome://passwordmgr/locale/passwordmgr.properties";
 static PRBool sRememberPasswords = PR_FALSE;
@@ -209,6 +212,7 @@ NS_INTERFACE_MAP_BEGIN(nsPasswordManager)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMFocusListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPasswordManager)
+  NS_INTERFACE_MAP_ENTRY(nsIPromptFactory)
 NS_INTERFACE_MAP_END
 
 nsPasswordManager::nsPasswordManager()
@@ -1223,6 +1227,35 @@ nsPasswordManager::HandleEvent(nsIDOMEvent* aEvent)
   else if (type.EqualsLiteral("DOMContentLoaded"))
     return FillDocument(domDoc);
 
+  return NS_OK;
+}
+
+
+// nsIPromptFactory implementation
+
+NS_IMETHODIMP
+nsPasswordManager::GetPrompt(nsIDOMWindow* aParent, const nsIID& aIID,
+                             void** _retval)
+{
+  if (!aIID.Equals(NS_GET_IID(nsIAuthPrompt2))) {
+    NS_WARNING("asked for unknown IID");
+    return NS_NOINTERFACE;
+  }
+
+  // NOTE: It is important to return the specific return value here. The
+  // caller cares.
+  nsresult rv;
+  nsCOMPtr<nsIPromptService2> service =
+    do_GetService(NS_PROMPTSERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsSingleSignonPrompt2* wrapper = new nsSingleSignonPrompt2(service, aParent);
+  if (!wrapper)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(wrapper);
+  *_retval = NS_STATIC_CAST(nsIAuthPrompt2*, wrapper);
   return NS_OK;
 }
 

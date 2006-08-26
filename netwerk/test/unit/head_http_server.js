@@ -83,6 +83,16 @@ nsTestServ.prototype =
         // fall through to failure response
       }
       stream.write(failedResponse, failedResponse.length);
+    },
+
+    "/auth/ntlm/simple": function(stream) {
+      var response = this.headers("401 Unauthorized") +
+                     "WWW-Authenticate: NTLM\r\n" + // realm=\"secret\"\r\n" +
+                     "\r\n" +
+                     "NOTE: This just sends an NTLM challenge, it never\n" +
+                     "accepts the authentication. It also closes\n" +
+                     "the connection after sending the challenge\n";
+      stream.write(response, response.length);
     }
   },
 

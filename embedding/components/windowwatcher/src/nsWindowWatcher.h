@@ -46,6 +46,8 @@
 #include "jspubtd.h"
 #include "nsIWindowCreator.h" // for stupid compilers
 #include "nsIWindowWatcher.h"
+#include "nsIPromptFactory.h"
+#include "nsIAuthPromptAdapterFactory.h"
 #include "nsPIWindowWatcher.h"
 #include "nsVoidArray.h"
 
@@ -64,7 +66,9 @@ struct SizeSpec;
 
 class nsWindowWatcher :
       public nsIWindowWatcher,
-      public nsPIWindowWatcher
+      public nsPIWindowWatcher,
+      public nsIPromptFactory,
+      public nsIAuthPromptAdapterFactory
 {
 friend class nsWatcherWindowEnumerator;
 
@@ -78,6 +82,8 @@ public:
 
   NS_DECL_NSIWINDOWWATCHER
   NS_DECL_NSPIWINDOWWATCHER
+  NS_DECL_NSIPROMPTFACTORY
+  NS_DECL_NSIAUTHPROMPTADAPTERFACTORY
 
 private:
   PRBool AddEnumerator(nsWatcherWindowEnumerator* inEnumerator);

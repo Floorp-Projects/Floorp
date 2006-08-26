@@ -61,7 +61,11 @@ SDK_XPIDLSRCS   = \
 		$(NULL)
 
 XPIDLSRCS	= \
+		nsIAuthInformation.idl \
 		nsIAuthPrompt.idl \
+		nsIAuthPrompt2.idl \
+		nsIAuthPromptAdapterFactory.idl \
+		nsIAuthPromptCallback.idl \
 		nsIAsyncStreamCopier.idl \
 		nsISafeOutputStream.idl \
 		nsIBufferedStreams.idl \
