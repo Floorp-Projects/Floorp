@@ -36,6 +36,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsISupports.idl"
+
+interface nsIDOMWindow;
+interface nsIObserver;
+interface nsIPrompt;
+interface nsIAuthPrompt;
+interface nsISimpleEnumerator;
+interface nsIWebBrowserChrome;
+interface nsIWindowCreator;
+
+
+
 /**
  * nsIWindowWatcher is the keeper of Gecko/DOM Windows. It maintains
  * a list of open top-level windows, and allows some operations on them.
@@ -58,17 +70,6 @@
  *
  * @status FROZEN
  */
-
-#include "nsISupports.idl"
-
-interface nsIDOMWindow;
-interface nsIObserver;
-interface nsIPrompt;
-interface nsIAuthPrompt;
-interface nsISimpleEnumerator;
-interface nsIWebBrowserChrome;
-interface nsIWindowCreator;
-
 [scriptable, uuid(002286a8-494b-43b3-8ddd-49e3fc50622b)]
 
 interface nsIWindowWatcher : nsISupports {

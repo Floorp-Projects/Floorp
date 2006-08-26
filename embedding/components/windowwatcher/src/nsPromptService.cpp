@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPromptService.h"
+#include "nsPrompt.h"
 
 #include "nsDialogParamBlock.h"
 #include "nsIComponentManager.h"
@@ -83,7 +84,7 @@ private:
  ************************ nsPromptService ***********************
  ****************************************************************/
 
-NS_IMPL_ISUPPORTS3(nsPromptService, nsIPromptService,
+NS_IMPL_ISUPPORTS4(nsPromptService, nsIPromptService, nsIPromptService2,
                    nsPIPromptService, nsINonBlockingAlertService)
 
 nsPromptService::nsPromptService() {
@@ -556,6 +557,36 @@ NS_IMETHODIMP nsPromptService::PromptPassword(nsIDOMWindow *parent,
       block->GetInt(eCheckboxState, checkValue);  
   }
   return rv;
+}
+
+
+NS_IMETHODIMP
+nsPromptService::PromptAuth(nsIDOMWindow* aParent,
+                            nsIChannel* aChannel,
+                            PRUint32 aLevel,
+                            nsIAuthInformation* aAuthInfo,
+                            const PRUnichar* aCheckLabel,
+                            PRBool* aCheckValue,
+                            PRBool *retval)
+{
+  return nsPrompt::PromptPasswordAdapter(this, aParent, aChannel,
+                                         aLevel, aAuthInfo,
+                                         aCheckLabel, aCheckValue,
+                                         retval);
+}
+
+NS_IMETHODIMP
+nsPromptService::AsyncPromptAuth(nsIDOMWindow* aParent,
+                                 nsIChannel* aChannel,
+                                 nsIAuthPromptCallback* aCallback,
+                                 nsISupports* aContext,
+                                 PRUint32 aLevel,
+                                 nsIAuthInformation* aAuthInfo,
+                                 const PRUnichar* aCheckLabel,
+                                 PRBool* aCheckValue,
+                                 nsICancelable** retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

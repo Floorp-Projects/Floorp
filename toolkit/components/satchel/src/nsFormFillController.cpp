@@ -75,6 +75,7 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIGenericFactory.h"
 #include "nsToolkitCompsCID.h"
+#include "nsEmbedCID.h"
 
 NS_INTERFACE_MAP_BEGIN(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY(nsIFormFillController)
@@ -1146,6 +1147,13 @@ static const nsModuleComponentInfo components[] =
   { "Password Manager",
     NS_PASSWORDMANAGER_CID,
     NS_PASSWORDMANAGER_CONTRACTID,
+    nsPasswordManagerConstructor,
+    nsPasswordManager::Register,
+    nsPasswordManager::Unregister },
+
+  { "Password Manager",
+    NS_PASSWORDMANAGER_CID,
+    NS_PWMGR_AUTHPROMPTFACTORY,
     nsPasswordManagerConstructor,
     nsPasswordManager::Register,
     nsPasswordManager::Unregister },

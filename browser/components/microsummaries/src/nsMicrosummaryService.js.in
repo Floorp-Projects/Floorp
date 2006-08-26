@@ -1978,7 +1978,7 @@ MicrosummaryResource.prototype = {
   get _httpAuthFailed()         { return this.__httpAuthFailed },
   set _httpAuthFailed(newValue) { this.__httpAuthFailed = newValue },
 
-  getAuthPrompt: function(aPromptReason) {
+  getAuthPrompt: function(aPromptReason, aIID) {
     this._httpAuthFailed = true;
     throw Components.results.NS_ERROR_NOT_AVAILABLE;
   },

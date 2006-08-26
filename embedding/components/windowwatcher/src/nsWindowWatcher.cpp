@@ -324,7 +324,11 @@ nsresult JSContextAutoPopper::Push(JSContext *cx)
 
 NS_IMPL_ADDREF(nsWindowWatcher)
 NS_IMPL_RELEASE(nsWindowWatcher)
-NS_IMPL_QUERY_INTERFACE2(nsWindowWatcher, nsIWindowWatcher, nsPIWindowWatcher)
+NS_IMPL_QUERY_INTERFACE4(nsWindowWatcher,
+                         nsIWindowWatcher,
+                         nsIPromptFactory,
+                         nsIAuthPromptAdapterFactory,
+                         nsPIWindowWatcher)
 
 nsWindowWatcher::nsWindowWatcher() :
         mEnumeratorList(),
@@ -960,6 +964,47 @@ NS_IMETHODIMP
 nsWindowWatcher::GetNewAuthPrompter(nsIDOMWindow *aParent, nsIAuthPrompt **_retval)
 {
   return NS_NewAuthPrompter(_retval, aParent);
+}
+
+NS_IMETHODIMP
+nsWindowWatcher::GetPrompt(nsIDOMWindow *aParent, const nsIID& aIID,
+                           void **_retval)
+{
+  if (aIID.Equals(NS_GET_IID(nsIPrompt)))
+    return NS_NewPrompter(NS_REINTERPRET_CAST(nsIPrompt**, _retval), aParent);
+  if (aIID.Equals(NS_GET_IID(nsIAuthPrompt)))
+    return NS_NewAuthPrompter(NS_REINTERPRET_CAST(nsIAuthPrompt**, _retval),
+                              aParent);
+  if (aIID.Equals(NS_GET_IID(nsIAuthPrompt2))) {
+    nsresult rv = NS_NewAuthPrompter2(NS_REINTERPRET_CAST(nsIAuthPrompt2**,
+                                                          _retval),
+                                      aParent);
+    if (rv == NS_NOINTERFACE) {
+      // Return an wrapped nsIAuthPrompt (if we can)
+      nsCOMPtr<nsIAuthPrompt> prompt;
+      rv = NS_NewAuthPrompter(getter_AddRefs(prompt), aParent);
+      if (NS_SUCCEEDED(rv)) {
+        NS_WrapAuthPrompt(prompt,
+                          NS_REINTERPRET_CAST(nsIAuthPrompt2**, _retval));
+        if (!*_retval)
+          rv = NS_ERROR_NOT_AVAILABLE;
+      }
+
+      return rv;
+    }
+  }
+
+  return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP
+nsWindowWatcher::CreateAdapter(nsIAuthPrompt* aPrompt, nsIAuthPrompt2** _retval)
+{
+  *_retval = new AuthPromptWrapper(aPrompt);
+  if (!*_retval)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

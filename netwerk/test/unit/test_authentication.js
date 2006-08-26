@@ -3,6 +3,9 @@
 const FLAG_RETURN_FALSE   = 1 << 0;
 const FLAG_WRONG_PASSWORD = 1 << 1;
 
+const nsIAuthPrompt2 = Components.interfaces.nsIAuthPrompt2;
+const nsIAuthInformation = Components.interfaces.nsIAuthInformation;
+
 function AuthPrompt1(flags) {
   this.flags = flags;
 }
@@ -58,8 +61,79 @@ AuthPrompt1.prototype = {
 
 };
 
-function Requestor(flags) {
+function AuthPrompt2(flags) {
   this.flags = flags;
+}
+
+AuthPrompt2.prototype = {
+  user: "guest",
+  pass: "guest",
+
+  expectedRealm: "secret",
+
+  QueryInterface: function authprompt2_qi(iid) {
+    if (iid.equals(Components.interfaces.nsISupports) ||
+        iid.equals(Components.interfaces.nsIAuthPrompt2))
+      return this;
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  promptAuth:
+    function ap2_promptAuth(channel, level, authInfo)
+  {
+    var isNTLM = channel.URI.path.indexOf("ntlm") != -1;
+
+    if (isNTLM)
+      this.expectedRealm = ""; // NTLM knows no realms
+
+    do_check_eq(this.expectedRealm, authInfo.realm);
+
+    // This would be nice but isn't currently implemented,
+    // so we can't test it
+    // var expectedLevel = isNTLM ?
+    //                     nsIAuthPrompt2.LEVEL_PW_ENCRYPTED :
+    //                     nsIAuthPrompt2.LEVEL_NONE;
+    var expectedLevel = nsIAuthPrompt2.LEVEL_NONE;
+    do_check_eq(expectedLevel, level);
+
+    var expectedFlags = nsIAuthInformation.AUTH_HOST;
+
+    if (isNTLM)
+      expectedFlags |= nsIAuthInformation.NEED_DOMAIN;
+
+    do_check_eq(expectedFlags, authInfo.flags);
+
+    var expectedScheme = isNTLM ? "ntlm" : "basic";
+    do_check_eq(expectedScheme, authInfo.authenticationScheme);
+
+    // No passwords in the URL -> nothing should be prefilled
+    do_check_eq(authInfo.username, "");
+    do_check_eq(authInfo.password, "");
+    do_check_eq(authInfo.domain, "");
+
+    if (this.flags & FLAG_RETURN_FALSE)
+      return false;
+
+    authInfo.username = this.user;
+    if (this.flags & FLAG_WRONG_PASSWORD) {
+      authInfo.password = this.pass + ".wrong";
+      // Now clear the flag to avoid an infinite loop
+      this.flags &= ~FLAG_WRONG_PASSWORD;
+    } else {
+      authInfo.password = this.pass;
+    }
+    return true;
+  },
+
+  asyncPromptAuth: function ap2_async(chan, cb, ctx, lvl, info) {
+    do_throw("not implemented yet")
+  }
+};
+
+
+function Requestor(flags, versions) {
+  this.flags = flags;
+  this.versions = versions;
 }
 
 Requestor.prototype = {
@@ -71,16 +145,26 @@ Requestor.prototype = {
   },
 
   getInterface: function requestor_gi(iid) {
-    if (iid.equals(Components.interfaces.nsIAuthPrompt)) {
+    if (this.versions & 1 &&
+        iid.equals(Components.interfaces.nsIAuthPrompt)) {
       // Allow the prompt to store state by caching it here
       if (!this.prompt1)
         this.prompt1 = new AuthPrompt1(this.flags); 
       return this.prompt1;
     }
+    if (this.versions & 2 &&
+        iid.equals(Components.interfaces.nsIAuthPrompt2)) {
+      // Allow the prompt to store state by caching it here
+      if (!this.prompt2)
+        this.prompt2 = new AuthPrompt2(this.flags); 
+      return this.prompt2;
+    }
+
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
 
-  prompt1: null
+  prompt1: null,
+  prompt2: null
 };
 
 var listener = {
@@ -137,7 +221,8 @@ function makeChan(url) {
   return chan;
 }
 
-var tests = [test_noauth, test_returnfalse1, test_wrongpw1, test_prompt1];
+var tests = [test_noauth, test_returnfalse1, test_wrongpw1, test_prompt1,
+             test_returnfalse2, test_wrongpw2, test_prompt2, test_ntlm];
 var current_test = 0;
 
 var httpserv = null;
@@ -159,7 +244,7 @@ function test_noauth() {
 function test_returnfalse1() {
   var chan = makeChan("http://localhost:4444/auth");
 
-  chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE);
+  chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 1);
   listener.expectedCode = 401; // Unauthorized
   chan.asyncOpen(listener, null);
 
@@ -169,7 +254,7 @@ function test_returnfalse1() {
 function test_wrongpw1() {
   var chan = makeChan("http://localhost:4444/auth");
 
-  chan.notificationCallbacks = new Requestor(FLAG_WRONG_PASSWORD);
+  chan.notificationCallbacks = new Requestor(FLAG_WRONG_PASSWORD, 1);
   listener.expectedCode = 200; // OK
   chan.asyncOpen(listener, null);
 
@@ -179,8 +264,48 @@ function test_wrongpw1() {
 function test_prompt1() {
   var chan = makeChan("http://localhost:4444/auth");
 
-  chan.notificationCallbacks = new Requestor(0);
+  chan.notificationCallbacks = new Requestor(0, 1);
   listener.expectedCode = 200; // OK
+  chan.asyncOpen(listener, null);
+
+  do_test_pending();
+}
+
+function test_returnfalse2() {
+  var chan = makeChan("http://localhost:4444/auth");
+
+  chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
+  listener.expectedCode = 401; // Unauthorized
+  chan.asyncOpen(listener, null);
+
+  do_test_pending();
+}
+
+function test_wrongpw2() {
+  var chan = makeChan("http://localhost:4444/auth");
+
+  chan.notificationCallbacks = new Requestor(FLAG_WRONG_PASSWORD, 2);
+  listener.expectedCode = 200; // OK
+  chan.asyncOpen(listener, null);
+
+  do_test_pending();
+}
+
+function test_prompt2() {
+  var chan = makeChan("http://localhost:4444/auth");
+
+  chan.notificationCallbacks = new Requestor(0, 2);
+  listener.expectedCode = 200; // OK
+  chan.asyncOpen(listener, null);
+
+  do_test_pending();
+}
+
+function test_ntlm() {
+  var chan = makeChan("http://localhost:4444/auth/ntlm/simple");
+
+  chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
+  listener.expectedCode = 401; // Unauthorized
   chan.asyncOpen(listener, null);
 
   do_test_pending();

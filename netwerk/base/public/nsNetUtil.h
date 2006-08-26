@@ -85,6 +85,9 @@
 #include "nsInterfaceRequestorAgg.h"
 #include "nsInt64.h"
 #include "nsINetUtil.h"
+#include "nsIAuthPrompt.h"
+#include "nsIAuthPrompt2.h"
+#include "nsIAuthPromptAdapterFactory.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsINestedURI.h"
@@ -287,6 +290,46 @@ NS_MakeAbsoluteURI(nsAString       &result,
             CopyUTF8toUTF16(resultBuf, result);
     }
     return rv;
+}
+
+/**
+ * This function is a helper function to get a protocol's default port if the
+ * URI does not specify a port explicitly. Returns -1 if this protocol has no
+ * concept of ports or if there was an error getting the port.
+ */
+inline PRInt32
+NS_GetRealPort(nsIURI* aURI,
+               nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
+{
+    PRInt32 port;
+    nsresult rv = aURI->GetPort(&port);
+    if (NS_FAILED(rv))
+        return -1;
+
+    if (port != -1)
+        return port; // explicitly specified
+
+    // Otherwise, we have to get the default port from the protocol handler
+
+    // Need the scheme first
+    nsCAutoString scheme;
+    rv = aURI->GetScheme(scheme);
+    if (NS_FAILED(rv))
+        return -1;
+
+    nsCOMPtr<nsIIOService> grip;
+    rv = net_EnsureIOService(&ioService, grip);
+    if (!ioService)
+        return -1;
+
+    nsCOMPtr<nsIProtocolHandler> handler;
+    rv = ioService->GetProtocolHandler(scheme.get(), getter_AddRefs(handler));
+    if (NS_FAILED(rv))
+        return -1;
+
+    NS_ASSERTION(handler, "IO Service lied");
+    rv = handler->GetDefaultPort(&port);
+    return NS_SUCCEEDED(rv) ? port : -1;
 }
 
 inline nsresult
@@ -981,6 +1024,78 @@ NS_QueryNotificationCallbacks(nsIInterfaceRequestor  *callbacks,
                 cbs->GetInterface(iid, result);
         }
     }
+}
+
+/**
+ * Wraps an nsIAuthPrompt so that it can be used as an nsIAuthPrompt2. This
+ * method is provided mainly for use by other methods in this file.
+ *
+ * *aAuthPrompt2 should be set to null before calling this function.
+ */
+inline void
+NS_WrapAuthPrompt(nsIAuthPrompt *aAuthPrompt, nsIAuthPrompt2** aAuthPrompt2)
+{
+    nsCOMPtr<nsIAuthPromptAdapterFactory> factory =
+        do_GetService(NS_AUTHPROMPT_ADAPTER_FACTORY_CONTRACTID);
+    if (!factory)
+        return;
+
+    NS_WARNING("Using deprecated nsIAuthPrompt");
+    factory->CreateAdapter(aAuthPrompt, aAuthPrompt2);
+}
+
+/**
+ * Gets an auth prompt from an interface requestor. This takes care of wrapping
+ * an nsIAuthPrompt so that it can be used as an nsIAuthPrompt2.
+ */
+inline void
+NS_QueryAuthPrompt2(nsIInterfaceRequestor  *aCallbacks,
+                    nsIAuthPrompt2        **aAuthPrompt)
+{
+    CallGetInterface(aCallbacks, aAuthPrompt);
+    if (*aAuthPrompt)
+        return;
+
+    // Maybe only nsIAuthPrompt is provided and we have to wrap it.
+    nsCOMPtr<nsIAuthPrompt> prompt(do_GetInterface(aCallbacks));
+    if (!prompt)
+        return;
+
+    NS_WrapAuthPrompt(prompt, aAuthPrompt);
+}
+
+/**
+ * Gets an nsIAuthPrompt2 from a channel. Use this instead of
+ * NS_QueryNotificationCallbacks for better backwards compatibility.
+ */
+inline void
+NS_QueryAuthPrompt2(nsIChannel      *aChannel,
+                    nsIAuthPrompt2 **aAuthPrompt)
+{
+    *aAuthPrompt = nsnull;
+
+    // We want to use any auth prompt we can find on the channel's callbacks,
+    // and if that fails use the loadgroup's prompt (if any)
+    // Therefore, we can't just use NS_QueryNotificationCallbacks, because
+    // that would prefer a loadgroup's nsIAuthPrompt2 over a channel's
+    // nsIAuthPrompt.
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    aChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
+    if (callbacks) {
+        NS_QueryAuthPrompt2(callbacks, aAuthPrompt);
+        if (*aAuthPrompt)
+            return;
+    }
+
+    nsCOMPtr<nsILoadGroup> group;
+    aChannel->GetLoadGroup(getter_AddRefs(group));
+    if (!group)
+        return;
+
+    group->GetNotificationCallbacks(getter_AddRefs(callbacks));
+    if (!callbacks)
+        return;
+    NS_QueryAuthPrompt2(callbacks, aAuthPrompt);
 }
 
 /* template helper */

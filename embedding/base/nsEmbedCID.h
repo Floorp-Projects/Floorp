@@ -67,6 +67,7 @@
  * 
  * This contract implements the following interfaces:
  * nsIPromptService
+ * nsIPromptService2 (optional)
  *
  * Embedders may override this ContractID with their own implementation if they
  * want more control over the way prompts, alerts, and confirmation dialogs are
@@ -86,5 +87,16 @@
  */
 #define NS_NONBLOCKINGALERTSERVICE_CONTRACTID \
  "@mozilla.org/embedcomp/nbalert-service;1"
+
+/**
+ * This contract ID should be implemented by password managers to be able to
+ * override the standard implementation of nsIAuthPrompt2. It will be used as
+ * a service.
+ *
+ * This contract implements the following interfaces:
+ * nsIPromptFactory
+ */
+#define NS_PWMGR_AUTHPROMPTFACTORY \
+ "@mozilla.org/passwordmanager/authpromptfactory;1"
 
 #endif // NSEMBEDCID_H

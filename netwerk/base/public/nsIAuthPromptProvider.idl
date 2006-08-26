@@ -37,9 +37,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIAuthPrompt;
-
-[scriptable, uuid(129d3bd5-8a26-4b0b-b8a0-19fdea029196)]
+[scriptable, uuid(bd9dc0fa-68ce-47d0-8859-6418c2ae8576)]
 interface nsIAuthPromptProvider : nsISupports
 {
     /**
@@ -53,13 +51,16 @@ interface nsIAuthPromptProvider : nsISupports
     const PRUint32 PROMPT_PROXY         = 1;
 
     /**
-     * Request a nsIAuthPrompt interface for the given prompt reason;
+     * Request a prompt interface for the given prompt reason;
      * @throws NS_ERROR_NOT_AVAILABLE if no prompt is allowed or
      * available for the given reason.
      *
      * @param aPromptReason   The reason for the auth prompt;
-     *                        one of @PROMPT_NORMAL or @PROMPT_PROXY
-     * @returns a nsIAuthPrompt interface, or throws NS_ERROR_NOT_AVAILABLE
+     *                        one of #PROMPT_NORMAL or #PROMPT_PROXY
+     * @param iid             The desired interface, e.g.
+     *                        NS_GET_IID(nsIAuthPrompt2).
+     * @returns an nsIAuthPrompt2 interface, or throws NS_ERROR_NOT_AVAILABLE
      */
-    nsIAuthPrompt getAuthPrompt(in PRUint32 aPromptReason);
+    void getAuthPrompt(in PRUint32 aPromptReason, in nsIIDRef iid,
+                       [iid_is(iid),retval] out nsQIResult result);
 };
