@@ -35,10 +35,10 @@ class AddonsController extends AppController
             //Check for file upload errors
             if ($this->data['Addon']['file']['error'] !== 0) {
                 $this->Addon->invalidate('file');
-                $fileErrors = array('1' => 'Exceeds maximum upload size',
-                                    '2' => 'Exceeds maximum upload size',
-                                    '3' => 'Incomplete transfer',
-                                    '4' => 'No file uploaded'
+                $fileErrors = array('1' => _('Exceeds maximum upload size'),
+                                    '2' => _('Exceeds maximum upload size'),
+                                    '3' => _('Incomplete transfer'),
+                                    '4' => _('No file uploaded')
                               );
                 $fileError = $fileErrors[$this->data['Addon']['file']['error']];
                 $this->set('fileError', $fileError);
