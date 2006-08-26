@@ -468,12 +468,10 @@ class JavaMembers
                     // Find the getter method, or if there is none, the is-
                     // method.
                     MemberBox getter = null;
-                    String getterName = "get".concat(nameComponent);
-                    String isName = "is".concat(nameComponent);
-                    getter = findGetter(isStatic, ht, getterName);
+                    getter = findGetter(isStatic, ht, "get", nameComponent);
                     // If there was no valid getter, check for an is- method.
                     if (getter == null) {
-                        getter = findGetter(isStatic, ht, isName);
+                        getter = findGetter(isStatic, ht, "is", nameComponent);
                     }
 
                     // setter
@@ -525,8 +523,9 @@ class JavaMembers
         }
     }
 
-    private MemberBox findGetter(boolean isStatic, Hashtable ht, String getterName)
+    private MemberBox findGetter(boolean isStatic, Hashtable ht, String prefix, String propertyName)
     {
+        String getterName = prefix.concat(propertyName);
         if (ht.containsKey(getterName)) {
             // Check that the getter is a method.
             Object member = ht.get(getterName);
