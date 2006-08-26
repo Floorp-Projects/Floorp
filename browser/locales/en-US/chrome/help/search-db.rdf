@@ -25,10 +25,12 @@
         <li><Description nc:name="Certificates" nc:link="prefs.xhtml#certificates"/></li>
         <li><Description nc:name="Certificate Revocation Lists" nc:link="prefs.xhtml#certificates"/></li>
         <li><Description nc:name="client (definition)" nc:link="glossary.xhtml#client"/></li>
+        <li><Description nc:name="Configuring Extensions" nc:link="customization.xhtml#add_ons_configuring_extensions"/></li>
         <li><Description nc:name="cookie (definition)" nc:link="glossary.xhtml#cookie"/></li>
         <li><Description nc:name="cryptography (definition)" nc:link="glossary.xhtml#cryptography"/></li>
         <li><Description nc:name="decryption (definition)" nc:link="glossary.xhtml#decryption"/></li>
         <li><Description nc:name="digital ID (definition)" nc:link="glossary.xhtml#digital_ID"/></li>
+        <li><Description nc:name="Disabling, Enabling, Uninstalling Add-ons" nc:link="customization.xhtml#add_ons_uninstalling"/></li>
         <li><Description nc:name="encryption (definition)" nc:link="glossary.xhtml#encryption"/></li>
         <li><Description nc:name="Extensible Markup Language (XML) (definition)" nc:link="glossary.xhtml#XML"/></li>
         <li><Description nc:name="feed (definition)" nc:link="glossary.xhtml#feed"/></li>
@@ -68,9 +70,11 @@
         <li><Description nc:name="Software Updates" nc:link="menu_reference.xhtml#check_for_updates"/></li>
         <li><Description nc:name="Status Bar (definition)" nc:link="glossary.xhtml#Status_Bar"/></li>
         <li><Description nc:name="Stop Button" nc:link="using_firebird.xhtml#stopping_and_reloading"/></li>
+        <li><Description nc:name="Switching Themes" nc:link="customization.xhtml#add_ons_switching_themes"/></li>
         <li><Description nc:name="TLS (definition)" nc:link="glossary.xhtml#TLS"/></li>
         <li><Description nc:name="TCP/IP (Transmission Control Protocol/Internet Protocol) (definition)" nc:link="glossary.xhtml#TCP_IP"/></li>
         <li><Description nc:name="Uniform Resource Locator (URL) (definition)" nc:link="glossary.xhtml#Uniform_Resource_Locator"/></li>
+        <li><Description nc:name="Updating Add-ons" nc:link="customization.xhtml#add_ons_updating"/></li>
         <li><Description nc:name="Verification" nc:link="prefs.xhtml#certificates"/></li>
         <li><Description nc:name="Viewing HTML Source" nc:link="menu_reference.xhtml#page_source"/></li>
         <li><Description nc:name="web page (definition)" nc:link="glossary.xhtml#web_page"/></li>
