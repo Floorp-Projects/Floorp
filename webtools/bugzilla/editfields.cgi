@@ -98,17 +98,55 @@ elsif ($action eq 'new') {
 }
 elsif ($action eq 'edit') {
     my $name = $cgi->param('name') || ThrowUserError('customfield_missing_name');
-    trick_taint($name);
-    my @field = Bugzilla->get_fields({'name' => $name, 'custom' => 1});
-    scalar(@field) || ThrowUserError('customfield_nonexistent', {'name' => $name});
+    # Custom field names must start with "cf_".
+    if ($name !~ /^cf_/) {
+        $name = 'cf_' . $name;
+    }
+    my $field = new Bugzilla::Field({'name' => $name});
+    $field || ThrowUserError('customfield_nonexistent', {'name' => $name});
 
-    $vars->{'field'} = $field[0];
+    $vars->{'field'} = $field;
 
     $template->process('admin/custom_fields/edit.html.tmpl', $vars)
         || ThrowTemplateError($template->error());
 }
 elsif ($action eq 'update') {
-    die "not yet implemented...\n";
+    my $name = $cgi->param('name');
+    my $desc = clean_text($cgi->param('desc') || '');
+    my $sortkey = $cgi->param('sortkey') || 0;
+
+    # Validate fields.
+    $name || ThrowUserError('customfield_missing_name');
+    # Custom field names must start with "cf_".
+    if ($name !~ /^cf_/) {
+        $name = 'cf_' . $name;
+    }
+    my $field = new Bugzilla::Field({'name' => $name});
+    $field || ThrowUserError('customfield_nonexistent', {'name' => $name});
+
+    $desc || ThrowUserError('customfield_missing_description', {'name' => $name});
+    trick_taint($desc);
+
+    my $skey = $sortkey;
+    detaint_natural($sortkey)
+      || ThrowUserError('customfield_invalid_sortkey', {'name'    => $name,
+                                                        'sortkey' => $skey});
+
+    $vars->{'name'} = $field->name;
+    $vars->{'desc'} = $desc;
+    $vars->{'sortkey'} = $sortkey;
+    $vars->{'custom'} = 1;
+    $vars->{'in_new_bugmail'} = $cgi->param('new_bugmail') ? 1 : 0;
+    $vars->{'editable_on_enter_bug'} = $cgi->param('enter_bug') ? 1 : 0;
+    $vars->{'is_obsolete'} = $cgi->param('obsolete') ? 1 : 0;
+
+    Bugzilla::Field::create_or_update($vars);
+
+    $vars->{'custom_fields'} = [Bugzilla->get_fields({'custom' => 1})];
+    $vars->{'message'} = 'custom_field_updated';
+
+    $template->process('admin/custom_fields/list.html.tmpl', $vars)
+        || ThrowTemplateError($template->error());
 }
 elsif ($action eq 'del') {
     die "not yet implemented...\n";

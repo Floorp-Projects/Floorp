@@ -284,7 +284,7 @@ Params:      This function takes named parameters in a hashref:
              C<in_new_bugmail> - boolean - Whether this field appears at the
                  top of the bugmail for a newly-filed bug.
 
-             The following parameters are only available on field creation:
+             The following parameters are optional:
              C<custom> - boolean - True if this is a Custom Field. The field
                  will be added to the C<bugs> table if it does not exist.
              C<sortkey> - integer - The sortkey of the field.
@@ -300,28 +300,43 @@ Returns:     a C<Bugzilla::Field> object.
 
 sub create_or_update {
     my ($params) = @_;
+    my $dbh = Bugzilla->dbh;
 
-    my $custom         = $params->{custom} ? 1 : 0;
     my $name           = $params->{name};
+    my $custom         = $params->{custom} ? 1 : 0;
     my $in_new_bugmail = $params->{in_new_bugmail} ? 1 : 0;
-    my $sortkey        = $params->{sortkey} || 0;
-    my $enter_bug      = $params->{editable_on_enter_bug} ? 1 : 0;
-    my $is_obsolete    = $params->{is_obsolete} ? 1 : 0;
-
     # Some day we'll allow invocants to specify the field type.
     # We don't care about $params->{type} yet.
     my $type = $custom ? FIELD_TYPE_FREETEXT : FIELD_TYPE_UNKNOWN;
 
     my $field = new Bugzilla::Field({name => $name});
-
-    my $dbh = Bugzilla->dbh;
     if ($field) {
+        # Both fields are mandatory.
+        my @columns = ('description', 'mailhead');
+        my @values = ($params->{desc}, $in_new_bugmail);
+
+        if (exists $params->{sortkey}) {
+            push(@columns, 'sortkey');
+            push(@values, $params->{sortkey} || 0);
+        }
+        if (exists $params->{editable_on_enter_bug}) {
+            push(@columns, 'enter_bug');
+            push(@values, $params->{editable_on_enter_bug} ? 1 : 0);
+        }
+        if (exists $params->{is_obsolete}) {
+            push(@columns, 'obsolete');
+            push(@values, $params->{is_obsolete} ? 1 : 0);
+        }
+        my $columns = join(', ', map {"$_ = ?"} @columns);
         # Update the already-existing definition.
-        $dbh->do("UPDATE fielddefs SET description = ?, mailhead = ?
-                   WHERE id = ?",
-                 undef, $params->{desc}, $in_new_bugmail, $field->id);
+        $dbh->do("UPDATE fielddefs SET $columns WHERE id = ?",
+                  undef, (@values, $field->id));
     }
     else {
+        my $sortkey     = $params->{sortkey} || 0;
+        my $enter_bug   = $params->{editable_on_enter_bug} ? 1 : 0;
+        my $is_obsolete = $params->{is_obsolete} ? 1 : 0;
+
         $sortkey ||= $dbh->selectrow_array(
             "SELECT MAX(sortkey) + 100 FROM fielddefs") || 100;
 

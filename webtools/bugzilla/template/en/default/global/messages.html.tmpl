@@ -165,6 +165,11 @@
     The new custom field '[% name FILTER html %]' has been
     successfully created.
 
+  [% ELSIF message_tag == "custom_field_updated" %]
+    [% title = "Custom Field Updated" %]
+    Properties of the '[% name FILTER html %]' field have been
+    successfully updated.
+
   [% ELSIF message_tag == "emailold_change_cancelled" %]
     [% title = "Cancel Request to Change Email Address" %]
     The request to change the email address for your account to
