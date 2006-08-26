@@ -60,7 +60,7 @@
         buttons="accept,extra2"
 #endif
         creditslabel="&copyright;"
-        aboutlabel="&aboutLink;
+        aboutlabel="&aboutLink;"
         style="width: 299px;height: 435px;">
 
   <script type="application/x-javascript" src="chrome://calendar/content/aboutDialog.js"/>
