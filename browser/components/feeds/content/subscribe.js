@@ -52,6 +52,5 @@ var SubscribeHandler = {
   
   subscribe: function FH_subscribe() {
     this._feedWriter.subscribe();
-  },
+  }
 };
-
