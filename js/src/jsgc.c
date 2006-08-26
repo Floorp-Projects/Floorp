@@ -933,17 +933,24 @@ FindAndMarkObjectsToClose(JSContext *cx, JSGCInvocationKind gckind)
         if (*js_GetGCThingFlags(gen->obj) & GCF_MARK) {
             genp = &gen->next;
         } else {
+            /*
+             * Only generators that yielded or were already closed can become
+             * unreachable while still on reachableList.
+             */
+            JS_ASSERT(gen->state == JSGEN_OPEN || gen->state == JSGEN_CLOSED);
+
             *genp = gen->next;
             gen->next = NULL;
-            if (gen->state != JSGEN_CLOSED) {
+            if (gen->state == JSGEN_OPEN &&
+                js_FindFinallyHandler(gen->frame.script, gen->frame.pc)) {
                 /*
-                 * Generator cannot be nesting, i.e., running or closing, and
-                 * newborn generator is never registered with GC.
+                 * Generator yielded inside a try with a finally block.
+                 * Schedule it for closing.
                  *
-                 * XXX: we do need to run the close hook if the last yield
-                 * happened outside a try block.
+                 * We keep generators that yielded outside try-with-finally
+                 * with gen->state == JSGEN_OPEN. The finalizer must deal with
+                 * open generators as we may skip the close hooks, see below.
                  */
-                JS_ASSERT(gen->state == JSGEN_OPEN);
                 *rt->gcCloseState.todoTail = gen;
                 rt->gcCloseState.todoTail = &gen->next;
                 rt->gcCloseState.todoCount++;

@@ -101,7 +101,7 @@ typedef enum JSGeneratorState {
     JSGEN_NEWBORN,  /* not yet started */
     JSGEN_OPEN,     /* started by a .next() or .send(undefined) call */
     JSGEN_RUNNING,  /* currently executing via .next(), etc., call */
-    JSGEN_CLOSING,  /* close method is doing .send(GeneratorExit) */
+    JSGEN_CLOSING,  /* close method is doing asynchronous return */
     JSGEN_CLOSED    /* closed, cannot be started or closed again */
 } JSGeneratorState;
 
@@ -123,12 +123,19 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp);
 extern JSBool
 js_CloseGeneratorObject(JSContext *cx, JSGenerator *gen);
 
+
+/*
+ * Special unique value to implement asynchronous return for
+ * generator.close(). Scripts never see it.
+ */
+
+#define JSVAL_ARETURN   BOOLEAN_TO_JSVAL(JS_TRUE + 1)
+
 #endif
 
 extern JSClass          js_GeneratorClass;
 extern JSClass          js_IteratorClass;
 extern JSClass          js_StopIterationClass;
-extern JSClass          js_GeneratorExitClass;
 
 extern JSObject *
 js_InitIteratorClasses(JSContext *cx, JSObject *obj);

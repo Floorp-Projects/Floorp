@@ -6214,13 +6214,30 @@ out:
             /*
              * Look for a try block in script that can catch this exception.
              */
-            SCRIPT_FIND_CATCH_START(script, pc, pc);
-            if (pc) {
-                /* Don't clear cx->throwing to save cx->exception from GC. */
-                len = 0;
-                ok = JS_TRUE;
-                DO_NEXT_OP(len);
+#if JS_HAS_GENERATORS
+            if (JS_LIKELY(cx->exception != JSVAL_ARETURN)) {
+                SCRIPT_FIND_CATCH_START(script, pc, pc);
+                if (!pc)
+                    goto no_catch;
+            } else {
+                pc = js_FindFinallyHandler(script, pc);
+                if (!pc) {
+                    cx->throwing = JS_FALSE;
+                    ok = JS_TRUE;
+                    fp->rval = JSVAL_VOID;
+                    goto no_catch;
+                }
             }
+#else
+            SCRIPT_FIND_CATCH_START(script, pc, pc);
+            if (!pc)
+                goto no_catch;
+#endif
+
+            /* Don't clear cx->throwing to save cx->exception from GC. */
+            len = 0;
+            ok = JS_TRUE;
+            DO_NEXT_OP(len);
         }
 no_catch:;
     }
