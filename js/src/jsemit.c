@@ -6377,3 +6377,40 @@ js_FinishTakingTryNotes(JSContext *cx, JSCodeGenerator *cg, JSTryNote *notes)
     notes[count].length = CG_OFFSET(cg);
     notes[count].catchStart = 0;
 }
+
+#if JS_HAS_GENERATORS
+
+jsbytecode *
+js_FindFinallyHandler(JSScript *script, jsbytecode *pc)
+{
+    JSTryNote *tn;
+    ptrdiff_t off;
+
+    tn = script->trynotes;
+    if (!tn)
+        return NULL;
+
+    off = pc - script->main;
+    if (off < 0)
+        return NULL;
+
+    JS_ASSERT(tn->catchStart != 0);
+    do {
+        if ((jsuword)(off - tn->start) < (jsuword)tn->length) {
+            /*
+             * We have a handler, is it finally?
+             *
+             * Catch bytecode begins with:   JSOP_SETSP JSOP_ENTERBLOCK
+             * Finally bytecode begins with: JSOP_SETSP JSOP_EXCEPTION
+             */
+            pc = script->main + tn->catchStart;
+            JS_ASSERT(*pc == JSOP_SETSP);
+            if (pc[js_CodeSpec[JSOP_SETSP].length] == JSOP_EXCEPTION)
+                return pc;
+            JS_ASSERT(pc[js_CodeSpec[JSOP_SETSP].length] == JSOP_ENTERBLOCK);
+        }
+    } while ((++tn)->catchStart != 0);
+    return NULL;
+}
+
+#endif

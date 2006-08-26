@@ -97,6 +97,14 @@ struct JSScript {
         catchpc = catchpc_;                                                   \
     JS_END_MACRO
 
+/*
+ * Find the innermost finally block that handles the given pc. This is a
+ * version of SCRIPT_FIND_CATCH_START that ignore catch blocks and is used
+ * to implement generator.close().
+ */
+jsbytecode *
+js_FindFinallyHandler(JSScript *script, jsbytecode *pc);
+
 extern JS_FRIEND_DATA(JSClass) js_ScriptClass;
 
 extern JSObject *

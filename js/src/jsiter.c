@@ -560,27 +560,6 @@ JSClass js_StopIterationClass = {
     NULL,             NULL
 };
 
-static JSBool
-genexit_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
-{
-    *bp = !JSVAL_IS_PRIMITIVE(v) &&
-          OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_GeneratorExitClass;
-    return JS_TRUE;
-}
-
-JSClass js_GeneratorExitClass = {
-    js_GeneratorExit_str,
-    JSCLASS_HAS_CACHED_PROTO(JSProto_GeneratorExit),
-    JS_PropertyStub,  JS_PropertyStub,
-    JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,
-    JS_ConvertStub,   JS_FinalizeStub,
-    NULL,             NULL,
-    NULL,             NULL,
-    NULL,             genexit_hasInstance,
-    NULL,             NULL
-};
-
 JSBool
 js_ThrowStopIteration(JSContext *cx, JSObject *obj)
 {
@@ -746,14 +725,10 @@ static JSBool
 SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
                 JSGenerator *gen, jsval arg, jsval *rval)
 {
-    jsval genexit;
     JSStackFrame *fp;
     jsval junk;
     JSArena *arena;
     JSBool ok;
-    jsval exn;
-    JSClass *clasp;
-    JSString *str;
 
     JS_ASSERT(gen->state ==  JSGEN_NEWBORN || gen->state == JSGEN_OPEN);
     switch (op) {
@@ -776,11 +751,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
 
       default:
         JS_ASSERT(op == JSGENOP_CLOSE);
-        if (!js_FindClassObject(cx, NULL, INT_TO_JSID(JSProto_GeneratorExit),
-                                &genexit)) {
-            return JS_FALSE;
-        }
-        JS_SetPendingException(cx, genexit);
+        JS_SetPendingException(cx, JSVAL_ARETURN);
         gen->state = JSGEN_CLOSING;
         break;
     }
@@ -815,33 +786,9 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
         return js_ThrowStopIteration(cx, obj);
     }
 
-    if (op == JSGENOP_CLOSE && cx->throwing) {
-        /*
-         * Generator terminated with an exception. Clear if it is a normal
-         * exit signal.
-         */
-        exn = cx->exception;
-        if (!JSVAL_IS_PRIMITIVE(exn)) {
-            clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(exn));
-            if (clasp == &js_GeneratorExitClass ||
-                clasp == &js_StopIterationClass) {
-                JS_ClearPendingException(cx);
-                return JS_TRUE;
-            }
-        }
-        str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
-                                         OBJECT_TO_JSVAL(obj), NULL);
-        if (str) {
-            JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
-                                   JSMSG_BAD_GENERATOR_EXIT,
-                                   JSSTRING_CHARS(str));
-        }
-        return JS_FALSE;
-    }
-
     /*
-     * An error, silent termination by branch callback or an exception thrown
-     * in resposnse to next|send|throw. Propagate the condition to the caller.
+     * An error, silent termination by branch callback or an exception.
+     * Propagate the condition to the caller.
      */
     return JS_FALSE;
 }
@@ -1048,13 +995,6 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
 
     if (!JS_InitClass(cx, obj, NULL, &js_GeneratorClass, NULL, 0,
                       NULL, generator_methods, NULL, NULL)) {
-        return NULL;
-    }
-#endif
-
-#if JS_HAS_GENERATORS
-    if (!JS_InitClass(cx, obj, NULL, &js_GeneratorExitClass, NULL, 0,
-                      NULL, NULL, NULL, NULL)) {
         return NULL;
     }
 #endif
