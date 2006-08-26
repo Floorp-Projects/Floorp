@@ -3362,12 +3362,29 @@ function BrowserCustomizeToolbar()
   var cmd = document.getElementById("cmd_CustomizeToolbars");
   cmd.setAttribute("disabled", "true");
 
-  window.openDialog("chrome://global/content/customizeToolbar.xul", "CustomizeToolbar",
-                    "chrome,all,dependent", document.getElementById("navigator-toolbox"));
+#ifdef TOOLBAR_CUSTOMIZATION_SHEET
+  document.getElementById("customizeToolbarSheetBox").hidden = false;
+
+  // New tabs are breaking the xul stack
+  document.getElementById("cmd_newNavigatorTab")
+          .setAttribute("disabled", "true");
+  getBrowser()._blockDblClick = true;
+#else
+  window.openDialog("chrome://global/content/customizeToolbar.xul",
+                    "CustomizeToolbar",
+                    "chrome,all,dependent",
+                    document.getElementById("navigator-toolbox"));
+#endif
 }
 
 function BrowserToolboxCustomizeDone(aToolboxChanged)
 {
+#ifdef TOOLBAR_CUSTOMIZATION_SHEET
+  document.getElementById("customizeToolbarSheetBox").hidden = true;
+  document.getElementById("cmd_newNavigatorTab").removeAttribute("disabled");
+  getBrowser()._blockDblClick = false;
+#endif
+
   // Update global UI elements that may have been added or removed
   if (aToolboxChanged) {
     gURLBar = document.getElementById("urlbar");
@@ -3437,8 +3454,10 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   bookmarksBar._init();
 #endif
 
+#ifndef TOOLBAR_CUSTOMIZATION_SHEET
   // XXX Shouldn't have to do this, but I do
   window.focus();
+#endif
 }
 
 var FullScreen =

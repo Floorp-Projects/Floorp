@@ -43,6 +43,10 @@ browser.jar:
 *       content/browser/jsConsoleOverlay.xul          (content/jsConsoleOverlay.xul)
 *       content/browser/softwareUpdateOverlay.xul  (content/softwareUpdateOverlay.xul)
 #endif
+#ifdef TOOLBAR_CUSTOMIZATION_SHEET
+*       content/browser/customizeToolbarSheet.xul         (content/customizeToolbarSheet.xul)
+*       content/browser/customizeToolbarSheet.js          (content/customizeToolbarSheet.js)
+#endif
 *       content/browser/viewSourceOverlay.xul         (content/viewSourceOverlay.xul)
 #ifdef MOZ_USE_GENERIC_BRANDING
 % content branding %content/branding/ xpcnativewrappers=yes

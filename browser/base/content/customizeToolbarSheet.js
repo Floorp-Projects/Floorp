@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,14 +11,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is mozilla.org Code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Mozilla Corporation
+# Portions created by the Initial Developer are Copyright (C) 2005-2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Asaf Romano <mozilla.mano@sent.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,39 +35,15 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH   = ../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH   = @srcdir@
+var gCustomizeToolbarSheet = {
+  init: function() {
+    InitWithToolbox(window.parent.document.getElementById("navigator-toolbox"));
+  },
 
-include $(DEPTH)/config/autoconf.mk
-
-include $(topsrcdir)/config/config.mk
-
-include $(topsrcdir)/config/rules.mk
-
-DEFINES += -DMOZ_APP_VERSION=$(MOZ_APP_VERSION)
-
-ifndef MOZ_BRANDING_DIRECTORY
-DEFINES += -DMOZ_USE_GENERIC_BRANDING
-endif
-
-ifneq (,$(filter windows gtk2 mac cocoa, $(MOZ_WIDGET_TOOLKIT)))
-DEFINES += -DHAVE_SHELL_SERVICE=1
-endif
-
-ifneq (,$(filter mac cocoa, $(MOZ_WIDGET_TOOLKIT)))
-DEFINES += -DTOOLBAR_CUSTOMIZATION_SHEET
-endif
-
-ifndef MOZ_BRANDING_DIRECTORY
-libs locale::
-	$(INSTALL) $(srcdir)/content/browserconfig.properties $(DIST)/bin
-
-install::
-	$(SYSINSTALL) $(srcdir)/content/browserconfig.properties $(DESTDIR)$(mozappdir)
-endif
-
-ifneq (,$(filter windows mac cocoa, $(MOZ_WIDGET_TOOLKIT)))
-DEFINES += -DCONTEXT_COPY_IMAGE_CONTENTS=1
-endif
+  done: function() {
+    // XXXmano: I'm pretty sure we don't need to do this, but since
+    // the XP dialog does, we will.
+    document.getElementById("main-box").collapsed = true;
+    finishToolbarCustomization();
+  }
+};
