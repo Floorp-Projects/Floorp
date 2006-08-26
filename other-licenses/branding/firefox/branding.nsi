@@ -42,8 +42,8 @@
 # should not contain release that may be in the BrandFullName (e.g. Beta 1, etc.)
 !define BrandFullNameInternal "Mozilla Firefox"
 !define CompanyName           "Mozilla Corporation"
-!define URLInfoAbout          "http://www.mozilla.com/${AB_CD}"
-!define URLUpdateInfo         "http://www.mozilla.com/${AB_CD}/firefox"
+!define URLInfoAbout          "http://${AB_CD}.www.mozilla.com/${AB_CD}/"
+!define URLUpdateInfo         "http://${AB_CD}.www.mozilla.com/${AB_CD}/firefox/"
 !define SurveyURL             "https://survey.mozilla.com/1/Mozilla%20Firefox/${AppVersion}/${AB_CD}/exit.html"
 
 # Percentage of new "Standard" installs to enable talkback for
