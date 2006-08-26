@@ -30,7 +30,6 @@
   locale/@AB_CD@/messenger/am-smime.dtd                                 (%chrome/messenger/am-smime.dtd)
   locale/@AB_CD@/messenger/am-smime.properties                          (%chrome/messenger/am-smime.properties)
   locale/@AB_CD@/messenger/messenger.properties                         (%chrome/messenger/messenger.properties)
-  locale/@AB_CD@/messenger/threadpane.dtd                               (%chrome/messenger/threadpane.dtd)
   locale/@AB_CD@/messenger/folderpane.dtd                               (%chrome/messenger/folderpane.dtd)
   locale/@AB_CD@/messenger/newFolderDialog.dtd                          (%chrome/messenger/newFolderDialog.dtd)
   locale/@AB_CD@/messenger/newTagDialog.dtd                             (%chrome/messenger/newTagDialog.dtd)
