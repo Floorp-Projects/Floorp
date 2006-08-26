@@ -159,14 +159,14 @@ PROT_PhishMsgDisplayerBase.prototype.acceptAction = function() {
 }
 
 /**
- * Get the url for "Get me out of here."  This is the user's home page if
- * one is set, ow, about:blank.
+ * Get the url for "Get me out of here."  This is the browser's default home
+ * page, or, about:blank.
  * @return String url
  */
 PROT_PhishMsgDisplayerBase.prototype.getMeOutOfHereUrl_ = function() {
   // Try to get their homepage from prefs.
   var prefs = Cc["@mozilla.org/preferences-service;1"]
-              .getService(Ci.nsIPrefService).getBranch(null);
+              .getService(Ci.nsIPrefService).getDefaultBranch(null);
 
   var url = "about:blank";
   try {
