@@ -119,10 +119,6 @@ var gChromeState = null; // chrome state before we went into print preview
 
 var gSanitizeListener = null;
 
-var gFormFillPrefListener = null;
-var gFormHistory = null;
-var gFormFillEnabled = true;
-
 var gURLBarAutoFillPrefListener = null;
 var gAutoHideTabbarPrefListener = null;
 
@@ -1041,11 +1037,6 @@ function delayedStartup()
 
   var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
 
-  // Enable/Disable Form Fill
-  gFormFillPrefListener = new FormFillPrefListener();
-  pbi.addObserver(gFormFillPrefListener.domain, gFormFillPrefListener, false);
-  gFormFillPrefListener.toggleFormFill();
-
   // Enable/Disable URL Bar Auto Fill
   gURLBarAutoFillPrefListener = new URLBarAutoFillPrefListener();
   pbi.addObserver(gURLBarAutoFillPrefListener.domain, gURLBarAutoFillPrefListener, false);
@@ -1163,7 +1154,6 @@ function BrowserShutdown()
 
   try {
     var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-    pbi.removeObserver(gFormFillPrefListener.domain, gFormFillPrefListener);
     pbi.removeObserver(gURLBarAutoFillPrefListener.domain, gURLBarAutoFillPrefListener);
     pbi.removeObserver(gAutoHideTabbarPrefListener.domain, gAutoHideTabbarPrefListener);
     pbi.removeObserver(gHomeButton.prefDomain, gHomeButton);
@@ -1265,34 +1255,6 @@ function nonBrowserWindowDelayedStartup()
   gSanitizeListener = new SanitizeListener();
 }
 #endif
-
-function FormFillPrefListener()
-{
-  gBrowser.attachFormFill();
-}
-
-FormFillPrefListener.prototype =
-{
-  domain: "browser.formfill.enable",
-  observe: function (aSubject, aTopic, aPrefName)
-  {
-    if (aTopic != "nsPref:changed" || aPrefName != this.domain)
-      return;
-
-    this.toggleFormFill();
-  },
-
-  toggleFormFill: function ()
-  {
-    try {
-      gFormFillEnabled = gPrefService.getBoolPref(this.domain);
-    }
-    catch (e) {
-    }
-    var formController = Components.classes["@mozilla.org/satchel/form-fill-controller;1"].getService(Components.interfaces.nsIAutoCompleteInput);
-    formController.disableAutoComplete = !gFormFillEnabled;
-  }
-}
 
 function URLBarAutoFillPrefListener()
 {
