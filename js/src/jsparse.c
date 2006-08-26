@@ -715,6 +715,12 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
         cx->fp = &frame;
     }
 
+    /*
+     * Set interpreted early so js_EmitTree can test it to decide whether to
+     * eliminate useless expressions.
+     */
+    fun->flags |= JSFUN_INTERPRETED;
+
     js_PushStatement(tc, &stmtInfo, STMT_BLOCK, -1);
     stmtInfo.flags = SIF_BODY_BLOCK;
 
@@ -808,7 +814,6 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
         if (!fun->u.i.script) {
             pn = NULL;
         } else {
-            fun->flags |= JSFUN_INTERPRETED;
             if (funcg.treeContext.flags & TCF_FUN_HEAVYWEIGHT)
                 fun->flags |= JSFUN_HEAVYWEIGHT;
         }
@@ -1138,13 +1143,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     if (op != JSOP_NOP)
         fun->flags |= (op == JSOP_GETTER) ? JSPROP_GETTER : JSPROP_SETTER;
 #endif
-
-
-    /*
-     * Set interpreted early so js_EmitTree can test it to decide whether to
-     * eliminate useless expressions.
-     */
-    fun->flags |= JSFUN_INTERPRETED;
 
     /*
      * Atomize fun->object early to protect against a last-ditch GC under

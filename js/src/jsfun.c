@@ -1756,7 +1756,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSBool ok;
 
     fp = cx->fp;
-    if (fp && !(fp->flags & JSFRAME_CONSTRUCTING)) {
+    if (!(fp->flags & JSFRAME_CONSTRUCTING)) {
         obj = js_NewObject(cx, &js_FunctionClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
