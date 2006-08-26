@@ -274,8 +274,15 @@ CREATE TABLE `langs` (
   `meta` varchar(255) NOT NULL,
   `error_text` varchar(255) NOT NULL,
   `encoding` varchar(255) NOT NULL DEFAULT 'UTF-8',
+  `created` datetime NOT NULL default '0000-00-00 00:00:00',
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+
+-- This data is not necessarily permanent.
+INSERT INTO `langs` (`id`,`name`,`meta`,`error_text`,`encoding`,`created`) VALUES
+('en_US', 'English (US)', 'en_US', 'Error', NOW()),
+('de_DE', 'German', 'de_DE', 'Störung', NOW());
 
 -- --------------------------------------------------------
 
