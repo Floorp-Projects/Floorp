@@ -1,8 +1,34 @@
-<?=$html->formTag('/addons/add/', 'post', array('enctype'=>'multipart/form-data'))?>
-<?=$html->hidden('Addon/add_step1')?>
-Add-on Type: <?=$html->selectTag('Addon/addontype_id', $addonTypes)?><BR />
-<?=$html->tagErrorMsg('Addon/addontype_id', 'Please select the type of add-on you are submitting.')?>
-Max upload size: <?=ini_get('upload_max_filesize')?><BR />
-Add-on File: <?=$html->file('Addon/file')?><BR />
-<?=$html->tagErrorMsg('Addon/file', 'File error: '.$fileError)?>
-<?=$html->submit()?>
+<?php
+
+
+
+?>
+<?php
+
+echo $html->formTag('/addons/add/', 'post', array('enctype'=>'multipart/form-data'));
+
+echo $html->hidden('Addon/add_step1');
+
+echo _('Add-on Type:'); 
+echo $html->selectTag('Addon/addontype_id', $addonTypes);
+echo $html->tagErrorMsg('Addon/addontype_id', _('Please select the type of add-on you are submitting.'));
+
+echo '<br />';//temporary
+
+
+echo sprintf(_('Max upload size: %dMB'), ini_get('upload_max_filesize'));
+
+echo '<br />';//temporary
+
+echo _('Add-on File:'); 
+echo $html->file('Addon/file');
+echo $html->tagErrorMsg('Addon/file', sprintf(_('File error: %s'),$fileError));
+
+echo '<br />';//temporary
+
+
+echo $html->submit();
+
+
+
+?>
