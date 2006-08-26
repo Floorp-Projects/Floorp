@@ -273,6 +273,7 @@ CREATE TABLE `langs` (
   `name` varchar(255) NOT NULL,
   `meta` varchar(255) NOT NULL,
   `error_text` varchar(255) NOT NULL,
+  `encoding` varchar(255) NOT NULL DEFAULT 'UTF-8',
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -379,15 +380,15 @@ CREATE TABLE `translations` (
   `id` int(11) unsigned NOT NULL,
   `pk_column` varchar(50) NOT NULL,
   `translated_column` varchar(50) NOT NULL,
-  `en-US` text,
-  `en-GB` text,
+  `en_US` text,
+  `en_GB` text,
   `fr` text,
   `de` text,
   `ja` text,
   `pl` text,
-  `es-ES` text,
-  `zh-CN` text,
-  `zh-TW` text,
+  `es_ES` text,
+  `zh_CN` text,
+  `zh_TW` text,
   `cs` text,
   `da` text,
   `nl` text,
@@ -395,10 +396,10 @@ CREATE TABLE `translations` (
   `hu` text,
   `it` text,
   `ko` text,
-  `pt-BR` text,
+  `pt_BR` text,
   `ru` text,
-  `es-AR` text,
-  `sv-SE` text,
+  `es_AR` text,
+  `sv_SE` text,
   `tr` text,
   PRIMARY KEY  (`id`,`pk_column`,`translated_column`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
