@@ -170,7 +170,7 @@ typedef struct JSGCCloseState {
 } JSGCCloseState;
 
 extern void
-js_RegisterGeneratorObject(JSContext *cx, JSGenerator *gen);
+js_RegisterOpenGenerator(JSContext *cx, JSGenerator *gen);
 
 JSBool
 js_RunCloseHooks(JSContext *cx);

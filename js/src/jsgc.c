@@ -889,13 +889,14 @@ CloseIteratorStates(JSContext *cx)
 #if JS_HAS_GENERATORS
 
 void
-js_RegisterGeneratorObject(JSContext *cx, JSGenerator *gen)
+js_RegisterOpenGenerator(JSContext *cx, JSGenerator *gen)
 {
     JSRuntime *rt;
 
     rt = cx->runtime;
     JS_ASSERT(!rt->gcRunning);
     JS_ASSERT(rt->state != JSRTS_LANDING);
+    JS_ASSERT(gen->state == JSGEN_OPEN);
 
     JS_LOCK_GC(rt);
     gen->next = rt->gcCloseState.reachableList;
@@ -935,8 +936,14 @@ FindAndMarkObjectsToClose(JSContext *cx, JSGCInvocationKind gckind)
             *genp = gen->next;
             gen->next = NULL;
             if (gen->state != JSGEN_CLOSED) {
-                /* Generator cannot be nesting, i.e., running or closing. */
-                JS_ASSERT(gen->state <= JSGEN_OPEN);
+                /*
+                 * Generator cannot be nesting, i.e., running or closing, and
+                 * newborn generator is never registered with GC.
+                 *
+                 * XXX: we do need to run the close hook if the last yield
+                 * happened outside a try block.
+                 */
+                JS_ASSERT(gen->state == JSGEN_OPEN);
                 *rt->gcCloseState.todoTail = gen;
                 rt->gcCloseState.todoTail = &gen->next;
                 rt->gcCloseState.todoCount++;

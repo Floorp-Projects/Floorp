@@ -594,43 +594,21 @@ js_ThrowStopIteration(JSContext *cx, JSObject *obj)
 
 #if JS_HAS_GENERATORS
 
-/*
- * Execute generator's close hook after GC detects that the object has become
- * unreachable.
- */
-JSBool
-js_CloseGeneratorObject(JSContext *cx, JSGenerator *gen)
-{
-    JSObject *obj, *proto;
-    jsval fval, rval;
-    const jsid id = ATOM_TO_JSID(cx->runtime->atomState.closeAtom);
-
-    /* JSGenerator.closeLink must be already unlinked from all lists. */
-    JS_ASSERT(!gen->next);
-    JS_ASSERT(gen != cx->runtime->gcCloseState.reachableList);
-    JS_ASSERT(gen != cx->runtime->gcCloseState.todoHead);
-
-    /*
-     * Get generator_close from cached class object for gen's scope chain, so
-     * as not to depend on gen->obj's mutable prototype chain.
-     */
-    obj = gen->obj;
-    if (!js_GetClassPrototype(cx, obj, INT_TO_JSID(JSProto_Generator), &proto))
-        return JS_FALSE;
-    if (!JS_GetMethodById(cx, proto, id, &proto, &fval))
-        return JS_FALSE;
-
-    return js_InternalCall(cx, obj, fval, 0, NULL, &rval);
-}
-
 static void
 generator_finalize(JSContext *cx, JSObject *obj)
 {
     JSGenerator *gen;
 
     gen = (JSGenerator *) JS_GetPrivate(cx, obj);
-    if (gen)
+    if (gen) {
+        /*
+         * gen can be open on shutdown when close hooks are ignored or when
+         * the embedding cancels scheduled close hooks.
+         */
+        JS_ASSERT(gen->state == JSGEN_NEWBORN || gen->state == JSGEN_CLOSED ||
+                  gen->state == JSGEN_OPEN);
         JS_free(cx, gen);
+    }
 }
 
 static uint32
@@ -746,8 +724,6 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
         goto bad;
     }
 
-    /* Register after we have properly initialized the private slot. */
-    js_RegisterGeneratorObject(cx, gen);
     return obj;
 
   bad:
@@ -755,43 +731,58 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     return NULL;
 }
 
+typedef enum JSGeneratorOp {
+    JSGENOP_NEXT,
+    JSGENOP_SEND,
+    JSGENOP_THROW,
+    JSGENOP_CLOSE
+} JSGeneratorOp;
+
 /*
- * Common subroutine of generator_send and generator_close.
+ * Start newborn or restart yielding generator and perform the requested
+ * operation inside its frame.
  */
 static JSBool
-generator_send_sub(JSContext *cx, JSObject *obj, JSGenerator *gen,
-                   uintN argc, jsval *argv, jsval *rval)
+SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
+                JSGenerator *gen, jsval arg, jsval *rval)
 {
-    JSString *str;
+    jsval genexit;
     JSStackFrame *fp;
+    jsval junk;
     JSArena *arena;
     JSBool ok;
-    jsval junk;
+    jsval exn;
+    JSClass *clasp;
+    JSString *str;
 
-    if (gen->state & JSGEN_RUNNING) {
-        str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, argv[-1],
-                                         NULL);
-        if (str) {
-            JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
-                                   JSMSG_NESTING_GENERATOR,
-                                   JSSTRING_CHARS(str));
+    JS_ASSERT(gen->state ==  JSGEN_NEWBORN || gen->state == JSGEN_OPEN);
+    switch (op) {
+      case JSGENOP_NEXT:
+      case JSGENOP_SEND:
+        if (gen->state == JSGEN_OPEN) {
+            /*
+             * Store the argument to send as the result of the yield
+             * expression.
+             */
+            gen->frame.sp[-1] = arg;
         }
-        return JS_FALSE;
-    }
+        gen->state = JSGEN_RUNNING;
+        break;
 
-    if (gen->state == JSGEN_NEWBORN) {
-        if (argc != 0 && !JSVAL_IS_VOID(argv[0])) {
-            str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, argv[0],
-                                             NULL);
-            if (str) {
-                JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
-                                       JSMSG_BAD_GENERATOR_SEND,
-                                       JSSTRING_CHARS(str));
-            }
+      case JSGENOP_THROW:
+        JS_SetPendingException(cx, arg);
+        gen->state = JSGEN_RUNNING;
+        break;
+
+      default:
+        JS_ASSERT(op == JSGENOP_CLOSE);
+        if (!js_FindClassObject(cx, NULL, INT_TO_JSID(JSProto_GeneratorExit),
+                                &genexit)) {
             return JS_FALSE;
         }
-
-        gen->state = JSGEN_OPEN;
+        JS_SetPendingException(cx, genexit);
+        gen->state = JSGEN_CLOSING;
+        break;
     }
 
     fp = cx->fp;
@@ -799,100 +790,36 @@ generator_send_sub(JSContext *cx, JSObject *obj, JSGenerator *gen,
     cx->stackPool.current = &gen->arena;
     cx->fp = &gen->frame;
     gen->frame.down = fp;
-
-    /* Store the argument to send as the result of the yield expression. */
-    gen->frame.sp[-1] = (argc != 0) ? argv[0] : JSVAL_VOID;
-    gen->state |= JSGEN_RUNNING;
     ok = js_Interpret(cx, gen->frame.pc, &junk);
-    gen->state &= ~JSGEN_RUNNING;
     cx->fp = fp;
     cx->stackPool.current = arena;
 
-    if (!ok) {
-        /* An error, exception, or silent termination by branch callback. */
-        JS_ASSERT(!(gen->frame.flags & JSFRAME_YIELDING));
-        gen->state = JSGEN_CLOSED;
-        return JS_FALSE;
+    if (gen->frame.flags & JSFRAME_YIELDING) {
+        /* Yield cannot fail, throw or be called on closing. */
+        JS_ASSERT(ok);
+        JS_ASSERT(!cx->throwing);
+        JS_ASSERT(gen->state == JSGEN_RUNNING);
+        JS_ASSERT(op != JSGENOP_CLOSE);
+        gen->frame.flags &= ~JSFRAME_YIELDING;
+        gen->state = JSGEN_OPEN;
+        *rval = gen->frame.rval;
+        return JS_TRUE;
     }
 
-    if (!(gen->frame.flags & JSFRAME_YIELDING)) {
+    gen->state = JSGEN_CLOSED;
+
+    if (ok) {
         /* Returned, explicitly or by falling off the end. */
-        gen->state = JSGEN_CLOSED;
+        if (op == JSGENOP_CLOSE)
+            return JS_TRUE;
         return js_ThrowStopIteration(cx, obj);
     }
 
-    gen->frame.flags &= ~JSFRAME_YIELDING;
-    *rval = gen->frame.rval;
-    return JS_TRUE;
-}
-
-static JSBool
-generator_send(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-               jsval *rval)
-{
-    JSGenerator *gen;
-
-    if (!JS_InstanceOf(cx, obj, &js_GeneratorClass, argv))
-        return JS_FALSE;
-
-    gen = (JSGenerator *) JS_GetPrivate(cx, obj);
-    if (!gen || gen->state >= JSGEN_CLOSING)
-        return !JS_IsExceptionPending(cx) && js_ThrowStopIteration(cx, obj);
-
-    return generator_send_sub(cx, obj, gen, argc, argv, rval);
-}
-
-static JSBool
-generator_next(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-               jsval *rval)
-{
-    return generator_send(cx, obj, 0, argv, rval);
-}
-
-static JSBool
-generator_throw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                jsval *rval)
-{
-    JS_SetPendingException(cx, argv[0]);
-    return generator_send(cx, obj, 0, argv, rval);
-}
-
-static JSBool
-generator_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                jsval *rval)
-{
-    JSGenerator *gen;
-    jsval genexit, exn;
-    JSBool ok;
-    JSClass *clasp;
-    JSString *str;
-
-    if (!JS_InstanceOf(cx, obj, &js_GeneratorClass, argv))
-        return JS_FALSE;
-
-    gen = (JSGenerator *) JS_GetPrivate(cx, obj);
-    if (!gen || gen->state == JSGEN_CLOSED)
-        return JS_TRUE;
-
-    if (!js_FindClassObject(cx, NULL, INT_TO_JSID(JSProto_GeneratorExit),
-                            &genexit)) {
-        return JS_FALSE;
-    }
-
-    /* Throw GeneratorExit at the generator and ignore the returned status. */
-    JS_SetPendingException(cx, genexit);
-    gen->state |= JSGEN_CLOSING;
-    ok = generator_send_sub(cx, obj, gen, 0, argv, rval);
-    gen->state = JSGEN_CLOSED;
-
-    if (!cx->throwing) {
+    if (op == JSGENOP_CLOSE && cx->throwing) {
         /*
-         * If out-of-memory was reported or the branch callback canceled the
-         * generator, fail immediately.
+         * Generator terminated with an exception. Clear if it is a normal
+         * exit signal.
          */
-        if (!ok)
-            return JS_FALSE;
-    } else {
         exn = cx->exception;
         if (!JSVAL_IS_PRIMITIVE(exn)) {
             clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(exn));
@@ -902,15 +829,146 @@ generator_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 return JS_TRUE;
             }
         }
+        str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
+                                         OBJECT_TO_JSVAL(obj), NULL);
+        if (str) {
+            JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
+                                   JSMSG_BAD_GENERATOR_EXIT,
+                                   JSSTRING_CHARS(str));
+        }
+        return JS_FALSE;
     }
 
-    str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, argv[-1], NULL);
-    if (str) {
-        JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
-                               JSMSG_BAD_GENERATOR_EXIT,
-                               JSSTRING_CHARS(str));
-    }
+    /*
+     * An error, silent termination by branch callback or an exception thrown
+     * in resposnse to next|send|throw. Propagate the condition to the caller.
+     */
     return JS_FALSE;
+}
+
+/*
+ * Execute gen's close hook after the GC detects that the object has become
+ * unreachable.
+ */
+JSBool
+js_CloseGeneratorObject(JSContext *cx, JSGenerator *gen)
+{
+    /* JSGenerator.closeLink must be already unlinked from all lists. */
+    JS_ASSERT(!gen->next);
+    JS_ASSERT(gen != cx->runtime->gcCloseState.reachableList);
+    JS_ASSERT(gen != cx->runtime->gcCloseState.todoHead);
+
+    /* We pass null as rval since SendToGenerator never uses it with CLOSE. */
+    return SendToGenerator(cx, JSGENOP_CLOSE, gen->obj, gen, JSVAL_VOID, NULL);
+}
+
+/*
+ * Common subroutine of generator_(next|send|throw|close) methods.
+ */
+static JSBool
+generator_op(JSContext *cx, JSGeneratorOp op,
+             JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSGenerator *gen;
+    JSString *str;
+    jsval arg;
+    JSBool wasNewborn;
+
+    if (!JS_InstanceOf(cx, obj, &js_GeneratorClass, argv))
+        return JS_FALSE;
+
+    gen = (JSGenerator *) JS_GetPrivate(cx, obj);
+    switch (gen->state) {
+      case JSGEN_NEWBORN:
+        switch (op) {
+          case JSGENOP_NEXT:
+          case JSGENOP_THROW:
+            break;
+
+          case JSGENOP_SEND:
+            if (!JSVAL_IS_VOID(argv[0])) {
+                str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
+                                                 argv[0], NULL);
+                if (str) {
+                    JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
+                                           JSMSG_BAD_GENERATOR_SEND,
+                                           JSSTRING_CHARS(str));
+                }
+                return JS_FALSE;
+            }
+            break;
+
+          default:
+            JS_ASSERT(op == JSGENOP_CLOSE);
+            gen->state = JSGEN_CLOSED;
+            return JS_TRUE;
+        }
+        wasNewborn = JS_TRUE;
+        break;
+
+      case JSGEN_OPEN:
+        wasNewborn = JS_FALSE;
+        break;
+
+      case JSGEN_RUNNING:
+      case JSGEN_CLOSING:
+        str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, argv[-1],
+                                         NULL);
+        if (str) {
+            JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
+                                   JSMSG_NESTING_GENERATOR,
+                                   JSSTRING_CHARS(str));
+        }
+        return JS_FALSE;
+
+      default:
+        JS_ASSERT(gen->state == JSGEN_CLOSED);
+        if (op == JSGENOP_CLOSE)
+            return JS_TRUE;
+        return js_ThrowStopIteration(cx, obj);
+    }
+
+    arg = (op == JSGENOP_SEND || op == JSGENOP_THROW)
+          ? argv[0]
+          : JSVAL_VOID;
+    if (!SendToGenerator(cx, op, obj, gen, arg, rval))
+        return JS_FALSE;
+    if (wasNewborn && gen->state == JSGEN_OPEN) {
+        /*
+         * The generator yielded the first time. Register it with GC to ensure
+         * that suspended finally blocks will be executed.
+         */
+        js_RegisterOpenGenerator(cx, gen);
+    }
+    return JS_TRUE;
+}
+
+static JSBool
+generator_send(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+               jsval *rval)
+{
+    return generator_op(cx, JSGENOP_SEND, obj, argc, argv, rval);
+}
+
+static JSBool
+generator_next(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+               jsval *rval)
+{
+    return generator_op(cx, JSGENOP_NEXT, obj, argc, argv, rval);
+}
+
+static JSBool
+generator_throw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                jsval *rval)
+{
+    return generator_op(cx, JSGENOP_THROW, obj, argc, argv, rval);
+}
+
+static JSBool
+generator_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                jsval *rval)
+{
+    return generator_op(cx, JSGENOP_CLOSE, obj, argc, argv, rval);
 }
 
 /*
