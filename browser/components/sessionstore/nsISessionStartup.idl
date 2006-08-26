@@ -44,11 +44,11 @@
  * - and allows to restore everything into one window.
  */
 
-[scriptable, uuid(41cfaf30-f0ce-11da-8ad9-0800200c9a66)]
+[scriptable, uuid(22496a00-227b-11db-a98b-0800200c9a66)]
 interface nsISessionStartup: nsISupports
 {
   // Get session state as string
-  readonly attribute string state;
+  readonly attribute AString state;
 
   /**
    * Determine if session should be restored 

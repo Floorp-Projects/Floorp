@@ -610,23 +610,17 @@ SessionStoreService.prototype = {
 
 /* ........ nsISessionStore API .............. */
 
-// This API is terribly rough. TODO:
-// * figure out what functionality we really need
-// * figure out how to name the functions
-
-// * get/set the (opaque) state of all windows
-
-  get opaqueState() {
-    return this._getCurrentState();
+  getBrowserState: function sss_getBrowserState() {
+    return this._toJSONString(this._getCurrentState());
   },
 
-  set opaqueState(aState) {
+  setBrowserState: function sss_setBrowserState(aState) {
     var window = this._getMostRecentBrowserWindow();
     if (!window) {
-      this._openWindowWithState(aState);
+      this._openWindowWithState("(" + aState + ")");
       return;
     }
-    
+
     // close all other browser windows
     this._forEachBrowserWindow(function(aWindow) {
       if (aWindow != window) {
@@ -635,21 +629,16 @@ SessionStoreService.prototype = {
     });
 
     // restore to the given state
-    this.restoreWindow(window, aState, true);
+    this.restoreWindow(window, "(" + aState + ")", true);
   },
 
-// * get/set the opaque state of a closed window (for persisting it over sessions)
-
-  getOpaqueWindowState: function sss_getOpaqueWindowState(aWindow) {
-    return this._getWindowState(aWindow);
+  getWindowState: function sss_getWindowState(aWindow) {
+    return this._toJSONString(this._getWindowState(aWindow));
   },
 
-  setOpaqueWindowState: function sss_setOpaqueWindowState(aWindow, aState) {
-    this.restoreWindow(aWindow, aState, true);
+  setWindowState: function sss_setWindowState(aWindow, aState, aOverwrite) {
+    this.restoreWindow(aWindow, "(" + aState + ")", aOverwrite);
   },
-
-// * allow to reopen closed tabs
-// * get/set the opaque state of a closed tab (for persisting it over sessions)
 
   getClosedTabCount: function sss_getClosedTabCount(aWindow) {
     return this._windows[aWindow.__SSi]._closedTabs.length;
@@ -661,26 +650,8 @@ SessionStoreService.prototype = {
     return aIx in tabs ? tabs[aIx].title : null;
   },
 
-  /**
-   * Returns nsIDictionary
-   */
   getClosedTabData: function sss_getClosedTabDataAt(aWindow) {
-    try {
-      var wrappedData = Cc["@mozilla.org/dictionary;1"].createInstance(Ci.nsIDictionary);
-      var closedTabData = this._windows[aWindow.__SSi]._closedTabs;
-      if (closedTabData.length == 0)
-        return wrappedData;
-
-      // wrap it
-      for (var i = 0; i < closedTabData.length; i++)
-        wrappedData.setValue(i, { wrappedJSObject: closedTabData[i] });
-
-      return wrappedData;
-    } catch(ex) { debug("getClosedTabData: " + ex); }
-  },
-
-  setClosedTabData: function sss_setClosedTabDataAt(aWindow, aData) {
-    this._windows[aWindow.__SSi]._closedTabs = aData;
+    return this._toJSONString(this._windows[aWindow.__SSi]._closedTabs);
   },
 
   undoCloseTab: function sss_undoCloseTab(aWindow, aIndex) {
@@ -709,8 +680,6 @@ SessionStoreService.prototype = {
       Components.returnCode = Cr.NS_ERROR_INVALID_ARG;
     }
   },
-
-// * get/set persistent properties on individual tabs or windows (for extensions)
 
   getWindowValue: function sss_getWindowValue(aWindow, aKey) {
     if (aWindow.__SSi) {
@@ -1187,7 +1156,7 @@ SessionStoreService.prototype = {
         return; // nothing to restore
       }
     }
-    catch (ex) { // invalid .INI file - don't restore anything 
+    catch (ex) { // invalid state object - don't restore anything 
       debug(ex);
       return;
     }
@@ -1881,10 +1850,85 @@ SessionStoreService.prototype = {
    * safe eval'ing
    */
   _safeEval: function sss_safeEval(aStr) {
-    var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-    var uri = ioService.newFileURI(this._sessionFile, null, null);
-    var s = new Components.utils.Sandbox(uri.spec);
+    var s = new Components.utils.Sandbox("about:blank");
     return Components.utils.evalInSandbox(aStr, s);
+  },
+
+  /**
+   * Converts a JavaScript object into a JSON string
+   * (see http://www.json.org/ for the full grammar).
+   *
+   * The inverse operation consists of eval("(" + JSON_string + ")");
+   * and should be provably safe.
+   *
+   * @param aJSObject is the object to be converted
+   * @return the object's JSON representation
+   */
+  _toJSONString: function sss_toJSONString(aJSObject) {
+    // these characters have a special escape notation
+    const charMap = { "\b": "\\b", "\t": "\\t", "\n": "\\n", "\f": "\\f",
+                      "\r": "\\r", '"': '\\"', "\\": "\\\\" };
+    // we use a single string builder for efficiency reasons
+    var parts = [];
+    
+    // this recursive function walks through all objects and appends their
+    // JSON representation to the string builder
+    function jsonIfy(aObj) {
+      if (typeof aObj == "boolean") {
+        parts.push(aObj ? "true" : "false");
+      }
+      else if (typeof aObj == "number" && isFinite(aObj)) {
+        // there is no representation for infinite numbers or for NaN!
+        parts.push(aObj.toString());
+      }
+      else if (typeof aObj == "string") {
+        aObj = aObj.replace(/[\\"\x00-\x1F\u0080-\uFFFF]/g, function($0) {
+          // use the special escape notation if one exists, otherwise
+          // produce a general unicode escape sequence
+          return charMap[$0] ||
+            "\\u" + ("0000" + $0.charCodeAt(0).toString(16)).slice(-4);
+        });
+        parts.push('"' + aObj + '"')
+      }
+      else if (aObj == null) {
+        parts.push("null");
+      }
+      else if (aObj instanceof Array) {
+        parts.push("[");
+        for (var i = 0; i < aObj.length; i++) {
+          jsonIfy(aObj[i]);
+          parts.push(",");
+        }
+        if (parts[parts.length - 1] == ",")
+          parts.pop(); // drop the trailing colon
+        parts.push("]");
+      }
+      else if (typeof aObj == "object") {
+        parts.push("{");
+        for (var key in aObj) {
+          jsonIfy(key.toString());
+          parts.push(":");
+          jsonIfy(aObj[key]);
+          parts.push(",");
+        }
+        if (parts[parts.length - 1] == ",")
+          parts.pop(); // drop the trailing colon
+        parts.push("}");
+      }
+      else {
+        throw new Error("No JSON representation for this object!");
+      }
+    }
+    jsonIfy(aJSObject);
+    
+    var newJSONString = parts.join(" ");
+    // sanity check - so that API consumers can just eval this string
+    if (/[^,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]/.test(
+      newJSONString.replace(/"(\\.|[^"\\])*"/g, "")
+    ))
+      throw new Error("JSON conversion failed unexpectedly!");
+    
+    return newJSONString;
   },
 
 /* ........ Storage API .............. */
