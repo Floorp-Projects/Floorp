@@ -2333,12 +2333,21 @@ CK_RV NSC_Verify(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData,
 {
     SFTKSession *session;
     SFTKSessionContext *context;
-    CK_RV crv;
+    CK_RV crv, crv2;
     SECStatus rv;
 
     /* make sure we're legal */
     crv = sftk_GetContext(hSession,&context,SFTK_VERIFY,PR_FALSE,&session);
     if (crv != CKR_OK) return crv;
+
+    /* multi part Verifying are completely implemented by VerifyUpdate and
+     * VerifyFinal */
+    if (context->multi) {
+	sftk_FreeSession(session);
+	crv = NSC_VerifyUpdate(hSession, pData, ulDataLen);
+	crv2 = NSC_VerifyFinal(hSession, pSignature, ulSignatureLen);
+	return crv == CKR_OK ? crv2 :crv;
+    }
 
     rv = (*context->verify)(context->cipherInfo,pSignature, ulSignatureLen,
 							 pData, ulDataLen);
