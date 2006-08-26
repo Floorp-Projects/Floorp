@@ -154,7 +154,7 @@
       </menu>
 
       <menu id="menu_Edit">
-        <menupopup>
+        <menupopup id="menu_Edit_Popup">
           <menuitem id="menu_undo"/>   
           <menuitem id="menu_redo"/>
           <menuseparator/>
