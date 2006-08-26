@@ -48,7 +48,7 @@ interface nsIDictionary;
  * - and allows to restore everything into one window.
  */
 
-[scriptable, uuid(f217cde0-0c68-11db-9cd8-0800200c9a66)]
+[scriptable, uuid(11852a90-20de-11db-a98b-0800200c9a66)]
 interface nsISessionStore : nsISupports
 {
   /**
@@ -57,15 +57,44 @@ interface nsISessionStore : nsISupports
   void init(in nsIDOMWindow aWindow);
 
   /**
+   * Get the current browsing state.
+   * @return a JSON string representing the session state.
+   */
+  AString getBrowserState();
+
+  /**
+   * Set the browsing state.
+   * This will immediately restore the state of the whole application to the state
+   * passed in, *replacing* the current session.
+   *
+   * @param aState is a JSON string representing the session state.
+   */
+  void setBrowserState(in AString aState);
+
+  /**
+   * @param aWindow is the window whose state is to be returned.
+   * 
+   * @return a JSON string representing a session state with only one window.
+   */
+  AString getWindowState(in nsIDOMWindow aWindow);
+
+  /**
+   * @param aWindow    is the window whose state is to be set.
+   * @param aState     is a JSON string representing a session state.
+   * @param aOverwrite boolean overwrite existing tabs
+   */
+  void setWindowState(in nsIDOMWindow aWindow, in AString aState, in boolean aOverwrite);
+
+  /**
    * Get the number of restore-able tabs for a window
    */
   unsigned long getClosedTabCount(in nsIDOMWindow aWindow);
 
   /**
    * Get closed tab data
-   * XXX - This format is not final, and will be updated when a better way is found.
+   * @return a JSON string representing the list of closed tabs.
    */
-  nsIDictionary getClosedTabData(in nsIDOMWindow aWindow);
+  AString getClosedTabData(in nsIDOMWindow aWindow);
 
   /**
    * @param aWindow
@@ -81,20 +110,20 @@ interface nsISessionStore : nsISupports
    * 
    * @return A string value or "" if none is set.
    */
-  string getWindowValue(in nsIDOMWindow aWindow, in string aKey);
+  AString getWindowValue(in nsIDOMWindow aWindow, in AString aKey);
 
   /**
    * @param aWindow      is the window to set the value for.
    * @param aKey         is the value's name.
    * @param aStringValue is the value itself (use toSource/eval before setting JS objects).
    */
-  void setWindowValue(in nsIDOMWindow aWindow, in string aKey, in string aStringValue);
+  void setWindowValue(in nsIDOMWindow aWindow, in AString aKey, in AString aStringValue);
   
   /**
    * @param aWindow is the window to get the value for.
    * @param aKey    is the value's name.
    */
-  void deleteWindowValue(in nsIDOMWindow aWindow, in string aKey);
+  void deleteWindowValue(in nsIDOMWindow aWindow, in AString aKey);
 
   /**
    * @param aTab is the tab to get the value for.
@@ -102,23 +131,23 @@ interface nsISessionStore : nsISupports
    * 
    * @return A string value or "" if none is set.
    */
-  string getTabValue(in nsIDOMNode aTab, in string aKey);
+  AString getTabValue(in nsIDOMNode aTab, in AString aKey);
 
   /**
    * @param aTab         is the tab to set the value for.
    * @param aKey         is the value's name.
    * @param aStringValue is the value itself (use toSource/eval before setting JS objects).
    */
-  void setTabValue(in nsIDOMNode aTab, in string aKey, in string aStringValue);
+  void setTabValue(in nsIDOMNode aTab, in AString aKey, in AString aStringValue);
 
   /**
    * @param aTab is the tab to get the value for.
    * @param aKey is the value's name.
    */
-  void deleteTabValue(in nsIDOMNode aTab, in string aKey);
+  void deleteTabValue(in nsIDOMNode aTab, in AString aKey);
 
   /**
    * @param aName is the name of the attribute to save/restore for all xul:tabs.
    */
-  void persistTabAttribute(in string aName);
+  void persistTabAttribute(in AString aName);
 };
