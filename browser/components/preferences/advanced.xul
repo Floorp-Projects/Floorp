@@ -220,8 +220,8 @@
                       accesskey="&enableAppUpdate.accesskey;"
                       preference="app.update.enabled"/>
             <checkbox id="enableAddonUpdate"
-                      label="&enableExtensionUpdate.label;"
-                      accesskey="&enableExtensionUpdate.accesskey;"
+                      label="&enableAddonsUpdate.label;"
+                      accesskey="&enableAddonsUpdate.accesskey;"
                       preference="extensions.update.enabled"/>
             <checkbox id="enableSearchUpdate"
                       label="&enableSearchUpdate.label;"
@@ -242,7 +242,7 @@
                    accesskey="&modeAutomatic.accesskey;"/>
             <hbox class="indent">
               <checkbox id="warnIncompatible" 
-                        label="&modeAutoWarn.label;" accesskey="&modeAutoWarn.accesskey;"
+                        label="&modeAutoAddonWarn.label;" accesskey="&modeAutoAddonWarn.accesskey;"
                         preference="app.update.mode"
                         onsyncfrompreference="return gAdvancedPane.readAddonWarn();"
                         onsynctopreference="return gAdvancedPane.writeAddonWarn();"/>

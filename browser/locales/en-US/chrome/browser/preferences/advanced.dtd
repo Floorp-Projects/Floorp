@@ -8,7 +8,7 @@
 <!ENTITY useCursorNavigation.label       "Always use the cursor keys to navigate within pages">
 <!ENTITY useCursorNavigation.accesskey   "c">
 <!ENTITY searchStartTyping.label         "Search for text when I start typing">
-<!ENTITY searchStartTyping.accesskey     "S">
+<!ENTITY searchStartTyping.accesskey     "x">
 
 <!ENTITY browsing.label                  "Browsing">
 
@@ -52,8 +52,8 @@
 <!ENTITY autoCheck.label                 "Automatically check for updates to:">
 <!ENTITY enableAppUpdate.label           "&brandShortName;">
 <!ENTITY enableAppUpdate.accesskey       "F">
-<!ENTITY enableExtensionUpdate.label     "Installed Extensions and Themes">
-<!ENTITY enableExtensionUpdate.accesskey "x">
+<!ENTITY enableAddonsUpdate.label        "Installed Add-ons">
+<!ENTITY enableAddonsUpdate.accesskey    "n">
 <!ENTITY enableSearchUpdate.label        "Search Engines">
 <!ENTITY enableSearchUpdate.accesskey    "h">
 <!ENTITY whenUpdatesFound.label          "When updates to &brandShortName; are found:">
@@ -61,8 +61,8 @@
 <!ENTITY askMe.accesskey                 "k">
 <!ENTITY modeAutomatic.label             "Automatically download and install the update">
 <!ENTITY modeAutomatic.accesskey         "d">
-<!ENTITY modeAutoWarn.label              "Warn me if this will disable extensions or themes">
-<!ENTITY modeAutoWarn.accesskey          "W">
+<!ENTITY modeAutoAddonWarn.label         "Warn me if this will disable any of my add-ons">
+<!ENTITY modeAutoAddonWarn.accesskey     "W">
 <!ENTITY updateHistory.label             "Show Update History">
 <!ENTITY updateHistory.accesskey         "p">
 
@@ -81,10 +81,10 @@
 <!ENTITY certs.ask                       "Ask me every time">
 <!ENTITY certs.ask.accesskey             "i">
 <!ENTITY viewCerts.label                 "View Certificates">
-<!ENTITY viewCerts.accesskey             "V">
+<!ENTITY viewCerts.accesskey             "s">
 <!ENTITY viewCRLs.label                  "Revocation Lists">
 <!ENTITY viewCRLs.accesskey              "R">
 <!ENTITY verify.label                    "Verification">
-<!ENTITY verify.accesskey                "n">
+<!ENTITY verify.accesskey                "V">
 <!ENTITY viewSecurityDevices.label       "Security Devices">
 <!ENTITY viewSecurityDevices.accesskey   "y">
