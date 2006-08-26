@@ -1177,6 +1177,10 @@ SessionStoreService.prototype = {
    *        bool overwrite existing tabs w/ new ones
    */
   restoreWindow: function sss_restoreWindow(aWindow, aState, aOverwriteTabs) {
+    // initialize window if necessary
+    if (aWindow && (!aWindow.__SSi || !this._windows[aWindow.__SSi]))
+      this.onLoad(aWindow);
+
     try {
       var root = typeof aState == "string" ? this._safeEval(aState) : aState;
       if (!root.windows[0]) {
