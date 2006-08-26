@@ -591,6 +591,11 @@ public:
   NS_HIDDEN_(void)  FreeFrame(size_t aSize, void* aPtr);
 
 private:
+#ifdef DEBUG
+  // Number of frames in the pool
+  PRUint32 mFrameCount;
+#endif
+
 #if !defined(DEBUG_TRACEMALLOC_FRAMEARENA)
   // Underlying arena pool
   PLArenaPool mPool;
@@ -602,6 +607,9 @@ private:
 };
 
 FrameArena::FrameArena(PRUint32 aArenaSize)
+#ifdef DEBUG
+  : mFrameCount(0)
+#endif
 {
 #if !defined(DEBUG_TRACEMALLOC_FRAMEARENA)
   // Initialize the arena pool
@@ -614,6 +622,8 @@ FrameArena::FrameArena(PRUint32 aArenaSize)
 
 FrameArena::~FrameArena()
 {
+  NS_ASSERTION(mFrameCount == 0, "Some frame destructors were not called");
+ 
 #if !defined(DEBUG_TRACEMALLOC_FRAMEARENA)
   // Free the arena in the pool and finish using it
   PL_FinishArenaPool(&mPool);
@@ -623,11 +633,14 @@ FrameArena::~FrameArena()
 void*
 FrameArena::AllocateFrame(size_t aSize)
 {
-#if defined(DEBUG_TRACEMALLOC_FRAMEARENA)
-  return PR_Malloc(aSize);
-#else
   void* result = nsnull;
-  
+
+#if defined(DEBUG_TRACEMALLOC_FRAMEARENA)
+
+  result = PR_Malloc(aSize);
+
+#else
+
   // Ensure we have correct alignment for pointers.  Important for Tru64
   aSize = PR_ROUNDUP(aSize, sizeof(void*));
 
@@ -648,14 +661,22 @@ FrameArena::AllocateFrame(size_t aSize)
     PL_ARENA_ALLOCATE(result, &mPool, aSize);
   }
 
-  return result;
 #endif
+
+#ifdef DEBUG
+  if (result != nsnull)
+    ++mFrameCount;
+#endif
+
+  return result;
 }
 
 void
 FrameArena::FreeFrame(size_t aSize, void* aPtr)
 {
 #ifdef DEBUG
+  --mFrameCount;
+
   // Mark the memory with 0xdd in DEBUG builds so that there will be
   // problems if someone tries to access memory that they've freed.
   memset(aPtr, 0xdd, aSize);
