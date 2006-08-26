@@ -3683,7 +3683,7 @@ AssignExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #endif
 #if JS_HAS_LVALUE_RETURN
       case TOK_LP:
-        JS_ASSERT(pn->pn_op == JSOP_CALL || pn->pn_op == JSOP_EVAL);
+        JS_ASSERT(pn2->pn_op == JSOP_CALL || pn2->pn_op == JSOP_EVAL);
         pn2->pn_op = JSOP_SETCALL;
         break;
 #endif
