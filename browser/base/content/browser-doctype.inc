@@ -11,6 +11,10 @@
 %charsetDTD;
 <!ENTITY % findBarDTD SYSTEM "chrome://global/locale/findbar.dtd" >
 %findBarDTD;
+#ifdef TOOLBAR_CUSTOMIZATION_SHEET
+<!ENTITY % customizeToolbarDTD SYSTEM "chrome://global/locale/customizeToolbar.dtd">
+  %customizeToolbarDTD;
+#endif
 #ifdef MOZ_PLACES
 <!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
 %placesDTD;
