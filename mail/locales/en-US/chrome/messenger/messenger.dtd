@@ -32,7 +32,6 @@
 <!ENTITY getNextNMsgCmd.accesskey "t">
 <!ENTITY sendUnsentCmd.label "Send Unsent Messages">
 <!ENTITY sendUnsentCmd.accesskey "d">
-<!ENTITY loadFirstDraft.label			"Load First Draft Message">
 <!ENTITY subscribeCmd.label "Subscribe...">
 <!ENTITY subscribeCmd.accesskey "b">
 <!ENTITY renameFolder.label "Rename Folder...">
@@ -96,8 +95,6 @@
 <!ENTITY undoDefaultCmd.accesskey "U">
 <!ENTITY redoDefaultCmd.label "Redo">
 <!ENTITY redoDefaultCmd.accesskey "R">
-<!ENTITY editDraftCmd.label "Edit Draft">
-<!ENTITY editDraftCmd.accesskey "f">
 
 <!-- View Menu -->
 <!ENTITY showMessengerToolbarCmd.label "Mail Toolbar">
@@ -309,7 +306,7 @@
 <!ENTITY forwardMsgCmd.accesskey "F">
 <!ENTITY forwardMsgCmd.key	"l">
 <!ENTITY forwardAsMenu.label "Forward As">
-<!ENTITY forwardAsMenu.accesskey "o">
+<!ENTITY forwardAsMenu.accesskey "w">
 <!ENTITY forwardAsInline.label "Inline">
 <!ENTITY forwardAsInline.accesskey "I">
 <!ENTITY forwardAsAttachmentCmd.label "Attachment">
@@ -633,8 +630,6 @@
 
 <!-- Statusbar -->
 <!ENTITY statusText.label "Done">
-<!ENTITY unreadCountText.label "Unread: ">
-<!ENTITY totalCountText.label " Total: ">
 
 <!--  Mac OS X Window Menu -->
 <!ENTITY minimizeWindow.label "Minimize">
