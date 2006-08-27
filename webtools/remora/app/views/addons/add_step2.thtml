@@ -1,41 +1,49 @@
-<?=$html->formTag('/addons/add/')?>
-<?=$html->hidden('Addon/add_step2')?>
-<table>
-    <tr>
-        <td>Name</td>
-        <td><?=$html->input('Addon/Name', array('value'=>$manifestData['name']['en-US']))?></td>
-    </tr>
-    <tr>
-        <td>Version</td>
-        <td><?=$manifestData['version']?></td>
-    </tr>
-    <tr>
-        <td>File</td>
-        <td><?=$fileName.' ('.$fileSize.' KB)'?></td>
-    </tr>
-    <tr>
-        <td>Author(s)</td>
-        <td><?=$html->input('Addon/Author')?></td>
-    </tr>
-    <tr>
-        <td>Platforms</td>
-        <td><?=$html->selectTag('Addon/Platform', $platforms, null, null, null, false)?></td>
-    </tr>
-    <tr>
-        <td colspan=2>Target Application(s)</td>
-    </tr>
-    <tr>
-        <td>Homepage</td>
-        <td><?=$html->input('Addon/Homepage', array('value'=>$manifestData['homepageURL']))?></td>
-    </tr>
-    <tr>
-        <td>Description</td>
-        <td><?=$html->textarea('Addon/Description', array('value' => $manifestData['description']['en-US'],
+<?php
+echo '<h1>'.(($newAddon === true) ? _('Submit New Add-on') : sprintf(_('Update %s'), $info['name'])).'</h1>';
+echo '<h2>'._('Step 2 :: Add-on Information').'</h2>';
+echo $html->formTag('/addons/add/'.$id);
+echo $html->hidden('Addon/add_step2');
+echo '<table>';
+echo     '<tr>';
+echo         '<td>'._('Name').'</td>';
+echo         '<td>'.$html->input('Addon/Name', array('value'=>$info['name'])).$html->tagErrorMsg('Addon/Name', _('Please enter the name of your add-on.')).'</td>';
+echo     '</tr>';
+echo     '<tr>';
+echo         '<td>'._('Version').'</td>';
+echo         '<td>'.$info['version'].'</td>';
+echo     '</tr>';
+echo     '<tr>';
+echo         '<td>'._('File').'</td>';
+echo         '<td>'.sprintf(_('%s (%d KB)'), $fileName, $fileSize).'</td>';
+echo     '</tr>';
+echo     '<tr>';
+echo         '<td>'._('Author E-mail').'</td>';
+echo         '<td>'.$html->input('Addon/Author', array('size' => 40)).$html->link(_('Add Author'), '').$html->tagErrorMsg('Addon/Author', _('Please enter at least one author.')).'</td>';
+echo     '</tr>';
+echo     '<tr>';
+echo         '<td>'._('Categories').'</td>';
+echo         '<td>'.$html->selectTag('Addon/Tags', $tags, $info['selectedTags'], array('multiple' => 'true', 'size' => 10), null, false).$html->tagErrorMsg('Addon/Tags', _('Please select at least one category.')).'</td>';
+echo     '</tr>';
+echo     '<tr>';
+echo         '<td>'._('Homepage').'</td>';
+echo         '<td>'.$html->input('Addon/Homepage', array('size' => 40, 'value' => $info['homepage'])).'</td>';
+echo     '</tr>';
+echo     '<tr>';
+echo         '<td>'._('Summary').'</td>';
+echo         '<td>'.$html->input('Addon/Summary', array('size' => 40, 'maxlength' => 100, 'value' => $info['summary'])).$html->tagErrorMsg('Addon/Summary', _('Please enter a summary of your add-on.')).'</td>';
+echo     '</tr>';
+echo     '<tr>';
+echo         '<td>'._('Description').'</td>';
+echo         '<td>'.$html->textarea('Addon/Description', array('value' => $info['description'],
                                                           'rows' => 3,
                                                           'cols' => 55
-                                                    ))?></td>
-    </tr>
-    <tr>
-        <td colspan=2><?=$html->submit()?></td>
-    </tr>
-</table>
+                                                    )).$html->tagErrorMsg('Addon/Description', _('Please enter a description of your add-on.')).'</td>';
+echo     '</tr>';
+echo     '<tr>';
+echo         '<td colspan=2>'.$html->checkbox('Addon/ShowEULA').' '._('I would like to add an End User License Agreement and/or Privacy Policy').'</td>';
+echo     '</tr>';
+echo     '<tr>';
+echo         '<td colspan=2>'.$html->submit(_('Next').' &raquo;').'</td>';
+echo     '</tr>';
+echo '</table>';
+?>
