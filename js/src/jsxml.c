@@ -2525,19 +2525,17 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
      * an existing prefix, start tacking on a hyphen and a serial number.
      */
     serial = 0;
-    bp = NULL;
-#ifdef __GNUC__         /* suppress bogus gcc warnings */
-    newlength = 0;
-#endif
+    bp = cp;
+    newlength = length;
     do {
         done = JS_TRUE;
         for (i = 0, n = decls->length; i < n; i++) {
             ns = XMLARRAY_MEMBER(decls, i, JSXMLNamespace);
             if (ns->prefix &&
-                JSSTRING_LENGTH(ns->prefix) == length &&
-                !memcmp(JSSTRING_CHARS(ns->prefix), cp,
-                        length * sizeof(jschar))) {
-                if (!bp) {
+                JSSTRING_LENGTH(ns->prefix) == newlength &&
+                !memcmp(JSSTRING_CHARS(ns->prefix), bp,
+                        newlength * sizeof(jschar))) {
+                if (bp == cp) {
                     newlength = length + 2 + (size_t) log10(n);
                     bp = (jschar *)
                          JS_malloc(cx, (newlength + 1) * sizeof(jschar));
@@ -2561,7 +2559,7 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
         }
     } while (!done);
 
-    if (!bp) {
+    if (bp == cp) {
         offset = PTRDIFF(cp, start, jschar);
         prefix = js_NewDependentString(cx, uri, offset, length, 0);
     } else {
