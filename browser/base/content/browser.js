@@ -3327,10 +3327,21 @@ function BrowserCustomizeToolbar()
 #ifdef TOOLBAR_CUSTOMIZATION_SHEET
   document.getElementById("customizeToolbarSheetBox").hidden = false;
 
-  // New tabs are breaking the xul stack
-  document.getElementById("cmd_newNavigatorTab")
-          .setAttribute("disabled", "true");
-  getBrowser()._blockDblClick = true;
+  /**
+   * XXXmano hack: when a new tab is added while the sheet is visible,
+   * the new tabpanel is overlaying the sheet. We workaround this issue by
+   * hiding and reopening the sheet when a new tab is added.
+   */
+  function TabOpenSheetHandler(aEvent) {
+    getBrowser().removeEventListener("TabOpen", TabOpenSheetHandler, false);
+
+    document.getElementById("customizeToolbarSheetIFrame")
+            .contentWindow.gCustomizeToolbarSheet.done();
+    document.getElementById("customizeToolbarSheetBox").hidden = true;
+    BrowserCustomizeToolbar();
+    
+  }
+  getBrowser().addEventListener("TabOpen", TabOpenSheetHandler, false);
 #else
   window.openDialog("chrome://global/content/customizeToolbar.xul",
                     "CustomizeToolbar",
@@ -3343,8 +3354,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
 {
 #ifdef TOOLBAR_CUSTOMIZATION_SHEET
   document.getElementById("customizeToolbarSheetBox").hidden = true;
-  document.getElementById("cmd_newNavigatorTab").removeAttribute("disabled");
-  getBrowser()._blockDblClick = false;
 #endif
 
   // Update global UI elements that may have been added or removed
