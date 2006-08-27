@@ -810,12 +810,18 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
     CURRENT_TOKEN(ts).type = TOK_LC;
     pn = FunctionBody(cx, ts, fun, &funcg.treeContext);
     if (pn) {
-        fun->u.i.script = js_NewScriptFromCG(cx, &funcg, fun);
-        if (!fun->u.i.script) {
+        if (!js_MatchToken(cx, ts, TOK_EOF)) {
+            js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+                                        JSMSG_SYNTAX_ERROR);
             pn = NULL;
         } else {
-            if (funcg.treeContext.flags & TCF_FUN_HEAVYWEIGHT)
-                fun->flags |= JSFUN_HEAVYWEIGHT;
+            fun->u.i.script = js_NewScriptFromCG(cx, &funcg, fun);
+            if (!fun->u.i.script) {
+                pn = NULL;
+            } else {
+                if (funcg.treeContext.flags & TCF_FUN_HEAVYWEIGHT)
+                    fun->flags |= JSFUN_HEAVYWEIGHT;
+            }
         }
     }
 
