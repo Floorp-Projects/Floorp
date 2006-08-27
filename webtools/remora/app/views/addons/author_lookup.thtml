@@ -1,0 +1,8 @@
+<?php
+    if ($author === false) {
+        echo '<strong>No author found ['.$email.']</strong><br />';
+    }
+    else {
+        echo $author.'<br />';
+    }
+?>

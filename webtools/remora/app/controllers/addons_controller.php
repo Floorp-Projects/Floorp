@@ -4,8 +4,9 @@ require_once('Archive/Zip.php');
 class AddonsController extends AppController
 {
     var $name = 'Addons';
-    var $uses = array('Addon', 'Platform', 'Application', 'Appversion', 'Tag');
+    var $uses = array('Addon', 'Platform', 'Application', 'Appversion', 'Tag', 'User');
     var $components = array('Amo', 'Rdf', 'Versioncompare');
+    var $helpers = array('Html', 'Javascript', 'Ajax');
     var $scaffold;
    /**
     *
@@ -210,18 +211,19 @@ class AddonsController extends AppController
 
             }
 
+            $info['name'] = (!empty($existing['Addon']['name'])) ? $existing['Addon']['name'] : $manifestData['name']['en-US'];
+            $info['description'] = (!empty($existing['Addon']['description'])) ? $existing['Addon']['description'] : $manifestData['description']['en-US'];
+            $info['homepage'] = (!empty($existing['Addon']['homepage'])) ? $existing['Addon']['homepage'] : $manifestData['homepageURL'];
+            $info['addontype_id'] = (!empty($existing['Addon']['addontype_id'])) ? $existing['Addon']['addontype_id'] : $this->data['Addon']['addontype_id'];
+            $info['version'] = $manifestData['version'];
+            $info['summary'] = $existing['Addon']['summary'];
+
             //Get tags based on addontype
-            $tagsQry = $this->Tag->findAll(array('addontype_id' => $this->data['Addon']['addontype_id']),
+            $tagsQry = $this->Tag->findAll(array('addontype_id' => $info['addontype_id']),
                                                      null, null, null, null, -1);
             foreach ($tagsQry as $k => $v) {
                 $tags[$v['Tag']['id']] = $v['Tag']['name'];
             }
-
-            $info['name'] = (!empty($existing['Addon']['name'])) ? $existing['Addon']['name'] : $manifestData['name']['en-US'];
-            $info['description'] = (!empty($existing['Addon']['description'])) ? $existing['Addon']['description'] : $manifestData['description']['en-US'];
-            $info['homepage'] = (!empty($existing['Addon']['homepage'])) ? $existing['Addon']['homepage'] : $manifestData['homepageURL'];
-            $info['version'] = $manifestData['version'];
-            $info['summary'] = $existing['Addon']['summary'];
 
             if (count($existing['Tag']) > 0) {
                 foreach ($existing['Tag'] as $tag) {
@@ -285,6 +287,24 @@ class AddonsController extends AppController
     */
     function editVersion($id) {
 
+    }
+
+   /**
+    * AJAX action for looking up an author by email
+    * @param string $email
+    */
+    function authorLookup($email) {
+        if ($authors = $this->User->findAllByEmail($email)) {
+            $author = $authors[0]['User']['firstname'].' '.$authors[0]['User']['lastname'];
+            $author .= ' ['.$authors[0]['User']['email'].']';
+        }
+        else {
+            $author = false;
+        }
+
+        $this->set('author', $author);
+        $this->set('email', $email);
+        $this->render('author_lookup', 'ajax');
     }
 
 }
