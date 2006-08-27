@@ -108,7 +108,9 @@ class nsXPInstallManager : public nsIXPIListener,
         void        Shutdown();
         NS_IMETHOD  GetDestinationFile(nsString& url, nsILocalFile* *file);
         NS_IMETHOD  LoadParams(PRUint32 aCount, const PRUnichar** aPackageList, nsIDialogParamBlock** aParams);
+#ifdef ENABLE_SKIN_SIMPLE_INSTALLATION_UI
         PRBool      ConfirmChromeInstall(nsIDOMWindowInternal* aParentWindow, const PRUnichar** aPackage);
+#endif
         PRBool      TimeToUpdate(PRTime now);
         PRBool      VerifyHash(nsXPITriggerItem* aItem);
         PRInt32     GetIndexFromURL(const PRUnichar* aUrl);
