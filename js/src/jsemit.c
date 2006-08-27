@@ -5368,6 +5368,18 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             break;
 #endif
+#if JS_HAS_LVALUE_RETURN
+          case TOK_LP:
+            JS_ASSERT(pn2->pn_op == JSOP_SETCALL);
+            top = CG_OFFSET(cg);
+            if (!js_EmitTree(cx, cg, pn2))
+                return JS_FALSE;
+            if (js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - top) < 0)
+                return JS_FALSE;
+            if (js_Emit1(cx, cg, JSOP_DELELEM) < 0)
+                return JS_FALSE;
+            break;
+#endif
           case TOK_LB:
             if (!EmitElemOp(cx, pn2, JSOP_DELELEM, cg))
                 return JS_FALSE;
@@ -5460,7 +5472,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         off = top;
 
         /*
-         * Emit code for each argument in order, then emit the JSOP_*CALL* or
+         * Emit code for each argument in order, then emit the JSOP_*CALL or
          * JSOP_NEW bytecode with a two-byte immediate telling how many args
          * were pushed on the operand stack.
          */
