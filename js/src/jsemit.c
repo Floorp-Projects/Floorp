@@ -4588,10 +4588,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              *     we need one slot for the JSOP_RETSUB's return pc index.
              *     The unguarded catch is guaranteed to pop the exception,
              *     i.e., to "catch the exception" -- so we do not need to
-             *     stack it across the finally in order to propagate it.
+             *     stack it across the finally in order to propagate it --
+             *     unless the catch block explicitly re-throws it!  We can't
+             *     know whether this will happen by static analysis, so we
+             *     must always budget for two slots.
              */
             JS_ASSERT(cg->stackDepth == depth);
-            cg->stackDepth += (lastCatch && !lastCatch->pn_kid2) ? 1 : 2;
+            cg->stackDepth += 2;
             if ((uintN)cg->stackDepth > cg->maxStackDepth)
                 cg->maxStackDepth = cg->stackDepth;
 
@@ -4606,10 +4609,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             }
 
             /* Restore stack depth budget to its balanced state. */
-            if (cg->stackDepth != depth) {
-                JS_ASSERT(cg->stackDepth == depth + 1);
-                cg->stackDepth = depth;
-            }
+            JS_ASSERT(cg->stackDepth == depth + 1);
+            cg->stackDepth = depth;
         }
         if (!js_PopStatementCG(cx, cg))
             return JS_FALSE;
