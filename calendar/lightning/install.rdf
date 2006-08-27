@@ -42,7 +42,7 @@
     <em:name>Lightning</em:name>
     <em:version>0.1+</em:version>
 
-    <em:description>An experimental calendar extension (build @MOZ_BUILD_DATE@)</em:description>
+    <em:description>An experimental calendar extension (build @BUILD_ID@)</em:description>
     <em:creator>Mozilla Calendar Squad</em:creator>
 
     <em:updateURL>http://www.mozilla.org/projects/calendar/lightning/@TARGET_PLATFORM@/update.rdf</em:updateURL>
