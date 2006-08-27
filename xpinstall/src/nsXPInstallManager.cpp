@@ -283,21 +283,28 @@ nsXPInstallManager::InitManagerInternal()
         // Get permission to install
         //-----------------------------------------------------
 
+#ifdef ENABLE_SKIN_SIMPLE_INSTALLATION_UI
         if ( mChromeType == CHROME_SKIN )
         {
+            // We may want to enable the simple installation UI once
+            // bug 343037 is fixed
+
             // skins get a simpler/friendlier dialog
             // XXX currently not embeddable
             OKtoInstall = ConfirmChromeInstall( mParentWindow, packageList );
         }
         else
         {
+#endif
             rv = dlgSvc->ConfirmInstall( mParentWindow,
                                          packageList,
                                          numStrings,
                                          &OKtoInstall );
             if (NS_FAILED(rv))
                 OKtoInstall = PR_FALSE;
+#ifdef ENABLE_SKIN_SIMPLE_INSTALLATION_UI
         }
+#endif
 
         if (OKtoInstall)
         {
@@ -388,6 +395,7 @@ nsXPInstallManager::ConfirmInstall(nsIDOMWindow *aParent, const PRUnichar **aPac
     return rv;
 }
 
+#ifdef ENABLE_SKIN_SIMPLE_INSTALLATION_UI
 PRBool nsXPInstallManager::ConfirmChromeInstall(nsIDOMWindowInternal* aParentWindow, const PRUnichar **aPackage)
 {
     // get the dialog strings
@@ -445,7 +453,7 @@ PRBool nsXPInstallManager::ConfirmChromeInstall(nsIDOMWindowInternal* aParentWin
 
     return bInstall;
 }
-
+#endif
 
 NS_IMETHODIMP
 nsXPInstallManager::OpenProgressDialog(const PRUnichar **aPackageList, PRUint32 aCount, nsIObserver *aObserver)
