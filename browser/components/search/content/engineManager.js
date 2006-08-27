@@ -261,6 +261,12 @@ EngineStore.prototype = {
     return this._engines.indexOf(aEngine);
   },
 
+  _getEngineByName: function ES_getEngineByName(aName) {
+    for each (var engine in this._engines)
+      if (engine.name == aName)
+        return engine;
+  },
+
   _cloneEngine: function ES_cloneObj(aEngine) {
     var newO=[];
     for (var i in aEngine)
@@ -299,7 +305,10 @@ EngineStore.prototype = {
     if (index == -1)
       throw new Error("ES_moveEngine: invalid engine?");
 
-    // Switch the two engines in our internal store
+    if (index == aNewIndex)
+      return; // nothing to do
+
+    // Move the engine in our internal store
     var removedEngine = this._engines.splice(index, 1)[0];
     this._engines.splice(aNewIndex, 0, removedEngine);
 
@@ -318,18 +327,23 @@ EngineStore.prototype = {
   },
 
   restoreDefaultEngines: function ES_restoreDefaultEngines() {
-    var i = 0;
-    for each (var e in this._defaultEngines) {
-      // skip adding engine if the engine is already in the list
-      if (this._engines.some(this._isSameEngine, e))
-        continue;
+    var added = 0;
 
-      this._engines.splice(i, 0, e);
-      this._ops.push(new EngineUnhideOp(e, i));
-      i++;
+    for (var i = 0; i < this._defaultEngines.length; ++i) {
+      var e = this._defaultEngines[i];
+
+      // If the engine is already in the list, just move it.
+      if (this._engines.some(this._isSameEngine, e)) {
+        this.moveEngine(this._getEngineByName(e.name), i);
+      } else {
+        // Otherwise, add it back to our internal store
+        this._engines.splice(i, 0, e);
+        this._ops.push(new EngineUnhideOp(e, i));
+        added++;
+      }
     }
     gEngineManagerDialog.showRestoreDefaults(false);
-    return i;
+    return added;
   },
 
   reloadIcons: function ES_reloadIcons() {
