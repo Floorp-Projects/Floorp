@@ -2525,7 +2525,7 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
      * an existing prefix, start tacking on a hyphen and a serial number.
      */
     serial = 0;
-    bp = cp;
+    bp = (jschar *) cp;
     newlength = length;
     do {
         done = JS_TRUE;
