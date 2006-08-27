@@ -18,6 +18,7 @@
 //        Benjamin Smedberg
 //        Mike Morgan 
 //        Justin Scott
+//        Mike Shaver
 //
 // Alternatively, the contents of this file may be used under the terms of
 // either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -153,6 +154,24 @@ class VersionCompareComponent extends Object {
         }
     
         return 0;
+    }
+
+    /**
+     * Is $test between $lower and $upper (inclusive)?
+     * @param string $test complete version under test
+     * @param string $lower complete version of lower bound
+     * @param string $upper complete version of upper bound
+     */
+    function VersionBetween($test, $lower, $upper) {
+        if ($this->CompareVersions($test, $lower) == -1) {
+            return false;
+        }
+        
+        if ($this->CompareVersions($test, $upper) == 1) {
+            return false;
+        }
+        
+        return true;
     }
 }
 ?>
