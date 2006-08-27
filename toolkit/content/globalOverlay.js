@@ -227,13 +227,24 @@ function visitLink(aEvent) {
   if (!url)
     return;
 
-  var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                     .getService(Components.interfaces.nsIWindowWatcher);
-  var argstring = Components.classes["@mozilla.org/supports-string;1"]
-                            .createInstance(Components.interfaces.nsISupportsString);
-  argstring.data = url;
-  ww.openWindow(null, "chrome://browser/content/browser.xul", "_blank",
-                "chrome,all,dialog=no", argstring);
+  var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
+                              .getService(Components.interfaces.nsIExternalProtocolService);
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                            .getService(Components.interfaces.nsIIOService);
+  var uri = ioService.newURI(url, null, null);
+
+  // if the scheme is not an exposed protocol, then opening this link
+  // should be deferred to the system's external protocol handler
+  if (protocolSvc.isExposedProtocol(uri.scheme)) {
+    var win = window.top;
+    if (win instanceof Components.interfaces.nsIDOMChromeWindow) {
+      while (win.opener && !win.opener.closed)
+        win = win.opener;
+    }
+    win.open(uri.spec);
+  }
+  else
+    protocolSvc.loadUrl(uri);
 }
 
 function isValidLeftClick(aEvent, aName)
