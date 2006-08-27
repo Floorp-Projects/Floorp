@@ -513,7 +513,8 @@ calDavCalendar.prototype = {
                 var xSerializer = Components.classes
                     ['@mozilla.org/xmlextras/xmlserializer;1']
                     .getService(Components.interfaces.nsIDOMSerializer);
-                var response = xSerializer.serializeToString(aDetail);
+                // libical needs to see \r\n instead on \n\n in the case of "folded" lines
+                var response = xSerializer.serializeToString(aDetail).replace(/\n\n/g, "\r\n");
                 var responseElement = new XML(response);
 
                 // create calIItemBase from e4x object
