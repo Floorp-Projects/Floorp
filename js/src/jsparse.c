@@ -6090,11 +6090,14 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
             } else {
                 PN_MOVE_NODE(pn, pn2);
             }
-        } else {
+        }
+        if (!pn2 || (pn->pn_type == TOK_SEMI && !pn->pn_kid)) {
             /*
-             * False condition and no else: make pn an empty block (not an
+             * False condition and no else, or an empty then-statement was
+             * moved up over pn.  Either way, make pn an empty block (not an
              * empty statement, which does not decompile, even when labeled).
-             * NB: pn must be a TOK_IF as TOK_HOOK can never have a null kid.
+             * NB: pn must be a TOK_IF as TOK_HOOK can never have a null kid
+             * or an empty statement for a child.
              */
             pn->pn_type = TOK_LC;
             pn->pn_arity = PN_LIST;
