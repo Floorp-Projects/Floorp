@@ -66,21 +66,40 @@ function test()
     { 
       try
       { 
+        actual += 'finally,';
         throw 42;
       } 
       catch(e2) 
       { 
+        actual += e2;
         writeLineToLog(e2); 
       } 
     } 
+    return 'returned';
   }
 
-  expect = 42;
+  expect = 'finally,42';
+  actual = '';
 
-  actual = f(2, 1);
+  try
+  {
+    writeLineToLog('test 1');
+    f(2, 1);
+  }
+  catch(ex)
+  {
+  }
   reportCompare(expect, actual, summary);
 
-  actual = f(2, 0);
+  actual = '';
+  try
+  {
+    writeLineToLog('test 2');
+    f(2, 0);
+  }
+  catch(ex)
+  {
+  }
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');
