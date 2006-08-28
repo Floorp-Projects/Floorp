@@ -911,7 +911,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
   if (type == pmXprint) {
     DO_PR_DEBUG_LOG(("InitPrintSettingsFromPrinter() for Xprint printer\n"));
 
-    /* Setup the capabilties list of Mozilla's Xprint print module */
+    /* Setup the capabilities list of Mozilla's Xprint print module */
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
     nsPrinterFeatures printerFeatures(fullPrinterName);
 
@@ -924,7 +924,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
     printerFeatures.SetSupportsSpoolerCommandChange(PR_FALSE); /* won't work by design and very good reasons! */
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */ 
     
-    /* Setup the capabilties list of this specific printer */
+    /* Setup the capabilities list of this specific printer */
 
     Display   *pdpy;
     XPContext  pcontext;

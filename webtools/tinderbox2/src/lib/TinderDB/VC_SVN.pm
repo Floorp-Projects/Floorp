@@ -33,9 +33,9 @@
 #
 # Contributor(s): 
 
-# $Revision: 1.2 $ 
-# $Date: 2006/07/27 16:31:07 $ 
-# $Author: bear%code-bear.com $ 
+# $Revision: 1.3 $ 
+# $Date: 2006/08/28 20:12:37 $ 
+# $Author: timeless%mozdev.org $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_SVN.pm,v $ 
 # $Name:  $ 
 
@@ -82,7 +82,7 @@ use HTMLPopUp;
 use TreeData;
 use VCDisplay;
 
-$VERSION = ( qw $Revision: 1.2 $ )[1];
+$VERSION = ( qw $Revision: 1.3 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -297,7 +297,7 @@ sub get_all_svn_data {
 }
 
 sub find_last_data {
-  # Return the most recent times that we recieved treestate and checkin data.
+  # Return the most recent times that we received treestate and checkin data.
 
   my ($tree) = @_;
 

@@ -1398,7 +1398,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
                 // Do an update view batch.  Make sure not to do it DEFERRED,
                 // since that would effectively delay any invalidates that are
                 // triggered by the WillPaint notification (they'd happen when
-                // the invalide event fires, which is later than the reflow
+                // the invalid event fires, which is later than the reflow
                 // event would fire and could end up being after some timer
                 // events, leading to frame dropping in DHTML).  Note that the
                 // observer may try to reenter this code from inside

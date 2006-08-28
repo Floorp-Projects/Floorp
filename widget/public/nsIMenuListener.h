@@ -52,7 +52,7 @@ class nsIWidget;
  *
  * Menu event listener
  * This interface should only be implemented by the menu manager
- * These are registered with nsWindows to recieve menu events
+ * These are registered with nsWindows to receive menu events
  */
 
 class nsIMenuListener : public nsISupports {

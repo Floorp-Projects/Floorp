@@ -855,7 +855,7 @@ nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol,
   PRInt32 len = (nsCRT::strlen(aValue) * sizeof(PRUnichar));
   PRUnichar *swapval = nsnull;
 
-  // eventually turn this on when we're confident in mork's abilitiy
+  // eventually turn this on when we're confident in mork's ability
   // to handle yarn forms properly
 #if 0
   NS_ConvertUTF16toUTF8 utf8Value(aValue);

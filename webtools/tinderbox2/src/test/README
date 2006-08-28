@@ -25,7 +25,7 @@ general configuration testing.
 build information as if the build machines had sent the data.  There
 are not random logs generated for this test so all the 'L' links will
 point to nothing useful.  The output looks as if the processmail_build
-system has been posting updates of mail recieved.
+system has been posting updates of mail received.
 
 
 2) $prefix/build/test/gennotes: generates a days worth of random
@@ -34,7 +34,7 @@ notice information as if the developers have been posting notices.
 
 3) $prefix/build/test/genbugs: generates a days worth of random bug
 ticket information as if the processmail_bug system has been posting
-updates of mail recieved.
+updates of mail received.
 
 The makefile will automatically run all the gen* tests if you run
 'make gen_test'.

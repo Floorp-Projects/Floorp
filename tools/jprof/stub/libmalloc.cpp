@@ -333,7 +333,7 @@ void *mystry)
             gettimeofday(&tNow, 0);
             double usec = 1e6*(tNow.tv_sec - tFirst.tv_sec);
             usec += (tNow.tv_usec - tFirst.tv_usec);
-            milisec = static_cast<size_t>(usec*1e-3);
+            millisec = static_cast<size_t>(usec*1e-3);
         }
     }
 

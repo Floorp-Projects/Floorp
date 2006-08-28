@@ -3,7 +3,7 @@
 - DOCS
 - improve error handling
   - should some errors really be warnings?
-  - should autoreg support additional channel to recieve warnings so that
+  - should autoreg support additional channel to receive warnings so that
     an installer can decide whether or not to accept the consequences of 
     leaving the newly installed files in place?
 - verification of interfaces (warnings and/or errors)

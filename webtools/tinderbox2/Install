@@ -169,7 +169,7 @@ the other files depending on how you wish to have Tinderbox configured.
     light and will avoids any Daylight Savings problems.  This keeps
     the archive of compressed build logs from growing without limit.
 
-7.  You may recieve data into the $prefix/bin/processmail* programs via
+7.  You may receive data into the $prefix/bin/processmail* programs via
     http post. Typically this means that these programs must be installed
     in the $cgi-bin directory and have a name which ends in *.cgi. Instead
     of mailling the logs to these programs, use the HTTPPost program to
