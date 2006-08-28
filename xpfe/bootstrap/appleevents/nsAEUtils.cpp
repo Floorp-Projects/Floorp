@@ -1010,7 +1010,7 @@ OSErr NormalizeAbsoluteIndex(const AEDesc *keyData, long *index, long maxIndex, 
 	
 	switch (keyData->descriptorType)
 	{
-		case typeLongInteger:						// positve or negative index
+		case typeLongInteger:						// positive or negative index
 			if (DescToLong(keyData, index) != noErr)
 				return errAECoercionFail;
 

@@ -51,7 +51,7 @@
 
 struct nsID {
   /**
-   * @name Indentifier values
+   * @name Identifier values
    */
 
   //@{

@@ -81,7 +81,7 @@ public:
    * includes error messages.  The string is allocated using stdlib
    * string functions, so free it with free().
    *
-   * @retun true if succeeded, false if no running instance was found.
+   * @return true if succeeded, false if no running instance was found.
    */
   virtual nsresult SendCommand(const char *aProgram, const char *aUsername,
                                const char *aProfile, const char *aCommand,

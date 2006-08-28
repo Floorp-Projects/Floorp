@@ -126,7 +126,7 @@ long WriteCharsToConsole(char *buffer, long n)
  *	Reads from the Console into a buffer.  This function is called by
  *	read.
  *
- *	char *buffer:	Pointer to the buffer which will recieve the input.
+ *	char *buffer:	Pointer to the buffer which will receive the input.
  *	long n:			The maximum amount of characters to be read (size of
  *					buffer).
  *	returns short:	Actual number of characters read from the stream,

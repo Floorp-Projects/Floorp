@@ -2089,7 +2089,7 @@ nsresult nsLocalFile::CopyInternal(nsIFile* aParentDir,
   return MacErrorMapper(err);
 }
 
-const PRInt64 kMilisecsPerSec = 1000LL;
+const PRInt64 kMillisecsPerSec = 1000LL;
 const PRInt64 kUTCDateTimeFractionDivisor = 65535LL;
 
 PRInt64 nsLocalFile::HFSPlustoNSPRTime(const UTCDateTime& utcTime)
@@ -2098,21 +2098,21 @@ PRInt64 nsLocalFile::HFSPlustoNSPRTime(const UTCDateTime& utcTime)
   PRInt64 result = ((PRInt64)utcTime.highSeconds << 32) + (PRInt64)utcTime.lowSeconds; 
   // Subtract to convert to NSPR epoch of 1970
   result -= kJanuaryFirst1970Seconds;
-  // Convert to milisecs
-  result *= kMilisecsPerSec;
-  // Convert the fraction to milisecs and add it
-  result += ((PRInt64)utcTime.fraction * kMilisecsPerSec) / kUTCDateTimeFractionDivisor;
+  // Convert to millisecs
+  result *= kMillisecsPerSec;
+  // Convert the fraction to millisecs and add it
+  result += ((PRInt64)utcTime.fraction * kMillisecsPerSec) / kUTCDateTimeFractionDivisor;
 
   return result;
 }
 
 void nsLocalFile::NSPRtoHFSPlusTime(PRInt64 nsprTime, UTCDateTime& utcTime)
 {
-  PRInt64 fraction = nsprTime % kMilisecsPerSec;
-  PRInt64 seconds = (nsprTime / kMilisecsPerSec) + kJanuaryFirst1970Seconds;
+  PRInt64 fraction = nsprTime % kMillisecsPerSec;
+  PRInt64 seconds = (nsprTime / kMillisecsPerSec) + kJanuaryFirst1970Seconds;
   utcTime.highSeconds = (UInt16)((PRUint64)seconds >> 32);
   utcTime.lowSeconds = (UInt32)seconds;
-  utcTime.fraction = (UInt16)((fraction * kUTCDateTimeFractionDivisor) / kMilisecsPerSec);
+  utcTime.fraction = (UInt16)((fraction * kUTCDateTimeFractionDivisor) / kMillisecsPerSec);
 }
 
 nsresult nsLocalFile::CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutStr)
