@@ -206,7 +206,10 @@ FeedConverter.prototype = {
             case "bookmarks":
             case "client":
               try {
-                feedService.addToClientReader(this._request, result.uri.spec);
+                var feed = result.doc.QueryInterface(Ci.nsIFeed);
+                var title = feed.title ? feed.title.plainText() : "";
+                var desc = feed.subtitle ? feed.subtitle.plainText() : "";
+                feedService.addToClientReader(result.uri.spec, title, desc);
                 return;
               } catch(ex) { /* fallback to preview mode */ }
           }
@@ -334,7 +337,7 @@ var FeedResultService = {
   /**
    * See nsIFeedService.idl
    */
-  addToClientReader: function FRS_addToClientReader(request, spec) {
+  addToClientReader: function FRS_addToClientReader(spec, title, subtitle) {
     var prefs =   
         Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch);
@@ -383,9 +386,9 @@ var FeedResultService = {
           getService(Ci.nsIWindowMediator);
       var topWindow = wm.getMostRecentWindow("navigator:browser");
 #ifdef MOZ_PLACES
-      topWindow.PlacesCommandHook.addLiveBookmark(spec);
+      topWindow.PlacesCommandHook.addLiveBookmark(spec, title, subtitle);
 #else
-      topWindow.FeedHandler.addLiveBookmark(spec);
+      topWindow.FeedHandler.addLiveBookmark(spec, title, subtitle);
 #endif
       break;
     }

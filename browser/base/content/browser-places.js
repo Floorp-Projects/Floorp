@@ -187,20 +187,33 @@ var PlacesCommandHook = {
   
   /**
    * Adds a Live Bookmark to a feed associated with the current page. 
-   * @param   url
-   *          The nsIURI of the page the feed was attached to
+   * @param     url
+   *            The nsIURI of the page the feed was attached to
+   * @title     title
+   *            The title of the feed. Optional.
+   * @subtitle  subtitle
+   *            A short description of the feed. Optional. 
+   *            Not yet used. TODO: implement description annotation
    */
-  addLiveBookmark: function PCH_addLiveBookmark(url) {
+  addLiveBookmark: function PCH_addLiveBookmark(url, feedTitle, feedSubtitle) {
     var ios = 
         Cc["@mozilla.org/network/io-service;1"].
         getService(Ci.nsIIOService);
     var feedURI = ios.newURI(url, null, null);
     
     var browser = gBrowser.selectedBrowser;
-    
+   
+    var title = (arguments.length > 1) ? feedTitle :
+                                         browser.contentDocument.title;
+ 
     // TODO: implement description annotation
-    //var description = this._getDescriptionFromDocument(doc);
-    var title = browser.contentDocument.title;
+#if 0
+    var description;
+    if (arguments.length > 2)
+      description = feedSubtitle;
+    else
+      description = BookmarksUtils.getDescriptionFromDocument(doc);
+#endif
 
     // TODO: add dialog for filing/confirmation
     var bms = PlacesController.bookmarks;
