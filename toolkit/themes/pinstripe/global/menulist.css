@@ -73,7 +73,7 @@ border: 1px solid blue;
 /* ..... dropmarker ..... */
 
 .menulist-dropmarker {
-  -moz-appearance: menulist-button;
+  display: none;
 }
 
 /* ..... disabled state ..... */

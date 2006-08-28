@@ -125,12 +125,9 @@ toolbarbutton[checked="true"]:hover:active {
 /* ::::: toolbarbutton menu ::::: */
 
 .toolbarbutton-menu-dropmarker {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
-  -moz-image-region: auto; /* cut off inheritance */
-}
-
-.toolbarbutton-menu-dropmarker[disabled="true"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
+  -moz-appearance: none !important;
+  border: none !important;
+  background-color: transparent !important;
 }
 
 /* ::::: toolbarbutton menu-button ::::: */
@@ -161,17 +158,8 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
 /* .......... dropmarker .......... */
 
 .toolbarbutton-menubutton-dropmarker {
-  -moz-box-align: center;
+  border: none !important;
+  background-color: transparent !important;
   padding: 3px;
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
-  -moz-image-region: auto; /* cut off inheritance */
-  -moz-appearance: dualbutton-dropdown;
-}
-
-.toolbarbutton-menubutton-dropmarker[disabled="true"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif") !important;
-}
-
-toolbarbutton[type="menu-button"][open="true"] > .toolbarbutton-menubutton-dropmarker,
-toolbarbutton[type="menu-button"][buttondown="true"] > .toolbarbutton-menubutton-dropmarker {
+  -moz-appearance: dualbutton-dropdown !important;
 }

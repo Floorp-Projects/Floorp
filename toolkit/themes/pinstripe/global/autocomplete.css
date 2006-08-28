@@ -64,9 +64,9 @@ textbox.padded {
 /* ::::: history button ::::: */
 
 .autocomplete-history-dropmarker {
-  min-width: 17px;
-  -moz-box-align: center;
-  -moz-box-pack: center;
+  -moz-appearance: none !important;
+  border: none !important;
+  background-color: transparent !important;
   padding: 0px;
   list-style-image: url("chrome://global/skin/icons/autocomplete-dropmarker.png");
   margin: 0px;

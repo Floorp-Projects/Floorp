@@ -10,6 +10,7 @@ classic.jar:
         skin/classic/global/config.css
         skin/classic/global/customizeToolbar.css
         skin/classic/global/dialog.css
+        skin/classic/global/dropmarker.css
         skin/classic/global/expander.css
         skin/classic/global/filepicker.css
         skin/classic/global/findBar.css

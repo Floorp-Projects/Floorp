@@ -61,29 +61,12 @@
                       xbl:inherits="align,dir,pack,orient,disabled,toolbarmode,buttonstyle,label"/>
     </content>
   </binding>
-  
-  
+
   <binding id="toolbarbutton-image"
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
     <content>
       <xul:image class="toolbarbutton-icon" xbl:inherits="src=image"/>
     </content>
-  </binding>
-  
-  <binding id="dropmarker">
-    <content>
-      <xul:image class="menubutton-dropmarker-icon"/>
-    </content>
-
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULDropmarker;
-          ]]>
-        </getter>
-      </property>
-    </implementation>
   </binding>
     
 </bindings>
