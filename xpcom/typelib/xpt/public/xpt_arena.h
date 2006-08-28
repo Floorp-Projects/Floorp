@@ -47,25 +47,11 @@
 
 
 /*
- * The linkage of XPT API functions differs depending on whether the file is
- * used within the XPT library or not.  Any source file within the XPT
- * library should define EXPORT_XPT_API whereas any client of the library
- * should not.
+ * The XPT library is statically linked: no functions are exported from
+ * shared libraries.
  */
-#ifdef EXPORT_XPT_API
-#define XPT_PUBLIC_API(t)    PR_IMPLEMENT(t)
-#define XPT_PUBLIC_DATA(t)   PR_IMPLEMENT_DATA(t)
-#else
-#ifdef _WIN32
-#    define XPT_PUBLIC_API(t)    __declspec(dllimport) t
-#    define XPT_PUBLIC_DATA(t)   __declspec(dllimport) t
-#else
-#    define XPT_PUBLIC_API(t)    PR_IMPLEMENT(t)
-#    define XPT_PUBLIC_DATA(t)   t
-#endif
-#endif
-#define XPT_FRIEND_API(t)    XPT_PUBLIC_API(t)
-#define XPT_FRIEND_DATA(t)   XPT_PUBLIC_DATA(t)
+#define XPT_PUBLIC_API(t)    t
+#define XPT_PUBLIC_DATA(t)   t
 
 PR_BEGIN_EXTERN_C
 
