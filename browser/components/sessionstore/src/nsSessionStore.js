@@ -1582,35 +1582,58 @@ SessionStoreService.prototype = {
       return;
     }
     
-    var downloads = rdfContainer.GetElements();
-    
     // iterate through all downloads currently available in the RDF store
     // and restart the ones which were in progress before the crash
+    var downloads = rdfContainer.GetElements();
     while (downloads.hasMoreElements()) {
       var download = downloads.getNext().QueryInterface(Ci.nsIRDFResource);
-      
-      var node = datasource.GetTarget(rdfService.GetResource(download.Value), rdfService.GetResource("http://home.netscape.com/NC-rdf#DownloadState"), true);
+
+      // restart only if the download's in progress
+      var node = datasource.GetTarget(download, rdfService.GetResource("http://home.netscape.com/NC-rdf#DownloadState"), true);
       if (node) {
         node.QueryInterface(Ci.nsIRDFInt);
       }
       if (!node || node.Value != Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING) {
         continue;
       }
+
+      // URL being downloaded
+      node = datasource.GetTarget(download, rdfService.GetResource("http://home.netscape.com/NC-rdf#URL"), true);
+      var url = node.QueryInterface(Ci.nsIRDFResource).Value;
       
-      node = datasource.GetTarget(rdfService.GetResource(download.Value), rdfService.GetResource("http://home.netscape.com/NC-rdf#URL"), true);
-      node.QueryInterface(Ci.nsIRDFResource);
-      
-      var url = node.Value;
-      
-      node = datasource.GetTarget(rdfService.GetResource(download.Value), rdfService.GetResource("http://home.netscape.com/NC-rdf#File"), true);
-      node.QueryInterface(Ci.nsIRDFResource);
-      
+      // location where download's being saved
+      node = datasource.GetTarget(download, rdfService.GetResource("http://home.netscape.com/NC-rdf#File"), true);
+
+      // nsIRDFResource.Value is a string that's a URI; the downloads.rdf from
+      // which this was created will have a string in one of the following two
+      // forms, depending on platform:
+      //
+      //    /home/lumpy/dogtreat.txt
+      //    C:\lumpy\dogtreat.txt
+      //
+      // During RDF loading, the string *appears* to be converted to a URL if
+      // necessary.  Strings in the first form are not URLs and are converted to
+      // file: URLs; strings in the latter form seem to be treated as if they
+      // already are URLs and thus are not modified.  Consequently, on platforms
+      // where paths aren't URLs, we need to extract the path from the file:
+      // URL.
+      //
+      // See also bug 335725, bug 239948, and bug 349971.
+      var savedTo = node.QueryInterface(Ci.nsIRDFResource).Value;
+      try {
+        var savedToURI = Cc["@mozilla.org/network/io-service;1"].
+                         getService(Ci.nsIIOService).
+                         newURI(savedTo, null, null);
+        if (savedToURI.schemeIs("file"))
+          savedTo = savedToURI.path;
+      }
+      catch (e) { /* not a URI, assume it was a string of form #1 */ }
+
       var linkChecker = Cc["@mozilla.org/network/urichecker;1"].
                         createInstance(Ci.nsIURIChecker);
-      
       linkChecker.init(ioService.newURI(url, null, null));
       linkChecker.loadFlags = Ci.nsIRequest.LOAD_BACKGROUND;
-      linkChecker.asyncCheck(new AutoDownloader(url, node.Value, aWindow), null);
+      linkChecker.asyncCheck(new AutoDownloader(url, savedTo, aWindow), null);
     }
   },
 
