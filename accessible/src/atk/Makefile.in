@@ -76,7 +76,6 @@ CPPSRCS = \
   nsMaiInterfaceValue.cpp \
   nsMaiHyperlink.cpp \
   nsMaiInterfaceHypertext.cpp \
-  nsMaiInterfaceHyperlinkImpl.cpp \
   nsMaiInterfaceTable.cpp \
   nsMaiInterfaceDocument.cpp \
   $(NULL)
