@@ -29,6 +29,13 @@
     </restriction>
   </simpleType>
 
+  <simpleType name="nonNegativeInteger-test-1">
+    <restriction base='nonNegativeInteger'>
+      <totalDigits value="3" />
+      <maxInclusive value="500" />
+    </restriction>
+  </simpleType>
+
   <simpleType name="positiveInteger-test-1">
     <restriction base='positiveInteger'>
       <totalDigits value="3"/>
@@ -409,6 +416,55 @@
 
   <simpleType name="qname-test-1">
     <restriction base='QName'>
+      <maxLength value="13"/>
+      <minLength value="3"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="name-test-1">
+    <restriction base='Name'>
+      <maxLength value="13"/>
+      <minLength value="3"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="ncname-test-1">
+    <restriction base='NCName'>
+      <maxLength value="13"/>
+      <minLength value="3"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="id-test-1">
+    <restriction base='ID'>
+      <maxLength value="13"/>
+      <minLength value="3"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="idref-test-1">
+    <restriction base='IDREF'>
+      <maxLength value="13"/>
+      <minLength value="3"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="idrefs-test-1">
+    <restriction base='IDREFS'>
+      <maxLength value="13"/>
+      <minLength value="3"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="nmtoken-test-1">
+    <restriction base='NMTOKEN'>
+      <maxLength value="13"/>
+      <minLength value="3"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="nmtokens-test-1">
+    <restriction base='NMTOKENS'>
       <maxLength value="13"/>
       <minLength value="3"/>
     </restriction>

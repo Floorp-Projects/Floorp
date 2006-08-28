@@ -176,6 +176,12 @@
         validate("1", "nonPositiveInteger-test-1", false);
         validate("-3452", "nonPositiveInteger-test-1", false);
 
+        validate("-1", "nonNegativeInteger-test-1", false);
+        validate("0", "nonNegativeInteger-test-1", true);
+        validate("1", "nonNegativeInteger-test-1", true);
+        validate("501", "nonNegativeInteger-test-1", false);
+        validate("499", "nonNegativeInteger-test-1", true);
+
         validate("-1", "negativeInteger-test-1", true);
         validate("-22", "negativeInteger-test-1", true);
         validate("0", "negativeInteger-test-1", false);
@@ -594,6 +600,43 @@
         validate(":fooasdad", "qname-test-1", false);
         validate("n:s", "qname-test-1", true);
         validate("test:123456789", "qname-test-1", false);
+
+        validate("test:foo", "name-test-1", true);
+        validate(":fooasdad", "name-test-1", true);
+        validate("n:s", "name-test-1", true);
+        validate("-test", "name-test-1", false);
+        validate("t", "name-test-1", false);
+
+        validate("foo", "ncname-test-1", true);
+        validate("_fooasdad", "ncname-test-1", true);
+        validate("1foo", "ncname-test-1", false);
+        validate("test:foo", "ncname-test-1", false);
+        validate("t", "ncname-test-1", false);
+
+        validate("t123", "id-test-1", true);
+        validate("n:s", "id-test-1", false);
+        validate("-test", "id-test-1", false);
+        validate("t", "id-test-1", false);
+
+        validate("t123", "idref-test-1", true);
+        validate("n:s", "idref-test-1", false);
+        validate("-test", "idref-test-1", false);
+        validate("t", "idref-test-1", false);
+
+        validate("t123", "idrefs-test-1", true);
+        validate("ns _123", "idrefs-test-1", true);
+        validate("test \tfoo", "idrefs-test-1", true);
+        validate("test t123 u456 v789", "idrefs-test-1", false);
+
+        validate("t123", "nmtoken-test-1", true);
+        validate("n:s-1", "nmtoken-test-1", true);
+        validate("tes t", "nmtoken-test-1", false);
+        validate("t", "nmtoken-test-1", false);
+
+        validate("t123", "nmtokens-test-1", true);
+        validate("ns _123", "nmtokens-test-1", true);
+        validate("test \tfoo", "nmtokens-test-1", true);
+        validate("test t123 u456 v789", "nmtokens-test-1", false);
 
         validate("true false 0 1", "list-test-1", true);
         validate("true false e 1", "list-test-1", false);

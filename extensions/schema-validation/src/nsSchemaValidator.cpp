@@ -716,6 +716,25 @@ nsSchemaValidator::ValidateDerivedBuiltinType(const nsAString & aNodeValue,
       break;
     }
 
+    /* http://w3.org/TR/xmlschema-2/#nonNegativeInteger */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NONNEGATIVEINTEGER: {
+      if (aDerived->minExclusive.value.IsEmpty()) {
+        aDerived->minExclusive.value.AssignLiteral("-1");
+      } else if (aDerived->minInclusive.value.IsEmpty()) {
+        aDerived->minInclusive.value.AssignLiteral("0");
+      }
+
+      rv = ValidateBuiltinTypeInteger(aNodeValue,
+                                      aDerived->totalDigits.value,
+                                      aDerived->maxExclusive.value,
+                                      aDerived->minExclusive.value,
+                                      aDerived->maxInclusive.value,
+                                      aDerived->minInclusive.value,
+                                      &aDerived->enumerationList,
+                                      &isValid);
+      break;
+    }
+
     /* http://www.w3.org/TR/xmlschema-2/#negativeInteger */
     case nsISchemaBuiltinType::BUILTIN_TYPE_NEGATIVEINTEGER: {
       if (aDerived->maxExclusive.value.IsEmpty()) {
@@ -999,6 +1018,105 @@ nsSchemaValidator::ValidateDerivedBuiltinType(const nsAString & aNodeValue,
                                     &isValid);
       break;
     }
+    /* http://www.w3.org/TR/xmlschema-2/#name */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NAME: {
+      if (nsSchemaValidatorUtils::IsValidSchemaName(aNodeValue)) {
+        rv = ValidateBuiltinTypeString(aNodeValue,
+                                       aDerived->length.value,
+                                       aDerived->length.isDefined,
+                                       aDerived->minLength.value,
+                                       aDerived->minLength.isDefined,
+                                       aDerived->maxLength.value,
+                                       aDerived->maxLength.isDefined,
+                                       &aDerived->enumerationList,
+                                       &isValid);
+      }
+      break;
+    }
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NCNAME: {
+      if (nsSchemaValidatorUtils::IsValidSchemaNCName(aNodeValue)) {
+        rv = ValidateBuiltinTypeString(aNodeValue,
+                                       aDerived->length.value,
+                                       aDerived->length.isDefined,
+                                       aDerived->minLength.value,
+                                       aDerived->minLength.isDefined,
+                                       aDerived->maxLength.value,
+                                       aDerived->maxLength.isDefined,
+                                       &aDerived->enumerationList,
+                                       &isValid);
+      }
+      break;
+    }
+    case nsISchemaBuiltinType::BUILTIN_TYPE_ID: {
+      if (nsSchemaValidatorUtils::IsValidSchemaID(aNodeValue)) {
+        rv = ValidateBuiltinTypeString(aNodeValue,
+                                       aDerived->length.value,
+                                       aDerived->length.isDefined,
+                                       aDerived->minLength.value,
+                                       aDerived->minLength.isDefined,
+                                       aDerived->maxLength.value,
+                                       aDerived->maxLength.isDefined,
+                                       &aDerived->enumerationList,
+                                       &isValid);
+      }
+      break;
+    }
+    case nsISchemaBuiltinType::BUILTIN_TYPE_IDREF: {
+      if (nsSchemaValidatorUtils::IsValidSchemaIDRef(aNodeValue)) {
+        rv = ValidateBuiltinTypeString(aNodeValue,
+                                       aDerived->length.value,
+                                       aDerived->length.isDefined,
+                                       aDerived->minLength.value,
+                                       aDerived->minLength.isDefined,
+                                       aDerived->maxLength.value,
+                                       aDerived->maxLength.isDefined,
+                                       &aDerived->enumerationList,
+                                       &isValid);
+      }
+      break;
+    }
+    case nsISchemaBuiltinType::BUILTIN_TYPE_IDREFS: {
+      if (nsSchemaValidatorUtils::IsValidSchemaIDRefs(aNodeValue)) {
+        rv = ValidateBuiltinTypeString(aNodeValue,
+                                       aDerived->length.value,
+                                       aDerived->length.isDefined,
+                                       aDerived->minLength.value,
+                                       aDerived->minLength.isDefined,
+                                       aDerived->maxLength.value,
+                                       aDerived->maxLength.isDefined,
+                                       &aDerived->enumerationList,
+                                       &isValid);
+      }
+      break;
+    }
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NMTOKEN: {
+      if (nsSchemaValidatorUtils::IsValidSchemaNMToken(aNodeValue)) {
+        rv = ValidateBuiltinTypeString(aNodeValue,
+                                       aDerived->length.value,
+                                       aDerived->length.isDefined,
+                                       aDerived->minLength.value,
+                                       aDerived->minLength.isDefined,
+                                       aDerived->maxLength.value,
+                                       aDerived->maxLength.isDefined,
+                                       &aDerived->enumerationList,
+                                       &isValid);
+      }
+      break;
+    }
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NMTOKENS: {
+      if (nsSchemaValidatorUtils::IsValidSchemaNMTokens(aNodeValue)) {
+        rv = ValidateBuiltinTypeString(aNodeValue,
+                                       aDerived->length.value,
+                                       aDerived->length.isDefined,
+                                       aDerived->minLength.value,
+                                       aDerived->minLength.isDefined,
+                                       aDerived->maxLength.value,
+                                       aDerived->maxLength.isDefined,
+                                       &aDerived->enumerationList,
+                                       &isValid);
+      }
+      break;
+    }
 
     default:
       rv = NS_ERROR_SCHEMAVALIDATOR_TYPE_NOT_FOUND;
@@ -1148,6 +1266,16 @@ nsSchemaValidator::ValidateBuiltinType(const nsAString & aNodeValue,
       break;
     }
 
+    /* http://w3.org/TR/xmlschema-2/#nonNegativeInteger */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NONNEGATIVEINTEGER: {
+      // nonNegativeInteger inherits from integer, with minInclusive
+      // being 0 (only positive integers)
+      ValidateBuiltinTypeInteger(aNodeValue, nsnull, EmptyString(),
+                                 EmptyString(), EmptyString(),
+                                 NS_LITERAL_STRING("0"), nsnull, &isValid);
+      break;
+    }
+
     /* http://www.w3.org/TR/xmlschema-2/#negativeInteger */
     case nsISchemaBuiltinType::BUILTIN_TYPE_NEGATIVEINTEGER: {
       // negativeInteger inherits from integer, with maxInclusive
@@ -1286,6 +1414,35 @@ nsSchemaValidator::ValidateBuiltinType(const nsAString & aNodeValue,
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_QNAME: {
       isValid = IsValidSchemaQName(aNodeValue);
+      break;
+    }
+    /* http://www.w3.org/TR/xmlschema-2/#name */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NAME: {
+      isValid = nsSchemaValidatorUtils::IsValidSchemaName(aNodeValue);
+      break;
+    }
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NCNAME: {
+      isValid = nsSchemaValidatorUtils::IsValidSchemaNCName(aNodeValue);
+      break;
+    }
+    case nsISchemaBuiltinType::BUILTIN_TYPE_ID: {
+      isValid = nsSchemaValidatorUtils::IsValidSchemaID(aNodeValue);
+      break;
+    }
+    case nsISchemaBuiltinType::BUILTIN_TYPE_IDREF: {
+      isValid = nsSchemaValidatorUtils::IsValidSchemaIDRef(aNodeValue);
+      break;
+    }
+    case nsISchemaBuiltinType::BUILTIN_TYPE_IDREFS: {
+      isValid = nsSchemaValidatorUtils::IsValidSchemaIDRefs(aNodeValue);
+      break;
+    }
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NMTOKEN: {
+      isValid = nsSchemaValidatorUtils::IsValidSchemaNMToken(aNodeValue);
+      break;
+    }
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NMTOKENS: {
+      isValid = nsSchemaValidatorUtils::IsValidSchemaNMTokens(aNodeValue);
       break;
     }
 

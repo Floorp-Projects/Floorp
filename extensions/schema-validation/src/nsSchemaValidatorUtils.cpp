@@ -1413,6 +1413,179 @@ nsSchemaValidatorUtils::IsValidSchemaLanguage(const nsAString &aStrValue)
   return isValid;
 }
 
+// http://www.w3.org/TR/xmlschema-2/#name
+PRBool
+nsSchemaValidatorUtils::IsValidSchemaName(const nsAString &aStrValue)
+{
+  PRBool isValid = PR_FALSE;
+
+  // xsd:Name is restriction on xsd:token
+  if (IsValidSchemaToken(aStrValue)) {
+    /* http://www.w3.org/TR/2000/WD-xml-2e-20000814
+    [4]	NameChar ::=  Letter | Digit | '.' | '-' | '_' | ':' |
+                      CombiningChar | Extender
+    [5]	Name     ::= (Letter | '_' | ':') ( NameChar)*
+    */
+    // XXX Need to handling CombiningChar and Extender as well
+    // XXX Additional Unicode testing needed?
+    nsAutoString pattern;
+    pattern.AssignLiteral("^[a-zA-Z_:][\\w\\.\\-:]*$");
+    nsCOMPtr<nsISchemaValidatorRegexp> regexp = do_GetService(kREGEXP_CID);
+    nsresult rv = regexp->RunRegexp(aStrValue, pattern, "g", &isValid);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return isValid;
+}
+
+// http://www.w3.org/TR/xmlschema-2/#ncname
+PRBool
+nsSchemaValidatorUtils::IsValidSchemaNCName(const nsAString &aStrValue)
+{
+  PRBool isValid = PR_FALSE;
+  
+  // xsd:NCNAME is a restriction on xsd:Name
+  if (IsValidSchemaToken(aStrValue)) {
+    /* http://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName
+      NCNameChar ::=  Letter | Digit | '.' | '-' | '_' |
+                      CombiningChar | Extender
+      NCName     ::= (Letter | '_') (NCNameChar)*
+     */
+    nsAutoString pattern;
+    // XXX Need to handle Combining|Extender and Unicode Letters
+    // xsd:Name minus the ":"
+    pattern.AssignLiteral("^[a-zA-Z_][\\w\\.\\-]*$");
+    nsCOMPtr<nsISchemaValidatorRegexp> regexp = do_GetService(kREGEXP_CID);
+    nsresult rv = regexp->RunRegexp(aStrValue, pattern, "g", &isValid);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return isValid;
+}
+
+// http://www.w3.org/TR/xmlschema-2/#id
+PRBool
+nsSchemaValidatorUtils::IsValidSchemaID(const nsAString &aStrValue)
+{
+  PRBool isValid = PR_FALSE;
+
+  // xsd:ID is a restriction of xsd:NCNAME
+  if (IsValidSchemaNCName(aStrValue)) {
+    isValid = PR_TRUE;
+    // XXX Uniqueness tests per
+    //   http://www.w3.org/TR/2000/WD-xml-2e-20000814#NT-TokenizedType
+  }
+
+  return isValid;
+}
+
+// http://www.w3.org/TR/xmlschema-2/#idref
+PRBool
+nsSchemaValidatorUtils::IsValidSchemaIDRef(const nsAString &aStrValue)
+{
+  PRBool isValid = PR_FALSE;
+
+  // xsd:IDREF is a restriction of xsd:NCName
+  if (IsValidSchemaNCName(aStrValue)) {
+    isValid = PR_TRUE;
+    // XXX Ensure IDREF really references an ID,
+    //   http://www.w3.org/TR/2000/WD-xml-2e-20000814#idref
+  }
+
+  return isValid;
+}
+
+// http://www.w3.org/TR/xmlschema-2/#idrefs
+PRBool
+nsSchemaValidatorUtils::IsValidSchemaIDRefs(const nsAString &aStrValue)
+{
+  PRBool isValid = PR_FALSE;
+
+  // Need to validate each IDREF
+  nsAString::const_iterator iter, end, tokenStart;
+  nsAutoString idref;
+  aStrValue.BeginReading(iter);
+  aStrValue.BeginReading(tokenStart);
+  aStrValue.EndReading(end);
+  while (iter != end) {
+    for (;IsWhitespace(*iter) && iter != end; ++iter);
+    tokenStart = iter;
+
+    // Find end of token
+    for (;!IsWhitespace(*iter) && iter != end; ++iter);
+
+    // Get the token/idref and validate
+    idref = Substring(tokenStart, iter);
+    isValid = IsValidSchemaIDRef(idref);
+    if (!isValid) break; // No need to continue
+
+    if (iter != end) ++iter;
+  }
+
+  return isValid;
+}
+
+PRBool
+nsSchemaValidatorUtils::IsWhitespace(PRUnichar aChar)
+{
+  return aChar == ' '  || aChar == '\t' || aChar == '\n' ||
+         aChar == '\r' || aChar == '\v';
+}
+
+// http://www.w3.org/TR/xmlschema-2/#nmtoken
+PRBool
+nsSchemaValidatorUtils::IsValidSchemaNMToken(const nsAString &aStrValue)
+{
+  PRBool isValid = PR_FALSE;
+
+  // xsd:NMTOKEN is a restriction on xsd:token
+  if (IsValidSchemaToken(aStrValue)) {
+    /*
+      NameChar ::= 	Letter | Digit | '.' | '-' | '_' | ':' |
+                    CombiningChar | Extender
+      Nmtoken	 ::= (NameChar)+
+    */
+    nsAutoString pattern;
+    // XXX Need to handle Combining|Extender and possibly unicode letters
+    pattern.AssignLiteral("^[\\w\\.\\-_:]*$");
+    nsCOMPtr<nsISchemaValidatorRegexp> regexp = do_GetService(kREGEXP_CID);
+    nsresult rv = regexp->RunRegexp(aStrValue, pattern, "g", &isValid);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return isValid;
+}
+
+// http://www.w3.org/TR/xmlschema-2/#nmtokens
+PRBool
+nsSchemaValidatorUtils::IsValidSchemaNMTokens(const nsAString &aStrValue)
+{
+  PRBool isValid = PR_FALSE;
+
+  // Need to validate each NNTOKEN
+  nsAString::const_iterator iter, end, tokenStart;
+  nsAutoString idref;
+  aStrValue.BeginReading(iter);
+  aStrValue.BeginReading(tokenStart);
+  aStrValue.EndReading(end);
+  while (iter != end) {
+    for (;IsWhitespace(*iter) && iter != end; ++iter);
+    tokenStart = iter;
+
+    // Find end of token
+    for (;!IsWhitespace(*iter) && iter != end; ++iter);
+
+    // Get the token/idref and validate
+    idref = Substring(tokenStart, iter);
+    isValid = IsValidSchemaNMToken(idref);
+    if (!isValid) break; // No need to continue
+
+    if (iter != end) ++iter;
+  }
+
+  return isValid;
+}
+
 PRBool
 nsSchemaValidatorUtils::HandleEnumeration(const nsAString &aStrValue,
                                           const nsStringArray &aEnumerationList)

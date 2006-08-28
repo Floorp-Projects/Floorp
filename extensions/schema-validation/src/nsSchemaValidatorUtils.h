@@ -218,6 +218,14 @@ public:
   static PRBool IsValidSchemaNormalizedString(const nsAString & aStrValue);
   static PRBool IsValidSchemaToken(const nsAString & aStrValue);
   static PRBool IsValidSchemaLanguage(const nsAString & aStrValue);
+  static PRBool IsValidSchemaName(const nsAString & aStrValue);
+  static PRBool IsValidSchemaNCName(const nsAString & aStrValue);
+  static PRBool IsValidSchemaNMToken(const nsAString & aStrValue);
+  static PRBool IsValidSchemaNMTokens(const nsAString & aStrValue);
+  static PRBool IsValidSchemaID(const nsAString & aStrValue);
+  static PRBool IsValidSchemaIDRef(const nsAString & aStrValue);
+  static PRBool IsValidSchemaIDRefs(const nsAString & aStrValue);
+  static PRBool IsWhitespace(PRUnichar aChar);
 
   static PRBool HandleEnumeration(const nsAString &aStrValue,
                                   const nsStringArray &aEnumerationList);
