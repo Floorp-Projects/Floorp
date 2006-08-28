@@ -72,6 +72,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 #ifdef USE_FREETYPE
 // Can't include os2win.h, since it screws things up.  So definitions go here.
 typedef ULONG   HKEY;
+#define HKEY_LOCAL_MACHINE      0xFFFFFFEFL
 #define HKEY_CURRENT_USER       0xFFFFFFEEL
 #define READ_CONTROL            0x00020000
 #define KEY_QUERY_VALUE         0x0001
@@ -124,8 +125,13 @@ UseFTFunctions()
                                "Software\\Innotek\\InnoTek Font Engine", 0,
                                KEY_READ, &key);
     if (result != ERROR_SUCCESS) {
-      DosFreeModule(hmod);
-      return PR_FALSE;
+      result = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                            "Software\\Innotek\\InnoTek Font Engine", 0,
+                            KEY_READ, &key);
+      if (result != ERROR_SUCCESS) {
+        DosFreeModule(hmod);
+        return PR_FALSE;
+      }
     }
 
     ULONG value;
@@ -150,8 +156,11 @@ UseFTFunctions()
     strcat(keystr, ext);
     result = RegOpenKeyEx(HKEY_CURRENT_USER, keystr, 0, KEY_READ, &key);
     if (result != ERROR_SUCCESS) {
-      DosFreeModule(hmod);
-      return PR_FALSE;
+      result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, keystr, 0, KEY_READ, &key);
+      if (result != ERROR_SUCCESS) {
+        DosFreeModule(hmod);
+        return PR_FALSE;
+      }
     }
     result = RegQueryValueEx(key, "Enabled", NULL, NULL, (UCHAR*)&value,
                              &length);
