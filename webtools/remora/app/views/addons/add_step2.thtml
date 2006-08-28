@@ -44,7 +44,7 @@ echo         '<td>'.$html->textarea('Addon/Description', array('value' => $info[
                                                     )).$html->tagErrorMsg('Addon/Description', _('Please enter a description of your add-on.')).'</td>';
 echo     '</tr>';
 echo     '<tr>';
-echo         '<td colspan=2>'.$html->checkbox('Addon/ShowEULA').' '._('I would like to add an End User License Agreement and/or Privacy Policy').'</td>';
+echo         '<td colspan=2>'.$html->checkbox('Addon/ShowEula').' '._('I would like to add an End User License Agreement and/or Privacy Policy').'</td>';
 echo     '</tr>';
 echo     '<tr>';
 echo         '<td colspan=2>'.$html->submit(_('Next').' &raquo;').'</td>';

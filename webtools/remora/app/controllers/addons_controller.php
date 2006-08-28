@@ -241,11 +241,21 @@ class AddonsController extends AppController
             $this->set('manifestData', $manifestData);
             $this->render('add_step2');
         }
-        elseif (isset($this->data['Addon']['add_step2'])) {
-            
-            $this->render('add_step25');
-        }
-        elseif (isset($this->data['Addon']['add_step25'])) {
+        elseif (isset($this->data['Addon']['add_step2']) || isset($this->data['Addon']['add_step25'])) {
+            //Step 2 processing
+            if (isset($this->data['Addon']['add_step2'])) {
+                //Validate stuff
+
+                if($this->data['Addon']['ShowEula'] == 1) {
+                    $this->render('add_step25');
+                    die();
+                }
+                //Else, continue and show step3
+            }
+            //Step 2.5 processing
+            if (isset($this->data['Addon']['add_step25'])) {
+            }
+
             //Get Platforms list
             $platformQry = $this->Platform->findAll();
             foreach ($platformQry as $k => $v) {
