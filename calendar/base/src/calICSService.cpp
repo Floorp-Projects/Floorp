@@ -1043,6 +1043,8 @@ calIcalComponent::AddSubcomponent(calIIcalComponent *comp)
      * caller has something it can poke at all live-like.
      */
     calIcalComponent *ical = NS_STATIC_CAST(calIcalComponent *, comp);
+    if(ical->mParent)
+        ical->mComponent = icalcomponent_new_clone(ical->mComponent);
 
     PRUint32 tzCount = 0;
     calIIcalComponent **timezones = nsnull;;
@@ -1160,6 +1162,8 @@ calIcalComponent::AddProperty(calIIcalProperty *prop)
 {
     // XXX like AddSubcomponent, this is questionable
     calIcalProperty *ical = NS_STATIC_CAST(calIcalProperty *, prop);
+    if(ical->mParent)
+        ical->mProperty = icalproperty_new_clone(ical->mProperty);
     icalcomponent_add_property(mComponent, ical->mProperty);
     ical->mParent = this;
     return NS_OK;
