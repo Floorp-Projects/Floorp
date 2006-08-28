@@ -528,7 +528,6 @@
             }
             this._itemToBeToggled = items;
           }
-        },
         ]]></body>
       </method>
 
