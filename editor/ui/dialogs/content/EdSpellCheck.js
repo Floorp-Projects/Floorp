@@ -573,7 +573,9 @@ function ExitSpellChecker()
         spellChecker.dictionary = curLang;
       }
       // now check the document over again with the new dictionary
-      if ("inlineSpellChecker" in window.opener.InlineSpellChecker)
+      // if we have an inline spellchecker
+      if (("InlineSpellChecker" in window.opener) &&
+          ("inlineSpellChecker" in window.opener.InlineSpellChecker))
         if (window.opener.InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell)
           window.opener.InlineSpellChecker.checkDocument(window.opener.content.document);
     }
