@@ -50,8 +50,7 @@ SIMPLE_PROGRAMS	= PrimitiveTest$(BIN_SUFFIX) SimpleTypeLib$(BIN_SUFFIX)
 CSRCS		= PrimitiveTest.c SimpleTypeLib.c
 
 LIBS		= \
-		$(XPCOM_LIBS) \
-		$(NSPR_LIBS) \
+		$(DIST)/lib/$(LIB_PREFIX)xpt.$(LIB_SUFFIX) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
