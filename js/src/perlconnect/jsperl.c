@@ -410,7 +410,7 @@ checkError(JSContext *cx)
 }
 
 /*
-    Take the value of $JS::js and convert in to a jsval. It's stotred
+    Take the value of $JS::js and convert it to a jsval. It is stored
     in *rval. perl_eval and perl_call use $JS::js to store return results.
 */
 static JSBool

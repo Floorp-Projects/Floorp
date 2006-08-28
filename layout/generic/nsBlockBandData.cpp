@@ -93,7 +93,7 @@ nsBlockBandData::GetAvailableSpace(nscoord aY, PRBool aRelaxHeightConstraint,
   ComputeAvailSpaceRect();
   aResult = mAvailSpace;
 #ifdef REALLY_NOISY_COMPUTEAVAILSPACERECT
-  printf("nsBBD %p GetAvailableSpace(%d) returing (%d, %d, %d, %d)\n",
+  printf("nsBBD %p GetAvailableSpace(%d) returning (%d, %d, %d, %d)\n",
           this, aY, aResult.x, aResult.y, aResult.width, aResult.height);
 #endif
   return NS_OK;

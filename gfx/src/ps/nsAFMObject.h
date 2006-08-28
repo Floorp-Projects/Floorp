@@ -389,7 +389,7 @@ protected:
   /** ---------------------------------------------------
    * Read in the AFMFontInformation from the currently parsed AFM file
    * @update 2/26/99 dwc
-   * @param aFontInfo -- The header structure to read the caracter info from
+   * @param aFontInfo -- The header structure to read the character info from
    * @param aNumCharacters -- The number of characters to look for
    */
   void    ReadCharMetrics (AFMFontInformation *aFontInfo,PRInt32 aNumCharacters);

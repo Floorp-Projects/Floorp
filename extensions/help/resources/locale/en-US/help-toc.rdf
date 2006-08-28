@@ -417,7 +417,7 @@ nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
         <rdf:li> <rdf:Description ID="sign-encrypt-signing" nc:name="Signing &amp; Encrypting a New Message" nc:link="mail_sec_help.xhtml#signing_and_encrypting_a_new_message" /> </rdf:li>
         <rdf:li> <rdf:Description ID="sign-encrypt-read" nc:name="Reading Signed &amp; Encrypted Messages" nc:link="mail_sec_help.xhtml#reading_signed_and_encrypted_messages" /> </rdf:li>
         <rdf:li> <rdf:Description ID="compose_security" nc:name="Message Security - Compose Window" nc:link="mail_sec_help.xhtml#message_security_compose_window" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="received_security" nc:name="Message Security - Received Message" nc:link="mail_sec_help.xhtml#message_security_recieved_message" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="received_security" nc:name="Message Security - Received Message" nc:link="mail_sec_help.xhtml#message_security_received_message" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>

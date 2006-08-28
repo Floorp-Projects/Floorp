@@ -85,7 +85,7 @@
 
 /*
  * This file doesn't include prtypes.h, which defines PR_BEGIN_EXTERN_C,
- * and I certainly don't want to pull it in to such a high level include
+ * and I certainly don't want to pull it into such a high level include
  * file, so I'll just do what prtypes.h does. edburns
  */
 #ifdef __cplusplus

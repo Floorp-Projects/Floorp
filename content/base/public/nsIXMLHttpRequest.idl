@@ -76,7 +76,7 @@ interface nsIVariant;
  *   interface nsIDOMEventListener.
  *
  *   The 'onload', 'onerror', and 'onreadystatechange' attributes moved to
- *   nsIJSXMLHttRequest, but if you're coding in C++ you should avoid using
+ *   nsIJSXMLHttpRequest, but if you're coding in C++ you should avoid using
  *   those.  Though actually, if you use addEventListener from C++ weird things
  *   will happen too, since the result will depend on what JS happens to be on
  *   the stack when you do it....

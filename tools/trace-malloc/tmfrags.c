@@ -555,7 +555,7 @@ unsigned arrayAlloc(AnyArray* inArray, unsigned inItems)
 **  Resize the item array capcity to a specific number of items.
 **  This could possibly truncate the array, so handle that as well.
 **
-**  returns unsigned        <= inArray->mCapactiy on success.
+**  returns unsigned        <= inArray->mCapacity on success.
 */
 {
     unsigned retval = (unsigned)-1;

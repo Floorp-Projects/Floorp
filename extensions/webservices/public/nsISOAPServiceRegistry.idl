@@ -43,7 +43,7 @@ interface nsISOAPEncodingRegistry;
 
 /**
  * This interface represents a registry of SOAP services.
- * This registry recieves transports to listen for messages
+ * This registry receives transports to listen for messages
  *   and services to hand the messages to.  Service registries
  *   may be created as required.  Destroying a service registry
  *   stops the registry's action.  To temporarily register

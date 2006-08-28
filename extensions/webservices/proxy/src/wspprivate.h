@@ -88,7 +88,7 @@ public:
 
   static nsresult C2XML(const nsACString& aCIdentifier,
                         nsAString& aXMLIdentifier);
-  static void XML2C(const nsAString& aXMLIndentifier,
+  static void XML2C(const nsAString& aXMLIdentifier,
                     nsACString& aCIdentifier);
 };
 

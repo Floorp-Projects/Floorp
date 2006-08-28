@@ -226,7 +226,7 @@ Fixed more memory leaks.
 Version 0.18a 10 June 00 ( cvs tag libical-0-18a )
 -----------------------------------------------
 
-Did the final tweaks to stow.c, a program to recieve and store iMIP
+Did the final tweaks to stow.c, a program to receive and store iMIP
 messages.
 
 

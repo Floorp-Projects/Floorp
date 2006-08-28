@@ -157,7 +157,7 @@ struct nsSchemaTime {
   PRUint8 hour;
   PRUint8 minute;
   PRUint8 second;
-  PRUint32 milisecond;
+  PRUint32 millisecond;
   PRBool tzIsNegative;
   PRUint8 tzhour;
   PRUint8 tzminute;

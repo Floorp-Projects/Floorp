@@ -912,7 +912,7 @@ nsBayesianFilter::nsBayesianFilter()
     if (mJunkProbabilityThreshold == 0 || mJunkProbabilityThreshold >= 1)
       mJunkProbabilityThreshold = kDefaultJunkThreshold;
 
-    PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("junk probabilty threshold: %f", mJunkProbabilityThreshold));
+    PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("junk probability threshold: %f", mJunkProbabilityThreshold));
 
     getTrainingFile(getter_AddRefs(mTrainingFile));
 

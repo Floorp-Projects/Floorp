@@ -444,7 +444,7 @@ NS_IMETHODIMP J2XOUTServerTestComponentImpl::TestObject(iJ2XOUTServerTestCompone
 }
 /**
 
- * Auxiliary method, that used just for object indentification
+ * Auxiliary method, that used just for object identification
  * Invoked from client and from server, then identification strings compared.
 
  */ 

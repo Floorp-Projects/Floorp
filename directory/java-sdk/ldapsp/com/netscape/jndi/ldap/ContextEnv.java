@@ -212,7 +212,7 @@ class ContextEnv extends ShareableEnv  {
     }
 
     /**
-     * Set the maximum number of miliseconds to wait for any operation under default
+     * Set the maximum number of milliseconds to wait for any operation under default
      * SearchConstraints for the connection.
      * Specified with the env property java.naming.ldap.timelimit
      * Note: sun ldap does not have this property

@@ -71,7 +71,7 @@ interface nsISOAPTransport : nsISupports {
    * @param aListener Handler to be invoked (single threaded) as each response is 
    *  received and finally with null.  If specified as null, no responses are returned.
    *
-   * @param response Message to recieve response and be handled by listener.  May be 
+   * @param response Message to receive response and be handled by listener.  May be 
    *   null if listener is null.
    */
   nsISOAPCallCompletion asyncCall(in nsISOAPCall aCall,
@@ -87,7 +87,7 @@ interface nsISOAPTransport : nsISupports {
    *  desired listener was already added to the transport with the specified
    *  capture flag or if the transport does not support incoming messages.
    *
-   * @param aListener The listener to recieve unsolicited messages from the
+   * @param aListener The listener to receive unsolicited messages from the
    *   transport.
    *
    * @param aCapture True if the listener should capture the message before
@@ -101,7 +101,7 @@ interface nsISOAPTransport : nsISupports {
    *  will fail if the specified listener was not added with the specified
    *  capture setting.
    *
-   * @param aListener The listener to stop from recieving unsolicited messages 
+   * @param aListener The listener to stop from receiving unsolicited messages 
    *  from the transport.
    *
    * @param aCapture True if the listener was added to capture the message before

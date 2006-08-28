@@ -16,7 +16,7 @@
  * Portions created by Sun Microsystems Inc are Copyright (C) 2001
  * All Rights Reserved.
  * 
- * $Id: shmtran.c,v 1.2 2001/07/12 19:58:24 edburns%acm.org Exp $
+ * $Id: shmtran.c,v 1.3 2006/08/28 20:12:33 timeless%mozdev.org Exp $
  * 
  * Contributor(s):
  * 
@@ -571,7 +571,7 @@ int JVMP_RecvShmRequest(int msg_id, int sync,
   void* shmbuf;
   int len;
   
-  /* this msgrcv() won't recieve system messages */
+  /* this msgrcv() won't receive system messages */
  restart:
   if ((msgrcv(msg_id, 
 	      (struct msgbuf *)&msg, 

@@ -74,7 +74,7 @@
  * (i) User clicking around the tree
  * (ii) Network activity
  * (iii) scripts running
- * The FE can recieve notifications about these activities. 
+ * The FE can receive notifications about these activities. 
  * If the FE does not want to be notified about something, it can set 
  * the notification mask to block certain notifications.
  */

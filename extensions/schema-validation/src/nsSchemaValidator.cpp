@@ -2437,7 +2437,7 @@ nsSchemaValidator::ValidateBuiltinTypeTime(const nsAString & aValue,
 
     // 22-AUG-1993 10:59:12.82
     sprintf(fulldate, "22-AUG-1993 %d:%d:%d.%u", time.hour, time.minute,
-            time.second, time.milisecond);
+            time.second, time.millisecond);
 
     PR_ParseTimeString(fulldate, PR_TRUE, aResult);
   } else {
@@ -2644,7 +2644,7 @@ nsSchemaValidator::ValidateBuiltinTypeDateTime(const nsAString & aValue,
       dateTime.time.hour,
       dateTime.time.minute,
       dateTime.time.second,
-      dateTime.time.milisecond);
+      dateTime.time.millisecond);
 
     PR_ParseTimeString(fulldate, PR_TRUE, aResult);
   } else {

@@ -328,7 +328,7 @@ nsViewSourceChannel::SetContentType(const nsACString &aContentType)
     // Our GetContentType() currently returns VIEWSOURCE_CONTENT_TYPE
     //
     // However, during the parsing phase the parser calls our
-    // channel's GetContentType(). Returing the string above trips up
+    // channel's GetContentType(). Returning the string above trips up
     // the parser. In order to avoid messy changes and not to have the
     // parser depend on nsIViewSourceChannel Vidur proposed the
     // following solution:

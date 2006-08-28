@@ -162,7 +162,7 @@ protected:
     double   mJunkProbabilityThreshold;
     PRUint32 mGoodCount, mBadCount;
     PRPackedBool mTrainingDataDirty;
-    PRInt32 mMinFlushInterval; // in miliseconds, must be positive
+    PRInt32 mMinFlushInterval; // in milliseconds, must be positive
                                //and not too close to 0
     nsCOMPtr<nsITimer> mTimer;
     nsCOMPtr<nsILocalFile> mTrainingFile;

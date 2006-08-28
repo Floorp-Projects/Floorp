@@ -72,7 +72,7 @@ interface nsISOAPMessage : nsISupports {
    * instead of invoking encodeSOAPParameters to use encoders
    * or access and manipulate the message after it has been 
    * constructed by encodeSOAPParameters.  If the message has 
-   * not been set, invoking a call will fail.  A message reciever 
+   * not been set, invoking a call will fail.  A message receiver 
    * may also use this accessor to get the document to avoid using 
    * decoders.
    */

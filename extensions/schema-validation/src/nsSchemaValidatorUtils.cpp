@@ -484,7 +484,7 @@ nsSchemaValidatorUtils::ParseSchemaTime(const nsAString & aStrValue,
       aTime->hour = strtol(hour, &pEnd, 10);
       aTime->minute = strtol(minute, &pEnd, 10);
       aTime->second = strtol(second, &pEnd, 10);
-      aTime->milisecond = usecval;
+      aTime->millisecond = usecval;
 
       if (tzSign == '+')
         aTime->tzIsNegative = PR_FALSE;
@@ -689,9 +689,9 @@ nsSchemaValidatorUtils::CompareTime(nsSchemaTime aTime1, nsSchemaTime aTime2)
       } else if (aTime1.second > aTime2.second) {
         result = 1;
       } else {
-        if (aTime1.milisecond < aTime2.milisecond) {
+        if (aTime1.millisecond < aTime2.millisecond) {
           result = -1;
-        } else if (aTime1.milisecond > aTime2.milisecond) {
+        } else if (aTime1.millisecond > aTime2.millisecond) {
           result = 1;
         } else {
           result = 0;
@@ -715,7 +715,7 @@ nsSchemaValidatorUtils::AddTimeZoneToDateTime(nsSchemaDateTime aDateTime,
   int hour = aDateTime.time.hour;
   int minute = aDateTime.time.minute;
   PRUint8 second = aDateTime.time.second;
-  PRUint32 milisecond = aDateTime.time.milisecond;
+  PRUint32 millisecond = aDateTime.time.millisecond;
 
   if (aDateTime.time.tzIsNegative) {
     hour = hour + aDateTime.time.tzhour;
@@ -785,7 +785,7 @@ nsSchemaValidatorUtils::AddTimeZoneToDateTime(nsSchemaDateTime aDateTime,
   aDestDateTime->time.hour = hour;
   aDestDateTime->time.minute = minute;
   aDestDateTime->time.second = second;
-  aDestDateTime->time.milisecond = milisecond;
+  aDestDateTime->time.millisecond = millisecond;
   aDestDateTime->time.tzIsNegative = aDateTime.time.tzIsNegative;
 }
 
@@ -1293,7 +1293,7 @@ nsSchemaValidatorUtils::AddDurationToDatetime(nsSchemaDateTime aDatetime,
    */
   double dblValue;
   aDuration->GetFractionSeconds(&dblValue);
-  aResultDateTime->time.milisecond = (int) dblValue * 1000000;
+  aResultDateTime->time.millisecond = (int) dblValue * 1000000;
 
   // seconds
   aDuration->GetSeconds(&temp);

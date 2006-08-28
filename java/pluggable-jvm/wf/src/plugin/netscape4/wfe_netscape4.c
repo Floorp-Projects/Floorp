@@ -16,7 +16,7 @@
  * Portions created by Sun Microsystems Inc are Copyright (C) 2001
  * All Rights Reserved.
  * 
- * $Id: wfe_netscape4.c,v 1.2 2001/07/12 19:58:22 edburns%acm.org Exp $
+ * $Id: wfe_netscape4.c,v 1.3 2006/08/28 20:12:32 timeless%mozdev.org Exp $
  * 
  * Contributor(s):
  * 
@@ -58,7 +58,7 @@ static int SetTransport(int xid, int* pmsg_id)
   int msg_id;
 
   g_xid = xid;
-  /* create msg queue used by extension to recieve messages */
+  /* create msg queue used by extension to receive messages */
   if ((msg_id = 
        JVMP_msgget (0, IPC_CREAT | IPC_PRIVATE | IPC_EXCL | 0770)) == -1)
     {

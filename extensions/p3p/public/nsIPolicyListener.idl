@@ -40,7 +40,7 @@
 [scriptable,uuid(05D74F35-5081-4c01-B814-34F44DD8EB50)]
 interface nsIPolicyListener : nsISupports {
   /**
-   * Notify listeners about the availabiltiy of a policy
+   * Notify listeners about the availability of a policy
    *
    * @param aPolicyLocation -> Points to the sites full p3p policy
    * @param aError          -> POLICY_LOAD_SUCCESS | POLICY_LOAD_FAILURE | POLICY_LIFE_EXPIRED | POLICY_SYNTAX_ERROR

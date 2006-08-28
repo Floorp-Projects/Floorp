@@ -1349,7 +1349,7 @@ RangeSubtreeIterator::Prev()
 }
 
 
-// CollapseRangeAfterDelete() is a utiltiy method that is used by
+// CollapseRangeAfterDelete() is a utility method that is used by
 // DeleteContents() and ExtractContents() to collapse the range
 // in the correct place, under the range's root container (the
 // range end points common container) as outlined by the Range spec:

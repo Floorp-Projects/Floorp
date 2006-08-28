@@ -38,12 +38,12 @@
 #define nsDetetctionConfident_h__
 
 /*
-  This type is used to indidcate how confident the detection module about
+  This type is used to indicate how confident the detection module about
   the return result.
  
-  eNoAnswerYet is used to indidcate that the detector have not find out a 
+  eNoAnswerYet is used to indicate that the detector have not find out a 
                answer yet based on the data it received.
-  eBestAnswer  is used to indidcate that the answer the detector returned
+  eBestAnswer  is used to indicate that the answer the detector returned
                is the best one within the knowledge of the detector.
                In other words, the test to all other candidcates fail.
 
@@ -52,7 +52,7 @@
                bytes > 0x80 (which make ISO-2022-JP test failed) and byte 
                0x82 (which may EUC-JP test failed)
 
-  eSureAnswer  is used to indidcate that the detector are 100% sure about the 
+  eSureAnswer  is used to indicate that the detector is 100% sure about the 
                answer. 
                Exmaple 1; the Shift_JIS/ISO-2022-JP/EUC-JP detector return
                this w/ ISO-2022-JP when it hit one of the following ESC seq

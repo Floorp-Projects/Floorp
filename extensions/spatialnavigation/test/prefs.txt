@@ -30,7 +30,7 @@ DEFAULT: 3
 // snav.disableJS
 ///////////////////////////////////////////////////////////
 
-Disable onFocus event that an element may recieve during
+Disable onFocus event that an element may receive during
 spatial navigation.  On some pages we have found that the
 page decides to move the focus as if the targeted content
 was clicked.  This may lead to an undesirable behavior.

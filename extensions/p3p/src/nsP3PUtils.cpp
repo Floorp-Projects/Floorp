@@ -104,7 +104,7 @@ nsP3PUtils::TrimCharsInSet(const char* aSet,
   aValue.BeginReading(valueCurrent);
   aValue.EndReading(valueEnd);
 
-  // Skip charaters in the beginning
+  // Skip characters in the beginning
   while (valueCurrent != valueEnd) {
     if (!IsCharInSet(aSet, *valueCurrent)) {
       break;

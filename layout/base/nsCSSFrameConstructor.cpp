@@ -5462,7 +5462,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
   // Set the scroll frame's initial child list
   newFrame->SetInitialChildList(nsnull, legendFrame ? legendFrame : areaFrame);
 
-  // our new frame retured is the top frame which is the list frame. 
+  // our new frame returned is the top frame which is the list frame. 
   aNewFrame = newFrame; 
 
   // yes we have already initialized our frame 

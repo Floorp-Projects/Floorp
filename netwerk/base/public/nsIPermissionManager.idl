@@ -86,7 +86,7 @@ interface nsIPermissionManager : nsISupports
    * @param type        a case-sensitive ASCII string, identifying the consumer.
    *                    Consumers should choose this string to be unique, with
    *                    respect to other consumers. The number of unique type
-   *                    indentifiers may be limited.
+   *                    identifiers may be limited.
    * @param permission  an integer from 1 to 15, representing the desired
    *                    action (e.g. allow or deny). The interpretation of
    *                    this number is up to the consumer, and may represent

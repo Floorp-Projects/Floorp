@@ -35,7 +35,7 @@
  *
  *
  * Date:    11 October 2002
- * SUMMARY: Creation of date objects using local variables. Testing miliseconds.
+ * SUMMARY: Creation of date objects using local variables. Testing milliseconds.
  *
  * Syntax: |Date()|
  *

@@ -273,7 +273,7 @@ PRInt8 nsJISx4051LineBreaker::GetClass(PRUnichar u)
               ( ( 0xf900 <= h) && ( h <= 0xfaff) )
              )
    { 
-     c = 5; // CJK charcter, Han, and Han Compatability
+     c = 5; // CJK character, Han, and Han Compatability
    } 
    else if( 0xff00 == h)
    {

@@ -47,13 +47,13 @@ class tmTransactionManager;
 
 /**
   * This class isn't so much a queue as it is storage for transactions. It
-  *   is set up to recieve and store transactions in a growing collection
+  *   is set up to receive and store transactions in a growing collection
   *   (using tmVectors). Different messages can be received from the 
   *   Transaction Manager(TM) the queue belongs to which can add and remove
   *   listeners, empty the queue (flush), and add messages to the queue.
   *
   * See the documentation in tmTransactionService.h for details on the
-  *   messages you can send to and recieve from the queues in the TM
+  *   messages you can send to and receive from the queues in the TM
   */
 class tmQueue
 {

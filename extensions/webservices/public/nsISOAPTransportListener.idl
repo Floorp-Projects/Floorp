@@ -41,7 +41,7 @@ interface nsIDOMDocument;
 interface nsISOAPMessage;
 
 /**
- * This interface recieves control when an unsolicited transport
+ * This interface receives control when an unsolicited transport
  * is received on a transport.
  */
 

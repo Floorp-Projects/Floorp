@@ -261,14 +261,14 @@ WSPFactory::C2XML(const nsACString& aCIdentifier,
 }
 
 void
-WSPFactory::XML2C(const nsAString& aXMLIndentifier,
+WSPFactory::XML2C(const nsAString& aXMLIdentifier,
                   nsACString& aCIdentifier)
 {
   nsReadingIterator<PRUnichar> current, end;
 
   aCIdentifier.Truncate();
-  aXMLIndentifier.BeginReading(current);
-  aXMLIndentifier.EndReading(end);
+  aXMLIdentifier.BeginReading(current);
+  aXMLIdentifier.EndReading(end);
 
   while (current != end) {
     PRUnichar uch = *current++;

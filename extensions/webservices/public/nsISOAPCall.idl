@@ -47,8 +47,8 @@ interface nsISOAPCallCompletion;
  * which handles common patterns of calling, such as providing an
  * action URI in the HTTP header, locating and invoking the appropriate
  * transport based upon the protocol of the transportURI, and
- * automatically recieving the result in a new nsISOAPResponse object
- * which recieves an XML message.
+ * automatically receiving the result in a new nsISOAPResponse object
+ * which receives an XML message.
  */
 
 [scriptable, uuid(a8fefe40-52bc-11d4-9a57-000064657374)]
