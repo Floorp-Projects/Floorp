@@ -999,6 +999,24 @@ nsTableFrame::CreateAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
 }
 
 void
+nsTableFrame::MatchCellMapToColCache(nsTableCellMap* aCellMap)
+{
+  PRInt32 numColsInMap   = GetColCount();
+  PRInt32 numColsInCache = mColFrames.Count();
+  PRInt32 numColsToAdd = numColsInMap - numColsInCache;
+  if (numColsToAdd > 0) {
+    // this sets the child list, updates the col cache and cell map
+    CreateAnonymousColFrames(numColsToAdd, eColAnonymousCell, PR_TRUE); 
+  }
+  if (numColsToAdd < 0) {
+    PRInt32 numColsNotRemoved = DestroyAnonymousColFrames(-numColsToAdd);
+    // if the cell map has fewer cols than the cache, correct it
+    if (numColsNotRemoved > 0) {
+      aCellMap->AddColsAtEnd(numColsNotRemoved);
+    }
+  }
+}
+void
 nsTableFrame::AppendCell(nsTableCellFrame& aCellFrame,
                          PRInt32           aRowIndex)
 {
@@ -1006,13 +1024,7 @@ nsTableFrame::AppendCell(nsTableCellFrame& aCellFrame,
   if (cellMap) {
     nsRect damageArea(0,0,0,0);
     cellMap->AppendCell(aCellFrame, aRowIndex, PR_TRUE, damageArea);
-    PRInt32 numColsInMap   = GetColCount();
-    PRInt32 numColsInCache = mColFrames.Count();
-    PRInt32 numColsToAdd = numColsInMap - numColsInCache;
-    if (numColsToAdd > 0) {
-      // this sets the child list, updates the col cache and cell map
-      CreateAnonymousColFrames(numColsToAdd, eColAnonymousCell, PR_TRUE); 
-    }
+    MatchCellMapToColCache(cellMap);
     if (IsBorderCollapse()) {
       SetBCDamageArea(damageArea);
     }
@@ -1027,20 +1039,7 @@ void nsTableFrame::InsertCells(nsVoidArray&    aCellFrames,
   if (cellMap) {
     nsRect damageArea(0,0,0,0);
     cellMap->InsertCells(aCellFrames, aRowIndex, aColIndexBefore, damageArea);
-    PRInt32 numColsInMap = GetColCount();
-    PRInt32 numColsInCache = mColFrames.Count();
-    PRInt32 numColsToAdd = numColsInMap - numColsInCache;
-    if (numColsToAdd > 0) {
-      // this sets the child list, updates the col cache and cell map
-      CreateAnonymousColFrames(numColsToAdd, eColAnonymousCell, PR_TRUE);
-    }
-    if (numColsToAdd < 0) {
-      PRInt32 numColsNotRemoved = DestroyAnonymousColFrames(-numColsToAdd);
-      // if the cell map has fewer cols than the cache, correct it
-      if (numColsNotRemoved > 0) {
-        cellMap->AddColsAtEnd(numColsNotRemoved);
-      }
-    }
+    MatchCellMapToColCache(cellMap);
     if (IsBorderCollapse()) {
       SetBCDamageArea(damageArea);
     }
@@ -1080,19 +1079,7 @@ void nsTableFrame::RemoveCell(nsTableCellFrame* aCellFrame,
   if (cellMap) {
     nsRect damageArea(0,0,0,0);
     cellMap->RemoveCell(aCellFrame, aRowIndex, damageArea);
-    PRInt32 numColsInMap = GetColCount(); // cell map's notion of num cols
-    PRInt32 numColsInCache = mColFrames.Count();
-    if (numColsInCache > numColsInMap) {
-      PRInt32 numColsNotRemoved = DestroyAnonymousColFrames(numColsInCache - numColsInMap);
-      // if the cell map has fewer cols than the cache, correct it
-      if (numColsNotRemoved > 0) {
-        cellMap->AddColsAtEnd(numColsNotRemoved);
-      }
-    }
-    else if (numColsInCache < numColsInMap) {
-      // this sets the child list, updates the col cache and cell map
-      CreateAnonymousColFrames(numColsInMap - numColsInCache, eColAnonymousCell, PR_TRUE);
-    }
+    MatchCellMapToColCache(cellMap);
     if (IsBorderCollapse()) {
       SetBCDamageArea(damageArea);
     }
@@ -1160,13 +1147,7 @@ nsTableFrame::InsertRows(nsTableRowGroupFrame& aRowGroupFrame,
     PRInt32 origNumRows = cellMap->GetRowCount();
     PRInt32 numNewRows = aRowFrames.Count();
     cellMap->InsertRows(aRowGroupFrame, aRowFrames, aRowIndex, aConsiderSpans, damageArea);
-    PRInt32 numColsInMap = GetColCount(); // cell map's notion of num cols
-    PRInt32 numColsInCache = mColFrames.Count();
-    numColsToAdd = numColsInMap - numColsInCache;
-    if (numColsToAdd > 0) {
-      // this sets the child list, updates the col cache and cell map
-      CreateAnonymousColFrames(numColsToAdd, eColAnonymousCell, PR_TRUE);
-    }
+    MatchCellMapToColCache(cellMap);
     if (aRowIndex < origNumRows) {
       AdjustRowIndices(aRowIndex, numNewRows);
     }
@@ -1218,24 +1199,7 @@ void nsTableFrame::RemoveRows(nsTableRowFrame& aFirstRowFrame,
   if (cellMap) {
     nsRect damageArea(0,0,0,0);
     cellMap->RemoveRows(firstRowIndex, aNumRowsToRemove, aConsiderSpans, damageArea);
-    // only remove cols that are of type eTypeAnonymous cell (they are at the end)
-    PRInt32 numColsInMap = GetColCount(); // cell map's notion of num cols
-    PRInt32 numColsInCache = mColFrames.Count();
-    if (numColsInCache > numColsInMap) {
-      PRInt32 numColsNotRemoved = DestroyAnonymousColFrames(numColsInCache - numColsInMap);
-      // if the cell map has fewer cols than the cache, correct it
-      if (numColsNotRemoved > 0) {
-        cellMap->AddColsAtEnd(numColsNotRemoved);
-      }
-    }
-    else {
-      PRInt32 numAnonymousColsToAdd = numColsInMap - numColsInCache;
-      if (numAnonymousColsToAdd > 0) {
-        // this sets the child list, updates the col cache and cell map
-        CreateAnonymousColFrames(numAnonymousColsToAdd,
-                               eColAnonymousCell, PR_TRUE);
-      }
-    }
+    MatchCellMapToColCache(cellMap);
     if (IsBorderCollapse()) {
       SetBCDamageArea(damageArea);
     }
@@ -2649,20 +2613,7 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
         cellMap->RebuildConsideringCells(nsnull, nsnull, 0, 0, PR_FALSE, damageArea);
       }
 
-      // only remove cols that are of type eTypeAnonymous cell (they are at the end)
-      PRInt32 numColsInMap = GetColCount(); // cell map's notion of num cols
-      PRInt32 numColsInCache = mColFrames.Count();
-      if (numColsInCache > numColsInMap) {
-        PRInt32 numColsNotRemoved = DestroyAnonymousColFrames(numColsInCache - numColsInMap);
-        // if the cell map has fewer cols than the cache, correct it
-        if (numColsNotRemoved > 0 && cellMap) {
-          cellMap->AddColsAtEnd(numColsNotRemoved);
-        }
-      }
-      else if (numColsInCache < numColsInMap) {
-        CreateAnonymousColFrames(numColsInMap - numColsInCache,
-                                 eColAnonymousCell, PR_TRUE);
-      }
+      MatchCellMapToColCache(cellMap);
       // XXX This could probably be optimized with much effort
       SetNeedStrategyInit(PR_TRUE);
       AppendDirtyReflowCommand(this);
