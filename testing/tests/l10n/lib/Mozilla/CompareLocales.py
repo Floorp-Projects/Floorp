@@ -51,7 +51,10 @@ exceptions = [
   __regify(('mail|browser', 'defines.inc', 'MOZ_LANGPACK_CONTRIBUTORS')),
   # ignore search engine order for browser
   __regify(('browser', 'chrome\\/browser-region\\/region\\.properties',
-   'browser\\.search\\.order\.[1-9]'))]
+   'browser\\.search\\.order\.[1-9]')),
+  # ignore feed engine order for browser
+  __regify(('browser', 'chrome\\/browser-region\\/region\\.properties',
+   'browser\\.contentHandlers\\.types\.[0-5]'))]
 
 def __dont_ignore(tpl):
   for mod, path, key in exceptions:

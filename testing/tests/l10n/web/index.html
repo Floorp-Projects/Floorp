@@ -39,35 +39,54 @@
 
 <html>
   <head>
-    <title>Locales status</title>
-      <link rel="stylesheet" type="text/css" href="yui/examples/treeview/css/local/tree.css">
-      <link rel="stylesheet" type="text/css" href="yui/build/calendar/assets/calendar.css">
-      <link rel="stylesheet" type="text/css" href="layout.css">
-      <script type="text/javascript" src="yui/build/yahoo/yahoo.js"></script>
-      <script type="text/javascript" src="yui/build/dom/dom.js"></script>
-      <script type="text/javascript" src="yui/build/event/event.js"></script>
-      <script type="text/javascript" src="yui/build/treeview/treeview.js"></script>
-      <script type="text/javascript" src="yui/build/calendar/calendar.js"></script>
-      <script type="application/javascript" src="code.js"></script>
+    <title>1.8.1 Locales status</title>
+    <style type="text/css" id="style-Tier-1">
+      .Tier-1 {display: none}
+    </style>
+    <style type="text/css" id="style-Tier-2">
+      .Tier-2 {display: none}
+    </style>
+    <style type="text/css" id="style-Tier-3">
+      .Tier-3 {display: none}
+    </style>
+    <style type="text/css">
+      div {min-height: 5px;}
+    </style>
+    <link rel="stylesheet" type="text/css" href="yui/examples/treeview/css/local/tree.css">
+    <link rel="stylesheet" type="text/css" href="yui/build/container/assets/container.css">
+    <link rel="stylesheet" type="text/css" href="layout.css">
+    <script type="text/javascript" src="yui/build/yahoo/yahoo.js"></script>
+    <script type="text/javascript" src="yui/build/dom/dom.js"></script>
+    <script type="text/javascript" src="yui/build/event/event.js"></script>
+    <script type="text/javascript" src="yui/build/logger/logger.js"></script>
+    <script type="text/javascript" src="yui/build/treeview/treeview.js"></script>
+    <script type="text/javascript" src="yui/build/calendar/calendar.js"></script>
+    <script type="text/javascript" src="yui/build/dragdrop/dragdrop.js"></script>
+    <script type="text/javascript" src="yui/build/container/container.js"></script>
+    <script type="text/javascript" src="code-base.js"></script>
+    <script type="text/javascript" src="waterfall-code.js"></script>
+    <script type="text/javascript" src="search-code.js"></script>
+    <script type="text/javascript" src="comparison-code.js"></script>
   </head>
-  <body onload="return onLoad(event)">
-    <h1>Locales overview</h1>
-<p><strong>Legend:</strong> For each locale, this chart shows locale name, an indication of status for browser, mail, toolkit, and then, more importantly, number of missing files, missing entities, obsolete files and entities, and good entities, in red, orange and green, resp. You can click on the summary row to get (and hide) all the details for a particular locale.</p>
-<div id="calContainer"><div id="currentDate">date</div><div id="calDiv"></div>
-<p id="checks">
-<input type="checkbox" name="Tier-1" checked> Tier 1<br>
-<input type="checkbox" name="Tier-2" checked> Tier 2<br>
-<input type="checkbox" name="Tier-3" checked> Tier 3<br>
-</p>
-</div>
-<table><tr><td class="ygtvlph" style="background-image: none;">&nbsp;</td><td class="locale">&nbsp;</td>
-<td class="app-res">&nbsp;</td><td class="app-res">&nbsp;</td>
-<td class="app-res">&nbsp;</td>
-<td class="count missing" title="missing Files">m.F.</td>
-<td class="count missing" title="missing Entities">m.E.</td>
-<td class="count obsolete" title="obsolete Files">o.F.</td>
-<td class="count obsolete" title="obsolete Entities">o.E.</td>
-<td class="count good" title="unchanged or localized Entities">good</td></tr></table>
-    <div id="view"></div>
+  <body onload="">
+    <div id="sidebar">
+      <p id="checks">Showing Tier 1
+        <input type="checkbox" name="Tier-1" checked>&nbsp;
+        2 <input type="checkbox" name="Tier-2" checked>&nbsp;
+        3 <input type="checkbox" name="Tier-3" checked> for
+      </p>
+      <input type="text" id="tag-view" size="30">
+    </div>
+    <h1>Locale Tests</h1>
+    <div id="menu">
+      <ul id="tabs"></ul>
+    </div>
+    <table id="main">
+      <thead>
+        <tr id="head"></tr>
+      </thead>
+      <tbody id="content"></tbody>
+    </table>
+    <script type="text/javascript" src="post.js"></script>
   </body>
 </html>
