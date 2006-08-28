@@ -281,8 +281,8 @@ CREATE TABLE `langs` (
 
 -- This data is not necessarily permanent.
 INSERT INTO `langs` (`id`,`name`,`meta`,`error_text`,`encoding`,`created`) VALUES
-('en_US', 'English (US)', 'en_US', 'Error', NOW()),
-('de_DE', 'German', 'de_DE', 'Störung', NOW());
+('en_US', 'English (US)', 'en_US', 'Error', 'utf-8', NOW()),
+('de_DE', 'German', 'de_DE', 'Störung', 'utf-8', NOW());
 
 -- --------------------------------------------------------
 
