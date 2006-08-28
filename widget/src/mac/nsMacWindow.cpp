@@ -616,7 +616,10 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
          mWindowType != eWindowType_java) {
       const EventTypeSpec kScrollEventList[] = {
         { kEventClassMouse, kEventMouseWheelMoved },
+#if 0
+        // Disabled due to bug 347626
         { kEventClassMouse, kEventMouseScroll },
+#endif
       };
 
       static EventHandlerUPP sScrollEventHandlerUPP;
