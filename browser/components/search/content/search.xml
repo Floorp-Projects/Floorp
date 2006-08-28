@@ -207,7 +207,6 @@
             // Rebuild the popup and update the display after any modification.
             this.rebuildPopup();
             this.updateDisplay();
-            }
           }
         ]]></body>
       </method>
