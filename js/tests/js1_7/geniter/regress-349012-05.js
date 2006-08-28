@@ -67,7 +67,7 @@ function test()
   catch(ex)
   {
     writeLineToLog(ex + '');
-    actual = (ex + '').indexOf('TypeError: GeneratorExit ignored by generator function') != -1;
+    actual = (ex instanceof TypeError) && (ex + '').indexOf(' already executing generator') != -1;
   }
   
   reportCompare(expect, actual, summary);
