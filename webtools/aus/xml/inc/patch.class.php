@@ -175,22 +175,6 @@ class Patch extends AUS_Object {
             return true;
         } 
 
-        // If our channel matches our regexp for fallback channels, let's try to fallback.
-        if (preg_match('/^\w+\-cck\-\w+$/',$channel)) {
-
-            // Partner fallback channel to be used if the partner-specific update doesn't exist or work.
-            $buf = array();
-            $buf = split('-cck-',$channel);
-            $fallbackChannel = $buf[0];
-        
-            // Do a check for the fallback update.  If we find a valid fallback update, we can offer it. 
-            if (!empty($fallbackChannel) && $this->setPath($product,$platform,$locale,$version,$build,3,$fallbackChannel) && file_exists($this->path) && filesize($this->path) > 0) {
-                $this->setSnippet($this->path); 
-                $this->setVar('isPatch',true,true);
-                return true;
-            }
-        }
-
         // Determine the branch of the client's version.
         $branchVersion = $this->getBranch($version);
 
