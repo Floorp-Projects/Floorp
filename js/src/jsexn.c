@@ -161,7 +161,7 @@ CopyErrorReport(JSContext *cx, JSErrorReport *report)
             cursor += argSize;
         }
         copy->messageArgs[i] = NULL;
-        JS_ASSERT(argsCopySize == cursor - (uint8 *)copy->messageArgs[0]);
+        JS_ASSERT(cursor == (uint8 *)copy->messageArgs[0] + argsCopySize);
     }
 
     if (report->ucmessage) {
