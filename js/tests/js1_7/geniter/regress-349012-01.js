@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 //-----------------------------------------------------------------------------
 var bug = 349012;
-var summary = 'closing a generator fails to report error if GeneratorExit ignored';
+var summary = 'closing a generator fails to report error if yield during close is ignored';
 var actual = '';
 var expect = '';
 
