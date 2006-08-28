@@ -320,7 +320,7 @@ protected:
    */
   PRInt16                  mBitField;
   /**
-   * The current value of the input if it has been changed from the deafault
+   * The current value of the input if it has been changed from the default
    */
   char*                    mValue;
   /**
