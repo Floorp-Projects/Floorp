@@ -51,6 +51,10 @@ PREF_JS_EXPORTS = $(srcdir)/profile/firefox.js \
 		  $(srcdir)/profile/channel-prefs.js \
 		  $(NULL)
 
+ifndef MOZ_BRANDING_DIRECTORY
+PREF_JS_EXPORTS += $(srcdir)/firefox-branding.js
+endif
+
 # hardcode en-US for the moment
 AB_CD = en-US
 
@@ -308,8 +312,6 @@ endif
 export::
 ifndef MOZ_BRANDING_DIRECTORY
 	$(NSINSTALL) -D $(DIST)/branding
-	$(NSINSTALL) -D $(DIST)/bin/defaults/pref
-	cp $(srcdir)/firefox-branding.js $(DIST)/bin/defaults/pref/firefox-branding.js
 ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/firefox.ico   $(DIST)/branding/firefox.ico
 	cp $(srcdir)/firefox.ico   $(DIST)/branding/app.ico
