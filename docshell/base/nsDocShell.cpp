@@ -8555,6 +8555,27 @@ nsDocShell::SetHasFocus(PRBool aHasFocus)
   return NS_OK;
 }
 
+// Find an nsICanvasFrame under aFrame.  Only search the principal
+// child lists.  aFrame must be non-null.
+static nsICanvasFrame* FindCanvasFrame(nsIFrame* aFrame)
+{
+    nsICanvasFrame* canvasFrame;
+    if (NS_SUCCEEDED(CallQueryInterface(aFrame, &canvasFrame))) {
+        return canvasFrame;
+    }
+
+    nsIFrame* kid = aFrame->GetFirstChild(nsnull);
+    while (kid) {
+        canvasFrame = FindCanvasFrame(kid);
+        if (canvasFrame) {
+            return canvasFrame;
+        }
+        kid = kid->GetNextSibling();
+    }
+
+    return nsnull;
+}
+
 //-------------------------------------------------------
 // Tells the HTMLFrame/CanvasFrame that is now has focus
 NS_IMETHODIMP
@@ -8571,17 +8592,28 @@ nsDocShell::SetCanvasHasFocus(PRBool aCanvasHasFocus)
   if (!doc) return NS_ERROR_FAILURE;
 
   nsIContent *rootContent = doc->GetRootContent();
-  if (!rootContent) return NS_ERROR_FAILURE;
-
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(rootContent);
-  if (frame) {
-    frame = frame->GetParent();
-    if (frame) {
-      nsICanvasFrame* canvasFrame;
-      if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsICanvasFrame), (void**)&canvasFrame)))
-        return canvasFrame->SetHasFocus(aCanvasHasFocus);
-    }
+  if (rootContent) {
+      nsIFrame* frame = presShell->GetPrimaryFrameFor(rootContent);
+      if (frame) {
+          frame = frame->GetParent();
+          if (frame) {
+              nsICanvasFrame* canvasFrame;
+              if (NS_SUCCEEDED(CallQueryInterface(frame, &canvasFrame))) {
+                  return canvasFrame->SetHasFocus(aCanvasHasFocus);
+              }
+          }
+      }
+  } else {
+      // Look for the frame the hard way
+      nsIFrame* frame = presShell->GetRootFrame();
+      if (frame) {
+          nsICanvasFrame* canvasFrame = FindCanvasFrame(frame);
+          if (canvasFrame) {
+              return canvasFrame->SetHasFocus(aCanvasHasFocus);
+          }
+      }      
   }
+  
   return NS_ERROR_FAILURE;
 }
 

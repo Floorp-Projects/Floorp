@@ -5804,9 +5804,10 @@ nsresult PresShell::RetargetEventToParent(nsIView         *aView,
   // We do this for non-mouse events in zombie documents.
   // That way at least the UI key bindings can work.
 
-  // First, eliminate the focus ring in the current docshell, which 
-  // is  now a zombie. If we key navigate, it won't be within this
-  // docshell, until the newly loading document is displayed.
+  // First, eliminate the focus ring in the current docshell, which is
+  // now a zombie. If we key navigate, it won't be within this
+  // docshell, until the newly loading document is displayed or we
+  // have a root content again.
 
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
   // hold a reference to the ESM across event dispatch
@@ -5814,8 +5815,10 @@ nsresult PresShell::RetargetEventToParent(nsIView         *aView,
 
   esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
   esm->SetFocusedContent(nsnull);
-  ContentStatesChanged(mDocument, aZombieFocusedContent,
-                       nsnull, NS_EVENT_STATE_FOCUS);
+  if (aZombieFocusedContent) {
+    ContentStatesChanged(mDocument, aZombieFocusedContent,
+                         nsnull, NS_EVENT_STATE_FOCUS);
+  }
 
   // Next, update the display so the old focus ring is no longer visible
 
@@ -6019,7 +6022,7 @@ PresShell::HandleEvent(nsIView         *aView,
         }
         mCurrentEventFrame = nsnull; // XXXldb Isn't it already?
       }
-      if (mCurrentEventContent && InZombieDocument(mCurrentEventContent)) {
+      if (!mCurrentEventContent || InZombieDocument(mCurrentEventContent)) {
         return RetargetEventToParent(aView, aEvent, aEventStatus,
                                      mCurrentEventContent);
       }
