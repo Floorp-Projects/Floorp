@@ -1537,9 +1537,12 @@ JAVA_INSTALL_DIR = $(JAVA_DIST_DIR)/$(XPI_NAME)
 else
 JAVA_INSTALL_DIR = $(JAVA_DIST_DIR)/default
 endif
-export:: $(JAVA_DIST_DIR) $(JAVADEPFILES)
-	cd $(JAVA_GEN_DIR) && find . -name "*.java" \
-		-exec sh -c "dirname {} | sed 's/^\.\///' | xargs -I % $(NSINSTALL) $(IFLAGS1) {} ../$(JAVA_INSTALL_DIR)/%" \;
+
+$(JAVA_INSTALL_DIR):
+	$(NSINSTALL) -D $@
+
+export:: $(JAVA_DIST_DIR) $(JAVADEPFILES) $(JAVA_INSTALL_DIR)
+	cd $(JAVA_GEN_DIR) && tar $(TAR_CREATE_FLAGS) - * | (cd "../$(JAVA_INSTALL_DIR)" && tar -xf -)
 
 endif # XPIDLSRCS || SDK_XPIDLSRCS
 endif # MOZ_JAVAXPCOM
