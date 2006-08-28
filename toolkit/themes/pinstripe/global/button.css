@@ -92,17 +92,10 @@ button[type="menu-button"] {
 
 .button-menu-dropmarker,
 .button-menubutton-dropmarker {
+  -moz-appearance: none !important;
+  border: none !important;
+  background-color: transparent !important;
   margin: 1px;
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
-}
-  
-.button-menu-dropmarker[disabled="true"],
-.button-menubutton-dropmarker[disabled="true"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.png");
-}
-
-.button-menubutton-dropmarker[open="true"] {
-  /* margin: 2px 0px 0px 2px; */
 }
 
 /* ::::: plain buttons ::::: */

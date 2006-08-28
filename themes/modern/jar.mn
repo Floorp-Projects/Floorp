@@ -158,6 +158,7 @@ modern.jar:
   skin/modern/global/checkbox.css                                  (global/checkbox.css)
   skin/modern/global/colorpicker.css                               (global/colorpicker.css)
   skin/modern/global/console.css                                   (global/console.css)
+  skin/modern/global/dropmarker.css                                (global/dropmarker.css)
   skin/modern/global/filepicker.css                                (global/filepicker.css)
   skin/modern/global/formatting.css                                (global/formatting.css)
   skin/modern/global/groupbox.css                                  (global/groupbox.css)

@@ -73,21 +73,6 @@ textbox {
 
 /* ::::: history button ::::: */
 
-.autocomplete-history-dropmarker {
-  -moz-appearance: menulist-button;
-  min-width: 17px;
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDLightShadow ThreeDHighlight;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDLightShadow ThreeDHighlight;
-  background-color: -moz-Dialog;
-  padding: 1px;
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
-}
-
 .autocomplete-history-dropmarker[open="true"] {
   -moz-border-top-colors: ThreeDShadow ThreeDFace;
   -moz-border-right-colors: ThreeDShadow ThreeDFace;

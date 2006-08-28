@@ -136,10 +136,6 @@ toolbarbutton[type="menu-button"] {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu-button");
 }
 
-dropmarker[type="menu-button"] {
-  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#dropmarker");
-}
-
 /******** browser, editor, iframe ********/
 
 browser,
@@ -871,7 +867,7 @@ menulist > menupopup > menuitem {
   -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic-noaccel");
 }
 
-dropmarker[type="menu"] {
+dropmarker {
   -moz-binding: url("chrome://global/content/bindings/general.xml#dropmarker");
 }
 

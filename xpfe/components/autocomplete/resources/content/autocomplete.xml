@@ -1711,20 +1711,9 @@
     </handlers>
   </binding>
 
-  <binding id="history-dropmarker" extends="xul:button">
-    <content>
-      <xul:image class="dropmarker-image"/>
-    </content>
+  <binding id="history-dropmarker" extends="chrome://global/content/bindings/general.xml#dropmarker">
       
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULDropmarker;
-          ]]>
-        </getter>
-      </property>
-
+    <implementation>
       <method name="showPopup">
         <body><![CDATA[
           var textbox = document.getBindingParent(this);

@@ -1,0 +1,23 @@
+dropmarker {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  border: 3px solid;
+  -moz-border-top-colors: #000000 #BBC4D1 #B3BBC9;
+  -moz-border-bottom-colors: #000000 #99A7B7 #9EACBB;
+  -moz-border-right-colors: #000000 #99A7B7 #9EACBB;
+  -moz-border-left-colors: #000000 #BBC4D1 #B3BBC9;
+  -moz-border-radius: 2px;
+  padding-top: 3px;
+  padding-bottom: 2px;
+  background-color: #A6B3C0;
+  list-style-image: url("chrome://global/skin/menulist/mlist-arrow.gif");
+}
+
+dropmarker[disabled="true"] {
+  -moz-border-top-colors: #727D8E #D0D6DF #BDC6D2 !important;
+  -moz-border-right-colors: #727D8E #AAB5C2 #B3BBC8 !important;
+  -moz-border-top-colors: #727D8E #D0D6DF #BDC6D2 !important;
+  -moz-border-bottom-colors: #727D8E #AAB5C2 #B3BBC8 !important;
+  background-color: #B7BFCB !important;
+  list-style-image: url("chrome://global/skin/menulist/mlist-dis-arrow.gif") !important;
+}

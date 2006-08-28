@@ -90,27 +90,12 @@ menulist[open="true"]:focus > .menulist-label-box {
 
 /* ..... dropmarker ..... */
 
-.menulist-dropmarker {
-  -moz-appearance: menulist-button;
-  min-width: 16px;
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  border: 2px solid;
-  background-color: -moz-Dialog;
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
-}
-
-.menulist-dropmarker,
 menulist[disabled="true"]:hover:active > .menulist-dropmarker {
   -moz-border-top-colors: ThreeDLightShadow ThreeDHighlight;
   -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
   -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
   -moz-border-left-colors: ThreeDLightShadow ThreeDHighlight;
   padding: 1px;
-}
-
-menulist[disabled="true"] > .menulist-dropmarker {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
 }
 
 menulist:hover:active > .menulist-dropmarker {

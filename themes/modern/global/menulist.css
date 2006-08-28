@@ -82,23 +82,13 @@ menulist {
 }
 
 .menulist-dropmarker {
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  border-top: 3px solid;
-  border-right: 3px solid;
-  border-bottom: 3px solid;
   border-left: 2px solid;
-  -moz-border-top-colors: #000000 #BBC4D1 #B3BBC9;
-  -moz-border-bottom-colors: #000000 #99A7B7 #9EACBB;
-  -moz-border-right-colors: #000000 #99A7B7 #9EACBB;
   -moz-border-left-colors: #6D7C8F #C1CBD9;
-  -moz-border-radius-topright: 2px;
-  -moz-border-radius-bottomright: 2px;
-  background-color: #A6B3C0;
-  list-style-image: url("chrome://global/skin/menulist/mlist-arrow.gif");
+  -moz-border-radius-topleft: 0px;
+  -moz-border-radius-bottomleft: 0px;
 }
 
-.dropmarker-icon {
+.menulist-dropmarker > .dropmarker-icon {
   margin: 1px 2px 0px 2px;
 }
 
@@ -133,8 +123,7 @@ menulist[disabled="true"] {
   color: #8C99AB !important;
 }
   
-menulist[disabled="true"] > .menulist-label-box,
-menulist[disabled="true"] > .menulist-dropmarker {
+menulist[disabled="true"] > .menulist-label-box {
   -moz-border-top-colors: #727D8E #D0D6DF #BDC6D2 !important;
   -moz-border-bottom-colors: #727D8E #AAB5C2 #B3BBC8 !important;
   background-color: #B7BFCB !important;
@@ -145,9 +134,7 @@ menulist[disabled="true"] > .menulist-label-box {
 }
 
 menulist[disabled="true"] > .menulist-dropmarker {
-  -moz-border-right-colors: #727D8E #AAB5C2 #B3BBC8 !important;
   -moz-border-left-colors: #95A1AD #C7D0DC !important;
-  list-style-image: url("chrome://global/skin/menulist/mlist-dis-arrow.gif") !important;
 }
 
 /* ::::: editable menulists ::::: */

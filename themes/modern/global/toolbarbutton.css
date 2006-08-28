@@ -103,6 +103,9 @@ toolbarbutton[checked="true"]:hover:active {
 .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://global/skin/button/tbmenu-arrow.gif");
   -moz-image-region: auto; /* cut off inheritance */
+  padding: 0px;
+  border: none !important;
+  background-color: transparent !important;
 }
 
 .toolbarbutton-menu-dropmarker[disabled="true"] {
@@ -125,6 +128,9 @@ toolbarbutton[checked="true"]:hover:active {
   -moz-box-align: center;
   -moz-box-pack: center;
   margin: 20px 5px 15px 40px;
+  padding: 0px;
+  border: none !important;
+  background-color: transparent !important;
   width: 13px;
   height: 11px;
   list-style-image: url("chrome://global/skin/button/tbmbtn-arrow.gif");
