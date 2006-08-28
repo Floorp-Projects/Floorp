@@ -149,17 +149,10 @@
 #define XPRINT_MODULES
 #endif
 
-#define XPINTL_MODULE MODULE(nsXPIntlModule)
-#define WINDOWDS_MODULE MODULE(nsWindowDataSourceModule)
-
 #ifdef MOZ_RDF
 #define RDF_MODULE MODULE(nsRDFModule)
 #else
-#undef XPINTL_MODULE
-#undef WINDOWDS_MODULE
 #define RDF_MODULE
-#define WINDOWDS_MODULE
-#define XPINTL_MODULE
 #endif
 
 #ifdef OJI
@@ -212,11 +205,19 @@
 #endif
 
 #ifdef MOZ_XPFE_COMPONENTS
+#ifdef MOZ_RDF
+#define RDFAPP_MODULES \
+    MODULE(nsXPIntlModule) \
+    MODULE(nsWindowDataSourceModule)
+#else
+#define RDFAPP_MODULES
+#endif
 #define APPLICATION_MODULES \
     MODULE(application) \
     MODULE(nsFindComponent)
 #else
 #define APPLICATION_MODULES
+#define RDFAPP_MODULES
 #endif
 
 #ifdef MOZ_XPINSTALL
@@ -233,7 +234,7 @@
 #define JSDEBUGGER_MODULES
 #endif
 
-#ifdef MOZ_FILEVIEW
+#if defined(MOZ_FILEVIEW) && defined(MOZ_XPFE_COMPONENTS)
 #define FILEVIEW_MODULE MODULE(nsFileViewModule)
 #else
 #define FILEVIEW_MODULE
@@ -283,8 +284,7 @@
     MODULE(nsPrefModule)                     \
     MODULE(nsSecurityManagerModule)          \
     RDF_MODULE                               \
-    XPINTL_MODULE                            \
-    WINDOWDS_MODULE                          \
+    RDFAPP_MODULES                           \
     MODULE(nsParserModule)                   \
     POSTSCRIPT_MODULES                       \
     GFX_MODULES                              \

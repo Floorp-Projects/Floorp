@@ -181,15 +181,21 @@ endif
 ifdef MOZ_RDF
 COMPONENT_LIBS += \
 	rdf \
+	$(NULL)
+ifdef MOZ_XPFE_COMPONENTS
+COMPONENT_LIBS += \
 	windowds \
 	intlapp \
 	$(NULL)
 endif
+endif
 
 ifeq (,$(filter beos os2 mac photon cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 ifdef MOZ_RDF
+ifdef MOZ_XPFE_COMPONENTS
 COMPONENT_LIBS += fileview
 DEFINES += -DMOZ_FILEVIEW
+endif
 endif
 endif
 
