@@ -74,6 +74,9 @@ const FW_CLASSID = Components.ID("{49bb6593-3aff-4eb3-a068-2712c28bd58e}");
 const FW_CLASSNAME = "Feed Writer";
 const FW_CONTRACTID = "@mozilla.org/browser/feeds/result-writer;1";
 
+const TITLE_ID = "feedTitleText";
+const SUBTITLE_ID = "feedSubtitleText";
+
 function FeedWriter() {
 }
 FeedWriter.prototype = {
@@ -146,14 +149,14 @@ FeedWriter.prototype = {
    *          The feed container
    */
   _setTitleText: function FW__setTitleText(container) {
-    if(container.title) {
-      this._setContentText("feedTitleText", container.title.plainText());
+    if (container.title) {
+      this._setContentText(TITLE_ID, container.title.plainText());
       this._document.title = container.title.plainText();
     }
     
     var feed = container.QueryInterface(Ci.nsIFeed);
-    if(feed && feed.subtitle)
-      this._setContentText("feedSubtitleText", container.subtitle.plainText());
+    if (feed && feed.subtitle)
+      this._setContentText(SUBTITLE_ID, container.subtitle.plainText());
   },
   
   /**
@@ -779,20 +782,20 @@ FeedWriter.prototype = {
           prefs.setCharPref(PREF_SELECTED_READER, "bookmarks");
           break;
       }
-
-      var request = this._window
-                        .QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIWebNavigation)
-                        .QueryInterface(Ci.nsIDocShell)
-                        .currentDocumentChannel;
       var feedService = Cc["@mozilla.org/browser/feeds/result-service;1"].
                         getService(Ci.nsIFeedResultService);
-      feedService.addToClientReader(request, this._window.location.href);
+
+      // Pull the title and subtitle out of the document
+      var feedTitle = this._document.getElementById(TITLE_ID).textContent;
+      var feedSubtitle =
+        this._document.getElementById(SUBTITLE_ID).textContent;
+      feedService.addToClientReader(this._window.location.href,
+                                    feedTitle, feedSubtitle);
     }
 
     // If "Always use..." is checked, we should set PREF_SELECTED_ACTION
-    // to either "reader" (If a web reader or if an application is selected), or
-    // to "bookmarks" (if the live bookmarks option is selected).
+    // to either "reader" (If a web reader or if an application is selected),
+    // or to "bookmarks" (if the live bookmarks option is selected).
     // Otherwise, we should set it to "ask"
     if (useAsDefault)
       prefs.setCharPref(PREF_SELECTED_ACTION, defaultHandler);

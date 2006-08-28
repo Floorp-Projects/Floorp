@@ -45,7 +45,7 @@ interface nsIFeedResult;
  * nsIFeedResultService provides a globally-accessible object for retreiving
  * the results of feed processing.
  */
-[scriptable, uuid(96dadf57-6a1d-44d3-83fa-6af22f6cae31)]
+[scriptable, uuid(f3262589-48b2-4019-9947-90e5269bbfb9)]
 interface nsIFeedResultService : nsISupports
 {
   /**
@@ -57,12 +57,16 @@ interface nsIFeedResultService : nsISupports
   /**
    * Adds a URI to the user's specified external feed handler, or live 
    * bookmarks. 
-   * @param   request
-   *          The request for the feed document
    * @param   uri
    *          The uri of the feed to add.
+   * @param   title
+   *          The title of the feed to add.
+   * @param   subtitle
+   *          The subtitle of the feed to add.
    */
-  void addToClientReader(in nsIRequest request, in AString uri);
+  void addToClientReader(in AUTF8String uri, 
+                         in AString title,
+                         in AString subtitle);
 
   /**
    * Registers a Feed Result object with a globally accessible service

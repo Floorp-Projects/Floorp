@@ -6566,13 +6566,21 @@ var FeedHandler = {
 #ifndef MOZ_PLACES
   /**
    * Adds a Live Bookmark to a feed
-   * @param   url
-   *          The URL of the feed being bookmarked
+   * @param     url
+   *            The URL of the feed being bookmarked
+   * @title     title
+   *            The title of the feed. Optional.
+   * @subtitle  subtitle
+   *            A short description of the feed. Optional.
    */
-  addLiveBookmark: function(url) {
+  addLiveBookmark: function(url, feedTitle, feedSubtitle) {
     var doc = gBrowser.selectedBrowser.contentDocument;
-    var title = doc.title;
-    var description = BookmarksUtils.getDescriptionFromDocument(doc);
+    var title = (arguments.length > 1) ? feedTitle : doc.title;
+    var description;
+    if (arguments.length > 2)
+      description = feedSubtitle;
+    else
+      description = BookmarksUtils.getDescriptionFromDocument(doc);
     BookmarksUtils.addLivemark(doc.baseURI, url, title, description);
   },
 #endif
