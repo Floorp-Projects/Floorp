@@ -1518,7 +1518,7 @@ nsPlainTextSerializer::OutputQuotesAndIndent(PRBool stripTrailingSpaces /* = PR_
     }
     if (!mCurrentLine.IsEmpty()) {
       /* Better don't output a space here, if the line is empty,
-         in case a recieving f=f-aware UA thinks, this were a flowed line,
+         in case a receiving f=f-aware UA thinks, this were a flowed line,
          which it isn't - it's just empty.
          (Flowed lines may be joined with the following one,
          so the empty line may be lost completely.) */
@@ -1877,7 +1877,7 @@ nsPlainTextSerializer::IsInPre()
 }
 
 /**
- * This method is required only to indentify LI's inside OL.
+ * This method is required only to identify LI's inside OL.
  * Returns TRUE if we are inside an OL tag and FALSE otherwise.
  */
 PRBool

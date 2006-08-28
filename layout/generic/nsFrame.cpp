@@ -2518,7 +2518,7 @@ static FrameTarget GetSelectionClosestFrameForBlock(nsIFrame* aFrame,
 // frame to the given point.
 // It doesn't completely account for offset styles, so needs to be used in
 // restricted environments.
-// Cannot handle overlapping frames correctly, so it should recieve the output
+// Cannot handle overlapping frames correctly, so it should receive the output
 // of GetFrameForPoint
 // Guaranteed to return a valid FrameTarget
 static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame, nsPoint aPoint)

@@ -6550,7 +6550,7 @@ nsFontMetricsGTK::FindFont(PRUint32 aChar)
 
   // If this is is the 'unknown' char (ie: converter could not 
   // convert it) there is no sense in searching any further for 
-  // a font. Just returing mWesternFont
+  // a font. Just returning mWesternFont
   if (aChar == UCS2_REPLACEMENT_CHAR) {
     FIND_FONT_PRINTF(("      ignore the 'UCS2_REPLACEMENT_CHAR' character, return mWesternFont"));
     return mWesternFont;

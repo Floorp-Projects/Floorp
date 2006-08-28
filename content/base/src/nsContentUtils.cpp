@@ -1467,7 +1467,7 @@ nsContentUtils::TrimCharsInSet(const char* aSet,
   aValue.BeginReading(valueCurrent);
   aValue.EndReading(valueEnd);
 
-  // Skip charaters in the beginning
+  // Skip characters in the beginning
   while (valueCurrent != valueEnd) {
     if (!IsCharInSet(aSet, *valueCurrent)) {
       break;
@@ -1502,7 +1502,7 @@ nsContentUtils::TrimWhitespace(const nsAString& aStr, PRBool aTrimTrailing)
   aStr.BeginReading(start);
   aStr.EndReading(end);
 
-  // Skip whitespace charaters in the beginning
+  // Skip whitespace characters in the beginning
   while (start != end && nsCRT::IsAsciiSpace(*start)) {
     ++start;
   }

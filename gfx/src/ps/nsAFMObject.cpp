@@ -509,7 +509,7 @@ char* AFMFileName= ToNewUTF8String(aFontName.name); // file we will open
 	        case kEndDirection:
 	          break;
 	        case kStartCharMetrics:
-	          GetAFMInt(&mPSFontInfo->mNumCharacters);     // number of charaters that follow
+	          GetAFMInt(&mPSFontInfo->mNumCharacters);     // number of characters that follow
             mPSFontInfo->mAFMCharMetrics = new AFMscm[mPSFontInfo->mNumCharacters];
             memset(mPSFontInfo->mAFMCharMetrics,0,sizeof(AFMscm)*mPSFontInfo->mNumCharacters);
 	          ReadCharMetrics (mPSFontInfo,mPSFontInfo->mNumCharacters);

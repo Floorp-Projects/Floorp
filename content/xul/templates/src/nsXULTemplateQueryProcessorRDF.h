@@ -219,7 +219,7 @@ public:
     /**
      * Compile a query that's specified using the simple template
      * syntax. Each  TestNode is created in a chain, the last compiled node
-     * is retured as aLastNode. All nodes will have been added to mAllTests
+     * is returned as aLastNode. All nodes will have been added to mAllTests
      * which owns the nodes.
      */
     nsresult

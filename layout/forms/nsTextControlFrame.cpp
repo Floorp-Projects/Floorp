@@ -2251,7 +2251,7 @@ nsTextControlFrame::DOMPointToOffset(nsIDOMNode* aNode,
   }
 
   NS_ASSERTION((aNode == rootNode && aNodeOffset == (PRInt32)length),
-               "Invalide node offset!");
+               "Invalid node offset!");
 
   *aResult = textOffset;
   

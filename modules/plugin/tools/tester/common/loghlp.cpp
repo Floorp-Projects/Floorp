@@ -826,7 +826,7 @@ int formatLogItem(LogItemStruct * plis, LPSTR szOutput, LPSTR szEndOfItem, BOOL 
           strcpy(szMode, "NP_FULL");
           break;
         default:
-          strcpy(szMode, "[Invalide mode]");
+          strcpy(szMode, "[Invalid mode]");
           break;
       }
       char szArgs[512] = "\0";

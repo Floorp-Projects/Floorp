@@ -203,7 +203,7 @@ PROT_URLCanonicalizer.fullyDecodeURLAsString_ = function(url) {
 
 /**
  * Specially URL-encode the given array of ASCII values. We want to encode 
- * the charcters: [0, 32], 37, [127, 255].
+ * the characters: [0, 32], 37, [127, 255].
  *
  * @param arrayOfASCIIValues Array of ascii values (numbers) to encode
  *

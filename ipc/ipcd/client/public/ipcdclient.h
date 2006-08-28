@@ -147,7 +147,7 @@ IPC_METHOD IPC_EnableMessageObserver(
  * aReceiverID is non-zero, then the message is forwarded to the client
  * corresponding to that identifier.
  *
- * If there is no client corresponding to aRecieverID, then the IPC daemon will
+ * If there is no client corresponding to aReceiverID, then the IPC daemon will
  * simply drop the message.
  */
 IPC_METHOD IPC_SendMessage(

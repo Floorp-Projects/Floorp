@@ -84,7 +84,7 @@ extern r_debug _r_debug;
 static int gLogFD = -1;
 static pthread_t main_thread;
 
-static void startSignalCounter(unsigned long milisec);
+static void startSignalCounter(unsigned long millisec);
 static int enableRTCSignals(bool enable);
 
 
@@ -207,14 +207,14 @@ static int realTime;
  * programmed to reset, even though it is capable of doing so.  This is
  * to keep from getting interrupts from inside of the handler.
 */
-static void startSignalCounter(unsigned long milisec)
+static void startSignalCounter(unsigned long millisec)
 {
     struct itimerval tvalue;
 
     tvalue.it_interval.tv_sec = 0;
     tvalue.it_interval.tv_usec = 0;
-    tvalue.it_value.tv_sec = milisec/1000;
-    tvalue.it_value.tv_usec = (milisec%1000)*1000;
+    tvalue.it_value.tv_sec = millisec/1000;
+    tvalue.it_value.tv_usec = (millisec%1000)*1000;
 
     if (realTime) {
 	setitimer(ITIMER_REAL, &tvalue, NULL);
@@ -302,7 +302,7 @@ void *mystry)
 {
     static struct timeval tFirst;
     static int first=1;
-    size_t milisec = 0;
+    size_t millisec = 0;
 
 #if defined(linux)
     if (rtcHz && pthread_self() != main_thread) {
@@ -320,7 +320,7 @@ void *mystry)
 #endif
         {
             gettimeofday(&tFirst, 0);
-            milisec = 0;
+            millisec = 0;
         }
     } else {
 #if defined(linux)
@@ -338,14 +338,14 @@ void *mystry)
     }
 
 #ifdef JPROF_PTHREAD_HACK
-    Log(milisec, NULL);
+    Log(millisec, NULL);
 #else
     // The mystry[19] thing is a hack to figure out where we were called from.
     // By playing around with the debugger it looks like [19] contains the
     // information I need.
     // it's really ((ucontext_t *)mystry)->uc_mcontext.gregs[14] which is
     // the EIP register when the handler was called
-    Log(milisec, ((char**)mystry)[19]);
+    Log(millisec, ((char**)mystry)[19]);
 #endif
     if (!rtcHz)
         startSignalCounter(timerMiliSec);

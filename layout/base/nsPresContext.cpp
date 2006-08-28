@@ -1010,7 +1010,7 @@ nsPresContext::TwipsToPixelsForFonts() const
 #ifdef NS_PRINT_PREVIEW
   // If an alternative DC is available we want to use
   // it to get the scaling factor for fonts. Usually, the AltDC
-  // is a printing DC so therefore we need to get the printers
+  // is a printing DC so therefore we need to get the printer's
   // scaling values for calculating the font heights
   nsCOMPtr<nsIDeviceContext> altDC;
   mDeviceContext->GetAltDevice(getter_AddRefs(altDC));
