@@ -308,6 +308,7 @@ endif
 export::
 ifndef MOZ_BRANDING_DIRECTORY
 	$(NSINSTALL) -D $(DIST)/branding
+	$(NSINSTALL) -D $(DIST)/bin/defaults/pref
 	cp $(srcdir)/firefox-branding.js $(DIST)/bin/defaults/pref/firefox-branding.js
 ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/firefox.ico   $(DIST)/branding/firefox.ico
