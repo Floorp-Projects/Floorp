@@ -41,6 +41,7 @@
  */
 
 #include "xpidl.h"
+#include <limits.h>
 
 #ifdef XP_MAC
 #include <stat.h>
@@ -765,12 +766,17 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
             real_outname = g_strdup_printf("%s.%s", out_basename, mode->suffix);
         }
 
-        /* Use binary write for typelib mode */
-        fopen_mode = (strcmp(mode->mode, "typelib")) ? "w" : "wb";
-        state.file = fopen(real_outname, fopen_mode);
-        if (!state.file) {
-            perror("error opening output file");
-            return 0;
+        /* don't create/open file here for Java */
+        if (strcmp(mode->mode, "java") == 0) {
+            state.filename = real_outname;
+        } else {
+            /* Use binary write for typelib mode */
+            fopen_mode = (strcmp(mode->mode, "typelib")) ? "w" : "wb";
+            state.file = fopen(real_outname, fopen_mode);
+            if (!state.file) {
+                perror("error opening output file");
+                return 0;
+            }
         }
     } else {
         state.file = stdout;
@@ -784,8 +790,11 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
     if (emitter->emit_epilog)
         emitter->emit_epilog(&state);
 
-    if (state.file != stdout)
-        fclose(state.file);
+    if (strcmp(mode->mode, "java") != 0) {
+        if (state.file != stdout)
+            fclose(state.file);
+    }
+
     free(state.basename);
     free(outname);
     g_hash_table_foreach(callback_state.already_included, free_ghash_key, NULL);
@@ -797,16 +806,18 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
     if (top)
         IDL_tree_free(top);
 
-    if (real_outname != NULL) {
-        /*
-         * Delete partial output file on failure.  (Mac does this in the plugin
-         * driver code, if the compiler returns failure.)
-         */
+    if (strcmp(mode->mode, "java") != 0) {
+        if (real_outname != NULL) {
+            /*
+             * Delete partial output file on failure.  (Mac does this in the
+             * plugin driver code, if the compiler returns failure.)
+             */
 #if defined(XP_UNIX) || defined(XP_WIN)
-        if (!ok)
-            unlink(real_outname);
+            if (!ok)
+                unlink(real_outname);
 #endif
-        g_free(real_outname);
+            g_free(real_outname);
+        }
     }
 
     return ok;

@@ -56,68 +56,53 @@ JAVA_SRCS = \
 		$(srcdir)/VersionComparator.java \
 		$(NULL)
 
-GEN_JAVA_SRCS = \
-		IXPCOMError.java \
-		$(NULL)
-
 # install jars into SDK
 SDK_LIBRARY = $(JARFILE) $(JARFILE_SRC)
 
-GARBAGE += $(JARFILE) $(JARFILE_SRC) $(GEN_JAVA_SRCS) java.files .done
-GARBAGE_DIRS += _javagen org
+GARBAGE += $(JARFILE) $(JARFILE_SRC) java.files
+GARBAGE_DIRS += org
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH),WINNT)
-RUN =
-OUTPUT_DIR = $(shell cygpath -w $(CURDIR)/_javagen/org/mozilla/xpcom)
-else
-RUN = $(DIST)/bin/run-mozilla.sh
-OUTPUT_DIR = $(CURDIR)/_javagen/org/mozilla/xpcom
-endif
+# XXX Need to copy Java source files to correct directory structure, until
+# bug 328901 is fixed.
 
-_javagen/org/mozilla/xpcom/.iface_done: $(JAVA_SRCS) $(DIST)/bin/GenerateJavaInterfaces$(BIN_SUFFIX)
-	@if test ! -d _javagen/org/mozilla/xpcom; then \
-		touch .done; \
-		$(INSTALL) -m 644 .done _javagen/org/mozilla/xpcom; \
-	fi
+JAVA_SRCS_DIR = _java/org/mozilla/xpcom
+GARBAGE_DIRS += _java
+
+$(JAVA_SRCS_DIR)::
+	$(NSINSTALL) -D $@
+
+$(JAVA_SRCS_DIR)/Mozilla.java: $(JAVA_SRCS_DIR)
 	@echo Copying Java source files
-	@$(INSTALL) -m 644 $(JAVA_SRCS) \
-			_javagen/org/mozilla/xpcom
-	@$(INSTALL) -m 644 $(GEN_JAVA_SRCS) _javagen/org/mozilla/xpcom
-	@echo Generating Java interface files
-	$(RUN) $(DIST)/bin/GenerateJavaInterfaces$(BIN_SUFFIX) -d $(OUTPUT_DIR)
-	@touch $@
+	$(INSTALL) -m 644 $(JAVA_SRCS) $<
+
+$(JAVA_SRCS_DIR)/IXPCOMError.java: $(topsrcdir)/xpcom/base/nsError.h gen-nsError.pl Makefile Makefile.in $(JAVA_SRCS_DIR)
+	$(PERL) $(srcdir)/../gen-nsError.pl < $< > $@
+
+# Don't include the interface nsIPref, since it depends on the obsolete
+# interface nsIFileSpec.
+IGNORE_IFACES_NAMES = nsIPref
+ifneq (,$(IGNORE_IFACES_NAMES))
+IGNORE_IFACES = $(patsubst %, ! -name "*%.java", $(IGNORE_IFACES_NAMES))
+endif
 
 # Using the temporary "java.files" avoids an "argument list too long"
 # error on Windows when using *.java
-org/mozilla/xpcom/.class_done: _javagen/org/mozilla/xpcom/.iface_done
-	@echo Compiling Java interface classes
-	find _javagen -name "*.java" > java.files
-	$(JAVAC) $(JAVAC_FLAGS) -classpath . -d . -sourcepath _javagen @java.files
-	@touch $@
+org/mozilla/xpcom/Mozilla.class: $(JAVA_SRCS_DIR)/IXPCOMError.java $(JAVA_SRCS_DIR)/Mozilla.java
+	@echo Compiling Java classes
+	find _java -name "*.java" > java.files
+	find $(JAVA_DIST_DIR)/default -name "*.java" $(IGNORE_IFACES) >> java.files
+	$(JAVAC) $(JAVAC_FLAGS) -classpath . -d . -sourcepath _java -sourcepath $(JAVA_DIST_DIR)/default @java.files
 
-$(JARFILE): org/mozilla/xpcom/.class_done Makefile
+$(JARFILE): org/mozilla/xpcom/Mozilla.class Makefile
 	$(JAR) cf $@ org
 
 $(JARFILE_SRC): $(JARFILE)
-	$(JAR) cf $@ -C _javagen org
-
-IXPCOMError.java: $(topsrcdir)/xpcom/base/nsError.h gen-nsError.pl Makefile Makefile.in
-	$(PERL) $(srcdir)/../gen-nsError.pl < $< > $@
-
-export:: IXPCOMError.java
-
-# Temporarily copy these not only to dist/sdk/lib but to dist/bin/sdk/lib
-
-TEMP_SDK_DIR = $(DIST)/bin/sdk/lib
-
-$(TEMP_SDK_DIR)::
-	$(NSINSTALL) -D $@
-
-export:: $(JARFILE) $(JARFILE_SRC) $(TEMP_SDK_DIR)
-	$(INSTALL) $(IFLAGS2) $^
+	$(JAR) cf $@ -C _java org
+	$(JAR) uf $@ -C $(JAVA_DIST_DIR)/default org
+	$(ZIP) -d $@ $(patsubst %, $(JAVA_IFACES_PKG_NAME)/%.java, $(IGNORE_IFACES_NAMES))
 
 # Build the implementation Java classes, which depend on these interfaces
-export::
+export:: $(JARFILE) $(JARFILE_SRC)
 	$(MAKE) -C ../src jarfile

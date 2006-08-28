@@ -46,9 +46,5 @@ DIRS = src
 
 TOOL_DIRS = glue
 
-ifndef CROSS_COMPILE
-TOOL_DIRS += tools/genifaces
-endif
-
 include $(topsrcdir)/config/rules.mk
 
