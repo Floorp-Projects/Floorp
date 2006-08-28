@@ -239,7 +239,6 @@
             return true;
           }
           return false;
-          }
         ]]></body>
       </method>
 
