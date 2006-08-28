@@ -2622,6 +2622,11 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
       mFrames.DestroyFrame(aOldFrame);
     }
   }
+  // for now, just bail and recalc all of the collapsing borders
+  if (IsBorderCollapse()) {
+    nsRect damageArea(0, 0, PR_MAX(1, GetColCount()), PR_MAX(1, GetRowCount()));
+    SetBCDamageArea(damageArea);
+  }
 #ifdef DEBUG_TABLE_CELLMAP
   printf("=== TableFrame::RemoveFrame\n");
   Dump(PR_TRUE, PR_TRUE, PR_TRUE);
