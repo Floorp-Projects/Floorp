@@ -308,6 +308,7 @@ endif
 export::
 ifndef MOZ_BRANDING_DIRECTORY
 	$(NSINSTALL) -D $(DIST)/branding
+	cp $(srcdir)/firefox-branding.js $(DIST)/bin/defaults/pref/firefox-branding.js
 ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/firefox.ico   $(DIST)/branding/firefox.ico
 	cp $(srcdir)/firefox.ico   $(DIST)/branding/app.ico
@@ -387,6 +388,6 @@ libs::
 
 libs:: $(srcdir)/profile/prefs.js
 	$(INSTALL) $^ $(DIST)/bin/defaults/profile
-
+	
 install:: $(srcdir)/profile/prefs.js
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile
