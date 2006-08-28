@@ -181,22 +181,9 @@ nsContextMenuInfo::GetImageSrc(nsIURI **aURI)
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_STATE(mDOMNode);
   
-  // First try the easy case of our node being a nsIDOMHTMLImageElement
-  nsCOMPtr<nsIDOMHTMLImageElement> imgElement(do_QueryInterface(mDOMNode));
-  if (imgElement) {
-    nsAutoString imgSrcSpec;
-    nsresult rv = imgElement->GetSrc(imgSrcSpec);
-    if (NS_SUCCEEDED(rv))
-      return NS_NewURI(aURI, NS_ConvertUTF16toUTF8(imgSrcSpec));
-  }
-  
-  // If not, dig deeper.
-  nsCOMPtr<imgIRequest> request;
-  GetImageRequest(mDOMNode, getter_AddRefs(request));
-  if (request)
-    return request->GetURI(aURI);
-
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(mDOMNode));
+  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+  return content->GetCurrentURI(aURI);
 }
 
 /* readonly attribute imgIContainer backgroundImageContainer; */
