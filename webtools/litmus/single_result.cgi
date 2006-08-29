@@ -90,6 +90,23 @@ if ($c->param && $c->param('id')) {
                                                  comment => $c->param('new_comment'),
                                                 });    
     }
+
+    if (Litmus::Auth::istrusted($cookie) and
+        $c->param('vet_result')) {
+      if ($c->param('valid')) {
+        $result->valid(1);
+      } else {
+        $result->valid(0);
+      }
+      $result->vetted(1);
+      $result->vetted_by_user($user);
+      $result->validated_by_user($user);
+      $result->vetted_timestamp($time);
+      $result->validated_timestamp($time);
+      $result->last_updated($time);
+      $result->update;
+    }
+
   }
 
   my $title = 'Test Result #' . $c->param('id') . ' - Details';

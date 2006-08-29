@@ -25,6 +25,9 @@
   # ***** END LICENSE BLOCK *****
 #%]
 
+<form id="update_result" name="update_result" method="post" action="single_result.cgi">
+<input type="hidden" name="id" value="[% result.testresult_id | html %]">
+
 [% IF result.isAutomated %]
 <div class="automated-result-banner">
   <strong>automated test result</strong><br /><br />
@@ -64,6 +67,19 @@ Summary Information
 Not provided
 [% END %]</td>
 </tr>
+[% IF show_admin %]
+<tr class="even">
+<td>Valid?</td>
+<td><input id="valid" name="valid" type="checkbox"[% IF result.valid %] checked[% END %]> <input id="vet_result" name="vet_result" class="button" type="submit" value="Vet Result"></td>
+</tr>
+<tr class="odd">
+<td>Vetted By:</td>
+<td>[% IF result.vetted_by_user.email %][% result.vetted_by_user.email | html | uri | email %][% ELSE %]Not yet vetted[% END %]</td>
+</tr>
+<tr class="even">
+<td>Vetted on:</td><td>[% IF result.vetted_timestamp %][% result.vetted_timestamp | html %][% ELSE %]Not yet vetted[% END %]</td>
+</tr>
+[% END %]
 </table>
 
   </div> <!--END section-content-->
@@ -101,9 +117,6 @@ Product and Platform
   </div> <!--END section-content-->
 
 </div> <!--END section-full-->
-
-<form id="update_result" name="update_result" method="post" action="single_result.cgi">
-<input type="hidden" name="id" value="[% result.testresult_id | html %]">
 
 <div class="section-full">
   <div class="section-header">
@@ -199,8 +212,6 @@ No comments.
 
 </div> <!--END section-full-->
 
-</form>
-
 <div class="section-full">
   <div class="section-header">
 Logs
@@ -231,5 +242,6 @@ No logs available.
 
 </div> <!--END section-full-->
 
+</form>
 
 

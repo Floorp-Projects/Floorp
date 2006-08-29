@@ -58,6 +58,8 @@ Litmus::DB::Testresult->column_alias("build_type_id", "build_type");
 Litmus::DB::Testresult->column_alias("exit_status_id", "exit_status");
 Litmus::DB::Testresult->column_alias("validity_id", "validity");
 Litmus::DB::Testresult->column_alias("vetting_status_id", "vetting_status");
+Litmus::DB::Testresult->column_alias("validated_by_user_id", "validated_by_user");
+Litmus::DB::Testresult->column_alias("vetted_by_user_id", "vetted_by_user");
 Litmus::DB::Testresult->column_alias("locale_abbrev", "locale");
 Litmus::DB::Testresult->column_alias("is_automated_result", "isAutomated");
 
@@ -72,6 +74,8 @@ Litmus::DB::Testresult->has_a(exit_status => "Litmus::DB::ExitStatus");
 Litmus::DB::Testresult->has_a(locale => "Litmus::DB::Locale");
 Litmus::DB::Testresult->has_a(platform => 
                               [ "Litmus::DB::Opsys" => "platform" ]);
+Litmus::DB::Testresult->has_a(vetted_by_user => "Litmus::DB::User");
+Litmus::DB::Testresult->has_a(validated_by_user => "Litmus::DB::User");
 
 Litmus::DB::Testresult->has_many(logs => 
 						  ["Litmus::DB::LogTestresult" => 'log_id']);
