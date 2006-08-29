@@ -1088,10 +1088,6 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
 #define TRIM_TOKENBUF(i)    (ts->tokenbuf.ptr = ts->tokenbuf.base + i)
 #define NUL_TERM_TOKENBUF() (*ts->tokenbuf.ptr = 0)
 
-    /* If there was a fatal error, keep returning TOK_ERROR. */
-    if (ts->flags & TSF_ERROR)
-        return TOK_ERROR;
-
     /* Check for a pushed-back token resulting from mismatching lookahead. */
     while (ts->lookahead != 0) {
         JS_ASSERT(!(ts->flags & TSF_XMLTEXTMODE));
@@ -1101,6 +1097,10 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
         if (tt != TOK_EOL || (ts->flags & TSF_NEWLINES))
             return tt;
     }
+
+    /* If there was a fatal error, keep returning TOK_ERROR. */
+    if (ts->flags & TSF_ERROR)
+        return TOK_ERROR;
 
 #if JS_HAS_XML_SUPPORT
     if (ts->flags & TSF_XMLTEXTMODE) {
