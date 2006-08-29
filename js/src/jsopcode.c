@@ -937,7 +937,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     jsval val;
     int stackDummy;
 
-    static const char finally_cookie[]   = "/*FINALLY*/";
+    static const char exception_cookie[] = "/*EXCEPTION*/";
+    static const char retsub_pc_cookie[] = "/*RETSUB_PC*/";
     static const char iter_cookie[]      = "/*ITER*/";
     static const char with_cookie[]      = "/*WITH*/";
     static const char dot_format[]       = "%s.%s";
@@ -1238,12 +1239,17 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                  * address, popped by JSOP_RETSUB and counted by script->depth
                  * but not by ss->top (see JSOP_SETSP, below).
                  */
-                todo = Sprint(&ss->sprinter, finally_cookie);
+                todo = Sprint(&ss->sprinter, exception_cookie);
+                if (todo < 0 || !PushOff(ss, todo, op))
+                    return JS_FALSE;
+                todo = Sprint(&ss->sprinter, retsub_pc_cookie);
                 break;
 
               case JSOP_RETSUB:
                 rval = POP_STR();
-                LOCAL_ASSERT(strcmp(rval, finally_cookie) == 0);
+                LOCAL_ASSERT(strcmp(rval, retsub_pc_cookie) == 0);
+                lval = POP_STR();
+                LOCAL_ASSERT(strcmp(lval, exception_cookie) == 0);
                 todo = -2;
                 break;
 
@@ -1638,6 +1644,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
               }
 #endif
+
+              case JSOP_THROWING:
+                todo = -2;
+                break;
 
               case JSOP_THROW:
                 sn = js_GetSrcNote(jp->script, pc);
