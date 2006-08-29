@@ -66,6 +66,7 @@
 #include "nsLayoutErrors.h"
 #include "nsDisplayList.h"
 #include "nsContentErrors.h"
+#include "nsIEventStateManager.h"
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -126,6 +127,9 @@ CleanupGeneratedContentIn(nsIContent* aRealContent, nsIFrame* aRoot) {
     while (child) {
       nsIContent* content = child->GetContent();
       if (content && content != aRealContent) {
+        // Tell the ESM that this content is going away now, so it'll update
+        // its hover content, etc.
+        aRoot->GetPresContext()->EventStateManager()->ContentRemoved(content);
         content->UnbindFromTree();
       }
       ::CleanupGeneratedContentIn(aRealContent, child);
