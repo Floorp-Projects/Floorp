@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: fipstest.c,v 1.18 2006/08/03 21:50:51 wtchang%redhat.com Exp $ */
+/* $Id: fipstest.c,v 1.19 2006/08/29 16:57:18 glen.beasley%sun.com Exp $ */
 
 #include "softoken.h"   /* Required for RC2-ECB, RC2-CBC, RC4, DES-ECB,  */
                         /*              DES-CBC, DES3-ECB, DES3-CBC, RSA */
@@ -1499,46 +1499,27 @@ rsa_loser:
 static CK_RV
 sftk_fips_ECDSA_PowerUpSelfTest() {
 
-    /* ECDSA Known info for curve nistp256  */
-    static const PRUint8 ecdsa_publicValue[] = {
-                            EC_POINT_FORM_UNCOMPRESSED,
-                            0x07, 0xb1, 0xcb, 0x57, 0x20, 0xa7, 0x10, 0xd6,
-                            0x9d, 0x37, 0x4b, 0x1c, 0xdc, 0x35, 0x90, 0xff, 
-                            0x1a, 0x2d, 0x98, 0x95, 0x1b, 0x2f, 0xeb, 0x7f, 
-                            0xbb, 0x81, 0xca, 0xc0, 0x69, 0x75, 0xea, 0xc5, 
-                            0xb8, 0x03, 0xe6, 0x89, 0xe5, 0x06, 0x55, 0x22, 
-                            0x21, 0x0e, 0xcd, 0x1a, 0xf8, 0xc0, 0xd4, 0xa7, 
-                            0x8f, 0x47, 0x81, 0x1e, 0x4a, 0x81, 0xb5, 0x41, 
-                            0x3d, 0xa1, 0xf0, 0x4b, 0x65, 0xb4, 0x26, 0xe9};
-
-    static const PRUint8 ecdsa_privateValue[] = {
+    /* ECDSA Known Seed info for curve nistp256  */
+    static const PRUint8 ecdsa_Known_Seed[] = {
                             0x6a, 0x9b, 0xf6, 0xf7, 0xce, 0xed, 0x79, 0x11,
                             0xf0, 0xc7, 0xc8, 0x9a, 0xa5, 0xd1, 0x57, 0xb1,
                             0x7b, 0x5a, 0x3b, 0x76, 0x4e, 0x7b, 0x7c, 0xbc,
                             0xf2, 0x76, 0x1c, 0x1c, 0x7f, 0xc5, 0x53, 0x2f};
 
-    static const PRUint8 ecdsa_version[] = { 0x01 };
-
-    static const PRUint8 ecdsa_known_P256_signature[] = {
-                            0xa8, 0x6f, 0x0a, 0x04, 0x6b, 0x6c, 0x47, 0x0c,
-                            0x5a, 0xfd, 0xc6, 0x9f, 0xab, 0x65, 0x1d, 0x21,
-                            0xa5, 0x8f, 0x0d, 0xe6, 0xac, 0xaa, 0x63, 0xb6,
-                            0x7a, 0x39, 0x62, 0x4c, 0xae, 0xa1, 0x50, 0xb7,
-                            0x30, 0xa9, 0x88, 0xeb, 0x44, 0x94, 0xb7, 0x1f,
-                            0x23, 0x35, 0xe3, 0x52, 0x13, 0xd3, 0x46, 0xd0,
-                            0x54, 0xfd, 0x43, 0xdc, 0x3b, 0x7f, 0xf5, 0x60,
-                            0x92, 0xcc, 0x43, 0x67, 0x8c, 0xc5, 0xea, 0x75};
- 
    /* ECDSA Known curve nistp256 params  */
     static const PRUint8 knownEncodedParams[] = {
                             0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03,
                             0x01, 0x07};
 
-    static const PRUint8 ecdsa_Known_Seed[] = {
-                            0xe3, 0x2f, 0x50, 0x8d, 0xde, 0xd3, 0x55, 0x74,
-                            0xe7, 0x71, 0x86, 0x76, 0x3b, 0xeb, 0x84, 0x15,
-                            0x1b, 0x49, 0xf5, 0x18, 0xe5, 0x5f, 0x84, 0x7e,
-                            0x76, 0x16, 0x14, 0x4f, 0x79, 0x4f, 0xbb, 0xd6};
+    static const PRUint8 ecdsa_known_P256_signature[] = {
+                            0x07,0xb1,0xcb,0x57,0x20,0xa7,0x10,0xd6, 
+                            0x9d,0x37,0x4b,0x1c,0xdc,0x35,0x90,0xff, 
+                            0x1a,0x2d,0x98,0x95,0x1b,0x2f,0xeb,0x7f, 
+                            0xbb,0x81,0xca,0xc0,0x69,0x75,0xea,0xc5,
+                            0x59,0x6a,0x62,0x49,0x3d,0x50,0xc9,0xe1, 
+                            0x27,0x3b,0xff,0x9b,0x13,0x66,0x67,0xdd, 
+                            0x7d,0xd1,0x0d,0x2d,0x7c,0x44,0x04,0x1b, 
+                            0x16,0x21,0x12,0xc5,0xcb,0xbd,0x9e,0x75};
 
     static const PRUint8 msg[] = {
                             "Firefox and ThunderBird are awesome!"};
@@ -1547,8 +1528,8 @@ sftk_fips_ECDSA_PowerUpSelfTest() {
     unsigned char sig[2*MAX_ECKEY_LEN];
     SECItem signature, digest;
     SECItem encodedparams;
-    ECParams *ecparams;
-    ECPrivateKey ecdsa_private_key;
+    ECParams *ecparams = NULL;
+    ECPrivateKey *ecdsa_private_key = NULL;
     ECPublicKey ecdsa_public_key;
     SECStatus ecdsaStatus = SECSuccess;
 
@@ -1556,39 +1537,40 @@ sftk_fips_ECDSA_PowerUpSelfTest() {
     encodedparams.type = siBuffer;
     encodedparams.data = (unsigned char *) knownEncodedParams;
     encodedparams.len = sizeof knownEncodedParams;
+    
     if (EC_DecodeParams(&encodedparams, &ecparams) != SECSuccess) {
         return( CKR_DEVICE_ERROR );
     }
 
-    ecdsa_private_key.ecParams.arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if (ecdsa_private_key.ecParams.arena == NULL) {
-        PORT_FreeArena(ecparams->arena, PR_FALSE);
-        return CKR_HOST_MEMORY;
+    /* Generates a new EC key pair. The private key is a supplied
+     * random value (in seed) and the public key is the result of 
+     * performing a scalar point multiplication of that value with 
+     * the curve's base point.
+     */
+    if (EC_NewKeyFromSeed(ecparams, &ecdsa_private_key, ecdsa_Known_Seed, 
+        sizeof(ecdsa_Known_Seed)) != SECSuccess) {
+        return( CKR_DEVICE_ERROR );
     }
 
-    ecdsaStatus = EC_CopyParams(ecdsa_private_key.ecParams.arena, 
-                                &ecdsa_private_key.ecParams, ecparams); 
-    PORT_FreeArena(ecparams->arena, PR_FALSE);
-
+    /* construct public key from private key. */
+    ecdsaStatus = EC_CopyParams(ecdsa_private_key->ecParams.arena, 
+                                &ecdsa_public_key.ecParams,
+                                &ecdsa_private_key->ecParams);
     if (ecdsaStatus != SECSuccess) {
         goto loser;
     }
-    
-    ecdsa_private_key.publicValue.type = siBuffer;
-    ecdsa_private_key.publicValue.data = (unsigned char *)ecdsa_publicValue;
-    ecdsa_private_key.publicValue.len = sizeof ecdsa_publicValue;
-    
-    ecdsa_private_key.privateValue.type = siBuffer;
-    ecdsa_private_key.privateValue.data = (unsigned char *)ecdsa_privateValue;
-    ecdsa_private_key.privateValue.len = sizeof ecdsa_privateValue;
-    
-    ecdsa_private_key.version.type = siBuffer;
-    ecdsa_private_key.version.data = (unsigned char *)ecdsa_version;
-    ecdsa_private_key.version.len = sizeof ecdsa_version;
+    ecdsa_public_key.publicValue = ecdsa_private_key->publicValue;
 
     /* validate public key value */
-    ecdsaStatus = EC_ValidatePublicKey(&ecdsa_private_key.ecParams, 
-                                       &ecdsa_private_key.publicValue);
+    ecdsaStatus = EC_ValidatePublicKey(&ecdsa_public_key.ecParams, 
+                                       &ecdsa_public_key.publicValue);
+    if (ecdsaStatus != SECSuccess) {
+        goto loser;
+    }
+
+    /* validate public key value */
+    ecdsaStatus = EC_ValidatePublicKey(&ecdsa_private_key->ecParams, 
+                                       &ecdsa_private_key->publicValue);
     if (ecdsaStatus != SECSuccess) {
         goto loser;
     }
@@ -1610,7 +1592,7 @@ sftk_fips_ECDSA_PowerUpSelfTest() {
     signature.data = sig;
     signature.len = sizeof sig;
     
-    ecdsaStatus = ECDSA_SignDigestWithSeed(&ecdsa_private_key, &signature, 
+    ecdsaStatus = ECDSA_SignDigestWithSeed(ecdsa_private_key, &signature, 
                          &digest, ecdsa_Known_Seed, sizeof ecdsa_Known_Seed);
     if (ecdsaStatus != SECSuccess) {
         goto loser;
@@ -1622,15 +1604,6 @@ sftk_fips_ECDSA_PowerUpSelfTest() {
         ecdsaStatus = SECFailure;
         goto loser;
     }
-
-    /* construct public key from private key. */
-    ecdsaStatus = EC_CopyParams(ecdsa_private_key.ecParams.arena, 
-                                &ecdsa_public_key.ecParams,
-                                &ecdsa_private_key.ecParams);
-    if (ecdsaStatus != SECSuccess) {
-        goto loser;
-    }
-    ecdsa_public_key.publicValue = ecdsa_private_key.publicValue;
     
     /******************************************************/
     /* ECDSA Single-Round Known Answer Verification Test. */
@@ -1640,9 +1613,9 @@ sftk_fips_ECDSA_PowerUpSelfTest() {
     ecdsaStatus = ECDSA_VerifyDigest(&ecdsa_public_key, &signature, &digest);
 
 loser:
-    /* free the memory for the private */
-    if (ecdsa_private_key.ecParams.arena != NULL) {
-        PORT_FreeArena(ecdsa_private_key.ecParams.arena, PR_FALSE);
+    /* free the memory for the private key arena*/
+    if (ecdsa_private_key->ecParams.arena != NULL) {
+        PORT_FreeArena(ecdsa_private_key->ecParams.arena, PR_FALSE);
     }
 
     if (ecdsaStatus != SECSuccess) {
