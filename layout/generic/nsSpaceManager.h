@@ -289,6 +289,10 @@ public:
     nsIFrame *mLastFrame;
     nscoord mX, mY;
     nscoord mLowestTop;
+    nscoord mMaximalLeftYMost;
+    nscoord mMaximalRightYMost;
+    PRPackedBool mHaveCachedLeftYMost;
+    PRPackedBool mHaveCachedRightYMost;
     
     friend class nsSpaceManager;
   };
@@ -439,6 +443,16 @@ protected:
   nscoord         mLowestTop;  // the lowest *top*
   FrameInfo*      mFrameInfoMap;
   nsIntervalSet   mFloatDamage;
+  PRPackedBool    mHaveCachedLeftYMost; // If true, mMaximalLeftYMost is set
+  PRPackedBool    mHaveCachedRightYMost; // If true, mMaximalRightYMost is set
+  nscoord         mMaximalLeftYMost;  // The maximal YMost of our FrameInfo
+                                      // rects for left floats.  Only makes
+                                      // sense when mHaveCachedLeftYMost is
+                                      // true.
+  nscoord         mMaximalRightYMost; // The maximal YMost of our FrameInfo
+                                      // rects for right floats.  Only makes
+                                      // sense when mHaveCachedLeftYMost is
+                                      // true.
 
 protected:
   FrameInfo* GetFrameInfoFor(nsIFrame* aFrame);
