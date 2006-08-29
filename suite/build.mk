@@ -66,8 +66,10 @@ tier_app_dirs += \
 # When Suite becomes a full MOZ_XUL_APP we can remove this ifdef
 ifdef MOZ_XUL_APP
 tier_app_dirs += themes
-else
-tier_app_dirs += suite
 endif
 
+tier_app_dirs += suite
+
+ifndef MOZ_XUL_APP
 tier_app_dirs += xpfe/bootstrap
+endif
