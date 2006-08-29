@@ -297,34 +297,12 @@ pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager");
 // Generic browser related prefs. 
 // XXX: Need to scrub these to see which ones thunderbird really needs...
 /////////////////////////////////////////////////////////////////
-
-pref("general.open_location.last_url",      "");
-pref("general.open_location.last_window_choice", 0);
-
-// 0 = blank, 1 = home (browser.startup.homepage), 2 = last
-pref("browser.startup.page",                1);
 pref("browser.startup.homepage",	   "chrome://navigator-region/locale/region.properties");
-pref("browser.startup.homepage.count", 1);
-// "browser.startup.homepage_override" was for 4.x
-pref("browser.startup.homepage_override.1", true);
-pref("browser.startup.autoload_homepage",   true);
-
 pref("browser.cache.memory.capacity",       4096);
-
 pref("browser.send_pings", false);
-
-pref("browser.urlbar.autoFill", false);
-pref("browser.urlbar.showPopup", true);
-pref("browser.urlbar.showSearch", true);
-pref("browser.urlbar.matchOnlyTyped", false);
-
 pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", false);
-
 pref("browser.chrome.toolbar_tips",         true);
-// 0 = Pictures Only, 1 = Text Only, 2 = Pictures and Text
-pref("browser.chrome.toolbar_style",        2);
-
 pref("browser.xul.error_pages.enabled", true);
 
 // Attachment download manager settings
@@ -340,41 +318,6 @@ pref("browser.download.manager.closeWhenDone", true);
 pref("browser.download.manager.openDelay", 100);
 pref("browser.download.manager.focusWhenStarting", false);
 pref("browser.download.manager.flashCount", 0);
-
-// various default search settings
-pref("browser.search.defaulturl", "chrome://navigator-region/locale/region.properties");
-pref("browser.search.opensidebarsearchpanel", true);
-pref("browser.search.last_search_category", "NC:SearchCategory?category=urn:search:category:1");
-pref("browser.search.mode", 0);
-// basic search popup constraint: minimum sherlock plugin version displayed
-// (note: must be a string representation of a float or it'll default to 0.0)
-pref("browser.search.basic.min_ver", "0.0");
-pref("browser.urlbar.autocomplete.enabled", true);
-pref("browser.urlbar.clickSelectsAll", true);
-
-pref("browser.history.grouping", "day");
-pref("browser.sessionhistory.max_entries", 50);
-
-// Translation service
-pref("browser.translation.service", "http://www.teletranslator.com:8120/?AlisUI=frames_ex/moz_home&alis_info=moz&AlisTargetURI=");
-pref("browser.translation.serviceDomain", "teletranslator.com");
-
-// css2 hover pref
-pref("nglayout.events.showHierarchicalHover", false);
-
-// Smart Browsing prefs
-pref("browser.related.enabled", true);
-pref("browser.related.autoload", 1);  // 0 = Always, 1 = After first use, 2 = Never
-pref("browser.related.provider", "http://www-rl.netscape.com/wtgn?");
-pref("browser.related.disabledForDomains", "");
-pref("browser.goBrowsing.enabled", true);
-
-// Default bookmark sorting
-pref("browser.bookmarks.sort.direction", "descending");
-pref("browser.bookmarks.sort.resource", "rdf:http://home.netscape.com/NC-rdf#Name");
-
-//Internet Search
-pref("browser.search.defaultenginename", "chrome://communicator-region/locale/region.properties");
 
 pref("javascript.options.showInConsole",    true);
 
@@ -424,10 +367,6 @@ pref("alerts.totalOpenTime", 3000);
 // 1 opens a progress dialog
 // 2 and other values, no download manager, no progress dialog. 
 pref("browser.downloadmanager.behavior", 1);
-
-pref("privacy.popups.sound_enabled",              true);
-pref("privacy.popups.sound_url",                  "");
-pref("privacy.popups.statusbar_icon_enabled",     true);
 
 #ifndef XP_MACOSX
 #ifdef XP_UNIX
