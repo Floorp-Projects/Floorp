@@ -1882,6 +1882,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     if (todo < 0)
                         return JS_FALSE;
                     ss->offsets[ss->top-1] = todo;
+                    ss->sprinter.offset += PAREN_SLOP;
                     DECOMPILE_CODE(pc + oplen, tail - oplen);
                 } else {
                     js_printf(jp, "\t%s in %s) {\n", lval, rval);
