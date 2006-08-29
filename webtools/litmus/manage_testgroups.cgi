@@ -51,15 +51,14 @@ my $status;
 my $rv;
 
 if ($c->param("searchTestgroupList")) {
-	print $c->header('text/plain');
-	my $product_id = $c->param("product");
-	
-	my $testgroups = Litmus::DB::Testgroup->search(product => $product_id);
-	
-	while (my $tg = $testgroups->next) {
-		print $tg->testgroup_id()."\n";
-	}
-	exit;
+  print $c->header('text/plain');
+  my $product_id = $c->param("product");
+
+  my $testgroups = Litmus::DB::Testgroup->search(product => $product_id);
+  while (my $tg = $testgroups->next) {
+    print $tg->testgroup_id()."\n";
+  }
+  exit;
 }
 
 # anyone can use this script for its searching capabilities, but if we 

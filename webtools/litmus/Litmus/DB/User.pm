@@ -42,6 +42,7 @@ Litmus::DB::User->columns(All => qw/user_id bugzilla_uid email password realname
 
 Litmus::DB::User->column_alias("is_trusted", "istrusted");
 Litmus::DB::User->column_alias("is_admin", "is_trusted");
+Litmus::DB::User->column_alias("email", "username");
 
 Litmus::DB::User->has_many(test_results => "Litmus::DB::Testresult");
 Litmus::DB::User->has_many(sessions => "Litmus::DB::Session");

@@ -68,16 +68,15 @@ sub validate_login($$) {
     return 0; 
   } 
 
-  if (!$userobj->enabled() || $userobj->enabled() == 0) { 
-    die "Account ".$userobj->username()." has been disabled by the administrator"; 
+  if (!$userobj->enabled() || $userobj->enabled() == 0) {    
+    my $c = Litmus->cgi();
+    my $errmsg = "Account ".$userobj->username()." has been disabled by the administrator.";
+    loginError($c, $errmsg);
   }
 	
   # for security reasons, we use the real (correct) crypt'd passwd
   # as the salt:
-  my $realPasswordCrypted = $userobj->getRealPasswd();
-  return 0 if (!$realPasswordCrypted or $realPasswordCrypted eq '');
-  my $enteredPasswordCrypted = crypt($password, $realPasswordCrypted);
-  if ($enteredPasswordCrypted eq $realPasswordCrypted) {
+  if (checkPassword($userobj,$password)) {
     return $userobj;
   } else {
     return 0;
@@ -343,44 +342,65 @@ sub processLoginForm {
                 return_to => $c->param("login_loc"),
                 params => $c
                };
-    
+
     print $c->header();
     Litmus->template()->process("auth/accountcreated.html.tmpl", $vars) ||
       internalError(Litmus->template()->error());
-    
+
     exit;
-    
+
   } else {
     internalError("Unknown login scheme attempted");
   }
 }
 
-sub changePassword {
-	my $userobj = shift;
-	my $password = shift;
-	$userobj->password(bz_crypt($password));
-	$userobj->update();
-	
-	my @sessions = $userobj->sessions();
-	foreach my $session (@sessions) {
-		$session->makeExpire();
-	}
+sub checkPassword {
+  my $userobj = shift;
+  my $password = shift;
+
+  my $realPasswordCrypted = $userobj->getRealPasswd();
+  return 0 if (!$realPasswordCrypted or $realPasswordCrypted eq '');
+  my $enteredPasswordCrypted = crypt($password, $realPasswordCrypted);
+  if ($enteredPasswordCrypted eq $realPasswordCrypted) {
+    return 1;
+  } else {
+    return 0;
+  }
 }
+
+sub changePassword {
+  my $userobj = shift;
+  my $password = shift;
+
+  $userobj->password(bz_crypt($password));
+  $userobj->update();
+
+  expireSessions($userobj);
+}
+
+sub expireSessions {
+  my $userobj = shift;
+  my @sessions = $userobj->sessions();
+  foreach my $session (@sessions) {
+    $session->makeExpire();
+  }
+}
+
 
 # Given a userobj, process the login and return a session object
 sub makeSession {
   my $userobj = shift;
   my $c = Litmus->cgi();
-  
+
   my $expires = localtime() + ONE_DAY * $cookie_expire_days;
-  
+
   my $sessioncookie = randomToken(64);
-  
+
   my $session = Litmus::DB::Session->create({
                                              user_id => $userobj, 
                                              sessioncookie => $sessioncookie,
                                              expires => $expires});
-  
+
   Litmus->request_cache->{'curSession'} = $session;
   return $session;
 }

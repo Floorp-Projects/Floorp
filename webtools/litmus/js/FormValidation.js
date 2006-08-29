@@ -169,8 +169,18 @@ function checkEmail (theField, emptyOK)
     }
 }
 
-function comparePasswords(password1, password2)
+function comparePasswords(password1, password2, emptyOK)
 {
+    if (comparePasswords.arguments.length == 2) { 
+	emptyOK = defaultEmptyOK;
+    }
+
+    if (emptyOK == true &&
+	isEmpty(password1.value) &&
+	isEmpty(password2.value)) {
+	return true;
+    }	
+
     if (isWhitespace(password1.value)) {
         return warnEmpty(password1, "Password");
     }
@@ -186,6 +196,8 @@ function comparePasswords(password1, password2)
 	password2.value="";
         return warnInvalid (password1, iPasswordMismatch);
     }
+
+    return true;
 }
 
 // checkBuildId (TEXTFIELD theField [, BOOLEAN emptyOK==false])
