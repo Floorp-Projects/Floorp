@@ -2078,8 +2078,6 @@ void
 js_UngetToken(JSTokenStream *ts)
 {
     JS_ASSERT(ts->lookahead < NTOKENS_MASK);
-    if (ts->flags & TSF_ERROR)
-        return;
     ts->lookahead++;
     ts->cursor = (ts->cursor - 1) & NTOKENS_MASK;
 }
