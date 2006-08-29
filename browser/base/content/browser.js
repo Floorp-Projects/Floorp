@@ -1652,6 +1652,10 @@ function updateGoMenu(aEvent, goMenu)
   // In case the timer didn't fire.
   destroyGoMenuItems(goMenu);
 
+  // enable/disable RCT sub menu
+  // do this here, before the early return
+  HistoryMenu.toggleRecentlyClosedTabs();
+
   var history = document.getElementById("hiddenHistoryTree");
 
   if (history.hidden) {
@@ -1700,9 +1704,6 @@ function updateGoMenu(aEvent, goMenu)
 
   if (showSep)
     endSep.hidden = false;
-
-  // enable/disable RCT sub menu
-  HistoryMenu.toggleRecentlyClosedTabs();
 }
  
 function addBookmarkAs(aBrowser, aBookmarkAllTabs, aIsWebPanel)
