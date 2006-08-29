@@ -119,7 +119,7 @@ CopyErrorReport(JSContext *cx, JSErrorReport *report)
 
 #define JS_CHARS_SIZE(jschars) ((js_strlen(jschars) + 1) * sizeof(jschar))
 
-    filenameSize = strlen(report->filename) + 1;
+    filenameSize = report->filename ? strlen(report->filename) + 1 : 0;
     linebufSize = report->linebuf ? strlen(report->linebuf) + 1 : 0;
     uclinebufSize = report->uclinebuf ? JS_CHARS_SIZE(report->uclinebuf) : 0;
     ucmessageSize = 0;
@@ -190,8 +190,10 @@ CopyErrorReport(JSContext *cx, JSErrorReport *report)
         }
     }
 
-    copy->filename = (const char *)cursor;
-    memcpy(cursor, report->filename, filenameSize);
+    if (report->filename) {
+        copy->filename = (const char *)cursor;
+        memcpy(cursor, report->filename, filenameSize);
+    }
     JS_ASSERT(cursor + filenameSize == (uint8 *)copy + mallocSize);
 
     /* Copy non-pointer members. */
@@ -234,8 +236,11 @@ exn_finalize(JSContext *cx, JSObject *obj)
 
     if (!JSVAL_IS_VOID(privateValue)) {
         privateData = (JSExnPrivate*) JSVAL_TO_PRIVATE(privateValue);
-        if (privateData && privateData->errorReport)
-            JS_free(cx, privateData->errorReport);
+        if (privateData) {
+            if (privateData->errorReport)
+                JS_free(cx, privateData->errorReport);
+            JS_free(cx, privateData);
+        }
     }
 }
 
