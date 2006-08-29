@@ -870,9 +870,17 @@ generator_op(JSContext *cx, JSGeneratorOp op,
 
       default:
         JS_ASSERT(gen->state == JSGEN_CLOSED);
-        if (op == JSGENOP_CLOSE)
+        switch (op) {
+          case JSGENOP_NEXT:
+          case JSGENOP_SEND:
+            return js_ThrowStopIteration(cx, obj);
+          case JSGENOP_THROW:
+            JS_SetPendingException(cx, argv[0]);
+            return JS_FALSE;
+          default:
+            JS_ASSERT(op == JSGENOP_CLOSE);
             return JS_TRUE;
-        return js_ThrowStopIteration(cx, obj);
+        }
     }
 
     arg = (op == JSGENOP_SEND || op == JSGENOP_THROW)
