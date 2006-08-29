@@ -111,7 +111,11 @@ PSArenaFreeCB(size_t aSize, void* aPtr, void* aClosure)
 nsSpaceManager::nsSpaceManager(nsIPresShell* aPresShell, nsIFrame* aFrame)
   : mFrame(aFrame),
     mLowestTop(NSCOORD_MIN),
-    mFloatDamage(PSArenaAllocCB, PSArenaFreeCB, aPresShell)
+    mFloatDamage(PSArenaAllocCB, PSArenaFreeCB, aPresShell),
+    mHaveCachedLeftYMost(PR_TRUE),
+    mHaveCachedRightYMost(PR_TRUE),
+    mMaximalLeftYMost(0),
+    mMaximalRightYMost(0)
 {
   MOZ_COUNT_CTOR(nsSpaceManager);
   mX = mY = 0;
@@ -802,14 +806,12 @@ nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
 {
   NS_PRECONDITION(nsnull != aFrame, "null frame");
 
+#ifdef DEBUG
   // See if there is already a region associated with aFrame
-  FrameInfo*  frameInfo = GetFrameInfoFor(aFrame);
-
-  if (nsnull != frameInfo) {
-    NS_WARNING("aFrame is already associated with a region");
-    return NS_ERROR_FAILURE;
-  }
-
+  NS_ASSERTION(!GetFrameInfoFor(aFrame),
+               "aFrame is already associated with a region");
+#endif
+  
   // Convert the frame to world coordinates
   nsRect  rect(aUnavailableSpace.x + mX, aUnavailableSpace.y + mY,
                aUnavailableSpace.width, aUnavailableSpace.height);
@@ -818,7 +820,7 @@ nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
     mLowestTop = rect.y;
 
   // Create a frame info structure
-  frameInfo = CreateFrameInfo(aFrame, rect);
+  FrameInfo* frameInfo = CreateFrameInfo(aFrame, rect);
   if (nsnull == frameInfo) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1000,6 +1002,10 @@ nsSpaceManager::PushState(SavedState* aState)
   aState->mX = mX;
   aState->mY = mY;
   aState->mLowestTop = mLowestTop;
+  aState->mHaveCachedLeftYMost = mHaveCachedLeftYMost;
+  aState->mHaveCachedRightYMost = mHaveCachedRightYMost;
+  aState->mMaximalLeftYMost = mMaximalLeftYMost;
+  aState->mMaximalRightYMost = mMaximalRightYMost;
 
   if (mFrameInfoMap) {
     aState->mLastFrame = mFrameInfoMap->mFrame;
@@ -1017,6 +1023,11 @@ nsSpaceManager::PopState(SavedState* aState)
   // match the current implementation of PushState(). The
   // idea here is to remove any frames that have been added
   // to the mFrameInfoMap since the last call to PushState().
+
+  // Say we don't have cached left- and right-YMost, so that we don't
+  // try to check for it in RemoveRegion.  We'll restore these from
+  // the state anyway.
+  mHaveCachedLeftYMost = mHaveCachedRightYMost = PR_FALSE;
 
   // mFrameInfoMap is LIFO so keep removing what it points
   // to until we hit mLastFrame.
@@ -1036,6 +1047,10 @@ nsSpaceManager::PopState(SavedState* aState)
   mX = aState->mX;
   mY = aState->mY;
   mLowestTop = aState->mLowestTop;
+  mHaveCachedLeftYMost = aState->mHaveCachedLeftYMost;
+  mHaveCachedRightYMost = aState->mHaveCachedRightYMost;
+  mMaximalLeftYMost = aState->mMaximalLeftYMost;
+  mMaximalRightYMost = aState->mMaximalRightYMost;
 }
 
 nscoord
@@ -1138,6 +1153,19 @@ nsSpaceManager::CreateFrameInfo(nsIFrame* aFrame, const nsRect& aRect)
     // Link it into the list
     frameInfo->mNext = mFrameInfoMap;
     mFrameInfoMap = frameInfo;
+
+    // Optimize for the common case case when the frame being added is
+    // likely to be near the bottom.
+    nscoord ymost = aRect.YMost();
+    PRUint8 floatType = aFrame->GetStyleDisplay()->mFloats;
+    if (mHaveCachedLeftYMost && ymost > mMaximalLeftYMost &&
+        floatType == NS_STYLE_FLOAT_LEFT) {
+      mMaximalLeftYMost = ymost;
+    }
+    else if (mHaveCachedRightYMost && ymost > mMaximalRightYMost &&
+             floatType == NS_STYLE_FLOAT_RIGHT) {
+      mMaximalRightYMost = ymost;
+    }
   }
   return frameInfo;
 }
@@ -1164,28 +1192,21 @@ nsSpaceManager::DestroyFrameInfo(FrameInfo* aFrameInfo)
     }
   }
 
-  delete aFrameInfo;
-}
-
-static PRBool
-ShouldClearFrame(nsIFrame* aFrame, PRUint8 aBreakType)
-{
-  PRUint8 floatType = aFrame->GetStyleDisplay()->mFloats;
-  PRBool result;
-  switch (aBreakType) {
-    case NS_STYLE_CLEAR_LEFT_AND_RIGHT:
-      result = PR_TRUE;
-      break;
-    case NS_STYLE_CLEAR_LEFT:
-      result = floatType == NS_STYLE_FLOAT_LEFT;
-      break;
-    case NS_STYLE_CLEAR_RIGHT:
-      result = floatType == NS_STYLE_FLOAT_RIGHT;
-      break;
-    default:
-      result = PR_FALSE;
+  // Optimize for the case when the frame being removed is likely to be near
+  // the bottom, but do nothing if we have neither cached value -- that case is
+  // likely to be hit from PopState().
+  if (mHaveCachedLeftYMost || mHaveCachedRightYMost) {
+    PRUint8 floatType = aFrameInfo->mFrame->GetStyleDisplay()->mFloats;
+    if (floatType == NS_STYLE_FLOAT_LEFT) {
+      mHaveCachedLeftYMost = PR_FALSE;
+    }
+    else {
+      NS_ASSERTION(floatType == NS_STYLE_FLOAT_RIGHT, "Unexpected float type");
+      mHaveCachedRightYMost = PR_FALSE;
+    }
   }
-  return result;
+
+  delete aFrameInfo;
 }
 
 nscoord
@@ -1193,12 +1214,56 @@ nsSpaceManager::ClearFloats(nscoord aY, PRUint8 aBreakType)
 {
   nscoord bottom = aY + mY;
 
-  for (FrameInfo *frame = mFrameInfoMap; frame; frame = frame->mNext) {
-    if (ShouldClearFrame(frame->mFrame, aBreakType)) {
-      if (frame->mRect.YMost() > bottom) {
-        bottom = frame->mRect.YMost();
+  if ((!mHaveCachedLeftYMost && aBreakType != NS_STYLE_CLEAR_RIGHT) ||
+      (!mHaveCachedRightYMost && aBreakType != NS_STYLE_CLEAR_LEFT)) {
+    // Recover our maximal YMost values.  Might need both if this is a
+    // NS_STYLE_CLEAR_LEFT_AND_RIGHT
+    nscoord maximalLeftYMost = mHaveCachedLeftYMost ? mMaximalLeftYMost : 0;
+    nscoord maximalRightYMost = mHaveCachedRightYMost ? mMaximalRightYMost : 0;
+
+    // Optimize for most floats not being near the bottom
+    for (FrameInfo *frame = mFrameInfoMap; frame; frame = frame->mNext) {
+      nscoord ymost = frame->mRect.YMost();
+      if (ymost > maximalLeftYMost) {
+        if (frame->mFrame->GetStyleDisplay()->mFloats == NS_STYLE_FLOAT_LEFT) {
+          NS_ASSERTION(!mHaveCachedLeftYMost, "Shouldn't happen");
+          maximalLeftYMost = ymost;
+          // No need to compare to the right ymost
+          continue;
+        }
+      }
+
+      if (ymost > maximalRightYMost) {
+        if (frame->mFrame->GetStyleDisplay()->mFloats == NS_STYLE_FLOAT_RIGHT) {
+          NS_ASSERTION(!mHaveCachedRightYMost, "Shouldn't happen");
+          maximalRightYMost = ymost;
+        }
       }
     }
+
+    mMaximalLeftYMost = maximalLeftYMost;
+    mMaximalRightYMost = maximalRightYMost;
+    mHaveCachedRightYMost = mHaveCachedLeftYMost = PR_TRUE;
+  }
+  
+  switch (aBreakType) {
+    case NS_STYLE_CLEAR_LEFT_AND_RIGHT:
+      NS_ASSERTION(mHaveCachedLeftYMost && mHaveCachedRightYMost,
+                   "Need cached values!");
+      bottom = PR_MAX(bottom, mMaximalLeftYMost);
+      bottom = PR_MAX(bottom, mMaximalRightYMost);
+      break;
+    case NS_STYLE_CLEAR_LEFT:
+      NS_ASSERTION(mHaveCachedLeftYMost, "Need cached value!");
+      bottom = PR_MAX(bottom, mMaximalLeftYMost);
+      break;
+    case NS_STYLE_CLEAR_RIGHT:
+      NS_ASSERTION(mHaveCachedRightYMost, "Need cached value!");
+      bottom = PR_MAX(bottom, mMaximalRightYMost);
+      break;
+    default:
+      // Do nothing
+      break;
   }
 
   bottom -= mY;
