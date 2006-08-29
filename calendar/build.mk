@@ -48,5 +48,5 @@ endif
 
 tier_app_dirs += \
 	calendar \
-	calendar\sunbird \
+	calendar/sunbird \
 	$(NULL)
