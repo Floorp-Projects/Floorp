@@ -329,11 +329,10 @@ ReportStatementTooLarge(JSContext *cx, JSCodeGenerator *cg)
   Note that backpatch chains would present a problem for BuildSpanDepTable,
   which inspects bytecode to build cg->spanDeps on demand, when the first
   short jump offset overflows.  To solve this temporary problem, we emit a
-  proxy bytecode (JSOP_BACKPATCH; JSOP_BACKPATCH_PUSH for jumps that push a
-  result on the interpreter's stack, namely JSOP_GOSUB; or JSOP_BACKPATCH_POP
-  for branch ops) whose nuses/ndefs counts help keep the stack balanced, but
-  whose opcode format distinguishes its backpatch delta immediate operand from
-  a normal jump offset.
+  proxy bytecode (JSOP_BACKPATCH; JSOP_BACKPATCH_POP for branch ops) whose
+  nuses/ndefs counts help keep the stack balanced, but whose opcode format
+  distinguishes its backpatch delta immediate operand from a normal jump
+  offset.
  */
 static int
 BalanceJumpTargets(JSJumpTarget **jtp)
@@ -1352,7 +1351,7 @@ EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
           case STMT_FINALLY:
             if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
                 return JS_FALSE;
-            jmp = EmitBackPatchOp(cx, cg, JSOP_BACKPATCH_PUSH, &GOSUBS(*stmt));
+            jmp = EmitBackPatchOp(cx, cg, JSOP_BACKPATCH, &GOSUBS(*stmt));
             if (jmp < 0)
                 return JS_FALSE;
             break;
@@ -4379,8 +4378,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (pn->pn_kid3) {
             if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
                 return JS_FALSE;
-            jmp = EmitBackPatchOp(cx, cg, JSOP_BACKPATCH_PUSH,
-                                  &GOSUBS(stmtInfo));
+            jmp = EmitBackPatchOp(cx, cg, JSOP_BACKPATCH, &GOSUBS(stmtInfo));
             if (jmp < 0)
                 return JS_FALSE;
 
@@ -4420,7 +4418,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              *
              * If there's no catch block without a catchguard, the last
              * <offset to next catch block> points to rethrow code.  This
-             * code will GOSUB to the finally code if appropriate, and is
+             * code will [gosub] to the finally code if appropriate, and is
              * also used for the catch-all trynote for capturing exceptions
              * thrown from catch{} blocks.
              */
@@ -4437,6 +4435,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
                     /* Fix up and clean up previous catch block. */
                     CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, guardJump);
+
+                    /* Set cx->throwing to protect cx->exception from the GC. */
+                    if (!js_Emit1(cx, cg, JSOP_THROWING) < 0)
+                        return JS_FALSE;
 
                     /*
                      * Emit an unbalanced [leaveblock] for the previous catch,
@@ -4472,12 +4474,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
                 /* gosub <finally>, if required */
                 if (pn->pn_kid3) {
-                    jmp = EmitBackPatchOp(cx, cg, JSOP_BACKPATCH_PUSH,
+                    jmp = EmitBackPatchOp(cx, cg, JSOP_BACKPATCH,
                                           &GOSUBS(stmtInfo));
                     if (jmp < 0)
                         return JS_FALSE;
-                    JS_ASSERT(cg->stackDepth == depth + 1);
-                    cg->stackDepth = depth;
+                    JS_ASSERT(cg->stackDepth == depth);
                 }
 
                 /*
@@ -4499,11 +4500,35 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 
         /*
-         * We emit a [setsp, exception, gosub, throw] block for rethrowing
-         * when there's no unguarded catch, and also for running finally code
-         * while letting an uncaught exception pass through.
+         * We emit a [setsp][gosub] sequence for running finally code while
+         * letting an uncaught exception pass thrown from within the try in a
+         * try-finally.  The [gosub] and [retsub] opcodes will take care of
+         * stacking and rethrowing any exception pending across the finally.
+         *
+         * For rethrowing after a try-catch(guard)-finally, we have a problem:
+         * all the guards have mismatched, leaving cx->exception still set but
+         * cx->throwing clear, so that no exception appears to be pending for
+         * [gosub] to stack and [retsub] to rethrow.  We must emit a special
+         * [throwing] opcode in front of the [setsp][gosub] finally sequence.
+         * This opcode will restore cx->throwing to true before running the
+         * finally.
+         * 
+         * For rethrowing after a try-catch(guard) without a finally, we emit
+         * [throwing] before the [setsp][exception][throw] rethrow sequence.
          */
         if (pn->pn_kid3 || (lastCatch && lastCatch->pn_kid2)) {
+            /*
+             * Last catch guard jumps to the rethrow code sequence if none
+             * of the guards match.  Target guardJump at the beginning of the
+             * rethrow sequence, just in case a guard expression throws and
+             * leaves the stack unbalanced.
+             */
+            if (lastCatch && lastCatch->pn_kid2) {
+                CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, GUARDJUMP(stmtInfo));
+                if (pn->pn_kid3 && !js_Emit1(cx, cg, JSOP_THROWING) < 0)
+                    return JS_FALSE;
+            }
+
             /*
              * Emit another stack fixup, because the catch could itself
              * throw an exception in an unbalanced state, and the finally
@@ -4512,51 +4537,25 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * stack fixup.
              */
             finallyCatch = CG_OFFSET(cg);
-
-            /*
-             * Last catch guard jumps to the rethrow code sequence if none
-             * of the guards match.  Target guardJump at the beginning of the
-             * rethrow sequence, just in case a guard expression throws and
-             * leaves the stack unbalanced.
-             *
-             * What's more, we must jump to the front of the rethrow sequence
-             * for a second reason: to re-sample the pending exception via the
-             * [exception] opcode, so that it can be saved across the [gosub].
-             * See below for case 2 in the comment describing finally clause
-             * stack budget.
-             */
-            if (lastCatch && lastCatch->pn_kid2)
-                CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, GUARDJUMP(stmtInfo));
-
             EMIT_UINT16_IMM_OP(JSOP_SETSP, (jsatomid)depth);
             cg->stackDepth = depth;
 
-            if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
-                js_Emit1(cx, cg, JSOP_EXCEPTION) < 0) {
-                return JS_FALSE;
-            }
-
             if (pn->pn_kid3) {
-                jmp = EmitBackPatchOp(cx, cg, JSOP_BACKPATCH_PUSH,
+                jmp = EmitBackPatchOp(cx, cg, JSOP_BACKPATCH,
                                       &GOSUBS(stmtInfo));
                 if (jmp < 0)
                     return JS_FALSE;
 
-                /*
-                 * Exception and retsub pc index are modeled as on the stack.
-                 * Decrease cg->stackDepth by one to account for JSOP_RETSUB
-                 * popping the pc index.
-                 */
-                JS_ASSERT(cg->stackDepth == depth + 2);
-                JS_ASSERT((uintN)cg->stackDepth <= cg->maxStackDepth);
-                cg->stackDepth = depth + 1;
+                JS_ASSERT(cg->stackDepth == depth);
+                JS_ASSERT((uintN)depth <= cg->maxStackDepth);
+            } else {
+                if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
+                    js_Emit1(cx, cg, JSOP_EXCEPTION) < 0 ||
+                    js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
+                    js_Emit1(cx, cg, JSOP_THROW) < 0) {
+                    return JS_FALSE;
+                }
             }
-
-            if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
-                js_Emit1(cx, cg, JSOP_THROW) < 0) {
-                return JS_FALSE;
-            }
-            JS_ASSERT(cg->stackDepth == depth);
         }
 
         /*
@@ -4568,30 +4567,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
 
             /*
-             * The stack budget must be balanced at this point.  There are
-             * three cases:
-             *
-             * 1.  try-finally: we need two more slots for the saved exception
-             *     and the JSOP_RETSUB's return pc index that was pushed by
-             *     the JSOP_GOSUB opcode that called this finally clause.
-             *
-             * 2.  try-catch(guard)...-catch(guard)-finally: we can't know at
-             *     compile time whether a guarded catch caught the exception,
-             *     so we may need to propagate it via re-throw bytecode when
-             *     the finally returns.  In this case, if no guard expression
-             *     evaluates to true, we will jump to the rethrow sequence,
-             *     which re-samples cx->exception using JSOP_EXCEPTION, then
-             *     calls the finally subroutine.  So in this case as well as
-             *     in case 1, two more slots will already be on the stack.
-             *
-             * 3.  try-catch-finally or try-catch(guard)...-catch-finally:
-             *     we need one slot for the JSOP_RETSUB's return pc index.
-             *     The unguarded catch is guaranteed to pop the exception,
-             *     i.e., to "catch the exception" -- so we do not need to
-             *     stack it across the finally in order to propagate it --
-             *     unless the catch block explicitly re-throws it!  We can't
-             *     know whether this will happen by static analysis, so we
-             *     must always budget for two slots.
+             * The stack budget must be balanced at this point.  All [gosub]
+             * calls emitted before this point will push two stack slots, one
+             * for the pending exception (or JSVAL_HOLE if there is no pending
+             * exception) and one for the [retsub] pc-index.
              */
             JS_ASSERT(cg->stackDepth == depth);
             cg->stackDepth += 2;
@@ -4609,7 +4588,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             }
 
             /* Restore stack depth budget to its balanced state. */
-            JS_ASSERT(cg->stackDepth == depth + 1);
+            JS_ASSERT(cg->stackDepth == depth + 2);
             cg->stackDepth = depth;
         }
         if (!js_PopStatementCG(cx, cg))
@@ -6390,40 +6369,3 @@ js_FinishTakingTryNotes(JSContext *cx, JSCodeGenerator *cg, JSTryNote *notes)
     notes[count].length = CG_OFFSET(cg);
     notes[count].catchStart = 0;
 }
-
-#if JS_HAS_GENERATORS
-
-jsbytecode *
-js_FindFinallyHandler(JSScript *script, jsbytecode *pc)
-{
-    JSTryNote *tn;
-    ptrdiff_t off;
-
-    tn = script->trynotes;
-    if (!tn)
-        return NULL;
-
-    off = pc - script->main;
-    if (off < 0)
-        return NULL;
-
-    JS_ASSERT(tn->catchStart != 0);
-    do {
-        if ((jsuword)(off - tn->start) < (jsuword)tn->length) {
-            /*
-             * We have a handler, is it finally?
-             *
-             * Catch bytecode begins with:   JSOP_SETSP JSOP_ENTERBLOCK
-             * Finally bytecode begins with: JSOP_SETSP JSOP_EXCEPTION
-             */
-            pc = script->main + tn->catchStart;
-            JS_ASSERT(*pc == JSOP_SETSP);
-            if (pc[js_CodeSpec[JSOP_SETSP].length] == JSOP_EXCEPTION)
-                return pc;
-            JS_ASSERT(pc[js_CodeSpec[JSOP_SETSP].length] == JSOP_ENTERBLOCK);
-        }
-    } while ((++tn)->catchStart != 0);
-    return NULL;
-}
-
-#endif

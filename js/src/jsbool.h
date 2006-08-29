@@ -45,6 +45,18 @@
 
 JS_BEGIN_EXTERN_C
 
+/*
+ * Crypto-booleans, not visible to script but used internally by the engine.
+ *
+ * JSVAL_HOLE is a useful value for identifying a hole in an array.  It's also
+ * used in the interpreter to represent "no exception pending".  In general it
+ * can be used to represent "no value".
+ *
+ * JSVAL_ARETURN is used to throw asynchronous return for generator.close().
+ */
+#define JSVAL_HOLE      BOOLEAN_TO_JSVAL(2)
+#define JSVAL_ARETURN   BOOLEAN_TO_JSVAL(3)
+
 extern JSClass js_BooleanClass;
 
 extern JSObject *

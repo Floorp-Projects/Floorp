@@ -123,14 +123,6 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp);
 extern JSBool
 js_CloseGeneratorObject(JSContext *cx, JSGenerator *gen);
 
-
-/*
- * Special unique value to implement asynchronous return for
- * generator.close(). Scripts never see it.
- */
-
-#define JSVAL_ARETURN   BOOLEAN_TO_JSVAL(JS_TRUE + 1)
-
 #endif
 
 extern JSClass          js_GeneratorClass;
