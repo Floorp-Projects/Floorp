@@ -38,9 +38,10 @@
 #ifndef nsIPopupSetFrame_h___
 #define nsIPopupSetFrame_h___
 
-// {E2D804A1-50CA-11d3-BF87-00105A1B0627}
+// 043ecc8e-469f-40e1-9569-0529ac0c3039
 #define NS_IPOPUPSETFRAME_IID \
-{ 0xe2d804a1, 0x50ca, 0x11d3, { 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
+{ 0x043ecc8e, 0x469f, 0x40e1, \
+ { 0x95, 0x69, 0x05, 0x29, 0xac, 0x0c, 0x30, 0x39 } }
 
 class nsIFrame;
 class nsIContent;
@@ -59,9 +60,6 @@ public:
                        const nsString& aPopupAlignment) = 0;
   NS_IMETHOD HidePopup(nsIFrame* aPopup) = 0;
   NS_IMETHOD DestroyPopup(nsIFrame* aPopup, PRBool aDestroyEntireChain) = 0;
-
-  NS_IMETHOD AddPopupFrame(nsIFrame* aPopup) = 0;
-  NS_IMETHOD RemovePopupFrame(nsIFrame* aPopup) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIPopupSetFrame, NS_IPOPUPSETFRAME_IID)

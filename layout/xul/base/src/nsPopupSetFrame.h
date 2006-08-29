@@ -91,7 +91,19 @@ public:
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
-
+  NS_IMETHOD AppendFrames(nsIAtom*        aListName,
+                          nsIFrame*       aFrameList);
+  NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
+                         nsIFrame*       aOldFrame);
+#ifdef DEBUG
+  // Only need these for asserts
+  NS_IMETHOD InsertFrames(nsIAtom*        aListName,
+                          nsIFrame*       aPrevFrame,
+                          nsIFrame*       aFrameList);
+  NS_IMETHOD  SetInitialChildList(nsIAtom*        aListName,
+                                  nsIFrame*       aChildList);
+#endif
+  
     // nsIBox
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
 #ifdef DEBUG_LAYOUT
@@ -111,9 +123,6 @@ public:
   NS_IMETHOD HidePopup(nsIFrame* aPopup);
   NS_IMETHOD DestroyPopup(nsIFrame* aPopup, PRBool aDestroyEntireChain);
 
-  NS_IMETHOD AddPopupFrame(nsIFrame* aPopup);
-  NS_IMETHOD RemovePopupFrame(nsIFrame* aPopup);
-  
   PRBool OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent);
   PRBool OnDestroy(nsIContent* aPopupContent);
   PRBool OnCreated(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent);
@@ -132,6 +141,9 @@ public:
 
 protected:
 
+  nsresult AddPopupFrame(nsIFrame* aPopup);
+  nsresult RemovePopupFrame(nsIFrame* aPopup);
+  
   void MarkAsGenerated(nsIContent* aPopupContent);
 
 protected:
