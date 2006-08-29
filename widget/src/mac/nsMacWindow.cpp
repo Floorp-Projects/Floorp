@@ -1130,16 +1130,7 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool aState)
 #endif
           }
         }
-        // Bug 345388: hiding windows using the async
-        // TransitionWindowWithOptions causes memory corruption on 10.3, even
-        // though the API is supported there.  Only fade these windows out on
-        // 10.4 or later, which are able to handle it without corruption or
-        // crashing.
-        if (mWindowType == eWindowType_popup && transitionFunc
-#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_4
-            && nsToolkit::OSXVersion() >= MAC_OS_X_VERSION_10_4_HEX
-#endif
-           ) {
+        if (mWindowType == eWindowType_popup && transitionFunc) {
           mDeathGripDuringTransition = this;
           TransitionWindowOptions transitionOptions = { version  : 0,
                                                         duration : 0.2,
