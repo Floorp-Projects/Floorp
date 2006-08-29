@@ -4882,19 +4882,18 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
     if (NS_FAILED(rv))
       continue;
 
-    if (nsPluginsDir::IsPluginFile(dirEntry)) {
-      pluginFileinDirectory * item = new pluginFileinDirectory();
-      if (!item)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-      // Get file mod time
-      PRInt64 fileModTime = LL_ZERO;
-      dirEntry->GetLastModifiedTime(&fileModTime);
-
-      item->mModTime = fileModTime;
-      item->mFilename = filePath;
-      pluginFilesArray.AppendElement(item);
-    }
+    pluginFileinDirectory * item = new pluginFileinDirectory();
+    if (!item)
+      return NS_ERROR_OUT_OF_MEMORY;
+    
+    // Get file mod time
+    PRInt64 fileModTime = LL_ZERO;
+    dirEntry->GetLastModifiedTime(&fileModTime);
+    
+    item->mModTime = fileModTime;
+    item->mFilename = filePath;
+    pluginFilesArray.AppendElement(item);
+   
   } // end round of up of plugin files
 
   // now sort the array by file modification time or by filename, if equal
@@ -4943,8 +4942,14 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       }
     }
     else {
-      // plugin file was added, flag this fact
-      *aPluginsChanged = PR_TRUE;
+      if (nsPluginsDir::IsPluginFile(localfile)) {
+        // plugin file was added, flag this fact
+        *aPluginsChanged = PR_TRUE;
+      }
+      else {
+        // It's a non-plugin, so keep looping.
+        continue;
+      }
     }
 
     // if we are not creating the list, just continue the loop
