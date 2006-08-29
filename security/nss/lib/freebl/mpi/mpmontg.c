@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mpmontg.c,v 1.19 2006/05/05 01:22:59 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: mpmontg.c,v 1.20 2006/08/29 02:41:38 nelson%bolyard.com Exp $ */
 
 /* This file implements moduluar exponentiation using Montgomery's
  * method for modular reduction.  This file implements the method
@@ -541,108 +541,106 @@ mp_err mp_set_safe_modexp(int value)
 
 #ifndef MP_CHAR_STORE_SLOW
 /*
- * mpi_to_weave takes MPI data and stores in into a byte array interleaved.
+ * mpi_to_weave takes an array of bignums, a matrix in which each bignum 
+ * occupies all the columns of a row, and transposes it into a matrix in 
+ * which each bignum occupies a column of every row.  The first row of the
+ * input matrix becomes the first column of the output matrix.  The n'th
+ * row of input becomes the n'th column of output.  The input data is said
+ * to be "interleaved" or "woven" into the output matrix.
  *
- * The purpose of this interleaving is to hide our access to the array of
- * modulus powers from and attacker snooping on cache hits and misses. Because
- * the array is interleaved, each reference will cause exactly the same cache
- * lines to reload.
+ * The array of bignums is left in this woven form.  Each time a single
+ * bignum value is needed, it is recreated by fetching the n'th column, 
+ * forming a single row which is the new bignum.
  *
- * There are 2 different implementations in this file, one which works with just
- * byte loads and stores, the second which works with mp_weave_word loads and
- * stores. These 2 implementations have DIFFERENT results in exactly which byte
- * of an mp_digit winds up in which location in the byte array. That is why
- * there are 2 sets of explanations for how the array is set up.
+ * The purpose of this interleaving is make it impossible to determine which
+ * of the bignums is being used in any one operation by examining the pattern
+ * of cache misses.
  *
+ * The weaving function does not transpose the entire input matrix in one call.
+ * It transposes 4 rows of mp_ints into their respective columns of output.
  *
- *  a is an array of WEAVE_WORD_SIZE mp_ints (that is 4). 
- * It is a partial window into a logical array mp_int p[count] containing
- * the base to the 0 through count-1 powers. Ideally this code would be 
- * simpler if we stored one element of that array at a time, but on some 
- * platforms the cost of storing a byte incurs a full read modify write cycle
- * and increases the memory bandwidth cost by a factor of 4 or 8. By collecting
- * for mp_ints together, we can arrange to store all 4 values in a single
- * word write. 
+ * There are two different implementations of the weaving and unweaving code
+ * in this file.  One uses byte loads and stores.  The second uses loads and
+ * stores of mp_weave_word size values.  The weaved forms of these two 
+ * implementations differ.  Consequently, each one has its own explanation.
  *
- *  b is the targeted weaved location. b[0] points to the first byte where
- * first byte of the a array needs to be stored. Each b is an offset into the 
- * weave array.
+ * Here is the explanation for the byte-at-a-time implementation.
+ *
+ * This implementation treats each mp_int bignum as an array of bytes, 
+ * rather than as an array of mp_digits.  It stores those bytes as a 
+ * column of bytes in the output matrix.  It doesn't care if the machine
+ * uses big-endian or little-endian byte ordering within mp_digits.
+ * The first byte of the mp_digit array becomes the first byte in the output
+ * column, regardless of whether that byte is the MSB or LSB of the mp_digit.
+ *
+ * "bignums" is an array of mp_ints.
+ * It points to four rows, four mp_ints, a subset of a larger array of mp_ints.
+ *
+ * "weaved" is the weaved output matrix. 
+ * The first byte of bignums[0] is stored in weaved[0].
  * 
- *  count is 2^window size. 
+ * "nBignums" is the total number of bignums in the array of which "bignums" 
+ * is a part.  
  *
- *  b_size is the size in mp_digits of each mp_int in the array. mp_ints
- * with less than b_size elements are logically padded with zeros before
- * storing.
- *
- *
- * Data is stored as follows :
- * The mp_int array is treated as a byte array.
- *
- *
- * we want to eventually store the logical array mp_int p[count] into the
- * weave array as follows:
-
- * p[count].digit is treated as a byte array (rather than * an mp_digit array),
- * N is count, and n is b_size * *sizeof(mp_digit):
- *
- * p[0].digit[0]   p[1].digit[0]   ...... p[N-2].digit[0]   p[N-1].digit[0]
- * p[0].digit[1]   p[1].digit[1]   ...... p[N-2].digit[1]   p[N-1].digit[1]
- *            .                                         .
- *            .                                         .
- * p[0].digit[n-2] p[1].digit[n-2] ...... p[N-2].digit[n-2] p[N-1].digit[n-2]
- * p[0].digit[n-1] p[1].digit[n-1] ...... p[N-2].digit[n-1] p[N-1].digit[n-1] 
- *
- * This function stores that a window of p in each call.
+ * "nDigits" is the size in mp_digits of each mp_int in the "bignums" array. 
+ * mp_ints that use less than nDigits digits are logically padded with zeros 
+ * while being stored in the weaved array.
  */
-mp_err mpi_to_weave(const mp_int *a, unsigned char *b, 
-			             mp_size b_size,  mp_size count)
+mp_err mpi_to_weave(const mp_int  *bignums, 
+                    unsigned char *weaved, 
+		    mp_size nDigits,  /* in each mp_int of input */
+		    mp_size nBignums) /* in the entire source array */
 {
-  mp_size i, j;
-  unsigned char *bsave = b;
+  mp_size i;
+  unsigned char * endDest = weaved + (nDigits * nBignums * sizeof(mp_digit));
 
   for (i=0; i < WEAVE_WORD_SIZE; i++) {
-    unsigned char *pb = (unsigned char *)MP_DIGITS(&a[i]);
-    mp_size useda = MP_USED(&a[i]);
-    mp_size zero =  b_size - useda;
-    unsigned char *end = pb+ (useda*sizeof(mp_digit));
-    b = bsave+i;
+    mp_size used = MP_USED(&bignums[i]);
+    unsigned char *pSrc   = (unsigned char *)MP_DIGITS(&bignums[i]);
+    unsigned char *endSrc = pSrc + (used * sizeof(mp_digit));
+    unsigned char *pDest  = weaved + i;
 
+    ARGCHK(MP_SIGN(&bignums[i]) == MP_ZPOS, MP_BADARG);
+    ARGCHK(used <= nDigits, MP_BADARG);
 
-    ARGCHK(MP_SIGN(&a[i]) == MP_ZPOS, MP_BADARG);
-    ARGCHK(useda <= b_size, MP_BADARG);
-
-    for (; pb < end; pb++) {
-      *b = *pb;
-      b += count;
+    for (; pSrc < endSrc; pSrc++) {
+      *pDest = *pSrc;
+      pDest += nBignums;
     }
-    for (j=0; j < zero; j++) {
-      *b = 0;
-      b += count;
+    while (pDest < endDest) {
+      *pDest = 0;
+      pDest += nBignums;
     }
   }
 
   return MP_OKAY;
 }
 
-/* reverse the operation above for one entry.
- * b points to the offset into the weave array of the power we are
- * calculating */
-mp_err weave_to_mpi(mp_int *a, const unsigned char *b, 
-					mp_size b_size, mp_size count)
+/* Reverse the operation above for one mp_int.
+ * Reconstruct one mp_int from its column in the weaved array.
+ * "pSrc" points to the offset into the weave array of the bignum we 
+ * are going to reconstruct.
+ */
+mp_err weave_to_mpi(mp_int *a,                /* output, result */
+                    const unsigned char *pSrc, /* input, byte matrix */
+		    mp_size nDigits,          /* per mp_int output */
+		    mp_size nBignums)         /* bignums in weaved matrix */
 {
-  unsigned char  *pb = (unsigned char *)MP_DIGITS(a);
-  unsigned char *end = pb+ (b_size*sizeof(mp_digit));
+  unsigned char *pDest   = (unsigned char *)MP_DIGITS(a);
+  unsigned char *endDest = pDest + (nDigits * sizeof(mp_digit));
 
   MP_SIGN(a) = MP_ZPOS;
-  MP_USED(a) = b_size;
+  MP_USED(a) = nDigits;
 
-  for (; pb < end; b+=count, pb++) {
-    *pb = *b;
+  for (; pDest < endDest; pSrc += nBignums, pDest++) {
+    *pDest = *pSrc;
   }
   s_mp_clamp(a);
   return MP_OKAY;
 }
+
 #else
+
 /* Need a primitive that we know is 32 bits long... */
 /* this is true on all modern processors we know of today*/
 typedef unsigned int mp_weave_word;
