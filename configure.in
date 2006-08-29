@@ -4110,7 +4110,7 @@ MOZ_ARG_ENABLE_STRING(application,
                               xpcom/xpconnect or to manually drive a build)],
 [ MOZ_BUILD_APP=$enableval ] )
 
-if test "$MOZ_BUILD_APP" == "macbrowser"; then
+if test "$MOZ_BUILD_APP" = "macbrowser"; then
     MOZ_BUILD_APP=camino
 fi
 
