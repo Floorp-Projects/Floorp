@@ -10,7 +10,7 @@ echo         '<td>'.$info['version'].'</td>';
 echo     '</tr>';
 echo     '<tr>';
 echo         '<td>'._('Platforms').'</td>';
-echo         '<td>'.$html->selectTag('Addon/Platform', $platforms, null, null, null, false).$html->tagErrorMsg('Addon/Platform', _('Please select the platforms your add-on suports.')).'</td>';
+echo         '<td>'.$html->selectTag('Addon/Platform', $platforms, array('1' => true), array('multiple' => true, 'size' => '3'), null, false).$html->tagErrorMsg('Addon/Platform', _('Please select the platforms your add-on suports.')).'</td>';
 echo     '</tr>';
 echo     '<tr>';
 echo         '<td colspan=2>'._('Target Application(s)').'</td>';

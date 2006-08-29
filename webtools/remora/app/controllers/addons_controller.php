@@ -244,7 +244,51 @@ class AddonsController extends AppController
         elseif (isset($this->data['Addon']['add_step2']) || isset($this->data['Addon']['add_step25'])) {
             //Step 2 processing
             if (isset($this->data['Addon']['add_step2'])) {
-                //Validate stuff
+                //Check for model validation first
+                if (!$this->Addon->validates($this->data)) {
+                    $this->validateErrors();
+                    $this->render('add_step2');
+                    die();
+                }
+
+                //Updated Addon
+                if ($newAddon === false) {
+                    //Check for identical versions
+                    if ($this->Version->findAll()) {
+                        $this->invalidate('general');
+                        $this->set('generalError', sprintf(_('An identical version (%s) already exists for this add-on and platform.'), $this->data['Addon']['version']));
+                        $this->render('add_step2');
+                        die();
+                    }
+
+                    //Update addon
+
+                    //Delete current authors
+
+                    //Add new authors
+
+                    //Delete old tags
+
+                    //Add new tags
+
+                }
+                //New Addon
+                else {
+                    //Check for duplicate names
+                    if ($this->Addon->findAllByName($this->data['Addon']['name'])) {
+                        $this->invalidate('general');
+                        $this->set('generalError', _('The name for your add-on already exists in the database. Please make sure that: <br /><li>Your GUIDs match. The most common cause for this error is mismatched GUIDs.</li><li>You do not have a duplicate entry in the database. If you do, you should update that entry or delete it and try again.</li>'));
+                        $this->render('add_step2');
+                        die();
+                    }
+
+                    //Insert addon
+
+                    //Add authors
+
+                    //Add tags
+                }
+
 
                 if($this->data['Addon']['ShowEula'] == 1) {
                     $this->render('add_step25');
@@ -254,6 +298,9 @@ class AddonsController extends AppController
             }
             //Step 2.5 processing
             if (isset($this->data['Addon']['add_step25'])) {
+
+                //Update EULA/PP
+
             }
 
             //Get Platforms list
@@ -266,6 +313,26 @@ class AddonsController extends AppController
             $this->render('add_step3');
         }
         elseif (isset($this->data['Addon']['add_step3'])) {
+            //Check for model validation first
+            if (!$this->Version->validates($this->data)) {
+                $this->validateErrors();
+                $this->render('add_step3');
+                die();
+            }
+
+            //Construct new filename
+
+            //Move file
+
+            //Insert version
+
+            //Insert files
+
+            //Cancel any pending approvals (TODO warn earlier in process)
+
+            //Approval queue
+
+
             $this->render('add_step4');
         }
         //Step 1: Add-on type and file upload
