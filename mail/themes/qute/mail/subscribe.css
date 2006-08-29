@@ -32,29 +32,31 @@ treechildren::-moz-tree-cell-text(nameColumn, Subscribable-false) {
 
 treechildren::-moz-tree-image(nameColumn) {
   -moz-margin-end: 2px;
-  list-style-image: url("chrome://messenger/skin/icons/folder-closed.png");
+  list-style-image: url("chrome://messenger/skin/icons/folder.png");
+  -moz-image-region: rect(0 16px 16px 0);
 }
 
 treechildren::-moz-tree-image(nameColumn, ServerType-nntp),
 treechildren::-moz-tree-image(nameColumn2, nntp) {
   -moz-margin-end: 2px;
-  list-style-image: url("chrome://messenger/skin/icons/folder-newsgroup.png");
+  -moz-image-region: rect(0 160px 16px 144px);
 }
 
 /* ::::: Servers :::::: */
 
 .subscribeMenuItem {
-  list-style-image: url("chrome://messenger/skin/icons/server-mail.png");
+  list-style-image: url("chrome://messenger/skin/icons/server.png");
+  -moz-image-region: rect(0 16px 16px 0);
 }
 
 .subscribeMenuItem[ServerType="imap"][IsSecure="true"] {
-  list-style-image: url("chrome://messenger/skin/icons/server-remote-lock.png");
+  -moz-image-region: rect(0 32px 16px 16px);
 }
 
 .subscribeMenuItem[ServerType="nntp"] {
-  list-style-image: url("chrome://messenger/skin/icons/server-news.png");
+  -moz-image-region: rect(0 64px 16px 48px);
 }
 
 .subscribeMenuItem[ServerType="nntp"][IsSecure="true"] {
-  list-style-image: url("chrome://messenger/skin/icons/server-news-lock.png");
+  -moz-image-region: rect(0 80px 16px 64px);
 }

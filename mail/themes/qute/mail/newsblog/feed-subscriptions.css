@@ -49,14 +49,16 @@
 #subscriptionChildren::-moz-tree-image(folderNameCol) {
   -moz-margin-end: 2px;
   list-style-image: url("chrome://messenger-newsblog/skin/icons/rss-feed.png");
+  -moz-image-region: rect(0 16px 16px 0);
 }
 
 #subscriptionChildren::-moz-tree-image(folderNameCol, container) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-closed.png");
+  list-style-image: url("chrome://messenger/skin/icons/folder.png");
+  -moz-image-region: rect(0 16px 16px 0);
 }
 
 #subscriptionChildren::-moz-tree-image(folderNameCol, container, open) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-open.png");
+  -moz-image-region: rect(0 32px 16px 16px);
 }
 
 #rssFeedInfoBox {

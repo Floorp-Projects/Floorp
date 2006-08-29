@@ -100,3 +100,7 @@ list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
 toolbar[mode="full"] .toolbarbutton-1 {
   min-width: 55px;
 }
+
+sidebarheader .toolbarbutton-text:not([value]) {
+  display: none;
+}

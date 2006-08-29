@@ -46,6 +46,7 @@ radiogroup.paneSelector {
   background-image: url("chrome://messenger/skin/preferences/background.png");
   background-position: center bottom;
   background-repeat: repeat-x;
+  -moz-padding-start: 0;
 }
 
 radio[pane] {
