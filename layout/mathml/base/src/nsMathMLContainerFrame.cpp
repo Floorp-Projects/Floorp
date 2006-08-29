@@ -625,7 +625,9 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIFrame*       aFrame,
     nsIContent* content = aFrame->GetContent();
     if (!gap) {
       // unset any -moz-math-font-size attribute without notifying that we want a reflow
-      content->UnsetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZfontsize, PR_FALSE);
+      // (but leave it to the primary frame to do that, a child pseudo can't overrule)
+      if (!aFrame->GetParent() || aFrame->GetParent()->GetContent() != content)
+        content->UnsetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZfontsize, PR_FALSE);
     }
     else {
       // By default scriptminsize=8pt and scriptsizemultiplier=0.71
