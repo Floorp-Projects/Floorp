@@ -157,6 +157,12 @@ static NS_DEFINE_CID(kRangeCID, NS_RANGE_CID);
 static PRLogModuleInfo *nsObjectFrameLM = PR_NewLogModule("nsObjectFrame");
 #endif /* PR_LOGGING */
 
+// 1020 / 60
+#define NORMAL_PLUGIN_DELAY 17
+
+// low enough to avoid audio skipping/delays
+#define HIDDEN_PLUGIN_DELAY 100
+
 // special class for handeling DOM context menu events because for
 // some reason it starves other mouse events if implemented on the
 // same class
@@ -331,7 +337,7 @@ public:
   NS_DECL_NSITIMERCALLBACK
   
   void CancelTimer();
-  void StartTimer();
+  void StartTimer(unsigned int aDelay);
 
   // nsIScrollPositionListener interface
   NS_IMETHOD ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
@@ -1056,7 +1062,7 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
 
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("plugin printing done, return code is %lx\n", (long)rv));
 
-#else  // Windows and non-UNIX, non-Mac(Classic) cases
+#else
 
   // we need the native printer device context to pass to plugin
   // On Windows, this will be the HDC
@@ -1067,7 +1073,6 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   npprint.print.embedPrint.window = window;
   // send off print info to plugin
     rv = pi->Print(&npprint);
-
 #endif
 
   // XXX Nav 4.x always sent a SetWindow call after print. Should we do the same?
@@ -1081,7 +1086,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect)
 {
   // Screen painting code
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
   // delegate all painting to the plugin instance.
   if (mInstanceOwner)
       mInstanceOwner->Paint(aDirtyRect);
@@ -1210,7 +1215,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
 #endif
     }
   }
-#endif /* !XP_MAC */
+#endif
 }
 
 NS_IMETHODIMP
@@ -1221,7 +1226,6 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
   NS_ENSURE_ARG_POINTER(anEventStatus);
   nsresult rv = NS_OK;
 
-  //FIX FOR CRASHING WHEN NO INSTANCE OWVER
   if (!mInstanceOwner)
     return NS_ERROR_NULL_POINTER;
 
@@ -2616,7 +2620,7 @@ nsresult nsPluginInstanceOwner::ScrollPositionDidChange(nsIScrollableView* aScro
     }
 #endif
 
-    StartTimer();
+    StartTimer(NORMAL_PLUGIN_DELAY);
     return NS_OK;
 }
 
@@ -3185,7 +3189,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
     return NS_OK;
 }
 
-void nsPluginInstanceOwner::StartTimer()
+void nsPluginInstanceOwner::StartTimer(unsigned int aDelay)
 {
 #ifdef XP_MACOSX
     nsresult rv;
@@ -3194,7 +3198,7 @@ void nsPluginInstanceOwner::StartTimer()
     if (!mPluginTimer) {
       mPluginTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
       if (NS_SUCCEEDED(rv))
-        rv = mPluginTimer->InitWithCallback(this, 1020 / 60, nsITimer::TYPE_REPEATING_SLACK);
+        mPluginTimer->InitWithCallback(this, aDelay, nsITimer::TYPE_REPEATING_SLACK);
     }
 #endif
 }
@@ -3351,7 +3355,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
           mPluginWindow->window = GetPluginPort();
 
           // start the idle timer.
-          StartTimer();
+          StartTimer(NORMAL_PLUGIN_DELAY);
 
           // tell the plugin window about the widget
           mPluginWindow->SetPluginWidget(mWidget);
@@ -3474,8 +3478,17 @@ nsPluginPort* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
       mPluginWindow->clipRect.top     != oldClipRect.top    ||
       mPluginWindow->clipRect.right   != oldClipRect.right  ||
       mPluginWindow->clipRect.bottom  != oldClipRect.bottom)
-  {  
+  {
     mInstance->SetWindow(mPluginWindow);
+    // if the clipRect is of size 0, make the null timer fire less often
+    CancelTimer();
+    if (mPluginWindow->clipRect.left == mPluginWindow->clipRect.right ||
+        mPluginWindow->clipRect.top == mPluginWindow->clipRect.bottom) {
+      StartTimer(HIDDEN_PLUGIN_DELAY);
+    }
+    else {
+      StartTimer(NORMAL_PLUGIN_DELAY);
+    }
   }
 
   return pluginPort;
