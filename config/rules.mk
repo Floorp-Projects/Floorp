@@ -1542,7 +1542,7 @@ $(JAVA_INSTALL_DIR):
 	$(NSINSTALL) -D $@
 
 export:: $(JAVA_DIST_DIR) $(JAVADEPFILES) $(JAVA_INSTALL_DIR)
-	cd $(JAVA_GEN_DIR) && tar $(TAR_CREATE_FLAGS) - * | (cd "../$(JAVA_INSTALL_DIR)" && tar -xf -)
+	(cd $(JAVA_GEN_DIR) && tar $(TAR_CREATE_FLAGS) - *) | (cd $(JAVA_INSTALL_DIR) && tar -xf -)
 
 endif # XPIDLSRCS || SDK_XPIDLSRCS
 endif # MOZ_JAVAXPCOM
