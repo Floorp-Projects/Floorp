@@ -165,11 +165,49 @@ gfxPangoFontGroup::~gfxPangoFontGroup()
 {
 }
 
+
+static PRBool
+IsOutsideASCII(const nsAString& aName)
+{
+    PRUint32 len = aName.Length();
+    const PRUnichar* str = aName.BeginReading();
+    for (PRUint32 i = 0; i < len; i++) {
+        /*
+         * is outside 7 bit ASCII
+         */
+        if (str[i] > 0x7E) {
+            return PR_TRUE;
+        }
+    }
+  
+    return PR_FALSE;
+}
+
+#define USE_XFT_FOR_ASCII
+
 gfxTextRun*
 gfxPangoFontGroup::MakeTextRun(const nsAString& aString)
 {
+#ifdef USE_XFT_FOR_ASCII
+    if (IsOutsideASCII(aString))
+        return new gfxPangoTextRun(aString, this);
+
+    return new gfxXftTextRun(aString, this);
+#else
     return new gfxPangoTextRun(aString, this);
+#endif
 }
+
+gfxTextRun*
+gfxPangoFontGroup::MakeTextRun(const nsACString& aString)
+{
+#ifdef USE_XFT_FOR_ASCII
+    return new gfxXftTextRun(aString, this);
+#else
+    return new gfxPangoTextRun(NS_ConvertASCIItoUTF16(aString), this);
+#endif
+}
+
 
 /**
  ** gfxPangoFont
@@ -235,6 +273,7 @@ gfxPangoFont::gfxPangoFont(const nsAString &aName, const gfxFontStyle *aFontStyl
     mPangoFontDesc = nsnull;
     mPangoCtx = nsnull;
     mHasMetrics = PR_FALSE;
+    mXftFont = nsnull;
 }
 
 gfxPangoFont::~gfxPangoFont()
@@ -328,6 +367,7 @@ gfxPangoFont::RealizeFont(PRBool force)
     pango_font_description_set_style(mPangoFontDesc, ThebesStyleToPangoStyle(mStyle));
     pango_font_description_set_weight(mPangoFontDesc, ThebesStyleToPangoWeight(mStyle));
 
+    //printf ("%s, %f, %d, %d\n", NS_ConvertUTF16toUTF8(mName).get(), mStyle->size, ThebesStyleToPangoStyle(mStyle), ThebesStyleToPangoWeight(mStyle));
 #ifndef THEBES_USE_PANGO_CAIRO
     mPangoCtx = pango_xft_get_context(GDK_DISPLAY(), 0);
     gdk_pango_context_set_colormap(mPangoCtx, gdk_rgb_get_cmap());
@@ -341,6 +381,27 @@ gfxPangoFont::RealizeFont(PRBool force)
     pango_context_set_font_description(mPangoCtx, mPangoFontDesc);
 
     mHasMetrics = PR_FALSE;
+}
+
+void
+gfxPangoFont::RealizeXftFont(PRBool force)
+{
+    // already realized?
+    if (!force && mXftFont)
+        return;
+    if (GDK_DISPLAY() == 0) {
+        mXftFont = nsnull;
+        return;
+    }
+
+    PangoAttrList *al = pango_attr_list_new();
+    GList *items = pango_itemize(mPangoCtx, "a", 0, 1, al, NULL);
+    pango_attr_list_unref(al);
+
+    PangoItem *item = (PangoItem*)items->data;
+    PangoFcFont *fcfont = PANGO_FC_FONT(item->analysis.font);
+
+    mXftFont = pango_xft_font_get_font(PANGO_FONT(fcfont));
 }
 
 void
@@ -546,6 +607,151 @@ gfxPangoFont::GetMetrics()
 }
 
 
+/**
+ ** gfxXftTextRun
+ **/
+
+gfxXftTextRun::gfxXftTextRun(const nsAString& aString, gfxPangoFontGroup *aGroup)
+    : mWString(aString, 0), mIsWide(PR_TRUE), mGroup(aGroup), mWidth(-1), mHeight(-1)
+
+{
+}
+
+gfxXftTextRun::gfxXftTextRun(const nsACString& aString, gfxPangoFontGroup *aGroup)
+    : mCString(aString, 0), mIsWide(PR_FALSE), mGroup(aGroup), mWidth(-1), mHeight(-1)
+{
+}
+
+gfxXftTextRun::~gfxXftTextRun()
+{
+}
+
+#define AUTO_GLYPHBUF_SIZE 100
+
+void
+gfxXftTextRun::Draw(gfxContext *aContext, gfxPoint pt)
+{
+    gfxMatrix mat = aContext->CurrentMatrix();
+
+    nsRefPtr<gfxPangoFont> pf = mGroup->GetFontAt(0);
+    //printf("2. %s\n", nsPromiseFlatCString(mString).get());
+    XftFont * xfont = pf->GetXftFont();
+    //XftDraw * xdraw = pf->GetXftDraw();
+
+    
+    cairo_font_face_t* font = cairo_ft_font_face_create_for_pattern(xfont->pattern);
+    cairo_set_font_face(aContext->GetCairo(), font);
+
+    double size;
+    if (FcPatternGetDouble(xfont->pattern, FC_PIXEL_SIZE, 0, &size) != FcResultMatch)
+        size = 12.0;
+
+    cairo_set_font_size(aContext->GetCairo(), size);
+
+    //aContext->MoveTo(pt);
+    
+    size_t len = mIsWide ? mWString.Length() : mCString.Length();
+    
+   
+    gfxFloat offset = 0;
+    cairo_glyph_t autoGlyphs[AUTO_GLYPHBUF_SIZE];
+    cairo_glyph_t* glyphs = autoGlyphs;
+    if (len > AUTO_GLYPHBUF_SIZE)
+        glyphs = new cairo_glyph_t[len];
+
+    for (size_t i = 0; i < len; i++) {
+        FT_UInt glyph = mIsWide ?
+            XftCharIndex(GDK_DISPLAY(), xfont, mWString[i]) :
+            XftCharIndex(GDK_DISPLAY(), xfont, mCString[i]);
+
+        glyphs[i].index = glyph;
+        glyphs[i].x = pt.x + offset;
+        glyphs[i].y = pt.y;
+
+        XGlyphInfo info;                        
+        XftGlyphExtents(GDK_DISPLAY(), xfont, &glyph, 1, &info);
+        offset += !mUTF8Spacing.IsEmpty() ? mUTF8Spacing[i] : info.xOff;
+    }    
+
+    cairo_show_glyphs(aContext->GetCairo(), glyphs, len);
+
+    if (len > AUTO_GLYPHBUF_SIZE)
+        delete [] glyphs;
+    
+
+    /*
+    if (mIsWide)
+        cairo_show_text (aContext->GetCairo(), (const char *) NS_ConvertUTF16toUTF8(mWString).Data());
+    else 
+        cairo_show_text (aContext->GetCairo(), nsCString(mCString).Data());
+    */
+
+    cairo_font_face_destroy(font);
+
+    //aContext->SetMatrix(mat);
+}
+
+gfxFloat
+gfxXftTextRun::Measure(gfxContext *aContext)
+{
+    nsRefPtr<gfxPangoFont> pf = mGroup->GetFontAt(0);
+
+    XftFont * font = pf->GetXftFont();
+    if (font)
+    {
+        XGlyphInfo extents;
+        Display * dpy = GDK_DISPLAY ();
+        if (dpy) {
+            if (mIsWide) {
+                XftTextExtents16(dpy, font, (FcChar16 *) mWString.Data(), mWString.Length(), &extents);
+            } else {
+                XftTextExtents8(dpy, font, (FcChar8 *) mCString.Data(), mCString.Length(), &extents);
+            }
+            mWidth = extents.xOff;
+        } else {
+            NS_ERROR ("Textruns with no Display");
+        }
+        
+    } else {
+        printf ("didn't get font!\n");
+        mWidth = 1;
+    }
+
+    return mWidth;
+}
+
+void
+gfxXftTextRun::SetSpacing(const nsTArray<gfxFloat>& spacingArray)
+{
+    mSpacing = spacingArray;
+
+    //size_t len = mWString.Length();
+
+    if (mIsWide) {
+        NS_ConvertUTF16toUTF8 str(mWString);
+
+        mUTF8Spacing.Clear();
+        const char *curChar = str.get();
+        const char *prevChar = curChar;
+        for (unsigned int i = 0; i < mWString.Length(); i++) {
+            for (; prevChar + 1 < curChar; prevChar++)
+                mUTF8Spacing.AppendElement(0);
+            mUTF8Spacing.AppendElement((PRInt32)NSToCoordRound(mSpacing[i]));
+            if (IS_HIGH_SURROGATE(mWString[i]))
+                i++;
+            prevChar = curChar;
+            curChar = g_utf8_find_next_char(curChar, NULL);
+        }
+    }
+}
+
+const nsTArray<gfxFloat> *const
+gfxXftTextRun::GetSpacing() const
+{
+    return &mSpacing;
+}
+
+
 
 /**
  ** gfxPangoTextRun
@@ -605,7 +811,7 @@ DrawCairoGlyphs(gfxContext* ctx,
 }
 #endif
 
-gfxPangoTextRun::gfxPangoTextRun(const nsAString &aString, gfxPangoFontGroup *aGroup)
+gfxPangoTextRun::gfxPangoTextRun(const nsAString& aString, gfxPangoFontGroup *aGroup)
     : mString(aString), mGroup(aGroup), mPangoLayout(nsnull), mWidth(-1), mHeight(-1)
 {
 }
@@ -635,7 +841,7 @@ gfxPangoTextRun::EnsurePangoLayout(gfxContext *aContext)
 
         // fix up the space width
         PangoLayoutLine *line = pango_layout_get_line(mPangoLayout, 0);
-        gint32 spaceWidth =
+        gint32 spaceWidth = (gint32)
             NSToCoordRound(pf->GetMetrics().spaceWidth * FLOAT_PANGO_SCALE);
         for (GSList *tmpList = line->runs;
              tmpList && tmpList->data; tmpList = tmpList->next)
@@ -754,7 +960,7 @@ gfxPangoTextRun::SetSpacing(const nsTArray<gfxFloat> &spacingArray)
     for (unsigned int i = 0; i < mString.Length(); i++) {
         for (; prevChar + 1 < curChar; prevChar++)
             mUTF8Spacing.AppendElement(0);
-        mUTF8Spacing.AppendElement(NSToCoordRound(mSpacing[i] * FLOAT_PANGO_SCALE));
+        mUTF8Spacing.AppendElement((PRInt32)NSToCoordRound(mSpacing[i] * FLOAT_PANGO_SCALE));
         if (IS_HIGH_SURROGATE(mString[i]))
             i++;
         prevChar = curChar;
