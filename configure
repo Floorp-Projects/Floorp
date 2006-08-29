@@ -12305,7 +12305,7 @@ if test "${enable_application+set}" = set; then
 fi
 
 
-if test "$MOZ_BUILD_APP" == "macbrowser"; then
+if test "$MOZ_BUILD_APP" = "macbrowser"; then
     MOZ_BUILD_APP=camino
 fi
 
