@@ -1,3 +1,11 @@
+-- phpMyAdmin SQL Dump
+-- version 2.7.0-pl2
+-- http://www.phpmyadmin.net
+-- 
+-- Host: localhost
+-- Generation Time: Aug 29, 2006 at 02:54 PM
+-- Server version: 5.0.19
+-- PHP Version: 4.4.2
 -- 
 -- Database: `remora`
 -- 
@@ -5,10 +13,33 @@
 -- --------------------------------------------------------
 
 -- 
+-- Table structure for table `addonevents`
+-- 
+
+CREATE TABLE `addonevents` (
+  `id` int(11) unsigned NOT NULL auto_increment,
+  `addon_id` int(11) unsigned NOT NULL,
+  `user_id` int(11) unsigned NOT NULL,
+  `added` varchar(255) NOT NULL,
+  `removed` varchar(255) NOT NULL,
+  `notes` text,
+  `created` datetime NOT NULL,
+  PRIMARY KEY  (`id`),
+  KEY `addon_id` (`addon_id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+-- 
+-- Dumping data for table `addonevents`
+-- 
+
+
+-- --------------------------------------------------------
+
+-- 
 -- Table structure for table `addons`
 -- 
 
-DROP TABLE IF EXISTS `addons`;
 CREATE TABLE `addons` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `guid` varchar(255) NOT NULL default '',
@@ -18,7 +49,7 @@ CREATE TABLE `addons` (
   `homepage` varchar(255) NOT NULL default '',
   `description` text NOT NULL,
   `summary` text NOT NULL,
-  `averagerating` varchar(255) default NULL, 
+  `averagerating` varchar(255) default NULL,
   `weeklydownloads` int(11) unsigned NOT NULL default '0',
   `totaldownloads` int(11) unsigned NOT NULL default '0',
   `developercomments` text,
@@ -36,13 +67,34 @@ CREATE TABLE `addons` (
   KEY `addontype_id` (`addontype_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+-- 
+-- Dumping data for table `addons`
+-- 
+
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `addons_langs`
+-- 
+
+CREATE TABLE `addons_langs` (
+  `addon_id` int(11) unsigned NOT NULL,
+  `lang_id` int(11) unsigned NOT NULL,
+  PRIMARY KEY  (`addon_id`,`lang_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- 
+-- Dumping data for table `addons_langs`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `addons_tags`
 -- 
 
-DROP TABLE IF EXISTS `addons_tags`;
 CREATE TABLE `addons_tags` (
   `addon_id` int(11) unsigned NOT NULL default '0',
   `tag_id` int(11) unsigned NOT NULL default '0',
@@ -50,13 +102,17 @@ CREATE TABLE `addons_tags` (
   KEY `tag_id` (`tag_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- 
+-- Dumping data for table `addons_tags`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `addons_users`
 -- 
 
-DROP TABLE IF EXISTS `addons_users`;
 CREATE TABLE `addons_users` (
   `addon_id` int(11) unsigned NOT NULL default '0',
   `user_id` int(11) unsigned NOT NULL default '0',
@@ -66,13 +122,17 @@ CREATE TABLE `addons_users` (
   KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- 
+-- Dumping data for table `addons_users`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `addontypes`
 -- 
 
-DROP TABLE IF EXISTS `addontypes`;
 CREATE TABLE `addontypes` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `name` varchar(255) NOT NULL,
@@ -81,13 +141,17 @@ CREATE TABLE `addontypes` (
   PRIMARY KEY  (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+-- 
+-- Dumping data for table `addontypes`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `applications`
 -- 
 
-DROP TABLE IF EXISTS `applications`;
 CREATE TABLE `applications` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `guid` varchar(255) NOT NULL,
@@ -99,13 +163,17 @@ CREATE TABLE `applications` (
   PRIMARY KEY  (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+-- 
+-- Dumping data for table `applications`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `applications_versions`
 -- 
 
-DROP TABLE IF EXISTS `applications_versions`;
 CREATE TABLE `applications_versions` (
   `application_id` int(11) unsigned NOT NULL default '0',
   `version_id` int(11) unsigned NOT NULL default '0',
@@ -118,13 +186,17 @@ CREATE TABLE `applications_versions` (
   KEY `version_id` (`version_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- 
+-- Dumping data for table `applications_versions`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `approvals`
 -- 
 
-DROP TABLE IF EXISTS `approvals`;
 CREATE TABLE `approvals` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `user_id` int(11) unsigned NOT NULL default '0',
@@ -136,13 +208,17 @@ CREATE TABLE `approvals` (
   KEY `file_id` (`file_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+-- 
+-- Dumping data for table `approvals`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `appversions`
 -- 
 
-DROP TABLE IF EXISTS `appversions`;
 CREATE TABLE `appversions` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `application_id` int(11) unsigned NOT NULL default '0',
@@ -153,13 +229,17 @@ CREATE TABLE `appversions` (
   KEY `application_id` (`application_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+-- 
+-- Dumping data for table `appversions`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `blapps`
 -- 
 
-DROP TABLE IF EXISTS `blapps`;
 CREATE TABLE `blapps` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `blitem_id` int(11) unsigned NOT NULL default '0',
@@ -173,13 +253,17 @@ CREATE TABLE `blapps` (
   KEY `guid` (`guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+-- 
+-- Dumping data for table `blapps`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `blitems`
 -- 
 
-DROP TABLE IF EXISTS `blitems`;
 CREATE TABLE `blitems` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `guid` varchar(255) NOT NULL,
@@ -190,13 +274,17 @@ CREATE TABLE `blitems` (
   PRIMARY KEY  (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+-- 
+-- Dumping data for table `blitems`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `cake_sessions`
 -- 
 
-DROP TABLE IF EXISTS `cake_sessions`;
 CREATE TABLE `cake_sessions` (
   `id` varchar(255) NOT NULL default '',
   `data` text,
@@ -204,13 +292,17 @@ CREATE TABLE `cake_sessions` (
   PRIMARY KEY  (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- 
+-- Dumping data for table `cake_sessions`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `downloads`
 -- 
 
-DROP TABLE IF EXISTS `downloads`;
 CREATE TABLE `downloads` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `file_id` int(11) unsigned default NULL,
@@ -222,13 +314,17 @@ CREATE TABLE `downloads` (
   KEY `file_id` (`file_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+-- 
+-- Dumping data for table `downloads`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `features`
 -- 
 
-DROP TABLE IF EXISTS `features`;
 CREATE TABLE `features` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `addon_id` int(11) unsigned NOT NULL default '0',
@@ -240,13 +336,17 @@ CREATE TABLE `features` (
   KEY `addon_id` (`addon_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+-- 
+-- Dumping data for table `features`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `files`
 -- 
 
-DROP TABLE IF EXISTS `files`;
 CREATE TABLE `files` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `version_id` int(11) unsigned NOT NULL default '0',
@@ -261,28 +361,33 @@ CREATE TABLE `files` (
   KEY `platform_id` (`platform_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+-- 
+-- Dumping data for table `files`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `langs`
 -- 
 
-DROP TABLE IF EXISTS `langs`;
 CREATE TABLE `langs` (
   `id` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
   `meta` varchar(255) NOT NULL,
   `error_text` varchar(255) NOT NULL,
-  `encoding` varchar(255) NOT NULL DEFAULT 'UTF-8',
+  `encoding` varchar(255) NOT NULL default 'UTF-8',
   `created` datetime NOT NULL default '0000-00-00 00:00:00',
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+-- 
+-- Dumping data for table `langs`
+-- 
 
--- This data is not necessarily permanent.
-INSERT INTO `langs` (`id`,`name`,`meta`,`error_text`,`encoding`,`created`) VALUES
-('en_US', 'English (US)', 'en_US', 'Error', 'utf-8', NOW()),
-('de_DE', 'German', 'de_DE', 'Störung', 'utf-8', NOW());
+INSERT INTO `langs` VALUES ('en_US', 'English (US)', 'en_US', 'Error', 'utf-8', '2006-08-28 09:31:03');
+INSERT INTO `langs` VALUES ('de_DE', 'German', 'de_DE', 'Störung', 'utf-8', '2006-08-28 09:31:03');
 
 -- --------------------------------------------------------
 
@@ -290,7 +395,6 @@ INSERT INTO `langs` (`id`,`name`,`meta`,`error_text`,`encoding`,`created`) VALUE
 -- Table structure for table `platforms`
 -- 
 
-DROP TABLE IF EXISTS `platforms`;
 CREATE TABLE `platforms` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `name` varchar(255) NOT NULL default '',
@@ -300,13 +404,17 @@ CREATE TABLE `platforms` (
   PRIMARY KEY  (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+-- 
+-- Dumping data for table `platforms`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `previews`
 -- 
 
-DROP TABLE IF EXISTS `previews`;
 CREATE TABLE `previews` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `addon_id` int(11) unsigned NOT NULL default '0',
@@ -319,13 +427,17 @@ CREATE TABLE `previews` (
   KEY `addon_id` (`addon_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+-- 
+-- Dumping data for table `previews`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `reviewratings`
 -- 
 
-DROP TABLE IF EXISTS `reviewratings`;
 CREATE TABLE `reviewratings` (
   `review_id` int(11) unsigned NOT NULL default '0',
   `user_id` int(11) unsigned NOT NULL default '0',
@@ -335,13 +447,17 @@ CREATE TABLE `reviewratings` (
   KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- 
+-- Dumping data for table `reviewratings`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `reviews`
 -- 
 
-DROP TABLE IF EXISTS `reviews`;
 CREATE TABLE `reviews` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `version_id` int(11) unsigned NOT NULL default '0',
@@ -356,13 +472,17 @@ CREATE TABLE `reviews` (
   KEY `version_id` (`version_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+-- 
+-- Dumping data for table `reviews`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `tags`
 -- 
 
-DROP TABLE IF EXISTS `tags`;
 CREATE TABLE `tags` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `name` varchar(255) NOT NULL default '',
@@ -376,13 +496,17 @@ CREATE TABLE `tags` (
   KEY `application_id` (`application_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+-- 
+-- Dumping data for table `tags`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `translations`
 -- 
 
-DROP TABLE IF EXISTS `translations`;
 CREATE TABLE `translations` (
   `id` int(11) unsigned NOT NULL,
   `pk_column` varchar(50) NOT NULL,
@@ -411,13 +535,41 @@ CREATE TABLE `translations` (
   PRIMARY KEY  (`id`,`pk_column`,`translated_column`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+-- 
+-- Dumping data for table `translations`
+-- 
+
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `userevents`
+-- 
+
+CREATE TABLE `userevents` (
+  `id` int(11) unsigned NOT NULL auto_increment,
+  `changed_id` int(11) unsigned NOT NULL,
+  `user_id` int(11) unsigned NOT NULL,
+  `added` varchar(255) NOT NULL,
+  `removed` varchar(255) NOT NULL,
+  `notes` text,
+  `created` datetime NOT NULL,
+  PRIMARY KEY  (`id`),
+  KEY `changed_id` (`changed_id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+-- 
+-- Dumping data for table `userevents`
+-- 
+
+
 -- --------------------------------------------------------
 
 -- 
 -- Table structure for table `users`
 -- 
 
-DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `cake_session_id` varchar(255) default NULL,
@@ -430,11 +582,16 @@ CREATE TABLE `users` (
   `confirmationcode` varchar(255) NOT NULL default '',
   `created` datetime NOT NULL default '0000-00-00 00:00:00',
   `modified` datetime NOT NULL default '0000-00-00 00:00:00',
-  `notes` text default NULL,
+  `notes` text,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `email` (`email`),
   KEY `cake_session_id` (`cake_session_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+-- 
+-- Dumping data for table `users`
+-- 
+
 
 -- --------------------------------------------------------
 
@@ -442,7 +599,6 @@ CREATE TABLE `users` (
 -- Table structure for table `versions`
 -- 
 
-DROP TABLE IF EXISTS `versions`;
 CREATE TABLE `versions` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `addon_id` int(11) unsigned NOT NULL default '0',
@@ -453,14 +609,26 @@ CREATE TABLE `versions` (
   `approved` tinyint(1) unsigned NOT NULL default '0',
   `releasenotes` text,
   `created` datetime NOT NULL default '0000-00-00 00:00:00',
-  `modifid` datetime NOT NULL default '0000-00-00 00:00:00',
+  `modified` datetime NOT NULL default '0000-00-00 00:00:00',
   PRIMARY KEY  (`id`),
   KEY `addon_id` (`addon_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- 
+-- Dumping data for table `versions`
+-- 
+
+
+-- 
 -- Constraints for dumped tables
 -- 
+
+-- 
+-- Constraints for table `addonevents`
+-- 
+ALTER TABLE `addonevents`
+  ADD CONSTRAINT `addonevents_ibfk_1` FOREIGN KEY (`addon_id`) REFERENCES `addons` (`id`),
+  ADD CONSTRAINT `addonevents_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 
 -- 
 -- Constraints for table `addons`
@@ -552,6 +720,13 @@ ALTER TABLE `reviews`
 ALTER TABLE `tags`
   ADD CONSTRAINT `tags_ibfk_1` FOREIGN KEY (`addontype_id`) REFERENCES `addontypes` (`id`),
   ADD CONSTRAINT `tags_ibfk_2` FOREIGN KEY (`application_id`) REFERENCES `applications` (`id`);
+
+-- 
+-- Constraints for table `userevents`
+-- 
+ALTER TABLE `userevents`
+  ADD CONSTRAINT `userevents_ibfk_1` FOREIGN KEY (`changed_id`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `userevents_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 
 -- 
 -- Constraints for table `users`
