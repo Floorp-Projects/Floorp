@@ -333,6 +333,7 @@ public:
 
   static void ShutDown();
   static PRBool IsCallerChrome();
+  static void CloseBlockScriptTerminationFunc(nsISupports *aRef);
 
   friend class WindowStateHolder;
 
@@ -398,6 +399,8 @@ protected:
    * @param argc The number of arguments in argv.
    * @param aExtraArgument Another way to pass arguments in.  This is mutually
    *                       exclusive with the argv/argc approach.
+   * @param aJSCallerContext The calling script's context. This must be nsnull
+   *                         when aCalledNoScript is true.
    * @param aReturn [out] The window that was opened, if any.
    *
    * @note that the boolean args are const because the function shouldn't be
@@ -413,6 +416,7 @@ protected:
                                     nsIArray *argv,
                                     nsISupports *aExtraArgument,
                                     nsIPrincipal *aCalleePrincipal,
+                                    JSContext *aJSCallerContext,
                                     nsIDOMWindow **aReturn);
 
   static void CloseWindow(nsISupports* aWindow);
@@ -535,6 +539,9 @@ protected:
   PRPackedBool                  mHavePendingClose : 1;
   PRPackedBool                  mHadOriginalOpener : 1;
   PRPackedBool                  mIsPopupSpam : 1;
+
+  // Indicates whether scripts are allowed to close this window.
+  PRPackedBool                  mBlockScriptedClosingFlag : 1;
 
   // Track what sorts of events we need to fire when thawed
   PRPackedBool                  mFireOfflineStatusChangeEventOnThaw : 1;
