@@ -771,7 +771,7 @@ nsPopupSetFrame::OnDestroyed(nsPresContext* aPresContext,
   return PR_TRUE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPopupSetFrame::RemovePopupFrame(nsIFrame* aPopup)
 {
   // This was called by the Destroy() method of the popup, so all we have to do is
@@ -804,7 +804,7 @@ nsPopupSetFrame::RemovePopupFrame(nsIFrame* aPopup)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPopupSetFrame::AddPopupFrame(nsIFrame* aPopup)
 {
   // The entry should already exist, but might not (if someone decided to make their
