@@ -2784,31 +2784,6 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
      * faster code and less data overhead.
      */
 
-    /* Step 17(c): append XML namespace declarations. */
-    for (i = 0, n = decls.length; i < n; i++) {
-        ns2 = XMLARRAY_MEMBER(&decls, i, JSXMLNamespace);
-        JS_ASSERT(ns2->declared);
-
-        js_AppendCString(&sb, " xmlns");
-
-        /* 17(c)(ii): NULL means *undefined* here. */
-        if (!ns2->prefix) {
-            prefix = GeneratePrefix(cx, ns2->uri, &ancdecls);
-            if (!prefix)
-                goto out;
-            ns2->prefix = prefix;
-        }
-
-        /* 17(c)(iii). */
-        if (!IS_EMPTY(ns2->prefix)) {
-            js_AppendChar(&sb, ':');
-            js_AppendJSString(&sb, ns2->prefix);
-        }
-
-        /* 17(d-g). */
-        AppendAttributeValue(cx, &sb, ns2->uri);
-    }
-
     /* Step 17(b): append attributes. */
     for (i = 0, n = xml->xml_attrs.length; i < n; i++) {
         attr = XMLARRAY_MEMBER(&xml->xml_attrs, i, JSXML);
@@ -2852,6 +2827,31 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
 
         /* 17(d-g). */
         AppendAttributeValue(cx, &sb, attr->xml_value);
+    }
+
+    /* Step 17(c): append XML namespace declarations. */
+    for (i = 0, n = decls.length; i < n; i++) {
+        ns2 = XMLARRAY_MEMBER(&decls, i, JSXMLNamespace);
+        JS_ASSERT(ns2->declared);
+
+        js_AppendCString(&sb, " xmlns");
+
+        /* 17(c)(ii): NULL means *undefined* here. */
+        if (!ns2->prefix) {
+            prefix = GeneratePrefix(cx, ns2->uri, &ancdecls);
+            if (!prefix)
+                goto out;
+            ns2->prefix = prefix;
+        }
+
+        /* 17(c)(iii). */
+        if (!IS_EMPTY(ns2->prefix)) {
+            js_AppendChar(&sb, ':');
+            js_AppendJSString(&sb, ns2->prefix);
+        }
+
+        /* 17(d-g). */
+        AppendAttributeValue(cx, &sb, ns2->uri);
     }
 
     /* Step 18: handle point tags. */
