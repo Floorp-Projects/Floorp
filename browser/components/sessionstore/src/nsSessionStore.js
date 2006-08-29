@@ -390,6 +390,10 @@ SessionStoreService.prototype = {
    *        Window reference
    */
   onLoad: function sss_onLoad(aWindow) {
+    // return if window has already been initialized
+    if (aWindow && aWindow.__SSi && this._windows[aWindow.__SSi])
+      return;
+
     var _this = this;
 
     // ignore non-browser windows and windows opened while shutting down
