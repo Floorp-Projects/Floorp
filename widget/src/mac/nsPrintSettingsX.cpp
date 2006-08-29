@@ -45,10 +45,18 @@
 
 #include "plbase64.h"
 #include "prmem.h"
+#include "prnetdb.h"
+
+// This struct should be represented identically on all architectures, and
+// there shouldn't be any padding before the data field.
+struct FrozenHandle {
+  PRUint32 size;
+  char     data[0];
+};
 
 // Constants
 #define PRINTING_PREF_BRANCH            "print."
-#define MAC_OS_X_PAGE_SETUP_PREFNAME    "macosx.pagesetup"
+#define MAC_OS_X_PAGE_SETUP_PREFNAME    "macosx.pagesetup-2"
 
 
 
@@ -318,14 +326,27 @@ NS_IMETHODIMP nsPrintSettingsX::ReadPageFormatFromPrefs()
     return rv;
 
   // decode the base64
-  PRInt32   encodedDataLen = strlen(encodedData.get());
-  char* decodedData = ::PL_Base64Decode(encodedData.get(), encodedDataLen, nsnull);
-  if (!decodedData)
+  PRInt32 encodedDataLen = encodedData.Length();
+  FrozenHandle* frozenHandle =
+   (FrozenHandle*)::PL_Base64Decode(encodedData.get(), encodedDataLen, nsnull);
+  if (!frozenHandle)
     return NS_ERROR_FAILURE;
 
+  PRUint32 handleSize = PR_ntohl(frozenHandle->size);
+
+  // Ensure that the length reported in the frozen handle agrees with the
+  // amount of decoded data.  At most 3 bytes of data map to 4 bytes when
+  // base64-encoded.
+  PRUint32 maximumDataSize = (encodedDataLen * 3) / 4 - sizeof(FrozenHandle);
+  PRUint32 minimumDataSize = maximumDataSize - 2;
+  if (handleSize > maximumDataSize || handleSize < minimumDataSize) {
+    PR_Free(frozenHandle);
+    return NS_ERROR_FAILURE;
+  }
+
   Handle    decodedDataHandle = nsnull;
-  OSErr err = ::PtrToHand(decodedData, &decodedDataHandle, (encodedDataLen * 3) / 4);
-  PR_Free(decodedData);
+  OSErr err = ::PtrToHand(frozenHandle->data, &decodedDataHandle, handleSize);
+  PR_Free(frozenHandle);
   if (err != noErr)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -369,9 +390,25 @@ NS_IMETHODIMP nsPrintSettingsX::WritePageFormatToPrefs()
     
   StHandleOwner   handleOwner(pageFormatHandle);
   StHandleLocker  handleLocker(pageFormatHandle);
-  
+
+  // Save the handle in a struct that identifies the data length and
+  // the data itself, and wrap it all up in base64.  The length must be
+  // included because PL_DecodeBase64 doesn't return the size of the
+  // decoded data, and the handle will need to be reconstructed later with
+  // the correct size.
+  PRUint32 dataSize = ::GetHandleSize(pageFormatHandle);
+  PRUint32 frozenDataSize = sizeof(FrozenHandle) + dataSize;
+  FrozenHandle* frozenHandle = (FrozenHandle*)PR_Malloc(frozenDataSize);
+  if (!frozenHandle)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  frozenHandle->size = PR_htonl(dataSize);
+  memcpy(&frozenHandle->data, *pageFormatHandle, dataSize);
+
   nsXPIDLCString  encodedData;
-  encodedData.Adopt(::PL_Base64Encode(*pageFormatHandle, ::GetHandleSize(pageFormatHandle), nsnull));
+  encodedData.Adopt(::PL_Base64Encode((char*)frozenHandle, frozenDataSize,
+                    nsnull));
+  PR_Free(frozenHandle);
   if (!encodedData.get())
     return NS_ERROR_OUT_OF_MEMORY;
 
