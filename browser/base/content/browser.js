@@ -4282,8 +4282,8 @@ var gHomeButton = {
     // use this if we can't find the pref
     if (!url) {
       var SBS = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
-      var configBundle = SBS.getBundle("resource:/browserconfig.properties");
-      url = configBundle.getString(this.prefDomain);
+      var configBundle = SBS.createBundle("resource:/browserconfig.properties");
+      url = configBundle.GetStringFromName(this.prefDomain);
     }
 
     return url;
