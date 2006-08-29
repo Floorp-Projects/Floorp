@@ -11,15 +11,16 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is TransforMiiX XSLT processor code.
+# The Original Code is the Mozilla build system.
 #
 # The Initial Developer of the Original Code is
-# Axel Hecht.
-# Portions created by the Initial Developer are Copyright (C) 2001
+# the Mozilla Foundation <http://www.mozilla.org/>.
+#
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Axel Hecht <axel@pike.org>
+# Benjamin Smedberg <benjamin@smedbergs.us> (Initial Code)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,58 +36,12 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH           = ../../../..
-topsrcdir       = @top_srcdir@
-srcdir          = @srcdir@
-VPATH           = @srcdir@
+include $(topsrcdir)/config/nspr/build.mk
 
-include $(DEPTH)/config/autoconf.mk
+TIERS += app
 
-MODULE = transformiix
-LIBRARY_NAME = txbase_s
-LIBXUL_LIBRARY = 1
-
-REQUIRES	= string \
-		  xpcom \
-		  $(NULL)
-
-ifndef MOZ_XSLT_STANDALONE
-REQUIRES	+= unicharutil \
-		  dom \
-		  content \
-		  layout \
-		  pref \
-		  widget \
-		  necko \
-		  caps \
-		  xpconnect \
-		  js \
-		  htmlparser \
-		  $(NULL)
-endif
-
-CPPSRCS	= txDouble.cpp \
-	txList.cpp \
-	txExpandedNameMap.cpp \
-	txNamespaceMap.cpp \
-	txURIUtils.cpp
-
-ifdef MOZ_XSLT_STANDALONE
-CPPSRCS += txSimpleErrorObserver.cpp \
-	txStringUtils.cpp \
-	txAtoms.cpp
-endif
-
-# we don't want the shared lib, but we want to force the creation of a
-# static lib.
-FORCE_STATIC_LIB = 1
-
-include $(topsrcdir)/config/rules.mk
-
-INCLUDES += \
-	-I$(srcdir)/../../public \
-	-I$(srcdir) \
-	-I$(srcdir)/../xml \
-	-I$(srcdir)/../xpath \
-	-I$(srcdir)/../xslt \
+tier_app_dirs += \
+	modules/libbz2 \
+	modules/libmar \
+	other-licenses/bsdiff \
 	$(NULL)

@@ -1678,7 +1678,7 @@ if test -n "$MOZ_SUNBIRD"; then
     add_makefiles "$MAKEFILES_sunbird"
 fi
 
-if test "$MOZ_BUILD_APP" = "macbrowser"; then
+if test "$MOZ_BUILD_APP" = "camino"; then
     add_makefiles "$MAKEFILES_macbrowser"
 fi
 

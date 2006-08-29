@@ -4103,12 +4103,16 @@ MOZ_ARG_ENABLE_STRING(application,
                             composer
                             calendar (Sunbird)
                             xulrunner
-                            macbrowser (Camino)
+                            camino
                             content/xslt (Standalone Transformiix XSLT)
                             tools/update-packaging (AUS-related packaging tools)
                             standalone (use this for standalone
                               xpcom/xpconnect or to manually drive a build)],
 [ MOZ_BUILD_APP=$enableval ] )
+
+if test "$MOZ_BUILD_APP" == "macbrowser"; then
+    MOZ_BUILD_APP=camino
+fi
 
 case "$MOZ_BUILD_APP" in
 minimo)
@@ -4366,7 +4370,7 @@ xulrunner)
   fi
   ;;
 
-macbrowser) 
+camino) 
   MOZ_APP_NAME=mozilla
   _PLATFORM_DEFAULT_TOOLKIT=cocoa
   ENABLE_TESTS=

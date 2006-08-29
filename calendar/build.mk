@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,14 +11,16 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is the Mozilla build system.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# the Mozilla Foundation <http://www.mozilla.org/>.
+#
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+# Benjamin Smedberg <benjamin@smedbergs.us> (Initial Code)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,32 +36,11 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ..
-topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
-srcdir		= @srcdir@
+ifdef MOZ_BRANDING_DIRECTORY
+tier_app_dirs += $(MOZ_BRANDING_DIRECTORY)
+endif
 
-include $(DEPTH)/config/autoconf.mk
-
-#
-# Normally DIRS should contain all sub-dirs, but this
-# directory was built to organize code rather than to
-# reflect build order.
-#
-# Thus on the first pass we build the core classes and the
-# top-level Makefile will control the order of subsequent
-# directories by going directly into the specific directories
-#
-# The proper way to do this would be to introduce different
-# stages into the java code build cycle, but that has the
-# potential to introduce too many changes
-#
-# This is necessary to break circular dependencies the logical
-# tree directory structure would otherwise introduce.
-#
-# See top-level makefile for details
-#
-
-DIRS		= src/fdlibm src
-
-include $(topsrcdir)/config/rules.mk
+tier_app_dirs += \
+	calendar \
+	calendar\sunbird \
+	$(NULL)

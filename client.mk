@@ -64,7 +64,7 @@
 #     composer (standalone composer, aka NVU)
 #     calendar (aka Sunbird, use this to build the calendar extensions also)
 #     xulrunner
-#     macbrowser (aka Camino)
+#     camino
 #
 # Other common MOZ_CO_MODULE options include the following:
 #   mozilla/other-licenses/libart_lgpl
@@ -111,7 +111,7 @@ AVAILABLE_PROJECTS = \
   composer \
   calendar \
   xulrunner \
-  macbrowser \
+  camino \
   $(NULL)
 
 # Trailing / on top-level mozilla dir required to stop fast-update thinking
@@ -352,17 +352,17 @@ BOOTSTRAP_xulrunner :=                          \
   mozilla/xulrunner/config/mozconfig            \
   $(NULL)
 
-MODULES_NS_macbrowser :=                        \
+MODULES_NS_camino :=                            \
   $(MODULES_NS_toolkit)                         \
   $(NULL)
 
-MODULES_macbrowser :=                           \
+MODULES_camino :=                               \
   $(MODULES_core)                               \
   mozilla/camino                                \
   mozilla/themes                                \
   $(NULL)
 
-BOOTSTRAP_macbrowser :=                         \
+BOOTSTRAP_camino :=                             \
   $(BOOTSTRAP_toolkit)                          \
   mozilla/camino/config/mozconfig               \
   $(NULL)
@@ -486,6 +486,7 @@ include $(TOPSRCDIR)/build/unix/modules.mk
 # Options that may come from mozconfig
 
 MOZ_PROJECT_LIST := $(subst $(comma), ,$(MOZ_CO_PROJECT))
+MOZ_PROJECT_LIST := $(subst macbrowser,camino,$(MOZ_PROJECT_LIST))
 
 ifneq (,$(filter-out $(AVAILABLE_PROJECTS),$(MOZ_PROJECT_LIST)))
 $(error MOZ_CO_PROJECT contains an unrecognized project.)
