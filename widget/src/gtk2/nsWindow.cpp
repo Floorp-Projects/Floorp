@@ -4825,24 +4825,51 @@ nsChildWindow::~nsChildWindow()
 #ifdef USE_XIM
 
 void
+nsWindow::IMEInitData(void)
+{
+    NS_ASSERTION(!mIMEData, "This window was already initialized.");
+    nsWindow *win = IMEGetOwningWindow();
+    if (!win)
+        return;
+    mIMEData = win->mIMEData;
+    if (!mIMEData)
+        return;
+    mIMEData->mRefCount++;
+}
+
+void
+nsWindow::IMEReleaseData(void)
+{
+    if (!mIMEData)
+        return;
+
+    mIMEData->mRefCount--;
+    if (mIMEData->mRefCount != 0)
+        return;
+
+    delete mIMEData;
+    mIMEData = nsnull;
+}
+
+void
 nsWindow::IMEDestroyContext(void)
 {
     if (!mIMEData || mIMEData->mOwner != this) {
-        // This nsWindow is not the owner of the instance of mIMEData,
-        // we should only clear reference to this.
+        // This nsWindow is not the owner of the instance of mIMEData.
         if (IMEComposingWindow() == this)
             CancelIMEComposition();
         if (gIMEFocusWindow == this)
             gIMEFocusWindow = nsnull;
+        IMEReleaseData();
         return;
     }
 
     /* NOTE:
      * This nsWindow is the owner of the instance of mIMEData,
-     * so, we must free the instance now. But that was referred from other
-     * nsWindows.(They are children of this.) But we don't need to worry about
-     * this issue. Because this function is only called on destroying this
-     * nsWindow. So, the children of this window should already be destroyed.
+     * so, we must release the contexts now. But that might be referred from
+     * other nsWindows.(They are children of this. But we don't know why there
+     * are the cases.) So, we need to clear the pointers that refers to contexts
+     * and this if the other referrers are still alive. See bug 349727.
      */
 
     // If this is the focus window and we have an IM context we need
@@ -4853,29 +4880,30 @@ nsWindow::IMEDestroyContext(void)
         gIMEFocusWindow = nsnull;
     }
 
+    mIMEData->mOwner   = nsnull;
+    mIMEData->mEnabled = PR_FALSE;
+
     if (mIMEData->mContext) {
         gtk_im_context_set_client_window(mIMEData->mContext, nsnull);
         g_object_unref(G_OBJECT(mIMEData->mContext));
+        mIMEData->mContext = nsnull;
     }
 
     if (mIMEData->mDummyContext) {
         gtk_im_context_set_client_window(mIMEData->mDummyContext, nsnull);
         g_object_unref(G_OBJECT(mIMEData->mDummyContext));
+        mIMEData->mDummyContext = nsnull;
     }
 
-    delete mIMEData;
-    mIMEData = nsnull;
+    IMEReleaseData();
 }
 
 void
 nsWindow::IMESetFocus(void)
 {
     // Initialize mIMEData for this window
-    if (!mIMEData) {
-      nsWindow *win = IMEGetOwningWindow();
-      if (win)
-        mIMEData = win->mIMEData;
-    }
+    if (!mIMEData)
+        IMEInitData();
 
     LOGIM(("IMESetFocus %p\n", (void *)this));
     GtkIMContext *im = IMEGetContext();

@@ -268,6 +268,8 @@ public:
     static guint32     mLastButtonReleaseTime;
 
 #ifdef USE_XIM
+    void               IMEInitData       (void);
+    void               IMEReleaseData    (void);
     void               IMEDestroyContext (void);
     void               IMESetFocus       (void);
     void               IMELoseFocus      (void);
@@ -309,8 +311,11 @@ public:
         // mComposingWindow to commit or reset the composition.
         nsWindow           *mComposingWindow;
         // Owner of this struct.
-        // The owner window must free this instance at destroying.
+        // The owner window must release the contexts at destroying.
         nsWindow           *mOwner;
+        // The reference counter. When this will be zero by the decrement,
+        // the decrementer must free the instance.
+        PRUint32           mRefCount;
         // IME enabled state in this window.
         PRPackedBool       mEnabled;
         nsIMEData(nsWindow* aOwner) {
@@ -318,6 +323,7 @@ public:
             mDummyContext    = nsnull;
             mComposingWindow = nsnull;
             mOwner           = aOwner;
+            mRefCount        = 1;
             mEnabled         = PR_TRUE;
         }
     };
