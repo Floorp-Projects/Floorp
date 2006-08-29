@@ -50,6 +50,10 @@ ifdef MOZ_BRANDING_DIRECTORY
 tier_app_dirs += $(MOZ_BRANDING_DIRECTORY)
 endif
 
+# TODO: remove this, since it's only needed by confused tinderbox and
+# packaging scripts.
+tier_app_dirs += xpfe/bootstrap
+
 tier_app_dirs += \
 	embedding/config \
 	camino \
