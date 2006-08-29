@@ -1208,7 +1208,8 @@ SessionStoreService.prototype = {
       }
     }
     if (winData._closedTabs && (root._firstTabs || aOverwriteTabs)) {
-      this._windows[aWindow.__SSi]._closedTabs = winData._closedTabs;
+      //XXXzeniko remove the slice call as soon as _closedTabs instanceof Array
+      this._windows[aWindow.__SSi]._closedTabs = winData._closedTabs.slice();
     }
     
     this.restoreHistoryPrecursor(aWindow, winData.tabs, (aOverwriteTabs ?
