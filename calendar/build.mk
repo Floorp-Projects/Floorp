@@ -36,6 +36,12 @@
 #
 # ***** END LICENSE BLOCK *****
 
+ifndef LIBXUL_SDK
+include $(topsrcdir)/toolkit/toolkit-tiers.mk
+endif
+
+TIERS += app
+
 ifdef MOZ_BRANDING_DIRECTORY
 tier_app_dirs += $(MOZ_BRANDING_DIRECTORY)
 endif
