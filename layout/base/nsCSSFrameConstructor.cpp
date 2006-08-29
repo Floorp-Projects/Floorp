@@ -1120,6 +1120,9 @@ public:
   // Whether the parent is a block (see ProcessChildren's aParentIsBlock)
   PRBool                    mCreatorIsBlock;
 
+  // The root box, if any.
+  nsIRootBox* mRootBox;
+
   // Constructor
   // Use the passed-in history state.
   nsFrameConstructorState(nsIPresShell*          aPresShell,
@@ -1176,6 +1179,8 @@ public:
    *        positioned
    * @param aCanBeFloated pass false if the frame isn't allowed to be
    *        floated
+   * @param aIsOutOfFlowPopup pass true if the frame is an out-of-flow popup
+   *        (XUL-only)
    * @throws NS_ERROR_OUT_OF_MEMORY if it happens.
    * @note If this method throws, that means that aNewFrame was not inserted
    *       into any frame lists.  Furthermore, this method will handle cleanup
@@ -1189,7 +1194,8 @@ public:
                     nsStyleContext* aStyleContext,
                     nsIFrame* aParentFrame,
                     PRBool aCanBePositioned = PR_TRUE,
-                    PRBool aCanBeFloated = PR_TRUE);
+                    PRBool aCanBeFloated = PR_TRUE,
+                    PRBool aIsOutOfFlowPopup = PR_FALSE);
 
   // Push an nsIAnonymousContentCreator and its insertion node
   void PushAnonymousContentCreator(nsIFrame *aCreator,
@@ -1226,7 +1232,8 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
     mPseudoFrames(),
     mAnonymousCreator(nsnull),
     mInsertionContent(nsnull),
-    mCreatorIsBlock(PR_FALSE)
+    mCreatorIsBlock(PR_FALSE),
+    mRootBox(nsIRootBox::GetRootBox(aPresShell))
 {
 }
 
@@ -1245,7 +1252,8 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
     mPseudoFrames(),
     mAnonymousCreator(nsnull),
     mInsertionContent(nsnull),
-    mCreatorIsBlock(PR_FALSE)
+    mCreatorIsBlock(PR_FALSE),
+    mRootBox(nsIRootBox::GetRootBox(aPresShell))
 {
   mFrameState = aPresShell->GetDocument()->GetLayoutHistoryState();
 }
@@ -1353,7 +1361,8 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
                                   nsStyleContext* aStyleContext,
                                   nsIFrame* aParentFrame,
                                   PRBool aCanBePositioned,
-                                  PRBool aCanBeFloated)
+                                  PRBool aCanBeFloated,
+                                  PRBool aIsOutOfFlowPopup)
 {
   // The comments in GetGeometricParent regarding root table frames
   // all apply here, unfortunately.
@@ -1383,8 +1392,8 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
     }
   }
 
-  if (needPlaceholder) {
-    NS_ASSERTION(frameItems != &aFrameItems,
+  if (needPlaceholder || aIsOutOfFlowPopup) {
+    NS_ASSERTION(frameItems != &aFrameItems || aIsOutOfFlowPopup,
                  "Putting frame in-flow _and_ want a placeholder?");
     nsIFrame* placeholderFrame;
     nsresult rv =
@@ -1415,6 +1424,14 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
                  "In-flow frame has wrong parent");
   }
 #endif
+
+  if (NS_UNLIKELY(aIsOutOfFlowPopup)) {
+    NS_ASSERTION(mRootBox && mRootBox->GetPopupSetFrame(),
+                 "Must have a popup set frame!");
+    return mRootBox->GetPopupSetFrame()->AppendFrames(nsGkAtoms::popupList,
+                                                      aNewFrame);
+
+  }
 
   frameItems->AddChild(aNewFrame);
 
@@ -1871,6 +1888,23 @@ GetChildListNameFor(nsIFrame*       aChildFrame)
       listName = nsLayoutAtoms::absoluteList;
     } else if (NS_STYLE_POSITION_FIXED == disp->mPosition) {
       listName = nsLayoutAtoms::fixedList;
+#ifdef MOZ_XUL
+    } else if (NS_STYLE_DISPLAY_POPUP == disp->mDisplay) {
+      // Out-of-flows that are DISPLAY_POPUP must be kids of the root popup set
+#ifdef DEBUG
+      nsIFrame* parent = aChildFrame->GetParent();
+      if (parent) {
+        nsIPopupSetFrame* popupSet;
+        CallQueryInterface(parent, &popupSet);
+        NS_ASSERTION(popupSet, "Unexpected parent");
+      }
+#endif // DEBUG
+
+      // Return here, because the postcondition for this function actually
+      // fails for this case, since the popups are not in a "real" frame list
+      // in the popup set.
+      return nsGkAtoms::popupList;      
+#endif // MOZ_XUL
     } else {
       NS_ASSERTION(aChildFrame->GetStyleDisplay()->IsFloating(),
                    "not a floated frame");
@@ -1882,8 +1916,8 @@ GetChildListNameFor(nsIFrame*       aChildFrame)
   }
 
   // Verify that the frame is actually in that child list
-  NS_ASSERTION(nsFrameList(aChildFrame->GetParent()->GetFirstChild(listName))
-               .ContainsFrame(aChildFrame), "not in child list");
+  NS_POSTCONDITION(nsFrameList(aChildFrame->GetParent()->GetFirstChild(listName))
+                   .ContainsFrame(aChildFrame), "not in child list");
 
   return listName;
 }
@@ -6373,30 +6407,41 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
         mayBeScrollable = PR_TRUE;
       }
       else if (display->mDisplay == NS_STYLE_DISPLAY_POPUP) {
-        // This is its own frame that derives from
-        // box.
-        isReplaced = PR_TRUE;
-        newFrame = NS_NewMenuPopupFrame(mPresShell, aStyleContext);
-
-        if (aTag == nsXULAtoms::tooltip) {
-          if (aContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::_default,
-                                    nsXULAtoms::_true, eIgnoreCase)) {
-            // Locate the root box and tell it about the tooltip.
-            nsIRootBox* rootBox = nsIRootBox::GetRootBox(mPresShell);
-            if (rootBox)
-              rootBox->SetDefaultTooltip(aContent);
-          }
-        }
-
         // If a popup is inside a menu, then the menu understands the complex
         // rules/behavior governing the cascade of multiple menu popups and can handle
         // having the real popup frame placed under it as a child.  
         // If, however, the parent is *not* a menu frame, then we need to create
         // a placeholder frame for the popup, and then we add the popup frame to the
         // root popup set (that manages all such "detached" popups).
-        nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(aParentFrame));
-        if (!menuFrame)
+        nsIMenuFrame* menuFrame;
+        CallQueryInterface(aParentFrame, &menuFrame);
+        if (!menuFrame) {
+          if (!aState.mRootBox || !aState.mRootBox->GetPopupSetFrame()) {
+            // Just don't create a frame for this popup; we can't do
+            // anything with it, since there is no root popup set.
+            *aHaltProcessing = PR_TRUE;
+            return NS_OK;
+          }
+
+#ifdef DEBUG
+          nsIPopupSetFrame* popupSet;
+          CallQueryInterface(aState.mRootBox->GetPopupSetFrame(), &popupSet);
+          NS_ASSERTION(popupSet, "Unexpected return from GetPopupSetFrame()");
+#endif
           isPopup = PR_TRUE;
+        }
+
+        // This is its own frame that derives from box.
+        newFrame = NS_NewMenuPopupFrame(mPresShell, aStyleContext);
+
+        if (aTag == nsXULAtoms::tooltip) {
+          if (aContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::_default,
+                                    nsXULAtoms::_true, eIgnoreCase)) {
+            // Tell the root box about the tooltip.
+            if (aState.mRootBox)
+              aState.mRootBox->SetDefaultTooltip(aContent);
+          }
+        }
       }
       
       else {
@@ -6439,8 +6484,15 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
     }
 
     // xul does not support absolute positioning
-    nsIFrame* geometricParent = aParentFrame;
-
+    nsIFrame* geometricParent;
+    if (isPopup) {
+      NS_ASSERTION(aState.mRootBox && aState.mRootBox->GetPopupSetFrame(),
+                   "How did we get here?");
+      geometricParent = aState.mRootBox->GetPopupSetFrame();
+    } else {
+      geometricParent = aParentFrame;
+    }
+    
     /*
       nsIFrame* geometricParent = aState.GetGeometricParent(display, aParentFrame);
     */
@@ -6476,57 +6528,14 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       
     }
 
-    // If the frame is a popup, then create a placeholder frame
-#ifdef MOZ_XUL
-    if (isPopup) {
-      nsIFrame* placeholderFrame;
-
-      CreatePlaceholderFrameFor(mPresShell, aState.mPresContext,
-                                aState.mFrameManager, aContent,
-                                newFrame, aStyleContext, aParentFrame,
-                                &placeholderFrame);
-
-      // Locate the root popup set and add ourselves to the popup set's list
-      // of popup frames.
-      nsIRootBox* rootBox = nsIRootBox::GetRootBox(mPresShell);
-      PRBool added = PR_FALSE;
-      if (rootBox) {
-        nsIFrame* popupSetFrame = rootBox->GetPopupSetFrame();
-        NS_ASSERTION(popupSetFrame, "unexpected null pointer");
-        if (popupSetFrame) {
-          nsCOMPtr<nsIPopupSetFrame> popupSet(do_QueryInterface(popupSetFrame));
-          NS_ASSERTION(popupSet, "unexpected null pointer");
-          if (popupSet) {
-            added = PR_TRUE;
-            popupSet->AddPopupFrame(newFrame);
-          }
-        }
-      }
-
-      if (added) {
-        // Add the placeholder frame to the flow
-        aFrameItems.AddChild(placeholderFrame);
-      } else {
-        // Didn't add the popup set frame...  Need to clean up and
-        // just not construct a frame here.
-        aState.mFrameManager->UnregisterPlaceholderFrame(NS_STATIC_CAST(nsPlaceholderFrame*, placeholderFrame));
-        newFrame->Destroy();
-        placeholderFrame->Destroy();
-        *aHaltProcessing = PR_TRUE;
-        return NS_OK;        
-      }
-    } else {
-#endif
-      // Add the new frame to our list of frame items.  Note that we
-      // don't support floating or positioning of XUL frames.
-      rv = aState.AddChild(topFrame, aFrameItems, display, aContent,
-                           aStyleContext, origParentFrame, PR_FALSE, PR_FALSE);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-#ifdef MOZ_XUL
+    // Add the new frame to our list of frame items.  Note that we
+    // don't support floating or positioning of XUL frames.
+    rv = aState.AddChild(topFrame, aFrameItems, display, aContent,
+                         aStyleContext, origParentFrame, PR_FALSE, PR_FALSE,
+                         isPopup);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
-#endif
 
     // Process the child content if requested
     nsFrameItems childItems;
@@ -9852,33 +9861,11 @@ DeletingFrameSubtree(nsFrameManager* aFrameManager,
   for (PRInt32 i = destroyQueue.Count() - 1; i >= 0; --i) {
     nsIFrame* outOfFlowFrame = NS_STATIC_CAST(nsIFrame*, destroyQueue[i]);
 
-#ifdef MOZ_XUL
-    const nsStyleDisplay* display = outOfFlowFrame->GetStyleDisplay();
-    if (display->mDisplay == NS_STYLE_DISPLAY_POPUP) {
-      // Locate the root popup set and remove ourselves from the popup set's list
-      // of popup frames.
-      nsIRootBox* rootBox =
-        nsIRootBox::GetRootBox(aFrameManager->GetPresShell());
-      NS_ASSERTION(rootBox, "unexpected null pointer");
-      if (rootBox) {
-        nsIFrame* popupSetFrame = rootBox->GetPopupSetFrame();
-        NS_ASSERTION(popupSetFrame, "unexpected null pointer");
-        if (popupSetFrame) {
-          nsCOMPtr<nsIPopupSetFrame> popupSet(do_QueryInterface(popupSetFrame));
-          NS_ASSERTION(popupSet, "unexpected null pointer");
-          if (popupSet)
-            popupSet->RemovePopupFrame(outOfFlowFrame);
-        }
-      }
-    } else
-#endif
-    {
-      // Ask the out-of-flow's parent to delete the out-of-flow
-      // frame from the right list.
-      aFrameManager->RemoveFrame(outOfFlowFrame->GetParent(),
-                                 GetChildListNameFor(outOfFlowFrame),
-                                 outOfFlowFrame);
-    }
+    // Ask the out-of-flow's parent to delete the out-of-flow
+    // frame from the right list.
+    aFrameManager->RemoveFrame(outOfFlowFrame->GetParent(),
+                               GetChildListNameFor(outOfFlowFrame),
+                               outOfFlowFrame);
   }
 
   return NS_OK;
@@ -10040,36 +10027,14 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
       frameManager->UnregisterPlaceholderFrame(placeholderFrame);
 
       // Now we remove the out-of-flow frame
-#ifdef MOZ_XUL
-      // Handle XUL popups specially -- they need to be removed from
-      // the root frame
-      const nsStyleDisplay* display = childFrame->GetStyleDisplay();
-      if (display->mDisplay == NS_STYLE_DISPLAY_POPUP) {
-    
-        // Locate the root popup set and remove ourselves from the popup set's list
-        // of popup frames.
-        nsIRootBox* rootBox = nsIRootBox::GetRootBox(mPresShell);
-        if (rootBox) {
-          nsIFrame* popupSetFrame = rootBox->GetPopupSetFrame();
-          if (popupSetFrame) {
-            nsCOMPtr<nsIPopupSetFrame> popupSet(do_QueryInterface(popupSetFrame));
-            if (popupSet)
-              popupSet->RemovePopupFrame(childFrame);
-          }
-        }
-      } else {
-#endif
-        // XXX has to be done first for now: for floats, the block's line list
-        // contains an array of pointers to the placeholder - we have to
-        // remove the float first (which gets rid of the lines
-        // reference to the placeholder and float) and then remove the
-        // placeholder
-        rv = frameManager->RemoveFrame(parentFrame,
-                                       GetChildListNameFor(childFrame),
-                                       childFrame);
-#ifdef MOZ_XUL
-      }
-#endif
+      // XXX has to be done first for now: for floats, the block's line list
+      // contains an array of pointers to the placeholder - we have to
+      // remove the float first (which gets rid of the lines
+      // reference to the placeholder and float) and then remove the
+      // placeholder
+      rv = frameManager->RemoveFrame(parentFrame,
+                                     GetChildListNameFor(childFrame),
+                                     childFrame);
 
       // Remove the placeholder frame first (XXX second for now) (so
       // that it doesn't retain a dangling pointer to memory)
