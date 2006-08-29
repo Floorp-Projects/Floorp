@@ -42,6 +42,7 @@
 #include "gfxFont.h"
 
 #include <pango/pango.h>
+#include <X11/Xft/Xft.h>
 
 class gfxPangoFont : public gfxFont {
 public:
@@ -53,15 +54,19 @@ public:
 
     PangoFontDescription* GetPangoFontDescription() { RealizeFont(); return mPangoFontDesc; }
     PangoContext* GetPangoContext() { RealizeFont(); return mPangoCtx; }
+    XftFont * GetXftFont () { RealizeXftFont (); return mXftFont; }
 
 protected:
     PangoFontDescription *mPangoFontDesc;
     PangoContext *mPangoCtx;
 
+    XftFont * mXftFont;
+
     PRBool mHasMetrics;
     Metrics mMetrics;
 
     void RealizeFont(PRBool force = PR_FALSE);
+    void RealizeXftFont(PRBool force = PR_FALSE);
     void GetSize(const char *aString, PRUint32 aLength, gfxSize& inkSize, gfxSize& logSize);
 };
 
@@ -72,9 +77,7 @@ public:
     virtual ~gfxPangoFontGroup ();
 
     virtual gfxTextRun *MakeTextRun(const nsAString& aString);
-    virtual gfxTextRun *MakeTextRun(const nsACString& aCString) {
-        return MakeTextRun(NS_ConvertASCIItoUTF16(aCString));
-    }
+    virtual gfxTextRun *MakeTextRun(const nsACString& aCString);
 
     gfxPangoFont *GetFontAt(PRInt32 i) {
         return NS_STATIC_CAST(gfxPangoFont*, 
@@ -85,6 +88,32 @@ protected:
     static PRBool FontCallback (const nsAString& fontName,
                                 const nsACString& genericName,
                                 void *closure);
+};
+
+class THEBES_API gfxXftTextRun : public gfxTextRun {
+public:
+    gfxXftTextRun(const nsAString& aString, gfxPangoFontGroup *aFontGroup);
+    gfxXftTextRun(const nsACString& aString, gfxPangoFontGroup *aFontGroup);
+    ~gfxXftTextRun();
+
+    virtual void Draw(gfxContext *aContext, gfxPoint pt);
+    virtual gfxFloat Measure(gfxContext *aContext);
+
+    virtual void SetSpacing(const nsTArray<gfxFloat>& spacingArray);
+    virtual const nsTArray<gfxFloat> *const GetSpacing() const;
+
+private:
+    nsDependentSubstring mWString;
+    nsDependentCSubstring mCString;
+
+    PRBool mIsWide;
+
+    gfxPangoFontGroup *mGroup;
+
+    int mWidth, mHeight;
+
+    nsTArray<gfxFloat> mSpacing;
+    nsTArray<PRInt32>  mUTF8Spacing;
 };
 
 class THEBES_API gfxPangoTextRun : public gfxTextRun {
