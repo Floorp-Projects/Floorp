@@ -607,6 +607,7 @@ CREATE TABLE `versions` (
   `dateapproved` datetime NOT NULL default '0000-00-00 00:00:00',
   `dateupdated` datetime NOT NULL default '0000-00-00 00:00:00',
   `approved` tinyint(1) unsigned NOT NULL default '0',
+  `approvalnotes` text,
   `releasenotes` text,
   `created` datetime NOT NULL default '0000-00-00 00:00:00',
   `modified` datetime NOT NULL default '0000-00-00 00:00:00',
