@@ -203,7 +203,12 @@ enum {
 // Utils
 
 nscoord* lo_parse_coord_list          (char *str, PRInt32* value_cnt);
-nsresult createFrameTraversal         (PRUint32 type, nsPresContext* presContext, nsIBidirectionalEnumerator** outTraversal);
+nsresult createFrameTraversal         (nsPresContext* aPresContext,
+                                       PRInt32 aType,
+                                       PRBool aVisual,
+                                       PRBool aLockInScrollView,
+                                       PRBool aFollowOOFs,
+                                       nsIBidirectionalEnumerator** outTraversal);
 nsresult getEventTargetFromWindow     (nsIDOMWindow* aWindow, nsIDOM3EventTarget** aEventTarget, nsIDOMEventGroup** aSystemGroup);
 void     getContentFromFrame          (nsIContent* c, nsIContent** outContent);
 nsresult getFrameForContent           (nsIContent* aContent, nsIFrame** aFrame);

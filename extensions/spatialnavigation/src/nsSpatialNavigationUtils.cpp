@@ -199,14 +199,18 @@ nscoord* lo_parse_coord_list(char *str, PRInt32* value_cnt)
   return value_list;
 }
 
-nsresult createFrameTraversal(PRUint32 type, nsPresContext* presContext, 
+nsresult createFrameTraversal(nsPresContext* aPresContext,
+                              PRInt32 aType,
+                              PRBool aVisual,
+                              PRBool aLockInScrollView,
+                              PRBool aFollowOOFs,
                               nsIBidirectionalEnumerator** outTraversal)
 {
   nsresult result;
-  if (!presContext)
+  if (!aPresContext)
     return NS_ERROR_FAILURE;    
   
-  nsIPresShell* presShell = presContext->PresShell();
+  nsIPresShell* presShell = aPresContext->PresShell();
   if (!presShell)
     return NS_ERROR_FAILURE;
   
@@ -230,9 +234,8 @@ nsresult createFrameTraversal(PRUint32 type, nsPresContext* presContext,
     return result;
   
   result = trav->NewFrameTraversal(getter_AddRefs(frameTraversal),
-                                   type, 
-                                   presContext, 
-                                   frame);
+                                   aPresContext, frame,
+                                   aType, aVisual, aLockInScrollView, aFollowOOFs);
   if (NS_FAILED(result))
     return result;
   

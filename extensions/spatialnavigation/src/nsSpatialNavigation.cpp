@@ -506,7 +506,12 @@ nsSpatialNavigation::getContentInDirection(int aDirection,
 
   
   nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
-  nsresult result = createFrameTraversal(FOCUS, aPresContext, getter_AddRefs(frameTraversal));  
+  nsresult result = createFrameTraversal(aPresContext,
+                                         ePreOrder,
+                                         PR_FALSE, // aVisual
+                                         PR_FALSE, // aLockInScrollView
+                                         PR_TRUE,  // aFollowOOFs
+                                         getter_AddRefs(frameTraversal));  
   if (NS_FAILED(result))
     return result;
   
@@ -536,8 +541,6 @@ nsSpatialNavigation::getContentInDirection(int aDirection,
 nsresult
 nsSpatialNavigation::handleMove(int direction)
 {
-  PRUint32 type = FOCUS;
-
   nsCOMPtr<nsIContent> focusedContent;
   getFocusedContent(direction, getter_AddRefs(focusedContent));
 

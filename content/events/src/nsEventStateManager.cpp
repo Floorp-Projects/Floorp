@@ -3709,16 +3709,26 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
     aStartFrame = presShell->GetPrimaryFrameFor(aRootContent);
     NS_ENSURE_TRUE(aStartFrame, NS_ERROR_FAILURE);
-    rv = trav->NewFrameTraversal(getter_AddRefs(frameTraversal), FOCUS,
-                                mPresContext, aStartFrame);
+    rv = trav->NewFrameTraversal(getter_AddRefs(frameTraversal),
+                                mPresContext, aStartFrame,
+                                ePreOrder,
+                                PR_FALSE, // aVisual
+                                PR_FALSE, // aLockInScrollView
+                                PR_TRUE   // aFollowOOFs
+                                );
     NS_ENSURE_SUCCESS(rv, rv);
     if (!forward) {
       rv = frameTraversal->Last();
     }
   }
   else {
-    rv = trav->NewFrameTraversal(getter_AddRefs(frameTraversal), FOCUS,
-                                mPresContext, aStartFrame);
+    rv = trav->NewFrameTraversal(getter_AddRefs(frameTraversal),
+                                 mPresContext, aStartFrame,
+                                 ePreOrder,
+                                 PR_FALSE, // aVisual
+                                 PR_FALSE, // aLockInScrollView
+                                 PR_TRUE   // aFollowOOFs
+                                 );
     NS_ENSURE_SUCCESS(rv, rv);
     if (!aStartContent || aStartContent->Tag() != nsHTMLAtoms::area ||
         !aStartContent->IsNodeOfType(nsINode::eHTML)) {
@@ -4872,8 +4882,13 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
                                                              &rv));
           NS_ENSURE_SUCCESS(rv, rv);
 
-          rv = trav->NewFrameTraversal(getter_AddRefs(frameTraversal), LEAF,
-                                       mPresContext, startFrame);
+          rv = trav->NewFrameTraversal(getter_AddRefs(frameTraversal),
+                                       mPresContext, startFrame,
+                                       eLeaf,
+                                       PR_FALSE, // aVisual
+                                       PR_FALSE, // aLockInScrollView
+                                       PR_FALSE  // aFollowOOFs
+                                       );
           NS_ENSURE_SUCCESS(rv, rv);
 
           nsIFrame *newCaretFrame = nsnull;

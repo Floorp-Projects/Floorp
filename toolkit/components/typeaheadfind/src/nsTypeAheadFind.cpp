@@ -1152,7 +1152,13 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
   nsCOMPtr<nsIFrameTraversal> trav(do_CreateInstance(kFrameTraversalCID));
   if (trav)
-    trav->NewFrameTraversal(getter_AddRefs(frameTraversal), LEAF, aPresContext, frame);
+    trav->NewFrameTraversal(getter_AddRefs(frameTraversal),
+                            aPresContext, frame,
+                            eLeaf,
+                            PR_FALSE, // aVisual
+                            PR_FALSE, // aLockInScrollView
+                            PR_FALSE  // aFollowOOFs
+                            );
 
   if (!frameTraversal)
     return PR_FALSE;
