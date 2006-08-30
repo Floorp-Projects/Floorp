@@ -183,9 +183,11 @@ calWcapCachedCalendar.prototype = {
     function( err )
     {
         debugger;
-        var str = this.logError( err );
-        this.notifyObservers( "onError",
-                              [err instanceof Error ? -1 : err, str] );
+        var msg = this.logError(err);
+        this.notifyObservers(
+            "onError",
+            err instanceof Components.interfaces.nsIException
+            ? [err.result, err.message] : [-1, msg] );
     },
     
     // calIWcapCalendar:
@@ -472,7 +474,7 @@ calWcapCachedCalendar.prototype = {
                                     }
                                 }
                                 else {
-                                    throw new Error(
+                                    throw new Components.Exception(
                                         "unexpected operation type! " +
                                         "(expected SYNC)" );
                                 }

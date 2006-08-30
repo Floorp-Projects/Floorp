@@ -131,6 +131,57 @@ function getCalendarManager()
     return g_calendarManager;
 };
 
+var g_bInitedLockedExec = false;
+var g_eventQueueService = null;
+var g_threadManager = null;
+
+/** Locks event dispatching for the current event queue while the passed
+    function is executed.
+    
+    xxx todo: this hinders timeeout events for sync requests
+              to be dispatched!
+*/
+function lockedExec( func )
+{
+    if (!g_bInitedLockedExec) {
+        try {
+            var cl = Components.classes["@mozilla.org/event-queue-service;1"];
+            if (cl) {
+                g_eventQueueService =
+                    cl.getService(Components.interfaces.nsIEventQueueService);
+            }
+        }
+        catch (exc) { // eventQueue has vanished on trunk
+        }
+        if (!g_eventQueueService) {
+            g_threadManager =
+                Components.classes["@mozilla.org/thread-manager;1"]
+                .getService(Components.interfaces.nsIThreadManager);
+        }
+        g_bInitedLockedExec = true;
+    }
+    
+    var queue;
+    if (g_eventQueueService)
+        queue = g_eventQueueService.pushThreadEventQueue();
+    else // we are on trunk using nsIThreadInternal
+        g_threadManager.currentThread.pushEventQueue(null);
+    try {
+        return func();
+    }
+    catch (exc) {
+        if (g_eventQueueService)
+            g_eventQueueService.popThreadEventQueue(queue);
+        else // we are on trunk using nsIThreadInternal
+            g_threadManager.currentThread.popEventQueue();
+        throw exc;
+    }
+    if (g_eventQueueService)
+        g_eventQueueService.popThreadEventQueue(queue);
+    else // we are on trunk using nsIThreadInternal
+        g_threadManager.currentThread.popEventQueue();
+}
+
 var g_wcapBundle = null;
 function getWcapBundle()
 {
@@ -144,6 +195,17 @@ function getWcapBundle()
     return g_wcapBundle;
 }
 
+function getResultCode( exc )
+{
+    return (exc instanceof Components.interfaces.nsIException
+            ? exc.result : exc);
+}
+
+function testResultCode( exc, rc )
+{
+    return (getResultCode(exc) == rc);
+}
+
 function isEvent( item )
 {
     return (item instanceof Components.interfaces.calIEvent);
@@ -151,11 +213,13 @@ function isEvent( item )
 
 function isParent( item )
 {
-    if (item.id != item.parentItem.id)
-        throw new Error("proxy has different id than its parent!");
+    if (item.id != item.parentItem.id) {
+        throw new Components.Exception(
+            "proxy has different id than its parent!");
+    }
     if (item.parentItem.recurrenceId) {
-        throw new Error("parent has recurrenceId: " +
-                        item.parentItem.recurrenceId);
+        throw new Components.Exception("parent has recurrenceId: " +
+                                       item.parentItem.recurrenceId);
     }
     return (!item.recurrenceId);
 }
@@ -260,91 +324,8 @@ function setPref(prefName, value)
         prefBranch.setCharPref(prefName, value);
         break;
     default:
-        throw new Error("unsupported pref value: " + typeof(value));
+        throw new Components.Exception("unsupported pref value: " +
+                                       typeof(value));
     }
 }
-
-function syncExec( func )
-{
-    // xxx todo: how to do better?
-    // possible HACK here, because of lack of sync possibilities:
-    // when we run into executing dialogs, the js runtime
-    // concurrently executes (another getItems() request).
-    // That concurrent request needs to wait for the first login
-    // attempt to finish.
-    // Creating a thread event queue somehow hinders the js engine
-    // from scheduling another js execution.
-    var eventQueueService = null;
-    try {
-        eventQueueService =
-            Components.classes["@mozilla.org/event-queue-service;1"]
-            .getService(Components.interfaces.nsIEventQueueService);
-    }
-    catch (exc) {
-    }
-    if (eventQueueService != null) {
-        var eventQueue = eventQueueService.pushThreadEventQueue();
-        try {
-            func();
-        }
-        catch (exc) {
-            eventQueueService.popThreadEventQueue( eventQueue );
-            throw exc;
-        }
-        eventQueueService.popThreadEventQueue( eventQueue );
-    }
-    else // xxx todo: eventQueue has vanished on TRUNK
-        func();
-}
-
-// // xxx todo: the below code still does not sync properly...
-// function syncExec( func )
-// {
-//     // sync all execution for login to UI thread, using nsIRunnable:
-//     // change from MOZILLA_1_8_BRANCH->TRUNK: probe xxx todo: test
-//     var target = null; // eventQueue or eventTarget
-//     try {
-//         var eventQueueService =
-//             Components.classes["@mozilla.org/event-queue-service;1"]
-//             .getService(Components.interfaces.nsIEventQueueService);
-//         if (eventQueueService != null) {
-//             target = eventQueueService.getSpecialEventQueue(
-//                 Components.interfaces.
-//                 nsIEventQueueService.UI_THREAD_EVENT_QUEUE );
-//         }
-//     }
-//     catch (exc) {
-//         // eventQueue has vanished on TRUNK
-//     }
-//     if (target == null) {
-//         // we are on the TRUNK:
-//         var threadManager = Components.classes["@mozilla.org/thread-manager;1"]
-//                             .getService(Components.interfaces.nsIThreadManager);
-//         target = threadManager.mainThread;
-//     }
-    
-//     var proxyObjectManager =
-//         Components.classes["@mozilla.org/xpcomproxy;1"]
-//         .getService(Components.interfaces.nsIProxyObjectManager);
-//     var proxy = proxyObjectManager.getProxyForObject(
-//         target, Components.interfaces.nsIRunnable,
-//         { // need to implemented QueryInterface, because object param
-//           // is not associated with iid:
-//             QueryInterface:
-//             function( iid ) {
-//                 if (Components.interfaces.nsIRunnable.equals(iid) ||
-//                     Components.interfaces.nsISupports.equals(iid))
-//                     return this;
-//                 throw Components.results.NS_ERROR_NO_INTERFACE;
-//             },
-//             // nsIRunnable:
-//             run:
-//             function() {
-//                 func();
-//             }
-//         },
-//         Components.interfaces.nsIProxyObjectManager.INVOKE_SYNC );
-//     // xxx todo: are rc/exceptions forwarded to current thread?
-//     proxy.run();
-// }
 

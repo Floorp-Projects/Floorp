@@ -60,6 +60,9 @@ var CACHE = "off";
 // denotes where to host local storage calendar(s)
 var CACHE_DIR = null;
 
+// timeout for sync network requests (in secs):
+var SYNC_REQUESTS_TIMEOUT = 10;
+
 // logging:
 #expand var LOG_LEVEL = __LOG_LEVEL__;
 var LOG_TIMEZONE = null;
@@ -91,6 +94,9 @@ function initWcapProvider()
         g_busyItemTitle = getWcapBundle().GetStringFromName(
             "busyItem.title.text");
         g_busyPhantomItemUuidPrefix = ("PHANTOM_uuid" + getTime().icalString);
+        
+        SYNC_REQUESTS_TIMEOUT = getPref(
+            "calendar.wcap.sync_request_timeout", 10);
         
         LOG_TIMEZONE = getPref("calendar.timezone.local", null);
         
@@ -166,7 +172,7 @@ function initWcapProvider()
     }
 }
 
-var calWcapCalendarModule = {
+var calWcapCalendarModule = { // nsIModule:
     
     WcapCalendarInfo: {
         classDescription: "Sun Java System Calendar Server WCAP Provider",
@@ -195,6 +201,16 @@ var calWcapCalendarModule = {
             this.WcapSessionInfo.classDescription,
             this.WcapSessionInfo.contractID,
             fileSpec, location, type );
+    },
+    
+    unregisterSelf:
+    function( compMgr, fileSpec, location ) {
+        compMgr = compMgr.QueryInterface(
+            Components.interfaces.nsIComponentRegistrar );
+        compMgr.unregisterFactoryLocation(
+            this.WcapCalendarInfo.classID, fileSpec );
+        compMgr.unregisterFactoryLocation(
+            this.WcapSessionInfo.classID, fileSpec );
     },
     
     m_scriptsLoaded: false,
@@ -230,9 +246,9 @@ var calWcapCalendarModule = {
         if (!iid.equals( Components.interfaces.nsIFactory ))
             throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
         
-        return {
-            createInstance:
-            function( outer, iid ) {
+        return { // nsIFactory:
+            lockFactory: function( lock ) {},
+            createInstance: function( outer, iid ) {
                 if (outer != null)
                     throw Components.results.NS_ERROR_NO_AGGREGATION;
                 var session = new calWcapSession();

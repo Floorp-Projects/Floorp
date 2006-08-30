@@ -355,11 +355,12 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
         //           undefined, assume an allDay todo???
         dtstart = item.entryDate;
         dtend = item.dueDate;
-        if (dtend) {
-            url += ("&due=" + getIcalUTC(dtend));
-//         url += ("&X-NSCP-DUE-TZID=" + encodeURIComponent(
-//                     this.getAlignedTimezone(dtend.timezone)));
-        }
+        url += ("&due=" + getIcalUTC(dtend));
+//         if (dtend) {
+//             url += ("&X-NSCP-DUE-TZID=" + encodeURIComponent(
+//                         this.getAlignedTimezone(dtend.timezone)));
+//         }
+        
         bIsAllDay = (dtstart && dtstart.isDate);
         if (item.isCompleted)
             url += "&percent=100";
@@ -383,10 +384,10 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
     if (bIsAllDay)
         url += "&isAllDay=1";
     
+    url += ("&dtstart=" + getIcalUTC(dtstart));
     if (dtstart) {
         // important to provide tz info with entry date for proper
         // occurrence calculation (daylight savings)
-        url += ("&dtstart=" + getIcalUTC(dtstart));
         // xxx todo: setting X-NSCP-tz does not work.
         //           i.e. for now no separate tz for start/end.
 //     url += ("&X-NSCP-DTSTART-TZID=" +
@@ -396,6 +397,10 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
                     this.getAlignedTimezone(dtstart.timezone)));
     }
     
+    // xxx todo: alarm mimic of todos currently different:
+    //           WCAP offsets relate to DUE
+    if (bIsEvent) {
+
     // alarm support:
     var alarmStart = item.alarmOffset;
     if (alarmStart) {
@@ -422,19 +427,16 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
 //             this.log( "setting default alarm start: " + alarmStart.icalString );
 //         }
 //     }
-    url += "&alarmStart=";
     if (alarmStart) {
         // minimal alarm server support: Alarms are currently off by default,
         // so let server at least send reminder eMails...
-        url += alarmStart.icalString;
-        url += "&alarmEmails=";
+        var emails = "";
         if (item.hasProperty("alarmEmailAddress"))
-            url += encodeURIComponent( item.getProperty("alarmEmailAddress") );
+            emails = encodeURIComponent(item.getProperty("alarmEmailAddress"));
         else {
             var ar = this.session.getUserPreferences(
                 "X-NSCP-WCAP-PREF-ceDefaultAlarmEmail", {});
             if (ar.length > 0 && ar[0].length > 0) {
-                var emails = "";
                 for each ( var i in ar ) {
                     var ars = i.split(/[;,]/);
                     for each ( var j in ars ) {
@@ -446,20 +448,21 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
                         }
                     }
                 }
-                url += emails;
-                url += "&alarmPopup=";
-            }
-            else {
-                // xxx todo: popup exor emails can be currently specified...
-                url += ("&alarmPopup=" + alarmStart.icalString);
             }
         }
+        url += ("&alarmStart=" + alarmStart.icalString);
+        url += ("&alarmEmails=" + emails);
+        url += "&alarmPopup=";
+        if (emails.length == 0)
+            url += alarmStart.icalString;
         // xxx todo: missing: alarm triggers for flashing, etc.
     }
     else {
         // clear popup, emails:
-        url += "&alarmPopup=&alarmEmails=";
+        url += "&alarmStart=&alarmPopup=&alarmEmails=";
     }
+
+    } // if (bIsEvent)
     
     // xxx todo: however, sometimes socs just returns an empty calendar when
     //           nothing or only optional props like attendee ROLE has changed,
@@ -506,7 +509,7 @@ calWcapCalendar.prototype.adoptItem_resp = function( wcapResponse, listener )
             Components.interfaces.calICalendar.ITEM_FILTER_ALL_ITEMS,
             0, null, null );
         if (items.length < 1)
-            throw new Error("empty VCALENDAR returned!");
+            throw new Components.Exception("empty VCALENDAR returned!");
         if (items.length > 1)
             this.notifyError( "unexpected number of items: " + items.length );
         item = items[0];
@@ -535,9 +538,13 @@ calWcapCalendar.prototype.adoptItem_resp = function( wcapResponse, listener )
 calWcapCalendar.prototype.adoptItem = function( item, listener )
 {
     this.log( "adoptItem() call: " + item.title );
-    if (this.readOnly)
-        throw Components.interfaces.calIErrors.CAL_IS_READONLY;
     try {
+        if (this.readOnly) {
+            throw new Components.Exception(
+                "Calendar is read-only.",
+                Components.interfaces.calIErrors.CAL_IS_READONLY );
+        }
+        
         // xxx todo: workaround really necessary for adding an occurrence?
         var oldItem = null;
         if (!isParent(item)) {
@@ -583,7 +590,7 @@ calWcapCalendar.prototype.modifyItem_resp = function(
             Components.interfaces.calICalendar.ITEM_FILTER_ALL_ITEMS,
             0, null, null );
         if (items.length < 1)
-            throw new Error("empty VCALENDAR returned!");
+            throw new Components.Exception("empty VCALENDAR returned!");
         if (items.length > 1)
             this.notifyError( "unexpected number of items: " + items.length );
         item = items[0];
@@ -610,13 +617,15 @@ calWcapCalendar.prototype.modifyItem_resp = function(
 
 calWcapCalendar.prototype.modifyItem = function( newItem, oldItem, listener )
 {
-    this.log( "modifyItem() call: " + newItem.id );
-    if (this.readOnly)
-        throw Components.interfaces.calIErrors.CAL_IS_READONLY;
-    
+    this.log( "modifyItem() call: " + newItem.id );    
     try {
+        if (this.readOnly) {
+            throw new Components.Exception(
+                "Calendar is read-only.",
+                Components.interfaces.calIErrors.CAL_IS_READONLY );
+        }
         if (!newItem.id)
-            throw new Error("new item has no id!");
+            throw new Components.Exception("new item has no id!");
         
         var this_ = this;
         this.storeItem(
@@ -673,11 +682,14 @@ calWcapCalendar.prototype.deleteItem_resp = function(
 calWcapCalendar.prototype.deleteItem = function( item, listener )
 {
     this.log( "deleteItem() call: " + item.id );
-    if (this.readOnly)
-        throw Components.interfaces.calIErrors.CAL_IS_READONLY;
     try {
+        if (this.readOnly) {
+            throw new Components.Exception(
+                "Calendar is read-only.",
+                Components.interfaces.calIErrors.CAL_IS_READONLY );
+        }
         if (item.id == null)
-            throw new Error("no item id!");
+            throw new Components.Exception("no item id!");
         
         var url = this.session.getCommandUrl(
             isEvent(item) ? "deleteevents_by_id" : "deletetodos_by_id" );
@@ -777,12 +789,13 @@ calWcapCalendar.prototype.parseItems = function(
                         }
                     break;
                 }
-                if (item &&
-                    item.alarmOffset && !item.entryDate && !item.dueDate) {
-                    // xxx todo: loss on roundtrip
-                    this_.log( "app currently does not support " +
-                               "absolute alarm trigger datetimes. " +
-                               "Removing alarm from item: " + item.title );
+//                 if (item &&
+//                     item.alarmOffset && !item.entryDate && !item.dueDate) {
+//                     // xxx todo: loss on roundtrip
+//                     this_.log( "app currently does not support " +
+//                                "absolute alarm trigger datetimes. " +
+//                                "Removing alarm from item: " + item.title );
+                if (item) { // xxx todo: todo alarms currently off
                     item.alarmOffset = null;
                     item.alarmLastAck = null;
                 }
@@ -865,7 +878,7 @@ calWcapCalendar.prototype.parseItems = function(
     for each ( var item in excItems ) {
         var parent = uid2parent[item.id];
         if (parent == null) {
-            this.logError( "getItems_resp(): no parent item for rid=" +
+            this.logError( "parseItems(): no parent item for rid=" +
                            item.recurrenceId );
         }
         else {
@@ -931,7 +944,7 @@ calWcapCalendar.prototype.getItem = function( id, listener )
                 Components.interfaces.calICalendar.ITEM_FILTER_ALL_ITEMS,
                 1, null, null );
             if (items.length < 1)
-                throw new Error("no such item!");
+                throw new Components.Exception("no such item!");
             if (items.length > 1) {
                 this_.notifyError(
                     "unexpected number of items: " + items.length );
@@ -941,7 +954,7 @@ calWcapCalendar.prototype.getItem = function( id, listener )
                 listener.onGetResult(
                     this_.superCalendar, Components.results.NS_OK,
                     Components.interfaces.calIItemBase,
-                    this_.log( "getItems_resp(): success." ),
+                    this_.log( "getItem(): success." ),
                     items.length, items );
                 listener.onOperationComplete(
                     this_.superCalendar, Components.results.NS_OK,
@@ -988,8 +1001,8 @@ calWcapCalendar.prototype.getItems_resp = function(
         var exc = wcapResponse.exception;
         // check  whether access is denied,
         // then show free-busy information instead:
-        if (exc && (exc == Components.interfaces.
-                           calIWcapErrors.WCAP_ACCESS_DENIED_TO_CALENDAR)) {
+        if (testResultCode( exc, Components.interfaces.
+                            calIWcapErrors.WCAP_ACCESS_DENIED_TO_CALENDAR)) {
             if (listener != null) {
                 var this_ = this;
                 var freeBusyListener = { // calIWcapFreeBusyListener:
@@ -1048,7 +1061,7 @@ calWcapCalendar.prototype.getItems_resp = function(
         if (listener != null) {
             listener.onGetResult( this.superCalendar, Components.results.NS_OK,
                                    Components.interfaces.calIItemBase,
-                                   this.log( "getItems_resp(): success." ),
+                                   this.log( "getItems(): success." ),
                                    items.length, items );
             listener.onOperationComplete(
                 this.superCalendar, Components.results.NS_OK,
@@ -1149,7 +1162,8 @@ calWcapCalendar.prototype.getItems = function(
                 Components.interfaces.calIOperationListener.GET,
                 null, exc );
         }
-        if (exc == Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED) {
+        if (testResultCode(exc, Components.interfaces.
+                           calIWcapErrors.WCAP_LOGIN_FAILED)) {
             // silently ignore login failed, no calIObserver UI:
             this.log( "getItems_resp() ignored: " + errorToString(exc) );
         }
@@ -1211,14 +1225,16 @@ FinishListener.prototype = {
         }
         else if (this.m_opType != opType) {
             this.m_syncState.abort(
-                new Error("unexpected operation type: " + opType) );
+                new Components.Exception("unexpected operation type: " +
+                                         opType) );
         }
         this.m_syncState.release();
     },
     onGetResult:
     function( calendar, status, itemType, detail, count, items )
     {
-        this.m_syncState.abort( new Error("unexpected onGetResult()!") );
+        this.m_syncState.abort(
+            new Components.Exception("unexpected onGetResult()!") );
     }
 };
 

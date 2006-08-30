@@ -78,8 +78,11 @@ WcapResponse.prototype = {
 
 function stringToIcal( data )
 {
-    if (!data || data == "") // assuming time-out
-        throw Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED;
+    if (!data || data == "") { // assuming time-out
+        throw new Components.Exception(
+            "Login failed. Invalid session ID.",
+            Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED );
+    }
     var icalRootComp = getIcsService().parseICS( data );
     checkWcapIcalErrno( icalRootComp );
     return icalRootComp;
@@ -87,8 +90,11 @@ function stringToIcal( data )
 
 function stringToXml( data )
 {
-    if (!data || data == "") // assuming time-out
-        throw Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED;
+    if (!data || data == "") { // assuming time-out
+        throw new Components.Exception(
+            "Login failed. Invalid session ID.",
+            Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED );
+    }
     var xml = getDomParser().parseFromString( data, "text/xml" );
     checkWcapXmlErrno( xml );
     return xml;
@@ -185,7 +191,21 @@ function issueSyncRequest( url, receiverFunc, bLogging )
     var channel = getIoService().newChannel(
         url, "" /* charset */, null /* baseURI */ );
     channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
+    
+    var timer = Components.classes["@mozilla.org/timer;1"]
+                .createInstance(Components.interfaces.nsITimer);
+    timer.initWithCallback(
+        { // nsITimerCallback:
+            notify: function( timer_ ) {
+                        if (channel.isPending())
+                            channel.cancel(NS_BINDING_FAILED);
+                    }
+        },
+        SYNC_REQUESTS_TIMEOUT * 1000,
+        Components.interfaces.nsITimer.TYPE_ONE_SHOT );
     var stream = channel.open();
+    timer.cancel();
+    
     var status = channel.status;
     if (status == Components.results.NS_OK) {
         var charset = channel.contentCharset;
@@ -205,7 +225,11 @@ function issueSyncRequest( url, receiverFunc, bLogging )
         logMessage( "issueSyncRequest( \"" + url + "\" )",
                     "failed: " + status );
     }
-    throw status;
+    
+    throw new Components.Exception(
+        bLogging ? ("issueSyncRequest( \"" + url + "\" ) failed.")
+                 : "issueSyncRequest() failed.",
+        status );
 }
 
 function issueSyncXMLRequest( url, receiverFunc, bLogging )

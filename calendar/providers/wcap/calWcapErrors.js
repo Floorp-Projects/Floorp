@@ -37,10 +37,90 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+//
+// Common netwerk errors:
+//
+const NS_ERROR_MODULE_BASE_OFFSET = 0x45;
+const NS_ERROR_MODULE_NETWORK = 6;
+
+function generateFailure(module, code) {
+    return ((1<<31) | ((module + NS_ERROR_MODULE_BASE_OFFSET) << 16) | code);
+}
+
+function generateNetFailure(code) {
+    return generateFailure(NS_ERROR_MODULE_NETWORK, code);
+}
+
+function getErrorModule( rc ) {
+    return (((rc >>> 16) & 0x7fff) - NS_ERROR_MODULE_BASE_OFFSET);
+}
+
 // Cannot perform operation, because user is offline.
-// This has been taken from netwerk/base/public/nsNetError.h
+// The following error codes have been adopted from
+// netwerk/base/public/nsNetError.h
 // and ought to be defined in IDL. xxx todo
-const NS_ERROR_OFFLINE = ((1<<31) | ((6+0x45)<<16) | 16);
+
+// The requested action could not be completed while the networking
+// is in the offline state.
+const NS_ERROR_OFFLINE = generateNetFailure(16);
+
+// The async request failed for some unknown reason.
+const NS_BINDING_FAILED = generateNetFailure(1);
+
+const g_nsNetErrorCodes = [
+    NS_BINDING_FAILED,
+    "The async request failed for some unknown reason.",
+    /*NS_BINDING_ABORTED*/ generateNetFailure(2),
+    "The async request failed because it was aborted by some user action.",
+    /*NS_ERROR_MALFORMED_URI*/ generateNetFailure(10),
+    "The URI is malformed.",
+    /*NS_ERROR_UNKNOWN_PROTOCOL*/ generateNetFailure(18),
+    "The URI scheme corresponds to an unknown protocol handler.",
+    /*NS_ERROR_CONNECTION_REFUSED*/ generateNetFailure(13),
+    "The connection attempt failed, for example, because no server was listening at specified host:port.",
+    /*NS_ERROR_PROXY_CONNECTION_REFUSED*/ generateNetFailure(72),
+    "The connection attempt to a proxy failed.",
+    /*NS_ERROR_NET_TIMEOUT*/ generateNetFailure(14),
+    "The connection was lost due to a timeout error.",
+    NS_ERROR_OFFLINE,
+    "The requested action could not be completed while the networking library is in the offline state.",
+    /*NS_ERROR_PORT_ACCESS_NOT_ALLOWED*/ generateNetFailure(19),
+    "The requested action was prohibited because it would have caused the networking library to establish a connection to an unsafe or otherwise banned port.",
+    /*NS_ERROR_NET_RESET*/ generateNetFailure(20),
+    "The connection was established, but no data was ever received.",
+    /*NS_ERROR_NET_INTERRUPT*/ generateNetFailure(71),
+    "The connection was established, but the data transfer was interrupted.",
+    /*NS_ERROR_NOT_RESUMABLE*/ generateNetFailure(25),
+    "This request is not resumable, but it was tried to resume it, or to request resume-specific data.",
+    /*NS_ERROR_ENTITY_CHANGED*/ generateNetFailure(32),
+    "It was attempted to resume the request, but the entity has changed in the meantime.",
+    /*NS_ERROR_REDIRECT_LOOP*/ generateNetFailure(31),
+    "The request failed as a result of a detected redirection loop.",
+    /*NS_ERROR_UNKNOWN_HOST*/ generateNetFailure(30),
+    "The lookup of a hostname failed. This generally refers to the hostname from the URL being loaded.",
+    /*NS_ERROR_UNKNOWN_PROXY_HOST*/ generateNetFailure(42),
+    "The lookup of a proxy hostname failed.",
+    /*NS_ERROR_UNKNOWN_SOCKET_TYPE*/ generateNetFailure(51),
+    "The specified socket type does not exist.",
+    /*NS_ERROR_SOCKET_CREATE_FAILED*/ generateNetFailure(52),
+    "The specified socket type could not be created."
+    ];
+
+function netErrorToString( rc )
+{
+    if (getErrorModule(rc) == NS_ERROR_MODULE_NETWORK) {
+        var i = 0;
+        while (i < g_nsNetErrorCodes.length) {
+            // rc is kept unsigned, our generated code signed,
+            // so == won't work here:
+            if ((g_nsNetErrorCodes[i] ^ rc) == 0)
+                return g_nsNetErrorCodes[i + 1];
+            i += 2;
+        }
+    }
+    throw Components.results.NS_ERROR_INVALID_ARG;
+}
+
 
 //
 // WCAP error handling helpers
@@ -181,34 +261,6 @@ function wcapErrorToString( rc )
     throw Components.results.NS_ERROR_INVALID_ARG;
 }
 
-function errorToString( err )
-{
-    if (typeof(err) == "string")
-        return err;
-    if (err instanceof Error)
-        return err.message;
-    switch (err) {
-    case NS_ERROR_OFFLINE:
-        return "NS_ERROR_OFFLINE";
-        // xxx todo: there may be a more comprehensive API for these:
-    case Components.results.NS_ERROR_INVALID_ARG:
-        return "NS_ERROR_INVALID_ARG";
-    case Components.results.NS_ERROR_NO_INTERFACE:
-        return "NS_ERROR_NO_INTERFACE";
-    case Components.results.NS_ERROR_NOT_IMPLEMENTED:
-        return "NS_ERROR_NOT_IMPLEMENTED";
-    case Components.results.NS_ERROR_FAILURE:
-        return "NS_ERROR_FAILURE";
-    default: // probe for WCAP error:
-        try {
-            return wcapErrorToString(err);
-        }
-        catch (exc) {
-            return ("[" + err + "] Unknown error.");
-        }
-    }
-}
-
 function getWcapErrorCode( errno )
 {
     var index = -1;
@@ -233,7 +285,9 @@ function getWcapXmlErrno( xml )
             return parseInt(elem.textContent);
     }
     // some commands just respond with an empty calendar, no errno. WTF.
-    throw Components.interfaces.calIWcapErrors.WCAP_NO_ERRNO;
+    throw new Components.Exception(
+        "No WCAP errno (missing X-NSCP-WCAP-ERRNO).",
+        Components.interfaces.calIWcapErrors.WCAP_NO_ERRNO );
 }
 
 function getWcapIcalErrno( icalRootComp )
@@ -242,15 +296,26 @@ function getWcapIcalErrno( icalRootComp )
     if (prop)
         return parseInt(prop.value);
     // some commands just respond with an empty calendar, no errno. WTF.
-    throw Components.interfaces.calIWcapErrors.WCAP_NO_ERRNO;
+    throw new Components.Exception(
+        "No WCAP errno (missing X-NSCP-WCAP-ERRNO).",
+        Components.interfaces.calIWcapErrors.WCAP_NO_ERRNO );
 }
 
 function checkWcapErrno( errno, expectedErrno )
 {
     if (expectedErrno == undefined)
         expectedErrno = 0; // i.e. Command successful.
-    if (errno != expectedErrno)
-        throw getWcapErrorCode(errno);
+    if (errno != expectedErrno) {
+        var rc;
+        try {
+            rc = getWcapErrorCode(errno);
+        }
+        catch (exc) {
+            throw new Components.Exception(
+                "No WCAP error no.", Components.results.NS_ERROR_INVALID_ARG );
+        }
+        throw new Components.Exception( wcapErrorToString(rc), rc );
+    }
 }
 
 function checkWcapXmlErrno( xml, expectedErrno )
@@ -261,5 +326,36 @@ function checkWcapXmlErrno( xml, expectedErrno )
 function checkWcapIcalErrno( icalRootComp, expectedErrno )
 {
     checkWcapErrno( getWcapIcalErrno(icalRootComp), expectedErrno );
+}
+
+
+function errorToString( err )
+{
+    if (typeof(err) == "string")
+        return err;
+    if (err instanceof Error)
+        return err.message;
+    switch (err) {
+    case Components.results.NS_ERROR_INVALID_ARG:
+        return "NS_ERROR_INVALID_ARG";
+    case Components.results.NS_ERROR_NO_INTERFACE:
+        return "NS_ERROR_NO_INTERFACE";
+    case Components.results.NS_ERROR_NOT_IMPLEMENTED:
+        return "NS_ERROR_NOT_IMPLEMENTED";
+    case Components.results.NS_ERROR_FAILURE:
+        return "NS_ERROR_FAILURE";
+    default: // probe for WCAP error:
+        try {
+            return wcapErrorToString(err);
+        }
+        catch (exc) { // probe for netwerk error:
+            try {
+                return netErrorToString(err);
+            }
+            catch (exc) {
+                return ("[" + err + "] Unknown error.");
+            }
+        }
+    }
 }
 

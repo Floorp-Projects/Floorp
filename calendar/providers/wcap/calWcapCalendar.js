@@ -128,17 +128,19 @@ calWcapCalendar.prototype = {
     logError:
     function( err, context )
     {
-        var str = ("error: " + errorToString(err));
-        Components.utils.reportError( this.log( str, context ) );
-        return str;
+        var msg = errorToString(err);
+        Components.utils.reportError( this.log("error: " + msg, context) );
+        return msg;
     },
     notifyError:
     function( err )
     {
         debugger;
-        var str = this.logError( err );
-        this.notifyObservers( "onError",
-                              [err instanceof Error ? -1 : err, str] );
+        var msg = this.logError(err);
+        this.notifyObservers(
+            "onError",
+            err instanceof Components.interfaces.nsIException
+            ? [err.result, err.message] : [-1, msg] );
     },
     
     // calICalendar:
@@ -319,7 +321,6 @@ calWcapCalendar.prototype = {
     },
 //     set defaultTimezone( tzid ) {
 //         if (this.readOnly)
-//             throw Components.interfaces.calIErrors.CAL_IS_READONLY;
 //         // xxx todo:
 //         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
 //     },

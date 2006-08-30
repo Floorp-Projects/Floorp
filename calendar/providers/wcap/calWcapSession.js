@@ -134,17 +134,19 @@ calWcapSession.prototype = {
     logError:
     function( err, context )
     {
-        var str = ("error: " + errorToString(err));
-        Components.utils.reportError( this.log( str, context ) );
-        return str;
+        var msg = errorToString(err);
+        Components.utils.reportError( this.log("error: " + msg, context) );
+        return msg;
     },
     notifyError:
     function( err )
     {
         debugger;
-        var str = this.logError( err );
-        this.notifyObservers( "onError",
-                              [err instanceof Error ? -1 : err, str] );
+        var msg = this.logError(err);
+        this.notifyObservers(
+            "onError",
+            err instanceof Components.interfaces.nsIException
+            ? [err.result, err.message] : [-1, msg] );
     },
     
     m_observers: null,
@@ -211,7 +213,7 @@ calWcapSession.prototype = {
             var str = issueSyncRequest( url );
             var icalRootComp = getIcsService().parseICS( str );
             if (icalRootComp == null)
-                throw new Error("invalid data, expected ical!");
+                throw new Components.Exception("invalid data, expected ical!");
             checkWcapIcalErrno( icalRootComp );
             var tzids = [];
             var this_ = this;
@@ -258,7 +260,7 @@ calWcapSession.prototype = {
             var str = issueSyncRequest( url );
             var icalRootComp = getIcsService().parseICS( str );
             if (icalRootComp == null)
-                throw new Error("invalid data, expected ical!");
+                throw new Components.Exception("invalid data, expected ical!");
             checkWcapIcalErrno( icalRootComp );
             var serverTime = getDatetimeFromIcalProp(
                 icalRootComp.getFirstProperty( "X-NSCP-WCAPTIME" ) );
@@ -298,30 +300,35 @@ calWcapSession.prototype = {
     {
         if (this.m_bNoLoginsAnymore) {
             this.log( "login has failed, no logins anymore for this user." );
-            throw Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED;
+            throw new Components.Exception(
+                "Login failed. Invalid session ID.",
+                Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED );
         }
         if (getIoService().offline) {
             this.log( "in offline mode." );
-            throw NS_ERROR_OFFLINE;
+            throw new Components.Exception(
+                "The requested action could not be completed while the " +
+                "networking library is in the offline state.",
+                NS_ERROR_OFFLINE );
         }
         
         if (this.m_sessionId == null || this.m_sessionId == timedOutSessionId) {
             
             var this_ = this;
-            syncExec(
+            lockedExec(
                 function() {
-                    if (this_.m_sessionId == null ||
-                        this_.m_sessionId == timedOutSessionId)
-                    {
+                    if (!this_.m_bNoLoginsAnymore &&
+                        (this_.m_sessionId == null ||
+                         this_.m_sessionId == timedOutSessionId)) {
                         if (timedOutSessionId != null) {
                             this_.m_sessionId = null;
-                            this_.log(
-                                "session timeout; prompting to reconnect." );
+                            this_.log( "session timeout; " +
+                                       "prompting to reconnect." );
                             var prompt =getWindowWatcher().getNewPrompter(null);
                             var bundle = getWcapBundle();
                             if (!prompt.confirm(
                                     bundle.GetStringFromName(
-                                        "reconnectConfirmation.label" ),
+                                        "reconnectConfirmation.label"),
                                     bundle.formatStringFromName(
                                         "reconnectConfirmation.text",
                                         [this_.uri.hostPort], 1 ) )) {
@@ -343,8 +350,11 @@ calWcapSession.prototype = {
                     }
                 } );
         }
+        
         if (this.m_sessionId == null) {
-            throw Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED;
+            throw new Components.Exception(
+                "Login failed. Invalid session ID.",
+                Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED );
         }
         return this.m_sessionId;
     },
@@ -381,7 +391,7 @@ calWcapSession.prototype = {
             var loginUri = this.sessionUri.clone();
             if (loginUri.scheme.toLowerCase() != "https") {
                 if (loginUri.port == -1) {
-                    // no https, but no port specified
+                    // no https and no port specified
                     // => enforce login via https:
                     loginUri.scheme = "https";
                 }
@@ -421,7 +431,7 @@ calWcapSession.prototype = {
                             loginText = this.getServerInfo( loginUri );
                         }
                         if (loginText == null) {
-                            throw new Error(
+                            throw new Components.Exception(
                                 getWcapBundle().formatStringFromName(
                                     "accessingServerFailedError.text",
                                     [loginUri.hostPort], 1 ) );
@@ -429,7 +439,7 @@ calWcapSession.prototype = {
                         if (this.sessionUri.scheme.toLowerCase() == "https") {
                             // user specified https, so http is no option:
                             loginText = null;
-                            throw new Error(
+                            throw new Components.Exception(
                                 getWcapBundle().formatStringFromName(
                                     "mandatoryHttpsError.text",
                                     [loginUri.hostPort], 1 ) );
@@ -477,6 +487,7 @@ calWcapSession.prototype = {
                 
                 var savePW = { value: false };
                 while (this.m_sessionId == null) {
+                    this.log( "prompting for user/pw..." );
                     var prompt = getWindowWatcher().getNewPrompter(null);
                     if (prompt.promptUsernameAndPassword(
                             getWcapBundle().GetStringFromName(
@@ -526,7 +537,7 @@ calWcapSession.prototype = {
         checkWcapIcalErrno( icalRootComp );
         var prop = icalRootComp.getFirstProperty( "X-NSCP-WCAP-SESSION-ID" );
         if (prop == null)
-            throw new Error("missing X-NSCP-WCAP-SESSION-ID!");
+            throw new Components.Exception("missing X-NSCP-WCAP-SESSION-ID!");
         this.m_sessionId = prop.value;
         
 //         var xml = issueSyncXMLRequest(
@@ -552,7 +563,7 @@ calWcapSession.prototype = {
                 return null; // no ical data returned
             icalRootComp = getIcsService().parseICS( str );
             if (icalRootComp == null)
-                throw new Error("invalid ical data!");
+                throw new Components.Exception("invalid ical data!");
         }
         catch (exc) { // soft error; request denied etc.
             this.log( "server version request failed: " + errorToString(exc) );
@@ -566,7 +577,7 @@ calWcapSession.prototype = {
         loginTextVars.push( prop ? prop.value : "<unknown>" );
         prop = icalRootComp.getFirstProperty( "X-NSCP-WCAPVERSION" );
         if (prop == null)
-            throw new Error("missing X-NSCP-WCAPVERSION!");
+            throw new Components.Exception("missing X-NSCP-WCAPVERSION!");
         loginTextVars.push( prop.value );
         var wcapVersion = parseInt(prop.value);
         if (wcapVersion < 3) {
@@ -578,7 +589,7 @@ calWcapSession.prototype = {
                                  bundle.formatStringFromName(
                                      "insufficientWcapVersionConfirmation.text",
                                      loginTextVars, loginTextVars.length ) )) {
-                throw new Error(labelText);
+                throw new Components.Exception(labelText);
             }
         }
         return getWcapBundle().formatStringFromName(
@@ -589,7 +600,7 @@ calWcapSession.prototype = {
     function( wcapCommand )
     {
         if (this.sessionUri == null)
-            throw new Error("no URI!");
+            throw new Components.Exception("no URI!");
         // ensure established session, so userId is set;
         // (calId defaults to userId) if not set:
         this.getSessionId();
@@ -613,8 +624,10 @@ calWcapSession.prototype = {
                             data, wcapResponse );
                     }
                     catch (exc) {
-                        if (exc == Components.interfaces.
-                            calIWcapErrors.WCAP_LOGIN_FAILED) /* timeout */ {
+                        if (testResultCode(
+                                exc, Components.interfaces.
+                                calIWcapErrors.WCAP_LOGIN_FAILED)) /* timeout */
+                        {
                             // getting a new session will throw any exception in
                             // this block, thus it is notified into receiverFunc
                             this_.getSessionId(
@@ -931,7 +944,7 @@ calWcapSession.prototype = {
         }
         catch (exc) {
             const calIWcapErrors = Components.interfaces.calIWcapErrors;
-            switch (exc) {
+            switch (getResultCode(exc)) {
             case calIWcapErrors.WCAP_NO_ERRNO: // workaround
             case calIWcapErrors.WCAP_ACCESS_DENIED_TO_CALENDAR:
             case calIWcapErrors.WCAP_CALENDAR_DOES_NOT_EXIST:
