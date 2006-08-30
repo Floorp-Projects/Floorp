@@ -150,13 +150,6 @@ html|*:root message[level="ephemeral"], html|*:root hint {
   display: block;
 }
 
-xul|*:root message[level="ephemeral"] xul|deck , xul|*:root hint xul|deck {
-  background-color: InfoBackground;
-  color: InfoText;
-  padding: 2px 3px;
-  font: message-box;
-}
-
 html|*:root message[level="ephemeral"] > html|div.-moz-xforms-message-container,
 html|*:root hint > html|div.-moz-xforms-message-container {
   background-color: inherit;

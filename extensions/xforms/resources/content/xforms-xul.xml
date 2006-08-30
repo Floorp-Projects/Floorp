@@ -391,12 +391,12 @@
            extends="#xformswidget-alert">
 
     <content>
-      <xul:popup anonid="popup">
+      <xul:tooltip anonid="popup">
         <xul:deck anonid="contentswitcher" flex="1" selectedIndex="1">
           <xul:label anonid="implicitcontent" xbl:inherits="orient"/>
           <xul:label xbl:inherits="orient"><children/></xul:label>
         </xul:deck>
-      </xul:popup>
+      </xul:tooltip>
     </content>
 
     <implementation implements="nsIXFormsEphemeralMessageUI">
@@ -404,10 +404,21 @@
         <parameter name="aPosX"/>
         <parameter name="aPosY"/>
         <body>
-          aPosX += this.ownerDocument.defaultView.screenX;
-          aPosY += this.ownerDocument.defaultView.screenY;
-          this.popup.showPopup(this.ownerDocument.documentElement, aPosX, aPosY,
-                               "popup", null, null);
+          // Since the method gets coordinates relative document but tooltip can
+          // be shown relative screen then we should do the following magic.
+          // We use passed coordinates to save the logic of xtf part of
+          // message. Also we substract 21 from y coordinate to revoke tooltip
+          // logic.
+
+          var boxObject = this.ownerDocument.getBoxObjectFor(this.parentNode);
+          var deltaX = aPosX - boxObject.x;
+          var deltaY = aPosY - boxObject.y;
+
+          aPosX = boxObject.screenX + deltaX;
+          aPosY = boxObject.screenY + deltaY - 21;
+
+          this.popup.showPopup(this.ownerDocument.documentElement,
+                               aPosX, aPosY, "tooltip", null, null);
         </body>
       </method>
 
