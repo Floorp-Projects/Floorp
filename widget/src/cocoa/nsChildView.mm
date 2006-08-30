@@ -65,6 +65,15 @@
 #ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
+
+extern "C" {
+CG_EXTERN void CGContextResetCTM (CGContextRef);
+CG_EXTERN void CGContextSetCTM (CGContextRef, CGAffineTransform);
+CG_EXTERN void CGContextResetClip (CGContextRef);
+}
+
+#undef DEBUG_UPDATE
+
 #else
 #include "nsGfxUtils.h" // for StPortSetter
 #endif
@@ -875,7 +884,6 @@ NS_IMETHODIMP nsChildView::MoveWithRepaintOption(PRInt32 aX, PRInt32 aY, PRBool 
     if (mVisible && aRepaint)
       [mView setNeedsDisplay:YES];
 
-    
     // Report the event
     ReportMoveEvent();
   }
@@ -1226,7 +1234,7 @@ NS_IMETHODIMP nsChildView::InvalidateRegion(const nsIRegion *aRegion, PRBool aIs
 {
   if ( !mView || !mVisible)
     return NS_OK;
-    
+
 //FIXME rewrite to use a Cocoa region when nsIRegion isn't a QD Region
   NSRect r;
   nsRect bounds;
@@ -1385,9 +1393,6 @@ nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
   if (! mVisible)
     return;
 
-#ifdef DEBUG_vladimir
-  fprintf(stderr, "nsChildView[%p]::UpdateWidget called!\n", this);
-#else
   // For updating widgets, we _always_ want to use the NSQuickDrawView's port,
   // since that's the correct port for gecko to use to make rendering contexts.
   // The plugin is the only thing that uses the plugin port.
@@ -1416,7 +1421,6 @@ nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
       Flash(paintEvent);
   }
   EndDraw();
-#endif
 }
 #endif
 
@@ -2042,11 +2046,14 @@ nsChildView::Idle()
 gfxASurface*
 nsChildView::GetThebesSurface()
 {
-#ifdef DEBUG_vladimir
-  fprintf (stderr, "nsChildView[%p]::GetThebesSurface\n", this);
-#endif
 
-  return new gfxQuartzSurface(gfxASurface::ImageFormatARGB32, 1, 1);
+  if (!mTempThebesSurface) {
+    mTempThebesSurface = new gfxQuartzSurface(gfxASurface::ImageFormatARGB32, 1, 1);
+  }
+
+  gfxASurface *surf = mTempThebesSurface.get();
+  NS_ADDREF(surf);
+  return surf;
 }
 #endif
 
@@ -2402,13 +2409,20 @@ nsChildView::GetThebesSurface()
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
   nsRect geckoBounds;
   mGeckoChild->GetBounds(geckoBounds);
-  nsRefPtr<gfxQuartzSurface> targetSurface =
-    new gfxQuartzSurface(cgContext, geckoBounds.width, geckoBounds.height, PR_FALSE);
 
-  //fprintf (stderr, "Update[%p] [%f %f %f %f] cgc: %p gecko bounds: [%d %d %d %d]\n", mGeckoChild, aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height, cgContext, geckoBounds.x, geckoBounds.y, geckoBounds.width, geckoBounds.height);
+  NSRect bounds = [self bounds];
+  nsRefPtr<gfxQuartzSurface> targetSurface =
+    new gfxQuartzSurface(cgContext, bounds.size.width, bounds.size.height, PR_TRUE);
+
+#ifdef DEBUG_UPDATE
+  fprintf (stderr, "---- Update[%p][%p] [%f %f %f %f] cgc: %p\n  gecko bounds: [%d %d %d %d]\n",
+           self, mGeckoChild,
+           aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height, cgContext,
+           geckoBounds.x, geckoBounds.y, geckoBounds.width, geckoBounds.height);
 
   CGAffineTransform xform = CGContextGetCTM(cgContext);
-  //fprintf (stderr, "  context xform: t: %f %f xx: %f xy: %f yx: %f yy: %f\n", xform.tx, xform.ty, xform.a, xform.b, xform.c, xform.d);
+  fprintf (stderr, "  xform in: [%f %f %f %f %f %f]\n", xform.a, xform.b, xform.c, xform.d, xform.tx, xform.ty);
+#endif
 
   nsRefPtr<gfxContext> targetContext = new gfxContext(targetSurface);
 
@@ -2421,7 +2435,6 @@ nsChildView::GetThebesSurface()
   int count, i;
   [self getRectsBeingDrawn:&rects count:&count];
   for (i = 0; i < count; ++i) {
-    //fprintf (stderr, " Clip rect[%d]: %f %f %f %f\n", i, rects[i].origin.x, rects[i].origin.y, rects[i].size.width, rects[i].size.height);
     targetContext->Rectangle(gfxRect(rects[i].origin.x, rects[i].origin.y,
                                      rects[i].size.width, rects[i].size.height));
   }
@@ -2439,8 +2452,6 @@ nsChildView::GetThebesSurface()
   mGeckoChild->LocalToWindowCoordinate(tr);
   //targetContext->Translate(gfxPoint(tr.x, tr.y));
 
-  //fprintf (stderr, "  window coords: [%d %d %d %d]\n", tr.x, tr.y, tr.width, tr.height);
-
   nsPaintEvent paintEvent(PR_TRUE, NS_PAINT, mGeckoChild);
   paintEvent.renderingContext = rc;
   paintEvent.rect = &r;
@@ -2450,9 +2461,28 @@ nsChildView::GetThebesSurface()
 
   paintEvent.renderingContext = nsnull;
 
-  //fprintf (stderr, "---- update done ----\n");
+  targetContext = nsnull;
+  targetSurface = nsnull;
 
-#else /* MOZ_CAIRO_GFX */
+  // note that the cairo surface *MUST* be destroyed at this point,
+  // or bad things will happen (since we can't keep the cgContext around
+  // beyond this drawRect message handler)
+
+#ifdef DEBUG_UPDATE
+  fprintf (stderr, "  window coords: [%d %d %d %d]\n", tr.x, tr.y, tr.width, tr.height);
+  fprintf (stderr, "---- update done ----\n");
+
+  CGContextSetRGBStrokeColor (cgContext,
+                            ((((unsigned long)self) & 0xff)) / 255.0,
+                            ((((unsigned long)self) & 0xff00) >> 8) / 255.0,
+                            ((((unsigned long)self) & 0xff0000) >> 16) / 255.0,
+                            0.5);
+  CGContextSetLineWidth (cgContext, 4.0);
+  CGContextStrokeRect (cgContext,
+                       CGRectMake(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height));
+#endif
+
+#else
   // tell gecko to paint.
   const NSRect *rects;
   int count, i;

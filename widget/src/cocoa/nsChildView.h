@@ -40,6 +40,7 @@
 
 #import "mozView.h"
 
+#include "nsAutoPtr.h"
 #include "nsISupports.h"
 #include "nsBaseWidget.h"
 #include "nsIPluginWidget.h"
@@ -300,6 +301,10 @@ protected:
   nsCOMPtr<nsIFontMetrics>      mFontMetrics;
   nsCOMPtr<nsIRenderingContext> mTempRenderingContext;
   PRPackedBool          mTempRenderingContextMadeHere;
+#endif
+
+#ifdef MOZ_CAIRO_GFX
+  nsRefPtr<gfxASurface> mTempThebesSurface;
 #endif
 
   PRPackedBool          mDestructorCalled;
