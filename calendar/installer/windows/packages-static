@@ -20,6 +20,7 @@ bin\chrome\calendar-@AB_CD@.manifest
 bin\defaults\pref\sunbird-l10n.js
 bin\defaults\profile\prefs.js
 bin\defaults\profile\chrome\*
+bin\uninstall\uninst.exe
 bin\updater.ini
 
 [xpcom]

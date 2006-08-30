@@ -53,6 +53,11 @@ ifdef MOZ_BRANDING_DIRECTORY
 DEFINES += -DOFFICIAL_BRANDING=1
 endif
 
+# For Windows build the uninstaller during the application build since the
+# uninstaller is included with the application for mar file generation.
+libs::
+	$(MAKE) -C ../installer/windows uninstaller
+
 endif
 endif
 
