@@ -93,7 +93,6 @@ CPPSRCS		= \
 		nsSVGFilterElement.cpp \
 		nsSVGFilters.cpp \
 		nsSVGGElement.cpp \
-		nsSVGGenericStringValue.cpp \
 		nsSVGGradientElement.cpp \
 		nsSVGGraphicElement.cpp \
 		nsSVGImageElement.cpp \
