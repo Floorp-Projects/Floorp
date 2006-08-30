@@ -1089,81 +1089,140 @@ should not be called from anywhere else.
 
 =head2 Functions
 
-=over 4
+=over
 
 =item C<connect_main>
 
- Description: Function to connect to the main database, returning a new
-              database handle.
- Params:      $no_db_name (optional) - If true, Connect to the database 
-                  server, but don't connect to a specific database. This 
-                  is only used when creating a database. After you create
-                  the database, you should re-create a new Bugzilla::DB object
-                  without using this parameter. 
- Returns:     new instance of the DB class
+=over
 
-=item C<connect_shadow>
+=item B<Description>
 
- Description: Function to connect to the shadow database, returning a new
-              database handle.
-              This routine C<die>s if no shadow database is configured.
- Params:      none
- Returns:     new instance of the DB class
+Function to connect to the main database, returning a new database handle.
 
-=item C<bz_check_requirements($output)>
+=item B<Params>
 
-Description: Checks to make sure that you have the correct
-             DBD and database version installed for the
-             database that Bugzilla will be using.
-             Prints a message and exits if you don't
-             pass the requirements.
-             If C<$db_check> is true (from F<localconfig>), we won't
-             check the database version.
+=over
 
-Params:      C<$output> - C<true> if the function should display
-                 informational output about what it's doing, such
-                 as versions found.
-
-Returns:     nothing
-
-=item C<bz_create_database()>
-
-Description: Creates an empty database with the name
-             C<$db_name>, if that database doesn't
-             already exist. Prints an error message and
-             exits if we can't create the database.
-
-Params:      none
-
-Returns:     nothing
-
-=item C<_connect>
-
- Description: Internal function, creates and returns a new, connected
-              instance of the correct DB class.
-              This routine C<die>s if no driver is specified.
- Params:      $driver = name of the database driver to use
-              $host = host running the database we are connecting to
-              $dbname = name of the database to connect to
-              $port = port the database is listening on
-              $sock = socket the database is listening on
-              $user = username used to log in to the database
-              $pass = password used to log in to the database
- Returns:     new instance of the DB class
-
-=item C<_handle_error>
-
- Description: Function passed to the DBI::connect call for error handling.
-              It shortens the error for printing.
-
-=item C<import>
-
- Description: Overrides the standard import method to check that derived class
-              implements all required abstract methods. Also calls original
-              implementation in its super class.
+=item C<$no_db_name> (optional) - If true, connect to the database
+server, but don't connect to a specific database. This is only used 
+when creating a database. After you create the database, you should 
+re-create a new Bugzilla::DB object without using this parameter. 
 
 =back
 
+=item B<Returns>
+
+New instance of the DB class
+
+=back
+
+=item C<connect_shadow>
+
+=over
+
+=item B<Description>
+
+Function to connect to the shadow database, returning a new database handle.
+This routine C<die>s if no shadow database is configured.
+
+=item B<Params> (none)
+
+=item B<Returns>
+
+A new instance of the DB class
+
+=back
+
+=item C<bz_check_requirements>
+
+=over
+
+=item B<Description>
+
+Checks to make sure that you have the correct DBD and database version 
+installed for the database that Bugzilla will be using. Prints a message 
+and exits if you don't pass the requirements.
+
+If C<$db_check> is false (from F<localconfig>), we won't check the 
+database version.
+
+=item B<Params>
+
+=over
+
+=item C<$output> - C<true> if the function should display informational 
+output about what it's doing, such as versions found.
+
+=back
+
+=item B<Returns> (nothing)
+
+=back
+
+
+=item C<bz_create_database>
+
+=over
+
+=item B<Description>
+
+Creates an empty database with the name C<$db_name>, if that database 
+doesn't already exist. Prints an error message and exits if we can't 
+create the database.
+
+=item B<Params> (none)
+
+=item B<Returns> (nothing)
+
+=back
+
+=item C<_connect>
+
+=over
+
+=item B<Description>
+
+Internal function, creates and returns a new, connected instance of the 
+correct DB class.  This routine C<die>s if no driver is specified.
+
+=item B<Params>
+
+=over
+
+=item C<$driver> - name of the database driver to use
+
+=item C<$host> - host running the database we are connecting to
+
+=item C<$dbname> - name of the database to connect to
+
+=item C<$port> - port the database is listening on
+
+=item C<$sock> - socket the database is listening on
+
+=item C<$user> - username used to log in to the database
+
+=item C<$pass> - password used to log in to the database
+
+=back
+
+=item B<Returns>
+
+A new instance of the DB class
+
+=back
+
+=item C<_handle_error>
+
+Function passed to the DBI::connect call for error handling. It shortens the 
+error for printing.
+
+=item C<import>
+
+Overrides the standard import method to check that derived class
+implements all required abstract methods. Also calls original implementation 
+in its super class.
+
+=back
 
 =head1 ABSTRACT METHODS
 
@@ -1174,185 +1233,478 @@ be implemented for all supported databases separately.
 To avoid confusion with standard DBI methods, all methods returning string with
 formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
 
-=over 4
+=head2 Constructor
+
+=over
 
 =item C<new>
 
- Description: Constructor
-              Abstract method, should be overridden by database specific code.
- Params:      $user = username used to log in to the database
-              $pass = password used to log in to the database
-              $host = host running the database we are connecting to
-              $dbname = name of the database to connect to
-              $port = port the database is listening on
-              $sock = socket the database is listening on
- Returns:     new instance of the DB class
- Note:        The constructor should create a DSN from the parameters provided and
-              then call C<db_new()> method of its super class to create a new
-              class instance. See C<db_new> description in this module. As per
-              DBI documentation, all class variables must be prefixed with
-              "private_". See L<DBI>.
+=over
+
+=item B<Description>
+
+Constructor.  Abstract method, should be overridden by database specific 
+code.
+
+=item B<Params>
+
+=over 
+
+=item C<$user> - username used to log in to the database
+
+=item C<$pass> - password used to log in to the database
+
+=item C<$host> - host running the database we are connecting to
+
+=item C<$dbname> - name of the database to connect to
+
+=item C<$port> - port the database is listening on
+
+=item C<$sock> - socket the database is listening on
+
+=back
+
+=item B<Returns>
+
+A new instance of the DB class
+
+=item B<Note>
+
+The constructor should create a DSN from the parameters provided and
+then call C<db_new()> method of its super class to create a new
+class instance. See L<db_new> description in this module. As per
+DBI documentation, all class variables must be prefixed with
+"private_". See L<DBI>.
+
+=back
+
+=back
+
+=head2 SQL Generation
+
+=over
 
 =item C<sql_regexp>
 
- Description: Outputs SQL regular expression operator for POSIX regex
-              searches (case insensitive) in format suitable for a given
-              database.
-              Abstract method, should be overridden by database specific code.
- Params:      $expr = SQL expression for the text to be searched (scalar)
-              $pattern = the regular expression to search for (scalar)
- Returns:     formatted SQL for regular expression search (e.g. REGEXP)
-              (scalar)
+=over
+
+=item B<Description>
+
+Outputs SQL regular expression operator for POSIX regex
+searches (case insensitive) in format suitable for a given
+database.
+
+Abstract method, should be overridden by database specific code.
+
+=item B<Params>
+
+=over
+
+=item C<$expr> - SQL expression for the text to be searched (scalar)
+
+=item C<$pattern> - the regular expression to search for (scalar)
+
+=back
+
+=item B<Returns>
+
+Formatted SQL for regular expression search (e.g. REGEXP) (scalar)
+
+=back
 
 =item C<sql_not_regexp>
 
- Description: Outputs SQL regular expression operator for negative POSIX
-              regex searches (case insensitive) in format suitable for a given
-              database.
-              Abstract method, should be overridden by database specific code.
- Params:      $expr = SQL expression for the text to be searched (scalar)
-              $pattern = the regular expression to search for (scalar)
- Returns:     formatted SQL for negative regular expression search
-              (e.g. NOT REGEXP) (scalar)
+=over
+
+=item B<Description>
+
+Outputs SQL regular expression operator for negative POSIX
+regex searches (case insensitive) in format suitable for a given
+database.
+
+Abstract method, should be overridden by database specific code.
+
+=item B<Params>
+
+=over
+
+=item C<$expr> - SQL expression for the text to be searched (scalar)
+
+=item C<$pattern> - the regular expression to search for (scalar)
+
+=back
+
+=item B<Returns>
+
+Formatted SQL for negative regular expression search (e.g. NOT REGEXP) 
+(scalar)
+
+=back
 
 =item C<sql_limit>
 
- Description: Returns SQL syntax for limiting results to some number of rows
-              with optional offset if not starting from the begining.
-              Abstract method, should be overridden by database specific code.
- Params:      $limit = number of rows to return from query (scalar)
-              $offset = number of rows to skip prior counting (scalar)
- Returns:     formatted SQL for limiting number of rows returned from query
-              with optional offset (e.g. LIMIT 1, 1) (scalar)
+=over
+
+=item B<Description>
+
+Returns SQL syntax for limiting results to some number of rows
+with optional offset if not starting from the begining.
+
+Abstract method, should be overridden by database specific code.
+
+=item B<Params>
+
+=over
+
+=item C<$limit> - number of rows to return from query (scalar)
+
+=item C<$offset> - number of rows to skip prior counting (scalar)
+
+=back
+
+=item B<Returns>
+
+Formatted SQL for limiting number of rows returned from query
+with optional offset (e.g. LIMIT 1, 1) (scalar)
+
+=back
 
 =item C<sql_from_days>
 
- Description: Outputs SQL syntax for converting Julian days to date.
-              Abstract method, should be overridden by database specific code.
- Params:      $days = days to convert to date
- Returns:     formatted SQL for returning Julian days in dates. (scalar)
+=over
+
+=item B<Description>
+
+Outputs SQL syntax for converting Julian days to date.
+
+Abstract method, should be overridden by database specific code.
+
+=item B<Params>
+
+=over
+
+=item C<$days> - days to convert to date
+
+=back
+
+=item B<Returns>
+
+Formatted SQL for returning Julian days in dates. (scalar)
+
+=back
 
 =item C<sql_to_days>
 
- Description: Outputs SQL syntax for converting date to Julian days.
-              Abstract method, should be overridden by database specific code.
- Params:      $date = date to convert to days
- Returns:     formatted SQL for returning date fields in Julian days. (scalar)
+=over
+
+=item B<Description>
+
+Outputs SQL syntax for converting date to Julian days.
+
+Abstract method, should be overridden by database specific code.
+
+=item B<Params>
+
+=over
+
+=item C<$date> - date to convert to days
+
+=back
+
+=item B<Returns>
+
+Formatted SQL for returning date fields in Julian days. (scalar)
+
+=back
 
 =item C<sql_date_format>
 
- Description: Outputs SQL syntax for formatting dates.
-              Abstract method, should be overridden by database specific code.
- Params:      $date = date or name of date type column (scalar)
-              $format = format string for date output (scalar)
-              (%Y = year, four digits, %y = year, two digits, %m = month,
-               %d = day, %a = weekday name, 3 letters, %H = hour 00-23,
-               %i = minute, %s = second)
- Returns:     formatted SQL for date formatting (scalar)
+=over
+
+=item B<Description>
+
+Outputs SQL syntax for formatting dates.
+
+Abstract method, should be overridden by database specific code.
+
+=item B<Params>
+
+=over
+
+=item C<$date> - date or name of date type column (scalar)
+
+=item C<$format> - format string for date output (scalar)
+(C<%Y> = year, four digits, C<%y> = year, two digits, C<%m> = month,
+C<%d> = day, C<%a> = weekday name, 3 letters, C<%H> = hour 00-23,
+C<%i> = minute, C<%s> = second)
+
+=back
+
+=item B<Returns>
+
+Formatted SQL for date formatting (scalar)
+
+=back
 
 =item C<sql_interval>
 
- Description: Outputs proper SQL syntax for a time interval function.
-              Abstract method, should be overridden by database specific code.
- Params:      $interval - the time interval requested (e.g. '30') (integer)
-              $units    - the units the interval is in (e.g. 'MINUTE') (string)
- Returns:     formatted SQL for interval function (scalar)
+=over
+
+=item B<Description>
+
+Outputs proper SQL syntax for a time interval function.
+
+Abstract method, should be overridden by database specific code.
+
+=item B<Params>
+
+=over
+
+=item C<$interval> - the time interval requested (e.g. '30') (integer)
+
+=item C<$units> - the units the interval is in (e.g. 'MINUTE') (string)
+
+=back
+
+=item B<Returns>
+
+Formatted SQL for interval function (scalar)
+
+=back
 
 =item C<sql_position>
 
- Description: Outputs proper SQL syntax determinig position of a substring
-              (fragment) withing a string (text). Note: if the substring or
-              text are string constants, they must be properly quoted
-              (e.g. "'pattern'").
- Params:      $fragment = the string fragment we are searching for (scalar)
-              $text = the text to search (scalar)
- Returns:     formatted SQL for substring search (scalar)
+=over
+
+=item B<Description>
+
+Outputs proper SQL syntax determinig position of a substring
+(fragment) withing a string (text). Note: if the substring or
+text are string constants, they must be properly quoted (e.g. "'pattern'").
+
+=item B<Params>
+
+=over
+
+=item C<$fragment> - the string fragment we are searching for (scalar)
+
+=item C<$text> - the text to search (scalar)
+
+=back
+
+=item B<Returns>
+
+Formatted SQL for substring search (scalar)
+
+=back
 
 =item C<sql_group_by>
 
- Description: Outputs proper SQL syntax for grouping the result of a query.
-              For ANSI SQL databases, we need to group by all columns we are
-              querying for (except for columns used in aggregate functions).
-              Some databases require (or even allow) to specify only one
-              or few columns if the result is uniquely defined. For those
-              databases, the default implementation needs to be overloaded.
- Params:      $needed_columns = string with comma separated list of columns
-              we need to group by to get expected result (scalar)
-              $optional_columns = string with comma separated list of all
-              other columns we are querying for, but which are not in the
-              required list.
- Returns:     formatted SQL for row grouping (scalar)
+=over
+
+=item B<Description>
+
+Outputs proper SQL syntax for grouping the result of a query.
+
+For ANSI SQL databases, we need to group by all columns we are
+querying for (except for columns used in aggregate functions).
+Some databases require (or even allow) to specify only one
+or few columns if the result is uniquely defined. For those
+databases, the default implementation needs to be overloaded.
+
+=item B<Params>
+
+=over
+
+=item C<$needed_columns> - string with comma separated list of columns
+we need to group by to get expected result (scalar)
+
+=item C<$optional_columns> - string with comma separated list of all
+other columns we are querying for, but which are not in the required list.
+
+=back
+
+=item B<Returns>
+
+Formatted SQL for row grouping (scalar)
+
+=back
 
 =item C<sql_string_concat>
 
- Description: Returns SQL syntax for concatenating multiple strings (constants
-              or values from table columns) together.
- Params:      @params = array of column names or strings to concatenate
- Returns:     formatted SQL for concatenating specified strings
+=over
+
+=item B<Description>
+
+Returns SQL syntax for concatenating multiple strings (constants
+or values from table columns) together.
+
+=item B<Params>
+
+=over
+
+=item C<@params> - array of column names or strings to concatenate
+
+=back
+
+=item B<Returns>
+
+Formatted SQL for concatenating specified strings
+
+=back
 
 =item C<sql_fulltext_search>
 
- Description: Returns SQL syntax for performing a full text search for
-              specified text on a given column.
-              There is a ANSI SQL version of this method implemented using
-              LIKE operator, but it's not a real full text search. DB specific
-              modules should override this, as this generic implementation will
-              be always much slower. This generic implementation returns
-              'relevance' as 0 for no match, or 1 for a match.
- Params:      $column = name of column to search (scalar)
-              $text = text to search for (scalar)
- Returns:     formatted SQL for full text search
+=over
+
+=item B<Description>
+
+Returns SQL syntax for performing a full text search for specified text 
+on a given column.
+
+There is a ANSI SQL version of this method implemented using LIKE operator,
+but it's not a real full text search. DB specific modules should override 
+this, as this generic implementation will be always much slower. This 
+generic implementation returns 'relevance' as 0 for no match, or 1 for a 
+match.
+
+=item B<Params>
+
+=over
+
+=item C<$column> - name of column to search (scalar)
+
+=item C<$text> - text to search for (scalar)
+
+=back
+
+=item B<Returns>
+
+Formatted SQL for full text search
+
+=back
 
 =item C<sql_istrcmp>
 
- Description: Returns SQL for a case-insensitive string comparison.
- Params:      $left - What should be on the left-hand-side of the
-                      operation.
-              $right - What should be on the right-hand-side of the
-                       operation.
-              $op (optional) - What the operation is. Should be a 
-                  valid ANSI SQL comparison operator, like "=", "<", 
-                  "LIKE", etc. Defaults to "=" if not specified.
- Returns:     A SQL statement that will run the comparison in 
-              a case-insensitive fashion.
- Note:        Uses sql_istring, so it has the same performance concerns.
-              Try to avoid using this function unless absolutely necessary.
-              Subclass Implementors: Override sql_istring instead of this
-              function, most of the time (this function uses sql_istring).
+=over
+
+=item B<Description>
+
+Returns SQL for a case-insensitive string comparison.
+
+=item B<Params>
+
+=over
+
+=item C<$left> - What should be on the left-hand-side of the operation.
+
+=item C<$right> - What should be on the right-hand-side of the operation.
+
+=item C<$op> (optional) - What the operation is. Should be a  valid ANSI 
+SQL comparison operator, such as C<=>, C<E<lt>>, C<LIKE>, etc. Defaults 
+to C<=> if not specified.
+
+=back
+
+=item B<Returns>
+
+A SQL statement that will run the comparison in a case-insensitive fashion.
+
+=item B<Note>
+
+Uses L</sql_istring>, so it has the same performance concerns.
+Try to avoid using this function unless absolutely necessary.
+
+Subclass Implementors: Override sql_istring instead of this
+function, most of the time (this function uses sql_istring).
+
+=back
 
 =item C<sql_istring>
 
- Description: Returns SQL syntax "preparing" a string or text column for
-              case-insensitive comparison. 
- Params:      $string - string to convert (scalar)
- Returns:     formatted SQL making the string case insensitive
- Note:        The default implementation simply calls LOWER on the parameter.
-              If this is used to search on a text column with index, the index
-              will not be usually used unless it was created as LOWER(column).
+=over
+
+=item B<Description>
+
+Returns SQL syntax "preparing" a string or text column for case-insensitive 
+comparison.
+
+=item B<Params>
+
+=over
+
+=item C<$string> - string to convert (scalar)
+
+=back
+
+=item B<Returns>
+
+Formatted SQL making the string case insensitive.
+
+=item B<Note>
+
+The default implementation simply calls LOWER on the parameter.
+If this is used to search on a text column with index, the index
+will not be usually used unless it was created as LOWER(column).
+
+=back
 
 =item C<bz_lock_tables>
 
- Description: Performs a table lock operation on specified tables.
-              If the underlying database supports transactions, it should also
-              implicitly start a new transaction.
-              Abstract method, should be overridden by database specific code.
- Params:      @tables = list of names of tables to lock in MySQL
-              notation (ex. 'bugs AS bugs2 READ', 'logincookies WRITE')
- Returns:     none
+=over
+
+=item B<Description>
+
+Performs a table lock operation on specified tables. If the underlying 
+database supports transactions, it should also implicitly start a new 
+transaction.
+
+Abstract method, should be overridden by database specific code.
+
+=item B<Params>
+
+=over
+
+=item C<@tables> - list of names of tables to lock in MySQL
+notation (ex. 'bugs AS bugs2 READ', 'logincookies WRITE')
+
+=back
+
+=item B<Returns> (nothing)
+
+=back
 
 =item C<bz_unlock_tables>
 
- Description: Performs a table unlock operation
-              If the underlying database supports transactions, it should also
-              implicitly commit or rollback the transaction.
-              Also, this function should allow to be called with the abort flag
-              set even without locking tables first without raising an error
-              to simplify error handling.
-              Abstract method, should be overridden by database specific code.
- Params:      $abort = UNLOCK_ABORT (true, 1) if the operation on locked tables
-              failed (if transactions are supported, the action will be rolled
-              back). False (0) or no param if the operation succeeded.
- Returns:     none
+=over
+
+=item B<Description>
+
+Performs a table unlock operation.
+
+If the underlying database supports transactions, it should also implicitly 
+commit or rollback the transaction.
+
+Also, this function should allow to be called with the abort flag
+set even without locking tables first without raising an error
+to simplify error handling.
+
+Abstract method, should be overridden by database specific code.
+
+=item B<Params>
+
+=over
+
+=item C<$abort> - C<UNLOCK_ABORT> if the operation on locked tables
+failed (if transactions are supported, the action will be rolled
+back). No param if the operation succeeded. This is only used by
+L<Bugzilla::Error/throw_error>.
+
+=back
+
+=item B<Returns> (none)
+
+=back
 
 =back
 
@@ -1367,41 +1719,80 @@ database-compatibility reasons.
 
 These methods return information about data in the database.
 
-=over 4
+=over
 
 =item C<bz_last_key>
 
- Description: Returns the last serial number, usually from a previous INSERT.
-              Must be executed directly following the relevant INSERT.
-              This base implementation uses DBI->last_insert_id. If the
-              DBD supports it, it is the preffered way to obtain the last
-              serial index. If it is not supported, the DB specific code
-              needs to override it with DB specific code.
- Params:      $table = name of table containing serial column (scalar)
-              $column = name of column containing serial data type (scalar)
- Returns:     Last inserted ID (scalar)
+=over
+
+=item B<Description>
+
+Returns the last serial number, usually from a previous INSERT.
+
+Must be executed directly following the relevant INSERT.
+This base implementation uses L<DBI/last_insert_id>. If the
+DBD supports it, it is the preffered way to obtain the last
+serial index. If it is not supported, the DB-specific code
+needs to override this function.
+
+=item B<Params>
+
+=over
+
+=item C<$table> - name of table containing serial column (scalar)
+
+=item C<$column> - name of column containing serial data type (scalar)
 
 =back
 
+=item B<Returns>
+
+Last inserted ID (scalar)
+
+=back
+
+=item C<bz_get_field_defs>
+
+=over
+
+=item B<Description>
+
+Returns a list of all the "bug" fields in Bugzilla. The list
+contains hashes, with a C<name> key and a C<description> key.
+
+=item B<Params> (none)
+
+=item B<Returns>
+
+List of all the "bug" fields
+
+=back
+
+=back
 
 =head2 Database Setup Methods
 
 These methods are used by the Bugzilla installation programs to set up
 the database.
 
-=over 4
+=over
 
-=item C<bz_populate_enum_tables()>
+=item C<bz_populate_enum_tables>
 
-Description: For an upgrade or an initial installation, populates
-             the tables that hold the legal values for the old
-             "enum" fields: C<bug_severity>, C<resolution>, etc.
-             Prints out information if it inserts anything into the
-             DB.
+=over
 
-Params:      none
+=item B<Description>
 
-Returns:     nothing
+For an upgrade or an initial installation, populates the tables that hold 
+the legal values for the old "enum" fields: C<bug_severity>, 
+C<resolution>, etc. Prints out information if it inserts anything into the
+DB.
+
+=item B<Params> (none)
+
+=item B<Returns> (nothing)
+
+=back
 
 =back
 
@@ -1414,103 +1805,220 @@ Where a parameter says "Abstract index/column definition", it returns/takes
 information in the formats defined for indexes and columns in
 C<Bugzilla::DB::Schema::ABSTRACT_SCHEMA>.
 
-=over 4
+=over
 
-=item C<bz_add_column($table, $name, \%definition, $init_value)>
+=item C<bz_add_column>
 
- Description: Adds a new column to a table in the database. Prints out
-              a brief statement that it did so, to stdout.
-              Note that you cannot add a NOT NULL column that has no
-              default -- the database won't know what to set all
-              the NOT NULL values to.
- Params:      $table = the table where the column is being added
-              $name  = the name of the new column
-              \%definition = Abstract column definition for the new column
-              $init_value = (optional) An initial value to set the column
-                            to. Required if your column is NOT NULL and has
-                            no DEFAULT set.
- Returns:     nothing
+=over
 
-=item C<bz_add_index($table, $name, $definition)>
+=item B<Description>
 
- Description: Adds a new index to a table in the database. Prints
-              out a brief statement that it did so, to stdout.
-              If the index already exists, we will do nothing.
- Params:      $table - The table the new index is on.
-              $name  - A name for the new index.
-              $definition - An abstract index definition. 
-                            Either a hashref or an arrayref.
- Returns:     nothing
+Adds a new column to a table in the database. Prints out a brief statement 
+that it did so, to stdout. Note that you cannot add a NOT NULL column that 
+has no default -- the database won't know what to set all the NULL
+values to.
 
-=item C<bz_add_table($name)>
+=item B<Params>
 
- Description: Creates a new table in the database, based on the
-              definition for that table in the abstract schema.
-              Note that unlike the other 'add' functions, this does
-              not take a definition, but always creates the table
-              as it exists in the ABSTRACT_SCHEMA.
-              If a table with that name already exists, then this
-              function returns silently.
- Params:      $name - The name of the table you want to create.
- Returns:     nothing
+=over
 
-=item C<bz_drop_index($table, $name)>
+=item C<$table> - the table where the column is being added
 
- Description: Removes an index from the database. Prints out a brief
-              statement that it did so, to stdout. If the index
-              doesn't exist, we do nothing.
- Params:      $table - The table that the index is on.
-              $name  - The name of the index that you want to drop.
- Returns:     nothing
+=item C<$name> - the name of the new column
 
-=item C<bz_drop_table($name)>
+=item C<\%definition> - Abstract column definition for the new column
 
- Description: Drops a table from the database. If the table
-              doesn't exist, we just return silently.
- Params:      $name - The name of the table to drop.
- Returns:     nothing
-
-=item C<bz_alter_column($table, $name, \%new_def, $set_nulls_to)>
-
- Description: Changes the data type of a column in a table. Prints out
-              the changes being made to stdout. If the new type is the
-              same as the old type, the function returns without changing
-              anything.
- Params:      $table   = the table where the column is
-              $name    = the name of the column you want to change
-              $new_def = An abstract column definition for the new 
-                         data type of the columm
-              $set_nulls_to = (Optional) If you are changing the column
-                              to be NOT NULL, you probably also want to
-                              set any existing NULL columns to a particular
-                              value. Specify that value here. 
-                              NOTE: The value should not already be SQL-quoted.
- Returns:     nothing
-
-=item C<bz_drop_column($table, $column)>
-
- Description: Removes a column from a database table. If the column
-              doesn't exist, we return without doing anything. If we do
-              anything, we print a short message to stdout about the change.
- Params:      $table  = The table where the column is
-              $column = The name of the column you want to drop
- Returns:     none
-
-=item C<bz_rename_column($table, $old_name, $new_name)>
-
- Description: Renames a column in a database table. If the C<$old_name>
-              column doesn't exist, we return without doing anything.
-              If C<$old_name> and C<$new_name> both already exist in the
-              table specified, we fail.
- Params:      $table    = The table containing the column 
-                          that you want to rename
-              $old_name = The current name of the column that 
-                          you want to rename
-              $new_name = The new name of the column
- Returns:     nothing
+=item C<$init_value> (optional) - An initial value to set the column
+to. Required if your column is NOT NULL and has no DEFAULT set.
 
 =back
 
+=item B<Returns> (nothing)
+
+=back
+
+=item C<bz_add_index>
+
+=over
+
+=item B<Description>
+
+Adds a new index to a table in the database. Prints out a brief statement 
+that it did so, to stdout. If the index already exists, we will do nothing.
+
+=item B<Params>
+
+=over
+
+=item C<$table> - The table the new index is on.
+
+=item C<$name>  - A name for the new index.
+
+=item C<$definition> - An abstract index definition. Either a hashref 
+or an arrayref.
+
+=back
+
+=item B<Returns> (nothing)
+
+=back
+
+=item C<bz_add_table>
+
+=over
+
+=item B<Description>
+
+Creates a new table in the database, based on the definition for that 
+table in the abstract schema.
+
+Note that unlike the other 'add' functions, this does not take a 
+definition, but always creates the table as it exists in
+L<Bugzilla::DB::Schema/ABSTRACT_SCHEMA>.
+
+If a table with that name already exists, then this function returns 
+silently.
+
+=item B<Params>
+
+=over
+
+=item C<$name> - The name of the table you want to create.
+
+=back
+
+=item B<Returns> (nothing)
+
+=back
+
+=item C<bz_drop_index>
+
+=over
+
+=item B<Description>
+
+Removes an index from the database. Prints out a brief statement that it 
+did so, to stdout. If the index doesn't exist, we do nothing.
+
+=item B<Params>
+
+=over
+
+=item C<$table> - The table that the index is on.
+
+=item C<$name> - The name of the index that you want to drop.
+
+=back
+
+=item B<Returns> (nothing)
+
+=back
+
+=item C<bz_drop_table>
+
+=over
+
+=item B<Description>
+
+Drops a table from the database. If the table doesn't exist, we just 
+return silently.
+
+=item B<Params>
+
+=over
+
+=item C<$name> - The name of the table to drop.
+
+=back
+
+=item B<Returns> (nothing)
+
+=back
+
+=item C<bz_alter_column>
+
+=over
+
+=item B<Description>
+
+Changes the data type of a column in a table. Prints out the changes 
+being made to stdout. If the new type is the same as the old type, 
+the function returns without changing anything.
+
+=item B<Params>
+
+=over
+
+=item C<$table> - the table where the column is
+
+=item C<$name> - the name of the column you want to change
+
+=item C<\%new_def> - An abstract column definition for the new 
+data type of the columm
+
+=item C<$set_nulls_to> (Optional) - If you are changing the column
+to be NOT NULL, you probably also want to set any existing NULL columns 
+to a particular value. Specify that value here. B<NOTE>: The value should 
+not already be SQL-quoted.
+
+=back
+
+=item B<Returns> (nothing)
+
+=back
+
+=item C<bz_drop_column>
+
+=over
+
+=item B<Description>
+
+Removes a column from a database table. If the column doesn't exist, we 
+return without doing anything. If we do anything, we print a short 
+message to C<stdout> about the change.
+
+=item B<Params>
+
+=over
+
+=item C<$table> - The table where the column is
+
+=item C<$column> - The name of the column you want to drop
+
+=back
+
+=item B<Returns> (nothing)
+
+=back
+
+=item C<bz_rename_column>
+
+=over
+
+=item B<Description>
+
+Renames a column in a database table. If the C<$old_name> column 
+doesn't exist, we return without doing anything. If C<$old_name> 
+and C<$new_name> both already exist in the table specified, we fail.
+
+=item B<Params>
+
+=over
+
+=item C<$table> - The name of the table containing the column 
+that you want to rename
+
+=item C<$old_name> - The current name of the column that you want to rename
+
+=item C<$new_name> - The new name of the column
+
+=back
+
+=item B<Returns> (nothing)
+
+=back
+
+=back
 
 =head2 Schema Information Methods
 
@@ -1518,46 +2026,63 @@ These methods return information about the current Bugzilla database
 schema, as it currently exists on the disk. 
 
 Where a parameter says "Abstract index/column definition", it returns/takes
-information in the formats defined for indexes and columns in
-C<Bugzilla::DB::Schema::ABSTRACT_SCHEMA>.
+information in the formats defined for indexes and columns for
+L<Bugzilla::DB::Schema/ABSTRACT_SCHEMA>.
 
-=over 4
+=over
 
-=item C<bz_column_info($table, $column)>
+=item C<bz_column_info>
 
- Description: Get abstract column definition.
- Params:      $table - The name of the table the column is in.
-              $column - The name of the column.
- Returns:     An abstract column definition for that column.
-              If the table or column does not exist, we return undef.
+=over
 
-=item C<bz_index_info($table, $index)>
+=item B<Description>
 
- Description: Get abstract index definition.
- Params:      $table - The table the index is on.
-              $index - The name of the index.
- Returns:     An abstract index definition for that index,
-              always in hashref format. The hashref will
-              always contain the TYPE element, but it will
-              be an empty string if it's just a normal index.
-              If the index does not exist, we return undef.
+Get abstract column definition.
+
+=item B<Params>
+
+=over
+
+=item C<$table> - The name of the table the column is in.
+
+=item C<$column> - The name of the column.
 
 =back
 
+=item B<Returns>
 
-=head2 Deprecated Schema Information Methods
+An abstract column definition for that column. If the table or column 
+does not exist, we return C<undef>.
 
-These methods return info about the current Bugzilla database, for
-MySQL only.
+=back
 
-=over 4
+=item C<bz_index_info>
 
-=item C<bz_get_field_defs>
+=over
 
- Description: Returns a list of all the "bug" fields in Bugzilla. The list
-              contains hashes, with a 'name' key and a 'description' key.
- Params:      none
- Returns:     List of all the "bug" fields
+=item B<Description>
+
+Get abstract index definition.
+
+=item B<Params>
+
+=over
+
+=item C<$table> - The table the index is on.
+
+=item C<$index> - The name of the index.
+
+=back
+
+=item B<Returns>
+
+An abstract index definition for that index, always in hashref format. 
+The hashref will always contain the C<TYPE> element, but it will
+be an empty string if it's just a normal index.
+
+If the index does not exist, we return C<undef>.
+
+=back
 
 =back
 
@@ -1567,27 +2092,22 @@ MySQL only.
 These methods deal with the starting and stopping of transactions 
 in the database.
 
-=over 4
+=over
 
 =item C<bz_start_transaction>
 
- Description: Starts a transaction if supported by the database being used
- Params:      none
- Returns:     none
+Starts a transaction if supported by the database being used. Returns nothing
+and takes no parameters.
 
 =item C<bz_commit_transaction>
 
- Description: Ends a transaction, commiting all changes, if supported by
-              the database being used
- Params:      none
- Returns:     none
+Ends a transaction, commiting all changes, if supported by the database 
+being used. Returns nothing and takes no parameters.
 
 =item C<bz_rollback_transaction>
 
- Description: Ends a transaction, rolling back all changes, if supported by
-              the database being used
- Params:      none
- Returns:     none
+Ends a transaction, rolling back all changes, if supported by the database 
+being used. Returns nothing and takes no parameters.
 
 =back
 
@@ -1597,18 +2117,40 @@ in the database.
 Methods in this class are intended to be used by subclasses to help them
 with their functions.
 
-=over 4
+=over
 
 =item C<db_new>
 
- Description: Constructor
- Params:      $dsn = database connection string
-              $user = username used to log in to the database
-              $pass = password used to log in to the database
-              $attributes = set of attributes for DB connection (optional)
- Returns:     new instance of the DB class
- Note:        the name of this constructor is not new, as that would make
-              our check for implementation of new() by derived class useles.
+=over
+
+=item B<Description>
+
+Constructor
+
+=item B<Params>
+
+=over
+
+=item C<$dsn> - database connection string
+
+=item C<$user> - username used to log in to the database
+
+=item C<$pass> - password used to log in to the database
+
+=item C<\%attributes> - set of attributes for DB connection (optional)
+
+=back
+
+=item B<Returns>
+
+A new instance of the DB class
+
+=item B<Note>
+
+The name of this constructor is not C<new>, as that would make
+our check for implementation of C<new> by derived class useless.
+
+=back
 
 =back
 
@@ -1617,6 +2159,4 @@ with their functions.
 
 L<DBI>
 
-L<Bugzilla::Constants> - The C<DB_MODULE> constant.
-
-=cut
+L<Bugzilla::Constants/DB_MODULE>
