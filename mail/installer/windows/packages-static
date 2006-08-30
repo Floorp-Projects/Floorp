@@ -9,6 +9,7 @@ bin\chrome\@AB_CD@.jar
 bin\chrome\@AB_CD@.manifest
 bin\chrome\mail-locales.manifest
 bin\dictionaries\*
+bin\uninstall\uninst.exe
 
 [xpcom]
 bin\xpcom.dll
@@ -373,7 +374,3 @@ bin\components\dom_svg.xpt
 
 ; [Updater]
 bin\updater.exe
-
-; [Uninstaller]
-bin\uninstall\uninstall.exe
-bin\uninstall\uninstall.ini
