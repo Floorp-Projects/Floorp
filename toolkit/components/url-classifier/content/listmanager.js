@@ -78,6 +78,9 @@
  */
 const kTableVersionPrefPrefix = "urlclassifier.tableversion.";
 
+// How frequently we check for updates (30 minutes)
+const kUpdateInterval = 30 * 60 * 1000;
+
 /**
  * A ListManager keeps track of black and white lists and knows
  * how to update them.
@@ -278,9 +281,27 @@ PROT_ListManager.prototype.maybeToggleUpdateChecking = function() {
 
     // Multiple warden can ask us to reenable updates at the same time, but we
     // really just need to schedule a single update.
-    if (!this.currentUpdateChecker_)
+    if (!this.currentUpdateChecker_) {
+      // If the user has never downloaded tables, do the check now.
+      // If the user has tables, add a fuzz of a few minutes.
+      this.loadTableVersions_();
+      var hasTables = false;
+      for (var table in this.tablesKnown_) {
+        if (this.tablesKnown_[table].minor != -1) {
+          hasTables = true;
+          break;
+        }
+      }
+
+      var initialUpdateDelay = 3000;
+      if (hasTables) {
+        // Add a fuzz of 0-5 minutes.
+        initialUpdateDelay += Math.floor(Math.random() * (5 * 60 * 1000));
+      }
       this.currentUpdateChecker_ =
-        new G_Alarm(BindToObject(this.checkForUpdates, this), 3000);
+        new G_Alarm(BindToObject(this.checkForUpdates, this),
+                    initialUpdateDelay);
+    }
   } else {
     G_Debug(this, "Stopping managing lists (if currently active)");
     this.stopUpdateChecker();                    // Cancel pending updates
@@ -289,15 +310,31 @@ PROT_ListManager.prototype.maybeToggleUpdateChecking = function() {
 
 /**
  * Start periodic checks for updates. Idempotent.
+ * We want to distribute update checks evenly across the update period (an
+ * hour).  To do this, we pick a random number of time between 0 and 30
+ * minutes.  The client first checks at 15 + rand, then every 30 minutes after
+ * that.
  */
 PROT_ListManager.prototype.startUpdateChecker = function() {
   this.stopUpdateChecker();
   
-  // Schedule a check for updates every so often
-  // TODO(tc): PREF NEW
-  var sixtyMinutes = 60 * 60 * 1000;
+  // Schedule the first check for between 15 and 45 minutes.
+  var repeatingUpdateDelay = kUpdateInterval / 2;
+  repeatingUpdateDelay += Math.floor(Math.random() * kUpdateInterval);
+  this.updateChecker_ = new G_Alarm(BindToObject(this.initialUpdateCheck_,
+                                                 this),
+                                    repeatingUpdateDelay);
+}
+
+/**
+ * Callback for the first update check.
+ * We go ahead and check for table updates, then start a regular timer (once
+ * every 30 minutes).
+ */
+PROT_ListManager.prototype.initialUpdateCheck_ = function() {
+  this.checkForUpdates();
   this.updateChecker_ = new G_Alarm(BindToObject(this.checkForUpdates, this), 
-                                    sixtyMinutes, true /* repeat */);
+                                    kUpdateInterval, true /* repeat */);
 }
 
 /**
