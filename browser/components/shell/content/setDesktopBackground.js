@@ -242,8 +242,10 @@ var gSetBackground = {
     this.updateColor(this._backgroundColor);
              
     var img = this._createImage();
-    var width = this._image.width * this._monitor.boxObject.width / screen.width;
-    var height = this._image.height * this._monitor.boxObject.height / screen.height;
+    // Use naturalHeight/Width here so we don't scale an image improperly in
+    // the preview window if the image is resized in the browser window.
+    var width = this._image.naturalWidth * this._monitor.boxObject.width / screen.width;
+    var height = this._image.naturalHeight * this._monitor.boxObject.height / screen.height;
     img.width = Math.floor(width);
     img.height = Math.floor(height);
     this._monitor.appendChild(img);
