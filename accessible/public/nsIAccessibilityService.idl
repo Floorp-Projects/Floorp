@@ -83,6 +83,10 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
                               in nsIWeakReference aWeakShell, 
                               inout nsIFrame frameHint, out boolean aIsHidden);
 
+  // For gtk+ native window accessible
+  [noscript] nsIAccessible addNativeRootAccessible(in voidPtr aAtkAccessible);
+  [noscript] void removeNativeRootAccessible(in nsIAccessible aRootAccessible);
+
   /**
    * Invalidate the accessibility cache associated with aPresShell, for accessibles
    * that were generated for aContainerContent and it's subtree.

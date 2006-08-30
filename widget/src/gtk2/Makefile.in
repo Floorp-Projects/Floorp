@@ -110,6 +110,7 @@ CPPSRCS		= \
 		nsDeviceContextSpecG.cpp \
 		nsPrintOptionsGTK.cpp \
 		nsImageToPixbuf.cpp \
+		nsAccessibilityHelper.cpp \
 		$(NULL)
 
 # build our subdirs, too

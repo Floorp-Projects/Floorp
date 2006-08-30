@@ -89,7 +89,7 @@ public:
     }
     
 protected:
-    AtkObject *mMaiAtkObject;
+    AtkObject *mAtkObject;
 
 private:
     PRUint16 CreateMaiInterfaces(void);

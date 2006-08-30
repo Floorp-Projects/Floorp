@@ -353,6 +353,10 @@ public:
     gfxASurface       *GetThebesSurface();
 #endif
 
+#ifdef ACCESSIBILITY
+    static PRBool      sAccessibilityEnabled;
+#endif
+
 private:
     void               GetToplevelWidget(GtkWidget **aWidget);
     void               GetContainerWindow(nsWindow  **aWindow);

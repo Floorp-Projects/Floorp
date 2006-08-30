@@ -82,6 +82,10 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
   nsHyperTextAccessible(aDOMNode, aShell), mWnd(nsnull),
   mScrollPositionChangedTicks(0), mIsContentLoaded(PR_FALSE)
 {
+  // For GTK+ native window, we do nothing here.
+  if (!mDOMNode)
+    return;
+
   // Because of the way document loading happens, the new nsIWidget is created before
   // the old one is removed. Since it creates the nsDocAccessible, for a brief moment
   // there can be 2 nsDocAccessible's for the content area, although for 2 different
