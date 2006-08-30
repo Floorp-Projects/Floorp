@@ -101,7 +101,9 @@ CAIRO_BEGIN_DECLS
 /* slim_internal.h */
 #if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__)
 #define cairo_private		__attribute__((__visibility__("hidden")))
-#else
+#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+#define cairo_private		__hidden
+#else /* not gcc >= 3.3 and not Sun Studio >= 8 */
 #define cairo_private
 #endif
 
