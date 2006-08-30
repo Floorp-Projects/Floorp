@@ -96,8 +96,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSessionX, Init)
 #include "nsBidiKeyboard.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 
+#ifdef MOZ_CAIRO_GFX
+#include "nsNativeThemeCocoa.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeCocoa)
+#else
 #include "nsNativeThemeMac.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeMac)
+#endif
 
 static const nsModuleComponentInfo gComponents[] =
 {
@@ -179,7 +184,12 @@ static const nsModuleComponentInfo gComponents[] =
     NS_NATIVESCROLLBAR_CID,
     "@mozilla.org/widget/nativescrollbar;1",
     nsNativeScrollbarConstructor },
-#ifndef MOZ_CAIRO_GFX
+#ifdef MOZ_CAIRO_GFX
+  { "Native Theme Renderer", 
+    NS_THEMERENDERER_CID,
+    "@mozilla.org/chrome/chrome-native-theme;1",
+    nsNativeThemeCocoaConstructor },
+#else
   { "Native Theme Renderer", 
     NS_THEMERENDERER_CID,
     "@mozilla.org/chrome/chrome-native-theme;1",

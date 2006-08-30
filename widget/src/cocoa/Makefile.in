@@ -117,6 +117,10 @@ CPPSRCS =  \
 		$(MAC_LCPPSRCS) \
 		$(NULL)
 
+ifdef MOZ_ENABLE_CAIRO_GFX
+CPPSRCS += nsNativeThemeCocoa.cpp
+endif
+
 CMMSRCS = \
 		nsMenuX.mm \
 		nsMenuBarX.mm \
@@ -200,6 +204,7 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../mac \
 	-I/System/Library/Frameworks/Carbon.Framework/Headers \
 	-I/System/Library/Frameworks/Cocoa.Framework/Headers \
+	-I/System/Library/Frameworks/Carbon.framework/Frameworks/HIToolbox.framework/Headers \
 	$(NULL)
 
 LDFLAGS	+= \
