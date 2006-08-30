@@ -219,6 +219,7 @@ nsTextTransformer::Init(nsIFrame* aFrame,
    *  We do numeric shaping in all Bidi documents.
    */
   if (mPresContext->BidiEnabled()) {
+    SetFrameIsRTL(NS_GET_EMBEDDING_LEVEL(aFrame) & 1);
     mCharType = (nsCharType)NS_PTR_TO_INT32(mPresContext->PropertyTable()->GetProperty(aFrame, nsLayoutAtoms::charType));
     if (mCharType == eCharType_RightToLeftArabic) {
       if (aForceArabicShaping) {
@@ -1485,7 +1486,9 @@ nsTextTransformer::DoArabicShaping(PRUnichar* aText,
     return;
   
   PRInt32 newLen;
-  PRBool isVisual = mPresContext->IsVisualMode();
+  // Arabic text will be in logical order in right-to-left frames and in visual
+  // order in left-to-right frames.
+  PRBool isLogical = FrameIsRTL();
 
   nsAutoString buf;
   if (!EnsureStringLength(buf, aTextLength)) {
@@ -1495,7 +1498,7 @@ nsTextTransformer::DoArabicShaping(PRUnichar* aText,
   }
   PRUnichar* buffer = buf.BeginWriting();
   
-  ArabicShaping(aText, buf.Length(), buffer, (PRUint32 *)&newLen, !isVisual, !isVisual);
+  ArabicShaping(aText, buf.Length(), buffer, (PRUint32 *)&newLen, isLogical, isLogical);
 
   if (newLen <= aTextLength) {
     aTextLength = newLen;
