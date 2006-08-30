@@ -6440,6 +6440,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
         }
 
         // This is its own frame that derives from box.
+        isReplaced = PR_TRUE;
         newFrame = NS_NewMenuPopupFrame(mPresShell, aStyleContext);
 
         if (aTag == nsXULAtoms::tooltip) {
