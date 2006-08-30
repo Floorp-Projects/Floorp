@@ -358,7 +358,7 @@
   <key id="key_watchThread" key="&watchThreadMenu.key;"              oncommand="goDoCommand('cmd_watchThread')" />
   <key id="key_killThread" key="&killThreadMenu.key;"                oncommand="goDoCommand('cmd_killThread')" />
   <key id="key_openMessage" key="&openMessageWindowCmd.key;"         oncommand="goDoCommand('cmd_openMessage')" modifiers="accel"/>
-  <key id="key_moveToFolderAgain" key="&moveToFolderAgainCmd.key;"   oncommand="goDoCommand('cmd_moveToFolderAgain')" modifiers="accel"/>
+  <key id="key_moveToFolderAgain" key="&moveToFolderAgainCmd.key;"   oncommand="goDoCommand('cmd_moveToFolderAgain')" modifiers="accel, shift"/>
   <key id="key_print" key="&printCmd.key;"                           oncommand="goDoCommand('cmd_print')" modifiers="accel"/>
   <key id="key_saveAsFile" key="&saveAsFileCmd.key;"                 oncommand="goDoCommand('cmd_saveAsFile')" modifiers="accel"/>
   <key id="key_viewPageSource" key="&pageSourceCmd.key;"             oncommand="goDoCommand('cmd_viewPageSource')" modifiers="accel"/>
@@ -541,7 +541,7 @@
       accesskey="&contextCopyMsgMenu.accesskey;"
       sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
       sortDirection="ascending"
-      datasources="rdf:null"> 
+      datasources="rdf:null">
       <menupopup/>
       <template>
       <rule nc:NoSelect="true" iscontainer="true" isempty="false">
