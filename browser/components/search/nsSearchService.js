@@ -1011,7 +1011,7 @@ Engine.prototype = {
 
     switch (this._dataType) {
       case SEARCH_DATA_XML:
-
+break; //XXX
         var domParser = Cc["@mozilla.org/xmlextras/domparser;1"].
                         createInstance(Ci.nsIDOMParser);
         var doc = domParser.parseFromStream(fileInStream, "UTF-8",
@@ -1036,7 +1036,7 @@ Engine.prototype = {
     fileInStream.close();
 
     // Now that the data is loaded, initialize the engine object
-    this._initFromData();
+    //this._initFromData();
   },
 
   /**
@@ -2223,7 +2223,6 @@ SearchService.prototype = {
   },
 
   _loadEngines: function SRCH_SVC_loadEngines(aDir) {
-    return;
     LOG("_loadEngines: Searching in " + aDir.path + " for search engines.");
 
     // Check whether aDir is the user profile dir
