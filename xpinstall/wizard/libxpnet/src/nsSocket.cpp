@@ -288,7 +288,7 @@ nsSocket::Send(unsigned char *aBuf, int *aBufSize)
     int timeout = 0;
     fd_set selset;
 
-    if (!aBuf || (aBufSize && (*aBufSize <= 0)) || mFd < 0)
+    if (!aBuf || !aBufSize || (*aBufSize <= 0) || mFd < 0)
         return E_PARAM;
 
     while (timeout < kTimeoutThresholdUsecs)
@@ -355,7 +355,7 @@ nsSocket::Recv(unsigned char *aBuf, int *aBufSize, int aTimeoutThresholdUsecs)
     int bufsize;
     int timeout;
 
-    if (!aBuf || (aBufSize && (*aBufSize <= 0)) || mFd < 0)
+    if (!aBuf || !aBufSize || (*aBufSize <= 0) || mFd < 0)
         return E_PARAM;
     memset(aBuf, 0, *aBufSize);
 
