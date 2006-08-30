@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.89 $ $Date: 2006/08/22 22:54:11 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.90 $ $Date: 2006/08/30 17:57:20 $";
 #endif /* DEBUG */
 
 /*
@@ -1201,6 +1201,9 @@ nssTrustDomain_TraverseCertificatesBySubject (
     NSSCertificate *c;
     PRIntn i;
     tmpArena = NSSArena_Create();
+    if (!tmpArena) {
+        return PR_FAILURE;
+    }
     subjectCerts = NSSTrustDomain_FindCertificatesBySubject(td, subject, NULL,
                                                             0, tmpArena);
     if (subjectCerts) {
@@ -1228,6 +1231,9 @@ nssTrustDomain_TraverseCertificatesByNickname (
     NSSCertificate *c;
     PRIntn i;
     tmpArena = NSSArena_Create();
+    if (!tmpArena) {
+        return PR_FAILURE;
+    }
     nickCerts = NSSTrustDomain_FindCertificatesByNickname(td, nickname, NULL,
                                                           0, tmpArena);
     if (nickCerts) {
