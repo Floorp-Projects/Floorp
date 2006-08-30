@@ -1120,8 +1120,10 @@ public:
   // Whether the parent is a block (see ProcessChildren's aParentIsBlock)
   PRBool                    mCreatorIsBlock;
 
+#ifdef MOZ_XUL
   // The root box, if any.
   nsIRootBox* mRootBox;
+#endif
 
   // Constructor
   // Use the passed-in history state.
@@ -1232,8 +1234,10 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
     mPseudoFrames(),
     mAnonymousCreator(nsnull),
     mInsertionContent(nsnull),
-    mCreatorIsBlock(PR_FALSE),
-    mRootBox(nsIRootBox::GetRootBox(aPresShell))
+    mCreatorIsBlock(PR_FALSE)
+#ifdef MOZ_XUL    
+    , mRootBox(nsIRootBox::GetRootBox(aPresShell))
+#endif
 {
 }
 
@@ -1252,8 +1256,10 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
     mPseudoFrames(),
     mAnonymousCreator(nsnull),
     mInsertionContent(nsnull),
-    mCreatorIsBlock(PR_FALSE),
-    mRootBox(nsIRootBox::GetRootBox(aPresShell))
+    mCreatorIsBlock(PR_FALSE)
+#ifdef MOZ_XUL
+    , mRootBox(nsIRootBox::GetRootBox(aPresShell))
+#endif
 {
   mFrameState = aPresShell->GetDocument()->GetLayoutHistoryState();
 }
@@ -1425,6 +1431,7 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
   }
 #endif
 
+#ifdef MOZ_XUL
   if (NS_UNLIKELY(aIsOutOfFlowPopup)) {
     NS_ASSERTION(mRootBox && mRootBox->GetPopupSetFrame(),
                  "Must have a popup set frame!");
@@ -1432,6 +1439,7 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
                                                       aNewFrame);
 
   }
+#endif
 
   frameItems->AddChild(aNewFrame);
 
@@ -6485,13 +6493,18 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
     // xul does not support absolute positioning
     nsIFrame* geometricParent;
+#ifdef MOZ_XUL
     if (isPopup) {
       NS_ASSERTION(aState.mRootBox && aState.mRootBox->GetPopupSetFrame(),
                    "How did we get here?");
       geometricParent = aState.mRootBox->GetPopupSetFrame();
-    } else {
+    }
+    else
+#else
+    {
       geometricParent = aParentFrame;
     }
+#endif
     
     /*
       nsIFrame* geometricParent = aState.GetGeometricParent(display, aParentFrame);
