@@ -37,17 +37,18 @@
 
 #include "gfxQuartzSurface.h"
 
-#include "cairo-quartz2.h"
+#include "cairo-nquartz.h"
 
 gfxQuartzSurface::gfxQuartzSurface(gfxImageFormat format,
-                                   int width, int height,
-                                   PRBool y_grows_down)
+                                   int width, int height)
     : mWidth(width), mHeight(height)
 {
-    mCGContext = nsnull;
+    cairo_surface_t *surf = cairo_nquartz_surface_create
+        ((cairo_format_t) format, width, height);
 
-    cairo_surface_t *surf = cairo_quartzgl_surface_create
-        ((cairo_format_t) format, width, height, y_grows_down);
+    mCGContext = cairo_nquartz_surface_get_cg_context (surf);
+
+    CGContextRetain(mCGContext);
 
     Init(surf);
 }
@@ -57,23 +58,27 @@ gfxQuartzSurface::gfxQuartzSurface(CGContextRef context,
                                    PRBool y_grows_down)
     : mCGContext(context), mWidth(width), mHeight(height)
 {
-    cairo_surface_t *surf = cairo_quartzgl_surface_create_for_cg_context
+    cairo_surface_t *surf = cairo_nquartz_surface_create_for_cg_context
         (context, width, height, y_grows_down);
-    //printf ("+++ gfxQuartzSurface[%p] %p %d %d -> %p\n", this, context, width, height, surf);
+
+    CGContextRetain(mCGContext);
+
     Init(surf);
 }
 
 gfxQuartzSurface::gfxQuartzSurface(cairo_surface_t *csurf)
 {
-    mWidth = -1;
-    mHeight = -1;
-    mCGContext = nsnull;
+    mWidth = 0;
+    mHeight = 0;
+
+    mCGContext = cairo_nquartz_surface_get_cg_context (csurf);
+    CGContextRetain (mCGContext);
 
     Init(csurf, PR_TRUE);
 }
 
 gfxQuartzSurface::~gfxQuartzSurface()
 {
-    //printf ("--- ~gfxQuartzSurface[%p] %p %p\n", this, CairoSurface(), mCGContext);
     Destroy();
+    CGContextRelease(mCGContext);
 }
