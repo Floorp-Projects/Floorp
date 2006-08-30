@@ -55,8 +55,12 @@ TOOLKIT_NSIS_FILES = \
 
 $(CONFIG_DIR)/setup.exe::
 	$(INSTALL) $(addprefix $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
-	$(INSTALL) $(topsrcdir)/toolkit/mozapps/installer/windows/wizard/setuprsc/setup.ico $(CONFIG_DIR)
+	$(INSTALL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/setup.ico $(CONFIG_DIR)
 	cd $(CONFIG_DIR) && makensis.exe installer.nsi
+# Support for building the uninstaller when repackaging locales
+ifeq ($(CONFIG_DIR),l10ngen)
+	cd $(CONFIG_DIR) && makensis.exe uninstaller.nsi
+endif
 
 $(CONFIG_DIR)/7zSD.sfx:
 	$(CYGWIN_WRAPPER) upx --best -o $(CONFIG_DIR)/7zSD.sfx $(SFX_MODULE)
@@ -68,3 +72,12 @@ installer::
 	$(NSINSTALL) -D $(DIST)/install/sea
 	cat $(CONFIG_DIR)/7zSD.sfx $(CONFIG_DIR)/app.tag $(CONFIG_DIR)/app.7z > $(DIST)/install/sea/$(PKG_BASENAME).installer.exe
 	chmod 0755 $(DIST)/install/sea/$(PKG_BASENAME).installer.exe
+
+# For building the uninstaller during the application build so it can be
+# included for mar file generation.
+uninstaller::
+	$(INSTALL) $(addprefix $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
+	$(INSTALL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/setup.ico $(CONFIG_DIR)
+	cd $(CONFIG_DIR) && makensis.exe uninstaller.nsi
+	$(NSINSTALL) -D $(DIST)/bin/uninstall
+	cp $(CONFIG_DIR)/uninst.exe $(DIST)/bin/uninstall
