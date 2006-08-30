@@ -250,7 +250,7 @@ public:
 
 //  NS_IMETHOD   GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, PRInt32 aOffset, PRBool aIsEndNode, nsIFrame **aResultFrame);
   NS_IMETHOD   GetPrimaryFrameForAnchorNode(nsIFrame **aResultFrame);
-  NS_IMETHOD   GetPrimaryFrameForFocusNode(nsIFrame **aResultFrame, PRInt32 *aOffset);
+  NS_IMETHOD   GetPrimaryFrameForFocusNode(nsIFrame **aResultFrame, PRInt32 *aOffset, PRBool aVisual);
   NS_IMETHOD   SetOriginalAnchorPoint(nsIDOMNode *aNode, PRInt32 aOffset);
   NS_IMETHOD   GetOriginalAnchorPoint(nsIDOMNode **aNode, PRInt32 *aOffset);
   NS_IMETHOD   LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
@@ -1290,16 +1290,6 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
   offsetused = mDomSelections[index]->FetchFocusOffset();
   weakNodeUsed = mDomSelections[index]->FetchFocusNode();
 
-    
-  nsIFrame *frame;
-  result = mDomSelections[index]->GetPrimaryFrameForFocusNode(&frame, &offsetused);
-
-  if (NS_FAILED(result) || !frame)
-    return result?result:NS_ERROR_FAILURE;
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(frame->GetContent());
-  nsCOMPtr<nsIDOMNode> parentNode;
-  nsPeekOffsetStruct pos;
-
   PRBool visualMovement = 
     (aKeycode == nsIDOMKeyEvent::DOM_VK_BACK_SPACE || 
      aKeycode == nsIDOMKeyEvent::DOM_VK_DELETE ||
@@ -1308,6 +1298,13 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
     PR_FALSE : // Delete operations and home/end are always logical
     mCaretMovementStyle == 1 || (mCaretMovementStyle == 2 && !aContinueSelection);
 
+  nsIFrame *frame;
+  result = mDomSelections[index]->GetPrimaryFrameForFocusNode(&frame, &offsetused, visualMovement);
+
+  if (NS_FAILED(result) || !frame)
+    return result?result:NS_ERROR_FAILURE;
+
+  nsPeekOffsetStruct pos;
   //set data using mLimiter to stop on scroll views.  If we have a limiter then we stop peeking
   //when we hit scrollable views.  If no limiter then just let it go ahead
   pos.SetData(aAmount, eDirPrevious, offsetused, desiredX, 
@@ -4905,7 +4902,8 @@ nsTypedSelection::GetPrimaryFrameForAnchorNode(nsIFrame **aReturnFrame)
 }
 
 NS_IMETHODIMP
-nsTypedSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame, PRInt32 *aOffsetUsed)
+nsTypedSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame, PRInt32 *aOffsetUsed,
+                                              PRBool aVisual)
 {
   if (!aReturnFrame)
     return NS_ERROR_NULL_POINTER;
@@ -4916,11 +4914,6 @@ nsTypedSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame, PRInt32 *
   
   nsIPresShell *presShell = mFrameSelection->GetShell();
 
-  nsCOMPtr<nsICaret> caret;
-  nsresult result = presShell->GetCaret(getter_AddRefs(caret));
-  if (NS_FAILED(result) || !caret)
-    return NS_ERROR_FAILURE;
-
   PRInt32 frameOffset = 0;
   *aReturnFrame = 0;
   if (!aOffsetUsed)
@@ -4928,10 +4921,25 @@ nsTypedSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame, PRInt32 *
     
   nsFrameSelection::HINT hint = mFrameSelection->GetHint();
 
-  PRUint8 caretBidiLevel = mFrameSelection->GetCaretBidiLevel();
+  if (aVisual) {
+    nsCOMPtr<nsICaret> caret;
+    nsresult result = presShell->GetCaret(getter_AddRefs(caret));
+    if (NS_FAILED(result) || !caret)
+      return NS_ERROR_FAILURE;
+    
+    PRUint8 caretBidiLevel = mFrameSelection->GetCaretBidiLevel();
 
-  return caret->GetCaretFrameForNodeOffset(content, FetchFocusOffset(),
-    hint, caretBidiLevel, aReturnFrame, aOffsetUsed);
+    return caret->GetCaretFrameForNodeOffset(content, FetchFocusOffset(),
+      hint, caretBidiLevel, aReturnFrame, aOffsetUsed);
+  }
+  
+  *aReturnFrame = mFrameSelection->
+    GetFrameForNodeOffset(content, FetchFocusOffset(),
+                          hint, aOffsetUsed);
+  if (!*aReturnFrame)
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
 }
 
 
@@ -7529,7 +7537,7 @@ nsTypedSelection::SelectionLanguageChange(PRBool aLangRTL)
 
   focusOffset = FetchFocusOffset();
   focusNode = FetchFocusNode();
-  result = GetPrimaryFrameForFocusNode(&focusFrame, nsnull);
+  result = GetPrimaryFrameForFocusNode(&focusFrame, nsnull, PR_FALSE);
   if (NS_FAILED(result) || !focusFrame)
     return result?result:NS_ERROR_FAILURE;
 
