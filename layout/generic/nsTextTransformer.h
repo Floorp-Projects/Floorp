@@ -145,6 +145,10 @@ class nsIWordBreaker;
 
 // The text in the transform buffer needs numeric shaping
 #define NS_TEXT_TRANSFORMER_DO_NUMERIC_SHAPING 16
+
+// The frame containing the text was resolved as right-to-left by the
+// Bidi Algorithm
+#define NS_TEXT_TRANSFORMER_FRAME_IS_RTL 32
 #endif
 
 // A growable text buffer that tries to avoid using malloc by having a
@@ -280,6 +284,11 @@ public:
   PRBool NeedsNumericShaping() const {
     return (mFlags & NS_TEXT_TRANSFORMER_DO_NUMERIC_SHAPING) != 0;
   }
+
+  // Returns PR_TRUE if the frame containing the text is right-to-left
+  PRBool FrameIsRTL() const {
+    return (mFlags & NS_TEXT_TRANSFORMER_FRAME_IS_RTL) != 0;
+  }
 #endif
 
   // Set or clears the LEAVE_AS_ASCII bit
@@ -311,6 +320,12 @@ public:
   void SetNeedsNumericShaping(PRBool aValue) {
     aValue ? mFlags |= NS_TEXT_TRANSFORMER_DO_NUMERIC_SHAPING : 
                        mFlags &= (~NS_TEXT_TRANSFORMER_DO_NUMERIC_SHAPING);
+  }
+
+  // Set or clears the NS_TEXT_TRANSFORMER_FRAME_IS_RTL bit
+  void SetFrameIsRTL(PRBool aValue) {
+    aValue ? mFlags |= NS_TEXT_TRANSFORMER_FRAME_IS_RTL:
+             mFlags &= (~NS_TEXT_TRANSFORMER_FRAME_IS_RTL);
   }
 #endif
   
