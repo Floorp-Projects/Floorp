@@ -41,54 +41,43 @@
 #include "nsIEnumerator.h"
 #include "nsIFrame.h"
 
-/* Brief explanation of frame traversal types:
- *
- * LEAF:
- *  Iterate over only the leaf frames in the tree, in depth-first order.
- *
- * EXTENSIVE:
- *  Iterate over all frames in the tree, including non-leaf frames.
- *  Child frames are traversed before their parents going both forward
- *  and backward.
- *
- * FOCUS:
- *  Traverse frames in "focus" order, which is like extensive but
- *  does a strict preorder traversal in both directions.  This type of
- *  traversal also handles placeholder frames transparently, meaning that
- *  it will never stop on one - going down will get the real frame, going
- *  back up will go on past the placeholder, so the placeholders are logically
- *  part of the frame tree.
- *
- * FASTEST:
- *  XXX not implemented
- *
- * VISUAL:
- *  Traverse frames in "visual" order (left-to-right, top-to-bottom).
- */
+enum nsIteratorType {
+  eLeaf,
+  ePreOrder,
+  ePostOrder
+};
 
-enum nsTraversalType{
-  LEAF,
-  EXTENSIVE,
-  FOCUS,
-  FASTEST
-#ifdef IBMBIDI // Simon
-   , VISUAL
-#endif
-}; 
-
-// {1691E1F3-EE41-11d4-9885-00C04FA0CF4B}
+// {9d469828-9bf2-4151-a385-05f30219221b}
 #define NS_IFRAMETRAVERSAL_IID \
-{ 0x1691e1f3, 0xee41, 0x11d4, { 0x98, 0x85, 0x0, 0xc0, 0x4f, 0xa0, 0xcf, 0x4b } }
+{ 0x9d469828, 0x9bf2, 0x4151, { 0xa3, 0x85, 0x05, 0xf3, 0x02, 0x19, 0x22, 0x1b } }
 
 class nsIFrameTraversal : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFRAMETRAVERSAL_IID)
 
+  /**
+   * Create a frame iterator with the specified properties.
+   * @param aEnumerator [out] the created iterator
+   * @param aPresContext [in]
+   * @param aStart [in] the frame to start iterating from
+   * @param aType [in] the type of the iterator: leaf, pre-order, or post-order
+   * @param aVisual [in] whether the iterator should traverse frames in visual
+   *        bidi order
+   * @param aLockInScrollView [in] whether to stop iterating when exiting a
+   *        scroll view
+   * @param aFollowOOFs [in] whether the iterator should follow out-of-flows.
+   *        If true, when reaching a placeholder frame while going down will get
+   *        the real frame. Going back up will go on past the placeholder,
+   *        so the placeholders are logically part of the frame tree.
+   */
   NS_IMETHOD NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
-                              PRUint32 aType,
-                              nsPresContext* aPresContext,
-                              nsIFrame *aStart) = 0;
+                               nsPresContext* aPresContext,
+                               nsIFrame *aStart,
+                               PRInt32 aType,
+                               PRBool aVisual,
+                               PRBool aLockInScrollView,
+                               PRBool aFollowOOFs) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFrameTraversal, NS_IFRAMETRAVERSAL_IID)

@@ -2025,8 +2025,13 @@ nsFrameSelection::GetFrameFromLevel(nsIFrame    *aFrameIn,
   if (NS_FAILED(result))
       return result;
 
-  result = trav->NewFrameTraversal(getter_AddRefs(frameTraversal), LEAF,
-                                   mShell->GetPresContext(), aFrameIn);
+  result = trav->NewFrameTraversal(getter_AddRefs(frameTraversal),
+                                   mShell->GetPresContext(), aFrameIn,
+                                   eLeaf,
+                                   PR_FALSE, // aVisual
+                                   PR_FALSE, // aLockInScrollView
+                                   PR_FALSE  // aFollowOOFs
+                                   );
   if (NS_FAILED(result))
     return result;
   nsISupports *isupports = nsnull;

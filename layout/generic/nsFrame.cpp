@@ -3905,8 +3905,13 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
       //resultFrame is not a block frame
 
       nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
-      result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), EXTENSIVE,
-                                    aPresContext, resultFrame, aPos->mScrollViewStop);
+      result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
+                                    aPresContext, resultFrame,
+                                    ePostOrder,
+                                    PR_FALSE, // aVisual
+                                    aPos->mScrollViewStop,
+                                    PR_FALSE  // aFollowOOFs
+                                    );
       if (NS_FAILED(result))
         return result;
       nsISupports *isupports = nsnull;
@@ -3999,8 +4004,13 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
 
       if (!found){
         resultFrame = storeOldResultFrame;
-        result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), LEAF,
-                                      aPresContext, resultFrame, aPos->mScrollViewStop);
+        result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
+                                      aPresContext, resultFrame,
+                                      eLeaf,
+                                      PR_FALSE, // aVisual
+                                      aPos->mScrollViewStop,
+                                      PR_FALSE  // aFollowOOFs
+                                      );
       }
       while ( !found ){
         nsPoint point(aPos->mDesiredX, 0);
@@ -4546,13 +4556,12 @@ nsIFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct 
     }
     nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
     result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
-#ifdef IBMBIDI
-                                  aPos->mVisual && aPresContext->BidiEnabled() ? VISUAL : 
-#endif
-                                  LEAF,
-                                  aPresContext, 
-                                  traversedFrame, aPos->mScrollViewStop);
-
+                                  aPresContext, traversedFrame,
+                                  eLeaf,
+                                  aPos->mVisual && aPresContext->BidiEnabled(),
+                                  aPos->mScrollViewStop,
+                                  PR_TRUE  // aFollowOOFs
+                                  );
     if (NS_FAILED(result))
       return result;
 
