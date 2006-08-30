@@ -5419,6 +5419,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
       case TOK_NEW:
       case TOK_LP:
+      {
+        uintN oldflags;
+
         /*
          * Emit function call or operator new (constructor call) code.
          * First, emit code for the left operand to evaluate the callable or
@@ -5455,10 +5458,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * JSOP_NEW bytecode with a two-byte immediate telling how many args
          * were pushed on the operand stack.
          */
+        oldflags = cg->treeContext.flags;
+        cg->treeContext.flags &= ~TCF_IN_FOR_INIT;
         for (pn2 = pn2->pn_next; pn2; pn2 = pn2->pn_next) {
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
         }
+        cg->treeContext.flags |= oldflags & TCF_IN_FOR_INIT;
         if (js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - off) < 0)
             return JS_FALSE;
 
@@ -5466,6 +5472,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (js_Emit3(cx, cg, pn->pn_op, ARGC_HI(argc), ARGC_LO(argc)) < 0)
             return JS_FALSE;
         break;
+      }
 
       case TOK_LEXICALSCOPE:
       {
