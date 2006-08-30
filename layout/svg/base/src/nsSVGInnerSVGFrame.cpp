@@ -209,7 +209,6 @@ nsSVGInnerSVGFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
   // make sure our cached transform matrix gets (lazily) updated
   mCanvasTM = nsnull;
-  UpdateCoordCtx();
 
   return nsSVGInnerSVGFrameBase::NotifyCanvasTMChanged(suppressInvalidation);
 }
