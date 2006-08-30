@@ -136,6 +136,13 @@ public:
         *y0 = mat.y0;
     }
 
+    gfxFloat& xx() { return mat.xx; }
+    gfxFloat& xy() { return mat.xy; }
+    gfxFloat& yx() { return mat.yx; }
+    gfxFloat& yy() { return mat.yy; }
+    gfxFloat& x0() { return mat.x0; }
+    gfxFloat& y0() { return mat.y0; }
+
     // matrix operations
     /**
      * Resets this matrix to the identity matrix.
@@ -243,6 +250,11 @@ public:
      */
     bool HasNonTranslation() const {
         return ((mat.xx != 1.0) || (mat.yy != 1.0) ||
+                (mat.xy != 0.0) || (mat.yx != 0.0));
+    }
+
+    bool HasNonTranslationOrFlip() const {
+        return ((mat.xx != 1.0) || ((mat.yy != 1.0) && (mat.yy != -1.0)) ||
                 (mat.xy != 0.0) || (mat.yx != 0.0));
     }
 };

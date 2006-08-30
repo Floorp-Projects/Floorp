@@ -33,12 +33,12 @@
  *      Vladimir Vukicevic <vladimir@mozilla.com>
  */
 
-#ifndef CAIRO_QUARTZGL_H
-#define CAIRO_QUARTZGL_H
+#ifndef CAIRO_NQUARTZ_H
+#define CAIRO_NQUARTZ_H
 
 #include <cairo.h>
 
-#if CAIRO_HAS_QUARTZGL_SURFACE
+#if CAIRO_HAS_NQUARTZ_SURFACE
 
 #include <Carbon/Carbon.h>
 
@@ -47,32 +47,34 @@
 CAIRO_BEGIN_DECLS
 
 cairo_surface_t *
-cairo_quartzgl_surface_create (cairo_format_t format,
-                               unsigned int width,
-                               unsigned int height,
-                               cairo_bool_t y_grows_down);
+cairo_nquartz_surface_create (cairo_format_t format,
+                              unsigned int width,
+                              unsigned int height);
 
-#ifdef CAIRO_QUARTZ2_SUPPORT_AGL
+#ifdef CAIRO_NQUARTZ_SUPPORT_AGL
 cairo_surface_t *
-cairo_quartzgl_surface_create_for_agl_context (AGLContext aglContext,
-                                               unsigned int width,
-                                               unsigned int height,
-                                               cairo_bool_t y_grows_down);
-#endif
-
-cairo_surface_t *
-cairo_quartzgl_surface_create_for_cg_context (CGContextRef cgContext,
+cairo_nquartz_surface_create_for_agl_context (AGLContext aglContext,
                                               unsigned int width,
                                               unsigned int height,
                                               cairo_bool_t y_grows_down);
+#endif
+
+cairo_surface_t *
+cairo_nquartz_surface_create_for_cg_context (CGContextRef cgContext,
+                                             unsigned int width,
+                                             unsigned int height,
+                                             cairo_bool_t y_grows_down);
 
 cairo_bool_t
-cairo_surface_is_quartzgl (cairo_surface_t *surf);
+cairo_surface_is_nquartz (cairo_surface_t *surf);
+
+CGContextRef
+cairo_nquartz_surface_get_cg_context (cairo_surface_t *surf);
 
 CAIRO_END_DECLS
 
-#else  /* CAIRO_HAS_QUARTZGL_SURFACE */
-# error Cairo was not compiled with support for the quartzgl backend
-#endif /* CAIRO_HAS_QUARTZGL_SURFACE */
+#else  /* CAIRO_HAS_NQUARTZ_SURFACE */
+# error Cairo was not compiled with support for the nquartz backend
+#endif /* CAIRO_HAS_NQUARTZ_SURFACE */
 
-#endif /* CAIRO_QUARTZGL_H */
+#endif /* CAIRO_NQUARTZ_H */
