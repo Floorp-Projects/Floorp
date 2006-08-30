@@ -48,6 +48,9 @@ REQUIRES  = xpcom xulapp
 
 CPPSRCS   = nsXULStub.cpp
 
+# Statically link the CRT when possible
+USE_STATIC_LIBS = 1
+
 ifeq ($(OS_ARCH),Darwin)
 
 PROGRAM   = xulrunner$(BIN_SUFFIX)
