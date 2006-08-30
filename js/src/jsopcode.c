@@ -1860,6 +1860,21 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 tail = js_GetSrcNoteOffset(sn2, 0);
 
               do_forinhead:
+                if (!atom && xval) {
+                    /*
+                     * If xval is not a dummy empty string, we have to strdup
+                     * it to save it from being clobbered by the first Sprint
+                     * below.  Standard dumb decompiler operating procedure!
+                     */
+                    if (*xval == '\0') {
+                        xval = NULL;
+                    } else {
+                        xval = JS_strdup(cx, xval);
+                        if (!xval)
+                            return JS_FALSE;
+                    }
+                }
+
 #if JS_HAS_XML_SUPPORT
                 if (foreach) {
                     foreach = JS_FALSE;
@@ -1877,13 +1892,19 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     xval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                     if (!xval)
                         return JS_FALSE;
-                } else if (xval && *xval) {
-                    Sprint(&ss->sprinter,
-                           (js_CodeSpec[lastop].format & JOF_XMLNAME)
-                           ? ".%s"
-                           : "[%s]",
-                           xval);
+                } else if (xval) {
+                    JS_ASSERT(*xval != '\0');
+                    ok = (Sprint(&ss->sprinter,
+                                 (js_CodeSpec[lastop].format & JOF_XMLNAME)
+                                 ? ".%s"
+                                 : "[%s]",
+                                 xval)
+                          >= 0);
+                    JS_free(cx, (char *)xval);
+                    if (!ok)
+                        return JS_FALSE;
                 }
+
                 lval = OFF2STR(&ss->sprinter, todo);
                 rval = OFF2STR(&ss->sprinter, ss->offsets[ss->top-1]);
                 RETRACT(&ss->sprinter, rval);
