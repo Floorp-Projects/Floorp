@@ -327,8 +327,6 @@ function showView(aView) {
       el = document.getElementById("checkUpdatesAllButton");
       el.setAttribute("tooltiptext", el.getAttribute(isThemes ? "tooltiptextthemes" :
                                                                   "tooltiptextaddons"));
-      getMore.setAttribute("tooltiptext", getMore.getAttribute(isThemes ? "tooltiptextthemes" :
-                                                                          "tooltiptextextensions"));
       getMore.setAttribute("value", getMore.getAttribute(isThemes ? "valuethemes" :
                                                                     "valueextensions"));
       var getMorePref = isThemes ? PREF_EXTENSIONS_GETMORETHEMESURL : PREF_EXTENSIONS_GETMOREEXTENSIONSURL;

@@ -221,9 +221,7 @@
       <label id="getMore" class="text-link"
              onclick="openURL(this.getAttribute('getMoreURL'));"
              valuethemes="&getThemes.label;"
-             valueextensions="&getExtensions.label;"
-             tooltiptextthemes="&getThemes.tooltip;"
-             tooltiptextextensions="&getExtensions.tooltip;"/>
+             valueextensions="&getExtensions.label;"/>
     </hbox>
     <hbox id="resizerBox" style="min-width:1px;">
       <spacer flex="1"/>
