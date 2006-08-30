@@ -50,13 +50,12 @@ SFX_MODULE = $(topsrcdir)/other-licenses/7zstub/firefox/7zSD.sfx
 
 PP_LOCALIZED_FILES = \
 	packages-static \
-	installer.cfg \
 	$(NULL)
 
 INSTALLER_FILES = \
 	app.tag \
 	nsis/installer.nsi \
-	nsis/SetProgramAccess.nsi \
+	nsis/uninstaller.nsi \
 	$(NULL)
 
 BRANDING_FILES = \
@@ -81,11 +80,14 @@ installer::
 	$(MAKE) -C .. installer-stage
 	$(MAKE) $(CONFIG_DIR)/setup.exe
 
+# For building the uninstaller during the application build so it can be
+# included for mar file generation.
+uninstaller::
+
 $(CONFIG_DIR)/setup.exe::
 	$(RM) -rf $(CONFIG_DIR) && mkdir $(CONFIG_DIR)
 	$(INSTALL) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) $(CONFIG_DIR)
 	$(INSTALL) $(addprefix $(DIST)/branding/,$(BRANDING_FILES)) $(CONFIG_DIR)
-	cp $(topsrcdir)/browser/EULA $(CONFIG_DIR)/license.txt
 	cp $(topsrcdir)/browser/EULA.rtf $(CONFIG_DIR)/license.rtf
 	$(EXIT_ON_ERROR) \
 	for i in $(PP_LOCALIZED_FILES); do \

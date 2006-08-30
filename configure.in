@@ -5726,6 +5726,21 @@ MOZ_ARG_DISABLE_BOOL(installer,
 [  --disable-installer     Disable building of installer],
     MOZ_INSTALLER=,
     MOZ_INSTALLER=1 )
+if test -n "$MOZ_INSTALLER" -a -n "$MOZ_XUL_APP" -a "$OS_ARCH" = "WINNT"; then
+    # Disable installer for Windows builds that use the new toolkit if NSIS
+    # isn't in the path.
+    AC_PATH_PROGS(MAKENSIS, makensis)
+    if test -z "$MAKENSIS" || test "$MAKENSIS" = ":"; then
+        AC_MSG_ERROR([To build the installer makensis is required in your path. To build without the installer reconfigure using --disable-installer.])
+    fi
+    # The Windows build for NSIS requires the iconv command line utility to
+    # convert the charset of the locale files.
+    AC_PATH_PROGS(HOST_ICONV, $HOST_ICONV "iconv", "")
+    if test -z "$HOST_ICONV"; then
+        AC_MSG_ERROR([To build the installer iconv is required in your path. To build without the installer reconfigure using --disable-installer.])
+    fi
+fi
+
 # Automatically disable installer if xpinstall isn't built
 if test -z "$MOZ_XPINSTALL"; then
     MOZ_INSTALLER=

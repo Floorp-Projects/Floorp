@@ -55,6 +55,8 @@ const PR_RDONLY      = 0x01;
 const PR_WRONLY      = 0x02;
 const PR_APPEND      = 0x10;
 
+const PERMS_FILE     = 0644;
+
 const nsIWindowsRegKey = Components.interfaces.nsIWindowsRegKey;
 
 //-----------------------------------------------------------------------------
@@ -140,10 +142,7 @@ function getLocale() {
 
 //-----------------------------------------------------------------------------
 
-const PREFIX_INSTALLING = "installing: ";
-const PREFIX_CREATE_FOLDER = "create folder: ";
-const PREFIX_CREATE_REGISTRY_KEY = "create registry key: ";
-const PREFIX_STORE_REGISTRY_VALUE_STRING = "store registry value string: ";
+const PREFIX_FILE = "File: ";
 
 function InstallLogWriter() {
 }
@@ -154,34 +153,24 @@ InstallLogWriter.prototype = {
    * Write a single line to the output stream.
    */
   _writeLine: function(s) {
-    s = s + "\n";
+    s = s + "\r\n";
     this._outputStream.write(s, s.length);
   },
 
   /**
-   * This function creates an empty install wizard log file and returns
-   * a reference to the resulting nsIFile.
+   * This function creates an empty uninstall update log file if it doesn't
+   * exist and returns a reference to the resulting nsIFile.
    */
-  _getInstallLogFile: function() {
-    function makeLeafName(index) {
-      return "install_wizard" + index + ".log"
-    }
-
+  _getUninstallLogFile: function() {
     var file = getFile(KEY_APPDIR); 
     file.append("uninstall");
     if (!file.exists())
       return null;
 
-    file.append("x");
-    var n = 0;
-    do {
-      file.leafName = makeLeafName(++n);
-    } while (file.exists());
+    file.append("uninstall.log");
+    if (!file.exists())
+      file.create(Components.interfaces.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
 
-    if (n == 1)
-      return null;  // What, no install wizard log file?
-
-    file.leafName = makeLeafName(n - 1);
     return file;
   },
 
@@ -211,34 +200,90 @@ InstallLogWriter.prototype = {
    * newly added for this update.
    */
   _readUpdateLog: function(logFile, entries) {
-    var appDir = getFile(KEY_APPDIR);
     var stream;
     try {
       stream = openFileInputStream(logFile).
           QueryInterface(Components.interfaces.nsILineInputStream);
 
-      var dirs = {};
       var line = {};
       while (stream.readLine(line)) {
         var data = line.value.split(" ");
         if (data[0] == "EXECUTE" && data[1] == "ADD") {
-          var file = getFileRelativeTo(appDir, data[2]);
-          
-          // remember all parent directories
-          var parent = file.parent;
-          while (!parent.equals(appDir)) {
-            dirs[parent.path] = true;
-            parent = parent.parent;
-          }
-
-          // remember the file
-          entries.files.push(file.path);
+          // The uninstaller requires the path separator to be "\" and
+          // relative paths to start with a "\".
+          var relPath = "\\" + data[2].replace(/\//g, "\\");
+          entries[relPath] = null;
         }
       }
-      for (var d in dirs)
-        entries.dirs.push(d);
-      // Sort the directories so that subdirectories are deleted first.
-      entries.dirs.sort();
+    } finally {
+      if (stream)
+        stream.close();
+    }
+  },
+
+  /**
+   * Read install_wizard log files to extract information about files that were
+   * previously added by the xpinstall installer and software update.
+   */
+  _readXPInstallLog: function(logFile, entries) {
+    var stream;
+    try {
+      stream = openFileInputStream(logFile).
+          QueryInterface(Components.interfaces.nsILineInputStream);
+
+      function fixPath(path, offset) {
+        return path.substr(offset).replace(appDirPath, "");
+      }
+
+      var appDir = getFile(KEY_APPDIR);
+      var appDirPath = appDir.path;
+      var line = {};
+      while (stream.readLine(line)) {
+        var entry = line.value;
+        // This works with both the entries from xpinstall (e.g. Installing: )
+        // and from update (e.g. installing: )
+        var searchStr = "nstalling: ";
+        var index = entry.indexOf(searchStr);
+        if (index != -1) {
+          entries[fixPath(entry, index + searchStr.length)] = null;
+          continue;
+        }
+
+        searchStr = "Replacing: ";
+        index = entry.indexOf(searchStr);
+        if (index != -1) {
+          entries[fixPath(entry, index + searchStr.length)] = null;
+          continue;
+        }
+
+        searchStr = "Windows Shortcut: ";
+        index = entry.indexOf(searchStr);
+        if (index != -1) {
+          entries[fixPath(entry + ".lnk", index + searchStr.length)] = null;
+          continue;
+        }
+      }
+    } finally {
+      if (stream)
+        stream.close();
+    }
+  },
+
+  _readUninstallLog: function(logFile, entries) {
+    var stream;
+    try {
+      stream = openFileInputStream(logFile).
+          QueryInterface(Components.interfaces.nsILineInputStream);
+
+      var line = {};
+      var searchStr = "File: ";
+      while (stream.readLine(line)) {
+        var index = line.value.indexOf(searchStr);
+        if (index != -1) {
+          var str = line.value.substr(index + searchStr.length);
+          entries.push(str);
+        }
+      }
     } finally {
       if (stream)
         stream.close();
@@ -247,47 +292,59 @@ InstallLogWriter.prototype = {
 
   /**
    * This function initializes the log writer and is responsible for
-   * translating 'update.log' to the install wizard format.
+   * translating 'update.log' and the 'install_wizard' logs to the NSIS format.
    */
   begin: function() {
-    var installLog = this._getInstallLogFile();
     var updateLog = this._getUpdateLogFile();
-    if (!installLog || !updateLog)
+    if (!updateLog)
       return;
 
-    var entries = { dirs: [], files: [] };
-    this._readUpdateLog(updateLog, entries);
+    var newEntries = { };
+    this._readUpdateLog(updateLog, newEntries);
+
+    try {
+      const nsIDirectoryEnumerator = Components.interfaces.nsIDirectoryEnumerator;
+      const nsILocalFile = Components.interfaces.nsILocalFile;
+      var prefixWizLog = "install_wizard";
+      var uninstallDir = getFile(KEY_APPDIR); 
+      uninstallDir.append("uninstall");
+      var entries = uninstallDir.directoryEntries.QueryInterface(nsIDirectoryEnumerator);
+      while (true) {
+        var wizLog = entries.nextFile;
+        if (!wizLog)
+          break;
+        if (wizLog instanceof nsILocalFile && !wizLog.isDirectory() &&
+            wizLog.leafName.indexOf(prefixWizLog) == 0) {
+          this._readXPInstallLog(wizLog, newEntries);
+          wizLog.remove(false);
+        }
+      }
+    }
+    catch (e) {}
+    if (entries)
+      entries.close();
+
+    var uninstallLog = this._getUninstallLogFile();
+    var oldEntries = [];
+    this._readUninstallLog(uninstallLog, oldEntries);
+
+    // Prevent writing duplicate entries in the log file
+    for (var relPath in newEntries) {
+      if (oldEntries.indexOf(relPath) != -1)
+        delete newEntries[relPath];
+    }
+
+    if (newEntries.length == 0)
+      return;
 
     this._outputStream =
-        openFileOutputStream(installLog, PR_WRONLY | PR_APPEND);
-    this._writeLine("\nUPDATE [" + new Date().toUTCString() + "]");
+        openFileOutputStream(uninstallLog, PR_WRONLY | PR_APPEND);
 
-    var i;
-    // The log file is processed in reverse order, so list directories before
-    // files to ensure that the directories will be deleted.
-    for (i = 0; i < entries.dirs.length; ++i)
-      this._writeLine(PREFIX_CREATE_FOLDER + entries.dirs[i]);
-    for (i = 0; i < entries.files.length; ++i)
-      this._writeLine(PREFIX_INSTALLING + entries.files[i]);
-  },
-
-  /**
-   * This function records the creation of a registry key.
-   */
-  registryKeyCreated: function(keyPath) {
-    if (!this._outputStream)
-      return;
-    this._writeLine(PREFIX_CREATE_REGISTRY_KEY + keyPath + " []");
-  },
-
-  /**
-   * This function records the creation of a registry key value.
-   */
-  registryKeyValueSet: function(keyPath, valueName) {
-    if (!this._outputStream)
-      return;
-    this._writeLine(
-        PREFIX_STORE_REGISTRY_VALUE_STRING + keyPath + " [" + valueName + "]");
+    // The NSIS uninstaller deletes all directories where the installer has
+    // added a file if the directory is empty after the files have been removed
+    // so there is no need to log directories.
+    for (var relPath in newEntries)
+      this._writeLine(PREFIX_FILE + relPath);
   },
 
   end: function() {
@@ -350,8 +407,6 @@ RegKey.prototype = {
   createChild: function(path, mode) {
     var child = this._key.createChild(path, mode);
     var key = new RegKey(child, this._root, this._path + "\\" + path);
-    if (installLogWriter)
-      installLogWriter.registryKeyCreated(key.toString());
     return key;
   },
 
@@ -361,14 +416,10 @@ RegKey.prototype = {
 
   writeStringValue: function(name, value) {
     this._key.writeStringValue(name, value);
-    if (installLogWriter)
-      installLogWriter.registryKeyValueSet(this.toString(), name);
   },
 
   writeIntValue: function(name, value) {
     this._key.writeIntValue(name, value);
-    if (installLogWriter)
-      installLogWriter.registryKeyValueSet(this.toString(), name);
   },
 
   hasValue: function(name) {
@@ -594,19 +645,36 @@ function updateRegistry(rootKey) {
   try {
     key.open(rootKey, "SOFTWARE\\" + vendorShortName, key.ACCESS_READ);
     oldInstall = locateOldInstall(key, ourInstallDir);
-  } finally {
-    key.close();
-  }
+  } catch (e) {}
+  key.close();
 
   if (!oldInstall) {
     LOG("no existing registry keys found");
     return;
   }
 
+  const uninstallRoot =
+      "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
   // Maybe nothing needs to be changed...
   if (oldInstall.fullName == brandFullName &&
       oldInstall.version == app.version) {
-    LOG("registry is up-to-date");
+    var uninst = getFile(KEY_APPDIR);
+    uninst.append("uninstall");
+    uninst.append("uninst.exe");
+    var uninstString = uninst.path;
+    nameWithVersion = oldInstall.fullName + " (" + oldInstall.version + ")";
+    try {
+      key.open(rootKey, uninstallRoot, key.ACCESS_READ);
+      var regUninstString = key.readStringValue("UninstallString");
+      if (regUninstString != uninstString) {
+        LOG("\n\nupdating UninstallString registry value\n\n");
+          createRegistryKeys(key, { name: nameWithVersion,
+                                    values: ["UninstallString", uninstString] });
+      } else {
+        LOG("registry is up-to-date");
+      }
+    } catch (e) {}
+    key.close();
     return;
   }
 
@@ -614,9 +682,8 @@ function updateRegistry(rootKey) {
   try {
     key.open(rootKey, "SOFTWARE\\" + vendorShortName, key.ACCESS_READ);
     deleteOldRegKeys(key, oldInstall);
-  } finally {
-    key.close();
-  }
+  } catch (e) {}
+  key.close();
 
   // Create the new keys:
 
@@ -689,25 +756,19 @@ function updateRegistry(rootKey) {
   try {
     key.open(rootKey, "SOFTWARE", key.ACCESS_READ);
     createRegistryKeys(key, Key_brand);
-  } finally {
-    key.close();
-  }
+  } catch (e) {}
+  key.close();
 
   if (rootKey != RegKey.prototype.ROOT_KEY_LOCAL_MACHINE)
     return;
 
   // Now, do the same thing for the Add/Remove Programs control panel:
-
-  const uninstallRoot =
-      "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
-
   try {
     key.open(rootKey, uninstallRoot, key.ACCESS_READ);
     var oldName = oldInstall.fullName + " (" + oldInstall.version + ")";
     deleteRegistryKey(key, oldName, false);
-  } finally {
-    key.close();
-  }
+  } catch (e) {}
+  key.close();
 
   var uninstallBundle = sbs.createBundle(URI_UNINSTALL_PROPERTIES);
 
@@ -715,10 +776,8 @@ function updateRegistry(rootKey) {
 
   var uninstaller = getFile(KEY_APPDIR);
   uninstaller.append("uninstall");
-  uninstaller.append("uninstall.exe");
-
-  var uninstallString =
-      uninstaller.path + " /ua \"" + versionWithLocale + "\"";
+  uninstaller.append("uninst.exe");
+  var uninstallString = uninstaller.path;
 
   Key_uninstall = {
     name: nameWithVersion,
@@ -744,11 +803,10 @@ function updateRegistry(rootKey) {
     child = key.openChild(nameWithVersion, key.ACCESS_WRITE);
     child.writeIntValue("NoModify", 1);
     child.writeIntValue("NoRepair", 1);
-  } finally {
-    if (child)
-      child.close();
-    key.close();
-  }
+  } catch (e) {}
+  if (child)
+    child.close();
+  key.close();
 }
 
 //-----------------------------------------------------------------------------

@@ -24,6 +24,7 @@ bin\defaults\profile\prefs.js
 bin\defaults\profile\search.rdf
 bin\defaults\profile\mimeTypes.rdf
 bin\defaults\profile\chrome\*
+bin\uninstall\uninst.exe
 bin\updater.ini
 bin\dictionaries\*
 
@@ -328,11 +329,6 @@ bin\chrome\pippki.manifest
 ; [Updater]
 ;
 bin\updater.exe
-
-; [Uninstaller]
-;
-bin\uninstall\uninstall.exe
-bin\uninstall\uninstall.ini
 
 ; [Additional Developer Tools]
 [adt]
