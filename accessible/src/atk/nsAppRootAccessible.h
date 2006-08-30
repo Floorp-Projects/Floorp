@@ -96,7 +96,6 @@ public:
     nsresult RemoveRootAccessible(nsIAccessible *aRootAccWrap);
 private:
     nsCOMPtr<nsIMutableArray> mChildren;
-    PRBool mInitialized;
 };
 
 #endif   /* __NS_APP_ROOT_ACCESSIBLE_H__ */

@@ -53,8 +53,11 @@
 #include "nsMaiInterfaceSelection.h"
 #include "nsMaiInterfaceValue.h"
 #include "nsMaiInterfaceHypertext.h"
+#include "nsMaiInterfaceHyperlinkImpl.h"
 #include "nsMaiInterfaceTable.h"
 #include "nsMaiInterfaceDocument.h"
+
+extern "C" GType g_atk_hyperlink_impl_type; //defined in nsAppRootAccessible.cpp
 
 /* MaiAtkObject */
 
@@ -76,10 +79,11 @@ enum MaiInterfaceType {
     MAI_INTERFACE_VALUE,
     MAI_INTERFACE_EDITABLE_TEXT,
     MAI_INTERFACE_HYPERTEXT,
+    MAI_INTERFACE_HYPERLINK_IMPL,
     MAI_INTERFACE_SELECTION,
     MAI_INTERFACE_TABLE,
     MAI_INTERFACE_TEXT,
-    MAI_INTERFACE_DOCUMENT /* 8 */
+    MAI_INTERFACE_DOCUMENT /* 9 */
 };
 
 static GType GetAtkTypeForMai(MaiInterfaceType type)
@@ -95,6 +99,8 @@ static GType GetAtkTypeForMai(MaiInterfaceType type)
       return ATK_TYPE_EDITABLE_TEXT;
     case MAI_INTERFACE_HYPERTEXT:
       return ATK_TYPE_HYPERTEXT;
+    case MAI_INTERFACE_HYPERLINK_IMPL:
+       return g_atk_hyperlink_impl_type;
     case MAI_INTERFACE_SELECTION:
       return ATK_TYPE_SELECTION;
     case MAI_INTERFACE_TABLE:
@@ -117,6 +123,8 @@ static const GInterfaceInfo atk_if_infos[] = {
     {(GInterfaceInitFunc)editableTextInterfaceInitCB,
      (GInterfaceFinalizeFunc) NULL, NULL},
     {(GInterfaceInitFunc)hypertextInterfaceInitCB,
+     (GInterfaceFinalizeFunc) NULL, NULL},
+    {(GInterfaceInitFunc)hyperlinkImplInterfaceInitCB,
      (GInterfaceFinalizeFunc) NULL, NULL},
     {(GInterfaceInitFunc)selectionInterfaceInitCB,
      (GInterfaceFinalizeFunc) NULL, NULL},
@@ -366,6 +374,14 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
         if (NS_SUCCEEDED(rv) && (linkCount > 0)) {
             interfacesBits |= 1 << MAI_INTERFACE_HYPERTEXT;
         }
+    }
+
+    //nsIAccessibleHyperLink
+    nsCOMPtr<nsIAccessibleHyperLink> accessInterfaceHyperlink;
+    QueryInterface(NS_GET_IID(nsIAccessibleHyperLink),
+                   getter_AddRefs(accessInterfaceHyperlink));
+    if (accessInterfaceHyperlink) {
+       interfacesBits |= 1 << MAI_INTERFACE_HYPERLINK_IMPL;
     }
 
     //nsIAccessibleTable
