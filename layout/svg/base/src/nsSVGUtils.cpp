@@ -348,10 +348,17 @@ nsSVGUtils::GetSurface(nsSVGOuterSVGFrame *aOuterSVGFrame,
 float
 nsSVGUtils::AngleBisect(float a1, float a2)
 {
-  if (a2 - a1 < M_PI)
-    return (a1+a2)/2;
-  else
-    return M_PI + (a1+a2)/2;
+  float delta = fmod(a2 - a1, NS_STATIC_CAST(float, 2*M_PI));
+  if (delta < 0) {
+    delta += 2*M_PI;
+  }
+  /* delta is now the angle from a1 around to a2, in the range [0, 2*M_PI) */
+  float r = a1 + delta/2;
+  if (delta >= M_PI) {
+    /* the arc from a2 to a1 is smaller, so use the ray on that side */
+    r += M_PI;
+  }
+  return r;
 }
 
 nsSVGOuterSVGFrame *
