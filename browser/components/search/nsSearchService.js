@@ -1328,7 +1328,6 @@ Engine.prototype = {
    * Initialize this Engine object from the collected data.
    */
   _initFromData: function SRCH_ENG_initFromData() {
-return;
 
     ENSURE_WARN(this._data, "Can't init an engine with no data!",
                 Cr.NS_ERROR_UNEXPECTED);
