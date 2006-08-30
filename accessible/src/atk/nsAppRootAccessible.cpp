@@ -48,6 +48,12 @@
 #include <gtk/gtk.h>
 #include <atk/atk.h>
 
+typedef GType (* AtkGetTypeType) (void);
+GType g_atk_hyperlink_impl_type = G_TYPE_INVALID;
+static PRBool sATKChecked = PR_FALSE;
+static const char sATKLibName[] = "libatk-1.0.so";
+static const char sATKHyperlinkImplGetTypeSymbol[] = "atk_hyperlink_impl_get_type";
+
 /* app root accessible */
 static nsAppRootAccessible *sAppRoot = nsnull;
 
@@ -88,9 +94,6 @@ static void value_destroy_func(gpointer data);
 static GHashTable *listener_list = NULL;
 static gint listener_idx = 1;
 
-typedef struct _MaiUtilListenerInfo MaiUtilListenerInfo;
-
-
 #define MAI_TYPE_UTIL              (mai_util_get_type ())
 #define MAI_UTIL(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
                                     MAI_TYPE_UTIL, MaiUtil))
@@ -103,9 +106,6 @@ typedef struct _MaiUtilListenerInfo MaiUtilListenerInfo;
 #define MAI_UTIL_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), \
                                     MAI_TYPE_UTIL, MaiUtilClass))
 
-typedef struct _MaiUtil                  MaiUtil;
-typedef struct _MaiUtilClass             MaiUtilClass;
-
 static GHashTable *key_listener_list = NULL;
 static guint key_snooper_id = 0;
 
@@ -114,7 +114,7 @@ typedef void (*GnomeAccessibilityInit) (void);
 typedef void (*GnomeAccessibilityShutdown) (void);
 G_END_DECLS
 
-struct _MaiUtil
+struct MaiUtil
 {
     AtkUtil parent;
     GList *listener_list;
@@ -136,13 +136,13 @@ struct GnomeAccessibilityModule
     GnomeAccessibilityShutdown shutdown;
 };
 
-GType mai_util_get_type (void);
-static void mai_util_class_init(MaiUtilClass *klass);
-
-struct _MaiUtilClass
+struct MaiUtilClass
 {
     AtkUtilClass parent_class;
 };
+
+GType mai_util_get_type (void);
+static void mai_util_class_init(MaiUtilClass *klass);
 
 /* supporting */
 PRLogModuleInfo *gMaiLog = NULL;
@@ -150,7 +150,7 @@ PRLogModuleInfo *gMaiLog = NULL;
 #define MAI_VERSION MOZILLA_VERSION
 #define MAI_NAME "Gecko"
 
-struct _MaiUtilListenerInfo
+struct MaiUtilListenerInfo
 {
     gint key;
     guint signal_id;
@@ -499,18 +499,11 @@ add_listener (GSignalEmissionHook listener,
     return rc;
 }
 
-
-
-
-// currently support one child
-nsRootAccessibleWrap *sOnlyChild = nsnull;
-
 static nsresult LoadGtkModule(GnomeAccessibilityModule& aModule);
 
 nsAppRootAccessible::nsAppRootAccessible():
     nsAccessibleWrap(nsnull, nsnull),
-    mChildren(nsnull),
-    mInitialized(PR_FALSE)
+    mChildren(nsnull)
 {
     MAI_LOG_DEBUG(("======Create AppRootAcc=%p\n", (void*)this));
 }
@@ -555,10 +548,6 @@ nsAppRootAccessible::DumpMaiObjectInfo(int aDepth)
 
 NS_IMETHODIMP nsAppRootAccessible::Init()
 {
-    NS_ASSERTION((mInitialized == FALSE), "Init AppRoot Again!!");
-    if (mInitialized == PR_TRUE)
-        return NS_OK;
-
     // load and initialize gail library
     nsresult rv = LoadGtkModule(sGail);
     if (NS_SUCCEEDED(rv)) {
@@ -820,6 +809,14 @@ nsAppRootAccessible::RemoveRootAccessible(nsIAccessible *aRootAccWrap)
 nsAppRootAccessible *
 nsAppRootAccessible::Create()
 {
+    if (!sATKChecked) {
+        PRLibrary *atkLib = PR_LoadLibrary(sATKLibName);
+        AtkGetTypeType pfn_atk_hyperlink_impl_get_type = (AtkGetTypeType) PR_FindFunctionSymbol(atkLib, sATKHyperlinkImplGetTypeSymbol);
+        if (pfn_atk_hyperlink_impl_get_type) {
+            g_atk_hyperlink_impl_type = pfn_atk_hyperlink_impl_get_type();
+        }
+        sATKChecked = PR_TRUE;
+    }
     if (!sAppRoot) {
         sAppRoot = new nsAppRootAccessible();
         NS_ASSERTION(sAppRoot, "OUT OF MEMORY");
