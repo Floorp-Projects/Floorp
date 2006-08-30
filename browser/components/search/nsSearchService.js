@@ -2223,6 +2223,7 @@ SearchService.prototype = {
   },
 
   _loadEngines: function SRCH_SVC_loadEngines(aDir) {
+    return;
     LOG("_loadEngines: Searching in " + aDir.path + " for search engines.");
 
     // Check whether aDir is the user profile dir
