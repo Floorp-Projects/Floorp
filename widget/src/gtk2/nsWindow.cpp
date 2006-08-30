@@ -75,7 +75,8 @@
 #include "prenv.h"
 #include "stdlib.h"
 static PRBool sAccessibilityChecked = PR_FALSE;
-static PRBool sAccessibilityEnabled = PR_FALSE;
+/* static */
+PRBool nsWindow::sAccessibilityEnabled = PR_FALSE;
 static const char sSysPrefService [] = "@mozilla.org/system-preference-service;1";
 static const char sAccEnv [] = "GNOME_ACCESSIBILITY";
 static const char sAccessibilityKey [] = "config.use_system_prefs.accessibility";

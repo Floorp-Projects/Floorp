@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim:expandtab:shiftwidth=4:tabstop=4:
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
  */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -22,7 +22,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bolian Yin (bolian.yin@sun.com)
  *   Ginn Chen (ginn.chen@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -39,33 +38,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_ROOT_ACCESSIBLE_WRAP_H__
-#define __NS_ROOT_ACCESSIBLE_WRAP_H__
+#include "nsAccessibilityHelper.h"
 
-#include "nsRootAccessible.h"
+#ifdef ACCESSIBILITY
+#include "nsIAccessibilityService.h"
+#include "nsWindow.h"
+#endif
 
-/* nsRootAccessibleWrap is the accessible class for toplevel Window.
- * The instance of nsRootAccessibleWrap will be child of MaiAppRoot instance.
- * It is added into root when the toplevel window is created, and removed
- * from root when the toplevel window is destroyed.
- */
-
-class nsRootAccessibleWrap: public nsRootAccessible
+gint RunDialog(GtkDialog* aDialog)
 {
-public:
-    nsRootAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference* aShell);
-    virtual ~nsRootAccessibleWrap();
+#ifdef ACCESSIBILITY
+  if (!nsWindow::sAccessibilityEnabled) {
+    return gtk_dialog_run (aDialog);
+  }
 
-    NS_IMETHOD Init();
-    NS_IMETHOD Shutdown();
-    NS_IMETHOD GetParent(nsIAccessible **  aParent);
-};
+  nsCOMPtr<nsIAccessibilityService> accService =
+    do_GetService ("@mozilla.org/accessibilityService;1");
+  nsCOMPtr<nsIAccessible> accessible;
 
-// For gtk+ native window
-class nsNativeRootAccessibleWrap: public nsRootAccessible
-{
-public:
-    nsNativeRootAccessibleWrap(AtkObject *aAccessible);
-};
+  // Attach the dialog accessible to app accessible tree
+  if (accService) {
+    AtkObject* gailWindow = gtk_widget_get_accessible(GTK_WIDGET(aDialog));
+    accService->AddNativeRootAccessible(gailWindow, getter_AddRefs(accessible));
+  }
 
-#endif   /* __NS_ROOT_ACCESSIBLE_WRAP_H__ */
+  gint result = gtk_dialog_run (aDialog);
+
+  // Deattach the dialog accessible
+  if (accService && accessible) {
+    accService->RemoveNativeRootAccessible(accessible);
+  }
+
+  return result;
+#else
+  return gtk_dialog_run (aDialog);
+#endif
+}

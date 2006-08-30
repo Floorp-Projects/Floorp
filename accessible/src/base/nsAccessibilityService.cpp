@@ -96,6 +96,10 @@
 #include "nsHTMLWin32ObjectAccessible.h"
 #endif
 
+#ifdef MOZ_ACCESSIBILITY_ATK
+#include "nsAppRootAccessible.h"
+#endif
+
 #ifndef DISABLE_XFORMS_HOOKS
 #include "nsXFormsFormControlsAccessible.h"
 #endif
@@ -1450,6 +1454,39 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
 
   NS_ADDREF(*aAccessible);
   return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibilityService::AddNativeRootAccessible(void * aAtkAccessible,  nsIAccessible **aRootAccessible)
+{
+#ifdef MOZ_ACCESSIBILITY_ATK
+  nsNativeRootAccessibleWrap* rootAccWrap =
+    new nsNativeRootAccessibleWrap((AtkObject*)aAtkAccessible);
+
+  *aRootAccessible = NS_STATIC_CAST(nsIAccessible*, rootAccWrap);
+  NS_ADDREF(*aRootAccessible);
+
+  nsAppRootAccessible *appRoot = nsAppRootAccessible::Create();
+  appRoot->AddRootAccessible(*aRootAccessible);
+
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+NS_IMETHODIMP nsAccessibilityService::RemoveNativeRootAccessible(nsIAccessible * aRootAccessible)
+{
+#ifdef MOZ_ACCESSIBILITY_ATK
+  void* atkAccessible;
+  aRootAccessible->GetNativeInterface(&atkAccessible);
+
+  nsAppRootAccessible *appRoot = nsAppRootAccessible::Create();
+  appRoot->RemoveRootAccessible(aRootAccessible);
+
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 // Called from layout when the frame tree owned by a node changes significantly

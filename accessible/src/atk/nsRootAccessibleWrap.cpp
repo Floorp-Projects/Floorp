@@ -91,3 +91,9 @@ NS_IMETHODIMP nsRootAccessibleWrap::GetParent(nsIAccessible **  aParent)
     return rv;
 }
 
+nsNativeRootAccessibleWrap::nsNativeRootAccessibleWrap(AtkObject *aAccessible):
+    nsRootAccessible(nsnull, nsnull)
+{
+    g_object_ref(aAccessible);
+    nsAccessibleWrap::mAtkObject = aAccessible;
+}

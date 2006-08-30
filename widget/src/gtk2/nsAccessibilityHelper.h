@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim:expandtab:shiftwidth=4:tabstop=4:
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
  */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -22,7 +22,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bolian Yin (bolian.yin@sun.com)
  *   Ginn Chen (ginn.chen@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -39,33 +38,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_ROOT_ACCESSIBLE_WRAP_H__
-#define __NS_ROOT_ACCESSIBLE_WRAP_H__
+#ifndef __NS_ACCESSIBILITY_HELPER_H__
+#define __NS_ACCESSIBILITY_HELPER_H__
 
-#include "nsRootAccessible.h"
+#include <gtk/gtkdialog.h>
 
-/* nsRootAccessibleWrap is the accessible class for toplevel Window.
- * The instance of nsRootAccessibleWrap will be child of MaiAppRoot instance.
- * It is added into root when the toplevel window is created, and removed
- * from root when the toplevel window is destroyed.
- */
+// This helper function attach/deattach the AtkObject of the dialog 
+// to Gecko a11y root, before/after calling gtk_dialog_run.
+// It makes Mozilla's gtk2 native dialog accessible to at-tools.
+// It should be used instead of calling gtk_dialog_run directly in Mozilla.
+gint RunDialog(GtkDialog *aDialog);
 
-class nsRootAccessibleWrap: public nsRootAccessible
-{
-public:
-    nsRootAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference* aShell);
-    virtual ~nsRootAccessibleWrap();
-
-    NS_IMETHOD Init();
-    NS_IMETHOD Shutdown();
-    NS_IMETHOD GetParent(nsIAccessible **  aParent);
-};
-
-// For gtk+ native window
-class nsNativeRootAccessibleWrap: public nsRootAccessible
-{
-public:
-    nsNativeRootAccessibleWrap(AtkObject *aAccessible);
-};
-
-#endif   /* __NS_ROOT_ACCESSIBLE_WRAP_H__ */
+#endif /* __NS_ACCESSIBILITY_HELPER_H__ */

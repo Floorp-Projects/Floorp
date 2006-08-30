@@ -242,7 +242,7 @@ PRInt32 nsAccessibleWrap::mAccWrapDeleted = 0;
 nsAccessibleWrap::nsAccessibleWrap(nsIDOMNode* aNode,
                                    nsIWeakReference *aShell)
     : nsAccessible(aNode, aShell),
-      mMaiAtkObject(nsnull)
+      mAtkObject(nsnull)
 {
 #ifdef MAI_LOGGING
     ++mAccWrapCreated;
@@ -262,9 +262,11 @@ nsAccessibleWrap::~nsAccessibleWrap()
                    (void*)this, mAccWrapDeleted,
                    (mAccWrapCreated-mAccWrapDeleted)));
 
-    if (mMaiAtkObject) {
-        MAI_ATK_OBJECT(mMaiAtkObject)->accWrap = nsnull;
-        g_object_unref(mMaiAtkObject);
+    if (mAtkObject) {
+        if (IS_MAI_OBJECT(mAtkObject)) {
+            MAI_ATK_OBJECT(mAtkObject)->accWrap = nsnull;
+        }
+        g_object_unref(mAtkObject);
     }
 }
 
@@ -276,20 +278,20 @@ NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
       // We don't create ATK objects for nsIAccessible plain text leaves
       return NS_ERROR_FAILURE;
     }
-    if (!mMaiAtkObject) {
+    if (!mAtkObject) {
         GType type = GetMaiAtkType(CreateMaiInterfaces());
         NS_ENSURE_TRUE(type, NS_ERROR_FAILURE);
-        mMaiAtkObject =
+        mAtkObject =
             NS_REINTERPRET_CAST(AtkObject *,
                                 g_object_new(type, NULL));
-        NS_ENSURE_TRUE(mMaiAtkObject, NS_ERROR_OUT_OF_MEMORY);
+        NS_ENSURE_TRUE(mAtkObject, NS_ERROR_OUT_OF_MEMORY);
 
-        atk_object_initialize(mMaiAtkObject, this);
-        mMaiAtkObject->role = ATK_ROLE_INVALID;
-        mMaiAtkObject->layer = ATK_LAYER_INVALID;
+        atk_object_initialize(mAtkObject, this);
+        mAtkObject->role = ATK_ROLE_INVALID;
+        mAtkObject->layer = ATK_LAYER_INVALID;
     }
 
-    *aOutAccessible = mMaiAtkObject;
+    *aOutAccessible = mAtkObject;
     return NS_OK;
 }
 
@@ -689,7 +691,7 @@ classInitCB(AtkObjectClass *aClass)
 void
 initializeCB(AtkObject *aAtkObj, gpointer aData)
 {
-    NS_ASSERTION((MAI_IS_ATK_OBJECT(aAtkObj)), "Invalid AtkObject");
+    NS_ASSERTION((IS_MAI_OBJECT(aAtkObj)), "Invalid AtkObject");
     NS_ASSERTION(aData, "Invalid Data to init AtkObject");
     if (!aAtkObj || !aData)
         return;
@@ -717,7 +719,7 @@ initializeCB(AtkObject *aAtkObj, gpointer aData)
 void
 finalizeCB(GObject *aObj)
 {
-    if (!MAI_IS_ATK_OBJECT(aObj))
+    if (!IS_MAI_OBJECT(aObj))
         return;
     NS_ASSERTION(MAI_ATK_OBJECT(aObj)->accWrap == nsnull, "AccWrap NOT null");
 
@@ -1012,7 +1014,7 @@ refRelationSetCB(AtkObject *aAtkObj)
 nsresult
 CheckMaiAtkObject(AtkObject *aAtkObj)
 {
-    NS_ENSURE_ARG(MAI_IS_ATK_OBJECT(aAtkObj));
+    NS_ENSURE_ARG(IS_MAI_OBJECT(aAtkObj));
     nsAccessibleWrap * tmpAccWrap = MAI_ATK_OBJECT(aAtkObj)->accWrap;
     if (tmpAccWrap == nsnull)
         return NS_ERROR_INVALID_POINTER;
@@ -1027,7 +1029,7 @@ CheckMaiAtkObject(AtkObject *aAtkObj)
 // for it.
 nsAccessibleWrap *GetAccessibleWrap(AtkObject *aAtkObj)
 {
-    NS_ENSURE_TRUE(MAI_IS_ATK_OBJECT(aAtkObj), nsnull);
+    NS_ENSURE_TRUE(IS_MAI_OBJECT(aAtkObj), nsnull);
     nsAccessibleWrap * tmpAccWrap = MAI_ATK_OBJECT(aAtkObj)->accWrap;
     NS_ENSURE_TRUE(tmpAccWrap != nsnull, nsnull);
     NS_ENSURE_TRUE(tmpAccWrap->GetAtkObject() == aAtkObj, nsnull);
