@@ -165,8 +165,15 @@
       </property>
 
       <property name="value"
-                onget="return this._textbox.value;"
-                onset="this._textbox.value = val; return val;"/>
+                onget="return this._textbox.value;">
+        <setter><![CDATA[
+          if (val)
+            this._textbox.value = val;
+          else
+            this._textbox._displayCurrentEngine();
+          return val;
+        ]]></setter>
+      </property>
 
       <method name="focus">
         <body><![CDATA[

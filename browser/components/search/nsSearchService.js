@@ -2390,11 +2390,7 @@ SearchService.prototype = {
         alphaEngines.push(this._engines[engine.name]);
     }
     alphaEngines = alphaEngines.sort(function (a, b) {
-                                       if (a.name < b.name)
-                                         return -1;
-                                       if (a.name > b.name)
-                                         return 1;
-                                       return 0;
+                                       return a.name.localeCompare(b.name);
                                      });
     this._sortedEngines = this._sortedEngines.concat(alphaEngines);
   },
@@ -2565,7 +2561,7 @@ SearchService.prototype = {
       if (bIdx)
         return 1;
 
-      return a.name < b.name ? -1 : 1;
+      return a.name.localeCompare(b.name);
     }
     engines.sort(compareEngines);
 
