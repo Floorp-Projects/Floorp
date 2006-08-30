@@ -584,7 +584,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
 
     case NS_THEME_TREEVIEW_TREEITEM:
     case NS_THEME_TREEVIEW:
-      HIThemeSetFill (kThemeBrushWhite, NULL, cgContext, HITHEME_ORIENTATION);
+      // Not on 10.3.9?!
+      //HIThemeSetFill (kThemeBrushWhite, NULL, cgContext, HITHEME_ORIENTATION);
+      CGContextSetRGBFillColor (cgContext, 1, 1, 1, 1);
       CGContextFillRect (cgContext, macRect);
       break;
 
