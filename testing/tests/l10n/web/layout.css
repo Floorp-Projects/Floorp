@@ -113,3 +113,10 @@ td.count {
 div.calbordered { 
   float: none;
 }
+
+/* search view */
+
+td.ordered {border: 2px solid black;}
+td.error {background-color: coral;}
+td.conflict {background-color: grey;}
+td.enUS {opacity: .5;}
