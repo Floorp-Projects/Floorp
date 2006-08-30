@@ -3115,7 +3115,10 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, PRBool* aBlock)
         nsCOMPtr<nsIStreamLoader> loader;
         rv = NS_NewStreamLoader(getter_AddRefs(loader), aScriptProto->mSrcURI,
                                 this, nsnull, group);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) {
+            mCurrentScriptProto = nsnull;
+            return rv;
+        }
 
         aScriptProto->mSrcLoading = PR_TRUE;
     }
