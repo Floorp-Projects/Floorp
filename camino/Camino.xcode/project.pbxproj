@@ -12551,7 +12551,7 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_MISSING_PARENTHESES = NO;
-				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = NO;
 				GCC_WARN_SIGN_COMPARE = YES;
 				GCC_WARN_UNKNOWN_PRAGMAS = YES;
 				GCC_WARN_UNUSED_LABEL = YES;
@@ -12569,9 +12569,9 @@
 				DEAD_CODE_STRIPPING = YES;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = NO;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				WARNING_CFLAGS = "-Wno-non-virtual-dtor";
+				WARNING_CFLAGS = "";
 				ZERO_LINK = NO;
 			};
 			isa = PBXBuildStyle;
@@ -13116,11 +13116,6 @@
 			settings = {
 			};
 		};
-//7B0
-//7B1
-//7B2
-//7B3
-//7B4
 		7BB332F30A7E99BC0075521C = {
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
@@ -13135,6 +13130,11 @@
 			settings = {
 			};
 		};
+//7B0
+//7B1
+//7B2
+//7B3
+//7B4
 //820
 //821
 //822
@@ -16831,7 +16831,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				DEBUGGING_SYMBOLS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				WARNING_CFLAGS = "-Wno-non-virtual-dtor";
+				WARNING_CFLAGS = "";
 			};
 			isa = PBXBuildStyle;
 			name = DeploymentSymbols;
