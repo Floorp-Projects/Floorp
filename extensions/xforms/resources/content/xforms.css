@@ -288,6 +288,59 @@ html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#gDay"] {
   -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input-day');
 }
 
+  /* input type="xsd:integer" */
+xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#integer"] {
+  -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-integer');
+}
+  /* input type="xsd:nonPositiveInteger" */
+xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#nonPositiveInteger"] {
+  -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-nonPositiveInteger');
+}
+  /* input type="xsd:negativeInteger" */
+xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#negativeInteger"] {
+  -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-negativeInteger');
+}
+  /* input type="xsd:long" */
+xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#long"] {
+  -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-long');
+}
+  /* input type="xsd:int" */
+xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#int"] {
+  -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-int');
+}
+  /* input type="xsd:short" */
+xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#short"] {
+  -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-short');
+}
+  /* input type="xsd:byte" */
+xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#byte"] {
+  -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-byte');
+}
+  /* input type="xsd:nonNegativeInteger" */
+xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#nonNegativeInteger"] {
+  -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-nonNegativeInteger');
+}
+  /* input type="xsd:unsignedLong" */
+xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#unsignedLong"] {
+  -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-unsignedLong');
+}
+  /* input type="xsd:unsignedInt" */
+xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#unsignedInt"] {
+  -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-unsignedInt');
+}
+  /* input type="xsd:unsignedShort" */
+xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#unsignedShort"] {
+  -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-unsignedShort');
+}
+  /* input type="xsd:unsignedByte" */
+xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#unsignedByte"] {
+  -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-unsignedByte');
+}
+  /* input type="xsd:positiveInteger" */
+xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#positiveInteger"] {
+  -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-positiveInteger');
+}
+
 html|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#base64Binary"],
 html|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#hexBinary"],
 html|*:root secret[mozType|typelist~="http://www.w3.org/2001/XMLSchema#base64Binary"],

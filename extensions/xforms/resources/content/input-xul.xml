@@ -308,6 +308,184 @@
   </binding>
 
 
+  <!-- INPUT: <NUMBER> -->
+  <binding id="xformswidget-input-number-base"
+           extends="#xformswidget-input-base">
+
+    <implementation>
+      <constructor>
+        var changeHandler = {
+          xfcontrol: this,
+          handleEvent: function(aEvent) {
+            if (aEvent.currentTarget == aEvent.originalTarget) {
+              this.xfcontrol.updateInstanceData(true);
+            }
+          }
+        };
+        this.control.control.addEventListener("change", changeHandler, false);
+      </constructor>
+    </implementation>
+  </binding>
+
+
+  <!-- INPUT: type="xsd:integer" -->
+  <binding id="xformswidget-input-integer"
+           extends="#xformswidget-input-number-base">
+    <content>
+      <children includes="label"/>
+      <xul:textbox type="number" class="xf-value" anonid="control"
+                   xbl:inherits="accesskey" flex="1"
+                   min="Number.MIN_VALUE" max="Number.MAX_VALUE"/>
+      <children/>
+    </content>
+  </binding>
+
+  <!-- INPUT: type="xsd:nonPositiveInteger" -->
+  <binding id="xformswidget-input-nonPositiveInteger"
+           extends="#xformswidget-input-number-base">
+    <content>
+      <children includes="label"/>
+      <xul:textbox type="number" class="xf-value" anonid="control"
+                   xbl:inherits="accesskey" flex="1"
+                   min="Number.MIN_VALUE" max="0"/>
+      <children/>
+    </content>
+  </binding>
+
+  <!-- INPUT: type="xsd:negativeInteger" -->
+  <binding id="xformswidget-input-negativeInteger"
+           extends="#xformswidget-input-number-base">
+    <content>
+      <children includes="label"/>
+      <xul:textbox type="number" class="xf-value" anonid="control"
+                   xbl:inherits="accesskey" flex="1"
+                   min="Number.MIN_VALUE" max="-1"/>
+      <children/>
+    </content>
+  </binding>
+
+  <!-- INPUT: type="xsd:long" -->
+  <binding id="xformswidget-input-long"
+           extends="#xformswidget-input-number-base">
+    <content>
+      <children includes="label"/>
+      <xul:textbox type="number" class="xf-value" anonid="control"
+                   xbl:inherits="accesskey" flex="1"
+                   min="-9223372036854775807" max="9223372036854775807"/>
+      <children/>
+    </content>
+  </binding>
+
+  <!-- INPUT: type="xsd:int" -->
+  <binding id="xformswidget-input-int"
+           extends="#xformswidget-input-number-base">
+    <content>
+      <children includes="label"/>
+      <xul:textbox type="number" class="xf-value" anonid="control"
+                   xbl:inherits="accesskey" flex="1"
+                   min="-2147483647" max="2147483647"/>
+      <children/>
+    </content>
+  </binding>
+
+  <!-- INPUT: type="xsd:short" -->
+  <binding id="xformswidget-input-short"
+           extends="#xformswidget-input-number-base">
+    <content>
+      <children includes="label"/>
+      <xul:textbox type="number" class="xf-value" anonid="control"
+                   xbl:inherits="accesskey" flex="1"
+                   min="-32767" max="32767"/>
+      <children/>
+    </content>
+  </binding>
+
+  <!-- INPUT: type="xsd:byte" -->
+  <binding id="xformswidget-input-byte"
+           extends="#xformswidget-input-number-base">
+    <content>
+      <children includes="label"/>
+      <xul:textbox type="number" class="xf-value" anonid="control"
+                   xbl:inherits="accesskey" flex="1"
+                   min="-127" max="127"/>
+      <children/>
+    </content>
+  </binding>
+
+  <!-- INPUT: type="xsd:nonNegativeInteger" -->
+  <binding id="xformswidget-input-nonNegativeInteger"
+           extends="#xformswidget-input-number-base">
+    <content>
+      <children includes="label"/>
+      <xul:textbox type="number" class="xf-value" anonid="control"
+                   xbl:inherits="accesskey" flex="1"
+                   min="0" max="Number.MAX_VALUE"/>
+      <children/>
+    </content>
+  </binding>
+
+
+  <!-- INPUT: type="xsd:unsignedLong" -->
+  <binding id="xformswidget-input-unsignedLong"
+           extends="#xformswidget-input-number-base">
+    <content>
+      <children includes="label"/>
+      <xul:textbox type="number" class="xf-value" anonid="control"
+                   xbl:inherits="accesskey" flex="1"
+                   min="0" max="18446744073709551615"/>
+      <children/>
+    </content>
+  </binding>
+
+  <!-- INPUT: type="xsd:unsignedInt" -->
+  <binding id="xformswidget-input-unsignedInt"
+           extends="#xformswidget-input-number-base">
+    <content>
+      <children includes="label"/>
+      <xul:textbox type="number" class="xf-value" anonid="control"
+                   xbl:inherits="accesskey" flex="1"
+                   min="0" max="4294967295"/>
+      <children/>
+    </content>
+  </binding>
+
+  <!-- INPUT: type="xsd:unsignedShort" -->
+  <binding id="xformswidget-input-unsignedShort"
+           extends="#xformswidget-input-number-base">
+    <content>
+      <children includes="label"/>
+      <xul:textbox type="number" class="xf-value" anonid="control"
+                   xbl:inherits="accesskey" flex="1"
+                   min="0" max="65535"/>
+      <children/>
+    </content>
+  </binding>
+
+  <!-- INPUT: type="xsd:unsignedByte" -->
+  <binding id="xformswidget-input-unsignedByte"
+           extends="#xformswidget-input-number-base">
+    <content>
+      <children includes="label"/>
+      <xul:textbox type="number" class="xf-value" anonid="control"
+                   xbl:inherits="accesskey" flex="1"
+                   min="0" max="255"/>
+      <children/>
+    </content>
+  </binding>
+
+  <!-- INPUT: type="xsd:positiveInteger" -->
+  <binding id="xformswidget-input-positiveInteger"
+           extends="#xformswidget-input-number-base">
+    <content>
+      <children includes="label"/>
+      <xul:textbox type="number" class="xf-value" anonid="control"
+                   xbl:inherits="accesskey" flex="1"
+                   min="1" max="Number.MAX_VALUE"/>
+      <children/>
+    </content>
+  </binding>
+
+
   <!-- SECRET: <DEFAULT> -->
   <binding id="xformswidget-secret"
            extends="#xformswidget-input-base">
