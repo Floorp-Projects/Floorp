@@ -228,6 +228,7 @@
   <command id="cmd_forwardAttachment" oncommand="goDoCommand('cmd_forwardAttachment')"/>
   <command id="cmd_editAsNew" oncommand="goDoCommand('cmd_editAsNew')"/>
   <command id="cmd_openMessage" oncommand="goDoCommand('cmd_openMessage')"/>
+  <command id="cmd_moveToFolderAgain" oncommand="goDoCommand('cmd_moveToFolderAgain')"/>
   <command id="cmd_createFilterFromMenu" oncommand="goDoCommand('cmd_createFilterFromMenu')"/>
   <command id="cmd_killThread" oncommand="goDoCommand('cmd_killThread')"/>
   <command id="cmd_watchThread" oncommand="goDoCommand('cmd_watchThread')"/>
@@ -357,6 +358,7 @@
   <key id="key_watchThread" key="&watchThreadMenu.key;"              oncommand="goDoCommand('cmd_watchThread')" />
   <key id="key_killThread" key="&killThreadMenu.key;"                oncommand="goDoCommand('cmd_killThread')" />
   <key id="key_openMessage" key="&openMessageWindowCmd.key;"         oncommand="goDoCommand('cmd_openMessage')" modifiers="accel"/>
+  <key id="key_moveToFolderAgain" key="&moveToFolderAgainCmd.key;"   oncommand="goDoCommand('cmd_moveToFolderAgain')" modifiers="accel"/>
   <key id="key_print" key="&printCmd.key;"                           oncommand="goDoCommand('cmd_print')" modifiers="accel"/>
   <key id="key_saveAsFile" key="&saveAsFileCmd.key;"                 oncommand="goDoCommand('cmd_saveAsFile')" modifiers="accel"/>
   <key id="key_viewPageSource" key="&pageSourceCmd.key;"             oncommand="goDoCommand('cmd_viewPageSource')" modifiers="accel"/>
@@ -499,7 +501,7 @@
               ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
               <menupopup>
                 <menuitem label="&fileHereMenu.label;" accesskey="&fileHereMenu.accesskey;" 
-                  oncommand="MsgMoveMessage(event.target.parentNode.parentNode)"/>
+                  oncommand="MsgMoveMessage(event.target.parentNode.parentNode.id)"/>
                 <menuseparator/>
               </menupopup>
             </menu>
@@ -524,7 +526,7 @@
         </rule>
         <rule nc:CanFileMessages="true">
           <menupopup>
-            <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target)" 
+            <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target.id)" 
               SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
               BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
               IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
@@ -567,7 +569,7 @@
               ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
               <menupopup>
                 <menuitem label="&copyHereMenu.label;" accesskey="&copyHereMenu.accesskey;" 
-                  oncommand="MsgCopyMessage(event.target.parentNode.parentNode)"/>
+                  oncommand="MsgCopyMessage(event.target.parentNode.parentNode.id)"/>
                 <menuseparator/>
               </menupopup>
             </menu>
@@ -593,7 +595,7 @@
         <rule nc:CanFileMessages="true">
           <menupopup>
             <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" 
-              oncommand="MsgCopyMessage(event.target)" 
+              oncommand="MsgCopyMessage(event.target.id)" 
               SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
               BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
               IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
@@ -603,6 +605,8 @@
         </rule>
       </template>
     </menu>
+    <menuitem id="threadPaneContext-moveToFolderAgain" observes="cmd_moveToFolderAgain"
+          label="&moveToFolderAgain.label;" accesskey="moveToFolderAgain.accesskey"/>
     <menu id="threadPaneContext-tags" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;">
       <menupopup id="threadPaneContext-tagpopup" onpopupshowing="InitMessageTags(this)">
         <menuitem id="threadPaneContext-tagRemoveAll" oncommand="RemoveAllMessageTags();"/>
@@ -813,7 +817,7 @@
               ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
               <menupopup>
                 <menuitem label="&fileHereMenu.label;" accesskey="&fileHereMenu.accesskey;" 
-                  oncommand="MsgMoveMessage(event.target.parentNode.parentNode)"/>
+                  oncommand="MsgMoveMessage(event.target.parentNode.parentNode.id)"/>
                 <menuseparator/>
               </menupopup>
             </menu>
@@ -838,7 +842,7 @@
         </rule>
         <rule nc:CanFileMessages="true">
           <menupopup>
-            <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target)" 
+            <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target.id)"
               SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
               BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
               IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
@@ -881,7 +885,7 @@
               ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
               <menupopup>
                 <menuitem label="&copyHereMenu.label;" accesskey="&copyHereMenu.accesskey;" 
-                  oncommand="MsgCopyMessage(event.target.parentNode.parentNode)"/>
+                  oncommand="MsgCopyMessage(event.target.parentNode.parentNode.id)"/>
                 <menuseparator/>
               </menupopup>
             </menu>
@@ -907,7 +911,7 @@
         <rule nc:CanFileMessages="true">
           <menupopup>
             <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" 
-              oncommand="MsgCopyMessage(event.target)" 
+              oncommand="MsgCopyMessage(event.target.id)" 
               SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
               BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
               IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
@@ -917,6 +921,8 @@
         </rule>
       </template>
     </menu>
+    <menuitem id="messagePaneContext-moveToFolderAgain" observes="cmd_moveToFolderAgain"
+              label="&moveToFolderAgain.label;" accesskey="moveToFolderAgain.accesskey"/>    
     <menuseparator id="messagePaneContext-sep-tags-1"/>
     <menu id="messagePaneContext-tags" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;">
       <menupopup id="messagePaneContext-tagpopup" onpopupshowing="InitMessageTags(this)">
@@ -1453,7 +1459,7 @@
                           ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
                       <menupopup>
                         <menuitem label="&fileHereMenu.label;" accesskey="&fileHereMenu.accesskey;" 
-                           oncommand="MsgMoveMessage(event.target.parentNode.parentNode)"/>
+                           oncommand="MsgMoveMessage(event.target.parentNode.parentNode.id)"/>
                         <menuseparator/>
                       </menupopup>
                     </menu>
@@ -1478,7 +1484,7 @@
                </rule>
                <rule nc:CanFileMessages="true">
                  <menupopup>
-                   <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target)" 
+                   <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target.id)"
                              SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                              BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                              IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
@@ -1519,7 +1525,7 @@
                      ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
                       <menupopup>
                         <menuitem label="&copyHereMenu.label;" accesskey="&copyHereMenu.accesskey;" 
-                          oncommand="MsgCopyMessage(event.target.parentNode.parentNode)"/>
+                          oncommand="MsgCopyMessage(event.target.parentNode.parentNode.id)"/>
                         <menuseparator/>
                       </menupopup>
                     </menu>
@@ -1545,7 +1551,7 @@
                 <rule nc:CanFileMessages="true">
                   <menupopup>
                     <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" 
-                     oncommand="MsgCopyMessage(event.target)" 
+                     oncommand="MsgCopyMessage(event.target.id)" 
                      SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                      BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                      IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
@@ -1555,7 +1561,8 @@
                 </rule>
               </template>
             </menu>
-
+            <menuitem id="moveToFolderAgain" key="key_moveToFolderAgain" observes="cmd_moveToFolderAgain"
+                      label="&moveToFolderAgain.label;" accesskey="moveToFolderAgain.accesskey"/>
             <menu id="tagMenu" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;" observes="cmd_tag">
               <menupopup id="tagMenu-tagpopup" onpopupshowing="InitMessageTags(this)">
               <menuitem id="tagMenu-tagRemoveAll" oncommand="RemoveAllMessageTags();"/>
@@ -1804,7 +1811,7 @@
                ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
                 <menupopup>
                   <menuitem label="&fileHereMenu.label;" accesskey="&fileHereMenu.accesskey;" 
-                    oncommand="MsgMoveMessage(event.target.parentNode.parentNode)"/>
+                    oncommand="MsgMoveMessage(event.target.parentNode.parentNode.id)"/>
                   <menuseparator/>
                 </menupopup>
               </menu>
@@ -1829,7 +1836,7 @@
           </rule>
           <rule nc:CanFileMessages="true">
             <menupopup>
-              <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target)" 
+              <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target.id)" 
                SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"

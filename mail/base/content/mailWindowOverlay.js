@@ -79,7 +79,6 @@ var gPrefBranch = Components.classes["@mozilla.org/preferences-service;1"].getSe
 var gPrintSettings = null;
 var gWindowReuse  = 0;
 var gMarkViewedMessageAsReadTimer = null; // if the user has configured the app to mark a message as read if it is viewed for more than n seconds
-
 var gTimelineService = null;
 var gTimelineEnabled = ("@mozilla.org;timeline-service;1" in Components.classes);
 if (gTimelineEnabled) {
@@ -96,10 +95,11 @@ if (gTimelineEnabled) {
   }
 }
 
-var disallow_classes_no_html = 1; /* the user preference,
-     if HTML is not allowed. I assume, that the user could have set this to a
-     value > 1 in his prefs.js or user.js, but that the value will not
-     change during runtime other than through the MsgBody*() functions below.*/
+// the user preference,
+// if HTML is not allowed. I assume, that the user could have set this to a
+// value > 1 in his prefs.js or user.js, but that the value will not
+// change during runtime other than through the MsgBody*() functions below.
+var gDisallow_classes_no_html = 1; 
 
 // Disable the new account menu item if the account preference is locked.
 // Two other affected areas are the account central and the account manager
@@ -396,43 +396,33 @@ function InitMessageMenu()
 {
   var aMessage = GetFirstSelectedMessage();
   var isNews = false;
-  if(aMessage) {
-      isNews = IsNewsMessage(aMessage);
-  }
+  if(aMessage)
+    isNews = IsNewsMessage(aMessage);
 
   //We show reply to Newsgroups only for news messages.
   var replyNewsgroupMenuItem = document.getElementById("replyNewsgroupMainMenu");
   if(replyNewsgroupMenuItem)
-  {
-      replyNewsgroupMenuItem.setAttribute("hidden", isNews ? "" : "true");
-  }
+    replyNewsgroupMenuItem.setAttribute("hidden", isNews ? "" : "true");
 
   //For mail messages we say reply. For news we say ReplyToSender.
   var replyMenuItem = document.getElementById("replyMainMenu");
   if(replyMenuItem)
-  {
-      replyMenuItem.setAttribute("hidden", !isNews ? "" : "true");
-  }
+    replyMenuItem.setAttribute("hidden", !isNews ? "" : "true");
 
   var replySenderMenuItem = document.getElementById("replySenderMainMenu");
   if(replySenderMenuItem)
-  {
-      replySenderMenuItem.setAttribute("hidden", isNews ? "" : "true");
-  }
+    replySenderMenuItem.setAttribute("hidden", isNews ? "" : "true");
 
   // we only kill and watch threads for news
   var threadMenuSeparator = document.getElementById("threadItemsSeparator");
-  if (threadMenuSeparator) {
-      threadMenuSeparator.setAttribute("hidden", isNews ? "" : "true");
-  }
+  if (threadMenuSeparator)
+    threadMenuSeparator.setAttribute("hidden", isNews ? "" : "true");
   var killThreadMenuItem = document.getElementById("killThread");
-  if (killThreadMenuItem) {
-      killThreadMenuItem.setAttribute("hidden", isNews ? "" : "true");
-  }
+  if (killThreadMenuItem)
+    killThreadMenuItem.setAttribute("hidden", isNews ? "" : "true");
   var watchThreadMenuItem = document.getElementById("watchThread");
-  if (watchThreadMenuItem) {
-      watchThreadMenuItem.setAttribute("hidden", isNews ? "" : "true");
-  }
+  if (watchThreadMenuItem)
+    watchThreadMenuItem.setAttribute("hidden", isNews ? "" : "true");
 
   // disable the move and copy menus if there are no messages selected.
   // disable the move menu if we can't delete msgs from the folder
@@ -440,22 +430,24 @@ function InitMessageMenu()
   var msgFolder = GetLoadedMsgFolder();
   if(moveMenu)
   {
-      var enableMenuItem = aMessage && msgFolder && msgFolder.canDeleteMessages;
-      moveMenu.setAttribute("disabled", !enableMenuItem);
+    var enableMenuItem = aMessage && msgFolder && msgFolder.canDeleteMessages;
+    moveMenu.setAttribute("disabled", !enableMenuItem);
   }
 
   var copyMenu = document.getElementById("copyMenu");
   if(copyMenu)
-      copyMenu.setAttribute("disabled", !aMessage);
+    copyMenu.setAttribute("disabled", !aMessage);
+  
+  initMoveToFolderAgainMenu(document.getElementById("moveToFolderAgain"));
 
   // Disable Forward as/Label menu items if no message is selected
   var forwardAsMenu = document.getElementById("forwardAsMenu");
   if(forwardAsMenu)
-      forwardAsMenu.setAttribute("disabled", !aMessage);
+    forwardAsMenu.setAttribute("disabled", !aMessage);
 
   var labelMenu = document.getElementById("labelMenu");
   if(labelMenu)
-      labelMenu.setAttribute("disabled", !aMessage);
+    labelMenu.setAttribute("disabled", !aMessage);
 
   // Disable mark menu when we're not in a folder
   var markMenu = document.getElementById("markMenu");
@@ -463,6 +455,27 @@ function InitMessageMenu()
     markMenu.setAttribute("disabled", !msgFolder);
 
   document.commandDispatcher.updateCommands('create-menu-message');
+}
+
+// initMoveToFolderAgainMenu
+// enables / disables aMenuItem based on the value of mail.last_msg_movecopy_target_uri
+// Adjusts the label and accesskey for aMenuItem to include the folder name
+function initMoveToFolderAgainMenu(aMenuItem)
+{
+  var lastFolderURI = pref.getCharPref("mail.last_msg_movecopy_target_uri");
+  var isMove = pref.getBoolPref("mail.last_msg_movecopy_was_move");  
+  aMenuItem.setAttribute("disabled", !lastFolderURI);
+  if (lastFolderURI)
+  {
+    var destResource = RDF.GetResource(lastFolderURI);
+    var destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+    aMenuItem.label = gMessengerBundle.getFormattedString(isMove ? 
+                                                          "moveToFolderAgain" : "copyToFolderAgain",
+                                                          [destMsgFolder.prettyName], 1);
+    aMenuItem.setAttribute('accesskey', 
+                           gMessengerBundle.getString(isMove ? 
+                                                      "moveToFolderAgainAccessKey" : "copyToFolderAgainAccessKey"));
+  }
 }
 
 function InitViewHeadersMenu()
@@ -505,8 +518,8 @@ function InitViewBodyMenu()
     html_as = pref.getIntPref("mailnews.display.html_as");
     disallow_classes = pref.getIntPref("mailnews.display.disallow_mime_handlers");
     if (disallow_classes > 0)
-      disallow_classes_no_html = disallow_classes;
-    // else disallow_classes_no_html keeps its inital value (see top)
+      gDisallow_classes_no_html = disallow_classes;
+    // else gDisallow_classes_no_html keeps its inital value (see top)
   }
   catch (ex)
   {
@@ -1090,35 +1103,44 @@ function MsgDeleteMessage(reallyDelete, fromToolbar)
     }
 }
 
-function MsgCopyMessage(destFolder)
+// MsgCopyMessage
+//   Copies the selected messages to the destination folder
+//   aDestFolderURI -- the URI of the destination folder
+function MsgCopyMessage(aDestFolderURI)
 {
   try {
     // get the msg folder we're copying messages into
-    var destUri = destFolder.getAttribute('id');
-    var destResource = RDF.GetResource(destUri);
+    var destResource = RDF.GetResource(aDestFolderURI);
     var destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
     gDBView.doCommandWithFolder(nsMsgViewCommandType.copyMessages, destMsgFolder);
+    pref.setCharPref("mail.last_msg_movecopy_target_uri", aDestFolderURI);
+    pref.setBoolPref("mail.last_msg_movecopy_was_move", false);  
   }
   catch (ex) {
     dump("MsgCopyMessage failed: " + ex + "\n");
   }
 }
 
-function MsgMoveMessage(destFolder)
+// MsgMoveMessage
+//   Moves the selected messages to the destination folder
+//   aDestFolderURI -- the URI of the destination folder
+function MsgMoveMessage(aDestFolderURI)
 {
   try {
     // get the msg folder we're moving messages into
-    var destUri = destFolder.getAttribute('id');
-    var destResource = RDF.GetResource(destUri);
+    // var destUri = destFolder.getAttribute('id');
+    var destResource = RDF.GetResource(aDestFolderURI);
     var destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
     // we don't move news messages, we copy them
-    if (isNewsURI(gDBView.msgFolder.URI)) {
+    if (isNewsURI(gDBView.msgFolder.URI))
       gDBView.doCommandWithFolder(nsMsgViewCommandType.copyMessages, destMsgFolder);
-    }
-    else {
+    else 
+    {
       SetNextMessageAfterDelete();
       gDBView.doCommandWithFolder(nsMsgViewCommandType.moveMessages, destMsgFolder);
-    }
+    }    
+    pref.setCharPref("mail.last_msg_movecopy_target_uri", aDestFolderURI);
+    pref.setBoolPref("mail.last_msg_movecopy_was_move", true);  
   }
   catch (ex) {
     dump("MsgMoveMessage failed: " + ex + "\n");
@@ -1735,7 +1757,7 @@ function MsgBodySanitized()
     gPrefBranch.setBoolPref("mailnews.display.prefer_plaintext", false);
     gPrefBranch.setIntPref("mailnews.display.html_as", 3);
     gPrefBranch.setIntPref("mailnews.display.disallow_mime_handlers",
-                      disallow_classes_no_html);
+                      gDisallow_classes_no_html);
     MsgReload();
     return true;
 }
@@ -1744,7 +1766,7 @@ function MsgBodyAsPlaintext()
 {
     gPrefBranch.setBoolPref("mailnews.display.prefer_plaintext", true);
     gPrefBranch.setIntPref("mailnews.display.html_as", 1);
-    gPrefBranch.setIntPref("mailnews.display.disallow_mime_handlers", disallow_classes_no_html);
+    gPrefBranch.setIntPref("mailnews.display.disallow_mime_handlers", gDisallow_classes_no_html);
     MsgReload();
     return true;
 }

@@ -171,10 +171,10 @@ var DefaultController =
 			case "cmd_previousMsg":
 			case "cmd_previousUnreadMsg":
 			case "cmd_previousFlaggedMsg":
-                        case "button_goForward":
-                        case "button_goBack":
-                        case "cmd_goForward":
-                        case "cmd_goBack":
+      case "button_goForward":
+      case "button_goBack":
+      case "cmd_goForward":
+      case "cmd_goBack":
       case "cmd_goStartPage":
 			case "cmd_viewAllMsgs":
 			case "cmd_viewUnreadMsgs":
@@ -227,6 +227,7 @@ var DefaultController =
       case "cmd_close":
       case "cmd_selectAll":
       case "cmd_selectThread":
+      case "cmd_moveToFolderAgain":
 				return true;
       case "cmd_downloadFlagged":
       case "cmd_downloadSelected":
@@ -427,6 +428,8 @@ var DefaultController =
         return CheckOnline() && IsAccountOfflineEnabled();       
       case "cmd_settingsOffline":
         return IsAccountOfflineEnabled();
+      case "cmd_moveToFolderAgain":
+        return pref.getCharPref("mail.last_msg_movecopy_target_uri") && GetNumSelectedMessages() > 0;
       default:
         return false;
     }
@@ -528,14 +531,14 @@ var DefaultController =
 			case "cmd_previousFlaggedMsg":
 				MsgPreviousFlaggedMessage();
 				break;
-                        case "button_goForward":
-                        case "cmd_goForward":
-                          MsgGoForward();
-                          break;
-                        case "button_goBack":
-                        case "cmd_goBack":
-                          MsgGoBack();
-                          break;
+      case "button_goForward":
+      case "cmd_goForward":
+        MsgGoForward();
+        break;
+      case "button_goBack":
+      case "cmd_goBack":
+        MsgGoBack();
+        break;
       case "cmd_goStartPage":
         HideMessageHeaderPane();
         loadStartPage();
@@ -554,10 +557,10 @@ var DefaultController =
 				messenger.Redo(msgWindow);
 				break;
 			case "cmd_expandAllThreads":
-                gDBView.doCommand(nsMsgViewCommandType.expandAll);
+        gDBView.doCommand(nsMsgViewCommandType.expandAll);
 				break;
 			case "cmd_collapseAllThreads":
-                gDBView.doCommand(nsMsgViewCommandType.collapseAll);
+        gDBView.doCommand(nsMsgViewCommandType.collapseAll);
 				break;
 			case "cmd_renameFolder":
 				MsgRenameFolder();
@@ -566,7 +569,7 @@ var DefaultController =
 				MsgSendUnsentMsgs();
 				return;
 			case "cmd_openMessage":
-                MsgOpenSelectedMessages();
+        MsgOpenSelectedMessages();
 				return;
 			case "cmd_printSetup":
 			  NSPrintSetup();
@@ -662,31 +665,38 @@ var DefaultController =
 			case "cmd_compactFolder":
 				MsgCompactFolder(true);
 				return;
-            case "cmd_downloadFlagged":
-                MsgDownloadFlagged();
-                break;
-            case "cmd_downloadSelected":
-                MsgDownloadSelected();
-                break;
-            case "cmd_synchronizeOffline":
-                MsgSynchronizeOffline();
-                break;
-            case "cmd_settingsOffline":
-                MsgSettingsOffline();
-                break;
-            case "cmd_selectAll":
-                // move the focus so the user can delete the newly selected messages, not the folder
-                SetFocusThreadPane();
-                // if in threaded mode, the view will expand all before selecting all
-                gDBView.doCommand(nsMsgViewCommandType.selectAll)
-                if (gDBView.numSelected != 1) {
-                    setTitleFromFolder(gDBView.msgFolder,null);
-                    ClearMessagePane();
-                }
-                break;
-            case "cmd_selectThread":
-                gDBView.doCommand(nsMsgViewCommandType.selectThread);
-                break;
+      case "cmd_downloadFlagged":
+          MsgDownloadFlagged();
+          break;
+      case "cmd_downloadSelected":
+          MsgDownloadSelected();
+          break;
+      case "cmd_synchronizeOffline":
+          MsgSynchronizeOffline();
+          break;
+      case "cmd_settingsOffline":
+          MsgSettingsOffline();
+          break;
+      case "cmd_moveToFolderAgain":
+          var folderId = pref.getCharPref("mail.last_msg_movecopy_target_uri");
+          if (pref.getBoolPref("mail.last_msg_movecopy_was_move"))
+            MsgMoveMessage(folderId);
+          else
+            MsgCopyMessage(folderId);
+          break;
+      case "cmd_selectAll":
+          // move the focus so the user can delete the newly selected messages, not the folder
+          SetFocusThreadPane();
+          // if in threaded mode, the view will expand all before selecting all
+          gDBView.doCommand(nsMsgViewCommandType.selectAll)
+          if (gDBView.numSelected != 1) {
+              setTitleFromFolder(gDBView.msgFolder,null);
+              ClearMessagePane();
+          }
+          break;
+      case "cmd_selectThread":
+          gDBView.doCommand(nsMsgViewCommandType.selectThread);
+          break;
 		}
 	},
 	
@@ -694,10 +704,10 @@ var DefaultController =
 	{
 		// on blur events set the menu item texts back to the normal values
 		if ( event == 'blur' )
-        {
-            goSetMenuValue('cmd_undo', 'valueDefault');
-            goSetMenuValue('cmd_redo', 'valueDefault');
-        }
+    {
+      goSetMenuValue('cmd_undo', 'valueDefault');
+      goSetMenuValue('cmd_redo', 'valueDefault');
+    }
 	}
 };
 

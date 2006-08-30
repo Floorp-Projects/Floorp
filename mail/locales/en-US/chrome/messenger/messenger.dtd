@@ -322,6 +322,9 @@
 <!ENTITY copyMessageLocation.accesskey "M">
 <!ENTITY copyMsgMenu.label "Copy">
 <!ENTITY copyMsgMenu.accesskey "C">
+<!ENTITY moveToFolderAgain.label "Move Again">
+<!ENTITY moveToFolderAgain.accesskey "i">
+<!ENTITY moveToFolderAgainCmd.key "t">
 <!ENTITY killThreadMenu.label "Ignore Thread">
 <!ENTITY killThreadMenu.accesskey "I">
 <!ENTITY killThreadMenu.key "k">

@@ -147,6 +147,11 @@ pref("mail.showPreviewText", true); // enables preview text in mail alerts and f
 pref("mail.ui.folderpane.view", 0);
 pref("mail.folder.views.version", 0);
 
+// target folder URI used for the last move or copy
+pref("mail.last_msg_movecopy_target_uri", "");
+// last move or copy operation was a move
+pref("mail.last_msg_movecopy_was_move", true);
+
 #ifdef XP_WIN
 pref("browser.preferences.instantApply", false);
 #else
