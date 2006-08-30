@@ -121,6 +121,11 @@ function PROT_PhishingWarden(progressListener) {
   var phishWardenPrefObserver = 
     BindToObject(this.onPhishWardenEnabledPrefChanged, this);
   this.prefs_.addObserver(kPhishWardenEnabledPref, phishWardenPrefObserver);
+  
+  // Get notifications when the data provider pref changes
+  var dataProviderPrefObserver =
+    BindToObject(this.onDataProviderPrefChanged, this);
+  this.prefs_.addObserver(kDataProviderIdPref, dataProviderPrefObserver);
 
   // hook up our browser listener
   this.progressListener_ = progressListener;
@@ -128,6 +133,12 @@ function PROT_PhishingWarden(progressListener) {
   this.progressListener_.enabled = this.phishWardenEnabled_;
   // ms to wait after a request has started before firing JS callback
   this.progressListener_.delay = 1500;
+
+  // object to keep track of request errors if we're in remote check mode
+  this.requestBackoff_ = new RequestBackoff(3 /* num errors */,
+                                   10*60*1000 /* error time, 10min */,
+                                   10*60*1000 /* backoff interval, 10min */,
+                                   6*60*60*1000 /* max backoff, 6hr */);
 
   G_Debug(this, "phishWarden initialized");
 }
@@ -185,11 +196,12 @@ PROT_PhishingWarden.prototype.maybeToggleUpdateChecking = function() {
   // We update and save to disk all tables if we don't have remote checking
   // enabled.
   if (phishWardenEnabled === true) {
-    if (this.checkRemote_ === false) {
-      // Local list mode, start table updates
-      this.enableBlacklistTableUpdates();
-      this.enableWhitelistTableUpdates();
-    } else if (this.checkRemote_ === true) {
+    // If anti-phishing is enabled, we always download the local files to
+    // use in case remote lookups fail.
+    this.enableBlacklistTableUpdates();
+    this.enableWhitelistTableUpdates();
+
+    if (this.checkRemote_ === true) {
       // Remote lookup mode
       // We check to see if the local list update host is the same as the
       // remote lookup host.  If they are the same, then we don't bother
@@ -213,15 +225,9 @@ PROT_PhishingWarden.prototype.maybeToggleUpdateChecking = function() {
         // The data provider for local lists and remote lookups is the
         // same, enable whitelist lookup suppression.
         this.checkWhitelists_ = true;
-
-        this.disableBlacklistTableUpdates();
-        this.enableWhitelistTableUpdates();
       } else {
-        // hosts don't match, disable all tables
+        // hosts don't match, don't use whitelist suppression
         this.checkWhitelists_ = false;
-
-        this.disableBlacklistTableUpdates();
-        this.disableWhitelistTableUpdates();
       }
     }
   } else {
@@ -266,6 +272,7 @@ PROT_PhishingWarden.prototype.removeBrowserView = function(view) {
 PROT_PhishingWarden.prototype.onCheckRemotePrefChanged = function(prefName) {
   this.checkRemote_ = this.prefs_.getBoolPrefOrDefault(prefName,
                                                        this.checkRemote_);
+  this.requestBackoff_.reset();
   this.maybeToggleUpdateChecking();
 }
 
@@ -280,8 +287,24 @@ PROT_PhishingWarden.prototype.onPhishWardenEnabledPrefChanged = function(
                                                                     prefName) {
   this.phishWardenEnabled_ = 
     this.prefs_.getBoolPrefOrDefault(prefName, this.phishWardenEnabled_);
+  this.requestBackoff_.reset();
   this.maybeToggleUpdateChecking();
   this.progressListener_.enabled = this.phishWardenEnabled_;
+}
+
+/**
+ * Event fired when the user changes data providers.
+ */
+PROT_PhishingWarden.prototype.onDataProviderPrefChanged = function(prefName) {
+  // We want to reset request backoff state since it's a different provider.
+  this.requestBackoff_.reset();
+
+  // If we have a new data provider and we're doing remote lookups, then
+  // we may want to use whitelist lookup suppression or change which
+  // tables are being downloaded.
+  if (this.checkRemote_) {
+    this.maybeToggleUpdateChecking();
+  }
 }
 
 /**
@@ -294,25 +317,19 @@ PROT_PhishingWarden.prototype.onDocNavStart = function(request, url) {
   G_Debug(this, "checkRemote: " +
           (this.checkRemote_ ? "yes" : "no"));
 
-  // This logic is a bit involved. In some instances of SafeBrowsing
-  // (the stand-alone extension, for example), the user might yet have
-  // opted into or out of advanced protection mode. In this case we
-  // would like to show them a modal dialog requiring them
-  // to. However, there are links from that dialog to the test page,
-  // and the warden starts out as disabled. So we want to show the
-  // warning on the test page so long as the extension hasn't been
-  // explicitly disabled.
-
-  // If we're on the test page and we're not explicitly disabled
+  // If we're on a test page, trigger the warning.
   // XXX Do we still need a test url or should each provider just put
   // it in their local list?
-  // Either send a request off or check locally
-  if (this.checkRemote_) {
-    // First check to see if it's a blacklist url.
-    if (this.isBlacklistTestURL(url)) {
-      this.houstonWeHaveAProblem_(request);
-    } else if (this.checkWhitelists_) {
-      // Use whitelists to suppress remote lookups.
+  if (this.isBlacklistTestURL(url)) {
+    this.houstonWeHaveAProblem_(request);
+    return;
+  }
+
+  // Make a remote lookup check if the pref is selected and if we haven't
+  // triggered server backoff.  Otherwise, make a local check.
+  if (this.checkRemote_ && this.requestBackoff_.canMakeRequest()) {
+    // If we can use whitelists to suppress remote lookups, do so.
+    if (this.checkWhitelists_) {
       var maybeRemoteCheck = BindToObject(this.maybeMakeRemoteCheck_,
                                           this,
                                           url,
@@ -323,6 +340,7 @@ PROT_PhishingWarden.prototype.onDocNavStart = function(request, url) {
       this.fetcher_.get(url,
                         BindToObject(this.onTRFetchComplete,
                                      this,
+                                     url,
                                      request));
     }
   } else {
@@ -331,7 +349,7 @@ PROT_PhishingWarden.prototype.onDocNavStart = function(request, url) {
                                     this,
                                     url,
                                     request);
-    this.checkUrl_(url, evilCallback);
+    this.isEvilURL(url, evilCallback);
   }
 }
 
@@ -350,21 +368,40 @@ PROT_PhishingWarden.prototype.maybeMakeRemoteCheck_ = function(url, request, sta
   this.fetcher_.get(url,
                     BindToObject(this.onTRFetchComplete,
                                  this,
+                                 url,
                                  request));
 }
 
 /**
  * Invoked with the result of a lookupserver request.
  *
+ * @param url String the URL we looked up
  * @param request The nsIRequest in which we're interested
- *
  * @param trValues Object holding name/value pairs parsed from the
  *                 lookupserver's response
+ * @param status Number HTTP status code or NS_ERROR_NOT_AVAILABLE if there's
+ *               an HTTP error
  */
-PROT_PhishingWarden.prototype.onTRFetchComplete = function(request,
-                                                           trValues) {
-  var callback = BindToObject(this.houstonWeHaveAProblem_, this, request);
-  this.checkRemoteData(callback, trValues);
+PROT_PhishingWarden.prototype.onTRFetchComplete = function(url,
+                                                           request,
+                                                           trValues,
+                                                           status) {
+  // Did the remote http request succeed?  If not, we fall back on
+  // local lists.
+  if (status == Components.results.NS_ERROR_NOT_AVAILABLE ||
+      this.requestBackoff_.isErrorStatus_(status)) {
+    this.requestBackoff_.noteServerResponse(status);
+
+    G_Debug(this, "remote check failed, using local lists instead");
+    var evilCallback = BindToObject(this.localListMatch_,
+                                    this,
+                                    url,
+                                    request);
+    this.isEvilURL(url, evilCallback);
+  } else {
+    var callback = BindToObject(this.houstonWeHaveAProblem_, this, request);
+    this.checkRemoteData(callback, trValues);
+  }
 }
 
 /**
@@ -497,21 +534,6 @@ PROT_PhishingWarden.prototype.isBlacklistTestURL = function(url) {
 }
 
 /**
- * Check to see if the url is in the blacklist.
- *
- * @param url String
- * @param callback Function
- */
-PROT_PhishingWarden.prototype.checkUrl_ = function(url, callback) {
-  // First check to see if it's a blacklist url.
-  if (this.isBlacklistTestURL(url)) {
-    callback();
-    return;
-  }
-  this.isEvilURL(url, callback);
-}
-
-/**
  * Callback for found local blacklist match.  First we report that we have
  * a blacklist hit, then we bring up the warning dialog.
  * @param status Number enum from callback (PROT_ListWarden.IN_BLACKLIST,
@@ -550,3 +572,53 @@ PROT_PhishingWarden.prototype.checkRemoteData = function(callback,
     G_Debug(this, "Remote blacklist miss");
   }
 }
+
+#ifdef 0
+// Some unittests (e.g., paste into JS shell)
+var warden = safebrowsing.phishWarden;
+function expectLocalCheck() {
+  warden.isEvilURL = function() {
+    dump("checkurl: ok\n");
+  }
+  warden.checkRemoteData = function() {
+    throw "unexpected remote check";
+  }
+}
+function expectRemoteCheck() {
+  warden.isEvilURL = function() {
+    throw "unexpected local check";
+  }
+  warden.checkRemoteData = function() {
+    dump("checkremote: ok\n");
+  }
+}
+
+warden.requestBackoff_.reset();
+
+// START TESTS
+expectRemoteCheck();
+warden.onTRFetchComplete(null, null, null, 200);
+
+// HTTP 5xx should fallback on local check
+expectLocalCheck();
+warden.onTRFetchComplete(null, null, null, 500);
+warden.onTRFetchComplete(null, null, null, 502);
+
+// Only two errors have occurred, so we continue to try remote lookups.
+if (!warden.requestBackoff_.canMakeRequest()) throw "expected ok";
+
+// NS_ERROR_NOT_AVAILABLE also triggers a local check, but it doesn't
+// count as a remote lookup error.  We don't know /why/ it failed (e.g.,
+// user may just be in offline mode).
+warden.onTRFetchComplete(null, null, null,
+                         Components.results.NS_ERROR_NOT_AVAILABLE);
+if (!warden.requestBackoff_.canMakeRequest()) throw "expected ok";
+
+// HTTP 302, 303, 307 should also trigger an error.  This is our
+// third error so we should now be in backoff mode.
+expectLocalCheck();
+warden.onTRFetchComplete(null, null, null, 303);
+
+if (warden.requestBackoff_.canMakeRequest()) throw "expected failed";
+
+#endif
