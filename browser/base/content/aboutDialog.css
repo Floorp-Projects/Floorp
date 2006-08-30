@@ -3,6 +3,10 @@
   width: 299px;
 }
 
+#modes {
+  min-height: 380px;
+}
+
 #clientBox {
   background-image: url("chrome://branding/content/about.png");
   background-repeat: no-repeat;
@@ -15,12 +19,8 @@
   font-weight: bold; font-size: larger;
 } 
 
-#detailsBox {
-  padding: 8px 10px 0px 8px;
-}
-
 #userAgent {
-  margin: 3px 10px 0px 5px;
+  margin: 11px 20px 0px 13px;
   background-color: #FFFFFF;
   color: #000000;
   padding: 1px 0px 0px 3px;
