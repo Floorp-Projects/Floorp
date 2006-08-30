@@ -113,6 +113,8 @@ class nsNativeTheme
 
   // tab:
   PRBool IsBottomTab(nsIFrame* aFrame);
+  PRBool IsFirstTab(nsIFrame* aFrame);
+  PRBool IsLastTab(nsIFrame* aFrame);
 
   // progressbar:
   PRBool IsIndeterminateProgress(nsIFrame* aFrame);

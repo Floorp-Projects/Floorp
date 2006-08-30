@@ -329,6 +329,24 @@ nsNativeTheme::IsBottomTab(nsIFrame* aFrame)
   return !classStr.IsEmpty() && classStr.Find("tab-bottom") != kNotFound;
 }
 
+PRBool
+nsNativeTheme::IsFirstTab(nsIFrame* aFrame)
+{
+  if (!aFrame)
+    return PR_FALSE;
+
+  return aFrame->GetContent()->HasAttr(kNameSpaceID_None, nsWidgetAtoms::firsttab);
+}
+
+PRBool
+nsNativeTheme::IsLastTab(nsIFrame* aFrame)
+{
+  if (!aFrame)
+    return PR_FALSE;
+
+  return aFrame->GetContent()->HasAttr(kNameSpaceID_None, nsWidgetAtoms::lasttab);
+}
+
 // progressbar:
 PRBool
 nsNativeTheme::IsIndeterminateProgress(nsIFrame* aFrame)
