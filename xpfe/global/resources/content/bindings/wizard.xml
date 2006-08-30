@@ -273,6 +273,7 @@
 
           window.close();
           window.setTimeout(function() {window.close();}, 1);
+          return false;
         ]]></body>
       </method>
       
