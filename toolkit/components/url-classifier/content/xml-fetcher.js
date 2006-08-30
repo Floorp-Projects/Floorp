@@ -46,12 +46,12 @@
 
 /**
  * Because we might be in a component, we can't just assume that
- * XMLHttpRequest exists. So we use this tiny class to wrap the XPCOM
- * version.
+ * XMLHttpRequest exists. So we use this tiny factory function to wrap the
+ * XPCOM version.
  *
- * @constructor
+ * @return XMLHttpRequest object
  */
-function PROT_XMLHttpRequest() {
+function PROT_NewXMLHttpRequest() {
   var Cc = Components.classes;
   var Ci = Components.interfaces;
   var request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
@@ -73,7 +73,7 @@ function PROT_XMLHttpRequest() {
  */
 function PROT_XMLFetcher(opt_stripCookies) {
   this.debugZone = "xmlfetcher";
-  this._request = new PROT_XMLHttpRequest();
+  this._request = PROT_NewXMLHttpRequest();
   this._stripCookies = !!opt_stripCookies;
 }
 
@@ -92,7 +92,7 @@ PROT_XMLFetcher.prototype = {
    */
   get: function(page, callback) {
     this._request.abort();                // abort() is asynchronous, so
-    this._request = new PROT_XMLHttpRequest();
+    this._request = PROT_NewXMLHttpRequest();
     this._callback = callback;
     var asynchronous = true;
     this._request.open("GET", page, asynchronous);
@@ -114,25 +114,28 @@ PROT_XMLFetcher.prototype = {
    * means content has been received.
    */
   readyStateChange: function(fetcher) {
-    if (fetcher._request.readyState != 4) // TODO: check status code 200
+    if (fetcher._request.readyState != 4)
       return;
 
-    // We occasionally get an NS_ERROR_NOT_AVAILABLE (it doesn't have
-    // headers) when we try to read the response. Mask the exception
-    // by returning null response. 
-    // TODO maybe masking this should be an option?
+    // If the request fails, on trunk we get status set to
+    // NS_ERROR_NOT_AVAILABLE.  On 1.8.1 branch we get an exception
+    // forwarded from nsIHttpChannel::GetResponseStatus.  To be consistent
+    // between branch and trunk, we send back NS_ERROR_NOT_AVAILABLE for
+    // http failures.
     var responseText = null;
+    var status = Components.results.NS_ERROR_NOT_AVAILABLE;
     try {
       G_Debug(this, "xml fetch status code: \"" + 
               fetcher._request.status + "\"");
-      var responseText = fetcher._request.responseText;
+      status = fetcher._request.status;
+      responseText = fetcher._request.responseText;
     } catch(e) {
       G_Debug(this, "Caught exception trying to read xmlhttprequest " +
               "status/response.");
       G_Debug(this, e);
     }
     if (fetcher._callback)
-      fetcher._callback(responseText);
+      fetcher._callback(responseText, status);
   }
 };
 

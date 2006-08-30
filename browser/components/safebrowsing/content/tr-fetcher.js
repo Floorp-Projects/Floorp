@@ -117,10 +117,13 @@ PROT_TRFetcher.prototype.get = function(forPage, callback) {
  * Invoked when a fetch has completed.
  *
  * @param callback Function to invoke with parsed response object
- *
  * @param responseText Text of the protocol4 message
+ * @param httpStatus Number HTTP status code or NS_ERROR_NOT_AVAILABLE if the
+ *     request failed
  */
-PROT_TRFetcher.prototype.onFetchComplete_ = function(callback, responseText) {
+PROT_TRFetcher.prototype.onFetchComplete_ = function(callback, responseText,
+                                                     httpStatus) {
+  
   var responseObj = this.extractResponse_(responseText);
 
   // The server might tell us to rekey, for example if it sees that
@@ -139,7 +142,7 @@ PROT_TRFetcher.prototype.onFetchComplete_ = function(callback, responseText) {
   for (var field in responseObj)
     G_Debug(this, field + "=" + responseObj[field]);
 
-  callback(responseObj);
+  callback(responseObj, httpStatus);
 };
 
 /**
