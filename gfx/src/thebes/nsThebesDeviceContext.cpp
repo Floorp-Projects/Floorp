@@ -237,6 +237,30 @@ nsThebesDeviceContext::Init(nsNativeWidget aWidget)
     }
     // XXX
     mDepth = 24;
+
+    // Cache scrollbar sizes for GTK.
+    GtkRequisition req;
+    GtkWidget *sb;
+
+    sb = gtk_vscrollbar_new(NULL);
+    gtk_widget_ref(sb);
+    gtk_object_sink(GTK_OBJECT(sb));
+    gtk_widget_ensure_style(sb);
+    gtk_widget_queue_resize(sb);
+    gtk_widget_size_request(sb,&req);
+    mGTKScrollbarWidth = req.width;
+    gtk_widget_destroy(sb);
+    gtk_widget_unref(sb);
+
+    sb = gtk_hscrollbar_new(NULL);
+    gtk_widget_ref(sb);
+    gtk_object_sink(GTK_OBJECT(sb));
+    gtk_widget_ensure_style(sb);
+    gtk_widget_queue_resize(sb);
+    gtk_widget_size_request(sb,&req);
+    mGTKScrollbarHeight = req.height;
+    gtk_widget_destroy(sb);
+    gtk_widget_unref(sb);
 #endif
 
 #ifdef XP_WIN
@@ -358,15 +382,16 @@ nsThebesDeviceContext::SupportsNativeWidgets(PRBool &aSupportsWidgets)
 NS_IMETHODIMP
 nsThebesDeviceContext::GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
-#ifdef XP_WIN
     float scale;
     GetCanonicalPixelScale(scale);
-
+#ifdef MOZ_ENABLE_GTK2
+    aWidth = mGTKScrollbarWidth * mDevUnitsToAppUnits * scale;
+    aHeight = mGTKScrollbarHeight * mDevUnitsToAppUnits * scale;
+#elif XP_WIN
     aWidth  = ::GetSystemMetrics(SM_CXVSCROLL) * mDevUnitsToAppUnits * scale;
     aHeight = ::GetSystemMetrics(SM_CXHSCROLL) * mDevUnitsToAppUnits * scale;
-
 #else
-
+    NS_WARNING("Couldn't get scrollbar size from system, so setting to 10px. FIX ME!");
     aWidth = 10.0f * mPixelsToTwips;
     aHeight = 10.0f * mPixelsToTwips;
 #endif
