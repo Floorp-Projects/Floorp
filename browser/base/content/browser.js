@@ -3382,7 +3382,7 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   // Update the urlbar
   var url = getWebNavigation().currentURI.spec;
   if (gURLBar) {
-    gURLBar.value = url;
+    gURLBar.value = url == "about:blank" ? "" : url;
     SetPageProxyState("valid");
     XULBrowserWindow.asyncUpdateUI();    
   }
