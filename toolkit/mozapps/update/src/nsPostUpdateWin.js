@@ -664,12 +664,14 @@ function updateRegistry(rootKey) {
     var uninstString = uninst.path;
     nameWithVersion = oldInstall.fullName + " (" + oldInstall.version + ")";
     try {
-      key.open(rootKey, uninstallRoot, key.ACCESS_READ);
+      key.open(rootKey, uninstallRoot + "\\" + nameWithVersion, key.ACCESS_READ);
       var regUninstString = key.readStringValue("UninstallString");
       if (regUninstString != uninstString) {
-        LOG("\n\nupdating UninstallString registry value\n\n");
-          createRegistryKeys(key, { name: nameWithVersion,
-                                    values: ["UninstallString", uninstString] });
+        LOG("updating UninstallString registry value");
+        key.close();
+        key.open(rootKey, uninstallRoot, key.ACCESS_READ);
+        createRegistryKeys(key, { name: nameWithVersion,
+                                  values: ["UninstallString", uninstString] });
       } else {
         LOG("registry is up-to-date");
       }
