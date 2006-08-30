@@ -65,6 +65,7 @@
 #include "nsIDOMTextListener.h"
 #include "nsIDOMCompositionListener.h"
 #include "nsIDOMDragListener.h"
+#include "nsIDOMHTMLBRElement.h"
 #include "nsIDocument.h"
 #include "nsITransactionManager.h"
 #include "nsIAbsorbingTransaction.h"
@@ -4593,29 +4594,110 @@ nsEditor::DeleteSelectionImpl(nsIEditor::EDirection aAction)
   if (NS_FAILED(res)) return res;
   nsAutoRules beginRulesSniffing(this, kOpDeleteSelection, aAction);
 
+  nsCOMPtr<nsIDOMCharacterData> deleteCharData;
+  nsCOMPtr<nsIDOMNode> deleteNode;
+  PRInt32 deleteCharOffset = -1;
+  PRBool isDeletingOneChar = PR_FALSE;
+
+  // Notification uses nsIEditActionListener::[Will|Did]Delete[Text|Node] instead of
+  // nsIEditActionListener::[Will|Did]DeleteSelection when collapsed action is
+  // used to delete one character forward or backwards.
+  // The following code block determines what to call by setting
+  // isDeletingOneChar, deleteNode and deleteCharData
+  if (aAction == ePrevious || aAction == eNext) {
+#ifdef DEBUG
+    PRUint32 flags;
+    NS_ASSERTION(NS_SUCCEEDED(GetFlags(&flags) &&
+                 (flags & nsIPlaintextEditor::eEditorPlaintextMask)),
+                 "Should not have reached this point in rich text editor");
+#endif
+    res = selection->GetIsCollapsed(&isDeletingOneChar);
+    if (isDeletingOneChar) {
+      // XXX After bug 240933 is fixed we will never be deleting a node
+      // a node, there will always be a char data
+      selection->GetFocusNode(getter_AddRefs(deleteNode));
+      deleteCharData = do_QueryInterface(deleteNode);
+      selection->GetFocusOffset(&deleteCharOffset);
+      if (!deleteCharData) {
+        nsCOMPtr<nsINode> parentNode(do_QueryInterface(deleteNode));
+        deleteNode = do_QueryInterface(parentNode->GetChildAt(deleteCharOffset));
+        deleteCharData = do_QueryInterface(deleteNode);
+        deleteCharOffset = 0;
+      }
+      if (aAction == ePrevious && --deleteCharOffset < 0) {
+        // Backspace pressed at beginning of node, so get the previous node
+        nsCOMPtr<nsIDOMNode> previousNode;
+        deleteNode->GetPreviousSibling(getter_AddRefs(previousNode));
+        deleteNode.swap(previousNode);
+        deleteCharData = do_QueryInterface(deleteNode);
+      }
+      PRUint32 deleteDataLength = 1; // Treat deleted node as length of 1
+      if (deleteCharData) {
+        deleteCharData->GetLength(&deleteDataLength);
+      }
+      // Check for valid position for a deletion
+      if (deleteCharOffset < 0) {
+        deleteCharOffset = deleteDataLength - 1;
+      }
+      else if (deleteCharOffset >= NS_STATIC_CAST(PRInt32, deleteDataLength)) {
+        nsCOMPtr<nsIDOMNode> nextNode;
+        deleteNode->GetNextSibling(getter_AddRefs(nextNode));
+        deleteNode.swap(nextNode);
+        deleteCharOffset = 0;
+      }
+      deleteCharData = do_QueryInterface(deleteNode);
+#ifdef DEBUG
+      nsCOMPtr<nsIDOMHTMLBRElement> deleteBR(do_QueryInterface(deleteNode));
+      NS_ASSERTION(!deleteNode || deleteCharData || deleteBR,
+                   "Deleting non-BR node in plaintext editor");
+#endif
+    }
+  }
+
   PRInt32 i;
   nsIEditActionListener *listener;
   if (NS_SUCCEEDED(res))  
   {
+    // Notify nsIEditActionListener::WillDelete[Selection|Text|Node]
     if (mActionListeners)
     {
       for (i = 0; i < mActionListeners->Count(); i++)
       {
         listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
-        if (listener)
-          listener->WillDeleteSelection(selection);
+        if (listener) {
+          if (!isDeletingOneChar) {
+            listener->WillDeleteSelection(selection);
+          }
+          else if (deleteCharData) {
+            listener->WillDeleteText(deleteCharData, deleteCharOffset, 1);
+          }
+          else if (deleteNode) {
+            listener->WillDeleteNode(deleteNode);
+          }
+        }
       }
     }
 
+    // Delete the specified amount
     res = DoTransaction(txn);  
 
+    // Notify nsIEditActionListener::DidDelete[Selection|Text|Node]
     if (mActionListeners)
     {
       for (i = 0; i < mActionListeners->Count(); i++)
       {
         listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
-        if (listener)
-          listener->DidDeleteSelection(selection);
+        if (listener) {
+          if (!isDeletingOneChar) {
+            listener->DidDeleteSelection(selection);
+          }
+          else if (deleteCharData) {
+            listener->DidDeleteText(deleteCharData, deleteCharOffset, 1, res);
+          }
+          else if (deleteNode) {
+            listener->DidDeleteNode(deleteNode, res);
+          }
+        }
       }
     }
   }

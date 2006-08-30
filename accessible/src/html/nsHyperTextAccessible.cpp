@@ -1032,6 +1032,7 @@ NS_IMETHODIMP nsHyperTextAccessible::WillInsertNode(nsIDOMNode *aNode, nsIDOMNod
 NS_IMETHODIMP nsHyperTextAccessible::DidInsertNode(nsIDOMNode *aNode, nsIDOMNode *aParent,
                                                    PRInt32 aPosition, nsresult aResult)
 {
+  InvalidateChildren();
   AtkTextChange textData;
 
   textData.add = PR_TRUE;
@@ -1067,6 +1068,7 @@ NS_IMETHODIMP nsHyperTextAccessible::WillDeleteNode(nsIDOMNode *aChild)
   AtkTextChange textData;
 
   textData.add = PR_FALSE;
+  textData.length = 1;
   nsCOMPtr<nsIContent> content(do_QueryInterface(aChild));
   if (content && content->IsNodeOfType(nsINode::eTEXT)) {
     textData.length = content->TextLength();
@@ -1086,7 +1088,13 @@ NS_IMETHODIMP nsHyperTextAccessible::WillDeleteNode(nsIDOMNode *aChild)
     }
   }
 
-  if (NS_FAILED(DOMPointToOffset(aChild, 0, &textData.start))) {
+  nsCOMPtr<nsIDOMNode> parentNode;
+  aChild->GetParentNode(getter_AddRefs(parentNode));
+  nsCOMPtr<nsIContent> parentContent(do_QueryInterface(parentNode));
+  NS_ENSURE_TRUE(parentContent, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIContent> childContent(do_QueryInterface(aChild));
+  NS_ENSURE_TRUE(childContent, NS_ERROR_FAILURE);
+  if (NS_FAILED(DOMPointToOffset(parentNode, parentContent->IndexOf(childContent), &textData.start))) {
     return NS_OK;
   }
   return FireTextChangeEvent(&textData);
@@ -1094,7 +1102,7 @@ NS_IMETHODIMP nsHyperTextAccessible::WillDeleteNode(nsIDOMNode *aChild)
 
 NS_IMETHODIMP nsHyperTextAccessible::DidDeleteNode(nsIDOMNode *aChild, nsresult aResult)
 {
-  return NS_OK;
+  return InvalidateChildren();
 }
 
 NS_IMETHODIMP nsHyperTextAccessible::WillSplitNode(nsIDOMNode *aExistingRightNode, PRInt32 aOffset)
@@ -1105,7 +1113,7 @@ NS_IMETHODIMP nsHyperTextAccessible::WillSplitNode(nsIDOMNode *aExistingRightNod
 NS_IMETHODIMP nsHyperTextAccessible::DidSplitNode(nsIDOMNode *aExistingRightNode, PRInt32 aOffset,
                                                   nsIDOMNode *aNewLeftNode, nsresult aResult)
 {
-  return NS_OK;
+  return InvalidateChildren();
 }
 
 NS_IMETHODIMP nsHyperTextAccessible::WillJoinNodes(nsIDOMNode *aLeftNode,
@@ -1117,7 +1125,7 @@ NS_IMETHODIMP nsHyperTextAccessible::WillJoinNodes(nsIDOMNode *aLeftNode,
 NS_IMETHODIMP nsHyperTextAccessible::DidJoinNodes(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode,
                                                   nsIDOMNode *aParent, nsresult aResult)
 {
-  return NS_OK;
+  return InvalidateChildren();
 }
 
 NS_IMETHODIMP nsHyperTextAccessible::WillInsertText(nsIDOMCharacterData *aTextNode,
