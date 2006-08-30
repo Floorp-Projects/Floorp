@@ -5,6 +5,7 @@ xforms.jar:
 % skin	xforms	classic/1.0	%skin/xforms/
   content/xforms/contents.rdf                  (resources/content/contents.rdf)
 * content/xforms/xforms.css                    (resources/content/xforms.css)
+* content/xforms/xforms-message.xul            (resources/content/xforms-message.xul)
 * content/xforms/xforms-prefs.xul              (resources/content/xforms-prefs.xul)
 * content/xforms/xforms-prefs-ui.xul           (resources/content/xforms-prefs-ui.xul)
 * content/xforms/xforms-prefs.js               (resources/content/xforms-prefs.js)

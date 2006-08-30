@@ -76,6 +76,8 @@
 #include "nsIDOMSerializer.h"
 #include "nsIServiceManager.h"
 #include "nsIDelegateInternal.h"
+#include "nsISupportsArray.h"
+#include "nsISupportsPrimitives.h"
 #include "nsNetUtil.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIChannelEventSink.h"
@@ -84,30 +86,10 @@
 #define MESSAGE_WINDOW_PROPERTIES \
   "location=false,scrollbars=yes,centerscreen"
 
+#define MESSAGE_WINDOW_URL \
+  "chrome://xforms/content/xforms-message.xul"
+
 // Defining a simple dialog for modeless and modal messages.
-
-#define MESSAGE_WINDOW_UI_PART1 \
-  "<?xml version='1.0'?> \
-   <?xml-stylesheet href='chrome://global/skin/' type='text/css'?> \
-   <window title='[XForms]'\
-     xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' \
-     onkeypress='if (event.keyCode == event.DOM_VK_ESCAPE) window.close();' "
-
-#define MESSAGE_WINDOW_UI_PART1_WITH_SRC \
-     "onload='document.documentElement.lastChild.previousSibling \
-             .firstChild.nextSibling.focus();'>"
-
-#define MESSAGE_WINDOW_UI_PART1_WITHOUT_SRC \
-     "onload='window.sizeToContent(); \
-             document.documentElement.lastChild.previousSibling \
-             .firstChild.nextSibling.focus();'>"
-
-#define MESSAGE_WINDOW_UI_PART2 \
-  "<separator class='thin'/><hbox><spacer flex='1'/><button label='"
-
-#define MESSAGE_WINDOW_UI_PART3 \
-  "' oncommand='window.close();'/><spacer flex='1'/> \
-  </hbox><separator class='thin'/></window>"
 
 #define SHOW_EPHEMERAL_TIMEOUT           750
 #define HIDE_EPHEMERAL_TIMEOUT           5000
@@ -661,6 +643,11 @@ nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
     return NS_OK;
   }
 
+  nsAutoString messageURL;
+
+  // Order of precedence is single-node binding, linking attribute then
+  // inline text.
+
   nsAutoString instanceData;
   PRBool hasBinding = nsXFormsUtils::GetSingleNodeBindingValue(mElement,
                                                                instanceData);
@@ -673,12 +660,10 @@ nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
     mElement->GetAttribute(NS_LITERAL_STRING("src"), src);
   }
 
-  // order of precedence is single-node binding, linking attribute then
-  // inline text
   nsresult rv;
   if (!hasBinding && !src.IsEmpty()) {
     // Creating a normal window for messages with src attribute.
-    options.AppendLiteral(",chrome=no");
+    options.AppendLiteral(",chrome=no,resizable");
 
     // Create a new URI so that we properly convert relative urls to absolute.
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDoc));
@@ -689,14 +674,11 @@ nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
     NS_ENSURE_STATE(uri);
     nsCAutoString uriSpec;
     uri->GetSpec(uriSpec);
-    rv = ConstructMessageWindowURL(NS_ConvertUTF8toUTF16(uriSpec),
-                                   PR_TRUE,
-                                   src);
-    NS_ENSURE_SUCCESS(rv, rv);
+    messageURL = NS_ConvertUTF8toUTF16(uriSpec);
   } else {
     // Cloning the content of the xf:message and creating a
     // dialog for it.
-    options.AppendLiteral(",dialog,chrome,dependent,width=200,height=200");
+    options.AppendLiteral(",dialog,chrome,dependent");
     nsCOMPtr<nsIDOMDocument> ddoc;
     nsCOMPtr<nsIDOMDOMImplementation> domImpl;
     rv = aDoc->GetImplementation(getter_AddRefs(domImpl));
@@ -714,6 +696,8 @@ nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
                                NS_LITERAL_STRING("html"),
                                getter_AddRefs(htmlEl));
     NS_ENSURE_SUCCESS(rv, rv);
+    htmlEl->SetAttribute(NS_LITERAL_STRING("style"),
+                         NS_LITERAL_STRING("background-color: -moz-Dialog;"));
     ddoc->AppendChild(htmlEl, getter_AddRefs(tmp));
 
     nsCOMPtr<nsIDOMElement> bodyEl;
@@ -760,78 +744,43 @@ nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
     rv = serializer->SerializeToString(ddoc, docString);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = ConstructMessageWindowURL(docString, PR_FALSE, src);
-    NS_ENSURE_SUCCESS(rv, rv);
+    char* b64 =
+      PL_Base64Encode(NS_ConvertUTF16toUTF8(docString).get(), 0, nsnull);
+    if (!b64) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCAutoString b64String;
+    b64String.AppendLiteral("data:application/vnd.mozilla.xul+xml;base64,");
+    b64String.Append(b64);
+    PR_Free(b64);
+
+    CopyUTF8toUTF16(b64String, messageURL);
   }
 
-  nsCOMPtr<nsISupports> arg;
-  PRBool isModal = aLevel.EqualsLiteral("modal");
-  if (isModal) {
+  if (aLevel.EqualsLiteral("modal"))
     options.AppendLiteral(",modal");
-    // We need to have an argument to set the window modal.
-    // Using nsXFormsAtoms::messageProperty so that we don't create new
-    // cycles between the windows.
-    arg = nsXFormsAtoms::messageProperty;
-  }
+
+  nsCOMPtr<nsISupportsString> arg(
+    do_CreateInstance("@mozilla.org/supports-string;1", &rv));
+  if (!arg)
+    return rv;
+
+  arg->SetData(messageURL);
+
+  nsCOMPtr<nsISupportsArray> args(
+    do_CreateInstance("@mozilla.org/supports-array;1", &rv));
+  if (!args)
+    return rv;
+
+  args->AppendElement(arg);
 
   nsCOMPtr<nsIDOMWindow> messageWindow;
   // The 2nd argument is the window name, and if a window with the name exists,
   // it gets reused.  Using "_blank" makes sure we get a new window each time.
-  internal->OpenDialog(src, NS_LITERAL_STRING("_blank"), options, arg,
+  internal->OpenDialog(NS_LITERAL_STRING(MESSAGE_WINDOW_URL),
+                       NS_LITERAL_STRING("_blank"), options, args,
                        getter_AddRefs(messageWindow));
-  return NS_OK;
-}
-
-nsresult
-nsXFormsMessageElement::ConstructMessageWindowURL(const nsAString& aData,
-                                                  PRBool aIsLink,
-                                                  nsAString& aURL)
-{
-  nsXPIDLString messageOK;
-  nsCOMPtr<nsIStringBundleService> bundleService =
-    do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-  if (bundleService) {
-    nsCOMPtr<nsIStringBundle> bundle;
-    bundleService->CreateBundle("chrome://global/locale/dialog.properties",
-                                 getter_AddRefs(bundle));
-    if (bundle) {
-      bundle->GetStringFromName(NS_LITERAL_STRING("button-accept").get(),
-                                getter_Copies(messageOK));
-    }
-  }
-  if (messageOK.IsEmpty())
-    messageOK.AssignLiteral("OK");
-
-  nsAutoString xul;
-  xul.AssignLiteral(MESSAGE_WINDOW_UI_PART1);
-  if (aIsLink) {
-    xul.AppendLiteral(MESSAGE_WINDOW_UI_PART1_WITH_SRC);
-    xul.AppendLiteral("<browser flex='1' src='");
-  } else {
-    xul.AppendLiteral(MESSAGE_WINDOW_UI_PART1_WITHOUT_SRC);
-  }
-
-  xul.Append(aData);
-
-  if (aIsLink)
-    xul.AppendLiteral("'/>");
-  else
-    xul.AppendLiteral("<spacer flex='1'/>");
-
-  xul.AppendLiteral(MESSAGE_WINDOW_UI_PART2);
-  xul.Append(messageOK);
-  xul.AppendLiteral(MESSAGE_WINDOW_UI_PART3);
-
-  char* b64 = PL_Base64Encode(NS_ConvertUTF16toUTF8(xul).get(), 0, nsnull);
-  if (!b64)
-    return NS_ERROR_FAILURE;
-
-  nsCAutoString b64String;
-  b64String.AppendLiteral("data:application/vnd.mozilla.xul+xml;base64,");
-  b64String.Append(b64);
-  PR_Free(b64);
-
-  CopyUTF8toUTF16(b64String, aURL);
   return NS_OK;
 }
 
