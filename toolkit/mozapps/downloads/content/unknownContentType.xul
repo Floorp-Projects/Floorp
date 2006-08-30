@@ -84,8 +84,7 @@
     <separator class="thin"/>
 
     <hbox align="center" id="basicBox" collapsed="true">
-      <label value="&unknownPromptText.label;" id="from"/>
-      <description id="source" class="plain" crop="start" flex="1"/>
+      <label value="&unknownPromptText.label;" flex="1"/>
     </hbox>
 
     <groupbox flex="1" id="normalBox">
