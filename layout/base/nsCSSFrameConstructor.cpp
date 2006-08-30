@@ -6500,11 +6500,10 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       geometricParent = aState.mRootBox->GetPopupSetFrame();
     }
     else
-#else
+#endif
     {
       geometricParent = aParentFrame;
     }
-#endif
     
     /*
       nsIFrame* geometricParent = aState.GetGeometricParent(display, aParentFrame);
