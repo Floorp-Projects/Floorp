@@ -1011,7 +1011,6 @@ Engine.prototype = {
 
     switch (this._dataType) {
       case SEARCH_DATA_XML:
-break; //XXX
         var domParser = Cc["@mozilla.org/xmlextras/domparser;1"].
                         createInstance(Ci.nsIDOMParser);
         var doc = domParser.parseFromStream(fileInStream, "UTF-8",
@@ -1036,7 +1035,7 @@ break; //XXX
     fileInStream.close();
 
     // Now that the data is loaded, initialize the engine object
-    //this._initFromData();
+    this._initFromData();
   },
 
   /**
@@ -1329,6 +1328,7 @@ break; //XXX
    * Initialize this Engine object from the collected data.
    */
   _initFromData: function SRCH_ENG_initFromData() {
+return;
 
     ENSURE_WARN(this._data, "Can't init an engine with no data!",
                 Cr.NS_ERROR_UNEXPECTED);
