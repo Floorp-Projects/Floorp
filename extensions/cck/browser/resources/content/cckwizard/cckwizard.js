@@ -1696,7 +1696,7 @@ function CCKWriteDefaultJS(destdir)
   var overrideurl = document.getElementById('HomePageOverrideURL').value;
   if (browserstartuppage && (browserstartuppage.length > 0)) {
     fos.write(homepage1, homepage1.length);
-    if (prefIsLocked("browser.throbber.url")) {
+    if (prefIsLocked("browser.startup.homepage")) {
       fos.write(browserstartuppage, browserstartuppage.length);
     } else {    
       fos.write(chromeurl, chromeurl.length);
