@@ -3375,9 +3375,15 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     if (mLoadGroup)
         mLoadGroup->AddRequest(this, nsnull);
 
-    rv = Connect();
+    // We may have been cancelled already, either by on-modify-request
+    // listeners or by load group observers; in that case, we should
+    // not send the request to the server
+    if (mCanceled)
+        rv = mStatus;
+    else
+        rv = Connect();
     if (NS_FAILED(rv)) {
-        LOG(("Connect failed [rv=%x]\n", rv));
+        LOG(("Calling AsyncAbort [rv=%x mCanceled=%i]\n", rv, mCanceled));
         CloseCacheEntry();
         AsyncAbort(rv);
     }
