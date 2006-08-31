@@ -207,12 +207,17 @@ CCKService.prototype={
         var channel=ioService.newChannel("chrome://cck/content/"+CertName,null,null);
         var input=channel.open();
         scriptableStream.init(input);
-        var cert=scriptableStream.read(input.available());
+        var certfile=scriptableStream.read(input.available());
         scriptableStream.close();
         input.close();
-        cert = cert.replace(/-----BEGIN CERTIFICATE-----[\r\n]/, "");
-        cert = cert.replace(/-----END CERTIFICATE-----[\r\n]/, "");
-        cert = cert.replace(/[\r\n]/g, "");
+        
+        var beginCert = "-----BEGIN CERTIFICATE-----";
+        var endCert = "-----END CERTIFICATE-----";
+
+        certfile = certfile.replace(/[\r\n]/g, "");
+        begin = certfile.indexOf(beginCert);
+        end = certfile.indexOf(endCert);
+        cert = certfile.substring(begin + beginCert.length, end);
         certDB.addCertFromBase64(cert, CertTrust, "");
       }
       i++;
