@@ -80,11 +80,6 @@ function calAlarmService() {
         onEndBatch: function() { },
         onLoad: function() { },
         onAddItem: function(aItem) {
-            if (!aItem.alarmOffset &&
-                !(aItem.parentItem && aItem.parentItem.alarmOffset)) {
-                return;
-            }
-
             var occs = [];
             if (aItem.recurrenceInfo) {
                 var start = this.alarmService.mRangeEnd.clone();
@@ -96,6 +91,10 @@ function calAlarmService() {
             } else {
                 occs = [aItem];
             }
+            function hasAlarm(a) {
+                return a.alarmOffset || a.parentItem.alarmOffset;
+            }
+            occs = occs.filter(hasAlarm);
             for each (var occ in occs) {
                 this.alarmService.addAlarm(occ);
             }
