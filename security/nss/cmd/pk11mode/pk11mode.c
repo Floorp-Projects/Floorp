@@ -70,92 +70,92 @@ struct tuple_str {
 typedef struct tuple_str tuple_str;
 
 static const tuple_str errStrings[] = {
-CKR_OK                              , "CKR_OK                              " ,
-CKR_CANCEL                          , "CKR_CANCEL                          " ,
-CKR_HOST_MEMORY                     , "CKR_HOST_MEMORY                     " ,
-CKR_SLOT_ID_INVALID                 , "CKR_SLOT_ID_INVALID                 " ,
-CKR_GENERAL_ERROR                   , "CKR_GENERAL_ERROR                   " ,
-CKR_FUNCTION_FAILED                 , "CKR_FUNCTION_FAILED                 " ,
-CKR_ARGUMENTS_BAD                   , "CKR_ARGUMENTS_BAD                   " ,
-CKR_NO_EVENT                        , "CKR_NO_EVENT                        " ,
-CKR_NEED_TO_CREATE_THREADS          , "CKR_NEED_TO_CREATE_THREADS          " ,
-CKR_CANT_LOCK                       , "CKR_CANT_LOCK                       " ,
-CKR_ATTRIBUTE_READ_ONLY             , "CKR_ATTRIBUTE_READ_ONLY             " ,
-CKR_ATTRIBUTE_SENSITIVE             , "CKR_ATTRIBUTE_SENSITIVE             " ,
-CKR_ATTRIBUTE_TYPE_INVALID          , "CKR_ATTRIBUTE_TYPE_INVALID          " ,
-CKR_ATTRIBUTE_VALUE_INVALID         , "CKR_ATTRIBUTE_VALUE_INVALID         " ,
-CKR_DATA_INVALID                    , "CKR_DATA_INVALID                    " ,
-CKR_DATA_LEN_RANGE                  , "CKR_DATA_LEN_RANGE                  " ,
-CKR_DEVICE_ERROR                    , "CKR_DEVICE_ERROR                    " ,
-CKR_DEVICE_MEMORY                   , "CKR_DEVICE_MEMORY                   " ,
-CKR_DEVICE_REMOVED                  , "CKR_DEVICE_REMOVED                  " ,
-CKR_ENCRYPTED_DATA_INVALID          , "CKR_ENCRYPTED_DATA_INVALID          " ,
-CKR_ENCRYPTED_DATA_LEN_RANGE        , "CKR_ENCRYPTED_DATA_LEN_RANGE        " ,
-CKR_FUNCTION_CANCELED               , "CKR_FUNCTION_CANCELED               " ,
-CKR_FUNCTION_NOT_PARALLEL           , "CKR_FUNCTION_NOT_PARALLEL           " ,
-CKR_FUNCTION_NOT_SUPPORTED          , "CKR_FUNCTION_NOT_SUPPORTED          " ,
-CKR_KEY_HANDLE_INVALID              , "CKR_KEY_HANDLE_INVALID              " ,
-CKR_KEY_SIZE_RANGE                  , "CKR_KEY_SIZE_RANGE                  " ,
-CKR_KEY_TYPE_INCONSISTENT           , "CKR_KEY_TYPE_INCONSISTENT           " ,
-CKR_KEY_NOT_NEEDED                  , "CKR_KEY_NOT_NEEDED                  " ,
-CKR_KEY_CHANGED                     , "CKR_KEY_CHANGED                     " ,
-CKR_KEY_NEEDED                      , "CKR_KEY_NEEDED                      " ,
-CKR_KEY_INDIGESTIBLE                , "CKR_KEY_INDIGESTIBLE                " ,
-CKR_KEY_FUNCTION_NOT_PERMITTED      , "CKR_KEY_FUNCTION_NOT_PERMITTED      " ,
-CKR_KEY_NOT_WRAPPABLE               , "CKR_KEY_NOT_WRAPPABLE               " ,
-CKR_KEY_UNEXTRACTABLE               , "CKR_KEY_UNEXTRACTABLE               " ,
-CKR_MECHANISM_INVALID               , "CKR_MECHANISM_INVALID               " ,
-CKR_MECHANISM_PARAM_INVALID         , "CKR_MECHANISM_PARAM_INVALID         " ,
-CKR_OBJECT_HANDLE_INVALID           , "CKR_OBJECT_HANDLE_INVALID           " ,
-CKR_OPERATION_ACTIVE                , "CKR_OPERATION_ACTIVE                " ,
-CKR_OPERATION_NOT_INITIALIZED       , "CKR_OPERATION_NOT_INITIALIZED       " ,
-CKR_PIN_INCORRECT                   , "CKR_PIN_INCORRECT                   " ,
-CKR_PIN_INVALID                     , "CKR_PIN_INVALID                     " ,
-CKR_PIN_LEN_RANGE                   , "CKR_PIN_LEN_RANGE                   " ,
-CKR_PIN_EXPIRED                     , "CKR_PIN_EXPIRED                     " ,
-CKR_PIN_LOCKED                      , "CKR_PIN_LOCKED                      " ,
-CKR_SESSION_CLOSED                  , "CKR_SESSION_CLOSED                  " ,
-CKR_SESSION_COUNT                   , "CKR_SESSION_COUNT                   " ,
-CKR_SESSION_HANDLE_INVALID          , "CKR_SESSION_HANDLE_INVALID          " ,
-CKR_SESSION_PARALLEL_NOT_SUPPORTED  , "CKR_SESSION_PARALLEL_NOT_SUPPORTED  " ,
-CKR_SESSION_READ_ONLY               , "CKR_SESSION_READ_ONLY               " ,
-CKR_SESSION_EXISTS                  , "CKR_SESSION_EXISTS                  " ,
-CKR_SESSION_READ_ONLY_EXISTS        , "CKR_SESSION_READ_ONLY_EXISTS        " ,
-CKR_SESSION_READ_WRITE_SO_EXISTS    , "CKR_SESSION_READ_WRITE_SO_EXISTS    " ,
-CKR_SIGNATURE_INVALID               , "CKR_SIGNATURE_INVALID               " ,
-CKR_SIGNATURE_LEN_RANGE             , "CKR_SIGNATURE_LEN_RANGE             " ,
-CKR_TEMPLATE_INCOMPLETE             , "CKR_TEMPLATE_INCOMPLETE             " ,
-CKR_TEMPLATE_INCONSISTENT           , "CKR_TEMPLATE_INCONSISTENT           " ,
-CKR_TOKEN_NOT_PRESENT               , "CKR_TOKEN_NOT_PRESENT               " ,
-CKR_TOKEN_NOT_RECOGNIZED            , "CKR_TOKEN_NOT_RECOGNIZED            " ,
-CKR_TOKEN_WRITE_PROTECTED           , "CKR_TOKEN_WRITE_PROTECTED           " ,
-CKR_UNWRAPPING_KEY_HANDLE_INVALID   , "CKR_UNWRAPPING_KEY_HANDLE_INVALID   " ,
-CKR_UNWRAPPING_KEY_SIZE_RANGE       , "CKR_UNWRAPPING_KEY_SIZE_RANGE       " ,
-CKR_UNWRAPPING_KEY_TYPE_INCONSISTENT, "CKR_UNWRAPPING_KEY_TYPE_INCONSISTENT" ,
-CKR_USER_ALREADY_LOGGED_IN          , "CKR_USER_ALREADY_LOGGED_IN          " ,
-CKR_USER_NOT_LOGGED_IN              , "CKR_USER_NOT_LOGGED_IN              " ,
-CKR_USER_PIN_NOT_INITIALIZED        , "CKR_USER_PIN_NOT_INITIALIZED        " ,
-CKR_USER_TYPE_INVALID               , "CKR_USER_TYPE_INVALID               " ,
-CKR_USER_ANOTHER_ALREADY_LOGGED_IN  , "CKR_USER_ANOTHER_ALREADY_LOGGED_IN  " ,
-CKR_USER_TOO_MANY_TYPES             , "CKR_USER_TOO_MANY_TYPES             " ,
-CKR_WRAPPED_KEY_INVALID             , "CKR_WRAPPED_KEY_INVALID             " ,
-CKR_WRAPPED_KEY_LEN_RANGE           , "CKR_WRAPPED_KEY_LEN_RANGE           " ,
-CKR_WRAPPING_KEY_HANDLE_INVALID     , "CKR_WRAPPING_KEY_HANDLE_INVALID     " ,
-CKR_WRAPPING_KEY_SIZE_RANGE         , "CKR_WRAPPING_KEY_SIZE_RANGE         " ,
-CKR_WRAPPING_KEY_TYPE_INCONSISTENT  , "CKR_WRAPPING_KEY_TYPE_INCONSISTENT  " ,
-CKR_RANDOM_SEED_NOT_SUPPORTED       , "CKR_RANDOM_SEED_NOT_SUPPORTED       " ,
-CKR_RANDOM_NO_RNG                   , "CKR_RANDOM_NO_RNG                   " ,
-CKR_DOMAIN_PARAMS_INVALID           , "CKR_DOMAIN_PARAMS_INVALID           " ,
-CKR_BUFFER_TOO_SMALL                , "CKR_BUFFER_TOO_SMALL                " ,
-CKR_SAVED_STATE_INVALID             , "CKR_SAVED_STATE_INVALID             " ,
-CKR_INFORMATION_SENSITIVE           , "CKR_INFORMATION_SENSITIVE           " ,
-CKR_STATE_UNSAVEABLE                , "CKR_STATE_UNSAVEABLE                " ,
-CKR_CRYPTOKI_NOT_INITIALIZED        , "CKR_CRYPTOKI_NOT_INITIALIZED        " ,
-CKR_CRYPTOKI_ALREADY_INITIALIZED    , "CKR_CRYPTOKI_ALREADY_INITIALIZED    " ,
-CKR_MUTEX_BAD                       , "CKR_MUTEX_BAD                       " ,
-CKR_MUTEX_NOT_LOCKED                , "CKR_MUTEX_NOT_LOCKED                " ,
-CKR_FUNCTION_REJECTED               , "CKR_FUNCTION_REJECTED               " ,
-CKR_VENDOR_DEFINED                  , "CKR_VENDOR_DEFINED                  "
+{CKR_OK                              , "CKR_OK                              "},
+{CKR_CANCEL                          , "CKR_CANCEL                          "},
+{CKR_HOST_MEMORY                     , "CKR_HOST_MEMORY                     "},
+{CKR_SLOT_ID_INVALID                 , "CKR_SLOT_ID_INVALID                 "},
+{CKR_GENERAL_ERROR                   , "CKR_GENERAL_ERROR                   "},
+{CKR_FUNCTION_FAILED                 , "CKR_FUNCTION_FAILED                 "},
+{CKR_ARGUMENTS_BAD                   , "CKR_ARGUMENTS_BAD                   "},
+{CKR_NO_EVENT                        , "CKR_NO_EVENT                        "},
+{CKR_NEED_TO_CREATE_THREADS          , "CKR_NEED_TO_CREATE_THREADS          "},
+{CKR_CANT_LOCK                       , "CKR_CANT_LOCK                       "},
+{CKR_ATTRIBUTE_READ_ONLY             , "CKR_ATTRIBUTE_READ_ONLY             "},
+{CKR_ATTRIBUTE_SENSITIVE             , "CKR_ATTRIBUTE_SENSITIVE             "},
+{CKR_ATTRIBUTE_TYPE_INVALID          , "CKR_ATTRIBUTE_TYPE_INVALID          "},
+{CKR_ATTRIBUTE_VALUE_INVALID         , "CKR_ATTRIBUTE_VALUE_INVALID         "},
+{CKR_DATA_INVALID                    , "CKR_DATA_INVALID                    "},
+{CKR_DATA_LEN_RANGE                  , "CKR_DATA_LEN_RANGE                  "},
+{CKR_DEVICE_ERROR                    , "CKR_DEVICE_ERROR                    "},
+{CKR_DEVICE_MEMORY                   , "CKR_DEVICE_MEMORY                   "},
+{CKR_DEVICE_REMOVED                  , "CKR_DEVICE_REMOVED                  "},
+{CKR_ENCRYPTED_DATA_INVALID          , "CKR_ENCRYPTED_DATA_INVALID          "},
+{CKR_ENCRYPTED_DATA_LEN_RANGE        , "CKR_ENCRYPTED_DATA_LEN_RANGE        "},
+{CKR_FUNCTION_CANCELED               , "CKR_FUNCTION_CANCELED               "},
+{CKR_FUNCTION_NOT_PARALLEL           , "CKR_FUNCTION_NOT_PARALLEL           "},
+{CKR_FUNCTION_NOT_SUPPORTED          , "CKR_FUNCTION_NOT_SUPPORTED          "},
+{CKR_KEY_HANDLE_INVALID              , "CKR_KEY_HANDLE_INVALID              "},
+{CKR_KEY_SIZE_RANGE                  , "CKR_KEY_SIZE_RANGE                  "},
+{CKR_KEY_TYPE_INCONSISTENT           , "CKR_KEY_TYPE_INCONSISTENT           "},
+{CKR_KEY_NOT_NEEDED                  , "CKR_KEY_NOT_NEEDED                  "},
+{CKR_KEY_CHANGED                     , "CKR_KEY_CHANGED                     "},
+{CKR_KEY_NEEDED                      , "CKR_KEY_NEEDED                      "},
+{CKR_KEY_INDIGESTIBLE                , "CKR_KEY_INDIGESTIBLE                "},
+{CKR_KEY_FUNCTION_NOT_PERMITTED      , "CKR_KEY_FUNCTION_NOT_PERMITTED      "},
+{CKR_KEY_NOT_WRAPPABLE               , "CKR_KEY_NOT_WRAPPABLE               "},
+{CKR_KEY_UNEXTRACTABLE               , "CKR_KEY_UNEXTRACTABLE               "},
+{CKR_MECHANISM_INVALID               , "CKR_MECHANISM_INVALID               "},
+{CKR_MECHANISM_PARAM_INVALID         , "CKR_MECHANISM_PARAM_INVALID         "},
+{CKR_OBJECT_HANDLE_INVALID           , "CKR_OBJECT_HANDLE_INVALID           "},
+{CKR_OPERATION_ACTIVE                , "CKR_OPERATION_ACTIVE                "},
+{CKR_OPERATION_NOT_INITIALIZED       , "CKR_OPERATION_NOT_INITIALIZED       "},
+{CKR_PIN_INCORRECT                   , "CKR_PIN_INCORRECT                   "},
+{CKR_PIN_INVALID                     , "CKR_PIN_INVALID                     "},
+{CKR_PIN_LEN_RANGE                   , "CKR_PIN_LEN_RANGE                   "},
+{CKR_PIN_EXPIRED                     , "CKR_PIN_EXPIRED                     "},
+{CKR_PIN_LOCKED                      , "CKR_PIN_LOCKED                      "},
+{CKR_SESSION_CLOSED                  , "CKR_SESSION_CLOSED                  "},
+{CKR_SESSION_COUNT                   , "CKR_SESSION_COUNT                   "},
+{CKR_SESSION_HANDLE_INVALID          , "CKR_SESSION_HANDLE_INVALID          "},
+{CKR_SESSION_PARALLEL_NOT_SUPPORTED  , "CKR_SESSION_PARALLEL_NOT_SUPPORTED  "},
+{CKR_SESSION_READ_ONLY               , "CKR_SESSION_READ_ONLY               "},
+{CKR_SESSION_EXISTS                  , "CKR_SESSION_EXISTS                  "},
+{CKR_SESSION_READ_ONLY_EXISTS        , "CKR_SESSION_READ_ONLY_EXISTS        "},
+{CKR_SESSION_READ_WRITE_SO_EXISTS    , "CKR_SESSION_READ_WRITE_SO_EXISTS    "},
+{CKR_SIGNATURE_INVALID               , "CKR_SIGNATURE_INVALID               "},
+{CKR_SIGNATURE_LEN_RANGE             , "CKR_SIGNATURE_LEN_RANGE             "},
+{CKR_TEMPLATE_INCOMPLETE             , "CKR_TEMPLATE_INCOMPLETE             "},
+{CKR_TEMPLATE_INCONSISTENT           , "CKR_TEMPLATE_INCONSISTENT           "},
+{CKR_TOKEN_NOT_PRESENT               , "CKR_TOKEN_NOT_PRESENT               "},
+{CKR_TOKEN_NOT_RECOGNIZED            , "CKR_TOKEN_NOT_RECOGNIZED            "},
+{CKR_TOKEN_WRITE_PROTECTED           , "CKR_TOKEN_WRITE_PROTECTED           "},
+{CKR_UNWRAPPING_KEY_HANDLE_INVALID   , "CKR_UNWRAPPING_KEY_HANDLE_INVALID   "},
+{CKR_UNWRAPPING_KEY_SIZE_RANGE       , "CKR_UNWRAPPING_KEY_SIZE_RANGE       "},
+{CKR_UNWRAPPING_KEY_TYPE_INCONSISTENT, "CKR_UNWRAPPING_KEY_TYPE_INCONSISTENT"},
+{CKR_USER_ALREADY_LOGGED_IN          , "CKR_USER_ALREADY_LOGGED_IN          "},
+{CKR_USER_NOT_LOGGED_IN              , "CKR_USER_NOT_LOGGED_IN              "},
+{CKR_USER_PIN_NOT_INITIALIZED        , "CKR_USER_PIN_NOT_INITIALIZED        "},
+{CKR_USER_TYPE_INVALID               , "CKR_USER_TYPE_INVALID               "},
+{CKR_USER_ANOTHER_ALREADY_LOGGED_IN  , "CKR_USER_ANOTHER_ALREADY_LOGGED_IN  "},
+{CKR_USER_TOO_MANY_TYPES             , "CKR_USER_TOO_MANY_TYPES             "},
+{CKR_WRAPPED_KEY_INVALID             , "CKR_WRAPPED_KEY_INVALID             "},
+{CKR_WRAPPED_KEY_LEN_RANGE           , "CKR_WRAPPED_KEY_LEN_RANGE           "},
+{CKR_WRAPPING_KEY_HANDLE_INVALID     , "CKR_WRAPPING_KEY_HANDLE_INVALID     "},
+{CKR_WRAPPING_KEY_SIZE_RANGE         , "CKR_WRAPPING_KEY_SIZE_RANGE         "},
+{CKR_WRAPPING_KEY_TYPE_INCONSISTENT  , "CKR_WRAPPING_KEY_TYPE_INCONSISTENT  "},
+{CKR_RANDOM_SEED_NOT_SUPPORTED       , "CKR_RANDOM_SEED_NOT_SUPPORTED       "},
+{CKR_RANDOM_NO_RNG                   , "CKR_RANDOM_NO_RNG                   "},
+{CKR_DOMAIN_PARAMS_INVALID           , "CKR_DOMAIN_PARAMS_INVALID           "},
+{CKR_BUFFER_TOO_SMALL                , "CKR_BUFFER_TOO_SMALL                "},
+{CKR_SAVED_STATE_INVALID             , "CKR_SAVED_STATE_INVALID             "},
+{CKR_INFORMATION_SENSITIVE           , "CKR_INFORMATION_SENSITIVE           "},
+{CKR_STATE_UNSAVEABLE                , "CKR_STATE_UNSAVEABLE                "},
+{CKR_CRYPTOKI_NOT_INITIALIZED        , "CKR_CRYPTOKI_NOT_INITIALIZED        "},
+{CKR_CRYPTOKI_ALREADY_INITIALIZED    , "CKR_CRYPTOKI_ALREADY_INITIALIZED    "},
+{CKR_MUTEX_BAD                       , "CKR_MUTEX_BAD                       "},
+{CKR_MUTEX_NOT_LOCKED                , "CKR_MUTEX_NOT_LOCKED                "},
+{CKR_FUNCTION_REJECTED               , "CKR_FUNCTION_REJECTED               "},
+{CKR_VENDOR_DEFINED                  , "CKR_VENDOR_DEFINED                  "}
 };
 
 static const CK_ULONG numStrings = sizeof(errStrings) / sizeof(tuple_str);
@@ -184,8 +184,8 @@ PKM_CK_RVtoStr(CK_RV errNum) {
 "error %d (%s)\n"
 "should come after \n"
 "error %d (%s)\n",
-                        i, lastNum, errStrings[i-1].errString,
-                        num, errStrings[i].errString);
+                        (int) i, (int) lastNum, errStrings[i-1].errString,
+                        (int) num, errStrings[i].errString);
             }
             lastNum = num;
         }
@@ -308,7 +308,6 @@ static int number_of_all_known_attribute_types =
 
 #define MAX_SIG_SZ 128
 #define DIGESTLEN       64
-//#define DATASIZE        8192
 #define MAX_CIPHER_SZ 128
 #define MAX_DATA_SZ 64
 #define MAX_DIGEST_LEN 64
@@ -906,6 +905,8 @@ CK_RV PKM_InitPWforDB(CK_FUNCTION_LIST_PTR pFunctionList,
                    PKM_CK_RVtoStr(crv));
         return crv;
     }
+    PKM_LogIt("CKU_USER 0x%08X \n", CKU_USER); 
+
     crv = pFunctionList->C_Login(hSession, CKU_SO, NULL, 0);
     if (crv != CKR_OK) {
         PKM_Error( "C_Login failed with 0x%08X, %-26s\n", crv, 
@@ -952,6 +953,8 @@ CK_RV PKM_InitPWforDB(CK_FUNCTION_LIST_PTR pFunctionList,
                    PKM_CK_RVtoStr(crv));
         return crv;
     }
+
+    PKM_LogIt("CKU_USER 0x%08X \n", CKU_USER); 
 
     crv = pFunctionList->C_Login(hSession, CKU_USER, testPin,
                                  sizeof(testPin));
@@ -1652,12 +1655,6 @@ CK_RV PKM_DualFuncDigest(CK_FUNCTION_LIST_PTR pFunctionList,
         0x00, 0x00, 0x00, 0x00
     };
     CK_BYTE PLAINTEXT[] = {"Firefox  Rules!"};
-    CK_BYTE CIPHERTEXT[] = {
-        0xc6, 0x5c, 0xf8, 0x86,
-        0x5f, 0xf8, 0x2a, 0xe5,
-        0xb2, 0xb2, 0x3a, 0x5b,
-        0x1e, 0x87, 0xfe, 0x7a
-    };
     CK_BYTE ciphertext[16];
     CK_ULONG ciphertextLen, lastLen;
     CK_BYTE plaintext[16];
@@ -3591,18 +3588,18 @@ CK_RV PKM_RecoverFunctions(CK_FUNCTION_LIST_PTR pFunctionList,
     CK_BYTE subject[] = {"RSA Private Key"};
     CK_ULONG modulusBits = 768;
     CK_BYTE publicExponent[] = { 3};
-    CK_MECHANISM signRSAMech = {
-        CKM_RSA_PKCS, NULL, 0
-    };
     CK_BYTE id[] = {"RSA123"};
     CK_ATTRIBUTE publicKeyTemplate[] = {
+        {CKA_KEY_TYPE, &rsatype, sizeof(rsatype)},
         {CKA_ENCRYPT, &true, sizeof(true)},
+        {CKA_KEY_TYPE, &rsatype, sizeof(rsatype)},
         {CKA_VERIFY, &true, sizeof(true)},
         {CKA_WRAP, &true, sizeof(true)},
         {CKA_MODULUS_BITS, &modulusBits, sizeof(modulusBits)},
         {CKA_PUBLIC_EXPONENT, publicExponent, sizeof (publicExponent)}
     };
     CK_ATTRIBUTE privateKeyTemplate[] = {
+        {CKA_KEY_TYPE, &rsatype, sizeof(rsatype)},
         {CKA_TOKEN, &true, sizeof(true)},
         {CKA_PRIVATE, &true, sizeof(true)},
         {CKA_SUBJECT, subject, sizeof(subject)},
@@ -3768,6 +3765,7 @@ CK_RV PKM_wrapUnwrap(CK_FUNCTION_LIST_PTR pFunctionList,
     CK_BYTE publicExponent[] = { 3};
     CK_BYTE id[] = {"RSA123"};
     CK_ATTRIBUTE publicKeyTemplate[] = {
+        {CKA_KEY_TYPE, &rsatype, sizeof(rsatype)},
         {CKA_ENCRYPT, &true, sizeof(true)},
         {CKA_VERIFY, &true, sizeof(true)},
         {CKA_WRAP, &true, sizeof(true)},
@@ -3775,6 +3773,7 @@ CK_RV PKM_wrapUnwrap(CK_FUNCTION_LIST_PTR pFunctionList,
         {CKA_PUBLIC_EXPONENT, publicExponent, sizeof (publicExponent)}
     };
     CK_ATTRIBUTE privateKeyTemplate[] = {
+        {CKA_KEY_TYPE, &rsatype, sizeof(rsatype)},
         {CKA_TOKEN, &true, sizeof(true)},
         {CKA_PRIVATE, &true, sizeof(true)},
         {CKA_SUBJECT, subject, sizeof(subject)},
@@ -4238,7 +4237,6 @@ PKM_TLSKeyAndMacDerive( CK_FUNCTION_LIST_PTR pFunctionList,
         /* 7 */ {CKA_ENCRYPT, &encrypt_bool, sizeof (encrypt_bool)},
         /* 8 */ {CKA_DECRYPT, &decrypt_bool, sizeof (decrypt_bool)}};
 
-    CK_ULONG                attrs_count = 4;
     CK_OBJECT_HANDLE        mk_obj = CK_INVALID_HANDLE;
     CK_SSL3_KEY_MAT_PARAMS km_params;
     CK_SSL3_KEY_MAT_OUT kmo;
@@ -4447,6 +4445,7 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
     CK_BYTE publicExponent[] = { 3};
     CK_BYTE id[] = {"RSA123"};
     CK_ATTRIBUTE publicKeyTemplate[] = {
+        {CKA_KEY_TYPE, &rsatype, sizeof(rsatype)},
         {CKA_PRIVATE, &true, sizeof(true)},
         {CKA_ENCRYPT, &true, sizeof(true)},
         {CKA_DECRYPT, &true, sizeof(true)},
@@ -4457,6 +4456,7 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
         {CKA_PUBLIC_EXPONENT, publicExponent, sizeof (publicExponent)}
     };
     CK_ATTRIBUTE privateKeyTemplate[] = {
+        {CKA_KEY_TYPE, &rsatype, sizeof(rsatype)},
         {CKA_TOKEN, &true, sizeof(true)},
         {CKA_PRIVATE, &true, sizeof(true)},
         {CKA_SUBJECT, subject, sizeof(subject)},
@@ -4474,8 +4474,6 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
     CK_MECHANISM sAESKeyMech = {
         CKM_AES_KEY_GEN, NULL, 0
     };
-    CK_BYTE wrappedKey[56];
-    CK_ULONG wrappedKeyLen = 0;
     CK_OBJECT_CLASS class = CKO_SECRET_KEY;
     CK_KEY_TYPE keyAESType = CKK_AES;
     CK_UTF8CHAR AESlabel[] = "An AES secret key object";
@@ -4507,10 +4505,6 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
     CK_MECHANISM sDES3KeyGenMechanism = {
         CKM_DES3_KEY_GEN, NULL, 0
     };
-    CK_MECHANISM des3EcbMech = {
-        CKM_DES3_ECB, NULL, 0
-    };
-
     CK_ATTRIBUTE sDES3KeyTemplate[] = {
         {CKA_CLASS, &class, sizeof(class)},
         {CKA_KEY_TYPE, &keyDES3Type, sizeof(keyDES3Type)},
@@ -4550,22 +4544,22 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
     typedef struct mech_str mech_str;
 
     mech_str digestMechs[] = {
-        CKM_SHA_1,  "CKM_SHA_1 ",
-        CKM_SHA256, "CKM_SHA256",
-        CKM_SHA384, "CKM_SHA384",
-        CKM_SHA512, "CKM_SHA512"
+        {CKM_SHA_1, "CKM_SHA_1 "},
+        {CKM_SHA256, "CKM_SHA256"},
+        {CKM_SHA384, "CKM_SHA384"},
+        {CKM_SHA512, "CKM_SHA512"}
     };
     mech_str hmacMechs[] = {
-        CKM_SHA_1_HMAC, "CKM_SHA_1_HMAC", 
-        CKM_SHA256_HMAC, "CKM_SHA256_HMAC",
-        CKM_SHA384_HMAC, "CKM_SHA384_HMAC",
-        CKM_SHA512_HMAC, "CKM_SHA512_HMAC"
+        {CKM_SHA_1_HMAC, "CKM_SHA_1_HMAC"}, 
+        {CKM_SHA256_HMAC, "CKM_SHA256_HMAC"},
+        {CKM_SHA384_HMAC, "CKM_SHA384_HMAC"},
+        {CKM_SHA512_HMAC, "CKM_SHA512_HMAC"}
     };
     mech_str sigRSAMechs[] = {
-        CKM_SHA1_RSA_PKCS, "CKM_SHA1_RSA_PKCS", 
-        CKM_SHA256_RSA_PKCS, "CKM_SHA256_RSA_PKCS",
-        CKM_SHA384_RSA_PKCS, "CKM_SHA384_RSA_PKCS",
-        CKM_SHA512_RSA_PKCS, "CKM_SHA512_RSA_PKCS"
+        {CKM_SHA1_RSA_PKCS, "CKM_SHA1_RSA_PKCS"}, 
+        {CKM_SHA256_RSA_PKCS, "CKM_SHA256_RSA_PKCS"},
+        {CKM_SHA384_RSA_PKCS, "CKM_SHA384_RSA_PKCS"},
+        {CKM_SHA512_RSA_PKCS, "CKM_SHA512_RSA_PKCS"}
     };
 
     CK_ULONG digestMechsSZ = NUM_ELEM(digestMechs);
@@ -4574,8 +4568,6 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
     CK_MECHANISM mech;
 
     unsigned int i;
-
-    memset(wrappedKey, 0, sizeof(wrappedKey));
 
     crv = pFunctionList->C_OpenSession(pSlotList[slotID],
                                        CKF_RW_SESSION | CKF_SERIAL_SESSION,
