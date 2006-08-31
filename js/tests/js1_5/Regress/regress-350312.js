@@ -51,6 +51,8 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
   
+  var counter = 0;
+
   function f(x,y) { 
 
     try 
@@ -73,6 +75,10 @@ function test()
       { 
         actual += e2;
         writeLineToLog(e2); 
+        if (++counter > 10)
+        {
+          throw 'Infinite loop...';
+        }
       } 
     } 
     return 'returned';
