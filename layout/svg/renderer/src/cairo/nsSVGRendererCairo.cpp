@@ -41,7 +41,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsISVGRenderer.h"
-#include "nsSVGCairoGlyphGeometry.h"
 #include "nsSVGCairoCanvas.h"
 #include "nsSVGCairoSurface.h"
 #include <cairo.h>
