@@ -185,8 +185,8 @@ function SubscribeOnLoad()
   gSubscribeDeck = document.getElementById("subscribedeck");
 
   msgWindow = Components.classes[msgWindowContractID].createInstance(Components.interfaces.nsIMsgWindow);
+  msgWindow.domWindow = window;  
   msgWindow.statusFeedback = gStatusFeedback;
-  msgWindow.domWindow = window;
   msgWindow.rootDocShell.allowAuth = true;
 
 	// look in arguments[0] for parameters

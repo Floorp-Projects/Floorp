@@ -179,6 +179,8 @@ NS_IMETHODIMP nsMsgWindow::SetStatusFeedback(nsIMsgStatusFeedback * aStatusFeedb
   nsCOMPtr<nsIDocShell> messageWindowDocShell; 
   GetMessageWindowDocShell(getter_AddRefs(messageWindowDocShell));
 
+  NS_ASSERTION(messageWindowDocShell, "No messagepane docshell found! setStatusFeedback called before setDOMWindow");
+
   // register our status feedback object as a web progress listener
   nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(messageWindowDocShell));
   if (webProgress && mStatusFeedback && messageWindowDocShell)

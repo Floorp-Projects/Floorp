@@ -206,9 +206,10 @@ function CreateMailWindowGlobals()
 function InitMsgWindow()
 {
   msgWindow.windowCommands = new nsMsgWindowCommands();
+  // set the domWindow before setting the status feedback and header sink objects
+  msgWindow.domWindow = window;  
   msgWindow.statusFeedback = statusFeedback;
   msgWindow.msgHeaderSink = messageHeaderSink;
-  msgWindow.domWindow = window;
   mailSession.AddMsgWindow(msgWindow);
 
   var messagepane = document.getElementById("messagepane");
