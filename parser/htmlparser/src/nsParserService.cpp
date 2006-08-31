@@ -199,14 +199,14 @@ nsParserService::GetTopicObservers(const nsAString& aTopic,
 }
 
 nsresult
-nsParserService::CheckQName(const nsASingleFragmentString& aQName,
+nsParserService::CheckQName(const nsAString& aQName,
                             PRBool aNamespaceAware,
                             const PRUnichar** aColon)
 {
   const char* colon;
   const PRUnichar *begin, *end;
-  aQName.BeginReading(begin);
-  aQName.EndReading(end);
+  begin = aQName.BeginReading();
+  end = aQName.EndReading();
   int result = MOZ_XMLCheckQName(NS_REINTERPRET_CAST(const char*, begin),
                                  NS_REINTERPRET_CAST(const char*, end),
                                  aNamespaceAware, &colon);

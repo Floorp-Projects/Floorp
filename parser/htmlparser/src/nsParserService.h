@@ -81,7 +81,7 @@ public:
   NS_IMETHOD GetTopicObservers(const nsAString& aTopic,
                                nsIObserverEntry** aEntry);
 
-  nsresult CheckQName(const nsASingleFragmentString& aQName,
+  nsresult CheckQName(const nsAString& aQName,
                       PRBool aNamespaceAware, const PRUnichar** aColon);
 
   PRBool IsXMLLetter(PRUnichar aChar)
