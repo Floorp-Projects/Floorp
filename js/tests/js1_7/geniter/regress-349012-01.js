@@ -45,6 +45,11 @@ var expect = '';
 test();
 //-----------------------------------------------------------------------------
 
+if (typeof quit != 'undefined')
+{
+  quit(0);
+}
+
 function test()
 {
   enterFunc ('test');
