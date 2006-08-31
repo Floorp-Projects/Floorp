@@ -153,6 +153,11 @@
   <key id="import_key"           key="&calendar.import.key;"             observes="import_command"              modifiers="accel"/>
   <key id="reload_server_key"    key="&calendar.reloadserver.key;"       observes="reload_remote_calendars"     modifiers="accel"/>
 
+  <key id="find_key"
+       key="&calendar.find.key;"
+       modifiers="accel"
+       oncommand="focusSearch();"/>
+
 #ifdef XP_MACOSX
   <key id="key_minimizeWindow"   key="&minimizeWindow.key;"              command="minimizeWindow"               modifiers="accel"/>
   <key id="key_preferencesCmdMac" key="&preferencesCmdMac.commandkey;" modifiers="&preferencesCmdMac.modifiers;"/>

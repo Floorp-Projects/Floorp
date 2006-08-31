@@ -288,6 +288,7 @@
 <!ENTITY calendar.unifinder.tree.location.label    "Location">
 <!ENTITY calendar.unifinder.tree.status.label    "Status">
 <!ENTITY calendar.unifinder.tree.calendarname.label    "Calendar Name">
+<!ENTITY calendar.find.key  "F">
 
 <!ENTITY calendar.gototoday.button.tooltip        "Go to today" >
 <!ENTITY calendar.choosedate.button.tooltip       "Choose date to go to" >

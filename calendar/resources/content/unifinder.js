@@ -844,3 +844,7 @@ function unifinderKeyPress(aEvent) {
             break;
     }
 }
+
+function focusSearch() {
+    document.getElementById("unifinder-search-field").focus();
+}
