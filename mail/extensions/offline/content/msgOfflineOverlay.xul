@@ -75,4 +75,10 @@
     <menuseparator insertafter="offlineMenuItem"/>
   </menupopup>
 
+  <menupopup id="threadPaneContext" onpopupshowing="EnableMenuItem('downloadSelected', GetNumSelectedMessages() > 0);
+      return fillThreadPaneContextMenu();">
+    <menuitem id="downloadSelected" insertafter="threadPaneContext-delete" label="&downloadSelectedCmd.label;"
+      accesskey="&downloadSelectedCmd.accesskey;"  observes="cmd_downloadSelected"/>
+  </menupopup>
+
 </overlay>
