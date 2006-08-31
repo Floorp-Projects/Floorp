@@ -236,7 +236,7 @@
             var monthName = calGetString("dateFormat", "month." + (this.mDate.month+1) + ".Mmm");
             daylabel.setAttribute("value", this.mDate.day + " " + monthName);
           } else {
-            daylabel.setAttribute("value", aDate.day);
+            daylabel.setAttribute("value", this.mDate.day);
           }
           return val;
         ]]></setter>
@@ -1150,6 +1150,8 @@
               daybox.setDate(date);
               if (date.day == 1 || date.day == date.endOfMonth.day) {
                 daybox.showMonthLabel = true;
+              } else {
+                daybox.showMonthLabel = false;
               }
               daybox.monthView = this;
 
