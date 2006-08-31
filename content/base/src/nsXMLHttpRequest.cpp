@@ -1409,7 +1409,7 @@ nsXMLHttpRequest::RequestCompleted()
   CopyEventListeners(mOnLoadListener, mLoadEventListeners, loadEventListeners);
 
   // We need to create the event before nulling out mDocument
-  nsEvent evt(PR_TRUE, NS_PAGE_LOAD);
+  nsEvent evt(PR_TRUE, NS_LOAD);
   nsCOMPtr<nsIDOMEvent> domevent;
   if (loadEventListeners.Count()) {
     rv = CreateEvent(&evt, EmptyString(), getter_AddRefs(domevent));

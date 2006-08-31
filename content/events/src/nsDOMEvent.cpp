@@ -421,7 +421,7 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
     else if (atom == nsLayoutAtoms::onselect)
       mEvent->message = NS_FORM_SELECTED;
     else if (atom == nsLayoutAtoms::onload)
-      mEvent->message = NS_PAGE_LOAD;
+      mEvent->message = NS_LOAD;
     else if (atom == nsLayoutAtoms::onunload)
       mEvent->message = NS_PAGE_UNLOAD;
     else if (atom == nsLayoutAtoms::onabort)
@@ -1131,9 +1131,7 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_blur];
   case NS_XUL_CLOSE:
     return sEventNames[eDOMEvents_close];
-  case NS_PAGE_LOAD:
-  case NS_IMAGE_LOAD:
-  case NS_SCRIPT_LOAD:
+  case NS_LOAD:
     return sEventNames[eDOMEvents_load];
   case NS_BEFORE_PAGE_UNLOAD:
     return sEventNames[eDOMEvents_beforeunload];

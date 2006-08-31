@@ -1050,7 +1050,7 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   PRBool restoring = PR_FALSE;
   if(NS_SUCCEEDED(aStatus)) {
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event(PR_TRUE, NS_PAGE_LOAD);
+    nsEvent event(PR_TRUE, NS_LOAD);
     event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
      // XXX Dispatching to |window|, but using |document| as the target.
     event.target = mDocument;

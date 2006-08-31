@@ -614,9 +614,9 @@ nsHTMLScriptElement::ScriptEvaluated(nsresult aResult,
   nsresult rv = NS_OK;
   if (!aIsInline) {
     nsEventStatus status = nsEventStatus_eIgnore;
-    PRUint32 type = NS_SUCCEEDED(aResult) ? NS_SCRIPT_LOAD : NS_SCRIPT_ERROR;
+    PRUint32 type = NS_SUCCEEDED(aResult) ? NS_LOAD : NS_SCRIPT_ERROR;
     nsEvent event(PR_TRUE, type);
-    if (type == NS_SCRIPT_LOAD) {
+    if (type == NS_LOAD) {
       // Load event doesn't bubble.
       event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
     }
