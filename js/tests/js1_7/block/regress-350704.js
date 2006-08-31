@@ -55,7 +55,7 @@ function test()
 
   f = function() { try{} catch(y) { for(z(let(y=3)4); ; ) ; } }
   expect = 'function () {\n    try {\n    } catch (y) {\n        ' + 
-    'let y = 3;\n        for (z(4);;) {\n        }\n    }\n}'
+    'for (z(let (y = 3) 4);;) {\n        }\n    }\n}'
   actual = f + '';
   reportCompare(expect, actual, summary);
 
