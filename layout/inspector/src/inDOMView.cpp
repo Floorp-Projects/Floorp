@@ -400,8 +400,7 @@ inDOMView::GetCellProperties(PRInt32 row, nsITreeColumn* col, nsISupportsArray *
     NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIAccessible> accessible;
-    nsresult rv = accService->GetAccessibleFor(node->node,
-                                               getter_AddRefs(accessible));
+    accService->GetAccessibleFor(node->node, getter_AddRefs(accessible));
     if (accessible)
       properties->AppendElement(kAccessibleNodeAtom);
   }
@@ -944,7 +943,8 @@ inDOMView::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer, nsICon
   RemoveLink(oldNode);
   RemoveNode(row);
 
-  if (aContainer->GetChildCount() == 0) {
+  nsINode* container = NODE_FROM(aContainer, aDocument);
+  if (container->GetChildCount() == 0) {
     // Fix up the parent
     parentNode->isContainer = PR_FALSE;
     parentNode->isOpen = PR_FALSE;
