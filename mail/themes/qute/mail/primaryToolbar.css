@@ -520,5 +520,5 @@ toolbar[iconsize="small"] #button-goforward[disabled] {
 }
 
 #phishingBarImage {
-  list-style-image: url("chrome://global/skin/icons/phishing.png");
+  list-style-image: url("chrome://messenger/skin/icons/phishing.png");
 }
