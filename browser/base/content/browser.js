@@ -2947,18 +2947,20 @@ const BrowserSearch = {
     // XXX this event listener can/should probably be combined with the onLinkAdded
     // listener in tabbrowser.xml.  See comments in FeedHandler.onLinkAdded().
     const target = event.target;
-    var erel = target.rel;
     var etype = target.type;
-    var etitle = target.title;
-    var ehref = target.href;
     const searchRelRegex = /(^|\s)search($|\s)/i;
     const searchHrefRegex = /^(https?|ftp):\/\//i;
 
     if (!etype)
       return;
       
+    // Bug 349431: If the engine has no suggested title, ignore it rather
+    // than trying to find an alternative.
+    if (!target.title)
+      return;
+
     if (etype == "application/opensearchdescription+xml" &&
-        searchRelRegex.test(erel) && searchHrefRegex.test(ehref))
+        searchRelRegex.test(target.rel) && searchHrefRegex.test(target.href))
     {
       const targetDoc = target.ownerDocument;
       // Set the attribute of the (first) search-engine button.
@@ -2970,19 +2972,17 @@ const BrowserSearch = {
         var iconURL = null;
         if (gBrowser.shouldLoadFavIcon(browser.currentURI))
           iconURL = browser.currentURI.prePath + "/favicon.ico";
-        var usableTitle = target.title || browser.contentTitle || target.href;
+
         var hidden = false;
-        if (target.title) {
-          // If this engine (identified by title) is already in the list, add it
-          // to the list of hidden engines rather than to the main list.
-          // XXX This will need to be changed when engines are identified by URL;
-          // see bug 335102.
-          var searchService =
-              Components.classes["@mozilla.org/browser/search-service;1"]
-                        .getService(Components.interfaces.nsIBrowserSearchService);
-          if (searchService.getEngineByName(target.title))
-            hidden = true;
-        }
+        // If this engine (identified by title) is already in the list, add it
+        // to the list of hidden engines rather than to the main list.
+        // XXX This will need to be changed when engines are identified by URL;
+        // see bug 335102.
+         var searchService =
+            Components.classes["@mozilla.org/browser/search-service;1"]
+                      .getService(Components.interfaces.nsIBrowserSearchService);
+        if (searchService.getEngineByName(target.title))
+          hidden = true;
 
         var engines = [];
         if (hidden) {
@@ -2995,7 +2995,7 @@ const BrowserSearch = {
         }
 
         engines.push({ uri: target.href,
-                       title: usableTitle,
+                       title: target.title,
                        icon: iconURL });
 
          if (hidden) {
