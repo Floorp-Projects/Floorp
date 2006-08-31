@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Properties;
 
 import junit.framework.Assert;
@@ -25,7 +26,7 @@ import org.mozilla.javascript.tools.shell.ShellContextFactory;
  * Executes the tests in the js/tests directory, much like jsDriver.pl does.
  * Excludes tests found in the js/tests/rhino-n.tests file.
  * @author Attila Szegedi
- * @version $Id: StandardTests.java,v 1.1 2006/08/21 17:01:48 szegedia%freemail.hu Exp $
+ * @version $Id: StandardTests.java,v 1.2 2006/08/31 10:17:48 szegedia%freemail.hu Exp $
  */
 public class StandardTests extends TestSuite
 {
@@ -55,13 +56,19 @@ public class StandardTests extends TestSuite
         {
             in.close();
         }
-        addSuites(suite, testDir, excludes);
+        for(int i = -1; i < 2; ++i)
+        {
+            TestSuite optimizationLevelSuite = new TestSuite("Optimization level " + i);
+            addSuites(optimizationLevelSuite, testDir, excludes, i);
+            suite.addTest(optimizationLevelSuite);
+        }
         return suite;
     }
     
-    private static void addSuites(TestSuite topLevel, File testDir, Properties excludes)
+    private static void addSuites(TestSuite topLevel, File testDir, Properties excludes, int optimizationLevel)
     {
         File[] subdirs = testDir.listFiles(new DirectoryFilter());
+        Arrays.sort(subdirs);
         for (int i = 0; i < subdirs.length; i++)
         {
             File subdir = subdirs[i];
@@ -71,14 +78,15 @@ public class StandardTests extends TestSuite
                 continue;
             }
             TestSuite testSuite = new TestSuite(name);
-            addCategories(testSuite, subdir, name + "/", excludes);
+            addCategories(testSuite, subdir, name + "/", excludes, optimizationLevel);
             topLevel.addTest(testSuite);
         }
     }
     
-    private static void addCategories(TestSuite suite, File suiteDir, String prefix, Properties excludes)
+    private static void addCategories(TestSuite suite, File suiteDir, String prefix, Properties excludes, int optimizationLevel)
     {
         File[] subdirs = suiteDir.listFiles(new DirectoryFilter());
+        Arrays.sort(subdirs);
         for (int i = 0; i < subdirs.length; i++)
         {
             File subdir = subdirs[i];
@@ -88,14 +96,15 @@ public class StandardTests extends TestSuite
                 continue;
             }
             TestSuite testCategory = new TestSuite(name);
-            addTests(testCategory, subdir, prefix + name + "/", excludes);
+            addTests(testCategory, subdir, prefix + name + "/", excludes, optimizationLevel);
             suite.addTest(testCategory);
         }
     }
     
-    private static void addTests(TestSuite suite, File suiteDir, String prefix, Properties excludes)
+    private static void addTests(TestSuite suite, File suiteDir, String prefix, Properties excludes, int optimizationLevel)
     {
         File[] jsFiles = suiteDir.listFiles(new JsFilter());
+        Arrays.sort(jsFiles);
         for (int i = 0; i < jsFiles.length; i++)
         {
             File jsFile = jsFiles[i];
@@ -104,18 +113,20 @@ public class StandardTests extends TestSuite
             {
                 continue;
             }
-            suite.addTest(new JsTestCase(jsFile));
+            suite.addTest(new JsTestCase(jsFile, optimizationLevel));
         }
     }
     
     private static final class JsTestCase extends TestCase
     {
         private final File jsFile;
+        private final int optimizationLevel;
         
-        JsTestCase(File jsFile)
+        JsTestCase(File jsFile, int optimizationLevel)
         {
-            super(jsFile.getName());
+            super(jsFile.getName() + (optimizationLevel == 1 ? "-compiled" : "-interpreted"));
             this.jsFile = jsFile;
+            this.optimizationLevel = optimizationLevel;
         }
         
         public int countTestCases()
@@ -137,6 +148,7 @@ public class StandardTests extends TestSuite
             global.setOut(p);
             global.setErr(p);
             final ShellContextFactory shellContextFactory = new ShellContextFactory();
+            shellContextFactory.setOptimizationLevel(optimizationLevel);
             final TestState testState = new TestState();
             Thread t = new Thread(new Runnable()
             {
