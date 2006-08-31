@@ -148,7 +148,7 @@
     <caption label="&serverSettings.label;"/>
     <vbox align="start">
     <checkbox wsm_persist="true"
-              id="server.loginAtStartUp" hidefor="nntp"
+              id="server.loginAtStartUp" 
               label="&loginAtStartup.label;"
               accesskey="&loginAtStartup.accesskey;"
               prefattribute="value"
