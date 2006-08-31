@@ -57,11 +57,11 @@ class nsIURI;
 class nsIXPConnectWrappedJS;
 class nsIDOMNodeList;
 class nsVoidArray;
-class nsIDocumentObserver;
+class nsIMutationObserver;
 
 #define NS_IBINDING_MANAGER_IID \
-{ 0x8186980b, 0x35b8, 0x469f,   \
- { 0x8b, 0xc5, 0x33, 0xad, 0x3c, 0x35, 0x90, 0x98 } }
+{ 0x6abe92b0, 0x4553, 0x4301, \
+ { 0xa1, 0xcb, 0x3e, 0x2d, 0x85, 0xd0, 0xec, 0x8c } }
 
 class nsIBindingManager : public nsISupports
 {
@@ -187,13 +187,13 @@ public:
    * ContentInserted/ContentAppended and before they're updated for
    * ContentRemoved.
    */
-  virtual void AddObserver(nsIDocumentObserver* aObserver) = 0;
+  virtual void AddObserver(nsIMutationObserver* aObserver) = 0;
 
   /**
    * Remove an observer of document change notifications. This will
    * return false if the observer cannot be found.
    */
-  virtual PRBool RemoveObserver(nsIDocumentObserver* aObserver) = 0;
+  virtual PRBool RemoveObserver(nsIMutationObserver* aObserver) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIBindingManager, NS_IBINDING_MANAGER_IID)
