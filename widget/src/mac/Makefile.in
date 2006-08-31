@@ -135,9 +135,11 @@ SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_UNICHARUTIL_LIBS) \
-		$(TK_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(call EXPAND_LIBNAME_PATH,gkgfx,$(DEPTH)/gfx/src) \
+		$(TK_LIBS) \
+		-framework QuickTime \
+		-framework IOKit \
 		$(NULL)
 
 ifdef MOZ_ENABLE_CAIRO_GFX
@@ -159,9 +161,4 @@ LOCAL_INCLUDES	= \
 	$(TK_CFLAGS) \
 	-I$(topsrcdir)/gfx/src/mac \
 	-I$(srcdir)/../xpwidgets \
-	$(NULL)
-
-LDFLAGS	+= \
-	-framework QuickTime \
-	-framework IOKit \
 	$(NULL)
