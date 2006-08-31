@@ -853,7 +853,6 @@ MAKEFILES_inspector="
 extensions/inspector/Makefile
 extensions/inspector/base/Makefile
 extensions/inspector/build/Makefile
-extensions/inspector/build/src/Makefile
 extensions/inspector/resources/Makefile
 extensions/inspector/resources/locale/Makefile
 "
@@ -916,7 +915,6 @@ browser/components/shell/public/Makefile
 browser/components/shell/src/Makefile
 browser/extensions/Makefile
 browser/extensions/layout-debug/Makefile
-browser/extensions/package-fixup/Makefile
 browser/installer/Makefile
 browser/installer/unix/Makefile
 browser/installer/windows/Makefile
@@ -1005,14 +1003,6 @@ toolkit/mozapps/downloads/src/Makefile
 toolkit/mozapps/extensions/Makefile
 toolkit/mozapps/extensions/public/Makefile
 toolkit/mozapps/extensions/src/Makefile
-toolkit/mozapps/installer/unix/wizard/Makefile
-toolkit/mozapps/installer/unix/Makefile
-toolkit/mozapps/installer/Makefile
-toolkit/mozapps/installer/windows/Makefile
-toolkit/mozapps/installer/windows/wizard/Makefile
-toolkit/mozapps/installer/windows/wizard/setup/Makefile
-toolkit/mozapps/installer/windows/wizard/setuprsc/Makefile
-toolkit/mozapps/installer/windows/wizard/uninstall/Makefile
 toolkit/mozapps/update/Makefile
 toolkit/mozapps/update/public/Makefile
 toolkit/mozapps/update/src/Makefile
