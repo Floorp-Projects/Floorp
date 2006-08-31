@@ -3396,7 +3396,6 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     jsatomid atomIndex;
     JSTreeContext *tc;
     JSStmtInfo *stmt, *scopeStmt;
-    JSObject *blockObj;
     uintN oldflags;
 #ifdef DEBUG
     JSBool varOrConst = (pn->pn_op != JSOP_NOP);
@@ -3507,14 +3506,10 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 
                     tc->topStmt = stmt->down;
                     tc->topScopeStmt = scopeStmt->downScope;
-                    blockObj = tc->blockChain;
-                    tc->blockChain =
-                        JSVAL_TO_OBJECT(blockObj->slots[JSSLOT_PARENT]);
                 }
 #ifdef __GNUC__
                 else {
                     stmt = scopeStmt = NULL;    /* quell GCC overwarning */
-                    blockObj = NULL;
                 }
 #endif
 
@@ -3527,7 +3522,6 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 if (popScope) {
                     tc->topStmt = stmt;
                     tc->topScopeStmt = scopeStmt;
-                    tc->blockChain = blockObj;
                 }
             }
         }
