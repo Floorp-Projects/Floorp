@@ -176,8 +176,11 @@ nsNativeThemeMac::DrawButton ( ThemeButtonKind inKind, const Rect& inBoxRect, PR
   if ( inDisabled )
     info.state = kThemeStateUnavailableInactive;
   else {
-    info.state = ((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER)) ? 
-                    kThemeStatePressed : kThemeStateActive;
+    if ((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER))
+      info.state = kThemeStatePressed;
+    else
+      info.state = (inKind == kThemeArrowButton) ?
+                   kThemeStateInactive : kThemeStateActive;
     if ( inState & NS_EVENT_STATE_FOCUS ) {
       // There is a bug in OS 10.2.x-10.3.x where if we are in a CG context and
       // draw the focus ring with DrawThemeButton(), there are ugly lines all
@@ -491,7 +494,8 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
                     kThemeButtonOn, kThemeAdornmentNone, eventState );
       break;
     case NS_THEME_DROPDOWN_BUTTON:
-      // do nothing, this is covered by the DROPDOWN case
+      DrawButton ( kThemeArrowButton, macRect, PR_FALSE, IsDisabled(aFrame), 
+                   kThemeButtonOn, kThemeAdornmentArrowDownArrow, eventState );
       break;
 
     case NS_THEME_TEXTFIELD:
@@ -618,6 +622,7 @@ nsNativeThemeMac::GetWidgetBorder(nsIDeviceContext* aContext,
       break;
 
     case NS_THEME_DROPDOWN:
+    case NS_THEME_DROPDOWN_BUTTON:
       aResult->SizeTo(kAquaDropdownLeftEndcap, kAquaPushButtonTopBottom, 
                         kAquaDropwdonRightEndcap, kAquaPushButtonTopBottom);
       break;
@@ -730,19 +735,14 @@ nsNativeThemeMac::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
     }
 
     case NS_THEME_DROPDOWN:
+    case NS_THEME_DROPDOWN_BUTTON:
     {
       SInt32 popupHeight = 0;
       ::GetThemeMetric(kThemeMetricPopupButtonHeight, &popupHeight);
       aResult->SizeTo(0, popupHeight);
       break;
     }
-    
-    case NS_THEME_DROPDOWN_BUTTON:
-      // the drawing for this is done by the dropdown, so just make this
-      // zero sized.
-      aResult->SizeTo(0,0);
-      break;
-      
+
     case NS_THEME_TEXTFIELD:
     {
       // at minimum, we should be tall enough for 9pt text.
