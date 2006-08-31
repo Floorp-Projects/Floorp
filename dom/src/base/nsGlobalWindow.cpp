@@ -1798,7 +1798,8 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 
   if (aVisitor.mEvent->message == NS_RESIZE_EVENT) {
     mIsHandlingResizeEvent = PR_FALSE;
-  } else if (aVisitor.mEvent->message == NS_PAGE_UNLOAD) {
+  } else if (aVisitor.mEvent->message == NS_PAGE_UNLOAD &&
+             NS_IS_TRUSTED_EVENT(aVisitor.mEvent)) {
     // Execute bindingdetached handlers before we tear ourselves
     // down.
     if (mDocument) {
@@ -1806,7 +1807,10 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       mDoc->BindingManager()->ExecuteDetachedHandlers();
     }
     mIsDocumentLoaded = PR_FALSE;
-  } else if (aVisitor.mEvent->message == NS_PAGE_LOAD) {
+  } else if (aVisitor.mEvent->message == NS_LOAD &&
+             NS_IS_TRUSTED_EVENT(aVisitor.mEvent)) {
+    // This is page load event since load events don't propagate to |window|.
+    // @see nsDocument::PreHandleEvent.
     mIsDocumentLoaded = PR_TRUE;
 
     nsCOMPtr<nsIContent> content(do_QueryInterface(GetFrameElementInternal()));
@@ -1825,7 +1829,7 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       // onload event for the frame element.
 
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent), NS_PAGE_LOAD);
+      nsEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent), NS_LOAD);
       event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
 
       // Most of the time we could get a pres context to pass in here,

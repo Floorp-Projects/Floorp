@@ -4274,9 +4274,7 @@ nsDocument::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   aVisitor.mForceContentDispatch = PR_TRUE;
 
   // Load events must not propagate to |window| object, see bug 335251.
-  if (!(aVisitor.mEvent->message == NS_IMAGE_LOAD ||
-        aVisitor.mEvent->message == NS_PAGE_LOAD ||
-        aVisitor.mEvent->message == NS_SCRIPT_LOAD)) {
+  if (aVisitor.mEvent->message != NS_LOAD) {
     aVisitor.mParentTarget = GetWindow();
   }
   return NS_OK;

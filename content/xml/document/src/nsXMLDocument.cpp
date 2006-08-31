@@ -632,7 +632,7 @@ nsXMLDocument::EndLoad()
     // Generate a document load event for the case when an XML
     // document was loaded as pure data without any presentation
     // attached to it.
-    nsEvent event(PR_TRUE, NS_PAGE_LOAD);
+    nsEvent event(PR_TRUE, NS_LOAD);
     nsEventStatus status = nsEventStatus_eIgnore;
 
     nsIScriptGlobalObject* sgo = nsnull;

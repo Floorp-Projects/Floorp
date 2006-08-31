@@ -951,7 +951,6 @@ case _value: eventName.AssignWithConversion(_name) ; break
     _ASSIGN_eventName(NS_GOTFOCUS,"NS_GOTFOCUS");
     _ASSIGN_eventName(NS_IMAGE_ABORT,"NS_IMAGE_ABORT");
     _ASSIGN_eventName(NS_IMAGE_ERROR,"NS_IMAGE_ERROR");
-    _ASSIGN_eventName(NS_IMAGE_LOAD,"NS_IMAGE_LOAD");
     _ASSIGN_eventName(NS_KEY_DOWN,"NS_KEY_DOWN");
     _ASSIGN_eventName(NS_KEY_PRESS,"NS_KEY_PRESS");
     _ASSIGN_eventName(NS_KEY_UP,"NS_KEY_UP");
@@ -973,7 +972,7 @@ case _value: eventName.AssignWithConversion(_name) ; break
     _ASSIGN_eventName(NS_MOUSE_RIGHT_CLICK,"NS_MOUSE_RIGHT_CLICK");
     _ASSIGN_eventName(NS_MOUSE_RIGHT_DOUBLECLICK,"NS_MOUSE_RIGHT_DBLCLICK");
     _ASSIGN_eventName(NS_MOVE,"NS_MOVE");
-    _ASSIGN_eventName(NS_PAGE_LOAD,"NS_PAGE_LOAD");
+    _ASSIGN_eventName(NS_LOAD,"NS_LOAD");
     _ASSIGN_eventName(NS_PAGE_UNLOAD,"NS_PAGE_UNLOAD");
     _ASSIGN_eventName(NS_PAINT,"NS_PAINT");
     _ASSIGN_eventName(NS_XUL_BROADCAST, "NS_XUL_BROADCAST");
