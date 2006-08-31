@@ -543,7 +543,7 @@ function convertLanguageCode(abbr)
     // and the rest as strings.
     try
     {
-      language = gLangBundle.getString(tokens[0]);
+      language = gLangBundle.getString(tokens[0].toLowerCase());
     }
     catch (e) 
     {
