@@ -1,7 +1,14 @@
 
 .graphconfig { 
   background-color: #cccccc;
-  -moz-border-radius: 10px;
+  -moz-border-radius: 10px 0 0 10px;
+  padding: 10px;
+  width: 15em;
+}
+
+.graphconfig-list {
+  background-color: #cccccc;
+  -moz-border-radius:  0 10px 10px 0;
   padding: 10px;
 }
 
