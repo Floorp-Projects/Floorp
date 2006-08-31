@@ -429,7 +429,7 @@ var DefaultController =
       case "cmd_settingsOffline":
         return IsAccountOfflineEnabled();
       case "cmd_moveToFolderAgain":
-        return pref.getCharPref("mail.last_msg_movecopy_target_uri") && GetNumSelectedMessages() > 0;
+        return (pref.getCharPref("mail.last_msg_movecopy_target_uri") && GetNumSelectedMessages() > 0);
       default:
         return false;
     }

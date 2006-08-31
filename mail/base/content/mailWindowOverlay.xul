@@ -606,7 +606,7 @@
       </template>
     </menu>
     <menuitem id="threadPaneContext-moveToFolderAgain" observes="cmd_moveToFolderAgain"
-          label="&moveToFolderAgain.label;" accesskey="moveToFolderAgain.accesskey"/>
+          label="&moveToFolderAgain.label;" accesskey="&moveToFolderAgain.accesskey;"/>
     <menu id="threadPaneContext-tags" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;">
       <menupopup id="threadPaneContext-tagpopup" onpopupshowing="InitMessageTags(this)">
         <menuitem id="threadPaneContext-tagRemoveAll" oncommand="RemoveAllMessageTags();"/>
@@ -922,7 +922,7 @@
       </template>
     </menu>
     <menuitem id="messagePaneContext-moveToFolderAgain" observes="cmd_moveToFolderAgain"
-              label="&moveToFolderAgain.label;" accesskey="moveToFolderAgain.accesskey"/>    
+              label="&moveToFolderAgain.label;" accesskey="&moveToFolderAgain.accesskey;"/>    
     <menuseparator id="messagePaneContext-sep-tags-1"/>
     <menu id="messagePaneContext-tags" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;">
       <menupopup id="messagePaneContext-tagpopup" onpopupshowing="InitMessageTags(this)">
@@ -1562,7 +1562,7 @@
               </template>
             </menu>
             <menuitem id="moveToFolderAgain" key="key_moveToFolderAgain" observes="cmd_moveToFolderAgain"
-                      label="&moveToFolderAgain.label;" accesskey="moveToFolderAgain.accesskey"/>
+                      label="&moveToFolderAgain.label;" accesskey="&moveToFolderAgain.accesskey;"/>
             <menu id="tagMenu" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;" observes="cmd_tag">
               <menupopup id="tagMenu-tagpopup" onpopupshowing="InitMessageTags(this)">
               <menuitem id="tagMenu-tagRemoveAll" oncommand="RemoveAllMessageTags();"/>

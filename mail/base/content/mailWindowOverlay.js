@@ -464,7 +464,6 @@ function initMoveToFolderAgainMenu(aMenuItem)
 {
   var lastFolderURI = pref.getCharPref("mail.last_msg_movecopy_target_uri");
   var isMove = pref.getBoolPref("mail.last_msg_movecopy_was_move");  
-  aMenuItem.setAttribute("disabled", !lastFolderURI);
   if (lastFolderURI)
   {
     var destResource = RDF.GetResource(lastFolderURI);

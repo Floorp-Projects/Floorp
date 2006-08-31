@@ -324,7 +324,7 @@
 <!ENTITY copyMsgMenu.accesskey "C">
 <!ENTITY moveToFolderAgain.label "Move Again">
 <!ENTITY moveToFolderAgain.accesskey "i">
-<!ENTITY moveToFolderAgainCmd.key "t">
+<!ENTITY moveToFolderAgainCmd.key "m">
 <!ENTITY killThreadMenu.label "Ignore Thread">
 <!ENTITY killThreadMenu.accesskey "I">
 <!ENTITY killThreadMenu.key "k">
