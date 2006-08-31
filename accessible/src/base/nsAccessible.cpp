@@ -90,6 +90,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsITimer.h"
 #include "nsIMutableArray.h"
+#include "nsIPersistentProperties2.h"
 
 #ifdef NS_DEBUG
 #include "nsIFrameDebug.h"
@@ -1873,6 +1874,32 @@ NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
     }
   }
   return mDOMNode ? GetRole(aRole) : NS_ERROR_FAILURE;  // Node already shut down
+}
+
+NS_IMETHODIMP nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
+{
+  *aAttributes = nsnull;
+
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;  // Node already shut down
+  }
+
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+  NS_ENSURE_TRUE(element, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIPersistentProperties> attributes =
+     do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
+  NS_ENSURE_TRUE(attributes, NS_ERROR_NULL_POINTER);
+
+  nsAutoString tagName;
+  nsresult result = element->GetTagName(tagName);
+  if (NS_SUCCEEDED(result)) {
+    nsAutoString oldValueUnused; 
+    attributes->SetStringProperty(NS_LITERAL_CSTRING("tag"), tagName, oldValueUnused);
+  }
+  attributes.swap(*aAttributes);
+
+  return result;
 }
 
 PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut,
