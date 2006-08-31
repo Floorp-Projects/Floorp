@@ -55,6 +55,9 @@
 #include "nsMaiInterfaceHypertext.h"
 #include "nsMaiInterfaceHyperlinkImpl.h"
 #include "nsMaiInterfaceTable.h"
+#include "nsXPCOMStrings.h"
+#include "nsComponentManagerUtils.h"
+#include "nsIPersistentProperties2.h"
 #include "nsMaiInterfaceDocument.h"
 
 extern "C" GType g_atk_hyperlink_impl_type; //defined in nsAppRootAccessible.cpp
@@ -171,6 +174,7 @@ static void finalizeCB(GObject *aObj);
 static const gchar*        getNameCB (AtkObject *aAtkObj);
 static const gchar*        getDescriptionCB (AtkObject *aAtkObj);
 static AtkRole             getRoleCB(AtkObject *aAtkObj);
+static AtkAttributeSet*    getAttributesCB(AtkObject *aAtkObj);
 static AtkObject*          getParentCB(AtkObject *aAtkObj);
 static gint                getChildCountCB(AtkObject *aAtkObj);
 static AtkObject*          refChildCB(AtkObject *aAtkObj, gint aChildIndex);
@@ -630,6 +634,7 @@ classInitCB(AtkObjectClass *aClass)
     aClass->ref_child = refChildCB;
     aClass->get_index_in_parent = getIndexInParentCB;
     aClass->get_role = getRoleCB;
+    aClass->get_attributes = getAttributesCB;
     aClass->ref_state_set = refStateSetCB;
     aClass->ref_relation_set = refRelationSetCB;
 
@@ -819,6 +824,47 @@ getRoleCB(AtkObject *aAtkObj)
         aAtkObj->role = NS_STATIC_CAST(AtkRole, atkRole);
     }
     return aAtkObj->role;
+}
+
+AtkAttributeSet *
+getAttributesCB(AtkObject *aAtkObj)
+{
+    NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), nsnull);
+    nsAccessibleWrap *accWrap =
+        NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
+
+    AtkAttributeSet *objAttributeSet = nsnull;
+    nsCOMPtr<nsIPersistentProperties> attributes;
+    accWrap->GetAttributes(getter_AddRefs(attributes));
+    if (attributes) {
+
+        nsCOMPtr<nsISimpleEnumerator> propEnum;
+        nsresult rv = attributes->Enumerate(getter_AddRefs(propEnum));
+        NS_ENSURE_SUCCESS(rv, nsnull);
+
+        PRBool hasMore;
+        while (NS_SUCCEEDED(propEnum->HasMoreElements(&hasMore)) && hasMore) {
+            nsCOMPtr<nsISupports> sup;
+            rv = propEnum->GetNext(getter_AddRefs(sup));
+            nsCOMPtr<nsIPropertyElement> propElem(do_QueryInterface(sup));
+            NS_ENSURE_TRUE(propElem, nsnull);
+
+            nsCAutoString name;
+            rv = propElem->GetKey(name);
+            NS_ENSURE_SUCCESS(rv, nsnull);
+
+            nsAutoString value;
+            rv = propElem->GetValue(value);
+            NS_ENSURE_SUCCESS(rv, nsnull);
+
+            AtkAttribute *objAttribute = (AtkAttribute *)g_malloc(sizeof(AtkAttribute));
+            objAttribute->name = g_strdup(name.get());
+            objAttribute->value = g_strdup(NS_ConvertUTF16toUTF8(value).get());
+            objAttributeSet = g_slist_prepend(objAttributeSet, objAttribute);
+        }
+    }
+
+    return objAttributeSet;
 }
 
 AtkObject *

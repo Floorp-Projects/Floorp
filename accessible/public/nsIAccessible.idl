@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+interface nsIPersistentProperties;
 
 /**
  * A cross-platform interface that supports platform-specific 
@@ -52,7 +53,7 @@
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(DB717DB4-37E9-42F1-A3B0-2579DD7C3814)]
+[scriptable, uuid(c27c44b9-9455-48f2-b5f4-2897e54a8d69)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -162,6 +163,11 @@ interface nsIAccessible : nsISupports
    * Focused accessible child of node
    */
   readonly attribute nsIAccessible focusedChild;
+
+  /**
+   * Attributes of accessible
+   */
+  readonly attribute nsIPersistentProperties attributes;
 
   /**
    * Accessible child which contains the coordinate at (x, y) in screen pixels.

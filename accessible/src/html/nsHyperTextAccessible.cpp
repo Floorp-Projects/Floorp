@@ -55,6 +55,7 @@
 #include "nsIPlaintextEditor.h"
 #include "nsIServiceManager.h"
 #include "nsTextFragment.h"
+#include "nsIPersistentProperties2.h"
 
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
@@ -725,6 +726,48 @@ NS_IMETHODIMP nsHyperTextAccessible::GetAttributeRange(PRInt32 aOffset, PRInt32 
   }
 
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsHyperTextAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
+{
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;  // Node already shut down
+  }
+
+  nsAccessibleWrap::GetAttributes(aAttributes);
+  NS_ENSURE_TRUE(*aAttributes, NS_ERROR_NULL_POINTER);
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  NS_ENSURE_TRUE(content, NS_ERROR_UNEXPECTED);
+  nsIAtom *tag = content->Tag();
+
+  PRInt32 headLevel = 0;
+  if (tag == nsAccessibilityAtoms::h1) {
+    headLevel = 1;
+  }
+  else if (tag == nsAccessibilityAtoms::h2) {
+    headLevel = 2;
+  }
+  else if (tag == nsAccessibilityAtoms::h3) {
+    headLevel = 3;
+  }
+  else if (tag == nsAccessibilityAtoms::h4) {
+    headLevel = 4;
+  }
+  else if (tag == nsAccessibilityAtoms::h5) {
+    headLevel = 5;
+  }
+  else if (tag == nsAccessibilityAtoms::h6) {
+    headLevel = 6;
+  }
+  if (headLevel) {
+    nsAutoString valueString;
+    valueString.AppendInt(headLevel);
+    nsAutoString oldValueUnused;
+    (*aAttributes)->SetStringProperty(NS_LITERAL_CSTRING("level"), valueString, oldValueUnused);
+  }
+
+  return  NS_OK;
 }
 
 /*
