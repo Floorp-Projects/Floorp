@@ -6,7 +6,7 @@ echo $html->hidden('Addon/add_step2');
 echo '<table>';
 echo     '<tr>';
 echo         '<td>'._('Name').'</td>';
-echo         '<td>'.$html->input('Addon/Name', array('value'=>$info['name'])).$html->tagErrorMsg('Addon/Name', _('Please enter the name of your add-on.')).'</td>';
+echo         '<td>'.$html->input('Addon/name', array('value'=>$info['name'])).$html->tagErrorMsg('Addon/Name', _('Please enter the name of your add-on.')).'</td>';
 echo     '</tr>';
 echo     '<tr>';
 echo         '<td>'._('Version').'</td>';
@@ -30,15 +30,15 @@ echo         '<td>'.$html->selectTag('Addon/Tags', $tags, $info['selectedTags'],
 echo     '</tr>';
 echo     '<tr>';
 echo         '<td>'._('Homepage').'</td>';
-echo         '<td>'.$html->input('Addon/Homepage', array('size' => 40, 'value' => $info['homepage'])).'</td>';
+echo         '<td>'.$html->input('Addon/homepage', array('size' => 40, 'value' => $info['homepage'])).'</td>';
 echo     '</tr>';
 echo     '<tr>';
 echo         '<td>'._('Summary').'</td>';
-echo         '<td>'.$html->input('Addon/Summary', array('size' => 40, 'maxlength' => 100, 'value' => $info['summary'])).$html->tagErrorMsg('Addon/Summary', _('Please enter a summary of your add-on.')).'</td>';
+echo         '<td>'.$html->input('Addon/summary', array('size' => 40, 'maxlength' => 100, 'value' => $info['summary'])).$html->tagErrorMsg('Addon/Summary', _('Please enter a summary of your add-on.')).'</td>';
 echo     '</tr>';
 echo     '<tr>';
 echo         '<td>'._('Description').'</td>';
-echo         '<td>'.$html->textarea('Addon/Description', array('value' => $info['description'],
+echo         '<td>'.$html->textarea('Addon/description', array('value' => $info['description'],
                                                           'rows' => 3,
                                                           'cols' => 55
                                                     )).$html->tagErrorMsg('Addon/Description', _('Please enter a description of your add-on.')).'</td>';

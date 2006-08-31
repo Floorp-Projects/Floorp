@@ -43,6 +43,11 @@ class Version extends AppModel
                                             'finderSql'  => '',
                                             'deleteQuery'=> '',
                                       ),
-                                      );
+                               );
+
+    var $validate = array(
+                          'addon_id' => VALID_NUMBER,
+                          'version' => VALID_NOT_EMPTY
+                    );
 }
 ?>
