@@ -55,6 +55,7 @@
 <?xml-stylesheet href="chrome://calendar/skin/calendar-views.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/calendar-decorated-views.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/datetimepickers/minimonth.css" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/content/datetimepickers/datetimepickers.css" type="text/css"?>
 
 <overlay id="ltnSidebarOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -119,7 +120,11 @@
       <minimonth id="ltnMinimonth" onchange="ltnMinimonthPick(this);" flex="2"/>
       <spacer flex="1"/>
     </hbox>
-  
+    <hbox>
+      <spacer width="10"/>
+      <datetextpicker flex="1" id="ltnDateTextPicker" oncommand="ltnGoToDate()"/>
+    </hbox>
+
     <tabbox flex="1">
       <tabs>
         <tab label="&lightning.sidebar.agenda.label;"/>

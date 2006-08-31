@@ -43,6 +43,10 @@ datetimepicker {
   -moz-binding: url("chrome://calendar/content/datetimepickers/datetimepickers.xml#datetimepicker");
 }
 
+datetextpicker {
+  -moz-binding: url("chrome://calendar/content/datetimepickers/datetimepickers.xml#datetextpicker");
+}
+
 timepicker {
   -moz-binding: url("chrome://calendar/content/datetimepickers/datetimepickers.xml#timepicker");
 }

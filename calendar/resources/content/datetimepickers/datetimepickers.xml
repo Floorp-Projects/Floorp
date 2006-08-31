@@ -63,6 +63,188 @@
           xmlns:xbl="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+  <binding id="datetextpicker"
+           extends="chrome://calendar/content/datetimepickers/datetimepickers.xml#datetimepicker-base">
+    <content>
+      <xul:hbox flex="1">
+        <xul:textbox anonid="date-textbox" flex="1"
+                     onfocus="this.select();"
+                     onkeypress="if (event.keyCode == Components.interfaces.nsIDOMKeyEvent.DOM_VK_RETURN) fireGoEvent();"/>
+        <xul:button anonid="date-go-button" oncommand="fireGoEvent()"/>
+      </xul:hbox>
+    </content>
+    <implementation>
+      <field name="mRelativeDates">[]</field>
+      <field name="mDayNames">[]</field>
+      <field name="mRelationWords">[]</field>
+      <field name="mMonthLongNames">[]</field>
+      <field name="mMonthShortNames">[]</field>
+
+      <constructor><![CDATA[
+        var goButton = document.getAnonymousElementByAttribute(this, "anonid", "date-go-button");
+        goButton.setAttribute("label", calGetString("calendar", "go"));
+        // Load the stuff we're going to use to parse written dates
+        this.mRelativeDates = [
+            {word:calGetString("calendar", "today").toLowerCase(), offset: 0},
+            {word:calGetString("calendar", "yesterday").toLowerCase(), offset: -1},
+            {word:calGetString("calendar", "tomorrow").toLowerCase(), offset: 1}];
+        var i;
+        for (i = 1; i <= 7; i++) {
+          this.mDayNames.push(calGetString("dateFormat", "day."+i+".name").toLowerCase());
+        }
+
+        for (i = 1; i <= 12; i++) {
+          this.mMonthLongNames.push(calGetString("dateFormat", "month."+i+".name").toLowerCase());
+          this.mMonthShortNames.push(calGetString("dateFormat", "month."+i+".Mmm").toLowerCase());
+        }
+
+        // note that some languages have different conjugations of
+        // next/last depending on the day
+        this.mRelationWords = [
+            {word:calGetString("calendar", "last1"), offset: -1},
+            {word:calGetString("calendar", "last2"), offset: -1},
+            {word:calGetString("calendar", "next1"), offset: 0},
+            {word:calGetString("calendar", "next2"), offset: 0}];        
+
+        // Set the value to today
+        var text = document.getAnonymousElementByAttribute(this, "anonid", "date-textbox");
+        text.value = calGetString("calendar", "today");
+      ]]></constructor>
+
+      <property name="value">
+        <getter><![CDATA[
+          return this.mValue;
+        ]]></getter>
+        <setter><![CDATA[
+         var text = document.getAnonymousElementByAttribute(this, "anonid", "date-textbox");
+          try {
+            text.value = this.formatDate(val);
+          } catch(ex) {}
+          return val;
+        ]]></setter>
+      </property>
+
+      <method name="fireGoEvent">
+        <body><![CDATA[
+          var text = document.getAnonymousElementByAttribute(this, "anonid", "date-textbox");
+          var date = this.parseLanguageDate(text.value);
+          if (!date) {
+            date = this.parseDateTime(text.value);
+          }
+          if (date) {
+            // format fails if year <= 1600 on win2k, so try format first.
+            var prettyDate;
+            try { 
+              prettyDate = this.formatDate(date);
+            } catch (ex) {} // fall thru
+          }
+          if (date && prettyDate) {
+            this.mValue = date;
+            text.value = prettyDate;
+            this.fireEvent("command", date);
+            return;
+          }
+        ]]></body>
+      </method>
+
+      <!-- This function will take written (with words) dates and, if
+         - possible, return a Date() object described by the words.  Note
+         - that this function will not parse explicit dates, like 1/1/06,
+         - you should use parseDateTime for that.
+        -->
+      <method name="parseLanguageDate">
+        <parameter name="aValue"/>
+        <body><![CDATA[
+           if (!aValue) {
+             return null;
+           }
+           var val = aValue.toLowerCase();
+           // Look for the easy ones like today, tomorrow, etc
+           for each (var rel in this.mRelativeDates) {
+             if (val == rel.word) {
+               var now = new Date();
+               now.setDate(now.getDate()+rel.offset);
+               return now;
+             }
+           }
+
+           var parser = this;
+
+           // Takes a written day of the week and returns a js-date
+           // corresponding to the nearest day in the future that is
+           // that day of the week
+           function getDateForDay(aWord) {
+             for (var i in parser.mDayNames) {
+               if (aWord != parser.mDayNames[i]) {
+                 continue;
+               }
+               // Figure out what day of the week today is 
+               var calDate = createDateTime();
+               calDate.jsDate = new Date();
+
+               // i-weekday gets the offset (off by 1), add 7 to ensure
+               // that the % operation stays positive.
+               var offset = (i-calDate.weekday+7)%7 +1;
+               var now = new Date();
+               now.setDate(now.getDate()+offset);
+               return now;
+             }
+             return null;
+           }
+
+           // Remove commas
+           val = val.replace(',', '');
+
+           if (val.indexOf(' ') == -1) {
+             // Just a single word, or a single date.
+             return getDateForDay(val);
+           }
+
+           // Replace month names with numbers
+           for (var i in this.mMonthLongNames) {
+             if (val.indexOf(this.mMonthLongNames[i]) != -1) {
+               var newVal = val.replace(this.mMonthLongNames[i], Number(i)+1);
+               newVal = newVal.replace(' ', '/');
+               return this.parseDateTime(newVal);
+             }
+          }
+
+          // Same for short month names
+           for (var i in this.mMonthShortNames) {
+             if (val.indexOf(this.mMonthShortNames[i]) != -1) {
+               var newVal = val.replace(this.mMonthShortNames[i], Number(i)+1);
+               newVal = newVal.replace(' ', '/');
+               return this.parseDateTime(newVal);
+             }
+          }
+
+          // Now for the cool 'next' and 'last'
+          var words = val.split(' ');
+          var offset, day;
+          for each (word in words) {
+            for each (rel in this.mRelationWords) {
+              if (word == rel.word) {
+                offset = rel.offset;
+                break;
+              }
+            }
+            for (var i in this.mDayNames) {
+              if (word == this.mDayNames[i]) {
+                day = getDateForDay(word);
+                break;
+              }
+            }
+          }
+
+          if (day && offset != undefined) {
+            day.setDate(day.getDate()+(7*offset));
+            return day;
+          }
+          return null;
+        ]]></body>
+      </method>
+    </implementation>
+  </binding>
   <binding id="datepicker" extends="chrome://calendar/content/datetimepickers/datetimepickers.xml#datetimepicker-base">
     <!-- ::::::::::::::::: CONTENT ::::::::::::::::::::::::: -->
     <!-- Desired behavior: when user is done editing the date field 
@@ -1177,10 +1359,12 @@
 
       <method name="fireEvent">
         <parameter name="aEventName"/>
+        <parameter name="aDetail"/>
         <body>
           <![CDATA[
             var event = document.createEvent('Events');
             event.initEvent(aEventName, true, true);
+            event.detail = aDetail;
             this.dispatchEvent(event);
           ]]>
         </body>

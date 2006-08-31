@@ -106,6 +106,7 @@ function ltnMinimonthPick(minimonth)
         return;
 
     var jsDate = minimonth.value;
+    document.getElementById("ltnDateTextPicker").value = jsDate;
     var cdt = new CalDateTime();
     cdt.year = jsDate.getFullYear();
     cdt.month = jsDate.getMonth();
@@ -135,6 +136,14 @@ function ltnMinimonthPick(minimonth)
 
     cdt.timezone = currentView().timezone;
     currentView().goToDay(cdt);
+}
+
+function ltnGoToDate()
+{
+    var goToDate = document.getElementById("ltnDateTextPicker");
+    if (goToDate.value) {
+        ltnMinimonthPick(goToDate);
+    }
 }
 
 function ltnOnLoad(event)
