@@ -198,7 +198,7 @@
 <!ENTITY  customizeBundles.description  "Use the buttons below to select extensions and themes to be installed with your CCK.">
 <!ENTITY  customizeBundles.warning      "<html:b>IMPORTANT: If you add extensions and/or themes to your CCK,
                                          you can no longer install the CCK as part of a Firefox install. You must
-                                         install through the browser or use the -install-global-extension mechanism.
+                                         install through the browser.
                                          </html:b>">
 
 <!ENTITY  bundles.label                 "Extensions/Themes">
