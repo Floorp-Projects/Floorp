@@ -4906,7 +4906,6 @@ interrupt:
              */
             JS_ASSERT(!fp->blockChain);
             obj2 = fp->scopeChain;
-            JS_ASSERT(OBJ_GET_CLASS(cx, obj2) != &js_BlockClass);
             if (OBJ_GET_PARENT(cx, obj) != obj2) {
                 obj = js_CloneFunctionObject(cx, obj, obj2);
                 if (!obj) {
@@ -4998,7 +4997,6 @@ interrupt:
             /* If re-parenting, store a clone of the function object. */
             JS_ASSERT(!fp->blockChain);
             parent = fp->scopeChain;
-            JS_ASSERT(OBJ_GET_CLASS(cx, parent) != &js_BlockClass);
             if (OBJ_GET_PARENT(cx, obj) != parent) {
                 SAVE_SP_AND_PC(fp);
                 obj = js_CloneFunctionObject(cx, obj, parent);
