@@ -51,12 +51,15 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
+  var x = {y: {z: function() {}}};
+
   try
   {
     import x['y']['z'];
   }
   catch(ex)
   {
+    reportCompare('TypeError: x["y"]["z"] is not exported', ex + '', summary);
   }
 
   reportCompare(expect, actual, summary);
