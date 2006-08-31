@@ -69,11 +69,15 @@ class nsTextFragment;
 // hack to make egcs / gcc 2.95.2 happy
 class nsIContent_base : public nsINode {
 public:
+#ifdef MOZILLA_INTERNAL_API
+  // If you're using the external API, the only thing you can know about
+  // nsIContent is that it exists with an IID
 
   nsIContent_base(nsINodeInfo *aNodeInfo)
     : nsINode(aNodeInfo)
   {
   }
+#endif
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
 };
@@ -84,6 +88,9 @@ public:
  */
 class nsIContent : public nsIContent_base {
 public:
+#ifdef MOZILLA_INTERNAL_API
+  // If you're using the external API, the only thing you can know about
+  // nsIContent is that it exists with an IID
 
   nsIContent(nsINodeInfo *aNodeInfo)
     : nsIContent_base(aNodeInfo)
@@ -755,6 +762,7 @@ public:
   // the tabfocus bit field applies to xul elements.
   static PRBool sTabFocusModelAppliesToXUL;
 
+#endif // MOZILLA_INTERNAL_API
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContent, NS_ICONTENT_IID)
