@@ -93,6 +93,13 @@ nsTestServ.prototype =
                      "accepts the authentication. It also closes\n" +
                      "the connection after sending the challenge\n";
       stream.write(response, response.length);
+    },
+
+    // A URL that causes the current unit test to fail
+    // Use it to ensure that requests are cancelled before
+    // they reach the server
+    "/failtest": function (stream) {
+      do_throw("This should not be reached");
     }
   },
 
