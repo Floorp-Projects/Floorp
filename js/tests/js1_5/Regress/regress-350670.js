@@ -54,12 +54,12 @@ function test()
   var f;
 
   f = function() { for(z() in x) { } }
-  expect = 'function () {\n    for (z()[()] in x) {\n    }\n}';
+  expect = 'function () {\n    for (z() in x) {\n    }\n}';
   actual = f + '';
   reportCompare(expect, actual, summary);
 
   f = function() { for(z(12345678) in x) { } }
-  expect = 'function () {\n    for (z(12345678)[8)] in x) {\n    }\n}';
+  expect = 'function () {\n    for (z(12345678) in x) {\n    }\n}';
   actual = f + '';
   reportCompare(expect, actual, summary);
 
