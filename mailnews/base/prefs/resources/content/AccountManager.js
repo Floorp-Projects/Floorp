@@ -166,14 +166,7 @@ function onLoad() {
   removeButton = document.getElementById("removeButton");
   setDefaultButton = document.getElementById("setDefaultButton");
 
-  sortAccountList(accounttree);
   setTimeout(selectServer, 0, selectedServer ? selectedServer.serverURI : "", selectPage);
-}
-
-function sortAccountList(accounttree)
-{
-  var xulSortService = Components.classes["@mozilla.org/xul/xul-sort-service;1"].getService(Components.interfaces.nsIXULSortService);
-  xulSortService.sort(accounttree, 'http://home.netscape.com/NC-rdf#FolderTreeName?sort=true', 'ascending');
 }
 
 function selectServer(serverId, selectPage)
