@@ -39,7 +39,7 @@
 #define nsIParserService_h__
 
 #include "nsISupports.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 #include "nsHTMLTags.h"
 #include "nsIElementObserver.h"
 
@@ -155,7 +155,7 @@ class nsIParserService : public nsISupports {
   NS_IMETHOD GetTopicObservers(const nsAString& aTopic,
                                nsIObserverEntry** aEntry) = 0;
 
-  virtual nsresult CheckQName(const nsASingleFragmentString& aQName,
+  virtual nsresult CheckQName(const nsAString& aQName,
                               PRBool aNamespaceAware,
                               const PRUnichar** aColon) = 0;
   virtual PRBool IsXMLLetter(PRUnichar aChar) = 0;
