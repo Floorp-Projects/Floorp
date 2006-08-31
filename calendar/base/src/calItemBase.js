@@ -55,9 +55,11 @@ function NewCalDateTime(aJSDate) {
 }
 
 function calItemBase() {
+    this.mPropertyParams = {};
 }
 
 calItemBase.prototype = {
+    mPropertyParams: null,
     mIsProxy: false,
 
     QueryInterface: function (aIID) {
@@ -386,6 +388,10 @@ calItemBase.prototype = {
         } catch (e) { }
     },
 
+    getPropertyParameter: function getPP(aPropName, aParamName) {
+        return this.mPropertyParams[aPropName][aParamName];
+    },
+
     getAttendees: function (countObj) {
         if (!this.mAttendees && this.mIsProxy && this.mParentItem) {
             this.mAttendees = this.mParentItem.getAttendees(countObj);
@@ -616,8 +622,15 @@ calItemBase.prototype = {
              prop;
              prop = icalcomp.getNextProperty("ANY")) {
             if (!promoted[prop.propertyName]) {
-                // XXX keep parameters around, sigh
                 this.setProperty(prop.propertyName, prop.value);
+                var param = prop.getFirstParameterName();
+                while (param) {
+                    if (!(prop.propertyName in this.mPropertyParams)) {
+                        this.mPropertyParams[prop.propertyName] = {};
+                    }
+                    this.mPropertyParams[prop.propertyName][param] = prop.getParameter(param);
+                    param = prop.getNextParameterName();
+                }
             }
         }
     },

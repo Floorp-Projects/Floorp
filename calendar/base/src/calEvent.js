@@ -182,6 +182,13 @@ calEvent.prototype = {
                 if (!this.eventPromotedProps[iprop.name]) {
                     var icalprop = icssvc.createIcalProperty(iprop.name);
                     icalprop.value = iprop.value;
+                    var propBucket = this.mPropertyParams[iprop.name];
+                    if (propBucket) {
+                        for (paramName in propBucket) {
+                            icalprop.setParameter(paramName,
+                                                  propBucket[paramName]);
+                        }
+                    }
                     icalcomp.addProperty(icalprop);
                 }
             } catch (e) {

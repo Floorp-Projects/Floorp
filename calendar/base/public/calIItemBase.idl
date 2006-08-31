@@ -216,6 +216,16 @@ interface calIItemBase : nsISupports
   boolean isPropertyPromoted(in AString name);
 
   /**
+   * Returns a particular parameter value for a property, or null if the 
+   * parameter does not exist.  If the property does not exist, throws.
+   *
+   * @param aPropertyName  the name of the property
+   * @param aParameterName the name of the parameter on the property
+   */
+   AString getPropertyParameter(in AString aPropertyName, 
+                                in AString aParameterName);
+
+  /**
    * The organizer (originator) of the item.  We will likely not
    * honour or preserve all fields in the calIAttendee passed around here.
    * A base class like calIPerson might be more appropriate here, if we ever
