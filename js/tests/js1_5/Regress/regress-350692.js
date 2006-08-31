@@ -50,8 +50,14 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
-  
-  import x['y']['z'];
+
+  try
+  {
+    import x['y']['z'];
+  }
+  catch(ex)
+  {
+  }
 
   reportCompare(expect, actual, summary);
 
