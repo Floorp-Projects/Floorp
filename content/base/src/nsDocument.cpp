@@ -830,10 +830,8 @@ nsDocument::Init()
   NS_ENSURE_TRUE(bindingManager, NS_ERROR_OUT_OF_MEMORY);
   mBindingManager = bindingManager;
 
-  if (!mObservers.PrependObserver(bindingManager)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  
+  // The binding manager needs to come before everything but us in our
+  // mutation observer list.
   nsINode::nsSlots* slots = GetSlots();
   NS_ENSURE_TRUE(slots &&
                  slots->mMutationObservers.PrependObserver(bindingManager),
@@ -2245,6 +2243,18 @@ nsDocument::GetScriptLoader()
   }
 
   return mScriptLoader;
+}
+
+void
+nsDocument::AddMutationObserver(nsIMutationObserver* aMutationObserver)
+{
+  mBindingManager->AddObserver(aMutationObserver);
+}
+
+void
+nsDocument::RemoveMutationObserver(nsIMutationObserver* aMutationObserver)
+{
+  mBindingManager->RemoveObserver(aMutationObserver);
 }
 
 // Note: We don't hold a reference to the document observer; we assume

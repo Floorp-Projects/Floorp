@@ -295,8 +295,8 @@ SetOrRemoveObject(PLDHashTable& table, nsISupports* aKey, nsISupports* aValue)
 // Static member variable initialization
 
 // Implement our nsISupports methods
-NS_IMPL_ISUPPORTS4(nsBindingManager, nsIBindingManager, nsIStyleRuleSupplier,
-                   nsIDocumentObserver, nsIMutationObserver)
+NS_IMPL_ISUPPORTS3(nsBindingManager, nsIBindingManager, nsIStyleRuleSupplier,
+                   nsIMutationObserver)
 
 // Constructors/Destructors
 nsBindingManager::nsBindingManager(void)
@@ -1156,40 +1156,16 @@ nsBindingManager::GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChil
 // Note: We don't hold a reference to the document observer; we assume
 // that it has a live reference to the document.
 void
-nsBindingManager::AddObserver(nsIDocumentObserver* aObserver)
+nsBindingManager::AddObserver(nsIMutationObserver* aObserver)
 {
   // The array makes sure the observer isn't already in the list
   mObservers.AppendObserver(aObserver);
 }
 
 PRBool
-nsBindingManager::RemoveObserver(nsIDocumentObserver* aObserver)
+nsBindingManager::RemoveObserver(nsIMutationObserver* aObserver)
 {
   return mObservers.RemoveObserver(aObserver);
-}
-
-void
-nsBindingManager::BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)
-{
-  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(BeginUpdate, (aDocument, aUpdateType));
-}
-
-void
-nsBindingManager::EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)
-{
-  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(EndUpdate, (aDocument, aUpdateType));
-}
-
-void
-nsBindingManager::BeginLoad(nsIDocument* aDocument)
-{
-  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(BeginLoad, (aDocument));
-}
-
-void
-nsBindingManager::EndLoad(nsIDocument* aDocument)
-{
-  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(EndLoad, (aDocument));
 }
 
 void
@@ -1199,17 +1175,6 @@ nsBindingManager::CharacterDataChanged(nsIDocument* aDocument,
 {
   NS_BINDINGMANAGER_NOTIFY_OBSERVERS(CharacterDataChanged,
                                      (aDocument, aContent, aAppend));
-}
-
-void
-nsBindingManager::ContentStatesChanged(nsIDocument* aDocument,
-                                       nsIContent* aContent1,
-                                       nsIContent* aContent2,
-                                       PRInt32 aStateMask)
-{
-  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(ContentStatesChanged,
-                                     (aDocument, aContent1, aContent2,
-                                      aStateMask));
 }
 
 void
@@ -1391,60 +1356,3 @@ nsBindingManager::NodeWillBeDestroyed(const nsINode *aNode)
 {
   NS_BINDINGMANAGER_NOTIFY_OBSERVERS(NodeWillBeDestroyed, (aNode));
 }
-
-void
-nsBindingManager::StyleSheetAdded(nsIDocument* aDocument,
-                                  nsIStyleSheet* aStyleSheet,
-                                  PRBool aDocumentSheet)
-{
-  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(StyleSheetAdded,
-                                     (aDocument, aStyleSheet, aDocumentSheet));
-}
-
-void
-nsBindingManager::StyleSheetRemoved(nsIDocument* aDocument,
-                                    nsIStyleSheet* aStyleSheet,
-                                    PRBool aDocumentSheet)
-{
-  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(StyleSheetRemoved,
-                                     (aDocument, aStyleSheet, aDocumentSheet));
-}
-
-void
-nsBindingManager::StyleSheetApplicableStateChanged(nsIDocument* aDocument,
-                                                   nsIStyleSheet* aStyleSheet,
-                                                   PRBool aApplicable)
-{
-  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(StyleSheetApplicableStateChanged,
-                                     (aDocument, aStyleSheet, aApplicable));
-}
-
-void
-nsBindingManager::StyleRuleChanged(nsIDocument* aDocument,
-                                   nsIStyleSheet* aStyleSheet,
-                                   nsIStyleRule* aOldStyleRule,
-                                   nsIStyleRule* aNewStyleRule)
-{
-  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(StyleRuleChanged,
-                                     (aDocument, aStyleSheet, aOldStyleRule,
-                                      aNewStyleRule));
-}
-
-void
-nsBindingManager::StyleRuleAdded(nsIDocument* aDocument,
-                                 nsIStyleSheet* aStyleSheet,
-                                 nsIStyleRule* aStyleRule)
-{
-  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(StyleRuleAdded,
-                                     (aDocument, aStyleSheet, aStyleRule));
-}
-
-void
-nsBindingManager::StyleRuleRemoved(nsIDocument* aDocument,
-                                   nsIStyleSheet* aStyleSheet,
-                                   nsIStyleRule* aStyleRule)
-{
-  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(StyleRuleRemoved,
-                                     (aDocument, aStyleSheet, aStyleRule));
-}
-

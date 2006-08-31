@@ -2721,7 +2721,7 @@ NS_IMETHODIMP
 PresShell::BeginObservingDocument()
 {
   if (mDocument) {
-    mDocument->BindingManager()->AddObserver(this);
+    mDocument->AddObserver(this);
     if (mIsDocumentGone) {
       NS_WARNING("Adding a presshell that was disconnected from the document "
                  "as a document observer?  Sounds wrong...");
@@ -2739,7 +2739,7 @@ PresShell::EndObservingDocument()
   // is gone, perhaps?  Except for printing it's NOT gone, sometimes.
   mIsDocumentGone = PR_TRUE;
   if (mDocument) {
-    mDocument->BindingManager()->RemoveObserver(this);
+    mDocument->RemoveObserver(this);
   }
   return NS_OK;
 }

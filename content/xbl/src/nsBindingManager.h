@@ -42,7 +42,7 @@
 
 #include "nsIBindingManager.h"
 #include "nsIStyleRuleSupplier.h"
-#include "nsStubDocumentObserver.h"
+#include "nsIMutationObserver.h"
 #include "pldhash.h"
 #include "nsInterfaceHashtable.h"
 #include "nsRefPtrHashtable.h"
@@ -61,11 +61,11 @@ class nsStyleSet;
 
 class nsBindingManager : public nsIBindingManager,
                          public nsIStyleRuleSupplier,
-                         public nsIDocumentObserver
+                         public nsIMutationObserver
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOCUMENTOBSERVER
+  NS_DECL_NSIMUTATIONOBSERVER
 
   nsBindingManager();
   ~nsBindingManager();
@@ -124,9 +124,9 @@ public:
 
   NS_IMETHOD ShouldBuildChildFrames(nsIContent* aContent, PRBool* aResult);
 
-  virtual NS_HIDDEN_(void) AddObserver(nsIDocumentObserver* aObserver);
+  virtual NS_HIDDEN_(void) AddObserver(nsIMutationObserver* aObserver);
 
-  virtual NS_HIDDEN_(PRBool) RemoveObserver(nsIDocumentObserver* aObserver);  
+  virtual NS_HIDDEN_(PRBool) RemoveObserver(nsIMutationObserver* aObserver);  
 
   // nsIStyleRuleSupplier
   NS_IMETHOD WalkRules(nsStyleSet* aStyleSet, 
@@ -149,7 +149,7 @@ protected:
   nsresult GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult);
 
 #define NS_BINDINGMANAGER_NOTIFY_OBSERVERS(func_, params_) \
-  NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(mObservers, nsIDocumentObserver, \
+  NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(mObservers, nsIMutationObserver, \
                                      func_, params_);
 
 // MEMBER VARIABLES
@@ -197,10 +197,10 @@ protected:
   // table, they have not yet finished loading.
   nsInterfaceHashtable<nsURIHashKey,nsIStreamListener> mLoadingDocTable;
 
-  // Array of document observers who would like to be notified of content
+  // Array of mutation observers who would like to be notified of content
   // appends/inserts after we update our data structures and of content removes
   // before we do so.
-  nsTObserverArray<nsIDocumentObserver> mObservers;
+  nsTObserverArray<nsIMutationObserver> mObservers;
 
   // A queue of binding attached event handlers that are awaiting execution.
   nsVoidArray mAttachedStack;
