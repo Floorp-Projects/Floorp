@@ -48,7 +48,7 @@
 
 menulist {
   -moz-appearance: menulist;
-  margin: 2px 2px;
+  margin: 2px 4px;
   color: -moz-DialogText;
 }
 
