@@ -42,6 +42,7 @@
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="using-firebird-navigating-web-pages" nc:name="Navigating Web Pages" nc:link="using_firebird.xhtml#navigating_web_pages"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-firebird-searching" nc:name="Searching" nc:link="using_firebird.xhtml#searching"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="using-firebird-copying-saving-and-printing-pages" nc:name="Copying, Saving, and Printing Pages" nc:link="using_firebird.xhtml#copying_saving_and_printng_pages"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-firebird-improving-speed-and-efficiency" nc:name="Improving Speed and Efficiency" nc:link="using_firebird.xhtml#improving_speed_and_efficiency"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -68,7 +69,6 @@
         <rdf:li><rdf:Description ID="using-firebird-stopping-and-reloading" nc:name="Stopping and Reloading" nc:link="using_firebird.xhtml#stopping_and_reloading"/> </rdf:li>
         <rdf:li><rdf:Description ID="using-firebird-tabbed-browsing" nc:name="Tabbed Browsing" nc:link="tabbed_browsing.xhtml"/> </rdf:li>
         <rdf:li><rdf:Description ID="using-firebird-sidebar" nc:name="Using the Sidebar" nc:link="using_firebird.xhtml#using_the_sidebar"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-firebird-copying-saving-and-printing-pages" nc:name="Copying, Saving, and Printing Pages" nc:link="using_firebird.xhtml#copying_saving_and_printng_pages"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -77,7 +77,7 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li><rdf:Description ID="use-firebird-searching-the-web" nc:name="Searching the Web" nc:link="using_firebird.xhtml#searching_the_web"/> </rdf:li>
-        <rdf:li><rdf:Description ID="use-firebird-searching-on-selected-words-in-a-web-page" nc:name="Searching for selected words in a web page" nc:link="using_firebird.xhtml#searching_on_selected_words_in_a_web_page"/> </rdf:li>
+        <rdf:li><rdf:Description ID="use-firebird-searching-on-selected-words-in-a-web-page" nc:name="Searching for Selected Words in a Web Page" nc:link="using_firebird.xhtml#searching_on_selected_words_in_a_web_page"/> </rdf:li>
         <rdf:li><rdf:Description ID="use-firebird-searching-within-a-page" nc:name="Searching Within a Page" nc:link="using_firebird.xhtml#searching_within_a_page"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
