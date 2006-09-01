@@ -3622,6 +3622,14 @@ Expr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         PN_INIT_LIST_1(pn2, pn);
         pn = pn2;
         do {
+#if JS_HAS_GENERATORS
+            if (PN_LAST(pn)->pn_type == TOK_YIELD) {
+                js_ReportCompileErrorNumber(cx, ts,
+                                            JSREPORT_TS | JSREPORT_ERROR,
+                                            JSMSG_SYNTAX_ERROR);
+                return NULL;
+            }
+#endif
             pn2 = AssignExpr(cx, ts, tc);
             if (!pn2)
                 return NULL;
