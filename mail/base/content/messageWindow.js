@@ -815,6 +815,7 @@ var MessageWindowController =
       case "cmd_settingsOffline":
       case "cmd_createFilterFromPopup":
       case "cmd_createFilterFromMenu":
+      case "cmd_moveToFolderAgain":
 				return true;
       case "cmd_synchronizeOffline":
 			case "cmd_downloadFlagged":
@@ -923,6 +924,8 @@ var MessageWindowController =
       case "cmd_undo":
       case "cmd_redo":
         return SetupUndoRedoCommand(command);
+      case "cmd_moveToFolderAgain":
+        return (pref.getCharPref("mail.last_msg_movecopy_target_uri"));
       case "cmd_applyFilters":
       case "cmd_runJunkControls":
       case "cmd_deleteJunk":
@@ -984,6 +987,13 @@ var MessageWindowController =
 			case "cmd_editAsNew":
 				MsgEditMessageAsNew();
 				break;
+      case "cmd_moveToFolderAgain":
+        var folderId = pref.getCharPref("mail.last_msg_movecopy_target_uri");
+        if (pref.getBoolPref("mail.last_msg_movecopy_was_move"))
+          MsgMoveMessage(folderId);
+        else
+          MsgCopyMessage(folderId);
+        break;				
       case "cmd_createFilterFromPopup":
 				break;// This does nothing because the createfilter is invoked from the popupnode oncommand.        
       case "cmd_createFilterFromMenu":
