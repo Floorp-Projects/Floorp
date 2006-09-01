@@ -1918,7 +1918,7 @@ sftk_MACUpdate(CK_SESSION_HANDLE hSession,CK_BYTE_PTR pPart,
     SECStatus rv;
 
     /* make sure we're legal */
-    crv = sftk_GetContext(hSession,&context,type,PR_FALSE,NULL);
+    crv = sftk_GetContext(hSession,&context,type,PR_TRUE,NULL);
     if (crv != CKR_OK) return crv;
 
     if (context->hashInfo) {
