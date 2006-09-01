@@ -236,7 +236,7 @@ foreach my $result (@results) {
 $sth->finish;
 print "|}\n\n";
 
-print "==== Top Testers ====\n\n";
+print "=== Top Testers ===\n\n";
 print '{| border="1" cellpadding="2"',"\n";
 print '! style="background:#efefef" | \'\'\'Tester\'\'\'',"\n";
 print '! style="background:#efefef" | \'\'\'# Results\'\'\'',"\n";
@@ -264,7 +264,7 @@ while (my @result = $sth->fetchrow_array) {
   $testers->{$result[3]}->{$result[1]} = $result[2];
 }
 
-print "==== Result Status Breakdown By Tester ====\n\n";
+print "=== Result Status Breakdown By Tester ===\n\n";
 print '{| border="1" cellpadding="2"',"\n";
 print '! style="background:#efefef" | \'\'\'Tester\'\'\'',"\n";
 print '! style="background:#efefef" | \'\'\'Pass\'\'\'',"\n";
