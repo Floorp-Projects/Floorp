@@ -255,7 +255,6 @@ JS_BEGIN_EXTERN_C
  *                              pn_extra: stack slot, used during code gen
  * TOK_ARRAYPUSH      unary     pn_op: JSOP_ARRAYCOMP
  *                              pn_kid: array comprehension expression
- *                              pn_array: link to TOK_ARRAYCOMP
  */
 typedef enum JSParseNodeArity {
     PN_FUNC     = -3,
@@ -299,7 +298,6 @@ struct JSParseNode {
         struct {                        /* one kid if unary */
             JSParseNode *kid;
             jsint       num;            /* -1 or sharp variable number */
-            JSParseNode *array;         /* cyclic link to array comprehension */
         } unary;
         struct {                        /* name, labeled statement, etc. */
             JSAtom      *atom;          /* name or label atom, null if slot */
@@ -335,7 +333,6 @@ struct JSParseNode {
 #define pn_val          pn_u.binary.val
 #define pn_kid          pn_u.unary.kid
 #define pn_num          pn_u.unary.num
-#define pn_array        pn_u.unary.array
 #define pn_atom         pn_u.name.atom
 #define pn_expr         pn_u.name.expr
 #define pn_slot         pn_u.name.slot
