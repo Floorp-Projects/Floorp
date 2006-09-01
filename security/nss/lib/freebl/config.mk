@@ -75,6 +75,10 @@ PROGRAM      =
 
 EXTRA_LIBS   += $(DIST)/lib/$(LIB_PREFIX)secutil.$(LIB_SUFFIX)
 
+ifeq ($(OS_TARGET), SunOS)
+OS_LIBS += -lkstat
+endif
+
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 
 # don't want the 32 in the shared library name
