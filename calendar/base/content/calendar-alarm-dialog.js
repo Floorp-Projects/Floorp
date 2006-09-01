@@ -82,15 +82,10 @@ function onDismissAll()
   now = now.getInTimezone("UTC");
   var box = document.getElementById("alarmlist");
   for each (kid in box.childNodes) {
-    if (!kid.item) {
+    if (!kid || !kid.item) {
         continue;
     }
-    // We want the parent item, otherwise we're going to accidentally create an
-    // exception.  We've relnoted (for 0.1) the slightly odd behavior this can
-    // cause if you move an event after dismissing an alarm
-    var item = kid.item.parentItem.clone();
-    item.alarmLastAck = now;
-    item.calendar.modifyItem(item, kid.item, null);
+    onDismissWidget(kid);
   }
   return true;
 }
@@ -104,8 +99,8 @@ function onSnoozeAlarm(event)
   
   var duration = Components.classes["@mozilla.org/calendar/duration;1"]
                  .createInstance(Components.interfaces.calIDuration);
-  //XXX figure out a nice UI way to offer other length options
-  duration.minutes = 5;
+  duration.minutes = event.detail;
+  duration.normalize();
 
   alarmService.snoozeEvent(alarmWidget.item, duration);
 
@@ -119,13 +114,26 @@ function onSnoozeAlarm(event)
 
 function onDismissAlarm(event)
 {
-  var alarmWidget = event.target;
+  onDismissWidget(event.target);
+}
+
+function onDismissWidget(alarmWidget) {
   var now = Components.classes["@mozilla.org/calendar/datetime;1"]
                       .createInstance(Components.interfaces.calIDateTime);
   now.jsDate = new Date();
   now = now.getInTimezone("UTC");
-  var item = alarmWidget.item.clone();
+  // We want the parent item, otherwise we're going to accidentally create an 
+  // exception.  We've relnoted (for 0.1) the slightly odd behavior this can
+  // cause if you move an event after dismissing an alarm
+  var item = alarmWidget.item.parentItem.clone();
   item.alarmLastAck = now;
+
+  // Make sure to clear out any snoozes that were here.
+  if (item.recurrenceInfo) {
+      item.deleteProperty("X-MOZ-SNOOZE-TIME-"+alarmWidget.item.recurrenceId.nativeTime);
+  } else {
+      item.deleteProperty("X-MOZ-SNOOZE-TIME");
+  }
   item.calendar.modifyItem(item, alarmWidget.item, null);
 
   var parent = alarmWidget.parentNode;

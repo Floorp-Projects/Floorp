@@ -22,6 +22,8 @@
    - Contributor(s):
    -   Stuart Parmenter <stuart.parmenter@oracle.com>
    -   Simon Paquet <bugzilla@babylonsounds.com>
+   -   Joey Minta <jminta@gmail.com>
+   -   Stefan Sitter <ssitter@googlemail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,6 +49,7 @@
 
   <binding id="calendar-alarm-widget">
     <content>
+      <xul:groupbox flex="1">
       <xul:hbox flex="1">
         <xul:vbox pack="start">
           <xul:image/>
@@ -55,14 +58,43 @@
           <xul:label xbl:inherits="value=title"/>
           <xul:label xbl:inherits="value=time"/>
           <xul:label xbl:inherits="value=location"/>
-        </xul:vbox>
-        <xul:vbox pack="start">
-          <!-- Snooze button hidden for Lightning 0.1.  Most likely we need to
-               introduce calIAlarm properly before it can work without dataloss
-          <xul:button label="&calendar.alarm.snooze.label;" oncommand="var snoozeEvent = document.createEvent('Events'); snoozeEvent.initEvent('snooze', true, false); this.dispatchEvent(snoozeEvent);"/>-->
-          <xul:button label="&calendar.alarm.dismiss.label;" oncommand="var dismissEvent = document.createEvent('Events'); dismissEvent.initEvent('dismiss', true, false); this.dispatchEvent(dismissEvent);"/>
+          <xul:hbox flex="1" align="center">
+            <xul:button label="&calendar.alarm.snooze.label;" oncommand="snoozeAlarm();"/>
+            <xul:label value="&calendar.alarm.for.label;"/>
+            <xul:menulist anonid="alarm-widget-snooze-value">
+              <xul:menupopup>
+                <xul:menuitem label="&calendar.alarm.5minutes;" value="5"/>
+                <xul:menuitem label="&calendar.alarm.15minutes;" value="15"/>
+                <xul:menuitem label="&calendar.alarm.30minutes;" value="30"/>
+                <xul:menuitem label="&calendar.alarm.1hour;" value="60"/>
+                <xul:menuitem label="&calendar.alarm.1day;" value="1440"/>
+              </xul:menupopup>
+            </xul:menulist>
+            <xul:spacer flex="1"/>
+            <xul:button label="&calendar.alarm.dismiss.label;" oncommand="dismissAlarm();"/>
+          </xul:hbox>
         </xul:vbox>
       </xul:hbox>
+    </xul:groupbox>
     </content>
+    <implementation>
+      <method name="snoozeAlarm">
+        <body><![CDATA[
+          var snoozeValue = document.getAnonymousElementByAttribute(this, 
+                                "anonid", "alarm-widget-snooze-value").value;
+          var snoozeEvent = document.createEvent('Events');
+          snoozeEvent.initEvent('snooze', true, false);
+          snoozeEvent.detail = snoozeValue;
+          this.dispatchEvent(snoozeEvent);
+        ]]></body>
+      </method>
+      <method name="dismissAlarm">
+        <body><![CDATA[
+          var dismissEvent = document.createEvent('Events');
+          dismissEvent.initEvent('dismiss', true, false); 
+          this.dispatchEvent(dismissEvent);
+        ]]></body>
+      </method>
+    </implementation>
   </binding>
 </bindings>

@@ -194,25 +194,29 @@ calAlarmService.prototype = {
 
     snoozeEvent: function(event, duration) {
         /* modify the event for a new alarm time */
-        var newEvent = event.clone();
+        // Make sure we're working with the parent, otherwise we'll accidentally
+        // create an exception
+        var newEvent = event.parentItem.clone();
         var alarmTime = jsDateToDateTime((new Date())).getInTimezone("UTC");
 
         // Set the last acknowledged time to now.
         newEvent.alarmLastAck = alarmTime;
+
+        alarmTime = alarmTime.clone();
         alarmTime.addDuration(duration);
 
-        var datetime;
-        if (newEvent.alarmRelated == Components.interfaces.calIItemBase.ALARM_RELATED_START) {
-            datetime = newEvent.startDate || newEvent.entryDate;
+        if (event.parentItem != event) {
+            // This is the *really* hard case where we've snoozed a single
+            // instance of a recurring event.  We need to not only know that
+            // there was a snooze, but also which occurrence was snoozed.  Part
+            // of me just wants to create a local db of snoozes here...
+            newEvent.setProperty("X-MOZ-SNOOZE-TIME-"+event.recurrenceId.nativeTime, alarmTime);
         } else {
-            datetime = newEvent.endDate || newEvent.dueDate;
+            newEvent.setProperty("X-MOZ-SNOOZE-TIME", alarmTime);
         }
-
-        var offset = datetime.subtractDate(alarmTime);
-        newEvent.alarmOffset = offset;
         // calling modifyItem will cause us to get the right callback
         // and update the alarm properly
-        newEvent.calendar.modifyItem(newEvent, event, null);
+        newEvent.calendar.modifyItem(newEvent, event.parentItem, null);
     },
 
     addObserver: function(aObserver) {
@@ -240,6 +244,17 @@ calAlarmService.prototype = {
             catch (e) { }
         }
         this.mObservers.forEach(notify);
+    },
+
+    hasAlarm: function almSvc_hasAlarm(aItem) {
+        var hasSnooze;
+        if (aItem.parentItem != aItem) {
+            hasSnooze = aItem.parentItem.hasProperty("X-MOZ-SNOOZE-TIME-"+aItem.recurrenceId.nativeTime);
+        } else {
+            hasSnooze = aItem.hasProperty("X-MOZ-SNOOZE-TIME");
+        }
+
+        return aItem.alarmOffset || aItem.parentItem.alarmOffset || hasSnooze;
     },
 
     startup: function() {
@@ -344,6 +359,22 @@ calAlarmService.prototype = {
             alarmTime = aItem.endDate || aItem.dueDate;
         }
 
+        // Check for snooze
+        var snoozeTime;
+        if (aItem.parentItem != aItem) {
+            snoozeTime = aItem.parentItem.getProperty("X-MOZ-SNOOZE-TIME-"+aItem.recurrenceId.nativeTime)
+        } else {
+            snoozeTime = aItem.getProperty("X-MOZ-SNOOZE-TIME");
+        }
+
+        const calIDateTime = Components.interfaces.calIDateTime;
+        if (snoozeTime && !(snoozeTime instanceof calIDateTime)) {
+            var time = Components.classes["@mozilla.org/calendar/datetime;1"]
+                                 .createInstance(calIDateTime);
+            time.nativeTime = snoozeTime;
+            snoozeTime = time;
+        }
+dump("snooze time is:"+snoozeTime+'\n');
         alarmTime = alarmTime.clone();
 
         // Handle all day events.  This is kinda weird, because they don't have
@@ -358,6 +389,7 @@ calAlarmService.prototype = {
 
         alarmTime.addDuration(offset);
         alarmTime = alarmTime.getInTimezone("UTC");
+        alarmTime = snoozeTime || alarmTime;
 dump("considering alarm for item:"+aItem.title+'\n offset:'+offset+', which makes alarm time:'+alarmTime+'\n');
         var now;
         // XXX When the item is floating, should use the default timezone
@@ -422,8 +454,7 @@ dump("alarm is in the past, and unack'd, firing now!\n");
             onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
                 for (var i = 0; i < aCount; ++i) {
                     var item = aItems[i];
-                    if (item.alarmOffset || 
-                       (item.parentItem && item.parentItem.alarmOffset)) {
+                    if (this.alarmService.hasAlarm(item)) {
                         this.alarmService.addAlarm(item);
                     }
                 }
