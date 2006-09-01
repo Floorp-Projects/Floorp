@@ -537,6 +537,9 @@ ConvertDocShellLoadInfoToLoadType(nsDocShellInfoLoadType aDocShellLoadType)
     case nsIDocShellLoadInfo::loadNormalExternal:
         loadType = LOAD_NORMAL_EXTERNAL;
         break;
+    case nsIDocShellLoadInfo::loadNormalAllowFixup:
+        loadType = LOAD_NORMAL_FIXUP;
+        break;
     case nsIDocShellLoadInfo::loadHistory:
         loadType = LOAD_HISTORY;
         break;
@@ -600,6 +603,9 @@ nsDocShell::ConvertLoadTypeToDocShellLoadInfo(PRUint32 aLoadType)
         break;
     case LOAD_NORMAL_EXTERNAL:
         docShellLoadType = nsIDocShellLoadInfo::loadNormalExternal;
+        break;
+    case LOAD_NORMAL_FIXUP:
+        docShellLoadType = nsIDocShellLoadInfo::loadNormalAllowFixup;
         break;
     case LOAD_NORMAL_BYPASS_CACHE:
         docShellLoadType = nsIDocShellLoadInfo::loadNormalBypassCache;
