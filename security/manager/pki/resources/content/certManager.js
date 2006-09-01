@@ -331,19 +331,19 @@ function deleteCerts()
 
   if (selTabID == 'mine_tab') 
   {
-    params.SetString(0,bundle.GetStringFromName("deleteUserCertFlag"));
+    params.SetString(0, selTabID);
   } 
   else if (selTabID == "websites_tab") 
   {
-    params.SetString(0,bundle.GetStringFromName("deleteSslCertFlag"));
+    params.SetString(0, selTabID);
   } 
   else if (selTabID == "ca_tab") 
   {
-    params.SetString(0,bundle.GetStringFromName("deleteCaCertFlag"));
+    params.SetString(0, selTabID);
   }
   else if (selTabID == "others_tab") 
   {
-    params.SetString(0,bundle.GetStringFromName("deleteEmailCertFlag"));
+    params.SetString(0, selTabID);
   }
   else
   {
