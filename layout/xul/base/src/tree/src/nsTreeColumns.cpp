@@ -307,6 +307,12 @@ nsTreeColumns::GetCount(PRInt32* _retval)
 }
 
 NS_IMETHODIMP
+nsTreeColumns::GetLength(PRInt32* _retval)
+{
+  return GetCount(_retval);
+}
+
+NS_IMETHODIMP
 nsTreeColumns::GetFirstColumn(nsITreeColumn** _retval)
 {
   NS_IF_ADDREF(*_retval = GetFirstColumn());

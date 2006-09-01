@@ -73,7 +73,7 @@ interface nsITreeColumn : nsISupports
 
 interface nsITreeBoxObject;
 
-[scriptable, uuid(fcc7b6b5-f7d7-4e57-abd1-080602deb21d)]
+[scriptable, uuid(f8a8d6b4-6788-438d-9009-7142798767ab)]
 interface nsITreeColumns : nsISupports
 {
   /**
@@ -85,6 +85,12 @@ interface nsITreeColumns : nsISupports
    * The number of columns.
    */
   readonly attribute long count;
+
+  /**
+   * An alias for count (for the benefit of scripts which treat this as an
+   * array).
+   */
+  readonly attribute long length;
 
   /**
    * Get the first/last column.
