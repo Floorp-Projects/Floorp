@@ -114,7 +114,7 @@ var BookmarkPropertiesPanel = {
   },
 
   _bookmarkURI: null,
-  _bookmarkTitle: "",
+  _bookmarkTitle: undefined,
   _microsummaries: null,
   _dialogWindow: null,
   _parentWindow: null,
@@ -399,14 +399,17 @@ var BookmarkPropertiesPanel = {
    * This method should be called by the onload of the Bookmark Properties
    * dialog to initialize the state of the panel.
    *
-   * @param identifier   a nsIURI object representing the bookmarked URI or
-   *                     integer folder ID of the item that
-   *                     we want to view the properties of
    * @param dialogWindow the window object of the Bookmark Properties dialog
    * @param controller   a PlacesController object for interacting with the
    *                     Places system
+   * @param action       the desired user action; see determineVariant()
+   * @param identifier   a nsIURI object representing the bookmarked URI or
+   *                     integer folder ID of the item that
+   *                     we want to view the properties of
+   * @param title        a string representing the desired title of the
+   *                     bookmark; undefined means "pick a default title"
    */
-  init: function BPP_init(dialogWindow, identifier, controller, action) {
+  init: function BPP_init(dialogWindow, controller, action, identifier, title) {
     this._variant = this._determineVariant(identifier, action);
 
     if (this._identifierIsURI()) {
@@ -419,6 +422,7 @@ var BookmarkPropertiesPanel = {
     else if (this._isVariant(this.ADD_MULTIPLE_BOOKMARKS_VARIANT)) {
       this._URIList = identifier;
     }
+    this._bookmarkTitle = title;
     this._dialogWindow = dialogWindow;
     this._controller = controller;
 
@@ -477,11 +481,15 @@ var BookmarkPropertiesPanel = {
   _populateProperties: function BPP__populateProperties() {
     var document = this._dialogWindow.document;
 
-    if (this._identifierIsURI()) {
-      this._bookmarkTitle = this._getURITitle(this._bookmarkURI);
-    }
-    else if (this._identifierIsFolderID()){
-      this._bookmarkTitle = this._bms.getFolderTitle(this._folderId);
+    /* The explicit comparison against undefined here allows creators to pass
+     * "" to init() if they wish to have no title. */
+    if (title === undefined) {
+      if (this._identifierIsURI()) {
+        this._bookmarkTitle = this._getURITitle(this._bookmarkURI);
+      }
+      else if (this._identifierIsFolderID()){
+        this._bookmarkTitle = this._bms.getFolderTitle(this._folderId);
+      }
     }
 
     this._dialogWindow.document.title = this._getDialogTitle();

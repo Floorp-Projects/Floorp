@@ -1166,8 +1166,8 @@ var PlacesController = {
    * @param uri an nsIURI object for which the "add bookmark" dialog is
    *            to be shown.
    */
-  showAddBookmarkUI: function PC_showAddBookmarkUI(uri) {
-    this._showBookmarkDialog(uri, "add");
+  showAddBookmarkUI: function PC_showAddBookmarkUI(uri, title) {
+    this._showBookmarkDialog("add", uri, title);
   },
 
   /**
@@ -1180,7 +1180,7 @@ var PlacesController = {
    */
   showAddMultiBookmarkUI: function PC_showAddMultiBookmarkUI(uriList) {
     NS_ASSERT(uriList.length, "showAddMultiBookmarkUI expects a list of nsIURI objects");
-    this._showBookmarkDialog(uriList, "addmulti");
+    this._showBookmarkDialog("addmulti", uriList);
   },
 
   /**
@@ -1189,7 +1189,7 @@ var PlacesController = {
    * @param   uri an nsIURI object for which the properties are to be shown
    */
   showBookmarkProperties: function PC_showBookmarkProperties(uri) {
-    this._showBookmarkDialog(uri, "edit");
+    this._showBookmarkDialog("edit", uri);
   },
 
   /**
@@ -1201,7 +1201,7 @@ var PlacesController = {
   showFolderProperties: function PC_showFolderProperties(folderId) {
     NS_ASSERT(typeof(folderId)=="number",
               "showFolderProperties received a non-numerical value for its folderId parameter");
-    this._showBookmarkDialog(folderId, "edit");
+    this._showBookmarkDialog("edit", folderId);
   },
 
   /**
@@ -1214,10 +1214,10 @@ var PlacesController = {
    * @param action "add" or "edit", see _determineVariant in 
    *               bookmarkProperties.js
    */
-  _showBookmarkDialog: function PC__showBookmarkDialog(identifier, action) {
+  _showBookmarkDialog: function PC__showBookmarkDialog(action, identifier, title) {
     window.openDialog("chrome://browser/content/places/bookmarkProperties.xul",
                       "", "width=600,height=400,chrome,dependent,modal,resizable",
-                      identifier, this, action);
+                      this, action, identifier, title);
   },
 
   /**

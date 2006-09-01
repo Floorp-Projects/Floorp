@@ -2738,6 +2738,7 @@ function openHomeDialog(aURL)
   }
 }
 
+#ifndef MOZ_PLACES
 var bookmarksButtonObserver = {
   onDrop: function (aEvent, aXferData, aDragSession)
   {
@@ -2748,12 +2749,8 @@ var bookmarksButtonObserver = {
         name: split[1],
         url: url
       }
-#ifndef MOZ_PLACES
       openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
                  BROWSER_ADD_BM_FEATURES, dialogArgs);
-#else
-      dump("*** IMPLEMENT ME");
-#endif
     }
   },
 
@@ -2779,6 +2776,7 @@ var bookmarksButtonObserver = {
     return flavourSet;
   }
 }
+#endif
 
 var newTabButtonObserver = {
   onDragOver: function(aEvent, aFlavour, aDragSession)
@@ -5045,17 +5043,6 @@ nsContextMenu.prototype = {
                                          Components.interfaces.nsIClipboardHelper );
         clipboard.copyString(addresses);
     },
-    addBookmark : function() {
-      var docshell = document.getElementById( "content" ).webNavigation;
-#ifndef MOZ_PLACES
-      BookmarksUtils.addBookmark( docshell.currentURI.spec,
-                                  docshell.document.title,
-                                  docshell.document.charset,
-                                  BookmarksUtils.getDescriptionFromDocument(docshell.document));
-#else
-      dump("*** IMPLEMENT ME\n");
-#endif
-    },
     addBookmarkForFrame : function() {
 #ifndef MOZ_PLACES
       var doc = this.target.ownerDocument;
@@ -5066,7 +5053,7 @@ nsContextMenu.prototype = {
         title = uri;
       BookmarksUtils.addBookmark(uri, title, doc.charset, description);
 #else
-      dump("*** IMPLEMENT ME\n");
+      dump("*** IMPLEMENT ME: Bug 342217\n");
 #endif
     },
     // Open Metadata window for node
@@ -5478,7 +5465,7 @@ function asyncOpenWebPanel(event)
                     BROWSER_ADD_BM_FEATURES, dialogArgs);
          event.preventDefault();
 #else
-         dump("*** IMPLEMENT ME");
+         dump("*** IMPLEMENT ME: Bug 329964\n");
 #endif
          return false;
        }
@@ -6242,7 +6229,7 @@ function AddKeywordForSearchField()
   openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
              BROWSER_ADD_BM_FEATURES, dialogArgs);
 #else
-  dump("*** IMPLEMENT ME\n");
+  dump("*** IMPLEMENT ME: Bug 329281\n");
 #endif
 }
 

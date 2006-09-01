@@ -20,7 +20,7 @@
         ondialogcancel="BookmarkPropertiesPanel.dialogCancel();"
         ondialogextra1="BookmarkPropertiesPanel.dialogDeleteBookmark();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="BookmarkPropertiesPanel.init(window, window.arguments[0], window.arguments[1], window.arguments[2]);">
+        onload="BookmarkPropertiesPanel.init(window, window.arguments[0], window.arguments[1], window.arguments[2], window.arguments[3]);">
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="stringBundle"

@@ -147,6 +147,8 @@
     <command id="cmd_findAgain" oncommand="gFindBar.onFindAgainCmd(false);" observes="isImage"/>
     <command id="cmd_findPrevious" oncommand="gFindBar.onFindAgainCmd(true);" observes="isImage"/>
 #ifdef MOZ_PLACES
+    <command id="Browser:AddLinkBookmark"
+             oncommand="PlacesCommandHook.bookmarkLink(gContextMenu.linkURL, gContextMenu.linkText());"/>
     <command id="Browser:AddBookmarkAs" 
              oncommand="PlacesCommandHook.bookmarkCurrentPage();"/>
     <command id="Browser:BookmarkAllTabs" oncommand="BrowserController.doCommand('Browser:BookmarkAllTabs');"/>
