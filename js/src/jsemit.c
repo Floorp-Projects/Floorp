@@ -5626,13 +5626,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #if JS_HAS_GENERATORS
        case TOK_ARRAYPUSH:
         /*
-         * Pick up the array's stack index from pn->pn_array, which points up
-         * the tree to our TOK_ARRAYCOMP ancestor.  See below under the array
-         * initialiser code generator for array comprehension special casing.
+         * The array object's stack index is in cg->arrayCompSlot.  See below
+         * under the array initialiser code generator for array comprehension
+         * special casing.
          */
         if (!js_EmitTree(cx, cg, pn->pn_kid))
             return JS_FALSE;
-        EMIT_UINT16_IMM_OP(pn->pn_op, pn->pn_array->pn_extra);
+        EMIT_UINT16_IMM_OP(pn->pn_op, cg->arrayCompSlot);
         break;
 #endif
 
@@ -5665,15 +5665,19 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
 #if JS_HAS_GENERATORS
         if (pn->pn_type == TOK_ARRAYCOMP) {
+            uintN saveSlot;
+
             /*
              * Pass the new array's stack index to the TOK_ARRAYPUSH case by
              * storing it in pn->pn_extra, then simply traverse the TOK_FOR
              * node and its kids under pn2 to generate this comprehension.
              */
             JS_ASSERT(cg->stackDepth > 0);
-            pn->pn_extra = (uint32) (cg->stackDepth - 1);
+            saveSlot = cg->arrayCompSlot;
+            cg->arrayCompSlot = (uint32) (cg->stackDepth - 1);
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
+            cg->arrayCompSlot = saveSlot;
 
             /* Emit the usual op needed for decompilation. */
             if (js_Emit1(cx, cg, JSOP_ENDINIT) < 0)

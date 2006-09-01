@@ -270,6 +270,8 @@ struct JSCodeGenerator {
     ptrdiff_t       spanDepTodo;    /* offset from main.base of potentially
                                        unoptimized spandeps */
 
+    uintN           arrayCompSlot;  /* stack slot of array in comprehension */
+
     uintN           emitLevel;      /* js_EmitTree recursion level */
     JSAtomList      constList;      /* compile time constants */
     JSCodeGenerator *parent;        /* Enclosing function or global context */

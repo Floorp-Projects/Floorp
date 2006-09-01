@@ -5277,7 +5277,6 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 pn2->pn_type = TOK_ARRAYPUSH;
                 pn2->pn_op = JSOP_ARRAYPUSH;
                 pn2->pn_kid = pnexp;
-                pn2->pn_array = pn;
                 *pnp = pn2;
                 PN_APPEND(pn, pntop);
 
