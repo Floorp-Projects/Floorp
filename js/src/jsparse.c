@@ -2701,15 +2701,18 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             /* No initializer -- set first kid of left sub-node to null. */
             pn1 = NULL;
         } else {
-            /* Set pn1 to a var list or an initializing expression. */
             /*
+             * Set pn1 to a var list or an initializing expression.
+             *
              * Set the TCF_IN_FOR_INIT flag during parsing of the first clause
              * of the for statement.  This flag will be used by the RelExpr
              * production; if it is set, then the 'in' keyword will not be
              * recognized as an operator, leaving it available to be parsed as
-             * part of a for/in loop.  A side effect of this restriction is
-             * that (unparenthesized) expressions involving an 'in' operator
-             * are illegal in the init clause of an ordinary for loop.
+             * part of a for/in loop.
+             *
+             * A side effect of this restriction is that (unparenthesized)
+             * expressions involving an 'in' operator are illegal in the init
+             * clause of an ordinary for loop.
              */
             tc->flags |= TCF_IN_FOR_INIT;
             if (tt == TOK_VAR) {
@@ -2725,6 +2728,10 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #endif
             } else {
                 pn1 = Expr(cx, ts, tc);
+                if (pn1) {
+                    while (pn1->pn_type == TOK_RP)
+                        pn1 = pn1->pn_kid;
+                }
             }
             tc->flags &= ~TCF_IN_FOR_INIT;
             if (!pn1)
@@ -2741,9 +2748,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             stmtInfo.type = STMT_FOR_IN_LOOP;
 
             /* Check that the left side of the 'in' is valid. */
-            while (pn1->pn_type == TOK_RP)
-                pn1 = pn1->pn_kid;
-            if (TOKEN_TYPE_IS_DECL(pn1->pn_type)
+            JS_ASSERT(!TOKEN_TYPE_IS_DECL(tt) || pn1->pn_type == tt);
+            if (TOKEN_TYPE_IS_DECL(tt)
                 ? (pn1->pn_count > 1 || pn1->pn_op == JSOP_DEFCONST)
                 : (pn1->pn_type != TOK_NAME &&
                    pn1->pn_type != TOK_DOT &&
@@ -2764,11 +2770,15 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 return NULL;
             }
 
-            if (TOKEN_TYPE_IS_DECL(pn1->pn_type)) {
+            if (TOKEN_TYPE_IS_DECL(tt)) {
                 /* Tell js_EmitTree(TOK_VAR) that pn1 is part of a for/in. */
                 pn1->pn_extra |= PNX_FORINVAR;
 
-                /* Generate a final POP only if the var has an initializer. */
+                /*
+                 * Generate a final POP only if the variable is a simple name
+                 * (which means it is not a destructuring left-hand side) and
+                 * it has an initializer.
+                 */
                 pn2 = pn1->pn_head;
                 if (pn2->pn_type == TOK_NAME && pn2->pn_expr)
                     pn1->pn_extra |= PNX_POPVAR;
