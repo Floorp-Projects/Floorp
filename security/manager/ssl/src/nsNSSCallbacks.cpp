@@ -70,6 +70,10 @@
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* gPIPNSSLog;
+#endif
+
 struct nsHTTPDownloadEvent : nsRunnable {
   nsHTTPDownloadEvent();
   ~nsHTTPDownloadEvent();
@@ -253,6 +257,9 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
                                                         const char **http_response_data, 
                                                         PRUint32 *http_response_data_len)
 {
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+         ("nsNSSHttpRequestSession::trySendAndReceiveFcn to %s\n", mURL.get()));
+
   if (NS_IsMainThread())
   {
     nsresult rv;
@@ -279,6 +286,61 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
     return SECFailure;
   }
 
+  const int max_retries = 5;
+  int retry_count = 0;
+  PRBool retryable_error = PR_FALSE;
+  SECStatus result_sec_status = SECFailure;
+
+  do
+  {
+    if (retry_count > 0)
+    {
+      if (retryable_error)
+      {
+        PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+               ("nsNSSHttpRequestSession::trySendAndReceiveFcn - sleeping and retrying: %d of %d\n",
+                retry_count, max_retries));
+      }
+
+      PR_Sleep( PR_MillisecondsToInterval(300) * retry_count );
+    }
+
+    ++retry_count;
+    retryable_error = PR_FALSE;
+
+    result_sec_status =
+      internal_send_receive_attempt(retryable_error, pPollDesc, http_response_code,
+                                    http_response_content_type, http_response_headers,
+                                    http_response_data, http_response_data_len);
+  }
+  while (retryable_error &&
+         retry_count < max_retries);
+
+#ifdef PR_LOGGING
+  if (retry_count > 1)
+  {
+    if (retryable_error)
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+             ("nsNSSHttpRequestSession::trySendAndReceiveFcn - still failing, giving up...\n"));
+    else
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+             ("nsNSSHttpRequestSession::trySendAndReceiveFcn - success at attempt %d\n",
+              retry_count));
+  }
+#endif
+
+  return result_sec_status;
+}
+
+SECStatus
+nsNSSHttpRequestSession::internal_send_receive_attempt(PRBool &retryable_error,
+                                                       PRPollDesc **pPollDesc,
+                                                       PRUint16 *http_response_code,
+                                                       const char **http_response_content_type,
+                                                       const char **http_response_headers,
+                                                       const char **http_response_data,
+                                                       PRUint32 *http_response_data_len)
+{
   if (pPollDesc) *pPollDesc = nsnull;
   if (http_response_code) *http_response_code = 0;
   if (http_response_content_type) *http_response_content_type = 0;
@@ -364,7 +426,15 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
     return SECFailure;
 
   if (NS_FAILED(mListener->mResultCode))
+  {
+    if (mListener->mResultCode == NS_ERROR_CONNECTION_REFUSED
+        ||
+        mListener->mResultCode == NS_ERROR_NET_RESET)
+    {
+      retryable_error = PR_TRUE;
+    }
     return SECFailure;
+  }
 
   if (http_response_code)
     *http_response_code = mListener->mHttpResponseCode;
@@ -502,6 +572,14 @@ nsHTTPListener::OnStreamComplete(nsIStreamLoader* aLoader,
 
   nsresult rv = aLoader->GetRequest(getter_AddRefs(req));
   
+#ifdef PR_LOGGING
+  if (NS_FAILED(aStatus))
+  {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("nsHTTPListener::OnStreamComplete status failed %d", aStatus));
+  }
+#endif
+
   if (NS_SUCCEEDED(rv))
     hchan = do_QueryInterface(req, &rv);
 

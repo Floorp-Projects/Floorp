@@ -140,6 +140,14 @@ public:
 protected:
   nsNSSHttpRequestSession();
   ~nsNSSHttpRequestSession();
+
+  SECStatus internal_send_receive_attempt(PRBool &retryable_error,
+                                          PRPollDesc **pPollDesc,
+                                          PRUint16 *http_response_code,
+                                          const char **http_response_content_type,
+                                          const char **http_response_headers,
+                                          const char **http_response_data,
+                                          PRUint32 *http_response_data_len);
 };
 
 class nsNSSHttpInterface
