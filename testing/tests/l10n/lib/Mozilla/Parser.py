@@ -52,7 +52,7 @@ class Parser:
     try:
       self.contents = f.read()
     except UnicodeDecodeError, e:
-      logging.error(" Can't read file: " + file + '; ' + str(e))
+      logging.getLogger('locales').error("Can't read file: " + file + '; ' + str(e))
       self.contents = u''
     f.close()
   def mapping(self):

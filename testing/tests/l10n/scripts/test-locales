@@ -50,41 +50,23 @@ import codecs
 from Mozilla import Parser, CompareLocales, Paths, Tests
 import simplejson
 
-testLocales = []
-lvl = logging.WARNING
-date = datetime.utcnow().replace(minute=0,second=0,microsecond=0).isoformat(' ')
-# parse commandline arguments
-cp = OptionParser(version='0.2')
-cp.add_option('-v', '--verbose', action='count', dest='v', default=0,
-              help='Make more noise')
-cp.add_option('-q', '--quiet', action='count', dest='q', default=0,
-              help='Make less noise')
-cp.add_option('-O', '--base-dir', type='string', dest='target',
-              default='results',
-              help='Destination base directory')
-cp.add_option('-d', '--date', type='string', dest='date', default=date,
-              help='Explicit start date [Default: last full hour]')
-cp.add_option('-z',action="store_true", dest="gzip", default=False,
-              help='Use gzip compression for output')
-cp.add_option('-w','--enable-waterfall', action="store_true",
-              dest="waterfall", default=False,
-              help='Update waterfall data')
-cp.add_option('--end-date', type='string', dest='enddate',
-              help='Explicit (faked) end date')
-opts, optlist = cp.parse_args(sys.argv[1:])
+#
+# Helper classes
+#
 
-logging.basicConfig(level=(logging.WARNING + 10*(opts.q - opts.v)))
+#
+# Logging
+#
+class LogHandler(logging.Handler):
+  def __init__(self):
+    self.log = []
+    logging.Handler.__init__(self)
+  def emit(self, record):
+    self.log.append((record.name, record.levelname, record.getMessage().strip()))
 
-logging.debug(' Ensure output directory')
-# replace : with -
-opts.date = opts.date.replace(':','-')
-if not os.path.isdir(opts.target):
-  sys.exit('error: ' + opts.target + ' is not a directory')
-startdate = time.mktime(time.strptime(opts.date, '%Y-%m-%d %H-%M-%S'))
-basePath = os.path.join(opts.target, opts.date)
-if not os.path.isdir(basePath):
-  os.mkdir(basePath)
-
+#
+# JSON with optional gzip
+#
 class Wrapper:
   def __init__(self, path, name):
     self.p = os.path.join(path, name)
@@ -118,7 +100,9 @@ class Wrapper:
     if opts.gzip:
       f.close()
     self.w = self.r = self.f = None
-
+#
+# Helper function for JSON output with optional gzip
+#
 def saveJSON(dic, localName):
   name = os.path.join(basePath, localName) ;
   if opts.gzip:
@@ -134,7 +118,75 @@ def saveJSON(dic, localName):
     s.close()
   f.close()
 
-tests = [Tests.SearchTest(),Tests.CompareTest()]
+
+lvl = logging.WARNING
+date = datetime.utcnow().replace(second=0,microsecond=0).isoformat(' ')
+# parse commandline arguments
+cp = OptionParser(version='0.2')
+cp.add_option('-v', '--verbose', action='count', dest='v', default=0,
+              help='Make more noise')
+cp.add_option('-q', '--quiet', action='count', dest='q', default=0,
+              help='Make less noise')
+cp.add_option('-O', '--base-dir', type='string', dest='target',
+              default='results',
+              help='Destination base directory')
+cp.add_option('-c', '--checkout', action='store_true', dest='checkout',
+              default=False,
+              help='Run make -f client.mk l10n-checkout [Default: not]')
+cp.add_option('-d', '--date', type='string', dest='date',
+              help='Explicit start date or subdir [Default: now]')
+cp.add_option('-z',action="store_true", dest="gzip", default=False,
+              help='Use gzip compression for output')
+cp.add_option('-w','--enable-waterfall', action="store_true",
+              dest="waterfall", default=False,
+              help='Update waterfall data')
+cp.add_option('--end-date', type='string', dest='enddate',
+              help='Explicit (faked) end date')
+opts, optlist = cp.parse_args(sys.argv[1:])
+
+#
+# Set up Logging
+#
+logging.basicConfig(level=(logging.INFO + 10*(opts.q - opts.v)))
+# Add a handler to store the output
+h = LogHandler()
+logging.getLogger('').addHandler(h)
+
+#
+# Check that we're in the right location and check out if requested
+#
+try:
+  os.chdir('mozilla')
+  if opts.checkout:
+    env = ''
+    l = logging.getLogger('cvsco')
+    if opts.date:
+      env = 'MOZ_CO_DATE="' + opts.date + ' +0" '
+    fh = os.popen(env + 'make -f client.mk l10n-checkout')
+    for ln in fh:
+      l.info(ln.strip())
+    if fh.close():
+      raise Exception('cvs checkout failed')
+  os.chdir('..')
+except Exception,e:
+  sys.exit(str(e))
+
+if not opts.date:
+  opts.date = date # use default set above
+
+logging.debug(' Ensure output directory')
+# replace : with -
+opts.date = opts.date.replace(':','-')
+if not os.path.isdir(opts.target):
+  sys.exit('error: ' + opts.target + ' is not a directory')
+if opts.waterfall:
+  startdate = time.mktime(time.strptime(opts.date, '%Y-%m-%d %H-%M-%S')) + time.altzone
+basePath = os.path.join(opts.target, opts.date)
+if not os.path.isdir(basePath):
+  os.mkdir(basePath)
+
+
+tests = [Tests.CompareTest(),Tests.SearchTest()]
 drop = {}
 for test in tests:
   res = test.run()
@@ -143,11 +195,12 @@ for test in tests:
     test.failureTest(res, drop)
 
 if not opts.waterfall:
+  saveJSON(h.log, 'buildlog.json')
   sys.exit()
 
 
 if opts.enddate:
-  endtime = time.mktime(time.strptime(opts.enddate, '%Y-%m-%d %H:%M:%S'))
+  endtime = time.mktime(time.strptime(opts.enddate, '%Y-%m-%d %H:%M:%S')) + time.altzone
 else:
   endtime = time.mktime(datetime.utcnow().timetuple())
 f = None
@@ -159,7 +212,27 @@ else:
   water = []
 
 water.append((opts.date, (startdate, endtime), drop))
-  
+#
+# Check if we need to rotate the waterfall
+#
+rotateLen = 24
+if len(water) > rotateLen * 1.5:
+  # rotate, maximum of 16 logs
+  suffix = ''
+  if opts.gzip:
+    suffix = '.gz'
+  fnames = [os.path.join(basePath, 'buildlog-%x.json'%i) + suffix for i in range(16)]
+  # remove oldest log
+  if os.path.isfile(flames[15]):
+    os.remove(fnames[15])
+  for l in range(14, -1, -1):
+    if os.path.isfile(fnames[l]):
+      os.rename(fnames[l], fnames[l+1])
+  saveJSON(water[:rotateLen], fnames[0])
+  water = water[rotateLen:]
+
 w.open('w')
 simplejson.dump(water, w, sort_keys=True)
 w.close()
+
+saveJSON(h.log, 'buildlog.json')

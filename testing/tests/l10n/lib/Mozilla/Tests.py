@@ -251,10 +251,11 @@ class SearchTest(Base):
     details = {}
     
     for loc in locales:
+      l = logging.getLogger('locales.' + loc)
       try:
         lst = open(Paths.get_path('browser',loc,'searchplugins/list.txt'),'r')
       except IOError:
-        logging.error("Locale " + loc + " doesn't have search plugins")
+        l.error("Locale " + loc + " doesn't have search plugins")
         details[Paths.get_path('browser',loc,'searchplugins/list.txt')] = {
           'error': 'not found'
           }
@@ -271,24 +272,26 @@ class SearchTest(Base):
       sets[loc]['orders'] = orders
       for fn in lst:
         name = fn.strip()
+        if len(name) == 0:
+          continue
         leaf = 'searchplugins/' + name + '.xml'
         _path = Paths.get_path('browser','en-US', leaf)
         if not os.access(_path, os.R_OK):
           _path = Paths.get_path('browser', loc, leaf)
-        logging.info('testing ' + _path)
+        l.debug('testing ' + _path)
         sets[loc]['list'].append(_path)
         try:
           parser.parse(_path)
         except IOError:
-          logging.error("can't open " + _path)
+          l.error("can't open " + _path)
           details[_path] = {'_name': name, 'error': 'not found'}
           continue
         except UserWarning, ex:
-          logging.error("error in searchplugin " + _path)
+          l.error("error in searchplugin " + _path)
           details[_path] = {'_name': name, 'error': ex.args[0]}
           continue
         except sax._exceptions.SAXParseException, ex:
-          logging.error("error in searchplugin " + _path)
+          l.error("error in searchplugin " + _path)
           details[_path] = {'_name': name, 'error': ex.args[0]}
           continue
         details[_path] = handler.engine
@@ -297,4 +300,15 @@ class SearchTest(Base):
     engines = {'locales': sets,
       'details': details}
     return engines
-  
+  def  failureTest(self, myResult, failureResult):
+    '''signal pass/warn/failure for each locale
+    Just signaling errors in individual plugins for now.
+    
+    '''
+    for loc, val in myResult['locales'].iteritems():
+      for p in val['list']:
+        if myResult['details'][p].has_key('error'):
+          if not failureResult.has_key(loc):
+            failureResult[loc] = 2
+          else:
+            failureResult[loc] |= 2
