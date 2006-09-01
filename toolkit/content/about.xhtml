@@ -73,11 +73,14 @@
     <li>&about.buildconfig.beforeLink; <a href="about:buildconfig">&about.buildconfig.linkTitle;</a> &about.buildconfig.afterLink;</li>
     <script type="application/x-javascript">
       // get release notes URL from prefs
-      var formatter = Components.classes["@mozilla.org/browser/URLFormatterService;1"]
-                                .getService(Components.interfaces.nsIURLFormatter);
-      var releaseNotesURL = formatter.formatURLPref("app.releaseNotesURL", null);
-      var relnotes = document.getElementById("releaseNotesURL");
-      relnotes.setAttribute("href", releaseNotesURL);
+      try {
+        var formatter = Components.classes["@mozilla.org/browser/URLFormatterService;1"]
+                                  .getService(Components.interfaces.nsIURLFormatter);
+        var releaseNotesURL = formatter.formatURLPref("app.releaseNotesURL", null);
+        var relnotes = document.getElementById("releaseNotesURL");
+        relnotes.setAttribute("href", releaseNotesURL);
+      }
+      catch (ex) { /* no release notes URL for you without bug 349985 being fixed */ }
 
       var ua = navigator.userAgent;
       if (ua) {
