@@ -1506,6 +1506,9 @@ Engine.prototype = {
         case "UpdateInterval":
           this._updateInterval = parseInt(child.textContent);
           break;
+        case "IconUpdateUrl":
+          this._iconUpdateURL = child.textContent;
+          break;
       }
     }
     ENSURE(this.name && (this._urls.length > 0),
@@ -1872,6 +1875,8 @@ Engine.prototype = {
     appendTextNode(MOZSEARCH_NS_10, "Alias", this.alias);
     appendTextNode(MOZSEARCH_NS_10, "UpdateInterval", this._updateInterval);
     appendTextNode(MOZSEARCH_NS_10, "UpdateUrl", this._updateURL);
+    appendTextNode(MOZSEARCH_NS_10, "IconUpdateUrl", this._iconUpdateURL);
+    appendTextNode(MOZSEARCH_NS_10, "SearchForm", this._searchForm);
 
     for (var i = 0; i < this._urls.length; ++i)
       this._urls[i]._serializeToElement(doc, docElem);
