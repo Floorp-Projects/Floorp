@@ -2288,13 +2288,16 @@ function serv_notice (e)
 {
     var targetName = e.params[1];
 
-    // Strip off one (and only one) user mode prefix.
-    for (var i = 0; i < this.userModes.length; i++)
+    if (this.userModes)
     {
-        if (targetName[0] == this.userModes[i].symbol)
+        // Strip off one (and only one) user mode prefix.
+        for (var i = 0; i < this.userModes.length; i++)
         {
-            targetName = targetName.substr(1);
-            break;
+            if (targetName[0] == this.userModes[i].symbol)
+            {
+                targetName = targetName.substr(1);
+                break;
+            }
         }
     }
 
@@ -2339,13 +2342,16 @@ function serv_privmsg (e)
 {
     var targetName = e.params[1];
 
-    // Strip off one (and only one) user mode prefix.
-    for (var i = 0; i < this.userModes.length; i++)
+    if (this.userModes)
     {
-        if (targetName[0] == this.userModes[i].symbol)
+        // Strip off one (and only one) user mode prefix.
+        for (var i = 0; i < this.userModes.length; i++)
         {
-            targetName = targetName.substr(1);
-            break;
+            if (targetName[0] == this.userModes[i].symbol)
+            {
+                targetName = targetName.substr(1);
+                break;
+            }
         }
     }
 
