@@ -149,7 +149,23 @@ var PlacesCommandHook = {
     else
       this.showPlacesPopup();
   },
-  
+
+  /**
+   * Adds a bookmark to the page targeted by a link.
+   * @param   url
+   *          The address of the link target
+   * @param   title
+   *          The link text
+   */
+  bookmarkLink: function PCH_bookmarkLink(url, title) {
+    var ios = 
+        Cc["@mozilla.org/network/io-service;1"].
+        getService(Ci.nsIIOService);
+    var linkURI = ios.newURI(url, null, null);
+
+    PlacesController.showAddBookmarkUI(linkURI, title);
+  },
+
   /**
    * Adds a bookmark to the page loaded in the current tab. 
    */

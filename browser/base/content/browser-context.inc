@@ -58,8 +58,12 @@
       <menuitem id="context-bookmarklink"
                 label="&bookmarkLinkCmd.label;"
                 accesskey="&bookmarkLinkCmd.accesskey;"
+#ifdef MOZ_PLACES
+                command="Browser:AddLinkBookmark"/>
+#else
                 oncommand="BookmarksUtils.addBookmark(gContextMenu.linkURL,
                                                       gContextMenu.linkText());"/>
+#endif
       <menuitem id="context-savelink"
                 label="&saveLinkCmd.label;"
                 accesskey="&saveLinkCmd.accesskey;"
