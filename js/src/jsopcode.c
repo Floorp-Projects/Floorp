@@ -940,6 +940,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     static const char exception_cookie[] = "/*EXCEPTION*/";
     static const char retsub_pc_cookie[] = "/*RETSUB_PC*/";
     static const char iter_cookie[]      = "/*ITER*/";
+    static const char forelem_cookie[]   = "/*FORELEM*/";
     static const char with_cookie[]      = "/*WITH*/";
     static const char dot_format[]       = "%s.%s";
     static const char index_format[]     = "%s[%s]";
@@ -1904,6 +1905,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     if (!ok)
                         return JS_FALSE;
                 }
+                if (todo < 0)
+                    return JS_FALSE;
 
                 lval = OFF2STR(&ss->sprinter, todo);
                 rval = OFF2STR(&ss->sprinter, ss->offsets[ss->top-1]);
@@ -1937,7 +1940,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                  * bound the recursively decompiled loop body.
                  */
                 sn = js_GetSrcNote(jp->script, pc);
-                JS_ASSERT(!forelem_tail);
+                LOCAL_ASSERT(!forelem_tail);
                 forelem_tail = pc + js_GetSrcNoteOffset(sn, 0);
 
                 /*
@@ -1952,8 +1955,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                  * state from JSOP_FORELEM to JSOP_ENUMELEM, thence (via goto)
                  * to label do_forinhead.
                  */
-                JS_ASSERT(!forelem_done);
+                LOCAL_ASSERT(!forelem_done);
                 forelem_done = pc + GetJumpOffset(pc, pc);
+
+                /* Our net stack balance after forelem;ifeq is +1. */
+                todo = SprintCString(&ss->sprinter, forelem_cookie);
                 break;
 
               case JSOP_ENUMELEM:
@@ -1967,11 +1973,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 atom = NULL;
                 xval = POP_STR();
                 lval = POP_STR();
-                rval = OFF2STR(&ss->sprinter, ss->offsets[ss->top-1]);
-                JS_ASSERT(forelem_tail > pc);
+                rval = POP_STR();
+                LOCAL_ASSERT(strcmp(rval, forelem_cookie) == 0);
+                LOCAL_ASSERT(forelem_tail > pc);
                 tail = forelem_tail - pc;
                 forelem_tail = NULL;
-                JS_ASSERT(forelem_done > pc);
+                LOCAL_ASSERT(forelem_done > pc);
                 len = forelem_done - pc;
                 forelem_done = NULL;
                 goto do_forinhead;
