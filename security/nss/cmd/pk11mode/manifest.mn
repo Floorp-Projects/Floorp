@@ -37,7 +37,7 @@
 
 CORE_DEPTH = ../../..
 
-MODULE = pk11mode
+MODULE = nss
 
 EXPORTS = 
 
