@@ -70,10 +70,15 @@ function html_exportToStream(aStream, aCount, aItems, aTitle) {
         Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
                   .getService(Components.interfaces.calIDateTimeFormatter);
 
+    var documentTitle = aTitle;
+    if (!documentTitle) {
+        documentTitle = calGetString("calendar", "HTMLTitle");
+    }
+
     var html =
         <html>
             <head>
-                <title>{aTitle}</title>
+                <title>{documentTitle}</title>
                 <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/>
                 <style type='text/css'/>
             </head>
@@ -99,6 +104,11 @@ function html_exportToStream(aStream, aCount, aItems, aTitle) {
     // Sort aItems
     aItems.sort(function (a,b) { return a.startDate.compare(b.startDate); });
 
+    var prefixTitle = calGetString("calendar", "htmlPrefixTitle");
+    var prefixWhen = calGetString("calendar", "htmlPrefixWhen");
+    var prefixLocation = calGetString("calendar", "htmlPrefixLocation");
+    var prefixDescription = calGetString("calendar", "htmlPrefixDescription");
+
     for each (item in aItems) {
         try {
             item = item.QueryInterface(Components.interfaces.calIEvent);
@@ -113,7 +123,7 @@ function html_exportToStream(aStream, aCount, aItems, aTitle) {
         // Title
         ev.appendChild(
             <div>
-                <div class='key summarykey'>Title</div>
+                <div class='key summarykey'>{prefixTitle}</div>
                 <div class='value summary'>{item.title}</div>
             </div>
         );
@@ -132,7 +142,7 @@ function html_exportToStream(aStream, aCount, aItems, aTitle) {
 
         ev.appendChild(
             <div>
-                <div class='key'>When</div>
+                <div class='key'>{prefixWhen}</div>
                 <div class='value'>
                     <abbr class='dtstart' title={item.startDate.icalString}>{startstr.value}</abbr>
                     {seperator}
@@ -146,7 +156,7 @@ function html_exportToStream(aStream, aCount, aItems, aTitle) {
         if (item.getProperty('LOCATION')) {
             ev.appendChild(
                 <div>
-                    <div class='key'>Location</div>
+                    <div class='key'>{prefixLocation}</div>
                     <div class='value location'>{item.getProperty('LOCATION')}</div>
                 </div>
             );
@@ -165,7 +175,7 @@ function html_exportToStream(aStream, aCount, aItems, aTitle) {
 
             var descnode = 
                 <div>
-                    <div class='key'>Description</div>
+                    <div class='key'>{prefixDescription}</div>
                     <div class='value'/>
                 </div>;
 
