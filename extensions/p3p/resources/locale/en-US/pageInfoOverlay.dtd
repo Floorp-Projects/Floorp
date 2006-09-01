@@ -51,6 +51,6 @@
 <!ENTITY pageInfo.humanReadable.label       "Policy">
 <!ENTITY pageInfo.humanReadable.accesskey   "c">
 <!ENTITY pageInfo.machineReadable.label     "Summary">
-<!ENTITY pageInfo.machineReadable.accesskey "S">
+<!ENTITY pageInfo.machineReadable.accesskey "u">
 <!ENTITY pageInfo.optinoptout.label         "Options">
 <!ENTITY pageInfo.optinoptout.accesskey     "O">
