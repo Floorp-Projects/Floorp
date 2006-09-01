@@ -684,6 +684,7 @@ nsContentUtils::Shutdown()
 
     if (sEventListenerManagersHash.entryCount == 0) {
       PL_DHashTableFinish(&sEventListenerManagersHash);
+      sEventListenerManagersHash.ops = nsnull;
     }
   }
 }
