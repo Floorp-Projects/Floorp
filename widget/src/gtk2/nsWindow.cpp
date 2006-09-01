@@ -4735,19 +4735,24 @@ nsWindow::CreateRootAccessible()
 void
 nsWindow::GetRootAccessible(nsIAccessible** aAccessible)
 {
-    nsCOMPtr<nsIAccessible> docAcc, parentAcc;
-    DispatchAccessibleEvent(getter_AddRefs(docAcc));
+    nsCOMPtr<nsIAccessible> accessible, parentAccessible;
+    DispatchAccessibleEvent(getter_AddRefs(accessible));
     PRUint32 role;
 
-    while (docAcc) {
-        docAcc->GetRole(&role);
-        if (role == nsIAccessible::ROLE_CHROME_WINDOW) {
-            *aAccessible = docAcc;
-            NS_ADDREF(*aAccessible);
+    if (!accessible) {
+        return;
+    }
+    while (PR_TRUE) {
+        accessible->GetParent(getter_AddRefs(parentAccessible));
+        if (!parentAccessible) {
             break;
         }
-        docAcc->GetParent(getter_AddRefs(parentAcc));
-        docAcc = parentAcc;
+        parentAccessible->GetRole(&role);
+        if (role == nsIAccessible::ROLE_APP_ROOT) {
+            NS_ADDREF(*aAccessible = accessible);
+            break;
+        }
+        accessible = parentAccessible;
     }
 }
 
