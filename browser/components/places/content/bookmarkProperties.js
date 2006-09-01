@@ -483,7 +483,7 @@ var BookmarkPropertiesPanel = {
 
     /* The explicit comparison against undefined here allows creators to pass
      * "" to init() if they wish to have no title. */
-    if (title === undefined) {
+    if (this._bookmarkTitle === undefined) {
       if (this._identifierIsURI()) {
         this._bookmarkTitle = this._getURITitle(this._bookmarkURI);
       }
