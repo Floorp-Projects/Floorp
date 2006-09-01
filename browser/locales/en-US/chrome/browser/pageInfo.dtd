@@ -51,7 +51,7 @@
 <!ENTITY  closeWindow.key       "w">
 
 <!ENTITY  generalTab            "General">
-<!ENTITY  generalAccesskey      "G">
+<!ENTITY  generalTab.accesskey  "G">
 <!ENTITY  generalTitle          "Title:">
 <!ENTITY  generalURL            "Address:">
 <!ENTITY  generalMode           "Render Mode:">
@@ -68,7 +68,7 @@
 <!ENTITY  generalMetaContent    "Content">
 
 <!ENTITY  formsTab              "Forms">
-<!ENTITY  formsAccesskey        "F">
+<!ENTITY  formsTab.accesskey    "F">
 <!ENTITY  formAction            "Form Action">
 <!ENTITY  formMethod            "Method">
 <!ENTITY  formName              "Name">
@@ -82,7 +82,7 @@
 <!ENTITY  formCValue            "Current Value">
 
 <!ENTITY  linksTab              "Links">
-<!ENTITY  linksAccesskey        "L">
+<!ENTITY  linksTab.accesskey    "L">
 <!ENTITY  linkNo                "No.">
 <!ENTITY  linkName              "Name">
 <!ENTITY  linkAddress           "Address">
@@ -91,7 +91,7 @@
 <!ENTITY  linkAccessKey         "Access Key">
 
 <!ENTITY  mediaTab              "Media">
-<!ENTITY  mediaAccesskey        "M">
+<!ENTITY  mediaTab.accesskey    "M">
 <!ENTITY  mediaHeader           "Images on this page">
 <!ENTITY  mediaURL              "Address:">
 <!ENTITY  mediaBase             "Base Address:">
@@ -110,7 +110,7 @@
 <!ENTITY  mediaTitle            "Title:">
 <!ENTITY  mediaLongdesc         "Long Description:">
 <!ENTITY  mediaSaveAs           "Save As...">
-<!ENTITY  mediaSaveAs.accesskey "S">
+<!ENTITY  mediaSaveAs.accesskey "A">
 <!ENTITY  mediaPreview          "Media Preview:">
 
 <!ENTITY  framesTab             "Frames">

@@ -95,12 +95,12 @@
 
   <tabbox id="tabbox" flex="1" class="spaced">
     <tabs id="tabs">
-      <tab id="generalTab" label="&generalTab;" accesskey="&generalAccesskey;"/>
-      <tab id="formsTab"   label="&formsTab;"   accesskey="&formsAccesskey;"
+      <tab id="generalTab" label="&generalTab;" accesskey="&generalTab.accesskey;"/>
+      <tab id="formsTab"   label="&formsTab;"   accesskey="&formsTab.accesskey;"
            oncommand="ensureSelection(formView)"/>
-      <tab id="linksTab"   label="&linksTab;"   accesskey="&linksAccesskey;"
+      <tab id="linksTab"   label="&linksTab;"   accesskey="&linksTab.accesskey;"
            oncommand="ensureSelection(linkView)"/>
-      <tab id="mediaTab"   label="&mediaTab;"   accesskey="&mediaAccesskey;"
+      <tab id="mediaTab"   label="&mediaTab;"   accesskey="&mediaTab.accesskey;"
            oncommand="ensureSelection(imageView)"/>
       <!-- Others added by overlay -->
     </tabs>
@@ -256,7 +256,7 @@
                          width="2" id="link-target"   label="&linkTarget;" hidden="true"/>
             <splitter class="tree-splitter"/>
             <treecol sortSeparators="true" persist="hidden width" flex="1"
-                         width="1" id="link-acceskey" label="&linkAccessKey;" hidden="true"/>
+                         width="1" id="link-accesskey" label="&linkAccessKey;" hidden="true"/>
           </treecols>
           <treechildren flex="1"/>
         </tree>
