@@ -80,6 +80,109 @@ static size_t CopyLowBits(void *dst, size_t dstlen, void *src, size_t srclen)
     return dstlen;
 }
 
+#ifdef SOLARIS
+
+#include <kstat.h>
+
+static const PRUint32 entropy_buf_len = 4096; /* buffer up to 4 KB */
+
+/* Buffer entropy data, and feed it to the RNG, entropy_buf_len bytes at a time.
+ * Returns error if RNG_RandomUpdate fails. Also increments *total_fed
+ * by the number of bytes successfully buffered.
+ */
+static SECStatus BufferEntropy(char* inbuf, PRUint32 inlen,
+                                char* entropy_buf, PRUint32* entropy_buffered,
+                                PRUint32* total_fed)
+{
+    PRUint32 tocopy = 0;
+    PRUint32 avail = 0;
+    SECStatus rv = SECSuccess;
+
+    while (inlen) {
+        avail = entropy_buf_len - *entropy_buffered;
+        if (!avail) {
+            /* Buffer is full, time to feed it to the RNG. */
+            rv = RNG_RandomUpdate(entropy_buf, entropy_buf_len);
+            if (SECSuccess != rv) {
+                break;
+            }
+            *entropy_buffered = 0;
+            avail = entropy_buf_len;
+        }
+        tocopy = PR_MIN(avail, inlen);
+        memcpy(entropy_buf + *entropy_buffered, inbuf, tocopy);
+        *entropy_buffered += tocopy;
+        inlen -= tocopy;
+        inbuf += tocopy;
+        *total_fed += tocopy;
+    }
+    return rv;
+}
+
+/* Feed kernel statistics structures and ks_data field to the RNG.
+ * Returns status as well as the number of bytes successfully fed to the RNG.
+ */
+static SECStatus RNG_kstat(PRUint32* fed)
+{
+    kstat_ctl_t*    kc = NULL;
+    kstat_t*        ksp = NULL;
+    PRUint32        entropy_buffered = 0;
+    char*           entropy_buf = NULL;
+    SECStatus       rv = SECSuccess;
+
+    PORT_Assert(fed);
+    if (!fed) {
+        return SECFailure;
+    }
+    *fed = 0;
+
+    kc = kstat_open();
+    PORT_Assert(kc);
+    if (!kc) {
+        return SECFailure;
+    }
+    entropy_buf = (char*) PORT_Alloc(entropy_buf_len);
+    PORT_Assert(entropy_buf);
+    if (entropy_buf) {
+        for (ksp = kc->kc_chain; ksp != NULL; ksp = ksp->ks_next) {
+            if (-1 == kstat_read(kc, ksp, NULL)) {
+                PORT_Assert(0);
+                /* missing data from a single kstat shouldn't be fatal */
+                continue;
+            }
+            rv = BufferEntropy((char*)ksp, sizeof(kstat_t),
+                                    entropy_buf, &entropy_buffered,
+                                    fed);
+            if (SECSuccess != rv) {
+                break;
+            }
+
+            if (ksp->ks_data && ksp->ks_data_size>0 && ksp->ks_ndata>0) {
+                rv = BufferEntropy((char*)ksp->ks_data, ksp->ks_data_size,
+                                        entropy_buf, &entropy_buffered,
+                                        fed);
+                if (SECSuccess != rv) {
+                    break;
+                }
+            }
+        }
+        if (SECSuccess == rv && entropy_buffered) {
+            /* Buffer is not empty, time to feed it to the RNG */
+            rv = RNG_RandomUpdate(entropy_buf, entropy_buffered);
+        }
+        PORT_Free(entropy_buf);
+    } else {
+        rv = SECFailure;
+    }
+    if (kstat_close(kc)) {
+        PORT_Assert(0);
+        rv = SECFailure;
+    }
+    return rv;
+}
+
+#endif
+
 #if defined(SCO) || defined(UNIXWARE) || defined(BSDI) || defined(FREEBSD) \
     || defined(NETBSD) || defined(NTO) || defined(DARWIN) || defined(OPENBSD)
 #include <sys/times.h>
@@ -774,6 +877,11 @@ safe_pclose(FILE *fp)
 #include <crt_externs.h>
 #endif
 
+/* Fork netstat to collect its output by default. Do not unset this unless
+ * another source of entropy is available
+ */
+#define DO_NETSTAT 1
+
 void RNG_SystemInfoForRNG(void)
 {
     FILE *fp;
@@ -872,6 +980,29 @@ for the small amount of entropy it provides.
         return;
 #endif
 
+#ifdef SOLARIS
+
+/*
+ * On Solaris, NSS may be initialized automatically from libldap in
+ * applications that are unaware of the use of NSS. safe_popen forks, and
+ * sometimes creates issues with some applications' pthread_atfork handlers.
+ * We always have /dev/urandom on Solaris 9 and above as an entropy source,
+ * and for Solaris 8 we have the libkstat interface, so we don't need to
+ * fork netstat.
+ */
+
+#undef DO_NETSTAT
+    if (!bytes) {
+        /* On Solaris 8, /dev/urandom isn't available, so we use libkstat. */
+        PRUint32 kstat_bytes = 0;
+        if (SECSuccess != RNG_kstat(&kstat_bytes)) {
+            PORT_Assert(0);
+        }
+        bytes += kstat_bytes;
+        PORT_Assert(bytes);
+    }
+#endif
+
 #ifdef DO_PS
     fp = safe_popen(ps_cmd);
     if (fp != NULL) {
@@ -880,12 +1011,15 @@ for the small amount of entropy it provides.
 	safe_pclose(fp);
     }
 #endif
+
+#ifdef DO_NETSTAT
     fp = safe_popen(netstat_ni_cmd);
     if (fp != NULL) {
 	while ((bytes = fread(buf, 1, sizeof(buf), fp)) > 0)
 	    RNG_RandomUpdate(buf, bytes);
 	safe_pclose(fp);
     }
+#endif
 
 }
 #else
