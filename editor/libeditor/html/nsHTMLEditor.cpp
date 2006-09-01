@@ -183,10 +183,18 @@ nsHTMLEditor::~nsHTMLEditor()
   if (mResizedObject)
     HideResizers();
 
+  nsCOMPtr<nsISelectionController> selCon;
+  nsresult result = GetSelectionController(getter_AddRefs(selCon));
+  if (NS_SUCCEEDED(result) && selCon)
+  {
+    selCon->SetSelectionFlags(
+      nsISelectionDisplay::DISPLAY_TEXT | nsISelectionDisplay::DISPLAY_IMAGES);
+  }
+
   //the autopointers will clear themselves up. 
   //but we need to also remove the listeners or we have a leak
   nsCOMPtr<nsISelection>selection;
-  nsresult result = GetSelection(getter_AddRefs(selection));
+  result = GetSelection(getter_AddRefs(selection));
   // if we don't get the selection, just skip this
   if (NS_SUCCEEDED(result) && selection) 
   {

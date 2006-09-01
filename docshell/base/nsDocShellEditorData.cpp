@@ -192,7 +192,10 @@ nsDocShellEditorData::SetEditor(nsIEditor *inEditor)
       
     mEditor = inEditor;    // owning addref
   }   
-  
+
+  if (!inEditor)
+    mMakeEditable = PR_FALSE;
+
   return NS_OK;
 }
 
