@@ -742,6 +742,11 @@
               }
             }
 
+            // We've selected the new tab, so go ahead and notify listeners.
+            var event = document.createEvent("Events");
+            event.initEvent("TabSelect", true, false);
+            this.mCurrentTab.dispatchEvent(event);
+
             if (document.commandDispatcher.focusedElement &&
                 document.commandDispatcher.focusedElement.parentNode ==
                 this.mCurrentTab.parentNode) {
