@@ -66,25 +66,25 @@ function setWindowName()
   var confirm;
   var impact;
   
-  if(typeFlag == bundle.GetStringFromName("deleteUserCertFlag"))
+  if(typeFlag == "mine_tab")
   {
      title = bundle.GetStringFromName("deleteUserCertTitle");
      confirm = bundle.GetStringFromName("deleteUserCertConfirm");
      impact = bundle.GetStringFromName("deleteUserCertImpact");
   }
-  else if(typeFlag == bundle.GetStringFromName("deleteSslCertFlag"))
+  else if(typeFlag == "websites_tab")
   {
      title = bundle.GetStringFromName("deleteSslCertTitle");
      confirm = bundle.GetStringFromName("deleteSslCertConfirm");
      impact = bundle.GetStringFromName("deleteSslCertImpact");
   }
-  else if(typeFlag == bundle.GetStringFromName("deleteCaCertFlag"))
+  else if(typeFlag == "ca_tab")
   {
      title = bundle.GetStringFromName("deleteCaCertTitle");
      confirm = bundle.GetStringFromName("deleteCaCertConfirm");
      impact = bundle.GetStringFromName("deleteCaCertImpact");
   }
-  else if(typeFlag == bundle.GetStringFromName("deleteEmailCertFlag"))
+  else if(typeFlag == "others_tab")
   {
      title = bundle.GetStringFromName("deleteEmailCertTitle");
      confirm = bundle.GetStringFromName("deleteEmailCertConfirm");
