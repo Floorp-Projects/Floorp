@@ -3387,19 +3387,22 @@ MaybeEmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 
 static JSBool
 EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
-              JSBool popScope, ptrdiff_t *headNoteIndex)
+              JSBool inLetHead, ptrdiff_t *headNoteIndex)
 {
-    JSBool inLetHead;
+    JSTreeContext *tc;
+    JSBool let, forInVar;
+#if JS_HAS_BLOCK_SCOPE
+    JSBool forInLet, popScope;
+#endif
     ptrdiff_t off, noteIndex, tmp;
     JSParseNode *pn2, *pn3;
     JSOp op;
     jsatomid atomIndex;
-    JSTreeContext *tc;
     JSStmtInfo *stmt, *scopeStmt;
     uintN oldflags;
-#ifdef DEBUG
-    JSBool varOrConst = (pn->pn_op != JSOP_NOP);
-#endif
+
+    /* Default in case of JS_HAS_BLOCK_SCOPE early return, below. */
+    *headNoteIndex = -1;
 
     /*
      * Let blocks and expressions have a parenthesized head in which the new
@@ -3407,16 +3410,20 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
      * lexical scope. If popScope is true below, then we hide the top lexical
      * block from any calls to BindNameToSlot hiding in pn2->pn_expr so that
      * it won't find any names in the new let block.
+     *
+     * The same goes for let declarations in the head of any kind of for loop.
+     * Unlike a let declaration 'let x = i' within a block, where x is hoisted
+     * to the start of the block, a 'for (let x = i...) ...' loop evaluates i
+     * in the containing scope, and puts x in the loop body's scope.
      */
-    JS_ASSERT(!popScope || !varOrConst);
     tc = &cg->treeContext;
-
-    /*
-     * We pop the scope around initializers for for-in loop variables and let
-     * statements/expressions. Let statements/expressions have a different
-     * sourcenote sequence, so test here to see which case we are really in.
-     */
-    inLetHead = (popScope && !(tc->flags & TCF_IN_FOR_INIT));
+    let = (pn->pn_op == JSOP_NOP);
+    forInVar = (pn->pn_extra & PNX_FORINVAR);
+#if JS_HAS_BLOCK_SCOPE
+    forInLet = let && forInVar;
+    popScope = (inLetHead || (let && (tc->flags & TCF_IN_FOR_INIT)));
+    JS_ASSERT(!popScope || let);
+#endif
 
     off = noteIndex = -1;
     for (pn2 = pn->pn_head; ; pn2 = pn2->pn_next) {
@@ -3431,7 +3438,8 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                  * emitting an enumerating opcode and a branch that tests
                  * whether the enumeration ended.
                  */
-                JS_ASSERT(pn->pn_extra & PNX_FORINVAR);
+                JS_ASSERT(forInVar);
+                JS_ASSERT(pn->pn_count == 1);
                 if (!EmitDestructuringDecls(cx, cg, pn->pn_op, pn2))
                     return JS_FALSE;
                 break;
@@ -3445,11 +3453,12 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
              * the head of the loop.
              */
             JS_ASSERT(pn2->pn_type == TOK_ASSIGN);
-            if (noteIndex < 0 && !pn2->pn_next) {
+            if (pn->pn_count == 1) {
                 /*
                  * If this is the only destructuring assignment in the list,
                  * try to optimize to a group assignment.
                  */
+                JS_ASSERT(noteIndex < 0 && !pn2->pn_next);
                 op = JSOP_POP;
                 if (!MaybeEmitGroupAssignment(cx, cg, pn2, &op))
                     return JS_FALSE;
@@ -3462,8 +3471,46 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             pn3 = pn2->pn_left;
             if (!EmitDestructuringDecls(cx, cg, pn->pn_op, pn3))
                 return JS_FALSE;
+
+#if JS_HAS_BLOCK_SCOPE
+            /*
+             * If this is a 'for (let [x, y] = i in o) ...' let declaration,
+             * throw away i if it is a useless expression.
+             */
+            if (forInLet) {
+                JSBool useful = JS_FALSE;
+
+                JS_ASSERT(pn->pn_count == 1);
+                if (!CheckSideEffects(cx, tc, pn2->pn_right, &useful))
+                    return JS_FALSE;
+                if (!useful)
+                    return JS_TRUE;
+            }
+#endif
+
             if (!js_EmitTree(cx, cg, pn2->pn_right))
                 return JS_FALSE;
+
+#if JS_HAS_BLOCK_SCOPE
+            /*
+             * The expression i in 'for (let [x, y] = i in o) ...', which is
+             * pn2->pn_right above, appears to have side effects.  We've just
+             * emitted code to evaluate i, but we must not destructure i yet.
+             * Let the TOK_FOR: code in js_EmitTree do the destructuring to
+             * emit the right combination of source notes and bytecode for the
+             * decompiler.
+             *
+             * This has the effect of hoisting the evaluation of i out of the
+             * for-in loop, without hoisting the let variables, which must of
+             * course be scoped by the loop.  Set PNX_POPVAR to cause JSOP_POP
+             * to be emitted, just before the bottom of this function.
+             */
+            if (forInLet) {
+                pn->pn_extra |= PNX_POPVAR;
+                break;
+            }
+#endif
+
             if (!EmitDestructuringOps(cx, cg, pn->pn_op, pn3))
                 return JS_FALSE;
             goto emit_note_pop;
@@ -3474,12 +3521,13 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 
         if (!BindNameToSlot(cx, &cg->treeContext, pn2))
             return JS_FALSE;
-        JS_ASSERT(pn2->pn_slot >= 0 || varOrConst);
+        JS_ASSERT(pn2->pn_slot >= 0 || !let);
 
         op = pn2->pn_op;
         if (op == JSOP_ARGUMENTS) {
             /* JSOP_ARGUMENTS => no initializer */
-            JS_ASSERT(!pn2->pn_expr && varOrConst);
+            JS_ASSERT(!pn2->pn_expr && !let);
+            pn3 = NULL;
 #ifdef __GNUC__
             atomIndex = 0;            /* quell GCC overwarning */
 #endif
@@ -3487,18 +3535,35 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             if (!MaybeEmitVarDecl(cx, cg, pn->pn_op, pn2, &atomIndex))
                 return JS_FALSE;
 
-            if (pn2->pn_expr) {
+            pn3 = pn2->pn_expr;
+            if (pn3) {
+#if JS_HAS_BLOCK_SCOPE
+                /*
+                 * If this is a 'for (let x = i in o) ...' let declaration,
+                 * throw away i if it is a useless expression.
+                 */
+                if (forInLet) {
+                    JSBool useful = JS_FALSE;
+
+                    JS_ASSERT(pn->pn_count == 1);
+                    if (!CheckSideEffects(cx, tc, pn3, &useful))
+                        return JS_FALSE;
+                    if (!useful)
+                        return JS_TRUE;
+                }
+#endif
+
                 if (op == JSOP_SETNAME) {
-                    JS_ASSERT(varOrConst);
+                    JS_ASSERT(!let);
                     EMIT_ATOM_INDEX_OP(JSOP_BINDNAME, atomIndex);
                 }
-                pn3 = pn2->pn_expr;
                 if (pn->pn_op == JSOP_DEFCONST &&
                     !js_DefineCompileTimeConstant(cx, cg, pn2->pn_atom,
                                                   pn3)) {
                     return JS_FALSE;
                 }
 
+#if JS_HAS_BLOCK_SCOPE
                 /* Evaluate expr in the outer lexical scope if requested. */
                 if (popScope) {
                     stmt = tc->topStmt;
@@ -3512,6 +3577,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                     stmt = scopeStmt = NULL;    /* quell GCC overwarning */
                 }
 #endif
+#endif
 
                 oldflags = cg->treeContext.flags;
                 cg->treeContext.flags &= ~TCF_IN_FOR_INIT;
@@ -3519,10 +3585,12 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                     return JS_FALSE;
                 cg->treeContext.flags |= oldflags & TCF_IN_FOR_INIT;
 
+#if JS_HAS_BLOCK_SCOPE
                 if (popScope) {
                     tc->topStmt = stmt;
                     tc->topScopeStmt = scopeStmt;
                 }
+#endif
             }
         }
 
@@ -3533,14 +3601,23 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
          * Both cases must conditionally emit a JSOP_DEFVAR, above.  Note
          * that the parser error-checks to ensure that pn->pn_count is 1.
          *
+         * 'for (let x = i in o) ...' must evaluate i before the loop, and
+         * subject it to useless expression elimination.  The variable list
+         * in pn is a single let declaration if pn_op == JSOP_NOP.  We test
+         * the let local in order to break early in this case, as well as in
+         * the 'for (var x in o)' case.
+         *
          * XXX Narcissus keeps track of variable declarations in the node
          * for the script being compiled, so there's no need to share any
          * conditional prolog code generation there.  We could do likewise,
          * but it's a big change, requiring extra allocation, so probably
          * not worth the trouble for SpiderMonkey.
          */
-        if ((pn->pn_extra & PNX_FORINVAR) && !pn2->pn_expr)
+        JS_ASSERT(pn3 == pn2->pn_expr);
+        if (forInVar && (!pn3 || let)) {
+            JS_ASSERT(pn->pn_count == 1);
             break;
+        }
 
         if (pn2 == pn->pn_head &&
             !inLetHead &&
@@ -3578,9 +3655,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     }
 
     /* If this is a let head, emit and return a srcnote on the pop. */
-    if (!inLetHead) {
-        *headNoteIndex = -1;
-    } else {
+    if (inLetHead) {
         *headNoteIndex = js_NewSrcNote(cx, cg, SRC_DECL);
         if (*headNoteIndex < 0)
             return JS_FALSE;
@@ -3944,6 +4019,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * (if needed) should be generated here, we must emit the note
              * just before the JSOP_FOR* opcode in the switch on pn3->pn_type
              * a bit below, so nothing is hoisted: 'for (var x in o) ...'.
+             *
+             * A 'for (let x = i in o)' loop must not be hoisted, since in
+             * this form the let variable is scoped by the loop body (but not
+             * the head).  The initializer expression i must be evaluated for
+             * any side effects.  So we hoist only i in the let case.
              */
             pn3 = pn2->pn_left;
             type = pn3->pn_type;
@@ -3973,12 +4053,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
             /* Compile a JSOP_FOR* bytecode based on the left hand side. */
             emitIFEQ = JS_TRUE;
-            type = pn3->pn_type;
             switch (type) {
 #if JS_HAS_BLOCK_SCOPE
               case TOK_LET:
 #endif
               case TOK_VAR:
+                JS_ASSERT(pn3->pn_arity == PN_LIST && pn3->pn_count == 1);
                 pn3 = pn3->pn_head;
 #if JS_HAS_DESTRUCTURING
                 if (pn3->pn_type == TOK_ASSIGN) {
@@ -3994,7 +4074,21 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #else
                 JS_ASSERT(pn3->pn_type == TOK_NAME);
 #endif
-                if (!pn3->pn_expr &&
+                /*
+                 * Always annotate JSOP_FORLOCAL if given input of the form
+                 * 'for (let x in * o)' -- the decompiler must not hoist the
+                 * 'let x' out of the loop head, or x will be bound in the
+                 * wrong scope.  Likewise, but in this case only for the sake
+                 * of higher decompilation fidelity only, do not hoist 'var x'
+                 * when given 'for (var x in o)'.  But 'for (var x = i in o)'
+                 * requires hoisting in order to preserve the initializer i.
+                 * The decompiler can only handle so much!
+                 */
+                if ((
+#if JS_HAS_BLOCK_SCOPE
+                     type == TOK_LET ||
+#endif
+                     !pn3->pn_expr) &&
                     js_NewSrcNote2(cx, cg, SRC_DECL,
                                    type == TOK_VAR
                                    ? SRC_DECL_VAR
@@ -4036,7 +4130,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 break;
 
               case TOK_DOT:
-                useful = JS_TRUE;
+                useful = JS_FALSE;
                 if (!CheckSideEffects(cx, &cg->treeContext, pn3->pn_expr,
                                       &useful)) {
                     return JS_FALSE;
@@ -5076,11 +5170,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * Because each branch pushes a single value, but our stack budgeting
          * analysis ignores branches, we now have to adjust cg->stackDepth to
          * ignore the value pushed by the first branch.  Execution will follow
-         * only one path, so we must decrement cg->stackDepth.  Failing to do
-         * this will foil code, such as the try/catch/finally exception
-         * handling code generator, that samples cg->stackDepth for use at
-         * runtime (JSOP_SETSP) or let expressions and statements, which must
-         * use the stack depth to find locals correctly.
+         * only one path, so we must decrement cg->stackDepth.
+         *
+         * Failing to do this will foil code, such as the try/catch/finally
+         * exception handling code generator, that samples cg->stackDepth for
+         * use at runtime (JSOP_SETSP), or in let expression and block code
+         * generation, which must use the stack depth to compute local stack
+         * indexes correctly.
          */
         JS_ASSERT(cg->stackDepth > 0);
         cg->stackDepth--;
@@ -5501,10 +5597,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
 #if JS_HAS_BLOCK_SCOPE
       case TOK_LET:
-      {
-        JSBool popScope;
-
-        /* Let statements have their declarations on the left. */
+        /* Let statements have their variable declarations on the left. */
         if (pn->pn_arity == PN_BINARY) {
             pn2 = pn->pn_right;
             pn = pn->pn_left;
@@ -5512,13 +5605,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             pn2 = NULL;
         }
 
-        /* Let and for loop heads evaluate initializers in the outer scope. */
-        popScope = (pn2 != NULL || (cg->treeContext.flags & TCF_IN_FOR_INIT));
-
+        /* Non-null pn2 means that pn is the variable list from a let head. */
         JS_ASSERT(pn->pn_arity == PN_LIST);
-        if (!EmitVariables(cx, cg, pn, popScope, &noteIndex))
+        if (!EmitVariables(cx, cg, pn, pn2 != NULL, &noteIndex))
             return JS_FALSE;
 
+        /* Thus non-null pn2 is the body of the let block or expression. */
         tmp = CG_OFFSET(cg);
         if (pn2 && !js_EmitTree(cx, cg, pn2))
             return JS_FALSE;
@@ -5529,7 +5621,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
         }
         break;
-      }
 #endif /* JS_HAS_BLOCK_SCOPE */
 
 #if JS_HAS_GENERATORS
