@@ -964,12 +964,6 @@ function loadStartFolder(initialUri)
 
                 startFolderResource = inboxFolder.QueryInterface(Components.interfaces.nsIRDFResource);
             }
-            else
-            {
-                // set the startFolderResource to the server, so we select it
-                // so we'll get account central
-                startFolderResource = RDF.GetResource(defaultServer.serverURI);
-            }
         }
 
         var startFolder = startFolderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
