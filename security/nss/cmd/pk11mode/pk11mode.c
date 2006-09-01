@@ -53,9 +53,9 @@
 #define LIB_NAME "softokn3.dll"
 #include "cryptoki.h"
 #else
-#include <prprf.h>
+#include "prprf.h"
 #include "prlink.h"
-#include "../../lib/softoken/pkcs11.h"
+#include "pkcs11.h"
 #endif
 
 
@@ -578,10 +578,12 @@ int main(int argc, char **argv)
         pC_GetFunctionList = (CK_C_GetFunctionList) PR_FindFunctionSymbol(lib,
         "FC_GetFunctionList");
         assert(pC_GetFunctionList != NULL);
+        slotID = 0;
     } else {
         pC_GetFunctionList = (CK_C_GetFunctionList) PR_FindFunctionSymbol(lib,
         "C_GetFunctionList");
         assert(pC_GetFunctionList != NULL);
+        slotID = 1;
     }
 #endif
 
@@ -824,7 +826,7 @@ int main(int argc, char **argv)
     FreeLibrary(hModule);
 #else 
     if (PR_UnloadLibrary(lib) != PR_SUCCESS) {
-        PKM_Error("unable to unload softoken");
+        PKM_Error("unable to unload softoken\n");
     }
 #endif
     return 0;
