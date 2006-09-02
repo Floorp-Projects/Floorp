@@ -1382,19 +1382,22 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
   // add new cols to the table map if necessary
   PRInt32 endColIndex = startColIndex + colSpan - 1;
   if (endColIndex >= origNumCols) {
+    NS_ASSERTION(aCellFrame, "dead cells should not require new columns");
     aMap.AddColsAtEnd(1 + endColIndex - origNumCols);
   }
 
   // Setup CellData for this cell
   if (origData) {
     NS_ASSERTION(origData->IsDead(), "replacing a non dead cell is a memory leak");
-    origData->Init(aCellFrame);
-    // we are replacing a dead cell, increase the number of cells 
-    // originating at this column
-    nsColInfo* colInfo = aMap.GetColInfoAt(startColIndex);
-    NS_ASSERTION(colInfo, "access to a non existing column");
-    if (colInfo) { 
-      colInfo->mNumCellsOrig++;
+    if (aCellFrame) { // do nothing to replace a dead cell with a dead cell
+      origData->Init(aCellFrame);
+      // we are replacing a dead cell, increase the number of cells 
+      // originating at this column
+      nsColInfo* colInfo = aMap.GetColInfoAt(startColIndex);
+      NS_ASSERTION(colInfo, "access to a non existing column");
+      if (colInfo) { 
+        colInfo->mNumCellsOrig++;
+      }
     }
   }
   else {
