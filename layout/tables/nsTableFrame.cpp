@@ -5759,7 +5759,9 @@ nsTableFrame::CalcBCBorders()
   nsTableCellMap* tableCellMap = GetCellMap(); if (!tableCellMap) ABORT0();
   PRInt32 numRows = GetRowCount();
   PRInt32 numCols = GetColCount();
-  
+  if (!numRows || !numCols)
+    return; // nothing to do
+
   // Get the property holding the table damage area and border widths
   BCPropertyData* propData = 
     (BCPropertyData*)nsTableFrame::GetProperty(this, nsLayoutAtoms::tableBCProperty, PR_FALSE);
