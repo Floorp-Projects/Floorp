@@ -49,6 +49,12 @@
 #include <usp10.h>
 #include <cairo-win32.h>
 
+/* Bug 341128 - w32api defines min/max which causes problems with <bitset> */
+#ifdef __MINGW32__
+#undef min
+#undef max
+#endif
+
 #include <bitset>
 
 /** @description Font Weights
