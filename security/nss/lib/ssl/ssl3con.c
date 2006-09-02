@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.96 2006/08/24 22:10:03 nelson%bolyard.com Exp $ */
+/* $Id: ssl3con.c,v 1.97 2006/09/02 18:53:54 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -74,7 +74,7 @@
 static void      ssl3_CleanupPeerCerts(sslSocket *ss);
 static PK11SymKey *ssl3_GenerateRSAPMS(sslSocket *ss, ssl3CipherSpec *spec,
                                        PK11SlotInfo * serverKeySlot);
-static SECStatus ssl3_DeriveMasterSecret(sslSocket *ss, const PK11SymKey *pms);
+static SECStatus ssl3_DeriveMasterSecret(sslSocket *ss, PK11SymKey *pms);
 static SECStatus ssl3_DeriveConnectionKeysPKCS11(sslSocket *ss);
 static SECStatus ssl3_HandshakeFailure(      sslSocket *ss);
 static SECStatus ssl3_InitState(             sslSocket *ss);
@@ -2534,7 +2534,7 @@ ssl3_HandleChangeCipherSpecs(sslSocket *ss, sslBuffer *buf)
 ** Called from ssl3_InitPendingCipherSpec.   prSpec is pwSpec.
 */
 static SECStatus
-ssl3_DeriveMasterSecret(sslSocket *ss, const PK11SymKey *pms)
+ssl3_DeriveMasterSecret(sslSocket *ss, PK11SymKey *pms)
 {
     ssl3CipherSpec *  pwSpec = ss->ssl3.pwSpec;
     const ssl3KEADef *kea_def= ss->ssl3.hs.kea_def;
@@ -2584,9 +2584,20 @@ ssl3_DeriveMasterSecret(sslSocket *ss, const PK11SymKey *pms)
     }
 
     if (pms != NULL) {
-	pwSpec->master_secret = PK11_DeriveWithFlags((PK11SymKey *)pms, 
-					master_derive, &params, key_derive, 
-					CKA_DERIVE, 0, keyFlags);
+#if defined(TRACE)
+	if (ssl_trace >= 100) {
+	    SECStatus extractRV = PK11_ExtractKeyValue(pms);
+	    if (extractRV == SECSuccess) {
+		SECItem * keyData = PK11_GetKeyData(pms);
+		if (keyData && keyData->data && keyData->len) {
+		    ssl_PrintBuf(ss, "Pre-Master Secret", 
+				 keyData->data, keyData->len);
+		}
+	    }
+	}
+#endif
+	pwSpec->master_secret = PK11_DeriveWithFlags(pms, master_derive, 
+				&params, key_derive, CKA_DERIVE, 0, keyFlags);
 	if (!isDH && pwSpec->master_secret && ss->opt.detectRollBack) {
 	    SSL3ProtocolVersion client_version;
 	    client_version = pms_version.major << 8 | pms_version.minor;
