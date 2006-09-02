@@ -157,15 +157,21 @@ function loadDialog(item)
 
     /* todo specific properties */
     if (isToDo(item)) {
+        var entryDate;
         var hasEntryDate = (item.entryDate != null);
         setElementValue("todo-has-entrydate", hasEntryDate, "checked");
-        if (hasEntryDate)
-            setElementValue("todo-entrydate", item.entryDate.jsDate);
+        if (hasEntryDate) {
+            entryDate = item.entryDate.getInTimezone(kDefaultTimezone);
+            setElementValue("todo-entrydate", entryDate.jsDate);
+        }
 
+        var dueDate;
         var hasDueDate = (item.dueDate != null);
         setElementValue("todo-has-duedate", hasDueDate, "checked");
-        if (hasDueDate)
-            setElementValue("todo-duedate", item.dueDate.jsDate);
+        if (hasDueDate) {
+            dueDate = item.dueDate.getInTimezone(kDefaultTimezone);
+            setElementValue("todo-duedate", dueDate.jsDate);
+        }
         if (hasEntryDate && hasDueDate) {
             gItemDuration = item.dueDate.subtractDate(item.entryDate);
         }
