@@ -89,7 +89,7 @@
              accesskey="&subscribeUsing.accesskey;"/>
       <hbox id="readerContainer" class="indent" flex="1">
         <listbox id="readers" rows="5" flex="1"
-                 onselect="gFeedsPane.writeSelectedFeedReader();">
+                 onselect="gFeedsPane.writeSelectedFeedReader(); event.stopPropagation();">
           <listcols>
             <listcol flex="1"/>
             <listcol/>

@@ -80,7 +80,7 @@ var gFeedsPane = {
   QueryInterface: function(aIID) {
     if (aIID.equals(Ci.nsISupports) ||
         aIID.equals(Ci.nsIObserver) ||
-        aIID.equals(Ci.nsISupportsWeakReference))
+        aIID.equals(Ci.nsIDOMEventListener))
       return this;
       
     throw Cr.NS_ERROR_NO_INTERFACE;
@@ -106,6 +106,18 @@ var gFeedsPane = {
   },
 
   /**
+   * See nsIDOMEventListener
+   */
+  handleEvent: function(aEvent) {
+    if (aEvent.type == "unload") {
+      var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+        getService(Ci.nsIPrefBranch2);
+      prefBranch.removeObserver(PREF_SELECTED_WEB, this);
+      window.removeEventListener("unload", this, false);
+    }
+  },
+
+  /**
    * Initializes this.
    */
   init: function () {
@@ -122,7 +134,9 @@ var gFeedsPane = {
     // affect when the prefwindow is closed)
     var prefBranch = Cc["@mozilla.org/preferences-service;1"].
       getService(Ci.nsIPrefBranch2);
-    prefBranch.addObserver(PREF_SELECTED_WEB, this, true);
+
+    prefBranch.addObserver(PREF_SELECTED_WEB, this, false);
+    window.addEventListener("unload", this, false);
   },
 
   /**
