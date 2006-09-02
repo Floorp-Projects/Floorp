@@ -49,7 +49,7 @@ ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/license.txt  $(DIST)/branding/license.txt
 	cp $(srcdir)/wizHeader.bmp     $(DIST)/branding/wizHeader.bmp
 	cp $(srcdir)/wizHeaderRTL.bmp  $(DIST)/branding/wizHeaderRTL.bmp
-	cp $(srcdir)/wizWatermark.bmp  $(DIST)/branding/Watermark.bmp
+	cp $(srcdir)/wizWatermark.bmp  $(DIST)/branding/wizWatermark.bmp
 endif
 ifeq ($(OS_ARCH),OS2)
 	cp $(srcdir)/sunbird-os2.ico  $(DIST)/branding/sunbird.ico
