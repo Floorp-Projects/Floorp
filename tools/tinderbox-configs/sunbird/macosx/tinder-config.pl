@@ -41,7 +41,7 @@ $ENV{CVS_RSH} = "ssh";
 #$BuildLocales      = 0;      # Do l10n packaging?
 
 # Tests
-#$CleanProfile             = 0;
+$CleanProfile             = 1;
 #$ResetHomeDirForTests     = 1;
 $ProductName              = "Calendar";
 $VendorName               = 'Mozilla';
@@ -162,7 +162,6 @@ $BuildTree  = 'Sunbird';
 #$BuildConfigDir = 'mozilla/config';
 #$Topsrcdir = 'mozilla';
 
-#$BinaryName = 'mozilla-bin';
 $BinaryName = 'sunbird-bin';
 
 #
@@ -185,7 +184,7 @@ $shiptalkback  = 1;
 #$ReleaseToLatest = 1; # Push the release to latest-<milestone>?
 #$ReleaseToDated = 1; # Push the release to YYYY-MM-DD-HH-<milestone>?
 $build_hour    = "6";
-#$package_creation_path = "/xpinstall/packager";
+$package_creation_path = "/calendar/installer";
 # needs setting for mac + talkback:
 $mac_bundle_path = "/calendar/sunbird/app";
 $ssh_version   = "2";
@@ -226,3 +225,4 @@ $push_raw_xpis = 0;
 # Prevent Extension Manager from spawning child processes during tests
 # - processes that tbox scripts cannot kill.
 #$ENV{NO_EM_RESTART} = '1';
+
