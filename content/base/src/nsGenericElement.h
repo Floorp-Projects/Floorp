@@ -884,6 +884,9 @@ protected:
    */
   virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
 
+public:
+  // Because of a bug in MS C++ compiler nsDOMSlots must be declared public,
+  // otherwise nsXULElement::nsXULSlots doesn't compile.
   /**
    * There are a set of DOM- and scripting-specific instance variables
    * that may only be instantiated when a content object is accessed
@@ -931,6 +934,7 @@ protected:
     };
   };
 
+protected:
   // Override from nsINode
   virtual nsINode::nsSlots* CreateSlots();
 
