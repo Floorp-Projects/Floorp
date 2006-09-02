@@ -281,10 +281,25 @@ nsXULElement::~nsXULElement()
       UnbindFromTree();
     }
 
-    nsDOMSlots* slots = GetExistingDOMSlots();
-    if (slots) {
-      NS_IF_RELEASE(slots->mControllers); // Forces release
+    if (mListenerManager) {
+      mListenerManager->Disconnect();
     }
+}
+
+nsXULElement::nsXULSlots::nsXULSlots(PtrBits aFlags)
+    : nsXULElement::nsDOMSlots(aFlags)
+{
+}
+
+nsXULElement::nsXULSlots::~nsXULSlots()
+{
+    NS_IF_RELEASE(mControllers); // Forces release
+}
+
+nsINode::nsSlots*
+nsXULElement::CreateSlots()
+{
+    return new nsXULSlots(mFlagsOrSlots);
 }
 
 /* static */

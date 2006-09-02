@@ -43,6 +43,7 @@
 #include "nsIMutationObserver.h"
 #include "nsIDocument.h"
 #include "nsIDOMUserDataHandler.h"
+#include "nsIEventListenerManager.h"
 
 #define IMPL_MUTATION_NOTIFICATION(func_, content_, params_)      \
   PR_BEGIN_MACRO                                                  \
@@ -147,7 +148,7 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
 }
 
 void
-nsNodeUtils::NodeWillBeDestroyed(nsINode* aNode)
+nsNodeUtils::LastRelease(nsINode* aNode, PRBool aDelete)
 {
   nsINode::nsSlots* slots = aNode->GetExistingSlots();
   if (slots) {
@@ -161,11 +162,9 @@ nsNodeUtils::NodeWillBeDestroyed(nsINode* aNode)
     delete slots;
     aNode->mFlagsOrSlots = flags;
   }
-}
 
-void
-nsNodeUtils::LastRelease(nsINode* aNode)
-{
+  // Kill properties first since that may run external code, so we want to
+  // be in as complete state as possible at that time.
   if (aNode->HasProperties()) {
     nsIDocument* document = aNode->GetOwnerDoc();
     if (document) {
@@ -174,7 +173,42 @@ nsNodeUtils::LastRelease(nsINode* aNode)
                                           aNode, nsnull, nsnull);
       document->PropertyTable()->DeleteAllPropertiesFor(aNode);
     }
+    aNode->UnsetFlags(NODE_HAS_PROPERTIES);
   }
-  delete aNode;
+
+  if (aNode->HasFlag(NODE_HAS_RANGELIST)) {
+#ifdef DEBUG
+    if (!nsContentUtils::LookupRangeList(aNode) &&
+        nsContentUtils::IsInitialized()) {
+      NS_ERROR("Huh, our bit says we have a range list, but there's nothing "
+               "in the hash!?!!");
+    }
+#endif
+
+    nsContentUtils::RemoveRangeList(aNode);
+    aNode->UnsetFlags(NODE_HAS_RANGELIST);
+  }
+
+  if (aNode->HasFlag(NODE_HAS_LISTENERMANAGER)) {
+#ifdef DEBUG
+    if (nsContentUtils::IsInitialized()) {
+      nsCOMPtr<nsIEventListenerManager> manager;
+      PRBool created;
+      nsContentUtils::GetListenerManager(aNode, PR_FALSE,
+                                         getter_AddRefs(manager), &created);
+      if (!manager) {
+        NS_ERROR("Huh, our bit says we have a listener manager list, "
+                 "but there's nothing in the hash!?!!");
+      }
+    }
+#endif
+
+    nsContentUtils::RemoveListenerManager(aNode);
+    aNode->UnsetFlags(NODE_HAS_LISTENERMANAGER);
+  }
+
+  if (aDelete) {
+    delete aNode;
+  }
 }
 

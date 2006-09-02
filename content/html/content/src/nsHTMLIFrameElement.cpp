@@ -89,8 +89,8 @@ nsHTMLIFrameElement::~nsHTMLIFrameElement()
 }
 
 
-NS_IMPL_ADDREF(nsHTMLIFrameElement)
-NS_IMPL_RELEASE(nsHTMLIFrameElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLIFrameElement, nsGenericElement)
+NS_IMPL_RELEASE_INHERITED(nsHTMLIFrameElement, nsGenericElement)
 
 // QueryInterface implementation for nsHTMLIFrameElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLIFrameElement, nsGenericHTMLFrameElement)
