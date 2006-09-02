@@ -71,7 +71,7 @@ interface nsIXFormsUIWidget : nsIDOMElement
    * of instance node that element is bound to. For example:
    * 1) When a XForms control has non-incremental update and its value is
    * changed due to user interaction, then getCurrentValue will return the
-   * control's new value even though the bound node has not be updated yet.
+   * control's new value even though the bound node has not been updated yet.
    * 2) If instace value is out of range then xforms element can't show it.
    * Therefore it shows default value and getCurrentValue will return showed
    * value.
