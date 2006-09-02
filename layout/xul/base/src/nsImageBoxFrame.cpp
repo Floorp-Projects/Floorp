@@ -148,7 +148,7 @@ nsImageBoxFrameEvent::Run()
 void
 FireImageDOMEvent(nsIContent* aContent, PRUint32 aMessage)
 {
-  NS_ASSERTION(aMessage == NS_LOAD || aMessage == NS_IMAGE_ERROR,
+  NS_ASSERTION(aMessage == NS_LOAD || aMessage == NS_LOAD_ERROR,
                "invalid message");
 
   nsCOMPtr<nsIRunnable> event = new nsImageBoxFrameEvent(aContent, aMessage);
@@ -567,7 +567,7 @@ NS_IMETHODIMP nsImageBoxFrame::OnStopDecode(imgIRequest *request,
     mIntrinsicSize.SizeTo(0, 0);
     nsBoxLayoutState state(GetPresContext());
     MarkDirty(state);
-    FireImageDOMEvent(mContent, NS_IMAGE_ERROR);
+    FireImageDOMEvent(mContent, NS_LOAD_ERROR);
   }
 
   return NS_OK;

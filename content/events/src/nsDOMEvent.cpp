@@ -427,7 +427,7 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
     else if (atom == nsLayoutAtoms::onabort)
       mEvent->message = NS_IMAGE_ABORT;
     else if (atom == nsLayoutAtoms::onerror)
-      mEvent->message = NS_IMAGE_ERROR;
+      mEvent->message = NS_LOAD_ERROR;
   } else if (mEvent->eventStructType == NS_MUTATION_EVENT) {
     if (atom == nsLayoutAtoms::onDOMAttrModified)
       mEvent->message = NS_MUTATION_ATTRMODIFIED;
@@ -1033,7 +1033,7 @@ nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
     break;
   case NS_SCRIPT_ERROR_EVENT :
     switch(aEvent->message) {
-    case NS_SCRIPT_ERROR :
+    case NS_LOAD_ERROR :
       // Any error event will allow popups, if enabled in the pref.
       if (::PopupAllowedForEvent("error"))
         abuse = openControlled;
@@ -1139,8 +1139,7 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_unload];
   case NS_IMAGE_ABORT:
     return sEventNames[eDOMEvents_abort];
-  case NS_IMAGE_ERROR:
-  case NS_SCRIPT_ERROR:
+  case NS_LOAD_ERROR:
     return sEventNames[eDOMEvents_error];
   case NS_FORM_SUBMIT:
     return sEventNames[eDOMEvents_submit];

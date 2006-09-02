@@ -810,7 +810,7 @@ nsImageLoadingContent::Event::Run()
   if (mMessage.EqualsLiteral("load")) {
     eventMsg = NS_LOAD;
   } else {
-    eventMsg = NS_IMAGE_ERROR;
+    eventMsg = NS_LOAD_ERROR;
   }
 
   nsCOMPtr<nsIContent> ourContent = do_QueryInterface(mContent);

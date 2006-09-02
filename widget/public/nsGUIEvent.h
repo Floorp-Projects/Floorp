@@ -191,9 +191,6 @@ class nsIDOMEvent;
 // ensure that it is drawn using the current system colors.
 #define NS_SYSCOLORCHANGED              (NS_WINDOW_START + 42)
 
-// Indicates a script error has occurred
-#define NS_SCRIPT_ERROR                 (NS_WINDOW_START + 50)
-
 #define NS_RESIZE_EVENT                 (NS_WINDOW_START + 60)
 #define NS_SCROLL_EVENT                 (NS_WINDOW_START + 61)
 
@@ -234,7 +231,7 @@ class nsIDOMEvent;
 #define NS_LOAD                         (NS_STREAM_EVENT_START)
 #define NS_PAGE_UNLOAD                  (NS_STREAM_EVENT_START + 1)
 #define NS_IMAGE_ABORT                  (NS_STREAM_EVENT_START + 3)
-#define NS_IMAGE_ERROR                  (NS_STREAM_EVENT_START + 4)
+#define NS_LOAD_ERROR                   (NS_STREAM_EVENT_START + 4)
 #define NS_BEFORE_PAGE_UNLOAD           (NS_STREAM_EVENT_START + 6)
 #define NS_PAGE_RESTORE                 (NS_STREAM_EVENT_START + 7)
  

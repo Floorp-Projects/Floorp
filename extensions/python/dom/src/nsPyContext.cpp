@@ -138,7 +138,7 @@ nsresult nsPythonContext::HandlePythonError()
   if (!PyErr_Occurred())
     return NS_OK;
 
-  nsScriptErrorEvent errorevent(PR_TRUE, NS_SCRIPT_ERROR);
+  nsScriptErrorEvent errorevent(PR_TRUE, NS_LOAD_ERROR);
   nsAutoString strFilename;
 
   PyObject *exc, *typ, *tb;
