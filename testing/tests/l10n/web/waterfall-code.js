@@ -92,7 +92,9 @@ var waterfallView = {
         }        
         while (heads[h].textContent < loc) {
           // we don't have a result for this column in this build
-          wf.appendChild(view.getCell());
+          cell = view.getCell();
+          cell.className = view.getClass(heads[h].textContent)
+          wf.appendChild(cell);
           h++;
           if (h >= heads.length) {
             YAHOO.widget.Logger.log("dropping result for " + loc);
