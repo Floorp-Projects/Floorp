@@ -65,6 +65,7 @@
 #include "nsIMsgFilterPlugin.h"
 #include "nsIStringBundle.h"
 #include "nsMsgTagService.h"
+#include "nsCOMArray.h"
 
 #define MESSENGER_STRING_URL       "chrome://messenger/locale/messenger.properties"
 
@@ -290,8 +291,10 @@ protected:
 
   // for sorting
   nsresult GetFieldTypeAndLenForSort(nsMsgViewSortTypeValue sortType, PRUint16 *pMaxLen, eFieldType *pFieldType);
-  nsresult GetCollationKey(nsIMsgDBHdr *msgHdr, nsMsgViewSortTypeValue sortType, PRUint8 **result, PRUint32 *len);
-  nsresult GetLongField(nsIMsgDBHdr *msgHdr, nsMsgViewSortTypeValue sortType, PRUint32 *result);
+  nsresult GetCollationKey(nsIMsgDBHdr *msgHdr, nsMsgViewSortTypeValue sortType, PRUint8 **result, 
+                          PRUint32 *len, nsIMsgCustomColumnHandler* colHandler = nsnull);
+  nsresult GetLongField(nsIMsgDBHdr *msgHdr, nsMsgViewSortTypeValue sortType, PRUint32 *result, 
+                          nsIMsgCustomColumnHandler* colHandler = nsnull);
   nsresult GetStatusSortValue(nsIMsgDBHdr *msgHdr, PRUint32 *result);
   nsresult GetLocationCollationKey(nsIMsgDBHdr *msgHdr, PRUint8 **result, PRUint32 *len);
 
@@ -387,6 +390,12 @@ protected:
   
   nsUInt32Array mIndicesToNoteChange;
 
+  //these hold pointers (and IDs) for the nsIMsgCustomColumnHandler object that constitutes the custom column handler
+  nsCOMArray <nsIMsgCustomColumnHandler> m_customColumnHandlers;
+  nsStringArray m_customColumnHandlerIDs;
+  
+  nsIMsgCustomColumnHandler* GetColumnHandler(const PRUnichar*);
+  nsIMsgCustomColumnHandler* GetCurColumnHandlerFromDBInfo();
 
 protected:
   static nsresult   InitDisplayFormats();

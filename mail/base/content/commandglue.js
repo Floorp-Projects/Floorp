@@ -537,8 +537,23 @@ function ConvertColumnIDToSortType(columnID)
 	    sortKey = nsMsgViewSortType.byAttachments;
 	    break;
     default:
-      dump("unsupported sort column: " + columnID + "\n");
-      sortKey = 0;
+      
+      //no predefined column handler - lets check if there is a custom column handler
+      try {
+        //try to grab the columnHandler (an error is thrown if it does not exist)
+        columnHandler = gDBView.getColumnHandler(columnID);
+
+        //it exists - save this column ID in the customSortCol property of dbFolderInfo
+        //for later use (see nsIMsgDBView.cpp)
+        gDBView.db.dBFolderInfo.setProperty('customSortCol', columnID);
+        
+        sortKey = nsMsgViewSortType.byCustom;
+      }
+      catch(err)
+      {
+        dump("unsupported sort column: " + columnID + " - no custom handler installed. (Error was: " + err + ")\n");
+        sortKey = 0;
+      }
       break;
   }
   return sortKey;
@@ -601,6 +616,20 @@ function ConvertSortTypeToColumnID(sortKey)
 	  case nsMsgViewSortType.byAttachments:
 	    columnID = "attachmentCol";
 	    break;
+    case nsMsgViewSortType.byCustom:
+
+      //TODO: either change try() catch to if (property exists) or restore the getColumnHandler() check
+      try //getColumnHandler throws an errror when the ID is not handled
+      {
+        columnID = gDBView.db.dBFolderInfo.getProperty('customSortCol');
+      }
+
+      catch (err) { //error - means no handler
+        dump("ConvertSortTypeToColumnID: custom sort key but no handler for column '" + columnID + "'\n");
+        columnID = "dateCol";
+      }
+
+      break;
     default:
       dump("unsupported sort key: " + sortKey + "\n");
       columnID = "dateCol";

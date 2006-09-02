@@ -46,6 +46,8 @@ interface nsIMsgDBViewCommandUpdater;
 interface nsIMsgDatabase;
 interface nsIMsgSearchSession;
 interface nsISimpleEnumerator;
+interface nsITreeView;
+interface nsIMsgCustomColumnHandler;
 
 typedef long nsMsgViewNotificationCodeValue;
 typedef long nsMsgViewCommandCheckStateValue;
@@ -104,6 +106,7 @@ interface nsMsgViewSortType
 	const nsMsgViewSortTypeValue byJunkStatus = 0x1f;
 	const nsMsgViewSortTypeValue byAttachments = 0x20;
   const nsMsgViewSortTypeValue byAccount = 0x21;
+  const nsMsgViewSortTypeValue byCustom = 0x22;
 };
 
 [scriptable, uuid(255d1c1e-fde7-11d4-a5be-0060b0fc04b7)]
@@ -250,7 +253,7 @@ interface nsMsgNavigationType
 };
 
 
-[scriptable, uuid(704c7d28-fd1a-11d4-a5be-0060b0fc04b7)]
+[scriptable, uuid(7a49bcaa-5367-476d-a3da-7f305b7afb90)]
 interface nsIMsgDBView : nsISupports
 {
     void open(in nsIMsgFolder folder, in nsMsgViewSortTypeValue sortType, in nsMsgViewSortOrderValue sortOrder, in nsMsgViewFlagsTypeValue viewFlags, out long count);
@@ -333,6 +336,17 @@ interface nsIMsgDBView : nsISupports
 
     // use lines or kB for size?
     readonly attribute boolean usingLines;
+    
+    // Custom Column Implementation note: see nsIMsgCustomColumnHandler
+    
+    // attaches a custom column handler to a specific column (can be a new column or a built in)
+    void addColumnHandler(in AString aColumn, in nsIMsgCustomColumnHandler aHandler);
+    
+    // removes a custom column handler leaving the column to be handled by the system
+    void removeColumnHandler(in AString aColumn);
+    
+    // returns the custom column handler attached to a specific column - if any
+    nsIMsgCustomColumnHandler getColumnHandler(in AString aColumn);
 };
 
 /* this interface is rapidly morphing from a command updater interface into a more generic
