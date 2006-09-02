@@ -1103,12 +1103,14 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
          * local variable to bind its name to its value, and not an activation
          * object property (it might also need the activation property, if the
          * outer function contains with statements, e.g., but the stack slot
-         * wins when jsemit.c's LookupArgOrVar can optimize a JSOP_NAME into a
+         * wins when jsemit.c's BindNameToSlot can optimize a JSOP_NAME into a
          * JSOP_GETVAR bytecode).
          */
         if (AT_TOP_LEVEL(tc) && (tc->flags & TCF_IN_FUNCTION)) {
+            JSScopeProperty *sprop;
+
             /*
-             * Define a property on the outer function so that LookupArgOrVar
+             * Define a property on the outer function so that BindNameToSlot
              * can properly optimize accesses.
              */
             JS_ASSERT(OBJ_GET_CLASS(cx, varobj) == &js_FunctionClass);
@@ -1119,16 +1121,26 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             }
             if (prop)
                 OBJ_DROP_PROPERTY(cx, pobj, prop);
+            sprop = NULL;
             if (!prop ||
                 pobj != varobj ||
-                ((JSScopeProperty *)prop)->getter != js_GetLocalVariable) {
+                (sprop = (JSScopeProperty *)prop,
+                 sprop->getter != js_GetLocalVariable)) {
+                uintN sflags;
+
+                /*
+                 * Use SPROP_IS_DUPLICATE if there is a formal argument of the
+                 * same name, so the decompiler can find the parameter name.
+                 */
+                sflags = (sprop && sprop->getter == js_GetArgument)
+                         ? SPROP_IS_DUPLICATE | SPROP_HAS_SHORTID
+                         : SPROP_HAS_SHORTID;
                 if (!js_AddHiddenProperty(cx, varobj, ATOM_TO_JSID(funAtom),
                                           js_GetLocalVariable,
                                           js_SetLocalVariable,
                                           SPROP_INVALID_SLOT,
                                           JSPROP_PERMANENT | JSPROP_SHARED,
-                                          SPROP_HAS_SHORTID,
-                                          fp->fun->u.i.nvars)) {
+                                          sflags, fp->fun->u.i.nvars)) {
                     return NULL;
                 }
                 if (fp->fun->u.i.nvars == JS_BITMASK(16)) {
