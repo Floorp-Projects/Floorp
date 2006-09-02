@@ -42,9 +42,10 @@
  * Overview
  * This service keeps track of a user's session, storing the various bits
  * required to return the browser to it's current state. The relevant data is 
- * stored in memory, and is periodically saved to disk in an ini file in the 
- * profile directory. The service is started at first window load, in delayedStartup, and will restore
- * the session from the data received from the nsSessionStartup service.
+ * stored in memory, and is periodically saved to disk in a file in the 
+ * profile directory. The service is started at first window load, in
+ * delayedStartup, and will restore the session from the data received from
+ * the nsSessionStartup service.
  */
 
 /* :::::::: Constants and Helpers ::::::::::::::: */
@@ -229,13 +230,13 @@ SessionStoreService.prototype = {
         }, this);
         delete this._initialState.windows[0].hidden;
       }
-      catch (ex) { debug("The session file is invalid: " + ex); } // invalid .INI file - nothing can be restored
+      catch (ex) { debug("The session file is invalid: " + ex); }
     }
     
     // if last session crashed, backup the session
     if (this._lastSessionCrashed) {
       try {
-        this._writeFile(this._getSessionFile(true), iniString);
+        this._writeFile(this._sessionFileBackup, iniString);
       }
       catch (ex) { } // nothing else we can do here
     }
@@ -1145,7 +1146,7 @@ SessionStoreService.prototype = {
    * @param aWindow
    *        Window reference
    * @param aState
-   *        Ini formatted string, or object
+   *        JS object or its eval'able source
    * @param aOverwriteTabs
    *        bool overwrite existing tabs w/ new ones
    */
@@ -1682,7 +1683,7 @@ SessionStoreService.prototype = {
     this._dirty = aUpdateAll;
     var oState = this._getCurrentState();
     oState.session = { state: ((this._loadState == STATE_RUNNING) ? STATE_RUNNING_STR : STATE_STOPPED_STR) };
-    this._writeFile(this._getSessionFile(), oState.toSource());
+    this._writeFile(this._sessionFile, oState.toSource());
     this._lastSaveTime = Date.now();
   },
 
@@ -1690,30 +1691,18 @@ SessionStoreService.prototype = {
    * delete session datafile and backup
    */
   _clearDisk: function sss_clearDisk() {
-    var file = this._getSessionFile();
-
-    if (file.exists()) {
+    if (this._sessionFile.exists()) {
       try {
-        file.remove(false);
+        this._sessionFile.remove(false);
       }
       catch (ex) { dump(ex + '\n'); } // couldn't remove the file - what now?
     }
-
-    if (!this._lastSessionCrashed)
-      return;
-
-    try {
-      this._getSessionFile(true).remove(false);
+    if (this._sessionFileBackup.exists()) {
+      try {
+        this._sessionFileBackup.remove(false);
+      }
+      catch (ex) { dump(ex + '\n'); } // couldn't remove the file - what now?
     }
-    catch (ex) { dump(ex + '\n'); } // couldn't remove the file - what now?
-  },
-
-  /**
-   * get session datafile (or its backup)
-   * @returns nsIFile 
-   */
-  _getSessionFile: function sss_getSessionFile(aBackup) {
-    return aBackup ? this._sessionFileBackup : this._sessionFile;
   },
 
 /* ........ Auxiliary Functions .............. */
