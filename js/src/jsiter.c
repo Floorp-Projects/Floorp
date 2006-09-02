@@ -860,7 +860,7 @@ generator_op(JSContext *cx, JSGeneratorOp op,
       case JSGEN_RUNNING:
       case JSGEN_CLOSING:
         str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, argv[-1],
-                                         NULL);
+                                         JS_GetFunctionId(gen->frame.fun));
         if (str) {
             JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
                                    JSMSG_NESTING_GENERATOR,
@@ -926,52 +926,7 @@ generator_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return generator_op(cx, JSGENOP_CLOSE, obj, argc, argv, rval);
 }
 
-/*
- * NB: we pass (0, NULL) as (argc, argv) to js_fun_toString in both of these
- * native methods, which tells js_fun_toString to use its obj parameter as the
- * function to decompile.  This spares us from having to juggle argv[-2] and
- * argv[-1] in order to make the forwarded call look like a direct native call
- * to Function.prototype.to{Source,String} on the generator function.
- */
-#if JS_HAS_TOSOURCE
-static JSBool
-generator_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                   jsval *rval)
-{
-    JSGenerator *gen;
-
-    gen = (JSGenerator *)
-          JS_GetInstancePrivate(cx, obj, &js_GeneratorClass, argv);
-    if (!gen)
-        return JS_FALSE;
-
-    JS_ASSERT(VALUE_IS_FUNCTION(cx, gen->frame.argv[-2]));
-    return js_fun_toString(cx, JSVAL_TO_OBJECT(gen->frame.argv[-2]),
-                           JS_DONT_PRETTY_PRINT, 0, NULL, rval);
-}
-#endif
-
-static JSBool
-generator_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                   jsval *rval)
-{
-    JSGenerator *gen;
-
-    gen = (JSGenerator *)
-          JS_GetInstancePrivate(cx, obj, &js_GeneratorClass, argv);
-    if (!gen)
-        return JS_FALSE;
-
-    JS_ASSERT(VALUE_IS_FUNCTION(cx, gen->frame.argv[-2]));
-    return js_fun_toString(cx, JSVAL_TO_OBJECT(gen->frame.argv[-2]), 0,
-                           0, NULL, rval);
-}
-
 static JSFunctionSpec generator_methods[] = {
-#if JS_HAS_TOSOURCE
-    {js_toSource_str, generator_toSource,0,0,0},
-#endif
-    {js_toString_str, generator_toString,0,0,0},
     {js_iterator_str, iterator_self,     0,0,0},
     {js_next_str,     generator_next,    0,0,0},
     {js_send_str,     generator_send,    1,0,0},
