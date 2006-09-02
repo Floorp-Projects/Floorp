@@ -156,7 +156,8 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 
     nsEvent* event;
     priv->GetInternalNSEvent(&event);
-    if (event->message == NS_SCRIPT_ERROR) {
+    if (event->message == NS_LOAD_ERROR &&
+        event->eventStructType == NS_SCRIPT_ERROR_EVENT) {
       nsScriptErrorEvent *scriptEvent =
         NS_STATIC_CAST(nsScriptErrorEvent*, event);
       // Create a temp argv for the error event.

@@ -238,7 +238,7 @@ nsSVGScriptElement::ScriptAvailable(nsresult aResult,
     }
 
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsScriptErrorEvent event(PR_TRUE, NS_SCRIPT_ERROR);
+    nsScriptErrorEvent event(PR_TRUE, NS_LOAD_ERROR);
 
     event.lineNr = aLineNo;
 
@@ -280,7 +280,7 @@ nsSVGScriptElement::ScriptEvaluated(nsresult aResult,
 
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event(PR_TRUE,
-                  NS_SUCCEEDED(aResult) ? NS_LOAD : NS_SCRIPT_ERROR);
+                  NS_SUCCEEDED(aResult) ? NS_LOAD : NS_LOAD_ERROR);
     event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
     nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),
                                 presContext, &event, nsnull, &status);
