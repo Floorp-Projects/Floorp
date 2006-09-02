@@ -72,6 +72,10 @@
     <script type="application/x-javascript" src="chrome://browser/content/preferences/feeds.js"/>
 
     <filefield class="indent" id="selectedAppFilefield" disabled="true" hidden="true"/>
+#ifdef XP_WIN
+    <filefield class="indent" id="defaultSystemReaderFilefield" disabled="true" hidden="true"/>
+#endif
+
     <stringbundle id="stringbundle" src="chrome://browser/locale/preferences/feeds.properties"/>
 
     <label value="&feedClick.label;"/>
@@ -107,6 +111,11 @@
                       oncommand="gFeedsPane.chooseClientApp();"/>
             </listcell>
           </listitem>
+#ifdef XP_WIN
+          <listitem id="defaultSystemReaderListitem"
+                    class="listitem-iconic"
+                    hidden="true"/>
+#endif
         </listbox>
       </hbox>
     </radiogroup>
