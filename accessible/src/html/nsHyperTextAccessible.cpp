@@ -569,6 +569,10 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
       // our calculation from the beginning of the next line
       endOffset = startOffset = aOffset + 1;
       startFrame = GetPosAndText(startOffset, endOffset);
+      if (!startFrame) {
+        startOffset = endOffset = aOffset;
+        return NS_OK;
+      }
   }
 
   nsSelectionAmount amount;
