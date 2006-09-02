@@ -312,3 +312,47 @@ class SearchTest(Base):
             failureResult[loc] = 2
           else:
             failureResult[loc] |= 2
+
+class RSSReaderTest(Base):
+  """Test class to collect information about RSS readers and to
+  verify that they might be working.
+
+  """
+  def __init__(self):
+    '''Set up the test class with a good leaf name'''
+    self.leafName = 'feed-reader-results.json'
+    pass
+  def run(self):
+    '''Collect the data from browsers region.properties for all locales
+
+    '''
+    locales = [loc.strip() for loc in open('mozilla/browser/locales/all-locales')]
+    uri = re.compile('browser\\.contentHandlers\\.types\\.([0-5])\\.uri')
+    title = re.compile('browser\\.contentHandlers\\.types\\.([0-5])\\.title')
+    res = {}
+    for loc in locales:
+      l = logging.getLogger('locales.' + loc)
+      regprop = Paths.get_path('browser', loc, 'chrome/browser-region/region.properties')
+      p = Parser.getParser(regprop)
+      p.read(regprop)
+      uris = {}
+      titles = {}
+      for key, val in p:
+        m = uri.match(key)
+        if m:
+          o = int(m.group(1))
+          if uris.has_key(o):
+            l.error('Double definition of RSS reader ' + o)
+          uris[o] = val.strip()
+        else:
+          m = title.match(key)
+          if m:
+            o = int(m.group(1))
+            if titles.has_key(o):
+              l.error('Double definition of RSS reader ' + o)
+            titles[o] = val.strip()
+      ind = sorted(uris.keys())
+      if ind != range(len(ind)) or ind != sorted(titles.keys()):
+        l.error('RSS Readers are badly set up')
+      res[loc] = [(titles[o], uris[o]) for o in ind]
+    return res
