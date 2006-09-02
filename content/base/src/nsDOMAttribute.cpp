@@ -74,8 +74,6 @@ nsDOMAttribute::nsDOMAttribute(nsDOMAttributeMap *aAttrMap,
 
 nsDOMAttribute::~nsDOMAttribute()
 {
-  nsNodeUtils::NodeWillBeDestroyed(this);
-
   if (mChildList) {
     mChildList->DropReference();
     NS_RELEASE(mChildList);
@@ -99,7 +97,7 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsDOMAttribute)
 NS_IMPL_RELEASE_WITH_DESTROY(nsDOMAttribute,
-                             nsNodeUtils::LastRelease(this))
+                             nsNodeUtils::LastRelease(this, PR_TRUE))
 
 // nsIDOMGCParticipant methods
 nsIDOMGCParticipant*

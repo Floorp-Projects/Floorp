@@ -91,14 +91,12 @@ nsGenericDOMDataNode::~nsGenericDOMDataNode()
 {
   NS_PRECONDITION(!IsInDoc(),
                   "Please remove this from the document properly");
-
-  nsNodeUtils::NodeWillBeDestroyed(this);
 }
 
 
 NS_IMPL_ADDREF(nsGenericDOMDataNode)
 NS_IMPL_RELEASE_WITH_DESTROY(nsGenericDOMDataNode,
-                             nsNodeUtils::LastRelease(this))
+                             nsNodeUtils::LastRelease(this, PR_TRUE))
 
 NS_INTERFACE_MAP_BEGIN(nsGenericDOMDataNode)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)

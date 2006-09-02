@@ -589,7 +589,15 @@ protected:
 
     nsresult AddPopupListener(nsIAtom* aName);
 
-protected:
+    class nsXULSlots : public nsGenericElement::nsDOMSlots
+    {
+    public:
+       nsXULSlots(PtrBits aFlags);
+       virtual ~nsXULSlots();
+    };
+
+    virtual nsINode::nsSlots* CreateSlots();
+
     // Required fields
     nsRefPtr<nsXULPrototypeElement>     mPrototype;
     nsCOMPtr<nsIEventListenerManager>   mListenerManager;    // [OWNER]
