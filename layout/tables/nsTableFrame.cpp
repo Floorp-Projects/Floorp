@@ -4940,7 +4940,7 @@ BCMapCellIterator::Next(BCMapCellInfo& aMapInfo)
   while ((mRowIndex <= mAreaEnd.y) && !mAtEnd) {
     for (; mColIndex <= mAreaEnd.x; mColIndex++) {
       PRInt32 rgRowIndex = mRowIndex - mRowGroupStart;
-      CellData* cellData = mCellMap->GetDataAt(*mTableCellMap, rgRowIndex, mColIndex, PR_FALSE);
+      CellData* cellData = mCellMap->GetDataAt(*mTableCellMap, rgRowIndex, mColIndex, PR_TRUE);
       if (!cellData) { // add a dead cell data
         nsRect damageArea;
         cellData = mCellMap->AppendCell(*mTableCellMap, nsnull, rgRowIndex, PR_FALSE, damageArea); if (!cellData) ABORT0();
@@ -4969,7 +4969,7 @@ BCMapCellIterator::PeekRight(BCMapCellInfo&   aRefInfo,
   PRInt32 colIndex = aRefInfo.colIndex + aRefInfo.colSpan;
   PRUint32 rgRowIndex = aRowIndex - mRowGroupStart;
 
-  CellData* cellData = mCellMap->GetDataAt(*mTableCellMap, rgRowIndex, colIndex, PR_FALSE);
+  CellData* cellData = mCellMap->GetDataAt(*mTableCellMap, rgRowIndex, colIndex, PR_TRUE);
   if (!cellData) { // add a dead cell data
     NS_ASSERTION(colIndex < mTableCellMap->GetColCount(), "program error");
     nsRect damageArea;
@@ -5020,7 +5020,7 @@ BCMapCellIterator::PeekBottom(BCMapCellInfo&   aRefInfo,
     }
   }
 
-  CellData* cellData = cellMap->GetDataAt(*mTableCellMap, rgRowIndex, aColIndex, PR_FALSE);
+  CellData* cellData = cellMap->GetDataAt(*mTableCellMap, rgRowIndex, aColIndex, PR_TRUE);
   if (!cellData) { // add a dead cell data
     NS_ASSERTION(rgRowIndex < cellMap->GetRowCount(), "program error");
     nsRect damageArea;
