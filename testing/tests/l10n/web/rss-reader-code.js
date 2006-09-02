@@ -35,99 +35,56 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#sidebar { 
-  float: right;
-  margin-top: -8px;
-}
 
-#menu li[selected] {
-  background-color: lightgrey;
-  border-style: inset inset none inset;
-}
-#menu li { 
-  display: block;
-  float: left;
-  font-weight: bold;
-  padding: .5em;
-  margin-left:1px;
-  margin-right:1px;
-  border-style: outset outset none outset;
-  -moz-border-radius-topleft: 15px;
-  -moz-border-radius-topright: 15px;
-}
-
-#main { 
-  clear: left;
-}
-body {
-  overflow: scroll;
-}
-#content { 
-  vertical-align: top;
-}
-
-div.is_good { 
-  padding-left: 16px;
-}
-
-.missing, .busted { 
-  background-color: red;
-}
-
-.obsolete, .fair { 
-  background-color: orange;
-}
-
-.zero { 
-  opacity: .3;
-  background-color: green !important;
-}
-
-
-.good { 
-  background-color: limegreen;
-}
-
-.void { 
-  color: grey;
-  background-color: lightgrey;
-}
-
-td.locale { 
-  width: 4em;
-}
-td.app-res { 
-  width: 4em;
-}
-
-td.count { 
-  padding-left:3px;
-  padding-right: 3px;
-  width: 3.5em;
-  text-align: right;
-}
-
-div.calbordered { 
-  float: none;
-}
-
-/* waterfall view */
-#log-dlg {
-  overflow: scroll;
-}
-.log-row {
-  margin: 0pt;
-}
-.ERROR {
-  background-color: coral;
-}
-
-/* search view */
-
-td.ordered {border: 2px solid black;}
-td.error {background-color: coral;}
-td.conflict {background-color: grey;}
-td.enUS {opacity: .5;}
-
-/* feedreader view */
-.feedreader { border: thin solid lightgrey }
+var rssController = {
+  __proto__: baseController,
+  beforeSelect: function() {
+    this.hashes = {};
+    rssView.setUpHandlers();
+    var _t = this;
+    var callback = function(obj) {
+      delete _t.req;
+      if (view != rssView) {
+        // ignore, we have switched again
+        return;
+      }
+      _t.result = obj;
+      rssView.updateView(keys(_t.result));
+    };
+    this.req = JSON.get('results/' + this.tag + '/feed-reader-results.json',
+                        callback);
+  },
+  beforeUnSelect: function() {
+    rssView.destroyHandlers();
+  },
+  showView: function(aClosure) {
+    // json onload handler does this;
+  },
+  getContent: function(aLoc) {
+    var row = document.createDocumentFragment();
+    var lst = this.result[aLoc];
+    var _t = this;
+    for each (var pair in lst) {
+      //YAHOO.widget.Logger.log('testing ' + path);
+      var td = document.createElement('td');
+      td.className = 'feedreader';
+      td.innerHTML = pair[0];
+      td.title = pair[1];
+      row.appendChild(td);
+    }
+    return row;
+  }
+};
+var rssView = {
+  __proto__: baseView,
+  setUpHandlers: function() {
+    _t = this;
+  },
+  destroyHandlers: function() {
+    if (this._dv) {
+      this._dv.hide();
+    }
+  }
+};
+controller.addPane('RSS', 'rss', rssController, rssView);
+//controller.addLocales(keys(results.locales));
