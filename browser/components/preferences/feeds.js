@@ -144,7 +144,28 @@ var gFeedsPane = {
    */
   _initFeedReaders: function() {
     this.updateSelectedApplicationInfo();
+#ifdef XP_WIN
+    // On Windows, list the system default feed reader if it is
+    // not the last-selected application already
+    try {
+      var systemDefaultReader = this._getSystemDefaultReader();
+      if (systemDefaultReader) {
+        var defaultSystemReaderFilefield = this.element("defaultSystemReaderFilefield");
+        defaultSystemReaderFilefield.file = systemDefaultReader;
+        var selectedAppFile = this.element("selectedAppFilefield").file;
+        if (!selectedAppFile || defaultSystemReaderFilefield.file.path !=
+            selectedAppFile.path) {
+          var defaultReaderItem = this.element("defaultSystemReaderListitem");
+          defaultReaderItem.setAttribute("label", defaultSystemReaderFilefield.label);
+          defaultReaderItem.setAttribute("image", defaultSystemReaderFilefield.image);
+          defaultReaderItem.hidden = false;
+        }
+      }
+    }
+    catch(ex) { }
+#endif
 
+    // List of web handlers
     var wccr = 
         Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
         getService(Ci.nsIWebContentConverterService);
@@ -152,10 +173,10 @@ var gFeedsPane = {
     if (handlers.length == 0)
       return;
 
-    var appRow = this.element("selectedApplicationListitem");
     var ios = 
         Cc["@mozilla.org/network/io-service;1"].
         getService(Ci.nsIIOService);
+    var readersList = this.element("readers");
     for (var i = 0; i < handlers.length; ++i) {
       var row = document.createElementNS(kXULNS, "listitem");
       row.className = "listitem-iconic";
@@ -165,7 +186,7 @@ var gFeedsPane = {
       var uri = ios.newURI(handlers[i].uri, null, null);
       row.setAttribute("image", uri.prePath + "/favicon.ico");
       
-      appRow.parentNode.appendChild(row);
+      readersList.appendChild(row);
     }
   },
 
@@ -174,7 +195,7 @@ var gFeedsPane = {
    */
   updateSelectedApplicationInfo: function() {
     var appItemCell = this.element("selectedApplicationCell");
-    var selectedAppFilefield = this.element("selectedAppFilefield")
+    var selectedAppFilefield = this.element("selectedAppFilefield");
     selectedAppFilefield.file = this.element(PREF_SELECTED_APP).value;
     if (selectedAppFilefield.file) {
       appItemCell.setAttribute("label", selectedAppFilefield.label);
@@ -230,6 +251,20 @@ var gFeedsPane = {
         this._silentSelectReader(this.element("liveBookmarksListItem"));
         break;
       case "client":
+#ifdef XP_WIN
+        // Keep the system default feed reader item selected if the
+        // last-selected application is the the system default feed reader
+        // and if it is already selected
+        var currentItem = this.element("readers").currentItem;
+        if (currentItem && currentItem.id == "defaultSystemReaderListitem") {
+          var defaultSystemReaderFile = this.element("defaultSystemReaderFilefield").file;
+          var selectedAppFile = this.element("selectedAppFilefield").file;
+          if (selectedAppFile && defaultSystemReaderFile &&
+              defaultSystemReaderFile.path == selectedAppFile.path)
+            break;
+        }
+#endif
+
         this._silentSelectReader(this.element("selectedApplicationListitem"));
         break;
       case "web":
@@ -322,6 +357,13 @@ var gFeedsPane = {
         case "selectedApplicationListitem":
           // PREF_SELECTED_APP is saved in chooseClientApp
           this.element(PREF_SELECTED_READER).value = "client";
+          break;
+#ifdef XP_WIN
+        case "defaultSystemReaderListitem":
+          this.element(PREF_SELECTED_APP).value = this.element("defaultSystemReaderFilefield").file;
+          this.element(PREF_SELECTED_READER).value = "client";
+          break;
+#endif
       }
     }
   }

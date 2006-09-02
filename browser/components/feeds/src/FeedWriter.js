@@ -488,14 +488,14 @@ FeedWriter.prototype = {
             selectedAppMenuItem.wrappedJSObject.hidden = false;
             selectedAppMenuItem.doCommand();
 
-#ifdef ENABLE_SYSTEM_FEED_READER_CODE
+#ifdef XP_WIN
             // Only show the default reader menuitem if the default reader
             // isn't the selected application
             var defaultHandlerMenuItem =
             this._document.getElementById("defaultHandlerMenuItem");
             if (defaultHandlerMenuItem) {
               defaultHandlerMenuItem.wrappedJSObject.hidden =
-                defaultHandlerMenuItem.file.path == selectedApp.path;
+                defaultHandlerMenuItem.wrappedJSObject.file.path == selectedApp.path;
             }
 #endif
             break;
@@ -547,7 +547,7 @@ FeedWriter.prototype = {
     }
     handlersMenuPopup.appendChild(menuItem);
 
-#ifdef ENABLE_SYSTEM_FEED_READER_CODE
+#ifdef XP_WIN
     // On Windows, also list the default feed reader
     var defaultReader;
     try {
@@ -584,7 +584,7 @@ FeedWriter.prototype = {
 
         // Hide the default reader item if it points to the same application
         // as the last-selected application
-        if (defaultReader.path == selectedApp.path)
+        if (selectedApp && selectedApp.path == defaultReader.path)
           menuItem.setAttribute("hidden", "true");
   
         handlersMenuPopup.appendChild(menuItem);
@@ -770,7 +770,7 @@ FeedWriter.prototype = {
     else {
       switch (selectedHandler.id) {
         case "selectedAppMenuItem":
-#ifdef ENABLE_SYSTEM_FEED_READER_CODE
+#ifdef XP_WIN
         case "defaultHandlerMenuItem":
 #endif
           prefs.setCharPref(PREF_SELECTED_READER, "client");
