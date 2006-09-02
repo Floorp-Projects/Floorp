@@ -114,6 +114,17 @@ div.calbordered {
   float: none;
 }
 
+/* waterfall view */
+#log-dlg {
+  overflow: scroll;
+}
+.log-row {
+  margin: 0pt;
+}
+.ERROR {
+  background-color: coral;
+}
+
 /* search view */
 
 td.ordered {border: 2px solid black;}
