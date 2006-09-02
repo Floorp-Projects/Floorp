@@ -186,7 +186,7 @@ if not os.path.isdir(basePath):
   os.mkdir(basePath)
 
 
-tests = [Tests.CompareTest(),Tests.SearchTest()]
+tests = [Tests.CompareTest(), Tests.SearchTest(), Tests.RSSReaderTest()]
 drop = {}
 for test in tests:
   res = test.run()
@@ -221,14 +221,17 @@ if len(water) > rotateLen * 1.5:
   suffix = ''
   if opts.gzip:
     suffix = '.gz'
-  fnames = [os.path.join(basePath, 'buildlog-%x.json'%i) + suffix for i in range(16)]
+  fnames = [os.path.join(opts.target, 'waterfall-%x.json'%i) + suffix for i in range(16)]
   # remove oldest log
-  if os.path.isfile(flames[15]):
+  if os.path.isfile(fnames[15]):
     os.remove(fnames[15])
   for l in range(14, -1, -1):
     if os.path.isfile(fnames[l]):
       os.rename(fnames[l], fnames[l+1])
-  saveJSON(water[:rotateLen], fnames[0])
+  w0 = Wrapper('.', fnames[0])
+  w0.open('w')
+  simplejson.dump(water[:rotateLen], w0, sort_keys=True)
+  w0.close()
   water = water[rotateLen:]
 
 w.open('w')
