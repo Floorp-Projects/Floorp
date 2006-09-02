@@ -101,12 +101,7 @@ JSON_c.prototype = {
     }
   },
   handleFailure : function(o) {
-    if (o.callback) {
-      o.callback.handleFailure();
-      delete o.callback;
-      return;
-    }
-    throw("load failed with " + o.status + " " + o.statusText);
+    YAHOO.widget.Logger("load failed with " + o.status + " " + o.statusText);
   }
 };
 var JSON = new JSON_c();
@@ -261,6 +256,44 @@ baseController = {
   },
   showView: function(aClosure) {
     view.updateView(controller.locales, aClosure);
+  },
+  showLog: function(aTag, aLocale) {
+    var _t = this;
+    var dlgProps = { xy: ["1em", "1em"], height: "40em", width: "40em",
+                     modal:true, draggable:false }
+    var dlg = new YAHOO.widget.SimpleDialog("log-dlg", dlgProps);
+    var prefix = '';
+    if (aLocale) {
+      prefix  = '[' + aLocale * '] ';
+    }
+    dlg.setHeader(prefix + 'build log, ' + aTag);
+    dlg.setBody('Loading &hellip;');
+    var okButton = {
+      text: 'OK',
+      handler: function(){
+        this.hide();
+        this.destroy()
+      },
+      isDefault: true
+    };
+    dlg.cfg.queueProperty("buttons", [okButton]);
+    dlg.render(document.body);
+    dlg.moveTo(10, 10);
+    var callback = function(obj) {
+      _t.handleLog.apply(_t, [obj, dlg, aLocale]);
+    };
+    JSON.get('results/' + aTag + '/buildlog.json', callback);
+  },
+  handleLog: function(aLog, aDlg, aLocale) {
+    var df = document.createDocumentFragment();
+    for each (var r in aLog) {
+      var d = document.createElement('pre');
+      d.className = 'log-row ' + r[1];
+      // XXX filter on r[0:1]
+      d.textContent = r[2].replace(/[\n\r]$/, '');
+      df.appendChild(d);
+    }
+    aDlg.setBody(df);
   },
   getContent: function(aLoc) {
     if (! this._target) return;

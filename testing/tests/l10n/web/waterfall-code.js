@@ -54,6 +54,14 @@ var waterfallView = {
       head.appendChild(h);
     }
     var heads = head.childNodes;
+    var lastDate = -1;
+    function pad(aNumber, length) {
+      str = String(aNumber);
+      while (str.length < length) {
+        str = '0' + str;
+      }
+      return str;
+    };
     for (var i = aResult.length - 1; i >= 0; i--) {
       var wf = document.createElement('tr');
       wf.className = 'waterfall-row';
@@ -65,7 +73,15 @@ var waterfallView = {
       wf.setAttribute('style', style);
       var cell = view.getCell();
       cell.className = 'cell-label';
-      cell.textContent = b[0];
+      var d = this.getUTCDate(b[0]);
+      var label = pad(d.getUTCHours(), 2) + ':' +
+        pad(d.getUTCMinutes(), 2);
+      if (lastDate != d.getUTCDate()) {
+        lastDate = d.getUTCDate();
+        label = d.getUTCDate() +'/'+ (d.getUTCMonth()+1) + '<br>' + label;
+      }
+      cell.innerHTML = label +
+        '<br><a href="javascript:controller.showLog(\'' + b[0] + '\');">L</a>';
       wf.appendChild(cell);
       var locs = keys(b[2]);
       var h = 1;
@@ -122,6 +138,14 @@ var waterfallView = {
     _t = this;
   },
   destroyHandlers: function() {
+  },
+  // Helper functions
+  getUTCDate: function(aTag) {
+    var D = new Date();
+    var d = aTag.split(/[ -]/).map(function(aEl){return Number(aEl);});
+    d[1] -= 1; // adjust month
+    D.setTime(Date.UTC.apply(null,d));
+    return D;
   }
 };
 var waterfallController = {
