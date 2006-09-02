@@ -72,11 +72,6 @@ const CID = Components.ID("{ec7a6c20-e081-11da-8ad9-0800200c9a66}");
 const CONTRACT_ID = "@mozilla.org/browser/sessionstartup;1";
 const CLASS_NAME = "Browser Session Startup Service";
 
-const STATE_STOPPED = 0;
-const STATE_RUNNING = 1;
-const STATE_QUITTING = -1;
-
-const STATE_STOPPED_STR = "stopped";
 const STATE_RUNNING_STR = "running";
 
 /* :::::::: Pref Defaults :::::::::::::::::::: */
@@ -103,9 +98,6 @@ function SessionStartup() {
 
 SessionStartup.prototype = {
 
-  // set default load state
-  _loadState: STATE_STOPPED,
-
   // the state to restore at startup
   _iniString: null,
 
@@ -128,29 +120,23 @@ SessionStartup.prototype = {
     var dirService = Cc["@mozilla.org/file/directory_service;1"].
                      getService(Ci.nsIProperties);
     this._sessionFile = dirService.get("ProfD", Ci.nsILocalFile);
-    this._sessionFileBackup = this._sessionFile.clone();
     this._sessionFile.append("sessionstore.js");
-    this._sessionFileBackup.append("sessionstore.bak");
-   
+    
     // only read the session file if config allows possibility of restoring
     var resumeFromCrash = this._getPref("sessionstore.resume_from_crash", DEFAULT_RESUME_FROM_CRASH);
     if (resumeFromCrash || this._doResumeSession()) {
       // get string containing session state
-      this._iniString = this._readFile(this._getSessionFile());
+      this._iniString = this._readFile(this._sessionFile);
       if (this._iniString) {
         try {
-          // get uri for file path
-          var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-          var uri = ioService.newFileURI(this._sessionFile, null, null);
-
           // parse the session state into JS objects
-          var s = new Components.utils.Sandbox(uri.spec);
-          this._initialState = Components.utils.evalInSandbox(this._iniString, s);
+          var s = new Components.utils.Sandbox("about:blank");
+          var initialState = Components.utils.evalInSandbox(this._iniString, s);
 
           // set bool detecting crash
           this._lastSessionCrashed =
-            this._initialState.session && this._initialState.session.state &&
-            this._initialState.session.state == STATE_RUNNING_STR;
+            initialState.session && initialState.session.state &&
+            initialState.session.state == STATE_RUNNING_STR;
         // invalid .INI file - nothing can be restored
         }
         catch (ex) { debug("The session file is invalid: " + ex); } 
@@ -159,8 +145,7 @@ SessionStartup.prototype = {
     
     // prompt and check prefs
     this._doRestore = this._lastSessionCrashed ? this._doRecoverSession() : this._doResumeSession();
-    if (this._initialState && !this._doRestore) {
-      delete this._initialState; // delete state
+    if (this._iniString && !this._doRestore) {
       this._iniString = null; // reset the state string
     }
     if (this._getPref("sessionstore.resume_session_once", DEFAULT_RESUME_SESSION_ONCE)) {
@@ -181,9 +166,6 @@ SessionStartup.prototype = {
   observe: function sss_observe(aSubject, aTopic, aData) {
     var observerService = Cc["@mozilla.org/observer-service;1"].
                           getService(Ci.nsIObserverService);
-
-    // for event listeners
-    var _this = this;
 
     switch (aTopic) {
     case "app-startup": 
@@ -241,16 +223,6 @@ SessionStartup.prototype = {
     return this._doRestore && this._iniString != null;
   },
 
-/* ........ Disk Access .............. */
-
-  /**
-   * get session datafile (or its backup)
-   * @returns nsIFile 
-   */
-  _getSessionFile: function sss_getSessionFile(aBackup) {
-    return aBackup ? this._sessionFileBackup : this._sessionFile;
-  },
-
 /* ........ Auxiliary Functions .............. */
 
   /**
@@ -275,7 +247,7 @@ SessionStartup.prototype = {
     // if the prompt fails, recover anyway
     var recover = true;
     // allow extensions to hook in a more elaborate restore prompt
-    //zeniko: drop this when we're using our own dialog instead of a standard prompt
+    // XXXzeniko drop this when we're using our own dialog instead of a standard prompt
     var dialogURI = this._getPref("sessionstore.restore_prompt_uri");
     
     try {
