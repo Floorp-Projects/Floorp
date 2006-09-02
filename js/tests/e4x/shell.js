@@ -46,7 +46,8 @@ var VERBOSE = false;
 var SECT_PREFIX = 'Section ';
 var SECT_SUFFIX = ' of test -';
 
-if (typeof options != 'undefined')
+if (typeof options != 'undefined' &&
+    options().indexOf('xml') < 0)
 {
     // automatically turn on e4x support
     options('xml');
