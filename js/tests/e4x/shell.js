@@ -46,6 +46,12 @@ var VERBOSE = false;
 var SECT_PREFIX = 'Section ';
 var SECT_SUFFIX = ' of test -';
 
+if (typeof options != 'undefined')
+{
+    // automatically turn on e4x support
+    options('xml');
+}
+
 /*
  * The test driver searches for such a phrase in the test output.
  * If such phrase exists, it will set n as the expected exit code.
