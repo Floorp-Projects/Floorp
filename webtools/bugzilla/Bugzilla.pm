@@ -32,6 +32,7 @@ use Bugzilla::Auth;
 use Bugzilla::Auth::Persist::Cookie;
 use Bugzilla::CGI;
 use Bugzilla::DB;
+use Bugzilla::Install::Localconfig qw(read_localconfig);
 use Bugzilla::Template;
 use Bugzilla::User;
 use Bugzilla::Error;
@@ -145,6 +146,11 @@ sub cgi {
     my $class = shift;
     request_cache()->{cgi} ||= new Bugzilla::CGI();
     return request_cache()->{cgi};
+}
+
+sub localconfig {
+    request_cache()->{localconfig} ||= read_localconfig();
+    return request_cache()->{localconfig};
 }
 
 sub params {

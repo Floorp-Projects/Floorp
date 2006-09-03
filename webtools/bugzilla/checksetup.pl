@@ -331,7 +331,7 @@ require Bugzilla::Bug;
 import Bugzilla::Bug qw(is_open_state);
 
 require Bugzilla::Install::Localconfig;
-import Bugzilla::Install::Localconfig qw(read_localconfig update_localconfig);
+import Bugzilla::Install::Localconfig qw(update_localconfig);
 
 require Bugzilla::Install::Filesystem;
 import Bugzilla::Install::Filesystem qw(update_filesystem create_htaccess
@@ -349,11 +349,7 @@ require Bugzilla::Install;
 
 print "Reading " .  bz_locations()->{'localconfig'} . "...\n" unless $silent;
 update_localconfig({ output => !$silent, answer => \%answer });
-my $lc_hash = read_localconfig();
-
-# XXX Eventually this variable can be eliminated, but it is
-# used more than once throughout checksetup right now.
-my $my_webservergroup = $lc_hash->{'webservergroup'};
+my $lc_hash = Bugzilla->localconfig;
 
 ###########################################################################
 # Check --DATABASE-- setup

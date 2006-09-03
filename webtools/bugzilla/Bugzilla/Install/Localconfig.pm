@@ -33,11 +33,9 @@ use IO::File;
 use Safe;
 
 use base qw(Exporter);
-our @EXPORT = qw(
-    read_localconfig
-);
 
 our @EXPORT_OK = qw(
+    read_localconfig
     update_localconfig
 );
 
@@ -344,6 +342,9 @@ EOT
     # Now we do some checks on localconfig values.
     _check_web_server_group($localconfig->{'webservergroup'}) if $output;
 
+    # Reset the cache for Bugzilla->localconfig so that it will be re-read
+    delete Bugzilla->request_cache->{localconfig};
+
     return { old_vars => \@old_vars, new_vars => \@new_vars };
 }
 
@@ -460,14 +461,14 @@ Bugzilla::Install::Localconfig - Functions and variables dealing
 
 =head1 SYNOPSIS
 
- use Bugzilla::Install::Requirements qw(read_localconfig update_localconfig)
- my $localconfig = read_localconfig();
+ use Bugzilla::Install::Requirements qw(update_localconfig);
  update_localconfig({ output => 1, answer => \%answer });
 
 =head1 DESCRIPTION
 
 This module is used primarily by L<checksetup.pl> to create and
-modify the localconfig file.
+modify the localconfig file. Most scripts should use L<Bugzilla/localconfig>
+to access localconfig variables.
 
 =head1 CONSTANTS
 

@@ -59,7 +59,7 @@ sub FILESYSTEM {
     my $templatedir   = bz_locations()->{'templatedir'};
     my $libdir        = bz_locations()->{'libpath'};
 
-    my $ws_group      = read_localconfig()->{'webservergroup'};
+    my $ws_group      = Bugzilla->localconfig->{'webservergroup'};
 
     # The set of permissions that we use:
 
@@ -494,7 +494,7 @@ sub fix_all_file_permissions {
 
     my $owner_id = POSIX::getuid();
     my $group_id = POSIX::getgid();
-    my $ws_group = read_localconfig()->{'webservergroup'};
+    my $ws_group = Bugzilla->localconfig->{'webservergroup'};
     if ($ws_group) {
         my $ws_group_id = getgrnam($ws_group);
         die "There is no such group: $ws_group. Check your \$webservergroup"
