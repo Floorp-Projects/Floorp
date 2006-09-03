@@ -518,6 +518,8 @@ PutBlockObjects(JSContext *cx, JSStackFrame *fp)
 
     ok = JS_TRUE;
     for (obj = fp->scopeChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
+        if (JS_GetPrivate(cx, obj) != fp)
+            break;
         if (OBJ_GET_CLASS(cx, obj) == &js_BlockClass)
             ok &= js_PutBlockObject(cx, obj);
     }
