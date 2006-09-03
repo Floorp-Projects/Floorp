@@ -526,11 +526,13 @@ nsIEProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
       regValue[MAX_PATH] = '\0';
       nsCAutoString  homePageURL;
       nsCOMPtr<nsIURI> homePageURI;
-      NS_NewURI(getter_AddRefs(homePageURI), NS_REINTERPRET_CAST(char *, regValue), nsnull, nsnull);
-      rv = homePageURI->GetSpec(homePageURL);
+      rv = NS_NewURI(getter_AddRefs(homePageURI), NS_REINTERPRET_CAST(char *, regValue), nsnull, nsnull);
+      if (NS_SUCCEEDED(rv)) {
+        rv = homePageURI->GetSpec(homePageURL);
 
-      if (NS_SUCCEEDED(rv) && !homePageURL.IsEmpty())
-        aResult.Assign(homePageURL);
+        if (NS_SUCCEEDED(rv) && !homePageURL.IsEmpty())
+          aResult.Assign(homePageURL);
+      }
     }
   }
   ::RegCloseKey(regKey);
