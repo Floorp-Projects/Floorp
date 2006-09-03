@@ -41,7 +41,7 @@
 
 1 24 "MozillaSunbird.exe.manifest"
 
-# SUNBIRD_ICO is defined in ./Makefile for generic vs. official branding
+/* SUNBIRD_ICO is defined in ./Makefile for generic vs. official branding */
 IDI_APPICON ICON SUNBIRD_ICO
 IDI_APPLICATION ICON SUNBIRD_ICO
 
