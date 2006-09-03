@@ -139,6 +139,43 @@ var gFeedsPane = {
     window.addEventListener("unload", this, false);
   },
 
+#ifdef XP_WIN
+  /**
+   * Returns the system default feed reader as a nsILocalFile object if any,
+   * null otherwise.
+   */
+  _getSystemDefaultReader: function() {
+    var defaultReader;
+    try {
+      const WRK = Ci.nsIWindowsRegKey;
+      var regKey =
+          Cc["@mozilla.org/windows-registry-key;1"].createInstance(WRK);
+      regKey.open(WRK.ROOT_KEY_CLASSES_ROOT, 
+                  "feed\\shell\\open\\command", WRK.ACCESS_READ);
+      var path = regKey.readStringValue("");
+      if (path.charAt(0) == "\"") {
+        // Everything inside the quotes
+        path = path.substr(1);
+        path = path.substr(0, path.indexOf("\""));
+      }
+      else {
+        // Everything up to the first space
+        path = path.substr(0, path.indexOf(" "));
+      }
+
+      defaultReader = Cc["@mozilla.org/file/local;1"].
+                      createInstance(Ci.nsILocalFile);
+      defaultReader.initWithPath(path);
+
+      return defaultReader;
+    }
+    catch (ex) { }
+
+    return null;
+  },
+#endif
+
+
   /**
    * Populates the UI list of available feed readers.
    */
