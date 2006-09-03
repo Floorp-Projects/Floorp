@@ -2678,10 +2678,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
       case TOK_FOR:
       {
 #if JS_HAS_BLOCK_SCOPE
-        JSParseNode *pnlet;
-        JSStmtInfo blockInfo;
-
-        pnlet = NULL;
+        JSParseNode *pnlet = NULL;
 #endif
 
         /* A FOR node is binary, left is loop control and right is the body. */
@@ -2732,11 +2729,9 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 pn1 = Variables(cx, ts, tc);
 #if JS_HAS_BLOCK_SCOPE
             } else if (tt == TOK_LET) {
-                (void) js_GetToken(cx, ts);
-                pnlet = PushLexicalScope(cx, ts, tc, &blockInfo);
-                if (!pnlet)
-                    return NULL;
-                pn1 = Variables(cx, ts, tc);
+                pn1 = Statement(cx, ts, tc);
+                if (pn1 && pn1->pn_arity == PN_LIST)
+                    pnlet = tc->blockNode;
 #endif
             } else {
                 pn1 = Expr(cx, ts, tc);
@@ -3245,8 +3240,17 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
         /* Check for a let statement or let expression. */
         if (js_PeekToken(cx, ts) == TOK_LP) {
-            pn = LetBlock(cx, ts, tc, JS_TRUE);
+            /*
+             * The TOK_FOR case above calls Statement to handle the first part
+             * of a 'for (let ...; cond; update) body' loop, so treat this let
+             * as an expression, not a statement, and skip automatic semicolon
+             * insertion by returning early.
+             */
+            pn = LetBlock(cx, ts, tc, !(tc->flags & TCF_IN_FOR_INIT));
             if (!pn || pn->pn_op == JSOP_LEAVEBLOCK)
+                return pn;
+
+            if (tc->flags & TCF_IN_FOR_INIT)
                 return pn;
 
             /* Let expressions require automatic semicolon insertion. */
@@ -3330,6 +3334,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn = Variables(cx, ts, tc);
         if (!pn)
             return NULL;
+        if (tc->flags & TCF_IN_FOR_INIT)
+            return pn;
         pn->pn_extra = PNX_POPVAR;
         break;
       }
