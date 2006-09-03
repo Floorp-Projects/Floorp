@@ -197,6 +197,8 @@ public:
 
   void EnsureMenuItemIsVisible(nsIMenuFrame* aMenuFrame);
 
+  // This sets 'left' and 'top' attributes.
+  // May kill the frame.
   void MoveTo(PRInt32 aLeft, PRInt32 aTop);
 
   void GetAutoPosition(PRBool* aShouldAutoPosition);
@@ -209,6 +211,9 @@ public:
 protected:
   friend class nsMenuPopupTimerMediator;
   NS_HIDDEN_(nsresult) Notify(nsITimer* aTimer);
+
+  // Move without updating attributes.
+  void MoveToInternal(PRInt32 aLeft, PRInt32 aTop);
 
   // redefine to tell the box system not to move the
   // views.

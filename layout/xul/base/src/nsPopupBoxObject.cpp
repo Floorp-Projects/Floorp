@@ -165,9 +165,10 @@ nsPopupBoxObject::SizeTo(PRInt32 aWidth, PRInt32 aHeight)
   nsAutoString width, height;
   width.AppendInt(aWidth);
   height.AppendInt(aHeight);
-  
-  mContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::width, width, PR_FALSE);
-  mContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::height, height, PR_TRUE);
+
+  nsCOMPtr<nsIContent> content = mContent;
+  content->SetAttr(kNameSpaceID_None, nsHTMLAtoms::width, width, PR_FALSE);
+  content->SetAttr(kNameSpaceID_None, nsHTMLAtoms::height, height, PR_TRUE);
 
   return NS_OK;
 }
