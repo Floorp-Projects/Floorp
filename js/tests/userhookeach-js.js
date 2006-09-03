@@ -44,10 +44,14 @@ var gCheckInterval = 1000;
 
 // if jsUnit status doesn't change, force page complete.
 
+function userOnStart()
+{
+  registerDialogCloser();
+}
+
 function userOnBeforePage()
 {
   dlog('userOnBeforePage');
-  registerDialogCloser();
 }
 
 var gReport;
@@ -56,6 +60,13 @@ function userOnAfterPage()
 {
   dlog('userOnAfterPage');
   checkTestCompleted();
+}
+
+function userOnStop()
+{
+  // close any pending dialogs
+  closeDialog();
+  unregisterDialogCloser();
 }
 
 function checkTestCompleted()
@@ -67,7 +78,6 @@ function checkTestCompleted()
   }
   if (win.gPageCompleted)
   {
-    unregisterDialogCloser();
     gPageCompleted = true;
 
     var testcases = win.testcases;
