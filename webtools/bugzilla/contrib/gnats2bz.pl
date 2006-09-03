@@ -649,7 +649,7 @@ sub write_bugs {
         }
     } elsif ($pr_data{"State"} eq "suspended") {
         $bug_status = "RESOLVED";
-        $resolution = "LATER";
+        $resolution = "WONTFIX";
     } else {
         $bug_status = "NEW";
         $resolution = "";

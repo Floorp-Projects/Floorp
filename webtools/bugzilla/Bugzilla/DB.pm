@@ -68,8 +68,8 @@ use constant ENUM_DEFAULTS => {
     rep_platform => ["All","PC","Macintosh","Other"],
     bug_status   => ["UNCONFIRMED","NEW","ASSIGNED","REOPENED","RESOLVED",
                      "VERIFIED","CLOSED"],
-    resolution   => ["","FIXED","INVALID","WONTFIX","LATER","REMIND",
-                     "DUPLICATE","WORKSFORME","MOVED"],
+    resolution   => ["","FIXED","INVALID","WONTFIX", "DUPLICATE","WORKSFORME",
+                     "MOVED"],
 };
 
 #####################################################################
