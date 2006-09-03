@@ -43,10 +43,14 @@ var gCheckInterval = 1000;
 
 // if jsUnit status doesn't change, force page complete.
 
+function userOnStart()
+{
+  registerDialogCloser();
+}
+
 function userOnBeforePage()
 {
   dlog('userOnBeforePage');
-  registerDialogCloser();
 }
 
 var gReport;
@@ -54,7 +58,6 @@ var gReport;
 function userOnAfterPage()
 {
   dlog('userOnAfterPage');
-  unregisterDialogCloser();
 
   var win = gSpider.mDocument.defaultView;
   if (win.wrappedJSObject)
@@ -99,6 +102,13 @@ function userOnAfterPage()
 // so need to delay this call to make 
 // sure the previous ones have completed
   win.setTimeout("executeList()", 10000);
+}
+
+function userOnStop()
+{
+  // close any pending dialogs
+  closeDialog();
+  unregisterDialogCloser();
 }
 
 
