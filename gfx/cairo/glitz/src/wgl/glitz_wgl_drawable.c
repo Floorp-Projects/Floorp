@@ -79,8 +79,8 @@ _glitz_wgl_create_drawable (glitz_wgl_screen_info_t *screen_info,
 	glitz_wgl_pop_current (drawable);
     }
 
-    if (width > context->max_viewport_dims[0] ||
-	height > context->max_viewport_dims[1]) {
+    if (width > context->backend.max_viewport_dims[0] ||
+	height > context->backend.max_viewport_dims[1]) {
 	free (drawable);
 	return NULL;
     }
@@ -100,20 +100,20 @@ _glitz_wgl_create_pbuffer_drawable (glitz_wgl_screen_info_t    *screen_info,
     glitz_wgl_context_t *context;
     glitz_int_drawable_format_t *iformat = &screen_info->formats[format->id];
     HPBUFFERARB pbuffer;
-    HDC dc;
+    HDC dc = NULL;
 
     if (!(iformat->types & GLITZ_DRAWABLE_TYPE_PBUFFER_MASK))
 	return NULL;
 
-    context = glitz_wgl_context_get (screen_info, dc, format);
-    if (!context)
-        return NULL;
-    
     pbuffer = glitz_wgl_pbuffer_create (screen_info, screen_info->format_ids[format->id],
 					width, height,
 					&dc);
     if (!pbuffer)
 	return NULL;
+
+    context = glitz_wgl_context_get (screen_info, dc, format);
+    if (!context)
+        return NULL;
 
     drawable = _glitz_wgl_create_drawable (screen_info, context, format,
 					   NULL, dc, pbuffer,

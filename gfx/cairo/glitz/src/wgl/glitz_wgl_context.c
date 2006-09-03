@@ -45,7 +45,7 @@ _glitz_wgl_context_create (glitz_wgl_screen_info_t *screen_info,
 			   int                     format_id,
 			   glitz_wgl_context_t     *context)
 {
-    PIXELFORMATDESCRIPTOR dummy_pfd;
+    PIXELFORMATDESCRIPTOR dummy_pfd = { 0 };
 
     dummy_pfd.nSize = sizeof (PIXELFORMATDESCRIPTOR);
     dummy_pfd.nVersion = 1;
@@ -208,8 +208,22 @@ glitz_wgl_context_get (glitz_wgl_screen_info_t          *screen_info,
     context->backend.draw_buffer = _glitz_drawable_draw_buffer;
     context->backend.read_buffer = _glitz_drawable_read_buffer;
 
-    context->backend.drawable_formats = screen_info->formats;
-    context->backend.n_drawable_formats = screen_info->n_formats;
+    context->backend.drawable_formats = NULL;
+    context->backend.n_drawable_formats = 0;
+
+    if (screen_info->n_formats)
+    {
+	int size;
+
+	size = sizeof (glitz_int_drawable_format_t) * screen_info->n_formats;
+	context->backend.drawable_formats = malloc (size);
+	if (context->backend.drawable_formats)
+	{
+	    memcpy (context->backend.drawable_formats, screen_info->formats,
+		    size);
+	    context->backend.n_drawable_formats = screen_info->n_formats;
+	}
+    }
 
     context->backend.texture_formats = NULL;
     context->backend.formats = NULL;
@@ -227,6 +241,9 @@ void
 glitz_wgl_context_destroy (glitz_wgl_screen_info_t *screen_info,
 			   glitz_wgl_context_t     *context)
 {
+    if (context->backend.drawable_formats)
+	free (context->backend.drawable_formats);
+
     if (context->backend.formats)
 	free (context->backend.formats);
 
@@ -245,9 +262,6 @@ _glitz_wgl_context_initialize (glitz_wgl_screen_info_t *screen_info,
     glitz_backend_init (&context->backend,
 			glitz_wgl_get_proc_address,
 			(void *) screen_info);
-
-    context->backend.gl->get_integer_v (GLITZ_GL_MAX_VIEWPORT_DIMS,
-					context->max_viewport_dims);
 
     glitz_initiate_state (&_glitz_wgl_gl_proc_address);
 
