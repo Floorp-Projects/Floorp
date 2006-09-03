@@ -1362,9 +1362,13 @@ UpdateService.prototype = {
     // but in selectUpdate(), minor updates trump major updates
     // if major trumps minor, and we said "never" to the major
     // we'd never see the minor update.
+    // 
+    // note, the never decision should only apply to major updates
+    // see bug #350636 for a scenario where this could potentially
+    // be an issue
     var neverPrefName = PREF_UPDATE_NEVER_BRANCH + update.version;
     var never = getPref("getBoolPref", neverPrefName, false);
-    if (never)
+    if (never && update.type == "major")
       return;
 
     if (this._shouldPrompt(update))
