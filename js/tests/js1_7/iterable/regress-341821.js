@@ -40,9 +40,10 @@ var summary = 'Close hook crash';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
+var ialert = 0;
 
 //-----------------------------------------------------------------------------
-test();
+//test();
 //-----------------------------------------------------------------------------
 
 function test()
@@ -67,7 +68,7 @@ function test()
     iter = null;
     if (typeof alert != 'undefined')
     {
-      alert(1);
+      alert(++ialert);
     }
   }
 
@@ -82,5 +83,31 @@ function test()
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');
+}
+
+function init()
+{
+  // give the dialog closer time to register
+  setTimeout('runtest()', 5000);
+}
+
+function runtest()
+{
+  test();
+  reportCompare(expect, actual, summary);
+  gDelayTestDriverEnd = false;
+  jsTestDriverEnd();
+}
+
+if (typeof window != 'undefined')
+{
+    // delay test driver end
+    gDelayTestDriverEnd = true;
+
+    window.addEventListener("load", init, false);
+}
+else
+{
+  reportCompare(expect, actual, summary);
 }
 
