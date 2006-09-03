@@ -49,11 +49,11 @@ function init()
   }
   else if(value.indexOf('1.6') != -1)
   {
-    gVersion = 150;
+    gVersion = 160;
   }
   else if(value.indexOf('1.7') != -1)
   {
-    gVersion = 150;
+    gVersion = 170;
   }
 
   var testpathparts = testpath.split(/\//);
@@ -71,11 +71,15 @@ function init()
 
   outputscripttag(suitepath + '/shell.js', attribute, value, ise4x);
   outputscripttag(suitepath + '/browser.js', attribute, value, ise4x);
-  outputscripttag(suitepath + '/' + subsuite + '/shell.js', attribute, value, ise4x);
-  outputscripttag(suitepath + '/' + subsuite + '/browser.js', attribute, value, ise4x);
-  outputscripttag(suitepath + '/' + subsuite + '/' + test, attribute, value, ise4x);
+  outputscripttag(suitepath + '/' + subsuite + '/shell.js', attribute, value, 
+                  ise4x);
+  outputscripttag(suitepath + '/' + subsuite + '/browser.js', attribute, value,
+                  ise4x);
+  outputscripttag(suitepath + '/' + subsuite + '/' + test, attribute, value, 
+                  ise4x);
 
-  document.write('<title>' + suitepath + '/' + subsuite + '/' + test + '<\/title>');
+  document.write('<title>' + suitepath + '/' + subsuite + '/' + test + 
+                 '<\/title>');
   return;
 }
 
