@@ -145,7 +145,7 @@ function doOnSelectProduct(selectmode) {
     </td>
     <td>
       [% IF button_name %]
-        <input type="submit" id="[% button_name FILTER html %]"
+        <input type="submit" id="[% button_name.replace (' ' , '_') FILTER html %]"
                value="[% button_name FILTER html %]">
       [% END %]
     </td>
@@ -421,8 +421,6 @@ function doOnSelectProduct(selectmode) {
     </td>
   </tr>
 </table>
-
-<p>
 
 [%# *** Email Numbering Votes *** %]
 
