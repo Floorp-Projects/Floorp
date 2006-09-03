@@ -564,12 +564,13 @@ nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext, nsGUIEvent* aEvent)
           //printf("Collapse right\n");
           if (supportsAfter) 
           {
-            mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::substate,
-                                      NS_LITERAL_STRING("after"),
-                                      PR_TRUE);
-            mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state,
-                                      NS_LITERAL_STRING("collapsed"),
-                                      PR_TRUE);
+            nsCOMPtr<nsIContent> outer = mOuter->mContent;
+            outer->SetAttr(kNameSpaceID_None, nsXULAtoms::substate,
+                           NS_LITERAL_STRING("after"),
+                           PR_TRUE);
+            outer->SetAttr(kNameSpaceID_None, nsXULAtoms::state,
+                           NS_LITERAL_STRING("collapsed"),
+                           PR_TRUE);
           }
 
         } else if (oldPos < 0 && oldPos < pos)
@@ -577,12 +578,13 @@ nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext, nsGUIEvent* aEvent)
           //printf("Collapse left\n");
           if (supportsBefore)
           {
-            mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::substate,
-                                      NS_LITERAL_STRING("before"),
-                                      PR_TRUE);
-            mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state,
-                                      NS_LITERAL_STRING("collapsed"),
-                                      PR_TRUE);
+            nsCOMPtr<nsIContent> outer = mOuter->mContent;
+            outer->SetAttr(kNameSpaceID_None, nsXULAtoms::substate,
+                           NS_LITERAL_STRING("before"),
+                           PR_TRUE);
+            outer->SetAttr(kNameSpaceID_None, nsXULAtoms::state,
+                           NS_LITERAL_STRING("collapsed"),
+                           PR_TRUE);
           }
         }
       }
@@ -962,7 +964,7 @@ nsSplitterFrameInner::UpdateState()
                                             (newState == CollapsedBefore ||
                                              mState == CollapsedBefore));
     if (splitterSibling) {
-      nsIContent* sibling = splitterSibling->GetContent();
+      nsCOMPtr<nsIContent> sibling = splitterSibling->GetContent();
       if (sibling) {
         if (mState == CollapsedBefore || mState == CollapsedAfter) {
           // CollapsedBefore -> Open
@@ -1108,7 +1110,9 @@ nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIBox* aChildB
                            prefValue, eCaseMatters))
      return;
 
+  nsWeakFrame weakBox(aChildBox);
   content->SetAttr(kNameSpaceID_None, attribute, prefValue, PR_TRUE);
+  ENSURE_TRUE(weakBox.IsAlive());
   aChildBox->MarkDirty(aState);
 }
 

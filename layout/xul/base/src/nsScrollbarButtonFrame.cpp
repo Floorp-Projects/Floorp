@@ -180,9 +180,12 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
       return PR_FALSE;
   }
   // set this attribute so we can style it later
+  nsWeakFrame weakFrame(this);
   mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::active, NS_LITERAL_STRING("true"), PR_TRUE);
 
-  DoButtonAction(smoothScroll);
+  if (weakFrame.IsAlive()) {
+    DoButtonAction(smoothScroll);
+  }
   if (repeat)
     nsRepeatService::GetInstance()->Start(this);
   return PR_TRUE;
@@ -226,7 +229,7 @@ nsScrollbarButtonFrame::DoButtonAction(PRBool aSmoothScroll)
     return;
 
   // get the scrollbars content node
-  nsIContent* content = scrollbar->GetContent();
+  nsCOMPtr<nsIContent> content = scrollbar->GetContent();
 
   // get the current pos
   PRInt32 curpos = nsSliderFrame::GetCurrentPosition(content);

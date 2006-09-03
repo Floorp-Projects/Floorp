@@ -667,7 +667,7 @@ nsPopupSetFrame::OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
 
     PRUint32 count = aPopupContent->GetChildCount();
     for (PRUint32 i = 0; i < count; i++) {
-      nsIContent *grandChild = aPopupContent->GetChildAt(i);
+      nsCOMPtr<nsIContent> grandChild = aPopupContent->GetChildAt(i);
 
       if (grandChild->Tag() == nsXULAtoms::menuitem) {
         // See if we have a command attribute.

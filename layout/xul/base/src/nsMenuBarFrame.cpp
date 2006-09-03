@@ -360,11 +360,21 @@ nsMenuBarFrame::ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFl
   nsIMenuFrame* result = FindMenuWithShortcut(aKeyEvent);
   if (result) {
     // We got one!
+    nsWeakFrame weakFrame(this);
+    nsIFrame* frame = nsnull;
+    CallQueryInterface(result, &frame);
+    nsWeakFrame weakResult(frame);
     aHandledFlag = PR_TRUE;
     SetActive(PR_TRUE);
-    SetCurrentMenuItem(result);
-    result->OpenMenu(PR_TRUE);
-    result->SelectFirstItem();
+    if (weakFrame.IsAlive()) {
+      SetCurrentMenuItem(result);
+    }
+    if (weakResult.IsAlive()) {
+      result->OpenMenu(PR_TRUE);
+      if (weakResult.IsAlive()) {
+        result->SelectFirstItem();
+      }
+    }
   }
 
   return NS_OK;
@@ -377,7 +387,8 @@ nsMenuBarFrame::KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag)
   NS_DIRECTION_FROM_KEY_CODE(theDirection, aKeyCode);
   if (!mCurrentMenu)
     return NS_OK;
-  
+
+  nsWeakFrame weakFrame(this);
   PRBool isContainer = PR_FALSE;
   PRBool isOpen = PR_FALSE;
   mCurrentMenu->MenuIsContainer(isContainer);
@@ -399,8 +410,13 @@ nsMenuBarFrame::KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag)
                              GetNextMenuItem(mCurrentMenu) : 
                              GetPreviousMenuItem(mCurrentMenu);
 
-    SetCurrentMenuItem(nextItem);
+    nsIFrame* nextFrame = nsnull;
     if (nextItem) {
+      CallQueryInterface(nextItem, &nextFrame);
+    }
+    nsWeakFrame weakNext(nextFrame);
+    SetCurrentMenuItem(nextItem);
+    if (weakNext.IsAlive()) {
       PRBool nextIsOpen;
       nextItem->MenuIsOpen(nextIsOpen);
       if (nextIsOpen) {
@@ -410,9 +426,16 @@ nsMenuBarFrame::KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag)
     }
   }
   else if NS_DIRECTION_IS_BLOCK(theDirection) {
-    // Open the menu and select its first item.
-    mCurrentMenu->OpenMenu(PR_TRUE);
-    mCurrentMenu->SelectFirstItem();
+    NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_OK);
+    nsIFrame* frame = nsnull;
+    CallQueryInterface(mCurrentMenu, &frame);
+    nsWeakFrame weakCurrentMenu(frame);
+    nsIMenuFrame* currentMenu = mCurrentMenu;
+     // Open the menu and select its first item.
+    currentMenu->OpenMenu(PR_TRUE);
+    if (weakCurrentMenu.IsAlive()) {
+      currentMenu->SelectFirstItem();
+    }
   }
 
   return NS_OK;
@@ -537,18 +560,33 @@ NS_IMETHODIMP nsMenuBarFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
   if (nsMenuFrame::GetContextMenu())
     return NS_OK;
 
+  nsWeakFrame weakFrame(this);
+
   // Unset the current child.
   if (mCurrentMenu) {
-    mCurrentMenu->MenuIsOpen(wasOpen);
-    mCurrentMenu->SelectMenu(PR_FALSE);
-    if (wasOpen)
-      mCurrentMenu->OpenMenu(PR_FALSE);
+    nsIFrame* frame = nsnull;
+    CallQueryInterface(mCurrentMenu, &frame);
+    nsWeakFrame weakCurrentMenu(frame);
+    nsIMenuFrame* currentMenu = mCurrentMenu;
+    currentMenu->MenuIsOpen(wasOpen);
+    currentMenu->SelectMenu(PR_FALSE);
+    if (wasOpen && weakCurrentMenu.IsAlive()) {
+      currentMenu->OpenMenu(PR_FALSE);
+    }
   }
+
+  NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_OK);
+
 
   // Set the new child.
   if (aMenuItem) {
+    nsIFrame* newMenu = nsnull;
+    CallQueryInterface(aMenuItem, &newMenu);
+    nsWeakFrame weakNewMenu(newMenu);
     aMenuItem->SelectMenu(PR_TRUE);
+    NS_ENSURE_TRUE(weakNewMenu.IsAlive(), NS_OK);
     aMenuItem->MarkAsGenerated(); // Have the menu building. Get it ready to be shown.
+    NS_ENSURE_TRUE(weakNewMenu.IsAlive(), NS_OK);
 
     PRBool isDisabled = PR_FALSE;
     aMenuItem->MenuIsDisabled(isDisabled);
@@ -557,6 +595,7 @@ NS_IMETHODIMP nsMenuBarFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
     ClearRecentlyRolledUp();
   }
 
+  NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_OK);
   mCurrentMenu = aMenuItem;
 
   return NS_OK;
@@ -569,6 +608,7 @@ nsMenuBarFrame::Escape(PRBool& aHandledFlag)
   if (!mCurrentMenu)
     return NS_OK;
 
+  nsWeakFrame weakFrame(this);
   // See if our menu is open.
   PRBool isOpen = PR_FALSE;
   mCurrentMenu->MenuIsOpen(isOpen);
@@ -576,10 +616,12 @@ nsMenuBarFrame::Escape(PRBool& aHandledFlag)
     // Let the child menu handle this.
     aHandledFlag = PR_FALSE;
     mCurrentMenu->Escape(aHandledFlag);
+    NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_OK);
     if (!aHandledFlag) {
       // Close up this menu but keep our current menu item
       // designation.
       mCurrentMenu->OpenMenu(PR_FALSE);
+      NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_OK);
     }
     nsMenuDismissalListener::Shutdown();
     return NS_OK;
@@ -587,6 +629,7 @@ nsMenuBarFrame::Escape(PRBool& aHandledFlag)
 
   // Clear our current menu item if we've got one.
   SetCurrentMenuItem(nsnull);
+  NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_OK);
 
   SetActive(PR_FALSE);
 
@@ -676,8 +719,11 @@ nsMenuBarFrame::DismissChain()
 {
   // Stop capturing rollups
   nsMenuDismissalListener::Shutdown();
+  nsWeakFrame weakFrame(this);
   SetCurrentMenuItem(nsnull);
-  SetActive(PR_FALSE);
+  if (weakFrame.IsAlive()) {
+    SetActive(PR_FALSE);
+  }
   return NS_OK;
 }
 
