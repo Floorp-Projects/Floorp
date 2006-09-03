@@ -92,7 +92,6 @@ typedef struct _glitz_wgl_context_t {
   glitz_format_id_t id;
   int               pixel_format;
   glitz_backend_t   backend;
-  glitz_gl_int_t    max_viewport_dims[2];
   glitz_bool_t      initialized;
 } glitz_wgl_context_t;
 
