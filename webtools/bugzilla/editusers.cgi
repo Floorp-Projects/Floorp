@@ -192,11 +192,11 @@ if ($action eq 'search') {
                                                   object => "users"});
 
     my $new_user = Bugzilla::User->create({
-        login_name    => $cgi->param('login'),
-        cryptpassword => $cgi->param('password'),
-        realname      => $cgi->param('name'),
-        disabledtext  => $cgi->param('disabledtext'),
-        disable_mail  => $cgi->param('disable_mail')});
+        login_name    => scalar $cgi->param('login'),
+        cryptpassword => scalar $cgi->param('password'),
+        realname      => scalar $cgi->param('name'),
+        disabledtext  => scalar $cgi->param('disabledtext'),
+        disable_mail  => scalar $cgi->param('disable_mail')});
 
     userDataToVars($new_user->id);
 
