@@ -10699,8 +10699,8 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
 
 #endif // MOZ_XUL
 
-  // See if we have appearance information for a theme.
   if (primaryFrame) {
+    // See if we have appearance information for a theme.
     const nsStyleDisplay* disp = primaryFrame->GetStyleDisplay();
     if (disp->mAppearance) {
       nsPresContext* presContext = mPresShell->GetPresContext();
@@ -10712,16 +10712,8 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
           NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
       }
     }
-  }
-
-  nsFrameManager *frameManager = shell->FrameManager();
-  nsReStyleHint rshint = frameManager->HasAttributeDependentStyle(aContent,
-                                                                  aAttribute,
-                                                                  aModType);
-
-  
-  // let the frame deal with it now, so we don't have to deal later
-  if (primaryFrame) {
+   
+    // let the frame deal with it now, so we don't have to deal later
     result = primaryFrame->AttributeChanged(aNameSpaceID, aAttribute,
                                             aModType);
     // XXXwaterson should probably check for special IB siblings
@@ -10729,6 +10721,13 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
     // them, as well. Currently, inline frames don't do anything on
     // this notification, so it's not that big a deal.
   }
+
+  // See if we can optimize away the style re-resolution -- must be called after
+  // the frame's AttributeChanged() in case it does something that affects the style
+  nsFrameManager *frameManager = shell->FrameManager();
+  nsReStyleHint rshint = frameManager->HasAttributeDependentStyle(aContent,
+                                                                  aAttribute,
+                                                                  aModType);
 
   // Menus and such can't deal with asynchronous changes of display
   // when the menugenerated or menuactive attribute changes, so make
