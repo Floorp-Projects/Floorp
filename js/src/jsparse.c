@@ -2733,10 +2733,14 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #if JS_HAS_BLOCK_SCOPE
             } else if (tt == TOK_LET) {
                 (void) js_GetToken(cx, ts);
-                pnlet = PushLexicalScope(cx, ts, tc, &blockInfo);
-                if (!pnlet)
-                    return NULL;
-                pn1 = Variables(cx, ts, tc);
+                if (js_PeekToken(cx, ts) == TOK_LP) {
+                    pn1 = LetBlock(cx, ts, tc, JS_FALSE);
+                } else {
+                    pnlet = PushLexicalScope(cx, ts, tc, &blockInfo);
+                    if (!pnlet)
+                        return NULL;
+                    pn1 = Variables(cx, ts, tc);
+                }
 #endif
             } else {
                 pn1 = Expr(cx, ts, tc);
