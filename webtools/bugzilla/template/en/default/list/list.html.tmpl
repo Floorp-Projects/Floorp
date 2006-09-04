@@ -154,7 +154,7 @@
             <input type="submit" value="XML" id="xml">
         </form>
 
-        [% IF UserInGroup(Param('timetrackinggroup')) %]
+        [% IF user.in_group(Param('timetrackinggroup')) %]
           <form method="post" action="summarize_time.cgi">
             <input type="hidden" name="id" value="[% buglist_joined FILTER html %]">
             <input type="submit" id="timesummary" value="Time Summary">

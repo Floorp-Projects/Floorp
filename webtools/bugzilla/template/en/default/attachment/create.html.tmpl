@@ -54,7 +54,7 @@
         [% IF attachments.size %]
           [% FOREACH attachment = attachments %]
             [% IF ((attachment.isprivate == 0) || (Param("insidergroup")
-              && UserInGroup(Param("insidergroup")))) %]
+              && user.in_group(Param("insidergroup")))) %]
               <input type="checkbox" id="[% attachment.id %]"
                    name="obsolete" value="[% attachment.id %]">
               <a href="attachment.cgi?id=[% attachment.id %]&amp;action=edit">[% attachment.id %]: [% attachment.description FILTER html %]</a><br>
@@ -91,7 +91,7 @@
         %]
       </td>
     </tr>
-    [% IF (Param("insidergroup") && UserInGroup(Param("insidergroup"))) %]
+    [% IF (Param("insidergroup") && user.in_group(Param("insidergroup"))) %]
       <tr>
         <th>Privacy:</th>
         <td>

@@ -316,7 +316,7 @@ function doOnSelectProduct(selectmode) {
   [% END %]
 
   [%# Deadline %]
-  [% IF UserInGroup(Param("timetrackinggroup")) %]
+  [% IF user.in_group(Param("timetrackinggroup")) %]
     <tr>
       <th align="right">
         <label for="deadlinefrom" accesskey="l">Dead<u>l</u>ine</label>:

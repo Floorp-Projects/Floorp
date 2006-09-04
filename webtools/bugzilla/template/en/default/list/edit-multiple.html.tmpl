@@ -131,7 +131,7 @@
     [% END %]
   </tr>
 
-  [% IF UserInGroup(Param("timetrackinggroup")) %]
+  [% IF user.in_group(Param("timetrackinggroup")) %]
     <tr>
       <th><label for="estimated_time">Estimated Hours:</label></th>
       <td>

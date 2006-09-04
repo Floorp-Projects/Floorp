@@ -85,7 +85,7 @@
 [% END %]
 
 [% IF show_quips %]
-  [% IF !UserInGroup('admin') %]
+  [% IF !user.in_group('admin') %]
     <h2>
       Existing quips:
     </h2>
@@ -156,7 +156,7 @@
   <p>
     Those who like their wisdom in large doses can
     <a href="quips.cgi?action=show">view
-    [% IF UserInGroup('admin') %]
+    [% IF user.in_group('admin') %]
       and edit
     [% END %]
     the whole quip list</a>.

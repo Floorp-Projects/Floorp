@@ -164,7 +164,7 @@ sub initFromCGI {
     
     # Change 'admin' here and in series.html.tmpl, or remove the check
     # completely, if you want to change who can make series public.
-    $self->{'public'} = 0 unless UserInGroup('admin');
+    $self->{'public'} = 0 unless Bugzilla->user->in_group('admin');
 }
 
 sub writeToDatabase {

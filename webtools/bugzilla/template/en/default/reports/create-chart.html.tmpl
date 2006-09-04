@@ -188,7 +188,7 @@ function subcatSelected() {
             </td>
 
             <td align="center">
-              [% IF user.id == series.creator OR UserInGroup("admin") %]
+              [% IF user.id == series.creator OR user.in_group("admin") %]
                <a href="chart.cgi?action=edit&series_id=
                        [% series.series_id %]">Edit</a> |
               [% END %]
@@ -260,7 +260,7 @@ function subcatSelected() {
   [% END %]  
 </form>
 
-[% IF UserInGroup('editbugs') %]
+[% IF user.in_group('editbugs') %]
   <h3><a href="query.cgi?format=create-series">Create New Data Set</a></h3>
 [% END %]                 
 

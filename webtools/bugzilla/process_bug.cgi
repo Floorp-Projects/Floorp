@@ -156,7 +156,7 @@ foreach my $field ("estimated_time", "work_time", "remaining_time") {
     }
 }
 
-if (UserInGroup(Bugzilla->params->{'timetrackinggroup'})) {
+if (Bugzilla->user->in_group(Bugzilla->params->{'timetrackinggroup'})) {
     my $wk_time = $cgi->param('work_time');
     if ($cgi->param('comment') =~ /^\s*$/ && $wk_time && $wk_time != 0) {
         ThrowUserError('comment_required');
@@ -592,7 +592,7 @@ umask(0);
 
 sub _remove_remaining_time {
     my $cgi = Bugzilla->cgi;
-    if (UserInGroup(Bugzilla->params->{'timetrackinggroup'})) {
+    if (Bugzilla->user->in_group(Bugzilla->params->{'timetrackinggroup'})) {
         if ( defined $cgi->param('remaining_time') 
              && $cgi->param('remaining_time') > 0 )
         {
@@ -875,7 +875,7 @@ if (defined $cgi->param('id')) {
 
 if ( defined $cgi->param('id') &&
      (Bugzilla->params->{"insidergroup"} 
-      && UserInGroup(Bugzilla->params->{"insidergroup"})) ) 
+      && Bugzilla->user->in_group(Bugzilla->params->{"insidergroup"})) ) 
 {
 
     my $sth = $dbh->prepare('UPDATE longdescs SET isprivate = ?
@@ -1191,7 +1191,7 @@ if ($::comma eq ""
 }
 
 # Process data for Time Tracking fields
-if (UserInGroup(Bugzilla->params->{'timetrackinggroup'})) {
+if (Bugzilla->user->in_group(Bugzilla->params->{'timetrackinggroup'})) {
     foreach my $field ("estimated_time", "remaining_time") {
         if (defined $cgi->param($field)) {
             my $er_time = trim($cgi->param($field));
@@ -1535,7 +1535,7 @@ foreach my $id (@idlist) {
     $timestamp = $dbh->selectrow_array(q{SELECT NOW()});
 
     my $work_time;
-    if (UserInGroup(Bugzilla->params->{'timetrackinggroup'})) {
+    if (Bugzilla->user->in_group(Bugzilla->params->{'timetrackinggroup'})) {
         $work_time = $cgi->param('work_time');
         if ($work_time) {
             # AppendComment (called below) can in theory raise an error,

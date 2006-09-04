@@ -217,7 +217,7 @@ foreach my $group (@$groups) {
     # Add groups required
     if (($membercontrol == CONTROLMAPMANDATORY)
        || (($othercontrol == CONTROLMAPMANDATORY) 
-            && (!UserInGroup($groupname)))) {
+            && (!Bugzilla->user->in_group($groupname)))) {
         # User had no option, bug needs to be in this group.
         push(@groupstoadd, $id)
     }
@@ -278,7 +278,7 @@ foreach my $grouptoadd (@groupstoadd) {
 # Add the initial comment, allowing for the fact that it may be private
 my $privacy = 0;
 if (Bugzilla->params->{"insidergroup"} 
-    && UserInGroup(Bugzilla->params->{"insidergroup"})) 
+    && Bugzilla->user->in_group(Bugzilla->params->{"insidergroup"})) 
 {
     $privacy = $cgi->param('commentprivacy') ? 1 : 0;
 }
@@ -297,7 +297,7 @@ foreach my $ccid (@$cc_ids) {
 my @all_deps;
 my $sth_addkeyword = $dbh->prepare(q{
             INSERT INTO keywords (bug_id, keywordid) VALUES (?, ?)});
-if (UserInGroup("editbugs")) {
+if (Bugzilla->user->in_group("editbugs")) {
     foreach my $keyword (@keyword_ids) {
         $sth_addkeyword->execute($id, $keyword);
     }

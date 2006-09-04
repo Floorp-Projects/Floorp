@@ -32,7 +32,7 @@
     [% END %]
     <th bgcolor="#cccccc" align="left">Actions</th>
   </tr>
-  [% canseeprivate = !Param("insidergroup") || UserInGroup(Param("insidergroup")) %]
+  [% canseeprivate = !Param("insidergroup") || user.in_group(Param("insidergroup")) %]
   [% count = 0 %]
   [% FOREACH attachment = attachments %]
     [% count = count + 1 %]

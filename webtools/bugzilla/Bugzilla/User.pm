@@ -51,7 +51,6 @@ use Bugzilla::Field;
 use base qw(Bugzilla::Object Exporter);
 @Bugzilla::User::EXPORT = qw(is_available_username
     login_to_id user_id_to_login validate_password
-    UserInGroup
     USER_MATCH_MULTIPLE USER_MATCH_FAILED USER_MATCH_SUCCESS
     MATCH_SKIP_CONFIRM
 );
@@ -1471,9 +1470,6 @@ sub validate_password {
     return 1;
 }
 
-sub UserInGroup {
-    return exists Bugzilla->user->groups->{$_[0]} ? 1 : 0;
-}
 
 1;
 
@@ -1892,10 +1888,6 @@ requirements for length and content), else returns false.
 
 If a second password is passed in, this function also verifies that
 the two passwords match.
-
-=item C<UserInGroup($groupname)>
-
-Takes a name of a group, and returns 1 if a user is in the group, 0 otherwise.
 
 =back
 

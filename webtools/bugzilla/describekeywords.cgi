@@ -36,7 +36,7 @@ my $template = Bugzilla->template;
 my $vars = {};
 
 $vars->{'keywords'} = Bugzilla::Keyword->get_all_with_bug_count();
-$vars->{'caneditkeywords'} = UserInGroup("editkeywords");
+$vars->{'caneditkeywords'} = Bugzilla->user->in_group("editkeywords");
 
 print Bugzilla->cgi->header();
 $template->process("reports/keywords.html.tmpl", $vars)

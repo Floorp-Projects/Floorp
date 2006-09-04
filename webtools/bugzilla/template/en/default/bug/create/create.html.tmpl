@@ -258,7 +258,7 @@ function handleWantsAttachment(wants_attachment) {
     <td>&nbsp;</td>
     [%# Calculate the number of rows we can use for flags %]
     [% num_rows = 6 + (Param("useqacontact") ? 1 : 0) +
-                      (UserInGroup(Param('timetrackinggroup')) ? 3 : 0) +
+                      (user.in_group(Param('timetrackinggroup')) ? 3 : 0) +
                       (Param("usebugaliases") ? 1 : 0)
     %]
     <td rowspan="[% num_rows FILTER html %]" valign="top">
@@ -323,7 +323,7 @@ function handleWantsAttachment(wants_attachment) {
     <td colspan="2"></td>
   </tr>
 
-[% IF UserInGroup(Param('timetrackinggroup')) %]
+[% IF user.in_group(Param('timetrackinggroup')) %]
   <tr>
     <td align="right"><strong>Estimated Hours:</strong></td>
     <td colspan="2">
@@ -400,7 +400,7 @@ function handleWantsAttachment(wants_attachment) {
     </td>
   </tr>
 
-  [% IF Param("insidergroup") && UserInGroup(Param("insidergroup")) %]
+  [% IF Param("insidergroup") && user.in_group(Param("insidergroup")) %]
     <tr>
       <td></td>
       <td colspan="3">
@@ -450,7 +450,7 @@ function handleWantsAttachment(wants_attachment) {
     </td>
   </tr>
 
-  [% IF UserInGroup('editbugs') %]
+  [% IF user.in_group('editbugs') %]
     [% IF use_keywords %]
       <tr>
         <td align="right" valign="top">

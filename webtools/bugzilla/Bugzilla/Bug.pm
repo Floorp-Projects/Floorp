@@ -1266,7 +1266,7 @@ sub GetBugActivity {
     my $suppjoins = "";
     my $suppwhere = "";
     if (Bugzilla->params->{"insidergroup"} 
-        && !UserInGroup(Bugzilla->params->{'insidergroup'})) 
+        && !Bugzilla->user->in_group(Bugzilla->params->{'insidergroup'})) 
     {
         $suppjoins = "LEFT JOIN attachments 
                    ON attachments.attach_id = bugs_activity.attach_id";
@@ -1313,7 +1313,7 @@ sub GetBugActivity {
             || $fieldname eq 'deadline')
         {
             $activity_visible = 
-                UserInGroup(Bugzilla->params->{'timetrackinggroup'}) ? 1 : 0;
+                Bugzilla->user->in_group(Bugzilla->params->{'timetrackinggroup'}) ? 1 : 0;
         } else {
             $activity_visible = 1;
         }

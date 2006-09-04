@@ -327,11 +327,11 @@ $vars->{'op_sys'}                = get_legal_field_values('op_sys');
 $vars->{'use_keywords'}          = 1 if Bugzilla::Keyword::keyword_count();
 
 $vars->{'assigned_to'}           = formvalue('assigned_to');
-$vars->{'assigned_to_disabled'}  = !UserInGroup('editbugs');
+$vars->{'assigned_to_disabled'}  = !Bugzilla->user->in_group('editbugs');
 $vars->{'cc_disabled'}           = 0;
 
 $vars->{'qa_contact'}           = formvalue('qa_contact');
-$vars->{'qa_contact_disabled'}  = !UserInGroup('editbugs');
+$vars->{'qa_contact_disabled'}  = !Bugzilla->user->in_group('editbugs');
 
 $vars->{'cloned_bug_id'}         = $cloned_bug_id;
 
@@ -381,7 +381,7 @@ if ($cloned_bug_id) {
 
     if ( !($isprivate) ||
          ( ( Bugzilla->params->{"insidergroup"} ) && 
-           ( UserInGroup(Bugzilla->params->{"insidergroup"}) ) ) 
+           ( Bugzilla->user->in_group(Bugzilla->params->{"insidergroup"}) ) ) 
        ) {
         $vars->{'comment'}        = $cloned_bug->{'longdescs'}->[0]->{'body'};
         $vars->{'commentprivacy'} = $isprivate;
@@ -505,7 +505,7 @@ foreach my $row (@$grouplist) {
                || ($membercontrol == CONTROLMAPMANDATORY)
                || (($othercontrol != CONTROLMAPSHOWN) 
                     && ($othercontrol != CONTROLMAPDEFAULT)
-                    && (!UserInGroup($groupname)))
+                    && (!Bugzilla->user->in_group($groupname)))
              );
     my $check;
 
@@ -532,7 +532,7 @@ foreach my $row (@$grouplist) {
         # Checkbox is checked by default if $control is a default state.
         $check = (($membercontrol == CONTROLMAPDEFAULT)
                  || (($othercontrol == CONTROLMAPDEFAULT)
-                      && (!UserInGroup($groupname))));
+                      && (!Bugzilla->user->in_group($groupname))));
     }
 
     my $group = 

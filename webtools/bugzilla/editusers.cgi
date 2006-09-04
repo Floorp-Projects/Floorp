@@ -409,7 +409,7 @@ if ($action eq 'search') {
                                                   action => "delete",
                                                   object => "users"});
     $vars->{'otheruser'}      = $otherUser;
-    $vars->{'editcomponents'} = UserInGroup('editcomponents');
+    $vars->{'editcomponents'} = Bugzilla->user->in_group('editcomponents');
 
     # Find other cross references.
     $vars->{'assignee_or_qa'} = $dbh->selectrow_array(

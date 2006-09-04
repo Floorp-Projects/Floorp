@@ -28,7 +28,7 @@ use Bugzilla::Constants; # LOGIN_*
 use Bugzilla::Bug;       # EmitDependList
 use Bugzilla::Util;      # trim
 use Bugzilla::Error;
-use Bugzilla::User;      # UserInGroup
+use Bugzilla::User;      # Bugzilla->user->in_group
 
 my $template = Bugzilla->template;
 my $vars = {};
@@ -404,7 +404,7 @@ my $cgi = Bugzilla->cgi;
 
 Bugzilla->switch_to_shadow_db();
 
-UserInGroup(Bugzilla->params->{"timetrackinggroup"})
+Bugzilla->user->in_group(Bugzilla->params->{"timetrackinggroup"})
     || ThrowUserError("auth_failure", {group  => "time-tracking",
                                        action => "access",
                                        object => "timetracking_summaries"});

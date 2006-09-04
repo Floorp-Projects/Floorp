@@ -35,8 +35,8 @@
 #
 # JS-less chart creation - hard.
 # Broken image on error or no data - need to do much better.
-# Centralise permission checking, so UserInGroup('editbugs') not scattered
-#   everywhere.
+# Centralise permission checking, so Bugzilla->user->in_group('editbugs')
+#   not scattered everywhere.
 # User documentation :-)
 #
 # Bonus:
@@ -93,13 +93,13 @@ if ($action eq "search") {
 
 my $user = Bugzilla->login(LOGIN_REQUIRED);
 
-UserInGroup(Bugzilla->params->{"chartgroup"})
+Bugzilla->user->in_group(Bugzilla->params->{"chartgroup"})
   || ThrowUserError("auth_failure", {group  => Bugzilla->params->{"chartgroup"},
                                      action => "use",
                                      object => "charts"});
 
 # Only admins may create public queries
-UserInGroup('admin') || $cgi->delete('public');
+Bugzilla->user->in_group('admin') || $cgi->delete('public');
 
 # All these actions relate to chart construction.
 if ($action =~ /^(assemble|add|remove|sum|subscribe|unsubscribe)$/) {
@@ -224,11 +224,11 @@ sub assertCanEdit {
 sub assertCanCreate {
     my ($cgi) = shift;
     
-    UserInGroup("editbugs") || ThrowUserError("illegal_series_creation");
+    Bugzilla->user->in_group("editbugs") || ThrowUserError("illegal_series_creation");
 
     # Check permission for frequency
     my $min_freq = 7;
-    if ($cgi->param('frequency') < $min_freq && !UserInGroup("admin")) {
+    if ($cgi->param('frequency') < $min_freq && !Bugzilla->user->in_group("admin")) {
         ThrowUserError("illegal_frequency", { 'minimum' => $min_freq });
     }    
 }

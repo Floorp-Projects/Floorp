@@ -86,7 +86,7 @@ my $template = Bugzilla->template;
 # and restricting access to this installation's administrators (which
 # prevents users with a legitimate interest in Bugzilla integrity
 # from accessing the script).
-UserInGroup("editbugs")
+Bugzilla->user->in_group("editbugs")
   || ThrowUserError("auth_failure", {group  => "editbugs",
                                      action => "run",
                                      object => "sanity_check"});

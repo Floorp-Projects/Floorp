@@ -578,7 +578,7 @@ sub init {
              my $table = "longdescs_$chartid";
              my $extra = "";
              if (Bugzilla->params->{"insidergroup"} 
-                 && !UserInGroup(Bugzilla->params->{"insidergroup"}))
+                 && !Bugzilla->user->in_group(Bugzilla->params->{"insidergroup"}))
              {
                  $extra = "AND $table.isprivate < 1";
              }
@@ -641,7 +641,7 @@ sub init {
              my $table = "longdescs_$chartseq";
              my $extra = "";
              if (Bugzilla->params->{"insidergroup"} 
-                 && !UserInGroup(Bugzilla->params->{"insidergroup"})) 
+                 && !Bugzilla->user->in_group(Bugzilla->params->{"insidergroup"})) 
              {
                  $extra = "AND $table.isprivate < 1";
              }
@@ -661,7 +661,7 @@ sub init {
              my $table = "longdescs_$chartseq";
              my $extra = "";
              if (Bugzilla->params->{"insidergroup"} 
-                 && !UserInGroup(Bugzilla->params->{"insidergroup"})) 
+                 && !Bugzilla->user->in_group(Bugzilla->params->{"insidergroup"})) 
              {
                  $extra = "AND $table.isprivate < 1";
              }
@@ -684,7 +684,7 @@ sub init {
              my $table = "longdescs_$chartid";
              my $extra = "";
              if (Bugzilla->params->{"insidergroup"} 
-                 && !UserInGroup(Bugzilla->params->{"insidergroup"})) 
+                 && !Bugzilla->user->in_group(Bugzilla->params->{"insidergroup"})) 
              {
                  $extra = "AND $table.isprivate < 1";
              }
@@ -793,7 +793,7 @@ sub init {
              my $dtable = "attachdata_$chartid";
              my $extra = "";
              if (Bugzilla->params->{"insidergroup"} 
-                 && !UserInGroup(Bugzilla->params->{"insidergroup"})) 
+                 && !Bugzilla->user->in_group(Bugzilla->params->{"insidergroup"})) 
              {
                  $extra = "AND $atable.isprivate = 0";
              }
@@ -807,7 +807,7 @@ sub init {
              my $table = "attachments_$chartid";
              my $extra = "";
              if (Bugzilla->params->{"insidergroup"} 
-                 && !UserInGroup(Bugzilla->params->{"insidergroup"})) 
+                 && !Bugzilla->user->in_group(Bugzilla->params->{"insidergroup"})) 
              {
                  $extra = "AND $table.isprivate = 0";
              }

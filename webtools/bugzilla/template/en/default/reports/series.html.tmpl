@@ -68,7 +68,7 @@
         <span style="font-weight: bold;">&nbsp;day(s)</span><br>
         [%# Change 'admin' here and in Series.pm, or remove the check
             completely, if you want to change who can make series public. %]
-        [% IF UserInGroup('admin') %]      
+        [% IF user.in_group('admin') %]      
           <input type="checkbox" name="public"
                  [% "checked='checked'" IF default.public.0 %]>
           <span style="font-weight: bold;">Visible to all<br>

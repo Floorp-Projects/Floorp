@@ -67,11 +67,11 @@
       [% END %]
       [% IF displayfields.long_desc %]
         [% FOREACH c = bug.longdescs %]
-          [% NEXT IF c.isprivate && !UserInGroup(Param("insidergroup")) %]
+          [% NEXT IF c.isprivate && !user.in_group(Param("insidergroup")) %]
           <long_desc isprivate="[% c.isprivate FILTER xml %]">
             <who>[% c.email FILTER xml %]</who>
             <bug_when>[% c.time FILTER time FILTER xml %]</bug_when>
-            [% IF UserInGroup(Param('timetrackinggroup')) && (c.work_time - 0 != 0) %]
+            [% IF user.in_group(Param('timetrackinggroup')) && (c.work_time - 0 != 0) %]
               <work_time>[% PROCESS formattimeunit time_unit = c.work_time FILTER xml %]</work_time>
             [% END %]
             <thetext>[% c.body FILTER xml %]</thetext>
@@ -81,7 +81,7 @@
       
       [% IF displayfields.attachment %]
         [% FOREACH a = bug.attachments %]
-          [% NEXT IF a.isprivate && !UserInGroup(Param("insidergroup")) %]
+          [% NEXT IF a.isprivate && !user.in_group(Param("insidergroup")) %]
           <attachment
               isobsolete="[% a.isobsolete FILTER xml %]"
               ispatch="[% a.ispatch FILTER xml %]"

@@ -38,7 +38,7 @@
 
 
 [% DEFAULT start_at = 0 mode = "show" %]
-[% isinsider = Param("insidergroup") && UserInGroup(Param("insidergroup")) %]
+[% isinsider = Param("insidergroup") && user.in_group(Param("insidergroup")) %]
 [% sort_order = user.settings.comment_sort_order.value %]
 
 [%# NOTE: (start_at > 0) means we came here from a midair collision,
@@ -134,7 +134,7 @@
           <label for="isprivate-[% count %]">Private</label>
         </i>
       [% END %]
-      [% IF UserInGroup(Param('timetrackinggroup')) &&
+      [% IF user.in_group(Param('timetrackinggroup')) &&
             (comment.work_time > 0 || comment.work_time < 0) %]
          <br>
          Additional hours worked: 

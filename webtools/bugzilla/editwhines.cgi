@@ -80,7 +80,7 @@ $user->in_group('bz_canusewhines')
                                      object => "reports"});
 
 # May this user send mail to other users?
-my $can_mail_others = UserInGroup('bz_canusewhineatothers');
+my $can_mail_others = Bugzilla->user->in_group('bz_canusewhineatothers');
 
 # If the form was submitted, we need to look for what needs to be added or
 # removed, then what was altered.

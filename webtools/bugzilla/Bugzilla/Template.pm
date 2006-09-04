@@ -790,9 +790,6 @@ sub create {
             # started the session.
             'sudoer' => sub { return Bugzilla->sudoer; },
 
-            # UserInGroup. Deprecated - use the user.* functions instead
-            'UserInGroup' => \&Bugzilla::User::UserInGroup,
-
             # SendBugMail - sends mail about a bug, using Bugzilla::BugMail.pm
             'SendBugMail' => sub {
                 my ($id, $mailrecipients) = (@_);

@@ -57,7 +57,7 @@
 
       replytext = "(In reply to comment #" + id + ")\n" + replytext + "\n";
 
-    [% IF Param("insidergroup") && UserInGroup(Param("insidergroup")) %]
+    [% IF Param("insidergroup") && user.in_group(Param("insidergroup")) %]
       if (document.getElementById('isprivate-'+id).checked) {
           document.getElementById('newcommentprivacy').checked = 'checked';
       }
@@ -97,7 +97,7 @@
       return text;
   }
 
-[% IF UserInGroup(Param('timetrackinggroup')) %]
+[% IF user.in_group(Param('timetrackinggroup')) %]
   var fRemainingTime = [% bug.remaining_time %]; // holds the original value
   function adjustRemainingTime() {
       // subtracts time spent from remaining time
@@ -435,7 +435,7 @@
     </tr>
   </table>
 
-  [% IF UserInGroup(Param('timetrackinggroup')) %]
+  [% IF user.in_group(Param('timetrackinggroup')) %]
     <br>
     <table cellspacing="0" cellpadding="4" border="1">
       <tr>
@@ -561,7 +561,7 @@
 
   <br>
   <label for="comment" accesskey="c"><b>Additional <u>C</u>omments</b></label>:
-  [% IF Param("insidergroup") && UserInGroup(Param("insidergroup")) %]
+  [% IF Param("insidergroup") && user.in_group(Param("insidergroup")) %]
     <input type="checkbox" name="commentprivacy" value="1"
            id="newcommentprivacy"
            onClick="updateCommentTagControl(this, form)">

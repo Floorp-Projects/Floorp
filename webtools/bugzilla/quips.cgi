@@ -76,7 +76,7 @@ if ($action eq "add") {
 
     # Add the quip 
     my $approved = (Bugzilla->params->{'quip_list_entry_control'} eq "open")
-                   || UserInGroup('admin') || 0;
+                   || Bugzilla->user->in_group('admin') || 0;
     my $comment = $cgi->param("quip");
     $comment || ThrowUserError("need_quip");
     trick_taint($comment); # Used in a placeholder below
@@ -115,7 +115,7 @@ if ($action eq 'approve') {
 }
 
 if ($action eq "delete") {
-    UserInGroup("admin")
+    Bugzilla->user->in_group("admin")
       || ThrowUserError("auth_failure", {group  => "admin",
                                          action => "delete",
                                          object => "quips"});

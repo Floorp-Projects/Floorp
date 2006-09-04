@@ -170,7 +170,7 @@ sub validateID
 
     ValidateBugID($bugid);
     if ($isprivate && Bugzilla->params->{"insidergroup"}) {
-        UserInGroup(Bugzilla->params->{"insidergroup"})
+        Bugzilla->user->in_group(Bugzilla->params->{"insidergroup"})
           || ThrowUserError("auth_failure", {action => "access",
                                              object => "attachment"});
     }
@@ -398,7 +398,7 @@ sub viewall
     my $dbh = Bugzilla->dbh;
 
     if ( Bugzilla->params->{"insidergroup"} 
-         && !UserInGroup(Bugzilla->params->{"insidergroup"}) )
+         && !Bugzilla->user->in_group(Bugzilla->params->{"insidergroup"}) )
     {
         $privacy = "AND isprivate < 1 ";
     }
@@ -450,7 +450,7 @@ sub enter
   # Retrieve the attachments the user can edit from the database and write
   # them into an array of hashes where each hash represents one attachment.
   my $canEdit = "";
-  if (!UserInGroup("editbugs")) {
+  if (!Bugzilla->user->in_group("editbugs")) {
       $canEdit = "AND submitter_id = " . Bugzilla->user->id;
   }
   my $attachments = $dbh->selectall_arrayref(
@@ -517,7 +517,7 @@ sub insert
   # Assign the bug to the user, if they are allowed to take it
   my $owner = "";
   
-  if ($cgi->param('takebug') && UserInGroup("editbugs")) {
+  if ($cgi->param('takebug') && Bugzilla->user->in_group("editbugs")) {
       
       my @fields = ("assigned_to", "bug_status", "resolution", "everconfirmed",
                     "login_name");

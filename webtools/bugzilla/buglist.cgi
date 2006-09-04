@@ -83,7 +83,7 @@ my $dotweak = $cgi->param('tweak') ? 1 : 0;
 # Log the user in
 if ($dotweak) {
     Bugzilla->login(LOGIN_REQUIRED);
-    UserInGroup("editbugs")
+    Bugzilla->user->in_group("editbugs")
       || ThrowUserError("auth_failure", {group  => "editbugs",
                                          action => "modify",
                                          object => "multiple_bugs"});
@@ -717,7 +717,7 @@ if (trim($votes) && !grep($_ eq 'votes', @displaycolumns)) {
 
 # Remove the timetracking columns if they are not a part of the group
 # (happens if a user had access to time tracking and it was revoked/disabled)
-if (!UserInGroup(Bugzilla->params->{"timetrackinggroup"})) {
+if (!Bugzilla->user->in_group(Bugzilla->params->{"timetrackinggroup"})) {
    @displaycolumns = grep($_ ne 'estimated_time', @displaycolumns);
    @displaycolumns = grep($_ ne 'remaining_time', @displaycolumns);
    @displaycolumns = grep($_ ne 'actual_time', @displaycolumns);
@@ -1107,10 +1107,10 @@ $vars->{'urlquerypart'} = $params->canonicalise_query('order',
                                                       'cmdtype',
                                                       'query_based_on');
 $vars->{'order'} = $order;
-$vars->{'caneditbugs'} = UserInGroup('editbugs');
+$vars->{'caneditbugs'} = Bugzilla->user->in_group('editbugs');
 
 my @bugowners = keys %$bugowners;
-if (scalar(@bugowners) > 1 && UserInGroup('editbugs')) {
+if (scalar(@bugowners) > 1 && Bugzilla->user->in_group('editbugs')) {
     my $suffix = Bugzilla->params->{'emailsuffix'};
     map(s/$/$suffix/, @bugowners) if $suffix;
     my $bugowners = join(",", @bugowners);

@@ -81,7 +81,7 @@ sub queue {
 
     my $attach_join_clause = "flags.attach_id = attachments.attach_id";
     if (Bugzilla->params->{"insidergroup"} 
-        && !UserInGroup(Bugzilla->params->{"insidergroup"})) 
+        && !Bugzilla->user->in_group(Bugzilla->params->{"insidergroup"})) 
     {
         $attach_join_clause .= " AND attachments.isprivate < 1";
     }
