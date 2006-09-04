@@ -129,14 +129,13 @@ class BookmarksParser(Parser):
           r += getProps(c, base + '.' + str(i))
         else:
           for k,v in c.iteritems():
-            k = k.lower()
-            if k == u'href':
+            if k == u'HREF':
               r.append(('%s.%i.href'%(base, i), v))
-            if k == u'feedurl':
+            if k == u'FEEDURL':
               r.append(('%s.%i.feedurl'%(base, i), v))
             elif k == u'__title__':
               r.append(('%s.%i.title'%(base, i), v))
-            elif k == u'icon':
+            elif k == u'ICON':
               r.append(('%s.%i.icon'%(base, i), v))
       return r
     return getProps(self.getDetails(), 'bookmarks').__iter__()
@@ -146,7 +145,7 @@ class BookmarksParser(Parser):
     def parse_link(f, line):
       link = {}
       for m in re.finditer('(?P<key>[A-Z]+)="(?P<val>[^"]+)', line):
-        link[m.group('key')] = m.group('val')
+        link[m.group('key').upper()] = m.group('val')
       m = re.search('"[ ]*>([^<]+)</A>', line, re.I)
       link[u'__title__'] = m.group(1)
       f[u'children'].append(link)
