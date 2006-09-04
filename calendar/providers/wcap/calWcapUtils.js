@@ -162,12 +162,13 @@ function lockedExec( func )
     }
     
     var queue;
+    var ret;
     if (g_eventQueueService)
         queue = g_eventQueueService.pushThreadEventQueue();
     else // we are on trunk using nsIThreadInternal
         g_threadManager.currentThread.pushEventQueue(null);
     try {
-        return func();
+        ret = func();
     }
     catch (exc) {
         if (g_eventQueueService)
@@ -180,6 +181,7 @@ function lockedExec( func )
         g_eventQueueService.popThreadEventQueue(queue);
     else // we are on trunk using nsIThreadInternal
         g_threadManager.currentThread.popEventQueue();
+    return ret;
 }
 
 var g_wcapBundle = null;
