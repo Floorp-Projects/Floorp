@@ -47,16 +47,18 @@ Litmus::DB::Platform->has_many(opsyses => "Litmus::DB::Opsys",
                               {order_by => 'name ASC'});
 
 Litmus::DB::Platform->set_sql(ByProduct => qq{
-                                              SELECT pl.* 
-                                              FROM platforms pl, platform_products plpr
-                                              WHERE plpr.product_id=? AND plpr.platform_id=pl.platform_id
+  SELECT pl.* 
+  FROM platforms pl, platform_products plpr
+  WHERE plpr.product_id=? AND plpr.platform_id=pl.platform_id
+  ORDER BY pl.name ASC
 });
 
 Litmus::DB::Platform->set_sql(ByProductAndName => qq{
-                                                     SELECT pl.* 
-                                                     FROM platforms pl, platform_products plpr
-                                                     WHERE plpr.product_id=? AND plpr.platform_id=pl.platform_id
-                                                     AND pl.name=?
+  SELECT pl.* 
+  FROM platforms pl, platform_products plpr
+  WHERE plpr.product_id=? AND plpr.platform_id=pl.platform_id
+  AND pl.name=?
+  ORDER BY pl.name ASC
 });
 
 #########################################################################
