@@ -349,6 +349,7 @@
       <handler event="DOMAttrModified">
         <![CDATA[
           if (event.attrName != "disabled" ||
+              !this.parentNode.selectedItem ||
               !event.originalTarget.hasAttribute("command"))
             return;
 
