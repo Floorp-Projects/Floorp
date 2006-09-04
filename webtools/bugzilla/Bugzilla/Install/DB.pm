@@ -218,12 +218,6 @@ sub update_table_definitions {
 
     _recrypt_plaintext_passwords();
 
-    # 2001-06-06 justdave@syndicomm.com:
-    # There was no index on the 'who' column in the long descriptions table.
-    # This caused queries by who posted comments to take a LONG time.
-    #   http://bugzilla.mozilla.org/show_bug.cgi?id=57350
-    $dbh->bz_add_index('longdescs', 'longdescs_who_idx', [qw(who)]);
-
     # 2001-06-15 kiko@async.com.br - Change bug:version size to avoid
     # truncates re http://bugzilla.mozilla.org/show_bug.cgi?id=9352
     $dbh->bz_alter_column('bugs', 'version',
@@ -488,6 +482,8 @@ sub update_table_definitions {
         {TYPE => 'MEDIUMTEXT', NOTNULL => 1, DEFAULT => "''"});
     $dbh->bz_alter_column('profiles', 'realname',
         {TYPE => 'varchar(255)', NOTNULL => 1, DEFAULT => "''"});
+
+    _update_longdescs_who_index();
 
     ################################################################
     # New --TABLE-- changes should go *** A B O V E *** this point #
@@ -2692,6 +2688,19 @@ EOT
 
         # Now that we don't need it, get rid of the nomail file.
         unlink "$datadir/nomail";
+    }
+}
+
+sub _update_longdescs_who_index {
+    my $dbh = Bugzilla->dbh;
+    # When doing a search on who posted a comment, longdescs is joined
+    # against the bugs table. So we need an index on both of these,
+    # not just on "who".
+    my $who_index = $dbh->bz_index_info('longdescs', 'longdescs_who_idx');
+    if (!$who_index || scalar @{$who_index->{FIELDS}} == 1) {
+        # If the index doesn't exist, this will harmlessly do nothing.
+        $dbh->bz_drop_index('longdescs', 'longdescs_who_idx');
+        $dbh->bz_add_index('longdescs', 'longdescs_who_idx', [qw(who bug_id)]);
     }
 }
 

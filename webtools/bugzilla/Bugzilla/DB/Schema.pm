@@ -269,7 +269,7 @@ use constant ABSTRACT_SCHEMA => {
         ],
         INDEXES => [
             longdescs_bug_id_idx   => ['bug_id'],
-            longdescs_who_idx     => ['who'],
+            longdescs_who_idx     => [qw(who bug_id)],
             longdescs_bug_when_idx => ['bug_when'],
             longdescs_thetext_idx => {FIELDS => ['thetext'],
                                       TYPE => 'FULLTEXT'},
