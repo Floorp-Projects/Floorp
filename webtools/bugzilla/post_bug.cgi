@@ -139,12 +139,6 @@ if (defined $cgi->param('maketemplate')) {
 
 umask 0;
 
-# Some sanity checking
-my $component = 
-    Bugzilla::Bug::_check_component(scalar $cgi->param('component'), $product);
-$cgi->param('short_desc', 
-            Bugzilla::Bug::_check_short_desc($cgi->param('short_desc')));
-
 # This has to go somewhere after 'maketemplate' 
 # or it breaks bookmarks with no comments. 
 $comment = Bugzilla::Bug::_check_comment($cgi->param('comment'));
@@ -152,135 +146,25 @@ $comment = Bugzilla::Bug::_check_comment($cgi->param('comment'));
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-$cgi->param('bug_file_loc', 
-            Bugzilla::Bug::_check_bug_file_loc($cgi->param('bug_file_loc')));
-$cgi->param('assigned_to', 
-            Bugzilla::Bug::_check_assigned_to(scalar $cgi->param('assigned_to'),
-                                              $component));
-
-
-my @enter_bug_field_names = map {$_->name} Bugzilla->get_fields({ custom => 1,
-    obsolete => 0, enter_bug => 1});
-
-my @bug_fields = ("version", "rep_platform",
-                  "bug_severity", "priority", "op_sys", "assigned_to",
-                  "bug_status", "everconfirmed", "bug_file_loc", "short_desc",
-                  "target_milestone", "status_whiteboard",
-                  @enter_bug_field_names);
-
-if (Bugzilla->params->{"usebugaliases"}) {
-    my $alias = Bugzilla::Bug::_check_alias($cgi->param('alias'));
-    if ($alias) {
-        $cgi->param('alias', $alias);
-        push(@bug_fields, "alias");
-    }
-}
-
-if (Bugzilla->params->{"useqacontact"}) {
-    my $qa_contact = Bugzilla::Bug::_check_qa_contact(
-        scalar $cgi->param('qa_contact'), $component);
-    if ($qa_contact) {
-        $cgi->param('qa_contact', $qa_contact);
-        push(@bug_fields, "qa_contact");
-    }
-}
-
-$cgi->param('bug_status', Bugzilla::Bug::_check_bug_status(
-                scalar $cgi->param('bug_status'), $product));
-
-if (!defined $cgi->param('target_milestone')) {
-    $cgi->param(-name => 'target_milestone', -value => $product->default_milestone);
-}
-
-# Some more sanity checking
-$cgi->param(-name => 'priority', -value => Bugzilla::Bug::_check_priority(
-    $cgi->param('priority')));
-$cgi->param(-name  => 'rep_platform', 
-    -value => Bugzilla::Bug::_check_rep_platform($cgi->param('rep_platform')));
-$cgi->param(-name => 'bug_severity', 
-    -value => Bugzilla::Bug::_check_bug_severity($cgi->param('bug_severity')));
-$cgi->param(-name => 'op_sys', -value => Bugzilla::Bug::_check_op_sys(
-    $cgi->param('op_sys')));
- 
-check_field('version',      scalar $cgi->param('version'),
-            [map($_->name, @{$product->versions})]);
-check_field('target_milestone', scalar $cgi->param('target_milestone'),
-            [map($_->name, @{$product->milestones})]);
-
-my $everconfirmed = ($cgi->param('bug_status') eq 'UNCONFIRMED') ? 0 : 1;
-$cgi->param(-name => 'everconfirmed', -value => $everconfirmed);
-
-my @used_fields;
-foreach my $field (@bug_fields) {
-    if (defined $cgi->param($field)) {
-        push (@used_fields, $field);
-    }
-}
-
-$cgi->param(-name => 'product_id', -value => $product->id);
-push(@used_fields, "product_id");
-$cgi->param(-name => 'component_id', -value => $component->id);
-push(@used_fields, "component_id");
-
 my $cc_ids = Bugzilla::Bug::_check_cc([$cgi->param('cc')]);
 my @keyword_ids = @{Bugzilla::Bug::_check_keywords($cgi->param('keywords'))};
 
-Bugzilla::Bug::_check_strict_isolation($product, $cc_ids, 
-    $cgi->param('assigned_to'), $cgi->param('qa_contact'));
+# XXX These checks are only here until strict_isolation can move fully
+# into Bugzilla::Bug.
+my $component = Bugzilla::Bug::_check_component($product, 
+    $cgi->param('component'));
+my $assigned_to_id = Bugzilla::Bug::_check_assigned_to($component,
+    $cgi->param('assigned_to'));
+my $qa_contact_id = Bugzilla::Bug::_check_qa_contact($component,
+    $cgi->param('qa_contact'));
+Bugzilla::Bug::_check_strict_isolation($product, $cc_ids, $assigned_to_id, 
+    $qa_contact_id);
 
 my ($depends_on_ids, $blocks_ids) = Bugzilla::Bug::_check_dependencies(
     scalar $cgi->param('dependson'), scalar $cgi->param('blocked'));
 
 # get current time
 my $timestamp = $dbh->selectrow_array(q{SELECT NOW()});
-
-# Build up SQL string to add bug.
-# creation_ts will only be set when all other fields are defined.
-
-my @fields_values;
-
-foreach my $field (@used_fields) {
-    my $value = $cgi->param($field);
-    trick_taint($value);
-    push (@fields_values, $value);
-}
-
-my $sql_used_fields = join(", ", @used_fields);
-my $sql_placeholders = "?, " x scalar(@used_fields);
-
-my $query = qq{INSERT INTO bugs ($sql_used_fields, reporter, delta_ts,
-                                 estimated_time, remaining_time, deadline)
-               VALUES ($sql_placeholders ?, ?, ?, ?, ?)};
-
-push (@fields_values, $user->id);
-push (@fields_values, $timestamp);
-
-my $est_time = 0;
-my $deadline;
-
-# Time Tracking
-if (UserInGroup(Bugzilla->params->{"timetrackinggroup"}) &&
-    defined $cgi->param('estimated_time')) {
-
-    $est_time = $cgi->param('estimated_time');
-    Bugzilla::Bug::ValidateTime($est_time, 'estimated_time');
-    trick_taint($est_time);
-
-}
-
-push (@fields_values, $est_time, $est_time);
-
-if ( UserInGroup(Bugzilla->params->{"timetrackinggroup"})
-     && $cgi->param('deadline') ) 
-{
-    validate_date($cgi->param('deadline'))
-      || ThrowUserError('illegal_date', {date => $cgi->param('deadline'),
-                                         format => 'YYYY-MM-DD'});
-    $deadline = $cgi->param('deadline');
-    trick_taint($deadline);
-}
-
-push (@fields_values, $deadline);
 
 # Groups
 my @groupstoadd = ();
@@ -339,17 +223,50 @@ foreach my $group (@$groups) {
     }
 }
 
+my @bug_fields = map {$_->name} Bugzilla->get_fields(
+    { custom => 1, obsolete => 0, enter_bug => 1});
+push(@bug_fields, qw(
+    product
+    component
+
+    assigned_to
+    qa_contact
+
+    alias
+    bug_file_loc
+    bug_severity
+    bug_status
+    short_desc
+    op_sys
+    priority
+    rep_platform
+    version
+    target_milestone
+    status_whiteboard
+
+    estimated_time
+    deadline
+));
+my %bug_params;
+foreach my $field (@bug_fields) {
+    $bug_params{$field} = $cgi->param($field);
+}
+$bug_params{'creation_ts'} = $timestamp;
+
 # Add the bug report to the DB.
 $dbh->bz_lock_tables('bugs WRITE', 'bug_group_map WRITE', 'longdescs WRITE',
                      'cc WRITE', 'keywords WRITE', 'dependencies WRITE',
                      'bugs_activity WRITE', 'groups READ',
                      'user_group_map READ', 'group_group_map READ',
-                     'keyworddefs READ', 'fielddefs READ');
+                     'keyworddefs READ', 'fielddefs READ',
+                     'products READ', 'versions READ', 'milestones READ',
+                     'components READ', 'profiles READ', 'bug_severity READ',
+                     'op_sys READ', 'priority READ', 'rep_platform READ');
 
-$dbh->do($query, undef, @fields_values);
+my $bug = Bugzilla::Bug->create(\%bug_params);
 
 # Get the bug ID back.
-my $id = $dbh->bz_last_key('bugs', 'bug_id');
+my $id = $bug->bug_id;
 
 # Add the group restrictions
 my $sth_addgroup = $dbh->prepare(q{
@@ -420,7 +337,6 @@ $dbh->do("UPDATE bugs SET creation_ts = ? WHERE bug_id = ?",
 
 $dbh->bz_unlock_tables();
 
-my $bug = new Bugzilla::Bug($id);
 # We don't have to check if the user can see the bug, because a user filing
 # a bug can always see it. You can't change reporter_accessible until
 # after the bug is filed.

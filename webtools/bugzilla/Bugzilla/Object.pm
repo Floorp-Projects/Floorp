@@ -123,15 +123,28 @@ sub create {
     my ($class, $params) = @_;
     my $dbh = Bugzilla->dbh;
 
-    my $required   = $class->REQUIRED_CREATE_FIELDS;
-    my $validators = $class->VALIDATORS;
-    my $table      = $class->DB_TABLE;
-
     foreach my $field ($class->REQUIRED_CREATE_FIELDS) {
         ThrowCodeError('param_required', 
             { function => "${class}->create", param => $field })
             if !exists $params->{$field};
     }
+
+    my ($field_names, $values) = $class->run_create_validators($params);
+
+    my $qmarks = '?,' x @$values;
+    chop($qmarks);
+    my $table = $class->DB_TABLE;
+    $dbh->do("INSERT INTO $table (" . join(', ', @$field_names) 
+             . ") VALUES ($qmarks)", undef, @$values);
+    my $id = $dbh->bz_last_key($table, $class->ID_FIELD);
+
+    return $class->new($id);
+}
+
+sub run_create_validators {
+    my ($class, $params) = @_;
+
+    my $validators = $class->VALIDATORS;
 
     my (@field_names, @values);
     # We do the sort just to make sure that validation always
@@ -144,18 +157,14 @@ sub create {
         else {
             $value = $params->{$field};
         }
-        trick_taint($value);
+        # We want people to be able to explicitly set fields to NULL,
+        # and that means they can be set to undef.
+        trick_taint($value) if defined $value;
         push(@field_names, $field);
         push(@values, $value);
     }
 
-    my $qmarks = '?,' x @values;
-    chop($qmarks);
-    $dbh->do("INSERT INTO $table (" . join(', ', @field_names) 
-             . ") VALUES ($qmarks)", undef, @values);
-    my $id = $dbh->bz_last_key($table, $class->ID_FIELD);
-
-    return $class->new($id);
+    return (\@field_names, \@values);
 }
 
 sub get_all {
@@ -306,6 +315,20 @@ Notes:       In order for this function to work in your subclass,
              your subclass's L</ID_FIELD> must be of C<SERIAL>
              type in the database. Your subclass also must
              define L</REQUIRED_CREATE_FIELDS> and L</VALIDATORS>.
+
+=item C<run_create_validators($params)>
+
+Description: Runs the validation of input parameters for L</create>.
+             This subroutine exists so that it can be overridden
+             by subclasses who need to do special validations
+             of their input parameters. This method is B<only> called
+             by L</create>.
+
+Params:      The same as L</create>.
+
+Returns:     Two arrayrefs. The first is an array of database field names.
+             The second is an untainted array of values that should go 
+             into those fields (in the same order).
 
 =item C<get_all>
 
