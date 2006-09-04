@@ -55,7 +55,10 @@
 <div class="sec_head">
   <table cellspacing="0" cellpadding="0">
   <tr>
-  <td class="l">Testcases - <a href="run_tests.cgi?product=[% sysconfig.product.productid %]&amp;defaulttestgroup=[% group.testgroup_id %]&amp;continuetesting=1" title="Click here to return to the Test Group selection page">[% group.name | html %]</a>: [% subgroup.name | html %]</td>
+  <td colspan="2" class="l">Testcases - <a href="run_tests.cgi?product=[% sysconfig.product.productid %]&amp;defaulttestgroup=[% group.testgroup_id %]&amp;continuetesting=1" title="Click here to return to the Test Group selection page">[% group.name | html %]</a>: [% subgroup.name | html %]</td>
+  </tr>
+  <tr>
+  <td class="submitall"><div class="v3"><input class="button" type="submit" id="Submit" name="Submit" value="Submit All Results" onclick="findEdited()" /></div></td>
   <td class="r">
 <div class="nav"><a id="top_all" href="#" onclick="allStretch.showAll('height'); return false;">Show All</a>&nbsp;/&nbsp;<a id="top_all" href="#" onclick="allStretch.hideAll('height'); return false;">Hide All</a></div>
   </td>
