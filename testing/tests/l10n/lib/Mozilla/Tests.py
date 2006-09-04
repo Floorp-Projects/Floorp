@@ -356,3 +356,42 @@ class RSSReaderTest(Base):
         l.error('RSS Readers are badly set up')
       res[loc] = [(titles[o], uris[o]) for o in ind]
     return res
+
+class BookmarksTest(Base):
+  """Test class to collect information about bookmarks and check their
+  structure.
+
+  """
+  def __init__(self):
+    '''Set up the test class with a good leaf name'''
+    self.leafName = 'bookmarks-results.json'
+    pass
+  def run(self):
+    '''Collect the data from bookmarks.html for all locales
+
+    '''
+    locales = [loc.strip() for loc in open('mozilla/browser/locales/all-locales')]
+    bm = Parser.BookmarksParser()
+    res = {}
+    for loc in locales:
+      try:
+        bm.read('l10n/%s/browser/profile/bookmarks.html'%loc)
+        res[loc] = bm.getDetails()
+      except Exception, e:
+        logging.getLogger('locale.%s'%loc).error('Bookmarks are busted, %s'%e)
+    return res
+  def  failureTest(self, myResult, failureResult):
+    '''signal pass/warn/failure for each locale
+    Just signaling errors for now.
+    
+    '''
+    locales = [loc.strip() for loc in open('mozilla/browser/locales/all-locales')]
+    bm = Parser.BookmarksParser()
+    bm.read('mozilla/browser/locales/en-US/profile/bookmarks.html')
+    enUSDetails = bm.getDetails()
+    for loc in locales:
+      if not myResult.has_key(loc):
+        if not failureResult.has_key(loc):
+          failureResult[loc] = 2
+        else:
+          failureResult[loc] |= 2
