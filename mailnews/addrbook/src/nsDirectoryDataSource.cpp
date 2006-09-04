@@ -115,6 +115,7 @@ nsAbDirectoryDataSource::Observe(nsISupports *aSubject, const char *aTopic, cons
     return NS_OK;
   }
   else if (!strcmp(aTopic,NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    DIR_ShutDown();
     return Cleanup();
   }
   return NS_OK;
