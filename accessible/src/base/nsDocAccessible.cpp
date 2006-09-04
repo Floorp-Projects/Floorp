@@ -825,7 +825,7 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
   }
   else if (aNameSpaceID == kNameSpaceID_WAIProperties) {
     // DHTML accessibility attributes
-    if (HasRoleAttribute(aContent)) {
+    if (!HasRoleAttribute(aContent)) {
       // We don't care about DHTML state changes unless there is
       // a DHTML role set for the element
       return;
