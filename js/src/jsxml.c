@@ -2503,6 +2503,20 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
     JS_ASSERT(!IS_EMPTY(uri));
 
     /*
+     * If there are no *declared* namespaces, skip all collision detection and
+     * return a short prefix quickly; an example of such a situation:
+     *
+     *   var x = <f/>;
+     *   var n = new Namespace("http://example.com/");
+     *   x.@n::att = "val";
+     *   x.toXMLString();
+     *
+     * This is necessary for various log10 uses below to be valid.
+     */
+    if (decls->length == 0)
+        return JS_NewStringCopyZ(cx, "a");
+
+    /*
      * Try peeling off the last filename suffix or pathname component till
      * we have a valid XML name.  This heuristic will prefer "xul" given
      * ".../there.is.only.xul", "xbl" given ".../xbl", and "xbl2" given any
@@ -2513,7 +2527,8 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
     while (--cp > start) {
         if (*cp == '.' || *cp == '/' || *cp == ':') {
             ++cp;
-            if (IsXMLName(cp, PTRDIFF(end, cp, jschar)))
+            length = PTRDIFF(end, cp, jschar);
+            if (IsXMLName(cp, length) && !STARTS_WITH_XML(cp, length))
                 break;
             end = --cp;
         }
@@ -2521,12 +2536,31 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
     length = PTRDIFF(end, cp, jschar);
 
     /*
+     * If the namespace consisted only of non-XML names or names that begin
+     * case-insensitively with "xml", arbitrarily create a prefix consisting of
+     * 'a's of size length (allowing dp-calculating code to work with or without
+     * this branch executing) plus the space for storing a hyphen and the serial
+     * number (avoiding reallocation if a collision happens).
+     */
+    bp = (jschar *) cp;
+    newlength = length;
+    if (STARTS_WITH_XML(cp, length) || !IsXMLName(cp, length)) {
+        newlength = length + 2 + (size_t) log10(decls->length);
+        bp = (jschar *)
+             JS_malloc(cx, (newlength + 1) * sizeof(jschar));
+        if (!bp)
+            return NULL;
+
+        bp[newlength] = 0;
+        for (i = 0; i < newlength; i++)
+             bp[i] = 'a';
+    }
+
+    /*
      * Now search through decls looking for a collision.  If we collide with
      * an existing prefix, start tacking on a hyphen and a serial number.
      */
     serial = 0;
-    bp = (jschar *) cp;
-    newlength = length;
     do {
         done = JS_TRUE;
         for (i = 0, n = decls->length; i < n; i++) {
