@@ -39,8 +39,7 @@ import re
 import codecs
 import logging
 
-__statics = {}
-__constructors = {}
+__constructors = []
 
 class Parser:
   def __init__(self):
@@ -80,13 +79,10 @@ class Parser:
     return (m.group(1), self.postProcessValue(m.group(2)))
 
 def getParser(path):
-  ext = path.rsplit('.',1)[1]
-  if __statics.has_key(ext):
-    return __statics[ext]
-  if not __constructors.has_key(ext):
-    raise UserWarning, "Cannot find Parser"
-  __statics[ext] = __constructors[ext]()
-  return __statics[ext]
+  for item in __constructors:
+    if re.search(item[0], path):
+      return item[1]
+  raise UserWarning, "Cannot find Parser"
 
 class DTDParser(Parser):
   def __init__(self):
@@ -183,6 +179,7 @@ class BookmarksParser(Parser):
     return f
 
 
-__constructors = {'dtd': DTDParser,
-                  'properties': PropertiesParser,
-                  'inc': DefinesParser}
+__constructors = [('\\.dtd', DTDParser()),
+                  ('\\.properties', PropertiesParser()),
+                  ('\\.inc', DefinesParser()),
+                  ('bookmarks\\.html', BookmarksParser())]

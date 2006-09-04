@@ -186,7 +186,10 @@ if not os.path.isdir(basePath):
   os.mkdir(basePath)
 
 
-tests = [Tests.CompareTest(), Tests.SearchTest(), Tests.RSSReaderTest()]
+tests = [Tests.CompareTest(),
+         Tests.SearchTest(),
+         Tests.RSSReaderTest(),
+         Tests.BookmarksTest()]
 drop = {}
 for test in tests:
   res = test.run()
@@ -202,7 +205,7 @@ if not opts.waterfall:
 if opts.enddate:
   endtime = time.mktime(time.strptime(opts.enddate, '%Y-%m-%d %H:%M:%S')) + time.altzone
 else:
-  endtime = time.mktime(datetime.utcnow().timetuple())
+  endtime = time.mktime(datetime.now().timetuple())
 f = None
 w = Wrapper(opts.target, 'waterfall.json')
 if os.path.isfile(w.p):
