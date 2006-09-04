@@ -297,7 +297,7 @@ They must return the validated value.
 
 =over
 
-=item C<create($params)>
+=item C<create>
 
 Description: Creates a new item in the database.
              Throws a User Error if any of the passed-in params
