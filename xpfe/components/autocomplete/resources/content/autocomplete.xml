@@ -1327,6 +1327,8 @@
             
             if (this.mTree)
               this.mTree.rowCountChanged(0, -oldCount);
+            if (this.mBoxObject)
+              this.mBoxObject.scrollToRow(0);
           },
           
           addResults: function(aResults)
