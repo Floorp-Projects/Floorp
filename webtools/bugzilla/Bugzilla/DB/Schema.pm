@@ -79,6 +79,13 @@ That means that CGI scripts should never call any function in this
 module directly, but should instead rely on methods provided by
 Bugzilla::DB.
 
+=head1 NEW TO SCHEMA.PM?
+
+If this is your first time looking at Schema.pm, especially if
+you are making changes to the database, please take a look at
+L<http://www.bugzilla.org/docs/developer.html#sql-schema> to learn
+more about how this integrates into the rest of Bugzilla.
+
 =cut
 
 #--------------------------------------------------------------------------
@@ -2072,35 +2079,74 @@ __END__
 
 =head1 ABSTRACT DATA TYPES
 
-The following abstract data types are used:
+The size and range data provided here is only
+intended as a guide.  See your database's Bugzilla
+module (in this directory) for the most up-to-date
+values for these data types.  The following
+abstract data types are used:
 
 =over 4
 
 =item C<BOOLEAN>
 
+Logical value 0 or 1 where 1 is true, 0 is false.
+
 =item C<INT1>
+
+Integer values (-128 - 127 or 0 - 255 unsigned).
 
 =item C<INT2>
 
+Integer values (-32,768 - 32767 or 0 - 65,535 unsigned).
+
 =item C<INT3>
+
+Integer values (-8,388,608 - 8,388,607 or 0 - 16,777,215 unsigned)
 
 =item C<INT4>
 
+Integer values (-2,147,483,648 - 2,147,483,647 or 0 - 4,294,967,295 
+unsigned)
+
 =item C<SMALLSERIAL>
+
+An auto-increment L</INT1>
 
 =item C<MEDIUMSERIAL>
 
+An auto-increment L</INT3>
+
 =item C<INTSERIAL>
+
+An auto-increment L</INT4>
 
 =item C<TINYTEXT>
 
+Variable length string of characters up to 255 (2^8 - 1) characters wide 
+or more depending on the character set used.
+
 =item C<MEDIUMTEXT>
+
+Variable length string of characters up to 16M (2^24 - 1) characters wide 
+or more depending on the character set used.
 
 =item C<TEXT>
 
+Variable length string of characters up to 64K (2^16 - 1) characters wide 
+or more depending on the character set used.
+
 =item C<LONGBLOB>
 
+Variable length string of binary data up to 4M (2^32 - 1) bytes wide
+
 =item C<DATETIME>
+
+DATETIME support varies from database to database, however, it's generally 
+safe to say that DATETIME entries support all date/time combinations greater
+than 1900-01-01 00:00:00.  Note that the format used is C<YYYY-MM-DD hh:mm:ss>
+to be safe, though it's possible that your database may not require
+leading zeros.  For greatest compatibility, however, please make sure dates 
+are formatted as above for queries to guarantee consistent results.
 
 =back
 
@@ -2122,5 +2168,7 @@ database-specific basis:
 =head1 SEE ALSO
 
 L<Bugzilla::DB>
+
+L<http://www.bugzilla.org/docs/developer.html#sql-schema>
 
 =cut
