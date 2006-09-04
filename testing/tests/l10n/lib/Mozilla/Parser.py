@@ -117,6 +117,72 @@ class DefinesParser(Parser):
     self.comment = re.compile('^#[^d][^e][^f][^i][^n][^e][^\s].*$',re.M)
     Parser.__init__(self)
 
+class BookmarksParser(Parser):
+  def __init__(self):
+    Parser.__init__(self)
+  def __iter__(self):
+    def getProps(f, base):
+      r = []
+      if f.has_key(u'__title__'):
+        r.append((base+'.title', f[u'__title__']))
+      if f.has_key(u'__desc__'):
+        r.append((base+'.desc',f[u'__desc__']))
+      for i in range(len(f[u'children'])):
+        c = f[u'children'][i]
+        if c.has_key(u'children'):
+          r += getProps(c, base + '.' + str(i))
+        else:
+          for k,v in c.iteritems():
+            k = k.lower()
+            if k == u'href':
+              r.append(('%s.%i.href'%(base, i), v))
+            if k == u'feedurl':
+              r.append(('%s.%i.feedurl'%(base, i), v))
+            elif k == u'__title__':
+              r.append(('%s.%i.title'%(base, i), v))
+            elif k == u'icon':
+              r.append(('%s.%i.icon'%(base, i), v))
+      return r
+    return getProps(self.getDetails(), 'bookmarks').__iter__()
+  def next(self):
+    raise NotImplementedError
+  def getDetails(self):
+    def parse_link(f, line):
+      link = {}
+      for m in re.finditer('(?P<key>[A-Z]+)="(?P<val>[^"]+)', line):
+        link[m.group('key')] = m.group('val')
+      m = re.search('"[ ]*>([^<]+)</A>', line, re.I)
+      link[u'__title__'] = m.group(1)
+      f[u'children'].append(link)
+    stack = []
+    f = {u'children': []}
+    nextTitle = None
+    nextDesc = None
+    for ln in self.contents.splitlines():
+      if ln.find('<DL') >= 0:
+        stack.append(f)
+        chld = {u'children':[], u'__title__': nextTitle, u'__desc__': nextDesc}
+        nextTitle = None
+        nextDesc = None
+        f[u'children'].append(chld)
+        f = chld
+      elif re.search('<H[13]',ln):
+        if nextTitle:
+          pass
+        nextTitle = re.search('>([^<]+)</H', ln, re.I).group(1)
+      elif ln.find('<DD>') >= 0:
+        if nextDesc:
+          pass
+        nextDesc = re.search('DD>([^<]+)', ln).group(1)
+      elif ln.find('<DT><A') >= 0:
+        parse_link(f, ln)
+      elif ln.find('</DL>') >= 0:
+        f = stack.pop()
+      elif ln.find('<TITLE') >= 0:
+        f[u'__title__'] = re.search('>([^<]+)</TITLE', ln).group(1)
+    return f
+
+
 __constructors = {'dtd': DTDParser,
                   'properties': PropertiesParser,
                   'inc': DefinesParser}
