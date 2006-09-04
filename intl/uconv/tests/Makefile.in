@@ -84,3 +84,13 @@ OS_LIBS		+= /usr/lib/libdl.so
 endif
 endif
 
+# Unit tests
+_UNIT_FILES := $(wildcard $(srcdir)/unit/*.js)
+
+libs:: $(_UNIT_FILES)
+	$(INSTALL) $^ $(DIST)/bin/intl_unit_tests
+
+check::
+	$(RUN_TEST_PROGRAM) $(DIST)/bin/test_all.sh $(DIST)/bin/intl_unit_tests
+
+
