@@ -70,18 +70,11 @@ NS_IMETHODIMP nsMsgXFVirtualFolderDBView::Open(nsIMsgFolder *folder, nsMsgViewSo
 void nsMsgXFVirtualFolderDBView::RemovePendingDBListeners()
 {
   nsresult rv;
-  PRInt32 scopeCount;
-  nsCOMPtr <nsIMsgSearchSession> searchSession = do_QueryReferent(m_searchSession);
   nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
-  searchSession->CountSearchScopes(&scopeCount);
-  for (PRInt32 i = 0; i < scopeCount; i++)
-  {
-    nsMsgSearchScopeValue scopeId;
-    nsCOMPtr<nsIMsgFolder> searchFolder;
-    searchSession->GetNthSearchScope(i, &scopeId, getter_AddRefs(searchFolder));
-    if (searchFolder && msgDBService)
-      msgDBService->UnregisterPendingListener(this);
-  }
+  // UnregisterPendingListener will return an error when there are no more instances
+  // of this object registered as pending listeners.
+  while (NS_SUCCEEDED(rv))
+    rv = msgDBService->UnregisterPendingListener(this);
 }
 
 NS_IMETHODIMP nsMsgXFVirtualFolderDBView::Close()
