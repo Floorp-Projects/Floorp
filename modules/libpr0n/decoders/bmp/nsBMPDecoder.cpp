@@ -147,31 +147,40 @@ nsresult nsBMPDecoder::SetData()
 
 nsresult nsBMPDecoder::WriteRLERows(PRUint32 rows)
 {
-    PRUint32 alpha, cnt, line;
+    PRUint32 cnt, line;
+
+    PRUint32 abpr;
     PRUint8 bit;
     PRUint8* pos = mAlpha;
-
     // First pack the alpha data
-    nsresult rv = mFrame->GetAlphaBytesPerRow(&alpha);
+    nsresult rv = mFrame->GetAlphaBytesPerRow(&abpr);
     NS_ENSURE_SUCCESS(rv, rv);
-    for (cnt = 0; cnt < alpha; cnt++) {
+#ifdef MOZ_CAIRO_GFX
+    gfx_format format;
+    mFrame->GetFormat(&format);
+    if (format == RLE_GFXFORMAT_ALPHA)
+        abpr >>= 2;
+#endif
+    for (cnt = 0; cnt < abpr; cnt++) {
         PRUint8 byte = 0;
         for (bit = 128; bit; bit >>= 1)
             byte |= *pos++ & bit;
         mAlpha[cnt] = byte;
 #ifdef MOZ_CAIRO_GFX
 #ifdef IS_LITTLE_ENDIAN
-        mDecoded[(cnt * 4) + 3] = byte ? 255 : 0;
+        mDecoded[(cnt << 2) + 3] = byte ? 0 : 255;
 #else
-        mDecoded[(cnt * 4)] = byte ? 255 : 0;
+        mDecoded[(cnt << 2)] = byte ? 0 : 255;
 #endif
 #endif
     }
 
     for (cnt = 0; cnt < rows; cnt++) {
         line = (mBIH.height < 0) ? (-mBIH.height - mCurLine--) : --mCurLine;
-        rv = mFrame->SetAlphaData(mAlpha, alpha, line * alpha);
+#ifndef MOZ_CAIRO_GFX
+        rv = mFrame->SetAlphaData(mAlpha, alpha, line * abpr);
         NS_ENSURE_SUCCESS(rv, rv);
+#endif
         rv = mFrame->SetImageData(mDecoded, mBpr, line * mBpr);
         NS_ENSURE_SUCCESS(rv, rv);
         if (cnt == 0) {
