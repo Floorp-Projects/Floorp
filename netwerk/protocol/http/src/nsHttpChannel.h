@@ -196,7 +196,7 @@ private:
     nsresult GetAuthenticator(const char *challenge, nsCString &scheme, nsIHttpAuthenticator **auth); 
     void     ParseRealm(const char *challenge, nsACString &realm);
     void     GetIdentityFromURI(PRUint32 authFlags, nsHttpAuthIdentity&);
-    nsresult PromptForIdentity(const char *scheme, const char *host, PRInt32 port, PRBool proxyAuth, const char *realm, const char *authType, PRUint32 authFlags, nsHttpAuthIdentity &);
+    nsresult PromptForIdentity(PRUint32 level, PRBool proxyAuth, const char *realm, const char *authType, PRUint32 authFlags, nsHttpAuthIdentity &);
     PRBool   ConfirmAuth(const nsString &bundleKey, PRBool doYesNoPrompt);
     void     CheckForSuperfluousAuth();
     void     SetAuthorizationHeader(nsHttpAuthCache *, nsHttpAtom header, const char *scheme, const char *host, PRInt32 port, const char *path, nsHttpAuthIdentity &ident);

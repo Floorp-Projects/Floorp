@@ -369,6 +369,6 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpChannel  *httpChannel,
 NS_IMETHODIMP
 nsHttpNTLMAuth::GetAuthFlags(PRUint32 *flags)
 {
-    *flags = CONNECTION_BASED | IDENTITY_INCLUDES_DOMAIN;
+    *flags = CONNECTION_BASED | IDENTITY_INCLUDES_DOMAIN | IDENTITY_ENCRYPTED;
     return NS_OK;
 }

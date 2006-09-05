@@ -2539,9 +2539,15 @@ nsHttpChannel::GetCredentialsForChallenge(const char *challenge,
         }
 
         if (!entry && ident->IsEmpty()) {
+            PRUint32 level = nsIAuthPrompt2::LEVEL_NONE;
+            if (scheme.EqualsLiteral("https"))
+                level = nsIAuthPrompt2::LEVEL_SECURE;
+            else if (authFlags & nsIHttpAuthenticator::IDENTITY_ENCRYPTED)
+                level = nsIAuthPrompt2::LEVEL_PW_ENCRYPTED;
+
             // at this point we are forced to interact with the user to get
             // their username and password for this domain.
-            rv = PromptForIdentity(scheme.get(), host, port, proxyAuth, realm.get(), 
+            rv = PromptForIdentity(level, proxyAuth, realm.get(), 
                                    authType, authFlags, *ident);
             if (NS_FAILED(rv)) return rv;
             identFromURI = PR_FALSE;
@@ -2755,9 +2761,7 @@ nsAuthInformationHolder::SetToHttpAuthIdentity(PRUint32 authFlags, nsHttpAuthIde
 }
 
 nsresult
-nsHttpChannel::PromptForIdentity(const char *scheme,
-                                 const char *host,
-                                 PRInt32     port,
+nsHttpChannel::PromptForIdentity(PRUint32    level,
                                  PRBool      proxyAuth,
                                  const char *realm,
                                  const char *authType,
@@ -2797,7 +2801,7 @@ nsHttpChannel::PromptForIdentity(const char *scheme,
         return NS_ERROR_OUT_OF_MEMORY;
     PRBool retval = PR_FALSE;
     rv = authPrompt->PromptAuth(this,
-                                nsIAuthPrompt2::LEVEL_NONE,
+                                level,
                                 holder, &retval);
     if (NS_FAILED(rv))
         return rv;
