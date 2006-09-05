@@ -1929,7 +1929,7 @@
               <rule nc:CanFileMessages="true">
                 <menupopup>
                   <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" 
-                    oncommand="MsgCopyMessage(event.target.id)" 
+                    oncommand="MsgMoveMessage(event.target.id)" 
                     SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                     BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                     IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
