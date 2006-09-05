@@ -393,11 +393,9 @@
   [% END %]
 [% END %]
 
-[%# If we are in ERROR_MODE_DIE, we want the error message to be plain text,
-  # not HTML
-%]
+[%# We only want HTML error messages for ERROR_MODE_WEBPAGE %]
 [% USE Bugzilla %]
-[% IF Bugzilla.error_mode == ERROR_MODE_DIE %]
+[% IF Bugzilla.error_mode != ERROR_MODE_WEBPAGE %]
   [% error_message FILTER none %]
   [% RETURN %]
 [% END %]

@@ -37,6 +37,7 @@ use CGI qw(-no_xhtml -oldstyle_urls :private_tempfiles :unique_headers SERVER_PU
 
 use base qw(CGI);
 
+use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Util;
 
@@ -61,10 +62,12 @@ sub new {
 
     my $self = $class->SUPER::new(@args);
 
-    # This happens here so that command-line scripts don't spit out
-    # their errors in HTML format.
-    require CGI::Carp;
-    import CGI::Carp qw(fatalsToBrowser);
+    if (Bugzilla->error_mode eq ERROR_MODE_WEBPAGE) {
+        # This happens here so that command-line scripts don't spit out
+        # their errors in HTML format.
+        require CGI::Carp;
+        import CGI::Carp qw(fatalsToBrowser);
+    }
 
     # Make sure our outgoing cookie list is empty on each invocation
     $self->{Bugzilla_cookie_list} = [];
