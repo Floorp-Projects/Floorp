@@ -867,10 +867,6 @@ Function preComponents
   Call CheckCustom
   ; If DOMi isn't available skip the components page
   ${Unless} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
-    ; If talkback exists always install it enabled.
-    ${If} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
-      SectionSetFlags 2 1
-    ${EndIf}
     Abort
   ${EndUnless}
   !insertmacro MUI_HEADER_TEXT "$(OPTIONAL_COMPONENTS_TITLE)" "$(OPTIONAL_COMPONENTS_SUBTITLE)"
@@ -1120,6 +1116,8 @@ Function .onInit
   ${If} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
     ${GetSize} "$EXEDIR\optional\extensions\talkback@mozilla.org" "/S=0K" $0 $8 $9
     SectionSetSize 2 $0
+    ; Install Talkback by default.
+    SectionSetFlags 2 1
   ${Else}
     ; Hide Talkback in the components page if it isn't available.
     SectionSetText 2 ""
