@@ -61,7 +61,7 @@
           <label class="text-link plain"
             statustext="&safeb.palm.p1.linkStatusText;"
             id="safebrowsing-palm-showmore-link"
-            onclick="goDoCommand('safebrowsing-palm-showmore')"
+            onclick="goDoCommand('safebrowsing-palm-showmore'); document.getElementById('safebrowsing-palm-faq-link').focus()"
             value="&safeb.palm.message.p1.linkText;" />
         </description>
 
