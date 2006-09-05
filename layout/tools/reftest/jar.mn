@@ -1,0 +1,4 @@
+reftest.jar:
+% content reftest %content/
+*  content/reftest.js (reftest.js)
+  content/reftest.xul (reftest.xul)
