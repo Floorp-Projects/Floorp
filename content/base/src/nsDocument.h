@@ -517,6 +517,10 @@ public:
   virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
                                     nsPresContext* aPresContext,
                                     nsEventStatus* aEventStatus);
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
 
   // nsIRadioGroupContainer
   NS_IMETHOD WalkRadioGroup(const nsAString& aName,
@@ -764,32 +768,6 @@ private:
    */
   already_AddRefed<nsIDOMElement>
     CheckAncestryAndGetFrame(nsIDocument* aDocument) const;
-
-  /**
-   * Walks the attribute and descendant nodes of aNode. If aNewNodeInfoManager
-   * is not null, it is used to create new nodeinfos for the nodes. Also
-   * reparents the XPConnect wrappers for the nodes in aNewScope.
-   * aNodesWithProperties will be filled with all the nodes that have
-   * properties.
-   *
-   * @param aNode Node to adopt.
-   * @param aNewNodeInfoManager The nodeinfo manager to use to create new
-   *                            nodeinfos for aNode and its attributes and
-   *                            descendants. May be null if the nodeinfos
-   *                            shouldn't be changed.
-   * @param aCx Context to use for reparenting the wrappers.
-   * @param aOldScope Old scope for the wrappers.
-   * @param aNewScope New scope for the wrappers.
-   * @param aNodesWithProperties All nodes (from amongst aNode and its
-   *                             descendants) with properties.
-   */
-  static nsresult Adopt(nsINode *aNode, nsNodeInfoManager *aNewNodeInfoManager,
-                        JSContext *aCx, JSObject *aOldScope,
-                        JSObject *aNewScope,
-                        nsCOMArray<nsINode> &aNodesWithProperties);
-
-  friend PLDHashOperator PR_CALLBACK
-    AdoptFunc(nsAttrHashKey::KeyType aKey, nsIDOMNode *aData, void* aUserArg);
 
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);

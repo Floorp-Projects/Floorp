@@ -95,7 +95,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
@@ -146,6 +146,7 @@ public:
                               PRBool aCompileEventHandlers);
 
   virtual PRInt32 IntrinsicState() const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
   void GetImageFrame(nsIImageFrame** aImageFrame);
@@ -203,7 +204,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLImageElement, nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-NS_IMPL_DOM_CLONENODE(nsHTMLImageElement)
+NS_IMPL_ELEMENT_CLONE(nsHTMLImageElement)
 
 
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Name, name)

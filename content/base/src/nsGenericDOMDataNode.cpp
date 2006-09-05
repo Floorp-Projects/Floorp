@@ -258,29 +258,6 @@ nsGenericDOMDataNode::GetBaseURI(nsAString& aURI)
 }
 
 nsresult
-nsGenericDOMDataNode::CloneNode(PRBool aDeep, nsIDOMNode *aSource,
-                                nsIDOMNode **aResult) const
-{
-  *aResult = nsnull;
-
-  nsCOMPtr<nsIContent> newContent;
-  nsresult rv = CloneContent(mNodeInfo->NodeInfoManager(), aDeep,
-                             getter_AddRefs(newContent));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = CallQueryInterface(newContent, aResult);
-
-  nsIDocument *ownerDoc = GetOwnerDoc();
-  if (NS_SUCCEEDED(rv) && ownerDoc && HasProperties()) {
-    nsContentUtils::CallUserDataHandler(ownerDoc,
-                                        nsIDOMUserDataHandler::NODE_CLONED,
-                                        this, aSource, *aResult);
-  }
-
-  return rv;
-}
-
-nsresult
 nsGenericDOMDataNode::LookupPrefix(const nsAString& aNamespaceURI,
                                    nsAString& aPrefix)
 {
@@ -920,7 +897,7 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
    * as this node!
    */
 
-  nsCOMPtr<nsIContent> newContent = Clone(mNodeInfo, PR_FALSE);
+  nsCOMPtr<nsIContent> newContent = CloneDataNode(mNodeInfo, PR_FALSE);
   if (!newContent) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1061,32 +1038,6 @@ nsGenericDOMDataNode::GetCurrentValueAtom()
   nsAutoString val;
   GetData(val);
   return NS_NewAtom(val);
-}
-
-nsresult
-nsGenericDOMDataNode::CloneContent(nsNodeInfoManager *aNodeInfoManager,
-                                   PRBool aDeep, nsIContent **aResult) const
-{
-  nsINodeInfo *nodeInfo = NodeInfo();
-  nsCOMPtr<nsINodeInfo> newNodeInfo;
-  if (aNodeInfoManager != nodeInfo->NodeInfoManager()) {
-    nsresult rv = aNodeInfoManager->GetNodeInfo(nodeInfo->NameAtom(),
-                                                nodeInfo->GetPrefixAtom(),
-                                                nodeInfo->NamespaceID(),
-                                                getter_AddRefs(newNodeInfo));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nodeInfo = newNodeInfo;
-  }
-
-  *aResult = Clone(nodeInfo, PR_TRUE);
-  if (!*aResult) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aResult);
-
-  return NS_OK;
 }
 
 nsIAtom*

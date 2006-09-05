@@ -557,6 +557,17 @@ public:
    */
   virtual void RemoveMutationObserver(nsIMutationObserver* aMutationObserver);
 
+  /**
+   * Clones this node. This needs to be overriden by all node classes. aNodeInfo
+   * should be identical to this node's nodeInfo, except for the document which
+   * may be different. When cloning an element, all attributes of the element
+   * will be cloned. The children of the node will not be cloned.
+   *
+   * @param aNodeInfo the nodeinfo to use for the clone
+   * @param aResult the clone
+   */
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const = 0;
+
   // This class can be extended by subclasses that wish to store more
   // information in the slots.
   class nsSlots
@@ -650,7 +661,6 @@ protected:
     *flags &= ~aFlagsToUnset;
   }
 
-  friend class nsDocument;
   nsCOMPtr<nsINodeInfo> mNodeInfo;
 
   enum { PARENT_BIT_INDOCUMENT = 1 << 0, PARENT_BIT_PARENT_IS_CONTENT = 1 << 1 };

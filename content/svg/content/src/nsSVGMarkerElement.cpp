@@ -152,7 +152,7 @@ nsSVGMarkerElement::Init()
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGMarkerElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGMarkerElement)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGFitToViewBox methods

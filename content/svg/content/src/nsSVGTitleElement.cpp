@@ -57,9 +57,11 @@ public:
   NS_DECL_NSIDOMSVGTITLEELEMENT
 
   // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGTitleElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGTitleElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGTitleElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGTitleElementBase::)
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Title)
@@ -99,5 +101,5 @@ nsSVGTitleElement::Init()
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGTitleElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGTitleElement)
 

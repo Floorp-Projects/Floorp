@@ -277,15 +277,11 @@ nsGenericHTMLElement::Shutdown()
 }
 
 nsresult
-nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst, PRBool aDeep) const
+nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst) const
 {
-  nsresult rv = NS_OK;
+  nsresult rv;
   PRInt32 i, count = GetAttrCount();
-  nsAutoString value;
-
   for (i = 0; i < count; ++i) {
-    // XXX Once we have access to existing nsDOMAttributes for this element, we
-    //     should call CloneNode or ImportNode on them.
     const nsAttrName *name = mAttrsAndChildren.AttrNameAt(i);
     const nsAttrValue *value = mAttrsAndChildren.AttrAt(i);
     if (name->Equals(nsHTMLAtoms::style, kNameSpaceID_None) &&
@@ -330,20 +326,7 @@ nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst, PRBool aDeep) const
     }
   }
 
-  nsIDocument *newDoc = aDst->GetOwnerDoc();
-
-  if (aDeep) {
-    nsIDocument *doc = GetOwnerDoc();
-    if (doc == newDoc) {
-      rv = CloneChildrenTo(aDst);
-    }
-    else {
-      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(newDoc);
-      rv = ImportChildrenTo(aDst, domDoc);
-    }
-  }
-
-  return rv;
+  return NS_OK;
 }
 
 nsresult

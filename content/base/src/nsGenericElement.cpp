@@ -3165,80 +3165,16 @@ nsGenericElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr) co
 }
 
 nsresult
-nsGenericElement::CopyInnerTo(nsGenericElement* aDst, PRBool aDeep) const
+nsGenericElement::CopyInnerTo(nsGenericElement* aDst) const
 {
-  nsresult rv = NS_OK;
   PRUint32 i, count = mAttrsAndChildren.AttrCount();
   for (i = 0; i < count; ++i) {
-    // XXX Once we have access to existing nsDOMAttributes for this element, we
-    //     should call CloneNode or ImportNode on them.
     const nsAttrName* name = mAttrsAndChildren.AttrNameAt(i);
     const nsAttrValue* value = mAttrsAndChildren.AttrAt(i);
     nsAutoString valStr;
     value->ToString(valStr);
-    rv = aDst->SetAttr(name->NamespaceID(), name->LocalName(),
-                       name->GetPrefix(), valStr, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  if (aDeep) {
-    nsIDocument *doc = GetOwnerDoc();
-    nsIDocument *newDoc = aDst->GetOwnerDoc();
-    if (doc == newDoc) {
-      rv = CloneChildrenTo(aDst);
-    }
-    else {
-      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(newDoc);
-      rv = ImportChildrenTo(aDst, domDoc);
-    }
-  }
-
-  return rv;
-}
-
-nsresult
-nsGenericElement::ImportChildrenTo(nsGenericElement *aDst,
-                                   nsIDOMDocument *aImportDocument) const
-{
-  PRUint32 i, count = mAttrsAndChildren.ChildCount();
-  for (i = 0; i < count; ++i) {
-    nsresult rv;
-    nsCOMPtr<nsIDOMNode> node =
-      do_QueryInterface(mAttrsAndChildren.ChildAt(i), &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIDOMNode> newNode;
-    rv = aImportDocument->ImportNode(node, PR_TRUE, getter_AddRefs(newNode));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIContent> newContent = do_QueryInterface(newNode, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aDst->AppendChildTo(newContent, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsGenericElement::CloneChildrenTo(nsGenericElement *aDst) const
-{
-  PRUint32 i, count = mAttrsAndChildren.ChildCount();
-  for (i = 0; i < count; ++i) {
-    nsresult rv;
-    nsCOMPtr<nsIDOMNode> node =
-      do_QueryInterface(mAttrsAndChildren.ChildAt(i), &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIDOMNode> newNode;
-    rv = node->CloneNode(PR_TRUE, getter_AddRefs(newNode));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIContent> newContent = do_QueryInterface(newNode, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aDst->AppendChildTo(newContent, PR_FALSE);
+    nsresult rv = aDst->SetAttr(name->NamespaceID(), name->LocalName(),
+                                name->GetPrefix(), valStr, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -3803,46 +3739,4 @@ nsGenericElement::GetContentsAsText(nsAString& aText)
       child->AppendTextTo(aText);
     }
   }
-}
-
-nsresult
-nsGenericElement::CloneNode(PRBool aDeep, nsIDOMNode *aSource,
-                            nsIDOMNode **aResult) const
-{
-  *aResult = nsnull;
-
-  nsCOMPtr<nsIContent> newContent;
-  nsresult rv = CloneContent(mNodeInfo->NodeInfoManager(), aDeep,
-                             getter_AddRefs(newContent));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = CallQueryInterface(newContent, aResult);
-
-  nsIDocument *ownerDoc = GetOwnerDoc();
-  if (NS_SUCCEEDED(rv) && ownerDoc && HasProperties()) {
-    nsContentUtils::CallUserDataHandler(ownerDoc,
-                                        nsIDOMUserDataHandler::NODE_CLONED,
-                                        this, aSource, *aResult);
-  }
-
-  return rv;
-}
-
-nsresult
-nsGenericElement::CloneContent(nsNodeInfoManager *aNodeInfoManager,
-                               PRBool aDeep, nsIContent **aResult) const
-{
-  nsINodeInfo *nodeInfo = NodeInfo();
-  nsCOMPtr<nsINodeInfo> newNodeInfo;
-  if (aNodeInfoManager != nodeInfo->NodeInfoManager()) {
-    nsresult rv = aNodeInfoManager->GetNodeInfo(nodeInfo->NameAtom(),
-                                                nodeInfo->GetPrefixAtom(),
-                                                nodeInfo->NamespaceID(),
-                                                getter_AddRefs(newNodeInfo));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nodeInfo = newNodeInfo;
-  }
-
-  return Clone(nodeInfo, aDeep, aResult);
 }

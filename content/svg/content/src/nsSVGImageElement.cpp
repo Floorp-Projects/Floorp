@@ -79,7 +79,7 @@ public:
   NS_DECL_NSIDOMSVGURIREFERENCE
 
   // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGImageElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGImageElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGImageElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGImageElementBase::)
 
@@ -98,6 +98,8 @@ public:
 
   // nsSVGPathGeometryElement methods:
   virtual void ConstructPath(cairo_t *aCtx);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
 
@@ -193,7 +195,7 @@ nsSVGImageElement::Init()
 // nsIDOMNode methods
 
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGImageElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGImageElement)
 
 
 //----------------------------------------------------------------------

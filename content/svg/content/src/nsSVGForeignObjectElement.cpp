@@ -78,7 +78,7 @@ nsSVGForeignObjectElement::nsSVGForeignObjectElement(nsINodeInfo *aNodeInfo)
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGForeignObjectElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGForeignObjectElement)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGForeignObjectElement methods:

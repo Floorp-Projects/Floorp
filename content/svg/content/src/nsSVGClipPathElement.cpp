@@ -58,9 +58,11 @@ public:
   NS_DECL_NSIDOMSVGCLIPPATHELEMENT
 
   // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGClipPathElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGClipPathElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGClipPathElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGClipPathElementBase::)
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
 
@@ -140,5 +142,5 @@ NS_IMETHODIMP nsSVGClipPathElement::GetClipPathUnits(nsIDOMSVGAnimatedEnumeratio
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGClipPathElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGClipPathElement)
 

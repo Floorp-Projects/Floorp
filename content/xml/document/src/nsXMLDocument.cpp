@@ -91,9 +91,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsIDOMUserDataHandler.h"
 #include "nsEventDispatcher.h"
-
-// XXX The XML world depends on the html atoms
-#include "nsHTMLAtoms.h"
+#include "nsNodeUtils.h"
 
 
 // ==================================================================
@@ -662,76 +660,7 @@ nsXMLDocument::IsLoadedAsData()
 NS_IMETHODIMP    
 nsXMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
-
-  nsresult rv;
-  nsCOMPtr<nsIDOMDocumentType> docType, newDocType;
-  nsCOMPtr<nsIDOMDocument> newDoc;
-
-  // Get the doctype prior to new document construction. There's no big 
-  // advantage now to dealing with the doctype separately, but maybe one 
-  // day we'll do something significant with the doctype on document creation.
-  GetDoctype(getter_AddRefs(docType));
-  if (docType) {
-    nsCOMPtr<nsIDOMNode> newDocTypeNode;
-    rv = docType->CloneNode(PR_TRUE, getter_AddRefs(newDocTypeNode));
-    if (NS_FAILED(rv)) return rv;
-    newDocType = do_QueryInterface(newDocTypeNode);
-  }
-
-  // Create an empty document
-  rv = NS_NewDOMDocument(getter_AddRefs(newDoc), EmptyString(), EmptyString(),
-                         newDocType, nsIDocument::GetDocumentURI(),
-                         nsIDocument::GetBaseURI(), NodePrincipal());
-  if (NS_FAILED(rv)) return rv;
-
-  if (aDeep) {
-    // If there was a doctype, a new one has already been inserted into the
-    // new document. We might have to add nodes before it.
-    PRBool beforeDocType = (docType.get() != nsnull);
-    nsCOMPtr<nsIDOMNodeList> childNodes;
-    
-    GetChildNodes(getter_AddRefs(childNodes));
-    if (childNodes) {
-      PRUint32 index, count;
-      childNodes->GetLength(&count);
-      for (index=0; index < count; index++) {
-        nsCOMPtr<nsIDOMNode> child;
-        childNodes->Item(index, getter_AddRefs(child));
-        if (child && (child != docType)) {
-          nsCOMPtr<nsIDOMNode> newChild;
-          rv = child->CloneNode(aDeep, getter_AddRefs(newChild));
-          if (NS_FAILED(rv)) return rv;
-          
-          nsCOMPtr<nsIDOMNode> dummyNode;
-          if (beforeDocType) {
-            rv = newDoc->InsertBefore(newChild, 
-                                      docType, 
-                                      getter_AddRefs(dummyNode));
-            if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-          }
-          else {
-            rv = newDoc->AppendChild(newChild, 
-                                     getter_AddRefs(dummyNode));
-            if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-          }
-        }
-        else {
-          beforeDocType = PR_FALSE;
-        }
-      }
-    }
-  }
-
-  rv = CallQueryInterface(newDoc, aReturn);
-  if (NS_SUCCEEDED(rv) && HasProperties()) {
-    nsContentUtils::CallUserDataHandler(this,
-                                        nsIDOMUserDataHandler::NODE_CLONED,
-                                        this, this, *aReturn);
-  }
-
-  return rv;
+  return nsNodeUtils::CloneNodeImpl(this, aDeep, aReturn);
 }
  
 // nsIDOMDocument interface
@@ -764,4 +693,20 @@ nsXMLDocument::GetElementById(const nsAString& aElementId,
   }
 
   return CallQueryInterface(content, aReturn);
+}
+
+nsresult
+nsXMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
+{
+  NS_ASSERTION(aNodeInfo->NodeInfoManager() == mNodeInfoManager,
+               "Can't import this document into another document!");
+
+  nsCOMPtr<nsIDOMDocument> newDoc;
+  nsresult rv = NS_NewDOMDocument(getter_AddRefs(newDoc), EmptyString(),
+                                  EmptyString(), nsnull,
+                                  nsIDocument::GetDocumentURI(),
+                                  nsIDocument::GetBaseURI(), NodePrincipal());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CallQueryInterface(newDoc, aResult);
 }

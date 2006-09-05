@@ -327,7 +327,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
@@ -371,6 +371,8 @@ public:
   virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
   virtual void DoneAddingChildren(PRBool aHaveNotified);
   virtual PRBool IsDoneAddingChildren();
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
   PRBool IsOnloadEventForWindow();
@@ -486,8 +488,7 @@ nsHTMLScriptElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 }
 
 nsresult
-nsHTMLScriptElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
-                           nsIContent **aResult) const
+nsHTMLScriptElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nsnull;
 
@@ -496,8 +497,8 @@ nsHTMLScriptElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsCOMPtr<nsIContent> kungFuDeathGrip = it;
-  nsresult rv = CopyInnerTo(it, aDeep);
+  nsCOMPtr<nsINode> kungFuDeathGrip = it;
+  nsresult rv = CopyInnerTo(it);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // The clone should be marked evaluated if we are.  It should also be marked
@@ -510,12 +511,6 @@ nsHTMLScriptElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
   kungFuDeathGrip.swap(*aResult);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLScriptElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
-{
-  return nsGenericElement::CloneNode(aDeep, this, aResult);
 }
 
 NS_IMETHODIMP

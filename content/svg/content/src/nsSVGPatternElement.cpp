@@ -186,7 +186,7 @@ nsSVGPatternElement::Init()
 //----------------------------------------------------------------------
 // nsIDOMNode method
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGPatternElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGPatternElement)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGFitToViewBox methods

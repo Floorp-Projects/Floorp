@@ -73,7 +73,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
@@ -125,6 +125,8 @@ public:
 
   // nsObjectLoadingContent
   virtual PRUint32 GetCapabilities() const;
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 private:
   /**
@@ -217,8 +219,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(nsHTMLSharedObjectElement,
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_IF_TAG(HTMLEmbedElement, embed)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
-NS_IMPL_DOM_CLONENODE_AMBIGUOUS(nsHTMLSharedObjectElement,
-                                nsIDOMHTMLAppletElement)
+NS_IMPL_ELEMENT_CLONE(nsHTMLSharedObjectElement)
 
 nsresult
 nsHTMLSharedObjectElement::BindToTree(nsIDocument *aDocument,

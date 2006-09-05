@@ -70,7 +70,7 @@ public:
 
   // xxx If xpcom allowed virtual inheritance we wouldn't need to
   // forward here :-(
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGTSpanElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGTSpanElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGTSpanElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGTSpanElementBase::)
 
@@ -79,6 +79,8 @@ public:
 
   // nsISVGContent specializations:
   virtual void ParentChainChanged();
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
   // nsSVGElement overrides
@@ -187,7 +189,7 @@ nsSVGTSpanElement::Init()
 // nsIDOMNode methods
 
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGTSpanElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGTSpanElement)
 
 
 //----------------------------------------------------------------------

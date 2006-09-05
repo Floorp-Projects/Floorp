@@ -58,7 +58,7 @@ public:
   NS_DECL_NSIDOMSVGLINEELEMENT
 
   // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGLineElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGLineElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGLineElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGLineElementBase::)
 
@@ -69,6 +69,8 @@ public:
   virtual PRBool IsMarkable() { return PR_TRUE; }
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(cairo_t *aCtx);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
 
@@ -114,7 +116,7 @@ nsSVGLineElement::nsSVGLineElement(nsINodeInfo *aNodeInfo)
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGLineElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGLineElement)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGLineElement methods

@@ -232,7 +232,7 @@ nsDOMDocumentType::GetNodeType(PRUint16* aNodeType)
 }
 
 nsGenericDOMDataNode*
-nsDOMDocumentType::Clone(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
+nsDOMDocumentType::CloneDataNode(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
 {
   return new nsDOMDocumentType(aNodeInfo, mName, mEntities, mNotations,
                                mPublicId, mSystemId, mInternalSubset);

@@ -661,21 +661,6 @@ public:
   }
 
   /**
-   * Clones this node, using aNodeInfoManager to get the nodeinfo for the
-   * clone. When cloning an element, all attributes of the element will be
-   * cloned. If aDeep is set, all descendants will also be cloned (by calling
-   * the DOM method cloneNode on them if aNodeInfoManager is the same as
-   * the nodeinfo manager of the mNodeInfo of this content node or by calling
-   * the DOM method importNode if they differ).
-   *
-   * @param aNodeInfoManager the nodeinfo manager to get the nodeinfo for the
-   *                         clone, it should not be null
-   * @param aDeep whether to clone the descendants of this node
-   */
-  virtual nsresult CloneContent(nsNodeInfoManager *aNodeInfoManager,
-                                PRBool aDeep, nsIContent **aResult) const = 0;
-
-  /**
    * Get the ID of this content node (the atom corresponding to the
    * value of the null-namespace attribute whose name is given by
    * GetIDAttributeName().  This may be null if there is no ID.

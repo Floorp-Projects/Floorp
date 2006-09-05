@@ -170,8 +170,8 @@ nsXMLProcessingInstruction::GetNodeType(PRUint16* aNodeType)
 }
 
 nsGenericDOMDataNode*
-nsXMLProcessingInstruction::Clone(nsINodeInfo *aNodeInfo,
-                                  PRBool aCloneText) const
+nsXMLProcessingInstruction::CloneDataNode(nsINodeInfo *aNodeInfo,
+                                          PRBool aCloneText) const
 {
   nsAutoString data;
   nsGenericDOMDataNode::GetData(data);

@@ -61,7 +61,7 @@ public:
 
   // xxx If xpcom allowed virtual inheritance we wouldn't need to
   // forward here :-(
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGStopElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGStopElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGStopElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGStopElementBase::)
 
@@ -70,6 +70,7 @@ public:
   PRBool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
                         const nsAString& aValue, nsAttrValue& aResult);
 
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
 
@@ -109,7 +110,7 @@ nsSVGStopElement::nsSVGStopElement(nsINodeInfo* aNodeInfo)
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGStopElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGStopElement)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGStopElement methods

@@ -86,7 +86,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER
 
   // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGUseElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGUseElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGUseElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGUseElementBase::)
 
@@ -103,6 +103,8 @@ public:
 
   // nsSVGElement specializations:
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
 
@@ -196,8 +198,7 @@ nsSVGUseElement::Init()
 // nsIDOMNode methods
 
 nsresult
-nsSVGUseElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
-                       nsIContent **aResult) const
+nsSVGUseElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nsnull;
 
@@ -206,9 +207,9 @@ nsSVGUseElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsCOMPtr<nsIContent> kungFuDeathGrip(it);
+  nsCOMPtr<nsINode> kungFuDeathGrip(it);
   nsresult rv = it->Init();
-  rv |= CopyInnerTo(it, aDeep);
+  rv |= CopyInnerTo(it);
 
   // nsSVGUseElement specific portion - record who we cloned from
   it->mOriginal = NS_CONST_CAST(nsSVGUseElement*, this);
@@ -218,12 +219,6 @@ nsSVGUseElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsSVGUseElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
-{
-  return nsGenericElement::CloneNode(aDeep, this, aResult);
 }
 
 //----------------------------------------------------------------------
@@ -402,9 +397,12 @@ nsSVGUseElement::CreateAnonymousContent(nsPresContext*    aPresContext,
     }
   }
 
-  nsCOMPtr<nsIContent> newcontent;
-  targetContent->CloneContent(mNodeInfo->NodeInfoManager(), PR_TRUE,
-                              getter_AddRefs(newcontent));
+  nsCOMPtr<nsIDOMNode> newnode;
+  nsCOMArray<nsINode> unused;
+  nsNodeUtils::Clone(targetContent, PR_TRUE, nsnull, unused,
+                     getter_AddRefs(newnode));
+
+  nsCOMPtr<nsIContent> newcontent = do_QueryInterface(newnode);
 
   if (!newcontent)
     return NS_ERROR_FAILURE;

@@ -81,7 +81,7 @@ public:
   NS_DECL_NSIDOMSVGZOOMANDPAN
   
   // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGSVGElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGSVGElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGSVGElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGSVGElementBase::)
 
@@ -116,6 +116,7 @@ public:
   // public helpers:
   nsresult GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval);
 
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
   // nsSVGElement overrides

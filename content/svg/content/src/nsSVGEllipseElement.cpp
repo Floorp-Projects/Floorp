@@ -59,12 +59,14 @@ public:
   NS_DECL_NSIDOMSVGELLIPSEELEMENT
 
   // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGEllipseElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGEllipseElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGEllipseElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGEllipseElementBase::)
 
   // nsSVGPathGeometryElement methods:
   virtual void ConstructPath(cairo_t *aCtx);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
 
@@ -110,7 +112,7 @@ nsSVGEllipseElement::nsSVGEllipseElement(nsINodeInfo *aNodeInfo)
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGEllipseElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGEllipseElement)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGEllipseElement methods

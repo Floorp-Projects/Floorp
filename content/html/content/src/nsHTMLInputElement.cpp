@@ -161,7 +161,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLFormElement::)
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLFormElement::)
 
   // nsIDOMElement
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
@@ -236,6 +236,8 @@ public:
    * @return the radio group container (or null if no form or document)
    */
   virtual already_AddRefed<nsIRadioGroupContainer> GetRadioGroupContainer();
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
   // Helper method
@@ -393,8 +395,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 // nsIDOMNode
 
 nsresult
-nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
-                          nsIContent **aResult) const
+nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nsnull;
 
@@ -403,8 +404,8 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsCOMPtr<nsIContent> kungFuDeathGrip = it;
-  nsresult rv = CopyInnerTo(it, aDeep);
+  nsCOMPtr<nsINode> kungFuDeathGrip = it;
+  nsresult rv = CopyInnerTo(it);
   NS_ENSURE_SUCCESS(rv, rv);
 
   switch (mType) {
@@ -443,12 +444,6 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
   kungFuDeathGrip.swap(*aResult);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInputElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
-{
-  return nsGenericElement::CloneNode(aDeep, this, aResult);
 }
 
 nsresult

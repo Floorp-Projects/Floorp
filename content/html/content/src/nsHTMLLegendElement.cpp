@@ -61,7 +61,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLFormElement::)
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLFormElement::)
 
   // nsIDOMElement
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
@@ -101,6 +101,8 @@ public:
                            PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
 
@@ -132,7 +134,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 // nsIDOMHTMLLegendElement
 
 
-NS_IMPL_DOM_CLONENODE(nsHTMLLegendElement)
+NS_IMPL_ELEMENT_CLONE(nsHTMLLegendElement)
 
 
 NS_IMETHODIMP

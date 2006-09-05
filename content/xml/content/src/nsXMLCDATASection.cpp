@@ -152,7 +152,7 @@ nsXMLCDATASection::GetNodeType(PRUint16* aNodeType)
 }
 
 nsGenericDOMDataNode*
-nsXMLCDATASection::Clone(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
+nsXMLCDATASection::CloneDataNode(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
 {
   nsXMLCDATASection *it = new nsXMLCDATASection(aNodeInfo);
   if (it && aCloneText) {

@@ -44,11 +44,13 @@ class nsXMLEventsElement : public nsXMLElement {
 public:
   nsXMLEventsElement(nsINodeInfo *aNodeInfo);
   virtual ~nsXMLEventsElement();
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsXMLElement::)
+  NS_FORWARD_NSIDOMNODE(nsXMLElement::)
+
   virtual nsIAtom *GetIDAttributeName() const;
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
 nsXMLEventsElement::nsXMLEventsElement(nsINodeInfo *aNodeInfo)
@@ -80,7 +82,7 @@ nsXMLEventsElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPref
                                    aNotify);
 }
 
-NS_IMPL_DOM_CLONENODE(nsXMLEventsElement)
+NS_IMPL_ELEMENT_CLONE(nsXMLEventsElement)
 
 nsresult
 NS_NewXMLEventsElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
