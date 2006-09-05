@@ -116,7 +116,7 @@ $template->process($format->{'template'}, $vars, \$comment)
 
 # Check that the product exists and that the user
 # is allowed to enter bugs into this product.
-my $product = Bugzilla::Bug::_check_product($cgi->param('product'));
+my $product = Bugzilla::Bug->_check_product($cgi->param('product'));
 
 # Set cookies
 if (defined $cgi->param('product')) {
@@ -141,26 +141,26 @@ umask 0;
 
 # This has to go somewhere after 'maketemplate' 
 # or it breaks bookmarks with no comments. 
-$comment = Bugzilla::Bug::_check_comment($cgi->param('comment'));
+$comment = Bugzilla::Bug->_check_comment($cgi->param('comment'));
 # If comment is all whitespace, it'll be null at this point. That's
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-my $cc_ids = Bugzilla::Bug::_check_cc([$cgi->param('cc')]);
-my @keyword_ids = @{Bugzilla::Bug::_check_keywords($cgi->param('keywords'))};
+my $cc_ids = Bugzilla::Bug->_check_cc([$cgi->param('cc')]);
+my @keyword_ids = @{Bugzilla::Bug->_check_keywords($cgi->param('keywords'))};
 
 # XXX These checks are only here until strict_isolation can move fully
 # into Bugzilla::Bug.
-my $component = Bugzilla::Bug::_check_component($product, 
+my $component = Bugzilla::Bug->_check_component($product, 
     $cgi->param('component'));
-my $assigned_to_id = Bugzilla::Bug::_check_assigned_to($component,
+my $assigned_to_id = Bugzilla::Bug->_check_assigned_to($component,
     $cgi->param('assigned_to'));
-my $qa_contact_id = Bugzilla::Bug::_check_qa_contact($component,
+my $qa_contact_id = Bugzilla::Bug->_check_qa_contact($component,
     $cgi->param('qa_contact'));
-Bugzilla::Bug::_check_strict_isolation($product, $cc_ids, $assigned_to_id, 
+Bugzilla::Bug->_check_strict_isolation($product, $cc_ids, $assigned_to_id, 
     $qa_contact_id);
 
-my ($depends_on_ids, $blocks_ids) = Bugzilla::Bug::_check_dependencies(
+my ($depends_on_ids, $blocks_ids) = Bugzilla::Bug->_check_dependencies(
     scalar $cgi->param('dependson'), scalar $cgi->param('blocked'));
 
 # get current time

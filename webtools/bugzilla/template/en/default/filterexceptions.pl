@@ -515,16 +515,6 @@
   'classification_text', 
 ],
 
-'admin/keywords/edit.html.tmpl' => [
-  'keyword_id',
-  'bug_count',
-],
-
-'admin/keywords/confirm-delete.html.tmpl' => [
-  'keyword_id',
-  'bug_count',
-],
-
 'admin/flag-type/confirm-delete.html.tmpl' => [
   'flag_type.flag_count',
   'flag_type.id', 

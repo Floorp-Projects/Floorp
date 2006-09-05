@@ -34,34 +34,6 @@ my $dbh = Bugzilla->dbh;
 my $template = Bugzilla->template;
 my $vars = {};
 
-sub Validate {
-    my ($name, $description) = @_;
-    if ($name eq "") {
-        ThrowUserError("keyword_blank_name");
-    }
-    if ($name =~ /[\s,]/) {
-        ThrowUserError("keyword_invalid_name");
-    }    
-    if ($description eq "") {
-        ThrowUserError("keyword_blank_description");
-    }
-    # It is safe to detaint these values as they are only
-    # used in placeholders.
-    trick_taint($name);
-    $_[0] = $name;
-    trick_taint($description);
-    $_[1] = $description;
-}
-
-sub ValidateKeyID {
-    my $id = shift;
-
-    $id = trim($id || 0);
-    detaint_natural($id) || ThrowCodeError('invalid_keyword_id');
-    return $id;
-}
-
-
 #
 # Preliminary checks:
 #
@@ -75,7 +47,8 @@ $user->in_group('editkeywords')
                                      action => "edit",
                                      object => "keywords"});
 
-my $action  = trim($cgi->param('action')  || '');
+my $action = trim($cgi->param('action')  || '');
+my $key_id = $cgi->param('id');
 $vars->{'action'} = $action;
 
 
@@ -127,32 +100,14 @@ if ($action eq 'new') {
 #
 
 if ($action eq 'edit') {
-    my $id = ValidateKeyID(scalar $cgi->param('id'));
+    my $keyword = new Bugzilla::Keyword($key_id)
+        || ThrowCodeError('invalid_keyword_id', { id => $key_id });
 
-    # get data of keyword
-    my ($name, $description) =
-        $dbh->selectrow_array('SELECT name, description FROM keyworddefs
-                               WHERE id = ?', undef, $id);
-
-    if (!$name) {
-        $vars->{'id'} = $id;
-        ThrowCodeError("invalid_keyword_id", $vars);
-    }
-
-    my $bugs = $dbh->selectrow_array('SELECT COUNT(*) FROM keywords
-                                      WHERE keywordid = ?',
-                                      undef, $id);
-
-    $vars->{'keyword_id'} = $id;
-    $vars->{'name'} = $name;
-    $vars->{'description'} = $description;
-    $vars->{'bug_count'} = $bugs;
+    $vars->{'keyword'} = $keyword;
 
     print $cgi->header();
-
     $template->process("admin/keywords/edit.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
-
     exit;
 }
 
@@ -162,27 +117,16 @@ if ($action eq 'edit') {
 #
 
 if ($action eq 'update') {
-    my $id = ValidateKeyID(scalar $cgi->param('id'));
+    my $keyword = new Bugzilla::Keyword($key_id)
+        || ThrowCodeError('invalid_keyword_id', { id => $key_id });
 
-    my $name  = trim($cgi->param('name') || '');
-    my $description  = trim($cgi->param('description')  || '');
-
-    Validate($name, $description);
-
-    my $tmp = $dbh->selectrow_array('SELECT id FROM keyworddefs
-                                     WHERE name = ?', undef, $name);
-
-    if ($tmp && $tmp != $id) {
-        $vars->{'name'} = $name;
-        ThrowUserError("keyword_already_exists", $vars);
-    }
-
-    $dbh->do('UPDATE keyworddefs SET name = ?, description = ?
-              WHERE id = ?', undef, ($name, $description, $id));
+    $keyword->set_name($cgi->param('name'));
+    $keyword->set_description($cgi->param('description'));
+    $keyword->update();
 
     print $cgi->header();
 
-    $vars->{'name'} = $name;
+    $vars->{'keyword'} = $keyword;
     $template->process("admin/keywords/rebuild-cache.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 
@@ -191,36 +135,23 @@ if ($action eq 'update') {
 
 
 if ($action eq 'delete') {
-    my $id = ValidateKeyID(scalar $cgi->param('id'));
+    my $keyword =  new Bugzilla::Keyword($key_id)
+        || ThrowCodeError('invalid_keyword_id', { id => $key_id });
 
-    my $name = $dbh->selectrow_array('SELECT name FROM keyworddefs
-                                      WHERE id= ?', undef, $id);
+    $vars->{'keyword'} = $keyword;
 
-    if (!$cgi->param('reallydelete')) {
-        my $bugs = $dbh->selectrow_array('SELECT COUNT(*) FROM keywords
-                                          WHERE keywordid = ?',
-                                          undef, $id);
-
-        if ($bugs) {
-            $vars->{'bug_count'} = $bugs;
-            $vars->{'keyword_id'} = $id;
-            $vars->{'name'} = $name;
-
-            print $cgi->header();
-
-            $template->process("admin/keywords/confirm-delete.html.tmpl", $vars)
-              || ThrowTemplateError($template->error());
-
-            exit;
-        }
+    if (!$cgi->param('reallydelete') && $keyword->bug_count) {
+        print $cgi->header();
+        $template->process("admin/keywords/confirm-delete.html.tmpl", $vars)
+            || ThrowTemplateError($template->error());
+        exit;
     }
 
-    $dbh->do('DELETE FROM keywords WHERE keywordid = ?', undef, $id);
-    $dbh->do('DELETE FROM keyworddefs WHERE id = ?', undef, $id);
+    $dbh->do('DELETE FROM keywords WHERE keywordid = ?', undef, $keyword->id);
+    $dbh->do('DELETE FROM keyworddefs WHERE id = ?', undef, $keyword->id);
 
     print $cgi->header();
 
-    $vars->{'name'} = $name;
     $template->process("admin/keywords/rebuild-cache.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 

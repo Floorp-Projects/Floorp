@@ -60,7 +60,7 @@ unless ($createexp) {
 my $login = $cgi->param('login');
 
 if (defined($login)) {
-    $login = Bugzilla::User::check_login_name_for_creation($login);
+    $login = Bugzilla::User->check_login_name_for_creation($login);
     $vars->{'login'} = $login;
 
     if ($login !~ /$createexp/) {

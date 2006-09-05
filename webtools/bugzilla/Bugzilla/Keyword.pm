@@ -42,6 +42,11 @@ use constant VALIDATORS => {
     description => \&_check_description,
 };
 
+use constant UPDATE_COLUMNS => qw(
+    name
+    description
+);
+
 ###############################
 ####      Accessors      ######
 ###############################
@@ -49,14 +54,21 @@ use constant VALIDATORS => {
 sub description       { return $_[0]->{'description'}; }
 
 sub bug_count {
-    ($_[0]->{'bug_count'}) ||=
-      Bugzilla->dbh->selectrow_array('SELECT COUNT(keywords.bug_id) AS bug_count
-                                        FROM keyworddefs
-                                   LEFT JOIN keywords
-                                          ON keyworddefs.id = keywords.keywordid
-                                       WHERE keyworddefs.id=?', undef, ($_[0]->id));
-    return $_[0]->{'bug_count'};
+    my ($self) = @_;
+    return $self->{'bug_count'} if defined $self->{'bug_count'};
+    ($self->{'bug_count'}) =
+      Bugzilla->dbh->selectrow_array(
+          'SELECT COUNT(*) FROM keywords WHERE keywordid = ?', 
+          undef, $self->id);
+    return $self->{'bug_count'};
 }
+
+###############################
+####       Mutators       #####
+###############################
+
+sub set_name        { $_[0]->set('name', $_[1]); }
+sub set_description { $_[0]->set('description', $_[1]); }
 
 ###############################
 ####      Subroutines    ######
@@ -96,20 +108,26 @@ sub get_all_with_bug_count {
 ###############################
 
 sub _check_name {
-    my ($name) = @_;
+    my ($self, $name) = @_;
+
     $name = trim($name);
     $name eq "" && ThrowUserError("keyword_blank_name");
     if ($name =~ /[\s,]/) {
         ThrowUserError("keyword_invalid_name");
     }
-    my $keyword = new Bugzilla::Keyword({ name => $name });
-    ThrowUserError("keyword_already_exists", { name => $name }) if $keyword;
+
+    # We only want to validate the non-existence of the name if
+    # we're creating a new Keyword or actually renaming the keyword.
+    if (!ref($self) || $self->name ne $name) {
+        my $keyword = new Bugzilla::Keyword({ name => $name });
+        ThrowUserError("keyword_already_exists", { name => $name }) if $keyword;
+    }
 
     return $name;
 }
 
 sub _check_description {
-    my ($desc) = @_;
+    my ($self, $desc) = @_;
     $desc = trim($desc);
     $desc eq '' && ThrowUserError("keyword_blank_description");
     return $desc;

@@ -12,6 +12,10 @@
 #
 # The Original Code is the Bugzilla Bug Tracking System.
 #
+# The Initial Developer of the Original Code is Everything Solved.
+# Portions created by Everything Solved are Copyright (C) 2006 
+# Everything Solved. All Rights Reserved.
+#
 # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
 
 use strict;
@@ -116,6 +120,48 @@ sub id                { return $_[0]->{'id'};          }
 sub name              { return $_[0]->{'name'};        }
 
 ###############################
+####        Methods        ####
+###############################
+
+sub set {
+    my ($self, $field, $value) = @_;
+
+    # This method is protected. It's used to help implement set_ functions.
+    caller->isa('Bugzilla::Object')
+        || ThrowCodeError('protection_violation', 
+                          { caller     => caller,
+                            superclass => __PACKAGE__,
+                            function   => 'Bugzilla::Object->set' });
+
+    my $validators = $self->VALIDATORS;
+    if (exists $validators->{$field}) {
+        my $validator = $validators->{$field};
+        $value = $self->$validator($value);
+    }
+
+    $self->{$field} = $value;
+}
+
+sub update {
+    my $self = shift;
+
+    my $dbh      = Bugzilla->dbh;
+    my $table    = $self->DB_TABLE;
+    my $id_field = $self->ID_FIELD;
+    
+    my $columns = join(', ', map {"$_ = ?"} $self->UPDATE_COLUMNS);
+    my @values;
+    foreach my $column ($self->UPDATE_COLUMNS) {
+        my $value = $self->{$column};
+        trick_taint($value) if defined $value;
+        push(@values, $value);
+    }
+
+    $dbh->do("UPDATE $table SET $columns WHERE $id_field = ?", undef, 
+             @values, $self->id);
+}
+
+###############################
 ####      Subroutines    ######
 ###############################
 
@@ -152,7 +198,8 @@ sub run_create_validators {
     foreach my $field (sort keys %$params) {
         my $value;
         if (exists $validators->{$field}) {
-            $value = &{$validators->{$field}}($params->{$field});
+            my $validator = $validators->{$field};
+            $value = $class->$validator($params->{$field});
         }
         else {
             $value = $params->{$field};
@@ -254,14 +301,33 @@ C<create()>. This should be an array.
 =item C<VALIDATORS>
 
 A hashref that points to a function that will validate each param to
-C<create()>. Each function in this hashref will be passed a single
-argument, the value passed to C<create()> for that field. These
-functions should call L<Bugzilla::Error/ThrowUserError> if they fail.
-They must return the validated value.
+L</create>. 
+
+Validators are called both by L</create> and L</set>. When
+they are called by L</create>, the first argument will be the name
+of the class (what we normally call C<$class>).
+
+When they are called by L</set>, the first argument will be
+a reference to the current object (what we normally call C<$self>).
+
+The second argument will be the value passed to L</create> or 
+L</set>for that field. 
+
+These functions should call L<Bugzilla::Error/ThrowUserError> if they fail.
+
+The validator must return the validated value.
+
+=item C<UPDATE_COLUMNS>
+
+A list of columns to update when L</update> is called.
+If a field can't be changed, it shouldn't be listed here. (For example,
+the L</ID_FIELD> usually can't be updated.)
 
 =back
 
 =head1 METHODS
+
+=head2 Constructors
 
 =over
 
@@ -293,7 +359,7 @@ They must return the validated value.
 
 =back
 
-=head1 SUBROUTINES
+=head2 Database Manipulation
 
 =over
 
@@ -329,6 +395,56 @@ Params:      The same as L</create>.
 Returns:     Two arrayrefs. The first is an array of database field names.
              The second is an untainted array of values that should go 
              into those fields (in the same order).
+
+=item C<update>
+
+Saves the values currently in this object to the database.
+Only the fields specified in L</UPDATE_COLUMNS> will be
+updated. Returns nothing and takes no parameters.
+
+=back
+
+=head2 Subclass Helpers
+
+These functions are intended only for use by subclasses. If
+you call them from anywhere else, they will throw a C<CodeError>.
+
+=over
+
+=item C<set>
+
+=over
+
+=item B<Description>
+
+Sets a certain hash member of this class to a certain value.
+Used for updating fields. Calls the validator for this field,
+if it exists. Subclasses should use this function
+to implement the various C<set_> mutators for their different
+fields.
+
+See L</VALIDATORS> for more information.
+
+=item B<Params>
+
+=over
+
+=item C<$field> - The name of the hash member to update. This should
+be the same as the name of the field in L</VALIDATORS>, if it exists there.
+
+=item C<$value> - The value that you're setting the field to.
+
+=back
+
+=item B<Returns> (nothing)
+
+=back
+
+=back
+
+=head1 CLASS FUNCTIONS
+
+=over
 
 =item C<get_all>
 

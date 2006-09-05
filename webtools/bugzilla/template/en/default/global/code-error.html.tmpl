@@ -296,6 +296,18 @@
     a <code>[% param FILTER html %]</code> argument, and that
     argument was not set.
 
+  [% ELSIF error == "protection_violation" %]
+    The function <code>[% function FILTER html %]</code> was called
+    from
+   
+    [% IF caller %]
+        <code>[%+ caller FILTER html %]</code>, which is
+    [% END %]
+
+    outside the package. This function may only be called from
+    a subclass of <code>[% superclass FILTER html %]</code>.
+
+
   [% ELSIF error == "unknown_comparison_type" %]
     Specified comparison type is not supported.
 

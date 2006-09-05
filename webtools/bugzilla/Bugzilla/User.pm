@@ -121,13 +121,13 @@ sub new {
 # Validators
 ################################################################################
 
-sub _check_disable_mail { return $_[0] ? 1 : 0; }
-sub _check_disabledtext { return trim($_[0]) || ''; }
+sub _check_disable_mail { return $_[1] ? 1 : 0; }
+sub _check_disabledtext { return trim($_[1]) || ''; }
 
 # This is public since createaccount.cgi needs to use it before issuing
 # a token for account creation.
 sub check_login_name_for_creation {
-    my ($name) = @_;
+    my ($self, $name) = @_;
     $name = trim($name);
     $name || ThrowUserError('user_login_required');
     validate_email_syntax($name)
@@ -138,7 +138,7 @@ sub check_login_name_for_creation {
 }
 
 sub _check_password {
-    my ($pass) = @_;
+    my ($self, $pass) = @_;
 
     # If the password is '*', do not encrypt it or validate it further--we 
     # are creating a user who should not be able to log in using DB 
@@ -150,7 +150,7 @@ sub _check_password {
     return $cryptpassword;
 }
 
-sub _check_realname { return trim($_[0]) || ''; }
+sub _check_realname { return trim($_[1]) || ''; }
 
 ################################################################################
 # Methods

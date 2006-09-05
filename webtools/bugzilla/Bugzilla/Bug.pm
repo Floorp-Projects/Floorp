@@ -228,26 +228,26 @@ sub run_create_validators {
     my $class  = shift;
     my $params = shift;
 
-    my $product = _check_product($params->{product});
+    my $product = $class->_check_product($params->{product});
     $params->{product_id} = $product->id;
     delete $params->{product};
 
     ($params->{bug_status}, $params->{everconfirmed})
-        = _check_bug_status($product, $params->{bug_status});
+        = $class->_check_bug_status($product, $params->{bug_status});
 
-    $params->{target_milestone} = _check_target_milestone($product,
+    $params->{target_milestone} = $class->_check_target_milestone($product,
         $params->{target_milestone});
 
-    $params->{version} = _check_version($product, $params->{version});
+    $params->{version} = $class->_check_version($product, $params->{version});
 
-    my $component = _check_component($product, $params->{component});
+    my $component = $class->_check_component($product, $params->{component});
     $params->{component_id} = $component->id;
     delete $params->{component};
 
     $params->{assigned_to} = 
-        _check_assigned_to($component, $params->{assigned_to});
+        $class->_check_assigned_to($component, $params->{assigned_to});
     $params->{qa_contact} =
-        _check_qa_contact($component, $params->{qa_contact});
+        $class->_check_qa_contact($component, $params->{qa_contact});
     # Callers cannot set Reporter, currently.
     $params->{reporter} = Bugzilla->user->id;
 
@@ -332,7 +332,7 @@ sub remove_from_db {
 #####################################################################
 
 sub _check_alias {
-   my ($alias) = @_;
+   my ($invocant, $alias) = @_;
    $alias = trim($alias);
    return undef if (!Bugzilla->params->{'usebugaliases'} || !$alias);
    ValidateBugAlias($alias);
@@ -340,7 +340,7 @@ sub _check_alias {
 }
 
 sub _check_assigned_to {
-    my ($component, $name) = @_;
+    my ($invocant, $component, $name) = @_;
     my $user = Bugzilla->user;
 
     $name = trim($name);
@@ -355,21 +355,21 @@ sub _check_assigned_to {
 }
 
 sub _check_bug_file_loc {
-    my ($url) = @_;
+    my ($invocant, $url) = @_;
     # If bug_file_loc is "http://", the default, use an empty value instead.
     $url = '' if $url eq 'http://';
     return $url;
 }
 
 sub _check_bug_severity {
-    my ($severity) = @_;
+    my ($invocant, $severity) = @_;
     $severity = trim($severity);
     check_field('bug_severity', $severity);
     return $severity;
 }
 
 sub _check_bug_status {
-    my ($product, $status) = @_;
+    my ($invocant, $product, $status) = @_;
     my $user = Bugzilla->user;
 
     my @valid_statuses = VALID_ENTRY_STATUS;
@@ -396,7 +396,7 @@ sub _check_bug_status {
 }
 
 sub _check_cc {
-    my ($ccs) = @_;
+    my ($invocant, $ccs) = @_;
     return [] unless $ccs;
 
     my %cc_ids;
@@ -409,7 +409,7 @@ sub _check_cc {
 }
 
 sub _check_comment {
-    my ($comment) = @_;
+    my ($invocant, $comment) = @_;
 
     if (!defined $comment) {
         ThrowCodeError('undefined_field', { field => 'comment' });
@@ -430,7 +430,7 @@ sub _check_comment {
 }
 
 sub _check_component {
-    my ($product, $name) = @_;
+    my ($invocant, $product, $name) = @_;
     $name = trim($name);
     $name || ThrowUserError("require_component");
     my $obj = Bugzilla::Component::check_component($product, $name);
@@ -441,7 +441,7 @@ sub _check_component {
 }
 
 sub _check_deadline {
-    my ($date) = @_;
+    my ($invocant, $date) = @_;
     $date = trim($date);
     my $tt_group = Bugzilla->params->{"timetrackinggroup"};
     return undef unless $date && $tt_group 
@@ -455,7 +455,7 @@ sub _check_deadline {
 # Takes two comma/space-separated strings and returns arrayrefs
 # of valid bug IDs.
 sub _check_dependencies {
-    my ($depends_on, $blocks) = @_;
+    my ($invocant, $depends_on, $blocks) = @_;
 
     # Only editbugs users can set dependencies on bug entry.
     return ([], []) unless Bugzilla->user->in_group('editbugs');
@@ -482,11 +482,11 @@ sub _check_dependencies {
 }
 
 sub _check_estimated_time {
-    return _check_time($_[0], 'estimated_time');
+    return $_[0]->_check_time($_[1], 'estimated_time');
 }
 
 sub _check_keywords {
-    my ($keyword_string) = @_;
+    my ($invocant, $keyword_string) = @_;
     $keyword_string = trim($keyword_string);
     return [] if (!$keyword_string || !Bugzilla->user->in_group('editbugs'));
 
@@ -501,7 +501,7 @@ sub _check_keywords {
 }
 
 sub _check_product {
-    my ($name) = @_;
+    my ($invocant, $name) = @_;
     # Check that the product exists and that the user
     # is allowed to enter bugs into this product.
     Bugzilla->user->can_enter_product($name, THROW_ERROR);
@@ -515,14 +515,14 @@ sub _check_product {
 }
 
 sub _check_op_sys {
-    my ($op_sys) = @_;
+    my ($invocant, $op_sys) = @_;
     $op_sys = trim($op_sys);
     check_field('op_sys', $op_sys);
     return $op_sys;
 }
 
 sub _check_priority {
-    my ($priority) = @_;
+    my ($invocant, $priority) = @_;
     if (!Bugzilla->params->{'letsubmitterchoosepriority'}) {
         $priority = Bugzilla->params->{'defaultpriority'};
     }
@@ -533,18 +533,18 @@ sub _check_priority {
 }
 
 sub _check_remaining_time {
-    return _check_time($_[0], 'remaining_time');
+    return $_[0]->_check_time($_[1], 'remaining_time');
 }
 
 sub _check_rep_platform {
-    my ($platform) = @_;
+    my ($invocant, $platform) = @_;
     $platform = trim($platform);
     check_field('rep_platform', $platform);
     return $platform;
 }
 
 sub _check_short_desc {
-    my ($short_desc) = @_;
+    my ($invocant, $short_desc) = @_;
     # Set the parameter to itself, but cleaned up
     $short_desc = clean_text($short_desc) if $short_desc;
 
@@ -554,11 +554,11 @@ sub _check_short_desc {
     return $short_desc;
 }
 
-sub _check_status_whiteboard { return defined $_[0] ? $_[0] : ''; }
+sub _check_status_whiteboard { return defined $_[1] ? $_[1] : ''; }
 
 # Unlike other checkers, this one doesn't return anything.
 sub _check_strict_isolation {
-    my ($product, $cc_ids, $assignee_id, $qa_contact_id) = @_;
+    my ($invocant, $product, $cc_ids, $assignee_id, $qa_contact_id) = @_;
 
     return unless Bugzilla->params->{'strict_isolation'};
 
@@ -588,7 +588,7 @@ sub _check_strict_isolation {
 }
 
 sub _check_target_milestone {
-    my ($product, $target) = @_;
+    my ($invocant, $product, $target) = @_;
     $target = trim($target);
     $target = $product->default_milestone if !defined $target;
     check_field('target_milestone', $target,
@@ -597,7 +597,7 @@ sub _check_target_milestone {
 }
 
 sub _check_time {
-    my ($time, $field) = @_;
+    my ($invocant, $time, $field) = @_;
     my $tt_group = Bugzilla->params->{"timetrackinggroup"};
     return 0 unless $tt_group && Bugzilla->user->in_group($tt_group);
     $time = trim($time) || 0;
@@ -606,7 +606,7 @@ sub _check_time {
 }
 
 sub _check_qa_contact {
-    my ($component, $name) = @_;
+    my ($invocant, $component, $name) = @_;
     my $user = Bugzilla->user;
 
     return undef unless Bugzilla->params->{'useqacontact'};
@@ -625,7 +625,7 @@ sub _check_qa_contact {
 }
 
 sub _check_version {
-    my ($product, $version) = @_;
+    my ($invocant, $product, $version) = @_;
     $version = trim($version);
     check_field('version', $version, [map($_->name, @{$product->versions})]);
     return $version;
