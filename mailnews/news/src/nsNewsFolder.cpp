@@ -1854,30 +1854,6 @@ NS_IMETHODIMP nsMsgNewsFolder::GetSortOrder(PRInt32 *order)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::GetPersistElided(PRBool *aPersistElided)
-{
-  nsresult rv;
-
-  PRBool isNewsServer = PR_FALSE;
-  rv = GetIsServer(&isNewsServer);
-  NS_ENSURE_SUCCESS(rv,rv);
- 
-  // persist the open / closed state, if not a server
-  // this doesn't matter right now, but it will if we ever add categories
-  if (!isNewsServer) 
-  {
-    *aPersistElided = PR_TRUE;
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  rv = prefBranch->GetBoolPref("news.persist_server_open_state_in_folderpane", aPersistElided);
-  NS_ENSURE_SUCCESS(rv,rv);
-  return rv;
-}
-
 NS_IMETHODIMP nsMsgNewsFolder::Shutdown(PRBool shutdownChildren)
 {
   if (mFilterList) 
