@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -189,6 +190,17 @@ JS_XDRFindClassById(JSXDRState *xdr, uint32 id);
 #define JSXDR_MAGIC_SCRIPT_4        0xdead0004
 #define JSXDR_MAGIC_SCRIPT_5        0xdead0005
 #define JSXDR_MAGIC_SCRIPT_CURRENT  JSXDR_MAGIC_SCRIPT_5
+
+/*
+ * Bytecode version number.  Decrement the second term whenever JS bytecode
+ * changes incompatibly.
+ *
+ * This version number should be XDR'ed once near the front of any file or
+ * larger storage unit containing XDR'ed bytecode and other data, and checked
+ * before deserialization of bytecode.  If the saved version does not match
+ * the current version, abort deserialization and invalidate the file.
+ */
+#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 0)
 
 /*
  * Library-private functions.

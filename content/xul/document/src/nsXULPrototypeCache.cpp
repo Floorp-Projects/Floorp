@@ -72,6 +72,8 @@
 #include "nsDataHashtable.h"
 #include "nsAppDirectoryServiceDefs.h"
 
+#include "jsxdrapi.h"
+
 struct CacheScriptEntry
 {
     PRUint32    mScriptTypeID; // the script language ID.
@@ -907,12 +909,16 @@ nsXULPrototypeCache::StartFastLoad(nsIURI* aURI)
                 // Get the XUL fastload file version number, which should be
                 // decremented whenever the XUL-specific file format changes
                 // (see public/nsIXULPrototypeCache.h for the #define).
-                PRUint32 version;
-                rv = objectInput->Read32(&version);
+                PRUint32 xulFastLoadVersion, jsByteCodeVersion;
+                rv = objectInput->Read32(&xulFastLoadVersion);
+                rv |= objectInput->Read32(&jsByteCodeVersion);
                 if (NS_SUCCEEDED(rv)) {
-                    if (version != XUL_FASTLOAD_FILE_VERSION) {
+                    if (xulFastLoadVersion != XUL_FASTLOAD_FILE_VERSION ||
+                        jsByteCodeVersion != JSXDR_BYTECODE_VERSION) {
 #ifdef DEBUG
-                        printf("bad FastLoad file version\n");
+                        printf((xulFastLoadVersion != XUL_FASTLOAD_FILE_VERSION)
+                               ? "bad FastLoad file version\n"
+                               : "bad JS bytecode version\n");
 #endif
                         rv = NS_ERROR_UNEXPECTED;
                     } else {
@@ -962,6 +968,7 @@ nsXULPrototypeCache::StartFastLoad(nsIURI* aURI)
                                               getter_AddRefs(objectOutput));
         if (NS_SUCCEEDED(rv)) {
             rv = objectOutput->Write32(XUL_FASTLOAD_FILE_VERSION);
+            rv |= objectOutput->Write32(JSXDR_BYTECODE_VERSION);
             rv |= objectOutput->WriteStringZ(chromePath.get());
             rv |= objectOutput->WriteStringZ(locale.get());
         }

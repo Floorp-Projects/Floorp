@@ -351,12 +351,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
 {
     nsresult rv;
 
-    PRUint32 version;
-    rv = aStream->Read32(&version);
-    if (version != XUL_FASTLOAD_FILE_VERSION)
-        return NS_ERROR_FAILURE;
-
-    rv |= aStream->ReadObject(PR_TRUE, getter_AddRefs(mURI));
+    rv = aStream->ReadObject(PR_TRUE, getter_AddRefs(mURI));
 
     PRUint32 referenceCount;
     nsCOMPtr<nsIURI> referenceURI;
@@ -479,9 +474,7 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
 {
     nsresult rv;
 
-    rv = aStream->Write32(XUL_FASTLOAD_FILE_VERSION);
-    
-    rv |= aStream->WriteCompoundObject(mURI, NS_GET_IID(nsIURI), PR_TRUE);
+    rv = aStream->WriteCompoundObject(mURI, NS_GET_IID(nsIURI), PR_TRUE);
     
     PRUint32 referenceCount;
     nsCOMPtr<nsIURI> referenceURI;

@@ -783,6 +783,16 @@ mozJSComponentLoader::StartFastLoad(nsIFastLoadService *flSvc)
                         }
                     }
                 }
+
+                if (NS_SUCCEEDED(rv)) {
+                    /* Get the JS bytecode version number and validate it. */
+                    PRUint32 version;
+                    rv = mFastLoadInput->Read32(&version);
+                    if (NS_SUCCEEDED(rv) && version != JSXDR_BYTECODE_VERSION) {
+                        LOG(("Bad JS bytecode version\n"));
+                        rv = NS_ERROR_UNEXPECTED;
+                    }
+                }
             }
             if (NS_FAILED(rv)) {
                 LOG(("Invalid fastload file detected, removing it\n"));
@@ -807,6 +817,10 @@ mozJSComponentLoader::StartFastLoad(nsIFastLoadService *flSvc)
 
             rv = flSvc->NewOutputStream(output,
                                         getter_AddRefs(mFastLoadOutput));
+
+            if (NS_SUCCEEDED(rv))
+                rv = mFastLoadOutput->Write32(JSXDR_BYTECODE_VERSION);
+
             if (NS_FAILED(rv)) {
                 LOG(("Fatal error, could not create fastload file\n"));
 
