@@ -417,6 +417,13 @@ sub update {
         Bugzilla::Flag::clear($flag_id, $bug, $attachment);
     }
 
+    # Now silently remove requestees from flags which are no longer
+    # specifically requestable.
+    if (!$cgi->param('is_requesteeble')) {
+        $dbh->do('UPDATE flags SET requestee_id = NULL WHERE type_id = ?',
+                 undef, $id);
+    }
+
     $vars->{'name'} = $cgi->param('name');
     $vars->{'message'} = "flag_type_changes_saved";
 
