@@ -5044,16 +5044,19 @@ nsContextMenu.prototype = {
         clipboard.copyString(addresses);
     },
     addBookmarkForFrame : function() {
-#ifndef MOZ_PLACES
       var doc = this.target.ownerDocument;
       var uri = doc.location.href;
+#ifndef MOZ_PLACES
       var title = doc.title;
       var description = BookmarksUtils.getDescriptionFromDocument(doc);
       if ( !title )
         title = uri;
       BookmarksUtils.addBookmark(uri, title, doc.charset, description);
 #else
-      dump("*** IMPLEMENT ME: Bug 342217\n");
+      var ioService = Components.classes["@mozilla.org/network/io-service;1"].
+                      getService(Components.interfaces.nsIIOService);
+      var linkURI = ioService.newURI(uri, null, null);
+      PlacesController.showAddBookmarkUI(linkURI);
 #endif
     },
     // Open Metadata window for node
