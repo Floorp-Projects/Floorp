@@ -762,19 +762,6 @@ function Create3PaneGlobals()
   GetMessagePane().collapsed = true;
 }
  
-// because the "open" state persists, we'll call
-// PerformExpand() for all servers that are open at startup.            
-function PerformExpandForAllOpenServers()
-{
-    var servers = accountManager.allServers;
-    for (var i = 0; i < servers.Count(); i++)
-    {
-        var server = servers.QueryElementAt(i, Components.interfaces.nsIMsgIncomingServer);
-        if (server.type != "imap" && !server.rootMsgFolder.getFlag(MSG_FOLDER_FLAG_ELIDED))
-            server.performExpand(msgWindow);
-    }
-}
-
 function loadStartFolder(initialUri)
 {
     var folderTree = GetFolderTree();
@@ -831,14 +818,6 @@ function loadStartFolder(initialUri)
           defaultServer.PerformBiff(msgWindow);        
 
         SelectFolder(startFolder.URI);
-
-        // because the "open" state persists, we'll call
-        // PerformExpand() for all servers that are open at startup.
-        // note, because of the "news.persist_server_open_state_in_folderpane" pref
-        // we don't persist the "open" state of news servers across sessions, 
-        // but we do within a session, so if you open another 3 pane
-        // and a news server is "open", we'll update the unread counts.
-        PerformExpandForAllOpenServers();
     }
     catch(ex)
     {
