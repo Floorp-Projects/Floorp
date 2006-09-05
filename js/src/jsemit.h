@@ -497,7 +497,7 @@ typedef enum JSSrcNoteType {
                                    gets and sets */
     SRC_ASSIGNOP    = 8,        /* += or another assign-op follows */
     SRC_COND        = 9,        /* JSOP_IFEQ is from conditional ?: operator */
-    SRC_UNQUOTE     = 10,       /* don't quote a JSOP_STRING */
+    SRC_UNUSED10    = 10,       /* unused */
     SRC_HIDDEN      = 11,       /* opcode shouldn't be decompiled */
     SRC_PCBASE      = 12,       /* distance back from annotated get- or setprop
                                    op to first obj.prop.subprop bytecode */
@@ -510,13 +510,19 @@ typedef enum JSSrcNoteType {
                                    2nd off to first JSOP_CASE if condswitch */
     SRC_FUNCDEF     = 19,       /* JSOP_NOP for function f() with atomid */
     SRC_CATCH       = 20,       /* catch block has guard */
-    SRC_UNUSED21    = 21,       /* Unused source note */
+    SRC_UNUSED21    = 21,       /* unused */
     SRC_NEWLINE     = 22,       /* bytecode follows a source newline */
     SRC_SETLINE     = 23,       /* a file-absolute source line number note */
     SRC_XDELTA      = 24        /* 24-31 are for extended delta notes */
 } JSSrcNoteType;
 
-/* Constants for the SRC_DECL source note. */
+/*
+ * Constants for the SRC_DECL source note.  Note that span-dependent bytecode
+ * selection means that any SRC_DECL offset greater than SRC_DECL_LET may need
+ * to be adjusted, but these "offsets" are too small to span a span-dependent
+ * instruction, so can be used to denote distinct declaration syntaxes to the
+ * decompiler.
+ */
 #define SRC_DECL_VAR             0
 #define SRC_DECL_CONST           1
 #define SRC_DECL_LET             2

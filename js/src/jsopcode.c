@@ -442,18 +442,22 @@ const jschar js_EscapeMap[] = {
     0
 };
 
+#define QUOTE_IN_XML    0x10000
+
 static char *
-QuoteString(Sprinter *sp, JSString *str, jschar quote)
+QuoteString(Sprinter *sp, JSString *str, uint32 quote)
 {
+    JSBool inXML, ok;
+    jschar qc, c;
     ptrdiff_t off, len, nb;
     const jschar *s, *t, *u, *z;
     char *bp;
-    jschar c;
-    JSBool ok;
 
     /* Sample off first for later return value pointer computation. */
+    inXML = (quote & QUOTE_IN_XML) != 0;
+    qc = (jschar) quote;
     off = sp->offset;
-    if (quote && Sprint(sp, "%c", (char)quote) < 0)
+    if (qc && Sprint(sp, "%c", (char)qc) < 0)
         return NULL;
 
     /* Loop control variables: z points at end of string sentinel. */
@@ -462,7 +466,7 @@ QuoteString(Sprinter *sp, JSString *str, jschar quote)
     for (t = s; t < z; s = ++t) {
         /* Move t forward from s past un-quote-worthy characters. */
         c = *t;
-        while (JS_ISPRINT(c) && c != quote && c != '\\' && !(c >> 8)) {
+        while (JS_ISPRINT(c) && c != qc && c != '\\' && !(c >> 8)) {
             c = *++t;
             if (t == z)
                 break;
@@ -486,7 +490,9 @@ QuoteString(Sprinter *sp, JSString *str, jschar quote)
 
         /* Use js_EscapeMap, \u, or \x only if necessary. */
         if ((u = js_strchr(js_EscapeMap, c)) != NULL) {
-            ok = Sprint(sp, "\\%c", (char)u[1]) >= 0;
+            ok = inXML
+                 ? Sprint(sp, "%c", (char)c) >= 0
+                 : Sprint(sp, "\\%c", (char)u[1]) >= 0;
         } else {
 #ifdef JS_C_STRINGS_ARE_UTF8
             /* If this is a surrogate pair, make sure to print the pair. */
@@ -496,6 +502,12 @@ QuoteString(Sprinter *sp, JSString *str, jschar quote)
                 buffer[1] = *++t;
                 buffer[2] = 0;
                 if (t == z) {
+                    char numbuf[10];
+                    JS_snprintf(numbuf, sizeof numbuf, "0x%x", c);
+                    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
+                                                 js_GetErrorMessage, NULL,
+                                                 JSMSG_BAD_SURROGATE_CHAR,
+                                                 numbuf);
                     ok = JS_FALSE;
                     break;
                 }
@@ -505,7 +517,7 @@ QuoteString(Sprinter *sp, JSString *str, jschar quote)
                 ok = Sprint(sp, "%hc", c) >= 0;
             }
 #else
-            /* Use \uXXXX or \xXX  if the string cannot be displayed as UTF-8. */
+            /* Use \uXXXX or \xXX  if the string can't be displayed as UTF-8. */
             ok = Sprint(sp, (c >> 8) ? "\\u%04X" : "\\x%02X", c) >= 0;
 #endif
         }
@@ -514,7 +526,7 @@ QuoteString(Sprinter *sp, JSString *str, jschar quote)
     }
 
     /* Sprint the closing quote and return the quoted string. */
-    if (quote && Sprint(sp, "%c", (char)quote) < 0)
+    if (qc && Sprint(sp, "%c", (char)qc) < 0)
         return NULL;
 
     /*
@@ -2498,11 +2510,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               END_LITOPX_CASE
 
               BEGIN_LITOPX_CASE(JSOP_STRING)
-                sn = js_GetSrcNote(jp->script, pc);
                 rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
-                                   (jschar)((inXML ||
-                                             (sn && SN_TYPE(sn) == SRC_UNQUOTE))
-                                            ? 0 : '"'));
+                                   inXML ? QUOTE_IN_XML : '"');
                 if (!rval)
                     return JS_FALSE;
                 todo = STR2OFF(&ss->sprinter, rval);

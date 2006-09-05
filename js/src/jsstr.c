@@ -2841,7 +2841,7 @@ js_InflateString(JSContext *cx, const char *bytes, size_t *length)
     if (!chars)
         return NULL;
     js_InflateStringToBuffer(cx, bytes, *length, chars, &dstlen);
-    chars [dstlen] = 0;
+    chars[dstlen] = 0;
     *length = dstlen;
     return chars;
 }
@@ -2854,13 +2854,13 @@ js_DeflateString(JSContext *cx, const jschar *chars, size_t length)
 {
     size_t size = 0;
     char *bytes = NULL;
-    if (!js_DeflateStringToBuffer (cx, chars, length, NULL, &size))
+    if (!js_DeflateStringToBuffer(cx, chars, length, NULL, &size))
         return NULL;
     bytes = (char *) (cx ? JS_malloc(cx, size+1) : malloc(size+1));
     if (!bytes)
         return NULL;
-    js_DeflateStringToBuffer (cx, chars, length, bytes, &size);
-    bytes [size] = 0;
+    js_DeflateStringToBuffer(cx, chars, length, bytes, &size);
+    bytes[size] = 0;
     return bytes;
 }
 
@@ -2907,7 +2907,7 @@ js_DeflateStringToBuffer(JSContext *cx, const jschar *src, size_t srclen,
                 goto bufferTooSmall;
             if (dst) {
                 for (i = 0; i < utf8Len; i++)
-                    *dst++ = (char) utf8buf [i];
+                    *dst++ = (char) utf8buf[i];
             }
         }
         dstlen -= utf8Len;
@@ -2918,13 +2918,12 @@ js_DeflateStringToBuffer(JSContext *cx, const jschar *src, size_t srclen,
 badSurrogate:
     *dstlenp = (origDstlen - dstlen);
     if (cx) {
-        char buffer [10];
-        JS_snprintf (buffer, 10, "0x%x", c);
-        JS_ReportErrorFlagsAndNumber(cx,
-                                JSREPORT_ERROR,
-                                js_GetErrorMessage, NULL,
-                                JSMSG_BAD_SURROGATE_CHAR,
-                                buffer);
+        char buffer[10];
+        JS_snprintf(buffer, 10, "0x%x", c);
+        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
+                                     js_GetErrorMessage, NULL,
+                                     JSMSG_BAD_SURROGATE_CHAR,
+                                     buffer);
     }
     return JS_FALSE;
 
@@ -2958,7 +2957,7 @@ js_InflateStringToBuffer(JSContext *cx, const char *src, size_t srclen,
             if (n == 1 || n > 6)
                 goto badCharacter;
             for (j = 1; j < n; j++) {
-                if ((src [j] & 0xC0) != 0x80)
+                if ((src[j] & 0xC0) != 0x80)
                     goto badCharacter;
             }
             v = Utf8ToOneUcs4Char(src, n);
@@ -2967,13 +2966,13 @@ js_InflateStringToBuffer(JSContext *cx, const char *src, size_t srclen,
                 if (v > 0xFFFFF || dstlen < 2) {
                     *dstlenp = (origDstlen - dstlen);
                     if (cx) {
-                        char buffer [10];
-                        JS_snprintf (buffer, 10, "0x%x", v + 0x10000);
+                        char buffer[10];
+                        JS_snprintf(buffer, 10, "0x%x", v + 0x10000);
                         JS_ReportErrorFlagsAndNumber(cx,
-                                                JSREPORT_ERROR,
-                                                js_GetErrorMessage, NULL,
-                                                JSMSG_UTF8_CHAR_TOO_LARGE,
-                                                buffer);
+                                                     JSREPORT_ERROR,
+                                                     js_GetErrorMessage, NULL,
+                                                     JSMSG_UTF8_CHAR_TOO_LARGE,
+                                                     buffer);
                     }
                     return JS_FALSE;
                 }
@@ -3001,43 +3000,45 @@ js_InflateStringToBuffer(JSContext *cx, const char *src, size_t srclen,
 badCharacter:
     *dstlenp = (origDstlen - dstlen);
     if (cx) {
-        char buffer [10];
-        JS_snprintf (buffer, 10, "%d", offset);
-        JS_ReportErrorFlagsAndNumber(cx,
-                                JSREPORT_ERROR,
-                                js_GetErrorMessage, NULL,
-                                JSMSG_MALFORMED_UTF8_CHAR,
-                                buffer);
+        char buffer[10];
+        JS_snprintf(buffer, 10, "%d", offset);
+        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
+                                     js_GetErrorMessage, NULL,
+                                     JSMSG_MALFORMED_UTF8_CHAR,
+                                     buffer);
     }
     return JS_FALSE;
 
 bufferTooSmall:
     *dstlenp = (origDstlen - dstlen);
-    if (cx)
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BUFFER_TOO_SMALL);
+    if (cx) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_BUFFER_TOO_SMALL);
+    }
     return JS_FALSE;
 }
 
 #else
 
 JSBool
-js_InflateStringToBuffer(JSContext* cx, const char *bytes, size_t length, jschar *chars, size_t* charsLength)
+js_InflateStringToBuffer(JSContext* cx, const char *bytes, size_t length,
+                         jschar *chars, size_t* charsLength)
 {
     size_t i;
 
     if (length > *charsLength) {
         for (i = 0; i < *charsLength; i++)
             chars[i] = (unsigned char) bytes[i];
-        if (cx)
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BUFFER_TOO_SMALL);
+        if (cx) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_BUFFER_TOO_SMALL);
+        }
         return JS_FALSE;
     }
-    else {
-        for (i = 0; i < length; i++)
-            chars[i] = (unsigned char) bytes[i];
-        *charsLength = length;
-        return JS_TRUE;
-    }
+    for (i = 0; i < length; i++)
+        chars[i] = (unsigned char) bytes[i];
+    *charsLength = length;
+    return JS_TRUE;
 }
 
 jschar *
@@ -3053,13 +3054,14 @@ js_InflateString(JSContext *cx, const char *bytes, size_t *bytesLength)
     }
     for (i = 0; i < length; i++)
         chars[i] = (unsigned char) bytes[i];
-    chars [length] = 0;
+    chars[length] = 0;
     *bytesLength = length;
     return chars;
 }
 
 JSBool
-js_DeflateStringToBuffer(JSContext* cx, const jschar *chars, size_t length, char *bytes, size_t* bytesLength)
+js_DeflateStringToBuffer(JSContext* cx, const jschar *chars, size_t length,
+                         char *bytes, size_t* bytesLength)
 {
     size_t i;
 
@@ -3072,12 +3074,10 @@ js_DeflateStringToBuffer(JSContext* cx, const jschar *chars, size_t length, char
         }
         return JS_FALSE;
     }
-    else {
-        for (i = 0; i < length; i++)
-            bytes[i] = (char) chars[i];
-        *bytesLength = length;
-        return JS_TRUE;
-    }
+    for (i = 0; i < length; i++)
+        bytes[i] = (char) chars[i];
+    *bytesLength = length;
+    return JS_TRUE;
 }
 
 /*
@@ -3097,7 +3097,7 @@ js_DeflateString(JSContext *cx, const jschar *chars, size_t length)
     for (i = 0; i < length; i++)
         bytes[i] = (char) chars[i];
 
-    bytes [length] = 0;
+    bytes[length] = 0;
     return bytes;
 }
 
