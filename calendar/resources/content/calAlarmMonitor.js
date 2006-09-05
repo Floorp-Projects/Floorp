@@ -80,7 +80,7 @@ var alarmServiceObserver = {
             this._WindowOpening = wWatcher.openWindow(null,
                                                "chrome://calendar/content/calendar-alarm-dialog.xul",
                                                "_blank",
-                                               "chrome,dialog=yes,all",
+                                               "chrome,dialog=yes,all,resizable",
                                                 null);
         }
         if (this._WindowOpening) {
