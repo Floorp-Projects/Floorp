@@ -1971,6 +1971,8 @@ foreach my $id (@idlist) {
                 # We delay the sending of these messages till tables are unlocked.
                 $msgs = RemoveVotes($id, 0,
                           "This bug has been moved to a different product");
+
+                CheckIfVotedConfirmed($id, $whoid);
             }
 
             if ($col eq 'bug_status' 
