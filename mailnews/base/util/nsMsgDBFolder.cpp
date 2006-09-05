@@ -1065,16 +1065,6 @@ NS_IMETHODIMP nsMsgDBFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *e
   nsXPIDLCString charset;
 
   element->GetInt32Property("flags", (PRInt32 *) &mFlags);
-
-  PRBool persistElided = PR_TRUE;
-  rv = GetPersistElided(&persistElided);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // we aren't persisting elided, set the folder as closed
-  if (!persistElided) {
-    mFlags |= MSG_FOLDER_FLAG_ELIDED;
-  }
-
   element->GetInt32Property("totalMsgs", &mNumTotalMessages);
   element->GetInt32Property("totalUnreadMsgs", &mNumUnreadMessages);
   element->GetInt32Property("pendingUnreadMsgs", &mNumPendingUnreadMessages);
@@ -5072,13 +5062,6 @@ NS_IMETHODIMP nsMsgDBFolder::GetSortKey(PRUint8 **aKey, PRUint32 *aLength)
   NS_ENSURE_SUCCESS(rv,rv);
   orderString.Append(folderName);
   return CreateCollationKey(orderString, aKey, aLength);
-}
-
-NS_IMETHODIMP nsMsgDBFolder::GetPersistElided(PRBool *aPersistElided)
-{
-  // by default, we should always persist the open / closed state of folders & servers
-  *aPersistElided = PR_TRUE;
-  return NS_OK;
 }
 
 nsresult
