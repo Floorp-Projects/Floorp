@@ -174,14 +174,18 @@ PR_PUBLIC_API(PRInt32) ZIP_OpenArchive(const char * zipname, void** hZip)
     return ZIP_ERR_MEMORY;
 
   PRFileDesc * fd = PR_Open(zipname, PR_RDONLY, 0400);
-  if (!fd)
+  if (!fd) {
+    delete zip;
     return ZIP_ERR_DISK;
+  }
 
   status = zip->OpenArchive(fd);
   if (status == ZIP_OK)
     *hZip = NS_STATIC_CAST(void*,zip);
-  else
+  else {
     delete zip;
+    PR_Close(fd);
+  }
 
   return status;
 }
