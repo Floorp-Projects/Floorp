@@ -148,11 +148,10 @@
       <method name="onLoad">
         <body>
           <![CDATA[
-
             var args = window.arguments[0];
             var item = args.calendarEvent;
             var calendar = item.calendar;
-            
+
             // set 'mIsReadOnly' if the calendar is read-only
             if (calendar && calendar.readOnly)
               this.mIsReadOnly = true;
@@ -182,7 +181,21 @@
 
             var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
             var template = document.getAnonymousElementByAttribute(this, "anonid", "item");
-            
+
+            // we need to enfore several layout constraints which can't be modelled
+            // with plain xul and css, at least as far as i know.
+            const kStylesheet = "chrome://calendar/content/sun-calendar-event-dialog.css";
+            for each(var stylesheet in document.styleSheets) {
+                if (stylesheet.href == kStylesheet) {
+
+                    // the height of the text blocks contained in the grid items needs
+                    // to have the same height as the items of the attendee-list.
+                    var height = template.boxObject.height-1;
+                    stylesheet.insertRule(".freebusy-grid { min-height: "+height+"px; }", 0);
+                    break;
+                }
+            }
+
             if(this.mIsReadOnly || !this.mIsOrganizer)
               listbox.setAttribute("disabled","true");
             
@@ -233,7 +246,7 @@
               self.onModify();
             }
             callback();
-          ]]>
+            ]]>
         </body>
       </method>
 
@@ -358,7 +371,6 @@
         <parameter name="aSetFocus"/>
         <body>
           <![CDATA[
-
             var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
             var listitem1 = this.getListItem(1);
 
@@ -400,7 +412,9 @@
               input.attendee = newAttendee;
 
               // this copies the autocomplete sessions list from first attendee
-              input.syncSessions(document.getElementById('attendeeCol2#1'));
+              if (this.mLDAPSession && this.mSessionAdded) {
+                input.syncSessions(document.getElementById('attendeeCol2#1'));
+              }
 
               // set role and participation status
               status.setAttribute("status",newAttendee.participationStatus);
@@ -624,7 +638,7 @@
         <body>
           <![CDATA[
             var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
-            var items = listbox.getElementsByTagName("listitem");
+            var items = listbox.getElementsByTagNameNS('*','listitem');
             this.mContentHeight = 0;
             if (items.length > 0) {
               var i = 0;
@@ -668,7 +682,7 @@
         <parameter name="aParent"/>
         <body>
           <![CDATA[
-            var cell = document.createElement("listcell");
+            var cell = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul","listcell");
             cell.setAttribute("class", "addressingWidgetCell dummy-row-cell");
             if (aParent)
               aParent.appendChild(cell);
@@ -681,7 +695,7 @@
         <parameter name="aParent"/>
         <body>
           <![CDATA[
-            var titem = document.createElement("listitem");
+            var titem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul","listitem");
             titem.setAttribute("_isDummyRow", "true");
             titem.setAttribute("class", "dummy-row");
             for (var i=this.numColumns; i>0; i--)
@@ -715,7 +729,7 @@
           <![CDATA[
             var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
             if (listbox && aRow > 0) {
-              var listitems = listbox.getElementsByTagName('listitem');
+              var listitems = listbox.getElementsByTagNameNS('*','listitem');
               if (listitems && listitems.length >= aRow)
                 return listitems[aRow-1];
             }
@@ -776,26 +790,21 @@
         <parameter name="aRow"/>
         <body>
           <![CDATA[
-            var self = this;
-            var callback = function func() {
-              var node = self.getListItem(aRow);
+            var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
+            var node = this.getListItem(aRow);
 
-              // do we need to scroll in order to see the selected row?
-              var listbox = document.getAnonymousElementByAttribute(self, "anonid", "listbox");
-              var firstVisibleRow = listbox.getIndexOfFirstVisibleRow();
-              var numOfVisibleRows = listbox.getNumberOfVisibleRows();
-              if (aRow <= firstVisibleRow)
-                listbox.scrollToIndex(aRow-1);
-              else
-                if (aRow-1 >= (firstVisibleRow+numOfVisibleRows))
-                  listbox.scrollToIndex(aRow-numOfVisibleRows);
+            // do we need to scroll in order to see the selected row?
+            var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
+            var firstVisibleRow = listbox.getIndexOfFirstVisibleRow();
+            var numOfVisibleRows = listbox.getNumberOfVisibleRows();
+            if (aRow <= firstVisibleRow)
+              listbox.scrollToIndex(aRow-1);
+            else
+              if (aRow-1 >= (firstVisibleRow+numOfVisibleRows))
+                listbox.scrollToIndex(aRow-numOfVisibleRows);
 
-              var input = document.getAnonymousElementByAttribute(node, "anonid", "input");
-              input.focus();
-            }
-            
-            // handle the real thing asynchronusly
-            setTimeout(callback, 0);
+            var input = document.getAnonymousElementByAttribute(node, "anonid", "input");
+            input.focus();
           ]]>
         </body>
       </method>
@@ -818,7 +827,7 @@
           <![CDATA[
             if (!this.mNumColumns) {
               var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
-              var listCols = listbox.getElementsByTagName('listcol');
+              var listCols = listbox.getElementsByTagNameNS('*','listcol');
               this.mNumColumns = listCols.length;
               if (!this.mNumColumns)
                 this.mNumColumns = 1;
@@ -923,7 +932,6 @@
       <method name="setupAutocomplete">
         <body>
           <![CDATA[
-          
             var autocompleteLdap = false;
             var autocompleteDirectory = null;
             var prevAutocompleteDirectory = this.mCurrentAutocompleteDirectory;
@@ -1239,8 +1247,10 @@
       <method name="releaseAutoCompleteState">
         <body>
           <![CDATA[
-            for (i=1; i <= this.mMaxAttendees; i++) {
-              this.getInputElement(i).removeSession(this.mLDAPSession);
+            if (this.mLDAPSession && this.mSessionAdded) {
+              for (i=1; i <= this.mMaxAttendees; i++) {
+                this.getInputElement(i).removeSession(this.mLDAPSession);
+              }
             }
 
             this.mSessionAdded = false;
@@ -1629,12 +1639,6 @@
             const kStylesheet = "chrome://calendar/content/sun-calendar-event-dialog.css";
             for each(var stylesheet in document.styleSheets) {
                 if (stylesheet.href == kStylesheet) {
-
-                    // the height of the text blocks contained in the grid items needs
-                    // to have the same height as the items of the attendee-list.
-                    var attendees = document.getAnonymousElementByAttribute(this, "anonid", "attendees-list");
-                    var height = attendees.getListItem(1).boxObject.height-1;
-                    stylesheet.insertRule(".freebusy-grid { min-height: "+height+"px; }", 0);
 
                     // make the dummy-spacer #1 [top] the same height as the timebar
                     var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");

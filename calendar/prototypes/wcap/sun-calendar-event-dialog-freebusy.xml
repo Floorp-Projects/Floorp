@@ -1142,46 +1142,47 @@
       <method name="updateFreeBusy">
         <body>
           <![CDATA[
-            for (var i=1; i<=this.mMaxFreeBusy; i++) {
-            
-              // retrieve the string from the appropriate row
-              var freebusy = this.getFreeBusyElement(i);
-              if(freebusy.hasAttribute("dirty")) {
-                freebusy.removeAttribute("dirty");
+          for (var i=1; i<=this.mMaxFreeBusy; i++) {
 
-                var calid = freebusy.getAttribute("calid");
-                if(calid && calid.length > 0) {
+            // retrieve the string from the appropriate row
+            var freebusy = this.getFreeBusyElement(i);
+            if(freebusy.hasAttribute("dirty")) {
+              freebusy.removeAttribute("dirty");
 
-                    // define the datetime range we would like to ask for.
-                    var start = this.mStartDate.clone();
-                    start.hour = 0;
-                    start.minute = 0;
-                    start.second = 0;
-                    var end = start.clone();
-                    end.day += this.mRange;
+              var calid = freebusy.getAttribute("calid");
+              if(calid && calid.length > 0) {
 
-                    // update with 'no data available' until response will be received
-                    freebusy.onFreeBusy(null);
+                // define the datetime range we would like to ask for.
+                var start = this.mStartDate.clone();
+                start.hour = 0;
+                start.minute = 0;
+                start.second = 0;
+                var end = start.clone();
+                end.day += this.mRange;
 
-                    try {
-                      if(this.mCalendar) {
-                      
-                        var msg = "request for <"+calid+"> on row <"+i+">";
-                        var str = ("\n### freebusy log " + start.toString() + " " + end.toString() +
-                                   "### " + (msg ? msg : ""));
-                        this.mConsoleService.logStringMessage(str);
-                                                
-                        this.mFreeBusy.push(i);
-                        this.mFreeBusySequence = this.mFreeBusy.length-1;
-                        
-                        this.mCalendar.session.getFreeBusyTimes(calid,start,end,true,this.mFreeBusyListener,true,this.mFreeBusySequence);
-                      }
-                    }
-                    catch (ex) {}
+                // update with 'no data available' until response will be received
+                freebusy.onFreeBusy(null);
+
+                try {
+                  
+                  if(this.mCalendar) {
+                  
+                    var msg = "request for <"+calid+"> on row <"+i+">";
+                    var str = ("\n### freebusy log " + start.toString() + " " + end.toString() +
+                               "### " + (msg ? msg : ""));
+                    this.mConsoleService.logStringMessage(str);
+                                            
+                    this.mFreeBusy.push(i);
+                    this.mFreeBusySequence = this.mFreeBusy.length-1;
+                    
+                    this.mCalendar.session.getFreeBusyTimes(calid,start,end,true,this.mFreeBusyListener,true,this.mFreeBusySequence);
                   }
+                }
+                catch (ex) {
                 }
               }
             }
+          }
           ]]>
         </body>
       </method>
@@ -1354,7 +1355,7 @@
           <![CDATA[
             var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
             if (listbox && aRow > 0) {
-              var listitems = listbox.getElementsByTagName('listitem');
+              var listitems = listbox.getElementsByTagNameNS('*','listitem');
               if (listitems && listitems.length >= aRow)
                 return listitems[aRow-1];
             }
@@ -1433,7 +1434,7 @@
         <body>
           <![CDATA[
             var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
-            var items = listbox.getElementsByTagName("listitem");
+            var items = listbox.getElementsByTagNameNS('*','listitem');
             this.mContentHeight = 0;
             if (items.length > 0) {
               var i = 0;
@@ -1507,7 +1508,7 @@
           <![CDATA[
             if (!this.mNumColumns) {
               var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
-              var listCols = listbox.getElementsByTagName('listcol');
+              var listCols = listbox.getElementsByTagNameNS('*','listcol');
               this.mNumColumns = listCols.length;
               if (!this.mNumColumns)
                 this.mNumColumns = 1;
