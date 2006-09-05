@@ -107,9 +107,9 @@ sub FILESYSTEM {
         'whine.pl'        => { perms => $ws_executable },
         'customfield.pl'  => { perms => $owner_executable },
 
-        'docs/html/makedocs.pl' => { perms => $owner_executable },
-        'docs/rel_notes.txt'    => { perms => $ws_readable },
-        'docs/README.docs'      => { perms => $owner_readable },
+        'docs/makedocs.pl'   => { perms => $owner_executable },
+        'docs/rel_notes.txt' => { perms => $ws_readable },
+        'docs/README.docs'   => { perms => $owner_readable },
         "$datadir/bugzilla-update.xml" => { perms => $ws_writeable },
         "$datadir/params" => { perms => $ws_writeable },
     );
@@ -164,6 +164,8 @@ sub FILESYSTEM {
                                      dirs => $ws_dir_readable },
          'docs/images'         => { files => $ws_readable,
                                      dirs => $ws_dir_readable },
+         'docs/lib'            => { files => $owner_readable,
+                                     dirs => $owner_dir_readable },
          'docs/xml'            => { files => $owner_readable,
                                      dirs => $owner_dir_readable },
     );

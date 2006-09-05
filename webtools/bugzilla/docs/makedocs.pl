@@ -21,17 +21,35 @@
 # Contributor(s): Matthew Tuck <matty@chariot.net.au>
 #                 Jacob Steenhagen <jake@bugzilla.org>
 #                 Colin Ogilvie <colin.ogilvie@gmail.com>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 
 # This script compiles all the documentation.
 
-use diagnostics;
 use strict;
 
-use File::Basename;
-use lib("..");
-use Bugzilla::Install::Requirements qw (REQUIRED_MODULES OPTIONAL_MODULES MOD_PERL_MODULES);
-use Bugzilla::Constants qw (DB_MODULE);
-chdir dirname($0);
+# We need to be in this directory to use our libraries.
+BEGIN {
+    require File::Basename;
+    import File::Basename qw(dirname);
+    chdir dirname($0);
+}
+
+use lib qw(.. lib);
+
+# We only compile our POD if Pod::Simple is installed. We do the checks
+# this way so that if there's a compile error in Pod::Simple::HTML::Bugzilla,
+# makedocs doesn't just silently fail, but instead actually tells us there's
+# a compile error.
+my $pod_simple;
+if (eval { require Pod::Simple }) {
+    require Pod::Simple::HTMLBatch::Bugzilla;
+    require Pod::Simple::HTML::Bugzilla;
+    $pod_simple = 1;
+};
+
+use Bugzilla::Install::Requirements 
+    qw(REQUIRED_MODULES OPTIONAL_MODULES MOD_PERL_MODULES);
+use Bugzilla::Constants qw(DB_MODULE BUGZILLA_VERSION);
 
 ###############################################################################
 # Generate minimum version list
@@ -116,14 +134,44 @@ sub MakeDocs {
 
 }
 
+sub make_pod {
+
+    print "Creating API documentation...\n";
+
+    my $converter = Pod::Simple::HTMLBatch::Bugzilla->new;
+    # Don't output progress information.
+    $converter->verbose(0);
+    $converter->html_render_class('Pod::Simple::HTML::Bugzilla');
+
+    my $doctype      = Pod::Simple::HTML::Bugzilla->DOCTYPE;
+    my $content_type = Pod::Simple::HTML::Bugzilla->META_CT;
+    my $bz_version   = BUGZILLA_VERSION;
+
+    my $contents_start = <<END_HTML;
+$doctype
+<html>
+  <head>
+    $content_type
+    <title>Bugzilla $bz_version API Documentation</title>
+  </head>
+  <body class="contentspage">
+    <h1>Bugzilla $bz_version API Documentation</h1>
+END_HTML
+
+    $converter->contents_page_start($contents_start);
+    $converter->contents_page_end("</body></html>");
+    $converter->add_css('style.css');
+    $converter->javascript_flurry(0);
+    $converter->css_flurry(0);
+    $converter->batch_convert(['../'], 'html/api/');
+
+    print "\n";
+}
+
 ###############################################################################
 # Make the docs ...
 ###############################################################################
 
-if (!-d 'html') {
-    unlink 'html';
-    mkdir 'html', 0755;
-}
 if (!-d 'txt') {
     unlink 'txt';
     mkdir 'txt', 0755;
@@ -132,6 +180,8 @@ if (!-d 'pdf') {
     unlink 'pdf';
     mkdir 'pdf', 0755;
 }
+
+make_pod() if $pod_simple;
 
 chdir 'html';
 
