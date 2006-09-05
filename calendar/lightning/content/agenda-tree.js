@@ -377,7 +377,7 @@ function listener_onGetResult(calendar, status, itemtype, detail, count, items)
 {
     if (!Components.isSuccessCode(status))
         return;
-    
+
     items.forEach(this.agendaTreeView.addItem, this.agendaTreeView);
 };
 
