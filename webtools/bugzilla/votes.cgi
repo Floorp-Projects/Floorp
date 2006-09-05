@@ -341,7 +341,7 @@ sub record_votes {
     $dbh->bz_unlock_tables();
 
     $vars->{'type'} = "votes";
-    $vars->{'mailrecipients'} = { 'changer' => $who };
+    $vars->{'mailrecipients'} = { 'changer' => Bugzilla->user->login };
 
     foreach my $bug_id (@updated_bugs) {
         $vars->{'id'} = $bug_id;
