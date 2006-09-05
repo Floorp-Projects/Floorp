@@ -948,6 +948,8 @@ SessionStoreService.prototype = {
     Array.forEach(aWindow.getBrowser().browsers, function(aBrowser, aIx) {
       try {
         var tabData = this._windows[aWindow.__SSi].tabs[aIx];
+        if (tabData.entries.length == 0)
+          return; // ignore incompletely initialized tabs
         
         var text = [];
         if (aBrowser.parentNode.__SS_text && this._checkPrivacyLevel(aBrowser.currentURI.schemeIs("https"))) {
