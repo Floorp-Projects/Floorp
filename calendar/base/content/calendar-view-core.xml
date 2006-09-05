@@ -88,6 +88,7 @@
               this.mSelected = false;
               this.removeAttribute("selected");
           }
+          return val;
         ]]></setter>
       </property>
       <property name="calendarView">
@@ -96,6 +97,7 @@
         ]]></getter>
         <setter><![CDATA[
           this.mCalendarView = val;
+          return val;
         ]]></setter>
       </property>
 
@@ -108,6 +110,7 @@
           this.mOccurrence = val;
           this.setEditableLabel();
           this.setCSSClasses();
+          return val;
         ]]></setter>
       </property>
 

@@ -288,6 +288,7 @@
             this.mPixPerMin = val;
             this.relayout();
           }
+          return val;
         ]]></setter>
       </property>
 
@@ -1305,6 +1306,7 @@
         ]]></getter>
         <setter><![CDATA[
           this.mDate = val;
+          return val;
         ]]></setter>
       </property>
 
@@ -1314,6 +1316,7 @@
         ]]></getter>
         <setter><![CDATA[
           this.mCalendarView = val;
+          return val;
         ]]></setter>
       </property>
 
@@ -1847,6 +1850,7 @@
           this.mCalendar.addObserver (this.mObserver);
 
           this.refresh();
+          return val;
         ]]></setter>
       </property>
 
@@ -1888,6 +1892,7 @@
         ]]></getter>
         <setter><![CDATA[
           this.mTasksInView = val;
+          return val;
         ]]></setter>
       </property>
 
@@ -2113,6 +2118,7 @@
         ]]></getter>
         <setter><![CDATA[
           this.mInPlaceEditActive = val;
+          return val;
         ]]></setter>
       </property>
 

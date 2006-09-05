@@ -156,6 +156,7 @@
                     if (this.selectedDay) {
                         this.goToDay(this.selectedDay);
                     }
+                    return val;
                 ]]></setter>
             </property>
 

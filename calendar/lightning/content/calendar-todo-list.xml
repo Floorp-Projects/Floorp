@@ -163,6 +163,7 @@
                 if (this.mCalendar)
                     this.mCalendar.addObserver(this.mOperationListener);
                 this.rebuildDisplay();
+                return val;
             ]]></setter>
         </property>
 
@@ -263,7 +264,7 @@
       
       <property name="manager">
       <getter><![CDATA[ return this.mManager; ]]></getter>
-      <setter><![CDATA[ this.mManager = val; ]]></setter>
+      <setter><![CDATA[ this.mManager = val; return val; ]]></setter>
       </property>
       
       <property name="label">

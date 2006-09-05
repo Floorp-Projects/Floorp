@@ -79,6 +79,7 @@
           // Add our blank attendee
           this.addAttendee(null, true);
           this.mLoading = false;
+          return val;
         ]]></setter>
       </property>
 

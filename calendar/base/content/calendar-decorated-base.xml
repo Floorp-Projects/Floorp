@@ -131,6 +131,7 @@
                 ]]></getter>
                 <setter><![CDATA[
                     this.mWorkdaysOnly = val;
+                    return val;
                 ]]></setter>
             </property>
 
@@ -167,6 +168,7 @@
                 ]]></getter>
                 <setter><![CDATA[
                     this.mTasksInView = val;
+                    return val;
                 ]]></setter>
             </property>
 
@@ -176,6 +178,7 @@
                 ]]></getter>
                 <setter><![CDATA[
                     document.getAnonymousElementByAttribute(this, "anonid", "view-element").controller = val;
+                    return val;
                 ]]></setter>
             </property>
 
@@ -185,6 +188,7 @@
                 ]]></getter>
                 <setter><![CDATA[
                     document.getAnonymousElementByAttribute(this, "anonid", "view-element").displayCalendar = val;
+                    return val;
                 ]]></setter>
             </property>
 
@@ -194,6 +198,7 @@
                 ]]></getter>
                 <setter><![CDATA[
                     document.getAnonymousElementByAttribute(this, "anonid", "view-element").timezone = val;
+                    return val;
                 ]]></setter>
             </property>
 
