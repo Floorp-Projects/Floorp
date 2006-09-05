@@ -407,7 +407,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
 
   if (aNode->IsNodeOfType(nsINode::eELEMENT)) {
     // aNode's attributes.
-    nsGenericElement *elem = NS_STATIC_CAST(const nsGenericElement*, aNode);
+    nsGenericElement *elem = NS_STATIC_CAST(nsGenericElement*, aNode);
     const nsDOMAttributeMap *map = elem->GetAttributeMap();
     if (map) {
       nsCOMPtr<nsIDOMElement> element;
