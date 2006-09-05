@@ -210,9 +210,9 @@ calAlarmService.prototype = {
             // instance of a recurring event.  We need to not only know that
             // there was a snooze, but also which occurrence was snoozed.  Part
             // of me just wants to create a local db of snoozes here...
-            newEvent.setProperty("X-MOZ-SNOOZE-TIME-"+event.recurrenceId.nativeTime, alarmTime);
+            newEvent.setProperty("X-MOZ-SNOOZE-TIME-"+event.recurrenceId.nativeTime, alarmTime.icalString);
         } else {
-            newEvent.setProperty("X-MOZ-SNOOZE-TIME", alarmTime);
+            newEvent.setProperty("X-MOZ-SNOOZE-TIME", alarmTime.icalString);
         }
         // calling modifyItem will cause us to get the right callback
         // and update the alarm properly
@@ -371,7 +371,7 @@ calAlarmService.prototype = {
         if (snoozeTime && !(snoozeTime instanceof calIDateTime)) {
             var time = Components.classes["@mozilla.org/calendar/datetime;1"]
                                  .createInstance(calIDateTime);
-            time.nativeTime = snoozeTime;
+            time.icalString = snoozeTime;
             snoozeTime = time;
         }
 dump("snooze time is:"+snoozeTime+'\n');
