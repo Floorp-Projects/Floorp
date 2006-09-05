@@ -39,6 +39,7 @@
 #define INCL_WIN
 #include <os2.h>
 #include <assert.h>
+#include <stdio.h>
 
 #include "npnulos2.h"
 
