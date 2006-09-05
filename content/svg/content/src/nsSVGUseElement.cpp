@@ -123,7 +123,7 @@ protected:
 
   nsCOMPtr<nsIContent> mOriginal; // if we've been cloned, our "real" copy
   nsCOMPtr<nsIContent> mClone;    // cloned tree
-  nsIContent *mSourceContent;     // weak pointer to the observed element
+  nsCOMPtr<nsIContent> mSourceContent;  // observed element
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsSVGUseElement, NS_SVG_USE_ELEMENT_IMPL_CID)
@@ -165,7 +165,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGUseElementBase)
 // Implementation
 
 nsSVGUseElement::nsSVGUseElement(nsINodeInfo *aNodeInfo)
-  : nsSVGUseElementBase(aNodeInfo), mSourceContent(nsnull)
+  : nsSVGUseElementBase(aNodeInfo)
 {
 }
 
@@ -351,8 +351,10 @@ nsSVGUseElement::CreateAnonymousContent(nsPresContext*    aPresContext,
   if (!targetContent)
     return NS_ERROR_FAILURE;
 
-  RemoveListener();
-  targetContent->AddMutationObserver(this);
+  if (mSourceContent != targetContent) {
+    RemoveListener();
+    targetContent->AddMutationObserver(this);
+  }
   mSourceContent = targetContent;
 
   // make sure target is valid type for <use>
