@@ -185,7 +185,7 @@ nsThebesImage::GetAlphaBits()
 PRInt32
 nsThebesImage::GetAlphaLineStride()
 {
-    return mStride;
+    return (mAlphaDepth > 0) ? mStride : 0;
 }
 
 void
