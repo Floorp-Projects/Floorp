@@ -67,7 +67,7 @@
                 var pb2 = Components.classes
                           ["@mozilla.org/preferences-service;1"]
                           .getService(Components.interfaces.nsIPrefBranch2);
-                pb2.addObserver("calendar.view.", this.mPrefObserver, false);
+                pb2.addObserver("calendar.", this.mPrefObserver, false);
                 return;
             ]]></constructor>
 
@@ -75,7 +75,7 @@
                 var pb2 = Components.classes
                           ["@mozilla.org/preferences-service;1"]
                           .getService(Components.interfaces.nsIPrefBranch2);
-                pb2.removeObserver("calendar.view.", this.mPrefObserver);
+                pb2.removeObserver("calendar.", this.mPrefObserver);
                 return;
             ]]></destructor>
 
