@@ -218,12 +218,13 @@ NSString* const kAddBookmarkItemPrimaryTabKey = @"primary";
 
 - (void)buildBookmarksFolderPopup
 {
+  BookmarkManager* bookmarkManager = [BookmarkManager sharedBookmarkManager];
   [mParentFolderPopup removeAllItems];
-  [[[BookmarkManager sharedBookmarkManager] rootBookmarks] buildFlatFolderList:[mParentFolderPopup menu] depth:1];
+  [[bookmarkManager rootBookmarks] buildFlatFolderList:[mParentFolderPopup menu] depth:1];
   
   BookmarkFolder* initialFolder = mInitialParentFolder;
   if (!initialFolder)
-    initialFolder = [[BookmarkManager sharedBookmarkManager] lastUsedBookmarkFolder];
+    initialFolder = [bookmarkManager lastUsedBookmarkFolder];
 
   if (initialFolder)
   {
@@ -233,7 +234,8 @@ NSString* const kAddBookmarkItemPrimaryTabKey = @"primary";
   }
   else if ([mParentFolderPopup numberOfItems] > 0)
   {
-    [mParentFolderPopup selectItemAtIndex:0];
+    int initialItemIndex = [[mParentFolderPopup menu] indexOfItemWithRepresentedObject:[bookmarkManager toolbarFolder]];
+    [mParentFolderPopup selectItemAtIndex:initialItemIndex];
   }
 
   [mParentFolderPopup synchronizeTitleAndSelectedItem];
