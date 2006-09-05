@@ -387,7 +387,7 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
 NS_IMETHODIMP
 nsHttpDigestAuth::GetAuthFlags(PRUint32 *flags)
 {
-  *flags = REQUEST_BASED | REUSABLE_CHALLENGE;
+  *flags = REQUEST_BASED | REUSABLE_CHALLENGE | IDENTITY_ENCRYPTED;
   //
   // NOTE: digest auth credentials must be uniquely computed for each request,
   //       so we do not set the REUSABLE_CREDENTIALS flag.

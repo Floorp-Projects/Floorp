@@ -177,6 +177,12 @@ interface nsIHttpAuthenticator : nsISupports
      * attribute that the user must supply.
      */
     const unsigned long IDENTITY_INCLUDES_DOMAIN = (1<<11);
+
+    /**
+     * This flag indicates that the identity will be sent encrypted. It does
+     * not make sense to combine this flag with IDENTITY_IGNORED.
+     */
+    const unsigned long IDENTITY_ENCRYPTED = (1<<12);
 };
 
 %{C++

@@ -88,12 +88,9 @@ AuthPrompt2.prototype = {
 
     do_check_eq(this.expectedRealm, authInfo.realm);
 
-    // This would be nice but isn't currently implemented,
-    // so we can't test it
-    // var expectedLevel = isNTLM ?
-    //                     nsIAuthPrompt2.LEVEL_PW_ENCRYPTED :
-    //                     nsIAuthPrompt2.LEVEL_NONE;
-    var expectedLevel = nsIAuthPrompt2.LEVEL_NONE;
+    var expectedLevel = isNTLM ?
+                        nsIAuthPrompt2.LEVEL_PW_ENCRYPTED :
+                        nsIAuthPrompt2.LEVEL_NONE;
     do_check_eq(expectedLevel, level);
 
     var expectedFlags = nsIAuthInformation.AUTH_HOST;
