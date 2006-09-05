@@ -437,8 +437,7 @@ nsXULElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 // nsIDOMNode interface
 
 nsresult
-nsXULElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
-                    nsIContent **aResult) const
+nsXULElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
     *aResult = nsnull;
 
@@ -484,7 +483,7 @@ nsXULElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
 
     // Note that we're _not_ copying mControllers.
 
-    nsresult rv = CopyInnerTo(element, aDeep);
+    nsresult rv = CopyInnerTo(element);
     if (NS_SUCCEEDED(rv)) {
         NS_ADDREF(*aResult = element);
     }
@@ -496,12 +495,6 @@ nsXULElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
     }
 
     return rv;
-}
-
-NS_IMETHODIMP
-nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
-{
-    return nsGenericElement::CloneNode(aDeep, this, aResult);
 }
 
 //----------------------------------------------------------------------

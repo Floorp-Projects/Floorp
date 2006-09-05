@@ -94,6 +94,8 @@ public:
 
   virtual nsresult Init();
 
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
 protected:
   virtual nsresult GetLoadGroup(nsILoadGroup **aLoadGroup);
 

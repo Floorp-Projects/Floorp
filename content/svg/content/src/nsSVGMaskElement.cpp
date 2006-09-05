@@ -121,7 +121,7 @@ nsSVGMaskElement::Init()
 //----------------------------------------------------------------------
 // nsIDOMNode method
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGMaskElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGMaskElement)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGMaskElement methods

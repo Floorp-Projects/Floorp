@@ -56,13 +56,15 @@ public:
   NS_DECL_NSIDOMSVGPOLYGONELEMENT
 
   // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGPolygonElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGPolygonElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGPolygonElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGPolygonElementBase::)
 
   // nsSVGPathGeometryElement methods:
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(cairo_t *aCtx);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Polygon)
@@ -93,7 +95,7 @@ nsSVGPolygonElement::nsSVGPolygonElement(nsINodeInfo* aNodeInfo)
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGPolygonElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGPolygonElement)
 
 //----------------------------------------------------------------------
 // nsSVGPathGeometryElement methods

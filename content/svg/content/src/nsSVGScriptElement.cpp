@@ -79,7 +79,7 @@ public:
 
   // xxx If xpcom allowed virtual inheritance we wouldn't need to
   // forward here :-(
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGScriptElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGScriptElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGScriptElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGScriptElementBase::)
 
@@ -103,6 +103,8 @@ public:
                               PRBool aCompileEventHandlers);
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
     
 protected:
   /**
@@ -180,7 +182,7 @@ nsSVGScriptElement::Init()
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGScriptElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGScriptElement)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGScriptElement methods

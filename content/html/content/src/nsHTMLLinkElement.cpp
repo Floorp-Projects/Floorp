@@ -72,7 +72,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
@@ -108,6 +108,8 @@ public:
                              PRBool aNotify);
 
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
   virtual void GetStyleSheetURL(PRBool* aIsInline,
@@ -150,7 +152,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLLinkElement, nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-NS_IMPL_DOM_CLONENODE(nsHTMLLinkElement)
+NS_IMPL_ELEMENT_CLONE(nsHTMLLinkElement)
 
 
 NS_IMETHODIMP

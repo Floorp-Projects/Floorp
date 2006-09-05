@@ -549,7 +549,7 @@ public:
     { return GetFlags() & (aFlag << XUL_ELEMENT_LAZY_STATE_OFFSET); }
 
     // nsIDOMNode
-    NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericElement::)
+    NS_FORWARD_NSIDOMNODE(nsGenericElement::)
 
     // nsIDOMElement
     NS_FORWARD_NSIDOMELEMENT(nsGenericElement::)
@@ -571,6 +571,7 @@ public:
     // nsIChromeEventHandler
     NS_DECL_NSICHROMEEVENTHANDLER
 
+    virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
     nsXULElement(nsINodeInfo* aNodeInfo);

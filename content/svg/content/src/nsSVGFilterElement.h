@@ -67,7 +67,7 @@ public:
   NS_DECL_NSIDOMSVGFILTERELEMENT
 
   // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGFilterElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGFilterElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFilterElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFilterElementBase::)
 
@@ -78,6 +78,8 @@ public:
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
 

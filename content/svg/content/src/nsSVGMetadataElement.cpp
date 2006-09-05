@@ -57,9 +57,11 @@ public:
   NS_DECL_NSIDOMSVGMETADATAELEMENT
 
   // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGElement::)
+  NS_FORWARD_NSIDOMNODE(nsSVGElement::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGElement::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGElement::)
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Metadata)
@@ -99,4 +101,4 @@ nsSVGMetadataElement::Init()
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGMetadataElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGMetadataElement)

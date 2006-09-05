@@ -91,7 +91,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLFormElement::)
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLFormElement::)
 
   // nsIDOMElement
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
@@ -140,6 +140,8 @@ public:
 
   virtual void DoneAddingChildren(PRBool aHaveNotified);
   virtual PRBool IsDoneAddingChildren();
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
   nsCOMPtr<nsIControllers> mControllers;
@@ -208,7 +210,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 // nsIDOMHTMLTextAreaElement
 
 
-NS_IMPL_DOM_CLONENODE(nsHTMLTextAreaElement)
+NS_IMPL_ELEMENT_CLONE(nsHTMLTextAreaElement)
 
 
 NS_IMETHODIMP

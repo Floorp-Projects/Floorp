@@ -69,12 +69,14 @@ public:
 
   // xxx If xpcom allowed virtual inheritance we wouldn't need to
   // forward here :-(
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGTextPathElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGTextPathElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGTextPathElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGTextPathElementBase::)
 
   // nsIContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
 
@@ -186,7 +188,7 @@ nsSVGTextPathElement::Init()
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGTextPathElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGTextPathElement)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGURIReference methods

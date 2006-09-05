@@ -2868,59 +2868,10 @@ nsDocument::ImportNode(nsIDOMNode* aImportedNode,
     return rv;
   }
 
-  nsIDocument *document;
   PRUint16 nodeType;
   aImportedNode->GetNodeType(&nodeType);
   switch (nodeType) {
     case nsIDOMNode::ATTRIBUTE_NODE:
-    {
-      nsCOMPtr<nsIAttribute> attr = do_QueryInterface(aImportedNode);
-      NS_ENSURE_TRUE(attr, NS_ERROR_FAILURE);
-
-      document = attr->GetOwnerDoc();
-
-      nsCOMPtr<nsIDOMAttr> domAttr = do_QueryInterface(aImportedNode);
-      nsAutoString value;
-      rv = domAttr->GetValue(value);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsINodeInfo *nodeInfo = attr->NodeInfo();
-      nsCOMPtr<nsINodeInfo> newNodeInfo;
-      if (document != this) {
-        rv = mNodeInfoManager->GetNodeInfo(nodeInfo->NameAtom(),
-                                           nodeInfo->GetPrefixAtom(),
-                                           nodeInfo->NamespaceID(),
-                                           getter_AddRefs(newNodeInfo));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nodeInfo = newNodeInfo;
-      }
-
-      nsCOMPtr<nsIDOMNode> clone = new nsDOMAttribute(nsnull, nodeInfo, value);
-      if (!clone) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      if (document) {
-        // XXX For now, nsDOMAttribute has only one child. We need to notify
-        //     about importing it, so we force creation here.
-        nsCOMPtr<nsIDOMNode> child;
-        aImportedNode->GetFirstChild(getter_AddRefs(child));
-        nsCOMPtr<nsINode> childNode = do_QueryInterface(child);
-        if (childNode && childNode->HasProperties()) {
-          nsCOMPtr<nsIDOMNode> newChild;
-          clone->GetFirstChild(getter_AddRefs(newChild));
-          if (newChild) {
-            nsContentUtils::CallUserDataHandler(document,
-                                                nsIDOMUserDataHandler::NODE_IMPORTED,
-                                                childNode, child, newChild);
-          }
-        }
-      }
-
-      clone.swap(*aResult);
-      break;
-    }
     case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
     case nsIDOMNode::ELEMENT_NODE:
     case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
@@ -2928,19 +2879,26 @@ nsDocument::ImportNode(nsIDOMNode* aImportedNode,
     case nsIDOMNode::CDATA_SECTION_NODE:
     case nsIDOMNode::COMMENT_NODE:
     {
-      nsCOMPtr<nsIContent> imported = do_QueryInterface(aImportedNode);
+      nsCOMPtr<nsINode> imported = do_QueryInterface(aImportedNode);
       NS_ENSURE_TRUE(imported, NS_ERROR_FAILURE);
 
-      document = imported->GetOwnerDoc();
-      nsCOMPtr<nsIContent> clone;
-      rv = imported->CloneContent(mNodeInfoManager, aDeep,
-                                  getter_AddRefs(clone));
+      nsCOMPtr<nsIDOMNode> newNode;
+      nsCOMArray<nsINode> nodesWithProperties;
+      rv = nsNodeUtils::Clone(imported, aDeep, mNodeInfoManager,
+                              nodesWithProperties, getter_AddRefs(newNode));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = CallQueryInterface(clone, aResult);
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsIDocument *ownerDoc = imported->GetOwnerDoc();
+      if (ownerDoc) {
+        rv = nsNodeUtils::CallUserDataHandlers(nodesWithProperties, ownerDoc,
+                                               nsIDOMUserDataHandler::NODE_IMPORTED,
+                                               PR_TRUE);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
 
-      break;
+      newNode.swap(*aResult);
+
+      return NS_OK;
     }
     case nsIDOMNode::ENTITY_NODE:
     case nsIDOMNode::ENTITY_REFERENCE_NODE:
@@ -2955,15 +2913,6 @@ nsDocument::ImportNode(nsIDOMNode* aImportedNode,
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
   }
-
-  nsCOMPtr<nsINode> importedNode = do_QueryInterface(aImportedNode);
-  if (document && importedNode && importedNode->HasProperties()) {
-    nsContentUtils::CallUserDataHandler(document,
-                                        nsIDOMUserDataHandler::NODE_IMPORTED,
-                                        importedNode, aImportedNode, *aResult);
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3856,107 +3805,6 @@ nsDocument::SetDocumentURI(const nsAString& aDocumentURI)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-class AdoptFuncData {
-public:
-  AdoptFuncData(nsNodeInfoManager *aNewNodeInfoManager, JSContext *aCx,
-                JSObject *aOldScope, JSObject *aNewScope,
-                nsCOMArray<nsINode> &aNodesWithProperties)
-    : mNewNodeInfoManager(aNewNodeInfoManager),
-      mCx(aCx),
-      mOldScope(aOldScope),
-      mNewScope(aNewScope),
-      mNodesWithProperties(aNodesWithProperties)
-  {
-  };
-
-  nsNodeInfoManager *mNewNodeInfoManager;
-  JSContext *mCx;
-  JSObject *mOldScope;
-  JSObject *mNewScope;
-  nsCOMArray<nsINode> &mNodesWithProperties;
-};
-
-PLDHashOperator PR_CALLBACK
-AdoptFunc(nsAttrHashKey::KeyType aKey, nsIDOMNode *aData, void* aUserArg)
-{
-  nsCOMPtr<nsIAttribute> attr = do_QueryInterface(aData);
-  NS_ASSERTION(attr, "non-nsIAttribute somehow made it into the hashmap?!");
-
-  AdoptFuncData *data = NS_STATIC_CAST(AdoptFuncData*, aUserArg);
-  nsresult rv = nsDocument::Adopt(attr, data->mNewNodeInfoManager, data->mCx,
-                                  data->mOldScope, data->mNewScope,
-                                  data->mNodesWithProperties);
-
-  return NS_SUCCEEDED(rv) ? PL_DHASH_NEXT : PL_DHASH_STOP;
-}
-
-/* static */
-nsresult
-nsDocument::Adopt(nsINode *aNode, nsNodeInfoManager *aNewNodeInfoManager,
-                  JSContext *aCx, JSObject *aOldScope, JSObject *aNewScope,
-                  nsCOMArray<nsINode> &aNodesWithProperties)
-{
-  NS_PRECONDITION(!aCx || (aOldScope && aNewScope), "Must have scopes");
-
-  // First walk aNode's attributes (and their children), then walk aNode's
-  // children (and recurse into their attributes and children) and finally deal
-  // with aNode.
-
-  if (aNode->IsNodeOfType(eELEMENT)) {
-    // aNode's attributes.
-    nsGenericElement *element = NS_STATIC_CAST(nsGenericElement*, aNode);
-    const nsDOMAttributeMap *map = element->GetAttributeMap();
-    if (map) {
-      AdoptFuncData data(aNewNodeInfoManager, aCx, aOldScope, aNewScope,
-                         aNodesWithProperties);
- 
-      PRUint32 count = map->Enumerate(AdoptFunc, &data);
-      NS_ENSURE_TRUE(count == map->Count(), NS_ERROR_FAILURE);
-    }
-  }
-
-  // aNode's children.
-  nsresult rv;
-  PRUint32 i, length = aNode->GetChildCount();
-  for (i = 0; i < length; ++i) {
-    rv = Adopt(aNode->GetChildAt(i), aNewNodeInfoManager, aCx, aOldScope,
-               aNewScope, aNodesWithProperties);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // aNode.
-  if (aNewNodeInfoManager) {
-    nsINodeInfo *nodeInfo = aNode->mNodeInfo;
-    nsCOMPtr<nsINodeInfo> newNodeInfo;
-    rv = aNewNodeInfoManager->GetNodeInfo(nodeInfo->NameAtom(),
-                                          nodeInfo->GetPrefixAtom(),
-                                          nodeInfo->NamespaceID(),
-                                          getter_AddRefs(newNodeInfo));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    aNode->mNodeInfo.swap(newNodeInfo);
-
-    nsIXPConnect *xpc = nsContentUtils::XPConnect();
-    if (xpc && aCx) {
-      nsCOMPtr<nsIXPConnectJSObjectHolder> oldWrapper;
-      rv = xpc->ReparentWrappedNativeIfFound(aCx, aOldScope, aNewScope, aNode,
-                                             getter_AddRefs(oldWrapper));
-      if (NS_FAILED(rv)) {
-        newNodeInfo.swap(aNode->mNodeInfo);
-
-        return rv;
-      }
-    }
-  }
-
-  if (aNode->HasProperties()) {
-    PRBool ok = aNodesWithProperties.AppendObject(aNode);
-    NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
-  }
-
-  return NS_OK;
-}
-
 static void BlastSubtreeToPieces(nsINode *aNode);
 
 PLDHashOperator PR_CALLBACK
@@ -4115,8 +3963,8 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
   }
 
   nsCOMArray<nsINode> nodesWithProperties;
-  rv = Adopt(adoptedNode, sameDocument ? nsnull : mNodeInfoManager, cx,
-             oldScope, newScope, nodesWithProperties);
+  rv = nsNodeUtils::Adopt(adoptedNode, sameDocument ? nsnull : mNodeInfoManager,
+                          cx, oldScope, newScope, nodesWithProperties);
   if (NS_FAILED(rv)) {
     // Disconnect all nodes from their parents, since some have the old document
     // as their ownerDocument and some have this as their ownerDocument.
@@ -4147,15 +3995,10 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
     }
   }
 
-  for (i = 0; i < count; ++i) {
-    nsINode *nodeWithProperties = nodesWithProperties[i];
-
-    nsCOMPtr<nsIDOMNode> source = do_QueryInterface(nodeWithProperties, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsContentUtils::CallUserDataHandler(this,
-                                        nsIDOMUserDataHandler::NODE_ADOPTED,
-                                        nodeWithProperties, source, nsnull);
-  }
+  rv = nsNodeUtils::CallUserDataHandlers(nodesWithProperties, this,
+                                         nsIDOMUserDataHandler::NODE_ADOPTED,
+                                         PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(adoptedNode, aResult);
 }

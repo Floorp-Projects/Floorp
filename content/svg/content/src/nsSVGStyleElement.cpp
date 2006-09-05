@@ -59,7 +59,7 @@ public:
   NS_DECL_NSIDOMSVGSTYLEELEMENT
 
   // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGStyleElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGStyleElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGStyleElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGStyleElementBase::)
 
@@ -82,9 +82,12 @@ public:
                            PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
 protected:
   // Dummy init method to make the NS_IMPL_NS_NEW_SVG_ELEMENT and
-  // NS_IMPL_DOM_CLONENODE_WITH_INIT usable with this class. This should be
+  // NS_IMPL_ELEMENT_CLONE_WITH_INIT usable with this class. This should be
   // completely optimized away.
   inline nsresult Init()
   {
@@ -134,7 +137,7 @@ nsSVGStyleElement::nsSVGStyleElement(nsINodeInfo *aNodeInfo)
 // nsIDOMNode methods
 
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGStyleElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGStyleElement)
 
 
 //----------------------------------------------------------------------

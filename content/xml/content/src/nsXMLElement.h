@@ -60,7 +60,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericElement::)
+  NS_FORWARD_NSIDOMNODE(nsGenericElement::)
 
   // nsIDOMElement
   NS_FORWARD_NSIDOMELEMENT(nsGenericElement::)
@@ -79,6 +79,8 @@ public:
                            PRBool aNotify);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
   PRBool mIsLink;

@@ -38,12 +38,13 @@
 #ifndef nsNodeUtils_h___
 #define nsNodeUtils_h___
 
-#include "prtypes.h"
+#include "nsDOMAttributeMap.h"
 
+struct JSContext;
+struct JSObject;
 class nsINode;
-class nsIContent;
-class nsIDocument;
-class nsIAtom;
+class nsNodeInfoManager;
+template<class E> class nsCOMArray;
 
 class nsNodeUtils
 {
@@ -105,6 +106,137 @@ public:
    * @param aDelete If PR_TRUE, calling this method also deletes aNode.
    */
   static void LastRelease(nsINode* aNode, PRBool aDelete);
+
+  /**
+   * Clones aNode, its attributes and, if aDeep is PR_TRUE, its descendant nodes
+   * If aNewNodeInfoManager is not null, it is used to create new nodeinfos for
+   * the clones. aNodesWithProperties will be filled with all the nodes that
+   * have properties, and every node in it will be followed by its clone.
+   *
+   * @param aNode Node to clone.
+   * @param aDeep If PR_TRUE the function will be called recursively on
+   *              descendants of the node
+   * @param aNewNodeInfoManager The nodeinfo manager to use to create new
+   *                            nodeinfos for aNode and its attributes and
+   *                            descendants. May be null if the nodeinfos
+   *                            shouldn't be changed.
+   * @param aNodesWithProperties All nodes (from amongst aNode and its
+   *                             descendants) with properties. Every node will
+   *                             be followed by its clone.
+   * @param aResult *aResult will contain the cloned node.
+   */
+  static nsresult Clone(nsINode *aNode, PRBool aDeep,
+                        nsNodeInfoManager *aNewNodeInfoManager,
+                        nsCOMArray<nsINode> &aNodesWithProperties,
+                        nsIDOMNode **aResult)
+  {
+    return CloneAndAdopt(aNode, PR_TRUE, aDeep, aNewNodeInfoManager, nsnull,
+                         nsnull, nsnull, aNodesWithProperties, nsnull,
+                         aResult);
+  }
+
+  /**
+   * Walks aNode, its attributes and descendant nodes. If aNewNodeInfoManager is
+   * not null, it is used to create new nodeinfos for the nodes. Also reparents
+   * the XPConnect wrappers for the nodes in aNewScope if aCx is not null.
+   * aNodesWithProperties will be filled with all the nodes that have
+   * properties.
+   *
+   * @param aNode Node to adopt.
+   * @param aNewNodeInfoManager The nodeinfo manager to use to create new
+   *                            nodeinfos for aNode and its attributes and
+   *                            descendants. May be null if the nodeinfos
+   *                            shouldn't be changed.
+   * @param aCx Context to use for reparenting the wrappers, or null if no
+   *            reparenting should be done. Must be null if aNewNodeInfoManager
+   *            is null.
+   * @param aOldScope Old scope for the wrappers. May be null if aCx is null.
+   * @param aNewScope New scope for the wrappers. May be null if aCx is null.
+   * @param aNodesWithProperties All nodes (from amongst aNode and its
+   *                             descendants) with properties.
+   */
+  static nsresult Adopt(nsINode *aNode, nsNodeInfoManager *aNewNodeInfoManager,
+                        JSContext *aCx, JSObject *aOldScope,
+                        JSObject *aNewScope,
+                        nsCOMArray<nsINode> &aNodesWithProperties)
+  {
+    nsCOMPtr<nsIDOMNode> dummy;
+    return CloneAndAdopt(aNode, PR_FALSE, PR_TRUE, aNewNodeInfoManager, aCx,
+                         aOldScope, aNewScope, aNodesWithProperties,
+                         nsnull, getter_AddRefs(dummy));
+  }
+
+  /**
+   * Call registered userdata handlers for operation aOperation for the nodes in
+   * aNodesWithProperties. If aCloned is PR_TRUE aNodesWithProperties should
+   * contain both the original and the cloned nodes (and only the userdata
+   * handlers registered for the original nodes will be called).
+   *
+   * @param aNodesWithProperties Contains the nodes that might have properties
+   *                             registered on them. If aCloned is PR_TRUE every
+   *                             one of those nodes should be immediately
+   *                             followed in the array by the cloned node.
+   * @param aOwnerDocument The ownerDocument of the original nodes.
+   * @param aOperation The operation to call a userdata handler for.
+   * @param aCloned If PR_TRUE aNodesWithProperties will contain both original
+   *                and cloned nodes.
+   */
+  static nsresult CallUserDataHandlers(nsCOMArray<nsINode> &aNodesWithProperties,
+                                       nsIDocument *aOwnerDocument,
+                                       PRUint16 aOperation, PRBool aCloned);
+
+  /**
+   * A basic implementation of the DOM cloneNode method. Calls nsINode::Clone to
+   * do the actual cloning of the node.
+   *
+   * @param aNode the node to clone
+   * @param aDeep if true all descendants will be cloned too
+   * @param aResult the clone
+   */
+  static nsresult CloneNodeImpl(nsINode *aNode, PRBool aDeep,
+                                nsIDOMNode **aResult);
+
+private:
+  friend PLDHashOperator PR_CALLBACK
+    AdoptFunc(nsAttrHashKey::KeyType aKey, nsIDOMNode *aData, void* aUserArg);
+
+  /**
+   * Walks aNode, its attributes and, if aDeep is PR_TRUE, its descendant nodes.
+   * If aClone is PR_TRUE the nodes will be cloned. If aNewNodeInfoManager is
+   * not null, it is used to create new nodeinfos for the nodes. Also reparents
+   * the XPConnect wrappers for the nodes in aNewScope if aCx is not null.
+   * aNodesWithProperties will be filled with all the nodes that have
+   * properties.
+   *
+   * @param aNode Node to adopt/clone.
+   * @param aClone If PR_TRUE the node will be cloned and the cloned node will
+   *               be in aResult.
+   * @param aDeep If PR_TRUE the function will be called recursively on
+   *              descendants of the node
+   * @param aNewNodeInfoManager The nodeinfo manager to use to create new
+   *                            nodeinfos for aNode and its attributes and
+   *                            descendants. May be null if the nodeinfos
+   *                            shouldn't be changed.
+   * @param aCx Context to use for reparenting the wrappers, or null if no
+   *            reparenting should be done. Must be null if aClone is PR_TRUE or
+   *            if aNewNodeInfoManager is null.
+   * @param aOldScope Old scope for the wrappers. May be null if aCx is null.
+   * @param aNewScope New scope for the wrappers. May be null if aCx is null.
+   * @param aNodesWithProperties All nodes (from amongst aNode and its
+   *                             descendants) with properties. If aClone is
+   *                             PR_TRUE every node will be followed by its
+   *                             clone.
+   * @param aParent If aClone is PR_TRUE the cloned node will be appended to
+   *                aParent's children. May be null.
+   * @param aResult *aResult will contain the cloned node (if aClone is
+   *                PR_TRUE).
+   */
+  static nsresult CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
+                                nsNodeInfoManager *aNewNodeInfoManager,
+                                JSContext *aCx, JSObject *aOldScope,
+                                JSObject *aNewScope,
+                                nsCOMArray<nsINode> &aNodesWithProperties,
+                                nsINode *aParent, nsIDOMNode **aResult);
 };
 
 #endif // nsNodeUtils_h___

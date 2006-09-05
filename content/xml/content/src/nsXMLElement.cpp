@@ -385,4 +385,4 @@ nsXMLElement::IsFocusable(PRInt32 *aTabIndex)
 }
 
 
-NS_IMPL_DOM_CLONENODE(nsXMLElement)
+NS_IMPL_ELEMENT_CLONE(nsXMLElement)

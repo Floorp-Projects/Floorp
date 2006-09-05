@@ -146,7 +146,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
@@ -244,6 +244,8 @@ public:
   static nsresult CompareNodes(nsIDOMNode* a,
                                nsIDOMNode* b,
                                PRInt32* retval);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
   nsresult DoSubmitOrReset(nsEvent* aEvent,
@@ -567,7 +569,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 
 // nsIDOMHTMLFormElement
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsHTMLFormElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsHTMLFormElement)
 
 NS_IMETHODIMP
 nsHTMLFormElement::GetElements(nsIDOMHTMLCollection** aElements)

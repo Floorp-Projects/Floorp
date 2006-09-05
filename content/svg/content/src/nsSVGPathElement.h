@@ -104,7 +104,7 @@ public:
   NS_DECL_NSIDOMSVGANIMATEDPATHDATA
 
   // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGPathElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGPathElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGPathElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGPathElementBase::)
 
@@ -122,6 +122,8 @@ public:
   virtual void ConstructPath(cairo_t *aCtx);
 
   virtual nsSVGFlattenedPath *GetFlattenedPath(nsIDOMSVGMatrix *aMatrix);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
 

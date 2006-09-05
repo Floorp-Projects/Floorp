@@ -125,8 +125,8 @@ public:
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
 
-  virtual nsGenericDOMDataNode *Clone(nsINodeInfo *aNodeInfo,
-                                      PRBool aCloneText) const
+  virtual nsGenericDOMDataNode *CloneDataNode(nsINodeInfo *aNodeInfo,
+                                              PRBool aCloneText) const
   {
     nsAttributeTextNode *it = new nsAttributeTextNode(aNodeInfo);
     if (it && aCloneText) {
@@ -218,7 +218,7 @@ nsTextNode::IsNodeOfType(PRUint32 aFlags) const
 }
 
 nsGenericDOMDataNode*
-nsTextNode::Clone(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
+nsTextNode::CloneDataNode(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
 {
   nsTextNode *it = new nsTextNode(aNodeInfo);
   if (it && aCloneText) {

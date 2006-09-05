@@ -128,8 +128,7 @@ public:
   {
     return GetXTFElement()->CloneState(aElement);
   }
-  nsresult Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
-                 nsIContent **aResult) const;
+  nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
   // to be implemented by subclasses:

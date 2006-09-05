@@ -73,7 +73,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLFormElement::)
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLFormElement::)
 
   // nsIDOMElement
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
@@ -107,6 +107,8 @@ public:
                                 nsAttrValue& aResult);
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
   PRInt8 mType;
@@ -153,7 +155,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 // nsIDOMHTMLButtonElement
 
 
-NS_IMPL_DOM_CLONENODE(nsHTMLButtonElement)
+NS_IMPL_ELEMENT_CLONE(nsHTMLButtonElement)
 
 
 // nsIDOMHTMLButtonElement

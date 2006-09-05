@@ -56,7 +56,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
@@ -72,6 +72,8 @@ public:
                               PRBool aCompileEventHandlers);
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
 protected:
   nsRefPtr<nsContentList> mAreas;
 };
@@ -127,7 +129,7 @@ nsHTMLMapElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-NS_IMPL_DOM_CLONENODE(nsHTMLMapElement)
+NS_IMPL_ELEMENT_CLONE(nsHTMLMapElement)
 
 
 NS_IMETHODIMP

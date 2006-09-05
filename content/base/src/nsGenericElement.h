@@ -56,6 +56,7 @@
 #include "nsILinkHandler.h"
 #include "nsGenericDOMNodeList.h"
 #include "nsContentUtils.h"
+#include "nsNodeUtils.h"
 #include "nsAttrAndChildArray.h"
 #include "mozFlushType.h"
 #include "nsDOMAttributeMap.h"
@@ -386,13 +387,6 @@ public:
   virtual PRUint32 GetScriptTypeID() const;
   virtual nsresult SetScriptTypeID(PRUint32 aLang);
 
-  /**
-   * This calls Clone to do the actual cloning so that we end up with the
-   * right class for the clone.
-   */
-  nsresult CloneContent(nsNodeInfoManager *aNodeInfoManager, PRBool aDeep,
-                        nsIContent **aResult) const;
-
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
   virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
@@ -492,6 +486,10 @@ public:
   NS_IMETHOD HasAttributeNS(const nsAString& aNamespaceURI,
                             const nsAString& aLocalName,
                             PRBool* aReturn);
+  nsresult CloneNode(PRBool aDeep, nsIDOMNode **aResult)
+  {
+    return nsNodeUtils::CloneNodeImpl(this, aDeep, aResult);
+  }
 
   //----------------------------------------
 
@@ -856,28 +854,10 @@ protected:
   virtual nsAttrInfo GetAttrInfo(PRInt32 aNamespaceID, nsIAtom* aName) const;
 
   /**
-   * Duplicate children by calling importNode and append them to another
-   * element.
-   *
-   * @param aDst the element to append the imported children to
-   * @param aImportDocument the document to use to call importNode
-   */
-  nsresult ImportChildrenTo(nsGenericElement *aDst,
-                            nsIDOMDocument *aImportDocument) const;
-
-  /**
-   * Clone children and append them to another element.
-   *
-   * @param aDst the element to append the imported children to
-   */
-  nsresult CloneChildrenTo(nsGenericElement *aDst) const;
-
-  /**
-   * Copy attributes and children to another content object
+   * Copy attributes and state to another element
    * @param aDest the object to copy to
-   * @param aDeep whether to copy children
    */
-  nsresult CopyInnerTo(nsGenericElement* aDest, PRBool aDeep) const;
+  nsresult CopyInnerTo(nsGenericElement* aDest) const;
 
   /**
    * Internal hook for converting an attribute name-string to an atomized name
@@ -960,129 +940,18 @@ protected:
   void GetContentsAsText(nsAString& aText);
 
   /**
-   * Method to clone this element. This needs to be overriden by all element
-   * classes. aNodeInfo should be identical to this element's nodeInfo, except
-   * for the document which may be different. If aDeep is true all descendants
-   * will be cloned too (by calling the DOM method cloneNode on them if the
-   * ownerDocument of aNodeInfo is the same as the ownerDocument of this
-   * element or by calling the DOM method importNode if they differ).
-   *
-   * @param aNodeInfo the nodeinfo to use for the clone
-   * @param aDeep if true all descendants will be cloned too (attributes are
-   *              always cloned)
-   * @param aResult the clone
-   */
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
-                         nsIContent **aResult) const = 0;
-
-  /**
-   * A basic implementation of the DOM cloneNode method. Calls CloneContent to
-   * do the actual cloning of the element.
-   *
-   * @param aDeep if true all descendants will be cloned too (attributes on the
-   *              element are always cloned)
-   * @param aSource nsIDOMNode pointer to this node
-   * @param aResult the clone
-   */
-  nsresult CloneNode(PRBool aDeep, nsIDOMNode *aSource,
-                     nsIDOMNode **aResult) const;
-
-  /**
    * Array containing all attributes and children for this element
    */
   nsAttrAndChildArray mAttrsAndChildren;
 };
 
-#define NS_FORWARD_NSIDOMNODE_NO_CLONENODE(_to)                               \
-  NS_IMETHOD GetNodeName(nsAString& aNodeName) {                              \
-    return _to GetNodeName(aNodeName);                                        \
-  }                                                                           \
-  NS_IMETHOD GetNodeValue(nsAString& aNodeValue) {                            \
-    return _to GetNodeValue(aNodeValue);                                      \
-  }                                                                           \
-  NS_IMETHOD SetNodeValue(const nsAString& aNodeValue) {                      \
-    return _to SetNodeValue(aNodeValue);                                      \
-  }                                                                           \
-  NS_IMETHOD GetNodeType(PRUint16* aNodeType) {                               \
-    return _to GetNodeType(aNodeType);                                        \
-  }                                                                           \
-  NS_IMETHOD GetParentNode(nsIDOMNode** aParentNode) {                        \
-    return _to GetParentNode(aParentNode);                                    \
-  }                                                                           \
-  NS_IMETHOD GetChildNodes(nsIDOMNodeList** aChildNodes) {                    \
-    return _to GetChildNodes(aChildNodes);                                    \
-  }                                                                           \
-  NS_IMETHOD GetFirstChild(nsIDOMNode** aFirstChild) {                        \
-    return _to GetFirstChild(aFirstChild);                                    \
-  }                                                                           \
-  NS_IMETHOD GetLastChild(nsIDOMNode** aLastChild) {                          \
-    return _to GetLastChild(aLastChild);                                      \
-  }                                                                           \
-  NS_IMETHOD GetPreviousSibling(nsIDOMNode** aPreviousSibling) {              \
-    return _to GetPreviousSibling(aPreviousSibling);                          \
-  }                                                                           \
-  NS_IMETHOD GetNextSibling(nsIDOMNode** aNextSibling) {                      \
-    return _to GetNextSibling(aNextSibling);                                  \
-  }                                                                           \
-  NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap** aAttributes) {                \
-    return _to GetAttributes(aAttributes);                                    \
-  }                                                                           \
-  NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument) {              \
-    return _to GetOwnerDocument(aOwnerDocument);                              \
-  }                                                                           \
-  NS_IMETHOD GetNamespaceURI(nsAString& aNamespaceURI) {                      \
-    return _to GetNamespaceURI(aNamespaceURI);                                \
-  }                                                                           \
-  NS_IMETHOD GetPrefix(nsAString& aPrefix) {                                  \
-    return _to GetPrefix(aPrefix);                                            \
-  }                                                                           \
-  NS_IMETHOD SetPrefix(const nsAString& aPrefix) {                            \
-    return _to SetPrefix(aPrefix);                                            \
-  }                                                                           \
-  NS_IMETHOD GetLocalName(nsAString& aLocalName) {                            \
-    return _to GetLocalName(aLocalName);                                      \
-  }                                                                           \
-  NS_IMETHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,       \
-                          nsIDOMNode** aReturn) {                             \
-    return _to InsertBefore(aNewChild, aRefChild, aReturn);                   \
-  }                                                                           \
-  NS_IMETHOD ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,       \
-                          nsIDOMNode** aReturn) {                             \
-    return _to ReplaceChild(aNewChild, aOldChild, aReturn);                   \
-  }                                                                           \
-  NS_IMETHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) {       \
-    return _to RemoveChild(aOldChild, aReturn);                               \
-  }                                                                           \
-  NS_IMETHOD AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn) {       \
-    return _to AppendChild(aNewChild, aReturn);                               \
-  }                                                                           \
-  NS_IMETHOD HasChildNodes(PRBool* aReturn) {                                 \
-    return _to HasChildNodes(aReturn);                                        \
-  }                                                                           \
-  NS_IMETHOD Normalize() {                                                    \
-    return _to Normalize();                                                   \
-  }                                                                           \
-  NS_IMETHOD IsSupported(const nsAString& aFeature,                           \
-                         const nsAString& aVersion, PRBool* aReturn) {        \
-    return _to IsSupported(aFeature, aVersion, aReturn);                      \
-  }                                                                           \
-  NS_IMETHOD HasAttributes(PRBool* aReturn) {                                 \
-    return _to HasAttributes(aReturn);                                        \
-  }                                                                           \
-  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);                   \
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,                \
-                         nsIContent **aResult) const;
-
-
 /**
- * Macros to implement CloneNode(). _elementName is the class for which to
- * implement CloneNode, _implClass is the class to use to cast to
- * nsIDOMNode*.
+ * Macros to implement Clone(). _elementName is the class for which to implement
+ * Clone.
  */
-#define NS_IMPL_DOM_CLONENODE_AMBIGUOUS(_elementName, _implClass)           \
+#define NS_IMPL_ELEMENT_CLONE(_elementName)                                 \
 nsresult                                                                    \
-_elementName::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,                   \
-                    nsIContent **aResult) const                             \
+_elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
 {                                                                           \
   *aResult = nsnull;                                                        \
                                                                             \
@@ -1091,29 +960,18 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,                   \
     return NS_ERROR_OUT_OF_MEMORY;                                          \
   }                                                                         \
                                                                             \
-  nsCOMPtr<nsIContent> kungFuDeathGrip = it;                                \
-  nsresult rv = CopyInnerTo(it, aDeep);                                     \
+  nsCOMPtr<nsINode> kungFuDeathGrip = it;                                   \
+  nsresult rv = CopyInnerTo(it);                                            \
   if (NS_SUCCEEDED(rv)) {                                                   \
     kungFuDeathGrip.swap(*aResult);                                         \
   }                                                                         \
                                                                             \
   return rv;                                                                \
-}                                                                           \
-NS_IMETHODIMP                                                               \
-_elementName::CloneNode(PRBool aDeep, nsIDOMNode **aResult)                 \
-{                                                                           \
-  return nsGenericElement::CloneNode(aDeep,                                 \
-                                     NS_STATIC_CAST(_implClass*, this),     \
-                                     aResult);                              \
 }
 
-#define NS_IMPL_DOM_CLONENODE(_elementName)                                 \
-NS_IMPL_DOM_CLONENODE_AMBIGUOUS(_elementName, _elementName)
-
-#define NS_IMPL_DOM_CLONENODE_WITH_INIT(_elementName)                       \
+#define NS_IMPL_ELEMENT_CLONE_WITH_INIT(_elementName)                       \
 nsresult                                                                    \
-_elementName::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,                   \
-                    nsIContent **aResult) const                             \
+_elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
 {                                                                           \
   *aResult = nsnull;                                                        \
                                                                             \
@@ -1122,19 +980,14 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,                   \
     return NS_ERROR_OUT_OF_MEMORY;                                          \
   }                                                                         \
                                                                             \
-  nsCOMPtr<nsIContent> kungFuDeathGrip = it;                                \
+  nsCOMPtr<nsINode> kungFuDeathGrip = it;                                   \
   nsresult rv = it->Init();                                                 \
-  rv |= CopyInnerTo(it, aDeep);                                             \
+  rv |= CopyInnerTo(it);                                                    \
   if (NS_SUCCEEDED(rv)) {                                                   \
     kungFuDeathGrip.swap(*aResult);                                         \
   }                                                                         \
                                                                             \
   return rv;                                                                \
-}                                                                           \
-NS_IMETHODIMP                                                               \
-_elementName::CloneNode(PRBool aDeep, nsIDOMNode **aResult)                 \
-{                                                                           \
-  return nsGenericElement::CloneNode(aDeep, this, aResult);                 \
 }
 
 #endif /* nsGenericElement_h___ */

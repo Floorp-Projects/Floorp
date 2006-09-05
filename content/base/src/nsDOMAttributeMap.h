@@ -43,13 +43,11 @@
 #ifndef nsDOMAttributeMap_h___
 #define nsDOMAttributeMap_h___
 
-#include "nsIAtom.h"
 #include "nsIDOMNamedNodeMap.h"
-#include "nsVoidArray.h"
 #include "nsString.h"
-#include "plhash.h"
 #include "nsInterfaceHashtable.h"
 
+class nsIAtom;
 class nsIContent;
 class nsDOMAttribute;
 class nsINodeInfo;

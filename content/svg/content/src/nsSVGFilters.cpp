@@ -219,12 +219,13 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEGaussianBlurElementBase::)
 
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGFEGaussianBlurElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGFEGaussianBlurElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEGaussianBlurElementBase::)
 
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
   virtual NumberAttributesInfo GetNumberInfo();
@@ -289,7 +290,7 @@ nsSVGFEGaussianBlurElement::Init()
 // nsIDOMNode methods
 
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGFEGaussianBlurElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEGaussianBlurElement)
 
 
 //----------------------------------------------------------------------
@@ -653,13 +654,15 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEComponentTransferElementBase::)
 
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGFEComponentTransferElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGFEComponentTransferElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEComponentTransferElementBase::)
 
   // nsIContent
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
 
@@ -712,7 +715,7 @@ nsSVGFEComponentTransferElement::Init()
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGFEComponentTransferElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEComponentTransferElement)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGFEComponentTransferElement methods
@@ -1173,10 +1176,10 @@ public:
   NS_DECL_NSIDOMSVGFEFUNCRELEMENT
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGComponentTransferFunctionElement::)
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGComponentTransferFunctionElement::)
+  NS_FORWARD_NSIDOMNODE(nsSVGComponentTransferFunctionElement::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGComponentTransferFunctionElement::)
 
-protected:
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
 NS_IMPL_ADDREF_INHERITED(nsSVGFEFuncRElement,nsSVGComponentTransferFunctionElement)
@@ -1192,7 +1195,7 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFEFuncRElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGComponentTransferFunctionElement)
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncR)
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGFEFuncRElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEFuncRElement)
 
 
 class nsSVGFEFuncGElement : public nsSVGComponentTransferFunctionElement,
@@ -1213,10 +1216,10 @@ public:
   NS_DECL_NSIDOMSVGFEFUNCGELEMENT
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGComponentTransferFunctionElement::)
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGComponentTransferFunctionElement::)
+  NS_FORWARD_NSIDOMNODE(nsSVGComponentTransferFunctionElement::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGComponentTransferFunctionElement::)
 
-protected:
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
 NS_IMPL_ADDREF_INHERITED(nsSVGFEFuncGElement,nsSVGComponentTransferFunctionElement)
@@ -1232,7 +1235,7 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFEFuncGElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGComponentTransferFunctionElement)
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncG)
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGFEFuncGElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEFuncGElement)
 
 
 class nsSVGFEFuncBElement : public nsSVGComponentTransferFunctionElement,
@@ -1253,10 +1256,10 @@ public:
   NS_DECL_NSIDOMSVGFEFUNCBELEMENT
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGComponentTransferFunctionElement::)
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGComponentTransferFunctionElement::)
+  NS_FORWARD_NSIDOMNODE(nsSVGComponentTransferFunctionElement::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGComponentTransferFunctionElement::)
 
-protected:
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
 NS_IMPL_ADDREF_INHERITED(nsSVGFEFuncBElement,nsSVGComponentTransferFunctionElement)
@@ -1272,7 +1275,7 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFEFuncBElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGComponentTransferFunctionElement)
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncB)
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGFEFuncBElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEFuncBElement)
 
 
 class nsSVGFEFuncAElement : public nsSVGComponentTransferFunctionElement,
@@ -1293,10 +1296,10 @@ public:
   NS_DECL_NSIDOMSVGFEFUNCAELEMENT
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGComponentTransferFunctionElement::)
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGComponentTransferFunctionElement::)
+  NS_FORWARD_NSIDOMNODE(nsSVGComponentTransferFunctionElement::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGComponentTransferFunctionElement::)
 
-protected:
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
 NS_IMPL_ADDREF_INHERITED(nsSVGFEFuncAElement,nsSVGComponentTransferFunctionElement)
@@ -1312,7 +1315,7 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFEFuncAElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGComponentTransferFunctionElement)
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncA)
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGFEFuncAElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEFuncAElement)
 
 //---------------------Merge------------------------
 
@@ -1344,7 +1347,7 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEMergeElementBase::)
 
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGFEMergeElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGFEMergeElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEMergeElementBase::)
 
   // nsIContent
@@ -1352,8 +1355,7 @@ public:
                                  PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
-protected:
-
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEMerge)
@@ -1389,7 +1391,7 @@ nsSVGFEMergeElement::~nsSVGFEMergeElement()
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGFEMergeElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEMergeElement)
 
 NS_IMETHODIMP
 nsSVGFEMergeElement::Filter(nsSVGFilterInstance *instance)
@@ -1552,8 +1554,10 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEMergeNodeElementBase::)
 
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGFEMergeNodeElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGFEMergeNodeElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEMergeNodeElementBase::)
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
   nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
@@ -1603,7 +1607,7 @@ nsSVGFEMergeNodeElement::Init()
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGFEMergeNodeElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEMergeNodeElement)
 
 NS_IMETHODIMP
 nsSVGFEMergeNodeElement::WillModifySVGObservable(nsISVGValue* observable,
@@ -1679,8 +1683,10 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEOffsetElementBase::)
 
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGFEOffsetElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGFEOffsetElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEOffsetElementBase::)
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
   virtual NumberAttributesInfo GetNumberInfo();
@@ -1744,7 +1750,7 @@ nsSVGFEOffsetElement::Init()
 // nsIDOMNode methods
 
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGFEOffsetElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEOffsetElement)
 
 
 //----------------------------------------------------------------------
@@ -1896,11 +1902,10 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEUnimplementedMOZElementBase::)
 
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGFEUnimplementedMOZElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGFEUnimplementedMOZElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEUnimplementedMOZElementBase::)
 
-protected:
-
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEUnimplementedMOZ)
@@ -1936,7 +1941,7 @@ nsSVGFEUnimplementedMOZElement::~nsSVGFEUnimplementedMOZElement()
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGFEUnimplementedMOZElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEUnimplementedMOZElement)
 
 NS_IMETHODIMP
 nsSVGFEUnimplementedMOZElement::Filter(nsSVGFilterInstance *instance)

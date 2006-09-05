@@ -44,8 +44,6 @@
 #include "nsLayoutAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
-#include "nsContentUtils.h"
-
 
 class nsCommentNode : public nsGenericDOMDataNode,
                       public nsIDOMComment
@@ -164,7 +162,7 @@ nsCommentNode::GetNodeType(PRUint16* aNodeType)
 }
 
 nsGenericDOMDataNode*
-nsCommentNode::Clone(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
+nsCommentNode::CloneDataNode(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
 {
   nsCommentNode *it = new nsCommentNode(aNodeInfo);
   if (it && aCloneText) {

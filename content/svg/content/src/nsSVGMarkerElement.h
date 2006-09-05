@@ -64,7 +64,7 @@ public:
   NS_DECL_NSIDOMSVGFITTOVIEWBOX
 
   // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGElement::)
+  NS_FORWARD_NSIDOMNODE(nsSVGElement::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGElement::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGElement::)
 
@@ -87,6 +87,8 @@ public:
                               float aX, float aY, float aAngle,
                               nsIDOMSVGMatrix **_retval);
   nsresult GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
 

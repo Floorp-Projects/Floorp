@@ -80,12 +80,14 @@ public:
   // Mutation Observer
   NS_DECL_NSIMUTATIONOBSERVER
 
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGElement::)
+  NS_FORWARD_NSIDOMNODE(nsSVGElement::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGElement::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGElement::)
 
   // nsIContent interface
   NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
 

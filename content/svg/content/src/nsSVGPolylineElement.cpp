@@ -56,10 +56,12 @@ public:
   NS_DECL_NSIDOMSVGPOLYLINEELEMENT
 
   // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGPolylineElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGPolylineElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGPolylineElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGPolylineElementBase::)
 
+  // nsIContent interface
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Polyline)
@@ -90,5 +92,4 @@ nsSVGPolylineElement::nsSVGPolylineElement(nsINodeInfo* aNodeInfo)
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGPolylineElement)
-
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGPolylineElement)

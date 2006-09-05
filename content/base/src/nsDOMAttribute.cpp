@@ -372,46 +372,26 @@ nsDOMAttribute::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsDOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
+nsresult
+nsDOMAttribute::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
-  *aReturn = nsnull;
-
   nsAutoString value;
-  GetValue(value);
+  NS_CONST_CAST(nsDOMAttribute*, this)->GetValue(value);
 
-  nsCOMPtr<nsIDOMNode> newAttr = new nsDOMAttribute(nsnull, mNodeInfo, value);
-  if (!newAttr) {
+  *aResult = new nsDOMAttribute(nsnull, aNodeInfo, value);
+  if (!*aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsIDocument *document = GetOwnerDoc();
-  if (document) {
-    // XXX For now, nsDOMAttribute has only one child. We need to notify about
-    //     cloning it, so we force creation here.
-    nsCOMPtr<nsIDOMNode> child;
-    GetFirstChild(getter_AddRefs(child));
-    nsCOMPtr<nsINode> childNode = do_QueryInterface(child);
-    if (childNode && childNode->HasProperties()) {
-      nsCOMPtr<nsIDOMNode> newChild;
-      newAttr->GetFirstChild(getter_AddRefs(newChild));
-      if (newChild) {
-        nsContentUtils::CallUserDataHandler(document,
-                                            nsIDOMUserDataHandler::NODE_CLONED,
-                                            childNode, child, newChild);
-      }
-    }
-
-    if (HasProperties()) {
-      nsContentUtils::CallUserDataHandler(document,
-                                          nsIDOMUserDataHandler::NODE_CLONED,
-                                          this, this, newAttr);
-    }
-  }
-
-  newAttr.swap(*aReturn);
+  NS_ADDREF(*aResult);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aResult)
+{
+  return nsNodeUtils::CloneNodeImpl(this, aDeep, aResult);
 }
 
 NS_IMETHODIMP

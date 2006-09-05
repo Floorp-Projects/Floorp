@@ -63,9 +63,11 @@ public:
   // Mask Element
   NS_DECL_NSIDOMSVGMASKELEMENT
 
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGElement::)
+  NS_FORWARD_NSIDOMNODE(nsSVGElement::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGElement::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGElement::)
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
 

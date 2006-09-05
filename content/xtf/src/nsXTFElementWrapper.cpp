@@ -492,8 +492,7 @@ nsXTFElementWrapper::IntrinsicState() const
 }
 
 nsresult
-nsXTFElementWrapper::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
-                           nsIContent **aResult) const
+nsXTFElementWrapper::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nsnull;
   nsCOMPtr<nsIContent> it;
@@ -505,7 +504,7 @@ nsXTFElementWrapper::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
   nsXTFElementWrapper* wrapper =
     NS_STATIC_CAST(nsXTFElementWrapper*,
                    NS_STATIC_CAST(nsIContent*, it.get()));
-  nsresult rv = CopyInnerTo(wrapper, aDeep);
+  nsresult rv = CopyInnerTo(wrapper);
 
   if (NS_SUCCEEDED(rv)) {
     if (mAttributeHandler) {
@@ -521,7 +520,7 @@ nsXTFElementWrapper::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
         }
       }
     }
-    it.swap(*aResult);
+    NS_ADDREF(*aResult = it);
   }
 
   // XXX CloneState should take |const nIDOMElement*|

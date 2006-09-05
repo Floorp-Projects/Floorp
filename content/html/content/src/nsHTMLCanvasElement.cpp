@@ -74,7 +74,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
@@ -111,6 +111,8 @@ public:
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
 protected:
   nsIntSize GetWidthHeight();
   nsresult UpdateContext();
@@ -158,7 +160,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLCanvasElement, nsGenericElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLCanvasElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
-NS_IMPL_DOM_CLONENODE(nsHTMLCanvasElement)
+NS_IMPL_ELEMENT_CLONE(nsHTMLCanvasElement)
 
 nsIntSize
 nsHTMLCanvasElement::GetWidthHeight()

@@ -60,7 +60,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLFormElement::)
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLFormElement::)
 
   // nsIDOMElement
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
@@ -106,6 +106,8 @@ public:
 
   // nsObjectLoadingContent
   virtual PRUint32 GetCapabilities() const;
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 private:
   /**
@@ -168,7 +170,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLObjectElement,
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLObjectElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
-NS_IMPL_DOM_CLONENODE(nsHTMLObjectElement)
+NS_IMPL_ELEMENT_CLONE(nsHTMLObjectElement)
 
 
 NS_IMETHODIMP

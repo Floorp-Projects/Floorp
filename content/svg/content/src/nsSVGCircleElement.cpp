@@ -58,12 +58,14 @@ public:
   NS_DECL_NSIDOMSVGCIRCLEELEMENT
 
   // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGCircleElementBase::)
+  NS_FORWARD_NSIDOMNODE(nsSVGCircleElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGCircleElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGCircleElementBase::)
 
   // nsSVGPathGeometryElement methods:
   virtual void ConstructPath(cairo_t *aCtx);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
 
@@ -108,7 +110,7 @@ nsSVGCircleElement::nsSVGCircleElement(nsINodeInfo *aNodeInfo)
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGCircleElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGCircleElement)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGCircleElement methods
