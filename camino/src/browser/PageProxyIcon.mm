@@ -72,9 +72,12 @@
   [cursor setOnMouseEntered:YES];
 }
 
-- (unsigned int)draggingSourceOperationMaskForLocal:(BOOL)flag
+- (unsigned int)draggingSourceOperationMaskForLocal:(BOOL)isLocal
 {
-  return NSDragOperationGeneric;
+  if (isLocal)
+    return NSDragOperationGeneric;
+  else
+    return NSDragOperationCopy;
 }
 
 - (void)mouseDown:(NSEvent *)theEvent
