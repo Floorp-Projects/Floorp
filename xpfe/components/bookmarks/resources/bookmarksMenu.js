@@ -473,6 +473,17 @@ var BookmarksMenuDNDObserver = {
   canDrop: function (aEvent, aDragSession)
   {
     var target = aEvent.target;
+
+    if (aDragSession) { // this function gets its API abused by onDragStart
+      var orientation = BookmarksMenu.getBTOrientation(aEvent, target);
+      if (target == aDragSession.sourceNode ||
+          (target == aDragSession.sourceNode.previousSibling &&
+           orientation == BookmarksUtils.DROP_AFTER) ||
+          (target == aDragSession.sourceNode.nextSibling &&
+           orientation == BookmarksUtils.DROP_BEFORE))
+        return false;
+    }
+
     return BookmarksMenu.isBTBookmark(target.id)       && 
            target.id != "NC:SystemBookmarksStaticRoot" &&
            target.id.substring(0,5) != "find:"         ||
