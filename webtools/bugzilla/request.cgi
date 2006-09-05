@@ -41,10 +41,7 @@ use Bugzilla::Component;
 
 # Make sure the user is logged in.
 my $user = Bugzilla->login();
-
 my $cgi = Bugzilla->cgi;
-local our $vars = {};
-
 
 ################################################################################
 # Main Body Execution
@@ -71,10 +68,12 @@ exit;
 
 sub queue {
     my $cgi = Bugzilla->cgi;
+    # There are some user privilege checks to do. We do them against the main DB.
     my $dbh = Bugzilla->dbh;
     my $template = Bugzilla->template;
     my $user = Bugzilla->user;
     my $userid = $user->id;
+    my $vars = {};
 
     my $status = validateStatus($cgi->param('status'));
     my $form_group = validateGroup($cgi->param('group'));
@@ -140,8 +139,10 @@ sub queue {
     $query .= " AND flags.status = '?' " unless $status;
 
     # The set of criteria by which we filter records to display in the queue.
+    # We now move to the shadow DB to query the DB.
     my @criteria = ();
-    
+    $dbh = Bugzilla->switch_to_shadow_db;
+
     # A list of columns to exclude from the report because the report conditions
     # limit the data being displayed to exact matches for those columns.
     # In other words, if we are only displaying "pending" , we don't
@@ -278,7 +279,10 @@ sub queue {
     my $flagtypes = $dbh->selectcol_arrayref(
                          "SELECT DISTINCT(name) FROM flagtypes ORDER BY name");
     push(@types, @$flagtypes);
-    
+
+    # We move back to the main DB to get the list of products the user can see.
+    $dbh = Bugzilla->switch_to_main_db;
+
     $vars->{'products'} = $user->get_selectable_products;
     $vars->{'excluded_columns'} = \@excluded_columns;
     $vars->{'group_field'} = $form_group;
@@ -286,7 +290,7 @@ sub queue {
     $vars->{'types'} = \@types;
 
     # Return the appropriate HTTP response headers.
-    print Bugzilla->cgi->header();
+    print $cgi->header();
 
     # Generate and return the UI (HTML page) from the appropriate template.
     $template->process("request/queue.html.tmpl", $vars)
