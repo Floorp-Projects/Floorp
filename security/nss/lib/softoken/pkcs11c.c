@@ -2157,12 +2157,17 @@ RSA_HashCheckSign(SECOidTag hashOid, NSSLOWKEYPublicKey *key,
     if (SECOID_GetAlgorithmTag(&di->digestAlgorithm) != hashOid) {
 	goto loser;
     }
+    /* make sure the "parameters" are not too bogus. */
+    if (di->digestAlgorithm.parameters.len > 2) {
+	goto loser;
+    }
     /* Now check the signature */
     if (PORT_Memcmp(digest, di->digest.data, di->digest.len) == 0) {
 	goto done;
     }
 
   loser:
+    PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
     rv = SECFailure;
 
   done:

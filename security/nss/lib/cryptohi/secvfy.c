@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: secvfy.c,v 1.18 2006/05/31 23:54:51 wtchang%redhat.com Exp $ */
+/* $Id: secvfy.c,v 1.19 2006/09/05 09:45:46 nelson%bolyard.com Exp $ */
 
 #include <stdio.h>
 #include "cryptohi.h"
@@ -85,7 +85,14 @@ DecryptSigBlock(SECOidTag *tagp, unsigned char *digest, unsigned int len,
     ** ID and the signature block
     */
     tag = SECOID_GetAlgorithmTag(&di->digestAlgorithm);
-    /* XXX Check that tag is an appropriate algorithm? */
+    /* Check that tag is an appropriate algorithm */
+    if (tag == SEC_OID_UNKNOWN) {
+	goto sigloser;
+    }
+    /* make sure the "parameters" are not too bogus. */
+    if (di->digestAlgorithm.parameters.len > 2) {
+	goto sigloser;
+    }
     if (di->digest.len > len) {
 	PORT_SetError(SEC_ERROR_OUTPUT_LEN);
 	goto loser;
