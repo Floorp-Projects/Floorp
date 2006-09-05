@@ -268,7 +268,7 @@ function hasNextSibling(row, afterIndex)
 agendaTreeView.findPeriodForItem =
 function findPeriodForItem(item)
 {
-    var start = item.startDate || item.dueDate;
+    var start = item.startDate || item.entryDate || item.dueDate;
     if (!start) 
         return null;
     if (start.compare(this.today.end) == -1)

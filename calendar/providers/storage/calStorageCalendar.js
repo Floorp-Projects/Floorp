@@ -699,6 +699,8 @@ calStorageCalendar.prototype = {
             // to fall within the range
             sp = this.mSelectTodosByRange.params;
             sp.cal_id = this.mCalId;
+            sp.range_start = startTime;
+            sp.end_offset = aRangeStart ? aRangeStart.timezoneOffset * USECS_PER_SECOND : 0;
             sp.range_end = endTime;
             sp.end_offset = aRangeEnd ? aRangeEnd.timezoneOffset * USECS_PER_SECOND : 0;
 
@@ -1049,15 +1051,21 @@ calStorageCalendar.prototype = {
             "  AND cal_id = :cal_id AND recurrence_id IS NULL"
             );
 
-        var floatingTodoEntry = "todo_entry_tz = 'floating' AND todo_entry"
-        var nonFloatingTodoEntry = "todo_entry_tz != 'floating' AND todo_entry"
+        var floatingTodoEntry = "todo_entry_tz = 'floating' AND todo_entry";
+        var nonFloatingTodoEntry = "todo_entry_tz != 'floating' AND todo_entry";
+        var floatingTodoDue = "todo_due_tz = 'floating' AND todo_due";
+        var nonFloatingTodoDue = "todo_due_tz != 'floating' AND todo_due";
+
         this.mSelectTodosByRange = createStatement(
             this.mDB,
             "SELECT * FROM cal_todos " +
             "WHERE " +
-            " ((("+floatingTodoEntry+" < :range_end + :end_offset) OR " +
-            "   ("+nonFloatingTodoEntry+" < :range_end)) " +
-            "  OR (todo_entry IS NULL)) " +
+            " (("+floatingTodoDue+" >= :range_start + :start_offset) OR " +
+            "  ("+nonFloatingTodoDue+" >= :range_start)) OR " +
+            "   (todo_due IS NULL) AND " +
+            " (("+floatingTodoEntry+" < :range_end + :end_offset) OR " +
+            "  ("+nonFloatingTodoEntry+" < :range_end)) OR " +
+            "   (todo_entry IS NULL) " +
             " AND cal_id = :cal_id AND recurrence_id IS NULL"
             );
 
