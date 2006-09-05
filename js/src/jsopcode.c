@@ -1300,6 +1300,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 sn = js_GetSrcNote(jp->script, pc);
                 switch (sn ? SN_TYPE(sn) : SRC_NULL) {
                   case SRC_FOR:
+                    /* Force parens around 'in' expression at 'for' front. */
+                    if (ss->opcodes[ss->top-1] == JSOP_IN)
+                        op = JSOP_LSH;
                     rval = POP_STR();
                     todo = -2;
                     goto do_forloop;
