@@ -178,7 +178,7 @@ nsresult nsBMPDecoder::WriteRLERows(PRUint32 rows)
     for (cnt = 0; cnt < rows; cnt++) {
         line = (mBIH.height < 0) ? (-mBIH.height - mCurLine--) : --mCurLine;
 #ifndef MOZ_CAIRO_GFX
-        rv = mFrame->SetAlphaData(mAlpha, alpha, line * abpr);
+        rv = mFrame->SetAlphaData(mAlpha, abpr, line * abpr);
         NS_ENSURE_SUCCESS(rv, rv);
 #endif
         rv = mFrame->SetImageData(mDecoded, mBpr, line * mBpr);
