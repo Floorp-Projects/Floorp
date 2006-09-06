@@ -116,7 +116,7 @@ function monthPrint_format(aStream, aStart, aEnd, aCount, aItems, aTitle) {
         firstDate.day -= 7;
         firstDate.normalize();
     }
-    if (firstDate.compare(aStart) != 1) {
+    if (firstDate.compare(start) != 1) {
         start = maybeNewStart;
     }
 
@@ -136,7 +136,7 @@ function monthPrint_format(aStream, aStart, aEnd, aCount, aItems, aTitle) {
     // aEnd is exclusive, so we can add another day and be safe
     lastDate.day += 1;
     lastDate.normalize();
-    if (lastDate.compare(aEnd) != -1) {
+    if (lastDate.compare(end) != -1) {
         end = maybeNewEnd;
     }
 
@@ -146,7 +146,7 @@ function monthPrint_format(aStream, aStart, aEnd, aCount, aItems, aTitle) {
 
     var body = <body/>
 
-    while (date.month <= aEnd.month) {
+    while (date.month <= end.month) {
         var monthName = calGetString("dateFormat", "month." + (date.month +1)+ ".name");
         monthName += " " + start.year;
         body.appendChild(

@@ -54,6 +54,10 @@ function loadCalendarPrintDialog()
     document.getElementById("start-date-picker").value = theView.startDay.jsDate;
     document.getElementById("end-date-picker").value = theView.endDay.jsDate;
 
+    if (!gCalendarWindow.EventSelection.selectedEvents.length) {
+        document.getElementById("selected").setAttribute("disabled", true);
+    }
+
     // Get a list of formatters
     var contractids = new Array();
     var catman = Components.classes["@mozilla.org/categorymanager;1"]
