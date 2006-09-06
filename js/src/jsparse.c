@@ -3640,10 +3640,11 @@ Expr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn = pn2;
         do {
 #if JS_HAS_GENERATORS
-            if (PN_LAST(pn)->pn_type == TOK_YIELD) {
-                js_ReportCompileErrorNumber(cx, ts,
-                                            JSREPORT_TS | JSREPORT_ERROR,
-                                            JSMSG_SYNTAX_ERROR);
+            pn2 = PN_LAST(pn);
+            if (pn2->pn_type == TOK_YIELD) {
+                js_ReportCompileErrorNumber(cx, pn2,
+                                            JSREPORT_PN | JSREPORT_ERROR,
+                                            JSMSG_BAD_YIELD_SYNTAX);
                 return NULL;
             }
 #endif
@@ -4121,6 +4122,14 @@ ArgumentList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             JSParseNode *argNode = AssignExpr(cx, ts, tc);
             if (!argNode)
                 return JS_FALSE;
+#if JS_HAS_GENERATORS
+            if (argNode->pn_type == TOK_YIELD) {
+                js_ReportCompileErrorNumber(cx, argNode,
+                                            JSREPORT_PN | JSREPORT_ERROR,
+                                            JSMSG_BAD_YIELD_SYNTAX);
+                return NULL;
+            }
+#endif
             PN_APPEND(listNode, argNode);
         } while (js_MatchToken(cx, ts, TOK_COMMA));
 
