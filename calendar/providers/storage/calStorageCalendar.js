@@ -1253,7 +1253,7 @@ calStorageCalendar.prototype = {
                 "DELETE FROM " + extrasTables[table] + " WHERE item_id IN" +
                 "  (SELECT id FROM cal_events WHERE cal_id = :cal_id)"
                 );
-            this.mDeleteTodoExtras[eTable] = createStatement (
+            this.mDeleteTodoExtras[table] = createStatement (
                 this.mDB,
                 "DELETE FROM " + extrasTables[table] + " WHERE item_id IN" +
                 "  (SELECT id FROM cal_todos WHERE cal_id = :cal_id)"
