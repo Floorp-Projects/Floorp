@@ -930,7 +930,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     jsbytecode *endpc, *pc2, *done, *forelem_tail, *forelem_done;
     ptrdiff_t tail, todo, len, oplen, cond, next;
     JSOp op, lastop, saveop;
-    const JSCodeSpec *cs, *topcs;
+    const JSCodeSpec *cs;
     jssrcnote *sn, *sn2;
     const char *lval, *rval, *xval, *fmt;
     jsint i, argc;
@@ -1019,7 +1019,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     forelem_tail = forelem_done = NULL;
     tail = -1;
     todo = -2;                  /* NB: different from Sprint() error return. */
-    op = JSOP_NOP;
+    saveop = JSOP_NOP;
     sn = NULL;
     rval = NULL;
 #if JS_HAS_XML_SUPPORT
@@ -1027,7 +1027,14 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #endif
 
     while (pc < endpc) {
-        lastop = op;
+        /*
+         * Move saveop to lastop so prefixed bytecodes can take special action
+         * while sharing maximal code.  Set op and saveop to the new bytecode,
+         * use op in POP_STR to trigger automatic parenthesization, but push
+         * saveop at the bottom of the loop if this op pushes.  Thus op may be
+         * set to nop or otherwise mutated to suppress auto-parens.
+         */
+        lastop = saveop;
         op = saveop = (JSOp) *pc;
         if (op >= JSOP_LIMIT) {
             switch (op) {
@@ -1046,12 +1053,22 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
         if (cs->token) {
             switch (cs->nuses) {
               case 2:
-                rval = POP_STR();
-                lval = POP_STR();
                 sn = js_GetSrcNote(jp->script, pc);
                 if (sn && SN_TYPE(sn) == SRC_ASSIGNOP) {
+                    /*
+                     * Avoid over-parenthesizing y in x op= y based on its
+                     * expansion: x = x op y (replace y by z = w to see the
+                     * problem).
+                     */
+                    op = pc[1];
+                    JS_ASSERT(op != saveop);
+                }
+                rval = POP_STR();
+                lval = POP_STR();
+                if (op != saveop) {
                     /* Print only the right operand of the assignment-op. */
                     todo = SprintCString(&ss->sprinter, rval);
+                    op = saveop;
                 } else if (!inXML) {
                     todo = Sprint(&ss->sprinter, "%s %s %s",
                                   lval, cs->token, rval);
@@ -1205,16 +1222,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_GROUP:
-                /* Use last real op so PopOff adds parens if needed. */
-                todo = PopOff(ss, lastop);
-
-                /* Now add user-supplied parens only if PopOff did not. */
-                cs    = &js_CodeSpec[lastop];
-                topcs = &js_CodeSpec[ss->opcodes[ss->top]];
-                if (topcs->prec >= cs->prec) {
-                    todo = Sprint(&ss->sprinter, "(%s)",
-                                  OFF2STR(&ss->sprinter, todo));
-                }
+                /*
+                 * Don't explicitly parenthesize -- just fix the top opcode so
+                 * that the auto-parens magic in PopOff can do its thing.
+                 */
+                LOCAL_ASSERT(ss->top != 0);
+                ss->opcodes[ss->top-1] = lastop;
+                todo = -2;
                 break;
 
               case JSOP_STARTITER:
@@ -1308,6 +1322,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_POP:
+                /*
+                 * By default, do not automatically parenthesize when popping
+                 * a stacked expression decompilation.  We auto-parenthesize
+                 * only when JSOP_POP is annotated with SRC_PCDELTA, meaning
+                 * comma operator.
+                 */
+                op = JSOP_POPV;
+                /* FALL THROUGH */
+
               case JSOP_POPV:
                 sn = js_GetSrcNote(jp->script, pc);
                 switch (sn ? SN_TYPE(sn) : SRC_NULL) {
@@ -1320,6 +1343,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     goto do_forloop;
 
                   case SRC_PCDELTA:
+                    /* Comma operator: use JSOP_POP for correct precedence. */
+                    op = JSOP_POP;
+
                     /* Pop and save to avoid blowing stack depth budget. */
                     lval = JS_strdup(cx, POP_STR());
                     if (!lval)
@@ -1606,8 +1632,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 goto do_forlvalinloop;
 
               case JSOP_SETRVAL:
-                op = JSOP_RETURN;
-                /* FALL THROUGH */
               case JSOP_RETURN:
                 rval = POP_STR();
                 if (*rval != '\0')
@@ -2014,7 +2038,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_DUP:
                 rval = OFF2STR(&ss->sprinter, ss->offsets[ss->top-1]);
-                op = ss->opcodes[ss->top-1];
+                saveop = ss->opcodes[ss->top-1];
                 todo = SprintCString(&ss->sprinter, rval);
                 break;
 
@@ -2062,7 +2086,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #if JS_HAS_LVALUE_RETURN
               case JSOP_SETCALL:
 #endif
-                saveop = op;
                 op = JSOP_NOP;           /* turn off parens */
                 argc = GET_ARGC(pc);
                 argv = (char **)
@@ -2084,15 +2107,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 (void) PopOff(ss, op);
 
                 /* Get the callee's decompiled image in argv[0]. */
-                if (saveop == JSOP_NEW)
-                    op = saveop;
+                op = saveop;
                 argv[0] = JS_strdup(cx, POP_STR());
-                op = JSOP_NOP;
                 if (!argv[i])
                     ok = JS_FALSE;
 
                 lval = "(", rval = ")";
-                if (saveop == JSOP_NEW) {
+                if (op == JSOP_NEW) {
+                    if (argc == 0)
+                        lval = rval = "";
                     todo = Sprint(&ss->sprinter, "%s %s%s",
                                   js_new_str, argv[0], lval);
                 } else {
@@ -2120,7 +2143,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 JS_free(cx, argv);
                 if (!ok)
                     return JS_FALSE;
-                op = saveop;
 #if JS_HAS_LVALUE_RETURN
                 if (op == JSOP_SETCALL) {
                     if (!PushOff(ss, todo, op))
@@ -2361,7 +2383,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_GETXELEM:
                 op = JSOP_NOP;           /* turn off parens */
                 xval = POP_STR();
-                op = JSOP_GETELEM;
+                op = saveop;
                 lval = POP_STR();
                 if (*xval == '\0') {
                     todo = Sprint(&ss->sprinter, "%s", lval);
@@ -2378,7 +2400,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 op = JSOP_NOP;           /* turn off parens */
                 rval = POP_STR();
                 xval = POP_STR();
-                op = JSOP_SETELEM;
+                op = saveop;
                 lval = POP_STR();
                 if (*xval == '\0')
                     goto do_setlval;
@@ -2455,7 +2477,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_LITOPX:
                 atomIndex = GET_LITERAL_INDEX(pc);
                 pc2 = pc + 1 + LITERAL_INDEX_LEN;
-                op = *pc2;
+                op = saveop = *pc2;
                 pc += len - (1 + ATOM_INDEX_LEN);
                 cs = &js_CodeSpec[op];
                 len = cs->length;
@@ -2804,6 +2826,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 op = JS_GetTrapOpcode(cx, jp->script, pc);
                 if (op == JSOP_LIMIT)
                     return JS_FALSE;
+                saveop = op;
                 *pc = op;
                 cs = &js_CodeSpec[op];
                 len = cs->length;
@@ -2836,7 +2859,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     if (SprintCString(&ss->sprinter, "{") < 0)
                         return JS_FALSE;
                 }
-                op = JSOP_NEWINIT;      /* mark the stack with this op */
                 break;
 
               case JSOP_ENDINIT:
@@ -2950,6 +2972,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               BEGIN_LITOPX_CASE(JSOP_QNAMEPART)
                 if (pc[JSOP_QNAMEPART_LENGTH] == JSOP_TOATTRNAME) {
+                    saveop = JSOP_TOATTRNAME;
                     len += JSOP_TOATTRNAME_LENGTH;
                     lval = "@";
                     goto do_qname;
@@ -3105,7 +3128,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
             if (todo == -1)
                 return JS_FALSE;
         } else {
-            if (!PushOff(ss, todo, op))
+            if (!PushOff(ss, todo, saveop))
                 return JS_FALSE;
         }
         pc += len;
