@@ -61,6 +61,10 @@
 
 #define NUM_ELEM(array) (sizeof(array)/sizeof(array[0]))
 
+#ifndef NULL_PTR
+#define NULL_PTR 0
+#endif
+
 struct tuple_str {
     CK_RV         errNum;
     const char * errString;
@@ -307,10 +311,9 @@ static int number_of_all_known_attribute_types =
 (sizeof(all_known_attribute_types)/sizeof(all_known_attribute_types[0]));
 
 #define MAX_SIG_SZ 128
-#define DIGESTLEN       64
 #define MAX_CIPHER_SZ 128
 #define MAX_DATA_SZ 64
-#define MAX_DIGEST_LEN 64
+#define MAX_DIGEST_SZ 64
 #define HMAC_MAX_LENGTH 64
 #define FIPSMODE 0
 #define NONFIPSMODE 1
@@ -372,7 +375,7 @@ static const char * tokenFlagName[] = {
     "unknown token flag 0x00001000",
     "unknown token flag 0x00002000",
     "unknown token flag 0x00004000",
-    "CKF_THREAD_SAFE (nonstandard 0x00008000)",
+    "unknown token flag 0x00008000",
     "CKF_USER_PIN_COUNT_LOW",
     "CKF_USER_PIN_FINAL_TRY",
     "CKF_USER_PIN_LOCKED",
@@ -453,19 +456,16 @@ CK_RV PKM_SessionLogin(CK_FUNCTION_LIST_PTR pFunctionList,
                        CK_UTF8CHAR_PTR pwd, CK_ULONG pwdLen);
 CK_RV PKM_SecretKey(CK_FUNCTION_LIST_PTR pFunctionList, CK_SLOT_ID *pSlotList,
                     CK_ULONG slotID, CK_UTF8CHAR_PTR pwd, CK_ULONG pwdLen);
-CK_RV PKM_DualFuncDigest(CK_FUNCTION_LIST_PTR pFunctionList,
-                         CK_SLOT_ID * pSlotList, CK_ULONG slotID,
-                         CK_UTF8CHAR_PTR pwd, CK_ULONG pwdLen);
 CK_RV PKM_PublicKey(CK_FUNCTION_LIST_PTR pFunctionList, CK_SLOT_ID *pSlotList,
                     CK_ULONG slotID, CK_UTF8CHAR_PTR pwd, CK_ULONG pwdLen);
 CK_RV PKM_HybridMode(CK_UTF8CHAR_PTR pwd, CK_ULONG pwdLen);
-CK_RV PKM_FindAllObjects (CK_FUNCTION_LIST_PTR pFunctionList,
+CK_RV PKM_FindAllObjects(CK_FUNCTION_LIST_PTR pFunctionList,
                           CK_SLOT_ID * pSlotList, CK_ULONG slotID,
                           CK_UTF8CHAR_PTR pwd, CK_ULONG pwdLen);
-CK_RV PKM_MultiObjectManagement (CK_FUNCTION_LIST_PTR pFunctionList,
+CK_RV PKM_MultiObjectManagement(CK_FUNCTION_LIST_PTR pFunctionList,
                                  CK_SLOT_ID * pSlotList, CK_ULONG slotID,
                                  CK_UTF8CHAR_PTR pwd, CK_ULONG pwdLen);
-CK_RV PKM_OperationalState (CK_FUNCTION_LIST_PTR pFunctionList,
+CK_RV PKM_OperationalState(CK_FUNCTION_LIST_PTR pFunctionList,
                             CK_SLOT_ID * pSlotList, CK_ULONG slotID,
                             CK_UTF8CHAR_PTR pwd, CK_ULONG pwdLen);
 CK_RV PKM_LegacyFunctions(CK_FUNCTION_LIST_PTR pFunctionList,
@@ -502,22 +502,28 @@ CK_RV PKM_DualFuncSign(CK_FUNCTION_LIST_PTR pFunctionList,
                       CK_OBJECT_HANDLE publicKey, CK_OBJECT_HANDLE privateKey,
                       CK_MECHANISM *sigMech, CK_OBJECT_HANDLE secretKey,
                       CK_MECHANISM *cryptMech, 
-                      CK_BYTE *pData, CK_ULONG pDataLen);
+                      const CK_BYTE *  pData, CK_ULONG pDataLen);
+CK_RV PKM_DualFuncDigest(CK_FUNCTION_LIST_PTR pFunctionList,
+                       CK_SESSION_HANDLE hSession,
+                       CK_OBJECT_HANDLE hSecKey, CK_MECHANISM *cryptMech,
+                       CK_OBJECT_HANDLE hSecKeyDigest, 
+                       CK_MECHANISM *digestMech, 
+                       const CK_BYTE *  pData, CK_ULONG pDataLen); 
 CK_RV PKM_PubKeySign(CK_FUNCTION_LIST_PTR pFunctionList, 
                      CK_SESSION_HANDLE hRwSession,
                      CK_OBJECT_HANDLE hPubKey, CK_OBJECT_HANDLE hPrivKey,
-                     CK_MECHANISM *signMech, CK_BYTE *pData, CK_ULONG dataLen);
+                     CK_MECHANISM *signMech, const CK_BYTE *  pData, CK_ULONG dataLen);
 CK_RV PKM_SecKeyCrypt(CK_FUNCTION_LIST_PTR pFunctionList, 
                       CK_SESSION_HANDLE hSession,
                       CK_OBJECT_HANDLE hSymKey, CK_MECHANISM *cryptMech,
-                      CK_BYTE *pData, CK_ULONG dataLen);
+                      const CK_BYTE *  pData, CK_ULONG dataLen);
 CK_RV PKM_Hmac(CK_FUNCTION_LIST_PTR pFunctionList, CK_SESSION_HANDLE hSession,
                 CK_OBJECT_HANDLE sKey, CK_MECHANISM *hmacMech, 
-                CK_BYTE *pData, CK_ULONG pDataLen);
+                const CK_BYTE *  pData, CK_ULONG pDataLen);
 CK_RV PKM_Digest(CK_FUNCTION_LIST_PTR pFunctionList, 
                  CK_SESSION_HANDLE hRwSession,
                  CK_MECHANISM *digestMech, CK_OBJECT_HANDLE hSecretKey,
-                 CK_BYTE *pData, CK_ULONG pDataLen);
+                 const CK_BYTE *  pData, CK_ULONG pDataLen);
 
 int main(int argc, char **argv)
 {
@@ -530,11 +536,13 @@ int main(int argc, char **argv)
     CK_TOKEN_INFO tokenInfo;
     CK_ULONG slotID;
 
+    slotID = 0;
     if (argc == 2) {
         if (strcmp(argv[1], "FIPS") == 0) {
             MODE = FIPSMODE;
         } else {
             MODE = NONFIPSMODE;
+            slotID = 1;
         }
     } else MODE = FIPSMODE;
 
@@ -548,7 +556,6 @@ int main(int argc, char **argv)
         /* FIPS mode == FC_GetFunctionList */
         pC_GetFunctionList = (CK_C_GetFunctionList)
                              GetProcAddress(hModule, "FC_GetFunctionList");
-        slotID = 0;
         PKM_LogIt("loading FC_GetFunctionList for FIPS Mode; slotID %d \n",
                   slotID);
         PKM_LogIt("pFunctionList->C_Foo == pFunctionList->FC_Foo\n");
@@ -557,7 +564,6 @@ int main(int argc, char **argv)
         /* NON FIPS mode  == C_GetFunctionList */
         pC_GetFunctionList = (CK_C_GetFunctionList)
                              GetProcAddress(hModule, "C_GetFunctionList");
-        slotID = 1;
         PKM_LogIt("loading C_GetFunctionList for Non FIPS Mode; slotID %d \n",
                   slotID);
     }
@@ -566,14 +572,15 @@ int main(int argc, char **argv)
         exit(1);
     }
 #else
-    char *libname;
+    {
+    char *libname = NULL;
     /* Get the platform-dependent library name of the NSS cryptographic module */
     libname = PR_GetLibraryName(NULL, "softokn3");
     assert(libname != NULL);
     lib = PR_LoadLibrary(libname);
     assert(lib != NULL);
     PR_FreeLibraryName(libname);
-    
+    } 
     if (MODE == FIPSMODE) {
         pC_GetFunctionList = (CK_C_GetFunctionList) PR_FindFunctionSymbol(lib,
         "FC_GetFunctionList");
@@ -644,7 +651,7 @@ int main(int argc, char **argv)
         PKM_LogIt("using existing DB\n");
     }
 
-    /* general mechanism by token  
+    /* general mechanism by token */ 
     crv = PKM_Mechanism(pFunctionList, pSlotList, slotID);
     if (crv == CKR_OK) {
         PKM_LogIt("PKM_Mechanism succeeded\n");
@@ -652,7 +659,7 @@ int main(int argc, char **argv)
         PKM_Error( "PKM_Mechanism failed with 0x%08X, %-26s\n", crv, 
                    PKM_CK_RVtoStr(crv));
         exit(1);
-    } */
+    } 
     /* RNG example without Login */
     crv = PKM_RNG(pFunctionList, pSlotList, slotID);
     if (crv == CKR_OK) {
@@ -673,15 +680,6 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    crv = PKM_DualFuncDigest(pFunctionList, pSlotList, slotID,
-                         pwd, sizeof(pwd));
-    if (crv == CKR_OK) {
-        PKM_LogIt("PKM_DualFuncDigest succeeded\n");
-    } else {
-        PKM_Error( "PKM_DualFuncDigest failed with 0x%08X, %-26s\n", crv, 
-                   PKM_CK_RVtoStr(crv));
-        exit(1);
-    }
     /*
      * PKM_KeyTest creates RSA,DSA public keys 
      * and AES, DES3 secret keys.
@@ -690,9 +688,9 @@ int main(int argc, char **argv)
     crv = PKM_KeyTests(pFunctionList, pSlotList, slotID,
                             pwd, sizeof(pwd));
     if (crv == CKR_OK) {
-        PKM_LogIt("PKM_DualFuncSign succeeded\n");
+        PKM_LogIt("PKM_KeyTests succeeded\n");
     } else {
-        PKM_Error( "PKM_DualFuncSign failed with 0x%08X, %-26s\n", crv, 
+        PKM_Error( "PKM_KeyTest failed with 0x%08X, %-26s\n", crv, 
                    PKM_CK_RVtoStr(crv));
         exit(1);
     }
@@ -818,16 +816,14 @@ int main(int argc, char **argv)
     /* mode to FIPS mode */
 
     PKM_LogIt("Testing Hybrid mode \n");
-
     PKM_HybridMode(pwd, sizeof(pwd));
+    PKM_LogIt("Testing Hybrid mode  completed\n");
 
     PKM_LogIt("unloading NSS PKCS # 11 softoken \n");
 #ifdef _WIN32
     FreeLibrary(hModule);
 #else 
-    if (PR_UnloadLibrary(lib) != PR_SUCCESS) {
-        PKM_Error("unable to unload softoken\n");
-    }
+    PR_UnloadLibrary(lib);
 #endif
     return 0;
 }
@@ -896,8 +892,8 @@ CK_RV PKM_InitPWforDB(CK_FUNCTION_LIST_PTR pFunctionList,
                       CK_UTF8CHAR_PTR pwd, CK_ULONG pwdLen)  {
     CK_RV crv = CKR_OK;
     CK_SESSION_HANDLE hSession;
-    CK_UTF8CHAR testPin[] = {"0Mozilla"};
-    CK_UTF8CHAR weakPin[] = {"mozilla"};
+    static const CK_UTF8CHAR testPin[] = {"0Mozilla"};
+    static const CK_UTF8CHAR weakPin[] = {"mozilla"};
 
     crv = pFunctionList->C_OpenSession(pSlotList[slotID],
                                        CKF_RW_SESSION | CKF_SERIAL_SESSION,
@@ -916,7 +912,8 @@ CK_RV PKM_InitPWforDB(CK_FUNCTION_LIST_PTR pFunctionList,
         return crv;
     }
     if (MODE == FIPSMODE) {
-        crv = pFunctionList->C_InitPIN(hSession, weakPin, sizeof(weakPin));
+        crv = pFunctionList->C_InitPIN(hSession, (CK_UTF8CHAR *) weakPin, 
+                                       sizeof(weakPin));
         if (crv == CKR_OK) {
             PKM_Error( "C_InitPIN with a weak password succeeded\n");
             return crv;
@@ -925,7 +922,8 @@ CK_RV PKM_InitPWforDB(CK_FUNCTION_LIST_PTR pFunctionList,
                       "0x%08X, %-26s\n", crv, PKM_CK_RVtoStr(crv));
         }
     }
-    crv = pFunctionList->C_InitPIN(hSession, testPin, sizeof(testPin));
+    crv = pFunctionList->C_InitPIN(hSession, (CK_UTF8CHAR *) testPin, 
+                                   sizeof(testPin));
     if (crv == CKR_OK) {
         PKM_LogIt("C_InitPIN succeeded\n");
     } else {
@@ -958,7 +956,7 @@ CK_RV PKM_InitPWforDB(CK_FUNCTION_LIST_PTR pFunctionList,
 
     PKM_LogIt("CKU_USER 0x%08X \n", CKU_USER); 
 
-    crv = pFunctionList->C_Login(hSession, CKU_USER, testPin,
+    crv = pFunctionList->C_Login(hSession, CKU_USER, (CK_UTF8CHAR *) testPin,
                                  sizeof(testPin));
     if (crv != CKR_OK) {
         PKM_Error( "C_Login failed with 0x%08X, %-26s\n", crv, 
@@ -967,8 +965,10 @@ CK_RV PKM_InitPWforDB(CK_FUNCTION_LIST_PTR pFunctionList,
     }
     if (MODE == FIPSMODE) {
         crv = pFunctionList->C_SetPIN(
-                                     hSession, testPin, sizeof(testPin),
-                                     weakPin, sizeof(weakPin));
+                                     hSession, (CK_UTF8CHAR *) testPin, 
+                                     sizeof(testPin),
+                                     (CK_UTF8CHAR *) weakPin, 
+                                     sizeof(weakPin));
         if (crv == CKR_OK) {
             PKM_Error( "C_SetPIN with a weak password succeeded\n");
             return crv;
@@ -978,7 +978,8 @@ CK_RV PKM_InitPWforDB(CK_FUNCTION_LIST_PTR pFunctionList,
         }
     }
     crv = pFunctionList->C_SetPIN(
-                                 hSession, testPin, sizeof(testPin),
+                                 hSession, (CK_UTF8CHAR *) testPin, 
+                                 sizeof(testPin),
                                  pwd, pwdLen);
     if (crv != CKR_OK) {
         PKM_Error( "C_CSetPin failed with 0x%08X, %-26s\n", crv, 
@@ -1292,9 +1293,9 @@ CK_RV PKM_HybridMode(CK_UTF8CHAR_PTR pwd, CK_ULONG pwdLen) {
         return crv;
     }
 
-    PKM_LogIt("In FIPS mode!");
+    PKM_LogIt("*** In FIPS mode!  ***\n");
 
-    /* Could do something */
+    /* could do some operations in FIPS MODE */
 
     crv = pFC_FunctionList->C_Finalize(NULL);
     if (crv == CKR_OK) {
@@ -1615,154 +1616,36 @@ CK_RV PKM_LegacyFunctions(CK_FUNCTION_LIST_PTR pFunctionList,
 */
 
 CK_RV PKM_DualFuncDigest(CK_FUNCTION_LIST_PTR pFunctionList,
-                         CK_SLOT_ID * pSlotList, CK_ULONG slotID,
-                         CK_UTF8CHAR_PTR pwd, CK_ULONG pwdLen) {
-    CK_SESSION_HANDLE hSession;
+                       CK_SESSION_HANDLE hSession,
+                       CK_OBJECT_HANDLE hSecKey, CK_MECHANISM *cryptMech,
+                       CK_OBJECT_HANDLE hSecKeyDigest, 
+                       CK_MECHANISM *digestMech, 
+                       const CK_BYTE *  pData, CK_ULONG pDataLen) {
     CK_RV crv = CKR_OK;
-    CK_OBJECT_HANDLE hKey;
-
-    CK_BYTE eDigest[16];
-    CK_BYTE dDigest[16];
+    CK_BYTE eDigest[MAX_DIGEST_SZ];
+    CK_BYTE dDigest[MAX_DIGEST_SZ];
     CK_ULONG ulDigestLen;
-    CK_MECHANISM mechanism = {
-        CKM_AES_KEY_GEN, NULL, 0
-    };
-    CK_MECHANISM aesEcbMech = {
-        CKM_AES_ECB, NULL, 0
-    };
-    CK_OBJECT_CLASS class = CKO_SECRET_KEY;
-    CK_KEY_TYPE keyType = CKK_AES;
-    CK_UTF8CHAR label[] = "An AES secret key object";
-    CK_ULONG valueLen = 16;
-    CK_ATTRIBUTE template[] = {
-        {CKA_CLASS, &class, sizeof(class)},
-        {CKA_KEY_TYPE, &keyType, sizeof(keyType)},
-        {CKA_TOKEN, &true, sizeof(true)},
-        {CKA_LABEL, label, sizeof(label)-1},
-        {CKA_ENCRYPT, &true, sizeof(true)},
-        {CKA_DECRYPT, &true, sizeof(true)},
-        {CKA_UNWRAP, &true, sizeof(true)},
-        {CKA_VALUE_LEN, &valueLen, sizeof(valueLen)}
-    };
-    CK_BYTE KEY[] = {
-        0x80, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00
-    };
-    CK_BYTE IV[] = {
-        0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00
-    };
-    CK_BYTE PLAINTEXT[] = {"Firefox  Rules!"};
-    CK_BYTE ciphertext[16];
+    CK_BYTE ciphertext[MAX_CIPHER_SZ];
     CK_ULONG ciphertextLen, lastLen;
-    CK_BYTE plaintext[16];
+    CK_BYTE plaintext[MAX_DATA_SZ];
     CK_ULONG plaintextLen;
-    CK_BYTE wrappedKey[16];
-    CK_ULONG wrappedKeyLen;
-    CK_OBJECT_HANDLE hTestKey;
-
-    CK_MECHANISM cryptMech = {
-        CKM_AES_CBC, IV, sizeof(IV)
-    };
-    CK_MECHANISM digestMech = {
-        CKM_SHA512, NULL, 0
-    };
-
     unsigned int i;
 
     memset(eDigest, 0, sizeof(eDigest));
     memset(dDigest, 0, sizeof(dDigest));
     memset(ciphertext, 0, sizeof(ciphertext));
-
-    crv = pFunctionList->C_OpenSession(pSlotList[slotID],
-                                       CKF_RW_SESSION | CKF_SERIAL_SESSION,
-                                       NULL, NULL, &hSession);
-    if (crv != CKR_OK) {
-        PKM_Error( "C_OpenSession failed with 0x%08X, %-26s\n", crv, 
-                   PKM_CK_RVtoStr(crv));
-        return crv;
-    }
-
-    if (MODE == FIPSMODE) {
-        crv = pFunctionList->C_GenerateKey(hSession, &mechanism,
-                                          template,
-                                          sizeof(template)/sizeof(template[0]),
-                                          &hKey);
-        if (crv == CKR_OK) {
-            PKM_Error("C_GenerateKey succeeded when not logged in.\n");
-            return CKR_GENERAL_ERROR;
-        } else {
-            PKM_LogIt("C_GenerateKey failed with  0x%08X, %-26s\n"
-                      "since not logged in\n", crv, PKM_CK_RVtoStr(crv));
-        }
-    }
-    crv = pFunctionList->C_Login(hSession, CKU_USER, pwd, pwdLen);
-    if (crv == CKR_OK) {
-        PKM_LogIt("C_Login with correct password succeeded\n");
-    } else {
-        PKM_Error( "C_Login with correct password failed "
-                   "with 0x%08X, %-26s\n", crv, PKM_CK_RVtoStr(crv));
-        return crv;
-    }
-
-    crv = pFunctionList->C_GenerateKey(hSession, &mechanism,
-                                       template,
-                                       sizeof(template)/sizeof(template[0]),
-                                       &hKey);
-    if (crv == CKR_OK) {
-        PKM_LogIt("C_GenerateKey succeeded\n");
-    } else {
-        PKM_Error( "C_GenerateKey failed with 0x%08X, %-26s\n", crv,
-                    PKM_CK_RVtoStr(crv));
-        return crv;
-    }
-
-    crv = pFunctionList->C_EncryptInit(hSession, &aesEcbMech, hKey);
-    if (crv != CKR_OK) {
-        PKM_Error( "C_EncryptInit failed with 0x%08X, %-26s\n", crv, 
-                   PKM_CK_RVtoStr(crv));
-        return crv;
-    }
-    wrappedKeyLen = sizeof(wrappedKey);
-    crv = pFunctionList->C_Encrypt(hSession, KEY, sizeof(KEY),
-                                   wrappedKey, &wrappedKeyLen);
-    if (crv != CKR_OK) {
-        PKM_Error( "C_Encrypt failed with 0x%08X, %-26s\n", crv, 
-                   PKM_CK_RVtoStr(crv));
-        return crv;
-    }
-    if (wrappedKeyLen != sizeof(wrappedKey)) {
-        PKM_Error( "wrappedKeyLen is %lu\n", wrappedKeyLen);
-        return crv;
-    }
-    /* Import an encrypted key */
-    crv = pFunctionList->C_UnwrapKey(hSession, &aesEcbMech, hKey,
-                                     wrappedKey, wrappedKeyLen,
-                                     template,
-                                     sizeof(template)/sizeof(template[0]),
-                                     &hTestKey);
-    if (crv != CKR_OK) {
-        PKM_Error( "C_UnwraPKey failed with 0x%08X, %-26s\n", crv, 
-                   PKM_CK_RVtoStr(crv));
-        return crv;
-    }
-
-
+    memset(plaintext, 0, sizeof(plaintext));
 
     /*
      * First init the Digest and Ecrypt operations
      */
-    crv = pFunctionList->C_EncryptInit(hSession, &cryptMech, hTestKey);
+    crv = pFunctionList->C_EncryptInit(hSession, cryptMech, hSecKey);
     if (crv != CKR_OK) {
         PKM_Error( "C_EncryptInit failed with 0x%08X, %-26s\n", crv, 
                    PKM_CK_RVtoStr(crv));
         return crv;
     }
-    crv = pFunctionList->C_DigestInit(hSession, &digestMech);
+    crv = pFunctionList->C_DigestInit(hSession, digestMech);
     if (crv != CKR_OK) {
         PKM_Error( "C_DigestInit failed with 0x%08X, %-26s\n", crv, 
                    PKM_CK_RVtoStr(crv));
@@ -1770,8 +1653,8 @@ CK_RV PKM_DualFuncDigest(CK_FUNCTION_LIST_PTR pFunctionList,
     }
 
     ciphertextLen = sizeof(ciphertext);
-    crv = pFunctionList->C_DigestEncryptUpdate(hSession, PLAINTEXT,
-                                               sizeof(PLAINTEXT),
+    crv = pFunctionList->C_DigestEncryptUpdate(hSession, (CK_BYTE * ) pData,
+                                               pDataLen,
                                                ciphertext, &ciphertextLen);
     if (crv != CKR_OK) {
         PKM_Error( "C_DigestEncryptUpdate failed with 0x%08X, %-26s\n", crv, 
@@ -1791,13 +1674,15 @@ CK_RV PKM_DualFuncDigest(CK_FUNCTION_LIST_PTR pFunctionList,
     /* get the last piece of ciphertext (length should be 0 */
     lastLen = sizeof(ciphertext) - ciphertextLen;
     crv = pFunctionList->C_EncryptFinal(hSession,
-                                      (CK_BYTE_PTR)&ciphertext[ciphertextLen],
+                                      (CK_BYTE * )&ciphertext[ciphertextLen],
                                       &lastLen);
     if (crv != CKR_OK) {
         PKM_Error( "C_EncryptFinal failed with 0x%08X, %-26s\n", crv, 
                    PKM_CK_RVtoStr(crv));
         return crv;
     }
+    ciphertextLen = ciphertextLen + lastLen;
+
     printf("ciphertext = ");
     for (i = 0; i < ciphertextLen; i++) {
         printf("%02x", (unsigned)ciphertext[i]);
@@ -1809,14 +1694,14 @@ CK_RV PKM_DualFuncDigest(CK_FUNCTION_LIST_PTR pFunctionList,
     }
     printf("\n");
 
-    /* AES CBC Decrypt the text */
-    crv = pFunctionList->C_DecryptInit(hSession, &cryptMech, hTestKey);
+    /* Decrypt the text */
+    crv = pFunctionList->C_DecryptInit(hSession, cryptMech, hSecKey);
     if (crv != CKR_OK) {
         PKM_Error( "C_DecryptInit failed with 0x%08X, %-26s\n", crv, 
                    PKM_CK_RVtoStr(crv));
         return crv;
     }
-    crv = pFunctionList->C_DigestInit(hSession, &digestMech);
+    crv = pFunctionList->C_DigestInit(hSession, digestMech);
     if (crv != CKR_OK) {
         PKM_Error( "C_DecryptInit failed with 0x%08X, %-26s\n", crv, 
                    PKM_CK_RVtoStr(crv));
@@ -1825,8 +1710,9 @@ CK_RV PKM_DualFuncDigest(CK_FUNCTION_LIST_PTR pFunctionList,
 
     plaintextLen = sizeof(plaintext);
     crv = pFunctionList->C_DecryptDigestUpdate(hSession, ciphertext,
-                                               sizeof(ciphertext),
-                                               plaintext, &plaintextLen);
+                                               ciphertextLen,
+                                               plaintext,
+                                               &plaintextLen);
     if (crv != CKR_OK) {
         PKM_Error( "C_DecryptDigestUpdate failed with 0x%08X, %-26s\n", crv, 
                    PKM_CK_RVtoStr(crv));
@@ -1835,14 +1721,14 @@ CK_RV PKM_DualFuncDigest(CK_FUNCTION_LIST_PTR pFunctionList,
     lastLen = sizeof(plaintext) - plaintextLen;
 
     crv = pFunctionList->C_DecryptFinal(hSession,
-                                        (CK_BYTE_PTR)&plaintext[plaintextLen],
+                                        (CK_BYTE * )&plaintext[plaintextLen],
                                         &lastLen);
     if (crv != CKR_OK) {
         PKM_Error( "C_DecryptFinal failed with 0x%08X, %-26s\n", crv, 
                    PKM_CK_RVtoStr(crv));
         return crv;
     }
-
+    plaintextLen = plaintextLen + lastLen;
 
     ulDigestLen = sizeof(dDigest);
     crv = pFunctionList->C_DigestFinal(hSession, dDigest, &ulDigestLen);
@@ -1874,26 +1760,13 @@ CK_RV PKM_DualFuncDigest(CK_FUNCTION_LIST_PTR pFunctionList,
         PKM_Error( "Digests don't match\n");
     }
 
-    if ((plaintextLen == sizeof(PLAINTEXT)) &&
-        (memcmp(plaintext, PLAINTEXT, sizeof(PLAINTEXT)))  == 0) {
-        PKM_LogIt("AES CBCVarKey128 decrypt test case passed\n");
+    if ((plaintextLen == pDataLen) &&
+        (memcmp(plaintext, pData, pDataLen))  == 0) {
+        PKM_LogIt("DualFuncDigest decrypt test case passed\n");
     } else {
-        PKM_Error( "AES CBCVarKey128 derypt test case failed\n");
+        PKM_Error( "DualFuncDigest derypt test case failed\n");
     }
-    crv = pFunctionList->C_Logout(hSession);
-    if (crv == CKR_OK) {
-        PKM_LogIt("C_Logout succeeded\n");
-    } else {
-        PKM_Error( "C_Logout failed with 0x%08X, %-26s\n", crv, 
-                   PKM_CK_RVtoStr(crv));
-        return crv;
-    }
-    crv = pFunctionList->C_CloseSession(hSession);
-    if (crv != CKR_OK) {
-        PKM_Error( "C_CloseSession failed with 0x%08X, %-26s\n", crv, 
-                   PKM_CK_RVtoStr(crv));
-        return crv;
-    }
+
     return crv;
 
 }
@@ -1906,7 +1779,7 @@ CK_RV PKM_DualFuncDigest(CK_FUNCTION_LIST_PTR pFunctionList,
 CK_RV PKM_SecKeyCrypt(CK_FUNCTION_LIST_PTR pFunctionList, 
                       CK_SESSION_HANDLE hSession,
                        CK_OBJECT_HANDLE hSymKey, CK_MECHANISM *cryptMech,
-                       CK_BYTE *pData, CK_ULONG dataLen) {
+                       const CK_BYTE *  pData, CK_ULONG dataLen) {
     CK_RV crv = CKR_OK;
 
     CK_BYTE cipher1[MAX_CIPHER_SZ];
@@ -1921,7 +1794,6 @@ CK_RV PKM_SecKeyCrypt(CK_FUNCTION_LIST_PTR pFunctionList,
     memset(data1, 0, sizeof(data1));
     memset(data2, 0, sizeof(data2));
 
-
     /* C_Encrypt */
     crv = pFunctionList->C_EncryptInit(hSession, cryptMech, hSymKey);
     if (crv != CKR_OK) {
@@ -1930,7 +1802,7 @@ CK_RV PKM_SecKeyCrypt(CK_FUNCTION_LIST_PTR pFunctionList,
         return crv;
     }
     cipher1Len = sizeof(cipher1);
-    crv = pFunctionList->C_Encrypt(hSession, pData, dataLen,
+    crv = pFunctionList->C_Encrypt(hSession, (CK_BYTE * ) pData, dataLen,
                                    cipher1, &cipher1Len);
     if (crv != CKR_OK) {
         PKM_Error( "C_Encrypt failed with 0x%08X, %-26s\n", crv, 
@@ -1946,7 +1818,7 @@ CK_RV PKM_SecKeyCrypt(CK_FUNCTION_LIST_PTR pFunctionList,
         return crv;
     }
     cipher2Len = sizeof(cipher2);
-    crv = pFunctionList->C_EncryptUpdate (hSession, pData,
+    crv = pFunctionList->C_EncryptUpdate (hSession, (CK_BYTE * ) pData,
                                           dataLen,
                                           cipher2, &cipher2Len);
     if (crv != CKR_OK) {
@@ -1957,7 +1829,7 @@ CK_RV PKM_SecKeyCrypt(CK_FUNCTION_LIST_PTR pFunctionList,
     lastLen = sizeof(cipher2) - cipher2Len;
 
     crv = pFunctionList->C_EncryptFinal(hSession,
-                                    (CK_BYTE_PTR)&cipher2[cipher2Len],
+                                    (CK_BYTE * )&cipher2[cipher2Len],
                                     &lastLen);
     cipher2Len = cipher2Len + lastLen;
 
@@ -2002,7 +1874,7 @@ CK_RV PKM_SecKeyCrypt(CK_FUNCTION_LIST_PTR pFunctionList,
     }
     lastLen = sizeof(data2) - data2Len;
     crv = pFunctionList->C_DecryptFinal(hSession,
-                                        (CK_BYTE_PTR)&data2[data2Len],
+                                        (CK_BYTE * )&data2[data2Len],
                                         &lastLen);
     if (crv != CKR_OK) {
         PKM_Error( "C_DecryptFinal failed with 0x%08X, %-26s\n", crv, 
@@ -2199,7 +2071,7 @@ CK_RV PKM_SecretKey(CK_FUNCTION_LIST_PTR pFunctionList,
     lastLen = sizeof(ciphertext2) - ciphertext2Len;
 
     crv = pFunctionList->C_EncryptFinal(hSession,
-                                    (CK_BYTE_PTR)&ciphertext2[ciphertext2Len],
+                                    (CK_BYTE * )&ciphertext2[ciphertext2Len],
                                     &lastLen);
     ciphertext2Len = ciphertext2Len + lastLen;
 
@@ -2251,7 +2123,7 @@ CK_RV PKM_SecretKey(CK_FUNCTION_LIST_PTR pFunctionList,
     }
     lastLen = sizeof(plaintext2) - plaintext2Len;
     crv = pFunctionList->C_DecryptFinal(hSession,
-                                     (CK_BYTE_PTR)&plaintext2[plaintext2Len],
+                                     (CK_BYTE * )&plaintext2[plaintext2Len],
                                      &lastLen);
     plaintext2Len = plaintext2Len + lastLen;
 
@@ -2287,7 +2159,7 @@ CK_RV PKM_SecretKey(CK_FUNCTION_LIST_PTR pFunctionList,
 CK_RV PKM_PubKeySign(CK_FUNCTION_LIST_PTR pFunctionList, 
                     CK_SESSION_HANDLE hRwSession,
                     CK_OBJECT_HANDLE hPubKey, CK_OBJECT_HANDLE hPrivKey,
-                    CK_MECHANISM *signMech, CK_BYTE *pData, 
+                    CK_MECHANISM *signMech, const CK_BYTE *  pData, 
                     CK_ULONG pDataLen) {
     CK_RV crv = CKR_OK;
     CK_BYTE sig[MAX_SIG_SZ];
@@ -2303,7 +2175,7 @@ CK_RV PKM_PubKeySign(CK_FUNCTION_LIST_PTR pFunctionList,
         return crv;
     }
     sigLen = sizeof(sig);
-    crv = pFunctionList->C_Sign(hRwSession, pData, pDataLen,
+    crv = pFunctionList->C_Sign(hRwSession, (CK_BYTE * ) pData, pDataLen,
                                 sig, &sigLen);
     if (crv != CKR_OK) {
         PKM_Error( "C_Sign failed with 0x%08X, %-26s\n", crv, 
@@ -2318,7 +2190,7 @@ CK_RV PKM_PubKeySign(CK_FUNCTION_LIST_PTR pFunctionList,
                    PKM_CK_RVtoStr(crv));
         return crv;
     }
-    crv = pFunctionList->C_Verify(hRwSession, pData, pDataLen,
+    crv = pFunctionList->C_Verify(hRwSession, (CK_BYTE * ) pData, pDataLen,
                                   sig, sigLen);
     if (crv == CKR_OK) {
         PKM_LogIt("C_Verify succeeded\n");
@@ -2342,7 +2214,7 @@ CK_RV PKM_PubKeySign(CK_FUNCTION_LIST_PTR pFunctionList,
                    PKM_CK_RVtoStr(crv));
         return crv;
     }
-    crv = pFunctionList->C_SignUpdate(hRwSession, pData, pDataLen);
+    crv = pFunctionList->C_SignUpdate(hRwSession, (CK_BYTE * ) pData, pDataLen);
     if (crv != CKR_OK) {
         PKM_Error( "C_Sign failed with 0x%08lX %-26s\n", crv, 
                    PKM_CK_RVtoStr(crv));
@@ -2365,7 +2237,7 @@ CK_RV PKM_PubKeySign(CK_FUNCTION_LIST_PTR pFunctionList,
                    PKM_CK_RVtoStr(crv));
         return crv;
     }
-    crv = pFunctionList->C_VerifyUpdate(hRwSession, pData, pDataLen);
+    crv = pFunctionList->C_VerifyUpdate(hRwSession, (CK_BYTE * ) pData, pDataLen);
     if (crv != CKR_OK) {
         PKM_Error( "C_VerifyUpdate failed with 0x%08X, %-26s\n", crv, 
                    PKM_CK_RVtoStr(crv));
@@ -2734,7 +2606,7 @@ CK_RV PKM_PublicKey(CK_FUNCTION_LIST_PTR pFunctionList,
 
 CK_RV PKM_Hmac(CK_FUNCTION_LIST_PTR pFunctionList, CK_SESSION_HANDLE hSession,
                 CK_OBJECT_HANDLE sKey, CK_MECHANISM *hmacMech, 
-                CK_BYTE *pData, CK_ULONG pDataLen) {
+                const CK_BYTE *  pData, CK_ULONG pDataLen) {
 
     CK_RV crv = CKR_OK;
 
@@ -2756,9 +2628,9 @@ CK_RV PKM_Hmac(CK_FUNCTION_LIST_PTR pFunctionList, CK_SESSION_HANDLE hSession,
     }
 
     hmac1Len = sizeof(hmac1);
-    crv = pFunctionList->C_Sign(hSession, (CK_BYTE_PTR)pData,
+    crv = pFunctionList->C_Sign(hSession, (CK_BYTE * )pData,
                                 pDataLen,
-                                (CK_BYTE_PTR)hmac1, &hmac1Len);
+                                (CK_BYTE * )hmac1, &hmac1Len);
     if (crv == CKR_OK) {
         PKM_LogIt("C_Sign succeeded\n");
     } else {
@@ -2776,7 +2648,7 @@ CK_RV PKM_Hmac(CK_FUNCTION_LIST_PTR pFunctionList, CK_SESSION_HANDLE hSession,
         return crv;
     }
 
-    crv = pFunctionList->C_SignUpdate(hSession, (CK_BYTE_PTR)pData,
+    crv = pFunctionList->C_SignUpdate(hSession, (CK_BYTE * )pData,
                                       pDataLen);
     if (crv == CKR_OK) {
         PKM_LogIt("C_SignUpdate succeeded\n");
@@ -2787,7 +2659,7 @@ CK_RV PKM_Hmac(CK_FUNCTION_LIST_PTR pFunctionList, CK_SESSION_HANDLE hSession,
     }
 
     hmac2Len = sizeof(hmac2);
-    crv = pFunctionList->C_SignFinal(hSession, (CK_BYTE_PTR)hmac2, &hmac2Len);
+    crv = pFunctionList->C_SignFinal(hSession, (CK_BYTE * )hmac2, &hmac2Len);
     if (crv == CKR_OK) {
         PKM_LogIt("C_SignFinal succeeded\n");
     } else {
@@ -2807,9 +2679,9 @@ CK_RV PKM_Hmac(CK_FUNCTION_LIST_PTR pFunctionList, CK_SESSION_HANDLE hSession,
                    PKM_CK_RVtoStr(crv));
         return crv;
     }
-    crv = pFunctionList->C_Verify(hSession, (CK_BYTE_PTR)pData,
+    crv = pFunctionList->C_Verify(hSession, (CK_BYTE * )pData,
                                   pDataLen,
-                                  (CK_BYTE_PTR) hmac2, hmac2Len);
+                                  (CK_BYTE * ) hmac2, hmac2Len);
     if (crv == CKR_OK) {
         PKM_LogIt("C_Verify of hmac succeeded\n");
     } else {
@@ -2823,7 +2695,7 @@ CK_RV PKM_Hmac(CK_FUNCTION_LIST_PTR pFunctionList, CK_SESSION_HANDLE hSession,
                    PKM_CK_RVtoStr(crv));
         return crv;
     }
-    crv = pFunctionList->C_VerifyUpdate(hSession, (CK_BYTE_PTR)pData,
+    crv = pFunctionList->C_VerifyUpdate(hSession, (CK_BYTE * )pData,
                                   pDataLen);
     if (crv == CKR_OK) {
         PKM_LogIt("C_VerifyUpdate of hmac succeeded\n");
@@ -2832,7 +2704,7 @@ CK_RV PKM_Hmac(CK_FUNCTION_LIST_PTR pFunctionList, CK_SESSION_HANDLE hSession,
                    PKM_CK_RVtoStr(crv));
         return crv;
     }
-    crv = pFunctionList->C_VerifyFinal(hSession, (CK_BYTE_PTR) hmac1, 
+    crv = pFunctionList->C_VerifyFinal(hSession, (CK_BYTE * ) hmac1, 
                                        hmac1Len);
     if (crv == CKR_OK) {
         PKM_LogIt("C_VerifyFinal of hmac succeeded\n");
@@ -3395,7 +3267,7 @@ CK_RV PKM_OperationalState(CK_FUNCTION_LIST_PTR pFunctionList,
     CK_UTF8CHAR *plaintext_1 = (CK_UTF8CHAR *)"Thunderbird rules.";
     CK_UTF8CHAR *plaintext_2 = (CK_UTF8CHAR *)"Firefox and Thunderbird.";
 
-    char    digest[MAX_DIGEST_LEN], digest_1[MAX_DIGEST_LEN];
+    char    digest[MAX_DIGEST_SZ], digest_1[MAX_DIGEST_SZ];
     CK_ATTRIBUTE signtemplate[] = {
          {CKA_CLASS, &class, sizeof(class)},
          {CKA_KEY_TYPE, &skeytype, sizeof(skeytype)},
@@ -3420,7 +3292,7 @@ CK_RV PKM_OperationalState(CK_FUNCTION_LIST_PTR pFunctionList,
     plainlen = strlen((char *)plaintext);
     plainlen_1 = strlen((char *)plaintext_1);
     plainlen_2 = strlen((char *)plaintext_2);
-    digestlen = DIGESTLEN;
+    digestlen = MAX_DIGEST_SZ;
 
 
     crv = pFunctionList->C_OpenSession(pSlotList[slotID], CKF_SERIAL_SESSION,
@@ -3474,7 +3346,7 @@ CK_RV PKM_OperationalState(CK_FUNCTION_LIST_PTR pFunctionList,
         return crv;
     }
 
-    digestlen = DIGESTLEN;
+    digestlen = MAX_DIGEST_SZ;
     crv = pFunctionList->C_DigestInit(hSession, &digestmech);
     if (crv != CKR_OK) {
         PKM_Error("C_DigestInit failed returned 0x%08X, %-26s\n", crv, 
@@ -3537,7 +3409,7 @@ CK_RV PKM_OperationalState(CK_FUNCTION_LIST_PTR pFunctionList,
                   PKM_CK_RVtoStr(crv));
         return crv;
     }
-    digestlen = DIGESTLEN;
+    digestlen = MAX_DIGEST_SZ;
     crv = pFunctionList->C_DigestInit(hSession, &digestmech);
     if (crv != CKR_OK) {
         PKM_Error("C_DigestInit failed returned 0x%08X, %-26s\n", crv, 
@@ -3678,9 +3550,9 @@ CK_RV PKM_RecoverFunctions(CK_FUNCTION_LIST_PTR pFunctionList,
     /* signs single-part data,
      * where the data can be recovered from the signature
      */
-    crv = pFunctionList->C_SignRecover(hRwSession, (CK_BYTE_PTR)PLAINTEXT,
+    crv = pFunctionList->C_SignRecover(hRwSession, (CK_BYTE * )PLAINTEXT,
                                        sizeof(PLAINTEXT),
-                                       (CK_BYTE_PTR)rsaSig, &rsaSigLen);
+                                       (CK_BYTE * )rsaSig, &rsaSigLen);
     if (crv == CKR_OK) {
         PKM_LogIt("C_SignRecover succeeded. \n");
     } else {
@@ -3709,9 +3581,9 @@ CK_RV PKM_RecoverFunctions(CK_FUNCTION_LIST_PTR pFunctionList,
     * verifies a signature on single-part data,
     * where the data is recovered from the signature
     */
-    crv = pFunctionList->C_VerifyRecover(hRwSession, (CK_BYTE_PTR)rsaSig,
+    crv = pFunctionList->C_VerifyRecover(hRwSession, (CK_BYTE * )rsaSig,
                                          rsaSigLen,
-                                         (CK_BYTE_PTR)recover, &recoverLen);
+                                         (CK_BYTE * )recover, &recoverLen);
     if (crv == CKR_OK) {
         PKM_LogIt("C_VerifyRecover succeeded. \n");
     } else {
@@ -3794,7 +3666,7 @@ CK_RV PKM_wrapUnwrap(CK_FUNCTION_LIST_PTR pFunctionList,
     CK_MECHANISM sKeyGenMechanism = {
         CKM_DES3_KEY_GEN, NULL, 0
     };
-    CK_ATTRIBUTE sKeyTemplate[] = {
+    CK_ATTRIBUTE sKeyAESTemplate[] = {
         {CKA_CLASS, &class, sizeof(class)},
         {CKA_KEY_TYPE, &keyType, sizeof(keyType)},
         {CKA_LABEL, label, sizeof(label)-1},
@@ -3848,8 +3720,8 @@ CK_RV PKM_wrapUnwrap(CK_FUNCTION_LIST_PTR pFunctionList,
         return crv;
     }
     crv = pFunctionList->C_GenerateKey(hRwSession, &sKeyGenMechanism,
-                                       sKeyTemplate, sizeof(sKeyTemplate)
-                                       /sizeof(sKeyTemplate[0]), &hSecretKey);
+                                       sKeyAESTemplate, sizeof(sKeyAESTemplate)
+                                       /sizeof(sKeyAESTemplate[0]), &hSecretKey);
     if (crv == CKR_OK) {
         PKM_LogIt("C_GenerateKey succeeded\n");
     } else {
@@ -3872,9 +3744,9 @@ CK_RV PKM_wrapUnwrap(CK_FUNCTION_LIST_PTR pFunctionList,
     }
     crv = pFunctionList->C_UnwrapKey(
                                     hRwSession, &wrapMechanism, hPrivateKey,
-                                    wrappedKey, ulWrappedKeyLen, sKeyTemplate,
-                                    sizeof(sKeyTemplate)
-                                    /sizeof(sKeyTemplate[0]),
+                                    wrappedKey, ulWrappedKeyLen, sKeyAESTemplate,
+                                    sizeof(sKeyAESTemplate)
+                                    /sizeof(sKeyAESTemplate[0]),
                                     &hSecretKeyUnwrapped);
     if (crv == CKR_OK) {
         PKM_LogIt("C_UnwrapKey succeeded\n");
@@ -4403,76 +4275,36 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
     CK_SESSION_HANDLE hRwSession;
 
     CK_RV crv = CKR_OK;
-    CK_BYTE PLAINTEXT[] = {"Firefox  Rules!"};
-    CK_BYTE PLAINTEXT_PAD[] = {"Firefox and thunderbird rule the world!"};
+    static const CK_BYTE PLAINTEXT[] = {"Firefox  Rules!"};
+    static const CK_BYTE PLAINTEXT_PAD[] = {"Firefox and thunderbird rule the world!"};
 
 /*** DSA Key ***/
-    CK_MECHANISM dsaParamGenMech = {
-        CKM_DSA_PARAMETER_GEN, NULL, 0
-    };
+    CK_MECHANISM dsaParamGenMech;
     CK_ULONG primeBits = 1024;
-    CK_ATTRIBUTE dsaParamGenTemplate[] = {
-        {CKA_PRIME_BITS, &primeBits, sizeof(primeBits)}
-    };
-    CK_OBJECT_HANDLE hDsaParams;
+    CK_ATTRIBUTE dsaParamGenTemplate[1]; 
+    CK_OBJECT_HANDLE hDsaParams = CK_INVALID_HANDLE;
     CK_BYTE DSA_P[128];
     CK_BYTE DSA_Q[20];
     CK_BYTE DSA_G[128];
-    CK_MECHANISM dsaKeyPairGenMech = {
-        CKM_DSA_KEY_PAIR_GEN, NULL, 0
-    };
-    CK_ATTRIBUTE dsaPubKeyTemplate[] = {
-        {CKA_PRIME, DSA_P, sizeof(DSA_P)},
-        {CKA_SUBPRIME, DSA_Q, sizeof(DSA_Q)},
-        {CKA_BASE, DSA_G, sizeof(DSA_G)},
-        {CKA_TOKEN, &true, sizeof(true)},
-        {CKA_VERIFY, &true, sizeof(true)}
-    };
-    CK_ATTRIBUTE dsaPrivKeyTemplate[] = {
-        {CKA_TOKEN, &true, sizeof(true)},
-        {CKA_PRIVATE, &true, sizeof(true)},
-        {CKA_SENSITIVE, &true, sizeof(true)},
-        {CKA_SIGN, &true, sizeof(true)},
-        {CKA_EXTRACTABLE, &true, sizeof(true)}
-    };
-    CK_OBJECT_HANDLE hDSApubKey, hDSAprivKey;
+    CK_MECHANISM dsaKeyPairGenMech;
+    CK_ATTRIBUTE dsaPubKeyTemplate[5]; 
+    CK_ATTRIBUTE dsaPrivKeyTemplate[5]; 
+    CK_OBJECT_HANDLE hDSApubKey = CK_INVALID_HANDLE;
+    CK_OBJECT_HANDLE hDSAprivKey = CK_INVALID_HANDLE;
 
 /**** RSA Key ***/
     CK_KEY_TYPE rsatype = CKK_RSA;
-    CK_MECHANISM rsaKeyPairGenMech = {
-        CKM_RSA_PKCS_KEY_PAIR_GEN, NULL, 0
-    };
+    CK_MECHANISM rsaKeyPairGenMech;
     CK_BYTE subject[] = {"RSA Private Key"};
     CK_ULONG modulusBits = 768;
     CK_BYTE publicExponent[] = { 3};
     CK_BYTE id[] = {"RSA123"};
-    CK_ATTRIBUTE publicKeyTemplate[] = {
-        {CKA_KEY_TYPE, &rsatype, sizeof(rsatype)},
-        {CKA_PRIVATE, &true, sizeof(true)},
-        {CKA_ENCRYPT, &true, sizeof(true)},
-        {CKA_DECRYPT, &true, sizeof(true)},
-        {CKA_VERIFY, &true, sizeof(true)},
-        {CKA_SIGN, &true, sizeof(true)},
-        {CKA_WRAP, &true, sizeof(true)},
-        {CKA_MODULUS_BITS, &modulusBits, sizeof(modulusBits)},
-        {CKA_PUBLIC_EXPONENT, publicExponent, sizeof (publicExponent)}
-    };
-    CK_ATTRIBUTE privateKeyTemplate[] = {
-        {CKA_KEY_TYPE, &rsatype, sizeof(rsatype)},
-        {CKA_TOKEN, &true, sizeof(true)},
-        {CKA_PRIVATE, &true, sizeof(true)},
-        {CKA_SUBJECT, subject, sizeof(subject)},
-        {CKA_ID, id, sizeof(id)},
-        {CKA_SENSITIVE, &true, sizeof(true)},
-        {CKA_ENCRYPT, &true, sizeof(true)},
-        {CKA_DECRYPT, &true, sizeof(true)},
-        {CKA_VERIFY, &true, sizeof(true)},
-        {CKA_SIGN, &true, sizeof(true)},
-        {CKA_UNWRAP, &true, sizeof(true)}
-    };
-    CK_OBJECT_HANDLE hRSApubKey, hRSAprivKey;
+    CK_ATTRIBUTE rsaPubKeyTemplate[9]; 
+    CK_ATTRIBUTE rsaPrivKeyTemplate[11]; 
+    CK_OBJECT_HANDLE hRSApubKey = CK_INVALID_HANDLE;
+    CK_OBJECT_HANDLE hRSAprivKey = CK_INVALID_HANDLE;
 
-/*** AES Key ***/
+ /*** AES Key ***/
     CK_MECHANISM sAESKeyMech = {
         CKM_AES_KEY_GEN, NULL, 0
     };
@@ -4571,6 +4403,114 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
 
     unsigned int i;
 
+    /* DSA key init */
+    dsaParamGenMech.mechanism      = CKM_DSA_PARAMETER_GEN; 
+    dsaParamGenMech.ulParameterLen = NULL_PTR; 
+    dsaParamGenMech.ulParameterLen = 0;
+    dsaParamGenTemplate[0].type = CKA_PRIME_BITS; 
+    dsaParamGenTemplate[0].pValue     = &primeBits; 
+    dsaParamGenTemplate[0].ulValueLen = sizeof(primeBits);
+    dsaPubKeyTemplate[0].type       = CKA_PRIME; 
+    dsaPubKeyTemplate[0].pValue     = DSA_P;
+    dsaPubKeyTemplate[0].ulValueLen = sizeof(DSA_P);
+    dsaPubKeyTemplate[1].type = CKA_SUBPRIME; 
+    dsaPubKeyTemplate[1].pValue = DSA_Q;
+    dsaPubKeyTemplate[1].ulValueLen = sizeof(DSA_Q);
+    dsaPubKeyTemplate[2].type = CKA_BASE; 
+    dsaPubKeyTemplate[2].pValue = DSA_G; 
+    dsaPubKeyTemplate[2].ulValueLen = sizeof(DSA_G);
+    dsaPubKeyTemplate[3].type = CKA_TOKEN; 
+    dsaPubKeyTemplate[3].pValue = &true; 
+    dsaPubKeyTemplate[3].ulValueLen = sizeof(true);
+    dsaPubKeyTemplate[4].type = CKA_VERIFY; 
+    dsaPubKeyTemplate[4].pValue = &true; 
+    dsaPubKeyTemplate[4].ulValueLen = sizeof(true);
+    dsaKeyPairGenMech.mechanism      = CKM_DSA_KEY_PAIR_GEN;
+    dsaKeyPairGenMech.ulParameterLen = NULL_PTR;
+    dsaKeyPairGenMech.ulParameterLen = 0;
+    dsaPrivKeyTemplate[0].type       = CKA_TOKEN;
+    dsaPrivKeyTemplate[0].pValue     = &true; 
+    dsaPrivKeyTemplate[0].ulValueLen = sizeof(true);
+    dsaPrivKeyTemplate[1].type       = CKA_PRIVATE; 
+    dsaPrivKeyTemplate[1].pValue     = &true; 
+    dsaPrivKeyTemplate[1].ulValueLen = sizeof(true);
+    dsaPrivKeyTemplate[2].type       = CKA_SENSITIVE; 
+    dsaPrivKeyTemplate[2].pValue     = &true; 
+    dsaPrivKeyTemplate[2].ulValueLen = sizeof(true);
+    dsaPrivKeyTemplate[3].type       = CKA_SIGN, 
+    dsaPrivKeyTemplate[3].pValue     = &true;
+    dsaPrivKeyTemplate[3].ulValueLen = sizeof(true);
+    dsaPrivKeyTemplate[4].type       = CKA_EXTRACTABLE; 
+    dsaPrivKeyTemplate[4].pValue     = &true; 
+    dsaPrivKeyTemplate[4].ulValueLen = sizeof(true);
+
+    /* RSA key init */
+    rsaKeyPairGenMech.mechanism      = CKM_RSA_PKCS_KEY_PAIR_GEN;
+    rsaKeyPairGenMech.ulParameterLen = NULL_PTR;
+    rsaKeyPairGenMech.ulParameterLen = 0;
+
+    rsaPubKeyTemplate[0].type       = CKA_KEY_TYPE; 
+    rsaPubKeyTemplate[0].pValue     = &rsatype; 
+    rsaPubKeyTemplate[0].ulValueLen = sizeof(rsatype);
+    rsaPubKeyTemplate[1].type       = CKA_PRIVATE; 
+    rsaPubKeyTemplate[1].pValue     = &true; 
+    rsaPubKeyTemplate[1].ulValueLen = sizeof(true);
+    rsaPubKeyTemplate[2].type       = CKA_ENCRYPT;
+    rsaPubKeyTemplate[2].pValue     = &true; 
+    rsaPubKeyTemplate[2].ulValueLen = sizeof(true);
+    rsaPubKeyTemplate[3].type       = CKA_DECRYPT;
+    rsaPubKeyTemplate[3].pValue     = &true;
+    rsaPubKeyTemplate[3].ulValueLen = sizeof(true);
+    rsaPubKeyTemplate[4].type       = CKA_VERIFY;
+    rsaPubKeyTemplate[4].pValue     = &true; 
+    rsaPubKeyTemplate[4].ulValueLen = sizeof(true);
+    rsaPubKeyTemplate[5].type       = CKA_SIGN;
+    rsaPubKeyTemplate[5].pValue     = &true; 
+    rsaPubKeyTemplate[5].ulValueLen = sizeof(true);
+    rsaPubKeyTemplate[6].type       = CKA_WRAP; 
+    rsaPubKeyTemplate[6].pValue     = &true; 
+    rsaPubKeyTemplate[6].ulValueLen = sizeof(true);
+    rsaPubKeyTemplate[7].type       = CKA_MODULUS_BITS; 
+    rsaPubKeyTemplate[7].pValue     = &modulusBits; 
+    rsaPubKeyTemplate[7].ulValueLen = sizeof(modulusBits);
+    rsaPubKeyTemplate[8].type       = CKA_PUBLIC_EXPONENT; 
+    rsaPubKeyTemplate[8].pValue     = publicExponent; 
+    rsaPubKeyTemplate[8].ulValueLen = sizeof (publicExponent);
+
+    rsaPrivKeyTemplate[0].type       = CKA_KEY_TYPE;
+    rsaPrivKeyTemplate[0].pValue     = &rsatype; 
+    rsaPrivKeyTemplate[0].ulValueLen = sizeof(rsatype);
+    rsaPrivKeyTemplate[1].type       = CKA_TOKEN;
+    rsaPrivKeyTemplate[1].pValue     = &true; 
+    rsaPrivKeyTemplate[1].ulValueLen = sizeof(true);
+    rsaPrivKeyTemplate[2].type       = CKA_PRIVATE;
+    rsaPrivKeyTemplate[2].pValue     = &true; 
+    rsaPrivKeyTemplate[2].ulValueLen = sizeof(true);
+    rsaPrivKeyTemplate[3].type       = CKA_SUBJECT; 
+    rsaPrivKeyTemplate[3].pValue     = subject; 
+    rsaPrivKeyTemplate[3].ulValueLen = sizeof(subject);
+    rsaPrivKeyTemplate[4].type       = CKA_ID; 
+    rsaPrivKeyTemplate[4].pValue     = id; 
+    rsaPrivKeyTemplate[4].ulValueLen = sizeof(id);
+    rsaPrivKeyTemplate[5].type       = CKA_SENSITIVE; 
+    rsaPrivKeyTemplate[5].pValue     = &true; 
+    rsaPrivKeyTemplate[5].ulValueLen = sizeof(true);
+    rsaPrivKeyTemplate[6].type       = CKA_ENCRYPT; 
+    rsaPrivKeyTemplate[6].pValue     = &true; 
+    rsaPrivKeyTemplate[6].ulValueLen = sizeof(true);
+    rsaPrivKeyTemplate[7].type       = CKA_DECRYPT; 
+    rsaPrivKeyTemplate[7].pValue     = &true; 
+    rsaPrivKeyTemplate[7].ulValueLen = sizeof(true);
+    rsaPrivKeyTemplate[8].type       = CKA_VERIFY; 
+    rsaPrivKeyTemplate[8].pValue     = &true; 
+    rsaPrivKeyTemplate[8].ulValueLen = sizeof(true);
+    rsaPrivKeyTemplate[9].type       = CKA_SIGN; 
+    rsaPrivKeyTemplate[9].pValue     = &true; 
+    rsaPrivKeyTemplate[9].ulValueLen = sizeof(true);
+    rsaPrivKeyTemplate[10].type       = CKA_UNWRAP; 
+    rsaPrivKeyTemplate[10].pValue     = &true; 
+    rsaPrivKeyTemplate[10].ulValueLen = sizeof(true);
+    
     crv = pFunctionList->C_OpenSession(pSlotList[slotID],
                                        CKF_RW_SESSION | CKF_SERIAL_SESSION,
                                        NULL, NULL, &hRwSession);
@@ -4590,14 +4530,21 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
         return crv;
     }
 
-
+    PKM_LogIt("Generate an AES key\n");
     /* generate an AES Secret Key */
     crv = pFunctionList->C_GenerateKey(hRwSession, &sAESKeyMech,
                                        sAESKeyTemplate,
                                        sizeof(sAESKeyTemplate)/
                                        sizeof(sAESKeyTemplate[0]),
                                        &hAESSecKey);
-
+    if (crv == CKR_OK) {
+        PKM_LogIt("C_GenerateKey AES succeeded\n");
+    } else {
+        PKM_Error( "C_GenerateKey AES failed with 0x%08X, %-26s\n", 
+                   crv, PKM_CK_RVtoStr(crv));
+        return crv;
+    }
+    PKM_LogIt("Generate an 3DES key\n");
     /* generate an 3DES Secret Key */   
     crv = pFunctionList->C_GenerateKey(hRwSession, &sDES3KeyGenMechanism,
                                        sDES3KeyTemplate,
@@ -4612,11 +4559,11 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
         return crv;
     }
 
+    PKM_LogIt("Generate an DSA PQG domain parameters \n");
     /* Generate DSA domain parameters PQG */
     crv = pFunctionList->C_GenerateKey(hRwSession, &dsaParamGenMech,
                                        dsaParamGenTemplate,
-                                       sizeof(dsaParamGenTemplate)
-                                       /sizeof(dsaParamGenTemplate[0]),
+                                       1,
                                        &hDsaParams);
     if (crv == CKR_OK) {
         PKM_LogIt("DSA domain parameter generation succeeded\n");
@@ -4642,7 +4589,7 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
                    "with 0x%08X, %-26s\n", crv, PKM_CK_RVtoStr(crv));
         return crv;
     }
-
+    PKM_LogIt("Generate an DSA key pair\n");
     /* Generate a persistent DSA key pair */
     crv = pFunctionList->C_GenerateKeyPair(hRwSession, &dsaKeyPairGenMech,
                                            dsaPubKeyTemplate,
@@ -4657,14 +4604,14 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
                    "with 0x%08X, %-26s\n", crv, PKM_CK_RVtoStr(crv));
         return crv;
     }
-
+    PKM_LogIt("Generate an RSA key pair\n");
     /*** GEN RSA Key ***/
     crv = pFunctionList->C_GenerateKeyPair(hRwSession, &rsaKeyPairGenMech,
-                                           publicKeyTemplate,
-                                           (sizeof (publicKeyTemplate)
+                                           rsaPubKeyTemplate,
+                                           (sizeof (rsaPubKeyTemplate)
                                             / sizeof (CK_ATTRIBUTE)),
-                                           privateKeyTemplate,
-                                           (sizeof (privateKeyTemplate)
+                                           rsaPrivKeyTemplate,
+                                           (sizeof (rsaPrivKeyTemplate)
                                             / sizeof (CK_ATTRIBUTE)),
                                            &hRSApubKey, &hRSAprivKey);
     if (crv == CKR_OK) {
@@ -4674,6 +4621,8 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
                   "with 0x%08X, %-26s\n", crv, PKM_CK_RVtoStr(crv));
         return crv;
     }
+
+    PKM_LogIt("Generation of keys completed\n");
 
     crv = PKM_SecKeyCrypt(pFunctionList, hRwSession,
                     hAESSecKey, &AES_CBC_PAD_Mech,
@@ -4887,6 +4836,16 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
                        PKM_CK_RVtoStr(crv));
             return crv;
         }
+        crv = PKM_DualFuncDigest(pFunctionList, hRwSession,
+                     hAESSecKey, &AES_CBC_Mech,
+                     0,&mech,
+                     PLAINTEXT, sizeof(PLAINTEXT));
+        if (crv == CKR_OK) {
+            PKM_LogIt("PKM_DualFuncDigest succeeded\n");
+        } else {
+            PKM_Error( "PKM_DualFuncDigest failed with 0x%08X, %-26s\n", crv, 
+                       PKM_CK_RVtoStr(crv));
+        }
 
         crv = PKM_Digest(pFunctionList, hRwSession,
                      &mech, 0,
@@ -4958,7 +4917,7 @@ CK_RV PKM_DualFuncSign(CK_FUNCTION_LIST_PTR pFunctionList,
                        CK_OBJECT_HANDLE publicKey, CK_OBJECT_HANDLE privateKey,
                        CK_MECHANISM *sigMech,
                        CK_OBJECT_HANDLE secretKey, CK_MECHANISM *cryptMech,
-                       CK_BYTE *pData, CK_ULONG pDataLen) {
+                       const CK_BYTE *  pData, CK_ULONG pDataLen) {
 
     CK_RV crv = CKR_OK;
     CK_BYTE encryptedData[MAX_CIPHER_SZ];
@@ -5005,7 +4964,7 @@ CK_RV PKM_DualFuncSign(CK_FUNCTION_LIST_PTR pFunctionList,
 
 
     ulEncryptedDataLen = sizeof(encryptedData);
-    crv = pFunctionList->C_SignEncryptUpdate(hRwSession, pData,
+    crv = pFunctionList->C_SignEncryptUpdate(hRwSession, (CK_BYTE * ) pData,
                                              pDataLen,
                                              encryptedData,
                                              &ulEncryptedDataLen);
@@ -5017,7 +4976,7 @@ CK_RV PKM_DualFuncSign(CK_FUNCTION_LIST_PTR pFunctionList,
 
     ulLastUpdateSize = sizeof(encryptedData) - ulEncryptedDataLen;
     crv = pFunctionList->C_EncryptFinal(hRwSession,
-         (CK_BYTE_PTR)&encryptedData[ulEncryptedDataLen], &ulLastUpdateSize);
+         (CK_BYTE * )&encryptedData[ulEncryptedDataLen], &ulLastUpdateSize);
     if (crv != CKR_OK) {
         PKM_Error( "C_EncryptFinal failed with 0x%08X, %-26s\n", crv,
                     PKM_CK_RVtoStr(crv));
@@ -5104,11 +5063,11 @@ CK_RV PKM_DualFuncSign(CK_FUNCTION_LIST_PTR pFunctionList,
 CK_RV PKM_Digest(CK_FUNCTION_LIST_PTR pFunctionList, 
                  CK_SESSION_HANDLE hSession,
                  CK_MECHANISM *digestMech, CK_OBJECT_HANDLE hSecretKey,
-                 CK_BYTE *pData, CK_ULONG pDataLen) {
+                 const CK_BYTE *  pData, CK_ULONG pDataLen) {
     CK_RV crv = CKR_OK;
-    CK_BYTE digest1[MAX_DIGEST_LEN];
+    CK_BYTE digest1[MAX_DIGEST_SZ];
     CK_ULONG digest1Len = 0 ;
-    CK_BYTE digest2[MAX_DIGEST_LEN];
+    CK_BYTE digest2[MAX_DIGEST_SZ];
     CK_ULONG digest2Len = 0;
 
     /* Tested with CKM_SHA_1, CKM_SHA256, CKM_SHA384, CKM_SHA512 */
@@ -5123,7 +5082,7 @@ CK_RV PKM_Digest(CK_FUNCTION_LIST_PTR pFunctionList,
         return crv;
     }
     digest1Len = sizeof(digest1);
-    crv = pFunctionList->C_Digest(hSession, pData, pDataLen, 
+    crv = pFunctionList->C_Digest(hSession, (CK_BYTE * ) pData, pDataLen, 
         digest1, &digest1Len);
     if (crv != CKR_OK) {
         PKM_Error( "C_Sign failed with 0x%08X, %-26s\n", crv, 
@@ -5139,7 +5098,7 @@ CK_RV PKM_Digest(CK_FUNCTION_LIST_PTR pFunctionList,
         return crv;
     }
 
-    crv = pFunctionList->C_DigestUpdate(hSession, pData, pDataLen);
+    crv = pFunctionList->C_DigestUpdate(hSession, (CK_BYTE * ) pData, pDataLen);
     if (crv != CKR_OK) {
         PKM_Error( "C_DigestUpdate failed with 0x%08X, %-26s\n", crv, 
             PKM_CK_RVtoStr(crv));
