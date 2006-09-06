@@ -267,7 +267,7 @@ calCalendarManager.prototype = {
         // calendar stored on a server when all they really wanted to do was
         // unsubscribe.
         if (calendar instanceof Components.interfaces.calICalendarProvider
-           (calendar.type == "storage" || cal.type == "memory")) {
+           (calendar.type == "storage" || calendar.type == "memory")) {
             try {
                 calendar.deleteCalendar(calendar, null);
             } catch(ex) {
