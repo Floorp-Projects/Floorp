@@ -254,8 +254,26 @@ calCalendarManager.prototype = {
     deleteCalendar: function(calendar) {
         /* check to see if calendar is unregistered first... */
         /* delete the calendar for good */
-        
+        if (this.findCalendarID(calendar) in this.mCache) {
+            throw "Can't delete a registered calendar";
+        }
         this.notifyObservers("onCalendarDeleting", [calendar]);
+
+        // XXX This is a workaround for bug 351499. We should remove it once
+        // we sort out the whole "delete" vs. "unsubscribe" UI thing.
+        //
+        // We only want to delete the contents of calendars from local
+        // providers (storage and memory). Otherwise we may nuke someone's
+        // calendar stored on a server when all they really wanted to do was
+        // unsubscribe.
+        if (calendar instanceof Components.interfaces.calICalendarProvider
+           (calendar.type == "storage" || cal.type == "memory")) {
+            try {
+                calendar.deleteCalendar(calendar, null);
+            } catch(ex) {
+                dump("error purging calendar:"+ex+'\n');
+            }
+        }
     },
 
     getCalendars: function(count) {

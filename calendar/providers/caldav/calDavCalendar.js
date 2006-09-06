@@ -89,7 +89,8 @@ calDavCalendar.prototype = {
     // 
     QueryInterface: function (aIID) {
         if (!aIID.equals(Components.interfaces.nsISupports) &&
-            !aIID.equals(calICalendar) &&
+            !aIID.equals(Components.interfaces.calICalendarProvider) &&
+            !aIID.equals(Components.interfaces.calICalendar) &&
             !aIID.equals(Components.interfaces.nsIInterfaceRequestor)) {
             throw Components.results.NS_ERROR_NO_INTERFACE;
         }
@@ -98,7 +99,26 @@ calDavCalendar.prototype = {
     },
 
     //
-    // nsICalendar interface
+    // calICalendarProvider interface
+    //
+    get prefChromeOverlay() {
+        return null;
+    },
+
+    get displayName() {
+        return calGetString("calendar", "caldavName");
+    },
+
+    createCalendar: function caldav_createCal() {
+        throw NS_ERROR_NOT_IMPLEMENTED;
+    },
+
+    deleteCalendar: function caldav_deleteCal(cal, listener) {
+        throw NS_ERROR_NOT_IMPLEMENTED;
+    },
+
+    //
+    // calICalendar interface
     //
 
     // attribute AUTF8String name;

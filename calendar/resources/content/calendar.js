@@ -250,8 +250,7 @@ function deleteCalendar(event)
         getCompositeCalendar().removeCalendar(calendar.uri);
         var calMgr = getCalendarManager();
         calMgr.unregisterCalendar(calendar);
-        // Delete file?
-        //calMgr.deleteCalendar(cal);
+        calMgr.deleteCalendar(calendar);
     }
 }
 

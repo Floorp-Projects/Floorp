@@ -219,6 +219,7 @@ function ltnRemoveCalendar(cal)
     // XXX in the future, we should ask the user if they want to delete the
     // XXX files associated with this calendar or not!
     getCalendarManager().unregisterCalendar(cal);
+    getCalendarManager().deleteCalendar(cal);
 }
 
 function ltnEditCalendarProperties(cal)

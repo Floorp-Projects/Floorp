@@ -65,6 +65,7 @@ calMemoryCalendar.prototype = {
     // 
     QueryInterface: function (aIID) {
         if (!aIID.equals(Components.interfaces.nsISupports) &&
+            !aIID.equals(Components.interfaces.calICalendarProvider) &&
             !aIID.equals(Components.interfaces.calICalendar)) {
             throw Components.results.NS_ERROR_NO_INTERFACE;
         }
@@ -78,7 +79,31 @@ calMemoryCalendar.prototype = {
     },
 
     //
-    // nsICalendar interface
+    // calICalendarProvider interface
+    //
+    get prefChromeOverlay() {
+        return null;
+    },
+
+    get displayName() {
+        return calGetString("calendar", "memoryName");
+    },
+
+    createCalendar: function mem_createCal() {
+        throw NS_ERROR_NOT_IMPLEMENTED;
+    },
+
+    deleteCalendar: function mem_deleteCal(cal, listener) {
+        cal = cal.wrappedJSObject;
+        cal.mItems = {};
+
+        try {
+            listener.onDeleteCalendar(cal, Components.results.NS_OK, null);
+        } catch(ex) {}
+    },
+
+    //
+    // calICalendar interface
     //
 
     // attribute AUTF8String name;

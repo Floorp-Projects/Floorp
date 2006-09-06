@@ -116,6 +116,7 @@ calCompositeCalendar.prototype = {
     //
     QueryInterface: function (aIID) {
         if (!aIID.equals(Components.interfaces.nsISupports) &&
+            !aIID.equals(Components.interfaces.calICalendarProvider) &&
             !aIID.equals(Components.interfaces.calICalendar) &&
             !aIID.equals(Components.interfaces.calICompositeCalendar))
         {
@@ -123,6 +124,26 @@ calCompositeCalendar.prototype = {
         }
 
         return this;
+    },
+
+    //
+    // calICalendarProvider interface
+    //
+    get prefChromeOverlay() {
+        return null;
+    },
+
+    get displayName() {
+        return calGetString("calendar", "compositeName");
+    },
+
+    createCalendar: function comp_createCal() {
+        throw NS_ERROR_NOT_IMPLEMENTED;
+    },
+
+    deleteCalendar: function comp_deleteCal(cal, listener) {
+        // You shouldn't be able to delete from the composite calendar.
+        throw NS_ERROR_NOT_IMPLEMENTED;
     },
 
     //

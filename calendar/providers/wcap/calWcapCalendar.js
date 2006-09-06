@@ -60,6 +60,7 @@ function calWcapCalendar( calId, session ) {
 }
 calWcapCalendar.prototype = {
     m_ifaces: [ Components.interfaces.calIWcapCalendar,
+                Components.interfaces.calICalendarProvider,
                 Components.interfaces.calICalendar,
                 Components.interfaces.nsIInterfaceRequestor,
                 Components.interfaces.nsIClassInfo,
@@ -142,7 +143,24 @@ calWcapCalendar.prototype = {
             err instanceof Components.interfaces.nsIException
             ? [err.result, err.message] : [-1, msg] );
     },
-    
+
+    // calICalendarProvider:
+    get prefChromeOverlay() {
+        return null;
+    },
+
+    get displayName() {
+        return calGetString("wcap", "wcapName");
+    },
+
+    createCalendar: function wcap_createCal() {
+        throw NS_ERROR_NOT_IMPLEMENTED;
+    },
+
+    deleteCalendar: function wcap_deleteCal(cal, listener) {
+        throw NS_ERROR_NOT_IMPLEMENTED;
+    },
+
     // calICalendar:
     get name() {
         return getCalendarManager().getCalendarPref( this, "NAME" );

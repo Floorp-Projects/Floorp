@@ -72,6 +72,7 @@ calICSCalendar.prototype = {
 
     QueryInterface: function (aIID) {
         if (!aIID.equals(Components.interfaces.nsISupports) &&
+            !aIID.equals(Components.interfaces.calICalendarProvider) &&
             !aIID.equals(Components.interfaces.calICalendar) &&
             !aIID.equals(Components.interfaces.nsIStreamListener) &&
             !aIID.equals(Components.interfaces.nsIStreamLoaderObserver) &&
@@ -93,6 +94,28 @@ calICSCalendar.prototype = {
         this.mMemoryCalendar.wrappedJSObject.calendarToReturn = this;
     },
 
+    //
+    // calICalendarProvider interface
+    //
+    get prefChromeOverlay() {
+        return null;
+    },
+
+    get displayName() {
+        return calGetString("calendar", "icsName");
+    },
+
+    createCalendar: function ics_createCal() {
+        throw NS_ERROR_NOT_IMPLEMENTED;
+    },
+
+    deleteCalendar: function ics_deleteCal(cal, listener) {
+        throw NS_ERROR_NOT_IMPLEMENTED;
+    },
+
+    //
+    // calICalendar interface
+    //
     get name() {
         return getCalendarManager().getCalendarPref(this, "NAME");
     },
