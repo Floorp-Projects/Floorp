@@ -44,23 +44,28 @@ print $c->header();
 
 if ($c->param && $c->param('id')) {
   
+  my $title = 'Test Result #' . $c->param('id') . ' - Details';
+  my $vars = {
+              title => $title,
+             };
+  
   my $result = Litmus::DB::Testresult->retrieve($c->param('id'));
-
+  
   if (!$result) {
     internalError("There is no test result corresponding to id#: " . $c->param('id') . ".");
     exit 1;
   }
-
+  
   my $time = &Date::Manip::UnixDate("now","%q");
   my $cookie =  Litmus::Auth::getCookie();
   my $user;
   if ($cookie) {
     $user = $cookie->user_id();
-
+    
     if ($user and 
         $c->param('new_bugs') and
         $c->param('new_bugs') ne '') {
-
+      
       my $new_bug_string = $c->param('new_bugs');
       $new_bug_string =~ s/[^0-9,]//g;
       my @new_bugs = split(/,/,$new_bug_string);
@@ -78,7 +83,7 @@ if ($c->param && $c->param('id')) {
         }
       }
     } 
-
+    
     if ($user and
         $c->param('new_comment') and
         $c->param('new_comment') ne '') {
@@ -90,7 +95,7 @@ if ($c->param && $c->param('id')) {
                                                  comment => $c->param('new_comment'),
                                                 });    
     }
-
+    
     if (Litmus::Auth::istrusted($cookie) and
         $c->param('vet_result')) {
       if ($c->param('valid')) {
@@ -106,14 +111,24 @@ if ($c->param && $c->param('id')) {
       $result->last_updated($time);
       $result->update;
     }
-
+    if ((Litmus::Auth::istrusted($cookie) or
+         $cookie == $result->user_id) and 
+        $c->param('change_result_status') and
+        $c->param('result_status')) {
+      # Ignore submission if it doesn't actually change the status.
+      if ($c->param('result_status') ne $result->result_status->class_name){
+        my ($new_status) = Litmus::DB::ResultStatus->search(class_name => $c->param('result_status'));
+        if ($new_status) {
+          $result->result_status($new_status);
+          $result->last_updated($time);
+          $result->update;
+        }
+      }
+    }
+    
   }
 
-  my $title = 'Test Result #' . $c->param('id') . ' - Details';
-  my $vars = {
-              title => $title,
-              result => $result,
-             };
+  $vars->{"result"} = $result;
   
   if ($cookie) {
     $vars->{"defaultemail"} = $cookie;
