@@ -106,36 +106,10 @@
         relic -r mozilla/js/src     # re-license files
 
 """
-# Backward incompatibilities with 'lick' and 'ripl':
-# - The configuration file support from 'lick' and 'ripl' is currently
-#   not implemented. Here is a defense for each of the supported
-#   configuration items:
-#     - "exclude paths": I suppose this might be useful for repeated
-#       runs but I wouldn't call it critical.
-#     - "exclude dirs": What dirs other that CVS should always be
-#       excluded? CVS is excluded by default here.
-#     - "exclude extensions": .cvsignore is used here for this. Are
-#       there other extensions that should be ignored that are not
-#       part of .cvsignore? If so can those not just be hardcoded?
-#     - "include only extensions": Is this if one wants to do a run
-#       including only some specific files? 'lick' and 'ripl' did not
-#       support passing specific files (only dirs) on stdin. This
-#       config option can be better done with relic.py via:
-#        find . -blah blah | relic
-#     - "include licenses": This is a feature regression. But is it
-#       truly necessary to differentiate the different license combos
-#       if the 'ripl' functionality is smart enough to know what to do
-#       with what combo?
-#     - "setup extensions": An internal registry of content types is
-#       used for this. Is there any reason this registry needs to be
-#       in a configuration file? Does it differ from user to user?
-#
 # Possible TODOs:
 # - Perhaps try to infer the comment delimiter from the file is it is
 #   not known. This would help for .s files, though I don't know if that
 #   is sufficient to bother.
-#
-
 
 import os
 import sys
@@ -173,7 +147,7 @@ log = logging.getLogger("relic")
 
 #---- globals
 
-_version_ = (0, 6, 8)
+_version_ = (0, 6, 9)
 
 # When processing files, 'relic' skips files and directories according
 # to these settings. Note: files identified in .cvsignore files are also
@@ -190,11 +164,8 @@ _g_skip_file_basenames = [
     "nspr.m4",
 ]
 _g_skip_files = [
-    # GRM 2004-12-26 - these are the files we don't have full permissions for
-    # yet. See problem-file-list.txt.
-    
     # Files containing copies of the licence which confuse the script
-    # Last act is to update them all.
+    # TODO: update them all.
     "LICENSE",
     "COPYING",
     "extensions/xmlterm/doc/MPL",
@@ -211,18 +182,18 @@ _g_skip_files = [
     "security/nss/lib/freebl/mpi/tests/LICENSE-MPL", # Currently MPL/GPL
     "security/nss/lib/freebl/mpi/doc/LICENSE-MPL",   # Currently MPL/GPL
     
-    # Need to update with MPL block; exclude until then
+    # TODO: update with MPL block
     "tools/wizards/templates/licenses/MPL/lic.mak",
     "tools/wizards/templates/licenses/MPL/lic.pl",
 
-    ###########################################################################
-    # Everything in _g_skip_files below this line needs no further work for 
-    # relicensing to be completed.
-    ###########################################################################
-    
     # Files containing licensing information
+    # TODO: Update
     "xpfe/global/resources/content/license.html",
     "toolkit/content/license.html",
+    
+    ###########################################################################
+    # Everything in _g_skip_files below this line needs no further work.
+    ###########################################################################
     
     # Ben Bucksch - files are tri-licensed with an extra clause.
     "netwerk/streamconv/converters/mozTXTToHTMLConv.cpp",
@@ -272,17 +243,8 @@ _g_skip_dir_basenames_cvs_only = [
 
 # Complete path from mozilla dir to a dir to skip.
 _g_skip_dirs = [
-    # As per the "New Original Source Files" section of:
-    #   http://www.mozilla.org/MPL/license-policy.html
-    "dbm", # XXX 4-clause BSD; need to remove clause 3. Bug 331603.
-    
-    # XXX This may be a problem - it's MPLed only. James Clark has given 
-    # permission to change it back to MIT. Bug 331604.
-    "modules/xml/expat",
-    
     ###########################################################################
-    # Everything in_g_skip_dirs below this line needs no further work for 
-    # relicensing to be completed.
+    # Everything in_g_skip_dirs below this line needs no further work.
     ###########################################################################
     
     # Test files for this script; they cause it to crash!
@@ -291,8 +253,11 @@ _g_skip_dirs = [
     # License template files
     "tools/wizards/templates/licenses",
         
+    # As per the "New Original Source Files" section of:
+    #   http://www.mozilla.org/MPL/license-policy.html
     "apache", # Obsolete mod_gzip code
     "cck", # Don't know what mkaply is doing, but it's not core code anyway.
+    "dbm",
     "directory/java-sdk", # Java LDAP SDK
     "directory/perldap", # Perl LDAP SDK
     "ef", # Multi-platform Java JIT
@@ -357,7 +322,6 @@ _g_basename_to_comment_info = {
     "README": ([""], ["#"]),
     "copyright": ([""], ),
 
-    # Special cases in mozilla/xpcom/reflect/xptcall/src/md/unix/
     "xptcstubs_asm_ppc_darwin.s.m4": (["/*", " *", "*/"], ),
     "xptcstubs_asm_mips.s.m4": (["/*", " *", "*/"], ),
 
@@ -456,7 +420,7 @@ _g_ext_to_comment_info = {
 
     ".properties": (["#"], ),
     ".win":        (["#"], ),
-    ".s":          (["#"], ),
+    ".s":          (["#"], ["//"], ["!"], [";"], ["<!--", "   -", "-->"]),
     ".dsp":        (["#"], ),
     ".exp":        (["#"], ),
     ".mk":         (["#"], ),
@@ -683,7 +647,7 @@ def _should_skip_file(path):
         # '.s' file comment delimiters are all over the map.
         log.info("Skipping '%s' ('.s' files are wacky)", path)
         return 1
-    elif ext in _g_skip_exts:
+    if ext in _g_skip_exts:
         log.info("Skipping '%s' (according to '_g_skip_exts').", path)
         return 1
     xpath = '/'.join(path.split(os.sep)) # use same sep as in _g_skip_files
