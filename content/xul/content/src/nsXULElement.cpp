@@ -2292,9 +2292,18 @@ PopupListenerPropertyDtor(void* aObject, nsIAtom* aPropertyName,
 nsresult
 nsXULElement::AddPopupListener(nsIAtom* aName)
 {
+    XULPopupType popupType;
+    nsCOMPtr<nsIAtom> listenerAtom;
+    if (aName == nsXULAtoms::context || aName == nsXULAtoms::contextmenu) {
+        popupType = eXULPopupType_context;
+        listenerAtom = nsXULAtoms::contextmenulistener;
+    } else {
+        popupType = eXULPopupType_popup;
+        listenerAtom = nsXULAtoms::popuplistener;
+    }
+
     nsCOMPtr<nsIXULPopupListener> popupListener =
-        NS_STATIC_CAST(nsIXULPopupListener*,
-                       GetProperty(nsXULAtoms::popuplistener));
+        NS_STATIC_CAST(nsIXULPopupListener*, GetProperty(listenerAtom));
     if (popupListener) {
         // Popup listener is already installed.
         return NS_OK;
@@ -2306,14 +2315,6 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to create an instance of the popup listener object.");
     if (NS_FAILED(rv)) return rv;
 
-    XULPopupType popupType;
-    if (aName == nsXULAtoms::context || aName == nsXULAtoms::contextmenu) {
-        popupType = eXULPopupType_context;
-    }
-    else {
-        popupType = eXULPopupType_popup;
-    }
-
     // Add a weak reference to the node.
     popupListener->Init(this, popupType);
 
@@ -2321,7 +2322,7 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     nsCOMPtr<nsIDOMEventListener> eventListener = do_QueryInterface(popupListener);
     nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
     NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
-    rv = SetProperty(nsXULAtoms::popuplistener, popupListener,
+    rv = SetProperty(listenerAtom, popupListener,
                      PopupListenerPropertyDtor);
     NS_ENSURE_SUCCESS(rv, rv);
     nsIXULPopupListener* listener = popupListener;
