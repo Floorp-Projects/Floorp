@@ -69,7 +69,7 @@
         [% FOREACH c = bug.longdescs %]
           [% NEXT IF c.isprivate && !user.in_group(Param("insidergroup")) %]
           <long_desc isprivate="[% c.isprivate FILTER xml %]">
-            <who>[% c.email FILTER xml %]</who>
+            <who name="[% c.name FILTER xml %]">[% c.email FILTER xml %]</who>
             <bug_when>[% c.time FILTER time FILTER xml %]</bug_when>
             [% IF user.in_group(Param('timetrackinggroup')) && (c.work_time - 0 != 0) %]
               <work_time>[% PROCESS formattimeunit time_unit = c.work_time FILTER xml %]</work_time>
@@ -119,12 +119,16 @@
     [%# We need to handle some fields differently. This should become
       # nicer once we have custfields, and a type attribute for the fields
       #%]
+    [% name = '' %]
     [% IF field == 'reporter' OR field == 'assigned_to' OR
           field == 'qa_contact' %]
+      [% name = val.name %]
       [% val = val.email %]
     [% ELSIF field == 'creation_ts' OR field == 'delta_ts' %]
       [% val = val FILTER time %]
     [% END %]
-    <[% field %]>[% val FILTER xml %]</[% field %]>
+    <[% field %]
+      [% IF name != '' %]name="[% name FILTER xml %]"[% END %]
+    >[% val FILTER xml %]</[% field %]>
   [% END %]
 [% END %]
