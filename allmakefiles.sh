@@ -261,7 +261,6 @@ extensions/universalchardet/tests/Makefile
 fi
 
 MAKEFILES_js="
-js/Makefile
 js/src/Makefile
 js/src/fdlibm/Makefile
 "
