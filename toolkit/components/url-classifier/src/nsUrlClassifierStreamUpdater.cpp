@@ -101,7 +101,8 @@ TableUpdateListener::OnStartRequest(nsIRequest *request, nsISupports* context)
   nsresult status;
   rv = httpChannel->GetStatus(&status);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (NS_ERROR_CONNECTION_REFUSED == status) {
+  if (NS_ERROR_CONNECTION_REFUSED == status ||
+      NS_ERROR_NET_TIMEOUT == status) {
     // Assume that we're overloading the server and trigger backoff.
     mErrorCallback->HandleEvent(nsCString());
     return NS_ERROR_ABORT;
