@@ -2155,7 +2155,7 @@ public class Interpreter
     {
         String tag = "org.mozilla.javascript.Interpreter.interpretLoop";
         StringBuffer sb = new StringBuffer(nativeStackTrace.length() + 1000);
-        String lineSeparator = System.getProperty("line.separator");
+        String lineSeparator = SecurityUtilities.getSystemProperty("line.separator");
 
         CallFrame[] array = (CallFrame[])ex.interpreterStackInfo;
         int[] linePC = ex.interpreterLineData;
