@@ -818,13 +818,16 @@ int main(int argc, char **argv)
     PKM_LogIt("Testing Hybrid mode \n");
     PKM_HybridMode(pwd, sizeof(pwd));
     PKM_LogIt("Testing Hybrid mode  completed\n");
+    
+    PKM_LogIt("**** ALL TESTS PASSED ****\n");
+    PKM_LogIt("unloading NSS PKCS # 11 softoken and exiting\n");
 
-    PKM_LogIt("unloading NSS PKCS # 11 softoken \n");
 #ifdef _WIN32
     FreeLibrary(hModule);
 #else 
     PR_UnloadLibrary(lib);
 #endif
+
     return 0;
 }
 void PKM_LogIt(const char *fmt, ...) {
@@ -4559,7 +4562,7 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
         return crv;
     }
 
-    PKM_LogIt("Generate an DSA PQG domain parameters \n");
+    PKM_LogIt("Generate DSA PQG domain parameters \n");
     /* Generate DSA domain parameters PQG */
     crv = pFunctionList->C_GenerateKey(hRwSession, &dsaParamGenMech,
                                        dsaParamGenTemplate,
@@ -4589,7 +4592,7 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
                    "with 0x%08X, %-26s\n", crv, PKM_CK_RVtoStr(crv));
         return crv;
     }
-    PKM_LogIt("Generate an DSA key pair\n");
+    PKM_LogIt("Generate a DSA key pair\n");
     /* Generate a persistent DSA key pair */
     crv = pFunctionList->C_GenerateKeyPair(hRwSession, &dsaKeyPairGenMech,
                                            dsaPubKeyTemplate,
@@ -4604,7 +4607,7 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
                    "with 0x%08X, %-26s\n", crv, PKM_CK_RVtoStr(crv));
         return crv;
     }
-    PKM_LogIt("Generate an RSA key pair\n");
+    PKM_LogIt("Generate a RSA key pair\n");
     /*** GEN RSA Key ***/
     crv = pFunctionList->C_GenerateKeyPair(hRwSession, &rsaKeyPairGenMech,
                                            rsaPubKeyTemplate,
