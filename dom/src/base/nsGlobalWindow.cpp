@@ -7935,13 +7935,9 @@ nsNavigator::GetOnLine(PRBool* aOnline)
 NS_IMETHODIMP
 nsNavigator::GetBuildID(nsAString& aBuildID)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  long buildID = NS_BUILD_ID;
-  if (buildID) {
-    aBuildID = NS_LITERAL_STRING(NS_STRINGIFY(NS_BUILD_ID));
-    rv = NS_OK;
-  }
-  return rv;
+  aBuildID = NS_LITERAL_STRING(NS_STRINGIFY(NS_BUILD_ID));
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
