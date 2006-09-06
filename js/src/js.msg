@@ -294,3 +294,4 @@ MSG_DEF(JSMSG_IN_AFTER_FOR_NAME,      211, 0, JSEXN_SYNTAXERR, "missing in after
 MSG_DEF(JSMSG_BAD_ITERATOR_RETURN,    212, 2, JSEXN_TYPEERR, "{0}.{1} returned a primitive value")
 MSG_DEF(JSMSG_KEYWORD_NOT_NS,         213, 0, JSEXN_SYNTAXERR, "keyword is used as namespace")
 MSG_DEF(JSMSG_BAD_GENERATOR_YIELD,    214, 1, JSEXN_TYPEERR, "yield from closing generator {0}")
+MSG_DEF(JSMSG_BAD_YIELD_SYNTAX,       215, 0, JSEXN_SYNTAXERR, "yield expression must be parenthesized")
