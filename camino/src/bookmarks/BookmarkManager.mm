@@ -1270,9 +1270,16 @@ static BookmarkManager* gBookmarkManager = nil;
     else
     {
       // save the corrupted bookmarks to a backup file
+      long long bmFileSize = [fM sizeOfFileAtPath:bookmarkPath traverseLink:YES];
+      NSLog(@"Corrupted bookmarks.plist is %qi bytes", bmFileSize);
+      NSDictionary* fileAttributesDict = [fM fileAttributesAtPath:bookmarkPath traverseLink:YES];
+      NSDate* modificationDate = [fileAttributesDict objectForKey:NSFileModificationDate];
+      NSLog(@"Corrupted bookmarks.plist was last modified %@", modificationDate);
+
       NSString* uniqueName = [fM backupFileNameFromPath:bookmarkPath withSuffix:@"-corrupted"];
-      [fM copyPath:bookmarkPath toPath:uniqueName handler:nil];
-      NSLog(@"Copied corrupted bookmarks file to %@", uniqueName);
+      BOOL withSuccess = [fM copyPath:bookmarkPath toPath:uniqueName handler:nil];
+
+      NSLog(@"Copied corrupted bookmarks file to %@ (OK? %d)", uniqueName, withSuccess);
     }
   }
   else if ([fM isReadableFileAtPath:[profileDir stringByAppendingPathComponent:@"bookmarks.xml"]])
@@ -1923,6 +1930,12 @@ static BookmarkManager* gBookmarkManager = nil;
 //
 -(void)writePropertyListFile:(NSString *)pathToFile
 {
+  if (![NSThread inMainThread])
+  {
+    NSLog(@"writePropertyListFile: called from background thread");
+    return;
+  }
+
   if (!pathToFile)
   {
     NSLog(@"writePropertyListFile: nil path argument");
