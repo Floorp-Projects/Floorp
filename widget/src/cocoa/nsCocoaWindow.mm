@@ -345,12 +345,10 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     
     if (mWindowType != eWindowType_popup)
       rect.origin.y -= ::GetMBarHeight();
-    
-#ifdef DEBUG
-    NSLog(@"Top-level window being created at Cocoa rect: %f, %f, %f, %f\n",
-          rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
-#endif
-    
+
+    // NSLog(@"Top-level window being created at Cocoa rect: %f, %f, %f, %f\n",
+    //       rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+
     // create the window
     mWindow = [[NSWindow alloc] initWithContentRect:rect styleMask:features 
                                 backing:NSBackingStoreBuffered defer:NO];
