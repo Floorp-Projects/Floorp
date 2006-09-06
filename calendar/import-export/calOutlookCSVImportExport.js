@@ -431,7 +431,6 @@ function csv_exportToStream(aStream, aCount, aItems) {
     headers.push(localeEn['headDescription']);
     headers.push(localeEn['headLocation']);
     headers.push(localeEn['headPrivate']);
-    headers.push(localeEn['headAlarmTime']);
     str = headers.map(function(v) {return '"'+v+'"';}).join(',')+"\n"
     aStream.write(str, str.length);
 
@@ -447,6 +446,7 @@ function csv_exportToStream(aStream, aCount, aItems) {
         line.push(""); //XXX add alarm support
         line.push(""); //XXX add alarm support
         line.push(item.getProperty("CATEGORIES"));
+        line.push(item.getProperty("DESCRIPTION"));
         line.push(item.getProperty("LOCATION"));
         line.push((item.privacy=="PRIVATE") ? localeEn.valueTrue : localeEn.valueFalse);
 
