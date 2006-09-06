@@ -1101,12 +1101,12 @@ calStorageCalendar.prototype = {
             this.mDB,
             "SELECT * FROM cal_todos " +
             "WHERE " +
-            " (("+floatingTodoDue+" >= :range_start + :start_offset) OR " +
-            "  ("+nonFloatingTodoDue+" >= :range_start)) OR " +
-            "   (todo_due IS NULL) AND " +
-            " (("+floatingTodoEntry+" < :range_end + :end_offset) OR " +
-            "  ("+nonFloatingTodoEntry+" < :range_end)) OR " +
-            "   (todo_entry IS NULL) " +
+            " ((("+floatingTodoDue+" >= :range_start + :start_offset) OR " +
+            "   ("+nonFloatingTodoDue+" >= :range_start)) OR " +
+            "  (todo_due IS NULL)) AND " +
+            " ((("+floatingTodoEntry+" < :range_end + :end_offset) OR " +
+            "   ("+nonFloatingTodoEntry+" < :range_end)) OR " +
+            "  (todo_entry IS NULL)) " +
             " AND cal_id = :cal_id AND recurrence_id IS NULL"
             );
 
