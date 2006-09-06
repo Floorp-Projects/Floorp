@@ -270,8 +270,8 @@ calCalendarManager.prototype = {
            (calendar.type == "storage" || calendar.type == "memory")) {
             try {
                 calendar.deleteCalendar(calendar, null);
-            } catch(ex) {
-                dump("error purging calendar:"+ex+'\n');
+            } catch (e) {
+                Components.utils.reportError("error purging calendar: " + e);
             }
         }
     },
