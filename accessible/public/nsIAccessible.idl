@@ -23,6 +23,7 @@
  * Contributor(s): Aaron Leventhal (aaronl@netscape.com)
  *                 John Gaunt (jgaunt@netscape.com)
  *                 Kyle Yuan (kyle.yuan@sun.com)
+ *                 Håkan Waara (hwaara@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,6 +40,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsIArray.idl"
+
 interface nsIPersistentProperties;
 
 /**
@@ -53,7 +56,8 @@ interface nsIPersistentProperties;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(c27c44b9-9455-48f2-b5f4-2897e54a8d69)]
+
+[scriptable, uuid(3068b82f-1eec-47eb-b407-bf8415c22942)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -80,6 +84,11 @@ interface nsIAccessible : nsISupports
    * Last child in accessible tree
    */
   readonly attribute nsIAccessible lastChild;
+  
+  /**
+   * Array of all this element's children.
+   */
+  readonly attribute nsIArray children;
 
   /**
    * Number of accessible children

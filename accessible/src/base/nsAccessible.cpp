@@ -635,6 +635,22 @@ NS_IMETHODIMP nsAccessible::GetChildAt(PRInt32 aChildNum, nsIAccessible **aChild
   return NS_OK;
 }
 
+// readonly attribute nsIArray children;
+NS_IMETHODIMP nsAccessible::GetChildren(nsIArray **aOutChildren)
+{
+  nsCOMPtr<nsIMutableArray> children = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  if (!children)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAccessible> curChild;
+  while (NextChild(curChild)) {
+    children->AppendElement(curChild, PR_FALSE);
+  }
+  
+  NS_ADDREF(*aOutChildren = children);
+  return NS_OK;
+}
+
 nsIAccessible *nsAccessible::NextChild(nsCOMPtr<nsIAccessible>& aAccessible)
 {
   nsCOMPtr<nsIAccessible> nextChild;
@@ -953,7 +969,7 @@ NS_IMETHODIMP nsAccessible::GetChildAtPoint(PRInt32 tx, PRInt32 ty, nsIAccessibl
         nsIFrame *frame = accessNode->GetFrame();
         if (!frame) {
           child->GetFinalState(&state);
-          // Some case accessibles don't have a frame; examples are
+          // In some cases accessibles don't have a frame; examples are
           // tree items or combo box dropdown markers. For these cases
           // just ensure that the returned accessible is visible.
           if ((state & (STATE_OFFSCREEN|STATE_INVISIBLE)) == 0) {
