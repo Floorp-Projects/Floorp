@@ -1210,11 +1210,17 @@ def _get_license_info(filename, quick=0):
         initial_developer = match.group("developer")
         initial_copyright_date = match.group("date")
     lic_info["initial_developer"] = initial_developer
-    # XXX GRM - temporary code to print out Initial Developer list for MPL
-    # section 3.3 compliance.
+    ###########################################################################
+    # XXX GRM - Temporary code to print out Initial Developer list for MPL
+    # section 3.3 compliance in about:licence.
+    # 0) Uncomment the two lines below.
+    # 1) /usr/src/relic/relic -s -f . > init-devs.txt
+    # 2) Edit init-devs.txt to remove the trailing summary text.
+    # 3) /usr/src/relic/make-id-list < init-devs.txt > list.txt
+    ###########################################################################
     # if initial_developer:
-        # print filename + ": " + initial_developer
-        # print initial_developer
+    #     print initial_developer
+    
     lic_info["initial_copyright_date"] = initial_copyright_date
     log.info("initial developer paragraph: %r", paragraph)
     log.info("initial developer: %r", initial_developer)
