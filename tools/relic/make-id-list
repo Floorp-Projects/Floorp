@@ -82,4 +82,4 @@ while (<>)
 }
 
 # Print out the list in a form suitable for pasting into about:licence.
-print join (", ", sort {lc $a cmp lc $b} keys %indevs);
+print join (",\n", sort {lc $a cmp lc $b} keys %indevs);
