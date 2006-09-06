@@ -1,4 +1,3 @@
-#expand <!ENTITY  lang.version          "__MOZILLA_LOCALE_VERSION__">
 <!ENTITY  brandShortName        "Mail/News">
 <!ENTITY  brandFullName         "Mail/News Client">
 <!ENTITY  vendorShortName       "Mail/News Client">
