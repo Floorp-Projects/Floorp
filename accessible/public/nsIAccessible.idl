@@ -56,7 +56,6 @@ interface nsIPersistentProperties;
  *
  * @status UNDER_REVIEW
  */
-
 [scriptable, uuid(3068b82f-1eec-47eb-b407-bf8415c22942)]
 interface nsIAccessible : nsISupports
 {
