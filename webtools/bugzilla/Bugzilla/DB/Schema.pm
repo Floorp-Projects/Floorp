@@ -1047,6 +1047,7 @@ use constant ABSTRACT_SCHEMA => {
             default_value => {TYPE => 'varchar(32)', NOTNULL => 1},
             is_enabled    => {TYPE => 'BOOLEAN', NOTNULL => 1,
                               DEFAULT => 'TRUE'},
+            subclass      => {TYPE => 'varchar(32)'},
         ],
     },
 

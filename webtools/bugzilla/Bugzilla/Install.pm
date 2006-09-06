@@ -50,6 +50,8 @@ use constant SETTINGS => {
     # 2006-05-01 olav@bkor.dhs.org -- Bug 7710
     state_addselfcc    => { options => ['always', 'never',  'cc_unless_role'],
                             default => 'cc_unless_role' },
+    # 2006-08-04 wurblzap@gmail.com -- Bug 322693
+    skin               => { subclass => 'Skin', default => 'standard' },
 
 };
 
@@ -75,8 +77,10 @@ use constant DEFAULT_COMPONENT => {
 sub update_settings {
     my %settings = %{SETTINGS()};
     foreach my $setting (keys %settings) {
-        add_setting($setting, $settings{$setting}->{options}, 
-                    $settings{$setting}->{default});
+        add_setting($setting,
+                    $settings{$setting}->{options}, 
+                    $settings{$setting}->{default},
+                    $settings{$setting}->{subclass});
     }
 }
 

@@ -485,6 +485,8 @@ sub update_table_definitions {
 
     _update_longdescs_who_index();
 
+    $dbh->bz_add_column('setting', 'subclass', {TYPE => 'varchar(32)'});
+
     ################################################################
     # New --TABLE-- changes should go *** A B O V E *** this point #
     ################################################################

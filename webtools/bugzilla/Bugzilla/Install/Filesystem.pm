@@ -184,6 +184,7 @@ sub FILESYSTEM {
         graphs                  => $ws_dir_writeable,
         $webdotdir              => $ws_dir_writeable,
         'skins/custom'          => $ws_dir_readable,
+        'skins/contrib'         => $ws_dir_readable,
     );
 
     # The name of each file, pointing at its default permissions and

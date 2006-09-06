@@ -368,6 +368,7 @@ sub bz_locations {
         'localconfig' => "$libpath/$localconfig",
         'datadir'     => "$libpath/$datadir",
         'attachdir'   => "$libpath/$datadir/attachments",
+        'skinsdir'    => "$libpath/skins/contrib",
         # $webdotdir must be in the webtree somewhere. Even if you use a 
         # local dot, we output images to there. Also, if $webdotdir is 
         # not relative to the bugzilla root directory, you'll need to 

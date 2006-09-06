@@ -330,6 +330,10 @@
     option. Setting names must begin with a letter, and contain only
     letters, digits, or the symbols '_', '-', '.', or ':'.
 
+  [% ELSIF error == "setting_subclass_invalid" %]
+    There is no such Setting subclass as
+    <code>[% subclass FILTER html %]</code>.
+
   [% ELSIF error == "setting_value_invalid" %]
     The value "<code>[% value FILTER html %]</code>" is not in the list of
     legal values for the <em>[% name FILTER html %]</em> setting.

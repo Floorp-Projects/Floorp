@@ -14,6 +14,7 @@
 #
 # Contributor(s): Shane H. W. Travis <travis@sedsystems.ca>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
+#                 Marc Schumann <wurblzap@gmail.com>
 #
 
 
@@ -39,10 +40,10 @@ sub new {
     my $user_id = shift;
 
     my $class = ref($invocant) || $invocant;
+    my $subclass = '';
 
     # Create a ref to an empty hash and bless it
     my $self = {};
-    bless($self, $class);
 
     my $dbh = Bugzilla->dbh;
 
@@ -60,9 +61,10 @@ sub new {
     # to retrieve the information for this setting ourselves.
     if (scalar @_ == 0) {
 
-        my ($default, $is_enabled, $value) = 
+        my ($default, $is_enabled, $value);
+        ($default, $is_enabled, $value, $subclass) = 
           $dbh->selectrow_array(
-             q{SELECT default_value, is_enabled, setting_value
+             q{SELECT default_value, is_enabled, setting_value, subclass
                  FROM setting
             LEFT JOIN profile_setting
                    ON setting.name = profile_setting.setting_name
@@ -73,9 +75,9 @@ sub new {
 
         # if not defined, then grab the default value
         if (! defined $value) {
-            ($default, $is_enabled) =
+            ($default, $is_enabled, $subclass) =
               $dbh->selectrow_array(
-                 q{SELECT default_value, is_enabled
+                 q{SELECT default_value, is_enabled, subclass
                    FROM setting
                    WHERE name = ?},
               undef,
@@ -96,12 +98,23 @@ sub new {
         }
     }
     else {
-      # If the values were passed in, simply assign them and return.
-      $self->{'is_enabled'}     = shift;
-      $self->{'default_value'}  = shift;
-      $self->{'value'}          = shift;
-      $self->{'is_default'}     = shift;
+        ($subclass) = $dbh->selectrow_array(
+            q{SELECT subclass FROM setting WHERE name = ?},
+            undef,
+            $setting_name);
+        # If the values were passed in, simply assign them and return.
+        $self->{'is_enabled'}    = shift;
+        $self->{'default_value'} = shift;
+        $self->{'value'}         = shift;
+        $self->{'is_default'}    = shift;
     }
+    if ($subclass) {
+        eval('require ' . $class . '::' . $subclass);
+        $@ && ThrowCodeError('setting_subclass_invalid',
+                             {'subclass' => $subclass});
+        $class = $class . '::' . $subclass;
+    }
+    bless($self, $class);
 
     $self->{'_setting_name'} = $setting_name;
     $self->{'_user_id'}      = $user_id;
@@ -114,18 +127,18 @@ sub new {
 ###############################
 
 sub add_setting {
-    my ($name, $values, $default_value) = @_;
+    my ($name, $values, $default_value, $subclass) = @_;
     my $dbh = Bugzilla->dbh;
 
     return if _setting_exists($name);
 
-    ($name && $values && $default_value)
+    ($name && $default_value)
       ||  ThrowCodeError("setting_info_invalid");
 
     print "Adding a new user setting called '$name'\n";
-    $dbh->do(q{INSERT INTO setting (name, default_value, is_enabled)
-                    VALUES (?, ?, 1)},
-             undef, ($name, $default_value));
+    $dbh->do(q{INSERT INTO setting (name, default_value, is_enabled, subclass)
+                    VALUES (?, ?, 1, ?)},
+             undef, ($name, $default_value, $subclass));
 
     my $sth = $dbh->prepare(q{INSERT INTO setting_value (name, value, sortindex)
                                     VALUES (?, ?, ?)});
