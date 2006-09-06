@@ -146,7 +146,6 @@ static SECStatus RNG_kstat(PRUint32* fed)
     if (entropy_buf) {
         for (ksp = kc->kc_chain; ksp != NULL; ksp = ksp->ks_next) {
             if (-1 == kstat_read(kc, ksp, NULL)) {
-                PORT_Assert(0);
                 /* missing data from a single kstat shouldn't be fatal */
                 continue;
             }
