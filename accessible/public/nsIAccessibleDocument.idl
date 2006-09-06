@@ -58,7 +58,7 @@ interface nsIDOMWindow;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(8781FC88-355F-4439-881F-6504A0A1CEB6)]
+[scriptable, uuid(DD22939F-B470-4a56-9B80-8C7BA4031334)]
 interface nsIAccessibleDocument : nsISupports
 {
   /**
