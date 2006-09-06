@@ -341,6 +341,8 @@ sub packit {
     $lightningXpiStageDir = 'windows-xpi';
   } elsif (TinderUtils::is_linux()) {
     $lightningXpiStageDir = 'linux-xpi';
+  } elsif (TinderUtils::is_mac()) {
+    $lightningXpiStageDir = 'mac-xpi';
   }
 
   if (-e $lightningXpi && $lightningXpiStageDir ne undef) {
