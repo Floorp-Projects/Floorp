@@ -54,7 +54,11 @@ public class DefiningClassLoader extends ClassLoader
     }
 
     public Class defineClass(String name, byte[] data) {
-        return super.defineClass(name, data, 0, data.length);
+        // Use our own protection domain for the generated classes.
+        // TODO: we might want to use a separate protection domain for classes
+        // compiled from scripts, based on where the script was loaded from.
+        return super.defineClass(name, data, 0, data.length, 
+                SecurityUtilities.getProtectionDomain(getClass()));
     }
 
     public void linkClass(Class cl) {
@@ -78,5 +82,5 @@ public class DefiningClassLoader extends ClassLoader
         return cl;
     }
 
-    private ClassLoader parentLoader;
+    private final ClassLoader parentLoader;
 }

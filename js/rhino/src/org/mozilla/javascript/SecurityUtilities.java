@@ -38,10 +38,11 @@ package org.mozilla.javascript;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.security.ProtectionDomain;
 
 /**
  * @author Attila Szegedi
- * @version $Id: SecurityUtilities.java,v 1.1 2006/09/06 12:53:49 szegedia%freemail.hu Exp $
+ * @version $Id: SecurityUtilities.java,v 1.2 2006/09/06 13:35:16 szegedia%freemail.hu Exp $
  */
 public class SecurityUtilities
 {
@@ -61,5 +62,17 @@ public class SecurityUtilities
                     return System.getProperty(name);
                 }
             });
+    }
+    
+    public static ProtectionDomain getProtectionDomain(final Class clazz)
+    {
+        return (ProtectionDomain)AccessController.doPrivileged(
+                new PrivilegedAction()
+                {
+                    public Object run()
+                    {
+                        return clazz.getProtectionDomain();
+                    }
+                });
     }
 }
