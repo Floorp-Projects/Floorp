@@ -522,8 +522,6 @@ public:
 
     virtual nsIContent *GetBindingParent() const;
     virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
-    NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
-                                  nsIEventListenerManager** aResult);
     virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
     virtual nsIAtom* GetID() const;
     virtual const nsAttrValue* GetClasses() const;
@@ -601,7 +599,6 @@ protected:
 
     // Required fields
     nsRefPtr<nsXULPrototypeElement>     mPrototype;
-    nsCOMPtr<nsIEventListenerManager>   mListenerManager;    // [OWNER]
 
     /**
      * The nearest enclosing content node with a binding
