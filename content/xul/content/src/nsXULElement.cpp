@@ -280,10 +280,6 @@ nsXULElement::~nsXULElement()
     if (IsInDoc()) {
       UnbindFromTree();
     }
-
-    if (mListenerManager) {
-      mListenerManager->Disconnect();
-    }
 }
 
 nsXULElement::nsXULSlots::nsXULSlots(PtrBits aFlags)
@@ -561,29 +557,6 @@ nsXULElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
     return nsGenericElement::GetEventListenerManagerForAttr(aManager,
                                                             aTarget,
                                                             aDefer);
-}
-
-NS_IMETHODIMP
-nsXULElement::GetListenerManager(PRBool aCreateIfNotFound,
-                                 nsIEventListenerManager** aResult)
-{
-    if (!mListenerManager) {
-        if (!aCreateIfNotFound) {
-            *aResult = nsnull;
-            return NS_OK;
-        }
-
-        nsresult rv =
-            NS_NewEventListenerManager(getter_AddRefs(mListenerManager));
-        if (NS_FAILED(rv))
-            return rv;
-
-        mListenerManager->SetListenerTarget(NS_STATIC_CAST(nsIContent*, this));
-    }
-
-    *aResult = mListenerManager;
-    NS_ADDREF(*aResult);
-    return NS_OK;
 }
 
 PRBool
