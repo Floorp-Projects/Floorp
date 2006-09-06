@@ -1499,13 +1499,15 @@ nsGenericHTMLElement::PostHandleEventForAnchors(nsEventChainPostVisitor& aVisito
             if (win) {
               nsIFocusController *focusController =
                 win->GetRootFocusController();
-              PRBool isActive = PR_FALSE;
-              focusController->GetActive(&isActive);
-              if (!isActive) {
-                nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(this);
-                if(domElement)
-                  focusController->SetFocusedElement(domElement);
-                break;
+              if (focusController) {
+                PRBool isActive = PR_FALSE;
+                focusController->GetActive(&isActive);
+                if (!isActive) {
+                  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(this);
+                  if(domElement)
+                    focusController->SetFocusedElement(domElement);
+                  break;
+                }
               }
             }
 

@@ -1612,7 +1612,8 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
       nsIFocusController *focusController =
         nsGlobalWindow::GetRootFocusController();
       PRBool isActive = PR_FALSE;
-      focusController->GetActive(&isActive);
+      if (focusController)
+        focusController->GetActive(&isActive);
       // only restore OS chrome if the closing window was active
 
       if (isActive) {

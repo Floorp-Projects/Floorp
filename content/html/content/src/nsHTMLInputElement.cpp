@@ -1169,13 +1169,15 @@ nsHTMLInputElement::SetFocus(nsPresContext* aPresContext)
   nsCOMPtr<nsPIDOMWindow> win = doc->GetWindow();
   if (win) {
     nsIFocusController *focusController = win->GetRootFocusController();
-    PRBool isActive = PR_FALSE;
-    focusController->GetActive(&isActive);
-    if (!isActive) {
-      focusController->SetFocusedWindow(win);
-      focusController->SetFocusedElement(this);
+    if (focusController) {
+      PRBool isActive = PR_FALSE;
+      focusController->GetActive(&isActive);
+      if (!isActive) {
+        focusController->SetFocusedWindow(win);
+        focusController->SetFocusedElement(this);
 
-      return;
+        return;
+      }
     }
   }
 
@@ -1215,13 +1217,15 @@ nsHTMLInputElement::Select()
     nsPIDOMWindow *win = doc->GetWindow();
     if (win) {
       nsIFocusController *focusController = win->GetRootFocusController();
-      PRBool isActive = PR_FALSE;
-      focusController->GetActive(&isActive);
-      if (!isActive) {
-        focusController->SetFocusedWindow(win);
-        focusController->SetFocusedElement(this);
-        SelectAll(presContext);
-        return NS_OK;
+      if (focusController) {
+        PRBool isActive = PR_FALSE;
+        focusController->GetActive(&isActive);
+        if (!isActive) {
+          focusController->SetFocusedWindow(win);
+          focusController->SetFocusedElement(this);
+          SelectAll(presContext);
+          return NS_OK;
+        }
       }
     }
 
