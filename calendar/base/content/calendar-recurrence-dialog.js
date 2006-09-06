@@ -141,6 +141,7 @@ function loadDialog()
                 break;
             case "WEEKLY":
                 document.getElementById("period-list").selectedIndex = 1;
+                setElementValue("weekly-weeks", rule.interval);
 
                 const byDayTable = { 1 : "sun", 2 : "mon", 3 : "tue", 4 : "wed",
                                      5 : "thu", 6 : "fri", 7: "sat" };
@@ -154,6 +155,7 @@ function loadDialog()
                 // XXX This code ignores a lot of monthly recurrence rules that
                 // can come in from external sources. There just is no UI to
                 // show them
+                setElementValue("monthly-months", rule.interval);
                 var days = rule.getComponent("BYMONTHDAY", {});
                 if (days.length > 0 && days[0]) {
                     if (days[0] == -1) {
@@ -232,7 +234,7 @@ function saveDialog()
         break;
     case 1:
         recRule.type = "WEEKLY";
-        recRule.interval = 1; // XXX we need to support every 2 weeks and so on..
+        recRule.interval = getElementValue("weekly-weeks");
         var onDays = [];
         ["sun", "mon", "tue", "wed", "thu", "fri", "sat"].
             forEach(function(d)
@@ -247,7 +249,7 @@ function saveDialog()
         break;
     case 2:
         recRule.type = "MONTHLY";
-        recRule.interval = 1; // XXX we need to support every 2 months and so on..
+        recRule.interval = getElementValue("monthly-months");
         var recurtype = getElementValue("monthly-type");
         switch (recurtype) {
           case "nth-day":
@@ -338,21 +340,24 @@ function updateAccept()
     document.getElementById("repeat-interval-warning").setAttribute("hidden", true);
     document.getElementById("repeat-numberoftimes-warning").setAttribute("hidden", true);
 
+    var interval;
     switch (Number(getElementValue("period-list"))) {
     case 0: // daily
-        var ndays = Number(getElementValue("daily-days"));
-        if (ndays == "" || ndays < 1) {
-            document.getElementById("repeat-interval-warning").removeAttribute("hidden");
-            acceptButton.setAttribute("disabled", "true");
-        }
+        interval = Number(getElementValue("daily-days"));
+        break;
+    case 1: // weekly
+        interval = Number(getElementValue("weekly-weeks"));
+        break;
+    case 2: // monthly
+        interval = Number(getElementValue("monthly-months"));
         break;
     case 3: // yearly
-        var nyears = Number(getElementValue("yearly-years"));
-        if (nyears == "" || nyears < 1) {
-            document.getElementById("repeat-interval-warning").removeAttribute("hidden");
-            acceptButton.setAttribute("disabled", "true");
-        }
+        interval = Number(getElementValue("yearly-years"));
         break;
+    }
+    if (interval == "" || interval < 1) {
+        document.getElementById("repeat-interval-warning").removeAttribute("hidden");
+        acceptButton.setAttribute("disabled", "true");
     }
 
     if (document.getElementById("recurrence-duration").selectedItem.value == "ntimes") {

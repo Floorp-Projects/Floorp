@@ -108,23 +108,35 @@
             </vbox>
 
             <!-- Weekly -->
-            <hbox>
-              <label value="&newevent.recurrence.on.label;"/>
-              <vbox>
-                <checkbox id="weekly-mon" label="&day.2.name;" value="2"/>
-                <checkbox id="weekly-tue" label="&day.3.name;" value="3"/>
-                <checkbox id="weekly-wed" label="&day.4.name;" value="4"/>
-                <checkbox id="weekly-thu" label="&day.5.name;" value="5"/>
-              </vbox>
-              <vbox>
-                <checkbox id="weekly-fri" label="&day.6.name;" value="6"/>
-                <checkbox id="weekly-sat" label="&day.7.name;" value="7"/>
-                <checkbox id="weekly-sun" label="&day.1.name;" value="1"/>
-              </vbox>
-            </hbox>
+            <vbox>
+              <hbox align="center">
+                <label value="&newevent.recurrence.every.label;"/>
+                <textbox id="weekly-weeks" value="1" size="3" 
+                         oninput="validateIntegers(event); updateAccept();"/>
+                <label value="&newevent.recurrence.weeks.label;"/>
+              </hbox>
+              <hbox>
+                <vbox>
+                  <checkbox id="weekly-mon" label="&day.2.name;" value="2"/>
+                  <checkbox id="weekly-tue" label="&day.3.name;" value="3"/>
+                  <checkbox id="weekly-wed" label="&day.4.name;" value="4"/>
+                  <checkbox id="weekly-thu" label="&day.5.name;" value="5"/>
+                </vbox>
+                <vbox>
+                  <checkbox id="weekly-fri" label="&day.6.name;" value="6"/>
+                  <checkbox id="weekly-sat" label="&day.7.name;" value="7"/>
+                  <checkbox id="weekly-sun" label="&day.1.name;" value="1"/>
+                </vbox>
+              </hbox>
+            </vbox>
 
             <vbox>
-              <label value="&newevent.recurrence.every.label;"/>
+              <hbox align="center">
+                <label value="&newevent.recurrence.every.label;"/>
+                <textbox id="monthly-months" value="1" size="3"
+                         oninput="validateIntegers(event); updateAccept();"/>
+                <label value="&newevent.recurrence.months.label;"/>
+              </hbox>
               <radiogroup id="monthly-type">
                 <radio id="monthly-nth-day" value="nth-day"/>
                 <radio id="monthly-nth-week" value="nth-week"/>

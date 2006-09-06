@@ -148,7 +148,9 @@
 <!ENTITY newevent.recurrence.occurs.label   "Occurs" >
 <!ENTITY newevent.recurrence.day.label      "daily" >
 <!ENTITY newevent.recurrence.week.label     "weekly" >
+<!ENTITY newevent.recurrence.weeks.label    "weeks on" >
 <!ENTITY newevent.recurrence.month.label    "monthly" >
+<!ENTITY newevent.recurrence.months.label   "months on the" >
 <!ENTITY newevent.recurrence.year.label     "annually" >
 <!ENTITY newevent.recurrence.on.label       "On:" >
 <!ENTITY newevent.recurrence.every.label    "Every:" >
