@@ -2735,6 +2735,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 (void) js_GetToken(cx, ts);
                 if (js_PeekToken(cx, ts) == TOK_LP) {
                     pn1 = LetBlock(cx, ts, tc, JS_FALSE);
+                    tt = TOK_LEXICALSCOPE;
                 } else {
                     pnlet = PushLexicalScope(cx, ts, tc, &blockInfo);
                     if (!pnlet)
