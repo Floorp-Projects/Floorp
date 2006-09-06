@@ -1599,10 +1599,17 @@ NS_IMETHODIMP nsMsgDBView::RemoveColumnHandler(const nsAString& aColID)
 //TODO: NS_ENSURE_SUCCESS
 nsIMsgCustomColumnHandler* nsMsgDBView::GetCurColumnHandlerFromDBInfo()
 {
+  if (!m_db)
+    return nsnull;  
+    
   nsresult rv;
   
   nsCOMPtr<nsIDBFolderInfo>  dbInfo;
+  
   m_db->GetDBFolderInfo(getter_AddRefs(dbInfo));
+  
+  if (!dbInfo)
+    return nsnull;
   
   nsAutoString colID;
   rv = dbInfo->GetProperty("customSortCol", colID);            
