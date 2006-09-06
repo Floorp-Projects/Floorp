@@ -122,6 +122,7 @@ var gAlarmsPane = {
 
         var bundlePreferences = document.getElementById("bundlePreferences");
         var title = bundlePreferences.getString("Open");
+        fp.appendFilters(nsIFilePicker.filterAll);
         fp.init(window, title, nsIFilePicker.modeOpen);
 
         var ret = fp.show();
