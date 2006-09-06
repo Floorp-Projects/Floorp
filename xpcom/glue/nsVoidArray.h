@@ -69,7 +69,7 @@ public:
 
   void* FastElementAt(PRInt32 aIndex) const
   {
-    NS_ASSERTION(0 <= aIndex && aIndex < Count(), "index out of range");
+    NS_ASSERTION(0 <= aIndex && aIndex < Count(), "nsVoidArray::FastElementAt: index out of range");
     return mImpl->mArray[aIndex];
   }
 
@@ -78,7 +78,7 @@ public:
   // crashing for backwards compatibility.  See bug 96108.
   void* ElementAt(PRInt32 aIndex) const
   {
-    NS_ASSERTION(0 <= aIndex && aIndex < Count(), "index out of range");
+    NS_ASSERTION(0 <= aIndex && aIndex < Count(), "nsVoidArray::ElementAt: index out of range");
     return SafeElementAt(aIndex);
   }
 
@@ -370,7 +370,7 @@ public:
   // crashing for backwards compatibility.  See bug 96108.
   void* ElementAt(PRInt32 aIndex) const
   {
-    NS_ASSERTION(0 <= aIndex && aIndex < Count(), "index out of range");
+    NS_ASSERTION(0 <= aIndex && aIndex < Count(), "nsSmallVoidArray::ElementAt: index out of range");
     return SafeElementAt(aIndex);
   }
   void* SafeElementAt(PRInt32 aIndex) const {

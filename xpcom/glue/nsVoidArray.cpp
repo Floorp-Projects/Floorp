@@ -1241,7 +1241,7 @@ nsSmallVoidArray::Count() const
 void*
 nsSmallVoidArray::FastElementAt(PRInt32 aIndex) const
 {
-  NS_ASSERTION(0 <= aIndex && aIndex < Count(), "index out of range");
+  NS_ASSERTION(0 <= aIndex && aIndex < Count(), "nsSmallVoidArray::FastElementAt: index out of range");
 
   if (HasSingle()) {
     return GetSingle();
