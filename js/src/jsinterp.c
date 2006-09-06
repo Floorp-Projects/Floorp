@@ -463,47 +463,67 @@ js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-/*
- * Recursive helper to convert a compile-time block chain to a runtime block
- * scope chain prefix.  Each cloned block object is safe from GC by virtue of
- * the object newborn root.  This root cannot be displaced by arbitrary code
- * called from within js_NewObject, because we pass non-null proto and parent
- * arguments (so js_NewObject won't call js_GetClassPrototype).
- */
-static JSObject *
-CloneBlockChain(JSContext *cx, JSStackFrame *fp, JSObject *obj)
-{
-    JSObject *parent;
-
-    parent = OBJ_GET_PARENT(cx, obj);
-    if (!parent) {
-        parent = fp->scopeChain;
-    } else {
-        parent = CloneBlockChain(cx, fp, parent);
-        if (!parent)
-            return NULL;
-        fp->scopeChain = parent;
-    }
-    return js_CloneBlockObject(cx, obj, parent, fp);
-}
-
 JSObject *
 js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
 {
-    JSObject *obj;
+    JSObject *obj, *cursor, *clonedChild, *parent;
+    JSTempValueRooter tvr;
 
     obj = fp->blockChain;
-    if (obj) {
-        obj = CloneBlockChain(cx, fp, obj);
-        if (!obj)
-            return NULL;
-        fp->flags |= JSFRAME_POP_BLOCKS;
-        fp->scopeChain = obj;
-        fp->blockChain = NULL;
-        return obj;
+    if (!obj) {
+        JS_ASSERT(fp->scopeChain);
+        return fp->scopeChain;
     }
-    JS_ASSERT(fp->scopeChain);
-    return fp->scopeChain;
+
+    /*
+     * Clone the block chain. To avoid recursive cloning we set the parent of
+     * the cloned child after we clone the parent. In the following loop when
+     * clonedChild is null it indicates the first iteration when no special GC
+     * rooting is necessary. On the second and the following iterations we
+     * have to protect clonedChild against the GC during cloning of the parent.
+     */
+    cursor = obj;
+    clonedChild = NULL;
+    for (;;) {
+        parent = OBJ_GET_PARENT(cx, cursor);
+
+        /*
+         * We pass fp->scopeChain and not null even if we override the parent
+         * slot later as null triggers useless calculations of slot's value in
+         * js_NewObject that js_CloneBlockObject calls.
+         */
+        cursor = js_CloneBlockObject(cx, cursor, fp->scopeChain, fp);
+        if (!cursor) {
+            if (clonedChild)
+                JS_POP_TEMP_ROOT(cx, &tvr);
+            return NULL;
+        }
+        if (!parent) {
+            if (!clonedChild)
+                obj = cursor;
+            else
+                JS_POP_TEMP_ROOT(cx, &tvr);
+            break;
+        }
+        if (!clonedChild) {
+            obj = cursor;
+            JS_PUSH_SINGLE_TEMP_ROOT(cx, cursor, &tvr);
+        } else {
+            /*
+             * Avoid OBJ_SET_PARENT overhead as clonedChild cannot escape to
+             * other threads.
+             */
+            clonedChild->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(cursor);
+            JS_ASSERT(tvr.u.value == OBJECT_TO_JSVAL(clonedChild));
+            tvr.u.value = OBJECT_TO_JSVAL(cursor);
+        }
+        clonedChild = cursor;
+        cursor = parent;
+    }
+    fp->flags |= JSFRAME_POP_BLOCKS;
+    fp->scopeChain = obj;
+    fp->blockChain = NULL;
+    return obj;
 }
 
 /*
