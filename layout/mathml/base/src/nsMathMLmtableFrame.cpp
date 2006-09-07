@@ -48,8 +48,7 @@
 #include "nsIFontMetrics.h"
 
 #include "nsVoidArray.h"
-#include "nsFrameManager.h"
-#include "nsStyleChangeList.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsTableOuterFrame.h"
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
@@ -107,198 +106,162 @@ struct nsValueList
 
 // Each rowalign='top bottom' or columnalign='left right center' (from
 // <mtable> or <mtr>) is split once (lazily) into a nsValueList which is
-// stored in the frame manager. Cell frames query the frame manager
+// stored in the property table. Row/Cell frames query the property table
 // to see what values apply to them.
 
 // XXX See bug 69409 - MathML attributes are not mapped to style.
-// This code is not suitable for dynamic updates, for example when the
-// rowalign and columalign attributes are changed with JavaScript.
-// The code doesn't include hooks for AttributeChanged() notifications.
 
 static void
-DestroyValueListFunc(void*           aFrame,
-                     nsIAtom*        aPropertyName,
-                     void*           aPropertyValue,
-                     void*           aDtorData)
+DestroyValueListFunc(void*    aFrame,
+                     nsIAtom* aPropertyName,
+                     void*    aPropertyValue,
+                     void*    aDtorData)
 {
   delete NS_STATIC_CAST(nsValueList*, aPropertyValue);
 }
 
 static PRUnichar*
-GetValueAt(nsPresContext*  aPresContext,
-           nsIFrame*       aTableOrRowFrame,
-           nsIAtom*        aAttributeAtom,
-           PRInt32         aRowOrColIndex)
+GetValueAt(nsIFrame* aTableOrRowFrame,
+           nsIAtom*  aAttribute,
+           PRInt32   aRowOrColIndex)
 {
-  PRUnichar* result = nsnull;
-  nsPropertyTable *propTable = aPresContext->PropertyTable();
-  nsValueList* valueList;
-
-  valueList = NS_STATIC_CAST(nsValueList*,
-                             propTable->GetProperty(aTableOrRowFrame,
-                                                    aAttributeAtom));
-
+  nsValueList* valueList = NS_STATIC_CAST(nsValueList*,
+    aTableOrRowFrame->GetProperty(aAttribute));
   if (!valueList) {
     // The property isn't there yet, so set it
     nsAutoString values;
-    aTableOrRowFrame->GetContent()->GetAttr(kNameSpaceID_None, aAttributeAtom, values);
-    if (!values.IsEmpty()) {
+    aTableOrRowFrame->GetContent()->GetAttr(kNameSpaceID_None, aAttribute, values);
+    if (!values.IsEmpty())
       valueList = new nsValueList(values);
-      if (valueList) {
-        propTable->SetProperty(aTableOrRowFrame, aAttributeAtom,
-                               valueList, DestroyValueListFunc, nsnull);
-      }
+    if (!valueList || !valueList->mArray.Count()) {
+      delete valueList; // ok either way, delete is null safe
+      return nsnull;
     }
+    aTableOrRowFrame->SetProperty(aAttribute, valueList, DestroyValueListFunc);
   }
-
-  if (valueList) {
-    PRInt32 count = valueList->mArray.Count();
-    result = (aRowOrColIndex < count)
-           ? (PRUnichar*)(valueList->mArray[aRowOrColIndex])
-           : (PRUnichar*)(valueList->mArray[count-1]);
-  }
-  return result;
+  PRInt32 count = valueList->mArray.Count();
+  return (aRowOrColIndex < count)
+         ? (PRUnichar*)(valueList->mArray[aRowOrColIndex])
+         : (PRUnichar*)(valueList->mArray[count-1]);
 }
 
 #ifdef NS_DEBUG
 #define DEBUG_VERIFY_THAT_FRAME_IS(_frame, _expected) \
-  NS_ASSERTION(NS_STYLE_DISPLAY_##_expected == _frame->GetStyleDisplay()->mDisplay, "internal error");
+  NS_ASSERTION(nsGkAtoms::##_expected##Frame == _frame->GetType(), "internal error");
 #else
 #define DEBUG_VERIFY_THAT_FRAME_IS(_frame, _expected)
 #endif
 
+// map attributes that depend on the index of the row:
+// rowalign, rowlines, XXX need rowspacing too
 static void
-MapAttributesInto(nsPresContext* aPresContext,
-                  nsIContent*     aCellContent,
-                  nsIFrame*       aCellFrame,
-                  nsIFrame*       aCellInnerFrame)
+MapRowAttributesIntoCSS(nsIFrame* aTableFrame,
+                        nsIFrame* aRowFrame)
 {
-  nsTableCellFrame* cellFrame = NS_STATIC_CAST(nsTableCellFrame*, aCellFrame);
-  nsTableCellFrame* sibling;
-
-  PRInt32 rowIndex, colIndex;
-  nsresult rv = cellFrame->GetCellIndexes(rowIndex, colIndex);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "cannot find the position of the cell frame");
-  if (NS_FAILED(rv)) return;
-
-  nsIFrame* rowFrame = cellFrame->GetParent();
-  nsIFrame* rowgroupFrame = rowFrame->GetParent();
-  nsIFrame* tableFrame = rowgroupFrame->GetParent();
-  DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TABLE_ROW);
-  DEBUG_VERIFY_THAT_FRAME_IS(rowgroupFrame, TABLE_ROW_GROUP);
-  DEBUG_VERIFY_THAT_FRAME_IS(tableFrame, TABLE);
-#ifdef NS_DEBUG
-  PRBool originates;
-  ((nsTableFrame*)tableFrame)->GetCellInfoAt(rowIndex, colIndex, &originates);
-  NS_ASSERTION(originates, "internal error");
-#endif
-
-  nsIAtom* atom;
+  DEBUG_VERIFY_THAT_FRAME_IS(aTableFrame, table);
+  DEBUG_VERIFY_THAT_FRAME_IS(aRowFrame, tableRow);
+  PRInt32 rowIndex = ((nsTableRowFrame*)aRowFrame)->GetRowIndex();
+  nsIContent* rowContent = aRowFrame->GetContent();
   PRUnichar* attr;
-  PRBool hasChanged = PR_FALSE;
-  NS_NAMED_LITERAL_STRING(trueStr, "true");
-
-  //////////////////////////////////////
-  // process attributes that depend on the index of the row:
-  // rowalign, rowlines
 
   // see if the rowalign attribute is not already set
-  atom = nsMathMLAtoms::rowalign_;
-  if (!aCellContent->HasAttr(kNameSpaceID_None, atom)) {
-    // see if the rowalign attribute was specified on the row
-    attr = GetValueAt(aPresContext, rowFrame, atom, rowIndex);
-    if (!attr) {
-    	// see if the rowalign attribute was specified on the table
-      attr = GetValueAt(aPresContext, tableFrame, atom, rowIndex);
-    }
-    // set the attribute without notifying that we want a reflow
+  if (!rowContent->HasAttr(kNameSpaceID_None, nsMathMLAtoms::rowalign_) &&
+      !rowContent->HasAttr(kNameSpaceID_None, nsMathMLAtoms::MOZrowalign)) {
+    // see if the rowalign attribute was specified on the table
+    attr = GetValueAt(aTableFrame, nsMathMLAtoms::rowalign_, rowIndex);
     if (attr) {
-      hasChanged = PR_TRUE;
-      aCellContent->SetAttr(kNameSpaceID_None, atom, nsDependentString(attr), PR_FALSE);
+      // set our special -moz attribute on the row without notifying a reflow
+      rowContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZrowalign,
+                          nsDependentString(attr), PR_FALSE);
     }
   }
+
   // if we are not on the first row, see if |rowlines| was specified on the table.
   // Note that we pass 'rowIndex-1' because the CSS rule in mathml.css is associated
   // to 'border-top', and it is as if we draw the line on behalf of the previous cell.
   // This way of doing so allows us to handle selective lines, [row]\hline[row][row]',
   // and cases of spanning cells without further complications.
-  if (rowIndex > 0) {
-    attr = GetValueAt(aPresContext, tableFrame, nsMathMLAtoms::rowlines_, rowIndex-1);
-    // set the special -moz-math-rowline without notifying that we want a reflow
+  if (rowIndex > 0 &&
+      !rowContent->HasAttr(kNameSpaceID_None, nsMathMLAtoms::MOZrowline)) {
+    attr = GetValueAt(aTableFrame, nsMathMLAtoms::rowlines_, rowIndex-1);
     if (attr) {
-      hasChanged = PR_TRUE;
-      aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZrowline, nsDependentString(attr), PR_FALSE);
+      // set our special -moz attribute on the row without notifying a reflow
+      rowContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZrowline,
+                          nsDependentString(attr), PR_FALSE);
     }
   }
-  else {
-    // set the special -moz-math-firstrow to annotate that we are on the first row
-    hasChanged = PR_TRUE;
-    aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZfirstrow, trueStr, PR_FALSE);
-  }
-  // if we are on the last row, set the special -moz-math-lastrow
-  PRInt32 rowSpan = ((nsTableFrame*)tableFrame)->GetEffectiveRowSpan(*cellFrame);
-  sibling = ((nsTableFrame*)tableFrame)->GetCellFrameAt(rowIndex+rowSpan, colIndex);
-  if (!sibling) {
-    hasChanged = PR_TRUE;
-    aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZlastrow, trueStr, PR_FALSE);
-  }
+}
 
-  //////////////////////////////////////
-  // process attributes that depend on the index of the column:
-  // columnalign, columnlines, XXX need columnwidth too
+// map attributes that depend on the index of the column:
+// columnalign, columnlines, XXX need columnwidth and columnspacing too
+static void
+MapColAttributesIntoCSS(nsIFrame* aTableFrame,
+                        nsIFrame* aRowFrame,
+                        nsIFrame* aCellFrame)
+{
+  DEBUG_VERIFY_THAT_FRAME_IS(aTableFrame, table);
+  DEBUG_VERIFY_THAT_FRAME_IS(aRowFrame, tableRow);
+  NS_ASSERTION(IS_TABLE_CELL(aCellFrame->GetType()),"internal error");
+  PRInt32 rowIndex, colIndex;
+  ((nsTableCellFrame*)aCellFrame)->GetCellIndexes(rowIndex, colIndex);
+  nsIContent* cellContent = aCellFrame->GetContent();
+  PRUnichar* attr;
 
   // see if the columnalign attribute is not already set
-  atom = nsMathMLAtoms::columnalign_;
-  if (!aCellContent->HasAttr(kNameSpaceID_None, atom)) {
+  if (!cellContent->HasAttr(kNameSpaceID_None, nsMathMLAtoms::columnalign_) &&
+      !cellContent->HasAttr(kNameSpaceID_None, nsMathMLAtoms::MOZcolumnalign)) {
     // see if the columnalign attribute was specified on the row
-    attr = GetValueAt(aPresContext, rowFrame, atom, colIndex);
+    attr = GetValueAt(aRowFrame, nsMathMLAtoms::columnalign_, colIndex);
     if (!attr) {
-    	// see if the columnalign attribute was specified on the table
-      attr = GetValueAt(aPresContext, tableFrame, atom, colIndex);
+      // see if the columnalign attribute was specified on the table
+      attr = GetValueAt(aTableFrame, nsMathMLAtoms::columnalign_, colIndex);
     }
     if (attr) {
-      hasChanged = PR_TRUE;
-      aCellContent->SetAttr(kNameSpaceID_None, atom, nsDependentString(attr), PR_FALSE);
+      // set our special -moz attribute without notifying a reflow
+      cellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZcolumnalign,
+                           nsDependentString(attr), PR_FALSE);
     }
   }
+
   // if we are not on the first column, see if |columnlines| was specified on
   // the table. Note that we pass 'colIndex-1' because the CSS rule in mathml.css
   // is associated to 'border-left', and it is as if we draw the line on behalf
   // of the previous cell. This way of doing so allows us to handle selective lines,
   // e.g., 'r|cl', and cases of spanning cells without further complications.
-  if (colIndex > 0) {
-    attr = GetValueAt(aPresContext, tableFrame, nsMathMLAtoms::columnlines_, colIndex-1);
-    // set the special -moz-math-columnline without notifying that we want a reflow
+  if (colIndex > 0 &&
+      !cellContent->HasAttr(kNameSpaceID_None, nsMathMLAtoms::MOZcolumnline)) {
+    attr = GetValueAt(aTableFrame, nsMathMLAtoms::columnlines_, colIndex-1);
     if (attr) {
-      hasChanged = PR_TRUE;
-      aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZcolumnline, nsDependentString(attr), PR_FALSE);
+      // set our special -moz attribute without notifying a reflow
+      cellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZcolumnline,
+                           nsDependentString(attr), PR_FALSE);
     }
   }
-  else {
-    // set the special -moz-math-firstcolumn to annotate that we are on the first column
-    hasChanged = PR_TRUE;
-    aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZfirstcolumn, trueStr, PR_FALSE);
-  }
-  // if we are on the last column, set the special -moz-math-lastcolumn
-  PRInt32 colSpan = ((nsTableFrame*)tableFrame)->GetEffectiveColSpan(*cellFrame);
-  sibling = ((nsTableFrame*)tableFrame)->GetCellFrameAt(rowIndex, colIndex+colSpan);
-  if (!sibling) {
-    hasChanged = PR_TRUE;
-    aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZlastcolumn, trueStr, PR_FALSE);
-  }
+}
 
-  // now, re-resolve the style contexts in our subtree to pick up any changes
-  if (hasChanged) {
-    // this is unused
-    nsFrameManager *fm = aPresContext->FrameManager();
-    nsStyleChangeList changeList;
-    nsChangeHint maxChange = fm->ComputeStyleChangeFor(aCellFrame, &changeList,
-                                                       NS_STYLE_HINT_NONE);
-#ifdef DEBUG
-    // Use the parent frame to make sure we catch in-flows and such
-    nsIFrame* parentFrame = aCellFrame->GetParent();
-    fm->DebugVerifyStyleTree(parentFrame ? parentFrame : aCellFrame);
-#endif
+// map all attribues within a table -- requires the indices of rows and cells.
+// so it can only happen after they are made ready by the table base class.
+static void
+MapAllAttributesIntoCSS(nsIFrame* aTableFrame)
+{
+  //XXX only loop for the sake of it,
+  //mtable is simple and only has one (pseudo) row-group
+  nsIFrame* rowgroupFrame = aTableFrame->GetFirstChild(nsnull);
+  for ( ; rowgroupFrame; rowgroupFrame = rowgroupFrame->GetNextSibling()) {
+    nsIFrame* rowFrame = rowgroupFrame->GetFirstChild(nsnull);
+    for ( ; rowFrame; rowFrame = rowFrame->GetNextSibling()) {
+      DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, tableRow);
+      if (rowFrame->GetType() == nsGkAtoms::tableRowFrame) {
+        MapRowAttributesIntoCSS(aTableFrame, rowFrame);
+        nsIFrame* cellFrame = rowFrame->GetFirstChild(nsnull);
+        for ( ; cellFrame; cellFrame = cellFrame->GetNextSibling()) {
+          NS_ASSERTION(IS_TABLE_CELL(cellFrame->GetType()),"internal error");
+          if (IS_TABLE_CELL(cellFrame->GetType())) {
+            MapColAttributesIntoCSS(aTableFrame, rowFrame, cellFrame);
+          }
+        }
+      }
+    }
   }
 }
 
@@ -395,9 +358,9 @@ nsMathMLmtableOuterFrame::Init(nsIContent*      aContent,
                                nsIFrame*        aParent,
                                nsIFrame*        aPrevInFlow)
 {
-  MapAttributesIntoCSS(GetPresContext(), aContent);
-
-  return nsTableOuterFrame::Init(aContent, aParent, aPrevInFlow);
+  nsresult rv = nsTableOuterFrame::Init(aContent, aParent, aPrevInFlow);
+  nsMathMLFrame::MapCommonAttributesIntoCSS(GetPresContext(), aContent);
+  return rv;
 }
 
 nsIFrame*
@@ -423,7 +386,7 @@ nsMathMLmtableOuterFrame::GetRowFrameAt(nsPresContext* aPresContext,
       nsIFrame* rowFrame = rowIter.First();
       while (rowFrame) {
         if (--aRowIndex == 0) {
-          DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TABLE_ROW);
+          DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, tableRow);
           return rowFrame;
         }
         rowFrame = rowIter.Next();
@@ -434,45 +397,12 @@ nsMathMLmtableOuterFrame::GetRowFrameAt(nsPresContext* aPresContext,
   return nsnull;
 }
 
-#ifdef NS_DEBUG
-void
-nsMathMLmtableOuterFrame::DEBUG_VerifyTableRelatedFrames()
-{
-  PRInt32 rowCount, colCount;
-  GetTableSize(rowCount, colCount);
-  nsTableIteration dir = eTableLTR;
-  nsIFrame* innerTableFrame = mFrames.FirstChild();
-  nsTableIterator rowgroupIter(*innerTableFrame, dir);
-  nsIFrame* rowgroupFrame = rowgroupIter.First();
-  for ( ; rowgroupFrame; rowgroupFrame = rowgroupIter.Next()) {
-    nsTableIterator rowIter(*rowgroupFrame, dir);
-    nsIFrame* rowFrame = rowIter.First();
-    for ( ; rowFrame; rowFrame = rowIter.Next()) {
-      DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TABLE_ROW);
-      //XXX uncomment this if <mtr> ever gets its own MathML frame implementation
-      //NS_ASSERTION(rowFrame->IsFrameOfType(nsIFrame::eMathML), 
-      //             "non MathML row frame");
-      nsTableIterator cellIter(*rowFrame, dir);
-      nsIFrame* cellFrame = cellIter.First();
-      for ( ; cellFrame; cellFrame = cellIter.Next()) {
-        DEBUG_VERIFY_THAT_FRAME_IS(cellFrame, TABLE_CELL);
-        NS_ASSERTION(cellFrame->IsFrameOfType(nsIFrame::eMathML), 
-                     "non MathML cell frame");
-      }
-    }
-  }
-}
-#endif
-
 NS_IMETHODIMP
 nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
                                  nsHTMLReflowMetrics&     aDesiredSize,
                                  const nsHTMLReflowState& aReflowState,
                                  nsReflowStatus&          aStatus)
 {
-#ifdef NS_DEBUG
-  DEBUG_VerifyTableRelatedFrames();
-#endif
   nsresult rv;
   nsAutoString value;
   // we want to return a table that is anchored according to the align attribute
@@ -604,6 +534,134 @@ nsMathMLmtableOuterFrame::IsFrameOfType(PRUint32 aFlags) const
 }
 
 // --------
+// implementation of nsMathMLmtableFrame
+
+NS_IMPL_ADDREF_INHERITED(nsMathMLmtableFrame, nsTableFrame)
+NS_IMPL_RELEASE_INHERITED(nsMathMLmtableFrame, nsTableFrame)
+NS_IMPL_QUERY_INTERFACE_INHERITED0(nsMathMLmtableFrame, nsTableFrame)
+
+nsIFrame*
+NS_NewMathMLmtableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+{
+  return new (aPresShell) nsMathMLmtableFrame(aContext);
+}
+
+nsMathMLmtableFrame::~nsMathMLmtableFrame()
+{
+}
+
+PRBool
+nsMathMLmtableFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~nsIFrame::eMathML);
+}
+
+NS_IMETHODIMP
+nsMathMLmtableFrame::SetInitialChildList(nsIAtom*  aListName,
+                                         nsIFrame* aChildList)
+{
+  nsresult rv = nsTableFrame::SetInitialChildList(aListName, aChildList);
+  if (NS_FAILED(rv)) return rv;
+  MapAllAttributesIntoCSS(this);
+  return rv;
+}
+
+void
+nsMathMLmtableFrame::RestyleTable()
+{
+  // Cancel any reflow command that may be pending for this table
+  GetPresContext()->PresShell()->CancelReflowCommand(this, nsnull);
+
+  // re-sync MathML specific style data that may have changed
+  MapAllAttributesIntoCSS(this);
+
+  // Explicitly request a re-resolve and reflow in our subtree to pick up any changes
+  GetPresContext()->PresShell()->FrameConstructor()->
+    PostRestyleEvent(mContent, eReStyle_Self, nsChangeHint_ReflowFrame);
+}
+
+// --------
+// implementation of nsMathMLmtrFrame
+
+NS_IMPL_ADDREF_INHERITED(nsMathMLmtrFrame, nsTableRowFrame)
+NS_IMPL_RELEASE_INHERITED(nsMathMLmtrFrame, nsTableRowFrame)
+NS_IMPL_QUERY_INTERFACE_INHERITED0(nsMathMLmtrFrame, nsTableRowFrame)
+
+nsIFrame*
+NS_NewMathMLmtrFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+{
+  return new (aPresShell) nsMathMLmtrFrame(aContext);
+}
+
+nsMathMLmtrFrame::~nsMathMLmtrFrame()
+{
+}
+
+NS_IMETHODIMP
+nsMathMLmtrFrame::Init(nsIContent* aContent,
+                       nsIFrame*   aParent,
+                       nsIFrame*   aPrevInFlow)
+{
+  nsresult rv = nsTableRowFrame::Init(aContent, aParent, aPrevInFlow);
+  nsMathMLFrame::MapCommonAttributesIntoCSS(GetPresContext(), aContent);
+  return rv;
+}
+
+PRBool
+nsMathMLmtrFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~nsIFrame::eMathML);
+}
+
+NS_IMETHODIMP
+nsMathMLmtrFrame::AttributeChanged(PRInt32  aNameSpaceID,
+                                   nsIAtom* aAttribute,
+                                   PRInt32  aModType)
+{
+  // Attributes common to MathML tags
+  if (nsMathMLFrame::CommonAttributeChangedFor(GetPresContext(), mContent, aAttribute))
+    return NS_OK;
+
+  // Attributes specific to <mtr>:
+  // groupalign  : Not yet supported.
+  // rowalign    : Fully specified in mathml.css, and so HasAttributeDependentStyle() will
+  //               pick it up and nsCSSFrameConstructor will issue a PostRestyleEvent().
+  // columnalign : Need an explicit re-style call.
+
+  if (aAttribute == nsMathMLAtoms::rowalign_) {
+    // unset any -moz attribute that we may have set earlier, and re-sync
+    mContent->UnsetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZrowalign, PR_FALSE);
+    MapRowAttributesIntoCSS(nsTableFrame::GetTableFrame(this), this);
+    // That's all - see comment above.
+    return NS_OK;
+  }
+
+  if (aAttribute != nsMathMLAtoms::columnalign_)
+    return NS_OK;
+
+  // Clear any cached columnalign's nsValueList for this row
+  DeleteProperty(aAttribute);
+
+  // Clear any internal -moz attribute that we may have set earlier
+  // in our cells and re-sync their columnalign attribute
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsIFrame* cellFrame = GetFirstChild(nsnull);
+  for ( ; cellFrame; cellFrame = cellFrame->GetNextSibling()) {
+    if (IS_TABLE_CELL(cellFrame->GetType())) {
+      cellFrame->GetContent()->
+        UnsetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZcolumnalign, PR_FALSE);
+      MapColAttributesIntoCSS(tableFrame, this, cellFrame);
+    }
+  }
+
+  // Explicitly request a re-resolve and reflow in our subtree to pick up any changes
+  GetPresContext()->PresShell()->FrameConstructor()->
+    PostRestyleEvent(mContent, eReStyle_Self, nsChangeHint_ReflowFrame);
+
+  return NS_OK;
+}
+
+// --------
 // implementation of nsMathMLmtdFrame
 
 NS_IMPL_ADDREF_INHERITED(nsMathMLmtdFrame, nsTableCellFrame)
@@ -618,6 +676,16 @@ NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 nsMathMLmtdFrame::~nsMathMLmtdFrame()
 {
+}
+
+NS_IMETHODIMP
+nsMathMLmtdFrame::Init(nsIContent* aContent,
+                       nsIFrame*   aParent,
+                       nsIFrame*   aPrevInFlow)
+{
+  nsresult rv = nsTableCellFrame::Init(aContent, aParent, aPrevInFlow);
+  nsMathMLFrame::MapCommonAttributesIntoCSS(GetPresContext(), aContent);
+  return rv;
 }
 
 PRInt32
@@ -656,6 +724,40 @@ nsMathMLmtdFrame::IsFrameOfType(PRUint32 aFlags) const
   return !(aFlags & ~nsIFrame::eMathML);
 }
 
+NS_IMETHODIMP
+nsMathMLmtdFrame::AttributeChanged(PRInt32  aNameSpaceID,
+                                   nsIAtom* aAttribute,
+                                   PRInt32  aModType)
+{
+  // Attributes common to MathML tags
+  if (nsMathMLFrame::CommonAttributeChangedFor(GetPresContext(), mContent, aAttribute))
+    return NS_OK;
+
+  // Attributes specific to <mtd>:
+  // groupalign  : Not yet supported
+  // rowalign    : in mathml.css
+  // columnalign : here
+  // rowspan     : here
+  // columnspan  : here
+
+  if (aAttribute == nsMathMLAtoms::columnalign_) {
+    // unset any -moz attribute that we may have set earlier, and re-sync
+    mContent->UnsetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZcolumnalign, PR_FALSE);
+    MapColAttributesIntoCSS(nsTableFrame::GetTableFrame(this), mParent, this);
+    return NS_OK;
+  }
+
+  if (aAttribute == nsMathMLAtoms::rowspan ||
+      aAttribute == nsMathMLAtoms::columnspan_) {
+    // use the naming expected by the base class 
+    if (aAttribute == nsMathMLAtoms::columnspan_)
+      aAttribute = nsMathMLAtoms::colspan;
+    return nsTableCellFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
+  }
+
+  return NS_OK;
+}
+
 // --------
 // implementation of nsMathMLmtdInnerFrame
 
@@ -692,11 +794,6 @@ nsMathMLmtdInnerFrame::Reflow(nsPresContext*          aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus)
 {
-  // Map attributes to style (hopefully, bug 69409 will eventually help here).
-  if (NS_FRAME_FIRST_REFLOW & mState) {
-    MapAttributesInto(aPresContext, mContent, mParent, this);
-  }
-
   // Let the base class do the reflow
   nsresult rv = nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 

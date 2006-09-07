@@ -197,16 +197,9 @@ nsMathMLmstyleFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                       nsIAtom*        aAttribute,
                                       PRInt32         aModType)
 {
-  if (aAttribute == nsMathMLAtoms::mathcolor_      ||
-      aAttribute == nsMathMLAtoms::color           ||
-      aAttribute == nsMathMLAtoms::mathsize_       ||
-      aAttribute == nsMathMLAtoms::fontsize_       ||
-      aAttribute == nsMathMLAtoms::fontfamily_     ||
-      aAttribute == nsMathMLAtoms::mathbackground_ ||
-      aAttribute == nsMathMLAtoms::background) {
-    MapAttributesIntoCSS(GetPresContext(), this);
-    return ReflowDirtyChild(GetPresContext()->PresShell(), nsnull);
-  }
+  // Attributes common to MathML tags
+  if (CommonAttributeChangedFor(GetPresContext(), mContent, aAttribute))
+    return NS_OK;
 
   // Other attributes can affect too many things, ask our parent to re-layout
   // its children so that we can pick up changes in our attributes & transmit

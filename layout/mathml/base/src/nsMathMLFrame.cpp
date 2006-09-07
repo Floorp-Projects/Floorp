@@ -590,8 +590,8 @@ GetMathMLAttributeStyleSheet(nsPresContext* aPresContext,
 }
 
 /* static */ PRInt32
-nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
-                                    nsIContent*     aContent)
+nsMathMLFrame::MapCommonAttributesIntoCSS(nsPresContext* aPresContext,
+                                          nsIContent*    aContent)
 {
   // normal case, quick return if there are no attributes
   NS_ASSERTION(aContent, "null arg");
@@ -660,10 +660,12 @@ nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
     attrAtom->ToString(attrName);
 
     // make a style rule that maps to the equivalent CSS property
-    nsAutoString cssRule;
-    cssRule.Assign(NS_LITERAL_STRING("[")  + attrName +
-                   NS_LITERAL_STRING("='") + escapedAttrValue +
-                   NS_LITERAL_STRING("']{") + cssProperty + NS_LITERAL_STRING("}"));
+    nsAutoString selector, cssRule;
+    selector.Assign(NS_LITERAL_STRING("[") + attrName +
+                    NS_LITERAL_STRING("=\"") + escapedAttrValue +
+                    NS_LITERAL_STRING("\"]"));
+    cssRule.Assign(selector +
+                   NS_LITERAL_STRING("{") + cssProperty + NS_LITERAL_STRING("}"));
 
     if (!sheet) {
       // first time... we do this to defer the lookup up to the
@@ -685,11 +687,8 @@ nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
       sheet->SetOwningDocument(nsnull);
     }
 
-    // check for duplicate, if a similar rule is already there, don't bother to add another one
-    nsAutoString selector;
-    selector.Assign(NS_LITERAL_STRING("*[") + attrName +
-                    NS_LITERAL_STRING("=\"") + escapedAttrValue +
-                    NS_LITERAL_STRING("\"]"));
+    // check for duplicate, if a similar rule is already there,
+    // don't bother to add another one
     PRInt32 k, count;
     cssSheet->StyleRuleCount(count);
     for (k = 0; k < count; ++k) {
@@ -699,6 +698,15 @@ nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
       nsCOMPtr<nsICSSStyleRule> tmpStyleRule = do_QueryInterface(tmpRule);
       if (tmpStyleRule) {
         tmpStyleRule->GetSelectorText(tmpSelector);
+        NS_ASSERTION(tmpSelector.CharAt(0) != '*', "unexpected universal symbol");
+#ifdef DEBUG_rbs
+        nsCAutoString str;
+        LossyAppendUTF16toASCII(selector, str);
+        str.AppendLiteral(" vs ");
+        LossyAppendUTF16toASCII(tmpSelector, str);
+        printf("Attr selector %s %s\n", str.get(),
+        tmpSelector.Equals(selector)? " ... match" : " ... nomatch");
+#endif
         if (tmpSelector.Equals(selector)) {
           k = -1;
           break;
@@ -724,10 +732,10 @@ nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
 }
 
 /* static */ PRInt32
-nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
-                                    nsIFrame*       aFrame)
+nsMathMLFrame::MapCommonAttributesIntoCSS(nsPresContext* aPresContext,
+                                          nsIFrame*      aFrame)
 {
-  PRInt32 ruleCount = MapAttributesIntoCSS(aPresContext, aFrame->GetContent());
+  PRInt32 ruleCount = MapCommonAttributesIntoCSS(aPresContext, aFrame->GetContent());
   if (!ruleCount)
     return 0;
 
@@ -742,6 +750,31 @@ nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
 #endif
 
   return ruleCount;
+}
+
+/* static */ PRBool
+nsMathMLFrame::CommonAttributeChangedFor(nsPresContext* aPresContext,
+                                         nsIContent*    aContent,
+                                         nsIAtom*       aAttribute)
+{
+  if (aAttribute == nsMathMLAtoms::mathcolor_      ||
+      aAttribute == nsMathMLAtoms::color           ||
+      aAttribute == nsMathMLAtoms::mathsize_       ||
+      aAttribute == nsMathMLAtoms::fontsize_       ||
+      aAttribute == nsMathMLAtoms::fontfamily_     ||
+      aAttribute == nsMathMLAtoms::mathbackground_ ||
+      aAttribute == nsMathMLAtoms::background) {
+
+    MapCommonAttributesIntoCSS(aPresContext, aContent);
+
+    // That's all folks. Common attributes go in the internal MathML attribute
+    // stylesheet. So when nsCSSFrameConstructor checks if the content
+    // HasAttributeDependentStyle(), it will detect them and issue a
+    // PostRestyleEvent() to re-resolve the style data and reflow if needed.
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
 }
 
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)

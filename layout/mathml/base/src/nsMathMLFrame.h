@@ -431,11 +431,19 @@ public:
   // helpers to map attributes into CSS rules (work-around to bug 69409 which
   // is not scheduled to be fixed anytime soon)
   static PRInt32
-  MapAttributesIntoCSS(nsPresContext* aPresContext,
-                       nsIContent*     aContent);
+  MapCommonAttributesIntoCSS(nsPresContext* aPresContext,
+                             nsIContent*    aContent);
   static PRInt32
-  MapAttributesIntoCSS(nsPresContext* aPresContext,
-                       nsIFrame*       aFrame);
+  MapCommonAttributesIntoCSS(nsPresContext* aPresContext,
+                             nsIFrame*      aFrame);
+ 
+  // helper used by all AttributeChanged() methods. It handles
+  // those attributes that are common to all tags.
+  // @return true if the attribue is handled.
+  static PRBool
+  CommonAttributeChangedFor(nsPresContext* aPresContext,
+                            nsIContent*    aContent,
+                            nsIAtom*       aAttribute);
 
 protected:
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
