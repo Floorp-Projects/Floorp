@@ -263,7 +263,7 @@ function mmgr_showpop (event)
         // Get the array of new items to add.
         var ary = evalAttribute(menuitem, "repeatfor");
 
-        if ((typeof ary != "object") || !(ary instanceof Array))
+        if ((typeof ary != "object") || !isinstance(ary, Array))
             ary = [];
 
         /* The item itself should only be shown if there's no items in the

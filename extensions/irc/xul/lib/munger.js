@@ -123,7 +123,7 @@ function CMungerEntry (name, regex, className, enable, tagName)
     this.enabledDefault = this.enabled;
     this.tagName = (tagName) ? tagName : "html:span";
 
-    if (regex instanceof RegExp)
+    if (isinstance(regex, RegExp))
         this.regex = regex;
     else
         this.lambdaMatch = regex;

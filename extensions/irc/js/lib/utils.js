@@ -389,7 +389,7 @@ function matchObject (o, pattern, negate)
 
     function _match (o, pattern)
     {
-        if (pattern instanceof Function)
+        if (isinstance(pattern, Function))
             return pattern(o);
 
         for (p in pattern)
@@ -405,7 +405,7 @@ function matchObject (o, pattern, negate)
                 */
             val = o[p];
 
-            if (pattern[p] instanceof Function)
+            if (isinstance(pattern[p], Function))
             {
                 if (!pattern[p](val))
                     return false;
@@ -424,7 +424,7 @@ function matchObject (o, pattern, negate)
 
     }
 
-    if (!(pattern instanceof Array))
+    if (!isinstance(pattern, Array))
         return Boolean (negate ^ _match(o, pattern));
 
     for (var i in pattern)

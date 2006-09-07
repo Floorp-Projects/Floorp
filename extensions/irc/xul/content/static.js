@@ -372,7 +372,7 @@ function initStatic()
         {
             // Load the first item from the file.
             var item = awayLoader.deserialize();
-            if (item instanceof Array)
+            if (isinstance(item, Array))
             {
                 // If the first item is an array, it is the entire thing.
                 client.awayMsgs = item;
@@ -1959,7 +1959,7 @@ function findDynamicRule (selector)
 {
     var rules = frames[0].document.styleSheets[1].cssRules;
 
-    if (selector instanceof RegExp)
+    if (isinstance(selector, RegExp))
         fun = "search";
     else
         fun = "indexOf";
@@ -3473,7 +3473,7 @@ function cli_connect(networkOrName, requireSecurity)
     var name;
 
 
-    if (networkOrName instanceof CIRCNetwork)
+    if (isinstance(networkOrName, CIRCNetwork))
     {
         network = networkOrName;
     }

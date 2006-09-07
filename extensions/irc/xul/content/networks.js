@@ -98,7 +98,7 @@ function initNetworks()
         if (networksLoader.open("<"))
         {
             var item = networksLoader.deserialize();
-            if (item instanceof Array)
+            if (isinstance(item, Array))
                 userNetworkList = item;
             else
                 dd("Malformed networks file!");

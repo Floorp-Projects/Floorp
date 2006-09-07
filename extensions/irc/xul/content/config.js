@@ -518,7 +518,7 @@ function PrefData(parent, name)
     
     // And those arrays... this just makes our life easier later by having 
     // a particular name for array prefs.
-    if (this.def instanceof Array)
+    if (isinstance(this.def, Array))
         this.type = "array";
     
     if (this.group == "hidden")

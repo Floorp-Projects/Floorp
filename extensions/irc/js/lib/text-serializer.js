@@ -166,7 +166,7 @@ function ts_serialize(obj)
                     break;
 
                 case "function":
-                    if (o[p] instanceof RegExp)
+                    if (isinstance(o[p], RegExp))
                         writeProp(p, ecmaEscape("" + o[p]));
                     // Can't serialize non-RegExp functions (yet).
                     break;
@@ -180,7 +180,7 @@ function ts_serialize(obj)
                     else
                     {
                         var className = "";
-                        if (o[p] instanceof Array)
+                        if (isinstance(o[p], Array))
                             className = "<Array> ";
 
                         me._fileStream.write(indent + "START " + className +
@@ -196,7 +196,7 @@ function ts_serialize(obj)
         }
     };
 
-    if (obj instanceof Array)
+    if (isinstance(obj, Array))
         this._fileStream.write("START <Array>" + this.lineEnd);
     else
         this._fileStream.write("START" + this.lineEnd);
@@ -276,7 +276,7 @@ function ts_deserialize()
                         /* Create a new object level, but with no name. This is
                          * only valid if the parent level is an array.
                          */
-                        if (!ASSERT(obj instanceof Array, "Parent not Array!"))
+                        if (!ASSERT(isinstance(obj, Array), "Parent not Array!"))
                             return null;
                         if (className)
                             n = new window[className]();

@@ -121,7 +121,7 @@ function futils_nosepicker(initialPath, typeList, attribs)
         }
         else
         {
-            if (!(initialPath instanceof nsILocalFile))
+            if (!isinstance(initialPath, nsILocalFile))
                 throw "bad type for argument |initialPath|";
 
             localFile = initialPath;
@@ -135,7 +135,7 @@ function futils_nosepicker(initialPath, typeList, attribs)
     if (typeof typeList == "string")
         typeList = typeList.split(" ");
 
-    if (typeList instanceof Array)
+    if (isinstance(typeList, Array))
     {
         for (var i in typeList)
         {
@@ -330,7 +330,7 @@ function LocalFile(file, mode, perms, tmp)
     {
         this.localFile = new nsLocalFile(file);
     }
-    else if (file instanceof nsILocalFile)
+    else if (isinstance(file, nsILocalFile))
     {
         this.localFile = file;
     }

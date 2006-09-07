@@ -1313,7 +1313,7 @@ function my_list(word, file)
         this._list.file = new LocalFile(lfile.localFile, ">");
     }
 
-    if (word instanceof RegExp)
+    if (isinstance(word, RegExp))
     {
         this._list.regexp = word;
         this._list.string = "";
