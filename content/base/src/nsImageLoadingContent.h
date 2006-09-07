@@ -108,9 +108,12 @@ protected:
    *                will be sent as needed.
    * @param aDocument Optional parameter giving the document this node is in.
    *        This is purely a performance optimization.
+   * @param aLoadFlags Optional parameter specifying load flags to use for
+   *        the image load
    */
   nsresult LoadImage(nsIURI* aNewURI, PRBool aForce, PRBool aNotify,
-                     nsIDocument* aDocument = nsnull);
+                     nsIDocument* aDocument = nsnull,
+                     nsLoadFlags aLoadFlags = nsIRequest::LOAD_NORMAL);
 
   /**
    * helper to get the document for this content (from the nodeinfo

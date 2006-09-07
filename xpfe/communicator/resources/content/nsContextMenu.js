@@ -181,6 +181,8 @@ nsContextMenu.prototype = {
           this.setItemAttr( "context-fitimage", "checked", content.document.imageIsResized ? "true" : null);
         }
 
+        this.showItem( "context-reloadimage", this.onImage);
+
         // View Image depends on whether an image was clicked on.
         this.showItem( "context-viewimage", this.onImage && !this.onStandaloneImage);
 
@@ -579,6 +581,12 @@ nsContextMenu.prototype = {
     },
     toggleImageSize : function () {
         content.document.toggleImageSize();
+    },
+    // Reload image
+    reloadImage : function () {
+        urlSecurityCheck( this.imageURL, document );
+        if (this.target instanceof Components.interfaces.nsIImageLoadingContent)
+          this.target.forceReload();
     },
     // Change current window to the URL of the image.
     viewImage : function () {

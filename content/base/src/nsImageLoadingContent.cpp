@@ -475,6 +475,17 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
   return rv;
 }
 
+NS_IMETHODIMP nsImageLoadingContent::ForceReload()
+{
+  nsCOMPtr<nsIURI> currentURI;
+  GetCurrentURI(getter_AddRefs(currentURI));
+  if (!currentURI) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return LoadImage(currentURI, PR_TRUE, PR_TRUE, nsnull, nsIRequest::VALIDATE_ALWAYS);
+}
+
 /*
  * Non-interface methods
  */
@@ -505,7 +516,8 @@ nsresult
 nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
                                  PRBool aForce,
                                  PRBool aNotify,
-                                 nsIDocument* aDocument)
+                                 nsIDocument* aDocument,
+                                 nsLoadFlags aLoadFlags)
 {
   if (!mLoadingEnabled) {
     FireEvent(NS_LITERAL_STRING("error"));
@@ -583,7 +595,7 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
 
   rv = nsContentUtils::LoadImage(aNewURI, aDocument,
                                  aDocument->GetDocumentURI(),
-                                 this, nsIRequest::LOAD_NORMAL,
+                                 this, aLoadFlags,
                                  getter_AddRefs(req));
   if (NS_FAILED(rv)) {
     FireEvent(NS_LITERAL_STRING("error"));
