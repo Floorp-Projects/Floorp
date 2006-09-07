@@ -216,11 +216,17 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   widgetData.mBorderStyle = eBorderStyle_default;
   widgetData.clipSiblings = PR_TRUE;
 
+  PRBool isCanvas;
+  const nsStyleBackground* bg;
+  PRBool hasBG =
+    nsCSSRendering::FindBackground(GetPresContext(), this, &bg, &isCanvas);
+  PRBool viewHasTransparentContent = hasBG && (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
+
   nsIContent* parentContent = GetContent()->GetParent();
   nsIAtom *tag = nsnull;
   if (parentContent)
     tag = parentContent->Tag();
-  widgetData.mDropShadow = !(tag && tag == nsXULAtoms::menulist);
+  widgetData.mDropShadow = !(viewHasTransparentContent || tag == nsXULAtoms::menulist);
   
 #if defined(XP_MACOSX) || defined(XP_BEOS)
   static NS_DEFINE_IID(kCPopupCID,  NS_POPUP_CID);
@@ -230,6 +236,7 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   static NS_DEFINE_IID(kCChildCID,  NS_CHILD_CID);
   aView->CreateWidget(kCChildCID, &widgetData, nsnull, PR_TRUE, PR_TRUE);
 #endif
+  aView->GetWidget()->SetWindowTranslucency(viewHasTransparentContent);
   return NS_OK;
 }
 
