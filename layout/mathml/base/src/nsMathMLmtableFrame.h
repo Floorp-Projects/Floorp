@@ -92,9 +92,6 @@ public:
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
-#ifdef NS_DEBUG
-  void DEBUG_VerifyTableRelatedFrames();
-#endif
 protected:
   nsMathMLmtableOuterFrame(nsStyleContext* aContext) : nsTableOuterFrame(aContext) {}
   virtual ~nsMathMLmtableOuterFrame();
@@ -109,6 +106,129 @@ protected:
 
 // --------------
 
+class nsMathMLmtableFrame : public nsTableFrame
+{
+public:
+  friend nsIFrame* NS_NewMathMLmtableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // Overloaded nsTableFrame methods
+
+  NS_IMETHOD
+  SetInitialChildList(nsIAtom*  aListName,
+                      nsIFrame* aChildList);
+
+  NS_IMETHOD
+  AppendFrames(nsIAtom*  aListName,
+               nsIFrame* aFrameList)
+  {
+    nsresult rv = nsTableFrame::AppendFrames(aListName, aFrameList);
+    RestyleTable();
+    return rv;
+  }
+
+  NS_IMETHOD
+  InsertFrames(nsIAtom*  aListName,
+               nsIFrame* aPrevFrame,
+               nsIFrame* aFrameList)
+  {
+    nsresult rv = nsTableFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
+    RestyleTable();
+    return rv;
+  }
+
+  NS_IMETHOD
+  RemoveFrame(nsIAtom*  aListName,
+              nsIFrame* aOldFrame)
+  {
+    nsresult rv = nsTableFrame::RemoveFrame(aListName, aOldFrame);
+    RestyleTable();
+    return rv;
+  }
+
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+
+  // helper to restyle and reflow the table when a row is changed -- since MathML
+  // attributes are inter-dependent and row/colspan can affect the table, it is
+  // safer (albeit grossly suboptimal) to just relayout the whole thing.
+  void RestyleTable();
+
+protected:
+  nsMathMLmtableFrame(nsStyleContext* aContext) : nsTableFrame(aContext) {}
+  virtual ~nsMathMLmtableFrame();
+}; // class nsMathMLmtableFrame
+
+// --------------
+
+class nsMathMLmtrFrame : public nsTableRowFrame
+{
+public:
+  friend nsIFrame* NS_NewMathMLmtrFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // overloaded nsTableRowFrame methods
+
+  NS_IMETHOD
+  Init(nsIContent* aContent,
+       nsIFrame*   aParent,
+       nsIFrame*   aPrevInFlow);
+
+  NS_IMETHOD
+  AttributeChanged(PRInt32  aNameSpaceID,
+                   nsIAtom* aAttribute,
+                   PRInt32  aModType);
+
+  NS_IMETHOD
+  AppendFrames(nsIAtom*  aListName,
+               nsIFrame* aFrameList)
+  {
+    nsresult rv = nsTableRowFrame::AppendFrames(aListName, aFrameList);
+    RestyleTable();
+    return rv;
+  }
+
+  NS_IMETHOD
+  InsertFrames(nsIAtom*  aListName,
+               nsIFrame* aPrevFrame,
+               nsIFrame* aFrameList)
+  {
+    nsresult rv = nsTableRowFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
+    RestyleTable();
+    return rv;
+  }
+
+  NS_IMETHOD
+  RemoveFrame(nsIAtom*  aListName,
+              nsIFrame* aOldFrame)
+  {
+    nsresult rv = nsTableRowFrame::RemoveFrame(aListName, aOldFrame);
+    RestyleTable();
+    return rv;
+  }
+
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+
+  // helper to restyle and reflow the table -- @see nsMathMLmtableFrame.
+  void RestyleTable()
+  {
+    nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+    if (tableFrame && tableFrame->IsFrameOfType(nsIFrame::eMathML)) {
+      // cancel any reflow command that may be pending for the row
+      GetPresContext()->PresShell()->CancelReflowCommand(this, nsnull);
+      // relayout the table
+      ((nsMathMLmtableFrame*)tableFrame)->RestyleTable();
+    }
+  }
+
+protected:
+  nsMathMLmtrFrame(nsStyleContext* aContext) : nsTableRowFrame(aContext) {}
+  virtual ~nsMathMLmtrFrame();
+}; // class nsMathMLmtrFrame
+
+// --------------
+
 class nsMathMLmtdFrame : public nsTableCellFrame
 {
 public:
@@ -117,6 +237,17 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // overloaded nsTableCellFrame methods
+
+  NS_IMETHOD
+  Init(nsIContent* aContent,
+       nsIFrame*   aParent,
+       nsIFrame*   aPrevInFlow);
+
+  NS_IMETHOD
+  AttributeChanged(PRInt32  aNameSpaceID,
+                   nsIAtom* aAttribute,
+                   PRInt32  aModType);
+
   virtual PRInt32 GetRowSpan();
   virtual PRInt32 GetColSpan();
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const;

@@ -289,11 +289,12 @@ mtable[frame="dashed"] {
 
 mtr {
   display: table-row;
+  vertical-align: baseline;
 }
 
 mtd {
   display: table-cell;
-  vertical-align: baseline;
+  vertical-align: inherit;
   text-align: -moz-center;
   white-space: nowrap;
 }
@@ -307,32 +308,45 @@ mtd {
 /***********************/
 /* -- mtd: columnalign */
 
+mtd[-moz-math-columnalign="left"],
 mtd[columnalign="left"] {
   text-align: left;
 }
+mtd[-moz-math-columnalign="right"],
 mtd[columnalign="right"] {
   text-align: right;
 }
+mtd[-moz-math-columnalign="center"],
 mtd[columnalign="center"] {
   text-align: -moz-center;
 }
 
-/********************/
-/* -- mtd: rowalign */
+/*************************/
+/* -- mtr, mtd: rowalign */
 
+mtr[-moz-math-rowalign="top"],
+mtr[rowalign="top"],
 mtd[rowalign="top"] {
   vertical-align: top;
 }
+mtr[-moz-math-rowalign="bottom"],
+mtr[rowalign="bottom"],
 mtd[rowalign="bottom"] {
   vertical-align: bottom;
 }
+mtr[-moz-math-rowalign="center"],
+mtr[rowalign="center"],
 mtd[rowalign="center"] {
   vertical-align: middle;
 }
+mtr[-moz-math-rowalign="baseline"],
+mtr[rowalign="baseline"],
 mtd[rowalign="baseline"] {
   vertical-align: baseline;
 }
 /* -- not yet supported --
+mtr[-moz-math-rowalign="axis"],
+mtr[rowalign="axis"],
 mtd[rowalign="axis"] {
   vertical-align: mathline;
 }
@@ -351,33 +365,33 @@ mtd {
   padding-top: 0.5ex;    /* half of rowspacing[rowindex-1] */
 }
 /* turn off the spacing at the periphery of boundary cells */
-mtd[-moz-math-firstrow="true"] {
+mtr:first-child > mtd {
   padding-top: 0ex;
 }
-mtd[-moz-math-lastrow="true"] {
+mtr:last-child > mtd {
   padding-bottom: 0ex;
 }
-mtd[-moz-math-firstcolumn="true"] {
+mtd:first-child {
   padding-left: 0em;
 }
-mtd[-moz-math-lastcolumn="true"] {
+mtd:last-child {
   padding-right: 0em;
 }
 /* re-instate the spacing if the table has a surrounding frame */
-mtable[frame="solid"] > mtr > mtd[-moz-math-firstrow="true"],
-mtable[frame="dashed"] > mtr > mtd[-moz-math-firstrow="true"] {
+mtable[frame="solid"] > mtr:first-child > mtd,
+mtable[frame="dashed"] > mtr:first-child > mtd {
   padding-top: 0.5ex; /* framespacing.top */
 }
-mtable[frame="solid"] > mtr > mtd[-moz-math-lastrow="true"],
-mtable[frame="dashed"] > mtr > mtd[-moz-math-lastrow="true"] {
+mtable[frame="solid"] > mtr:last-child > mtd,
+mtable[frame="dashed"] > mtr:last-child > mtd {
   padding-bottom: 0.5ex; /* framespacing.bottom */
 }
-mtable[frame="solid"] > mtr > mtd[-moz-math-firstcolumn="true"],
-mtable[frame="dashed"] > mtr > mtd[-moz-math-firstcolumn="true"] {
+mtable[frame="solid"] > mtr > mtd:first-child,
+mtable[frame="dashed"] > mtr > mtd:first-child {
   padding-left: 0.4em; /* framespacing.left */
 }
-mtable[frame="solid"] > mtr > mtd[-moz-math-lastcolumn="true"],
-mtable[frame="dashed"] > mtr > mtd[-moz-math-lastcolumn="true"] {
+mtable[frame="solid"] > mtr > mtd:last-child,
+mtable[frame="dashed"] > mtr > mtd:last-child {
   padding-right: 0.4em; /* framespacing.right */
 }
 
@@ -387,13 +401,13 @@ mtable[frame="dashed"] > mtr > mtd[-moz-math-lastcolumn="true"] {
    unsuitable rules on the cells on the first row and the first column.
    In general, however, authors can use the 'border' property of CSS to
    achieve varying effects down to the level of the table cell. */
-mtd[-moz-math-rowline="none"] {
+mtr[-moz-math-rowline="none"] > mtd {
   border-top: none;
 }
-mtd[-moz-math-rowline="solid"] {
+mtr[-moz-math-rowline="solid"] > mtd {
   border-top: solid thin;
 }
-mtd[-moz-math-rowline="dashed"] {
+mtr[-moz-math-rowline="dashed"] > mtd {
   border-top: dashed thin;
 }
 mtd[-moz-math-columnline="none"] {

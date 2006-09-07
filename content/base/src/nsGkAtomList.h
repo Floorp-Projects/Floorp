@@ -1066,13 +1066,11 @@ GK_ATOM(zoomAndPan, "zoomAndPan")
 #endif
 
 #ifdef MOZ_MATHML
+GK_ATOM(MOZcolumnalign, "-moz-math-columnalign")
 GK_ATOM(MOZcolumnline, "-moz-math-columnline") // different from columnlines_
-GK_ATOM(MOZfirstcolumn, "-moz-math-firstcolumn")
-GK_ATOM(MOZfirstrow, "-moz-math-firstrow")
 GK_ATOM(MOZfontsize, "-moz-math-font-size") // different from fontsize_
 GK_ATOM(MOZfontstyle, "-moz-math-font-style") // different from fontstyle_
-GK_ATOM(MOZlastcolumn, "-moz-math-lastcolumn")
-GK_ATOM(MOZlastrow, "-moz-math-lastrow")
+GK_ATOM(MOZrowalign, "-moz-math-rowalign")
 GK_ATOM(MOZrowline, "-moz-math-rowline") // different from rowlines_
 GK_ATOM(abs_, "abs")
 GK_ATOM(accent_, "accent")

@@ -758,7 +758,7 @@ nsMathMLContainerFrame::Init(nsIContent*      aContent,
                              nsIFrame*        aParent,
                              nsIFrame*        aPrevInFlow)
 {
-  MapAttributesIntoCSS(GetPresContext(), aContent);
+  MapCommonAttributesIntoCSS(GetPresContext(), aContent);
 
   // let the base class do its Init()
   return nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
@@ -931,16 +931,12 @@ nsMathMLContainerFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                          nsIAtom*        aAttribute,
                                          PRInt32         aModType)
 {
-  if (aAttribute == nsMathMLAtoms::mathcolor_      ||
-      aAttribute == nsMathMLAtoms::color           ||
-      aAttribute == nsMathMLAtoms::mathsize_       ||
-      aAttribute == nsMathMLAtoms::fontsize_       ||
-      aAttribute == nsMathMLAtoms::fontfamily_     ||
-      aAttribute == nsMathMLAtoms::mathbackground_ ||
-      aAttribute == nsMathMLAtoms::background) {
-    MapAttributesIntoCSS(GetPresContext(), this);
-  }
+  // Attributes common to MathML tags
+  if (CommonAttributeChangedFor(GetPresContext(), mContent, aAttribute))
+    return NS_OK;
 
+  // XXX Since they are numerous MathML attributes that affect layout, and
+  // we can't check all of them here, play safe by requesting a reflow.
   return ReflowDirtyChild(GetPresContext()->PresShell(), nsnull);
 }
 
