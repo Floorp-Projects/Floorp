@@ -159,13 +159,15 @@ static const tuple_str errStrings[] = {
 {CKR_MUTEX_BAD                       , "CKR_MUTEX_BAD                       "},
 {CKR_MUTEX_NOT_LOCKED                , "CKR_MUTEX_NOT_LOCKED                "},
 {CKR_FUNCTION_REJECTED               , "CKR_FUNCTION_REJECTED               "},
-{CKR_VENDOR_DEFINED                  , "CKR_VENDOR_DEFINED                  "}
+{CKR_VENDOR_DEFINED                  , "CKR_VENDOR_DEFINED                  "},
+{0xCE534351                          , "CKR_NETSCAPE_CERTDB_FAILED          "},
+{0xCE534352                          , "CKR_NETSCAPE_KEYDB_FAILED           "}
 };
 
 static const CK_ULONG numStrings = sizeof(errStrings) / sizeof(tuple_str);
 
 /* Returns constant error string for "CRV".
- * Returns NULL of errNum is unknown.
+ * Returns "unknown error" if errNum is unknown.
  */
 const char *
 PKM_CK_RVtoStr(CK_RV errNum) {
@@ -211,7 +213,7 @@ PKM_CK_RVtoStr(CK_RV errNum) {
             return errStrings[low].errString;
     if (errNum == errStrings[high].errNum)
             return errStrings[high].errString;
-    return NULL;
+    return "unknown error";
 }
 
 
