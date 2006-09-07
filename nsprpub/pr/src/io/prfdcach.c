@@ -277,6 +277,14 @@ void _PR_InitFdCache(void)
     if (NULL != low) _pr_fd_cache.limit_low = atoi(low);
     if (NULL != high) _pr_fd_cache.limit_high = atoi(high);
 
+    if (_pr_fd_cache.limit_low < 0)
+        _pr_fd_cache.limit_low = 0;
+    if (_pr_fd_cache.limit_low > FD_SETSIZE)
+        _pr_fd_cache.limit_low = FD_SETSIZE;
+
+    if (_pr_fd_cache.limit_high > FD_SETSIZE)
+        _pr_fd_cache.limit_high = FD_SETSIZE;
+
     if (_pr_fd_cache.limit_high < _pr_fd_cache.limit_low)
         _pr_fd_cache.limit_high = _pr_fd_cache.limit_low;
 

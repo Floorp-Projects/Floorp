@@ -120,6 +120,8 @@ int index;
 
 		if (num_atomic_locks > MAX_ATOMIC_LOCKS)
 			num_atomic_locks = MAX_ATOMIC_LOCKS;
+		else if (num_atomic_locks < 1) 
+			num_atomic_locks = 1;
 		else {
 			num_atomic_locks = PR_FloorLog2(num_atomic_locks);
 			num_atomic_locks = 1L << num_atomic_locks;
