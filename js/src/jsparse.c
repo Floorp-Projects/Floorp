@@ -4127,7 +4127,7 @@ ArgumentList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 js_ReportCompileErrorNumber(cx, argNode,
                                             JSREPORT_PN | JSREPORT_ERROR,
                                             JSMSG_BAD_YIELD_SYNTAX);
-                return NULL;
+                return JS_FALSE;
             }
 #endif
             PN_APPEND(listNode, argNode);
