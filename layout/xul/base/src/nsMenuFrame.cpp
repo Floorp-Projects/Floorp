@@ -190,11 +190,7 @@ public:
     NS_ENSURE_TRUE(imenu, NS_OK);
 
     nsMenuFrame* menu = NS_STATIC_CAST(nsMenuFrame*, imenu);
-    nsWeakFrame weakFrame(frame);
     menu->UpdateMenuType(menu->GetPresContext());
-    NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_OK);
-
-    menu->BuildAcceleratorText();
     return NS_OK;
   }
 
@@ -255,6 +251,7 @@ nsMenuFrame::Init(nsIContent*      aContent,
     gModifierSeparator = new nsString(modifierSeparator);    
   }
 
+  BuildAcceleratorText();
   nsCOMPtr<nsIRunnable> ev =
     new nsASyncMenuInitialization(GetContent());
   NS_DispatchToCurrentThread(ev);
