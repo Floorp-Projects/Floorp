@@ -1,4 +1,4 @@
- /*
+/*
  * pk11mode.c - Test FIPS or NONFIPS Modes for the NSS PKCS11 api.
  *              The goal of this program is to test every function
  *              entry point of the PKCS11 api at least once.
@@ -46,6 +46,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 #ifdef _WIN32
 
@@ -53,7 +54,6 @@
 #define LIB_NAME "softokn3.dll"
 #include "cryptoki.h"
 #else
-#include "prprf.h"
 #include "prlink.h"
 #include "pkcs11.h"
 #endif
