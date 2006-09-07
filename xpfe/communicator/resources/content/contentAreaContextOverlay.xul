@@ -105,6 +105,10 @@
                 label="&fitImageCmd.label;"
                 accesskey="&fitImageCmd.accesskey;"
                 oncommand="gContextMenu.toggleImageSize();"/>
+      <menuitem id="context-reloadimage"
+                label="&reloadImageCmd.label;"
+                accesskey="&reloadImageCmd.accesskey;"
+                oncommand="gContextMenu.reloadImage();"/>
       <menuitem id="context-viewimage"
                 label="&viewImageCmd.label;"
                 accesskey="&viewImageCmd.accesskey;"
