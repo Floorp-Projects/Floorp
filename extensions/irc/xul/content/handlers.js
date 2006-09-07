@@ -2943,6 +2943,14 @@ function my_dccfiledisconnect(e)
 
 var CopyPasteHandler = new Object();
 
+CopyPasteHandler.allowDrop =
+CopyPasteHandler.allowStartDrag =
+CopyPasteHandler.onCopyOrDrag =
+function phand_bogus()
+{
+    return true;
+}
+
 CopyPasteHandler.onPasteOrDrop =
 function phand_onpaste(e, data)
 {
