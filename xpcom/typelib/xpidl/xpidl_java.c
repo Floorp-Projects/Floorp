@@ -48,6 +48,9 @@
 #ifdef XP_WIN
 #include <windef.h>
 #define PATH_MAX  MAX_PATH
+#elif defined(XP_OS2) && !defined(PATH_MAX)
+#include <os2.h>
+#define PATH_MAX  CCHMAXPATH
 #endif
 
 /* XXX Bug 331178 - nsIScriptSecurityManager inherits from non-scriptable
