@@ -255,6 +255,12 @@ void _PR_InitLog(void)
         }
         PR_SetLogBuffering(isSync ? bufSize : 0);
 
+#ifdef XP_UNIX
+        if (getuid() != geteuid()) {
+            return;
+        }
+#endif /* XP_UNIX */
+
         ev = PR_GetEnv("NSPR_LOG_FILE");
         if (ev && ev[0]) {
             if (!PR_SetLogFile(ev)) {
@@ -293,10 +299,12 @@ void _PR_LogCleanup(void)
 #endif
         ) {
         fclose(logFile);
+        logFile = NULL;
     }
 #else
     if (logFile && logFile != _pr_stdout && logFile != _pr_stderr) {
         PR_Close(logFile);
+        logFile = NULL;
     }
 #endif
 

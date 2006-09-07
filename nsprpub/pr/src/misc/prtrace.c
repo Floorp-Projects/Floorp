@@ -45,15 +45,7 @@
 */
 
 #include <string.h>
-#include "prtrace.h"
-#include "prclist.h"
-#include "prlock.h"
-#include "prcvar.h"
-#include "prio.h"
-#include "prlog.h"
-#include "prenv.h"
-#include "prmem.h"
-#include "prerror.h"
+#include "primpl.h"
 
 
 #define DEFAULT_TRACE_BUFSIZE ( 1024 * 1024 )
@@ -696,6 +688,12 @@ static PRFileDesc * InitializeRecording( void )
 
     logLostData = 0; /* reset at entry */
     logState = LogReset;
+
+#ifdef XP_UNIX
+    if (getuid() != geteuid()) {
+        return NULL;
+    }
+#endif /* XP_UNIX */
 
     /* Get the filename for the logfile from the environment */
     logFileName = PR_GetEnv( "NSPR_TRACE_LOG" );
