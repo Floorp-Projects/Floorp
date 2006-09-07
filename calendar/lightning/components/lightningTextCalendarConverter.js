@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Mike Shaver <shaver@mozilla.org>
+ *   Clint Talbert <cmtalbert@myfastmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -35,69 +36,134 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const CI = Components.interfaces;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
 function makeTableRow(val) {
     return "<tr><td>" + val[0] + "</td><td>" + val[1] + "</td></tr>\n";
 }
 
-function makeButton(type, content) {
-    return "<button type='submit' value='" + type + "'>" + content + "</button>";
+function getLightningStringBundle()
+{
+    var svc = Cc["@mozilla.org/intl/stringbundle;1"]
+              .getService(Ci.nsIStringBundleService);
+    return svc.createBundle("chrome://lightning/locale/lightning.properties");
 }
 
-function startForm(calendarData) {
-    var form = "<form method='GET' action='moz-cal-handle-itip:'>\n";
-    form += "<input type='hidden' name='preferredCalendar' value=''>\n";
-    // We use escape instead of encodeURI*, because we need to deal with single quotes, sigh
-    form += "<input type='hidden' name='data' value='" + escape(calendarData) + "'>\n";
-    return form;
+function createHtmlTableSection(label, text)
+{
+    var tblRow = <tr>
+                    <td class="description">
+                        <p>{label}</p>
+                    </td>
+                    <td class="content">
+                        <p>{text}</p>
+                    </td>
+                 </tr>;
+    return tblRow;
+}
+
+function createHtml(event)
+{
+    // Creates HTML using the Node strings in the properties file
+    var stringBundle = getLightningStringBundle();
+    var html;
+    if (stringBundle) {
+        // Using e4x javascript support here
+        html =
+               <html>
+               <head>
+                    <meta http-equiv='Content-Type' content='text/html; charset=utf-8'/>
+                    <link rel='stylesheet' type='text/css' href='chrome://lightning/skin/imip.css'/>
+               </head>
+               <body>
+                    <table>
+                    </table>
+               </body>
+               </html>;
+        // Create header row
+        var labelText = stringBundle.GetStringFromName("imipHtml.header");
+        html.body.table.appendChild(
+            <tr>
+                <td colspan="3" class="header">
+                    <p class="header">{labelText}</p>
+                </td>
+            </tr>
+        );
+        if (event.title) {
+            labelText = stringBundle.GetStringFromName("imipHtml.summary");
+            html.body.table.appendChild(createHtmlTableSection(labelText,
+                                                               event.title));
+        }
+
+        var eventLocation = event.getProperty("LOCATION");
+        if (eventLocation) {
+            labelText = stringBundle.GetStringFromName("imipHtml.location");
+            html.body.table.appendChild(createHtmlTableSection(labelText,
+                                                               eventLocation));
+        }
+
+        var labelText = stringBundle.GetStringFromName("imipHtml.when");
+        html.body.table.appendChild(createHtmlTableSection(labelText,
+                                                           event.startDate.jsDate.toLocaleString()));
+
+        if (event.organizer && 
+           (event.organizer.commonName || event.organizer.id)) {
+            labelText = stringBundle.GetStringFromName("imipHtml.organizer");
+            var orgname = event.organizer.commonName || event.organizer.id;
+            html.body.table.appendChild(createHtmlTableSection(labelText, orgname));
+        }
+
+        var eventDescription = event.getProperty("DESCRIPTION");
+        if (eventDescription) {
+            labelText = stringBundle.GetStringFromName("imipHtml.description");
+            html.body.table.appendChild(createHtmlTableSection(labelText,
+                                                               eventDescription));
+        }
+    }
+
+    return html;
 }
 
 function ltnMimeConverter() { }
 
 ltnMimeConverter.prototype = {
     QueryInterface: function (aIID) {
-        if (!aIID.equals(CI.nsISupports) &&
-            !aIID.equals(CI.nsISimpleMimeConverter))
-            throw Components.interfaces.NS_ERROR_NO_INTERFACE;
+        if (!aIID.equals(Ci.nsISupports) &&
+            !aIID.equals(Ci.nsISimpleMimeConverter))
+            throw Ci.NS_ERROR_NO_INTERFACE;
 
         return this;
     },
 
     convertToHTML: function(contentType, data) {
-        // dump("converting " + contentType + " to HTML\n");
-
-        var event = Components.classes["@mozilla.org/calendar/event;1"]
-            .createInstance(CI.calIEvent);
+        var event = Cc["@mozilla.org/calendar/event;1"]
+                    .createInstance(Ci.calIEvent);
         event.icalString = data;
+        var html = createHtml(event);
 
-        var html = "<script src='chrome://lightning/content/text-calendar-handler.js'></script>\n";
-        html += "<center>\n";
-        html += startForm(data);
-        html += "<table bgcolor='#CCFFFF'>\n";
-        var organizer = event.organizer;
-        var rows = [["Invitation from", "<a href='" + organizer.id + "'>" + 
-                                        organizer.commonName + "</a>"],
-                    ["Topic:", event.title],
-                    ["Start:", event.startDate.jsDate.toLocaleTimeString()],
-                    ["End:", event.endDate.jsDate.toLocaleTimeString()]];
-        html += rows.map(makeTableRow).join("\n");
-        html += "<tr><td colspan='2'>";
-        html += makeButton("accept", "Accept meeting") + " ";
-        html += makeButton("decline", "Decline meeting") + " ";
-        html += "</td></tr>\n";
-        html += "</table>\n</form>\n</center>";
+        try {
+            // Bug 351610: This mechanism is a little flawed
+            var itipItem = Cc["@mozilla.org/calendar/itip-item;1"]
+                           .createInstance(Ci.calIItipItem);
+            itipItem.initialize(data);
+            var observer = Cc["@mozilla.org/observer-service;1"]
+                           .getService(Ci.nsIObserverService);
+            if (observer) {
+                observer.notifyObservers(itipItem, "onITipItemCreation", 0);
+            }
+        } catch (e) {
+            Components.utils.reportError("Cannot Create iTIP Item: " + e);
+        }
 
-        // dump("Generated HTML:\n\n" + html + "\n\n");
         return html;
-    },
-    
+    }
 };
 
 var myModule = {
     registerSelf: function (compMgr, fileSpec, location, type) {
         debug("*** Registering Lightning text/calendar handler\n");
-        compMgr = compMgr.QueryInterface(CI.nsIComponentRegistrar);
+        compMgr = compMgr.QueryInterface(Ci.nsIComponentRegistrar);
         compMgr.registerFactoryLocation(this.myCID,
                                         "Lightning text/calendar handler",
                                         this.myContractID,
@@ -106,7 +172,7 @@ var myModule = {
                                         type);
 
         var catman = Components.classes["@mozilla.org/categorymanager;1"]
-            .getService(CI.nsICategoryManager);
+            .getService(Ci.nsICategoryManager);
 
         catman.addCategoryEntry("simple-mime-converters", "text/calendar",
                                 this.myContractID, true, true);
@@ -143,5 +209,4 @@ var myModule = {
 function NSGetModule(compMgr, fileSpec) {
     return myModule;
 }
-
 
