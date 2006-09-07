@@ -975,6 +975,8 @@ nsSpaceManager::ClearRegions()
   ClearFrameInfo();
   mBandList.Clear();
   mLowestTop = NSCOORD_MIN;
+  mHaveCachedLeftYMost = mHaveCachedRightYMost = PR_TRUE;
+  mMaximalLeftYMost = mMaximalRightYMost = 0;
 }
 
 void
