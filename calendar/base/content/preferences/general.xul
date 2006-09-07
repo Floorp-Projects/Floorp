@@ -86,7 +86,7 @@
                        control="dateformat"/>
                 <menulist id="dateformat" crop="none"
                           preference="calendar.date.format">
-                    <menupopup id="dateformat">
+                    <menupopup id="dateformatpopup">
                         <menuitem id="dateformat-long-menuitem"
                                   label="&pref.dateformat.long;"
                                   value="0"/>

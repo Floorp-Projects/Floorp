@@ -154,14 +154,14 @@
                 <rows>
                     <row>
                         <vbox align="start">
-                            <caption label="&pref.defalarm4events.label;"
-                                     accesskey="&pref.defalarm4events.accesskey;"
-                                     control="eventdefalarm"/>
+                            <label value="&pref.defalarm4events.label;"
+                                   accesskey="&pref.defalarm4events.accesskey;"
+                                   control="eventdefalarm"/>
                         </vbox>
                         <menulist id="eventdefalarm"
                                   crop="none"
                                   preference="calendar.alarms.onforevents">
-                            <menupopup id="eventdefalarm">
+                            <menupopup id="eventdefalarmpopup">
                                 <menuitem id="eventdefalarmon"
                                           label="&pref.alarm.on;"
                                           value="1"/>
@@ -174,14 +174,14 @@
                     </row>
                     <row>
                         <vbox align="start">
-                            <caption label="&pref.defalarm4todos.label;"
-                                     accesskey="&pref.defalarm4todos.accesskey;"
-                                     control="tododefalarm"/>
+                            <label value="&pref.defalarm4todos.label;"
+                                   accesskey="&pref.defalarm4todos.accesskey;"
+                                   control="tododefalarm"/>
                         </vbox>
                         <menulist id="tododefalarm"
                                   crop="none"
                                   preference="calendar.alarms.onfortodos">
-                            <menupopup id="tododefalarm">
+                            <menupopup id="tododefalarmpopup">
                                 <menuitem id="tododefalarmon"
                                           label="&pref.alarm.on;"
                                           value="1"/>
@@ -194,9 +194,9 @@
                     </row>
                     <row>
                         <vbox align="start">
-                            <caption label="&pref.defalarmlen4events.label;"
-                                     accesskey="&pref.defalarmlen4events.accesskey;"
-                                     control="eventdefalarmlen"/>
+                            <label value="&pref.defalarmlen4events.label;"
+                                   accesskey="&pref.defalarmlen4events.accesskey;"
+                                   control="eventdefalarmlen"/>
                         </vbox>
                         <hbox>
                             <textbox id="eventdefalarmlen"
@@ -207,19 +207,19 @@
                                       crop="none"
                                       preference="calendar.alarms.eventalarmunit"
                                       labelnumber="labelplural">
-                                <menupopup id="eventdefalarmunit">
-                                    <menuitem id="eventdefalarmunitday"
+                                <menupopup id="eventdefalarmunitpopup">
+                                    <menuitem id="eventdefalarmunitmin"
                                               label="&calendar.global.units.minutes;"
                                               labelplural="&calendar.global.units.minutes;"
                                               labelsingular="&calendar.global.units.minute;"
                                               value="minutes"
                                               selected="true"/>
-                                    <menuitem id="eventdefalarmunitmin"
+                                    <menuitem id="eventdefalarmunithour"
                                               label="&calendar.global.units.hours;"
                                               labelplural="&calendar.global.units.hours;"
                                               labelsingular="&calendar.global.units.hour;"
                                               value="hours"/>
-                                    <menuitem id="eventdefalarmunitmin"
+                                    <menuitem id="eventdefalarmunitday"
                                               label="&calendar.global.units.days;"
                                               labelplural="&calendar.global.units.days;"
                                               labelsingular="&calendar.global.units.day;"
@@ -230,9 +230,9 @@
                     </row>
                     <row>
                         <vbox align="start">
-                            <caption label="&pref.defalarmlen4todos.label;"
-                                     accesskey="&pref.defalarmlen4todos.accesskey;"
-                                     control="tododefalarmlen"/>
+                            <label value="&pref.defalarmlen4todos.label;"
+                                   accesskey="&pref.defalarmlen4todos.accesskey;"
+                                   control="tododefalarmlen"/>
                         </vbox>
                         <hbox>
                             <textbox id="tododefalarmlen"
@@ -243,19 +243,19 @@
                                       crop="none"
                                       preference="calendar.alarms.todoalarmunit"
                                       labelnumber="labelplural">
-                                <menupopup id="tododefalarmunit">
-                                    <menuitem id="tododefalarmunitday"
+                                <menupopup id="tododefalarmunitpopup">
+                                    <menuitem id="tododefalarmunitmin"
                                               label="&calendar.global.units.minutes;"
                                               labelplural="&calendar.global.units.minutes;"
                                               labelsingular="&calendar.global.units.minute;"
                                               value="minutes"
                                               selected="true"/>
-                                    <menuitem id="tododefalarmunitmin"
+                                    <menuitem id="tododefalarmunithour"
                                               label="&calendar.global.units.hours;"
                                               labelplural="&calendar.global.units.hours;"
                                               labelsingular="&calendar.global.units.hour;"
                                               value="hours"/>
-                                    <menuitem id="tododefalarmunitmin"
+                                    <menuitem id="tododefalarmunitday"
                                               label="&calendar.global.units.days;"
                                               labelplural="&calendar.global.units.days;"
                                               labelsingular="&calendar.global.units.day;"

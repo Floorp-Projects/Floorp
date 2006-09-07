@@ -99,11 +99,11 @@
         <groupbox>
             <caption label="&pref.calendar.view.allview.caption;"/>
             <hbox align="center">
-                <caption label="&pref.weekstarts.label;"
-                         accesskey="&pref.weekstarts.accesskey;"
-                         control="weekstarts"/>
+                <label value="&pref.weekstarts.label;"
+                       accesskey="&pref.weekstarts.accesskey;"
+                       control="weekstarts"/>
                 <menulist id="weekstarts" preference="calendar.week.start">
-                    <menupopup id="weekstarts">
+                    <menupopup id="weekstartspopup">
                         <menuitem label="&day.1.name;" value="0"/>
                         <menuitem label="&day.2.name;" value="1"/>
                         <menuitem label="&day.3.name;" value="2"/>
@@ -161,9 +161,9 @@
         <groupbox>
             <caption label="&pref.calendar.view.multiweekview.caption;"/>
             <hbox align="center">
-                <caption label="&pref.numberofweeks.label;"
-                         accesskey="&pref.numberofweeks.accesskey;"
-                         control="viewsMultiweekTotalWeeks"/>
+                <label value="&pref.numberofweeks.label;"
+                       accesskey="&pref.numberofweeks.accesskey;"
+                       control="viewsMultiweekTotalWeeks"/>
                 <menulist id="viewsMultiweekTotalWeeks"
                           preference="calendar.weeks.inview">
                     <menupopup>
@@ -177,9 +177,9 @@
                 </menulist>
             </hbox>
             <hbox align="center" id="previousWeeksBox">
-                <caption label="&pref.numberofpreviousweeks.label;"
-                         accesskey="&pref.numberofpreviousweeks.accesskey;"
-                         control="viewsMultiweekPreviousWeeks"/>
+                <label value="&pref.numberofpreviousweeks.label;"
+                       accesskey="&pref.numberofpreviousweeks.accesskey;"
+                       control="viewsMultiweekPreviousWeeks"/>
                 <menulist id="viewsMultiweekPreviousWeeks"
                           preference="calendar.previousweeks.inview">
                     <menupopup>
