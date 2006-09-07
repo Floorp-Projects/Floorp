@@ -655,6 +655,10 @@ pref("msgcompose.background_color",         "#FFFFFF");
 // to prevent some mail server to disclose the bcc recipients
 pref("mail.compose.add_undisclosed_recipients", true);
 
+// Set this preference to true to tell mail not to attach the source of a link to a local
+// network file (file://///<network name>/<path>/<file name>). Windows only
+pref("mail.compose.dont_attach_source_of_local_network_links", false);
+
 // these prefs (in minutes) are here to help QA test this feature
 // "mail.purge.min_delay", never purge a junk folder more than once every 480 minutes (60 mins/hour * 8 hours)
 // "mail.purge.timer_interval", fire the purge timer every 5 minutes, starting 5 minutes after we load accounts

@@ -32,6 +32,8 @@
     <RDF:li resource="chrome://messenger/content/addressbook/abSelectAddressesDialog.xul"/>
     <RDF:li resource="chrome://editor/content/editor.xul"/>
     <RDF:li resource="chrome://editor/content/editorTasksOverlay.xul"/>
+    <RDF:li resource="chrome://editor/content/EdImageOverlay.xul"/>
+    <RDF:li resource="chrome://editor/content/EdLinkProps.xul"/>
   </RDF:Seq>
 
 
@@ -92,6 +94,14 @@
   <!-- messenger items for Composer -->
   <RDF:Seq about="chrome://editor/content/editor.xul">
     <RDF:li>chrome://messenger/content/mailEditorOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://editor/content/EdImageOverlay.xul">
+    <RDF:li>chrome://messenger/content/messengercompose/mailComposeEditorOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://editor/content/EdLinkProps.xul">
+    <RDF:li>chrome://messenger/content/messengercompose/mailComposeEditorOverlay.xul</RDF:li>
   </RDF:Seq>
   
 </RDF:RDF>

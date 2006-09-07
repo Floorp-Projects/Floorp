@@ -3847,22 +3847,11 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
         node->GetNodeName(tagName);
         ToLowerCase(tagName);
 
-        // See if it's an image or an embed
-        if (tagName.EqualsLiteral("img") || tagName.EqualsLiteral("embed"))
+        // See if it's an image or an embed and also include all links.
+        // Let mail decide which link to send or not
+        if (tagName.EqualsLiteral("img") || tagName.EqualsLiteral("embed") ||
+            tagName.EqualsLiteral("a"))
           (*aNodeList)->AppendElement(node);
-        else if (tagName.EqualsLiteral("a"))
-        {
-          // Only include links if they're links to file: URLs
-          nsCOMPtr<nsIDOMHTMLAnchorElement> anchor (do_QueryInterface(content));
-          if (anchor)
-          {
-            nsAutoString href;
-            if (NS_SUCCEEDED(anchor->GetHref(href)))
-              if (StringBeginsWith(href, NS_LITERAL_STRING("file:"),
-                                   nsCaseInsensitiveStringComparator()))
-                (*aNodeList)->AppendElement(node);
-          }
-        }
         else if (tagName.EqualsLiteral("body"))
         {
           nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);

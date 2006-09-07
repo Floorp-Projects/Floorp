@@ -100,6 +100,7 @@
   locale/@AB_CD@/messenger/messengercompose/askSendFormat.dtd           (%chrome/messenger/messengercompose/askSendFormat.dtd)
   locale/@AB_CD@/messenger/messengercompose/sendProgress.dtd            (%chrome/messenger/messengercompose/sendProgress.dtd)
   locale/@AB_CD@/messenger/messengercompose/composeMsgs.properties      (%chrome/messenger/messengercompose/composeMsgs.properties)
+  locale/@AB_CD@/messenger/messengercompose/mailComposeEditorOverlay.dtd (%chrome/messenger/messengercompose/mailComposeEditorOverlay.dtd)
   locale/@AB_CD@/messenger/preferences/preferences.dtd                  (%chrome/messenger/preferences/preferences.dtd)
   locale/@AB_CD@/messenger/preferences/general.dtd                      (%chrome/messenger/preferences/general.dtd)
   locale/@AB_CD@/messenger/preferences/display.dtd                      (%chrome/messenger/preferences/display.dtd)

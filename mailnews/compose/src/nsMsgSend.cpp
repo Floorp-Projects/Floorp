@@ -118,6 +118,9 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 #define PREF_MAIL_STRICTLY_MIME "mail.strictly_mime"
 #define PREF_MAIL_MESSAGE_WARNING_SIZE "mailnews.message_warning_size"
 #define PREF_MAIL_COLLECT_EMAIL_ADDRESS_OUTGOING "mail.collect_email_address_outgoing"
+#define PREF_MAIL_DONT_ATTACH_SOURCE "mail.compose.dont_attach_source_of_local_network_links"
+
+#define ATTR_MOZ_DO_NOT_SEND "moz-do-not-send"
 
 enum  { kDefaultMode = (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE) };
 
@@ -1439,22 +1442,29 @@ nsMsgComposeAndSend::GetEmbeddedObjectInfo(nsIDOMNode *node, nsMsgAttachmentData
   NS_ENSURE_ARG_POINTER(attachment);
   NS_ENSURE_ARG_POINTER(acceptObject);
 
+// GetEmbeddedObjectInfo will determine if we need to attach the source of the embedded object with the message
+// The decision is made automatically unless the attribute moz-do-not-send has been set to true or false
+// The default rule is that all image and anchor objects are attached as well link to a local file
   nsresult rv;
 
   // Reset this structure to null!
   memset(attachment, 0, sizeof(nsMsgAttachmentData));
   *acceptObject = PR_FALSE;
 
-  // Check if the object has an moz-do-not-send attribute set. If it's the case,
-  // we must ignore it
+  // Check if the object has a moz-do-not-send attribute set. If it's true,
+  // we must ignore it, if false set forceToBeAttached to be true.
 
+  PRBool forceToBeAttached = PR_FALSE;
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(node);
   if (domElement)
   {
     nsAutoString attributeValue;
-    if (NS_SUCCEEDED(domElement->GetAttribute(NS_LITERAL_STRING("moz-do-not-send"), attributeValue)))
+    if (NS_SUCCEEDED(domElement->GetAttribute(NS_LITERAL_STRING(ATTR_MOZ_DO_NOT_SEND), attributeValue)))
+    {
       if (attributeValue.LowerCaseEqualsLiteral("true"))
         return NS_OK;
+      forceToBeAttached = PR_TRUE;
+    }
   }
     
   // Now, we know the types of objects this node can be, so we will do
@@ -1601,12 +1611,40 @@ nsMsgComposeAndSend::GetEmbeddedObjectInfo(nsIDOMNode *node, nsMsgAttachmentData
           rv = aLocalFile->IsFile(&isAValidFile);
           if (NS_FAILED(rv))
             isAValidFile = PR_FALSE;
+          else
+          {
+            if (anchor)
+            {
+              // One more test, if the anchor points to a local network server, let's check what the pref
+              // mail.compose.dont_attach_source_of_local_network_links tells us to do.
+              nsCAutoString urlSpec;         
+              rv = attachment->url->GetSpec(urlSpec);
+              if (NS_SUCCEEDED(rv))
+                if (StringBeginsWith(urlSpec, NS_LITERAL_CSTRING("file://///")))
+                {
+                  nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+                  if (pPrefBranch)
+                  {
+                    PRBool dontSend = PR_FALSE;
+                    rv = pPrefBranch->GetBoolPref(PREF_MAIL_DONT_ATTACH_SOURCE, &dontSend);
+                    if (dontSend)
+                      isAValidFile = PR_FALSE;
+                  }
+                }
+            }
+          }
         }
       }
       
       if (! isAValidFile)
         return NS_OK;
     }  
+  }
+  else //not a file:// url
+  {
+    //if this is an anchor, don't attach remote file unless we have been forced to do it
+    if (anchor && !forceToBeAttached)
+      return NS_OK;
   }
   
   *acceptObject = PR_TRUE;

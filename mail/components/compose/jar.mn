@@ -1,4 +1,6 @@
 messenger.jar:
+% overlay chrome://editor/content/EdImageOverlay.xul chrome://messenger/content/messengercompose/mailComposeEditorOverlay.xul
+% overlay chrome://editor/content/EdLinkProps.xul chrome://messenger/content/messengercompose/mailComposeEditorOverlay.xul
 *   content/messenger/messengercompose/messengercompose.xul        (content/messengercompose.xul)
 *   content/messenger/messengercompose/MsgComposeCommands.js       (content/MsgComposeCommands.js)
 *   content/messenger/messengercompose/addressingWidgetOverlay.js  (content/addressingWidgetOverlay.js)
@@ -9,6 +11,7 @@ messenger.jar:
     content/messenger/messengercompose/sendProgress.js             (/mailnews/compose/resources/content/sendProgress.js)
     content/messenger/messengercompose/MsgAttachPage.xul           (/mailnews/compose/resources/content/MsgAttachPage.xul)
     content/messenger/messengercompose/MsgAttachPage.js            (/mailnews/compose/resources/content/MsgAttachPage.js)
+    content/messenger/messengercompose/mailComposeEditorOverlay.xul (/mailnews/compose/resources/content/mailComposeEditorOverlay.xul)
 
 comm.jar:
 +   content/editor/EdSpellCheck.js                                 (content/EdSpellCheck.js) 
