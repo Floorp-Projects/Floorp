@@ -27,6 +27,7 @@
 #                 ArentJan Banck <ajbanck@planet.nl>
 #                 Eric Belhaire <belhaire@ief.u-psud.fr>
 #                 Matthew Willis <mattwillis@gmail.com>
+#                 Stefan Sitter <ssitter@googlemail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -59,12 +60,12 @@
                      label="&event.new.todo;"
                      accesskey="&event.new.todo.accesskey;"
                      observes="new_todo_command"/>
-           <!-- XXX lilmatt: Finish this! -->
+           <!-- XXX lilmatt: Finish this!
            <menuitem key="new_journal_key"
                      id="calendar-new-journal-menu"
                      label="&calendar.new.journal.label;"
                      accesskey="&calendar.new.journal.accesskey;"
-                     disabled="true"/>
+                     disabled="true"/> -->
            <menuitem id="calendar-new-calendar-menu"
                      key="new_calendar_key"
                      label="&calendar.new.server.label;"
@@ -75,32 +76,11 @@
                      label="&calendar.open.file.label;"
                      accesskey="&calendar.open.file.accesskey;"
                      observes="open_local_calendar_command"/>
-           <menuitem id="unifinder-modify-menu"
-                     key="modify_event_key"
-                     label="&event.edit.event;"
-                     accesskey="&event.edit.event.accesskey;"
-                     observes="modify_command"/>
-           <menuitem id="calendar-close"
-                     key="key_close"
-#ifdef XP_MACOSX
-                     label="&calendar.menu.options.close.mac;"
-#else
-                     label="&calendar.menu.options.close;"
-                     accesskey="&calendar.menu.options.close.accesskey;"
-#endif
-                     observes="close_calendar_command"/>
-           <menuseparator/>
-
            <menuitem id="calendar-addserver-menu"
                      label="&calendar.subscribe.label;"
                      accesskey="&calendar.subscribe.accesskey;"
                      observes="new_calendar_command"/>
-           <menuitem id="calendar-reloadserver-menu"
-                     key="reload_server_key"
-                     label="&calendar.reloadserver.label;"
-                     accesskey="&calendar.reloadserver.accesskey;"
-                     observes="reload_remote_calendars"/>
-           <menuseparator/>
+           <menuseparator id="calendar-new-sep"/>
 
            <!-- import: pulling data into existing files -->
            <menuitem id="calendar-import-menu"
@@ -110,9 +90,14 @@
                      observes="import_command"/>
            <!-- export: getting data out of existing files -->
            <menuitem id="calendar-export-menu"
-                     label="&calendar.export.label;"
-                     accesskey="&calendar.export.accesskey;"
+                     label="&calendar.export.selection.label;"
+                     accesskey="&calendar.export.selection.accesskey;"
                      observes="export_command"/>
+           <menuitem id="calendar-export-calendar-menu"
+                     label="&calendar.export.calendar.label;"
+                     accesskey="&calendar.export.calendar.accesskey;"
+                     observes="ask_and_export_calendar"/>
+           <menuseparator id="calendar-importexport-sep"/>
            <!-- Disable this until Sunbird gets mail support
            <menuitem id="calendar-mail-event"
                      key="send_event_key"
@@ -121,10 +106,22 @@
                      observes="send_event_command"/>
            -->
            <menuitem id="calendar-publish-menu"
-                     label="&calendar.publish.label;"
-                     accesskey="&calendar.publish.accesskey;"
+                     label="&calendar.publish.selection.label;"
+                     accesskey="&calendar.publish.selection.accesskey;"
                      observes="publish_events_command"/>
-           <menuseparator/>
+           <menuitem id="calendar-publish-calendar-menu"
+                     label="&calendar.publish.calendar.label;"
+                     accesskey="&calendar.publish.calendar.accesskey;"
+                     observes="ask_and_publish_calendar"/>
+           <menuseparator id="calendar-publish-sep"/>
+
+           <menuitem id="calendar-reloadserver-menu"
+                     key="reload_server_key"
+                     label="&calendar.reloadserver.label;"
+                     accesskey="&calendar.reloadserver.accesskey;"
+                     observes="reload_remote_calendars"/>
+           <menuseparator id="calendar-reload-sep"/>
+
            <menuitem id="calendar-page-setup-menu"
                      label="&calendar.pagesetup.label;"
                      accesskey="&calendar.pagesetup.accesskey;"
@@ -141,10 +138,17 @@
                      oncommand="goQuitApplication()"/>
 #else
            <menuseparator id="calendar-print-sep"/>
+#ifdef XP_WIN
+           <menuitem id="calendar-quit-menu"
+                     label="&calendar.exit.label;"
+                     accesskey="&calendar.exit.accesskey;"
+                     oncommand="goQuitApplication()"/>
+#else
            <menuitem id="calendar-quit-menu"
                      label="&calendar.quit.label;"
                      accesskey="&calendar.quit.accesskey;"
                      oncommand="goQuitApplication()"/>
+#endif
 #endif
          </menupopup>
        </menu>
@@ -179,6 +183,11 @@
                      label="&calendar.paste.label;"
                      accesskey="&calendar.paste.accesskey;"
                      observes="paste_command"/>
+           <menuitem id="unifinder-modify-menu"
+                     key="modify_event_key"
+                     label="&event.edit.event;"
+                     accesskey="&event.edit.event.accesskey;"
+                     observes="modify_command"/>
            <menuitem id="unifinder-remove-menu"
                      key="delete_key"
                      label="&event.delete.event;"

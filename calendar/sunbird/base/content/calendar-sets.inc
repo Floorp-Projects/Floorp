@@ -27,6 +27,7 @@
 #                 ArentJan Banck <ajbanck@planet.nl>
 #                 Eric Belhaire <belhaire@ief.u-psud.fr>
 #                 Matthew Willis <mattwillis@gmail.com>
+#                 Stefan Sitter <ssitter@googlemail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -84,9 +85,11 @@
 
   <command id="import_command" oncommand="loadEventsFromFile()"/>
   <command id="export_command" oncommand="saveEventsToFile(gCalendarWindow.EventSelection.selectedEvents)" disabled="true" disabledwhennoeventsselected="true"/>
+  <command id="ask_and_export_calendar" oncommand="exportEntireCalendar()"/>
 
   <command id="reload_remote_calendars" oncommand="reloadCalendars()"/>
   <command id="publish_calendar" oncommand="publishEntireCalendar(getDefaultCalendar())"/>
+  <command id="ask_and_publish_calendar" oncommand="publishEntireCalendar()"/>
   <command id="publish_events_command" oncommand="publishCalendarData()" disabled="true" disabledwhennoeventsselected="true"/>
 
   <command id="toggle_tasks_in_view" 

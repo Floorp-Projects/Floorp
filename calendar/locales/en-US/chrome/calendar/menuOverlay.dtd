@@ -22,6 +22,7 @@
    -                 Mike Potter <mikep@oeone.com>
    -                 Chris Charabaruk <coldacid@meldstar.com>
    -                 Matthew Willis <mattwillis@gmail.com>
+   -                 Stefan Sitter <ssitter@googlemail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,7 +50,7 @@
 <!ENTITY event.new.todo.key                     "T">
 <!ENTITY event.new.todo.accesskey               "T">
 
-<!ENTITY calendar.new.server.label              "New Calendar File…">
+<!ENTITY calendar.new.server.label              "New Calendar…">
 <!ENTITY calendar.new.server.key                "L">
 <!ENTITY calendar.new.server.accesskey          "l">
 
@@ -95,6 +96,12 @@
 <!ENTITY calendar.export.label                  "Export Selection...">
 <!ENTITY calendar.export.accesskey              "E">
 
+<!ENTITY calendar.export.calendar.label         "Export Calendar…">
+<!ENTITY calendar.export.calendar.accesskey     "E">
+
+<!ENTITY calendar.export.selection.label        "Export Selection…">
+<!ENTITY calendar.export.selection.accesskey    "S">
+
 <!ENTITY calendar.subscribe.label               "Subscribe to Remote Calendar…">
 <!ENTITY calendar.subscribe.accesskey           "R">
 
@@ -105,11 +112,20 @@
 <!ENTITY calendar.publish.label                 "Publish...">
 <!ENTITY calendar.publish.accesskey             "b">
 
+<!ENTITY calendar.publish.calendar.label        "Publish Calendar…">
+<!ENTITY calendar.publish.calendar.accesskey    "b">
+
+<!ENTITY calendar.publish.selection.label       "Publish Selection…">
+<!ENTITY calendar.publish.selection.accesskey   "c">
+
 <!ENTITY calendar.quit.label                    "Quit">
 <!ENTITY calendar.quit.accesskey                "Q">
 <!ENTITY calendar.quit.label.mac                "Quit &brandShortName;">
 <!ENTITY calendar.quit.key.mac                  "Q">
 <!ENTITY calendar.quit.modifiers.mac            "accel">
+
+<!ENTITY calendar.exit.label                    "Exit">
+<!ENTITY calendar.exit.accesskey                "x">
 
 <!ENTITY calendar.about.label                   "About Calendar">
 <!ENTITY calendar.about.accesskey               "C">
