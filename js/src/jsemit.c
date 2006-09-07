@@ -5474,17 +5474,30 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             break;
           default:
+            /*
+             * If useless, just emit JSOP_TRUE; otherwise convert delete foo()
+             * to foo(), true (a comma expression, requiring SRC_PCDELTA).
+             */
             useful = JS_FALSE;
             if (!CheckSideEffects(cx, &cg->treeContext, pn2, &useful))
                 return JS_FALSE;
-            if (useful) {
+            if (!useful) {
+                off = noteIndex = -1;
+            } else {
                 if (!js_EmitTree(cx, cg, pn2))
                     return JS_FALSE;
-                if (js_Emit1(cx, cg, JSOP_POP) < 0)
+                off = CG_OFFSET(cg);
+                noteIndex = js_NewSrcNote2(cx, cg, SRC_PCDELTA, 0);
+                if (noteIndex < 0 || js_Emit1(cx, cg, JSOP_POP) < 0)
                     return JS_FALSE;
             }
             if (js_Emit1(cx, cg, JSOP_TRUE) < 0)
                 return JS_FALSE;
+            if (noteIndex >= 0) {
+                tmp = CG_OFFSET(cg);
+                if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0, tmp-off))
+                    return JS_FALSE;
+            }
         }
         break;
 
