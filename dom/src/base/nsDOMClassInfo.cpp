@@ -5954,9 +5954,10 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // Note, we won't forward resolve of the location property to the
   // inner window, we need to deal with that one for the outer too
   // since we've got special security protection code for that
-  // property.
-  if (win->IsOuterWindow() && id != sLocation_id &&
-      !ObjectIsNativeWrapper(cx, obj)) {
+  // property.  Also note that we want to enter this block even for
+  // native wrappers, so that we'll ensure an inner window to wrap
+  // against for the result of whatever we're getting.
+  if (win->IsOuterWindow() && id != sLocation_id) {
     // XXXjst: Do security checks here when we remove the security
     // checks on the inner window.
 
@@ -5986,7 +5987,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
 
     JSObject *innerObj;
-    if (innerWin && (innerObj = innerWin->GetGlobalJSObject())) {
+    if (!ObjectIsNativeWrapper(cx, obj) &&
+        innerWin && (innerObj = innerWin->GetGlobalJSObject())) {
 #ifdef DEBUG_SH_FORWARDING
       printf(" --- Forwarding resolve to inner window %p\n", (void *)innerWin);
 #endif
