@@ -181,6 +181,8 @@ var gFeedsPane = {
    */
   _initFeedReaders: function() {
     this.updateSelectedApplicationInfo();
+
+    var readersList = this.element("readers");
 #ifdef XP_WIN
     // On Windows, list the system default feed reader if it is
     // not the last-selected application already
@@ -192,10 +194,12 @@ var gFeedsPane = {
         var selectedAppFile = this.element("selectedAppFilefield").file;
         if (!selectedAppFile || defaultSystemReaderFilefield.file.path !=
             selectedAppFile.path) {
-          var defaultReaderItem = this.element("defaultSystemReaderListitem");
+          var defaultReaderItem = document.createElementNS(kXULNS, "listitem");
+          defaultReaderItem.id = "defaultSystemReaderListitem";
+          defaultReaderItem.className = "listitem-iconic";
           defaultReaderItem.setAttribute("label", defaultSystemReaderFilefield.label);
           defaultReaderItem.setAttribute("image", defaultSystemReaderFilefield.image);
-          defaultReaderItem.hidden = false;
+          readersList.appendChild(defaultReaderItem);
         }
       }
     }
@@ -213,7 +217,6 @@ var gFeedsPane = {
     var ios = 
         Cc["@mozilla.org/network/io-service;1"].
         getService(Ci.nsIIOService);
-    var readersList = this.element("readers");
     for (var i = 0; i < handlers.length; ++i) {
       var row = document.createElementNS(kXULNS, "listitem");
       row.className = "listitem-iconic";

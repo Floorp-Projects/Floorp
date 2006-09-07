@@ -104,18 +104,13 @@
                     image="chrome://browser/skin/page-livemarks.png"/>
           <listitem id="selectedApplicationListitem" allowevents="true">
             <listcell id="selectedApplicationCell" class="listcell-iconic"/>
-            <listcell>
+            <listcell id="chooseClientAppCell">
               <button id="chooseClientApp"
                       label="&chooseApplication.label;"
                       accesskey="&chooseApplication.accesskey;"
                       oncommand="gFeedsPane.chooseClientApp();"/>
             </listcell>
           </listitem>
-#ifdef XP_WIN
-          <listitem id="defaultSystemReaderListitem"
-                    class="listitem-iconic"
-                    hidden="true"/>
-#endif
         </listbox>
       </hbox>
     </radiogroup>
