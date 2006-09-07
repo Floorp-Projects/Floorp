@@ -858,8 +858,8 @@ CK_RV PKM_KeyTests(CK_FUNCTION_LIST_PTR pFunctionList,
     CK_KEY_TYPE rsatype = CKK_RSA;
     CK_MECHANISM rsaKeyPairGenMech;
     CK_BYTE subject[] = {"RSA Private Key"};
-    CK_ULONG modulusBits = 768;
-    CK_BYTE publicExponent[] = {3};
+    CK_ULONG modulusBits = 1024;
+    CK_BYTE publicExponent[] = {0x01, 0x00, 0x01};
     CK_BYTE id[] = {"RSA123"};
     CK_ATTRIBUTE rsaPubKeyTemplate[9]; 
     CK_ATTRIBUTE rsaPrivKeyTemplate[11]; 
