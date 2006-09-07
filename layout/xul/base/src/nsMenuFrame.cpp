@@ -1969,6 +1969,12 @@ public:
     nsIFrame* frame = shell->GetPrimaryFrameFor(mContent);
     NS_ENSURE_TRUE(frame, NS_OK);
 
+    PRBool collapsed = PR_FALSE;
+    nsBoxLayoutState state(frame->GetPresContext());
+    frame->IsCollapsed(state, collapsed);
+    if (collapsed) {
+      return NS_OK;
+    }
     nsIMenuFrame* imenu = nsnull;
     CallQueryInterface(frame, &imenu);
     NS_ENSURE_TRUE(imenu, NS_OK);
