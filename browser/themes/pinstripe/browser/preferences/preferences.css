@@ -262,3 +262,9 @@ caption {
 }
 
 
+/**
+ * Feeds pane
+ */
+#chooseClientAppCell {
+  -moz-padding-end: 12px;
+}
