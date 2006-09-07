@@ -130,12 +130,11 @@ is_selfserv_alive()
   else
       PID=`cat ${SERVERPID}`
   fi
-  #if  [ "${OS_ARCH}" = "Linux" ]; then
-      kill -0 $PID >/dev/null 2>/dev/null || Exit 10 "Fatal - selfserv process not detectable"
-  #else
-      #$PS -e | grep $PID >/dev/null || \
-          #Exit 10 "Fatal - selfserv process not detectable"
-  #fi
+
+  echo "kill -0 ${PID} >/dev/null 2>/dev/null" 
+  kill -0 ${PID} >/dev/null 2>/dev/null || Exit 10 "Fatal - selfserv process not detectable"
+
+  echo "selfserv with PID ${PID} found at `date`"
 }
 
 ########################### wait_for_selfserv ##########################
@@ -143,9 +142,9 @@ is_selfserv_alive()
 ########################################################################
 wait_for_selfserv()
 {
+  echo "waiting for selfserv at `date`"
   echo "tstclnt -p ${PORT} -h ${HOSTADDR} ${CLIENT_OPTIONS} -q \\"
   echo "        -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}"
-  #echo "tstclnt -q started at `date`"
   tstclnt -p ${PORT} -h ${HOSTADDR} ${CLIENT_OPTIONS} -q \
           -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}
   if [ $? -ne 0 ]; then
@@ -170,22 +169,33 @@ kill_selfserv()
   else
       PID=`cat ${SERVERPID}`
   fi
+
+  echo "trying to kill selfserv with PID ${PID} at `date`"
+
   if [ "${OS_ARCH}" = "WINNT" -o "${OS_ARCH}" = "WIN95" -o "${OS_ARCH}" = "OS2" ]; then
+      echo "${KILL} ${PID}"
       ${KILL} ${PID}
   else
+      echo "${KILL} -USR1 ${PID}"
       ${KILL} -USR1 ${PID}
   fi
   wait ${PID}
   if [ ${fileout} -eq 1 ]; then
       cat ${SERVEROUTFILE}
   fi
+
   # On Linux selfserv needs up to 30 seconds to fully die and free
   # the port.  Wait until the port is free. (Bug 129701)
   if [ "${OS_ARCH}" = "Linux" ]; then
+      echo "selfserv -b -p ${PORT} 2>/dev/null;"
       until selfserv -b -p ${PORT} 2>/dev/null; do
+          echo "RETRY: selfserv -b -p ${PORT} 2>/dev/null;"
           sleep 1
       done
   fi
+
+  echo "selfserv with PID ${PID} killed at `date`"
+
   rm ${SERVERPID}
 }
 
@@ -205,9 +215,9 @@ start_selfserv()
   else
       ECC_OPTIONS=""
   fi
+  echo "selfserv starting at `date`"
   echo "selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} ${SERVER_OPTIONS} \\"
   echo "         ${ECC_OPTIONS} -w nss ${sparam} -i ${R_SERVERPID} $verbose &"
-  echo "selfserv started at `date`"
   if [ ${fileout} -eq 1 ]; then
       selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} ${SERVER_OPTIONS} \
                ${ECC_OPTIONS} -w nss ${sparam} -i ${R_SERVERPID} $verbose \
@@ -230,6 +240,14 @@ start_selfserv()
   # other than the MKS shell.)
   SHELL_SERVERPID=$!
   wait_for_selfserv
+
+  if [ "${OS_ARCH}" = "WINNT" -a "$OS_NAME" = "CYGWIN_NT" ]; then
+      PID=${SHELL_SERVERPID}
+  else
+      PID=`cat ${SERVERPID}`
+  fi
+
+  echo "selfserv with PID ${PID} started at `date`"
 }
 
 ############################## ssl_cov #################################
