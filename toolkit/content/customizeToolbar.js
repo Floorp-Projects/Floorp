@@ -231,9 +231,6 @@ function unwrapToolbarItems()
     if (paletteItem.hasAttribute("itemcommand"))
       toolbarItem.setAttribute("command", paletteItem.getAttribute("itemcommand"));
 
-    // We need the removeChild here because replaceChild and XBL no workee
-    // together.  See bug 193298.
-    paletteItem.removeChild(toolbarItem);
     paletteItem.parentNode.replaceChild(toolbarItem, paletteItem);
   }
 }
