@@ -225,7 +225,7 @@ protected:
   void GetMenuChildrenElement(nsIContent** aResult);
 
   // Examines the key node and builds the accelerator.
-  void BuildAcceleratorText(); // @see comment ***
+  void BuildAcceleratorText();
 
   // Called to execute our command handler.
   void Execute(nsGUIEvent *aEvent); // @see comment ***
