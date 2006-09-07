@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Josh Aas <josh@mozilla.com>
  *   Mark Mentovai <mark@moxienet.com>
+ *   HÃ¥kan Waara <hwaara@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -168,7 +169,7 @@ static void blinkRgn(RgnHandle rgn);
 
 
 static inline void
-ConvertGeckoToFlippedCocoaRect(const nsRect & inGeckoRect, NSRect & outCocoaRect)
+GeckoRectToNSRect(const nsRect & inGeckoRect, NSRect & outCocoaRect)
 {
   outCocoaRect.origin.x = inGeckoRect.x;
   outCocoaRect.origin.y = inGeckoRect.y;
@@ -177,7 +178,7 @@ ConvertGeckoToFlippedCocoaRect(const nsRect & inGeckoRect, NSRect & outCocoaRect
 }
 
 static inline void
-ConvertFlippedCocoaToGeckoRect(const NSRect & inCocoaRect, nsRect & outGeckoRect)
+NSRectToGeckoRect(const NSRect & inCocoaRect, nsRect & outGeckoRect)
 {
   outGeckoRect.x = NS_STATIC_CAST(nscoord, inCocoaRect.origin.x);
   outGeckoRect.y = NS_STATIC_CAST(nscoord, inCocoaRect.origin.y);
@@ -194,6 +195,20 @@ ConvertGeckoRectToMacRect(const nsRect& aRect, Rect& outMacRect)
   outMacRect.right = aRect.x + aRect.width;
   outMacRect.bottom = aRect.y + aRect.height;
 }
+
+// Flips a screen coordinate from a point in the cocoa coordinate system (bottom-left rect) to a point
+// that is a "flipped" cocoa coordinate system (starts in the top-left).
+static inline void
+FlipCocoaScreenCoordinate (NSPoint &inPoint) {
+  // need to flip the point relative to the main screen
+  if ([[NSScreen screens] count] > 0) {  // paranoia
+    // "global" coords are relative to the upper left of the main screen,
+    // which is the first screen in the array (not [NSScreen mainScreen]).
+    NSRect topLeftScreenFrame = [[[NSScreen screens] objectAtIndex:0] frame];
+    inPoint.y = NSMaxY(topLeftScreenFrame) - inPoint.y;
+  }
+}
+  
 
 static PRUint32
 UnderlineAttributeToTextRangeType(PRUint32 aUnderlineStyle, NSRange selRange)
@@ -395,7 +410,7 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
   // create our parallel NSView and hook it up to our parent. Recall
   // that NS_NATIVE_WIDGET is the NSView.
   NSRect r;
-  ConvertGeckoToFlippedCocoaRect(mBounds, r);
+  GeckoRectToNSRect(mBounds, r);
   mView = [CreateCocoaView(r) retain];
   if (!mView) return NS_ERROR_FAILURE;
   
@@ -600,7 +615,7 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
     
 #if 0
     case NS_NATIVE_COLORMAP:
-      //¥TODO
+      //TODO
       break;
 #endif
 
@@ -841,7 +856,7 @@ NS_METHOD nsChildView::SetBounds(const nsRect &aRect)
   if ( NS_SUCCEEDED(rv) ) {
     //CalcWindowRegions();
     NSRect r;
-    ConvertGeckoToFlippedCocoaRect(aRect, r);
+    GeckoRectToNSRect(aRect, r);
     [mView setFrame:r];
   }
 
@@ -878,7 +893,7 @@ NS_IMETHODIMP nsChildView::MoveWithRepaintOption(PRInt32 aX, PRInt32 aY, PRBool 
     mBounds.y = aY;
    
     NSRect r;
-    ConvertGeckoToFlippedCocoaRect(mBounds, r);
+    GeckoRectToNSRect(mBounds, r);
     [mView setFrame:r];
 
     if (mVisible && aRepaint)
@@ -907,7 +922,7 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
       [[mView superview] setNeedsDisplayInRect: [mView frame]];    //XXX needed?
     
     NSRect r;
-    ConvertGeckoToFlippedCocoaRect(mBounds, r);
+    GeckoRectToNSRect(mBounds, r);
     [mView setFrame:r];
 
     if (mVisible && aRepaint)
@@ -1195,7 +1210,7 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsRect &aRect, PRBool aIsSynchronous
     return NS_OK;
 
   NSRect r;
-  ConvertGeckoToFlippedCocoaRect ( aRect, r );
+  GeckoRectToNSRect ( aRect, r );
   
   if (aIsSynchronous)
     [mView displayRect:r];
@@ -1240,7 +1255,7 @@ NS_IMETHODIMP nsChildView::InvalidateRegion(const nsIRegion *aRegion, PRBool aIs
   nsRect bounds;
   nsIRegion* region = NS_CONST_CAST(nsIRegion*, aRegion);     // ugh. this method should be const
   region->GetBoundingBox ( &bounds.x, &bounds.y, &bounds.width, &bounds.height );
-  ConvertGeckoToFlippedCocoaRect(bounds, r);
+  GeckoRectToNSRect(bounds, r);
   
   if ( aIsSynchronous )
     [mView displayRect:r];
@@ -1777,21 +1792,16 @@ PRBool nsChildView::PointInWidget(Point aThePoint)
 NS_IMETHODIMP nsChildView::WidgetToScreen(const nsRect& aLocalRect, nsRect& aGlobalRect)
 {
   NSRect temp;
-  ConvertGeckoToFlippedCocoaRect(aLocalRect, temp);
-  temp = [mView convertRect:temp toView:nil];                       // convert to window coords
-  temp.origin = [[mView nativeWindow] convertBaseToScreen:temp.origin];   // convert to screen coords
+  GeckoRectToNSRect(aLocalRect, temp);
   
-  // need to flip the point relative to the main screen
-  if ([[NSScreen screens] count] > 0)   // paranoia
-  {
-    // "global" coords are relative to the upper left of the main screen,
-    // which is the first screen in the array (not [NSScreen mainScreen]).
-    NSRect mainScreenFrame = [[[NSScreen screens] objectAtIndex:0] frame];
-    temp.origin.y = NSMaxY(mainScreenFrame) - temp.origin.y;
-  }
+  temp = [mView convertRect:temp toView:nil]; // first translate this into window coords
+  temp.origin = [[mView nativeWindow] convertBaseToScreen:temp.origin]; // from window coords to global screen coords
   
-  ConvertFlippedCocoaToGeckoRect(temp, aGlobalRect);
+  // XXX: we shouldn't be returning cocoa coordinates from this method, since it's used
+  // by the rest of Gecko where top-left coordinates are normally expected. see bug 350018
+  FlipCocoaScreenCoordinate(temp.origin);
   
+  NSRectToGeckoRect(temp, aGlobalRect);
   return NS_OK;
 }
 
@@ -1806,21 +1816,13 @@ NS_IMETHODIMP nsChildView::WidgetToScreen(const nsRect& aLocalRect, nsRect& aGlo
 NS_IMETHODIMP nsChildView::ScreenToWidget(const nsRect& aGlobalRect, nsRect& aLocalRect)
 {
   NSRect temp;
-  ConvertGeckoToFlippedCocoaRect(aGlobalRect, temp);
-
-  // need to flip the point relative to the main screen
-  if ([[NSScreen screens] count] > 0)   // paranoia
-  {
-    // "global" coords are relative to the upper left of the main screen,
-    // which is the first screen in the array (not [NSScreen mainScreen]).
-    NSRect mainScreenFrame = [[[NSScreen screens] objectAtIndex:0] frame];
-    temp.origin.y = NSMaxY(mainScreenFrame) - temp.origin.y;
-  }
+  GeckoRectToNSRect(aGlobalRect, temp);
+  FlipCocoaScreenCoordinate(temp.origin);
 
   temp.origin = [[mView nativeWindow] convertScreenToBase:temp.origin];   // convert to screen coords
   temp = [mView convertRect:temp fromView:nil];                     // convert to window coords
 
-  ConvertFlippedCocoaToGeckoRect(temp, aLocalRect);
+  NSRectToGeckoRect(temp, aLocalRect);
   
   return NS_OK;
 } 
@@ -1999,15 +2001,7 @@ nsChildView::DragEvent(PRUint32 aMessage, PRInt16 aMouseGlobalX, PRInt16 aMouseG
   // window coordinates for convert:message:toGeckoEvent
 
   NSPoint dragLoc = NSMakePoint(aMouseGlobalX, aMouseGlobalY);
-
-  // need to flip the point relative to the main screen
-  if ([[NSScreen screens] count] > 0)   // paranoia
-  {
-    // "global" coords are relative to the upper left of the main screen,
-    // which is the first screen in the array (not [NSScreen mainScreen]).
-    NSRect mainScreenFrame = [[[NSScreen screens] objectAtIndex:0] frame];
-    dragLoc.y = NSMaxY(mainScreenFrame) - dragLoc.y;
-  }
+  FlipCocoaScreenCoordinate(dragLoc);
 
   // convert to window coords
   dragLoc = [[mView window] convertScreenToBase:dragLoc];
@@ -2446,7 +2440,7 @@ nsChildView::GetThebesSurface()
   rc->Init (mGeckoChild->GetDeviceContext(), targetContext);
   
   nsRect r, tr;
-  ConvertFlippedCocoaToGeckoRect(aRect, r);
+  NSRectToGeckoRect(aRect, r);
   tr = r;
 
   mGeckoChild->LocalToWindowCoordinate(tr);
@@ -2489,7 +2483,7 @@ nsChildView::GetThebesSurface()
   [self getRectsBeingDrawn:&rects count:&count];
   for (i = 0; i < count; ++i) {
     nsRect r;
-    ConvertFlippedCocoaToGeckoRect(rects[i], r);
+    NSRectToGeckoRect(rects[i], r);
     nsCOMPtr<nsIRenderingContext> rendContext = getter_AddRefs(mGeckoChild->GetRenderingContext());
     mGeckoChild->UpdateWidget(r, rendContext);
   }
@@ -3362,7 +3356,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   nsRect compositionRect = [self sendCompositionEvent:NS_COMPOSITION_QUERY];
 
   NSRect rangeRect;
-  ConvertGeckoToFlippedCocoaRect(compositionRect, rangeRect);
+  GeckoRectToNSRect(compositionRect, rangeRect);
 
   // convert to window coords
   rangeRect = [self convertRect:rangeRect toView:nil];
