@@ -786,6 +786,7 @@ void nsViewManager::RenderViews(nsView *aView, nsIRenderingContext& aRC,
                                 const nsRegion& aRegion, nsIDrawingSurface* aRCSurface)
 {
 #ifndef MOZ_CAIRO_GFX
+  BlendingBuffers* buffers = nsnull;
   nsIWidget* widget = aView->GetWidget();
   PRBool translucentWindow = PR_FALSE;
   if (widget) {
@@ -793,15 +794,14 @@ void nsViewManager::RenderViews(nsView *aView, nsIRenderingContext& aRC,
     if (translucentWindow) {
       NS_WARNING("Transparent window enabled");
       NS_ASSERTION(aRCSurface, "Cannot support transparent windows with doublebuffering disabled");
+
+      // Create a buffer wrapping aRC (which is usually the double-buffering offscreen buffer).
+      buffers = CreateBlendingBuffers(&aRC, PR_TRUE, aRCSurface, translucentWindow, aRegion.GetBounds());
+      NS_ASSERTION(buffers, "Failed to create rendering buffers");
+      if (!buffers)
+        return;
     }
   }
-
-  // Create a buffer wrapping aRC (which is usually the double-buffering offscreen buffer).
-  BlendingBuffers* buffers =
-    CreateBlendingBuffers(&aRC, PR_TRUE, aRCSurface, translucentWindow, aRegion.GetBounds());
-  NS_ASSERTION(buffers, "Failed to create rendering buffers");
-  if (!buffers)
-    return;
 #endif
 
   if (mObserver) {
@@ -814,6 +814,10 @@ void nsViewManager::RenderViews(nsView *aView, nsIRenderingContext& aRC,
     aRC.Translate(-offsetToRoot.x, -offsetToRoot.y);
     mObserver->Paint(displayRoot, &aRC, damageRegion);
     aRC.PopState();
+#ifndef MOZ_CAIRO_GFX
+    if (translucentWindow)
+      mObserver->Paint(displayRoot, buffers->mWhiteCX, aRegion);
+#endif
   }
 
 #ifndef MOZ_CAIRO_GFX
@@ -830,9 +834,8 @@ void nsViewManager::RenderViews(nsView *aView, nsIRenderingContext& aRC,
       widget->UpdateTranslucentWindowAlpha(r, alphas);
     }
     delete[] alphas;
+    delete buffers;
   }
-
-  delete buffers;
 #endif
 }
 

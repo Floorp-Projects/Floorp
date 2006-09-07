@@ -5680,13 +5680,14 @@ PresShell::Paint(nsIView*             aView,
   frame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
   nscolor backgroundColor;
   mViewManager->GetDefaultBackgroundColor(&backgroundColor);
-  nsIView* rootView;
-  mViewManager->GetRootView(rootView);
-  if (!rootView->GetParent() && rootView->HasWidget()) {
-    PRBool widgetIsTranslucent;
-    rootView->GetWidget()->GetWindowTranslucency(widgetIsTranslucent);
-    if (widgetIsTranslucent) {
-      backgroundColor = NS_RGBA(0,0,0,0);
+  for (nsIView *view = aView; view; view = view->GetParent()) {
+    if (view->HasWidget()) {
+      PRBool widgetIsTranslucent;
+      view->GetWidget()->GetWindowTranslucency(widgetIsTranslucent);
+      if (widgetIsTranslucent) {
+        backgroundColor = NS_RGBA(0,0,0,0);
+        break;
+      }
     }
   }
   
