@@ -79,13 +79,15 @@
  * 13           +, -, etc.              JSOP_ADD, JSOP_SUB, etc.
  * 14           *, /, %                 JSOP_MUL, JSOP_DIV, JSOP_MOD
  * 15           !, ~, etc.              JSOP_NOT, JSOP_BITNOT, etc.
- * 16           0, 3.14, etc.           JSOP_ZERO, JSOP_NUMBER, etc.
+ * 16           0, function(){} etc.    JSOP_ZERO, JSOP_ANONFUNOBJ, etc.
  * 17           x.y, f(), etc.          JSOP_GETPROP, JSOP_CALL, etc.
  * 18           x, null, etc.           JSOP_NAME, JSOP_NULL, etc.
  *
  * The push-numeric-constant operators, JSOP_ZERO, JSOP_NUMBER, etc., have
  * lower precedence than the member operators emitted for the . operator, to
  * cause the decompiler to parenthesize the . left operand, e.g. (0).foo.
+ * Otherwise the . could be taken as a decimal point.  We use the same level
+ * 16 for function expressions too, to force parenthesization.
  *
  * This file is best viewed with 128 columns:
 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678
@@ -135,7 +137,7 @@ OPDEF(JSOP_MOD,       31, "mod",        "%",          1,  2,  1, 14,  JOF_BYTE|J
 OPDEF(JSOP_NOT,       32, "not",        "!",          1,  1,  1, 15,  JOF_BYTE|JOF_DETECTING)
 OPDEF(JSOP_BITNOT,    33, "bitnot",     "~",          1,  1,  1, 15,  JOF_BYTE)
 OPDEF(JSOP_NEG,       34, "neg",        "- ",         1,  1,  1, 15,  JOF_BYTE)
-OPDEF(JSOP_NEW,       35, js_new_str,   NULL,         3, -1,  1, 15,  JOF_UINT16)
+OPDEF(JSOP_NEW,       35, js_new_str,   NULL,         3, -1,  1, 16,  JOF_UINT16)
 OPDEF(JSOP_DELNAME,   36, "delname",    NULL,         3,  0,  1, 15,  JOF_CONST|JOF_NAME|JOF_DEL)
 OPDEF(JSOP_DELPROP,   37, "delprop",    NULL,         3,  1,  1, 17,  JOF_CONST|JOF_PROP|JOF_DEL)
 OPDEF(JSOP_DELELEM,   38, "delelem",    NULL,         1,  2,  1, 17,  JOF_BYTE |JOF_ELEM|JOF_DEL)
@@ -292,10 +294,10 @@ OPDEF(JSOP_DEFCONST,  126,"defconst",   NULL,         3,  0,  0,  0,  JOF_CONST|
 OPDEF(JSOP_DEFVAR,    127,"defvar",     NULL,         3,  0,  0,  0,  JOF_CONST|JOF_NAME|JOF_DECLARING)
 
 /* Auto-clone (if needed due to re-parenting) and push an anonymous function. */
-OPDEF(JSOP_ANONFUNOBJ,  128, "anonfunobj",  NULL,     3,  0,  1, 18,  JOF_CONST)
+OPDEF(JSOP_ANONFUNOBJ,  128, "anonfunobj",  NULL,     3,  0,  1, 16,  JOF_CONST)
 
 /* ECMA ed. 3 named function expression. */
-OPDEF(JSOP_NAMEDFUNOBJ, 129, "namedfunobj", NULL,     3,  0,  1, 18,  JOF_CONST)
+OPDEF(JSOP_NAMEDFUNOBJ, 129, "namedfunobj", NULL,     3,  0,  1, 16,  JOF_CONST)
 
 /*
  * Like JSOP_SETLOCAL, but specialized to avoid requiring JSOP_POP immediately

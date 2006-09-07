@@ -2557,11 +2557,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     }
                 } else {
                     if (!js_fun_toString(cx, ATOM_TO_OBJECT(atom),
-                                         (pc + len < endpc &&
-                                          pc[len] == JSOP_GROUP)
-                                         ? JS_IN_GROUP_CONTEXT |
-                                           JS_DONT_PRETTY_PRINT
-                                         : JS_DONT_PRETTY_PRINT,
+                                         JS_IN_GROUP_CONTEXT |
+                                         JS_DONT_PRETTY_PRINT,
                                          0, NULL, &val)) {
                         return JS_FALSE;
                     }
