@@ -2082,6 +2082,12 @@ CheckDestructuring(JSContext *cx, BindData *data,
     JSParseNode *lhs, *rhs, *pn, *pn2;
     uint32 count;
 
+    if (left->pn_type == TOK_ARRAYCOMP) {
+        js_ReportCompileErrorNumber(cx, left, JSREPORT_PN | JSREPORT_ERROR,
+                                    JSMSG_ARRAY_COMP_LEFTSIDE);
+        return JS_FALSE;
+    }
+
     ok = JS_TRUE;
     fpvd.table.ops = NULL;
     lhs = left->pn_head;
