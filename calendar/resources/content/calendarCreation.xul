@@ -65,8 +65,8 @@
                onpageadvanced="onInitialAdvance();">
         <description>&initialpage.description;</description>
         <radiogroup id="calendar-type">
-            <radio value="local" label="&initialpage.local.label;" selected="true" />
-            <radio value="remote" label="&initialpage.remote.label;"/>
+            <radio value="local" label="&initialpage.computer.label;" selected="true"/>
+            <radio value="remote" label="&initialpage.network.label;"/>
         </radiogroup>
    </wizardpage>
 

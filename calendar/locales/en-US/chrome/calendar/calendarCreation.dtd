@@ -38,8 +38,8 @@
 <!ENTITY wizard.description       "Locate your calendar" >
 
 <!ENTITY initialpage.description    "Your calendar can be stored on your computer or be stored on a server in order to access it remotely or share it with your friends or co-workers." >
-<!ENTITY initialpage.local.label    "Local" >
-<!ENTITY initialpage.remote.label   "Remote" >
+<!ENTITY initialpage.computer.label  "On My Computer">
+<!ENTITY initialpage.network.label  "On the Network">
 
 <!ENTITY locationpage.description         "Provide info about what is needed to access your remote calendar" >
 <!ENTITY locationpage.login.description   "Optional: enter an username and password" >

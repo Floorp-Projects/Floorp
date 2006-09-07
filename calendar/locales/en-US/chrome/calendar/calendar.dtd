@@ -513,7 +513,7 @@
 
 <!-- Calendar Properties -->
 <!ENTITY calendarproperties.color.label    "Color:">
-<!ENTITY calendarproperties.webdav.label   "WebDAV">
+<!ENTITY calendarproperties.webdav.label   "iCalendar (ICS)">
 <!ENTITY calendarproperties.caldav.label   "CalDAV">
 <!ENTITY calendarproperties.wcap.label     "Sun Java System Calendar Server (WCAP)">
 <!ENTITY calendarproperties.format.label   "Format:">
