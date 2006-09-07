@@ -6106,6 +6106,13 @@ interrupt:
 
           BEGIN_CASE(JSOP_YIELD)
             ASSERT_NOT_THROWING(cx);
+            if (fp->flags & JSFRAME_FILTERING) {
+                /* FIXME: bug 309894 -- fix to eliminate this error. */
+                JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
+                                       JSMSG_YIELD_FROM_FILTER);
+                ok = JS_FALSE;
+                goto out;
+            }
             if (FRAME_TO_GENERATOR(fp)->state == JSGEN_CLOSING) {
                 str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
                                                  fp->argv[-2], NULL);
