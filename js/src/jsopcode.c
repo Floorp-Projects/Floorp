@@ -1227,7 +1227,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                  * that the auto-parens magic in PopOff can do its thing.
                  */
                 LOCAL_ASSERT(ss->top != 0);
-                ss->opcodes[ss->top-1] = lastop;
+                ss->opcodes[ss->top-1] = saveop = lastop;
                 todo = -2;
                 break;
 
