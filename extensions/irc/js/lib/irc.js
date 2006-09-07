@@ -1426,17 +1426,10 @@ function serv_001 (e)
                           this.parent.INITIAL_UMODE + "\n");
     }
 
-    if (this.parent.INITIAL_CHANNEL)
-    {
-        this.parent.primChan = this.addChannel (this.parent.INITIAL_CHANNEL);
-        this.parent.primChan.join();
-    }
-
     this.parent.users = this.users;
     e.destObject = this.parent;
     e.set = "network";
 }
-
 
 /* server features */
 CIRCServer.prototype.on005 =
@@ -1560,6 +1553,26 @@ function serv_005 (e)
     e.set = "network";
 
     return true;
+}
+
+/* users */
+CIRCServer.prototype.on251 =
+function serv_251(e)
+{
+    // 251 is the first message we get after 005, so it's now safe to do
+    // things that might depend upon server features.
+
+    if (this.supports.namesx)
+        this.sendData("PROTOCTL NAMESX\n");
+
+    if (this.parent.INITIAL_CHANNEL)
+    {
+        this.parent.primChan = this.addChannel(this.parent.INITIAL_CHANNEL);
+        this.parent.primChan.join();
+    }
+
+    e.destObject = this.parent;
+    e.set = "network";
 }
 
 /* user away message */
@@ -1715,7 +1728,7 @@ function serv_315 (e)
     return true;
 }
 
-/* name reply */
+/* names reply */
 CIRCServer.prototype.on353 =
 function serv_353 (e)
 {
@@ -1738,21 +1751,23 @@ function serv_353 (e)
         if (nick == "")
             break;
 
-        var found = false;
-        for (var m in mList)
+        var modes = new Array();
+        do
         {
-            if (nick[0] == mList[m].symbol)
+            var found = false;
+            for (var m in mList)
             {
-                e.user = new CIRCChanUser(e.channel, null,
-                                          nick.substr(1, nick.length),
-                                          [ mList[m].mode ]);
-                found = true;
-                break;
+                if (nick[0] == mList[m].symbol)
+                {
+                    nick = nick.substr(1);
+                    modes.push(mList[m].mode);
+                    found = true;
+                    break;
+                }
             }
-        }
-        if (!found)
-            e.user = new CIRCChanUser(e.channel, null, nick, [ ]);
+        } while (found && this.supports.namesx);
 
+        new CIRCChanUser(e.channel, null, nick, modes);
     }
 
     return true;

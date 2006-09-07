@@ -1021,12 +1021,29 @@ function my_showtonet (e)
                 // This makes sure we have the *right* me object.
                 this.primServ.me.rehome(this.primServ);
             }
+
             // Update the list of ignored users from the prefs:
             var ignoreAry = this.prefs["ignoreList"];
             for (var j = 0; j < ignoreAry.length; ++j)
                 this.ignoreList[ignoreAry[j]] = getHostmaskParts(ignoreAry[j]);
 
-            // After rehoming it is now safe for the user's commands.
+            // Update everything.
+            // Welcome to history.
+            if (client.globalHistory)
+                client.globalHistory.addPage(this.getURL());
+            updateTitle(this);
+            this.updateHeader();
+            client.updateHeader();
+            updateSecurityIcon();
+            updateStalkExpression(this);
+
+            client.ident.removeNetwork(this);
+
+            str = e.decodeParam(2);
+
+            break;
+
+        case "251": /* users */
             var cmdary = this.prefs["autoperform"];
             for (var i = 0; i < cmdary.length; ++i)
             {
@@ -1062,16 +1079,6 @@ function my_showtonet (e)
                 delete this.pendingURLs;
             }
 
-            // Update everything.
-            // Welcome to history.
-            if (client.globalHistory)
-                client.globalHistory.addPage(this.getURL());
-            updateTitle(this);
-            this.updateHeader();
-            client.updateHeader();
-            updateSecurityIcon();
-            updateStalkExpression(this);
-
             // Do this after the JOINs, so they are quicker.
             // This is not time-critical code.
             if (jsenv.HAS_SERVER_SOCKETS && client.prefs["dcc.enabled"] &&
@@ -1086,8 +1093,6 @@ function my_showtonet (e)
                 setTimeout(delayFn, 1000 * Math.random(), this);
             }
 
-            client.ident.removeNetwork(this);
-
             // Had some collision during connect.
             if (this.primServ.me.unicodeName != this.prefs["nickname"])
             {
@@ -1095,12 +1100,13 @@ function my_showtonet (e)
                 this.reclaimName();
             }
 
-            str = e.decodeParam(2);
             if ("onLogin" in this)
             {
                 ev = new CEvent("network", "login", this, "onLogin");
                 client.eventPump.addEvent(ev);
             }
+
+            str = e.decodeParam(e.params.length - 1);
             break;
 
         case "376": /* end of MOTD */
@@ -1122,7 +1128,6 @@ function my_showtonet (e)
     }
 
     this.displayHere(p + str, e.code.toUpperCase());
-
 }
 
 CIRCNetwork.prototype.onUnknownCTCPReply =
