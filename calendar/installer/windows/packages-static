@@ -20,6 +20,7 @@ bin\chrome\calendar-@AB_CD@.manifest
 bin\defaults\pref\sunbird-l10n.js
 bin\defaults\profile\prefs.js
 bin\defaults\profile\chrome\*
+bin\dictionaries\*
 bin\uninstall\uninst.exe
 bin\updater.ini
 
@@ -144,6 +145,7 @@ bin\components\rdf.xpt
 bin\components\satchel.xpt
 bin\components\saxparser.xpt
 bin\components\shistory.xpt
+bin\components\spellchecker.xpt
 bin\components\storage.xpt
 bin\components\toolkitprofile.xpt
 bin\components\txmgr.xpt
@@ -201,6 +203,7 @@ bin\components\calMemoryCalendar.js
 bin\components\calStorageCalendar.js
 bin\components\calWcapCalendarModule.js
 bin\components\FeedProcessor.js
+bin\components\jsconsole-clhandler.js
 bin\components\pluginGlue.js
 bin\js\calAlarmService.js
 bin\js\calAttachment.js
@@ -253,6 +256,7 @@ bin\res\ua.css
 bin\res\html.css
 bin\res\quirk.css
 bin\res\forms.css
+bin\res\svg.css
 
 bin\res\arrowd.gif
 bin\res\viewsource.css
@@ -292,12 +296,12 @@ bin\updater.exe
 
 ; [Additional Developer Tools]
 [adt]
-bin\extensions\inspector@mozilla.org\install.rdf
-bin\extensions\inspector@mozilla.org\components\inspector-cmdline.js
-bin\extensions\inspector@mozilla.org\chrome.manifest
-bin\extensions\inspector@mozilla.org\chrome\inspector.jar
-bin\extensions\inspector@mozilla.org\defaults\preferences\inspector.js
-bin\extensions\inspector@mozilla.org\chrome\icons\default\winInspectorMain.ico
+;bin\extensions\inspector@mozilla.org\install.rdf
+;bin\extensions\inspector@mozilla.org\components\inspector-cmdline.js
+;bin\extensions\inspector@mozilla.org\chrome.manifest
+;bin\extensions\inspector@mozilla.org\chrome\inspector.jar
+;bin\extensions\inspector@mozilla.org\defaults\preferences\inspector.js
+;bin\extensions\inspector@mozilla.org\chrome\icons\default\winInspectorMain.ico
 
 [talkback]
 bin\README.txt,bin\readme.txt
