@@ -425,16 +425,20 @@ var FeedResultService = {
   removeFeedResult: function FRS_removeFeedResult(uri) {
     NS_ASSERT(uri != null, "null URI!");
     var resultList = this._results[uri.spec];
+    if (!resultList)
+      return;
+    var deletions = 0;
     for (var i = 0; i < resultList.length; ++i) {
       if (resultList[i].uri == uri) {
         delete resultList[i];
-        // send the null value to the end of our little list and pop
-        // it off
-        resultList.sort(); 
-        resultList.pop();
-        break;
+        ++deletions;
       }
     }
+    
+    // send the holes to the end
+    resultList.sort();
+    // and trim the list
+    resultList.splice(resultList.length - deletions, deletions);
     if (resultList.length == 0)
       delete this._results[uri.spec];
   },

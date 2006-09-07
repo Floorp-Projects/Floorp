@@ -695,13 +695,14 @@ FeedWriter.prototype = {
   
   _window: null,
   _document: null,
-  
+  _feedURI: null,
+
   /**
    * See nsIFeedWriter
    */
   write: function FW_write(window) {
-    var originalURI = this._getOriginalURI(window);
-    if (!originalURI)
+    this._feedURI = this._getOriginalURI(window);
+    if (!this._feedURI)
       return;
     try {
       this._window = window;
@@ -731,10 +732,7 @@ FeedWriter.prototype = {
       this._writeFeedContent(container);
     }
     finally {
-      var feedService = 
-          Cc["@mozilla.org/browser/feeds/result-service;1"].
-          getService(Ci.nsIFeedResultService);
-      feedService.removeFeedResult(originalURI);
+      this._removeFeedFromCache();
     }
   },
 
@@ -751,6 +749,17 @@ FeedWriter.prototype = {
     prefs.removeObserver(PREF_SELECTED_READER, this);
     prefs.removeObserver(PREF_SELECTED_WEB, this);
     prefs.removeObserver(PREF_SELECTED_APP, this);
+    this._removeFeedFromCache();
+  },
+
+  _removeFeedFromCache: function FW__removeFeedFromCache() {
+    if (this._feedURI) {
+      var feedService = 
+           Cc["@mozilla.org/browser/feeds/result-service;1"].
+           getService(Ci.nsIFeedResultService);
+      feedService.removeFeedResult(this._feedURI);
+      this._feedURI = null;
+    }
   },
 
   /**
