@@ -59,11 +59,12 @@
       tooltiptext="&locationEditField.tooltip;"
       />
     <textbox id="srcInput" oninput="ChangeImageSrc();" tabindex="1" class="uri-element"/>
-    <hbox>
+    <hbox id="MakeRelativeHbox">
       <checkbox 
         id  = "MakeRelativeCheckbox"
         for = "srcInput"
         tabindex="2"/>
+      <!-- mail compose will insert custom item here defined in mailComposeEditorOverlay.xul -->
       <spacer flex="1"/>
       <!-- from EdDialogOverlay.xul -->
       <button id="ChooseFile"  tabindex="3"/>
