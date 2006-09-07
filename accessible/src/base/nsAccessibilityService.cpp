@@ -1358,7 +1358,7 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
       *aAccessible = new nsXULMenubarAccessible(aNode, weakShell);
       break;
     case nsIAccessibleProvider::XULMenuitem:
-      *aAccessible = new nsXULMenuitemAccessible(aNode, weakShell);
+      *aAccessible = new nsXULMenuitemAccessibleWrap(aNode, weakShell);
       break;
     case nsIAccessibleProvider::XULMenupopup:
     {
@@ -1413,10 +1413,10 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
       *aAccessible = new nsXULTextFieldAccessible(aNode, weakShell);
       break;
     case nsIAccessibleProvider::XULTree:
-      *aAccessible = new nsXULTreeAccessible(aNode, weakShell);
+      *aAccessible = new nsXULTreeAccessibleWrap(aNode, weakShell);
       break;
     case nsIAccessibleProvider::XULTreeColumns:
-      *aAccessible = new nsXULTreeColumnsAccessible(aNode, weakShell);
+      *aAccessible = new nsXULTreeColumnsAccessibleWrap(aNode, weakShell);
       break;
     case nsIAccessibleProvider::XULTreeColumnitem:
       *aAccessible = new nsXULTreeColumnitemAccessible(aNode, weakShell);
