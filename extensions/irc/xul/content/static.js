@@ -3325,6 +3325,8 @@ function getTabForObject (source, create)
         browser.setAttribute("ondraggesture",
                              "nsDragAndDrop.startDrag(event, " +
                              "contentAreaDNDObserver);");
+        if (typeof startScrolling == "function")
+            browser.setAttribute("onmousedown", "startScrolling(event);");
         browser.source = source;
         source.frame = browser;
         ASSERT(client.deck, "no deck?");
