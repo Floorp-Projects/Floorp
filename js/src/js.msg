@@ -295,3 +295,4 @@ MSG_DEF(JSMSG_BAD_ITERATOR_RETURN,    212, 2, JSEXN_TYPEERR, "{0}.{1} returned a
 MSG_DEF(JSMSG_KEYWORD_NOT_NS,         213, 0, JSEXN_SYNTAXERR, "keyword is used as namespace")
 MSG_DEF(JSMSG_BAD_GENERATOR_YIELD,    214, 1, JSEXN_TYPEERR, "yield from closing generator {0}")
 MSG_DEF(JSMSG_BAD_YIELD_SYNTAX,       215, 0, JSEXN_SYNTAXERR, "yield expression must be parenthesized")
+MSG_DEF(JSMSG_ARRAY_COMP_LEFTSIDE,    216, 0, JSEXN_SYNTAXERR, "invalid array comprehension left-hand side")
