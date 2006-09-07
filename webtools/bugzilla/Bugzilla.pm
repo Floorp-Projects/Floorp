@@ -343,6 +343,12 @@ sub custom_field_names {
                @{Bugzilla::Field->match({ custom=>1, obsolete=>0 })});
 }
 
+sub hook_args {
+    my ($class, $args) = @_;
+    $class->request_cache->{hook_args} = $args if $args;
+    return $class->request_cache->{hook_args};
+}
+
 sub request_cache {
     if ($ENV{MOD_PERL}) {
         require Apache2::RequestUtil;
@@ -555,5 +561,10 @@ Change the database object to refer to the main database.
 The current Parameters of Bugzilla, as a hashref. If C<data/params>
 does not exist, then we return an empty hashref. If C<data/params>
 is unreadable or is not valid perl, we C<die>.
+
+=item C<hook_args>
+
+If you are running inside a code hook (see L<Bugzilla::Hook>) this
+is how you get the arguments passed to the hook.
 
 =back

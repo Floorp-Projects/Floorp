@@ -547,7 +547,7 @@ foreach my $row (@$grouplist) {
 
 $vars->{'group'} = \@groups;
 
-Bugzilla::Hook::process("enter_bug-entrydefaultvars");
+Bugzilla::Hook::process("enter_bug-entrydefaultvars", { vars => $vars });
 
 $vars->{'default'} = \%default;
 

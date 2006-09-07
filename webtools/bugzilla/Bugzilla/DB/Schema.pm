@@ -35,9 +35,11 @@ package Bugzilla::DB::Schema;
 
 use strict;
 use Bugzilla::Error;
+use Bugzilla::Hook;
 use Bugzilla::Util;
 use Bugzilla::Constants;
 
+use Hash::Util qw(lock_value unlock_hash lock_keys unlock_keys);
 use Safe;
 # Historical, needed for SCHEMA_VERSION = '1.00'
 use Storable qw(dclone freeze thaw);
@@ -1167,6 +1169,15 @@ sub _initialize {
     my $abstract_schema = shift;
 
     $abstract_schema ||= ABSTRACT_SCHEMA;
+
+    # Let extensions add tables, but make sure they can't modify existing 
+    # tables. If we don't lock/unlock keys, lock_value complains.
+    lock_keys(%$abstract_schema);
+    lock_value(%$abstract_schema, $_) foreach (keys %$abstract_schema);
+    unlock_keys(%$abstract_schema);
+    Bugzilla::Hook::process('db_schema-abstract_schema', 
+                            { schema => $abstract_schema });
+    unlock_hash(%$abstract_schema);
 
     $self->{schema} = dclone($abstract_schema);
     # While ABSTRACT_SCHEMA cannot be modified, 

@@ -23,6 +23,7 @@ use strict;
 
 use Bugzilla::Bug qw(is_open_state);
 use Bugzilla::Constants;
+use Bugzilla::Hook;
 use Bugzilla::Util;
 use Bugzilla::Series;
 
@@ -490,6 +491,8 @@ sub update_table_definitions {
     ################################################################
     # New --TABLE-- changes should go *** A B O V E *** this point #
     ################################################################
+
+    Bugzilla::Hook::process('install-update_db');
 }
 
 # Subroutines should be ordered in the order that they are called.

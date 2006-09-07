@@ -29,8 +29,7 @@ use Bugzilla::Error;
 use strict;
 
 sub process {
-    my $name = shift;
-    trick_taint($name);
+    my ($name, $args) = @_;
     
     # get a list of all extensions
     my @extensions = glob(bz_locations()->{'extensionsdir'} . "/*");
@@ -43,6 +42,7 @@ sub process {
         # worry about, so we can safely detaint them:
         trick_taint($extension);
         if (-e $extension.'/code/'.$name.'.pl') {
+            Bugzilla->hook_args($args);
             do($extension.'/code/'.$name.'.pl');
             ThrowCodeError('extension_invalid', {
                 name => $name, extension => $extension }) if $@;
@@ -61,26 +61,106 @@ Bugzilla::Hook - Extendible extension hooks for Bugzilla code
 
 =head1 SYNOPSIS
 
-  use Bugzilla::Hook;
+ use Bugzilla::Hook;
 
-  Bugzilla::Hook::process("hookname");
+ Bugzilla::Hook::process("hookname", { arg => $value, arg2 => $value2 });
 
 =head1 DESCRIPTION
 
 Bugzilla allows extension modules to drop in and add routines at 
 arbitrary points in Bugzilla code. These points are refered to as 
 hooks. When a piece of standard Bugzilla code wants to allow an extension
-to perform additional functions, it uses Bugzilla::Hook's process() 
+to perform additional functions, it uses Bugzilla::Hook's L</process>
 subroutine to invoke any extension code if installed. 
 
-=over 4
+=head2 How Hooks Work
+
+When a hook named C<HOOK_NAME> is run, Bugzilla will attempt to invoke any 
+source files named F<extensions/*/code/HOOK_NAME.pl>.
+
+So, for example, if your extension is called "testopia", and you
+want to have code run during the L</install-update_db> hook, you
+would have a file called F<extensions/testopia/code/install-update_db.pl>
+that contained perl code to run during that hook.
+
+=head2 Arguments Passed to Hooks
+
+Some L<hooks|/HOOKS> have params that are passed to them.
+
+These params are accessible through L<Bugzilla/hook_args>.
+That returns a hashref. Very frequently, if you want your
+hook to do anything, you have to modify these variables.
+
+=head1 SUBROUTINES
+
+=over
 
 =item C<process>
 
-Invoke any code hooks with a matching name from any installed extensions. 
-When this subroutine is called with hook name foo, Bugzilla will attempt 
-to invoke any source files in C<bugzilla/extension/EXTENSION_NAME/code/foo.pl>. 
+=over
+
+=item B<Description>
+
+Invoke any code hooks with a matching name from any installed extensions.
+
 See C<customization.xml> in the Bugzilla Guide for more information on
-Bugzilla's extension mechanism. 
+Bugzilla's extension mechanism.
+
+=item B<Params>
+
+=over
+
+=item C<$name> - The name of the hook to invoke.
+
+=item C<$args> - A hashref. The named args to pass to the hook. 
+They will be accessible to the hook via L<Bugzilla/hook_args>.
+
+=back
+
+=item B<Returns> (nothing)
+
+=back
+
+=back
+
+=head1 HOOKS
+
+This describes what hooks exist in Bugzilla currently.
+
+=head2 enter_bug-entrydefaultvars
+
+This happens right before the template is loaded on enter_bug.cgi.
+
+Params:
+
+=over
+
+=item C<vars> - A hashref. The variables that will be passed into the template.
+
+=back
+
+=head2 install-update_db
+
+This happens at the very end of all the tables being updated
+during an installation or upgrade. If you need to modify your custom
+schema, do it here. No params are passed.
+
+=head2 db_schema-abstract_schema
+
+This allows you to add tables to Bugzilla. Note that we recommend that you 
+prefix the names of your tables with some word, so that they don't conflict 
+with any future Bugzilla tables.
+
+If you wish to add new I<columns> to existing Bugzilla tables, do that
+in L</install-update_db>.
+
+Params:
+
+=over
+
+=item C<schema> - A hashref, in the format of 
+L<Bugzilla::DB::Schema/ABSTRACT_SCHEMA>. Add new hash keys to make new table
+definitions. F<checksetup.pl> will automatically add these tables to the
+database when run.
 
 =back
