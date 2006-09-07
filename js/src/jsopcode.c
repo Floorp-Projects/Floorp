@@ -2866,7 +2866,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 sn = js_GetSrcNote(jp->script, pc);
                 if (*rval == '[')
                     --ss->inArrayInit;
-                todo = Sprint(&ss->sprinter, "%s%s%c",
+                todo = Sprint(&ss->sprinter,
+                              (pc[1] == JSOP_GROUP &&
+                               (pc[2] == JSOP_POP || pc[2] == JSOP_POPV))
+                              ? "(%s%s%c)"
+                              : "%s%s%c",
                               rval,
                               (sn && SN_TYPE(sn) == SRC_CONTINUE) ? ", " : "",
                               (*rval == '[') ? ']' : '}');
