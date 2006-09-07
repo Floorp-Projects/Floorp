@@ -147,7 +147,7 @@ GetValueAt(nsIFrame* aTableOrRowFrame,
 
 #ifdef NS_DEBUG
 #define DEBUG_VERIFY_THAT_FRAME_IS(_frame, _expected) \
-  NS_ASSERTION(nsGkAtoms::##_expected##Frame == _frame->GetType(), "internal error");
+  NS_ASSERTION(NS_STYLE_DISPLAY_##_expected == _frame->GetStyleDisplay()->mDisplay, "internal error");
 #else
 #define DEBUG_VERIFY_THAT_FRAME_IS(_frame, _expected)
 #endif
@@ -158,8 +158,8 @@ static void
 MapRowAttributesIntoCSS(nsIFrame* aTableFrame,
                         nsIFrame* aRowFrame)
 {
-  DEBUG_VERIFY_THAT_FRAME_IS(aTableFrame, table);
-  DEBUG_VERIFY_THAT_FRAME_IS(aRowFrame, tableRow);
+  DEBUG_VERIFY_THAT_FRAME_IS(aTableFrame, TABLE);
+  DEBUG_VERIFY_THAT_FRAME_IS(aRowFrame, TABLE_ROW);
   PRInt32 rowIndex = ((nsTableRowFrame*)aRowFrame)->GetRowIndex();
   nsIContent* rowContent = aRowFrame->GetContent();
   PRUnichar* attr;
@@ -199,9 +199,9 @@ MapColAttributesIntoCSS(nsIFrame* aTableFrame,
                         nsIFrame* aRowFrame,
                         nsIFrame* aCellFrame)
 {
-  DEBUG_VERIFY_THAT_FRAME_IS(aTableFrame, table);
-  DEBUG_VERIFY_THAT_FRAME_IS(aRowFrame, tableRow);
-  NS_ASSERTION(IS_TABLE_CELL(aCellFrame->GetType()),"internal error");
+  DEBUG_VERIFY_THAT_FRAME_IS(aTableFrame, TABLE);
+  DEBUG_VERIFY_THAT_FRAME_IS(aRowFrame, TABLE_ROW);
+  DEBUG_VERIFY_THAT_FRAME_IS(aCellFrame, TABLE_CELL);
   PRInt32 rowIndex, colIndex;
   ((nsTableCellFrame*)aCellFrame)->GetCellIndexes(rowIndex, colIndex);
   nsIContent* cellContent = aCellFrame->GetContent();
@@ -250,12 +250,12 @@ MapAllAttributesIntoCSS(nsIFrame* aTableFrame)
   for ( ; rowgroupFrame; rowgroupFrame = rowgroupFrame->GetNextSibling()) {
     nsIFrame* rowFrame = rowgroupFrame->GetFirstChild(nsnull);
     for ( ; rowFrame; rowFrame = rowFrame->GetNextSibling()) {
-      DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, tableRow);
+      DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TABLE_ROW);
       if (rowFrame->GetType() == nsGkAtoms::tableRowFrame) {
         MapRowAttributesIntoCSS(aTableFrame, rowFrame);
         nsIFrame* cellFrame = rowFrame->GetFirstChild(nsnull);
         for ( ; cellFrame; cellFrame = cellFrame->GetNextSibling()) {
-          NS_ASSERTION(IS_TABLE_CELL(cellFrame->GetType()),"internal error");
+          DEBUG_VERIFY_THAT_FRAME_IS(cellFrame, TABLE_CELL);
           if (IS_TABLE_CELL(cellFrame->GetType())) {
             MapColAttributesIntoCSS(aTableFrame, rowFrame, cellFrame);
           }
@@ -386,7 +386,7 @@ nsMathMLmtableOuterFrame::GetRowFrameAt(nsPresContext* aPresContext,
       nsIFrame* rowFrame = rowIter.First();
       while (rowFrame) {
         if (--aRowIndex == 0) {
-          DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, tableRow);
+          DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TABLE_ROW);
           return rowFrame;
         }
         rowFrame = rowIter.Next();
