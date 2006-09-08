@@ -269,6 +269,8 @@ class SearchTest(Base):
         m = re.match('browser.search.order.([1-9])', key)
         if m:
           orders[val.strip()] = int(m.group(1))
+        elif key == 'browser.search.defaultenginename':
+          sets[loc]['default'] = val.strip()
       sets[loc]['orders'] = orders
       for fn in lst:
         name = fn.strip()
@@ -306,7 +308,17 @@ class SearchTest(Base):
     
     '''
     for loc, val in myResult['locales'].iteritems():
+      l = logging.getLogger('locales.' + loc)
+      # Verify that there are no errors in the engine parsing,
+      # and that there default engine is the first one.
+      if (not val['orders'].has_key(val['default'])) or val['orders'][val['default']] != 1:
+        l.error('Default engine is not first in order')
+        if not failureResult.has_key(loc):
+          failureResult[loc] = 2
+        else:
+          failureResult[loc] |= 2        
       for p in val['list']:
+        # no logging, that is already reported above
         if myResult['details'][p].has_key('error'):
           if not failureResult.has_key(loc):
             failureResult[loc] = 2
