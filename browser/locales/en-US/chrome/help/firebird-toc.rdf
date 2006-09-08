@@ -77,7 +77,7 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li><rdf:Description ID="use-firebird-searching-the-web" nc:name="Searching the Web" nc:link="using_firebird.xhtml#searching_the_web"/> </rdf:li>
-        <rdf:li><rdf:Description ID="use-firebird-searching-on-selected-words-in-a-web-page" nc:name="Searching for Selected Words in a Web Page" nc:link="using_firebird.xhtml#searching_on_selected_words_in_a_web_page"/> </rdf:li>
+        <rdf:li><rdf:Description ID="use-firebird-searching-on-selected-words-in-a-web-page" nc:name="Searching the Web for Words Selected in a Web Page" nc:link="using_firebird.xhtml#searching_on_selected_words_in_a_web_page"/> </rdf:li>
         <rdf:li><rdf:Description ID="use-firebird-searching-within-a-page" nc:name="Searching Within a Page" nc:link="using_firebird.xhtml#searching_within_a_page"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
