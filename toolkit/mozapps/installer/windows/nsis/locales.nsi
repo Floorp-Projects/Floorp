@@ -35,8 +35,9 @@
 # ***** END LICENSE BLOCK *****
 
 /**
- * "One off" locale configuration settings for font name, font size, and RTL
- * (e.g. locale text is read right to left).
+ * "One off" locale configuration settings for RTL (e.g. locale text is read
+ * right to left). Fonts should not only be specified if Win9x systems are
+ * supported for East Asian locales.
  */
 
 ; Arabic
@@ -44,20 +45,3 @@
 
 ; Hebrew
 !define he_rtl
-
-; Japanese
-!define ja_font  "ＭＳ Ｐゴシック"
-!define ja_size  "9"
-
-;Korean
-;define ko_font  "굴림"
-;define ko_size  "9"
-
-; Chinese Simplified, China
-!define zh-CN_font  "宋体"
-!define zh-CN_size  "9"
-
-; Chinese Traditional, Taiwan
-!define zh-TW_font  "新細明體"
-!define zh-TW_size  "9"
-
