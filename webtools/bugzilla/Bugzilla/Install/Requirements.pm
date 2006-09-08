@@ -58,7 +58,7 @@ use constant REQUIRED_MODULES => [
     },
     {
         name => 'Template',
-        version => '2.08'
+        version => '2.10'
     },
     {
         name => 'Mail::Mailer',

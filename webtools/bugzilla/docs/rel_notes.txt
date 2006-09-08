@@ -102,7 +102,7 @@ Required Perl Modules
   DBI v1.38
   File::Spec v0.84
   File::Temp (any)
-  Template Toolkit v2.08
+  Template Toolkit v2.10 (changed from 2.20)
   Text::Wrap v2001.0131
   Mail::Mailer v1.67     (changed from 2.20)
   MIME::Base64 v3.01     (new in 2.22)
