@@ -289,7 +289,7 @@ nsMimeMapperMac::ExportMapping ( short * outLength ) const
         strcat(posInString, currMapping);
         posInString += strlen(currMapping);     // advance marker to get ready for next mapping
       }
-      nsCRT::free ( mimeType );
+      nsMemory::Free ( mimeType );
       nsCRT::free ( currMapping );
     }
       

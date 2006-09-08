@@ -1028,7 +1028,7 @@ InMemoryDataSource::LogOperation(const char* aOperation,
         PR_LogPrint
            ("  -->(\"%s\")\n", valueCStr);
 
-        nsCRT::free(valueCStr);
+        NS_Free(valueCStr);
     }
     else {
         PR_LogPrint

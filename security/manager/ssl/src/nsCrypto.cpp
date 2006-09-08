@@ -2044,10 +2044,10 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
   }
   aReturn.Assign(NS_ConvertASCIItoUTF16(retString));
   if (nickname) {
-    nsCRT::free(nickname);
+    NS_Free(nickname);
   }
   if (cmmfResponse) {
-    nsCRT::free(cmmfResponse);
+    NS_Free(cmmfResponse);
   }
   if (certRepContent) {
     CMMF_DestroyCertRepContent(certRepContent);

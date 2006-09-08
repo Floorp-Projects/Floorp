@@ -317,7 +317,7 @@ nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
   const char* mapping = theMapper.ExportMapping(&mappingLen);
   if ( mapping && mappingLen ) {
     errCode = PutOnClipboard ( nsMimeMapperMac::MappingFlavor(), mapping, mappingLen );
-    nsCRT::free ( NS_CONST_CAST(char*, mapping) );
+    nsMemory::Free ( NS_CONST_CAST(char*, mapping) );
   }
   
   return errCode;
@@ -395,7 +395,7 @@ nsClipboard :: GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32
   errCode = GetDataOffClipboard ( nsMimeMapperMac::MappingFlavor(), (void**)&mimeMapperData, 0 );
   nsMimeMapperMac theMapper ( mimeMapperData );
   if (mimeMapperData)
-    nsCRT::free ( mimeMapperData );
+    nsMemory::Free ( mimeMapperData );
  
   // Now walk down the list of flavors. When we find one that is actually on the
   // clipboard, copy out the data into the transferable in that format. SetTransferData()

@@ -1328,7 +1328,7 @@ nsPlaintextEditor::PasteAsQuotation(PRInt32 aSelectionType)
         rv = InsertAsQuotation(stuffToPaste, 0);
       }
     }
-    nsCRT::free(flav);
+    NS_Free(flav);
   }
 
   return rv;

@@ -301,7 +301,7 @@ GetNullTerminatedString(CFStringRef aStringRef)
 void
 FreeNullTerminatedString(char* aString)
 {
-  nsCRT::free(aString);
+  free(aString);
   aString = nsnull;
 }
 

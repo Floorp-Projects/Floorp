@@ -1594,7 +1594,7 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   }
 
   if (mTagText) {
-    nsCRT::free(mTagText);
+    NS_Free(mTagText);
     mTagText = nsnull;
   }
 

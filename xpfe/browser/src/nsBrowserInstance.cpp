@@ -249,7 +249,7 @@ public:
       printf("########## PageCycler loaded (%d ms): %s\n", 
              PR_IntervalToMilliseconds(PR_IntervalNow() - mIntervalTime), 
              dataStr);
-      nsCRT::free(dataStr);
+      NS_Free(dataStr);
 
       nsAutoString url;
       rv = GetNextURL(url);
@@ -283,7 +283,7 @@ public:
     else {
       char* dataStr = ToNewCString(data);
       printf("########## PageCycler possible failure for: %s\n", dataStr);
-      nsCRT::free(dataStr);
+      NS_Free(dataStr);
     }
     return rv;
   }

@@ -435,7 +435,7 @@ nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
         transform->prefSetterFunc(transform, branch);
       }
       if (colorString)
-        nsCRT::free(colorString);
+        free(colorString);
     }
     else {
       nsCAutoString val;
@@ -462,7 +462,7 @@ nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
         transform->prefHasValue = PR_TRUE;
         transform->prefSetterFunc(transform, branch);
         if (transform->type == _OPM(STRING) && transform->stringValue) {
-          nsCRT::free(transform->stringValue);
+          NS_Free(transform->stringValue);
           transform->stringValue = nsnull;
         }
       }

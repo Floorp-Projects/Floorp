@@ -486,7 +486,7 @@ nsDragService::RegisterDragItemsAndFlavors(nsISupportsArray* inArray, RgnHandle 
     if ( mapping && mappingLen ) {
       ::AddDragItemFlavor ( mDragRef, itemIndex, nsMimeMapperMac::MappingFlavor(), 
                                mapping, mappingLen, flags );
-	    nsCRT::free ( mapping );
+	    nsMemory::Free ( mapping );
     
       ::SetDragItemBounds(mDragRef, itemIndex, &dragRgnBounds);
 	  }
@@ -527,7 +527,7 @@ nsDragService::GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex )
   // create a mime mapper to help us out based on data in a special flavor for this item
   char* mappings = LookupMimeMappingsForItem(mDragRef, itemRef);
   nsMimeMapperMac theMapper ( mappings );
-  nsCRT::free ( mappings );
+  nsMemory::Free ( mappings );
   
   // Now walk down the list of flavors. When we find one that is actually present,
   // copy out the data into the transferable in that format. SetTransferData()
