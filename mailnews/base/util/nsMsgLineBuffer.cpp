@@ -357,6 +357,7 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
     {
       if (prv)
         *prv = rv;
+      aNumBytesInLine = -1;
       return nsnull;
     }
     if (!nonBlockingStream && numBytesInStream == 0) // if no data available,
