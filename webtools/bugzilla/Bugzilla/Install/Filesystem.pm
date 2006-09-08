@@ -191,8 +191,6 @@ sub FILESYSTEM {
     # default contents.
     my %create_files = (
         "$datadir/mail"    => { perms => $ws_readable },
-        'skins/.cvsignore' => { perms    => $owner_readable,
-                                contents => ".cvsignore\ncustom\n" },
     );
 
     # Each standard stylesheet has an associated custom stylesheet that
