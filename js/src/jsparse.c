@@ -5534,9 +5534,22 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             return NULL;
 
         MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_IN_PAREN);
-        pn->pn_type = TOK_RP;
-        pn->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
-        pn->pn_kid = pn2;
+        if (pn2->pn_type == TOK_RP) {
+            /*
+             * Avoid redundant JSOP_GROUP opcodes, for efficiency and mainly
+             * to help the decompiler look ahead from a JSOP_ENDINIT to see a
+             * JSOP_GROUP followed by a POP or POPV.  That sequence means the
+             * parentheses are mandatory, to disambiguate object initialisers
+             * as expression statements from block statements.
+             */
+            pn->pn_kid = NULL;
+            RecycleTree(pn, tc);
+            pn = pn2;
+        } else {
+            pn->pn_type = TOK_RP;
+            pn->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
+            pn->pn_kid = pn2;
+        }
         break;
 
 #if JS_HAS_XML_SUPPORT
