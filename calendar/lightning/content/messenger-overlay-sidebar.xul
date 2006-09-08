@@ -75,14 +75,41 @@
     <command id="publish_calendar" oncommand="ltnPublishCalendar()"/>
     <command id="import_command" oncommand="loadEventsFromFile()"/>
     <command id="export_command" oncommand="exportEntireCalendar()"/>
+    <command id="reload_remote_calendars" oncommand="getCompositeCalendar().refresh();"/>
   </commandset>
 
   <popupset>
+    <!-- Popup for Calendars tab -->
     <popup id="calendartree-context-menu" onpopupshowing="return true;">
-      <menuitem label="&calendar.publish.label;" observes="publish_calendar"/>
-      <menuitem label="&calendar.import.into.label;" oncommand="loadEventsFromFile(ltnSelectedCalendar())"/>
-      <menuitem label="&calendar.export.specific.calendar;" oncommand="exportEntireCalendar(ltnSelectedCalendar())"/>
+      <menuitem id="calpopup-new"
+                label="&calendar.context.newserver.label;" 
+                accesskey="&calendar.context.newserver.accesskey;"
+                oncommand="ltnNewCalendar();"/>
+      <menuitem id="calpopup-delete"
+                label="&calendar.context.deleteserver.label;" 
+                accesskey="&calendar.context.deleteserver.accesskey;"
+                oncommand="ltnDeleteSelectedCalendar();"/>
+      <menuseparator/>
+      <menuitem id="calpopup-export"
+                label="&calendar.context.export.label;" 
+                accesskey="&calendar.context.export.accesskey;"
+                oncommand="exportEntireCalendar(ltnSelectedCalendar())"/>
+      <menuitem id="calpopup-publish"
+                label="&calendar.context.publish.label;" 
+                accesskey="&calendar.context.publish.accesskey;"
+                observes="publish_calendar"/>
+      <menuseparator/>
+      <menuitem id="calpopup-reload"
+                label="&calendar.context.reloadserver.label;"
+                accesskey="&calendar.context.reloadserver.accesskey;"
+                observes="reload_remote_calendars"/>
+      <menuseparator/>
+      <menuitem id="calpopup-edit"
+                label="&calendar.context.properties.label;" 
+                accesskey="&calendar.context.properties.accesskey;"
+                oncommand="ltnEditSelectedCalendar();"/>
     </popup>
+
     <popup id="calendar-view-context-menu" onpopupshowing="return true;">
       <!-- These labels are set dynamically, based on the current view -->
       <menuitem id="context_previous" label="" oncommand="moveView(-1)" disabled="true"
@@ -115,17 +142,17 @@
   <splitter id="folderpaneCalendarSplitter" collapse="after" persist="state"/>
 
   <vbox id="ltnSidebar" height="350" persist="height">
-    <hbox>
+    <hbox id="ltnMinimonthBox">
       <spacer flex="1"/>
       <minimonth id="ltnMinimonth" onchange="ltnMinimonthPick(this);" flex="2"/>
       <spacer flex="1"/>
     </hbox>
-    <hbox>
+    <hbox id="ltnDateTextPickerBox">
       <spacer width="10"/>
       <datetextpicker flex="1" id="ltnDateTextPicker" oncommand="ltnGoToDate()"/>
     </hbox>
 
-    <tabbox flex="1">
+    <tabbox id="ltnTabpanelBox" flex="1">
       <tabs>
         <tab label="&lightning.sidebar.agenda.label;"/>
         <tab label="&lightning.sidebar.todo.label;"/>
@@ -134,9 +161,10 @@
       <tabpanels flex="1">
         <vbox id="agenda-tab-panel"/>    
         <vbox id="todo-tab-panel"/>
-        <vbox flex="1">
-          <hbox>
-            <button label="&lightning.sidebar.new.label;" oncommand="ltnNewCalendar();"/>
+        <vbox id="calendar-tab-panel" flex="1">
+          <hbox id="ltnCalendarButtonsBox">
+            <button id="cal-sidebar-new-calendar" label="&lightning.sidebar.new.label;" 
+                    oncommand="ltnNewCalendar();"/>
             <button id="cal-sidebar-edit-calendar" label="&lightning.sidebar.edit.label;" 
                     oncommand="ltnEditSelectedCalendar();"/>
             <spacer orient="horizontal" flex="5"/>
