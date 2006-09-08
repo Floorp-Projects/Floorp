@@ -3770,6 +3770,25 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     return !(pn->pn_extra & PNX_POPVAR) || js_Emit1(cx, cg, JSOP_POP) >= 0;
 }
 
+#if defined DEBUG_brendan || defined DEBUG_mrbkap
+static JSBool
+GettableNoteForNextOp(JSCodeGenerator *cg)
+{
+    ptrdiff_t offset, target;
+    jssrcnote *sn, *end;
+   
+    offset = 0;
+    target = CG_OFFSET(cg);
+    for (sn = CG_NOTES(cg), end = sn + CG_NOTE_COUNT(cg); sn < end;
+         sn = SN_NEXT(sn)) {
+        if (offset == target && SN_IS_GETTABLE(sn))
+            return JS_TRUE;
+        offset += SN_DELTA(sn);
+    }
+    return JS_FALSE;
+}
+#endif
+
 JSBool
 js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 {
@@ -5723,21 +5742,26 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             cg->maxStackDepth = cg->stackDepth;
 
         /*
-         * If this lexical scope is not for a catch block, let block, or let
-         * expression, and our container is top-level but not a function body,
-         * or else a block statement, emit a SRC_BRACE note.  Other container
+         * If this lexical scope is not for a catch block, let block or let
+         * expression, or any kind of for loop (where the scope starts in the
+         * head after the first part if for (;;), else in the body if for-in);
+         * and if our container is top-level but not a function body, or else
+         * a block statement; then emit a SRC_BRACE note.  All other container
          * statements get braces by default from the decompiler.
          */
         noteIndex = -1;
         tmp = CG_OFFSET(cg);
         type = pn->pn_expr->pn_type;
-        if (type != TOK_CATCH && type != TOK_LET &&
+        if (type != TOK_CATCH && type != TOK_LET && type != TOK_FOR &&
             (!(stmt = stmtInfo.down)
              ? !(cg->treeContext.flags & TCF_IN_FUNCTION)
              : stmt->type == STMT_BLOCK)) {
+#if defined DEBUG_brendan || defined DEBUG_mrbkap
             /* There must be no source note already output for the next op. */
             JS_ASSERT(CG_NOTE_COUNT(cg) == 0 ||
-                      CG_LAST_NOTE_OFFSET(cg) != CG_OFFSET(cg));
+                      CG_LAST_NOTE_OFFSET(cg) != CG_OFFSET(cg) ||
+                      !GettableNoteForNextOp(cg));
+#endif
             noteIndex = js_NewSrcNote2(cx, cg, SRC_BRACE, 0);
             if (noteIndex < 0)
                 return JS_FALSE;

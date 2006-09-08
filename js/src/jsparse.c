@@ -702,7 +702,7 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
     JSStackFrame *fp, frame;
     JSObject *funobj;
     JSStmtInfo stmtInfo;
-    uintN oldflags;
+    uintN oldflags, firstLine;
     JSParseNode *pn;
 
     fp = cx->fp;
@@ -730,6 +730,13 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
     oldflags = tc->flags;
     tc->flags &= ~(TCF_RETURN_EXPR | TCF_RETURN_VOID);
     tc->flags |= TCF_IN_FUNCTION;
+
+    /*
+     * Save the body's first line, and store it in pn->pn_pos.begin.lineno
+     * later, because we may have not peeked in ts yet, so Statements won't
+     * acquire a valid pn->pn_pos.begin from the current token.
+     */
+    firstLine = ts->lineno;
     pn = Statements(cx, ts, tc);
 
     js_PopStatement(tc);
@@ -745,14 +752,17 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
      * function's code.  We must do this here, not in js_CompileFunctionBody,
      * in order to detect TCF_IN_FUNCTION among tc->flags.
      */
-    if (pn && (tc->flags & TCF_COMPILING)) {
-        JSCodeGenerator *cg = (JSCodeGenerator *) tc;
+    if (pn) {
+        pn->pn_pos.begin.lineno = firstLine;
+        if ((tc->flags & TCF_COMPILING)) {
+            JSCodeGenerator *cg = (JSCodeGenerator *) tc;
 
-        if (!js_FoldConstants(cx, pn, tc) ||
-            !js_AllocTryNotes(cx, cg) ||
-            !js_EmitTree(cx, cg, pn) ||
-            js_Emit1(cx, cg, JSOP_STOP) < 0) {
-            pn = NULL;
+            if (!js_FoldConstants(cx, pn, tc) ||
+                !js_AllocTryNotes(cx, cg) ||
+                !js_EmitTree(cx, cg, pn) ||
+                js_Emit1(cx, cg, JSOP_STOP) < 0) {
+                pn = NULL;
+            }
         }
     }
 
