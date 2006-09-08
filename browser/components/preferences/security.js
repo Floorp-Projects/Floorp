@@ -268,11 +268,13 @@ var gSecurityPane = {
         try {
           var providerNum = providers[i];
           var url = providerBranch.getCharPref(providerNum + ".privacy.url");
+          var fallbackurl = providerBranch.getCharPref(providerNum +
+                                                       ".privacy.fallbackurl");
           var scheme = Cc["@mozilla.org/network/io-service;1"].
                        getService(Ci.nsIIOService).
-                       extractScheme(url);
+                       extractScheme(fallbackurl);
           if (scheme != "chrome")
-            throw "scheme must be chrome";
+            throw "fallbackurl scheme must be chrome";
         }
         catch (e) {
           // don't add this provider

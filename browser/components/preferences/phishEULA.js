@@ -78,7 +78,17 @@ var gPhishDialog = {
 
     // guaranteed to be present, because only providers with privacy policies
     // are displayed in the prefwindow
-    var privacyURL = prefb.getComplexValue(providerNum + ".privacy.url", Ci.nsISupportsString).data;
+    var formatter = Cc["@mozilla.org/browser/URLFormatterService;1"].
+                    getService(Ci.nsIURLFormatter);
+    var privacyURL = formatter.formatURLPref("browser.safebrowsing.provider." +
+                                             providerNum +
+                                             ".privacy.url",
+                                             null);
+    var fallbackURL = formatter.formatURLPref("browser.safebrowsing.provider." +
+                                              providerNum +
+                                              ".privacy.fallbackurl",
+                                              null);
+    this._progressListener._providerFallbackURL = fallbackURL;
 
     // add progress listener to enable OK, radios when page loads
     var frame = document.getElementById("phishPolicyFrame");
@@ -102,9 +112,19 @@ var gPhishDialog = {
   _progressListener:
   {
     /**
-     * True if we tried loading the first URL and encountered a failure.
+     * First we try to load the provider url (possibly remote). If that fails
+     * to load, we try to load the provider fallback url (must be chrome://).
+     * If that also fails, we display an error message.
      */
-    _loadFailed: false,
+    _providerLoadFailed: false,
+    _providerFallbackLoadFailed: false,
+    
+    _tryLoad: function(url) {
+      const Ci = Components.interfaces;
+      const loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+      var frame = document.getElementById("phishPolicyFrame");
+      frame.webNavigation.loadURI(url, loadFlags, null, null, null);
+    },
 
     onStateChange: function (aWebProgress, aRequest, aStateFlags, aStatus)
     {
@@ -112,23 +132,38 @@ var gPhishDialog = {
       const Ci = Components.interfaces, Cr = Components.results;
       if ((aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) &&
           (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW)) {
-        // check for failure
-        if (aRequest.status & 0x80000000) {
-          if (!this._loadFailed) {
-            this._loadFailed = true;
-
-            // fire off a load of the fallback policy
-            const loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-            const fallbackURL = "chrome://browser/content/preferences/fallbackEULA.xhtml";
-            var frame = document.getElementById("phishPolicyFrame");
-            frame.webNavigation.loadURI(fallbackURL, loadFlags, null, null, null);
-
-            // disable radios
-            document.getElementById("acceptOrDecline").disabled = true;
+        
+        if (Components.isSuccessCode(aRequest.status)) {
+          try {
+            aRequest.QueryInterface(Ci.nsIHttpChannel);
+          } catch (e) {
+            // Not an http request url (might be, e.g., chrome:) that loaded
+            // successfully, so we can exit.
+            return;
           }
-          else {
-            throw "Fallback policy failed to load -- what the hay!?!";
-          }
+
+          // Any response other than 200 OK is an error.
+          if (200 == aRequest.responseStatus)
+            return;
+        }
+
+        // Something failed
+        if (!this._providerLoadFailed) {
+          this._provderLoadFailed = true;
+          // Remote EULA failed to load; try loading provider fallback
+          this._tryLoad(this._providerFallbackURL);
+        } else if (!this._providerFallbackLoadFailed) {
+          // Provider fallback failed to load; try loading fallback EULA
+          this._providerFallbackLoadFailed = true;
+
+          // fire off a load of the fallback policy
+          const fallbackURL = "chrome://browser/content/preferences/fallbackEULA.xhtml";
+          this._tryLoad(fallbackURL);
+
+          // disable radios
+          document.getElementById("acceptOrDecline").disabled = true;
+        } else {
+          throw "Fallback policy failed to load -- what the hay!?!";
         }
       }
     },
