@@ -49,14 +49,13 @@
 #include <stdarg.h>
 
 #ifdef _WIN32
-
 #include <windows.h>
 #define LIB_NAME "softokn3.dll"
-#include "cryptoki.h"
 #else
 #include "prlink.h"
-#include "pkcs11.h"
 #endif
+
+#include "pkcs11.h"
 
 
 #define NUM_ELEM(array) (sizeof(array)/sizeof(array[0]))
