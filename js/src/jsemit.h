@@ -81,8 +81,9 @@ typedef enum JSStmtType {
 #define STMT_TYPE_IN_RANGE(t,b,e) ((uint)((t) - (b)) <= (uintN)((e) - (b)))
 
 #define STMT_TYPE_MAYBE_SCOPE(type)                                           \
-    STMT_TYPE_IN_RANGE(type, STMT_BLOCK, STMT_SUBROUTINE)
-#define STMT_TYPE_IS_SCOPE(type)                                              \
+    (type != STMT_WITH &&                                                     \
+     STMT_TYPE_IN_RANGE(type, STMT_BLOCK, STMT_SUBROUTINE))
+#define STMT_TYPE_LINKS_SCOPE(type)                                           \
     STMT_TYPE_IN_RANGE(type, STMT_WITH, STMT_CATCH)
 #define STMT_TYPE_IS_TRYING(type)                                             \
     STMT_TYPE_IN_RANGE(type, STMT_TRY, STMT_SUBROUTINE)
@@ -90,7 +91,7 @@ typedef enum JSStmtType {
 #define STMT_TYPE_IS_LOOP(type) ((type) >= STMT_DO_LOOP)
 
 #define STMT_MAYBE_SCOPE(stmt)  STMT_TYPE_MAYBE_SCOPE((stmt)->type)
-#define STMT_IS_SCOPE(stmt)     (STMT_TYPE_IS_SCOPE((stmt)->type) ||          \
+#define STMT_LINKS_SCOPE(stmt)  (STMT_TYPE_LINKS_SCOPE((stmt)->type) ||       \
                                  ((stmt)->flags & SIF_SCOPE))
 #define STMT_IS_TRYING(stmt)    STMT_TYPE_IS_TRYING((stmt)->type)
 #define STMT_IS_LOOP(stmt)      STMT_TYPE_IS_LOOP((stmt)->type)
@@ -443,7 +444,8 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
  * found.  Otherwise return null.
  */
 extern JSStmtInfo *
-js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp);
+js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp,
+                 JSBool letdecl);
 
 /*
  * Emit code into cg for the tree rooted at pn.
