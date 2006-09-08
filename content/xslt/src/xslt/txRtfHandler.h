@@ -65,8 +65,8 @@ public:
 
     nsresult getAsRTF(txAExprResult** aResult);
 
-    void endDocument(nsresult aResult);
-    void startDocument();
+    nsresult endDocument(nsresult aResult);
+    nsresult startDocument();
 };
 
 #endif /* txRtfHandler_h___ */

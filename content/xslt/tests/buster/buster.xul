@@ -47,6 +47,8 @@
         onload="onLoad()" onunload="onUnload()"
         title="Xalan testcase harness"
         persist="width,height"
+        width="800"
+        height="600"
         orient="vertical">
 <script type="application/x-javascript" src="buster-statics.js" />
 <script type="application/x-javascript" src="buster-test.js" />

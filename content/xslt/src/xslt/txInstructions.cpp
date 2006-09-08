@@ -181,7 +181,7 @@ txAttribute::execute(txExecutionState& aEs)
         NS_STATIC_CAST(txTextHandler*, aEs.popResultHandler()));
     if (!name.IsEmpty()) {
         // add attribute if everything was ok
-        aEs.mResultHandler->attribute(name, nsId, handler->mValue);
+        return aEs.mResultHandler->attribute(name, nsId, handler->mValue);
     }
 
     return NS_OK;
@@ -263,9 +263,7 @@ txComment::execute(txExecutionState& aEs)
         }
     }
 
-    aEs.mResultHandler->comment(handler->mValue);
-
-    return NS_OK;
+    return aEs.mResultHandler->comment(handler->mValue);
 }
 
 nsresult
@@ -277,17 +275,15 @@ txCopyBase::copyNode(const txXPathNode& aNode, txExecutionState& aEs)
             nsAutoString nodeName, nodeValue;
             txXPathNodeUtils::getNodeName(aNode, nodeName);
             txXPathNodeUtils::appendNodeValue(aNode, nodeValue);
-            aEs.mResultHandler->attribute(nodeName,
-                                          txXPathNodeUtils::getNamespaceID(aNode),
-                                          nodeValue);
-            break;
+            return aEs.mResultHandler->
+              attribute(nodeName, txXPathNodeUtils::getNamespaceID(aNode),
+                        nodeValue);
         }
         case txXPathNodeType::COMMENT_NODE:
         {
             nsAutoString nodeValue;
             txXPathNodeUtils::appendNodeValue(aNode, nodeValue);
-            aEs.mResultHandler->comment(nodeValue);
-            break;
+            return aEs.mResultHandler->comment(nodeValue);
         }
         case txXPathNodeType::DOCUMENT_NODE:
         case txXPathNodeType::DOCUMENT_FRAGMENT_NODE:
@@ -306,7 +302,8 @@ txCopyBase::copyNode(const txXPathNode& aNode, txExecutionState& aEs)
             nsAutoString name;
             txXPathNodeUtils::getNodeName(aNode, name);
             PRInt32 nsID = txXPathNodeUtils::getNamespaceID(aNode);
-            aEs.mResultHandler->startElement(name, nsID);
+            nsresult rv = aEs.mResultHandler->startElement(name, nsID);
+            NS_ENSURE_SUCCESS(rv, rv);
 
             // Copy attributes
             txXPathTreeWalker walker(aNode);
@@ -315,9 +312,9 @@ txCopyBase::copyNode(const txXPathNode& aNode, txExecutionState& aEs)
                     nsAutoString nodeName, nodeValue;
                     walker.getNodeName(nodeName);
                     walker.appendNodeValue(nodeValue);
-                    aEs.mResultHandler->attribute(nodeName,
-                                                  walker.getNamespaceID(),
-                                                  nodeValue);
+                    rv = aEs.mResultHandler->
+                      attribute(nodeName, walker.getNamespaceID(), nodeValue);
+                    NS_ENSURE_SUCCESS(rv, rv);
                 } while (walker.moveToNextAttribute());
                 walker.moveToParent();
             }
@@ -329,24 +326,21 @@ txCopyBase::copyNode(const txXPathNode& aNode, txExecutionState& aEs)
                 hasChild = walker.moveToNextSibling();
             }
 
-            aEs.mResultHandler->endElement(name, nsID);
-            break;
+            return aEs.mResultHandler->endElement(name, nsID);
         }
         case txXPathNodeType::PROCESSING_INSTRUCTION_NODE:
         {
             nsAutoString target, data;
             txXPathNodeUtils::getNodeName(aNode, target);
             txXPathNodeUtils::appendNodeValue(aNode, data);
-            aEs.mResultHandler->processingInstruction(target, data);
-            break;
+            return aEs.mResultHandler->processingInstruction(target, data);
         }
         case txXPathNodeType::TEXT_NODE:
         case txXPathNodeType::CDATA_SECTION_NODE:
         {
             nsAutoString nodeValue;
             txXPathNodeUtils::appendNodeValue(aNode, nodeValue);
-            aEs.mResultHandler->characters(nodeValue, PR_FALSE);
-            break;
+            return aEs.mResultHandler->characters(nodeValue, PR_FALSE);
         }
     }
     
@@ -370,7 +364,8 @@ txCopy::execute(txExecutionState& aEs)
             const nsAFlatString& empty = EmptyString();
 
             // "close" current element to ensure that no attributes are added
-            aEs.mResultHandler->characters(empty, PR_FALSE);
+            rv = aEs.mResultHandler->characters(empty, PR_FALSE);
+            NS_ENSURE_SUCCESS(rv, rv);
 
             rv = aEs.pushString(empty);
             NS_ENSURE_SUCCESS(rv, rv);
@@ -386,7 +381,8 @@ txCopy::execute(txExecutionState& aEs)
             txXPathNodeUtils::getNodeName(node, nodeName);
             PRInt32 nsID = txXPathNodeUtils::getNamespaceID(node);
 
-            aEs.mResultHandler->startElement(nodeName, nsID);
+            rv = aEs.mResultHandler->startElement(nodeName, nsID);
+            NS_ENSURE_SUCCESS(rv, rv);
             // XXX copy namespace nodes once we have them
 
             rv = aEs.pushString(nodeName);
@@ -440,17 +436,14 @@ txCopyOf::execute(txExecutionState& aEs)
             txResultTreeFragment* rtf =
                 NS_STATIC_CAST(txResultTreeFragment*,
                                NS_STATIC_CAST(txAExprResult*, exprRes));
-            rv = rtf->flushToHandler(aEs.mResultHandler);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            break;
+            return rtf->flushToHandler(aEs.mResultHandler);
         }
         default:
         {
             nsAutoString value;
             exprRes->stringValue(value);
             if (!value.IsEmpty()) {
-                aEs.mResultHandler->characters(value, PR_FALSE);
+                return aEs.mResultHandler->characters(value, PR_FALSE);
             }
             break;
         }
@@ -469,7 +462,7 @@ txEndElement::execute(txExecutionState& aEs)
     
     // For xsl:elements with a bad name we push an empty name
     if (!nodeName.IsEmpty()) {
-        aEs.mResultHandler->endElement(nodeName, namespaceID);
+        return aEs.mResultHandler->endElement(nodeName, namespaceID);
     }
 
     return NS_OK;
@@ -567,15 +560,12 @@ txLREAttribute::execute(txExecutionState& aEs)
 
     const nsString* value = exprRes->stringValuePointer();
     if (value) {
-        aEs.mResultHandler->attribute(nodeName, mNamespaceID, *value);
-    }
-    else {
-        nsAutoString valueStr;
-        exprRes->stringValue(valueStr);
-        aEs.mResultHandler->attribute(nodeName, mNamespaceID, valueStr);
+        return aEs.mResultHandler->attribute(nodeName, mNamespaceID, *value);
     }
 
-    return NS_OK;
+    nsAutoString valueStr;
+    exprRes->stringValue(valueStr);
+    return aEs.mResultHandler->attribute(nodeName, mNamespaceID, valueStr);
 }
 
 txMessage::txMessage(PRBool aTerminate)
@@ -620,9 +610,7 @@ txNumber::execute(txExecutionState& aEs)
                                    aEs.getEvalContext(), res);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    aEs.mResultHandler->characters(res, PR_FALSE);
-
-    return NS_OK;
+    return aEs.mResultHandler->characters(res, PR_FALSE);
 }
 
 nsresult
@@ -657,9 +645,7 @@ txProcessingInstruction::execute(txExecutionState& aEs)
         return NS_ERROR_FAILURE;
     }
 
-    aEs.mResultHandler->processingInstruction(name, handler->mValue);
-
-    return NS_OK;
+    return aEs.mResultHandler->processingInstruction(name, handler->mValue);
 }
 
 txPushNewContext::txPushNewContext(nsAutoPtr<Expr> aSelect)
@@ -935,13 +921,14 @@ txStartElement::execute(txExecutionState& aEs)
 
     if (!name.IsEmpty()) {
         // add element if everything was ok
-        aEs.mResultHandler->startElement(name, nsId);
+        rv = aEs.mResultHandler->startElement(name, nsId);
     }
     else {
         // we call characters with an empty string to "close" any element to
         // make sure that no attributes are added
-        aEs.mResultHandler->characters(EmptyString(), PR_FALSE);
+        rv = aEs.mResultHandler->characters(EmptyString(), PR_FALSE);
     }
+    NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aEs.pushString(name);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -978,9 +965,10 @@ txStartLREElement::execute(txExecutionState& aEs)
         mLocalName->ToString(nodeName);
     }
 
-    aEs.mResultHandler->startElement(nodeName, mNamespaceID);
+    nsresult rv = aEs.mResultHandler->startElement(nodeName, mNamespaceID);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    nsresult rv = aEs.pushString(nodeName);
+    rv = aEs.pushString(nodeName);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aEs.pushInt(mNamespaceID);
@@ -998,8 +986,7 @@ txText::txText(const nsAString& aStr, PRBool aDOE)
 nsresult
 txText::execute(txExecutionState& aEs)
 {
-    aEs.mResultHandler->characters(mStr, mDOE);
-    return NS_OK;
+    return aEs.mResultHandler->characters(mStr, mDOE);
 }
 
 txValueOf::txValueOf(nsAutoPtr<Expr> aExpr, PRBool aDOE)
@@ -1019,14 +1006,14 @@ txValueOf::execute(txExecutionState& aEs)
     const nsString* value = exprRes->stringValuePointer();
     if (value) {
         if (!value->IsEmpty()) {
-            aEs.mResultHandler->characters(*value, mDOE);
+            return aEs.mResultHandler->characters(*value, mDOE);
         }
     }
     else {
         nsAutoString valueStr;
         exprRes->stringValue(valueStr);
         if (!valueStr.IsEmpty()) {
-            aEs.mResultHandler->characters(valueStr, mDOE);
+            return aEs.mResultHandler->characters(valueStr, mDOE);
         }
     }
 

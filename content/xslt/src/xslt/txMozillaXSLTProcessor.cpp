@@ -668,7 +668,12 @@ txMozillaXSLTProcessor::TransformToDoc(nsIDOMDocument *aOutputDoc,
 
     // Process root of XML source document
     nsresult rv = txXSLTProcessor::execute(es);
-    es.end(rv);
+    
+    nsresult endRv = es.end(rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = endRv;
+    }
+    
     if (NS_SUCCEEDED(rv)) {
         if (aResult) {
             txAOutputXMLEventHandler* handler =
@@ -721,7 +726,10 @@ txMozillaXSLTProcessor::TransformToFragment(nsIDOMNode *aSource,
     // Process root of XML source document
     rv = txXSLTProcessor::execute(es);
     // XXX setup exception context, bug 204658
-    es.end(rv);
+    nsresult endRv = es.end(rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = endRv;
+    }
 
     return rv;
 }

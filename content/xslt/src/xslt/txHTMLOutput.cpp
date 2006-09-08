@@ -200,9 +200,9 @@ txHTMLOutput::~txHTMLOutput()
 {
 }
 
-void txHTMLOutput::attribute(const nsAString& aName,
-                             const PRInt32 aNsID,
-                             const nsAString& aValue)
+nsresult
+txHTMLOutput::attribute(const nsAString& aName, const PRInt32 aNsID,
+                        const nsAString& aValue)
 {
     if (!mStartTagOpen)
         // XXX Signal this? (can't add attributes after element closed)
@@ -233,15 +233,18 @@ void txHTMLOutput::attribute(const nsAString& aName,
     }
     if (!shortHand)
         txXMLOutput::attribute(aName, aNsID, aValue);
+
+    return NS_OK;
 }
 
-void txHTMLOutput::characters(const nsAString& aData, PRBool aDOE)
+nsresult
+txHTMLOutput::characters(const nsAString& aData, PRBool aDOE)
 {
     if (aDOE) {
         closeStartTag(MB_FALSE);
         printUTF8Chars(aData);
 
-        return;
+        return NS_OK;
     }
 
     // Special-case script and style
@@ -252,15 +255,17 @@ void txHTMLOutput::characters(const nsAString& aData, PRBool aDOE)
              currentElement->mLocalName == txHTMLAtoms::style)) {
             closeStartTag(MB_FALSE);
             printUTF8Chars(aData);
-            return;
+
+            return NS_OK;
         }
     }
-    txXMLOutput::characters(aData, aDOE);
+    return txXMLOutput::characters(aData, aDOE);
 }
 
-void txHTMLOutput::endElement(const nsAString& aName,
-                              const PRInt32 aNsID)
+nsresult
+txHTMLOutput::endElement(const nsAString& aName, const PRInt32 aNsID)
 {
+    nsresult rv = NS_OK;
     const nsAString& localPart = XMLUtils::getLocalPart(aName);
     if ((aNsID == kNameSpaceID_None) && isShorthandElement(localPart) &&
         mStartTagOpen) {
@@ -274,13 +279,16 @@ void txHTMLOutput::endElement(const nsAString& aName,
         mAfterEndTag = MB_TRUE;
     }
     else {
-        txXMLOutput::endElement(aName, aNsID);
+        rv = txXMLOutput::endElement(aName, aNsID);
     }
     delete (txExpandedName*)mCurrentElements.pop();
+
+    return rv;
 }
 
-void txHTMLOutput::processingInstruction(const nsAString& aTarget,
-                                         const nsAString& aData)
+nsresult
+txHTMLOutput::processingInstruction(const nsAString& aTarget,
+                                    const nsAString& aData)
 {
     closeStartTag(MB_FALSE);
     if (mOutputFormat.mIndent == eTrue) {
@@ -294,21 +302,27 @@ void txHTMLOutput::processingInstruction(const nsAString& aTarget,
     *mOut << R_ANGLE_BRACKET;
     if (mOutputFormat.mIndent == eTrue)
         *mOut << endl;
+
+    return NS_OK;
 }
 
-void txHTMLOutput::startDocument()
+nsresult
+txHTMLOutput::startDocument()
 {
     // XXX Should be using mOutputFormat.getVersion
     *mOut << DOCTYPE_START << "html " << PUBLIC;
     *mOut << " \"-//W3C//DTD HTML 4.0 Transitional//EN\"";
     *mOut << " \"http://www.w3.org/TR/REC-html40/loose.dtd\"";
     *mOut << DOCTYPE_END << endl;
+
+    return NS_OK;
 }
 
-void txHTMLOutput::startElement(const nsAString& aName,
-                                const PRInt32 aNsID)
+nsresult
+txHTMLOutput::startElement(const nsAString& aName, const PRInt32 aNsID)
 {
-    txXMLOutput::startElement(aName, aNsID);
+    nsresult rv = txXMLOutput::startElement(aName, aNsID);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIAtom> localAtom;
     if (aNsID == kNameSpaceID_None) {
@@ -324,6 +338,8 @@ void txHTMLOutput::startElement(const nsAString& aName,
     NS_ASSERTION(currentElement, "Can't create currentElement");
     if (currentElement)
         mCurrentElements.push(currentElement);
+
+    return NS_OK;
 }
 
 void txHTMLOutput::closeStartTag(MBool aUseEmptyElementShorthand)

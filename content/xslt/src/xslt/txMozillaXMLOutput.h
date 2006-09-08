@@ -72,11 +72,11 @@ public:
                                 nsresult aStatus);
 
     void Init(nsITransformObserver* aObserver);
-    void AddScriptElement(nsIScriptElement* aElement);
-    void AddStyleSheet(nsIStyleSheet* aStyleSheet);
+    nsresult AddScriptElement(nsIScriptElement* aElement);
+    nsresult AddStyleSheet(nsIStyleSheet* aStyleSheet);
     void OnTransformEnd(nsresult aResult = NS_OK);
     void OnTransformStart();
-    void SetOutputDocument(nsIDOMDocument* aDocument);
+    nsresult SetOutputDocument(nsIDOMDocument* aDocument);
 
 private:
     void SignalTransformEnd(nsresult aResult = NS_OK);
@@ -105,10 +105,10 @@ public:
     TX_DECL_TXAOUTPUTXMLEVENTHANDLER
 
 private:
-    void closePrevious(PRInt8 aAction);
+    nsresult closePrevious(PRInt8 aAction);
     nsresult createTxWrapper();
-    void startHTMLElement(nsIDOMElement* aElement, PRBool aXHTML);
-    void endHTMLElement(nsIDOMElement* aElement);
+    nsresult startHTMLElement(nsIDOMElement* aElement, PRBool aXHTML);
+    nsresult endHTMLElement(nsIDOMElement* aElement);
     void processHTTPEquiv(nsIAtom* aHeader, const nsAString& aValue);
     nsresult createResultDocument(const nsAString& aName, PRInt32 aNsID,
                                   nsIDOMDocument* aSourceDocument,

@@ -65,13 +65,15 @@ txXMLOutput::~txXMLOutput()
 {
 }
 
-void txXMLOutput::attribute(const nsAString& aName,
-                            const PRInt32 aNsID,
-                            const nsAString& aValue)
+nsresult
+txXMLOutput::attribute(const nsAString& aName,
+                       const PRInt32 aNsID,
+                       const nsAString& aValue)
 {
-    if (!mStartTagOpen)
+    if (!mStartTagOpen) {
         // XXX Signal this? (can't add attributes after element closed)
-        return;
+        return NS_OK;
+    }
 
     txListIterator iter(&mAttributes);
     nsCOMPtr<nsIAtom> localName = do_GetAtom(XMLUtils::getLocalPart(aName));
@@ -86,18 +88,24 @@ void txXMLOutput::attribute(const nsAString& aName,
     }
     if (!setAtt) {
         setAtt = new txOutAttr(aNsID, localName, aValue);
-        mAttributes.add(setAtt);
+        NS_ENSURE_TRUE(setAtt, NS_ERROR_OUT_OF_MEMORY);
+
+        nsresult rv = mAttributes.add(setAtt);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
+    
+    return NS_OK;
 }
 
-void txXMLOutput::characters(const nsAString& aData, PRBool aDOE)
+nsresult
+txXMLOutput::characters(const nsAString& aData, PRBool aDOE)
 {
     closeStartTag(MB_FALSE);
 
     if (aDOE) {
         printUTF8Chars(aData);
 
-        return;
+        return NS_OK;
     }
 
     if (mInCDATASection) {
@@ -143,9 +151,12 @@ void txXMLOutput::characters(const nsAString& aData, PRBool aDOE)
     else {
         printWithXMLEntities(aData);
     }
+
+    return NS_OK;
 }
 
-void txXMLOutput::comment(const nsAString& aData)
+nsresult
+txXMLOutput::comment(const nsAString& aData)
 {
     closeStartTag(MB_FALSE);
 
@@ -158,13 +169,18 @@ void txXMLOutput::comment(const nsAString& aData)
     *mOut << COMMENT_END;
     if (mOutputFormat.mIndent == eTrue)
         *mOut << endl;
+
+    return NS_OK;
 }
 
-void txXMLOutput::endDocument(nsresult aResult)
+nsresult
+txXMLOutput::endDocument(nsresult aResult)
 {
+    return NS_OK;
 }
 
-void txXMLOutput::endElement(const nsAString& aName,
+nsresult
+txXMLOutput::endElement(const nsAString& aName,
                              const PRInt32 aNsID)
 {
     MBool newLine = (mOutputFormat.mIndent == eTrue) && mAfterEndTag;
@@ -187,10 +203,13 @@ void txXMLOutput::endElement(const nsAString& aName,
         *mOut << endl;
     mAfterEndTag = MB_TRUE;
     mInCDATASection = mCDATASections.pop() != 0;
+
+    return NS_OK;
 }
 
-void txXMLOutput::processingInstruction(const nsAString& aTarget,
-                                        const nsAString& aData)
+nsresult
+txXMLOutput::processingInstruction(const nsAString& aTarget,
+                                   const nsAString& aData)
 {
     closeStartTag(MB_FALSE);
     if (mOutputFormat.mIndent == eTrue) {
@@ -204,9 +223,12 @@ void txXMLOutput::processingInstruction(const nsAString& aTarget,
     *mOut << PI_END;
     if (mOutputFormat.mIndent == eTrue)
         *mOut << endl;
+
+    return NS_OK;
 }
 
-void txXMLOutput::startDocument()
+nsresult
+txXMLOutput::startDocument()
 {
     if (mOutputFormat.mMethod == eMethodNotSet) {
         // XXX We should "cache" content until we have a 
@@ -224,10 +246,13 @@ void txXMLOutput::startDocument()
       *mOut << PI_END << endl;
       
     }
+
+    return NS_OK;
 }
 
-void txXMLOutput::startElement(const nsAString& aName,
-                               const PRInt32 aNsID)
+nsresult
+txXMLOutput::startElement(const nsAString& aName,
+                          const PRInt32 aNsID)
 {
     if (!mHaveDocumentElement) {
         // XXX Output doc type and "cached" content
@@ -262,6 +287,8 @@ void txXMLOutput::startElement(const nsAString& aName,
             break;
         }
     }
+
+    return NS_OK;
 }
 
 void txXMLOutput::closeStartTag(MBool aUseEmptyElementShorthand)

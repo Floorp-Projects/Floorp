@@ -69,9 +69,9 @@ public:
      * @param aNsID the namespace ID of the attribute
      * @param aValue the value of the attribute
      */
-    virtual void attribute(const nsAString& aName,
-                           const PRInt32 aNsID,
-                           const nsAString& aValue) = 0;
+    virtual nsresult attribute(const nsAString& aName,
+                               const PRInt32 aNsID,
+                               const nsAString& aValue) = 0;
 
     /**
      * Signals to receive characters.
@@ -79,20 +79,20 @@ public:
      * @param aData the characters to receive
      * @param aDOE disable output escaping for these characters
      */
-    virtual void characters(const nsAString& aData, PRBool aDOE) = 0;
+    virtual nsresult characters(const nsAString& aData, PRBool aDOE) = 0;
 
     /**
      * Signals to receive data that should be treated as a comment.
      *
      * @param data the comment data to receive
      */
-    virtual void comment(const nsAString& aData) = 0;
+    virtual nsresult comment(const nsAString& aData) = 0;
 
     /**
      * Signals the end of a document. It is an error to call
      * this method more than once.
      */
-    virtual void endDocument(nsresult aResult) = 0;
+    virtual nsresult endDocument(nsresult aResult) = 0;
 
     /**
      * Signals to receive the end of an element.
@@ -100,7 +100,7 @@ public:
      * @param aName the name of the element
      * @param aNsID the namespace ID of the element
      */
-    virtual void endElement(const nsAString& aName,
+    virtual nsresult endElement(const nsAString& aName,
                             const PRInt32 aNsID) = 0;
 
     /**
@@ -109,13 +109,13 @@ public:
      * @param aTarget the target of the processing instruction
      * @param aData the data of the processing instruction
      */
-    virtual void processingInstruction(const nsAString& aTarget, 
+    virtual nsresult processingInstruction(const nsAString& aTarget, 
                                        const nsAString& aData) = 0;
 
     /**
      * Signals the start of a document.
      */
-    virtual void startDocument() = 0;
+    virtual nsresult startDocument() = 0;
 
     /**
      * Signals to receive the start of an element.
@@ -123,21 +123,22 @@ public:
      * @param aName the name of the element
      * @param aNsID the namespace ID of the element
      */
-    virtual void startElement(const nsAString& aName,
-                              const PRInt32 aNsID) = 0;
+    virtual nsresult startElement(const nsAString& aName,
+                                  const PRInt32 aNsID) = 0;
 };
 
-#define TX_DECL_TXAXMLEVENTHANDLER                                          \
-    virtual void attribute(const nsAString& aName, const PRInt32 aNsID,     \
-                           const nsAString& aValue);                        \
-    virtual void characters(const nsAString& aData, PRBool aDOE);           \
-    virtual void comment(const nsAString& aData);                           \
-    virtual void endDocument(nsresult aResult = NS_OK);                     \
-    virtual void endElement(const nsAString& aName, const PRInt32 aNsID);   \
-    virtual void processingInstruction(const nsAString& aTarget,            \
-                                       const nsAString& aData);             \
-    virtual void startDocument();                                           \
-    virtual void startElement(const nsAString& aName, const PRInt32 aNsID);
+#define TX_DECL_TXAXMLEVENTHANDLER                                           \
+    virtual nsresult attribute(const nsAString& aName, const PRInt32 aNsID,  \
+                               const nsAString& aValue);                     \
+    virtual nsresult characters(const nsAString& aData, PRBool aDOE);        \
+    virtual nsresult comment(const nsAString& aData);                        \
+    virtual nsresult endDocument(nsresult aResult = NS_OK);                  \
+    virtual nsresult endElement(const nsAString& aName, const PRInt32 aNsID);\
+    virtual nsresult processingInstruction(const nsAString& aTarget,         \
+                                       const nsAString& aData);              \
+    virtual nsresult startDocument();                                        \
+    virtual nsresult startElement(const nsAString& aName,                    \
+                                  const PRInt32 aNsID);
 
 
 #ifdef TX_EXE

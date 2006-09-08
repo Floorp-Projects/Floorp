@@ -48,40 +48,53 @@ txTextOutput::~txTextOutput()
 {
 }
 
-void txTextOutput::attribute(const nsAString& aName,
-                             const PRInt32 aNsID,
-                             const nsAString& aValue)
+nsresult
+txTextOutput::attribute(const nsAString& aName,
+                        const PRInt32 aNsID,
+                        const nsAString& aValue)
 {
+    return NS_OK;
 }
 
-void txTextOutput::characters(const nsAString& aData, PRBool aDOE)
+nsresult
+txTextOutput::characters(const nsAString& aData, PRBool aDOE)
 {
     *mOut << NS_ConvertUTF16toUTF8(aData).get();
 }
 
-void txTextOutput::comment(const nsAString& aData)
+nsresult
+txTextOutput::comment(const nsAString& aData)
 {
+    return NS_OK;
 }
 
-void txTextOutput::endDocument(nsresult aResult)
+nsresult
+txTextOutput::endDocument(nsresult aResult)
 {
+    return NS_OK;
 }
 
-void txTextOutput::endElement(const nsAString& aName,
-                              const PRInt32 aNsID)
+nsresult
+txTextOutput::endElement(const nsAString& aName, const PRInt32 aNsID)
 {
+    return NS_OK;
 }
 
-void txTextOutput::processingInstruction(const nsAString& aTarget,
-                                         const nsAString& aData)
+nsresult
+txTextOutput::processingInstruction(const nsAString& aTarget,
+                                    const nsAString& aData)
 {
+    return NS_OK;
 }
 
-void txTextOutput::startDocument()
+nsresult
+txTextOutput::startDocument()
 {
+    return NS_OK;
 }
 
-void txTextOutput::startElement(const nsAString& aName,
-                                const PRInt32 aNsID)
+nsresult
+txTextOutput::startElement(const nsAString& aName, const PRInt32 aNsID)
 {
+    return NS_OK;
 }

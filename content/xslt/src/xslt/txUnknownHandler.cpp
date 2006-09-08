@@ -50,19 +50,23 @@ txUnknownHandler::~txUnknownHandler()
 {
 }
 
-void txUnknownHandler::attribute(const nsAString& aName,
-                                 const PRInt32 aNsID,
-                                 const nsAString& aValue)
+nsresult
+txUnknownHandler::attribute(const nsAString& aName,
+                            const PRInt32 aNsID,
+                            const nsAString& aValue)
 {
     // If this is called then the stylesheet is trying to add an attribute
     // without adding an element first. So we'll just ignore it.
     // XXX ErrorReport: Signal this?
+
+    return NS_OK;
 }
 
-void txUnknownHandler::endDocument(nsresult aResult)
+nsresult
+txUnknownHandler::endDocument(nsresult aResult)
 {
     if (NS_FAILED(aResult)) {
-        return;
+        return NS_OK;
     }
 
     // This is an unusual case, no output method has been set and we
@@ -77,16 +81,17 @@ void txUnknownHandler::endDocument(nsresult aResult)
 
     nsresult rv = createHandlerAndFlush(eXMLOutput, EmptyString(),
                                         kNameSpaceID_None);
-    if (NS_FAILED(rv))
-        return;
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    mEs->mResultHandler->endDocument(aResult);
+    rv = mEs->mResultHandler->endDocument(aResult);
 
     delete this;
+
+    return rv;
 }
 
-void txUnknownHandler::startElement(const nsAString& aName,
-                                    const PRInt32 aNsID)
+nsresult
+txUnknownHandler::startElement(const nsAString& aName, const PRInt32 aNsID)
 {
     // Make sure that mEs->mResultHandler == this is true, otherwise we'll
     // leak mEs->mResultHandler in createHandlerAndFlush and we may crash
@@ -107,12 +112,13 @@ void txUnknownHandler::startElement(const nsAString& aName,
     else {
         rv = createHandlerAndFlush(eXMLOutput, aName, aNsID);
     }
-    if (NS_FAILED(rv))
-        return;
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    mEs->mResultHandler->startElement(aName, aNsID);
+    rv = mEs->mResultHandler->startElement(aName, aNsID);
 
     delete this;
+
+    return rv;
 }
 
 nsresult txUnknownHandler::createHandlerAndFlush(txOutputMethod aMethod,

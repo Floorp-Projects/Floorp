@@ -137,34 +137,28 @@ txBufferingHandler::~txBufferingHandler()
 {
 }
 
-void
+nsresult
 txBufferingHandler::attribute(const nsAString& aName, const PRInt32 aNsID,
                               const nsAString& aValue)
 {
-    if (!mBuffer) {
-        return;
-    }
+    NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
 
     if (!mCanAddAttribute) {
         // XXX ErrorReport: Can't add attributes without element
-        return;
+        return NS_OK;
     }
 
     txOutputTransaction* transaction =
         new txAttributeTransaction(aName, aNsID, aValue);
-    if (!transaction) {
-        NS_ASSERTION(0, "Out of memory!");
-        return;
-    }
-    mBuffer->addTransaction(transaction);
+    NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
+
+    return mBuffer->addTransaction(transaction);
 }
 
-void
+nsresult
 txBufferingHandler::characters(const nsAString& aData, PRBool aDOE)
 {
-    if (!mBuffer) {
-        return;
-    }
+    NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
 
     mCanAddAttribute = PR_FALSE;
 
@@ -177,122 +171,96 @@ txBufferingHandler::characters(const nsAString& aData, PRBool aDOE)
         mBuffer->mStringValue.Append(aData);
         NS_STATIC_CAST(txCharacterTransaction*, transaction)->mLength +=
             aData.Length();
-        return;
+        return NS_OK;
     }
 
     transaction = new txCharacterTransaction(type, aData.Length());
-    if (!transaction) {
-        NS_ASSERTION(0, "Out of memory!");
-        return;
-    }
+    NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
 
     mBuffer->mStringValue.Append(aData);
-    mBuffer->addTransaction(transaction);
+    return mBuffer->addTransaction(transaction);
 }
 
-void
+nsresult
 txBufferingHandler::comment(const nsAString& aData)
 {
-    if (!mBuffer) {
-        return;
-    }
+    NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
 
     mCanAddAttribute = PR_FALSE;
 
     txOutputTransaction* transaction = new txCommentTransaction(aData);
-    if (!transaction) {
-        NS_ASSERTION(0, "Out of memory!");
-        return;
-    }
-    mBuffer->addTransaction(transaction);
+    NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
+
+    return mBuffer->addTransaction(transaction);
 }
 
-void
+nsresult
 txBufferingHandler::endDocument(nsresult aResult)
 {
-    if (!mBuffer) {
-        return;
-    }
+    NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
 
     txOutputTransaction* transaction =
         new txOutputTransaction(txOutputTransaction::eEndDocumentTransaction);
-    if (!transaction) {
-        NS_ASSERTION(0, "Out of memory!");
-        return;
-    }
-    mBuffer->addTransaction(transaction);
+    NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
+
+    return mBuffer->addTransaction(transaction);
 }
 
-void
+nsresult
 txBufferingHandler::endElement(const nsAString& aName, const PRInt32 aNsID)
 {
-    if (!mBuffer) {
-        return;
-    }
+    NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
 
     mCanAddAttribute = PR_FALSE;
 
     txOutputTransaction* transaction =
         new txElementTransaction(txOutputTransaction::eEndElementTransaction,
                                  aName, aNsID);
-    if (!transaction) {
-        NS_ASSERTION(0, "Out of memory!");
-        return;
-    }
-    mBuffer->addTransaction(transaction);
+    NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
+
+    return mBuffer->addTransaction(transaction);
 }
 
-void
+nsresult
 txBufferingHandler::processingInstruction(const nsAString& aTarget,
                                           const nsAString& aData)
 {
-    if (!mBuffer) {
-        return;
-    }
+    NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
 
     mCanAddAttribute = PR_FALSE;
 
     txOutputTransaction* transaction =
         new txPITransaction(aTarget, aData);
-    if (!transaction) {
-        NS_ASSERTION(0, "Out of memory!");
-        return;
-    }
-    mBuffer->addTransaction(transaction);
+    NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
+
+    return mBuffer->addTransaction(transaction);
 }
 
-void txBufferingHandler::startDocument()
+nsresult
+txBufferingHandler::startDocument()
 {
-    if (!mBuffer) {
-        return;
-    }
+    NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
 
     txOutputTransaction* transaction =
         new txOutputTransaction(txOutputTransaction::eStartDocumentTransaction);
-    if (!transaction) {
-        NS_ASSERTION(0, "Out of memory!");
-        return;
-    }
-    mBuffer->addTransaction(transaction);
+    NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
+
+    return mBuffer->addTransaction(transaction);
 }
 
-void
+nsresult
 txBufferingHandler::startElement(const nsAString& aName, const PRInt32 aNsID)
 {
-    if (!mBuffer) {
-        return;
-    }
+    NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
 
     mCanAddAttribute = PR_TRUE;
 
     txOutputTransaction* transaction =
         new txElementTransaction(txOutputTransaction::eStartElementTransaction,
                                  aName, aNsID);
-    if (!transaction) {
-        NS_ASSERTION(0, "Out of memory!");
-        return;
-    }
-    mBuffer->addTransaction(transaction);
+    NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
+
+    return mBuffer->addTransaction(transaction);
 }
 
 PR_STATIC_CALLBACK(PRBool)
@@ -320,23 +288,26 @@ struct Holder
 {
     txAXMLEventHandler* mHandler;
     nsAFlatString::const_char_iterator mIter;
+    nsresult mResult;
 };
 
 PR_STATIC_CALLBACK(PRBool)
 flushTransaction(void* aElement, void *aData)
 {
-    txAXMLEventHandler* handler = NS_STATIC_CAST(Holder*, aData)->mHandler;
+    Holder* holder = NS_STATIC_CAST(Holder*, aData);
+    txAXMLEventHandler* handler = holder->mHandler;
     txOutputTransaction* transaction =
         NS_STATIC_CAST(txOutputTransaction*, aElement);
 
+    nsresult rv;
     switch (transaction->mType) {
         case txOutputTransaction::eAttributeTransaction:
         {
             txAttributeTransaction* attrTransaction =
                 NS_STATIC_CAST(txAttributeTransaction*, aElement);
-            handler->attribute(attrTransaction->mName,
-                               attrTransaction->mNsID,
-                               attrTransaction->mValue);
+            rv = handler->attribute(attrTransaction->mName,
+                                    attrTransaction->mNsID,
+                                    attrTransaction->mValue);
             break;
         }
         case txOutputTransaction::eCharacterTransaction:
@@ -345,12 +316,12 @@ flushTransaction(void* aElement, void *aData)
             txCharacterTransaction* charTransaction =
                 NS_STATIC_CAST(txCharacterTransaction*, aElement);
             nsAFlatString::const_char_iterator& start =
-                NS_STATIC_CAST(Holder*, aData)->mIter;
+                holder->mIter;
             nsAFlatString::const_char_iterator end =
                 start + charTransaction->mLength;
-            handler->characters(Substring(start, end),
-                                transaction->mType ==
-                                txOutputTransaction::eCharacterNoOETransaction);
+            rv = handler->characters(Substring(start, end),
+                                     transaction->mType ==
+                                     txOutputTransaction::eCharacterNoOETransaction);
             start = end;
             break;
         }
@@ -358,41 +329,43 @@ flushTransaction(void* aElement, void *aData)
         {
             txCommentTransaction* commentTransaction =
                 NS_STATIC_CAST(txCommentTransaction*, aElement);
-            handler->comment(commentTransaction->mValue);
+            rv = handler->comment(commentTransaction->mValue);
             break;
         }
         case txOutputTransaction::eEndElementTransaction:
         {
             txElementTransaction* elementTransaction =
                 NS_STATIC_CAST(txElementTransaction*, aElement);
-            handler->endElement(elementTransaction->mName,
-                                elementTransaction->mNsID);
+            rv = handler->endElement(elementTransaction->mName,
+                                     elementTransaction->mNsID);
             break;
         }
         case txOutputTransaction::ePITransaction:
         {
             txPITransaction* piTransaction =
                 NS_STATIC_CAST(txPITransaction*, aElement);
-            handler->processingInstruction(piTransaction->mTarget,
-                                           piTransaction->mData);
+            rv = handler->processingInstruction(piTransaction->mTarget,
+                                                piTransaction->mData);
             break;
         }
         case txOutputTransaction::eStartDocumentTransaction:
         {
-            handler->startDocument();
+            rv = handler->startDocument();
             break;
         }
         case txOutputTransaction::eStartElementTransaction:
         {
             txElementTransaction* elementTransaction =
                 NS_STATIC_CAST(txElementTransaction*, aElement);
-            handler->startElement(elementTransaction->mName,
-                                  elementTransaction->mNsID);
+            rv = handler->startElement(elementTransaction->mName,
+                                       elementTransaction->mNsID);
             break;
         }
     }
 
-    return PR_TRUE;
+    holder->mResult = rv;
+
+    return NS_SUCCEEDED(rv);
 }
 
 nsresult
@@ -401,8 +374,11 @@ txResultBuffer::flushToHandler(txAXMLEventHandler* aHandler)
     Holder data;
     data.mHandler = aHandler;
     mStringValue.BeginReading(data.mIter);
+    data.mResult = NS_OK;
+
     mTransactions.EnumerateForwards(flushTransaction, &data);
-    return NS_OK;
+
+    return data.mResult;
 }
 
 txOutputTransaction*
