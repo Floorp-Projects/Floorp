@@ -254,30 +254,17 @@ NS_IMETHODIMP nsHTMLLIAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *wid
 
 void nsHTMLLIAccessible::CacheChildren()
 {
-  if (!mBulletAccessible || !mWeakShell) {
-    nsAccessibleWrap::CacheChildren();
+  if (!mWeakShell || mAccChildCount != eChildCountUninitialized) {
     return;
   }
 
-  if (mAccChildCount == eChildCountUninitialized) {
-    SetFirstChild(mBulletAccessible);
-    mBulletAccessible->SetParent(this); // Set weak parent;
-    PRInt32 childCount = 1;
-    PRBool allowsAnonChildren = PR_FALSE;
-    GetAllowsAnonChildAccessibles(&allowsAnonChildren);
-    nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, allowsAnonChildren);
-    walker.mState.frame = GetFrame();
-    walker.GetFirstChild();
+  nsAccessibleWrap::CacheChildren();
 
-    nsCOMPtr<nsPIAccessible> privatePrevAccessible = mBulletAccessible.get();
-    while (walker.mState.accessible) {
-      ++ childCount;
-      privatePrevAccessible->SetNextSibling(walker.mState.accessible);
-      privatePrevAccessible = do_QueryInterface(walker.mState.accessible);
-      privatePrevAccessible->SetParent(this);
-      walker.GetNextSibling();
-    }
-    mAccChildCount = childCount;
+  if (mBulletAccessible) {
+    mBulletAccessible->SetNextSibling(mFirstChild);
+    mBulletAccessible->SetParent(this); // Set weak parent;
+    SetFirstChild(mBulletAccessible);
+    ++ mAccChildCount;
   }
 }
 
