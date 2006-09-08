@@ -780,6 +780,7 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
 {
     JSContext *cx;
     JSPrinter *jp;
+    uintN top;
     char *lval, *rval;
     uintN i;
     ptrdiff_t diff, off, off2, caseExprOff;
@@ -789,7 +790,9 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
     cx = ss->sprinter.context;
     jp = ss->printer;
 
-    lval = OFF2STR(&ss->sprinter, PopOff(ss, JSOP_NOP));
+    /* Don't pop the discriminant, the stack model requires it to be there. */
+    top = ss->top;
+    lval = OFF2STR(&ss->sprinter, ss->offsets[top-1]);
     js_printf(jp, "\tswitch (%s) {\n", lval);
 
     if (tableLength) {
@@ -876,6 +879,10 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
         jp->indent -= 2;
     }
     js_printf(jp, "\t}\n");
+
+    /* Now that we are done, pop the discriminant. */
+    JS_ASSERT(ss->top == top);
+    ss->top = top - 1;
     return JS_TRUE;
 }
 
