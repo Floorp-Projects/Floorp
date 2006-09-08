@@ -82,7 +82,10 @@ JS_BEGIN_EXTERN_C
  * TOK_IF       ternary     pn_kid1: cond, pn_kid2: then, pn_kid3: else or null
  * TOK_SWITCH   binary      pn_left: discriminant
  *                          pn_right: list of TOK_CASE nodes, with at most one
- *                            TOK_DEFAULT node
+ *                            TOK_DEFAULT node, or if there are let bindings
+ *                            in the top level of the switch body's cases, a
+ *                            TOK_LEXICALSCOPE node that contains the list of
+ *                            TOK_CASE nodes.
  * TOK_CASE,    binary      pn_left: case expr or null if TOK_DEFAULT
  * TOK_DEFAULT              pn_right: TOK_LC node for this case's statements
  *                          pn_val: constant value if lookup or table switch
@@ -349,6 +352,7 @@ struct JSParseNode {
 #define PNX_ENDCOMMA    0x10            /* array literal has comma at end */
 #define PNX_XMLROOT     0x20            /* top-most node in XML literal tree */
 #define PNX_GROUPINIT   0x40            /* var [a, b] = [c, d]; unit list */
+#define PNX_NEEDBRACES  0x80            /* braces necessary due to closure */
 
 /*
  * Move pn2 into pn, preserving pn->pn_pos and pn->pn_offset and handing off

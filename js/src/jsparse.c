@@ -601,7 +601,10 @@ HasFinalReturn(JSParseNode *pn)
       case TOK_SWITCH:
         rv = ENDS_IN_RETURN;
         hasDefault = ENDS_IN_OTHER;
-        for (pn2 = pn->pn_kid2->pn_head; rv && pn2; pn2 = pn2->pn_next) {
+        pn2 = pn->pn_right;
+        if (pn2->pn_type == TOK_LEXICALSCOPE)
+            pn2 = pn2->pn_expr;
+        for (pn2 = pn2->pn_head; rv && pn2; pn2 = pn2->pn_next) {
             if (pn2->pn_type == TOK_DEFAULT)
                 hasDefault = ENDS_IN_RETURN;
             pn3 = pn2->pn_right;
@@ -1375,6 +1378,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
          * sub-statement.
          */
         op = JSOP_CLOSURE;
+        tc->flags |= TCF_HAS_CLOSURE;
     } else {
         op = JSOP_NOP;
     }
@@ -2546,7 +2550,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
       case TOK_SWITCH:
       {
-        JSParseNode *pn5;
+        JSParseNode *pn5, *saveBlock;
         JSBool seenDefault = JS_FALSE;
 
         pn = NewParseNode(cx, ts, PN_BINARY, tc);
@@ -2566,6 +2570,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn2 = NewParseNode(cx, ts, PN_LIST, tc);
         if (!pn2)
             return NULL;
+        saveBlock = tc->blockNode;
+        tc->blockNode = pn2;
         PN_INIT_LIST(pn2);
 
         js_PushStatement(tc, &stmtInfo, STMT_SWITCH, -1);
@@ -2640,11 +2646,20 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             pn3->pn_right = pn4;
         }
 
+        /*
+         * Handle the case where there was a let declaration in any case in
+         * the switch body, but not within an inner block.  If it replaced
+         * tc->blockNode with a new block node then we must refresh pn2 and
+         * then restore tc->blockNode.
+         */
+        if (tc->blockNode != pn2)
+            pn2 = tc->blockNode;
+        tc->blockNode = saveBlock;
         js_PopStatement(tc);
 
         pn->pn_pos.end = pn2->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
-        pn->pn_kid1 = pn1;
-        pn->pn_kid2 = pn2;
+        pn->pn_left = pn1;
+        pn->pn_right = pn2;
         return pn;
       }
 
@@ -3364,6 +3379,11 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         break;
 
       case TOK_LC:
+      {
+        uintN oldflags;
+
+        oldflags = tc->flags;
+        tc->flags = oldflags & ~TCF_HAS_CLOSURE;
         js_PushStatement(tc, &stmtInfo, STMT_BLOCK, -1);
         pn = Statements(cx, ts, tc);
         if (!pn)
@@ -3371,7 +3391,18 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
         MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_IN_COMPOUND);
         js_PopStatement(tc);
+
+        /*
+         * If we contain a function statement and our container is top-level
+         * or another block, flag pn to preserve braces when decompiling.
+         */
+        if ((tc->flags & TCF_HAS_CLOSURE) &&
+            (!tc->topStmt || tc->topStmt->type == STMT_BLOCK)) {
+            pn->pn_extra |= PNX_NEEDBRACES;
+        }
+        tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
         return pn;
+      }
 
       case TOK_EOL:
       case TOK_SEMI:

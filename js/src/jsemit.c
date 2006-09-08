@@ -1525,7 +1525,10 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSBool letdecl)
             break;
         }
 
-        JS_ASSERT(stmt->flags & SIF_SCOPE);
+        /* Skip "maybe scope" statements that don't contain let bindings. */
+        if (!(stmt->flags & SIF_SCOPE))
+            continue;
+
         obj = ATOM_TO_OBJECT(stmt->atom);
         JS_ASSERT(LOCKED_OBJ_GET_CLASS(obj) == &js_BlockClass);
         scope = OBJ_SCOPE(obj);
@@ -2533,6 +2536,10 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     intN noteIndex;
     size_t switchSize, tableSize;
     jsbytecode *pc, *savepc;
+#if JS_HAS_BLOCK_SCOPE
+    JSObject *obj;
+    jsint count;
+#endif
 
     /* Try for most optimal, fall back if not dense ints, and per ECMAv2. */
     switchOp = JSOP_TABLESWITCH;
@@ -2540,15 +2547,65 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     hasDefault = constPropagated = JS_FALSE;
     defaultOffset = -1;
 
-    /* Emit code for the discriminant first. */
-    if (!js_EmitTree(cx, cg, pn->pn_kid1))
+    /*
+     * If the switch contains let variables scoped by its body, model the
+     * resulting block on the stack first, before emitting the discriminant's
+     * bytecode (in case the discriminant contains a stack-model dependency
+     * such as a let expression).
+     */
+    pn2 = pn->pn_right;
+#if JS_HAS_BLOCK_SCOPE
+    if (pn2->pn_type == TOK_LEXICALSCOPE) {
+        atom = pn2->pn_atom;
+        obj = ATOM_TO_OBJECT(atom);
+        OBJ_SET_BLOCK_DEPTH(cx, obj, cg->stackDepth);
+
+        count = OBJ_BLOCK_COUNT(cx, obj);
+        cg->stackDepth += count;
+        if ((uintN)cg->stackDepth > cg->maxStackDepth)
+            cg->maxStackDepth = cg->stackDepth;
+
+        /* Emit JSOP_ENTERBLOCK before code to evaluate the discriminant. */
+        ale = js_IndexAtom(cx, atom, &cg->atomList);
+        if (!ale)
+            return JS_FALSE;
+        EMIT_ATOM_INDEX_OP(JSOP_ENTERBLOCK, ALE_INDEX(ale));
+    }
+#ifdef __GNUC__
+    else {
+        atom = NULL;
+        count = -1;
+    }
+#endif
+#endif
+
+    /*
+     * Emit code for the discriminant first (or nearly first, in the case of a
+     * switch whose body is a block scope).
+     */
+    if (!js_EmitTree(cx, cg, pn->pn_left))
         return JS_FALSE;
 
     /* Switch bytecodes run from here till end of final case. */
     top = CG_OFFSET(cg);
+#if !JS_HAS_BLOCK_SCOPE
     js_PushStatement(&cg->treeContext, stmtInfo, STMT_SWITCH, top);
+#else
+    if (pn2->pn_type == TOK_LC) {
+        js_PushStatement(&cg->treeContext, stmtInfo, STMT_SWITCH, top);
+    } else {
+        /* Recompute top now that the JSOP_ENTERBLOCK has been emitted. */
+        top = CG_OFFSET(cg);
 
-    pn2 = pn->pn_kid2;
+        /* Push the body's block scope after emitting the discriminant. */
+        js_PushBlockScope(&cg->treeContext, stmtInfo, atom, top);
+        stmtInfo->type = STMT_SWITCH;
+
+        /* Advance pn2 to refer to the switch case list. */
+        pn2 = pn2->pn_expr;
+    }
+#endif
+
     caseCount = pn2->pn_count;
     tableLength = 0;
     table = NULL;
@@ -2953,7 +3010,17 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 out:
     if (table)
         JS_free(cx, table);
-    return ok && js_PopStatementCG(cx, cg);
+    if (ok) {
+        ok = js_PopStatementCG(cx, cg);
+
+#if JS_HAS_BLOCK_SCOPE
+        if (ok && pn->pn_right->pn_type == TOK_LEXICALSCOPE) {
+            EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, count);
+            cg->stackDepth -= count;
+        }
+#endif
+    }
+    return ok;
 
 bad:
     ok = JS_FALSE;
@@ -4741,13 +4808,19 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
       case TOK_CATCH:
       {
-        ptrdiff_t guardJump;
+        ptrdiff_t catchStart, guardJump;
 
-        /* Morph STMT_BLOCK to STMT_CATCH and save the block object atom. */
+        /*
+         * Morph STMT_BLOCK to STMT_CATCH, note the block entry code offset,
+         * and save the block object atom.
+         */
         stmt = cg->treeContext.topStmt;
         JS_ASSERT(stmt->type == STMT_BLOCK && (stmt->flags & SIF_SCOPE));
         stmt->type = STMT_CATCH;
+        catchStart = stmt->update;
         atom = stmt->atom;
+
+        /* Go up one statement info record to the TRY or FINALLY record. */
         stmt = stmt->down;
         JS_ASSERT(stmt->type == STMT_TRY || stmt->type == STMT_FINALLY);
 
@@ -4778,11 +4851,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         /* Emit the guard expression, if there is one. */
         if (pn->pn_kid2) {
-            ptrdiff_t guardStart = CG_OFFSET(cg);
             if (!js_EmitTree(cx, cg, pn->pn_kid2))
                 return JS_FALSE;
             if (!js_SetSrcNoteOffset(cx, cg, CATCHNOTE(*stmt), 0,
-                                     CG_OFFSET(cg) - guardStart)) {
+                                     CG_OFFSET(cg) - catchStart)) {
                 return JS_FALSE;
             }
             /* ifeq <next block> */
@@ -4877,11 +4949,27 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #endif
 
         JS_ASSERT(pn->pn_arity == PN_LIST);
+
+        noteIndex = -1;
+        tmp = CG_OFFSET(cg);
+        if (pn->pn_extra & PNX_NEEDBRACES) {
+            noteIndex = js_NewSrcNote2(cx, cg, SRC_BRACE, 0);
+            if (noteIndex < 0 || js_Emit1(cx, cg, JSOP_NOP) < 0)
+                return JS_FALSE;
+        }
+
         js_PushStatement(&cg->treeContext, &stmtInfo, STMT_BLOCK, top);
         for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
         }
+
+        if (noteIndex >= 0 &&
+            !js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0,
+                                 CG_OFFSET(cg) - tmp)) {
+            return JS_FALSE;
+        }
+
         ok = js_PopStatementCG(cx, cg);
         break;
 
@@ -5621,6 +5709,27 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if ((uintN)cg->stackDepth > cg->maxStackDepth)
             cg->maxStackDepth = cg->stackDepth;
 
+        /*
+         * If this lexical scope is not for a catch block, let block, or let
+         * expression, and our container is top-level but not a function body,
+         * or else a block statement, emit a SRC_BRACE note.  Other container
+         * statements get braces by default from the decompiler.
+         */
+        noteIndex = -1;
+        tmp = CG_OFFSET(cg);
+        type = pn->pn_expr->pn_type;
+        if (type != TOK_CATCH && type != TOK_LET &&
+            (!(stmt = stmtInfo.down)
+             ? !(cg->treeContext.flags & TCF_IN_FUNCTION)
+             : stmt->type == STMT_BLOCK)) {
+            /* There must be no source note already output for the next op. */
+            JS_ASSERT(CG_NOTE_COUNT(cg) == 0 ||
+                      CG_LAST_NOTE_OFFSET(cg) != CG_OFFSET(cg));
+            noteIndex = js_NewSrcNote2(cx, cg, SRC_BRACE, 0);
+            if (noteIndex < 0)
+                return JS_FALSE;
+        }
+
         ale = js_IndexAtom(cx, atom, &cg->atomList);
         if (!ale)
             return JS_FALSE;
@@ -5628,6 +5737,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         if (!js_EmitTree(cx, cg, pn->pn_expr))
             return JS_FALSE;
+
+        if (noteIndex >= 0 &&
+            !js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0,
+                                 CG_OFFSET(cg) - tmp)) {
+            return JS_FALSE;
+        }
 
         /* Emit the JSOP_LEAVEBLOCK or JSOP_LEAVEBLOCKEXPR opcode. */
         EMIT_UINT16_IMM_OP(pn->pn_op, count);
@@ -6067,6 +6182,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     return ok;
 }
 
+/* XXX get rid of offsetBias altogether, it's used only by SRC_FOR */
 JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[] = {
     {"null",            0,      0,      0},
     {"if",              0,      0,      0},
@@ -6078,7 +6194,7 @@ JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[] = {
     {"pcdelta",         1,      0,      1},
     {"assignop",        0,      0,      0},
     {"cond",            1,      0,      1},
-    {"unused10",        0,      0,      0},
+    {"brace",           1,      0,      1},
     {"hidden",          0,      0,      0},
     {"pcbase",          1,      0,     -1},
     {"label",           1,      0,      0},
@@ -6088,7 +6204,7 @@ JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[] = {
     {"cont2label",      1,      0,      0},
     {"switch",          2,      0,      1},
     {"funcdef",         1,      0,      0},
-    {"catch",           1,     11,      1},
+    {"catch",           1,      0,      1},
     {"unused21",        0,      0,      0},
     {"newline",         0,      0,      0},
     {"setline",         1,      0,      0},

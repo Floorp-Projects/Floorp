@@ -1223,6 +1223,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
                     break;
 
+                  case SRC_BRACE:
+                    js_printf(jp, "\t{\n");
+                    jp->indent += 4;
+                    len = js_GetSrcNoteOffset(sn, 0);
+                    DECOMPILE_CODE(pc + oplen, len - oplen);
+                    jp->indent -= 4;
+                    js_printf(jp, "\t}\n");
+                    break;
+
                   default:;
                 }
               case JSOP_RETRVAL:
@@ -1492,10 +1501,25 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 }
 
                 sn = js_GetSrcNote(jp->script, pc);
-                if (sn && SN_TYPE(sn) == SRC_CATCH) {
+                switch (sn ? SN_TYPE(sn) : SRC_NULL) {
+#if JS_HAS_BLOCK_SCOPE
+                  case SRC_BRACE:
+                    js_printf(jp, "\t{\n");
+                    jp->indent += 4;
+                    len = js_GetSrcNoteOffset(sn, 0);
+                    ok = Decompile(ss, pc + oplen, len - oplen);
+                    if (!ok)
+                        goto enterblock_out;
+                    jp->indent -= 4;
+                    js_printf(jp, "\t}\n");
+                    break;
+#endif
+
+                  case SRC_CATCH:
                     jp->indent -= 4;
                     js_printf(jp, "\t} catch (");
 
+                    pc2 = pc;
                     pc += oplen;
                     LOCAL_ASSERT(*pc == JSOP_EXCEPTION);
                     pc += JSOP_EXCEPTION_LENGTH;
@@ -1513,6 +1537,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
                     len = js_GetSrcNoteOffset(sn, 0);
                     if (len) {
+                        len -= PTRDIFF(pc, pc2, jsbytecode);
+                        JS_ASSERT(len > 0);
                         js_printf(jp, " if ");
                         ok = Decompile(ss, pc, len);
                         if (!ok)
@@ -1526,6 +1552,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     js_printf(jp, ") {\n");
                     jp->indent += 4;
                     len = 0;
+                    break;
                 }
 
                 todo = -2;
