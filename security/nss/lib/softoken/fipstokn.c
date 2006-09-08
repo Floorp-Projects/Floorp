@@ -84,6 +84,8 @@ static void (*audit_close_func)(int fd);
 static int (*audit_log_user_message_func)(int audit_fd, int type,
     const char *message, const char *hostname, const char *addr,
     const char *tty, int result);
+static int (*audit_send_user_message_func)(int fd, int type,
+    const char *message);
 
 static pthread_once_t libaudit_once_control = PTHREAD_ONCE_INIT;
 
@@ -96,8 +98,16 @@ libaudit_init(void)
     }
     audit_open_func = dlsym(libaudit_handle, "audit_open");
     audit_close_func = dlsym(libaudit_handle, "audit_close");
+    /*
+     * audit_send_user_message is the older function.
+     * audit_log_user_message, if available, is preferred.
+     */
     audit_log_user_message_func = dlsym(libaudit_handle,
 					"audit_log_user_message");
+    if (!audit_log_user_message_func) {
+	audit_send_user_message_func = dlsym(libaudit_handle,
+					     "audit_send_user_message");
+    }
 }
 #endif /* LINUX */
 
@@ -353,8 +363,12 @@ sftk_LogAuditMessage(NSSAuditSeverity severity, const char *msg)
 	    PR_smprintf_free(message);
 	    return;
 	}
-	audit_log_user_message_func(audit_fd, AUDIT_USER, message,
-				    NULL, NULL, NULL, result);
+	if (audit_log_user_message_func) {
+	    audit_log_user_message_func(audit_fd, AUDIT_USER, message,
+					NULL, NULL, NULL, result);
+	} else {
+	    audit_send_user_message_func(audit_fd, AUDIT_USER, message);
+	}
 	audit_close_func(audit_fd);
 	PR_smprintf_free(message);
     }
