@@ -100,7 +100,6 @@ MakeXpiFile("deflenus");
 MakeXpiFile("langenus");
 MakeXpiFile("venkman");
 MakeXpiFile("inspector");
-MakeXpiFile("spellcheck");
 MakeXpiFile("reporter");
 
 # Make the config.ini file

@@ -55,14 +55,13 @@ C2=Component2
 C3=Component3
 C4=Component5
 C5=Component6
-C6=Component9
-C7=Component11
+C6=Component10
 
 [Setup Type1]
 ; *** LOCALIZE ME BABY ***
 Description Short=Complete
 ; *** LOCALIZE ME BABY ***
-Description Long=Navigator, Mail & News, Spellchecker, Chatzilla, Debugger, Inspector, and Reporter
+Description Long=Navigator, Mail & News, Chatzilla, Debugger, Inspector, and Reporter
 C0=Component0
 C1=Component1
 C2=Component2
@@ -74,7 +73,6 @@ C7=Component7
 C8=Component8
 C9=Component9
 C10=Component10
-C11=Component11
 
 [Setup Type2]
 ; *** LOCALIZE ME BABY ***
@@ -86,7 +84,7 @@ C1=Component1
 C2=Component3 
 C3=Component5
 C4=Component6
-C5=Component11
+C5=Component10
 
 [Setup Type3]
 ; *** LOCALIZE ME BABY ***
@@ -104,7 +102,6 @@ C7=Component7
 C8=Component8
 C9=Component9
 C10=Component10
-C11=Component11
 
 
 ;-------------------------------------------------------------------------
@@ -205,16 +202,6 @@ Attributes=SELECTED
 URL0=$URLPath$
 
 [Component9]
-Description Short=Spellchecker
-; *** LOCALIZE ME BABY ***
-Description Long=Spellchecker
-Archive=spellcheck.xpi
-$InstallSize$:spellcheck
-$InstallSizeArchive$:spellcheck.xpi
-Attributes=SELECTED
-URL0=$URLPath$
-
-[Component10]
 Description Short=Website Reporter
 ; *** LOCALIZE ME BABY ***
 Description Long=Website Reporter
@@ -224,7 +211,7 @@ $InstallSizeArchive$:reporter.xpi
 Attributes=SELECTED
 URL0=$URLPath$
 
-[Component11]
+[Component10]
 Description Short=Quality Feedback Agent
 ; *** LOCALIZE ME BABY ***
 Description Long=for reporting $AppDisplayName$ crash information
