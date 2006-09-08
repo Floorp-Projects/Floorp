@@ -43,11 +43,10 @@ function start_venkman()
     toOpenWindowByType("mozapp:venkman", "chrome://venkman/content/venkman.xul");
 }
 
-const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
-const nsIXULAppInfo = Components.interfaces.nsIXULAppInfo;
-
 function isThunderbird()
 {
+    const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
+    const nsIXULAppInfo = Components.interfaces.nsIXULAppInfo;
     var cls = Components.classes[XULAPPINFO_CONTRACTID];
     if (!cls)
         return false;
