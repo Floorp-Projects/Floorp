@@ -2831,6 +2831,19 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             }
         }
 
+        /*
+         * If we didn't have an explicit default (which could fall in between
+         * cases, preventing us from fusing this js_SetSrcNoteOffset with the
+         * call in the loop above), link the last case to the implicit default
+         * for the decompiler.
+         */
+        if (!hasDefault &&
+            caseNoteIndex >= 0 &&
+            !js_SetSrcNoteOffset(cx, cg, (uintN)caseNoteIndex, 0,
+                                 CG_OFFSET(cg) - off)) {
+            return JS_FALSE;
+        }
+
         /* Emit default even if no explicit default statement. */
         defaultOffset = EmitJump(cx, cg, JSOP_DEFAULT, 0);
         if (defaultOffset < 0)
