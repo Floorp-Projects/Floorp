@@ -62,8 +62,8 @@ public:
     TX_DECL_TXAOUTPUTXMLEVENTHANDLER
 
 private:
-    void createResultDocument(nsIDOMDocument* aSourceDocument,
-                              nsIDOMDocument* aResultDocument);
+    nsresult createResultDocument(nsIDOMDocument* aSourceDocument,
+                                  nsIDOMDocument* aResultDocument);
 
     nsCOMPtr<nsIDOMCharacterData> mTextNode;
     nsWeakPtr mObserver;

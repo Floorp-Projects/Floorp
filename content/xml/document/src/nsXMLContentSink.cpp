@@ -353,7 +353,7 @@ nsXMLContentSink::OnDocumentCreated(nsIDOMDocument* aResultDocument)
   nsCOMPtr<nsIContentViewer> contentViewer;
   mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
   if (contentViewer) {
-    contentViewer->SetDOMDocument(aResultDocument);
+    return contentViewer->SetDOMDocument(aResultDocument);
   }
   return NS_OK;
 }

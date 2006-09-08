@@ -204,9 +204,7 @@ nsresult
 txExecutionState::end(nsresult aResult)
 {
     popTemplateRule();
-    mOutputHandler->endDocument(aResult);
-    
-    return NS_OK;
+    return mOutputHandler->endDocument(aResult);
 }
 
 

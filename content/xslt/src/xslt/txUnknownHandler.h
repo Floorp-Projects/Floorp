@@ -50,10 +50,10 @@ public:
     txUnknownHandler(txExecutionState* aEs);
     virtual ~txUnknownHandler();
 
-    void attribute(const nsAString& aName, const PRInt32 aNsID,
-                   const nsAString& aValue);
-    void endDocument(nsresult aResult);
-    void startElement(const nsAString& aName, const PRInt32 aNsID);
+    nsresult attribute(const nsAString& aName, const PRInt32 aNsID,
+                       const nsAString& aValue);
+    nsresult endDocument(nsresult aResult);
+    nsresult startElement(const nsAString& aName, const PRInt32 aNsID);
 
 private:
     nsresult createHandlerAndFlush(txOutputMethod aMethod,
