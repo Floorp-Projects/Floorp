@@ -668,9 +668,9 @@
            toolbarname="Compose" 
            fullscreentoolbar="true" mode="full"
 #ifdef XP_MACOSX
-           defaultset="button-send,spacer,button-address,spacer,spellingButton,spacer,button-attach,button-security,spacer,button-save,spring,throbber-box"
+           defaultset="button-send,separator,button-address,spellingButton,button-attach,button-security,button-save,spring,throbber-box"
 #else
-           defaultset="button-send,spacer,button-address,spacer,spellingButton,spacer,button-attach,button-security,spacer,button-save"
+           defaultset="button-send,separator,button-address,spellingButton,button-attach,button-security,button-save"
 #endif
            customizable="true" context="toolbar-context-menu">
   </toolbar>
