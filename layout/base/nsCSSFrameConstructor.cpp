@@ -7774,9 +7774,8 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     newFrame = NS_NewSVGClipPathFrame(mPresShell, aContent, aStyleContext);
   }
   else if (aTag == nsSVGAtoms::textPath) {
-    nsISVGTextContentMetrics* metrics;
-    CallQueryInterface(aParentFrame, &metrics);
-    if (metrics) {
+    if (aParentFrame &&
+        aParentFrame->GetType() == nsLayoutAtoms::svgTextFrame) {
       newFrame = NS_NewSVGTextPathFrame(mPresShell, aContent, aParentFrame, aStyleContext);
     }
   }
