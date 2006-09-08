@@ -113,6 +113,9 @@ public:
 #endif // DEBUG
 
 protected:
+  nsSVGPatternFrame(nsStyleContext* aContext,
+                    nsIDOMSVGURIReference *aRef);
+
   virtual ~nsSVGPatternFrame();
 
   // Internal methods for handling referenced patterns
@@ -147,8 +150,8 @@ protected:
 
 private:
   // this is a *temporary* reference to the frame of the element currently
-  // referencing our pattern.  This must be termporary because different
-  // referencing frames will all reference this one fram
+  // referencing our pattern.  This must be temporary because different
+  // referencing frames will all reference this one frame
   nsSVGGeometryFrame                     *mSource;
   nsCOMPtr<nsIDOMSVGMatrix>               mCTM;
 
