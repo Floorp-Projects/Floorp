@@ -69,7 +69,7 @@
     </tr>
     <tr>
       <th align="right">Type:</th>
-      <td>Free Text</td>
+      <td>[% field_types.${field.type} FILTER html %]</td>
 
       <th align="right"><label for="obsolete">Is obsolete:</label></th>
       <td><input type="checkbox" id="obsolete" name="obsolete" value="1"
@@ -85,6 +85,15 @@
       <th>&nbsp;</th>
       <td>&nbsp;</td>
     </tr>
+    [% IF field.type == constants.FIELD_TYPE_SINGLE_SELECT %]
+      <tr>
+        <th>&nbsp;</th>
+        <td colspan="3">
+          <a href="editvalues.cgi?field=[% field.name FILTER url_quote %]">Edit
+            legal values for this field</a>.
+        </td>
+      </tr>
+    [% END %]
   </table>
   <br>
   <input type="hidden" name="action" value="update">

@@ -37,6 +37,10 @@
        heading => "Sortkey"
      },
      {
+       name => "type_name"
+       heading => "Type"
+     },
+     {
        name => "enter_bug"
        heading => "Editable on Bug Creation"
      },
@@ -50,6 +54,14 @@
      }
    ]
 %]
+
+[% USE Bugzilla %]
+[% custom_fields = Bugzilla.get_fields({ custom => 1 }) %]
+
+[%# We want to display the type name of fields, not their type ID. %]
+[% FOREACH cf_field = custom_fields %]
+  [% cf_field.type_name = field_types.${cf_field.type} %]
+[% END %]
 
 [% PROCESS admin/table.html.tmpl
      columns = columns

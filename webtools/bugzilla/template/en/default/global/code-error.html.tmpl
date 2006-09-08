@@ -170,6 +170,10 @@
      The custom sort order specified in your form submission contains an
      invalid column name <em>[% fragment FILTER html %]</em>.
 
+  [% ELSIF error == "invalid_customfield_type" %]
+    [% title = "Invalid Field Type" %]
+    The type <em>[% type FILTER html %]</em> is not a valid field type.
+
   [% ELSIF error == "invalid_dimensions" %]
     [% title = "Invalid Dimensions" %]
     The width or height specified is not a positive integer.

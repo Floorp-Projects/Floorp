@@ -211,8 +211,16 @@ foreach my $group (@$groups) {
     }
 }
 
-my @bug_fields = map {$_->name} Bugzilla->get_fields(
-    { custom => 1, obsolete => 0, enter_bug => 1});
+# Include custom fields editable on bug creation.
+my @custom_bug_fields = Bugzilla->get_fields(
+    { custom => 1, obsolete => 0, enter_bug => 1 });
+
+my @bug_fields = map { $_->name } @custom_bug_fields;
+
+# Custom tables must be locked (required when validating custom fields).
+my @custom_tables = grep { $_->type == FIELD_TYPE_SINGLE_SELECT } @custom_bug_fields;
+@custom_tables = map { $_->name . ' READ' } @custom_tables;
+
 push(@bug_fields, qw(
     product
     component
@@ -251,7 +259,7 @@ $dbh->bz_lock_tables('bugs WRITE', 'bug_group_map WRITE', 'longdescs WRITE',
                      'products READ', 'versions READ', 'milestones READ',
                      'components READ', 'profiles READ', 'bug_severity READ',
                      'op_sys READ', 'priority READ', 'rep_platform READ',
-                     'group_control_map READ');
+                     'group_control_map READ', @custom_tables);
 
 my $bug = Bugzilla::Bug->create(\%bug_params);
 

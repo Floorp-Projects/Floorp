@@ -314,6 +314,11 @@
     The field '[% field.name FILTER html %]' ([% field.description FILTER html %])
     already exists. Please choose another name.
 
+  [% ELSIF error == "customfield_invalid_name" %]
+    [% title = "Invalid Custom Field Name" %]
+    '[% name FILTER html %]' is not a valid name for a custom field.
+    A name may contain only letters, numbers, and the underscore character.
+
   [% ELSIF error == "customfield_nonexistent" %]
     [% title = "Unknown Custom Field" %]
     There is no custom field with the name '[% name FILTER html %]'.

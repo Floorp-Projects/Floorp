@@ -79,10 +79,11 @@
     <tr>
       <th align="right"><label for="type">Type:</label></th>
       <td>
-        [%# Only one field type is valid right now. But let's prepare the UI
-          # for future new types. %]
         <select id="type" name="type">
-          <option value="FIELD_TYPE_FREETEXT">Free Text</option>
+          [% FOREACH type = field_types.keys %]
+            [% NEXT IF type == constants.FIELD_TYPE_UNKNOWN %]
+            <option value="[% type FILTER html %]">[% field_types.$type FILTER html %]</option>
+          [% END %]
         </select>
       </td>
 

@@ -103,7 +103,9 @@ use constant DB_COLUMNS => (
 use constant SQL_DEFINITIONS => {
     # Using commas because these are constants and they shouldn't
     # be auto-quoted by the "=>" operator.
-    FIELD_TYPE_FREETEXT, { TYPE => 'varchar(255)' },
+    FIELD_TYPE_FREETEXT,      { TYPE => 'varchar(255)' },
+    FIELD_TYPE_SINGLE_SELECT, { TYPE => 'varchar(64)', NOTNULL => 1,
+                                DEFAULT => "'---'" },
 };
 
 # Field definitions for the fields that ship with Bugzilla.
@@ -266,6 +268,24 @@ enter_bug.cgi
 
 sub enter_bug { return $_[0]->{enter_bug} }
 
+=over
+
+=item C<legal_values>
+
+A reference to an array with valid active values for this field.
+
+=back
+
+=cut
+
+sub legal_values {
+    my $self = shift;
+
+    if (!defined $self->{'legal_values'}) {
+        $self->{'legal_values'} = get_legal_field_values($self->name);
+    }
+    return $self->{'legal_values'};
+}
 
 =pod
 
@@ -305,9 +325,7 @@ sub create_or_update {
     my $name           = $params->{name};
     my $custom         = $params->{custom} ? 1 : 0;
     my $in_new_bugmail = $params->{in_new_bugmail} ? 1 : 0;
-    # Some day we'll allow invocants to specify the field type.
-    # We don't care about $params->{type} yet.
-    my $type = $custom ? FIELD_TYPE_FREETEXT : FIELD_TYPE_UNKNOWN;
+    my $type           = $params->{type} || FIELD_TYPE_UNKNOWN;
 
     my $field = new Bugzilla::Field({name => $name});
     if ($field) {
@@ -353,6 +371,15 @@ sub create_or_update {
         $dbh->bz_add_column('bugs', $name, SQL_DEFINITIONS->{$type});
     }
 
+    if ($custom && !$dbh->bz_table_info($name)
+        && $type eq FIELD_TYPE_SINGLE_SELECT)
+    {
+        # Create the table that holds the legal values for this field.
+        $dbh->bz_add_field_table($name);
+        # And insert a default value of "---" into it.
+        $dbh->do("INSERT INTO $name (value) VALUES ('---')");
+    }
+
     return new Bugzilla::Field({name => $name});
 }
 
@@ -361,19 +388,45 @@ sub create_or_update {
 
 =over
 
-=item C<match($criteria)>
+=item C<match>
 
-Description: returns a list of fields that match the specified criteria.
+=over
 
-Params:    C<$criteria> - hash reference - the criteria to match against.
-           Hash keys represent field properties; hash values represent
-           their values.  All criteria are optional.  Valid criteria are
-           "custom" and "obsolete", and both take boolean values.
+=item B<Description>
 
-           Note: Bugzilla->get_fields() and Bugzilla->custom_field_names
-           wrap this method for most callers.
+Returns a list of fields that match the specified criteria.
 
-Returns:   A reference to an array of C<Bugzilla::Field> objects.
+You should be using L<Bugzilla/get_fields> and
+L<Bugzilla/get_custom_field_names> instead of this function.
+
+=item B<Params>
+
+Takes named parameters in a hashref:
+
+=over
+
+=item C<name> - The name of the field.
+
+=item C<custom> - Boolean. True to only return custom fields. False
+to only return non-custom fields. 
+
+=item C<obsolete> - Boolean. True to only return obsolete fields.
+False to not return obsolete fields.
+
+=item C<type> - The type of the field. A C<FIELD_TYPE> constant from
+L<Bugzilla::Constants>.
+
+=item C<enter_bug> - Boolean. True to only return fields that appear
+on F<enter_bug.cgi>. False to only return fields that I<don't> appear
+on F<enter_bug.cgi>.
+
+=back
+
+=item B<Returns>
+
+A reference to an array of C<Bugzilla::Field> objects.
+
+=back
 
 =back
 
@@ -395,8 +448,11 @@ sub match {
     if (defined $criteria->{enter_bug}) {
         push(@terms, "enter_bug=" . ($criteria->{enter_bug} ? '1' : '0'));
     }
+    if (defined $criteria->{type}) {
+        push(@terms, "type = " . $criteria->{type});
+    }
     my $where = (scalar(@terms) > 0) ? "WHERE " . join(" AND ", @terms) : "";
-  
+
     my $ids = Bugzilla->dbh->selectcol_arrayref(
         "SELECT id FROM fielddefs $where", {Slice => {}});
 

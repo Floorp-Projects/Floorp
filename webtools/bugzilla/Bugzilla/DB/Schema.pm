@@ -1090,6 +1090,23 @@ use constant ABSTRACT_SCHEMA => {
     },
 
 };
+
+use constant FIELD_TABLE_SCHEMA => {
+    FIELDS => [
+        id       => {TYPE => 'SMALLSERIAL', NOTNULL => 1,
+                     PRIMARYKEY => 1},
+        value    => {TYPE => 'varchar(64)', NOTNULL => 1},
+        sortkey  => {TYPE => 'INT2', NOTNULL => 1, DEFAULT => 0},
+        isactive => {TYPE => 'BOOLEAN', NOTNULL => 1,
+                     DEFAULT => 'TRUE'},
+    ],
+    # Note that bz_add_field_table should prepend the table name
+    # to these index names.
+    INDEXES => [
+        value_idx   => {FIELDS => ['value'], TYPE => 'UNIQUE'},
+        sortkey_idx => ['sortkey', 'value'],
+    ],
+};
 #--------------------------------------------------------------------------
 
 =head1 METHODS

@@ -80,6 +80,10 @@
      IF !field_descs.${bz_field.name}.defined %]
 [% END %]
 
+[% field_types = { ${constants.FIELD_TYPE_UNKNOWN}       => "Unknown Type",
+                   ${constants.FIELD_TYPE_FREETEXT}      => "Free Text",
+                   ${constants.FIELD_TYPE_SINGLE_SELECT} => "Drop Down" } %]
+
 [% status_descs = { "UNCONFIRMED" => "UNCONFIRMED",
                     "NEW"         => "NEW",
                     "ASSIGNED"    => "ASSIGNED",

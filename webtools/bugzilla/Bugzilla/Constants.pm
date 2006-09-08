@@ -106,6 +106,7 @@ use File::Basename;
 
     FIELD_TYPE_UNKNOWN
     FIELD_TYPE_FREETEXT
+    FIELD_TYPE_SINGLE_SELECT
 
     BUG_STATE_OPEN
 
@@ -296,6 +297,7 @@ use constant SENDMAIL_EXE => '/usr/lib/sendmail.exe';
 
 use constant FIELD_TYPE_UNKNOWN   => 0;
 use constant FIELD_TYPE_FREETEXT  => 1;
+use constant FIELD_TYPE_SINGLE_SELECT => 2;
 
 # The maximum number of days a token will remain valid.
 use constant MAX_TOKEN_AGE => 3;

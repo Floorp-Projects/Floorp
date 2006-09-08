@@ -42,6 +42,14 @@
   [% SWITCH field.type %]
     [% CASE constants.FIELD_TYPE_FREETEXT %]
         <input name="[% field.name FILTER html %]" value="[% value FILTER html %]" size="60">
+    [% CASE constants.FIELD_TYPE_SINGLE_SELECT %]
+        <select id="[% field.name FILTER html %]" name="[% field.name FILTER html %]">
+          [% FOREACH legal_value = field.legal_values %]
+            <option value="[% legal_value FILTER html %]"
+                [%- " selected=\"selected\"" IF value == legal_value %]>
+                [%- legal_value FILTER html %]</option>
+          [% END %]
+        </select>
   [% END %]
 [% ELSE %]
   [% value FILTER html %]

@@ -41,26 +41,25 @@ print $cgi->header();
 
 # List all existing custom fields if no action is given.
 if (!$action) {
-    $vars->{'custom_fields'} = [Bugzilla->get_fields({'custom' => 1})];
-
     $template->process('admin/custom_fields/list.html.tmpl', $vars)
         || ThrowTemplateError($template->error());
 }
 # Interface to add a new custom field.
 elsif ($action eq 'add') {
-    $template->process('admin/custom_fields/create.html.tmpl')
+    $template->process('admin/custom_fields/create.html.tmpl', $vars)
         || ThrowTemplateError($template->error());
 }
 elsif ($action eq 'new') {
     my $name = clean_text($cgi->param('name') || '');
     my $desc = clean_text($cgi->param('desc') || '');
-    # For now, there is only one type available for custom fields.
-    # In the future, we will have to look at $cgi->param('type').
-    my $type = FIELD_TYPE_FREETEXT;
+    my $type = trim($cgi->param('type') || FIELD_TYPE_FREETEXT);
     my $sortkey = $cgi->param('sortkey') || 0;
 
     # Validate these fields.
     $name || ThrowUserError('customfield_missing_name');
+    # Don't want to allow a name that might mess up SQL.
+    $name =~ /^\w+$/ || ThrowUserError('customfield_invalid_name',
+                                       { name => $name });
     # Prepend cf_ to the custom field name to distinguish it from standard fields.
     if ($name !~ /^cf_/) {
         $name = 'cf_' . $name;
@@ -69,6 +68,11 @@ elsif ($action eq 'new') {
     ThrowUserError('customfield_already_exists', {'field' => $field }) if $field;
 
     $desc || ThrowUserError('customfield_missing_description', {'name' => $name});
+
+    # We hardcode valid values for $type. This doesn't matter.
+    my $typ = $type;
+    (detaint_natural($type) && $type < 3)
+      || ThrowCodeError('invalid_customfield_type', {'type' => $typ});
 
     my $skey = $sortkey;
     detaint_natural($sortkey)
@@ -90,7 +94,6 @@ elsif ($action eq 'new') {
 
     Bugzilla::Field::create_or_update($vars);
 
-    $vars->{'custom_fields'} = [Bugzilla->get_fields({'custom' => 1})];
     $vars->{'message'} = 'custom_field_created';
 
     $template->process('admin/custom_fields/list.html.tmpl', $vars)
@@ -142,7 +145,6 @@ elsif ($action eq 'update') {
 
     Bugzilla::Field::create_or_update($vars);
 
-    $vars->{'custom_fields'} = [Bugzilla->get_fields({'custom' => 1})];
     $vars->{'message'} = 'custom_field_updated';
 
     $template->process('admin/custom_fields/list.html.tmpl', $vars)

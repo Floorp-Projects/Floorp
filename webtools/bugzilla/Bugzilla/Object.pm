@@ -17,6 +17,7 @@
 # Everything Solved. All Rights Reserved.
 #
 # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 use strict;
 
@@ -136,7 +137,7 @@ sub set {
     my $validators = $self->VALIDATORS;
     if (exists $validators->{$field}) {
         my $validator = $validators->{$field};
-        $value = $self->$validator($value);
+        $value = $self->$validator($value, $field);
     }
 
     $self->{$field} = $value;
@@ -196,7 +197,7 @@ sub run_create_validators {
         my $value;
         if (exists $validators->{$field}) {
             my $validator = $validators->{$field};
-            $value = $class->$validator($params->{$field});
+            $value = $class->$validator($params->{$field}, $field);
         }
         else {
             $value = $params->{$field};
@@ -327,6 +328,9 @@ a reference to the current object (what we normally call C<$self>).
 
 The second argument will be the value passed to L</create> or 
 L</set>for that field. 
+
+The third argument will be the name of the field being validated.
+This may be required by validators which validate several distinct fields.
 
 These functions should call L<Bugzilla::Error/ThrowUserError> if they fail.
 

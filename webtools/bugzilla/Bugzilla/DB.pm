@@ -577,8 +577,23 @@ sub bz_add_table {
 sub _bz_add_table_raw {
     my ($self, $name) = @_;
     my @statements = $self->_bz_schema->get_table_ddl($name);
-    print "Adding new table $name ...\n";
+    print "Adding new table $name ...\n" unless i_am_cgi();
     $self->do($_) foreach (@statements);
+}
+
+sub bz_add_field_table {
+    my ($self, $name) = @_;
+    my $table_schema = $self->_bz_schema->FIELD_TABLE_SCHEMA;
+    my $indexes      = $table_schema->{INDEXES};
+    # $indexes is an arrayref, not a hash. In order to fix the keys,
+    # we have to fix every other item.
+    for (my $i = 0; $i < scalar @$indexes; $i++) {
+        next if ($i % 2 && $i != 0); # We skip 1, 3, 5, 7, etc.
+        $indexes->[$i] = $name . "_" . $indexes->[$i];
+    }
+    # We add this to the abstract schema so that bz_add_table can find it.
+    $self->_bz_schema->add_table($name, $table_schema);
+    $self->bz_add_table($name);
 }
 
 sub bz_drop_column {

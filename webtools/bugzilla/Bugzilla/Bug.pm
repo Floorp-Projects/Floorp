@@ -110,20 +110,30 @@ use constant REQUIRED_CREATE_FIELDS => qw(
 
 # There are also other, more complex validators that are called
 # from run_create_validators.
-use constant VALIDATORS => {
-    alias          => \&_check_alias,
-    bug_file_loc   => \&_check_bug_file_loc,
-    bug_severity   => \&_check_bug_severity,
-    cc             => \&_check_cc,
-    deadline       => \&_check_deadline,
-    estimated_time => \&_check_estimated_time,
-    op_sys         => \&_check_op_sys,
-    priority       => \&_check_priority,
-    product        => \&_check_product,
-    remaining_time => \&_check_remaining_time,
-    rep_platform   => \&_check_rep_platform,
-    short_desc     => \&_check_short_desc,
-    status_whiteboard => \&_check_status_whiteboard,
+sub VALIDATORS {
+    my $validators = {
+        alias          => \&_check_alias,
+        bug_file_loc   => \&_check_bug_file_loc,
+        bug_severity   => \&_check_bug_severity,
+        cc             => \&_check_cc,
+        deadline       => \&_check_deadline,
+        estimated_time => \&_check_estimated_time,
+        op_sys         => \&_check_op_sys,
+        priority       => \&_check_priority,
+        product        => \&_check_product,
+        remaining_time => \&_check_remaining_time,
+        rep_platform   => \&_check_rep_platform,
+        short_desc     => \&_check_short_desc,
+        status_whiteboard => \&_check_status_whiteboard,
+    };
+
+    my @select_fields = Bugzilla->get_fields({custom => 1, obsolete => 0,
+                                              type => FIELD_TYPE_SINGLE_SELECT});
+
+    foreach my $field (@select_fields) {
+        $validators->{$field->name} = \&_check_select_field;
+    }
+    return $validators;
 };
 
 # Used in LogActivityEntry(). Gives the max length of lines in the
@@ -279,7 +289,7 @@ sub run_create_validators {
     $params->{remaining_time} = $params->{estimated_time};
 
     $class->_check_strict_isolation($product, $params->{cc},
-    $params->{assigned_to}, $params->{qa_contact});
+                                    $params->{assigned_to}, $params->{qa_contact});
 
     return $params;
 }
@@ -657,6 +667,12 @@ sub _check_version {
     return $version;
 }
 
+sub _check_select_field {
+    my ($invocant, $value, $field) = @_;
+    $value = trim($value);
+    check_field($field, $value);
+    return $value;
+}
 
 #####################################################################
 # Class Accessors

@@ -55,7 +55,7 @@ use constant SUMMARY_RELEVANCE_FACTOR => 7;
 # We need to have a list of these fields and what they map to.
 # Each field points to an array that contains the fields mapped 
 # to, in order.
-our %specialorder = (
+use constant SPECIAL_ORDER => {
     'bugs.target_milestone' => [ 'ms_order.sortkey','ms_order.value' ],
     'bugs.bug_status' => [ 'bug_status.sortkey','bug_status.value' ],
     'bugs.rep_platform' => [ 'rep_platform.sortkey','rep_platform.value' ],
@@ -63,12 +63,12 @@ our %specialorder = (
     'bugs.op_sys' => [ 'op_sys.sortkey','op_sys.value' ],
     'bugs.resolution' => [ 'resolution.sortkey', 'resolution.value' ],
     'bugs.bug_severity' => [ 'bug_severity.sortkey','bug_severity.value' ]
-);
+};
 
 # When we add certain fields to the ORDER BY, we need to then add a
 # table join to the FROM statement. This hash maps input fields to 
 # the join statements that need to be added.
-our %specialorderjoin = (
+use constant SPECIAL_ORDER_JOIN => {
     'bugs.target_milestone' => 'LEFT JOIN milestones AS ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product_id = bugs.product_id',
     'bugs.bug_status' => 'LEFT JOIN bug_status ON bug_status.value = bugs.bug_status',
     'bugs.rep_platform' => 'LEFT JOIN rep_platform ON rep_platform.value = bugs.rep_platform',
@@ -76,7 +76,7 @@ our %specialorderjoin = (
     'bugs.op_sys' => 'LEFT JOIN op_sys ON op_sys.value = bugs.op_sys',
     'bugs.resolution' => 'LEFT JOIN resolution ON resolution.value = bugs.resolution',
     'bugs.bug_severity' => 'LEFT JOIN bug_severity ON bug_severity.value = bugs.bug_severity'
-);
+};
 
 # Create a new Search
 # Note that the param argument may be modified by Bugzilla::Search
@@ -116,6 +116,18 @@ sub init {
     my @specialchart;
     my @andlist;
     my %chartfields;
+
+    my %special_order      = %{SPECIAL_ORDER()};
+    my %special_order_join = %{SPECIAL_ORDER_JOIN()};
+
+    my @select_fields = Bugzilla->get_fields({ type => FIELD_TYPE_SINGLE_SELECT,
+                                               obsolete => 0 });
+    foreach my $field (@select_fields) {
+        my $name = $field->name;
+        $special_order{"bugs.$name"} = [ "$name.sortkey", "$name.value" ],
+        $special_order_join{"bugs.$name"} =
+            "LEFT JOIN $name ON $name.value = bugs.$name";
+    }
 
     my $dbh = Bugzilla->dbh;
 
@@ -212,6 +224,9 @@ sub init {
                         "bug_status", "resolution", "priority", "bug_severity",
                         "assigned_to", "reporter", "component", "classification",
                         "target_milestone", "bug_group");
+
+    # Include custom select fields.
+    push(@legal_fields, map { $_->name } @select_fields);
 
     foreach my $field ($params->param()) {
         if (lsearch(\@legal_fields, $field) != -1) {
@@ -1368,7 +1383,7 @@ sub init {
         if ($orderitem =~ /\s+AS\s+(.+)$/i) {
             $orderitem = $1;
         }
-        BuildOrderBy($orderitem, \@orderby);
+        BuildOrderBy(\%special_order, $orderitem, \@orderby);
     }
     # Now JOIN the correct tables in the FROM clause.
     # This is done separately from the above because it's
@@ -1376,8 +1391,8 @@ sub init {
     foreach my $orderitem (@inputorder) {
         # Grab the part without ASC or DESC.
         my @splitfield = split(/\s+/, $orderitem);
-        if ($specialorderjoin{$splitfield[0]}) {
-            push(@supptables, $specialorderjoin{$splitfield[0]});
+        if ($special_order_join{$splitfield[0]}) {
+            push(@supptables, $special_order_join{$splitfield[0]});
         }
     }
 
@@ -1677,7 +1692,7 @@ sub IsValidQueryType
 # BuildOrderBy recursively, to let it know that we're "reversing" the 
 # order. That is, that we wanted "A DESC", not "A".
 sub BuildOrderBy {
-    my ($orderitem, $stringlist, $reverseorder) = (@_);
+    my ($special_order, $orderitem, $stringlist, $reverseorder) = (@_);
 
     my @twopart = split(/\s+/, $orderitem);
     my $orderfield = $twopart[0];
@@ -1695,11 +1710,12 @@ sub BuildOrderBy {
     }
 
     # Handle fields that have non-standard sort orders, from $specialorder.
-    if ($specialorder{$orderfield}) {
-        foreach my $subitem (@{$specialorder{$orderfield}}) {
+    if ($special_order->{$orderfield}) {
+        foreach my $subitem (@{$special_order->{$orderfield}}) {
             # DESC on a field with non-standard sort order means
             # "reverse the normal order for each field that we map to."
-            BuildOrderBy($subitem, $stringlist, $orderdirection =~ m/desc/i);
+            BuildOrderBy($special_order, $subitem, $stringlist,
+                         $orderdirection =~ m/desc/i);
         }
         return;
     }

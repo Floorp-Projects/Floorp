@@ -35,6 +35,12 @@ use Bugzilla::Config qw(:admin);
 our @valid_fields = ('op_sys', 'rep_platform', 'priority', 'bug_severity',
                      'resolution');
 
+# Add custom select fields.
+my @custom_fields = Bugzilla->get_fields({custom => 1,
+                                          type => FIELD_TYPE_SINGLE_SELECT});
+
+push(@valid_fields, map { $_->name } @custom_fields);
+
 ######################################################################
 # Subroutines
 ######################################################################
@@ -128,6 +134,7 @@ $defaults{'bug_severity'} = 'defaultseverity';
 # In this case, only the sortkey can be altered.
 my %static;
 $static{'resolution'} = ['', 'FIXED', 'MOVED', 'DUPLICATE'];
+$static{$_->name} = ['---'] foreach (@custom_fields);
 
 #
 # field = '' -> Show nice list of fields

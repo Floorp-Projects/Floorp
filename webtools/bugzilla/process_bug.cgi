@@ -775,14 +775,16 @@ foreach my $field ("rep_platform", "priority", "bug_severity",
 }
 
 # Add custom fields data to the query that will update the database.
-foreach my $field (Bugzilla->custom_field_names) {
-    if (defined $cgi->param($field)
+foreach my $field (Bugzilla->get_fields({custom => 1, obsolete => 0})) {
+    my $fname = $field->name;
+    if (defined $cgi->param($fname)
         && (!$cgi->param('dontchange')
-            || $cgi->param($field) ne $cgi->param('dontchange')))
+            || $cgi->param($fname) ne $cgi->param('dontchange')))
     {
         DoComma();
-        $::query .= "$field = ?";
-        my $value = $cgi->param($field);
+        $::query .= "$fname = ?";
+        my $value = $cgi->param($fname);
+        check_field($fname, $value) if ($field->type == FIELD_TYPE_SINGLE_SELECT);
         trick_taint($value);
         push(@values, $value);
     }
