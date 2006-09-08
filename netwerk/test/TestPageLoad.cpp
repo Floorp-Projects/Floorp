@@ -45,7 +45,6 @@
 #include "prprf.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-#include "nsTimer.h"
 #include "prlong.h"
 #include "plstr.h"
 #include "nsSupportsArray.h"
