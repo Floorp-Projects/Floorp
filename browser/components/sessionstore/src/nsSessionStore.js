@@ -880,16 +880,15 @@ SessionStoreService.prototype = {
    * @param aPanel
    *        TabPanel reference
    * @param aTextarea
-   *        HTML content element (without an XPCNativeWrapper applied)
+   *        HTML content element
    * @returns bool
    */
   _saveTextData: function sss_saveTextData(aPanel, aTextarea) {
-    var wrappedTextarea = XPCNativeWrapper(aTextarea);
-    var id = wrappedTextarea.id ? "#" + wrappedTextarea.id :
-                                  wrappedTextarea.name;
+    var id = aTextarea.id ? "#" + aTextarea.id :
+                                  aTextarea.name;
     if (!id
-      || !(wrappedTextarea instanceof Ci.nsIDOMHTMLTextAreaElement 
-      || wrappedTextarea instanceof Ci.nsIDOMHTMLInputElement)) {
+      || !(aTextarea instanceof Ci.nsIDOMHTMLTextAreaElement 
+      || aTextarea instanceof Ci.nsIDOMHTMLInputElement)) {
       return false; // nothing to save
     }
     
@@ -904,7 +903,7 @@ SessionStoreService.prototype = {
     }
     
     // determine the frame we're in and encode it into the textarea's ID
-    var content = wrappedTextarea.ownerDocument.defaultView;
+    var content = aTextarea.ownerDocument.defaultView;
     while (content != content.top) {
       var frames = content.parent.frames;
       for (var i = 0; i < frames.length && frames[i] != content; i++);
@@ -913,7 +912,7 @@ SessionStoreService.prototype = {
     }
     
     // mark this element for saving
-    aPanel.__SS_text[aTextarea] = { id: id, element: wrappedTextarea };
+    aPanel.__SS_text[aTextarea] = { id: id, element: aTextarea };
     
     return true;
   },
@@ -967,7 +966,7 @@ SessionStoreService.prototype = {
         }
         tabData.text = text.join(" ");
         
-        updateRecursively(XPCNativeWrapper(aBrowser.contentWindow), tabData.entries[tabData.index - 1]);
+        updateRecursively(aBrowser.contentWindow, tabData.entries[tabData.index - 1]);
       }
       catch (ex) { debug(ex); } // get as much data as possible, ignore failures (might succeed the next time)
     }, this);
@@ -1458,11 +1457,9 @@ SessionStoreService.prototype = {
       }
     }
     
-    var content = XPCNativeWrapper(aEvent.originalTarget).defaultView;
-    if (this.currentURI.spec == "about:config") {
-      //XXXzeniko why ever this doesn't work with an XPCNativeWrapper...
+    var content = aEvent.originalTarget.defaultView;
+    if (this.currentURI.spec == "about:config")
       content = aEvent.originalTarget.defaultView;
-    }
     restoreTextDataAndScrolling(content, this.__SS_restore_data, "");
     
     // notify the tabbrowser that this document has been completely restored
