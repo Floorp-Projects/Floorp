@@ -312,7 +312,7 @@ class SearchTest(Base):
       # Verify that there are no errors in the engine parsing,
       # and that there default engine is the first one.
       if (not val['orders'].has_key(val['default'])) or val['orders'][val['default']] != 1:
-        l.error('Default engine is not first in order')
+        l.error('Default engine is not first in order in locale ' + loc)
         if not failureResult.has_key(loc):
           failureResult[loc] = 2
         else:
