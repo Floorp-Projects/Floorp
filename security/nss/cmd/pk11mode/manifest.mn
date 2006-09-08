@@ -39,17 +39,10 @@ CORE_DEPTH = ../../..
 
 MODULE = nss
 
-EXPORTS = 
+EXPORTS =
 
-CSRCS = pk11mode.c		\
-		$(NULL)
+CSRCS = pk11mode.c
 
-CPPSRCS = 
-
-PROGRAM = pk11mode 
+PROGRAM = pk11mode
 
 REQUIRES =
-
-DEFINES = -DNSPR20
-
-EXTRA_LIBS =
