@@ -390,7 +390,7 @@ ssl_stress()
       elif [ "$ectype" != "#" ]; then
           cparam=`echo $cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
 
-# This tests needs the mixed cert 
+# These tests need the mixed cert 
 # Stress TLS ECDH-RSA AES 128 CBC with SHA (no reuse)
 # Stress TLS ECDH-RSA AES 128 CBC with SHA (no reuse, client auth)
           p=`echo "$sparam" | sed -e "s/\(.*\)\(-c_:C0..\)\(.*\)/\2/"`;
