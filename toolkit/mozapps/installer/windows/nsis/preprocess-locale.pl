@@ -59,14 +59,6 @@ open(locales, "<$inFile");
 $lnum = 1;
 while( $line = <locales> ) {
   $line =~ s/[\r\n]*//g;    # remove \r and \n
-  if ($line =~ m|^!define $AB_CD\_font .*|) {
-    $fontName = $line;
-    $fontName =~ s/^!define $AB_CD\_font[^"]*"([^"]*)".*$/$1/g;
-  }
-  if ($line =~ m|^!define $AB_CD\_size .*|) {
-    $fontSize = $line;
-    $fontSize =~ s/^!define $AB_CD\_size[^"]*"([^"]*)".*$/$1/g;
-  }
   if ($line =~ m|^!define $AB_CD\_rtl|) {
     $RTL = "RTL";
   }
@@ -74,7 +66,9 @@ while( $line = <locales> ) {
 }
 close locales;
 
-if ($codepage != "CP1252") {
+# In NSIS codepage CP1252 is specified with a '-'. For all other locales
+# specify the number for the locales codepage.
+if ($langCP ne "CP1252") {
   $nsisCP = $langCP;
   $nsisCP =~ s/^CP(.*)$/$1/g;
 }
