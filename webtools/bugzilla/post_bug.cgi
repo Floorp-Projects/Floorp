@@ -146,19 +146,7 @@ $comment = Bugzilla::Bug->_check_comment($cgi->param('comment'));
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-my $cc_ids = Bugzilla::Bug->_check_cc([$cgi->param('cc')]);
 my @keyword_ids = @{Bugzilla::Bug->_check_keywords($cgi->param('keywords'))};
-
-# XXX These checks are only here until strict_isolation can move fully
-# into Bugzilla::Bug.
-my $component = Bugzilla::Bug->_check_component($product, 
-    $cgi->param('component'));
-my $assigned_to_id = Bugzilla::Bug->_check_assigned_to($component,
-    $cgi->param('assigned_to'));
-my $qa_contact_id = Bugzilla::Bug->_check_qa_contact($component,
-    $cgi->param('qa_contact'));
-Bugzilla::Bug->_check_strict_isolation($product, $cc_ids, $assigned_to_id, 
-    $qa_contact_id);
 
 my ($depends_on_ids, $blocks_ids) = Bugzilla::Bug->_check_dependencies(
     scalar $cgi->param('dependson'), scalar $cgi->param('blocked'));
@@ -252,6 +240,7 @@ foreach my $field (@bug_fields) {
     $bug_params{$field} = $cgi->param($field);
 }
 $bug_params{'creation_ts'} = $timestamp;
+$bug_params{'cc'}          = [$cgi->param('cc')];
 
 # Add the bug report to the DB.
 $dbh->bz_lock_tables('bugs WRITE', 'bug_group_map WRITE', 'longdescs WRITE',
@@ -261,7 +250,8 @@ $dbh->bz_lock_tables('bugs WRITE', 'bug_group_map WRITE', 'longdescs WRITE',
                      'keyworddefs READ', 'fielddefs READ',
                      'products READ', 'versions READ', 'milestones READ',
                      'components READ', 'profiles READ', 'bug_severity READ',
-                     'op_sys READ', 'priority READ', 'rep_platform READ');
+                     'op_sys READ', 'priority READ', 'rep_platform READ',
+                     'group_control_map READ');
 
 my $bug = Bugzilla::Bug->create(\%bug_params);
 
@@ -287,12 +277,6 @@ trick_taint($comment);
 $dbh->do(q{INSERT INTO longdescs (bug_id, who, bug_when, thetext,isprivate)
            VALUES (?, ?, ?, ?, ?)}, undef, ($id, $user->id, $timestamp,
                                             $comment, $privacy));
-
-# Insert the cclist into the database
-my $sth_cclist = $dbh->prepare(q{INSERT INTO cc (bug_id, who) VALUES (?,?)});
-foreach my $ccid (@$cc_ids) {
-    $sth_cclist->execute($id, $ccid);
-}
 
 my @all_deps;
 my $sth_addkeyword = $dbh->prepare(q{

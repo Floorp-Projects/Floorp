@@ -169,22 +169,19 @@ sub create {
     my ($class, $params) = @_;
     my $dbh = Bugzilla->dbh;
 
+    $class->check_required_create_fields($params);
+    my $field_values = $class->run_create_validators($params);
+    return $class->insert_create_data($field_values);
+}
+
+sub check_required_create_fields {
+    my ($class, $params) = @_;
+
     foreach my $field ($class->REQUIRED_CREATE_FIELDS) {
-        ThrowCodeError('param_required', 
+        ThrowCodeError('param_required',
             { function => "${class}->create", param => $field })
             if !exists $params->{$field};
     }
-
-    my ($field_names, $values) = $class->run_create_validators($params);
-
-    my $qmarks = '?,' x @$values;
-    chop($qmarks);
-    my $table = $class->DB_TABLE;
-    $dbh->do("INSERT INTO $table (" . join(', ', @$field_names) 
-             . ") VALUES ($qmarks)", undef, @$values);
-    my $id = $dbh->bz_last_key($table, $class->ID_FIELD);
-
-    return $class->new($id);
 }
 
 sub run_create_validators {
@@ -192,7 +189,7 @@ sub run_create_validators {
 
     my $validators = $class->VALIDATORS;
 
-    my (@field_names, @values);
+    my %field_values;
     # We do the sort just to make sure that validation always
     # happens in a consistent order.
     foreach my $field (sort keys %$params) {
@@ -206,12 +203,30 @@ sub run_create_validators {
         }
         # We want people to be able to explicitly set fields to NULL,
         # and that means they can be set to undef.
-        trick_taint($value) if defined $value;
+        trick_taint($value) if defined $value && !ref($value);
+        $field_values{$field} = $value;
+    }
+
+    return \%field_values;
+}
+
+sub insert_create_data {
+    my ($class, $field_values) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    my (@field_names, @values);
+    while (my ($field, $value) = each %$field_values) {
         push(@field_names, $field);
         push(@values, $value);
     }
 
-    return (\@field_names, \@values);
+    my $qmarks = '?,' x @field_names;
+    chop($qmarks);
+    my $table = $class->DB_TABLE;
+    $dbh->do("INSERT INTO $table (" . join(', ', @field_names)
+             . ") VALUES ($qmarks)", undef, @values);
+    my $id = $dbh->bz_last_key($table, $class->ID_FIELD);
+    return $class->new($id);
 }
 
 sub get_all {
@@ -382,7 +397,35 @@ Notes:       In order for this function to work in your subclass,
              type in the database. Your subclass also must
              define L</REQUIRED_CREATE_FIELDS> and L</VALIDATORS>.
 
-=item C<run_create_validators($params)>
+             Subclass Implementors: This function basically just
+             calls L</check_required_create_fields>, then
+             L</run_create_validators>, and then finally
+             L</insert_create_data>. So if you have a complex system that
+             you need to implement, you can do it by calling these
+             three functions instead of C<SUPER::create>.
+
+=item C<check_required_create_fields>
+
+=over
+
+=item B<Description>
+
+Part of L</create>. Throws an error if any of the L</REQUIRED_CREATE_FIELDS>
+have not been specified in C<$params>
+
+=item B<Params>
+
+=over
+
+=item C<$params> - The same as C<$params> from L</create>.
+
+=back
+
+=item B<Returns> (nothing)
+
+=back
+
+=item C<run_create_validators>
 
 Description: Runs the validation of input parameters for L</create>.
              This subroutine exists so that it can be overridden
@@ -392,9 +435,16 @@ Description: Runs the validation of input parameters for L</create>.
 
 Params:      The same as L</create>.
 
-Returns:     Two arrayrefs. The first is an array of database field names.
-             The second is an untainted array of values that should go 
-             into those fields (in the same order).
+Returns:     A hash, in a similar format as C<$params>, except that
+             these are the values to be inserted into the database,
+             not the values that were input to L</create>.
+
+=item C<insert_create_data>
+
+Part of L</create>.
+
+Takes the return value from L</run_create_validators> and inserts the
+data into the database. Returns a newly created object. 
 
 =item C<update>
 
