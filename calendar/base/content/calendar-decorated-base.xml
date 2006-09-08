@@ -150,11 +150,23 @@
                 ]]></getter>
             </property>
 
-            <property name="selectedItem">
-                <getter><![CDATA[
-                    return document.getAnonymousElementByAttribute(this, "anonid", "view-element").selectedItem;
-                ]]></getter>
-            </property>
+            <method name="getSelectedItems">
+                <parameter name="aCount"/>
+                <body><![CDATA[
+                    var selectedItems = document.getAnonymousElementByAttribute(this, "anonid", "view-element").getSelectedItems({});
+                    aCount.value = selectedItems.length;
+                    return selectedItems;
+                ]]></body>
+            </method>
+            <method name="setSelectedItems">
+                <parameter name="aCount"/>
+                <parameter name="aItems"/>
+                <parameter name="aSuppressEvent"/>
+                <body><![CDATA[
+                    var viewElement = document.getAnonymousElementByAttribute(this, "anonid", "view-element");
+                    viewElement.setSelectedItems(aCount, aItems, aSuppressEvent);
+                ]]></body>
+            </method>
 
             <property name="selectedDay">
                 <getter><![CDATA[

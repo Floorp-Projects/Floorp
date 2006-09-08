@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Joey Minta <jminta@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -161,13 +162,6 @@ var calCompositeCalendarObserver = {
             var checkCell = item.firstChild;
             checkCell.setAttribute('checked', false);
         }
-        var newSelectedEvents = new Array();
-        var oldSelectedEvents = gCalendarWindow.EventSelection.selectedEvents;
-        for (var i in oldSelectedEvents) {
-            if (!oldSelectedEvents[i].calendar.uri.equals(aCalendar.uri)) 
-                newSelectedEvents.push(oldSelectedEvents[i]);
-        }
-        gCalendarWindow.EventSelection.setArrayToSelection(newSelectedEvents);
     },
 
     onDefaultCalendarChanged: function (aNewDefaultCalendar) {

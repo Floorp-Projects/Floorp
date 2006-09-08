@@ -26,6 +26,8 @@
  *                 Eric Belhaire <eric.belhaire@ief.u-psud.fr>
  *                 Matthew Willis <mattwillis@gmail.com>
  *                 Michiel van Leeuwen <mvl@exedo.nl>
+ *                 Joey Minta <jminta@gmail.com>
+ *                 Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -85,7 +87,7 @@ function selectSelectedEventsInTree( EventsToSelect )
    doingSelection = true;
 
    if( EventsToSelect === false )
-      EventsToSelect = gCalendarWindow.EventSelection.selectedEvents;
+     EventsToSelect = currentView().getSelectedItems({});
    var SearchTree = document.getElementById( UnifinderTreeName );
       
    /* The following is a brutal hack, caused by 
@@ -98,7 +100,7 @@ function selectSelectedEventsInTree( EventsToSelect )
    SearchTree.removeEventListener( "select", unifinderOnSelect, true );
    SearchTree.view.selection.selectEventsSuppressed = true;
 
-   if( EventsToSelect.length == 1 )
+   if( EventsToSelect && EventsToSelect.length == 1 )
    {
       var RowToScrollTo = SearchTree.eventView.getRowOfCalendarEvent( EventsToSelect[0] );
          
@@ -115,7 +117,7 @@ function selectSelectedEventsInTree( EventsToSelect )
          SearchTree.view.selection.clearSelection( );
       }
    }
-   else if( EventsToSelect.length > 1 )
+   else if( EventsToSelect && EventsToSelect.length > 1 )
    {
       SearchTree.view.selection.clearSelection( );
       for (var i in EventsToSelect) {
@@ -246,16 +248,9 @@ var unifinderObserver = {
 
 function prepareCalendarUnifinder( )
 {
-   // tell the unifinder to get ready
-   var unifinderEventSelectionObserver = 
-   {
-      onSelectionChanged : function( EventSelectionArray )
-      {
-         selectSelectedEventsInTree( EventSelectionArray );
-      }
+   function onGridSelect(aEvent) {
+       selectSelectedEventsInTree(aEvent.detail);
    }
-      
-   gCalendarWindow.EventSelection.addObserver( unifinderEventSelectionObserver );
    
    // set up our calendar event observer
    
@@ -267,6 +262,7 @@ function prepareCalendarUnifinder( )
    // Listen for changes in the selected day, so we can update if need be
    var viewDeck = document.getElementById("view-deck")
    viewDeck.addEventListener("dayselect", unifinderOnDaySelect, false);
+   viewDeck.addEventListener("itemselect", onGridSelect, true);
 
    refreshEventTree(); //Display something upon first load. onLoad doesn't work properly for observers
 }
@@ -383,7 +379,8 @@ function unifinderOnSelect( event )
          gCalendarWindow.currentView.goToDay( eventStartDate, true);
    }
    
-   gCalendarWindow.EventSelection.setArrayToSelection( ArrayOfEvents );
+   // Pass in true, so we don't end up in a circular loop
+   currentView().setSelectedItems(ArrayOfEvents.length, ArrayOfEvents, true);
 }
 
 function unifinderToDoHasFocus()
@@ -803,32 +800,6 @@ function refreshEventTreeInternal(eventArray)
 
    //select selected events in the tree.
    selectSelectedEventsInTree( false );
-}
-
-function focusFirstItemIfNoSelection()
-{
-   if( gCalendarWindow.EventSelection.selectedEvents.length == 0 )
-   {
-      //select the first event in the list.
-      var ListBox = document.getElementById( UnifinderTreeName );
-
-      if( ListBox.childNodes.length > 0 )
-      {
-         var SelectedEvent = ListBox.childNodes[0].event;
-
-         var ArrayOfEvents = new Array();
-   
-         ArrayOfEvents[ ArrayOfEvents.length ] = SelectedEvent;
-         
-         gCalendarWindow.EventSelection.setArrayToSelection( ArrayOfEvents );
-      
-         /*start date is either the next or last occurence, or the start date of the event */
-         var eventStartDate = getCurrentNextOrPreviousRecurrence( SelectedEvent );
-            
-         /* you need this in case the current day is not visible. */
-         gCalendarWindow.currentView.goToDay( eventStartDate, true);
-      }
-   }
 }
 
 function unifinderKeyPress(aEvent) {

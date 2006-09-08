@@ -31,7 +31,6 @@ calendar.jar:
     content/calendar/calendarUtils.js (content/calendarUtils.js)
     content/calendar/calendarMail.js (content/calendarMail.js)
     content/calendar/calendarManagement.js (content/calendarManagement.js)
-    content/calendar/calendarSelection.js (content/calendarSelection.js) 
     content/calendar/calendarWindow.js (content/calendarWindow.js)
     content/calendar/calErrorPrompt.xul (/calendar/base/content/calErrorPrompt.xul)
     content/calendar/chooseCalendarDialog.xul (/calendar/base/content/chooseCalendarDialog.xul)

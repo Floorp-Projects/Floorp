@@ -27,6 +27,8 @@
  *                 ArentJan Banck <ajbanck@planet.nl> 
  *                 Eric Belhaire <belhaire@ief.u-psud.fr>
  *                 Matthew Willis <mattwillis@gmail.com>
+ *                 Joey Minta <jminta@gmail.com>
+ *                 Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -60,6 +62,9 @@
 
 // single global instance of CalendarWindow
 var gCalendarWindow;
+
+// store the current selection in the global scope to workaround bug 351747
+var gXXXEvilHackSavedSelection;
 
 /*-----------------------------------------------------------------
 *  G L O B A L     C A L E N D A R      F U N C T I O N S
@@ -129,8 +134,8 @@ function calendarInit()
    var toolbox = document.getElementById("calendar-toolbox");
    toolbox.customizeDone = CalendarToolboxCustomizeDone;
 
-   document.getElementById("view-deck")
-           .addEventListener("dayselect", observeViewDaySelect, false);
+   getViewDeck().addEventListener("dayselect", observeViewDaySelect, false);
+   getViewDeck().addEventListener("itemselect", onSelectionChanged, true);
 
    // Handle commandline args
    for (var i=0; i < window.arguments.length; i++) {
@@ -333,17 +338,17 @@ function getSelectedCalendarOrNull()
 *  This is called from the unifinder's edit command
 */
 
-function editEvent()
+function editEvent(aEvent)
 {
-   if( gCalendarWindow.EventSelection.selectedEvents.length == 1 )
-   {
-      var calendarEvent = gCalendarWindow.EventSelection.selectedEvents[0];
+    if (aEvent) {
+        modifyEventWithDialog(aEvent);
+        return;
+    }
 
-      if( calendarEvent != null )
-      {
-         modifyEventWithDialog(getOccurrenceOrParent(calendarEvent));
-      }
-   }
+    if (gXXXEvilHackSavedSelection.length == 1) {
+        modifyEventWithDialog(
+            getOccurrenceOrParent(gXXXEvilHackSavedSelection[0]));
+    }
 }
 
 function editToDo(task) {
@@ -378,13 +383,12 @@ function deleteItems( SelectedItems, DoNotConfirm )
 
 
 /**
-*  Delete the current selected item with focus from the ToDo unifinder list
+*  Delete the current selected items with focus from the unifinder list
 */
 function deleteEventCommand( DoNotConfirm )
 {
-   var SelectedItems = gCalendarWindow.EventSelection.selectedEvents;
-   deleteItems( SelectedItems, DoNotConfirm );
-   gCalendarWindow.EventSelection.emptySelection();
+    var SelectedItems = currentView().getSelectedItems({});
+    deleteItems( SelectedItems, DoNotConfirm );
 }
 
 
@@ -426,13 +430,58 @@ function goFindNewCalendars()
 
 function selectAllEvents()
 {
-    //XXX
-    throw "Broken by the switch to the new views"; 
+    var items = [];
+    var listener = {
+        onOperationComplete: function selectAll_ooc(aCalendar, aStatus, 
+                                                    aOperationType, aId, 
+                                                    aDetail) {
+            currentView().setSelectedItems(items.length, items, false);
+        },
+        onGetResult: function selectAll_ogr(aCalendar, aStatus, aItemType, 
+                                            aDetail, aCount, aItems) {
+            for each (var item in aItems) {
+                items.push(item);
+            }
+        }
+    };
+
+    var composite = getCompositeCalendar();
+    var filter = composite.ITEM_FILTER_COMPLETED_ALL |
+                 composite.ITEM_FILTER_CLASS_OCCURRENCES;
+
+    if (currentView().tasksInView) {
+        filter |= composite.ITEM_FILTER_TYPE_ALL; 
+    } else {
+        filter |= composite.ITEM_FILTER_TYPE_EVENT;
+    }
+
+    // Need to move one day out to get all events
+    var end = currentView().endDay.clone();
+    end.day += 1;
+    end.normalize();
+
+    composite.getItems(filter, 0, currentView().startDay, end, listener);
 }
 
 function closeCalendar()
 {
    self.close();
+}
+
+function onSelectionChanged(aEvent) {
+    var elements = 
+        document.getElementsByAttribute("disabledwhennoeventsselected", "true");
+
+    var selectedItems = aEvent.detail;
+    gXXXEvilHackSavedSelection = selectedItems;
+
+    for (var i = 0; i < elements.length; i++) {
+        if (selectedItems.length >= 1) {
+            elements[i].removeAttribute("disabled");
+        } else {
+            elements[i].setAttribute("disabled", "true");
+        }
+    }
 }
 
 /* Change the only-workday checkbox */

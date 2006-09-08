@@ -93,8 +93,7 @@ function canPaste()
 
 function cutToClipboard( /* calendarEventArray */)
 {
-    // if( !calendarEventArray)
-    var calendarEventArray = gCalendarWindow.EventSelection.selectedEvents;
+    var calendarEventArray = currentView().getSelectedItems({});
 
     if( copyToClipboard( calendarEventArray ) )
     {
@@ -110,13 +109,11 @@ function cutToClipboard( /* calendarEventArray */)
 
 function copyToClipboard( calendarItemArray )
 {  
-    if(!calendarItemArray)
-    {
-        calendarItemArray = new Array();
-        calendarItemArray = gCalendarWindow.EventSelection.selectedEvents;
+    if (!calendarItemArray) {
+        calendarItemArray = currentView().getSelectedItems({});
     }
 
-    if (calendarItemArray.length == 0) {
+    if (!calendarItemArray.length) {
         dump("Tried to cut/copy 0 events");
         return false;
     }

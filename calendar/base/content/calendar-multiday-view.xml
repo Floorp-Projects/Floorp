@@ -227,8 +227,11 @@
         // we make assumptions about our position in the tree here;
         // specifically, this should get us to a <calendar-event-box>
         var evbox = this.parentNode.parentNode;
+
         // still select it (since we'll stopPropagation())
-        evbox.calendarView.selectedItem = evbox.mOccurrence;
+        evbox.calendarView.setSelectedItems(1, 
+            [event.ctrlKey ? (this.mOccurrence.parentItem, this.mOccurrence]));
+
         // then start dragging it
         evbox.parentColumn.startSweepingToModifyEvent(evbox, evbox.mOccurrence, whichside, event.screenX, event.screenY);
       ]]></handler>
@@ -367,36 +370,43 @@
       <property
         name="events"
         readonly="true"
-        onget="return this.mEvents"/>
+        onget="return this.methods"/>
 
-      <!-- methods -->
+      <!-- mEvents -->
+      <field name="mSelectedChunks">[]</field>
 
       <method name="selectOccurrence">
         <parameter name="aOccurrence"/>
         <body><![CDATA[
-          // if we're being asked to unselect, and we
-          // don't have a selection, return.
-          if (aOccurrence == null && !this.mCurrentSelection)
-              return;
-
-          if (this.mCurrentSelection) {
-              this.mCurrentSelection.eventbox.selected = false;
-              this.mCurrentSelection = null;
-          }
-
           if (aOccurrence) {
               var chunk = this.findChunkForOccurrence(aOccurrence);
               if (!chunk || !chunk.eventbox) {
-                  dump ("++ Couldn't find chunk to select!!!\n");
+                  dump("++ Couldn't find chunk to select!!!\n");
                   return;
               }
 
               chunk.eventbox.selected = true;
-              this.mCurrentSelection = chunk;
+              this.mSelectedChunks.push(chunk);
           }
         ]]></body>
       </method>
 
+      <method name="unselectOccurrence">
+        <parameter name="aOccurrence"/>
+        <body><![CDATA[
+          if (aOccurrence) {
+              var chunk = this.findChunkForOccurrence(aOccurrence);
+              if (!chunk || !chunk.eventbox) {
+                  dump ("++ Couldn't find chunk to unselect!!!\n");
+                  return;
+              }
+
+              chunk.eventbox.selected = false;
+              var index = this.mSelectedChunks.indexOf(chunk);
+              this.mSelectedChunks.splice(index, 1);
+          }
+        ]]></body>
+      </method>
 
       <method name="findChunkForOccurrence">
         <parameter name="aOccurrence"/>
@@ -454,8 +464,10 @@
            }
 
            if (itemIndex != -1) {
-               if (this.mSelectedItem == this.mEvents[itemIndex])
-                   this.mSelectedItem = null;
+               function isNotItem(a) {
+                  return !a.event.hasSameIds(aOccurrence);
+               }
+               this.mSelectedChunks = this.mSelectedChunks.filter(isNotItem);
 
                this.mEvents.splice(itemIndex, 1);
                return true;
@@ -663,6 +675,14 @@
                       chunkBox.parentColumn = this;
 
                       chunk.event.eventbox = chunkBox;
+
+                      // Because we're on a timeout here, it may have been that
+                      // someone selected us in that window.  Check for that.
+                      for each (var item in this.calendarView.mSelectedItems) {
+                          if (chunk.event.event.hasSameIds(item)) {
+                              chunkBox.selected = true;
+                          }
+                      }
                   } else {
                       var chunkBox = createXULElement("spacer");
                       chunkBox.setAttribute("context", this.getAttribute("context"));
@@ -1357,12 +1377,22 @@
           for each (itemBox in this.mItemBoxes) {
             if (aItem && itemBox.occurrence.hasSameIds(aItem)) {
               itemBox.selected = true;
-            } else {
+            } 
+
+          } 
+        ]]></body>
+      </method>
+      <method name="unselectOccurrence">
+        <parameter name="aItem"/>
+        <body><![CDATA[
+          for each (itemBox in this.mItemBoxes) {
+            if (aItem && itemBox.occurrence.hasSameIds(aItem)) {
               itemBox.selected = false;
             }
           }
         ]]></body>
       </method>
+
     </implementation>
 
     <handlers>
@@ -1620,7 +1650,7 @@
       <field name="mPixPerMin">0.6</field>
       <field name="mMinHorizontalPixelsPerMinute">1.2</field>
       <field name="mMinVerticalPixelsPerMinute">0.5</field>
-      <field name="mSelectedItem">null</field>
+      <field name="mSelectedItems">[]</field>
       <field name="mSelectedDayCol">null</field>
 
       <field name="mStartMin">0*60</field>
@@ -1628,40 +1658,6 @@
       <field name="mTasksInView">false</field>
       <field name="mDaysOffArray">[0,6]</field>
       <field name="mTimezone">"UTC"</field>
-
-      <field name="mSelectionObserver"><![CDATA[
-      ({  calView: this,
-          onSelectionChanged: function selectionObserverCallback(itemSelectionArray) {
-	       // The selection manager should be smart enough to only call this
-	       // when the selection really did change, so just do it.
-               if (this.calView.mSelectedItem) {
-                   var cols = this.calView.findColumnsForItem(this.calView.mSelectedItem);
-                   var selectedStart = this.calView.mSelectedItem.startDate || this.calView.mSelectedItem.entryDate
-                   for each (col in cols) {
-                       if (!selectedStart.isDate) {
-                           col.column.selectOccurrence(null);
-                       } else {
-                           col.header.selectOccurrence(null);
-                       }
-                   }
-               }
-               this.calView.mSelectedItem = itemSelectionArray[0];
-               if (!this.calView.mSelectedItem)
-                  return;
-               var newSelectedStart = this.calView.mSelectedItem.startDate || this.calView.mSelectedItem.entryDate;
-               this.calView.showDate(newSelectedStart);
-               var cols = this.calView.findColumnsForItem(this.calView.mSelectedItem);
-               for each (col in cols) {
-                   if (!newSelectedStart.isDate) {
-                       col.column.selectOccurrence(this.calView.mSelectedItem);
-                   } else {
-                       col.header.selectOccurrence(this.calView.mSelectedItem);
-                   }
-               }
-          }
-      })
-      ]]></field>
-
 
       <field name="mObserver"><![CDATA[
         // the calIObserver, and calICompositeObserver
@@ -1800,12 +1796,7 @@
 
           onOperationComplete: 
           function onOperationComplete(aCalendar, aStatus, aOperationType, 
-                                       aId, aDetail) {
-              if (this.calView.controller.selectionManager &&
-                  this.calView.controller.selectionManager.selectedEvents[0])
-                this.calView.selectedItem = (this.calView.controller
-                                             .selectionManager.selectedEvents[0]);
-          },
+                                       aId, aDetail) {},
           onGetResult: 
           function onGetResult(aCalendar, aStatus, aItemType, aDetail,
                                aCount, aItems) {
@@ -2067,45 +2058,48 @@
         ]]></setter>
       </property>
 
-      <property name="selectedItem">
-        <getter><![CDATA[
-          return this.mSelectedItem;
-        ]]></getter>
-        <setter><![CDATA[
-          if (this.mSelectedItem != val) {
-              if (this.mSelectedItem) {
-                  var cols = this.findColumnsForItem(this.mSelectedItem);
+      <method name="getSelectedItems">
+        <parameter name="aCount"/>
+        <body><![CDATA[
+          aCount.value = this.mSelectedItems.length;
+          return this.mSelectedItems;
+        ]]></body>
+      </method>
+      <method name="setSelectedItems">
+        <parameter name="aCount"/>
+        <parameter name="aItems"/>
+        <parameter name="aSuppressEvent"/>
+        <body><![CDATA[
+          if (this.mSelectedItems.length) {
+              for each (var item in this.mSelectedItems) {
+                  var cols = this.findColumnsForItem(item);
                   for each (col in cols) {
-                      col.header.selectOccurrence(null);
-                      col.column.selectOccurrence(null);
+                      col.header.unselectOccurrence(item);
+                      col.column.unselectOccurrence(item);
                   }
               }
+          }
+          this.mSelectedItems = aItems || [];
 
-              if (val) {
-                  var cols = this.findColumnsForItem(val);
-                  if (cols.length > 0) {
-                      var start = val.startDate || val.entryDate;
-                      for each (col in cols) {
-                          if(start.isDate) {
-                              col.header.selectOccurrence(val);
-                          }
-                          else {
-                              col.column.selectOccurrence(val);
-                          }
+          for each (var item in this.mSelectedItems) {
+              var cols = this.findColumnsForItem(item);
+              if (cols.length > 0) {
+                  var start = item.startDate || item.entryDate;
+                  for each (col in cols) {
+                      if (start.isDate) {
+                          col.header.selectOccurrence(item);
+                      } else {
+                          col.column.selectOccurrence(item);
                       }
-                      if(this.mController.selectionManager)
-                          this.mController.selectionManager.replaceSelection(val);
-                  } else {
-                      val = null;
                   }
               }
-
-              this.mSelectedItem = val;
           }
 
-          return val;
-        ]]></setter>
-      </property>
+          if (!aSuppressEvent) {
+              this.fireEvent("itemselect", this.mSelectedItems);
+          }
+        ]]></body>
+      </method>
 
       <property name="pixelsPerMinute">
         <getter>return this.mPixPerMin</getter>
@@ -2678,9 +2672,11 @@
         if (event.keyCode == kKE.DOM_VK_BACK_SPACE ||
             event.keyCode == kKE.DOM_VK_DELETE)
         {
-            if (!this.activeInPlaceEdit && this.selectedItem && this.controller) {
-                var occurrence = (event.ctrlKey) ? this.selectedItem.parentItem : this.selectedItem;
-                this.controller.deleteOccurrence(occurrence);
+            if (!this.activeInPlaceEdit && this.mSelectedItems.length && this.controller) {
+                for each (var item in this.mSelectedItems) {
+                    var item = (event.ctrlKey) ? item.parentItem : item;
+                    this.controller.deleteOccurrence(item);
+                }
             }
         }
       ]]></handler>

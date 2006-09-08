@@ -712,7 +712,7 @@
       <field name="mDateBoxes">null</field>
       <field name="mTimezone">"floating"</field>
 
-      <field name="mSelectedItem">null</field>
+      <field name="mSelectedItems">[]</field>
       <field name="mSelectedDayBox">null</field>
 
       <field name="mShowDaysOutsideMonth">true</field>
@@ -723,27 +723,6 @@
       <field name="mDisplayDaysOff">true</field>
       <field name="mDropShadows">null</field>
       <field name="mShadowIndex">0</field>
-
-      <field name="mSelectionObserver"><![CDATA[
-      ({  calView: this,
-          onSelectionChanged: function selectionObserverCallback(itemSelectionArray) {
-	       // The selection manager is smart enough to call this only when
-	       // the selection really did change, so don't bother checking
-               if (this.calView.mSelectedItem) {
-                   var oldboxes = this.calView.findBoxesForItem(this.calView.mSelectedItem);
-                   for each (oldbox in oldboxes) {
-                       oldbox.box.unselectItem(this.calView.mSelectedItem);
-                   }
-               }
-               this.calView.mSelectedItem = itemSelectionArray[0];
-
-               var newboxes = this.calView.findBoxesForItem(this.calView.mSelectedItem);
-               for each (newbox in newboxes) {
-                   newbox.box.selectItem(this.calView.mSelectedItem);
-               }
-          }
-      })
-      ]]></field>
 
       <!-- other methods -->
       <method name="setAttribute">
@@ -863,31 +842,43 @@
         ]]></setter>
       </property>
 
-      <property name="selectedItem">
-        <getter><![CDATA[
-          return this.mSelectedItem;
-        ]]></getter>
-        <setter><![CDATA[
-          if (this.mSelectedItem) {
-              var oldboxes = this.findBoxesForItem(this.mSelectedItem);
-              for each (oldbox in oldboxes) {
-                  oldbox.box.unselectItem(this.mSelectedItem);
+      <method name="getSelectedItems">
+        <parameter name="aCount"/>
+        <body><![CDATA[
+          aCount.value = this.mSelectedItems.length;
+          return this.mSelectedItems;
+        ]]></body>
+      </method>
+      <method name="setSelectedItems">
+        <parameter name="aCount"/>
+        <parameter name="aItems"/>
+        <parameter name="aSuppressEvent"/>
+        <body><![CDATA[
+          if (this.mSelectedItems.length) {
+              for each (var item in this.mSelectedItems) {
+                  var oldboxes = this.findBoxesForItem(item);
+                  for each (oldbox in oldboxes) {
+                      oldbox.box.unselectItem(item);
+                  }
               }
           }
 
-          this.mSelectedItem = val;
+          this.mSelectedItems = aItems || [];
 
-          if (this.mSelectedItem) {
-              var newboxes = this.findBoxesForItem(this.mSelectedItem);
-              for each (newbox in newboxes) {
-                  newbox.box.selectItem(this.mSelectedItem);
+          if (this.mSelectedItems.length) {
+              for each (var item in this.mSelectedItems) {
+                  var newboxes = this.findBoxesForItem(item);
+                  for each (newbox in newboxes) {
+                      newbox.box.selectItem(item);
+                  }
               }
-              if (this.mController.selectionManager)
-                  this.mController.selectionManager.replaceSelection(this.mSelectedItem);
           }
-          return val;
-        ]]></setter>
-      </property>
+
+          if (!aSuppressEvent) {
+              this.fireEvent("itemselect", this.mSelectedItems);
+          }
+        ]]></body>
+      </method>
 
       <property name="selectedDay">
         <getter><![CDATA[
@@ -1079,8 +1070,8 @@
               }
           }
 
-          if (this.mSelectedItem) {
-            this.selectedItem = null;
+          if (this.mSelectedItems.length) {
+            this.mSelectedItems = [];
           }
 	  
           // Clear out the old selection, since it won't be valid after relayout
@@ -1303,8 +1294,10 @@
           if (!boxes.length)
             return;
 
-          if (this.mSelectedItem == aItem)
-              this.mSelectedItem = null;
+          function isNotItem(a) {
+              return !a.hasSameIds(aItem);
+          }
+          this.mSelectedItems = this.mSelectedItems.filter(isNotItem);
 
           for each (box in boxes) {
             box.box.deleteItem(aItem);
@@ -1338,12 +1331,7 @@
             return this;
           },
   
-          onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
-              if (this.calView.controller.selectionManager &&
-                  this.calView.controller.selectionManager.selectedEvents[0])
-                this.calView.selectedItem = (this.calView.controller
-                                             .selectionManager.selectedEvents[0]);
-          },
+          onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {},
           onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
             if (!Components.isSuccessCode(aStatus))
               return;
@@ -1464,9 +1452,11 @@
         if (event.keyCode == kKE.DOM_VK_BACK_SPACE ||
             event.keyCode == kKE.DOM_VK_DELETE)
         {
-            if (!this.activeInPlaceEdit && this.selectedItem && this.controller) {
-                var item = (event.ctrlKey) ? this.selectedItem.parentItem : this.selectedItem;
-                this.controller.deleteOccurrence(item);
+            if (!this.activeInPlaceEdit && this.mSelectedItems.length && this.controller) {
+                for each (var item in this.mSelectedItems.length) {
+                    item = (event.ctrlKey) ? item.parentItem : item;
+                    this.controller.deleteOccurrence(item);
+                }
             }
         }
       ]]></handler>

@@ -22,6 +22,7 @@
  *                 Mike Potter <mikep@oeone.com>
  *                 Eric Belhaire <belhaire@ief.u-psud.fr>
  *                 Robin Edrenius <robin.edrenius@gmail.com>
+ *                 Joey Minta <jminta@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -62,10 +63,6 @@
 
 function CalendarWindow( )
 {
-   //setup the calendar event selection
-   this.EventSelection = new CalendarEventSelection( this );
-   calendarViewController.selectionManager = this.EventSelection;
-
    // Extension authors can tweak this array to make gCalendarWindow.switchToView 
    // play nicely with any additional views
    this.availableViews = ["day", "week", "multiweek", "month"];

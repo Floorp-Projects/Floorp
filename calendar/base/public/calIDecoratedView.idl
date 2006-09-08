@@ -100,19 +100,19 @@ interface calIDecoratedView : nsISupports
   attribute boolean tasksInView;
 
   /**
-   * The selectedItem in the embedded view.
+   * See calICalendarView.idl for the description of these functions.
    */
-  readonly attribute calIItemBase selectedItem;
+  void getSelectedItems(out unsigned long aCount,
+                        [array,size_is(aCount),retval] out calIItemBase aItems);
+  void setSelectedItems(in unsigned long aCount,
+                        [array,size_is(aCount)] in calIItemBase aItems,
+                        in boolean aSuppressEvent);
 
   /**
    * The selectedDay in the embedded view.  Use the goToDay function to set a
    * particular day to be selected.
    */
   readonly attribute calIDateTime selectedDay;
-
-  // XXX-Probably need to make the selectionManager/selectionObserver into
-  // real interfaces
-  //readonly attribute calISelectionObserver selectionObserver
 
   /**
    * The first day shown in the embedded view

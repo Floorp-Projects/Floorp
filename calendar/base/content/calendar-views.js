@@ -162,8 +162,10 @@ var calendarViewController = {
 function switchToView(aViewType) {
     var viewDeck = getViewDeck();
     var selectedDay;
+    var currentSelection = [];
     try {
-        var selectedDay = viewDeck.selectedPanel.selectedDay;
+        selectedDay = viewDeck.selectedPanel.selectedDay;
+        currentSelection = viewDeck.selectedPanel.getSelectedItems({});
     } catch(ex) {
         // This dies if no view has even been chosen this session, but that's
         // ok because we'll just use now() below.
@@ -184,6 +186,7 @@ function switchToView(aViewType) {
     }
 
     view.goToDay(selectedDay);
+    view.setSelectedItems(currentSelection.length, currentSelection);
 }
 
 function moveView(aNumber) {

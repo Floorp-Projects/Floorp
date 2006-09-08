@@ -217,7 +217,14 @@
             }
             this.editingTimer = setTimeout(function alldayTimeout() { self.startEditing(); }, 350);
         } else {
-            this.calendarView.selectedItem = this.mOccurrence;
+            var items;
+            if (event.ctrlKey || event.metaKey) {
+                items = this.calendarView.mSelectedItems;
+                items.push(this.mOccurrence);
+            } else {
+                items = [this.mOccurrence];
+            }
+            this.calendarView.setSelectedItems(items.length, items);
         }
       ]]></handler>
 

@@ -28,6 +28,7 @@
 #                 Eric Belhaire <belhaire@ief.u-psud.fr>
 #                 Matthew Willis <mattwillis@gmail.com>
 #                 Stefan Sitter <ssitter@googlemail.com>
+#                 Dan Mosedale <dan.mosedale@oracle.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -84,7 +85,7 @@
   <command id="multiweek_view_command" oncommand="gCalendarWindow.switchToView('multiweek')"/>
 
   <command id="import_command" oncommand="loadEventsFromFile()"/>
-  <command id="export_command" oncommand="saveEventsToFile(gCalendarWindow.EventSelection.selectedEvents)" disabled="true" disabledwhennoeventsselected="true"/>
+  <command id="export_command" oncommand="saveEventsToFile(currentView().getSelectedItems({}))" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="ask_and_export_calendar" oncommand="exportEntireCalendar()"/>
 
   <command id="reload_remote_calendars" oncommand="reloadCalendars()"/>

@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -57,8 +57,8 @@ function publishCalendarData()
  */
 function publishCalendarDataDialogResponse(CalendarPublishObject, aProgressDialog)
 {
-   publishItemArray(gCalendarWindow.EventSelection.selectedEvents,
-                    CalendarPublishObject.remotePath, aProgressDialog);
+    publishItemArray(currentView().getSelectedItems({}), 
+                     CalendarPublishObject.remotePath, aProgressDialog);
 }
 
 /**

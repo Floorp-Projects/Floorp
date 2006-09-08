@@ -54,7 +54,7 @@ function loadCalendarPrintDialog()
     document.getElementById("start-date-picker").value = theView.startDay.jsDate;
     document.getElementById("end-date-picker").value = theView.endDay.jsDate;
 
-    if (!gCalendarWindow.EventSelection.selectedEvents.length) {
+    if (!theView.getSelectedItems({}).length) {
         document.getElementById("selected").setAttribute("disabled", true);
     }
 
@@ -122,14 +122,15 @@ function getDialogSettings()
     var end;
     var eventList;
     switch (document.getElementById("view-field").selectedItem.value) {
+        var theView = window.opener.currentView();
+
         case 'currentview':
         case '': //just in case
-            var theView = window.opener.currentView();
             start = theView.startDay;
             end   = theView.endDay;
             break;
         case 'selected':
-            eventList = gCalendarWindow.EventSelection.selectedEvents;
+            eventList = theView.getSelectedItems({});
             break;
         case 'custom':
             start = jsDateToDateTime(document.getElementById("start-date-picker").value);
