@@ -3641,7 +3641,15 @@ nsXULDocument::OverlayForwardReference::Resolve()
             return eResolve_Error;
         }
         
-        mDocument->InsertElement(mDocument->mRootContent, mOverlay, notify);
+        rv = mDocument->InsertElement(mDocument->mRootContent, mOverlay, notify);
+        if (NS_FAILED(rv)) return eResolve_Error;
+
+        if (!notify) {
+            // Add child and any descendants to the element map
+            rv = mDocument->AddSubtreeToDocument(mOverlay);
+            if (NS_FAILED(rv)) return eResolve_Error;
+        }
+
         mResolved = PR_TRUE;
         return eResolve_Succeeded;
     }
@@ -3670,9 +3678,11 @@ nsXULDocument::OverlayForwardReference::Resolve()
     target->SetScriptTypeID(oldDefLang);
     if (NS_FAILED(rv)) return eResolve_Error;
 
-    // Add child and any descendants to the element map
-    rv = mDocument->AddSubtreeToDocument(target);
-    if (NS_FAILED(rv)) return eResolve_Error;
+    if (!notify) {
+        // Add child and any descendants to the element map
+        rv = mDocument->AddSubtreeToDocument(target);
+        if (NS_FAILED(rv)) return eResolve_Error;
+    }
 
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULLog, PR_LOG_NOTICE)) {
