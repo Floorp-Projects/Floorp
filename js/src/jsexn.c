@@ -1291,6 +1291,7 @@ js_ReportUncaughtException(JSContext *cx)
         vp[0] = exn;
     }
 
+    JS_ClearPendingException(cx);
     reportp = js_ErrorFromException(cx, exn);
 
     /* XXX L10N angels cry once again (see also jsemit.c, /L10N gaffes/) */
@@ -1348,7 +1349,6 @@ js_ReportUncaughtException(JSContext *cx)
         js_ReportErrorAgain(cx, bytes, reportp);
     }
 
-    JS_ClearPendingException(cx);
 out:
     if (exnObject)
         js_FreeStack(cx, mark);
