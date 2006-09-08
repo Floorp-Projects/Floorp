@@ -57,6 +57,7 @@ const PREF_APP_EXTENSIONS_VERSION         = "app.extensions.version";
 const PREF_GENERAL_USERAGENT_LOCALE       = "general.useragent.locale";
 const PREF_APP_UPDATE_INCOMPATIBLE_MODE   = "app.update.incompatible.mode";
 const PREF_UPDATE_NEVER_BRANCH            = "app.update.never."
+const PREF_PARTNER_BRANCH                 = "app.partner.";
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
 const URI_UPDATE_HISTORY_DIALOG = "chrome://mozapps/content/update/history.xul";
@@ -459,14 +460,36 @@ function getLocale() {
  * to other instances of the application that may use the same profile.
  */
 function getUpdateChannel() {
+  var channel = "default";
+  var prefName;
+  var prefValue;
+
   var defaults =
       gPref.QueryInterface(Components.interfaces.nsIPrefService).
       getDefaultBranch(null);
   try {
-    return defaults.getCharPref(PREF_APP_UPDATE_CHANNEL);
+    channel = defaults.getCharPref(PREF_APP_UPDATE_CHANNEL);
   } catch (e) {
-    return "default";  // failover when pref not found
+    // use default when pref not found
   }
+
+  try {
+    var partners = gPref.getChildList(PREF_PARTNER_BRANCH, { });
+    if (partners.length) {
+      channel += "-cck";
+      partners.sort();
+
+      for each (prefName in partners) {
+        prefValue = gPref.getCharPref(prefName);
+        channel += "-" + prefValue;
+      }
+    }
+  }
+  catch (e) {
+    Components.utils.reportError(e);
+  }
+
+  return channel;
 }
 
 /**
