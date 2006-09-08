@@ -89,9 +89,9 @@ function init() {
 
     var extensionsBundle = document.getElementById("extensionsBundle");
     try {
-      var formatter = Components.classes["@mozilla.org/browser/URLFormatterService;1"]
+      var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
                                 .getService(Components.interfaces.nsIURLFormatter);
-      var url = formatter.formatURLPref("extensions.blocklist.detailsURL", null);
+      var url = formatter.formatURLPref("extensions.blocklist.detailsURL");
     }
     catch (e) { }
 

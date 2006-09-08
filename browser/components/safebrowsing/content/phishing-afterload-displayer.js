@@ -475,9 +475,9 @@ PROT_PhishMsgDisplayerBase.prototype.showMore_ = function() {
   this.doc_.getElementById(this.showmoreLinkId_).style.display = "none";
 
   // set FAQ URL
-  var formatter = Components.classes["@mozilla.org/browser/URLFormatterService;1"]
+  var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
                             .getService(Components.interfaces.nsIURLFormatter);
-  var faqURL = formatter.formatURLPref("browser.safebrowsing.warning.infoURL", null);
+  var faqURL = formatter.formatURLPref("browser.safebrowsing.warning.infoURL");
   var labelEl = this.doc_.getElementById(this.faqLinkId_);
   labelEl.setAttribute("href", faqURL);
   

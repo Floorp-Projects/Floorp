@@ -55,8 +55,8 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 
 const CID =         Components.ID("{e6156350-2be8-11db-a98b-0800200c9a66}");
-const CONTRACT_ID = "@mozilla.org/browser/URLFormatterService;1";
-const CLASS_NAME =  "Browser URL Formatter Service";
+const CONTRACT_ID = "@mozilla.org/toolkit/URLFormatterService;1";
+const CLASS_NAME =  "Application URL Formatter Service";
 
 
 /**
@@ -97,32 +97,21 @@ nsURLFormatterService.prototype = {
   /**
    * nsIURLFormatter.formatURL
    */
-  formatURL: function uf_formatURL(aFormat, aVars) {
-    var repl = [];
-    if (aVars) {
-      var keys = aVars.getKeys({});
-      for (var i = 0; i < keys.length; i++) {
-        var val = aVars.getValue(keys[i]).QueryInterface(Ci.nsISupportsString).data;
-        repl[keys[i]] = val;
-      }
-    }
-      
+  formatURL: function uf_formatURL(aFormat) {
     var _this = this;
-    var replacer = function(aMatch, aKey) {
-      if (repl[aKey]) // handle vars from caller
-        return repl[aKey];
-      if (_this._defaults[aKey]) // supported defaults
+    var replacementCallback = function(aMatch, aKey) {
+      if (aKey in _this._defaults) // supported defaults
         return _this._defaults[aKey]();
       Components.utils.reportError("formatURL: Couldn't find value for key: " + aKey);
       return '';
     }
-    return aFormat.replace(/%([A-Z]+)%/gi, replacer);
+    return aFormat.replace(/%([A-Z]+)%/gi, replacementCallback);
   },
 
   /**
    * nsIURLFormatter.formatURLPref
    */
-  formatURLPref: function uf_formatURLPref(aPref, aVars) {
+  formatURLPref: function uf_formatURLPref(aPref) {
     var format = null;
     var PS = Cc['@mozilla.org/preferences-service;1'].
              getService(Ci.nsIPrefBranch);
@@ -140,7 +129,7 @@ nsURLFormatterService.prototype = {
       }
     }
 
-    return this.formatURL(format, aVars);
+    return this.formatURL(format);
   },
 
   QueryInterface: function uf_QueryInterface(aIID) {

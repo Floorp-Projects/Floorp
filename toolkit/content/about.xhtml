@@ -74,9 +74,9 @@
     <script type="application/x-javascript">
       // get release notes URL from prefs
       try {
-        var formatter = Components.classes["@mozilla.org/browser/URLFormatterService;1"]
+        var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
                                   .getService(Components.interfaces.nsIURLFormatter);
-        var releaseNotesURL = formatter.formatURLPref("app.releaseNotesURL", null);
+        var releaseNotesURL = formatter.formatURLPref("app.releaseNotesURL");
         var relnotes = document.getElementById("releaseNotesURL");
         relnotes.setAttribute("href", releaseNotesURL);
       }
