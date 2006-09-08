@@ -1769,9 +1769,26 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
     if (!prop)
         return JS_TRUE;
 
-    /* From here, return true, or goto bad on failure to drop prop. */
-    if (!OBJ_GET_ATTRIBUTES(cx, obj2, id, prop, &oldAttrs))
+    /*
+     * Use prop as a speedup hint to OBJ_GET_ATTRIBUTES, but drop it on error.
+     * An assertion at label bad: will insist that it is null.
+     */
+    if (!OBJ_GET_ATTRIBUTES(cx, obj2, id, prop, &oldAttrs)) {
+        OBJ_DROP_PROPERTY(cx, obj2, prop);
+#ifdef DEBUG
+        prop = NULL;
+#endif
         goto bad;
+    }
+
+    /*
+     * From here, return true, or else goto bad on failure to null out params.
+     * If our caller doesn't want prop, drop it (we don't need it any longer).
+     */
+    if (!propp) {
+        OBJ_DROP_PROPERTY(cx, obj2, prop);
+        prop = NULL;
+    }
 
     /* If either property is readonly, we have an error. */
     report = ((oldAttrs | attrs) & JSPROP_READONLY)
@@ -1822,7 +1839,7 @@ bad:
         *objp = NULL;
         *propp = NULL;
     }
-    OBJ_DROP_PROPERTY(cx, obj2, prop);
+    JS_ASSERT(!prop);
     return JS_FALSE;
 }
 
