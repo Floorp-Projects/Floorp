@@ -474,7 +474,7 @@ cmdEditEdit.prototype =
       if (out.accepted) {
         this.subject              = viewer.subject;
         this.newValue             = out.value;
-        this.newNamespaceURI      = out.namespaceURI;
+        this.newNamespaceURI      = out.namespaceURI || null;
         this.previousValue        = attr.nodeValue;
         this.previousNamespaceURI = attr.namespaceURI;
         if (this.previousNamespaceURI == this.newNamespaceURI) {
