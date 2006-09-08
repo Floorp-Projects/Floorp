@@ -55,22 +55,6 @@ class nsSVGGradientFrame : public nsSVGGradientFrameBase,
                            public nsSupportsWeakReference
 {
 public:
-  friend nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell, 
-                                                nsIContent*   aContent,
-                                                nsStyleContext* aContext);
-
-  friend nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell, 
-                                                nsIContent*   aContent,
-                                                nsStyleContext* aContext);
-
-  friend nsIFrame* NS_NewSVGStopFrame(nsIPresShell* aPresShell, 
-                                      nsIContent*   aContent, 
-                                      nsIFrame*     aParentFrame,
-                                      nsStyleContext* aContext);
-
-  nsSVGGradientFrame(nsStyleContext* aContext) :
-    nsSVGGradientFrameBase(aContext) {}
-
   // nsSVGPaintServerFrame methods:
   virtual nsresult SetupPaintServer(nsISVGRendererCanvas *aCanvas,
                                     cairo_t *aCtx,
@@ -177,6 +161,9 @@ protected:
   // Get the value of our gradientUnits attribute
   PRUint16 GetGradientUnits();
 
+  nsSVGGradientFrame(nsStyleContext* aContext,
+                     nsIDOMSVGURIReference *aRef);
+
   virtual ~nsSVGGradientFrame();
 
   // The graphic element our gradient is (currently) being applied to
@@ -213,8 +200,9 @@ typedef nsSVGGradientFrame nsSVGLinearGradientFrameBase;
 class nsSVGLinearGradientFrame : public nsSVGLinearGradientFrameBase
 {
 public:
-  nsSVGLinearGradientFrame(nsStyleContext* aContext) :
-    nsSVGLinearGradientFrameBase(aContext) {}
+  friend nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell, 
+                                                nsIContent*   aContent,
+                                                nsStyleContext* aContext);
 
   // nsIFrame interface:
   virtual nsIAtom* GetType() const;  // frame type: nsGkAtoms::svgLinearGradientFrame
@@ -232,6 +220,10 @@ public:
 #endif // DEBUG
 
 protected:
+  nsSVGLinearGradientFrame(nsStyleContext* aContext,
+                           nsIDOMSVGURIReference *aRef) :
+    nsSVGLinearGradientFrameBase(aContext, aRef) {}
+
   float GradientLookupAttribute(nsIAtom *aAtomName, PRUint16 aEnumName);
   virtual cairo_pattern_t *CreateGradient();
 };
@@ -245,8 +237,9 @@ typedef nsSVGGradientFrame nsSVGRadialGradientFrameBase;
 class nsSVGRadialGradientFrame : public nsSVGRadialGradientFrameBase
 {
 public:
-  nsSVGRadialGradientFrame(nsStyleContext* aContext) :
-    nsSVGRadialGradientFrameBase(aContext) {}
+  friend nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell, 
+                                                nsIContent*   aContent,
+                                                nsStyleContext* aContext);
 
   // nsIFrame interface:
   virtual nsIAtom* GetType() const;  // frame type: nsGkAtoms::svgRadialGradientFrame
@@ -264,18 +257,14 @@ public:
 #endif // DEBUG
 
 protected:
+  nsSVGRadialGradientFrame(nsStyleContext* aContext,
+                           nsIDOMSVGURIReference *aRef) :
+    nsSVGRadialGradientFrameBase(aContext, aRef) {}
+
   float GradientLookupAttribute(nsIAtom *aAtomName, PRUint16 aEnumName,
                                 nsIContent *aElement = nsnull);
   virtual cairo_pattern_t *CreateGradient();
 };
 
-
-nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell*   aPresShell,
-                                       nsIContent*     aContent,
-                                       nsStyleContext* aContext);
-
-nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell*   aPresShell,
-                                       nsIContent*     aContent,
-                                       nsStyleContext* aContext);
 #endif // __NS_SVGGRADIENTFRAME_H__
 

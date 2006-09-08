@@ -50,6 +50,19 @@
 //----------------------------------------------------------------------
 // Implementation
 
+nsSVGGradientFrame::nsSVGGradientFrame(nsStyleContext* aContext,
+                                       nsIDOMSVGURIReference *aRef) :
+  nsSVGGradientFrameBase(aContext),
+  mNextGrad(nsnull), 
+  mLoopFlag(PR_FALSE),
+  mInitialized(PR_FALSE) 
+{
+  if (aRef) {
+    // Get the href
+    aRef->GetHref(getter_AddRefs(mHref));
+  }
+}
+
 nsSVGGradientFrame::~nsSVGGradientFrame()
 {
   WillModify(mod_die);
@@ -728,20 +741,10 @@ NS_NewSVGLinearGradientFrame(nsIPresShell*   aPresShell,
   if (!grad)
     return nsnull;
   
-  nsSVGLinearGradientFrame* it = new (aPresShell) nsSVGLinearGradientFrame(aContext);
-  if (nsnull == it)
-    return nsnull;
-
   nsCOMPtr<nsIDOMSVGURIReference> aRef = do_QueryInterface(aContent);
   NS_ASSERTION(aRef, "NS_NewSVGLinearGradientFrame -- Content doesn't support nsIDOMSVGURIReference");
-  if (aRef) {
-    // Get the href
-    aRef->GetHref(getter_AddRefs(it->mHref));
-  }
-  it->mNextGrad = nsnull;
-  it->mLoopFlag = PR_FALSE;
-  it->mInitialized = PR_FALSE;
-  return it;
+
+  return new (aPresShell) nsSVGLinearGradientFrame(aContext, aRef);
 }
 
 nsIFrame*
@@ -754,18 +757,8 @@ NS_NewSVGRadialGradientFrame(nsIPresShell*   aPresShell,
   if (!grad)
     return nsnull;
   
-  nsSVGRadialGradientFrame* it = new (aPresShell) nsSVGRadialGradientFrame(aContext);
-  if (nsnull == it)
-    return nsnull;
-
   nsCOMPtr<nsIDOMSVGURIReference> aRef = do_QueryInterface(aContent);
   NS_ASSERTION(aRef, "NS_NewSVGRadialGradientFrame -- Content doesn't support nsIDOMSVGURIReference");
-  if (aRef) {
-    // Get the href
-    aRef->GetHref(getter_AddRefs(it->mHref));
-  }
-  it->mNextGrad = nsnull;
-  it->mLoopFlag = PR_FALSE;
-  it->mInitialized = PR_FALSE;
-  return it;
+
+  return new (aPresShell) nsSVGRadialGradientFrame(aContext, aRef);
 }
