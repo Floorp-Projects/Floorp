@@ -61,6 +61,7 @@ XPIDLSRCS	= calIAlarmService.idl \
 		  calIEvent.idl      \
 		  calIICSService.idl \
 		  calIItemBase.idl   \
+		  calIItipItem.idl   \
 		  calIRecurrenceInfo.idl \
 		  calIRecurrenceDate.idl \
 		  calIRecurrenceDateSet.idl \

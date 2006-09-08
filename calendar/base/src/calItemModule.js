@@ -57,6 +57,7 @@ var CalRecurrenceDate = null;
 var CalDateTime = null;
 var CalDuration = null;
 var CalAttendee = null;
+var CalItipItem = null;
 
 var componentInitRun = false;
 function initBaseComponent()
@@ -72,6 +73,8 @@ function initBaseComponent()
                                              Components.interfaces.calIDateTime);
     CalAttendee = new Components.Constructor("@mozilla.org/calendar/attendee;1",
                                              Components.interfaces.calIAttendee);
+    CalItipItem = new Components.Constructor("@mozilla.org/calendar/itip-item;1",
+                                             Components.interfaces.calIItipItem);
 }
 
 
@@ -129,7 +132,12 @@ const componentData =
     {cid: Components.ID("{6877bbdd-f336-46f5-98ce-fe86d0285cc1}"),
      contractid: "@mozilla.org/calendar/weektitle-service;1",
      script: "calWeekTitleService.js",
-     constructor: "calWeekTitleService"}
+     constructor: "calWeekTitleService"},
+
+    {cid: Components.ID("{b84de879-4b85-4d68-8550-e0C527e46f98}"),
+     contractid: "@mozilla.org/calendar/itip-item;1",
+     script: "calItipItem.js",
+     constructor: "calItipItem"}
     ];
 
 var calItemModule = {
