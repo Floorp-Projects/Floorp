@@ -73,3 +73,6 @@
 <!ENTITY lightning.context.deleteitem.accesskey  "D">
 <!-- This access key is in the same menu as 'Go to Next' which gets the 'N'-->
 <!ENTITY lightning.context.newevent.accesskey  "E">
+
+<!-- iMIP Bar (meeting support) -->
+<!ENTITY lightning.imipbar.description "This message contains an invitation to an event.">
