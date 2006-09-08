@@ -1847,7 +1847,7 @@ nsXULTreeBuilder::CompareResults(nsIXULTemplateResult* aLeft, nsIXULTemplateResu
             if (isSequence) {
                 // Determine the indices of the left and right elements
                 // in the container.
-                PRInt32 lindex, rindex;
+                PRInt32 lindex = 0, rindex = 0;
 
                 nsCOMPtr<nsIRDFResource> leftitem;
                 aLeft->GetResource(getter_AddRefs(leftitem));
