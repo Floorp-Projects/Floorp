@@ -813,9 +813,9 @@ Update.prototype = {
       try {
         // Try using a default details URL supplied by the distribution
         // if the update XML does not supply one.
-        var formatter = Components.classes["@mozilla.org/browser/URLFormatterService;1"]
+        var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
                                   .getService(Components.interfaces.nsIURLFormatter);
-        return formatter.formatURLPref(PREF_APP_UPDATE_URL_DETAILS, null);
+        return formatter.formatURLPref(PREF_APP_UPDATE_URL_DETAILS);
       }
       catch (e) {
       }

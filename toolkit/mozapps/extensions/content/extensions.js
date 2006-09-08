@@ -330,9 +330,9 @@ function showView(aView) {
       getMore.setAttribute("value", getMore.getAttribute(isThemes ? "valuethemes" :
                                                                     "valueextensions"));
       var getMorePref = isThemes ? PREF_EXTENSIONS_GETMORETHEMESURL : PREF_EXTENSIONS_GETMOREEXTENSIONSURL;
-      var formatter = Components.classes["@mozilla.org/browser/URLFormatterService;1"]
+      var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
                                 .getService(Components.interfaces.nsIURLFormatter);
-      var getMoreURL = formatter.formatURLPref(getMorePref, null);
+      var getMoreURL = formatter.formatURLPref(getMorePref);
       getMore.setAttribute("getMoreURL", getMoreURL);
       if (getMore.hidden)
         getMore.hidden = false;

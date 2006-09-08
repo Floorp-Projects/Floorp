@@ -406,17 +406,17 @@ var nsBrowserContentHandler = {
   get defaultArgs() {
     var prefb = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService(nsIPrefBranch);
-    var formatter = Components.classes["@mozilla.org/browser/URLFormatterService;1"]
+    var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
                               .getService(Components.interfaces.nsIURLFormatter);
 
     var pagesToLoad = "";
     var overrideState = needHomepageOverride(prefb);
     try {
       if (overrideState == 1) {
-        pagesToLoad = formatter.formatURLPref("startup.homepage_welcome_url", null);
+        pagesToLoad = formatter.formatURLPref("startup.homepage_welcome_url");
       }
       else if (overrideState == 2) {
-        pagesToLoad = formatter.formatURLPref("startup.homepage_override_url", null);
+        pagesToLoad = formatter.formatURLPref("startup.homepage_override_url");
       }
     }
     catch (e) {

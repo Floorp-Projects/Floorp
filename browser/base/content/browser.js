@@ -3126,7 +3126,7 @@ const BrowserSearch = {
     var newWindowPref = gPrefService.getIntPref("browser.link.open_newwindow");
     var where = newWindowPref == 3 ? "tab" : "window";
     var regionBundle = document.getElementById("bundle_browser_region");
-    var searchEnginesURL = formatURL("browser.search.searchEnginesURL", null, true);
+    var searchEnginesURL = formatURL("browser.search.searchEnginesURL", true);
     openUILinkIn(searchEnginesURL, where);
   }
 }
@@ -5271,7 +5271,7 @@ nsContextMenu.prototype = {
 
     addDictionaries : function()
     {
-      var uri = formatURL("browser.dictionaries.download.url", null, true);
+      var uri = formatURL("browser.dictionaries.download.url", true);
 
       var locale = "-";
       try {
@@ -6940,23 +6940,12 @@ function undoCloseTab(aIndex) {
 /**
  * Format a URL
  * eg:
- * echo formatURL("http://%LOCALE%.%SERVICE%.mozilla.org/%LOCALE%/%MYVAR%/", {SERVICE:"amo", MYVAR:"test"});
- * > http://en-US.amo.mozilla.org/en-US/test/
+ * echo formatURL("http://%LOCALE%.amo.mozilla.org/%LOCALE%/%APP%/%VERSION%/");
+ * > http://en-US.amo.mozilla.org/en-US/firefox/3.0a1/
  *
- * Currently supported built-ins are LOCALE, and any value from nsIXULAppInfo, uppercased.
+ * Currently supported built-ins are LOCALE, APP, and any value from nsIXULAppInfo, uppercased.
  */
-function formatURL(aFormat, aVars, aIsPref) {
-
-  var repl = null;
-  if (aVars) {
-    repl = Cc["@mozilla.org/dictionary;1"].createInstance(Ci.nsIDictionary);
-    for (var key in aVars) {
-      var val = Cc['@mozilla.org/supports-string;1'].createInstance(Ci.nsISupportsString);
-      val.data = aVars[key];
-      repl.setValue(key, val);
-    }
-  }
-
-  var formatter = Cc["@mozilla.org/browser/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
-  return aIsPref ? formatter.formatURLPref(aFormat, repl) : formatter.formatURL(aFormat, repl);
+function formatURL(aFormat, aIsPref) {
+  var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+  return aIsPref ? formatter.formatURLPref(aFormat) : formatter.formatURL(aFormat);
 }
