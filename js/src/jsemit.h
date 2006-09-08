@@ -65,8 +65,8 @@ typedef enum JSStmtType {
     STMT_LABEL,                 /* labeled statement:  L: s */
     STMT_IF,                    /* if (then) statement */
     STMT_ELSE,                  /* else clause of if statement */
-    STMT_SWITCH,                /* switch statement */
     STMT_BLOCK,                 /* compound statement: { s1[;... sN] } */
+    STMT_SWITCH,                /* switch statement */
     STMT_WITH,                  /* with statement */
     STMT_CATCH,                 /* catch block */
     STMT_TRY,                   /* try block */
@@ -109,8 +109,8 @@ struct JSStmtInfo {
     JSStmtInfo      *downScope;     /* next enclosing lexical scope */
 };
 
-#define SIF_SCOPE        0x0002     /* statement has its own lexical scope */
-#define SIF_BODY_BLOCK   0x0001     /* STMT_BLOCK type is a function body */
+#define SIF_SCOPE        0x0001     /* statement has its own lexical scope */
+#define SIF_BODY_BLOCK   0x0002     /* STMT_BLOCK type is a function body */
 
 /*
  * To reuse space in JSStmtInfo, rename breaks and continues for use during
@@ -158,6 +158,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_FUN_IS_GENERATOR  0x100 /* parsed yield statement in function */
 #define TCF_FUN_FLAGS         0x1E0 /* flags to propagate from FunctionBody */
 #define TCF_HAS_DEFXMLNS      0x200 /* default xml namespace = ...; parsed */
+#define TCF_HAS_CLOSURE       0x400 /* function statement was parsed */
 
 #define TREE_CONTEXT_INIT(tc)                                                 \
     ((tc)->flags = (tc)->numGlobalVars = 0,                                   \
@@ -499,7 +500,8 @@ typedef enum JSSrcNoteType {
                                    gets and sets */
     SRC_ASSIGNOP    = 8,        /* += or another assign-op follows */
     SRC_COND        = 9,        /* JSOP_IFEQ is from conditional ?: operator */
-    SRC_UNUSED10    = 10,       /* unused */
+    SRC_BRACE       = 10,       /* mandatory brace, for scope or to avoid
+                                   dangling else */
     SRC_HIDDEN      = 11,       /* opcode shouldn't be decompiled */
     SRC_PCBASE      = 12,       /* distance back from annotated get- or setprop
                                    op to first obj.prop.subprop bytecode */

@@ -928,6 +928,7 @@ SrcNotes(JSContext *cx, JSScript *script)
           case SRC_PCBASE:
           case SRC_PCDELTA:
           case SRC_DECL:
+          case SRC_BRACE:
             fprintf(gOutFile, " offset %u", (uintN) js_GetSrcNoteOffset(sn, 0));
             break;
           case SRC_LABEL:
@@ -960,8 +961,12 @@ SrcNotes(JSContext *cx, JSScript *script)
             break;
           case SRC_CATCH:
             delta = (uintN) js_GetSrcNoteOffset(sn, 0);
-            if (delta)
-                fprintf(gOutFile, " guard size %u", delta);
+            if (delta) {
+                if (script->main[offset] == JSOP_LEAVEBLOCK)
+                    fprintf(gOutFile, " stack depth %u", delta);
+                else
+                    fprintf(gOutFile, " guard delta %u", delta);
+            }
             break;
           default:;
         }
