@@ -498,16 +498,10 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
                 JS_POP_TEMP_ROOT(cx, &tvr);
             return NULL;
         }
-        if (!parent) {
-            if (!clonedChild)
-                obj = cursor;
-            else
-                JS_POP_TEMP_ROOT(cx, &tvr);
-            break;
-        }
         if (!clonedChild) {
             obj = cursor;
-            JS_PUSH_SINGLE_TEMP_ROOT(cx, cursor, &tvr);
+            if (parent)
+                JS_PUSH_SINGLE_TEMP_ROOT(cx, cursor, &tvr);
         } else {
             /*
              * Avoid OBJ_SET_PARENT overhead as clonedChild cannot escape to
@@ -516,6 +510,11 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
             clonedChild->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(cursor);
             JS_ASSERT(tvr.u.value == OBJECT_TO_JSVAL(clonedChild));
             tvr.u.value = OBJECT_TO_JSVAL(cursor);
+        }
+        if (!parent) {
+            if (clonedChild)
+                JS_POP_TEMP_ROOT(cx, &tvr);
+            break;
         }
         clonedChild = cursor;
         cursor = parent;
