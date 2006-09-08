@@ -19,6 +19,7 @@ bin/defaults/profile/en-US/*
 bin/defaults/messenger/en-US/*
 bin/defaults/isp/en-US/movemail.rdf
 bin/searchplugins/*
+bin/dictionaries/*
 
 [deflenus]
 ;
@@ -295,6 +296,11 @@ bin/components/libimgicon.so
 bin/components/xulappinfo.js
 bin/components/xulappinfo.xpt
 
+; spellchecker (may not be present)
+bin/components/libmyspell.so
+bin/components/spellchecker.xpt
+bin/components/libspellchecker.so
+
 ; NegotiateAuth
 bin/components/libauth.so
 
@@ -536,12 +542,6 @@ bin/defaults/pref/inspector.js
 bin/res/inspector/viewer-registry.rdf
 bin/res/inspector/search-registry.rdf
 bin/chrome/icons/default/winInspectorMain*.xpm
-
-[spellcheck]
-bin/components/libmyspell.so
-bin/components/libspellchecker.so
-bin/components/spellchecker.xpt
-bin/dictionaries/*
 
 [reporter]
 bin/chrome/reporter.jar
