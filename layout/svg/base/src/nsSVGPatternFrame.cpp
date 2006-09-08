@@ -68,6 +68,18 @@ static void printRect(char *msg, nsIDOMSVGRect *aRect);
 //----------------------------------------------------------------------
 // Implementation
 
+nsSVGPatternFrame::nsSVGPatternFrame(nsStyleContext* aContext,
+                                     nsIDOMSVGURIReference *aRef) :
+  nsSVGPatternFrameBase(aContext),
+  mNextPattern(nsnull),
+  mLoopFlag(PR_FALSE)
+{
+  if (aRef) {
+    // Get the hRef
+    aRef->GetHref(getter_AddRefs(mHref));
+  }
+}
+
 nsSVGPatternFrame::~nsSVGPatternFrame()
 {
   WillModify(mod_die);
@@ -877,24 +889,14 @@ nsIFrame* NS_NewSVGPatternFrame(nsIPresShell*   aPresShell,
   if (!patternElement)
     return nsnull;
 
-  nsSVGPatternFrame* it = new (aPresShell) nsSVGPatternFrame(aContext);
-  if (!it)
-    return nsnull;
-
   nsCOMPtr<nsIDOMSVGURIReference> ref = do_QueryInterface(aContent);
   NS_ASSERTION(ref, 
                "NS_NewSVGPatternFrame -- Content doesn't support nsIDOMSVGURIReference");
-  if (ref) {
-    // Get the hRef
-    ref->GetHref(getter_AddRefs(it->mHref));
-  }
 
-  it->mNextPattern = nsnull;
-  it->mLoopFlag = PR_FALSE;
 #ifdef DEBUG_scooter
   printf("NS_NewSVGPatternFrame\n");
 #endif
-  return it;
+  return new (aPresShell) nsSVGPatternFrame(aContext, ref);
 }
 
 #ifdef DEBUG_scooter
