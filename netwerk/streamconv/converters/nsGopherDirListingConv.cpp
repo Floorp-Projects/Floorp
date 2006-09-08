@@ -240,7 +240,7 @@ nsGopherDirListingConv::DigestBufferLines(char* aBuffer, nsCAutoString& aString)
                     return nsnull;
                 }
                 desc = escName;
-                nsCRT::free(escName);
+                NS_Free(escName);
                 PL_strfree(descStr);
             } else {
                 desc = "%20";
@@ -260,7 +260,7 @@ nsGopherDirListingConv::DigestBufferLines(char* aBuffer, nsCAutoString& aString)
                 return nsnull;
             }
             selector = escName;
-            nsCRT::free(escName);
+            NS_Free(escName);
             PL_strfree(sel);
             line = tabPos+1;
             tabPos = PL_strchr(line,'\t');

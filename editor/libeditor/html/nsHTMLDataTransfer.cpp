@@ -1389,7 +1389,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
       rv = NS_ERROR_NOT_IMPLEMENTED; // for now give error code
     }
   }
-  nsCRT::free(bestFlavor);
+  NS_Free(bestFlavor);
       
   // Try to scroll the selection into view if the paste/drop succeeded
   if (NS_SUCCEEDED(rv))
@@ -2055,7 +2055,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
         rv = InsertAsPlaintextQuotation(stuffToPaste, PR_TRUE, 0);
       }
     }
-    nsCRT::free(flav);
+    NS_Free(flav);
   }
 
   return rv;
@@ -2670,7 +2670,7 @@ void nsHTMLEditor::FreeTagStackStrings(nsVoidArray &tagStack)
   {
     PRUnichar* str = (PRUnichar*)tagStack.ElementAt(i);
     if (str) {
-      nsCRT::free(str);
+      NS_Free(str);
     }
   }
 }

@@ -1845,7 +1845,7 @@ PutCookieLine(nsOutputFileStream &strm, const nsString& aLine)
   while (*p) {
     strm.put(*(p++));
   }
-  nsCRT::free(cp);
+  NS_Free(cp);
   // the lines in a 5.x cookie file call end with '\n', on all platforms
   strm.put('\n');
   return NS_OK;
@@ -1911,7 +1911,7 @@ Fix4xCookies(nsIFileSpec * profilePath) {
     /* correct the expires field */
     char * expiresCString = ToNewCString(expiresString);
     unsigned long expires = strtoul(expiresCString, nsnull, 10);
-    nsCRT::free(expiresCString);
+    NS_Free(expiresCString);
 
     /* if the cookie is supposed to expire at the end of the session
      * expires == 0.  don't adjust those cookies.

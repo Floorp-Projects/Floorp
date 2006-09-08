@@ -325,7 +325,7 @@ nsListCommand::GetCurrentState(nsIEditor *aEditor, const char* aTagName,
   aParams->SetBooleanValue(STATE_ALL, !bMixed && inList);
   aParams->SetBooleanValue(STATE_MIXED, bMixed);
   aParams->SetBooleanValue(STATE_ENABLED, PR_TRUE);
-  if (tagStr) nsCRT::free(tagStr);
+  if (tagStr) NS_Free(tagStr);
   return NS_OK;
 }
 
@@ -429,7 +429,7 @@ nsListItemCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
       {
         rv = htmlEditor->RemoveList(nsDependentString(tagStr));    
       }
-      nsCRT::free(tagStr);
+      NS_Free(tagStr);
     }
   }
   else
@@ -465,7 +465,7 @@ nsRemoveListCommand::IsCommandEnabled(const char * aCommandName,
 
     *outCmdEnabled = bMixed ? PR_TRUE : (tagStr && *tagStr);
     
-    if (tagStr) nsCRT::free(tagStr);
+    if (tagStr) NS_Free(tagStr);
   }
   else
     *outCmdEnabled = PR_FALSE;

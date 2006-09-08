@@ -1780,7 +1780,7 @@ nsBookmarksService::getLocaleString(const char *key, nsString &str)
         && (keyUni))
     {
         str = keyUni;
-        nsCRT::free(keyUni);
+        NS_Free(keyUni);
     }
     else
     {
@@ -5605,7 +5605,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                         if (escapedAttrib)
                         {
                             rv |= strm->Write(escapedAttrib, strlen(escapedAttrib), &dummy);
-                            nsCRT::free(escapedAttrib);
+                            NS_Free(escapedAttrib);
                         }
                     }
                     rv |= strm->Write(kCloseH3, sizeof(kCloseH3)-1, &dummy);
@@ -5705,7 +5705,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                                     rv |= strm->Write(escapedAttrib,
                                                        strlen(escapedAttrib),
                                                        &dummy);
-                                    nsCRT::free(escapedAttrib);
+                                    NS_Free(escapedAttrib);
                                     escapedAttrib = nsnull;
                                 }
                             }
@@ -5884,7 +5884,7 @@ nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *ds,
                             rv |= strm->Write(escapedAttrib, strlen(escapedAttrib), &dummy);
                             rv |= strm->Write(kNL, sizeof(kNL)-1, &dummy);
 
-                            nsCRT::free(escapedAttrib);
+                            NS_Free(escapedAttrib);
                             escapedAttrib = nsnull;
                         }
                     }
@@ -5895,7 +5895,7 @@ nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *ds,
                     rv |= strm->Write(attribute, strlen(attribute), &dummy);
                     rv |= strm->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
                 }
-                nsCRT::free(attribute);
+                NS_Free(attribute);
                 attribute = nsnull;
             }
         }

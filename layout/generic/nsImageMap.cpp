@@ -323,7 +323,7 @@ void Area::ParseCoords(const nsAString& aSpec)
   char* cp = ToNewCString(aSpec);
   if (cp) {
     mCoords = lo_parse_coord_list(cp, &mNumCoords);
-    nsCRT::free(cp);
+    NS_Free(cp);
   }
 }
 

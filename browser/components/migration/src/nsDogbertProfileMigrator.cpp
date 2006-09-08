@@ -591,7 +591,7 @@ nsDogbertProfileMigrator::FixDogbertCookies()
     // correct the expires field
     char* expiresCString = ToNewCString(expiresString);
     unsigned long expires = strtoul(expiresCString, nsnull, 10);
-    nsCRT::free(expiresCString);
+    NS_Free(expiresCString);
 
     // if the cookie is supposed to expire at the end of the session
     // expires == 0.  don't adjust those cookies.

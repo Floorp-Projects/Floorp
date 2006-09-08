@@ -570,7 +570,7 @@ nsSeamonkeyProfileMigrator::WriteFontsBranch(nsIPrefService* aPrefService,
     switch (pref->type) {
     case nsIPrefBranch::PREF_STRING:
       rv = branch->SetCharPref(pref->prefName, pref->stringValue);
-      nsCRT::free(pref->stringValue);
+      PL_strfree(pref->stringValue);
       pref->stringValue = nsnull;
       break;
     case nsIPrefBranch::PREF_BOOL:
@@ -585,11 +585,11 @@ nsSeamonkeyProfileMigrator::WriteFontsBranch(nsIPrefService* aPrefService,
       rv = branch->SetComplexValue(pref->prefName, 
                                    NS_GET_IID(nsIPrefLocalizedString),
                                    pls);
-      nsCRT::free(pref->wstringValue);
+      NS_Free(pref->wstringValue);
       pref->wstringValue = nsnull;
       break;
     }
-    nsCRT::free(pref->prefName);
+    NS_Free(pref->prefName);
     pref->prefName = nsnull;
     delete pref;
     pref = nsnull;

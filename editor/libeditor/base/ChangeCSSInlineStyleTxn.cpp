@@ -100,7 +100,7 @@ ChangeCSSInlineStyleTxn::ValueIncludes(const nsAString &aValueList, const nsAStr
     }
     start = ++end;
   }
-  nsCRT::free(value);
+  NS_Free(value);
   return result;
 }
 
