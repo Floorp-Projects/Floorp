@@ -121,8 +121,8 @@ function getDialogSettings()
     var start;
     var end;
     var eventList;
+    var theView = window.opener.currentView();
     switch (document.getElementById("view-field").selectedItem.value) {
-        var theView = window.opener.currentView();
 
         case 'currentview':
         case '': //just in case
