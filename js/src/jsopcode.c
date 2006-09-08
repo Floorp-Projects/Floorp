@@ -780,16 +780,19 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
 {
     JSContext *cx;
     JSPrinter *jp;
+    ptrdiff_t off, off2, diff, caseExprOff;
     char *lval, *rval;
     uintN i;
-    ptrdiff_t diff, off, off2, caseExprOff;
     jsval key;
     JSString *str;
 
     cx = ss->sprinter.context;
     jp = ss->printer;
 
-    lval = OFF2STR(&ss->sprinter, PopOff(ss, JSOP_NOP));
+    /* JSOP_CONDSWITCH doesn't pop, unlike JSOP_{LOOKUP,TABLE}SWITCH. */
+    off = isCondSwitch ? ss->offsets[ss->top-1] : PopOff(ss, JSOP_NOP);
+    lval = OFF2STR(&ss->sprinter, off);
+
     js_printf(jp, "\tswitch (%s) {\n", lval);
 
     if (tableLength) {
@@ -826,6 +829,9 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
                     return JS_FALSE;
                 }
                 caseExprOff = nextCaseExprOff;
+
+                /* Balance the stack as if this JSOP_CASE matched. */
+                --ss->top;
             } else {
                 /*
                  * key comes from an atom, not the decompiler, so we need to
@@ -867,6 +873,10 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
             if (!Decompile(ss, pc + off, off2 - off))
                 return JS_FALSE;
             jp->indent -= 4;
+
+            /* Re-balance as if last JSOP_CASE or JSOP_DEFAULT mismatched. */
+            if (isCondSwitch)
+                ++ss->top;
         }
     }
 
@@ -876,6 +886,10 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
         jp->indent -= 2;
     }
     js_printf(jp, "\t}\n");
+
+    /* By the end of a JSOP_CONDSWITCH, the discriminant has been popped. */
+    if (isCondSwitch)
+        --ss->top;
     return JS_TRUE;
 }
 
