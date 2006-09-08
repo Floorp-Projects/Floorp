@@ -223,6 +223,9 @@ pref("browser.search.order.Yahoo.1",          "chrome://branding/content/searchc
 pref("browser.search.order.Yahoo.2",          "chrome://branding/content/searchconfig.properties");
 pref("browser.search.order.Yahoo",            "chrome://branding/content/searchconfig.properties");
 
+pref("browser.search.param.yahoo-fr", "moz2");
+pref("browser.search.param.yahoo-fr-cjkt", "fx2-moz-1");
+
 // search bar results always open in a new tab
 pref("browser.search.openintab", false);
 

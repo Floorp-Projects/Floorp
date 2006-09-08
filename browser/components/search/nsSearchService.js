@@ -1421,24 +1421,35 @@ Engine.prototype = {
                  // We only support MozParams for appdir-shipped search engines
                  this._isInAppDir) {
         var value;
-        // For now, we only support the "defaultEngine" condition.
-        if (param.getAttribute("condition") == "defaultEngine") {
-          const defPref = BROWSER_SEARCH_PREF + "defaultenginename";
-          var defaultPrefB = Cc["@mozilla.org/preferences-service;1"].
-                             getService(Ci.nsIPrefService).
-                             getDefaultBranch(null);
-          const nsIPLS = Ci.nsIPrefLocalizedString;
-          var defaultName;
-          try {
-            defaultName = defaultPrefB.getComplexValue(defPref, nsIPLS).data;
-          } catch (ex) {}
+        switch (param.getAttribute("condition")) {
+          case "defaultEngine":
+            const defPref = BROWSER_SEARCH_PREF + "defaultenginename";
+            var defaultPrefB = Cc["@mozilla.org/preferences-service;1"].
+                               getService(Ci.nsIPrefService).
+                               getDefaultBranch(null);
+            const nsIPLS = Ci.nsIPrefLocalizedString;
+            var defaultName;
+            try {
+              defaultName = defaultPrefB.getComplexValue(defPref, nsIPLS).data;
+            } catch (ex) {}
 
-          // If this engine was the default search engine, use the true value
-          if (this.name == defaultName)
-            value = param.getAttribute("trueValue");
-          else
-            value = param.getAttribute("falseValue");
-          url.addParam(param.getAttribute("name"), value);
+            // If this engine was the default search engine, use the true value
+            if (this.name == defaultName)
+              value = param.getAttribute("trueValue");
+            else
+              value = param.getAttribute("falseValue");
+            url.addParam(param.getAttribute("name"), value);
+            break;
+
+          case "pref":
+            try {
+              var prefB = Cc["@mozilla.org/preferences-service;1"].
+                          getService(Ci.nsIPrefBranch);
+              value = prefB.getCharPref(BROWSER_SEARCH_PREF + "param." +
+                                        param.getAttribute("pref"));
+              url.addParam(param.getAttribute("name"), value);
+            } catch (e) { }
+            break;
         }
       }
     }
