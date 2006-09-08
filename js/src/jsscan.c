@@ -1313,8 +1313,7 @@ retry:
                                                  kw->chars)) {
                     goto error;
                 }
-            } else if (JS_VERSION_IS_ECMA(cx) ||
-                       kw->version <= (cx->version & JSVERSION_MASK)) {
+            } else if (kw->version <= JSVERSION_NUMBER(cx)) {
                 tt = kw->tokentype;
                 tp->t_op = (JSOp) kw->op;
                 goto out;
