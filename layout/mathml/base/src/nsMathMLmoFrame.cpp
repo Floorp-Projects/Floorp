@@ -682,6 +682,7 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
 
       if (mMaxSize != float(NS_UNCONSTRAINEDSIZE) && mMaxSize > 0.0f) {
         // if we are here, there is a user defined maxsize ...
+        //XXX Set stretchHint = NS_STRETCH_NORMAL? to honor the maxsize as close as possible?
         if (NS_MATHML_OPERATOR_MAXSIZE_IS_EXPLICIT(mFlags)) {
           // there is an explicit value like maxsize="20pt"
           // try to maintain the aspect ratio of the char
@@ -714,6 +715,15 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
 
       if (mMinSize != float(NS_UNCONSTRAINEDSIZE) && mMinSize > 0.0f) {
         // if we are here, there is a user defined minsize ...
+        // always allow the char to stretch in its natural direction,
+        // even if it is different from the caller's direction 
+        if (aStretchDirection != NS_STRETCH_DIRECTION_DEFAULT &&
+            aStretchDirection != mEmbellishData.direction) {
+          aStretchDirection = NS_STRETCH_DIRECTION_DEFAULT;
+          // but when we are not honoring the requested direction
+          // we should not use the caller's container size either
+          container = initialSize;
+        }
         if (NS_MATHML_OPERATOR_MINSIZE_IS_EXPLICIT(mFlags)) {
           // there is an explicit value like minsize="20pt"
           // try to maintain the aspect ratio of the char
