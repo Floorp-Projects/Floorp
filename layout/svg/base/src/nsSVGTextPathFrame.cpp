@@ -60,15 +60,13 @@ NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsIContent* aContent,
                        nsIFrame* parentFrame, nsStyleContext* aContext)
 {
   NS_ASSERTION(parentFrame, "null parent");
-  nsISVGTextContentMetrics *metrics;
-  CallQueryInterface(parentFrame, &metrics);
-  if (!metrics) {
+  if (parentFrame->GetType() != nsLayoutAtoms::svgTextFrame) {
     NS_ERROR("trying to construct an SVGTextPathFrame for an invalid container");
     return nsnull;
   }
   
-  nsCOMPtr<nsIDOMSVGTextPathElement> tspan_elem = do_QueryInterface(aContent);
-  if (!tspan_elem) {
+  nsCOMPtr<nsIDOMSVGTextPathElement> tpath_elem = do_QueryInterface(aContent);
+  if (!tpath_elem) {
     NS_ERROR("Trying to construct an SVGTextPathFrame for a "
              "content element that doesn't support the right interfaces");
     return nsnull;
