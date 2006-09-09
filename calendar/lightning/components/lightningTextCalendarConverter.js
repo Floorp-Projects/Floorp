@@ -146,11 +146,11 @@ ltnMimeConverter.prototype = {
             // Bug 351610: This mechanism is a little flawed
             var itipItem = Cc["@mozilla.org/calendar/itip-item;1"]
                            .createInstance(Ci.calIItipItem);
-            itipItem.initialize(data);
+            itipItem.init(data);
             var observer = Cc["@mozilla.org/observer-service;1"]
                            .getService(Ci.nsIObserverService);
             if (observer) {
-                observer.notifyObservers(itipItem, "onITipItemCreation", 0);
+                observer.notifyObservers(itipItem, "onItipItemCreation", 0);
             }
         } catch (e) {
             Components.utils.reportError("Cannot Create iTIP Item: " + e);
