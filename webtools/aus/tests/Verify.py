@@ -4,8 +4,8 @@ which is copyright (c) 2002 Cunningham & Cunningham, Inc.
 Released under the terms of the GNU General Public License version 2 or later.
 """
 
-import urllib2
 import feedparser # http://feedparser.org/
+import urllib2
 from fit.ColumnFixture import ColumnFixture
 
 auth_handler = urllib2.HTTPBasicAuthHandler()
@@ -36,7 +36,17 @@ class Verify(ColumnFixture):
                "isMajorUpdate": "Boolean"}
 
     def __init__(self):
+        super(Verify, self).__init__()
         self.osVersion = "osVersion"
+
+        # Variables that are typically set in the FitNesse wiki params.
+        self.host = ""
+        self.product = ""
+        self.version = ""
+        self.platform = ""
+        self.locale = ""
+
+        # For storign the last retrieved AUS XML and its URI.
         self.lastURI = ""
         self.lastXML = ""
 
@@ -54,11 +64,11 @@ class Verify(ColumnFixture):
 
     # Check if the update type is "minor".
     def isMinorUpdate(self):
-        return ("type=\"minor\"" in self.getXml())
+        return ('type="minor"' in self.getXml())
 
     # Check if the update type is "major".
     def isMajorUpdate(self):
-        return ("type=\"major\"" in self.getXml())
+        return ('type="major"' in self.getXml())
 
     # Check if the AUS XML document is well-formed.
     def isValidXml(self):
@@ -82,11 +92,14 @@ class Verify(ColumnFixture):
 
     # Builds an AUS URI based on our test data.
     def buildUri(self):
-        return self.host + "/" +        \
-               self.product + "/" +     \
-               self.version + "/" +     \
-               self.build + "/" +       \
-               self.platform + "/" +    \
-               self.locale + "/" +      \
-               self.channel + "/" +     \
-               self.osVersion + "/update.xml"
+
+        # Assign class variables from FitNesse arguments.
+        self.host = self.args[0]
+        self.product = self.args[1]
+        self.version = self.args[2]
+        self.platform = self.args[3]
+        self.locale = self.args[4]
+
+        return '/'.join((self.host, self.product, self.version,     \
+                        self.build, self.platform, self.locale,     \
+                        self.channel, self.osVersion, "update.xml"))
