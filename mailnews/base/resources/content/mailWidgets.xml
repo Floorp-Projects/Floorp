@@ -1963,7 +1963,7 @@
         </treecols>
         <treechildren class="foldersTreeChildren"/>
         <template>
-          <rule>
+          <rule nc:IsDeferred="false">
             <treechildren>
               <treeitem uri="rdf:*">
                 <treerow sort="rdf:http://home.netscape.com/NC-rdf#FolderTreeName?sort=true">
