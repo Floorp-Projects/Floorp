@@ -74,7 +74,7 @@
 <!ENTITY lightning.toolbar.dayview.label     "Day View">
 <!ENTITY lightning.toolbar.weekview.label    "Week View">
 <!ENTITY lightning.toolbar.monthview.label   "Month View">
-<!ENTITY lightning.toolbar.print.label       "Print Calendar…"
+<!ENTITY lightning.toolbar.print.label       "Print Calendar…">
 
 <!--Views' context menu-->
 <!ENTITY lightning.context.deleteitem.accesskey  "D">
