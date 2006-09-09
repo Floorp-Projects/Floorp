@@ -3468,7 +3468,6 @@ NS_IMETHODIMP
 DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
                           nsIWebProgressListener* aWebProgressListener)
 {
-  INIT_RUNTIME_ERROR_CHECKING();
 
 #ifdef MOZ_XUL
   // Temporary code for Bug 136185 / Bug 240490
