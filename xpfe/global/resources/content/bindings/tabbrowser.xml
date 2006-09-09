@@ -180,8 +180,9 @@
         tabbrowser: this,
         handleEvent: function handleEvent(aEvent) {
           if (aEvent.ctrlKey && aEvent.keyCode == KeyEvent.DOM_VK_F4 &&
-            this.tabbrowser.mTabBox.handleCtrlPageUpDown)
-          this.tabbrowser.removeCurrentTab();
+              this.tabbrowser.mTabBox.handleCtrlPageUpDown &&
+              this.tabbrowser.getStripVisibility())
+            this.tabbrowser.removeCurrentTab();
         }
       })]]>
       </field>
