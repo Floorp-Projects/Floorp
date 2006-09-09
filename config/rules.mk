@@ -591,21 +591,25 @@ endif # SUPPRESS_DEFAULT_RULES
 MAKE_TIER_SUBMAKEFILES = $(if $(tier_$*_dirs),$(MAKE) $(addsuffix /Makefile,$(tier_$*_dirs)))
 
 export_tier_%: 
+	@echo "$@"
 	@$(MAKE_TIER_SUBMAKEFILES)
 	@$(EXIT_ON_ERROR) \
 	$(foreach dir,$(tier_$*_dirs),$(MAKE) -C $(dir) export; )
 
 libs_tier_%:
+	@echo "$@"
 	@$(MAKE_TIER_SUBMAKEFILES)
 	@$(EXIT_ON_ERROR) \
 	$(foreach dir,$(tier_$*_dirs),$(MAKE) -C $(dir) libs; )
 
 tools_tier_%:
+	@echo "$@"
 	@$(MAKE_TIER_SUBMAKEFILES)
 	@$(EXIT_ON_ERROR) \
 	$(foreach dir,$(tier_$*_dirs),$(MAKE) -C $(dir) tools; )
 
 $(foreach tier,$(TIERS),tier_$(tier))::
+	@echo "$@: $($@_staticdirs) $($@_dirs)"
 	@$(EXIT_ON_ERROR) \
 	$(foreach dir,$($@_staticdirs),$(MAKE) -C $(dir); )
 	$(MAKE) export_$@
