@@ -252,6 +252,41 @@ function loadDialog(item)
     } else if (item.recurrenceInfo)
         setElementValue("item-recurrence", "true", "checked");
 
+    /* Alarms */
+    if (item.alarmOffset) {
+        var alarmRelatedStart = (item.alarmRelated == Components.interfaces.calIItemBase.ALARM_RELATED_START);
+        if (alarmRelatedStart) {
+            setElementValue("alarm-trigger-relation", "START");
+        } else {
+            setElementValue("alarm-trigger-relation", "END");
+        }
+
+        var offset = item.alarmOffset;
+        if (offset.minutes) {
+            var minutes = offset.minutes + offset.hours*60 + offset.days*24*60 + offset.weeks*60*24*7;
+            // Special cases for the common alarms
+            if ((minutes == 15) && alarmRelatedStart) {
+                document.getElementById("item-alarm").selectedIndex = 2;
+            } else if ((minutes == 30) && alarmRelatedStart) {
+                document.getElementById("item-alarm").selectedIndex = 3;
+            } else {
+                setElementValue("alarm-length-field", minutes);
+                setElementValue("alarm-length-units", "minutes");
+                setElementValue("item-alarm", "custom");
+            }
+        } else if (offset.hours) {
+            var hours = offset.hours + offset.days*24 + offset.weeks*24*7;
+            setElementValue("alarm-length-field", hours);
+            setElementValue("alarm-length-units", "hours");
+            setElementValue("item-alarm", "custom");
+        } else { // days
+            var days = offset.days + offset.weeks*7;
+            setElementValue("alarm-length-field", days);
+            setElementValue("alarm-length-units", "days");
+            setElementValue("item-alarm", "custom");
+        }
+    }
+
     var detailsButton = document.getElementById("calendar-event-dialog").getButton("disclosure");
     var detailsElements = document.getElementsByAttribute("details", "true");
 
@@ -611,11 +646,12 @@ function updateEntryDate()
 }
 
 function updateTaskAlarmWarnings() {
+    document.getElementById("alarm-warnings").setAttribute("hidden", true);
     document.getElementById("alarm-start-warning").setAttribute("hidden", true);
     document.getElementById("alarm-end-warning").setAttribute("hidden", true);
 
     var alarmType = getElementValue("item-alarm");
-    if (!gDetailsShown || !isToDo(window.calendarItem) || alarmType == "none") {
+    if (!isToDo(window.calendarItem) || alarmType == "none") {
         return true;
     }
 
@@ -625,11 +661,13 @@ function updateTaskAlarmWarnings() {
     var alarmRelated = document.getElementById("alarm-trigger-relation").selectedItem.value;
 
     if ((alarmType != "custom" || alarmRelated == "START") && !hasEntryDate) {
+        document.getElementById("alarm-warnings").removeAttribute("hidden");
         document.getElementById("alarm-start-warning").removeAttribute("hidden");
         return false;
     }
 
     if (alarmRelated == "END" && !hasDueDate) {
+        document.getElementById("alarm-warnings").removeAttribute("hidden");
         document.getElementById("alarm-end-warning").removeAttribute("hidden");
         return false;
     }
@@ -898,41 +936,6 @@ function loadDetails() {
         default:  // bogus value
             dump("ERROR! Event has invalid privacy string: " + item.privacy + "\n");
             break;
-    }
-
-    /* alarms */
-    if (item.alarmOffset) {
-        var alarmRelatedStart = (item.alarmRelated == Components.interfaces.calIItemBase.ALARM_RELATED_START);
-        if (alarmRelatedStart) {
-            setElementValue("alarm-trigger-relation", "START");
-        } else {
-            setElementValue("alarm-trigger-relation", "END");
-        }
-
-        var offset = item.alarmOffset;
-        if (offset.minutes) {
-            var minutes = offset.minutes + offset.hours*60 + offset.days*24*60 + offset.weeks*60*24*7;
-            // Special cases for the common alarms
-            if ((minutes == 15) && alarmRelatedStart) {
-                document.getElementById("item-alarm").selectedIndex = 2;
-            } else if ((minutes == 30) && alarmRelatedStart) {
-                document.getElementById("item-alarm").selectedIndex = 3;
-            } else {
-                setElementValue("alarm-length-field", minutes);
-                setElementValue("alarm-length-units", "minutes");
-                setElementValue("item-alarm", "custom");
-            }
-        } else if (offset.hours) {
-            var hours = offset.hours + offset.days*24 + offset.weeks*24*7;
-            setElementValue("alarm-length-field", hours);
-            setElementValue("alarm-length-units", "hours");
-            setElementValue("item-alarm", "custom");
-        } else { // days
-            var days = offset.days + offset.weeks*7;
-            setElementValue("alarm-length-field", days);
-            setElementValue("alarm-length-units", "days");
-            setElementValue("item-alarm", "custom");
-        }
     }
 
     // update alarm checkbox/label/settings button
