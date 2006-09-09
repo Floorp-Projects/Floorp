@@ -38,7 +38,7 @@
 #
 # ***** END LICENSE BLOCK *****
 #
-#ident	"$Id: Makefile.com,v 1.7 2005/02/26 03:40:36 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile.com,v 1.8 2006/09/09 02:24:25 wtchang%redhat.com Exp $"
 #
 
 MACH = $(shell mach)
@@ -57,7 +57,6 @@ FILES = $(DATAFILES) pkginfo
 PACKAGE = $(shell basename `pwd`)
 
 PRODUCT_VERSION = $(shell grep JSS_VERSION $(CORE_DEPTH)/jss/org/mozilla/jss/util/jssver.h | sed -e 's/"$$//' -e 's/.*"//' -e 's/ .*//')
-PRODUCT_NAME = JSS_3_5_RTM
 
 LN = /usr/bin/ln
 CP = /usr/bin/cp
