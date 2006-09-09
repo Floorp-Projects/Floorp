@@ -2805,6 +2805,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
          */
         if (pn1 && js_MatchToken(cx, ts, TOK_IN)) {
             stmtInfo.type = STMT_FOR_IN_LOOP;
+            pn->pn_op = JSOP_FORIN;
 
             /* Check that the left side of the 'in' is valid. */
             JS_ASSERT(!TOKEN_TYPE_IS_DECL(tt) || pn1->pn_type == tt);
