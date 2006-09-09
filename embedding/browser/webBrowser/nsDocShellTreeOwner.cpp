@@ -74,6 +74,13 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMHTMLTextAreaElement.h"
+#include "nsIDOMHTMLHtmlElement.h"
+#include "nsIDOMHTMLAppletElement.h"
+#include "nsIDOMHTMLObjectElement.h"
+#include "nsIDOMHTMLEmbedElement.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIImageLoadingContent.h"
 #include "nsIWebNavigation.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIPresShell.h"
@@ -1687,77 +1694,71 @@ ChromeContextMenuListener::ContextMenu(nsIDOMEvent* aMouseEvent)
     menuInfo = menuInfoImpl; 
   }
 
-  // Find the first node to be an element starting with this node and
-  // working up through its parents.
-
   PRUint32 flags = nsIContextMenuListener::CONTEXT_NONE;
   PRUint32 flags2 = nsIContextMenuListener2::CONTEXT_NONE;
-  nsCOMPtr<nsIContent> content;
-  do {
-    // XXX test for selected text
-    content = do_QueryInterface(node);
-    if (content && content->IsNodeOfType(nsINode::eHTML)) {
-      const char *tagStr;
-      content->Tag()->GetUTF8String(&tagStr);
 
-      // Test what kind of element we're dealing with here
-      if (strcmp(tagStr, "img") == 0)
-      {
+  // XXX test for selected text
+
+  PRUint16 nodeType;
+  res = node->GetNodeType(&nodeType);
+  NS_ENSURE_SUCCESS(res, res);
+
+  // First, checks for nodes that never have children.
+  if (nodeType == nsIDOMNode::ELEMENT_NODE) {
+    nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(node));
+    if (content) {
+      nsCOMPtr<nsIURI> imgUri;
+      content->GetCurrentURI(getter_AddRefs(imgUri));
+      if (imgUri) {
         flags |= nsIContextMenuListener::CONTEXT_IMAGE;
         flags2 |= nsIContextMenuListener2::CONTEXT_IMAGE;
         targetDOMnode = node;
-        // if we see an image, keep searching for a possible anchor
       }
-      else if (strcmp(tagStr, "input") == 0)
-      {
-        // INPUT element - button, combo, checkbox, text etc.
-        flags |= nsIContextMenuListener::CONTEXT_INPUT;
-        flags2 |= nsIContextMenuListener2::CONTEXT_INPUT;
-        targetDOMnode = node;
-        
-        // See if the input type is an image
-        if (menuListener2) {
-          nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(node));
-          if (inputElement) {
-            nsAutoString inputElemType;
-            inputElement->GetType(inputElemType);
-            if (inputElemType.LowerCaseEqualsLiteral("image"))
-              flags2 |= nsIContextMenuListener2::CONTEXT_IMAGE;
-          }
-        }
-        break; // exit do-while
+    }
+
+    nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(node));
+    if (inputElement) {
+      flags |= nsIContextMenuListener::CONTEXT_INPUT;
+      flags2 |= nsIContextMenuListener2::CONTEXT_INPUT;
+
+      if (menuListener2) {
+        nsAutoString inputElemType;
+        inputElement->GetType(inputElemType);
+        if (inputElemType.LowerCaseEqualsLiteral("text") ||
+            inputElemType.LowerCaseEqualsLiteral("password"))
+          flags2 |= nsIContextMenuListener2::CONTEXT_TEXT;
       }
-      else if (strcmp(tagStr, "textarea") == 0)
-      {
-        // text area
-        flags |= nsIContextMenuListener::CONTEXT_TEXT;
-        flags2 |= nsIContextMenuListener2::CONTEXT_TEXT;
-        targetDOMnode = node;
-        break; // exit do-while
-      }
-      else if (strcmp(tagStr, "html") == 0)
-      {
-        if (!flags && !flags2) { 
-        // only care about this if no other context was found.
-            flags |= nsIContextMenuListener::CONTEXT_DOCUMENT;
-            flags2 |= nsIContextMenuListener2::CONTEXT_DOCUMENT;
-            targetDOMnode = node;
-        }
-        if (!(flags & nsIContextMenuListener::CONTEXT_IMAGE)) {
-          // first check if this is a background image that the user was trying to click on
-          // and if the listener is ready for that (only nsIContextMenuListener2 and up)
-          if (menuInfoImpl && menuInfoImpl->HasBackgroundImage(node)) {
-            flags2 |= nsIContextMenuListener2::CONTEXT_BACKGROUND_IMAGE;
-          }
-        }
-        break; // exit do-while
-      }
-      else if (strcmp(tagStr, "object") == 0 ||  /* XXX what about images and documents? */
-               strcmp(tagStr, "embed") == 0 ||
-               strcmp(tagStr, "applet") == 0)
-      {                // always consume events for plugins and Java 
-        return NS_OK;  // who may throw their own context menus
-      }
+
+      targetDOMnode = node;
+    }
+
+    nsCOMPtr<nsIDOMHTMLTextAreaElement> textElement(do_QueryInterface(node));
+    if (textElement) {
+      flags |= nsIContextMenuListener::CONTEXT_TEXT;
+      flags2 |= nsIContextMenuListener2::CONTEXT_TEXT;
+      targetDOMnode = node;
+    }
+
+    // always consume events for plugins and Java who may throw their
+    // own context menus but not for image objects.  Document objects
+    // will never be targets or ancestors of targets, so that's OK.
+    nsCOMPtr<nsIDOMHTMLObjectElement> objectElement;
+    if (!(flags & nsIContextMenuListener::CONTEXT_IMAGE))
+      objectElement = do_QueryInterface(node);
+    nsCOMPtr<nsIDOMHTMLEmbedElement> embedElement(do_QueryInterface(node));
+    nsCOMPtr<nsIDOMHTMLAppletElement> appletElement(do_QueryInterface(node));
+
+    if (objectElement || embedElement || appletElement)
+      return NS_OK;
+  }
+
+  // Bubble out, looking for items of interest
+  do {
+    PRUint16 nodeType;
+    res = node->GetNodeType(&nodeType);
+    NS_ENSURE_SUCCESS(res, res);
+
+    if (nodeType == nsIDOMNode::ELEMENT_NODE) {
 
       // Test if the element has an associated link
       nsCOMPtr<nsIDOMElement> element(do_QueryInterface(node));
@@ -1782,6 +1783,30 @@ ChromeContextMenuListener::ContextMenu(nsIDOMEvent* aMouseEvent)
     node->GetParentNode(getter_AddRefs(parentNode));
     node = parentNode;
   } while (node);
+
+  if (!flags && !flags2) {
+    // We found nothing of interest so far, check if we
+    // have at least an html document.
+    nsCOMPtr<nsIDOMDocument> document;
+    node = do_QueryInterface(targetNode);
+    node->GetOwnerDocument(getter_AddRefs(document));
+    nsCOMPtr<nsIDOMHTMLDocument> htmlDocument(do_QueryInterface(document));
+    if (htmlDocument) {
+      flags |= nsIContextMenuListener::CONTEXT_DOCUMENT;
+      flags2 |= nsIContextMenuListener2::CONTEXT_DOCUMENT;
+      targetDOMnode = node;
+      if (!(flags & nsIContextMenuListener::CONTEXT_IMAGE)) {
+        // check if this is a background image that the user was trying to click on
+        // and if the listener is ready for that (only nsIContextMenuListener2 and up)
+        if (menuInfoImpl && menuInfoImpl->HasBackgroundImage(targetDOMnode)) {
+          flags2 |= nsIContextMenuListener2::CONTEXT_BACKGROUND_IMAGE;
+          // For the embedder to get the correct background image 
+          // targetDOMnode must point to the original node. 
+          targetDOMnode = do_QueryInterface(targetNode);
+        }
+      }
+    }
+  }
 
   // we need to cache the event target into the focus controller's popupNode
   // so we can get at it later from command code, etc.:
