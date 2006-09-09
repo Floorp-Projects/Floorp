@@ -557,6 +557,16 @@ interface nsICanvasRenderingContextGLES11 : nsISupports
   const PRUint32 ARRAY_BUFFER_BINDING = 0x8894;
   const PRUint32 ELEMENT_ARRAY_BUFFER_BINDING = 0x8895;
 
+  /* Extensions */
+  const PRUint32 TEXTURE_RECTANGLE              = 0x84F5;
+  const PRUint32 TEXTURE_BINDING_RECTANGLE      = 0x84F6;
+  const PRUint32 MAX_RECTANGLE_TEXTURE_SIZE     = 0x84F8;
+
+  const PRUint32 TEXTURE_MAX_ANISOTROPY         = 0x84FE;
+  const PRUint32 MAX_TEXTURE_MAX_ANISOTROPY     = 0x84FF;
+
+
+
   /**
    ** GL ES 1.1 API
    **
@@ -666,7 +676,7 @@ interface nsICanvasRenderingContextGLES11 : nsISupports
 
   // This needs some work; we need to allow specifying the internal format, so that
   // we can load A/L/LA images as well as RGB/RGBA, which is all we'd get from a DOM Image
-  void texImage2DHTML (in nsIDOMHTMLElement imageOrCanvas);
+  void texImage2DHTML (in PRUint32 target, in nsIDOMHTMLElement imageOrCanvas);
   //void texSubImage2DHTML (...);
 
   void texParameter();

@@ -48,7 +48,7 @@ function startTextureLoad() {
         var texId = (gl.genTextures(1))[0];
         gl.bindTexture(gl.TEXTURE_2D, texId);
         gl.texParameter(gl.TEXTURE_2D, gl.GENERATE_MIPMAP, true);
-        gl.texImage2DHTML(img);
+        gl.texImage2DHTML(gl.TEXTURE_2D, img);
         gl.enable(gl.TEXTURE_2D);
 
         draw();
