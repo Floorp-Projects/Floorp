@@ -95,7 +95,12 @@
         // Session history has the URL of the page that failed
         // to load, not the one of the error page. So, just call
         // reload(), which will also repost POST data correctly.
-        location.reload();
+        try {
+          location.reload();
+        } catch (e) {
+          // We probably tried to reload a URI that caused an exception to
+          // occur;  e.g. a non-existent file.
+        }
       }
 
       function initPage()
