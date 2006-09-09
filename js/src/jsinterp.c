@@ -2604,6 +2604,10 @@ interrupt:
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
           END_CASE(JSOP_IN)
 
+          BEGIN_CASE(JSOP_FORIN)
+            flags = 0;
+          END_CASE(JSOP_FORIN)
+
           BEGIN_CASE(JSOP_FOREACH)
             flags = JSITER_FOREACH;
           END_CASE(JSOP_FOREACH)
@@ -2703,10 +2707,7 @@ interrupt:
 
             /* Is this the first iteration ? */
             if (JSVAL_IS_NULL(rval)) {
-                /*
-                 * Yes, and because rval is null we know JSOP_STARTITER stored
-                 * that slot, and we must use the new iteration protocol.
-                 */
+                /* Yes, use the new iteration protocol. */
                 fp->pc = (jsbytecode *) sp[i-depth];
                 iterobj = js_ValueToIterator(cx, OBJECT_TO_JSVAL(obj), flags);
                 fp->pc = pc;
@@ -6077,15 +6078,12 @@ interrupt:
 #if JS_HAS_GENERATORS
           BEGIN_CASE(JSOP_STARTITER)
             /*
-             * Start of a for-in or for-each-in loop: clear flags and push two
-             * nulls.  If this is a for-each-in loop, JSOP_FOREACH will follow
-             * and set flags = JSITER_FOREACH.  Push null instead of undefined
-             * so that code at do_forinloop: can tell that this opcode pushed
-             * the iterator slot, rather than a backward compatible JSOP_PUSH
-             * that was emitted prior to the introduction of the new iteration
-             * protocol.
+             * Start of a for-in or for-each-in loop: push two nulls.  Push
+             * null instead of undefined so that code at do_forinloop: can
+             * tell that this opcode pushed the iterator slot, rather than a
+             * backward compatible JSOP_PUSH that was emitted prior to the
+             * introduction of the new iteration protocol.
              */
-            flags = 0;
             sp[0] = sp[1] = JSVAL_NULL;
             sp += 2;
           END_CASE(JSOP_STARTITER)
