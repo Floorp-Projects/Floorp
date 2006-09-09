@@ -127,13 +127,15 @@ function markInDatabase( lower, upper )
     while ( enumerator.hasMoreElements() )
     {
       var header = enumerator.getNext();
-      if ( ( header instanceof Components.interfaces.nsIMsgDBHdr )
-         && !header.isRead ) // don't do anything until really necessary
+      if ( header instanceof Components.interfaces.nsIMsgDBHdr )
       {
-        var messageDate = header.date;
+        if ( !header.isRead ) // don't do anything until really necessary
+        {
+           var messageDate = header.date;
 
-        if ( ( lower <= messageDate ) && ( messageDate < upper ) )
-          headers.AppendElement( header );
+           if ( ( lower <= messageDate ) && ( messageDate < upper ) )
+             headers.AppendElement( header );
+        }
       }
       else
         dump("markByDate::markInDatabase: unexpected: the database gave us a header which is no nsIMsgDBHdr!\n" );
