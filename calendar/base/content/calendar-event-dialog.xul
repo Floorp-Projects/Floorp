@@ -265,6 +265,12 @@
                         </menupopup>
                       </menulist>
                     </hbox>
+                  </vbox>
+                </row>
+
+                <row id="alarm-warnings">
+                  <spacer flex="1"/>
+                  <vbox>
                     <label id="alarm-start-warning" value="&alarm.start.warning;"
                            class="warning-text-class"/>
                     <label id="alarm-end-warning" value="&alarm.due.warning;"
