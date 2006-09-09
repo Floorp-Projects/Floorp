@@ -178,8 +178,11 @@
         <row details="true">
           <label value="&newevent.attendees.label;"/>
           <hbox flex="1">
+            <!-- XXX This should be changed to a richlistbox that actually
+               -     works and doesn't need to be constrained by max-height.
+              -->
             <calendar-attendee-list id="attendees-list" flex="1"
-                                    style="max-height: 10em;"/>
+                                    style="max-height: 12em;"/>
             <spacer width="10"/>
 
             <grid>
