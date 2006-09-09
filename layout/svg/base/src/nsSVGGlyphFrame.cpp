@@ -195,10 +195,9 @@ nsSVGGlyphFrame::IsFrameOfType(PRUint32 aFlags) const
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods
 
-void
-nsSVGGlyphFrame::LoopCharacters(cairo_t *aCtx, const nsAString &aText,
-                                const nsSVGCharacterPosition *aCP,
-                                void (*aFunc)(cairo_t *cr, const char *utf8))
+static void
+LoopCharacters(cairo_t *aCtx, nsAString &aText, nsSVGCharacterPosition *aCP,
+               void (*aFunc)(cairo_t *cr, const char *utf8))
 {
   if (!aCP) {
     aFunc(aCtx, NS_ConvertUTF16toUTF8(aText).get());
@@ -230,7 +229,9 @@ nsSVGGlyphFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
   }
 
   nsAutoString text;
-  if (!GetCharacterData(text)) {
+  GetCharacterData(text);
+
+  if (text.IsEmpty()) {
     return NS_OK;
   }
 
@@ -240,7 +241,7 @@ nsSVGGlyphFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
 
   SelectFont(ctx);
 
-  nsresult rv = GetCharacterPosition(ctx, text, getter_Transfers(cp));
+  nsresult rv = GetCharacterPosition(ctx, getter_Transfers(cp));
 
   PRUint16 renderMode;
   cairo_matrix_t matrix;
@@ -375,20 +376,26 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
   }
 
   nsAutoString text;
-  if (!GetCharacterData(text)) {
+  GetCharacterData(text);
+
+  if (text.IsEmpty()) {
     return NS_OK;
   }
 
   nsAutoArrayPtr<nsSVGCharacterPosition> cp;
 
-  nsSVGAutoGlyphHelperContext ctx(this, text, getter_Transfers(cp));
+  nsSVGAutoGlyphHelperContext ctx(this);
 
-  nsresult rv = GetGlobalTransform(ctx, nsnull);
+  nsresult rv = GetCharacterPosition(ctx, getter_Transfers(cp));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!cp) {
+  rv = GetGlobalTransform(ctx, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!cp)
     cairo_move_to(ctx, mX, mY);
 
+  if (!cp) {
     if (hasStroke) {
       cairo_text_path(ctx, NS_ConvertUTF16toUTF8(text).get());
     } else {
@@ -480,15 +487,19 @@ nsSVGGlyphFrame::GetBBox(nsIDOMSVGRect **_retval)
   *_retval = nsnull;
 
   nsAutoString text;
-  if (!GetCharacterData(text)) {
+  GetCharacterData(text);
+
+  if (text.IsEmpty())
     return NS_OK;
-  }
 
   nsAutoArrayPtr<nsSVGCharacterPosition> cp;
 
-  nsSVGAutoGlyphHelperContext ctx(this, text, getter_Transfers(cp));
+  nsSVGAutoGlyphHelperContext ctx(this);
 
-  nsresult rv = GetGlobalTransform(ctx, nsnull);
+  nsresult rv = GetCharacterPosition(ctx, getter_Transfers(cp));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = GetGlobalTransform(ctx, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!cp)
@@ -527,7 +538,7 @@ nsSVGGlyphFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
 //----------------------------------------------------------------------
 // nsSVGGlyphFrame methods:
 
-PRBool
+void
 nsSVGGlyphFrame::GetCharacterData(nsAString & aCharacterData)
 {
   nsAutoString characterData;
@@ -541,19 +552,13 @@ nsSVGGlyphFrame::GetCharacterData(nsAString & aCharacterData)
                                      trimTrailingWhitespace);
   }
   aCharacterData = characterData;
-
-  return !characterData.IsEmpty();
 }
 
 nsresult
 nsSVGGlyphFrame::GetCharacterPosition(cairo_t *ctx,
-                                      const nsAString &aText,
                                       nsSVGCharacterPosition **aCharacterPosition)
 {
   *aCharacterPosition = nsnull;
-
-  NS_ASSERTION(!aText.IsEmpty(), "no text");
-
   nsSVGTextPathFrame *textPath = FindTextPathParent();
 
   /* we're an ordinary fragment - return */
@@ -568,12 +573,14 @@ nsSVGGlyphFrame::GetCharacterPosition(cairo_t *ctx,
     return NS_ERROR_FAILURE;
 
   float length = data->GetLength();
-  PRUint32 strLength = aText.Length();
+  nsAutoString text;
+  GetCharacterData(text);
+  PRUint32 strLength = text.Length();
 
   nsSVGCharacterPosition *cp = new nsSVGCharacterPosition[strLength];
 
   for (PRUint32 k = 0; k < strLength; k++)
-    cp[k].draw = PR_FALSE;
+      cp[k].draw = PR_FALSE;
 
   float x = mX;
   for (PRUint32 i = 0; i < strLength; i++) {
@@ -581,7 +588,7 @@ nsSVGGlyphFrame::GetCharacterPosition(cairo_t *ctx,
     cairo_text_extents_t extent;
 
     cairo_text_extents(ctx,
-                       NS_ConvertUTF16toUTF8(Substring(aText, i, 1)).get(),
+                       NS_ConvertUTF16toUTF8(Substring(text, i, 1)).get(),
                        &extent);
     float advance = extent.x_advance;
 
@@ -771,7 +778,10 @@ nsSVGGlyphFrame::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retv
 
   nsAutoArrayPtr<nsSVGCharacterPosition> cp;
 
-  nsSVGAutoGlyphHelperContext ctx(this, text, getter_Transfers(cp));
+  nsSVGAutoGlyphHelperContext ctx(this);
+
+  nsresult rv = GetCharacterPosition(ctx, getter_Transfers(cp));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   float x, y;
 
@@ -814,7 +824,10 @@ nsSVGGlyphFrame::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval
 
   nsAutoArrayPtr<nsSVGCharacterPosition> cp;
   
-  nsSVGAutoGlyphHelperContext ctx(this, text, getter_Transfers(cp));
+  nsSVGAutoGlyphHelperContext ctx(this);
+
+  nsresult rv = GetCharacterPosition(ctx, getter_Transfers(cp));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   cairo_text_extents_t extent;
 
@@ -852,7 +865,10 @@ nsSVGGlyphFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 
   nsAutoArrayPtr<nsSVGCharacterPosition> cp;
 
-  nsSVGAutoGlyphHelperContext ctx(this, text, getter_Transfers(cp));
+  nsSVGAutoGlyphHelperContext ctx(this);
+
+  nsresult rv = GetCharacterPosition(ctx, getter_Transfers(cp));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   cairo_text_extents_t extent;
   cairo_text_extents(ctx,
@@ -920,7 +936,10 @@ nsSVGGlyphFrame::GetRotationOfChar(PRUint32 charnum, float *_retval)
 
   nsAutoArrayPtr<nsSVGCharacterPosition> cp;
 
-  nsSVGAutoGlyphHelperContext ctx(this, text, getter_Transfers(cp));
+  nsSVGAutoGlyphHelperContext ctx(this);
+
+  nsresult rv = GetCharacterPosition(ctx, getter_Transfers(cp));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (cp) {
     if (cp[charnum].draw == PR_FALSE) {
@@ -971,7 +990,9 @@ NS_IMETHODIMP_(float)
 nsSVGGlyphFrame::GetAdvance()
 {
   nsAutoString text;
-  if (!GetCharacterData(text)) {
+  GetCharacterData(text);
+
+  if (text.IsEmpty()) {
     return 0.0f;
   }
 
@@ -1111,7 +1132,9 @@ NS_IMETHODIMP_(float)
 nsSVGGlyphFrame::GetComputedTextLength()
 {
   nsAutoString text;
-  if (!GetCharacterData(text)) {
+  GetCharacterData(text);
+
+  if (text.IsEmpty()) {
     return 0.0f;
   }
 
@@ -1153,7 +1176,10 @@ nsSVGGlyphFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
 
   nsAutoArrayPtr<nsSVGCharacterPosition> cp;
 
-  nsSVGAutoGlyphHelperContext ctx(this, text, getter_Transfers(cp));
+  nsSVGAutoGlyphHelperContext ctx(this);
+
+  nsresult rv = GetCharacterPosition(ctx, getter_Transfers(cp));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   float x, y;
   if (!cp) {
@@ -1393,15 +1419,19 @@ PRBool
 nsSVGGlyphFrame::ContainsPoint(float x, float y)
 {
   nsAutoString text;
-  if (!GetCharacterData(text)) {
+  GetCharacterData(text);
+
+  if (text.IsEmpty())
     return PR_FALSE;
-  }
 
   nsAutoArrayPtr<nsSVGCharacterPosition> cp;
 
-  nsSVGAutoGlyphHelperContext ctx(this, text, getter_Transfers(cp));
+  nsSVGAutoGlyphHelperContext ctx(this);
 
-  nsresult rv = GetGlobalTransform(ctx, nsnull);
+  nsresult rv = GetCharacterPosition(ctx, getter_Transfers(cp));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  rv = GetGlobalTransform(ctx, nsnull);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   float xx = 0, yy = 0;
@@ -1474,21 +1504,10 @@ nsSVGGlyphFrame::GetGlobalTransform(cairo_t *ctx,
 //----------------------------------------------------------------------
 // helper class
 
-nsSVGGlyphFrame::nsSVGAutoGlyphHelperContext::nsSVGAutoGlyphHelperContext(
-    nsSVGGlyphFrame *aSource,
-    const nsAString &aText,
-    nsSVGCharacterPosition **cp)
-{
-  Init(aSource);
-
-  nsresult rv = aSource->GetCharacterPosition(mCT, aText, cp);
-  if NS_FAILED(rv) {
-    NS_WARNING("failed to get character position data");
-  }
-}
-
-void nsSVGGlyphFrame::nsSVGAutoGlyphHelperContext::Init(nsSVGGlyphFrame *aSource)
+nsSVGAutoGlyphHelperContext::nsSVGAutoGlyphHelperContext(nsSVGGlyphFrame *aSource)
 {
   mCT = cairo_create(nsSVGUtils::GetCairoComputationalSurface());
-  aSource->SelectFont(mCT);
+  if (aSource) {
+    aSource->SelectFont(mCT);
+  }
 }
