@@ -254,10 +254,6 @@ nsPrintEngine::nsPrintEngine() :
 //-------------------------------------------------------
 nsPrintEngine::~nsPrintEngine()
 {
-#ifdef MOZ_LAYOUTDEBUG
-  nsPrintEngine::mLayoutDebugObj = nsnull;
-#endif
-
   Destroy(); // for insurance
 }
 
@@ -540,7 +536,6 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
   // need to be cleared from the settings at the end of the job.
   nsCOMPtr<nsIPrintSession> printSession =
       do_CreateInstance("@mozilla.org/gfx/printsession;1", &rv);
-  CHECK_RUNTIME_ERROR_CONDITION(nsIDebugObject::PRT_RUNTIME_CREATEPRTSESSION, rv, NS_ERROR_FAILURE);
   if (NS_FAILED(rv)) {
     PR_PL(("NS_ERROR_FAILURE - do_CreateInstance for printsession failed"));
     return CleanupOnFailure(rv, PR_TRUE);
@@ -586,7 +581,6 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
   // Add Root Doc to Tree and List
   mPrt->mPrintObject = new nsPrintObject();
   rv = mPrt->mPrintObject->Init(webContainer);
-  CHECK_RUNTIME_ERROR_CONDITION(nsIDebugObject::PRT_RUNTIME_INITPRTOBJ, rv, NS_ERROR_FAILURE);
   if (NS_FAILED(rv)) {
     PR_PL(("NS_ERROR_FAILURE - Failed on Init of PrintObject"));
     ShowPrintErrorDialog(NS_ERROR_FAILURE);
@@ -651,8 +645,6 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
   /* create factory (incl. create print dialog) */
   nsCOMPtr<nsIDeviceContextSpecFactory> factory =
           do_CreateInstance(kDeviceContextSpecFactoryCID, &rv);
-
-  CHECK_RUNTIME_ERROR_CONDITION(nsIDebugObject::PRT_RUNTIME_CREATESPECFACTORY, rv, NS_ERROR_FAILURE);
   if (NS_SUCCEEDED(rv)) {
 #ifdef DEBUG_dcone
     printf("PRINT JOB STARTING\n");
@@ -706,7 +698,6 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
       }
     }
 
-    CHECK_RUNTIME_ERROR_CONDITION(nsIDebugObject::PRT_RUNTIME_NOPROMPTSERVICE, rv, NS_ERROR_GFX_NO_PRINTROMPTSERVICE);
     if (NS_FAILED(rv)) {
       PR_PL(("**** Printing Stopped before CreateDeviceContextSpec"));
       return CleanupOnFailure(rv, PR_TRUE);
@@ -730,7 +721,6 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
       return NS_ERROR_ABORT;
     }
 
-    CHECK_RUNTIME_ERROR_CONDITION(nsIDebugObject::PRT_RUNTIME_NODEVSPEC, rv, NS_ERROR_FAILURE);
     if (NS_SUCCEEDED(rv)) {
       rv = mDeviceContext->GetDeviceContextFor(devspec,
                                                *getter_AddRefs(mPrt->mPrintDC));
@@ -793,36 +783,6 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
             mPrt->mPrintSettings->GetPrintFrameType(&mPrt->mPrintFrameType);
           }
 
-#ifdef MOZ_LAYOUTDEBUG
-          {
-            // This is a special debugging regression tool section
-            PRUnichar* tempFileName = nsnull;
-            if (nsPrintEngine::IsDoingRuntimeTesting()) {
-              // Here we check for a special filename (the destination for the print job)
-              // and sets into the print settings if there is a name then we want to 
-              // print to a file. if not, let it print normally.
-              if (NS_SUCCEEDED(mLayoutDebugObj->GetPrintFileName(&tempFileName)) && tempFileName) {
-                if (*tempFileName) {
-                  mPrt->mPrintSettings->SetPrintToFile(PR_TRUE);
-                  mPrt->mPrintSettings->SetToFileName(tempFileName);
-                }
-                nsMemory::Free(tempFileName);
-              }
-
-              // Here we check to see how we should print a frameset (if there is one)
-              PRBool asIs = PR_FALSE;
-              if (NS_SUCCEEDED(mLayoutDebugObj->GetPrintAsIs(&asIs))) {
-                PRInt16 howToEnableFrameUI;
-                mPrt->mPrintSettings->GetHowToEnableFrameUI(&howToEnableFrameUI);
-                if (howToEnableFrameUI != nsIPrintSettings::kFrameEnableNone) {
-                  mPrt->mPrintFrameType = asIs?nsIPrintSettings::kFramesAsIs:nsIPrintSettings::kEachFrameSep;
-                  mPrt->mPrintSettings->SetPrintFrameType(mPrt->mPrintFrameType);
-                }
-              }
-            }
-          }
-#endif
-
           // Get the Needed info for Calling PrepareDocument
           PRUnichar* fileName = nsnull;
           // check to see if we are printing to a file
@@ -846,7 +806,6 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
           if (docTitleStr) nsMemory::Free(docTitleStr);
           if (docURLStr) nsMemory::Free(docURLStr);
 
-          CHECK_RUNTIME_ERROR_CONDITION(nsIDebugObject::PRT_RUNTIME_PREPAREDOC, rv, NS_ERROR_FAILURE);
           if (NS_FAILED(rv)) {
             return CleanupOnFailure(rv, PR_TRUE);
           }
@@ -2082,7 +2041,6 @@ nsPrintEngine::SetupToPrintContent(nsIDeviceContext* aDContext,
 
   // Here we reflow all the PrintObjects
   nsresult rv = ReflowDocList(mPrt->mPrintObject, doSetPixelScale);
-  CHECK_RUNTIME_ERROR_CONDITION(nsIDebugObject::PRT_RUNTIME_REFLOWDOCLIST, rv, NS_ERROR_FAILURE);
   if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
   }
@@ -2212,7 +2170,6 @@ nsPrintEngine::SetupToPrintContent(nsIDeviceContext* aDContext,
   if (docTitleStr) nsMemory::Free(docTitleStr);
   if (docURLStr) nsMemory::Free(docURLStr);
 
-  CHECK_RUNTIME_ERROR_CONDITION(nsIDebugObject::PRT_RUNTIME_BEGINDOC, rv, NS_ERROR_FAILURE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // This will print the docshell document
@@ -2615,6 +2572,7 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
         fdbg->DumpRegressionData(poPresContext, mPrt->mDebugFilePtr, 0, PR_TRUE);
       }
       fclose(mPrt->mDebugFilePtr);
+      SetIsPrinting(PR_FALSE);
 #endif
     } else {
       nsIFrame* rootFrame = poPresShell->FrameManager()->GetRootFrame();
@@ -2879,7 +2837,6 @@ nsPrintEngine::PrintPage(nsPresContext*   aPresContext,
   // When rv == NS_ERROR_ABORT, it means we want out of the
   // print job without displaying any error messages
   nsresult rv = mPageSeqFrame->PrintNextPage();
-  CHECK_RUNTIME_ERROR_CONDITION(nsIDebugObject::PRT_RUNTIME_NEXTPAGE, rv, NS_ERROR_FAILURE);
   if (NS_FAILED(rv)) {
     if (rv != NS_ERROR_ABORT) {
       ShowPrintErrorDialog(rv);
@@ -4147,47 +4104,6 @@ static void DumpPrintObjectsListStart(const char * aStr, nsVoidArray * aDocList)
 #define DUMP_DOC_LIST(_title)
 #define DUMP_DOC_TREE
 #define DUMP_DOC_TREELAYOUT
-#endif
-
-#ifdef MOZ_LAYOUTDEBUG
-nsCOMPtr<nsIDebugObject> nsPrintEngine::mLayoutDebugObj;
-
-PRBool nsPrintEngine::mIsDoingRuntimeTesting = PR_FALSE;
-
-void 
-nsPrintEngine::InitializeTestRuntimeError()
-{
-  mIsDoingRuntimeTesting =
-    nsContentUtils::GetBoolPref("print.doing_runtime_error_checking");
-
-  mLayoutDebugObj = do_GetService("@mozilla.org/debug/debugobject;1");
-}
-
-PRBool 
-nsPrintEngine::IsDoingRuntimeTesting() 
-{ 
-  PRBool isDoingTests = PR_FALSE;
-  if (mLayoutDebugObj) {
-    mLayoutDebugObj->GetDoRuntimeTests(&isDoingTests);
-  }
-  return isDoingTests;
-}
-
-nsresult 
-nsPrintEngine::TestRuntimeErrorCondition(PRInt16  aRuntimeID, 
-                                         nsresult aCurrentErrorCode, 
-                                         nsresult aNewErrorCode)
-{
-  PRInt16 id;
-  if (mLayoutDebugObj) {
-    if (NS_SUCCEEDED(mLayoutDebugObj->GetTestId(&id))) {
-      if (id == aRuntimeID) {
-        return aNewErrorCode;
-      }
-    }
-  }
-  return aCurrentErrorCode;
-}
 #endif
 
 //---------------------------------------------------------------
