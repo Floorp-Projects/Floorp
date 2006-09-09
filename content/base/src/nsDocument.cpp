@@ -2600,8 +2600,10 @@ nsDocument::CreateTextNode(const nsAString& aData, nsIDOMText** aReturn)
   nsresult rv = NS_NewTextNode(getter_AddRefs(text), mNodeInfoManager);
 
   if (NS_SUCCEEDED(rv)) {
+    // Don't notify; this node is still being created.
+    text->SetText(aData, PR_FALSE);
+
     rv = CallQueryInterface(text, aReturn);
-    (*aReturn)->AppendData(aData);
   }
 
   return rv;
@@ -2622,8 +2624,10 @@ nsDocument::CreateComment(const nsAString& aData, nsIDOMComment** aReturn)
   nsresult rv = NS_NewCommentNode(getter_AddRefs(comment), mNodeInfoManager);
 
   if (NS_SUCCEEDED(rv)) {
+    // Don't notify; this node is still being created.
+    comment->SetText(aData, PR_FALSE);
+
     rv = CallQueryInterface(comment, aReturn);
-    (*aReturn)->AppendData(aData);
   }
 
   return rv;
@@ -2648,8 +2652,10 @@ nsDocument::CreateCDATASection(const nsAString& aData,
                                       mNodeInfoManager);
 
   if (NS_SUCCEEDED(rv)) {
+    // Don't notify; this node is still being created.
+    content->SetText(aData, PR_FALSE);
+
     rv = CallQueryInterface(content, aReturn);
-    (*aReturn)->AppendData(aData);
   }
 
   return rv;
