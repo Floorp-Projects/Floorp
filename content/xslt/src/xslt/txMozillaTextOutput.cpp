@@ -282,6 +282,8 @@ txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
     NS_ENSURE_SUCCESS(rv, rv);
 
     mTextNode = textNode;
+
+    return NS_OK;
 }
 
 nsresult
