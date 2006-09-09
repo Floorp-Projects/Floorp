@@ -54,6 +54,7 @@ function calWcapCachedCalendar() {
 calWcapCachedCalendar.prototype = {
     m_ifaces: [ Components.interfaces.calIWcapCalendar,
                 Components.interfaces.calICalendar,
+                Components.interfaces.calICalendarProvider,
                 Components.interfaces.nsIInterfaceRequestor,
                 Components.interfaces.nsIClassInfo,
                 Components.interfaces.nsISupports ],
@@ -188,6 +189,22 @@ calWcapCachedCalendar.prototype = {
             "onError",
             err instanceof Components.interfaces.nsIException
             ? [err.result, err.message] : [-1, msg] );
+    },
+    
+    // calICalendarProvider:
+    get prefChromeOverlay() {
+        return this.remoteCal.prefChromeOverlay;
+    },
+    // displayName attribute already part of calIWcapCalendar
+    createCalendar:
+    function( name, url, listener ) {
+        this.remoteCal.createCalendar( name, url, listener );
+    },
+    deleteCalendar: function( calendar, listener ) {
+        this.remoteCal.deleteCalendar( calendar, listener );
+    },
+    getCalendar: function( url ) {
+        return this.remoteCal.getCalendar( url );
     },
     
     // calIWcapCalendar:

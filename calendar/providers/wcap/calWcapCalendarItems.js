@@ -1309,140 +1309,113 @@ calWcapCalendar.prototype.syncChangesTo = function(
             },
             // abortFunc:
             function( exc ) {
-//                 if (listener != null) {
-//                     listener.onOperationComplete(
-//                         this_.superCalendar,
-//                         Components.results.NS_ERROR_FAILURE,
-//                         SYNC, null, exc );
-//                 }
+                if (listener != null) {
+                    listener.onOperationComplete(
+                        this_.superCalendar,
+                        Components.results.NS_ERROR_FAILURE,
+                        SYNC, null, exc );
+                }
                 this_.logError( exc );
             } );
         
         var addItemListener = new FinishListener(
             Components.interfaces.calIOperationListener.ADD, syncState );
-        if (dtFrom == null) {
-            this.log( "syncChangesTo(): doing initial sync." );
-            syncState.acquire();
-            var url = this.session.getCommandUrl( "fetchcomponents_by_range" );
-            url += ("&relativealarm=1&compressed=1&recurring=1" +
-                    "&fmt-out=text%2Fcalendar&calid=" +
-                    encodeURIComponent(this.calId));
-            url += getItemFilterUrlPortions(itemFilter);
-            this.session.issueAsyncRequest(
-                url, stringToIcal,
-                function( wcapResponse ) {
-                    this_.syncChangesTo_resp(
-                        wcapResponse, syncState, listener,
-                        function( item ) {
+        var modifiedItems = [];
+        
+        this.log( "syncChangesTo(): getting last modifications..." );
+        var modifyItemListener = new FinishListener(
+            Components.interfaces.calIOperationListener.MODIFY, syncState );
+        var params = ("&relativealarm=1&compressed=1&recurring=1&calid=" +
+                      encodeURIComponent(this.calId));
+        params += ("&fmt-out=text%2Fcalendar&dtstart=" + zdtFrom);
+        params += ("&dtend=" + getIcalUTC(now));
+        
+        syncState.acquire();
+        this.session.issueAsyncRequest(
+            this.session.getCommandUrl("fetchcomponents_by_lastmod") +
+            params + getItemFilterUrlPortions(itemFilter),
+            stringToIcal,
+            function( wcapResponse ) {
+                this_.syncChangesTo_resp(
+                    wcapResponse, syncState, listener,
+                    function( item ) {
+                        var dtCreated = item.getProperty("CREATED");
+                        var bAdd = (dtCreated == null || dtFrom == null ||
+                                    dtCreated.compare(dtFrom) >= 0);
+                        modifiedItems.push( item.id );
+                        if (bAdd) {
+                            // xxx todo: verify whether exceptions
+                            //           have been written
                             this_.log( "new item: " + item.id );
                             if (destCal) {
                                 syncState.acquire();
-                                // xxx todo: verify whether exceptions have been
-                                //           written
                                 destCal.addItem( item, addItemListener );
                             }
                             if (calObserver)
                                 calObserver.onAddItem( item );
-                        } );
-                } );
-        }
-        else {
-            var modifiedItems = [];
-            
-            this.log( "syncChangesTo(): getting last modifications..." );
-            var modifyItemListener = new FinishListener(
-                Components.interfaces.calIOperationListener.MODIFY, syncState );
-            var params = ("&relativealarm=1&compressed=1&recurring=1&calid=" +
-                          encodeURIComponent(this.calId));
-            params += ("&fmt-out=text%2Fcalendar&dtstart=" + zdtFrom);
-            syncState.acquire();
-            this.session.issueAsyncRequest(
-                this.session.getCommandUrl("fetchcomponents_by_lastmod") +
-                params + getItemFilterUrlPortions(itemFilter),
-                stringToIcal,
-                function( wcapResponse ) {
-                    this_.syncChangesTo_resp(
-                        wcapResponse, syncState, listener,
-                        function( item ) {
-                            var dtCreated = item.getProperty("CREATED");
-                            var bAdd = (dtCreated == null ||
-                                        dtCreated.compare(dtFrom) >= 0);
-                            modifiedItems.push( item.id );
-                            if (bAdd) {
-                                // xxx todo: verify whether exceptions
-                                //           have been written
-                                this_.log( "new item: " + item.id );
-                                if (destCal) {
-                                    syncState.acquire();
-                                    destCal.addItem( item, addItemListener );
-                                }
-                                if (calObserver)
-                                    calObserver.onAddItem( item );
+                        }
+                        else {
+                            this_.log( "modified item: " + item.id );
+                            if (destCal) {
+                                syncState.acquire();
+                                destCal.modifyItem( item, null,
+                                                    modifyItemListener );
                             }
-                            else {
-                                this_.log( "modified item: " + item.id );
-                                if (destCal) {
-                                    syncState.acquire();
-                                    destCal.modifyItem( item, null,
-                                                        modifyItemListener );
-                                }
-                                if (calObserver)
-                                    calObserver.onModifyItem( item, null );
+                            if (calObserver)
+                                calObserver.onModifyItem( item, null );
+                        }
+                    } );
+            } );
+        
+        this.log( "syncChangesTo(): getting deleted items..." );
+        var deleteItemListener = new FinishListener(
+            Components.interfaces.calIOperationListener.DELETE, syncState );
+        syncState.acquire();
+        this.session.issueAsyncRequest(
+            this.session.getCommandUrl("fetch_deletedcomponents") + params +
+            getItemFilterUrlPortions( itemFilter & // only component-type
+                                      Components.interfaces.calICalendar
+                                      .ITEM_FILTER_TYPE_ALL ),
+            stringToIcal,
+            function( wcapResponse ) {
+                this_.syncChangesTo_resp(
+                    wcapResponse, syncState, listener,
+                    function( item ) {
+                        // don't delete anything that has been touched
+                        // by lastmods:
+                        for each ( var mid in modifiedItems ) {
+                            if (item.id == mid) {
+                                this_.log( "skipping deletion of " + item.id );
+                                return;
                             }
-                        } );
-                } );
-            
-            this.log( "syncChangesTo(): getting deleted items..." );
-            var deleteItemListener = new FinishListener(
-                Components.interfaces.calIOperationListener.DELETE, syncState );
-            syncState.acquire();
-            this.session.issueAsyncRequest(
-                this.session.getCommandUrl("fetch_deletedcomponents") + params +
-                getItemFilterUrlPortions( itemFilter & // only component-type
-                                          Components.interfaces.calICalendar
-                                          .ITEM_FILTER_TYPE_ALL ),
-                stringToIcal,
-                function( wcapResponse ) {
-                    this_.syncChangesTo_resp(
-                        wcapResponse, syncState, listener,
-                        function( item ) {
-                            // don't delete anything that has been touched
-                            // by lastmods:
-                            for each ( var mid in modifiedItems ) {
-                                if (item.id == mid) {
-                                    this_.log(
-                                        "skipping deletion of " + item.id );
-                                    return;
-                                }
+                        }
+                        if (isParent(item)) {
+                            this_.log( "deleted item: " + item.id );
+                            if (destCal) {
+                                syncState.acquire();
+                                destCal.deleteItem(
+                                    item, deleteItemListener );
                             }
-                            if (isParent(item)) {
-                                this_.log( "deleted item: " + item.id );
-                                if (destCal) {
-                                    syncState.acquire();
-                                    destCal.deleteItem( item,
-                                                        deleteItemListener );
-                                }
-                                if (calObserver)
-                                    calObserver.onDeleteItem( item );
+                            if (calObserver)
+                                calObserver.onDeleteItem( item );
+                        }
+                        else {
+                            // modify parent instead of
+                            // straight-forward deleteItem(). WTF.
+                            var parent = item.parentItem.clone();
+                            parent.recurrenceInfo.removeOccurrenceAt(
+                                item.recurrenceId );
+                            this_.log( "modified parent: " + parent.id );
+                            if (destCal) {
+                                syncState.acquire();
+                                destCal.modifyItem( parent, item,
+                                                    deleteItemListener );
                             }
-                            else {
-                                // modify parent instead of
-                                // straight-forward deleteItem(). WTF.
-                                var parent = item.parentItem.clone();
-                                parent.recurrenceInfo.removeOccurrenceAt(
-                                    item.recurrenceId );
-                                this_.log( "modified parent: " + parent.id );
-                                if (destCal) {
-                                    syncState.acquire();
-                                    destCal.modifyItem( parent, item,
-                                                        deleteItemListener );
-                                }
-                                if (calObserver)
-                                    calObserver.onModifyItem( parent, item );
-                            }
-                        } );
-                } );
-        }
+                            if (calObserver)
+                                calObserver.onModifyItem( parent, item );
+                        }
+                    } );
+            } );
     }
     catch (exc) {
         if (listener != null) {

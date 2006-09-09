@@ -60,8 +60,8 @@ function calWcapCalendar( calId, session ) {
 }
 calWcapCalendar.prototype = {
     m_ifaces: [ Components.interfaces.calIWcapCalendar,
-                Components.interfaces.calICalendarProvider,
                 Components.interfaces.calICalendar,
+                Components.interfaces.calICalendarProvider,
                 Components.interfaces.nsIInterfaceRequestor,
                 Components.interfaces.nsIClassInfo,
                 Components.interfaces.nsISupports ],
@@ -143,24 +143,28 @@ calWcapCalendar.prototype = {
             err instanceof Components.interfaces.nsIException
             ? [err.result, err.message] : [-1, msg] );
     },
-
+    
     // calICalendarProvider:
     get prefChromeOverlay() {
         return null;
     },
-
-    get displayName() {
-        return calGetString("wcap", "wcapName");
-    },
-
-    createCalendar: function wcap_createCal() {
+    // displayName attribute already part of calIWcapCalendar
+    createCalendar:
+    function( name, url, listener )
+    {
         throw NS_ERROR_NOT_IMPLEMENTED;
     },
-
-    deleteCalendar: function wcap_deleteCal(cal, listener) {
+    deleteCalendar:
+    function( calendar, listener )
+    {
         throw NS_ERROR_NOT_IMPLEMENTED;
     },
-
+    getCalendar:
+    function( url )
+    {
+        throw NS_ERROR_NOT_IMPLEMENTED;
+    },
+    
     // calICalendar:
     get name() {
         return getCalendarManager().getCalendarPref( this, "NAME" );
@@ -230,7 +234,7 @@ calWcapCalendar.prototype = {
     //           like a subscribed one...
     m_calId: null,
     get calId() {
-        var userId = this.session.userId; // assure being logged in
+        var userId = this.session.defaultCalId; // assure being logged in
         return this.m_calId || userId;
     },
     set calId( id ) {

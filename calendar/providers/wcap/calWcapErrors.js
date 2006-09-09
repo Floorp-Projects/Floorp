@@ -335,6 +335,9 @@ function errorToString( err )
         return err;
     if (err instanceof Error)
         return err.message;
+    if (err instanceof Components.interfaces.nsIException)
+        return err.toString(); // xxx todo: or just message?
+    // numeric codes:
     switch (err) {
     case Components.results.NS_ERROR_INVALID_ARG:
         return "NS_ERROR_INVALID_ARG";

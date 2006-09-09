@@ -692,6 +692,8 @@ calWcapSession.prototype = {
                     var nColon = username.indexOf(':');
                     this.m_userId =
                         (nColon >= 0 ? username.substr(0, nColon) : username);
+                    if (this.m_userId.length > 0)
+                        this.m_defaultCalId = this.m_userId;
                 }
                 this.m_uri = thatUri.clone();
                 this.log( "setting uri to " + this.uri.spec );
@@ -704,6 +706,9 @@ calWcapSession.prototype = {
     
     m_userId: null,
     get userId() { return this.m_userId; },
+    
+    m_defaultCalId: null,
+    get defaultCalId() { return this.m_defaultCalId || this.userId; },
     
     get isLoggedIn() { return this.m_sessionId != null; },
     
@@ -736,6 +741,7 @@ calWcapSession.prototype = {
         }
         this.m_userId = null;
         this.m_userPrefs = null; // reread prefs
+        this.m_defaultCalId = null;
         this.m_bNoLoginsAnymore = false;
     },
     
@@ -1011,7 +1017,7 @@ function confirmInsecureLogin( uri )
     if (g_confirmedHttpLogins == null) {
         g_confirmedHttpLogins = {};
         var confirmedHttpLogins = getPref(
-            "calendar.wcap.confirmedHttpLogins", "");
+            "calendar.wcap.confirmed_http_logins", "");
         var tuples = confirmedHttpLogins.split(',');
         for each ( var tuple in tuples ) {
             var ar = tuple.split(':');
@@ -1037,12 +1043,12 @@ function confirmInsecureLogin( uri )
     if (dontAskAgain.value) {
         // save decision for all running calendars and all future confirmations:
         var confirmedHttpLogins = getPref(
-            "calendar.wcap.confirmedHttpLogins", "");
+            "calendar.wcap.confirmed_http_logins", "");
         if (confirmedHttpLogins.length > 0)
             confirmedHttpLogins += ",";
         confirmedEntry = (bConfirmed ? "1" : "0");
         confirmedHttpLogins += (encodedHost + ":" + confirmedEntry);
-        setPref("calendar.wcap.confirmedHttpLogins", confirmedHttpLogins);
+        setPref("calendar.wcap.confirmed_http_logins", confirmedHttpLogins);
         g_confirmedHttpLogins[encodedHost] = confirmedEntry;
     }
     
