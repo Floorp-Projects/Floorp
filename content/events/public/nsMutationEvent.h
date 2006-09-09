@@ -69,6 +69,7 @@ public:
 #define NS_MUTATION_NODEINSERTEDINTODOCUMENT          (NS_MUTATION_START+4)
 #define NS_MUTATION_ATTRMODIFIED                      (NS_MUTATION_START+5)
 #define NS_MUTATION_CHARACTERDATAMODIFIED             (NS_MUTATION_START+6)
+#define NS_MUTATION_END                               (NS_MUTATION_START+6)
 
 // Bits are actually checked to optimize mutation event firing.
 // That's why I don't number from 0x00.  The first event should
