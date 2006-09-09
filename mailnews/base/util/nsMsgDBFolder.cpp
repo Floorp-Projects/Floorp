@@ -1616,7 +1616,8 @@ nsMsgDBFolder::AutoCompact(nsIMsgWindow *aWindow)
              rv = aWindow->GetPromptDialog(getter_AddRefs(dialog));
              NS_ENSURE_SUCCESS(rv, rv);
 
-             rv = dialog->ConfirmEx(dialogTitle.get(), confirmString.get(), nsIPrompt::STD_OK_CANCEL_BUTTONS,
+             rv = dialog->ConfirmEx(dialogTitle.get(), confirmString.get(),
+                                    (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0 + nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
                                     nsnull, nsnull, nsnull, checkboxText.get(), &checkValue, &buttonPressed);
              NS_ENSURE_SUCCESS(rv, rv);
              if (!buttonPressed)
