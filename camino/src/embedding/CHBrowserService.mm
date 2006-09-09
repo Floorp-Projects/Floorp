@@ -55,6 +55,7 @@
 #include "nsIMIMEInfo.h"
 #include "nsIPref.h"
 #include "nsIObserverService.h"
+#include "GeckoUtils.h"
 
 NSString* const InitEmbeddingNotificationName = @"InitEmebedding";    // this is actually broadcast from MainController
 NSString* const TermEmbeddingNotificationName = @"TermEmbedding";
@@ -224,7 +225,16 @@ CHBrowserService::CreateChromeWindow(nsIWebBrowserChrome *parent,
 #endif
     return NS_ERROR_FAILURE;
   }
-    
+  
+  // Push a null JSContext on the JS stack, before we create the chrome window.
+  // Otherwise, a webpage invoking some JS to do window.open() will be last on the JS stack.
+  // And once we start fixing up our newly created chrome window (to hide the scrollbar,
+  // for example) Gecko will think it's the *webpage*, and webpages are not allowed
+  // to do that.  see bug 324907.
+  nsresult rv = NS_OK;
+  StNullJSContextScope hack(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   nsCOMPtr<nsIWindowCreator> browserChrome(do_QueryInterface(parent));
   return browserChrome->CreateChromeWindow(parent, chromeFlags, _retval);
 }

@@ -35,9 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-struct JSContext; // allow nsIJSContextStack to be included without sucking in JS headers
-#include "nsIJSContextStack.h"
 #include "nsServiceManagerUtils.h"
+#include "GeckoUtils.h"
 
 #import "nsAlertController.h"
 #import "CHBrowserService.h"
@@ -133,9 +132,9 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
   }
 
   int result = NSAlertErrorReturn;
-
-  nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
-  if (stack && NS_SUCCEEDED(stack->Push(nsnull)))
+  nsresult rv = NS_OK;
+  StNullJSContextScope hack(&rv);
+  if (NS_SUCCEEDED(rv))
   {
     // be paranoid; we don't want to throw Obj-C exceptions over C++ code
     NS_DURING
@@ -146,10 +145,6 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
     NS_HANDLER
       NSLog(@"Exception caught in safeRunModalForWindow:relativeToWindow: %@", localException);
     NS_ENDHANDLER
-
-    JSContext* cx;
-    stack->Pop(&cx);
-    NS_ASSERTION(cx == nsnull, "JSContextStack mismatch");
   }
     
   return result;

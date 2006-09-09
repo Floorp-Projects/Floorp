@@ -38,13 +38,17 @@
 #ifndef __GeckoUtils_h__
 #define __GeckoUtils_h__
 
+#include "nsServiceManagerUtils.h"
 #include "nsString.h"
+#include "jsapi.h"
+#include "nsIJSContextStack.h"
 
 class nsIDOMNode;
 class nsIDOMElement;
 class nsIDocShell;
 class nsIURI;
 class nsIEditor;
+
 
 class GeckoUtils
 {
@@ -66,5 +70,32 @@ class GeckoUtils
     static void FindDocShellForURI(nsIURI *aURI, nsIDocShell *aRoot, nsIDocShell **outMatch);
 };
 
+/* Stack-based utility that will push a null JSContext onto the JS stack during the
+   length of its lifetime.
 
+   For example, this is needed when some unprivileged JS code executes from a webpage. 
+   If we try to call into Gecko then, the current JSContext will be the webpage, and so 
+   Gecko might deny *us* the right to do something. For this reason we push a null JSContext, 
+   to make sure that whatever we want to do will be allowed. 
+*/
+class StNullJSContextScope {
+public:
+  StNullJSContextScope(nsresult *rv) {
+    mStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1", rv);
+    if (NS_SUCCEEDED(*rv) && mStack)
+      *rv = mStack->Push(nsnull);
+  }
+  
+  ~StNullJSContextScope() {
+    if (mStack) {
+      JSContext *ctx;
+      mStack->Pop(&ctx);
+      NS_ASSERTION(!ctx, "Popped JSContext not null!");
+    }
+  }
+  
+private:
+  nsCOMPtr<nsIJSContextStack> mStack;
+};
+    
 #endif
