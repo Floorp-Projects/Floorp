@@ -18,8 +18,9 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
-   -   Mike Shaver       <shaver@mozilla.org>
-   -   Simon Paquet      <bugzilla@babylonsounds.com>
+   -   Mike Shaver <shaver@mozilla.org>
+   -   Simon Paquet <bugzilla@babylonsounds.com>
+   -   Matthew Willis <mattwillis@mac.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,14 +36,19 @@
    -
    - ***** END LICENSE BLOCK *****
 -->
-   
+
+<!-- WARNING! This file contains UTF-8 encoded characters!
+   - If this ==> … <== doesn't look like an ellipsis (three dots in a row),
+   - your editor isn't using UTF-8 encoding and may munge up the document!
+  -->
+
 <!-- Tools menu -->
 <!ENTITY lightning.taskLabel "Lightning">
 
 <!-- New menu popup in File menu -->
-<!ENTITY lightning.menupopup.new.event.label    "Event...">
-<!ENTITY lightning.menupopup.new.task.label     "Task...">
-<!ENTITY lightning.menupopup.new.calendar.label "Calendar...">
+<!ENTITY lightning.menupopup.new.event.label    "Event…">
+<!ENTITY lightning.menupopup.new.task.label     "Task…">
+<!ENTITY lightning.menupopup.new.calendar.label "Calendar…">
 
 <!-- Agenda Tree View -->
 <!ENTITY agenda.treeview.label           "View:">
@@ -51,7 +57,7 @@
 <!ENTITY agenda.treeview.events.label    "Events">
 <!ENTITY agenda.treeview.tasks.label     "Tasks">
 <!ENTITY agenda.treeview.reminders.label "Reminders">
-<!ENTITY agenda.treeview.customize.label "Customize...">
+<!ENTITY agenda.treeview.customize.label "Customize…">
 <!ENTITY agenda.treeview.item.label      "Item">
 <!ENTITY agenda.treeview.description     "Customize your views">
 
@@ -59,8 +65,8 @@
 <!ENTITY lightning.sidebar.agenda.label      "Agenda">
 <!ENTITY lightning.sidebar.todo.label        "Todo">
 <!ENTITY lightning.sidebar.calendars.label   "Calendars">
-<!ENTITY lightning.sidebar.new.label         "New...">
-<!ENTITY lightning.sidebar.edit.label        "Edit...">
+<!ENTITY lightning.sidebar.new.label         "New…">
+<!ENTITY lightning.sidebar.edit.label        "Edit…">
 <!ENTITY lightning.sidebar.delete.label      "Delete">
 <!ENTITY lightning.calendar.label            "Calendar">
 
