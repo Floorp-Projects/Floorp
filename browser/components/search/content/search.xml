@@ -171,8 +171,30 @@
       </property>
 
       <property name="value"
-                onget="return this._textbox.value;"
-                onset="this._textbox.value = val; return val;"/>
+                onget="return this._textbox.value;">
+        <setter><![CDATA[
+          // Make sure to remove the "empty" attribute if someone is setting
+          // the search bar value to a non-empty string. Similarly, we need to
+          // add the "empty" attribute if someone is clearing the search box,
+          // but only if the search box currently doesn't have focus.
+          if (val) {
+            this.removeAttribute("empty");
+            this._textbox.value = val;
+          }
+          else {
+            if (this._textbox.hasAttribute("focused")) {
+              // Just clear the textbox
+              this._textbox.value = "";
+            }
+            else {
+              // Display the current engine
+              this._textbox._displayCurrentEngine();
+            }
+          }
+
+          return val;
+        ]]></setter>
+      </property>
 
       <method name="focus">
         <body><![CDATA[
@@ -510,7 +532,8 @@
             getBrowser().loadOneTab(url, null, null, postData, false, false);
             if (gURLBar)
               gURLBar.value = url;
-          } else
+          }
+          else
             loadURI(url, null, postData, false);
           content.focus();
         ]]></body>
