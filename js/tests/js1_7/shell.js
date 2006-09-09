@@ -39,6 +39,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// explicitly turn on js17
+version(170);
+
 var FAILED = "FAILED!: ";
 var STATUS = "STATUS: ";
 var BUGNUMBER = "BUGNUMBER: ";
