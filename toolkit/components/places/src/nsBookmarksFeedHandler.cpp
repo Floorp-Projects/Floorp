@@ -572,7 +572,8 @@ nsLivemarkLoadListener::TryParseAsSimpleRSS ()
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIDOMDocument> xmldoc;
-  parser->SetBaseURI(mLivemark->feedURI);
+  // XXXbz is this the right principal?
+  parser->Init(nsnull, mLivemark->feedURI, nsnull);
   rv = parser->ParseFromBuffer ((const PRUint8*) mBody.get(), mBody.Length(), "text/xml", getter_AddRefs(xmldoc));
   if (NS_FAILED(rv)) return rv;
 

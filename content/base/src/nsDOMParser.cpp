@@ -57,6 +57,7 @@
 #include "nsNetCID.h"
 #include "nsContentUtils.h"
 #include "nsDOMJSUtils.h"
+#include "nsDOMError.h"
 
 // nsIDOMEventListener
 nsresult
@@ -103,7 +104,8 @@ nsDOMParser::Error(nsIDOMEvent* aEvent)
 }
 
 nsDOMParser::nsDOMParser()
-  : mLoopingForSyncLoad(PR_FALSE)
+  : mLoopingForSyncLoad(PR_FALSE),
+    mAttemptedInit(PR_FALSE)
 {
 }
 
@@ -118,8 +120,10 @@ nsDOMParser::~nsDOMParser()
 NS_INTERFACE_MAP_BEGIN(nsDOMParser)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMParser)
   NS_INTERFACE_MAP_ENTRY(nsIDOMParser)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMParserJS)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(DOMParser)
 NS_INTERFACE_MAP_END
 
@@ -187,8 +191,23 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
       (nsCRT::strcmp(contentType, "application/xhtml+xml") != 0))
     return NS_ERROR_NOT_IMPLEMENTED;
 
-  // Put the nsCOMPtr out here so we hold a ref to the stream as needed
   nsresult rv;
+  if (!mPrincipal) {
+    NS_ENSURE_TRUE(!mAttemptedInit, NS_ERROR_NOT_INITIALIZED);
+    AttemptedInitMarker marker(&mAttemptedInit);
+    
+    nsCOMPtr<nsIPrincipal> prin =
+      do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    rv = Init(prin, nsnull, nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  NS_ASSERTION(mPrincipal, "Must have principal by now");
+  NS_ASSERTION(mDocumentURI, "Must have document URI by now");
+  
+  // Put the nsCOMPtr out here so we hold a ref to the stream as needed
   nsCOMPtr<nsIInputStream> bufferedStream;
   if (!NS_InputStreamIsBuffered(stream)) {
     rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream), stream,
@@ -198,40 +217,9 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
     stream = bufferedStream;
   }
   
-  nsCOMPtr<nsIPrincipal> principal;
-  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
-  if (secMan) {
-    secMan->GetSubjectPrincipal(getter_AddRefs(principal));
-  }
-
-  // Try to find a base URI for the document we're creating.
-  nsCOMPtr<nsIURI> baseURI;
-  nsCOMPtr<nsIDocument> doc =
-    do_QueryInterface(nsContentUtils::GetDocumentFromContext());
-  if (doc) {
-    baseURI = doc->GetBaseURI();
-  }
-
-  if (!baseURI) {
-    // No URI from script environment (we are running from command line, for example).
-    // Create a dummy one.
-    // XXX Is this safe? Could we get the URI from stream or something?
-    if (!mBaseURI) {
-      rv = NS_NewURI(getter_AddRefs(baseURI),
-                     "about:blank" );
-      if (NS_FAILED(rv)) return rv;    
-    } else {
-      baseURI = mBaseURI;
-    }
-  }
-
-  // XXXbz Is this really right?  Why are we setting the documentURI to
-  // baseURI?  But note that's what the StartDocumentLoad() below would do
-  // if we let it reset.  In any case, this is odd, since the caller can
-  // set baseURI to anything it feels like, pretty much.
   nsCOMPtr<nsIDOMDocument> domDocument;
   rv = nsContentUtils::CreateDocument(EmptyString(), EmptyString(), nsnull,
-                                      baseURI, baseURI, principal,
+                                      mDocumentURI, mBaseURI, mPrincipal,
                                       getter_AddRefs(domDocument));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -251,14 +239,11 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
 
   // Create a fake channel 
   nsCOMPtr<nsIChannel> parserChannel;
-  NS_NewInputStreamChannel(getter_AddRefs(parserChannel), baseURI, nsnull,
+  NS_NewInputStreamChannel(getter_AddRefs(parserChannel), mDocumentURI, nsnull,
                            nsDependentCString(contentType), nsnull);
   NS_ENSURE_STATE(parserChannel);
 
-  // Hold a reference to it in this method
-  if (principal) {
-    parserChannel->SetOwner(principal);
-  }
+  parserChannel->SetOwner(mPrincipal);
 
   if (charset) {
     parserChannel->SetContentCharset(nsDependentCString(charset));
@@ -273,16 +258,18 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
 
   // Have to pass PR_FALSE for reset here, else the reset will remove
   // our event listener.  Should that listener addition move to later
-  // than this call?
+  // than this call?  Then we wouldn't need to mess around with
+  // SetPrincipal, etc, probably!
   rv = document->StartDocumentLoad(kLoadAsData, parserChannel, 
                                    nsnull, nsnull, 
                                    getter_AddRefs(listener),
                                    PR_FALSE);
 
-  if (principal) {
-    // Make sure to give this document the right principal
-    document->SetPrincipal(principal);
-  }
+  // Make sure to give this document the right principal
+  document->SetPrincipal(mPrincipal);
+
+  // And the right base URI
+  document->SetBaseURI(mBaseURI);
 
   if (NS_FAILED(rv) || !listener) {
     return NS_ERROR_FAILURE;
@@ -326,20 +313,200 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsDOMParser::GetBaseURI(nsIURI **aBaseURI)
+NS_IMETHODIMP
+nsDOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
+                  nsIURI* baseURI)
 {
-  NS_ENSURE_ARG_POINTER(aBaseURI);
+  NS_ENSURE_STATE(!mAttemptedInit);
+  mAttemptedInit = PR_TRUE;
+  
+  NS_ENSURE_ARG(principal || documentURI);
 
-  NS_IF_ADDREF(*aBaseURI = mBaseURI);
+  mDocumentURI = documentURI;
+  if (!mDocumentURI) {
+    principal->GetURI(getter_AddRefs(mDocumentURI));
+    if (!mDocumentURI) {
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
 
+  mPrincipal = principal;
+  if (!mPrincipal) {
+    nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+    NS_ENSURE_TRUE(secMan, NS_ERROR_NOT_AVAILABLE);
+    nsresult rv =
+      secMan->GetCodebasePrincipal(mDocumentURI, getter_AddRefs(mPrincipal));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  
+  mBaseURI = baseURI;
+  // Note: if mBaseURI is null, fine.  Leave it like that; that will use the
+  // documentURI as the base.  Otherwise for null principals we'll get
+  // nsDocument::SetBaseURI giving errors.
+
+  NS_POSTCONDITION(mPrincipal, "Must have principal");
+  NS_POSTCONDITION(mDocumentURI, "Must have document URI");
+  return NS_OK;
+}
+  
+static nsQueryInterface
+JSvalToInterface(JSContext* cx, jsval val, nsIXPConnect* xpc, PRBool* wasNull)
+{
+  if (val == JSVAL_NULL) {
+    *wasNull = PR_TRUE;
+    return nsQueryInterface(nsnull);
+  }
+  
+  *wasNull = PR_FALSE;
+  if (JSVAL_IS_OBJECT(val)) {
+    JSObject* arg = JSVAL_TO_OBJECT(val);
+
+    nsCOMPtr<nsIXPConnectWrappedNative> native;
+    xpc->GetWrappedNativeOfJSObject(cx, arg, getter_AddRefs(native));
+
+    // do_QueryWrappedNative is not null-safe
+    if (native) {
+      return do_QueryWrappedNative(native);
+    }
+  }
+  
+  return nsQueryInterface(nsnull);
+}
+
+static nsresult
+GetInitArgs(JSContext *cx, PRUint32 argc, jsval *argv,
+            nsIPrincipal** aPrincipal, nsIURI** aDocumentURI,
+            nsIURI** aBaseURI)
+{
+  // Only proceed if the caller has UniversalXPConnect.
+  PRBool haveUniversalXPConnect;
+  nsresult rv = nsContentUtils::GetSecurityManager()->
+    IsCapabilityEnabled("UniversalXPConnect", &haveUniversalXPConnect);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!haveUniversalXPConnect) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }    
+  
+  nsIXPConnect* xpc = nsContentUtils::XPConnect();
+  
+  // First arg is our principal.  If someone passes something that's
+  // not a principal and not null, die to prevent privilege escalation.
+  PRBool wasNull;
+  nsCOMPtr<nsIPrincipal> prin = JSvalToInterface(cx, argv[0], xpc, &wasNull);
+  if (!prin && !wasNull) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsIURI> documentURI;
+  nsCOMPtr<nsIURI> baseURI;
+  if (argc > 1) {
+    // Grab our document URI too.  Again, if it's something unexpected bail
+    // out.
+    documentURI = JSvalToInterface(cx, argv[1], xpc, &wasNull);
+    if (!documentURI && !wasNull) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    if (argc > 2) {
+      // Grab our base URI as well
+      baseURI = JSvalToInterface(cx, argv[2], xpc, &wasNull);
+      if (!baseURI && !wasNull) {
+        return NS_ERROR_INVALID_ARG;
+      }
+    }
+  }
+
+  NS_IF_ADDREF(*aPrincipal = prin);
+  NS_IF_ADDREF(*aDocumentURI = documentURI);
+  NS_IF_ADDREF(*aBaseURI = baseURI);
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsDOMParser::SetBaseURI(nsIURI *aBaseURI)
+NS_IMETHODIMP
+nsDOMParser::Initialize(JSContext *cx, JSObject* obj,
+                        PRUint32 argc, jsval *argv)
 {
-  mBaseURI = aBaseURI;
+  AttemptedInitMarker marker(&mAttemptedInit);
+  nsCOMPtr<nsIPrincipal> prin;
+  nsCOMPtr<nsIURI> documentURI;
+  nsCOMPtr<nsIURI> baseURI;
+  if (argc > 0) {
+    nsresult rv = GetInitArgs(cx, argc, argv, getter_AddRefs(prin),
+                              getter_AddRefs(documentURI),
+                              getter_AddRefs(baseURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    // No arguments; use the subject principal
+    nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+    NS_ENSURE_TRUE(secMan, NS_ERROR_UNEXPECTED);
 
-  return NS_OK;
+    secMan->GetSubjectPrincipal(getter_AddRefs(prin));
+
+    // We're called from JS; there better be a subject principal, really.
+    NS_ENSURE_TRUE(prin, NS_ERROR_UNEXPECTED);
+  }
+
+  NS_ASSERTION(prin, "Must have principal by now");
+  
+  if (!documentURI) {
+    // No explicit documentURI; grab document and base URIs off the window our
+    // constructor was called on. Error out if anything untoward happens.
+
+    // Note that this is a behavior change as far as I can tell -- we're now
+    // using the base URI and document URI of the window off of which the
+    // DOMParser is created, not the window in which parse*() is called.
+    // Does that matter?
+
+    // Also note that |cx| matches what GetDocumentFromContext() would return,
+    // while GetDocumentFromCaller() gives us the window that the DOMParser()
+    // call was made on.
+    
+    nsCOMPtr<nsIDocument> doc =
+      do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
+    if (!doc) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    baseURI = doc->GetBaseURI();
+    documentURI = doc->GetDocumentURI();
+  }
+
+  return Init(prin, documentURI, baseURI);
+}
+
+NS_IMETHODIMP
+nsDOMParser::Init()
+{
+  AttemptedInitMarker marker(&mAttemptedInit);
+
+  nsCOMPtr<nsIXPCNativeCallContext> ncc;
+
+  nsresult rv = nsContentUtils::XPConnect()->
+    GetCurrentNativeCallContext(getter_AddRefs(ncc));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(ncc, NS_ERROR_UNEXPECTED);
+
+  JSContext *cx = nsnull;
+  rv = ncc->GetJSContext(&cx);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(cx, NS_ERROR_UNEXPECTED);
+
+  PRUint32 argc;
+  jsval *argv = nsnull;
+  ncc->GetArgc(&argc);
+  ncc->GetArgvPtr(&argv);
+
+  if (argc != 3) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsIPrincipal> prin;
+  nsCOMPtr<nsIURI> documentURI;
+  nsCOMPtr<nsIURI> baseURI;
+  rv = GetInitArgs(cx, argc, argv, getter_AddRefs(prin),
+                   getter_AddRefs(documentURI), getter_AddRefs(baseURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return Init(prin, documentURI, baseURI);  
 }

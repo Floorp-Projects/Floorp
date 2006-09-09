@@ -40,6 +40,7 @@
 interface nsIInputStream;
 interface nsIDOMDocument;
 interface nsIURI;
+interface nsIPrincipal;
 
 /**
  * The nsIDOMParser interface is a non-SAX interface that can be used
@@ -49,10 +50,9 @@ interface nsIURI;
  * parsing with the XMLHttpRequest interface, which can be used for
  * asynchronous (callback-based) loading.
  */
-
-[scriptable, uuid(4f45513e-55e5-411c-a844-e899057026c1)]
-interface nsIDOMParser : nsISupports {
-
+[scriptable, uuid(5db52912-cdee-46d2-9166-01436c3f9e73)]
+interface nsIDOMParser : nsISupports
+{
   /**
    * The string passed in is parsed into a DOM document.
    *
@@ -97,9 +97,41 @@ interface nsIDOMParser : nsISupports {
                                  in string contentType);
 
   /**
-   * Set/Get the baseURI, may be needed when called from native code.
+   * Initialize the principal and document and base URIs that the parser should
+   * use for documents it creates.  If this is not called, then a null
+   * principal and its URI will be used.  When creating a DOMParser via the JS
+   * constructor, this will be called automatically.  This method may only be
+   * called once.  If this method fails, all following parse attempts will
+   * fail.
+   *
+   * @param principal The principal to use for documents we create.
+   *                  If this is null, a codebase principal will be created
+   *                  based on documentURI; in that case the documentURI must
+   *                  be non-null.
+   * @param documentURI The documentURI to use for the documents we create.
+   *                    If null, the principal's URI will be used;
+   *                    in that case, the principal must be non-null and its
+   *                    URI must be non-null.
+   * @param baseURI The baseURI to use for the documents we create.
+   *                If null, the documentURI will be used.
    */
-  [noscript] attribute nsIURI baseURI;
+  [noscript] void init(in nsIPrincipal principal,
+                       in nsIURI documentURI,
+                       in nsIURI baseURI);
+};
+
+/**
+ * The nsIDOMParserJS interface provides a scriptable way of calling init().
+ * Do NOT use this interface from languages other than JavaScript.
+ */
+[scriptable, uuid(dca92fe9-ae7a-44b7-80aa-d151216698ac)]
+interface nsIDOMParserJS : nsISupports
+{
+  /**
+   * Just like nsIDOMParser.init, but callable from JS.  It'll pick up the args
+   * from XPConnect.
+   */
+  void init();
 };
 
 %{ C++
