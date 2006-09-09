@@ -53,6 +53,7 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsCanvas3DModule
 GRE_MODULE	= 1
 MOZILLA_INTERNAL_API = 1
+BUILD_STATIC_LIBS =
 
 REQUIRES	= \
 		xpcom \
@@ -143,13 +144,19 @@ CSRCS		= $(GLITZ_CSRCS) \
 		  glew.c \
 		  $(NULL)
 
+VPATH += $(topsrcdir)/gfx/src
 CPPSRCS		= nsCanvas3DModule.cpp \
 		  nsCanvasRenderingContextGLES11.cpp \
 		  $(NULL)
 
 DEFINES += -DXPCOM_GLUE -DGLEW_MX -DGLEW_STATIC
 
-EXTRA_DSO_LIBS += gkgfx thebes js3250 mozcairo mozlibpixman xpcom nspr4 xpcom_core
+EXTRA_DSO_LIBS += thebes js3250 mozcairo mozlibpixman xpcom nspr4 xpcom_core
+
+# Hack for getting an extension built against static vs. dynamic versions of firefox
+ifeq (,$(BUILD_STATIC_LIBS))
+EXTRA_DSO_LIBS += gkgfx
+endif
 
 include $(topsrcdir)/config/rules.mk
 

@@ -39,7 +39,6 @@
 #include "prmem.h"
 #include "prlog.h"
 
-#include "nsTransform2D.h"
 #include "nsIRenderingContext.h"
 
 #include "nsICanvasRenderingContextGLES11.h"
@@ -48,7 +47,11 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 
+#ifndef MOZILLA_1_8_BRANCH
 #include "nsIDocument.h"
+#include "nsTransform2D.h"
+#endif
+
 #include "nsIScriptSecurityManager.h"
 #include "nsISecurityCheckedComponent.h"
 
@@ -63,6 +66,7 @@
 #include "nsIImage.h"
 #include "nsIFrame.h"
 #include "nsDOMError.h"
+#include "nsIJSRuntimeService.h"
 
 #ifndef MOZILLA_1_8_BRANCH
 #include "nsIClassInfoImpl.h"
@@ -131,6 +135,8 @@ struct _cairo_surface_win32_hack {
 #endif
 
 static nsIXPConnect *gXPConnect = nsnull;
+static JSRuntime *gScriptRuntime = nsnull;
+static nsIJSRuntimeService *gJSRuntimeService = nsnull;
 
 #define MAX_TEXTURE_UNITS 16
 
@@ -156,6 +162,18 @@ public:
 
         ncc->GetArgc(&argc);
         ncc->GetArgvPtr(&argv);
+    }
+
+    void addGCRoot (void *aPtr, const char *aName) {
+        PRBool ok = JS_AddNamedRootRT(gScriptRuntime, aPtr, aName);
+        if (!ok) {
+            NS_ERROR("JS_AddNamedRootRT failed!\n");
+            return;
+        }
+    }
+
+    void releaseGCRoot (void *aPtr) {
+        JS_RemoveRootRT(gScriptRuntime, aPtr);
     }
 
     nsCOMPtr<nsIXPCNativeCallContext> ncc;
@@ -574,10 +592,30 @@ nsCanvasRenderingContextGLES11::nsCanvasRenderingContextGLES11()
     if (!gXPConnect) {
         nsresult rv = CallGetService(nsIXPConnect::GetCID(), &gXPConnect);
         if (NS_FAILED(rv)) {
-            // see no evil, hear no evil..
+            NS_ERROR("Failed to get XPConnect!");
+            return;
         }
     } else {
         NS_ADDREF(gXPConnect);
+    }
+
+    if (!gJSRuntimeService) {
+        nsresult rv = CallGetService("@mozilla.org/js/xpc/RuntimeService;1",
+                                     &gJSRuntimeService);
+        if (NS_FAILED(rv)) {
+            // uh..
+            NS_ERROR("Failed to get JS RuntimeService!");
+            return;
+        }
+
+        gJSRuntimeService->GetRuntime(&gScriptRuntime);
+        if (!gScriptRuntime) {
+            NS_RELEASE(gJSRuntimeService);
+            gJSRuntimeService = nsnull;
+            NS_ERROR("Unable to get JS runtime from JS runtime service");
+        }
+    } else {
+        NS_ADDREF(gJSRuntimeService);
     }
 
 #ifdef XP_WIN
@@ -591,6 +629,10 @@ nsCanvasRenderingContextGLES11::~nsCanvasRenderingContextGLES11()
     Destroy();
     if (gXPConnect && gXPConnect->Release() == 0)
         gXPConnect = nsnull;
+    if (gJSRuntimeService && gJSRuntimeService->Release() == 0) {
+        gJSRuntimeService = nsnull;
+        gScriptRuntime = nsnull;
+    }
 }
 
 void
@@ -743,13 +785,19 @@ nsCanvasRenderingContextGLES11::SetDimensions(PRInt32 width, PRInt32 height)
     templ.color.blue_size = 8;
     templ.color.alpha_size = 8;
     templ.doublebuffer = 0;
-    
-    gdformat = glitz_wgl_find_pbuffer_format
-        (GLITZ_FORMAT_FOURCC_MASK |
-         GLITZ_FORMAT_RED_SIZE_MASK | GLITZ_FORMAT_GREEN_SIZE_MASK |
-         GLITZ_FORMAT_BLUE_SIZE_MASK | GLITZ_FORMAT_ALPHA_SIZE_MASK |
-         GLITZ_FORMAT_DOUBLEBUFFER_MASK,
-         &templ, 0);
+    templ.samples = 8;
+
+    gdformat = nsnull;
+
+    do {
+        templ.samples = templ.samples >> 1;
+        gdformat = glitz_wgl_find_pbuffer_format
+            (GLITZ_FORMAT_FOURCC_MASK |
+             GLITZ_FORMAT_RED_SIZE_MASK | GLITZ_FORMAT_GREEN_SIZE_MASK |
+             GLITZ_FORMAT_BLUE_SIZE_MASK | GLITZ_FORMAT_ALPHA_SIZE_MASK |
+             GLITZ_FORMAT_DOUBLEBUFFER_MASK | GLITZ_FORMAT_SAMPLES_MASK,
+             &templ, 0);
+    } while (gdformat == nsnull && templ.samples > 0);
 
     if (!gdformat)
         return NS_ERROR_INVALID_ARG;
@@ -1190,6 +1238,15 @@ nsCanvasRenderingContextGLES11::JSArrayToSimpleBuffer (SimpleBuffer& sbuffer, PR
             ::JS_ValueToECMAUint32(ctx, jv, &iv);
             *ptr++ = (unsigned char) iv;
         }
+    } else if (typeParam == GL_UNSIGNED_INT) {
+        PRUint32 *ptr = (PRUint32*) sbuffer.data;
+        for (PRUint32 i = 0; i < arrayLen; i++) {
+            jsval jv;
+            uint32 iv;
+            ::JS_GetElement(ctx, arrayObj, i, &jv);
+            ::JS_ValueToECMAUint32(ctx, jv, &iv);
+            *ptr++ = iv;
+        }
     } else {
         return NS_ERROR_NOT_IMPLEMENTED;
     }
@@ -1238,6 +1295,7 @@ nsCanvasRenderingContextGLES11::CheckEnableMode(PRUint32 mode) {
             case SAMPLE_ALPHA_TO_ONE:
             case SAMPLE_COVERAGE:
             case TEXTURE_2D:
+            case TEXTURE_RECTANGLE:
             case SCISSOR_TEST:
             case ALPHA_TEST:
             case STENCIL_TEST:
@@ -2156,9 +2214,9 @@ nsCanvasRenderingContextGLES11::DeleteTextureObject(nsICanvasRenderingContextGLE
     return NS_OK;
 }
 
-/* void texImage2DHTML (in nsIDOMHTMLElement imageOrCanvas); */
+/* void texImage2DHTML (in PRUint32 target, in nsIDOMHTMLElement imageOrCanvas); */
 NS_IMETHODIMP
-nsCanvasRenderingContextGLES11::TexImage2DHTML(nsIDOMHTMLElement *imageOrCanvas)
+nsCanvasRenderingContextGLES11::TexImage2DHTML(PRUint32 target, nsIDOMHTMLElement *imageOrCanvas)
 {
     nsresult rv;
     cairo_surface_t *cairo_surf = nsnull;
@@ -2174,10 +2232,16 @@ nsCanvasRenderingContextGLES11::TexImage2DHTML(nsIDOMHTMLElement *imageOrCanvas)
 
     DoDrawImageSecurityCheck(element_uri, force_write_only);
 
-    // Check that it's a power of 2 texture; we don't deal with TEXTURE_RECTANGLE.
-    if ((width & (width-1)) != 0 ||
-        (height & (height-1)) != 0)
+    if (target == GL_TEXTURE_2D) {
+        if ((width & (width-1)) != 0 ||
+            (height & (height-1)) != 0)
+            return NS_ERROR_INVALID_ARG;
+    } else if (GLEW_ARB_texture_rectangle && target == GL_TEXTURE_RECTANGLE_ARB) {
+        if (width == 0 || height == 0)
+            return NS_ERROR_INVALID_ARG;
+    } else {
         return NS_ERROR_INVALID_ARG;
+    }
 
     if (!image_data) {
         local_image_data = (PRUint8*) PR_Malloc(width * height * 4);
@@ -2230,7 +2294,7 @@ nsCanvasRenderingContextGLES11::TexImage2DHTML(nsIDOMHTMLElement *imageOrCanvas)
 
     MakeContextCurrent();
 
-    glTexImage2D(GL_TEXTURE_2D, 0, 4, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+    glTexImage2D(target, 0, 4, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
 
     if (local_image_data)
         PR_Free(local_image_data);
@@ -2255,8 +2319,11 @@ nsCanvasRenderingContextGLES11::TexParameter()
         !::JS_ValueToECMAUint32(js.ctx, js.argv[1], &pnameVal))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
-    if (targetVal != GL_TEXTURE_2D)
+    if (targetVal != GL_TEXTURE_2D &&
+        (!GLEW_ARB_texture_rectangle || targetVal != GL_TEXTURE_RECTANGLE_ARB))
+    {
         return NS_ERROR_DOM_SYNTAX_ERR;
+    }
 
     MakeContextCurrent();
     switch (pnameVal) {
@@ -2305,6 +2372,17 @@ nsCanvasRenderingContextGLES11::TexParameter()
             glTexParameteri (targetVal, pnameVal, ival);
         }
             break;
+        case GL_TEXTURE_MAX_ANISOTROPY_EXT: {
+            if (GLEW_EXT_texture_filter_anisotropic) {
+                jsdouble dval;
+                if (!::JS_ValueToNumber(js.ctx, js.argv[2], &dval))
+                    return NS_ERROR_DOM_SYNTAX_ERR;
+                glTexParameterf (targetVal, pnameVal, (float) dval);
+            } else {
+                return NS_ERROR_NOT_IMPLEMENTED;
+            }
+        }
+            break;
         default:
             return NS_ERROR_DOM_SYNTAX_ERR;
     }
@@ -2323,6 +2401,12 @@ nsCanvasRenderingContextGLES11::GetTexParameter()
 NS_IMETHODIMP
 nsCanvasRenderingContextGLES11::BindTexture(PRUint32 target, PRUint32 texid)
 {
+    if (target != GL_TEXTURE_2D &&
+        (!GLEW_ARB_texture_rectangle || target != GL_TEXTURE_RECTANGLE_ARB))
+    {
+        return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
     MakeContextCurrent();
     glBindTexture(target, texid);
     return NS_OK;
@@ -2344,6 +2428,9 @@ nsCanvasRenderingContextGLES11::DeleteTextures()
     if (!JSValToJSArrayAndLength(js.ctx, js.argv[0], &arrayObj, &arrayLen)) {
         return NS_ERROR_DOM_SYNTAX_ERR;
     }
+
+    if (arrayLen == 0)
+        return NS_OK;
 
     SimpleBuffer sbuffer;
     nsresult rv = JSArrayToSimpleBuffer(sbuffer, GL_UNSIGNED_INT, 1, js.ctx, arrayObj, arrayLen);
@@ -2666,7 +2753,104 @@ nsCanvasRenderingContextGLES11::Hint(PRUint32 target, PRUint32 mode)
 NS_IMETHODIMP
 nsCanvasRenderingContextGLES11::GetParameter(PRUint32 pname)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    MakeContextCurrent();
+
+    jsval result = JSVAL_VOID;
+    JSObject *rootToRelease = nsnull;
+
+    // XXX incomplete
+    switch (pname) {
+        case GL_ACCUM_ALPHA_BITS:
+        case GL_ACCUM_BLUE_BITS:
+        case GL_ACCUM_GREEN_BITS:
+        case GL_ACCUM_RED_BITS:
+        case GL_ALPHA_BIAS:
+        case GL_ALPHA_BITS:
+        case GL_ALPHA_SCALE:
+        case GL_ALPHA_TEST_FUNC:
+        case GL_ALPHA_TEST_REF:
+        case GL_ATTRIB_STACK_DEPTH:
+        case GL_AUX_BUFFERS:
+        case GL_BLEND_DST:
+        case GL_BLEND_SRC:
+        case GL_BLUE_BIAS:
+        case GL_BLUE_BITS:
+        case GL_BLUE_SCALE:
+        case GL_COLOR_MATERIAL_FACE:
+        case GL_COLOR_MATERIAL_PARAMETER: {
+            float fv;
+            glGetFloatv (pname, &fv);
+            if (!JS_NewDoubleValue(js.ctx, (jsdouble) fv, &result))
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+            break;
+
+        case GL_ALPHA_TEST:
+        case GL_AUTO_NORMAL:
+        case GL_BLEND:
+        case GL_CLIP_PLANE0:
+        case GL_CLIP_PLANE1:
+        case GL_CLIP_PLANE2:
+        case GL_CLIP_PLANE3:
+        case GL_CLIP_PLANE4:
+        case GL_CLIP_PLANE5:
+        case GL_COLOR_MATERIAL: {
+            GLboolean bv;
+            glGetBooleanv (pname, &bv);
+            if (bv)
+                result = JSVAL_TRUE;
+            else
+                result = JSVAL_FALSE;
+        }
+            break;
+
+/*
+        case GL_COLOR_CLEAR_VALUE:
+            break;
+*/
+
+        case GL_MODELVIEW_MATRIX:
+        case GL_PROJECTION_MATRIX:
+        case GL_TEXTURE_MATRIX: {
+            float mat[16];
+            glGetFloatv (pname, &mat[0]);
+            nsAutoArrayPtr<jsval> jsvector(new jsval[16]);
+            for (int i = 0; i < 16; i++) {
+                if (!JS_NewDoubleValue(js.ctx, (jsdouble) mat[i], &jsvector[i]))
+                    return NS_ERROR_OUT_OF_MEMORY;
+            }
+
+            JSObject *jsarr = JS_NewArrayObject(js.ctx, 16, jsvector.get());
+            if (!jsarr)
+                return NS_ERROR_OUT_OF_MEMORY;
+
+            js.addGCRoot (jsarr, "glGetParameter");
+            rootToRelease = jsarr;
+
+            result = OBJECT_TO_JSVAL(jsarr);
+        }
+            break;
+
+        default:
+            return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    if (result == JSVAL_VOID)
+        return NS_ERROR_NOT_IMPLEMENTED;
+
+    jsval *retvalPtr;
+    js.ncc->GetRetValPtr(&retvalPtr);
+    *retvalPtr = result;
+    js.ncc->SetReturnValueWasSet(PR_TRUE);
+
+    if (rootToRelease)
+        js.releaseGCRoot(rootToRelease);
+
+    return NS_OK;
 }
 
 #if 0
@@ -2773,6 +2957,9 @@ nsCanvasRenderingContextGLES11::DeleteBuffers()
     if (JSValToJSArrayAndLength(js.ctx, js.argv[0], &arrayObj, &arrayLen)) {
         return NS_ERROR_DOM_SYNTAX_ERR;
     }
+
+    if (arrayLen == 0)
+        return NS_OK;
 
     SimpleBuffer sbuffer;
     nsresult rv = JSArrayToSimpleBuffer(sbuffer, GL_UNSIGNED_INT, 1, js.ctx, arrayObj, arrayLen);
@@ -2906,26 +3093,6 @@ nsCanvasRenderingContextGLES11::CairoSurfaceFromElement(nsIDOMElement *imgElt,
                 cairo_surface_destroy (surf);
                 return rv;
             }
-
-#ifdef XP_WIN
-            // the non-cairo code is very confused as to the byte order
-            // for which it returns; so we'll just "know" what's going on
-            // and we'll correct for the broken bgrness
-            PRUint8 *pp = data;
-            for (jsuint j = 0; j < h; j++) {
-                for (jsuint i = 0; i < w; i++) {
-                    PRUint8 x = pp[0];
-                    PRUint8 y = pp[1];
-                    PRUint8 z = pp[2];
-                    PRUint8 w = pp[3];
-                    pp[0] = z; /* r */
-                    pp[1] = y; /* g */
-                    pp[2] = x; /* b */
-                    pp[3] = w;
-                    pp += 4;
-                }
-            }
-#endif
 
             *aCairoSurface = surf;
             *imgData = data;
