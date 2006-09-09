@@ -436,7 +436,7 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
  *
  * If a WITH statement is reached along the scope stack, return its statement
  * info record, so callers can tell that atom is ambiguous.  If slotp is not
- * null, then if atom is found, set *slotp to its stack slot, otherwise to -1. 
+ * null, then if atom is found, set *slotp to its stack slot, otherwise to -1.
  * This means that if slotp is not null, all the block objects on the lexical
  * scope chain must have had their depth slots computed by the code generator,
  * so the caller must be under js_EmitTree.
