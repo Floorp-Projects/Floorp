@@ -220,7 +220,9 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   const nsStyleBackground* bg;
   PRBool hasBG =
     nsCSSRendering::FindBackground(GetPresContext(), this, &bg, &isCanvas);
-  PRBool viewHasTransparentContent = hasBG && (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
+  PRBool viewHasTransparentContent = hasBG &&
+    (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) &&
+    !GetStyleDisplay()->mAppearance;
 
   nsIContent* parentContent = GetContent()->GetParent();
   nsIAtom *tag = nsnull;
