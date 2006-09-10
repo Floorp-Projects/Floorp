@@ -1739,11 +1739,14 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
   nsIContent *bindingParent = content->GetBindingParent();
   nsIContent *parent = bindingParent? bindingParent->GetParent() :
                                       content->GetParent();
-  if (parent && parent->Tag() == nsAccessibilityAtoms::toolbaritem &&
-      parent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, label)) {
-    label.CompressWhitespace();
-    aLabel = label;
-    return NS_OK;
+  while (parent) {
+    if (parent->Tag() == nsAccessibilityAtoms::toolbaritem &&
+        parent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, label)) {
+      label.CompressWhitespace();
+      aLabel = label;
+      return NS_OK;
+    }
+    parent = parent->GetParent();
   }
 
   // Don't use AppendFlatStringFromSubtree for container widgets like menulist
