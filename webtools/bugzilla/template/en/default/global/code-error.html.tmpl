@@ -153,7 +153,7 @@
 
   [% ELSIF error == "inactive_group" %]
     Attempted to add [% terms.bug %] to the '[% name FILTER html %]'
-    group, which is not used for bugs.
+    group, which is not used for [% terms.bugs %].
 
   [% ELSIF error == "invalid_attach_id_to_obsolete" %]
      The attachment number of one of the attachments you wanted to obsolete,
