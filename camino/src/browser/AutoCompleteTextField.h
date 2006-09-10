@@ -46,17 +46,21 @@ class nsIAutoCompleteSession;
 class nsIAutoCompleteResults;
 class nsIAutoCompleteListener;
 
+@class ClickMenuImageView;
 @class PageProxyIcon;
+
+extern NSString* const kWillShowFeedMenu;
 
 @interface AutoCompleteTextField : NSTextField
 {
   IBOutlet PageProxyIcon*   mProxyIcon;
   IBOutlet NSMenu*          mLockIconContextMenu;
-
+  
   NSWindow*                 mPopupWin;
   NSTableView*              mTableView;
   
-  NSImageView*              mLock;                  // STRONG, lock that shows when a page is secure, hidden otherwise
+  ClickMenuImageView*       mLock;                  // STRONG, lock that shows when a page is secure, hidden otherwise
+  ClickMenuImageView*       mFeedIcon;              // STRONG, feed icon that shows when a page discovers a feed
   NSColor*                  mSecureBackgroundColor; // STRONG, yellow color for bg when on a secure page, cached for perf
   
   AutoCompleteDataSource*   mDataSource;
@@ -92,5 +96,9 @@ class nsIAutoCompleteListener;
 // Changes the display of the text field to indicate whether the page
 // is secure or not.
 - (void)setSecureState:(unsigned char)inState;
+
+// Change the display to show the feed icon
+- (void)displayFeedIcon:(BOOL)inDisplay;
+- (void)setFeedIconContextMenu:(NSMenu*)inMenu;
 
 @end

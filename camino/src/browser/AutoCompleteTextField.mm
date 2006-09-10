@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (Original Author)
  *   David Haas <haasd@cae.wisc.edu>
+ *   Nick Kreeger <nick.kreeger@park.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -62,10 +63,15 @@ const float kSecureIconRightOffset = 19.0;    // offset from right size of url b
 const float kSecureIconYOrigin = 3.0;
 const float kSecureIconSize = 16.0;
 
+const float kFeedIconRightOffest = 17.0;
+const float kFeedIconYOrigin = 5.0;
+const float kFeedIconWidth = 14.0;
+const float kFeedIconHeight = 13.0;
 
 // stole this from NSPasteboard+Utils.mm
 static NSString* kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x75726C20"; // 'url '  url
-
+// posted when the feed icon's menu is about to be drawn
+NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 
 @interface AutoCompleteTextField(Private)
 
@@ -98,6 +104,8 @@ static NSString* kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x7
 - (void) onResize:(NSNotification *)aNote;
 - (void) onUndoOrRedo:(NSNotification *)aNote;
 
+- (void)positionFeedIcon;
+
 @end
 
 #pragma mark -
@@ -125,8 +133,12 @@ static NSString* kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x7
 @interface AutoCompleteTextCell : NSTextFieldCell
 {
   BOOL mDisplaySecureIcon;    // YES if currently displaying the security icon
+  BOOL mDisplayFeedIcon;      // YES if currently displaying the feed icon
 }
-- (void)setDisplaySecureIcon:(BOOL)inIsVisible;
+- (void)calcControlViewSizeForSecureIcon:(BOOL)inIsVisible;
+- (void)calcControlViewSizeForFeedIcon:(BOOL)inIsVisible;
+- (BOOL)isSecureIconDisplayed;
+- (BOOL)isFeedIconDisplayed;
 @end
 
 @implementation AutoCompleteTextCell
@@ -140,6 +152,7 @@ static NSString* kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x7
 {
   if ((self = [super initTextCell:inStr])) {
     mDisplaySecureIcon = NO;
+    mDisplayFeedIcon = NO;
   }
   return self;
 }
@@ -158,39 +171,115 @@ static NSString* kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x7
   
   theRect.origin.x += kProxyIconOffset;
   theRect.size.width -= kProxyIconOffset;
-  if (mDisplaySecureIcon)
+  if ([self isSecureIconDisplayed])
     theRect.size.width -= kSecureIconRightOffset;
+  if ([self isFeedIconDisplayed])
+    theRect.size.width -= kFeedIconRightOffest;
+    
   return [super drawingRectForBounds:theRect];
 }
 
 //
-// -setDisplaySecureIcon:
+// -calcControlViewSizeForSecureIcon:
 //
-// Indicates whether or now we need to take away space on the right side for the security
+// Indicates whether or not we need to take away space on the right side for the security
 // icon. Causes the cell's drawing rect to be recalculated.
 //
-- (void)setDisplaySecureIcon:(BOOL)inIsVisible
+- (void)calcControlViewSizeForSecureIcon:(BOOL)inIsVisible
 {
   mDisplaySecureIcon = inIsVisible;
   [(NSControl*)[self controlView] calcSize];
 }
 
+//
+// -calcControlViewSizeForFeedIcon:
+//
+// Return the feed icons visibility state.
+//
+- (void)calcControlViewSizeForFeedIcon:(BOOL)inIsVisible
+{
+  mDisplayFeedIcon = inIsVisible;
+  [(NSControl*)[self controlView] calcSize];
+}
+
+//
+// -isSecureIconDisplayed:
+//
+// Return the secure icons visibility state.
+//
+- (BOOL)isSecureIconDisplayed
+{
+  return mDisplaySecureIcon;
+}
+
+//
+// -isFeedIconDisplayed:
+//
+// Accessor method to help the layout the feed icon to the left of the security icon. This
+// method is used when |displaySecureIcon:| is called to determine if the feed icon has been
+// displayed before the security icon.
+//
+- (BOOL)isFeedIconDisplayed
+{
+  return mDisplayFeedIcon;
+}
+
 @end
 
-@interface LockImageView : NSImageView
+@interface ClickMenuImageView : NSImageView
+{
+  // Notifications will only be posted if this string is set in |setMenuNotificationName:|
+  NSString* mMenuNotificationName;  
+}
+- (void)setMenuNotificationName:(NSString*)aNotificationName;
 @end
 
-@implementation LockImageView
+@implementation ClickMenuImageView
 
-+ (NSMenu *)defaultMenu
+- (id)init
+{
+  if ((self = [super init]))
+    mMenuNotificationName = nil;
+  
+  return self;
+}
+
+- (void)dealloc
+{
+  if (mMenuNotificationName)
+    [mMenuNotificationName release];
+  
+  [super dealloc];
+}
+
+// Setting the notification variable in this method will enable notification postings.
+- (void)setMenuNotificationName:(NSString*)aNotificationName
+{
+  mMenuNotificationName = [aNotificationName retain];
+}
+
++ (NSMenu*)defaultMenu
 {
   // we need to return something here to get the NSToolbar to forward context clicks to our view.
   return [[[NSMenu alloc] initWithTitle:@"Dummy"] autorelease];
 }
 
-- (NSMenu *)menuForEvent:(NSEvent *)theEvent
+- (NSMenu*)menuForEvent:(NSEvent *)theEvent
 {
+  // If we are the a feed icon, post this notification so the menu can get built.
+  if (mMenuNotificationName) {
+    [[NSNotificationCenter defaultCenter] postNotificationName:mMenuNotificationName 
+                                                        object:self];
+  }
   return [self menu];
+}
+
+- (void)mouseDown:(NSEvent*)theEvent
+{
+  // By default a right-click will show the context menu for our image view subclass, 
+  // but a left click will not show a context. Since we want to show the context menus
+  // on a left click, foward this mouse down event as a right mouse down event.
+  [self rightMouseDown:theEvent];
 }
 
 @end
@@ -298,12 +387,19 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   // window and mark this view that it needs to resize its subviews so it will automagically move the
   // secure icon when it's visible.
   mSecureBackgroundColor = [[NSColor colorWithDeviceRed:1.0 green:1.0 blue:0.777 alpha:1.0] retain];
-  mLock = [[LockImageView alloc] initWithFrame:NSMakeRect([self bounds].size.width - kSecureIconRightOffset, 
+  mLock = [[ClickMenuImageView alloc] initWithFrame:NSMakeRect([self bounds].size.width - kSecureIconRightOffset, 
                                                           kSecureIconYOrigin, kSecureIconSize, kSecureIconSize)];  // we own this
   [mLock setAutoresizingMask:(NSViewNotSizable | NSViewMinXMargin)];
-  [self setAutoresizesSubviews:YES];
-
   [mLock setMenu:mLockIconContextMenu];
+  
+  mFeedIcon = [[ClickMenuImageView alloc] initWithFrame:NSMakeRect([self bounds].size.width - kFeedIconRightOffest, 
+                                                              kFeedIconYOrigin, kFeedIconWidth, kFeedIconHeight)];  // we own this
+  [mFeedIcon setMenuNotificationName:kWillShowFeedMenu];
+  [mFeedIcon setAutoresizingMask:(NSViewNotSizable | NSViewMinXMargin)];
+  [mFeedIcon setToolTip:NSLocalizedString(@"FeedDetected", nil)];
+  [mFeedIcon setImage:[NSImage imageNamed:@"feed"]];
+  
+  [self setAutoresizesSubviews:YES];
 
   // create the text columns
   column = [[[NSTableColumn alloc] initWithIdentifier:@"col1"] autorelease];
@@ -378,7 +474,10 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [mSecureBackgroundColor release];
   mSecureBackgroundColor = nil;
   
-  [mLock release]; mLock = nil;
+  [mLock release]; 
+  mLock = nil;
+  [mFeedIcon release];
+  mFeedIcon = nil;
 
   NS_IF_RELEASE(mSession);
   NS_IF_RELEASE(mResults);
@@ -596,6 +695,60 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 #pragma mark -
 
+// Handle feed detection and opening
+
+//
+// -displayFeedIcon:
+//
+// Called when BrowserWindowController wants us to show the RSS icon.
+//
+- (void)displayFeedIcon:(BOOL)inDisplay
+{
+  if (inDisplay) {
+    if (![mFeedIcon superview]) {
+      // showing the icon. The user may have resized the window (and thus this view) while
+      // the view was hidden (and thus not part of the view hierarchy) so we have to reposition
+      // it manually before we add it.
+      [[self cell] calcControlViewSizeForFeedIcon:YES];
+      [self addSubview:mFeedIcon];
+    }
+    [self positionFeedIcon];
+  }
+  else if ([mFeedIcon superview]) {
+    // hiding the icon. We don't have to do anything more than remove it from view.
+    [[self cell] calcControlViewSizeForFeedIcon:NO];
+    [mFeedIcon removeFromSuperview];
+  }
+}
+
+//
+// -positionFeedIcon
+//
+// Called when the position of the feed icon in the text field needs to be checked.
+//
+-(void)positionFeedIcon
+{
+  // position the feed icon to the left of the security icon
+  if ([[self cell] isSecureIconDisplayed])
+    [mFeedIcon setFrameOrigin:NSMakePoint([self bounds].size.width - (kFeedIconWidth + kSecureIconRightOffset), kFeedIconYOrigin)];
+  // position the feed icon to the furthest right of the url bar
+  else
+    [mFeedIcon setFrameOrigin:NSMakePoint([self bounds].size.width - kFeedIconRightOffest, kFeedIconYOrigin)];
+}
+
+//
+// -setFeedIconContextMenu:
+//
+// Set the context menu for the feed icon with a menu that has been built for the
+// feeds found on the page.
+//
+- (void)setFeedIconContextMenu:(NSMenu*)inMenu
+{
+  [mFeedIcon setMenu:inMenu];
+}
+
+#pragma mark -
+
 // url completion ////////////////////////////
 
 - (void) completeDefaultResult
@@ -689,6 +842,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [fieldEditor selectAll:self];
 }
 
+#pragma mark -
+
 //
 // -displaySecureIcon:
 //
@@ -700,14 +855,22 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     // showing the icon. The user may have resized the window (and thus this view) while
     // the view was hidden (and thus not part of the view hierarchy) so we have to reposition
     // it manually before we add it.
-    [[self cell] setDisplaySecureIcon:YES];
+    [[self cell] calcControlViewSizeForSecureIcon:YES];
     [mLock setFrameOrigin:NSMakePoint([self bounds].size.width - kSecureIconRightOffset, kSecureIconYOrigin)];
     [self addSubview:mLock];
+    
+    // If the feed icon needs to be displayed, and it was drawn before the secure icon, move the 
+    // feed icon to the left hand side of the secure icon.
+    if ([[self cell] isFeedIconDisplayed])
+      [self positionFeedIcon];
   }
   else if (!inShouldDisplay && [mLock superview]) {
     // hiding the icon. We don't have to do anything more than remove it from view.
-    [[self cell] setDisplaySecureIcon:NO];
+    [[self cell] calcControlViewSizeForSecureIcon:NO];
     [mLock removeFromSuperview];
+    
+    if ([[self cell] isFeedIconDisplayed])
+      [self positionFeedIcon];
   }
 }
 

@@ -143,6 +143,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
     mListenersAttached = NO;
     mSecureState = nsIWebProgressListener::STATE_IS_INSECURE;
     mProgress = 0.0;
+    mFeedList = nil;
 
     BOOL gotPref;
     BOOL pluginsEnabled = [[PreferenceManager sharedInstance] getBooleanPref:"camino.enable_plugins" withSuccess:&gotPref];
@@ -182,6 +183,8 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   [mTabTitle release];
   
   NS_IF_RELEASE(mBlockedSites);
+  
+  [mFeedList release];
   
   [mBrowserView release];
   [mContentViewProviders release];
@@ -335,6 +338,10 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   return mSecureState;
 }
 
+- (BOOL)feedsDetected
+{
+	return (mFeedList && [mFeedList count] > 0);
+}
 
 - (void)loadURI:(NSString*)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags focusContent:(BOOL)focusContent allowPopups:(BOOL)inAllowPopups
 {
@@ -459,7 +466,10 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   [mDelegate updateStatus:mLoadingStatusString];
   
   [(BrowserTabViewItem*)mTabItem startLoadAnimation];
-
+  
+  [mDelegate showFeedDetected:NO];
+  [mFeedList removeAllObjects];
+  
   [mTabTitle autorelease];
   mTabTitle = [mLoadingStatusString retain];
   [mTabItem setLabel:mTabTitle];
@@ -760,6 +770,19 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
                                                               notifyingClient:self];
     }
   }
+}
+
+- (void)onFeedDetected:(NSString*)inFeedURI feedTitle:(NSString*)inFeedTitle
+{
+  // add the two in variables to a dictionary, then store in the feed array
+  NSDictionary* feed = [NSDictionary dictionaryWithObjectsAndKeys:inFeedURI, @"feeduri", inFeedTitle, @"feedtitle", nil];
+  
+  if (!mFeedList)
+    mFeedList = [[NSMutableArray alloc] init];
+  
+  [mFeedList addObject:feed];
+  // notify the browser UI that a feed was found
+  [mDelegate showFeedDetected:YES];
 }
 
 // Called when a context menu should be shown.
@@ -1070,6 +1093,16 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 - (NSString*)currentCharset
 {
   return [[self getBrowserView] currentCharset];
+}
+
+//
+// -feedList:
+//
+// Return the list of feeds that were found on this page.
+//
+- (NSArray*)feedList
+{
+  return mFeedList;
 }
 
 //

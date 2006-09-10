@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Simon Fraser <smfr@smfr.org>
+ *   Nick Kreeger <nick.kreeger@park.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -798,69 +799,170 @@ CHBrowserListener::HandleLinkAddedEvent(nsIDOMEvent* inEvent)
   nsCOMPtr<nsIDOMElement> linkElement = do_QueryInterface(target);
   if (!linkElement)
     return NS_ERROR_FAILURE;
-
+  
+  ELinkAttributeType linkAttrType = GetLinkAttributeType(linkElement);
+  if (linkAttrType == eOtherType)
+    return NS_OK;
+  
   nsAutoString relAttribute;
   linkElement->GetAttribute(NS_LITERAL_STRING("rel"), relAttribute);
+  
+  if (linkAttrType == eFavIconType)
+    HandleFaviconLink(linkElement);
+  else if (linkAttrType == eFeedType)
+    HandleFeedLink(linkElement);
 
-  if (!relAttribute.EqualsIgnoreCase("shortcut icon") && !relAttribute.EqualsIgnoreCase("icon"))
-    return NS_OK;
+  return NS_OK;
+}
 
+ELinkAttributeType
+CHBrowserListener::GetLinkAttributeType(nsIDOMElement* inElement)
+{
+  nsAutoString attribute;
+  inElement->GetAttribute(NS_LITERAL_STRING("rel"), attribute);
+  
+  // Favicon link type
+  if (attribute.EqualsIgnoreCase("shortcut icon") || attribute.EqualsIgnoreCase("icon"))
+    return eFavIconType;
+
+  // Check for feed type next
+  inElement->GetAttribute(NS_LITERAL_STRING("type"), attribute);
+  
+  // kinda ugly, but if we don't match any of these strings return
+  if (attribute.Equals(NS_LITERAL_STRING("application/rssxml")) ||
+      attribute.Equals(NS_LITERAL_STRING("application/rss+xml")) ||
+      attribute.Equals(NS_LITERAL_STRING("application/atomxml")) ||
+      attribute.Equals(NS_LITERAL_STRING("application/atom+xml")) ||
+      attribute.Equals(NS_LITERAL_STRING("text/xml")) ||
+      attribute.Equals(NS_LITERAL_STRING("application/xml")) ||
+      attribute.Equals(NS_LITERAL_STRING("application/rdfxml")))
+  {
+    return eFeedType;
+  }
+  
+  return eOtherType;
+}
+
+void
+CHBrowserListener::HandleFaviconLink(nsIDOMElement* inElement)
+{  
   // make sure the load is for the main window
   nsCOMPtr<nsIDOMDocument> domDoc;
-  linkElement->GetOwnerDocument (getter_AddRefs(domDoc));
-
+  inElement->GetOwnerDocument(getter_AddRefs(domDoc));
+  
   nsCOMPtr<nsIDOMDocumentView> docView(do_QueryInterface(domDoc));
-  NS_ENSURE_TRUE(docView, NS_ERROR_FAILURE);
-
+  if (!docView)
+    return;
+  
   nsCOMPtr<nsIDOMAbstractView> abstractView;
   docView->GetDefaultView(getter_AddRefs(abstractView));
-
-  nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(abstractView));
-  NS_ENSURE_TRUE(domWin, NS_ERROR_FAILURE);
-
+  if (!abstractView)
+    return;
+  
+  nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(abstractView));;
+  if (!domWin)
+    return;
+  
   nsCOMPtr<nsIDOMWindow> topDomWin;
   domWin->GetTop(getter_AddRefs(topDomWin));
-
+  
   nsCOMPtr<nsISupports> domWinAsISupports(do_QueryInterface(domWin));
   nsCOMPtr<nsISupports> topDomWinAsISupports(do_QueryInterface(topDomWin));
   // prevent subframes from setting the favicon
   if (domWinAsISupports != topDomWinAsISupports)
-    return NS_OK;
-
-  // now get the uri of the icon
+    return;
+  
+  // get the uri of the icon
   nsAutoString iconHref;
-  linkElement->GetAttribute(NS_LITERAL_STRING("href"), iconHref);
+  inElement->GetAttribute(NS_LITERAL_STRING("href"), iconHref);
   if (iconHref.IsEmpty())
-    return NS_OK;
-
+    return;
+  
   // get the document uri
   nsCOMPtr<nsIDOM3Document> doc = do_QueryInterface(domDoc);
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
+  if (!doc)
+    return;
+  
   nsAutoString docURISpec;
   nsresult rv = doc->GetDocumentURI(docURISpec);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
+  if (NS_FAILED(rv))
+    return;
+  
   nsCOMPtr<nsIURI> documentURI;
   rv = NS_NewURI(getter_AddRefs(documentURI), docURISpec);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
+  if (NS_FAILED(rv))
+    return;
+  
   nsCOMPtr<nsIURI> iconURI;
   rv = NS_NewURI(getter_AddRefs(iconURI), NS_ConvertUTF16toUTF8(iconHref), nsnull, documentURI);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
+  if (NS_FAILED(rv))
+    return;
+  
   // only accept http and https icons (should we allow https, even?)
   PRBool isHTTP = PR_FALSE, isHTTPS = PR_FALSE;
   iconURI->SchemeIs("http", &isHTTP);
   iconURI->SchemeIs("https", &isHTTPS);
   if (!isHTTP && !isHTTPS)
-    return NS_OK;
-
+    return;
+  
   nsCAutoString iconFullURI;
   iconURI->GetSpec(iconFullURI);
   NSString* iconSpec = [NSString stringWith_nsACString:iconFullURI];
-  
   [mContainer onFoundShortcutIcon:iconSpec];
-  return NS_OK;
 }
 
+void
+CHBrowserListener::HandleFeedLink(nsIDOMElement* inElement)
+{
+  //XXX Implement the new Firefox sniffing code. (nsIFeedSniffer)
+  BOOL titleFound = YES;  // assume yes check below
+  nsresult rv;
+  
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  inElement->GetOwnerDocument(getter_AddRefs(domDoc));
+
+  nsAutoString titleAttr;
+  rv = inElement->GetAttribute(NS_LITERAL_STRING("title"), titleAttr);
+  if (NS_FAILED(rv))
+    titleFound = NO;
+    
+  nsAutoString feedHref;
+  rv = inElement->GetAttribute(NS_LITERAL_STRING("href"), feedHref);
+  if (NS_FAILED(rv))
+    return;
+
+  // get the document uri
+  nsCOMPtr<nsIDOM3Document> doc = do_QueryInterface(domDoc);
+  if (!doc)
+    return;
+
+  nsAutoString docURISpec;
+  rv = doc->GetDocumentURI(docURISpec);
+  if (NS_FAILED(rv))
+    return;
+
+  nsCOMPtr<nsIURI> documentURI;
+  rv = NS_NewURI(getter_AddRefs(documentURI), docURISpec);
+  if (NS_FAILED(rv))
+    return;
+  
+  nsCOMPtr<nsIURI> feedURI;
+  rv = NS_NewURI(getter_AddRefs(feedURI), NS_ConvertUTF16toUTF8(feedHref), nsnull, documentURI);
+  if (NS_FAILED(rv))
+    return;
+  
+  // set the scheme to feed:// so sending to outside application is one only one call
+  feedURI->SetScheme(NS_LITERAL_CSTRING("feed"));
+  
+  nsCAutoString feedFullURI;
+  feedURI->GetSpec(feedFullURI);
+  
+  // get the two specs, the feed's uri and the feed's title
+  NSString* feedSpec = [NSString stringWith_nsACString:feedFullURI];
+  NSString* titleSpec = nil;
+  if (titleFound)
+    titleSpec = [NSString stringWith_nsAString:titleAttr];
+  
+  // notify that a feed has sucessfully been discovered
+  [mContainer onFeedDetected:feedSpec feedTitle:titleSpec];
+}

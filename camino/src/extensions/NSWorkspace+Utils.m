@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Simon Fraser <smfr@smfr.org>
  *   Josh Aas <josha@mac.com>
+ *   Nick Kreeger <nick.kreeger@park.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,7 +52,7 @@
   NSArray* apps;
   _LSCopyApplicationURLsForItemURL([NSURL URLWithString:@"http:"], kLSRolesViewer, &apps);
   [apps autorelease];
-
+  
   // Put all the browsers into a new array, but only if they also support https and have a bundle ID we can access
   NSEnumerator *appEnumerator = [apps objectEnumerator];
   NSURL* anApp;
@@ -64,7 +65,7 @@
         [browsersSet addObject:tmpBundleID];
     }
   }
-
+  
   // add default browser in case it hasn't been already
   NSString* currentBrowser = [self defaultBrowserIdentifier];
   if (currentBrowser)
@@ -73,9 +74,33 @@
   return [browsersSet allObjects];
 }
 
+- (NSSet*)installedFeedViewerIdentifiers
+{
+  NSArray* apps = nil;
+  NSMutableSet* feedApps = [[[NSMutableSet alloc] init] autorelease]; 
+  [feedApps addObject:[self defaultFeedViewerIdentifier]];
+  _LSCopyApplicationURLsForItemURL([NSURL URLWithString:@"feed:"], kLSRolesViewer, &apps);
+  [apps autorelease];
+  
+  NSEnumerator* appEnumerator = [apps objectEnumerator];
+  NSURL* anApp;
+  while ((anApp = [appEnumerator nextObject])) {
+    NSString* tmpBundleID = [self identifierForBundle:anApp];
+    if (tmpBundleID)
+      [feedApps addObject:tmpBundleID];
+  }
+  
+  return feedApps;
+}
+
 - (NSString*)defaultBrowserIdentifier
 {
   return [self identifierForBundle:[self defaultBrowserURL]];
+}
+
+- (NSString*)defaultFeedViewerIdentifier
+{
+  return [self identifierForBundle:[self defaultFeedViewerURL]];
 }
 
 - (NSURL*)defaultBrowserURL
@@ -84,6 +109,15 @@
   if (_LSCopyDefaultSchemeHandlerURL(@"http", &currSetURL) == noErr)
     return [currSetURL autorelease];
 
+  return nil;
+}
+
+- (NSURL*)defaultFeedViewerURL
+{
+  NSURL* curViewer = nil;
+  if (_LSCopyDefaultSchemeHandlerURL(@"feed", &curViewer) == noErr)
+    return [curViewer autorelease];
+  
   return nil;
 }
 
@@ -101,6 +135,15 @@
     _LSSetWeakBindingForType(0, 0, CFSTR("htm"),  kLSRolesAll, &browserFSRef);
     _LSSetWeakBindingForType(0, 0, CFSTR("html"), kLSRolesAll, &browserFSRef);
     _LSSetWeakBindingForType(0, 0, CFSTR("url"),  kLSRolesAll, &browserFSRef);
+    _LSSaveAndRefresh();
+  }
+}
+
+- (void)setDefaultFeedViewerWithIdentifier:(NSString*)bundleID
+{
+  NSURL* feedAppURL = [self urlOfApplicationWithIdentifier:bundleID];
+  if (feedAppURL) {
+    _LSSetDefaultSchemeHandlerURL(@"feed", feedAppURL);
     _LSSaveAndRefresh();
   }
 }

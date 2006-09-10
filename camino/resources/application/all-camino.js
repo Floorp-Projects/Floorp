@@ -57,6 +57,9 @@ pref("camino.enable_plugins", true);
 // show warning when closing windows or quitting
 pref("camino.warn_when_closing", true);
 
+// show warning when attempting to open a feed to another application
+pref("camino.warn_before_opening_feed", true);
+
 // turn off dumping of JS and CSS errors to the console
 pref("chimera.log_js_to_console", false);
 

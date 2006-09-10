@@ -87,6 +87,8 @@ class nsISecureBrowserUI;
 - (void)onPopupBlocked:(nsIDOMPopupBlockedEvent*)data;
 // Called when a "shortcut icon" link element is noticed
 - (void)onFoundShortcutIcon:(NSString*)inIconURI;
+// Called when a feed link element is noticed
+- (void)onFeedDetected:(NSString*)inFeedURI feedTitle:(NSString*)inFeedTitle;
 
 @end
 

@@ -187,6 +187,10 @@ typedef enum
 
 - (void)unblockAllPopupSites:(nsIArray*)inSites;
 
+  // call to update feed detection in a page
+- (void)showFeedDetected:(BOOL)inDetected;
+- (IBAction)openFeedPrefPane:(id)sender;
+
 - (void)performAppropriateLocationAction;
 - (IBAction)goToLocationFromToolbarURLField:(id)sender;
 - (void)beginLocationSheet;

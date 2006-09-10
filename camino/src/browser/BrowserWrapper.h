@@ -69,6 +69,7 @@ class nsIArray;
 - (void)configurePopupBlocking;
 - (void)unblockAllPopupSites:(nsIArray*)inSites;
 - (void)showSecurityState:(unsigned long)state;
+- (void)showFeedDetected:(BOOL)inDetected;
 
 - (BOOL)userChangedLocationField;
 
@@ -143,6 +144,7 @@ class nsIArray;
     // array of popupevents that have been blocked. We can use them to reconstruct the popups
     // later. If nil, no sites are blocked. Cleared after each new page.
   nsIMutableArray*          mBlockedSites;
+  NSMutableArray*           mFeedList;        // list of feeds found on page
 
   CHBrowserView*            mBrowserView;     // retained
   NSString*                 mDefaultStatusString;
@@ -194,7 +196,9 @@ class nsIArray;
 - (NSString*)statusString;
 - (float)loadingProgress;
 - (BOOL)popupsBlocked;
+- (BOOL)feedsDetected;
 - (unsigned long)securityState;
+- (NSArray*)feedList;
 
 - (NSString*)getCurrentURI;
 
@@ -232,6 +236,7 @@ class nsIArray;
 - (void)onSecurityStateChange:(unsigned long)newState;
 - (void)onShowTooltip:(NSPoint)where withText:(NSString*)text;
 - (void)onHideTooltip;
+- (void)onFeedDetected:(NSString*)inFeedURI feedTitle:(NSString*)inFeedTitle;
 
 // CHBrowserContainer messages
 - (void)setStatus:(NSString *)statusString ofType:(NSStatusType)type;

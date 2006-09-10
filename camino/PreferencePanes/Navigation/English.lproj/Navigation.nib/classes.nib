@@ -16,6 +16,9 @@
             ACTIONS = {
                 checkboxStartPageClicked = id; 
                 defaultBrowserChange = id; 
+                defaultFeedViewerChange = id; 
+                runOpenDialogToSelectBrowser = id; 
+                runOpenDialogToSelectFeedViewer = id; 
                 warningCheckboxClicked = id; 
             }; 
             CLASS = OrgMozillaChimeraPreferenceNavigation; 
@@ -26,6 +29,7 @@
                 checkboxNewWindowBlank = NSButton; 
                 checkboxWarnWhenClosing = NSButton; 
                 defaultBrowserPopUp = NSPopUpButton; 
+                defaultFeedViewerPopUp = NSPopUpButton; 
                 textFieldHomePage = NSTextField; 
             }; 
             SUPERCLASS = PreferencePaneBase; 

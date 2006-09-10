@@ -42,52 +42,38 @@
 #import <Cocoa/Cocoa.h>
 #import <ApplicationServices/ApplicationServices.h>
 
-#import "NSString+Utils.h"
 #import "NSWorkspace+Utils.h"
+#import "AppListMenuFactory.h"
 
 #import "Navigation.h"
 
 const int kDefaultExpireDays = 9;
-static NSString* const kUserChosenBrowserUserDefaultsKey = @"UserChosenBrowsers";
 
 @interface OrgMozillaChimeraPreferenceNavigation(Private)
 
 - (NSString*)getCurrentHomePage;
--(void)updateDefaultBrowserMenu;
+- (void)updateDefaultBrowserMenu;
+- (void)browserSelectionPanelDidEnd:(NSOpenPanel*)sheet returnCode:(int)returnCode contextInfo:(void*)contextInfo;
+- (void)feedSelectionPanelDidEnd:(NSOpenPanel*)sheet returnCode:(int)returnCode contextInfo:(void*)contextInfo;
 
 @end
-
-// this is for sorting the web browser bundle ID list by display name
-static int CompareBundleIDAppDisplayNames(id a, id b, void *context)
-{
-  NSURL* appURLa = nil;
-  NSURL* appURLb = nil;
-  
-  if ((LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)a, NULL, NULL, (CFURLRef*)&appURLa) == noErr) &&
-      (LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)b, NULL, NULL, (CFURLRef*)&appURLb) == noErr))
-  {
-    NSString *aName = [[NSWorkspace sharedWorkspace] displayNameForFile:appURLa];
-    NSString *bName = [[NSWorkspace sharedWorkspace] displayNameForFile:appURLb];
-    return [aName compare:bName];
-  }
-  
-  // this shouldn't ever happen, and if it does we handle it correctly when building the menu.
-  // there is no way to flag an error condition here and the sort fuctions return void
-  return NSOrderedSame;
-}
 
 @implementation OrgMozillaChimeraPreferenceNavigation
 
 - (id)initWithBundle:(NSBundle *)bundle
 {
   if ((self = [super initWithBundle:bundle])) {
-    [[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObject:[NSArray array] forKey:kUserChosenBrowserUserDefaultsKey]];
+    [[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObject:[NSArray array] 
+                                                                                        forKey:kUserChosenBrowserUserDefaultsKey]];
+    [[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObject:[NSArray array]
+                                                                                        forKey:kUserChosenFeedViewerUserDefaultsKey]];
   }
   return self;
 }
 
 - (void)dealloc
 {
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
   [super dealloc];
 }
 
@@ -116,6 +102,15 @@ static int CompareBundleIDAppDisplayNames(id a, id b, void *context)
   
   // set up default browser menu
   [self updateDefaultBrowserMenu];
+ 
+  // set up the feed viewer menu
+  [self updateDefaultFeedViewerMenu];
+  
+  // register notification if the default feed viewer is changed in the FeedServiceController
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(updateDefaultFeedViewerMenu)
+                                               name:kDefaultFeedViewerChanged
+                                             object:nil];
 }
 
 - (void) didUnselect
@@ -131,7 +126,7 @@ static int CompareBundleIDAppDisplayNames(id a, id b, void *context)
 
   [self setPref:"camino.check_default_browser" toBoolean:([checkboxCheckDefaultBrowserOnLaunch state] == NSOnState)];
 
-  [self setPref:"camino.warn_when_closing"  toBoolean:([checkboxWarnWhenClosing state] == NSOnState)];
+  [self setPref:"camino.warn_when_closing" toBoolean:([checkboxWarnWhenClosing state] == NSOnState)];
 }
 
 - (IBAction)checkboxStartPageClicked:(id)sender
@@ -164,38 +159,45 @@ static int CompareBundleIDAppDisplayNames(id a, id b, void *context)
 // called when the users changes the selection in the default browser menu
 - (IBAction)defaultBrowserChange:(id)sender
 {
-  id repObject = [sender representedObject];
-  if (repObject) {
-    // only change default if the app still exists
-    NSURL *appURL = nil;
-    if (LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)repObject, NULL, NULL, (CFURLRef*)&appURL) == noErr) {
-      if ([[NSFileManager defaultManager] isExecutableFileAtPath:[[appURL path] stringByStandardizingPath]]) {
-        // set it as the default browser
-        [[NSWorkspace sharedWorkspace] setDefaultBrowserWithIdentifier:repObject];
-        return;
-      }
-    }
-    NSRunAlertPanel(NSLocalizedString(@"Application does not exist", @"Application does not exist"),
-                    NSLocalizedString(@"BrowserDoesNotExistExplanation", @"BrowserDoesNotExistExplanation"),
-                    NSLocalizedString(@"OKButtonText", @"OK"), nil, nil);
-    // update the popup list to reflect the fact that the chosen browser does not exist
-    [self updateDefaultBrowserMenu];
-  } else {
-    // its not a browser that was selected, so the user must want to select a browser
-    NSOpenPanel *op = [NSOpenPanel openPanel];
-    [op setCanChooseDirectories:NO];
-    [op setAllowsMultipleSelection:NO];
-    [op beginSheetForDirectory:nil
-                          file:nil
-                         types:[NSArray arrayWithObject:@"app"]
-                modalForWindow:[defaultBrowserPopUp window]
-                 modalDelegate:self
-                didEndSelector:@selector(openPanelDidEnd:returnCode:contextInfo:)
-                   contextInfo:nil];
-  }
+  [[AppListMenuFactory sharedAppListMenuFactory] validateAndRegisterDefaultBrowser:[sender representedObject]];
+  [self updateDefaultBrowserMenu];
 }
 
-- (void)openPanelDidEnd:(NSOpenPanel *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
+-(IBAction)defaultFeedViewerChange:(id)sender
+{
+  [[AppListMenuFactory sharedAppListMenuFactory] validateAndRegisterDefaultFeedViewer:[sender representedObject]];
+  [self updateDefaultFeedViewerMenu];
+}
+
+-(IBAction)runOpenDialogToSelectBrowser:(id)sender
+{
+  NSOpenPanel *op = [NSOpenPanel openPanel];
+  [op setCanChooseDirectories:NO];
+  [op setAllowsMultipleSelection:NO];
+  [op beginSheetForDirectory:nil
+                        file:nil
+                       types:[NSArray arrayWithObject:@"app"]
+              modalForWindow:[defaultBrowserPopUp window]
+               modalDelegate:self
+              didEndSelector:@selector(browserSelectionPanelDidEnd:returnCode:contextInfo:)
+                 contextInfo:nil];
+}
+
+-(IBAction)runOpenDialogToSelectFeedViewer:(id)sender
+{
+  NSOpenPanel *op = [NSOpenPanel openPanel];
+  [op setCanChooseDirectories:NO];
+  [op setAllowsMultipleSelection:NO];
+  [op beginSheetForDirectory:nil
+                        file:nil
+                       types:[NSArray arrayWithObject:@"app"]
+              modalForWindow:[defaultFeedViewerPopUp window]
+               modalDelegate:self
+              didEndSelector:@selector(feedSelectionPanelDidEnd:returnCode:contextInfo:)
+                 contextInfo:nil];
+}
+
+- (void)browserSelectionPanelDidEnd:(NSOpenPanel*)sheet returnCode:(int)returnCode contextInfo:(void*)contextInfo
 {
   if (returnCode == NSOKButton) {
     NSString *chosenBundleID = [[NSWorkspace sharedWorkspace] identifierForBundle:[[sheet URLs] objectAtIndex:0]];
@@ -214,87 +216,42 @@ static int CompareBundleIDAppDisplayNames(id a, id b, void *context)
   [self updateDefaultBrowserMenu];
 }
 
-// returns an array of web browser bundle IDs sorted by display name
-- (NSArray*)getWebBrowserList
+- (void)feedSelectionPanelDidEnd:(NSOpenPanel*)sheet returnCode:(int)returnCode contextInfo:(void*)contextInfo
 {
-  NSArray* installedBrowsers = [[NSWorkspace sharedWorkspace] installedBrowserIdentifiers];
-
-  // use a set to avoid duplicates
-  NSMutableSet* browsersSet = [NSMutableSet setWithArray:installedBrowsers];
-  
-  // add user chosen browsers to list
-  [browsersSet addObjectsFromArray:[[NSUserDefaults standardUserDefaults] objectForKey:kUserChosenBrowserUserDefaultsKey]];
-
-  // sort by display name
-  NSMutableArray* browsers = [[browsersSet allObjects] mutableCopy];
-  [browsers sortUsingFunction:&CompareBundleIDAppDisplayNames context:NULL];
-  return [browsers autorelease];
+  if (returnCode == NSOKButton) {
+    NSString* chosenBundleID = [[NSWorkspace sharedWorkspace] identifierForBundle:[[sheet URLs] objectAtIndex:0]];
+    if (chosenBundleID) {
+      // add this browser to a list of apps we should always consider as browsers
+      NSMutableArray* userChosenBundleIDs = [NSMutableArray arrayWithCapacity:2];
+      [userChosenBundleIDs addObjectsFromArray:[[NSUserDefaults standardUserDefaults] objectForKey:kUserChosenFeedViewerUserDefaultsKey]];
+      if (![userChosenBundleIDs containsObject:chosenBundleID]) {
+        [userChosenBundleIDs addObject:chosenBundleID];
+        [[NSUserDefaults standardUserDefaults] setObject:userChosenBundleIDs forKey:kUserChosenFeedViewerUserDefaultsKey];
+      }
+      // set the default feed viewer
+      [[NSWorkspace sharedWorkspace] setDefaultFeedViewerWithIdentifier:chosenBundleID];
+      [self updateDefaultFeedViewerMenu];
+    }
+  }
+  // The open action was cancelled, re-select the default application
+  else
+    [defaultFeedViewerPopUp selectItemAtIndex:0];
 }
 
 -(void)updateDefaultBrowserMenu
 {
-  NSArray *browsers = [self getWebBrowserList];
-  NSMenu *menu = [[[NSMenu alloc] initWithTitle:@"Browsers"] autorelease];
-  NSString* caminoBundleID = [[NSBundle mainBundle] bundleIdentifier];
-  
-  // get current default browser's bundle ID
-  NSString* currentDefaultBrowserBundleID = [[NSWorkspace sharedWorkspace] defaultBrowserIdentifier];
-  
-  // add separator first, current instance of Camino will be inserted before it
-  [menu addItem:[NSMenuItem separatorItem]];
+  [[AppListMenuFactory sharedAppListMenuFactory] buildBrowserAppsMenuForPopup:defaultBrowserPopUp 
+                                                                    andAction:@selector(defaultBrowserChange:) 
+                                                              andSelectAction:@selector(runOpenDialogToSelectBrowser:)
+                                                                    andTarget:self];
+}
 
-  // Set up new menu
-  NSMenuItem* selectedBrowserMenuItem = nil;
-  NSEnumerator* browserEnumerator = [browsers objectEnumerator];
-  NSString* bundleID;
-  while ((bundleID = [browserEnumerator nextObject]))
-  {
-    NSURL* appURL = [[NSWorkspace sharedWorkspace] urlOfApplicationWithIdentifier:bundleID];
-    if (!appURL) {
-      // see if it was supposed to find Camino and use our own path in that case,
-      // otherwise skip this bundle ID
-      if ([bundleID isEqualToString:caminoBundleID])
-        appURL = [NSURL fileURLWithPath:[[NSBundle mainBundle] bundlePath]];
-      else
-        continue;
-    }
-    
-    NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:[[NSWorkspace sharedWorkspace] displayNameForFile:appURL]
-                                                  action:@selector(defaultBrowserChange:) keyEquivalent:@""];
-    NSImage *icon = [[NSWorkspace sharedWorkspace] iconForFile:[[appURL path] stringByStandardizingPath]];
-    [icon setSize:NSMakeSize(16.0, 16.0)];
-    [item setImage:icon];
-    [item setRepresentedObject:bundleID];
-    [item setTarget:self];
-    [item setEnabled:YES];
-    
-    // if this item is Camino, insert it first in the list
-    if ([bundleID isEqualToString:caminoBundleID])
-      [menu insertItem:item atIndex:0];
-    else
-      [menu addItem:item];
-    
-    // if this item has the same bundle ID as the current default browser, select it
-    if ([bundleID isEqualToString:currentDefaultBrowserBundleID])
-      selectedBrowserMenuItem = item;
-    
-    [item release];
-  }
-  
-  // allow user to select a browser
-  [menu addItem:[NSMenuItem separatorItem]];
-  NSMenuItem* selectItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Select...", "Select...")
-                                    action:@selector(defaultBrowserChange:) keyEquivalent:@""];
-  [selectItem setRepresentedObject:nil];
-  [selectItem setTarget:self];
-  [selectItem setEnabled:YES];
-  [menu addItem:selectItem];
-  [selectItem release];
-  
-  [defaultBrowserPopUp setMenu:menu];
-
-  // set the correct selection
-  [defaultBrowserPopUp selectItem:selectedBrowserMenuItem];
+-(void)updateDefaultFeedViewerMenu
+{
+  [[AppListMenuFactory sharedAppListMenuFactory] buildFeedAppsMenuForPopup:defaultFeedViewerPopUp
+                                                                 andAction:@selector(defaultFeedViewerChange:)
+                                                           andSelectAction:@selector(runOpenDialogToSelectFeedViewer:) 
+                                                                 andTarget:self];
 }
 
 @end

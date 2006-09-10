@@ -53,6 +53,13 @@
 
 @class CHBrowserView;
 
+typedef enum 
+{
+  eFeedType,
+  eFavIconType,
+  eOtherType
+} ELinkAttributeType;
+
 class CHBrowserListener : public nsSupportsWeakReference,
                                public nsIInterfaceRequestor,
                                public nsIWebBrowserChrome,
@@ -87,10 +94,12 @@ public:
   void SetContainer(NSView<CHBrowserListener, CHBrowserContainer>* aContainer);
 
 protected:
-
   nsresult HandleBlockedPopupEvent(nsIDOMEvent* inEvent);
   nsresult HandleLinkAddedEvent(nsIDOMEvent* inEvent);
-  
+  void HandleFaviconLink(nsIDOMElement* inElement);
+  void HandleFeedLink(nsIDOMElement* inElement);
+  ELinkAttributeType GetLinkAttributeType(nsIDOMElement* inElement); 
+    
 private:
   CHBrowserView*          mView;     // WEAK - it owns us
   NSMutableArray*         mListeners;

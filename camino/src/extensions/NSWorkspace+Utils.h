@@ -45,7 +45,12 @@
 - (NSString*)defaultBrowserIdentifier;
 - (NSURL*)defaultBrowserURL;
 
+- (NSSet*)installedFeedViewerIdentifiers;
+- (NSString*)defaultFeedViewerIdentifier;
+- (NSURL*)defaultFeedViewerURL;
+
 - (void)setDefaultBrowserWithIdentifier:(NSString*)bundleID;
+- (void)setDefaultFeedViewerWithIdentifier:(NSString*)bundleID;
 
 - (NSURL*)urlOfApplicationWithIdentifier:(NSString*)bundleID;
 - (NSString*)identifierForBundle:(NSURL*)inBundleURL;

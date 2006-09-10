@@ -1119,6 +1119,10 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
 {
 }
 
+- (void)onFeedDetected:(NSString*)inFeedURI feedTitle:(NSString*)inFeedTitle;
+{
+}
+
 @end
 
 //

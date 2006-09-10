@@ -53,6 +53,7 @@
 #import "AddBookmarkDialogController.h"
 #import "ProgressDlgController.h"
 #import "PageInfoWindowController.h"
+#import "FeedServiceController.h"
 
 #import "BrowserContentViews.h"
 #import "BrowserWrapper.h"
@@ -157,7 +158,6 @@ const float kMininumURLAndSearchBarWidth = 128.0;
 static NSString* const NavigatorWindowFrameSaveName = @"NavigatorWindow";
 static NSString* const NavigatorWindowSearchBarWidth = @"SearchBarWidth";
 static NSString* const NavigatorWindowSearchBarHidden = @"SearchBarHidden";
-
 static NSString* const kViewSourceProtocolString = @"view-source:";
 const unsigned long kNoToolbarsChromeMask = (nsIWebBrowserChrome::CHROME_ALL & ~(nsIWebBrowserChrome::CHROME_TOOLBAR |
                                                                                  nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR |
@@ -321,7 +321,7 @@ public:
 
 - (id)initWithImage:(NSImage *)inImage
 {
-  if ( (self = [super initTextCell:@"" pullsDown:YES]) )
+  if ((self = [super initTextCell:@"" pullsDown:YES]))
   {
     fImage = [inImage retain];
     fSrcRect = NSMakeRect(0,0,0,0);
@@ -483,6 +483,11 @@ enum BWCOpenDest {
 // create back/forward session history menus on toolbar button
 - (IBAction)backMenu:(id)inSender;
 - (IBAction)forwardMenu:(id)inSender;
+
+// run a modal according to the users pref on opening a feed
+- (BOOL)shouldWarnBeforeOpeningFeed;
+- (void)buildFeedsDetectedListMenu:(NSNotification*)notifer; 
+- (IBAction)openFeedInExternalApp:(id)sender;
 
 - (BOOL)prepareSpellingSuggestionMenu:(NSMenu*)inMenu tag:(int)inTag;
 
@@ -797,7 +802,7 @@ enum BWCOpenDest {
       // that both needing updating instead of just the two individual rects
       // (radar 2194819), we need to make the text area opaque.
       [mStatus setBackgroundColor:[NSColor windowBackgroundColor]];
-      [mStatus setDrawsBackground:YES];            
+      [mStatus setDrawsBackground:YES];
     }
 
     // Set up the toolbar's search text field
@@ -836,6 +841,12 @@ enum BWCOpenDest {
     [[self window] setAcceptsMouseMovedEvents:YES];
 
     [self setupToolbar];
+    
+    // Listen to the context menu events from the URL bar for the feed icon
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(buildFeedsDetectedListMenu:)
+                                                 name:kWillShowFeedMenu
+                                               object:nil];
 
     // set the size of the search bar to the width it was last time and hide it
     // programmatically if it wasn't visible
@@ -1609,6 +1620,17 @@ enum BWCOpenDest {
 }
 
 //
+// -openFeedPrefPane
+//
+// Opens the preference pane that contains the options for opening feeds
+//
+- (IBAction)openFeedPrefPane:(id)sender
+{
+  [[MVPreferencesController sharedInstance] showPreferences:nil];
+  [[MVPreferencesController sharedInstance] selectPreferencePaneByIdentifier:@"org.mozilla.camino.preference.general"];
+}
+
+//
 // -unblockAllPopupSites:
 //
 // Called in response to the menu item from the unblock popup. Puts all the
@@ -1689,6 +1711,91 @@ enum BWCOpenDest {
   pm->Add(URL, "popup", nsIPermissionManager::ALLOW_ACTION);
 }
 
+//
+// -showFeedDetected:
+//
+// Called when the browser wrapper decides to show or hide the feed icon. 
+// Pass the notice off to the URL bar.
+//
+- (void)showFeedDetected:(BOOL)inDetected 
+{
+  [mURLBar displayFeedIcon:inDetected];
+}
+
+//
+// -buildFeedsDetectedListMenu
+//
+// Called by the notification center right before the menu will be displayed. This
+// allows us the opportunity to populate its contents from the number of feeds that were detected
+//
+- (void)buildFeedsDetectedListMenu:(NSNotification*)notifier
+{
+  NSMenu* menu = [[[NSMenu alloc] initWithTitle:@"FeedListMenu"] autorelease];  // retained by the popup button
+  NSEnumerator* feedsEnum = [[[self getBrowserWrapper] feedList] objectEnumerator];
+  NSString* titleFormat = NSLocalizedString(@"SubscribeTo", nil); // "Subscribe to feedTitle or feedURI"
+  NSDictionary* curFeedDict;
+  while ((curFeedDict = [feedsEnum nextObject])) {
+    NSString* feedTitle = [curFeedDict objectForKey:@"feedtitle"];
+    NSString* feedURI = [curFeedDict objectForKey:@"feeduri"];
+    NSString* itemTitle;
+    
+    if (feedTitle && [feedTitle length] > 0)
+      itemTitle = [NSString stringWithFormat:titleFormat, feedTitle];
+    else
+      itemTitle = [NSString stringWithFormat:titleFormat, feedURI];
+    
+    // Insert the feed item into the menu if one with the same name has not
+    // already been inserted into the list.
+    if ([menu indexOfItemWithTitle:itemTitle] == -1) {
+      NSMenuItem* curFeedMenuItem = [[NSMenuItem alloc] initWithTitle:itemTitle
+                                                               action:@selector(openFeedInExternalApp:)
+                                                        keyEquivalent:@""];
+      
+      [curFeedMenuItem setTarget:self];
+      [curFeedMenuItem setRepresentedObject:feedURI];
+      [menu addItem:curFeedMenuItem];
+      [curFeedMenuItem release];
+    }
+  }
+  
+  // Offer a shortcut to the feed preferences
+  [menu addItem:[NSMenuItem separatorItem]];
+  NSMenuItem* feedPrefItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"FeedPreferences", nil)
+                                                        action:@selector(openFeedPrefPane:) 
+                                                 keyEquivalent:@""];
+  [feedPrefItem setTarget:self];
+  [feedPrefItem setEnabled:YES];
+  [menu addItem:feedPrefItem];
+  [feedPrefItem release];
+  
+  [mURLBar setFeedIconContextMenu:menu];
+}
+
+//
+// -shouldWarnBeforeOpeningFeed
+//
+// Returns the state of the users pref to show the warning screen when opening a feed
+// 
+-(BOOL)shouldWarnBeforeOpeningFeed
+{
+  return [[PreferenceManager sharedInstance] getBooleanPref:"camino.warn_before_opening_feed" withSuccess:NULL];
+}
+
+// -openFeedInExternalApp
+//
+// Called when the user clicks on one of the feeds found on the page
+- (IBAction)openFeedInExternalApp:(id)sender
+{
+  FeedServiceController* feedServController = [FeedServiceController sharedFeedServiceController];
+  
+  // Only pose the warning dialog if we need to warn the user before opening
+  // or if the user doesn't have any feed applications registered.
+  if ([self shouldWarnBeforeOpeningFeed] || ![feedServController feedAppsExist]) 
+    [feedServController showFeedWillOpenDialog:[self window]  feedURI:[sender representedObject]];
+  else
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:[sender representedObject]]];
+}
+
 - (void)showSecurityState:(unsigned long)state
 {
   [self updateLock:state];
@@ -1709,13 +1816,14 @@ enum BWCOpenDest {
 
 - (void)updateFromFrontmostTab
 {
-  [[self window] setTitle:  [mBrowserView windowTitle]];
-  [self setLoadingActive:   [mBrowserView isBusy]];
-  [self setLoadingProgress: [mBrowserView loadingProgress]];
-  [self showSecurityState:  [mBrowserView securityState]];
-  [self updateSiteIcons:    [mBrowserView siteIcon] ignoreTyping:NO];
-  [self updateStatus:       [mBrowserView statusString]];
+  [[self window] setTitle:[mBrowserView windowTitle]];
+  [self setLoadingActive:[mBrowserView isBusy]];
+  [self setLoadingProgress:[mBrowserView loadingProgress]];
+  [self showSecurityState:[mBrowserView securityState]];
+  [self updateSiteIcons:[mBrowserView siteIcon] ignoreTyping:NO];
+  [self updateStatus:[mBrowserView statusString]];
   [self updateLocationFields:[mBrowserView getCurrentURI] ignoreTyping:NO];
+  [self showFeedDetected:[mBrowserView feedsDetected]];
 }
 
 #pragma mark -
