@@ -79,6 +79,7 @@ nsDOMMouseEvent::nsDOMMouseEvent(nsPresContext* aPresContext,
 nsDOMMouseEvent::~nsDOMMouseEvent()
 {
   if (mEventIsInternal) {
+    delete mEvent->userType;
     switch (mEvent->eventStructType)
     {
       case NS_MOUSE_EVENT:

@@ -53,6 +53,7 @@ nsDOMMutationEvent::nsDOMMutationEvent(nsPresContext* aPresContext,
 nsDOMMutationEvent::~nsDOMMutationEvent()
 {
   if (mEventIsInternal) {
+    delete mEvent->userType;
     nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
     delete mutation;
     mEvent = nsnull;
