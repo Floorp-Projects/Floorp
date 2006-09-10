@@ -242,13 +242,23 @@ sub create {
     $class->check_required_create_fields(@_);
     my $params = $class->run_create_validators(@_);
 
-    # "cc" is not a field in the bugs table, so we don't pass it to
+    # These are not a fields in the bugs table, so we don't pass them to
     # insert_create_data.
     my $cc_ids = $params->{cc};
     delete $params->{cc};
+    my $groups = $params->{groups};
+    delete $params->{groups};
 
     my $bug = $class->insert_create_data($params);
 
+    # Add the group restrictions
+    my $sth_group = $dbh->prepare(
+        'INSERT INTO bug_group_map (bug_id, group_id) VALUES (?, ?)');
+    foreach my $group_id (@$groups) {
+        $sth_group->execute($bug->bug_id, $group_id);
+    }
+
+    # Add the CCs
     my $sth_cc = $dbh->prepare('INSERT INTO cc (bug_id, who) VALUES (?,?)');
     foreach my $user_id (@$cc_ids) {
         $sth_cc->execute($bug->bug_id, $user_id);
@@ -273,6 +283,9 @@ sub run_create_validators {
         $params->{target_milestone});
 
     $params->{version} = $class->_check_version($product, $params->{version});
+
+    $params->{groups} = $class->_check_groups($product,
+        $params->{groups});
 
     my $component = $class->_check_component($product, $params->{component});
     $params->{component_id} = $component->id;

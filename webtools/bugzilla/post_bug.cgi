@@ -145,8 +145,6 @@ foreach my $group (grep(/^bit-\d+$/, $cgi->param())) {
     push(@selected_groups, $1);
 }
 
-my @add_groups = @{Bugzilla::Bug->_check_groups($product, \@selected_groups)};
-
 # Include custom fields editable on bug creation.
 my @custom_bug_fields = Bugzilla->get_fields(
     { custom => 1, obsolete => 0, enter_bug => 1 });
@@ -185,6 +183,7 @@ foreach my $field (@bug_fields) {
 }
 $bug_params{'creation_ts'} = $timestamp;
 $bug_params{'cc'}          = [$cgi->param('cc')];
+$bug_params{'groups'}      = \@selected_groups;
 
 # Add the bug report to the DB.
 $dbh->bz_lock_tables('bugs WRITE', 'bug_group_map WRITE', 'longdescs WRITE',
@@ -201,13 +200,6 @@ my $bug = Bugzilla::Bug->create(\%bug_params);
 
 # Get the bug ID back.
 my $id = $bug->bug_id;
-
-# Add the group restrictions
-my $sth_addgroup = $dbh->prepare(q{
-            INSERT INTO bug_group_map (bug_id, group_id) VALUES (?, ?)});
-foreach my $group_id (@add_groups) {
-    $sth_addgroup->execute($id, $group_id);
-}
 
 # Add the initial comment, allowing for the fact that it may be private
 my $privacy = 0;
