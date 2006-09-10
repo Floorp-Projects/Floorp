@@ -128,7 +128,7 @@
       [% val = val FILTER time %]
     [% END %]
     <[% field %]
-      [% IF name != '' %]name="[% name FILTER xml %]"[% END %]
+      [%+ IF name != '' %]name="[% name FILTER xml %]"[% END %]
     >[% val FILTER xml %]</[% field %]>
   [% END %]
 [% END %]
