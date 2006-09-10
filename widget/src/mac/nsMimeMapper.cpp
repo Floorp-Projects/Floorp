@@ -290,7 +290,7 @@ nsMimeMapperMac::ExportMapping ( short * outLength ) const
         posInString += strlen(currMapping);     // advance marker to get ready for next mapping
       }
       nsMemory::Free ( mimeType );
-      delete currMapping;
+      delete[] currMapping;
     }
       
     *posInString = '\0';                        // null terminate our resulting string
