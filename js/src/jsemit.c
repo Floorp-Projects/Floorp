@@ -6205,7 +6205,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         ale = js_IndexAtom(cx, pn->pn_atom2, &cg->atomList);
         if (!ale)
             return JS_FALSE;
-        if (!EmitAtomIndexOp(cx, JSOP_STRING, ALE_INDEX(ale), cg))
+        if (!EmitAtomIndexOp(cx, JSOP_QNAMEPART, ALE_INDEX(ale), cg))
             return JS_FALSE;
         if (!EmitAtomOp(cx, pn, JSOP_XMLPI, cg))
             return JS_FALSE;
