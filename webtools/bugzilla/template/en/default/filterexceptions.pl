@@ -100,7 +100,6 @@
 'reports/duplicates-table.html.tmpl' => [
   'column.name', 
   'column.description',
-  'bug.id', 
   'bug.count', 
   'bug.delta', 
 ],

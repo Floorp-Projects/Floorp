@@ -118,8 +118,7 @@
         <tr [% "class='resolved'" IF bug.resolution != "" %]>
           <td>
             <center>
-              [% isclosed = bug.resolution != "" %]
-              <a href="show_bug.cgi?id=[% bug.id %]">[% bug.id FILTER closed(isclosed) %]</a>
+              [% bug.id FILTER bug_link(bug.id) FILTER none %]
             </center>
           </td>
 
