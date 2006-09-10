@@ -51,32 +51,22 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
-  var iter;
-
-  var N = 10;
-
   function gen() {
-    if (N == 0) {
-      yield "something";
-    } else {
-      --N;
-      iter.next();
+    var iter = yield;
+    try {
+      iter.next(1);
+    } catch (e) {
+      yield e;
     }
   }
 
   expect = true;
-  try
-  {
-    iter = gen();
-    var i = iter.next();
-    writeLineToLog("i="+i);
-  }
-  catch(ex)
-  {
-    writeLineToLog(ex + '');
-    actual = (ex + '').indexOf('TypeError: already executing generator function') != -1;
-  }
-  
+  var iter = gen();
+  iter.next();
+  var ex = iter.send(iter);
+  writeLineToLog(ex + '');
+  actual = (ex instanceof TypeError);
+
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');

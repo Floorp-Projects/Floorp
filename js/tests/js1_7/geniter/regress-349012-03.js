@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 //-----------------------------------------------------------------------------
 var bug = 349012;
-var summary = 'generator recursively calling itself via send is an Error';
+var summary = 'generator recursively calling itself via send is a TypeError';
 var actual = '';
 var expect = '';
 
@@ -51,32 +51,22 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
-  var iter;
-
-  var N = 10;
-
   function gen() {
-    if (N == 0) {
-      yield "something";
-    } else {
-      --N;
+    var iter = yield;
+    try {
       iter.send(1);
+    } catch (e) {
+      yield e;
     }
   }
 
   expect = true;
-  try
-  {
-    iter = gen();
-    var i = iter.next();
-    writeLineToLog("i="+i);
-  }
-  catch(ex)
-  {
-    writeLineToLog(ex + '');
-    actual = (ex + '').indexOf('TypeError: already executing generator function') != -1;
-  }
-  
+  var iter = gen();
+  iter.next();
+  var ex = iter.send(iter);
+  writeLineToLog(ex + '');
+  actual = (ex instanceof TypeError);
+
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');
