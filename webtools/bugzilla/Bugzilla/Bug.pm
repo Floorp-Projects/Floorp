@@ -118,6 +118,7 @@ sub VALIDATORS {
         cc             => \&_check_cc,
         deadline       => \&_check_deadline,
         estimated_time => \&_check_estimated_time,
+        keywords       => \&_check_keywords,
         op_sys         => \&_check_op_sys,
         priority       => \&_check_priority,
         product        => \&_check_product,
@@ -249,6 +250,11 @@ sub create {
     my $groups = $params->{groups};
     delete $params->{groups};
 
+    # Set up the keyword cache for bug creation.
+    my $keywords = $params->{keywords};
+    $params->{keywords} = join(', ', sort {lc($a) cmp lc($b)} 
+                                          map($_->name, @$keywords));
+
     my $bug = $class->insert_create_data($params);
 
     # Add the group restrictions
@@ -262,6 +268,13 @@ sub create {
     my $sth_cc = $dbh->prepare('INSERT INTO cc (bug_id, who) VALUES (?,?)');
     foreach my $user_id (@$cc_ids) {
         $sth_cc->execute($bug->bug_id, $user_id);
+    }
+
+    # Add in keywords
+    my $sth_keyword = $dbh->prepare(
+        'INSERT INTO keywords (bug_id, keywordid) VALUES (?, ?)');
+    foreach my $keyword_id (map($_->id, @$keywords)) {
+        $sth_keyword->execute($bug->bug_id, $keyword_id);
     }
 
     return $bug;
@@ -585,14 +598,14 @@ sub _check_keywords {
     $keyword_string = trim($keyword_string);
     return [] if (!$keyword_string || !Bugzilla->user->in_group('editbugs'));
 
-    my %keyword_ids;
+    my %keywords;
     foreach my $keyword (split(/[\s,]+/, $keyword_string)) {
         next unless $keyword;
         my $obj = new Bugzilla::Keyword({ name => $keyword });
         ThrowUserError("unknown_keyword", { keyword => $keyword }) if !$obj;
-        $keyword_ids{$obj->id} = 1;
+        $keywords{$obj->id} = $obj;
     }
-    return [keys %keyword_ids];
+    return [values %keywords];
 }
 
 sub _check_product {

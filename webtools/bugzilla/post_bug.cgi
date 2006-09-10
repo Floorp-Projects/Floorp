@@ -130,8 +130,6 @@ $comment = Bugzilla::Bug->_check_comment($cgi->param('comment'));
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-my @keyword_ids = @{Bugzilla::Bug->_check_keywords($cgi->param('keywords'))};
-
 my ($depends_on_ids, $blocks_ids) = Bugzilla::Bug->_check_dependencies(
     scalar $cgi->param('dependson'), scalar $cgi->param('blocked'));
 
@@ -166,6 +164,7 @@ push(@bug_fields, qw(
     bug_file_loc
     bug_severity
     bug_status
+    keywords
     short_desc
     op_sys
     priority
@@ -215,25 +214,7 @@ $dbh->do(q{INSERT INTO longdescs (bug_id, who, bug_when, thetext,isprivate)
                                             $comment, $privacy));
 
 my @all_deps;
-my $sth_addkeyword = $dbh->prepare(q{
-            INSERT INTO keywords (bug_id, keywordid) VALUES (?, ?)});
 if (Bugzilla->user->in_group("editbugs")) {
-    foreach my $keyword (@keyword_ids) {
-        $sth_addkeyword->execute($id, $keyword);
-    }
-    if (@keyword_ids) {
-        # Make sure that we have the correct case for the kw
-        my $kw_ids = join(', ', @keyword_ids);
-        my $list = $dbh->selectcol_arrayref(qq{
-                                    SELECT name 
-                                      FROM keyworddefs 
-                                     WHERE id IN ($kw_ids)
-                                  ORDER BY name});
-        my $kw_list = join(', ', @$list);
-        $dbh->do(q{UPDATE bugs 
-                      SET delta_ts = ?, keywords = ? 
-                    WHERE bug_id = ?}, undef, ($timestamp, $kw_list, $id));
-    }
     if ($cgi->param('dependson') || $cgi->param('blocked')) {
         my %deps = (dependson => $depends_on_ids, blocked => $blocks_ids);
         foreach my $pair (["blocked", "dependson"], ["dependson", "blocked"]) {
