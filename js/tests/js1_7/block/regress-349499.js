@@ -51,7 +51,7 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
-  expect = 'function (x) {\n    new (let (x = 3) x)();\n}';
+  expect = 'function (x) {\n    new (let (x = 3) x);\n}';
 
   var f = function(x) { new let (x = 3) x };
   actual = f.toString();
