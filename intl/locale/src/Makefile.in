@@ -70,7 +70,6 @@ CPPSRCS		= \
 		nsLanguageAtomService.cpp \
 		nsLocale.cpp \
 		nsLocaleService.cpp \
-		nsFontPackageService.cpp \
 		$(NULL)
 
 EXPORTS		= \

@@ -48,7 +48,6 @@
 #include "nsICharsetConverterManager.h"
 #include "nsICollation.h"
 #include "nsCollationCID.h"
-#include "nsFontPackageHandler.h"
 #include "nsLocaleCID.h"
 #include "nsIGenericFactory.h"
 #include "nsILocaleService.h"
@@ -2062,15 +2061,10 @@ NS_IMETHODIMP nsCharsetMenu::EndUpdateBatch()
 
 // Module definitions
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageHandler)
-
 static const nsModuleComponentInfo components[] = {
     { "nsCharsetMenu", NS_CHARSETMENU_CID,
       NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID,
       NS_NewCharsetMenu },
-    { "nsFontPackageHandler", NS_FONTPACKAGEHANDLER_CID,
-      "@mozilla.org/locale/default-font-package-handler;1",
-      nsFontPackageHandlerConstructor },
 };
 
 NS_IMPL_NSGETMODULE(nsXPIntlModule, components)

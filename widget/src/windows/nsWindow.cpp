@@ -59,7 +59,6 @@
 #include "nsIAppShell.h"
 #include "nsIFontMetrics.h"
 #include "nsIFontEnumerator.h"
-#include "nsIFontPackageService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsFont.h"
@@ -4244,25 +4243,19 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         fontEnum->UpdateFontList(&didChange);
         //didChange is TRUE only if new font langGroup is added to the list.
         if (didChange)  {
-          nsCOMPtr<nsIFontPackageService> proxy = do_GetService("@mozilla.org/intl/fontpackageservice;1", &rv);
-          if (proxy) {
-            // font in the system is changed.  Notify the font download service.
-            proxy->FontPackageHandled(PR_FALSE, PR_FALSE, "");
-
-            // update device context font cache
-            // Dirty but easiest way:
-            // Changing nsIPref entry which triggers callbacks
-            // and flows into calling mDeviceContext->FlushFontCache()
-            // to update the font cache in all the instance of Browsers
-            nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-            if (prefs) {
-              nsCOMPtr<nsIPrefBranch> fiPrefs;
-              prefs->GetBranch("font.internaluseonly.", getter_AddRefs(fiPrefs));
-              if (fiPrefs) {
-                PRBool fontInternalChange = PR_FALSE;
-                fiPrefs->GetBoolPref("changed", &fontInternalChange);
-                fiPrefs->SetBoolPref("changed", !fontInternalChange);
-              }
+          // update device context font cache
+          // Dirty but easiest way:
+          // Changing nsIPref entry which triggers callbacks
+          // and flows into calling mDeviceContext->FlushFontCache()
+          // to update the font cache in all the instance of Browsers
+          nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+          if (prefs) {
+            nsCOMPtr<nsIPrefBranch> fiPrefs;
+            prefs->GetBranch("font.internaluseonly.", getter_AddRefs(fiPrefs));
+            if (fiPrefs) {
+              PRBool fontInternalChange = PR_FALSE;
+              fiPrefs->GetBoolPref("changed", &fontInternalChange);
+              fiPrefs->SetBoolPref("changed", !fontInternalChange);
             }
           }
         }

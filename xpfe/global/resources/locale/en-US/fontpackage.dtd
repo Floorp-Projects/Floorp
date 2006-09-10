@@ -1,6 +1,0 @@
-<!ENTITY window.title "Download Font">
-<!ENTITY info.label "To display language characters correctly, you need to install the following components:">
-<!ENTITY size.label "Download Size:">
-<!ENTITY downloadButton.label "Download Font">
-<!ENTITY cancelButton.label "Cancel">
-<!ENTITY install "Use the Regional Options Control Panel to install these components.">

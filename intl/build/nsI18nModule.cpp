@@ -335,10 +335,6 @@ static nsModuleComponentInfo components[] =
     NS_LANGUAGEATOMSERVICE_CID,
     NS_LANGUAGEATOMSERVICE_CONTRACTID,
     nsLanguageAtomServiceConstructor },
-  { "Font Package Service",
-    NS_FONTPACKAGESERVICE_CID,
-    NS_FONTPACKAGESERVICE_CONTRACTID,
-    nsFontPackageServiceConstructor },
  
 #ifdef XP_WIN 
   { "Platform locale",
