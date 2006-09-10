@@ -26,8 +26,11 @@ package Bugzilla::Install;
 
 use strict;
 
+use Bugzilla::Constants;
+use Bugzilla::Error;
 use Bugzilla::Group;
 use Bugzilla::Product;
+use Bugzilla::User;
 use Bugzilla::User::Setting;
 use Bugzilla::Version;
 
@@ -134,6 +137,128 @@ sub create_default_product {
                  $product->id, $default_comp->{description}, $admin_id);
     }
 
+}
+
+sub create_admin {
+    my ($params) = @_;
+    my $dbh      = Bugzilla->dbh;
+    my $template = Bugzilla->template;
+
+    my $admin_group = new Bugzilla::Group({ name => 'admin' });
+    my $admin_inheritors = 
+        Bugzilla::User->flatten_group_membership($admin_group->id);
+    my $admin_group_ids = join(',', @$admin_inheritors);
+
+    my ($admin_count) = $dbh->selectrow_array(
+        "SELECT COUNT(*) FROM user_group_map 
+          WHERE group_id IN ($admin_group_ids)");
+
+    return if $admin_count;
+
+    my %answer    = %{$params->{answer} || {}};
+    my $login     = $answer{'ADMIN_EMAIL'};
+    my $password  = $answer{'ADMIN_PASSWORD'};
+    my $full_name = $answer{'ADMIN_REALNAME'};
+
+    if (!$login || !$password || !$full_name) {
+        print "\n" . get_text('install_admin_setup') . "\n\n";
+    }
+
+    while (!$login) {
+        print get_text('install_admin_get_email') . ' ';
+        $login = <STDIN>;
+        chomp $login;
+        eval { Bugzilla::User->check_login_name_for_creation($login); };
+        if ($@) {
+            print $@ . "\n";
+            undef $login;
+        }
+    }
+
+    while (!defined $full_name) {
+        print get_text('install_admin_get_name') . ' ';
+        $full_name = <STDIN>;
+        chomp($full_name);
+    }
+
+    while (!$password) {
+        # trap a few interrupts so we can fix the echo if we get aborted.
+        local $SIG{HUP}  = \&_create_admin_exit;
+        local $SIG{INT}  = \&_create_admin_exit;
+        local $SIG{QUIT} = \&_create_admin_exit;
+        local $SIG{TERM} = \&_create_admin_exit;
+
+        system("stty","-echo") unless ON_WINDOWS;  # disable input echoing
+
+        print get_text('install_admin_get_password') . ' ';
+        $password = <STDIN>;
+        print "\n", get_text('install_admin_get_password2') . ' ';
+        my $pass2 = <STDIN>;
+        eval { validate_password($password, $pass2); };
+        if ($@) {
+            print "\n$@\n";
+            undef $password;
+        }
+        system("stty","echo") unless ON_WINDOWS;
+    }
+
+    my $admin = Bugzilla::User->create({ login_name    => $login, 
+                                         realname      => $full_name,
+                                         cryptpassword => $password });
+    make_admin($admin);
+}
+
+sub make_admin {
+    my ($user) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    $user = ref($user) ? $user 
+            : new Bugzilla::User(login_to_id($user, THROW_ERROR));
+
+    my $admin_group = new Bugzilla::Group({ name => 'admin' });
+
+    # Admins get explicit membership and bless capability for the admin group
+    $dbh->selectrow_array("SELECT id FROM groups WHERE name = 'admin'");
+
+    my $group_insert = $dbh->prepare(
+        'INSERT INTO user_group_map (user_id, group_id, isbless, grant_type)
+              VALUES (?, ?, ?, ?)');
+    # These are run in an eval so that we can ignore the error of somebody
+    # already being granted these things.
+    eval { 
+        $group_insert->execute($user->id, $admin_group->id, 0, GRANT_DIRECT); 
+    };
+    eval {
+        $group_insert->execute($user->id, $admin_group->id, 1, GRANT_DIRECT);
+    };
+
+    # Admins should also have editusers directly, even though they'll usually
+    # inherit it. People could have changed their inheritance structure.
+    my $editusers = new Bugzilla::Group({ name => 'editusers' });
+    eval { 
+        $group_insert->execute($user->id, $editusers->id, 0, GRANT_DIRECT); 
+    };
+
+    print "\n", get_text('install_admin_created', { user => $user }), "\n";
+}
+
+# This is just in case we get interrupted while getting the admin's password.
+sub _create_admin_exit {
+    # re-enable input echoing
+    system("stty","echo") unless ON_WINDOWS;
+    exit 1;
+}
+
+sub get_text {
+    my ($name, $vars) = @_;
+    my $template = Bugzilla->template;
+    $vars ||= {};
+    $vars->{'message'} = $name;
+    my $message;
+    $template->process('global/message.txt.tmpl', $vars, \$message)
+        || ThrowTemplateError($template->error());
+    $message =~ s/^\s+//gm;
+    return $message;
 }
 
 1;

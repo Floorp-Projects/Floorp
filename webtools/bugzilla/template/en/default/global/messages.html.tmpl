@@ -262,6 +262,26 @@
       <a href="editflagtypes.cgi">Back to flag types.</a>
     </p>
     
+  [% ELSIF message_tag == "install_admin_get_email" %]
+    Enter the e-mail address of the administrator:
+
+  [% ELSIF message_tag == "install_admin_get_name" %]
+    Enter the real name of the administrator:
+
+  [% ELSIF message_tag == "install_admin_get_password" %]
+    Enter a password for the administrator account:
+
+  [% ELSIF message_tag == "install_admin_get_password2" %]
+    Please retype the password to verify:
+
+  [% ELSIF message_tag == "install_admin_created" %]
+    [% user.login FILTER html %] is now set up as an administrator.
+
+  [% ELSIF message_tag == "install_admin_setup" %]
+    Looks like we don't have an administrator set up yet.
+    Either this is your first time using Bugzilla, or your
+    administrator's privileges might have accidentally been deleted.
+
   [% ELSIF message_tag == "product_invalid" %]
     [% title = "$terms.Bugzilla Component Descriptions" %]
     The product <em>[% product FILTER html %]</em> does not exist

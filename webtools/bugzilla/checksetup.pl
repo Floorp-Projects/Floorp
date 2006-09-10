@@ -44,6 +44,7 @@ checksetup.pl - A do-it-all upgrade and installation script for Bugzilla.
 
  ./checksetup.pl [--help|--check-modules]
  ./checksetup.pl [SCRIPT [--verbose]] [--no-templates|-t]
+ ./checksetup.pl --make-admin=user@domain.com
 
 =head1 OPTIONS
 
@@ -64,6 +65,12 @@ Display this help text
 =item B<--check-modules>
 
 Only check for correct module dependencies and quit afterward.
+
+=item B<--make-admin>=username@domain.com
+
+Makes the specified user into a Bugzilla administrator. This is
+in case you accidentally lock yourself out of the Bugzilla administrative
+interface.
 
 =item B<--no-templates> (B<-t>) 
 
@@ -204,7 +211,6 @@ The format of that file is as follows:
 
  (Any localconfig variable or parameter can be specified as above.)
 
- $answer{'ADMIN_OK'} = 'Y';
  $answer{'ADMIN_EMAIL'} = 'myadmin@mydomain.net';
  $answer{'ADMIN_PASSWORD'} = 'fooey';
  $answer{'ADMIN_REALNAME'} = 'Joel Peshkin';
@@ -270,7 +276,7 @@ sub read_answers_file {
 
 my %switch;
 GetOptions(\%switch, 'help|h|?', 'check-modules', 'no-templates|t',
-                     'verbose|v|no-silent');
+                     'verbose|v|no-silent', 'make-admin=s');
 
 # Print the help message if that switch was selected.
 pod2usage({-verbose => 1, -exitval => 1}) if $switch{'help'};
@@ -342,6 +348,8 @@ require Bugzilla::DB;
 require Bugzilla::Template;
 require Bugzilla::Field;
 require Bugzilla::Install;
+
+Bugzilla->usage_mode(USAGE_MODE_CMDLINE);
 
 ###########################################################################
 # Check and update --LOCAL-- configuration
@@ -585,215 +593,8 @@ Bugzilla::Install::update_settings();
 # Create Administrator  --ADMIN--
 ###########################################################################
 
-sub bailout {   # this is just in case we get interrupted while getting passwd
-    if ($^O !~ /MSWin32/i) {
-        system("stty","echo"); # re-enable input echoing
-    }
-    exit 1;
-}
-
-my @groups = ();
-$sth = $dbh->prepare("SELECT id FROM groups");
-$sth->execute();
-while ( my @row = $sth->fetchrow_array() ) {
-    push (@groups, $row[0]);
-}
-
-#  Prompt the user for the email address and name of an administrator.  Create
-#  that login, if it doesn't exist already, and make it a member of all groups.
-
-$sth = $dbh->prepare("SELECT user_id FROM groups INNER JOIN user_group_map " .
-                     "ON id = group_id WHERE name = 'admin'");
-$sth->execute;
-# when we have no admin users, prompt for admin email address and password ...
-if ($sth->rows == 0) {
-    my $login = "";
-    my $realname = "";
-    my $pass1 = "";
-    my $pass2 = "*";
-    my $admin_ok = 0;
-    my $admin_create = 1;
-    my $mailcheckexp = "";
-    my $mailcheck    = ""; 
-
-    # Here we look to see what the emailregexp is set to so we can 
-    # check the email address they enter. Bug 96675. If they have no 
-    # params (likely but not always the case), we use the default.
-    if (-e "$datadir/params") { 
-        require "$datadir/params"; # if they have a params file, use that
-    }
-    if (Bugzilla->params->{'emailregexp'}) {
-        $mailcheckexp = Bugzilla->params->{'emailregexp'};
-        $mailcheck    = Bugzilla->params->{'emailregexpdesc'};
-    } else {
-        $mailcheckexp = '^[\\w\\.\\+\\-=]+@[\\w\\.\\-]+\\.[\\w\\-]+$';
-        $mailcheck    = 'A legal address must contain exactly one \'@\', 
-        and at least one \'.\' after the @.';
-    }
-
-    print "\nLooks like we don't have an administrator set up yet.\n";
-    print "Either this is your first time using Bugzilla, or your\n ";
-    print "administrator's privileges might have accidentally been deleted.\n";
-    while(! $admin_ok ) {
-        while( $login eq "" ) {
-            print "Enter the e-mail address of the administrator: ";
-            $login = $answer{'ADMIN_EMAIL'} 
-                || ($silent && die("cant preload ADMIN_EMAIL")) 
-                || <STDIN>;
-            chomp $login;
-            if(! $login ) {
-                print "\nYou DO want an administrator, don't you?\n";
-            }
-            unless ($login =~ /$mailcheckexp/) {
-                print "\nThe login address is invalid:\n";
-                print "$mailcheck\n";
-                print "You can change this test on the params page once checksetup has successfully\n";
-                print "completed.\n\n";
-                # Go round, and ask them again
-                $login = "";
-            }
-        }
-        $sth = $dbh->prepare("SELECT login_name FROM profiles " .
-                              "WHERE " . $dbh->sql_istrcmp('login_name', '?'));
-        $sth->execute($login);
-        if ($sth->rows > 0) {
-            print "$login already has an account.\n";
-            print "Make this user the administrator? [Y/n] ";
-            my $ok = $answer{'ADMIN_OK'} 
-                || ($silent && die("cant preload ADMIN_OK")) 
-                || <STDIN>;
-            chomp $ok;
-            if ($ok !~ /^n/i) {
-                $admin_ok = 1;
-                $admin_create = 0;
-            } else {
-                print "OK, well, someone has to be the administrator.\n";
-                print "Try someone else.\n";
-                $login = "";
-            }
-        } else {
-            print "You entered $login.  Is this correct? [Y/n] ";
-            my $ok = $answer{'ADMIN_OK'} 
-                || ($silent && die("cant preload ADMIN_OK")) 
-                || <STDIN>;
-            chomp $ok;
-            if ($ok !~ /^n/i) {
-                $admin_ok = 1;
-            } else {
-                print "That's okay, typos happen.  Give it another shot.\n";
-                $login = "";
-            }
-        }
-    }
-
-    if ($admin_create) {
-        while( $realname eq "" ) {
-            print "Enter the real name of the administrator: ";
-            $realname = $answer{'ADMIN_REALNAME'} 
-                || ($silent && die("cant preload ADMIN_REALNAME")) 
-                || <STDIN>;
-            chomp $realname;
-            if(! $realname ) {
-                print "\nReally.  We need a full name.\n";
-            }
-            if(! is_7bit_clean($realname)) {
-                print "\nSorry, but at this stage the real name can only " . 
-                      "contain standard English\ncharacters.  Once Bugzilla " .
-                      "has been installed, you can use the 'Prefs' page\nto " .
-                      "update the real name.\n";
-                $realname = '';
-            }
-        }
-
-        # trap a few interrupts so we can fix the echo if we get aborted.
-        $SIG{HUP}  = \&bailout;
-        $SIG{INT}  = \&bailout;
-        $SIG{QUIT} = \&bailout;
-        $SIG{TERM} = \&bailout;
-
-        if ($^O !~ /MSWin32/i) {
-            system("stty","-echo");  # disable input echoing
-        }
-
-        while( $pass1 ne $pass2 ) {
-            while( $pass1 eq "" || $pass1 !~ /^[[:print:]]{3,16}$/ ) {
-                print "Enter a password for the administrator account: ";
-                $pass1 = $answer{'ADMIN_PASSWORD'} 
-                    || ($silent && die("cant preload ADMIN_PASSWORD")) 
-                    || <STDIN>;
-                chomp $pass1;
-                if(! $pass1 ) {
-                    print "\n\nAn empty password is a security risk. Try again!\n";
-                } elsif ( $pass1 !~ /^.{3,16}$/ ) {
-                    print "\n\nThe password must be 3-16 characters in length.\n";
-                } elsif ( $pass1 !~ /^[[:print:]]{3,16}$/ ) {
-                    print "\n\nThe password contains non-printable characters.\n";
-                }
-            }
-            print "\nPlease retype the password to verify: ";
-            $pass2 = $answer{'ADMIN_PASSWORD'} 
-                || ($silent && die("cant preload ADMIN_PASSWORD")) 
-                || <STDIN>;
-            chomp $pass2;
-            if ($pass1 ne $pass2) {
-                print "\n\nPasswords don't match.  Try again!\n";
-                $pass1 = "";
-                $pass2 = "*";
-            }
-        }
-
-        if ($^O !~ /MSWin32/i) {
-            system("stty","echo"); # re-enable input echoing
-        }
-
-        $SIG{HUP}  = 'DEFAULT'; # and remove our interrupt hooks
-        $SIG{INT}  = 'DEFAULT';
-        $SIG{QUIT} = 'DEFAULT';
-        $SIG{TERM} = 'DEFAULT';
-
-        Bugzilla::User->create({
-            login_name => $login, 
-            realname   => $realname, 
-            cryptpassword => $pass1});
-    }
-
-    # Put the admin in each group if not already    
-    my $userid = $dbh->selectrow_array("SELECT userid FROM profiles WHERE " .
-                                       $dbh->sql_istrcmp('login_name', '?'),
-                                       undef, $login);
-
-    # Admins get explicit membership and bless capability for the admin group
-    my ($admingroupid) = $dbh->selectrow_array("SELECT id FROM groups 
-                                                WHERE name = 'admin'");
-    $dbh->do("INSERT INTO user_group_map 
-        (user_id, group_id, isbless, grant_type) 
-        VALUES ($userid, $admingroupid, 0, " . GRANT_DIRECT . ")");
-    $dbh->do("INSERT INTO user_group_map 
-        (user_id, group_id, isbless, grant_type) 
-        VALUES ($userid, $admingroupid, 1, " . GRANT_DIRECT . ")");
-
-    # Admins get inherited membership and bless capability for all groups
-    foreach my $group ( @groups ) {
-        my $sth_check = $dbh->prepare("SELECT member_id FROM group_group_map
-                                 WHERE member_id = ?
-                                 AND  grantor_id = ?
-                                 AND grant_type = ?");
-        $sth_check->execute($admingroupid, $group, GROUP_MEMBERSHIP);
-        unless ($sth_check->rows) {
-            $dbh->do("INSERT INTO group_group_map
-                      (member_id, grantor_id, grant_type)
-                      VALUES ($admingroupid, $group, " . GROUP_MEMBERSHIP . ")");
-        }
-        $sth_check->execute($admingroupid, $group, GROUP_BLESS);
-        unless ($sth_check->rows) {
-            $dbh->do("INSERT INTO group_group_map
-                      (member_id, grantor_id, grant_type)
-                      VALUES ($admingroupid, $group, " . GROUP_BLESS . ")");
-        }
-    }
-
-    print "\n$login is now set up as an administrator account.\n";
-}
+Bugzilla::Install::make_admin($switch{'make-admin'}) if $switch{'make-admin'};
+Bugzilla::Install::create_admin({ answer => \%answer });
 
 ###########################################################################
 # Create default Product and Classification
@@ -804,14 +605,6 @@ Bugzilla::Install::create_default_product();
 ###########################################################################
 # Final checks
 ###########################################################################
-
-$sth = $dbh->prepare("SELECT user_id " .
-                       "FROM groups INNER JOIN user_group_map " .
-                       "ON groups.id = user_group_map.group_id " .
-                      "WHERE groups.name = 'admin'");
-$sth->execute;
-my ($adminuid) = $sth->fetchrow_array;
-if (!$adminuid) { die "No administrator!" } # should never get here
 
 # Check if the default parameter for urlbase is still set, and if so, give
 # notification that they should go and visit editparams.cgi 
