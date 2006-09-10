@@ -2410,7 +2410,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 sn = js_GetSrcNote(jp->script, pc - 1);
                 todo = Sprint(&ss->sprinter, fmt, lval, xval,
                               (sn && SN_TYPE(sn) == SRC_ASSIGNOP)
-                              ? js_CodeSpec[lastop].token
+                              ? (lastop == JSOP_GETTER)
+                                ? js_getter_str
+                                : (lastop == JSOP_SETTER)
+                                ? js_setter_str
+                                : js_CodeSpec[lastop].token
                               : "",
                               rval);
                 break;
