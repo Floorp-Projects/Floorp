@@ -1144,7 +1144,6 @@ FeedProcessor.prototype = {
     }
     finally {
       this._result = null;
-      this._reader = null;
     }
   },
 
@@ -1174,7 +1173,12 @@ FeedProcessor.prototype = {
   },
 
   onStopRequest: function FP_onStopRequest(request, context, statusCode) {
-    this._reader.onStopRequest(request, context, statusCode);
+    try {
+      this._reader.onStopRequest(request, context, statusCode);
+    }
+    finally {
+      this._reader = null;
+    }
   },
 
   onDataAvailable:
