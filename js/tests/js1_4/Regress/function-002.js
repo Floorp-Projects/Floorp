@@ -103,7 +103,8 @@ new TestCase(
     SECTION,
     "f2.toString() == dec2",
     true,
-    StripSpaces(f2.toString()) == StripSpaces(dec2));
+    StripSpaces(f2.toString().replace(/new Date\(\)/g, 'new Date')) == 
+    StripSpaces(dec2.replace(/new Date\(\)/g, 'new Date')));
 
 test();
 
