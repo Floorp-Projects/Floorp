@@ -2732,25 +2732,21 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             return NULL;
         js_PushStatement(tc, &stmtInfo, STMT_FOR_LOOP, -1);
 
-#if JS_HAS_XML_SUPPORT
-        pn->pn_op = JSOP_NOP;
+        pn->pn_op = JSOP_FORIN;
         if (js_MatchToken(cx, ts, TOK_NAME)) {
             if (CURRENT_TOKEN(ts).t_atom == cx->runtime->atomState.eachAtom)
                 pn->pn_op = JSOP_FOREACH;
             else
                 js_UngetToken(ts);
         }
-#endif
 
         MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
         ts->flags |= TSF_OPERAND;
         tt = js_PeekToken(cx, ts);
         ts->flags &= ~TSF_OPERAND;
         if (tt == TOK_SEMI) {
-#if JS_HAS_XML_SUPPORT
             if (pn->pn_op == JSOP_FOREACH)
                 goto bad_for_each;
-#endif
 
             /* No initializer -- set first kid of left sub-node to null. */
             pn1 = NULL;
@@ -2805,7 +2801,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
          */
         if (pn1 && js_MatchToken(cx, ts, TOK_IN)) {
             stmtInfo.type = STMT_FOR_IN_LOOP;
-            pn->pn_op = JSOP_FORIN;
 
             /* Check that the left side of the 'in' is valid. */
             JS_ASSERT(!TOKEN_TYPE_IS_DECL(tt) || pn1->pn_type == tt);
@@ -2887,10 +2882,9 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 return NULL;
             pn->pn_left = pn2;
         } else {
-#if JS_HAS_XML_SUPPORT
             if (pn->pn_op == JSOP_FOREACH)
                 goto bad_for_each;
-#endif
+            pn->pn_op = JSOP_NOP;
 
             /* Parse the loop condition or null into pn2. */
             MUST_MATCH_TOKEN(TOK_SEMI, JSMSG_SEMI_AFTER_FOR_INIT);
@@ -2951,13 +2945,11 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         js_PopStatement(tc);
         return pn;
 
-#if JS_HAS_XML_SUPPORT
       bad_for_each:
         js_ReportCompileErrorNumber(cx, pn,
                                     JSREPORT_PN | JSREPORT_ERROR,
                                     JSMSG_BAD_FOR_EACH_LOOP);
         return NULL;
-#endif
       }
 
       case TOK_TRY: {
