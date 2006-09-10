@@ -1,0 +1,9 @@
+Changes since Rhino 1.6R4
+=========================
+- Added org.mozilla.javascript.PolicySecurityController as a concrete 
+  implementation of an org.mozilla.javascript.SecurityController and the 
+  preferred way of integrating with Java security architecture.
+- When no security controller is in use, generated classes and scripts run in
+  the ProtectionDomain of Rhino classes.
+- Wrapped access to system properties and creation of class loaders into
+  AccessController.doPrivileged() to nicely play in secured environments.
