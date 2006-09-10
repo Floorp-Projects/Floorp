@@ -82,8 +82,6 @@
 
     <!-- addons, forgery (phishing) UI -->
     <groupbox id="addonsPhishingGroup"
-              xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
-              xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
               xmlns:aaa="http://www.w3.org/2005/07/aaa">
       <hbox id="addonInstallBox">
         <checkbox id="warnAddonInstall" flex="1"
@@ -112,15 +110,14 @@
                label="&useDownloadedList.label;"
                accesskey="&useDownloadedList.accesskey;"
                value="false"/>
-        <hbox id="onloadBox" align="center" xhtml2:role="wairole:label">
+        <hbox id="onloadBox" align="center">
           <radio id="onloadRadio"
                  label="&askThirdParty.label;"
                  accesskey="&askThirdParty.accesskey;"
-                 value="true"/>
+                 value="true" aaa:labelledby="onloadBox"/>
           <menulist id="onloadProvider"
                     preference="browser.safebrowsing.dataProvider"
                     onsyncfrompreference="return gSecurityPane.readOnloadPhishProvider();"
-                    xhtml2:role="wairole:list"
                     aaa:labelledby="onloadBox"/>
           <label id="onloadAfter">&askThirdPartyAfter.label;</label>
         </hbox>

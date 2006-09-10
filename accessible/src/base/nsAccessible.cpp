@@ -1359,17 +1359,17 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
       if (!frame || !frame->GetStyleVisibility()->IsVisible()) {
         return NS_OK;
       }
- 
-      if (aContent->Tag() == nsAccessibilityAtoms::label ||
-          aContent->Tag() == nsAccessibilityAtoms::description) {
-        aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value,
-                         textEquivalent);
+
+      nsCOMPtr<nsIDOMXULLabeledControlElement> labeledEl(do_QueryInterface(aContent));
+      if (labeledEl) {
+        labeledEl->GetLabel(textEquivalent);
       }
-      else if (!aContent->GetAttr(kNameSpaceID_None,
-                                  nsAccessibilityAtoms::tooltiptext, textEquivalent) ||
-               textEquivalent.IsEmpty()) {
-        AppendNameFromAccessibleFor(aContent, aFlatString, PR_TRUE /* use value */);
+      else {
+        aContent->GetAttr(kNameSpaceID_None,
+                          nsAccessibilityAtoms::tooltiptext, textEquivalent);
       }
+      AppendNameFromAccessibleFor(aContent, &textEquivalent, PR_TRUE /* use value */);
+
       return AppendStringWithSpaces(aFlatString, textEquivalent);
     }
     return NS_OK; // Not HTML and not XUL -- we don't handle it yet
@@ -1431,14 +1431,19 @@ nsresult nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, 
 {
   // Depth first search for all text nodes that are decendants of content node.
   // Append all the text into one flat string
-
-  PRUint32 numChildren = aContent->GetChildCount();
+  PRUint32 numChildren = 0;
+  nsCOMPtr<nsIDOMXULSelectControlElement> selectControlEl(do_QueryInterface(aContent));
+  if (!selectControlEl) {  // Don't walk children of elements with options, just get label directly
+    numChildren = aContent->GetChildCount();
+  }
 
   if (numChildren == 0) {
+    // There are no children or they are irrelvant: get the text from the current node
     AppendFlatStringFromContentNode(aContent, aFlatString);
     return NS_OK;
   }
 
+  // There are relevant children: use them to get the text.
   PRUint32 index;
   for (index = 0; index < numChildren; index++) {
     AppendFlatStringFromSubtreeRecurse(aContent->GetChildAt(index), aFlatString);

@@ -50,8 +50,6 @@
         buttons="accept,cancel,help"
         ondialogaccept="return gChangeActionDialog.onAccept();" 
         ondialoghelp="openHelp('prefs-download-actions', 'chrome://browser/locale/help/help.rdf');"
-        xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
-        xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
         xmlns:aaa="http://www.w3.org/2005/07/aaa"
         style="width: &window.width;;"
         persist="screenX screenY">
@@ -72,14 +70,16 @@
   <vbox id="changeActionContent" flex="1">
     <label control="handlerGroup">&whenDownloading.label;</label>
     <radiogroup id="handlerGroup" onselect="gChangeActionDialog.doEnabling(this.selectedItem);" 
-                flex="1" xhtml2:role="wairole:radiogroup" aaa:describedby="changeActionHeader">
+                flex="1" aaa:describedby="changeActionHeader">
       <separator class="thin"/>
       <radio id="openDefault" value="system" 
-             label="&openDefault.label;" accesskey="&openDefault.accesskey;"/>
+             label="&openDefault.label;" accesskey="&openDefault.accesskey;"
+             aaa:labelledby="openDefault defaultApp"/>
       <filefield class="indent" id="defaultApp" disabled="true"/>
       <separator class="thin"/>
       <radio id="openApplication" value="app" 
-             label="&openApplication.label;" accesskey="&openApplication.accesskey;"/>
+             label="&openApplication.label;" accesskey="&openApplication.accesskey;"
+             aaa:labelledby="openApplication customApp"/>
       <hbox align="center">
         <filefield id="customApp" class="indent" flex="1" disabled="true"/>
         <button id="changeApp" oncommand="gChangeActionDialog.changeApp();" 
@@ -94,7 +94,8 @@
         <radio id="saveToDefault" value="default" selected="true"
                label="&saveToDefaultFolder.label;" accesskey="&saveToDefaultFolder.accesskey;"/>
         <radio id="saveToCustom" value="custom"
-               label="&saveToThisFolder.label;" accesskey="&saveToThisFolder.accesskey;"/>
+               label="&saveToThisFolder.label;" accesskey="&saveToThisFolder.accesskey;"
+               aaa:labelledby="saveToCustom customDownloadFolder"/>
         <hbox align="center" class="indent">
           <filefield id="customDownloadFolder" flex="1"/>
           <button id="chooseCustomDownloadFolder" oncommand="gChangeActionDialog.changeCustomFolder();"
@@ -104,7 +105,8 @@
                label="&saveToAskMe.label;" accesskey="&saveToAskMe.accesskey;"/>
       </radiogroup>
       <radio id="plugin" value="plugin" 
-             label="&usePlugin.label;" accesskey="&usePlugin.accesskey;"/>
+             label="&usePlugin.label;" accesskey="&usePlugin.accesskey;"
+             aaa:labelledby="plugin pluginName"/>
       <filefield class="indent" id="pluginName" disabled="true"/>
     </radiogroup>
   </vbox>

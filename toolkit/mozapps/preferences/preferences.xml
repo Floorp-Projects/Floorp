@@ -5,17 +5,15 @@
           xmlns:xbl="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="fileField">
+  <binding id="fileField" extends="chrome://global/content/bindings/general.xml#control-item">
     <content>
       <xul:stringbundle anonid="bundle" src="chrome://mozapps/locale/preferences/preferences.properties"/>
       <xul:hbox class="fileFieldContentBox" align="center" flex="1">
         <xul:image class="fileFieldIcon" xbl:inherits="src=image"/>
-        <xul:textbox class="fileFieldLabel" xbl:inherits="value=label,disabled" flex="1" readonly="true"/>
+        <xul:textbox class="fileFieldLabel" xbl:inherits="value=label,disabled,accesskey,tabindex" flex="1" readonly="true"/>
       </xul:hbox>
     </content>
-    <implementation>
-      <property name="image" onget="return this.getAttribute('image');"
-                             onset="this.setAttribute('image', val); return val;"/>
+    <implementation implements="nsIDOMXULLabeledControlElement">
       <property name="label" onget="return this.getAttribute('label');">
         <setter>
           this.setAttribute('label', val); 
@@ -42,9 +40,6 @@
         ]]>
         </setter>
       </property>      
-      <property name="disabled" onget="return this.getAttribute('disabled');"
-                                onset="this.setAttribute('disabled', val); return val;"/>
-      
       <method name="_getDisplayNameForFile">
         <parameter name="aFile"/>
         <body>
