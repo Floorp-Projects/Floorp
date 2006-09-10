@@ -49,8 +49,9 @@
 
 #ifndef MOZILLA_1_8_BRANCH
 #include "nsIDocument.h"
-#include "nsTransform2D.h"
 #endif
+
+#include "nsTransform2D.h"
 
 #include "nsIScriptSecurityManager.h"
 #include "nsISecurityCheckedComponent.h"

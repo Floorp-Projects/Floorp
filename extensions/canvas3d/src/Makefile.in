@@ -79,8 +79,11 @@ REQUIRES	= \
 		uconv \
 		intl \
 		cairo \
-		thebes \
 		$(NULL)
+
+ifdef MOZ_ENABLE_CAIRO_GFX
+REQUIRES += thebes
+endif
 
 GLITZ_SRC_DIR = $(topsrcdir)/gfx/cairo/glitz/src
 VPATH += $(GLITZ_SRC_DIR)
@@ -151,7 +154,11 @@ CPPSRCS		= nsCanvas3DModule.cpp \
 
 DEFINES += -DXPCOM_GLUE -DGLEW_MX -DGLEW_STATIC
 
-EXTRA_DSO_LIBS += thebes js3250 mozcairo mozlibpixman xpcom nspr4 xpcom_core
+EXTRA_DSO_LIBS += js3250 mozcairo mozlibpixman xpcom nspr4 xpcom_core
+
+ifdef MOZ_ENABLE_CAIRO_GFX
+EXTRA_DSO_LIBS += thebes
+endif
 
 # Hack for getting an extension built against static vs. dynamic versions of firefox
 ifeq (,$(BUILD_STATIC_LIBS))
