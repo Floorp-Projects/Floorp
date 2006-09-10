@@ -5279,6 +5279,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                     if (!pn2)
                         return NULL;
 
+                    pn2->pn_op = JSOP_FORIN;
                     if (js_MatchToken(cx, ts, TOK_NAME)) {
                         if (CURRENT_TOKEN(ts).t_atom == rt->atomState.eachAtom)
                             pn2->pn_op = JSOP_FOREACH;
