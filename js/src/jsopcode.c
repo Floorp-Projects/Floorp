@@ -2438,8 +2438,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_SETELEM:
-                op = JSOP_NOP;           /* turn off parens */
                 rval = POP_STR();
+                op = JSOP_NOP;           /* turn off parens */
                 xval = POP_STR();
                 op = saveop;
                 lval = POP_STR();
