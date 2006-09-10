@@ -25,8 +25,6 @@ toolkit.jar:
 *+ content/global/finddialog.js               (finddialog.js)
 *+ content/global/finddialog.xul              (finddialog.xul)
 *+ content/global/findUtils.js                (findUtils.js)
-*+ content/global/fontpackage.js              (fontpackage.js)
-*+ content/global/fontpackage.xul             (fontpackage.xul)
 *+ content/global/globalOverlay.js            (globalOverlay.js)
 *+ content/global/inlineSpellCheckUI.js       (inlineSpellCheckUI.js)
 +  content/global/mozilla.xhtml               (mozilla.xhtml)

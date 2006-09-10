@@ -65,7 +65,6 @@ REQUIRES	= xpcom \
 
 CPPSRCS= \
 	nsCharsetMenu.cpp \
-	nsFontPackageHandler.cpp \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS = \

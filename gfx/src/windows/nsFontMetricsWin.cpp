@@ -51,7 +51,6 @@
 #include "nsFontMetricsWin.h"
 #include "nsQuickSort.h"
 #include "nsTextFormatter.h"
-#include "nsIFontPackageProxy.h"
 #include "nsIPersistentProperties2.h"
 #include "nsNetUtil.h"
 #include "prmem.h"
@@ -151,7 +150,6 @@ static nsICharsetConverterManager* gCharsetManager = nsnull;
 static nsIUnicodeEncoder* gUserDefinedConverter = nsnull;
 static nsISaveAsCharset* gFontSubstituteConverter = nsnull;
 static nsIPref* gPref = nsnull;
-static nsIFontPackageProxy* gFontPackageProxy = nsnull;
 
 static nsIAtom* gUsersLocale = nsnull;
 static nsIAtom* gSystemLocale = nsnull;
@@ -209,7 +207,6 @@ FreeGlobals(void)
   NS_IF_RELEASE(gSystemLocale);
   NS_IF_RELEASE(gUserDefined);
   NS_IF_RELEASE(gUserDefinedConverter);
-  NS_IF_RELEASE(gFontPackageProxy);
   if (gUserDefinedCCMap)
     FreeCCMap(gUserDefinedCCMap);
   NS_IF_RELEASE(gJA);
@@ -489,26 +486,6 @@ InitGlobals(void)
   return NS_OK;
 }
 
-static void CheckFontLangGroup(nsIAtom* lang1, nsIAtom* lang2, const char* lang3)
-{
-  if (lang1 == lang2) {
-    nsresult res = NS_OK;
-    if (!gFontPackageProxy) {
-      res = CallGetService("@mozilla.org/intl/fontpackageservice;1",
-                           &gFontPackageProxy);
-      if (NS_FAILED(res)) {
-        NS_ERROR("Cannot get the font package proxy");
-        return;
-      }
-    }
-
-    char fontpackageid[256];
-    PR_snprintf(fontpackageid, sizeof(fontpackageid), "lang:%s", lang3);
-    res = gFontPackageProxy->NeedFontPackage(fontpackageid);
-    NS_ASSERTION(NS_SUCCEEDED(res), "cannot notify missing font package ");
-  }
-}
-
 nsFontMetricsWin::nsFontMetricsWin()
 {
 }
@@ -571,17 +548,6 @@ nsFontMetricsWin::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
   mFont = aFont;
   mLangGroup = aLangGroup;
-
-  // do special checking for the following lang group
-  // * use fonts?
-  PRInt32 useDccFonts = 0;
-  if (NS_SUCCEEDED(gPref->GetIntPref("browser.display.use_document_fonts", &useDccFonts)) && (useDccFonts != 0)) {
-    CheckFontLangGroup(mLangGroup, gJA,   "ja");
-    CheckFontLangGroup(mLangGroup, gKO,   "ko");
-    CheckFontLangGroup(mLangGroup, gZHTW, "zh-TW");
-    CheckFontLangGroup(mLangGroup, gZHCN, "zh-CN");
-    CheckFontLangGroup(mLangGroup, gZHHK, "zh-HK");
-  }
 
   //don't addref this to avoid circular refs
   mDeviceContext = (nsDeviceContextWin *)aContext;
