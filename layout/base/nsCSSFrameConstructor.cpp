@@ -1908,6 +1908,7 @@ GetChildListNameFor(nsIFrame*       aChildFrame)
       }
 #endif // DEBUG
 
+      // XXX FIXME: Bug 350740
       // Return here, because the postcondition for this function actually
       // fails for this case, since the popups are not in a "real" frame list
       // in the popup set.
