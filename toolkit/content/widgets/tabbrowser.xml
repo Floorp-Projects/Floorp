@@ -2954,11 +2954,22 @@
   <binding id="tabbrowser-close-tab-button"
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image">
     <handlers>
-      <handler event="command"><![CDATA[
+      <handler event="click"><![CDATA[
         var bindingParent = document.getBindingParent(this);
         if (bindingParent) {
           var tabbedBrowser = document.getBindingParent(bindingParent);
           if (bindingParent.localName == "tab") {
+            /* The only sequence in which a second click event (i.e. dblclik)
+             * can be dispatched on an in-tab close button is when it is shown
+             * after the first click (i.e. the first click event was dispatched
+             * on the tab). This happens when we show the close button only on
+             * the active tab; in which case, it is most likely that the close
+             * button area has been accidentally clicked, therefore we do not
+             * close the tab. See bug 352021 for no details.
+             */
+            if (event.detail == 2)
+              return;
+
             tabbedBrowser.removeTab(bindingParent);
             tabbedBrowser._blockDblClick = true;
 
