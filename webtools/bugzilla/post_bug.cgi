@@ -49,22 +49,6 @@ my $template = Bugzilla->template;
 my $vars = {};
 
 ######################################################################
-# Subroutines
-######################################################################
-
-# Determines whether or not a group is active by checking
-# the "isactive" column for the group in the "groups" table.
-# Note: This function selects groups by id rather than by name.
-sub GroupIsActive {
-    my ($group_id) = @_;
-    $group_id ||= 0;
-    detaint_natural($group_id);
-    my ($is_active) = Bugzilla->dbh->selectrow_array(
-        "SELECT isactive FROM groups WHERE id = ?", undef, $group_id);
-    return $is_active;
-}
-
-######################################################################
 # Main Script
 ######################################################################
 
@@ -154,62 +138,14 @@ my ($depends_on_ids, $blocks_ids) = Bugzilla::Bug->_check_dependencies(
 # get current time
 my $timestamp = $dbh->selectrow_array(q{SELECT NOW()});
 
-# Groups
-my @groupstoadd = ();
-my $sth_othercontrol = $dbh->prepare(q{SELECT othercontrol
-                                         FROM group_control_map
-                                        WHERE group_id = ?
-                                          AND product_id = ?});
-
-foreach my $b (grep(/^bit-\d*$/, $cgi->param())) {
-    if ($cgi->param($b)) {
-        my $v = substr($b, 4);
-        detaint_natural($v)
-          || ThrowUserError("invalid_group_ID");
-        if (!GroupIsActive($v)) {
-            # Prevent the user from adding the bug to an inactive group.
-            # Should only happen if there is a bug in Bugzilla or the user
-            # hacked the "enter bug" form since otherwise the UI 
-            # for adding the bug to the group won't appear on that form.
-            $vars->{'bit'} = $v;
-            ThrowCodeError("inactive_group");
-        }
-        my ($permit) = $user->in_group_id($v);
-        if (!$permit) {
-            my $othercontrol = $dbh->selectrow_array($sth_othercontrol, 
-                                                     undef, ($v, $product->id));
-            $permit = (($othercontrol == CONTROLMAPSHOWN)
-                       || ($othercontrol == CONTROLMAPDEFAULT));
-        }
-        if ($permit) {
-            push(@groupstoadd, $v)
-        }
-    }
+# Group Validation
+my @selected_groups;
+foreach my $group (grep(/^bit-\d+$/, $cgi->param())) {
+    $group =~ /^bit-(\d+)$/;
+    push(@selected_groups, $1);
 }
 
-my $groups = $dbh->selectall_arrayref(q{
-                 SELECT DISTINCT groups.id, groups.name, membercontrol,
-                                 othercontrol, description
-                            FROM groups
-                       LEFT JOIN group_control_map 
-                              ON group_id = id
-                             AND product_id = ?
-                           WHERE isbuggroup != 0
-                             AND isactive != 0
-                        ORDER BY description}, undef, $product->id);
-
-foreach my $group (@$groups) {
-    my ($id, $groupname, $membercontrol, $othercontrol) = @$group;
-    $membercontrol ||= 0;
-    $othercontrol ||= 0;
-    # Add groups required
-    if (($membercontrol == CONTROLMAPMANDATORY)
-       || (($othercontrol == CONTROLMAPMANDATORY) 
-            && (!Bugzilla->user->in_group($groupname)))) {
-        # User had no option, bug needs to be in this group.
-        push(@groupstoadd, $id)
-    }
-}
+my @add_groups = @{Bugzilla::Bug->_check_groups($product, \@selected_groups)};
 
 # Include custom fields editable on bug creation.
 my @custom_bug_fields = Bugzilla->get_fields(
@@ -269,8 +205,8 @@ my $id = $bug->bug_id;
 # Add the group restrictions
 my $sth_addgroup = $dbh->prepare(q{
             INSERT INTO bug_group_map (bug_id, group_id) VALUES (?, ?)});
-foreach my $grouptoadd (@groupstoadd) {
-    $sth_addgroup->execute($id, $grouptoadd);
+foreach my $group_id (@add_groups) {
+    $sth_addgroup->execute($id, $group_id);
 }
 
 # Add the initial comment, allowing for the fact that it may be private

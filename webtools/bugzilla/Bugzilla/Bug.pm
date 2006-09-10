@@ -521,6 +521,52 @@ sub _check_estimated_time {
     return $_[0]->_check_time($_[1], 'estimated_time');
 }
 
+sub _check_groups {
+    my ($invocant, $product, $group_ids) = @_;
+
+    my $user = Bugzilla->user;
+
+    my %add_groups;
+    my $controls = $product->group_controls;
+
+    foreach my $id (@$group_ids) {
+        my $group = new Bugzilla::Group($id)
+            || ThrowUserError("invalid_group_ID");
+
+        # This can only happen if somebody hacked the enter_bug form.
+        ThrowCodeError("inactive_group", { name => $group->name })
+            unless $group->is_active;
+
+        my $membercontrol = $controls->{$id}
+                            && $controls->{$id}->{membercontrol};
+        my $othercontrol  = $controls->{$id} 
+                            && $controls->{$id}->{othercontrol};
+        
+        my $permit = ($membercontrol && $user->in_group($group->name))
+                     || $othercontrol;
+
+        $add_groups{$id} = 1 if $permit;
+    }
+
+    foreach my $id (keys %$controls) {
+        next unless $controls->{$id}->{isactive};
+        my $membercontrol = $controls->{$id}->{membercontrol} || 0;
+        my $othercontrol  = $controls->{$id}->{othercontrol}  || 0;
+
+        # Add groups required
+        if ($membercontrol == CONTROLMAPMANDATORY
+            || ($othercontrol == CONTROLMAPMANDATORY
+                && !$user->in_group_id($id))) 
+        {
+            # User had no option, bug needs to be in this group.
+            $add_groups{$id} = 1;
+        }
+    }
+
+    my @add_groups = keys %add_groups;
+    return \@add_groups;
+}
+
 sub _check_keywords {
     my ($invocant, $keyword_string) = @_;
     $keyword_string = trim($keyword_string);

@@ -152,8 +152,8 @@
     A legal [% field FILTER html %] was not set.
 
   [% ELSIF error == "inactive_group" %]
-    Attempted to add [% terms.bug %] to an inactive group, identified by the bit
-    '[% bit FILTER html %]'.
+    Attempted to add [% terms.bug %] to the '[% name FILTER html %]'
+    group, which is not used for bugs.
 
   [% ELSIF error == "invalid_attach_id_to_obsolete" %]
      The attachment number of one of the attachments you wanted to obsolete,
