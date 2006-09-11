@@ -69,16 +69,17 @@
           var position = -1;
           var interval = setInterval(function nextStep() {
             try {
+              var width = stack.boxObject.width >> 2;
               spacer.height = stack.boxObject.height;
-              spacer.width = stack.boxObject.width >> 2;
-              spacer.left = spacer.width * position;
-              position += 30 / (stack.boxObject.width + 600);
+              spacer.width = width;
+              spacer.left = width * position;
+              position += 15 / (width + 150);
               if (position >= 4)
                 position = -1;
             } catch (e) {
               clearInterval(interval);
             }
-          }, 10);
+          }, 20);
         ]]></body>
       </method>
 
