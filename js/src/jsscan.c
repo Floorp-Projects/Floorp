@@ -1697,19 +1697,21 @@ retry:
                     }
                     ADD_TO_TOKENBUF(c);
                 }
+                if (targetLength == 0)
+                    goto bad_xml_markup;
+                if (!TOKENBUF_OK())
+                    goto error;
                 if (contentIndex < 0) {
                     atom = cx->runtime->atomState.emptyAtom;
                 } else {
-                    if (!TOKENBUF_OK())
-                        goto error;
                     atom = js_AtomizeChars(cx,
                                            &TOKENBUF_CHAR(contentIndex),
                                            TOKENBUF_LENGTH() - contentIndex,
                                            0);
                     if (!atom)
                         goto error;
-                    TRIM_TOKENBUF(targetLength);
                 }
+                TRIM_TOKENBUF(targetLength);
                 tp->t_atom2 = atom;
                 tt = TOK_XMLPI;
 
