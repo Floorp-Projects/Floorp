@@ -1229,6 +1229,46 @@ PRBool nsExternalHelperAppService::promptForScheme(nsIURI* aURI,
   aURI->GetSpec(spec);
   NS_ConvertUTF8toUTF16 uri(spec);
 
+  // The maximum amount of space the URI should take up in the dialog.
+  const PRUint32 maxWidth = 75;
+  const PRUint32 maxLines = 12; // (not counting ellipsis line)
+  const PRUint32 maxLength = maxWidth * maxLines;
+
+  // If the URI seems too long, insert zero-width spaces to make it wrappable
+  // and crop it in the middle (replacing the cropped portion with an ellipsis),
+  // so the dialog doesn't grow so wide or tall it renders buttons off-screen.
+  if (uri.Length() > maxWidth) {
+    PRUint32 charIdx = maxWidth;
+    PRUint32 lineIdx = 1;
+    
+    PRInt32 numCharsToCrop = uri.Length() - maxLength;
+
+    while (charIdx < uri.Length()) {
+      // Don't insert characters in the middle of a surrogate pair.
+      if (IS_LOW_SURROGATE(uri[charIdx]))
+        --charIdx;
+
+      if (numCharsToCrop > 0 && lineIdx == maxLines / 2) {
+        NS_NAMED_LITERAL_STRING(ellipsis, "\n...\n");
+
+        // Don't end the crop in the middle of a surrogate pair.
+        if (IS_HIGH_SURROGATE(uri[charIdx + numCharsToCrop - 1]))
+          ++numCharsToCrop;
+
+        uri.Replace(charIdx, numCharsToCrop, ellipsis);
+        charIdx += ellipsis.Length();
+      }
+      else {
+        // 0x200B is the zero-width breakable space character.
+        uri.Insert(PRUnichar(0x200B), charIdx);
+        charIdx += 1;
+      }
+  
+      charIdx += maxWidth;
+      ++lineIdx;
+    }
+  }
+
   nsCAutoString asciischeme;
   aURI->GetScheme(asciischeme);
   NS_ConvertUTF8toUTF16 scheme(asciischeme);
