@@ -951,7 +951,6 @@ nsFontMetricsPango::GetPosition(const PRUnichar *aText, PRUint32 aLength,
 {
     int trailing = 0;
     int inx = 0;
-    gboolean found = FALSE;
     const gchar *curChar;
     PRInt32 retval = 0;
 
@@ -977,21 +976,11 @@ nsFontMetricsPango::GetPosition(const PRUnichar *aText, PRUint32 aLength,
     pango_layout_set_text(layout, text, strlen(text));
     FixupSpaceWidths(layout, text);
     
-    found = pango_layout_xy_to_index(layout, localX, localY,
-                                     &inx, &trailing);
+    pango_layout_xy_to_index(layout, localX, localY,
+                             &inx, &trailing);
 
     // Convert the index back to the utf-16 index
     curChar = text;
-
-    // Jump to the end if it's not found.
-    if (!found) {
-        if (inx == 0)
-            retval = 0;
-        else if (trailing)
-            retval = aLength;
-
-        goto loser;
-    }
 
     for (PRUint32 curOffset=0; curOffset < aLength;
          curOffset++, curChar = g_utf8_find_next_char(curChar, NULL)) {
