@@ -126,7 +126,8 @@ sub compareProperties
         } else {
 # hack around region.properties#browser.search.order.[1-9]
             if ($path !~ /chrome\/browser-region\/region\.properties$/ and
-                $entity !~ /browser\.search\.order\.[1-9]/) {
+                ($entity !~ /browser\.search\.order\.[1-9]/ ||
+                 $entity =~ /browser\.contentHandlers\.types\.[0-5]/)) {
                 push @extra1, $entity;
             }
         }
@@ -134,7 +135,8 @@ sub compareProperties
 # hack around region.properties#browser.search.order.[1-9]
     if ($path =~ /chrome\/browser-region\/region\.properties$/) {
         foreach $entity (keys(%entities2)) {
-            if ($entity =~ /browser\.search\.order\.[1-9]/) {
+            if ($entity =~ /browser\.search\.order\.[1-9]/ ||
+                $entity =~ /browser\.contentHandlers\.types\.[0-5]/) {
                 delete $entities2{$entity};
             }
         }
@@ -210,12 +212,12 @@ sub compareDir
 
     opendir(DIR1, "$gSourceDir1/$path") ||
         die ("Couldn't list $gSourceDir1/$path");
-    @entries1 = grep(!(/^(\.|CVS)/ || /~$/ || /^uninstaller.inc$/), readdir(DIR1));
+    @entries1 = grep(!(/^(\.|CVS)/ || /~$/), readdir(DIR1));
     closedir(DIR1);
 
     opendir(DIR2, "$gSourceDir2/$path") ||
         die ("Couldn't list $gSourceDir2/$path");
-    %entries2 = map { $_ => 1 } grep(!(/^(\.|CVS)/ || /~$/ || /^uninstaller.inc$/), readdir(DIR2));
+    %entries2 = map { $_ => 1 } grep(!(/^(\.|CVS)/ || /~$/), readdir(DIR2));
     closedir(DIR2);
 
     foreach my $file (@entries1) {
