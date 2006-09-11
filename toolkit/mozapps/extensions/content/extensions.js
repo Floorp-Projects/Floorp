@@ -306,7 +306,6 @@ function showView(aView) {
                       ["previewImage", "?previewImage"],
                       ["progress", "?progress"],
                       ["state", "?state"],
-                      ["status", "?status"],
                       ["type", "?type"],
                       ["updateable", "?updateable"],
                       ["updateURL", "?updateURL"],
