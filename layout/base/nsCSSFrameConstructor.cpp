@@ -4597,7 +4597,10 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
   // by the style system, so we can assume that display->mDisplay is
   // either NONE, BLOCK, or TABLE.
 
-  PRBool docElemIsTable = display->mDisplay == NS_STYLE_DISPLAY_TABLE;
+  PRBool docElemIsTable = (display->mDisplay == NS_STYLE_DISPLAY_TABLE) &&
+                          !IsSpecialContent(aDocElement, aDocElement->Tag(),
+                                            aDocElement->GetNameSpaceID(),
+                                            styleContext);
 
   if (docElemIsTable) {
     // if the document is a table then just populate it.
