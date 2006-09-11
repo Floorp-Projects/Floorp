@@ -1335,7 +1335,7 @@ public:
    *  return NS_ERROR_FAILURE
    *  @param aPOS is defined in nsFrameSelection
    */
-  nsresult PeekOffset(nsPeekOffsetStruct *aPos);
+  NS_IMETHOD PeekOffset(nsPeekOffsetStruct *aPos);
 
   /**
    *  called to find the previous/next selectable leaf frame.

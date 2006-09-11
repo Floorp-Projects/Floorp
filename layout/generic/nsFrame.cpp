@@ -4216,7 +4216,7 @@ static PRBool IsMovingInFrameDirection(nsIFrame* frame, nsDirection aDirection, 
   return aDirection == (isReverseDirection ? eDirPrevious : eDirNext);
 }
 
-nsresult
+NS_IMETHOD
 nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
 {
   if (!aPos)
