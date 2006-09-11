@@ -3246,12 +3246,9 @@ ExtensionManager.prototype = {
           var item = this._getItemForDroppedFile(entry, location);
           if (item) {
             droppedInFiles.push({ file: entry, location: location });
-
-            var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
-                                      .createInstance(Components.interfaces.nsIZipReader);
-            zipReader.open(entry);
             var prettyName = "";
             try {
+              var zipReader = getZipReaderForFile(entry);
               var principal = { };
               var certPrincipal = zipReader.getCertificatePrincipal(null, principal);
               // XXXbz This string could be empty.  This needs better
@@ -3259,6 +3256,8 @@ ExtensionManager.prototype = {
               prettyName = principal.value.prettyName;
             }
             catch (e) { }
+            if (zipReader)
+              zipReader.close();
             xpinstallStrings = xpinstallStrings.concat([item.name, 
                                                         getURLSpecFromFile(entry),
                                                         item.iconURL, 
