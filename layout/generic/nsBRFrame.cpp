@@ -66,10 +66,8 @@ public:
 
   virtual ContentOffsets CalcContentOffsetsFromFramePoint(nsPoint aPoint);
 
-  virtual PRBool PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset);
-  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset);
-  virtual PRBool PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
-                                PRInt32* aOffset, PRBool* aSawBeforeType);
+  NS_IMETHOD PeekOffset(nsPresContext* aPresContext, 
+                         nsPeekOffsetStruct *aPos);
 
   NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
@@ -209,35 +207,42 @@ nsIFrame::ContentOffsets BRFrame::CalcContentOffsetsFromFramePoint(nsPoint aPoin
   return offsets;
 }
 
-PRBool
-BRFrame::PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset)
+NS_IMETHODIMP BRFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 {
-  NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
-  PRInt32 startOffset = *aOffset;
-  // If we hit the end of a BR going backwards, go to its beginning and stay there.
-  if (!aForward && startOffset != 0) {
-    *aOffset = 0;
-    return PR_TRUE;
+  if (!aPos)
+    return NS_ERROR_NULL_POINTER;
+
+  //BR is also a whitespace, but sometimes GetNextWord() can't handle this
+  //See bug 304891
+  nsTextTransformer::Initialize();
+
+  if (aPos->mWordMovementType != eDefaultBehavior) {
+    // aPos->mWordMovementType possible values:
+    //       eEndWord: eat the space if we're moving backwards
+    //       eStartWord: eat the space if we're moving forwards
+    if ((aPos->mWordMovementType == eEndWord) == (aPos->mDirection == eDirPrevious)) {
+      aPos->mEatingWS = PR_TRUE;
+    }
   }
-  // Otherwise, stop if we hit the beginning, continue (forward) if we hit the end.
-  return (startOffset == 0);
-}
+  else if (aPos->mDirection == eDirNext && nsTextTransformer::GetWordSelectEatSpaceAfter()) {
+    // Use the hidden preference which is based on operating system behavior.
+    // This pref only affects whether moving forward by word should go to the end of this word or start of the next word.
+    // When going backwards, the start of the word is always used, on every operating system.
+    aPos->mEatingWS = PR_TRUE;
+  }
 
-PRBool
-BRFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
-{
-  NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
-  // Keep going. The actual line jumping will stop us.
-  return PR_FALSE;
-}
+ //offset of this content in its parents child list. base 0
+  PRInt32 offsetBegin = mContent->GetParent()->IndexOf(mContent);
 
-PRBool
-BRFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
-                        PRInt32* aOffset, PRBool* aSawBeforeType)
-{
-  NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
-  // Keep going. The actual line jumping will stop us.
-  return PR_FALSE;
+  if (aPos->mAmount != eSelectLine && aPos->mAmount != eSelectBeginLine 
+      && aPos->mAmount != eSelectEndLine) //then we must do the adjustment to make sure we leave this frame
+  {
+    if (aPos->mDirection == eDirNext)
+      aPos->mStartOffset = offsetBegin +1;//go to end to make sure we jump to next node.
+    else
+      aPos->mStartOffset = offsetBegin; //we start at beginning to make sure we leave this frame.
+  }
+  return nsFrame::PeekOffset(aPresContext, aPos);//now we let the default take over.
 }
 
 #ifdef ACCESSIBILITY

@@ -91,6 +91,7 @@ struct nsPeekOffsetStruct
     mIsKeyboardSelect = aIsKeyboardSelect;
     mVisual = aVisual;
     mWordMovementType = aWordMovementType;
+    mEatingWS = PR_FALSE;
   }
 
   // Note: Most arguments (input and output) are only used with certain values
@@ -104,14 +105,6 @@ struct nsPeekOffsetStruct
   nsSelectionAmount mAmount;
 
   // mDirection: eDirPrevious or eDirNext.
-  //             * Note for visual bidi movement:
-  //             eDirPrevious means 'left-then-up' if the containing block is LTR, 
-  //             'right-then-up' if it is RTL.
-  //             eDirNext means 'right-then-down' if the containing block is LTR, 
-  //             'left-then-down' if it is RTL.
-  //             Between paragraphs, eDirPrevious means "go to the visual end of the 
-  //             previous paragraph", and eDirNext means "go to the visual beginning
-  //             of the next paragraph".
   //             Used with: eSelectCharacter, eSelectWord, eSelectLine, eSelectParagraph.
   nsDirection mDirection;
 
@@ -163,6 +156,14 @@ struct nsPeekOffsetStruct
   //                 PR_TRUE means "the beginning of the frame logically after the caret".
   //                 Used with: eSelectLine, eSelectBeginLine, eSelectEndLine.
   PRBool mAttachForward;
+
+  /*** Arguments only used internally ***/
+
+  // mEatingWS: Used only internally, for recursive calls into PeekOffset.
+  //            Shold be PR_FALSE upon initial call to PeekOffset.
+  //            Used with: eSelectWord.
+  PRBool mEatingWS;
+
 };
 
 struct nsPrevNextBidiLevels

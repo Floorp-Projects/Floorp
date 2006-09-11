@@ -511,7 +511,7 @@ PRInt32 nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell, nsIFr
               kIsJumpLinesOk,
               kIsScrollViewAStop, kIsKeyboardSelect, kIsVisualBidi,
               wordMovementType);
-  nsresult rv = aFromFrame->PeekOffset(&pos);
+  nsresult rv = aFromFrame->PeekOffset(aPresShell->GetPresContext(), &pos);
 
   PRInt32 resultOffset = pos.mContentOffset;
   nsIContent *resultContent = nsnull;
