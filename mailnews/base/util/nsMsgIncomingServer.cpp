@@ -1829,7 +1829,8 @@ NS_IMETHODIMP nsMsgIncomingServer::GetSocketType(PRInt32 *aSocketType)
     if (NS_SUCCEEDED(rv) && isSecure)
     {
        *aSocketType = nsIMsgIncomingServer::useSSL;
-       SetSocketType(*aSocketType);
+      // don't call virtual method in case overrides call GetSocketType
+      nsMsgIncomingServer::SetSocketType(*aSocketType);
     }
     else
     {

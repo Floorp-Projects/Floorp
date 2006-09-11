@@ -110,9 +110,9 @@ protected:
   // these allow us to handle duplicate incoming messages, e.g. delete them.
   nsHashtable m_downloadedHdrs;
   PRInt32  m_numMsgsDownloaded;
+  nsIPrefBranch *m_prefBranch;
 static PRBool evictOldEntries(nsHashKey *aKey, void *element, void *aData);
 private:
-  nsIPrefBranch *m_prefBranch;
   nsCString m_password;
   PRUint32 m_biffState;
   PRPackedBool m_serverBusy;

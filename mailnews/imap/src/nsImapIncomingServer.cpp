@@ -3576,6 +3576,17 @@ nsImapIncomingServer::GetShowAttachmentsInline(PRBool *aResult)
   return NS_OK; // In case this pref is not set we need to return NS_OK.
 }
 
+NS_IMETHODIMP nsImapIncomingServer::SetSocketType(PRInt32 aSocketType)
+{
+  PRInt32 oldSocketType;
+  nsresult rv = GetSocketType(&oldSocketType);
+  if (NS_SUCCEEDED(rv) && oldSocketType != aSocketType)
+    CloseCachedConnections();
+  nsCAutoString fullPrefName;
+  getPrefName(m_serverKey.get(), "socketType", fullPrefName);
+  return m_prefBranch->SetIntPref(fullPrefName.get(), aSocketType);
+}
+
 NS_IMETHODIMP
 nsImapIncomingServer::OnUserOrHostNameChanged(const char *oldName, const char *newName)
 {

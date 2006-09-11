@@ -101,6 +101,7 @@ public:
   NS_IMETHOD GetNumIdleConnections(PRInt32 *aNumIdleConnections);
   NS_IMETHOD ForgetSessionPassword();
   NS_IMETHOD GetMsgFolderFromURI(nsIMsgFolder *aFolderResource, const char *aURI, nsIMsgFolder **aFolder);
+  NS_IMETHOD SetSocketType(PRInt32 aSocketType);
 
 protected:
 	nsresult GetFolder(const char* name, nsIMsgFolder** pFolder);
