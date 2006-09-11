@@ -1,0 +1,75 @@
+<?php if ($error): ?>
+<p>There was an error in your submission, please try again.</p>
+<?php endif; ?>
+<form action="<?php echo $html->url('/party/register'); ?>" method="post">
+  <div>
+    <label for="name"><strong>Party Name</strong>:</label>
+    <?php echo $html->input('Party/name', array('size' => 35)); ?>
+  </div>
+  <div>
+	<label for="">Venue Name:</label>
+	<?php echo $html->input('Party/vname', array('size' => 35)); ?>
+  </div>
+  <div>
+    <label for="address">Address:</label>
+    <?php echo $html->input('Party/address', array('size' => 35, 'id' => 'location', 'onkeypress' => 'capture(event)', 'onblur' => 'update()')); ?>
+    <div id="suggest" style="display: none">Did you mean <span style="font-style: italic"><a id="suggest2" href="#" onclick=""></a></span>?</div>
+  </div>
+  <div>
+    <label for="date">Date:</label>
+    <?php echo $html->yearOptionTag('Party/year', null, date('Y'), MAX_YEAR, date('Y'), null, null, false); ?>-<?php echo $html->hourOptionTag('Party/month', null, false, date('m')); ?>-<?php echo $html->dayOptionTag('Party/day', null, date('d'), null, false); ?>
+  </div>
+  <div>
+    <label for="time">Time:</label>
+    <?php echo $html->hourOptionTag('Party/hour', null, true);?>:<?php echo $html->minuteOptionTag('Party/minute');?>
+    <?php echo $html->radio('Party/confirmed', array(0 => 'Tentative', 1 => 'Confirmed')); ?>
+  </div>
+  <div>
+    <label for="website">Web site:</label>
+    <?php echo $html->input('Party/website', array('size' => 35)); ?>
+  </div>
+  <div>
+    <label for="PartyNeedinvite">Invite only</label>
+    <?php echo $html->checkbox('Party/inviteonly'); ?>
+  </div>
+  <div>
+    Additional notes:<br/>
+    <?php echo $html->textarea('Party/notes'); ?>
+  </div>
+  <?php if(GMAP_API_KEY != null): ?>
+  <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo GMAP_API_KEY; ?>"
+      type="text/javascript"></script>
+  <script src="<?php echo $html->url('/js/maps.js'); ?>" type="text/javascript"></script>
+    <script type="text/javascript">
+
+    //<![CDATA[
+      function update(aSuggest) {
+        var loc;
+        if (!aSuggest)
+          loc = document.getElementById("location").value;
+        else
+          loc = aSuggest;
+        
+        if (loc != "")
+          geocode(loc);
+      }
+      
+      function capture(event) {
+        if (event.keyCode == 13) {
+          event.preventDefault();
+          update();
+        }  
+      }
+    //]]>
+    </script>
+  <div style="width: 500px; height: 300px; margin: 0 auto;">
+    <div id="maperror" style="display: none" class="error"></div>
+    <div id="map" style="height: 100%; width: 100%;"></div>
+  </div>
+  <?php echo $html->hidden('Party/lat', array('id' => 'lat')); 
+        echo $html->hidden('Party/long', array('id' => 'long'));
+        echo $html->hidden('Party/zoom', array('id' => 'zoom'));
+        echo $html->hidden('Party/geocoded', array('id' => 'geocoded', 'value' => 0)); ?>
+  <?php endif; ?>
+  <?php echo $html->submit('Register'); ?>
+</form>

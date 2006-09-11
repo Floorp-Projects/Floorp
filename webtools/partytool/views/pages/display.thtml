@@ -1,0 +1,23 @@
+<div style="font-size: x-large; font-weight: bold; text-align: center">
+<?php echo $pcount.(($pcount == 1) ? ' Party, ' : ' Parties, ').$ucount.(($ucount == 1) ? ' Partygoer, ' : ' Partygoers, ');
+$difference = 1161975280 - time();
+$days_left = floor($difference/60/60/24);
+echo $days_left." days until Firefox 2!"; ?><br/></div>
+
+<div>
+<div style="float: left; width: 75%">
+<p>
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Nulla porta tellus ac leo suscipit euismod. Aenean id ante. Vestibulum consectetuer. Integer diam neque, iaculis eget, ultricies ac, elementum sit amet, risus. Proin blandit. Cras quam. Aenean sollicitudin, lorem vel lobortis bibendum, lorem nibh gravida elit, et aliquam dolor libero bibendum sem. Cras pharetra. Vivamus ligula nisl, mattis sed, molestie nec, interdum ac, massa. In eros pede, dictum at, mollis eu, adipiscing eget, ante. Nunc elit nunc, tincidunt sit amet, tincidunt eu, euismod id, massa. Vivamus molestie. Sed non dui non velit semper egestas. Maecenas vulputate. Quisque sapien. Pellentesque interdum, libero rutrum tincidunt molestie, dui pede eleifend quam, quis tempor sapien ligula et turpis.
+Maecenas ut sem. Nam adipiscing sem sit amet magna. Curabitur a risus non ipsum mattis tempor. Fusce in arcu. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Sed eu diam nec nisi ultrices laoreet. Pellentesque tincidunt, enim nec malesuada tristique, est neque luctus dui, sit amet posuere nunc nulla vel diam. Phasellus pharetra tortor ut massa lacinia adipiscing. Morbi in nulla. Proin ut diam et tortor hendrerit congue. Mauris porttitor fringilla augue. Etiam faucibus rutrum enim.
+Maecenas varius massa sit amet nulla. Nunc sit amet mauris. Nunc eu purus a sapien aliquam aliquam. Donec sodales commodo dolor. Fusce volutpat. Sed quis ipsum nec dolor facilisis facilisis. Fusce leo massa, tincidunt in, sodales eu, sodales nec, libero. Etiam vehicula. Ut egestas. Ut consectetuer dolor ac est. Phasellus viverra euismod nisl. Nunc ut felis nec erat vulputate ullamcorper. Praesent rhoncus cursus nunc. Quisque elementum. Etiam euismod erat sit amet lorem.
+</p>
+</div>
+<div style="float:right; width: 25%; font-size: large;">
+<ul>
+  <li><a href="<?php echo $html->url('/party'); ?>">View map</a></li>
+  <li><a href="<?php echo $html->url('/party/view/all'); ?>">View all parties</a></li>
+  <li><a href="<?php echo $html->url('/user/register'); ?>">Register</a></li>
+  <li><a href="<?php echo $html->url('/party/register'); ?>">Create a party</a></li>
+<ul>
+</div>
+</div>

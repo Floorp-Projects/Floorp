@@ -1,0 +1,63 @@
+<?php if ($error): ?>
+<p>There was an error in your submission, please try again.</p>
+<?php endif; ?>
+<form action="<?php echo $html->url('/user/register'); ?>" method="post">
+  <div>
+    <label for="email"><strong>Email address</strong>:</label>
+    <?php echo $html->input('User/email', array('size' => 20)); ?>
+    <?php echo $html->tagErrorMsg('User/email', 'Email invalid or already registered.')?>
+  </div>
+  <div>
+    <label for="name">Name:</label>
+    <?php echo $html->input('User/name', array('size' => 20)); ?>
+  </div>  
+  <div>
+    <label for="password"><strong>Password</strong>:</label>
+    <?php echo $html->password('User/password', array('size' => 20)); ?>
+    <?php echo $html->tagErrorMsg('User/password', 'Passwords don\'t match!')?>
+  </div>
+  <div>
+    <label for="confpassword"><strong>Confirm password</strong>:</label>
+    <?php echo $html->password('User/confpassword', array('size' => 20)); ?>
+  </div>
+  <div>
+     <label for="location">Location:</label>
+    <?php echo $html->input('User/location', array('id' => 'location', 'size' => 20, 'onkeypress' => 'capture(event)')); ?>
+  </div>
+  <div>
+    <label for="website">Website:</label>
+    <?php echo $html->input('User/website', array('size' => 20)); ?>
+  </div>
+  <?php if(GMAP_API_KEY != null): ?>
+  <a onclick="update()">Update map</a>
+  <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo GMAP_API_KEY; ?>"
+      type="text/javascript"></script>
+  <script src="<?php echo $html->url('/js/maps.js'); ?>" type="text/javascript"></script>
+    <script type="text/javascript">
+
+    //<![CDATA[
+      function update() {
+        var loc = document.getElementById("location").value;
+        geocode(loc);
+      }
+      
+      function capture(event) {
+        if (event.keyCode == 13) {
+          event.preventDefault();
+          update();
+        }  
+      }
+    //]]>
+    </script>
+  <div style="width: 500px; height: 300px">
+    <div id="maperror" style="display: none" class="error"></div>
+    <div id="map" style="height: 100%; width: 100%;"></div>
+  </div>
+  <div>
+    <?php echo $html->hidden('User/lat', array('id' => 'lat')); 
+          echo $html->hidden('User/long', array('id' => 'long'));
+          echo $html->hidden('User/zoom', array('id' => 'zoom')); ?>
+  </div>
+  <?php endif; ?>
+  <?php echo $html->submit('Register'); ?>
+</form>

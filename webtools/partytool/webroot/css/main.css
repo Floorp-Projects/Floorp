@@ -1,0 +1,74 @@
+.error {
+  background: #ffa5a5;
+  border: 1px solid red;
+  text-align: center;
+  font-weight: bold;
+  padding: 5px;
+  margin: 5px 0 5px 0;
+}
+
+.info {
+  background: #fffe94;
+  border: 1px solid yellow;
+  text-align: center;
+  font-weight: bold;
+  padding: 5px;
+  margin: 5px 0 5px 0;
+}
+
+#user {
+position: absolute;
+right: 0;
+}
+
+img { border: 1px solid #555 }
+
+body {
+	background: #fff url("/cake/img/body_back.png") top repeat-x;
+	color: #555;
+	font-family: arial, sans-serif;
+	margin: 0 10px;
+	padding: 0;
+	font-size:    x-small;
+	voice-family: "\"}\"";
+	voice-family: inherit;
+	font-size:    small;
+}
+
+a { color: #34518c; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+#container {
+	width: 742px;
+	position: relative;
+	margin: 0 auto;
+	padding: 22px 0;
+}
+
+#mozilla-com a {
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: block;
+	text-indent: -5000em;
+	width: 110px;
+	height: 25px;
+	text-decoration: none;
+	background: url("/cake/img/mozilla-org.png") no-repeat;
+}
+
+#header {
+  background: url("/cake/img/header.gif") no-repeat;
+  color: white;
+  font-family: Arial;
+  font-size: 30px;
+  font-weight: bold;
+  text-align: center;
+  height: 127px;
+}
+
+#header a { color: white; text-decoration: none; }
+
+#map {
+  border: 1px solid #555;
+}

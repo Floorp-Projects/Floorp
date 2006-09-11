@@ -1,0 +1,25 @@
+Parties I'm attending:
+<?php
+  $c = count($parties) - 1;
+  $i = 0;
+  foreach ($parties as $party) {
+    echo '<a href="'.$html->url('/party/view/'.$party['parties']['id']).'">'.$party['parties']['name'].'</a>';
+    echo ($i < $c) ? ', ' : '';
+    $i++;
+  }
+?>
+<br/>
+Parties I'm hosting:
+<?php
+  $c = count($hparties) - 1;
+  $i = 0;
+  foreach ($hparties as $party) {
+    echo '<a href="'.$html->url('/party/view/'.$party['parties']['id']).'">'.$party['parties']['name'].'</a>';
+    echo ($i < $c) ? ', ' : '';
+    $i++;
+  }
+?>
+<ul>
+<li><a href="<?php echo $html->url('/party/register'); ?>">Create a new party</a></li>
+<li><a href="<?php echo $html->url('/user/edit'); ?>">Edit my account</a></li>
+</ul>
