@@ -68,6 +68,6 @@
   // party tools that we do this!
   //
   // /hwaara
-  id <mozView, mozAccessible> parallelView; // weak ref
+  id <mozView, mozAccessible> mParallelView; // weak ref
 }
 @end

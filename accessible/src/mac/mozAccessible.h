@@ -47,14 +47,14 @@
 
 @interface mozAccessible : NSObject <mozAccessible>
 {
-  nsAccessible    *geckoAccessible;  // weak reference; it owns us.
-  NSMutableArray  *children;         // strong ref to array of children
+  nsAccessible    *mGeckoAccessible;  // weak reference; it owns us.
+  NSMutableArray  *mChildren;         // strong ref to array of children
   
   // we can be marked as 'expired' if Shutdown() is called on our geckoAccessible.
   // since we might still be retained by some third-party, we need to do cleanup
   // in |expire|, and prevent any potential harm that could come from someone using us
   // after this point.
-  BOOL isExpired;
+  BOOL mIsExpired;
 }
 
 // inits with the gecko owner.

@@ -66,25 +66,25 @@ static id <mozAccessible, mozView> getNativeViewFromRootAccessible (nsAccessible
 // return the AXParent that our parallell NSView tells us about.
 - (id)parent
 {
-  if (!parallelView)
-    parallelView = (id<mozView, mozAccessible>)[self ourself];
+  if (!mParallelView)
+    mParallelView = (id<mozView, mozAccessible>)[self ourself];
   
-  return [parallelView accessibilityAttributeValue:NSAccessibilityParentAttribute];
+  return [mParallelView accessibilityAttributeValue:NSAccessibilityParentAttribute];
 }
 
 // this will return our parallell NSView. see mozDocAccessible.h
 - (id)ourself
 {
-  if (parallelView)
-    return (id)parallelView;
+  if (mParallelView)
+    return (id)mParallelView;
   
-  parallelView = getNativeViewFromRootAccessible (geckoAccessible);
+  mParallelView = getNativeViewFromRootAccessible (mGeckoAccessible);
   
 #ifdef DEBUG
-  if (!parallelView)
+  if (!mParallelView)
     NSLog (@"!!! can't return root accessible's native parallel view.");
 #endif
-  return parallelView;
+  return mParallelView;
 }
 
 - (NSString*)role
