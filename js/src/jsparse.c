@@ -3405,7 +3405,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             (!tc->topStmt || tc->topStmt->type == STMT_BLOCK)) {
             pn->pn_extra |= PNX_NEEDBRACES;
         }
-        tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
+        tc->flags = oldflags | (tc->flags & (TCF_FUN_FLAGS | TCF_RETURN_FLAGS));
         return pn;
       }
 

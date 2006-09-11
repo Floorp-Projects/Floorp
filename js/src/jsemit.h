@@ -151,6 +151,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_IN_FUNCTION        0x02 /* parsing inside function body */
 #define TCF_RETURN_EXPR        0x04 /* function has 'return expr;' */
 #define TCF_RETURN_VOID        0x08 /* function has 'return;' */
+#define TCF_RETURN_FLAGS       0x0C /* propagate these out of blocks */
 #define TCF_IN_FOR_INIT        0x10 /* parsing init expr of for; exclude 'in' */
 #define TCF_FUN_CLOSURE_VS_VAR 0x20 /* function and var with same name */
 #define TCF_FUN_USES_NONLOCALS 0x40 /* function refers to non-local names */
