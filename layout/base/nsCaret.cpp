@@ -719,7 +719,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
                 {
                   nsPeekOffsetStruct pos;
                   pos.SetData(eSelectBeginLine, eDirPrevious, 0, 0, PR_FALSE, PR_TRUE, PR_FALSE, PR_TRUE);
-                  if (NS_SUCCEEDED(frameAfter->PeekOffset(presContext, &pos))) {
+                  if (NS_SUCCEEDED(frameAfter->PeekOffset(&pos))) {
                     theFrame = pos.mResultFrame;
                     theFrameOffset = pos.mContentOffset;
                   }
@@ -751,7 +751,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
                 {
                   nsPeekOffsetStruct pos;
                   pos.SetData(eSelectEndLine, eDirNext, 0, 0, PR_FALSE, PR_TRUE, PR_FALSE, PR_TRUE);
-                  if (NS_SUCCEEDED(frameBefore->PeekOffset(presContext, &pos))) {
+                  if (NS_SUCCEEDED(frameBefore->PeekOffset(&pos))) {
                     theFrame = pos.mResultFrame;
                     theFrameOffset = pos.mContentOffset;
                   }

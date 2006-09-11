@@ -175,6 +175,22 @@ nsInlineFrame::IsEmpty()
   return PR_TRUE;
 }
 
+PRBool
+nsInlineFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
+{
+  // Override the implementation in nsFrame, to skip empty inline frames
+  NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
+  PRInt32 startOffset = *aOffset;
+  if (startOffset < 0)
+    startOffset = 1;
+  if (aForward == (startOffset == 0)) {
+    // We're before the frame and moving forward, or after it and moving backwards:
+    // skip to the other side, but keep going.
+    *aOffset = 1 - startOffset;
+  }
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 nsInlineFrame::AppendFrames(nsIAtom*        aListName,
                             nsIFrame*       aFrameList)
