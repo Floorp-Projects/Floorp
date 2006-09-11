@@ -1083,7 +1083,7 @@ nsFormFillController::GetDocShellForInput(nsIDOMHTMLInputElement *aInput)
   nsCOMPtr<nsIDOMDocument> domDoc;
   aInput->GetOwnerDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  
+  NS_ENSURE_TRUE(doc, nsnull);
   nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(doc->GetWindow());
   nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(webNav);
   return docShell;
