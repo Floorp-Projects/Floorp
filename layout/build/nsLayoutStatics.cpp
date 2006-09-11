@@ -90,7 +90,8 @@
 
 #ifdef MOZ_SVG
 #include "nsSVGAtoms.h"
-#include "nsSVGUtils.h"
+
+PRBool NS_SVGEnabled();
 #endif
 
 #ifndef MOZ_NO_INSPECTOR_APIS
@@ -159,7 +160,7 @@ nsLayoutStatics::Initialize()
 #endif
 
 #ifdef MOZ_SVG
-  if (nsSVGUtils::SVGEnabled())
+  if (NS_SVGEnabled())
     nsContentDLF::RegisterSVG();
 #endif
 

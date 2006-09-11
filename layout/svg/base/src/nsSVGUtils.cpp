@@ -110,7 +110,7 @@ SVGPrefChanged(const char *aPref, void *aClosure)
 }
 
 PRBool
-nsSVGUtils::SVGEnabled()
+NS_SVGEnabled()
 {
   static PRBool sInitialized = PR_FALSE;
   
@@ -951,4 +951,18 @@ nsSVGUtils::GetCairoComputationalSurface()
       cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 1, 1);
 
   return mCairoComputationalSurface;
+}
+
+cairo_matrix_t
+nsSVGUtils::ConvertSVGMatrixToCairo(nsIDOMSVGMatrix *aMatrix)
+{
+  float A, B, C, D, E, F;
+  aMatrix->GetA(&A);
+  aMatrix->GetB(&B);
+  aMatrix->GetC(&C);
+  aMatrix->GetD(&D);
+  aMatrix->GetE(&E);
+  aMatrix->GetF(&F);
+  cairo_matrix_t m = { A, B, C, D, E, F };
+  return m;
 }

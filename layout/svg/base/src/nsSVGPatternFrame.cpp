@@ -838,7 +838,7 @@ nsSVGPatternFrame::SetupPaintServer(nsISVGRendererCanvas *aCanvas,
     return NS_ERROR_FAILURE;
 
   // Translate the pattern frame
-  cairo_matrix_t pmatrix = NS_ConvertSVGMatrixToCairo(pMatrix);
+  cairo_matrix_t pmatrix = nsSVGUtils::ConvertSVGMatrixToCairo(pMatrix);
   cairoCanvas->AdjustMatrixForInitialTransform(&pmatrix);
   if (cairo_matrix_invert(&pmatrix))
     return NS_ERROR_FAILURE;

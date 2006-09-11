@@ -132,7 +132,7 @@ NS_NewSVGMaskElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsSVGUtils::SVGEnabled(),
+  NS_PRECONDITION(NS_SVGEnabled(),
                   "creating an SVG element while SVG disabled");
 
   static const char kSVGStyleSheetURI[] = "resource://gre/res/svg.css";

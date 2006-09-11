@@ -337,7 +337,7 @@ nsSVGGradientFrame::SetupPaintServer(nsISVGRendererCanvas *aCanvas,
   if (!svgMatrix)
     return NS_ERROR_FAILURE;
 
-  cairo_matrix_t patternMatrix = NS_ConvertSVGMatrixToCairo(svgMatrix);
+  cairo_matrix_t patternMatrix = nsSVGUtils::ConvertSVGMatrixToCairo(svgMatrix);
   if (cairo_matrix_invert(&patternMatrix))
     return NS_ERROR_FAILURE;
 
