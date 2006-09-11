@@ -37,7 +37,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.53 2006/08/07 19:09:41 julien.pierre.bugs%sun.com Exp $
+ * $Id: crl.c,v 1.54 2006/09/11 23:12:30 julien.pierre.bugs%sun.com Exp $
  */
  
 #include "cert.h"
@@ -579,9 +579,13 @@ CERT_DecodeDERCrlWithFlags(PRArenaPool *narena, SECItem *derSignedCrl,
     
 loser:
     if (options & CRL_DECODE_KEEP_BAD_CRL) {
-        extended->decodingError = PR_TRUE;
-        crl->referenceCount = 1;
-        return(crl);
+        if (extended) {
+            extended->decodingError = PR_TRUE;
+        }
+        if (crl) {
+            crl->referenceCount = 1;
+            return(crl);
+        }
     }
 
     if ((narena == NULL) && arena ) {
