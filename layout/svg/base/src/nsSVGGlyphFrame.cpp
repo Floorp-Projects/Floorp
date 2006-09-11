@@ -52,7 +52,6 @@
 #include "nsSVGPoint.h"
 #include "nsSVGRect.h"
 #include "nsDOMError.h"
-#include "nsSVGMatrix.h"
 #include "nsISVGCairoCanvas.h"
 #include "cairo.h"
 
@@ -1486,7 +1485,7 @@ nsSVGGlyphFrame::GetGlobalTransform(cairo_t *ctx,
   GetCanvasTM(getter_AddRefs(ctm));
   NS_ASSERTION(ctm, "graphic source didn't specify a ctm");
 
-  cairo_matrix_t matrix = NS_ConvertSVGMatrixToCairo(ctm);
+  cairo_matrix_t matrix = nsSVGUtils::ConvertSVGMatrixToCairo(ctm);
   if (aCanvas) {
     aCanvas->AdjustMatrixForInitialTransform(&matrix);
   }

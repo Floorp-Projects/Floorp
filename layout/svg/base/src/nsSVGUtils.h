@@ -45,6 +45,7 @@
 #include "nsCOMPtr.h"
 #include "nsISVGValue.h"
 #include "nsRect.h"
+#include "cairo.h"
 
 class nsIDocument;
 class nsPresContext;
@@ -68,8 +69,6 @@ class nsSVGLength2;
 class nsSVGElement;
 class nsSVGCoordCtxProvider;
 class nsAttrValue;
-
-typedef struct _cairo_surface cairo_surface_t;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -96,14 +95,17 @@ typedef struct _cairo_surface cairo_surface_t;
 /* are we the child of a non-display container? */
 #define NS_STATE_SVG_NONDISPLAY_CHILD 0x20000000
 
+/*
+ * Checks the svg enable preference and if a renderer could
+ * successfully be created.  Declared as a function instead of a
+ * nsSVGUtil method so that files that can't pull in nsSVGUtils.h (due
+ * to cairo.h usage) can still query this information.
+ */
+PRBool NS_SVGEnabled();
+
 class nsSVGUtils
 {
 public:
-  /* Checks the svg enable preference and if a renderer could
-   * successfully be created.
-   */
-  static PRBool SVGEnabled();
-
   /*
    * Report a localized error message to the error console.
    */
@@ -251,6 +253,12 @@ public:
    */
   static cairo_surface_t *
   GetCairoComputationalSurface();
+
+  /*
+   * Convert a nsIDOMSVGMatrix to a cairo_matrix_t.
+   */
+  static cairo_matrix_t
+  ConvertSVGMatrixToCairo(nsIDOMSVGMatrix *aMatrix);
 
 private:
   /* Cairo computational (nil) surface */

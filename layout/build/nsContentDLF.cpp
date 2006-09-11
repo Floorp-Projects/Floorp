@@ -113,7 +113,7 @@ static const char* const gSVGTypes[] = {
   0
 };
 
-#include "nsSVGUtils.h"
+PRBool NS_SVGEnabled();
 #endif
 
 static const char* const gRDFTypes[] = {
@@ -193,7 +193,7 @@ nsContentDLF::CreateInstance(const char* aCommand,
     }
 
 #ifdef MOZ_SVG
-    if (nsSVGUtils::SVGEnabled()) {
+    if (NS_SVGEnabled()) {
       for (typeIndex = 0; gSVGTypes[typeIndex] && !knownType; ++typeIndex) {
         if (type.Equals(gSVGTypes[typeIndex])) {
           knownType = PR_TRUE;
@@ -241,7 +241,7 @@ nsContentDLF::CreateInstance(const char* aCommand,
   }
 
 #ifdef MOZ_SVG
-  if (nsSVGUtils::SVGEnabled()) {
+  if (NS_SVGEnabled()) {
     // Try SVG
     typeIndex = 0;
     while(gSVGTypes[typeIndex]) {

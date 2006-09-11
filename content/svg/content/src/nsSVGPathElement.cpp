@@ -47,7 +47,6 @@
 #include "nsISVGValueUtils.h"
 #include "nsSVGUtils.h"
 #include "nsSVGPoint.h"
-#include "nsSVGMatrix.h"
 
 nsSVGElement::NumberInfo nsSVGPathElement::sNumberInfo = 
                                                   { &nsGkAtoms::pathLength, 0 };
@@ -456,7 +455,7 @@ nsSVGPathElement::GetFlattenedPath(nsIDOMSVGMatrix *aMatrix)
   }
 
   if (aMatrix) {
-    cairo_matrix_t matrix = NS_ConvertSVGMatrixToCairo(aMatrix);
+    cairo_matrix_t matrix = nsSVGUtils::ConvertSVGMatrixToCairo(aMatrix);
     cairo_set_matrix(ctx, &matrix);
   }
 

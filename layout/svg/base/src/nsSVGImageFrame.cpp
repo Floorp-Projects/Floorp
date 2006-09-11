@@ -276,7 +276,7 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
     }
 
     nsCOMPtr<nsISVGCairoCanvas> cairoCanvas = do_QueryInterface(canvas);
-    cairo_matrix_t matrix = NS_ConvertSVGMatrixToCairo(fini);
+    cairo_matrix_t matrix = nsSVGUtils::ConvertSVGMatrixToCairo(fini);
     cairoCanvas->AdjustMatrixForInitialTransform(&matrix);
     cairo_t *ctx = cairoCanvas->GetContext();
 

@@ -44,7 +44,7 @@
 // Test to see if a feature is implemented
 PRBool
 NS_SVG_TestFeature(const nsAString& fstr) {
-  if (!nsSVGUtils::SVGEnabled()) {
+  if (!NS_SVGEnabled()) {
     return PR_FALSE;
   }
   nsAutoString lstr(fstr);
