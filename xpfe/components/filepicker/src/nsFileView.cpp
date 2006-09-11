@@ -77,7 +77,6 @@ public:
 
   nsStringArray mValues;
   nsAutoString mSearchString;
-  PRInt32 mSlashPos;
   PRUint16 mSearchResult;
 };
 
@@ -85,29 +84,29 @@ NS_IMPL_ISUPPORTS1(nsFileResult, nsIAutoCompleteResult)
 
 nsFileResult::nsFileResult(const nsAString& aSearchString,
                            const nsAString& aSearchParam):
-  mSearchString(aSearchString),
-  mSlashPos(mSearchString.RFindChar('/'))
+  mSearchString(aSearchString)
 {
   if (aSearchString.IsEmpty())
     mSearchResult = RESULT_IGNORED;
   else {
+    PRInt32 slashPos = mSearchString.RFindChar('/');
     mSearchResult = RESULT_FAILURE;
     nsCOMPtr<nsILocalFile> directory;
-    nsDependentSubstring parent(Substring(mSearchString, 0, mSlashPos + 1));
-    if (mSlashPos != kNotFound)
+    nsDependentSubstring parent(Substring(mSearchString, 0, slashPos + 1));
+    if (!parent.IsEmpty() && parent.First() == '/')
       NS_NewLocalFile(parent, PR_TRUE, getter_AddRefs(directory));
     if (!directory) {
       if (NS_FAILED(NS_NewLocalFile(aSearchParam, PR_TRUE, getter_AddRefs(directory))))
         return;
-      if (mSlashPos > 0)
-        directory->AppendRelativePath(Substring(mSearchString, 0, mSlashPos));
+      if (slashPos > 0)
+        directory->AppendRelativePath(Substring(mSearchString, 0, slashPos));
     }
     nsCOMPtr<nsISimpleEnumerator> dirEntries;
     if (NS_FAILED(directory->GetDirectoryEntries(getter_AddRefs(dirEntries))))
       return;
     mSearchResult = RESULT_NOMATCH;
     PRBool hasMore = PR_FALSE;
-    nsDependentSubstring prefix(Substring(mSearchString, mSlashPos + 1));
+    nsDependentSubstring prefix(Substring(mSearchString, slashPos + 1));
     while (NS_SUCCEEDED(dirEntries->HasMoreElements(&hasMore)) && hasMore) {
       nsCOMPtr<nsISupports> nextItem;
       dirEntries->GetNext(getter_AddRefs(nextItem));
