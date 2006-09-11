@@ -1336,7 +1336,10 @@ struct SubstituteTextClosure {
     SubstituteTextClosure(nsIXULTemplateResult* aResult, nsAString& aString)
         : result(aResult), str(aString) {}
 
-    nsIXULTemplateResult* result;
+    // some datasources are lazily initialized or modified while values are
+    // being retrieved, causing results to be removed. Due to this, hold a
+    // strong reference to the result.
+    nsCOMPtr<nsIXULTemplateResult> result;
     nsAString& str;
 };
 
