@@ -15,6 +15,8 @@
 #
 # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
 
+package Bugzilla::ModPerl;
+
 use strict;
 
 # If you have an Apache2::Status handler in your Apache configuration,
@@ -27,27 +29,78 @@ use strict;
 # file.
 
 use Apache::DBI ();
-use Bugzilla ();
-use Bugzilla::Constants ();
-use Bugzilla::CGI ();
-use Bugzilla::Mailer ();
-use Bugzilla::Template ();
-use Bugzilla::Util ();
+use Apache2::ServerUtil;
+use ModPerl::RegistryLoader ();
 use CGI ();
 CGI->compile(qw(:cgi -no_xhtml -oldstyle_urls :private_tempfiles
                 :unique_headers SERVER_PUSH :push));
 use Template::Config ();
 Template::Config->preload();
 
-# ModPerl::RegistryLoader can pre-compile all CGI scripts.
-use ModPerl::RegistryLoader ();
+use Bugzilla ();
+use Bugzilla::Constants ();
+use Bugzilla::CGI ();
+use Bugzilla::Mailer ();
+use Bugzilla::Template ();
+use Bugzilla::Util ();
+
+my $cgi_path = Bugzilla::Constants::bz_locations()->{'cgi_path'};
+
+# Set up the configuration for the web server
+my $server = Apache2::ServerUtil->server;
+my $conf = <<EOT;
+<Directory "$cgi_path">
+    AddHandler perl-script .cgi
+    # No need to PerlModule these because they're already defined in mod_perl.pl
+    PerlResponseHandler Bugzilla::ModPerl::ResponseHandler
+    PerlCleanupHandler  Bugzilla::ModPerl::CleanupHandler
+    PerlOptions +ParseHeaders
+    Options +ExecCGI
+</Directory>
+EOT
+
+$server->add_config([split("\n", $conf)]);
+
+# Have ModPerl::RegistryLoader pre-compile all CGI scripts.
 my $rl = new ModPerl::RegistryLoader();
 # Note that $cgi_path will be wrong if somebody puts the libraries
 # in a different place than the CGIs.
-my $cgi_path = Bugzilla::Constants::bz_locations()->{'libpath'};
 foreach my $file (glob "$cgi_path/*.cgi") {
     Bugzilla::Util::trick_taint($file);
     $rl->handler($file, $file);
+}
+
+
+package Bugzilla::ModPerl::ResponseHandler;
+use strict;
+use base qw(ModPerl::Registry);
+use Bugzilla;
+
+sub handler : method {
+    my $class = shift;
+
+    # $0 is broken under mod_perl before 2.0.2, so we have to set it
+    # here explicitly or init_page's shutdownhtml code won't work right.
+    $0 = $ENV{'SCRIPT_FILENAME'};
+    Bugzilla::init_page();
+    return $class->SUPER::handler(@_);
+}
+
+
+package Bugzilla::ModPerl::CleanupHandler;
+use strict;
+use Apache2::Const -compile => qw(OK);
+
+sub handler {
+    my $r = shift;
+
+    # Sometimes mod_perl doesn't properly call DESTROY on all
+    # the objects in pnotes()
+    foreach my $key (keys %{$r->pnotes}) {
+        delete $r->pnotes->{$key};
+    }
+
+    return Apache2::Const::OK;
 }
 
 1;

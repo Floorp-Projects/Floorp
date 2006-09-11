@@ -365,6 +365,9 @@ sub bz_locations {
     # That means that if you modify these paths, they must be absolute paths.
     return {
         'libpath'     => $libpath,
+        # If you put the libraries in a different location than the CGIs,
+        # make sure this still points to the CGIs.
+        'cgi_path'    => $libpath,
         'templatedir' => "$libpath/template",
         'project'     => $project,
         'localconfig' => "$libpath/$localconfig",

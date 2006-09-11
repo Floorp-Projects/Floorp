@@ -77,60 +77,64 @@ use constant SHUTDOWNHTML_EXIT_SILENTLY => [
 #}
 #$::SIG{__DIE__} = \&Bugzilla::die_with_dignity;
 
-# Some environment variables are not taint safe
-delete @::ENV{'PATH', 'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
+sub init_page {
 
-# If Bugzilla is shut down, do not allow anything to run, just display a
-# message to the user about the downtime and log out.  Scripts listed in 
-# SHUTDOWNHTML_EXEMPT are exempt from this message.
-#
-# Because this is code which is run live from perl "use" commands of other
-# scripts, we're skipping this part if we get here during a perl syntax check
-# -- runtests.pl compiles scripts without running them, so we need to make sure
-# that this check doesn't apply to 'perl -c' calls.
-#
-# This code must go here. It cannot go anywhere in Bugzilla::CGI, because
-# it uses Template, and that causes various dependency loops.
-if (!$^C
-    && Bugzilla->params->{"shutdownhtml"}
-    && lsearch(SHUTDOWNHTML_EXEMPT, basename($0)) == -1) 
-{
-    # Allow non-cgi scripts to exit silently (without displaying any
-    # message), if desired. At this point, no DBI call has been made
-    # yet, and no error will be returned if the DB is inaccessible.
-    if (lsearch(SHUTDOWNHTML_EXIT_SILENTLY, basename($0)) > -1
-        && !i_am_cgi())
+    # Some environment variables are not taint safe
+    delete @::ENV{'PATH', 'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
+
+    # If Bugzilla is shut down, do not allow anything to run, just display a
+    # message to the user about the downtime and log out.  Scripts listed in 
+    # SHUTDOWNHTML_EXEMPT are exempt from this message.
+    #
+    # Because this is code which is run live from perl "use" commands of other
+    # scripts, we're skipping this part if we get here during a perl syntax 
+    # check -- runtests.pl compiles scripts without running them, so we 
+    # need to make sure that this check doesn't apply to 'perl -c' calls.
+    #
+    # This code must go here. It cannot go anywhere in Bugzilla::CGI, because
+    # it uses Template, and that causes various dependency loops.
+    if (!$^C && Bugzilla->params->{"shutdownhtml"} 
+        && lsearch(SHUTDOWNHTML_EXEMPT, basename($0)) == -1)
     {
+        # Allow non-cgi scripts to exit silently (without displaying any
+        # message), if desired. At this point, no DBI call has been made
+        # yet, and no error will be returned if the DB is inaccessible.
+        if (lsearch(SHUTDOWNHTML_EXIT_SILENTLY, basename($0)) > -1
+            && !i_am_cgi())
+        {
+            exit;
+        }
+
+        # For security reasons, log out users when Bugzilla is down.
+        # Bugzilla->login() is required to catch the logincookie, if any.
+        my $user = Bugzilla->login(LOGIN_OPTIONAL);
+        my $userid = $user->id;
+        Bugzilla->logout();
+
+        my $template = Bugzilla->template;
+        my $vars = {};
+        $vars->{'message'} = 'shutdown';
+        $vars->{'userid'} = $userid;
+        # Generate and return a message about the downtime, appropriately
+        # for if we're a command-line script or a CGI script.
+        my $extension;
+        if (i_am_cgi() && (!Bugzilla->cgi->param('ctype')
+                           || Bugzilla->cgi->param('ctype') eq 'html')) {
+            $extension = 'html';
+        }
+        else {
+            $extension = 'txt';
+        }
+        print Bugzilla->cgi->header() if i_am_cgi();
+        my $t_output;
+        $template->process("global/message.$extension.tmpl", $vars, \$t_output)
+            || ThrowTemplateError($template->error);
+        print $t_output . "\n";
         exit;
     }
-
-    # For security reasons, log out users when Bugzilla is down.
-    # Bugzilla->login() is required to catch the logincookie, if any.
-    my $user = Bugzilla->login(LOGIN_OPTIONAL);
-    my $userid = $user->id;
-    Bugzilla->logout();
-
-    my $template = Bugzilla->template;
-    my $vars = {};
-    $vars->{'message'} = 'shutdown';
-    $vars->{'userid'} = $userid;
-    # Generate and return a message about the downtime, appropriately
-    # for if we're a command-line script or a CGI script.
-    my $extension;
-    if (i_am_cgi() && (!Bugzilla->cgi->param('ctype')
-                       || Bugzilla->cgi->param('ctype') eq 'html')) {
-        $extension = 'html';
-    }
-    else {
-        $extension = 'txt';
-    }
-    print Bugzilla->cgi->header() if i_am_cgi();
-    my $t_output;
-    $template->process("global/message.$extension.tmpl", $vars, \$t_output)
-        || ThrowTemplateError($template->error);
-    print $t_output . "\n";
-    exit;
 }
+
+init_page() if !$ENV{MOD_PERL};
 
 #####################################################################
 # Subroutines and Methods
@@ -352,21 +356,7 @@ sub hook_args {
 sub request_cache {
     if ($ENV{MOD_PERL}) {
         require Apache2::RequestUtil;
-        my $request = Apache2::RequestUtil->request;
-        my $cache = $request->pnotes();
-        # Sometimes mod_perl doesn't properly call DESTROY on all
-        # the objects in pnotes(), so we register a cleanup handler
-        # to make sure that this happens.
-        if (!$cache->{cleanup_registered}) {
-             $request->push_handlers(PerlCleanupHandler => sub {
-                 my $r = shift;
-                 foreach my $key (keys %{$r->pnotes}) {
-                     delete $r->pnotes->{$key};
-                 }
-             });
-             $cache->{cleanup_registered} = 1;
-        }
-        return $cache;
+        return Apache2::RequestUtil->request->pnotes();
     }
     return $_request_cache;
 }
@@ -385,7 +375,8 @@ sub _cleanup {
 }
 
 sub END {
-    _cleanup();
+    # Bugzilla.pm cannot compile in mod_perl.pl if this runs.
+    _cleanup() unless $ENV{MOD_PERL};
 }
 
 1;
