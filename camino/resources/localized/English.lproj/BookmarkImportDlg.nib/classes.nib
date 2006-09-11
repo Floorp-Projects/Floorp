@@ -8,6 +8,9 @@
                 mBrowserListButton = NSPopUpButton; 
                 mCancelButton = NSButton; 
                 mImportButton = NSButton; 
+                mImportProgressBar = NSProgressIndicator; 
+                mImportView = NSView; 
+                mProgressView = NSView; 
             }; 
             SUPERCLASS = NSWindowController; 
         }, 
