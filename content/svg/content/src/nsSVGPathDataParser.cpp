@@ -1075,104 +1075,27 @@ nsSVGPathDataParserToInternal::ConvertArcToCurves(float x2, float y2,
                                                   PRBool largeArcFlag,
                                                   PRBool sweepFlag)
 {
-  const double radPerDeg = M_PI/180.0;
-
-  double x1=mPx, y1=mPy;
-
-  // 1. Treat out-of-range parameters as described in
+  float x1=mPx, y1=mPy, x3, y3;
+  // Treat out-of-range parameters as described in
   // http://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
   
   // If the endpoints (x1, y1) and (x2, y2) are identical, then this
   // is equivalent to omitting the elliptical arc segment entirely
-  if (x1 == x2 && y1 == y2)
+  if (x1 == x2 && y1 == y2) {
     return NS_OK;
-
+  }
   // If rX = 0 or rY = 0 then this arc is treated as a straight line
   // segment (a "lineto") joining the endpoints.
   if (rx == 0.0f || ry == 0.0f) {
     return PathLineTo(x2, y2);
   }
-
-  // If rX or rY have negative signs, these are dropped; the absolute
-  // value is used instead.
-  if (rx<0.0) rx = -rx;
-  if (ry<0.0) ry = -ry;
+  nsSVGArcConverter converter(x1, y1, x2, y2, rx, ry, angle,
+                              largeArcFlag, sweepFlag);
   
-  // 2. convert to center parameterization as shown in
-  // http://www.w3.org/TR/SVG/implnote.html
-  double sinPhi = sin(angle*radPerDeg);
-  double cosPhi = cos(angle*radPerDeg);
-  
-  double x1dash =  cosPhi * (x1-x2)/2.0 + sinPhi * (y1-y2)/2.0;
-  double y1dash = -sinPhi * (x1-x2)/2.0 + cosPhi * (y1-y2)/2.0;
-
-  double root;
-  double numerator = rx*rx*ry*ry - rx*rx*y1dash*y1dash - ry*ry*x1dash*x1dash;
-
-  if (numerator < 0.0) { 
-    //  If rX , rY and are such that there is no solution (basically,
-    //  the ellipse is not big enough to reach from (x1, y1) to (x2,
-    //  y2)) then the ellipse is scaled up uniformly until there is
-    //  exactly one solution (until the ellipse is just big enough).
-
-    // -> find factor s, such that numerator' with rx'=s*rx and
-    //    ry'=s*ry becomes 0 :
-    float s = (float)sqrt(1.0 - numerator/(rx*rx*ry*ry));
-
-    rx *= s;
-    ry *= s;
-    root = 0.0;
-
-  }
-  else {
-    root = (largeArcFlag == sweepFlag ? -1.0 : 1.0) *
-      sqrt( numerator/(rx*rx*y1dash*y1dash + ry*ry*x1dash*x1dash) );
-  }
-  
-  double cxdash = root*rx*y1dash/ry;
-  double cydash = -root*ry*x1dash/rx;
-  
-  double cx = cosPhi * cxdash - sinPhi * cydash + (x1+x2)/2.0;
-  double cy = sinPhi * cxdash + cosPhi * cydash + (y1+y2)/2.0;
-  double theta1 = CalcVectorAngle(1.0, 0.0, (x1dash-cxdash)/rx, (y1dash-cydash)/ry);
-  double dtheta = CalcVectorAngle((x1dash-cxdash)/rx, (y1dash-cydash)/ry,
-                                  (-x1dash-cxdash)/rx, (-y1dash-cydash)/ry);
-  if (!sweepFlag && dtheta>0)
-    dtheta -= 2.0*M_PI;
-  else if (sweepFlag && dtheta<0)
-    dtheta += 2.0*M_PI;
-  
-  // 3. convert into cubic bezier segments <= 90deg
-  int segments = (int)ceil(fabs(dtheta/(M_PI/2.0)));
-  double delta = dtheta/segments;
-  double t = 8.0/3.0 * sin(delta/4.0) * sin(delta/4.0) / sin(delta/2.0);
-  
-  for (int i = 0; i < segments; ++i) {
-    double cosTheta1 = cos(theta1);
-    double sinTheta1 = sin(theta1);
-    double theta2 = theta1 + delta;
-    double cosTheta2 = cos(theta2);
-    double sinTheta2 = sin(theta2);
-    
-    // a) calculate endpoint of the segment:
-    double xe = cosPhi * rx*cosTheta2 - sinPhi * ry*sinTheta2 + cx;
-    double ye = sinPhi * rx*cosTheta2 + cosPhi * ry*sinTheta2 + cy;
-
-    // b) calculate gradients at start/end points of segment:
-    double dx1 = t * ( - cosPhi * rx*sinTheta1 - sinPhi * ry*cosTheta1);
-    double dy1 = t * ( - sinPhi * rx*sinTheta1 + cosPhi * ry*cosTheta1);
-    
-    double dxe = t * ( cosPhi * rx*sinTheta2 + sinPhi * ry*cosTheta2);
-    double dye = t * ( sinPhi * rx*sinTheta2 - cosPhi * ry*cosTheta2);
-
+  while (converter.GetNextSegment(&x1, &y1, &x2, &y2, &x3, &y3)) {
     // c) draw the cubic bezier:
-    nsresult rv = PathCurveTo(x1+dx1, y1+dy1, xe+dxe, ye+dye, xe, ye);
+    nsresult rv = PathCurveTo(x1, y1, x2, y2, x3, y3);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    // do next segment
-    theta1 = theta2;
-    x1 = (float)xe;
-    y1 = (float)ye;
   }
 
   return NS_OK;
@@ -1418,5 +1341,109 @@ nsSVGPathDataParserToDOM::StoreEllipticalArc(PRBool absCoords,
                                        largeArcFlag, sweepFlag)
               : NS_NewSVGPathSegArcRel(x, y, r1, r2, angle,
                                        largeArcFlag, sweepFlag));
+}
+
+nsSVGArcConverter::nsSVGArcConverter(float x1, float y1,
+                                     float x2, float y2,
+                                     float rx, float ry,
+                                     float angle,
+                                     PRBool largeArcFlag,
+                                     PRBool sweepFlag)
+{
+  const double radPerDeg = M_PI/180.0;
+
+  // If rX or rY have negative signs, these are dropped; the absolute
+  // value is used instead.
+  mRx = fabs(rx);
+  mRy = fabs(ry);
+
+  // Convert to center parameterization as shown in
+  // http://www.w3.org/TR/SVG/implnote.html
+  mSinPhi = sin(angle*radPerDeg);
+  mCosPhi = cos(angle*radPerDeg);
+
+  double x1dash =  mCosPhi * (x1-x2)/2.0 + mSinPhi * (y1-y2)/2.0;
+  double y1dash = -mSinPhi * (x1-x2)/2.0 + mCosPhi * (y1-y2)/2.0;
+
+  double root;
+  double numerator = mRx*mRx*mRy*mRy - mRx*mRx*y1dash*y1dash -
+                     mRy*mRy*x1dash*x1dash;
+
+  if (numerator < 0.0) {
+    //  If mRx , mRy and are such that there is no solution (basically,
+    //  the ellipse is not big enough to reach from (x1, y1) to (x2,
+    //  y2)) then the ellipse is scaled up uniformly until there is
+    //  exactly one solution (until the ellipse is just big enough).
+
+    // -> find factor s, such that numerator' with mRx'=s*mRx and
+    //    mRy'=s*mRy becomes 0 :
+    float s = (float)sqrt(1.0 - numerator/(mRx*mRx*mRy*mRy));
+
+    mRx *= s;
+    mRy *= s;
+    root = 0.0;
+
+  }
+  else {
+    root = (largeArcFlag == sweepFlag ? -1.0 : 1.0) *
+      sqrt( numerator/(mRx*mRx*y1dash*y1dash + mRy*mRy*x1dash*x1dash) );
+  }
+
+  double cxdash = root*mRx*y1dash/mRy;
+  double cydash = -root*mRy*x1dash/mRx;
+
+  mCx = mCosPhi * cxdash - mSinPhi * cydash + (x1+x2)/2.0;
+  mCy = mSinPhi * cxdash + mCosPhi * cydash + (y1+y2)/2.0;
+  mTheta = CalcVectorAngle(1.0, 0.0, (x1dash-cxdash)/mRx, (y1dash-cydash)/mRy);
+  double dtheta = CalcVectorAngle((x1dash-cxdash)/mRx, (y1dash-cydash)/mRy,
+                                  (-x1dash-cxdash)/mRx, (-y1dash-cydash)/mRy);
+  if (!sweepFlag && dtheta>0)
+    dtheta -= 2.0*M_PI;
+  else if (sweepFlag && dtheta<0)
+    dtheta += 2.0*M_PI;
+
+  // Convert into cubic bezier segments <= 90deg
+  mNumSegs = NS_STATIC_CAST(int, ceil(fabs(dtheta/(M_PI/2.0))));
+  mDelta = dtheta/mNumSegs;
+  mT = 8.0/3.0 * sin(mDelta/4.0) * sin(mDelta/4.0) / sin(mDelta/2.0);
+
+  mX1 = x1;
+  mY1 = y1;
+  mSegIndex = 0;
+}
+
+PRBool
+nsSVGArcConverter::GetNextSegment(float *x1, float *y1,
+                                  float *x2, float *y2,
+                                  float *x3, float *y3)
+{
+  if (mSegIndex == mNumSegs) {
+     return PR_FALSE;
+  }
+  
+  float cosTheta1 = cos(mTheta);
+  float sinTheta1 = sin(mTheta);
+  float theta2 = mTheta + mDelta;
+  float cosTheta2 = cos(theta2);
+  float sinTheta2 = sin(theta2);
+
+  // a) calculate endpoint of the segment:
+  *x3 = mCosPhi * mRx*cosTheta2 - mSinPhi * mRy*sinTheta2 + mCx;
+  *y3 = mSinPhi * mRx*cosTheta2 + mCosPhi * mRy*sinTheta2 + mCy;
+
+  // b) calculate gradients at start/end points of segment:
+  *x1 = mX1 + mT * ( - mCosPhi * mRx*sinTheta1 - mSinPhi * mRy*cosTheta1);
+  *y1 = mY1 + mT * ( - mSinPhi * mRx*sinTheta1 + mCosPhi * mRy*cosTheta1);
+
+  *x2 = *x3 + mT * ( mCosPhi * mRx*sinTheta2 + mSinPhi * mRy*cosTheta2);
+  *y2 = *y3 + mT * ( mSinPhi * mRx*sinTheta2 - mCosPhi * mRy*cosTheta2);
+
+  // do next segment
+  mTheta = theta2;
+  mX1 = *x3;
+  mY1 = *y3;
+  ++mSegIndex;
+
+  return PR_TRUE;
 }
 
