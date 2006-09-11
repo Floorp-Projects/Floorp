@@ -489,7 +489,7 @@ NS_IMETHODIMP nsAccessible::Shutdown()
 NS_IMETHODIMP nsAccessible::InvalidateChildren()
 {
   // Document has transformed, reset our invalid children and child count
-  mAccChildCount = -1;
+  mAccChildCount = eChildCountUninitialized;
   mFirstChild = nsnull;
   return NS_OK;
 }
@@ -667,7 +667,7 @@ void nsAccessible::CacheChildren()
 {
   if (!mWeakShell) {
     // This node has been shut down
-    mAccChildCount = -1;
+    mAccChildCount = eChildCountUninitialized;
     return;
   }
 
@@ -1968,7 +1968,7 @@ NS_IMETHODIMP nsAccessible::GetFinalState(PRUint32 *aState)
   if (!content) {
     return NS_ERROR_FAILURE;  // Node already shut down
   }
-  for (PRInt32 index = 0; index < NS_ARRAY_LENGTH(gUnivStateMap); index ++) {
+  for (PRUint32 index = 0; index < NS_ARRAY_LENGTH(gUnivStateMap); index ++) {
     MappedAttrState(content, aState, &gUnivStateMap[index]);
   }
   if (!mRoleMapEntry) {
