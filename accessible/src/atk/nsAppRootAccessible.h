@@ -86,14 +86,15 @@ public:
     NS_IMETHOD GetPreviousSibling(nsIAccessible **aPreviousSibling);
     NS_IMETHOD GetChildAt(PRInt32 aChildNum, nsIAccessible **aChild);
 
-    NS_IMETHOD GetFirstChild(nsIAccessible * *aFirstChild);
-    NS_IMETHOD GetChildCount(PRInt32 *aAccChildCount);
-
     // return the atk object for app root accessible
     NS_IMETHOD GetNativeInterface(void **aOutAccessible);
 
     nsresult AddRootAccessible(nsIAccessible *aRootAccWrap);
     nsresult RemoveRootAccessible(nsIAccessible *aRootAccWrap);
+
+protected:
+    virtual void CacheChildren();
+
 private:
     nsCOMPtr<nsIMutableArray> mChildren;
 };

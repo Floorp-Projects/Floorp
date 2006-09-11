@@ -495,7 +495,7 @@ void nsHTMLGroupboxAccessible::CacheChildren()
 {
   if (!mWeakShell) {
     // This node has been shut down
-    mAccChildCount = -1;
+    mAccChildCount = eChildCountUninitialized;
     return;
   }
 

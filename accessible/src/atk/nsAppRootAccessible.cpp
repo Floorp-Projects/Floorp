@@ -678,32 +678,41 @@ NS_IMETHODIMP nsAppRootAccessible::GetChildAt(PRInt32 aChildNum,
     return rv;
 }
 
-NS_IMETHODIMP nsAppRootAccessible::GetChildCount(PRInt32 *aAccChildCount) 
+void nsAppRootAccessible::CacheChildren()
 {
-    PRUint32 count = 0;
-    nsresult rv = NS_OK;
-    if (mChildren)
-        rv = mChildren->GetLength(&count);
-    if (NS_SUCCEEDED(rv)) {
-        MAI_LOG_DEBUG(("\nGet Acc Child OK, count=%d\n", count));
+    if (!mChildren) {
+        mAccChildCount = eChildCountUninitialized;
+        return;
     }
-    else
-        MAI_LOG_DEBUG(("\nGet Acc Child Failed, count=%d\n", count));
 
-    *aAccChildCount = NS_STATIC_CAST(PRInt32, count);
-    return rv;
-}
+    if (mAccChildCount == eChildCountUninitialized) {
+        nsCOMPtr<nsISimpleEnumerator> enumerator;
+        mChildren->Enumerate(getter_AddRefs(enumerator));
 
-NS_IMETHODIMP nsAppRootAccessible::GetFirstChild(nsIAccessible * *aFirstChild) 
-{
-    nsCOMPtr<nsIAccessible> firstChild;
-    *aFirstChild = nsnull;
-    nsresult rv = NS_OK;
-    rv = mChildren->QueryElementAt(0, NS_GET_IID(nsIAccessible),
-                                   getter_AddRefs(firstChild));
-    if (firstChild)
-        NS_IF_ADDREF(*aFirstChild = firstChild);
-    return rv;
+        nsCOMPtr<nsIWeakReference> childWeakRef;
+        nsCOMPtr<nsIAccessible> accessible;
+        nsCOMPtr<nsPIAccessible> previousAccessible;
+        PRBool hasMoreElements;
+        while(NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreElements))
+              && hasMoreElements) {
+            enumerator->GetNext(getter_AddRefs(childWeakRef));
+            accessible = do_QueryReferent(childWeakRef);
+            if (accessible) {
+                if (previousAccessible) {
+                    previousAccessible->SetNextSibling(accessible);
+                }
+                else {
+                    SetFirstChild(accessible);
+                }
+                previousAccessible = do_QueryInterface(accessible);
+                previousAccessible->SetParent(this);
+            }
+        }
+
+        PRUint32 count = 0;
+        mChildren->GetLength(&count);
+        mAccChildCount = NS_STATIC_CAST(PRInt32, count);
+    }
 }
 
 NS_IMETHODIMP nsAppRootAccessible::GetNextSibling(nsIAccessible * *aNextSibling) 
@@ -746,6 +755,7 @@ nsAppRootAccessible::AddRootAccessible(nsIAccessible *aRootAccWrap)
 
     // add by weak reference
     rv = mChildren->AppendElement(aRootAccWrap, PR_TRUE);
+    InvalidateChildren();
 
     void* atkAccessible;
     aRootAccWrap->GetNativeInterface(&atkAccessible);
@@ -803,6 +813,7 @@ nsAppRootAccessible::RemoveRootAccessible(nsIAccessible *aRootAccWrap)
     rv = mChildren->RemoveElementAt(index);
 
 #endif
+    InvalidateChildren();
     return rv;
 }
 
