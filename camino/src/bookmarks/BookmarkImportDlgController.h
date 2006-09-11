@@ -43,6 +43,9 @@
   IBOutlet NSPopUpButton* mBrowserListButton;
   IBOutlet NSButton* mCancelButton;
   IBOutlet NSButton* mImportButton;  
+  IBOutlet NSProgressIndicator* mImportProgressBar;  
+  IBOutlet NSView* mImportView;  
+  IBOutlet NSView* mProgressView;  
 }
 
 -(void) buildAvailableFileList;
@@ -51,5 +54,6 @@
 -(IBAction) loadOpenPanel:(id)aSender;
 -(IBAction) nullAction:(id)aSender;
 -(void) alertSheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo;
+-(void) finishThreadedImport:(BOOL)success fromFile:(NSString *)aFile;
 
 @end

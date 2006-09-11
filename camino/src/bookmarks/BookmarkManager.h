@@ -47,9 +47,11 @@
 @class KindaSmartFolderManager;
 
 extern NSString* const kBookmarkManagerStartedNotification;
-
 extern NSString* const kBookmarksToolbarFolderIdentifier;
 extern NSString* const kBookmarksMenuFolderIdentifier;
+
+extern NSString* const kBookmarkImportPathIndentifier;
+extern NSString* const kBookmarkImportNewFolderNameIdentifier;
 
 const int kBookmarksContextMenuArrangeSeparatorTag = 100;
 
@@ -142,7 +144,7 @@ const int kBookmarksContextMenuArrangeSeparatorTag = 100;
 
 // Importing bookmarks
 - (void)startImportBookmarks;
-- (BOOL)importBookmarks:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
+- (void)importBookmarksThreadEntry:(NSDictionary *)aDict;
 
 // Writing bookmark files
 - (void)writeHTMLFile:(NSString *)pathToFile;

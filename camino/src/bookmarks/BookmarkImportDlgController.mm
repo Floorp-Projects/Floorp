@@ -47,11 +47,14 @@
 
 -(void) tryAddImportFromBrowser: (NSString *) aBrowserName withBookmarkPath: (NSString *) aPath;
 -(void) tryOmniWeb5Import;
--(void) buildButtonForBrowser:(NSString *) aBrowserName withObject:(id)anObject;
+-(void) buildButtonForBrowser:(NSString *) aBrowserName withPathArray:(NSArray *)anArray;
 -(NSString *) getSaltedBookmarkPathForProfile: (NSString *) aPath;
--(void) beginImportFrom:(NSString *) aPath intoFolder:(BookmarkFolder *) aFolder;
--(void) beginOmniWeb5ImportFrom:(NSArray *)anArray intoFolder:(BookmarkFolder *)aFolder;
--(void) finishImport:(BOOL)success fromFile:(NSString *)aFile intoFolder:(BookmarkFolder*)aFolder;
+-(void) beginImportFrom:(NSArray *)aPath withTitles:(NSArray *)anArray;
+-(void) beginOmniWeb5ImportFrom:(NSArray *)anArray;
+-(void) finishImport:(BOOL)success fromFiles:(NSArray *)anArray;
+-(void) finishThreadedImport:(BOOL)success fromFiles:(NSArray *)anArray;
+-(void) showProgressView;
+-(void) showImportView;
 
 @end
 
@@ -61,8 +64,8 @@
 
 -(void) windowDidLoad
 {
+  [self showImportView];
   [self buildAvailableFileList];
-  [[self window] center];
 }
 
 // Check for common webbrower bookmark files and, if they exist, add import buttons.
@@ -107,7 +110,7 @@
   NSFileManager *fm = [NSFileManager defaultManager];
   NSString *fullPathString = [aPath stringByStandardizingPath];
   if ([fm fileExistsAtPath:fullPathString]) {
-    [self buildButtonForBrowser:aBrowserName withObject:fullPathString];
+    [self buildButtonForBrowser:aBrowserName withPathArray:[NSArray arrayWithObject:fullPathString]];
   }
 }
 
@@ -131,7 +134,7 @@
   }
   if ([haveFiles count] > 0)
   {
-    [self buildButtonForBrowser:@"OmniWeb 5" withObject:haveFiles];
+    [self buildButtonForBrowser:@"OmniWeb 5" withPathArray:haveFiles];
   }
 }
 
@@ -153,13 +156,13 @@
   return nil;
 }
 
--(void) buildButtonForBrowser:(NSString *) aBrowserName withObject:(id)aThingy
+-(void) buildButtonForBrowser:(NSString *) aBrowserName withPathArray:(NSArray *)anArray
 {
   [mBrowserListButton insertItemWithTitle:aBrowserName atIndex:0];
   NSMenuItem *browserItem = [mBrowserListButton itemAtIndex:0];
   [browserItem setTarget:self];
   [browserItem setAction:@selector(nullAction:)];
-  [browserItem setRepresentedObject:aThingy];  
+  [browserItem setRepresentedObject:anArray];  
 }
 
 // keeps browsers turned on
@@ -175,22 +178,18 @@
 
 -(IBAction) import:(id)aSender
 {
-  // XXX show a spinner, disable the button, postpone to next event loop (to give UI time to update)
   NSMenuItem *selectedItem = [mBrowserListButton selectedItem];
-  BookmarkFolder *importFolder = [[[BookmarkManager sharedBookmarkManager] rootBookmarks] addBookmarkFolder];
   NSString *titleString;
   if ([[selectedItem title] isEqualToString:@"Internet Explorer"])
-    titleString = [[NSString alloc] initWithString:NSLocalizedString(@"Imported IE Favorites", @"")];
+    titleString = [NSString stringWithString:NSLocalizedString(@"Imported IE Favorites", @"")];
   else
-    titleString = [[NSString alloc] initWithFormat:NSLocalizedString(@"Imported %@ Bookmarks", @""), [selectedItem title]];
-  [importFolder setTitle:titleString];
-  [titleString release];
+    titleString = [NSString stringWithFormat:NSLocalizedString(@"Imported %@ Bookmarks", @""), [selectedItem title]];
   // Stupid OmniWeb 5 gets its own import function
   if ( [[selectedItem title] isEqualToString:@"OmniWeb 5"] ) {
-    [self beginOmniWeb5ImportFrom:[selectedItem representedObject] intoFolder:importFolder];
+      [self beginOmniWeb5ImportFrom:[selectedItem representedObject]];
   }
   else {
-    [self beginImportFrom:[selectedItem representedObject] intoFolder:importFolder];
+    [self beginImportFrom:[selectedItem representedObject] withTitles:[NSArray arrayWithObject:titleString]];
   }
 }
 
@@ -207,75 +206,56 @@
                                          types: array];
   if (result == NSOKButton) {
     NSString *pathToFile = [[openPanel filenames] objectAtIndex:0];
-    BookmarkFolder *importFolder = [[[BookmarkManager sharedBookmarkManager] rootBookmarks] addBookmarkFolder];
-    [importFolder setTitle:NSLocalizedString(@"Imported Bookmarks",@"Imported Bookmarks")];
-    [self beginImportFrom:pathToFile intoFolder:importFolder];
+    [self beginImportFrom:[NSArray arrayWithObject:pathToFile] 
+               withTitles:[NSArray arrayWithObject:NSLocalizedString(@"Imported Bookmarks",@"Imported Bookmarks")]];
   }
 }
 
--(void) beginOmniWeb5ImportFrom:(NSArray *)anArray intoFolder:(BookmarkFolder *) aFolder
+-(void) beginOmniWeb5ImportFrom:(NSArray *)anArray
 {
-  [mCancelButton setEnabled:NO];
-  [mImportButton setEnabled:NO];
-  
   NSEnumerator *enumerator = [anArray objectEnumerator];
-
+  NSMutableArray *titleArray= [NSMutableArray array];
   NSString* curFilename = nil;
-  
-  BOOL success = TRUE;
-  NSString *curPath;
-  while ( success && (curPath = [enumerator nextObject] ) )
+  NSString *curPath = nil;
+  while ( curPath = [enumerator nextObject]  )
   {
     curFilename = [curPath lastPathComponent];
     // What folder we import into depends on what OmniWeb file we're importing.
     if ([curFilename isEqualToString:@"Bookmarks.html"] )
     {
-      success = [[BookmarkManager sharedBookmarkManager] importBookmarks:curPath intoFolder:aFolder];
+      [titleArray addObject:NSLocalizedString(@"Imported OmniWeb 5 Bookmarks", @"Imported OmniWeb 5 Bookmarks")];
     }
     else if ([curFilename isEqualToString:@"Favorites.html"] )
     {
-      BookmarkFolder *favoriteFolder = [aFolder addBookmarkFolder];
-      [favoriteFolder setTitle:NSLocalizedString(@"OmniWeb Favorites", @"OmniWeb Favorites")];
-      success = [[BookmarkManager sharedBookmarkManager] importBookmarks:curPath intoFolder:favoriteFolder];
+      [titleArray addObject:NSLocalizedString(@"OmniWeb Favorites", @"OmniWeb Favorites")]; 
     }
     else if ([curFilename isEqualToString:@"Published.html"])
     {
-      BookmarkFolder *publishedFolder = [aFolder addBookmarkFolder];
-      [publishedFolder setTitle:NSLocalizedString(@"OmniWeb Published", @"OmniWeb Published")];
-      success = [[BookmarkManager sharedBookmarkManager] importBookmarks:curPath intoFolder:publishedFolder];
+      [titleArray addObject:NSLocalizedString(@"OmniWeb Published", @"OmniWeb Published")]; 
     }    
   }
-  
-  [mCancelButton setEnabled:YES];
-  [mImportButton setEnabled:YES];
-
-  // Non-rigorous reporting of errors
-  [self finishImport:success fromFile:curFilename intoFolder:aFolder];
+  [self beginImportFrom:anArray withTitles:titleArray];
 }
 
--(void) beginImportFrom:(NSString *) aPath intoFolder:(BookmarkFolder *) aFolder
+-(void) beginImportFrom:(NSArray *) aPathArray withTitles:(NSArray *)aTitleArray
 {
-  [mCancelButton setEnabled:NO];
-  [mImportButton setEnabled:NO];  
-  
-  BOOL success = [[BookmarkManager sharedBookmarkManager] importBookmarks:aPath intoFolder:aFolder];
-  
-  [mCancelButton setEnabled:YES];
-  [mImportButton setEnabled:YES];
-  
-  [self finishImport:success fromFile:[aPath lastPathComponent] intoFolder:aFolder];
-  
+  [self showProgressView];
+  NSDictionary *aDict = [NSDictionary dictionaryWithObjectsAndKeys: aPathArray, kBookmarkImportPathIndentifier, 
+    aTitleArray, kBookmarkImportNewFolderNameIdentifier, nil];
+  [NSThread detachNewThreadSelector:@selector(importBookmarksThreadEntry:)
+                           toTarget:[BookmarkManager sharedBookmarkManager]
+                         withObject:aDict];  
 }
 
--(void) finishImport:(BOOL)success fromFile:(NSString *)aFile intoFolder:(BookmarkFolder*)aFolder
+-(void) finishThreadedImport:(BOOL)success fromFile:(NSString *)aFile
 {
-  //show them the imported bookmarks if import succeeded
   if (success)
   {
-    [[self window] orderOut:self];
     BrowserWindowController* windowController = [(MainController *)[NSApp delegate] openBrowserWindowWithURL:@"about:bookmarks" andReferrer:nil behind:nil allowPopups:NO];
     BookmarkViewController*  bmController = [windowController bookmarkViewController];
-    [bmController setItemToRevealOnLoad:aFolder];
+    BookmarkFolder *rootFolder = [[BookmarkManager sharedBookmarkManager] rootBookmarks];
+    BookmarkFolder *newFolder = [rootFolder objectAtIndex:([rootFolder count] - 1)];
+    [bmController setItemToRevealOnLoad:newFolder];
   }
   else
   {
@@ -291,11 +271,32 @@
                       [NSString stringWithFormat:NSLocalizedString(@"ImportFailureMessage", @"The file '%@' is not a supported bookmark file type."), aFile]
                       );
   }
+  [[self window] orderOut:self];
+  [self showImportView];
 }
 
 -(void) alertSheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
 {
   [[self window] orderOut:self];
+}
+
+-(void) showProgressView
+{
+  NSSize viewSize = [mProgressView frame].size;
+  [[self window] setContentView:mProgressView];
+  [[self window] setContentSize:viewSize];
+  [[self window] center];
+  [mImportProgressBar setUsesThreadedAnimation:YES];
+  [mImportProgressBar startAnimation:self]; 
+}
+
+-(void) showImportView
+{
+  [mImportProgressBar stopAnimation:self];
+  NSSize viewSize = [mImportView frame].size;
+  [[self window] setContentView:mImportView];
+  [[self window] setContentSize:viewSize];
+  [[self window] center];
 }
 
 @end

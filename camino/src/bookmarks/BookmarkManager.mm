@@ -67,13 +67,20 @@
 NSString* const kBookmarkManagerStartedNotification = @"BookmarkManagerStartedNotification";
 
 // root bookmark folder identifiers (must be unique!)
-NSString* const kBookmarksToolbarFolderIdentifier      = @"BookmarksToolbarFolder";
-NSString* const kBookmarksMenuFolderIdentifier         = @"BookmarksMenuFolder";
+NSString* const kBookmarksToolbarFolderIdentifier              = @"BookmarksToolbarFolder";
+NSString* const kBookmarksMenuFolderIdentifier                 = @"BookmarksMenuFolder";
 
-static NSString* const kTop10BookmarksFolderIdentifier = @"Top10BookmarksFolder";
-static NSString* const kRendezvousFolderIdentifier     = @"RendezvousFolder";   // aka Bonjour
-static NSString* const kAddressBookFolderIdentifier    = @"AddressBookFolder";
-static NSString* const kHistoryFolderIdentifier        = @"HistoryFolder";
+static NSString* const kTop10BookmarksFolderIdentifier         = @"Top10BookmarksFolder";
+static NSString* const kRendezvousFolderIdentifier             = @"RendezvousFolder";   // aka Bonjour
+static NSString* const kAddressBookFolderIdentifier            = @"AddressBookFolder";
+static NSString* const kHistoryFolderIdentifier                = @"HistoryFolder";
+
+NSString* const kBookmarkImportPathIndentifier                 = @"path";
+NSString* const kBookmarkImportNewFolderNameIdentifier         = @"title";
+
+static NSString* const kBookmarkImportStatusIndentifier        = @"flag";
+static NSString* const kBookmarkImportNewFolderIdentifier      = @"folder";
+static NSString* const kBookmarkImportNewFolderIndexIdentifier = @"index";
 
 // these are suggested indices; we only use them to order the root folders, not to access them.
 enum {
@@ -111,6 +118,7 @@ enum {
 - (BOOL)importHTMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
 - (BOOL)importCaminoXMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder settingToolbarFolder:(BOOL)setToolbarFolder;
 - (BOOL)importPropertyListFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
+- (void)importBookmarksThreadReturn:(NSDictionary *)aDict;
 
 - (BOOL)readOperaFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
 
@@ -601,9 +609,14 @@ static BookmarkManager* gBookmarkManager = nil;
   return [mRootBookmarks itemWithUUID:uuid];
 }
 
+// only the main thread can get the undo manager.
+// imports (on a background thread) get nothing, which is ok.
+// this keeps things nice and thread safe
 -(NSUndoManager *) undoManager
 {
-  return mUndoManager;
+  if ([NSThread inMainThread])
+    return mUndoManager;
+  return nil;
 }
 
 - (void)setPathToBookmarkFile:(NSString *)aString
@@ -1466,38 +1479,103 @@ static BookmarkManager* gBookmarkManager = nil;
   [mImportDlgController showWindow:nil];
 }
 
-- (BOOL)importBookmarks:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder
+- (void)importBookmarksThreadEntry:(NSDictionary *)aDict
 {
-  // I feel dirty doing it this way.  But we'll check file extension
-  // to figure out how to handle this.
-  NSUndoManager *undoManager = [self undoManager];
-  [undoManager beginUndoGrouping];
-  BOOL success = NO;
-  NSString *extension =[pathToFile pathExtension];
-  if ([extension isEqualToString:@""]) // we'll go out on a limb here
-    success = [self readOperaFile:pathToFile intoFolder:aFolder];
-  else if ([extension isEqualToString:@"html"] || [extension isEqualToString:@"htm"])
-    success = [self importHTMLFile:pathToFile intoFolder:aFolder];
-  else if ([extension isEqualToString:@"xml"])
-    success = [self importCaminoXMLFile:pathToFile intoFolder:aFolder settingToolbarFolder:NO];
-  else if ([extension isEqualToString:@"plist"] || !success)
-    success = [self importPropertyListFile:pathToFile intoFolder:aFolder];
-  // we don't know the extension, or we failed to load.  we'll take another
-  // crack at it trying everything we know.
-  if (!success) {
-    success = [self readOperaFile:pathToFile intoFolder:aFolder];
+  NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+  BOOL success = TRUE;
+  int currentFile = 0;
+  NSArray *pathArray = [aDict objectForKey:kBookmarkImportPathIndentifier];
+  NSArray *titleArray = [aDict objectForKey:kBookmarkImportNewFolderNameIdentifier];
+  NSString *pathToFile; 
+  NSString *aTitle;
+  BookmarkFolder *topImportFolder = [[BookmarkFolder alloc] init];
+  BookmarkFolder *importFolder = topImportFolder;
+  
+  NSEnumerator *pathEnumerator = [pathArray objectEnumerator];
+  NSEnumerator *titleEnumerator = [titleArray objectEnumerator];
+
+  [self startSuppressingChangeNotifications];
+
+  while (success && (pathToFile = [pathEnumerator nextObject]) )
+  {
+    if (!importFolder)
+    {
+      importFolder = [[BookmarkFolder alloc] init];
+    }
+    
+    NSString *extension =[pathToFile pathExtension];
+    if ([extension isEqualToString:@""]) // we'll go out on a limb here
+      success = [self readOperaFile:pathToFile intoFolder:importFolder];
+    else if ([extension isEqualToString:@"html"] || [extension isEqualToString:@"htm"])
+      success = [self importHTMLFile:pathToFile intoFolder:importFolder];
+    else if ([extension isEqualToString:@"xml"])
+      success = [self importCaminoXMLFile:pathToFile intoFolder:importFolder settingToolbarFolder:NO];
+    else if ([extension isEqualToString:@"plist"] || !success)
+      success = [self importPropertyListFile:pathToFile intoFolder:importFolder];
+    // we don't know the extension, or we failed to load.  we'll take another
+    // crack at it trying everything we know.
     if (!success) {
-      success = [self importHTMLFile:pathToFile intoFolder:aFolder];
+      success = [self readOperaFile:pathToFile intoFolder:importFolder];
       if (!success) {
-        success = [self importCaminoXMLFile:pathToFile intoFolder:aFolder settingToolbarFolder:NO];
+        success = [self importHTMLFile:pathToFile intoFolder:importFolder];
+        if (!success) {
+          success = [self importCaminoXMLFile:pathToFile intoFolder:importFolder settingToolbarFolder:NO];
+        }
       }
     }
+
+    aTitle = [titleEnumerator nextObject];
+    
+    if (!aTitle)
+      aTitle = NSLocalizedString(@"Imported Bookmarks",@"Imported Bookmarks");
+    
+    [importFolder setTitle:aTitle];
+    
+    if (importFolder != topImportFolder)
+    {
+      [topImportFolder appendChild:importFolder];
+      [importFolder release];
+    }
+    
+    importFolder = nil;
+    currentFile++;
   }
-  [[undoManager prepareWithInvocationTarget:[self rootBookmarks]] deleteChild:aFolder];
-  [undoManager endUndoGrouping];
-  [undoManager setActionName:NSLocalizedString(@"Import Bookmarks", @"")];
-  return success;
+  
+  [self stopSuppressingChangeNotifications];
+  
+  NSDictionary *returnDict = [NSDictionary dictionaryWithObjectsAndKeys:
+    [NSNumber numberWithBool:success],kBookmarkImportStatusIndentifier,
+    [NSNumber numberWithInt:currentFile], kBookmarkImportNewFolderIndexIdentifier, 
+    pathArray, kBookmarkImportPathIndentifier,
+    topImportFolder, kBookmarkImportNewFolderIdentifier,
+    nil];
+  
+  [self performSelectorOnMainThread:@selector(importBookmarksThreadReturn:) 
+                         withObject:returnDict 
+                      waitUntilDone:YES];
+  // release the top-level import folder we allocated - somebody else retains it by now if still needed.
+  [topImportFolder release];
+
+  [pool release];
 }
+
+-(void)importBookmarksThreadReturn:(NSDictionary *)aDict
+{
+  BOOL success = [[aDict objectForKey:kBookmarkImportStatusIndentifier] boolValue];
+  NSArray *fileArray = [aDict objectForKey:kBookmarkImportPathIndentifier];
+  int currentIndex = [[aDict objectForKey:kBookmarkImportNewFolderIndexIdentifier] intValue];
+  BookmarkFolder *rootFolder = [self rootBookmarks];
+  BookmarkFolder *importFolder = [aDict objectForKey:kBookmarkImportNewFolderIdentifier];
+  if (success || ((currentIndex - [fileArray count]) > 0) )
+  {
+    NSUndoManager *undoManager = [self undoManager];
+    [rootFolder appendChild:importFolder];
+    [undoManager setActionName:NSLocalizedString(@"Import Bookmarks", @"")];
+  }
+    [mImportDlgController finishThreadedImport:success
+                                     fromFile:[[fileArray objectAtIndex:(--currentIndex)] lastPathComponent] ];
+}
+
 
 // spits out text file as NSString with "proper" encoding based on pretty shitty detection
 - (NSString *)decodedTextFile:(NSString *)pathToFile
