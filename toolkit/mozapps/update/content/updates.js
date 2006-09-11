@@ -1288,6 +1288,12 @@ var gDownloadingPage = {
       var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                         .getService(Components.interfaces.nsIPromptService);
       var flags = ps.STD_YES_NO_BUTTONS;
+      // focus the software update wizard before prompting.
+      // this will raise the software update wizard if it is minimized
+      // making it more obvious what the prompt is for and will
+      // solve the problem of windows "obscuring" the prompt.
+      // see bug #350299 for more details
+      window.focus();
       var rv = ps.confirmEx(window, title, message, flags, null, null, null, null, { });
       if (rv == 1) {
         downloadInBackground = false;
@@ -1595,6 +1601,18 @@ var gFinishedPage = {
     // Do the restart
     LOG("UI:FinishedPage" , "onWizardFinish: Restarting Application...");
     
+    // disable the "finish" (Restart) and "cancel" (Later) buttons
+    // because the Software Update wizard is still up at the point,
+    // and will remain up until we return and we close the
+    // window with a |window.close()| in wizard.xml
+    // (it was the firing the "wizardfinish" event that got us here.)
+    // This prevents the user from switching back
+    // to the Software Update dialog and clicking "Restart" or "Later"
+    // when dealing with the "confirm close" prompts.
+    // See bug #350299 for more details.
+    gUpdates.wiz.getButton("finish").disabled = true;
+    gUpdates.wiz.getButton("cancel").disabled = true;
+
     // This process is *extremely* broken. There should be some nice 
     // integrated system for determining whether or not windows are allowed
     // to close or not, and what happens when that happens. We need to 
