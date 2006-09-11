@@ -1287,6 +1287,9 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
     }
   }
 
+  offsetused = mDomSelections[index]->FetchFocusOffset();
+  weakNodeUsed = mDomSelections[index]->FetchFocusNode();
+
   PRBool visualMovement = 
     (aKeycode == nsIDOMKeyEvent::DOM_VK_BACK_SPACE || 
      aKeycode == nsIDOMKeyEvent::DOM_VK_DELETE ||
@@ -1346,7 +1349,7 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
   default :return NS_ERROR_FAILURE;
   }
   PostReason(nsISelectionListener::KEYPRESS_REASON);
-  if (NS_SUCCEEDED(result = frame->PeekOffset(&pos)) && pos.mResultContent)
+  if (NS_SUCCEEDED(result = frame->PeekOffset(context, &pos)) && pos.mResultContent)
   {
     nsIFrame *theFrame;
     PRInt32 currentOffset, frameStart, frameEnd;
@@ -1413,8 +1416,6 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
     result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinueSelection, PR_FALSE);
   } else if (aKeycode == nsIDOMKeyEvent::DOM_VK_RIGHT && !aContinueSelection) {
     // Collapse selection if PeekOffset failed because we bumped into the BRFrame, bug 207623.
-    weakNodeUsed = mDomSelections[index]->FetchFocusNode();
-    offsetused = mDomSelections[index]->FetchFocusOffset();
     mDomSelections[index]->Collapse(weakNodeUsed, offsetused);
     tHint = mHint; // make the line below restore the original hint
     result = NS_OK;
@@ -1547,8 +1548,10 @@ nsFrameSelection::VisualSequence(nsIFrame*           aSelectFrame,
   PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   nsresult result = nsnull;
   
+  nsPresContext* presContext = mShell->GetPresContext();
+  
   PRUint8 currentLevel = NS_GET_EMBEDDING_LEVEL(aCurrentFrame);
-  result = aSelectFrame->PeekOffset(aPos);
+  result = aSelectFrame->PeekOffset(presContext, aPos);
   while (aCurrentFrame != (aSelectFrame = aPos->mResultFrame))
   {
     if (NS_FAILED(result))
@@ -1581,7 +1584,7 @@ nsFrameSelection::VisualSequence(nsIFrame*           aSelectFrame,
 
     aPos->mAmount = eSelectDir; // reset this because PeekOffset will have changed it to eSelectNoAmount
     aPos->mContentOffset = 0;
-    result = aSelectFrame->PeekOffset(aPos);
+    result = aSelectFrame->PeekOffset(presContext, aPos);
   }
   
   return NS_OK;
@@ -1651,17 +1654,19 @@ nsFrameSelection::SelectLines(nsDirection        aSelectionDirection,
     endOffset = aAnchorOffset;
   }
   
+  nsPresContext* presContext = mShell->GetPresContext();
+
   aPos.mStartOffset = startOffset;
   aPos.mDirection = eDirNext;
   aPos.mAmount = eSelectLine;
-  result = startFrame->PeekOffset(&aPos);
+  result = startFrame->PeekOffset(presContext, &aPos);
   if (NS_FAILED(result))
     return result;
   startFrame = aPos.mResultFrame;
   
   aPos.mStartOffset = aPos.mContentOffset;
   aPos.mAmount = eSelectBeginLine;
-  result = startFrame->PeekOffset(&aPos);
+  result = startFrame->PeekOffset(presContext, &aPos);
   if (NS_FAILED(result))
     return result;
   
@@ -1685,14 +1690,14 @@ nsFrameSelection::SelectLines(nsDirection        aSelectionDirection,
   aPos.mStartOffset = endOffset;
   aPos.mDirection = eDirPrevious;
   aPos.mAmount = eSelectLine;
-  result = endFrame->PeekOffset(&aPos);
+  result = endFrame->PeekOffset(presContext, &aPos);
   if (NS_FAILED(result))
     return result;
   endFrame = aPos.mResultFrame;
 
   aPos.mStartOffset = aPos.mContentOffset;
   aPos.mAmount = eSelectEndLine;
-  result = endFrame->PeekOffset(&aPos);
+  result = endFrame->PeekOffset(presContext, &aPos);
   if (NS_FAILED(result))
     return result;
 
@@ -1736,6 +1741,8 @@ nsFrameSelection::VisualSelectFrames(nsIFrame*          aCurrentFrame,
   nsDirection selectionDirection;
   PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   
+  nsPresContext* presContext = mShell->GetPresContext();
+
   result = mDomSelections[index]->GetOriginalAnchorPoint(getter_AddRefs(anchorNode), &anchorOffset);
   if (NS_FAILED(result))
     return result;
@@ -1811,7 +1818,7 @@ nsFrameSelection::VisualSelectFrames(nsIFrame*          aCurrentFrame,
     aPos.mStartOffset = anchorOffset;
     aPos.mDirection = selectionDirection;
 
-    result = anchorFrame->PeekOffset(&aPos);
+    result = anchorFrame->PeekOffset(presContext, &aPos);
     if (NS_FAILED(result))
       return result;
     
@@ -1963,14 +1970,20 @@ nsFrameSelection::GetPrevNextBidiLevels(nsIContent *aNode,
     return levels;
   }
 
-  nsIFrame *newFrame;
-  PRInt32 offset;
-  PRBool jumpedLine;
-  nsresult rv = currentFrame->GetFrameFromDirection(direction, PR_FALSE,
-                                                    aJumpLines, PR_TRUE,
-                                                    &newFrame, &offset, &jumpedLine);
-  if (NS_FAILED(rv))
-    newFrame = nsnull;
+  nsPeekOffsetStruct pos;
+  pos.SetData(eSelectCharacter,
+              direction,
+              currentOffset,
+              0,
+              aJumpLines,
+              PR_TRUE,        // aScrollViewStop
+              PR_FALSE,       // aIsKeyboardSelect
+              PR_FALSE);      // aVisual
+  
+  nsresult rv = currentFrame->GetFrameFromDirection(mShell->GetPresContext(), &pos);  
+  nsIFrame *newFrame = nsnull;
+  if (NS_SUCCEEDED(rv))
+    newFrame = pos.mResultFrame;
 
   PRUint8 baseLevel = NS_GET_BASE_LEVEL(currentFrame);
   PRUint8 currentLevel = NS_GET_EMBEDDING_LEVEL(currentFrame);
@@ -2286,7 +2299,7 @@ nsFrameSelection::HandleDrag(nsIFrame *aFrame, nsPoint aPoint)
     pos.SetData(amount, direction, offset, 0,
                 PR_FALSE, mLimiter != nsnull, PR_FALSE, PR_FALSE);
 
-    if (frame && NS_SUCCEEDED(frame->PeekOffset(&pos)) && pos.mResultContent) {
+    if (frame && NS_SUCCEEDED(frame->PeekOffset(mShell->GetPresContext(), &pos)) && pos.mResultContent) {
       offsets.content = pos.mResultContent;
       offsets.offset = pos.mContentOffset;
     }

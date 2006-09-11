@@ -2010,7 +2010,7 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
                    PR_TRUE,  //limit on scrolled views
                    PR_FALSE,
                    PR_FALSE);
-  rv = PeekOffset(&startpos);
+  rv = PeekOffset(aPresContext, &startpos);
   if (NS_FAILED(rv))
     return rv;
   nsPeekOffsetStruct endpos;
@@ -2022,7 +2022,7 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
                  PR_TRUE,  //limit on scrolled views
                  PR_FALSE,
                  PR_FALSE);
-  rv = PeekOffset(&endpos);
+  rv = PeekOffset(aPresContext, &endpos);
   if (NS_FAILED(rv))
     return rv;
 
@@ -3767,9 +3767,7 @@ nsFrame::GetPointFromOffset(nsPresContext* inPresContext, nsIRenderingContext* i
     if (newContent){
       PRInt32 newOffset = newContent->IndexOf(mContent);
 
-      PRBool isRTL = (NS_GET_EMBEDDING_LEVEL(this) & 1) == 1;
-      if (!isRTL && inOffset > newOffset ||
-          isRTL && inOffset <= newOffset)
+      if (inOffset > newOffset)
         bottomLeft.x = GetRect().width;
     }
   }
@@ -4058,10 +4056,11 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         //we need to jump to new block frame.
       aPos->mAmount = eSelectLine;
       aPos->mStartOffset = 0;
+      aPos->mEatingWS = PR_FALSE;
       aPos->mAttachForward = !(aPos->mDirection == eDirNext);
       if (aPos->mDirection == eDirPrevious)
         aPos->mStartOffset = -1;//start from end
-     return aBlockFrame->PeekOffset(aPos);
+     return aBlockFrame->PeekOffset(aPresContext, aPos);
     }
   }
   return NS_OK;
@@ -4141,7 +4140,8 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
 }
 
 nsresult
-nsIFrame::PeekOffsetParagraph(nsPeekOffsetStruct *aPos)
+nsFrame::PeekOffsetParagraph(nsPresContext* aPresContext,
+                             nsPeekOffsetStruct *aPos)
 {
   nsIFrame* frame = this;
   nsBlockFrame* bf;  // used only for QI
@@ -4208,137 +4208,62 @@ nsIFrame::PeekOffsetParagraph(nsPeekOffsetStruct *aPos)
   return NS_OK;
 }
 
-// Determine movement direction relative to frame
-static PRBool IsMovingInFrameDirection(nsIFrame* frame, nsDirection aDirection, PRBool aVisual)
-{
-  PRBool isReverseDirection = aVisual ?
-    (NS_GET_EMBEDDING_LEVEL(frame) & 1) != (NS_GET_BASE_LEVEL(frame) & 1) : PR_FALSE;
-  return aDirection == (isReverseDirection ? eDirPrevious : eDirNext);
-}
-
-NS_IMETHOD
-nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
+NS_IMETHODIMP
+nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 {
   if (!aPos)
     return NS_ERROR_NULL_POINTER;
   nsresult result = NS_ERROR_FAILURE;
-
-  if (mState & NS_FRAME_IS_DIRTY)
-    return NS_ERROR_UNEXPECTED;
-
-  // Translate content offset to be relative to frame
-  FrameContentRange range = GetRangeForFrame(this);
-  PRInt32 offset = aPos->mStartOffset - range.start;
-  nsIFrame* current = this;
-  
-  switch (aPos->mAmount) {
-    case eSelectCharacter:
+  switch (aPos->mAmount){
+  case eSelectCharacter : case eSelectWord:
     {
-      PRBool eatingNonRenderableWS = PR_FALSE;
-      PRBool done = PR_FALSE;
-      
-      while (!done) {
-        PRBool movingInFrameDirection =
-          IsMovingInFrameDirection(current, aPos->mDirection, aPos->mVisual);
+      if (mContent)
+      {
+        nsIContent* newContent = mContent->GetParent();
+        if (newContent){
+          aPos->mResultContent = newContent;
 
-        if (eatingNonRenderableWS)
-          done = current->PeekOffsetNoAmount(movingInFrameDirection, &offset); 
-        else
-          done = current->PeekOffsetCharacter(movingInFrameDirection, &offset); 
+          PRInt32 newOffset = newContent->IndexOf(mContent);
 
-        if (!done) {
-          PRBool jumpedLine;
-          result =
-            current->GetFrameFromDirection(aPos->mDirection, aPos->mVisual,
-                                           aPos->mJumpLines, aPos->mScrollViewStop,
-                                           &current, &offset, &jumpedLine);
+          if (aPos->mDirection == eDirNext)
+            aPos->mContentOffset = newOffset + 1;
+          else
+            aPos->mContentOffset = newOffset;//to beginning of frame
+
+          nsTextTransformer::Initialize();
+          if (nsTextTransformer::GetWordSelectEatSpaceAfter() &&
+              aPos->mDirection == eDirNext && aPos->mEatingWS)
+          {
+            //If we want to stop at beginning of the next word
+            //GetFrameFromDirection should not return NS_ERROR_FAILURE
+            //at end of line
+            aPos->mEatingWS = PR_FALSE;	
+            result = GetFrameFromDirection(aPresContext, aPos);
+            aPos->mEatingWS = PR_TRUE;
+          }
+          else
+            result = GetFrameFromDirection(aPresContext, aPos);
+
           if (NS_FAILED(result))
             return result;
-
-          // If we jumped lines, it's as if we found a character, but we still need
-          // to eat non-renderable content on the new line.
-          if (jumpedLine)
-            eatingNonRenderableWS = PR_TRUE;
+          PRBool selectable = PR_FALSE;
+          if (aPos->mResultFrame)
+            aPos->mResultFrame->IsSelectable(&selectable, nsnull);
+          if (NS_FAILED(result) || !aPos->mResultFrame || !selectable)
+          {
+            return result?result:NS_ERROR_FAILURE;
+          }
+          return aPos->mResultFrame->PeekOffset(aPresContext, aPos);
         }
       }
-
-      // Set outputs
-      range = GetRangeForFrame(current);
-      aPos->mResultFrame = current;
-      aPos->mResultContent = range.content;
-      // Output offset is relative to content, not frame
-      aPos->mContentOffset = offset < 0 ? range.end : range.start + offset;
-      
       break;
     }
-    case eSelectWord:
+    case eSelectNoAmount:
     {
-      // wordSelectEatSpace means "are we looking for a boundary between whitespace
-      // and non-whitespace (in the direction we're moving in)".
-      // It is true when moving forward and looking for a beginning of a word, or
-      // when moving backwards and looking for an end of a word.
-      PRBool wordSelectEatSpace;
-      if (aPos->mWordMovementType != eDefaultBehavior) {
-        // aPos->mWordMovementType possible values:
-        //       eEndWord: eat the space if we're moving backwards
-        //       eStartWord: eat the space if we're moving forwards
-        wordSelectEatSpace = ((aPos->mWordMovementType == eEndWord) == (aPos->mDirection == eDirPrevious));
-      }
-      else {
-        // Use the hidden preference which is based on operating system behavior.
-        // This pref only affects whether moving forward by word should go to the end of this word or start of the next word.
-        // When going backwards, the start of the word is always used, on every operating system.
-        nsTextTransformer::Initialize();
-        wordSelectEatSpace = aPos->mDirection == eDirNext && nsTextTransformer::GetWordSelectEatSpaceAfter();
-      }      
-      
-      // sawBeforeType means "we already saw characters of the type
-      // before the boundary we're looking for". Examples:
-      // 1. If we're moving forward, looking for a word beginning (i.e. a boundary
-      //    between whitespace and non-whitespace), then eatingWS==PR_TRUE means
-      //    "we already saw some whitespace".
-      // 2. If we're moving backward, looking for a word beginning (i.e. a boundary
-      //    between non-whitespace and whitespace), then eatingWS==PR_TRUE means
-      //    "we already saw some non-whitespace".
-      PRBool sawBeforeType = PR_FALSE;
-
-      PRBool done = PR_FALSE;
-      while (!done) {
-        PRBool movingInFrameDirection =
-          IsMovingInFrameDirection(current, aPos->mDirection, aPos->mVisual);
-        
-        done = current->PeekOffsetWord(movingInFrameDirection, wordSelectEatSpace, aPos->mIsKeyboardSelect,
-                                       &offset, &sawBeforeType);
-        
-        if (!done) {
-          nsIFrame* nextFrame;
-          PRInt32 nextFrameOffset;
-          PRBool jumpedLine;
-          result =
-            current->GetFrameFromDirection(aPos->mDirection, aPos->mVisual,
-                                           aPos->mJumpLines, aPos->mScrollViewStop,
-                                           &nextFrame, &nextFrameOffset, &jumpedLine);
-          // We can't jump lines if we're looking for whitespace following
-          // non-whitespace, and we already encountered non-whitespace.
-          if (NS_FAILED(result) ||
-              jumpedLine && !wordSelectEatSpace && sawBeforeType) {
-            done = PR_TRUE;
-          } else {
-            current = nextFrame;
-            offset = nextFrameOffset;
-            // Jumping a line is equivalent to encountering whitespace
-            if (wordSelectEatSpace && jumpedLine)
-              sawBeforeType = PR_TRUE;
-          }
-        }
-      }
-      
-      // Set outputs
-      range = GetRangeForFrame(current);
-      aPos->mResultFrame = current;
+      FrameContentRange range = GetRangeForFrame(this);
       aPos->mResultContent = range.content;
-      // Output offset is relative to content, not frame
-      aPos->mContentOffset = offset < 0 ? range.end : range.start + offset;
+      aPos->mContentOffset = range.start;
+      result = range.content ? NS_OK : NS_ERROR_FAILURE;
       break;
     }
     case eSelectLine :
@@ -4347,24 +4272,23 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
       nsIFrame *blockFrame = this;
 
       while (NS_FAILED(result)){
-        PRInt32 thisLine = nsFrame::GetLineNumber(blockFrame, &blockFrame);
+        PRInt32 thisLine = GetLineNumber(blockFrame, &blockFrame);
         if (thisLine < 0) 
           return  NS_ERROR_FAILURE;
         result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(iter));
         NS_ASSERTION(NS_SUCCEEDED(result) && iter, "GetLineNumber() succeeded but no block frame?");
 
         int edgeCase = 0;//no edge case. this should look at thisLine
-        
         PRBool doneLooping = PR_FALSE;//tells us when no more block frames hit.
         //this part will find a frame or a block frame. if it's a block frame
         //it will "drill down" to find a viable frame or it will return an error.
         nsIFrame *lastFrame = this;
         do {
-          result = nsFrame::GetNextPrevLineFromeBlockFrame(GetPresContext(),
-                                                           aPos, 
-                                                           blockFrame, 
-                                                           thisLine, 
-                                                           edgeCase //start from thisLine
+          result = GetNextPrevLineFromeBlockFrame(aPresContext,
+                                                  aPos, 
+                                                  blockFrame, 
+                                                  thisLine, 
+                                                  edgeCase //start from thisLine
             );
           if (NS_SUCCEEDED(result) && (!aPos->mResultFrame || aPos->mResultFrame == lastFrame))//we came back to same spot! keep going
           {
@@ -4429,11 +4353,11 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
           }
         } while (!doneLooping);
       }
-      return result;
+      break;
     }
 
     case eSelectParagraph:
-      return PeekOffsetParagraph(aPos);
+      return PeekOffsetParagraph(aPresContext, aPos);
 
     case eSelectBeginLine:
     case eSelectEndLine:
@@ -4441,7 +4365,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
       nsCOMPtr<nsILineIteratorNavigator> it;
       // Adjusted so that the caret can't get confused when content changes
       nsIFrame* blockFrame = AdjustFrameForSelectionStyles(this);
-      PRInt32 thisLine = nsFrame::GetLineNumber(blockFrame, &blockFrame);
+      PRInt32 thisLine = GetLineNumber(blockFrame, &blockFrame);
       if (thisLine < 0)
         return NS_ERROR_FAILURE;
       result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
@@ -4455,7 +4379,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
       PRBool endOfLine = (eSelectEndLine == aPos->mAmount);
       
 #ifdef IBMBIDI
-      if (aPos->mVisual && GetPresContext()->BidiEnabled()) {
+      if (aPos->mVisual && aPresContext->BidiEnabled()) {
         PRBool lineIsRTL;
         it->GetDirection(&lineIsRTL);
         PRBool isReordered;
@@ -4495,61 +4419,17 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
         return NS_ERROR_FAILURE;
       return NS_OK;
     }
+    break;
 
     default: 
     {
-      NS_ASSERTION(PR_FALSE, "Invalid amount");
-      return NS_ERROR_FAILURE;
+      if (NS_SUCCEEDED(result))
+        result = aPos->mResultFrame->PeekOffset(aPresContext, aPos);
     }
-  }
-  return NS_OK;
+  }                          
+  return result;
 }
 
-PRBool
-nsFrame::PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset)
-{
-  NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
-  // Sure, we can stop right here.
-  return PR_TRUE;
-}
-
-PRBool
-nsFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
-{
-  NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
-  PRInt32 startOffset = *aOffset;
-  // A negative offset means "end of frame", which in our case means offset 1.
-  if (startOffset < 0)
-    startOffset = 1;
-  if (aForward == (startOffset == 0)) {
-    // We're before the frame and moving forward, or after it and moving backwards:
-    // skip to the other side and we're done.
-    *aOffset = 1 - startOffset;
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-PRBool
-nsFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
-                        PRInt32* aOffset, PRBool* aSawBeforeType)
-{
-  NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
-  PRInt32 startOffset = *aOffset;
-  if (startOffset < 0)
-    startOffset = 1;
-  if (aForward == (startOffset == 0)) {
-    // We're before the frame and moving forward, or after it and moving backwards.
-    // If we're looking for non-whitespace, we found it (without skipping this frame).
-    if (aWordSelectEatSpace && *aSawBeforeType)
-      return PR_TRUE;
-    // Otherwise skip to the other side and note that we encountered non-whitespace.
-    *aOffset = 1 - startOffset;
-    if (!aWordSelectEatSpace)
-      *aSawBeforeType = PR_TRUE;
-  }
-  return PR_FALSE;
-}
 
 NS_IMETHODIMP
 nsFrame::CheckVisibility(nsPresContext* , PRInt32 , PRInt32 , PRBool , PRBool *, PRBool *)
@@ -4596,18 +4476,8 @@ nsFrame::GetLineNumber(nsIFrame *aFrame, nsIFrame** aContainingBlock)
 }
 
 nsresult
-nsIFrame::GetFrameFromDirection(nsDirection aDirection, PRBool aVisual,
-                                PRBool aJumpLines, PRBool aScrollViewStop, 
-                                nsIFrame** aOutFrame, PRInt32* aOutOffset, PRBool* aOutJumpedLine)
-{  
-  if (!aOutFrame || !aOutOffset || !aOutJumpedLine)
-    return NS_ERROR_NULL_POINTER;
-  
-  nsPresContext* presContext = GetPresContext();
-  *aOutFrame = nsnull;
-  *aOutOffset = 0;
-  *aOutJumpedLine = PR_FALSE;
-
+nsIFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
+{
   // Find the prev/next selectable frame
   PRBool selectable = PR_FALSE;
   nsIFrame *traversedFrame = this;
@@ -4625,19 +4495,19 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, PRBool aVisual,
     nsIFrame *firstFrame;
     nsIFrame *lastFrame;
 #ifdef IBMBIDI
-    if (aVisual && presContext->BidiEnabled()) {
+    if (aPos->mVisual && aPresContext->BidiEnabled()) {
       PRBool lineIsRTL;                                                             
       it->GetDirection(&lineIsRTL);
       PRBool isReordered;
       result = it->CheckLineOrder(thisLine, &isReordered, &firstFrame, &lastFrame);
-      nsIFrame** framePtr = aDirection == eDirPrevious ? &firstFrame : &lastFrame;
+      nsIFrame** framePtr = aPos->mDirection == eDirPrevious ? &firstFrame : &lastFrame;
       if (*framePtr) {
         nsBidiLevel embeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(*framePtr);
         if (((embeddingLevel & 1) && lineIsRTL || !(embeddingLevel & 1) && !lineIsRTL) ==
-            (aDirection == eDirPrevious)) {
-          nsFrame::GetFirstLeaf(presContext, framePtr);
+            (aPos->mDirection == eDirPrevious)) {
+          nsFrame::GetFirstLeaf(aPresContext, framePtr);
         } else {
-          nsFrame::GetLastLeaf(presContext, framePtr);
+          nsFrame::GetLastLeaf(aPresContext, framePtr);
         }
         atLineEdge = *framePtr == traversedFrame;
       } else {
@@ -4654,8 +4524,8 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, PRBool aVisual,
       if (NS_FAILED(result))
         return result;
 
-      if (aDirection == eDirPrevious) {
-        nsFrame::GetFirstLeaf(presContext, &firstFrame);
+      if (aPos->mDirection == eDirPrevious) {
+        nsFrame::GetFirstLeaf(aPresContext, &firstFrame);
         atLineEdge = firstFrame == traversedFrame;
       } else { // eDirNext
         lastFrame = firstFrame;
@@ -4666,36 +4536,43 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, PRBool aVisual,
             return NS_ERROR_FAILURE;
           }
         }
-        nsFrame::GetLastLeaf(presContext, &lastFrame);
+        nsFrame::GetLastLeaf(aPresContext, &lastFrame);
         atLineEdge = lastFrame == traversedFrame;
       }
     }
 
-    if (atLineEdge) {
-      *aOutJumpedLine = PR_TRUE;
-      if (!aJumpLines)
-        return NS_ERROR_FAILURE; //we are done. cannot jump lines
+    if (atLineEdge)
+    {
+      if (aPos->mJumpLines != PR_TRUE)
+        return NS_ERROR_FAILURE;//we are done. cannot jump lines
+      if (aPos->mAmount != eSelectWord)
+      {
+        aPos->mAmount = eSelectNoAmount;
+      }
+      else{
+        if (aPos->mEatingWS)//done finding what we wanted
+          return NS_ERROR_FAILURE;
+      }
     }
-
     nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
     result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
-                                  presContext, traversedFrame,
+                                  aPresContext, traversedFrame,
                                   eLeaf,
-                                  aVisual && presContext->BidiEnabled(),
-                                  aScrollViewStop,
+                                  aPos->mVisual && aPresContext->BidiEnabled(),
+                                  aPos->mScrollViewStop,
                                   PR_TRUE  // aFollowOOFs
                                   );
     if (NS_FAILED(result))
       return result;
 
-    if (aDirection == eDirNext)
+    nsISupports *isupports = nsnull;
+    if (aPos->mDirection == eDirNext)
       result = frameTraversal->Next();
-    else
+    else 
       result = frameTraversal->Prev();
+  
     if (NS_FAILED(result))
       return result;
-
-    nsISupports *isupports = nsnull;
     result = frameTraversal->CurrentItem(&isupports);
     if (NS_FAILED(result))
       return result;
@@ -4706,18 +4583,20 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, PRBool aVisual,
     traversedFrame = (nsIFrame *)isupports;
     traversedFrame->IsSelectable(&selectable, nsnull);
   } // while (!selectable)
-
-  *aOutOffset = (aDirection == eDirNext) ? 0 : -1;
-
+  
+  if (aPos->mDirection == eDirNext)
+    aPos->mStartOffset = 0;
+  else
+    aPos->mStartOffset = -1;
 #ifdef IBMBIDI
-  if (aVisual) {
+  if (aPos->mVisual) {
     PRUint8 newLevel = NS_GET_EMBEDDING_LEVEL(traversedFrame);
     PRUint8 newBaseLevel = NS_GET_BASE_LEVEL(traversedFrame);
     if ((newLevel & 1) != (newBaseLevel & 1)) // The new frame is reverse-direction, go to the other end
-      *aOutOffset = -1 - *aOutOffset;
+      aPos->mStartOffset = -1 - aPos->mStartOffset;
   }
 #endif
-  *aOutFrame = traversedFrame;
+  aPos->mResultFrame = traversedFrame;
   return NS_OK;
 }
 
