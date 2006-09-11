@@ -130,9 +130,6 @@ $comment = Bugzilla::Bug->_check_comment($cgi->param('comment'));
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-my ($depends_on_ids, $blocks_ids) = Bugzilla::Bug->_check_dependencies(
-    scalar $cgi->param('dependson'), scalar $cgi->param('blocked'));
-
 # get current time
 my $timestamp = $dbh->selectrow_array(q{SELECT NOW()});
 
@@ -161,9 +158,11 @@ push(@bug_fields, qw(
     qa_contact
 
     alias
+    blocked
     bug_file_loc
     bug_severity
     bug_status
+    dependson
     keywords
     short_desc
     op_sys
@@ -212,24 +211,6 @@ trick_taint($comment);
 $dbh->do(q{INSERT INTO longdescs (bug_id, who, bug_when, thetext,isprivate)
            VALUES (?, ?, ?, ?, ?)}, undef, ($id, $user->id, $timestamp,
                                             $comment, $privacy));
-
-my @all_deps;
-if (Bugzilla->user->in_group("editbugs")) {
-    if ($cgi->param('dependson') || $cgi->param('blocked')) {
-        my %deps = (dependson => $depends_on_ids, blocked => $blocks_ids);
-        foreach my $pair (["blocked", "dependson"], ["dependson", "blocked"]) {
-            my ($me, $target) = @{$pair};
-            my $sth_dep = $dbh->prepare(qq{
-                        INSERT INTO dependencies ($me, $target) VALUES (?, ?)});
-            foreach my $i (@{$deps{$target}}) {
-                $sth_dep->execute($id, $i);
-                push(@all_deps, $i); # list for mailing dependent bugs
-                # Log the activity for the other bug:
-                LogActivityEntry($i, $me, "", $id, $user->id, $timestamp);
-            }
-        }
-    }
-}
 
 # All fields related to the newly created bug are set.
 # The bug can now be made accessible.
@@ -288,7 +269,7 @@ push (@{$vars->{'sentmail'}}, { type => 'created',
                                 id => $id,
                               });
 
-foreach my $i (@all_deps) {
+foreach my $i (@{$bug->dependson || []}, @{$bug->blocked || []}) {
     push (@{$vars->{'sentmail'}}, { type => 'dep', id => $i, });
 }
 

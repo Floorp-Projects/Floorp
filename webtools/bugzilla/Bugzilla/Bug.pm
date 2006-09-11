@@ -249,11 +249,20 @@ sub create {
     delete $params->{cc};
     my $groups = $params->{groups};
     delete $params->{groups};
+    my $depends_on = $params->{dependson};
+    delete $params->{dependson};
+    my $blocked = $params->{blocked};
+    delete $params->{blocked};
 
     # Set up the keyword cache for bug creation.
     my $keywords = $params->{keywords};
     $params->{keywords} = join(', ', sort {lc($a) cmp lc($b)} 
                                           map($_->name, @$keywords));
+
+    # We don't want the bug to appear in the system until it's correctly
+    # protected by groups.
+    my $timestamp = $params->{creation_ts}; 
+    delete $params->{creation_ts};
 
     my $bug = $class->insert_create_data($params);
 
@@ -263,6 +272,9 @@ sub create {
     foreach my $group_id (@$groups) {
         $sth_group->execute($bug->bug_id, $group_id);
     }
+
+    $dbh->do('UPDATE bugs SET creation_ts = ? WHERE bug_id = ?', undef,
+             $timestamp, $bug->bug_id);
 
     # Add the CCs
     my $sth_cc = $dbh->prepare('INSERT INTO cc (bug_id, who) VALUES (?,?)');
@@ -275,6 +287,22 @@ sub create {
         'INSERT INTO keywords (bug_id, keywordid) VALUES (?, ?)');
     foreach my $keyword_id (map($_->id, @$keywords)) {
         $sth_keyword->execute($bug->bug_id, $keyword_id);
+    }
+
+    # Set up dependencies (blocked/dependson)
+    my $sth_deps = $dbh->prepare(
+        'INSERT INTO dependencies (blocked, dependson) VALUES (?, ?)');
+    foreach my $depends_on_id (@$depends_on) {
+        $sth_deps->execute($bug->bug_id, $depends_on_id);
+        # Log the reverse action on the other bug.
+        LogActivityEntry($depends_on_id, 'blocked', '', $bug->bug_id,
+                         $bug->reporter->id, $timestamp);
+    }
+    foreach my $blocked_id (@$blocked) {
+        $sth_deps->execute($blocked_id, $bug->bug_id);
+        # Log the reverse action on the other bug.
+        LogActivityEntry($blocked_id, 'dependson', '', $bug->bug_id,
+                         $bug->reporter->id, $timestamp);
     }
 
     return $bug;
@@ -316,6 +344,9 @@ sub run_create_validators {
 
     $class->_check_strict_isolation($product, $params->{cc},
                                     $params->{assigned_to}, $params->{qa_contact});
+
+    ($params->{dependson}, $params->{blocked}) = 
+        $class->_check_dependencies($params->{dependson}, $params->{blocked});
 
     return $params;
 }
