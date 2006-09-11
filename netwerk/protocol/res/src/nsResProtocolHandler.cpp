@@ -332,12 +332,15 @@ nsResProtocolHandler::ResolveURI(nsIURI *uri, nsACString &result)
     if (filepath.FindChar(':') != -1)
         return NS_ERROR_MALFORMED_URI;
 
+    const char *p = path.get() + 1; // path always starts with a slash
+    NS_ASSERTION(*(p-1) == '/', "Path did not begin with a slash!");
+
+    if (*p == '/')
+        return NS_ERROR_MALFORMED_URI;
+
     nsCOMPtr<nsIURI> baseURI;
     rv = GetSubstitution(host, getter_AddRefs(baseURI));
     if (NS_FAILED(rv)) return rv;
-
-    const char *p = path.get() + 1; // path always starts with a slash
-    NS_ASSERTION(*(p-1) == '/', "Path did not begin with a slash!");
 
     rv = baseURI->Resolve(nsDependentCString(p, path.Length()-1), result);
 
