@@ -1,4 +1,4 @@
-!1 Variables
+1 Variables
 !define COMMAND_PATTERN {python %m -v %p}
 !define TEST_RUNNER {/Users/morgamic/pyfit/fit/FitServer.py}
 !define host {http://khan.mozilla.org/~morgamic/austest/update/2}
@@ -59,15 +59,17 @@
 |7000000001|channel|complete|partial|false|false|false|true|
 |7000000001|channel-cck-partner|complete|partial|false|false|false|true|
 
-!1 Major and Minor updates 
- 1 minor update
- 2 major update
+!1 Major and Minor Updates 
+ 1 minor update using new snippet schema (preed's patch)
+ 2 major update using new snippet schema (preed's patch)
+ 3 minor update using existing snippet schema (minor was the only one, previously)
 |aus.Verify|${host}|${product}|${version}|${platform}|${locale}|
 |build|channel|complete|partial|hasUpdate?|isMinorUpdate?|isMajorUpdate?|hasComplete?|hasPartial?|isValidXml?|
 |8000000001|channel|complete|partial|true|true|false|true|true|true|
 |8000000002|channel|complete|partial|true|false|true|true|true|true|
+|8000000003|channel|complete|partial|true|true|false|true|true|true|
 
-!1 os version compatibility
+!1 OS Version Compatibility
  1 supported os version, or unknown os version
  2 unsupported or blocked platform (exists in $unsupportedPlatforms in aus2 config)
 |aus.Verify|${host}|${product}|${version}|${platform}|${locale}|
