@@ -804,13 +804,13 @@ run_viewer: $(FINAL_TARGET)/viewer
 clean clobber realclean clobber_all:: $(SUBMAKEFILES)
 	-rm -f $(ALL_TRASH)
 	-rm -rf $(ALL_TRASH_DIRS)
-	$(foreach dir,$(STATIC_DIRS),make -C $(dir) $@)
-	+$(LOOP_OVER_DIRS)
-	+$(LOOP_OVER_TOOL_DIRS)
+	+-$(foreach dir,$(STATIC_DIRS),make -C $(dir) $@; )
+	+-$(LOOP_OVER_DIRS)
+	+-$(LOOP_OVER_TOOL_DIRS)
 
 distclean:: $(SUBMAKEFILES)
-	+$(LOOP_OVER_DIRS)
-	+$(LOOP_OVER_TOOL_DIRS)
+	+-$(LOOP_OVER_DIRS)
+	+-$(LOOP_OVER_TOOL_DIRS)
 	-rm -rf $(ALL_TRASH_DIRS) 
 	-rm -f $(ALL_TRASH)  \
 	Makefile .HSancillary \
@@ -1893,6 +1893,9 @@ tags: TAGS
 TAGS: $(SUBMAKEFILES) $(CSRCS) $(CPPSRCS) $(wildcard *.h)
 	-etags $(CSRCS) $(CPPSRCS) $(wildcard *.h)
 	+$(LOOP_OVER_DIRS)
+
+echo-tiers:
+	@echo $(TIERS)
 
 echo-dirs:
 	@echo $(DIRS)
