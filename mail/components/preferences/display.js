@@ -79,13 +79,13 @@ var gDisplayPane = {
    
   buildTagList: function()
   {
-    var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService);
-    var allTags = tagService.tagEnumerator;
-    var allKeys = tagService.keyEnumerator;
-    while (allTags.hasMore())
+    var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
+                               .getService(Components.interfaces.nsIMsgTagService);
+    var tagArray = tagService.getAllTags({});
+    for (var i = 0; i < tagArray.length; ++i)
     {
-      var key = allKeys.getNext();
-      this.appendTagItem(allTags.getNext(), key, tagService.getColorForKey(key));
+      var taginfo = tagArray[i];
+      this.appendTagItem(taginfo.tag, taginfo.key, taginfo.color);
     }
   },
   
@@ -173,7 +173,7 @@ var gDisplayPane = {
 function addTagCallback(aName, aColor)
 {
   var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService);
-  tagService.addTag(aName, aColor);
+  tagService.addTag(aName, aColor, '');
  
   var item = gDisplayPane.appendTagItem(aName, tagService.getKeyForTag(aName), aColor);
   var tagListBox = document.getElementById('tagList');

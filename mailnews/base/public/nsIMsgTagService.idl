@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   David Bienvenu <bienvenu@mozilla.com>
+ *   Karsten Düsterloh <mnyromyr@tprac.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,14 +38,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIStringEnumerator.idl"
 
-/* 
- * Keys are the internal representation of tags, and use a limited range of 
+/*
+ * Keys are the internal representation of tags, and use a limited range of
  * characters, basically the characters allowed in imap keywords, which are
  * alphanumeric characters, but don't include spaces. Keys are stored on
  * the imap server, in local mail messages, and in summary files.
- * 
+ *
  * Tags are the user visible representation of keys, and are full unicode
  * strings. Tags should allow any unicode character.
  *
@@ -55,18 +55,40 @@
  * sure that no other keyword has the same value since that algorithm
  * doesn't guarantee a unique mapping.
  *
+ * Tags are sorted internally by 'importance' by their ordinal strings (which by
+ * default are equal to a tag's key and thus only stored if different). 
+ * The alphanumerically 'smallest' string is called the 'most important' one and
+ * comes first in any sorted array. The remainder follows in ascending order.
  */
-[scriptable, uuid(ad04db53-cfcc-47eb-b409-b24b3a0b6130)]
-interface nsIMsgTagService : nsISupports {
-  AString getTagForKey(in ACString key); // look up the tag for a key.
-  void setTagForKey(in ACString key, in AString tag); // this can be used to "rename" a tag
-  ACString getKeyForTag(in AString tag); // get the key representation of a given tag
-  void addTagForKey(in ACString key, in AString tag, in ACString color);
-  void addTag(in AString tag, in ACString color);
-  ACString getColorForKey(in ACString key);
-  void deleteKey(in ACString key);
-  // we need some way to enumerate all tags. Or return a list of all tags.
-  readonly attribute nsIStringEnumerator tagEnumerator;
-  readonly attribute nsIUTF8StringEnumerator keyEnumerator;
+
+[scriptable, uuid(84d593a3-5d8a-45e6-96e2-9189acd422e1)]
+interface nsIMsgTag : nsISupports {
+  readonly attribute ACString key;     // distinct tag identifier
+  readonly attribute AString  tag;     // human readable tag name
+  readonly attribute ACString color;   // tag color
+  readonly attribute ACString ordinal; // custom sort string (usually empty)
 };
 
+[scriptable, uuid(b897da55-8256-4cf5-892b-32e77bc7c50b)]
+interface nsIMsgTagService : nsISupports {
+  // create new tag by deriving the key from the tag
+  void addTag(in AString tag, in ACString color, in ACString ordinal);
+  // create/update tag with known key
+  void addTagForKey(in ACString key, in AString tag, in ACString color, in ACString ordinal);
+  // get the key representation of a given tag
+  ACString getKeyForTag(in AString tag);
+  // get the first key by ordinal order
+  ACString getTopKey(in string keyList);
+  // support functions for single tag aspects
+  AString getTagForKey(in ACString key); // look up the tag for a key.
+  void setTagForKey(in ACString key, in AString tag); // this can be used to "rename" a tag
+  ACString getColorForKey(in ACString key);
+  void setColorForKey(in ACString key, in ACString color);
+  ACString getOrdinalForKey(in ACString key);
+  void setOrdinalForKey(in ACString key, in ACString ordinal);
+  // delete a tag from the list of known tags (but not from any messages)
+  void deleteKey(in ACString key);
+  // get all known tags
+  void getAllTags(out unsigned long count,
+                  [retval, array, size_is(count)] out nsIMsgTag tagArray);
+};

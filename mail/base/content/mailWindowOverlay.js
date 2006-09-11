@@ -593,10 +593,10 @@ function ToggleMessageTagKey(index)
   var msgHdr = gDBView.hdrForFirstSelectedMessage;
   var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
                              .getService(Components.interfaces.nsIMsgTagService);
-  var allKeys = tagService.keyEnumerator;
-  while (allKeys.hasMore()) 
+  var tagArray = tagService.getAllTags({});
+  for (var i = 0; i < tagArray.length; ++i)
   {
-    var key = allKeys.getNext();
+    var key = tagArray[i].key;
     if (!--index) 
     {
       // found the key, now toggle its state
@@ -671,7 +671,7 @@ function AddTagCallback(name, color)
 {
   var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
                              .getService(Components.interfaces.nsIMsgTagService);
-  tagService.addTag(name, color);
+  tagService.addTag(name, color, '');
   try
   {
     ToggleMessageTag(tagService.getKeyForTag(name), true);
@@ -700,8 +700,8 @@ function InitMessageTags(menuPopup)
 {
   var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
                              .getService(Components.interfaces.nsIMsgTagService);
-  var allTags = tagService.tagEnumerator;
-  var allKeys = tagService.keyEnumerator;
+  var tagArray = tagService.getAllTags({});
+  var tagCount = tagArray.length;
 
   // remove any existing non-static entries...
   var menuseparator = menuPopup.lastChild.previousSibling;
@@ -709,7 +709,7 @@ function InitMessageTags(menuPopup)
     menuPopup.removeChild(menuseparator.previousSibling);
 
   // hide double menuseparator
-  menuseparator.previousSibling.hidden = !allTags.hasMore();
+  menuseparator.previousSibling.hidden = !tagCount;
 
   // create label and accesskey for the static remove item
   var tagRemoveLabel = gMessengerBundle.getString("mailnews.tags.remove");
@@ -721,18 +721,16 @@ function InitMessageTags(menuPopup)
   if (msgHdr.label)
     curKeys += " $label" + msgHdr.label;
 
-  var index = 0;
-  while (allTags.hasMore())
+  for (var i = 0; i < tagCount; ++i)
   {
-    var tag = allTags.getNext();
-    var key = allKeys.getNext();
+    var taginfo = tagArray[i];
     // TODO we want to either remove or "check" the tags that already exist
     var newMenuItem = document.createElement("menuitem");
-    SetMessageTagLabel(newMenuItem, ++index, tag);
-    newMenuItem.setAttribute("value", key);
+    SetMessageTagLabel(newMenuItem, i + 1, taginfo.tag);
+    newMenuItem.setAttribute("value", taginfo.key);
     newMenuItem.setAttribute("type", "checkbox");
-    newMenuItem.style.color = tagService.getColorForKey(key);
-    var removeKey = (" " + curKeys + " ").indexOf(" " + key + " ") > -1;
+    newMenuItem.style.color = tagService.getColorForKey(taginfo.key);
+    var removeKey = (" " + curKeys + " ").indexOf(" " + taginfo.key + " ") > -1;
     newMenuItem.setAttribute('checked', removeKey);
     newMenuItem.setAttribute('oncommand', 'ToggleMessageTagMenu(event.target);');
     menuPopup.insertBefore(newMenuItem, menuseparator);

@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Jan Varga (varga@ku.sk)
- *   Håkan Waara (hwaara@chello.se)
+ *   HÃ¥kan Waara (hwaara@chello.se)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -360,23 +360,22 @@ nsresult nsMsgDBView::GetPrefLocalizedString(const char *aPrefName, nsString& aR
 
 nsresult nsMsgDBView::AppendKeywordProperties(const char *keywords, nsISupportsArray *properties, PRBool addSelectedTextProperty)
 {
-  // get last keyword, get its color, turn that into an atom, and and 
-  // append that as a property.
-  nsCStringArray keywordsArray;
-  nsCAutoString color;
-  // skip leading spaces 
-  while (*keywords == ' ')
-    keywords++;
-  if (!*keywords)
-    return NS_OK;
-  keywordsArray.ParseString(keywords, " ");
+  // get the top most keyword's color and append that as a property.
   nsresult rv;
   if (!mTagService)
   {
     mTagService = do_GetService(NS_MSGTAGSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  rv = mTagService->GetColorForKey(*(keywordsArray[keywordsArray.Count() - 1]), color);
+  
+  nsCString topKey;
+  rv = mTagService->GetTopKey(keywords, topKey);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (topKey.IsEmpty())
+    return NS_OK;
+  
+  nsCString color;
+  rv = mTagService->GetColorForKey(topKey, color);
   if (NS_SUCCEEDED(rv) && !color.IsEmpty())
   {
     if (addSelectedTextProperty)

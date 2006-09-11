@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Karsten Düsterloh <mnyromyr@tprac.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -522,9 +523,10 @@
   "@mozilla.org/messenger/tagservice;1"
 
 #define NS_MSGTAGSERVICE_CID \
-{ /* ad04db53-cfcc-47eb-b409-b24b3a0b6130 */ \
- 0xad04db53, 0xcfcc, 0x47eb, \
- { 0xb4, 0x09, 0xb2, 0x4b, 0x3a, 0x0b, 0x61, 0x30}}
+{ /* b897da55-8256-4cf5-892b-32e77bc7c50b */ \
+ 0xb897da55, 0x8256, 0x4cf5, \
+ { 0x89, 0x2b, 0x32, 0xe7, 0x7b, 0xc7, 0xc5, 0x0b}}
+
 // 
 // nsMessengerOSIntegration 
 //

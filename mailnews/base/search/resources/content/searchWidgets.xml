@@ -401,16 +401,15 @@
       <constructor>
         <![CDATA[
             var menuPopup = document.getAnonymousNodes(this)[0].menupopup;
-            var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService); 
-            var allTags = tagService.tagEnumerator;
-            var allKeys = tagService.keyEnumerator;
-            while (allTags.hasMore())
+            var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
+                                       .getService(Components.interfaces.nsIMsgTagService); 
+            var tagArray = tagService.getAllTags({});
+            for (var i = 0; i < tagArray.length; ++i)
             {
-              var tag = allTags.getNext();
-              var key = allKeys.getNext();
+              var taginfo = tagArray[i];
               var newMenuItem = document.createElement('menuitem');
-              newMenuItem.setAttribute('label', tag);
-              newMenuItem.setAttribute('value',  key);
+              newMenuItem.setAttribute('label', taginfo.tag);
+              newMenuItem.setAttribute('value', taginfo.key);
               menuPopup.appendChild(newMenuItem);
             }
           // propagating a pre-existing hack to make the tag get displayed correctly in the menulist

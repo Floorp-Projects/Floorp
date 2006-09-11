@@ -1493,24 +1493,18 @@
           <![CDATA[
             var children = document.getAnonymousNodes(this);
             var popupMenu = children[5].firstChild;
-            var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService); 
-            var allTags = tagService.tagEnumerator;
-            var allKeys = tagService.keyEnumerator;
-            var tagNum = 0;
-            while (allTags.hasMore())
+            var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
+                                       .getService(Components.interfaces.nsIMsgTagService);
+            var tagArray = tagService.getAllTags({});
+            for (var i = 0; i < tagArray.length; ++i)
             {
-              var tag = allTags.getNext();
-              var key = allKeys.getNext();
+              var taginfo = tagArray[i];
               var newMenuItem = document.createElement('menuitem');
-              newMenuItem.setAttribute('label', tag);
-              newMenuItem.setAttribute('value',  key);
+              newMenuItem.setAttribute('label', taginfo.tag);
+              newMenuItem.setAttribute('value', taginfo.key);
               popupMenu.appendChild(newMenuItem);
-              if (tagNum == 0)
-              {
+              if (!i)
                 children[5].selectedItem = newMenuItem;
-                children[5].value = key;
-                tagNum++;
-              }
             }
           ]]>
         </body>

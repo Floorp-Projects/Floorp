@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   David Bienvenu <bienvenu@mozilla.org>
+ *   Karsten Düsterloh <mnyromyr@tprac.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -42,14 +43,24 @@
 #include "nsIMsgTagService.h"
 #include "nsIPrefBranch.h"
 
-class nsMsgTagEntry
+
+class nsMsgTag : public nsIMsgTag
 {
 public:
-  nsMsgTagEntry(const char *key, const PRUnichar *tag, PRUint32 color);
-  nsString m_tag;
-  nsCString m_key;
-  PRUint32 m_color;
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMSGTAG
+
+  nsMsgTag(const nsACString &aKey,
+           const nsAString  &aTag,
+           const nsACString &aColor,
+           const nsACString &aOrdinal);
+  ~nsMsgTag();
+
+protected:
+  nsString  mTag;
+  nsCString mKey, mColor, mOrdinal;
 };
+
 
 class nsMsgTagService : public nsIMsgTagService
 {
@@ -65,9 +76,9 @@ private:
 protected:
   nsresult getPrefService() ;
   nsresult SetUnicharPref(const char *prefName,
-                              const nsAString &prefValue);
+                          const nsAString &prefValue);
   nsresult GetUnicharPref(const char *prefName,
-                              nsAString &prefValue);
+                          nsAString &prefValue);
   nsresult MigrateLabelsToTags();
 
   nsCOMPtr<nsIPrefBranch> m_prefBranch;
