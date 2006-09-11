@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: Objective-C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,29 +36,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* For documentation of the accessibility architecture, 
- * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
- */
+#import <Cocoa/Cocoa.h>
 
-#ifndef _nsRootAccessibleWrap_H_
-#define _nsRootAccessibleWrap_H_
+#import "mozView.h"
 
-#include "nsRootAccessible.h"
+/* This protocol's primary use is so widget/src/cocoa can talk back to us
+   properly.
+   
+   ChildView owns the topmost mozRootAccessible, and needs to take care of setting up 
+   that parent/child relationship.
+   
+   This protocol is thus used to make sure it knows it's talking to us, and not
+   just some random |id|.
+*/
 
-struct objc_class;
+@protocol mozAccessible
 
-class nsRootAccessibleWrap : public nsRootAccessible
-{
-  public:
-    nsRootAccessibleWrap(nsIDOMNode *aNode, nsIWeakReference *aShell);
-    virtual ~nsRootAccessibleWrap();
+// returns this accessible's role name as a string.
+- (NSString*)role;
 
-    objc_class* GetNativeType ();
-    
-    // let's our native accessible get in touch with the
-    // native cocoa view that is our accessible parent.
-    void GetNativeWidget (void **aOutView);
-};
-
-
+#ifdef DEBUG
+// debug utility that will print the native accessibility tree, starting
+// at this node.
+- (void)printHierarchy;
 #endif
+
+/*** general ***/
+
+// returns the accessible at the specified point.
+- (id)accessibilityHitTest:(NSPoint)point;
+
+// whether this element is flagged as ignored.
+- (BOOL)accessibilityIsIgnored;
+
+// currently focused UI element (possibly a child accessible)
+- (id)accessibilityFocusedUIElement;
+
+/*** attributes ***/
+
+// all supported attributes
+- (NSArray*)accessibilityAttributeNames;
+
+// value for given attribute.
+- (id)accessibilityAttributeValue:(NSString*)attribute;
+
+// whether a particular attribute can be modified
+- (BOOL)accessibilityIsAttributeSettable:(NSString*)attribute;
+
+/*** actions ***/
+
+- (NSArray*)accessibilityActionNames;
+- (NSString*)accessibilityActionDescription:(NSString*)action;
+- (void)accessibilityPerformAction:(NSString*)action;
+
+@end
+

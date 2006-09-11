@@ -15,12 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Original Author: Aaron Leventhal (aaronl@netscape.com)
+ *   Original Author: Håkan Waara <hwaara@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,19 +36,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCOMPtr.h"
-#include "nsRootAccessibleWrap.h"
-#include "nsIServiceManager.h"
-#include "nsIAccessibilityService.h"
+#include "nsDocAccessibleWrap.h"
 
-//----- nsRootAccessibleWrap -----
+#import "mozDocAccessible.h"
+#import "mozAccessibleWrapper.h"
 
-nsRootAccessibleWrap::nsRootAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference *aShell): 
-  nsRootAccessible(aDOMNode, aShell)
+nsDocAccessibleWrap::nsDocAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference *aShell): 
+  nsDocAccessible(aDOMNode, aShell)
 {
 }
 
-nsRootAccessibleWrap::~nsRootAccessibleWrap()
+nsDocAccessibleWrap::~nsDocAccessibleWrap()
 {
 }
 
+NS_IMETHODIMP
+nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData)
+{
+  return NS_OK;
+}
+
+objc_class*
+nsDocAccessibleWrap::GetNativeType ()
+{
+  return [mozDocAccessible class];
+}

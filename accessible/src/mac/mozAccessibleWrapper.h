@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,12 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Original Author: Aaron Leventhal (aaronl@netscape.com)
+ *   Original Author: Håkan Waara <hwaara@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,21 +35,39 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
+ 
 #include "nsAccessibleWrap.h"
 
-//-----------------------------------------------------
-// construction 
-//-----------------------------------------------------
-nsAccessibleWrap::nsAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference *aShell): 
-  nsAccessible(aNode, aShell)
-{
-}
+#import "mozAccessible.h"
 
-//-----------------------------------------------------
-// destruction
-//-----------------------------------------------------
-nsAccessibleWrap::~nsAccessibleWrap()
-{
-}
+/* Wrapper class.  
 
+   This is needed because C++-only headers such as nsAccessibleWrap.h must not depend
+   on Objective-C and Cocoa. Classes in accessible/src/base depend on them, and other modules in turn
+   depend on them, so in the end all of Mozilla would end up having to link against Cocoa and be renamed .mm :-)
+
+   In order to have a mozAccessible object wrapped, the user passes itself (nsAccessible*) and the subclass of
+   mozAccessible that should be instantiated.
+
+   In the header file, the AccessibleWrapper is used as the member, and is forward-declared (because this header
+   cannot be #included directly.
+*/
+
+struct AccessibleWrapper {
+  mozAccessible *object;
+  AccessibleWrapper (nsAccessibleWrap *parent, Class classType) {
+    object = (mozAccessible*)[[classType alloc] initWithAccessible:parent];
+  }
+
+  ~AccessibleWrapper () {
+    // if some third-party still holds on to the object, it's important that it is marked
+    // as expired, so it can't do any harm (e.g., walk into an expired hierarchy of nodes).
+    [object expire];
+    
+    [object release];
+  }
+
+  mozAccessible* getNativeObject () {
+    return object;
+  }
+};

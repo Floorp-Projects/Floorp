@@ -36,29 +36,43 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* For documentation of the accessibility architecture, 
- * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
- */
+#include "nsCOMPtr.h"
+#include "nsRootAccessibleWrap.h"
 
-#ifndef _nsRootAccessibleWrap_H_
-#define _nsRootAccessibleWrap_H_
+#include "nsIWidget.h"
+#include "nsIViewManager.h"
 
-#include "nsRootAccessible.h"
+#import "mozAccessibleWrapper.h"
 
-struct objc_class;
 
-class nsRootAccessibleWrap : public nsRootAccessible
+nsRootAccessibleWrap::nsRootAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference *aShell): 
+  nsRootAccessible(aDOMNode, aShell)
 {
-  public:
-    nsRootAccessibleWrap(nsIDOMNode *aNode, nsIWeakReference *aShell);
-    virtual ~nsRootAccessibleWrap();
+}
 
-    objc_class* GetNativeType ();
-    
-    // let's our native accessible get in touch with the
-    // native cocoa view that is our accessible parent.
-    void GetNativeWidget (void **aOutView);
-};
+nsRootAccessibleWrap::~nsRootAccessibleWrap()
+{
+}
 
+objc_class*
+nsRootAccessibleWrap::GetNativeType ()
+{
+  return [mozRootAccessible class];
+}
 
-#endif
+void
+nsRootAccessibleWrap::GetNativeWidget (void **aOutView)
+{
+  nsIFrame *frame = GetFrame();
+  if (frame) {
+    nsIView *view = frame->GetViewExternal();
+    if (view) {
+      nsIWidget *widget = view->GetWidget();
+      if (widget) {
+        *aOutView = (void**)widget->GetNativeData (NS_NATIVE_WIDGET);
+        NS_ASSERTION (*aOutView, 
+                      "Couldn't get the native NSView parent we need to connect the accessibility hierarchy!");
+      }
+    }
+  }
+}
