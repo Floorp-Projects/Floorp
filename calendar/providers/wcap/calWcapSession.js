@@ -189,6 +189,7 @@ calWcapSession.prototype = {
             this.logout();
         }
         else if (topic == "quit-application") {
+            this.logout();
             // xxx todo: valid upon notification?
             var observerService =
                 Components.classes["@mozilla.org/observer-service;1"]
