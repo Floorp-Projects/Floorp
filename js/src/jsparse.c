@@ -4940,7 +4940,6 @@ XMLElementOrList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             if (!XMLElementContent(cx, ts, pn, tc))
                 return NULL;
 
-            js_MatchToken(cx, ts, TOK_XMLSPACE);
             tt = js_GetToken(cx, ts);
             XML_CHECK_FOR_ERROR_AND_EOF(tt, NULL);
             if (tt != TOK_XMLNAME && tt != TOK_LC) {
