@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,12 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Original Author: Aaron Leventhal (aaronl@netscape.com)
+ *   Original Author: Håkan Waara <hwaara@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -44,13 +44,43 @@
 #define _nsAccessibleWrap_H_
 
 #include "nsCOMPtr.h"
+#include "nsRect.h"
+
 #include "nsAccessible.h"
+
+struct AccessibleWrapper;
+struct objc_class;
 
 class nsAccessibleWrap : public nsAccessible
 {
   public: // construction, destruction
     nsAccessibleWrap(nsIDOMNode*, nsIWeakReference *aShell);
     virtual ~nsAccessibleWrap();
+    
+    // creates the native accessible connected to this one.
+    NS_IMETHOD Init ();
+    
+    // get the native obj-c object
+    NS_IMETHOD GetNativeInterface (void **aOutAccessible);
+    
+    // the objective-c |Class| type that this accessible's native object
+    // should be instantied with.   used on runtime to determine the
+    // right type for this native accessible's native object.
+    virtual objc_class* GetNativeType ();
+    
+    // returns a pointer to the native window for this accessible tree.
+    void GetNativeWindow (void **aOutNativeWindow);
+    
+    virtual nsresult Shutdown ();
+    virtual nsresult InvalidateChildren ();
+    
+  protected:
+    // Wrapper around our native object.
+    AccessibleWrapper *mNativeWrapper;
 };
+
+// Define unsupported wrap classes here
+typedef class nsHTMLTableCellAccessible    nsHTMLTableCellAccessibleWrap;
+typedef class nsHTMLTableAccessible        nsHTMLTableAccessibleWrap;
 
 #endif

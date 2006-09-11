@@ -14,8 +14,8 @@
 # The Original Code is mozilla.org code
 #
 # The Initial Developer of the Original Code is
-# Aaron Leventhal
-# Portions created by the Initial Developer are Copyright (C) 2003
+# Håkan Waara <hwaara@gmail.com>
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -52,6 +52,7 @@ REQUIRES	= content \
 		  editor \
 		  gfx \
 		  intl \
+		  locale \
 		  string \
 		  uriloader \
 		  view \
@@ -59,13 +60,16 @@ REQUIRES	= content \
 		  xpcom \
 		  necko \
 		  $(NULL)
-
-CPPSRCS = \
-  nsAccessNodeWrap.cpp \
-  nsAccessibleWrap.cpp \
-  nsDocAccessibleWrap.cpp \
-  nsRootAccessibleWrap.cpp \
-  $(NULL)
+  
+  
+CMMSRCS = nsAccessNodeWrap.mm \
+          nsDocAccessibleWrap.mm \
+          nsRootAccessibleWrap.mm \
+          nsAccessibleWrap.mm \
+          mozAccessible.mm \
+          mozDocAccessible.mm \
+          $(NULL)
+          
 
 EXPORTS = \
   nsAccessNodeWrap.h \
@@ -76,6 +80,11 @@ EXPORTS = \
   nsHTMLFormControlAccessibleWrap.h \
   nsXULMenuAccessibleWrap.h \
   nsXULTreeAccessibleWrap.h \
+  mozDocAccessible.h \
+  mozAccessible.h \
+  mozAccessibleWrapper.h \
+  mozAccessibleProtocol.h \
+  nsRoleMap.h \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

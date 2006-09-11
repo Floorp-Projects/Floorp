@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,29 +36,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* For documentation of the accessibility architecture, 
- * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
- */
+#import <Cocoa/Cocoa.h>
+#import "mozAccessible.h"
 
-#ifndef _nsRootAccessibleWrap_H_
-#define _nsRootAccessibleWrap_H_
+// our protocol that we implement (so cocoa widgets can talk to us)
+#import "mozAccessibleProtocol.h"
 
-#include "nsRootAccessible.h"
-
-struct objc_class;
-
-class nsRootAccessibleWrap : public nsRootAccessible
+/* 
+  Represents a "document", a web area. 
+  Created by nsDocAccessibleWrap 
+*/
+@interface mozDocAccessible : mozAccessible
 {
-  public:
-    nsRootAccessibleWrap(nsIDOMNode *aNode, nsIWeakReference *aShell);
-    virtual ~nsRootAccessibleWrap();
+}
+@end
 
-    objc_class* GetNativeType ();
-    
-    // let's our native accessible get in touch with the
-    // native cocoa view that is our accessible parent.
-    void GetNativeWidget (void **aOutView);
-};
-
-
-#endif
+/* 
+  The root accessible. There is one per window.
+  Created by the nsRootAccessibleWrap.
+*/
+@interface mozRootAccessible : mozDocAccessible
+{
+  // the mozView that we're representing.
+  // all outside communication goes through the mozView.
+  // in reality, it's just piping all calls to us, and we're
+  // doing its dirty work!
+  //
+  // whenever someone asks who we are (e.g., a child asking
+  // for its parent, or our parent asking for its child), we'll
+  // respond the mozView. it is absolutely necessary for third-
+  // party tools that we do this!
+  //
+  // /hwaara
+  id <mozView, mozAccessible> parallelView; // weak ref
+}
+@end

@@ -1,0 +1,499 @@
+/* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Original Author: Håkan Waara <hwaara@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+ 
+#import "mozAccessible.h"
+
+// to get the mozView formal protocol, that all gecko's ChildViews implement.
+#import "mozView.h"
+
+#include "nsRect.h"
+#include "nsCoord.h"
+
+#import "nsRoleMap.h"
+
+#include "nsIAccessible.h"
+
+
+// converts a screen-global point in the cocoa coordinate system (with origo in the bottom-left corner
+// of the screen), into a top-left screen point, that gecko can use.
+static inline void
+ConvertCocoaToGeckoPoint(NSPoint &aInPoint, nsPoint &aOutPoint)
+{
+  float mainScreenHeight = [(NSView*)[[NSScreen screens] objectAtIndex:0] frame].size.height;
+  aOutPoint.MoveTo ((nscoord)aInPoint.x, (nscoord)(mainScreenHeight - aInPoint.y));
+}
+
+// returns an object if it is not ignored. if it's ignored, will return
+// the first unignored ancestor.
+static inline id
+ObjectOrUnignoredAncestor(id anObject)
+{
+  if ([anObject accessibilityIsIgnored])
+    return NSAccessibilityUnignoredAncestor(anObject);
+  return anObject;
+}
+
+
+@interface mozAccessible (Private)
+- (mozAccessible*)getNativeFromGeckoAccessible:(nsIAccessible*)accessible;
+#ifdef DEBUG
+- (void)sanityCheckChildren:(NSArray*)theChildren;
+#endif
+@end
+
+#pragma mark -
+ 
+@implementation mozAccessible
+ 
+- (id)initWithAccessible:(nsAccessible*)accessible
+{
+  if ((self = [super init])) {
+    geckoAccessible = accessible;
+    isExpired = NO;
+  }
+   
+  return self;
+}
+
+- (void)dealloc
+{
+  [children release];
+  [super dealloc];
+}
+ 
+#pragma mark -
+
+- (BOOL)accessibilityIsIgnored
+{
+  return isExpired;
+}
+
+- (NSArray*)accessibilityAttributeNames
+{
+  // if we're expired, we don't support any attributes.
+  if (isExpired)
+    return [NSArray array];
+  
+  static NSArray *supportedAttributes = nil;
+  if (!supportedAttributes) {
+    // standard attributes that are shared and supported by all generic elements.
+    supportedAttributes = [[NSArray alloc] initWithObjects:NSAccessibilityChildrenAttribute, 
+                                                           NSAccessibilityParentAttribute,
+                                                           NSAccessibilityRoleAttribute,
+                                                           NSAccessibilityTitleAttribute,
+                                                           NSAccessibilityValueAttribute,
+                                                           NSAccessibilitySubroleAttribute,
+                                                           NSAccessibilityRoleDescriptionAttribute,
+                                                           NSAccessibilityPositionAttribute,
+                                                           NSAccessibilitySizeAttribute,
+                                                           NSAccessibilityWindowAttribute,
+                                                           NSAccessibilityFocusedUIElementAttribute,
+                                                           NSAccessibilityFocusedAttribute,
+                                                           NSAccessibilityTopLevelUIElementAttribute, // XXX: 10.4+ only!
+                                                           NSAccessibilityDescriptionAttribute, // XXX: 10.4+ only!
+                                                           nil];
+  }
+
+  return supportedAttributes;
+}
+
+- (id)accessibilityAttributeValue:(NSString*)attribute
+{  
+  if (isExpired)
+    return nil;
+  
+  if ([attribute isEqualToString:NSAccessibilityChildrenAttribute])
+    return NSAccessibilityUnignoredChildren ([self children]);
+  if ([attribute isEqualToString:NSAccessibilityParentAttribute]) 
+    return ObjectOrUnignoredAncestor ([self parent]);
+  
+#ifdef DEBUG_hakan
+  NSLog (@"(%@ responding to attr %@)", self, attribute);
+#endif
+  
+  if ([attribute isEqualToString:NSAccessibilityDescriptionAttribute])
+    return [self customDescription];
+  if ([attribute isEqualToString:NSAccessibilityPositionAttribute]) 
+    return [self position];
+  if ([attribute isEqualToString:NSAccessibilityRoleAttribute])
+    return [self role];
+  if ([attribute isEqualToString:NSAccessibilitySubroleAttribute])
+    return nil; // default to no subrole
+  if ([attribute isEqualToString:NSAccessibilityValueAttribute])
+    return [self value];
+  if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute])
+    return @""; // default to no role description
+  if ([attribute isEqualToString:NSAccessibilityFocusedUIElementAttribute])
+    return [self accessibilityFocusedUIElement];
+  if ([attribute isEqualToString:NSAccessibilityFocusedAttribute])
+    return [NSNumber numberWithBool:[self isFocused]];
+  if ([attribute isEqualToString:NSAccessibilitySizeAttribute])
+    return [self size];
+  if ([attribute isEqualToString:NSAccessibilityWindowAttribute])
+    return [self window];
+  if ([attribute isEqualToString:NSAccessibilityTopLevelUIElementAttribute])
+    // most apps seem to return the window as the top level ui element attr.
+    return [self window];
+  if ([attribute isEqualToString:NSAccessibilityTitleAttribute])
+    return [self title];
+
+#ifdef DEBUG
+ NSLog (@"!!! %@ can't respond to attribute %@", self, attribute);
+#endif
+ return nil; // be nice and return empty string instead?
+}
+
+- (BOOL)accessibilityIsAttributeSettable:(NSString*)attribute
+{
+  if ([attribute isEqualToString:NSAccessibilityFocusedAttribute])
+    return [self canBeFocused];
+  
+  return NO;
+}
+
+- (void)accessibilitySetValue:(id)value forAttribute:(NSString*)attribute
+{
+  // we only support focusing elements so far.
+  if ([attribute isEqualToString:NSAccessibilityFocusedAttribute] && [value boolValue])
+    [self focus];
+}
+
+- (id)accessibilityHitTest:(NSPoint)point
+{
+  if (isExpired)
+    return nil;
+  
+#ifdef DEBUG_hakan
+  NSLog (@"(%@ hittested at (untranslated) point (%f, %f))", self, point.x, point.y);
+#endif
+  
+  // convert from cocoa's coordinate system to gecko's.
+  nsPoint geckoPoint;
+  ConvertCocoaToGeckoPoint (point, geckoPoint);
+  
+  // see if we can find an accessible at that point.
+  nsCOMPtr<nsIAccessible> foundChild;
+  geckoAccessible->GetChildAtPoint ((PRInt32)geckoPoint.x, (PRInt32)geckoPoint.y, getter_AddRefs (foundChild));
+  
+  if (foundChild) {
+    // if we found something, return its native accessible.
+    mozAccessible *nativeChild = [self getNativeFromGeckoAccessible:foundChild];
+    if (nativeChild)
+      return ObjectOrUnignoredAncestor (nativeChild);
+  }
+  
+  // if we didn't find anything, return ourself (or the first unignored ancestor).
+  return ObjectOrUnignoredAncestor ([self ourself]); 
+}
+
+- (NSArray*)accessibilityActionNames 
+{
+  return [NSArray array];
+}
+
+- (NSString*)accessibilityActionDescription:(NSString*)action 
+{
+  return nil;
+}
+
+- (void)accessibilityPerformAction:(NSString*)action 
+{
+}
+
+- (id)accessibilityFocusedUIElement
+{
+  if (isExpired)
+    return nil;
+  
+  nsCOMPtr<nsIAccessible> focusedGeckoChild;
+  geckoAccessible->GetFocusedChild (getter_AddRefs (focusedGeckoChild));
+  
+  if (focusedGeckoChild) {
+    mozAccessible *focusedChild = [self getNativeFromGeckoAccessible:focusedGeckoChild];
+    if (focusedChild)
+      return ObjectOrUnignoredAncestor(focusedChild);
+  }
+  
+  // return ourself if we can't get a native focused child.
+  return ObjectOrUnignoredAncestor([self ourself]);
+}
+
+#pragma mark -
+
+- (id <mozAccessible>)parent
+{
+  nsCOMPtr<nsIAccessible> accessibleParent;
+  nsresult rv = geckoAccessible->GetParent (getter_AddRefs (accessibleParent));
+  if (accessibleParent && NS_SUCCEEDED (rv)) {
+    mozAccessible *nativeParent = [self getNativeFromGeckoAccessible:accessibleParent];
+    if (nativeParent)
+      return nativeParent;
+  }
+  
+#ifdef DEBUG
+  NSLog (@"!!! we can't find a parent for %@", self);
+#endif
+  // we didn't find a parent
+  return nil;
+}
+
+- (id <mozAccessible>)ourself
+{
+  return self;
+}
+
+// gets our native children lazily.
+// returns nil when there are no children.
+- (NSArray*)children
+{
+  // do we want to expire all children, when something is inserted
+  // into a children array instead? then we could avoid this (quite expensive)
+  // check.
+  PRInt32 count=0;
+  geckoAccessible->GetChildCount (&count);
+  
+  // short-circuit here. if we already have a children
+  // array, and the count hasn't changed, just return our
+  // cached version.
+  if (children && ([children count] == (unsigned)count))
+    return children;
+  
+  if (!children)
+    children = [[NSMutableArray alloc] initWithCapacity:count];
+  
+  // get the array of children.
+  nsCOMPtr<nsIArray> childrenArray;
+  geckoAccessible->GetChildren(getter_AddRefs(childrenArray));
+  
+  if (childrenArray) {
+    // get an enumerator for this array.
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    childrenArray->Enumerate(getter_AddRefs(enumerator));
+    
+    nsCOMPtr<nsISupports> curChild;
+    nsCOMPtr<nsIAccessible> accessible;
+    mozAccessible *curNative = nil;
+    PRBool hasMore = PR_FALSE;
+    
+    // now iterate through the children array, and get each native accessible.
+    while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore && 
+           NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(curChild))) && curChild) {
+      accessible = do_QueryInterface (curChild);
+      if (accessible) {
+        curNative = [self getNativeFromGeckoAccessible:accessible];
+        if (curNative)
+          [children addObject:curNative];
+      }
+    }
+  }
+  
+  return children;
+}
+
+- (NSValue*)position
+{
+  PRInt32 x, y, width, height;
+  geckoAccessible->GetBounds (&x, &y, &width, &height);
+  NSPoint p = NSMakePoint (x, y);
+  
+  // the coords we get here should be top-left.
+  // now, even if we're cocoa, it seems that NSAccessibility
+  // takes notice that our view |isFlipped| so we should
+  // just give it flipped coords (if we correspond to a ChildView).
+  
+  // workaround for bug 350018; we have the coords in cocoa coordinates, so flip them.
+  float mainScreenHeight = [[[NSScreen screens] objectAtIndex:0] frame].size.height;
+  p.y = mainScreenHeight - p.y;
+  
+#ifdef DEBUG_hakan
+  NSLog (@"[%@ position] = {%f, %f}", self, p.x, p.y);
+#endif
+  return [NSValue valueWithPoint:p];
+}
+
+- (NSValue*)size
+{
+  PRInt32 x, y, width, height;
+  geckoAccessible->GetBounds (&x, &y, &width, &height);  
+  return [NSValue valueWithSize:NSMakeSize (width, height)];
+}
+
+- (NSString*)role
+{
+  PRUint32 roleInt = 0;
+  geckoAccessible->GetFinalRole (&roleInt);
+  return AXRoles[roleInt]; // see nsRoleMap.h
+}
+
+- (NSString*)title
+{
+  nsAutoString title;
+  geckoAccessible->GetName (title);
+  return [NSString stringWithCharacters:title.BeginReading() length:title.Length()];
+}
+
+- (NSString*)value
+{
+  nsAutoString value;
+  geckoAccessible->GetValue (value);
+  return [NSString stringWithCharacters:value.BeginReading() length:value.Length()];
+}
+
+- (NSString*)customDescription
+{
+  nsAutoString desc;
+  geckoAccessible->GetDescription (desc);
+  return [NSString stringWithCharacters:desc.BeginReading() length:desc.Length()];
+}
+
+// objc-style description (from NSObject); not to be confused with the accessible description above.
+- (NSString*)description
+{
+  return [NSString stringWithFormat:@"(%p) %@", self, [self role], nil];
+}
+
+- (BOOL)isFocused
+{
+  PRUint32 state = 0;
+  geckoAccessible->GetFinalState (&state);
+  return (state & nsIAccessible::STATE_FOCUSED) != 0; 
+}
+
+- (BOOL)canBeFocused
+{
+  PRUint32 state = 0;
+  geckoAccessible->GetFinalState (&state);
+  return (state & nsIAccessible::STATE_FOCUSABLE) != 0;
+}
+
+// should only be called if canBeFocused returns YES.
+- (BOOL)focus
+{
+  nsresult rv = geckoAccessible->TakeFocus();
+  return NS_SUCCEEDED (rv);
+}
+
+- (NSWindow*)window
+{
+  nsAccessibleWrap *accWrap = NS_STATIC_CAST (nsAccessibleWrap*, geckoAccessible);
+  NSWindow *nativeWindow = nil;
+  accWrap->GetNativeWindow ((void**)&nativeWindow);
+  
+#ifdef DEBUG
+  if (!nativeWindow)
+    NSLog (@"Could not get native window for %@", self);
+#endif
+  
+  return nativeWindow;
+}
+
+- (mozAccessible*)getNativeFromGeckoAccessible:(nsIAccessible*)accessible
+{
+  mozAccessible *native = nil;
+  accessible->GetNativeInterface ((void**)&native);
+  return native ? (mozAccessible*)[native ourself] : nil;
+}
+
+- (void)invalidateChildren
+{
+  [children removeAllObjects];
+}
+
+- (void)expire
+{
+  [self invalidateChildren];
+  isExpired = YES;
+}
+
+#pragma mark -
+#pragma mark Debug methods
+#pragma mark -
+
+#ifdef DEBUG
+
+// will check that our children actually reference us as their
+// parent.
+- (void)sanityCheckChildren:(NSArray*)theChildren
+{
+  id parentObject = nil;
+  
+  // if we're the root accessible, our children's AXParent
+  // should reference the native view. see mozDocAccessible.h
+  if ([[self role] isEqualToString:@"mozRootAccessible"])
+    parentObject = [self ourself];
+  else
+    parentObject = self;
+  
+  NSEnumerator *iter = [theChildren objectEnumerator];
+  mozAccessible *curObj = nil;
+  
+  while ((curObj = [iter nextObject])) {
+    if ([curObj parent] != parentObject)
+      NSLog (@"!!! %@ not returning %@ as AXParent, even though it is a AXChild of it!", curObj, parentObject);
+  }
+}
+
+- (void)printHierarchy
+{
+  [self printHierarchyWithLevel:0];
+}
+
+- (void)printHierarchyWithLevel:(unsigned)level
+{
+  // print this node
+  NSMutableString *indent = [NSMutableString stringWithCapacity:level];
+  unsigned i=0;
+  for (;i<level;i++)
+    [indent appendString:@" "];
+  
+  NSLog (@"%@(#%i) %@", indent, level, self);
+  
+  // use |children| method to make sure our children are lazily
+  // fetched first.
+  NSEnumerator *iter = [[self children] objectEnumerator];
+  mozAccessible *object = nil;
+  
+  while (iter && (object = [iter nextObject]))
+    // print every child node's subtree, increasing the indenting
+    // by two for every level.
+    [object printHierarchyWithLevel:(level+1)];
+}
+
+#endif /* DEBUG */
+
+@end

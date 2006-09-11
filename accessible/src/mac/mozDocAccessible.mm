@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,12 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Original Author: Aaron Leventhal (aaronl@netscape.com)
+ *   Original Author: Håkan Waara <hwaara@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,20 +36,60 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsDocAccessibleWrap.h"
+#include "nsRootAccessibleWrap.h"
 
-//----- nsDocAccessibleWrap -----
+#import "mozDocAccessible.h"
 
-nsDocAccessibleWrap::nsDocAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference *aShell): 
-  nsDocAccessible(aDOMNode, aShell)
+#import "mozView.h"
+
+static id <mozAccessible, mozView> getNativeViewFromRootAccessible (nsAccessible *accessible)
 {
+  nsRootAccessibleWrap *root = NS_STATIC_CAST (nsRootAccessibleWrap*, accessible);
+  id <mozAccessible, mozView> nativeView = nil;
+  root->GetNativeWidget ((void**)&nativeView);
+  return nativeView;
 }
 
-nsDocAccessibleWrap::~nsDocAccessibleWrap()
+#pragma mark -
+
+@implementation mozDocAccessible
+
+- (NSString*)role
 {
+  return @"mozDocAccessible";
 }
 
-NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData)
+@end
+
+@implementation mozRootAccessible
+
+// return the AXParent that our parallell NSView tells us about.
+- (id)parent
 {
-  return NS_OK;
+  if (!parallelView)
+    parallelView = (id<mozView, mozAccessible>)[self ourself];
+  
+  return [parallelView accessibilityAttributeValue:NSAccessibilityParentAttribute];
 }
+
+// this will return our parallell NSView. see mozDocAccessible.h
+- (id)ourself
+{
+  if (parallelView)
+    return (id)parallelView;
+  
+  parallelView = getNativeViewFromRootAccessible (geckoAccessible);
+  
+#ifdef DEBUG
+  if (!parallelView)
+    NSLog (@"!!! can't return root accessible's native parallel view.");
+#endif
+  return parallelView;
+}
+
+- (NSString*)role
+{
+  return @"mozRootAccessible";
+}
+
+@end
