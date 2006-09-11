@@ -48,11 +48,6 @@ interface nsIArray;
 interface nsIFeedEntry : nsIFeedContainer {
 
   /**
-  * Parent Feed, Entry, or Item.
-  */
-  attribute nsIFeedContainer parent;
-
-  /**
   * Uses description, subtitle, summary, content and extensions
   * to generate a summary. 
   * 

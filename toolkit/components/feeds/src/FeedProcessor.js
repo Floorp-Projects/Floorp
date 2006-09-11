@@ -1378,12 +1378,9 @@ FeedProcessor.prototype = {
     var obj, key, prefix;
 
     // If the container is an entry/item, it'll need to have its 
-    // more esoteric properties put in the 'fields' property bag, and set its
-    // parent.
+    // more esoteric properties put in the 'fields' property bag.
     if (elementInfo.containerClass == Cc[ENTRY_CONTRACTID]) {
       obj = elementInfo.containerClass.createInstance(Ci.nsIFeedEntry);
-      // Set the parent property of the entry.
-      obj.parent = this._result.doc;
       obj.baseURI = this._xmlBaseStack[this._xmlBaseStack.length - 1];
       this._mapAttributes(obj.fields, attributes);
     }
