@@ -38,7 +38,11 @@
 #ifndef nsChildView_h__
 #define nsChildView_h__
 
+// formal protocols
 #import "mozView.h"
+#ifdef ACCESSIBILITY
+#import "mozAccessibleProtocol.h"
+#endif
 
 #include "nsAutoPtr.h"
 #include "nsISupports.h"
@@ -60,6 +64,7 @@
 #include "nsplugindefs.h"
 #include <Quickdraw.h>
 
+
 #ifdef MOZ_CAIRO_GFX
 class gfxASurface;
 #endif
@@ -74,12 +79,18 @@ struct nsPluginPort;
 
 class nsChildView;
 
-
+// Depending on whether we're on cairo, and if accessibility is on, we support different @protocols
+// and have a different superclass.
+@interface ChildView :
 #ifdef MOZ_CAIRO_GFX
-@interface ChildView : NSView<mozView, NSTextInput>
+                      NSView<
 #else
-@interface ChildView : NSQuickDrawView<mozView, NSTextInput>
+                      NSQuickDrawView<
 #endif
+#ifdef ACCESSIBILITY
+                                      mozAccessible,
+#endif
+                                      mozView, NSTextInput>
 {
 @private
   NSWindow* mWindow; // shortcut to the top window, [WEAK]
@@ -106,6 +117,7 @@ class nsChildView;
   // hand scroll locations
   NSPoint mHandScrollStartMouseLoc;
   nscoord mHandScrollStartScrollX, mHandScrollStartScrollY;
+  
   // when menuForEvent: is called, we store its event here (strong)
   NSEvent* mLastMenuForEventEvent;
 }
@@ -263,6 +275,11 @@ public:
   
   void              LiveResizeStarted();
   void              LiveResizeEnded();
+  
+#ifdef ACCESSIBILITY
+  PRBool            DispatchAccessibleEvent(nsIAccessible** aAccessible);
+  void              GetDocumentAccessible(nsIAccessible** aAccessible);
+#endif
 
 #ifdef MOZ_CAIRO_GFX
   virtual gfxASurface* GetThebesSurface();
