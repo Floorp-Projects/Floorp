@@ -83,8 +83,8 @@ ObjectOrUnignoredAncestor(id anObject)
 - (id)initWithAccessible:(nsAccessible*)accessible
 {
   if ((self = [super init])) {
-    geckoAccessible = accessible;
-    isExpired = NO;
+    mGeckoAccessible = accessible;
+    mIsExpired = NO;
   }
    
   return self;
@@ -92,7 +92,7 @@ ObjectOrUnignoredAncestor(id anObject)
 
 - (void)dealloc
 {
-  [children release];
+  [mChildren release];
   [super dealloc];
 }
  
@@ -100,13 +100,13 @@ ObjectOrUnignoredAncestor(id anObject)
 
 - (BOOL)accessibilityIsIgnored
 {
-  return isExpired;
+  return mIsExpired;
 }
 
 - (NSArray*)accessibilityAttributeNames
 {
   // if we're expired, we don't support any attributes.
-  if (isExpired)
+  if (mIsExpired)
     return [NSArray array];
   
   static NSArray *supportedAttributes = nil;
@@ -134,7 +134,7 @@ ObjectOrUnignoredAncestor(id anObject)
 
 - (id)accessibilityAttributeValue:(NSString*)attribute
 {  
-  if (isExpired)
+  if (mIsExpired)
     return nil;
   
   if ([attribute isEqualToString:NSAccessibilityChildrenAttribute])
@@ -195,7 +195,7 @@ ObjectOrUnignoredAncestor(id anObject)
 
 - (id)accessibilityHitTest:(NSPoint)point
 {
-  if (isExpired)
+  if (mIsExpired)
     return nil;
   
 #ifdef DEBUG_hakan
@@ -208,7 +208,7 @@ ObjectOrUnignoredAncestor(id anObject)
   
   // see if we can find an accessible at that point.
   nsCOMPtr<nsIAccessible> foundChild;
-  geckoAccessible->GetChildAtPoint ((PRInt32)geckoPoint.x, (PRInt32)geckoPoint.y, getter_AddRefs (foundChild));
+  mGeckoAccessible->GetChildAtPoint ((PRInt32)geckoPoint.x, (PRInt32)geckoPoint.y, getter_AddRefs (foundChild));
   
   if (foundChild) {
     // if we found something, return its native accessible.
@@ -237,11 +237,11 @@ ObjectOrUnignoredAncestor(id anObject)
 
 - (id)accessibilityFocusedUIElement
 {
-  if (isExpired)
+  if (mIsExpired)
     return nil;
   
   nsCOMPtr<nsIAccessible> focusedGeckoChild;
-  geckoAccessible->GetFocusedChild (getter_AddRefs (focusedGeckoChild));
+  mGeckoAccessible->GetFocusedChild (getter_AddRefs (focusedGeckoChild));
   
   if (focusedGeckoChild) {
     mozAccessible *focusedChild = [self getNativeFromGeckoAccessible:focusedGeckoChild];
@@ -258,7 +258,7 @@ ObjectOrUnignoredAncestor(id anObject)
 - (id <mozAccessible>)parent
 {
   nsCOMPtr<nsIAccessible> accessibleParent;
-  nsresult rv = geckoAccessible->GetParent (getter_AddRefs (accessibleParent));
+  nsresult rv = mGeckoAccessible->GetParent (getter_AddRefs (accessibleParent));
   if (accessibleParent && NS_SUCCEEDED (rv)) {
     mozAccessible *nativeParent = [self getNativeFromGeckoAccessible:accessibleParent];
     if (nativeParent)
@@ -285,20 +285,20 @@ ObjectOrUnignoredAncestor(id anObject)
   // into a children array instead? then we could avoid this (quite expensive)
   // check.
   PRInt32 count=0;
-  geckoAccessible->GetChildCount (&count);
+  mGeckoAccessible->GetChildCount (&count);
   
   // short-circuit here. if we already have a children
   // array, and the count hasn't changed, just return our
   // cached version.
-  if (children && ([children count] == (unsigned)count))
-    return children;
+  if (mChildren && ([mChildren count] == (unsigned)count))
+    return mChildren;
   
-  if (!children)
-    children = [[NSMutableArray alloc] initWithCapacity:count];
+  if (!mChildren)
+    mChildren = [[NSMutableArray alloc] initWithCapacity:count];
   
   // get the array of children.
   nsCOMPtr<nsIArray> childrenArray;
-  geckoAccessible->GetChildren(getter_AddRefs(childrenArray));
+  mGeckoAccessible->GetChildren(getter_AddRefs(childrenArray));
   
   if (childrenArray) {
     // get an enumerator for this array.
@@ -317,18 +317,18 @@ ObjectOrUnignoredAncestor(id anObject)
       if (accessible) {
         curNative = [self getNativeFromGeckoAccessible:accessible];
         if (curNative)
-          [children addObject:curNative];
+          [mChildren addObject:curNative];
       }
     }
   }
   
-  return children;
+  return mChildren;
 }
 
 - (NSValue*)position
 {
   PRInt32 x, y, width, height;
-  geckoAccessible->GetBounds (&x, &y, &width, &height);
+  mGeckoAccessible->GetBounds (&x, &y, &width, &height);
   NSPoint p = NSMakePoint (x, y);
   
   // the coords we get here should be top-left.
@@ -349,35 +349,35 @@ ObjectOrUnignoredAncestor(id anObject)
 - (NSValue*)size
 {
   PRInt32 x, y, width, height;
-  geckoAccessible->GetBounds (&x, &y, &width, &height);  
+  mGeckoAccessible->GetBounds (&x, &y, &width, &height);  
   return [NSValue valueWithSize:NSMakeSize (width, height)];
 }
 
 - (NSString*)role
 {
   PRUint32 roleInt = 0;
-  geckoAccessible->GetFinalRole (&roleInt);
+  mGeckoAccessible->GetFinalRole (&roleInt);
   return AXRoles[roleInt]; // see nsRoleMap.h
 }
 
 - (NSString*)title
 {
   nsAutoString title;
-  geckoAccessible->GetName (title);
+  mGeckoAccessible->GetName (title);
   return [NSString stringWithCharacters:title.BeginReading() length:title.Length()];
 }
 
 - (NSString*)value
 {
   nsAutoString value;
-  geckoAccessible->GetValue (value);
+  mGeckoAccessible->GetValue (value);
   return [NSString stringWithCharacters:value.BeginReading() length:value.Length()];
 }
 
 - (NSString*)customDescription
 {
   nsAutoString desc;
-  geckoAccessible->GetDescription (desc);
+  mGeckoAccessible->GetDescription (desc);
   return [NSString stringWithCharacters:desc.BeginReading() length:desc.Length()];
 }
 
@@ -390,27 +390,27 @@ ObjectOrUnignoredAncestor(id anObject)
 - (BOOL)isFocused
 {
   PRUint32 state = 0;
-  geckoAccessible->GetFinalState (&state);
+  mGeckoAccessible->GetFinalState (&state);
   return (state & nsIAccessible::STATE_FOCUSED) != 0; 
 }
 
 - (BOOL)canBeFocused
 {
   PRUint32 state = 0;
-  geckoAccessible->GetFinalState (&state);
+  mGeckoAccessible->GetFinalState (&state);
   return (state & nsIAccessible::STATE_FOCUSABLE) != 0;
 }
 
 // should only be called if canBeFocused returns YES.
 - (BOOL)focus
 {
-  nsresult rv = geckoAccessible->TakeFocus();
+  nsresult rv = mGeckoAccessible->TakeFocus();
   return NS_SUCCEEDED (rv);
 }
 
 - (NSWindow*)window
 {
-  nsAccessibleWrap *accWrap = NS_STATIC_CAST (nsAccessibleWrap*, geckoAccessible);
+  nsAccessibleWrap *accWrap = NS_STATIC_CAST (nsAccessibleWrap*, mGeckoAccessible);
   NSWindow *nativeWindow = nil;
   accWrap->GetNativeWindow ((void**)&nativeWindow);
   
@@ -431,13 +431,13 @@ ObjectOrUnignoredAncestor(id anObject)
 
 - (void)invalidateChildren
 {
-  [children removeAllObjects];
+  [mChildren removeAllObjects];
 }
 
 - (void)expire
 {
   [self invalidateChildren];
-  isExpired = YES;
+  mIsExpired = YES;
 }
 
 #pragma mark -
