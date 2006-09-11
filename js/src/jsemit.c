@@ -3498,12 +3498,12 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     JSBool let, forInVar;
 #if JS_HAS_BLOCK_SCOPE
     JSBool forInLet, popScope;
+    JSStmtInfo *stmt, *scopeStmt;
 #endif
     ptrdiff_t off, noteIndex, tmp;
     JSParseNode *pn2, *pn3;
     JSOp op;
     jsatomid atomIndex;
-    JSStmtInfo *stmt, *scopeStmt;
     uintN oldflags;
 
     /* Default in case of JS_HAS_BLOCK_SCOPE early return, below. */
