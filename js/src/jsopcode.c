@@ -2113,7 +2113,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 sn = js_GetSrcNote(jp->script, pc - 1);
                 if (sn && SN_TYPE(sn) == SRC_ASSIGNOP) {
                     todo = Sprint(&ss->sprinter, "%s %s= %s",
-                                  lval, js_CodeSpec[lastop].token, rval);
+                                  lval, 
+                                  (lastop == JSOP_GETTER)
+                                  ? js_getter_str
+                                  : (lastop == JSOP_SETTER)
+                                  ? js_setter_str
+                                  : js_CodeSpec[lastop].token,
+                                  rval);
                 } else {
                     sn = js_GetSrcNote(jp->script, pc);
                     todo = Sprint(&ss->sprinter, "%s%s = %s",
@@ -2445,18 +2451,23 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 rval = POP_STR();
                 op = JSOP_NOP;           /* turn off parens */
                 xval = POP_STR();
+                cs = &js_CodeSpec[ss->opcodes[ss->top]];
                 op = saveop;
                 lval = POP_STR();
                 if (*xval == '\0')
                     goto do_setlval;
                 sn = js_GetSrcNote(jp->script, pc - 1);
                 todo = Sprint(&ss->sprinter,
-                              (js_CodeSpec[lastop].format & JOF_XMLNAME)
+                              (cs->format & JOF_XMLNAME)
                               ? "%s.%s %s= %s"
                               : "%s[%s] %s= %s",
                               lval, xval,
                               (sn && SN_TYPE(sn) == SRC_ASSIGNOP)
-                              ? js_CodeSpec[lastop].token
+                                ? (lastop == JSOP_GETTER)
+                                ? js_getter_str
+                                : (lastop == JSOP_SETTER)
+                                ? js_setter_str
+                                : js_CodeSpec[lastop].token
                               : "",
                               rval);
                 break;
