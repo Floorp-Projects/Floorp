@@ -536,11 +536,13 @@ PRInt32 nsTableFrame::GetEffectiveColCount() const
 PRInt32 nsTableFrame::GetIndexOfLastRealCol()
 {
   PRInt32 numCols = mColFrames.Count();
-  for (PRInt32 colX = numCols; colX >= 0; colX--) { 
-    nsTableColFrame* colFrame = GetColFrame(colX);
-    if (colFrame) {
-      if (eColAnonymousCell != colFrame->GetColType()) {
-        return colX;
+  if (numCols > 0) {
+    for (PRInt32 colX = numCols - 1; colX >= 0; colX--) { 
+      nsTableColFrame* colFrame = GetColFrame(colX);
+      if (colFrame) {
+        if (eColAnonymousCell != colFrame->GetColType()) {
+          return colX;
+        }
       }
     }
   }
@@ -556,7 +558,7 @@ nsTableFrame::GetColFrame(PRInt32 aColIndex) const
     return (nsTableColFrame *)mColFrames.ElementAt(aColIndex);
   }
   else {
-    //NS_ASSERTION(PR_FALSE, "invalid col index");
+    NS_ERROR("invalid col index");
     return nsnull;
   }
 }
