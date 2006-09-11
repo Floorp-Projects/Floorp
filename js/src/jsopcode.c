@@ -1521,7 +1521,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         }
 #endif
                         js_printf(jp,
-                                  (*rval == '{') ? "\t(%s);\n" : "\t%s;\n",
+                                  (*rval == '{' ||
+                                   (strncmp(rval, js_function_str, 8) == 0 &&
+                                    rval[8] == ' '))
+                                  ? "\t(%s);\n"
+                                  : "\t%s;\n",
                                   rval);
                     }
                     todo = -2;
