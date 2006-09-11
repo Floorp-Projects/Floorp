@@ -35,7 +35,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathGeometryFrame.h"
-#include "nsISVGRendererSurface.h"
 #include "nsISVGRendererCanvas.h"
 #include "nsISVGRenderer.h"
 #include "nsIDOMSVGMatrix.h"
@@ -48,8 +47,10 @@
 #include "nsIDOMSVGImageElement.h"
 #include "nsSVGElement.h"
 #include "nsSVGUtils.h"
-#include "nsSVGOuterSVGFrame.h"
 #include "nsIImage.h" /* for MOZ_PLATFORM_IMAGES_BOTTOM_TO_TOP */
+#include "nsSVGMatrix.h"
+#include "nsISVGCairoCanvas.h"
+#include "cairo.h"
 
 #define NS_GET_BIT(rowptr, x) (rowptr[(x)>>3] &  (1<<(7-(x)&0x7)))
 
@@ -122,7 +123,7 @@ private:
   nsCOMPtr<nsIDOMSVGPreserveAspectRatio> mPreserveAspectRatio;
 
   nsCOMPtr<imgIDecoderObserver> mListener;
-  nsCOMPtr<nsISVGRendererSurface> mSurface;
+  cairo_surface_t *mSurface;
 
   nsresult ConvertFrame(gfxIImageFrame *aNewFrame);
 
@@ -158,6 +159,9 @@ nsSVGImageFrame::~nsSVGImageFrame()
     NS_REINTERPRET_CAST(nsSVGImageListener*, mListener.get())->SetFrame(nsnull);
   }
   mListener = nsnull;
+
+  if (mSurface)
+    cairo_surface_destroy(mSurface);
 }
 
 NS_IMETHODIMP
@@ -251,8 +255,8 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
     element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
 
     PRUint32 nativeWidth, nativeHeight;
-    mSurface->GetWidth(&nativeWidth);
-    mSurface->GetHeight(&nativeHeight);
+    nativeWidth = cairo_image_surface_get_width(mSurface);
+    nativeHeight = cairo_image_surface_get_height(mSurface);
 
     nsCOMPtr<nsIDOMSVGImageElement> image = do_QueryInterface(mContent);
     nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> ratio;
@@ -271,9 +275,16 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
       canvas->SetClipRect(ctm, x, y, width, height);
     }
 
-    canvas->CompositeSurfaceMatrix(mSurface,
-                                   fini,
-                                   mStyleContext->GetStyleDisplay()->mOpacity);
+    nsCOMPtr<nsISVGCairoCanvas> cairoCanvas = do_QueryInterface(canvas);
+    cairo_matrix_t matrix = NS_ConvertSVGMatrixToCairo(fini);
+    cairoCanvas->AdjustMatrixForInitialTransform(&matrix);
+    cairo_t *ctx = cairoCanvas->GetContext();
+
+    cairo_save(ctx);
+    cairo_set_matrix(ctx, &matrix);
+    cairo_set_source_surface(ctx, mSurface, 0.0, 0.0);
+    cairo_paint_with_alpha(ctx, mStyleContext->GetStyleDisplay()->mOpacity);
+    cairo_restore(ctx);
 
     if (GetStyleDisplay()->IsScrollableOverflow())
       canvas->PopClip();
@@ -294,29 +305,18 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
   PRInt32 width, height;
   aNewFrame->GetWidth(&width);
   aNewFrame->GetHeight(&height);
-  
-  nsresult rv;
-  nsCOMPtr<nsISVGRenderer> renderer;
 
-  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-  if (!outerSVGFrame)
+  mSurface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+  if (!mSurface)
     return NS_ERROR_FAILURE;
-  rv = outerSVGFrame->GetRenderer(getter_AddRefs(renderer));
-  if (NS_FAILED(rv))
-    return rv;
-  rv = renderer->CreateSurface(width, height, getter_AddRefs(mSurface));
-  if (NS_FAILED(rv))
-    return rv;
-  
+
   PRUint8 *data, *target;
   PRUint32 length;
   PRInt32 stride;
-  mSurface->Lock();
-  mSurface->GetData(&data, &length, &stride);
-  if (!data) {
-    mSurface->Unlock();
-    return NS_ERROR_FAILURE;
-  }
+
+  data = cairo_image_surface_get_data(mSurface);
+  stride = cairo_image_surface_get_stride(mSurface);
+
 #ifdef MOZ_PLATFORM_IMAGES_BOTTOM_TO_TOP
   stride = -stride;
 #endif
@@ -329,7 +329,6 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
   aNewFrame->GetImageData(&rgb, &length);
   aNewFrame->GetImageBytesPerRow(&bpr);
   if (!rgb) {
-    mSurface->Unlock();
     aNewFrame->UnlockImageData();
     aNewFrame->UnlockAlphaData();
     return NS_ERROR_FAILURE;
@@ -454,7 +453,6 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
 
 #endif // MOZ_CAIRO_GFX
   
-  mSurface->Unlock();
   aNewFrame->UnlockImageData();
   aNewFrame->UnlockAlphaData();
   
