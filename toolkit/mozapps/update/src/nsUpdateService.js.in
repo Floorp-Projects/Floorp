@@ -2587,6 +2587,8 @@ TimerManager.prototype = {
      getObserverService().removeObserver(this, "xpcom-shutdown");
 
       // Release everything we hold onto. 
+      for (var timerID in this._timers)
+        delete this._timers[timerID];
       this._timer = null;
       this._timers = null;
     }
