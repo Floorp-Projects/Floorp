@@ -4607,8 +4607,8 @@ nsEditor::DeleteSelectionImpl(nsIEditor::EDirection aAction)
   if (aAction == ePrevious || aAction == eNext) {
 #ifdef DEBUG
     PRUint32 flags;
-    NS_ASSERTION(NS_SUCCEEDED(GetFlags(&flags) &&
-                 (flags & nsIPlaintextEditor::eEditorPlaintextMask)),
+    NS_ASSERTION(NS_SUCCEEDED(GetFlags(&flags)) &&
+                 (flags & nsIPlaintextEditor::eEditorPlaintextMask),
                  "Should not have reached this point in rich text editor");
 #endif
     res = selection->GetIsCollapsed(&isDeletingOneChar);
