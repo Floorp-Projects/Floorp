@@ -174,6 +174,9 @@ static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 #define STYLE_STACK_DEPTH 50
 #define STYLE_CURRENT_STACK ((mSaveCount<STYLE_STACK_DEPTH)?mSaveCount:STYLE_STACK_DEPTH-1)
 
+static PRBool CheckSaneImageSize (PRInt32 width, PRInt32 height);
+static PRBool CheckSaneSubrectSize (PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, PRInt32 realWidth, PRInt32 realHeight);
+
 /**
  ** nsCanvasGradient
  **/
@@ -729,6 +732,10 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
 {
     Destroy();
+
+    // Check that the dimensions are sane
+    if (!CheckSaneImageSize(width, height))
+        return NS_ERROR_FAILURE;
 
     mWidth = width;
     mHeight = height;
@@ -2331,7 +2338,7 @@ nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
     return NS_OK;
 }
 
-static PRBool
+PRBool
 CheckSaneImageSize (PRInt32 width, PRInt32 height)
 {
     if (width <= 0 || height <= 0)
@@ -2349,6 +2356,22 @@ CheckSaneImageSize (PRInt32 width, PRInt32 height)
     /* reject over-wide or over-tall images */
     const PRInt32 k64KLimit = 0x0000FFFF;
     if (width > k64KLimit || height > k64KLimit)
+        return PR_FALSE;
+
+    return PR_TRUE;
+}
+
+/* Check that the rect [x,y,w,h] is a valid subrect of [0,0,realWidth,realHeight]
+ * without overflowing any integers and the like.
+ */
+PRBool
+CheckSaneSubrectSize (PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, PRInt32 realWidth, PRInt32 realHeight)
+{
+    if (w <= 0 || h <= 0 || x < 0 || y < 0)
+        return PR_FALSE;
+
+    if (x >= realWidth  || w > (realWidth - x) ||
+        y >= realHeight || h > (realHeight - y))
         return PR_FALSE;
 
     return PR_TRUE;
@@ -2833,8 +2856,7 @@ nsCanvasRenderingContext2D::GetImageData()
     if (!JS_ConvertArguments (ctx, argc, argv, "jjjj", &x, &y, &w, &h))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
-    if (w <= 0 || h <= 0 ||
-        x + w > mWidth || y + h > mHeight)
+    if (!CheckSaneSubrectSize (x, y, w, h, mWidth, mHeight))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
     PRUint8 *surfaceData = mImageSurfaceData;
@@ -2965,7 +2987,7 @@ nsCanvasRenderingContext2D::PutImageData()
         return NS_ERROR_DOM_SYNTAX_ERR;
     dataArray = JSVAL_TO_OBJECT(v);
 
-    if (w <= 0 || h <= 0)
+    if (!CheckSaneSubrectSize (x, y, w, h, mWidth, mHeight))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
     jsuint arrayLen;
@@ -2973,13 +2995,6 @@ nsCanvasRenderingContext2D::PutImageData()
         !JS_GetArrayLength(ctx, dataArray, &arrayLen) ||
         arrayLen < (jsuint)(w * h * 4))
         return NS_ERROR_DOM_SYNTAX_ERR;
-
-    // XXX I'm not sure if we really want this check -- we
-    // can just ignore any data that's set outside of the
-    // canvas boundaries
-    if (x + w > mWidth || y + h > mHeight)
-        return NS_ERROR_DOM_SYNTAX_ERR;
-
 
     nsAutoArrayPtr<PRUint8> imageBuffer(new PRUint8[w * h * 4]);
     cairo_surface_t *imgsurf;
