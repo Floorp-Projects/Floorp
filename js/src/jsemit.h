@@ -526,6 +526,8 @@ typedef enum JSSrcNoteType {
  * to be adjusted, but these "offsets" are too small to span a span-dependent
  * instruction, so can be used to denote distinct declaration syntaxes to the
  * decompiler.
+ *
+ * NB: the var_prefix array in jsopcode.c depends on these dense indexes.
  */
 #define SRC_DECL_VAR             0
 #define SRC_DECL_CONST           1

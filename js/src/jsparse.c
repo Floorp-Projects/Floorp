@@ -2339,6 +2339,7 @@ ReturnOrYield(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     return pn;
 }
 
+#if JS_HAS_BLOCK_SCOPE
 static JSStmtInfo *
 FindMaybeScopeStatement(JSTreeContext *tc)
 {
@@ -2352,6 +2353,7 @@ FindMaybeScopeStatement(JSTreeContext *tc)
     }
     return NULL;
 }
+#endif
 
 static JSParseNode *
 PushLexicalScope(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
