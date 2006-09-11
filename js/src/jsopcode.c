@@ -1421,15 +1421,22 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                             return JS_FALSE;
                         }
                         rval = POP_STR();
-                        todo = Sprint(&ss->sprinter, "let (%s) %s", lval, rval);
+                        todo = Sprint(&ss->sprinter,
+                                      (*rval == '{')
+                                      ? "let (%s) (%s)"
+                                      : "let (%s) %s",
+                                      lval, rval);
                         JS_free(cx, (char *)lval);
                     }
                     break;
 
                   default:
                     rval = POP_STR();
-                    if (*rval != '\0')
-                        js_printf(jp, "\t%s;\n", rval);
+                    if (*rval != '\0') {
+                        js_printf(jp,
+                                  (*rval == '{') ? "\t(%s);\n" : "\t%s;\n",
+                                  rval);
+                    }
                     todo = -2;
                     break;
                 }
@@ -1686,7 +1693,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_YIELD:
                 rval = POP_STR();
                 todo = (*rval != '\0')
-                       ? Sprint(&ss->sprinter, "%s %s", js_yield_str, rval)
+                       ? Sprint(&ss->sprinter,
+                                (strncmp(rval, js_yield_str, 5) == 0 &&
+                                 rval[5] == ' ')
+                                ? "%s (%s)"
+                                : "%s %s",
+                                js_yield_str, rval)
                        : SprintCString(&ss->sprinter, js_yield_str);
                 break;
 
@@ -2133,7 +2145,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #if JS_HAS_LVALUE_RETURN
               case JSOP_SETCALL:
 #endif
-                op = JSOP_NOP;           /* turn off parens */
+                op = JSOP_SETNAME;      /* turn off most parens */
                 argc = GET_ARGC(pc);
                 argv = (char **)
                     JS_malloc(cx, (size_t)(argc + 1) * sizeof *argv);
@@ -2915,15 +2927,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_ENDINIT:
+                op = JSOP_NOP;           /* turn off parens */
                 rval = POP_STR();
                 sn = js_GetSrcNote(jp->script, pc);
                 if (*rval == '[')
                     --ss->inArrayInit;
-                todo = Sprint(&ss->sprinter,
-                              (pc[1] == JSOP_GROUP &&
-                               (pc[2] == JSOP_POP || pc[2] == JSOP_POPV))
-                              ? "(%s%s%c)"
-                              : "%s%s%c",
+                todo = Sprint(&ss->sprinter, "%s%s%c",
                               rval,
                               (sn && SN_TYPE(sn) == SRC_CONTINUE) ? ", " : "",
                               (*rval == '[') ? ']' : '}');
