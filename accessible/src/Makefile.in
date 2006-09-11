@@ -49,7 +49,7 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 PLATFORM_DIR = msaa
 else
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 PLATFORM_DIR += mac
 else
 PLATFORM_DIR += other
