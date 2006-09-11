@@ -184,9 +184,9 @@ Please select a testing group with testcases, or that has not yet been tested in
             [% FOREACH cursubgroup = cursubgrouplist %]
 
             [% IF show_admin %]
-              [% personal_completed = cursubgroup.coverage(sysconfig.platform, sysconfig.build_id, sysconfig.locale, 0, user) %]
-            [% ELSE %]
               [% personal_completed = cursubgroup.coverage(sysconfig.platform, sysconfig.build_id, sysconfig.locale, 0, 0, 1) %]
+            [% ELSE %]
+              [% personal_completed = cursubgroup.coverage(sysconfig.platform, sysconfig.build_id, sysconfig.locale, 0, user) %]
             [% END %]
 
             [% IF personal_completed == 100 %]
