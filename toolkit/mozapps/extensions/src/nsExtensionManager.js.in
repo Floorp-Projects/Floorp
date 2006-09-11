@@ -7874,6 +7874,42 @@ ExtensionsDataSource.prototype = {
     return null;
   },
 
+  /**
+   * Get the em:appManaged property. This prevents extensions from hiding
+   * extensions installed into locations other than the app-global location.
+   */
+  _rdfGet_appManaged: function(item, property) {
+    var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
+    var locationKey = this.getItemProperty(id, "installLocation");
+    if (locationKey != KEY_APP_GLOBAL)
+      return EM_L("false");
+    return null;
+  },
+
+  /**
+   * Get the em:hidden property. This prevents extensions from hiding
+   * extensions installed into locations other than restricted locations.
+   */
+  _rdfGet_hidden: function(item, property) {
+    var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
+    var installLocation = InstallLocations.get(this.getInstallLocationKey(id));
+    if (!installLocation.restricted)
+      return EM_L("false");
+    return null;
+  },
+
+  /**
+   * Get the em:locked property. This prevents extensions from locking
+   * extensions installed into locations other than restricted locations.
+   */
+  _rdfGet_locked: function(item, property) {
+    var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
+    var installLocation = InstallLocations.get(this.getInstallLocationKey(id));
+    if (!installLocation.restricted)
+      return EM_L("false");
+    return null;
+  },
+
   /** 
    * Gets the em:availableUpdateURL - the URL to an XPI update package, if
    * present, or a literal string "none" if there is no update XPI URL.
