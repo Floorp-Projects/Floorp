@@ -1197,16 +1197,17 @@ NS_IMETHODIMP nsChildView::Invalidate(PRBool aIsSynchronous)
   if (!mView || !mVisible)
     return NS_OK;
 
-  if (aIsSynchronous)
+  if (aIsSynchronous) {
     [mView display];
-  else if ([NSView focusView])
-  {
+  }
+  else if ([NSView focusView]) {
     // if a view is focussed (i.e. being drawn), then postpone the invalidate so that we
     // don't lose it.
     [mView performSelector:@selector(setNeedsDisplayWithValue:) withObject:nil afterDelay:0];
   }
-  else
+  else {
     [mView setNeedsDisplay:YES];
+  }
 
   return NS_OK;
 }
@@ -1222,19 +1223,20 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsRect &aRect, PRBool aIsSynchronous
     return NS_OK;
 
   NSRect r;
-  GeckoRectToNSRect ( aRect, r );
+  GeckoRectToNSRect(aRect, r);
   
-  if (aIsSynchronous)
+  if (aIsSynchronous) {
     [mView displayRect:r];
-  else if ([NSView focusView])
-  {
+  }
+  else if ([NSView focusView]) {
     // if a view is focussed (i.e. being drawn), then postpone the invalidate so that we
     // don't lose it.
     [mView performSelector:@selector(setNeedsDisplayWithValue:) withObject:[NSValue valueWithRect:r] afterDelay:0];
   }
-  else
+  else {
     [mView setNeedsDisplayInRect:r];
-  
+  }
+
   return NS_OK;
 }
 
@@ -1295,14 +1297,12 @@ void nsChildView::StartDraw(nsIRenderingContext* aRenderingContext)
     return;
   mDrawing = PR_TRUE;
 
-  if (aRenderingContext == nsnull)
-  {
+  if (aRenderingContext == nsnull) {
     // make sure we have a rendering context
     mTempRenderingContext = getter_AddRefs(GetRenderingContext());
     mTempRenderingContextMadeHere = PR_TRUE;
   }
-  else
-  {
+  else {
     // if we already have a rendering context, save its state
     mTempRenderingContext = aRenderingContext;
     mTempRenderingContextMadeHere = PR_FALSE;
@@ -1314,8 +1314,7 @@ void nsChildView::StartDraw(nsIRenderingContext* aRenderingContext)
 
   // set the widget font. nsMacControl implements SetFont, which is where
   // the font should get set.
-  if (mFontMetrics)
-  {
+  if (mFontMetrics) {
     mTempRenderingContext->SetFont(mFontMetrics);
   }
 
