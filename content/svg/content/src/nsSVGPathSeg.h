@@ -41,9 +41,21 @@
 
 #include "nsIDOMSVGPathSeg.h"
 #include "nsIWeakReference.h"
+#include "nsSVGUtils.h"
+#include "nsSVGPathDataParser.h"
 
 class nsSVGPathSegList;
 class nsISVGValue;
+
+struct nsSVGPathSegTraversalState {
+  float curPosX, startPosX, quadCPX, cubicCPX;
+  float curPosY, startPosY, quadCPY, cubicCPY;
+  nsSVGPathSegTraversalState()
+  {
+    curPosX = startPosX = quadCPX = cubicCPX = 0;
+    curPosY = startPosY = quadCPY = cubicCPY = 0;
+  }
+};
 
 class nsSVGPathSeg : public nsIDOMSVGPathSeg
 {
@@ -57,6 +69,9 @@ public:
   // nsIDOMSVGPathSeg interface:
   NS_DECL_NSIDOMSVGPATHSEG
   NS_IMETHOD GetValueString(nsAString& aValue) = 0;
+
+  // nsSVGPathSeg methods:
+  virtual float GetLength(nsSVGPathSegTraversalState *ts) = 0;
 
 protected:
   virtual PRUint16 GetSegType() = 0;

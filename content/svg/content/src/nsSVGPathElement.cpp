@@ -139,7 +139,38 @@ nsSVGPathElement::GetPointAtLength(float distance, nsIDOMSVGPoint **_retval)
 NS_IMETHODIMP
 nsSVGPathElement::GetPathSegAtLength(float distance, PRUint32 *_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  //Check if mSegments is null
+  nsresult rv = CreatePathSegList();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 i = 0, numSegments;
+  float distCovered = 0;
+  nsSVGPathSegTraversalState ts;
+
+  mSegments->GetNumberOfItems(&numSegments);
+
+  //  There is no need to check to see if distance falls within the last segment
+  //  because if distance is longer than the total length of the path we return 
+  //  the index of the final segment anyway.
+  while (distCovered < distance && i < numSegments - 1) {
+    nsIDOMSVGPathSeg *iSeg;
+    mSegments->GetItem(i, &iSeg);
+    nsSVGPathSeg* curSeg = NS_STATIC_CAST(nsSVGPathSeg*, iSeg);
+    if (i == 0) {
+      curSeg->GetLength(&ts);
+    } else {
+      distCovered += curSeg->GetLength(&ts);
+    }
+
+    if (distCovered >= distance) {
+      break;
+    }
+    ++i;
+  }
+
+  *_retval = i;
+
+  return NS_OK;
 }
 
 /* nsIDOMSVGPathSegClosePath createSVGPathSegClosePath (); */

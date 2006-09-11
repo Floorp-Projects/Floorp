@@ -42,6 +42,15 @@
 #include "nsTextFormatter.h"
 #include "nsContentUtils.h"
 
+
+struct PathPoint {
+  float x, y;
+};
+
+//----------------------------------------------------------------------
+// Error threshold to use when calculating the length of Bezier curves
+static const float PATH_SEG_LENGTH_TOLERANCE = 0.0000001f;
+
 //----------------------------------------------------------------------
 // implementation helper macros
 
@@ -53,6 +62,73 @@ NS_INTERFACE_MAP_BEGIN(ns##basename)                          \
   NS_INTERFACE_MAP_ENTRY(nsIDOM##basename)                    \
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(basename)          \
 NS_INTERFACE_MAP_END_INHERITING(nsSVGPathSeg)
+
+//----------------------------------------------------------------------
+// GetLength Helper Functions
+
+static float GetDistance(float x1, float x2, float y1, float y2)
+{
+  return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+}
+
+static void SplitQuadraticBezier(PathPoint *curve,
+                                 PathPoint *left,
+                                 PathPoint *right)
+{
+  left[0].x = curve[0].x;
+  left[0].y = curve[0].y;
+  right[2].x = curve[2].x;
+  right[2].y = curve[2].y;
+  left[1].x = (curve[0].x + curve[1].x) / 2;
+  left[1].y = (curve[0].y + curve[1].y) / 2;
+  right[1].x = (curve[1].x + curve[2].x) / 2;
+  right[1].y = (curve[1].y + curve[2].y) / 2;
+  left[2].x = right[0].x = (left[1].x + right[1].x) / 2;
+  left[2].y = right[0].y = (left[1].y + right[1].y) / 2;
+}
+
+static void SplitCubicBezier(PathPoint *curve,
+                             PathPoint *left,
+                             PathPoint *right)
+{
+  PathPoint tmp;
+  tmp.x = (curve[1].x + curve[2].x) / 4;
+  tmp.y = (curve[1].y + curve[2].y) / 4;
+  left[0].x = curve[0].x;
+  left[0].y = curve[0].y;
+  right[3].x = curve[3].x;
+  right[3].y = curve[3].y;
+  left[1].x = (curve[0].x + curve[1].x) / 2;
+  left[1].y = (curve[0].y + curve[1].y) / 2;
+  right[2].x = (curve[2].x + curve[3].x) / 2;
+  right[2].y = (curve[2].y + curve[3].y) / 2;
+  left[2].x = left[1].x / 2 + tmp.x;
+  left[2].y = left[1].y / 2 + tmp.y;
+  right[1].x = right[2].x / 2 + tmp.x;
+  right[1].y = right[2].y / 2 + tmp.y;
+  left[3].x = right[0].x = (left[2].x + right[1].x) / 2;
+  left[3].y = right[0].y = (left[2].y + right[1].y) / 2;
+}
+
+static float CalcBezLength(PathPoint *curve,PRUint32 numPts,
+                           void (*split)(PathPoint*, PathPoint*, PathPoint*))
+{
+  PathPoint left[4];
+  PathPoint right[4];
+  float length = 0, dist;
+  PRUint32 i;
+  for (i = 0; i < numPts - 1; i++) {
+    length += GetDistance(curve[i].x, curve[i+1].x, curve[i].y, curve[i+1].y);
+  }
+  dist = GetDistance(curve[0].x, curve[numPts - 1].x,
+                     curve[0].y, curve[numPts - 1].y);
+  if (length - dist > PATH_SEG_LENGTH_TOLERANCE) {
+      split(curve, left, right);
+      return CalcBezLength(left, numPts, split) + 
+             CalcBezLength(right, numPts, split);
+  }
+  return length;
+}
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGPathSeg
@@ -127,7 +203,7 @@ public:
 
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
-
+  virtual float GetLength(nsSVGPathSegTraversalState *ts);
   virtual PRUint16 GetSegType()
     { return nsIDOMSVGPathSeg::PATHSEG_CLOSEPATH; }
 };
@@ -154,6 +230,16 @@ nsSVGPathSegClosePath::GetValueString(nsAString& aValue)
   return NS_OK;
 }
 
+float
+nsSVGPathSegClosePath::GetLength(nsSVGPathSegTraversalState *ts)
+{
+  float dist = GetDistance(ts->startPosX, ts->curPosX,
+                           ts->startPosY, ts->curPosY);
+  ts->quadCPX = ts->cubicCPX = ts->curPosX = ts->startPosX;
+  ts->quadCPY = ts->cubicCPY = ts->curPosY = ts->startPosY;
+  return dist;
+}
+
 ////////////////////////////////////////////////////////////////////////
 // nsSVGPathSegMovetoAbs
 
@@ -171,7 +257,7 @@ public:
 
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
-
+  virtual float GetLength(nsSVGPathSegTraversalState *ts);
   virtual PRUint16 GetSegType()
     { return nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS; }
 
@@ -208,6 +294,14 @@ nsSVGPathSegMovetoAbs::GetValueString(nsAString& aValue)
   aValue.Assign(buf);
 
   return NS_OK;
+}
+
+float
+nsSVGPathSegMovetoAbs::GetLength(nsSVGPathSegTraversalState *ts)
+{
+  ts->cubicCPX = ts->quadCPX = ts->startPosX = ts->curPosX = mX;
+  ts->cubicCPY = ts->quadCPY = ts->startPosY = ts->curPosY = mY;
+  return 0;
 }
 
 //----------------------------------------------------------------------
@@ -257,7 +351,7 @@ public:
 
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
-
+  virtual float GetLength(nsSVGPathSegTraversalState *ts);
   virtual PRUint16 GetSegType()
     { return nsIDOMSVGPathSeg::PATHSEG_MOVETO_REL; }
 
@@ -295,6 +389,15 @@ nsSVGPathSegMovetoRel::GetValueString(nsAString& aValue)
 
   return NS_OK;
 }
+
+float
+nsSVGPathSegMovetoRel::GetLength(nsSVGPathSegTraversalState *ts)
+{
+  ts->cubicCPX = ts->quadCPX = ts->startPosX = ts->curPosX += mX;
+  ts->cubicCPY = ts->quadCPY = ts->startPosY = ts->curPosY += mY;
+  return 0;
+}
+
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegMovetoRel methods:
 
@@ -341,7 +444,7 @@ public:
 
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
-
+  virtual float GetLength(nsSVGPathSegTraversalState *ts);
   virtual PRUint16 GetSegType()
     { return nsIDOMSVGPathSeg::PATHSEG_LINETO_ABS; }
 
@@ -379,6 +482,17 @@ nsSVGPathSegLinetoAbs::GetValueString(nsAString& aValue)
 
   return NS_OK;
 }
+
+float
+nsSVGPathSegLinetoAbs::GetLength(nsSVGPathSegTraversalState *ts)
+{
+  
+  float dist = GetDistance(ts->curPosX, mX, ts->curPosY, mY);
+  ts->cubicCPX = ts->quadCPX = ts->curPosX = mX;
+  ts->cubicCPY = ts->quadCPY = ts->curPosY = mY;
+  return dist;
+}
+
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegLinetoAbs methods:
 
@@ -426,7 +540,7 @@ public:
 
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
-
+  virtual float GetLength(nsSVGPathSegTraversalState *ts);
   virtual PRUint16 GetSegType()
     { return nsIDOMSVGPathSeg::PATHSEG_LINETO_REL; }
 
@@ -463,6 +577,14 @@ nsSVGPathSegLinetoRel::GetValueString(nsAString& aValue)
   aValue.Assign(buf);
 
   return NS_OK;
+}
+
+float
+nsSVGPathSegLinetoRel::GetLength(nsSVGPathSegTraversalState *ts)
+{
+  ts->cubicCPX = ts->quadCPX = ts->curPosX += mX;
+  ts->cubicCPY = ts->quadCPY = ts->curPosY += mY;
+  return sqrt(mX * mX + mY * mY);
 }
 
 //----------------------------------------------------------------------
@@ -514,7 +636,7 @@ public:
 
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
-
+  virtual float GetLength(nsSVGPathSegTraversalState *ts);
   virtual PRUint16 GetSegType()
     { return nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_ABS; }
 
@@ -556,6 +678,22 @@ nsSVGPathSegCurvetoCubicAbs::GetValueString(nsAString& aValue)
   aValue.Assign(buf);
 
   return NS_OK;
+}
+
+float
+nsSVGPathSegCurvetoCubicAbs::GetLength(nsSVGPathSegTraversalState *ts)
+{
+  PathPoint curve[4] = { {ts->curPosX, ts->curPosY},
+                         {mX1, mY1},
+                         {mX2, mY2},
+                         {mX, mY} };
+  float dist = CalcBezLength(curve, 4, SplitCubicBezier);
+  
+  ts->quadCPX = ts->curPosX = mX;
+  ts->quadCPY = ts->curPosY = mY;
+  ts->cubicCPX = mX2;
+  ts->cubicCPY = mY2;
+  return dist;
 }
 
 //----------------------------------------------------------------------
@@ -659,7 +797,7 @@ public:
 
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
-
+  virtual float GetLength(nsSVGPathSegTraversalState *ts);
   virtual PRUint16 GetSegType()
     { return nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_REL; }
 
@@ -701,6 +839,19 @@ nsSVGPathSegCurvetoCubicRel::GetValueString(nsAString& aValue)
   aValue.Assign(buf);
 
   return NS_OK;
+}
+
+float
+nsSVGPathSegCurvetoCubicRel::GetLength(nsSVGPathSegTraversalState *ts)
+{
+  PathPoint curve[4] = { {0, 0}, {mX1, mY1}, {mX2, mY2}, {mX, mY} };
+  float dist = CalcBezLength(curve, 4, SplitCubicBezier);
+  
+  ts->cubicCPX = mX2 + ts->curPosX;
+  ts->cubicCPY = mY2 + ts->curPosY;
+  ts->quadCPX = ts->curPosX += mX;
+  ts->quadCPY = ts->curPosY += mY;
+  return dist;
 }
 
 //----------------------------------------------------------------------
@@ -802,7 +953,7 @@ public:
 
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
-
+  virtual float GetLength(nsSVGPathSegTraversalState *ts);
   virtual PRUint16 GetSegType()
     { return nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_ABS; }
 
@@ -843,6 +994,19 @@ nsSVGPathSegCurvetoQuadraticAbs::GetValueString(nsAString& aValue)
   aValue.Assign(buf);
 
   return NS_OK;
+}
+
+float
+nsSVGPathSegCurvetoQuadraticAbs::GetLength(nsSVGPathSegTraversalState *ts)
+{
+  PathPoint curve[3] = { {ts->curPosX, ts->curPosY}, {mX1, mY1}, {mX, mY} };
+  float dist = CalcBezLength(curve, 3, SplitQuadraticBezier);
+  
+  ts->quadCPX = mX1;
+  ts->quadCPY = mY1;
+  ts->cubicCPX = ts->curPosX = mX;
+  ts->cubicCPY = ts->curPosY = mY;
+  return dist;
 }
 
 //----------------------------------------------------------------------
@@ -919,7 +1083,7 @@ public:
 
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
-
+  virtual float GetLength(nsSVGPathSegTraversalState *ts);
   virtual PRUint16 GetSegType()
     { return nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_REL; }
 
@@ -961,6 +1125,19 @@ nsSVGPathSegCurvetoQuadraticRel::GetValueString(nsAString& aValue)
   aValue.Assign(buf);
 
   return NS_OK;
+}
+
+float
+nsSVGPathSegCurvetoQuadraticRel::GetLength(nsSVGPathSegTraversalState *ts)
+{
+  PathPoint curve[3] = { {0, 0}, {mX1, mY1}, {mX, mY} };
+  float dist = CalcBezLength(curve, 3, SplitQuadraticBezier);
+  
+  ts->quadCPX = mX1 + ts->curPosX;
+  ts->quadCPY = mY1 + ts->curPosY;
+  ts->cubicCPX = ts->curPosX += mX;
+  ts->cubicCPY = ts->curPosY += mY;
+  return dist;
 }
 
 //----------------------------------------------------------------------
@@ -1038,7 +1215,7 @@ public:
 
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
-
+  virtual float GetLength(nsSVGPathSegTraversalState *ts);
   virtual PRUint16 GetSegType()
     { return nsIDOMSVGPathSeg::PATHSEG_ARC_ABS; }
 
@@ -1084,6 +1261,25 @@ nsSVGPathSegArcAbs::GetValueString(nsAString& aValue)
   aValue.Assign(buf);
 
   return NS_OK;
+}
+
+float
+nsSVGPathSegArcAbs::GetLength(nsSVGPathSegTraversalState *ts)
+{
+  PathPoint bez[4] = { {ts->curPosX, ts->curPosY}, {0,0}, {0,0}, {0,0}};
+  nsSVGArcConverter converter(ts->curPosX, ts->curPosY, mX, mY, mR1,
+                              mR2, mAngle, mLargeArcFlag, mSweepFlag);
+  float dist = 0;
+  while (converter.GetNextSegment(&bez[1].x, &bez[1].y, &bez[2].x, &bez[2].y,
+                                  &bez[3].x, &bez[3].y)) 
+  {
+    dist += CalcBezLength(bez, 4, SplitCubicBezier);
+    bez[0].x = bez[3].x;
+    bez[0].y = bez[3].y;
+  }
+  ts->cubicCPX = ts->quadCPX = ts->curPosX = mX;
+  ts->cubicCPY = ts->quadCPY = ts->curPosY = mY;
+  return dist;
 }
 
 //----------------------------------------------------------------------
@@ -1200,7 +1396,7 @@ public:
 
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
-
+  virtual float GetLength(nsSVGPathSegTraversalState *ts);
   virtual PRUint16 GetSegType()
     { return nsIDOMSVGPathSeg::PATHSEG_ARC_REL; }
 
@@ -1245,6 +1441,26 @@ nsSVGPathSegArcRel::GetValueString(nsAString& aValue)
   aValue.Assign(buf);
 
   return NS_OK;
+}
+
+float
+nsSVGPathSegArcRel::GetLength(nsSVGPathSegTraversalState *ts)
+{
+  PathPoint bez[4] = { {0, 0}, {0,0}, {0,0}, {0,0}};
+  nsSVGArcConverter converter(0, 0, mX, mY, mR1, mR2, mAngle,
+                              mLargeArcFlag, mSweepFlag);
+  float dist = 0;
+  while (converter.GetNextSegment(&bez[1].x, &bez[1].y, &bez[2].x, &bez[2].y,
+                                  &bez[3].x, &bez[3].y)) 
+  {
+    dist += CalcBezLength(bez, 4, SplitCubicBezier);
+    bez[0].x = bez[3].x;
+    bez[0].y = bez[3].y;
+  }
+
+  ts->cubicCPX = ts->quadCPX = ts->curPosX += mX;
+  ts->cubicCPY = ts->quadCPY = ts->curPosY += mY;
+  return dist;
 }
 
 //----------------------------------------------------------------------
@@ -1359,7 +1575,7 @@ public:
 
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
-
+  virtual float GetLength(nsSVGPathSegTraversalState *ts);
   virtual PRUint16 GetSegType()
     { return nsIDOMSVGPathSeg::PATHSEG_LINETO_HORIZONTAL_ABS; }
 
@@ -1399,6 +1615,15 @@ nsSVGPathSegLinetoHorizontalAbs::GetValueString(nsAString& aValue)
   return NS_OK;
 }
 
+float
+nsSVGPathSegLinetoHorizontalAbs::GetLength(nsSVGPathSegTraversalState *ts)
+{
+  float dist = fabs(mX - ts->curPosX);
+  ts->cubicCPX = ts->quadCPX = ts->curPosX = mX;
+  ts->cubicCPY = ts->quadCPY = ts->curPosY;
+  return dist;
+}
+
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegLinetoHorizontalAbs methods:
 
@@ -1432,7 +1657,7 @@ public:
 
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
-
+  virtual float GetLength(nsSVGPathSegTraversalState *ts);
   virtual PRUint16 GetSegType()
     { return nsIDOMSVGPathSeg::PATHSEG_LINETO_HORIZONTAL_REL; }
 
@@ -1472,6 +1697,14 @@ nsSVGPathSegLinetoHorizontalRel::GetValueString(nsAString& aValue)
   return NS_OK;
 }
 
+float
+nsSVGPathSegLinetoHorizontalRel::GetLength(nsSVGPathSegTraversalState *ts)
+{
+  ts->cubicCPX = ts->quadCPX = ts->curPosX += mX;
+  ts->cubicCPY = ts->quadCPY = ts->curPosY;
+  return fabs(mX);
+}
+
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegLinetoHorizontalRel methods:
 
@@ -1505,7 +1738,7 @@ public:
 
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
-
+  virtual float GetLength(nsSVGPathSegTraversalState *ts);
   virtual PRUint16 GetSegType()
     { return nsIDOMSVGPathSeg::PATHSEG_LINETO_VERTICAL_ABS; }
 
@@ -1545,6 +1778,15 @@ nsSVGPathSegLinetoVerticalAbs::GetValueString(nsAString& aValue)
   return NS_OK;
 }
 
+float
+nsSVGPathSegLinetoVerticalAbs::GetLength(nsSVGPathSegTraversalState *ts)
+{
+  float dist = fabs(mY - ts->curPosY);
+  ts->cubicCPY = ts->quadCPY = ts->curPosY = mY;
+  ts->cubicCPX = ts->quadCPX = ts->curPosX;
+  return dist;
+}
+
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegLinetoVerticalAbs methods:
 
@@ -1578,7 +1820,7 @@ public:
 
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
-
+  virtual float GetLength(nsSVGPathSegTraversalState *ts);
   virtual PRUint16 GetSegType()
     { return nsIDOMSVGPathSeg::PATHSEG_LINETO_VERTICAL_REL; }
 
@@ -1619,6 +1861,14 @@ nsSVGPathSegLinetoVerticalRel::GetValueString(nsAString& aValue)
   return NS_OK;
 }
 
+float
+nsSVGPathSegLinetoVerticalRel::GetLength(nsSVGPathSegTraversalState *ts)
+{
+  ts->cubicCPY = ts->quadCPY = ts->curPosY += mY;
+  ts->cubicCPX = ts->quadCPX = ts->curPosX;
+  return fabs(mY);
+}
+
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegLinetoVerticalRel methods:
 
@@ -1653,7 +1903,7 @@ public:
 
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
-
+  virtual float GetLength(nsSVGPathSegTraversalState *ts);
   virtual PRUint16 GetSegType()
     { return nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_ABS; }
 
@@ -1694,6 +1944,25 @@ nsSVGPathSegCurvetoCubicSmoothAbs::GetValueString(nsAString& aValue)
   aValue.Assign(buf);
 
   return NS_OK;
+}
+
+float
+nsSVGPathSegCurvetoCubicSmoothAbs::GetLength(nsSVGPathSegTraversalState *ts)
+{
+  float x1 = 2 * ts->curPosX - ts->cubicCPX;
+  float y1 = 2 * ts->curPosY - ts->cubicCPY;
+
+  PathPoint curve[4] = { {ts->curPosX, ts->curPosY},
+                         {x1, y1},
+                         {mX2, mY2},
+                         {mX, mY} };
+  float dist = CalcBezLength(curve, 4, SplitCubicBezier);
+
+  ts->cubicCPX = mX2;
+  ts->cubicCPY = mY2;
+  ts->quadCPX = ts->curPosX = mX;
+  ts->quadCPY = ts->curPosY = mY;
+  return dist;
 }
 
 //----------------------------------------------------------------------
@@ -1769,7 +2038,7 @@ public:
 
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
-
+  virtual float GetLength(nsSVGPathSegTraversalState *ts);
   virtual PRUint16 GetSegType()
     { return nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_REL; }
 
@@ -1810,6 +2079,23 @@ nsSVGPathSegCurvetoCubicSmoothRel::GetValueString(nsAString& aValue)
   aValue.Assign(buf);
 
   return NS_OK;
+}
+
+float
+nsSVGPathSegCurvetoCubicSmoothRel::GetLength(nsSVGPathSegTraversalState *ts)
+{
+  
+  float x1 = ts->curPosX - ts->cubicCPX;
+  float y1 = ts->curPosY - ts->cubicCPY;
+
+  PathPoint curve[4] = { {0, 0}, {x1, y1}, {mX2, mY2}, {mX, mY} };
+  float dist = CalcBezLength(curve, 4, SplitCubicBezier);
+
+  ts->cubicCPX = mX2 + ts->curPosX;
+  ts->cubicCPY = mY2 + ts->curPosY;
+  ts->quadCPX = ts->curPosX += mX;
+  ts->quadCPY = ts->curPosY += mY;
+  return dist;
 }
 
 //----------------------------------------------------------------------
@@ -1884,7 +2170,7 @@ public:
 
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
-
+  virtual float GetLength(nsSVGPathSegTraversalState *ts);
   virtual PRUint16 GetSegType()
     { return nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS; }
 
@@ -1921,6 +2207,22 @@ nsSVGPathSegCurvetoQuadraticSmoothAbs::GetValueString(nsAString& aValue)
   aValue.Assign(buf);
 
   return NS_OK;
+}
+
+float
+nsSVGPathSegCurvetoQuadraticSmoothAbs::GetLength(nsSVGPathSegTraversalState *ts)
+{
+  ts->quadCPX = 2 * ts->curPosX - ts->quadCPX;
+  ts->quadCPY = 2 * ts->curPosY - ts->quadCPY;
+
+  PathPoint bez[3] = { {ts->curPosX, ts->curPosY},
+                       {ts->quadCPX, ts->quadCPY},
+                       {mX, mY} };
+  float dist = CalcBezLength(bez, 3, SplitQuadraticBezier);
+
+  ts->cubicCPX = ts->curPosX = mX;
+  ts->cubicCPY = ts->curPosY = mY;
+  return dist;
 }
 
 //----------------------------------------------------------------------
@@ -1969,7 +2271,7 @@ public:
 
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
-
+  virtual float GetLength(nsSVGPathSegTraversalState *ts);
   virtual PRUint16 GetSegType()
     { return nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL; }
 
@@ -2008,6 +2310,23 @@ nsSVGPathSegCurvetoQuadraticSmoothRel::GetValueString(nsAString& aValue)
   aValue.Assign(buf);
 
   return NS_OK;
+}
+
+float
+nsSVGPathSegCurvetoQuadraticSmoothRel::GetLength(nsSVGPathSegTraversalState *ts)
+{
+  ts->quadCPX = ts->curPosX - ts->quadCPX;
+  ts->quadCPY = ts->curPosY - ts->quadCPY;
+
+  PathPoint bez[3] = { {0, 0}, {ts->quadCPX, ts->quadCPY}, {mX, mY} };
+  float dist = CalcBezLength(bez, 3, SplitQuadraticBezier);
+
+  ts->quadCPX += ts->curPosX;
+  ts->quadCPY += ts->curPosY;
+
+  ts->cubicCPX = ts->curPosX += mX;
+  ts->cubicCPY = ts->curPosY += mY;
+  return dist;
 }
 
 //----------------------------------------------------------------------
