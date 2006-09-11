@@ -218,6 +218,20 @@ function (aDescriptionURL)
   this.searchService.addEngine(aDescriptionURL, typeXML, iconURL, true);
 }
 
+// This function exists to implement window.external.IsSearchProviderInstalled(),
+// for compatibility with other browsers.  It will return an integer value
+// indicating whether the given engine is installed for the current user.
+// However, it is currently stubbed out due to security/privacy concerns
+// stemming from difficulties in determining what domain issued the request.
+// See bug 340604 and
+// http://msdn.microsoft.com/workshop/author/dhtml/reference/methods/issearchproviderinstalled.asp .
+// XXX Implement this!
+nsSidebar.prototype.IsSearchProviderInstalled =
+function (aSearchURL)
+{
+  return 0;
+}
+
 nsSidebar.prototype.addMicrosummaryGenerator =
 function (generatorURL)
 {

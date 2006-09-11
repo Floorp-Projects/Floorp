@@ -56,10 +56,11 @@ interface nsISidebar : nsISupports
     void addMicrosummaryGenerator(in string generatorURL);
 };
 
-[scriptable, uuid(edd70275-c131-4558-8f6c-9c4716b554a6)]
+[scriptable, uuid(4350fb73-9305-41df-a669-11d26222d420)]
 interface nsISidebarExternal : nsISupports
 {
     void AddSearchProvider(in string aDescriptionURL);
+		unsigned long IsSearchProviderInstalled(in string aSearchURL);
 };
 
 %{ C++
