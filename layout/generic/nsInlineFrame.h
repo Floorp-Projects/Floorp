@@ -48,7 +48,7 @@
 class nsAnonymousBlockFrame;
 
 #define NS_INLINE_FRAME_CID \
- { 0xa6cf90e0, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+ { 0x88b298af, 0x8b0e, 0x4592,{0x9e, 0xc6, 0xea, 0x4c, 0x4b, 0x3f, 0xf7, 0xa4}}
 
 #define nsInlineFrameSuper nsHTMLContainerFrame
 
@@ -113,6 +113,8 @@ public:
   virtual PRBool IsEmpty();
   virtual PRBool IsSelfEmpty();
 
+  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset);
+  
   // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,

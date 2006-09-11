@@ -100,10 +100,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// b7f1e31d-0dc8-466f-a46c-76a718a805a3
+// 48813f12-5e55-46af-8527-c8f408bac999
 #define NS_IFRAME_IID \
-{ 0xb7f1e31d, 0x0dc8, 0x466f, \
-  { 0xa4, 0x6c, 0x76, 0xa7, 0x18, 0xa8, 0x05, 0xa3 } }
+{ 0x48813f12, 0x5e55, 0x46af, \
+  { 0x85, 0x27, 0xc8, 0xf4, 0x08, 0xba, 0xc9, 0x99 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -1335,26 +1335,22 @@ public:
    *  return NS_ERROR_FAILURE
    *  @param aPOS is defined in nsFrameSelection
    */
-  NS_IMETHOD  PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos) = 0;
+  NS_IMETHOD PeekOffset(nsPeekOffsetStruct *aPos);
 
   /**
    *  called to find the previous/next selectable leaf frame.
-   *  @param aPOS is defined in nsFrameSelection.
-   *  Fields of aPos used as input are:
-   *    mAmount: should be either eSelectWord or eSelectCharacter
-   *    mDirection: eDirPrevious or eDirNext
-   *    mJumpLines: whether to allow jumping across line boundaries
-   *    mScrollViewStop: whether to stop when reaching a scroll view boundary
-   *    mVisual:  whether bidi caret behavior is visual (PR_TRUE) or logical (PR_FALSE)
-   *    mEatingWS: indicates whether we're seeking a boundary between
-   *               non-whitespace and whitespace.
-   *  Fields of aPos set as output are:
-   *    mResultFrame: the previous/next selectable leaf frame
-   *    mAmount: might be set to eSelectNone after crossing a line boundary
-   *    mStartOffset: set to 0 or -1 to indicate which edge of the result frame 
-   *                  is closer to "this" frame.
+   *  @param aDirection [in] the direction to move in (eDirPrevious or eDirNext)
+   *  @param aVisual [in] whether bidi caret behavior is visual (PR_TRUE) or logical (PR_FALSE)
+   *  @param aJumpLines [in] whether to allow jumping across line boundaries
+   *  @param aScrollViewStop [in] whether to stop when reaching a scroll frame boundary
+   *  @param aOutFrame [out] the previous/next selectable leaf frame
+   *  @param aOutOffset [out] 0 indicates that we arrived at the beginning of the output frame;
+   *                          -1 indicates that we arrived at its end.
+   *  @param aOutJumpedLine [out] whether this frame and the returned frame are on different lines
    */
-  nsresult GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos);
+  nsresult GetFrameFromDirection(nsDirection aDirection, PRBool aVisual,
+                                 PRBool aJumpLines, PRBool aScrollViewStop, 
+                                 nsIFrame** aOutFrame, PRInt32* aOutOffset, PRBool* aOutJumpedLine);
 
   /**
    *  called to see if the children of the frame are visible from indexstart to index end.
@@ -1704,7 +1700,60 @@ protected:
    */
   void InvalidateRoot(const nsRect& aDamageRect,
                       nscoord aOffsetX, nscoord aOffsetY,
-                      PRBool aImmediate);  
+                      PRBool aImmediate);
+
+  /**
+   * Can we stop inside this frame when we're skipping non-rendered whitespace?
+   * @param  aForward [in] Are we moving forward (or backward) in content order.
+   * @param  aOffset [in/out] At what offset into the frame to start looking.
+   *         on output - what offset was reached (whether or not we found a place to stop).
+   * @return PR_TRUE: An appropriate offset was found within this frame,
+   *         and is given by aOffset.
+   *         PR_FALSE: Not found within this frame, need to try the next frame.
+   */
+  virtual PRBool PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset) = 0;
+  
+  /**
+   * Search the frame for the next character
+   * @param  aForward [in] Are we moving forward (or backward) in content order.
+   * @param  aOffset [in/out] At what offset into the frame to start looking.
+   *         on output - what offset was reached (whether or not we found a place to stop).
+   * @return PR_TRUE: An appropriate offset was found within this frame,
+   *         and is given by aOffset.
+   *         PR_FALSE: Not found within this frame, need to try the next frame.
+   */
+  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset) = 0;
+  
+  /**
+   * Search the frame for the next word boundary
+   * @param  aForward [in] Are we moving forward (or backward) in content order.
+   * @param  aWordSelectEatSpace [in] PR_TRUE: look for non-whitespace following
+   *         whitespace (in the direction of movement).
+   *         PR_FALSE: look for whitespace following non-whitespace (in the
+   *         direction  of movement).
+   * @param  aIsKeyboardSelect [in] Was the action initiated by a keyboard operation?
+   *         If PR_TRUE, punctuation immediately following a word is considered part
+   *         of that word. Otherwise, a sequence of punctuation is always considered
+   *         as a word on its own.
+   * @param  aOffset [in/out] At what offset into the frame to start looking.
+   *         on output - what offset was reached (whether or not we found a place to stop).
+   * @param  aSawBeforeType [in/out] Did we encounter a character of the pre-boundary type
+   *         (whitespace if aWordSelectEatSpace is true, non-whitespace otherwise).
+   * @return PR_TRUE: An appropriate offset was found within this frame,
+   *         and is given by aOffset.
+   *         PR_FALSE: Not found within this frame, need to try the next frame.
+   */
+  virtual PRBool PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
+                                PRInt32* aOffset, PRBool* aSawBeforeType) = 0;
+
+  /**
+   * Search for the first paragraph boundary before or after the given position
+   * @param  aPos See description in nsFrameSelection.h. The following fields are
+   *              used by this method: 
+   *              Input: mDirection
+   *              Output: mResultContent, mContentOffset
+   */
+   nsresult PeekOffsetParagraph(nsPeekOffsetStruct *aPos);
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
