@@ -729,5 +729,13 @@ nsNativeScrollbar::UpdateScroller()
   mInTracking = NO;
 }
 
+#ifdef ACCESSIBILITY
+// XXXhakan: need to find out what needs to be done here to make these scrollbars accessible.
+- (BOOL)accessibilityIsIgnored
+{
+  return YES;
+}
+#endif
+
 @end
 

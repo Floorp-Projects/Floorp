@@ -82,6 +82,10 @@ REQUIRES += glitz glitzagl
 endif
 endif
 
+ifdef ACCESSIBILITY
+REQUIRES += accessibility
+endif
+
 EXPORTS = \
 		mozView.h \
 		$(NULL)
