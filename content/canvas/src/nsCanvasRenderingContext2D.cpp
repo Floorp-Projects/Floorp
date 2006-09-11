@@ -2470,7 +2470,7 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     mThebesContext->SetOperator(gfxContext::OPERATOR_OVER);
 
     nsIFrame* rootFrame = presShell->FrameManager()->GetRootFrame();
-    if (0 && rootFrame) {
+    if (rootFrame) {
         nsRect r(aX, aY, aW, aH);
         r.ScaleRoundOut(presContext->PixelsToTwips());
 
