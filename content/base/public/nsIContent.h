@@ -98,6 +98,7 @@ public:
     NS_ASSERTION(aNodeInfo,
                  "No nsINodeInfo passed to nsIContent, PREPARE TO CRASH!!!");
   }
+#endif // MOZILLA_INTERNAL_API
 
   /**
    * Bind this content node to a tree.  If this method throws, the caller must
@@ -747,7 +748,6 @@ public:
   // the tabfocus bit field applies to xul elements.
   static PRBool sTabFocusModelAppliesToXUL;
 
-#endif // MOZILLA_INTERNAL_API
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContent, NS_ICONTENT_IID)
