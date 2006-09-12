@@ -2479,8 +2479,10 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     rt->gcPoke = JS_FALSE;
 
 #ifdef JS_THREADSAFE
+    JS_ASSERT(cx->thread->id == js_CurrentThreadId());
+
     /* Bump gcLevel and return rather than nest on this thread. */
-    if (rt->gcThread && rt->gcThread->id == js_CurrentThreadId()) {
+    if (rt->gcThread == cx->thread) {
         JS_ASSERT(rt->gcLevel > 0);
         rt->gcLevel++;
         METER(if (rt->gcLevel > rt->gcStats.maxlevel)
@@ -2549,8 +2551,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 
     /* No other thread is in GC, so indicate that we're now in GC. */
     rt->gcLevel = 1;
-    rt->gcThread = js_GetCurrentThread(rt);
-    JS_ASSERT(rt->gcThread);
+    rt->gcThread = cx->thread;
 
     /* Wait for all other requests to finish. */
     while (rt->requestCount > 0)

@@ -100,8 +100,7 @@ js_GetCurrentThread(JSRuntime *rt)
 
     thread = (JSThread *)PR_GetThreadPrivate(rt->threadTPIndex);
     if (!thread) {
-        /* New memory is set to 0 so that elements in gcFreeLists are NULL. */
-        thread = (JSThread *) calloc(1, sizeof(JSThread));
+        thread = (JSThread *) malloc(sizeof(JSThread));
         if (!thread)
             return NULL;
 
@@ -112,6 +111,16 @@ js_GetCurrentThread(JSRuntime *rt)
 
         JS_INIT_CLIST(&thread->contextList);
         thread->id = js_CurrentThreadId();
+
+        /* js_SetContextThread initialize gcFreeLists as necessary. */
+#ifdef DEBUG
+        memset(thread->gcFreeLists, JS_FREE_PATTERN,
+               sizeof(thread->gcFreeLists));
+#endif
+        thread->gcMallocBytes = 0;
+#if JS_HAS_GENERATORS
+        thread->gcRunningCloseHooks = JS_FALSE;
+#endif
     }
     return thread;
 }
@@ -130,6 +139,14 @@ js_SetContextThread(JSContext *cx)
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
+
+    /*
+     * Clear gcFreeLists on each transition from 0 to 1 context active on the
+     * current thread. See bug 351602.
+     */
+    if (JS_CLIST_IS_EMPTY(&thread->contextList))
+        memset(thread->gcFreeLists, 0, sizeof(thread->gcFreeLists));
+
     cx->thread = thread;
     JS_REMOVE_LINK(&cx->threadLinks);
     JS_APPEND_LINK(&cx->threadLinks, &thread->contextList);
@@ -140,8 +157,14 @@ js_SetContextThread(JSContext *cx)
 void
 js_ClearContextThread(JSContext *cx)
 {
-    cx->thread = NULL;
     JS_REMOVE_AND_INIT_LINK(&cx->threadLinks);
+#ifdef DEBUG
+    if (JS_CLIST_IS_EMPTY(&cx->thread->contextList)) {
+        memset(cx->thread->gcFreeLists, JS_FREE_PATTERN,
+               sizeof(cx->thread->gcFreeLists));
+    }
+#endif
+    cx->thread = NULL;
 }
 
 #endif /* JS_THREADSAFE */

@@ -81,7 +81,7 @@ struct JSThread {
     uint32              gcMallocBytes;
 
 #if JS_HAS_GENERATORS
-    /* Flag indicating that the current thread is excuting close hooks. */
+    /* Flag indicating that the current thread is executing close hooks. */
     JSBool              gcRunningCloseHooks;
 #endif
 };
