@@ -323,11 +323,17 @@ function ltnFinish() {
 }
 
 function ltnEditSelectedItem() {
-    calendarViewController.modifyOccurrence(currentView().selectedItem);
+    var selectedItems = currentView().getSelectedItems({});
+    for each (var item in selectedItems) {
+        calendarViewController.modifyOccurrence(item);
+    }
 }
 
 function ltnDeleteSelectedItem() {
-    calendarViewController.deleteOccurrence(currentView().selectedItem);
+    var selectedItems = currentView().getSelectedItems({});
+    for each (var item in selectedItems) {
+        calendarViewController.deleteOccurrence(item);
+    }
 }
 
 function ltnCreateEvent() {
