@@ -37,7 +37,7 @@
 # ***** END LICENSE BLOCK ***** 
 -->
 
-<?xml-sheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/smime/msgCompSecurityInfo.css" type="text/css"?>
 
 <!DOCTYPE dialog SYSTEM "chrome://messenger-smime/locale/msgCompSecurityInfo.dtd">
