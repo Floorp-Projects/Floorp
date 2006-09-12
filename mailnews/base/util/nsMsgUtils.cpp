@@ -1256,3 +1256,47 @@ PRBool MsgFindKeyword(const nsACString &keyword, nsACString &keywords, nsACStrin
   return PR_FALSE;
 }
 
+PRBool MsgHostDomainIsTrusted(nsCString &host, nsCString &trustedMailDomains)
+{
+  const char *domain, *domainEnd, *end;
+  PRUint32 hostLen, domainLen;
+  PRBool domainIsTrusted = PR_FALSE;
+  
+  domain = trustedMailDomains.BeginReading();
+  domainEnd = trustedMailDomains.EndReading(); 
+  nsACString::const_iterator hostStart;
+  
+  host.BeginReading(hostStart);
+  hostLen = host.Length();
+  
+  do {
+    // skip any whitespace
+    while (*domain == ' ' || *domain == '\t')
+      ++domain;
+    
+    // find end of this domain in the string
+    end = strchr(domain, ',');
+    if (!end)
+      end = domainEnd;
+    
+    // to see if the hostname is in the domain, check if the domain
+    // matches the end of the hostname.
+    domainLen = end - domain;
+    if (domainLen && hostLen >= domainLen) {
+      const char *hostTail = hostStart.get() + hostLen - domainLen;
+      if (PL_strncasecmp(domain, hostTail, domainLen) == 0) 
+      {
+        // now, make sure either that the hostname is a direct match or
+        // that the hostname begins with a dot.
+        if (hostLen == domainLen || *hostTail == '.' || *(hostTail - 1) == '.')
+        {
+          domainIsTrusted = PR_TRUE;
+          break;
+        }
+      }
+    }
+    
+    domain = end + 1;
+  } while (*end);
+  return domainIsTrusted;
+}

@@ -1957,10 +1957,19 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow, PRBool *aFiltersRun)
 
       whiteListDirectory = do_QueryInterface(resource, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
-      headerParser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
     }
     // if we can't get the db, we probably want to continue firing spam filters.
+  }
+
+  nsXPIDLCString trustedMailDomains;
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  if (prefBranch)
+    prefBranch->GetCharPref("mail.trusteddomains", getter_Copies(trustedMailDomains));
+
+  if (whiteListDirectory || !trustedMailDomains.IsEmpty())
+  {
+    headerParser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // build up list of keys to classify
@@ -1977,7 +1986,28 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow, PRBool *aFiltersRun)
       rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(msgHdr));
       if (!NS_SUCCEEDED(rv))
         continue;
-
+      nsXPIDLCString author;
+      nsXPIDLCString authorEmailAddress;
+      if (whiteListDirectory || !trustedMailDomains.IsEmpty())
+      {
+        msgHdr->GetAuthor(getter_Copies(author));
+        rv = headerParser->ExtractHeaderAddressMailboxes(nsnull, author.get(), getter_Copies(authorEmailAddress));
+      }
+      
+      if (!trustedMailDomains.IsEmpty())
+      {
+        nsCAutoString domain;
+        PRInt32 atPos = authorEmailAddress.FindChar('@');
+        if (atPos >= 0)
+          authorEmailAddress.Right(domain, authorEmailAddress.Length() - atPos - 1);
+        if (!domain.IsEmpty() && MsgHostDomainIsTrusted(domain, trustedMailDomains))
+        {
+          // mark this msg as non-junk, because we whitelisted it.
+          mDatabase->SetStringProperty(msgKey, "junkscore", "0");
+          mDatabase->SetStringProperty(msgKey, "junkscoreorigin", "plugin");
+          continue; // skip this msg since it's in the white list
+        }
+      }
       msgHdr->GetStringProperty("junkscore", getter_Copies(junkScore));
       if (!junkScore.IsEmpty()) // ignore already scored messages.
         continue;
@@ -1987,12 +2017,8 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow, PRBool *aFiltersRun)
         if (NS_SUCCEEDED(rv))
         {
           PRBool cardExists = PR_FALSE;
-          nsXPIDLCString author;
-          nsXPIDLCString authorEmailAddress;
-          msgHdr->GetAuthor(getter_Copies(author));
-          rv = headerParser->ExtractHeaderAddressMailboxes(nsnull, author.get(), getter_Copies(authorEmailAddress));
           // don't want to abort the rest of the scoring.
-          if (NS_SUCCEEDED(rv))
+          if (!authorEmailAddress.IsEmpty())
             rv = whiteListDirectory->HasCardForEmailAddress(authorEmailAddress, &cardExists);
           if (NS_SUCCEEDED(rv) && cardExists)
           {
