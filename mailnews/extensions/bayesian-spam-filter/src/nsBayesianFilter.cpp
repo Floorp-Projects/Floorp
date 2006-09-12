@@ -1413,8 +1413,11 @@ static PRBool readTokens(FILE* stream, Tokenizer& tokenizer)
         if (size >= bufferSize) {
             delete[] buffer;
             PRUint32 newBufferSize = 2 * bufferSize;
-            while (size >= newBufferSize)
+            while (size >= newBufferSize) {
                 newBufferSize *= 2;
+                if(newBufferSize == 0) // see bug #240788
+                    return PR_FALSE;
+            }
             buffer = new char[newBufferSize];
             if (!buffer) return PR_FALSE;
             bufferSize = newBufferSize;
