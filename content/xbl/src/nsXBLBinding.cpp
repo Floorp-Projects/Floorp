@@ -104,6 +104,7 @@
 #include "nsGUIEvent.h"
 
 #include "prprf.h"
+#include "nsNodeUtils.h"
 
 nsresult NS_DOMClassInfo_PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper);
 
@@ -387,11 +388,16 @@ RealizeDefaultContent(nsHashKey* aKey, void* aData, void* aClosure)
         // We need to take this template and use it to realize the
         // actual default content (through cloning).
         // Clone this insertion point element.
-        nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(defContent));
-        nsCOMPtr<nsIDOMNode> clonedNode;
-        elt->CloneNode(PR_TRUE, getter_AddRefs(clonedNode));
-
         nsCOMPtr<nsIContent> insParent = currPoint->GetInsertionParent();
+        nsIDocument *document = insParent->GetOwnerDoc();
+        if (!document) {
+          return NS_ERROR_FAILURE;
+        }
+
+        nsCOMPtr<nsIDOMNode> clonedNode;
+        nsCOMArray<nsINode> nodesWithProperties;
+        nsNodeUtils::Clone(defContent, PR_TRUE, document->NodeInfoManager(),
+                           nodesWithProperties, getter_AddRefs(clonedNode));
 
         // Now that we have the cloned content, install the default content as
         // if it were additional anonymous content.
@@ -511,11 +517,16 @@ nsXBLBinding::GenerateAnonymousContent()
     }
 
     if (hasContent || hasInsertionPoints) {
-      nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(content));
+      nsIDocument *document = mBoundElement->GetOwnerDoc();
+      if (!document) {
+        return;
+      }
 
       nsCOMPtr<nsIDOMNode> clonedNode;
-      domElement->CloneNode(PR_TRUE, getter_AddRefs(clonedNode));
-  
+      nsCOMArray<nsINode> nodesWithProperties;
+      nsNodeUtils::Clone(content, PR_TRUE, document->NodeInfoManager(),
+                         nodesWithProperties, getter_AddRefs(clonedNode));
+
       mContent = do_QueryInterface(clonedNode);
       InstallAnonymousContent(mContent, mBoundElement);
 
