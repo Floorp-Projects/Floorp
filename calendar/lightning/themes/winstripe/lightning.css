@@ -138,3 +138,13 @@ treechildren::-moz-tree-image(col-calendar-Checkbox, unchecked) {
 radio[pane=paneLightning] {
   list-style-image: url("chrome://calendar/skin/calendartoolbar.png")
 }
+
+/**
+ * iMIP notification bar
+ */
+.iMipNotificationBar {
+    background-color: #baeeff;
+    color: #000000;  
+    border-bottom: 1px solid ThreeDDarkShadow;
+    padding: 3px;
+}
