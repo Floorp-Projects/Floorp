@@ -230,7 +230,7 @@
 
         // still select it (since we'll stopPropagation())
         evbox.calendarView.setSelectedItems(1, 
-            [event.ctrlKey ? this.mOccurrence.parentItem : this.mOccurrence]);
+            [event.ctrlKey ? evbox.mOccurrence.parentItem : evbox.mOccurrence]);
 
         // then start dragging it
         evbox.parentColumn.startSweepingToModifyEvent(evbox, evbox.mOccurrence, whichside, event.screenX, event.screenY);
