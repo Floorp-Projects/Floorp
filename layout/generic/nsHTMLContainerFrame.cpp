@@ -418,17 +418,7 @@ nsHTMLContainerFrame::ReparentFrameView(nsPresContext* aPresContext,
   NS_PRECONDITION(aNewParentFrame, "null new parent frame pointer");
   NS_PRECONDITION(aOldParentFrame != aNewParentFrame, "same old and new parent frame");
 
-  // This code is called often and we need it to be as fast as possible, so
-  // see if we can trivially detect that no work needs to be done
-  if (!aChildFrame->HasView()) {
-    // Child frame doesn't have a view. See if it has any child frames
-    if (!aChildFrame->GetFirstChild(nsnull)) {
-      return NS_OK;
-    }
-  }
-
   // See if either the old parent frame or the new parent frame have a view
-
   while (!aOldParentFrame->HasView() && !aNewParentFrame->HasView()) {
     // Walk up both the old parent frame and the new parent frame nodes
     // stopping when we either find a common parent or views for one
