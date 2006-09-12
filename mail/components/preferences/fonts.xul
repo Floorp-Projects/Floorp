@@ -129,7 +129,7 @@
 
           <row align="center">
             <hbox align="center" pack="end">
-              <label accesskey="&proportional.accesskey;" control="proportionalFont">&proportional.label;</label>
+              <label accesskey="&proportional.accesskey;" control="defaultFontType">&proportional.label;</label>
             </hbox>
             
             <menulist id="defaultFontType" flex="1" style="width: 0px;">
