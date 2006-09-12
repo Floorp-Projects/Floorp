@@ -1932,7 +1932,7 @@ NS_IMETHODIMP nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
     // through this attribute
     nsAutoString xmlRole;
     if (GetRoleAttribute(content, xmlRole)) {
-      attributes->SetStringProperty(NS_LITERAL_CSTRING("xml roles"), xmlRole, oldValueUnused);          
+      attributes->SetStringProperty(NS_LITERAL_CSTRING("xml-roles"), xmlRole, oldValueUnused);          
     }
   }
 
