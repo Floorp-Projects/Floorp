@@ -374,7 +374,6 @@ pref("custtoolbar.personal_toolbar_folder", "");
 pref("alerts.slideIncrement", 1);
 pref("alerts.slideIncrementTime", 10);
 pref("alerts.totalOpenTime", 4000);
-pref("alerts.height", 50);
 
 pref("browser.xul.error_pages.enabled", true);
 
