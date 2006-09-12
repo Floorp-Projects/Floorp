@@ -57,6 +57,7 @@
 - (NSString*)displayNameForFile:(NSURL*)inFileURL;
 
 // OS feature checks
++ (BOOL)isTigerOrHigher;
 + (BOOL)supportsSpotlight;
 + (BOOL)supportsUnifiedToolbar;
 
