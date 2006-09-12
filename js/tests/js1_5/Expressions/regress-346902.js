@@ -55,7 +55,7 @@ function test()
 
   expect = 
     'function () {\n' +
-    '    ({}[alert(5)]);\n' +
+    '    {}[alert(5)];\n' +
     '}';
   try
   {
