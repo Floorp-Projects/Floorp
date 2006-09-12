@@ -41,30 +41,16 @@
 
 #include "nsSoftwareUpdate.h"
 #include "nsSoftwareUpdateRun.h"
-#include "nsSoftwareUpdateIIDs.h"
 
 #include "nsInstall.h"
 
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-
-#include "nsProxiedService.h"
-#include "nsIURI.h"
-#include "nsIFileURL.h"
 #include "nsNetUtil.h"
 
 #include "nspr.h"
 #include "plstr.h"
 #include "jsapi.h"
 
-#include "nsIEnumerator.h"
 #include "nsIZipReader.h"
-#include "nsIJSRuntimeService.h"
-#include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
-#include "nsReadableUtils.h"
-#include "nsILocalFile.h"
-#include "nsIChromeRegistry.h"
 #include "nsInstallTrigger.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
@@ -131,28 +117,13 @@ nsresult VerifySigning(nsIZipReader* hZip, nsIPrincipal* aPrincipal)
         rv = entries->GetNext(name);
         if (NS_FAILED(rv)) return rv;
         
-        if (PL_strncasecmp("META-INF/", name.get(), 9) == 0)
+        // Do not verify the directory entries or 
+        // entries which are in the meta-inf directory
+        if ((name.Last() == '/') || 
+            (PL_strncasecmp("META-INF/", name.get(), 9) == 0))
             continue;
 
-        // libjar creates fake entries for directories which are
-        // not in the zip but do exist as part of the path of some
-        // entry within the zip, e.g. foo/ in a zip containing
-        // only foo/bar.txt -- skip those, because they shouldn't
-        // be in the manifest
- 
-        // This is pretty inefficient, but maybe that's okay.
-        nsCOMPtr<nsIZipEntry> entry;
-        rv = hZip->GetEntry(name.get(), getter_AddRefs(entry));
-        if (NS_FAILED(rv)) return rv;
-
-        PRBool isSynthetic;
-        rv = entry->GetIsSynthetic(&isSynthetic);
-        if (NS_FAILED(rv)) return rv;
-        if (isSynthetic)
-            continue;
-
-        // we only count the entries which are not in the meta-inf
-        // directory and which are explicitly listed in the zip
+        // Count the entries to be verified
         entryCount++;
 
         // Each entry must be signed
