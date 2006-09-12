@@ -1586,17 +1586,22 @@ MicrosummaryGenerator.prototype = {
   },
 
   generateMicrosummary: function MSD_generateMicrosummary(pageContent) {
+
+    var content;
+
     if (this.content) {
-      var content = this.content.replace(/^\s+|\s+$/g, "");
-      if (content.length > MAX_SUMMARY_LENGTH) 
-        content = content.substring(0, MAX_SUMMARY_LENGTH);
-      return content;
+      content = this.content;
     } else if (this.template) {
-      // Note that _processTemplate truncates the summary for us, so we don't
-      // need to do anything more here
-      return this._processTemplate(pageContent);
+      content = this._processTemplate(pageContent);
     } else
       throw("generateMicrosummary called on uninitialized microsummary generator");
+
+    // Clean up the output
+    content = content.replace(/^\s+|\s+$/g, "");
+    if (content.length > MAX_SUMMARY_LENGTH) 
+      content = content.substring(0, MAX_SUMMARY_LENGTH);
+
+    return content;
   },
 
   calculateUpdateInterval: function MSD_calculateUpdateInterval(doc) {
@@ -1637,11 +1642,7 @@ MicrosummaryGenerator.prototype = {
 
     // XXX When we support HTML microsummaries we'll need to do something
     // more sophisticated than just returning the text content of the fragment.
-    var content = fragment.textContent;
-    if (content.length > MAX_SUMMARY_LENGTH) 
-      content = content.substring(0, MAX_SUMMARY_LENGTH);
-
-    return content;
+    return fragment.textContent;
   }
 };
 
