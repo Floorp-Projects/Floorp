@@ -321,6 +321,8 @@ nsIFrame* nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& a
         if (startOffset > 0 || endOffset < substringEndOffset) {
           // XXX the Substring operation is efficient, but does the 
           // reassignment to the original nsAutoString cause a copy?
+          PRInt32 outStartLineUnused;
+          frame->GetChildFrameContainingOffset(startOffset, PR_TRUE, &outStartLineUnused, &frame);
           if (endOffset < substringEndOffset) {
             // Don't take entire substring: stop before the end
             substringEndOffset = endOffset;
@@ -557,22 +559,18 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
 
   PRInt32 startOffset = aOffset;
   PRInt32 endOffset = aOffset;
+
+  if (aBoundaryType == BOUNDARY_LINE_END) {
+    // Avoid getting the previous line
+    ++ startOffset;
+    ++ endOffset;
+  }
   // Convert offsets to frame-relative
   nsIFrame *startFrame = GetPosAndText(startOffset, endOffset);
   if (!startFrame) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (aBoundaryType == BOUNDARY_LINE_END) {
-      // When our position is right on the line boundary and our
-      // boundary type is BOUNDARY_LINE_END, we must start
-      // our calculation from the beginning of the next line
-      endOffset = startOffset = aOffset + 1;
-      startFrame = GetPosAndText(startOffset, endOffset);
-      if (!startFrame) {
-        startOffset = endOffset = aOffset;
-        return NS_OK;
-      }
+    PRInt32 textLength;
+    GetCharacterCount(&textLength);
+    return (aOffset < 0 || aOffset > textLength) ? NS_ERROR_FAILURE : NS_OK;
   }
 
   nsSelectionAmount amount;
@@ -638,11 +636,11 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     startForwardSearchOffset = startOffset = aOffset;
   }
   else {
-    startOffset = GetRelativeOffset(presShell, startFrame,  startOffset + (amount == eSelectLine),
+    startOffset = GetRelativeOffset(presShell, startFrame,  startOffset,
                                     amount, eDirPrevious, needsStart);
     startForwardSearchOffset = startOffset;
     if (amount == eSelectLine) {
-      ++ startForwardSearchOffset;
+      ++ startForwardSearchOffset; // Avoid getting the previous line
       if (aBoundaryType == BOUNDARY_LINE_END && startOffset > 0) {
         // Start line fixup: include \n at start of string
         -- startOffset;
@@ -663,17 +661,19 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     }
     endOffset = GetRelativeOffset(presShell, endFrame, endOffset, amount,
                                   eDirNext, needsStart);
-    if (aBoundaryType == BOUNDARY_LINE_START) {
-      PRInt32 textLength = (endFrame->GetType() == nsAccessibilityAtoms::textFrame) ?
-                           endFrame->GetContent()->TextLength() : 1;
+    if (amount == eSelectLine &&
+        endFrame->GetType() == nsAccessibilityAtoms::textFrame) {
       PRInt32 startFrameOffsetUnused, endFrameOffset;
-      endFrame->GetOffsets(startFrameOffsetUnused, endFrameOffset);
-      if (textLength == endFrameOffset) {
-        nsIFrame *nextSibling = endFrame->GetNextSibling();
-        if (nextSibling && nextSibling->GetType() == nsAccessibilityAtoms::brFrame) {
-          // End line fixup: include \n for <br> at start of string,
-          // just as whitespace would be included if wrapped without <br>
-          ++ endOffset;
+      if (NS_SUCCEEDED(endFrame->GetOffsets(startFrameOffsetUnused, endFrameOffset))) {
+        // End line fixup: make sure <br> at end of string is included in endOffset calculation
+        if ((endFrame = endFrame->GetNextSibling()) != nsnull &&
+            endFrame->GetType() == nsAccessibilityAtoms::brFrame) {
+          ++ endOffset; // Make sure endOffset comes after <br>
+        }
+        // End line fixup: include \n for <br> at end of string,
+        // only if aBoundaryType == BOUNDARY_LINE_START
+        if (aBoundaryType == BOUNDARY_LINE_END) {
+          -- endOffset;
         }
       }
     }
@@ -681,6 +681,9 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
 
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
+
+  NS_ASSERTION(startOffset <= aOffset && aType != eGetAfter, "Incorrect results for GetTextHelper");
+  NS_ASSERTION(endOffset > aOffset && aType != eGetBefore, "Incorrect results for GetTextHelper");
 
   return GetPosAndText(startOffset, endOffset, &aText) ? NS_OK : NS_ERROR_FAILURE;
 }
