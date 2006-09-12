@@ -3552,8 +3552,8 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JS_ASSERT(let || tt == TOK_VAR);
 
     /* Make sure that Statement set the tree context up correctly. */
+    scopeStmt = tc->topScopeStmt;
     if (let) {
-        scopeStmt = tc->topScopeStmt;
         while (scopeStmt && !(scopeStmt->flags & SIF_SCOPE)) {
             JS_ASSERT(!STMT_MAYBE_SCOPE(scopeStmt));
             scopeStmt = scopeStmt->downScope;
