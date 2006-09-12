@@ -910,7 +910,6 @@ nsSVGUtils::GetCoordContextProvider(nsSVGElement *aElement)
   nsSVGCoordCtxProvider *ctx;
   CallQueryInterface(owner, &ctx);
 
-  NS_IF_ADDREF(ctx);
   return ctx;
 }
 
