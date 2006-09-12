@@ -239,14 +239,17 @@ var gPrivacyPane = {
 
   /**
    * Sets the label of the "Clear Now..." button according to the
-   * privacy.sanitize.promptOnSanitize preference.
+   * privacy.sanitize.promptOnSanitize preference. Read valueFromPreferences to
+   * only change the button when the underlying pref changes, since in the case
+   * of instantApply=false, the call to clearPrivateDataNow would result in the
+   * dialog appearing when the user just unchecked the "Ask me" checkbox.
    */
   updateClearNowButtonLabel: function ()
   {
     var pref = document.getElementById("privacy.sanitize.promptOnSanitize");
     var clearNowButton = document.getElementById("clearDataNow");
 
-    if (pref.value)
+    if (pref.valueFromPreferences)
       clearNowButton.label = clearNowButton.getAttribute("label1"); // "Clear Now..."
     else
       clearNowButton.label = clearNowButton.getAttribute("label2"); // "Clear Now"
