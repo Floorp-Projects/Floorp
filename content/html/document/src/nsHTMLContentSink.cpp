@@ -1467,10 +1467,7 @@ SinkContext::AddComment(const nsIParserNode& aNode)
                                   mSink->mNodeInfoManager);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMComment> domComment(do_QueryInterface(comment));
-  NS_ENSURE_TRUE(domComment, NS_ERROR_UNEXPECTED);
-
-  domComment->AppendData(aNode.GetText());
+  comment->SetText(aNode.GetText(), PR_FALSE);
 
   NS_ASSERTION(mStackPos > 0, "stack out of bounds");
   if (mStackPos <= 0) {

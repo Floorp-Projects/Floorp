@@ -543,28 +543,22 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
 NS_IMETHODIMP
 nsHTMLFragmentContentSink::AddComment(const nsIParserNode& aNode)
 {
-  nsIContent *comment;
-  nsIDOMComment *domComment;
+  nsCOMPtr<nsIContent> comment;
   nsresult result = NS_OK;
 
   FlushText();
 
-  result = NS_NewCommentNode(&comment, mNodeInfoManager);
+  result = NS_NewCommentNode(getter_AddRefs(comment), mNodeInfoManager);
   if (NS_SUCCEEDED(result)) {
-    result = CallQueryInterface(comment, &domComment);
-    if (NS_SUCCEEDED(result)) {
-      domComment->AppendData(aNode.GetText());
-      NS_RELEASE(domComment);
+    comment->SetText(aNode.GetText(), PR_FALSE);
 
-      nsIContent *parent = GetCurrentContent();
+    nsIContent *parent = GetCurrentContent();
 
-      if (nsnull == parent) {
-        parent = mRoot;
-      }
-
-      parent->AppendChildTo(comment, PR_FALSE);
+    if (nsnull == parent) {
+      parent = mRoot;
     }
-    NS_RELEASE(comment);
+
+    parent->AppendChildTo(comment, PR_FALSE);
   }
 
   return NS_OK;
