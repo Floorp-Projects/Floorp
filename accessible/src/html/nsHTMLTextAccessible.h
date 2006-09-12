@@ -53,6 +53,8 @@ public:
   // nsIAccessible
   NS_IMETHOD GetName(nsAString& _retval);
   NS_IMETHOD GetState(PRUint32 *aState);
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+  NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
   
   // nsPIAccessNode
   NS_IMETHOD_(nsIFrame *) GetFrame(void);
