@@ -52,7 +52,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  intl \
 		  unicharutil \
-		  util \
 		  pref \
 		  uconv \
 		  $(ZLIB_REQUIRES) \
