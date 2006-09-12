@@ -4868,7 +4868,6 @@ XMLElementOrList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                  JSBool allowList)
 {
     JSParseNode *pn, *pn2, *list;
-    JSBool hadSpace;
     JSTokenType tt;
     JSAtom *startAtom, *endAtom;
 
@@ -4878,7 +4877,6 @@ XMLElementOrList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         return NULL;
 
     ts->flags |= TSF_XMLTAGMODE;
-    hadSpace = js_MatchToken(cx, ts, TOK_XMLSPACE);
     tt = js_GetToken(cx, ts);
     if (tt == TOK_ERROR)
         return NULL;
@@ -4990,7 +4988,7 @@ XMLElementOrList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
         /* Set pn_op now that pn has been updated to its final value. */
         pn->pn_op = JSOP_TOXML;
-    } else if (!hadSpace && allowList && tt == TOK_XMLTAGC) {
+    } else if (allowList && tt == TOK_XMLTAGC) {
         /* XMLList Initialiser. */
         pn->pn_type = TOK_XMLLIST;
         pn->pn_op = JSOP_TOXMLLIST;
