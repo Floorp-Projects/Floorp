@@ -134,12 +134,11 @@
 <keyset id="tasksKeys">
   <!-- File Menu -->
 #ifdef XP_MACOSX
-    <key id="key_newMessage" key="&newMessageCmd.key;" modifiers="accel,shift" oncommand="AbNewMessage()"/>
-    <key id="key_newCard" key="&newCard.key;" modifiers="accel" oncommand="AbNewCard();"/>
+  <key id="key_newMessage" key="&newMessageCmd.key;" modifiers="accel,shift" oncommand="AbNewMessage()"/>
 #else
-    <key id="key_newMessage" key="&newMessageCmd.key;" modifiers="accel" oncommand="AbNewMessage()"/>
-    <key id="key_newCard" key="&newCard.key;" modifiers="accel" oncommand="AbNewCard();"/>
+  <key id="key_newMessage" key="&newMessageCmd.key;" modifiers="accel" oncommand="AbNewMessage()"/>
 #endif
+  <key id="key_newCard" key="&newCard.key;" modifiers="accel" oncommand="AbNewCard();"/>
 
   <key id="key_printCard" key="&printCardViewCmd.key;" command="cmd_printcard" modifiers="accel"/>
   <key id="key_close" key="&closeCmd.key;" modifiers="accel" oncommand="AbClose()"/>
@@ -150,7 +149,13 @@
   <key id="key_cut" key="&cutCmd.key;" modifiers="accel"/>
   <key id="key_copy" key="&copyCmd.key;" modifiers="accel"/>
   <key id="key_paste" key="&pasteCmd.key;" modifiers="accel"/>
+
+#ifdef XP_MACOSX
+  <key id="key_delete" keycode="VK_BACK" command="cmd_delete"/>
+  <key id="key_delete2" keycode="VK_DELETE" command="cmd_delete"/>
+#else
   <key id="key_delete" keycode="VK_DELETE" command="cmd_delete"/>
+#endif
   <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
 #ifdef MOZ_WIDGET_GTK2
   <key id="key_searchAddresses" key="&searchAddressesCmd.key;" oncommand="onAdvancedAbSearch();" modifiers="shift"/>
