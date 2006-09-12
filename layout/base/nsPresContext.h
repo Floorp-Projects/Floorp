@@ -84,6 +84,8 @@ class nsICSSPseudoComparator;
 class nsIAtom;
 struct nsStyleStruct;
 struct nsStyleBackground;
+template <class T> class nsRunnableMethod;
+class nsIRunnable;
 
 #ifdef MOZ_REFLOW_PERF
 class nsIRenderingContext;
@@ -653,6 +655,10 @@ public:
                               mType == eContext_PrintPreview); };
 
 protected:
+  friend class nsRunnableMethod<nsPresContext>;
+  NS_HIDDEN_(void) ThemeChangedInternal();
+  NS_HIDDEN_(void) SysColorChangedInternal();
+  
   NS_HIDDEN_(void) SetImgAnimations(nsIContent *aParent, PRUint16 aMode);
   NS_HIDDEN_(void) GetDocumentColorPreferences();
 
@@ -754,6 +760,8 @@ protected:
   unsigned              mIsRootPaginatedDocument : 1;
   unsigned              mPrefBidiDirection : 1;
   unsigned              mPrefScrollbarSide : 2;
+  unsigned              mPendingSysColorChanged : 1;
+  unsigned              mPendingThemeChanged : 1;
 
 #ifdef IBMBIDI
   unsigned              mIsVisual : 1;
