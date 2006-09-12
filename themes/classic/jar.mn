@@ -314,6 +314,7 @@ classic.jar:
   skin/classic/global/tree/twisty-clsd.gif                    (global/win/tree/twisty-clsd.gif)
   skin/classic/global/progressmeter/progressmeter-busy.gif    (global/win/progressmeter/progressmeter-busy.gif)
 #endif
+  skin/classic/global/config.css                                        (global/config.css)
   skin/classic/global/netError.css                                      (global/netError.css)
   skin/classic/global/plugins.css                                       (/toolkit/empty-file)
   skin/classic/global/printing.css                                      (global/printing.css)

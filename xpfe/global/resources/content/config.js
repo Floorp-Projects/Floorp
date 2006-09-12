@@ -323,6 +323,17 @@ function onConfigLoad()
   gTypeStrs[nsIPrefBranch.PREF_INT] = gConfigBundle.getString("int");
   gTypeStrs[nsIPrefBranch.PREF_BOOL] = gConfigBundle.getString("bool");
 
+  var showWarning = gPrefBranch.getBoolPref("general.warnOnAboutConfig");
+
+  if (showWarning)
+    document.getElementById("warningButton").focus();
+  else
+    ShowPrefs();
+}
+
+// Unhide the warning message
+function ShowPrefs()
+{
   var prefCount = { value: 0 };
   var prefArray = gPrefBranch.getChildList("", prefCount);
 
@@ -354,14 +365,20 @@ function onConfigLoad()
   gPrefBranch.addObserver("", gPrefListener, false);
 
   document.getElementById("configTree").view = view;
-  
+
+  document.getElementById("configDeck").setAttribute("selectedIndex", 1);
+  var showNextTime = document.getElementById("showWarningNextTime").checked;
+  gPrefBranch.setBoolPref("general.warnOnAboutConfig", showNextTime);
+
   document.getElementById("textbox").focus();
 }
 
 function onConfigUnload()
 {
-  gPrefBranch.removeObserver("", gPrefListener);
-  document.getElementById("configTree").view = null;
+  if (document.getElementById("configDeck").getAttribute("selectedIndex") == 1) {
+    gPrefBranch.removeObserver("", gPrefListener);
+    document.getElementById("configTree").view = null;
+  }
 }
 
 function FilterPrefs()

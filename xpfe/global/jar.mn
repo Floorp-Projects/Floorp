@@ -11,7 +11,6 @@ toolkit.jar:
         content/global/commonDialog.js              (resources/content/commonDialog.js) 
         content/global/strres.js                    (resources/content/strres.js) 
         content/global/config.xul                   (resources/content/config.xul) 
-        content/global/config.css                   (resources/content/config.css) 
         content/global/config.js                    (resources/content/config.js) 
         content/global/mozilla.xhtml                (resources/content/mozilla.xhtml) 
         content/global/charsetOverlay.xul           (resources/content/charsetOverlay.xul) 
