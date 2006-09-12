@@ -2260,14 +2260,32 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 LOCAL_ASSERT(ss->top >= 2);
                 (void) PopOff(ss, op);
 
-                /* Get the callee's decompiled image in argv[0]. */
-                op = saveop;
+                /*
+                 * Get the callee's decompiled image in argv[0].  JSOP_NEW
+                 * has precedence 16, which is artificially low.  In the case
+                 * where the constructor is itself a call expression, pretend
+                 * op is JSOP_NAME (precedence 18, highest).  This causes the
+                 * call to be parenthesized.
+                 *
+                 * This means we'll overparenthesize in the following case
+                 *
+                 *   js> uneval(function () { new x.y(z).w })
+                 *   (function () {(new x.y(z)).w;})
+                 *
+                 * but not in any others (new x.y(z), new x.y, new (x(z))(w),
+                 * new (x(z)(w)), etc.).
+                 */
+                op = (saveop == JSOP_NEW &&
+                      ss->opcodes[ss->top-1] == JSOP_CALL)
+                     ? JSOP_NAME
+                     : saveop;
                 argv[0] = JS_strdup(cx, POP_STR());
                 if (!argv[i])
                     ok = JS_FALSE;
 
                 lval = "(", rval = ")";
-                if (op == JSOP_NEW) {
+                if (saveop == JSOP_NEW) {
+                    op = saveop;                /* in case it's JSOP_NAME */
                     if (argc == 0)
                         lval = rval = "";
                     todo = Sprint(&ss->sprinter, "%s %s%s",
