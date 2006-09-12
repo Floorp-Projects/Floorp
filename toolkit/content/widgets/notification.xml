@@ -303,7 +303,7 @@
           <children/>
         </xul:hbox>
         <xul:toolbarbutton ondblclick="event.stopPropagation();"
-                           class="messageCloseButton"
+                           class="messageCloseButton tabbable"
                            xbl:inherits="hidden=hideclose"
                            oncommand="document.getBindingParent(this).close();"/>
       </xul:hbox>
