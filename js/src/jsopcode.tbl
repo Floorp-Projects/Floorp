@@ -110,8 +110,8 @@ OPDEF(JSOP_IFNE,      8,  "ifne",       NULL,         3,  1,  0,  0,  JOF_JUMP)
 OPDEF(JSOP_ARGUMENTS, 9, js_arguments_str, js_arguments_str, 1, 0, 1, 18, JOF_BYTE)
 
 /* ECMA-compliant for-in loop with argument or local variable loop control. */
-OPDEF(JSOP_FORARG,    10, "forarg",     NULL,         3,  0,  1,  0,  JOF_QARG|JOF_NAME|JOF_FOR)
-OPDEF(JSOP_FORVAR,    11, "forvar",     NULL,         3,  0,  1,  0,  JOF_QVAR|JOF_NAME|JOF_FOR)
+OPDEF(JSOP_FORARG,    10, "forarg",     NULL,         3,  0,  1, 18,  JOF_QARG|JOF_NAME|JOF_FOR)
+OPDEF(JSOP_FORVAR,    11, "forvar",     NULL,         3,  0,  1, 18,  JOF_QVAR|JOF_NAME|JOF_FOR)
 
 /* More longstanding bytecodes. */
 OPDEF(JSOP_DUP,       12, "dup",        NULL,         1,  1,  2,  0,  JOF_BYTE)
@@ -232,9 +232,9 @@ OPDEF(JSOP_VARDEC,    102,"vardec",     NULL,         3,  0,  1, 15,  JOF_QVAR |
 
 /* ECMA-compliant for/in ops. */
 OPDEF(JSOP_TOOBJECT,  103,"toobject",   NULL,         1,  1,  1,  0,  JOF_BYTE)
-OPDEF(JSOP_FORNAME,   104,"forname",    NULL,         3,  0,  1,  0,  JOF_CONST|JOF_NAME|JOF_FOR)
-OPDEF(JSOP_FORPROP,   105,"forprop",    NULL,         3,  1,  1,  0,  JOF_CONST|JOF_PROP|JOF_FOR)
-OPDEF(JSOP_FORELEM,   106,"forelem",    NULL,         1,  2,  4,  0,  JOF_BYTE |JOF_ELEM|JOF_FOR)
+OPDEF(JSOP_FORNAME,   104,"forname",    NULL,         3,  0,  1, 18,  JOF_CONST|JOF_NAME|JOF_FOR)
+OPDEF(JSOP_FORPROP,   105,"forprop",    NULL,         3,  1,  1, 17,  JOF_CONST|JOF_PROP|JOF_FOR)
+OPDEF(JSOP_FORELEM,   106,"forelem",    NULL,         1,  2,  4, 17,  JOF_BYTE |JOF_ELEM|JOF_FOR)
 OPDEF(JSOP_POP2,      107,"pop2",       NULL,         1,  2,  0,  0,  JOF_BYTE)
 
 /* ECMA-compliant assignment ops. */
@@ -449,7 +449,7 @@ OPDEF(JSOP_INCLOCAL,      203,"inclocal",    NULL,    3,  0,  1, 15,  JOF_LOCAL|
 OPDEF(JSOP_DECLOCAL,      204,"declocal",    NULL,    3,  0,  1, 15,  JOF_LOCAL|JOF_NAME|JOF_DEC)
 OPDEF(JSOP_LOCALINC,      205,"localinc",    NULL,    3,  0,  1, 15,  JOF_LOCAL|JOF_NAME|JOF_INC|JOF_POST)
 OPDEF(JSOP_LOCALDEC,      206,"localdec",    NULL,    3,  0,  1, 15,  JOF_LOCAL|JOF_NAME|JOF_DEC|JOF_POST)
-OPDEF(JSOP_FORLOCAL,      207,"forlocal",    NULL,    3,  0,  1,  0,  JOF_LOCAL|JOF_NAME|JOF_FOR)
+OPDEF(JSOP_FORLOCAL,      207,"forlocal",    NULL,    3,  0,  1, 18,  JOF_LOCAL|JOF_NAME|JOF_FOR)
 
 /*
  * Iterator, generator, and array comprehension support.
