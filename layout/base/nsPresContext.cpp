@@ -73,6 +73,8 @@
 #include "nsIDOMDocument.h"
 #include "nsAutoPtr.h"
 #include "nsEventStateManager.h"
+#include "nsThreadUtils.h"
+
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
 #endif // IBMBIDI
@@ -156,8 +158,7 @@ static NS_DEFINE_CID(kSelectionImageService, NS_SELECTIONIMAGESERVICE_CID);
 
 nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   : mType(aType), mDocument(aDocument), mTextZoom(1.0),
-    mPageSize(-1, -1), mIsRootPaginatedDocument(PR_FALSE),
-    mCanPaginatedScroll(PR_FALSE),
+    mPageSize(-1, -1),
     mViewportStyleOverflow(NS_STYLE_OVERFLOW_AUTO, NS_STYLE_OVERFLOW_AUTO),
     mCompatibilityMode(eCompatibility_FullStandards),
     mImageAnimationModePref(imgIContainer::kNormalAnimMode),
@@ -174,7 +175,9 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mDefaultCursiveFont("cursive", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
                         NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(12)),
     mDefaultFantasyFont("fantasy", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-                        NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(12))
+                        NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(12)),
+    mCanPaginatedScroll(PR_FALSE),
+    mIsRootPaginatedDocument(PR_FALSE)
 {
   // NOTE! nsPresContext::operator new() zeroes out all members, so don't
   // bother initializing members to 0.
@@ -289,6 +292,16 @@ static const char* const kGenericFont[] = {
   ".cursive.",
   ".fantasy."
 };
+
+// Set to true when LookAndFeelChanged needs to be called.  This is used
+// because the look and feel is a service, so there's no need to notify it from
+// more than one prescontext.
+static PRBool sLookAndFeelChanged;
+
+// Set to true when ThemeChanged needs to be called on mTheme.  This is used
+// because mTheme is a service, so there's no need to notify it from more than
+// one prescontext.
+static PRBool sThemeChanged;
 
 void
 nsPresContext::GetFontPreferences()
@@ -1217,14 +1230,36 @@ nsPresContext::GetTheme()
 void
 nsPresContext::ThemeChanged()
 {
+  if (!mPendingThemeChanged) {
+    sLookAndFeelChanged = PR_TRUE;
+    sThemeChanged = PR_TRUE;
+
+    nsCOMPtr<nsIRunnable> ev =
+      new nsRunnableMethod<nsPresContext>(this,
+                                          &nsPresContext::ThemeChangedInternal);
+    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
+      mPendingThemeChanged = PR_TRUE;
+    }
+  }    
+}
+
+void
+nsPresContext::ThemeChangedInternal()
+{
+  mPendingThemeChanged = PR_FALSE;
+  
   // Tell the theme that it changed, so it can flush any handles to stale theme
   // data.
-  if (mTheme)
+  if (mTheme && sThemeChanged) {
     mTheme->ThemeChanged();
+    sThemeChanged = PR_FALSE;
+  }
 
   // Clear all cached nsILookAndFeel colors.
-  if (mLookAndFeel)
+  if (mLookAndFeel && sLookAndFeelChanged) {
     mLookAndFeel->LookAndFeelChanged();
+    sLookAndFeelChanged = PR_FALSE;
+  }
 
   // We have to clear style data because the assumption of style rule
   // immutability has been violated since any style rule that uses
@@ -1236,9 +1271,26 @@ nsPresContext::ThemeChanged()
 void
 nsPresContext::SysColorChanged()
 {
-  if (mLookAndFeel) {
+  if (!mPendingSysColorChanged) {
+    sLookAndFeelChanged = PR_TRUE;
+    nsCOMPtr<nsIRunnable> ev =
+      new nsRunnableMethod<nsPresContext>(this,
+                                          &nsPresContext::SysColorChangedInternal);
+    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
+      mPendingSysColorChanged = PR_TRUE;
+    }
+  }
+}
+
+void
+nsPresContext::SysColorChangedInternal()
+{
+  mPendingSysColorChanged = PR_FALSE;
+  
+  if (mLookAndFeel && sLookAndFeelChanged) {
      // Don't use the cached values for the system colors
     mLookAndFeel->LookAndFeelChanged();
+    sLookAndFeelChanged = PR_FALSE;
   }
    
   // Reset default background and foreground colors for the document since
