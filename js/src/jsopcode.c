@@ -3057,14 +3057,16 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                               rval);
 #else
                 if (lastop == JSOP_GETTER || lastop == JSOP_SETTER) {
-                    rval += strlen(js_function_str) + 1;
-                    todo = Sprint(&ss->sprinter, "%s%s%s %s%.*s",
+                    JS_ASSERT(strncmp(rval, js_function_str, 8) == 0 &&
+                              rval[8] == ' ');
+                    rval += 8 + 1;
+                    JS_ASSERT(rval[strlen(rval)-1] == '}');
+                    todo = Sprint(&ss->sprinter, "%s%s%s %s%s",
                                   lval,
                                   (lval[1] != '\0') ? ", " : "",
                                   (lastop == JSOP_GETTER)
                                   ? js_get_str : js_set_str,
                                   xval,
-                                  strlen(rval) - 1,
                                   rval);
                 } else {
                     todo = Sprint(&ss->sprinter, "%s%s%s:%s",
