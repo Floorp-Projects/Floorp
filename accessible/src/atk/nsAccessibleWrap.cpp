@@ -827,17 +827,13 @@ getRoleCB(AtkObject *aAtkObj)
 }
 
 AtkAttributeSet *
-getAttributesCB(AtkObject *aAtkObj)
+GetAttributeSet(nsIAccessible* aAccessible)
 {
-    NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), nsnull);
-    nsAccessibleWrap *accWrap =
-        NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
-
     AtkAttributeSet *objAttributeSet = nsnull;
     nsCOMPtr<nsIPersistentProperties> attributes;
-    accWrap->GetAttributes(getter_AddRefs(attributes));
-    if (attributes) {
+    aAccessible->GetAttributes(getter_AddRefs(attributes));
 
+    if (attributes) {
         nsCOMPtr<nsISimpleEnumerator> propEnum;
         nsresult rv = attributes->Enumerate(getter_AddRefs(propEnum));
         NS_ENSURE_SUCCESS(rv, nsnull);
@@ -865,6 +861,16 @@ getAttributesCB(AtkObject *aAtkObj)
     }
 
     return objAttributeSet;
+}
+
+AtkAttributeSet *
+getAttributesCB(AtkObject *aAtkObj)
+{
+    NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), nsnull);
+    nsAccessibleWrap *accWrap =
+        NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
+
+    return GetAttributeSet(accWrap);
 }
 
 AtkObject *

@@ -47,6 +47,8 @@
 #include "nsIPresShell.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
+#include "nsIPersistentProperties2.h"
+#include "nsComponentManagerUtils.h"
 
 nsHTMLTextAccessible::nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell, nsIFrame *aFrame):
 nsTextAccessibleWrap(aDomNode, aShell), mFrame(aFrame)
@@ -97,6 +99,19 @@ NS_IMETHODIMP nsHTMLTextAccessible::FireToolkitEvent(PRUint32 aEvent,
   return nsTextAccessibleWrap::FireToolkitEvent(aEvent, aTarget, aData);
 }
 
+NS_IMETHODIMP nsHTMLTextAccessible::GetRole(PRUint32 *aRole)
+{
+  nsIFrame *frame = GetFrame();
+  NS_ENSURE_TRUE(frame, NS_ERROR_NULL_POINTER);
+
+  if (frame->IsGeneratedContentFrame()) {
+    *aRole = ROLE_STATICTEXT;
+    return NS_OK;
+  }
+
+  return nsTextAccessible::GetRole(aRole);
+}
+
 NS_IMETHODIMP nsHTMLTextAccessible::GetState(PRUint32 *aState)
 {
   nsTextAccessible::GetState(aState);
@@ -109,6 +124,29 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetState(PRUint32 *aState)
      if (0 == (extState & EXT_STATE_EDITABLE)) {
        *aState |= STATE_READONLY; // Links not focusable in editor
      }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
+{
+  *aAttributes = nsnull;
+
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;  // Node already shut down
+  }
+
+  PRUint32 role;
+  GetRole(&role);
+  if (role == ROLE_STATICTEXT) {
+    nsCOMPtr<nsIPersistentProperties> attributes =
+        do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
+    NS_ENSURE_TRUE(attributes, NS_ERROR_NULL_POINTER);
+    nsAutoString oldValueUnused;
+    attributes->SetStringProperty(NS_LITERAL_CSTRING("static"),
+                                  NS_LITERAL_STRING("true"), oldValueUnused);
+    attributes.swap(*aAttributes);
   }
 
   return NS_OK;
@@ -296,4 +334,3 @@ NS_IMETHODIMP nsHTMLListBulletAccessible::GetName(nsAString &aName)
   aName = mBulletText;
   return NS_OK;
 }
-

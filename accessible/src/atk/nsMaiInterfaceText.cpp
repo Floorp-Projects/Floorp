@@ -42,6 +42,8 @@
 #include "nsMaiInterfaceText.h"
 #include "nsString.h"
 
+AtkAttributeSet * GetAttributeSet(nsIAccessible* aAccessible);
+
 void
 textInterfaceInitCB(AtkTextIface *aIface)
 {
@@ -254,9 +256,7 @@ getRunAttributesCB(AtkText *aText, gint aOffset,
     *aEndOffset = endOffset;
     NS_ENSURE_SUCCESS(rv, nsnull);
 
-    // XXX Turn accessibleWithAttrs into AtkAttributeSet by getting CSS for it
-    // Look at  nsAccessNodeWrap::get_computedStyle() for MSAA implementation
-    return nsnull;
+    return GetAttributeSet(accessibleWithAttrs);
 }
 
 AtkAttributeSet *
