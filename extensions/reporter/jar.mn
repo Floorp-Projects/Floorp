@@ -4,7 +4,6 @@ reporter.jar:
 #ifdef MOZ_PHOENIX
 % overlay chrome://browser/content/browser.xul         chrome://reporter/content/reporterOverlay.xul
 % overlay chrome://global/content/customizeToolbar.xul chrome://reporter/content/reporterOverlay.xul
-% overlay chrome://browser/content/customizeToolbarSheet.xul chrome://reporter/content/reporterOverlay.xul
 % skin reporter classic/1.0 %skin/classic/reporter/
 #endif
 #else

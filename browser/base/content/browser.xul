@@ -510,7 +510,7 @@
       <vbox flex="1">
         <iframe id="customizeToolbarSheetIFrame"
                 style="&dialog.style;"
-                src="chrome://browser/content/customizeToolbarSheet.xul"/>
+                src="chrome://global/content/customizeToolbar.xul"/>
         <vbox flex="1"/>
       </vbox>
       <hbox flex="1"/>
