@@ -9,3 +9,8 @@ pref("app.update.url.details", "http://www.mozilla.org/projects/%APP%/");
 
 // Release notes URL
 pref("app.releaseNotesURL", "http://www.mozilla.org/projects/%APP%/%VERSION%/releasenotes/");
+
+// Search codes belong only in builds with official branding
+pref("browser.search.param.yahoo-fr", "");
+pref("browser.search.param.yahoo-fr-cjkt", "");
+pref("browser.search.param.yahoo-f-CN", "");
