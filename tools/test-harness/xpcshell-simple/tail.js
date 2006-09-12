@@ -40,7 +40,7 @@ try {
   do_test_pending();
   run_test();
   do_test_finished();
-  do_main();
+  _do_main();
 } catch (e) {
   _fail = true;
   dump(e + "\n");

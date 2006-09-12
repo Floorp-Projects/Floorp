@@ -37,7 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// This file contains common code that is loaded with each test file.
+/* This file contains common code that is loaded with each test file.
+ * See http://developer.mozilla.org/en/docs/Writing_xpcshell-based_unit_tests
+ * for more informaton
+ */
 
 var _quit = false;
 var _fail = false;
@@ -59,13 +62,7 @@ _TimerCallback.prototype = {
   }
 };
 
-function do_timeout(delay, expr) {
-  var timer = Components.classes["@mozilla.org/timer;1"]
-                        .createInstance(Components.interfaces.nsITimer);
-  timer.initWithCallback(new _TimerCallback(expr), delay, timer.TYPE_ONE_SHOT);
-}
-
-function do_main() {
+function _do_main() {
   if (_quit)
     return;
 
@@ -80,15 +77,23 @@ function do_main() {
     thr.processNextEvent(true);
 }
 
-function do_quit() {
+function _do_quit() {
   dump("*** exiting\n");
 
   _quit = true;
 }
 
+/************** Functions to be used from the tests **************/
+
+function do_timeout(delay, expr) {
+  var timer = Components.classes["@mozilla.org/timer;1"]
+                        .createInstance(Components.interfaces.nsITimer);
+  timer.initWithCallback(new _TimerCallback(expr), delay, timer.TYPE_ONE_SHOT);
+}
+
 function do_throw(text) {
   _fail = true;
-  do_quit();
+  _do_quit();
   dump("*** CHECK FAILED: " + text + "\n");
   var frame = Components.stack;
   while (frame != null) {
@@ -98,18 +103,18 @@ function do_throw(text) {
   throw Components.results.NS_ERROR_ABORT;
 }
 
-function do_check_neq(_left, _right) {
-  if (_left == _right)
-    do_throw(_left + " != " + _right);
+function do_check_neq(left, right) {
+  if (left == right)
+    do_throw(left + " != " + right);
 }
 
-function do_check_eq(_left, _right) {
-  if (_left != _right)
-    do_throw(_left + " == " + _right);
+function do_check_eq(left, right) {
+  if (left != right)
+    do_throw(left + " == " + right);
 }
 
-function do_check_true(_condition) {
-  do_check_eq(_condition, true);
+function do_check_true(condition) {
+  do_check_eq(condition, true);
 }
 
 function do_test_pending() {
@@ -120,5 +125,5 @@ function do_test_pending() {
 function do_test_finished() {
   dump("*** test finished\n");
   if (--_tests_pending == 0)
-    do_quit();
+    _do_quit();
 }
