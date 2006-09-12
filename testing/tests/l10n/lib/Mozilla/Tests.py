@@ -166,11 +166,14 @@ class SearchTest(Base):
         self.engine = {'urls':[]}
         self.lNames = []
         self.textField = None
+        self.content = ''
         return
       def endDocument(self):
         self.engine['md5'] = self.md5.hexdigest()
         return
       def startElementNS(self, (ns, local), qname, attrs):
+        if self.textField:
+          logging.warning('Found Element, but expected CDATA.')
         self.indent += '  '
         if ns != u'http://www.mozilla.org/2006/browser/search/':
           raise UserWarning, ('bad namespace: ' + ns)
@@ -183,14 +186,17 @@ class SearchTest(Base):
           self.update(qna[0] + qna[1] + attrs.getValueByQName(qna))
         return
       def endElementNS(self, (ns, local), qname):
+        if self.textField:
+          self.engine[self.textField] = self.content
+          self.textField = None
+          self.content = ''
         self.lNames.pop()
         self.indent = self.indent[0:-2]
       def characters(self, content):
         self.update(content)
         if not self.textField:
           return
-        self.engine[self.textField] = content
-        self.textField = None
+        self.content += content
       def update(self, content):
         self.md5.update(utf_8_encode(content)[0])
       def openURL(self, attrs):
@@ -205,14 +211,23 @@ class SearchTest(Base):
           raise UserWarning, 'bad param'
         return
       def handleMozParam(self, attrs):
+        mp = None
         try:
-          self.engine['urls'][-1]['MozParams'] = {
-            'name': attrs.getValueByQName(u'name'),
-            'condition': attrs.getValueByQName(u'condition'),
-            'trueValue': attrs.getValueByQName(u'trueValue'),
-            'falseValue': attrs.getValueByQName(u'falseValue')}
+          mp = { 'name': attrs.getValueByQName(u'name'),
+                 'condition': attrs.getValueByQName(u'condition'),
+                 'trueValue': attrs.getValueByQName(u'trueValue'),
+                 'falseValue': attrs.getValueByQName(u'falseValue')}
         except KeyError:
-          raise UserWarning, 'bad mozParam'
+          try:
+            mp = {'name': attrs.getValueByQName(u'name'),
+                  'condition': attrs.getValueByQName(u'condition'),
+                  'pref': attrs.getValueByQName(u'pref')}
+          except KeyError:
+            raise UserWarning, 'bad mozParam'
+        if self.engine['urls'][-1].has_key('MozParams'):
+          self.engine['urls'][-1]['MozParams'].append(mp)
+        else:
+          self.engine['urls'][-1]['MozParams'] = [mp]
         return
       def handleShortName(self, attrs):
         self.textField = 'ShortName'

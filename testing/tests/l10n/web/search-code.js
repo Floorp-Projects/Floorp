@@ -38,6 +38,9 @@
 
 var searchController = {
   __proto__: baseController,
+  get path() {
+    return 'results/' + this.tag + '/search-results.json';
+  },
   beforeSelect: function() {
     this.hashes = {};
     searchView.setUpHandlers();
@@ -55,6 +58,7 @@ var searchController = {
                         callback);
   },
   beforeUnSelect: function() {
+    this.hashes = {};
     searchView.destroyHandlers();
   },
   showView: function(aClosure) {
@@ -214,7 +218,16 @@ var searchView = {
           sep = '&amp;';
         }
         uc = uc.replace('{searchTerms}', q);
-        c += '<button onclick="window.open(this.textContent)">' + uc + '</button><br>';
+        var mpContent = '';
+        if (url.MozParams) {
+          for each (var mp in url.MozParams) {
+            // add at least the yahoo prefs
+            if (mp.condition == 'pref') {
+              mpContent += ', using pref ' + mp.name + '=' + mp.pref;
+            }
+          }
+        }
+        c += '<button onclick="window.open(this.textContent)">' + uc + '</button>' +mpContent+ '<br>';
         len  = len < c.length ? c.length : len;
       }
       this._dv.setBody(c);
