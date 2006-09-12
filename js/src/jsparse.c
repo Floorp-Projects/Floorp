@@ -1388,7 +1388,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
          * sub-statement.
          */
         op = JSOP_CLOSURE;
-        tc->flags |= TCF_HAS_CLOSURE;
     } else {
         op = JSOP_NOP;
     }
@@ -1444,6 +1443,10 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             return NULL;
         }
         ts->flags |= TSF_OPERAND;
+
+        /* Detect a function statement for the TOK_LC case in Statement. */
+        if (pn2->pn_type == TOK_FUNCTION && !AT_TOP_LEVEL(tc))
+            tc->flags |= TCF_HAS_FUNCTION_STMT;
 
         /* If compiling top-level statements, emit as we go to save space. */
         if (!tc->topStmt && (tc->flags & TCF_COMPILING)) {
@@ -3388,7 +3391,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         uintN oldflags;
 
         oldflags = tc->flags;
-        tc->flags = oldflags & ~TCF_HAS_CLOSURE;
+        tc->flags = oldflags & ~TCF_HAS_FUNCTION_STMT;
         js_PushStatement(tc, &stmtInfo, STMT_BLOCK, -1);
         pn = Statements(cx, ts, tc);
         if (!pn)
@@ -3401,7 +3404,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
          * If we contain a function statement and our container is top-level
          * or another block, flag pn to preserve braces when decompiling.
          */
-        if ((tc->flags & TCF_HAS_CLOSURE) &&
+        if ((tc->flags & TCF_HAS_FUNCTION_STMT) &&
             (!tc->topStmt || tc->topStmt->type == STMT_BLOCK)) {
             pn->pn_extra |= PNX_NEEDBRACES;
         }
