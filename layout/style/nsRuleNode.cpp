@@ -3996,6 +3996,8 @@ nsRuleNode::ComputeColumnData(nsStyleStruct* aStartStruct,
     column->mColumnCount = NS_STYLE_COLUMN_COUNT_AUTO;
   } else if (eCSSUnit_Integer == columnData.mColumnCount.GetUnit()) {
     column->mColumnCount = columnData.mColumnCount.GetIntValue();
+    // Max 1000 columns - wallpaper for bug 345583.
+    column->mColumnCount = PR_MIN(column->mColumnCount, 1000);
   } else if (eCSSUnit_Inherit == columnData.mColumnCount.GetUnit()) {
     inherited = PR_TRUE;
     column->mColumnCount = parent->mColumnCount;
