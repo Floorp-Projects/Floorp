@@ -1090,8 +1090,8 @@ enum BWCOpenDest {
     toolbarItem = [[[ToolbarViewItem alloc] initWithItemIdentifier:itemIdent] autorelease];
     
     NSButton* button = [self createToolbarPopupButton:toolbarItem];
-    [toolbarItem setLabel:NSLocalizedString(@"Back", @"Back")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Back", @"Go Back")];
+    [toolbarItem setLabel:NSLocalizedString(@"Back", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Back", nil)];
 
     NSSize size = NSMakeSize(32., 32.);
     NSImage* icon = [NSImage imageNamed:@"back"];
@@ -1118,8 +1118,8 @@ enum BWCOpenDest {
   else if ([itemIdent isEqual:BackToolbarItemIdentifier]) {
     // not going onto the toolbar, don't need to go through the gynmastics above
     // and create a separate view
-    [toolbarItem setLabel:NSLocalizedString(@"Back", @"Back")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Back", @"Go Back")];
+    [toolbarItem setLabel:NSLocalizedString(@"Back", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Back", nil)];
     [toolbarItem setImage:[NSImage imageNamed:@"back"]];
   }
   else if ( [itemIdent isEqual:ForwardToolbarItemIdentifier] && willBeInserted ) {
@@ -1127,8 +1127,8 @@ enum BWCOpenDest {
     toolbarItem = [[[ToolbarViewItem alloc] initWithItemIdentifier:itemIdent] autorelease];
     
     NSButton* button = [self createToolbarPopupButton:toolbarItem];
-    [toolbarItem setLabel:NSLocalizedString(@"Forward", @"Forward")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Forward", @"Go Forward")];
+    [toolbarItem setLabel:NSLocalizedString(@"Forward", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Forward", nil)];
 
     NSSize size = NSMakeSize(32., 32.);
     NSImage* icon = [NSImage imageNamed:@"forward"];
@@ -1155,45 +1155,45 @@ enum BWCOpenDest {
   else if ([itemIdent isEqual:ForwardToolbarItemIdentifier]) {
     // not going onto the toolbar, don't need to go through the gynmastics above
     // and create a separate view
-    [toolbarItem setLabel:NSLocalizedString(@"Forward", @"Forward")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Forward", @"Go Forward")];
+    [toolbarItem setLabel:NSLocalizedString(@"Forward", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Forward", nil)];
     [toolbarItem setImage:[NSImage imageNamed:@"forward"]];
   }
   else if ([itemIdent isEqual:ReloadToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"Reload", @"Reload")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"Reload Page", @"Reload Page")];
-    [toolbarItem setToolTip:NSLocalizedString(@"ReloadToolTip", @"Reload current page")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Reload Page", nil)];
+    [toolbarItem setToolTip:NSLocalizedString(@"ReloadToolTip", nil)];
     [toolbarItem setImage:[NSImage imageNamed:@"reload"]];
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(reload:)];
   }
   else if ([itemIdent isEqual:StopToolbarItemIdentifier]) {
-    [toolbarItem setLabel:NSLocalizedString(@"Stop", @"Stop")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"Stop Loading", @"Stop Loading")];
-    [toolbarItem setToolTip:NSLocalizedString(@"StopToolTip", @"Stop loading this page")];
+    [toolbarItem setLabel:NSLocalizedString(@"Stop", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Stop Loading", nil)];
+    [toolbarItem setToolTip:NSLocalizedString(@"StopToolTip", nil)];
     [toolbarItem setImage:[NSImage imageNamed:@"stop"]];
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(stop:)];
   }
   else if ([itemIdent isEqual:HomeToolbarItemIdentifier]) {
-    [toolbarItem setLabel:NSLocalizedString(@"Home", @"Home")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Home", @"Go Home")];
-    [toolbarItem setToolTip:NSLocalizedString(@"HomeToolTip", @"Go to home page")];
+    [toolbarItem setLabel:NSLocalizedString(@"Home", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Home", nil)];
+    [toolbarItem setToolTip:NSLocalizedString(@"HomeToolTip", nil)];
     [toolbarItem setImage:[NSImage imageNamed:@"home"]];
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(home:)];
   }
   else if ([itemIdent isEqual:BookmarksToolbarItemIdentifier]) {
-    [toolbarItem setLabel:NSLocalizedString(@"ToggleBookmarks", @"Manage Bookmarks label")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"Manage Bookmarks", @"Manage Bookmarks palette")];
-    [toolbarItem setToolTip:NSLocalizedString(@"BookmarkMgrToolTip", @"Show or hide all bookmarks")];
+    [toolbarItem setLabel:NSLocalizedString(@"ToggleBookmarks", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Manage Bookmarks", nil)];
+    [toolbarItem setToolTip:NSLocalizedString(@"ShowBookmarkMgrToolTip", nil)];
     [toolbarItem setImage:[NSImage imageNamed:@"manager"]];
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(manageBookmarks:)];
   }
   else if ([itemIdent isEqual:ThrobberToolbarItemIdentifier]) {
     [toolbarItem setLabel:@""];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"Progress", @"Progress")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Progress", nil)];
     [toolbarItem setToolTip:NSLocalizedStringFromTable(@"ThrobberPageDefault", @"WebsiteDefaults", nil)];
     [toolbarItem setImage:[NSImage imageNamed:@"throbber-01"]];
     [toolbarItem setTarget:self];
@@ -1203,8 +1203,8 @@ enum BWCOpenDest {
   else if ([itemIdent isEqual:CombinedLocationToolbarItemIdentifier]) {
     NSMenuItem *menuFormRep = [[[NSMenuItem alloc] init] autorelease];
 
-    [toolbarItem setLabel:NSLocalizedString(@"Location", @"Location")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"Location", @"Location")];
+    [toolbarItem setLabel:NSLocalizedString(@"Location", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Location", nil)];
     [toolbarItem setView:mLocationToolbarView];
     [toolbarItem setMinSize:NSMakeSize(250, NSHeight([mLocationToolbarView frame]))];
     [toolbarItem setMaxSize:NSMakeSize(FLT_MAX, NSHeight([mLocationToolbarView frame]))];
@@ -1219,73 +1219,73 @@ enum BWCOpenDest {
     [toolbarItem setMenuFormRepresentation:menuFormRep];
   }
   else if ([itemIdent isEqual:PrintToolbarItemIdentifier]) {
-    [toolbarItem setLabel:NSLocalizedString(@"Print", @"Print")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"Print", @"Print")];
-    [toolbarItem setToolTip:NSLocalizedString(@"PrintToolTip", @"Print this page")];
+    [toolbarItem setLabel:NSLocalizedString(@"Print", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Print", nil)];
+    [toolbarItem setToolTip:NSLocalizedString(@"PrintToolTip", nil)];
     [toolbarItem setImage:[NSImage imageNamed:@"print"]];
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(printDocument:)];
   }
   else if ([itemIdent isEqual:ViewSourceToolbarItemIdentifier]) {
-    [toolbarItem setLabel:NSLocalizedString(@"View Source", @"View Source")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"View Page Source", @"View Page Source")];
-    [toolbarItem setToolTip:NSLocalizedString(@"ViewSourceToolTip", @"Display the HTML source of this page")];
+    [toolbarItem setLabel:NSLocalizedString(@"View Source", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"View Page Source", nil)];
+    [toolbarItem setToolTip:NSLocalizedString(@"ViewSourceToolTip", nil)];
     [toolbarItem setImage:[NSImage imageNamed:@"showsource"]];
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(viewSource:)];
   }
   else if ([itemIdent isEqual:BookmarkToolbarItemIdentifier]) {
-    [toolbarItem setLabel:NSLocalizedString(@"Bookmark", @"Bookmark")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"Bookmark Page", @"Bookmark Page")];
-    [toolbarItem setToolTip:NSLocalizedString(@"BookmarkToolTip", @"Add this page to your bookmarks")];
+    [toolbarItem setLabel:NSLocalizedString(@"Bookmark", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Bookmark Page", nil)];
+    [toolbarItem setToolTip:NSLocalizedString(@"BookmarkToolTip", nil)];
     [toolbarItem setImage:[NSImage imageNamed:@"add_to_bookmark.tif"]];
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(addBookmark:)];
   }
   else if ([itemIdent isEqual:TextBiggerToolbarItemIdentifier]) {
-    [toolbarItem setLabel:NSLocalizedString(@"BigText", @"Enlarge Text")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"BigText", @"Enlarge Text")];
-    [toolbarItem setToolTip:NSLocalizedString(@"BigTextToolTip", @"Enlarge the text on this page")];
+    [toolbarItem setLabel:NSLocalizedString(@"BigText", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"BigText", nil)];
+    [toolbarItem setToolTip:NSLocalizedString(@"BigTextToolTip", nil)];
     [toolbarItem setImage:[NSImage imageNamed:@"textBigger.tif"]];
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(makeTextBigger:)];
   }
   else if ([itemIdent isEqual:TextSmallerToolbarItemIdentifier]) {
-    [toolbarItem setLabel:NSLocalizedString(@"SmallText", @"Shrink Text")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"SmallText", @"Shrink Text")];
-    [toolbarItem setToolTip:NSLocalizedString(@"SmallTextToolTip", @"Shrink the text on this page")];
+    [toolbarItem setLabel:NSLocalizedString(@"SmallText", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"SmallText", nil)];
+    [toolbarItem setToolTip:NSLocalizedString(@"SmallTextToolTip", nil)];
     [toolbarItem setImage:[NSImage imageNamed:@"textSmaller.tif"]];
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(makeTextSmaller:)];
   }
   else if ([itemIdent isEqual:NewTabToolbarItemIdentifier]) {
-    [toolbarItem setLabel:NSLocalizedString(@"NewTab", @"New Tab")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"NewTab", @"New Tab")];
-    [toolbarItem setToolTip:NSLocalizedString(@"NewTabToolTip", @"Create a new tab")];
+    [toolbarItem setLabel:NSLocalizedString(@"NewTab", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"NewTab", nil)];
+    [toolbarItem setToolTip:NSLocalizedString(@"NewTabToolTip", nil)];
     [toolbarItem setImage:[NSImage imageNamed:@"newTab.tif"]];
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(newTab:)];
   }
   else if ([itemIdent isEqual:CloseTabToolbarItemIdentifier]) {
-    [toolbarItem setLabel:NSLocalizedString(@"CloseTab", @"Close Tab")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"CloseTab", @"Close Tab")];
-    [toolbarItem setToolTip:NSLocalizedString(@"CloseTabToolTip", @"Close the current tab")];
+    [toolbarItem setLabel:NSLocalizedString(@"CloseTab", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"CloseTab", nil)];
+    [toolbarItem setToolTip:NSLocalizedString(@"CloseTabToolTip", nil)];
     [toolbarItem setImage:[NSImage imageNamed:@"closeTab.tif"]];
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(closeCurrentTab:)];
   }
   else if ([itemIdent isEqual:SendURLToolbarItemIdentifier]) {
-    [toolbarItem setLabel:NSLocalizedString(@"SendLink", @"Send Link")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"SendLinkPaletteLabel", @"Email Page Location")];
-    [toolbarItem setToolTip:NSLocalizedString(@"SendLinkToolTip", @"Send current URL")];
+    [toolbarItem setLabel:NSLocalizedString(@"SendLink", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"SendLinkPaletteLabel", nil)];
+    [toolbarItem setToolTip:NSLocalizedString(@"SendLinkToolTip", nil)];
     [toolbarItem setImage:[NSImage imageNamed:@"sendLink.tif"]];
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(sendURL:)];
   }
   else if ([itemIdent isEqual:DLManagerToolbarItemIdentifier]) {
-    [toolbarItem setLabel:NSLocalizedString(@"Downloads", @"Downloads")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"Downloads", @"Downloads")];
-    [toolbarItem setToolTip:NSLocalizedString(@"DownloadsToolTip", @"Show the download manager")];
+    [toolbarItem setLabel:NSLocalizedString(@"Downloads", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Downloads", nil)];
+    [toolbarItem setToolTip:NSLocalizedString(@"DownloadsToolTip", nil)];
     [toolbarItem setImage:[NSImage imageNamed:@"dl_manager.tif"]];
     [toolbarItem setTarget:[ProgressDlgController sharedDownloadController]];
     [toolbarItem setAction:@selector(showWindow:)];
@@ -1366,8 +1366,20 @@ enum BWCOpenDest {
 
     return enable;
   }
-  else if (action == @selector(manageBookmarks:))
+  else if (action == @selector(manageBookmarks:)) {
+    if ([self bookmarkManagerIsVisible]) {
+      [theItem setPaletteLabel:NSLocalizedString(@"Hide Bookmarks", nil)];
+      [theItem setToolTip:NSLocalizedString(@"HideBookmarkMgrToolTip", nil)];
+      [theItem setImage:[NSImage imageNamed:@"hidemanager"]];
+    }
+    else {
+      [theItem setPaletteLabel:NSLocalizedString(@"Manage Bookmarks", nil)];
+      [theItem setToolTip:NSLocalizedString(@"ShowBookmarkMgrToolTip", nil)];
+      [theItem setImage:[NSImage imageNamed:@"manager"]];
+    }
+
     return ![self bookmarkManagerIsVisible] || [self canHideBookmarks];
+  }
   else if (action == @selector(reload:))
     return [[self getBrowserWrapper] canReload];
   else if (action == @selector(stop:))
