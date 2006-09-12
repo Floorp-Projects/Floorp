@@ -116,7 +116,10 @@ static const int kEscapeKeyCode = 53;
     BOOL shiftKeyIsDown = (([theEvent modifierFlags] & NSShiftKeyMask) != 0);
     handled = [windowController handleCommandReturn:shiftKeyIsDown];
   } else if (keyChar == '+') {
-    [windowController biggerTextSize:nil];
+    if ([windowController canMakeTextBigger])
+      [windowController makeTextBigger:nil];
+    else
+      NSBeep();
     handled = YES;
   } else if (keyChar >= '1' && keyChar <= '9') {
     BOOL cmdKeyIsDown = (([theEvent modifierFlags] & NSCommandKeyMask) != 0);
