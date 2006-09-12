@@ -132,3 +132,6 @@ pref("layout.spellcheckDefault", 1);
 // enable the tab jumpback feature
 pref("camino.enable_tabjumpback", true);
 
+// set the window.open behavior to "respect SWM unless the window.open call specifies size or features"
+pref("browser.link.open_newwindow.restriction", 2);
+

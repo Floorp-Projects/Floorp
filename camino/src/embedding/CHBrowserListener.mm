@@ -216,16 +216,16 @@ CHBrowserListener::ProvideWindow(nsIDOMWindow *inParent, PRUint32 inChromeFlags,
   NS_ENSURE_ARG_POINTER(outDOMWindow);
   *outDOMWindow = NULL;
 
-  // if the window has any non-standard chrome or a specific size/position, let
-  // Gecko open a new window. This fixes issues with webapps that expect the window
-  // to be standalone.
-  if (inChromeFlags != nsIWebBrowserChrome::CHROME_ALL || aPositionSpecified || aSizeSpecified)
+  // if the window has any non-standard chrome or a specific size/position and our pref says to respect such calls, let
+  // Gecko open a new window.
+  if ((inChromeFlags != nsIWebBrowserChrome::CHROME_ALL || aPositionSpecified || aSizeSpecified) &&
+      [mContainer respectWindowOpenCallsWithSizeAndPosition])
     return NS_OK;
 
   // if our chrome flags are different than normal, also force creating a new window
   if (mChromeFlags && mChromeFlags != nsIWebBrowserChrome::CHROME_ALL)
     return NS_OK;
-    
+
   // if the container prefers to reuse the existing window, tell it to do so and return
   // the DOMWindow it gives us. Otherwise we'll let Gecko create a new window.
   BOOL prefersTabs = [mContainer shouldReuseExistingWindow];

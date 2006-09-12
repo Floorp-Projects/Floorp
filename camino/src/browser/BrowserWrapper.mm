@@ -977,6 +977,12 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   return shouldReuse;
 }
 
+// Checks to see if we should allow window.open calls with specified size/position to open new windows (regardless of SWM)
+- (int)respectWindowOpenCallsWithSizeAndPosition
+{
+  return ([[PreferenceManager sharedInstance] getIntPref:"browser.link.open_newwindow.restriction" withSuccess:NULL] == 2);
+}
+
 - (CHBrowserView*)getBrowserView
 {
   return mBrowserView;

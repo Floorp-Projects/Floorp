@@ -116,6 +116,7 @@ typedef enum {
 // Return whether the container prefers to create new windows or to re-use
 // the existing one (will return YES if implementing "single-window mode")
 - (BOOL)shouldReuseExistingWindow;
+- (int)respectWindowOpenCallsWithSizeAndPosition;
 
 - (NSMenu*)contextMenu;
 - (NSWindow*)nativeWindow;
