@@ -2477,6 +2477,14 @@ static int CompareAttachmentPartId(const char * aAttachUrlLeft, const char * aAt
 
   char * partIdLeft  = GetAttachmentPartId(aAttachUrlLeft);
   char * partIdRight = GetAttachmentPartId(aAttachUrlRight);
+
+  // for detached attachments the URL does not contain any "part=xx"
+  if(!partIdLeft)
+    partIdLeft = "0";
+
+  if(!partIdRight)
+    partIdRight = "0";
+
   long idLeft, idRight;
   do
   {
@@ -2641,7 +2649,7 @@ nsAttachmentState::PrepareForAttachmentDelete()
     return NS_ERROR_FAILURE;
 
   // this prepares the attachment list for use in deletion. In order to prepare, we
-  // sorts the attachments in numerical ascending order on their part id, remove all
+  // sort the attachments in numerical ascending order on their part id, remove all
   // duplicates and remove any subparts which will be removed automatically by the
   // removal of the parent.
   // 
