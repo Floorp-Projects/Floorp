@@ -61,7 +61,6 @@
 #include "nsIAtom.h"
 #include "nsIImapIncomingServer.h"
 #include "nsIWeakReference.h"
-#include "nsIObserver.h"
 #include "nsIMsgFilterPlugin.h"
 #include "nsIStringBundle.h"
 #include "nsMsgTagService.h"
@@ -92,7 +91,7 @@ enum eFieldType {
 // The classes that implement the tree support will probably
 // inherit from this class.
 class nsMsgDBView : public nsIMsgDBView, public nsIDBChangeListener,
-                    public nsITreeView, public nsIObserver,
+                    public nsITreeView,
                     public nsIJunkMailClassificationListener
 {
 public:
@@ -103,7 +102,6 @@ public:
   NS_DECL_NSIMSGDBVIEW
   NS_DECL_NSIDBCHANGELISTENER
   NS_DECL_NSITREEVIEW
-  NS_DECL_NSIOBSERVER
   NS_DECL_NSIJUNKMAILCLASSIFICATIONLISTENER
 
   nsMsgViewIndex GetInsertIndexHelper(nsIMsgDBHdr *msgHdr, nsMsgKeyArray *keys,

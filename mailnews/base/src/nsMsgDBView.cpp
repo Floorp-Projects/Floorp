@@ -123,7 +123,6 @@ NS_INTERFACE_MAP_BEGIN(nsMsgDBView)
    NS_INTERFACE_MAP_ENTRY(nsIMsgDBView)
    NS_INTERFACE_MAP_ENTRY(nsIDBChangeListener)
    NS_INTERFACE_MAP_ENTRY(nsITreeView)
-   NS_INTERFACE_MAP_ENTRY(nsIObserver)
    NS_INTERFACE_MAP_ENTRY(nsIJunkMailClassificationListener)
 NS_INTERFACE_MAP_END
 
@@ -274,47 +273,6 @@ nsresult nsMsgDBView::InitLabelStrings()
     rv = GetPrefLocalizedString(prefString.get(), mLabelPrefDescriptions[i]);
   }
   return rv;
-}
-
-NS_IMETHODIMP nsMsgDBView::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
-{
-  nsresult rv = NS_OK;
-  PRBool matchFound = PR_FALSE;
-
-  if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID))
-  {
-    nsCString prefName;
-    nsCString indexStr;
-    PRUint32 prefNameLength;
-    PRInt32 indexInt;
-    PRInt32 irv;
-
-    prefName.AssignWithConversion(someData);
-    prefNameLength = prefName.Length();
-
-    /* Get the last character and convert it to an int.
-     * It should be a char from 1-5. */
-    indexStr.Assign(prefName.get() + prefNameLength - 1);
-    indexInt = indexStr.ToInteger(&irv);
-    NS_ASSERTION(!irv, "ToInteger() failed");
-    if (irv)
-      return NS_ERROR_FAILURE;
-
-    /* Determine if it's a description or a color preference */
-    if(prefName.Find(PREF_LABELS_DESCRIPTION, PR_TRUE, 0, 1) != kNotFound)
-    {
-      /* it's a description, get the localized string from the pref */
-      rv = GetPrefLocalizedString(prefName.get(), mLabelPrefDescriptions[indexInt - 1]);
-      matchFound = PR_TRUE;
-    }
-    if(matchFound) {
-      NS_ENSURE_SUCCESS(rv,rv);
-      NS_ASSERTION(mTree, "no tree, see bug #114956");
-      if(mTree)
-        mTree->Invalidate();
-    }
-  }
-  return NS_OK;
 }
 
 // helper function used to fetch strings from the messenger string bundle
