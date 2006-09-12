@@ -640,18 +640,6 @@ tab {
   display: -moz-box;
 }
 
-.tab-close-button-placeholder {
-  display: none;
-}
-
-.tabbrowser-tabs[disablebackgroundclose="true"] > .tabbrowser-tab:not([selected="true"]) > .tab-close-button {
-  display: none;
-}
-
-.tabbrowser-tabs[disablebackgroundclose="true"]:not([closebuttons="noclose"]):not([closebuttons="closeatend"]) > .tabbrowser-tab:not([selected="true"]) .tab-close-button-placeholder {
-  display: -moz-box;  
-}
-
 tabpanels {
   -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tabpanels");
   display: -moz-deck;
