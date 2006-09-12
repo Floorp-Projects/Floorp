@@ -221,7 +221,7 @@ PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
 
 #ifdef DEBUG
     if (entrySize > 10 * sizeof(void *)) {
-        fprintf(stderr,
+        printf_stderr(
                 "pldhash: for the table at address %p, the given entrySize"
                 " of %lu %s favors chaining over double hashing.\n",
                 (void *)table,

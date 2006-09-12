@@ -31,3 +31,4 @@ s/JS_NewDHashTable/PL_NewDHashTable/
 s/JS_ASSERT(0)/NS_NOTREACHED("0")/
 s/\( *\)JS_ASSERT(\(.*\));/\1NS_ASSERTION(\2,\n\1             "\2");/
 s/JS_/PR_/g
+s/fprintf(stderr,/printf_stderr(/

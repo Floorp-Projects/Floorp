@@ -40,7 +40,11 @@
 
 #include "nsCRTGlue.h"
 #include "nsXPCOM.h"
+#include "nsDebug.h"
 #include <string.h>
+#include <stdio.h>
+#include <io.h>
+#include <stdarg.h>
 
 const char*
 NS_strspnp(const char *delims, const char *str)
@@ -258,3 +262,27 @@ PRBool NS_IsAsciiDigit(PRUnichar aChar)
 {
   return aChar >= '0' && aChar <= '9';
 }
+
+#ifdef XP_WIN
+void
+printf_stderr(const char *fmt, ...)
+{
+  FILE *fp = _fdopen(_dup(2), "a");
+
+  va_list args;
+  va_start(args, fmt);
+  vfprintf(fp, fmt, args);
+  va_end(args);
+
+  fclose(fp);
+}
+#else
+void
+printf_stderr(const char *fmt, ...)
+{
+  va_list args;
+  va_start(args, fmt);
+  vfprintf(stderr, fmt, args);
+  va_end(args);
+}
+#endif
