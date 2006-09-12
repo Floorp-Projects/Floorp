@@ -78,22 +78,6 @@ static JSRuntime *sJSRuntime;
 // while executing JS on the context.
 static nsIJSContextStack *sContextStack;
 
-class AutoCXPusher
-{
-public:
-  AutoCXPusher(JSContext *cx)
-  {
-    if (sContextStack)
-      sContextStack->Push(cx);
-  }
-
-  ~AutoCXPusher()
-  {
-    if (sContextStack)
-      sContextStack->Pop(nsnull);
-  }
-};
-
 NPClass nsJSObjWrapper::sJSObjWrapperNPClass =
   {
     NP_CLASS_STRUCT_VERSION,
@@ -229,6 +213,31 @@ OnWrapperDestroyed()
     NS_IF_RELEASE(sContextStack);
   }
 }
+
+struct AutoCXPusher
+{
+  AutoCXPusher(JSContext *cx)
+  {
+    // Precondition explaining why we don't need to worry about errors
+    // in OnWrapperCreated.
+    NS_PRECONDITION(sWrapperCount > 0,
+                    "must have live wrappers when using AutoCXPusher");
+
+    // Call OnWrapperCreated and OnWrapperDestroyed to ensure that the
+    // last OnWrapperDestroyed doesn't happen while we're on the stack
+    // and null out sContextStack.
+    OnWrapperCreated();
+
+    sContextStack->Push(cx);
+  }
+
+  ~AutoCXPusher()
+  {
+    sContextStack->Pop(nsnull);
+
+    OnWrapperDestroyed();
+  }
+};
 
 static JSContext *
 GetJSContext(NPP npp)

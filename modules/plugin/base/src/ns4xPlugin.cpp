@@ -1999,12 +1999,14 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
           NPBool bPushCaller = (result != nsnull);
 
           if (bPushCaller) {
+            rv = NS_ERROR_FAILURE;
+
             nsCOMPtr<nsIPluginInstancePeer> peer;
             if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && peer) {
               nsCOMPtr<nsIPluginInstancePeer2> peer2 =
-                do_QueryInterface(peer, &rv);
+                do_QueryInterface(peer);
 
-              if (NS_SUCCEEDED(rv) && peer2) {
+              if (peer2) {
                 JSContext *cx;
                 rv = peer2->GetJSContext(&cx);
 

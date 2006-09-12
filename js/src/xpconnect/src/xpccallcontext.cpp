@@ -299,31 +299,28 @@ XPCCallContext::~XPCCallContext()
     {
         mXPCContext->SetCallingLangType(mPrevCallerLanguage);
 
-        if(mContextPopRequired)
-        {
-            XPCJSContextStack* stack = mThreadData->GetJSContextStack();
-            if(stack)
-            {
-#ifdef DEBUG
-                JSContext* poppedCX;
-                nsresult rv = stack->Pop(&poppedCX);
-                NS_ASSERTION(NS_SUCCEEDED(rv) && poppedCX == mJSContext, "bad pop");
-#else
-                (void) stack->Pop(nsnull);
-#endif
-            }
-            else
-            {
-                NS_ASSERTION(0, "bad!");
-            }
-        }
-
 #ifdef DEBUG
         XPCCallContext* old = mThreadData->SetCallContext(mPrevCallContext);
         NS_ASSERTION(old == this, "bad pop from per thread data");
 #else
         (void) mThreadData->SetCallContext(mPrevCallContext);
 #endif
+    }
+
+    if(mContextPopRequired)
+    {
+        XPCJSContextStack* stack = mThreadData->GetJSContextStack();
+        NS_ASSERTION(stack, "bad!");
+        if(stack)
+        {
+#ifdef DEBUG
+            JSContext* poppedCX;
+            nsresult rv = stack->Pop(&poppedCX);
+            NS_ASSERTION(NS_SUCCEEDED(rv) && poppedCX == mJSContext, "bad pop");
+#else
+            (void) stack->Pop(nsnull);
+#endif
+        }
     }
 
     if(mJSContext)
