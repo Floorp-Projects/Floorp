@@ -82,6 +82,10 @@ pref("mailnews.default_sort_type", 18); //
 pref("mailnews.default_news_sort_order", 1); // for News (nsNewsDatabase)
 pref("mailnews.default_news_sort_type", 22); //
 
+// If true, delete will use the direction of the sort order
+// in determining the next message to select. 
+pref("mail.delete_matches_sort_order", false);
+
 // mailnews tcp read+write timeout in seconds.
 pref("mailnews.tcptimeout", 60);
 
