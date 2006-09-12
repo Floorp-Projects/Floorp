@@ -3535,6 +3535,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
     JSTokenType tt;
     JSBool let;
+    JSStmtInfo *scopeStmt;
     BindData data;
     JSParseNode *pn, *pn2;
     JSStackFrame *fp;
@@ -3551,8 +3552,14 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JS_ASSERT(let || tt == TOK_VAR);
 
     /* Make sure that Statement set the tree context up correctly. */
-    JS_ASSERT(!let ||
-              (tc->topScopeStmt && (tc->topScopeStmt->flags & SIF_SCOPE)));
+    if (let) {
+        scopeStmt = tc->topScopeStmt;
+        while (scopeStmt && !(scopeStmt->flags & SIF_SCOPE)) {
+            JS_ASSERT(!STMT_MAYBE_SCOPE(scopeStmt));
+            scopeStmt = scopeStmt->downScope;
+        }
+        JS_ASSERT(scopeStmt);
+    }
 
     data.pn = NULL;
     data.ts = ts;
@@ -3575,7 +3582,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
      */
     fp = cx->fp;
     if (let) {
-        JS_ASSERT(tc->blockChain == ATOM_TO_OBJECT(tc->topScopeStmt->atom));
+        JS_ASSERT(tc->blockChain == ATOM_TO_OBJECT(scopeStmt->atom));
         data.obj = tc->blockChain;
         data.u.let.index = OBJ_BLOCK_COUNT(cx, data.obj);
         data.u.let.overflow = JSMSG_TOO_MANY_FUN_VARS;
