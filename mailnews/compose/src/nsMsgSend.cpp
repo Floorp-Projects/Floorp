@@ -1463,7 +1463,8 @@ nsMsgComposeAndSend::GetEmbeddedObjectInfo(nsIDOMNode *node, nsMsgAttachmentData
     {
       if (attributeValue.LowerCaseEqualsLiteral("true"))
         return NS_OK;
-      forceToBeAttached = PR_TRUE;
+      if (attributeValue.LowerCaseEqualsLiteral("false"))
+        forceToBeAttached = PR_TRUE;
     }
   }
     
