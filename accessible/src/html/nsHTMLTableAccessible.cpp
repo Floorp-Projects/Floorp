@@ -147,7 +147,7 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetAttributes(nsIPersistentProperties **aAt
   IsProbablyForLayout(&isProbablyForLayout);
   if (isProbablyForLayout) {
     nsAutoString oldValueUnused;
-    (*aAttributes)->SetStringProperty(NS_LITERAL_CSTRING("layout guess"), NS_LITERAL_STRING("true"), oldValueUnused);
+    (*aAttributes)->SetStringProperty(NS_LITERAL_CSTRING("layout-guess"), NS_LITERAL_STRING("true"), oldValueUnused);
   }
   
   return NS_OK;
