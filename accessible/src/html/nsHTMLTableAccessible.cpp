@@ -50,6 +50,7 @@
 #include "nsIDOMHTMLTableSectionElem.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIPersistentProperties2.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "nsITableLayout.h"
@@ -130,6 +131,25 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetName(nsAString& aName)
       content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::summary, aName);
     }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLTableAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
+{
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;  // Node already shut down
+  }
+
+  nsresult rv = nsAccessibleWrap::GetAttributes(aAttributes);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  PRBool isProbablyForLayout;
+  IsProbablyForLayout(&isProbablyForLayout);
+  if (isProbablyForLayout) {
+    nsAutoString oldValueUnused;
+    (*aAttributes)->SetStringProperty(NS_LITERAL_CSTRING("layout guess"), NS_LITERAL_STRING("true"), oldValueUnused);
+  }
+  
   return NS_OK;
 }
 

@@ -741,8 +741,8 @@ NS_IMETHODIMP nsHyperTextAccessible::GetAttributes(nsIPersistentProperties **aAt
     return NS_ERROR_FAILURE;  // Node already shut down
   }
 
-  nsAccessibleWrap::GetAttributes(aAttributes);
-  NS_ENSURE_TRUE(*aAttributes, NS_ERROR_NULL_POINTER);
+  nsresult rv = nsAccessibleWrap::GetAttributes(aAttributes);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   NS_ENSURE_TRUE(content, NS_ERROR_UNEXPECTED);
