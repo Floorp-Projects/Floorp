@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: secvfy.c,v 1.19 2006/09/05 09:45:46 nelson%bolyard.com Exp $ */
+/* $Id: secvfy.c,v 1.20 2006/09/12 17:13:20 wtchang%redhat.com Exp $ */
 
 #include <stdio.h>
 #include "cryptohi.h"
@@ -54,10 +54,12 @@
 ** Decrypt signature block using public key
 ** Store the hash algorithm oid tag in *tagp
 ** Store the digest in the digest buffer
+** Store the digest length in *digestlen
 ** XXX this is assuming that the signature algorithm has WITH_RSA_ENCRYPTION
 */
 static SECStatus
-DecryptSigBlock(SECOidTag *tagp, unsigned char *digest, unsigned int len,
+DecryptSigBlock(SECOidTag *tagp, unsigned char *digest,
+		unsigned int *digestlen, unsigned int maxdigestlen,
 		SECKEYPublicKey *key, const SECItem *sig, char *wincx)
 {
     SGNDigestInfo *di   = NULL;
@@ -93,12 +95,13 @@ DecryptSigBlock(SECOidTag *tagp, unsigned char *digest, unsigned int len,
     if (di->digestAlgorithm.parameters.len > 2) {
 	goto sigloser;
     }
-    if (di->digest.len > len) {
+    if (di->digest.len > maxdigestlen) {
 	PORT_SetError(SEC_ERROR_OUTPUT_LEN);
 	goto loser;
     }
     PORT_Memcpy(digest, di->digest.data, di->digest.len);
     *tagp = tag;
+    *digestlen = di->digest.len;
     goto done;
 
   sigloser:
@@ -116,7 +119,7 @@ DecryptSigBlock(SECOidTag *tagp, unsigned char *digest, unsigned int len,
 
 
 struct VFYContextStr {
-    SECOidTag alg;  /* the hash algorithm */
+    SECOidTag hashAlg;  /* the hash algorithm */
     SECKEYPublicKey *key;
     /*
      * This buffer holds either the digest or the full signature
@@ -137,6 +140,7 @@ struct VFYContextStr {
 	/* the full ECDSA signature */
 	unsigned char ecdsasig[2 * MAX_ECKEY_LEN];
     } u;
+    unsigned int rsadigestlen;
     void * wincx;
     void *hashcx;
     const SECHashObject *hashobj;
@@ -200,7 +204,7 @@ const SEC_ASN1Template hashParameterTemplate[] =
  * Pulls the hash algorithm, signing algorithm, and key type out of a
  * composite algorithm.
  *
- * alg: the composite algorithm to dissect.
+ * sigAlg: the composite algorithm to dissect.
  * hashalg: address of a SECOidTag which will be set with the hash algorithm.
  * encalg: address of a SECOidTag which will be set with the signing alg.
  *
@@ -369,7 +373,6 @@ vfy_CreateContext(const SECKEYPublicKey *key, const SECItem *sig,
     VFYContext *cx;
     SECStatus rv;
     unsigned int sigLen;
-    SECOidTag hashid = SEC_OID_UNKNOWN;
     KeyType type;
 
     /* make sure the encryption algorithm matches the key type */
@@ -387,20 +390,18 @@ vfy_CreateContext(const SECKEYPublicKey *key, const SECItem *sig,
     cx->wincx = wincx;
     cx->hasSignature = (sig != NULL);
     cx->encAlg = encAlg;
-    cx->alg = hashAlg;
+    cx->hashAlg = hashAlg;
     cx->key = SECKEY_CopyPublicKey(key);
     rv = SECSuccess;
     if (sig) {
 	switch (key->keyType) {
 	case rsaKey:
-	    rv = DecryptSigBlock(&hashid, cx->u.buffer,
+	    rv = DecryptSigBlock(&cx->hashAlg, cx->u.buffer, &cx->rsadigestlen,
 			HASH_LENGTH_MAX, cx->key, sig, (char*)wincx);
-	    if (cx->alg != SEC_OID_UNKNOWN && cx->alg != hashid) {
+	    if (cx->hashAlg != hashAlg && hashAlg != SEC_OID_UNKNOWN) {
 		PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
 		rv = SECFailure;	
-		break;
 	    }
-	    cx->alg = hashid;
 	    break;
 	case dsaKey:
 	case ecKey:
@@ -422,13 +423,13 @@ vfy_CreateContext(const SECKEYPublicKey *key, const SECItem *sig,
     if (rv) goto loser;
 
     /* check hash alg again, RSA may have changed it.*/
-    if (HASH_GetHashTypeByOidTag(cx->alg) == HASH_AlgNULL) {
+    if (HASH_GetHashTypeByOidTag(cx->hashAlg) == HASH_AlgNULL) {
 	/* error set by HASH_GetHashTypeByOidTag */
-	return NULL;
+	goto loser;
     }
 
     if (hash) {
-	*hash = cx->alg;
+	*hash = cx->hashAlg;
     }
     return cx;
 
@@ -498,7 +499,7 @@ VFY_Begin(VFYContext *cx)
 	cx->hashcx = NULL;
     }
 
-    cx->hashobj = HASH_GetHashObjectByOidTag(cx->alg);
+    cx->hashobj = HASH_GetHashObjectByOidTag(cx->hashAlg);
     if (!cx->hashobj) 
 	return SECFailure;	/* error code is set */
 
@@ -565,14 +566,15 @@ VFY_EndWithSignature(VFYContext *cx, SECItem *sig)
       case rsaKey:
 	if (sig) {
 	    SECOidTag hashid = SEC_OID_UNKNOWN;
-	    rv = DecryptSigBlock(&hashid, cx->u.buffer, 
+	    rv = DecryptSigBlock(&hashid, cx->u.buffer, &cx->rsadigestlen,
 		    HASH_LENGTH_MAX, cx->key, sig, (char*)cx->wincx);
-	    if ((rv != SECSuccess) || (hashid != cx->alg)) {
+	    if ((rv != SECSuccess) || (hashid != cx->hashAlg)) {
 		PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
 		return SECFailure;
 	    }
 	}
-	if (PORT_Memcmp(final, cx->u.buffer, part)) {
+	if ((part != cx->rsadigestlen) ||
+	    PORT_Memcmp(final, cx->u.buffer, part)) {
 	    PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
 	    return SECFailure;
 	}
@@ -609,7 +611,8 @@ vfy_VerifyDigest(const SECItem *digest, const SECKEYPublicKey *key,
     if (cx != NULL) {
 	switch (key->keyType) {
 	case rsaKey:
-	    if (PORT_Memcmp(digest->data, cx->u.buffer, digest->len)) {
+	    if ((digest->len != cx->rsadigestlen) ||
+		PORT_Memcmp(digest->data, cx->u.buffer, digest->len)) {
 		PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
 	    } else {
 		rv = SECSuccess;
