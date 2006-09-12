@@ -1730,7 +1730,10 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
     // in the same scope as aTarget.
     rv = ConvertSupportsTojsvals(aargv, target, &argc,
                                  NS_REINTERPRET_CAST(void **, &argv), &mark);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      stack->Pop(nsnull);
+      return rv;
+    }
   
     AutoFreeJSStack stackGuard(mContext, mark); // ensure always freed.
 

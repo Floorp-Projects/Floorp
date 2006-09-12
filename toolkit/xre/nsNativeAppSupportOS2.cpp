@@ -1656,18 +1656,17 @@ SafeJSContext::~SafeJSContext() {
 }
 
 nsresult SafeJSContext::Push() {
-  nsresult rv;
-
   if (mContext) // only once
     return NS_ERROR_FAILURE;
 
   mService = do_GetService(sJSStackContractID);
   if(mService) {
-    rv = mService->GetSafeJSContext(&mContext);
-    if (NS_SUCCEEDED(rv) && mContext) {
-      rv = mService->Push(mContext);
-      if (NS_FAILED(rv))
-        mContext = 0;
+    JSContext *cx;
+    if (NS_SUCCEEDED(mService->GetSafeJSContext(&cx)) &&
+        cx &&
+        NS_SUCCEEDED(mService->Push(cx))) {
+      // Save cx in mContext to indicate need to pop.
+      mContext = cx;
     }
   }
   return mContext ? NS_OK : NS_ERROR_FAILURE;

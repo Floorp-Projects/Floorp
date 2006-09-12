@@ -296,26 +296,22 @@ JSContextAutoPopper::~JSContextAutoPopper()
 
 nsresult JSContextAutoPopper::Push(JSContext *cx)
 {
-  nsresult rv = NS_OK;
-
   if (mContext) // only once
     return NS_ERROR_FAILURE;
 
   mService = do_GetService(sJSStackContractID);
   if(mService) {
-    if (cx) {
-      mContext = cx;
-    } else {
-      rv = mService->GetSafeJSContext(&mContext);
+    // Get the safe context if we're not provided one.
+    if (!cx && NS_FAILED(mService->GetSafeJSContext(&cx))) {
+      cx = nsnull;
     }
 
-    if (NS_SUCCEEDED(rv) && mContext) {
-      rv = mService->Push(mContext);
-      if (NS_FAILED(rv))
-        mContext = 0;
+    // Save cx in mContext to indicate need to pop.
+    if (cx && NS_SUCCEEDED(mService->Push(cx))) {
+      mContext = cx;
     }
   }
-  return mContext ? NS_OK : NS_ERROR_FAILURE; 
+  return mContext ? NS_OK : NS_ERROR_FAILURE;
 }
 
 /****************************************************************
