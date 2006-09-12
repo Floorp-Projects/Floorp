@@ -1,4 +1,4 @@
-1 Variables
+!1 Variables
 !define COMMAND_PATTERN {python %m -v %p}
 !define TEST_RUNNER {/Users/morgamic/pyfit/fit/FitServer.py}
 !define host {http://khan.mozilla.org/~morgamic/austest/update/2}
@@ -78,8 +78,13 @@
 |9000000001|channel|complete|partial|Windows_98|false|false|false|true|
 
 !1 Nightly Updates
- 1 one-off update serving both complete and partial
- 2 outdated (>1 off) update serving only a complete
- 3 version mapping to another branchVersion (1.0->1.x)
+ 1 outdated (>1 off) update serving only a complete (1.5.0.5->1.5.0.x)
+ 2 one-off update serving both complete and partial (1.5.0.5->1.5.0.x)
+ 3 client already at the latest build requests an update (no update shoudl be offered)
  4 version with no branchVersion in AUS config (6.0->?)
-TODO: add aus.Nightly and adjust fixtures to include variable versions.
+|aus.Verify|${host}|${product}|${version}|${platform}|${locale}|
+|version|build|channel|complete|partial|hasUpdate?|hasComplete?|hasPartial?|isValidXml?|
+|1.5.0.5|1100000001|nightly|complete|partial|true|true|false|true|
+|1.5.0.5|1100000002|nightly|complete|partial|true|true|true|true|
+|1.5.0.5|1100000003|nightly|complete|partial|false|false|false|true|
+|6.0|1100000001|nightly|complete|partial|false|false|false|true|

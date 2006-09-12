@@ -93,12 +93,13 @@ class Verify(ColumnFixture):
     # Builds an AUS URI based on our test data.
     def buildUri(self):
 
-        # Assign class variables from FitNesse arguments.
-        self.host = self.args[0]
-        self.product = self.args[1]
-        self.version = self.args[2]
-        self.platform = self.args[3]
-        self.locale = self.args[4]
+        # Assign class variables from FitNesse arguments if they 
+        # are not passed in from the row.
+        if (not self.host): self.host = self.args[0]
+        if (not self.product): self.product = self.args[1]
+        if (not self.version): self.version = self.args[2]
+        if (not self.platform): self.platform = self.args[3]
+        if (not self.locale): self.locale = self.args[4]
 
         return '/'.join((self.host, self.product, self.version,     \
                         self.build, self.platform, self.locale,     \
