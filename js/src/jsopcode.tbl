@@ -309,7 +309,7 @@ OPDEF(JSOP_SETLOCALPOP, 130, "setlocalpop", NULL,     3,  1,  0,  3,  JOF_LOCAL|
 OPDEF(JSOP_GROUP,       131, "group",       NULL,     1,  0,  0,  0,  JOF_BYTE)
 
 /* Host object extension: given 'o.item(i) = j', the left-hand side compiles JSOP_SETCALL, rather than JSOP_CALL. */
-OPDEF(JSOP_SETCALL,     132, "setcall",     NULL,     3, -1,  2,  3,  JOF_UINT16|JOF_SET|JOF_ASSIGNING)
+OPDEF(JSOP_SETCALL,     132, "setcall",     NULL,     3, -1,  2, 17,  JOF_UINT16|JOF_SET|JOF_ASSIGNING)
 
 /*
  * Exception handling no-ops, for more economical byte-coding than SRC_TRYFIN

@@ -2323,7 +2323,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_DELELEM:
+                op = JSOP_NOP;          /* turn off parens */
                 xval = POP_STR();
+                op = saveop;
                 lval = POP_STR();
                 if (*xval == '\0')
                     goto do_delete_lval;
@@ -2395,7 +2397,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_INCELEM:
               case JSOP_DECELEM:
+                op = JSOP_NOP;          /* turn off parens */
                 xval = POP_STR();
+                op = saveop;
                 lval = POP_STR();
                 if (*xval != '\0') {
                     todo = Sprint(&ss->sprinter,
@@ -2454,7 +2458,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_ELEMINC:
               case JSOP_ELEMDEC:
+                op = JSOP_NOP;          /* turn off parens */
                 xval = POP_STR();
+                op = saveop;
                 lval = POP_STR();
                 if (*xval != '\0') {
                     todo = Sprint(&ss->sprinter,
