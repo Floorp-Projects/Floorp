@@ -69,6 +69,7 @@ public:
   NS_IMETHOD GetRole(PRUint32 *aResult); 
   NS_IMETHOD GetState(PRUint32 *aResult); 
   NS_IMETHOD GetName(nsAString& aResult);
+  NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
 #ifdef SHOW_LAYOUT_HEURISTIC
   NS_IMETHOD GetDescription(nsAString& aDescription);
 #endif

@@ -1913,17 +1913,32 @@ NS_IMETHODIMP nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
 
   nsCOMPtr<nsIPersistentProperties> attributes =
      do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
-  NS_ENSURE_TRUE(attributes, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(attributes, NS_ERROR_OUT_OF_MEMORY);
 
   nsAutoString tagName;
-  nsresult result = element->GetTagName(tagName);
-  if (NS_SUCCEEDED(result)) {
-    nsAutoString oldValueUnused; 
+  nsAutoString oldValueUnused; 
+  element->GetTagName(tagName);
+  if (!tagName.IsEmpty()) {
     attributes->SetStringProperty(NS_LITERAL_CSTRING("tag"), tagName, oldValueUnused);
   }
+  
+  nsCOMPtr<nsIContent> content = GetRoleContent(mDOMNode);
+  if (content) {
+    nsAutoString id;
+    if (content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::id, id)) {
+      attributes->SetStringProperty(NS_LITERAL_CSTRING("id"), id, oldValueUnused);    
+    }
+    // XXX In the future we may need to expose the dynamic content role inheritance chain
+    // through this attribute
+    nsAutoString xmlRole;
+    if (GetRoleAttribute(content, xmlRole)) {
+      attributes->SetStringProperty(NS_LITERAL_CSTRING("xml roles"), xmlRole, oldValueUnused);          
+    }
+  }
+
   attributes.swap(*aAttributes);
 
-  return result;
+  return NS_OK;
 }
 
 PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut,

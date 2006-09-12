@@ -142,7 +142,7 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetAttributes(nsIPersistentProperties **aAtt
   if (role == ROLE_STATICTEXT) {
     nsCOMPtr<nsIPersistentProperties> attributes =
         do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
-    NS_ENSURE_TRUE(attributes, NS_ERROR_NULL_POINTER);
+    NS_ENSURE_TRUE(attributes, NS_ERROR_OUT_OF_MEMORY);
     nsAutoString oldValueUnused;
     attributes->SetStringProperty(NS_LITERAL_CSTRING("static"),
                                   NS_LITERAL_STRING("true"), oldValueUnused);
