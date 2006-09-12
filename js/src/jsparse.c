@@ -4251,6 +4251,9 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             pn2->pn_arity = PN_UNARY;
             pn2->pn_kid = pn;
             pn2->pn_next = NULL;
+#if JS_HAS_XML_SUPPORT
+            pn2->pn_ts = ts;
+#endif
             pn = pn2;
         }
     }
