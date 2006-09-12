@@ -243,4 +243,16 @@
   NS_ASSERTION(owningThread == PR_GetCurrentThread(), msg)
 #endif
 
+/* When compiling the XPCOM Glue on Windows, we pretend that it's going to
+ * be linked with a static CRT (-MT) even when it's not. This means that we
+ * cannot link to data exports from the CRT, only function exports. So,
+ * instead of referencing "stderr" directly, use fdopen.
+ */
+PR_BEGIN_EXTERN_C
+
+void
+printf_stderr(const char *fmt, ...);
+
+PR_END_EXTERN_C
+
 #endif /* nsDebug_h___ */
