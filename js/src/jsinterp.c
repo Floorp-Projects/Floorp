@@ -5294,6 +5294,7 @@ interrupt:
             /* Ensure that id has a type suitable for use with obj. */
             CHECK_ELEMENT_ID(obj, id);
 
+            SAVE_SP_AND_PC(fp);
             if (JS_TypeOfValue(cx, rval) != JSTYPE_FUNCTION) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_BAD_GETTER_OR_SETTER,
