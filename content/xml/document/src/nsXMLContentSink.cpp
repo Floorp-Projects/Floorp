@@ -1082,11 +1082,8 @@ nsXMLContentSink::HandleComment(const PRUnichar *aName)
   nsCOMPtr<nsIContent> comment;
   nsresult rv = NS_NewCommentNode(getter_AddRefs(comment), mNodeInfoManager);
   if (comment) {
-    nsCOMPtr<nsIDOMComment> domComment = do_QueryInterface(comment, &rv);
-    if (domComment) {
-      domComment->AppendData(nsDependentString(aName));
-      rv = AddContentAsLeaf(comment);
-    }
+    comment->SetText(nsDependentString(aName), PR_FALSE);
+    rv = AddContentAsLeaf(comment);
   }
 
   return rv;
@@ -1111,11 +1108,8 @@ nsXMLContentSink::HandleCDataSection(const PRUnichar *aData,
   nsCOMPtr<nsIContent> cdata;
   nsresult rv = NS_NewXMLCDATASection(getter_AddRefs(cdata), mNodeInfoManager);
   if (cdata) {
-    nsCOMPtr<nsIDOMCDATASection> domCDATA = do_QueryInterface(cdata);
-    if (domCDATA) {
-      domCDATA->SetData(nsDependentString(aData, aLength));
-      rv = AddContentAsLeaf(cdata);
-    }
+    cdata->SetText(aData, aLength, PR_FALSE);
+    rv = AddContentAsLeaf(cdata);
   }
 
   return rv;
