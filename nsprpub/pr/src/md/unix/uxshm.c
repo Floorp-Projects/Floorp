@@ -102,6 +102,7 @@ extern PRSharedMemory * _MD_OpenSharedMemory(
     {
         PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0 );
         PR_LOG(_pr_shm_lm, PR_LOG_DEBUG, ( "PR_OpenSharedMemory: New shm->ipcname out of memory")); 
+        PR_DELETE( shm );
         return( NULL );
     }
 
