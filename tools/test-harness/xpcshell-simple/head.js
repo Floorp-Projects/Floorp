@@ -39,7 +39,7 @@
 
 /* This file contains common code that is loaded with each test file.
  * See http://developer.mozilla.org/en/docs/Writing_xpcshell-based_unit_tests
- * for more informaton
+ * for more information
  */
 
 var _quit = false;
