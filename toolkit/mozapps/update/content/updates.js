@@ -1665,8 +1665,7 @@ var gFinishedPage = {
     ps.alert(window, gUpdates.strings.getString("restartLaterTitle"), 
              message);
 
-    var interval = getPref("getIntPref", PREF_UPDATE_NAGTIMER_RESTART, 
-                           18000000);
+    var interval = getPref("getIntPref", PREF_UPDATE_NAGTIMER_RESTART, 1800);
     gUpdates.registerNagTimer("restart-nag-timer", interval, 
                               "showUpdateComplete");
   }
