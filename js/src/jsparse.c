@@ -6368,6 +6368,8 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
         break;
 
       case TOK_UNARYOP:
+        while (pn1->pn_type == TOK_RP)
+            pn1 = pn1->pn_kid;
         if (pn1->pn_type == TOK_NUMBER) {
             jsdouble d;
             int32 i;
