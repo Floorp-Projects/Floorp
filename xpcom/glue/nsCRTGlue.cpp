@@ -43,8 +43,11 @@
 #include "nsDebug.h"
 #include <string.h>
 #include <stdio.h>
-#include <io.h>
 #include <stdarg.h>
+
+#ifdef XP_WIN
+#include <io.h>
+#endif
 
 const char*
 NS_strspnp(const char *delims, const char *str)
