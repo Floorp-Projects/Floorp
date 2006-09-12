@@ -1279,7 +1279,8 @@ PR_UnloadLibrary(PRLibrary *lib)
 #elif defined(USE_HPSHL)
     result = shl_unload(lib->dlh);
 #elif defined(USE_MACH_DYLD)
-    result = NSUnLinkModule(lib->dlh, NSUNLINKMODULE_OPTION_NONE) ? 0 : -1;
+    if (lib->dlh)
+        result = NSUnLinkModule(lib->dlh, NSUNLINKMODULE_OPTION_NONE) ? 0 : -1;
 #else
 #error Configuration error
 #endif
