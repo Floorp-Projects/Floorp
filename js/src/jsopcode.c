@@ -1318,13 +1318,21 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_GROUP:
-                /*
-                 * Don't explicitly parenthesize -- just fix the top opcode so
-                 * that the auto-parens magic in PopOff can do its thing.
-                 */
-                LOCAL_ASSERT(ss->top != 0);
-                ss->opcodes[ss->top-1] = saveop = lastop;
-                todo = -2;
+                cs = &js_CodeSpec[lastop];
+                if (cs->prec != 0 && cs->prec == js_CodeSpec[pc[1]].prec) {
+                    op = JSOP_NAME;     /* force parens */
+                    rval = POP_STR();
+                    todo = SprintCString(&ss->sprinter, rval);
+                } else {
+                    /*
+                     * Don't explicitly parenthesize -- just fix the top
+                     * opcode so that the auto-parens magic in PopOff can do
+                     * its thing.
+                     */
+                    LOCAL_ASSERT(ss->top != 0);
+                    ss->opcodes[ss->top-1] = saveop = lastop;
+                    todo = -2;
+                }
                 break;
 
               case JSOP_STARTITER:
