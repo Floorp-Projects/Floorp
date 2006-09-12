@@ -192,8 +192,10 @@ sub create_admin {
 
         print get_text('install_admin_get_password') . ' ';
         $password = <STDIN>;
+        chomp $password;
         print "\n", get_text('install_admin_get_password2') . ' ';
         my $pass2 = <STDIN>;
+        chomp $pass2;
         eval { validate_password($password, $pass2); };
         if ($@) {
             print "\n$@\n";
