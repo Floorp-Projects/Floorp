@@ -55,7 +55,7 @@ const long kOpenInTabsTag = 0xBEEF;
 
 - (void)setupBookmarkMenu;
 - (void)menuWillBeDisplayed;
-- (void)appendBookmarkItem:(BookmarkItem *)inItem buildingSubmenus:(BOOL)buildSubmenus;
+- (void)appendBookmarkItem:(BookmarkItem *)inItem buildingSubmenus:(BOOL)buildSubmenus withAlternates:(BOOL)withAlternates;
 - (void)addLastItems;
 
 @end
@@ -148,10 +148,10 @@ const long kOpenInTabsTag = 0xBEEF;
 
 - (void)menuWillBeDisplayed
 {
-  [self rebuildMenuIncludingSubmenus:NO];
+  [self rebuildMenuIncludingSubmenus:NO withAlternates:YES];
 }
 
-- (void)rebuildMenuIncludingSubmenus:(BOOL)includeSubmenus
+- (void)rebuildMenuIncludingSubmenus:(BOOL)includeSubmenus withAlternates:(BOOL)includeAlternates
 {
   if (mDirty)
   {
@@ -162,7 +162,7 @@ const long kOpenInTabsTag = 0xBEEF;
     BookmarkItem* curItem;
     while ((curItem = [childEnum nextObject]))
     {
-      [self appendBookmarkItem:curItem buildingSubmenus:includeSubmenus];
+      [self appendBookmarkItem:curItem buildingSubmenus:includeSubmenus withAlternates:includeAlternates];
     }
 
     [self addLastItems];
@@ -177,13 +177,13 @@ const long kOpenInTabsTag = 0xBEEF;
       NSMenuItem* curItem = [self itemAtIndex:i];
       if ([curItem hasSubmenu] && [[curItem submenu] isKindOfClass:[BookmarkMenu class]])
       {
-        [(BookmarkMenu*)[curItem submenu] rebuildMenuIncludingSubmenus:includeSubmenus];
+        [(BookmarkMenu*)[curItem submenu] rebuildMenuIncludingSubmenus:includeSubmenus withAlternates:includeAlternates];
       }
     }
   }
 }
 
-- (void)appendBookmarkItem:(BookmarkItem *)inItem buildingSubmenus:(BOOL)buildSubmenus
+- (void)appendBookmarkItem:(BookmarkItem *)inItem buildingSubmenus:(BOOL)buildSubmenus withAlternates:(BOOL)withAlternates
 {
   NSString *title = [[inItem title] stringByTruncatingTo:MENU_TRUNCATION_CHARS at:kTruncateAtMiddle];
 
@@ -192,32 +192,34 @@ const long kOpenInTabsTag = 0xBEEF;
   {
     if (![(Bookmark *)inItem isSeparator])  // normal bookmark
     {
-      menuItem                     = [[NSMenuItem alloc] initWithTitle:title action: NULL keyEquivalent: @""];
-      NSMenuItem *cmdMenuItem      = [[NSMenuItem alloc] initWithTitle:title action:@selector(openMenuBookmark:) keyEquivalent: @""];
-      NSMenuItem *cmdShiftMenuItem = [[NSMenuItem alloc] initWithTitle:title action:@selector(openMenuBookmark:) keyEquivalent: @""];
-
+      menuItem = [[NSMenuItem alloc] initWithTitle:title action:NULL keyEquivalent:@""];
       [menuItem setTarget:[NSApp delegate]];
       [menuItem setAction:@selector(openMenuBookmark:)];
       [menuItem setImage:[inItem icon]];
       [menuItem setKeyEquivalentModifierMask:0]; //Needed since by default NSMenuItems have NSCommandKeyMask
-
-      [cmdMenuItem setTarget:[NSApp delegate]];
-      [cmdMenuItem setImage:[inItem icon]];
-      [cmdMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask];
-      [cmdMenuItem setRepresentedObject:inItem];
-      [cmdMenuItem setAlternate:YES];
-
-      [cmdShiftMenuItem setTarget:[NSApp delegate]];
-      [cmdShiftMenuItem setImage:[inItem icon]];
-      [cmdShiftMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask | NSShiftKeyMask];
-      [cmdShiftMenuItem setRepresentedObject:inItem];
-      [cmdShiftMenuItem setAlternate:YES];
-
       [self addItem:menuItem];
-      [self addItem:cmdMenuItem];
-      [cmdMenuItem release];
-      [self addItem:cmdShiftMenuItem];
-      [cmdShiftMenuItem release];
+
+      if (withAlternates) {
+        NSMenuItem *cmdMenuItem      = [[NSMenuItem alloc] initWithTitle:title action:@selector(openMenuBookmark:) keyEquivalent:@""];
+        NSMenuItem *cmdShiftMenuItem = [[NSMenuItem alloc] initWithTitle:title action:@selector(openMenuBookmark:) keyEquivalent:@""];
+
+        [cmdMenuItem setTarget:[NSApp delegate]];
+        [cmdMenuItem setImage:[inItem icon]];
+        [cmdMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask];
+        [cmdMenuItem setRepresentedObject:inItem];
+        [cmdMenuItem setAlternate:YES];
+
+        [cmdShiftMenuItem setTarget:[NSApp delegate]];
+        [cmdShiftMenuItem setImage:[inItem icon]];
+        [cmdShiftMenuItem setKeyEquivalentModifierMask:(NSCommandKeyMask | NSShiftKeyMask)];
+        [cmdShiftMenuItem setRepresentedObject:inItem];
+        [cmdShiftMenuItem setAlternate:YES];
+
+        [self addItem:cmdMenuItem];
+        [cmdMenuItem release];
+        [self addItem:cmdShiftMenuItem];
+        [cmdShiftMenuItem release];
+      }
     }
     else    //separator
     {
@@ -236,7 +238,7 @@ const long kOpenInTabsTag = 0xBEEF;
       BookmarkMenu* subMenu = [[BookmarkMenu alloc] initWithTitle:title bookmarkFolder:curFolder];
       // if building "deep", build submenu; otherwise it will get built lazily on display
       if (buildSubmenus)
-        [subMenu rebuildMenuIncludingSubmenus:buildSubmenus];
+        [subMenu rebuildMenuIncludingSubmenus:buildSubmenus withAlternates:withAlternates];
 
       [menuItem setSubmenu:subMenu];
       [subMenu release];

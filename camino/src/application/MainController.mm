@@ -381,8 +381,12 @@ const int kReuseWindowOnAE = 2;
 
 - (NSMenu *)applicationDockMenu:(NSApplication *)sender
 {
+  // The OS check is needed because 10.3 can't handle alternates in dock menus.  Remove it (and the |withAlternates| params
+  // that exist to deal with it) once we're 10.4+
+  BOOL isTigerOrHigher = [NSWorkspace isTigerOrHigher];
+
   // the dock menu doesn't get the usual show notifications, so we rebuild it explicitly here
-  [mDockMenu rebuildMenuIncludingSubmenus:YES];
+  [mDockMenu rebuildMenuIncludingSubmenus:YES withAlternates:isTigerOrHigher];
   return mDockMenu;
 }
 
@@ -1235,6 +1239,9 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
     if ([aSender keyEquivalentModifierMask] & NSCommandKeyMask)
       openBehavior = eBookmarkOpenBehavior_NewPreferred;
   }
+  // safeguard for bookmark menus that don't have alternates yet
+  else if ([[NSApp currentEvent] modifierFlags] & NSCommandKeyMask)
+    openBehavior = eBookmarkOpenBehavior_NewPreferred;
 
   [self loadBookmark:item withBWC:[self getMainWindowBrowserController] openBehavior:openBehavior reverseBgToggle:reverseBackgroundPref];
 }
@@ -1558,6 +1565,14 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
 
   if (action == @selector(sendURL:))
     return ![[[browserController getBrowserWrapper] getCurrentURI] hasPrefix:@"about:"];
+
+  // key alternates
+  if (action == @selector(openMenuBookmark:) && [aMenuItem isAlternate]) {
+    if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL])
+      [aMenuItem setTitle:NSLocalizedString(@"Open in New Tabs", nil)];
+    else
+      [aMenuItem setTitle:NSLocalizedString(@"Open in Tabs in New Window", nil)];
+  }
 
   // default return
   return YES;
