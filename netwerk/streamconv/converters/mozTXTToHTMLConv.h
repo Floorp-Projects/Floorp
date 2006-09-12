@@ -58,7 +58,6 @@
 #include "mozITXTToHTMLConv.h"
 #include "nsIIOService.h"
 #include "nsString.h"
-#include "nsTimer.h"
 #include "nsCOMPtr.h"
 
 
@@ -93,12 +92,6 @@ public:
   see mozITXTToHTMLConv::CiteLevelTXT
  */
   PRInt32 CiteLevelTXT(const PRUnichar * line,PRUint32& logLineStart);
-
-
-  // Timing!
-  MOZ_TIMER_DECLARE(mScanTXTTimer)
-  MOZ_TIMER_DECLARE(mGlyphHitTimer)
-  MOZ_TIMER_DECLARE(mTotalMimeTime)
 
 
 //////////////////////////////////////////////////////////

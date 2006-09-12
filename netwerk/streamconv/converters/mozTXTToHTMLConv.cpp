@@ -768,8 +768,6 @@ PRBool
 mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBool col0,
          nsString& aOutputString, PRInt32& glyphTextLen)
 {
-  MOZ_TIMER_START(mGlyphHitTimer);
-
   PRUnichar text0 = aInString[0]; 
   PRUnichar text1 = aInString[1];
   PRUnichar firstChar = (col0 ? text0 : text1);
@@ -911,7 +909,6 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
     )
     {
         aOutputString.Append(outputHTML);
-        MOZ_TIMER_STOP(mGlyphHitTimer);
         return PR_TRUE;
     }
     i++;
@@ -920,7 +917,6 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
   {
       aOutputString.AppendLiteral("<span class='moz-txt-formfeed'></span>");
       glyphTextLen = 1;
-      MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_TRUE;
   }
   if (text0 == '+' || text1 == '+')
@@ -931,7 +927,6 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
     {
       aOutputString.AppendLiteral(" &plusmn;");
       glyphTextLen = 4;
-      MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_TRUE;
     }
     if (col0 && ItMatchesDelimited(aInString, aInLength,
@@ -940,7 +935,6 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
     {
       aOutputString.AppendLiteral("&plusmn;");
       glyphTextLen = 3;
-      MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_TRUE;
     }
   }
@@ -976,7 +970,6 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
 
     if (delimPos < aInLength && nsCRT::IsAsciiAlpha(aInString[delimPos]))
     {
-      MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_FALSE;
     }
 
@@ -989,7 +982,6 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
     aOutputString.AppendLiteral("</sup>");
 
     glyphTextLen = delimPos /* - 1 + 1 */ ;
-    MOZ_TIMER_STOP(mGlyphHitTimer);
     return PR_TRUE;
   }
   /*
@@ -1005,7 +997,6 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
     3/4    &frac34;  dito
     1/2    &frac12;  similar
   */
-  MOZ_TIMER_STOP(mGlyphHitTimer);
   return PR_FALSE;
 }
 
@@ -1015,23 +1006,10 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
 
 mozTXTToHTMLConv::mozTXTToHTMLConv()
 {
-  MOZ_TIMER_RESET(mScanTXTTimer);
-  MOZ_TIMER_RESET(mGlyphHitTimer);
-  MOZ_TIMER_RESET(mTotalMimeTime);
-  MOZ_TIMER_START(mTotalMimeTime);
 }
 
 mozTXTToHTMLConv::~mozTXTToHTMLConv() 
 {
-  MOZ_TIMER_STOP(mTotalMimeTime);
-  MOZ_TIMER_DEBUGLOG(("MIME Total Processing Time: "));
-  MOZ_TIMER_PRINT(mTotalMimeTime);
-  
-  MOZ_TIMER_DEBUGLOG(("mozTXTToHTMLConv::ScanTXT(): "));
-  MOZ_TIMER_PRINT(mScanTXTTimer);
-
-  MOZ_TIMER_DEBUGLOG(("mozTXTToHTMLConv::GlyphHit(): "));
-  MOZ_TIMER_PRINT(mGlyphHitTimer);
 }
 
 NS_IMPL_ISUPPORTS1(mozTXTToHTMLConv, mozITXTToHTMLConv)
@@ -1105,8 +1083,6 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, 
   PRBool doURLs = whattodo & kURLs;
   PRBool doGlyphSubstitution = whattodo & kGlyphSubstitution;
   PRBool doStructPhrase = whattodo & kStructPhrase;
-
-  MOZ_TIMER_START(mScanTXTTimer);
 
   PRUint32 structPhrase_strong = 0;  // Number of currently open tags
   PRUint32 structPhrase_underline = 0;
@@ -1226,8 +1202,6 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, 
       break;
     }
   }
-
-  MOZ_TIMER_STOP(mScanTXTTimer);
 }
 
 void

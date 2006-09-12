@@ -62,7 +62,6 @@ REQUIRES	= xpcom \
 		  nkcache \
 		  pref \
 		  mimetype \
-		  util \
 		  locale \
 		  intl \
 		  uconv \
@@ -114,10 +113,6 @@ SHARED_LIBRARY_LIBS += \
 		../cookie/src/$(LIB_PREFIX)neckocookie_s.$(LIB_SUFFIX) \
                 $(NULL)
 LOCAL_INCLUDES	+= -I$(srcdir)/../cookie/src
-endif
-
-ifdef MOZ_PERF_METRICS
-EXTRA_DSO_LIBS	+= mozutil_s
 endif
 
 EXTRA_DSO_LDOPTS = \
