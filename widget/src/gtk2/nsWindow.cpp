@@ -457,6 +457,11 @@ nsWindow::Destroy(void)
     mThebesSurface = nsnull;
 #endif
 
+    if (mDragMotionTimerID) {
+        gtk_timeout_remove(mDragMotionTimerID);
+        mDragMotionTimerID = 0;
+    }
+
     if (mShell) {
         gtk_widget_destroy(mShell);
         mShell = nsnull;
