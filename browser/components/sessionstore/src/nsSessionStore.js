@@ -680,6 +680,10 @@ SessionStoreService.prototype = {
   
       // restore tab content
       this.restoreHistoryPrecursor(aWindow, [closedTabState], 1, 0, 0);
+
+      // focus the tab's content area
+      var content = browser.getBrowserForTab(closedTabState._tab).contentWindow;
+      aWindow.setTimeout(function() { content.focus(); }, 0);
     }
     else {
       Components.returnCode = Cr.NS_ERROR_INVALID_ARG;
