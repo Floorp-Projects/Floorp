@@ -96,16 +96,6 @@ tab {
   opacity: 1.0;
 }
 
-.tab-close-button-placeholder {
-  list-style-image: url("chrome://global/skin/icons/close.png");
-  -moz-image-region: rect(0px, 64px, 16px, 48px);
-  opacity: 0.7;
-  -moz-margin-start: 2px;
-  margin-top: 2px;
-  border: none !important;
-  padding: 0px;
-}
-
 .tabbrowser-tab[selected="true"] > .tab-close-button {
   -moz-margin-start: 2px;
   margin-top: 0px;
