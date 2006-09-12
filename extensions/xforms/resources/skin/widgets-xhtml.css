@@ -41,6 +41,8 @@
 @namespace url(http://www.w3.org/1999/xhtml);
 @namespace mozType url(http://www.mozilla.org/projects/xforms/2005/type);
 
+/* span[mozType|calendar] */
+
 span[mozType|calendar] table {
   border: 1px outset black !important;
   background-color: -moz-Field;
@@ -91,3 +93,18 @@ input.-moz-date-fwd-button {
   background-repeat: no-repeat !important;
   background-position: center !important;
 }
+
+/* span[mozType|slider] */
+
+span[mozType|slider] span[anonid="minlabel"] {
+  margin-right: 3px;
+}
+
+span[mozType|slider] span[anonid="maxlabel"] {
+  margin-left: 3px;
+}
+
+span[mozType|slider] canvas {
+  margin: 2px;
+}
+

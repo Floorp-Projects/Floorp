@@ -21,6 +21,7 @@
    - Contributor(s):
    -  Doron Rosenberg <doronr@us.ibm.com>
    -  Alexander Surkov <surkov@dc.baikal.ru>
+   -  Allan Beaufour <allan@beaufour.dk>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -288,4 +289,425 @@
       </handler>
     </handlers>
   </binding>
+
+
+  <binding id="slider">
+    <resources>
+      <stylesheet src="chrome://xforms/skin/widgets-xhtml.css"/>
+    </resources>
+
+    <content>
+      <html:span anonid="minlabel"/>
+      <!-- XXX: width and height set by CSS, see bug 350870. -->
+      <html:canvas tabindex="0" anonid="canvas" width="260" height="40"/>
+      <html:span anonid="maxlabel"/>
+    </content>
+
+    <implementation>
+    <!-- interface -->
+
+      <!-- Get/set lower bound of values. -->
+      <property name="min"
+                onget="return parseFloat(this.getAttribute('min'));"
+                onset="this.setMin(val, true);"/>
+
+      <!-- Get/set upper bound of values. -->
+      <property name="max"
+                onget="return parseFloat(this.getAttribute('max'));"
+                onset="this.setMax(val, true);"/>
+
+      <!-- Get/set step of values. -->
+      <property name="step"
+                onget="return parseFloat(this.getAttribute('step'));"
+                onset="this.setStep(val, true);"/>
+
+      <!-- Get/set value. -->
+      <property name="value">
+        <getter>
+          return parseFloat(this.getAttribute("value"));
+        </getter>
+        <setter>
+        <![CDATA[
+          var value = parseFloat(val);
+          if (isNaN(value) || value < this.min)
+            value = this.min;
+          else if (value > this.max)
+            value = this.max;
+
+          var boxobj = this.sliderController;
+          if (!isNaN(value) && this.value != value)
+            this.eraseSlider(boxobj.getXCoordFromValue(this.value));
+          this.drawSlider(boxobj.getXCoordFromValue(value));
+          this.setAttribute("value", value);
+        ]]>
+        </setter>
+      </property>
+
+      <!-- Set min/max/step/value -->
+      <method name="set">
+        <parameter name="aMin"/>
+        <parameter name="aMax"/>
+        <parameter name="aStep"/>
+        <parameter name="aValue"/>
+        <body>
+          if (!isNaN(parseFloat(aMin)) ||
+              !isNaN(parseFloat(aMax)) ||
+              !isNaN(parseFloat(aStep))) {
+            this.setMin(aMin, false);
+            this.setMax(aMax, false);
+            this.setStep(aStep, false);
+            this.drawScale();
+          }
+          if (!isNaN(aValue))
+            this.value = aValue;
+        </body>
+      </method>
+
+      <method name="focus">
+        <body>
+          this.canvas.focus();
+          return true;
+        </body>
+      </method>
+
+    <!-- private -->
+
+      <method name="setMin">
+        <parameter name="aValue"/>
+        <parameter name="aRefresh"/>
+        <body>
+          if (!isNaN(parseFloat(aValue))) {
+            this.setAttribute("min", aValue);
+            this.minLabel.textContent = aValue;
+            if (aRefresh) {
+              this.drawScale();
+              this.value = this.value;
+            }
+          }
+        </body>
+      </method>
+
+      <method name="setMax">
+        <parameter name="aValue"/>
+        <parameter name="aRefresh"/>
+        <body>
+          if (!isNaN(parseFloat(aValue))) {
+            this.setAttribute("max", aValue);
+            this.maxLabel.textContent = aValue;
+            if (aRefresh) {
+              this.drawScale();
+              this.value = this.value;
+            }
+          }
+        </body>
+      </method>
+
+      <method name="setStep">
+        <parameter name="aValue"/>
+        <parameter name="aRefresh"/>
+        <body>
+          if (!isNaN(parseFloat(aValue))) {
+            this.setAttribute("step", aValue);
+            if (aRefresh) {
+              this.drawScale();
+              this.value = this.value;
+            }
+          }
+        </body>
+      </method>
+
+      <property name="sliderController" readonly="true">
+        <getter>
+        <![CDATA[
+          return {
+            slider: this,
+
+            get min() { return this.slider.min; },
+            get max() { return this.slider.max; },
+            get step() { return this.slider.step; },
+
+            // Return width of slider.
+            get sliderWidth() { return 5; },
+
+            // Return margin of slider bar.
+            get barMargin() { return this.sliderWidth + 1; },
+
+            // Return width/height of scale bar.
+            get barWidth() { return this.boxObject.width - this.barMargin * 2; },
+            get barHeight() { return this.boxObject.height; },
+
+            // Return count of steps.
+            get stepCount() {
+              var adjMax = this.max - ((this.max - this.min) % this.step);
+              return (adjMax - this.min) / this.step;
+            },
+
+            // Return distance between neighbor values.
+            get stepIndent() {
+              var k = this.barWidth / (this.max - this.min);
+              return this.step * k;
+            },
+
+            // Return count of scale points.
+            get scalePointCount() { return this.stepCount; },
+
+            // Return distance between neighbour scale points.
+            get scalePointIndent() {
+              var k = this.barWidth / (this.max - this.min);
+              return this.step * k;
+            },
+
+            // Takes a value and calculates the x position.
+            getXCoordFromValue: function(aValue) {
+              var k = this.barWidth / (this.max - this.min);
+              var pos = aValue - this.min;
+              return Math.round(pos * k) + this.barMargin;
+            },
+
+            // Takes a event and calculates the x position.
+            getXCoordFromEvent: function(aEvent) {
+              var boxobj = this.boxObject;
+              var x = aEvent.clientX - boxobj.x;
+              if (x < this.barMargin) {
+                x = this.barMargin;
+              } else if (x > this.barWidth + this.barMargin) {
+                x = this.barWidth + this.barMargin;
+              }
+              return x;
+            },
+
+            // Takes a x position and calculates value.
+            getValueFromXCoord: function(aX) {
+              return Math.round(aX / this.stepIndent) * this.step + this.min;
+            },
+
+            // Return nearest x position of steps grid.
+            getFittedXCoord: function(aX) {
+              return this.getXCoordFromValue(this.getValueFromXCoord(aX));
+            },
+
+            get boxObject() {
+              return this.slider.ownerDocument.
+                getBoxObjectFor(this.slider.canvas);
+            }
+          };
+        ]]>
+        </getter>
+      </property>
+
+      <!-- Draw slider. -->
+      <method name="drawSlider">
+        <parameter name="aPos"/>
+        <body>
+          var boxobj = this.sliderController;
+
+          this.context.save();
+          this.context.lineWidth = 1;
+
+          this.context.beginPath();
+          var h1 = boxobj.barHeight - Math.round(boxobj.barHeight / 5);
+          var h2 = h1 - Math.round(boxobj.barHeight / 10);
+          var h3 = Math.round(boxobj.barHeight / 5);
+
+          this.context.moveTo(aPos, h1);
+          this.context.lineTo(aPos - boxobj.sliderWidth, h2);
+          this.context.lineTo(aPos - boxobj.sliderWidth, h3);
+          this.context.lineTo(aPos + boxobj.sliderWidth, h3);
+          this.context.lineTo(aPos + boxobj.sliderWidth, h2);
+          this.context.closePath();
+
+          this.context.strokeStyle =this.currStrokeStyle;
+          this.context.stroke();
+
+          this.context.fillStyle = this.fillStyle;
+          this.context.fill();
+
+          this.context.restore();
+        </body>
+      </method>
+
+      <!-- Erase slider. -->
+      <method name="eraseSlider">
+        <parameter name="aPos"/>
+        <body>
+          var boxobj = this.sliderController;
+
+          // clear old slider
+          this.context.
+            clearRect(aPos - boxobj.sliderWidth -1, 0,
+                      boxobj.sliderWidth * 2 + 2,
+                      boxobj.barHeight - Math.round(boxobj.barHeight / 5) + 1);
+
+          // (re)draw horisontal bar
+          this.context.lineWidth = 1;
+          this.context.fillStyle = this.fillStyle;
+          this.context.strokeStyle = this.strokeStyle;
+
+          // XXX: only needs to be redrawn for old slider pos
+          mid = Math.round(boxobj.barHeight / 2);
+          this.context.fillRect(boxobj.barMargin, mid - 1, boxobj.barWidth, 3);
+          this.context.strokeRect(boxobj.barMargin, mid - 1, boxobj.barWidth, 3);
+        </body>
+      </method>
+
+      <!-- Draw scale. -->
+      <method name="drawScale">
+        <body>
+        <![CDATA[
+          this.context.lineWidth = 1;
+          this.context.fillStyle = this.fillStyle;
+          this.context.strokeStyle = this.strokeStyle;
+
+          var boxobj = this.sliderController;
+          var mid = Math.round(boxobj.barHeight / 2);
+          this.context.fillRect(boxobj.barMargin, mid - 1, boxobj.barWidth, 3);
+          this.context.strokeRect(boxobj.barMargin, mid - 1, boxobj.barWidth, 3);
+
+          var h = boxobj.barHeight - Math.round(boxobj.barHeight / 5) + 1;
+          for (var i = 0; i <= boxobj.scalePointCount; ++i) {
+            var pos = Math.round(i * boxobj.scalePointIndent) +
+              boxobj.barMargin;
+            this.context.moveTo(pos, h);
+            this.context.lineTo(pos, boxobj.barHeight);
+            this.context.closePath();
+            this.context.stroke();
+          }
+        ]]>
+        </body>
+      </method>
+
+      <!-- Return canvas drawing context. -->
+      <property name="context" readonly="true">
+        <getter>
+          if (!this._context) {
+            this._context = this.canvas.getContext("2d");
+            this._context.globalAlpha = 1.0;
+          }
+          return this._context;
+        </getter>
+      </property>
+      <field name="_context">null</field>
+
+      <!-- These styles are used to draw the slider.
+        XXX: The "skin", should be set via CSS, see bug 350870.
+      -->
+      <field name="strokeStyle" readonly="true">"#8f9ca4"</field>
+      <field name="strokeStyleMove" readonly="true">"red"</field>
+      <field name="currStrokeStyle" readonly="true">this.strokeStyle</field>
+      <field name="fillStyle" readonly="true">"#eff3f1"</field>
+
+      <method name="dispatchChangeEvent">
+        <body>
+          var event = this.ownerDocument.createEvent("Events");
+          event.initEvent("change", false, false);
+          this.dispatchEvent(event);
+        </body>
+      </method>
+
+      <property name="minLabel" readonly="true">
+        <getter>
+          if  (!this._minlabel) {
+            this._minlabel = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "minlabel");
+          }
+          return this._minlabel;
+        </getter>
+      </property>
+      <field name="_minlabel">null</field>
+
+      <property name="maxLabel" readonly="true">
+        <getter>
+          if  (!this._maxlabel) {
+            this._maxlabel = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "maxlabel");
+          }
+          return this._maxlabel;
+        </getter>
+      </property>
+      <field name="_maxlabel">null</field>
+
+      <property name="canvas" readonly="true">
+        <getter>
+          if  (!this._canvas) {
+            this._canvas = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "canvas");
+          }
+          return this._canvas;
+        </getter>
+      </property>
+      <field name="_canvas">null</field>
+    </implementation>
+
+    <handlers>
+      <!-- Capture events. -->
+      <handler event="mousedown">
+      <![CDATA[
+        var handler = {
+          slider: this,
+          boxobj: this.sliderController,
+          ownerDoc: this.ownerDocument,
+
+          prevX: this.sliderController.getXCoordFromValue(this.value),
+          handleEvent: function(aEvent) {
+            var x = this.boxobj.getXCoordFromEvent(aEvent);
+            this.slider.eraseSlider(this.prevX);
+
+            switch (aEvent.type) {
+              case "mousemove":
+                this.slider.currStrokeStyle = this.slider.strokeStyleMove;
+                this.slider.drawSlider(x);
+                this.prevX = x;
+                break;
+
+              case "mouseup":
+                // release events
+                this.ownerDoc.removeEventListener("mousemove", this, true);
+                this.ownerDoc.removeEventListener("mouseup", this, true);
+
+                this.slider.currStrokeStyle = this.slider.strokeStyle;
+
+                this.slider.eraseSlider(x);
+                this.slider.drawSlider(this.boxobj.getFittedXCoord(x));
+
+                this.slider.setAttribute("value",
+                                         this.boxobj.getValueFromXCoord(x));
+                this.slider.dispatchChangeEvent();
+                break;
+            }
+          }
+        };
+
+        this.ownerDocument.addEventListener("mousemove", handler, true);
+        this.ownerDocument.addEventListener("mouseup", handler, true);
+      ]]>
+      </handler>
+
+      <handler event="keypress">
+        nsIEvent = Components.interfaces.nsIDOMKeyEvent;
+        switch (event.keyCode) {
+          case nsIEvent.DOM_VK_RIGHT:
+          case nsIEvent.DOM_VK_DOWN:
+            this.value += this.step;
+            break;
+          case nsIEvent.DOM_VK_LEFT:
+          case nsIEvent.DOM_VK_UP:
+            this.value -= this.step;
+            break;
+          case nsIEvent.DOM_VK_PAGE_DOWN:
+          case nsIEvent.DOM_VK_END:
+            this.value = this.max;
+            break;
+          case nsIEvent.DOM_VK_PAGE_UP:
+          case nsIEvent.DOM_VK_HOME:
+            this.value = this.min;
+            break;
+          default:
+            return;
+        }
+
+        this.dispatchChangeEvent();
+      </handler>
+    </handlers>
+  </binding>
+
 </bindings>
