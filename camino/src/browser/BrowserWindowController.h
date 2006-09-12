@@ -222,8 +222,12 @@ typedef enum
 - (void)stopThrobber;
 - (void)clickThrobber:(id)aSender;
 
-- (IBAction)biggerTextSize:(id)aSender;
-- (IBAction)smallerTextSize:(id)aSender;
+- (BOOL)canMakeTextBigger;
+- (BOOL)canMakeTextSmaller;
+- (BOOL)canMakeTextDefaultSize;
+- (IBAction)makeTextBigger:(id)aSender;
+- (IBAction)makeTextSmaller:(id)aSender;
+- (IBAction)makeTextDefaultSize:(id)aSender;
 
 - (IBAction)getInfo:(id)sender;
 

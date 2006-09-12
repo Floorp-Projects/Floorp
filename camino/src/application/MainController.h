@@ -138,8 +138,9 @@ typedef enum EBookmarkOpenBehavior
 -(IBAction) doReload:(id)aSender;
 -(IBAction) doReloadAllTabs:(id)aSender;
 -(IBAction) doStop:(id)aSender;
--(IBAction) biggerTextSize:(id)aSender;
--(IBAction) smallerTextSize:(id)aSender;
+-(IBAction) makeTextBigger:(id)aSender;
+-(IBAction) makeTextSmaller:(id)aSender;
+-(IBAction) makeTextDefaultSize:(id)aSender;
 -(IBAction) viewSource:(id)aSender;
 -(IBAction) manageBookmarks: (id)aSender;
 -(IBAction) showHistory:(id)aSender;

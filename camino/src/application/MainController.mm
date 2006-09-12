@@ -322,7 +322,7 @@ const int kReuseWindowOnAE = 2;
                                       button1:NSLocalizedString(@"QuitButtonText", @"")
                                       button2:NSLocalizedString(@"CancelButtonText", @"")
                                       button3:nil
-                                     checkMsg:NSLocalizedString(@"QuitWithMultipleTabsCheckboxLabel", @"")
+                                     checkMsg:NSLocalizedString(@"DontShowWarningAgainCheckboxLabel", @"")
                                    checkValue:&dontShowAgain];
     NS_HANDLER
     NS_ENDHANDLER
@@ -680,7 +680,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
                                             button1:NSLocalizedString(@"OKButtonText", @"")
                                             button2:NSLocalizedString(@"CancelButtonText", @"")
                                             button3:nil
-                                           checkMsg:NSLocalizedString(@"CloseMultipleWindowsCheckboxLabel", @"")
+                                           checkMsg:NSLocalizedString(@"DontShowWarningAgainCheckboxLabel", @"")
                                          checkValue:&dontShowAgain];
       NS_HANDLER
       NS_ENDHANDLER
@@ -1314,18 +1314,19 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
   return YES;    
 }
 
-- (IBAction)biggerTextSize:(id)aSender
+- (IBAction)makeTextBigger:(id)aSender
 {
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController biggerTextSize:aSender];
+  [[self getMainWindowBrowserController] makeTextBigger:aSender];
 }
 
-- (IBAction)smallerTextSize:(id)aSender
+- (IBAction)makeTextSmaller:(id)aSender
 {
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController smallerTextSize:aSender];
+  [[self getMainWindowBrowserController] makeTextSmaller:aSender];
+}
+
+- (IBAction)makeTextDefaultSize:(id)aSender
+{
+  [[self getMainWindowBrowserController] makeTextDefaultSize:aSender];
 }
 
 -(IBAction) viewSource:(id)aSender
@@ -1516,15 +1517,14 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
     return (browserController && [[browserController getTabBrowser] numberOfTabViewItems] > 1);
   }
 
-  if (action == @selector(biggerTextSize:))
-    return (browserController &&
-            ![[browserController getBrowserWrapper] isEmpty] &&
-            [[[browserController getBrowserWrapper] getBrowserView] canMakeTextBigger]);
+  if (action == @selector(makeTextBigger:))
+    return (browserController && [browserController canMakeTextBigger]);
 
-  if (action == @selector(smallerTextSize:))
-    return (browserController &&
-            ![[browserController getBrowserWrapper] isEmpty] &&
-            [[[browserController getBrowserWrapper] getBrowserView] canMakeTextSmaller]);
+  if (action == @selector(makeTextSmaller:))
+    return (browserController && [browserController canMakeTextSmaller]);
+
+  if (action == @selector(makeTextDefaultSize:))
+    return (browserController && [browserController canMakeTextDefaultSize]);
 
   // don't allow View Source on the bookmark manager or on non-text content
   if (action == @selector(viewSource:)) {

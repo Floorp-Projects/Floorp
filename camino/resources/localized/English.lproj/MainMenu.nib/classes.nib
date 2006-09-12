@@ -38,7 +38,6 @@
                 aboutPlugins = id; 
                 aboutServers = id; 
                 aboutWindow = id; 
-                biggerTextSize = id; 
                 clearHistory = id; 
                 closeAllWindows = id; 
                 closeTab = id; 
@@ -58,6 +57,9 @@
                 goHome = id; 
                 importBookmarks = id; 
                 infoLink = id; 
+                makeTextBigger = id; 
+                makeTextDefaultSize = id; 
+                makeTextSmaller = id; 
                 manageBookmarks = id; 
                 newTab = id; 
                 newWindow = id; 
@@ -77,7 +79,6 @@
                 setFileExtension = id; 
                 showCertificates = id; 
                 showHistory = id; 
-                smallerTextSize = id; 
                 supportLink = id; 
                 tipsTricksLink = id; 
                 toggleAutoCharsetDetection = id; 

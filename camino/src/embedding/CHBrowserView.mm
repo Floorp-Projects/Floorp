@@ -123,6 +123,7 @@ typedef unsigned int DragReference;
 const char kPersistContractID[] = "@mozilla.org/embedding/browser/nsWebBrowserPersist;1";
 const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
+#define DEFAULT_TEXT_ZOOM 1.0f
 #define MIN_TEXT_ZOOM 0.01f
 #define MAX_TEXT_ZOOM 20.0f
 
@@ -1107,14 +1108,24 @@ const long NSFindPanelActionSetFindString = 7;
   return [self isCommandEnabled: "cmd_redo"];
 }
 
-- (void)biggerTextSize
+- (void)makeTextBigger
 {
   [self incrementTextZoom:0.25 min:MIN_TEXT_ZOOM max:MAX_TEXT_ZOOM];
 }
 
-- (void)smallerTextSize
+- (void)makeTextSmaller
 {
   [self incrementTextZoom:-0.25 min:MIN_TEXT_ZOOM max:MAX_TEXT_ZOOM];
+}
+
+- (void)makeTextDefaultSize
+{
+  nsCOMPtr<nsIContentViewer> contentViewer = dont_AddRef([self getContentViewer]);
+  nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(contentViewer));
+  if (!markupViewer)
+    return;
+
+  markupViewer->SetTextZoom(DEFAULT_TEXT_ZOOM);
 }
 
 - (BOOL)canMakeTextBigger
@@ -1127,6 +1138,11 @@ const long NSFindPanelActionSetFindString = 7;
 {
   float zoom = [self getTextZoom];
   return zoom > MIN_TEXT_ZOOM;
+}
+
+- (BOOL)isTextDefaultSize
+{
+  return (fabsf([self getTextZoom] - DEFAULT_TEXT_ZOOM) < .001);
 }
 
 - (void)moveToBeginningOfDocument:(id)sender
@@ -1253,10 +1269,10 @@ const long NSFindPanelActionSetFindString = 7;
 
 - (float)getTextZoom
 {
-  nsCOMPtr<nsIContentViewer> contentViewer = getter_AddRefs([self getContentViewer]);
+  nsCOMPtr<nsIContentViewer> contentViewer = dont_AddRef([self getContentViewer]);
   nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(contentViewer));
   if (!markupViewer)
-    return 1.0;
+    return DEFAULT_TEXT_ZOOM;
 
   float zoom;
   markupViewer->GetTextZoom(&zoom);
@@ -1265,7 +1281,7 @@ const long NSFindPanelActionSetFindString = 7;
 
 - (void)incrementTextZoom:(float)increment min:(float)min max:(float)max
 {
-  nsCOMPtr<nsIContentViewer> contentViewer = getter_AddRefs([self getContentViewer]);
+  nsCOMPtr<nsIContentViewer> contentViewer = dont_AddRef([self getContentViewer]);
   nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(contentViewer));
   if (!markupViewer)
     return;

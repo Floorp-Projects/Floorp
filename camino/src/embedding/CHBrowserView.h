@@ -249,11 +249,13 @@ typedef enum {
 - (BOOL)canUndo;
 - (BOOL)canRedo;
 
-- (void)biggerTextSize;
-- (void)smallerTextSize;
+- (void)makeTextBigger;
+- (void)makeTextSmaller;
+- (void)makeTextDefaultSize;
 
 - (BOOL)canMakeTextBigger;
 - (BOOL)canMakeTextSmaller;
+- (BOOL)isTextDefaultSize;
 
 // ideally these would not have to be called from outside the CHBrowerView, but currently
 // the cocoa impl of nsIPromptService is at the app level, so it needs to call down

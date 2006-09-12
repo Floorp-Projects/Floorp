@@ -655,7 +655,7 @@ enum BWCOpenDest {
                                     button1:NSLocalizedString(@"CloseWindowWithMultipleTabsButton", @"")
                                     button2:NSLocalizedString(@"CancelButtonText", @"")
                                     button3:nil
-                                   checkMsg:NSLocalizedString(@"CloseWindowWithMultipleTabsCheckboxLabel", @"")
+                                   checkMsg:NSLocalizedString(@"DontShowWarningAgainCheckboxLabel", @"")
                                  checkValue:&dontShowAgain];
       NS_HANDLER
       NS_ENDHANDLER
@@ -1248,7 +1248,7 @@ enum BWCOpenDest {
     [toolbarItem setToolTip:NSLocalizedString(@"BigTextToolTip", @"Enlarge the text on this page")];
     [toolbarItem setImage:[NSImage imageNamed:@"textBigger.tif"]];
     [toolbarItem setTarget:self];
-    [toolbarItem setAction:@selector(biggerTextSize:)];
+    [toolbarItem setAction:@selector(makeTextBigger:)];
   }
   else if ([itemIdent isEqual:TextSmallerToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"SmallText", @"Shrink Text")];
@@ -1256,7 +1256,7 @@ enum BWCOpenDest {
     [toolbarItem setToolTip:NSLocalizedString(@"SmallTextToolTip", @"Shrink the text on this page")];
     [toolbarItem setImage:[NSImage imageNamed:@"textSmaller.tif"]];
     [toolbarItem setTarget:self];
-    [toolbarItem setAction:@selector(smallerTextSize:)];
+    [toolbarItem setAction:@selector(makeTextSmaller:)];
   }
   else if ([itemIdent isEqual:NewTabToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"NewTab", @"New Tab")];
@@ -1375,9 +1375,9 @@ enum BWCOpenDest {
   else if (action == @selector(addBookmark:))
     return ![mBrowserView isEmpty];
   else if (action == @selector(biggerTextSize:))
-    return ![mBrowserView isEmpty] && [[mBrowserView getBrowserView] canMakeTextBigger] && ![self bookmarkManagerIsVisible];
+    return [self canMakeTextBigger];
   else if ( action == @selector(smallerTextSize:))
-    return ![mBrowserView isEmpty] && [[mBrowserView getBrowserView] canMakeTextSmaller] && ![self bookmarkManagerIsVisible];
+    return [self canMakeTextSmaller];
   else if (action == @selector(newTab:))
     return YES;
   else if (action == @selector(closeCurrentTab:))
@@ -3307,41 +3307,69 @@ enum BWCOpenDest {
 
 - (void)openURLArray:(NSArray*)urlArray tabOpenPolicy:(ETabOpenPolicy)tabPolicy allowPopups:(BOOL)inAllowPopups
 {
-  int curNumTabs = [mTabBrowser numberOfTabViewItems];
-  int numItems   = (int)[urlArray count];
-  int selectedTabIndex = [[mTabBrowser tabViewItems] indexOfObject:[mTabBrowser selectedTabViewItem]];
-  BrowserTabViewItem* tabViewToSelect = nil;
-  
-  for (int i = 0; i < numItems; i++)
-  {
-    NSString* thisURL = [urlArray objectAtIndex:i];
-    BrowserTabViewItem* tabViewItem = nil;
-    
-    if (tabPolicy == eReplaceTabs && i < curNumTabs)
-      tabViewItem = (BrowserTabViewItem*)[mTabBrowser tabViewItemAtIndex:i];
-    else if (tabPolicy == eReplaceFromCurrentTab && selectedTabIndex < curNumTabs)
-      tabViewItem = (BrowserTabViewItem*)[mTabBrowser tabViewItemAtIndex:selectedTabIndex++];
-    else
-    {
-      tabViewItem = [self createNewTabItem];
-      [tabViewItem setLabel:NSLocalizedString(@"UntitledPageTitle", @"")];
-      [mTabBrowser addTabViewItem:tabViewItem];
-    }
-    
-    if (!tabViewToSelect)
-      tabViewToSelect = tabViewItem;
+  BOOL doOpenURLArray       = YES;
+  BOOL myriadTabWarningPref = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.warnOnOpen" withSuccess:NULL];
+  int maxTabsBeforeWarn     = [[PreferenceManager sharedInstance] getIntPref:"browser.tabs.maxOpenBeforeWarn" withSuccess:NULL];
+  int numItems              = (int)[urlArray count];
 
-    [[tabViewItem view] loadURI:thisURL referrer:nil
-                          flags:NSLoadFlagsNone focusContent:(i == 0) allowPopups:inAllowPopups];
+  if (myriadTabWarningPref && (numItems > maxTabsBeforeWarn)) {
+    BOOL dontShowAgain = NO;
+
+    // make the warning dialog
+    [NSApp activateIgnoringOtherApps:YES];
+    nsAlertController* controller = CHBrowserService::GetAlertController();
+
+    NS_DURING
+      doOpenURLArray = [controller confirmCheckEx:[self window]
+                                            title:[NSString stringWithFormat:NSLocalizedString(@"OpenManyTabsTitle", nil), numItems]
+                                             text:[NSString stringWithFormat:NSLocalizedString(@"OpenManyTabsText", nil), numItems]
+                                          button1:NSLocalizedString(@"OpenManyTabsButtonText", @"")
+                                          button2:NSLocalizedString(@"CancelButtonText", @"")
+                                          button3:nil
+                                         checkMsg:NSLocalizedString(@"DontShowWarningAgainCheckboxLabel", @"")
+                                       checkValue:&dontShowAgain];
+    NS_HANDLER
+    NS_ENDHANDLER
+
+    if (dontShowAgain)
+      [[PreferenceManager sharedInstance] setPref:"browser.tabs.warnOnOpen" toBoolean:NO];
   }
+
+  if (doOpenURLArray) {
+    int curNumTabs = [mTabBrowser numberOfTabViewItems];
+    int numItems   = (int)[urlArray count];
+    int selectedTabIndex = [[mTabBrowser tabViewItems] indexOfObject:[mTabBrowser selectedTabViewItem]];
+    BrowserTabViewItem* tabViewToSelect = nil;
+
+    for (int i = 0; i < numItems; i++) {
+      NSString* thisURL = [urlArray objectAtIndex:i];
+      BrowserTabViewItem* tabViewItem = nil;
+
+      if (tabPolicy == eReplaceTabs && i < curNumTabs)
+        tabViewItem = (BrowserTabViewItem*)[mTabBrowser tabViewItemAtIndex:i];
+      else if (tabPolicy == eReplaceFromCurrentTab && selectedTabIndex < curNumTabs)
+        tabViewItem = (BrowserTabViewItem*)[mTabBrowser tabViewItemAtIndex:selectedTabIndex++];
+      else {
+        tabViewItem = [self createNewTabItem];
+        [tabViewItem setLabel:NSLocalizedString(@"UntitledPageTitle", @"")];
+        [mTabBrowser addTabViewItem:tabViewItem];
+      }
+
+      if (!tabViewToSelect)
+        tabViewToSelect = tabViewItem;
+
+      [[tabViewItem view] loadURI:thisURL referrer:nil
+                            flags:NSLoadFlagsNone focusContent:(i == 0) allowPopups:inAllowPopups];
+    }
   
-  // if we replace all tabs (because we opened a tab group), or we open additional tabs
-  // with the "focus new tab"-pref on, focus the first new tab.
-  BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+    // if we replace all tabs (because we opened a tab group), or we open additional tabs
+    // with the "focus new tab"-pref on, focus the first new tab.
+    BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
   
-  if (!((tabPolicy == eAppendTabs) && loadInBackground))
-    [mTabBrowser selectTabViewItem:tabViewToSelect];
-    
+    if (!((tabPolicy == eAppendTabs) && loadInBackground))
+      [mTabBrowser selectTabViewItem:tabViewToSelect];
+
+  }
 }
 
 -(void) openURLArrayReplacingTabs:(NSArray*)urlArray closeExtraTabs:(BOOL)closeExtra allowPopups:(BOOL)inAllowPopups
@@ -3407,14 +3435,43 @@ enum BWCOpenDest {
              mChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE));
 }
 
-- (IBAction)biggerTextSize:(id)aSender
+- (BOOL)canMakeTextBigger
 {
-  [[mBrowserView getBrowserView] biggerTextSize];
+  BrowserWrapper* wrapper = [self getBrowserWrapper];
+  return (![wrapper isEmpty] &&
+          ![self bookmarkManagerIsVisible] &&
+          [[wrapper getBrowserView] canMakeTextBigger]);
 }
 
-- (IBAction)smallerTextSize:(id)aSender
+- (BOOL)canMakeTextSmaller
 {
-  [[mBrowserView getBrowserView] smallerTextSize];
+  BrowserWrapper* wrapper = [self getBrowserWrapper];
+  return (![wrapper isEmpty] &&
+          ![self bookmarkManagerIsVisible] &&
+          [[wrapper getBrowserView] canMakeTextSmaller]);
+}
+
+- (BOOL)canMakeTextDefaultSize
+{
+  BrowserWrapper* wrapper = [self getBrowserWrapper];
+  return (![wrapper isEmpty] &&
+          ![self bookmarkManagerIsVisible] &&
+          ![[wrapper getBrowserView] isTextDefaultSize]);
+}
+
+- (IBAction)makeTextBigger:(id)aSender
+{
+  [[mBrowserView getBrowserView] makeTextBigger];
+}
+
+- (IBAction)makeTextSmaller:(id)aSender
+{
+  [[mBrowserView getBrowserView] makeTextSmaller];
+}
+
+- (IBAction)makeTextDefaultSize:(id)aSender
+{
+  [[mBrowserView getBrowserView] makeTextDefaultSize];
 }
 
 - (IBAction)getInfo:(id)sender
