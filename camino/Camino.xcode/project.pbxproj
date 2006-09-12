@@ -4715,6 +4715,7 @@
 				DEBC80100A14E4F6006AECD3,
 				DE74F7620AB2612700FD1D5B,
 				DE74F7650AB2618200FD1D5B,
+				DE8C61FF0AB67CDA00078871,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -8639,6 +8640,7 @@
 				DEBC80110A14E4F6006AECD3,
 				DE74F7630AB2612700FD1D5B,
 				DE74F7660AB2618200FD1D5B,
+				DE8C62000AB67CDA00078871,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -14160,6 +14162,26 @@
 			settings = {
 			};
 		};
+		DE8C61FE0AB67CDA00078871 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = hidemanager.tif;
+			path = resources/images/toolbar/hidemanager.tif;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		DE8C61FF0AB67CDA00078871 = {
+			fileRef = DE8C61FE0AB67CDA00078871;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		DE8C62000AB67CDA00078871 = {
+			fileRef = DE8C61FE0AB67CDA00078871;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		DEA548490A251FA900186C93 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
@@ -15646,6 +15668,7 @@
 				F5566DC1038E075F01A80166,
 				F5566DC3038E075F01A80166,
 				3F63719B057CE0DE00B62EE2,
+				DE8C61FE0AB67CDA00078871,
 				3FBDC8DF0827C44B00D7F8E0,
 				3FEBB43B089DA88B00BD8373,
 			);
