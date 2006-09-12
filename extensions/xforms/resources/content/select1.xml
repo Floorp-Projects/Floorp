@@ -238,23 +238,36 @@
                   this._selected.setActive(true);
                 }
               }
+            } else if (aEvent.charCode && !this.selectionOpen) {
+              // Cache sequence of last pressed keys and search it in value of
+              // xforms:label inside xforms:item elements.
+              var currtime = new Date().valueOf();
+              var char = String.fromCharCode(aEvent.charCode);
+              if (currtime - this.searchKeypressTime <= 1000)
+                this.searchValue += char;
+              else
+                this.searchValue = char;
+
+              this.selectItemByLabel(this.searchValue);
+              this.searchKeypressTime = currtime;
             }
             return true;
           ]]>
         </body>
       </method>
 
+      <field name="searchValue">""</field>
+      <field name="searchKeypressTime">0</field>
+
       <method name="handleInput">
         <body>
           <![CDATA[
-            if (this.selectionOpen) {
-              if (this._selected) {
-                this._selected.setActive(false);
-                this._selected = null;
-              }
-              if (this.incremental) {
-                this._handleSelection(false);
-              }
+            if (this._selected) {
+              this._selected.setActive(false);
+              this._selected = null;
+            }
+            if (this.incremental) {
+              this._handleSelection(false);
             }
 
             return true;
@@ -710,6 +723,62 @@
       <method name="getCurrentValue">
         <body>
           throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        </body>
+      </method>
+
+      <method name="selectItemByLabel">
+        <parameter name="aValue"/>
+        <parameter name="aContextNode"/>
+        <body>
+        <![CDATA[
+          var item =
+            this.searchItemByLabel(new RegExp("^" + aValue, "i"), this);
+
+          if (this._selected) {
+            this._selected.setActive(false);
+            this._selected = null;
+          }
+          this._selected = item;
+          if (this._selected) {
+            this._selected.setActive(true);
+            this.updateInputField();
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="searchItemByLabel">
+        <parameter name="aExp"/>
+        <parameter name="aContextNode"/>
+        <body>
+        <![CDATA[
+          for (var child = aContextNode.firstChild; child;
+               child = child.nextSibling) {
+            if (child.namespaceURI != this.XFORMS_NS)
+              continue;
+
+            switch (child.localName) {
+              case "item":
+                child = child.
+                  QueryInterface(Components.interfaces.nsIXFormsItemElement);
+                if (child.labelText.search(aExp) != -1) {
+                  return child;
+                }
+                break;
+              case "choices":
+                var item = this.searchItemByLabel(aExp, child);
+                if (item)
+                  return item;
+                break;
+              case "itemset":
+                var item =
+                  this.searchItemByLabel(aExp, child.anonymousItemSetContent);
+                if (item)
+                  return item;
+                break;
+            }
+          }
+        ]]>
         </body>
       </method>
 
