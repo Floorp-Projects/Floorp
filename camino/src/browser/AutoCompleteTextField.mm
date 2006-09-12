@@ -80,6 +80,7 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 
 - (void) startSearch:(NSString*)aString complete:(BOOL)aComplete;
 - (void) performSearch;
+- (BOOL) caretIsAtEndOfLine;
 - (void) dataReady:(nsIAutoCompleteResults*)aResults status:(AutoCompleteStatus)aStatus;
 - (void) searchTimer:(NSTimer *)aTimer;
 
@@ -447,7 +448,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   
   // read the user default on if we should auto-complete the text field as the user
   // types or make them pick something from a list (a-la mozilla).
-	mCompleteWhileTyping = [[NSUserDefaults standardUserDefaults] boolForKey:USER_DEFAULTS_AUTOCOMPLETE_WHILE_TYPING];
+  mCompleteWhileTyping = [[NSUserDefaults standardUserDefaults] boolForKey:USER_DEFAULTS_AUTOCOMPLETE_WHILE_TYPING];
         
     // register for string & URL drags
   [self registerForDraggedTypes:[NSArray arrayWithObjects:kCorePasteboardFlavorType_url, NSURLPboardType, NSStringPboardType, nil]];
@@ -571,6 +572,12 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     if (NS_FAILED(rv))
       NSLog(@"Unable to perform autocomplete lookup");
   }
+}
+
+- (BOOL)caretIsAtEndOfLine
+{
+  NSRange selectedLocation = [[self fieldEditor] selectedRange];
+  return (selectedLocation.length == 0) && (selectedLocation.location == [[self stringValue] length]);
 }
 
 - (void) dataReady:(nsIAutoCompleteResults*)aResults status:(AutoCompleteStatus)aStatus
@@ -916,7 +923,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   // we could find ourselves with stale results and the popup still open. If
   // it doesn't have focus, we can bypass all that and just use normal routines.
   if ( [self fieldEditor] && [[self window] firstResponder] == [self fieldEditor] ) {
-    [self setStringUndoably:aURI fromLocation:0];		// updates autocomplete correctly
+    [self setStringUndoably:aURI fromLocation:0];   // updates autocomplete correctly
 
     // set insertion point to the end of the url. setStringUndoably:fromLocation:
     // will leave it at the beginning of the text field for this case and
@@ -1134,13 +1141,17 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
       [self selectRowBy:-1];
       [self completeSelectedResult];
       return YES;
-	}
+    }
   } else if (command == @selector(moveDown:)) {
     if ([self isOpen]) {
       [self selectRowBy:1];
       [self completeSelectedResult];
       return YES;
-	}
+    }
+    else if ([self caretIsAtEndOfLine]) {
+      [self startSearch:[self stringValue] complete:YES];
+      return YES;
+    }
   } else if (command == @selector(scrollPageUp:)) {
     [self selectRowBy:-kMaxRows];
     [self completeSelectedResult];
@@ -1178,7 +1189,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     // if the user deletes characters, we need to know so that
     // we can prevent autocompletion later when search results come in
     if ([[textView string] length] > 1) {
-    	[self selectRowAt:-1];
+      [self selectRowAt:-1];
       mBackspaced = YES;
     }
   }
