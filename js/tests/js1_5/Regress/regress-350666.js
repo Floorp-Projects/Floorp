@@ -50,13 +50,13 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
-  
+
   var f;
 
   f = function () { for(;; delete y.(x)) { } }
   actual = f + '';
   expect = 'function () {\n    for (;; y.(x), true) {\n    }\n}';
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   try
   {
@@ -70,11 +70,10 @@ function test()
   expect = 'No Error';
   reportCompare(expect, actual, summary);
 
-
   f = function () { for(;; delete (y+x)) { } }
   actual = f + '';
   expect = 'function () {\n    for (;; y + x, true) {\n    }\n}';
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   try
   {

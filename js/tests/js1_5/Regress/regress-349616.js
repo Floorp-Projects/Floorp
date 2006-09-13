@@ -61,7 +61,7 @@ function test()
   expect = 'function () {\n    window.foo getter= ' + 
     'function () {return 5;};\n    writeLineToLog(window.foo);\n}';
 
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

@@ -56,13 +56,12 @@ function test()
   f = function() { g(h) = (delete let (y) 3); }
   actual = f + '';
   expect = 'function () {\n    g(h) = ((let (y) 3), true);\n}';
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   f = function () {    g(h) = ((let (y) 3), true);}
   actual = f + '';
   expect = 'function () {\n    g(h) = ((let (y) 3), true);\n}';
-  reportCompare(expect, actual, summary);
-
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

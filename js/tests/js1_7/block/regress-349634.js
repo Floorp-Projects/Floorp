@@ -50,14 +50,13 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
-  
+
   var f;
 
   f = function () { let a = 3; { let a = 4; } }
   actual = f + '';
   expect = 'function () {\n    let a = 3;\n    {\n        let a = 4;\n    }\n}';
-    
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

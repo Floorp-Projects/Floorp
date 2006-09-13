@@ -148,6 +148,10 @@ function TEST(section, expected, actual)
         reportFailure (section, output);   
         return false;
     }
+    else
+    {
+        print(section + ' PASSED');
+    }
     return true;
 }
 
@@ -332,4 +336,26 @@ JavaScriptOptions.prototype.reset = function ()
 {
   this.setOption('strict', this.orig.strict);
   this.setOption('werror', this.orig.werror);
+}
+
+function compareSource(n, expect, actual)
+{
+    var expectP = expect.
+        replace(/([(){},.\[\]])/mg, ' $1 ').
+        replace(/(\w+)/mg, ' $1 ').
+        replace(/<(\/)? (\w+) (\/)?>/mg, '<$1$2$3>').
+        replace(/\s+/mg, ' ').
+        replace(/new (\w+)\s*\(\s*\)/mg, 'new $1');
+
+    var actualP = actual.
+        replace(/([(){},.\[\]])/mg, ' $1 ').
+        replace(/(\w+)/mg, ' $1 ').
+        replace(/<(\/)? (\w+) (\/)?>/mg, '<$1$2$3>').
+        replace(/\s+/mg, ' ').
+        replace(/new (\w+)\s*\(\s*\)/mg, 'new $1');
+
+    print('expect:\n' + expectP);
+    print('actual:\n' + actualP);
+
+    TEST(n, expectP, actualP);
 }

@@ -56,12 +56,12 @@ function test()
   f = function () { let (x = 3) { x-- } }
   expect = 'function () {\n    let (x = 3) {\n        x--;\n    }\n}';
   actual = f + '';
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   f = function () { let (x = 3) { x--; x--; } }
   expect = 'function () {\n    let (x = 3) {\n        x--;\n        x--;\n    }\n}'
   actual = f + '';
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

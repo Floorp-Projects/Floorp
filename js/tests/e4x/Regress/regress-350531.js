@@ -49,11 +49,11 @@ var f;
 f = function (){ return (@['a'])=='b'}
 expect = 'function () {\n    return @["a"] == "b";\n}';
 actual = f + '';
-TEST(1, expect, actual);
+compareSource(1, expect, actual);
 
 f = function (){ return (@['a']).toXMLString() }
 expect = 'function () {\n    return @["a"].toXMLString();\n}';
 actual = f + '';
-TEST(2, expect, actual);
+compareSource(2, expect, actual);
 
 END();

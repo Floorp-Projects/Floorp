@@ -57,7 +57,7 @@ function test()
   actual = f + '';
   expect = 'function () {\n    y;\n}';
 
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

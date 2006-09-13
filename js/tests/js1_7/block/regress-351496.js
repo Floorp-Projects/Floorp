@@ -50,7 +50,7 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
-  
+
   var f = function() { switch(0) { case let(y = 3) 6: } }
   actual = f + '';
   expect = 'function () {\n' +
@@ -60,7 +60,7 @@ function test()
            '    }\n' +
            '}';
 
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

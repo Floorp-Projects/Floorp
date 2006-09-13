@@ -56,7 +56,7 @@ function test()
   var f = function (x) { return x ? 0 : let (a = 3) a; }
   actual = f.toString();
   writeLineToLog(f.toString());
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

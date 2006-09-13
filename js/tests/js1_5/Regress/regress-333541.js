@@ -51,23 +51,25 @@ try
 {
   expect = 'function a() {\n    return (1).toSource();\n}';
   actual = a.toString();
- }
+  compareSource(expect, actual, summary + ': 1');
+}
 catch(ex)
 {
   actual = ex + '';
+  reportCompare(expect, actual, summary + ': 1');
 }
-reportCompare(expect, actual, summary + ': 1');
 
 try
 {
   expect = 'function a() {return (1).toSource();}';
   actual = a.toSource();
+  compareSource(expect, actual, summary + ': 2');
 }
 catch(ex)
 {
   actual = ex + '';
+  reportCompare(expect, actual, summary + ': 2');
 }
-reportCompare(expect, actual, summary + ': 2');
 
 expect = a;
 actual = a.valueOf();
@@ -77,12 +79,13 @@ try
 {
   expect = 'function a() {\n    return (1).toSource();\n}';
   actual = "" + a;
+  compareSource(expect, actual, summary + ': 4');
 }
 catch(ex)
 {
   actual = ex + '';
+  reportCompare(expect, actual, summary + ': 4');
 }
-reportCompare(expect, actual, summary + ': 4');
 
 function b(){
   x=1..toSource();
@@ -105,10 +108,11 @@ try
                            "    x = (1)['#'];\n" + 
                            "}";
   actual = "" + b;
+  compareSource(expect, actual, summary + ': 5');
 }
 catch(ex)
 {
   actual = ex + '';
+  reportCompare(expect, actual, summary + ': 5');
 }
-reportCompare(expect, actual, summary + ': 5');
 

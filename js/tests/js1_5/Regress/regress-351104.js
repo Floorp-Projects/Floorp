@@ -54,10 +54,10 @@ function test()
   var f;
 
   f = function () { for((0 ? 2 : ({})); ; ) { } }
-  expect = 'function () {\n    for (({});;) {\n    }\n}';
+  expect = 'function () {\n    for ({};;) {\n    }\n}';
   actual = f + '';
 
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

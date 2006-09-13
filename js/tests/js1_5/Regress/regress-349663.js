@@ -50,7 +50,7 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
-  
+
   var f, g;
 
   f = function() { const h; for(null; h *= ""; null) ; }
@@ -60,7 +60,7 @@ function test()
   actual = g + '';
 
   writeLineToLog(f);
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

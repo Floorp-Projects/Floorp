@@ -56,7 +56,7 @@ function test()
   f = function () { if(0x10.(a)) { h(); } }
   expect = 'function () {\n    if ((16).(a)) {\n        h();\n    }\n}';
   actual = f + '';
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

@@ -49,6 +49,6 @@ f = function() { var y = <?foo bar?>; }
 actual = f + '';
 expect = 'function () {\n    var y = <?foo bar?>;\n}';
 
-TEST(1, expect, actual);
+compareSource(1, expect, actual);
 
 END();

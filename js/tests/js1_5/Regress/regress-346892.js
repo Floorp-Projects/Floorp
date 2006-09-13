@@ -50,11 +50,11 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
-  
+
   expect = 'function anonymous() {\n}';
   actual = (new Function("3")) + '';
 
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

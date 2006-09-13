@@ -56,12 +56,12 @@ function test()
   f = function () { delete 0x11.x }
   expect = 'function () {\n    delete (17).x;\n}';
   actual = f + '';
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   f = function () { delete (17).x }
   expect = 'function () {\n    delete (17).x;\n}';
   actual = f + '';
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

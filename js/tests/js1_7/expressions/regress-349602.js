@@ -61,7 +61,7 @@ function test()
   {
     actual = ex + '';
   }
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

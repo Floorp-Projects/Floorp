@@ -57,7 +57,7 @@ function test()
   expect = 'function () {\n    [(5)[7] for (y in window)];\n}';
   actual = f + '';
 
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

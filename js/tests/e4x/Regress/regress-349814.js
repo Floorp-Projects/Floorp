@@ -55,6 +55,6 @@ var z = function ()
 expect = z + '';
 actual = (eval("" + z)) + '';
 
-TEST(1, expect, actual);
+compareSource(1, expect, actual);
 
 END();
