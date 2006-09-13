@@ -60,5 +60,7 @@ browser.jar:
 #endif
 #endif
 
+#ifdef TOOLBAR_CUSTOMIZATION_SHEET
 toolkit.jar:
 *+      content/global/customizeToolbar.xul           (content/customizeToolbarSheet.xul)
+#endif
