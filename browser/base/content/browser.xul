@@ -285,7 +285,7 @@
       <toolbaritem id="search-container" title="&searchItem.title;" 
                    align="center" class="chromeclass-toolbar-additional"
                    flex="100">
-        <searchbar id="searchbar" flex="1"/>
+        <searchbar id="searchbar" flex="1" chromedir="&locale.dir;"/>
       </toolbaritem>
 
       <toolbaritem id="go-container" align="center" class="chromeclass-toolbar-additional">
