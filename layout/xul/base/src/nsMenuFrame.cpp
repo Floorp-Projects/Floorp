@@ -170,31 +170,24 @@ nsMenuFrame::SetParent(const nsIFrame* aParent)
 class nsASyncMenuInitialization : public nsRunnable
 {
 public:
-  nsASyncMenuInitialization(nsIContent* aContent)
-    : mContent(aContent)
+  nsASyncMenuInitialization(nsIFrame* aFrame)
+    : mWeakFrame(aFrame)
   {
   }
 
   NS_IMETHOD Run() {
-    nsIDocument* doc = mContent ? mContent->GetCurrentDoc() : nsnull;
-    NS_ENSURE_TRUE(doc, NS_OK);
-
-    nsIPresShell* shell = doc->GetShellAt(0);
-    NS_ENSURE_TRUE(shell, NS_OK);
-
-    nsIFrame* frame = shell->GetPrimaryFrameFor(mContent);
-    NS_ENSURE_TRUE(frame, NS_OK);
-
-    nsIMenuFrame* imenu = nsnull;
-    CallQueryInterface(frame, &imenu);
-    NS_ENSURE_TRUE(imenu, NS_OK);
-
-    nsMenuFrame* menu = NS_STATIC_CAST(nsMenuFrame*, imenu);
-    menu->UpdateMenuType(menu->GetPresContext());
+    if (mWeakFrame.IsAlive()) {
+      nsIMenuFrame* imenu = nsnull;
+      CallQueryInterface(mWeakFrame.GetFrame(), &imenu);
+      if (imenu) {
+        nsMenuFrame* menu = NS_STATIC_CAST(nsMenuFrame*, imenu);
+        menu->UpdateMenuType(menu->GetPresContext());
+      }
+    }
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContent> mContent;
+  nsWeakFrame mWeakFrame;
 };
 
 NS_IMETHODIMP
@@ -253,7 +246,7 @@ nsMenuFrame::Init(nsIContent*      aContent,
 
   BuildAcceleratorText();
   nsCOMPtr<nsIRunnable> ev =
-    new nsASyncMenuInitialization(GetContent());
+    new nsASyncMenuInitialization(this);
   NS_DispatchToCurrentThread(ev);
   return rv;
 }
@@ -1951,18 +1944,18 @@ nsMenuFrame::AppendFrames(nsIAtom*        aListName,
 class nsASyncMenuGeneration : public nsRunnable
 {
 public:
-  nsASyncMenuGeneration(nsIContent* aContent)
-    : mContent(aContent), mDocument(aContent ? aContent->GetCurrentDoc() : nsnull)
+  nsASyncMenuGeneration(nsIFrame* aFrame)
+    : mWeakFrame(aFrame)
   {
+    nsIContent* content = aFrame ? aFrame->GetContent() : nsnull;
+    mDocument = content ? content->GetCurrentDoc() : nsnull;
     if (mDocument) {
       mDocument->BlockOnload();
     }
   }
 
   NS_IMETHOD Run() {
-    nsIDocument* doc = mContent ? mContent->GetCurrentDoc() : nsnull;
-    nsIPresShell* shell = doc ? doc->GetShellAt(0) : nsnull;
-    nsIFrame* frame = shell ? shell->GetPrimaryFrameFor(mContent) : nsnull;
+    nsIFrame* frame = mWeakFrame.GetFrame();
     if (frame) {
       PRBool collapsed = PR_FALSE;
       nsBoxLayoutState state(frame->GetPresContext());
@@ -1975,14 +1968,13 @@ public:
         }
       }
     }
-
     if (mDocument) {
       mDocument->UnblockOnload(PR_FALSE);
     }
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContent>  mContent;
+  nsWeakFrame           mWeakFrame;
   nsCOMPtr<nsIDocument> mDocument;
 };
 
@@ -2005,7 +1997,7 @@ nsMenuFrame::SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize)
             !nsContentUtils::HasNonEmptyAttr(child, kNameSpaceID_None,
                                              nsXULAtoms::menugenerated)) {
           nsCOMPtr<nsIRunnable> ev =
-            new nsASyncMenuGeneration(GetContent());
+            new nsASyncMenuGeneration(this);
           NS_DispatchToCurrentThread(ev);
         }
         return PR_FALSE;
