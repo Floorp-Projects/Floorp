@@ -73,12 +73,6 @@
 #define MATHML_MODULES
 #endif
 
-#ifdef XP_WIN
-#define INTL_COMPAT_MODULES MODULE(I18nCompatibility)
-#else
-#define INTL_COMPAT_MODULES
-#endif
-
 #ifdef MOZ_IPCD
 #define IPC_MODULE MODULE(ipcdclient)
 #else
@@ -274,7 +268,6 @@
     MATHML_MODULES                           \
     MODULE(nsUConvModule)                    \
     MODULE(nsI18nModule)                     \
-    INTL_COMPAT_MODULES                      \
     UNIVERSALCHARDET_MODULE                  \
     MODULE(necko)                            \
     PERMISSIONS_MODULES                      \
