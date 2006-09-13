@@ -122,7 +122,7 @@ function initForm() {
   document.getElementById('url').value = gURL;
 
   // Change next button to "submit report"
-  reportWizard.getButton('next').label = strbundle.getString("submitReport") + ">";
+  reportWizard.getButton('next').label = strbundle.getString("submitReport");
   reportWizard.getButton('next').setAttribute("accesskey",
                                               strbundle.getString("submitReport.accesskey"));
 
