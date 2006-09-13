@@ -756,11 +756,6 @@ MicrosummaryService.prototype = {
   _setField: function MSS__setField(bookmarkID, fieldName, fieldValue) {
     var bookmarkResource = bookmarkID.QueryInterface(Ci.nsIRDFResource);
 
-    // If we're changing the bookmark title, force the bookmark trees
-    // to rebuild, since they don't seem to be rebuilding on their own.
-    if (fieldName == FIELD_GENERATED_TITLE)
-      this._bmds.beginUpdateBatch();
-
     if (this._hasField(bookmarkID, fieldName)) {
       var oldValue = this._getField(bookmarkID, fieldName);
       this._bmds.Change(bookmarkResource,
@@ -774,18 +769,10 @@ MicrosummaryService.prototype = {
                         this._literal(fieldValue),
                         true);
     }
-
-    if (fieldName == FIELD_GENERATED_TITLE)
-      this._bmds.endUpdateBatch();
   },
 
   _clearField: function MSS__clearField(bookmarkID, fieldName) {
     var bookmarkResource = bookmarkID.QueryInterface(Ci.nsIRDFResource);
-
-    // If we're changing the bookmark title, force the bookmark trees
-    // to rebuild, since they don't seem to be rebuilding on their own.
-    if (fieldName == FIELD_GENERATED_TITLE)
-      this._bmds.beginUpdateBatch();
 
     var node = this._bmds.GetTarget(bookmarkResource,
                                     this._resource(fieldName),
@@ -795,9 +782,6 @@ MicrosummaryService.prototype = {
                           this._resource(fieldName),
                           node);
     }
-
-    if (fieldName == FIELD_GENERATED_TITLE)
-      this._bmds.endUpdateBatch();
   },
 
   _hasField: function MSS__hasField(bookmarkID, fieldName) {
@@ -893,6 +877,10 @@ MicrosummaryService.prototype = {
     // Make sure that the bookmark is of type MicsumBookmark
     // because that's what the template rules are matching
     if (this._getField(bookmarkID, FIELD_RDF_TYPE) != VALUE_MICSUM_BOOKMARK) {
+      // Force the bookmark trees to rebuild, since they don't seem
+      // to be rebuilding on their own (bug 348928).
+      this._bmds.beginUpdateBatch();
+
       var bookmarkResource = bookmarkID.QueryInterface(Ci.nsIRDFResource);
       if (this._hasField(bookmarkID, FIELD_RDF_TYPE)) {
         var oldValue = this._getField(bookmarkID, FIELD_RDF_TYPE);
@@ -907,6 +895,8 @@ MicrosummaryService.prototype = {
                           this._resource(VALUE_MICSUM_BOOKMARK),
                           true);
       }
+
+      this._bmds.endUpdateBatch();
     }
 #endif
     this._setField(bookmarkID, FIELD_MICSUM_GEN_URI, microsummary.generator.uri.spec);
@@ -935,11 +925,17 @@ MicrosummaryService.prototype = {
 #ifndef MOZ_PLACES
     // Set the bookmark's RDF type back to the normal bookmark type
     if (this._getField(bookmarkID, FIELD_RDF_TYPE) == VALUE_MICSUM_BOOKMARK) {
+      // Force the bookmark trees to rebuild, since they don't seem
+      // to be rebuilding on their own (bug 348928).
+      this._bmds.beginUpdateBatch();
+
       var bookmarkResource = bookmarkID.QueryInterface(Ci.nsIRDFResource);
       this._bmds.Change(bookmarkResource,
                         this._resource(FIELD_RDF_TYPE),
                         this._resource(VALUE_MICSUM_BOOKMARK),
                         this._resource(VALUE_NORMAL_BOOKMARK));
+
+      this._bmds.endUpdateBatch();
     }
 #endif
 
