@@ -643,7 +643,7 @@ static void
 SetDontBrace(JSPrinter *jp)
 {
     ptrdiff_t offset;
-    
+
     /* When not pretty-printing, newline after brace is chopped. */
     JS_ASSERT(jp->spaceOffset < 0);
     offset = jp->sprinter.offset - (jp->pretty ? 3 : 2);
@@ -1547,7 +1547,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #if JS_HAS_BLOCK_SCOPE
                         /*
                          * If a let declaration is the only child of a control
-                         * structure that does not require braces, it must not 
+                         * structure that does not require braces, it must not
                          * be braced.  If it were braced explicitly, it would
                          * be bracketed by JSOP_ENTERBLOCK/JSOP_LEAVEBLOCK.
                          */
@@ -1917,19 +1917,26 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_IFEQ:
               case JSOP_IFEQX:
+              {
+                JSBool elseif = JS_FALSE;
+
+              if_again:
                 len = GetJumpOffset(pc, pc);
                 sn = js_GetSrcNote(jp->script, pc);
 
                 switch (sn ? SN_TYPE(sn) : SRC_NULL) {
                   case SRC_IF:
                   case SRC_IF_ELSE:
+                    op = JSOP_NOP;              /* turn off parens */
                     rval = POP_STR();
                     if (ss->inArrayInit) {
                         LOCAL_ASSERT(SN_TYPE(sn) == SRC_IF);
                         if (Sprint(&ss->sprinter, " if (%s)", rval) < 0)
                             return JS_FALSE;
                     } else {
-                        js_printf(SET_MAYBE_BRACE(jp), "\tif (%s) {\n", rval);
+                        js_printf(SET_MAYBE_BRACE(jp),
+                                  elseif ? " if (%s) {\n" : "\tif (%s) {\n",
+                                  rval);
                         jp->indent += 4;
                     }
 
@@ -1937,14 +1944,31 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         DECOMPILE_CODE(pc + oplen, len - oplen);
                     } else {
                         LOCAL_ASSERT(!ss->inArrayInit);
-                        len = js_GetSrcNoteOffset(sn, 0);
-                        DECOMPILE_CODE(pc + oplen, len - oplen);
+                        tail = js_GetSrcNoteOffset(sn, 0);
+                        DECOMPILE_CODE(pc + oplen, tail - oplen);
                         jp->indent -= 4;
-                        pc += len;
+                        pc += tail;
                         LOCAL_ASSERT(*pc == JSOP_GOTO || *pc == JSOP_GOTOX);
                         oplen = js_CodeSpec[*pc].length;
                         len = GetJumpOffset(pc, pc);
                         js_printf(jp, "\t} else");
+
+                        /*
+                         * If the second offset for sn is non-zero, it tells
+                         * the distance from the goto around the else, to the
+                         * ifeq for the if inside the else that forms an "if
+                         * else if" chain.  Thus cond spans the condition of
+                         * the second if, so we simply decompile it and start
+                         * over at label if_again.
+                         */
+                        cond = js_GetSrcNoteOffset(sn, 1);
+                        if (cond != 0) {
+                            DECOMPILE_CODE(pc + oplen, cond - oplen);
+                            pc += cond;
+                            elseif = JS_TRUE;
+                            goto if_again;
+                        }
+
                         js_printf(SET_MAYBE_BRACE(jp), " {\n");
                         jp->indent += 4;
                         DECOMPILE_CODE(pc + oplen, len - oplen);
@@ -1995,6 +2019,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     break;
                 }
                 break;
+              }
 
               case JSOP_IFNE:
               case JSOP_IFNEX:
@@ -2259,7 +2284,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 sn = js_GetSrcNote(jp->script, pc - 1);
                 if (sn && SN_TYPE(sn) == SRC_ASSIGNOP) {
                     todo = Sprint(&ss->sprinter, "%s %s= %s",
-                                  lval, 
+                                  lval,
                                   (lastop == JSOP_GETTER)
                                   ? js_getter_str
                                   : (lastop == JSOP_SETTER)

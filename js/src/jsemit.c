@@ -4002,19 +4002,25 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         /* Emit code for the condition before pushing stmtInfo. */
         if (!js_EmitTree(cx, cg, pn->pn_kid1))
             return JS_FALSE;
+        top = CG_OFFSET(cg);
         if (stmtInfo.type == STMT_IF) {
-            js_PushStatement(&cg->treeContext, &stmtInfo, STMT_IF,
-                             CG_OFFSET(cg));
+            js_PushStatement(&cg->treeContext, &stmtInfo, STMT_IF, top);
         } else {
             /*
              * We came here from the goto further below that detects else-if
              * chains, so we must mutate stmtInfo back into a STMT_IF record.
              * Also (see below for why) we need a note offset for SRC_IF_ELSE
-             * to help the decompiler.
+             * to help the decompiler.  Actually, we need two offsets, one for
+             * decompiling any else clause and the second for decompiling an
+             * else-if chain without bracing, overindenting, or incorrectly
+             * scoping let declarations.
              */
             JS_ASSERT(stmtInfo.type == STMT_ELSE);
             stmtInfo.type = STMT_IF;
+            stmtInfo.update = top;
             if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 0, jmp - beq))
+                return JS_FALSE;
+            if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 1, top - jmp))
                 return JS_FALSE;
         }
 
@@ -6251,7 +6257,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[] = {
     {"null",            0,      0,      0},
     {"if",              0,      0,      0},
-    {"if-else",         1,      0,      1},
+    {"if-else",         2,      0,      1},
     {"while",           1,      0,      1},
     {"for",             3,      1,      1},
     {"continue",        0,      0,      0},
