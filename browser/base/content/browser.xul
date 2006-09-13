@@ -210,7 +210,7 @@
 
       <toolbaritem id="urlbar-container" align="center" flex="1000"
                    title="&locationItem.title;" class="chromeclass-location">
-        <!-- This deck is a hack to make sure that the border between the
+        <!-- This stack is a hack to make sure that the border between the
              urlbar and the searchbar doesn't shift when the SSL and RSS
              icons appear and disappear.  Now that the searchbar is flexible,
              the appearance of the urlbar status icons tweaks the flex
@@ -218,7 +218,7 @@
              is to hide a decoy textbox with a spacer behind the urlbar, so
              that the deck that contains it is always as least as large as
              it would be if both icons were visible. -->
-        <deck id="urlbar-sizing-deck" flex="1">
+        <stack id="urlbar-sizing-deck" flex="1">
           <textbox id="urlbar" flex="1"
                    type="autocomplete"
                    autocompletesearch="history" 
@@ -279,7 +279,7 @@
           <textbox id="urlbar-spacer" flex="1">
             <hbox id="urlbar-icons-spacer"/>
           </textbox>
-        </deck>
+        </stack>
       </toolbaritem>
 
       <toolbaritem id="search-container" title="&searchItem.title;" 
