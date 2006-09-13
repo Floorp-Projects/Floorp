@@ -164,10 +164,64 @@
         <xul:vbox class="addon-icon" xbl:inherits="iconURL"/>
         <xul:vbox flex="1" class="addonTextBox">
           <xul:hbox class="addon-name-version" xbl:inherits="name, version"/>
-          <xul:hbox class="addon-description" xbl:inherits="description, opType"/>
+          <xul:hbox anonid="addonDescription" class="addon-description" xbl:inherits="description, opType"/>
         </xul:vbox>
       </xul:hbox>
     </content>
+    <implementation implements="nsIAccessibleProvider, nsIDOMXULSelectControlItemElement">
+      <field name="_addonDescription">
+        document.getAnonymousElementByAttribute(this, "anonid", "addonDescription");
+      </field>
+
+      <property name="label" readonly="true">
+        <getter>
+          <![CDATA[
+            var labelPieces = [];
+
+            // Add name and version
+            labelPieces.push(this.getAttribute("name"));
+            labelPieces.push(this.getAttribute("version"));
+
+            // Add description
+            var description = this.getAttribute("description");
+            labelPieces.push(description);
+
+            // Add status message, if any
+            // description is always in this.getAttribute("description"), but
+            // description is also sometimes in anonNodes[0].value.  But other
+            // times (like when there's an actual status message) the binding
+            // of that hbox gets changed dynamically so anonNodes[0].value
+            // is the status message.  The easiest way to sort it out is
+            // to check for duplicate strings.
+            // xxxpilgrim There is some additional weirdness here.  Visually,
+            // the description is not displayed on non-selected items if
+            // the item contains a status message.  However, when you arrow
+            // up and down through the list selecting different items, we want
+            // the accessible name during the OBJ_FOCUS event to include both
+            // the description and the status message.  You would think this
+            // would be handled automatically because the binding changes
+            // (to "addon-selected", below) when the item gets selected.
+            // However, when the OBJ_FOCUS event occurs, the binding hasn't
+            // changed yet, so this property gets queried for the accessible name.
+            // Bottom line, we need to this property in the first place to
+            // ensure that items have any accessible name at all when you
+            // arrow through the list (bug 352388), _and_ we need to include
+            // both the description and the status message to make the
+            // accessible name you get during the OBJ_FOCUS event match the
+            // accessible name you would get if you queried the object
+            // after it was already focused (i.e. after the binding had
+            // changed to "addon-selected").
+            var anonNodes = document.getAnonymousNodes(this._addonDescription);
+            if (anonNodes) {
+              var statusMessage = anonNodes[0].value;
+              if (description != statusMessage)
+                labelPieces.push(statusMessage);
+            }
+            return labelPieces.join(" ");
+          ]]>
+        </getter>
+      </property>
+    </implementation>
   </binding>
 
   <binding id="addon-selected" extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
@@ -225,7 +279,7 @@
       </xul:hbox>
     </content>
 
-    <implementation>
+    <implementation implements="nsIAccessibleProvider, nsIDOMXULSelectControlItemElement">
       <constructor>
         <![CDATA[
           if (this.isBlocklisted) {
