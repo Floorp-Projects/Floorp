@@ -434,14 +434,27 @@ function ShowMenus()
 // Toolbar buttons like quick search and mail views should be hidden for the message window
 function HideToolbarButtons()
 {
-  // How can we remove these two items from the palette as well? 
   var mailToolbar = document.getElementById('mail-bar2');
   if (mailToolbar)
   {
+    // the quick search box is part of the default toolbar set for the 3-pane and since it is shared code,
+    // the stand alone message window. We need to remove the search-container from the defaultset,
+    // remove the toolbar button itself from the DOM because we've already created it.
     var defaultSet = mailToolbar.getAttribute("defaultset");
     defaultSet = defaultSet.replace(/search-container/i, "");
-    defaultSet = defaultSet.replace(/mailviews-container/i, "");
     mailToolbar.setAttribute('defaultset', defaultSet);
+    
+    var searchContainer = document.getElementById('search-container');
+    if (searchContainer)
+      searchContainer.parentNode.removeChild(searchContainer);
+    
+    // now hack the toolbar palette to remove all of the toolbar items which don't
+    // make sense for the stand alone message window. This prevents them from showing up in the 
+    // customize dialog.
+    var toolbarPalette = document.getElementById('mail-toolbox').palette;
+    toolbarPalette.removeChild(toolbarPalette.getElementsByAttribute('id', 'search-container')[0]);
+    toolbarPalette.removeChild(toolbarPalette.getElementsByAttribute('id', 'mailviews-container')[0]);
+    toolbarPalette.removeChild(toolbarPalette.getElementsByAttribute('id', 'folder-location-container')[0]);    
   }
 }
 
