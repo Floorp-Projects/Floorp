@@ -6,6 +6,7 @@
 ]>
 
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:nc="http://home.netscape.com/NC-rdf#">
 
   <rdf:Description about="urn:root">
@@ -414,7 +415,9 @@
   </rdf:Description>
 
   <!-- The following nodes are intentionally linkable but not displayable -->
-  <rdf:Description ID="prefs-languages" nc:name="Languages" nc:link="prefs.xhtml#languages"/>
+  <Description rdf:ID="prefs-languages" nc:name="Languages" nc:link="prefs.xhtml#languages"/>
+  <Description rdf:ID="prefs-fonts-and-colors" nc:name="Fonts &amp; Colors" nc:link="prefs.xhtml#fonts_and_colors"/>
+  <Description rdf:ID="prefs-connection-settings" nc:name="Connection Settings" nc:link="prefs.xhtml#connection_settings"/>
 
   <!-- The following nodes are trees used multiple times in the hierarchy
        (for platform-specific reasons).  To display one of these trees,
@@ -422,69 +425,66 @@
        "#" plus the value of the rdf:ID for the appropriate tree within
        the appropriate rdf:Description element. -->
 
-  <rdf:Seq rdf:ID="prefs-tree">
-    <rdf:li> <rdf:Description ID="prefs-general" nc:name="General" nc:link="prefs.xhtml#general_options"/> </rdf:li>
-    <rdf:li> <rdf:Description ID="prefs-privacy" nc:name="Privacy" nc:link="prefs.xhtml#privacy_options"/> </rdf:li>
-    <rdf:li> <rdf:Description ID="prefs-content" nc:name="Content" nc:link="prefs.xhtml#content_options"/> </rdf:li>
-    <rdf:li> <rdf:Description ID="prefs-tabs"    nc:name="Tabs"    nc:link="prefs.xhtml#tabs_options"/> </rdf:li>
-    <rdf:li> <rdf:Description ID="prefs-downloads" nc:name="Downloads" nc:link="prefs.xhtml#downloads_options"/> </rdf:li>
-    <rdf:li> <rdf:Description ID="prefs-advanced" nc:name="Advanced" nc:link="prefs.xhtml#advanced_options"/> </rdf:li>
-  </rdf:Seq>
+  <Seq rdf:ID="prefs-tree">
+    <li><Description ID="prefs-main" nc:name="Main" nc:link="prefs.xhtml#main_options"/></li>
+    <li><Description ID="prefs-tabs" nc:name="Tabs" nc:link="prefs.xhtml#tabs_options"/></li>
+    <li><Description ID="prefs-content" nc:name="Content" nc:link="prefs.xhtml#content_options"/></li>
+    <li><Description ID="prefs-feeds" nc:name="Feeds" nc:link="prefs.xhtml#feeds_options"/></li>
+    <li><Description ID="prefs-privacy" nc:name="Privacy" nc:link="prefs.xhtml#privacy_options"/></li>
+    <li><Description ID="prefs-security" nc:name="Security" nc:link="prefs.xhtml#security_options"/></li>
+    <li><Description ID="prefs-advanced" nc:name="Advanced" nc:link="prefs.xhtml#advanced_options"/></li>
+  </Seq>
 
   <!-- The following are subnodes of trees used multiple times in the hierarchy. -->
 
-  <rdf:Description about="#prefs-general">
+  <Description rdf:about="#prefs-main">
+    <nc:subheadings>
+      <Seq>
+        <li><Description rdf:ID="prefs-startup" nc:name="Startup" nc:link="prefs.xhtml#startup"/></li>
+        <li><Description rdf:ID="prefs-downloads" nc:name="Downloads" nc:link="prefs.xhtml#downloads"/></li>
+        <li><Description rdf:ID="prefs-system-defaults" nc:name="System Defaults" nc:link="prefs.xhtml#system_defaults"/></li>
+      </Seq>
+    </nc:subheadings>
+  </Description>
+  
+  <Description rdf:about="#prefs-content">
+    <nc:subheadings>
+      <Seq>
+        <li><Description rdf:ID="prefs-advanced-javascript" nc:name="Advanced Javascript Settings" nc:link="prefs.xhtml#advanced_javascript"/></li>
+        <li><Description rdf:ID="prefs-fonts-and-colors" nc:name="Fonts and Colors" nc:link="prefs.xhtml#fonts_and_colors"/></li>
+        <li><Description rdf:ID="prefs-file-types" nc:name="File Types" nc:link="prefs.xhtml#file_types"/></li>
+      </Seq>
+    </nc:subheadings>
+  </Description>
+  
+  <Description rdf:about="#prefs-privacy">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="prefs-home-page" nc:name="Home Page" nc:link="prefs.xhtml#home_page"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-default-browser" nc:name="Default Browser" nc:link="prefs.xhtml#default_browser"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-connection-settings" nc:name="Connection Settings" nc:link="prefs.xhtml#connection_settings"/> </rdf:li>
+        <li><Description rdf:ID="prefs-privacy-history" nc:name="History" nc:link="prefs.xhtml#privacy_history"/></li>
+        <li><Description rdf:ID="prefs-privacy-cookies" nc:name="Cookies" nc:link="prefs.xhtml#privacy_cookies"/></li>
+        <li><Description rdf:ID="prefs-clear-private-data" nc:name="Private Data" nc:link="prefs.xhtml#private_data"/></li>
       </rdf:Seq>
     </nc:subheadings>
-  </rdf:Description>
-
-  <rdf:Description about="#prefs-privacy">
+  </Description>
+  
+  <Description rdf:about="#prefs-security">
     <nc:subheadings>
-      <rdf:Seq>
-        <rdf:li> <rdf:Description ID="prefs-clear-private-data" nc:name="Clear Private Data Settings" nc:link="prefs.xhtml#clear_private_data"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-history" nc:name="History" nc:link="prefs.xhtml#privacy_history"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-saved-forms" nc:name="Saved Forms" nc:link="prefs.xhtml#privacy_saved_forms"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-passwords" nc:name="Passwords" nc:link="prefs.xhtml#privacy_passwords"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-download-history" nc:name="Download History" nc:link="prefs.xhtml#privacy_download_history"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-cookies" nc:name="Cookies" nc:link="prefs.xhtml#privacy_cookies"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-cache" nc:name="Cache" nc:link="prefs.xhtml#privacy_cache"/> </rdf:li>
-      </rdf:Seq>
+      <Seq>
+        <li><Description rdf:ID="prefs-passwords" nc:name="Passwords" nc:link="prefs.xhtml#security_passwords"/></li>
+        <li><Description rdf:ID="prefs-warning-messages" nc:name="Warning Messages" nc:link="prefs.xhtml#warning_messages"/></li>
+      </Seq>
     </nc:subheadings>
-  </rdf:Description>
-
-  <rdf:Description about="#prefs-content">
+  </Description>
+  
+  <Description rdf:about="#prefs-advanced">
     <nc:subheadings>
-      <rdf:Seq>
-        <rdf:li> <rdf:Description ID="prefs-fonts-and-colors" nc:name="Fonts and Colors" nc:link="prefs.xhtml#fonts_and_colors"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-advanced-javascript" nc:name="Advanced Javascript Settings" nc:link="prefs.xhtml#advanced_javascript"/> </rdf:li>
-      </rdf:Seq>
+      <Seq>
+        <li><Description rdf:ID="prefs-advanced-general" nc:name="General" nc:link="prefs.xhtml#advanced_general"/></li>
+        <li><Description rdf:ID="prefs-advanced-network" nc:name="Network" nc:link="prefs.xhtml#advanced_network"/></li>
+        <li><Description rdf:ID="prefs-advanced-update" nc:name="Update" nc:link="prefs.xhtml#advanced_update"/></li>
+        <li><Description rdf:ID="prefs-advanced-encryption" nc:name="Encryption" nc:link="prefs.xhtml#advanced_encryption"/></li>
+      </Seq>
     </nc:subheadings>
-  </rdf:Description>
-
-  <rdf:Description about="#prefs-downloads">
-    <nc:subheadings>
-      <rdf:Seq>
-        <rdf:li> <rdf:Description ID="prefs-download-folder" nc:name="Download Folder" nc:link="prefs.xhtml#download_folder"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-download-manager" nc:name="Download Manager" nc:link="prefs.xhtml#download_manager"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-download-actions" nc:name="Download Actions" nc:link="prefs.xhtml#download_actions"/> </rdf:li>
-      </rdf:Seq>
-    </nc:subheadings>
-  </rdf:Description>
-
-  <rdf:Description about="#prefs-advanced">
-    <nc:subheadings>
-      <rdf:Seq>
-        <rdf:li> <rdf:Description ID="prefs-advanced-general" nc:name="General" nc:link="prefs.xhtml#advanced_general"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-advanced-update" nc:name="Update" nc:link="prefs.xhtml#advanced_update"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-advanced-security" nc:name="Security" nc:link="prefs.xhtml#advanced_security"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-advanced-safebrowsing" nc:name="Anti-Phishing" nc:link="prefs.xhtml#advanced_safebrowsing"/> </rdf:li>
-      </rdf:Seq>
-    </nc:subheadings>
-  </rdf:Description>
+  </Description>
 
 </rdf:RDF>

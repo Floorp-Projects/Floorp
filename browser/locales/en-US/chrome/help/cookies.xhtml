@@ -65,16 +65,14 @@ Contributors:
   &brandShortName;:</p>
 
 <ol>
-  <li>Select &pref.menuPath;.</li>
-  <li>Click the <em>Privacy</em> panel, and then click on the <em>Cookies</em>
-    tab.</li>
-  <li>Select the <em>until I close &brandShortName;</em> &pref.singular; from
-    the <em>Keep Cookies</em> combo box.</li>
+  <li>Select &pref.menuPath; and open the <em>Privacy</em> panel.</li>
+  <li>Select the <em>I close &brandShortName;</em> &pref.singular; from the
+    <em>Keep until</em> menu.</li>
 </ol>
 
 <p>If you want to grant sites you trust the ability to store cookies permanently
-  (e.g., to allow you to log in automatically to a site), click
-  <a href="#cookies_exceptions"><em>Exceptions</em></a>, enter the site address,
+  (e.g., to allow you to log in automatically to a site), click <a
+  href="#cookies_exceptions"><em>Exceptions...</em></a>, enter the site address,
   and click <em>Allow</em>.</p>
 
 <h3 id="all_the_settings">All the Settings</h3>
@@ -83,59 +81,35 @@ Contributors:
   &brandShortName;:</p>
 
 <dl>
-  <dt>Allow sites to set cookies</dt>
+  <dt>Accept cookies from sites</dt>
   <dd><p>If you don't want any sites to store cookies on your computer, uncheck
     this &pref.singular;. Note that some sites may not work properly when
     cookies are disabled. If you want to grant certain sites the ability to
-    store cookies, open the <a href="#cookies_exceptions">Cookies Exceptions
-    Window</a> by clicking <em>Exceptions</em>, enter the site address, and
-    click <em>Allow</em> or <em>Allow for Session</em>.</p></dd>
-  <dt>for the originating web site only</dt>
-  <dd>
-    <p>If &brandShortName; stores a site's cookie, it will return the cookie
-      only to that particular site.  &brandShortName; will not provide one site
-      with cookies set by another. Since a web site can only receive its own
-      cookies, it can learn about your activities while you are at that site
-      but not your activities in general while surfing the Web.</p>
-    <p>However, sometimes a web site displays content that is hosted on another
-      site. That content can be anything from an image to text or an
-      advertisement. The other web site that hosts also has the ability to
-      store a cookie in &brandShortName;, even though you haven't visited the
-      site directly.</p>
-    <p>Cookies that are stored by a site other than the one you are visiting
-      are called third-party cookies or foreign cookies. Web sites sometimes
-      use third-party cookies with transparent GIFs, which are special images
-      that help sites count users, track email responses, learn more about how
-      visitors use the site, or customize your browsing experience.
-      (Transparent GIFs are also known as web beacons or web bugs.) When this
-      checkbox is checked, it blocks these foreign cookies from being
-      stored.</p>
-  </dd>
-  <dt>unless I have removed Cookies set by the site</dt>
-  <dd><p>If you remove Cookies in the <em>View Cookies</em> dialog while this
-    checkbox is checked, &brandShortName; won't allow the respective sites to
-    store cookies again.</p></dd>
-  <dt>Keep Cookies:</dt>
+    store cookies, open the <a href="#cookies_exceptions">Cookies Exceptions</a>
+    window by clicking <em>Exceptions...</em>, enter the site address, and click
+    <em>Allow</em> or <em>Allow for Session</em>.</p></dd>
+  <dt>Keep until</dt>
   <dd>
   <ul>
-    <li><strong>until they expire</strong>: If this &pref.singular; is selected,
-      each cookie will be removed when it reaches its expiration date.</li>
-    <li><strong>until I close &brandShortName;:</strong> If this &pref.singular;
-      is selected, cookies will be removed when you restart
-      &brandShortName;. Web sites requiring the use of cookies will still
-      work, but if you restart &brandShortName;, the web site will think that
-      you logged into the site for the first time again.</li>
-    <li><strong>ask me every time:</strong> Display an alert every time a web
-      site tries to store a cookie to ask you if you want that cookie
-      stored.</li>
+    <li><em>they expire</em><br/>
+      If this &pref.singular; is selected, each cookie will be removed when the
+      site that set it has determined the cookie should expire.</li>
+    <li><em>I close &brandShortName;</em><br/>
+      If this &pref.singular; is selected, cookies will be removed when you
+      restart &brandShortName;.  Web sites requiring the use of cookies will
+      still work, but if you restart &brandShortName;, the web site will think
+      that you logged into the site for the first time again.</li>
+    <li><em>ask me every time</em><br/>
+      Display an alert every time a web site tries to store a cookie asking you
+      if you want that cookie stored.</li>
   </ul>
   </dd>
 </dl>
 
 <h2 id="accepting_and_blocking_cookies">Accepting and Blocking Cookies</h2>
 
-<p>If you've chosen <em>ask me every time</em> from the <em>Keep Cookies</em>
-  combo box, you'll see a dialog whenever a site tries to store a cookie on your
+<p>If you've chosen <em>ask me every time</em> from the <em>Keep until</em>
+  menu, you'll see a dialog whenever a site tries to store a cookie on your
   computer providing the following options:</p>
 
 <dl>
@@ -153,13 +127,13 @@ Contributors:
   <dt>Use my choice for all cookies from this site</dt>
   <dd>Select this checkbox before clicking any of the buttons if you want
     &brandShortName; to remember your decision and not ask again. The site will
-    be added to the <a href="#cookies_exceptions">Cookie Exceptions Window</a>,
+    be added to the <a href="#cookies_exceptions">Cookie Exceptions</a> window,
     where you can revert your choice should you wish to do so later.</dd>
 </dl>
 
 <h2 id="cookies_exceptions">The Cookies Exceptions Window</h2>
 
-<p>Access this window by clicking the <em>Exceptions</em> button in cookies
+<p>Access this window by clicking the <em>Exceptions...</em> button in cookies
   &pref.plural;. Here you can make exceptions from your general cookies
   &pref.plural; for specific sites. Using exceptions, you can allow all cookies,
   reject all cookies, or allow all cookies but have them deleted when you exit
@@ -187,12 +161,9 @@ Contributors:
 
 <p>To remove a cookie from the list, select it and click <em>Remove Cookie</em>.
   To remove a site's cookies, select the site and click <em>Remove
-  Cookie(s)</em>. To wipe all cookies, click <em>Remove All Cookies</em>.
-  (This is the same as clicking the <em>Clear Cookies Now</em> button from the
-  <a href="prefs.xhtml#privacy_cookies"><em>Cookies</em> tab</a> of the
-  <em>Privacy</em> panel of the &pref.pluralCaps; window.)</p>
+  Cookie(s)</em>. To wipe all cookies, click <em>Remove All Cookies</em>.</p>
 
-<div class="contentsBox"><em>07 July 2005</em></div>
+<div class="contentsBox"><em>12 September 2006</em></div>
 <p>Copyright &copy; 2003-2006 Contributors to the Mozilla Help Viewer Project.</p>
 
 </body>
