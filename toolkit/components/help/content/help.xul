@@ -154,7 +154,7 @@
 
   <vbox flex="1">
     <toolbox id="help-toolbox" class="toolbox-top">
-      <toolbar id="HelpToolbar" class="chromeclass-toolbar">
+      <toolbar id="HelpToolbar" class="chromeclass-toolbar" chromedir="&locale.dir;">
         <toolbarbutton id="help-back-button" type="menu-button"
                        label="&backButton.label;"
                        oncommand="if (event.target == this) goBack(); else gotoHistoryIndex(event);"
