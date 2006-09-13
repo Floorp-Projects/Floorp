@@ -634,8 +634,10 @@ js_GetPrinterOutput(JSPrinter *jp)
 
 #if !JS_HAS_BLOCK_SCOPE
 # define SET_MAYBE_BRACE(jp)    jp
+# define CLEAR_MAYBE_BRACE(jp)  jp
 #else
 # define SET_MAYBE_BRACE(jp)    ((jp)->braceState = MAYBE_BRACE, (jp))
+# define CLEAR_MAYBE_BRACE(jp)  ((jp)->braceState = ALWAYS_BRACE, (jp))
 
 static void
 SetDontBrace(JSPrinter *jp)
@@ -680,7 +682,7 @@ js_printf(JSPrinter *jp, const char *format, ...)
             braceState = jp->braceState;
             jp->braceState = ALWAYS_BRACE;
             if (braceState == DONT_BRACE) {
-                ptrdiff_t offset, from;
+                ptrdiff_t offset, delta, from;
 
                 JS_ASSERT(format[1] == '\n' || format[1] == ' ');
                 offset = jp->spaceOffset;
@@ -690,10 +692,19 @@ js_printf(JSPrinter *jp, const char *format, ...)
                 bp = jp->sprinter.base;
                 JS_ASSERT(bp[offset+0] == ' ');
                 JS_ASSERT(bp[offset+1] == '{');
-                JS_ASSERT(!jp->pretty || bp[offset+2] == '\n');
-                from = offset + 2;
+                delta = 2;
+                if (jp->pretty) {
+                    /* If pretty, we don't have to worry about 'else'. */
+                    JS_ASSERT(bp[offset+2] == '\n');
+                } else if (bp[offset-1] != ')') {
+                    /* Must keep ' ' to avoid 'dolet' or 'elselet'. */
+                    ++offset;
+                    delta = 1;
+                }
+
+                from = offset + delta;
                 memmove(bp + offset, bp + from, jp->sprinter.offset - from);
-                jp->sprinter.offset -= 2;
+                jp->sprinter.offset -= delta;
                 jp->spaceOffset = -1;
 
                 format += 2;
@@ -865,7 +876,7 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
     off = isCondSwitch ? ss->offsets[ss->top-1] : PopOff(ss, JSOP_NOP);
     lval = OFF2STR(&ss->sprinter, off);
 
-    js_printf(jp, "\tswitch (%s) {\n", lval);
+    js_printf(CLEAR_MAYBE_BRACE(jp), "\tswitch (%s) {\n", lval);
 
     if (tableLength) {
         diff = table[0].offset - defaultOffset;
@@ -1266,7 +1277,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     if (!rval)
                         return JS_FALSE;
                     RETRACT(&ss->sprinter, rval);
-                    js_printf(jp, "\t%s: {\n", rval);
+                    js_printf(CLEAR_MAYBE_BRACE(jp), "\t%s: {\n", rval);
                     jp->indent += 4;
                     break;
 
@@ -1304,7 +1315,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     break;
 
                   case SRC_BRACE:
-                    js_printf(jp, "\t{\n");
+                    js_printf(CLEAR_MAYBE_BRACE(jp), "\t{\n");
                     jp->indent += 4;
                     len = js_GetSrcNoteOffset(sn, 0);
                     DECOMPILE_CODE(pc + oplen, len - oplen);
@@ -1369,14 +1380,14 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_TRY:
-                js_printf(jp, "\ttry {\n");
+                js_printf(CLEAR_MAYBE_BRACE(jp), "\ttry {\n");
                 jp->indent += 4;
                 todo = -2;
                 break;
 
               case JSOP_FINALLY:
                 jp->indent -= 4;
-                js_printf(jp, "\t} finally {\n");
+                js_printf(CLEAR_MAYBE_BRACE(jp), "\t} finally {\n");
                 jp->indent += 4;
 
                 /*
@@ -1498,7 +1509,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     pc += JSOP_POP_LENGTH;
                     len = js_GetSrcNoteOffset(sn, 0);
                     if (pc[len] == JSOP_LEAVEBLOCK) {
-                        js_printf(jp, "\tlet (%s) {\n", POP_STR());
+                        js_printf(CLEAR_MAYBE_BRACE(jp), "\tlet (%s) {\n",
+                                  POP_STR());
                         jp->indent += 4;
                         DECOMPILE_CODE(pc, len);
                         jp->indent -= 4;
@@ -1635,7 +1647,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 switch (sn ? SN_TYPE(sn) : SRC_NULL) {
 #if JS_HAS_BLOCK_SCOPE
                   case SRC_BRACE:
-                    js_printf(jp, "\t{\n");
+                    js_printf(CLEAR_MAYBE_BRACE(jp), "\t{\n");
                     jp->indent += 4;
                     len = js_GetSrcNoteOffset(sn, 0);
                     ok = Decompile(ss, pc + oplen, len - oplen);
@@ -1648,7 +1660,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
                   case SRC_CATCH:
                     jp->indent -= 4;
-                    js_printf(jp, "\t} catch (");
+                    js_printf(CLEAR_MAYBE_BRACE(jp), "\t} catch (");
 
                     pc2 = pc;
                     pc += oplen;
