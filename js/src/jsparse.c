@@ -1602,6 +1602,8 @@ ImportExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             if (js_MatchToken(cx, ts, TOK_STAR)) {
                 pn2->pn_op = JSOP_IMPORTALL;
                 pn2->pn_atom = NULL;
+                pn2->pn_slot = -1;
+                pn2->pn_attrs = 0;
             } else {
                 MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NAME_AFTER_DOT);
                 pn2->pn_op = JSOP_GETPROP;
@@ -2383,6 +2385,8 @@ PushLexicalScope(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     pn->pn_op = JSOP_LEAVEBLOCK;
     pn->pn_atom = atom;
     pn->pn_expr = NULL;
+    pn->pn_slot = -1;
+    pn->pn_attrs = 0;
     return pn;
 }
 
@@ -3369,6 +3373,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             pn1->pn_pos = tc->blockNode->pn_pos;
             pn1->pn_atom = atom;
             pn1->pn_expr = tc->blockNode;
+            pn1->pn_slot = -1;
+            pn1->pn_attrs = 0;
             tc->blockNode = pn1;
         }
 
@@ -4266,6 +4272,8 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             pn2 = NewParseNode(cx, ts, PN_NAME, tc);
             if (!pn2)
                 return NULL;
+            pn2->pn_slot = -1;
+            pn2->pn_attrs = 0;
 #if JS_HAS_XML_SUPPORT
             ts->flags |= TSF_OPERAND | TSF_KEYWORD_IS_NAME;
             tt = js_GetToken(cx, ts);
