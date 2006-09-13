@@ -86,6 +86,10 @@
             newitem.setAttribute("label", aLabel);
             newitem.setAttribute("value", aValue);
             newitem.setAttribute("image", aImage);
+            if (!insertPos) {
+              newitem.style.position = "fixed";
+              newitem.style.top = "100%";
+            }
             this.insertBefore(newitem, insertPos);
 
             if (aButtons) {
@@ -179,10 +183,16 @@
             var height = aNotification.boxObject.height;
             var change = height / this.slideSteps;
             if (aSlideIn) {
-              aNotification.style.marginTop = -height + "px";
-              aNotification.style.opacity = 0;
+              if (this.currentNotification &&
+                  this.currentNotification.boxObject.height > height)
+                height = this.currentNotification.boxObject.height;
+
               this.currentNotification = aNotification;
               this._closedNotification = null;
+              aNotification.style.removeProperty("position");
+              aNotification.style.removeProperty("top");
+              aNotification.style.marginTop = -height + "px";
+              aNotification.style.opacity = 0;
             }
             else {
               change = -change;
