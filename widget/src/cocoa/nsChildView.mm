@@ -3952,7 +3952,7 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
   mGeckoChild->GetDocumentAccessible (getter_AddRefs (accessible));
   accessible->GetNativeInterface ((void**)&nativeAccessible);
 
-#if 0
+#ifdef DEBUG_hakan
   static PRBool testInit = PR_FALSE;
   if (!testInit && [[nativeAccessible role] isEqualToString:@"mozRootAccessible"]) {
     [nativeAccessible printHierarchy];
