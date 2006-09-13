@@ -922,8 +922,12 @@ SrcNotes(JSContext *cx, JSScript *script)
                    (uintN) js_GetSrcNoteOffset(sn, 1),
                    (uintN) js_GetSrcNoteOffset(sn, 2));
             break;
-          case SRC_COND:
           case SRC_IF_ELSE:
+            fprintf(gOutFile, " else %u elseif %u",
+                   (uintN) js_GetSrcNoteOffset(sn, 0),
+                   (uintN) js_GetSrcNoteOffset(sn, 1));
+            break;
+          case SRC_COND:
           case SRC_WHILE:
           case SRC_PCBASE:
           case SRC_PCDELTA:
