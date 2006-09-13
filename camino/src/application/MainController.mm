@@ -322,7 +322,7 @@ const int kReuseWindowOnAE = 2;
                                       button1:NSLocalizedString(@"QuitButtonText", @"")
                                       button2:NSLocalizedString(@"CancelButtonText", @"")
                                       button3:nil
-                                     checkMsg:NSLocalizedString(@"DontShowWarningAgainCheckboxLabel", @"")
+                                     checkMsg:NSLocalizedString(@"QuitWithMultipleTabsCheckboxLabel", @"")
                                    checkValue:&dontShowAgain];
     NS_HANDLER
     NS_ENDHANDLER
@@ -684,7 +684,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
                                             button1:NSLocalizedString(@"OKButtonText", @"")
                                             button2:NSLocalizedString(@"CancelButtonText", @"")
                                             button3:nil
-                                           checkMsg:NSLocalizedString(@"DontShowWarningAgainCheckboxLabel", @"")
+                                           checkMsg:NSLocalizedString(@"CloseMultipleWindowsCheckboxLabel", @"")
                                          checkValue:&dontShowAgain];
       NS_HANDLER
       NS_ENDHANDLER
