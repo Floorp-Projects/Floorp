@@ -215,6 +215,8 @@ public:
 };
 
 %{C++
+#include "nsCOMPtr.h"
+
 inline
 const nsQueryInterface
 do_QueryWrappedNative(nsIXPConnectWrappedNative *aWrappedNative)
