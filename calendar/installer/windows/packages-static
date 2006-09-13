@@ -218,6 +218,7 @@ bin\js\calItipItem.js
 bin\js\calListFormatter.js
 bin\js\calMonthGridPrinter.js
 bin\js\calOutlookCSVImportExport.js
+bin\js\calProtocolHandler.js
 bin\js\calRecurrenceInfo.js
 bin\js\calTodo.js
 bin\js\calUtils.js

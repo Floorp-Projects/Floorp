@@ -58,8 +58,6 @@ const ICALCNT_HANDLER_CONTRACTID =
     "@mozilla.org/uriloader/content-handler;1?type=text/calendar";
 const ICALCNT_HANDLER_CID =
     Components.ID("{9ebf4c8a-7770-40a6-aeed-e1738129535a}");
-const ICALPROT_HANDLER_CONTRACTID =
-    "@mozilla.org/network/protocol;1?name=webcal";
 const ICALPROT_HANDLER_CID =
     Components.ID("{d320ba05-88cf-44a6-b718-87a72ef05918}");
 
@@ -216,52 +214,6 @@ function (outer, iid) {
     return new ICALContentHandler();
 }
 
-/* webcal protocol handler component */
-function ICALProtocolHandler()
-{
-}
-
-ICALProtocolHandler.prototype.scheme = "webcal";
-ICALProtocolHandler.prototype.defaultPort = 8080;
-ICALProtocolHandler.prototype.protocolFlags =
-                   nsIProtocolHandler.URI_NORELATIVE |
-                   nsIProtocolHandler.ALLOWS_PROXY;
-
-ICALProtocolHandler.prototype.allowPort =
-function (aPort, aScheme)
-{
-    return false;
-}
-
-ICALProtocolHandler.prototype.newURI =
-function (aSpec, aCharset, aBaseURI)
-{
-    var url = Components.classes[STANDARDURL_CONTRACTID].
-      createInstance(nsIStandardURL);
-    url.init(nsIStandardURL.URLTYPE_STANDARD, 8080, aSpec, aCharset, aBaseURI);
-
-    return url.QueryInterface(nsIURI);
-}
-
-ICALProtocolHandler.prototype.newChannel =
-function (aURI)
-{
-    return new BogusChannel (aURI);
-}
-
-/* protocol handler factory object (ICALProtocolHandler) */
-var ICALProtocolHandlerFactory = new Object();
-
-ICALProtocolHandlerFactory.createInstance =
-function (outer, iid) {
-    if (outer != null)
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
-
-    if (!iid.equals(nsIProtocolHandler) && !iid.equals(nsISupports))
-        throw Components.results.NS_ERROR_INVALID_ARG;
-
-    return new ICALProtocolHandler();
-}
 
 /* bogus webcal channel used by the ICALProtocolHandler */
 function BogusChannel (aURI)
@@ -363,14 +315,6 @@ function (compMgr, fileSpec, location, type)
                                     fileSpec,
                                     location,
                                     type);
-
-    // dump("*** Registering webcal protocol handler.\n");
-    compMgr.registerFactoryLocation(ICALPROT_HANDLER_CID,
-                                    "Webcal protocol handler",
-                                    ICALPROT_HANDLER_CONTRACTID,
-                                    fileSpec,
-                                    location,
-                                    type);
 }
 
 CalendarModule.unregisterSelf =
@@ -380,7 +324,6 @@ function(compMgr, fileSpec, location)
 
     compMgr.unregisterFactoryLocation(CLINE_SERVICE_CID, fileSpec);
     compMgr.unregisterFactoryLocation(ICALCNT_HANDLER_CID, fileSpec);
-    compMgr.unregisterFactoryLocation(ICALPROT_HANDLER_CID, fileSpec);
 
     catman = Components.classes["@mozilla.org/categorymanager;1"]
                        .getService(nsICategoryManager);
@@ -397,9 +340,6 @@ function (compMgr, cid, iid) {
 
     if (cid.equals(ICALCNT_HANDLER_CID))
         return ICALContentHandlerFactory;
-
-    if (cid.equals(ICALPROT_HANDLER_CID))
-        return ICALProtocolHandlerFactory;
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
 }

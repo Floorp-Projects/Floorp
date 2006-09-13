@@ -137,7 +137,12 @@ const componentData =
     {cid: Components.ID("{b84de879-4b85-4d68-8550-e0C527e46f98}"),
      contractid: "@mozilla.org/calendar/itip-item;1",
      script: "calItipItem.js",
-     constructor: "calItipItem"}
+     constructor: "calItipItem"},
+
+    {cid: Components.ID("{1e2fc0e2-bf5f-4d60-9f1e-5e92cf517c0b}"),
+     contractid: "@mozilla.org/network/protocol;1?name=webcal",
+     script: "calProtocolHandler.js",
+     constructor: "calProtocolHandler"}
     ];
 
 var calItemModule = {

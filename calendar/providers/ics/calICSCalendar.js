@@ -148,7 +148,7 @@ calICSCalendar.prototype = {
         // right hooks to use easier.
         var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                                   .getService(Components.interfaces.nsIIOService);
-        var channel = ioService.newChannelFromURI(fixupUri(this.mUri));
+        var channel = ioService.newChannelFromURI(this.mUri);
 
         if (channel instanceof Components.interfaces.nsIHttpChannel) {
             this.mHooks = new httpHooks();
@@ -168,7 +168,7 @@ calICSCalendar.prototype = {
         var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                                   .getService(Components.interfaces.nsIIOService);
 
-        var channel = ioService.newChannelFromURI(fixupUri(this.mUri));
+        var channel = ioService.newChannelFromURI(this.mUri);
         channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
         channel.notificationCallbacks = this;
 
@@ -363,8 +363,7 @@ calICSCalendar.prototype = {
                     var ioService = Components.classes
                         ["@mozilla.org/network/io-service;1"]
                         .getService(Components.interfaces.nsIIOService);
-                    var channel = ioService.newChannelFromURI(
-                        fixupUri(savedthis.mUri));
+                    var channel = ioService.newChannelFromURI(savedthis.mUri);
 
                     // Allow the hook to add things to the channel, like a
                     // header that checks etags
@@ -751,7 +750,7 @@ calICSCalendar.prototype = {
         // Now go download the remote file, and store it somewhere local.
         var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                                   .getService(CI.nsIIOService);
-        var channel = ioService.newChannelFromURI(fixupUri(this.mUri));
+        var channel = ioService.newChannelFromURI(this.mUri);
         channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
         channel.notificationCallbacks = this;
 
@@ -784,15 +783,6 @@ calICSCalendar.prototype = {
         return;
     }
 };
-
-function fixupUri(aUri) {
-    var uri = aUri;
-    if (uri.scheme == 'webcal')
-        uri.scheme = 'http';
-    if (uri.scheme == 'webcals')
-        uri.scheme = 'https';
-    return uri;
-}
 
 function calICSObserver(aCalendar) {
     this.mCalendar = aCalendar;
