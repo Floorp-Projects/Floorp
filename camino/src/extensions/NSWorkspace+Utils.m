@@ -78,7 +78,10 @@
 {
   NSArray* apps = nil;
   NSMutableSet* feedApps = [[[NSMutableSet alloc] init] autorelease]; 
-  [feedApps addObject:[self defaultFeedViewerIdentifier]];
+  NSString* defaultFeedViewerID = [self defaultFeedViewerIdentifier];
+  if (defaultFeedViewerID)
+    [feedApps addObject:defaultFeedViewerID];
+  
   _LSCopyApplicationURLsForItemURL([NSURL URLWithString:@"feed:"], kLSRolesViewer, &apps);
   [apps autorelease];
   
