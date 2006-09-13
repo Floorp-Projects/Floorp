@@ -354,6 +354,7 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
                                 backing:NSBackingStoreBuffered defer:NO];
     
     if (mWindowType == eWindowType_popup) {
+      [mWindow setAlphaValue:0.95];
       [mWindow setLevel:NSPopUpMenuWindowLevel];
       [mWindow setHasShadow:YES];
 
