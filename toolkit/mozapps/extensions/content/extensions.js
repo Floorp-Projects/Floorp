@@ -724,7 +724,16 @@ XPInstallDownloadManager.prototype = {
       case nsIXPIProgressDialog.DIALOG_CLOSE:
         // Sort on startup and anytime an add-on is installed or upgraded.
         gExtensionManager.sortTypeByProperty(nsIUpdateItem.TYPE_ADDON, "name", true);
-        updateGlobalCommands();
+        // XXXrstrong - installs may be made compatible after this notification
+        // see bug 351819
+        // For updates on startup always enable the continue button after the
+        // update has completed.
+        if (gUpdatesOnly) {
+          setElementDisabledByID("cmd_continue", false);
+          document.getElementById("continueDialogButton").focus();
+        }
+        else
+          updateGlobalCommands();
         break;
     }
   },
@@ -1326,42 +1335,29 @@ function updateGlobalCommands() {
   var disableInstallFile = false;
   var disableUpdateCheck = true;
   var disableInstallUpdate = true;
-  var disableAppRestart = false;
+  var disableAppRestart = true;
   if (gExtensionsView.hasAttribute("update-operation")) {
     disableInstallFile = true;
     disableAppRestart = true;
   }
   else {
     var children = gExtensionsView.children;
-    var appCanRestart = true;
-    var appNeedsRestart = false;
     for (var i = 0; i < children.length; ++i) {
       var child = children[i];
       if (disableUpdateCheck && child.getAttribute("updateable") == "true")
         disableUpdateCheck = false;
       if (disableInstallUpdate && child.getAttribute("availableUpdateURL") != "none")
         disableInstallUpdate = false;
-      if (appCanRestart && !appNeedsRestart && child.hasAttribute("state")) {
-        var state = child.getAttribute("state");
-        if (state == "success")
-          appNeedsRestart = true;
-        else if (state != "failure")
-          appCanRestart = false;
+      if (disableAppRestart && child.hasAttribute("state")) {
+        if (child.getAttribute("state") == "success")
+          disableAppRestart = false;
       }
-      if (!disableUpdateCheck && !disableInstallUpdate &&
-          !appCanRestart && appNeedsRestart)
-        break;
     }
-    disableAppRestart = !(appCanRestart && appNeedsRestart);
   }
   setElementDisabledByID("cmd_checkUpdatesAll", disableUpdateCheck);
   setElementDisabledByID("cmd_installUpdatesAll", disableInstallUpdate);
   setElementDisabledByID("cmd_restartApp", disableAppRestart);
   setElementDisabledByID("cmd_installFile", disableInstallFile);
-
-  var button = document.getElementById("continueDialogButton");
-  if (!button.hidden && !disableAppRestart)
-    button.focus();
 }
 
 function checkUpdatesAll() {
@@ -1417,11 +1413,6 @@ function installUpdatesAll() {
 
 function restartApp() {
   const nsIAppStartup = Components.interfaces.nsIAppStartup;
-
-  if (gUpdatesOnly) {
-    window.close();
-    return;
-  }
 
   // Notify all windows that an application quit has been requested.
   var os = Components.classes["@mozilla.org/observer-service;1"]

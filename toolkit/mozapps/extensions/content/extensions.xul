@@ -105,6 +105,7 @@
     <command id="cmd_checkUpdatesAll" oncommand="checkUpdatesAll();"/>
     <command id="cmd_installUpdatesAll" oncommand="installUpdatesAll();"/>
     <command id="cmd_restartApp" oncommand="restartApp();"/>
+    <command id="cmd_continue" oncommand="closeEM();" disabled="true"/>
     <command id="cmd_close" oncommand="closeEM();"/>
   </commandset>
 
@@ -217,7 +218,7 @@
       <button id="continueDialogButton" label="&cmd.continue.label;"
               accesskey="&cmd.continue.accesskey;"
               tooltiptext="&cmd.continue.tooltip;"
-              command="cmd_restartApp"/>
+              command="cmd_continue"/>
       <label id="getMore" class="text-link"
              onclick="openURL(this.getAttribute('getMoreURL'));"
              valuethemes="&getThemes.label;"
