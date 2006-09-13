@@ -7050,22 +7050,8 @@ nsHTMLEditRules::JoinNodesSmart( nsIDOMNode *aNodeLeft,
   if (NS_FAILED(res)) return res;
 
   // separate join rules for differing blocks
-  if (nsHTMLEditUtils::IsParagraph(aNodeLeft))
-  {
-    // for para's, merge deep & add a <br> after merging
-    res = mHTMLEditor->JoinNodeDeep(aNodeLeft, aNodeRight, aOutMergeParent, aOutMergeOffset);
-    if (NS_FAILED(res)) return res;
-    // now we need to insert a br.  
-    nsCOMPtr<nsIDOMNode> brNode;
-    res = mHTMLEditor->CreateBR(*aOutMergeParent, *aOutMergeOffset, address_of(brNode));
-    if (NS_FAILED(res)) return res;
-    res = nsEditor::GetNodeLocation(brNode, aOutMergeParent, aOutMergeOffset);
-    if (NS_FAILED(res)) return res;
-    (*aOutMergeOffset)++;
-    return res;
-  }
-  else if (nsHTMLEditUtils::IsList(aNodeLeft)
-           || mHTMLEditor->IsTextNode(aNodeLeft))
+  if (nsHTMLEditUtils::IsList(aNodeLeft) ||
+      mHTMLEditor->IsTextNode(aNodeLeft))
   {
     // for list's, merge shallow (wouldn't want to combine list items)
     res = mHTMLEditor->JoinNodes(aNodeLeft, aNodeRight, parent);
@@ -7085,10 +7071,11 @@ nsHTMLEditRules::JoinNodesSmart( nsIDOMNode *aNodeLeft,
     res = mHTMLEditor->JoinNodes(aNodeLeft, aNodeRight, parent);
     if (NS_FAILED(res)) return res;
 
-    if (lastLeft && firstRight && mHTMLEditor->NodesSameType(lastLeft, firstRight))
-    {
+    if (lastLeft && firstRight &&
+        mHTMLEditor->NodesSameType(lastLeft, firstRight) &&
+        (nsEditor::IsTextNode(lastLeft) ||
+         mHTMLEditor->mHTMLCSSUtils->ElementsSameStyle(lastLeft, firstRight)))
       return JoinNodesSmart(lastLeft, firstRight, aOutMergeParent, aOutMergeOffset);
-    }
   }
   return res;
 }
