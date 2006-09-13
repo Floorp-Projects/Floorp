@@ -491,6 +491,9 @@ NS_IMETHODIMP nsAddrDatabase::Open
       rv = aMabFile->GetLeafName(mabFileName);
       NS_ENSURE_SUCCESS(rv, rv);
       AlertAboutLockedMabFile(mabFileName.get());
+
+      // We just overwrote rv, so return the proper value here.
+      return NS_ERROR_FILE_ACCESS_DENIED;
     }
   }
   // try one more time
