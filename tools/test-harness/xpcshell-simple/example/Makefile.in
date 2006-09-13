@@ -36,6 +36,15 @@
 #
 # ***** END LICENSE BLOCK *****
 
+#
+# Makefile for installing and running xpcshell-based tests. You can use 
+# this file as template when creating tests for a new module. Don't 
+# forget to change the lines marked below. See 
+# http://developer.mozilla.org/en/docs/Writing_xpcshell-based_unit_tests
+# for detailed instructions.
+#
+
+# Note: DEPTH should be set to the relative path to mozilla/
 DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
@@ -43,6 +52,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# Note: set the test module's name to test_<yourmodule>
 MODULE		= test_harness_xpcshell_simple
 
 include $(topsrcdir)/config/rules.mk
@@ -52,5 +62,6 @@ _UNIT_FILES := $(wildcard $(srcdir)/unit/*.js)
 libs:: $(_UNIT_FILES)
 	$(INSTALL) $^ $(DIST)/bin/$(MODULE)
 
+# Note: Invoke any additional (non-xpcshell) test programs here.
 check::
 	$(RUN_TEST_PROGRAM) $(DIST)/bin/test_all.sh $(DIST)/bin/$(MODULE)
