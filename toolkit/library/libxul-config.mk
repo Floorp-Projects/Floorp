@@ -94,6 +94,7 @@ COMPONENT_LIBS += \
 	necko \
 	uconv \
 	i18n \
+	chardet \
 	jar$(VERSION_NUMBER) \
 	pref \
 	caps \

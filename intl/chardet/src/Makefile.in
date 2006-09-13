@@ -43,8 +43,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= chardet
-LIBRARY_NAME	= chardet_s
-FORCE_STATIC_LIB = 1
+LIBRARY_NAME	= chardet
+EXPORT_LIBRARY = 1
+IS_COMPONENT = 1
+MODULE_NAME = nsChardetModule
+GRE_MODULE = 1
 LIBXUL_LIBRARY  = 1
 
 REQUIRES	= xpcom \
@@ -68,6 +71,12 @@ CPPSRCS		= \
 		nsPSMDetectors.cpp \
 		nsCyrillicDetector.cpp \
 		nsDocumentCharsetInfo.cpp \
+		nsChardetModule.cpp \
 		$(NULL)
+
+EXTRA_DSO_LDOPTS = \
+	$(MOZ_UNICHARUTIL_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

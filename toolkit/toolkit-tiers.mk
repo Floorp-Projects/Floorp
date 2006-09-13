@@ -91,6 +91,7 @@ endif
 tier_gecko_dirs += \
 		js/src/xpconnect \
 		intl \
+		intl/chardet \
 		$(NULL)
 
 ifdef MOZ_ENABLE_XLIB

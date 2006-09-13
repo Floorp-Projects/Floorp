@@ -268,6 +268,7 @@
     MATHML_MODULES                           \
     MODULE(nsUConvModule)                    \
     MODULE(nsI18nModule)                     \
+    MODULE(nsChardetModule)                  \
     UNIVERSALCHARDET_MODULE                  \
     MODULE(necko)                            \
     PERMISSIONS_MODULES                      \

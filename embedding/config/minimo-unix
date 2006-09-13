@@ -107,6 +107,7 @@ components/intl.xpt
 components/locale.xpt
 components/libuconv.so
 components/libi18n.so
+components/libchardet.so
 components/uconv.xpt
 components/unicharutil.xpt
 
