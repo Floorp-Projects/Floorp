@@ -49,9 +49,5 @@ ifdef SUNCTL
 DIRS		+= ctl
 endif
 
-ifeq ($(OS_ARCH),WINNT)
-DIRS		+= compatibility
-endif
-
 include $(topsrcdir)/config/rules.mk
 

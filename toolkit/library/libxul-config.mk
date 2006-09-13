@@ -225,10 +225,6 @@ COMPONENT_LIBS += \
 	$(NULL)
 endif
 
-ifeq ($(OS_ARCH),WINNT)
-COMPONENT_LIBS += intlcmpt
-endif
-
 ifdef MOZ_MATHML
 COMPONENT_LIBS += ucvmath
 endif

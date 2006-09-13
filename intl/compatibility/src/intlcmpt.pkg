@@ -1,3 +1,0 @@
-[gecko]
-dist/bin/components/intlcmpt.dll
-!xpt dist/bin/components/intlcmpt.xpt
