@@ -150,7 +150,7 @@ nsFtpState::OnControlDataAvailable(const char *aData, PRUint32 aDataLen)
     buffer.Append(aData, aDataLen);
 
     const char* currLine = buffer.get();
-    while (*currLine) {
+    while (*currLine && mKeepRunning) {
         PRInt32 eolLength = strcspn(currLine, CRLF);
         PRInt32 currLineLength = strlen(currLine);
 
