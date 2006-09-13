@@ -1197,16 +1197,10 @@ NS_IMETHODIMP nsChildView::Invalidate(PRBool aIsSynchronous)
   if (!mView || !mVisible)
     return NS_OK;
 
+  [mView setNeedsDisplay:YES];
+
   if (aIsSynchronous) {
-    [mView display];
-  }
-  else if ([NSView focusView]) {
-    // if a view is focussed (i.e. being drawn), then postpone the invalidate so that we
-    // don't lose it.
-    [mView performSelector:@selector(setNeedsDisplayWithValue:) withObject:nil afterDelay:0];
-  }
-  else {
-    [mView setNeedsDisplay:YES];
+    [mView displayIfNeeded];
   }
 
   return NS_OK;
@@ -1225,16 +1219,10 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsRect &aRect, PRBool aIsSynchronous
   NSRect r;
   GeckoRectToNSRect(aRect, r);
   
+  [mView setNeedsDisplayInRect:r];
+
   if (aIsSynchronous) {
-    [mView displayRect:r];
-  }
-  else if ([NSView focusView]) {
-    // if a view is focussed (i.e. being drawn), then postpone the invalidate so that we
-    // don't lose it.
-    [mView performSelector:@selector(setNeedsDisplayWithValue:) withObject:[NSValue valueWithRect:r] afterDelay:0];
-  }
-  else {
-    [mView setNeedsDisplayInRect:r];
+    [mView displayIfNeeded];
   }
 
   return NS_OK;
