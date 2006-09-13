@@ -1319,8 +1319,22 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_GROUP:
                 cs = &js_CodeSpec[lastop];
-                if (cs->prec != 0 && cs->prec == js_CodeSpec[pc[1]].prec) {
-                    op = JSOP_NAME;     /* force parens */
+                if ((cs->prec != 0 && cs->prec == js_CodeSpec[pc[1]].prec) ||
+                    pc[1] == JSOP_PUSHOBJ) {
+                    /*
+                     * Force parens if this JSOP_GROUP forced re-association
+                     * against precedence, or if this is a call or constructor
+                     * expression.
+                     *
+                     * This is necessary to handle the operator new grammar,
+                     * by which new x(y).z means (new x(y))).z.  For example
+                     * new (x(y).z) must decompile with the constructor
+                     * parenthesized, but normal precedence has JSOP_GETPROP
+                     * (for the final .z) higher than JSOP_NEW.  In general,
+                     * if the call or constructor expression is parenthesized,
+                     * we preserve parens.
+                     */
+                    op = JSOP_NAME;
                     rval = POP_STR();
                     todo = SprintCString(&ss->sprinter, rval);
                 } else {
@@ -1512,6 +1526,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     break;
 
                   default:
+                    /* Turn off parens around a yield statement. */
+                    if (ss->opcodes[ss->top-1] == JSOP_YIELD)
+                        op = JSOP_NOP;
+
                     rval = POP_STR();
                     if (*rval != '\0') {
 #if JS_HAS_BLOCK_SCOPE
@@ -2269,32 +2287,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 LOCAL_ASSERT(ss->top >= 2);
                 (void) PopOff(ss, op);
 
-                /*
-                 * Get the callee's decompiled image in argv[0].  JSOP_NEW
-                 * has precedence 16, which is artificially low.  In the case
-                 * where the constructor is itself a call expression, pretend
-                 * op is JSOP_NAME (precedence 18, highest).  This causes the
-                 * call to be parenthesized.
-                 *
-                 * This means we'll overparenthesize in the following case
-                 *
-                 *   js> uneval(function () { new x.y(z).w })
-                 *   (function () {(new x.y(z)).w;})
-                 *
-                 * but not in any others (new x.y(z), new x.y, new (x(z))(w),
-                 * new (x(z)(w)), etc.).
-                 */
-                op = (saveop == JSOP_NEW &&
-                      ss->opcodes[ss->top-1] == JSOP_CALL)
-                     ? JSOP_NAME
-                     : saveop;
+                op = saveop;
                 argv[0] = JS_strdup(cx, POP_STR());
                 if (!argv[i])
                     ok = JS_FALSE;
 
                 lval = "(", rval = ")";
-                if (saveop == JSOP_NEW) {
-                    op = saveop;                /* in case it's JSOP_NAME */
+                if (op == JSOP_NEW) {
                     if (argc == 0)
                         lval = rval = "";
                     todo = Sprint(&ss->sprinter, "%s %s%s",
