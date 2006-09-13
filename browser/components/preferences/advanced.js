@@ -176,6 +176,18 @@ var gAdvancedPane = {
     return isNaN(intValue) ? 0 : intValue * 1000;
   },
 
+  /**
+   * Clears the cache.
+   */
+  clearCache: function ()
+  {
+    var cacheService = Components.classes["@mozilla.org/network/cache-service;1"]
+                         	       .getService(Components.interfaces.nsICacheService);
+    try {
+      cacheService.evictEntries(Components.interfaces.nsICache.STORE_ANYWHERE);
+    } catch(ex) {}
+  },
+
   // UPDATE TAB
 
   /*

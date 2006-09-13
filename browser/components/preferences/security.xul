@@ -152,6 +152,7 @@
       </hbox>
 
       <hbox id="showPasswordsBox">
+        <spacer flex="1"/>
         <button id="showPasswords"
                 label="&showPasswords.label;" accesskey="&showPasswords.accesskey;"
                 oncommand="gSecurityPane.showPasswords();"
