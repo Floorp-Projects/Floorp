@@ -285,14 +285,15 @@ interface nsIBrowserSearchService : nsISupports
             [retval, array, size_is(engineCount)] out nsISearchEngine engines);
 
   /**
-   * Moves a search engine.
+   * Moves a visible search engine.
    *
    * @param  engine
-   *         The engine to remove.
+   *         The engine to move.
    * @param  newIndex
-   *         The engine's new index.
+   *         The engine's new index in the set of visible engines.
    *
-   * @throws NS_ERROR_FAILURE if newIndex is out of bounds.
+   * @throws NS_ERROR_FAILURE if newIndex is out of bounds, or if engine is
+   *         hidden.
    */
   void moveEngine(in nsISearchEngine engine, in long newIndex);
 
