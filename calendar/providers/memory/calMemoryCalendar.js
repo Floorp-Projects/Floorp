@@ -444,8 +444,12 @@ calMemoryCalendar.prototype = {
                 else if (item.isCompleted && !itemNotCompletedFilter)
                     continue;
 
-                itemEndTime = itemStartTime = 
-                    item.entryDate ? item.entryDate.nativeTime : 0;
+                itemStartTime = (item.entryDate
+                                 ? item.entryDate.nativeTime
+                                 : START_OF_TIME);
+                itemEndTime = (item.dueDate
+                               ? item.dueDate.nativeTime
+                               : END_OF_TIME);
             } else {
                 // XXX unknown item type, wth do we do?
                 continue;
