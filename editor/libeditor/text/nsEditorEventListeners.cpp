@@ -150,7 +150,14 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
   {
     if (flags & nsIPlaintextEditor::eEditorReadonlyMask || 
         flags & nsIPlaintextEditor::eEditorDisabledMask) 
+    {
+      // consume backspace for disabled and readonly textfields, to prevent
+      // back in history, which could be confusing to users
+      if (keyCode == nsIDOMKeyEvent::DOM_VK_BACK_SPACE)
+        aKeyEvent->PreventDefault();
+
       return NS_OK;
+    }
   }
   else
     return NS_ERROR_FAILURE;  // Editor unable to handle this.
