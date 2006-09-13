@@ -44,7 +44,6 @@
 #include "nsHttpDigestAuth.h"
 #include "nsIHttpChannel.h"
 #include "nsIServiceManager.h"
-#include "nsISignatureVerifier.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIURI.h"
