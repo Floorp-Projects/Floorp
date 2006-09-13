@@ -756,14 +756,27 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
         break;
     }
 
-    fp = cx->fp;
+    /* Extend the current stack pool with gen->arena. */
     arena = cx->stackPool.current;
-    cx->stackPool.current = &gen->arena;
+    JS_ASSERT(!arena->next);
+    JS_ASSERT(!gen->arena.next);
+    JS_ASSERT(cx->stackPool.current != &gen->arena);
+    cx->stackPool.current = arena->next = &gen->arena;
+
+    /* Push gen->frame around the interpreter activation. */
+    fp = cx->fp;
     cx->fp = &gen->frame;
     gen->frame.down = fp;
     ok = js_Interpret(cx, gen->frame.pc, &junk);
     cx->fp = fp;
+    gen->frame.down = NULL;
+
+    /* Retract the stack pool and sanitize gen->arena. */
+    JS_ASSERT(!gen->arena.next);
+    JS_ASSERT(arena->next == &gen->arena);
+    JS_ASSERT(cx->stackPool.current == &gen->arena);
     cx->stackPool.current = arena;
+    arena->next = NULL;
 
     if (gen->frame.flags & JSFRAME_YIELDING) {
         /* Yield cannot fail, throw or be called on closing. */
