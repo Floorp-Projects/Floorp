@@ -954,27 +954,24 @@ nsMsgIncomingServer::StorePassword()
 NS_IMETHODIMP
 nsMsgIncomingServer::ForgetPassword()
 {
-    nsresult rv;
-
-    nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-
     nsXPIDLCString serverSpec;
-    rv = GetServerURI(getter_Copies(serverSpec));
+    nsresult rv = GetServerURI(getter_Copies(serverSpec));
     if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), serverSpec);
 
     //this is need to make sure wallet service has been created
     rv = CreateServicesForPasswordManager();
     NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr <nsIPasswordManager> passwordMgr = do_GetService(NS_PASSWORDMANAGER_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv) && passwordMgr)
+    {
+      // Get the current server URI
+      nsXPIDLCString currServerUri;
+      rv = GetServerURI(getter_Copies(currServerUri));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = observerService->NotifyObservers(uri, "login-failed", nsnull);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = SetPassword("");
-    return rv;
+      passwordMgr->RemoveUser(currServerUri, EmptyString());
+    }
+    return SetPassword("");
 }
 
 NS_IMETHODIMP
@@ -1910,7 +1907,8 @@ nsMsgIncomingServer::GetPasswordPromptRequired(PRBool *aPasswordIsRequired)
 NS_IMETHODIMP nsMsgIncomingServer::ConfigureTemporaryFilters(nsIMsgFilterList *aFilterList)
 {
   nsresult rv = ConfigureTemporaryReturnReceiptsFilter(aFilterList);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) // shut up warnings...
+    return rv;
   return ConfigureTemporaryServerSpamFilters(aFilterList);
 }
 
