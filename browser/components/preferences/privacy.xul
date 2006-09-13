@@ -50,6 +50,7 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <prefpane id="panePrivacy" onpaneload="gPrivacyPane.init();"
+            helpTopic="prefs-privacy"
             helpURI="chrome://browser/locale/help/help.rdf">
 
     <preferences id="privacyPreferences">
