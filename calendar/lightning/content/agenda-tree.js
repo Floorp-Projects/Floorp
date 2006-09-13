@@ -26,6 +26,7 @@
  *   Daniel Boelzle <daniel.boelzle@sun.com>
  *   gekacheka@yahoo.com
  *   richard@duif.net
+ *   Matthew Willis <mattwillis@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -185,7 +186,7 @@ function getCellText(row, column)
         }
         return "";
     }
-    var start = event.startDate || event.dueDate;
+    var start = event.startDate || event.dueDate || event.entryDate;
     start = start.getInTimezone(calendarDefaultTimezone());
     if (start.compare(this.tomorrow.end) == -1) {
         // time only for events on today and tomorrow
@@ -351,8 +352,11 @@ function calendarUpdateComplete()
 {
     [this.today, this.tomorrow, this.soon].forEach(function(when) {
         function compare(a, b) {
-            var ad = a.startDate || a.dueDate;
-            var bd = b.startDate || b.dueDate;
+            // The assumption is that tasks having a dueDate should be added
+            // to the agenda based on _that_, rather than entryDate, but tasks
+            // with an entryDate but no dueDate shouldn't be left out.
+            var ad = a.startDate || a.dueDate || a.entryDate;
+            var bd = b.startDate || b.dueDate || b.entryDate;
             return ad.compare(bd);
         }
         when.events.sort(compare);
