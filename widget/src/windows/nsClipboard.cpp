@@ -480,20 +480,20 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
 #ifndef WINCE
             case CF_DIB :
               {
-                HGLOBAL hGlobal = stm.hGlobal;
-                BYTE  * pGlobal = (BYTE  *) GlobalLock (hGlobal) ;
-                BITMAPV4HEADER * header = (BITMAPV4HEADER *)pGlobal;
-
-                nsImageFromClipboard converter ( header );
-                nsIImage* image;
-                converter.GetImage ( &image );   // addrefs for us, don't release
-                if ( image ) {
-                  *aData = image;
-                  *aLen = sizeof(nsIImage*);
-                  result = NS_OK;
+                PRUint32 allocLen = 0;
+                unsigned char * clipboardData;
+                nsresult rv = GetGlobalData(stm.hGlobal, (void **) &clipboardData, &allocLen);
+                if (NS_SUCCEEDED(rv))
+                {
+                  nsImageFromClipboard converter;
+                  nsIInputStream * inputStream;
+                  converter.GetEncodedImageStream (clipboardData,  &inputStream );   // addrefs for us, don't release
+                  if ( inputStream ) {
+                    *aData = inputStream;
+                    *aLen = sizeof(nsIInputStream*);
+                    result = NS_OK;
+                  }
                 }
-
-                GlobalUnlock (hGlobal) ;
               } break;
 
             case CF_HDROP : 
@@ -643,6 +643,7 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
             nsCOMPtr<nsILocalFile> file;
             if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, PR_FALSE, getter_AddRefs(file))) )
               genericDataWrapper = do_QueryInterface(file);
+            nsMemory::Free(data);
           }
         else if ( strcmp(flavorStr, kNativeHTMLMime) == 0) {
           // the editor folks want CF_HTML exactly as it's on the clipboard, no conversions,
@@ -651,7 +652,16 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
           if ( FindPlatformHTML(aDataObject, anIndex, &data, &dataLen) )
             nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
           else
+          {
+            nsMemory::Free(data);
             continue;     // something wrong with this flavor, keep looking for other data
+          }
+          nsMemory::Free(data);
+        }
+        else if ( strcmp(flavorStr, kJPEGImageMime) == 0) {
+          nsIInputStream * imageStream = NS_REINTERPRET_CAST(nsIInputStream*, data);
+          genericDataWrapper = do_QueryInterface(imageStream);
+          NS_IF_RELEASE(imageStream);
         }
         else {
           // we probably have some form of text. The DOM only wants LF, so convert from Win32 line 
@@ -661,12 +671,11 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
           dataLen = signedLen;
 
           nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
+          nsMemory::Free(data);
         }
         
         NS_ASSERTION ( genericDataWrapper, "About to put null data into the transferable" );
         aTransferable->SetTransferData(flavorStr, genericDataWrapper, dataLen);
-
-        nsMemory::Free(data);
         res = NS_OK;
 
         // we found one, get out of the loop
