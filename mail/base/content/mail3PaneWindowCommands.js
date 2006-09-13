@@ -1036,36 +1036,6 @@ function GetFolderNameFromUri(uri, tree)
 	return nameResult.Value;
 }
 
-/* XXX hiding the search bar while it is focus kills the keyboard so we focus the thread pane */
-function SearchBarToggled()
-{
-  var searchBox = document.getElementById('searchBox');
-  if (searchBox)
-  {
-    var attribValue = searchBox.getAttribute("hidden") ;
-    if (attribValue == "true")
-    {
-      /*come out of quick search view */
-      if (gDBView && gDBView.viewType == nsMsgViewType.eShowQuickSearchResults)
-        onClearSearch();
-    }
-    else
-    {
-      /*we have to initialize searchInput because we cannot do it when searchBox is hidden */
-      var searchInput = GetSearchInput();
-      searchInput.value="";
-    }
-  }
-
-  for (var currentNode = top.document.commandDispatcher.focusedElement; currentNode; currentNode = currentNode.parentNode) {
-    // But skip the last node, which is a XULDocument.
-    if ((currentNode instanceof XULElement) && currentNode.hidden) {
-      SetFocusThreadPane();
-      return;
-    }
-  }
-}
-
 function SwitchPaneFocus(event)
 {
   var folderTree = GetFolderTree();
