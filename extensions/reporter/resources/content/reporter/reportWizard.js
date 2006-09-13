@@ -134,6 +134,9 @@ function initForm() {
 
   // We don't let the user go forward until they fufill certain requirements - see validateform()
   reportWizard.canAdvance = false;
+
+  document.getElementById("problem_type").focus();
+
 }
 
 function validateForm() {
