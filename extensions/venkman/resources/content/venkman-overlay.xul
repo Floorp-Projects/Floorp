@@ -57,11 +57,11 @@
 <script src="chrome://venkman/content/venkman-overlay.js"/>
 
 <!--
-  This is the id that the menuitem will be appended to.  see tasksOverlay.xul
+  This is the id that the menuitem will be appended to. See tasksOverlay.xul
 -->
 <menupopup id="toolsPopup">
   <menuitem id="venkman-menu"  position="5" label="&venkmanCmd.label;"
-    accesskey="&venkmanCmd.akey;" oncommand="start_venkman()"/>
+    accesskey="&venkmanCmd.accesskey;" oncommand="start_venkman()"/>
 </menupopup>
 
 <!-- This is the overlay that adds a "JavaScript Debugger" button to the 

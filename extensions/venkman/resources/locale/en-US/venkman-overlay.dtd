@@ -37,10 +37,10 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY venkmanCmd.label				        "JavaScript Debugger">
-<!ENTITY venkmanCmd.akey				                   "D">
+<!ENTITY venkmanCmd.label     "JavaScript Debugger">
+<!ENTITY venkmanCmd.accesskey "D">
 
-<!ENTITY vnkButton.label   "JavaScript Debugger">
+<!ENTITY vnkButton.label      "JavaScript Debugger">
   
-<!ENTITY vnkMenu.label     "JavaScript Debugger">
-<!ENTITY vnkMenu.accesskey "J">
+<!ENTITY vnkMenu.label        "JavaScript Debugger">
+<!ENTITY vnkMenu.accesskey    "J">
