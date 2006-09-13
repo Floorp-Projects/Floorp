@@ -123,15 +123,20 @@ switch ($clean['updateVersion']) {
             $xml->setPatchLine($completePatch);
 
             // If available, pull update information from the build snippet.
-            // @TODO Add ability to set updateType.
             if ($completePatch->hasUpdateInfo()) {
                 $update->setVersion($completePatch->updateVersion);
                 $update->setExtensionVersion($completePatch->updateExtensionVersion);
                 $update->setBuild($completePatch->build);
             }
 
+            // If there is details url information, add it to the update object.
             if ($completePatch->hasDetailsUrl()) {
                 $update->setDetails($completePatch->detailsUrl);
+            }
+
+            // If we found an update type, pass it along.
+            if ($completePatch->hasUpdateType()) {
+                $update->setType($completePatch->updateType);
             }
         }
 

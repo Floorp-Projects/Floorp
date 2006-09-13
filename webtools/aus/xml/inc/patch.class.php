@@ -37,6 +37,9 @@
 //
 // ***** END LICENSE BLOCK *****
 
+define('DEFAULT_SNIPPET_SCHEMA_VER', 0);
+define('CURRENT_SNIPPET_SCHEMA_VER', 1);
+
 /**
  * AUS Patch class.
  * @package aus
@@ -123,7 +126,25 @@ class Patch extends AUS_Object {
      * @return boolean
      */
     function setSnippet ($path) {
-        if ($file = explode("\n",file_get_contents($path,true))) {
+
+        // Default to the old Schema type
+        $snippetSchemaVersion = DEFAULT_SNIPPET_SCHEMA_VER;
+
+        // Attempt to read the file.  Return false on failure, since there's nothing left to do.
+        if (!($file = explode("\n",file_get_contents($path,true)))) {
+            return false;
+        }
+
+        if (preg_match('/^version=(\d+)$/', $file[0], $matches)) {
+            $snippetSchemaVersion = $matches[1];
+        }
+
+        /**
+         * This is the "legacy" way of reading snippet files.  This will be phased out.
+         */
+        if (DEFAULT_SNIPPET_SCHEMA_VER == $snippetSchemaVersion) {
+
+            $this->setVar('version', DEFAULT_SNIPPET_SCHEMA_VER);
             $this->setVar('type',$file[0]);
             $this->setVar('url',$file[1]);
             $this->setVar('hashFunction',$file[2]);
@@ -132,22 +153,59 @@ class Patch extends AUS_Object {
             $this->setVar('build',$file[5]);
 
             // Attempt to read update information.
-            // @TODO Add ability to set updateType, once it exists in the build snippet.
             if ($this->isComplete() && isset($file[6]) && isset($file[7])) {
                 $this->setVar('updateVersion',$file[6],true);
                 $this->setVar('updateExtensionVersion',$file[7],true);
                 $this->setVar('hasUpdateInfo',true,true);
             }
             
+            // Pull updat emetadata if it exists, and the patch is a complete patch.
             if ($this->isComplete() && isset($file[8])) {
                 $this->setVar('detailsUrl',$file[8],true);
                 $this->setVar('hasDetailsUrl',true,true);
             }
             
             return true;
-        }
+        } 
+        
+        /**
+         * This is an attribute-driven build snippet schema.  Data will be in the form:
+         *      key=value
+         *      foo=bar
+         *      bar=foo
+         */
+        elseif (CURRENT_SNIPPET_SCHEMA_VER == $snippetSchemaVersion) {
 
-        return false;
+            // For each line in the file, read the key=value pairing.
+            //
+            // If the pairing is matches our expected schema format, set them appropriately.
+            foreach ($file as $row) {
+                if (preg_match('/^(\w+)=(.+)$/', $row, $matches)) {
+                    $snippetKey = $matches[1];
+                    $snippetValue = $matches[2];
+                    $this->setVar($snippetKey, $snippetValue, true);
+                }
+            }
+
+            // Store information found only in complete snippets.
+            // This information is tied to the <update> element.
+            if ($this->isComplete()) {
+                if (isset($this->appv) && isset($this->extv)) {
+                    $this->setVar('updateVersion', $this->appv, true);
+                    $this->setVar('updateExtensionVersion', $this->extv, true);
+                    $this->setVar('hasUpdateInfo', true, true);
+                }
+
+                if (isset($this->detailsUrl)) {
+                    $this->setVar('hasDetailsUrl', true, true);
+                }
+            }
+
+            return true;
+        } else {
+            error_log("Unknown snippet schema version: $snippetSchemaVersion");
+            return false;
+        }
     }
 
     /**
@@ -208,7 +266,6 @@ class Patch extends AUS_Object {
                 return true;
             }
         } 
-
 
         // Otherwise, check for the partial snippet info.  If an update exists, pass it along.
         if ($this->isPartial() && $this->isNightlyChannel($channel) && $this->setPath($product,$platform,$locale,$branchVersion,$build,2,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
@@ -311,6 +368,7 @@ class Patch extends AUS_Object {
 
     /**
      * Determine whether or not this patch has a details URL.
+     * @TODO Make this a bit more graceful, possibly join it with hasUpdateInfo, or find a better way.
      */
     function hasDetailsUrl() {
        return $this->hasDetailsUrl;
@@ -318,9 +376,17 @@ class Patch extends AUS_Object {
 
     /**
      * Determine whether or not this patch has update information.
+     * @TODO Make this a bit more graceful.
      */
     function hasUpdateInfo() {
        return $this->hasUpdateInfo;
+    }
+
+    /**
+     * Determine whether or not this patch has update type information.
+     */
+    function hasUpdateType() {
+        return isset($this->updateType);
     }
 
     /**
