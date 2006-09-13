@@ -54,7 +54,7 @@ function test()
   var f = function () { for ((let (x = 3) y)[5] in []) { } }
   actual = f + '';
   expect = 'function () {\n    for ((let (x = 3) y)[5] in []) {\n    }\n}';
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

@@ -50,18 +50,18 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
-  
+
   expect = 'function () {\nL:\n    3;\n}';
   var f = function() { L: 3; };
   actual = f.toString();
   writeLineToLog(f.toString());
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   expect = 'function () {\nL:\n    3;\n    alert(5);\n}';
   f = function() { L: 3; alert(5); }
   actual = f.toString();
   writeLineToLog(f.toString());
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

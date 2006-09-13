@@ -49,6 +49,6 @@ var f = function (tag) { return <><{tag}></{tag}></>; }
 expect = 'function (tag) {\n    return <><{tag}></{tag}></>;\n}';
 actual = f + '';
 
-TEST(1, expect, actual);
+compareSource(1, expect, actual);
 
 END();

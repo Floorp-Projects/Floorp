@@ -56,6 +56,6 @@ catch(ex)
     actual = ex + '';
 }
 
-TEST(1, expect, actual);
+compareSource(1, expect, actual);
 
 END();

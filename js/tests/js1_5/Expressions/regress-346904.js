@@ -62,12 +62,13 @@ function test()
   {
     f = eval('function () { return - --x; }');
     actual = f + '';
+    compareSource(expect, actual, summary);
   }
   catch(ex)
   {
     actual = ex + '';
+    reportCompare(expect, actual, summary);
   }
-  reportCompare(expect, actual, summary);
 
   // - -
   expect = 
@@ -78,12 +79,13 @@ function test()
   {
     f = eval('function () { return - - x; }');
     actual = f + '';
+    compareSource(expect, actual, summary);
   }
   catch(ex)
   {
     actual = ex + '';
+    reportCompare(expect, actual, summary);
   }
-  reportCompare(expect, actual, summary);
 
   // ---
   expect = 'SyntaxError';
@@ -91,12 +93,13 @@ function test()
   {
     f = eval('function () { return ---x; }');
     actual = f + '';
+    compareSource(expect, actual, summary);
   }
   catch(ex)
   {
     actual = ex.name;
+    reportCompare(expect, actual, summary);
   }
-  reportCompare(expect, actual, summary);
 
   // + ++
   expect = 
@@ -107,12 +110,13 @@ function test()
   {
     f = eval('function () { return + ++x; }');
     actual = f + '';
+    compareSource(expect, actual, summary);
   }
   catch(ex)
   {
     actual = ex + '';
+    reportCompare(expect, actual, summary);
   }
-  reportCompare(expect, actual, summary);
 
   // + +
   expect = 
@@ -123,12 +127,13 @@ function test()
   {
     f = eval('function () { return + + x; }');
     actual = f + '';
+    compareSource(expect, actual, summary);
   }
   catch(ex)
   {
     actual = ex + '';
+    reportCompare(expect, actual, summary);
   }
-  reportCompare(expect, actual, summary);
 
   // +++
  

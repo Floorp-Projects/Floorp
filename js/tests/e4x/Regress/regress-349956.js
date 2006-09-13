@@ -53,6 +53,6 @@ g = eval(f + '');
 expect = f + '';
 actual = g + '';
 
-TEST(1, expect, actual);
+compareSource(1, expect, actual);
 
 END();

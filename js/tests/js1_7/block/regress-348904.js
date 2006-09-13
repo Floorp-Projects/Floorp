@@ -50,16 +50,16 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
-  
+
   var f = function () { for (let i = 3 in {}); }
   actual = f + '';
   expect = 'function () {\n    for (let i in {}) {\n    }\n}';
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   var f = function () { for (let i = (y = 4) in {}); }
   actual = f + '';
   expect = 'function () {\n    y = 4;\n    for (let i in {}) {\n    }\n}';
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

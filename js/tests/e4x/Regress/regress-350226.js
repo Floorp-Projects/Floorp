@@ -48,6 +48,6 @@ var f = function () { <x/>[@[*]]; }
 expect = 'function () {\n    <x/>[@[*]];\n}';
 actual = f + '';
 
-TEST(1, expect, actual);
+compareSource(1, expect, actual);
 
 END();

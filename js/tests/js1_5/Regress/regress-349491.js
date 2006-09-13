@@ -66,12 +66,12 @@ function test()
   expect = 'function () {\n    const z = 3;\n}';
   a  = function () { const z = 3; z = 4; }
   actual = a.toString();
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   expect = 'function () {\n    const z = 3;\n}';
   a  = function () { const z = 3; 4; }
   actual = a.toString();
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

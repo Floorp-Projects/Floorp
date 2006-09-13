@@ -51,13 +51,11 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
-  reportCompare(expect, actual, summary);
-
   var f = function() { L: if (0) return 5 }
 
   expect = 'function () {\n    L: {\n    }\n}';
   actual = f + '';
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

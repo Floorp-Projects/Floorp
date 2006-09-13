@@ -51,5 +51,5 @@ var func = function ff() {
 actual = uneval(func);
 
 expect = '(function ff() {obj = {get foo () {return "foo";}};return 1;})';
-  
-reportCompare(expect, actual, summary);
+
+compareSource(expect, actual, summary);

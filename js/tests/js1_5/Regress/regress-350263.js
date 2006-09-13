@@ -56,7 +56,7 @@ function test()
   f = function () { L: if(1); }
   expect = 'function () {\n    L: {\n    }\n}';
   actual = f + '';
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

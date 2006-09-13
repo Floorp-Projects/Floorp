@@ -55,13 +55,13 @@ function test()
   var f = function() { export x; alert(5); };
   actual = f.toString();
   writeLineToLog(f.toString());
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   expect = 'function () {\n    import o.x;\n    alert(5);\n}';
   f = function () { import o.x; alert(5); }
   actual = f.toString();
   writeLineToLog(f.toString());
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

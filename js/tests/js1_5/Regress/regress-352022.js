@@ -50,12 +50,12 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
-  
+
   var f = function (){a[b] = (c, d)}
   actual = f + '';
   expect = 'function () {\n    a[b] = (c, d);\n}';
 
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

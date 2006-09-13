@@ -50,13 +50,13 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
-  
+
   var f;
   f = function() { new ((x=a))(y) }  
   expect = 'function () {\n    new (x = a)(y);\n}';
   actual = f + '';
 
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

@@ -53,4 +53,4 @@ actual = uneval(
 
 expect = '({get foo() {return "foo";}})';
   
-reportCompare(expect, actual, summary);
+compareSource(expect, actual, summary);

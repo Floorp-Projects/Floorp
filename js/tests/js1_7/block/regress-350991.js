@@ -51,10 +51,10 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
-  
+
   var f;
 
-  expect = 'function () {\n    for (let (y) 3;;) {\n    }\n}';
+  expect = 'function () {\n    for ((let (y) 3);;) {\n    }\n}';
   try
   {
     f = eval('function () { for ((let (y) 3); ;) { } }');
@@ -65,7 +65,7 @@ function test()
     actual = ex + '';
   }
 
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   expect = 'function () {\n    let x = 5;\n    while (x-- > 0) {\n' +
     '        for (let x = x, q = 5;;) {\n        }\n    }\n}';
@@ -79,7 +79,7 @@ function test()
     actual = ex + '';
   }
 
-  reportCompare(expect, actual, summary);
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }
