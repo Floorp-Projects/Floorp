@@ -2142,6 +2142,21 @@ MicrosummaryResource.prototype = {
     // XMLHttpRequest will handle the notifications we don't handle.
     request.channel.notificationCallbacks = this;
 
+    // If this is a bookmarked resource, and the bookmarks service recorded
+    // its charset in the bookmarks datastore the last time the user visited it,
+    // then specify the charset in the channel so XMLHttpRequest loads
+    // the resource correctly.
+    try {
+      var resolver = Cc["@mozilla.org/embeddor.implemented/bookmark-charset-resolver;1"].
+                     getService(Ci.nsICharsetResolver);
+      if (resolver) {
+        var charset = resolver.requestCharset(null, request.channel, {}, {});
+        if (charset != "");
+          request.channel.contentCharset = charset;
+      }
+    }
+    catch(ex) {}
+
     request.send(null);
   },
 
