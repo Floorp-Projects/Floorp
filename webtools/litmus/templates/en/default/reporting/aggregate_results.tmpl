@@ -25,8 +25,21 @@
   # ***** END LICENSE BLOCK *****
 #%]
 
-    <div id="footer">
-    Search test results: <a href="search_results.cgi?order_by_created=DESC&amp;timespan=all&amp;result_status=fail&amp;limit=50">Recent Failures</a> | <a href="search_results.cgi?order_by_created=DESC&amp;timespan=all&amp;result_status=unclear&amp;limit=50">Recently Unclear</a> | <a href="common_results.cgi?status=fail">Most Common Failures</a> | <a href="common_results.cgi?status=unclear">Testcases Most Frequently Marked As Unclear</a> | <a href="aggregate_results.cgi"> Testgroup Popularity</a><br/>Search testcases: <a href="show_test.cgi?recently=added">Recently Added</a> | <a href="show_test.cgi?recently=changed">Recently Changed</a>
-    </div>
+[% INCLUDE global/html_header.tmpl includeselects=1 %]
+[% INCLUDE global/litmus_header.tmpl %]
 
-    </div>
+<div id="page">
+
+[% INCLUDE sidebar/sidebar.tmpl %]
+
+  <div id="content">
+
+    <h1 class="firstHeading">[% title | html %]</h1>
+    [% INCLUDE reporting/aggregate_results_table.tmpl %]
+
+  </div> <!--END content-->
+
+</div> <!--END page-->
+
+[% INCLUDE global/litmus_footer.tmpl %]
+[% INCLUDE global/html_footer.tmpl %]
