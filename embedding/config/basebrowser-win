@@ -166,6 +166,7 @@ res\wincharset.properties
 
 ; required i18n libraries
 components\i18n.dll
+components\chardet.dll
 components\intl.xpt
 components\locale.xpt
 components\uconv.dll

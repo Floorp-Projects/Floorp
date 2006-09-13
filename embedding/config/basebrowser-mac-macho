@@ -184,6 +184,7 @@ components/shistory.xpt
 
 components/libuconv.dylib
 components/libi18n.dylib
+components/libchardet.dylib
 components/uconv.xpt
 components/unicharutil.xpt
 components/intl.xpt

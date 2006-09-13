@@ -55,7 +55,6 @@
 
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-#include "nsICharsetDetector.h"
 
 // just for CIDs
 #include "nsCharsetConverterManager.h"
@@ -354,7 +353,7 @@ nsCharsetConverterManager::GetEncoderList(nsIUTF8StringEnumerator ** aResult)
 NS_IMETHODIMP
 nsCharsetConverterManager::GetCharsetDetectorList(nsIUTF8StringEnumerator** aResult)
 {
-  return GetList(NS_LITERAL_CSTRING(NS_CHARSET_DETECTOR_CATEGORY),
+  return GetList(NS_LITERAL_CSTRING("charset-detectors"),
                  NS_LITERAL_CSTRING("chardet."), aResult);
 }
 

@@ -166,6 +166,7 @@ bin/components/libgfxps.so
 bin/components/libgfxxprint.so
 bin/components/libimglib2.so
 bin/components/libi18n.so
+bin/components/libchardet.so
 bin/components/libmork.so
 bin/components/libmozfind.so
 bin/components/liboji.so
