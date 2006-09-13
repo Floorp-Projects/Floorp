@@ -1283,6 +1283,7 @@ have_fun:
         /* All arguments must be contiguous, so we may have to copy actuals. */
         nalloc = nslots;
         limit = (jsval *) cx->stackPool.current->limit;
+        JS_ASSERT((jsval *) cx->stackPool.current->base <= sp && sp <= limit);
         if (sp + nslots > limit) {
             /* Hit end of arena: we have to copy argv[-2..(argc+nslots-1)]. */
             nalloc += 2 + argc;
