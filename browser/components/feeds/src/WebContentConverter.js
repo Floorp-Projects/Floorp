@@ -377,7 +377,7 @@ var WebContentConverterRegistrar = {
    * See nsIWebContentHandlerRegistrar
    */
   registerProtocolHandler: 
-  function WCCR_registerProtocolHandler(protocol, uri, title) {
+  function WCCR_registerProtocolHandler(protocol, uri, title, contentWindow) {
     // XXXben - for Firefox 2 we only support feed types
     return;
     
@@ -393,7 +393,7 @@ var WebContentConverterRegistrar = {
    * preferences.
    */
   registerContentHandler: 
-  function WCCR_registerContentHandler(contentType, uri, title) {
+  function WCCR_registerContentHandler(contentType, uri, title, contentWindow) {
     LOG("registerContentHandler(" + contentType + "," + uri + "," + title + ")");
     
     // XXXben - for Firefox 2 we only support feed types

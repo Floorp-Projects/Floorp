@@ -38,6 +38,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMWindow;
+
 /**
  * nsIWebContentHandlerRegistrar
  * 
@@ -49,18 +51,22 @@
  * can invoke it. 
  */
 
-[scriptable, uuid(5184749d-8b4c-4fa5-900e-fb84a08f196a)]
+[scriptable, uuid(e6a75410-c93e-42bf-84ca-a5c3ec34a2f1)]
 interface nsIWebContentHandlerRegistrar : nsISupports
 {
   /**
-   * Web Applications 1.0 Browser State: registerContentHandler
-   * Allows web services to register themselves as handlers for certain content
-   * types.
-   * http://whatwg.org/specs/web-apps/current-work/
-   * See also: nsIDOMClientInformation.idl
+   * See documentation in nsIDOMClientInformation.idl
+   * The additional contentWindow param for both methods represents the dom
+   * content window from which the method has been called.
    */
-  void registerContentHandler(in DOMString mimeType, in DOMString uri, in DOMString title);
-  void registerProtocolHandler(in DOMString protocol, in DOMString uri, in DOMString title);
+   void registerContentHandler(in DOMString mimeType,
+                               in DOMString uri,
+                               in DOMString title,
+                               in nsIDOMWindow contentWindow);
+   void registerProtocolHandler(in DOMString protocol,
+                                in DOMString uri,
+                                in DOMString title,
+                                in nsIDOMWindow contentWindow);
 };
 
 %{ C++
