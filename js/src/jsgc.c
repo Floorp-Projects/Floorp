@@ -1349,7 +1349,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
     thing->next = NULL;
     thing->flagp = NULL;
 #ifdef DEBUG_gchist
-    gchist[gchpos].lastDitch = triedGC;
+    gchist[gchpos].lastDitch = doGC;
     gchist[gchpos].freeList = &rt->gcArenaList[flindex];
     if (++gchpos == NGCHIST)
         gchpos = 0;
