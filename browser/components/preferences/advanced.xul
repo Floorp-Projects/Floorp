@@ -44,6 +44,8 @@
 %brandDTD;
 <!ENTITY % advancedDTD SYSTEM "chrome://browser/locale/preferences/advanced.dtd">
 %advancedDTD;
+<!ENTITY % privacyDTD SYSTEM "chrome://browser/locale/preferences/privacy.dtd">
+%privacyDTD;
 ]>
 
 <overlay id="AdvancedPaneOverlay"
@@ -205,7 +207,10 @@
                         onsyncfrompreference="return gAdvancedPane.readCacheSize();"
                         onsynctopreference="return gAdvancedPane.writeCacheSize();"
                         aaa:labelledby="cacheSizeBox"/>
-               <label>&useCacheAfter.label;</label>
+               <label flex="1">&useCacheAfter.label;</label>
+               <button id="clearCacheButton" icon="clear"
+                       label="&clearDataNow.label2;"
+                       oncommand="gAdvancedPane.clearCache();"/>
              </hbox>
            </groupbox>
         </tabpanel>
