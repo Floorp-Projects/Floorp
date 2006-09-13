@@ -57,6 +57,7 @@ var gCheckCompat      = true;
 var gUpdatesOnly      = false;
 var gAppID            = "";
 var gPref             = null;
+var gPriorityCount    = 0;
 
 const PREF_EM_CHECK_COMPATIBILITY           = "extensions.checkCompatibility";
 const PREF_EXTENSIONS_GETMORETHEMESURL      = "extensions.getMoreThemesURL";
@@ -101,6 +102,43 @@ function getExtensionString(key, strings) {
   if (strings)
     return gExtensionStrings.getFormattedString(key, strings);
   return gExtensionStrings.getString(key);
+}
+
+function MessageButton(aLabel, aAccesskey, aData) {
+  this.label = aLabel;
+  this.accessKey = aAccesskey;
+  this.data = aData || "addons-message-dismiss";
+}
+MessageButton.prototype = {
+  label: null,
+  accessKey: null,
+  data: null,
+
+  callback: function (aNotification, aButton) {
+    var os = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
+    os.notifyObservers(null, "addons-message-notification", aButton.data);
+    aNotification.close();
+    return true;
+  }
+};
+
+function showMessage(aIconURL, aMessage, aButtonLabel, aButtonAccesskey,
+                     aShowCloseButton, aNotifyData) {
+  var addonsMsg = document.getElementById("addonsMsg");
+  var buttons = null;
+  if (aButtonLabel)
+    buttons = [new MessageButton(aButtonLabel, aButtonAccesskey, aNotifyData)];
+  var oldMessage = addonsMsg.getNotificationWithValue(aMessage);
+  if (oldMessage)
+    addonsMsg.removeNotification(oldMessage);
+  if (addonsMsg.currentNotification)
+    gPriorityCount += 0.0001;
+  else
+    gPriorityCount = 0;
+  addonsMsg.appendNotification(aMessage, aMessage, aIconURL,
+                               addonsMsg.PRIORITY_WARNING_LOW + gPriorityCount,
+                               buttons).hideclose = !aShowCloseButton;
 }
 
 // dynamically creates a template
@@ -460,7 +498,7 @@ function flushDataSource()
 function noUpdatesDismiss(aEvent)
 {
   window.removeEventListener("command", noUpdatesDismiss, true);
-  if (aEvent.target.localName == "addonsmessage")
+  if (aEvent.target.localName == "notification")
     return;
 
   var children = gExtensionsView.children;
@@ -469,7 +507,7 @@ function noUpdatesDismiss(aEvent)
     if (child.hasAttribute("updateStatus"))
       child.removeAttribute("updateStatus");
   }
-  document.getElementById("addonsMsg").hideMessage();
+  document.getElementById("addonsMsg").removeCurrentNotification();
 }
 
 function setRestartMessage(aItem)
@@ -547,16 +585,14 @@ function Startup()
     var buttonLabel = getExtensionString("enableButtonLabel");
     var buttonAccesskey = getExtensionString("enableButtonAccesskey");
     var notifyData = "addons-enable-compatibility";
-    var addonsMsg = document.getElementById("addonsMsg");
-    addonsMsg.showMessage("chrome://mozapps/skin/extensions/question.png",
-                          msgText, buttonLabel, buttonAccesskey,
-                          true, notifyData);
+    showMessage("chrome://mozapps/skin/extensions/question.png",
+                msgText, buttonLabel, buttonAccesskey,
+                true, notifyData);
   }
   if (gInSafeMode) {
-    var addonsMsg = document.getElementById("addonsMsg");
-    addonsMsg.showMessage("chrome://mozapps/skin/extensions/question.png",
-                          getExtensionString("safeModeMsg"),
-                          null, null, true, null);
+    showMessage("chrome://mozapps/skin/extensions/question.png",
+                getExtensionString("safeModeMsg"),
+                null, null, true, null);
   }
 
   if ("arguments" in window) {
@@ -571,10 +607,9 @@ function Startup()
         document.getElementById("viewGroup").hidden = true;
         document.getElementById("extensionsView").setAttribute("norestart", "");
         showView("updates");
-        var addonsMsg = document.getElementById("addonsMsg");
-        addonsMsg.showMessage("chrome://mozapps/skin/extensions/question.png",
-                              getExtensionString("newUpdatesAvailableMsg"),
-                              null, null, true, null);
+        showMessage("chrome://mozapps/skin/extensions/question.png",
+                    getExtensionString("newUpdatesAvailableMsg"),
+                    null, null, true, null);
         document.title = getExtensionString("newUpdateWindowTitle", [getBrandShortName()]);
       }
     }
@@ -606,7 +641,8 @@ function Shutdown()
                      .getService(Components.interfaces.nsIObserverService);
   os.removeObserver(gAddonsMsgObserver, "addons-message-notification");
   os.removeObserver(gDownloadManager, "xpinstall-download-started");
-  if (document.getElementById("addonsMsg").notifyData == "addons-no-updates")
+  var currentNotification = document.getElementById("addonsMsg").currentNotification;
+  if (currentNotification && currentNotification.value == "addons-no-updates")
     window.removeEventListener("command", noUpdatesDismiss, true);
 }
 
@@ -843,10 +879,9 @@ UpdateCheckListener.prototype = {
     if (this._updateFound)
       showView("updates");
     else {
-      var addonsMsg = document.getElementById("addonsMsg");
-      addonsMsg.showMessage("chrome://mozapps/skin/extensions/question.png",
-                            getExtensionString("noUpdatesMsg"),
-                            null, null, true, "addons-no-updates");
+      showMessage("chrome://mozapps/skin/extensions/question.png",
+                  getExtensionString("noUpdatesMsg"),
+                  null, null, true, "addons-no-updates");
       window.addEventListener("command", noUpdatesDismiss, true);
     }
   },
@@ -1253,10 +1288,9 @@ function isXPInstallEnabled() {
   var buttonLabel = locked ? null : getExtensionString("enableButtonLabel");
   var buttonAccesskey = locked ? null : getExtensionString("enableButtonAccesskey");
   var notifyData = locked ? null : "addons-enable-xpinstall";
-  var addonsMsg = document.getElementById("addonsMsg");
-  addonsMsg.showMessage("chrome://mozapps/skin/extensions/question.png",
-                        msgText, buttonLabel, buttonAccesskey,
-                        !locked, notifyData);
+  showMessage("chrome://mozapps/skin/extensions/question.png",
+              msgText, buttonLabel, buttonAccesskey,
+              !locked, notifyData);
   return false;
 }
 
@@ -1264,12 +1298,11 @@ function isOffline(messageKey) {
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                             .getService(nsIIOService);
   if (ioService.offline) {
-    var addonsMsg = document.getElementById("addonsMsg");
-    addonsMsg.showMessage("chrome://mozapps/skin/extensions/question.png",
-                          getExtensionString(messageKey, [getBrandShortName()]),
-                          getExtensionString("goOnlineButtonLabel"),
-                          getExtensionString("goOnlineButtonAccesskey"),
-                          true, "addons-go-online");
+    showMessage("chrome://mozapps/skin/extensions/question.png",
+                getExtensionString(messageKey, [getBrandShortName()]),
+                getExtensionString("goOnlineButtonLabel"),
+                getExtensionString("goOnlineButtonAccesskey"),
+                true, "addons-go-online");
   }
   return ioService.offline;
 }
@@ -1391,10 +1424,8 @@ function installUpdatesAll() {
   if (!isXPInstallEnabled())
     return;
 
-  if (gUpdatesOnly) {
-    var addonsMsg = document.getElementById("addonsMsg");
-    addonsMsg.hideMessage();
-  }
+  if (gUpdatesOnly)
+    document.getElementById("addonsMsg").removeCurrentNotification();
 
   var items = [];
   var children = gExtensionsView.children;

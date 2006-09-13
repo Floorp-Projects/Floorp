@@ -163,33 +163,34 @@
       <spacer flex="1"/>
     </vbox>
   </stack>
-  <addonsmessage id="addonsMsg" hidden="true"/>
-  <hbox id="extensionsBox" flex="1">
-    <richlistbox id="extensionsView" flex="1" 
-                 datasources="rdf:null" context="addonContextMenu"
-                 ondragenter="nsDragAndDrop.dragEnter(event, gExtensionsDNDObserver);"
-                 ondragover="nsDragAndDrop.dragOver(event, gExtensionsDNDObserver);"
-                 ondragdrop="nsDragAndDrop.drop(event, gExtensionsDNDObserver);"
-                 ondblclick="onViewDoubleClick(event);"/>
+  <notificationbox id="addonsMsg" flex="1">
+    <hbox id="extensionsBox" flex="1">
+      <richlistbox id="extensionsView" flex="1" 
+                   datasources="rdf:null" context="addonContextMenu"
+                   ondragenter="nsDragAndDrop.dragEnter(event, gExtensionsDNDObserver);"
+                   ondragover="nsDragAndDrop.dragOver(event, gExtensionsDNDObserver);"
+                   ondragdrop="nsDragAndDrop.drop(event, gExtensionsDNDObserver);"
+                   ondblclick="onViewDoubleClick(event);"/>
 
-    <splitter id="themeSplitter" hidden="true" collapse="after" persist="state"/>
+      <splitter id="themeSplitter" hidden="true" collapse="after" persist="state"/>
 
-    <vbox id="themePreviewArea" hidden="true" width="220" persist="width">
-      <deck id="previewImageDeck" flex="1">
-        <vbox id="noThemeSelected" pack="center" align="center">
-          <label class="previewText">&previewNoThemeSelected.label;</label>
-        </vbox>
-        <vbox id="noPreviewImage" pack="center" align="center">
-          <label class="previewText">&previewNoPreviewImage.label;</label>
-        </vbox>
-        <vbox id="previewImageContainer" align="center" pack="center">
-          <description>
-            <image id="previewImage"/>
-          </description>
-        </vbox>
-      </deck>
-    </vbox>
-  </hbox>
+      <vbox id="themePreviewArea" hidden="true" width="220" persist="width">
+        <deck id="previewImageDeck" flex="1">
+          <vbox id="noThemeSelected" pack="center" align="center">
+            <label class="previewText">&previewNoThemeSelected.label;</label>
+          </vbox>
+          <vbox id="noPreviewImage" pack="center" align="center">
+            <label class="previewText">&previewNoPreviewImage.label;</label>
+          </vbox>
+          <vbox id="previewImageContainer" align="center" pack="center">
+            <description>
+              <image id="previewImage"/>
+            </description>
+          </vbox>
+        </deck>
+      </vbox>
+    </hbox>
+  </notificationbox>
   <vbox>
     <hbox id="commandBarBottom" align="center">
       <button id="installFileButton" label="&cmd.installLocalFile.label;"
