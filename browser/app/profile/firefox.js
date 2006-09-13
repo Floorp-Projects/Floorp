@@ -524,3 +524,11 @@ pref("browser.safebrowsing.provider.0.reportPhishURL", "http://{moz:locale}.phis
 // FAQ URL
 pref("browser.safebrowsing.warning.infoURL", "http://%LOCALE%.www.mozilla.com/%LOCALE%/firefox/phishing-protection/");
 #endif
+
+// defaults to true
+pref("browser.EULA.2.accepted", true);
+
+// if we rev the EULA again, we should bump this so users agree to the new EULA
+pref("browser.EULA.version", 2);
+
+

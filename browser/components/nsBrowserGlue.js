@@ -100,6 +100,23 @@ BrowserGlue.prototype = {
   // profile startup handler (contains profile initialization routines)
   _onProfileStartup: function() 
   {
+    // check to see if the EULA must be shown on startup
+    try {
+      var mustDisplayEULA = true;
+      var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                  .getService(Components.interfaces.nsIPrefBranch);
+      var EULAVersion = prefService.getIntPref("browser.EULA.version");
+      mustDisplayEULA = !prefService.getBoolPref("browser.EULA." + EULAVersion + ".accepted");
+    } catch(ex) {
+    }
+
+    if (mustDisplayEULA) {
+      var ww2 = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                         .getService(Components.interfaces.nsIWindowWatcher);
+      ww2.openWindow(null, "chrome://browser/content/EULA.xul", 
+                     "_blank", "chrome,centerscreen,modal,resizable=yes", null);
+    }
+
     this.Sanitizer.onStartup();
     // check if we're in safe mode
     var app = Components.classes["@mozilla.org/xre/app-info;1"].getService(Components.interfaces.nsIXULAppInfo)
