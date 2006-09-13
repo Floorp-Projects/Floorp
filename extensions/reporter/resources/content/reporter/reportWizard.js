@@ -244,6 +244,7 @@ function sendReport() {
     finishExtendedDoc.getElementById('emailStri').textContent       = emailStri;
 
     reportWizard.canRewind = false;
+
   } else {
     // If there was an error from the server
     finishExtendedSuccess.setAttribute("class", "hide");
@@ -261,8 +262,8 @@ function sendReport() {
     //finishExtendedDoc.getElementById('faultCode').textContent = gFaultCode;
     finishExtendedDoc.getElementById('faultMessage').textContent = gFaultMessage;
   }
+
   document.getElementById('finishExtendedFrame').collapsed = true;
-  reportWizard.canRewind = false;
   reportWizard.getButton("cancel").disabled = true;
 }
 
