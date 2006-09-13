@@ -2640,7 +2640,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                               : "%s[%s] %s= %s",
                               lval, xval,
                               (sn && SN_TYPE(sn) == SRC_ASSIGNOP)
-                                ? (lastop == JSOP_GETTER)
+                              ? (lastop == JSOP_GETTER)
                                 ? js_getter_str
                                 : (lastop == JSOP_SETTER)
                                 ? js_setter_str
