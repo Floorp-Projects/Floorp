@@ -54,6 +54,7 @@ REQUIRES	= \
 		htmlparser \
 		content \
 		uconv \
+		xpconnect \
 		$(NULL)
 
 CPPSRCS		= \

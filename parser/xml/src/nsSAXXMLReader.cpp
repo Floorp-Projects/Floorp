@@ -43,7 +43,9 @@
 #include "nsParserCIID.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
+#include "nsIScriptError.h"
 #include "nsSAXAttributes.h"
+#include "nsSAXLocator.h"
 #include "nsSAXXMLReader.h"
 
 #define XMLNS_URI "http://www.w3.org/2000/xmlns/"
@@ -163,6 +165,8 @@ nsSAXXMLReader::HandleStartDTD(const PRUnichar *aName,
                                const PRUnichar *aSystemId,
                                const PRUnichar *aPublicId)
 {
+  mSystemId = aSystemId;
+  mPublicId = aPublicId;
   if (mLexicalHandler) {
     return mLexicalHandler->StartDTD(nsDependentString(aName),
                                      nsDependentString(aSystemId),
@@ -298,10 +302,23 @@ nsSAXXMLReader::ReportError(const PRUnichar* aErrorText,
   // Normally, the expat driver should report the error.
   *_retval = PR_TRUE;
 
-  /// XXX need to settle what to do about the input setup, so I have
-  /// coherent values for the nsISAXLocator here. nsnull for now.
   if (mErrorHandler) {
-    nsresult rv = mErrorHandler->FatalError(nsnull, nsDependentString(aErrorText));
+    PRUint32 lineNumber;
+    nsresult rv = aError->GetLineNumber(&lineNumber);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRUint32 columnNumber;
+    rv = aError->GetColumnNumber(&columnNumber);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsISAXLocator> locator = new nsSAXLocator(mPublicId,
+                                                       mSystemId,
+                                                       lineNumber,
+                                                       columnNumber);
+    if (!locator)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = mErrorHandler->FatalError(locator, nsDependentString(aErrorText));
     if (NS_SUCCEEDED(rv)) {
       // The error handler has handled the script error.  Don't log to console.
       *_retval = PR_FALSE;
@@ -464,6 +481,15 @@ nsSAXXMLReader::ParseFromStream(nsIInputStream *aStream,
   rv = mListener->OnStartRequest(parserChannel, nsnull);
   if (NS_FAILED(rv))
     parserChannel->Cancel(rv);
+
+  /* When parsing a new document, we need to clear the XML identifiers.
+     HandleStartDTD will set these values from the DTD declaration tag.
+     We won't have them, of course, if there's a well-formedness error
+     before the DTD tag (such as a space before an XML declaration).
+   */
+  mSystemId.Truncate();
+  mPublicId.Truncate();
+
   nsresult status;
   parserChannel->GetStatus(&status);
   

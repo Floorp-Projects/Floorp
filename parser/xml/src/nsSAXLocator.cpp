@@ -39,7 +39,14 @@
 
 NS_IMPL_ISUPPORTS1(nsSAXLocator, nsISAXLocator)
 
-nsSAXLocator::nsSAXLocator() : mLineNumber(0), mColumnNumber(0)
+nsSAXLocator::nsSAXLocator(nsString& aPublicId,
+                           nsString& aSystemId,
+                           PRInt32 aLineNumber,
+                           PRInt32 aColumnNumber) :
+  mPublicId(aPublicId),
+  mSystemId(aSystemId),
+  mLineNumber(aLineNumber),
+  mColumnNumber(aColumnNumber)
 {
 }
 
@@ -68,33 +75,5 @@ NS_IMETHODIMP
 nsSAXLocator::GetSystemId(nsAString &aSystemId)
 {
   aSystemId = mSystemId;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXLocator::SetColumnNumber(PRInt32 aColumnNumber)
-{
-  mColumnNumber = aColumnNumber;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXLocator::SetLineNumber(PRInt32 aLineNumber)
-{
-  mLineNumber = aLineNumber;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXLocator::SetSystemId(const nsAString &aSystemId)
-{
-  mSystemId = aSystemId;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXLocator::SetPublicId(const nsAString &aPublicId)
-{
-  mPublicId = aPublicId;
   return NS_OK;
 }
