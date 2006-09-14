@@ -109,7 +109,7 @@ nsBrowserContentListener.prototype =
         return false;
     },
 
-    doContent: function(contentType, command, request, contentHandler)
+    doContent: function(contentType, isContentPrefered, request, contentHandler)
     {
         // forward the doContent to our content area webshell
         var docShell = this.contentWindow.docShell;
@@ -124,11 +124,11 @@ nsBrowserContentListener.prototype =
         
         if (!contentListener) return false;
         
-        return contentListener.doContent(contentType, command, request, contentHandler);
+        return contentListener.doContent(contentType, isContentPreferred, request, contentHandler);
         
     },
 
-    isPreferred: function(contentType, command, desiredContentType)
+    isPreferred: function(contentType, desiredContentType)
     {
         // seems like we should be getting this from helper apps or something
         switch(contentType) {
@@ -147,7 +147,7 @@ nsBrowserContentListener.prototype =
         }
         return false;
     },
-    canHandleContent: function(contentType, command, desiredContentType)
+    canHandleContent: function(contentType, isContentPreferred, desiredContentType)
     {
         var docShell = this.contentWindow.docShell;
         var contentListener;
@@ -159,7 +159,7 @@ nsBrowserContentListener.prototype =
         }
         if (!contentListener) return false;
         
-        return contentListener.canHandleContent(contentType, command, desiredContentType);
+        return contentListener.canHandleContent(contentType, isContentPreferred, desiredContentType);
     },
     convertWindowToDocShell: function(win) {
         // don't know how to do this
