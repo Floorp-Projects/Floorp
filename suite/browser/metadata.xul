@@ -20,6 +20,7 @@
    - 
    - Contributor(s):
    -   Jonas Sicking <sicking@bigfoot.com> (Original Author)
+   -   Gervase Markham <gerv@gerv.net>
    - 
    - Alternatively, the contents of this file may be used under the
    - terms of the GNU General Public License Version 2 or later (the
@@ -44,9 +45,8 @@
 ]>
  
 <window id="metadata"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        label="&caption.label;"
+        title="&caption.label;"
         onload="onLoad()"
         class="dialog"
         align="vertical"
@@ -56,28 +56,13 @@
   <script language="javascript" src="chrome://navigator/content/metadata.js"/>
 
   <stringbundle src="chrome://navigator/locale/metadata.properties" id="bundle_metadata"/>
+  <stringbundle src="chrome://global/locale/languageNames.properties" id="bundle_languages"/>
+  <stringbundle src="chrome://global/locale/regionNames.properties" id="bundle_regions"/>
 
-  <titledbox id="sec-document">
-    <label><text value="&sec-document.label;"/></label>
-    <grid>
-      <columns>
-        <column/>
-        <column flex="1"/>
-      </columns>
-      <rows>
-        <row id="document-url">
-          <text value="&document-url.label;" />
-          <text id="document-url-text" class="link" onclick="openLink(this)" value="" />
-        </row>
-        <row id="document-title">
-          <text value="&document-title.label;"/>
-          <text id="document-title-text" value=""/>
-        </row>
-      </rows>
-    </grid>
-  </titledbox>
-  <titledbox id="sec-link">
-    <label><text value="&sec-link.label;"/></label>
+  <text id="no-properties" value="&no-properties.label;"/>
+  
+  <titledbox id="link-sec">
+    <label><text value="&link-sec.label;"/></label>
     <grid>
       <columns>
         <column/>
@@ -85,34 +70,34 @@
       </columns>
       <rows>
         <row id="link-url">
-          <text value="&link-url.label;"/>
+          <text value="&link-url.label; "/>
           <text id="link-url-text" value="" class="link" onclick="openLink(this)"/>
         </row>
         <row id="link-target">
-          <text value="&link-target.label;"/>
+          <text value="&link-target.label; "/>
           <text id="link-target-text" value=""/>
         </row>
         <row id="link-type">
-          <text value="&link-type.label;"/>
+          <text value="&link-type.label; "/>
           <text id="link-type-text" value=""/>
         </row>
         <row id="link-lang">
-          <text value="&link-lang.label;"/>
+          <text value="&link-lang.label; "/>
           <text id="link-lang-text" value=""/>
         </row>
         <row id="link-rel">
-          <text value="&link-rel.label;"/>
+          <text value="&link-rel.label; "/>
           <text id="link-rel-text" value=""/>
         </row>
         <row id="link-rev">
-          <text value="&link-rev.label;"/>
+          <text value="&link-rev.label; "/>
           <text id="link-rev-text" value=""/>
         </row>
       </rows>
     </grid>
   </titledbox>
-  <titledbox id="sec-image">
-    <label><text value="&sec-image.label;"/></label>
+  <titledbox id="image-sec">
+    <label><text value="&image-sec.label;"/></label>
     <grid>
       <columns>
         <column/>
@@ -120,18 +105,18 @@
       </columns>
       <rows>
         <row id="image-url">
-          <text value="&image-url.label;"/>
+          <text value="&image-url.label; "/>
           <text id="image-url-text" value="" class="link" onclick="openLink(this)"/>
         </row>
         <row id="image-desc">
-          <text value="&image-desc.label;"/>
+          <text value="&image-desc.label; "/>
           <text id="image-desc-text" value="" class="link" onclick="openLink(this)"/>
         </row>
       </rows>
     </grid>
   </titledbox>
-  <titledbox id="sec-insdel">
-    <label><text value="&sec-insdel.label;"/></label>
+  <titledbox id="insdel-sec">
+    <label><text value="&insdel-sec.label;"/></label>
     <grid>
       <columns>
         <column/>
@@ -139,18 +124,18 @@
       </columns>
       <rows>
         <row id="insdel-cite">
-          <text value="&insdel-cite.label;"/>
+          <text value="&insdel-cite.label; "/>
           <text id="insdel-cite-text" value="" class="link" onclick="openLink(this)"/>
         </row>
         <row id="insdel-date">
-          <text value="&insdel-date.label;"/>
+          <text value="&insdel-date.label; "/>
           <text id="insdel-date-text" value=""/>
         </row>
       </rows>
     </grid>
   </titledbox>
-  <titledbox id="sec-quote">
-    <label><text value="&sec-quote.label;"/></label>
+  <titledbox id="quote-sec">
+    <label><text value="&quote-sec.label;"/></label>
     <grid>
       <columns>
         <column/>
@@ -158,14 +143,14 @@
       </columns>
       <rows>
         <row id="quote-cite">
-          <text value="&quote-cite.label;"/>
+          <text value="&quote-cite.label; "/>
           <text id="quote-cite-text" value="" class="link" onclick="openLink(this)"/>
         </row>
       </rows>
     </grid>
   </titledbox>
-  <titledbox id="sec-misc">
-    <label><text value="&sec-misc.label;"/></label>
+  <titledbox id="misc-sec" debug="true">
+    <label><text value="&misc-sec.label;"/></label>
     <grid>
       <columns>
         <column/>
@@ -173,15 +158,17 @@
       </columns>
       <rows>
         <row id="misc-lang">
-          <text value="&misc-lang.label;"/>
+          <text value="&misc-lang.label; "/>
           <text id="misc-lang-text" value=""/>
         </row>
         <row id="misc-title">
-          <text value="&misc-title.label;"/>
-          <html id="misc-title-text"/>
+          <text value="&misc-title.label; "/>
+          <box>
+          <html id="misc-title-text" width="100%" style="margin: 0px;"/>
+          </box>
         </row>
         <row id="misc-tblsummary">
-          <text value="&misc-tblsummary.label;"/>
+          <text value="&misc-tblsummary.label; "/>
           <text id="misc-tblsummary-text" value=""/>
         </row>
       </rows>
