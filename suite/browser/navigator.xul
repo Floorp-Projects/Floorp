@@ -373,8 +373,9 @@ Contributor(s): ______________________________________. -->
     <vbox id="sidebar-box" class="chromeclass-extrachrome"/>
     <splitter id="sidebar-splitter" class="chromeclass-extrachrome" />
   
+    <!-- we only need to handle |ondragdrop| because everything else is
+          taken care of by the builtin behavior inside the tabbrowser -->
     <vbox id="appcontent" flex="1"
-         ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
          ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
 
       <!-- this box is temporary, pending XBLified <browser> -->
@@ -382,14 +383,12 @@ Contributor(s): ______________________________________. -->
         <tabbrowser id="content"
                  flex="1" contenttooltip="aHTMLTooltip"
                  contentcontextmenu="contentAreaContextMenu"
-                 onclick="return contentAreaClick(event);"
-                 ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
+                 onclick="return contentAreaClick(event);"/>
       </hbox>
     </vbox>  
   </hbox>
 
   <statusbar id="status-bar" class="chromeclass-status"
-             ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
     <statusbarpanel id="component-bar"/>
     <statusbarpanel id="statusbar-display" label="&statusText.label;" flex="1"/>
