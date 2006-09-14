@@ -329,6 +329,7 @@ function onLoadPageInfo()
 }
 
 function doHelpButton() {
+  var helpdoc;
   var tabControl = document.getElementById("tabbox");
   switch (tabControl.selectedTab.id) {
     case "generalTab":
