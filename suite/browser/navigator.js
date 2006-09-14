@@ -2279,7 +2279,8 @@ function maybeInitPopupContext()
 function WindowIsClosing()
 {
   var browser = getBrowser();
-  var numtabs = browser.mTabContainer.childNodes.length;
+  var cn = browser.mTabContainer.childNodes;
+  var numtabs = cn.length;
   var reallyClose = true;
 
   if (numtabs > 1) {
@@ -2307,5 +2308,13 @@ function WindowIsClosing()
       }
     } //if the warn-me pref was true
   } //if multiple tabs are open
+
+  for (var i = 0; reallyClose && i < numtabs; ++i) {
+    var ds = browser.getBrowserForTab(cn[i]).docShell;
+  
+    if (ds.contentViewer && !ds.contentViewer.permitUnload())
+      reallyClose = false;
+  }
+
   return reallyClose;
 }
