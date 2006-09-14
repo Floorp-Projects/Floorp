@@ -371,7 +371,7 @@ Contributor(s): ______________________________________. -->
       <!-- this box is temporary, pending XBLified <browser> -->
       <box id="browser" flex="1">
         <browser context="context" type="content-primary" id="content"
-          src="about:blank" flex="1" tooltip="aHTMLTooltip"/>
+          src="about:blank" flex="1" tooltip="aHTMLTooltip" onmouseover="if (throbberElement) EnableBusyCursor(throbberElement.getAttribute('busy') == 'true')"/>
       </box>
       
       <statusbar id="status-bar" class="chromeclass-status"/>

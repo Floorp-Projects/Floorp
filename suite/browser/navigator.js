@@ -310,6 +310,7 @@ nsXULBrowserWindow.prototype =
       if (state & Components.interfaces.nsIWebProgressListener.flag_is_request) {
         totalRequests += 1;
       }
+      EnableBusyCursor(throbberElement.getAttribute("busy") == "true");
     }
     else if (state & Components.interfaces.nsIWebProgressListener.flag_stop) {
       if (state & Components.interfaces.nsIWebProgressListener.flag_is_request) {
@@ -337,6 +338,8 @@ nsXULBrowserWindow.prototype =
         // XXX: These need to be based on window activity...
         stopButton.setAttribute("disabled", true);
         stopMenu.setAttribute("disabled", true);
+
+        EnableBusyCursor(false);
       }
     }
     else if (state & Components.interfaces.nsIWebProgressListener.flag_transferring) {
@@ -1676,6 +1679,17 @@ function FillInHTMLTooltip ( tipElement )
   }
   
   return retVal;
+}
+
+function EnableBusyCursor(doEnable) {
+  if (doEnable) {
+    window.setCursor("spinning");
+    window._content.setCursor("spinning");
+  }
+  else {
+    window.setCursor("auto");
+    window._content.setCursor("auto");
+  }
 }
 
 
