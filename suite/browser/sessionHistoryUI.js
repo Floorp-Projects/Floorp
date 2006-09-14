@@ -262,7 +262,8 @@ function addToUrlbarHistory()
          var url = entryToAdd.Value;
          if (url.indexOf(" ") == -1) {
            var fixedUpURI = gURIFixup.createFixupURI(url, 0);
-           gGlobalHistory.markPageAsTyped(fixedUpURI.spec);
+           if (!fixedupURI.schemeIs("data"))
+             gGlobalHistory.markPageAsTyped(fixedUpURI.spec);
          }
        }
        catch(ex) {
