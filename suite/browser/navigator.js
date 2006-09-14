@@ -1424,7 +1424,13 @@ function handleURLBarRevert()
 
 function handleURLBarCommand(aUserAction, aTriggeringEvent)
 {
-  addToUrlbarHistory();
+  try { 
+    addToUrlbarHistory();
+  } catch (ex) {
+    // Things may go wrong when adding url to session history,
+    // but don't let that interfere with the loading of the url.
+  }
+  
   BrowserLoadURL(aTriggeringEvent); 
 }
 
