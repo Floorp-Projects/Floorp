@@ -578,7 +578,7 @@
 
       <menuseparator />
 
-      <menuitem label="Latest Builds" oncommand="loadURI('ftp://ftp.mozilla.org/pub/mozilla/nightly/latest/');"/>
+      <menuitem label="Latest Builds" oncommand="loadURI('http://ftp.mozilla.org/pub/mozilla.org/mozilla/nightly/latest/');"/>
     </menupopup>
   </menu>
 </menubar>
