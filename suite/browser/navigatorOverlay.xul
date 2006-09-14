@@ -502,9 +502,7 @@ END of Deprecated -->
     <statusbarpanel id="offline-status"/>
     <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0"/>
     <statusbarpanel id="statusbar-display" value="&statusText.label;" crop="right" flex="1"/>
-    <spring flex="2"/>
-    <statusbarpanel id="certificate-authority"/>
-    <statusbarpanel id="security-button"/> <!-- tooltip="aTooltip"/-->
+    <statusbarpanel id="security-button" tooltip="aTooltip"/>
   </statusbar>
 
 </overlay>
