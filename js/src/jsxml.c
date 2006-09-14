@@ -7962,9 +7962,9 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
 {
     JSBool ok, match;
     JSStackFrame *fp;
+    uint32 flags, i, n;
     JSObject *scobj, *listobj, *resobj, *withobj, *kidobj;
     JSXML *xml, *list, *result, *kid;
-    uint32 i, n;
 
     ok = js_EnterLocalRootScope(cx);
     if (!ok)
@@ -7973,7 +7973,8 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
     /* All control flow after this point must exit via label out or bad. */
     *vp = JSVAL_NULL;
     fp = cx->fp;
-    fp->flags |= JSFRAME_FILTERING;
+    flags = fp->flags;
+    fp->flags = flags | JSFRAME_FILTERING;
     scobj = js_GetScopeChain(cx, fp);
     withobj = NULL;
     if (!scobj)
@@ -8024,7 +8025,7 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
     *vp = OBJECT_TO_JSVAL(resobj);
 
 out:
-    fp->flags &= ~JSFRAME_FILTERING;
+    fp->flags = flags;
     if (withobj) {
         fp->scopeChain = scobj;
         JS_SetPrivate(cx, withobj, NULL);
