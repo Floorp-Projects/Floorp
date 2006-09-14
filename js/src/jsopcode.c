@@ -1154,6 +1154,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                          ? JSOP_GETARG
                          : (type == JOF_QVAR)
                          ? JSOP_GETVAR
+                         : (type == JOF_LOCAL)
+                         ? JSOP_GETLOCAL
                          : JSOP_NAME;
                 } else {
                     /*
