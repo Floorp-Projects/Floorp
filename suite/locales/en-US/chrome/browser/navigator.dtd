@@ -41,6 +41,9 @@
 <!ENTITY pasteCmd.label "Paste">
 <!ENTITY pasteCmd.accesskey "p">
 
+<!ENTITY captureCmd.label "Save Form Data">
+<!ENTITY prefillCmd.label "Prefill Form">
+
 <!ENTITY viewMenu.label "View">
 <!ENTITY viewMenu.accesskey "v">
 
