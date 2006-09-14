@@ -740,8 +740,10 @@ function Shutdown()
 
 function Translate()
 {
-  var service = pref.getCharPref("browser.translation.service");
-  var serviceDomain = pref.getCharPref("browser.translation.serviceDomain");
+  var service = pref.getComplexValue("browser.translation.service",
+                                     Components.interfaces.nsIPrefLocalizedString).data;
+  var serviceDomain = pref.getComplexValue("browser.translation.serviceDomain",
+                                           Components.interfaces.nsIPrefLocalizedString).data;
   var targetURI = getWebNavigation().currentURI.spec;
 
   // if we're already viewing a translated page, then just reload
