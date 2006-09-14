@@ -25,6 +25,9 @@ const pageLoaderIface = Components.interfaces.nsIWebPageDescriptor;
 var gBrowser = null;
 var gPrefs = null;
 
+var gLastLineFound = '';
+var gGoToLine = 0;
+
 try {
   var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefService);
@@ -50,12 +53,16 @@ function viewSource(url)
   if (!url)
     return false; // throw Components.results.NS_ERROR_FAILURE;
 
+  getBrowser().addEventListener("unload", onUnloadContent, true);
+  getBrowser().addEventListener("load", onLoadContent, true);
+
   var loadFromURL = true;
   //
   // Parse the 'arguments' supplied with the dialog.
   //    arg[0] - URL string.
   //    arg[1] - Charset value in the form 'charset=xxx'.
   //    arg[2] - Page descriptor used to load content from the cache.
+  //    arg[3] - Line number to go to.
   //
   if ("arguments" in window) {
     var arg;
@@ -76,6 +83,13 @@ function viewSource(url)
       } catch (ex) {
         // Ignore the failure and keep processing arguments...
       }
+    }
+    //
+    // Get any specified line to jump to.
+    //
+    if (window.arguments.length >= 4) {
+      arg = window.arguments[3];
+      gGoToLine = parseInt(arg);
     }
     //
     // Use the page descriptor to load the content from the cache (if
@@ -134,6 +148,27 @@ function viewSource(url)
   return true;
 }
 
+function onLoadContent()
+{
+  //
+  // If the view source was opened with a "go to line" argument.
+  //
+  if (gGoToLine > 0) {
+    goToLine(gGoToLine);
+    gGoToLine = 0;
+  }
+  document.getElementById('cmd_goToLine').removeAttribute('disabled');
+}
+
+function onUnloadContent()
+{
+  //
+  // Disable "go to line" while reloading due to e.g. change of charset
+  // or toggling of syntax highlighting.
+  //
+  document.getElementById('cmd_goToLine').setAttribute('disabled', 'true');
+}
+
 function ViewSourceClose()
 {
   window.close();
@@ -156,12 +191,170 @@ function ViewSourceSavePage()
   saveURL(url, null, "SaveLinkTitle");
 }
 
+function ViewSourceGoToLine()
+{
+  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+        .getService(Components.interfaces.nsIPromptService);
+  var viewSourceBundle = document.getElementById('viewSourceBundle');
+
+  var input = {value:gLastLineFound};
+  for (;;) {
+    var ok = promptService.prompt(
+        window,
+        viewSourceBundle.getString("goToLineTitle"),
+        viewSourceBundle.getString("goToLineText"),
+        input,
+        null,
+        {value:0});
+
+    if (!ok) return;
+
+    var line = parseInt(input.value);
+ 
+    if (!(line > 0)) {
+      promptService.alert(window,
+          viewSourceBundle.getString("invalidInputTitle"),
+          viewSourceBundle.getString("invalidInputText"));
+  
+      continue;
+    }
+
+    var found = goToLine(line);
+
+    if (found) {
+      break;
+    }
+
+    promptService.alert(window,
+        viewSourceBundle.getString("outOfRangeTitle"),
+        viewSourceBundle.getString("outOfRangeText"));
+  }
+}
+
+function goToLine(line)
+{
+  var viewsource = window._content.document.body;
+
+  //
+  // The source document is made up of a number of pre elements with
+  // id attributes in the format <pre id="line123">, meaning that
+  // the first line in the pre element is number 123.
+  // Do binary search to find the pre element containing the line.
+  //
+  var pre, curLine;
+  for (var lbound = 0, ubound = viewsource.childNodes.length; ; ) {
+    var middle = (lbound + ubound) >> 1;
+    pre = viewsource.childNodes[middle];
+
+    curLine = parseInt(pre.id.substring(4));
+
+    if (lbound == ubound - 1) {
+      break;
+    }
+
+    if (line >= curLine) {
+      lbound = middle;
+    } else {
+      ubound = middle;
+    }
+  }
+
+  var range = null;
+
+  //
+  // Walk through each of the text nodes and count newlines.
+  //
+  var treewalker = document.createTreeWalker(pre, NodeFilter.SHOW_TEXT, null, false);
+
+  for (var textNode = treewalker.firstChild();
+       textNode && curLine <= line + 1;
+       textNode = treewalker.nextNode()) {    
+
+    //
+    // \r is not a valid character in the DOM, so we only check for \n.
+    //
+    var lineArray = textNode.data.split(/\n/);
+    var lastLineInNode = curLine + lineArray.length - 1;
+    if (lastLineInNode < line) {
+      curLine = lastLineInNode;
+      continue;
+    }
+
+    for (var i = 0, curPos = 0; 
+         i < lineArray.length;
+         curPos += lineArray[i++].length + 1) {
+
+      if (i > 0) {
+        curLine++;
+      }
+
+      if (curLine == line && !range) {
+        range = document.createRange();
+        range.setStart(textNode, curPos);
+
+        //
+        // This will always be overridden later, except when we look for
+        // the very last line in the file (this is the only line that does 
+        // not end with \n).
+        //
+        range.setEndAfter(pre.lastChild);
+
+      } else if (curLine == line + 1) {
+        range.setEnd(textNode, curPos);
+        curLine++;
+        break;
+      }
+    }
+  }
+
+  if (!range) {
+    return false;
+  }
+
+  var selection = window._content.getSelection();
+  selection.removeAllRanges();
+
+  var selCon = getBrowser().docShell
+    .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+    .getInterface(Components.interfaces.nsISelectionDisplay)
+    .QueryInterface(Components.interfaces.nsISelectionController);
+
+  selCon.setDisplaySelection(
+    Components.interfaces.nsISelectionController.SELECTION_ON);
+
+  selCon.setCaretEnabled(true);
+
+  // In our case, the range's startOffset is after "\n" on the previous line.
+  // Set "hintright" to tune the selection at the beginning of the next line.
+  selection.QueryInterface(Components.interfaces.nsISelectionPrivate)
+    .interlinePosition = true;	
+
+  selection.addRange(range);
+
+  // If it is a blank line, collapse to make the caret show up.
+  // (work-around to bug 156175)
+  if (range.endContainer == range.startContainer &&
+      range.endOffset - range.startOffset == 1) {
+    // note: by construction, there is just a "\n" in-bewteen
+    selection.collapseToStart();
+  }
+
+  // Scroll the beginning of the line into view.
+  selCon.scrollSelectionIntoView(
+    Components.interfaces.nsISelectionController.SELECTION_NORMAL,
+    Components.interfaces.nsISelectionController.SELECTION_ANCHOR_REGION,
+    true);
+
+  gLastLineFound = line;
+
+  return true;
+}
+
 //function to toggle long-line wrapping and set the view_source.wrap_long_lines 
 //pref to persist the last state
 function wrapLongLines()
 {
-  //get the first pre tag which surrounds the entire viewsource content
-  var myWrap = window._content.document.getElementById('viewsource');
+  var myWrap = window._content.document.body;
 
   if (myWrap.className == '')
     myWrap.className = 'wrap';
