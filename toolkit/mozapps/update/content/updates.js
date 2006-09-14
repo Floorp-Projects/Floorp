@@ -644,6 +644,15 @@ var gUpdatesAvailablePage = {
    * Initialize.
    */
   onPageShow: function() {
+    // disable the "next" button, as we don't want the user to
+    // be able to progress with the update util we show them the details
+    // which might include a warning about incompatible add-ons
+    // disable the "back" button, as well (note the call to setButtons()
+    // below does this, too).  This just leaves the cancel button
+    // until we are ready
+    gUpdates.wiz.getButton("next").disabled = true;
+    gUpdates.wiz.getButton("back").disabled = true;
+
     var updateName = gUpdates.strings.getFormattedString("updateName", 
       [gUpdates.brandName, gUpdates.update.version]);
     if (gUpdates.update.channel == "nightly")
@@ -706,11 +715,8 @@ var gUpdatesAvailablePage = {
       this._incompatibleItems = items;
     }
     
-    // If we were invoked from a background update check, automatically show 
-    // the additional details the user may need to make this decision since 
-    // they did not consciously make the decision to check. 
-    // if (gUpdates.sourceEvent == SRCEVT_BACKGROUND)
-    // This is ridiculous... always show the additional info.
+    // wait to show the additional details until after we do the check
+    // for add-on incompatibilty
     this.onShowMoreDetails();
 
     var licenseAccepted;
@@ -1156,6 +1162,7 @@ var gDownloadingPage = {
       return;
     }
     
+    try {
     // Say that this was a foreground download, not a background download, 
     // since the user cared enough to look in on this process.
     gUpdates.update.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
@@ -1182,6 +1189,10 @@ var gDownloadingPage = {
 
     var link = document.getElementById("detailsLink");
     link.href = gUpdates.update.detailsURL;
+    }
+    catch(ex) {
+      LOG("UI:DownloadingPage", "onPageShow: " + ex);
+    }
 
     gUpdates.setButtons(null, true, null, true, null, true, "hideButton",
                         false, false, null, false, null, false);
