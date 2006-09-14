@@ -61,6 +61,8 @@
 <!ENTITY ldb.RunBaselineMenu.accesskey "B">
 <!ENTITY ldb.RunVerifyMenu.label "Run Verify">
 <!ENTITY ldb.RunVerifyMenu.accesskey "V">
+<!ENTITY ldb.RegressionPrintMode.label "Print Mode">
+<!ENTITY ldb.RegressionPrintMode.accesskey "P">
 <!ENTITY ldb.AddNewList.label "Add New List...">
 <!ENTITY ldb.AddNewList.accesskey "A">
 <!ENTITY ldb.RemoveListMenu.label "Remove List">
