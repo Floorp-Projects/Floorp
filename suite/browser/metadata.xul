@@ -71,7 +71,7 @@
       <rows>
         <row id="link-url">
           <text value="&link-url.label; "/>
-          <text id="link-url-text" value="" class="link" onclick="openLink(this)"/>
+          <text id="link-url-text" value="" class="text-link" onclick="openLink(this)"/>
         </row>
         <row id="link-target">
           <text value="&link-target.label; "/>
@@ -106,11 +106,11 @@
       <rows>
         <row id="image-url">
           <text value="&image-url.label; "/>
-          <text id="image-url-text" value="" class="link" onclick="openLink(this)"/>
+          <text id="image-url-text" value="" class="text-link" onclick="openLink(this)"/>
         </row>
         <row id="image-desc">
           <text value="&image-desc.label; "/>
-          <text id="image-desc-text" value="" class="link" onclick="openLink(this)"/>
+          <text id="image-desc-text" value="" class="text-link" onclick="openLink(this)"/>
         </row>
       </rows>
     </grid>
@@ -125,7 +125,7 @@
       <rows>
         <row id="insdel-cite">
           <text value="&insdel-cite.label; "/>
-          <text id="insdel-cite-text" value="" class="link" onclick="openLink(this)"/>
+          <text id="insdel-cite-text" value="" class="text-link" onclick="openLink(this)"/>
         </row>
         <row id="insdel-date">
           <text value="&insdel-date.label; "/>
@@ -144,7 +144,7 @@
       <rows>
         <row id="quote-cite">
           <text value="&quote-cite.label; "/>
-          <text id="quote-cite-text" value="" class="link" onclick="openLink(this)"/>
+          <text id="quote-cite-text" value="" class="text-link" onclick="openLink(this)"/>
         </row>
       </rows>
     </grid>
