@@ -125,33 +125,57 @@ function createUBHistoryMenu( aParent )
   }
 
 function addToUrlbarHistory()
-  {
+{
 	var urlToAdd = gURLBar.value;
 	if (!urlToAdd)
 	   return;
 	if (localstore) {
-    var entries = rdfc.MakeSeq(localstore, rdf.GetResource("nc:urlbar-history"));
-	var entry = rdf.GetLiteral(urlToAdd);
-    var index = entries.IndexOf(entry);
+       var entries = rdfc.MakeSeq(localstore, rdf.GetResource("nc:urlbar-history"));
+       if (!entries)
+          return;       
+       var elements = entries.GetElements();
+       if (!elements)
+          return;         
+       var index = 0;
+       // create the nsIURI objects for comparing the 2 urls
+       var uriToAdd = Components.classes["@mozilla.org/network/standard-url;1"]
+                            .createInstance(Components.interfaces.nsIURI);
+       uriToAdd.spec = urlToAdd;
+       //dump("** URL entered = " + urlToAdd + "\n");
+       var rdfUri = Components.classes["@mozilla.org/network/standard-url;1"]
+                          .createInstance(Components.interfaces.nsIURI); 
+       while(elements.hasMoreElements()) {
+          entry = elements.getNext();
+          if (entry) {
+             index ++;
+             entry= entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
+             var rdfValue = entry.Value;             
+             //dump("**** value obtained from RDF " + rdfValue + "\n");
+             rdfUri.spec = rdfValue;
+             if (rdfUri.equals(uriToAdd)) {
+                 // URI already present in the database
+                 // Remove it from its current position.
+                 // It is inserted to the top after the while loop.
+                 //dump("*** URL are the same \n");
+                 entries.RemoveElementAt(index, true);
+                 break;                 
+             }             
+          }    
+       }   // while     
 
-    if (index != -1) {
-      // we've got it already. Remove it from its old place
-      // and insert it to the top
-      //dump("URL already in urlbar history\n");
-      entries.RemoveElementAt(index, true);
-    }
+       var entry = rdf.GetLiteral(urlToAdd);
+       // Otherwise, we've got a new URL in town. Add it!
+       // Put the value as it was typed by the user in to RDF
+       // Insert it to the beginning of the list.
+       entries.InsertElementAt(entry, 1, true);
 
-    // Otherwise, we've got a new URL in town. Add it!
-    // Put the new entry at the front of the list.
-    entries.InsertElementAt(entry, 1, true);
-
-    // Remove any expired history items so that we don't let this grow
-    // without bound.
-    for (index = entries.GetCount(); index > MAX_HISTORY_ITEMS; --index) {
-      entries.RemoveElementAt(index, true);
-    }
-  }
-  }
+       // Remove any expired history items so that we don't let 
+       // this grow without bound.
+       for (index = entries.GetCount(); index > MAX_HISTORY_ITEMS; --index) {
+           entries.RemoveElementAt(index, true);
+        }  // for
+   }  // localstore
+}
  
 function createMenuItem( aParent, aIndex, aValue)
   {
