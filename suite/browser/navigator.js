@@ -416,7 +416,8 @@ function UpdateHistory(event)
    //  dump("UpdateHistory: content's location is '" + window.content.location.href + "',\n");
     //dump("                         title is '" + window.content.document.title + "'\n");
 
-	if (window.content.location.href && window.content.location.href != "")
+	if ((window.content.location.href) && (window.content.location.href != "")
+		&& (event.target.toString().indexOf("HTMLDocument") >= 0))
 	{
 		try
 		{
@@ -457,7 +458,8 @@ function savePage( url ) {
 
 function UpdateBookmarksLastVisitedDate(event)
 {
-	if (window.content.location.href && window.content.location.href != "")
+	if ((window.content.location.href) && (window.content.location.href != "")
+		&& (event.target.toString().indexOf("HTMLDocument") >= 0))
 	{
 		try
 		{
@@ -477,16 +479,24 @@ function UpdateBookmarksLastVisitedDate(event)
 
 function UpdateInternetSearchResults(event)
 {
-	if (window.content.location.href && window.content.location.href != "")
+	if ((window.content.location.href) && (window.content.location.href != "")
+		&& (event.target.toString().indexOf("HTMLDocument") >= 0))
 	{
+		var	searchInProgressFlag = false;
+
 		try
 		{
 			var search = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
 			if (search)	search = search.QueryInterface(Components.interfaces.nsIInternetSearchService);
-			if (search)	search.FindInternetSearchResults(window.content.location.href);
+			if (search)	searchInProgressFlag = search.FindInternetSearchResults(window.content.location.href);
 		}
 		catch(ex)
 		{
+		}
+
+		if (searchInProgressFlag == true)
+		{
+			RevealSearchPanel();
 		}
 	}
 }
@@ -881,6 +891,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 	var searchEngineURI = null;
 	var autoOpenSearchPanel = false;
 	var defaultSearchURL = null;
+
 	try
 	{
 		searchMode = pref.GetIntPref("browser.search.powermode");
@@ -930,41 +941,46 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 		window.content.location.href = defaultSearchURL;
 	}
 
-	// rjc Note: the following is all a hack until the sidebar has appropriate APIs
-	// to check whether its shown/hidden, open/closed, and can show a particular panel
-
 	// should we try and open up the sidebar to show the "Search Results" panel?
 	if (autoOpenSearchPanel == true)
 	{
-		var sidebar = document.getElementById('sidebar-box');
-		var sidebar_splitter = document.getElementById('sidebar-splitter');
-		var searchPanel = document.getElementById("urn:sidebar:panel:search");
+		RevealSearchPanel();
+	}
+}
 
-		if (sidebar && sidebar_splitter && searchPanel)
+function RevealSearchPanel()
+{
+	// rjc Note: the following is all a hack until the sidebar has appropriate APIs
+	// to check whether its shown/hidden, open/closed, and can show a particular panel
+
+	var sidebar = document.getElementById("sidebar-box");
+	var sidebar_splitter = document.getElementById("sidebar-splitter");
+	var searchPanel = document.getElementById("urn:sidebar:panel:search");
+
+	if (sidebar && sidebar_splitter && searchPanel)
+	{
+		var is_hidden = sidebar.getAttribute("hidden");
+		if (is_hidden && is_hidden == "true")
 		{
-			var is_hidden = sidebar.getAttribute('hidden');
-			if (is_hidden && is_hidden == "true")
+		 	{
+				sidebarShowHide();
+		 	}
+		}
+		var sidebar_style = sidebar.getAttribute("style");
+		if (sidebar_style)
+		{
+			var visibility = sidebar_style.match("visibility:([^;]*)")
+			if (visibility)
 			{
-			 	{
-					sidebarShowHide();
-			 	}
-			}
-			var sidebar_style = sidebar.getAttribute("style");
-			if (sidebar_style)
-			{
-				var visibility = sidebar_style.match('visibility:([^;]*)')
-				if (visibility)
+				visibility = visibility[1];
+				if (visibility.indexOf("collapse") >= 0)
 				{
-					visibility = visibility[1];
-					if (visibility.indexOf("collapse") >= 0)
-					{
-						sidebar.removeAttribute("style");
-						sidebar.setAttribute("style", "width:100%; height:100%; hidden:false; visibility:show;");
-					}
+					sidebar.removeAttribute("style");
+					sidebar.setAttribute("style", "width:100%; height:100%; hidden:false; visibility:show;");
 				}
 			}
-			sidebarOpenClosePanel(searchPanel);
 		}
+		sidebarOpenClosePanel(searchPanel);
 	}
 }
 
