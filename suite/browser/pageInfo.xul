@@ -18,7 +18,7 @@
 
  The Initial Developer of the Original Code is
  Netscape Communications Corporation.
- Portions created by the Initial Developer are Copyright (C) 1998-1999
+ Portions created by the Initial Developer are Copyright (C) 1998-2004
  the Initial Developer. All Rights Reserved.
 
  Contributor(s):
@@ -26,6 +26,7 @@
    Chris McAfee <mcafee@netscape.com>
    Daniel Brooks <db48x@yahoo.com>
    Gervase Markham <gerv@gerv.net>
+   Florian QUEZE <f.qu@laposte.net>
 
  Alternatively, the contents of this file may be used under the terms of
  either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -43,25 +44,19 @@
 
 <?xml-stylesheet href="chrome://navigator/skin/pageInfo.css" type="text/css"?>
 
-<!DOCTYPE dialog [
-  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
-  %brandDTD;
-  <!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd">
-  %navigatorDTD;
+<!DOCTYPE window [
   <!ENTITY % pageInfoDTD SYSTEM "chrome://navigator/locale/pageInfo.dtd">
   %pageInfoDTD;
 ]>
 
-<dialog id="main-window"
+<window id="main-window"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   windowtype="Browser:page-info"
   onload="onLoadPageInfo()"
   align="stretch"
   screenX="10" screenY="10"
   width="&pageInfoWindow.width;" height="&pageInfoWindow.height;"
-  persist="screenX screenY width height sizemode"
-  buttons="help"
-  ondialoghelp="doHelpButton();">
+  persist="screenX screenY width height sizemode">
 
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
@@ -69,23 +64,38 @@
   <script type="application/x-javascript" src="chrome://global/content/XPCNativeWrapper.js"/>
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
-  <keyset>
-    <key id="closeWindow" key="&closeWindow.key;" modifiers="accel"
-         oncommand="window.close();"/>
-    <key id="copy" key="&copy.key;" modifiers="accel"
-         oncommand="doCopy(event);"/>
-  </keyset>
-
   <stringbundle id="pageinfobundle" src="chrome://navigator/locale/pageInfo.properties"/>
 
-  <tabbox id="tabbox" flex="1">
+  <commandset>
+    <command id="cmd_close"     oncommand="window.close();"/>
+    <command id="cmd_help"      oncommand="doHelpButton();"/>
+    <command id="cmd_copy"      oncommand="doCopy();"/>
+    <command id="cmd_selectall" oncommand="doSelectAll();"/>
+  </commandset>
+
+  <keyset>
+    <key key="&closeWindow.key;" modifiers="accel" command="cmd_close"/>
+    <key keycode="VK_ESCAPE"                       command="cmd_close"/>
+    <key keycode="."             modifiers="meta"  command="cmd_close"/>
+    <key keycode="VK_F1"                           command="cmd_help"/>
+    <key key="&copy.key;"        modifiers="accel" command="cmd_copy"/>
+    <key key="&selectall.key;"   modifiers="accel" command="cmd_selectall"/>
+    <key key="&selectall.key;"   modifiers="alt"   command="cmd_selectall"/>
+  </keyset>
+
+  <menupopup id="picontext">
+    <menuitem label="&selectall.label;" command="cmd_selectall" accesskey="&selectall.key;"/>
+    <menuitem label="&copy.label;"      command="cmd_copy"      accesskey="&copy.key;"/>
+  </menupopup>
+
+  <tabbox id="tabbox" flex="1" class="spaced">
     <tabs id="tabs">
-      <tab id="generalTab" label="&generalTab;"/>
-      <tab id="formsTab"   label="&formsTab;"   
+      <tab id="generalTab" label="&generalTab;" accesskey="&generalAccesskey;"/>
+      <tab id="formsTab"   label="&formsTab;"   accesskey="&formsAccesskey;"
            oncommand="ensureSelection(formView)"/>
-      <tab id="linksTab"   label="&linksTab;"   
+      <tab id="linksTab"   label="&linksTab;"   accesskey="&linksAccesskey;"
            oncommand="ensureSelection(linkView)"/>
-      <tab id="mediaTab"   label="&mediaTab;"  
+      <tab id="mediaTab"   label="&mediaTab;"   accesskey="&mediaAccesskey;"
            oncommand="ensureSelection(imageView)"/>
       <!-- Others added by overlay -->
     </tabs>
@@ -156,7 +166,7 @@
         </grid>
         <separator class="thin"/>
         <text id="metahead" class="header" value="&generalMeta;"/>
-        <tree id="metatree" flex="1">
+        <tree id="metatree" flex="1" contextmenu="picontext">
           <treecols>
             <treecol persist="hidden width" flex="1" id="meta-name"    label="&generalMetaName;"/>
             <splitter class="tree-splitter"/>
@@ -168,7 +178,7 @@
 
       <!-- Form information -->
       <vbox>
-        <tree id="formtree" class="fixedsize" onselect="onFormSelect();">
+        <tree id="formtree" class="fixedsize" onselect="onFormSelect();" contextmenu="picontext">
           <treecols>
             <splitter class="tree-splitter"/>
             <treecol sortSeparators="true" persist="hidden width" flex="1" 
@@ -205,7 +215,7 @@
             </rows>
           </grid>
           <text class="header" value="&formFields;"/>
-          <tree id="formpreview" flex="1">
+          <tree id="formpreview" flex="1" contextmenu="picontext">
             <treecols>
               <treecol sortSeparators="true" persist="hidden width" flex="3" 
                            width="3" id="field-label"  label="&formLabel;"/>
@@ -226,7 +236,7 @@
 
       <!-- Link info -->
       <vbox>
-        <tree id="linktree" flex="1" ondraggesture="onBeginLinkDrag(event,'link-address','link-name')">
+        <tree id="linktree" flex="1" ondraggesture="onBeginLinkDrag(event,'link-address','link-name')" contextmenu="picontext">
           <treecols>
             <treecol sortSeparators="true" persist="hidden width" flex="5" 
                          width="5" id="link-name"     label="&linkName;"/>
@@ -249,7 +259,7 @@
 
       <!-- Media information -->
       <vbox>
-        <tree id="imagetree" class="fixedsize" onselect="onImageSelect();" ondraggesture="onBeginLinkDrag(event,'image-address','image-alt')">
+        <tree id="imagetree" class="fixedsize" onselect="onImageSelect();" ondraggesture="onBeginLinkDrag(event,'image-address','image-alt')" contextmenu="picontext">
           <treecols>
             <treecol sortSeparators="true" persist="hidden width" flex="10" 
                          width="10" id="image-address" label="&mediaAddress;"/>
@@ -314,14 +324,18 @@
               <row>
                 <label value="&mediaDimensions;"/>
                 <separator/>
-                <vbox>
-                  <textbox readonly="true" crop="right" id="imageSize"/>
-                  <textbox readonly="true" crop="right" id="physSize"/>
-                </vbox>
+                <textbox readonly="true" crop="right" id="imageSize"/>
+              </row>
+              <row id="physRow" collapsed="true">
+                <label value="&mediaPhysDimensions;"/>
+                <separator/>
+                <textbox readonly="true" crop="right" id="physSize"/>
               </row>
             </rows>
           </grid>
-          <hbox>
+          <hbox align="end">
+            <label value="&mediaPreview;" class="header"/>
+            <spacer flex="1"/>
             <button label="&mediaSaveAs;" accesskey="&mediaSaveAs.accesskey;"
                     id="imagesaveasbutton" disabled="true"
                     oncommand="saveMedia();"/>
@@ -330,6 +344,9 @@
             <hbox id="theimagecontainer" pack="center">
               <image id="thepreviewimage"/>
             </hbox>
+            <hbox id="brokenimagecontainer" pack="center" collapsed="true">
+              <image id="brokenimage" src="resource:///res/broken-image.gif"/>
+            </hbox>
           </vbox>
         </vbox>
       </vbox>
@@ -337,9 +354,4 @@
       <!-- Others added by overlay -->
     </tabpanels>
   </tabbox>
-  <box>
-    <progressmeter mode="undetermined" id="piProgress" flex="1"/>
-    <spacer id="piSpacer" flex="0"/>
-    <button dlgtype="help" class="dialog-button"/>
-  </box>
-</dialog>
+</window>
