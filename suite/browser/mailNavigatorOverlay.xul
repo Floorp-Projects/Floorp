@@ -14,7 +14,7 @@
     // attachment: 0 - link
     //             1 - page
     //             2 - image
-    function openComposeWindow(url, title, attachment)
+    function openComposeWindow(url, title, attachment, charset)
     {
       if (gHasIntegratedMailClient) {                                                                      
         var params = Components.classes["@mozilla.org/messengercompose/composeparams;1"]
@@ -38,6 +38,7 @@
               if (attachmentData)
               {
                 attachmentData.url = url;
+                attachmentData.urlCharset = charset;
                 params.composeFields.addAttachment(attachmentData);
               }
             }
@@ -105,14 +106,15 @@
     function sendLink(pageUrl, pageTitle)
     {
       try {
-        openComposeWindow(pageUrl, pageTitle, 0);
+        openComposeWindow(pageUrl, pageTitle, 0, null);
       } catch(ex) { dump("Cannot Send Link: " + ex + "\n"); }
     }
 
     function sendImage(imageURL)
     {
       try {
-        openComposeWindow(imageURL, null, 2);
+        var charset =  getCharsetforSave(null);
+        openComposeWindow(imageURL, null, 2, charset);
       } catch(ex) { dump("Cannot Send Image: " + ex + "\n"); }
     }
 
@@ -121,11 +123,12 @@
       if (!aDocument)
         aDocument = window._content.document;
         
+      var charset =  getCharsetforSave(aDocument);
       var pageUrl = aDocument.URL;
       var pageTitle = Components.lookupMethod(aDocument, 'title').call(aDocument);
 
       try {
-        openComposeWindow(pageUrl, pageTitle, 1);
+        openComposeWindow(pageUrl, pageTitle, 1, charset);
       } catch(ex) { dump("Cannot Send Page: " + ex + "\n"); }
     }
 
