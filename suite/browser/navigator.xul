@@ -139,13 +139,13 @@ Contributor(s): ______________________________________. -->
 
     <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar" persist="collapsed" 
              grippytooltip="aTooltip" grippytooltiptext="&navigationToolbar.tooltip;"
-             tbalign="stretch">
+             tbalign="stretch" tooltip="aTooltip">
       <hbox id="nav-bar-buttons">
         <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"
                        label="&backButton.label;" crop="right"
                        oncommand="if (event.target==this) BrowserBack(); else gotoHistoryIndex(event);"
                        observes="canGoBack" context="backMenu"
-                       tooltip="aTooltip" tooltiptext="&backButton.tooltip;">
+                       tooltiptext="&backButton.tooltip;">
           <menupopup context="" onpopupshowing="BrowserBackMenu(event);"/>
         </toolbarbutton>
         
@@ -153,19 +153,19 @@ Contributor(s): ______________________________________. -->
                        label="&forwardButton.label;" crop="right"
                        oncommand="if (event.target==this) BrowserForward(); else gotoHistoryIndex(event);"
                        observes="canGoForward" context="forwardMenu"
-                       tooltip="aTooltip" tooltiptext="&forwardButton.tooltip;">
+                       tooltiptext="&forwardButton.tooltip;">
           <menupopup context="" onpopupshowing="BrowserForwardMenu(event);"/>
         </toolbarbutton>
         
         <toolbarbutton id="reload-button" class="toolbarbutton-1"
                        label="&reloadButton.label;" crop="right"
                        oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload();"  
-                       tooltip="aTooltip" tooltiptext="&reloadButton.tooltip;"/>
+                       tooltiptext="&reloadButton.tooltip;"/>
                        
         <toolbarbutton id="stop-button" class="toolbarbutton-1"
                        label="&stopButton.label;" crop="right"
                        oncommand="BrowserStop();" observes="canStop"  
-                       tooltip="aTooltip" tooltiptext="&stopButton.tooltip;"/>
+                       tooltiptext="&stopButton.tooltip;"/>
       </hbox>
                 
       <hbox id="nav-bar-inner" flex="1">
@@ -176,7 +176,7 @@ Contributor(s): ______________________________________. -->
                      timeout="50" maxrows="6" alwaysOpenPopup="true"
                      defaultSearchEngine="true" tabScrolling="true"
                      showCommentColumn="true"
-                     tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
+                     tooltiptext="&locationBar.tooltip;"
                      ontextcommand="return handleURLBarCommand(userAction);"
                      ontextrevert="return handleURLBarRevert();"
                      onfocus="URLBarFocusHandler(event);"
@@ -197,7 +197,7 @@ Contributor(s): ______________________________________. -->
                 ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
                 ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
                 ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
-                tooltip="aTooltip" tooltiptext="&goButton.tooltip;"/> 
+                tooltiptext="&goButton.tooltip;"/> 
 
         <button id="search-button" class="button-toolbar chromeclass-location"
                 label="&searchButton.label;" persist="hidden"
@@ -205,13 +205,13 @@ Contributor(s): ______________________________________. -->
                 ondragover="nsDragAndDrop.dragOver(event, searchButtonObserver);"
                 ondragdrop="nsDragAndDrop.drop(event, searchButtonObserver);"
                 ondragexit="nsDragAndDrop.dragExit(event, searchButtonObserver);"
-                tooltip="aTooltip" tooltiptext="&searchButton.tooltip;"/> 
+                tooltiptext="&searchButton.tooltip;"/> 
       </hbox>
 
       <toolbarbutton id="print-button" type="menu-button" class="toolbarbutton-1"
                      label="&printButton.label;" crop="right" persist="hidden"
                      oncommand="if (event.target==this) BrowserPrint();"
-                     tooltip="aTooltip" tooltiptext="&printButton.tooltip;">  
+                     tooltiptext="&printButton.tooltip;">  
         <menupopup id="printMenu">
           <menuitem label="&printCmd.label;" accesskey="&printCmd.accesskey;"
                     default="true" oncommand="BrowserPrint()"/>
@@ -220,7 +220,7 @@ Contributor(s): ______________________________________. -->
 
       <hbox id="throbber-box" align="center">
         <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
-                tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>
+                tooltiptext="&throbber.tooltip;"/>
       </hbox>
     </toolbar>
   
@@ -230,10 +230,10 @@ Contributor(s): ______________________________________. -->
              ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarObserver);"
              ondragexit="nsDragAndDrop.dragExit(event, personalToolbarObserver);"
              grippytooltip="aTooltip" grippytooltiptext="&personalToolbar.tooltip;"
-             tbalign="stretch">
+             tbalign="stretch" tooltip="aTooltip">
 
       <toolbarbutton id="home-button" class="bookmark-item"
-                     label="&homeButton.label;" tooltip="aTooltip" persist="hidden"
+                     label="&homeButton.label;" persist="hidden"
                      ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver);"
                      ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
                      ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
@@ -302,7 +302,7 @@ Contributor(s): ______________________________________. -->
           <rule parent="hbox">
             <toolbarbutton class="bookmark-item" uri="rdf:*" editable="true" 
                            status="rdf:http://home.netscape.com/WEB-rdf#status"
-                           tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
+                           tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
                            label="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"/>
           </rule>
 
