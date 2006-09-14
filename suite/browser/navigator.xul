@@ -216,7 +216,7 @@ Contributor(s): ______________________________________. -->
       <!-- "Bookmarks" button on personal toolbar -->                           
       <menubutton class="button-toolbar bookmark-item" id="bookmarks-button"   
                   persist="hidden" label="&bookmarksButton.label;" hidden="false"
-                  datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
+                  datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
                   ref="NC:BookmarksRoot" container="true" flags="dont-test-empty"
                   oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)" 
                   template="bookmarksMenuTemplate">
@@ -231,7 +231,7 @@ Contributor(s): ______________________________________. -->
 
       <!-- Personal toolbar items -->
       <hbox id="innermostBox" flex="1" style="min-width: 1px;" context="bmContext" 
-           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
+           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
            ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
            type="http://home.netscape.com/NC-rdf#Folder"
            oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)">
@@ -264,6 +264,7 @@ Contributor(s): ______________________________________. -->
 
           <rule parent="hbox">
             <button class="button-toolbar bookmark-item" uri="rdf:*" editable="true" 
+                    status="rdf:http://home.netscape.com/WEB-rdf#status"
                     tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
                     type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                     label="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"/>
@@ -301,6 +302,7 @@ Contributor(s): ______________________________________. -->
           <rule>
             <menupopup>
               <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
+                        status="rdf:http://home.netscape.com/WEB-rdf#status"
                         type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                         label="rdf:http://home.netscape.com/NC-rdf#Name"/>
             </menupopup>
@@ -328,22 +330,17 @@ Contributor(s): ______________________________________. -->
                  ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
       </hbox>
     </vbox>  
-   </hbox>
-     
-      <statusbar id="status-bar" class="chromeclass-status"
-         ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
-         ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
-      >
+  </hbox>
+
+  <statusbar id="status-bar" class="chromeclass-status"
+             ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
+             ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
         <box id="component-bar"/>
         <statusbarpanel id="statusbar-display" label="&statusText.label;" crop="right" flex="1"/>
         <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0"/>
         <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
         <statusbarpanel class="statusbarpanel-icononly" id="security-button"/>
         <resizer class="window-diagonal"/>
-      </statusbar> 
-       
-      
-      
-
+  </statusbar> 
 
 </window>

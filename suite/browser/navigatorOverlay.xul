@@ -200,6 +200,9 @@
         <menuseparator/>
         <menuitem id="menu_selectAll"/>
         <menuseparator /> 
+        <menuitem id="menu_find" label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="Browser:Find"/>
+        <menuitem id="menu_findAgain" label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
+        <menuseparator />
         <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
       </menupopup>
     </menu>
@@ -214,6 +217,19 @@
           </menupopup>
         </menu>   
         <menuseparator />
+  
+        <menu accesskey="&goMenu.accesskey;" label="&goMenu.label;" oncommand="gotoHistoryIndex(event);">
+          <menupopup oncreate="updateGoMenu(event);">
+            <menuitem label="&goBackCmd.label;"    accesskey="&goBackCmd.accesskey;"    key="goBackKb"    command="Browser:Back"/>
+            <menuitem label="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;" key="goForwardKb" command="Browser:Forward"/>
+            <menuitem label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    command="Browser:Home" key="goHome"/>
+            <menuseparator hidden="true"/>
+          </menupopup>
+        </menu>         
+        <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" id="menuitem-stop" oncommand="BrowserStop();" key="key_stop"/>
+        <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
+        <menuitem label="&showImagesCmd.label;" accesskey="&showImagesCmd.accesskey;" disabled="true" oncommand="BrowserReload();"/>
+        <menuseparator />
 
         <!-- overlayed from viewZoomOverlay.xul -->
         <menu id="menu_textZoom"/>
@@ -223,33 +239,12 @@
             <menuitem label="&useStyleSheetNone.label;" id="authssnoopt" type="radio" name="authorstyle" oncommand="stylesheetSwitch(window._content.document, '')"/>
           </menupopup>
         </menu>
-        <menuseparator />
-        <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
-        <menuitem label="&showImagesCmd.label;" accesskey="&showImagesCmd.accesskey;" disabled="true" oncommand="BrowserReload();"/>
-        <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" id="menuitem-stop" oncommand="BrowserStop();" key="key_stop"/>
+        <menu id="charsetMenu" />
+        <menuitem accesskey="&translateMenu.accesskey;" label="&translateMenu.label;" oncommand="Translate();"/>
         <menuseparator />
         <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
         <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
-        <menuseparator />
 
-        <menuitem accesskey="&translateMenu.accesskey;" label="&translateMenu.label;" oncommand="Translate();"/>
-        <menu label="&webContentMenu.label;" accesskey="&webContentMenu.accesskey;">
-          <menupopup
-              datasources="rdf:chrome"  ref="urn:mozilla:locale:root" 
-              sortResource="http://www.mozilla.org/rdf/chrome#name"
-              sortDirection="ascending" oncommand="selectLocale(event)">
-            <menuitem label="&downloadMore.label;" accesskey="&downloadMore.accesskey;" 
-                      oncommand="loadXURL('urn:clienturl:viewmenu:intlwebcontent');"/>
-            <menuseparator/>
-            <template>
-                <menuitem class="standard" uri="rdf:*" 
-                          label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
-                          value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
-            </template>
-	  </menupopup>
-        </menu>
-
-        <menu id = "charsetMenu" />
         <menuseparator/>
         <menu label="&applyTheme.label;" accesskey="&applyTheme.accesskey;">
           <menupopup datasources="rdf:chrome" ref="urn:mozilla:skin:root" oncommand="applyTheme(event.target)">
@@ -267,31 +262,12 @@
         </menu>
       </menupopup>
     </menu>
-  
+
     <menu accesskey="&searchMenu.accesskey;" label="&searchMenu.label;">
       <menupopup id="searchMenu">
-        <menuitem label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;"    key="key_find" command="Browser:Find"/>
-        <menuitem label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
-        <menuseparator />
         <menuitem label="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="loadXURL('urn:clienturl:srchmenu:srchinternet');"/>        
-        <menuseparator id="searchSeparator" />
-         <menu id="searchOptionsMenu" label="&searchOptions.label;">
-            <menupopup oncreate="syncSearchModeMenuWithPref();">
-              <menuitem id="simpleSearch" type="radio" label="&simpleMode.label;" oncommand="setBrowserSearchMode(0);" />
-              <menuitem id="advancedSearch" type="radio" label="&advancedMode.label;" oncommand="setBrowserSearchMode(1);" />
-            </menupopup>
-         </menu>
-       </menupopup>
-     </menu>
-  
-    <menu accesskey="&goMenu.accesskey;" label="&goMenu.label;" oncommand="gotoHistoryIndex(event);">
-      <menupopup oncreate="updateGoMenu(event);">
-        <menuitem label="&goBackCmd.label;"    accesskey="&goBackCmd.accesskey;"    key="goBackKb"    command="Browser:Back"/>
-        <menuitem label="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;" key="goForwardKb" command="Browser:Forward"/>
-        <menuitem label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    command="Browser:Home" key="goHome"/>
-        <menuseparator hidden="true"/>
       </menupopup>
-    </menu>       
+    </menu>
 
     <menu id="BookmarksMenu" label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;" 
           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
