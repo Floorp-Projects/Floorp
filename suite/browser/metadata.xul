@@ -74,7 +74,7 @@
           <hbox>
             <text id="link-url-text" value="" class="text-link" 
                   onclick="openLink(this)"/>
-            <spring flex="1"/>
+            <spacer flex="1"/>
           </hbox>
         </row>
         <row id="link-target">
@@ -113,7 +113,7 @@
           <hbox>
             <text id="image-url-text" value="" class="text-link" 
                   onclick="openLink(this)"/>
-            <spring flex="1"/>
+            <spacer flex="1"/>
           </hbox>
         </row>
         <row id="image-width">
@@ -135,7 +135,7 @@
           <hbox>
             <text id="image-desc-text" value="" class="text-link" 
                   onclick="openLink(this)"/>
-            <spring flex="1"/>
+            <spacer flex="1"/>
           </hbox>
         </row>
       </rows>
@@ -154,7 +154,7 @@
           <hbox>
             <text id="insdel-cite-text" value="" class="text-link" 
                   onclick="openLink(this)"/>
-            <spring flex="1"/>
+            <spacer flex="1"/>
           </hbox>
         </row>
         <row id="insdel-date">
@@ -177,7 +177,7 @@
           <hbox>
             <text id="quote-cite-text" value="" class="text-link" 
                   onclick="openLink(this)"/>
-            <spring flex="1"/>
+            <spacer flex="1"/>
           </hbox>
         </row>
       </rows>
@@ -209,6 +209,6 @@
     </grid>
   </groupbox>
 
-  <spring flex="1"/>
+  <spacer flex="1"/>
 
  </window>

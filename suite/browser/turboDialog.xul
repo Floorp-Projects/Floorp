@@ -69,9 +69,9 @@
       <vbox flex="1" style="max-width: 36em;"/>
       <separator/>
       <hbox>
-        <spring flex="45%"/>
+        <spacer flex="45%"/>
         <image id="turboTrayImage"/>
-        <spring flex="55%"/>
+        <spacer flex="55%"/>
       </hbox>
       <separator class="thin"/>
       <separator class="thin"/>
@@ -86,9 +86,9 @@
   <separator class="thin"/>
   <separator class="thin"/>
   <hbox>
-    <spring flex="1"/>
+    <spacer flex="1"/>
     <button id="okButton" label="&okButton.label;" oncommand="window.close();" default="true"/>
-    <spring flex="1"/>
+    <spacer flex="1"/>
   </hbox> 
 
 </window>
