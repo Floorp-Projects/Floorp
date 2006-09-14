@@ -51,22 +51,6 @@ function LinkToolbarHandler()
   this.hasItems = false;
 }
 
-LinkToolbarHandler.prototype.handleLinks =
-function(nodeList)
-{
-  if (!nodeList) return;
-
-  var len = nodeList.length;
-  for (var i = 0; i < len; i++) {
-    // optimization: weed out useless links here to avoid
-    // the function call. More in depth checks are done
-    // in this.handle
-    var node = nodeList.item(i);
-    if (node && (node.rel || node.rev) && node.href) 
-      this.handle(node);
-  }
-}
-
 LinkToolbarHandler.prototype.handle =
 function(element)
 {
@@ -76,7 +60,10 @@ function(element)
 
   if (linkElement.isIgnored()) return;
 
-  this.hasItems = true;
+  if (!this.hasItems) {
+    this.hasItems = true;
+    linkToolbarUI.activate();
+  }
 
   var relAttributes = linkElement.rel.split(" ");
   for (var i = 0; i < relAttributes.length; i++) {
@@ -130,7 +117,7 @@ function(relAttribute)
 
 LinkToolbarHandler.prototype.getItemForLinkType =
 function(linkType) {
-  if (!this.items[linkType])
+  if (!(linkType in this.items && this.items[linkType]))
     this.items[linkType] = LinkToolbarHandler.createItemForLinkType(linkType);
 
   return this.items[linkType];
@@ -161,8 +148,14 @@ function(linkType)
 LinkToolbarHandler.prototype.clearAllItems =
 function()
 {
+  // Hide the 'miscellaneous' separator
+  document.getElementById("misc-separator").setAttribute("collapsed", "true");
+
+  // Disable the individual items
   for (var linkType in this.items)
     this.items[linkType].clear();
+
+  // Store the fact that the toolbar is empty
   this.hasItems = false;
 }
 

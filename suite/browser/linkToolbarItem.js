@@ -21,6 +21,7 @@
  * Contributor(s):
  *      Christopher Hoess <choess@force.stwing.upenn.edu>
  *      Tim Taylor <tim@tool-man.org>
+ *      Stuart Ballard <sballard@netreach.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -258,21 +259,12 @@ function LinkToolbarTransientMenu (linkType) {
     if(!this.__proto__.displayLink.apply(this, [linkElement])) return false;
 
     this.getXULElement().removeAttribute("collapsed");
-    showMiscellaneousSeparator();
+
+    // Show the 'miscellaneous' separator
+    document.getElementById("misc-separator").removeAttribute("collapsed");
     return true;
   }
 }
 
-showMiscellaneousSeparator =
-function()
-{
-  document.getElementById("misc-separator").removeAttribute("collapsed");
-}
-
-hideMiscellaneousSeparator =
-function()
-{
-  document.getElementById("misc-separator").setAttribute("collapsed", "true");
-}
 LinkToolbarTransientMenu.prototype = new LinkToolbarMenu;
 
