@@ -463,7 +463,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 	var searchEngineURI = null;
 	var autoOpenSearchPanel = false;
 	var defaultSearchURL = null;
-
+    var fallbackDefaultSearchURL = "http://info.netscape.com/fwd/sidb1dnet/http://search.netscape.com/cgi-bin/search?search="
 	try
 	{
 		searchMode = pref.GetIntPref("browser.search.powermode");
@@ -475,23 +475,22 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 	catch(ex)
 	{
 	}
-
+    dump("Search defaultSearchURL: " + defaultSearchURL + "\n");
 	if ((defaultSearchURL == null) || (defaultSearchURL == ""))
 	{
 		// Fallback to a Netscape default (one that we can get sidebar search results for)
-//		defaultSearchURL = "http://search.netscape.com/cgi-bin/search?search=";
-		defaultSearchURL = "http://info.netscape.com/fwd/sidb1dnet/http://search.netscape.com/cgi-bin/search?search=";
+		defaultSearchURL = fallbackDefaultSearchURL;
 	}
-
-	if (window.content.location.href == searchStr) 
+    dump("This is before the search " + window.content.location.href + "\n");
+	dump("This is before the search " + searchStr + "\n");
+	if ((window.content.location.href == searchStr) || (searchStr == '')) 
 	{
-	    dump(searchStr + ' Search: ' + defaultSearchURL + '\n');
-		if (!(defaultSearchURL == "http://search.netscape.com/cgi-bin/search?search=")) {
+		if (!(defaultSearchURL == fallbackDefaultSearchURL)) {
 			window.content.location.href = defaultSearchURL;
 		}
 		else
 		{
-			window.content.location.href = "http://search.netscape.com/"
+			window.content.location.href = "http://info.netscape.com/fwd/6_0b1/http://search.netscape.com/"
 		}
 	}
 	else
