@@ -127,10 +127,10 @@ Contributor(s): ______________________________________. -->
 
   <toolbox id="navigator-toolbox" class="toolbox-top" deferattached="true">
     <!-- Menu -->
-    <menubar id="main-menubar" persist="collapsed" grippytooltip="aTooltip" tooltiptext="&menuBar.tooltip;"/>
+    <menubar id="main-menubar" persist="collapsed" grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;"/>
 
     <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar" persist="collapsed" 
-             grippytooltip="aTooltip" tooltiptext="&navigationBar.tooltip;"
+             grippytooltip="aTooltip" grippytooltiptext="&navigationBar.tooltip;"
              tbautostretch="always">
       <hbox id="nav-bar-buttons">
         <menubutton id="back-button" value="&backButton.label;" tooltiptext="&backButton.tooltip;"
