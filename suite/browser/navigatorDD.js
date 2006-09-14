@@ -421,9 +421,7 @@ var proxyIconDNDObserver = {
       var urlBar = document.getElementById("urlbar");
       var flavourList = { };
       flavourList["text/unicode"] = { width: 2, data: urlBar.value };
-//      flavourList["text/x-moz-url"] = { width: 2, data: urlBar.value + " " + window.title };
-//*** hack until bug 41984 is fixed. uncomment the above line, it is the "correct" fix
-      flavourList["text/x-moz-url"] = { width: 2, data: urlBar.value + " " + "( TEMP TITLE )" };
+      flavourList["text/x-moz-url"] = { width: 2, data: urlBar.value + " " + window.title };
       var htmlString = "<a href=\"" + urlBar.value + "\">" + urlBar.value + "</a>";
       flavourList["text/html"] = { width: 2, data: htmlString };
       return flavourList;
