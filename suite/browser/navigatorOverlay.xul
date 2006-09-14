@@ -334,7 +334,7 @@ oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/p
   
   <menu accesskey="&helpMenuCmd.accesskey;" id="menu_Help"/>
   // Menu for testing.
-  <menu accesskey="&debugMenu.accesskey;" value="&debugMenu.label;">
+  <menu id="debugMenu" accesskey="&debugMenu.accesskey;" value="&debugMenu.label;">
     <menupopup>
       <menu value="&debugVerCmd.label;">
         <menupopup>
@@ -423,7 +423,7 @@ oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/p
     </menupopup>
   </menu>
 
-  <menu accesskey="&QA.accesskey;" value="&QA.label;">
+  <menu id="qaMenu" accesskey="&QA.accesskey;" value="&QA.label;">
     <menupopup>
       <menuitem value="&PrecheckinTests.label;"  oncommand="window._content.location.href='http://www.mozilla.org/quality/precheckin-tests.html'"/>
       <menuseparator />
