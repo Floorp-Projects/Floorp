@@ -395,7 +395,7 @@ function DragOverContentArea ( event )
         validFlavor = true;
       else if ( dragSession.isDataFlavorSupported("text/unicode") )
         validFlavor = true;
-      else if ( dragSession.isDataFlavorSupported("application/file") )
+      else if ( dragSession.isDataFlavorSupported("application/x-moz-file") )
         validFlavor = true;
       //XXX other flavors here...
       
@@ -420,7 +420,7 @@ function DragOverContentArea ( event )
 function DropOnContentArea ( event )
 { 
   var dropAccepted = false;
-  
+
   var dragService = 
     Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
   if ( dragService ) {
@@ -430,7 +430,7 @@ function DropOnContentArea ( event )
         Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
       if ( trans ) {
         trans.addDataFlavor("text/unicode");
-        trans.addDataFlavor("application/file");
+        trans.addDataFlavor("application/x-moz-file");
         for ( var i = 0; i < dragSession.numDropItems; ++i ) {
           var id = "";
           dragSession.getData ( trans, i );
@@ -438,6 +438,7 @@ function DropOnContentArea ( event )
           var bestFlavor = new Object();
           var len = new Object();
           trans.getAnyTransferData ( bestFlavor, dataObj, len );
+ dump("best flavor is " + bestFlavor.value + "\n\n");
           if ( bestFlavor.value == "text/unicode" ) {
             if ( dataObj ) dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
             if ( dataObj ) {
@@ -446,7 +447,7 @@ function DropOnContentArea ( event )
               dump("ID: '" + id + "'\n");
             }
           }
-          else if ( bestFlavor.value == "application/file" ) {
+          else if ( bestFlavor.value == "application/x-moz-file" ) {
             if ( dataObj ) dataObj = dataObj.value.QueryInterface(Components.interfaces.nsIFile);
             if ( dataObj ) {
               var fileURL = Components.classes["component://netscape/network/standard-url"]
@@ -503,7 +504,17 @@ function DragProxyIcon ( event )
       
         dump("ID: " + id + "\n");
 
-        // add text/html flavor first
+        // first and foremost, we are a URL
+        var urlData = Components.classes["component://netscape/supports-wstring"].createInstance();
+        if ( urlData )
+          urlData = urlData.QueryInterface(Components.interfaces.nsISupportsWString);
+        if ( urlData ) {
+          urlData.data = id;
+          trans.addDataFlavor("text/x-moz-url");
+          trans.setTransferData( "text/x-moz-url", urlData, id.length * 2);
+        }
+        
+        // add text/html flavor next
         var htmlData = Components.classes["component://netscape/supports-wstring"].createInstance();
         if ( htmlData )
           htmlData = htmlData.QueryInterface(Components.interfaces.nsISupportsWString);
@@ -514,7 +525,7 @@ function DragProxyIcon ( event )
           trans.setTransferData( "text/html", htmlData, htmlstring.length * 2);
         }
        
-        // add the text/unicode flavor
+        // add the text/unicode flavor as a fallback
         trans.addDataFlavor("text/unicode");
         trans.setTransferData ( "text/unicode", genTextData, id.length * 2 );  // double byte data
       
