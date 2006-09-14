@@ -223,6 +223,14 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   PRBool viewHasTransparentContent = hasBG &&
     (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) &&
     !GetStyleDisplay()->mAppearance;
+  if (viewHasTransparentContent) {
+    nsCOMPtr<nsISupports> cont = GetPresContext()->GetContainer();
+    nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(cont);
+    PRInt32 type = -1;
+    if (!dsti || NS_FAILED(dsti->GetItemType(&type)) ||
+        type != nsIDocShellTreeItem::typeChrome)
+      viewHasTransparentContent = PR_FALSE;
+  }
 
   nsIContent* parentContent = GetContent()->GetParent();
   nsIAtom *tag = nsnull;
