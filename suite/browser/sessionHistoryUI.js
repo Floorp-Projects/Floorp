@@ -124,7 +124,12 @@ function createUBHistoryMenu( aParent )
       while (entries.hasMoreElements() && (i-- > 0)) {
         var entry = entries.getNext();
         if (entry) {
-          entry = entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
+          try {
+            entry = entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
+          } catch(ex) {
+            // XXXbar not an nsIRDFLiteral for some reason. see 90337.
+            continue;
+          }
           var url = entry.Value;
           createMenuItem(aParent, i, url);
         }
@@ -168,7 +173,12 @@ function addToUrlbarHistory()
           if (!entry) continue;
 
           index ++;
-          entry= entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
+          try {
+            entry = entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
+          } catch(ex) {
+            // XXXbar not an nsIRDFLiteral for some reason. see 90337.
+            continue;
+          }
           var rdfValue = entry.Value;
 
           try {
