@@ -75,8 +75,6 @@ nsBrowserStatusHandler.prototype =
 
   hideAboutBlank : true,
 
-  locationChanged : false,  
-
   QueryInterface : function(aIID)
   {
     if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
@@ -216,8 +214,6 @@ nsBrowserStatusHandler.prototype =
       this.stopButton.disabled = false;
       this.stopMenu.removeAttribute('disabled');
       this.stopContext.removeAttribute('disabled');
-
-      this.locationChanged = false;        
     }
     else if (aStateFlags & nsIWebProgressListener.STATE_STOP) {
       if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
@@ -262,20 +258,11 @@ nsBrowserStatusHandler.prototype =
         this.status = "";
         this.setDefaultStatus(msg);
         
-        //if the location hasn't been changed, the document may be null(eg a full-page plugin),
-        //we may not be able to get the correct content-type. 
-        //so we need to skip the test and keep the menu status.
-        //otherwise(this.locationChanged = true), test normally.
-        if (channel && this.locationChanged) {
-          try {
-            ctype = channel.contentType;
-            if (this.mimeTypeIsTextBased(ctype))
-              this.isImage.removeAttribute('disabled');
-            else
-              this.isImage.setAttribute('disabled', 'true');
-          }
-          catch (e) {}
-        }
+        // Disable menu entries for images, enable otherwise
+        if (content.document && this.mimeTypeIsTextBased(content.document.contentType))
+          this.isImage.removeAttribute('disabled');
+        else
+          this.isImage.setAttribute('disabled', 'true');
       }
 
       // Turn the progress meter and throbber off.
@@ -365,8 +352,6 @@ nsBrowserStatusHandler.prototype =
 
     var popupIcon = document.getElementById("popupIcon");
     popupIcon.hidden = !browser.popupDomain;
-
-    this.locationChanged = true;    
   },
 
   onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
