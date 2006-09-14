@@ -85,14 +85,19 @@ var personalToolbarObserver = {
 
       var db = document.getElementById("innermostBox").database;
       var uri = aEvent.target.id;
-
       if (!isBookmark(uri)) return;
       var url = RDFUtils.getTarget(db, uri, NC_RDF("URL"));
+      if (url)
+        url = url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+      else
+        url = "";
       var name = RDFUtils.getTarget(db, uri, NC_RDF("Name"));
-
+      if (name)
+        name = name.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+      else
+        name = "";
       var urlString = url + "\n" + name;
       var htmlString = "<A HREF='" + uri + "'>" + name + "</A>";
-
       aXferData.data = new TransferData();
       aXferData.data.addDataForFlavour("moz/rdfitem", uri);
       aXferData.data.addDataForFlavour("text/x-moz-url", urlString);
