@@ -163,9 +163,7 @@ Contributor(s): ______________________________________. -->
 	      <menuitem accesskey="&printPreviewCmd.accesskey;" observes="Browser:PrintPreview"/>
 	      <menuitem id="printMenuItem" accesskey="&printCmd.accesskey;" key="printKb" observes="Browser:Print"/>
 	      <menuseparator />
-	      <menu id="offlineMenu">
-	        <menupopup id="offlineMenuPopup"/>
-	      </menu>
+	      <menuitem id="offlineGoOfflineCmd"/>
 	      <menuseparator />
 	  </menupopup>
 	</menu>
@@ -378,7 +376,6 @@ END of Deprecated -->
       
   <menu id="tasksMenu"/>
   
-  <menu id="menu_Help"/>
   <menu accesskey="&helpMenuCmd.accesskey;" id="menu_Help"/>
   // Menu for testing.
   <menu accesskey="d" value="&debugMenu.label;">
