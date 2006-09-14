@@ -107,9 +107,9 @@ Contributor(s): ______________________________________. -->
 	<broadcaster id="Browser:ReduceTextSize"
 	             oncommand="BrowserChangeTextZoom(-1);"/>
 
-	<broadcaster id="cmd_viewnavbar" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
-	<broadcaster id="cmd_viewpersonaltoolbar"  oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
-	<broadcaster id="cmd_viewtaskbar" oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
+	<broadcaster id="cmd_viewnavbar" type="checkbox" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
+	<broadcaster id="cmd_viewpersonaltoolbar" type="checkbox" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
+	<broadcaster id="cmd_viewtaskbar" type="checkbox" oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
 
 	<broadcaster id="Browser:Open"  value="&openCmd.label;"        	oncommand="BrowserOpenWindow();"/>
 	<broadcaster id="Browser:OpenFile"  value="&openFileCmd.label;" oncommand="BrowserOpenFileWindow();"/>
