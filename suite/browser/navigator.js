@@ -1151,38 +1151,48 @@ function BrowserEditBookmarks()
   function BrowserViewSource()
   {
 	  dump("BrowserViewSource(); \n ");
-    var charsetArg = new String();
-  
-    if (appCore != null) {
-       
-        try 
-        {
-            //let's try to extract the current charset menu setting
-            var DocCharset = appCore.GetDocumentCharset();
-            charsetArg = "charset="+DocCharset;
-            dump("*** Current document charset: " + DocCharset + "\n");
+    var docCharset = null;
 
-            //we should "inherit" the charset menu setting in a new window
-            window.openDialog( "chrome://navigator/content/viewSource.xul",
-							           "_blank",
-							           "chrome,dialog=no",
-							           window.content.location, charsetArg);
-        }
- 
-         catch(ex) 
-         { 
-            dump("*** failed to read document charset \n");
-         }
+    try 
+    {
+      var wnd = document.commandDispatcher.focusedWindow;
+      if (window == wnd) wnd = window.content;
+      docCharset = "charset="+ wnd.document.characterSet;
+      dump("*** Current document charset: " + docCharset + "\n");
+    }
+
+    catch(ex) 
+    { 
+      docCharset = null;
+      dump("*** Failed to determine current document charset \n");
+    }
+
+
+    if (docCharset != null) 
+    {
+      try 
+      {
+        //now try to open a view-source window while inheriting the charset
+        window.openDialog( "chrome://navigator/content/viewSource.xul",
+						         "_blank",
+						         "chrome,dialog=no",
+					           window.content.location, docCharset);
+      }
+
+      catch(ex) 
+      { 
+        dump("*** Failed to open view-source window with preset charset menu.\n");
+      }
 
     } else {
-         //if everythig else fails, forget about the charset
-         window.openDialog( "chrome://navigator/content/viewSource.xul",
-							       "_blank",
-							       "chrome,dialog=no",
-							       window.content.location);
+        //default: forcing the view-source widow
+        dump("*** Failed to preset charset menu for the view-source window\n");
+        window.openDialog( "chrome://navigator/content/viewSource.xul",
+					         "_blank",
+					         "chrome,dialog=no",
+					         window.content.location);
     }
   }
-
 
   function BrowserPageInfo()
   {
