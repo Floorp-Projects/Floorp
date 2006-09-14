@@ -1051,7 +1051,9 @@ function RevealSearchPanel()
     var fileSpec = createInstance( "component://netscape/filespecwithui", "nsIFileSpecWithUI" );
     var url = null;
     try {
+        fileSpec.parentWindow = window;
         url = fileSpec.chooseFile( "Open File" );
+        fileSpec.parentWindow = null;
     } catch ( exception ) {
     }
     if ( url && url != "" ) {
