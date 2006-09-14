@@ -341,5 +341,11 @@
 <!ENTITY selectAllCmd.accesskey       "l">
 <!ENTITY copyLinkCmd.label            "Copy Link Location">
 <!ENTITY copyLinkCmd.accesskey        "l">
+<!ENTITY quoteKeyword.label           "Get a quote">
+<!ENTITY careerKeyword.label          "Get a job">
+<!ENTITY shopKeyword.label            "Shop Online">
+<!ENTITY webmailKeyword.label         "Check your email">
+<!ENTITY localKeyword.label           "Local Information">
+<!ENTITY listKeywords.label           "List of Keywords">
 <!ENTITY copyImageCmd.label           "Copy Image Location">
 <!ENTITY copyImageCmd.accesskey       "m">

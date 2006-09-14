@@ -535,6 +535,50 @@ function Shutdown()
    RefreshUrlbar();
   }
 
+  function setKeyword(index)
+  {
+      urlbar = document.getElementById('urlbar');
+	  if (!urlbar)
+	    return;
+      switch(index) {
+          case 0:		    
+	    	urlbar.focus();
+			urlbar.value = bundle.GetStringFromName("quoteKeyword");
+			urlbar.setSelectionRange(14,33);
+			break;
+          case 1:
+             urlbar.focus();
+		     urlbar.value = bundle.GetStringFromName("localKeyword");
+			 urlbar.setSelectionRange(12,27);			 
+			 break;
+          case 2:
+	         urlbar.focus();
+		     urlbar.value = bundle.GetStringFromName("shopKeyword");
+			 urlbar.setSelectionRange(13,22);
+			 break;
+		  case 3:
+		     urlbar.focus();
+		     urlbar.value = bundle.GetStringFromName("careerKeyword");
+			 urlbar.setSelectionRange(8,19);
+			 break;
+		  case 4:
+			 if (appCore)
+			   appCore.loadUrl(bundle.GetStringFromName("webmailKeyword"));
+			 else
+			    dump("Couldn't find instance of BrowserAppCore\n");
+			 break;
+		  
+		  case 5:
+		     if (appCore)
+			   appCore.loadUrl(bundle.GetStringFromName("keywordList"));
+			 else
+			    dump("Couldn't find instance of BrowserAppCore\n");   
+			 break;
+		     break;		 
+	  }
+
+  }
+
   function OpenBookmarkURL(node, datasources)
   {
     if (node.getAttribute('container') == "true") {
