@@ -199,6 +199,22 @@ nsXULBrowserWindow.prototype =
 			overLink = link;
 		UpdateStatusField();
 		},
+  onProgress : function (channel, current, max)
+  {
+ 		if(!statusMeter)
+			statusMeter = document.getElementById("statusbar-icon");
+    var percentage = 0;
+    if (max > 0)
+    {
+      percentage = (current * 100) / max ;
+      statusMeter.setAttribute("mode", "normal");
+      statusMeter.value = percentage;
+      statusMeter.progresstext = Math.round(percentage) + "%";
+    }
+    else
+      statusMeter.setAttribute("mode","undetermined");
+         
+  },
 	onStatusChange : function(channel, status)
 		{
 		if(!throbberElement)
@@ -227,8 +243,10 @@ nsXULBrowserWindow.prototype =
 			defaultStatus = msg;
 			UpdateStatusField();
 			window.XULBrowserWindow.setDefaultStatus(msg);
-         // Turn progress meter off.
-         statusMeter.setAttribute("mode","normal");
+       // Turn progress meter off.
+       statusMeter.setAttribute("mode","normal");
+       statusMeter.value = 0;  // be sure to clear the progress bar
+       statusMeter.progresstext = "";
 			throbberElement.setAttribute("busy", false);
 			}
 		else if(status & Components.interfaces.nsIWebProgress.flag_net_dns)
