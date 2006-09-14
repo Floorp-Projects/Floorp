@@ -445,64 +445,43 @@ var homeButtonObserver = {
     {
       var data = aData.length ? aData[0] : aData;
       var url = retrieveURLFromData(data);
-      var showDialog = nsPreferences.getBoolPref("browser.homepage.enable_home_button_drop", false);
-      var setHomepage;
-      if (showDialog)
-        {
-          var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
-                                                                    "nsICommonDialogs");
-          var block = nsJSComponentManager.createInstanceByID("c01ad085-4915-11d3-b7a0-85cf-55c3523c",
-                                                              "nsIDialogParamBlock");
-          var checkValue = { value: true };
-          var pressedVal = { };                            
-          var promptTitle = bundle.GetStringFromName("droponhometitle");
-          var promptMsg   = bundle.GetStringFromName("droponhomemsg");
-          var checkMsg    = bundle.GetStringFromName("dontremindme");
-          var okButton    = bundle.GetStringFromName("droponhomeokbutton");
-          var iconURL     = "chrome://navigator/skin/home.gif"; // evil evil common dialog code! evil! 
+      var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
+                                "nsICommonDialogs");
+      var pressedVal = { };                            
+      var promptTitle = bundle.GetStringFromName("droponhometitle");
+      var promptMsg   = bundle.GetStringFromName("droponhomemsg");
+      var okButton    = bundle.GetStringFromName("droponhomeokbutton");
+      var iconURL     = "chrome://navigator/skin/home.gif"; // evil evil common dialog code! evil! 
 
-          commonDialogService.UniversalDialog(window, null, promptTitle, promptMsg, checkMsg, 
-                                              okButton, null, null, null, null, null, { }, { },
-                                              iconURL, checkValue, 2, 0, null, pressedVal);
-          nsPreferences.setBoolPref("browser.homepage.enable_home_button_drop", checkValue.value);
+      commonDialogService.UniversalDialog(window, null, promptTitle, promptMsg, null, 
+                                          okButton, null, null, null, null, null, { }, { },
+                                          iconURL, { }, 2, 0, null, pressedVal);
 
-          setHomepage = pressedVal.value == 0 ? true : false;
-        }
-      else
-        setHomepage = true;
-      if (setHomepage) 
-        {
-          nsPreferences.setUnicharPref("browser.startup.homepage", url);                                           
-          setTooltipText("homebutton", url);
-        }
+      if (pressedVal.value == 0) {
+        nsPreferences.setUnicharPref("browser.startup.homepage", url);
+        setTooltipText("home-button", url);
+      }
     },
     
   onDragOver: function (aEvent, aFlavour, aDragSession)
     {
-      var homeButton = aEvent.target;
-      // preliminary attribute name for now
-      homeButton.setAttribute("home-dragover","true");
-		  var statusTextFld = document.getElementById("statusbar-display");
-      gStatus = gStatus ? gStatus : statusTextFld.value;
+      var statusTextFld = document.getElementById("statusbar-display");
       statusTextFld.setAttribute("value", bundle.GetStringFromName("droponhomebutton"));
     },
     
   onDragExit: function (aEvent, aDragSession)
     {
-      var homeButton = document.getElementById("homebutton");
-      homeButton.removeAttribute("home-dragover");
-      statusTextFld.setAttribute("value", gStatus);
-      gStatus = null;
+      statusTextFld.setAttribute("value", "");
     },
         
   onDragStart: function ()
     {
       var homepage = nsPreferences.getLocalizedUnicharPref("browser.startup.homepage", "about:blank");
       var flavourList = { };
-      flavourList["text/x-moz-url"] = { width: 2, data: homepage + " " + "[ TEMP - Home Page ]" };
+      var htmlString = "<a href=\"" + homepage + "\">" + homepage + "</a>";
+      flavourList["text/x-moz-url"] = { width: 2, data: homepage };
       flavourList["text/html"] = { width: 2, data: htmlString };
       flavourList["text/unicode"] = { width: 2, data: homepage };
-      var htmlString = "<a href=\"" + homepage + "\">" + homepage + "</a>";
       return flavourList;
     },
   
