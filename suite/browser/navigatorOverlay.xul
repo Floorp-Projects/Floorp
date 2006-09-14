@@ -121,9 +121,9 @@ Contributor(s): ______________________________________. -->
 	<broadcaster id="Browser:PrintPreview"  value="&printPreviewCmd.label;" disabled="true"  oncommand="BrowserReload();"/>
 	<broadcaster id="Browser:Print"  value="&printCmd.label;"        						 oncommand="BrowserPrint();"/>
   
-	<broadcaster id="canGoBack"	disabled="true" oncommand="BrowserBack();"/>
-	<broadcaster id="canGoForward" disabled="true"	oncommand="BrowserForward();"/>
-	<broadcaster id="Browser:Home" value="&goHomeCmd.label;" 					oncommand="BrowserHome();" />
+	<broadcaster id="canGoBack"	disabled="true" buttonaction="BrowserBack();"/>
+	<broadcaster id="canGoForward" disabled="true" buttonaction="BrowserForward();"/>
+	<broadcaster id="Browser:Home" value="&goHomeCmd.label;" oncommand="BrowserHome();" />
   
 	<broadcaster id="Browser:Find"      value="&findOnCmd.label;"            oncommand="BrowserFind();" />
 	<broadcaster id="Browser:FindAgain" value="&findAgainCmd.label;"         oncommand="BrowserFindAgain();" />	
@@ -334,11 +334,11 @@ END of Deprecated -->
 	</menupopup>
   </menu>
 
-  <menu accesskey="&goMenu.accesskey;" id="gomenu" value="&goMenu.label;" >
-	  <menupopup>
+  <menu accesskey="&goMenu.accesskey;" id="gomenu" value="&goMenu.label;" oncommand="gotoHistoryIndex(event);">
+	  <menupopup oncreate="updateGoMenu(event);">
 		  <menuitem id="menuitem-back" value="&goBackCmd.label;" accesskey="&goBackCmd.accesskey;"  key="goBackwardKb" observes="canGoBack"/>
 		  <menuitem id="menuitem-forward" value="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;"  key="goForwardKb" observes="canGoForward" />
-		  <menuitem accesskey="&goHomeCmd.accesskey;" key="goHomeKb" observes="Browser:Home"/>
+		  <menuitem id="menuitem-home" accesskey="&goHomeCmd.accesskey;" key="goHomeKb" observes="Browser:Home"/>
 		  <menuseparator />
 	  </menupopup>
   </menu>
