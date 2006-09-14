@@ -258,8 +258,21 @@ function LinkToolbarTransientMenu (linkType) {
     if(!this.__proto__.displayLink.apply(this, [linkElement])) return false;
 
     this.getXULElement().removeAttribute("collapsed");
-    showMiscellaneousSeperator();
+    showMiscellaneousSeparator();
     return true;
   }
 }
+
+showMiscellaneousSeparator =
+function()
+{
+  document.getElementById("misc-separator").removeAttribute("collapsed");
+}
+
+hideMiscellaneousSeparator =
+function()
+{
+  document.getElementById("misc-separator").setAttribute("collapsed", "true");
+}
 LinkToolbarTransientMenu.prototype = new LinkToolbarMenu;
+
