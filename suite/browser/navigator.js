@@ -64,8 +64,6 @@ catch (ex)
   var backButton	= null;
   var forwardButton = null;
 
-  var webNavigation = null;
-
   var useRealProgressFlag = false;
   var totalRequests = 0;
   var finishedRequests = 0;
@@ -427,14 +425,6 @@ function Startup()
       contentArea.addEventListener("load", getContentAreaFrameCount, true);
       contentArea.addEventListener("focus", contentAreaFrameFocus, true);
       contentArea.addEventListener("load",postURLToNativeWidget, true);
-    }
-
-    // Get the content area docshell
-    var docShell = { value : null };
-    var result = appCore.getContentDocShell(docShell);            
-    if (docShell.value) {
-        //Get the session history component from docshell
-        webNavigation = docShell.value.QueryInterface(Components.interfaces.nsIWebNavigation);
     }
 
     dump("*** Pulling out the charset\n");
