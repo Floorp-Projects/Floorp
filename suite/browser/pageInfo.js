@@ -629,7 +629,15 @@ function grabAllMedia(aWindow, aDocument)
     }
   }
 
-  theList = theList.concat(aDocument.getElementsByTagName("embed"), aDocument.applets, aDocument.getElementsByTagName("object"));
+  theList = theList.concat(aDocument.getElementsByTagName("embed"));
+  theList = theList.concat(aDocument.getElementsByTagName("object"));
+
+  //XXX When Java is enabled, the DOM model for <APPLET> is broken. Bug #59686.
+  // Also, some reports of a crash with Java in Media tab (bug 136535), and mixed
+  // content from two hosts (bug 136539) so just drop applets from Page Info when
+  // Java is on. For the 1.0.1 branch; get a real fix on the trunk.
+  if (!navigator.javaEnabled())
+    theList = theList.concat(aDocument.applets);
 
   var inputList = aDocument.getElementsByTagName("input");
   var length = inputList.length
@@ -791,25 +799,29 @@ function makePreview(item)
   var imageContainer = document.getElementById("theimagecontainer");
   var oldImage = document.getElementById("thepreviewimage");
 
-  var newImage = null;
   var nn = item.nodeName.toLowerCase();
-  if (nn == "link" || nn == "input")
-  {
-    newImage = new Image();
-    newImage.src = getAbsoluteURL(getSource(item), item);
-  }
-  else
-  {
-    newImage = item.cloneNode(true);
-    newImage.src = ("src" in item && item.src) || ("href" in item && item.href);  // weird funky hack, I know :P
-  }
-
+  var regex = new RegExp("^(https?|ftp|file|gopher)://");
+  var absoluteURL = getAbsoluteURL(getSource(item), item);
+  var isProtocolAllowed = regex.test(absoluteURL); 
+  var newImage = new Image();
   newImage.setAttribute("id", "thepreviewimage");
-  if ("width" in item && item.width)
-    newImage.width = item.width;
-  if ("height" in item && item.height)
-    newImage.height = item.height;
-  newImage.removeAttribute("align"); // just in case.
+  if ((nn == "link" || nn == "input" || nn == "img") &&
+      isProtocolAllowed) 
+  {
+    newImage.src = absoluteURL;
+    if ("width" in item && item.width)
+      newImage.width = item.width;
+    if ("height" in item && item.height)
+      newImage.height = item.height;
+  } 
+  else 
+  {
+    // fallback image for protocols not allowed (e.g., data: or javascript:) 
+    // or elements not [yet] handled (e.g., object, embed). XXX blank??
+    newImage.src = "resource:///res/loading-image.gif";
+    newImage.width = 40;
+    newImage.height = 40;
+  }
 
   imageContainer.removeChild(oldImage);
   imageContainer.appendChild(newImage);
