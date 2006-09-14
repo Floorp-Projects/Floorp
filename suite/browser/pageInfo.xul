@@ -49,8 +49,7 @@
   <stringbundle id="pageinfobundle" src="chrome://navigator/locale/pageInfo.properties"/>
 
   <vbox id="cont" flex="1">  
-   <label class="header" value="&pageInfo.description;"/>
-   <tabbox id="tabbox" flex="1">
+    <tabbox id="tabbox" flex="1">
     <tabs id="tabs">
       <tab id="generalTab" label="&pageInfo.generalTab;"/>
       <tab id="formsTab" label="&pageInfo.formsTab;" hidden="true" />
