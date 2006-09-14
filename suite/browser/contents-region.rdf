@@ -11,7 +11,7 @@
   <RDF:Description about="urn:mozilla:package:navigator-region"
         chrome:author="mozilla.org"
         chrome:name="navigator-region"
-	chrome:localeVersion="1.2">
+	chrome:localeVersion="1.3b">
   </RDF:Description>
 
 </RDF:RDF>
