@@ -62,7 +62,9 @@ const COPYCOL_IMAGE_ADDRESS = 1;
 const nsICacheService = Components.interfaces.nsICacheService;
 const cacheService = Components.classes["@mozilla.org/network/cache-service;1"].getService(nsICacheService);
 var httpCacheSession = cacheService.createSession("HTTP", 0, true);
+httpCacheSession.doomEntriesIfExpired = false;
 var ftpCacheSession = cacheService.createSession("FTP", 0, true);
+ftpCacheSession.doomEntriesIfExpired = false;
 
 // scriptable date formater, for pretty printing dates
 const nsIScriptableDateFormat = Components.interfaces.nsIScriptableDateFormat;
