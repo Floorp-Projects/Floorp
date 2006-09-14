@@ -277,7 +277,7 @@
         <menuitem label="&searchBookmarksHistoryCmd.label;" accesskey="&searchBookmarksHistoryCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'dialog=no,close,chrome,resizable', 'bookmarks');"/>
         <menuseparator id="searchSeparator" />
          <menu id="searchOptionsMenu" label="&searchOptions.label;">
-            <menupopup>
+            <menupopup oncreate="syncSearchModeMenuWithPref();">
               <menuitem id="simpleSearch" type="radio" label="&simpleMode.label;" oncommand="setBrowserSearchMode(0);" />
               <menuitem id="advancedSearch" type="radio" label="&advancedMode.label;" oncommand="setBrowserSearchMode(1);" />
             </menupopup>

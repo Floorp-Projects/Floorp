@@ -672,6 +672,23 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
     RevealSearchPanel();
 }
 
+function syncSearchModeMenuWithPref()
+{
+  try {
+    var searchMode = pref.GetIntPref("browser.search.mode");
+    
+    // update search menu
+    var simpleMenuItem = document.getElementById("simpleSearch");
+    simpleMenuItem.setAttribute("checked", 
+      (searchMode == 0) ? "true" : "false");
+
+    var advancedMenuItem = document.getElementById("advancedSearch");
+    advancedMenuItem.setAttribute("checked", 
+      (searchMode == 1) ? "true" : "false");
+  } catch (ex) {
+  }
+}
+
 function setBrowserSearchMode(searchMode)
 {
   // set search mode preference
