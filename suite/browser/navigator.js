@@ -24,21 +24,16 @@
 
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 
-var pref = null;
 var gURLBar = null;
 var bundle = srGetStrBundle("chrome://navigator/locale/navigator.properties");
 var brandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
 
-try {
-  pref = Components.classes["@mozilla.org/preferences;1"]
-                   .getService(Components.interfaces.nsIPref);
-} catch (ex) {
-  debug("failed to get prefs service!\n");
-}
+var pref = Components.classes["@mozilla.org/preferences;1"]
+                     .getService(Components.interfaces.nsIPref);
 
 var appCore = null;
 
-//cached elements/ fields
+//cached elements/fields
 var statusTextFld = null;
 var statusMeter = null;
 var throbberElement = null;
@@ -73,22 +68,18 @@ function loadEventHandlers(event)
 function getContentAreaFrameCount()
 {
   var saveFrameItem = document.getElementById("savepage");
-  var focusedWindow = document.commandDispatcher.focusedWindow;
-  if (!_content.frames.length || !isDocumentFrame(focusedWindow))
+  if (!_content.frames.length || !isDocumentFrame(document.commandDispatcher.focusedWindow))
     saveFrameItem.setAttribute("hidden", "true");
   else
     saveFrameItem.removeAttribute("hidden");
 }
 
-/**
- * When a content area frame is focused, update the focused frame URL
- **/
+// When a content area frame is focused, update the focused frame URL
 function contentAreaFrameFocus()
 {
-  var saveFrameItem = document.getElementById("savepage");
-  var focusedWindow = document.commandDispatcher.focusedWindow;
-  if (isDocumentFrame(focusedWindow)) {
+  if (isDocumentFrame(document.commandDispatcher.focusedWindow)) {
     gFocusedURL = focusedWindow.location.href;
+    var saveFrameItem = document.getElementById("savepage");
     saveFrameItem.removeAttribute("hidden");
   }
 }
@@ -102,15 +93,11 @@ function UpdateBookmarksLastVisitedDate(event)
   // var url = getWebNavigation().currentURI.spec;
   var url = _content.location.href;
   if (url) {
-    try {
-      // if the URL is bookmarked, update its "Last Visited" date
-      var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
-                           .getService(Components.interfaces.nsIBookmarksService);
+    // if the URL is bookmarked, update its "Last Visited" date
+    var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
+                         .getService(Components.interfaces.nsIBookmarksService);
 
-      bmks.UpdateBookmarkLastVisitedDate(url, _content.document.characterSet);
-    } catch (ex) {
-      debug("failed to update bookmark last visited date.\n");
-    }
+    bmks.UpdateBookmarkLastVisitedDate(url, _content.document.characterSet);
   }
 }
 
@@ -419,14 +406,12 @@ function Startup()
   contentArea.addEventListener("focus", contentAreaFrameFocus, true);
 
   // set default character set if provided
-  debug("*** Pulling out the charset\n");
   if ("arguments" in window && window.arguments.length > 1) {
     if (window.arguments[1].indexOf("charset=") != -1) {
       var arrayArgComponents = window.arguments[1].split("=");
       if (arrayArgComponents) {
         //we should "inherit" the charset menu setting in a new window
         appCore.SetDocumentCharset(arrayArgComponents[1]);
-        debug("*** SetDocumentCharset(" + arrayArgComponents[1] + ")\n");
       }
     }
   }
@@ -443,7 +428,6 @@ function Startup()
     document.getElementById("home-button").setAttribute("tooltiptext", homePage);
 
   // load appropriate initial page from commandline
-  var startPage;
   var isPageCycling;
 
   // page cycling for tinderbox tests
@@ -454,7 +438,7 @@ function Startup()
   if (!isPageCycling) {
     var cmdLineService = Components.classes["@mozilla.org/appshell/commandLineService;1"]
                                    .getService(Components.interfaces.nsICmdLineService);
-    startPage = cmdLineService.URLToLoad;
+    var startPage = cmdLineService.URLToLoad;
     appCore.cmdLineURLUsed = true;
 
     // Check for window.arguments[0]. If present, use that for startPage.
@@ -465,7 +449,7 @@ function Startup()
       loadURI(startPage);
   }
 
-  initConsoleListener();
+  //initConsoleListener();
 
   // Perform default browser checking.
   checkForDefaultBrowser();
@@ -569,10 +553,8 @@ function BrowserHome()
   loadURI(homePage);
 }
 
-function OpenBookmarkURL(event, datasources)
+function OpenBookmarkURL(node, datasources)
 {
-  // what is the meaning of the return value from this function?
-  var node = event.target;
   if (node.getAttribute("container") == "true")
     return;
 
@@ -608,40 +590,36 @@ function OpenBookmarkURL(event, datasources)
 
 function OpenSearch(tabName, forceDialogFlag, searchStr)
 {
-  var searchMode = 0;
-  var searchEngineURI = null;
   var autoOpenSearchPanel = false;
   var defaultSearchURL = null;
   var fallbackDefaultSearchURL = bundle.GetStringFromName("fallbackDefaultSearchURL");
-  var otherSearchURL = bundle.GetStringFromName("otherSearchURL");
   // XXX This somehow causes a big leak, back to the old way
   //     till we figure out why. See bug 61886.
   // var url = getWebNavigation().currentURI.spec;
   var url = _content.location.href;
 
   try {
-    searchMode = pref.GetIntPref("browser.search.powermode");
     autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
-    searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
     defaultSearchURL = pref.getLocalizedUnicharPref("browser.search.defaulturl");
   } catch (ex) {
   }
 
-  debug("Search defaultSearchURL: " + defaultSearchURL + "\n");
-  // Fallback to a Netscape default (one that we can get sidebar search results for)
+  // Fallback to a default url (one that we can get sidebar search results for)
   if (!defaultSearchURL)
     defaultSearchURL = fallbackDefaultSearchURL;
-
-  debug("This is before the search " + url + "\n");
-  debug("This is before the search " + searchStr + "\n");
 
   if (!searchStr || searchStr == url) {
     if (defaultSearchURL != fallbackDefaultSearchURL)
       loadURI(defaultSearchURL);
     else
-      loadURI(otherSearchURL);
+      loadURI(bundle.GetStringFromName("otherSearchURL"));
 
   } else {
+    var searchMode = 0;
+    try {
+      searchMode = pref.GetIntPref("browser.search.powermode");
+    } catch(ex) {
+    }
     if (forceDialogFlag || searchMode == 1) {
       // Use a single search dialog
       var windowManager = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"]
@@ -667,15 +645,15 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 
         searchDS.RememberLastSearchText(escapedSearchStr);
 
-        if (searchEngineURI) {
-          try {
+        try {
+          var searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
+          if (searchEngineURI) {
             var searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr);
             if (searchURL)
               defaultSearchURL = searchURL;
-          } catch (ex) {
           }
+        } catch (ex) {
         }
-
         loadURI(defaultSearchURL);
       }
     }
@@ -704,14 +682,9 @@ function setBrowserSearchMode(searchMode)
 
 function RevealSearchPanel()
 {
-  var should_popopen = true;
-  var should_unhide = true;
   var searchPanel = document.getElementById("urn:sidebar:panel:search");
-
-  if (searchPanel) {
-    // SidebarSelectPanel() lives in sidebarOverlay.js
-    SidebarSelectPanel(searchPanel, should_popopen, should_unhide);
-  }
+  if (searchPanel)
+    SidebarSelectPanel(searchPanel, true, true); // lives in sidebarOverlay.js
 }
 
 //Note: BrowserNewEditorWindow() was moved to globalOverlay.xul and renamed to NewEditorWindow()
@@ -764,11 +737,8 @@ function BrowserEditBookmarks()
   var bookmarksWindow = windowManager.getMostRecentWindow("bookmarks:manager");
 
   if (bookmarksWindow) {
-    //debug("Reuse existing bookmarks window");
     bookmarksWindow.focus();
   } else {
-    //debug("Open a new bookmarks dialog");
-
     // while disabled, don't open new bookmarks window
     if (!gDisableBookmarks) {
       gDisableBookmarks = true;
@@ -787,7 +757,7 @@ function BrowserPrintPreview()
 
 function BrowserPrint()
 {
-  // using window.print() until printing becomes scriptable on docShell
+  // using _content.print() until printing becomes scriptable on docShell
   _content.print();
 }
 
@@ -865,19 +835,7 @@ function BrowserPrint()
     zoomAnchor = zoomOther;
   }
 
-  function GetBrowserDocShell() {
-    var docShell = null;
-    var browserElement = document.getElementById("content");
-    if (browserElement) {
-      docShell = browserElement.boxObject.QueryInterface(Components.interfaces.nsIBrowserBoxObject).docShell;
-    } else {
-      debug("no browserElement found\n");
-    }
-    return docShell;
-  }
-
   function setTextZoom() {
-    // debug("Level: "+zoomLevel+" Factor: "+zoomFactor+" Anchor: "+zoomAnchor+" Steps: "+zoomSteps+"\n");
     var markupDocumentViewer = getBrowser().markupDocumentViewer;
     markupDocumentViewer.textZoom = zoomFactor / 100.0;
   }
@@ -1166,11 +1124,8 @@ function BrowserClose()
 function loadURI(uri)
 {
   try {
-    // _content.location.href = uri;
     getWebNavigation().loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE);
   } catch (e) {
-    debug("Didn't load uri: '"+uri+"'\n");
-    debug(e);
   }
 }
 
@@ -1264,7 +1219,6 @@ function BrowserViewSource()
     focusedWindow = _content;
 
   var docCharset = "charset=" + focusedWindow.document.characterSet;
-  // debug("*** Current document charset: " + docCharset + "\n");
 
   //now try to open a view-source window while inheriting the charset (if any)
   openDialog("chrome://navigator/content/viewSource.xul",
@@ -1280,20 +1234,8 @@ function BrowserPageInfo()
                     "chrome,dialog=no");
 }
 
-function doTests()
-{
-}
-
-function dumpProgress()
-{
-  var meter = document.getElementById("statusbar-icon");
-  debug("meter mode=" + meter.getAttribute("mode") + "\n");
-  debug("meter value=" + meter.getAttribute("value") + "\n");
-}
-
 function BrowserReload()
 {
-  debug("Sorry, command not implemented.\n");
 }
 
 function hiddenWindowStartup()
@@ -1303,27 +1245,10 @@ function hiddenWindowStartup()
                        'Browser:Print', 'canGoBack', 'canGoForward', 'Browser:Home', 'Browser:AddBookmark', 'cmd_undo',
                        'cmd_redo', 'cmd_cut', 'cmd_copy','cmd_paste', 'cmd_delete', 'cmd_selectAll'];
   for (id in disabledItems) {
-    // debug("disabling " + disabledItems[id] + "\n");
     var broadcaster = document.getElementById(disabledItems[id]);
     if (broadcaster)
       broadcaster.setAttribute("disabled", "true");
   }
-}
-
-// Dumps all properties of anObject.
-function dumpObject(anObject, prefix)
-{
-  if (!prefix)
-    prefix = anObject;
-
-  for (prop in anObject)
-    debug(prefix + "." + prop + " = " + anObject[prop] + "\n");
-}
-
-// Takes JS expression and dumps "expr="+expr+"\n"
-function dumpExpr(expr)
-{
-  debug(expr + "=" + eval(expr) + "\n");
 }
 
 // Initialize the LeakDetector class.
@@ -1385,14 +1310,10 @@ var consoleListener = {
 
   // whether or not an error alert is being displayed
   isShowingError: false
-
 };
 
 function initConsoleListener()
 {
-  var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
-                                 .getService(Components.interfaces.nsIConsoleService);
-
   /**
    * XXX - console launch hookup requires some work that I'm not sure how to
    *       do.
@@ -1408,9 +1329,14 @@ function initConsoleListener()
    *          errors.
    *
    *       As a result I am commenting out this for the moment.
-   **/
-  //if (consoleService)
-  //  consoleService.registerListener(consoleListener);
+   *
+
+  var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
+                                 .getService(Components.interfaces.nsIConsoleService);
+
+  if (consoleService)
+    consoleService.registerListener(consoleListener);
+  */
 }
 
 function loadErrorConsole(aEvent)
@@ -1428,26 +1354,18 @@ function clearErrorNotification()
 }
 
 //Posts the currently displayed url to a native widget so third-party apps can observe it.
-var urlWidgetService = null;
-try {
-  urlWidgetService = Components.classes["@mozilla.org/urlwidget;1"]
-                               .getService(Components.interfaces.nsIUrlWidget);
-} catch (exception) {
-  //debug("Error getting url widget service: " + exception + "\n");
-}
-
 function postURLToNativeWidget()
 {
-  if (urlWidgetService) {
-    // XXX This somehow causes a big leak, back to the old way
-    //     till we figure out why. See bug 61886.
-    // var url = getWebNavigation().currentURI.spec;
-    var url = _content.location.href;
-    try {
-      urlWidgetService.SetURLToHiddenControl(url, window);
-    } catch (exception) {
-      debug("SetURLToHiddenControl failed: " + exception + "\n");
-    }
+  var urlWidgetService = Components.classes["@mozilla.org/urlwidget;1"]
+                                   .getService(Components.interfaces.nsIUrlWidget);
+
+  // XXX This somehow causes a big leak, back to the old way
+  //     till we figure out why. See bug 61886.
+  // var url = getWebNavigation().currentURI.spec;
+  var url = _content.location.href;
+  try {
+    urlWidgetService.SetURLToHiddenControl(url, window);
+  } catch(ex) {
   }
 }
 
@@ -1507,7 +1425,6 @@ function FillInHTMLTooltip(tipElement)
       }
     }
   } catch (e) {
-    debug(e);
   }
 
   return retVal;
@@ -1631,11 +1548,6 @@ function checkForDefaultBrowser()
               .checkSettings(window);
   } catch(e) {
   }
-}
-
-function debug(message)
-{
-  dump(message);
 }
 
 function formCapture()
