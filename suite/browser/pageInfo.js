@@ -21,6 +21,9 @@
  *   Terry Hayes <thayes@netscape.com>
  */
 
+const nsScriptableDateFormat_CONTRACTID = "@mozilla.org/intl/scriptabledateformat;1";
+const nsIScriptableDateFormat = Components.interfaces.nsIScriptableDateFormat;
+
 /* Overlays register init functions here.
  *   Add functions to call by invoking "onLoadRegistry.append(XXXLoadFunc);"
  *   The XXXLoadFunc should be unique to the overlay module, and will be
@@ -93,8 +96,29 @@ function makeDocument(page, root)
   var lastModified;
   var lastMod = page.lastModified // get string of last modified date
   var lastModdate = Date.parse(lastMod)   // convert modified string to date
-
-  lastModified = (lastModdate) ? lastMod : "Unknown";  // unknown date (or January 1, 1970 GMT)
+  var lastModified;
+  if (lastModdate) {
+    var date = new Date(lastModdate);
+    try {
+      var dateService = Components.classes[nsScriptableDateFormat_CONTRACTID]
+        .getService(nsIScriptableDateFormat);
+      lastModified =  dateService.FormatDateTime(
+                              "", dateService.dateFormatLong,
+                              dateService.timeFormatSeconds,
+                              date.getFullYear(), date.getMonth()+1,
+                              date.getDate(), date.getHours(),
+                              date.getMinutes(), date.getSeconds());
+    } catch(e) {
+      lastModified = lastMod;
+    }
+  } else {
+    try {
+      var pageInfoBundle = document.getElementById("bundle_pageInfo");
+      lastModified = pageInfoBundle.getString("unknown");
+    } catch(e) {
+      lastModified = "Unknown";
+    }
+  }
 
   document.getElementById("titletext").setAttribute("value", title);
   document.getElementById("urltext").setAttribute("value", url);

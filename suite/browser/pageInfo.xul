@@ -48,6 +48,7 @@
   persist="screenX screenY width height sizemode">
 
   <script type="application/x-javascript" src="chrome://navigator/content/pageInfo.js"/>
+  <stringbundle src="chrome://navigator/locale/pageInfo.properties" id="bundle_pageInfo"/>
 
   <!-- keys are appended from the overlay -->
   <keyset id="dialogKeys"/>
