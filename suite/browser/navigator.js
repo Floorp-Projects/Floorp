@@ -323,9 +323,6 @@ function Startup()
   window.browserContentListener =
     new nsBrowserContentListener(window, getBrowser());
   
-  // XXXjag hack for directory.xul/js
-  _content.appCore = appCore;
-
   // Initialize browser instance..
   appCore.setWebShellWindow(window);
 
@@ -343,10 +340,10 @@ function Startup()
       var arrayArgComponents = window.arguments[1].split("=");
       if (arrayArgComponents) {
         //we should "inherit" the charset menu setting in a new window
-        appCore.setDefaultCharacterSet(arrayArgComponents[1]); //XXXjag see bug 67442
+        getMarkupDocumentViewer().defaultCharacterSet = arrayArgComponents[1];
       }
     } else if (window.arguments[1].indexOf("turbo=yes") != -1) {
-        turboMode = true;
+      turboMode = true;
     }
   }
 

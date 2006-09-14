@@ -66,7 +66,8 @@ function viewSource(url)
       if (window.arguments[1].indexOf('charset=') != -1) {
         var arrayArgComponents = window.arguments[1].split('=');
         if (arrayArgComponents) {
-          appCore.setDefaultCharacterSet(arrayArgComponents[1]); //XXXjag see bug 67442
+          //we should "inherit" the charset menu setting in a new window
+          getMarkupDocumentViewer().defaultCharacterSet = arrayArgComponents[1];
         } 
       }
     }
