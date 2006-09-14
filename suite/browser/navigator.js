@@ -1774,8 +1774,8 @@ function stylesheetSwitch(forDocument, title) {
         docStyleSheet.disabled = false;
       continue;
     }
-  } 
     docStyleSheet.disabled = (title != docStyleSheet.title);
+  }     
 }
 
 function applyTheme(themeName)
