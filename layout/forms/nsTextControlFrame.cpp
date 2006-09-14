@@ -235,7 +235,6 @@ protected:
   nsTextControlFrame* mFrame;  // weak reference
   
   PRPackedBool    mSelectionWasCollapsed;
-  PRPackedBool    mKnowSelectionCollapsed;
   /**
    * Whether we had undo items or not the last time we got EditAction()
    * notification (when this state changes we update undo and redo menus)
@@ -256,7 +255,6 @@ protected:
 nsTextInputListener::nsTextInputListener()
 : mFrame(nsnull)
 , mSelectionWasCollapsed(PR_TRUE)
-, mKnowSelectionCollapsed(PR_FALSE)
 , mHadUndoItems(PR_FALSE)
 , mHadRedoItems(PR_FALSE)
 {
@@ -325,11 +323,10 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
   }
 
   // if the collapsed state did not change, don't fire notifications
-  if (mKnowSelectionCollapsed && collapsed == mSelectionWasCollapsed)
+  if (collapsed == mSelectionWasCollapsed)
     return NS_OK;
   
   mSelectionWasCollapsed = collapsed;
-  mKnowSelectionCollapsed = PR_TRUE;
 
   return UpdateTextInputCommands(NS_LITERAL_STRING("select"));
 }
