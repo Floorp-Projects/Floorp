@@ -339,6 +339,21 @@ nsBrowserStatusHandler.prototype =
     }
     UpdateBackForwardButtons();
 
+    var blank = (location == "about:blank") || (location == "");
+    var browser = getBrowser().mCurrentBrowser;
+
+    //clear popupDomain accordingly so that icon will go away when visiting
+    //an unblocked site after a blocked site. note: if a popup is blocked 
+    //the icon will stay as long as we are in the same domain.
+    if (blank ||
+        !("popupDomain" in browser) ||
+        aLocation.hostPort != browser.popupDomain) {
+      browser.popupDomain = null;
+    }
+
+    var popupIcon = document.getElementById("popupIcon");
+    popupIcon.hidden = !browser.popupDomain;
+
     this.locationChanged = true;    
   },
 

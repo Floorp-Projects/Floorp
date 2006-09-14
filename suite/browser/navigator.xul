@@ -412,6 +412,7 @@ Contributor(s):
     <statusbarpanel class="statusbarpanel-progress">
       <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
     </statusbarpanel>
+    <statusbarpanel id="popupIcon" class="statusbarpanel-iconic" hidden="true" oncommand="ViewPopupManager()"/>
     <statusbarpanel class="statusbarpanel-iconic" id="offline-status"/>
     <statusbarpanel class="statusbarpanel-iconic" id="security-button"
                     onclick="BrowserPageInfo(null, 'securityTab')"/>

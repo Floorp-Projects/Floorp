@@ -147,6 +147,52 @@ const gPopupPermListener = {
   }
 };
 
+const POPUP_TYPE = 2;
+const gPopupPrefListener =
+{
+  domain: "dom.disable_open_during_load",
+  observe: function(subject, topic, prefName)
+  {        
+    if (topic != "nsPref:changed" || prefName != this.domain)
+      return;
+
+    var browsers = getBrowser().browsers;
+    var policy = pref.getBoolPref(prefName);
+
+    var hosts = [];
+
+    var popupManager = Components.classes["@mozilla.org/PopupWindowManager;1"]
+                                 .getService(Components.interfaces.nsIPopupWindowManager);
+    
+    var enumerator = popupManager.getEnumerator();
+    var count=0;
+    while (enumerator.hasMoreElements()) {
+      var permission = enumerator.getNext()
+                                 .QueryInterface(Components.interfaces.nsIPermission);
+      if (permission.capability == policy)
+        hosts[permission.host] = permission.host;
+    }
+
+    var popupIcon = document.getElementById("popupIcon");
+    
+    if (!policy) { // blacklist
+      for (var i = 0; i < browsers.length; i++) {
+        if (browsers[i].popupDomain in hosts)
+          break;
+        browsers[i].popupDomain = null;
+        popupIcon.hidden = true;
+      }
+    } else { // whitelist
+      for (var i = 0; i < browsers.length; i++) {
+        if (browsers[i].popupDomain in hosts) {
+          browsers[i].popupDomain = null;
+          popupIcon.hidden = true;
+        }
+      }
+    }
+  }
+};
+
 /**
 * Pref listener handler functions.
 * Both functions assume that observer.domain is set to 
@@ -428,6 +474,7 @@ function Startup()
   addPrefListener(gTabStripPrefListener);
   addPrefListener(gHomepagePrefListener);
   addPopupPermListener(gPopupPermListener);
+  addPrefListener(gPopupPrefListener);
 
   window.browserContentListener =
     new nsBrowserContentListener(window, getBrowser());
@@ -551,6 +598,8 @@ function Startup()
   // initiated by a web page script
   addEventListener("fullscreen", onFullScreen, false);
 
+  addEventListener("DOMPopupBlocked", onPopupBlocked, false);
+
   // does clicking on the urlbar select its contents?
   gClickSelectsAll = pref.getBoolPref("browser.urlbar.clickSelectsAll");
 
@@ -631,6 +680,7 @@ function Shutdown()
   removePrefListener(gTabStripPrefListener);
   removePrefListener(gHomepagePrefListener);
   removePopupPermListener(gPopupPermListener);
+  removePrefListener(gPopupPrefListener);
 
   window.browserContentListener.close();
   // Close the app core.
@@ -1958,6 +2008,64 @@ function BrowserFullScreen()
 function onFullScreen()
 {
   FullScreen.toggle();
+}
+
+
+function onPopupBlocked(aEvent) {
+  var playSound = pref.getBoolPref("privacy.popups.sound_enabled");
+
+  if (playSound) {
+    var sound = Components.classes["@mozilla.org/sound;1"]
+                          .createInstance(Components.interfaces.nsISound);
+
+    var soundUrlSpec = pref.getCharPref("privacy.popups.sound_url");
+
+    //beep if no sound file specified
+    if (!soundUrlSpec)
+      sound.beep();
+
+    if (soundUrlSpec.substr(0, 7) == "file://") {
+      var soundUrl = Components.classes["@mozilla.org/network/standard-url;1"]
+                               .createInstance(Components.interfaces.nsIFileURL);
+      soundUrl.spec = soundUrlSpec;
+      var file = soundUrl.file;
+      if (file.exists)
+        sound.play(soundUrl);
+    } 
+    else {
+      sound.playSystemSound(soundUrlSpec);
+    }
+  }
+
+  var showIcon = pref.getBoolPref("privacy.popups.statusbar_icon_enabled");
+  if (showIcon) {
+    var doc = aEvent.target;
+    var browsers = getBrowser().browsers;
+    for (var i = 0; i < browsers.length; i++) {
+      if (browsers[i].contentDocument == doc) {
+        var hostPort = browsers[i].currentURI.hostPort;
+        browsers[i].popupDomain = hostPort;
+        if (browsers[i] == getBrowser().selectedBrowser) {
+          var popupIcon = document.getElementById("popupIcon");
+          popupIcon.hidden = false;
+        }
+      }
+    }
+  }
+}
+
+function ViewPopupManager() {
+  var policy = pref.getBoolPref("dom.disable_open_during_load");
+  
+  var hostPort = "";
+  try {
+    hostPort = getBrowser().selectedBrowser.currentURI.hostPort;
+  }
+  catch(ex) { }
+  
+  //open blacklist or whitelist with web site prefilled to unblock
+  window.openDialog("chrome://communicator/content/popupManager.xul", "",
+                      "chrome,resizable=yes", policy, hostPort, false);
 }
 
 // Set up a lame hack to avoid opening two bookmarks.
