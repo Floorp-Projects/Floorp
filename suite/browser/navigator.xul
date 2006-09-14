@@ -80,7 +80,7 @@ Contributor(s): ______________________________________. -->
 
 <!-- broadcasters are appended from the overlay -->
 <broadcasterset id="broadcasterset">
-  <broadcaster id="canReload" oncommand="BrowserReallyReload(0);"/>
+  <broadcaster id="canReload" oncommand="BrowserReallyReload(event);"/>
   <broadcaster id="canPrint"/>
   <broadcaster id="args" value=""/> 
 </broadcasterset>
@@ -139,7 +139,7 @@ Contributor(s): ______________________________________. -->
         <menuitem id="context-reload"
                   value="&reloadCmd.label;"
                   accesskey="&reloadCmd.accesskey;"
-                  oncommand="BrowserReallyReload(0);"/>
+                  oncommand="BrowserReallyReload(event);"/>
         <menuitem id="context-reload-frame"
                   value="&reloadFrameCmd.label;"
                   accesskey="&reloadFrameCmd.accesskey;"
