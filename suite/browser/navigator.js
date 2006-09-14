@@ -1659,21 +1659,16 @@ function FillInHTMLTooltip ( tipElement )
         
       var titleText = "";
       var XLinkTitleText = "";
-      var summaryText = "";
       
-      while ( !titleText && !summaryText && !XLinkTitleText && tipElement ) {
+      while ( !titleText && !XLinkTitleText && tipElement ) {
         if ( tipElement.nodeType == 1 ) {
           titleText = tipElement.getAttributeNS(HTMLNS, "title");
           XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
-          if ( (tipElement.namespaceURI == "" || tipElement.namespaceURI == HTMLNS)
-              && tipElement.tagName.toLowerCase() == "table" ) {
-            summaryText = tipElement.getAttributeNS(HTMLNS, "summary");
-          }
         }
         tipElement = tipElement.parentNode;
       }
       
-      var texts = [ titleText, summaryText, XLinkTitleText ];
+      var texts = [ titleText, XLinkTitleText ];
       
       for (var i = 0; i < texts.length; i++) {
         var t = texts[i];
