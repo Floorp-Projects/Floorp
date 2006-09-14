@@ -496,7 +496,7 @@ function LoadBookmarksCallback()
                                     .getService(Components.interfaces.nsIBookmarksService);
     gBookmarksService.ReadBookmarks();
     // tickle personal toolbar to load personal toolbar items
-    var personalToolbar = document.getElementById("innermostBox");
+    var personalToolbar = document.getElementById("NC:PersonalToolbarFolder");
     personalToolbar.builder.rebuild();
   } catch (e) {
   }

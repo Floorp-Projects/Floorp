@@ -252,7 +252,7 @@ var personalToolbarDNDObserver = {
         return;
 
       //PCH: cleanup needed here, url is already calculated in isBookmark()
-      var db = document.getElementById("innermostBox").database;
+      var db = document.getElementById("NC:PersonalToolbarFolder").database;
       var url = RDFUtils.getTarget(db, uri, NC_RDF("URL"));
       if (url)
         url = url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
@@ -323,7 +323,7 @@ var personalToolbarDNDObserver = {
       return;
     var elementRes = RDFUtils.getResource(xferData[0]);
 
-    var childDB = document.getElementById("innermostBox").database;
+    var childDB = document.getElementById("NC:PersonalToolbarFolder").database;
     var rdfContainer = Components.classes["@mozilla.org/rdf/container;1"].createInstance(Components.interfaces.nsIRDFContainer);
 
     // if dragged url is already bookmarked, remove it from current location first
@@ -362,8 +362,6 @@ var personalToolbarDNDObserver = {
     if (aEvent.target.id == "bookmarks-button") 
       // dropPosition is always DROP_ON
       parentContainer = RDFUtils.getResource("NC:BookmarksRoot");
-    else if (aEvent.target.id == "innermostBox") 
-      parentContainer = RDFUtils.getResource("NC:PersonalToolbarFolder");
     else if (dropPosition == this.DROP_ON) 
       parentContainer = RDFUtils.getResource(aEvent.target.id);
     else {
@@ -431,7 +429,7 @@ var personalToolbarDNDObserver = {
   {
     var children = aNode.childNodes;
     for (var i = 0; i < children.length; i++) {
-      if (children[i].id == "innermostBox") {
+      if (children[i].id == "NC:PersonalToolbarFolder") {
         this.onDragCloseMenu(children[i]);
       }
       else if (this.isContainer(children[i]) && children[i].getAttribute("open") == "true") {
@@ -450,7 +448,7 @@ var personalToolbarDNDObserver = {
       return
     }
     // The bookmark button is not a sibling of the folders in the PT
-    if (this.mCurrentDragOverTarget.parentNode.id == "innermostBox")
+    if (this.mCurrentDragOverTarget.parentNode.id == "NC:PersonalToolbarFolder")
       this.onDragCloseMenu(document.getElementById("PersonalToolbar"));
     else
       this.onDragCloseMenu(this.mCurrentDragOverTarget.parentNode);
@@ -642,7 +640,7 @@ var personalToolbarDNDObserver = {
   {
     if (!aURI)
       return false;
-    var db = document.getElementById("innermostBox").database;
+    var db = document.getElementById("NC:PersonalToolbarFolder").database;
     var typeValue = RDFUtils.getTarget(db, aURI, _RDF("type"));
     typeValue = RDFUtils.getValueFromResource(typeValue);
     return (typeValue == NC_RDF("BookmarkSeparator") ||
