@@ -878,7 +878,9 @@ function BrowserHome()
     for (var i in homePage)
       URIs.push({URI: homePage[i]});
 
-    gBrowser.loadGroup(URIs);
+    var tab = gBrowser.loadGroup(URIs);
+    if (!pref.getBoolPref("browser.tabs.loadInBackground"))
+      gBrowser.selectedTab = tab;
   }
 }
 
