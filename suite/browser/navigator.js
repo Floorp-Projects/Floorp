@@ -897,12 +897,19 @@ function BrowserSetForcedDetector()
 
 function BrowserClose()
 {
+  var browser = getBrowser();
+  if (browser && browser.localName == 'tabbrowser' && browser.mTabContainer.childNodes.length > 1) {
+    // Just close up a tab.
+    browser.removeCurrentTab(); // XXXdwh In tab mode, the menu item should say close tab.
+    return;
+  }
+
   // This code replicates stuff in Shutdown().  It is here because
   // window.screenX and window.screenY have real values.  We need
   // to fix this eventually but by replicating the code here, we
   // provide a means of saving position (it just requires that the
   // user close the window via File->Close (vs. close box).
-
+  
   // Get the current window position/size.
   var x = window.screenX;
   var y = window.screenY;
