@@ -11,7 +11,6 @@ Expect: result.stylesheet.spec == "http://www.penny-arcade.com/stylesheets/rss-d
 <channel>
 <title>Penny-Arcade</title>
 <link>http://www.penny-arcade.com/</link>
-<description>News Fucker 4000</description>
 <language>en-us</language>
 
 <copyright>Copyright 1999 - 2006 Penny Arcade, Inc.</copyright>
