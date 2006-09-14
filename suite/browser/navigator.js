@@ -608,6 +608,8 @@ function OpenBookmarkURL(node, datasources)
     return;
 
   var url = node.getAttribute("id");
+  if (!url) // if empty url (most likely a normal menu item like "Manage Bookmarks",
+    return; // don't bother loading it
   try {
     // add support for IE favorites under Win32, and NetPositive URLs under BeOS
     if (datasources) {
