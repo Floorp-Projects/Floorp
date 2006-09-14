@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -17,9 +17,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *  Blake Ross <blakeross@telocity.com>
- *  Peter Annema <disttsc@bart.nl>
+ * Contributor(s):
+ *   Blake Ross <blakeross@telocity.com>
+ *   Peter Annema <disttsc@bart.nl>
  */
 
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
@@ -36,27 +36,15 @@ try {
   debug("failed to get prefs service!\n");
 }
 
-  var appCore = null;
+var appCore = null;
 
-  // Stored Status, Link and Loading values
-  var defaultStatus = bundle.GetStringFromName( "defaultStatus" );
-  var jsStatus = null;
-  var jsDefaultStatus = null;
-  var overLink = null; 
-  var startTime = (new Date()).getTime();
-
-  //cached elements/ fields
-  var statusTextFld = null;
-  var statusMeter = null;
-  var throbberElement = null;
-  var stopButton = null;
-  var stopMenu = null;
-  var stopContext = null;
-
-  var useRealProgressFlag = false;
-  var totalRequests = 0;
-  var finishedRequests = 0;
-///////////////////////////// DOCUMENT SAVE ///////////////////////////////////
+//cached elements/ fields
+var statusTextFld = null;
+var statusMeter = null;
+var throbberElement = null;
+var stopButton = null;
+var stopMenu = null;
+var stopContext = null;
 
 // focused frame URL
 var gFocusedURL = null;
@@ -78,22 +66,22 @@ function loadEventHandlers(event)
   }
 }
 
-/** 
+/**
  * Determine whether or not the content area is displaying a page with frames,
  * and if so, toggle the display of the 'save frame as' menu item.
  **/
 function getContentAreaFrameCount()
 {
   var saveFrameItem = document.getElementById("savepage");
-  if (!window._content.frames.length ||
-      !isDocumentFrame(document.commandDispatcher.focusedWindow))
+  var focusedWindow = document.commandDispatcher.focusedWindow;
+  if (!_content.frames.length || !isDocumentFrame(focusedWindow))
     saveFrameItem.setAttribute("hidden", "true");
-  else 
+  else
     saveFrameItem.removeAttribute("hidden");
 }
 
 /**
- * When a content area frame is focused, update the focused frame URL 
+ * When a content area frame is focused, update the focused frame URL
  **/
 function contentAreaFrameFocus()
 {
@@ -105,15 +93,15 @@ function contentAreaFrameFocus()
   }
 }
 
-/** 
- * Determine whether or not a given focused DOMWindow is in the content 
+/**
+ * Determine whether or not a given focused DOMWindow is in the content
  * area.
- **/   
+ **/
 function isDocumentFrame(aFocusedWindow)
 {
-  var contentFrames = window._content.frames;
+  var contentFrames = _content.frames;
   if (contentFrames.length) {
-    for (var i = 0; i < contentFrames.length; i++ ) {
+    for (var i = 0; i < contentFrames.length; ++i) {
       if (aFocusedWindow == contentFrames[i])
         return true;
     }
@@ -125,192 +113,186 @@ function isDocumentFrame(aFocusedWindow)
 
 function UpdateBookmarksLastVisitedDate(event)
 {
-	if ((window._content.location.href) && (window._content.location.href != ""))
-	{
-		try
-		{
-			// if the URL is bookmarked, update its "Last Visited" date
-			var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"].getService();
-			if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
-			if (bmks)	bmks.UpdateBookmarkLastVisitedDate(window._content.location.href, window._content.document.characterSet);
-		}
-		catch(ex)
-		{
-			debug("failed to update bookmark last visited date.\n");
-		}
-	}
+  var url = getWebNavigation().currentURI.spec;
+  if (url) {
+    try {
+      // if the URL is bookmarked, update its "Last Visited" date
+      var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
+                           .getService(Components.interfaces.nsIBookmarksService);
+
+      bmks.UpdateBookmarkLastVisitedDate(url, _content.document.characterSet);
+    } catch (ex) {
+      debug("failed to update bookmark last visited date.\n");
+    }
+  }
 }
 
 function UpdateInternetSearchResults(event)
 {
-	if ((window._content.location.href) && (window._content.location.href != ""))
-	{
-		var	searchInProgressFlag = false;
-		var autoOpenSearchPanel = false;
+  var url = getWebNavigation().currentURI.spec;
+  if (url) {
+    try {
+      var search = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
+                             .getService(Components.interfaces.nsIInternetSearchService);
 
-		try
-		{
-			var search = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"].getService();
-			if (search)	search = search.QueryInterface(Components.interfaces.nsIInternetSearchService);
-			if (search)	searchInProgressFlag = search.FindInternetSearchResults(window._content.location.href);
-			autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
-		}
-		catch(ex)
-		{
-		}
+      var searchInProgressFlag = search.FindInternetSearchResults(url);
 
-		if (searchInProgressFlag == true && autoOpenSearchPanel == true)
-		{
-			RevealSearchPanel();
-		}
-	}
-}
+      if (searchInProgressFlag) {
+        var autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
 
-function UpdateStatusField()
-{
-	var text = defaultStatus;
-
-	if(jsStatus)
-		text = jsStatus;
-	else if(overLink)
-		text = overLink;
-	else if(jsDefaultStatus)
-		text = jsDefaultStatus;
-
-	if(!statusTextFld)
-		statusTextFld = document.getElementById("statusbar-display");
-
-	statusTextFld.setAttribute("value", text);
+        if (autoOpenSearchPanel)
+          RevealSearchPanel();
+      }
+    } catch (ex) {
+    }
+  }
 }
 
 function nsXULBrowserWindow()
 {
+  this.defaultStatus = bundle.GetStringFromName("defaultStatus");
 }
 
-nsXULBrowserWindow.prototype = 
+nsXULBrowserWindow.prototype =
 {
+  useRealProgressFlag : false,
+  totalRequests : 0,
+  finishedRequests : 0,
+
+  // Stored Status, Link and Loading values
+  defaultStatus : "",
+  jsStatus : "",
+  jsDefaultStatus : "",
+  overLink : "",
+  startTime : 0,
+
   hideAboutBlank : true,
 
   QueryInterface : function(iid)
   {
-    if(iid.equals(Components.interfaces.nsIXULBrowserWindow))
+    if (iid.equals(Components.interfaces.nsIXULBrowserWindow))
       return this;
     throw Components.results.NS_NOINTERFACE;
-    return null;        // quiet warnings
   },
+
   setJSStatus : function(status)
   {
-    if(status == "")
-      jsStatus = null;
-    else
-      jsStatus = status;
-    UpdateStatusField();
+    this.jsStatus = status;
+    this.updateStatusField();
     // Status is now on status bar; don't use it next time.
     // This will cause us to revert to defaultStatus/jsDefaultStatus when the
     // user leaves the link (e.g., if the script set window.status in onmouseover).
-    jsStatus = null;
+    this.jsStatus = "";
   },
+
   setJSDefaultStatus : function(status)
   {
-    if(status == "")
-      jsDefaultStatus = null;
-    else
-      jsDefaultStatus = status;
-    UpdateStatusField();
+    this.jsDefaultStatus = status;
+    this.updateStatusField();
   },
+
   setDefaultStatus : function(status)
   {
-    if(status == "")
-      defaultStatus = null;
-    else
-      defaultStatus = status;
-    UpdateStatusField();
+    this.defaultStatus = status;
+    this.updateStatusField();
   },
+
   setOverLink : function(link)
   {
-    if(link == "")
-      overLink = null;
-    else
-      overLink = link;
-    UpdateStatusField();
+    this.overLink = link;
+    this.updateStatusField();
   },
+
+  updateStatusField : function()
+  {
+    var text = this.jsStatus || this.overLink || this.jsDefaultStatus || this.defaultStatus;
+
+    if (!statusTextFld)
+      statusTextFld = document.getElementById("statusbar-display");
+
+    statusTextFld.setAttribute("value", text);
+  },
+
   onProgress : function (channel, current, max)
   {
-    if(!statusMeter)
-      statusMeter = document.getElementById("statusbar-icon");
-    var percentage = 0;
-
-    if (!useRealProgressFlag && (channel != null)) {
+    if (!this.useRealProgressFlag && channel)
       return;
-    }
+
+    if (!statusMeter)
+      statusMeter = document.getElementById("statusbar-icon");
 
     if (max > 0) {
-      percentage = (current * 100) / max ;
-      if (statusMeter.getAttribute("mode") != "normal")     
+      if (statusMeter.getAttribute("mode") != "normal")
         statusMeter.setAttribute("mode", "normal");
+
+      var percentage = (current * 100) / max ;
       statusMeter.value = percentage;
       statusMeter.progresstext = Math.round(percentage) + "%";
-    }
-    else {
+    } else {
       if (statusMeter.getAttribute("mode") != "undetermined")
         statusMeter.setAttribute("mode","undetermined");
     }
   },
+
   onStateChange : function(channel, state)
   {
-    if(!throbberElement)
+    const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+
+    if (!throbberElement)
       throbberElement = document.getElementById("navigator-throbber");
-    if(!statusMeter)
+    if (!statusMeter)
       statusMeter = document.getElementById("statusbar-icon");
-    if(!stopButton)
+    if (!stopButton)
       stopButton = document.getElementById("stop-button");
-    if(!stopMenu)
+    if (!stopMenu)
       stopMenu = document.getElementById("menuitem-stop");
-    if(!stopContext)
+    if (!stopContext)
       stopContext = document.getElementById("context-stop");
 
-    if (state & Components.interfaces.nsIWebProgressListener.STATE_START) {
-      if(state & Components.interfaces.nsIWebProgressListener.STATE_IS_NETWORK) {
+    if (state & nsIWebProgressListener.STATE_START) {
+      if (state & nsIWebProgressListener.STATE_IS_NETWORK) {
         // Remember when loading commenced.
-        startTime = (new Date()).getTime();
+        this.startTime = (new Date()).getTime();
+
         // Turn progress meter on.
         statusMeter.setAttribute("mode","undetermined");
         throbberElement.setAttribute("busy", true);
 
-        // XXX: These need to be based on window activity...    
+        // XXX: These need to be based on window activity...
         stopButton.setAttribute("disabled", false);
         stopMenu.setAttribute("disabled", false);
         stopContext.setAttribute("disabled", false);
 
         // Initialize the progress stuff...
         statusMeter.setAttribute("mode","undetermined");
-        useRealProgressFlag = false;
-        totalRequests = 0;
-        finishedRequests = 0;
+        this.useRealProgressFlag = false;
+        this.totalRequests = 0;
+        this.finishedRequests = 0;
       }
-      if (state & Components.interfaces.nsIWebProgressListener.STATE_IS_REQUEST) {
-        totalRequests += 1;
+
+      if (state & nsIWebProgressListener.STATE_IS_REQUEST) {
+        this.totalRequests += 1;
       }
       EnableBusyCursor(throbberElement.getAttribute("busy") == "true");
     }
-    else if (state & Components.interfaces.nsIWebProgressListener.STATE_STOP) {
-      if (state & Components.interfaces.nsIWebProgressListener.STATE_IS_REQUEST) {
-        finishedRequests += 1;
-        if (!useRealProgressFlag) {
-          this.onProgress(null, finishedRequests, totalRequests);
-        }
+    else if (state & nsIWebProgressListener.STATE_STOP) {
+      if (state & nsIWebProgressListener.STATE_IS_REQUEST) {
+        this.finishedRequests += 1;
+        if (!this.useRealProgressFlag)
+          this.onProgress(null, this.finishedRequests, this.totalRequests);
       }
-      if(state & Components.interfaces.nsIWebProgressListener.STATE_IS_NETWORK) {
+
+      if (state & nsIWebProgressListener.STATE_IS_NETWORK) {
         var location = channel.URI.spec;
         var msg = "";
         if (location != "about:blank") {
           // Record page loading time.
-          var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
+          var elapsed = ((new Date()).getTime() - this.startTime) / 1000;
           msg = bundle.GetStringFromName("nv_done");
           msg = msg.replace(/%elapsed%/, elapsed);
         }
-        defaultStatus = msg;
-        UpdateStatusField();
+        this.setDefaultStatus(msg);
+
         // Turn progress meter off.
         statusMeter.setAttribute("mode","normal");
         statusMeter.value = 0;  // be sure to clear the progress bar
@@ -325,23 +307,23 @@ nsXULBrowserWindow.prototype =
         EnableBusyCursor(false);
       }
     }
-    else if (state & Components.interfaces.nsIWebProgressListener.STATE_TRANSFERRING) {
-      if (state & Components.interfaces.nsIWebProgressListener.STATE_IS_DOCUMENT) {
+    else if (state & nsIWebProgressListener.STATE_TRANSFERRING) {
+      if (state & nsIWebProgressListener.STATE_IS_DOCUMENT) {
         var ctype=channel.contentType;
-  
-        if (ctype != "text/html") {
-          useRealProgressFlag = true;
-        }
+
+        if (ctype != "text/html")
+          this.useRealProgressFlag = true;
+
         statusMeter.setAttribute("mode", "normal");
       }
-      if (state & Components.interfaces.nsIWebProgressListener.STATE_IS_REQUEST) {
-        if (!useRealProgressFlag) {
-          this.onProgress(null, finishedRequests, totalRequests);
-        }
+
+      if (state & nsIWebProgressListener.STATE_IS_REQUEST) {
+        if (!this.useRealProgressFlag)
+          this.onProgress(null, this.finishedRequests, this.totalRequests);
       }
     }
-
   },
+
   onLocationChange : function(location)
   {
     if (this.hideAboutBlank) {
@@ -350,12 +332,13 @@ nsXULBrowserWindow.prototype =
         location = "";
     }
 
-    // We should probably not do this if the value has changed since the user 
+    // We should probably not do this if the value has changed since the user
     // searched
     document.getElementById("urlbar").value = location;
 
     UpdateBackForwardButtons();
   },
+
   onStatus : function(channel, status, msg)
   {
     this.setOverLink(msg);
@@ -426,14 +409,14 @@ function Startup()
 
   // Initialize browser instance..
   appCore.setWebShellWindow(window);
-  
+
   // give urlbar focus so it'll be an active editor and d&d will work properly
   gURLBar = document.getElementById("urlbar");
   gURLBar.focus();
 
   // set the offline/online mode
   setOfflineStatus();
-  
+
   debug("Setting content window\n");
   appCore.setContentWindow(_content);
   // Have browser app core load appropriate initial page.
@@ -538,6 +521,7 @@ function Translate()
   // last argument (which we expect to always be "AlisTargetURI")
   var targetURI = getWebNavigation().currentURI.spec;
   var targetURIIndex = targetURI.indexOf("AlisTargetURI=");
+
   if (targetURIIndex >= 0)
     targetURI = targetURI.substring(targetURIIndex + 14);
 
@@ -626,6 +610,7 @@ function OpenBookmarkURL(event, datasources)
   } catch (ex) {
     return;
   }
+
   // Ignore "NC:" urls.
   if (url.substring(0, 3) == "NC:")
     return;
@@ -639,110 +624,79 @@ function OpenBookmarkURL(event, datasources)
 
 function OpenSearch(tabName, forceDialogFlag, searchStr)
 {
-	var searchMode = 0;
-	var searchEngineURI = null;
-	var autoOpenSearchPanel = false;
-	var defaultSearchURL = null;
-	var fallbackDefaultSearchURL = bundle.GetStringFromName("fallbackDefaultSearchURL");
-    var otherSearchURL = bundle.GetStringFromName("otherSearchURL");
+  var searchMode = 0;
+  var searchEngineURI = null;
+  var autoOpenSearchPanel = false;
+  var defaultSearchURL = null;
+  var fallbackDefaultSearchURL = bundle.GetStringFromName("fallbackDefaultSearchURL");
+  var otherSearchURL = bundle.GetStringFromName("otherSearchURL");
+  var url = getWebNavigation().currentURI.spec;
 
-	try
-	{
-		searchMode = pref.GetIntPref("browser.search.powermode");
-		autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
-		searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
-		defaultSearchURL = pref.getLocalizedUnicharPref("browser.search.defaulturl");
-		
-	}
-	catch(ex)
-	{
-	}
-    debug("Search defaultSearchURL: " + defaultSearchURL + "\n");
-	if ((defaultSearchURL == null) || (defaultSearchURL == ""))
-	{
-		// Fallback to a Netscape default (one that we can get sidebar search results for)
-		defaultSearchURL = fallbackDefaultSearchURL;
-	}
-    debug("This is before the search " + window._content.location.href + "\n");
-	debug("This is before the search " + searchStr + "\n");
-	if ((window._content.location.href == searchStr) || (searchStr == '')) 
-	{
-		//	window._content.location.href = defaultSearchURL;
-		// Call in to BrowserAppCore instead of replacing 
-		// the url in the content area so that B/F buttons work right
+  try {
+    searchMode = pref.GetIntPref("browser.search.powermode");
+    autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
+    searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
+    defaultSearchURL = pref.getLocalizedUnicharPref("browser.search.defaulturl");
+  } catch (ex) {
+  }
 
-      if (!(defaultSearchURL == fallbackDefaultSearchURL))
-      {
-          loadURI(defaultSearchURL);
+  debug("Search defaultSearchURL: " + defaultSearchURL + "\n");
+  // Fallback to a Netscape default (one that we can get sidebar search results for)
+  if (!defaultSearchURL)
+    defaultSearchURL = fallbackDefaultSearchURL;
+
+  debug("This is before the search " + url + "\n");
+  debug("This is before the search " + searchStr + "\n");
+
+  if (!searchStr || searchStr == url) {
+    if (defaultSearchURL != fallbackDefaultSearchURL)
+      loadURI(defaultSearchURL);
+    else
+      loadURI(otherSearchURL);
+
+  } else {
+    if (forceDialogFlag || searchMode == 1) {
+      // Use a single search dialog
+      var windowManager = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"]
+                                    .getService(Components.interfaces.nsIWindowMediator);
+
+      var searchWindow = windowManager.getMostRecentWindow("search:window");
+      if (!searchWindow) {
+        openDialog("chrome://communicator/content/search/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
+      } else {
+        // Already had one, focus it and load the page
+        searchWindow.focus();
+
+        if ("loadPage" in searchWindow)
+          searchWindow.loadPage(tabName, searchStr);
       }
-      else
-      {
-        //window._content.local.href = "http://home.netscape.com/bookmark/6_0/tsearch.html"
-        // Call in to BrowserAppCore instead of replacing
-        // the url in the content area so that B/F buttons work right
-          loadURI(otherSearchURL);
+    } else {
+      if (searchStr) {
+        var escapedSearchStr = escape(searchStr);
+        defaultSearchURL += escapedSearchStr;
+
+        var searchDS = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
+                                 .getService(Components.interfaces.nsIInternetSearchService);
+
+        searchDS.RememberLastSearchText(escapedSearchStr);
+
+        if (searchEngineURI) {
+          try {
+            var searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr);
+            if (searchURL)
+              defaultSearchURL = searchURL;
+          } catch (ex) {
+          }
+        }
+
+        loadURI(defaultSearchURL);
       }
-	}
-	else
-	{
-		if ((searchMode == 1) || (forceDialogFlag == true))
-		{
-			// Use a single search dialog
-			var cwindowManager = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService();
-			var iwindowManager = Components.interfaces.nsIWindowMediator;
-			var windowManager  = cwindowManager.QueryInterface(iwindowManager);
-			var searchWindow = windowManager.getMostRecentWindow("search:window");
-			if (searchWindow)
-			{
-				searchWindow.focus();
-				if (searchWindow.loadPage)	searchWindow.loadPage(tabName, searchStr);
-			}
-			else
-			{
-				window.openDialog("chrome://communicator/content/search/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
-			}
-		}
-		else 
-		{  
-			if ((!searchStr) || (searchStr == ""))	return;
+    }
+  }
 
-			var searchDS = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"].getService();
-			if (searchDS)	searchDS = searchDS.QueryInterface(Components.interfaces.nsIInternetSearchService);
-
-			var	escapedSearchStr = escape(searchStr);
-			defaultSearchURL += escapedSearchStr;
-
-			if (searchDS)
-			{
-				searchDS.RememberLastSearchText(escapedSearchStr);
-
-				if ((searchEngineURI != null) && (searchEngineURI != ""))
-				{
-					try
-					{
-						var	searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr);
-						if ((searchURL != null) && (searchURL != ""))
-						{
-							defaultSearchURL = searchURL;
-						}
-					}
-					catch(ex)
-					{
-					}
-				}
-			}  
-		//	window._content.location.href = defaultSearchURL
-		// Call in to BrowserAppCore instead of replacing 
-		// the url in the content area so that B/F buttons work right
-		   loadURI(defaultSearchURL);
-		}
-	}
-
-	// should we try and open up the sidebar to show the "Search Results" panel?
-	if (autoOpenSearchPanel == true)
-	{
-		RevealSearchPanel();
-	}
+  // should we try and open up the sidebar to show the "Search Results" panel?
+  if (autoOpenSearchPanel)
+    RevealSearchPanel();
 }
 
 function setBrowserSearchMode(searchMode)
@@ -789,26 +743,6 @@ function delayedOpenWindow(chrome,flags,url)
 {
   setTimeout("openDialog('"+chrome+"','_blank','"+flags+"','"+url+"')", 10);
 }
-
-  function createInstance( contractid, iidName ) {
-      var iid = Components.interfaces[iidName];
-      return Components.classes[ contractid ].createInstance( iid );
-  }
-
-  function createInstanceById( cid, iidName ) {
-      var iid = Components.interfaces[iidName];
-      return Components.classesByID[ cid ].createInstance( iid );
-  }
-
-  function getService( contractid, iidName ) {
-      var iid = Components.interfaces[iidName];
-      return Components.classes[ contractid ].getService( iid );
-  }
-
-  function getServiceById( cid, iidName ) {
-      var iid = Components.interfaces[iidName];
-      return Components.classesByID[ cid ].getService( iid );
-  }
 
 function BrowserOpenFileWindow()
 {
@@ -916,7 +850,7 @@ function BrowserPrint()
     var zoomLabel;
     var zoomLabelOther;
     var zoomLabelOriginal;
-  
+
     try {
       zoomMenuLabel = bundle.GetStringFromName("textZoomMenuLabel");
     } catch (exception) {
@@ -995,7 +929,7 @@ function BrowserPrint()
       } else {
         value = zoomLabel.replace(/%zoom%/, zoomFactors[i]);
       }
-      menuItem.setAttribute("value", value); 
+      menuItem.setAttribute("value", value);
       menuItem.setAttribute("accesskey", zoomAccessKeys[i]);
       menuItem.setAttribute("oncommand","browserSetTextZoom(this.data);");
       menuItem.setAttribute("data", zoomFactors[i].toString());
@@ -1022,7 +956,7 @@ function BrowserPrint()
     }
     return aZoomLevel;
   }
-  
+
   function updateTextZoomMenu() {
     var textZoomPopup = document.getElementById("textZoomPopup");
     if (textZoomPopup) {
@@ -1030,7 +964,7 @@ function BrowserPrint()
       var count = 0;
       while (item) {
         if (item.getAttribute("name")=="textZoom") {
-          if (count < zoomFactors.length) { 
+          if (count < zoomFactors.length) {
             if (item.getAttribute("data") == zoomFactor) {
               item.setAttribute("checked","true");
             } else {
@@ -1253,11 +1187,11 @@ function BrowserClose()
 }
 
   function BrowserFind() {
-    appCore.find();      
+    appCore.find();
   }
 
   function BrowserFindAgain() {
-    appCore.findNext();      
+    appCore.findNext();
   }
 
 function loadURI(uri)
@@ -1564,51 +1498,50 @@ function checkForDirectoryListing()
 }
 
 /**
- * Content area tooltip. 
- * XXX - this must move into XBL binding/equiv! Do not want to pollute 
+ * Content area tooltip.
+ * XXX - this must move into XBL binding/equiv! Do not want to pollute
  *       navigator.js with functionality that can be encapsulated into
  *       browser widget. TEMPORARY!
  **/
-function FillInHTMLTooltip ( tipElement )
+function FillInHTMLTooltip(tipElement)
 {
-  var HTMLNS = "http://www.w3.org/1999/xhtml";
-  var XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-  var XLinkNS = "http://www.w3.org/1999/xlink";
-  
+  const HTMLNS = "http://www.w3.org/1999/xhtml";
+  const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+  const XLinkNS = "http://www.w3.org/1999/xlink";
+  const Node = Components.interfaces.Node;
+
   var retVal = false;
   var tipNode = document.getElementById("HTML_TOOLTIP_tooltipBox");
-  if ( tipNode ) {
-    try {
-      while ( tipNode.hasChildNodes() )
-        tipNode.removeChild( tipNode.firstChild );
-        
-      var titleText = "";
-      var XLinkTitleText = "";
-      
-      while ( !titleText && !XLinkTitleText && tipElement ) {
-        if ( tipElement.nodeType == 1 ) {
-          titleText = tipElement.getAttributeNS(HTMLNS, "title");
-          XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
-        }
-        tipElement = tipElement.parentNode;
+  try {
+    while (tipNode.hasChildNodes())
+      tipNode.removeChild(tipNode.firstChild);
+
+    var titleText = "";
+    var XLinkTitleText = "";
+
+    while (!titleText && !XLinkTitleText && tipElement) {
+      if (tipElement.nodeType == Node.ELEMENT_NODE) {
+        titleText = tipElement.getAttributeNS(HTMLNS, "title");
+        XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
       }
-      
-      var texts = [ titleText, XLinkTitleText ];
-      
-      for (var i = 0; i < texts.length; i++) {
-        var t = texts[i];
-        if ( t.search(/\S/) >= 0 ) {
-          var tipLineElem = tipNode.ownerDocument.createElementNS(XULNS, "text");
-          tipLineElem.setAttribute("value", t);
-          tipNode.appendChild(tipLineElem);
-          
-          retVal = true;
-        }
+      tipElement = tipElement.parentNode;
+    }
+
+    var texts = [titleText, XLinkTitleText];
+
+    for (var i = 0; i < texts.length; ++i) {
+      var t = texts[i];
+      if (t.search(/\S/) >= 0) {
+        var tipLineElem = tipNode.ownerDocument.createElementNS(XULNS, "text");
+        tipLineElem.setAttribute("value", t);
+        tipNode.appendChild(tipLineElem);
+
+        retVal = true;
       }
     }
-    catch (e) { retVal = false; }
+  } catch (e) {
   }
-  
+
   return retVal;
 }
 
@@ -1695,9 +1628,9 @@ function applyTheme(themeName)
   var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                                  .getService(Components.interfaces.nsIChromeRegistry);
 
-  chromeRegistry.selectSkin(themeName.getAttribute("name"), true); 
+  chromeRegistry.selectSkin(themeName.getAttribute("name"), true);
   chromeRegistry.refreshSkins();
-}  
+}
 
 function getNewThemes()
 {
@@ -1731,7 +1664,7 @@ function checkForDefaultBrowser()
   } catch(e) {
   }
 }
- 
+
 function debug(message)
 {
   dump(message);
