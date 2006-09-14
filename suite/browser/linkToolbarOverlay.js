@@ -22,6 +22,7 @@
  *      Christopher Hoess <choess@force.stwing.upenn.edu>
  *      Tim Taylor <tim@tool-man.org>
  *      Henri Sivonen <henris@clinet.fi>
+ *      Stuart Ballard <sballard@netreach.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -62,10 +63,10 @@ function()
 LinkToolbarUI.prototype.isLinkToolbarEnabled =
 function()
 {
-  if (document.getElementById("cmd_viewlinktoolbar").getAttribute("checked") == "true")
-    return true;
-  else
+  if (document.getElementById("linktoolbar").getAttribute("hidden") == "true")
     return false;
+  else
+    return true;
 }
 
 LinkToolbarUI.prototype.doRefresh =
@@ -102,6 +103,9 @@ function()
       currentNode = currentNode.nextSibling;
     }
   }  
+
+  document.getElementById("linktoolbar").
+           setAttribute("hasitems", linkToolbarHandler.hasItems);
 }
 
 LinkToolbarUI.prototype.getLinkElements =
@@ -146,6 +150,9 @@ function()
 LinkToolbarUI.prototype.clicked =
 function(event)
 {
+  // Only handle primary click.  Change this if we get a context menu
+  if (0 != event.button) return;  
+
   // Return if this is one of the menubuttons.
   if (event.target.getAttribute("type") == "menu") return;
   
@@ -168,9 +175,9 @@ function(event)
 // functions for twiddling XUL elements in the toolbar
 
 LinkToolbarUI.prototype.toggleLinkToolbar =
-function()
+function(checkedItem)
 {
-  goToggleToolbar('linktoolbar', 'cmd_viewlinktoolbar');
+  this.goToggleTristateToolbar("linktoolbar", checkedItem);
   if (this.isLinkToolbarEnabled())
     this.doRefresh();
   else
@@ -187,6 +194,26 @@ LinkToolbarUI.prototype.hideMiscellaneousSeperator =
 function()
 {
   document.getElementById("misc-seperator").setAttribute("collapsed", "true");
+}
+LinkToolbarUI.prototype.initLinkbarVisibilityMenu = 
+function()
+{
+  var state = document.getElementById("linktoolbar").getAttribute("hidden");
+  if (!state)
+    state = "maybe";
+  var checkedItem = document.getElementById("cmd_viewlinktoolbar_" + state);
+  checkedItem.setAttribute("checked", true);
+  checkedItem.checked = true;
+}
+LinkToolbarUI.prototype.goToggleTristateToolbar =
+function(id, checkedItem)
+{
+  var toolbar = document.getElementById(id);
+  if (toolbar)
+  {
+    toolbar.setAttribute("hidden", checkedItem.value);
+    document.persist(id, "hidden");
+  }
 }
 
 const linkToolbarUI = new LinkToolbarUI;

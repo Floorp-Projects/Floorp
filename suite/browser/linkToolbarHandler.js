@@ -21,6 +21,7 @@
  * Contributor(s):
  *      Christopher Hoess <choess@force.stwing.upenn.edu>
  *      Tim Taylor <tim@tool-man.org>
+ *      Stuart Ballard <sballard@netreach.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,6 +48,7 @@
 function LinkToolbarHandler()
 {
   this.items = new Array();
+  this.hasItems = false;
 }
 
 LinkToolbarHandler.prototype.handleLinks =
@@ -73,6 +75,8 @@ function(element)
   var linkElement = new LinkElementDecorator(element);
 
   if (linkElement.isIgnored()) return;
+
+  this.hasItems = true;
 
   var relAttributes = linkElement.rel.split(" ");
   for (var i = 0; i < relAttributes.length; i++) {
@@ -159,6 +163,7 @@ function()
 {
   for (var linkType in this.items)
     this.items[linkType].clear();
+  this.hasItems = false;
 }
 
 const linkToolbarHandler = new LinkToolbarHandler();

@@ -22,6 +22,7 @@
    - Contributor(s):
    -      Christopher Hoess <choess@force.stwing.upenn.edu>
    -      Tim Taylor <tim@tool-man.org>
+   -      Stuart Ballard <sballard@netreach.net>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,6 +39,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://navigator/skin/linkToolbar.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://navigator/content/navigator.css" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <!DOCTYPE window SYSTEM "chrome://navigator/locale/linkToolbar.dtd">
 
@@ -61,18 +63,28 @@
     ]]>
   </script>
 
-  <broadcasterset id="navBroadcasters">
-    <broadcaster id="cmd_viewlinktoolbar" oncommand="linkToolbarUI.toggleLinkToolbar();" checked="true" />
-  </broadcasterset>
-
   <menupopup id="view_toolbars_popup">
-    <menuitem label="&linkToolbar.label;" class="menuitem-iconic" type="checkbox" observes="cmd_viewlinktoolbar" position="3" />
+    <menu label="&linkToolbar.label;" position="3"
+          oncommand="linkToolbarUI.toggleLinkToolbar(event.target)"
+          onpopupshowing="linkToolbarUI.initLinkbarVisibilityMenu()">
+      <menupopup>
+        <menuitem label="&linkToolbarAlways.label;"
+                  class="menuitem-iconic" type="radio" value="false"
+                  name="cmd_viewlinktoolbar" id="cmd_viewlinktoolbar_false" />
+        <menuitem label="&linkToolbarAsNeeded.label;"
+                  class="menuitem-iconic" type="radio" value="maybe"
+                  name="cmd_viewlinktoolbar" id="cmd_viewlinktoolbar_maybe" />
+        <menuitem label="&linkToolbarNever.label;"
+                  class="menuitem-iconic" type="radio" value="true"
+                  name="cmd_viewlinktoolbar" id="cmd_viewlinktoolbar_true" />
+      </menupopup>
+    </menu>
   </menupopup>
 
   <toolbox id="navigator-toolbox">
     <toolbar id="linktoolbar" class="chromeclass-directories"
         onclick="event.preventBubble(); return linkToolbarUI.clicked(event);"
-        tbautostretch="always">
+        tbautostretch="always" hidden="maybe">
 
       <toolbarbutton id="link-top" class="bookmark-item"
           label="&topButton.label;" disabled="true" tooltip="aTooltip" />
