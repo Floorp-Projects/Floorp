@@ -483,7 +483,7 @@ function gotoHistoryIndex( aEvent )
 	    }
 	  else 
       {
-	      var id = event.target.getAttribute("id");
+	      var id = aEvent.target.getAttribute("id");
 	      if (id == "menuitem-back")
 	        BrowserBack();
 	      else if (id == "menuitem-forward")
