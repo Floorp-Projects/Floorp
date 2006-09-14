@@ -223,7 +223,7 @@ Contributor(s): ______________________________________. -->
     ondragover="return DragOverPersonalToolbar(event);">
 
     <!-- button area of personal toolbar -->
-    <box align="horizontal" flex="1" style="min-width: 1px">
+    <box align="horizontal" flex="1">
 
       <!--
       // I added the container=true on this button as a temp hack until
@@ -267,7 +267,7 @@ Contributor(s): ______________________________________. -->
         <spring class="personaltoolbarspacer" flex="1"/>
       </menu>
 
-      <box align="horizontal"
+      <box align="horizontal" 
         flex="1"
         style="min-width: 1px; overflow: hidden"
         datasources="rdf:bookmarks"
@@ -282,13 +282,13 @@ Contributor(s): ______________________________________. -->
 		                        align="right" class="bookmarkFolder toolbar-flat"/>
 		          <menupopup class="standard"/>
 		        </menu>
-				<spring uri="rdf:*" class="personaltoolbarspacer" flex="1"/>
+				<spring uri="rdf:*" class="personaltoolbarspacer" flex="0"/>
 		      </rule>
 		      <rule parent="box">
 		        <titledbutton class="bookmarkbutton toolbar-flat" uri="rdf:*" align="left" 
 		          value="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"
 		          oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)"/>
-		        <spring uri="rdf:*" class="personaltoolbarspacer" flex="1"/>
+		        <spring uri="rdf:*" class="personaltoolbarspacer" flex="0"/>
 		      </rule>
 
 		      <!-- Recursive rules for nested folders -->
@@ -318,10 +318,10 @@ Contributor(s): ______________________________________. -->
 		      value="&homeButton.label;"
 			    class="bookmarkbutton toolbar-flat"  
 		      onclick="BrowserHome(); event.preventBubble();"/>
-		    <spring class="personaltoolbarspacer" flex="1"/>
+		    <spring class="personaltoolbarspacer" flex="0"/>
 	    
 	    </box>
-	    <spring flex="9999999"/>
+	    <spring flex="1"/>
     </box>
 	
 	<!-- throbber area of personal toolbar -->
