@@ -220,7 +220,7 @@
 
         <button id="search-button" class="button-toolbar chromeclass-location"
                 label="&searchButton.label;"
-                oncommand="OpenSearch('internet',false, QualifySearchTerm());" 
+                oncommand="OpenSearch('internet', QualifySearchTerm());" 
                 ondragover="nsDragAndDrop.dragOver(event, searchButtonObserver);"
                 ondragdrop="nsDragAndDrop.drop(event, searchButtonObserver);"
                 ondragexit="nsDragAndDrop.dragExit(event, searchButtonObserver);"
