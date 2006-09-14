@@ -167,7 +167,7 @@
 	      <menuitem accesskey="&openFileCmd.accesskey;" key="openFileKb" observes="Browser:OpenFile"/>
 	      <menuseparator/>
 	      <menuitem id="menu_close"/>
-		    <menuitem id="context-savepage" key="savePage" observes="Browser:SavePage"/>
+		    <menuitem id="context-savepage" key="key_savePage" observes="Browser:SavePage"/>
 		    <menuitem id="savepage" value="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="savePage(gFocusedURL);" hidden="true"/>
 	      <menuseparator id="file_moduleSeparator"/>
 	      <menuitem accesskey="&editPageCmd.accesskey;" observes="Browser:EditPage" />
