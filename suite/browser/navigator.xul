@@ -214,7 +214,7 @@ Contributor(s): ______________________________________. -->
   var gBookmarkPopup = null;
 </script>
 
-  <toolbox tooltip="aTooltip">
+  <toolbox>
     <!-- Menu -->
     <menubar id="main-menubar"/>
   
