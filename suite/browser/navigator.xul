@@ -351,33 +351,36 @@ Contributor(s): ______________________________________. -->
   
              <!-- this is the little page proxy icon --> 
              <!-- display should be turned off right now until functionality is implemented --> 
-              <titledbutton id="page-proxy-button" ondraggesture="DragProxyIcon(event);"/> 
-  
-               <!-- this is the urlbar --> 
+             <!-- This is the smart search pop-up -->
+			 <!-- <titledbutton id="action-popup" align="right"/> -->
+
+			 <titledbutton id="page-proxy-button" ondraggesture="DragProxyIcon(event);"/> 
+
+             <!-- this is the urlbar --> 
              <html:input id="urlbar" type="text" chromeclass="location" 
                 onkeyup="if (event.which == 13) { BrowserLoadURL(); }" 
                 flex = "100%" /> 
   
-                <!-- this is the urlbar session history popup --> 
-                <!-- display should be turned off right now until functionality is implemented --> 
-                <titledbutton id="sessionhist-popup"/> 
-  
-                <!-- this is the search/go button --> 
-                <titledbutton id="search-button" value="&searchButton.label;"
-                  onclick="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
-                /> 
-  
-             <!-- this is for other functionality --> 
-             <titledbutton id="action-popup" align="right"/> 
+             <!-- this is the urlbar session history popup --> 
+             <!-- display should be turned off right now until functionality is implemented --> 
+             <!-- <titledbutton id="sessionhist-popup"/> -->
   
              <!-- end url bar box -->
             </box>
             
             <!-- used for vertically positioning the url field contraption w/i the nav toolbar   -->
           </box>
-				
+		<!--  this is the search/go button -->
+         <box align="vertical" flex="1%">
+           <spring style="height: 4px;"/>
+			<box id="searchbutton" align="horizontal" style="width: 100%;"> 
+			<titledbutton id="search-button" value="&searchButton.label;"
+                  onclick="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
+                /> 
+            </box>
+		 </box>
       <!-- FIX ME - remove this
-      <box align="vertical" flex="9999999">
+      <box align="vertical" flex="100%">
         <spring flex="1"/>
         <html:input id="urlbar" type="text" chromeclass="location"
                     onkeyup="if (event.which == 13) { BrowserLoadURL(); }"/>   
