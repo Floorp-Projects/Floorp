@@ -86,6 +86,7 @@
     <key id="key_findPrev"   key="&findPrevCmd.commandkey;"       command="Browser:FindPrev"  modifiers="accel,shift"/>
     <key keycode="&findAgainCmd.commandkey2;" command="Browser:FindAgain"/>
     <key keycode="&findPrevCmd.commandkey2;"  command="Browser:FindPrev" modifiers="shift"/>
+    <key keycode="&findOnCmd.commandkey2;" command="Browser:Find"/>
     <key id="key_findTypeText"/>
     <key id="key_findTypeLinks"/>
 
