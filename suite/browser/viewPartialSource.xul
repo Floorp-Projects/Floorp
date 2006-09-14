@@ -68,7 +68,6 @@
   <keyset id="viewSourceKeys"/>
   <stringbundleset id="viewSource-stringbundleset"/>
   <popupset id="viewSourceContextSet" />
-  <popup id="contentAreaContextMenu"/>
 
   <toolbox id="viewSource-toolbox"/>
 

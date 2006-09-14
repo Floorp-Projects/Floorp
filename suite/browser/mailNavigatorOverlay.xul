@@ -145,15 +145,11 @@
       gContextMenu.showItem("context-sep-apps", gContextMenu.shouldShowSeparator("context-sep-apps"));
     }
       
-    var gAddedMailContextMenuPopupListener = false;
     function initMailContextMenuPopupListener(aEvent)
     {
-      // This is really lame, but we can't seem to add a bubbling listener to the DOMWindow (!)
-      if (gAddedMailContextMenuPopupListener)
-        return;
       var popup = document.getElementById("contentAreaContextMenu");
-      popup.addEventListener("popupshowing", initMailContextMenuItems, false);
-      gAddedMailContextMenuPopupListener = true;
+      if (popup)
+        popup.addEventListener("popupshowing", initMailContextMenuItems, false);
     }
 
     function hideMenuitems() {
@@ -168,7 +164,7 @@
       hideMenuitems();
     }
 
-    addEventListener("load", initOverlay, true);
+    addEventListener("load", initOverlay, false);
   ]]>
   </script>         
 
