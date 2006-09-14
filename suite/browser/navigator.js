@@ -218,7 +218,7 @@ nsXULBrowserWindow.prototype =
 	onStatusChange : function(channel, status)
 		{
 		if(!throbberElement)
-			throbberElement = document.getElementById("Throbber");
+			throbberElement = document.getElementById("navigator-throbber");
 		if(!statusMeter)
 			statusMeter = document.getElementById("statusbar-icon");
 		if(!stopButton)
@@ -376,7 +376,7 @@ function Shutdown()
 
   function onLoadViaOpenDialog() {
     // See if load in progress (loading default page).
-    if ( document.getElementById("Throbber").getAttribute("busy") == "true" ) {
+    if ( document.getElementById("navigator-throbber").getAttribute("busy") == "true" ) {
         dump( "Stopping load of default initial page\n" );
         appCore.stop();
     }
