@@ -21,201 +21,155 @@
  *  - Kevin Puetz (puetzk@iastate.edu)
  *  - Ben Goodger <ben@netscape.com>
  */
-/*
+
+var gRDFService = nsJSComponentManager.getService("component://netscape/rdf/rdf-service",
+                                                  "nsIRDFService"); 
+
+function RDF(aType) 
+  {
+    return "http://www.w3.org/1999/02/22-rdf-syntax-ns#" + aType;
+  }
+function NC_RDF(aType)
+  {
+    return "http://home.netscape.com/NC-rdf#" + aType;  
+  }
+
+var RDFUtils = {
+  getResource: function(aString)
+    {
+      return gRDFService.GetResource(aString, true);
+    },
+  
+  getTarget: function(aDS, aSourceID, aPropertyID)
+    {
+      dump("*** aSourceID = " + aSourceID + "\n");
+      dump("*** aPropertyID = " + aPropertyID + "\n");
+      var source = this.getResource(aSourceID);
+      var property = this.getResource(aPropertyID);
+      return aDS.GetTarget(source, property, true);
+    },
+  
+  getValueFromResource: function(aResource)
+    {
+      aResource = aResource.QueryInterface(Components.interfaces.nsIRDFResource);
+      return aResource ? target.Value : null;
+    },
+};
+
+function isBookmark(aURI)
+  {
+    var rv = true;
+    var typeValue = RDFUtils.getTarget(childWithDatabase.database, uri, RDF("type"));
+    typeValue = RDFUtils.getValueFromResource(typeValue);
+    if (typeValue != NC_RDF("BookmarkSeparator") && 
+        typeValue != NC_RDF("Bookmark") &&
+        typeValue != NC_RDF("Folder")) 
+      rv = false;
+    return rv;
+  }
+
+function isPToolbarDNDEnabled()
+  {
+    var prefs = nsJSComponentManager.getService("component://netscape/preferences",
+                                                "nsIPref");
+    dragAndDropEnabled = false;                                                  
+    try {
+      dragAndDropEnabled = prefs.GetBoolPref("browser.enable.tb_dnd");
+    }
+    catch(e) {
+    }
+    
+    return dragAndDropEnabled;
+  }
+  
 var personalToolbarObserver = {
   onDragStart: function (aEvent)
     {
+      // temporary
+      if (!isPToolbarDNDEnabled())
+        return false;
+        
       var personalToolbar = document.getElementById("PersonalToolbar");
       if (aEvent.target == personalToolbar)
-        return true;
+        return;
         
       var childWithDatabase = document.getElementById("innermostBox");
-      if (!childWithDatabase)
-        {
-          event.preventBubble();
-          return;
-        }
-
       var uri = aEvent.target.id;
+      //if (!isBookmark(uri)) 
+      //  return;
+      
+      var title = aEvent.target.value;
+      var htmlString = "<A HREF='" + uri + "'>" + title + "</A>";
+
       var flavourList = { };
       flavourList["moz/toolbaritem"] = { width: 2, data: uri };
       flavourList["text/unicode"] = { width: 2, data: uri };
+      return flavourList;
     },
   
+  onDrop: function (aEvent, aData) 
+    {
+      // temporary
+      if (!isPToolbarDNDEnabled())
+        return false;
+        
+      var element = aData.data.data;
+      var elementRes = RDFUtils.getResource(element);
+      var personalToolbarRes = RDFUtils.getResource("NC:PersonalToolbarFolder");
+      
+      var childDB = document.getElementById("innermostBox").database;
+      var rdfContainer = nsJSComponentManager.createInstance("component://netscape/rdf/container",
+                                                             "nsIRDFContainer");
+      rdfContainer.Init(childDB, personalToolbarRes);
+      
+      var newIndex = 1; // XXX need .offset* to figure out where to drop element
+      var dropIndex = rdfContainer.IndexOf(elementRes);
+      if (dropIndex > 0) 
+        rdfContainer.RemoveElement(elementRes, true);
+      else if (dropIndex == -1)
+        {
+          dump("*** element = " + element + "\n");
+          // look up this URL's title in global history
+          var potentialTitle = null;
+          var historyDS = gRDFService.GetDataSource("rdf:history");
+          var historyEntry = gRDFService.GetResource(element);
+          var historyTitleProperty = gRDFService.GetResource(NC_RDF("URL"));
+          var titleFromHistory = historyDS.GetTarget(historyEntry, historyTitleProperty, true);
+          if (titleFromHistory) 
+//            titleFromHistory = titleFromHistory.QueryInterface(Components.interfaces.nsIRDFLiteral);
+          if (titleFromHistory)
+            potentialTitle = titleFromHistory.Value;
+          linkTitle = potentialTitle ? potentialTitle : element;
+          childDB.Assert(gRDFService.GetResource(element, true), 
+                         gRDFService.GetResource(NC_RDF("Name"), true),
+                         gRDFService.GetLiteral(linkTitle),
+                         true);
+        }
+      rdfContainer.InsertElementAt(elementRes, newIndex, true);
+    },
+  
+  onDragOver: function (aEvent, aFlavour)
+    {
+      // temporary
+      if (!isPToolbarDNDEnabled())
+        return false;
+        
+      var toolbar = document.getElementById("PersonalToolbar");
+      toolbar.setAttribute("dd-triggerrepaint", 0);
+    },
+
+  getSupportedFlavours: function ()
+    {
+      // temporary
+      if (!isPToolbarDNDEnabled())
+        return false;
+        
+      var flavourList = { };
+      flavourList["moz/toolbaritem"] = { width: 2, iid: "nsISupportsWString" };
+      flavourList["text/unicode"] = { width: 2, iid: "nsISupportsWString" };
+      return flavourList;
+    },
 }; 
-
-			  var id = event.target.getAttribute("id");
-			  genData.data = id;
-			  genTextData.data = id;
-			      
-			  dump("ID: " + id + "\n");
-
-			  var database = childWithDatabase.database;
-			  var rdf = 
-			    Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
-			  if ((!rdf) || (!database))  return(false);
-
-			  // make sure its a bookmark, bookmark separator, or bookmark folder
-			  var src = rdf.GetResource(id, true);
-			  var prop = rdf.GetResource("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", true);
-			  var target = database.GetTarget(src, prop, true);
-*/
-/*
-pinkerton
-this doesn't work anymore (target is null), not sure why.
-  if (target) target = target.QueryInterface(Components.interfaces.nsIRDFResource);
-  if (target) target = target.Value;
-  if ((!target) || (target == "")) {dump("BAD\n"); return(false);}
-
-  dump("Type: '" + target + "'\n");
-
-  if ((target != "http://home.netscape.com/NC-rdf#BookmarkSeparator") &&
-     (target != "http://home.netscape.com/NC-rdf#Bookmark") &&
-     (target != "http://home.netscape.com/NC-rdf#Folder"))  return(false);
-*/
-/*
-	      trans.setTransferData ( "moz/toolbaritem", genData, id.length*2 );  // double byte data (len*2)
-	      trans.setTransferData ( "text/unicode", genTextData, id.length*2 );  // double byte data
-	      var transArray = 
-	        Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
-	      if ( transArray ) {
-	        // put it into the transferable as an |nsISupports|
-	        var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
-	        transArray.AppendElement(genTrans);
-	        var nsIDragService = Components.interfaces.nsIDragService;
-	        dragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
-	                                            nsIDragService.DRAGDROP_ACTION_MOVE );
-	        dragStarted = true;
-	      }
-      } // if data object
-    } // if transferable
-  } // if drag service
-
-  if ( dragStarted )               // don't propagate the event if a drag has begun
-    event.preventBubble();
-  
-  return true;
-  
-} // BeginDragPersonalToolbar
-*/
-
-function DropPersonalToolbar ( event )
-{ 
-  if ( !gDragDropEnabled )
-    return;
-  
-  var dropAccepted = false;
-  
-  var dragService =
-    Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
-  if ( dragService ) {
-    var dragSession = dragService.getCurrentSession();
-    if ( dragSession ) {
-      var trans =
-        Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
-      if ( trans ) {
-
-        // get references to various services/resources once up-front
-        var personalToolbarRes = null;
-        
-        var rdf = 
-          Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
-        if (rdf)
-          personalToolbarRes = rdf.GetResource("NC:PersonalToolbarFolder");
-
-        var rdfc = 
-          Components.classes["component://netscape/rdf/container"].getService(Components.interfaces.nsIRDFContainer);
-        if ( !rdfc ) return false;
-        
-        trans.addDataFlavor("moz/toolbaritem");
-        for ( var i = 0; i < dragSession.numDropItems; ++i ) {
-          dragSession.getData ( trans, i );
-          var dataObj = new Object();
-          var bestFlavor = new Object();
-          var len = new Object();
-          trans.getAnyTransferData ( bestFlavor, dataObj, len );
-          if ( dataObj ) dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
-          if ( dataObj ) {
-          
-            // remember len is in bytes, not chars
-            var id = dataObj.data.substring(0, len.value / 2);
-            dump("ID: '" + id + "'\n");
-            
-            var objectRes = rdf.GetResource(id, true);
-
-            dragSession.canDrop = true;
-            dropAccepted = true;
-                
-            var boxWithDatabase = document.getElementById("innermostBox");
-            var database = boxWithDatabase.database;
-            if (database && rdf && rdfc && personalToolbarRes && objectRes)
-            {
-              
-              rdfc.Init(database, personalToolbarRes);
-
-              // Note: RDF Sequences are one-based, not zero-based
-
-              // XXX figure out the REAL index to insert at;
-              // for the moment, insert it as the first element (pos=1)
-              var newIndex = 1;
-
-              var currentIndex = rdfc.IndexOf(objectRes);
-              if (currentIndex > 0)
-              {
-                dump("Element '" + id + "' was at position # " + currentIndex + "\n");
-                rdfc.RemoveElement(objectRes, true);
-                dump("Element '" + id + "' removed from position # " + currentIndex + "\n");
-              }
-              rdfc.InsertElementAt(objectRes, newIndex, true);
-              dump("Element '" + id + "' re-inserted at new position # " + newIndex + ".\n");
-            }
-
-          } 
-            
-        } // foreach drag item
-    
-      } // if transferable
-    } // if dragsession
-  } // if dragservice
-  
-  if ( dropAccepted )               // don't propagate the event if we did the drop
-    event.preventBubble();
-
-} // DropPersonalToolbar
-
-
-function DragOverPersonalToolbar ( event )
-{
-  if ( 1 )
-    return;
-  
-  var validFlavor = false;
-  var dragSession = null;
-
-  var dragService = 
-    Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
-  if ( dragService ) {
-    dragSession = dragService.getCurrentSession();
-    if ( dragSession ) {
-      if ( dragSession.isDataFlavorSupported("moz/toolbaritem") )
-        validFlavor = true;
-      else if ( dragSession.isDataFlavorSupported("text/unicode") )
-        validFlavor = true;
-      //XXX other flavors here...
-
-      // touch the attribute to trigger the repaint with the drop feedback.
-      if ( validFlavor ) {
-        //XXX this is really slow and likes to refresh N times per second.
-        var toolbar = document.getElementById("PersonalToolbar");
-        toolbar.setAttribute ( "dd-triggerrepaint", 0 );
-        dragSession.canDrop = true;
-        event.preventBubble();
-      }
-    }
-  }
-
-} // DragOverPersonalToolbar
-
 
 var contentAreaDNDObserver = {
   onDragStart: function (aEvent)

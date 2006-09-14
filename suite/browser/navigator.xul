@@ -53,18 +53,18 @@ Contributor(s): ______________________________________. -->
   screenX="10" screenY="10"
   persist="screenX screenY width height sizemode"> 
 
-<script language="javascript" src="chrome://global/content/builtinURLs.js"></script>
-<script language="javascript" src="chrome://global/content/strres.js"></script>
-<script language="javascript" src="chrome://navigator/content/navigator.js"></script>
-<script language="javascript" src="nsContextMenu.js"></script>
-<script language="javascript" src="tooltip.js"></script>
-<script language="javascript" src="navigatorDD.js"></script>
 <script language="javascript" src="chrome://global/content/nsJSSupportsUtils.js"></script>
 <script language="javascript" src="chrome://global/content/nsJSComponentManager.js"></script>
 <script language="javascript" src="chrome://global/content/nsUserSettings.js"></script>
 <script language="javascript" src="chrome://global/content/nsTransferable.js"></script>
 <script language="javascript" src="chrome://global/content/nsClipboard.js"></script>
 <script language="javascript" src="chrome://global/content/nsDragAndDrop.js"></script>
+<script language="javascript" src="chrome://global/content/builtinURLs.js"></script>
+<script language="javascript" src="chrome://global/content/strres.js"></script>
+<script language="javascript" src="chrome://navigator/content/navigator.js"></script>
+<script language="javascript" src="nsContextMenu.js"></script>
+<script language="javascript" src="tooltip.js"></script>
+<script language="javascript" src="navigatorDD.js"></script>
 
 <!-- UI services -->
 <script language="javascript" src="chrome://navigator/content/sessionHistoryUI.js"></script>
@@ -277,9 +277,9 @@ Contributor(s): ______________________________________. -->
     </toolbar>
   
     <toolbar id="PersonalToolbar" class="chromeclass-directories" persist="collapsed" dragdroparea="innermostBox"
-             ondraggesture="return BeginDragPersonalToolbar(event);"
-             ondragdrop="return DropPersonalToolbar(event);"
-             ondragover="return DragOverPersonalToolbar(event);"
+             ondragover="nsDragAndDrop.dragOver(event, personalToolbarObserver);"
+             ondragdrop="nsDragAndDrop.drop(event, personalToolbarObserver);"
+             ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarObserver);"
              grippytooltip="aTooltip" 
              grippytooltiptext="&personalBar.tooltip;">
 
@@ -336,7 +336,7 @@ Contributor(s): ______________________________________. -->
           <rule parent="box">
             <button class="button-toolbar bookmarkitem" uri="rdf:*" 
               tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
-              value="rdf:http://home.netscape.com/NC-rdf#Name" 
+              value="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"
               oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database);"/>
           </rule>
         
