@@ -489,7 +489,7 @@ function WindowFocusTimerCallback(element)
 
 function BrowserFlushBookmarksAndHistory()
 {
-  // Flush bookmakrs and history (used when window closes or is cached).
+  // Flush bookmarks and history (used when window closes or is cached).
   try {
     // If bookmarks are dirty, flush 'em to disk
     var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
