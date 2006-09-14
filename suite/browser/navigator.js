@@ -215,7 +215,28 @@ nsButtonPrefListener.prototype =
       button.setAttribute("hidden","false");
     else
       button.setAttribute("hidden", "true");
+
+    // If all the buttons before the separator are hidden, also hide the
+    // separator
+    if(allLeftButtonsAreHidden())
+      document.getElementById("home-bm-separator").setAttribute("hidden", "true");
+    else
+      document.getElementById("home-bm-separator").removeAttribute("hidden");
   }
+}
+
+// Function allLeftButtonsAreHidden
+// Returns true if all the buttons left of the separator in the personal
+// toolbar are hidden, false otherwise.
+// Used by nsButtonPrefListener to hide the separator if needed
+function allLeftButtonsAreHidden() {
+  var buttonNode = document.getElementById("PersonalToolbar").firstChild;
+  while(buttonNode.tagName != "toolbarseparator") {
+    if(!buttonNode.hasAttribute("hidden") || buttonNode.getAttribute("hidden") == "false")
+      return false;
+    buttonNode = buttonNode.nextSibling;
+  }
+  return true;
 }
 
 function Startup()
