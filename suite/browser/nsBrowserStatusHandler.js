@@ -68,7 +68,7 @@ nsBrowserStatusHandler.prototype =
       }
 
       return aValue;
-    },
+    }
   },
 
   useRealProgressFlag : false,
