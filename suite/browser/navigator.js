@@ -573,22 +573,35 @@ function Translate()
 function gotoHistoryIndex(aEvent)
 {
   var index = aEvent.target.getAttribute("index");
-  if (index) {
+  if (!index)
+    return false;
+  try {
     getWebNavigation().gotoIndex(index);
-    return true;
   }
-  return false;
+  catch(ex) {
+    return false;
+  }
+  return true;
+  
 }
 
 function BrowserBack()
 {
-  getWebNavigation().goBack();
+  try {
+    getWebNavigation().goBack();
+  } 
+  catch(ex) {
+  }
   UpdateBackForwardButtons();
 }
 
 function BrowserForward()
 {
-  getWebNavigation().goForward();
+  try {
+    getWebNavigation().goForward();
+  } 
+  catch(ex) {
+  }
   UpdateBackForwardButtons();
 }
 
@@ -604,7 +617,11 @@ function BrowserForwardMenu(event)
 
 function BrowserStop()
 {
-  getWebNavigation().stop();
+  try {
+    getWebNavigation().stop();
+  } 
+  catch(ex) {
+  }
 }
 
 function BrowserReload()
@@ -844,7 +861,11 @@ function BrowserPrint()
 function BrowserSetDefaultCharacterSet(aCharset)
 {
   getMarkupDocumentViewer().defaultCharacterSet = aCharset;
-  getWebNavigation().reload(nsIWebNavigation.LOAD_FLAGS_NONE);
+  try {
+    getWebNavigation().reload(nsIWebNavigation.LOAD_FLAGS_NONE);
+  } 
+  catch(ex) {
+  }
 }
 
 function BrowserSetForcedCharacterSet(aCharset)
