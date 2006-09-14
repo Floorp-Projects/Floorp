@@ -125,6 +125,7 @@
 	<broadcaster id="cmd_viewTextZoomEnlarge" value="&textZoomEnlargeCmd.label;"   oncommand="enlargeTextZoom();"/>
 	<broadcaster id="cmd_viewnavbar" value="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
 	<broadcaster id="cmd_viewpersonaltoolbar" value="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
+	<broadcaster id="cmd_viewformtoolbar" value="&formbarCmd.label;" accesskey="&formbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" oncommand="goToggleFormToolbar('FormToolbar','cmd_viewformtoolbar');" checked="true"/>
 	<broadcaster id="cmd_viewtaskbar" value="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
 
 	<broadcaster id="View:PageSource" oncommand="BrowserViewSource();"/>
@@ -203,6 +204,7 @@
 		  	<menupopup id="view_toolbars_popup"> 
 		  		<menuitem observes="cmd_viewnavbar"  />
 		  		<menuitem observes="cmd_viewpersonaltoolbar" />
+		  		<menuitem observes="cmd_viewformtoolbar" />
 		  		<menuitem observes="cmd_viewtaskbar" />
 		  	</menupopup>
 	</menu>   

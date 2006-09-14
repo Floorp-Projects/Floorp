@@ -294,6 +294,9 @@ nsXULBrowserWindow.prototype =
         stopMenu.setAttribute("disabled", true);
         stopContext.setAttribute("disabled", true);
 
+        // Set buttons in form menu
+        setFormToolbar();
+
         EnableBusyCursor(false);
       }
     }
@@ -1642,3 +1645,108 @@ function debug(message)
 {
   dump(message);
 }
+
+function formCapture()
+{
+  var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
+  walletService.WALLET_RequestToCapture(window._content);
+}
+
+function formPrefill()
+{
+  var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
+  walletService.WALLET_Prefill(false, window._content);
+
+  window.openDialog("chrome://communicator/content/wallet/WalletPreview.xul",
+                    "_blank", "chrome,modal=yes,dialog=yes,all, width=504, height=436");
+}
+
+function formShow()
+{
+  window.openDialog(
+      "chrome://communicator/content/wallet/WalletViewer.xul",
+      "WalletViewer",
+      "chrome,titlebar,modal=yes,resizable=yes");
+  // if a stored value changed, we might need to enable/disable the prefill-form button
+  setFormToolbar(); // in case we need to change state of prefill-form button 
+}
+
+function setFormToolbar()
+{
+
+  // keep form toolbar hidden if checkbox in view menu so indicates
+
+  var cmd_viewformToolbar = document.getElementById("cmd_viewformtoolbar");
+  if (cmd_viewformToolbar) {
+    var checkValue = cmd_viewformToolbar.getAttribute("checked");
+    if (checkValue == "false") {
+      return;
+    }
+  }
+
+  // hide form toolbar if there is no form on the current page
+
+  var formToolbar = document.getElementById("FormToolbar");
+  if (!formToolbar) {
+    return;
+  }
+  if (!window._content.document) {
+    formToolbar.setAttribute("hidden", "true");
+    return;
+  }
+  var formsArray = window._content.document.forms;
+  if (!formsArray || formsArray.length == 0) {
+    formToolbar.setAttribute("hidden", "true");
+    return;
+  }
+  formToolbar.removeAttribute("hidden");
+
+  // enable prefill button if there is at least one saved value for the form
+
+  var formPrefill = document.getElementById("formPrefill");
+  var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
+  var form;
+  for (form=0; form<formsArray.length; form++) {
+    var elementsArray = formsArray[form].elements;
+    var element;
+    for (element=0; element<elementsArray.length; element++) {
+      var type = elementsArray[element].type;
+      if (type=="" || type=="text" || type=="select-one") {
+        var value = walletService.WALLET_PrefillOneElement
+          (window._content, elementsArray[element]);
+        if (value != "") {
+          // element has a saved value, thus prefill button is to appear in toolbar
+          formPrefill.setAttribute("disabled", "false");
+          return;
+        }
+      }
+    }
+  }
+  formPrefill.setAttribute("disabled", "true");
+}
+
+// Can't use generic goToggleToolbar (see utilityOverlay.js) for form menu because
+// form toolbar could be hidden even when the checkbox in the view menu is checked
+function goToggleFormToolbar( id, elementID )
+{
+  var toolbar = document.getElementById(id);
+  var element = document.getElementById(elementID);
+  if (element) {
+    var checkValue = element.getAttribute("checked");
+    if (checkValue == "false") {
+      element.setAttribute("checked","true")
+      if (toolbar) {
+        setFormToolbar();
+      }
+    } else {
+      element.setAttribute("checked","false")
+      if (toolbar) {
+        toolbar.setAttribute("hidden", true );
+      }
+    }
+    document.persist(id, 'hidden');
+    document.persist(elementID, 'checked');
+  }
+}
+
+

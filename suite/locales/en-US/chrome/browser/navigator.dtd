@@ -46,6 +46,8 @@
 <!ENTITY navbarCmd.accesskey "n">
 <!ENTITY personalbarCmd.label "Personal Toolbar">
 <!ENTITY personalbarCmd.accesskey "p">
+<!ENTITY formbarCmd.label "Form Toolbar">
+<!ENTITY formbarCmd.accesskey "f">
 <!ENTITY taskbarCmd.label "Taskbar">
 <!ENTITY taskbarCmd.accesskey "t">
 
@@ -282,6 +284,14 @@
 <!ENTITY  bookmarksButton.label       "Bookmarks">
 <!ENTITY  bookmarksButton.tooltip     "Bookmarks list">
 <!ENTITY  homeButton.label            "Home">
+
+<!-- Wallet Toolbar items -->
+<!ENTITY  formPrefill.label           "Prefill Form">
+<!ENTITY  formCapture.label           "Save Form Data">
+<!ENTITY  formView.label              "View Saved Data">
+<!ENTITY  formPrefill.tooltip         "Prefill this form with previously-saved data">
+<!ENTITY  formCapture.tooltip         "Save data found on this form">
+<!ENTITY  formView.tooltip            "View previously-saved data for this form">
 
 <!-- LOCALIZATION NOTE (bugzillaButton.label) : DONT_TRANSLATE -->
 <!ENTITY  bugzillaButton.label        "Bugzilla">
