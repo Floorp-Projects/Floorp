@@ -392,6 +392,21 @@ function Startup()
       remoteService.addBrowserInstance(window);
     }
   }
+  // now load bookmarks after a delay
+  setTimeout(LoadBookmarksCallback, 100);
+}
+
+function LoadBookmarksCallback()
+{
+  try {
+    var bmservice = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
+                       .getService(Components.interfaces.nsIBookmarksService);
+    bmservice.ReadBookmarks();
+    // tickle personal toolbar to load personal toolbar items
+    var personalToolbar = document.getElementById("innermostBox");
+    personalToolbar.builder.rebuild();
+  } catch (e) {
+  }
 }
 
 function WindowFocusTimerCallback(element)
