@@ -110,7 +110,11 @@ nsBrowserStatusHandler.prototype =
     this.stopContext     = document.getElementById("context-stop");
     this.statusTextField = document.getElementById("statusbar-display");
     this.isImage         = document.getElementById("isImage");
+    this.securityButton  = document.getElementById("security-button");
 
+    // Initialize the security button's state and tooltip text
+    const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+    this.onSecurityChange(null, null, nsIWebProgressListener.STATE_IS_INSECURE);
   },
 
   destroy : function()
@@ -124,6 +128,7 @@ nsBrowserStatusHandler.prototype =
     this.stopContext     = null;
     this.statusTextField = null;
     this.isImage         = null;
+    this.securityButton  = null;
     this.userTyped       = null;
   },
 
@@ -161,9 +166,8 @@ nsBrowserStatusHandler.prototype =
 
     // check the current value so we don't trigger an attribute change
     // and cause needless (slow!) UI updates
-    if (this.statusTextField.label != text) {
+    if (this.statusTextField.label != text)
       this.statusTextField.label = text;
-    }
   },
 
   onLinkIconAvailable : function(aHref) {
@@ -340,6 +344,29 @@ nsBrowserStatusHandler.prototype =
 
   onSecurityChange : function(aWebProgress, aRequest, aState)
   {
+    const wpl = Components.interfaces.nsIWebProgressListener;
+
+    switch (aState) {
+      case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_HIGH:
+        this.securityButton.setAttribute("level", "high");
+        break;
+      case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_LOW:
+        this.securityButton.setAttribute("level", "low");
+        break;
+      case wpl.STATE_IS_BROKEN:
+        this.securityButton.setAttribute("level", "broken");
+        break;
+      case wpl.STATE_IS_INSECURE:
+      default:
+        this.securityButton.removeAttribute("level");
+        break;
+    }
+
+    var securityUI = getBrowser().securityUI;
+    if (securityUI)
+      this.securityButton.setAttribute("tooltiptext", securityUI.tooltipText);
+    else
+      this.securityButton.removeAttribute("tooltiptext");
   },
 
   startDocumentLoad : function(aRequest)

@@ -94,7 +94,10 @@ function onLoadPageInfo()
   } 
   else 
   {
-    theWindow = window.opener.frames[0];
+    if ("gBrowser" in window.opener)
+      theWindow = window.opener.gBrowser.contentWindow;
+    else
+      theWindow = window.opener.frames[0];
     theDocument = theWindow.document;
     docTitle = theBundle.getString("pageInfo.title");
   }
