@@ -60,7 +60,7 @@ Contributor(s): ______________________________________. -->
   <script type="application/x-javascript" src="chrome://global/content/nsClipboard.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/fullscreen.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/fullScreen.js"/>
   
   <!-- Content Area -->
   <script type="application/x-javascript" src="chrome://navigator/content/nsBrowserStatusHandler.js"/>
