@@ -898,19 +898,38 @@ function BrowserReloadSkipCache()
   return BrowserReloadWithFlags(reloadFlags);
 }
 
-function BrowserHome()
+function BrowserHome(aEvent)
 {
+  var tab;
   var homePage = getHomePage();
-  if (homePage.length == 1) {
-    loadURI(homePage[0]);
-  } else {
-    var URIs = [];
-    for (var i in homePage)
-      URIs.push({URI: homePage[i]});
+  var target = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
 
-    var tab = gBrowser.loadGroup(URIs);
-    if (!pref.getBoolPref("browser.tabs.loadInBackground"))
-      gBrowser.selectedTab = tab;
+  if (homePage.length == 1) {
+    switch (target) {
+    case "current":
+      loadURI(homePage[0]);
+      break;
+    case "tab":
+      tab = gBrowser.addTab(homePage[0]);
+      if (!BookmarksUtils.shouldLoadTabInBackground(aEvent))
+        gBrowser.selectedTab = tab;
+      break;
+    case "window":
+      openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", homePage[0]);
+    }
+  } else {
+    if (target == "window")
+      openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", homePage.join("\n"));
+    else {
+      var URIs = [];
+      for (var i in homePage)
+        URIs.push({URI: homePage[i]});
+
+      tab = gBrowser.loadGroup(URIs);
+      
+      if (!BookmarksUtils.shouldLoadTabInBackground(aEvent))
+        gBrowser.selectedTab = tab;
+    }
   }
 }
 
