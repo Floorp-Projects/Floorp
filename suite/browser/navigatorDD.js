@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *  - Kevin Puetz (puetzk@iastate.edu)
  *  - Ben Goodger <ben@netscape.com>
  */
@@ -25,19 +25,19 @@
 ////////////////////////////////////////////////////////////////////////////
 // XXX - WARNING - DRAG AND DROP API CHANGE ALERT - XXX
 // This file has been extensively modified in a checkin planned for Mozilla
-// 0.8, and the API has been modified. DO NOT MODIFY THIS FILE without 
-// approval from ben@netscape.com, otherwise your changes will be lost. 
+// 0.8, and the API has been modified. DO NOT MODIFY THIS FILE without
+// approval from ben@netscape.com, otherwise your changes will be lost.
 
 var gRDFService = nsJSComponentManager.getService("@mozilla.org/rdf/rdf-service;1",
-                                                  "nsIRDFService"); 
+                                                  "nsIRDFService");
 
-function _RDF(aType) 
+function _RDF(aType)
   {
     return "http://www.w3.org/1999/02/22-rdf-syntax-ns#" + aType;
   }
 function NC_RDF(aType)
   {
-    return "http://home.netscape.com/NC-rdf#" + aType;  
+    return "http://home.netscape.com/NC-rdf#" + aType;
   }
 
 var RDFUtils = {
@@ -45,14 +45,14 @@ var RDFUtils = {
     {
       return gRDFService.GetResource(aString, true);
     },
-  
+
   getTarget: function(aDS, aSourceID, aPropertyID)
     {
       var source = this.getResource(aSourceID);
       var property = this.getResource(aPropertyID);
       return aDS.GetTarget(source, property, true);
     },
-  
+
   getValueFromResource: function(aResource)
     {
       aResource = aResource.QueryInterface(Components.interfaces.nsIRDFResource);
@@ -67,7 +67,7 @@ function isBookmark(aURI)
     typeValue = RDFUtils.getValueFromResource(typeValue);
     return (typeValue == NC_RDF("BookmarkSeparator") ||
             typeValue == NC_RDF("Bookmark") ||
-            typeValue == NC_RDF("Folder")) 
+            typeValue == NC_RDF("Folder"))
   }
 
 var personalToolbarObserver = {
@@ -75,7 +75,7 @@ var personalToolbarObserver = {
     {
       var personalToolbar = document.getElementById("PersonalToolbar");
       if (aEvent.target == personalToolbar) return;
-        
+
       var db = document.getElementById("innermostBox").database;
       var uri = aEvent.target.id;
 
@@ -92,22 +92,22 @@ var personalToolbarObserver = {
       aXferData.data.addDataForFlavour("text/html", htmlString);
       aXferData.data.addDataForFlavour("text/unicode", url);
     },
-  
-  onDrop: function (aEvent, aXferData, aDragSession) 
+
+  onDrop: function (aEvent, aXferData, aDragSession)
     {
       var dropElement = aEvent.target.id;
       var elementRes = RDFUtils.getResource(aXferData.data);
       var dropElementRes = RDFUtils.getResource(dropElement);
       var personalToolbarRes = RDFUtils.getResource("NC:PersonalToolbarFolder");
-      
+
       var childDB = document.getElementById("innermostBox").database;
       const kCtrContractID = "@mozilla.org/rdf/container;1";
       const kCtrIID = Components.interfaces.nsIRDFContainer;
       var rdfContainer = Components.classes[kCtrContractID].getService(kCtrIID);
-      
+
       var parentContainer = this.findParentContainer(aDragSession.sourceElement);
-      if (parentContainer) 
-        { 
+      if (parentContainer)
+        {
           rdfContainer.Init(childDB, parentContainer);
           rdfContainer.RemoveElement(elementRes, true);
         }
@@ -123,7 +123,7 @@ var personalToolbarObserver = {
           if (titleFromHistory)
             potentialTitle = titleFromHistory.Value;
           linkTitle = potentialTitle ? potentialTitle : element;
-          childDB.Assert(elementRes, historyTitleProperty, 
+          childDB.Assert(elementRes, historyTitleProperty,
                          gRDFService.GetLiteral(linkTitle), true);
         }
       rdfContainer.Init (childDB, personalToolbarRes);
@@ -149,10 +149,10 @@ var personalToolbarObserver = {
       }
       return true;
     },
-  
+
   mCurrentDragOverButton: null,
   mCurrentDragPosition: null,
-  
+
   onDragExit: function (aEvent, aDragSession)
     {
       if (this.mCurrentDragOverButton)
@@ -163,14 +163,14 @@ var personalToolbarObserver = {
           this.mCurrentDragOverButton.removeAttribute("open");
         }
     },
-  
+
   onDragOver: function (aEvent, aFlavour, aDragSession)
     {
       var dropPosition = this.determineDropPosition(aEvent);
-      
+
       if (this.mCurrentDragOverButton != aEvent.target ||
-          (this.mCurrentDragOverButton == aEvent.target && 
-           this.mCurrentDragPosition != dropPosition)) 
+          (this.mCurrentDragOverButton == aEvent.target &&
+           this.mCurrentDragPosition != dropPosition))
         {
           if (this.mCurrentDragOverButton)
             {
@@ -182,10 +182,10 @@ var personalToolbarObserver = {
           this.mCurrentDragOverButton = aEvent.target;
           this.mCurrentDragPosition = dropPosition;
         }
-      
-      switch (dropPosition) 
+
+      switch (dropPosition)
         {
-          case -1: 
+          case -1:
             aEvent.target.setAttribute("dragover-left", "true");
             break;
           case 1:
@@ -200,7 +200,7 @@ var personalToolbarObserver = {
             }
             break;
         }
-        
+
        return true;
     },
 
@@ -218,35 +218,35 @@ var personalToolbarObserver = {
       var overButton = aEvent.target;
       var overButtonBoxObject = overButton.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
 
-      if (aEvent.clientX < (overButtonBoxObject.x + overButtonBoxObject.width/3)) 
+      if (aEvent.clientX < (overButtonBoxObject.x + overButtonBoxObject.width/3))
         {
-          if (aEvent.clientY > overButtonBoxObject.y && 
+          if (aEvent.clientY > overButtonBoxObject.y &&
               aEvent.clientY < overButtonBoxObject.y + overButtonBoxObject.height)
             return -1;
         }
-      else if (aEvent.clientX > (overButtonBoxObject.x + 2*(overButtonBoxObject.width/3))) 
+      else if (aEvent.clientX > (overButtonBoxObject.x + 2*(overButtonBoxObject.width/3)))
         {
-          if (aEvent.clientY > overButtonBoxObject.y && 
-              aEvent.clientY < overButtonBoxObject.y + overButtonBoxObject.height) 
+          if (aEvent.clientY > overButtonBoxObject.y &&
+              aEvent.clientY < overButtonBoxObject.y + overButtonBoxObject.height)
             return 1;
         }
       else if (aEvent.clientX > (overButtonBoxObject.x + overButtonBoxObject.width/3) &&
-               aEvent.clientX < ((overButtonBoxObject.x + 2*(overButtonBoxObject.width/3)))) 
+               aEvent.clientX < ((overButtonBoxObject.x + 2*(overButtonBoxObject.width/3))))
         {
-          if (aEvent.clientY > overButtonBoxObject.y && 
-              aEvent.clientY < overButtonBoxObject.y + overButtonBoxObject.height) 
+          if (aEvent.clientY > overButtonBoxObject.y &&
+              aEvent.clientY < overButtonBoxObject.y + overButtonBoxObject.height)
             return 0;
         }
-        
+
       return 0;
     },
 
   // returns the parent resource of the dragged element. This is determined
   // by inspecting the source element of the drag and walking up the DOM tree
-  // to find the appropriate containing node.    
-  findParentContainer: function (aElement) 
+  // to find the appropriate containing node.
+  findParentContainer: function (aElement)
     {
-      switch (aElement.localName) 
+      switch (aElement.localName)
         {
           case "button":
           case "menubutton":
@@ -262,16 +262,16 @@ var personalToolbarObserver = {
         }
       return null;
     }
-}; 
+};
 
 var proxyIconDNDObserver = {
   onDragStart: function (aEvent, aXferData, aDragAction)
     {
       var urlBar = document.getElementById("urlbar");
-      
+
       // XXX - do we want to allow the user to set a blank page to their homepage?
-      //       if so then we want to modify this a little to set about:blank as 
-      //       the homepage in the event of an empty urlbar. 
+      //       if so then we want to modify this a little to set about:blank as
+      //       the homepage in the event of an empty urlbar.
       if (!urlBar.value) return;
 
       var urlString = urlBar.value + "\n" + window._content.document.title;
@@ -299,19 +299,19 @@ var homeButtonObserver = {
           aXferData.data.addDataForFlavour("text/unicode", homepage);
         }
     },
-  
+
   onDrop: function (aEvent, aXferData, aDragSession)
     {
       var url = retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
       var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
                                 "nsICommonDialogs");
-      var pressedVal = { };                            
+      var pressedVal = { };
       var promptTitle = gNavigatorBundle.getString("droponhometitle");
       var promptMsg   = gNavigatorBundle.getString("droponhomemsg");
       var okButton    = gNavigatorBundle.getString("droponhomeokbutton");
-      var iconURL     = "chrome://navigator/skin/home.gif"; // evil evil common dialog code! evil! 
+      var iconURL     = "chrome://navigator/skin/home.gif"; // evil evil common dialog code! evil!
 
-      commonDialogService.UniversalDialog(window, null, promptTitle, promptMsg, null, 
+      commonDialogService.UniversalDialog(window, null, promptTitle, promptMsg, null,
                                           okButton, null, null, null, null, null, { }, { },
                                           iconURL, { }, 2, 0, null, pressedVal);
 
@@ -320,19 +320,19 @@ var homeButtonObserver = {
         setTooltipText("home-button", url);
       }
     },
-    
+
   onDragOver: function (aEvent, aFlavour, aDragSession)
     {
       var statusTextFld = document.getElementById("statusbar-display");
-      statusTextFld.setAttribute("value", gNavigatorBundle.getString("droponhomebutton"));
+      statusTextFld.label = gNavigatorBundle.getString("droponhomebutton");
       aDragSession.dragAction = Components.interfaces.nsIDragService.DRAGDROP_ACTION_LINK;
     },
-    
+
   onDragExit: function (aEvent, aDragSession)
     {
-      statusTextFld.setAttribute("value", "");
+      statusTextFld.label = "";
     },
-        
+
   getSupportedFlavours: function ()
     {
       var flavourSet = new FlavourSet();

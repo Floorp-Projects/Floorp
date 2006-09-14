@@ -99,24 +99,24 @@ function makeFormTree(page, root)
   if (formList.length == 0) return false;
 
   var treeChildren = document.getElementById("formChildren");
-  
+
   for (var i = 0; i < formList.length; i++)
   {
     var treeItem = document.createElement("treeitem");
     var treeRowElem = treeItem.appendChild(document.createElement("treerow"));
 
     var treeCellElem = treeRowElem.appendChild(document.createElement("treecell"));
-    treeCellElem.setAttribute("value", formList[i].action);
+    treeCellElem.setAttribute("label", formList[i].action);
 
     treeCellElem = treeRowElem.appendChild(document.createElement("treecell"));
-    treeCellElem.setAttribute("value", formList[i].method);
+    treeCellElem.setAttribute("label", formList[i].method);
 
     treeCellElem = treeRowElem.appendChild(document.createElement("treecell"));
-    treeCellElem.setAttribute("value", formList[i].name);
-	  
+    treeCellElem.setAttribute("label", formList[i].name);
+
     treeChildren.appendChild(treeItem);
   }
-  
+
   return true;
 }
 
@@ -127,26 +127,26 @@ function makeImageTree(page, root)
 
   var treeChildren = document.getElementById("imagesChildren");
 
-  for (var i = 0; i < imgList.length; i++) 
+  for (var i = 0; i < imgList.length; i++)
   {
     var treeItem = document.createElement("treeitem");
     treeItem.setAttribute("container", "true");
     treeItem.setAttribute("parent", "true");
-	  
+
     var treeRowElem = treeItem.appendChild(document.createElement("treerow"));
 
     var treeCellElem = treeRowElem.appendChild(document.createElement("treecell"));
-    treeCellElem.setAttribute("value", imgList[i].src);
+    treeCellElem.setAttribute("label", imgList[i].src);
 
     treeCellElem = treeRowElem.appendChild(document.createElement("treecell"));
-    treeCellElem.setAttribute("value", imgList[i].width);
+    treeCellElem.setAttribute("label", imgList[i].width);
 
     treeCellElem = treeRowElem.appendChild(document.createElement("treecell"));
-    treeCellElem.setAttribute("value", imgList[i].height);
+    treeCellElem.setAttribute("label", imgList[i].height);
 
     treeCellElem = treeRowElem.appendChild(document.createElement("treecell"));
-    treeCellElem.setAttribute("value", imgList[i].alt);
-	  
+    treeCellElem.setAttribute("label", imgList[i].alt);
+
     treeChildren.appendChild(treeItem);
   }
 
@@ -157,12 +157,12 @@ function onImageSelect()
 {
   var tree = document.getElementById("imageTree");
   var imageFrame = document.getElementById("imageFrame");
-  
+
   if (tree.selectedItems.length == 1)
   {
     var clickedRow = tree.selectedItems[0].firstChild;
     var firstCell = clickedRow.firstChild;
-    var imageUrl = firstCell.getAttribute("value");
+    var imageUrl = firstCell.getAttribute("label");
     imageFrame.setAttribute("src", imageUrl);
   }
 }
