@@ -518,7 +518,7 @@
 
       <menuitem label="Form Manager Samples" oncommand="loadURI('http://www.mozilla.org/wallet/samples/wallet.html');"/>
 
-      <menuitem label="chofmann's Browser Buster" oncommand="loadURI('http://komodo.mozilla.org/buster/');"/>
+      <menuitem label="chofmann's Browser Buster" oncommand="loadURI('http://webtools.mozilla.org/buster/');"/>
       <menuitem label="Composer (with test page)" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>
       <menuitem label="Flush Memory" oncommand="Components.classes['@mozilla.org/xpcom/memory-service;1'].getService(Components.interfaces.nsIMemory).heapMinimize(true);" />
 
