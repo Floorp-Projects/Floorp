@@ -50,7 +50,7 @@ catch (ex)
   var jsStatus = null;
   var jsDefaultStatus = null;
   var overLink = null; 
-  var startTime = 0;
+  var startTime = (new Date()).getTime();
 
   //cached elements/ fields
   var statusTextFld = null;
