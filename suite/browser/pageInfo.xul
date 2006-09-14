@@ -54,8 +54,10 @@
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <keyset>
-    <key id="closeWindow" key="&closeWindow.accesskey;" modifiers="accel" oncommand="window.close();"/>
-    <key id="copy" key="&copy.accesskey;" modifiers="accel" oncommand="doCopy(event);"/>
+    <key id="closeWindow" key="&closeWindow.key;" modifiers="accel"
+         oncommand="window.close();"/>
+    <key id="copy" key="&copy.key;" modifiers="accel"
+         oncommand="doCopy(event);"/>
   </keyset>
 
   <stringbundle id="pageinfobundle" src="chrome://navigator/locale/pageInfo.properties"/>
@@ -304,7 +306,9 @@
             </rows>
           </grid>
           <hbox>
-            <button label="&mediaSaveAs;" accesskey="&mediaSaveAsAccesskey;" id="imagesaveasbutton" disabled="true" oncommand="saveMedia();"/>
+            <button label="&mediaSaveAs;" accesskey="&mediaSaveAs.accesskey;"
+                    id="imagesaveasbutton" disabled="true"
+                    oncommand="saveMedia();"/>
           </hbox>
           <vbox class="inset iframe" flex="1" pack="center">
             <hbox id="theimagecontainer" pack="center">

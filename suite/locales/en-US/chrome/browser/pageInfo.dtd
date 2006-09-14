@@ -40,8 +40,8 @@
 <!ENTITY  pageInfoWindow.width  "425">
 <!ENTITY  pageInfoWindow.height "470">
 
-<!ENTITY  copy.accesskey        "c">
-<!ENTITY  closeWindow.accesskey "w">
+<!ENTITY  copy.key              "c">
+<!ENTITY  closeWindow.key       "w">
 
 <!ENTITY  generalTab            "General">
 <!ENTITY  generalTitle          "Title:">
@@ -97,7 +97,7 @@
 <!ENTITY  mediaTitle            "Title Attribute:">
 <!ENTITY  mediaLongdesc         "Long Description:">
 <!ENTITY  mediaSaveAs           "Save As...">
-<!ENTITY  mediaSaveAsAccesskey  "S">
+<!ENTITY  mediaSaveAs.accesskey "S">
 
 <!ENTITY  framesTab             "Frames">
 <!ENTITY  frameName             "Name">
