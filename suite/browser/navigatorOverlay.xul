@@ -254,15 +254,18 @@
         </menu>
 
         <menu id = "charsetMenu" />
-          <menuseparator/>
-            <menu label="&applyTheme.label;" accesskey="&applyTheme.accesskey;">
-              <menupopup datasources="rdf:chrome" ref="urn:mozilla:skin:root" oncommand="applyTheme(event.target)">
-              <menuitem label="&themePreferencesCmd.label;" accesskey="&themePreferencesCmd.accesskey;"
-                        oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/pref-themes.xul')"/>
-              <menuitem label="&getNewThemesCmd.label;" accesskey="&getNewThemesCmd.accesskey;" oncommand="getNewThemes();"/>
-              <menuseparator/>
+        <menuseparator/>
+        <menu label="&applyTheme.label;" accesskey="&applyTheme.accesskey;">
+          <menupopup datasources="rdf:chrome" ref="urn:mozilla:skin:root" oncommand="applyTheme(event.target)">
+            <menuitem label="&themePreferencesCmd.label;" accesskey="&themePreferencesCmd.accesskey;"
+                      oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/pref-themes.xul')"/>
+            <menuitem label="&getNewThemesCmd.label;" accesskey="&getNewThemesCmd.accesskey;" oncommand="getNewThemes();"/>
+            <menuseparator/>
             <template>
-              <menuitem uri="..." label="rdf:http://www.mozilla.org/rdf/chrome#displayName" name="rdf:http://www.mozilla.org/rdf/chrome#name"/>
+            <menuitem uri="..."
+                      label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+                      accesskey="rdf:http://www.mozilla.org/rdf/chrome#accessKey"
+                      name="rdf:http://www.mozilla.org/rdf/chrome#name"/>
             </template>
           </menupopup>
         </menu>
