@@ -474,6 +474,9 @@ function Startup()
       setTooltipText("homebutton", homepage);
 
     initConsoleListener();
+
+    // Perform default browser checking.
+    checkForDefaultBrowser();
   }
 
   
@@ -2146,4 +2149,16 @@ function URLBarBlurHandler(aEvent)
     var URLBar = aEvent.target;
     URLBar.setSelectionRange(0, 0);
   }
+}
+
+// This function gets the "windows hooks" service and has it check its setting
+// This will do nothing on platforms other than Windows.
+function checkForDefaultBrowser() {
+    try {
+        Components
+            .classes[ "@mozilla.org/winhooks;1"]
+                .getService( Components.interfaces.nsIWindowsHooks )
+                    .checkSettings( window );
+    } catch(e) {
+    }
 }
