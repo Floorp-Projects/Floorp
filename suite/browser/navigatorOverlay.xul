@@ -39,7 +39,6 @@ Contributor(s): ______________________________________. -->
 <keyset id="keyset">
 	<!-- File Menu -->
 	<key id="key_newNavigator"/>
-	<key id="key_newMessage"/>
 	<key id="key_newBlankPage"/>
 	<key id="openBrowserKb"     xulkey="true" key="&openCmd.commandkey;" observes="Browser:Open" />
 	<key id="openFileKb"        xulkey="true" key="&openFileCmd.commandkey;" observes="Browser:OpenFile" />
@@ -86,12 +85,9 @@ Contributor(s): ______________________________________. -->
 <broadcasterset id="broadcasterset">
 	<!-- File Menu -->
 	<broadcaster id="cmd_newNavigator"/>
-	<broadcaster id="cmd_newMessage"/>
-	<broadcaster id="cmd_newCard"/>
 	<broadcaster id="cmd_newEditor"/>
 	<broadcaster id="cmd_newEditorTemplate"/>
 	<broadcaster id="cmd_newEditorDraft"/>
-	<broadcaster id="cmd_sendPage"/>
 	<broadcaster id="cmd_quit"/>
 
 	<!-- Edit Menu -->
@@ -119,7 +115,6 @@ Contributor(s): ______________________________________. -->
 
 	<broadcaster id="cmd_close" oncommand="BrowserClose()"/>
 
-	<broadcaster id="Browser:SendLink"  value="&sendLinkCmd.label;" oncommand="BrowserSendLink(window.content.location.href, window.content.document.title);"/>
 	<broadcaster id="Browser:EditPage"  value="&editPageCmd.label;" oncommand="BrowserEditPage(window.content.location.href);"/>
  	
 	<broadcaster id="Browser:PrintSetup"  value="&printSetupCmd.label;"     disabled ="true" oncommand="BrowserReload();"/>
@@ -146,14 +141,12 @@ Contributor(s): ______________________________________. -->
 <!-- Menu -->
 <menubar id="main-menubar" class="chromeclass-menubar">
 	<menu id="menu_File">
-	    <menupopup id="menu_FilePopup">
+    <menupopup id="menu_FilePopup">
 			<menuitem value="&browserCmd.label;" accesskey="&browserCmd.accesskey;" key="key_newNavigator" observes="cmd_newNavigator"/>
 			<menu id="menu_New">
 				<menupopup id="menu_NewPopup">
 					<!-- From globalOverlay.xul -->
 					<menuitem id="menu_newNavigator" observes="cmd_newNavigator"/>
-					<menuitem id="menu_newMessage"   observes="cmd_newMessage"/>
-					<menuitem id="menu_newCard"      observes="cmd_newCard"/>
 					<menuitem id="menu_newEditor"    observes="cmd_newEditor"/>
 				</menupopup>
 			</menu>
@@ -164,8 +157,6 @@ Contributor(s): ______________________________________. -->
 		    <menuitem id="context-savepage" key="savePage" observes="Browser:SavePage"/>
 		    <menuitem id="savepage" value="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="savePage(gFocusedURL);" hidden="true"/>
 	      <menuseparator/>
-	      <menuitem id="menu_sendPage"  observes="cmd_sendPage"/>
-	      <menuitem accesskey="&sendLinkCmd.accesskey;" observes="Browser:SendLink"/>
 	      <menuitem accesskey="&editPageCmd.accesskey;" observes="Browser:EditPage" />
 	      <menuseparator/>
 	      <menuitem accesskey="&printSetupCmd.accesskey;" observes="Browser:PrintSetup"/>
