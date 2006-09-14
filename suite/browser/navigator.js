@@ -428,29 +428,9 @@ function Startup()
   gNavigatorRegionBundle = document.getElementById("bundle_navigator_region");
   gBrandRegionBundle = document.getElementById("bundle_brand_region");
 
+  gBrowser = document.getElementById("content");
   gURLBar = document.getElementById("urlbar");
 
-  // Do all UI building here:
-
-  setOfflineStatus();
-
-  // set home button tooltip text
-  var homePage = getHomePage();
-  if (homePage)
-    document.getElementById("home-button").setAttribute("tooltiptext", homePage);
-
-  try {
-    var searchMode = pref.GetIntPref("browser.search.mode");
-    setBrowserSearchMode(searchMode);
-  } catch (ex) {
-  }
-
-  // call rest of init on timer so the window shows early
-  setTimeout(delayedInit, 0);
-}
-
-function delayedInit()
-{
   var webNavigation;
   try {
     // Create the browser instance component.
@@ -466,6 +446,21 @@ function delayedInit()
     alert("Error creating browser instance");
     window.close(); // Give up.
     return;
+  }
+
+  // Do all UI building here:
+
+  setOfflineStatus();
+
+  // set home button tooltip text
+  var homePage = getHomePage();
+  if (homePage)
+    document.getElementById("home-button").setAttribute("tooltiptext", homePage);
+
+  try {
+    var searchMode = pref.GetIntPref("browser.search.mode");
+    setBrowserSearchMode(searchMode);
+  } catch (ex) {
   }
 
   // initialize observers and listeners
