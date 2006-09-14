@@ -100,9 +100,7 @@
     <separator id="upgradeEvangelismSep"/>
     <deck id="detailsDeck" flex="1">
       <vbox align="start">
-        <button id="moreDetails" 
-                label="&moreDetails.label;" accesskey="&moreDetails.accesskey;"
-                oncommand="gUpdatesAvailablePage.onShowMoreDetails();"/>
+        <description>&incompatibleChecking.label;</description>
       </vbox>
       <vbox>
         <vbox id="moreInfoContent" flex="1">
