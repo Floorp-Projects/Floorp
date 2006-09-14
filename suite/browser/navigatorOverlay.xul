@@ -199,7 +199,7 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
     </menupopup>
   </menu>
 
-  <menu id="menu_View" accesskey="v" value="&viewMenu.label;">
+  <menu id="menu_View" accesskey="&viewMenu.accesskey;" value="&viewMenu.label;">
     <menupopup id="menu_View_Popup">
     	 <menu value="&toolbarsCmd.label;" id="view_toolbars">
 		  	<menupopup> 
@@ -344,7 +344,7 @@ END of Deprecated -->
    </menupopup>
   </menu>
   
-  <menu accesskey="s" value="&searchMenu.label;">
+  <menu accesskey="&searchMenu.accesskey;" value="&searchMenu.label;">
     <menupopup id="searchMenu">
        <menuitem accesskey="&findOnCmd.accesskey;"    key="key_find" observes="Browser:Find"/>
        <menuitem accesskey="&findAgainCmd.accesskey;" key="key_findAgain" observes="Browser:FindAgain"/>
@@ -404,7 +404,7 @@ END of Deprecated -->
   
   <menu accesskey="&helpMenuCmd.accesskey;" id="menu_Help"/>
   // Menu for testing.
-  <menu accesskey="d" value="&debugMenu.label;">
+  <menu accesskey="&debugMenu.accesskey;" value="&debugMenu.label;">
     <menupopup>
       <menu value="&debugVerCmd.label;">
         <menupopup>
@@ -492,7 +492,7 @@ END of Deprecated -->
     </menupopup>
   </menu>
 
-  <menu accesskey="q" value="&QA.label;">
+  <menu accesskey="&QA.accesskey;" value="&QA.label;">
     <menupopup>
       <menuitem value="&PrecheckinTests.label;"  oncommand="window._content.location.href='http://www.mozilla.org/quality/precheckin-tests.html'"/>
       <menuseparator />

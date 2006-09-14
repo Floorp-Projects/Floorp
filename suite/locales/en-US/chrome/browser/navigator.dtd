@@ -42,6 +42,8 @@
 <!ENTITY pasteCmd.accesskey "p">
 
 <!ENTITY viewMenu.label "View">
+<!ENTITY viewMenu.accesskey "v">
+
 <!ENTITY toolbarsCmd.label "Toolbars">
 <!ENTITY navbarCmd.label "Navigation Toolbar">
 <!ENTITY personalbarCmd.label "Personal Toolbar">
@@ -129,6 +131,7 @@
 <!ENTITY dcharCp1255Cmd.label "Hebrew (Windows-1255)">
 <!ENTITY dcharCp1256Cmd.label "Arabic (Windows-1256)">
 <!ENTITY searchMenu.label "Search">
+<!ENTITY searchMenu.accesskey "s">
 <!ENTITY findOnCmd.label "Find in This Page...">
 <!ENTITY findOnCmd.accesskey "f">
 <!ENTITY findOnCmd.commandkey "f">
@@ -195,6 +198,7 @@
 
 <!-- LOCALIZATION NOTE BEGIN : DO not localize the entities below; debug --> 
 <!ENTITY debugMenu.label "Debug">
+<!ENTITY debugMenu.accesskey "d">
 <!ENTITY debugQA.label "QA Help">
 <!ENTITY debugQABug.label "QA Help">
 <!ENTITY debugQASmoke.label "Smoke Tests">
@@ -278,6 +282,7 @@
 
 <!-- LOCALIZATION NOTE BEGIN : DO not localize the entities below; QA --> 
 <!ENTITY QA.label "QA">
+<!ENTITY QA.accesskey "q">
 <!ENTITY PrecheckinTests.label "Precheckin Tests">
 <!ENTITY QABugCmd.label "Bug Writing Guidelines">
 <!ENTITY QATempCmd.label "Bug Template">
