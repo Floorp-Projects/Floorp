@@ -1184,20 +1184,54 @@ function delayedOpenTab(url)
   setTimeout(function(aTabElt) { getBrowser().selectedTab = aTabElt; }, 0, getBrowser().addTab(url));
 }
 
-function BrowserOpenFileWindow()
+/* Show file picker dialog configured for opening a file, and return 
+ * the selected nsIFileURL instance. */
+function selectFileToOpen(label, prefRoot)
 {
-  // Get filepicker component.
-  try {
-    const nsIFilePicker = Components.interfaces.nsIFilePicker;
-    var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-    fp.init(window, gNavigatorBundle.getString("openFile"), nsIFilePicker.modeOpen);
-    fp.appendFilters(nsIFilePicker.filterAll | nsIFilePicker.filterText | nsIFilePicker.filterImages |
-                     nsIFilePicker.filterXML | nsIFilePicker.filterHTML);
+  var fileURL = null;
 
-    if (fp.show() == nsIFilePicker.returnOK)
-      openTopWin(fp.fileURL.spec);
+  // Get filepicker component.
+  const nsIFilePicker = Components.interfaces.nsIFilePicker;
+  var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+  fp.init(window, gNavigatorBundle.getString(label), nsIFilePicker.modeOpen);
+  fp.appendFilters(nsIFilePicker.filterAll | nsIFilePicker.filterText | nsIFilePicker.filterImages |
+                   nsIFilePicker.filterXML | nsIFilePicker.filterHTML);
+
+  const filterIndexPref = prefRoot + "filterIndex";
+  const lastDirPref = prefRoot + "dir";
+
+  // use a pref to remember the filterIndex selected by the user.
+  var index = 0;
+  try {
+    index = pref.getIntPref(filterIndexPref);
   } catch (ex) {
   }
+  fp.filterIndex = index;
+
+  // use a pref to remember the displayDirectory selected by the user.
+  var dir = null;
+  try {
+    dir = pref.getComplexValue(lastDirPref, Components.interfaces.nsILocalFile);
+  } catch (ex) {
+  }
+  fp.displayDirectory = dir;
+
+  if (fp.show() == nsIFilePicker.returnOK) {
+    pref.setIntPref(filterIndexPref, fp.filterIndex);
+    pref.setComplexValue(lastDirPref,
+                         Components.interfaces.nsILocalFile,
+                         fp.file.parent.QueryInterface(Components.interfaces.nsILocalFile));
+    fileURL = fp.fileURL;
+  }
+
+  return fileURL;
+}
+
+function BrowserOpenFileWindow()
+{
+  try {
+    openTopWin(selectFileToOpen("openFile", "browser.open."));
+  } catch (e) {}
 }
 
 function BrowserEditBookmarks()
@@ -2289,4 +2323,80 @@ function WindowIsClosing()
   }
 
   return reallyClose;
+}
+
+/**
+ * file upload support
+ */
+
+/* This function returns the URI of the currently focused content frame
+ * or frameset.
+ */
+function getCurrentURI()
+{
+  const CI = Components.interfaces;
+
+  var focusedWindow = document.commandDispatcher.focusedWindow;
+  var contentFrame = isContentFrame(focusedWindow) ? focusedWindow : window.content;
+
+  var nav = contentFrame.QueryInterface(CI.nsIInterfaceRequestor)
+                        .getInterface(CI.nsIWebNavigation);
+  return nav.currentURI;
+}
+
+function uploadFile(fileURL)
+{
+  const CI = Components.interfaces;
+
+  var targetBaseURI = getCurrentURI();
+
+  // generate the target URI.  we use fileURL.file.leafName to get the
+  // unicode value of the target filename w/o any URI-escaped chars.
+  // this gives the protocol handler the best chance of generating a
+  // properly formatted URI spec.  we pass null for the origin charset
+  // parameter since we want the URI to inherit the origin charset
+  // property from targetBaseURI.
+
+  var leafName = fileURL.file.leafName;
+
+  const IOS = Components.classes["@mozilla.org/network/io-service;1"]
+                        .getService(CI.nsIIOService);
+  var targetURI = IOS.newURI(leafName, null, targetBaseURI);
+
+  // ok, start uploading...
+
+  var dialog = Components.classes["@mozilla.org/progressdialog;1"]
+                         .createInstance(CI.nsIProgressDialog);
+
+  var persist = Components.classes["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
+                          .createInstance(CI.nsIWebBrowserPersist);
+
+  dialog.init(fileURL, targetURI, leafName, null, Date.now()*1000, persist);
+  dialog.open(window);
+
+  persist.progressListener = dialog;
+  persist.saveURI(fileURL, null, null, null, null, targetURI);
+}
+
+function BrowserUploadFile()
+{
+  try {
+    uploadFile(selectFileToOpen("uploadFile", "browser.upload."));
+  } catch (e) {}
+}
+
+/* This function is called whenever the file menu is about to be displayed.
+ * Enable the upload menu item if appropriate. */
+function updateFileUploadItem()
+{
+  var canUpload = false;
+  try {
+    canUpload = getCurrentURI().schemeIs('ftp');
+  } catch (e) {}
+
+  var item = document.getElementById('Browser:UploadFile');
+  if (canUpload)
+    item.removeAttribute('disabled');
+  else
+    item.setAttribute('disabled', 'true');
 }
