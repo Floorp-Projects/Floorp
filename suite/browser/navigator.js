@@ -2561,19 +2561,6 @@ function SwitchDocumentDirection(aWindow)
     SwitchDocumentDirection(aWindow.frames[run]);
 }
 
-function SwitchFocusedTextEntryDirection()
-{
-  // The keybinding shoudn't work if the menu item is hidden
-  if (gShowBiDi) {
-    var focusedElement = document.commandDispatcher.focusedElement;
-    if (focusedElement)
-      if (window.getComputedStyle(focusedElement, "").direction == "ltr")
-        focusedElement.style.direction = "rtl";
-      else
-        focusedElement.style.direction = "ltr";
-  }
-}
-
 function updateSavePageItems()
 {
   var autoDownload = pref.getBoolPref("browser.download.autoDownload");
