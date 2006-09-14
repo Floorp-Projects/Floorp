@@ -278,6 +278,7 @@ function Startup()
   contentArea.addEventListener("load", loadEventHandlers, true);
   contentArea.addEventListener("focus", contentAreaFrameFocus, true);
 
+  var turboMode = false;
   // set default character set if provided
   if ("arguments" in window && window.arguments.length > 1 && window.arguments[1]) {
     if (window.arguments[1].indexOf("charset=") != -1) {
@@ -286,6 +287,8 @@ function Startup()
         //we should "inherit" the charset menu setting in a new window
         appCore.setDefaultCharacterSet(arrayArgComponents[1]); //XXXjag see bug 67442
       }
+    } else if (window.arguments[1].indexOf("turbo=yes") != -1) {
+        turboMode = true;
     }
   }
 
@@ -314,7 +317,7 @@ function Startup()
   if (!isPageCycling) {
     var uriToLoad;
 
-    if (!appCore.cmdLineURLUsed) {
+    if (!appCore.cmdLineURLUsed  && !turboMode) {
       var cmdLineService = Components.classes["@mozilla.org/appshell/commandLineService;1"]
                                      .getService(Components.interfaces.nsICmdLineService);
       uriToLoad = cmdLineService.URLToLoad;
@@ -335,6 +338,17 @@ function Startup()
     if (uriToLoad && uriToLoad != "about:blank") {
       gURLBar.value = uriToLoad;
       loadURI(uriToLoad);
+    }
+
+    // Close the window now, if it's for turbo mode startup.
+    if ( turboMode ) {
+        // Set "command line used" flag.  If we don't do this, then when a cmd line url
+        // for a "real* invocation comes in, we will override it with the "cmd line url"
+        // from the turbo-mode process (i.e., the home page).
+        appCore.cmdLineURLUsed = true;
+        // For some reason, window.close() directly doesn't work, so do it in the future.
+        window.setTimeout( "window.close()", 100 );
+        return;
     }
 
     // Focus the content area if the caller instructed us to.
@@ -362,42 +376,6 @@ function BrowserFlushBookmarksAndHistory() {
         history.Flush();
     } catch(ex) {
     }
-}
-
-function BrowserCanClose() {
-  // Check for "server mode."
-  try {
-    var appShellSvc = Components.classes["@mozilla.org/appshell/appShellService;1"]
-                                .getService(Components.interfaces.nsIAppShellService);
-    var nativeSupport = appShellSvc.nativeAppSupport;
-    if (nativeSupport && nativeSupport.isServerMode) {
-      // Give native app a chance to cache this window.
-      if (nativeSupport.cacheBrowserWindow(window)) {
-        // Window is "cached" so don't close it.
-
-        // But flush bookmarks and history, as if we did close it.
-        BrowserFlushBookmarksAndHistory();
-
-        // Reset session history.
-        var webNav = getWebNavigation();
-        if (webNav) {
-          try {
-            webNav.sessionHistory.PurgeHistory( webNav.sessionHistory.count );
-          } catch(ex) {
-          }
-        }
-
-        // Go to blank page.
-        loadURI( "about:blank" );
-
-        // This stops the close.
-        return false;
-      }
-    }
-  } catch (ex) {
-  }
-  // Ok to close window.
-  return true;
 }
 
 function Shutdown()
