@@ -788,7 +788,7 @@ function BrowserSetForcedCharacterSet(aCharset)
   var docCharset = getBrowser().docShell.QueryInterface(
                             Components.interfaces.nsIDocCharset);
   docCharset.charset = aCharset;
-  BrowserReload();
+  BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
 }
 
 function BrowserSetForcedDetector()
