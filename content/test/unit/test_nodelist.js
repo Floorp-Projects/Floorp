@@ -10,6 +10,7 @@ function run_test()
   test_getElementsByTagName();
   test_getElementsByTagNameNS();
   test_getElementsByAttribute();
+  test_getElementsByAttributeNS();
 
   // What else should we test?
   // XXXbz we need more tests here to test liveness!
@@ -281,4 +282,113 @@ function test_getElementsByAttribute()
               0);
   do_check_eq(root.getElementsByAttribute("foo:foo", "baz").length,
               0);
+}
+
+function test_getElementsByAttributeNS()
+{
+  var doc = ParseFile("nodelist_data_2.xul");
+  var root = doc.documentElement;
+
+  // Sadly, DOMParser can't create XULDocument objects.  But at least we have a
+  // XULElement!
+
+  do_check_true(root instanceof nsIDOMXULElement);
+
+  // Check that getElementsByAttributeNS returns a nodelist.
+  do_check_true(root.getElementsByAttributeNS("*", "*", "*") instanceof
+                nsIDOMNodeList);
+
+  var master1 = doc.getElementById("master1");
+  var master2 = doc.getElementById("master2");
+  var master3 = doc.getElementById("master3");
+  var external = doc.getElementById("external");
+
+  do_check_true(master1 instanceof nsIDOMXULElement);
+  do_check_true(master2 instanceof nsIDOMXULElement);
+  do_check_true(master3 instanceof nsIDOMXULElement);
+  do_check_true(external instanceof nsIDOMXULElement);
+  
+  // Test wildcard namespace
+  do_check_eq(root.getElementsByAttributeNS("*", "foo", "foo").length,
+              38);
+  do_check_eq(master1.getElementsByAttributeNS("*", "foo", "foo").length,
+              11);
+  do_check_eq(master2.getElementsByAttributeNS("*", "foo", "foo").length,
+              10);
+  do_check_eq(master3.getElementsByAttributeNS("*", "foo", "foo").length,
+              11);
+
+  do_check_eq(root.getElementsByAttributeNS("*", "foo", "bar").length,
+              16);
+  do_check_eq(master1.getElementsByAttributeNS("*", "foo", "bar").length,
+              4);
+  do_check_eq(master2.getElementsByAttributeNS("*", "foo", "bar").length,
+              5);
+  do_check_eq(master3.getElementsByAttributeNS("*", "foo", "bar").length,
+              4);
+
+  do_check_eq(root.getElementsByAttributeNS("*", "bar", "bar").length,
+              21);
+  do_check_eq(master1.getElementsByAttributeNS("*", "bar", "bar").length,
+              6);
+  do_check_eq(master2.getElementsByAttributeNS("*", "bar", "bar").length,
+              6);
+  do_check_eq(master3.getElementsByAttributeNS("*", "bar", "bar").length,
+              6);
+
+  do_check_eq(root.getElementsByAttributeNS("*", "foo", "*").length,
+              54);
+  do_check_eq(master1.getElementsByAttributeNS("*", "foo", "*").length,
+              15);
+  do_check_eq(master2.getElementsByAttributeNS("*", "foo", "*").length,
+              15);
+  do_check_eq(master3.getElementsByAttributeNS("*", "foo", "*").length,
+              15);
+
+  // Test null namespace. This should be the same as getElementsByAttribute.
+  do_check_eq(root.getElementsByAttributeNS("", "foo", "foo").length,
+              root.getElementsByAttribute("foo", "foo").length);
+  do_check_eq(master1.getElementsByAttributeNS("", "foo", "foo").length,
+              master1.getElementsByAttribute("foo", "foo").length);
+  do_check_eq(master2.getElementsByAttributeNS("", "foo", "foo").length,
+              master2.getElementsByAttribute("foo", "foo").length);
+  do_check_eq(master3.getElementsByAttributeNS("", "foo", "foo").length,
+              master3.getElementsByAttribute("foo", "foo").length);
+  
+  // Test namespace "foo"
+  do_check_eq(root.getElementsByAttributeNS("foo", "foo", "foo").length,
+              24);
+  do_check_eq(master1.getElementsByAttributeNS("foo", "foo", "foo").length,
+              7);
+  do_check_eq(master2.getElementsByAttributeNS("foo", "foo", "foo").length,
+              6);
+  do_check_eq(master3.getElementsByAttributeNS("foo", "foo", "foo").length,
+              7);
+
+  do_check_eq(root.getElementsByAttributeNS("foo", "foo", "bar").length,
+              9);
+  do_check_eq(master1.getElementsByAttributeNS("foo", "foo", "bar").length,
+              2);
+  do_check_eq(master2.getElementsByAttributeNS("foo", "foo", "bar").length,
+              3);
+  do_check_eq(master3.getElementsByAttributeNS("foo", "foo", "bar").length,
+              2);
+
+  do_check_eq(root.getElementsByAttributeNS("foo", "bar", "foo").length,
+              7);
+  do_check_eq(master1.getElementsByAttributeNS("foo", "bar", "foo").length,
+              2);
+  do_check_eq(master2.getElementsByAttributeNS("foo", "bar", "foo").length,
+              2);
+  do_check_eq(master3.getElementsByAttributeNS("foo", "bar", "foo").length,
+              2);
+
+  do_check_eq(root.getElementsByAttributeNS("foo", "bar", "bar").length,
+              14);
+  do_check_eq(master1.getElementsByAttributeNS("foo", "bar", "bar").length,
+              4);
+  do_check_eq(master2.getElementsByAttributeNS("foo", "bar", "bar").length,
+              4);
+  do_check_eq(master3.getElementsByAttributeNS("foo", "bar", "bar").length,
+              4);
 }

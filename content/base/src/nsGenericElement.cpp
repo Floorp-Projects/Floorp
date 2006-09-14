@@ -1639,8 +1639,6 @@ nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 {
   PRInt32 nameSpaceId = kNameSpaceID_Wildcard;
 
-  nsContentList *list = nsnull;
-
   if (!aNamespaceURI.EqualsLiteral("*")) {
     nsresult rv =
       nsContentUtils::NameSpaceManager()->RegisterNameSpace(aNamespaceURI,
@@ -1648,13 +1646,11 @@ nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (!list) {
-    nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
-    NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
+  nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
+  NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
-    list = NS_GetContentList(this, nameAtom, nameSpaceId).get();
-    NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
-  }
+  nsContentList *list = NS_GetContentList(this, nameAtom, nameSpaceId).get();
+  NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
   // transfer ref to aReturn
   *aReturn = list;
