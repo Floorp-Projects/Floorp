@@ -1219,7 +1219,7 @@ function BrowserChangeTextSize(newSize)
   {
     while (node)
     {
-      var nodeName = node.nodeName;
+      var nodeName = node.localName;
       if (nodeName == "")
         return null;
       nodeName = nodeName.toLowerCase();
@@ -1238,7 +1238,7 @@ function BrowserChangeTextSize(newSize)
    {
      while (node)
      {
-       var nodeName = node.nodeName;
+       var nodeName = node.localName;
        if (nodeName == "")
          return false;
        if (nodeName == "scrollbar")
