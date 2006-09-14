@@ -44,7 +44,7 @@ var gTargetNode = null;
 
 var gEntityConverter = null;
 var gWrapLongLines = false;
-const gViewSourceCSS = 'resource:///res/viewsource.css';
+const gViewSourceCSS = 'resource://gre/res/viewsource.css';
 const NS_XHTML = 'http://www.w3.org/1999/xhtml';
 
 // These are markers used to delimit the selection during processing. They
