@@ -267,7 +267,9 @@ function BrowserPrintPreview()
       if (!notifyOnOpen.value.valueOf() || gWebProgress.value == null) {
         FinishPrintPreview();
       }
-    } catch (e) {}
+    } catch (e) {
+      FinishPrintPreview();
+    }
   }
 }
 
