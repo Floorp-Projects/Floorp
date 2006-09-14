@@ -43,7 +43,7 @@
 	title="&mainWindow.title;" 
 	titlemodifier="&mainWindow.titlemodifier;" 
 	titlepreface="&mainWindow.preface;"
-	titlemenuseparator ="&mainWindow.titlemodifierseperator;"  
+	titlemenuseparator ="&mainWindow.titlemodifierseparator;"  
 	windowtype="navigator:view-source"
 	width="640" height="480"
 	screenX="10" screenY="10"
