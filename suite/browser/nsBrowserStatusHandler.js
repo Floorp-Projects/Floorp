@@ -109,6 +109,7 @@ nsBrowserStatusHandler.prototype =
     this.stopMenu        = document.getElementById("menuitem-stop");
     this.stopContext     = document.getElementById("context-stop");
     this.statusTextField = document.getElementById("statusbar-display");
+    this.translateMenu   = document.getElementById("menuitem-translate");
 
   },
 
@@ -122,6 +123,7 @@ nsBrowserStatusHandler.prototype =
     this.stopMenu        = null;
     this.stopContext     = null;
     this.statusTextField = null;
+    this.translateMenu   = null;
     this.userTyped       = null;
   },
 
@@ -198,6 +200,7 @@ nsBrowserStatusHandler.prototype =
     const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
     const nsIChannel = Components.interfaces.nsIChannel;
     var domWindow;
+    var ctype;
     if (aStateFlags & nsIWebProgressListener.STATE_START) {
       if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
         // Remember when loading commenced.
@@ -214,6 +217,7 @@ nsBrowserStatusHandler.prototype =
         this.stopButton.disabled = false;
         this.stopMenu.removeAttribute('disabled');
         this.stopContext.removeAttribute('disabled');
+        this.translateMenu.removeAttribute('disabled');
 
         // Initialize the progress stuff...
         this.useRealProgressFlag = false;
@@ -247,6 +251,9 @@ nsBrowserStatusHandler.prototype =
           }
           this.status = "";
           this.setDefaultStatus(msg);
+          ctype = aRequest.QueryInterface(nsIChannel).contentType;
+          if (ctype.match(/^image\//))
+            this.translateMenu.setAttribute('disabled', 'true');
         }
 
         // Turn the progress meter and throbber off.
@@ -263,7 +270,7 @@ nsBrowserStatusHandler.prototype =
     }
     else if (aStateFlags & nsIWebProgressListener.STATE_TRANSFERRING) {
       if (aStateFlags & nsIWebProgressListener.STATE_IS_DOCUMENT) {
-        var ctype = aRequest.QueryInterface(nsIChannel).contentType;
+        ctype = aRequest.QueryInterface(nsIChannel).contentType;
 
         if (ctype != "text/html")
           this.useRealProgressFlag = true;
