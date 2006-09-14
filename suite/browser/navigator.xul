@@ -239,7 +239,7 @@ Contributor(s): ______________________________________. -->
         <button class="button-toolbar-1 top" id="stop-button" crop="right" observes="canStop" onclick="BrowserStop()"/>
     
         <box class="box-toolbar-group" flex="1">
-          <menubutton class="menubutton-icon button-toolbar-3" id="sessionhist-popup">
+          <!-- <menubutton class="menubutton-icon button-toolbar-3" id="sessionhist-popup">
     			  <menupopup class="button-toolbar-3">
     			    <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&quoteKeyword.label;" oncommand="setKeyword(0)"/>
     			    <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&localKeyword.label;" oncommand="setKeyword(1)"/>
@@ -248,7 +248,8 @@ Contributor(s): ______________________________________. -->
     			    <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&webmailKeyword.label;" oncommand="setKeyword(4)"/>
     			    <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&listKeywords.label;" oncommand="setKeyword(5)"/>		 
     			  </menupopup>
-    			</menubutton> 
+    			</menubutton>
+          --> 
           <box autostretch="never" valign="middle" flex="1">
       			<image id="page-proxy-button" ondraggesture="DragProxyIcon(event);"/> 
             <textfield class="plain chromeclass-location" id="urlbar" onkeypress="if( event.which == 13 ) BrowserLoadURL();" flex="1"/>
@@ -266,7 +267,7 @@ Contributor(s): ______________________________________. -->
       ondraggesture="return BeginDragPersonalToolbar(event);"
       ondragdrop="return DropPersonalToolbar(event);"
       ondragover="return DragOverPersonalToolbar(event);">
-
+<!--
       <menubutton class="button-toolbar bookmarkfolder" id="PersonalMenu" datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex" 
         ref="NC:BookmarksRoot" container="true" value="&bookmarksButton.label;"
         oncommand="OpenBookmarkURL(event.target, document.getElementById('PersonalMenu').database)">
@@ -330,6 +331,8 @@ Contributor(s): ______________________________________. -->
         <button class="button-toolbar" id="homebutton" value="&homeButton.label;" oncommand="BrowserHome(); event.preventBubble();"/>
     
       </box>
+      -->
+
     </toolbar>
 
   </toolbox>
