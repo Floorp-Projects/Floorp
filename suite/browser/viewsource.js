@@ -209,21 +209,28 @@ function ViewSourceClose()
   window.close();
 }
 
+function BrowserReload()
+{
+  // Reload will always reload from cache which is probably not what's wanted
+  BrowserReloadSkipCache();
+}
+
+function BrowserReloadSkipCache()
+{
+  const webNavigation = getBrowser().webNavigation;
+  webNavigation.reload(webNavigation.LOAD_FLAGS_BYPASS_PROXY | webNavigation.LOAD_FLAGS_BYPASS_CACHE);
+}
+
 // Strips the |view-source:| for editPage()
 function ViewSourceEditPage()
 {
-  var url = window._content.location.href;
-  url = url.substring(12,url.length);
-  editPage(url,window, false);
+  editPage(window.content.location.href.substring(12), window, false);
 }
 
 // Strips the |view-source:| for saveURL()
 function ViewSourceSavePage()
 {
-  var url = window._content.document.location.href;
-  url = url.substring(12,url.length);
-
-  saveURL(url, null, "SaveLinkTitle");
+  saveURL(window.content.location.href.substring(12), null, "SaveLinkTitle");
 }
 
 function ViewSourceGoToLine()
