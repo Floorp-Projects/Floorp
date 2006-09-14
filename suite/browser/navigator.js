@@ -634,7 +634,7 @@ function OpenBookmarkGroup(element, datasource)
   var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                           .getService(Components.interfaces.nsIRDFService);
   var resource = rdf.GetResource(id, true);
-  return OpenBookmarkGroupFromResource(resource, datasource, rdf);
+  OpenBookmarkGroupFromResource(resource, datasource, rdf);
 }
 
 function OpenBookmarkGroupFromResource(resource, datasource, rdf) {
@@ -646,8 +646,8 @@ function OpenBookmarkGroupFromResource(resource, datasource, rdf) {
   var tabCount = tabPanels.length;
   var index = 0;
   while (containerChildren.hasMoreElements()) {
-    var resource = containerChildren.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-    var target = datasource.GetTarget(resource, urlResource, true);
+    var res = containerChildren.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+    var target = datasource.GetTarget(res, urlResource, true);
     if (target) {
       var uri = target.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
       if (index < tabCount)
