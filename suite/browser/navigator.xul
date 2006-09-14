@@ -411,10 +411,4 @@ Contributor(s):
     <statusbarpanel class="statusbarpanel-iconic" id="offline-status"/>
     <statusbarpanel class="statusbarpanel-iconic" id="security-button"/>
   </statusbar> 
-
-  <hbox id="popup-control">
-    <separator class="thin"/>
-    <checkbox id="popup-checkbox" label="&popup-control.label;" checked="true"
-              oncommand="popupCheckboxClick(this)"/>
-  </hbox>
 </window>

@@ -415,7 +415,7 @@ function Startup()
   addPrefListener(gButtonPrefListener); 
   addPrefListener(gTabStripPrefListener);
   addPrefListener(gHomepagePrefListener);
-  addPopupPermListener(gPopupPermListener);
+  //addPopupPermListener(gPopupPermListener);
 
   window.browserContentListener =
     new nsBrowserContentListener(window, getBrowser());
@@ -542,7 +542,7 @@ function Startup()
   setTimeout(LoadBookmarksCallback, 0);
 
   // initialize this checkbox after the rest of the onload sequence has completed
-  setTimeout(initPopupCheckbox, 0);
+  //setTimeout(initPopupCheckbox, 0);
 }
 
 function LoadBookmarksCallback()
@@ -617,7 +617,7 @@ function Shutdown()
   removePrefListener(gButtonPrefListener);
   removePrefListener(gTabStripPrefListener);
   removePrefListener(gHomepagePrefListener);
-  removePopupPermListener(gPopupPermListener);
+  //removePopupPermListener(gPopupPermListener);
 
   window.browserContentListener.close();
   // Close the app core.
