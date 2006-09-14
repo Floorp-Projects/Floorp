@@ -393,7 +393,7 @@ Contributor(s): ______________________________________. -->
 			</rule>
 			<rule>
 			  <menupopup>
-				<menuitem uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="OpenBookmarkURL(event.target, 'BookmarksMenu')" />
+				<menuitem uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="OpenBookmarkURL(event.target, document.getElementById('BookmarksMenu').database)" />
 			  </menupopup>
 			</rule>
 		</template>
