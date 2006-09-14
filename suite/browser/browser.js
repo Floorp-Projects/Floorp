@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Blake Ross <blakeross@telocity.com>
  *   Peter Annema <disttsc@bart.nl>
+ *   Samir Gehani <sgehani@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -39,6 +40,8 @@
 
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 var gPrintSettings = null;
+var gChromeState = null; // chrome state before we went into print preview
+var gOldCloseHandler = null; // close handler before we went into print preview
 
 function getWebNavigation()
 {
@@ -71,6 +74,121 @@ function BrowserReloadWithFlags(reloadFlags)
   }
 }
 
+function toggleAffectedChrome(aHide)
+{
+  // chrome to toggle includes:
+  //   (*) menubar
+  //   (*) navigation bar
+  //   (*) personal toolbar
+  //   (*) tab browser ``strip''
+  //   (*) sidebar
+
+  if (!gChromeState)
+    gChromeState = new Object;
+  var chrome = new Array;
+  var i = 0;
+  chrome[i++] = document.getElementById("main-menubar");
+  chrome[i++] = document.getElementById("nav-bar");
+  chrome[i++] = document.getElementById("PersonalToolbar");
+
+  // sidebar states map as follows:
+  //   was-hidden    => hide/show nothing
+  //   was-collapsed => hide/show only the splitter
+  //   was-shown     => hide/show the splitter and the box
+  if (aHide)
+  {
+    // going into print preview mode
+    if (sidebar_is_collapsed())
+    {
+      gChromeState.sidebar = "was-collapsed";
+      chrome[i++] = document.getElementById("sidebar-splitter");
+    }
+    else if (sidebar_is_hidden())
+      gChromeState.sidebar = "was-hidden";
+    else 
+    {
+      gChromeState.sidebar = "was-visible";
+      chrome[i++] = document.getElementById("sidebar-box");
+      chrome[i++] = document.getElementById("sidebar-splitter");
+    }
+  }
+  else
+  {
+    // restoring normal mode (i.e., leaving print preview mode)
+    if (gChromeState.sidebar == "was-collapsed" ||
+        gChromeState.sidebar == "was-visible")
+      chrome[i++] = document.getElementById("sidebar-splitter");
+    if (gChromeState.sidebar == "was-visible")
+      chrome[i++] = document.getElementById("sidebar-box");
+  }
+
+  // now that we've figured out which elements we're interested, toggle 'em
+  for (i = 0; i < chrome.length; ++i)
+  {
+    if (aHide)
+      chrome[i].hidden = true;
+    else
+      chrome[i].hidden = false;
+  }
+
+  // if we are unhiding and sidebar used to be there rebuild it
+  if (!aHide && gChromeState.sidebar == "was-visible")
+    SidebarRebuild();
+    
+  // now deal with the tab browser ``strip'' 
+  var theTabbrowser = document.getElementById("content"); 
+  if (aHide) // normal mode -> print preview
+  {
+    gChromeState.hadTabStrip = theTabbrowser.getStripVisibility();
+    theTabbrowser.setStripVisibilityTo(false);
+  }
+  else // print preview -> normal mode
+  {
+    // tabs were showing before entering print preview
+    if (gChromeState.hadTabStrip) 
+    {
+      theTabbrowser.setStripVisibilityTo(true);
+      gChromeState.hadTabStrip = false; // reset
+    }
+  }
+}
+
+function showPrintPreviewToolbar()
+{
+  toggleAffectedChrome(true);
+  const kXULNS = 
+    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+  var printPreviewTB = document.createElementNS(kXULNS, "toolbar");
+  printPreviewTB.setAttribute("printpreview", true);
+  printPreviewTB.setAttribute("id", "print-preview-toolbar");
+
+  var navTB = document.getElementById("nav-bar");
+  navTB.parentNode.appendChild(printPreviewTB);
+}
+
+function BrowserExitPrintPreview()
+{
+  // exit print preview galley mode in content area
+  var ifreq = _content.QueryInterface(
+    Components.interfaces.nsIInterfaceRequestor);
+  var webBrowserPrint = ifreq.getInterface(
+    Components.interfaces.nsIWebBrowserPrint);     
+  webBrowserPrint.exitPrintPreview(); 
+  _content.focus();
+
+  // remove the print preview toolbar
+  var navTB = document.getElementById("nav-bar");
+  var printPreviewTB = document.getElementById("print-preview-toolbar");
+  navTB.parentNode.removeChild(printPreviewTB);
+
+  // restore chrome to original state
+  toggleAffectedChrome(false);
+
+  // restore old onclose handler if we found one before previewing
+  var mainWin = document.getElementById("main-window");
+  mainWin.setAttribute("onclose", gOldCloseHandler);
+}
 
 function GetPrintSettings(webBrowserPrint)
 {
@@ -94,14 +212,26 @@ function GetPrintSettings(webBrowserPrint)
   } catch (e) {
     alert("GetPrintSettings "+e);
   }
+
   return gPrintSettings;
 }
 
 function BrowserPrintPreview()
 {
+  var mainWin = document.getElementById("main-window");
+
+  // save previous close handler to restoreon exiting print preview mode
+  if (mainWin.hasAttribute("onclose"))
+    gOldCloseHandler = mainWin.getAttribute("onclose");
+  else
+    gOldCloseHandler = null;
+  mainWin.setAttribute("onclose", "BrowserExitPrintPreview(); return false;");
+ 
   try {
-    var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-    var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
+    var ifreq = _content.QueryInterface(
+      Components.interfaces.nsIInterfaceRequestor);
+    var webBrowserPrint = ifreq.getInterface(
+      Components.interfaces.nsIWebBrowserPrint);     
     if (webBrowserPrint) {
       gPrintSettings = GetPrintSettings(webBrowserPrint);
       webBrowserPrint.printPreview(gPrintSettings);
@@ -113,6 +243,9 @@ function BrowserPrintPreview()
     // dump(e); // if you need to debug
   }
 
+  // show the toolbar after we go into print preview mode so
+  // that we can initialize the toolbar with total num pages
+  showPrintPreviewToolbar();
 }
 
 
