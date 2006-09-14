@@ -62,6 +62,7 @@
 <!ENTITY pageInfoCmd.label "Page Info">
 <!ENTITY translateMenu.label "Translate">
 <!ENTITY webContentMenu.label "Languages and Web Content">
+<!ENTITY downloadMore.label "Download More">
 <!ENTITY dcharMenu.label "Character Set  ISO">
 <!ENTITY dcharMenu1.label "Character Set  Multibyte">
 <!ENTITY dcharMenu2.label "Character Set  Cyrillic">
