@@ -24,7 +24,6 @@ function viewSource(url)
   }
 
   var docShellElement = document.getElementById("content");
-  docShellElement.docShell.viewMode = Components.interfaces.nsIDocShell.viewSource;
 
   try {
     if ("arguments" in window && window.arguments.length >= 2) {
@@ -39,7 +38,8 @@ function viewSource(url)
   }
 
   var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
-  docShellElement.webNavigation.loadURI(url, loadFlags);
+  var viewSrcUrl = "view-source:" + url;
+  docShellElement.webNavigation.loadURI(viewSrcUrl, loadFlags);
   return true;
 }
 
