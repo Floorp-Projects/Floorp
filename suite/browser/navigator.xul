@@ -82,7 +82,8 @@ Contributor(s): ______________________________________. -->
 <broadcasterset id="broadcasterset">
   <broadcaster id="canReload" oncommand="BrowserReallyReload(event);"/>
   <broadcaster id="canPrint"/>
-  <broadcaster id="args" value=""/> 
+  <broadcaster id="args" value=""/>
+  <broadcaster id="cmd_pageSetup"/>
 </broadcasterset>
 
 <!-- keys are appended from the overlay -->
@@ -301,7 +302,15 @@ Contributor(s): ______________________________________. -->
         <button class="button-toolbar-3 chromeclass-location" id="search-button" value="&searchButton.label;" 
                 oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
                 tooltip="aTooltip" tooltiptext="&searchButton.tooltip;"/> 
-    		<button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>
+    	  <menubutton class="menubutton-dual toolbar" id="print-button" value="&printButton.label;" 
+                  crop="right" buttonaction="BrowserPrint()" tooltip="aTooltip" buttontooltiptext="&printButton.tooltip;">  
+     	  	<menupopup id="printMenu">
+    			<menuitem value="&printCmd.label;" accesskey="&printCmd.accesskey;" oncommand="BrowserPrint()" default="true"/>
+    			<menuitem observes="cmd_pageSetup" />
+		    	<menuitem value="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" disabled="true" oncommand="BrowserReload();"/>
+        	</menupopup>
+  	  	  </menubutton>
+    	<button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>
       </box>
     </toolbar>
   

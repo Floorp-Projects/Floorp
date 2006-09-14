@@ -315,6 +315,7 @@
 <!ENTITY goButton.label               "Go">
 <!ENTITY goButton.tooltip             "Type a location in the field to the left, then click Go">
 <!ENTITY printButton.label            "Print">
+<!ENTITY printButton.tooltip 		  "Print this page">
 
 <!ENTITY throbber.tooltip             "Go to the &vendorShortName; home page">
 
