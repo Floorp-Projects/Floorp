@@ -456,45 +456,15 @@ function Shutdown()
 
 
   function BrowserStop() {
-     // Get a handle to the "canStop" broadcast id
-     var stopBElem = document.getElementById("canStop");
-     if (!stopBElem) {
-        dump("Couldn't obtain handle to stop Broadcast element\n");
-        return;
-	   }
-
-     var canStop = stopBElem.getAttribute("disabled");
-     var sb = document.getElementById("stop-button");
-     
-     if (!sb) {
-     	 dump("Could not obtain handle to stop button\n");
-	     return;
-     }
+     if(!stopButton)
+		 stopButton = document.getElementById("stop-button");
 
      // If the stop button is currently disabled, just return
-     if ((sb.getAttribute("disabled")) == "true") {
-	    return;
-     }
+     if ((stopButton.getAttribute("disabled")) == "true")
+		 return;
 	
-     //Stop button has just been pressed. Disable it. 
-     sb.setAttribute("disabled", "true");
-
-     // Get a handle to the stop menu item.
-     var sm = document.getElementById("menuitem-stop");
-     if (!sm) {
-       dump("Couldn't obtain menu item Stop\n");
-     } else {
-       // Disable the stop menu-item.
-       sm.setAttribute("disabled", "true");
-     }
-  
      //Call in to BrowserAppcore to stop the current loading
-     if (appCore != null) {
-        dump("Going to Stop\n");
-        appCore.stop();
-     } else {
-        dump("BrowserAppCore has not been created!\n");
-     }
+     appCore.stop();
   }
  
 
