@@ -118,7 +118,6 @@
     <key id="searchInternetKb" key="&searchInternet.commandKey;" modifiers="accel,shift" command="Browser:SearchInternet"/>
 
     <!-- Misc -->
-    <key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
           <!-- the amazing fishcam dept. -->
     <key key="f" modifiers="control,alt" oncommand="loadURI('http://home.netscape.com/fishcam/fishcam.html');"/>
     <key id="key_gotoHistory"  key="&history.commandKey;"        oncommand="toHistory();" modifiers="accel"/>
