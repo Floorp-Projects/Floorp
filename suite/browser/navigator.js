@@ -2054,7 +2054,7 @@ function onPopupBlocked(aEvent) {
   }
 }
 
-function ViewPopupManager() {
+function StatusbarViewPopupManager() {
   var policy = pref.getBoolPref("dom.disable_open_during_load");
   
   var hostPort = "";
