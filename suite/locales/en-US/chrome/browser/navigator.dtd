@@ -9,7 +9,6 @@
 <!ENTITY mainWindow.titlemodifier "&brandShortName; {&buildId.label;}"> 
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
 <!ENTITY mainWindow.titlemodifiermenuseparator " - ">
-<!ENTITY viewsourcetitle.preface "Source for: ">
 
 <!ENTITY nothingAvailable.label "(Nothing Available)">
 
