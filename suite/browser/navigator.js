@@ -2648,17 +2648,14 @@ function isBidiEnabled()
   var systemLocale;
   try {
     var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
-                                 .getService(Components.interfaces.nsILocaleService);
+                                  .getService(Components.interfaces.nsILocaleService);
     systemLocale = localeService.getSystemLocale().getCategory("NSILOCALE_CTYPE");
     rv = /^(he|ar|syr|fa|ur)-/.test(systemLocale);
   } catch (e) {}
 
   if (!rv) {
     // check the overriding pref
-    try {
-      rv = pref.getBoolPref("bidi.browser.ui");
-    }
-    catch (e) {}
+    rv = pref.getBoolPref("bidi.browser.ui");
   }
 
   return rv;
