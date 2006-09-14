@@ -39,6 +39,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
+var gPrintSettingsAreGlobal = true;
+var gSavePrintSettings = true;
 var gPrintSettings = null;
 var gChromeState = null; // chrome state before we went into print preview
 var gOldCloseHandler = null; // close handler before we went into print preview
@@ -202,15 +204,18 @@ function GetPrintSettings(webBrowserPrint)
 
   try {
     if (gPrintSettings == null) {
-      var useGlobalPrintSettings = true;
       var pref = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService(Components.interfaces.nsIPrefBranch);
       if (pref) {
-        useGlobalPrintSettings = pref.getBoolPref("print.use_global_printsettings", false);
+        gPrintSettingsAreGlobal = pref.getBoolPref("print.use_global_printsettings", false);
+        gSavePrintSettings = pref.getBoolPref("print.save_print_settings", false);
       }
 
-      if (useGlobalPrintSettings) {
-        gPrintSettings = webBrowserPrint.globalPrintSettings;
+      if (gPrintSettingsAreGlobal) {
+        gPrintSettings = webBrowserPrint.globalPrintSettings;        
+        if (gSavePrintSettings) {
+          webBrowserPrint.initPrintSettingsFromPrefs(gPrintSettings, false, gPrintSettings.kInitSaveNativeData);
+        }
       } else {
         gPrintSettings = webBrowserPrint.newPrintSettings;
       }
@@ -272,14 +277,17 @@ function BrowserPrintSetup()
       gPrintSettings = GetPrintSettings(webBrowserPrint);
     }
 
-    goPageSetup(gPrintSettings);  // from utilityOverlay.js
+    if (goPageSetup(window, gPrintSettings)) {  // from utilityOverlay.js
 
-    if (webBrowserPrint) {
-      if (webBrowserPrint.doingPrintPreview) {
-        webBrowserPrint.printPreview(gPrintSettings);
+      if (webBrowserPrint) {
+        if (gPrintSettingsAreGlobal && gSavePrintSettings) {
+          webBrowserPrint.savePrintSettingsToPrefs(gPrintSettings, false, gPrintSettings.kInitSaveNativeData);
+        }
+        if (webBrowserPrint.doingPrintPreview) {
+          webBrowserPrint.printPreview(gPrintSettings);
+        }
       }
     }
-
   } catch (e) {
     dump("BrowserPrintSetup "+e);
   }
