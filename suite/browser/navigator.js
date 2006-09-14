@@ -1497,7 +1497,7 @@ function FillInHTMLTooltip(tipElement)
   const HTMLNS = "http://www.w3.org/1999/xhtml";
   const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
   const XLinkNS = "http://www.w3.org/1999/xlink";
-  const Node = Components.interfaces.Node;
+  const Node = { ELEMENT_NODE : 1 }; // XXX Components.interfaces.Node;
 
   var retVal = false;
   var tipNode = document.getElementById("HTML_TOOLTIP_tooltipBox");
@@ -1529,6 +1529,7 @@ function FillInHTMLTooltip(tipElement)
       }
     }
   } catch (e) {
+    debug(e);
   }
 
   return retVal;
