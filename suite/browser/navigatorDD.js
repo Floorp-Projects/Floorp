@@ -22,12 +22,6 @@
  *  - Ben Goodger <ben@netscape.com>
  */
 
-////////////////////////////////////////////////////////////////////////////
-// XXX - WARNING - DRAG AND DROP API CHANGE ALERT - XXX
-// This file has been extensively modified in a checkin planned for Mozilla
-// 0.8, and the API has been modified. DO NOT MODIFY THIS FILE without
-// approval from ben@netscape.com, otherwise your changes will be lost.
-
 var gRDFService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                             .getService(Components.interfaces.nsIRDFService);
 
@@ -76,6 +70,16 @@ var personalToolbarObserver = {
   DROP_AFTER: 1,
   onDragStart: function (aEvent, aXferData, aDragAction)
     {
+      // Prevent dragging out of menus on non Win32 platforms. 
+      // a) on Mac drag from menus is generally regarded as being satanic
+      // b) on Linux, this causes an X-server crash, see bug 79003. 
+      // Since we're not doing D&D into menus properly at this point, it seems
+      // fair enough to disable it on non-Win32 platforms. There is no hang
+      // or crash associated with this on Windows, so we'll leave the functionality
+      // there. 
+      if (navigator.platform != "Win32" && aEvent.target.localName != "button")
+        return;
+        
       var personalToolbar = document.getElementById("PersonalToolbar");
       if (aEvent.target == personalToolbar) return;
 
