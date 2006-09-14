@@ -51,7 +51,9 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
   
-  uneval(function() { if (y) { { let set = 4.; } } else if (<x/>) { } })
+  uneval(function() { if (y) { { let set = 4.; } } else if (<x/>) { } });
+
+  reportCompare(expect, actual, summary);
 
   exitFunc ('test');
 }
