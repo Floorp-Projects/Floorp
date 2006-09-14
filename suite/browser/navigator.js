@@ -748,7 +748,7 @@ function Translate()
   if (targetURI.indexOf(serviceDomain) >= 0)
     BrowserReload();
   else {
-    loadURI(service + escape(targetURI));
+    loadURI(encodeURI(service + targetURI));
   }
 }
 
@@ -1025,7 +1025,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr, newWindowFlag)
         }
       } else {
         if (searchStr) {
-          var escapedSearchStr = escape(searchStr);
+          var escapedSearchStr = encodeURIComponent(searchStr);
           defaultSearchURL += escapedSearchStr;
           var searchDS = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
                                    .getService(Components.interfaces.nsIInternetSearchService);
