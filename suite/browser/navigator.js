@@ -1197,19 +1197,15 @@ function BrowserEditBookmarks()
       if (tagName) tagName = tagName.toLowerCase();
       var type = target.type;
       if (type) type = type.toLowerCase();
-      if (!((tagName == "input"
-             && (type == "" || type == "text" || type == "password"))
-            || tagName == "textarea"))
+
+      var url = readFromClipboard();
+      //dump ("Loading URL on clipboard: '" + url + "'; length = " + url.length + "\n");
+      if (url.length > 0)
       {
-        var url = readFromClipboard();
-        //dump ("Loading URL on clipboard: '" + url + "'; length = " + url.length + "\n");
-        if (url.length > 0)
-        {
-          var urlBar = document.getElementById("urlbar");
-          urlBar.value = url;
-          BrowserLoadURL();
-          event.preventBubble();
-        }
+        var urlBar = document.getElementById("urlbar");
+        urlBar.value = url;
+        BrowserLoadURL();
+        event.preventBubble();
       }
     }
   }
