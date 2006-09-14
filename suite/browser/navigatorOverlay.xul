@@ -330,8 +330,8 @@ END of Deprecated -->
       <menuseparator />
        <menu value="&searchOptions.label;">
        	  <menupopup>
-       	    <menuitem id="simpleSearch" value="&simpleMode.label;" oncommand="setBrowserSearchMode(0);" />
-       	    <menuitem id="advancedSearch" value="&advancedMode.label;" oncommand="setBrowserSearchMode(1);" />
+       	    <menuitem id="simpleSearch" type="radio" value="&simpleMode.label;" oncommand="setBrowserSearchMode(0);" />
+       	    <menuitem id="advancedSearch" type="radio" value="&advancedMode.label;" oncommand="setBrowserSearchMode(1);" />
        	  </menupopup>
        	</menu>
      </menupopup>
