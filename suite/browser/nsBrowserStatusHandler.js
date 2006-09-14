@@ -44,28 +44,6 @@ function nsBrowserStatusHandler()
 
 nsBrowserStatusHandler.prototype =
 {
-  userTyped :
-  {
-    _value : false,
-    browser : null,
-
-    get value() {
-      if (this.browser != getBrowser().mCurrentBrowser)
-        this._value = false;
-      
-      return this._value;
-    },
-
-    set value(aValue) {
-      if (this._value != aValue) {
-        this._value = aValue;
-        this.browser = aValue ? getBrowser().mCurrentBrowser : null;
-      }
-
-      return aValue;
-    }
-  },
-
   // Stored Status, Link and Loading values
   status : "",
   defaultStatus : "",
@@ -112,7 +90,6 @@ nsBrowserStatusHandler.prototype =
     this.statusTextField = null;
     this.isImage         = null;
     this.securityButton  = null;
-    this.userTyped       = null;
   },
 
   setJSStatus : function(status)
@@ -164,16 +141,18 @@ nsBrowserStatusHandler.prototype =
            contentType == "mozilla.application/cached-xul";
   },
 
-  onLinkIconAvailable : function(aHref) {
-    if (gProxyFavIcon && pref.getBoolPref("browser.chrome.site_icons"))
-    {
-      gProxyFavIcon.setAttribute("src", aHref);
+  onLinkIconAvailable : function(aHref)
+  {
+    if (gProxyFavIcon && pref.getBoolPref("browser.chrome.site_icons")) {
+      var browser = getBrowser();
+      if (browser.userTypedValue === null)
+        gProxyFavIcon.setAttribute("src", aHref);
 
       // update any bookmarks with new icon reference
       if (!gBookmarksService)
         gBookmarksService = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
                                       .getService(Components.interfaces.nsIBookmarksService);
-      gBookmarksService.updateBookmarkIcon(this.urlBar.value, aHref);
+      gBookmarksService.updateBookmarkIcon(browser.currentURI.spec, aHref);
     }
   },
 
@@ -236,8 +215,8 @@ nsBrowserStatusHandler.prototype =
         if (channel) {
           var location = channel.URI.spec;
           if (location != "about:blank") {
-            const kErrorBindingAborted = 2152398850;
-            const kErrorNetTimeout = 2152398862;
+            const kErrorBindingAborted = 0x804B0002;
+            const kErrorNetTimeout = 0x804B000E;
             switch (aStatus) {
               case kErrorBindingAborted:
                 msg = gNavigatorBundle.getString("nv_stopped");
@@ -297,7 +276,6 @@ nsBrowserStatusHandler.prototype =
         // pages.
         locationURI = gURIFixup.createExposableURI(aLocation);
         location = locationURI.spec;
-        
       }
       catch(ex) {
         location = aLocation.spec;
@@ -318,19 +296,24 @@ nsBrowserStatusHandler.prototype =
     // Update urlbar only if a new page was loaded on the primary content area
     // Do not update urlbar if there was a subframe navigation
 
+    var browser = getBrowser().selectedBrowser;
     if (aWebProgress.DOMWindow == content) {
-      if (!this.userTyped.value) {
+      var userTypedValue = browser.userTypedValue;
+      if (userTypedValue === null) {
         this.urlBar.value = location;
-        // the above causes userTyped.value to become true, reset it
-        this.userTyped.value = false;
-      }
+        SetPageProxyState("valid", aLocation);
 
-      SetPageProxyState("valid", aLocation);
+        // Setting the urlBar value in some cases causes userTypedValue to
+        // become set because of oninput, so reset it to null
+        browser.userTypedValue = null;
+      } else {
+        this.urlBar.value = userTypedValue;
+        SetPageProxyState("invalid", null);
+      }
     }
     UpdateBackForwardButtons();
 
     var blank = (location == "about:blank") || (location == "");
-    var browser = getBrowser().mCurrentBrowser;
 
     //clear popupDomain accordingly so that icon will go away when visiting
     //an unblocked site after a blocked site. note: if a popup is blocked 
@@ -389,9 +372,9 @@ nsBrowserStatusHandler.prototype =
 
   startDocumentLoad : function(aRequest)
   {
-    // Reset so we can see if the user typed after the document load
+    // Reset so we can see if the user typed between the document load
     // starting and the location changing.
-    this.userTyped.value = false;
+    getBrowser().userTypedValue = null;
 
     const nsIChannel = Components.interfaces.nsIChannel;
     var urlStr = aRequest.QueryInterface(nsIChannel).URI.spec;

@@ -165,7 +165,7 @@ Contributor(s):
                  defaultSearchEngine="true" tabScrolling="true"
                  showCommentColumn="true"
                  inputtooltiptext="&locationBar.tooltip;"
-                 oninput="window.XULBrowserWindow.userTyped.value=true;"
+                 oninput="gBrowser.userTypedValue = this.value;"
                  ontextcommand="return handleURLBarCommand(eventParam, domEvent);"
                  ontextrevert="return handleURLBarRevert();"
                  onfocus="URLBarFocusHandler(event);"
