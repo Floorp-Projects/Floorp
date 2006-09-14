@@ -3,5 +3,4 @@
 <!ENTITY goForwardCmd.keyCode "VK_RIGHT">
 <!ENTITY goBackCmd.commandKey "[">
 <!ENTITY goForwardCmd.commandKey "]">
-
-
+<!ENTITY findOnCmd.commandkey2 "VK_F19">
