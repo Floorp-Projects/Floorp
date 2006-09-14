@@ -94,6 +94,7 @@
     <key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
           <!-- the amazing fishcam dept. -->
     <key key="f" modifiers="control,alt" oncommand="loadURI('http://home.netscape.com/fishcam/fishcam.html');"/>
+    <key id="key_gotoHistory"  key="&history.commandKey;"        oncommand="toHistory();" modifiers="accel"/>
     <keyset id="viewZoomKeys"/>
     <keyset id="navigationKeys"/>  
     <keyset id="tasksKeys"/>
@@ -173,22 +174,21 @@
   <menubar id="main-menubar" class="chromeclass-menubar">
     <menu id="menu_File">
       <menupopup id="menu_FilePopup" onpopupshowing="getContentAreaFrameCount();">
-        <menuitem label="&browserCmd.label;" accesskey="&browserCmd.accesskey;" key="key_newNavigator" command="cmd_newNavigator"/>
         <menu id="menu_New">
           <menupopup id="menu_NewPopup">
-            <!-- From globalOverlay.xul -->
+            <!-- From utilityOverlay.xul -->
             <menuitem id="menu_newNavigator" command="cmd_newNavigator"/>
             <menuitem id="menu_newNavigatorTab" command="cmd_newNavigatorTab" key="key_newNavigatorTab"
                       label="&tabCmd.label;" accesskey="&tabCmd.accesskey;"/>
+            <menuseparator id="navBeginGlobalNewItems"/>
             <menuitem id="menu_newEditor"    command="cmd_newEditor"/>
           </menupopup>
         </menu>
         <menuitem label="&openCmd.label;" accesskey="&openCmd.accesskey;" key="openLocationKb" command="Browser:Open"/>
         <menuitem label="&openFileCmd.label;" accesskey="&openFileCmd.accesskey;" key="openFileKb" command="Browser:OpenFile"/>
-        <menuseparator/>
         <menuitem id="menu_close"/>
         <menuitem id="menu_closeWindow" hidden="true" command="cmd_closeWindow" key="key_closeWindow" label="&closeWindow.label;"/>
-        <menuseparator id="menu_closeSeparator" hidden="true"/>
+        <menuseparator/>
         <menuitem label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" key="key_savePage" command="Browser:SavePage"/>
         <menuitem id="savepage" label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="saveFrameDocument();" hidden="true"/>
         <menuseparator/>
@@ -213,6 +213,9 @@
         <menuitem id="menu_delete"/>
         <menuseparator/>
         <menuitem id="menu_selectAll"/>
+        <menuseparator/>
+        <menuitem id="menu_find" label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="Browser:Find"/>
+        <menuitem id="menu_findAgain" label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
         <menuseparator id="menu_PrefsSeparator"/> 
         <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
       </menupopup>
@@ -220,7 +223,7 @@
 
     <menu id="menu_View" accesskey="&viewMenu.accesskey;" label="&viewMenu.label;">
       <menupopup id="menu_View_Popup">
-        <menu label="&toolbarsCmd.label;" accesskey="&toolbarsCmd.accesskey;" id="view_toolbars">
+        <menu label="&toolbarsCmd.label;" accesskey="&toolbarsCmd.accesskey;" id="menu_Toolbars">
           <menupopup id="view_toolbars_popup" onpopupshowing="updateToolbarStates(this);"> 
             <menuitem label="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewnavbar"  />
             <menuitem label="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewpersonaltoolbar" />
@@ -232,6 +235,9 @@
                   label="&fullScreenCmd.label;" key="key_fullScreen"
                   command="View:FullScreen" hidden="true"/>
         <menuseparator />
+        <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" id="menuitem-stop" disabled="true" oncommand="BrowserStop();" key="key_stop"/>
+        <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
+        <menuseparator />
   
         <!-- overlayed from viewZoomOverlay.xul -->
         <menu id="menu_textZoom" observes="isImage"/>
@@ -242,22 +248,11 @@
             <menuitem label="&useStyleSheetPersistentOnly.label;" accesskey="&useStyleSheetPersistentOnly.accesskey;" type="radio"/>
           </menupopup>
         </menu>
-        <menuseparator />
-        <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
-        <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" id="menuitem-stop" disabled="true" oncommand="BrowserStop();" key="key_stop"/>
+        <menu id="charsetMenu" observes="isImage"/>
         <menuseparator />
         <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
         <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
         <menuseparator />
-        
-        <menuitem accesskey="&translateMenu.accesskey;" label="&translateMenu.label;" observes="isImage" oncommand="Translate();"/>
-
-        <menuitem label="&webContentMenu.label;" accesskey="&webContentMenu.accesskey;" oncommand="goPreferences('pref-contentpacks.xul','chrome://content-packs/content/pref-contentpacks.xul');">
-        </menuitem>
-        
-        <menu id="charsetMenu" observes="isImage"/>
-
-        <menuseparator/>
         <menu label="&applyTheme.label;" accesskey="&applyTheme.accesskey;">
           <menupopup datasources="rdf:chrome" ref="urn:mozilla:skin:root" oncommand="applyTheme(event.target)">
             <menuitem label="&themePreferencesCmd.label;" accesskey="&themePreferencesCmd.accesskey;"
@@ -275,20 +270,13 @@
       </menupopup>
     </menu>
 
-    <menu accesskey="&searchMenu.accesskey;" label="&searchMenu.label;">
-      <menupopup id="searchMenu">
-        <menuitem id="menu_find" label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="Browser:Find"/>
-        <menuitem id="menu_findAgain" label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
-        <menuseparator />
-        <menuitem label="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="loadXURL('urn:clienturl:srchmenu:srchinternet');"/>        
-      </menupopup>
-    </menu>
-
     <menu accesskey="&goMenu.accesskey;" label="&goMenu.label;" oncommand="gotoHistoryIndex(event);">
       <menupopup onpopupshowing="updateGoMenu(event);">
         <menuitem label="&goBackCmd.label;"    accesskey="&goBackCmd.accesskey;"    key="goBackKb"    command="Browser:Back"/>
         <menuitem label="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;" key="goForwardKb" command="Browser:Forward"/>
         <menuitem label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    command="Browser:Home" key="goHome"/>
+        <menuseparator/>
+        <menuitem label="&historyCmd.label;" accesskey="&historyCmd.accesskey;" oncommand="toHistory()" key="key_gotoHistory"/>
         <menuseparator hidden="true"/>
       </menupopup>
     </menu>
@@ -345,13 +333,19 @@
         <!-- for some reason these don't work as command="" -->
         <menuitem key="addBookmarkKb"   observes="Browser:AddBookmark"/>
         <menuitem key="addBookmarkAsKb" observes="Browser:AddBookmarkAs"/>
-        <menuseparator/>
         <menuitem key="manBookmarkKb"   observes="Browser:ManageBookmark"/>
         <menuseparator/>
       </menupopup>
     </menu>
       
-  <menu id="tasksMenu"/>
+  <menu id="tasksMenu">
+    <menupopup id="taskPopup">
+      <menuitem id="menu_searchWeb" label="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="loadXURL('urn:clienturl:srchmenu:srchinternet');"/>
+      <menuseparator id="navBeginGlobalItems"/>
+    </menupopup>
+  </menu>
+
+  <menu id="windowMenu"/>
   
   <menu accesskey="&helpMenuCmd.accesskey;" id="menu_Help"/>
 

@@ -42,6 +42,7 @@ const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 var gPrintSettings = null;
 var gChromeState = null; // chrome state before we went into print preview
 var gOldCloseHandler = null; // close handler before we went into print preview
+var gInPrintPreviewMode = false;
 
 function getWebNavigation()
 {
@@ -169,6 +170,11 @@ function showPrintPreviewToolbar()
 
 function BrowserExitPrintPreview()
 {
+  gInPrintPreviewMode = false;
+
+  var browser = getBrowser();
+  browser.setAttribute("handleCtrlPageUpDown", "true");
+
   // exit print preview galley mode in content area
   var ifreq = _content.QueryInterface(
     Components.interfaces.nsIInterfaceRequestor);
@@ -218,6 +224,11 @@ function GetPrintSettings(webBrowserPrint)
 
 function BrowserPrintPreview()
 {
+  gInPrintPreviewMode = true;
+
+  var browser = getBrowser();
+  browser.setAttribute("handleCtrlPageUpDown", "false");
+
   var mainWin = document.getElementById("main-window");
 
   // save previous close handler to restoreon exiting print preview mode
