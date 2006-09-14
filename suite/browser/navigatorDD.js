@@ -172,7 +172,12 @@ var goButtonObserver = {
       var xferData = aXferData.data.split("\n");
       var uri = xferData[0] ? xferData[0] : xferData[1];
       if (uri)
-        loadURI(uri);
+        {
+          // Perform a security check before loading the URI
+          nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, uri);
+
+          loadURI(uri);
+        }
     },
   getSupportedFlavours: function ()
     {
