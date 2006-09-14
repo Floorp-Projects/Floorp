@@ -304,8 +304,8 @@ function RegisterTabOpenObserver()
     }
   };
 
-  const service =
-    Components.classes["@mozilla.org/observer-service;1"].getService();
+  const service = Components.classes["@mozilla.org/observer-service;1"]
+    .getService(Components.interfaces.nsIObserverService);
   service.addObserver(observer, "open-new-tab-request", false);
 }
 
