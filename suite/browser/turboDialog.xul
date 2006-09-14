@@ -22,8 +22,7 @@
      - Blake Ross <blake@netscape.com> (Original Author)
 -->
 
-<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://navigator/skin/turbo.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/dialogs.css" type="text/css"?>
 
 <!DOCTYPE window [
   <!ENTITY % turboDialogDTD SYSTEM "chrome://navigator/locale/turboDialog.dtd" >
