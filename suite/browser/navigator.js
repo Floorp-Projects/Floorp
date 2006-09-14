@@ -576,8 +576,8 @@ function Startup()
               uriArray = getHomePage();
               break;
             case 2:
-              history = Components.classes["@mozilla.org/browser/global-history;1"]
-                                  .getService(Components.interfaces.nsIBrowserHistory);
+              var history = Components.classes["@mozilla.org/browser/global-history;1"]
+                                      .getService(Components.interfaces.nsIBrowserHistory);
               uriArray = [history.lastPageVisited];
               break;
           }
