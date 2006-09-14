@@ -118,12 +118,15 @@
 
 <!ENTITY bookmarksMenu.label "Bookmarks">
 <!ENTITY bookmarksMenu.accesskey "b">
-<!ENTITY addCurPageCmd.label "Add Current Page">
-<!ENTITY addCurPageCmd.accesskey "a">
+<!ENTITY addCurPageCmd.label "Add Bookmark">
+<!ENTITY addCurPageCmd.accesskey "b">
 <!ENTITY addCurPageCmd.commandkey "d">
+<!ENTITY addCurPageAsCmd.label "Add Bookmark As...">
+<!ENTITY addCurPageAsCmd.accesskey "a">
 <!ENTITY manBookmarksCmd.label "Manage Bookmarks...">
 <!ENTITY manBookmarksCmd.accesskey "m">
 <!ENTITY manBookmarksCmd.commandkey "b">
+<!ENTITY emptyItem.label "(Empty)">
 
 <!ENTITY helpMenuCmd.label "Help">
 <!ENTITY helpMenuCmd.accesskey "h">
