@@ -65,6 +65,7 @@
 	
     <!-- View Menu -->
 	<key id="key_reload"  key="&reloadCmd.commandkey;" observes="canReload" modifiers="accel"/>
+	<key id="key_reallyReload" key="&reloadCmd.commandkey;" observes="canReload" modifiers="accel,shift"/>
 	<key id="key_viewSource" key="&pageSourceCmd.commandkey;" observes="View:PageSource" modifiers="accel"/>
 	<key id="key_viewInfo"   key="&pageInfoCmd.commandkey;"   observes="View:PageInfo"   modifiers="accel"/>
 
