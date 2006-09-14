@@ -252,19 +252,21 @@ nsXULBrowserWindow.prototype =
 		},
   onProgress : function (channel, current, max)
   {
- 		if(!statusMeter)
-			statusMeter = document.getElementById("statusbar-icon");
+   if(!statusMeter)
+     statusMeter = document.getElementById("statusbar-icon");
     var percentage = 0;
     if (max > 0)
     {
       percentage = (current * 100) / max ;
-      statusMeter.setAttribute("mode", "normal");
+      if (statusMeter.getAttribute("mode") != "normal")     
+        statusMeter.setAttribute("mode", "normal");
       statusMeter.value = percentage;
       statusMeter.progresstext = Math.round(percentage) + "%";
     }
-    else
-      statusMeter.setAttribute("mode","undetermined");
-         
+    else {
+      if (statusMeter.getAttribute("mode") != "undetermined")
+        statusMeter.setAttribute("mode","undetermined");
+    }
   },
 	onStatusChange : function(channel, status)
 		{
@@ -425,6 +427,17 @@ function Startup()
         onLoadViaOpenDialog();
     }
     gURLBar = document.getElementById("urlbar");
+    
+    // set home button tooltip text
+    var homepage; 
+    try {
+      homepage = pref.CopyUnicharPref("browser.startup.homepage");
+    }
+    catch(e) {
+      homepage = null;
+    }
+    if (homepage)
+      setTooltipText("homebutton", homepage);
   }
 
 function Shutdown()
@@ -1467,4 +1480,4 @@ function dumpMemoryLeaks() {
 	if (leakDetector != null)
 		leakDetector.dumpLeaks();
 }
-
+ 

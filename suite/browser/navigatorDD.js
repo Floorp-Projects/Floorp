@@ -363,8 +363,11 @@ var homeButtonObserver = {
         }
       else
         setHomepage = true;
-      if (setHomepage)
-        nsPreferences.setUnicharPref("browser.startup.homepage", url);                                           
+      if (setHomepage) 
+        {
+          nsPreferences.setUnicharPref("browser.startup.homepage", url);                                           
+          setTooltipText("homebutton", url);
+        }
     },
     
   onDragOver: function (aEvent, aFlavour)
