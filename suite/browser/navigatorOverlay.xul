@@ -132,7 +132,7 @@
 
     <!-- View Menu -->
     <command id="View:PageSource" oncommand="BrowserViewSource();"/>
-    <command id="View:PageInfo"   oncommand="BrowserPageInfo();"/>
+    <command id="View:PageInfo"   oncommand="BrowserPageInfo(getBrowser().contentDocument);"/>
   
     <!-- Search Menu -->
     <command id="Browser:Find" oncommand="BrowserFind();" />
