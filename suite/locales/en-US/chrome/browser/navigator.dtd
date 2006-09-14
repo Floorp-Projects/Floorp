@@ -4,9 +4,9 @@
 <!-- LOCALIZATION NOTE : FILE Do not translate accesskey and commandkey --> 
 
 <!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE --> 
-<!ENTITY mainWindow.title "Mozilla"> 
+<!ENTITY mainWindow.title "&brandShortName;"> 
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE --> 
-<!ENTITY mainWindow.titlemodifier "Mozilla"> 
+<!ENTITY mainWindow.titlemodifier "&brandShortName;"> 
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
 <!ENTITY mainWindow.titlemodifiermenuseparator " - ">
 <!ENTITY viewsourcetitle.preface "Source for: ">
@@ -193,7 +193,7 @@
 <!ENTITY debugQASmoke.label "Smoke Tests">
 <!ENTITY debugQAKnowBug.label "Known Bugs">
 <!ENTITY debugVerCmd.label "Verification">
-<!ENTITY ver1Cmd.label "Mozilla">
+<!ENTITY ver1Cmd.label "&brandShortName;">
 <!ENTITY ver2Cmd.label "Yahoo">
 <!ENTITY ver3Cmd.label "Netscape">
 <!ENTITY ver4Cmd.label "Excite">
