@@ -822,7 +822,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr, newWindowFlag)
     defaultSearchURL = fallbackDefaultSearchURL;
 
   if (!searchStr) {
-    loadURI(gNavigatorRegionBundle.getString("otherSearchURL"));
+    BrowserSearchInternet();
   } else {
 
     //Check to see if location bar field is a url
@@ -903,6 +903,37 @@ function isSearchPanelOpen()
            SidebarGetLastSelectedPanel() == "urn:sidebar:panel:search"
          );
 }
+
+function BrowserSearchInternet()
+{
+  try {
+    var searchEngineURI = pref.getCharPref("browser.search.defaultengine");
+    if (searchEngineURI) {          
+      var searchRoot = getSearchUrl("searchForm");
+      if (searchRoot) {
+        loadURI(searchRoot);
+        return;
+      } else {
+        // Get a search URL and guess that the front page of the site has a search form.
+        var searchDS = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
+                                 .getService(Components.interfaces.nsIInternetSearchService);
+        searchURL = searchDS.GetInternetSearchURL(searchEngineURI, "ABC", 0, 0, {value:0});
+        if (searchURL) {
+          searchRoot = searchURL.match(/[a-z]+:\/\/[a-z.-]+/);
+          if (searchRoot) {
+            loadURI(searchRoot + "/");
+            return;
+          }
+        }
+      }
+    }
+  } catch (ex) {
+  }
+
+  // Fallback if the stuff above fails: use the hard-coded search engine
+  loadURI(gNavigatorRegionBundle.getString("otherSearchURL"));
+}
+
 
 //Note: BrowserNewEditorWindow() was moved to globalOverlay.xul and renamed to NewEditorWindow()
 
