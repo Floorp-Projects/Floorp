@@ -416,8 +416,7 @@ function UpdateHistory(event)
    //  dump("UpdateHistory: content's location is '" + window.content.location.href + "',\n");
     //dump("                         title is '" + window.content.document.title + "'\n");
 
-	if ((window.content.location.href) && (window.content.location.href != "")
-		&& (event.target.toString().indexOf("HTMLDocument") >= 0))
+	if ((window.content.location.href) && (window.content.location.href != ""))
 	{
 		try
 		{
@@ -458,8 +457,7 @@ function savePage( url ) {
 
 function UpdateBookmarksLastVisitedDate(event)
 {
-	if ((window.content.location.href) && (window.content.location.href != "")
-		&& (event.target.toString().indexOf("HTMLDocument") >= 0))
+	if ((window.content.location.href) && (window.content.location.href != ""))
 	{
 		try
 		{
@@ -479,8 +477,7 @@ function UpdateBookmarksLastVisitedDate(event)
 
 function UpdateInternetSearchResults(event)
 {
-	if ((window.content.location.href) && (window.content.location.href != "")
-		&& (event.target.toString().indexOf("HTMLDocument") >= 0))
+	if ((window.content.location.href) && (window.content.location.href != ""))
 	{
 		var	searchInProgressFlag = false;
 
@@ -540,11 +537,16 @@ function createBrowserInstance()
     
     tryToSetContentWindow();
 	
-    // Add a capturing event listener to the content window so we'll
-    // be notified when onloads complete.
-    window.addEventListener("load", UpdateHistory, true);
-    window.addEventListener("load", UpdateBookmarksLastVisitedDate, true);
-    window.addEventListener("load", UpdateInternetSearchResults, true);
+    // Add a capturing event listener to the content area
+    // (rjc note: not the entire window, otherwise we'll get sidebar pane loads too!)
+    //  so we'll be notified when onloads complete.
+    var contentArea = document.getElementById("appcontent");
+    if (contentArea)
+    {
+	    contentArea.addEventListener("load", UpdateHistory, true);
+	    contentArea.addEventListener("load", UpdateBookmarksLastVisitedDate, true);
+	    contentArea.addEventListener("load", UpdateInternetSearchResults, true);
+    }
 
 	 // Check for window.arguments[0].  If present, go to that url.
     if ( window.arguments && window.arguments[0] ) {
