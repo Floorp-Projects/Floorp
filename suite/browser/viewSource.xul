@@ -64,6 +64,9 @@
     <commandset id="globalEditMenuItems"/>
     <commandset id="selectEditMenuItems"/>
     <commandset id="clipboardEditMenuItems"/>
+    <commandset id="viewSourceMenuItems">
+      <command id="cmdWrapLongLines" oncommand="wrapLongLines()"/>
+    </commandset>
   </commandset>
     
   <stringbundleset id="stringbundleset">
@@ -144,6 +147,7 @@
      <!--   <menuitem accesskey="&pageInfoCmd.accesskey;" label="&pageInfoCmd.label;" key="key_viewInfo" observes="View:PageInfo"/>
         <menuseparator id="file_moduleSeparator"/>-->
         <menu id = "charsetMenu"/>
+        <menuitem id="menu_wrapLongLines" label="&menu_wrapLongLines.title;" type="checkbox" command="cmdWrapLongLines"/>
       </menupopup>
     </menu>
 

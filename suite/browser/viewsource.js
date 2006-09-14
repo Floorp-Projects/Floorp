@@ -22,6 +22,16 @@
 
 var gBrowser = null;
 var appCore = null;
+var gPrefs = null;
+
+try {
+  var prefsService = Components.classes["@mozilla.org/preferences;1"];
+  if (prefsService)
+    prefsService = prefsService.getService();
+  if (prefsService)
+    var gPrefs = prefsService.QueryInterface(Components.interfaces.nsIPref);
+} catch (ex) {
+}
 
 function onLoadViewSource() 
 {
@@ -68,6 +78,18 @@ function viewSource(url)
   var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
   var viewSrcUrl = "view-source:" + url;
   getBrowser().webNavigation.loadURI(viewSrcUrl, loadFlags);
+
+  //check the view_source.wrap_long_lines pref and set the menuitem's checked attribute accordingly
+  if (gPrefs){
+    try {
+      var wraplonglinesPrefValue = gPrefs.GetBoolPref("view_source.wrap_long_lines");
+
+      if (wraplonglinesPrefValue)
+        document.getElementById('menu_wrapLongLines').setAttribute("checked", "true");
+    } catch (ex) {
+    }
+  }
+
   window._content.focus();
   return true;
 }
@@ -83,4 +105,31 @@ function ViewSourceEditPage()
   var url = window._content.location.href;
   url = url.substring(12,url.length);
   editPage(url,window, false);
+}
+
+//function to toggle long-line wrapping and set the view_source.wrap_long_lines 
+//pref to persist the last state
+function wrapLongLines()
+{
+  //get the first pre tag which surrounds the entire viewsource content
+  var myWrap = window._content.document.getElementById('viewsource');
+
+  if (myWrap.className == '')
+    myWrap.className = 'wrap';
+  else myWrap.className = '';
+
+  //since multiple viewsource windows are possible, another window could have 
+  //affected the pref, so instead of determining the new pref value via the current
+  //pref value, we use myWrap.className  
+  if (gPrefs){
+    try {
+      if (myWrap.className == ''){
+        gPrefs.SetBoolPref("view_source.wrap_long_lines", false);
+      }
+      else {
+        gPrefs.SetBoolPref("view_source.wrap_long_lines", true);
+      }
+    } catch (ex) {
+    }
+  }
 }
