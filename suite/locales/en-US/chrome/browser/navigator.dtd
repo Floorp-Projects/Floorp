@@ -133,7 +133,7 @@
 <!ENTITY dcharCp1255Cmd.label "Hebrew (Windows-1255)">
 <!ENTITY dcharCp1256Cmd.label "Arabic (Windows-1256)">
 <!ENTITY searchMenu.label "Search">
-<!ENTITY findOnCmd.label "Find On this page...">
+<!ENTITY findOnCmd.label "Find on this Page...">
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY searchBookmarksHistoryCmd.label "Search Bookmarks/History">
 <!ENTITY searchInternetCmd.label "Search the Internet">
@@ -292,39 +292,39 @@
 <!ENTITY  buildId.label "Build ID: 1999122808">
 
 <!-- Context Menu -->                 
-<!ENTITY openLinkCmd.label            "Open link in new window">
+<!ENTITY openLinkCmd.label            "Open Link in New Window">
 <!ENTITY openLinkCmd.accesskey        "o">
-<!ENTITY editLinkCmd.label            "Edit link in composer">
+<!ENTITY editLinkCmd.label            "Edit Link in Composer">
 <!ENTITY editLinkCmd.accesskey        "e">
-<!ENTITY openFrameCmd.label           "Open frame in new window">
+<!ENTITY openFrameCmd.label           "Open Frame in New Window">
 <!ENTITY openFrameCmd.accesskey       "o">
-<!ENTITY viewPageSourceCmd.label      "View page source">
+<!ENTITY viewPageSourceCmd.label      "View Page Source">
 <!ENTITY viewPageSourceCmd.accesskey  "v">
-<!ENTITY viewFrameSourceCmd.label     "View frame source">
+<!ENTITY viewFrameSourceCmd.label     "View Frame Source">
 <!ENTITY viewFrameSourceCmd.accesskey "v">
-<!ENTITY viewPageInfoCmd.label        "View page info">
+<!ENTITY viewPageInfoCmd.label        "View Page Info">
 <!ENTITY viewPageInfoCmd.accesskey    "i">
-<!ENTITY viewFrameInfoCmd.label       "View frame info">
+<!ENTITY viewFrameInfoCmd.label       "View Frame Info">
 <!ENTITY viewFrameInfoCmd.accesskey   "i">
-<!ENTITY viewImageCmd.label           "View image">
+<!ENTITY viewImageCmd.label           "View Image">
 <!ENTITY viewImageCmd.accesskey       "w">
-<!ENTITY bookmarkPageCmd.label        "Bookmark this page">
+<!ENTITY bookmarkPageCmd.label        "Bookmark this Page">
 <!ENTITY bookmarkPageCmd.accesskey    "b">
-<!ENTITY savePageCmd.label            "Save page as...">
+<!ENTITY savePageCmd.label            "Save Page As...">
 <!ENTITY savePageCmd.accesskey        "s">
-<!ENTITY saveFrameCmd.label           "Save frame as...">
+<!ENTITY saveFrameCmd.label           "Save Frame As...">
 <!ENTITY saveFrameCmd.accesskey       "s">
-<!ENTITY saveLinkCmd.label            "Save link as...">
+<!ENTITY saveLinkCmd.label            "Save Link As...">
 <!ENTITY saveLinkCmd.accesskey        "s">
-<!ENTITY saveImageCmd.label           "Save image as...">
+<!ENTITY saveImageCmd.label           "Save Image As...">
 <!ENTITY saveImageCmd.accesskey       "a">
-<!ENTITY saveBGImageCmd.label         "Save background image as...">
+<!ENTITY saveBGImageCmd.label         "Save Background Image As...">
 <!ENTITY saveBGImageCmd.accesskey     "a">
 <!ENTITY copyCmd.label                "Copy">
 <!ENTITY copyCmd.accesskey            "c">
-<!ENTITY selectAllCmd.label           "Select all">
+<!ENTITY selectAllCmd.label           "Select All">
 <!ENTITY selectAllCmd.accesskey       "l">
-<!ENTITY copyLinkCmd.label            "Copy link location">
+<!ENTITY copyLinkCmd.label            "Copy Link Location">
 <!ENTITY copyLinkCmd.accesskey        "l">
-<!ENTITY copyImageCmd.label           "Copy image location">
+<!ENTITY copyImageCmd.label           "Copy Image Location">
 <!ENTITY copyImageCmd.accesskey       "m">
