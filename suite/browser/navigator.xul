@@ -326,6 +326,7 @@ Contributor(s): ______________________________________. -->
   </toolbar>
 
   <toolbar id="nav-bar" class="decorated main-bar" chromeclass="toolbar" persist="collapsed">
+	<box align="horizontal" flex="100%" style="overflow: hidden">
       <button class="large-toolbar left" id="back-button" crop="right" orient="vertical" observes="canGoBack" />  
       <button class="large-toolbar left" id="forward-button" crop="right" orient="vertical" observes="canGoForward" />
       <button class="large-toolbar left" id="reload-button" crop="right" orient="vertical" observes="canReload"/>
