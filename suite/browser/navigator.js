@@ -392,22 +392,20 @@ function Shutdown()
 
 function Translate()
 {
-  var service = "http://cgi.netscape.com/cgi-bin/translate.cgi?AlisUI=simple_frames/ns_home";
-
-  // if we're already viewing a translated page, then just get the
-  // last argument (which we expect to always be "AlisTargetURI")
+  var service = pref.getLocalizedUnicharPref("browser.translation.service");
+  var serviceDomain = pref.getLocalizedUnicharPref("browser.translation.serviceDomain");
+  
   // XXX This somehow causes a big leak, back to the old way
   //     till we figure out why. See bug 61886.
   // var targetURI = getWebNavigation().currentURI.spec;
   var targetURI = _content.location.href;
-  var targetURIIndex = targetURI.indexOf("AlisTargetURI=");
 
-  if (targetURIIndex >= 0)
-    targetURI = targetURI.substring(targetURIIndex + 14);
-
-  service += "&AlisTargetURI=" + escape(targetURI);
-
-  loadURI(service);
+  // if we're already viewing a translated page, then just reload
+  if (targetURI.indexOf(serviceDomain) >= 0)
+    BrowserReload();
+  else {
+    loadURI(service + escape(targetURI));
+  }
 }
 
 function gotoHistoryIndex(aEvent)
