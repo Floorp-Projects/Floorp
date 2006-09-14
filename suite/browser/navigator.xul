@@ -69,10 +69,6 @@ Contributor(s): ______________________________________. -->
   <broadcaster id="args" value=""/> 
 </broadcasterset>
 
-<observes element="WebBrowserChrome" attribute="status" onbroadcast="onStatus()"/>
-<observes element="WebBrowserChrome" attribute="overLink" onbroadcast="onOverLink()"/>
-<observes element="WebBrowserChrome" attribute="defaultStatus" onbroadcast="onDefaultStatus()"/>
-
 <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
 <broadcaster id="dialog.start" ready="false"/>
 <observes element="dialog.start" attribute="ready" onbroadcast="onLoadWithArgs()"/>
@@ -450,7 +446,12 @@ Contributor(s): ______________________________________. -->
         </box>
 		<spring style="width: 1em"/>
         <titledbutton id="statusText" class="status-bar" align="left" flex="100%" 
-          value="&statusText.label;"  style="min-width: 1px"/>
+          value="&statusText.label;"  style="min-width: 1px">
+
+          <observes element="WebBrowserChrome" attribute="status" onbroadcast="onStatus()"/>
+          <observes element="WebBrowserChrome" attribute="overLink" onbroadcast="onOverLink()"/>
+          <observes element="WebBrowserChrome" attribute="defaultStatus" onbroadcast="onDefaultStatus()"/>
+        </titledbutton>
     
         <titledbutton class="status-bar" align="left" value="&buildId.label;"/>
         <titledbutton id="lock-button" class="borderless" align="left"/>    
