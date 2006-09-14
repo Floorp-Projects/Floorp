@@ -130,6 +130,25 @@ const gHomepagePrefListener =
   }
 };
 
+// popup window permission change listener
+const gPopupPermListener = {
+
+  observe: function(subject, topic, data) {
+    if (topic == "popup-perm-close") {
+      // close the window if we're a popup and our opener's URI matches
+      // the URI in the notification
+      var popupOpenerURI = maybeInitPopupContext();
+      if (popupOpenerURI) {
+        const IOS = Components.classes["@mozilla.org/network/io-service;1"]
+                    .getService(Components.interfaces.nsIIOService);
+        closeURI = IOS.newURI(data, null, null);
+        if (closeURI.host == popupOpenerURI.host)
+          window.close();
+      }
+    }
+  }
+};
+
 /**
 * Pref listener handler functions.
 * Both functions assume that observer.domain is set to 
@@ -153,6 +172,20 @@ function removePrefListener(observer)
   } catch(ex) {
     dump("Failed to remove pref observer: " + ex + "\n");
   }
+}
+
+function addPopupPermListener(observer)
+{
+  const OS = Components.classes["@mozilla.org/observer-service;1"]
+             .getService(Components.interfaces.nsIObserverService);
+  OS.addObserver(observer, "popup-perm-close", false);
+}
+
+function removePopupPermListener(observer)
+{
+  const OS = Components.classes["@mozilla.org/observer-service;1"]
+             .getService(Components.interfaces.nsIObserverService);
+  OS.removeObserver(observer, "popup-perm-close");
 }
 
 /**
@@ -378,6 +411,7 @@ function Startup()
   addPrefListener(gButtonPrefListener); 
   addPrefListener(gTabStripPrefListener);
   addPrefListener(gHomepagePrefListener);
+  addPopupPermListener(gPopupPermListener);
 
   window.browserContentListener =
     new nsBrowserContentListener(window, getBrowser());
@@ -576,6 +610,7 @@ function Shutdown()
   removePrefListener(gButtonPrefListener);
   removePrefListener(gTabStripPrefListener);
   removePrefListener(gHomepagePrefListener);
+  removePopupPermListener(gPopupPermListener);
 
   window.browserContentListener.close();
   // Close the app core.
@@ -1952,4 +1987,35 @@ function checkTheme()
       }
     }
   } 
+}
+
+// opener may not have been initialized by load time (chrome windows only)
+// so call this function some time later.
+function maybeInitPopupContext()
+{
+  // it's not a popup with no opener
+  if (!window.content.opener)
+    return null;
+
+  try {
+    // are we a popup window?
+    const CI = Components.interfaces;
+    var xulwin = window
+                 .QueryInterface(CI.nsIInterfaceRequestor)
+                 .getInterface(CI.nsIWebNavigation)
+                 .QueryInterface(CI.nsIDocShellTreeItem).treeOwner
+                 .QueryInterface(CI.nsIInterfaceRequestor)
+                 .getInterface(CI.nsIXULWindow);
+    if (xulwin.contextFlags &
+        CI.nsIWindowCreator2.PARENT_IS_LOADING_OR_RUNNING_TIMEOUT) {
+      // return our opener's URI
+      const IOS = Components.classes["@mozilla.org/network/io-service;1"]
+                  .getService(CI.nsIIOService);
+      var spec = Components.lookupMethod(window.content.opener, "location")
+                 .call();
+      return IOS.newURI(spec, null, null);
+    }
+  } catch(e) {
+  }
+  return null;
 }
