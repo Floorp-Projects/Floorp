@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay SYSTEM "chrome://navigator/locale/mailNavigatorOverlay.dtd">
+
+<overlay id="platformMailOverlay.xul"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <keyset id="tasksKeys">
+    <key id="key_newMessage" key="&newMessageCmd.key;" modifiers="accel,shift" command="cmd_newMessage"/>
+  </keyset>
+
+</overlay>
