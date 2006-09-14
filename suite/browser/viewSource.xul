@@ -101,9 +101,9 @@
     <popup id="viewSourceContextMenu">
       <menuitem label="&findNextCmd.label;" accesskey="&findNextCmd.accesskey;"  command="Browser:FindAgain"/>
       <menuseparator/>
-      <menuitem id="menu_copy_cm" label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" observes="cmd_copy"/>
+      <menuitem id="menu_copy_cm" label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" command="cmd_copy"/>
       <menuseparator/>
-      <menuitem id="menu_selectAll_cm" label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" observes="cmd_selectAll"/>
+      <menuitem id="menu_selectAll_cm" label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll"/>
     </popup>
   </popupset>
 
