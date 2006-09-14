@@ -675,9 +675,13 @@ function WindowFocusTimerCallback(element)
     // set the element in command dispatcher so focus will restore properly
     // when the window does become active
 
-    document.commandDispatcher.focusedWindow = window;
-    if (element instanceof Components.interfaces.nsIDOMElement)
+    if (element instanceof Components.interfaces.nsIDOMWindow) {
+      document.commandDispatcher.focusedWindow = element;
+      document.commandDispatcher.focusedElement = null;
+    } else if (element instanceof Components.interfaces.nsIDOMElement) {
+      document.commandDispatcher.focusedWindow = element.ownerDocument.defaultView;
       document.commandDispatcher.focusedElement = element;
+    }
   }
 }
 
