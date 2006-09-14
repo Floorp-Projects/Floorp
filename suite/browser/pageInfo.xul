@@ -50,6 +50,7 @@
 
   <keyset>
     <key id="closeWindow" key="&closeWindow;" modifiers="accel" oncommand="window.close()"/>
+    <key keycode="VK_ESCAPE" oncommand="window.close()"/>
   </keyset>
   <!-- keys are appended from the overlay -->
   <keyset id="dialogKeys"/>
