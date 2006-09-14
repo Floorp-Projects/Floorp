@@ -536,6 +536,7 @@
       <menuitem label="chofmann's Browser Buster" oncommand="loadURI('http://webtools.mozilla.org/buster/');"/>
       <menuitem label="Composer (with test page)" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>
       <menuitem label="Flush Memory" oncommand="Components.classes['@mozilla.org/xpcom/memory-service;1'].getService(Components.interfaces.nsIMemory).heapMinimize(true);" />
+      <menuitem label="Show Build Configuration" oncommand="loadURI('about:buildconfig');"/>
 
       <menuseparator />
 
