@@ -77,7 +77,7 @@ var personalToolbarObserver = {
       // fair enough to disable it on non-Win32 platforms. There is no hang
       // or crash associated with this on Windows, so we'll leave the functionality
       // there. 
-      if (navigator.platform != "Win32" && aEvent.target.localName != "button")
+      if (navigator.platform != "Win32" && aEvent.target.localName != "toolbarbutton")
         return;
 
 
@@ -608,7 +608,7 @@ function determineDropPosition(aEvent, aAllowDropOn)
     coordValue = overButtonBoxObject.y;
     clientCoordValue = aEvent.clientY;
   }
-  else if (aEvent.target.localName == "button" || aEvent.target.localName == "menubutton") {
+  else if (aEvent.target.localName == "toolbarbutton") {
     measure = overButtonBoxObject.width/regionCount;
     coordValue = overButtonBoxObject.x;
     clientCoordValue = aEvent.clientX;
@@ -636,8 +636,7 @@ function findParentContainer(aElement)
 {
   if (!aElement) return null;
   switch (aElement.localName) {
-    case "button":
-    case "menubutton":
+    case "toolbarbutton":
       var box = aElement.parentNode;
       return RDFUtils.getResource(box.getAttribute("ref"));
     case "menu":
