@@ -81,7 +81,7 @@
 <!ENTITY stopCmd.label "Stop">
 <!ENTITY stopCmd.accesskey "s">
 <!ENTITY pageSourceCmd.label "Page Source">
-<!ENTITY pageSourceCmd.accesskey "u">
+<!ENTITY pageSourceCmd.accesskey "o">
 <!ENTITY pageSourceCmd.commandkey "u">
 <!ENTITY pageInfoCmd.label "Page Info">
 <!ENTITY pageInfoCmd.accesskey "i">
