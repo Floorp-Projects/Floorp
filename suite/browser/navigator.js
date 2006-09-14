@@ -1662,6 +1662,11 @@ function formShow()
 function setFormToolbar()
 {
 
+  var formToolbar = document.getElementById("FormToolbar");
+  if (!formToolbar) {
+    return;
+  }
+
   // keep form toolbar hidden if checkbox in view menu so indicates
 
   var cmd_viewformToolbar = document.getElementById("cmd_viewformtoolbar");
@@ -1675,11 +1680,6 @@ function setFormToolbar()
 
   // hide form toolbar if there is no form on the current page
 
-  var formToolbar = document.getElementById("FormToolbar");
-  if (!formToolbar) {
-    formToolbar.setAttribute("hidden", "true");
-    return;
-  }
   if (!window._content.document) {
     formToolbar.setAttribute("hidden", "true");
     return;
