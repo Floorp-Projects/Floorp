@@ -136,15 +136,10 @@ nsBrowserContentListener.prototype =
     isPreferred: function(contentType, desiredContentType)
     {
         try {
-            var catMgr = Components.classes["@mozilla.org/categorymanager;1"]
-                        .getService(Components.interfaces.nsICategoryManager);
-            var entry = catMgr.getCategoryEntry("Gecko-Content-Viewers",
-                                                contentType);
-            if (entry) {
-                return true;
-            }
-
-            return false;
+            var webNavInfo = 
+              Components.classes["@mozilla.org/webnavigation-info;1"]
+                        .getService(Components.interfaces.nsIWebNavigationInfo);
+            return webNavInfo.isTypeSupported(contentType, null);
         } catch (e) {
             // XXX propagate failures other than "NS_ERROR_NOT_AVAILABLE"?
             // This seems to never get called, so not like it matters....
