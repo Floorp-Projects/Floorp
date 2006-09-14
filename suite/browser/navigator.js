@@ -902,7 +902,7 @@ function BrowserHome(aEvent)
 {
   var tab;
   var homePage = getHomePage();
-  var target = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
+  var target = aEvent ? BookmarksUtils.getBrowserTargetFromEvent(aEvent) : "current";
 
   if (homePage.length == 1) {
     switch (target) {
