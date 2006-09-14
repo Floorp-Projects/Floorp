@@ -204,9 +204,9 @@ function GetPrintSettings(webBrowserPrint)
       }
 
       if (useGlobalPrintSettings) {
-        gPrintSettings = webBrowserPrint.newPrintSettings;
-      } else {
         gPrintSettings = webBrowserPrint.globalPrintSettings;
+      } else {
+        gPrintSettings = webBrowserPrint.newPrintSettings;
       }
     }
   } catch (e) {
@@ -236,16 +236,17 @@ function BrowserPrintPreview()
       gPrintSettings = GetPrintSettings(webBrowserPrint);
       webBrowserPrint.printPreview(gPrintSettings);
     }
+
+    // show the toolbar after we go into print preview mode so
+    // that we can initialize the toolbar with total num pages
+    showPrintPreviewToolbar();
+
   } catch (e) {
     // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
     // causing an exception to be thrown which we catch here.
     // Unfortunately this will also consume helpful failures, so add a
     // dump(e); // if you need to debug
   }
-
-  // show the toolbar after we go into print preview mode so
-  // that we can initialize the toolbar with total num pages
-  showPrintPreviewToolbar();
 }
 
 
