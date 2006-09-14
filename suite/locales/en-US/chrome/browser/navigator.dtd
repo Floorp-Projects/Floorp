@@ -63,11 +63,13 @@
 <!-- the command keys for Larger and Smaller were intended to be + and -, but see bug 52756 -->
 <!ENTITY textZoomEnlargeCmd.label "Larger">
 <!ENTITY textZoomEnlargeCmd.accesskey "l">
-<!ENTITY textZoomEnlargeCmd.commandkey "k">
+<!ENTITY textZoomEnlargeCmd.commandkey "+">
+<!-- + is above this key on many keyboards -->
+<!ENTITY textZoomEnlargeCmd.commandkey2 "=">
 <!ENTITY textZoomReduceCmd.label "Smaller">
 <!ENTITY textZoomReduceCmd.accesskey "m">
-<!ENTITY textZoomReduceCmd.commandkey "j">
-<!-- textZoomsee otherLabel in navigator.properties -->
+<!ENTITY textZoomReduceCmd.commandkey "-">
+<!-- see textZoomOtherLabel in navigator.properties -->
 <!ENTITY textZoomMenu.accesskey "z">
 <!ENTITY textZoomOtherCmd.accesskey "o">
 
