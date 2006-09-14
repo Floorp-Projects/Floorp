@@ -113,7 +113,6 @@
   <menubar id="zmain-menubar">
     <menu id="menu_File">
       <menupopup id="filemenu-popup">
-        <menuitem label="&browserCmd.label;" accesskey="&browserCmd.accesskey;" key="key_newNavigator" command="cmd_newNavigator"/>
         <menu id="menu_New">
           <menupopup id="menu_NewPopup">
             <menuitem id="menu_newNavigator" command="cmd_newNavigator"/>
@@ -159,7 +158,7 @@
      <!--   <menuitem accesskey="&pageInfoCmd.accesskey;" label="&pageInfoCmd.label;" key="key_viewInfo" observes="View:PageInfo"/>
         <menuseparator id="file_moduleSeparator"/>-->
         <menu id = "charsetMenu"/>
-        <menuitem id="menu_wrapLongLines" label="&menu_wrapLongLines.title;" type="checkbox" command="cmdWrapLongLines"/>
+        <menuitem id="menu_wrapLongLines" label="&menu_wrapLongLines.title;" accesskey="&menu_wrapLongLines.accesskey;" type="checkbox" command="cmdWrapLongLines"/>
       </menupopup>
     </menu>
 
