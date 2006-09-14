@@ -360,7 +360,7 @@
                     context="popupBlockerMenu"/>
     <statusbarpanel class="statusbarpanel-iconic" id="offline-status"/>
     <statusbarpanel class="statusbarpanel-iconic" id="security-button"
-                    onclick="BrowserPageInfo(null, 'securityTab')"/>
+                    oncommand="BrowserPageInfo(null, 'securityTab')"/>
   </statusbar> 
   <popupset>
     <menupopup id="popupBlockerMenu"
