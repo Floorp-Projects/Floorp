@@ -320,6 +320,8 @@
 <!ENTITY editLinkCmd.accesskey        "e">
 <!ENTITY openFrameCmd.label           "Open Frame in New Window">
 <!ENTITY openFrameCmd.accesskey       "o">
+<!ENTITY showOnlyThisFrameCmd.label           "Show Only This Frame">
+<!ENTITY showOnlyThisFrameCmd.accesskey       "w">
 <!ENTITY reloadCmd.accesskey          "r">
 <!ENTITY reloadCmd.commandKey         "r">
 <!ENTITY reloadFrameCmd.label         "Reload Frame">
