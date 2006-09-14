@@ -109,7 +109,7 @@ nsBrowserContentListener.prototype =
         return false;
     },
 
-    doContent: function(contentType, isContentPrefered, request, contentHandler)
+    doContent: function(contentType, isContentPreferred, request, contentHandler)
     {
         // forward the doContent to our content area webshell
         var docShell = this.contentWindow.docShell;
