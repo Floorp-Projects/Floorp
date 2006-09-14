@@ -60,6 +60,7 @@ Contributor(s): ______________________________________. -->
 <script language="javascript" src="navigatorDD.js"></script>
 <script language="javascript" src="chrome://global/content/nsJSSupportsUtils.js"></script>
 <script language="javascript" src="chrome://global/content/nsJSComponentManager.js"></script>
+<script language="javascript" src="chrome://global/content/nsUserSettings.js"></script>
 <script language="javascript" src="chrome://global/content/nsTransferable.js"></script>
 <script language="javascript" src="chrome://global/content/nsClipboard.js"></script>
 <script language="javascript" src="chrome://global/content/nsDragAndDrop.js"></script>
