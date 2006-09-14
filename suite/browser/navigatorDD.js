@@ -129,7 +129,17 @@ var personalToolbarObserver = {
       var linkCharset = aDragSession.sourceDocument ? aDragSession.sourceDocument.characterSet : null;
       // determine title of link
       var linkTitle;
-      if (xferData.length >= 2)
+      
+      // look it up in bookmarks
+      var bookmarksDS = gRDFService.GetDataSource("rdf:bookmarks");
+      var nameRes = RDFUtils.getResource(NC_RDF("Name"));
+      var nameFromBookmarks = bookmarksDS.GetTarget(elementRes, nameRes, true);
+      if (nameFromBookmarks)
+        nameFromBookmarks = nameFromBookmarks.QueryInterface(Components.interfaces.nsIRDFLiteral);
+      if (nameFromBookmarks) {
+        linkTitle = nameFromBookmarks.Value;
+      }
+      else if (xferData.length >= 2)
         linkTitle = xferData[1]
       else
         {
