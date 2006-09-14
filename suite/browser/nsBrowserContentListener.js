@@ -140,7 +140,6 @@ nsBrowserContentListener.prototype =
             case "image/gif":
             case "image/jpeg":
             case "image/png":
-            case "image/tiff":
             case "text/plain":
             case "application/http-index-format":
                 return true;
