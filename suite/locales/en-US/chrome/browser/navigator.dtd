@@ -87,10 +87,6 @@
 <!ENTITY charactersetBidiMenu.label "Character set">
 <!ENTITY doccharactersetBidiCmd.label "Use the document specified character set">
 <!ENTITY defaultcharactersetBidiCmd.label "Use my default character set, overriding the document-specified character set">
-<!ENTITY webContentMenu.label "Languages and Web Content">
-<!ENTITY webContentMenu.accesskey "l">
-<!ENTITY downloadMore.label "Download More">
-<!ENTITY downloadMore.accesskey "d">
 <!ENTITY applyTheme.label				"Apply Theme"> 
 <!ENTITY applyTheme.accesskey				"A"> 
 <!ENTITY themePreferencesCmd.label				"Theme Preferences..."> 
@@ -99,13 +95,13 @@
 <!ENTITY getNewThemesCmd.accesskey                             "G">
 <!ENTITY searchMenu.label "Search">
 <!ENTITY searchMenu.accesskey "s">
-<!ENTITY findOnCmd.label "Find in This Page...">
-<!ENTITY findOnFrameCmd.label "Find in This Frame...">
+<!ENTITY findOnCmd.label "Find...">
 <!ENTITY findOnCmd.accesskey "f">
 <!ENTITY findOnCmd.commandkey "f">
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY findAgainCmd.accesskey "g">
 <!ENTITY findAgainCmd.commandkey "g">
+<!-- XXX - boy there's a lot of crap here. -->
 <!ENTITY searchInternetCmd.label "Search the Web">
 <!ENTITY searchInternetCmd.accesskey "w">
 <!ENTITY searchAllMailCmd.label "Search Mail">
@@ -127,9 +123,6 @@
 <!ENTITY searchReferenceDesk.accesskey "r">
 <!ENTITY searchShopping.label "Shopping Search">
 <!ENTITY searchShopping.accesskey "s">
-<!ENTITY searchOptions.label "My Sidebar Search Tab">
-<!ENTITY simpleMode.label "Basic">
-<!ENTITY advancedMode.label "Advanced">
 <!ENTITY searchInternetKeywords.label "Internet Keywords">
 <!ENTITY searchInternetKeywords.accesskey "k">
 <!ENTITY goMenu.label "Go">
