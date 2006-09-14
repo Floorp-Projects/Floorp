@@ -1588,10 +1588,31 @@ function getShortcutOrURI(url)
         shortcutURL = gBookmarksService.resolveKeyword(cmd);
         // Bug 123006 : %s replace and URI escape, %S replace with raw value
         if (shortcutURL && text) {
-          shortcutURL = /%[sS]/.test(shortcutURL) ?
-              shortcutURL.replace(/%s/g, encodeURIComponent(text))
-                         .replace(/%S/g, text) :
-              null;
+          var encodedText = null; 
+          var charset = "";
+          const re = /^(.*)\&mozcharset=([a-zA-Z][_\-a-zA-Z0-9]+)\s*$/; 
+          var matches = shortcutURL.match(re);
+          if (matches) {
+             shortcutURL = matches[1];
+             charset = matches[2];
+          }
+          else if (/%s/.test(shortcutURL)) {
+            try {
+              charset = BMSVC.getLastCharset(shortcutURL);
+            } catch (ex) {
+            }
+          }
+
+          if (charset)
+            encodedText = escape(convertFromUnicode(charset, text)); 
+          else  // default case: charset=UTF-8
+            encodedText = encodeURIComponent(text);
+
+          if (encodedText && /%[sS]/.test(shortcutURL))
+            shortcutURL = shortcutURL.replace(/%s/g, encodedText)
+                                     .replace(/%S/g, text);
+          else 
+            shortcutURL = null;
         }
       }
     }
@@ -2655,4 +2676,18 @@ function updateSavePageItems()
 {
   var autoDownload = pref.getBoolPref("browser.download.autoDownload");
   goSetMenuValue("savepage", autoDownload ? "valueSave" : "valueSaveAs");
+}
+
+function convertFromUnicode(charset, str)
+{
+  try {
+    var unicodeConverter = Components
+       .classes["@mozilla.org/intl/scriptableunicodeconverter"]
+       .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+    unicodeConverter.charset = charset;
+    str = unicodeConverter.ConvertFromUnicode(str);
+    return str + unicodeConverter.Finish();
+  } catch(ex) {
+    return null; 
+  }
 }
