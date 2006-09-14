@@ -238,15 +238,12 @@ function unifinderMouseDownToDo( event )
    {
       // TODO HACK notifiers should be rewritten to integrate events and todos
       document.getElementById( "delete_todo_command" ).removeAttribute( "disabled" );
-      document.getElementById( "print_command" ).setAttribute( "disabled", "true" );
    } else
    {
       tree.view.selection.clearSelection();
 
       // TODO HACK notifiers should be rewritten to integrate events and todos
       document.getElementById( "delete_todo_command" ).setAttribute( "disabled", "true" );
-      //  printing tasks not supported
-      document.getElementById( "print_command" ).setAttribute( "disabled", "true" );
    }
 }
 
