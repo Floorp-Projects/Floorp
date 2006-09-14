@@ -425,3 +425,58 @@ var homeButtonObserver = {
       return flavourSet;
     }
 };
+
+var goButtonObserver = {
+  onDragOver: function(aEvent, aFlavour, aDragSession)
+    {
+      aEvent.target.setAttribute("dragover", "true");
+      return true;
+    },
+  onDragExit: function (aEvent, aDragSession)
+    {
+      aEvent.target.removeAttribute("dragover");
+    },
+  onDrop: function (aEvent, aXferData, aDragSession)
+    {
+      var xferData = aXferData.data.split("\n");
+      var uri = xferData[0] ? xferData[0] : xferData[1];
+      if (uri)
+        loadURI(uri);
+    },
+  getSupportedFlavours: function ()
+    {
+      var flavourSet = new FlavourSet();
+      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+      flavourSet.appendFlavour("text/x-moz-url");
+      flavourSet.appendFlavour("text/unicode");
+      return flavourSet;
+    }
+};
+
+var searchButtonObserver = {
+  onDragOver: function(aEvent, aFlavour, aDragSession)
+    {
+      aEvent.target.setAttribute("dragover", "true");
+      return true;
+    },
+  onDragExit: function (aEvent, aDragSession)
+    {
+      aEvent.target.removeAttribute("dragover");
+    },
+  onDrop: function (aEvent, aXferData, aDragSession)
+    {
+      var xferData = aXferData.data.split("\n");
+      var uri = xferData[1] ? xferData[1] : xferData[0];
+      if (uri)
+        OpenSearch('internet',false, uri);
+    },
+  getSupportedFlavours: function ()
+    {
+      var flavourSet = new FlavourSet();
+      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+      flavourSet.appendFlavour("text/x-moz-url");
+      flavourSet.appendFlavour("text/unicode");
+      return flavourSet;
+    }
+};
+  
