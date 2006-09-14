@@ -166,7 +166,15 @@ nsBrowserStatusHandler.prototype =
 
   onLinkIconAvailable : function(aHref) {
     if (gProxyFavIcon && pref.getBoolPref("browser.chrome.site_icons"))
+    {
       gProxyFavIcon.setAttribute("src", aHref);
+
+      // update any bookmarks with new icon reference
+      if (!gBookmarksService)
+        gBookmarksService = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
+                                      .getService(Components.interfaces.nsIBookmarksService);
+      gBookmarksService.UpdateBookmarkIcon(this.urlBar.value, aHref);
+    }
   },
 
   onProgressChange : function (aWebProgress, aRequest,
