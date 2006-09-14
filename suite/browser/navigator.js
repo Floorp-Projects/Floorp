@@ -129,16 +129,21 @@ function UpdateInternetSearchResults(event)
   var url = _content.location.href;
   if (url) {
     try {
-      var search = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
-                             .getService(Components.interfaces.nsIInternetSearchService);
+      var autoOpenSearchPanel = 
+        pref.getBoolPref("browser.search.opensidebarsearchpanel");
 
-      var searchInProgressFlag = search.FindInternetSearchResults(url);
+      if (autoOpenSearchPanel || isSearchPanelOpen())
+      {
+        var search = Components.
+          classes["@mozilla.org/rdf/datasource;1?name=internetsearch"].
+          getService(Components.interfaces.nsIInternetSearchService);
 
-      if (searchInProgressFlag) {
-        var autoOpenSearchPanel = pref.getBoolPref("browser.search.opensidebarsearchpanel");
+        var searchInProgressFlag = search.FindInternetSearchResults(url);
 
-        if (autoOpenSearchPanel)
-          RevealSearchPanel();
+        if (searchInProgressFlag) {
+          if (autoOpenSearchPanel)
+            RevealSearchPanel();
+        }
       }
     } catch (ex) {
     }
@@ -795,6 +800,14 @@ function RevealSearchPanel()
   var searchPanel = document.getElementById("urn:sidebar:panel:search");
   if (searchPanel)
     SidebarSelectPanel(searchPanel, true, true); // lives in sidebarOverlay.js
+}
+
+function isSearchPanelOpen()
+{
+  return ( !sidebar_is_hidden()    && 
+           !sidebar_is_collapsed() && 
+           SidebarGetLastSelectedPanel() == "urn:sidebar:panel:search"
+         );
 }
 
 //Note: BrowserNewEditorWindow() was moved to globalOverlay.xul and renamed to NewEditorWindow()
