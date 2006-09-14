@@ -5473,7 +5473,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
     aState.PushAbsoluteContainingBlock(areaFrame, absoluteSaveState);
   }
 
-  ProcessChildren(aState, aContent, areaFrame, PR_FALSE,
+  ProcessChildren(aState, aContent, areaFrame, PR_TRUE,
                   childItems, PR_TRUE);
 
   static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
