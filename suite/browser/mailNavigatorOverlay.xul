@@ -68,7 +68,7 @@
                                      .getService(Components.interfaces.nsIExternalProtocolService);
       var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                                 .getService(Components.interfaces.nsIIOService);
-      var mailto = url ? "mailto:?body="+url+"&subject="+escape(title) : "mailto:";
+      var mailto = url ? "mailto:?body="+escape(url)+"&subject="+escape(title) : "mailto:";
       var uri = ioService.newURI(mailto, null, null);
 
       extProtocolSvc.loadUrl(uri);
