@@ -93,22 +93,6 @@ function contentAreaFrameFocus()
   }
 }
 
-/**
- * Determine whether or not a given focused DOMWindow is in the content
- * area.
- **/
-function isDocumentFrame(aFocusedWindow)
-{
-  var contentFrames = _content.frames;
-  if (contentFrames.length) {
-    for (var i = 0; i < contentFrames.length; ++i) {
-      if (aFocusedWindow == contentFrames[i])
-        return true;
-    }
-  }
-  return false;
-}
-
 //////////////////////////////// BOOKMARKS ////////////////////////////////////
 
 function UpdateBookmarksLastVisitedDate(event)
