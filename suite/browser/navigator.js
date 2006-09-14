@@ -976,25 +976,15 @@ function RevealSearchPanel()
 		var is_hidden = sidebar.getAttribute("hidden");
 		if (is_hidden && is_hidden == "true")
 		{
-		 	{
-				sidebarShowHide();
-		 	}
+			// SidebarShowHide() lives in sidebarOverlay.js
+			SidebarShowHide();
 		}
-		var sidebar_style = sidebar.getAttribute("style");
-		if (sidebar_style)
-		{
-			var visibility = sidebar_style.match("visibility:([^;]*)")
-			if (visibility)
-			{
-				visibility = visibility[1];
-				if (visibility.indexOf("collapse") >= 0)
-				{
-					sidebar.removeAttribute("style");
-					sidebar.setAttribute("style", "width:100%; height:100%; hidden:false; visibility:show;");
-				}
-			}
+		var splitter_state = sidebar_splitter.getAttribute("state");
+		if (splitter_state && splitter_state == "collapsed") {
+			sidebar_splitter.removeAttribute("state");
 		}
-		sidebarOpenClosePanel(searchPanel);
+        // SidebarSelectPanel() lives in sidebarOverlay.js
+		SidebarSelectPanel(searchPanel);
 	}
 }
 
