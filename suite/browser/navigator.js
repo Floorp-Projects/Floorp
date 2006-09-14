@@ -1604,7 +1604,8 @@ function postURLToNativeWidget() {
         try {
             urlWidgetService = getService( "component://mozilla/urlwidget", "nsIUrlWidget" );
         } catch( exception ) {
-            dump( "Error getting url widget service: " + exception + "\n" );
+        // this component is windows only, don't spit out errors
+        // dump( "Error getting url widget service: " + exception + "\n" );
         }
     }
     if ( urlWidgetService ) {
