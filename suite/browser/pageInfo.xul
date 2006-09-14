@@ -24,7 +24,7 @@
     Chris McAfee <mcafee@netscape.com>
 -->
 
-<?xml-stylesheet href="chrome://navigator/skin/navigator.css" type="text/css"?>
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://navigator/skin/pageInfo.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://navigator/locale/viewSource.dtd" >
