@@ -898,7 +898,12 @@ function BrowserLoadURL()
   if (url.match(/^view-source:/)) {
     BrowserViewSourceOfURL(url.replace(/^view-source:/, ""), null);
   } else {
-    loadURI(getShortcutOrURI(url));
+    if (pref && pref.GetBoolPref("browser.tabs.opentabfor.urlbar") && getBrowser().localName == "tabbrowser") {
+      var t = getBrowser().addTab(getShortcutOrURI(url)); // open link in new tab
+      getBrowser().selectedTab = t;
+    }
+    else  
+      loadURI(getShortcutOrURI(url));
     _content.focus();
   }
 }
