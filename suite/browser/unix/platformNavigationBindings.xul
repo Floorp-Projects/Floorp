@@ -7,13 +7,13 @@
 
   <keyset id="navigationKeys">
     <!-- proper arrow key navigation, 4.xP -->
-    <key id="goBackKb"  keycode="VK_LEFT" observes="canGoBack" modifiers="alt"/>
-    <key id="goForwardKb"  keycode="VK_RIGHT" observes="canGoForward" modifiers="alt"/>
+    <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="alt"/>
+    <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="alt"/>
 
     <!-- Some people apparently use this combination too on Unix...
          we live and learn.  -->
-    <key key="&goBackCmd.commandKey;" observes="canGoBack" modifiers="accel"/>
-    <key key="&goForwardCmd.commandKey;" observes="canGoForward" modifiers="accel"/>
+    <key key="&goBackCmd.commandKey;" command="Browser:Back" modifiers="accel"/>
+    <key key="&goForwardCmd.commandKey;" command="Browser:Forward" modifiers="accel"/>
 
     <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="alt"/>
   </keyset>  
