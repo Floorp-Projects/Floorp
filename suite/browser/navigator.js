@@ -1028,7 +1028,17 @@ function BrowserEditBookmarks()
 
   function initViewMenu()
   {
-    updateTextSizeMenuLabel();
+    var viewPopup = document.getElementById("menu_View_Popup");
+    if (navigator.platform.indexOf("Mac") != -1) {
+      // only need to test once
+      viewPopup.removeAttribute("oncreate");
+    } else {
+      var textZoomMenu = document.getElementById("menu_TextZoom");
+      textZoomMenu.removeAttribute("hidden");
+      // next time, oncreate skips this check
+      viewPopup.setAttribute("oncreate", "updateTextSizeMenuLabel();");
+      updateTextSizeMenuLabel();
+    }
   }
 
   {
@@ -1074,13 +1084,13 @@ function BrowserEditBookmarks()
       zoomFactors = zoomFactorsString.split(",");
       for (var i=0; i<zoomFactors.length; i++) {
         zoomFactors[i] = parseInt(zoomFactors[i]);
-	if (zoomFactors[i] == 100) zoomLevel = i;
+        if (zoomFactors[i] == 100) zoomLevel = i;
       }
       zoomAccessKeys = zoomAccessKeysString.split(",");
       if (zoomAccessKeys.length != zoomFactors.length)
         throw "Different amount of text zoom access keys and text zoom values";
     } catch (e) {
-      zoomLabelOriginal = " (Original size)";
+      zoomLabelOriginal = "%zoom% % (Original size)";
       zoomFactors = [ 50, 75, 90, 100, 120, 150, 200 ];
       zoomAccessKeys = [ "5", "7", "9", "z", "1", "0", "2" ];
       zoomOther = 300;
