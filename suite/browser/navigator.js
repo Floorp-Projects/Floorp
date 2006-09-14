@@ -831,7 +831,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr, newWindowFlag)
               if (searchURL) {
                 defaultSearchURL = searchURL + escapedSearchStr; 
               } else {
-                searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr);
+                searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr, 0, 0, {value:0});
                 if (searchURL)
                   defaultSearchURL = searchURL;
               }

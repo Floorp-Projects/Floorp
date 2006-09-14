@@ -419,7 +419,7 @@
                 searchEngUrl += escapedSearch;
                 return searchEngUrl;
             } else {
-              return searchService.GetInternetSearchURL(item.getAttribute("searchEngine"),escapedSearch);
+              return searchService.GetInternetSearchURL(item.getAttribute("searchEngine"),escapedSearch, 0, 0, {value:0});
             }
           }
           return null;
