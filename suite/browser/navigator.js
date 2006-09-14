@@ -322,6 +322,11 @@ function Startup()
     // Initialize browser instance..
     appCore.setWebShellWindow(window);
     
+		// give urlbar focus so it'll be an active editor and d&d will work properly
+		var url_bar = document.getElementById("urlbar");
+		if ( url_bar )
+      url_bar.focus();
+    
     tryToSetContentWindow();
 	
     // Add a capturing event listener to the content area
