@@ -58,6 +58,55 @@ use constant SETTINGS => {
 
 };
 
+use constant SYSTEM_GROUPS => (
+    {
+        name        => 'admin',
+        description => 'Administrators'
+    },
+    {
+        name        => 'tweakparams',
+        description => 'Can change Parameters'
+    },
+    {
+        name        => 'editusers',
+        description => 'Can edit or disable users'
+    },
+    {
+        name        => 'creategroups',
+        description => 'Can create and destroy groups'
+    },
+    {
+        name        => 'editclassifications',
+        description => 'Can create, destroy, and edit classifications'
+    },
+    {
+        name        => 'editcomponents',
+        description => 'Can create, destroy, and edit components'
+    },
+    {
+        name        => 'editkeywords',
+        description => 'Can create, destroy, and edit keywords'
+    },
+    {
+        name        => 'editbugs',
+        description => 'Can edit all bug fields',
+        userregexp  => '.*'
+    },
+    {
+        name        => 'canconfirm',
+        description => 'Can confirm a bug or mark it a duplicate'
+    },
+    {
+        name        => 'bz_canusewhines',
+        description => 'User can configure whine reports for self'
+    },
+    {
+        name        => 'bz_sudoers',
+        description => 'Can perform actions as other users'
+    },
+    # There are also other groups created in update_system_groups.
+);
+
 use constant DEFAULT_CLASSIFICATION => {
     name        => 'Unclassified',
     description => 'Unassigned to any classification'
@@ -85,6 +134,73 @@ sub update_settings {
                     $settings{$setting}->{default},
                     $settings{$setting}->{subclass});
     }
+}
+
+sub update_system_groups {
+    my $dbh = Bugzilla->dbh;
+
+    # Create most of the system groups
+    foreach my $definition (SYSTEM_GROUPS) {
+        my $exists = new Bugzilla::Group({ name => $definition->{name} });
+        $definition->{isbuggroup} = 0;
+        Bugzilla::Group->create($definition) unless $exists;
+    }
+
+    # Certain groups need something done after they are created. We do
+    # that here.
+
+    # Make sure people who can whine at others can also whine.
+    if (!new Bugzilla::Group({name => 'bz_canusewhineatothers'})) {
+        my $whineatothers = Bugzilla::Group->create({
+            name        => 'bz_canusewhineatothers',
+            description => 'Can configure whine reports for other users',
+            isbuggroup  => 0 });
+        my $whine = new Bugzilla::Group({ name => 'bz_canusewhines' });
+
+        $dbh->do('INSERT INTO group_group_map (grantor_id, member_id) 
+                       VALUES (?,?)', undef, $whine->id, $whineatothers->id);
+    }
+
+    # Make sure sudoers are automatically protected from being sudoed.
+    if (!new Bugzilla::Group({name => 'bz_sudo_protect'})) {
+        my $sudo_protect = Bugzilla::Group->create({
+            name        => 'bz_sudo_protect',
+            description => 'Can not be impersonated by other users',
+            isbuggroup  => 0 });
+        my $sudo = new Bugzilla::Group({ name => 'bz_sudoers' });
+        $dbh->do('INSERT INTO group_group_map (grantor_id, member_id) 
+                       VALUES (?,?)', undef, $sudo_protect->id, $sudo->id);
+    }
+
+    # Re-evaluate all regexps, to keep them up-to-date.
+    my $sth = $dbh->prepare(
+        "SELECT profiles.userid, profiles.login_name, groups.id, 
+                groups.userregexp, user_group_map.group_id
+           FROM (profiles CROSS JOIN groups)
+                LEFT JOIN user_group_map
+                ON user_group_map.user_id = profiles.userid
+                   AND user_group_map.group_id = groups.id
+                   AND user_group_map.grant_type = ?
+          WHERE userregexp != '' OR user_group_map.group_id IS NOT NULL");
+
+    my $sth_add = $dbh->prepare(
+        "INSERT INTO user_group_map (user_id, group_id, isbless, grant_type)
+              VALUES (?, ?, 0, " . GRANT_REGEXP . ")");
+
+    my $sth_del = $dbh->prepare(
+        "DELETE FROM user_group_map
+          WHERE user_id  = ? AND group_id = ? AND isbless = 0 
+                AND grant_type = " . GRANT_REGEXP);
+
+    $sth->execute(GRANT_REGEXP);
+    while (my ($uid, $login, $gid, $rexp, $present) = $sth->fetchrow_array()) {
+        if ($login =~ m/$rexp/i) {
+            $sth_add->execute($uid, $gid) unless $present;
+        } else {
+            $sth_del->execute($uid, $gid) if $present;
+        }
+    }
+
 }
 
 # This function should be called only after creating the admin user.

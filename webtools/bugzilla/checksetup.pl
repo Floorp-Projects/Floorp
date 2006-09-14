@@ -390,9 +390,6 @@ $dbh->bz_populate_enum_tables();
 update_filesystem({ index_html => $lc_hash->{'index_html'} });
 create_htaccess() if $lc_hash->{'create_htaccess'};
 
-# XXX Some parts of checksetup still need these, right now.
-my $datadir   = bz_locations()->{'datadir'};
-
 # Remove parameters from the params file that no longer exist in Bugzilla,
 # and set the defaults for new ones
 update_params({ answer => \%answer});
@@ -441,107 +438,7 @@ Bugzilla::Install::DB::update_table_definitions();
 # Bugzilla uses --GROUPS-- to assign various rights to its users.
 ###########################################################################
 
-my $admin_group = Bugzilla::Group->new({ name => 'admin' })
-    || Bugzilla::Group->create({ 
-           name => 'admin', description => 'Administrators', isbuggroup => 0 });
-
-Bugzilla::Group->create({ name => 'tweakparams', 
-    description => 'Can tweak operating parameters', isbuggroup => 0 })
-    unless new Bugzilla::Group({ name => 'tweakparams' });
-
-Bugzilla::Group->create({ name => 'editusers', 
-    description => 'Can edit or disable users', isbuggroup => 0 })
-    unless new Bugzilla::Group({ name => 'editusers' });
-
-Bugzilla::Group->create({ name => 'creategroups', 
-    description => 'Can create and destroy groups.', isbuggroup => 0 })
-    unless new Bugzilla::Group({ name => 'creategroups' });
-
-Bugzilla::Group->create({ name => 'editclassifications', 
-    description => 'Can create, destroy, and edit classifications.', 
-    isbuggroup => 0 })
-    unless new Bugzilla::Group({ name => 'editclassifications' });
-
-Bugzilla::Group->create({ name => 'editcomponents', 
-    description => 'Can create, destroy, and edit components.',
-    isbuggroup => 0 })
-    unless new Bugzilla::Group({ name => 'editcomponents' });
-
-Bugzilla::Group->create({ name => 'editkeywords', 
-    description => 'Can create, destroy, and edit keywords.',
-    isbuggroup => 0 })
-    unless new Bugzilla::Group({ name => 'editkeywords' });
-
-Bugzilla::Group->create({name => 'editbugs', 
-    description => 'Can edit all bug fields.', userregexp => ".*", 
-    isbuggroup => 0 })
-    unless new Bugzilla::Group({name => "editbugs"});
-
-Bugzilla::Group->create({ name => 'canconfirm',  
-    description => 'Can confirm a bug.', userregexp => ".*", 
-    isbuggroup => 0 })
-    unless new Bugzilla::Group({name => "canconfirm"});
-
-# Create bz_canusewhineatothers and bz_canusewhines
-if (!new Bugzilla::Group({name => 'bz_canusewhines'})) {
-    my $whine = Bugzilla::Group->create({name => 'bz_canusewhines',
-       description => 'User can configure whine reports for self', 
-       isbuggroup => 0 });
-    my $whineatothers = Bugzilla::Group->create({
-        name => 'bz_canusewhineatothers',
-        description => 'Can configure whine reports for other users', 
-        isbuggroup => 0 });
-
-    $dbh->do('INSERT INTO group_group_map (grantor_id, member_id) VALUES (?,?)',
-             undef, $whine->id, $whineatothers->id);
-}
-
-# 2005-08-14 bugreport@peshkin.net -- Bug 304583
-use constant GRANT_DERIVED => 1;
-# Get rid of leftover DERIVED group permissions
-$dbh->do("DELETE FROM user_group_map WHERE grant_type = " . GRANT_DERIVED);
-# Evaluate regexp-based group memberships
-my $sth = $dbh->prepare("SELECT profiles.userid, profiles.login_name,
-                         groups.id, groups.userregexp,
-                         user_group_map.group_id
-                         FROM (profiles
-                         CROSS JOIN groups)
-                         LEFT JOIN user_group_map
-                         ON user_group_map.user_id = profiles.userid
-                         AND user_group_map.group_id = groups.id
-                         AND user_group_map.grant_type = ?
-                         WHERE (userregexp != ''
-                         OR user_group_map.group_id IS NOT NULL)");
-
-my $sth_add = $dbh->prepare("INSERT INTO user_group_map 
-                       (user_id, group_id, isbless, grant_type) 
-                       VALUES(?, ?, 0, " . GRANT_REGEXP . ")");
-
-my $sth_del = $dbh->prepare("DELETE FROM user_group_map 
-                       WHERE user_id  = ? 
-                       AND group_id = ? 
-                       AND isbless = 0
-                       AND grant_type = " . GRANT_REGEXP);
-
-$sth->execute(GRANT_REGEXP);
-while (my ($uid, $login, $gid, $rexp, $present) = $sth->fetchrow_array()) {
-    if ($login =~ m/$rexp/i) {
-        $sth_add->execute($uid, $gid) unless $present;
-    } else {
-        $sth_del->execute($uid, $gid) if $present;
-    }
-}
-
-# 2005-10-10 karl@kornel.name -- Bug 204498
-if (!new Bugzilla::Group({name => 'bz_sudoers'})) {
-    my $sudo = Bugzilla::Group->create({name => 'bz_sudoers',
-       description => 'Can perform actions as other users', isbuggroup => 0 });
-    my $sudo_protect = Bugzilla::Group->create({name => 'bz_sudo_protect',
-        description => 'Can not be impersonated by other users',
-        isbuggroup => 0 });
-    $dbh->do('INSERT INTO group_group_map (grantor_id, member_id) VALUES (?,?)',
-             undef, $sudo_protect->id, $sudo->id);
-}
+Bugzilla::Install::update_system_groups();
 
 ###########################################################################
 # Create --SETTINGS-- users can adjust

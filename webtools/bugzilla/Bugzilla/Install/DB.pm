@@ -416,6 +416,11 @@ sub update_table_definitions {
     _copy_attachments_thedata_to_attach_data();
     _fix_broken_all_closed_series();
 
+    # 2005-08-14 bugreport@peshkin.net -- Bug 304583
+    # Get rid of leftover DERIVED group permissions
+    use constant GRANT_DERIVED => 1;
+    $dbh->do("DELETE FROM user_group_map WHERE grant_type = " . GRANT_DERIVED);
+
     # PUBLIC is a reserved word in Oracle.
     $dbh->bz_rename_column('series', 'public', 'is_public');
 
