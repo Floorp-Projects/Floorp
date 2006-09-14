@@ -12,8 +12,8 @@
         chrome:displayName="Navigator"
         chrome:author="mozilla.org"
         chrome:name="navigator"
-	chrome:localeVersion="0.9.4"
-        chrome:skinVersion="1">
+        chrome:localeVersion="0.9.4"
+        chrome:skinVersion="0.9.4">
   </RDF:Description>
 
 </RDF:RDF>
