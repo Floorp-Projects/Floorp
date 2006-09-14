@@ -386,7 +386,11 @@ function Startup()
     
     if (uriToLoad && uriToLoad != "about:blank") {
       gURLBar.value = uriToLoad;
-      loadURI(uriToLoad);
+      if ("arguments" in window && window.arguments.length >= 4) {
+        loadURI(uriToLoad, window.arguments[3]);
+      } else {
+        loadURI(uriToLoad);
+      }
     }
 
     // Close the window now, if it's for turbo mode startup.
@@ -896,10 +900,10 @@ function BrowserCloseWindow()
   window.close();
 }
 
-function loadURI(uri)
+function loadURI(uri, referrer)
 {
   try {
-    getWebNavigation().loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
+    getWebNavigation().loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE, referrer, null, null);
   } catch (e) {
   }
 }
