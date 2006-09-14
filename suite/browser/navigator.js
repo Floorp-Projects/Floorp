@@ -1554,12 +1554,13 @@ function SetPageProxyState(aState, aURI)
   if (aState == "valid") {
     gLastValidURLStr = gURLBar.value;
     gURLBar.addEventListener("input", UpdatePageProxyState, false);
-    if (pref.getBoolPref("browser.chrome.site_icons") && aURI && "schemeIs" in aURI && (aURI.schemeIs("http") || aURI.schemeIs("https"))) {
-      var favurl = gBrowser.buildFavIconString(aURI);
-      if (favurl != gProxyFavIcon.src) {
-        gProxyFavIcon.setAttribute("src", favurl);
+    if (gBrowser.shouldLoadFavIcon(aURI)) {
+      var favStr = gBrowser.buildFavIconString(aURI);
+      if (favStr != gProxyFavIcon.src) {
+        gBrowser.loadFavIcon(aURI, "src", gProxyFavIcon);
         gProxyDeck.selectedIndex = 0;
       }
+      else gProxyDeck.selectedIndex = 1;
     }
     else {
       gProxyDeck.selectedIndex = 0;

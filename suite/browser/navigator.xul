@@ -184,7 +184,8 @@ Contributor(s): ______________________________________. -->
                        ondraggesture="PageProxyDragGesture(event);"/>
                 <image id="page-proxy-favicon" validate="never"
                        ondraggesture="PageProxyDragGesture(event);"
-                       onload="this.parentNode.selectedIndex = 1; event.stopPropagation(); event.preventBubble();"/>
+                       onload="this.parentNode.selectedIndex = 1; event.stopPropagation(); event.preventBubble();"
+                       onerror="gBrowser.addToMissedIconCache(this.src);"/>
               </deck>
               <menupopup id="ubhist-popup" class="autocomplete-history-popup"
                          popupalign="topleft" popupanchor="bottomleft"
