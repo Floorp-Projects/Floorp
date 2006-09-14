@@ -232,7 +232,7 @@ var contentAreaDNDObserver = {
         }
       else 
         {
-          switch (aEvent.target.nodeName)   // switch (aEvent.target.localName) 
+          switch (aEvent.target.localName) 
             {
               case 'AREA':
               case 'IMG':
