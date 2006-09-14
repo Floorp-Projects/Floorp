@@ -138,7 +138,7 @@ this doesn't work anymore (target is null), not sure why.
 	        var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
 	        transArray.AppendElement(genTrans);
 	        var nsIDragService = Components.interfaces.nsIDragService;
-	        dragService.invokeDragSession ( transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
+	        dragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
 	                                            nsIDragService.DRAGDROP_ACTION_MOVE );
 	        dragStarted = true;
 	      }
@@ -351,7 +351,7 @@ function BeginDragContentArea ( event )
           var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
           transArray.AppendElement(genTrans);
           var nsIDragService = Components.interfaces.nsIDragService;
-          dragService.invokeDragSession ( transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
+          dragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
                                               nsIDragService.DRAGDROP_ACTION_MOVE );
           dragStarted = true;
         }
@@ -525,7 +525,7 @@ function DragProxyIcon ( event )
           var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
           transArray.AppendElement(genTrans);
           var nsIDragService = Components.interfaces.nsIDragService;
-          dragService.invokeDragSession ( transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
+          dragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
                                               nsIDragService.DRAGDROP_ACTION_MOVE );
           dragStarted = true;
         }
@@ -586,7 +586,7 @@ function DragContentLink ( event )
           var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
           transArray.AppendElement(genTrans);
           var nsIDragService = Components.interfaces.nsIDragService;
-          dragService.invokeDragSession ( transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
+          dragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
                                               nsIDragService.DRAGDROP_ACTION_MOVE );
           dragStarted = true;
         }
