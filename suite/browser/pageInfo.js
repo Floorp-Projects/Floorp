@@ -466,7 +466,7 @@ function grabAllLinks(aWindow,aDocument)
   if ("links" in aDocument)
     return theList.concat(aDocument.links);
   else
-    return theList.concat(aDocument.getElementsByTagNameNS(XHTMLNS, "a");
+    return theList.concat(aDocument.getElementsByTagNameNS(XHTMLNS, "a"));
 }
 
 function openURL(target)
