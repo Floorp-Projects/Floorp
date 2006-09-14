@@ -59,16 +59,16 @@
         }                                                                         
       }
       else {
-        openExternalMailer(url);
+        openExternalMailer(url, title);
       }
     }
 
-    function openExternalMailer(url) {
+    function openExternalMailer(url, title) {
       var extProtocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
                                      .getService(Components.interfaces.nsIExternalProtocolService);
       var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                                 .getService(Components.interfaces.nsIIOService);
-      var mailto = url ? "mailto:?body="+url : "mailto:";
+      var mailto = url ? "mailto:?body="+url+"&subject="+escape(title) : "mailto:";
       var uri = ioService.newURI(mailto, null, null);
 
       extProtocolSvc.loadUrl(uri);
@@ -152,7 +152,9 @@
 
     function hideMenuitems() {
       document.getElementById("menu_newCard").hidden = !gHasIntegratedMailClient;
-      document.getElementById("menu_sendPage").hidden = !gHasIntegratedMailClient;
+      var menu_sendPage = document.getElementById("menu_sendPage");
+      if (menu_sendPage)
+        menu_sendPage.hidden = !gHasIntegratedMailClient;
     }
 
     function initOverlay(aEvent) {
