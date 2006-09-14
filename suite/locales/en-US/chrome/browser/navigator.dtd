@@ -121,8 +121,8 @@
 <!ENTITY addCurPageCmd.label "Add Bookmark">
 <!ENTITY addCurPageCmd.accesskey "b">
 <!ENTITY addCurPageCmd.commandkey "d">
-<!ENTITY addCurPageAsCmd.label "Add Bookmark As...">
-<!ENTITY addCurPageAsCmd.accesskey "a">
+<!ENTITY addCurPageAsCmd.label "File Bookmark...">
+<!ENTITY addCurPageAsCmd.accesskey "f">
 <!ENTITY manBookmarksCmd.label "Manage Bookmarks...">
 <!ENTITY manBookmarksCmd.accesskey "m">
 <!ENTITY manBookmarksCmd.commandkey "b">
