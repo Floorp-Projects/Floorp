@@ -28,7 +28,7 @@
 
 <?xml-stylesheet href="chrome://navigator/skin/pageInfo.css" type="text/css"?>
 
-<!DOCTYPE window [
+<!DOCTYPE dialog [
   <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
   %brandDTD;
   <!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd">
@@ -37,14 +37,16 @@
   %pageInfoDTD;
 ]>
 
-<window id="main-window"
+<dialog id="main-window"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   windowtype="Browser:page-info"
   onload="onLoadPageInfo()"
-  align="stretch" class="dialog"
+  align="stretch"
   screenX="10" screenY="10"
   width="&pageInfoWindow.width;" height="&pageInfoWindow.height;"
-  persist="screenX screenY width height sizemode">
+  persist="screenX screenY width height sizemode"
+  buttons="help"
+  ondialoghelp="doHelpButton();">
 
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
@@ -52,12 +54,9 @@
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <keyset>
-    <key id="closeWindow" key="&closeWindow;" modifiers="accel" oncommand="window.close();"/>
-    <key keycode="VK_ESCAPE" oncommand="window.close();"/>
-    <key id="copy" key="c" modifiers="accel" oncommand="doCopy(event);"/>
+    <key id="closeWindow" key="&closeWindow.accesskey;" modifiers="accel" oncommand="window.close();"/>
+    <key id="copy" key="&copy.accesskey;" modifiers="accel" oncommand="doCopy(event);"/>
   </keyset>
-  <!-- keys are appended from the overlay -->
-  <keyset id="dialogKeys"/>
 
   <stringbundle id="pageinfobundle" src="chrome://navigator/locale/pageInfo.properties"/>
 
@@ -321,6 +320,6 @@
   <box>
     <progressmeter mode="undetermined" id="piProgress" flex="1"/>
     <spacer id="piSpacer" flex="0"/>
-    <button label="&helpButton;" oncommand="doHelpButton();" />
+    <button dlgtype="help" class="dialog-button"/>
   </box>
-</window>
+</dialog>
