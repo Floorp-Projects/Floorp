@@ -21,7 +21,9 @@ Rights Reserved.
 Contributor(s): ______________________________________. -->
 
 
-<?xml-stylesheet href="chrome://navigator/skin/navigator.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
+
 <?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
@@ -46,10 +48,11 @@ Contributor(s): ______________________________________. -->
   persist="screenX screenY width height sizemode"
   ondraggesture="return GeneralDrag(event);"> 
 
-<html:script language="javascript" src="chrome://global/content/strres.js" />
-<html:script language="javascript" src="chrome://navigator/content/navigator.js" />
-<html:script language="javascript" src="nsContextMenu.js" />
-<html:script language="javascript" src="navigatorDD.js" />
+<script language="javascript" src="chrome://global/content/strres.js"></script>
+<script language="javascript" src="chrome://navigator/content/navigator.js"></script>
+<script language="javascript" src="nsContextMenu.js"></script>
+<script language="javascript" src="tooltip.js"></script>
+<script language="javascript" src="navigatorDD.js"></script>
 
 <commands id="commands">
 	<commandset id="globalEditMenuItems"/>
@@ -69,13 +72,17 @@ Contributor(s): ______________________________________. -->
   
 
 <!-- This needs to go into a xul fragment, but since those don't work now, this stays here !-->
-<popupset id="aTooltipSet" />
+<popupset>
+  <popup id="aTooltip" oncreate="return FillInTooltip(document.tooltipNode);"> 
+    <text id="replaceMe" crop="right"/>
+  </popup>
+</popupset>
 
 <!-- Context menu -->
-<html:script language="javascript">
+<script language="javascript">
     // Global variable that holds the nsContextMenu instance.
     var contextMenu = null;
-</html:script>
+</script>
 <popupset>
     <!-- This is the context menu for the content-area of the navigator
          window.  It contains each and every possible menu choice.  The
@@ -201,40 +208,67 @@ Contributor(s): ______________________________________. -->
     </popup>
 </popupset>
 
-<html:script language="javascript">
+<script language="javascript">
   var gBookmarkPopup = null;
-</html:script>
+</script>
 
-<!-- Menu -->
-<menubar id="main-menubar"/>
-<!-- Toolbox -->
-<toolbox id="main-toolbox">
+  <toolbox>
+    <!-- Menu -->
+    <menubar id="main-menubar"/>
   
-  <toolbar id="PersonalToolbar" class="chromeclass-toolbar" persist="collapsed" dragdroparea="innermostBox"
-    ondraggesture="return BeginDragPersonalToolbar(event);"
-    ondragdrop="return DropPersonalToolbar(event);"
-    ondragover="return DragOverPersonalToolbar(event);">
+    <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar" persist="collapsed">
+      <box id="nav-bar-inner" autostretch="never" flex="1">
+        <button class="button-toolbar-1 top" id="back-button" crop="right" observes="canGoBack"/>  
+    	  <button class="button-toolbar-1 top" id="forward-button" crop="right" observes="canGoForward"/>
+    <!--
+          <menubutton class="large-toolbar left" id="back-button" crop="right" orient="vertical" observes="canGoBack" oncommand="gotoHistoryIndex(event);">  
+    	  <menupopup oncreate="BrowserBackMenu(event);">
+    	  </menupopup>
+    	  </menubutton>
+          <menubutton class="large-toolbar left" id="forward-button" crop="right" orient="vertical" observes="canGoForward" oncommand="gotoHistoryIndex(event);">
+    	  <menupopup oncreate="BrowserForwardMenu(event);">
+    	  </menupopup>
+    	  </menubutton>
+    -->	  
+        <button class="button-toolbar-1 top" id="reload-button" crop="right" observes="canReload" />
+        <button class="button-toolbar-1 top" id="stop-button" crop="right" observes="canStop" onclick="BrowserStop()"/>
+    
+        <box class="box-toolbar-group" flex="1">
+          <menubutton class="menubutton-icon button-toolbar-3" id="sessionhist-popup">
+    			  <menupopup class="button-toolbar-3">
+    			    <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&quoteKeyword.label;" oncommand="setKeyword(0)"/>
+    			    <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&localKeyword.label;" oncommand="setKeyword(1)"/>
+    			    <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&shopKeyword.label;" oncommand="setKeyword(2)"/>
+    			    <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&careerKeyword.label;" oncommand="setKeyword(3)"/>
+    			    <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&webmailKeyword.label;" oncommand="setKeyword(4)"/>
+    			    <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&listKeywords.label;" oncommand="setKeyword(5)"/>		 
+    			  </menupopup>
+    			</menubutton> 
+          <box autostretch="never" valign="middle" flex="1">
+      			<image id="page-proxy-button" ondraggesture="DragProxyIcon(event);"/> 
+            <textfield class="plain chromeclass-location" id="urlbar" onkeypress="if( event.which == 13 ) BrowserLoadURL();" flex="1"/>
+            <button class="button-toolbar-3" id="search-button" value="&searchButton.label;" oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" /> 
+            <button class="button-toolbar-3" id="go-button" value="&goButton.label;" oncommand="BrowserLoadURL();" /> 
+          </box>
+        </box>
+    
+      </box>
+  		<button class="plain" id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"/>
+    </toolbar>
+  
+  
+    <toolbar id="PersonalToolbar" class="chromeclass-directories" persist="collapsed" dragdroparea="innermostBox"
+      ondraggesture="return BeginDragPersonalToolbar(event);"
+      ondragdrop="return DropPersonalToolbar(event);"
+      ondragover="return DragOverPersonalToolbar(event);">
 
-    <!-- button area of personal toolbar -->
-    <box align="horizontal" flex="1">
-
-      <!--
-      // I added the container=true on this button as a temp hack until
-      // we can get this button into rdf. We can't allow drags on this
-      // container so we have to be able to identify it (bug 19588).
-      //     - pinkerton
-      -->
-      <menu id="PersonalMenu" datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
-            ref="NC:BookmarksRoot"
-            oncommand="OpenBookmarkURL(event.target, document.getElementById('PersonalMenu').database)">
-        <titledbutton align="right" class="bookmarkFolder toolbar-flat" container="true"
-          value="&bookmarksButton.label;" crop="right"/>
+      <menubutton class="button-toolbar bookmarkfolder" id="PersonalMenu" datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex" 
+        ref="NC:BookmarksRoot" container="true" value="&bookmarksButton.label;"
+        oncommand="OpenBookmarkURL(event.target, document.getElementById('PersonalMenu').database)">
         <template>
-          <!-- Recursive rules for nested folders -->
           <rule iscontainer="true">
             <menupopup>
-              <menu uri="rdf:*"
-                value="rdf:http://home.netscape.com/NC-rdf#Name" >
+              <menu class="menu-iconic bookmarkitem" uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name" >
                 <menupopup/>
               </menu>
             </menupopup>
@@ -246,215 +280,75 @@ Contributor(s): ______________________________________. -->
           </rule>
           <rule>
             <menupopup>
-              <menuitem uri="rdf:*" 
-                value="rdf:http://home.netscape.com/NC-rdf#Name" />
+              <menuitem class="menuitem-iconic bookmarkitem" uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name" />
             </menupopup>
           </rule>
         </template>
-
-        <!-- We need a 'dummy' menupopup here that the template
-             builder can hang stuff off of. Failure to add this makes
-             it s.t. you need to triple-click (!) to get the bookmarks
-             menu to drop down. -->
+  
         <menupopup/>
-        <spring class="personaltoolbarspacer" flex="1"/>
-      </menu>
+      </menubutton>
 
-      <box align="horizontal" 
-        flex="1"
-        style="min-width: 1px; overflow: hidden"
-        datasources="rdf:bookmarks"
-        ref="NC:PersonalToolbarFolder" id="innermostBox">
-
-		    <!-- This template builds content from the bookmarks datasource -->
-		    <template>
-		      <!-- Rules for content hanging _directly_ off the toolbar -->
-		      <rule parent="box" iscontainer="true">
-		        <menu uri="..." class="standard">
-		          <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name"
-		                        align="right" class="bookmarkFolder toolbar-flat"/>
-		          <menupopup/>
-		        </menu>
-				<spring uri="rdf:*" class="personaltoolbarspacer" flex="0"/>
-		      </rule>
-		      <rule parent="box">
-		        <titledbutton class="bookmarkbutton toolbar-flat" uri="rdf:*" align="left" 
-		          value="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"
-		          oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)"/>
-		        <spring uri="rdf:*" class="personaltoolbarspacer" flex="0"/>
-		      </rule>
-
-		      <!-- Recursive rules for nested folders -->
-		      <rule iscontainer="true">
-		        <menupopup>
-		          <menu uri="rdf:*" 
-		            value="rdf:http://home.netscape.com/NC-rdf#Name" >
-		            <menupopup/>
-		          </menu>
-		        </menupopup>
-		      </rule>
-		      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-		        <menupopup>
-		          <menuseparator uri="rdf:*" />
-		        </menupopup>
-		      </rule>
-		      <rule>
-		        <menupopup>
-		          <menuitem uri="..." 
-		            value="rdf:http://home.netscape.com/NC-rdf#Name"
-		            oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)"/>
-		        </menupopup>
-		      </rule>
-		    </template>
-		     
-		    <titledbutton id="home-button" align="left"
-		      value="&homeButton.label;"
-			    class="bookmarkbutton toolbar-flat"  
-		      onclick="BrowserHome(); event.preventBubble();"/>
-		    <spring class="personaltoolbarspacer" flex="0"/>
-	    
-	    </box>
-	    <spring flex="1"/>
-    </box>
-	
-	<!-- throbber area of personal toolbar -->
-	<box id="personaltoolbar-endcap" align="vertical" width="68px"/>
-  </toolbar>
-
-  <toolbar id="nav-bar" class="decorated main-bar chromeclass-toolbar" persist="collapsed">
-	<box align="horizontal" flex="100%" style="overflow: hidden">
-
-	<button class="large-toolbar left" id="back-button" crop="right" orient="vertical" observes="canGoBack"/>  
-	<button class="large-toolbar left" id="forward-button" crop="right" orient="vertical" observes="canGoForward"/>
-<!--
-      <menubutton class="large-toolbar left" id="back-button" crop="right" orient="vertical" observes="canGoBack" oncommand="gotoHistoryIndex(event);">  
-	  <menupopup oncreate="BrowserBackMenu(event);">
-	  </menupopup>
-	  </menubutton>
-      <menubutton class="large-toolbar left" id="forward-button" crop="right" orient="vertical" observes="canGoForward" oncommand="gotoHistoryIndex(event);">
-	  <menupopup oncreate="BrowserForwardMenu(event);">
-	  </menupopup>
-	  </menubutton>
--->	  
-      <button class="large-toolbar left" id="reload-button" crop="right" orient="vertical" observes="canReload" />
-      <button class="large-toolbar left" id="stop-button" crop="right" orient="vertical" onclick="BrowserStop()"/>
-
-          <!-- changed : the url field is now grouped with search -->
-          <box align="vertical" flex="100%">
-            <spring style="height: 4px;"/>
-            <!-- used for vertically positioning the url field contraption w/i the nav toolbar   -->
-              
-            <box id="url-bar-box" align="horizontal" style="width: 100%;"> 
-  
-             <!-- this is the little page proxy icon --> 
-             <!-- display should be turned off right now until functionality is implemented --> 
-             <!-- This is the smart search pop-up -->
-			 <!-- <titledbutton id="action-popup" align="right"/> -->
-
-			 <!-- this is the urlbar keyword/session history popup -->              
-             <menu>
-			 <titledbutton id="sessionhist-popup"/>
-			 <menupopup>
-			 <menuitem value="&quoteKeyword.label;" oncommand="setKeyword(0)"/>
-			 <menuitem value="&localKeyword.label;" oncommand="setKeyword(1)"/>
-			 <menuitem value="&shopKeyword.label;" oncommand="setKeyword(2)"/>
-			 <menuitem value="&careerKeyword.label;" oncommand="setKeyword(3)"/>
-			 <menuitem value="&webmailKeyword.label;" oncommand="setKeyword(4)"/>
-			 <menuitem value="&listKeywords.label;" oncommand="setKeyword(5)"/>		 
-			 </menupopup>
-			 </menu> 
-
-			 <titledbutton id="page-proxy-button" ondraggesture="DragProxyIcon(event);"/> 
-
-             <!-- this is the urlbar --> 
-             <html:input id="urlbar" type="text" class="chromeclass-location" 
-                onkeypress="if (event.which == 13) { BrowserLoadURL(); }" 
-                flex = "100%" /> 
-  
-             <!-- this is the urlbar session history popup --> 
-             <!-- display should be turned off right now until functionality is implemented --> 
-             <!-- <titledbutton id="sessionhist-popup"/> -->
-  
-             <!-- end url bar box -->
-            </box>
-            
-            <!-- used for vertically positioning the url field contraption w/i the nav toolbar   -->
-          </box>
-		<!--  this is the search/go button -->
-         <box align="vertical" flex="1%">
-           <spring style="height: 4px;"/>
-			<box id="searchbutton" align="horizontal" style="width: 100%;"> 
-			<titledbutton id="search-button" class="toolbar-non-iconic" value="&searchButton.label;"
-                  onclick="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
-                /> 
-            </box>
-		 </box>
-      <!-- FIX ME - remove this
-      <box align="vertical" flex="100%">
-        <spring flex="1"/>
-        <html:input id="urlbar" type="text" class="chromeclass-location"
-                    onkeyup="if (event.which == 13) { BrowserLoadURL(); }"/>   
-        <spring flex="1"/>
-      </box>
-
-      <titledbutton id="search-button" crop="right" flex="1" align="top"
-                    value="&searchButton.label;"
-                    onclick="OpenSearch('internet', false, document.getElementById('urlbar').value);"/>
-
-      <titledbutton id="print-button" crop="right" flex="1" align="top" 
-                    value="&printButton.label;" onclick="BrowserPrint()">
-        <observes element="canPrint" attribute="disabled"/>
-      </titledbutton>
-      -->
-    </box>
-
-	<!-- throbber area of navigation toolbar -->
-	<box id="toolbar_throbber_box" align="vertical">
-		<titledbutton id="Throbber" onclick='goClickThrobber("browser.throbber.url")'/>
-	</box>
-  </toolbar>
-
-</toolbox>
-
-<!-- sidebar/toolbar/content/status -->
-<box align="horizontal" flex="100%">
-  <!-- toolbar/content/status -->
- 
-  <box id="sidebar-box" class="chromeclass-extrachrome"/>
-  <splitter id="sidebar-splitter" class="chromeclass-extrachrome" />
-  
-  <box id="appcontent" align="vertical" flex="100%"
-    onclick="if (event.button==2) browserHandleMiddleClick(event);"
-    ondragover="return DragOverContentArea(event);"
-    ondragdrop="return DropOnContentArea(event);"
-    ondraggesture="DragContentLink(event);">
-
-    <!-- type attribute is used by frame construction to locate iframes
-         intended to hold (html) content -->
-    <!-- id's use is a mystery -->
-    <box context="context" flex="100%">
-    <browser type="content-primary" id="content" src="about:blank" flex="100%"/>
-    </box>
-      <box id="status-bar" class="chromeclass-status">
-        <box id="state-box" align="horizontal" flex="100%" style="min-width: 1px">
-          <box align="vertical" style="width:100px">
-          <spring flex="100%"/>
-          <progressmeter id="statusbar-icon" mode="normal"
-            align="horizontal" value="0" onclick="dumpProgress()"/>
-          <spring flex="100%"/>
-        </box>
-		<spring style="width: 1em"/>
-        <titledbutton id="statusText" class="status-bar" align="left" flex="100%" 
-          value="&statusText.label;"  style="min-width: 1px">
-        </titledbutton>
+      <box id="innermostBox" flex="1" style="min-width: 0px;" datasources="rdf:bookmarks" ref="NC:PersonalToolbarFolder">
     
-        <titledbutton class="status-bar" align="left" value="&buildId.label;"/>
-        <titledbutton id="lock-button" class="borderless" align="left"/>    
-      
+        <template>
+          <rule parent="box" iscontainer="true">
+            <menubutton class="button-toolbar bookmarkfolder" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menupopup/>
+            </menubutton>
+          </rule>
+
+          <rule parent="box">
+            <button class="button-toolbar bookmarkitem" uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name" 
+                    oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database);"/>
+          </rule>
+        
+          <rule iscontainer="true">
+            <menupopup>
+              <menu class="menu-iconic bookmarkfolder" uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name">
+                <menupopup/>
+              </menu>
+            </menupopup>
+          </rule>
+          <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+            <menupopup>
+              <menuseparator uri="rdf:*" />
+            </menupopup>
+          </rule>
+          <rule>
+            <menupopup>
+              <menuitem class="menuitem-iconic bookmarkitem" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"
+                        oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)"/>
+            </menupopup>
+          </rule>
+        </template>
+       
+        <button class="button-toolbar" id="homebutton" value="&homeButton.label;" oncommand="BrowserHome(); event.preventBubble();"/>
+    
       </box>
-    </box><!-- status -->
-  </box><!-- toolbar/content/status -->
-</box><!-- sidebar and tools/content/status -->
-<toolbar id="taskbar" class="chromeclass-extrachrome" />
+    </toolbar>
+
+  </toolbox>
+    
+  <box flex="1">
+    <box id="sidebar-box" class="chromeclass-extrachrome"/>
+    <splitter id="sidebar-splitter" class="chromeclass-extrachrome" />
+  
+    <box id="appcontent" align="vertical" flex="100%"
+      onclick="if (event.button==2) browserHandleMiddleClick(event);"
+      ondragover="return DragOverContentArea(event);"
+      ondragdrop="return DropOnContentArea(event);"
+      ondraggesture="DragContentLink(event);">
+
+      <!-- type attribute is used by frame construction to locate iframes
+           intended to hold (html) content -->
+      <browser context="context" type="content-primary" id="content" src="about:blank" flex="100%"/>
+  
+      <box id="status-bar" class="chromeclass-status"/>
+
+    </box>
+
+  </box>
+
+  <toolbar id="taskbar" class="chromeclass-extrachrome" />
 
 </window>
