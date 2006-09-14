@@ -264,10 +264,6 @@
 <!ENTITY locationBar.tooltip          "Enter search term, keyword, or web address">
 <!ENTITY internetKeyword.tooltip      "Return to previously viewed page or choose keyword">
 
-<!ENTITY menuBar.tooltip              "Menu bar">
-<!ENTITY personalBar.tooltip          "Personal toolbar">
-<!ENTITY navigationBar.tooltip        "Navigation toolbar">
-
 <!-- Toolbar items --> 
 <!ENTITY  bookmarksButton.label       "Bookmarks">
 <!ENTITY  bookmarksButton.tooltip     "Bookmarks list">
