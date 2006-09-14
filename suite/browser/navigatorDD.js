@@ -278,6 +278,12 @@ var personalToolbarDNDObserver = {
   {
     if (aDragSession.canDrop)
       this.onDragSetFeedBack(aEvent);
+    if (this.determineDropPosition(aEvent) != this.mCurrentDropPosition) {
+      // emulating onDragExit and onDragEnter events since the drop region
+      // has changed on the target.
+      this.onDragExit(aEvent, aDragSession);
+      this.onDragEnter(aEvent, aDragSession);
+    }
     if (this.isPlatformNotSupported)
       return;
     if (this.isTimerSupported)
@@ -296,6 +302,7 @@ var personalToolbarDNDObserver = {
       this.onDragEnterSetTimer(target, aDragSession);
     }
     this.mCurrentDragOverTarget = target;
+    this.mCurrentDropPosition = this.determineDropPosition(aEvent);
     return;
   },
 
@@ -307,6 +314,7 @@ var personalToolbarDNDObserver = {
     this.onDragRemoveFeedBack(target);
     this.onDragExitSetTimer(target, aDragSession);
     this.mCurrentDragOverTarget = null;
+    this.mCurrentDropPosition = null;
     return;
   },
 
@@ -356,6 +364,8 @@ var personalToolbarDNDObserver = {
         titleFromHistory = titleFromHistory.QueryInterface(Components.interfaces.nsIRDFLiteral);
       if (titleFromHistory)
         linkTitle = titleFromHistory.Value;
+      else
+        linkTitle = xferData[0];
     }
 
     var dropIndex;
@@ -420,6 +430,7 @@ var personalToolbarDNDObserver = {
   isTimerSupported: navigator.platform.indexOf("Win") == -1,
 
   mCurrentDragOverTarget: null,
+  mCurrentDropPosition: null,
   loadTimer  : null,
   closeTimer : null,
   loadTarget : null,
@@ -435,7 +446,7 @@ var personalToolbarDNDObserver = {
       }
       else if (this.isContainer(children[i]) && children[i].getAttribute("open") == "true") {
         this.onDragCloseMenu(children[i].firstChild);
-        if (children[i] != this.mCurrentDragOverTarget)
+        if (children[i] != this.mCurrentDragOverTarget || this.mCurrentDropPosition != this.DROP_ON)
           children[i].firstChild.hidePopup();
       }
     } 
@@ -460,7 +471,9 @@ var personalToolbarDNDObserver = {
     if (!this.mCurrentDragOverTarget)
       return;
     // Load the current menu
-    if (this.isContainer(aTarget) && aTarget.getAttribute("group") != "true")
+    if (this.mCurrentDropPosition == this.DROP_ON && 
+        this.isContainer(aTarget)                 && 
+        aTarget.getAttribute("group") != "true")
       aTarget.firstChild.showPopup(aTarget, -1, -1, "menupopup");
   },
 
@@ -529,23 +542,19 @@ var personalToolbarDNDObserver = {
     switch (target.localName) {
       case "toolbarseparator":
       case "toolbarbutton":
-        if (this.isContainer(target)) {
-          target.setAttribute("dragover-left"  , "true");
-          target.setAttribute("dragover-right" , "true");
-          target.setAttribute("dragover-top"   , "true");
-          target.setAttribute("dragover-bottom", "true");
-        }
-        else {
-          switch (dropPosition) {
-            case this.DROP_BEFORE: 
-              target.removeAttribute("dragover-right");
-              target.setAttribute("dragover-left", "true");
-              break;
-            case this.DROP_AFTER:
-              target.removeAttribute("dragover-left");
-              target.setAttribute("dragover-right", "true");
-              break;
-          }
+        switch (dropPosition) {
+          case this.DROP_BEFORE: 
+            target.setAttribute("dragover-left", "true");
+            break;
+          case this.DROP_AFTER:
+            target.setAttribute("dragover-right", "true");
+            break;
+          case this.DROP_ON:
+            target.setAttribute("dragover-top"   , "true");
+            target.setAttribute("dragover-bottom", "true");
+            target.setAttribute("dragover-left"  , "true");
+            target.setAttribute("dragover-right" , "true");
+            break;
         }
         break;
       case "menuseparator": 
@@ -553,12 +562,12 @@ var personalToolbarDNDObserver = {
       case "menuitem":
         switch (dropPosition) {
           case this.DROP_BEFORE: 
-            target.removeAttribute("dragover-bottom");
             target.setAttribute("dragover-top", "true");
             break;
           case this.DROP_AFTER:
-            target.removeAttribute("dragover-top");
             target.setAttribute("dragover-bottom", "true");
+            break;
+          case this.DROP_ON:
             break;
         }
         break;
@@ -573,8 +582,8 @@ var personalToolbarDNDObserver = {
 
   onDragRemoveFeedBack: function (aTarget)
   {
-    if (aTarget.localName == "hbox") {
-      aTarget.lastChild.removeAttribute("dragover-right");
+    if (aTarget.localName == "toolbar") {
+      aTarget.lastChild.lastChild.removeAttribute("dragover-right");
     } else {
       aTarget.removeAttribute("dragover-left");
       aTarget.removeAttribute("dragover-right");
@@ -599,39 +608,51 @@ var personalToolbarDNDObserver = {
   // Methods that need to be moved into BookmarksUtils //
   ///////////////////////////////////////////////////////
 
-  //XXXPCH this function returns wrong vertical positions
   //XXX skin authors could break us, we'll cross that bridge when they turn us 90degrees
   determineDropPosition: function (aEvent)
   {
-    var overButtonBoxObject = aEvent.target.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
-    // most things only drop on the left or right
-    var regionCount = 2;
+    if (aEvent.target.id == "bookmarks-button")
+      return this.DROP_ON;
 
-    // you can drop ONTO containers, so there is a "middle" region
-    if (this.isContainer(aEvent.target))
-      return this.DROP_ON;
-      
-    var measure;
-    var coordValue;
-    var clientCoordValue;
-    if (aEvent.target.localName == "menuitem") {
-      measure = overButtonBoxObject.height/regionCount;
-      coordValue = overButtonBoxObject.y;
-      clientCoordValue = aEvent.clientY;
+    var overButtonBoxObject = aEvent.target.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
+    var overParentBoxObject = aEvent.target.parentNode.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
+
+    var size, border;
+    var coordValue, clientCoordValue;
+    switch (aEvent.target.localName) {
+      case "toolbarseparator":
+      case "toolbarbutton":
+        size = overButtonBoxObject.width;
+        coordValue = overButtonBoxObject.x;
+        clientCoordValue = aEvent.clientX;
+        break;
+      case "menuseparator": 
+      case "menu":
+      case "menuitem":
+        size = overButtonBoxObject.height;
+        coordValue = overButtonBoxObject.y-overParentBoxObject.y;
+        clientCoordValue = aEvent.clientY;
+        break;
+      default: return this.DROP_ON;
     }
-    else if (aEvent.target.localName == "toolbarbutton") {
-      measure = overButtonBoxObject.width/regionCount;
-      coordValue = overButtonBoxObject.x;
-      clientCoordValue = aEvent.clientX;
-    }
-    else
-      return this.DROP_ON;
     
+    if (this.isContainer(aEvent.target))
+      if (aEvent.target.localName == "toolbarbutton") {
+        // the DROP_BEFORE area excludes the label
+        var iconNode = document.getAnonymousElementByAttribute(aEvent.target, "class", "toolbarbutton-icon");
+        border = parseInt(document.defaultView.getComputedStyle(aEvent.target,"").getPropertyValue("padding-left")) +
+                 parseInt(document.defaultView.getComputedStyle(iconNode     ,"").getPropertyValue("width"));
+        border = Math.min(size/5,Math.max(border,4));
+      } else
+        border = size/5;
+    else
+      border = size/2;
+      
     // in the first region?
-    if (clientCoordValue < (coordValue + measure))
+    if (clientCoordValue-coordValue < border)
       return this.DROP_BEFORE;
     // in the last region?
-    if (clientCoordValue >= (coordValue + (regionCount - 1)*measure))
+    if (clientCoordValue-coordValue >= size-border)
       return this.DROP_AFTER;
     // must be in the middle somewhere
     return this.DROP_ON;
