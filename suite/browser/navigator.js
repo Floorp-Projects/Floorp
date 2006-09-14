@@ -675,7 +675,7 @@ function getSearchUrl(attr)
 }
 
 
-function OpenSearch(tabName, forceDialogFlag, searchStr)
+function OpenSearch(tabName, forceDialogFlag, searchStr, newWindowFlag)
 {
   //This function needs to be split up someday.
 
@@ -754,7 +754,10 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
           } catch (ex) {
           }
 
-          loadURI(defaultSearchURL);
+          if (!newWindowFlag)
+            loadURI(defaultSearchURL);
+          else
+            window.open(defaultSearchURL, "_blank");
         }
       }
     }
