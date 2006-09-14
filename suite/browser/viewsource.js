@@ -46,6 +46,7 @@ function viewSource(url)
   var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
   var viewSrcUrl = "view-source:" + url;
   getBrowser().webNavigation.loadURI(viewSrcUrl, loadFlags);
+  window._content.focus();
   return true;
 }
 
