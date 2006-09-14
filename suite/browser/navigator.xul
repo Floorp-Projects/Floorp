@@ -70,7 +70,6 @@ Contributor(s): ______________________________________. -->
 
 <!-- UI services -->
 <script language="javascript" src="chrome://navigator/content/sessionHistoryUI.js"></script>
-<script language="javascript" src="chrome://navigator/content/keywords.js"></script>
 
 <commands id="commands">
 	<commandset id="globalEditMenuItems"/>
