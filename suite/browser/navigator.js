@@ -1212,9 +1212,9 @@ function BrowserEditBookmarks()
       zoomAnchor = zoomOther;
       zoomSteps = 0;
       browserSetTextZoom(zoomOther);
-      updateTextZoomMenu();
       updateTextZoomOtherMenu();
     }
+    updateTextZoomMenu();
   }
 
   function browserSetTextZoom(aZoomFactor) {
