@@ -186,6 +186,7 @@
                  defaultSearchEngine="true" tabScrolling="true"
                  showCommentColumn="true"
                  inputtooltiptext="&locationBar.tooltip;"
+                 newlines="stripsurroundingwhitespace"
                  oninput="gBrowser.userTypedValue = this.value;"
                  ontextcommand="return handleURLBarCommand(eventParam, domEvent);"
                  ontextrevert="return handleURLBarRevert();"
