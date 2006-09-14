@@ -50,8 +50,8 @@ Contributor(s): ______________________________________. -->
         titlemodifier="&mainWindow.titlemodifier;" 
         titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
         windowtype="navigator:browser"
-        width="640" height="480"
-        screenX="10" screenY="10" fullScreen="false"
+        width="610" height="450"
+        screenX="4" screenY="4" fullScreen="false"
         persist="screenX screenY width height sizemode fullScreen"> 
 
   <!-- Generic Utility -->
