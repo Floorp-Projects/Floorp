@@ -2,4 +2,6 @@
 <!ENTITY goBackCmd.keyCode "VK_LEFT">
 <!ENTITY goForwardCmd.keyCode "VK_RIGHT">
 
+<!ENTITY addCurPageCmd.commandkey "d">
+
 
