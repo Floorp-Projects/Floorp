@@ -164,8 +164,7 @@ Contributor(s): ______________________________________. -->
                      tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
                      ontextcommand="return handleURLBarCommand(userAction);"
                      ontextrevert="return handleURLBarRevert();"
-                     onmouseup="URLBarMouseupHandler(event);"
-                     onkeyup="URLBarKeyupHandler(event);"
+                     onfocus="URLBarFocusHandler(event);"
                      onblur="URLBarBlurHandler(event);">
               <image id="page-proxy-button" allowevents="true"
                      ondraggesture="PageProxyDragGesture(event);"/>
