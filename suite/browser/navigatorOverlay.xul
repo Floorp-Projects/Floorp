@@ -22,7 +22,12 @@ Contributor(s): ______________________________________. -->
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://navigator/locale/navigator.dtd" >
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" >
+%navigatorDTD;
+]>
 
 <overlay id="navigatorOverlay"
          xmlns:html="http://www.w3.org/TR/REC-html40"
