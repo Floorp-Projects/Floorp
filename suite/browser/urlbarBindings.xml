@@ -307,7 +307,15 @@
 
     <handlers>
       <handler event="popupshowing"><![CDATA[
-        if (!this.mEnginesReady && this.defaultSearchEngine)
+        // sync up with prefs about showing search in the URL bar if
+        // the URL bar hasn't finished initializing the default engine info
+        //   -or-
+        // the search sidebar tab was displayed already triggering a change
+        // notification to the browser.search pref branch listener here which 
+        // calls updateEngines but doesn't cause the ``Search for ...'' 
+        // display string to be updated
+        if ( (!this.mEnginesReady && this.defaultSearchEngine) ||
+             !("mShowSearch" in this) ) 
           this.updatePref("browser.urlbar.showSearch");
 
         if (this.mShowSearch) {
