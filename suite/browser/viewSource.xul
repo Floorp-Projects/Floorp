@@ -58,7 +58,6 @@
   <script type="application/x-javascript" src="chrome://navigator/content/navigator.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
 
   <commandset id="commands">    
     <commandset id="globalEditMenuItems"/>
