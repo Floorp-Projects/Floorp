@@ -323,7 +323,10 @@ function onFormSelect()
       if(elem.nodeName.toLowerCase() == "button")
         fieldView.addRow([i+1, "", elem.name, elem.type, getValueText(elem)]);
       else
-        fieldView.addRow([i+1, "", elem.name, elem.type, elem.value]);
+      {
+        var val = (elem.type == "password") ? theBundle.getString("formPassword") : elem.value;
+        fieldView.addRow([i+1, "", elem.name, elem.type, val]);
+      }
     }
 
     var labels = form.getElementsByTagName("label");
