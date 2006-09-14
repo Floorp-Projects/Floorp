@@ -513,7 +513,7 @@ function Startup()
 
     if (startPage)
       loadURI(startPage);
-
+     
     // Perform default browser checking.
     checkForDefaultBrowser();
   }
@@ -603,16 +603,25 @@ function BrowserStop()
   getWebNavigation().stop();
 }
 
-function BrowserReallyReload(event)
+function BrowserReload()
 {
-  // Default is no flags.
   var reloadFlags = nsIWebNavigation.LOAD_FLAGS_NONE;
-  // See if the event was a shift-click.
-  if (event && event.shiftKey) {
-    // Shift key means bypass proxy and cache.
-    reloadFlags = nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY | nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
+  try {
+    getWebNavigation().reload(reloadFlags);
   }
-  getWebNavigation().reload(reloadFlags);
+  catch(ex) {
+  }
+}
+
+function BrowserReloadSkipCache()
+{
+  // Bypass proxy and cache.
+  var reloadFlags = nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY | nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
+  try {
+    getWebNavigation().reload(reloadFlags);
+  }
+  catch(ex) {
+  }
 }
 
 function BrowserHome()
@@ -760,7 +769,7 @@ function RevealSearchPanel()
 function BrowserOpenWindow()
 {
   //opens a window where users can select a web location to open
-  openDialog("chrome://navigator/content/openLocation.xul", "_blank", "chrome,modal,titlebar", window);
+  openDialog("chrome://communicator/content/openLocation.xul", "_blank", "chrome,modal,titlebar", window);
 }
 
 /* Called from the openLocation dialog. This allows that dialog to instruct
@@ -890,10 +899,11 @@ function loadURI(uri)
 function BrowserLoadURL()
 {
   var url = gURLBar.value;
-  loadShortcutOrURI(url);
+  loadURI(getShortcutOrURI(url));
+  _content.focus();
 }
 
-function loadShortcutOrURI(url)
+function getShortcutOrURI(url)
 {
   // rjc: added support for URL shortcuts (3/30/1999)
   try {
@@ -923,11 +933,8 @@ function loadShortcutOrURI(url)
       url = shortcutURL;
 
   } catch (ex) {
-    // stifle any exceptions so we're sure to load the URL.
   }
-
-  loadURI(url);
-  _content.focus();
+  return url;
 }
 
 function readFromClipboard()
@@ -990,10 +997,6 @@ function BrowserPageInfo()
   window.openDialog("chrome://navigator/content/pageInfo.xul",
                     "_blank",
                     "chrome,dialog=no");
-}
-
-function BrowserReload()
-{
 }
 
 function hiddenWindowStartup()
