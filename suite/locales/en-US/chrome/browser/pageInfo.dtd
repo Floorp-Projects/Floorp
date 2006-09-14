@@ -13,10 +13,12 @@
 <!ENTITY  pageInfo.URL "URL:"> 
 <!ENTITY  pageInfo.lastModified "Last Modified:">
 
+<!ENTITY  pageInfo.formHeader "Forms on this page">
 <!ENTITY  pageInfo.formAction "Form Action">
 <!ENTITY  pageInfo.formMethod "Method">
 <!ENTITY  pageInfo.formName "Name">
 
+<!ENTITY  pageInfo.imageHeader "Images on this page">
 <!ENTITY  pageInfo.imageURL "Image URL">
 <!ENTITY  pageInfo.imageWidth "Width">
 <!ENTITY  pageInfo.imageHeight "Height">
