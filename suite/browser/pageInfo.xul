@@ -56,8 +56,18 @@
   <!-- keys are appended from the overlay -->
   <keyset id="keyset"/>
 
-  <box id="cont" orient="vertical" flex="1">
+  <box id="cont" orient="vertical" flex="1">  
+   <text class="header label" value="&pageInfo.description;"/>
+   <tabcontrol id="tabcontrol" flex="1">
+    <tabbox id="tabbox">
+      <tab id="generalTab" value="&pageInfo.generalTab;"/>
+      <tab id="formsTab" value="&pageInfo.formsTab;" hidden="true" />
+      <tab id="imagesTab" value="&pageInfo.imagesTab;" hidden="true" />
+      <!-- Others added by overlay -->
+    </tabbox>
+    <tabpanel id="tabpanel" flex="1">
 
+    <!-- General page information -->
     <box orient="vertical">
       <text class="header label" value="&pageInfo.description;"/>
       <box class="inset" orient="vertical" id="documentinfo">
@@ -84,6 +94,7 @@
       </box>
     </box>
 
+    <!-- Form information -->
     <box id="formTreeContainer" flex="1" orient="vertical" collapsed="true">
       <text class="header label" value="&pageInfo.formHeader;"/>
       <tree id="formTree" class="inset" flex="1">
@@ -104,9 +115,8 @@
         <treechildren id="formChildren" flex="1"/>
       </tree>
     </box>
- 
-    <splitter id="formImageSplitter" hidden="true"/>
-      
+
+    <!-- Image information -->
     <box id="imageTreeContainer" flex="1" orient="vertical" collapsed="true">
       <text class="header label" value="&pageInfo.imageHeader;"/>
       <tree id="imageTree" class="inset" onselect="onImageSelect()" flex="1">
@@ -136,5 +146,9 @@
         <iframe id="imageFrame" class="inset" src="about:blank" flex="1"/>
       </box>
     </box>
+
+    <!-- Others added by overlay -->
+    </tabpanel>
+   </tabcontrol>
   </box>
 </window>

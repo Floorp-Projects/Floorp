@@ -18,7 +18,11 @@
  * Rights Reserved.
  *
  * Contributor(s): smorrison@gte.com
+ *   Terry Hayes <thayes@netscape.com>
  */
+
+/* Overlays register init functions here */
+var onLoadRegistry = [ ];
 
 function onLoadPageInfo()
 {
@@ -32,6 +36,9 @@ function onLoadPageInfo()
   var hasForm = makeFormTree(page, formTreeHolder);
   if (hasForm)
   {
+    var formsTab = document.getElementById("formsTab");
+
+    formsTab.removeAttribute("hidden");
     formTreeHolder.removeAttribute("collapsed");
   }
 
@@ -39,14 +46,33 @@ function onLoadPageInfo()
   var hasImages = makeImageTree(page, imageTreeHolder);
   if (hasImages)
   {
+    var imagesTab = document.getElementById("imagesTab");
+
+    imagesTab.removeAttribute("hidden");
     imageTreeHolder.removeAttribute("collapsed");
   }
 
-  if (hasForm && hasImages)
+  /* Call registered overlay init functions */
+  for (x in onLoadRegistry)
   {
-    document.getElementById("formImageSplitter").removeAttribute("hidden");
+    onLoadRegistry[x]();
   }
 
+  /* Selected the requested tab, if the name is specified */
+  /*  if (window.arguments != null) { */
+  if ("arguments" in window) {
+    var tabName = window.arguments[0];
+
+    if (tabName)
+    {
+      var tabControl = document.getElementById("tabcontrol");
+      var tab = document.getElementById(tabName);
+
+      if (tabControl && tab) {
+        tabControl.selectedTab = tab;
+      }
+    }
+  }
 }
 
 function makeDocument(page, root)
