@@ -86,8 +86,11 @@
     <key id="key_paste"/>
     <key id="key_delete"/>
     <key id="key_selectAll"/>
-    <key id="key_find"              key="&findOnCmd.commandkey;" command="Browser:Find" modifiers="accel"/>
-    <key id="key_findAgain"         key="&findAgainCmd.commandkey;" command="Browser:FindAgain" modifiers="accel"/>
+
+    <!-- Search Menu -->  
+    <key id="key_find"           key="&findOnCmd.commandkey;" command="Browser:Find" modifiers="accel"/>
+    <key id="key_findAgain"      key="&findAgainCmd.commandkey;" command="Browser:FindAgain" modifiers="accel"/>
+
     <keyset id="viewZoomKeys"/>
   </keyset>
 
@@ -129,9 +132,6 @@
         <menuitem id="menu_delete"/>
         <menuseparator/>
         <menuitem id="menu_selectAll"/>
-        <menuseparator /> 
-        <menuitem id="menu_find" label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="Browser:Find"/>
-        <menuitem id="menu_findAgain" label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
       </menupopup>
     </menu>
      
@@ -143,6 +143,13 @@
         <menuseparator id="file_moduleSeparator"/>-->
         <menu id = "charsetMenu"/>
       </menupopup>
+    </menu>
+
+    <menu id="menuSearch" accesskey="&searchMenu.accesskey;" label="&searchMenu.label;">
+      <menupopup>
+        <menuitem label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="Browser:Find"/>
+        <menuitem label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
+      </menupopup>      
     </menu>
 
     <menu id="menu_Help"/>
