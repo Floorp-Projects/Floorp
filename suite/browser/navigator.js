@@ -1417,23 +1417,6 @@ function PageProxyDragGesture(aEvent)
     return false;
 }
 
-function UpdateNecessaryItems(eltIds)
-{
-  var webNav = getWebNavigation();
-  if (!webNav) return;
-  eltIds = eltIds.split(",");
-  var elt;
-  var isPostData = webNav.postData;
-  for (var i = 0; i < eltIds.length; ++i) {
-    elt = document.getElementById(eltIds[i]);
-    if (!elt) continue;
-    if (isPostData)
-      elt.setAttribute("disabled", "true");
-    else if (elt.getAttribute("disabled"))
-      elt.removeAttribute("disabled");
-  }
-}
-
 function updateComponentBarBroadcaster()
 { 
   var compBarBroadcaster = document.getElementById('cmd_viewcomponentbar');

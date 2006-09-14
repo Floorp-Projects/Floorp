@@ -164,7 +164,7 @@
   <!-- Menu -->
   <menubar id="main-menubar" class="chromeclass-menubar">
     <menu id="menu_File">
-      <menupopup id="menu_FilePopup" onpopupshowing="UpdateNecessaryItems('cmd_sendPage','Browser:EditPage');">
+      <menupopup id="menu_FilePopup">
         <menuitem label="&browserCmd.label;" accesskey="&browserCmd.accesskey;" key="key_newNavigator" command="cmd_newNavigator"/>
         <menu id="menu_New">
           <menupopup id="menu_NewPopup">
@@ -206,7 +206,7 @@
     </menu>
 
     <menu id="menu_View" accesskey="&viewMenu.accesskey;" label="&viewMenu.label;">
-      <menupopup id="menu_View_Popup" onpopupshowing="UpdateNecessaryItems('View:PageSource');">
+      <menupopup id="menu_View_Popup">
         <menu label="&toolbarsCmd.label;" accesskey="&toolbarsCmd.accesskey;" id="view_toolbars">
           <menupopup id="view_toolbars_popup" onpopupshowing="updateToolbarStates(this);"> 
             <menuitem label="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewnavbar"  />
@@ -306,7 +306,8 @@
         </rule>
         <rule iscontainer="true">
           <menupopup>
-            <menu class="menu-iconic bookmark-item" uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name">
+            <menu class="menu-iconic bookmark-item" uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name"
+                  type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
               <menupopup />
             </menu>
           </menupopup>
