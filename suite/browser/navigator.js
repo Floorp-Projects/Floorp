@@ -1314,7 +1314,8 @@ function stylesheetFillPopup(menuPopup)
         lastWithSameTitle = currentStyleSheets[currentStyleSheet.title];
 
       if (!lastWithSameTitle) {
-        var menuItem = itemNoOptStyles.cloneNode(false);
+        var menuItem = document.createElement("menuitem");
+        menuItem.setAttribute("type", "radio");
         menuItem.setAttribute("label", currentStyleSheet.title);
         menuItem.setAttribute("data", currentStyleSheet.title);
         menuItem.setAttribute("checked", !currentStyleSheet.disabled);
