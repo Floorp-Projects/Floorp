@@ -1204,7 +1204,7 @@ function RevealSearchPanel()
   function BrowserSendPage(pageUrl, pageTitle)
   {
     window.openDialog( "chrome://messengercompose/content/", "_blank", "chrome,all,dialog=no",
-    	"attachment=" + pageUrl + ",body=" + pageUrl + ",subject='" + pageTitle + "'");
+    	"attachment=" + escape(pageUrl) + ",body=" + pageUrl + ",subject='" + pageTitle + "'");
   }
 
   function BrowserViewSource()
