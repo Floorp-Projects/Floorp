@@ -61,11 +61,11 @@ try {
 // focused frame URL
 var gFocusedURL = null;
 
-/**                                                                             
+/**
 * We can avoid adding multiple load event listeners and save some time by adding
-* one listener that calls all real handlers.                                   
-*/                                                                             
-                                                                                 
+* one listener that calls all real handlers.
+*/
+
 function loadEventHandlers(event)
 {
   // Filter out events that are not about the document load we are interested in
@@ -77,8 +77,6 @@ function loadEventHandlers(event)
     postURLToNativeWidget();
   }
 }
-                                                                                 
-                                                                         
 
 /** 
  * Determine whether or not the content area is displaying a page with frames,
@@ -486,7 +484,7 @@ function Startup()
   }
 
   // set home button tooltip text
-  var homePage = getHomePage(); 
+  var homePage = getHomePage();
   if (homePage)
     document.getElementById("home-button").setAttribute("tooltiptext", homePage);
 
@@ -508,7 +506,7 @@ function Startup()
   // Perform default browser checking.
   checkForDefaultBrowser();
 }
-  
+
 function Shutdown()
 {
   try {
@@ -520,10 +518,10 @@ function Shutdown()
   }
 
   try {
-    // give history a change at flushing to disk also                           
+    // give history a chance at flushing to disk also
     var history = Components.classes["@mozilla.org/browser/global-history;1"]
                             .getService(Components.interfaces.nsIRDFRemoteDataSource);
-    history.Flush();   
+    history.Flush();
   } catch (ex) {
   }
 
@@ -532,23 +530,21 @@ function Shutdown()
     appCore.close();
 }
 
-  function Translate()
-  {
-	var service = "http://cgi.netscape.com/cgi-bin/translate.cgi?AlisUI=simple_frames/ns_home";
+function Translate()
+{
+  var service = "http://cgi.netscape.com/cgi-bin/translate.cgi?AlisUI=simple_frames/ns_home";
 
-	// if we're already viewing a translated page, then just get the
-	// last argument (which we expect to always be "AlisTargetURI")
-	var targetURI = window._content.location.href;
-	var targetURIIndex = targetURI.indexOf("AlisTargetURI=");
-	if (targetURIIndex >= 0)
-	{
-		targetURI = targetURI.substring(targetURIIndex + 14);
-	}
-	service += "&AlisTargetURI=" + escape(targetURI);
+  // if we're already viewing a translated page, then just get the
+  // last argument (which we expect to always be "AlisTargetURI")
+  var targetURI = getWebNavigation().currentURI.spec;
+  var targetURIIndex = targetURI.indexOf("AlisTargetURI=");
+  if (targetURIIndex >= 0)
+    targetURI = targetURI.substring(targetURIIndex + 14);
 
-	//window._content.location.href = service;
-	loadURI(service);
-  }
+  service += "&AlisTargetURI=" + escape(targetURI);
+
+  loadURI(service);
+}
 
 function gotoHistoryIndex(aEvent)
 {
@@ -582,7 +578,7 @@ function BrowserForwardMenu(event)
   FillHistoryMenu(event.target, "forward");
 }
 
-function BrowserStop() 
+function BrowserStop()
 {
   getWebNavigation().stop();
 }
@@ -610,42 +606,35 @@ function OpenBookmarkURL(event, datasources)
   // what is the meaning of the return value from this function?
   var node = event.target;
   if (node.getAttribute("container") == "true")
-    return null;
+    return;
 
   var url = node.getAttribute("id");
   try {
     // add support for IE favorites under Win32, and NetPositive URLs under BeOS
-    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
-    if (rdf)
-      rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
-    if (rdf && datasources) {
+    if (datasources) {
+      var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                          .getService(Components.interfaces.nsIRDFService);
       var src = rdf.GetResource(url, true);
       var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
       var target = datasources.GetTarget(src, prop, true);
-      if (target)
-        target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
-      if (target)
-        target = target.Value;
-      if (target)
-        url = target;
+      if (target) {
+        target = target.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+        if (target)
+          url = target;
+      }
     }
-  }
-  catch(ex) {
-    return null;
+  } catch (ex) {
+    return;
   }
   // Ignore "NC:" urls.
   if (url.substring(0, 3) == "NC:")
-    return null;
+    return;
 
   // Check if we have a browser window
-  if (!window._content) {
-    window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
-    return true;
-  }
-  else {
+  if (_content)
     loadURI(url);
-  }
-  return false;
+  else
+    openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
 }
 
 function OpenSearch(tabName, forceDialogFlag, searchStr)
@@ -758,26 +747,18 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 
 function setBrowserSearchMode(searchMode)
 {
-	// set search mode preference
-	try
-	{
-		pref.SetIntPref("browser.search.mode", searchMode);
-	}
-	catch(ex)
-	{
-	}
+  // set search mode preference
+  try {
+    pref.SetIntPref("browser.search.mode", searchMode);
+  } catch (ex) {
+  }
 
-	// update search menu
-	var simpleMenuItem = document.getElementById("simpleSearch");
-	if (simpleMenuItem)
-	{
-		simpleMenuItem.setAttribute("checked", (searchMode == 0) ? "true" : "false");
-	}
-	var advancedMenuItem = document.getElementById("advancedSearch");
-	if (advancedMenuItem)
-	{
-		advancedMenuItem.setAttribute("checked", (searchMode == 1) ? "true" : "false");
-	}
+  // update search menu
+  var simpleMenuItem = document.getElementById("simpleSearch");
+  simpleMenuItem.setAttribute("checked", (searchMode == 0) ? "true" : "false");
+
+  var advancedMenuItem = document.getElementById("advancedSearch");
+  advancedMenuItem.setAttribute("checked", (searchMode == 1) ? "true" : "false");
 }
 
 function RevealSearchPanel()
@@ -793,7 +774,7 @@ function RevealSearchPanel()
 }
 
 //Note: BrowserNewEditorWindow() was moved to globalOverlay.xul and renamed to NewEditorWindow()
-  
+
 function BrowserOpenWindow()
 {
   //opens a window where users can select a web location to open
@@ -808,7 +789,7 @@ function delayedOpenWindow(chrome,flags,url)
 {
   setTimeout("openDialog('"+chrome+"','_blank','"+flags+"','"+url+"')", 10);
 }
-  
+
   function createInstance( contractid, iidName ) {
       var iid = Components.interfaces[iidName];
       return Components.classes[ contractid ].createInstance( iid );
@@ -845,27 +826,23 @@ function BrowserOpenFileWindow()
   }
 }
 
-  function OpenFile(url) {
-    // Obsolete (called from C++ code that is no longer called).
-    debug("OpenFile called?\n");
-    openNewWindowWith( url );
-  }
+function BrowserAddBookmark(url, title)
+{
+  if (!title)
+    title = url;
 
-  function BrowserAddBookmark(url,title)
-  {
-    var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"].getService();
-    var wnd = document.commandDispatcher.focusedWindow;
-    if (window == wnd) wnd = window._content;
-    var docCharset = wnd.document.characterSet;
+  var focusedWindow = document.commandDispatcher.focusedWindow;
+  if (focusedWindow == window)
+    focusedWindow = _content;
 
-    bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
-    if ((title == null) || (title == ""))
-    {
-    	title = url;
-    }
-    bmks.AddBookmark(url, title, bmks.BOOKMARK_DEFAULT_TYPE, docCharset);
-    debug("BrowserAddBookmark: " + docCharset + "\n");
-  }
+  var docCharset = focusedWindow.document.characterSet;
+
+  var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
+                       .getService(Components.interfaces.nsIBookmarksService);
+
+  bmks.AddBookmark(url, title, bmks.BOOKMARK_DEFAULT_TYPE, docCharset);
+  debug("BrowserAddBookmark: " + docCharset + "\n");
+}
 
 // Set up a lame hack to avoid opening two bookmarks.
 // Could otherwise happen with two Ctrl-B's in a row.
@@ -876,7 +853,7 @@ function enableBookmarks()
 }
 
 function BrowserEditBookmarks()
-{ 
+{
   // Use a single sidebar bookmarks dialog
   var windowManager = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"]
                                 .getService(Components.interfaces.nsIWindowMediator);
@@ -899,19 +876,17 @@ function BrowserEditBookmarks()
   }
 }
 
-
 function BrowserPrintPreview()
 {
   // this is currently a do-nothing on appCore which is going to die
   // ???.printPreview();
 }
 
-  function BrowserPrint()
-  {
-    // Borrowing this method to show how to 
-    // dynamically change icons
-    appCore.print();
-  }
+function BrowserPrint()
+{
+  // using window.print() until printing becomes scriptable on docShell
+  _content.print();
+}
 
   function initViewMenu()
   {
@@ -1253,29 +1228,29 @@ function BrowserSetForcedDetector()
   appCore.SetForcedDetector();
 }
 
-  function BrowserClose()
-  {
-    // This code replicates stuff in Shutdown().  It is here because
-    // window.screenX and window.screenY have real values.  We need
-    // to fix this eventually but by replicating the code here, we
-    // provide a means of saving position (it just requires that the
-    // user close the window via File->Close (vs. close box).
+function BrowserClose()
+{
+  // This code replicates stuff in Shutdown().  It is here because
+  // window.screenX and window.screenY have real values.  We need
+  // to fix this eventually but by replicating the code here, we
+  // provide a means of saving position (it just requires that the
+  // user close the window via File->Close (vs. close box).
 
-    // Get the current window position/size.
-    var x = window.screenX;
-    var y = window.screenY;
-    var h = window.outerHeight;
-    var w = window.outerWidth;
+  // Get the current window position/size.
+  var x = window.screenX;
+  var y = window.screenY;
+  var h = window.outerHeight;
+  var w = window.outerWidth;
 
-    // Store these into the window attributes (for persistence).
-    var win = document.getElementById( "main-window" );
-    win.setAttribute( "x", x );
-    win.setAttribute( "y", y );
-    win.setAttribute( "height", h );
-    win.setAttribute( "width", w );
+  // Store these into the window attributes (for persistence).
+  var win = document.getElementById( "main-window" );
+  win.setAttribute( "x", x );
+  win.setAttribute( "y", y );
+  win.setAttribute( "height", h );
+  win.setAttribute( "width", w );
 
-  	 window.close();
-  }
+  window.close();
+}
 
   function BrowserFind() {
     appCore.find();      
@@ -1287,180 +1262,127 @@ function BrowserSetForcedDetector()
 
 function loadURI(uri)
 {
-  // _content.location.href = uri;
-  getWebNavigation().loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE);
+  try {
+    // _content.location.href = uri;
+    getWebNavigation().loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE);
+  } catch (e) {
+    debug("Didn't load uri: '"+uri+"'\n");
+    debug(e);
+  }
 }
 
-  function BrowserLoadURL()
-  {
-    // rjc: added support for URL shortcuts (3/30/1999)
-    try
-    {
-      var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
-                           .getService(Components.interfaces.nsIBookmarksService);
+function BrowserLoadURL()
+{
+  var url = gURLBar.value;
 
-      var text = document.getElementById('urlbar').value;
-      var shortcutURL = bmks.FindShortcut(text);
-      if ((shortcutURL == null) || (shortcutURL == ""))
-      {
-        // rjc: add support for string substitution with shortcuts (4/4/2000)
-        //      (see bug # 29871 for details)
-      	var aOffset = text.indexOf(" ");
-      	if (aOffset > 0)
-      	{
-      	  var cmd = text.substr(0, aOffset);
-      	  text = text.substr(aOffset+1);
-          shortcutURL = bmks.FindShortcut(cmd);
-          if ((shortcutURL) && (shortcutURL != "") && (text != ""))
-          {
-            aOffset = shortcutURL.indexOf("%s");
-            if (aOffset >= 0)
-            {
-              shortcutURL = shortcutURL.substr(0, aOffset) + text + shortcutURL.substr(aOffset+2);
-            }
-            else
-            {
-              shortcutURL = null;
-            }
-          }      	  
-      	}
-      }
-      if ((shortcutURL != null) && (shortcutURL != ""))
-      {
-        document.getElementById('urlbar').value = shortcutURL;
-      }
-    }
-    catch (ex)
-    {
-      // stifle any exceptions so we're sure to load the URL.
-    }
+  // rjc: added support for URL shortcuts (3/30/1999)
+  try {
+    var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
+                         .getService(Components.interfaces.nsIBookmarksService);
 
-    loadURI(gURLBar.value);
-    _content.focus();
-  }
-
-  function readFromClipboard()
-  {
-    try {
-      // Get clipboard.
-      var clipboard = Components
-                        .classes["@mozilla.org/widget/clipboard;1"]
-                          .getService ( Components.interfaces.nsIClipboard );
-      // Create tranferable that will transfer the text.
-      var trans = Components
-                     .classes["@mozilla.org/widget/transferable;1"]
-                       .createInstance( Components.interfaces.nsITransferable );
-      if ( !clipboard || !trans )
-        return null;
-
-      trans.addDataFlavor( "text/unicode" );
-      clipboard.getData(trans, clipboard.kSelectionClipboard);
-
-      var data = new Object();
-      var dataLen = new Object();
-      trans.getTransferData("text/unicode", data, dataLen);
-      var url = null;
-      if (data)
-      {
-        data = data.value.QueryInterface(Components.interfaces
-                                                      .nsISupportsWString);
-        url = data.data.substring(0, dataLen.value / 2);
-      }
-      return url;
-    } catch(ex) {
-      return null;
-    }
-  }
-    
-  function OpenMessenger()
-  {
-	window.open("chrome://messenger/content/messenger.xul", "_blank", "chrome,menubar,toolbar,resizable");
-  }
-
-  function OpenAddressbook()
-  {
-	window.open("chrome://messenger/content/addressbook/addressbook.xul", "_blank", "chrome,menubar,toolbar,resizable");
-  }
-
-  function BrowserSendPage(pageUrl, pageTitle)
-  {
-    window.openDialog( "chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
-                       "chrome,all,dialog=no", 
-                       "attachment='" + pageUrl + "',body='" + pageUrl +
-                       "',subject='" + pageTitle + "',bodyislink=true");
-  }
-
-  function BrowserViewSource()
-  {
-    var docCharset = null;
-
-    try 
-    {
-      var wnd = document.commandDispatcher.focusedWindow;
-      if (window == wnd) wnd = window._content;
-      docCharset = "charset="+ wnd.document.characterSet;
-      // debug("*** Current document charset: " + docCharset + "\n");
-    }
-
-    catch(ex) 
-    { 
-      docCharset = null;
-      debug("*** Failed to determine current document charset \n");
-    }
-
-
-    if (docCharset != null) 
-    {
-      try 
-      {
-        //now try to open a view-source window while inheriting the charset
-        window.openDialog( "chrome://navigator/content/viewSource.xul",
-						         "_blank",
-						         "scrollbars,resizable,chrome,dialog=no",
-					           window._content.location, docCharset);
-      }
-
-      catch(ex) 
-      { 
-        debug("*** Failed to open view-source window with preset charset menu.\n");
-      }
-
-    } else {
-        //default: forcing the view-source widow
-        debug("*** Failed to preset charset menu for the view-source window\n");
-        window.openDialog( "chrome://navigator/content/viewSource.xul",
-					         "_blank",
-					         "scrollbars,resizable,chrome,dialog=no",
-					         window._content.location);
-    }
-  }
-
-  function BrowserPageInfo()
-  {
-    var charsetArg = new String();
-    
-      try 
-        {
-          //let's try to extract the current charset menu setting
-          var DocCharset = appCore.GetDocumentCharset();
-          charsetArg = "charset="+DocCharset;
-          debug("*** Current document charset: " + DocCharset + "\n");
-          
-          //we should "inherit" the charset menu setting in a new window
-          window.openDialog( "chrome://navigator/content/pageInfo.xul",
-                             "_blank",
-                             "chrome,dialog=no",
-                             window._content.location, charsetArg);
+    var shortcutURL = bmks.FindShortcut(url);
+    if (!shortcutURL) {
+      // rjc: add support for string substitution with shortcuts (4/4/2000)
+      //      (see bug # 29871 for details)
+      var aOffset = url.indexOf(" ");
+      if (aOffset > 0) {
+        var cmd = url.substr(0, aOffset);
+        var text = url.substr(aOffset+1);
+        shortcutURL = bmks.FindShortcut(cmd);
+        if (shortcutURL && text) {
+          aOffset = shortcutURL.indexOf("%s");
+          if (aOffset >= 0)
+            shortcutURL = shortcutURL.substr(0, aOffset) + text + shortcutURL.substr(aOffset+2);
+          else
+            shortcutURL = null;
         }
-      
-      catch(ex) 
-        { 
-          debug("*** failed to read document charset \n");
-        }
-      
+      }
+    }
+
+    if (shortcutURL)
+      url = shortcutURL;
+
+  } catch (ex) {
+    // stifle any exceptions so we're sure to load the URL.
   }
 
-function doTests() {
+  loadURI(url);
+  _content.focus();
+}
+
+function readFromClipboard()
+{
+  var url;
+
+  try {
+    // Get clipboard.
+    var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
+                              .getService(Components.interfaces.nsIClipboard);
+
+    // Create tranferable that will transfer the text.
+    var trans = Components.classes["@mozilla.org/widget/transferable;1"]
+                          .createInstance(Components.interfaces.nsITransferable);
+
+    trans.addDataFlavor("text/unicode");
+    clipboard.getData(trans, clipboard.kSelectionClipboard);
+
+    var data = {};
+    var dataLen = {};
+    trans.getTransferData("text/unicode", data, dataLen);
+
+    if (data) {
+      data = data.value.QueryInterface(Components.interfaces.nsISupportsWString);
+      url = data.data.substring(0, dataLen.value / 2);
+    }
+  } catch (ex) {
+  }
+
+  return url;
+}
+
+function OpenMessenger()
+{
+  open("chrome://messenger/content/messenger.xul", "_blank", "chrome,menubar,toolbar,resizable");
+}
+
+function OpenAddressbook()
+{
+  open("chrome://messenger/content/addressbook/addressbook.xul", "_blank", "chrome,menubar,toolbar,resizable");
+}
+
+function BrowserSendPage(pageUrl, pageTitle)
+{
+  openDialog("chrome://messenger/content/messengercompose/messengercompose.xul",
+             "_blank",
+             "chrome,all,dialog=no",
+             "attachment='" + pageUrl + "',body='" + pageUrl + "',subject='" + pageTitle + "',bodyislink=true");
+}
+
+function BrowserViewSource()
+{
+  var focusedWindow = document.commandDispatcher.focusedWindow;
+  if (focusedWindow == window)
+    focusedWindow = _content;
+
+  var docCharset = "charset=" + focusedWindow.document.characterSet;
+  // debug("*** Current document charset: " + docCharset + "\n");
+
+  //now try to open a view-source window while inheriting the charset (if any)
+  openDialog("chrome://navigator/content/viewSource.xul",
+             "_blank",
+             "scrollbars,resizable,chrome,dialog=no",
+             _content.location, docCharset);
+}
+
+function BrowserPageInfo()
+{
+  window.openDialog("chrome://navigator/content/pageInfo.xul",
+                    "_blank",
+                    "chrome,dialog=no");
+}
+
+function doTests()
+{
 }
 
 function dumpProgress()
@@ -1477,98 +1399,100 @@ function BrowserReload()
 
 function hiddenWindowStartup()
 {
-	// Disable menus which are not appropriate
-	var disabledItems = ['cmd_close', 'Browser:SendPage', 'Browser:EditPage', 'Browser:PrintSetup', 'Browser:PrintPreview',
-						 'Browser:Print', 'canGoBack', 'canGoForward', 'Browser:Home', 'Browser:AddBookmark', 'cmd_undo', 
-						 'cmd_redo', 'cmd_cut', 'cmd_copy','cmd_paste', 'cmd_delete', 'cmd_selectAll'];
-	for ( id in disabledItems )
-	{
-         // debug("disabling "+disabledItems[id]+"\n");
-		 var broadcaster = document.getElementById( disabledItems[id]);
-		 if (broadcaster)
-           broadcaster.setAttribute("disabled","true");
-	}
+  // Disable menus which are not appropriate
+  var disabledItems = ['cmd_close', 'Browser:SendPage', 'Browser:EditPage', 'Browser:PrintSetup', 'Browser:PrintPreview',
+                       'Browser:Print', 'canGoBack', 'canGoForward', 'Browser:Home', 'Browser:AddBookmark', 'cmd_undo',
+                       'cmd_redo', 'cmd_cut', 'cmd_copy','cmd_paste', 'cmd_delete', 'cmd_selectAll'];
+  for (id in disabledItems) {
+    // debug("disabling " + disabledItems[id] + "\n");
+    var broadcaster = document.getElementById(disabledItems[id]);
+    if (broadcaster)
+      broadcaster.setAttribute("disabled", "true");
+  }
 }
 
 // Dumps all properties of anObject.
-function dumpObject( anObject, prefix ) {
-    if ( prefix == null ) {
-        prefix = anObject;
-    }
-    for ( prop in anObject ) {
-        debug(prefix + "." + prop + " = " + anObject[prop] + "\n");
-    }
+function dumpObject(anObject, prefix)
+{
+  if (!prefix)
+    prefix = anObject;
+
+  for (prop in anObject)
+    debug(prefix + "." + prop + " = " + anObject[prop] + "\n");
 }
 
 // Takes JS expression and dumps "expr="+expr+"\n"
-function dumpExpr( expr ) {
-    debug(expr+"="+eval(expr)+"\n");
+function dumpExpr(expr)
+{
+  debug(expr + "=" + eval(expr) + "\n");
 }
 
 // Initialize the LeakDetector class.
 function LeakDetector(verbose)
 {
-    this.verbose = verbose;
+  this.verbose = verbose;
 }
+
 try {
-    LeakDetector.prototype = Components.classes["@mozilla.org/xpcom/leakdetector;1"]
-                             .createInstance(Components.interfaces.nsILeakDetector);
+  LeakDetector.prototype = Components.classes["@mozilla.org/xpcom/leakdetector;1"]
+                           .createInstance(Components.interfaces.nsILeakDetector);
 } catch (err) {
-    LeakDetector.prototype = Object.prototype;
+  LeakDetector.prototype = Object.prototype;
 }
+
 var leakDetector = new LeakDetector(false);
 
 // Dumps current set of memory leaks.
 function dumpMemoryLeaks()
 {
-    leakDetector.dumpLeaks();
+  leakDetector.dumpLeaks();
 }
 
 // Traces all objects reachable from the chrome document.
 function traceChrome()
 {
-    leakDetector.traceObject(document, leakDetector.verbose);
+  leakDetector.traceObject(document, leakDetector.verbose);
 }
 
 // Traces all objects reachable from the content document.
 function traceDocument()
 {
-    // keep the chrome document out of the dump.
-    leakDetector.markObject(document, true);
-    leakDetector.traceObject(window._content, leakDetector.verbose);
-    leakDetector.markObject(document, false);
+  // keep the chrome document out of the dump.
+  leakDetector.markObject(document, true);
+  leakDetector.traceObject(_content, leakDetector.verbose);
+  leakDetector.markObject(document, false);
 }
 
 // Controls whether or not we do verbose tracing.
 function traceVerbose(verbose)
 {
-    leakDetector.verbose = (verbose == "true");
+  leakDetector.verbose = (verbose == "true");
 }
 
 var consoleListener = {
-  observe: function (aMsgObject) 
-    {
-      const nsIScriptError = Components.interfaces.nsIScriptError;
-      var scriptError = aMsgObject.QueryInterface(nsIScriptError);
-      var isWarning = scriptError.flags & nsIScriptError.warningFlag != 0;
-      if (!isWarning) 
-        {
-          var statusbarDisplay = document.getElementById("statusbar-display");
-          statusbarDisplay.setAttribute("error", "true");
-          statusbarDisplay.addEventListener("click", loadErrorConsole, true);
-          statusbarDisplay.value = bundle.GetStringFromName("jserror");
-          this.isShowingError = true;
-        }
-    },
+  observe: function (aMsgObject)
+  {
+    const nsIScriptError = Components.interfaces.nsIScriptError;
+    var scriptError = aMsgObject.QueryInterface(nsIScriptError);
+    var isWarning = scriptError.flags & nsIScriptError.warningFlag != 0;
+    if (!isWarning) {
+      var statusbarDisplay = document.getElementById("statusbar-display");
+      statusbarDisplay.setAttribute("error", "true");
+      statusbarDisplay.addEventListener("click", loadErrorConsole, true);
+      statusbarDisplay.value = bundle.GetStringFromName("jserror");
+      this.isShowingError = true;
+    }
+  },
 
   // whether or not an error alert is being displayed
   isShowingError: false
-    
+
 };
 
 function initConsoleListener()
 {
-  var consoleService = nsJSComponentManager.getService("@mozilla.org/consoleservice;1", "nsIConsoleService");
+  var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
+                                 .getService(Components.interfaces.nsIConsoleService);
 
   /**
    * XXX - console launch hookup requires some work that I'm not sure how to
@@ -1578,17 +1502,17 @@ function initConsoleListener()
    *          error was flushed. how do I know when this happens? All the nsIScriptError
    *          object I get tells me is the URL. Where is it located in the content area?
    *       2) the notification service should not display chrome script errors.
-   *          web developers and users are not interested in the failings of our shitty, 
+   *          web developers and users are not interested in the failings of our shitty,
    *          exception unsafe js. One could argue that this should also extend to
    *          the console by default (although toggle-able via setting for chrome authors)
    *          At any rate, no status indication should be given for chrome script
-   *          errors. 
-   * 
-   *       As a result I am commenting out this for the moment. 
-   **/  
+   *          errors.
+   *
+   *       As a result I am commenting out this for the moment.
+   **/
   //if (consoleService)
   //  consoleService.registerListener(consoleListener);
-} 
+}
 
 function loadErrorConsole(aEvent)
 {
@@ -1607,31 +1531,33 @@ function clearErrorNotification()
 //Posts the currently displayed url to a native widget so third-party apps can observe it.
 var urlWidgetService = null;
 try {
-    urlWidgetService = getService( "@mozilla.org/urlwidget;1", "nsIUrlWidget" );
-} catch( exception ) {
-    //debug("Error getting url widget service: " + exception + "\n");
-}
-function postURLToNativeWidget() {
-    if ( urlWidgetService ) {
-        var url = window._content.location.href;
-        try {
-            urlWidgetService.SetURLToHiddenControl( url, window );
-        } catch( exception ) {
-            debug(" SetURLToHiddenControl failed: " + exception + "\n");
-        }
-    }
+  urlWidgetService = Components.classes["@mozilla.org/urlwidget;1"]
+                               .getService(Components.interfaces.nsIUrlWidget);
+} catch (exception) {
+  //debug("Error getting url widget service: " + exception + "\n");
 }
 
-function checkForDirectoryListing() {
-    if ( 'HTTPIndex' in window._content
-         &&
-         typeof window._content.HTTPIndex == "object"
-         &&
-         !window._content.HTTPIndex.constructor ) {
-        // Give directory .xul/.js access to browser instance.
-        window._content.defaultCharacterset = appCore.GetDocumentCharset();
-        window._content.parentWindow = window;
+function postURLToNativeWidget()
+{
+  if (urlWidgetService) {
+    var url = getWebNavigation().currentURI.spec;
+    try {
+      urlWidgetService.SetURLToHiddenControl(url, window);
+    } catch (exception) {
+      debug("SetURLToHiddenControl failed: " + exception + "\n");
     }
+  }
+}
+
+function checkForDirectoryListing()
+{
+  if ("HTTPIndex" in _content &&
+      typeof _content.HTTPIndex == "object" &&
+      !_content.HTTPIndex.constructor) {
+    // Give directory .xul/.js access to browser instance.
+    _content.defaultCharacterset = getBrowser().markupDocumentViewer.defaultCharacterSet;
+    _content.parentWindow = window;
+  }
 }
 
 /**
@@ -1689,74 +1615,76 @@ function EnableBusyCursor(doEnable)
     // set the spinning cursor everywhere but mac, we have our own way to
     // do this thankyouverymuch.
     if (navigator.platform.indexOf("Mac") > 0) {
-      window.setCursor("spinning");
+      setCursor("spinning");
       _content.setCursor("spinning");
     }
   } else {
-    window.setCursor("auto");
+    setCursor("auto");
     _content.setCursor("auto");
   }
 }
 
 /**
- * Use Stylesheet functions. 
+ * Use Stylesheet functions.
  *     Written by Tim Hill (bug 6782)
  **/
-function stylesheetFillPopup(forDocument, menuPopup, itmNoOptStyles) {
-  children = menuPopup.childNodes;
-  ccount = children.length;
-  for (i=0; i<ccount; i++) {
-    mnuitem = children[i];
-    if (mnuitem.getAttribute("class") == "authssmenuitem")
-      menuPopup.removeChild(mnuitem);
+function stylesheetFillPopup(forDocument, menuPopup, itemNoOptStyles)
+{
+  var children = menuPopup.childNodes;
+  var i;
+  for (i = 0; i < children.length; ++i) {
+    var child = children[i];
+    if (child.getAttribute("class") == "authssmenuitem")
+      menuPopup.removeChild(child);
   }
 
-  checkNoOptStyles = true;
-  var numSS = forDocument.styleSheets.length;
-  var SS = forDocument.styleSheets;
-  existingSS = new Array();
+  var noOptionalStyles = true;
+  var styleSheets = forDocument.styleSheets;
+  var currentStyleSheets = [];
 
-  for (var i=0; i<numSS; i++) {
-    curSS = SS[i];
+  for (i = 0; i < styleSheets.length; ++i) {
+    var currentStyleSheet = styleSheets[i];
 
-    if (curSS.title == "") continue;
+    if (currentStyleSheet.title) {
+      if (!currentStyleSheet.disabled)
+        noOptionalStyles = false;
 
-    if (!curSS.disabled)
-      checkNoOptStyles = false;
+      var lastWithSameTitle;
+      if (currentStyleSheet.title in currentStyleSheets)
+        lastWithSameTitle = currentStyleSheets[currentStyleSheet.title];
 
-    lastWithSameTitle = existingSS[curSS.title];
-    if (lastWithSameTitle == undefined) {
-      mnuitem = document.createElement("menuitem");
-      mnuitem.setAttribute("value", curSS.title);
-      mnuitem.setAttribute("data", curSS.title);
-      mnuitem.setAttribute("type", "radio");
-      mnuitem.setAttribute("checked", !curSS.disabled);
-      mnuitem.setAttribute("class", "authssmenuitem");
-      mnuitem.setAttribute("name", "authorstyle");
-      mnuitem.setAttribute("oncommand", "stylesheetSwitch(window._content.document, this.getAttribute('data'))");
-      menuPopup.appendChild(mnuitem);
-      existingSS[curSS.title] = mnuitem;
-    }
-    else {
-      if (curSS.disabled) lastWithSameTitle.setAttribute("checked", false);
+      if (!lastWithSameTitle) {
+        var menuItem = document.createElement("menuitem");
+        menuItem.setAttribute("value", currentStyleSheet.title);
+        menuItem.setAttribute("data", currentStyleSheet.title);
+        menuItem.setAttribute("type", "radio");
+        menuItem.setAttribute("checked", !currentStyleSheet.disabled);
+        menuItem.setAttribute("class", "authssmenuitem");
+        menuItem.setAttribute("name", "authorstyle");
+        menuItem.setAttribute("oncommand", "stylesheetSwitch(_content.document, this.getAttribute('data'))");
+        menuPopup.appendChild(menuItem);
+        currentStyleSheets[currentStyleSheet.title] = menuItem;
+      } else {
+        if (currentStyleSheet.disabled)
+          lastWithSameTitle.setAttribute("checked", false);
+      }
     }
   }
-  itmNoOptStyles.setAttribute("checked", checkNoOptStyles);
+  itemNoOptStyles.setAttribute("checked", noOptionalStyles);
 }
 
-function stylesheetSwitch(forDocument, title) {
-  docStyleSheets = forDocument.styleSheets;
-  numSS = docStyleSheets.length;
+function stylesheetSwitch(forDocument, title)
+{
+  var docStyleSheets = forDocument.styleSheets;
 
-  for (i=0; i<numSS; i++) {
-    docStyleSheet = docStyleSheets[i];
-    if (docStyleSheet.title == "") {
-      if (docStyleSheet.disabled == true)
-        docStyleSheet.disabled = false;
-      continue;
-    }
-    docStyleSheet.disabled = (title != docStyleSheet.title);
-  }     
+  for (var i = 0; i < docStyleSheets.length; ++i) {
+    var docStyleSheet = docStyleSheets[i];
+
+    if (docStyleSheet.title)
+      docStyleSheet.disabled = (docStyleSheet.title != title);
+    else if (docStyleSheet.disabled)
+      docStyleSheet.disabled = false;
+  }
 }
 
 function applyTheme(themeName)
