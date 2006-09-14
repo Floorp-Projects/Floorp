@@ -1546,18 +1546,6 @@ function readFromClipboard()
   return url;
 }
 
-function OpenMessenger()
-{
-  open("chrome://messenger/content/messenger.xul", "_blank",
-    "chrome,extrachrome,menubar,resizable,status,toolbar");
-}
-
-function OpenAddressbook()
-{
-  open("chrome://messenger/content/addressbook/addressbook.xul", "_blank",
-    "chrome,extrachrome,menubar,resizable,status,toolbar");
-}
-
 function BrowserViewSourceOfDocument(aDocument)
 {
   var docCharset;
