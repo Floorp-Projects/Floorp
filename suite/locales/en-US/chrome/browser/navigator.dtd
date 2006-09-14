@@ -32,6 +32,7 @@
 <!ENTITY editFrameSetCmd.accesskey "t">
 
 <!ENTITY uploadFile.label "Upload File...">
+<!ENTITY uploadFile.accesskey "F">
 
 <!ENTITY printSetupCmd.label "Page Setup...">
 <!ENTITY printSetupCmd.accesskey "u">

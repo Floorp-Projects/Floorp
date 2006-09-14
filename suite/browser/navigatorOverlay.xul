@@ -347,7 +347,7 @@
         <menuseparator id="saveMenuBlockEnd"/>
         <menuitem label="&editPageCmd.label;" accesskey="&editPageCmd.accesskey;" key="key_editPage" command="Browser:EditPage" />
         <menuseparator/>
-        <menuitem command="Browser:UploadFile" label="&uploadFile.label;"/>
+        <menuitem command="Browser:UploadFile" label="&uploadFile.label;" accesskey="&uploadFile.accesskey;"/>
         <menuseparator/>
         <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="cmd_printSetup"/>
         <menuitem id="printPreviewMenuItem" label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" command="Browser:PrintPreview"/>
