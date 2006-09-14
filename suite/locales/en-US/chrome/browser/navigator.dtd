@@ -116,6 +116,11 @@
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY findAgainCmd.accesskey "g">
 <!ENTITY findAgainCmd.commandkey "g">
+<!ENTITY findPrevCmd.label "Find Previous">
+<!ENTITY findPrevCmd.accesskey "v">
+<!ENTITY findPrevCmd.commandkey "g">
+<!ENTITY findAgainCmd.commandkey2 "VK_F3">
+<!ENTITY findPrevCmd.commandkey2 "VK_F3">
 
 <!ENTITY searchInternetCmd.label "Search the Web">
 <!ENTITY searchInternetCmd.accesskey "S">
