@@ -39,7 +39,6 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://navigator/skin/linkToolbar.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://navigator/content/navigator.css" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <!DOCTYPE window SYSTEM "chrome://navigator/locale/linkToolbar.dtd">
 
