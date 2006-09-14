@@ -21,53 +21,29 @@
  *  - Kevin Puetz (puetzk@iastate.edu)
  *  - Ben Goodger <ben@netscape.com>
  */
+/*
+var personalToolbarObserver = {
+  onDragStart: function (aEvent)
+    {
+      var personalToolbar = document.getElementById("PersonalToolbar");
+      if (aEvent.target == personalToolbar)
+        return true;
+        
+      var childWithDatabase = document.getElementById("innermostBox");
+      if (!childWithDatabase)
+        {
+          event.preventBubble();
+          return;
+        }
 
-function BeginDragPersonalToolbar ( event )
-{
-  if ( !gDragDropEnabled )
-    return;
+      var uri = aEvent.target.id;
+      var flavourList = { };
+      flavourList["moz/toolbaritem"] = { width: 2, data: uri };
+      flavourList["text/unicode"] = { width: 2, data: uri };
+    },
+  
+}; 
 
-  //XXX we rely on a capturer to already have determined which item the mouse was over
-  //XXX and have set an attribute.
-  
-  // if the click is on the toolbar proper, ignore it. We only care about clicks on
-  // items.
-  var toolbar = document.getElementById("PersonalToolbar");
-  if ( event.target == toolbar )
-    return true;  // continue propagating the event
-  
-  // since the database is not on the toolbar, but on the innermost box, we need to 
-  // make sure we can find it before we go any further. If we can't find it, we're
-  // up the creek, but don't keep propagating the event.
-  var childWithDatabase = document.getElementById("innermostBox");
-  if ( ! childWithDatabase ) {
-    event.preventBubble();
-    return;
-  }
-
-  // pinkerton
-  // right now, the issue of d&d and these popup menus is really wacky, so i'm punting
-  // until I have time to fix it and we can come up with a good UI gesture (bug 19588). In
-  // the meantime, if the target is a container, don't initiate the drag.
-  var container = event.target.getAttribute("container");
-  if ( container == "true" )
-    return;
-  
-  var dragStarted = false;
-  var dragService =
-    Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
-  if ( dragService ) {
-    var trans = 
-      Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
-    if ( trans ) {
-      trans.addDataFlavor("moz/toolbaritem");
-      var genData = 
-        Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
-      trans.addDataFlavor("text/unicode");
-      var genTextData = 
-        Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);      
-      if ( genData && genTextData ) {
-      
 			  var id = event.target.getAttribute("id");
 			  genData.data = id;
 			  genTextData.data = id;
@@ -83,6 +59,7 @@ function BeginDragPersonalToolbar ( event )
 			  var src = rdf.GetResource(id, true);
 			  var prop = rdf.GetResource("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", true);
 			  var target = database.GetTarget(src, prop, true);
+*/
 /*
 pinkerton
 this doesn't work anymore (target is null), not sure why.
@@ -96,7 +73,7 @@ this doesn't work anymore (target is null), not sure why.
      (target != "http://home.netscape.com/NC-rdf#Bookmark") &&
      (target != "http://home.netscape.com/NC-rdf#Folder"))  return(false);
 */
-
+/*
 	      trans.setTransferData ( "moz/toolbaritem", genData, id.length*2 );  // double byte data (len*2)
 	      trans.setTransferData ( "text/unicode", genTextData, id.length*2 );  // double byte data
 	      var transArray = 
@@ -120,7 +97,7 @@ this doesn't work anymore (target is null), not sure why.
   return true;
   
 } // BeginDragPersonalToolbar
-
+*/
 
 function DropPersonalToolbar ( event )
 { 
@@ -351,6 +328,8 @@ var homeButtonObserver = {
         {
           var commonDialogService = nsJSComponentManager.getService("component://netscape/appshell/commonDialogs",
                                                                     "nsICommonDialogs");
+          var block = nsJSComponentManager.createInstanceByID("c01ad085-4915-11d3-b7a0-85cf-55c3523c",
+                                                              "nsIDialogParamBlock");
           var checkValue = { value: false };
           var pressedVal = { };                            
           var promptTitle = bundle.GetStringFromName("droponhometitle");
@@ -358,6 +337,16 @@ var homeButtonObserver = {
           var checkMsg    = bundle.GetStringFromName("dontremindme");
           var okButton    = bundle.GetStringFromName("droponhomeokbutton");
           var iconURL     = "chrome://navigator/skin/home.gif"; // evil evil common dialog code! evil! 
+/*
+          block.SetInt(2, 2);
+          block.SetString(0, bundle.GetStringFromName("droponhomemsg"));
+          block.SetString(3, bundle.GetStringFromName("droponhometitle"));
+          block.SetString(2, "chrome://navigator/skin/home.gif");
+          block.SetString(1, bundle.GetStringFromName("dontremindme"));
+          block.SetInt(1, 1); // checkbox is checked
+          block.SetString(8, bundle.GetStringFromName("droponhomeokbutton"));
+          
+*/
           commonDialogService.UniversalDialog(window, null, promptTitle, promptMsg, checkMsg, 
                                               okButton, null, null, null, null, null, { }, { },
                                               iconURL, checkValue, 2, 0, null, pressedVal);
