@@ -1,0 +1,105 @@
+#!python
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is l10n test automation.
+#
+# The Initial Developer of the Original Code is
+# Mozilla Foundation
+# Portions created by the Initial Developer are Copyright (C) 2006
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#	Axel Hecht <l10n@mozilla.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+import sys
+import logging
+from optparse import OptionParser
+from urlparse import urlparse
+import httplib
+from urllib2 import urlopen
+
+EN_US_FEED = 'http://newsrss.bbc.co.uk/rss/newsonline_world_edition/front_page/rss.xml'
+FEEDSERVER = '%s.fxfeeds.mozilla.com'
+FEEDPATH   = '/%s/firefox/headlines.xml'
+
+L10NFEEDS = 'http://wiki.mozilla.org/Firefox2/L10n_Feed_Redirects?action=raw'
+
+op = OptionParser()
+op.add_option('--oldid', dest='oldid',
+              help='explicitly give a version number on the wiki')
+op.add_option('-v', dest='verbose', action='count', default=0,
+              help='increase verbosity')
+(options, args) = op.parse_args()
+
+if len(args) != 1:
+  sys.exit('all-locales or shipped-locales path expected')
+
+logging.basicConfig(level=(logging.WARNING - options.verbose*10))
+
+if options.oldid:
+  L10NFEEDS += '&oldid=' + options.oldid
+
+lFeeds = urlopen(L10NFEEDS)
+redirs = {}
+
+for row in lFeeds:
+  d, loc, url = row.split(' ', 2)
+  redirs[loc] = url.strip()
+
+# parse all-locales and shipped-locales, only take first bunch
+lFile = open(args[0])
+locales = [ln.split(' ', 1)[0].strip() for ln in lFile]
+# ignore ja-JP-mac, same bookmarks as ja
+def not_ja_JP_mac(loc): return loc != 'ja-JP-mac'
+locales = filter(not_ja_JP_mac, locales)
+
+for loc in locales:
+  logging.debug('testing ' + loc)
+  server = FEEDSERVER % loc
+  path   = FEEDPATH % loc
+  while server.endswith('mozilla.com'):
+    url = None
+    conn = httplib.HTTPConnection(server)
+    conn.request('HEAD', path)
+    r = conn.getresponse()
+    if r.status != 302:
+      logging.error('mozilla.com loses feed for ' + loc)
+      server = ''
+      continue
+    url = r.getheader('location')
+    server, path = urlparse(url)[1:3]
+    conn.close()
+  refurl = EN_US_FEED
+  if redirs.has_key(loc):
+    refurl = redirs[loc]
+  if url != refurl:
+    print loc, "FAIL"
+    logging.info(str(url) + ' is not ' + refurl)
+  else:
+    logging.debug(loc + ' PASS')
+
