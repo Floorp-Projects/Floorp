@@ -453,9 +453,16 @@ function Startup()
       appCore.cmdLineURLUsed = true;
     }
 
-    // Check for window.arguments[0]. If present, use that for startPage.
-    if (!startPage && "arguments" in window && window.arguments.length > 0)
-      startPage = window.arguments[0];
+    if (!startPage) {
+      // Check for window.arguments[0]. If present, use that for startPage.
+      if ("arguments" in window && window.arguments.length > 0) {
+        startPage = window.arguments[0];
+      } else {
+        var cmdLineHandler = Components.classes["@mozilla.org/commandlinehandler/general-startup;1?type=browser"]
+                                       .getService(Components.interfaces.nsICmdLineHandler);
+        startPage = cmdLineHandler.defaultArgs;
+      }
+    }
 
     if (startPage)
       loadURI(startPage);
