@@ -1372,7 +1372,7 @@ function BrowserEditBookmarks()
 function updateCloseItems()
 {
   var browser = getBrowser();
-  if (browser.getStripVisibility()) {
+  if (browser && browser.getStripVisibility()) {
     document.getElementById('menu_close').setAttribute('label', gNavigatorBundle.getString('tabs.closeTab'));
     document.getElementById('menu_closeWindow').hidden = false;
     document.getElementById('menu_closeOtherTabs').hidden = false;
@@ -1685,7 +1685,7 @@ function hiddenWindowStartup()
 
   // Disable menus which are not appropriate
   var disabledItems = ['cmd_close', 'Browser:SendPage', 'Browser:EditPage',
-                       'cmd_printSetup', /*'Browser:PrintPreview',*/
+                       'Browser:SavePage', 'cmd_printSetup', /*'Browser:PrintPreview',*/
                        'Browser:Print', 'canGoBack', 'canGoForward',
                        'Browser:Home', 'Browser:AddBookmark',
                        'Browser:AddBookmarkAs', 'Browser:AddGroupmarkAs',
