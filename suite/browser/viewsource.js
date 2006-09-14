@@ -152,7 +152,7 @@ function viewSource(url)
           // This allows the content to be fetched from the cache (if
           // possible) rather than the network...
           //
-          PageLoader.LoadPage(arg, pageLoaderIface.DISPLAY_AS_SOURCE);
+          PageLoader.loadPage(arg, pageLoaderIface.DISPLAY_AS_SOURCE);
           // The content was successfully loaded from the page cookie.
           loadFromURL = false;
         }
@@ -559,16 +559,16 @@ function highlightSyntax()
   gPrefs.setBoolPref("view_source.syntax_highlight", highlightSyntax);
 
   var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
-  PageLoader.LoadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
+  PageLoader.loadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
 }
 
 // Fix for bug 136322: this function overrides the function in
-// browser.js to call PageLoader.LoadPage() instead of BrowserReloadWithFlags()
+// browser.js to call PageLoader.loadPage() instead of BrowserReloadWithFlags()
 function BrowserSetForcedCharacterSet(aCharset)
 {
   var docCharset = getBrowser().docShell.QueryInterface(
                             Components.interfaces.nsIDocCharset);
   docCharset.charset = aCharset;
   var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
-  PageLoader.LoadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
+  PageLoader.loadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
 }
