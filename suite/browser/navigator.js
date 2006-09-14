@@ -471,7 +471,7 @@ function Startup()
       var arrayArgComponents = window.arguments[1].split("=");
       if (arrayArgComponents) {
         //we should "inherit" the charset menu setting in a new window
-        BrowserSetDefaultCharacterSet(arrayArgComponents[1]);
+        appCore.setDefaultCharacterSet(arrayArgComponents[1]); //XXXjag see bug 67442
       }
     }
   }
@@ -528,7 +528,7 @@ function Startup()
         startPage = window.arguments[0];
     }
 
-    if (startPage)
+    if (startPage && startPage != "about:blank")
       loadURI(startPage);
 
     // Focus the content area if the caller instructed us to.
