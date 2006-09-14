@@ -303,7 +303,7 @@ nsXULBrowserWindow.prototype =
         statusMeter.setAttribute("mode","normal");
         statusMeter.value = 0;  // be sure to clear the progress bar
         statusMeter.progresstext = "";
-        throbberElement.setAttribute("busy", false);
+        throbberElement.removeAttribute("busy");
 
         // XXX: These need to be based on window activity...
         stopButton.setAttribute("disabled", true);
@@ -1540,7 +1540,7 @@ function EnableBusyCursor(doEnable)
   if (doEnable) {
     // set the spinning cursor everywhere but mac, we have our own way to
     // do this thankyouverymuch.
-    if (navigator.platform.indexOf("Mac") > 0) {
+    if (navigator.platform.indexOf("Mac") == -1) {
       setCursor("spinning");
       _content.setCursor("spinning");
     }
