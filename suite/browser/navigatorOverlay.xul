@@ -168,7 +168,7 @@
 	      <menuitem accesskey="&editPageCmd.accesskey;" key="key_editPage" observes="Browser:EditPage" />
 	      <menuseparator/>
 	      <menuitem accesskey="&printSetupCmd.accesskey;" observes="Browser:PrintSetup"/>
-	      <menuitem accesskey="&printPreviewCmd.accesskey;" observes="Browser:PrintPreview"/>
+<!--	      <menuitem accesskey="&printPreviewCmd.accesskey;" observes="Browser:PrintPreview"/> -->
 	      <menuitem id="printMenuItem" accesskey="&printCmd.accesskey;" key="printKb" observes="Browser:Print"/>
 	      <menuseparator />
 	      <menuitem id="offlineGoOfflineCmd"/>
