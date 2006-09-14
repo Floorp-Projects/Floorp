@@ -247,8 +247,6 @@ function Startup()
 
   // Do all UI building here:
 
-  setOfflineStatus();
-
   // set home button tooltip text
   var homePage = getHomePage();
   if (homePage)
