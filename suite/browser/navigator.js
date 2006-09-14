@@ -209,12 +209,10 @@ function UpdateStatusField()
 
 function nsXULBrowserWindow()
 {
-  this.locationField = document.getElementById("urlbar");
 }
 
 nsXULBrowserWindow.prototype = 
 {
-  locationField : null,
   hideAboutBlank : true,
 
   QueryInterface : function(iid)
@@ -378,7 +376,7 @@ nsXULBrowserWindow.prototype =
 
     // We should probably not do this if the value has changed since the user 
     // searched
-    this.locationField.value = location;
+    document.getElementById("urlbar").value = location;
 
     UpdateBackForwardButtons();
   },
