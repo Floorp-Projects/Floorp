@@ -301,7 +301,6 @@
               rdf:type="http://home.netscape.com/NC-rdf#Folder">
           <menupopup>
             <menu class="menu-iconic bookmark-item" uri="rdf:*" 
-                  image="rdf:http://home.netscape.com/NC-rdf#Icon"
                   validate="never"
                   type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                   label="rdf:http://home.netscape.com/NC-rdf#Name">
@@ -314,7 +313,6 @@
         <rule iscontainer="true">
           <menupopup>
             <menu class="menu-iconic bookmark-item" uri="rdf:*"
-                  image="rdf:http://home.netscape.com/NC-rdf#Icon"
                   validate="never"
                   label="rdf:http://home.netscape.com/NC-rdf#Name"
                   type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
