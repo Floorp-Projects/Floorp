@@ -148,7 +148,7 @@
 <!ENTITY searchReferenceDesk.accesskey "r">
 <!ENTITY searchShopping.label "Shopping Search">
 <!ENTITY searchShopping.accesskey "s">
-<!ENTITY searchOptions.label "My Sidebar Search Panel">
+<!ENTITY searchOptions.label "My Sidebar Search Tab">
 <!ENTITY simpleMode.label "Basic">
 <!ENTITY advancedMode.label "Advanced">
 <!ENTITY searchInternetKeywords.label "Internet Keywords">
