@@ -98,7 +98,7 @@ function createUBHistoryMenu( aParent )
       deleteHistoryItems(aParent);
       if (!entries.hasMoreElements()) {
         //Create the "Nothing Available" Menu item
-        var na = bundle.GetStringFromName( "nothingAvailable" );
+        var na = gNavigatorBundle.getString("nothingAvailable");
         createMenuItem(aParent, "nothing_available", na);
       }
 
