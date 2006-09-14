@@ -509,19 +509,25 @@ function BrowserReloadSkipCache()
 
 function BrowserReloadWithFlags(reloadFlags)
 {
-   try {
-     /* Need to get SessionHistory from docshell so that
-      * reload on framed pages will work right. This 
-      * method should not be used for the context menu item "Reload frame".
-      * "Reload frame" should directly call into docshell as it does right now
-      */
-     var sh = getWebNavigation().sessionHistory;
-     var webNav = sh.QueryInterface(Components.interfaces.nsIWebNavigation);      
-     webNav.reload(reloadFlags);
-   }
-   catch(ex) {
-   }
- }
+  /* First, we'll try to use the session history object to reload so 
+   * that framesets are handled properly. If we're in a special 
+   * window (such as view-source) that has no session history, fall 
+   * back on using the web navigation's reload method.
+   */
+
+  var webNav = getWebNavigation();
+  try {
+    var sh = webNav.sessionHistory;
+    if (sh)
+      webNav = sh.QueryInterface(Components.interfaces.nsIWebNavigation);
+  } catch (e) {
+  }
+
+  try {
+    webNav.reload(reloadFlags);
+  } catch (e) {
+  }
+}
 
 function BrowserHome()
 {
