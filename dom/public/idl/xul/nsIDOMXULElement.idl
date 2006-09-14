@@ -46,7 +46,7 @@ interface nsIControllers;
 interface nsIBoxObject;
 
 
-[scriptable, uuid(0574ed81-c088-11d2-96ed-00104b7b7deb)]
+[scriptable, uuid(2261a45f-0a8f-401a-8e90-8da0d26cf9e3)]
 interface nsIDOMXULElement : nsIDOMElement
 {
   attribute DOMString                 id;
@@ -116,4 +116,8 @@ interface nsIDOMXULElement : nsIDOMElement
 
   nsIDOMNodeList            getElementsByAttribute(in DOMString name,
                                                    in DOMString value);
+
+  nsIDOMNodeList            getElementsByAttributeNS(in DOMString namespaceURI,
+                                                     in DOMString name,
+                                                     in DOMString value);
 };

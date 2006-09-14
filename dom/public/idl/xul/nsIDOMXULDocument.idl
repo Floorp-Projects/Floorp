@@ -42,7 +42,7 @@
 interface nsIDOMXULCommandDispatcher;
 interface nsIObserver;
 
-[scriptable, uuid(a521baa9-0745-453a-9049-03c1a2241378)]
+[scriptable, uuid(9816241b-2a20-44ff-903b-575f40c0ecc5)]
 interface nsIDOMXULDocument : nsISupports
 {
   attribute nsIDOMNode                          popupNode;
@@ -65,6 +65,10 @@ interface nsIDOMXULDocument : nsISupports
 
   nsIDOMNodeList            getElementsByAttribute(in DOMString name,
                                                    in DOMString value);
+
+  nsIDOMNodeList            getElementsByAttributeNS(in DOMString namespaceURI,
+                                                     in DOMString name,
+                                                     in DOMString value);
 
   void                      addBroadcastListenerFor(in nsIDOMElement broadcaster,
                                                     in nsIDOMElement observer,

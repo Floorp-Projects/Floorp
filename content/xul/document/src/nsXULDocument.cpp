@@ -1150,6 +1150,34 @@ nsXULDocument::GetElementsByAttribute(const nsAString& aAttribute,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULDocument::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
+                                        const nsAString& aAttribute,
+                                        const nsAString& aValue,
+                                        nsIDOMNodeList** aReturn)
+{
+    nsCOMPtr<nsIAtom> attrAtom(do_GetAtom(aAttribute));
+    NS_ENSURE_TRUE(attrAtom, NS_ERROR_OUT_OF_MEMORY);
+
+    PRInt32 nameSpaceId = kNameSpaceID_Wildcard;
+    if (!aNamespaceURI.EqualsLiteral("*")) {
+      nsresult rv =
+        nsContentUtils::NameSpaceManager()->RegisterNameSpace(aNamespaceURI,
+                                                              nameSpaceId);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    nsContentList *list = new nsContentList(this,
+                                            MatchAttribute,
+                                            aValue,
+                                            PR_TRUE,
+                                            attrAtom,
+                                            nameSpaceId);
+    NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
+
+    NS_ADDREF(*aReturn = list);
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsXULDocument::Persist(const nsAString& aID,
@@ -2005,7 +2033,8 @@ nsXULDocument::MatchAttribute(nsIContent* aContent,
 {
     NS_PRECONDITION(aContent, "Must have content node to work with!");
 
-    if (aNamespaceID != kNameSpaceID_Unknown) {
+    if (aNamespaceID != kNameSpaceID_Unknown &&
+        aNamespaceID != kNameSpaceID_Wildcard) {
         return aAttrValue.EqualsLiteral("*") ?
             aContent->HasAttr(aNamespaceID, aAttrName) :
             aContent->AttrValueIs(aNamespaceID, aAttrName, aAttrValue,
@@ -2020,6 +2049,8 @@ nsXULDocument::MatchAttribute(nsIContent* aContent,
         PRBool nameMatch;
         if (name->IsAtom()) {
             nameMatch = name->Atom() == aAttrName;
+        } else if (aNamespaceID == kNameSpaceID_Wildcard) {
+            nameMatch = name->NodeInfo()->Equals(aAttrName);
         } else {
             nameMatch = name->NodeInfo()->QualifiedNameEquals(aAttrName);
         }
