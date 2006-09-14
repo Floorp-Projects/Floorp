@@ -170,7 +170,7 @@ function addToUrlbarHistory()
                       .getService(Components.interfaces.nsIRDFService);
  
   if (!gGlobalHistory)
-    gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
+    gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
                                .getService(Components.interfaces.nsIBrowserHistory);
 
   if (!gURIFixup)

@@ -520,10 +520,8 @@ function Startup()
       webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
                                                .createInstance(Components.interfaces.nsISHistory);
 
-      // wire up global history.  the same applies here.
-      var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
-                                    .getService(Components.interfaces.nsIGlobalHistory);
-      getBrowser().docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).globalHistory = globalHistory;
+      // enable global history
+      getBrowser().docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
     } catch (e) {}
 
     const selectedBrowser = getBrowser().selectedBrowser;
@@ -568,7 +566,7 @@ function Startup()
               uriArray = getHomePage();
               break;
             case 2:
-              var history = Components.classes["@mozilla.org/browser/global-history;1"]
+              var history = Components.classes["@mozilla.org/browser/global-history;2"]
                                       .getService(Components.interfaces.nsIBrowserHistory);
               uriArray = [history.lastPageVisited];
               break;
@@ -690,7 +688,7 @@ function BrowserFlushBookmarksAndHistory()
     bmks.Flush();
 
     // give history a chance at flushing to disk also
-    var history = Components.classes["@mozilla.org/browser/global-history;1"]
+    var history = Components.classes["@mozilla.org/browser/global-history;2"]
                             .getService(Components.interfaces.nsIRDFRemoteDataSource);
     history.Flush();
   } catch(ex) {
