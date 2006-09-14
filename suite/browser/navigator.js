@@ -1097,7 +1097,7 @@ function stylesheetFillPopup(forDocument, menuPopup, itemNoOptStyles)
       if (!currentStyleSheet.disabled)
         noOptionalStyles = false;
 
-      var lastWithSameTitle;
+      var lastWithSameTitle = null;
       if (currentStyleSheet.title in currentStyleSheets)
         lastWithSameTitle = currentStyleSheets[currentStyleSheet.title];
 
