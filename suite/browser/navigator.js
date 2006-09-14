@@ -716,7 +716,8 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 	var searchEngineURI = null;
 	var autoOpenSearchPanel = false;
 	var defaultSearchURL = null;
-	var fallbackDefaultSearchURL = bundle.GetStringFromName("fallbackDefaultSearchURL")
+	var fallbackDefaultSearchURL = bundle.GetStringFromName("fallbackDefaultSearchURL");
+    var otherSearchURL = bundle.GetStringFromName("otherSearchURL");
 
 	try
 	{
@@ -743,15 +744,24 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 		// Call in to BrowserAppCore instead of replacing 
 		// the url in the content area so that B/F buttons work right
 
-		// There used to be an 'if' case to see if defaultSearchURL == fallbackDefaultSearchURL
-		// and if so, call appCore.loadUrl("http://search.netscape.com/").
-		// Removed 'if' case, set fallbackDefaultSearchURL to "http://search.netscape.com/" and
-		// always use defaultSearchURL. I assert that this new way of handling things is
-		// functionally equivalent to the old way.
-    if (appCore)
-	    appCore.loadUrl(defaultSearchURL);
-    else
-      dump("BrowserAppCore is not initialised\n");
+      if (!(defaultSearchULR == fallbackDefaultURL))
+      {
+        if (appCore)
+          appCore.loadUrl(defaultSearchURL);
+        else
+          dump("BrowserAppCore is not initialised\n");
+      }
+      else
+      {
+        //window._content.local.href = "http://home.netscape.com/bookmark/6_0/tsearch.html"
+        // Call in to BrowserAppCore instead of replacing
+        // the url in the content area so that B/F buttons work right
+        if (appCore)
+          appCore.loadUrl(otherSearchURL);
+        else
+          dump("BrowserAppCore is not initialised\n");
+        
+      }
 	}
 	else
 	{
