@@ -238,7 +238,7 @@
         <menu label="&useStyleSheetMenu.label;" accesskey="&useStyleSheetMenu.accesskey;" disabled="false" observes="isImage">
           <menupopup onpopupshowing="stylesheetFillPopup(this);"
                      oncommand="stylesheetSwitchAll(window._content, event.target.getAttribute('data'));">
-            <menuitem label="&useStyleSheetNone.label;" type="radio"/>
+            <menuitem label="&useStyleSheetPersistentOnly.label;" accesskey="&useStyleSheetPersistentOnly.accesskey;" type="radio"/>
           </menupopup>
         </menu>
         <menuseparator />
