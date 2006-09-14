@@ -81,7 +81,8 @@ var personalToolbarObserver = {
         return;
 
 
-      if (aEvent.target.localName == "menu" || aEvent.target.localName == "menubutton") {                                 
+      if (aEvent.target.localName == "menu" || 
+         (aEvent.target.localName == "toolbarbutton" && aEvent.target.getAttribute("type") == "menu")) {
         if (aEvent.target.getAttribute("type") == "http://home.netscape.com/NC-rdf#Folder") {
           var child = aEvent.target.childNodes[0];                               
           if (child && child.localName == "menupopup")                                     

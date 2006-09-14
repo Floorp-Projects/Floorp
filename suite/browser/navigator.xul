@@ -138,21 +138,31 @@ Contributor(s): ______________________________________. -->
     <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar" persist="collapsed" 
              tbalign="stretch">
       <hbox id="nav-bar-buttons">
-        <menubutton id="back-button" label="&backButton.label;" tooltiptext="&backButton.tooltip;"
-                    oncommand="gotoHistoryIndex(event);" buttonaction="BrowserBack();" context="backMenu"
-                    class="menubutton-dual top" crop="right" tooltip="aTooltip" observes="canGoBack">  
+        <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"
+                       label="&backButton.label;" crop="right"
+                       oncommand="if (event.target==this) BrowserBack(); else gotoHistoryIndex(event);"
+                       observes="canGoBack" context="backMenu"
+                       tooltip="aTooltip" tooltiptext="&backButton.tooltip;">
           <menupopup context="" onpopupshowing="BrowserBackMenu(event);"/>
-        </menubutton>
-        <menubutton id="forward-button" label="&forwardButton.label;" tooltiptext="&forwardButton.tooltip;"
-                    oncommand="gotoHistoryIndex(event);" buttonaction="BrowserForward();" context="forwardMenu"
-                    class="menubutton-dual top" crop="right" tooltip="aTooltip" observes="canGoForward">
+        </toolbarbutton>
+        
+        <toolbarbutton id="forward-button" type="menu-button" class="toolbarbutton-1"
+                       label="&forwardButton.label;" crop="right"
+                       oncommand="if (event.target==this) BrowserForward(); else gotoHistoryIndex(event);"
+                       observes="canGoForward" context="forwardMenu"
+                       tooltip="aTooltip" tooltiptext="&forwardButton.tooltip;">
           <menupopup context="" onpopupshowing="BrowserForwardMenu(event);"/>
-        </menubutton>
-
-        <button class="button-toolbar-1 top" id="reload-button" crop="right" oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload();" label="&reloadButton.label;" 
-                tooltip="aTooltip" tooltiptext="&reloadButton.tooltip;"/>
-        <button class="button-toolbar-1 top" id="stop-button" crop="right" observes="canStop" oncommand="BrowserStop();" label="&stopButton.label;" 
-                tooltip="aTooltip" tooltiptext="&stopButton.tooltip;"/>
+        </toolbarbutton>
+        
+        <toolbarbutton id="reload-button" class="toolbarbutton-1"
+                       label="&reloadButton.label;" crop="right"
+                       oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload();"  
+                       tooltip="aTooltip" tooltiptext="&reloadButton.tooltip;"/>
+                       
+        <toolbarbutton id="stop-button" class="toolbarbutton-1"
+                       label="&stopButton.label;" crop="right"
+                       oncommand="BrowserStop();" observes="canStop"  
+                       tooltip="aTooltip" tooltiptext="&stopButton.tooltip;"/>
       </hbox>
                 
       <hbox id="nav-bar-inner" flex="1">
@@ -178,27 +188,36 @@ Contributor(s): ______________________________________. -->
           </hbox>
         </hbox>
 
-        <button class="button-toolbar-3 chromeclass-location" id="go-button" persist="hidden" hidden="true" label="&goButton.label;"
-                oncommand="addToUrlbarHistory(); BrowserLoadURL();" ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
-                ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);" ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
+        <button id="go-button" class="button-toolbar chromeclass-location"
+                label="&goButton.label;" hidden="true" persist="hidden"
+                oncommand="addToUrlbarHistory(); BrowserLoadURL();"
+                ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
+                ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
+                ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
                 tooltip="aTooltip" tooltiptext="&goButton.tooltip;"/> 
 
-        <button class="button-toolbar-3 chromeclass-location" persist="hidden" 
-                id="search-button" label="&searchButton.label;"  ondragover="nsDragAndDrop.dragOver(event, searchButtonObserver);"
-                ondragdrop="nsDragAndDrop.drop(event, searchButtonObserver);" ondragexit="nsDragAndDrop.dragExit(event, searchButtonObserver);"
+        <button id="search-button" class="button-toolbar chromeclass-location"
+                label="&searchButton.label;" persist="hidden"
                 oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
+                ondragover="nsDragAndDrop.dragOver(event, searchButtonObserver);"
+                ondragdrop="nsDragAndDrop.drop(event, searchButtonObserver);"
+                ondragexit="nsDragAndDrop.dragExit(event, searchButtonObserver);"
                 tooltip="aTooltip" tooltiptext="&searchButton.tooltip;"/> 
       </hbox>
 
-      <menubutton class="menubutton-dual top" id="print-button" persist="hidden" label="&printButton.label;" 
-                  crop="right" buttonaction="BrowserPrint()" tooltip="aTooltip" tooltiptext="&printButton.tooltip;">  
-        <menupopup id="printMenu" popupalign="topright" popupanchor="bottomright">
-          <menuitem label="&printCmd.label;" accesskey="&printCmd.accesskey;" oncommand="BrowserPrint()" default="true"/>
+      <toolbarbutton id="print-button" type="menu-button" class="toolbarbutton-1"
+                     label="&printButton.label;" crop="right" persist="hidden"
+                     oncommand="if (event.target==this) BrowserPrint();"
+                     tooltip="aTooltip" tooltiptext="&printButton.tooltip;">  
+        <menupopup id="printMenu">
+          <menuitem label="&printCmd.label;" accesskey="&printCmd.accesskey;"
+                    default="true" oncommand="BrowserPrint()"/>
         </menupopup>
-      </menubutton>
+      </toolbarbutton>
 
       <hbox id="throbber-box" align="center">
-        <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>
+        <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
+                tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>
       </hbox>
     </toolbar>
   
@@ -209,25 +228,26 @@ Contributor(s): ______________________________________. -->
              ondragexit="nsDragAndDrop.dragExit(event, personalToolbarObserver);"
              tbalign="stretch">
 
-      <button class="button-toolbar bookmark-item" id="home-button" label="&homeButton.label;"
-              tooltip="aTooltip" persist="hidden"
-              ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver);"
-              ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
-              ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
-              ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
-              oncommand="BrowserHome(); event.preventBubble();"/>
+      <toolbarbutton id="home-button" class="bookmark-item"
+                     label="&homeButton.label;" tooltip="aTooltip" persist="hidden"
+                     ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
+                     ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
+                     ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
+                     oncommand="BrowserHome(); event.preventBubble();"/>
   
       <toolbarseparator id="home-bm-separator" persist="hidden"/>
  
       <!-- "Bookmarks" button on personal toolbar -->                           
-      <menubutton class="button-toolbar bookmark-item" id="bookmarks-button"   
-                  persist="hidden" label="&bookmarksButton.label;" hidden="false"
-                  datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
-                  ref="NC:BookmarksRoot" container="true" flags="dont-test-empty"
-                  oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)" 
-                  ondragover="nsDragAndDrop.dragOver(event, bookmarksButtonObserver);"
-                  template="bookmarksMenuTemplate">
-        <menupopup onpopuphiding="gDidOpen = false;" ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
+      <toolbarbutton type="menu" id="bookmarks-button" class="bookmark-item"
+                     persist="hidden" label="&bookmarksButton.label;" hidden="false"
+                     datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
+                     ref="NC:BookmarksRoot" container="true" flags="dont-test-empty"
+                     oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)" 
+                     ondragover="nsDragAndDrop.dragOver(event, bookmarksButtonObserver);"
+                     template="bookmarksMenuTemplate">
+        <menupopup onpopuphiding="gDidOpen = false;"
+                   ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
                    ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
                    ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
           <menuitem accesskey="&addCurPageCmd.accesskey;" key="addBookmarkKb" observes="Browser:AddBookmark"
@@ -239,7 +259,7 @@ Contributor(s): ______________________________________. -->
                     ondragover="event.preventBubble(); return false;"/>
           <menuseparator/>
         </menupopup>
-      </menubutton>
+      </toolbarbutton>
 
       <!-- Personal toolbar items -->
       <hbox id="innermostBox" flex="1" style="min-width: 1px;" context="bmContext" 
@@ -257,38 +277,34 @@ Contributor(s): ______________________________________. -->
                treated as containers for some reason -->
           <rule parent="hbox" iscontainer="true" isempty="true"
                 rdf:type="http://home.netscape.com/NC-rdf#Folder">
-            <menubutton class="button-toolbar bookmark-item" uri="rdf:*" editable="true" 
-                        type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                        label="rdf:http://home.netscape.com/NC-rdf#Name"
-                        ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }">
+            <toolbarbutton type="menu" editable="true" class="bookmark-item"
+                           uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name"
+                           ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }">
               <menupopup>
                 <menuitem label="&emptyItem.label;" disabled="true"/>
               </menupopup>
-            </menubutton>
+            </toolbarbutton>
           </rule>
 
           <rule parent="hbox" iscontainer="true">
-            <menubutton class="button-toolbar bookmark-item" uri="rdf:*" editable="true" 
-                        type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                        label="rdf:http://home.netscape.com/NC-rdf#Name"
-                        ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }">
+            <toolbarbutton type="menu" class="bookmark-item" uri="rdf:*" editable="true"
+                           label="rdf:http://home.netscape.com/NC-rdf#Name"
+                          ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }">
               <menupopup ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarObserver);"/>
-            </menubutton>
+            </toolbarbutton>
           </rule>
 
           <rule parent="hbox">
-            <button class="button-toolbar bookmark-item" uri="rdf:*" editable="true" 
-                    status="rdf:http://home.netscape.com/WEB-rdf#status"
-                    tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
-                    type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                    label="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"/>
+            <toolbarbutton class="bookmark-item" uri="rdf:*" editable="true" 
+                           status="rdf:http://home.netscape.com/WEB-rdf#status"
+                           tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
+                           label="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"/>
           </rule>
 
           <rule iscontainer="true" isempty="true"
                 rdf:type="http://home.netscape.com/NC-rdf#Folder">
             <menupopup>
               <menu class="menu-iconic bookmark-item" uri="rdf:*" 
-                    type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                     label="rdf:http://home.netscape.com/NC-rdf#Name">
                 <menupopup>
                   <menuitem label="&emptyItem.label;" disabled="true"
@@ -301,7 +317,6 @@ Contributor(s): ______________________________________. -->
           <rule iscontainer="true">
             <menupopup>
               <menu class="menu-iconic bookmark-item" uri="rdf:*" 
-                    type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                     label="rdf:http://home.netscape.com/NC-rdf#Name">
                 <menupopup/>
               </menu>
@@ -318,7 +333,6 @@ Contributor(s): ______________________________________. -->
             <menupopup>
               <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
                         status="rdf:http://home.netscape.com/WEB-rdf#status"
-                        type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                         label="rdf:http://home.netscape.com/NC-rdf#Name"/>
             </menupopup>
           </rule>
@@ -350,11 +364,11 @@ Contributor(s): ______________________________________. -->
   <statusbar id="status-bar" class="chromeclass-status"
              ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
-        <hbox id="component-bar"/>
-        <statusbarpanel id="statusbar-display" label="&statusText.label;" crop="right" flex="1"/>
-        <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0"/>
-        <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
-        <statusbarpanel class="statusbarpanel-icononly" id="security-button"/>
+    <hbox id="component-bar"/>
+    <statusbarpanel id="statusbar-display" label="&statusText.label;" crop="right" flex="1"/>
+    <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0"/>
+    <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
+    <statusbarpanel class="statusbarpanel-icononly" id="security-button"/>
   </statusbar> 
 
 </window>
