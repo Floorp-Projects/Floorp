@@ -204,14 +204,6 @@ Contributor(s): ______________________________________. -->
              grippytooltip="aTooltip" grippytooltiptext="&personalBar.tooltip;"
              tbautostretch="always">
 
-      <button class="button-toolbar bookmark-item" id="home-button" label="&homeButton.label;"
-              tooltip="aTooltip" persist="hidden"
-              ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver);"
-              ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
-              ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
-              ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
-              oncommand="BrowserHome(); event.preventBubble();"/>
-  
       <!-- "Bookmarks" button on personal toolbar -->                           
       <menubutton class="button-toolbar bookmark-item" id="bookmarks-button"   
                   persist="hidden" label="&bookmarksButton.label;" hidden="false"
@@ -228,6 +220,14 @@ Contributor(s): ______________________________________. -->
         </menupopup>
       </menubutton>
 
+      <button class="button-toolbar bookmark-item" id="home-button" label="&homeButton.label;"
+              tooltip="aTooltip" persist="hidden"
+              ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver);"
+              ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
+              ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
+              ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
+              oncommand="BrowserHome(); event.preventBubble();"/>
+  
       <toolbarseparator/>
  
       <!-- Personal toolbar items -->
