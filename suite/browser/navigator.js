@@ -1062,7 +1062,7 @@ function RevealSearchPanel()
     {
     	title = url;
     }
-    bmks.AddBookmark(url, title);
+    bmks.AddBookmark(url, title, bmks.BOOKMARK_DEFAULT_TYPE);
   }
 
 // Set up a lame hack to avoid opening two bookmarks.
