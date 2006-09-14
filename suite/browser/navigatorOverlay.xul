@@ -75,6 +75,7 @@
           <!-- View Menu -->
     <key id="key_reload"  key="&reloadCmd.commandkey;" oncommand="BrowserReload();" modifiers="accel"/>
     <key key="&reloadCmd.commandkey;" oncommand="BrowserReloadSkipCache();" modifiers="accel,shift"/>
+    <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
     <key id="key_viewSource" key="&pageSourceCmd.commandkey;" command="View:PageSource" modifiers="accel"/>
     <key id="key_viewInfo"   key="&pageInfoCmd.commandkey;"   command="View:PageInfo"   modifiers="accel"/>
 
@@ -132,6 +133,7 @@
     <command id="cmd_copyImageContents"/>
 
     <!-- View Menu -->
+    <command id="View:FullScreen" oncommand="BrowserFullScreenToggle();"/>
     <command id="View:PageSource" oncommand="BrowserViewSource();"/>
     <command id="View:PageInfo"   oncommand="BrowserPageInfo(getBrowser().contentDocument);"/>
   
@@ -241,6 +243,7 @@
         <menuseparator />
         <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
         <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
+        <menuitem accesskey="&fullScreenCmd.accesskey;" label="&fullScreenCmd.label;" key="key_fullScreen" command="View:FullScreen"/>
         <menuseparator />
         
         <menuitem accesskey="&translateMenu.accesskey;" label="&translateMenu.label;" oncommand="Translate();"/>
