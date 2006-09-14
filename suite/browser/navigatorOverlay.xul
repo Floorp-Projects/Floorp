@@ -39,10 +39,10 @@ Contributor(s): ______________________________________. -->
 	<!-- File Menu -->
 	<key id="key_newNavigator"/>
 	<key id="key_newMessage"/>
-  <key id="key_newBlankPage"/>
-  <key id="openBrowserKb"     xulkey="true" key="&openCmd.commandkey;" observes="Browser:Open" />
-  <key id="openFileKb"        xulkey="true" key="&openFileCmd.commandkey;" observes="Browser:OpenFile" />
-  <key id="printKb"           xulkey="true" key="&printCmd.commandkey;" observes="Browser:Print" />
+	<key id="key_newBlankPage"/>
+	<key id="openBrowserKb"     xulkey="true" key="&openCmd.commandkey;" observes="Browser:Open" />
+	<key id="openFileKb"        xulkey="true" key="&openFileCmd.commandkey;" observes="Browser:OpenFile" />
+	<key id="printKb"           xulkey="true" key="&printCmd.commandkey;" observes="Browser:Print" />
 	<key id="key_close"/>
 	<key id="key_quit"/>
 
@@ -73,10 +73,10 @@ Contributor(s): ______________________________________. -->
 		
 	<key id="goForwardKb"         xulkey="true" key="&goForwardCmd.commandkey;" observes="Browser:GoForward" />
 	<key id="goBackwardKb"        xulkey="true" key="&goBackCmd.commandkey;" observes="Browser:GoBackwards" />
-  <key id="goHomeKb"            xulkey="true" key="&goHomeCmd.commandkey;" observes="Browser:GoHome" />
+	<key id="goHomeKb"            xulkey="true" key="&goHomeCmd.commandkey;" observes="Browser:Home" />
     
-  <key id="addBookmarkKb"        xulkey="true" key="&addCurPageCmd.commandkey;" observes="Browser:AddBookmark" />
-  <key id="manBookmarkKb"        xulkey="true" key="&manBookmarksCmd.commandkey;" observes="Browser:ManageBookmark" />
+	<key id="addBookmarkKb"       xulkey="true" key="&addCurPageCmd.commandkey;" observes="Browser:AddBookmark" />
+	<key id="manBookmarkKb"       xulkey="true" key="&manBookmarksCmd.commandkey;" observes="Browser:ManageBookmark" />
 
 	<!-- how to handle return, enter, tab, function keys, arrow keys, others? saari working on solution -->
 </keyset>
