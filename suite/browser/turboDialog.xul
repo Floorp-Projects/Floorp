@@ -24,7 +24,7 @@
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://navigator/skin/turbo.css" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
 <!DOCTYPE window [
   <!ENTITY % turboDialogDTD SYSTEM "chrome://navigator/locale/turboDialog.dtd" >
   %turboDialogDTD;
@@ -34,10 +34,9 @@
   %brandDTD;
 ]>
 
-<dialog id="turboDialog"
+<dialog id="turboDialog" buttons="accept" buttonpack="center"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&exitWarningTitle.label;"
-        onload="document.getElementById('okButton').focus();"
         onunload="SetTurboPref();">
   <script type="application/x-javascript">
     <![CDATA[
@@ -79,12 +78,4 @@
     </vbox>
   </hbox>
 
-  <separator class="thin"/>
-  <separator class="thin"/>
-  <hbox>
-    <spacer flex="1"/>
-    <button id="okButton" label="&okButton.label;" oncommand="window.close();" default="true"/>
-    <spacer flex="1"/>
-  </hbox> 
-
-</window>
+</dialog>
