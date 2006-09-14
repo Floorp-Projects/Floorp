@@ -271,6 +271,25 @@ nsBrowserStatusHandler.prototype =
       }
     }
 
+   if (document.tooltipNode) {
+     // Optimise for the common case
+     if (aWebProgress.DOMWindow == content) {
+       document.getElementById("aHTMLTooltip").hidePopup();
+       document.tooltipNode = null;
+     } else {
+       for (var tooltipWindow =
+              document.tooltipNode.target.ownerDocument.defaultView;
+            tooltipWindow != tooltipWindow.parent;
+            tooltipWindow = tooltipWindow.parent) {
+         if (tooltipWindow == aWebProgress.DOMWindow) {
+           document.getElementById("aHTMLTooltip").hidePopup();
+           document.tooltipNode = null;
+           break;
+         }
+       }
+     }
+   }
+
     // XXX temporary hack for bug 104532.
     // Depends heavily on setOverLink implementation
     if (!aRequest)
