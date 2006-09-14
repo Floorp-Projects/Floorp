@@ -20,6 +20,7 @@ Rights Reserved.
 Contributor(s): ______________________________________. -->
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 
 <!DOCTYPE window [
@@ -121,8 +122,6 @@ Contributor(s): ______________________________________. -->
 	<broadcaster id="Browser:SendLink"  value="&sendLinkCmd.label;" oncommand="BrowserSendLink(window.content.location.href, window.content.document.title);"/>
 	<broadcaster id="Browser:EditPage"  value="&editPageCmd.label;" oncommand="BrowserEditPage(window.content.location.href);"/>
  	
-	<broadcaster id="Browser:Synchronize"  value="&offlineSynchronizeCmd.label;"   disabled="true" 		 oncommand="BrowserReload();"/>
-  
 	<broadcaster id="Browser:PrintSetup"  value="&printSetupCmd.label;"     disabled ="true" oncommand="BrowserReload();"/>
 	<broadcaster id="Browser:PrintPreview"  value="&printPreviewCmd.label;" disabled="true"  oncommand="BrowserReload();"/>
 	<broadcaster id="Browser:Print"  value="&printCmd.label;"        						 oncommand="BrowserPrint();"/>
@@ -173,12 +172,8 @@ Contributor(s): ______________________________________. -->
 	      <menuitem accesskey="&printPreviewCmd.accesskey;" observes="Browser:PrintPreview"/>
 	      <menuitem accesskey="&printCmd.accesskey;" key="printKb" observes="Browser:Print"/>
 	      <menuseparator />
-	      <menu value="&offlineMenu.label;" accesskey="&offlineMenu.accesskey;">
-	        <menupopup>
-	          <menuitem id="goOffline" accesskey="&offlineGoOfflineCmd.accesskey;" value="&offlineGoOfflineCmd.label;" oncommand="setOfflineStatus(true);"/>
-	          <menuseparator />
-	          <menuitem accesskey="&offlineSynchronizeCmd.accesskey;" observes="Browser:Synchronize"/>
-	        </menupopup>
+	      <menu id="offlineMenu">
+	        <menupopup id="offlineMenuPopup"/>
 	      </menu>
 	      <menuseparator />
 	  </menupopup>
@@ -498,8 +493,8 @@ END of Deprecated -->
 </menubar>
 
   <statusbar id="status-bar" class="chromeclass-status">
-    <statusbarpanel id="offline-status" onclick="setOfflineStatus(true);"/>
-    <progressmeter id="statusbar-icon" mode="normal" value="0"/>
+    <statusbarpanel id="offline-status"/>
+    <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0"/>
     <statusbarpanel id="statusbar-display" value="&statusText.label;" crop="right" flex="1"/>
     <statusbarpanel id="statusbar-buildid" value="&buildId.label;"/>
     <statusbarpanel id="security-button"/>
