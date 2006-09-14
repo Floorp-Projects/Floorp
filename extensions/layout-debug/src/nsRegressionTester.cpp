@@ -53,6 +53,8 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIDocShell.h"
+#include "nsIContentViewer.h"
+#include "nsIContentViewerFile.h"
 #include "nsIFrameDebug.h"
 #include "nsIFrame.h"
 #include "nsStyleStruct.h"
@@ -121,11 +123,21 @@ nsRegressionTester::DumpFrameModel(nsIDOMWindow *aWindowToDump, nsILocalFile *aD
     rv = aDestFile->OpenANSIFileDesc("w", &fp);
     if (NS_FAILED(rv)) return rv;
   }
-  
-  fdbg->DumpRegressionData(presShell->GetPresContext(), fp, 0, dumpStyle);
+  if (aFlagsMask & DUMP_FLAGS_MASK_PRINT_MODE) {
+    nsCOMPtr <nsIContentViewer> viewer;
+    docShell->GetContentViewer(getter_AddRefs(viewer));
+    if (viewer){
+      nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
+      if (viewerFile) {
+         viewerFile->Print(PR_TRUE, fp, nsnull);
+      }
+    }
+  }
+  else {
+    fdbg->DumpRegressionData(presShell->GetPresContext(), fp, 0, dumpStyle);
+  }
   if (fp != stdout)
     fclose(fp);
-
   *aResult = DUMP_RESULT_COMPLETED;
   return NS_OK;
 }

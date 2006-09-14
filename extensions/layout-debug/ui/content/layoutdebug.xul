@@ -97,13 +97,13 @@
 
     <toolbox>
       <menubar id="main-menubar" grippyhidden="true">
-        <menu id="menu_File">
+        <menu id="menu_file" label="File" accesskey="F">
           <menupopup id="menu_FilePopup">
             <menuitem id="menu_open" label="&ldb.Open.label;" accesskey="&ldb.Open.accesskey;" key="openFileKb" oncommand="openFile()"/>
-            <menuitem id="menu_close"/>
+            <menuitem id="menu_close" label="Close" accesskey="C" oncommand="window.close();"/>
           </menupopup>
         </menu>
-        <menu id="menu_Edit">
+        <menu id="menu_edit">
           <menupopup>
             <menuitem id="menu_cut" />
             <menuitem id="menu_copy" />
@@ -115,6 +115,7 @@
         <menu label="&ldb.RegressionTestMenu.label;"
               accesskey="&ldb.RegressionTestMenu.accesskey;">
           <menupopup>
+			<menuitem type="checkbox" id="menu_RTestPrintMode" label="&ldb.RegressionPrintMode.label;" accesskey="&ldb.RegressionPrintMode.accesskey;"/>
             <menu label="&ldb.RunBaselineMenu.label;"
                   accesskey="&ldb.RunBaselineMenu.accesskey;"
                   id="menu_RTest_baseline"
@@ -126,7 +127,7 @@
                   <menuitem uri="rdf:*"
                             label="rdf:&NC_RDFNS;name"
                             name="rdf:&NC_RDFNS;name"
-                            oncommand="RunRTest(this.getAttribute('name'), true);" />
+                            oncommand="RunRTest(this.getAttribute('name'), true, document.getElementById('menu_RTestPrintMode').getAttribute('checked'));" />
                 </menupopup>
               </template>
             </menu>
@@ -141,7 +142,7 @@
                   <menuitem uri="rdf:*"
                             label="rdf:&NC_RDFNS;name"
                             name="rdf:&NC_RDFNS;name"
-                            oncommand="RunRTest(this.getAttribute('name'), false);" />
+                            oncommand="RunRTest(this.getAttribute('name'), false, document.getElementById('menu_RTestPrintMode').getAttribute('checked'));" />
                 </menupopup>
               </template>
             </menu>
@@ -221,7 +222,7 @@
     </toolbox>
 
     <browser flex="1" id="browser" type="content-primary"
-             homepage="resource:///res/samples/test0.html" />
+             homepage="about:blank" />
 
     <hbox>
       <description id="status-text" value="" />

@@ -343,31 +343,32 @@ const NS_LOCALFILEINPUTSTREAM_CONTRACTID =
           "@mozilla.org/network/file-input-stream;1";
 
 
-function RunRTest(aFilename, aIsBaseline)
+function RunRTest(aFilename, aIsBaseline, aIsPrinting)
 {
   if (gRTestURLList) {
     // XXX Does alert work?
     alert("Already running regression test.\n");
     return;
   }
-
-  dump("Running " + (aIsBaseline?"baseline":"verify") + " test for " + aFilename + ".\n");
+  dump("Running " + (aIsBaseline?"baseline":"verify") + 
+      (aIsPrinting?" PrintMode":"") + " test for " + aFilename + ".\n");
 
   var listFile = Components.classes[NS_LOCAL_FILE_CONTRACTID].
                     createInstance(nsILocalFile);
   listFile.persistentDescriptor = aFilename;
-  gRTestURLList = new RTestURLList(listFile, aIsBaseline);
+  gRTestURLList = new RTestURLList(listFile, aIsBaseline, aIsPrinting);
   gRTestURLList.startURL();
 }
 
-function RTestURLList(aLocalFile, aIsBaseline) {
-  this.init(aLocalFile, aIsBaseline);
+function RTestURLList(aLocalFile, aIsBaseline, aIsPrinting) {
+  this.init(aLocalFile, aIsBaseline, aIsPrinting);
 }
 
 RTestURLList.prototype = {
-  init : function(aLocalFile, aIsBaseline)
+  init : function(aLocalFile, aIsBaseline, aIsPrinting)
     {
       this.mIsBaseline = aIsBaseline;
+      this.mIsPrinting = aIsPrinting;
       this.mURLs = new Array();
       this.readFileList(aLocalFile);
       this.mRegressionTester =
@@ -419,8 +420,16 @@ RTestURLList.prototype = {
 
     dump("Writing regression data to " +
          data.QueryInterface(nsILocalFile).persistentDescriptor + "\n");
-    this.mRegressionTester.dumpFrameModel(gBrowser.contentWindow, data,
-      nsILayoutRegressionTester.DUMP_FLAGS_MASK_DUMP_STYLE);
+    if (this.mIsPrinting) {
+      this.mRegressionTester.dumpFrameModel(gBrowser.contentWindow, data,
+        nsILayoutRegressionTester.DUMP_FLAGS_MASK_PRINT_MODE);
+    }
+    else {
+       this.mRegressionTester.dumpFrameModel(gBrowser.contentWindow, data,
+        nsILayoutRegressionTester.DUMP_FLAGS_MASK_DUMP_STYLE);
+    }
+     
+      
 
     if (!this.mIsBaseline) {
       var base_data = this.mCurrentURL.dir.clone();
@@ -454,5 +463,6 @@ RTestURLList.prototype = {
   mURLs : null,
   mCurrentURL : null, // url (string), dir (nsIFileURL), relurl (string)
   mIsBaseline : null,
-  mRegressionTester : null
+  mRegressionTester : null,
+  mIsPrinting : null
 }
