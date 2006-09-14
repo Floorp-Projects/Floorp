@@ -209,7 +209,7 @@ function loadEventHandlers(event)
 function getContentAreaFrameCount()
 {
   var saveFrameItem = document.getElementById("savepage");
-  if (!_content || !_content.frames.length || !isDocumentFrame(document.commandDispatcher.focusedWindow))
+  if (!content || !content.frames.length || !isContentFrame(document.commandDispatcher.focusedWindow))
     saveFrameItem.setAttribute("hidden", "true");
   else
     saveFrameItem.removeAttribute("hidden");
@@ -219,8 +219,8 @@ function getContentAreaFrameCount()
 function contentAreaFrameFocus()
 {
   var focusedWindow = document.commandDispatcher.focusedWindow;
-  if (isDocumentFrame(focusedWindow)) {
-    gFocusedURL = focusedWindow.location.href;
+  if (isContentFrame(focusedWindow)) {
+    gFocusedURL = Components.lookupMethod(focusedWindow, 'location').call(focusedWindow).href;
     gFocusedDocument = focusedWindow.document;
   }
 }
