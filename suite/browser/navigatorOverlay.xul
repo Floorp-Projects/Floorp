@@ -376,10 +376,10 @@ END of Deprecated -->
 		</menupopup>
     </menu>
       
-  <menu accesskey="t" id="tasksMenu"/>
+  <menu id="tasksMenu"/>
   
-  <menu accesskey="h" id="menu_Help"/>
-
+  <menu id="menu_Help"/>
+  <menu accesskey="&helpMenuCmd.accesskey;" id="menu_Help"/>
   // Menu for testing.
   <menu accesskey="d" value="&debugMenu.label;">
     <menupopup>
