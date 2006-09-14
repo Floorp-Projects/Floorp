@@ -33,6 +33,7 @@ Contributor(s): ______________________________________. -->
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="Startup()"
   onunload="Shutdown()"
+  contenttitlesettting="true"
   title="&mainWindow.title;" 
   titlemodifier="&mainWindow.titlemodifier;" 
   titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
