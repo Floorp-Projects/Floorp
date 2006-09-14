@@ -226,27 +226,28 @@ Contributor(s): ______________________________________. -->
       // we can get this button into rdf. We can't allow drags on this
       // container so we have to be able to identify it (bug 19588).
       //     - pinkerton
-      <menu id="PersonalMenu" datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" ref="NC:BookmarksRoot">
-        <titledbutton class="bookmarkFolder" align="right" container="true"
+      <menu id="PersonalMenu" datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
+            ref="NC:BookmarksRoot">
+        <titledbutton align="right" class="bmenu" container="true"
           value="&bookmarksButton.label;" crop="right"/>
         <template>
           <!-- Recursive rules for nested folders -->
           <rule iscontainer="true">
             <menupopup>
-              <menu uri="rdf:*" crop="right" flex="1" align="left"
+              <menu class="standard" uri="rdf:*" crop="right" flex="1" align="left"
                 value="rdf:http://home.netscape.com/NC-rdf#Name" >
-                <menupopup />
+                <menupopup class="standard"/>
               </menu>
             </menupopup>
           </rule>
           <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
             <menupopup>
-              <menuseparator uri="rdf:*"/>
+              <menuseparator class="standard" uri="rdf:*"/>
             </menupopup>
           </rule>
           <rule>
             <menupopup>
-              <menuitem align="left" uri="..." 
+              <menuitem class="standard" align="left" uri="..." 
                 value="rdf:http://home.netscape.com/NC-rdf#Name"
                 oncommand="OpenBookmarkURL(event.target, document.getElementById('PersonalMenu').database)"/>
             </menupopup>
@@ -257,8 +258,7 @@ Contributor(s): ______________________________________. -->
              builder can hang stuff off of. Failure to add this makes
              it s.t. you need to triple-click (!) to get the bookmarks
              menu to drop down. -->
-        <menupopup/>
-
+        <menupopup class="standard"/>
         <spring class="personaltoolbarspacer" flex="1"/>
       </menu>
 
