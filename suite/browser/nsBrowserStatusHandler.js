@@ -210,14 +210,8 @@ nsBrowserStatusHandler.prototype =
       if (aRequest) {
         var msg = "";
         // Get the channel if the request is a channel
-        var channel;
-        try {
-          channel = aRequest.QueryInterface(nsIChannel);
-        }
-        catch(e) { };
-
-        if (channel) {
-          var location = channel.URI.spec;
+        if (aRequest instanceof nsIChannel) {
+          var location = aRequest.URI.spec;
           if (location != "about:blank") {
             const kErrorBindingAborted = 0x804B0002;
             const kErrorNetTimeout = 0x804B000E;
