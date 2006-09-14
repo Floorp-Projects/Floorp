@@ -145,15 +145,10 @@ function UpdateBookmarksLastVisitedDate(event)
 	{
 		try
 		{
-
-      var wnd = document.commandDispatcher.focusedWindow;
-      if (window == wnd) wnd = window._content;
-      var docCharset = wnd.document.characterSet;
-
 			// if the URL is bookmarked, update its "Last Visited" date
 			var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
 			if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
-			if (bmks)	bmks.UpdateBookmarkLastVisitedDate(window._content.location.href, docCharset);
+			if (bmks)	bmks.UpdateBookmarkLastVisitedDate(window._content.location.href, window._content.document.characterSet);
 		}
 		catch(ex)
 		{
