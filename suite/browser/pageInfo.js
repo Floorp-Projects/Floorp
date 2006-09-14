@@ -28,63 +28,64 @@ function onLoadPageInfo()
 
   makeDocument(page, root);
 
-  var formTreeHolder = document.getElementById("formtreecontainer");
+  var formTreeHolder = document.getElementById("formTreeContainer");
   var hasForm = makeFormTree(page, formTreeHolder);
   if (hasForm)
   {
-    var formBox = document.getElementById("formtreecontainer");
-    formBox.removeAttribute("collapsed");
+    formTreeHolder.removeAttribute("collapsed");
   }
 
-  var imageTreeHolder = document.getElementById("imagetreecontainer");
-  var hasimages = makeImageTree(page, imageTreeHolder);
-  if (hasimages)
+  var imageTreeHolder = document.getElementById("imageTreeContainer");
+  var hasImages = makeImageTree(page, imageTreeHolder);
+  if (hasImages)
   {
-    var imageBox = document.getElementById("image_items");
-    imageBox.removeAttribute("collapsed");
+    imageTreeHolder.removeAttribute("collapsed");
   }
+
+  if (hasForm && hasImages)
+  {
+    document.getElementById("formImageSplitter").removeAttribute("hidden");
+  }
+
 }
 
 function makeDocument(page, root)
 {
   var title = page.title;
   var url   = page.URL;
-  var lastmodified;
-  var lastmod = page.lastModified // get string of last modified date
-  var lastmoddate = Date.parse(lastmod)   // convert modified string to date
-  if(lastmoddate == 0){               // unknown date (or January 1, 1970 GMT)
-    lastmodified = "Unknown";
-    } else {
-    lastmodified = lastmod;
-  }
+  var lastModified;
+  var lastMod = page.lastModified // get string of last modified date
+  var lastModdate = Date.parse(lastMod)   // convert modified string to date
+
+  lastModified = (lastModdate) ? lastMod : "Unknown";  // unknown date (or January 1, 1970 GMT)
 
   document.getElementById("titletext").setAttribute("value", title);
   document.getElementById("urltext").setAttribute("value", url);
-  document.getElementById("lastmodifiedtext").setAttribute("value", lastmodified);
+  document.getElementById("lastmodifiedtext").setAttribute("value", lastModified);
 }
 
 function makeFormTree(page, root)
 {
-  var form_list = page.forms;
-  if (form_list.length == 0) return false;
+  var formList = page.forms;
+  if (formList.length == 0) return false;
 
-  var treechildren = document.getElementById("formchildren");
+  var treeChildren = document.getElementById("formChildren");
   
-  for (var i = 0; i < form_list.length; i++)
+  for (var i = 0; i < formList.length; i++)
   {
-	  var treeitem = document.createElement("treeitem");
-	  var treerow_elem = treeitem.appendChild(document.createElement("treerow"));
+    var treeItem = document.createElement("treeitem");
+    var treeRowElem = treeItem.appendChild(document.createElement("treerow"));
 
-	  var treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
-	  treecell_elem.setAttribute("value", form_list[i].action);
+    var treeCellElem = treeRowElem.appendChild(document.createElement("treecell"));
+    treeCellElem.setAttribute("value", formList[i].action);
 
-	  treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
-	  treecell_elem.setAttribute("value", form_list[i].method);
+    treeCellElem = treeRowElem.appendChild(document.createElement("treecell"));
+    treeCellElem.setAttribute("value", formList[i].method);
 
-	  treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
-	  treecell_elem.setAttribute("value", form_list[i].name);
+    treeCellElem = treeRowElem.appendChild(document.createElement("treecell"));
+    treeCellElem.setAttribute("value", formList[i].name);
 	  
-	  treechildren.appendChild(treeitem);
+    treeChildren.appendChild(treeItem);
   }
   
   return true;
@@ -92,32 +93,32 @@ function makeFormTree(page, root)
 
 function makeImageTree(page, root)
 {
-  var img_list = page.images;
-  if (img_list.length == 0) return false;
+  var imgList = page.images;
+  if (imgList.length == 0) return false;
 
-  var treechildren = document.getElementById("imageschildren");
+  var treeChildren = document.getElementById("imagesChildren");
 
-  for (var i = 0; i < img_list.length; i++) 
+  for (var i = 0; i < imgList.length; i++) 
   {
-	  var treeitem = document.createElement("treeitem");
-	  treeitem.setAttribute("container", "true");
-	  treeitem.setAttribute("parent", "true");
+    var treeItem = document.createElement("treeitem");
+    treeItem.setAttribute("container", "true");
+    treeItem.setAttribute("parent", "true");
 	  
-	  var treerow_elem = treeitem.appendChild(document.createElement("treerow"));
+    var treeRowElem = treeItem.appendChild(document.createElement("treerow"));
 
-	  var treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
-	  treecell_elem.setAttribute("value", img_list[i].src);
+    var treeCellElem = treeRowElem.appendChild(document.createElement("treecell"));
+    treeCellElem.setAttribute("value", imgList[i].src);
 
-	  treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
-	  treecell_elem.setAttribute("value", img_list[i].width);
+    treeCellElem = treeRowElem.appendChild(document.createElement("treecell"));
+    treeCellElem.setAttribute("value", imgList[i].width);
 
-	  treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
-	  treecell_elem.setAttribute("value", img_list[i].height);
+    treeCellElem = treeRowElem.appendChild(document.createElement("treecell"));
+    treeCellElem.setAttribute("value", imgList[i].height);
 
-	  treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
-	  treecell_elem.setAttribute("value", img_list[i].alt);
+    treeCellElem = treeRowElem.appendChild(document.createElement("treecell"));
+    treeCellElem.setAttribute("value", imgList[i].alt);
 	  
-	  treechildren.appendChild(treeitem);
+    treeChildren.appendChild(treeItem);
   }
 
   return true;
@@ -125,20 +126,20 @@ function makeImageTree(page, root)
 
 function onImageSelect()
 {
-  var tree = document.getElementById("images_tree");
-  var imageFrame = document.getElementById("image_frame");
+  var tree = document.getElementById("imageTree");
+  var imageFrame = document.getElementById("imageFrame");
   
   if (tree.selectedItems.length == 1)
   {
-    var  clickedRow = tree.selectedItems[0].firstChild;
-    var  firstCell = clickedRow.firstChild;
-    var  imageUrl = firstCell.getAttribute("value");
+    var clickedRow = tree.selectedItems[0].firstChild;
+    var firstCell = clickedRow.firstChild;
+    var imageUrl = firstCell.getAttribute("value");
     imageFrame.setAttribute("src", imageUrl);
   }
 }
-
 
 function BrowserClose()
 {
   window.close();
 }
+
