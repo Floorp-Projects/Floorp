@@ -216,9 +216,9 @@
             defaultEngine = this.mPrefs.getComplexValue("browser.search.defaultengine",
                                                         Components.interfaces.nsISupportsString).data;
           } catch(ex) {
+            // this will re-invoke updateEngines via the pref observer if the pref changes
             this.ensureDefaultEnginePrefs(rdf, ds);
-            defaultEngine = this.mPrefs.getComplexValue("browser.search.defaultengine",
-                                                        Components.interfaces.nsISupportsString).data;
+            return;
           }
           
           if (defaultEngine) {
@@ -231,10 +231,15 @@
               } catch(ex) {
                 searchBarUrl = null;
               }
-                this.addEngine(res.Value, 
-                              this.readRDFString(ds, res, kNC_Name),
-                              this.readRDFString(ds, res, kNC_Icon),
-                              searchBarUrl);					  							  
+              if (searchBarUrl == null) {
+                // this will re-invoke updateEngines via the pref observer if the pref changes
+                this.ensureDefaultEnginePrefs(rdf, ds);
+                return;
+              }
+              this.addEngine(res.Value, 
+                            this.readRDFString(ds, res, kNC_Name),
+                            this.readRDFString(ds, res, kNC_Icon),
+                            searchBarUrl);
             }
           }
           
