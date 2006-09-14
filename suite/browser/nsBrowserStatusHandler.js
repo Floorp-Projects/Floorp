@@ -277,6 +277,11 @@ nsBrowserStatusHandler.prototype =
 
   onLocationChange : function(aWebProgress, aRequest, aLocation)
   {
+    // XXX temporary hack for bug 104532.
+    // Depends heavily on setOverLink implementation
+    if (!aRequest)
+      this.status = this.jsStatus = this.jsDefaultStatus = "";
+
     this.setOverLink("");
 
     var locationURI = null;
