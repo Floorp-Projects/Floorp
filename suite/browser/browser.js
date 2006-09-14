@@ -258,8 +258,6 @@ function BrowserPrintPreview()
 
 function FinishPrintPreview()
 {
-  gInPrintPreviewMode = true;
-
   var browser = getBrowser();
   try {
     var ifreq = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
@@ -268,6 +266,8 @@ function FinishPrintPreview()
       gPrintSettings = GetPrintSettings();
       webBrowserPrint.printPreview(gPrintSettings, null, gWebProgress.value);
     }
+
+    gInPrintPreviewMode = true;
 
     browser.setAttribute("handleCtrlPageUpDown", "false");
 
