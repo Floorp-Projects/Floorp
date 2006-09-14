@@ -235,21 +235,23 @@ Contributor(s): ______________________________________. -->
       </hbox>
     </toolbar>
   
-    <toolbar id="PersonalToolbar" class="chromeclass-directories" persist="collapsed" dragdroparea="innermostBox"
-             ondragover="nsDragAndDrop.dragOver(event, personalToolbarObserver);"
-             ondragdrop="nsDragAndDrop.drop(event, personalToolbarObserver);"
-             ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarObserver);"
-             ondragexit="nsDragAndDrop.dragExit(event, personalToolbarObserver);"
-             grippytooltiptext="&personalToolbar.tooltip;"
-             tbalign="stretch">
+    <toolbar id="PersonalToolbar" class="chromeclass-directories" persist="collapsed" 
+             grippytooltiptext="&personalToolbar.tooltip;" tbalign="stretch"
+             oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)"
+             ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarDNDObserver)"
+             ondragdrop="nsDragAndDrop.drop(event, personalToolbarDNDObserver); event.preventBubble()"
+             ondragenter="nsDragAndDrop.dragEnter(event, personalToolbarDNDObserver); event.preventBubble()"
+             ondragexit="nsDragAndDrop.dragExit(event, personalToolbarDNDObserver); event.preventBubble()"
+             ondragover="nsDragAndDrop.dragOver(event, personalToolbarDNDObserver); event.preventBubble()">
 
       <toolbarbutton id="home-button" class="bookmark-item"
                      label="&homeButton.label;" persist="hidden"
-                     ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver);"
-                     ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
-                     ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
-                     ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
-                     oncommand="BrowserHome(); event.preventBubble();"/>
+                     oncommand="BrowserHome(); event.preventBubble()"
+                     ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver); event.preventBubble()"
+                     ondragenter="event.preventBubble()"
+                     ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver); event.preventBubble()"
+                     ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver); event.preventBubble()"/>
   
       <toolbarseparator id="home-bm-separator" persist="hidden"/>
  
@@ -258,21 +260,13 @@ Contributor(s): ______________________________________. -->
                      persist="hidden" label="&bookmarksButton.label;"
                      datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
                      ref="NC:BookmarksRoot" container="true" flags="dont-test-empty"
-                     oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)" 
-                     ondragover="nsDragAndDrop.dragOver(event, folderObserver);"
-                     template="bookmarksMenuTemplate">
-        <menupopup onpopuphiding="gDidOpen = false;"
-                   onpopupshowing="checkBookmarksMenuTemplateBuilder();"
-                   ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
-                   ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
-                   ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
-          <menuitem accesskey="&addCurPageCmd.accesskey;" key="addBookmarkKb" observes="Browser:AddBookmark"
-                    ondragover="event.preventBubble(); return false;"/>
-          <menuitem accesskey="&addCurPageAsCmd.accesskey;" key="addBookmarkAsKb" observes="Browser:AddBookmarkAs"
-                    ondragover="event.preventBubble(); return false;"/>
-          <menuseparator ondragover="event.preventBubble(); return false;"/>
-          <menuitem accesskey="&manBookmarksCmd.accesskey;" key="manBookmarkKb" observes="Browser:ManageBookmark"
-                    ondragover="event.preventBubble(); return false;"/>
+                     template="bookmarksMenuTemplate"
+                     ondraggesture="if (event.target.id=='bookmarks-button') event.preventBubble()">
+        <menupopup onpopupshowing="checkBookmarksMenuTemplateBuilder();">
+          <menuitem accesskey="&addCurPageCmd.accesskey;" key="addBookmarkKb" observes="Browser:AddBookmark"/>
+          <menuitem accesskey="&addCurPageAsCmd.accesskey;" key="addBookmarkAsKb" observes="Browser:AddBookmarkAs"/>
+          <menuseparator/>
+          <menuitem accesskey="&manBookmarksCmd.accesskey;" key="manBookmarkKb" observes="Browser:ManageBookmark"/>
           <menuseparator id="lastStaticSeparator"/>
         </menupopup>
       </toolbarbutton>
@@ -281,8 +275,7 @@ Contributor(s): ______________________________________. -->
       <hbox id="innermostBox" flex="1" style="min-width: 1px;" context="bmContext" 
            datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
            ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
-           rdf:type="http://home.netscape.com/NC-rdf#Folder"
-           oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)">
+           rdf:type="http://home.netscape.com/NC-rdf#Folder">
         <tooltip id="ptTooltip" noautohide="true" onpopupshowing="return FillInPTTooltip(document.tooltipNode)">
           <vbox id="ptTooltipTextBox" flex="1">  
             <label id="ptTitleText" />
@@ -305,17 +298,13 @@ Contributor(s): ______________________________________. -->
                            rdf:type="http://home.netscape.com/NC-rdf#Folder"
                            label="rdf:http://home.netscape.com/NC-rdf#Name"/>
           </rule>
+
           <rule parent="hbox" iscontainer="true" isempty="true"
                 rdf:type="http://home.netscape.com/NC-rdf#Folder">
             <toolbarbutton type="menu" editable="true" class="bookmark-item"
                            rdf:type="http://home.netscape.com/NC-rdf#Folder"
-                           uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name"
-                           ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }"
-                           ondragover="nsDragAndDrop.dragOver(event, folderObserver);">
-              <menupopup
-                         ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
-                         ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
-                         ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
+                           uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menupopup>
                 <menuitem label="&emptyItem.label;" disabled="true"/>
               </menupopup>
             </toolbarbutton>
@@ -324,12 +313,8 @@ Contributor(s): ______________________________________. -->
           <rule parent="hbox" iscontainer="true">
             <toolbarbutton type="menu" class="bookmark-item" uri="rdf:*" editable="true"
                            rdf:type="http://home.netscape.com/NC-rdf#Folder"
-                           label="rdf:http://home.netscape.com/NC-rdf#Name"
-                           ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }"
-                           ondragover="nsDragAndDrop.dragOver(event, folderObserver);">
-              <menupopup ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
-                         ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
-                         ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();"/>
+                           label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menupopup/>
             </toolbarbutton>
           </rule>
 
@@ -352,27 +337,20 @@ Contributor(s): ______________________________________. -->
             </menupopup>
           </rule>
 
-          <rule iscontainer="true" isempty="true"
-                rdf:type="http://home.netscape.com/NC-rdf#Folder">
-            <menupopup
-                       ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
-                       ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
-                       ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
+          <rule iscontainer="true" isempty="true" rdf:type="http://home.netscape.com/NC-rdf#Folder">
+            <menupopup>
               <menu class="menu-iconic bookmark-item" uri="rdf:*" 
                   type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                   label="rdf:http://home.netscape.com/NC-rdf#Name">
                 <menupopup>
-                  <menuitem label="&emptyItem.label;" disabled="true"
-                      ondraggesture="event.preventBubble(); return false;"/>
+                  <menuitem label="&emptyItem.label;" disabled="true"/>
                 </menupopup>
               </menu>
             </menupopup>
           </rule>
 
           <rule iscontainer="true">
-            <menupopup ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
-                       ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
-                       ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
+            <menupopup>
               <menu class="menu-iconic bookmark-item" uri="rdf:*"
                     type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                     label="rdf:http://home.netscape.com/NC-rdf#Name">
@@ -388,9 +366,7 @@ Contributor(s): ______________________________________. -->
             </menupopup>
           </rule>
           <rule>
-            <menupopup ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
-                       ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
-                       ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
+            <menupopup>
               <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
                         label="rdf:http://home.netscape.com/NC-rdf#Name"/>
             </menupopup>
