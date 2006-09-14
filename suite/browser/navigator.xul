@@ -289,6 +289,8 @@ Contributor(s): ______________________________________. -->
           <rule parent="hbox" iscontainer="true" isempty="true"
                 rdf:type="http://home.netscape.com/NC-rdf#Folder">
             <toolbarbutton type="menu" editable="true" class="bookmark-item"
+                           image="rdf:http://home.netscape.com/NC-rdf#Icon"
+                           validate="never"
                            rdf:type="http://home.netscape.com/NC-rdf#Folder"
                            uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name"
                            ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }">
@@ -302,6 +304,8 @@ Contributor(s): ______________________________________. -->
             <toolbarbutton type="menu" class="bookmark-item" uri="rdf:*" editable="true"
                            rdf:type="http://home.netscape.com/NC-rdf#Folder"
                            label="rdf:http://home.netscape.com/NC-rdf#Name"
+                           image="rdf:http://home.netscape.com/NC-rdf#Icon"
+                           validate="never"
                           ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }">
               <menupopup ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarObserver);"/>
             </toolbarbutton>
@@ -318,6 +322,8 @@ Contributor(s): ______________________________________. -->
           </rule>
 
           <rule iscontainer="true" isempty="true"
+                image="rdf:http://home.netscape.com/NC-rdf#Icon"
+                validate="never"
                 rdf:type="http://home.netscape.com/NC-rdf#Folder">
             <menupopup>
               <menu class="menu-iconic bookmark-item" uri="rdf:*" 
@@ -332,7 +338,9 @@ Contributor(s): ______________________________________. -->
 
           <rule iscontainer="true">
             <menupopup>
-              <menu class="menu-iconic bookmark-item" uri="rdf:*" 
+              <menu class="menu-iconic bookmark-item" uri="rdf:*"
+                    image="rdf:http://home.netscape.com/NC-rdf#Icon"
+                    validate="never"
                     label="rdf:http://home.netscape.com/NC-rdf#Name">
                 <menupopup/>
               </menu>
