@@ -3691,7 +3691,8 @@ interrupt:
                      * or decrement result, if converted to a jsdouble from
                      * a non-number value, from GC nesting in the setter.
                      */
-                    vp = sp++;
+                    vp = sp;
+                    PUSH(JSVAL_VOID);
                     SAVE_SP(fp);
                     --i;
                 }
