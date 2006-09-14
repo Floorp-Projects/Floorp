@@ -192,6 +192,14 @@ var personalToolbarObserver = {
     {
       var dropPosition = this.determineDropPosition(aEvent);
 
+      // bail if drop target is not a valid bookmark item or folder
+      var inner = document.getElementById("innermostBox");
+      if (aEvent.target.parentNode != inner && aEvent.target != inner) 
+        {
+          aDragSession.canDrop = false;
+          return;
+        }
+      
       if (this.mCurrentDragOverButton != aEvent.target ||
           (this.mCurrentDragOverButton == aEvent.target &&
            this.mCurrentDragPosition != dropPosition))
@@ -246,7 +254,8 @@ var personalToolbarObserver = {
       var regionCount = 2;
 
       // you can drop ONTO containers, so there is a "middle" region
-      if (overButton.getAttribute("container") == "true")
+      if (overButton.getAttribute("container") == "true" &&
+          overButton.getAttribute("type") == "http://home.netscape.com/NC-rdf#Folder")
         regionCount = 3;
 
       var regionWidth = overButtonBoxObject.width/regionCount;
