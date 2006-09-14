@@ -1232,12 +1232,45 @@ function stylesheetSwitch(forDocument, title)
 
 function applyTheme(themeName)
 {
+  if (themeName.getAttribute("name") == "")
+    return;
+
   var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                                 .getService(Components.interfaces.nsIChromeRegistry);
+    .getService(Components.interfaces.nsIChromeRegistry);
+
+  try {
+    oldTheme = !chromeRegistry.checkThemeVersion(themeName.getAttribute("name"));
+  }
+  catch(e) {
+    oldTheme = false;
+  }
+
+
+  if (oldTheme) {
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+    var title = gNavigatorBundle.getString("oldthemetitle");
+    var message = gNavigatorBundle.getString("oldTheme");
+
+    message = message.replace(/%theme_name%/, themeName.getAttribute("displayName"));
+    message = message.replace(/%brand%/g, gBrandBundle.getString("brandShortName"));
+
+    if (promptService.confirm(window, title, message)){
+
+      var inUse = chromeRegistry.isSkinSelected(themeName.getAttribute("name"), true);
+
+      chromeRegistry.uninstallSkin( themeName.getAttribute("name"), true );
+
+      if (inUse)
+        chromeRegistry.refreshSkins();
+    }
+
+    return;
+  }
 
   chromeRegistry.selectSkin(themeName.getAttribute("name"), true);
   chromeRegistry.refreshSkins();
 }
+
 
 function getNewThemes()
 {
