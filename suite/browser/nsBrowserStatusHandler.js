@@ -172,7 +172,10 @@ nsBrowserStatusHandler.prototype =
 
   mimeTypeIsTextBased : function(contentType)
   {
-    return /^text\/|\+xml$/.test(contentType);
+    return /^text\/|\+xml$/.test(contentType) ||
+           contentType == "application/x-javascript" ||
+           contentType == "application/xml" ||
+           contentType == "mozilla.application/cached-xul";
   },
 
   onLinkIconAvailable : function(aHref) {
