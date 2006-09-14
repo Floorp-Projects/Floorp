@@ -92,8 +92,8 @@ Contributor(s): ______________________________________. -->
 
 	<broadcaster id="cmd_close" oncommand="BrowserClose()"/>
 
-	<broadcaster id="Browser:SendLink"  value="&sendLinkCmd.label;" oncommand="BrowserSendLink(window.content.location.href, window.content.document.title);"/>
-	<broadcaster id="Browser:EditPage"  value="&editPageCmd.label;" oncommand="BrowserEditPage(window.content.location.href);"/>
+	<broadcaster id="Browser:SendLink"  value="&sendLinkCmd.accesskey;" oncommand="BrowserSendLink(window.content.location.href, window.content.document.title);"/>
+	<broadcaster id="Browser:EditPage"  value="&editPageCmd.accesskey;" oncommand="BrowserEditPage(window.content.location.href);"/>
  	
 	<broadcaster id="Browser:GoOffline"  value="&offlineGoOfflineCmd.label;"       disabled="true" 		 oncommand="BrowserReload();"/>
 	<broadcaster id="Browser:Synchronize"  value="&offlineSynchronizeCmd.label;"   disabled="true" 		 oncommand="BrowserReload();"/>
@@ -136,8 +136,8 @@ Contributor(s): ______________________________________. -->
 		  <menuitem id="context-savepage" value="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" oncommand="savePage();"/>
 	      <menuseparator/>
 	      <menuitem id="menu_sendPage"  observes="cmd_sendPage"/>
-	      <menuitem accesskey="&sendLinkCmd.label;" observes="Browser:SendLink"/>
-	      <menuitem accesskey="&editPageCmd.label;" observes="Browser:EditPage" />
+	      <menuitem accesskey="&sendLinkCmd.accesskey;" observes="Browser:SendLink"/>
+	      <menuitem accesskey="&editPageCmd.accesskey;" observes="Browser:EditPage" />
 	      <menuseparator/>
 	      <menuitem accesskey="&printSetupCmd.accesskey;" observes="Browser:PrintSetup"/>
 	      <menuitem accesskey="&printPreviewCmd.accesskey;" observes="Browser:PrintPreview"/>
@@ -307,13 +307,13 @@ END of Deprecated -->
       <menuitem value="&findAgainCmd.label;" oncommand="BrowserFindAgain();"/>
       <menuseparator />   
       <menuitem value="&searchInternetCmd.label;"
-        oncommand="openTopWin('http://home.netscape.com/bookmark/6_0b1/ssearch.html')"/>
-      <menuitem value="&searchAllMailCmd.label;" disabled="true"
-        oncommand=""/>
-	  <menuitem value="&searchBookmarksHistoryCmd.label;" disabled="true"
-        oncommand=""/>
-      <menuitem value="&searchAddressbookCmd.label;" disabled="true"
-        oncommand=""/>
+        oncommand="OpenSearch('internet', true, null);"/>
+      <menuitem value="&searchAllMailCmd.label;" 
+        oncommand="OpenSearch('mail', true, null);"/>
+	  <menuitem value="&searchBookmarksHistoryCmd.label;" 
+        oncommand="OpenSearch('find', true, null);"/>
+      <menuitem value="&searchAddressbookCmd.label;"
+        oncommand="OpenSearch('addressbook', true, null);"/>
     <!--   <menuseparator />  
     Commenting out of beta. Not in Spec   
     <menuitem value="&searchComputerCmd.label;" 
