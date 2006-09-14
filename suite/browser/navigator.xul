@@ -151,6 +151,7 @@ Contributor(s): ______________________________________. -->
                      searchSessionType="urlbar" id="urlbar" tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
                      onclick="if (event.button == 0) URLBarLeftClickHandler(event);"
                      onblur="URLBarBlurHandler(event);"
+                     onkeypress="handleURLBarKeyPress(event);" flex="1"/>  
                      onkeypress="if (event.keyCode == 13) { addToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>
           </hbox>
           <menubutton class="menubutton-icon" id="ubhist">

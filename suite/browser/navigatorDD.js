@@ -329,6 +329,7 @@ var homeButtonObserver = {
 
   onDragExit: function (aEvent, aDragSession)
     {
+      var statusTextFld = document.getElementById("statusbar-display");
       statusTextFld.label = "";
     },
 
