@@ -66,7 +66,6 @@
     <commandset id="selectEditMenuItems"/>
     <commandset id="clipboardEditMenuItems"/>
     <commandset id="viewSourceMenuItems">
-      <command id="cmd_wrapLongLines" oncommand="wrapLongLines()"/>
       <command id="cmd_close" oncommand="ViewSourceClose()"/>
       <command id="cmd_savePage" oncommand="ViewSourceSavePage();"/>
       <command id="cmd_editPage" oncommand="ViewSourceEditPage();"/>
@@ -172,7 +171,7 @@
                     label="&pageInfoCmd.label;" accesskey="&pageInfoCmd.accesskey;"/>
           <menuseparator id="file_moduleSeparator"/>-->
           <menu id="charsetMenu"/>
-          <menuitem id="menu_wrapLongLines" type="checkbox" command="cmd_wrapLongLines"
+          <menuitem id="menu_wrapLongLines" type="checkbox" oncommand="wrapLongLines()"
                     label="&menu_wrapLongLines.title;" accesskey="&menu_wrapLongLines.accesskey;"/>
           <menuitem type="checkbox" id="menu_highlightSyntax" oncommand="highlightSyntax();"
                     label="&menu_highlightSyntax.label;" accesskey="&menu_highlightSyntax.accesskey;"/>
