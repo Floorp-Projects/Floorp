@@ -45,17 +45,17 @@ class query
 
     var $selected;               // Selected part of query
     var $where;                  // Where part of query
-    var $orderby;	         // How to order query
-    var $show;			 // How many to show on results page
-    var $page;			 // The page we are (page*show = starting result #)
-    var $count;			 // Should we count (top 25 page)
-    var $product_family;	 // The product family we are searching on
-    var $artificialReportID;	 // Only used when report_id is not in query results, as we need a report id, 
-    				 //  regardless of if the user wants to see it.
-    
-    var $totalResults;		 // How many results total in the database for the query
-    var $reportList;		 // if totalResults < max_nav_count has list of report_id's for next/prev nav
-    var $resultSet;		 // Actual data
+    var $orderby;                // How to order query
+    var $show;                   // How many to show on results page
+    var $page;                   // The page we are (page*show = starting result #)
+    var $count;                  // Should we count (top 25 page)
+    var $product_family;         // The product family we are searching on
+    var $artificialReportID;     // Only used when report_id is not in query results, as we need a report id,
+                                 //  regardless of if the user wants to see it.
+
+    var $totalResults;           // How many results total in the database for the query
+    var $reportList;             // if totalResults < max_nav_count has list of report_id's for next/prev nav
+    var $resultSet;              // Actual data
     var $queryHost = false;      // Does this query involve the host table explicity?
 
     function query(){
@@ -66,6 +66,7 @@ class query
     function processQueryInputs(){
         global $config;
 
+
         /*******************
          * ASCDESC
          *******************/
@@ -74,6 +75,7 @@ class query
         } else {
             $ascdesc = 'desc';
         }
+
 
         /*******************
          * SHOW (really "Limit")
@@ -87,6 +89,7 @@ class query
             $this->show = $_GET['show'];
         }
 
+
         /*******************
          * PAGE (really other part of "Limit"
          *******************/
@@ -98,6 +101,7 @@ class query
             $this->page = $_GET['page'];
         }
 
+
         /*******************
          * Count
          *******************/
@@ -105,6 +109,7 @@ class query
             $this->count = 'report_id'; // XX limitation for now
         }
         // if nothing... it's nothing
+
 
         /*******************
          * SELECT
@@ -145,6 +150,7 @@ class query
                                       'title' => $config['fields']['report_id']);
         }
 
+
       /*******************
        * ORDER BY
        *******************/
@@ -152,10 +158,11 @@ class query
         // The first priority is those who were recently specified (such as a menu header clicked).
         if(isset($_GET['orderby']) && in_array(strtolower($_GET['orderby']), $this->approved_selects)){
             $this->orderby[$_GET['orderby']] = $ascdesc;
-            
+
             // For continuity Params we set this to true to verify it's been checked as matching an approved val
             $this->orderbyChecked = true;
         }
+
 
       /*******************
        * COUNT
@@ -175,6 +182,7 @@ class query
             // Hardcode host_id
             $_GET['count'] = 'report_id'; // XXX we just hardcode this (just easier for now, and all people will be doing).
             // XX NOTE:  We don't escape count below because 'host_id' != `host_id`.
+
 
             /*******************
              * ORDER BY
@@ -196,6 +204,7 @@ class query
         if(isset($_GET['product_family'])){
             $this->product_family = $_GET['product_family'];
         }
+
 
         /*******************
          * WHERE
@@ -224,12 +233,13 @@ class query
                 }
             }
         }
-        
+
         return true;
     }
 
     function doQuery(){
         global $db, $config;
+
 
         /************
          * SELECT
@@ -254,6 +264,7 @@ class query
             $sql_select = $sql_select.' ';
         }
 
+
         /************
          * FROM
          ************/
@@ -264,10 +275,16 @@ class query
             $sql_from_count = $sql_from;
         }
 
+
         /************
          * WHERE
          ************/
         $sql_where = 'WHERE ';
+
+        $host_join_str = 'host.host_id = report_host_id AND '; // this is a var to help them remain consistant for when it's deleted
+
+        $sql_where .= $host_join_str;
+
         foreach($this->where as $where_child){
             // we make sure to use quote() here to escape any evil on the value.  The others are sane
             $sql_where .= $where_child[0].' '.$where_child[1].' '.$db->quote($where_child[2]).' AND ';
@@ -299,16 +316,31 @@ class query
             }
         }
 
-        if(sizeof(trim($sql_where)) <= 0){
-            $sql_where .= ' AND ';
+        // Notice: we now have a sql_where_count, this is what's used when we query again for the COUNT() of all records
+        // that match the query (for pagination purposes).  Because we don't get actual results (just a COUNT()), it can
+        // be trimmed down a bit for performance reasons.
+
+        // Note this must be done before we strip the trailing "AND" or else the str_replace() won't work
+        if($this->queryHost != true){
+            $sql_where_count = str_replace($host_join_str, '', $sql_where);
+        } else {
+           $sql_where_count = $sql_where;
         }
 
-        $sql_where .= 'host.host_id = report_host_id ';
-        if($this->queryHost == true){
-            $sql_where_count = $sql_where;
-        } else {
+        // If there is a trailing "AND", lets get rid of it
+        if(substr(strtoupper(trim($sql_where)),-3) == 'AND'){
+            $sql_where = substr(trim($sql_where),0, -3);
+        }
+        // and again for the where count
+        if(substr(strtoupper(trim($sql_where_count)),-3) == 'AND'){
+            $sql_where_count = substr(trim($sql_where_count),0, -3);
+        }
+
+        // If the where clause is simply "WHERE", delete it
+        if(strtoupper(trim($sql_where_count)) == 'WHERE'){
             $sql_where_count = '';
         }
+
 
         /*******************
          * ORDER BY
@@ -321,7 +353,7 @@ class query
              $sql_product_family = "";
              if(!$prodFamQuery){
                  trigger_error("A database error occured.", E_USER_ERROR);
-      	         return false;
+                 return false;
              }
 
              $prodFamCount = 0;
@@ -336,11 +368,12 @@ class query
 
              // If we had results, wrap it in ()
              if($prodFamCount > 0){
-                 $sql_product_family = ' AND ( '.$sql_product_family;
-                 $sql_product_family .= ')';
+                 $sql_product_family = " AND ( $sql_product_family )";
              }
              $sql_where .= $sql_product_family;
-	 }
+         }
+
+        
         /*******************
          * ORDER BY
          *******************/
@@ -354,6 +387,7 @@ class query
              $sql_orderby = substr($sql_orderby,0,-1).' ';
          }
 
+        
         /*******************
          * Count
          *******************/
@@ -367,6 +401,7 @@ class query
         // Calculate Start
         $start = ($this->page-1)*$this->show;
 
+        
         /**************
          * QUERY
          **************/
@@ -374,33 +409,34 @@ class query
 
         if (!$dbQuery){
            trigger_error("A database error occured.", E_USER_ERROR);
-	   return false;
-	}
+           return false;
+        }
         $this->resultSet = array();
         while (!$dbQuery->EOF) {
             $this->resultSet[] = $dbQuery->fields;
             $dbQuery->MoveNext();
- 	}
+        }
 
+        
         /**************
          * Count Total
          **************/
-	$totalCount = $db->Execute("SELECT COUNT(report.report_id) AS total
-  	 	                    $sql_from_count
- 	                     	    $sql_where_count");
+        $totalCount = $db->Execute("SELECT COUNT(report.report_id) AS total
+                                    $sql_from_count
+                                    $sql_where_count");
         if(!$totalCount){
             trigger_error("A database error occured.", E_USER_ERROR);
-	    return false;
- 	}
- 	$this->totalResults = $totalCount->fields['total'];
+            return false;
+        }
+        $this->totalResults = $totalCount->fields['total'];
 
-	// Get the first 2000 report id's for prev/next navigation, only if < 2000 results and
-	// only if count isn't being done (since you can't next/prev through that).
+        // Get the first 2000 report id's for prev/next navigation, only if < 2000 results and
+        // only if count isn't being done (since you can't next/prev through that).
         if($this->totalResults < $config['max_nav_count']  && $this->count == null){
             $listQuerySQL = "SELECT report.report_id
                              FROM report, host ".
                              $sql_where." \r".
-			     $sql_groupby.$sql_orderby;
+                             $sql_groupby.$sql_orderby;
 
             $listQuery = $db->SelectLimit($listQuerySQL,2001,0,$inputarr=false);
 
