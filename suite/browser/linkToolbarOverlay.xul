@@ -88,24 +88,24 @@
         tbautostretch="always" hidden="true" hasitems="false">
 
       <toolbarbutton id="link-top" class="bookmark-item"
-          label="&topButton.label;" disabled="true" tooltip="aTooltip" />
+          label="&topButton.label;" disabled="true"/>
 
       <toolbarbutton id="link-up" class="bookmark-item"
-          label="&upButton.label;" disabled="true" tooltip="aTooltip" />
+          label="&upButton.label;" disabled="true"/>
 
       <toolbarseparator />
 
       <toolbarbutton id="link-first" class="bookmark-item" 
-          label="&firstButton.label;" disabled="true" tooltip="aTooltip" />
+          label="&firstButton.label;" disabled="true"/>
 
       <toolbarbutton id="link-prev" class="bookmark-item" 
-          label="&prevButton.label;" disabled="true" tooltip="aTooltip" />
+          label="&prevButton.label;" disabled="true"/>
 
       <toolbarbutton id="link-next" class="bookmark-item" 
-          label="&nextButton.label;" disabled="true" tooltip="aTooltip" />
+          label="&nextButton.label;" disabled="true"/>
 
       <toolbarbutton id="link-last" class="bookmark-item" 
-          label="&lastButton.label;" disabled="true" tooltip="aTooltip" />
+          label="&lastButton.label;" disabled="true"/>
 
       <toolbarseparator />
 
