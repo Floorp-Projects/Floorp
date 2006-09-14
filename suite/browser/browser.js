@@ -42,9 +42,7 @@ const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 var gPrintSettingsAreGlobal = true;
 var gSavePrintSettings = true;
 var gChromeState = null; // chrome state before we went into print preview
-var gOldCloseHandler = null; // close handler before we went into print preview
 var gInPrintPreviewMode = false;
-var gWebProgress        = null;
 
 function getWebNavigation()
 {
@@ -144,155 +142,39 @@ function toggleAffectedChrome(aHide)
     SidebarRebuild();
 }
 
-function showPrintPreviewToolbar()
+function onEnterPrintPreview()
 {
   toggleAffectedChrome(true);
-  const kXULNS = 
-    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-  var printPreviewTB = document.createElementNS(kXULNS, "toolbar");
-  printPreviewTB.setAttribute("printpreview", true);
-  printPreviewTB.setAttribute("id", "print-preview-toolbar");
-
-  var navToolbox = document.getElementById("navigator-toolbox");
-  navToolbox.parentNode.insertBefore(printPreviewTB, navToolbox);
+  gInPrintPreviewMode = true;
 }
 
-function BrowserExitPrintPreview()
+function onExitPrintPreview()
 {
   gInPrintPreviewMode = false;
-
-  var browser = getBrowser();
-  browser.setAttribute("handleCtrlPageUpDown", "true");
-
-  // remove the print preview toolbar
-  var navToolbox = document.getElementById("navigator-toolbox");
-  var printPreviewTB = document.getElementById("print-preview-toolbar");
-  navToolbox.parentNode.removeChild(printPreviewTB);
-
   // restore chrome to original state
   toggleAffectedChrome(false);
-
-  // restore old onclose handler if we found one before previewing
-  var mainWin = document.getElementById("main-window");
-  mainWin.setAttribute("onclose", gOldCloseHandler);
-
-  // exit print preview galley mode in content area
-  var ifreq = content.QueryInterface(
-    Components.interfaces.nsIInterfaceRequestor);
-  var webBrowserPrint = ifreq.getInterface(
-    Components.interfaces.nsIWebBrowserPrint);     
-  webBrowserPrint.exitPrintPreview(); 
-  content.focus();
 }
 
-// This observer is called once the progress dialog has been "opened"
-var gPrintPreviewObs = {
-    observe: function(aSubject, aTopic, aData)
-    {
-      setTimeout(FinishPrintPreview, 0);
-    },
+function getEngineWebBrowserPrint()
+{
+  return content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                .getInterface(Components.interfaces.nsIWebBrowserPrint);
+}
 
-    QueryInterface : function(iid)
-    {
-     if (iid.equals(Components.interfaces.nsIObserver) || 
-         iid.equals(Components.interfaces.nsISupportsWeakReference) || 
-         iid.equals(Components.interfaces.nsISupports)) {
-      return this;
-     }
-     
-     throw Components.results.NS_NOINTERFACE;
-    }
-};
+function getNavToolbox()
+{
+  return document.getElementById("navigator-toolbox");
+}
+
+function getPPBrowser()
+{
+  return document.getElementById("browser");
+}
 
 function BrowserPrintPreview()
 {
-  var ifreq;
-  var webBrowserPrint;  
-  try {
-    ifreq = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-    webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
-    gPrintSettings = GetPrintSettings();
-
-  } catch (e) {
-    // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
-    // causing an exception to be thrown which we catch here.
-    // Unfortunately this will also consume helpful failures, so add a
-    // dump(e); // if you need to debug
-  }
-
-  // Here we get the PrintingPromptService tso we can display the PP Progress from script
-  // For the browser implemented via XUL with the PP toolbar we cannot let it be
-  // automatically opened from the print engine because the XUL scrollbars in the PP window
-  // will layout before the content window and a crash will occur.
-  //
-  // Doing it all from script, means it lays out before hand and we can let printing do it's own thing
-  gWebProgress = new Object();
-
-  var printPreviewParams    = new Object();
-  var notifyOnOpen          = new Object();
-  var printingPromptService = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
-                                  .getService(Components.interfaces.nsIPrintingPromptService);
-  if (printingPromptService) {
-    // just in case we are already printing, 
-    // an error code could be returned if the Prgress Dialog is already displayed
-    try {
-      printingPromptService.showProgress(this, webBrowserPrint, gPrintSettings, gPrintPreviewObs, false, gWebProgress, 
-                                         printPreviewParams, notifyOnOpen);
-      if (printPreviewParams.value) {
-        var webNav = getWebNavigation();
-        printPreviewParams.value.docTitle = webNav.document.title;
-        printPreviewParams.value.docURL   = webNav.currentURI.spec;
-      }
-
-      // this tells us whether we should continue on with PP or 
-      // wait for the callback via the observer
-      if (!notifyOnOpen.value.valueOf() || gWebProgress.value == null) {
-        FinishPrintPreview();
-      }
-    } catch (e) {
-      FinishPrintPreview();
-    }
-  }
+  PrintUtils.printPreview(onEnterPrintPreview, onExitPrintPreview);
 }
-
-function FinishPrintPreview()
-{
-  var browser = getBrowser();
-  try {
-    var ifreq = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-    var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
-    if (webBrowserPrint) {
-      gPrintSettings = GetPrintSettings();
-      webBrowserPrint.printPreview(gPrintSettings, null, gWebProgress.value);
-    }
-
-    gInPrintPreviewMode = true;
-
-    browser.setAttribute("handleCtrlPageUpDown", "false");
-
-    var mainWin = document.getElementById("main-window");
-
-    // save previous close handler to restoreon exiting print preview mode
-    if (mainWin.hasAttribute("onclose"))
-      gOldCloseHandler = mainWin.getAttribute("onclose");
-    else
-      gOldCloseHandler = null;
-    mainWin.setAttribute("onclose", "BrowserExitPrintPreview(); return false;");
- 
-    // show the toolbar after we go into print preview mode so
-    // that we can initialize the toolbar with total num pages
-    showPrintPreviewToolbar();
-
-    content.focus();
-  } catch (e) {
-    // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
-    // causing an exception to be thrown which we catch here.
-    // Unfortunately this will also consume helpful failures, so add a
-    // dump(e); // if you need to debug
-  }
-}
-
 
 function BrowserSetDefaultCharacterSet(aCharset)
 {
