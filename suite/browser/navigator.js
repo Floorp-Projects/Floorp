@@ -161,18 +161,20 @@ function UpdateInternetSearchResults(event)
 	if ((window._content.location.href) && (window._content.location.href != ""))
 	{
 		var	searchInProgressFlag = false;
+		var autoOpenSearchPanel = false;
 
 		try
 		{
 			var search = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"].getService();
 			if (search)	search = search.QueryInterface(Components.interfaces.nsIInternetSearchService);
 			if (search)	searchInProgressFlag = search.FindInternetSearchResults(window._content.location.href);
+			autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
 		}
 		catch(ex)
 		{
 		}
 
-		if (searchInProgressFlag == true)
+		if (searchInProgressFlag == true && autoOpenSearchPanel == true)
 		{
 			RevealSearchPanel();
 		}
