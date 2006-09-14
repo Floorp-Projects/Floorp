@@ -55,21 +55,23 @@ Contributor(s): ______________________________________. -->
   screenX="10" screenY="10"
   persist="screenX screenY width height sizemode"> 
 
-<script language="javascript" src="chrome://global/content/nsJSSupportsUtils.js"></script>
-<script language="javascript" src="chrome://global/content/nsJSComponentManager.js"></script>
-<script language="javascript" src="chrome://global/content/nsUserSettings.js"></script>
-<script language="javascript" src="chrome://global/content/nsTransferable.js"></script>
-<script language="javascript" src="chrome://global/content/nsClipboard.js"></script>
-<script language="javascript" src="chrome://global/content/nsDragAndDrop.js"></script>
-<script language="javascript" src="chrome://global/content/strres.js"></script>
-<script language="javascript" src="chrome://communicator/content/bookmarks/bookmarks.js"></script>
-<script language="javascript" src="chrome://navigator/content/navigator.js"></script>
-<script language="javascript" src="nsContextMenu.js"></script>
-<script language="javascript" src="tooltip.js"></script>
-<script language="javascript" src="navigatorDD.js"></script>
+<script type="text/javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
+<script type="text/javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+<script type="text/javascript" src="chrome://global/content/nsUserSettings.js"/>
+<script type="text/javascript" src="chrome://global/content/nsTransferable.js"/>
+<script type="text/javascript" src="chrome://global/content/nsClipboard.js"/>
+<script type="text/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+<script type="text/javascript" src="chrome://global/content/strres.js"/>
+<script type="text/javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
+<script type="text/javascript" src="chrome://communicator/content/contentAreaDD.js"/>
+<script type="text/javascript" src="chrome://communicator/content/bookmarks/bookmarks.js"/>
+<script type="text/javascript" src="chrome://navigator/content/navigator.js"/>
+<script type="text/javascript" src="nsContextMenu.js"/>
+<script type="text/javascript" src="tooltip.js"/>
+<script type="text/javascript" src="navigatorDD.js"/>
 
 <!-- UI services -->
-<script language="javascript" src="chrome://navigator/content/sessionHistoryUI.js"></script>
+<script type="text/javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
 
 <commands id="commands">
 	<commandset id="globalEditMenuItems"/>
@@ -96,6 +98,11 @@ Contributor(s): ______________________________________. -->
   <popup id="aHTMLTooltip" class="tooltip" oncreate="return FillInHTMLTooltip(document.tooltipNode);" > 
     <box id="HTML_TOOLTIP_tooltipBox" orient="vertical"/>
   </popup>
+</popupset>
+
+<popupset>
+  <popup id="backMenu" oncreate="BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+  <popup id="forwardMenu" oncreate="BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
 </popupset>
 
 <!-- Context menu -->
@@ -269,16 +276,14 @@ Contributor(s): ______________________________________. -->
              grippytooltip="aTooltip" grippytooltiptext="&navigationBar.tooltip;"
              tbautostretch="always">
       <box id="nav-bar-buttons">
-        <menubutton class="menubutton-dual toolbar top" id="back-button" value="&backButton.label;" 
-                    crop="right" observes="canGoBack" oncommand="gotoHistoryIndex(event);"
-                    tooltip="aTooltip"
-                    buttonaction="BrowserBack();" buttontooltiptext="&backButton.tooltip;">  
+        <menubutton id="back-button" value="&backButton.label;" buttontooltiptext="&backButton.tooltip;"
+                    oncommand="gotoHistoryIndex(event);" buttonaction="BrowserBack();" context="backMenu"
+                    class="menubutton-dual toolbar top" crop="right" tooltip="aTooltip" observes="canGoBack">  
        	  <menupopup oncreate="BrowserBackMenu(event);"/>
         </menubutton>
-        <menubutton class="menubutton-dual toolbar top" id="forward-button" 
-                    crop="right" observes="canGoForward" tooltip="aTooltip"
-                    oncommand="gotoHistoryIndex(event);" buttonaction="BrowserForward();"
-                    value="&forwardButton.label;" buttontooltiptext="&forwardButton.tooltip;">  
+        <menubutton id="forward-button" value="&forwardButton.label;" buttontooltiptext="&forwardButton.tooltip;"
+                    oncommand="gotoHistoryIndex(event);" buttonaction="BrowserForward();" context="forwardMenu"
+                    class="menubutton-dual toolbar top" crop="right" tooltip="aTooltip" observes="canGoForward">
       	  <menupopup oncreate="BrowserForwardMenu(event);"/>
         </menubutton>
 
@@ -391,7 +396,7 @@ Contributor(s): ______________________________________. -->
             <button class="button-toolbar bookmarkitem" uri="rdf:*" 
               tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
               value="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"
-              oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database);"/>
+              oncommand="OpenBookmarkURL(event, document.getElementById('innermostBox').database);"/>
           </rule>
         
           <rule iscontainer="true">

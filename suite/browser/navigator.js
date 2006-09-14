@@ -74,28 +74,6 @@ catch (ex)
 // focused frame URL
 var gFocusedURL = null;
 
-/**
- * Save the document at a given location to disk
- **/  
-function savePage( url ) 
-{
-  // Default is to save current page.
-  url = url ? url : window._content.location.href;
-  // Use stream xfer component to prompt for destination and save.
-  var xfer = getService("@mozilla.org/appshell/component/xfer;1", "nsIStreamTransfer");
-  try {
-    // Save; use page in cache if possible.
-    var postData = appCore.postData;
-    xfer.SelectFileAndTransferLocationSpec( url, window, "", "", true, postData );
-    return true;
-  } 
-  catch( exception ) { 
-    // suppress NS_ERROR_ABORT exceptions for cancellation 
-    return false;
-  }
-}
-
- 
 /**                                                                             
 * We can avoid adding multiple load event listeners and save some time by adding
 * one listener that calls all real handlers.                                   
@@ -602,22 +580,12 @@ function Shutdown()
 
 function gotoHistoryIndex( aEvent )
   {
-	  var index = aEvent.target.getAttribute("index");
-	  if (index) 
-      {
-        appCore.gotoHistoryIndex(index);
-	      return true;
-	    }
-	  else 
-      {
-	      var id = aEvent.target.getAttribute("id");
-	      if (id == "menuitem-back")
-	        BrowserBack();
-	      else if (id == "menuitem-forward")
-	        BrowserForward();
-      }
-      
-      return false;
+    var index = aEvent.target.getAttribute("index");
+    if (index) {
+      appCore.gotoHistoryIndex(index);
+      return true;
+    }
+    return false;
   }
 
 function BrowserBack()
@@ -671,62 +639,48 @@ function BrowserHome()
    RefreshUrlbar();
   }
 
-function OpenBookmarkURL(node, datasources)
-  {
-    // what is the meaning of the return value from this function?
-    
-    if (node.getAttribute('container') == "true") {
-      return false;
-    }
+function OpenBookmarkURL(event, datasources)
+{
+  // what is the meaning of the return value from this function?
+  var node = event.target;
+  if (node.getAttribute('container') == "true")
+    return null;
 
-	var url = node.getAttribute('id');
-	try
-	{
-		// add support for IE favorites under Win32, and NetPositive URLs under BeOS
-		var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
-		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
-		if (rdf && datasources)
-		{
-			var src = rdf.GetResource(url, true);
-			var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
-			var target = datasources.GetTarget(src, prop, true);
-			if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
-			if (target)	target = target.Value;
-			if (target)	url = target;
-		}
-	}
-	catch(ex)
-	{
-	}
-
-    // Ignore "NC:" urls.
-    if (url.substring(0, 3) == "NC:") {
-      return false;
+  var url = node.getAttribute('id');
+  try {
+    // add support for IE favorites under Win32, and NetPositive URLs under BeOS
+    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
+    if (rdf)
+      rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+    if (rdf && datasources) {
+      var src = rdf.GetResource(url, true);
+      var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
+      var target = datasources.GetTarget(src, prop, true);
+      if (target)
+        target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+      if (target)
+        target = target.Value;
+      if (target)
+        url = target;
     }
-	// Check if we have a browser window
-	if ( window._content == null )
-	{
-		window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
-		return true;
-	}
-	else
-	{
-  	  //window._content.location.href = url;
-	  if (appCore)
-	  {
-	     appCore.loadUrl(url);
-	     return true;
-	  }
-	  else
-	  {
-	     dump("BrowserAppCore is not initialised\n");
-	     return false;
-	  }
-      RefreshUrlbar();
-  	}
-  	
-  	return false;
   }
+  catch(ex) {
+    return null;
+  }
+  // Ignore "NC:" urls.
+  if (url.substring(0, 3) == "NC:")
+    return null;
+
+  // Check if we have a browser window
+  if (!window._content) {
+    window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
+    return true;
+  }
+  else {
+    loadURI(url);
+  }
+  return false;
+}
 
 function OpenSearch(tabName, forceDialogFlag, searchStr)
 {
@@ -928,50 +882,6 @@ function RevealSearchPanel()
       return Components.classesByID[ cid ].getService( iid );
   }
 
-  function openNewWindowWith( url ) {
-
-    // URL Loading Security Check
-    const nsIStandardURL = Components.interfaces.nsIStandardURL;
-    const nsIURI = Components.interfaces.nsIURI;
-    const stdURL = Components.classes["@mozilla.org/network/standard-url;1"];
-
-    var sourceURL = stdURL.createInstance(nsIStandardURL);
-    var focusedWindow = document.commandDispatcher.focusedWindow;
-    var sourceWin = isDocumentFrame(focusedWindow) ? focusedWindow.location.href : window._content.location.href;
-    sourceURL.init(nsIStandardURL.URLTYPE_STANDARD, 80, sourceWin, null);
-
-    var targetURL = stdURL.createInstance(nsIStandardURL);
-    targetURL.init(nsIStandardURL.URLTYPE_STANDARD, 80, url, null);
-
-    const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
-    var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"].getService().
-                 QueryInterface(nsIScriptSecurityManager);
-    secMan.CheckLoadURI(sourceURL, targetURL, nsIScriptSecurityManager.STANDARD);
-
-    var newWin;
-    var wintype = document.firstChild.getAttribute('windowtype');
-    
-    // if and only if the current window is a browser window and it has a document with a character
-    // set, then extract the current charset menu setting from the current document and use it to
-    // initialize the new browser window...
-    if (window && (wintype == "navigator:browser") && window._content && window._content.document)
-    {
-      var DocCharset = window._content.document.characterSet;
-      charsetArg = "charset="+DocCharset;
-      dump("*** Current document charset: " + DocCharset + "\n");
-
-      //we should "inherit" the charset menu setting in a new window
-      newWin = window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url, charsetArg );
-    }
-    else // forget about the charset information.
-    {
-      newWin = window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
-    }
-
-    // Fix new window.    
-    newWin.saveFileAndPos = true;
-  }
-  
   function BrowserOpenFileWindow()
   {
     // Get filepicker component.
@@ -1002,7 +912,6 @@ function RevealSearchPanel()
       dump("BrowserAppCore has not been created!\n");
     }
   }
-
 
   function BrowserAddBookmark(url,title)
   {
@@ -1486,6 +1395,15 @@ function BrowserEditBookmarks()
     }
   }
 
+  function loadURI(href)
+  {
+    var content = document.getElementById("content")
+    var boxObject = content.boxObject.QueryInterface(Components.interfaces.nsIBrowserBoxObject)
+    var docShell = boxObject.docShell
+    var webNavigation = docShell.QueryInterface(Components.interfaces.nsIWebNavigation)
+    return webNavigation.loadURI(href, 0);
+  }
+
   function BrowserLoadURL()
   {
     // rjc: added support for URL shortcuts (3/30/1999)
@@ -1569,94 +1487,6 @@ function BrowserEditBookmarks()
     } catch(ex) {
       return null;
     }
-  }
-
-  function findParentNode(node, parentNode)
-  {
-    while (node) {
-      var nodeName = node.localName;
-      if (nodeName == "")
-        return null;
-      nodeName = nodeName.toLowerCase();
-      if (nodeName == "" || nodeName == "body" ||
-          nodeName == "html" || nodeName == "#document") {
-        return null;
-      }
-      if (nodeName == parentNode)
-        return node;
-      node = node.parentNode;
-    }
-    return null;
-  }
-
-  // Called whenever the user clicks in the content area,
-  // except when left-clicking on links (special case)
-  // should always return true for click to go through
-  function contentAreaClick(event) 
-  {
-    var target = event.originalTarget;
-    var linkNode;
-    switch (target.localName.toLowerCase()) {
-      case "a":
-        linkNode = event.target;
-        break;
-      case "area":
-        if (event.target.href) 
-          linkNode = event.target;
-        break;
-      default:
-        linkNode = findParentNode(target, "a");
-        break;
-    }
-    if (linkNode)
-      return handleLinkClick(event, linkNode);
-
-    if (event.button == 2 &&
-        !findParentNode(target, "scrollbar") &&
-        pref.GetBoolPref("middlemouse.paste")) {
-      return middleMousePaste(event);
-    }
-
-    return true;
-  }
-
-  function handleLinkClick(event, node)
-  {  
-    switch (event.button) {                                   
-      case 1:                                                 // if left button clicked
-        if (event.metaKey || event.ctrlKey) {                 // and meta or ctrl are down
-          openNewWindowWith(node.href);                       // open link in new window
-          event.preventBubble();
-          return true;
-        } 
-        if (event.shiftKey)                                   // if shift is down
-          return savePage(node.href);                         // save the link
-        if (event.altKey)                                     // if alt is down
-          ;                                                   // select text within link (not implemented)
-        break;
-      case 2:                                                 // if middle button clicked
-        if (pref.GetBoolPref("middlemouse.openNewWindow")) {  // and the pref is on
-          openNewWindowWith(node.href);                       // open link in new window
-          event.preventBubble();
-          return true;
-        }
-        break;
-    }
-    return true;
-  }
-
-  function middleMousePaste(event)
-  {
-      var url = readFromClipboard();
-      //dump ("Loading URL on clipboard: '" + url + "'; length = " + url.length + "\n");
-      if (url) {
-        var urlBar = document.getElementById("urlbar");
-        urlBar.value = url;
-        BrowserLoadURL();
-        event.preventBubble();
-        return true;
-    }
-    return false;
   }
     
   function OpenMessenger()
