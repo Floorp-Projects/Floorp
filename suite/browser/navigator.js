@@ -50,8 +50,7 @@ var gLastValidURL = "";
 var gHaveUpdatedToolbarState = false;
 var gClickSelectsAll = -1;
 
-var pref = Components.classes["@mozilla.org/preferences;1"]
-                     .getService(Components.interfaces.nsIPref);
+var pref = null;
 
 var appCore = null;
 
@@ -133,7 +132,7 @@ function UpdateInternetSearchResults(event)
       var searchInProgressFlag = search.FindInternetSearchResults(url);
 
       if (searchInProgressFlag) {
-        var autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
+        var autoOpenSearchPanel = pref.getBoolPref("browser.search.opensidebarsearchpanel");
 
         if (autoOpenSearchPanel)
           RevealSearchPanel();
@@ -168,7 +167,8 @@ function getHomePage()
 {
   var url;
   try {
-    url = pref.getLocalizedUnicharPref("browser.startup.homepage");
+    url = pref.getComplexValue("browser.startup.homepage",
+                               Components.interfaces.nsIPrefLocalizedString);
   } catch (e) {
   }
 
@@ -204,7 +204,9 @@ function UpdateBackForwardButtons()
 function nsButtonPrefListener()
 {
   try {
-    pref.addObserver(this.domain, this);
+    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+    if (pbi)
+      pbi.addObserver(this.domain, this, false);
   } catch(ex) {
     dump("Failed to observe prefs: " + ex + "\n");
   }
@@ -224,7 +226,7 @@ nsButtonPrefListener.prototype =
     var buttonId = buttonName + "-button";
     var button = document.getElementById(buttonId);
 
-    var show = pref.GetBoolPref(prefName);
+    var show = pref.getBoolPref(prefName);
     if (show)
       button.setAttribute("hidden","false");
     else
@@ -274,6 +276,13 @@ function Startup()
                         .createInstance(Components.interfaces.nsIBrowserInstance);
     if (!appCore)
       throw "couldn't create a browser instance";
+
+    // Get the preferences service
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                .getService(Components.interfaces.nsIPrefService);
+    if (!prefService)
+      throw "couldn't create a preferences service";
+    pref = prefService.getBranch(null);
 
     webNavigation = getWebNavigation();
     if (!webNavigation)
@@ -447,8 +456,10 @@ function Shutdown()
   BrowserFlushBookmarksAndHistory();
 
   // unregister us as a pref listener
-  pref.removeObserver(window.buttonPrefListener.domain,
-                      window.buttonPrefListener);
+  var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+  if (pbi)
+    pbi.removeObserver(window.buttonPrefListener.domain,
+                       window.buttonPrefListener);
 
   window.browserContentListener.close();
   // Close the app core.
@@ -458,8 +469,8 @@ function Shutdown()
 
 function Translate()
 {
-  var service = pref.CopyCharPref("browser.translation.service");
-  var serviceDomain = pref.CopyCharPref("browser.translation.serviceDomain");
+  var service = pref.getCharPref("browser.translation.service");
+  var serviceDomain = pref.getCharPref("browser.translation.serviceDomain");
   
   // XXX This somehow causes a big leak, back to the old way
   //     till we figure out why. See bug 61886.
@@ -685,8 +696,9 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
   var forceAsURL = urlmatch.test(searchStr);
 
   try {
-    autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
-    defaultSearchURL = pref.getLocalizedUnicharPref("browser.search.defaulturl");
+    autoOpenSearchPanel = pref.getBoolPref("browser.search.opensidebarsearchpanel");
+    defaultSearchURL = pref.getComplexValue("browser.search.defaulturl",
+                                            Components.interfaces.nsIPrefLocalizedString);
   } catch (ex) {
   }
 
@@ -709,7 +721,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
      } else {
       var searchMode = 0;
       try {
-        searchMode = pref.GetIntPref("browser.search.powermode");
+        searchMode = pref.getIntPref("browser.search.powermode");
       } catch(ex) {
       }
       if (forceDialogFlag || searchMode == 1) {
@@ -736,7 +748,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 
           searchDS.RememberLastSearchText(escapedSearchStr);
           try {
-            var searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
+            var searchEngineURI = pref.getCharPref("browser.search.defaultengine");
             if (searchEngineURI) {          
               var searchURL = getSearchUrl("actionButton");
               if (searchURL) {
@@ -944,7 +956,7 @@ function BrowserLoadURL()
   if (url.match(/^view-source:/)) {
     BrowserViewSourceOfURL(url.replace(/^view-source:/, ""), null);
   } else {
-    if (pref && pref.GetBoolPref("browser.tabs.opentabfor.urlbar") && getBrowser().localName == "tabbrowser") {
+    if (pref && pref.getBoolPref("browser.tabs.opentabfor.urlbar") && getBrowser().localName == "tabbrowser") {
       var t = getBrowser().addTab(getShortcutOrURI(url)); // open link in new tab
       getBrowser().selectedTab = t;
     }
@@ -1362,7 +1374,9 @@ function applyTheme(themeName)
 
       chromeRegistry.uninstallSkin( themeName.getAttribute("name"), true );
       // XXX - this sucks and should only be temporary.
-      pref.SetUnicharPref("general.skins.removelist." + themeName.getAttribute("name"), true);
+      pref.setComplexValue("general.skins.removelist." + themeName.getAttribute("name"),
+                           Components.interfaces.nsISupportsWString,
+                           true);
       
       if (inUse)
         chromeRegistry.refreshSkins();
@@ -1374,7 +1388,9 @@ function applyTheme(themeName)
   // XXX XXX BAD BAD BAD BAD !! XXX XXX
   // we STILL haven't fixed editor skin switch problems
   // hacking around it yet again
-  pref.SetUnicharPref("general.skins.selectedSkin", themeName.getAttribute("name"));
+  pref.setComplexValue("general.skins.selectedSkin",
+                       Components.interfaces.nsISupportsWString,
+                       themeName.getAttribute("name"));
 
   var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
   observerService.notifyObservers(null, "skin-selected", null);
@@ -1398,7 +1414,7 @@ function URLBarFocusHandler(aEvent)
 {
   if (gURLBar) {
     if (gClickSelectsAll == -1)
-      gClickSelectsAll = pref.GetBoolPref("browser.urlbar.clickSelectsAll");
+      gClickSelectsAll = pref.getBoolPref("browser.urlbar.clickSelectsAll");
     if (gClickSelectsAll)
       gURLBar.setSelectionRange(0, gURLBar.textLength);
   }
