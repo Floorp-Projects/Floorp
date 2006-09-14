@@ -489,7 +489,7 @@ END of Deprecated -->
     <progressmeter id="statusbar-icon" mode="normal" value="0"/>
     <spring style="width: 1em"/>
     <image id="status-icon"/>
-    <text id="statusText" class="status-bar" flex="1" value="&statusText.label;"/>
+    <text id="statusText" class="status-bar" flex="1" value="&statusText.label;" crop="right"/>
     <text class="status-bar" value="&buildId.label;"/>
     <button class="plain" id="lock-button" />
   </box>
