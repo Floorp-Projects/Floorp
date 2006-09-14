@@ -185,7 +185,7 @@ Contributor(s): ______________________________________. -->
       <menuseparator/>
       <menuitem id="menu_selectAll"/>
       <menuseparator /> 
-      <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://communicator/content/pref/pref-appearance.xul', 'navigator')"/>
+      <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
     </menupopup>
   </menu>
 
