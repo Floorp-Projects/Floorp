@@ -330,7 +330,7 @@ END of Deprecated -->
       <menuitem accesskey="&findOnCmd.accesskey;"    key="key_find" observes="Browser:Find"/>
       <menuitem accesskey="&findAgainCmd.accesskey;" key="key_findAgain" observes="Browser:FindAgain"/>
       <menuseparator /> 
-      <menuitem value="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="openTopWin('http://home.netscape.com/bookmark/6_0b1/ssearch.html')"/>
+      <menuitem value="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="openTopWin('http://search.netscape.com/')"/>
       <menuitem value="&searchAllMailCmd.label;" accesskey="&searchAllMailCmd.accesskey;" disabled="true" oncommand=""/>
       <menuitem value="&searchBookmarksHistoryCmd.label;" accesskey="&searchBookmarksHistoryCmd.accesskey;" oncommand="window.openDialog('chrome://bookmarks/content/bm-find.xul', 'FindBookmarksWindow', 'centerscreen,dialog=no,close,chrome,resizable');"/>
       <menuitem value="&searchAddressbookCmd.label;" accesskey="&searchAddressbookCmd.accesskey;" disabled="true" oncommand="OpenSearch('addressbook', true, null);"/>
