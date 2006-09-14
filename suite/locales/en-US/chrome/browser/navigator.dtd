@@ -47,7 +47,9 @@
 <!ENTITY personalbarCmd.label "Personal Toolbar">
 <!ENTITY taskbarCmd.label "Taskbar">
 <!ENTITY enlargeTextSizeCmd.label "Enlarge Text Size">
+<!ENTITY enlargeTextSizeCmd.commandkey "+">
 <!ENTITY reduceTextSizeCmd.label "Reduce Text Size">
+<!ENTITY reduceTextSizeCmd.commandkey "-">
 <!ENTITY useStyleSheetMenu.label "Use Stylesheet">
 <!ENTITY useStyleSheetDefaultCmd.label "Default">
 <!ENTITY useStyleSheetEasyReadingCmd.label "Easy Reading">

@@ -46,6 +46,7 @@ catch (ex) {
   var overLink = null; 
   var explicitURL = false;
   var statusTextFld = null;
+  var textZoom = 1.0;
 
 
 function UpdateHistory(event)
@@ -798,6 +799,17 @@ function BrowserEditBookmarks()
     // dynamically change icons
     if (appCore != null) {
       appCore.print();
+    }
+  }
+
+  function BrowserChangeTextZoom(aChange)
+  {
+    if (appCore != null) {
+      textZoom += (aChange * 0.1);
+      if (textZoom < 0.1) {
+        textZoom = 0.1;
+      }
+      appCore.setTextZoom(textZoom);
     }
   }
 
