@@ -1160,6 +1160,30 @@ function BrowserEditBookmarks()
   }
 }
 
+function updateCloseItems()
+{
+  var browser = getBrowser();
+  if (browser && browser.localName == 'tabbrowser' && browser.getStripVisibility()) {
+    document.getElementById('menu_close').setAttribute('label', gNavigatorBundle.getString('tabs.closeTab'));
+    document.getElementById('menu_closeWindow').hidden = false;
+    document.getElementById('menu_closeOtherTabs').hidden = false;
+    if (browser.mTabContainer.childNodes.length > 1)
+      document.getElementById('cmd_closeOtherTabs').removeAttribute('disabled');
+    else
+      document.getElementById('cmd_closeOtherTabs').setAttribute('disabled', 'true');
+  } else {
+    document.getElementById('menu_close').setAttribute('label', gNavigatorBundle.getString('tabs.close'));
+    document.getElementById('menu_closeWindow').hidden = true;
+    document.getElementById('menu_closeOtherTabs').hidden = true;
+  }
+}
+
+function BrowserCloseOtherTabs()
+{
+  var browser = getBrowser();
+  browser.removeAllTabsBut(browser.mCurrentTab);
+}
+
 function BrowserCloseTabOrWindow()
 {
   var browser = getBrowser();
