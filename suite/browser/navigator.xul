@@ -218,7 +218,7 @@ Contributor(s): ______________________________________. -->
 <!-- Toolbox -->
 <toolbox id="main-toolbox">
   
-  <toolbar id="PersonalToolbar" chromeclass="toolbar" persist="collapsed" dragdroparea="innermostBox"
+  <toolbar id="PersonalToolbar" class="chromeclass-toolbar" persist="collapsed" dragdroparea="innermostBox"
     ondraggesture="return BeginDragPersonalToolbar(event);"
     ondragdrop="return DropPersonalToolbar(event);"
     ondragover="return DragOverPersonalToolbar(event);">
@@ -241,20 +241,20 @@ Contributor(s): ______________________________________. -->
           <!-- Recursive rules for nested folders -->
           <rule iscontainer="true">
             <menupopup>
-              <menu class="standard" uri="rdf:*"
+              <menu uri="rdf:*"
                 value="rdf:http://home.netscape.com/NC-rdf#Name" >
-                <menupopup class="standard"/>
+                <menupopup/>
               </menu>
             </menupopup>
           </rule>
           <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
             <menupopup>
-              <menuseparator class="standard" uri="rdf:*"/>
+              <menuseparator uri="rdf:*"/>
             </menupopup>
           </rule>
           <rule>
             <menupopup>
-              <menuitem class="standard" uri="rdf:*" 
+              <menuitem uri="rdf:*" 
                 value="rdf:http://home.netscape.com/NC-rdf#Name" />
             </menupopup>
           </rule>
@@ -264,7 +264,7 @@ Contributor(s): ______________________________________. -->
              builder can hang stuff off of. Failure to add this makes
              it s.t. you need to triple-click (!) to get the bookmarks
              menu to drop down. -->
-        <menupopup class="standard"/>
+        <menupopup/>
         <spring class="personaltoolbarspacer" flex="1"/>
       </menu>
 
@@ -281,7 +281,7 @@ Contributor(s): ______________________________________. -->
 		        <menu uri="..." class="standard">
 		          <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name"
 		                        align="right" class="bookmarkFolder toolbar-flat"/>
-		          <menupopup class="standard"/>
+		          <menupopup/>
 		        </menu>
 				<spring uri="rdf:*" class="personaltoolbarspacer" flex="0"/>
 		      </rule>
@@ -294,21 +294,21 @@ Contributor(s): ______________________________________. -->
 
 		      <!-- Recursive rules for nested folders -->
 		      <rule iscontainer="true">
-		        <menupopup class="standard">
-		          <menu class="standard" uri="rdf:*" 
+		        <menupopup>
+		          <menu uri="rdf:*" 
 		            value="rdf:http://home.netscape.com/NC-rdf#Name" >
-		            <menupopup class="standard"/>
+		            <menupopup/>
 		          </menu>
 		        </menupopup>
 		      </rule>
 		      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
 		        <menupopup>
-		          <menuseparator class="standard" uri="rdf:*" />
+		          <menuseparator uri="rdf:*" />
 		        </menupopup>
 		      </rule>
 		      <rule>
 		        <menupopup>
-		          <menuitem class="standard" uri="..." 
+		          <menuitem uri="..." 
 		            value="rdf:http://home.netscape.com/NC-rdf#Name"
 		            oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)"/>
 		        </menupopup>
@@ -329,7 +329,7 @@ Contributor(s): ______________________________________. -->
 	<box id="personaltoolbar-endcap" align="vertical" width="68px"/>
   </toolbar>
 
-  <toolbar id="nav-bar" class="decorated main-bar" chromeclass="toolbar" persist="collapsed">
+  <toolbar id="nav-bar" class="decorated main-bar chromeclass-toolbar" persist="collapsed">
 	<box align="horizontal" flex="100%" style="overflow: hidden">
 
 	<button class="large-toolbar left" id="back-button" crop="right" orient="vertical" observes="canGoBack"/>  
@@ -375,7 +375,7 @@ Contributor(s): ______________________________________. -->
 			 <titledbutton id="page-proxy-button" ondraggesture="DragProxyIcon(event);"/> 
 
              <!-- this is the urlbar --> 
-             <html:input id="urlbar" type="text" chromeclass="location" 
+             <html:input id="urlbar" type="text" class="chromeclass-location" 
                 onkeypress="if (event.which == 13) { BrowserLoadURL(); }" 
                 flex = "100%" /> 
   
@@ -400,7 +400,7 @@ Contributor(s): ______________________________________. -->
       <!-- FIX ME - remove this
       <box align="vertical" flex="100%">
         <spring flex="1"/>
-        <html:input id="urlbar" type="text" chromeclass="location"
+        <html:input id="urlbar" type="text" class="chromeclass-location"
                     onkeyup="if (event.which == 13) { BrowserLoadURL(); }"/>   
         <spring flex="1"/>
       </box>
@@ -428,8 +428,8 @@ Contributor(s): ______________________________________. -->
 <box align="horizontal" flex="100%">
   <!-- toolbar/content/status -->
  
-  <box id="sidebar-box" chromeclass="extrachrome"/>
-  <splitter id="sidebar-splitter" chromeclass="extrachrome" />
+  <box id="sidebar-box" class="chromeclass-extrachrome"/>
+  <splitter id="sidebar-splitter" class="chromeclass-extrachrome" />
   
   <box id="appcontent" align="vertical" flex="100%"
     onclick="if (event.button==2) browserHandleMiddleClick(event);"
@@ -443,7 +443,7 @@ Contributor(s): ______________________________________. -->
     <box context="context" flex="100%">
     <browser type="content-primary" id="content" src="about:blank" flex="100%"/>
     </box>
-      <box id="status-bar" chromeclass="status">
+      <box id="status-bar" class="chromeclass-status">
         <box id="state-box" align="horizontal" flex="100%" style="min-width: 1px">
           <box align="vertical" style="width:100px">
           <spring flex="100%"/>
@@ -463,6 +463,6 @@ Contributor(s): ______________________________________. -->
     </box><!-- status -->
   </box><!-- toolbar/content/status -->
 </box><!-- sidebar and tools/content/status -->
-<toolbar id="taskbar" chromeclass="extrachrome" />
+<toolbar id="taskbar" class="chromeclass-extrachrome" />
 
 </window>

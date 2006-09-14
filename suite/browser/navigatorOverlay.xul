@@ -135,7 +135,7 @@ Contributor(s): ______________________________________. -->
 
 
 <!-- Menu -->
-<menubar id="main-menubar" chromeclass="menubar">
+<menubar id="main-menubar" class="chromeclass-menubar">
 	<menu id="menu_File">
 	    <menupopup id="menu_FilePopup">
 			<menuitem value="&browserCmd.label;" accesskey="&browserCmd.accesskey;" key="key_newNavigator" observes="cmd_newNavigator"/>
