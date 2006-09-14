@@ -244,7 +244,7 @@
         <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
         <menuseparator />
 
-        <menuitem accesskey="&translateMenu.accesskey;" label="&translateMenu.label;" id="menuitem-translate" oncommand="Translate();"/>
+        <menuitem accesskey="&translateMenu.accesskey;" label="&translateMenu.label;" oncommand="Translate();"/>
         <menu label="&webContentMenu.label;" accesskey="&webContentMenu.accesskey;">
           <menupopup datasources="rdf:chrome"  ref="urn:mozilla:locale:root" 
                      sortResource="http://www.mozilla.org/rdf/chrome#name"
