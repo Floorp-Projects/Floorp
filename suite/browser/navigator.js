@@ -683,9 +683,11 @@ function OpenBookmarkGroupFromResource(resource, datasource, rdf) {
   if (index == 0)
     return; // If the bookmark group was completely invalid, just bail.
      
-  // Select the first tab in the group.
-  var tabs = gBrowser.mTabContainer.childNodes;
-  gBrowser.selectedTab = tabs[tabCount];
+  // Select the first tab in the group if we aren't loading in the background.
+  if (!pref.getBoolPref("browser.tabs.loadInBackground")) {
+    var tabs = gBrowser.mTabContainer.childNodes;
+    gBrowser.selectedTab = tabs[tabCount];
+  }
 }
 
 function OpenBookmarkURL(node, datasources)
