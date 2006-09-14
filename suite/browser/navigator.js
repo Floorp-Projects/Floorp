@@ -182,7 +182,19 @@ function createBrowserInstance()
     }
   }
 
-  function Shutdown() {
+  function Shutdown()
+  {
+	try
+	{
+		// If bookmarks are dirty, flush 'em to disk
+		var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
+		if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+		if (bmks)	bmks.Flush();
+	}
+	catch (ex)
+	{
+	}
+
     // Close the app core.
     if ( appCore ) {
         appCore.close();
