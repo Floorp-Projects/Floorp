@@ -18,7 +18,7 @@
    - Rights Reserved.
    - 
    - Contributor(s):
-   -   Blake Ross <BlakeR1234@aol.com>
+   -   Blake Ross   <blakeross@telocity.com>
    -   Peter Annema <disttsc@bart.nl>
    -->
 
@@ -32,6 +32,8 @@
 %brandDTD;
 <!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" >
 %navigatorDTD;
+<!ENTITY % contentAreaCommandsDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
+%contentAreaCommandsDTD;
 ]>
 
 <overlay id="navigatorOverlay"
@@ -99,7 +101,7 @@
 	<broadcaster id="Browser:OpenFile"  value="&openFileCmd.label;" oncommand="BrowserOpenFileWindow();"/>
 	<broadcaster id="cmd_close" oncommand="BrowserClose()"/>
 	<broadcaster id="Browser:SavePage" value="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" oncommand="savePage();"/>
-	<broadcaster id="Browser:EditPage" value="&editPageCmd.label;" oncommand="BrowserEditPage(window._content.location.href);"/>
+	<broadcaster id="Browser:EditPage" value="&editPageCmd.label;" oncommand="editPage(window._content.location.href);"/>
 	<broadcaster id="Browser:PrintSetup"  value="&printSetupCmd.label;"     disabled ="true" oncommand="BrowserReload();"/>
 	<broadcaster id="Browser:PrintPreview"  value="&printPreviewCmd.label;" disabled="true"  oncommand="BrowserReload();"/>
 	<broadcaster id="Browser:Print"  value="&printCmd.label;"        						 oncommand="BrowserPrint();"/>
