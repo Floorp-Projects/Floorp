@@ -105,7 +105,7 @@ function executeUrlBarHistoryCommand( aTarget)
   {
     var index = aTarget.getAttribute("index");
     var value = aTarget.getAttribute("value");
-    if (index && value) 
+    if (index != "nothing_available" && value) 
       {
         gURLBar.value = value;
         BrowserLoadURL();
@@ -115,27 +115,28 @@ function executeUrlBarHistoryCommand( aTarget)
 function createUBHistoryMenu( aParent )
   {
     var ubHistory = appCore.urlbarHistory;
-    // dump("In createUbHistoryMenu\n");
-	  if (localstore) {
-	     var entries = localstore.GetTargets(rdf.GetResource("nc:urlbar-history"),
-                                    rdf.GetResource("http://home.netscape.com/NC-rdf#child"),
-                                    true);
-       //dump("localstore found\n");
-         var i= MAX_HISTORY_MENU_ITEMS;
-		    // Delete any old menu items
-		    deleteHistoryItems(aParent);
+    if (localstore) {
+      var entries = localstore.GetTargets(rdf.GetResource("nc:urlbar-history"),
+                                          rdf.GetResource("http://home.netscape.com/NC-rdf#child"),
+                                          true);
+      var i= MAX_HISTORY_MENU_ITEMS;
+      
+      
+      // Delete any old menu items only if there are legitimate
+      // urls to display, otherwise we want to display the 
+      // '(Nothing Available)' item.
+      if (entries.hasMoreElements()) 
+        deleteHistoryItems(aParent);
 
-        while (entries.hasMoreElements() && (i-- > 0)) {
-		       var entry = entries.getNext();
-			     if (entry) {
-			        entry = entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
-              var url = entry.Value;
-              //dump("CREATEUBHISTORYMENU menuitem = " + url + "\n");
-			        createMenuItem(aParent, i, url);
-
-			     }
-         }
+      while (entries.hasMoreElements() && (i-- > 0)) {
+        var entry = entries.getNext();
+        if (entry) {
+          entry = entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
+          var url = entry.Value;
+          createMenuItem(aParent, i, url);
+        }
       }
+    }
   }
 
 function addToUrlbarHistory()
