@@ -210,7 +210,7 @@
         </textbox>
 
         <button id="go-button" class="button-toolbar chromeclass-location"
-                label="&goButton.label;" hidden="true" persist="hidden"
+                label="&goButton.label;" hidden="true"
                 oncommand="addToUrlbarHistory(); BrowserLoadURL(event);"
                 ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
                 ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
@@ -218,7 +218,7 @@
                 tooltiptext="&goButton.tooltip;" default="true"/> 
 
         <button id="search-button" class="button-toolbar chromeclass-location"
-                label="&searchButton.label;" persist="hidden"
+                label="&searchButton.label;"
                 oncommand="OpenSearch('internet',false, QualifySearchTerm());" 
                 ondragover="nsDragAndDrop.dragOver(event, searchButtonObserver);"
                 ondragdrop="nsDragAndDrop.drop(event, searchButtonObserver);"
@@ -227,7 +227,7 @@
       </hbox>
 
       <toolbarbutton id="print-button" type="menu-button" class="toolbarbutton-1"
-                     label="&printButton.label;" persist="hidden"
+                     label="&printButton.label;"
                      oncommand="if (event.target==this) NSPrint();"
                      tooltiptext="&printButton.tooltip;">  
         <menupopup id="printMenu">
@@ -267,7 +267,7 @@
         <vbox id="home-button-tooltip-inner" flex="1"/>
       </tooltip>
       <toolbarbutton id="home-button" class="bookmark-item"
-                     label="&homeButton.label;" persist="hidden"
+                     label="&homeButton.label;"
                      oncommand="BrowserHome(); event.preventBubble()"
                      tooltip="home-button-tooltip"
                      ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver)"
@@ -276,11 +276,11 @@
                      ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver); event.preventBubble()"
                      ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver); event.preventBubble()"/>
   
-      <toolbarseparator id="home-bm-separator" persist="hidden"/>
+      <toolbarseparator id="home-bm-separator"/>
  
       <!-- "Bookmarks" button on personal toolbar -->                           
       <toolbarbutton type="menu" id="bookmarks-button" class="bookmark-item"
-                     persist="hidden" label="&bookmarksButton.label;"
+                     label="&bookmarksButton.label;"
                      datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
                      ref="NC:BookmarksRoot" container="true" flags="dont-test-empty"
                      oncommand="BookmarksMenu.loadBookmark(event.target, this.database)" 
