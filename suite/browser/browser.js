@@ -199,3 +199,47 @@ function getMarkupDocumentViewer()
 {
   return getBrowser().markupDocumentViewer;
 }
+
+/**
+ * Content area tooltip.
+ * XXX - this must move into XBL binding/equiv! Do not want to pollute
+ *       navigator.js with functionality that can be encapsulated into
+ *       browser widget. TEMPORARY!
+ *
+ * NOTE: Any changes to this routine need to be mirrored in ChromeListener::FindTitleText()
+ *       (located in mozilla/embedding/browser/webBrowser/nsDocShellTreeOwner.cpp)
+ *       which performs the same function, but for embedded clients that
+ *       don't use a XUL/JS layer. It is important that the logic of
+ *       these two routines be kept more or less in sync.
+ *       (pinkerton)
+ **/
+function FillInHTMLTooltip(tipElement)
+{
+  const XLinkNS = "http://www.w3.org/1999/xlink";
+
+  var retVal = false;
+
+  var titleText = null;
+  var XLinkTitleText = null;
+  
+  while (!titleText && !XLinkTitleText && tipElement) {
+    if (tipElement.nodeType == Node.ELEMENT_NODE) {
+      titleText = tipElement.getAttribute("title");
+      XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
+    }
+    tipElement = tipElement.parentNode;
+  }
+
+  var texts = [titleText, XLinkTitleText];
+  var tipNode = document.getElementById("aHTMLTooltip");
+
+  for (var i = 0; i < texts.length; ++i) {
+    var t = texts[i];
+    if (t && t.search(/\S/) >= 0) {
+      tipNode.setAttribute("label", t);
+      retVal = true;
+    }
+  }
+
+  return retVal;
+}
