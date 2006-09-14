@@ -318,7 +318,9 @@ Contributor(s): ______________________________________. -->
         </menupopup>
       </menubutton>
 
-      <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>
+      <box id="navigator-throbber" autostretch="never">
+        <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>
+      </box>
     </toolbar>
   
     <toolbar id="PersonalToolbar" class="chromeclass-directories" persist="collapsed" dragdroparea="innermostBox"
