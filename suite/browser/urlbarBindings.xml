@@ -8,7 +8,7 @@
   <binding id="urlbar" extends="chrome://global/content/autocomplete.xml#autocomplete">
     <implementation>
       <constructor><![CDATA[
-        var pbi = this.mPrefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+        var pbi = this.mPrefs.QueryInterface(Components.interfaces.nsIPrefBranch2);
         if (pbi)
           pbi.addObserver("browser.urlbar", this.mPrefObserver, false);
         
@@ -17,7 +17,7 @@
       ]]></constructor>
 
       <destructor><![CDATA[
-        var pbi = this.mPrefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+        var pbi = this.mPrefs.QueryInterface(Components.interfaces.nsIPrefBranch2);
         if (pbi)
           pbi.removeObserver("browser.urlbar", this.mPrefObserver);
       ]]></destructor>
@@ -65,7 +65,7 @@
     <implementation>
       <constructor><![CDATA[
         // listen for changes to default search engine
-        var pbi = this.mPrefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+        var pbi = this.mPrefs.QueryInterface(Components.interfaces.nsIPrefBranch2);
         if (pbi) {
           pbi.addObserver("browser.search", this.mPrefObserver, false);
           pbi.addObserver("browser.urlbar", this.mPrefObserver, false);
@@ -73,7 +73,7 @@
       ]]></constructor>
 
       <destructor><![CDATA[
-        var pbi = this.mPrefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+        var pbi = this.mPrefs.QueryInterface(Components.interfaces.nsIPrefBranch2);
         if (pbi) {
           pbi.removeObserver("browser.search", this.mPrefObserver);
           pbi.removeObserver("browser.urlbar", this.mPrefObserver);
