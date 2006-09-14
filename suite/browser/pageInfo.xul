@@ -62,14 +62,13 @@
 
   <tabbox id="tabbox" flex="1">
     <tabs id="tabs">
-      <tab id="generalTab" label="&generalTab;" 
-           accesskey="&generalAccesskey;"/>
+      <tab id="generalTab" label="&generalTab;"/>
       <tab id="formsTab"   label="&formsTab;"   
-           accesskey="&formsAccesskey;" oncommand="ensureSelection(formView)"/>
+           oncommand="ensureSelection(formView)"/>
       <tab id="linksTab"   label="&linksTab;"   
-           accesskey="&linksAccesskey;" oncommand="ensureSelection(linkView)"/>
+           oncommand="ensureSelection(linkView)"/>
       <tab id="mediaTab"   label="&mediaTab;"  
-           accesskey="&mediaAccesskey;" oncommand="ensureSelection(imageView)"/>
+           oncommand="ensureSelection(imageView)"/>
       <!-- Others added by overlay -->
     </tabs>
     <tabpanels id="tabpanels" flex="1">
