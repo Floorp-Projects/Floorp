@@ -345,7 +345,7 @@ Contributor(s): ______________________________________. -->
 
   </toolbox>
     
-  <box flex="1" tooltip="aTooltip">
+  <box flex="1" >
     <box id="sidebar-box" class="chromeclass-extrachrome"/>
     <splitter id="sidebar-splitter" class="chromeclass-extrachrome" />
   
