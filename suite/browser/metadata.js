@@ -147,6 +147,7 @@ function checkForImage(elem, htmllocalname)
                    // "object" = <object>
                    // "input" = <input type=image>
                    // "background" = css background (to be added later)
+    var ismap = false;
 
     if (htmllocalname === "img") {
         img = elem;
@@ -167,25 +168,38 @@ function checkForImage(elem, htmllocalname)
 
         // Clicked in image map?
         var map = elem;
+        ismap = true;
+        setAlt(map);
+
         while (map && map.nodeType == Node.ELEMENT_NODE && !isHTMLElement(map,"map") )
             map = map.parentNode;
 
-        if (map && map.nodeType == Node.ELEMENT_NODE)
+        if (map && map.nodeType == Node.ELEMENT_NODE) {
             img = getImageForMap(map);
+            var imgLocalName = img && img.localName.toLowerCase();
+            if (imgLocalName == "img" || imgLocalName == "object") {
+                imgType = imgLocalName;
+            }
+        }
+
     }
 
     if (img) {
-        setInfo("image-url", img.src);
 
-        var size = getSize(img.src);
+        var imgInfo = imgType == "object" ? img.data : img.src;
+        setInfo ("image-url", imgInfo);
+        var size = getSize(imgInfo);
+
         if (size != -1) {
             var kbSize = size / 1024;
             kbSize = Math.round(kbSize*100)/100;
             setInfo("image-filesize", gMetadataBundle.getFormattedString("imageSize", [kbSize, size]));
+        } else {
+            setInfo("image-filesize", gMetadataBundle.getString("imageSizeUnknown"));
         }
-        if ("width" in img) {
-            setInfo("image-width", img.width);
-            setInfo("image-height", img.height);
+        if ("width" in img && img.width != "") {
+            setInfo("image-width", gMetadataBundle.getFormattedString("imageWidth", [ img.width ]));
+            setInfo("image-height", gMetadataBundle.getFormattedString("imageHeight", [ img.height ]));
         }
         else {
             setInfo("image-width", "");
@@ -199,6 +213,14 @@ function checkForImage(elem, htmllocalname)
         }
         
         onImage = true;
+    }
+
+    if (!ismap) {
+       if (imgType == "img" || imgType == "input") {
+           setAlt(img);
+       } else {
+           hideNode("image-alt");
+       }
     }
 }
 
@@ -327,14 +349,15 @@ function checkForTitle(elem, htmllocalname)
  */
 function setInfo(id, value)
 {
-    if (value == "") {
+    if (!value) {
         hideNode(id);
         return;
     }
 
     var node = document.getElementById(id+"-text");
 
-    if (node.namespaceURI == XULNS && node.localName == "label") {
+    if (node.namespaceURI == XULNS && node.localName == "label" ||
+       (node.namespaceURI == XULNS && node.localName == "textbox")) {
         node.setAttribute("value",value);
 
     } else if (node.namespaceURI == XULNS && node.localName == "description") {
@@ -565,4 +588,21 @@ function getSize(url) {
     }
     catch(ex) {}
     return -1;
+}
+
+function setAlt(elem) {
+    var altText = document.getElementById("image-alt-text");
+    if (elem.hasAttribute("alt")) {
+        if (elem.alt != "") {
+            altText.value = elem.alt;
+            altText.setAttribute("style","font-style:inherit");
+        } else {
+            altText.value = gMetadataBundle.getString("altTextBlank");
+            altText.setAttribute("style","font-style:italic");
+        }
+    } else {
+        altText.value = gMetadataBundle.getString("altTextMissing");
+        altText.setAttribute("style","font-style:italic");
+    }
+
 }
