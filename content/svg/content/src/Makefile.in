@@ -134,6 +134,7 @@ CPPSRCS		= \
 		nsSVGTitleElement.cpp \
 		nsSVGTransform.cpp \
 		nsSVGTransformList.cpp \
+		nsSVGTransformListParser.cpp \
 		nsSVGUseElement.cpp \
 		nsSVGValue.cpp \
 		$(NULL)
