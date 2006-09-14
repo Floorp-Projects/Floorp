@@ -1250,22 +1250,39 @@ function FillInHTMLTooltip(tipElement)
 /**
  * Use Stylesheet functions.
  *     Written by Tim Hill (bug 6782)
+ *     Frameset handling by Neil Rashbrook <neil@parkwaycc.co.uk>
  **/
-function stylesheetFillPopup(forDocument, menuPopup, itemNoOptStyles)
+function getStyleSheetArray(frame)
 {
-  var children = menuPopup.childNodes;
-  var i;
-  for (i = 0; i < children.length; ++i) {
-    var child = children[i];
-    if (child.getAttribute("class") == "authssmenuitem")
-      menuPopup.removeChild(child);
+  var styleSheets = frame.document.styleSheets;
+  var styleSheetsArray = new Array(styleSheets.length);
+  for (var i = 0; i < styleSheets.length; i++) {
+    styleSheetsArray[i] = styleSheets[i];
   }
+  return styleSheetsArray;
+}
+
+function getAllStyleSheets(frameset)
+{
+  var styleSheetsArray = getStyleSheetArray(frameset);
+  for (var i = 0; i < frameset.frames.length; i++) {
+    var frameSheets = getAllStyleSheets(frameset.frames[i]);
+    styleSheetsArray = styleSheetsArray.concat(frameSheets);
+  }
+  return styleSheetsArray;
+}
+
+function stylesheetFillPopup(menuPopup)
+{
+  var itemNoOptStyles = menuPopup.firstChild;
+  while (itemNoOptStyles.nextSibling)
+    menuPopup.removeChild(itemNoOptStyles.nextSibling);
 
   var noOptionalStyles = true;
-  var styleSheets = forDocument.styleSheets;
+  var styleSheets = getAllStyleSheets(window._content);
   var currentStyleSheets = [];
 
-  for (i = 0; i < styleSheets.length; ++i) {
+  for (var i = 0; i < styleSheets.length; ++i) {
     var currentStyleSheet = styleSheets[i];
 
     if (currentStyleSheet.title) {
@@ -1277,14 +1294,10 @@ function stylesheetFillPopup(forDocument, menuPopup, itemNoOptStyles)
         lastWithSameTitle = currentStyleSheets[currentStyleSheet.title];
 
       if (!lastWithSameTitle) {
-        var menuItem = document.createElement("menuitem");
+        var menuItem = itemNoOptStyles.cloneNode(false);
         menuItem.setAttribute("label", currentStyleSheet.title);
         menuItem.setAttribute("data", currentStyleSheet.title);
-        menuItem.setAttribute("type", "radio");
         menuItem.setAttribute("checked", !currentStyleSheet.disabled);
-        menuItem.setAttribute("class", "authssmenuitem");
-        menuItem.setAttribute("name", "authorstyle");
-        menuItem.setAttribute("oncommand", "stylesheetSwitch(_content.document, this.getAttribute('data'))");
         menuPopup.appendChild(menuItem);
         currentStyleSheets[currentStyleSheet.title] = menuItem;
       } else {
@@ -1296,9 +1309,18 @@ function stylesheetFillPopup(forDocument, menuPopup, itemNoOptStyles)
   itemNoOptStyles.setAttribute("checked", noOptionalStyles);
 }
 
-function stylesheetSwitch(forDocument, title)
-{
-  var docStyleSheets = forDocument.styleSheets;
+function stylesheetInFrame(frame, title) {
+  var docStyleSheets = frame.document.styleSheets;
+
+  for (var i = 0; i < docStyleSheets.length; ++i) {
+    if (docStyleSheets[i].title == title)
+      return true;
+  }
+  return false;
+}
+
+function stylesheetSwitchFrame(frame, title) {
+  var docStyleSheets = frame.document.styleSheets;
 
   for (var i = 0; i < docStyleSheets.length; ++i) {
     var docStyleSheet = docStyleSheets[i];
@@ -1307,6 +1329,15 @@ function stylesheetSwitch(forDocument, title)
       docStyleSheet.disabled = (docStyleSheet.title != title);
     else if (docStyleSheet.disabled)
       docStyleSheet.disabled = false;
+  }
+}
+
+function stylesheetSwitchAll(frameset, title) {
+  if (!title || stylesheetInFrame(frameset, title)) {
+    stylesheetSwitchFrame(frameset, title);
+  }
+  for (var i = 0; i < frameset.frames.length; i++) {
+    stylesheetSwitchAll(frameset.frames[i], title);
   }
 }
 
