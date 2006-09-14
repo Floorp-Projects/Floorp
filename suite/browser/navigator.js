@@ -291,8 +291,8 @@ nsXULBrowserWindow.prototype =
     if(!stopContext)
       stopContext = document.getElementById("context-stop");
 
-    if (state & Components.interfaces.nsIWebProgressListener.flag_start) {
-      if(state & Components.interfaces.nsIWebProgressListener.flag_is_network) {
+    if (state & Components.interfaces.nsIWebProgressListener.STATE_START) {
+      if(state & Components.interfaces.nsIWebProgressListener.STATE_IS_NETWORK) {
         // Remember when loading commenced.
         startTime = (new Date()).getTime();
         // Turn progress meter on.
@@ -310,19 +310,19 @@ nsXULBrowserWindow.prototype =
         totalRequests = 0;
         finishedRequests = 0;
       }
-      if (state & Components.interfaces.nsIWebProgressListener.flag_is_request) {
+      if (state & Components.interfaces.nsIWebProgressListener.STATE_IS_REQUEST) {
         totalRequests += 1;
       }
       EnableBusyCursor(throbberElement.getAttribute("busy") == "true");
     }
-    else if (state & Components.interfaces.nsIWebProgressListener.flag_stop) {
-      if (state & Components.interfaces.nsIWebProgressListener.flag_is_request) {
+    else if (state & Components.interfaces.nsIWebProgressListener.STATE_STOP) {
+      if (state & Components.interfaces.nsIWebProgressListener.STATE_IS_REQUEST) {
         finishedRequests += 1;
         if (!useRealProgressFlag) {
           this.onProgress(null, finishedRequests, totalRequests);
         }
       }
-      if(state & Components.interfaces.nsIWebProgressListener.flag_is_network) {
+      if(state & Components.interfaces.nsIWebProgressListener.STATE_IS_NETWORK) {
         // Record page loading time.
         var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
         var msg = bundle.GetStringFromName("nv_done");
@@ -346,8 +346,8 @@ nsXULBrowserWindow.prototype =
         EnableBusyCursor(false);
       }
     }
-    else if (state & Components.interfaces.nsIWebProgressListener.flag_transferring) {
-      if (state & Components.interfaces.nsIWebProgressListener.flag_is_document) {
+    else if (state & Components.interfaces.nsIWebProgressListener.STATE_TRANSFERRING) {
+      if (state & Components.interfaces.nsIWebProgressListener.STATE_IS_DOCUMENT) {
         var ctype=channel.contentType;
   
         if (ctype != "text/html") {
@@ -355,7 +355,7 @@ nsXULBrowserWindow.prototype =
         }
         statusMeter.setAttribute("mode", "normal");
       }
-      if (state & Components.interfaces.nsIWebProgressListener.flag_is_request) {
+      if (state & Components.interfaces.nsIWebProgressListener.STATE_IS_REQUEST) {
         if (!useRealProgressFlag) {
           this.onProgress(null, finishedRequests, totalRequests);
         }
