@@ -143,7 +143,7 @@
 
       <!-- Form information -->
       <vbox>
-        <outliner id="formoutliner" flex="1" class="inset" onselect="onFormSelect();">
+        <outliner id="formoutliner" class="inset fixedsize" onselect="onFormSelect();">
           <outlinercols>
             <outlinercol sortSeparators="true" persist="hidden width" flex="1" 
                          width="1" id="form-number" label="&formNo;"/>
@@ -160,7 +160,7 @@
           <outlinerchildren flex="1"/>
         </outliner>
         <splitter orient="vertical" collapse="after"/>
-        <vbox flex="2" id="formpage">
+        <vbox flex="1">
           <textbox class="header" id="formname"/>
           <grid>
             <columns>
@@ -226,7 +226,7 @@
 
       <!-- Media information -->
       <vbox>
-        <outliner id="imageoutliner" flex="1" class="inset" onselect="onImageSelect();">
+        <outliner id="imageoutliner" class="inset fixedsize" onselect="onImageSelect();">
           <outlinercols>
             <outlinercol sortSeparators="true" persist="hidden width" flex="1" 
                          width="1"  id="image-number"  label="&mediaNo;"/>
