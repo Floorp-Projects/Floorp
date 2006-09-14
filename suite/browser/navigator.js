@@ -1302,7 +1302,6 @@ function BrowserChangeTextSize(newSize)
 
   function BrowserViewSource()
   {
-	  dump("BrowserViewSource(); \n ");
     var docCharset = null;
 
     try 
@@ -1310,7 +1309,7 @@ function BrowserChangeTextSize(newSize)
       var wnd = document.commandDispatcher.focusedWindow;
       if (window == wnd) wnd = window._content;
       docCharset = "charset="+ wnd.document.characterSet;
-      dump("*** Current document charset: " + docCharset + "\n");
+      // dump("*** Current document charset: " + docCharset + "\n");
     }
 
     catch(ex) 
@@ -1341,14 +1340,13 @@ function BrowserChangeTextSize(newSize)
         dump("*** Failed to preset charset menu for the view-source window\n");
         window.openDialog( "chrome://navigator/content/viewSource.xul",
 					         "_blank",
-					         "chrome,dialog=no",
+					         "scrollbars,resizable,chrome,dialog=no",
 					         window._content.location);
     }
   }
 
   function BrowserPageInfo()
   {
-    dump("BrowserPageInfo(); \n ");
     var charsetArg = new String();
     
     if (appCore != null) {
@@ -1374,7 +1372,7 @@ function BrowserChangeTextSize(newSize)
       
     } else {
       //if everythig else fails, forget about the charset
-      window.openDialog( "chrome://navigator/content/viewSource.xul",
+      window.openDialog( "chrome://navigator/content/pageInfo.xul",
                          "_blank",
                          "chrome,dialog=no",
                          window._content.location);
