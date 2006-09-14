@@ -42,9 +42,8 @@
   windowtype="Browser:page-info"
   onload="onLoadPageInfo()"
   align="stretch" class="dialog"
-  width="&pageInfoWindow.width;" height="&pageInfoWindow.height;"
   screenX="10" screenY="10"
-  persist="screenX screenY width height sizemode">
+  persist="screenX screenY">
 
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/pageInfo.js"/>
@@ -65,11 +64,11 @@
       <tab id="generalTab" label="&generalTab;" 
            accesskey="&generalAccesskey;"/>
       <tab id="formsTab"   label="&formsTab;"   
-           accesskey="&formsAccesskey;" oncommand="makeTabs(theDocument, theWindow);"/>
+           accesskey="&formsAccesskey;" oncommand="ensureSelection(formView)"/>
       <tab id="linksTab"   label="&linksTab;"   
-           accesskey="&linksAccesskey;" oncommand="makeTabs(theDocument, theWindow);"/>
+           accesskey="&linksAccesskey;" oncommand="ensureSelection(linkView)"/>
       <tab id="mediaTab"   label="&mediaTab;"  
-           accesskey="&mediaAccesskey;" oncommand="makeTabs(theDocument, theWindow);"/>
+           accesskey="&mediaAccesskey;" oncommand="ensureSelection(imageView)"/>
       <!-- Others added by overlay -->
     </tabs>
     <tabpanels id="tabpanels" flex="1">
@@ -139,7 +138,7 @@
         </grid>
         <separator class="thin"/>
         <text id="metahead" class="header" value="&generalMeta;"/>
-        <tree id="metatree" flex="1" class="inset">
+        <tree id="metatree" flex="1">
           <treecols>
             <treecol persist="hidden width" flex="1" id="meta-name"    label="&generalMetaName;"/>
             <splitter class="tree-splitter"/>
@@ -151,7 +150,7 @@
 
       <!-- Form information -->
       <vbox>
-        <tree id="formtree" class="inset fixedsize" onselect="onFormSelect();">
+        <tree id="formtree" class="fixedsize" onselect="onFormSelect();">
           <treecols>
             <splitter class="tree-splitter"/>
             <treecol sortSeparators="true" persist="hidden width" flex="1" 
@@ -188,7 +187,7 @@
             </rows>
           </grid>
           <text class="header" value="&formFields;"/>
-          <tree id="formpreview" flex="1" class="inset">
+          <tree id="formpreview" flex="1">
             <treecols>
               <treecol sortSeparators="true" persist="hidden width" flex="3" 
                            width="3" id="field-label"  label="&formLabel;"/>
@@ -209,7 +208,7 @@
 
       <!-- Link info -->
       <vbox>
-        <tree id="linktree" flex="1" class="inset" ondraggesture="onBeginLinkDrag(event,'link-address','link-name')">
+        <tree id="linktree" flex="1" ondraggesture="onBeginLinkDrag(event,'link-address','link-name')">
           <treecols>
             <treecol sortSeparators="true" persist="hidden width" flex="5" 
                          width="5" id="link-name"    label="&linkName;"/>
@@ -229,7 +228,7 @@
 
       <!-- Media information -->
       <vbox>
-        <tree id="imagetree" class="inset fixedsize" onselect="onImageSelect();" ondraggesture="onBeginLinkDrag(event,'image-address','image-alt')">
+        <tree id="imagetree" class="fixedsize" onselect="onImageSelect();" ondraggesture="onBeginLinkDrag(event,'image-address','image-alt')">
           <treecols>
             <treecol sortSeparators="true" persist="hidden width" flex="10" 
                          width="10" id="image-address" label="&mediaAddress;"/>
@@ -316,7 +315,8 @@
     </tabpanels>
   </tabbox>
   <box>
-    <spacer flex="1"/>
+    <progressmeter mode="undetermined" id="piProgress" flex="1"/>
+    <spacer id="piSpacer" flex="0"/>
     <button label="&helpButton;" oncommand="doHelpButton();" />
   </box>
 </window>

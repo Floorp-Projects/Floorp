@@ -54,7 +54,6 @@ function pageInfoTreeView(columnids, copycol)
   this.selection = null;
   this.sortcol = null;
   this.sortdir = 0;
-  this.initialized = 0; // set this to one once we fill in all the rows
 }
 
 pageInfoTreeView.prototype = {
@@ -97,6 +96,7 @@ pageInfoTreeView.prototype = {
   addRow: function(row)
   {
     this.rows = this.data.push(row);
+    this.rowCountChanged(this.rows - 1, 1);
   },
 
   addRows: function(rows)
@@ -104,6 +104,7 @@ pageInfoTreeView.prototype = {
     var length = rows.length;
     for(var i = 0; i < length; i++)
       this.rows = this.data.push(rows[i]);
+    this.rowCountChanged(this.rows - length, length);
   },
 
   rowCountChanged: function(index, count)
@@ -178,6 +179,8 @@ var formView = new pageInfoTreeView(["form-name","form-method","form-action","fo
 var fieldView = new pageInfoTreeView(["field-label","field-field","field-type","field-value"], COPYCOL_NONE);
 var linkView = new pageInfoTreeView(["link-name","link-address","link-type"], COPYCOL_LINK_ADDRESS);
 var imageView = new pageInfoTreeView(["image-address","image-type","image-alt","image-node", "image-bg"], COPYCOL_IMAGE_ADDRESS);
+
+var intervalID = null;
 
 // localized strings (will be filled in when the document is loaded)
 // this isn't all of them, these are just the ones that would otherwise have been loaded inside a loop
@@ -294,6 +297,9 @@ function onLoadPageInfo()
 
   // do the easy stuff first
   makeGeneralTab();
+
+  // and then the hard stuff
+  makeTabs(theDocument, theWindow);
 
   /* Call registered overlay init functions */
   for (x in onLoadRegistry)
@@ -457,11 +463,13 @@ function makeGeneralTab()
 }
 
 //******** Generic Build-a-tab
+// Assumes the views are empty. Only called once to build the tabs, and
+// does so by farming the task off to another thread via setTimeout().
+// The actual work is done with a TreeWalker that calls doGrab() once for
+// each element node in the document.
+
 function makeTabs(aDocument, aWindow)
 {
-  if (formView.initialized || linkView.initialized || imageView.initialized)
-    return;
-
   if (aWindow && aWindow.frames.length > 0)
   {
     var num = aWindow.frames.length;
@@ -478,22 +486,33 @@ function makeTabs(aDocument, aWindow)
   imageTree.treeBoxObject.view = imageView;
   
   var iterator = aDocument.createTreeWalker(aDocument, NodeFilter.SHOW_ELEMENT, grabAll, true);
-  
-  while (iterator.nextNode())
-    ; // it'll never be executed anyway, since grabAll never 
-      // accepts any nodes
 
-  formView.rowCountChanged(0, formView.rowCount);
-  formView.selection.select(0);
-  formView.initialized = 1;
+  var meter = document.getElementById("piProgress");
 
-  linkView.rowCountChanged(0, linkView.rowCount);
-  linkView.selection.select(0);
-  linkView.initialized = 1;
+  meter.setAttribute("value", 1);
 
-  imageView.rowCountChanged(0, imageView.rowCount);
-  imageView.selection.select(0);
-  imageView.initialized = 1;
+  setTimeout(doGrab, 1, iterator, meter, 0);
+}
+
+function doGrab(iterator, meter, i)
+{
+  if (iterator.nextNode())
+  {
+    setTimeout(doGrab, 1, iterator, meter, i);
+  }
+  else
+  {
+    meter.setAttribute("value", 0);
+    meter.setAttribute("mode", "determined");
+    meter.setAttribute("hidden", "true");
+    document.getElementById("piSpacer").setAttribute("flex", 1);
+  }
+}
+
+function ensureSelection(view)
+{
+  if (view.selection.count == 0) // only select something if nothing is currently selected
+    view.selection.select(0);
 }
 
 function grabAll(elem)
@@ -506,7 +525,6 @@ function grabAll(elem)
     imageView.addRow([url.getStringValue(), gStrings.mediaBGImg, gStrings.notSet, elem, true]);
 
   // one swi^H^H^Hif-else to rule them all
-  // XXX: these tests should use regexes to be a little more lenient wrt whitespace, see bug 177047
   if (elem instanceof nsIAnchorElement)
   {
     linktext = getValueText(elem);
@@ -571,7 +589,7 @@ function grabAll(elem)
       linkView.addRow([linktext, getAbsoluteURL(elem.href, elem), gStrings.linkX, ""]);
     }
 
-  return NodeFilter.FILTER_SKIP;
+  return NodeFilter.FILTER_ACCEPT;
 }
 
 //******** Form Stuff
