@@ -1253,16 +1253,16 @@ function applyTheme(themeName)
   var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
     .getService(Components.interfaces.nsIChromeRegistry);
 
+  var oldTheme = false;
   try {
     oldTheme = !chromeRegistry.checkThemeVersion(themeName.getAttribute("name"));
   }
   catch(e) {
-    oldTheme = false;
   }
 
 
+  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
   if (oldTheme) {
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
     var title = gNavigatorBundle.getString("oldthemetitle");
     var message = gNavigatorBundle.getString("oldTheme");
 
@@ -1270,11 +1270,12 @@ function applyTheme(themeName)
     message = message.replace(/%brand%/g, gBrandBundle.getString("brandShortName"));
 
     if (promptService.confirm(window, title, message)){
-
       var inUse = chromeRegistry.isSkinSelected(themeName.getAttribute("name"), true);
 
       chromeRegistry.uninstallSkin( themeName.getAttribute("name"), true );
-
+      // XXX - this sucks and should only be temporary.
+      pref.SetUnicharPref("general.skins.removelist." + themeName.getAttribute("name"), true);
+      
       if (inUse)
         chromeRegistry.refreshSkins();
     }
@@ -1282,8 +1283,18 @@ function applyTheme(themeName)
     return;
   }
 
-  chromeRegistry.selectSkin(themeName.getAttribute("name"), true);
-  chromeRegistry.refreshSkins();
+  // XXX XXX BAD BAD BAD BAD !! XXX XXX
+  // we STILL haven't fixed editor skin switch problems
+  // hacking around it yet again
+  pref.SetUnicharPref("general.skins.selectedSkin", themeName.getAttribute("name"));
+
+  if (promptService) {
+    var dialogTitle = gNavigatorBundle.getString("switchskinstitle");
+    var brandName = gBrandBundle.getString("brandShortName");
+    var msg = gNavigatorBundle.getFormattedString("switchskins", [brandName]);
+    promptService.alert(window, dialogTitle, msg);
+  }
+
 }
 
 
