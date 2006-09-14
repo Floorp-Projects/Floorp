@@ -273,6 +273,109 @@ function DragOverPersonalToolbar ( event )
 
 
 //
+// BeginDragContentArea
+//
+function BeginDragContentArea ( event )
+{
+  if ( !gDragDropEnabled )
+    return;
+
+  dump ("in content area; starting drag\n");
+  var dragStarted = false;
+  var dragService = Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
+  if ( dragService )
+  {
+    var trans = Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
+    if ( trans )
+    {
+      var src = null;
+      var htmlData = Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
+      if ( htmlData )
+      {
+        trans.addDataFlavor("text/html");
+        
+        var htmlstring = null;
+        switch (event.target.nodeName)
+        {
+          case 'AREA':
+          case 'IMG':
+            var imgsrc = event.target.getAttribute("src");
+            var baseurl = window.content.location.href;
+            src = baseurl + imgsrc;
+            htmlstring = "<IMG src=\"" + src + "\">";
+            dump("src is "+src+"\n");
+            dump("htmlstring is "+htmlstring+"\n");
+            break;
+          
+          case 'HR':
+            break;
+          
+          case 'A':
+            if ( event.target.href )
+            {
+              // link
+              src = event.target.getAttribute("href");
+              htmlstring = "<A href=\"" + src + "\">" + src + "</A>";
+            }
+            else if (event.target.name )
+            {
+              // named anchor
+              src = event.target.getAttribute("name");
+              htmlstring = "<A name=\"" + src + "\">" + src + "</A>"
+            }
+            break;
+          
+          default:
+            dump("no handler found for " + event.target.nodeName + "\n");
+          case '#text':
+          case 'LI':
+          case 'OL':
+          case 'DD':
+            src = enclosingLink(event.target);
+            if ( src != "" )
+              htmlstring = "<A href=\"" + src + "\">" + src + "</A>";
+            else
+              htmlstring = "<p>no html tag or link found; found "+event.target.nodeName;
+            break;
+        }
+        
+			  htmlData.data = htmlstring;
+	      trans.setTransferData ( "text/html", htmlData, htmlstring.length*2 );  // double byte data (len*2)
+      }
+      
+      var genTextData = 
+        Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);      
+      if ( genTextData && src != "")
+      {
+        trans.addDataFlavor("text/unicode");
+			  genTextData.data = src; // should have been set if we had html
+	      trans.setTransferData ( "text/unicode", genTextData, src.length*2 );  // double byte data
+	    }
+	    
+      var transArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+      if ( transArray )
+      {
+        // put it into the transferable as an |nsISupports|
+        var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
+        transArray.AppendElement(genTrans);
+        var nsIDragService = Components.interfaces.nsIDragService;
+        dragService.invokeDragSession ( transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
+                                            nsIDragService.DRAGDROP_ACTION_MOVE );
+        dragStarted = true;
+      }
+
+    } // if transferable
+  } // if drag service
+
+  if ( dragStarted )               // don't propagate the event if a drag has begun
+    event.preventBubble();
+  
+  return true;
+  
+}
+
+
+//
 // DragOverContentArea
 //
 // An example of how to handle drag-over. Looks for any of a handful of flavors and
@@ -372,7 +475,6 @@ function DragProxyIcon ( event )
     var trans = 
       Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
     if ( trans ) {
-      trans.addDataFlavor("text/unicode");
       var genTextData =
         Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
       if ( genTextData ) {
@@ -381,12 +483,26 @@ function DragProxyIcon ( event )
         var urlBar = document.getElementById ( "urlbar" );
         if ( !urlBar )
           return;            
-        var id = urlBar.value
+        var id = urlBar.value;
         genTextData.data = id;
       
         dump("ID: " + id + "\n");
 
+        // add text/html flavor first
+        var htmlData = Components.classes["component://netscape/supports-wstring"].createInstance();
+        if ( htmlData )
+          htmlData = htmlData.QueryInterface(Components.interfaces.nsISupportsWString);
+        if ( htmlData ) {
+          var htmlstring = "<A href=\"" + genTextData + "\">" + genTextData + "</A>";
+          htmlData.data = htmlstring;
+          trans.addDataFlavor("text/html");
+          trans.setTransferData( "text/html", htmlData, htmlstring.length * 2);
+        }
+       
+        // add the text/unicode flavor
+        trans.addDataFlavor("text/unicode");
         trans.setTransferData ( "text/unicode", genTextData, id.length * 2 );  // double byte data
+      
         var transArray = 
           Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
         if ( transArray ) {
