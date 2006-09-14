@@ -144,9 +144,6 @@
 <!ENTITY goHomeCmd.label "Home">
 <!ENTITY goHomeCmd.accesskey "h">
 
-<!ENTITY historyCmd.label	"Complete History...">  
-<!ENTITY historyCmd.accesskey	"c">
-<!ENTITY history.commandKey	"h">
 
 <!ENTITY bookmarksMenu.label "Bookmarks">
 <!ENTITY bookmarksMenu.accesskey "b">
