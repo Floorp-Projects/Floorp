@@ -233,15 +233,18 @@ var contentAreaDNDObserver = {
       return flavourList;
     },
 
-  onDrop: function (aEvent, aData, aDragSession)
+  onDragOver: function (aEvent, aFlavour, aDragSession)
     {
       // if the drag originated w/in this content area, bail early. This avoids loading
       // a URL dragged from the content area into the very same content area (which is
       // almost never the desired action). This code is a bit too simplistic and may
       // have problems with nested frames, but that's not my problem ;)
       if ( aDragSession.sourceDocument == window._content.document )
-        return;
-      
+        aDragSession.canDrop = false;
+    },
+
+  onDrop: function (aEvent, aData, aDragSession)
+    {
       var aData = aData.length ? aData[0] : aData;
       var url = retrieveURLFromData(aData);
       if (url.length == 0)
