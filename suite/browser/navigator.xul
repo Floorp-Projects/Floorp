@@ -291,16 +291,16 @@
                      label="&bookmarksButton.label;"
                      datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
                      ref="NC:BookmarksRoot" container="true" flags="dont-test-empty"
-                     oncommand="BookmarksMenu.loadBookmark(event, this.database)" 
+                     tooltip="btTooltip"
+                     oncommand="BookmarksMenu.loadBookmark(event, this.database);"
                      onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)" 
                      template="bookmarksMenuTemplate"
                      ondraggesture="if (event.target.id=='bookmarks-button') event.preventBubble()">
-        <menupopup onpopupshowing="updateGroupmarkMenuitem('PT_bookmarks_groupmark');">
-          <menuitem accesskey="&addCurPageCmd.accesskey;" key="addBookmarkKb" observes="Browser:AddBookmark"/>
-          <menuitem accesskey="&addCurPageAsCmd.accesskey;" key="addBookmarkAsKb" observes="Browser:AddBookmarkAs"/>
-          <menuitem id="PT_bookmarks_groupmark" observes="Browser:AddGroupmarkAs"/>
-          <menuseparator/>
-          <menuitem accesskey="&manBookmarksCmd.accesskey;" key="manBookmarkKb" observes="Browser:ManageBookmark"/>
+        <menupopup onpopupshowing="updateGroupmarkCommand();">
+          <menuitem command="Browser:AddBookmark"/>
+          <menuitem command="Browser:AddBookmarkAs"/>
+          <menuitem command="Browser:AddGroupmarkAs"/>
+          <menuitem command="Browser:ManageBookmark"/>
           <menuseparator id="lastStaticSeparator"/>
         </menupopup>
       </toolbarbutton>
@@ -310,6 +310,7 @@
             context="bookmarks-context-menu" template="bookmarksMenuTemplate"
             datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
             ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
+            tooltip="btTooltip"
             oncommand="BookmarksUtils.loadBookmarkBrowser(event, this.database)"
             onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)"
             rdf:type="http://home.netscape.com/NC-rdf#Folder">
@@ -321,6 +322,7 @@
                        datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
                        template="bookmarksMenuTemplate" 
                        ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
+                       tooltip="btTooltip"
                        oncommand="BookmarksUtils.loadBookmarkBrowser(event, this.database)"
                        onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)">
           <menupopup id="bookmarks-chevron-popup"

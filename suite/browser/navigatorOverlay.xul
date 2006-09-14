@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 <!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
@@ -280,7 +280,6 @@
                      status="rdf:http://home.netscape.com/WEB-rdf#status"
                      rdf:type="http://home.netscape.com/NC-rdf#Bookmark"
                      statustext="rdf:http://home.netscape.com/NC-rdf#URL"
-                     tooltip="btTooltip"
                      label="rdf:http://home.netscape.com/NC-rdf#Name"/>
     </rule>
     <rule nc:FolderGroup="true" iscontainer="true">
@@ -328,7 +327,8 @@
                   src="rdf:http://home.netscape.com/NC-rdf#Icon"
                   validate="never"
                   label="rdf:http://home.netscape.com/NC-rdf#Name" 
-                  status="rdf:http://home.netscape.com/WEB-rdf#status"/>
+                  status="rdf:http://home.netscape.com/WEB-rdf#status"
+                  statustext="rdf:http://home.netscape.com/NC-rdf#URL"/>
       </menupopup>
     </rule>
   </template>
@@ -468,6 +468,7 @@
     <menu id="BookmarksMenu" label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;" 
           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
           ref="NC:BookmarksRoot" flags="dont-test-empty" template="bookmarksMenuTemplate"
+          tooltip="btTooltip"
           oncommand="BookmarksMenu.loadBookmark(event, this.database)"
           onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)"
           ondraggesture="nsDragAndDrop.startDrag(event, BookmarksMenuDNDObserver)"
@@ -476,12 +477,11 @@
           ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.preventBubble()"
           ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.preventBubble()">
       <menupopup id="menu_BookmarksPopup"
-                 onpopupshowing="updateGroupmarkMenuitem('bookmarks_groupmark');">
-        <!-- for some reason these don't work as command="" -->
-        <menuitem key="addBookmarkKb"   observes="Browser:AddBookmark"/>
-        <menuitem key="addBookmarkAsKb" observes="Browser:AddBookmarkAs"/>
-        <menuitem id="bookmarks_groupmark" observes="Browser:AddGroupmarkAs"/>
-        <menuitem key="manBookmarkKb"   observes="Browser:ManageBookmark"/>
+                 onpopupshowing="updateGroupmarkCommand();">
+        <menuitem key="addBookmarkKb"   command="Browser:AddBookmark"/>
+        <menuitem key="addBookmarkAsKb" command="Browser:AddBookmarkAs"/>
+        <menuitem                       command="Browser:AddGroupmarkAs"/>
+        <menuitem key="manBookmarkKb"   command="Browser:ManageBookmark"/>
         <menuseparator/>
       </menupopup>
     </menu>

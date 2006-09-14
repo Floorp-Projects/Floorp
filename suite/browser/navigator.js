@@ -1010,10 +1010,11 @@ function addGroupmarkAs()
   BookmarksUtils.addBookmarkForTabBrowser(gBrowser, true);
 }
 
-function updateGroupmarkMenuitem(id)
+function updateGroupmarkCommand()
 {
   const disabled = gBrowser.browsers.length == 1;
-  document.getElementById(id).setAttribute("disabled", disabled);
+  document.getElementById("Browser:AddGroupmarkAs")
+          .setAttribute("disabled", disabled);
 }
 
 function readRDFString(aDS,aRes,aProp)
@@ -1021,7 +1022,6 @@ function readRDFString(aDS,aRes,aProp)
   var n = aDS.GetTarget(aRes, aProp, true);
   return n ? n.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : "";
 }
-
 
 function ensureDefaultEnginePrefs(aRDF,aDS) 
 {
