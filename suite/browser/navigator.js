@@ -1095,8 +1095,9 @@ function BrowserOpenWindow()
 function BrowserOpenTab()
 {
   if (!gInPrintPreviewMode) {
-    var homePage = getHomePage();
-    var uriToLoad = homePage[0];
+    var handler = Components.classes['@mozilla.org/commandlinehandler/general-startup;1?type=browser']
+                            .getService(Components.interfaces.nsICmdLineHandler);
+    var uriToLoad = handler.defaultArgs.split("\n")[0];
     gBrowser.selectedTab = gBrowser.addTab(uriToLoad);
     var navBar = document.getElementById("nav-bar");
     if (uriToLoad == "about:blank" && !navBar.hidden && window.locationbar.visible)
