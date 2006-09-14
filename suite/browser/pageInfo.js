@@ -879,7 +879,7 @@ function makePreview(row)
                  ("codeType" in item && item.codeType) ||
                  ("contentType" in item && item.contentType) ||
                  getContentTypeFromImgRequest(item) ||
-                 getContentTypeFromHeaders(cacheEntryDescrptor) ||
+                 getContentTypeFromHeaders(cacheEntryDescriptor) ||
                  gStrings.unknown;
 
   document.getElementById("imagetypetext").value = mimeType;
