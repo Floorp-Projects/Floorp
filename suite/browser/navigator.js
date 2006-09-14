@@ -438,16 +438,9 @@ function nsBrowserAccess() {
 
 nsBrowserAccess.prototype = {
   openURI: function openURI(aURI, aOpener, aWhere, aContext) {
-    var isExternal = (aContext == nsIBrowserDOMWindow.OPEN_EXTERNAL);
-
-    if (isExternal && aURI && aURI.schemeIs("chrome")) {
-      dump("use -chrome command-line option to load external chrome urls\n");
-      return null;
-    }
-
-    var loadflags = isExternal ?
-                      nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
-                      nsIWebNavigation.LOAD_FLAGS_NONE;
+    var loadflags = aContext == nsIBrowserDOMWindow.OPEN_EXTERNAL ?
+                    nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
+                    nsIWebNavigation.LOAD_FLAGS_NONE;
 
     if (aWhere == nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW)
       if (aContext == nsIBrowserDOMWindow.OPEN_EXTERNAL)
@@ -662,15 +655,6 @@ function Startup()
     browser.popupDomain = null;
     browser.popupUrls = [];
     browser.popupFeatures = [];
-
-    try {
-      if (makeURI(uriToLoad).schemeIs("chrome")) {
-        dump("*** Preventing external load of chrome: URI into browser window\n");
-        dump("    Use -chrome <uri> instead\n");
-        window.close();
-        return;
-      }
-    } catch (e) {}
 
     if (uriToLoad != "about:blank") {
       gURLBar.value = uriToLoad;
