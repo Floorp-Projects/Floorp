@@ -46,8 +46,8 @@
 <!ENTITY navbarCmd.accesskey "n">
 <!ENTITY personalbarCmd.label "Personal Toolbar">
 <!ENTITY personalbarCmd.accesskey "p">
-<!ENTITY taskbarCmd.label "Taskbar">
-<!ENTITY taskbarCmd.accesskey "t">
+<!ENTITY taskbarCmd.label "Statusbar">
+<!ENTITY taskbarCmd.accesskey "s">
 
 <!ENTITY useStyleSheetMenu.label "Use Stylesheet">
 <!ENTITY useStyleSheetMenu.accesskey "u">
