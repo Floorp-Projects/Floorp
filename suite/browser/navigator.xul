@@ -214,7 +214,7 @@
 
         <button id="go-button" class="button-toolbar chromeclass-location"
                 label="&goButton.label;" hidden="true"
-                oncommand="addToUrlbarHistory(); BrowserLoadURL(event);"
+                oncommand="addToUrlbarHistory(gURLBar.value); BrowserLoadURL(event);"
                 ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
                 ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
                 ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
