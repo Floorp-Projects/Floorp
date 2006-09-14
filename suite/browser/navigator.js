@@ -53,6 +53,7 @@ var gLastValidURLStr = "";
 var gLastValidURL = null;
 var gHaveUpdatedToolbarState = false;
 var gClickSelectsAll = false;
+var gClickAtEndSelects = false;
 var gIgnoreFocus = false;
 var gIgnoreClick = false;
 var gURIFixup = null;
@@ -602,6 +603,7 @@ function Startup()
 
   // does clicking on the urlbar select its contents?
   gClickSelectsAll = pref.getBoolPref("browser.urlbar.clickSelectsAll");
+  gClickAtEndSelects = pref.getBoolPref("browser.urlbar.clickAtEndSelects");
 
   // now load bookmarks after a delay
   setTimeout(LoadBookmarksCallback, 0);
@@ -1807,8 +1809,9 @@ function URLBarMouseDownHandler(aEvent)
 
 function URLBarClickHandler(aEvent)
 {
-  if (!gIgnoreClick && gClickSelectsAll && gURLBar.selectionStart == gURLBar.selectionEnd && gURLBar.selectionStart < gURLBar.value.length)
-    gURLBar.select();
+  if (!gIgnoreClick && gClickSelectsAll && gURLBar.selectionStart == gURLBar.selectionEnd)
+    if (gClickAtEndSelects || gURLBar.selectionStart < gURLBar.value.length)
+      gURLBar.select();
 }
 
 // This function gets the "windows hooks" service and has it check its setting
