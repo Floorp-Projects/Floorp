@@ -656,7 +656,7 @@ function Shutdown()
 	// Check if we have a browser window
 	if ( window.content == null )
 	{
-		window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url ); 
+		window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url ); 
 	}
 	else
 	{
@@ -833,7 +833,7 @@ function RevealSearchPanel()
   }
 
   function openNewWindowWith( url ) {
-    var newWin = window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url );
+    var newWin = window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
 
     // Fix new window.    
     newWin.saveFileAndPos = true;
