@@ -165,6 +165,7 @@ Contributor(s): ______________________________________. -->
                      ontextcommand="return handleURLBarCommand(userAction);"
                      ontextrevert="return handleURLBarRevert();"
                      onmouseup="URLBarMouseupHandler(event);"
+                     onkeyup="URLBarKeyupHandler(event);"
                      onblur="URLBarBlurHandler(event);">
               <image id="page-proxy-button" allowevents="true"
                      ondraggesture="PageProxyDragGesture(event);"/>

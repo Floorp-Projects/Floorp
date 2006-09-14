@@ -1318,6 +1318,13 @@ function URLBarBlurHandler(aEvent)
     gURLBar.setSelectionRange(0, 0);
 }
 
+function URLBarKeyupHandler(aEvent)
+{
+  if (aEvent.keyCode == aEvent.DOM_VK_TAB ) {
+    ShowAndSelectContentsOfURLBar();
+  }
+}
+
 // This function gets the "windows hooks" service and has it check its setting
 // This will do nothing on platforms other than Windows.
 function checkForDefaultBrowser()
