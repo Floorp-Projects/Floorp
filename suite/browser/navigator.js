@@ -536,6 +536,52 @@ function OpenBookmarkURL(node, datasources)
     openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
 }
 
+function urlDomain(url)
+     {
+		urlReg = /http:\/\/([\w.]+)\//;
+	    return url.match(urlReg)[0];
+	 }
+
+
+function readRDFString(aDS,aRes,aProp) {
+          var n = aDS.GetTarget(aRes, aProp, true);
+          if (n)
+            return n.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+}
+
+
+function ensureDefaultEnginePrefs(aRDF,aDS) 
+   {
+
+    mPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
+    var defaultName = mPrefs.getComplexValue("browser.search.defaultenginename" , Components.interfaces.nsIPrefLocalizedString);
+	kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
+    kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");
+    kNC_Name = aRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
+          
+    var arcs = aDS.GetTargets(kNC_Root, kNC_child, true);
+    while (arcs.hasMoreElements()) {
+        var engineRes = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+        var name = readRDFString(aDS, engineRes, kNC_Name);
+		if (name == defaultName)
+           mPrefs.setCharPref("browser.search.defaultengine", engineRes.Value);
+    }
+  }
+
+
+function ensureSearchPref() {
+   
+   var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+   var ds = rdf.GetDataSource("rdf:internetsearch");
+   kNC_Name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
+   try {
+            defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
+        } catch(ex) {
+            ensureDefaultEnginePrefs(rdf, ds);
+            defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
+            }
+   }
+
 function OpenSearch(tabName, forceDialogFlag, searchStr)
 {
 
@@ -548,7 +594,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
   //     till we figure out why. See bug 61886.
   // var url = getWebNavigation().currentURI.spec;
   var url = _content.location.href;
-
+  ensureSearchPref()
   //Check to see if search string contains "://" or "ftp." or white space.
   //If it does treat as url and match for pattern
   
@@ -569,9 +615,6 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
   //If they match then go to default search URL engine
 
   if ((!searchStr || searchStr == url)) {
-  if (defaultSearchURL != fallbackDefaultSearchURL)
-      loadURI(defaultSearchURL);
-    else
       loadURI(gNavigatorRegionBundle.getString("otherSearchURL"));
 
   } else {
