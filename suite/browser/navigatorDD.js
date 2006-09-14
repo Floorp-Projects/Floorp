@@ -98,24 +98,27 @@ var personalToolbarObserver = {
 
   onDrop: function (aEvent, aXferData, aDragSession)
     {
-      var dropElement = aEvent.target.id;
       var xferData = aXferData.data.split("\n");
       var elementRes = RDFUtils.getResource(xferData[0]);
-      var dropElementRes = RDFUtils.getResource(dropElement);
       var personalToolbarRes = RDFUtils.getResource("NC:PersonalToolbarFolder");
 
-      var childDB = document.getElementById("innermostBox").database;
+      var inner = document.getElementById("innermostBox");
+      var childDB = inner.database;
       const kCtrContractID = "@mozilla.org/rdf/container;1";
       const kCtrIID = Components.interfaces.nsIRDFContainer;
-      var rdfContainer = Components.classes[kCtrContractID].getService(kCtrIID);
+      var rdfContainer = Components.classes[kCtrContractID].createInstance(kCtrIID);
 
-      var parentContainer = this.findParentContainer(aDragSession.sourceElement);
+      // if dragged url is already bookmarked, remove it from current location first
+      var parentContainer = this.findParentContainer(aDragSession.sourceNode);
       if (parentContainer)
         {
           rdfContainer.Init(childDB, parentContainer);
-          rdfContainer.RemoveElement(elementRes, true);
+          rdfContainer.RemoveElement(elementRes, false);
         }
 
+      // determine charset of link
+      var linkCharset = aDragSession.sourceDocument ? aDragSession.sourceDocument.characterSet : null;
+      // determine title of link
       var linkTitle;
       if (xferData.length >= 2)
         linkTitle = xferData[1]
@@ -124,41 +127,50 @@ var personalToolbarObserver = {
           // look up this URL's title in global history
           var potentialTitle = null;
           var historyDS = gRDFService.GetDataSource("rdf:history");
-          var historyTitleProperty = RDFUtils.getResource(NC_RDF("Name"));
-          var titleFromHistory = historyDS.GetTarget(elementRes, historyTitleProperty, true);
+          var titlePropRes = RDFUtils.getResource(NC_RDF("Name"));
+          var titleFromHistory = historyDS.GetTarget(elementRes, titlePropRes, true);
           if (titleFromHistory)
             titleFromHistory = titleFromHistory.QueryInterface(Components.interfaces.nsIRDFLiteral);
           if (titleFromHistory)
             potentialTitle = titleFromHistory.Value;
           linkTitle = potentialTitle;
-
-          if (linkTitle)
-            childDB.Assert(elementRes, historyTitleProperty, 
-                           gRDFService.GetLiteral(linkTitle), true);
         }
-      rdfContainer.Init (childDB, personalToolbarRes);
-      var dropIndex = rdfContainer.IndexOf(dropElementRes);
-      // determine the drop position
-      var dropPosition = this.determineDropPosition(aEvent);
+
+      var dropElement = aEvent.target.id;
+      var dropElementRes, dropIndex, dropPosition;
+      if (dropElement == "innermostBox") 
+        {
+          dropElementRes = personalToolbarRes;
+          dropPosition = this.DROP_ON;
+        }
+      else
+        {
+          dropElementRes = RDFUtils.getResource(dropElement);
+          rdfContainer.Init(childDB, personalToolbarRes);
+          dropIndex = rdfContainer.IndexOf(dropElementRes);
+          if (dropPosition == undefined)
+            dropPosition = this.determineDropPosition(aEvent);
+        }
+      
       switch (dropPosition) {
       case this.DROP_BEFORE:
         if (dropIndex<1) dropIndex = 1;
-        rdfContainer.Init(childDB, personalToolbarRes);
-        rdfContainer.InsertElementAt(elementRes, dropIndex, true);
+        this.insertBookmarkAt(xferData[0], linkTitle, linkCharset, personalToolbarRes, dropIndex);
         break;
       case this.DROP_ON:
-        if (dropIndex<1) dropIndex = 1;
-        // do something here to drop into subfolders
-        rdfContainer.Init(childDB, dropElementRes);
-        rdfContainer.AppendElement(elementRes);
+        this.insertBookmarkAt(xferData[0], linkTitle, linkCharset, dropElementRes, -1);
         break;
       case this.DROP_AFTER:
       default:
+        // compensate for badly calculated dropIndex
+        rdfContainer.Init(childDB, personalToolbarRes);
+        if (dropIndex < rdfContainer.GetCount()) ++dropIndex;
+        
         if (dropIndex<0) dropIndex = 0;
-        rdfContainer.Init (childDB, personalToolbarRes);
-        rdfContainer.InsertElementAt(elementRes, dropIndex+1, true);
+        this.insertBookmarkAt(xferData[0], linkTitle, linkCharset, personalToolbarRes, dropIndex);
         break;
       }
+      
       return true;
     },
 
@@ -277,6 +289,14 @@ var personalToolbarObserver = {
             return RDFUtils.getResource(treeitem.id);
         }
       return null;
+    },
+  
+  insertBookmarkAt: function(aURL, aTitle, aCharset, aFolderRes, aIndex)
+    {
+      const kBMSContractID = "@mozilla.org/browser/bookmarks-service;1";
+      const kBMSIID = Components.interfaces.nsIBookmarksService;
+      const kBMS = Components.classes[kBMSContractID].getService(kBMSIID);
+      kBMS.insertBookmarkInFolder(aURL, aTitle, aCharset, aFolderRes, aIndex);
     }
 };
 
