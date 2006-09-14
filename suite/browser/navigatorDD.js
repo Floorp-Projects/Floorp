@@ -324,7 +324,7 @@ var homeButtonObserver = {
   onDragOver: function (aEvent, aFlavour, aDragSession)
     {
       var statusTextFld = document.getElementById("statusbar-display");
-      statusTextFld.setAttribute("value", bundle.GetStringFromName("droponhomebutton"));
+      statusTextFld.setAttribute("value", gNavigatorBundle.getString("droponhomebutton"));
       aDragSession.dragAction = Components.interfaces.nsIDragService.DRAGDROP_ACTION_LINK;
     },
     
