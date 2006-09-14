@@ -29,12 +29,14 @@ var startPageDefault = "about:blank";
 // in case we fail to get the home page, load this
 var homePageDefault = bundle.GetStringFromName( "homePageDefault" );
 
-try {
-	pref = Components.classes['component://netscape/preferences'];
-	pref = pref.getService();
-	pref = pref.QueryInterface(Components.interfaces.nsIPref);
+try
+{
+	pref = Components.classes["component://netscape/preferences"];
+	if (pref)	pref = pref.getService();
+	if (pref)	pref = pref.QueryInterface(Components.interfaces.nsIPref);
 }
-catch (ex) {
+catch (ex)
+{
 	dump("failed to get prefs service!\n");
 	pref = null;
 }
@@ -351,6 +353,15 @@ function Startup()
                 dump("*** SetDocumentCharset(" + arrayArgComponents[1] + ")\n");
             }
         }
+    }
+
+    try
+    {
+    	var searchMode = pref.GetIntPref("browser.search.mode");
+    	setBrowserSearchMode(searchMode);
+    }
+    catch(ex)
+    {
     }
 
 	 // Check for window.arguments[0].  If present, go to that url.
@@ -983,6 +994,30 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 	}
 }
 
+function setBrowserSearchMode(searchMode)
+{
+	// set search mode preference
+	try
+	{
+		pref.SetIntPref("browser.search.mode", searchMode);
+	}
+	catch(ex)
+	{
+	}
+
+	// update search menu
+	var simpleMenuItem = document.getElementById("simpleSearch");
+	if (simpleMenuItem)
+	{
+		simpleMenuItem.setAttribute("checked", (searchMode == 0) ? "true" : "false");
+	}
+	var advancedMenuItem = document.getElementById("advancedSearch");
+	if (advancedMenuItem)
+	{
+		advancedMenuItem.setAttribute("checked", (searchMode == 1) ? "true" : "false");
+	}
+}
+
 function RevealSearchPanel()
 {
 	// rjc Note: the following is all a hack until the sidebar has appropriate APIs
@@ -1004,7 +1039,7 @@ function RevealSearchPanel()
 		if (splitter_state && splitter_state == "collapsed") {
 			sidebar_splitter.removeAttribute("state");
 		}
-        // SidebarSelectPanel() lives in sidebarOverlay.js
+		// SidebarSelectPanel() lives in sidebarOverlay.js
 		SidebarSelectPanel(searchPanel);
 	}
 }
