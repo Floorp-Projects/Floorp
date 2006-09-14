@@ -67,30 +67,21 @@ pageInfoTreeView.prototype = {
 
   getCellText: function(row, column)
   {
-    var colidx = 0;
-    // loop through the list of column names to find the index to the column 
-    // we should be worrying about. very much a hack, but what can you do?
-    while(colidx < this.colcount && column != this.columnids[colidx])
-      colidx++;
-
     // row can be null, but js arrays are 0-indexed.
     // colidx cannot be null, but can be larger than the number
     // of columns in the array (when column is a string not in 
     // this.columnids.) In this case it's the fault of
     // whoever typoed while calling this function.
-    return this.data[row][colidx] || "";
+    return this.data[row][column.index] || "";
+  },
+
+  setCellValue: function(row, column, value) 
+  {
   },
 
   setCellText: function(row, column, value) 
   {
-    var colidx = 0;
-    // loop through the list of column names to find the index 
-    // to the column the should be worrying about. very much a hack, but
-    // what can you do? 
-    // XXX: I think there's a better way to do this now...
-    while(colidx < this.colcount && column != this.columnids[colidx])
-      colidx++;
-    this.data[row][colidx] = value;
+    this.data[row][column.index] = value;
   },
 
   addRow: function(row)
@@ -137,15 +128,14 @@ pageInfoTreeView.prototype = {
     }
   },
 
-  getRowProperties: function(row, column, prop) { },
-  getCellProperties: function(row, prop) { },
-  getColumnProperties: function(column, elem, prop) { },
+  getRowProperties: function(row, prop) { },
+  getCellProperties: function(row, column, prop) { },
+  getColumnProperties: function(column, prop) { },
   isContainer: function(index) { return false; },
   isContainerOpen: function(index) { return false; },
   isSeparator: function(index) { return false; },
   isSorted: function() { },
-  canDropOn: function(index) { return false; },
-  canDropBeforeAfter: function(index, before) { return false; },
+  canDrop: function(index, orientation) { return false; },
   drop: function(row, orientation) { return false; },
   getParentIndex: function(index) { return 0; },
   hasNextSibling: function(index, after) { return false; },
@@ -154,7 +144,7 @@ pageInfoTreeView.prototype = {
   getProgressMode: function(row, column) { },
   getCellValue: function(row, column) { },
   toggleOpenState: function(index) { },
-  cycleHeader: function(col, elem) { },
+  cycleHeader: function(col) { },
   selectionChanged: function() { },
   cycleCell: function(row, column) { },
   isEditable: function(row, column) { return false; },
@@ -609,7 +599,8 @@ function onFormSelect()
     formPreview.treeBoxObject.view = fieldView;
 
     var clickedRow = formView.selection.currentIndex;
-    var form = formView.getCellText(clickedRow, "form-node");
+    // form-node;
+    var form = formView.data[clickedRow][3];
 
     var ft = null;
     if (form.name)
@@ -654,8 +645,10 @@ function onFormSelect()
       {
         var labeltext = getValueText(label);
         for (var j = 0; j < length; j++)
-          if (formfields[j] == whatfor)
-            fieldView.setCellText(j, "field-label", labeltext);
+          if (formfields[j] == whatfor) {
+            var col = formPreview.columns["field-label"];
+            fieldView.setCellText(j, col, labeltext);
+          }
       }
     }
   }
@@ -693,11 +686,8 @@ function onBeginLinkDrag(event,urlField,descField)
   if (!("treeBoxObject" in tree))
     tree = tree.parentNode;
 
-  var row = {};
-  var col = {};
-  var elt = {};
-  tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, elt);
-  if (row.value == -1)
+  var row = tree.treeBoxObject.getRowAt(event.clientX, event.clientY);
+  if (row == -1)
     return;
 
   // Getting drag-system needed services
@@ -711,8 +701,10 @@ function onBeginLinkDrag(event,urlField,descField)
   
   // Adding URL flavor
   trans.addDataFlavor("text/x-moz-url");
-  var url = tree.treeBoxObject.view.getCellText(row.value, urlField);
-  var desc = tree.treeBoxObject.view.getCellText(row.value, descField);
+  var col = tree.columns[urlField];
+  var url = tree.view.getCellText(row, col);
+  col = tree.columns[descField];
+  var desc = tree.view.getCellText(row, col);
   var stringURL = Components.classes[STRING_CONTRACTID].createInstance(Components.interfaces.nsISupportsString);
   stringURL.data = url + "\n"+desc;
   trans.setTransferData("text/x-moz-url", stringURL, stringURL.data.length * 2 );
@@ -737,8 +729,9 @@ function getSelectedImage(tree)
   if (!imageView.rowCount) return null;
 
   // Only works if only one item is selected
-  var clickedRow = tree.treeBoxObject.selection.currentIndex;
-  return imageView.getCellText(clickedRow, "image-node");
+  var clickedRow = tree.currentIndex;
+  // image-node
+  return imageView.data[clickedRow][3];
 }
 
 function saveMedia()
@@ -756,9 +749,9 @@ function onImageSelect()
   var tree = document.getElementById("imagetree");
   var saveAsButton = document.getElementById("imagesaveasbutton");
 
-  if (tree.treeBoxObject.selection.count == 1)
+  if (tree.view.selection.count == 1)
   {
-    makePreview(tree.treeBoxObject.selection.currentIndex);
+    makePreview(tree.view.selection.currentIndex);
     saveAsButton.setAttribute("disabled", "false");
   }
   else
@@ -767,9 +760,12 @@ function onImageSelect()
 
 function makePreview(row)
 {
-  var item = getSelectedImage(document.getElementById("imagetree"));
-  var url = imageView.getCellText(row, "image-address");
-  var isBG = imageView.getCellText(row, "image-bg");
+  var imageTree = document.getElementById("imagetree");
+  var item = getSelectedImage(imageTree);
+  var col = imageTree.columns["image-address"];
+  var url = imageView.getCellText(row, col);
+  // image-bg
+  var isBG = imageView.data[row][4];
 
   document.getElementById("imageurltext").value = url;
   document.getElementById("imagetitletext").value = item.title || gStrings.notSet;
