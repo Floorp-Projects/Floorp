@@ -570,7 +570,7 @@ function makeMediaTab()
   var theBundle = document.getElementById("pageinfobundle");
   var imageTree = document.getElementById("imagetree");
 
-  var imageView = new pageInfoTreeView(["image-number","image-address","image-type"], COPYCOL_IMAGE_ADDRESS);
+  var imageView = new pageInfoTreeView(["image-number","image-address","image-type","image-alt"], COPYCOL_IMAGE_ADDRESS);
   imageTree.treeBoxObject.view = imageView;
 
   imageList = grabAllMedia(theWindow, theDocument);
@@ -581,6 +581,7 @@ function makeMediaTab()
   var mediaEmbed = theBundle.getString("mediaEmbed");
   var mediaLink = theBundle.getString("mediaLink");
   var mediaInput = theBundle.getString("mediaInput");
+  var notSet = theBundle.getString("notset");
 
   var row = null;
   var length = imageList.length;
@@ -592,10 +593,10 @@ function makeMediaTab()
     switch (elem.nodeName.toLowerCase())
     {
       case "img":
-        imageView.addRow([++imageIndex, elem.src, mediaImg]);
+        imageView.addRow([++imageIndex, elem.src, mediaImg, (elem.hasAttribute("alt")) ? elem.alt : notSet ]);
         break;
       case "input":
-        imageView.addRow([++imageIndex, elem.src, mediaInput]);
+        imageView.addRow([++imageIndex, elem.src, mediaInput, (elem.hasAttribute("alt")) ? elem.alt : notSet ]);
         break;
       case "applet":
         imageView.addRow([++imageIndex, elem.code || elem.object, mediaApplet]);
@@ -713,11 +714,30 @@ function makePreview(item)
   var theBundle = document.getElementById("pageinfobundle");
   var unknown = theBundle.getString("unknown");
   var notSet = theBundle.getString("notset");
+  var emptyString = theBundle.getString("emptystring");
 
   var url = ("src" in item && item.src) || ("code" in item && item.code) || ("data" in item && item.data) || ("href" in item && item.href) || unknown;  // it better have at least one of those...
   document.getElementById("imageurltext").value = url;
   document.getElementById("imagetitletext").value = item.title || notSet;
-  document.getElementById("imagealttext").value = ("alt" in item && item.alt) || getValueText(item) || notSet;
+
+  var altText = null;
+  if (item.hasAttribute("alt") && ("alt" in item))
+    altText = item.alt;
+  else if (item.hasChildNodes())
+    altText = getValueText(item);
+  if (altText == null)
+    altText = notSet;
+  var textbox=document.getElementById("imagealttext");
+  // IMO all text that is not really the value text should go in italics
+  // What if somebody has <img alt="Not specified">? =)
+  // We can't use textbox.style because of bug 7639
+  if (altText=="") {
+      textbox.value = emptyString;
+      textbox.setAttribute("style","font-style:italic");
+  } else {
+      textbox.value = altText;
+      textbox.setAttribute("style","font-style:inherit");
+  }
   document.getElementById("imagelongdesctext").value = ("longDesc" in item && item.longDesc) || notSet;
 
   // find out the mime type

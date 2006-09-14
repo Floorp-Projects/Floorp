@@ -236,7 +236,7 @@
       <vbox>
         <tree id="imagetree" class="inset fixedsize" onselect="onImageSelect();">
           <treecols>
-            <treecol sortSeparators="true" persist="hidden width" flex="1" 
+            <treecol sortSeparators="true" hidden="true" persist="hidden width" flex="1" 
                          width="1"  id="image-number"  label="&mediaNo;"/>
             <splitter class="tree-splitter"/>
             <treecol sortSeparators="true" persist="hidden width" flex="10" 
@@ -244,6 +244,9 @@
             <splitter class="tree-splitter"/>
             <treecol sortSeparators="true" persist="hidden width" flex="2" 
                          width="2"  id="image-type"    label="&mediaType;"/>
+            <splitter class="tree-splitter"/>
+            <treecol sortSeparators="true" hidden="true" persist="hidden width" flex="4" 
+                         width="4"  id="image-alt"    label="&mediaAltHeader;"/>
           </treecols>
           <treechildren flex="1"/>
         </tree>
