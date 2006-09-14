@@ -18,8 +18,10 @@
  * 
  * Contributor(s): 
  *    Doron Rosenberg (doronr@naboonline.com) 
+ *    Neil Rashbrook (neil@parkwaycc.co.uk)
  */
 
+const pageLoaderIface = Components.interfaces.nsIWebPageDescriptor;
 var gBrowser = null;
 var appCore = null;
 var gPrefs = null;
@@ -97,7 +99,6 @@ function viewSource(url)
 
       try {
         if (typeof(arg) == "object" && arg != null) {
-          var pageLoaderIface = Components.interfaces.nsIWebPageDescriptor;
           var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
 
           //
@@ -134,6 +135,12 @@ function viewSource(url)
         document.getElementById('menu_wrapLongLines').setAttribute("checked", "true");
     } catch (ex) {
     }
+    try {
+      document.getElementById("cmd_highlightSyntax").setAttribute("checked", gPrefs.getBoolPref("view_source.syntax_highlight"));
+    } catch (ex) {
+    }
+  } else {
+    document.getElementById("cmd_highlightSyntax").setAttribute("hidden", "true");
   }
 
   window._content.focus();
@@ -187,4 +194,17 @@ function wrapLongLines()
     } catch (ex) {
     }
   }
+}
+
+//function to toggle syntax highlighting and set the view_source.syntax_highlight
+//pref to persist the last state
+function highlightSyntax()
+{
+  var highlightSyntaxCmd = document.getElementById("cmd_highlightSyntax");
+  var highlightSyntax = highlightSyntaxCmd.getAttribute("checked") != "true";
+  highlightSyntaxCmd.setAttribute("checked", highlightSyntax);
+  gPrefs.setBoolPref("view_source.syntax_highlight", highlightSyntax);
+
+  var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
+  PageLoader.LoadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
 }
