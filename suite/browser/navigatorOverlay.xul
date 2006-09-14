@@ -499,10 +499,10 @@ END of Deprecated -->
 </menubar>
 
   <statusbar id="status-bar" class="chromeclass-status">
-    <statusbarpanel id="offline-status"/>
+    <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
     <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0"/>
     <statusbarpanel id="statusbar-display" value="&statusText.label;" crop="right" flex="1"/>
-    <statusbarpanel id="security-button" tooltip="aTooltip"/>
+    <statusbarpanel class="statusbarpanel-icononly" id="security-button" tooltip="aTooltip"/>
   </statusbar>
 
 </overlay>

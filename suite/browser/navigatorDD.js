@@ -103,6 +103,7 @@ var personalToolbarObserver = {
 
       var flavourList = { };
       flavourList["moz/toolbaritem"] = { width: 2, data: uri };
+      flavourList["text/x-moz-url"] = { width: 2, data: homepage + " " + "[ TEMP TITLE ]" };
       flavourList["text/html"] = { width: 2, data: htmlString };
       flavourList["text/unicode"] = { width: 2, data: uri };
       return flavourList;
@@ -129,18 +130,14 @@ var personalToolbarObserver = {
         rdfContainer.RemoveElement(elementRes, true);
       else if (dropIndex == -1)
         {
-          dump("*** element = " + element + "\n");
           // look up this URL's title in global history
           var potentialTitle = null;
           var historyDS = gRDFService.GetDataSource("rdf:history");
           var historyEntry = gRDFService.GetResource(element);
           var historyTitleProperty = gRDFService.GetResource(NC_RDF("Name"));
           var titleFromHistory = historyDS.GetTarget(historyEntry, historyTitleProperty, true);
-          dump("*** titleFromHistory = " + titleFromHistory + "\n");
-          if (titleFromHistory) {
+          if (titleFromHistory)
             titleFromHistory = titleFromHistory.QueryInterface(Components.interfaces.nsIRDFLiteral);
-            dump("*** titleFromHistory2 = " + titleFromHistory + "\n");
-}
           if (titleFromHistory)
             potentialTitle = titleFromHistory.Value;
           linkTitle = potentialTitle ? potentialTitle : element;
@@ -229,6 +226,7 @@ var contentAreaDNDObserver = {
   
       var flavourList = { };
       flavourList["text/html"] = { width: 2, data: htmlstring };
+      flavourList["text/x-moz-url"] = { width: 2, data: textstring + " " + "( TEMP TITLE )" };
       flavourList["text/unicode"] = { width: 2, data: textstring };
       return flavourList;
     },
@@ -352,10 +350,10 @@ var homeButtonObserver = {
     {
       var homepage = nsPreferences.getLocalizedUnicharPref("browser.startup.homepage", "about:blank");
       var flavourList = { };
-      flavourList["text/unicode"] = { width: 2, data: homepage };
-      flavourList["text/x-moz-url"] = { width: 2, data: homepage };
-      var htmlString = "<a href=\"" + homepage + "\">" + homepage + "</a>";
+      flavourList["text/x-moz-url"] = { width: 2, data: homepage + " " + "[ TEMP - Home Page ]" };
       flavourList["text/html"] = { width: 2, data: htmlString };
+      flavourList["text/unicode"] = { width: 2, data: homepage };
+      var htmlString = "<a href=\"" + homepage + "\">" + homepage + "</a>";
       return flavourList;
     },
   
