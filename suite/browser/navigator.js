@@ -517,18 +517,22 @@ function Startup()
   try {
     getBrowser().sessionHistory;
   } catch (e) {
-    // sessionHistory wasn't set from the browser's constructor
-    // so we'll just have to set it here.
- 
-    // Wire up session and global history before any possible
-    // progress notifications for back/forward button updating
-    webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
-                                             .createInstance(Components.interfaces.nsISHistory);
+    /* Session history might not be available,
+       so we wrap access to it in a try block */
+    try {
+      // sessionHistory wasn't set from the browser's constructor
+      // so we'll just have to set it here.
 
-    // wire up global history.  the same applies here.
-    var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
-                                  .getService(Components.interfaces.nsIGlobalHistory);
-    getBrowser().docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).globalHistory = globalHistory;
+      // Wire up session and global history before any possible
+      // progress notifications for back/forward button updating
+      webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
+                                               .createInstance(Components.interfaces.nsISHistory);
+
+      // wire up global history.  the same applies here.
+      var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
+                                    .getService(Components.interfaces.nsIGlobalHistory);
+      getBrowser().docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).globalHistory = globalHistory;
+    } catch (e) {}
 
     const selectedBrowser = getBrowser().selectedBrowser;
     if (selectedBrowser.securityUI)
