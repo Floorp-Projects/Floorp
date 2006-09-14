@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const mediatorContractId = "@mozilla.org/rdf/datasource;1?name=window-mediator";
+const mediatorContractId = "@mozilla.org/appshell/window-mediator;1";
 const nsIWebBrowserChrome = Components.interfaces.nsIWebBrowserChrome;
 
 function nsBrowserContentListener(toplevelWindow, contentWindow)
