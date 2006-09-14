@@ -448,10 +448,8 @@ function Startup()
   // Initialize browser instance..
   appCore.setWebShellWindow(window);
 
-  // give urlbar focus so it'll be an active editor and d&d will work properly
   gURLBar = document.getElementById("urlbar");
-  gURLBar.focus();
-
+   
   // set the offline/online mode
   setOfflineStatus();
 
@@ -463,7 +461,7 @@ function Startup()
   contentArea.addEventListener("focus", contentAreaFrameFocus, true);
 
   // set default character set if provided
-  if ("arguments" in window && window.arguments.length > 1) {
+  if ("arguments" in window && window.arguments.length > 1 && window.arguments[1]) {
     if (window.arguments[1].indexOf("charset=") != -1) {
       var arrayArgComponents = window.arguments[1].split("=");
       if (arrayArgComponents) {
@@ -511,12 +509,18 @@ function Startup()
 
     if (!startPage) {
       // Check for window.arguments[0]. If present, use that for startPage.
-      if ("arguments" in window && window.arguments.length >= 1)
+      if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0])
         startPage = window.arguments[0];
     }
 
     if (startPage)
       loadURI(startPage);
+           
+    // Focus the content area if the caller instructed us to.
+    if ("arguments" in window && window.arguments[2] == true)
+      _content.focus();
+    else
+      gURLBar.focus();
      
     // Perform default browser checking.
     checkForDefaultBrowser();
