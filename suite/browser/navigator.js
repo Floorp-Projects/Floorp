@@ -693,16 +693,11 @@ function getSearchUrl(attr)
 
 function OpenSearch(tabName, forceDialogFlag, searchStr)
 {
-
   //This function needs to be split up someday.
 
   var autoOpenSearchPanel = false;
   var defaultSearchURL = null;
   var fallbackDefaultSearchURL = gNavigatorRegionBundle.getString("fallbackDefaultSearchURL");
-  // XXX This somehow causes a big leak, back to the old way
-  //     till we figure out why. See bug 61886.
-  // var url = getWebNavigation().currentURI.spec;
-  var url = _content.location.href;
   ensureSearchPref()
   //Check to see if search string contains "://" or "ftp." or white space.
   //If it does treat as url and match for pattern
@@ -721,10 +716,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
   if (!defaultSearchURL)
     defaultSearchURL = fallbackDefaultSearchURL;
 
-  //Check to see if content url equals url in location bar.
-  //If they match then go to default search URL engine
-
-  if ((!searchStr || searchStr == url)) {
+  if (!searchStr) {
     loadURI(gNavigatorRegionBundle.getString("otherSearchURL"));
   } else {
 
@@ -733,12 +725,13 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
     //Otherwise search on entry
     if (forceAsURL) {
        BrowserLoadURL()
-     } else {
+    } else {
       var searchMode = 0;
       try {
         searchMode = pref.getIntPref("browser.search.powermode");
       } catch(ex) {
       }
+
       if (forceDialogFlag || searchMode == 1) {
         // Use a single search dialog
         var windowManager = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"]
@@ -776,6 +769,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
             }
           } catch (ex) {
           }
+
           loadURI(defaultSearchURL);
         }
       }
