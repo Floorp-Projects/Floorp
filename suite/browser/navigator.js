@@ -1095,8 +1095,14 @@ function BrowserOpenWindow()
 function BrowserOpenTab()
 {
   if (!gInPrintPreviewMode) {
-    gBrowser.selectedTab = gBrowser.addTab('about:blank');
-    setTimeout("gURLBar.focus();", 0); 
+    var homePage = getHomePage();
+    var uriToLoad = homePage[0];
+    gBrowser.selectedTab = gBrowser.addTab(uriToLoad);
+    var navBar = document.getElementById("nav-bar");
+    if (uriToLoad == "about:blank" && !navBar.hidden && window.locationbar.visible)
+      setTimeout("gURLBar.focus();", 0);
+    else
+      setTimeout("content.focus();", 0);
   }
 }
 
