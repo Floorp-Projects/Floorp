@@ -22,6 +22,7 @@ Contributor(s): ______________________________________. -->
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
+<?xul-overlay href="chrome://navigator/content/platformNavigationBindings.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -56,7 +57,9 @@ Contributor(s): ______________________________________. -->
 	<key id="key_selectAll"/>
 	<key id="key_preferences"/>
 
-	<!-- View Menu -->
+	<key id="stop" keycode="VK_ESCAPE" onkeypress="BrowserStop();"/>
+
+        <!-- View Menu -->
 	<!--
 	<key id="key_enlargeTextSize" xulkey="true"
 	     key="&enlargeTextSizeCmd.commandkey;"
@@ -72,11 +75,8 @@ Contributor(s): ______________________________________. -->
 	<key id="key_savePage"        xulkey="true"  key="&savePageCmd.commandkey;" observes="Browser:SavePage"/>
 		
   <key id="goHomeKb"            alt="true" keycode="VK_HOME" observes="Browser:Home" />
+
   <key id="key_gotoHistory"     xulkey="true" shift="false" key="&history.commandKey;" onkeypress="toHistory();"/>
- 
-  
-  <key id="stop"                keycode="VK_ESCAPE" onkeypress="BrowserStop();"/>
-  
   
 	<key id="addBookmarkKb"       xulkey="true" key="&addCurPageCmd.commandkey;" observes="Browser:AddBookmark" />
 	<key id="manBookmarkKb"       xulkey="true" key="&manBookmarksCmd.commandkey;" observes="Browser:ManageBookmark" />
