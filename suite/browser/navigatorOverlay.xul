@@ -173,8 +173,8 @@
           <menupopup id="menu_NewPopup">
             <!-- From globalOverlay.xul -->
             <menuitem id="menu_newNavigator" command="cmd_newNavigator"/>
-            <!-- <menuitem id="menu_newNavigatorTab" position="1" command="cmd_newNavigatorTab" key="key_newNavigatorTab"
-                           label="&tabCmd.label;" accesskey="&tabCmd.accesskey;"/> -->
+            <menuitem id="menu_newNavigatorTab" command="cmd_newNavigatorTab" key="key_newNavigatorTab"
+                      label="&tabCmd.label;" accesskey="&tabCmd.accesskey;"/>
             <menuitem id="menu_newEditor"    command="cmd_newEditor"/>
           </menupopup>
         </menu>
