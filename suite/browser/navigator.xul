@@ -155,6 +155,9 @@ Contributor(s): ______________________________________. -->
       </hbox>
  
       <hbox id="nav-bar-inner" flex="1">
+        <toolbarbutton id="clear-button" oncommand="clearLocationBar();"
+                 tooltiptext="&clearButton.tooltip;"
+	         class="toolbar-button"/>
         <textbox id="urlbar" class="chromeclass-location" flex="1"
                  type="autocomplete" searchSessions="history" 
                  timeout="50" maxrows="6" alwaysopenpopup="true"
