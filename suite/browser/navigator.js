@@ -1412,25 +1412,8 @@ function applyTheme(themeName)
     return;
   }
 
-  // XXX XXX BAD BAD BAD BAD !! XXX XXX
-  // we STILL haven't fixed editor skin switch problems
-  // hacking around it yet again
-  str = Components.classes["@mozilla.org/supports-wstring;1"]
-                  .createInstance(Components.interfaces.nsISupportsWString);
-  str.data = name;
-  pref.setComplexValue("general.skins.selectedSkin",
-                       Components.interfaces.nsISupportsWString, str);
-
-  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-  observerService.notifyObservers(null, "skin-selected", null);
-
-  if (promptService) {
-    var dialogTitle = gNavigatorBundle.getString("switchskinstitle");
-    var brandName = gBrandBundle.getString("brandShortName");
-    var msg = gNavigatorBundle.getFormattedString("switchskins", [brandName]);
-    promptService.alert(window, dialogTitle, msg);
-  }
-
+  chromeRegistry.selectSkin(name, true);
+  chromeRegistry.refreshSkins();
 }
 
 
