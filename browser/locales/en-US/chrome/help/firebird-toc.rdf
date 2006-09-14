@@ -186,8 +186,8 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="a11y-keyboard-shortcuts" nc:name="Keyboard Shortcuts" nc:link="accessibility.xhtml#keyboard_shortcuts"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="a11y-caret-browsing" nc:name="Allow Text to Be Selected With The Keyboard" nc:link="accessibility.xhtml#allow_text_to_be_selected_with_the_keyboard"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="a11y-typeahead-find" nc:name="Begin Finding When You Begin Typing" nc:link="accessibility.xhtml#begin_finding_when_you_begin_typing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="a11y-caret-browsing" nc:name="Always Use the Cursor Keys to Navigate Within Webpages" nc:link="accessibility.xhtml#always_use_cursor_keys"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="a11y-typeahead-find" nc:name="Search for Text When I Start Typing" nc:link="accessibility.xhtml#find_as_you_type"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
