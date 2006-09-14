@@ -321,8 +321,8 @@ nsXULBrowserWindow.prototype =
       if(state & Components.interfaces.nsIWebProgressListener.flag_is_network) {
         // Record page loading time.
         var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
-        var msg = bundle.GetStringFromName("nv_done") + " (" + elapsed + " secs)";
-        dump( msg + "\n" );
+        var msg = bundle.GetStringFromName("nv_done");
+        msg = msg.replace(/%elapsed%/, elapsed);
         defaultStatus = msg;
         UpdateStatusField();
         //window.XULBrowserWindow.setDefaultStatus(msg);
