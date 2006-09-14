@@ -633,7 +633,9 @@ function Startup()
     if (uriToLoad != "about:blank") {
       gURLBar.value = uriToLoad;
       browser.userTypedValue = uriToLoad;
-      if ("arguments" in window && window.arguments.length >= 3) {
+      if ("arguments" in window && window.arguments.length >= 4) {
+        loadURI(uriToLoad, window.arguments[2], window.arguments[3]);
+      } else if ("arguments" in window && window.arguments.length == 3) {
         loadURI(uriToLoad, window.arguments[2]);
       } else {
         loadURI(uriToLoad);
@@ -1432,10 +1434,10 @@ function BrowserCloseWindow()
   window.close();
 }
 
-function loadURI(uri, referrer)
+function loadURI(uri, referrer, flags)
 {
   try {
-    getBrowser().loadURI(uri, referrer);
+    getBrowser().loadURIWithFlags(uri, flags, referrer);
   } catch (e) {
   }
 }
@@ -1488,7 +1490,8 @@ function BrowserLoadURL(aTriggeringEvent)
 
       if (openTab) {
         // Open link in new tab
-        var t = browser.addTab(url);
+        var t = browser.addTab(url, null, null, false,
+                        nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP);
 
         // Focus new tab unless shift is pressed
         if (!shiftPressed) {
@@ -1497,7 +1500,8 @@ function BrowserLoadURL(aTriggeringEvent)
         }
       } else {
         // Open a new window with the URL
-        var newWin = openDialog(getBrowserURL(), "_blank", "all,dialog=no", url);
+        var newWin = openDialog(getBrowserURL(), "_blank", "all,dialog=no", url,
+            null, null, nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP);
         // Reset url in the urlbar, copied from handleURLBarRevert()
         var oldURL = browser.currentURI.spec;
         if (oldURL != "about:blank") {
@@ -1534,7 +1538,7 @@ function BrowserLoadURL(aTriggeringEvent)
     } else {
       // No modifier was pressed, load the URL normally and
       // focus the content area
-      loadURI(url);
+      loadURI(url, null, nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP);
       content.focus();
     }
   }
