@@ -89,6 +89,8 @@ Contributor(s): ______________________________________. -->
     <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
   </stringbundleset>
 
+<resourcebundle id="resource_bundle_navigator" />
+
   <commandset id="commands">    
     <commandset id="globalEditMenuItems"/>
     <commandset id="selectEditMenuItems"/>
