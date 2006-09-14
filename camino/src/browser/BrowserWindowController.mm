@@ -1184,7 +1184,7 @@ enum BWCOpenDest {
     [toolbarItem setAction:@selector(home:)];
   }
   else if ([itemIdent isEqual:BookmarksToolbarItemIdentifier]) {
-    [toolbarItem setLabel:NSLocalizedString(@"ToggleBookmarks", nil)];
+    [toolbarItem setLabel:NSLocalizedString(@"Manage Bookmarks", nil)];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Manage Bookmarks", nil)];
     [toolbarItem setToolTip:NSLocalizedString(@"ShowBookmarkMgrToolTip", nil)];
     [toolbarItem setImage:[NSImage imageNamed:@"manager"]];
@@ -1368,11 +1368,13 @@ enum BWCOpenDest {
   }
   else if (action == @selector(manageBookmarks:)) {
     if ([self bookmarkManagerIsVisible]) {
+      [theItem setLabel:NSLocalizedString(@"Hide Bookmarks", nil)];
       [theItem setPaletteLabel:NSLocalizedString(@"Hide Bookmarks", nil)];
       [theItem setToolTip:NSLocalizedString(@"HideBookmarkMgrToolTip", nil)];
       [theItem setImage:[NSImage imageNamed:@"hidemanager"]];
     }
     else {
+      [theItem setLabel:NSLocalizedString(@"Manage Bookmarks", nil)];
       [theItem setPaletteLabel:NSLocalizedString(@"Manage Bookmarks", nil)];
       [theItem setToolTip:NSLocalizedString(@"ShowBookmarkMgrToolTip", nil)];
       [theItem setImage:[NSImage imageNamed:@"manager"]];
