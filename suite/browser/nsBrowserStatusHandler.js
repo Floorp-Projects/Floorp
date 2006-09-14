@@ -49,7 +49,27 @@ function nsBrowserStatusHandler()
 
 nsBrowserStatusHandler.prototype =
 {
-  userTyped : false,
+  userTyped :
+  {
+    _value : false,
+    browser : null,
+
+    get value() {
+      if (this.browser != getBrowser().mCurrentBrowser)
+        this._value = false;
+      
+      return this._value;
+    },
+
+    set value(aValue) {
+      if (this._value != aValue) {
+        this._value = aValue;
+        this.browser = aValue ? getBrowser().mCurrentBrowser : null;
+      }
+
+      return aValue;
+    },
+  },
 
   useRealProgressFlag : false,
   totalRequests : 0,
@@ -102,6 +122,7 @@ nsBrowserStatusHandler.prototype =
     this.stopMenu        = null;
     this.stopContext     = null;
     this.statusTextField = null;
+    this.userTyped       = null;
   },
 
   setJSStatus : function(status)
@@ -253,11 +274,7 @@ nsBrowserStatusHandler.prototype =
 
   onLocationChange : function(aWebProgress, aRequest, aLocation)
   {
-    if (this.userTyped)
-      return;
-
     var location = aLocation.spec;
-    domWindow = aWebProgress.DOMWindow;
 
     if (this.hideAboutBlank) {
       this.hideAboutBlank = false;
@@ -269,8 +286,12 @@ nsBrowserStatusHandler.prototype =
     // searched
     // Update urlbar only if a new page was loaded on the primary content area
     // Do not update urlbar if there was a subframe navigation
+
+    var domWindow = aWebProgress.DOMWindow;
     if (domWindow == domWindow.top) {
-      this.urlBar.value = location;
+      if (!this.userTyped.value)
+        this.urlBar.value = location;
+
       SetPageProxyState("valid", aLocation);
     }
     UpdateBackForwardButtons();
@@ -298,7 +319,7 @@ nsBrowserStatusHandler.prototype =
   {
     // Reset so we can see if the user typed after the document load
     // starting and the location changing.
-    this.userTyped = false;
+    this.userTyped.value = false;
 
     const nsIChannel = Components.interfaces.nsIChannel;
     var urlStr = aRequest.QueryInterface(nsIChannel).URI.spec;
