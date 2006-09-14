@@ -846,28 +846,14 @@ function setBrowserSearchMode(searchMode)
 
 function RevealSearchPanel()
 {
-	// rjc Note: the following is all a hack until the sidebar has appropriate APIs
-	// to check whether its shown/hidden, open/closed, and can show a particular panel
+  var should_popopen = true;
+  var should_unhide = true;
+  var searchPanel = document.getElementById("urn:sidebar:panel:search");
 
-	var sidebar = document.getElementById("sidebar-box");
-	var sidebar_splitter = document.getElementById("sidebar-splitter");
-	var searchPanel = document.getElementById("urn:sidebar:panel:search");
-
-	if (sidebar && sidebar_splitter && searchPanel)
-	{
-		var is_hidden = sidebar.getAttribute("hidden");
-		if (is_hidden && is_hidden == "true")
-		{
-			// SidebarShowHide() lives in sidebarOverlay.js
-			SidebarShowHide();
-		}
-		var splitter_state = sidebar_splitter.getAttribute("state");
-		if (splitter_state && splitter_state == "collapsed") {
-			sidebar_splitter.removeAttribute("state");
-		}
-		// SidebarSelectPanel() lives in sidebarOverlay.js
-		SidebarSelectPanel(searchPanel);
-	}
+  if (searchPanel) {
+    // SidebarSelectPanel() lives in sidebarOverlay.js
+    SidebarSelectPanel(searchPanel, should_popopen, should_unhide);
+  }
 }
 
   function BrowserNewWindow()
