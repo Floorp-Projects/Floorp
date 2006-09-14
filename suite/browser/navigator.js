@@ -1057,7 +1057,7 @@ function BrowserViewSourceOfURL(url, charset)
              url, charset);
 }
 
-// doc=owner document.
+// doc=null for regular page info, doc=owner document for frame info.
 function BrowserPageInfo(doc)
 {
   window.openDialog("chrome://navigator/content/pageInfo.xul",
