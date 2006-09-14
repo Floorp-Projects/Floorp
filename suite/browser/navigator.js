@@ -25,10 +25,12 @@
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 
 var gURLBar = null;
+var gProxyButton = null;
 var gNavigatorBundle;
 var gBrandBundle;
 var gNavigatorRegionBundle;
 var gBrandRegionBundle;
+var gLastValidURL = "";
 
 var pref = Components.classes["@mozilla.org/preferences;1"]
                      .getService(Components.interfaces.nsIPref);
@@ -223,6 +225,8 @@ function Startup()
 
   gBrowser = document.getElementById("content");
   gURLBar = document.getElementById("urlbar");
+  
+  SetPageProxyState("invalid");
 
   var webNavigation;
   try {
@@ -1214,20 +1218,19 @@ function getNewThemes()
   loadURI(gBrandRegionBundle.getString("getNewThemesURL"));
 }
 
-function URLBarLeftClickHandler(aEvent)
+function URLBarMouseupHandler(aEvent)
 {
-  if (pref.GetBoolPref("browser.urlbar.clickSelectsAll")) {
-    var URLBar = aEvent.target;
-    URLBar.setSelectionRange(0, URLBar.value.length);
+  if (aEvent.button == 0 && pref.GetBoolPref("browser.urlbar.clickSelectsAll")) {
+    var selectionLen = gURLBar.selectionEnd - gURLBar.selectionStart;
+    if (selectionLen == 0)
+      gURLBar.setSelectionRange(0, gURLBar.textLength);
   }
 }
 
 function URLBarBlurHandler(aEvent)
 {
-  if (pref.GetBoolPref("browser.urlbar.clickSelectsAll")) {
-    var URLBar = aEvent.target;
-    URLBar.setSelectionRange(0, 0);
-  }
+  if (pref.GetBoolPref("browser.urlbar.clickSelectsAll"))
+    gURLBar.setSelectionRange(0, 0);
 }
 
 // This function gets the "windows hooks" service and has it check its setting
@@ -1258,23 +1261,64 @@ function ShowAndSelectContentsOfURLBar()
 
 // If "ESC" is pressed in the url bar, we replace the urlbar's value with the url of the page
 // and highlight it, unless it is about:blank, where we reset it to "".
-function resetURLBar()
+function handleURLBarRevert()
 {
   var url = _content.location.href;
   var throbberElement = document.getElementById("navigator-throbber");
 
-  if (!throbberElement.getAttribute("busy")){
-    if (url != "about:blank"){ 
+  var isScrolling = gURLBar.userAction == "scrolling";
+  
+  // don't revert to last valid url unless page is NOT loading
+  // and user is NOT key-scrolling through autocomplete list
+  if (!throbberElement.getAttribute("busy") && !isScrolling) {
+    if (url != "about:blank") { 
       gURLBar.value = url;
       gURLBar.select();
     } else { //if about:blank, urlbar becomes ""
       gURLBar.value = "";
     }
+    SetPageProxyState("valid");
   }
+
+  // tell widget to revert to last typed text only if the user
+  // was scrolling when they hit escape
+  return isScrolling; 
 }
 
-function handleURLBarKeyPress(event)
+function handleURLBarCommand(aUserAction)
 {
-  if (event.keyCode == KeyEvent.DOM_VK_RETURN) { addToUrlbarHistory(); BrowserLoadURL(); } 
-  else if (event.keyCode == KeyEvent.DOM_VK_ESCAPE) { resetURLBar(); }
+  if (aUserAction == "typing")
+    addToUrlbarHistory();
+
+  BrowserLoadURL(); 
 }
+
+function UpdatePageProxyState()
+{
+  if (gURLBar.value != gLastValidURL)
+    SetPageProxyState("invalid");
+}
+
+function SetPageProxyState(aState)
+{
+  if (!gProxyButton)
+    gProxyButton = document.getElementById("page-proxy-button");
+
+  gProxyButton.setAttribute("pageproxystate", aState);
+
+  if (aState == "valid") {
+    gLastValidURL = gURLBar.value;
+    gURLBar.addEventListener("input", UpdatePageProxyState, false);
+  } else if (aState == "invalid")
+    gURLBar.removeEventListener("input", UpdatePageProxyState, false);
+  
+}
+
+function PageProxyDragGesture(aEvent)
+{
+  if (gProxyButton.getAttribute("pageproxystate") == "valid")
+    nsDragAndDrop.startDrag(aEvent, proxyIconDNDObserver);
+  else
+    return false;
+}
+

@@ -1,0 +1,51 @@
+/* ::::::::::
+   :: Rules for 'hiding' portions of the chrome for special
+   :: kinds of browser windows.
+   ::::: */
+ 
+window[chromehidden~="menubar"] .chromeclass-menubar {
+  display: none;
+}
+
+window[chromehidden~="toolbar"] .chromeclass-toolbar {
+  display: none;
+}
+
+window[chromehidden~="location"] .chromeclass-location {
+  display: none;
+}
+
+window[chromehidden~="directories"] .chromeclass-directories {
+  display: none;
+}
+
+window[chromehidden~="status"] .chromeclass-status {
+  display: none;
+}
+
+window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
+  display: none;
+}
+
+/* ::::: urlbar autocomplete ::::: */
+
+.autocomplete-result-popup[for="urlbar"] {
+  -moz-binding: url("chrome://navigator/content/urlbarBindings.xml#autocomplete-result-popup") !important;
+}
+
+.autocomplete-result {
+  -moz-binding: url("chrome://navigator/content/urlbarBindings.xml#autocomplete-result") !important;
+}
+
+.autocomplete-search-box {
+  -moz-binding: url("chrome://navigator/content/urlbarBindings.xml#autocomplete-search-box");
+}
+
+.autocomplete-search-engine {
+  -moz-binding: url("chrome://navigator/content/urlbarBindings.xml#autocomplete-search-engine");
+}
+
+#page-proxy-button[pageproxystate="invalid"] {
+  visibility: hidden;
+}
+
