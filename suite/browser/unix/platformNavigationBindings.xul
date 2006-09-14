@@ -16,8 +16,10 @@
     <key key="&goForwardCmd.commandKey;" command="Browser:Forward" modifiers="accel"/>
 
     <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="alt"/>
-  </keyset>  
+    <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
+  </keyset>
 
+  <menuitem id="menuitem_fullScreen" hidden="false"/>
 </overlay>
 
 
