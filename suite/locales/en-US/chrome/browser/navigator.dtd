@@ -182,6 +182,8 @@
 <!ENTITY throbber.tooltip             "Go to the &vendorShortName; home page">
 
 <!ENTITY locationBar.tooltip          "Enter search term, keyword, or web address">
+<!ENTITY locationBar.accesskey        "d">
+
 <!ENTITY proxyIcon.tooltip            "Drag and drop this icon to create a link to this page">
 <!ENTITY internetKeyword.tooltip      "Return to previously viewed page or choose keyword">
 
