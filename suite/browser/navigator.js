@@ -392,8 +392,8 @@ function Shutdown()
 
 function Translate()
 {
-  var service = pref.getLocalizedUnicharPref("browser.translation.service");
-  var serviceDomain = pref.getLocalizedUnicharPref("browser.translation.serviceDomain");
+  var service = pref.CopyCharPref("browser.translation.service");
+  var serviceDomain = pref.CopyCharPref("browser.translation.serviceDomain");
   
   // XXX This somehow causes a big leak, back to the old way
   //     till we figure out why. See bug 61886.
