@@ -401,6 +401,7 @@ Contributor(s):
                     flex="1" contenttooltip="aHTMLTooltip"
                     contentcontextmenu="contentAreaContextMenu"
                     onnewtab="BrowserOpenTab();"
+                    onbookmarkgroup="addGroupmarkAs();"
                     onclick="return contentAreaClick(event);"/>
       </hbox>
     </vbox>  
