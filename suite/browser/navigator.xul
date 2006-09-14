@@ -232,7 +232,8 @@ Contributor(s): ______________________________________. -->
       //     - pinkerton
       -->
       <menu id="PersonalMenu" datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
-            ref="NC:BookmarksRoot">
+            ref="NC:BookmarksRoot"
+            oncommand="OpenBookmarkURL(event.target, document.getElementById('PersonalMenu').database)">
         <titledbutton align="right" class="bookmarkFolder toolbar-flat" container="true"
           value="&bookmarksButton.label;" crop="right"/>
         <template>
@@ -253,8 +254,7 @@ Contributor(s): ______________________________________. -->
           <rule>
             <menupopup>
               <menuitem class="standard" uri="rdf:*" 
-                value="rdf:http://home.netscape.com/NC-rdf#Name"
-                oncommand="OpenBookmarkURL(event.target, document.getElementById('PersonalMenu').database)"/>
+                value="rdf:http://home.netscape.com/NC-rdf#Name" />
             </menupopup>
           </rule>
         </template>
