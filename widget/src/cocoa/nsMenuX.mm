@@ -198,13 +198,13 @@ NS_IMETHODIMP nsMenuX::SetLabel(const nsAString &aText)
 
 NS_IMETHODIMP nsMenuX::GetAccessKey(nsString &aText)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
 NS_IMETHODIMP nsMenuX::SetAccessKey(const nsAString &aText)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
@@ -313,13 +313,13 @@ NS_IMETHODIMP nsMenuX::GetItemAt(const PRUint32 aPos, nsISupports *& aMenuItem)
 
 NS_IMETHODIMP nsMenuX::InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
 NS_IMETHODIMP nsMenuX::RemoveItem(const PRUint32 aPos)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 

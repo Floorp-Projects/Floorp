@@ -225,13 +225,13 @@ NS_METHOD nsMenuX::SetLabel(const nsAString &aText)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuX::GetAccessKey(nsString &aText)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuX::SetAccessKey(const nsAString &aText)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-------------------------------------------------------------------------
@@ -408,15 +408,13 @@ NS_METHOD nsMenuX::GetItemAt(const PRUint32 aPos, nsISupports *& aMenuItem)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuX::InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem)
 {
-  NS_ASSERTION(0, "Not implemented");
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuX::RemoveItem(const PRUint32 aPos)
 {
-  NS_WARNING("Not implemented");
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-------------------------------------------------------------------------

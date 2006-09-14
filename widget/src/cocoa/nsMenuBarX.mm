@@ -748,7 +748,7 @@ NS_IMETHODIMP nsMenuBarX::GetMenuAt(const PRUint32 aCount, nsIMenu *& aMenu)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMenuBarX::InsertMenuAt(const PRUint32 aCount, nsIMenu *& aMenu)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-------------------------------------------------------------------------
@@ -762,7 +762,7 @@ NS_IMETHODIMP nsMenuBarX::RemoveMenu(const PRUint32 aCount)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMenuBarX::RemoveAll()
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-------------------------------------------------------------------------
@@ -775,7 +775,7 @@ NS_IMETHODIMP nsMenuBarX::GetNativeData(void *& aData)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMenuBarX::SetNativeData(void* aData)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-------------------------------------------------------------------------
