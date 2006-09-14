@@ -403,7 +403,8 @@
 
         <menu label="&useStyleSheetMenu.label;" accesskey="&useStyleSheetMenu.accesskey;" disabled="false" observes="isImage">
           <menupopup onpopupshowing="stylesheetFillPopup(this);"
-                     oncommand="stylesheetSwitchAll(window.content, event.target.getAttribute('data'));">
+                     oncommand="stylesheetSwitchAll(window.content, event.target.getAttribute('data')); setStyleDisabled(false);" type="radio">
+            <menuitem label="&useStyleSheetNone.label;" accesskey="&useStyleSheetNone.accesskey;" oncommand="setStyleDisabled(true); event.preventBubble();" type="radio"/>
             <menuitem label="&useStyleSheetPersistentOnly.label;" accesskey="&useStyleSheetPersistentOnly.accesskey;" type="radio"/>
           </menupopup>
         </menu>

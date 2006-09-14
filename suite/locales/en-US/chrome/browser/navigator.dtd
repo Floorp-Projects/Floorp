@@ -60,8 +60,10 @@
 
 <!ENTITY useStyleSheetMenu.label "Use Style">
 <!ENTITY useStyleSheetMenu.accesskey "u">
-<!ENTITY useStyleSheetPersistentOnly.label "Basic Page Style">
-<!ENTITY useStyleSheetPersistentOnly.accesskey "B">
+<!ENTITY useStyleSheetNone.label "None">
+<!ENTITY useStyleSheetNone.accesskey "N">
+<!ENTITY useStyleSheetPersistentOnly.label "Default Style">
+<!ENTITY useStyleSheetPersistentOnly.accesskey "d">
 <!ENTITY pageSourceCmd.label "Page Source">
 <!ENTITY pageSourceCmd.accesskey "o">
 <!ENTITY pageSourceCmd.commandkey "u">
