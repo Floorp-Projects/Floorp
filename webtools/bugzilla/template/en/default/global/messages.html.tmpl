@@ -282,11 +282,67 @@
     Either this is your first time using [% terms.Bugzilla %], or your
     administrator's privileges might have accidentally been deleted.
 
+  [% ELSIF message_tag == "install_column_add" %]
+    Adding new column '[% column FILTER html %]' to the '[% table FILTER html %]' table...
+
+  [% ELSIF message_tag == "install_column_drop" %]
+    Deleting the '[% column FILTER html %]' column from the '[% table FILTER html %]' table...
+
+  [% ELSIF message_tag == "install_column_rename" %]
+    Renaming column '[% old FILTER html %]' to '[% new FILTER html %]'...
+
+  [% ELSIF message_tag == "install_default_classification" %]
+    Creating default classification '[% name FILTER html %]'...
+
+  [% ELSIF message_tag == "install_default_product" %]
+    Creating initial dummy product '[% name FILTER html %]'...
+
+  [% ELSIF message_tag == "install_file_perms_fix" %]
+    Fixing file permissions...
+
+  [% ELSIF message_tag == "install_group_create" %]
+    Creating group [% name FILTER html %]...
+
+  [% ELSIF message_tag == "install_setting_new" %]
+    Adding a new user setting called '[% name FILTER html %]'
+
+  [% ELSIF message_tag == "install_table_drop" %]
+    Dropping the '[% name FILTER html %]' table...
+
   [% ELSIF message_tag == "install_urlbase_default" %]
     Now that you have installed [% terms.Bugzilla %], you should visit the
     'Parameters' page (linked in the footer of the Administrator
     account) to ensure it is set up as you wish - this includes
     setting the 'urlbase' option to the correct url.
+
+  [% ELSIF message_tag == "install_webservergroup_empty" %]
+    ****************************************************************************
+    WARNING! You have not entered a value for the "webservergroup" parameter
+    in localconfig. This means that certain files and directories which need
+    to be editable by both you and the webserver must be world writable, and
+    other files (including the localconfig file which stores your database
+    password) must be world readable. This means that _anyone_ who can obtain
+    local access to this machine can do whatever they want to your 
+    [%+ terms.Bugzilla %] installation, and is probably also able to run 
+    arbitrary Perl code as the user that the webserver runs as.
+
+    You really, really, really need to change this setting.
+    ****************************************************************************
+
+  [% ELSIF message_tag == "install_webservergroup_not_in" %]
+    Warning: you have entered a value for the "webservergroup" parameter in
+    localconfig, but you are not either a) running this script as [% constants.ROOT_USER FILTER html %]; 
+    or b) a member of this group. This can cause permissions problems and 
+    decreased security.  If you experience problems running [% terms.Bugzilla %]
+    scripts, log in as [% constants.ROOT_USER FILTER html %] and re-run this script, become a 
+    member of the group, or remove the value of the "webservergroup" parameter.
+
+  [% ELSIF message_tag == "install_webservergroup_windows" %]
+    Warning: You have set webservergroup in [% constants.bz_locations.localconfig FILTER html %]
+    Please understand that this does not bring you any security when
+    running under Windows.
+    Verify that the file permissions in your [% terms.Bugzilla %] directory are
+    suitable for your system. Avoid unnecessary write access.
 
   [% ELSIF message_tag == "product_invalid" %]
     [% title = "$terms.Bugzilla Component Descriptions" %]

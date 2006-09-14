@@ -32,6 +32,7 @@ use Bugzilla::Group;
 use Bugzilla::Product;
 use Bugzilla::User;
 use Bugzilla::User::Setting;
+use Bugzilla::Util qw(get_text);
 use Bugzilla::Version;
 
 use constant SETTINGS => {
@@ -210,7 +211,8 @@ sub create_default_product {
     # Make the default Classification if it doesn't already exist.
     if (!$dbh->selectrow_array('SELECT 1 FROM classifications')) {
         my $class = DEFAULT_CLASSIFICATION;
-        print "Creating default classification '$class->{name}'...\n";
+        print get_text('install_default_classification', 
+                       { name => $class->{name} }) . "\n";
         $dbh->do('INSERT INTO classifications (name, description)
                        VALUES (?, ?)',
                  undef, $class->{name}, $class->{description});
@@ -219,7 +221,8 @@ sub create_default_product {
     # And same for the default product/component.
     if (!$dbh->selectrow_array('SELECT 1 FROM products')) {
         my $default_prod = DEFAULT_PRODUCT;
-        print "Creating initial dummy product '$default_prod->{name}'...\n";
+        print get_text('install_default_product', 
+                       { name => $default_prod->{name} }) . "\n";
 
         $dbh->do(q{INSERT INTO products (name, description)
                         VALUES (?,?)}, 
@@ -365,19 +368,6 @@ sub _create_admin_exit {
     # re-enable input echoing
     system("stty","echo") unless ON_WINDOWS;
     exit 1;
-}
-
-sub get_text {
-    my ($name, $vars) = @_;
-    my $template = Bugzilla->template;
-    $vars ||= {};
-    $vars->{'message'} = $name;
-    my $message;
-    $template->process('global/message.txt.tmpl', $vars, \$message)
-        || ThrowTemplateError($template->error());
-    # Remove the indenting that exists in messages.html.tmpl.
-    $message =~ s/^    //gm;
-    return $message;
 }
 
 1;

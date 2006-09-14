@@ -108,6 +108,20 @@
     Charts will not work without the Chart::Lines Perl module being installed.
     Run checksetup.pl for installation instructions.
 
+  [% ELSIF error == "column_not_null_without_default" %]
+    Failed adding the column [% name FILTER html %]:
+    You cannot add a NOT NULL column with no default to an existing table
+    unless you specify something for the <code>$init_value</code> argument.
+
+  [% ELSIF error == "column_not_null_no_default_alter" %]
+    You cannot alter the [% name FILTER html %] column to be NOT NULL 
+    without specifying a default or something for $set_nulls_to, because
+    there are NULL values currently in it.
+
+  [% ELSIF error == "column_rename_conflict" %]
+    Name conflict: Cannot rename [% old FILTER html %] to
+    [% new FILTER html %] because [% new FILTER html %] already exists.
+
   [% ELSIF error == "cookies_need_value" %]
     Every cookie must have a value.
 
@@ -191,6 +205,10 @@
     [% title = "Invalid Series" %]
     The series_id [% series_id FILTER html %] is not valid. It may be that
     this series has been deleted.
+
+  [% ELSIF error == "invalid_webservergroup" %]
+    There is no such group: [% group FILTER html %]. Check your $webservergroup
+    setting in [% constants.bz_locations.localconfig FILTER html %].
 
   [% ELSIF error == "list_comparison_error" %]
     Unexpected error in list comparing code.

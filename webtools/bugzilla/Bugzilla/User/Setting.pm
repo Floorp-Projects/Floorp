@@ -23,12 +23,13 @@ package Bugzilla::User::Setting;
 use strict;
 use base qw(Exporter);
 
+
 # Module stuff
 @Bugzilla::User::Setting::EXPORT = qw(get_all_settings get_defaults
      add_setting);
 
 use Bugzilla::Error;
-use Bugzilla::Util qw{trick_taint};
+use Bugzilla::Util qw(trick_taint get_text);
 
 ###############################
 ###  Module Initialization  ###
@@ -135,7 +136,7 @@ sub add_setting {
     ($name && $default_value)
       ||  ThrowCodeError("setting_info_invalid");
 
-    print "Adding a new user setting called '$name'\n";
+    print get_text('install_setting_new', { name => $name }) . "\n";
     $dbh->do(q{INSERT INTO setting (name, default_value, is_enabled, subclass)
                     VALUES (?, ?, 1, ?)},
              undef, ($name, $default_value, $subclass));

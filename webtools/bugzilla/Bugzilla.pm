@@ -338,7 +338,11 @@ sub switch_to_main_db {
 sub get_fields {
     my $class = shift;
     my $criteria = shift;
-    return @{Bugzilla::Field->match($criteria)};
+    # This function may be called during installation, and Field::match
+    # may fail at that time. so we want to return an empty list in that
+    # case.
+    my $fields = eval { Bugzilla::Field->match($criteria) } || [];
+    return @$fields;
 }
 
 sub custom_field_names {

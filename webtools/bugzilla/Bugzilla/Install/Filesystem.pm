@@ -27,7 +27,9 @@ package Bugzilla::Install::Filesystem;
 use strict;
 
 use Bugzilla::Constants;
+use Bugzilla::Error;
 use Bugzilla::Install::Localconfig;
+use Bugzilla::Util;
 
 use File::Find;
 use File::Path;
@@ -484,6 +486,9 @@ sub _update_old_charts {
 sub fix_all_file_permissions {
     my ($output) = @_;
 
+    my $ws_group = Bugzilla->localconfig->{'webservergroup'};
+    my $group_id = _check_web_server_group($ws_group, $output);
+
     return if ON_WINDOWS;
 
     my $fs = FILESYSTEM();
@@ -491,17 +496,10 @@ sub fix_all_file_permissions {
     my %dirs  = %{$fs->{all_dirs}};
     my %recurse_dirs = %{$fs->{recurse_dirs}};
 
-    print "Fixing file permissions...\n" if $output;
+    print get_text('install_file_perms_fix') . "\n" if $output;
 
     my $owner_id = POSIX::getuid();
-    my $group_id = POSIX::getgid();
-    my $ws_group = Bugzilla->localconfig->{'webservergroup'};
-    if ($ws_group) {
-        my $ws_group_id = getgrnam($ws_group);
-        die "There is no such group: $ws_group. Check your \$webservergroup"
-            . " setting in localconfig" unless defined $ws_group_id;
-        $group_id = $ws_group_id;
-    }
+    $group_id = POSIX::getgid() unless defined $group_id;
 
     foreach my $dir (sort keys %dirs) {
         next unless -d $dir;
@@ -559,6 +557,40 @@ sub _fix_perms {
         || warn "Failed to change ownership of $name: $!";
     chmod $perms, $name
         || warn "Failed to change permissions of $name: $!";
+}
+
+sub _check_web_server_group {
+    my ($group, $output) = @_;
+
+    my $filename = bz_locations()->{'localconfig'};
+    my $group_id;
+
+    # If we are on Windows, webservergroup does nothing
+    if (ON_WINDOWS && $group && $output) {
+        print "\n\n" . get_text('install_webservergroup_windows') . "\n\n";
+    }
+
+    # If we're not on Windows, make sure that webservergroup isn't
+    # empty.
+    elsif (!ON_WINDOWS && !$group && $output) {
+        print "\n\n" . get_text('install_webservergroup_empty') . "\n\n";
+    }
+
+    # If we're not on Windows, make sure we are actually a member of
+    # the webservergroup.
+    elsif (!ON_WINDOWS && $group) {
+        $group_id = getgrnam($group);
+        ThrowCodeError('invalid_webservergroup', { group => $group }) 
+            unless defined $group_id;
+
+        # If on unix, see if we need to print a warning about a webservergroup
+        # that we can't chgrp to
+        if ($output && $< != 0 && !grep($_ eq $group_id, split(" ", $)))) {
+            print "\n\n" . get_text('install_webservergroup_not_in') . "\n\n";
+        }
+    }
+
+    return $group_id;
 }
 
 1;

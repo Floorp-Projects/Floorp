@@ -47,6 +47,7 @@ use 5.008;
 use File::Basename;
 use Getopt::Long qw(:config bundling);
 use Pod::Usage;
+use POSIX qw(setlocale LC_CTYPE);
 use Safe;
 
 BEGIN { chdir dirname($0); }
@@ -129,6 +130,10 @@ require Bugzilla::Field;
 require Bugzilla::Install;
 
 Bugzilla->usage_mode(USAGE_MODE_CMDLINE);
+
+# When we're running at the command line, we need to pick the right
+# language before ever creating a template object.
+$ENV{'HTTP_ACCEPT_LANGUAGE'} ||= setlocale(LC_CTYPE);
 
 ###########################################################################
 # Check and update --LOCAL-- configuration

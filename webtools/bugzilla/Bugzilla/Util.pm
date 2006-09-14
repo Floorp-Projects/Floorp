@@ -43,7 +43,8 @@ use base qw(Exporter);
                              format_time format_time_decimal validate_date
                              file_mod_time is_7bit_clean
                              bz_crypt generate_random_password
-                             validate_email_syntax clean_text);
+                             validate_email_syntax clean_text
+                             get_text);
 
 use Bugzilla::Constants;
 
@@ -397,6 +398,20 @@ sub clean_text {
     return trim($dtext);
 }
 
+sub get_text {
+    my ($name, $vars) = @_;
+    my $template = Bugzilla->template;
+    $vars ||= {};
+    $vars->{'message'} = $name;
+    my $message;
+    $template->process('global/message.txt.tmpl', $vars, \$message)
+        || ThrowTemplateError($template->error());
+    # Remove the indenting that exists in messages.html.tmpl.
+    $message =~ s/^    //gm;
+    return $message;
+}
+
+
 sub get_netaddr {
     my $ipaddr = shift;
 
@@ -682,6 +697,34 @@ ASCII 10 (LineFeed) and ASCII 13 (Carrage Return).
 =item C<clean_text($str)>
 Returns the parameter "cleaned" by exchanging non-printable characters with spaces.
 Specifically characters (ASCII 0 through 31) and (ASCII 127) will become ASCII 32 (Space).
+
+=item C<get_text>
+
+=over
+
+=item B<Description>
+
+This is a method of getting localized strings within Bugzilla code.
+Use this when you don't want to display a whole template, you just
+want a particular string.
+
+It uses the F<global/message.txt.tmpl> template to return a string.
+
+=item B<Params>
+
+=over
+
+=item C<$message> - The identifier for the message.
+
+=item C<$vars> - A hashref. Any variables you want to pass to the template.
+
+=back
+
+=item B<Returns>
+
+A string.
+
+=back
 
 =back
 

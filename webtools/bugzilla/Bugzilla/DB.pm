@@ -424,9 +424,8 @@ sub bz_add_column {
     if ( $new_def->{NOTNULL} && !exists $new_def->{DEFAULT} 
          && !defined $init_value && $new_def->{TYPE} !~ /SERIAL/)
     {
-        die "Failed adding the column ${table}.${name}:\n  You cannot add"
-            . " a NOT NULL column with no default to an existing table,\n"
-            . "  unless you specify something for \$init_value." 
+        ThrowCodeError('column_not_null_without_default',
+                       { name => "$table.$name" });
     }
 
     my $current_def = $self->bz_column_info($table, $name);
@@ -435,8 +434,9 @@ sub bz_add_column {
         my @statements = $self->_bz_real_schema->get_add_column_ddl(
             $table, $name, $new_def, 
             defined $init_value ? $self->quote($init_value) : undef);
-        print "Adding new column $name to table $table ...\n"
-          unless i_am_cgi();
+        print get_text('install_column_add',
+                       { column => $name, table => $table }) . "\n"
+            if Bugzilla->usage_mode == USAGE_MODE_CMDLINE;
         foreach my $sql (@statements) {
             $self->do($sql);
         }
@@ -460,12 +460,8 @@ sub bz_alter_column {
             # Check for NULLs
             my $any_nulls = $self->selectrow_array(
                 "SELECT 1 FROM $table WHERE $name IS NULL");
-            if ($any_nulls) {
-                die "You cannot alter the ${table}.${name} column to be"
-                    . " NOT NULL without\nspecifying a default or"
-                    . " something for \$set_nulls_to, because"
-                    . " there are\nNULL values currently in it.";
-            }
+            ThrowCodeError('column_not_null_no_default_alter', 
+                           { name => "$table.$name" }) if ($any_nulls);
         }
         $self->bz_alter_column_raw($table, $name, $new_def, $current_def,
                                    $set_nulls_to);
@@ -604,7 +600,9 @@ sub bz_drop_column {
     if ($current_def) {
         my @statements = $self->_bz_real_schema->get_drop_column_ddl(
             $table, $column);
-        print "Deleting unused column $column from table $table ...\n";
+        print get_text('install_column_drop', 
+                       { table => $table, column => $column }) . "\n"
+            if Bugzilla->usage_mode == USAGE_MODE_CMDLINE;
         foreach my $sql (@statements) {
             # Because this is a deletion, we don't want to die hard if
             # we fail because of some local customization. If something
@@ -664,7 +662,8 @@ sub bz_drop_table {
 
     if ($table_exists) {
         my @statements = $self->_bz_schema->get_drop_table_ddl($name);
-        print "Dropping table $name...\n";
+        print get_text('install_table_drop', { name => $name }) . "\n"
+            if Bugzilla->usage_mode == USAGE_MODE_CMDLINE;
         foreach my $sql (@statements) {
             # Because this is a deletion, we don't want to die hard if
             # we fail because of some local customization. If something
@@ -683,13 +682,16 @@ sub bz_rename_column {
 
     if ($old_col_exists) {
         my $already_renamed = $self->bz_column_info($table, $new_name);
-        die "Name conflict: Cannot rename ${table}.${old_name} to"
-            . " ${table}.${new_name},\nbecause ${table}.${new_name}"
-            . " already exists." if $already_renamed;
+            ThrowCodeError('column_rename_conflict',
+                           { old => "$table.$old_name", 
+                             new => "$table.$new_name" }) if $already_renamed;
         my @statements = $self->_bz_real_schema->get_rename_column_ddl(
             $table, $old_name, $new_name);
-        print "Changing column $old_name in table $table to"
-              . " be named $new_name...\n";
+
+        print get_text('install_column_rename', 
+                       { old => "$table.$old_name", new => "$table.$new_name" })
+               . "\n" if Bugzilla->usage_mode == USAGE_MODE_CMDLINE;
+
         foreach my $sql (@statements) {
             $self->do($sql);
         }

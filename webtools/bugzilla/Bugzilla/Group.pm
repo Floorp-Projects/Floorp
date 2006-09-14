@@ -27,6 +27,7 @@ use strict;
 package Bugzilla::Group;
 
 use base qw(Bugzilla::Object);
+
 use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::Error;
@@ -84,7 +85,8 @@ sub create {
     my ($params) = @_;
     my $dbh = Bugzilla->dbh;
 
-    print "Creating group $params->{name}...\n" unless i_am_cgi();
+    print get_text('install_group_create', { name => $params->{name} }) . "\n" 
+        if Bugzilla->usage_mode == USAGE_MODE_CMDLINE;
 
     my $group = $class->SUPER::create(@_);
 

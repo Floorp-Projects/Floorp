@@ -339,9 +339,6 @@ EOT
         exit;
     }
 
-    # Now we do some checks on localconfig values.
-    _check_web_server_group($localconfig->{'webservergroup'}) if $output;
-
     # Reset the cache for Bugzilla->localconfig so that it will be re-read
     delete Bugzilla->request_cache->{localconfig};
 
@@ -386,68 +383,6 @@ sub _get_default_diffpath {
         $diff_binaries =~ s:/diff\n$::;
     }
     return $diff_binaries;
-}
-
-sub _check_web_server_group {
-    my ($group) = @_;
-
-    my $filename = bz_locations()->{'localconfig'};
-
-    # If we are on Windows, webservergroup does nothing
-    if (ON_WINDOWS && $group) {
-        print <<EOT
-
-Warning: You have set webservergroup in $filename
-Please understand that this does not bring you any security when
-running under Windows.
-Verify that the file permissions in your Bugzilla directory are
-suitable for your system. Avoid unnecessary write access.
-
-EOT
-    }
-
-    # If we're not on Windows, make sure that webservergroup isn't
-    # empty.
-    elsif (!ON_WINDOWS && !$group) {
-        print <<EOT;
-
-********************************************************************************
-WARNING! You have not entered a value for the "webservergroup" parameter
-in localconfig. This means that certain files and directories which need
-to be editable by both you and the webserver must be world writable, and
-other files (including the localconfig file which stores your database
-password) must be world readable. This means that _anyone_ who can obtain
-local access to this machine can do whatever they want to your Bugzilla
-installation, and is probably also able to run arbitrary Perl code as the
-user that the webserver runs as.
-
-You really, really, really need to change this setting.
-********************************************************************************
-EOT
-    }
-
-    # If we're not on Windows, make sure we are actually a member of
-    # the webservergroup.
-    elsif (!ON_WINDOWS && $group) {
-        # If on unix, see if we need to print a warning about a webservergroup
-        # that we can't chgrp to
-        my $webservergid = (getgrnam($group))[2]
-                            or die("no such group: $group");
-        if ($< != 0 && !grep($_ eq $webservergid, split(" ", $)))) {
-            my $root = ROOT_USER;
-            print <<EOT;
-
-Warning: you have entered a value for the "webservergroup" parameter in
-localconfig, but you are not either a) running this script as $root; or b) a
-member of this group. This can cause permissions problems and decreased
-security.  If you experience problems running Bugzilla scripts, log in as
-$root and re-run this script, become a member of the group, or remove the
-value of the "webservergroup" parameter. Note that any warnings about
-"uninitialized values" that you may see below are caused by this.
-
-EOT
-        }
-    }
 }
 
 1;

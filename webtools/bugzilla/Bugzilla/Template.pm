@@ -864,6 +864,9 @@ sub precompile_templates {
             $template->context->template($file);
         }
     }
+
+    # If anything created a Template object before now, clear it out.
+    delete Bugzilla->request_cache->{template};
 }
 
 # Helper for precompile_templates
