@@ -229,12 +229,12 @@ Contributor(s): ______________________________________. -->
   
     <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar" persist="collapsed" grippytooltiptext="&navigationBar.tooltip;">
       <box id="nav-bar-inner" autostretch="never" flex="1" style="min-width: 0px;">
-        <menubutton class="menubutton-dual toolbar" id="back-button" value="&backButton.label;" 
+        <menubutton class="menubutton-dual top toolbar" id="back-button" value="&backButton.label;" 
                     crop="right" observes="canGoBack" oncommand="gotoHistoryIndex(event);"
                     buttonaction="BrowserBack();" buttontooltiptext="&backButton.tooltip;">  
        	  <menupopup oncreate="BrowserBackMenu(event);"/>
     	  </menubutton>
-        <menubutton class="menubutton-dual toolbar" id="forward-button" 
+        <menubutton class="menubutton-dual top toolbar" id="forward-button" 
                     crop="right" observes="canGoForward" 
                     oncommand="gotoHistoryIndex(event);" buttonaction="BrowserForward();"
                     value="&forwardButton.label;" buttontooltiptext="&forwardButton.tooltip;">  
