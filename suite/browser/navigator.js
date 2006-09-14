@@ -55,6 +55,7 @@ var gHaveUpdatedToolbarState = false;
 var gClickSelectsAll = false;
 var gIgnoreFocus = false;
 var gIgnoreClick = false;
+var gURIFixup = null;
 
 var pref = null;
 
@@ -1163,12 +1164,19 @@ function BrowserLoadURL(aTriggeringEvent)
       }
     }
     else if (saveModifier) {
-      // Firstly, fixup the url so that (e.g.) "www.foo.com" works
-      const nsIURIFixup = Components.interfaces.nsIURIFixup;
-      var uriFixup = Components.classes["@mozilla.org/docshell/urifixup;1"].getService(nsIURIFixup);
-      url = uriFixup.createFixupURI(url, nsIURIFixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI).spec;
-      // Open filepicker to save the url
-      saveURL(url, "");
+      try {
+        // Firstly, fixup the url so that (e.g.) "www.foo.com" works
+        if (!gURIFixup)
+          gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
+                                .getService(Components.interfaces.nsIURIFixup);
+        url = gURIFixup.createFixupURI(url, nsIURIFixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI).spec;
+        // Open filepicker to save the url
+        saveURL(url, "");
+      }
+      catch(ex) {
+        // XXX Do nothing for now.
+        // Do we want to put up an alert in the future?  Mmm, l10n...
+      }
     }
     else {
       // No modifier was pressed, load the URL normally and
