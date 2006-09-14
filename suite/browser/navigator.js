@@ -336,9 +336,9 @@ function Startup()
     // Focus the content area if the caller instructed us to.
     if ("arguments" in window && window.arguments.length >= 3 && window.arguments[2] == true ||
         !window.locationbar.visible)
-      _content.focus();
+      setTimeout("_content.focus();", 0); // XXXjag bug 91884
     else
-      gURLBar.focus();
+      setTimeout("gURLBar.focus();", 0);  // XXXjag bug 91884
 
     // Perform default browser checking.
     checkForDefaultBrowser();
