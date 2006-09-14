@@ -344,7 +344,7 @@ END of Deprecated -->
   </menu>
   
       <menu accesskey="&bookmarksMenu.accesskey;" value="&bookmarksMenu.label;"
-                           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" id="BookmarksMenu" ref="NC:BookmarksRoot">
+                           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex" id="BookmarksMenu" ref="NC:BookmarksRoot">
 		<template>
 			<rule iscontainer="true">
 			  <menupopup>
