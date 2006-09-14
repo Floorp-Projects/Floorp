@@ -253,36 +253,34 @@ Contributor(s): ______________________________________. -->
                     tooltip="aTooltip"
                     buttonaction="BrowserBack();" buttontooltiptext="&backButton.tooltip;">  
        	  <menupopup oncreate="BrowserBackMenu(event);"/>
-    	  </menubutton>
+        </menubutton>
         <menubutton class="menubutton-dual top toolbar" id="forward-button" 
                     crop="right" observes="canGoForward" tooltip="aTooltip"
                     oncommand="gotoHistoryIndex(event);" buttonaction="BrowserForward();"
                     value="&forwardButton.label;" buttontooltiptext="&forwardButton.tooltip;">  
       	  <menupopup oncreate="BrowserForwardMenu(event);"/>
-    	  </menubutton>
+        </menubutton>
         <button class="button-toolbar-1 top" id="reload-button" crop="right" observes="canReload" value="&reloadButton.label;" 
                 tooltip="aTooltip" tooltiptext="&reloadButton.tooltip;"/>
         <button class="button-toolbar-1 top" id="stop-button" crop="right" observes="canStop" onclick="BrowserStop()" value="&stopButton.label;" 
                 tooltip="aTooltip" tooltiptext="&stopButton.tooltip;"/>
     
-        <box class="box-toolbar-group" flex="1">
-          <menubutton class="menubutton-icon button-toolbar-3" id="ubhist-keyword-popup" 
-                      tooltip="aTooltip" tooltiptext="&internetKeyword.tooltip;">
-            <menupopup class="button-toolbar-3" oncreate="createUBHistoryMenu(event);" oncommand="executeKeywordCommand(event);"/>
-          </menubutton>
-
-         
+        <box id="urlbar-group" class="box-toolbar-group" flex="1">
           <box autostretch="never" valign="middle" flex="1">
-      			<image id="page-proxy-button" ondraggesture="nsDragAndDrop.startDrag(event, proxyIconDNDObserver);"/> 
-			      <textfield autocomplete="true" timeout="300" class="plain chromeclass-location" 
-		 	                 searchSessionType="urlbar" id="urlbar" tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
-			                 onkeypress="if( event.which == 13 ) { addToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>  
-            <button class="button-toolbar-3" id="search-button" value="&searchButton.label;" 
-                    oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
-                    tooltip="aTooltip" tooltiptext="&searchButton.tooltip;"/> 
-            <button class="button-toolbar-3" id="go-button" value="&goButton.label;" oncommand="addToUrlbarHistory(); BrowserLoadURL();" 
-                    tooltip="aTooltip" tooltiptext="&goButton.tooltip;"/> 
+	    <image id="page-proxy-button" ondraggesture="nsDragAndDrop.startDrag(event, proxyIconDNDObserver);"/> 
+	    <textfield autocomplete="true" timeout="300" class="plain chromeclass-location" 
+	               searchSessionType="urlbar" id="urlbar" tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
+	               onkeypress="if( event.which == 13 ) { addToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>  
           </box>
+          <menubutton class="menubutton-icon plain" id="ubhist">
+            <menupopup id="ubhist-popup" popupalign="topright" popupanchor="bottomright"
+                       oncreate="createUBHistoryMenu(event);" oncommand="executeUrlBarHistoryCommand(event.target);"/> 
+          </menubutton>
+          <button class="button-toolbar-3" id="search-button" value="&searchButton.label;" 
+                  oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
+                  tooltip="aTooltip" tooltiptext="&searchButton.tooltip;"/> 
+          <button class="button-toolbar-3" id="go-button" value="&goButton.label;" oncommand="addToUrlbarHistory(); BrowserLoadURL();" 
+                  tooltip="aTooltip" tooltiptext="&goButton.tooltip;"/> 
         </box>
     
       </box>
