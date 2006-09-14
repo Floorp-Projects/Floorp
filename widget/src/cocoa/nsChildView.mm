@@ -2051,34 +2051,21 @@ nsChildView::GetThebesSurface()
 #endif
 
 #ifdef ACCESSIBILITY
-PRBool
-nsChildView::DispatchAccessibleEvent(nsIAccessible** aAccessible)
-{
-  PRBool result = PR_FALSE;
-  nsAccessibleEvent event(PR_TRUE, NS_GETACCESSIBLE, this);
-  
-  *aAccessible = nsnull;
-  
-  nsEventStatus status;
-  DispatchEvent(&event, status);
-  result = (nsEventStatus_eConsumeNoDefault == status) ? PR_TRUE : PR_FALSE;
-  
-  // if the event returned an accessible get it.
-  if (event.accessible)
-    *aAccessible = event.accessible;
-  
-  return result;
-}
-
 void
 nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
 {
   *aAccessible = nsnull;
-  
-  // maybe we can figure out a way to cache this?
+
   nsIAccessible *acc = nsnull;
-  DispatchAccessibleEvent(&acc);
-  NS_IF_ADDREF(*aAccessible = acc);
+  nsEventStatus status;
+  nsAccessibleEvent event(PR_TRUE, NS_GETACCESSIBLE, this);
+  
+  // maybe we can figure out a way to cache this, instead of re-sending
+  // the event down to gecko every time?
+  DispatchEvent(&event, status);
+  
+  // if the event returned an accessible, return it.
+  NS_IF_ADDREF(*aAccessible = event.accessible);
   
   return;
 }
@@ -3934,11 +3921,13 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
 */
 - (id<mozAccessible>)accessible
 {
-  id <mozAccessible> nativeAccessible = nil;
+  id<mozAccessible> nativeAccessible = nil;
   
   nsCOMPtr<nsIAccessible> accessible;
-  mGeckoChild->GetDocumentAccessible (getter_AddRefs (accessible));
-  accessible->GetNativeInterface ((void**)&nativeAccessible);
+  mGeckoChild->GetDocumentAccessible(getter_AddRefs(accessible));
+  
+  if (accessible)
+    accessible->GetNativeInterface((void**)&nativeAccessible);
 
 #ifdef DEBUG_hakan
   static PRBool testInit = PR_FALSE;
@@ -4016,7 +4005,7 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
 
 - (id)accessibilityAttributeValue:(NSString*)attribute
 {
-  id <mozAccessible> accessible = [self accessible];
+  id<mozAccessible> accessible = [self accessible];
   
   // if we're the root (topmost) accessible, we need to return our native AXParent as we
   // traverse outside to the hierarchy of whoever embeds us. thus, fall back on NSView's
