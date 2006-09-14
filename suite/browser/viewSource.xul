@@ -27,6 +27,8 @@
 
   <broadcasterset id="broadcasterset"/>
 
+  <stringbundleset id="stringbundleset"/>
+
   <commands id="commands">
     <commandset id="globalEditMenuItems"/>
     <commandset id="selectEditMenuItems"/>
@@ -44,7 +46,7 @@
        ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"
        ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
 
-    <iframe id="content-frame" type="content-primary" name="content" src="about:blank" flex="1"/>
+    <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"/>
 
   </box>
 
