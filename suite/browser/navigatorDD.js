@@ -247,7 +247,7 @@ var contentAreaDNDObserver = {
       var textstring = null;
       var domselection = window.content.getSelection();
       if (domselection && !domselection.isCollapsed && 
-          domselection.containsNode(event.target,false))
+          domselection.containsNode(aEvent.target,false))
         {
           // the window has a selection so we should grab that rather than looking for specific elements
           htmlstring = domselection.toString("text/html", 128+256, 0);
