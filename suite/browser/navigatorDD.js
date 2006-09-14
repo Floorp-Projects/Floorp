@@ -216,9 +216,38 @@ var contentAreaDNDObserver = {
               case 'LI':
               case 'OL':
               case 'DD':
-                textstring = enclosingLink(aEvent.target);
+                var node = enclosingLink(aEvent.target);
+                textstring = "";
+                //select node now!
+                if (node)
+                  textstring = node.href;
                 if (textstring != "")
+                {
+    dump("link hit selecting link\n");
                   htmlstring = "<a href=\"" + textstring + "\">" + textstring + "</a>";
+                  var parent = node.parentNode;
+                  if (parent)
+                  {
+                    var nodelist = parent.childNodes;
+                    var index;
+                    for (index = 0; index<nodelist.length; index++)
+                    {
+                      if (nodelist.item(index) == node)
+                      {
+                        break;
+                      }
+                    }
+                    if (index >= nodelist.length)
+                    {
+                        throw Components.results.NS_ERROR_FAILURE;
+                    }
+                    if (domselection)
+                    {
+                      domselection.collapse(parent,index);
+                      domselection.extend(parent,index+1);
+                    }
+                  }
+                }
                 else
                   throw Components.results.NS_ERROR_FAILURE;
                 break;
