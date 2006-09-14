@@ -292,6 +292,7 @@ var contentAreaDNDObserver = {
     {
       var flavourList = { };
       //flavourList["moz/toolbaritem"] = { width: 2 };
+      flavourList["text/x-moz-url"] = { width: 2, iid: "nsISupportsWString" };
       flavourList["text/unicode"] = { width: 2, iid: "nsISupportsWString" };
       flavourList["application/x-moz-file"] = { width: 2, iid: "nsIFile" };
       return flavourList;
@@ -404,6 +405,7 @@ function retrieveURLFromData (aData)
     switch (aData.flavour)
       {
         case "text/unicode":
+        case "text/x-moz-url":
           return aData.data.data; // XXX this is busted. 
           break;
         case "application/x-moz-file":
