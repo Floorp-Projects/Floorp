@@ -442,28 +442,28 @@ function Startup()
   if (homePage)
     document.getElementById("home-button").setAttribute("tooltiptext", homePage);
 
+  // load appropriate initial page from commandline
   var startPage;
+  var isPageCycling;
 
-  if (!appCore.cmdLineURLUsed) {
-    // load appropriate initial page from commandline.
-    var isPageCycling = appCore.startPageCycler();
+  // page cycling for tinderbox tests
+  if (!appCore.cmdLineURLUsed)
+    isPageCycling = appCore.startPageCycler();
 
-    if (!isPageCycling) {
-      var cmdLineService = Components.classes["@mozilla.org/appshell/commandLineService;1"]
-                                     .getService(Components.interfaces.nsICmdLineService);
-      startPage = cmdLineService.URLToLoad;
-      appCore.cmdLineURLUsed = true;
-    }
+  // only load url passed in when we're not page cycling
+  if (!isPageCycling) {
+    var cmdLineService = Components.classes["@mozilla.org/appshell/commandLineService;1"]
+                                   .getService(Components.interfaces.nsICmdLineService);
+    startPage = cmdLineService.URLToLoad;
+    appCore.cmdLineURLUsed = true;
+
+    // Check for window.arguments[0]. If present, use that for startPage.
+    if (!startPage && "arguments" in window && window.arguments.length > 0)
+      startPage = window.arguments[0];
+
+    if (startPage)
+      loadURI(startPage);
   }
-
-  // Check for window.arguments[0]. If present, use that for startPage.
-  if (!startPage && "arguments" in window && window.arguments.length > 0)
-    startPage = window.arguments[0];
-
-  if (!startPage)
-    startPage = "about:blank";
-
-  loadURI(startPage);
 
   initConsoleListener();
 
