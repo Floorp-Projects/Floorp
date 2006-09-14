@@ -27,6 +27,8 @@ const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 var gURLBar = null;
 var gNavigatorBundle;
 var gBrandBundle;
+var gNavigatorRegionBundle;
+var gBrandRegionBundle;
 
 var pref = Components.classes["@mozilla.org/preferences;1"]
                      .getService(Components.interfaces.nsIPref);
@@ -366,7 +368,7 @@ function getHomePage()
 
   // use this if we can't find the pref
   if (!url)
-    url = gNavigatorBundle.getString("homePageDefault");
+    url = gNavigatorRegionBundle.getString("homePageDefault");
 
   return url;
 }
@@ -417,6 +419,8 @@ function Startup()
 {
   gNavigatorBundle = document.getElementById("bundle_navigator");
   gBrandBundle = document.getElementById("bundle_brand");
+  gNavigatorRegionBundle = document.getElementById("bundle_navigator_region");
+  gBrandRegionBundle = document.getElementById("bundle_brand_region");
 
   window.XULBrowserWindow = new nsXULBrowserWindow();
   window.buttonPrefListener = new nsButtonPrefListener();
@@ -669,7 +673,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 {
   var autoOpenSearchPanel = false;
   var defaultSearchURL = null;
-  var fallbackDefaultSearchURL = gNavigatorBundle.getString("fallbackDefaultSearchURL");
+  var fallbackDefaultSearchURL = gNavigatorRegionBundle.getString("fallbackDefaultSearchURL");
   // XXX This somehow causes a big leak, back to the old way
   //     till we figure out why. See bug 61886.
   // var url = getWebNavigation().currentURI.spec;
@@ -689,7 +693,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
     if (defaultSearchURL != fallbackDefaultSearchURL)
       loadURI(defaultSearchURL);
     else
-      loadURI(gNavigatorBundle.getString("otherSearchURL"));
+      loadURI(gNavigatorRegionBundle.getString("otherSearchURL"));
 
   } else {
     var searchMode = 0;
@@ -1275,7 +1279,7 @@ function applyTheme(themeName)
 
 function getNewThemes()
 {
-  loadURI(gBrandBundle.getString("getNewThemesURL"));
+  loadURI(gBrandRegionBundle.getString("getNewThemesURL"));
 }
 
 function URLBarLeftClickHandler(aEvent)
