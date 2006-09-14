@@ -116,8 +116,6 @@
   -->
 
 <toolbox id="mail-toolbox" class="toolbox-top"/>
-
-<hbox id="searchBox"/>
   
 </window>
 
