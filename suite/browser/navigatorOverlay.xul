@@ -185,7 +185,7 @@ Contributor(s): ______________________________________. -->
       <menuseparator/>
       <menuitem id="menu_selectAll"/>
       <menuseparator /> 
-      <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://pref/content/pref-appearance.xul')"/>
+      <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://communicator/content/pref/pref-appearance.xul')"/>
     </menupopup>
   </menu>
 
@@ -329,7 +329,7 @@ END of Deprecated -->
       <menuseparator /> 
       <menuitem value="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="openTopWin('http://search.netscape.com/')"/>
       <menuitem value="&searchAllMailCmd.label;" accesskey="&searchAllMailCmd.accesskey;" disabled="true" oncommand=""/>
-      <menuitem value="&searchBookmarksHistoryCmd.label;" accesskey="&searchBookmarksHistoryCmd.accesskey;" oncommand="window.openDialog('chrome://bookmarks/content/bm-find.xul', 'FindBookmarksWindow', 'centerscreen,dialog=no,close,chrome,resizable');"/>
+      <menuitem value="&searchBookmarksHistoryCmd.label;" accesskey="&searchBookmarksHistoryCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'centerscreen,dialog=no,close,chrome,resizable');"/>
       <menuitem value="&searchAddressbookCmd.label;" accesskey="&searchAddressbookCmd.accesskey;" disabled="true" oncommand="OpenSearch('addressbook', true, null);"/>
 	</menupopup>
   </menu>
@@ -445,7 +445,7 @@ END of Deprecated -->
        </menupopup>
       </menu>
 
-     <menuitem value="&domviewer.label;" oncommand="window.content.location.href='chrome://domviewer/content/DOMDataSourceViewer.xul'"/>
+     <menuitem value="&domviewer.label;" oncommand="window.content.location.href='chrome://communicator/content/domviewer/DOMDataSourceViewer.xul'"/>
      <menuitem value="&browserbuster.label;" oncommand="window.content.location.href='http://komodo.mozilla.org/buster'"/>
      <!-- TEMPORARY UNTIL -edit WORKS TO STARTUP COMPOSER (bug 16789)  -->
      <menuitem value="Composer with Test Page" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>
