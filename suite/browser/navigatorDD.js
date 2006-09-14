@@ -22,6 +22,9 @@
  *  - Ben Goodger <ben@netscape.com> 
  */
 
+var DROP_BEFORE = -1;
+var DROP_ON = 0;
+var DROP_AFTER = 1;
 var gRDFService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                             .getService(Components.interfaces.nsIRDFService);
 
@@ -65,9 +68,6 @@ function isBookmark(aURI)
   }
 
 var personalToolbarObserver = {
-  DROP_BEFORE: -1,
-  DROP_ON: 0,
-  DROP_AFTER: 1,
   onDragStart: function (aEvent, aXferData, aDragAction)
     {
       // Prevent dragging out of menus on non Win32 platforms. 
@@ -132,7 +132,7 @@ var personalToolbarObserver = {
       var rdfContainer = Components.classes[kCtrContractID].createInstance(kCtrIID);
 
       // if dragged url is already bookmarked, remove it from current location first
-      var parentContainer = this.findParentContainer(aDragSession.sourceNode);
+      var parentContainer = findParentContainer(aDragSession.sourceNode);
       if (parentContainer)
         {
           rdfContainer.Init(childDB, parentContainer);
@@ -174,7 +174,7 @@ var personalToolbarObserver = {
       if (dropElement == "innermostBox") 
         {
           dropElementRes = personalToolbarRes;
-          dropPosition = this.DROP_ON;
+          dropPosition = DROP_ON;
         }
       else
         {
@@ -182,25 +182,25 @@ var personalToolbarObserver = {
           rdfContainer.Init(childDB, personalToolbarRes);
           dropIndex = rdfContainer.IndexOf(dropElementRes);
           if (dropPosition == undefined)
-            dropPosition = this.determineDropPosition(aEvent);
+            dropPosition = determineDropPosition(aEvent, true);
         }
       
       switch (dropPosition) {
-      case this.DROP_BEFORE:
+      case DROP_BEFORE:
         if (dropIndex<1) dropIndex = 1;
-        this.insertBookmarkAt(xferData[0], linkTitle, linkCharset, personalToolbarRes, dropIndex);
+        insertBookmarkAt(xferData[0], linkTitle, linkCharset, personalToolbarRes, dropIndex);
         break;
-      case this.DROP_ON:
-        this.insertBookmarkAt(xferData[0], linkTitle, linkCharset, dropElementRes, -1);
+      case DROP_ON:
+        insertBookmarkAt(xferData[0], linkTitle, linkCharset, dropElementRes, -1);
         break;
-      case this.DROP_AFTER:
+      case DROP_AFTER:
       default:
         // compensate for badly calculated dropIndex
         rdfContainer.Init(childDB, personalToolbarRes);
         if (dropIndex < rdfContainer.GetCount()) ++dropIndex;
         
         if (dropIndex<0) dropIndex = 0;
-        this.insertBookmarkAt(xferData[0], linkTitle, linkCharset, personalToolbarRes, dropIndex);
+        insertBookmarkAt(xferData[0], linkTitle, linkCharset, personalToolbarRes, dropIndex);
         break;
       }
       
@@ -223,7 +223,7 @@ var personalToolbarObserver = {
 
   onDragOver: function (aEvent, aFlavour, aDragSession)
     {
-       var dropPosition = this.determineDropPosition(aEvent);
+       var dropPosition = determineDropPosition(aEvent, true);
 
       // bail if drop target is not a valid bookmark item or folder
       var inner = document.getElementById("innermostBox");
@@ -250,13 +250,13 @@ var personalToolbarObserver = {
 
       switch (dropPosition)
         {
-          case this.DROP_BEFORE: 
+          case DROP_BEFORE: 
             aEvent.target.setAttribute("dragover-left", "true");
             break;
-          case this.DROP_AFTER:
+          case DROP_AFTER:
             aEvent.target.setAttribute("dragover-right", "true");
             break;
-          case this.DROP_ON:
+          case DROP_ON:
           default:
             if (aEvent.target.getAttribute("container") == "true") {
               aEvent.target.setAttribute("dragover-top", "true");
@@ -276,74 +276,6 @@ var personalToolbarObserver = {
       // application/x-moz-file
       flavourSet.appendFlavour("text/unicode");
       return flavourSet;
-    },
-
-  determineDropPosition: function (aEvent)
-    {
-      var overButton = aEvent.target;
-      var overButtonBoxObject = overButton.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
-
-      // most things only drop on the left or right
-      var regionCount = 2;
-
-      // you can drop ONTO containers, so there is a "middle" region
-      if (overButton.getAttribute("container") == "true" &&
-          overButton.getAttribute("type") == "http://home.netscape.com/NC-rdf#Folder")
-         return this.DROP_ON;
-
-      var regionWidth = overButtonBoxObject.width/regionCount;
-
-      // make sure we are vertically aligned with the button!
-      if (aEvent.clientY < overButtonBoxObject.y ||
-          aEvent.clientY > overButtonBoxObject.y + overButtonBoxObject.height)
-        return 0;
-
-      // in the first region?
-      if (aEvent.clientX < (overButtonBoxObject.x + regionWidth))
-          return this.DROP_BEFORE;
-
-      // in the last region?
-      if (aEvent.clientX >= (overButtonBoxObject.x + (regionCount - 1)*regionWidth))
-          return this.DROP_AFTER;
-
-      // must be in the middle somewhere
-      return this.DROP_ON;
-    },
-
-  // returns the parent resource of the dragged element. This is determined
-  // by inspecting the source element of the drag and walking up the DOM tree
-  // to find the appropriate containing node.
-  findParentContainer: function (aElement)
-    {
-      if (!aElement) return null;
-      switch (aElement.localName) 
-        {
-          case "button":
-          case "menubutton":
-            var box = aElement.parentNode;
-            return RDFUtils.getResource(box.getAttribute("ref"));
-          case "menu":
-          case "menuitem":
-            var menu = aElement.parentNode.parentNode;
-            if (menu.getAttribute("type") != "http://home.netscape.com/NC-rdf#Folder")
-              return RDFUtils.getResource("NC:BookmarksRoot");
-            return RDFUtils.getResource(menu.id);
-          case "treecell":
-            var treeitem = aElement.parentNode.parentNode.parentNode.parentNode;
-            var res = treeitem.getAttribute("ref");
-            if (!res)
-              res = treeitem.id;            
-            return RDFUtils.getResource(res);
-        }
-      return null;
-    },
-  
-  insertBookmarkAt: function(aURL, aTitle, aCharset, aFolderRes, aIndex)
-    {
-      const kBMSContractID = "@mozilla.org/browser/bookmarks-service;1";
-      const kBMSIID = Components.interfaces.nsIBookmarksService;
-      const kBMS = Components.classes[kBMSContractID].getService(kBMSIID);
-      kBMS.insertBookmarkInFolder(aURL, aTitle, aCharset, aFolderRes, aIndex);
     }
 };
 
@@ -479,4 +411,255 @@ var searchButtonObserver = {
       return flavourSet;
     }
 };
-  
+var gDidOpen = false;
+var bookmarksButtonObserver = {
+  onDragOver: function(aEvent, aFlavour, aDragSession)
+    {
+      aEvent.target.setAttribute("dragover", "true");
+      if (!gDidOpen) {
+        aEvent.target.firstChild.openPopup(document.getElementById("bookmarks-button"), -1, -1, "menupopup", "bottomleft", "bottomleft");
+        gDidOpen = true;
+      }
+      return true;
+    },
+  getSupportedFlavours: function ()
+    {
+      var flavourSet = new FlavourSet();
+      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+      flavourSet.appendFlavour("text/x-moz-url");
+      return flavourSet;
+    }
+};
+
+var gCurrentTarget = null;
+var gCurrentDragOverMenu = null;
+function closeOpenMenu()
+{
+  if (gCurrentDragOverMenu && gCurrentTarget.firstChild != gCurrentDragOverMenu) {
+    if (gCurrentTarget.parentNode != gCurrentDragOverMenu) {
+      gMenuIsOpen = false;
+      gCurrentDragOverMenu.closePopup();
+      gCurrentDragOverMenu = null;
+    }
+  }
+}
+        
+var gMenuIsOpen = false;
+var menuDNDObserver = {
+  onDragOver: function(aEvent, aFlavour, aDragSession) 
+  {
+    // if we're a folder just one level deep, open it
+    var dropPosition = determineDropPosition(aEvent, aEvent.target.parentNode != document.getElementById("bookmarks-button").firstChild);
+    gCurrentTarget = aEvent.target;
+    if (aEvent.target.firstChild && aEvent.target.firstChild.localName == "menupopup") {
+      if (aEvent.target.parentNode == document.getElementById("bookmarks-button").firstChild) {
+        if (gCurrentDragOverMenu && gCurrentDragOverMenu != aEvent.target.firstChild) {
+          gCurrentDragOverMenu.closePopup();
+          gCurrentDragOverMenu = null;
+          gMenuIsOpen = false;
+        }
+        if (!gMenuIsOpen) {
+          gCurrentDragOverMenu = aEvent.target.firstChild;
+          aEvent.target.firstChild.openPopup(aEvent.target, -1, -1, "menupopup", "topright, topright");
+          gMenuIsOpen = true;
+        }
+      }
+      else {
+        aEvent.target.setAttribute("menuactive", "true"); 
+      }
+    }   
+    // remove drag attributes from old item once we move to a new item
+    if (this.mCurrentDragOverItem != aEvent.target) {
+      if (this.mCurrentDragOverItem) {
+        this.mCurrentDragOverItem.removeAttribute("dragover-top");
+        this.mCurrentDragOverItem.removeAttribute("dragover-bottom");
+        this.mCurrentDragOverItem.removeAttribute("menuactive");
+      }
+      this.mCurrentDragOverItem = aEvent.target;
+    }
+    
+    // if there's an open submenu and we're not over it or one of its children, close it
+    if (gCurrentDragOverMenu && aEvent.target.firstChild != gCurrentDragOverMenu) {
+      if (aEvent.target.parentNode != gCurrentDragOverMenu) {
+        setTimeout(function() { closeOpenMenu(); },500);
+      }
+    }
+
+    // ensure appropriate feedback
+    switch (dropPosition) {
+      case DROP_BEFORE: 
+        aEvent.target.setAttribute("dragover-bottom", "true");
+        break;
+      case DROP_AFTER:
+        aEvent.target.setAttribute("dragover-top", "true");
+        break;
+    }
+  },
+  mCurrentDragOverItem: null,
+  onDragExit: function (aEvent, aDragSession)
+  {
+    // remove drag attribute from current item once we leave the popup
+    if (this.mCurrentDragOverItem) {
+      this.mCurrentDragOverItem.removeAttribute("dragover-top");
+      this.mCurrentDragOverItem.removeAttribute("dragover-bottom");
+    }
+  },
+  onDrop: function (aEvent, aXferData, aDragSession)
+  {
+    var xferData = aXferData.data.split("\n");
+    var elementRes = RDFUtils.getResource(xferData[0]);
+
+    var bookmarksButton = document.getElementById("bookmarks-button");
+    var childDB = bookmarksButton.database;
+    var rdfContainer = Components.classes["@mozilla.org/rdf/container;1"].createInstance(Components.interfaces.nsIRDFContainer);
+
+    // if dragged url is already bookmarked, remove it from current location first
+    var parentContainer = findParentContainer(aDragSession.sourceNode);
+    if (parentContainer) {
+      rdfContainer.Init(childDB, parentContainer);
+      rdfContainer.RemoveElement(elementRes, false);
+    }
+    parentContainer = findParentContainer(aEvent.target);
+    // determine charset of link
+    var linkCharset = aDragSession.sourceDocument ? aDragSession.sourceDocument.characterSet : null;
+    // determine title of link
+    var linkTitle;
+      
+    // look it up in bookmarks
+    var bookmarksDS = gRDFService.GetDataSource("rdf:bookmarks");
+    var nameRes = RDFUtils.getResource(NC_RDF("Name"));
+    var nameFromBookmarks = bookmarksDS.GetTarget(elementRes, nameRes, true);
+    if (nameFromBookmarks)
+      nameFromBookmarks = nameFromBookmarks.QueryInterface(Components.interfaces.nsIRDFLiteral);
+
+    if (nameFromBookmarks)
+      linkTitle = nameFromBookmarks.Value;
+    else if (xferData.length >= 2)
+      linkTitle = xferData[1]
+    else {
+      // look up this URL's title in global history
+      var historyDS = gRDFService.GetDataSource("rdf:history");
+      var titlePropRes = RDFUtils.getResource(NC_RDF("Name"));
+      var titleFromHistory = historyDS.GetTarget(elementRes, titlePropRes, true);
+      if (titleFromHistory)
+        titleFromHistory = titleFromHistory.QueryInterface(Components.interfaces.nsIRDFLiteral);
+      if (titleFromHistory)
+        linkTitle = titleFromHistory.Value;
+    }
+
+    var dropElement = aEvent.target.id;
+    var dropElementRes, dropIndex, dropPosition;
+    dropElementRes = RDFUtils.getResource(dropElement);
+    rdfContainer.Init(childDB, parentContainer);
+    dropIndex = rdfContainer.IndexOf(dropElementRes);
+    dropPosition = determineDropPosition(aEvent, aEvent.target.parentNode != document.getElementById("bookmarks-button").firstChild);
+    switch (dropPosition) {
+      case DROP_BEFORE:
+        --dropIndex;
+        if (dropIndex<1) dropIndex = 1;
+          insertBookmarkAt(xferData[0], linkTitle, linkCharset, parentContainer, dropIndex);
+        break;
+      case DROP_ON:
+        insertBookmarkAt(xferData[0], linkTitle, linkCharset, dropElementRes, -1);
+        break;
+      case DROP_AFTER:
+      default:
+        // compensate for badly calculated dropIndex
+        if (dropIndex < rdfContainer.GetCount()) ++dropIndex;
+         
+        if (dropIndex<0) dropIndex = 0;
+        --dropIndex;
+        insertBookmarkAt(xferData[0], linkTitle, linkCharset, parentContainer, dropIndex);
+        break;
+    }
+    
+    // if user isn't rearranging within the menu, close it
+    if (aDragSession.sourceNode.localName != "menuitem" && aDragSession.sourceNode.localName != "menu")
+      setTimeout(function() { if (gCurrentDragOverMenu) gCurrentDragOverMenu.closePopup(); document.getElementById("bookmarks-button").firstChild.closePopup(); gDidOpen = false; }, 190);    
+    
+    return true;
+  },
+
+  getSupportedFlavours: function () {
+    var flavourSet = new FlavourSet();
+    flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+    flavourSet.appendFlavour("text/x-moz-url");
+    return flavourSet;
+  }
+};
+
+function determineDropPosition(aEvent, aAllowDropOn)
+{
+  var overButtonBoxObject = aEvent.target.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
+  // most things only drop on the left or right
+  var regionCount = 2;
+
+  // you can drop ONTO containers, so there is a "middle" region
+  if (aAllowDropOn && aEvent.target.getAttribute("container") == "true" &&
+      aEvent.target.getAttribute("type") == "http://home.netscape.com/NC-rdf#Folder")
+    return DROP_ON;
+      
+  var measure;
+  var coordValue;
+  var clientCoordValue;
+  if (aEvent.target.localName == "menuitem" || aEvent.target.localName == "menu") {
+    measure = overButtonBoxObject.height/regionCount;
+    coordValue = overButtonBoxObject.y;
+    clientCoordValue = aEvent.clientY;
+  }
+  else if (aEvent.target.localName == "button" || aEvent.target.localName == "menubutton") {
+    measure = overButtonBoxObject.width/regionCount;
+    coordValue = overButtonBoxObject.x;
+    clientCoordValue = aEvent.clientX;
+  }
+  else
+    return 0;
+
+      
+  // in the first region?
+  if (clientCoordValue < (coordValue + measure))
+    return DROP_BEFORE;
+
+  // in the last region?
+  if (clientCoordValue >= (coordValue + (regionCount - 1)*measure))
+    return DROP_AFTER;
+
+  // must be in the middle somewhere
+  return DROP_ON;
+}
+
+// returns the parent resource of the dragged element. This is determined
+// by inspecting the source element of the drag and walking up the DOM tree
+// to find the appropriate containing node.
+function findParentContainer(aElement)
+{
+  if (!aElement) return null;
+  switch (aElement.localName) {
+    case "button":
+    case "menubutton":
+      var box = aElement.parentNode;
+      return RDFUtils.getResource(box.getAttribute("ref"));
+    case "menu":
+    case "menuitem":
+      var menu = aElement.parentNode.parentNode;
+      if (menu.getAttribute("type") != "http://home.netscape.com/NC-rdf#Folder")
+        return RDFUtils.getResource("NC:BookmarksRoot");
+      return RDFUtils.getResource(menu.id);
+    case "treecell":
+      var treeitem = aElement.parentNode.parentNode.parentNode.parentNode;
+      var res = treeitem.getAttribute("ref");
+      if (!res)
+        res = treeitem.id;            
+      return RDFUtils.getResource(res);
+  }
+  return null;
+}
+
+function insertBookmarkAt(aURL, aTitle, aCharset, aFolderRes, aIndex)
+{
+  const kBMSContractID = "@mozilla.org/browser/bookmarks-service;1";
+  const kBMSIID = Components.interfaces.nsIBookmarksService;
+  const kBMS = Components.classes[kBMSContractID].getService(kBMSIID);
+  kBMS.insertBookmarkInFolder(aURL, aTitle, aCharset, aFolderRes, aIndex);
+}
+

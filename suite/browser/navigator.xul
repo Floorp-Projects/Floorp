@@ -224,12 +224,18 @@ Contributor(s): ______________________________________. -->
                   datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
                   ref="NC:BookmarksRoot" container="true" flags="dont-test-empty"
                   oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)" 
+                  ondragover="nsDragAndDrop.dragOver(event, bookmarksButtonObserver);"
                   template="bookmarksMenuTemplate">
-        <menupopup>
-          <menuitem accesskey="&addCurPageCmd.accesskey;" key="addBookmarkKb" observes="Browser:AddBookmark"/>
-          <menuitem accesskey="&addCurPageAsCmd.accesskey;" key="addBookmarkAsKb" observes="Browser:AddBookmarkAs"/>
-          <menuseparator/>
-          <menuitem accesskey="&manBookmarksCmd.accesskey;" key="manBookmarkKb" observes="Browser:ManageBookmark"/>
+        <menupopup onpopuphiding="gDidOpen = false;" ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
+                   ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
+                   ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
+          <menuitem accesskey="&addCurPageCmd.accesskey;" key="addBookmarkKb" observes="Browser:AddBookmark"
+                    ondragover="event.preventBubble(); return false;"/>
+          <menuitem accesskey="&addCurPageAsCmd.accesskey;" key="addBookmarkAsKb" observes="Browser:AddBookmarkAs"
+                    ondragover="event.preventBubble(); return false;"/>
+          <menuseparator ondragover="event.preventBubble(); return false;"/>
+          <menuitem accesskey="&manBookmarksCmd.accesskey;" key="manBookmarkKb" observes="Browser:ManageBookmark"
+                    ondragover="event.preventBubble(); return false;"/>
           <menuseparator/>
         </menupopup>
       </menubutton>
