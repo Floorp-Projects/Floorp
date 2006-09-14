@@ -154,7 +154,7 @@ Contributor(s): ______________________________________. -->
         <hbox id="urlbar-group" class="box-toolbar-group chromeclass-location" flex="1">
           <hbox autostretch="never" valign="middle" flex="1" id="urlbar-container">
     	      <image id="page-proxy-button" ondraggesture="nsDragAndDrop.startDrag(event, proxyIconDNDObserver);"/> 
-	          <textfield autocomplete="true" timeout="300" class="plain" 
+	          <textbox autocomplete="true" timeout="300" class="plain" 
 	                     searchSessionType="urlbar" id="urlbar" tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
                          onclick="if (event.button == 0) URLBarLeftClickHandler(event);"
                          onblur="URLBarBlurHandler(event);"
