@@ -51,18 +51,6 @@
 <!ENTITY taskbarCmd.label "Taskbar">
 <!ENTITY taskbarCmd.accesskey "t">
 
-<!ENTITY textZoomEnlargeCmd.label "Larger">
-<!ENTITY textZoomEnlargeCmd.accesskey "l">
-<!ENTITY textZoomEnlargeCmd.commandkey "+">
-<!-- + is above this key on many keyboards -->
-<!ENTITY textZoomEnlargeCmd.commandkey2 "=">
-<!ENTITY textZoomReduceCmd.label "Smaller">
-<!ENTITY textZoomReduceCmd.accesskey "m">
-<!ENTITY textZoomReduceCmd.commandkey "-">
-<!-- see textZoomOtherLabel in navigator.properties -->
-<!ENTITY textZoomMenu.accesskey "z">
-<!ENTITY textZoomOtherCmd.accesskey "o">
-
 <!ENTITY useStyleSheetMenu.label "Use Stylesheet">
 <!ENTITY useStyleSheetMenu.accesskey "u">
 <!ENTITY useStyleSheetNone.label "None">
