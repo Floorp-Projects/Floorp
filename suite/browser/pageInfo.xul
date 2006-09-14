@@ -84,8 +84,8 @@
   </keyset>
 
   <menupopup id="picontext">
-    <menuitem label="&selectall.label;" command="cmd_selectall" accesskey="&selectall.key;"/>
-    <menuitem label="&copy.label;"      command="cmd_copy"      accesskey="&copy.key;"/>
+    <menuitem label="&selectall.label;" command="cmd_selectall" accesskey="&selectall.accesskey;"/>
+    <menuitem label="&copy.label;"      command="cmd_copy"      accesskey="&copy.accesskey;"/>
   </menupopup>
 
   <tabbox id="tabbox" flex="1" class="spaced">
