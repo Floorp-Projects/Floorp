@@ -300,6 +300,9 @@
               </row>
             </rows>
           </grid>
+          <hbox>
+            <button label="&mediaSaveAs;" accesskey="&mediaSaveAsAccesskey;" id="imagesaveasbutton" disabled="true" oncommand="saveMedia();"/>
+          </hbox>
           <vbox class="inset iframe" flex="1" pack="center">
             <hbox id="theimagecontainer" pack="center">
               <image id="thepreviewimage"/>
