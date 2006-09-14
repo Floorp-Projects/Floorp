@@ -24,6 +24,7 @@
 
 var pref = null;
 var bundle = srGetStrBundle("chrome://navigator/locale/navigator.properties");
+var brandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
 
 // in case we fail to get the start page, load this
 var startPageDefault = "about:blank";
@@ -1757,6 +1758,24 @@ function stylesheetSwitch(forDocument, title) {
         docStyleSheet.disabled = false;
       continue;
     }
+  } 
     docStyleSheet.disabled = (title != docStyleSheet.title);
-  }
+}
+
+function applyTheme(themeName)
+{
+try {
+  var chromeRegistry = Components.classes["component://netscape/chrome/chrome-registry"].getService();
+  if ( chromeRegistry )
+    chromeRegistry = chromeRegistry.QueryInterface( Components.interfaces.nsIChromeRegistry );
+}
+catch(e) {}
+
+chromeRegistry.selectSkin( themeName.getAttribute('name'), true ); 
+chromeRegistry.refreshSkins();
+}  
+
+function getNewThemes()
+{
+window._content.location.href = brandBundle.GetStringFromName("getNewThemesURL");
 }
