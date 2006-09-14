@@ -489,6 +489,16 @@ function Startup()
 
   //initConsoleListener();
 
+  var interfaceRequestor = getBrowser().docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+  var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
+  webProgress.addProgressListener(appCore);
+
+  webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
+                                           .createInstance(Components.interfaces.nsISHistory);
+
+  // XXXjag see bug 68662
+  getBrowser().boxObject.setPropertyAsSupports("listenerkungfu", appCore);
+
   // load appropriate initial page from commandline
   var isPageCycling = false;
 
@@ -520,7 +530,7 @@ function Startup()
 
     if (startPage)
       loadURI(startPage);
-           
+
     // Focus the content area if the caller instructed us to.
     if ("arguments" in window && window.arguments.length >= 3 && window.arguments[2] == true)
       _content.focus();
@@ -534,6 +544,17 @@ function Startup()
 
 function Shutdown()
 {
+  var browser = getBrowser();
+
+  browser.boxObject.removeProperty("listenerkungfu");
+
+  try {
+    var interfaceRequestor = browser.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+    var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
+    webProgress.removeProgressListener(appCore);
+  } catch (ex) {
+  }
+
   try {
     // If bookmarks are dirty, flush 'em to disk
     var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
