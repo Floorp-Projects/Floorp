@@ -104,17 +104,16 @@ Contributor(s): ______________________________________. -->
     <key id="showHideSidebar"/>
   </keyset>
   
-  <popupset id="aHTMLTooltipSet">
-    <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
-    <popup id="backMenu" position="after_start" onpopupshowing="return BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
-    <popup id="forwardMenu" position="after_start" onpopupshowing="return BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
-    <popup id="sidebarPopup"/>
+  <popup id="backMenu" position="after_start" onpopupshowing="return BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+  <popup id="forwardMenu" position="after_start" onpopupshowing="return BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+  <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
+  <popup id="sidebarPopup"/>
 
-    <popupset id="bookmarksPopupset"/>
+  <popupset id="bookmarksPopupset"/>
  
-    <!-- context menu -->
-    <popupset id="contentAreaContextSet"/>
-  </popupset>
+  <!-- context menu -->
+  <popupset id="contentAreaContextSet"/>
+
   <script type="application/x-javascript">
     var gBookmarkPopup = null;
   </script>
@@ -161,7 +160,7 @@ Contributor(s): ______________________________________. -->
                  disablehistory="false"
                  defaultSearchEngine="true" tabScrolling="true"
                  showCommentColumn="true"
-                 tooltiptext="&locationBar.tooltip;"
+                 inputtooltiptext="&locationBar.tooltip;"
                  oninput="window.XULBrowserWindow.userTyped.value=true;"
                  ontextcommand="return handleURLBarCommand(eventParam, domEvent);"
                  ontextrevert="return handleURLBarRevert();"
