@@ -134,10 +134,13 @@ var personalToolbarObserver = {
           var potentialTitle = null;
           var historyDS = gRDFService.GetDataSource("rdf:history");
           var historyEntry = gRDFService.GetResource(element);
-          var historyTitleProperty = gRDFService.GetResource(NC_RDF("URL"));
+          var historyTitleProperty = gRDFService.GetResource(NC_RDF("Name"));
           var titleFromHistory = historyDS.GetTarget(historyEntry, historyTitleProperty, true);
-          if (titleFromHistory) 
-//            titleFromHistory = titleFromHistory.QueryInterface(Components.interfaces.nsIRDFLiteral);
+          dump("*** titleFromHistory = " + titleFromHistory + "\n");
+          if (titleFromHistory) {
+            titleFromHistory = titleFromHistory.QueryInterface(Components.interfaces.nsIRDFLiteral);
+            dump("*** titleFromHistory2 = " + titleFromHistory + "\n");
+}
           if (titleFromHistory)
             potentialTitle = titleFromHistory.Value;
           linkTitle = potentialTitle ? potentialTitle : element;
