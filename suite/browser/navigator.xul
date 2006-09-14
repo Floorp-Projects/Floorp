@@ -245,9 +245,13 @@ Contributor(s):
              ondragexit="nsDragAndDrop.dragExit(event, personalToolbarDNDObserver); event.preventBubble()"
              ondragover="nsDragAndDrop.dragOver(event, personalToolbarDNDObserver); event.preventBubble()">
 
+      <tooltip id="home-button-tooltip" noautohide="true">
+        <vbox id="home-button-tooltip-inner" flex="1"/>
+      </tooltip>
       <toolbarbutton id="home-button" class="bookmark-item"
                      label="&homeButton.label;" persist="hidden"
                      oncommand="BrowserHome(); event.preventBubble()"
+                     tooltip="home-button-tooltip"
                      ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver)"
                      ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver); event.preventBubble()"
                      ondragenter="event.preventBubble()"
