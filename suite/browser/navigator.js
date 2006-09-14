@@ -2109,7 +2109,7 @@ function onPopupWindow(aEvent) {
     }
     if (showDialog) {
       window.openDialog("chrome://communicator/content/aboutPopups.xul", "",
-                        "chrome,centerscreen,resizable=yes", true);
+                        "chrome,centerscreen,dependent", true);
       pref.setBoolPref("privacy.popups.first_popup", false);
     }
   }
