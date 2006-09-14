@@ -254,7 +254,7 @@
         <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
         <menuseparator />
         <menu label="&applyTheme.label;" accesskey="&applyTheme.accesskey;">
-          <menupopup datasources="rdf:chrome" ref="urn:mozilla:skin:root" oncommand="applyTheme(event.target)">
+          <menupopup id="theme" datasources="rdf:chrome" ref="urn:mozilla:skin:root" oncommand="applyTheme(event.target)" onpopupshowing="checkTheme()">
             <menuitem label="&themePreferencesCmd.label;" accesskey="&themePreferencesCmd.accesskey;"
                       oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/pref-themes.xul')"/>
             <menuitem label="&getNewThemesCmd.label;" accesskey="&getNewThemesCmd.accesskey;" oncommand="getNewThemes();"/>
@@ -263,7 +263,9 @@
             <menuitem uri="..."
                       label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
                       accesskey="rdf:http://www.mozilla.org/rdf/chrome#accessKey"
-                      name="rdf:http://www.mozilla.org/rdf/chrome#name"/>
+                      id="rdf:http://www.mozilla.org/rdf/chrome#name"
+                      type="radio"
+                      name="themeGroup"/>
             </template>
           </menupopup>
         </menu>
