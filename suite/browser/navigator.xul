@@ -161,11 +161,7 @@ Contributor(s): ______________________________________. -->
                   accesskey="&bookmarkPageCmd.accesskey;"
                   oncommand="BrowserAddBookmark( window.content.location.href,
                                                  window.content.document.title )"/>
-        <menuitem id="context-sendpage"
-                  value="&sendPageCmd.label;"
-                  accesskey="&sendPageCmd.accesskey;"
-                  oncommand="BrowserSendPage();"/>
-        <menuseparator/>
+               <menuseparator/>
         <!-- Save ==================================== -->
         <menuitem id="context-savepage"
                   value="&savePageCmd.label;"
