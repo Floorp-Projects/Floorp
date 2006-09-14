@@ -208,3 +208,14 @@ function highlightSyntax()
   var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
   PageLoader.LoadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
 }
+
+// Fix for bug 136322: this function overrides the function in
+// browser.js to call PageLoader.LoadPage() instead of BrowserReloadWithFlags()
+function BrowserSetForcedCharacterSet(aCharset)
+{
+  var docCharset = getBrowser().docShell.QueryInterface(
+                            Components.interfaces.nsIDocCharset);
+  docCharset.charset = aCharset;
+  var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
+  PageLoader.LoadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
+}
