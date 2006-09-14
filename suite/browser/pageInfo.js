@@ -163,16 +163,29 @@ function makeImageTree(page, root)
 
 function onImageSelect()
 {
-  var tree = document.getElementById("imageTree");
   var imageFrame = document.getElementById("imageFrame");
+  imageFrame.setAttribute("src", "about:blank");
+
+  var tree = document.getElementById("imageTree");
 
   if (tree.selectedItems.length == 1)
   {
     var clickedRow = tree.selectedItems[0].firstChild;
     var firstCell = clickedRow.firstChild;
     var imageUrl = firstCell.getAttribute("label");
-    imageFrame.setAttribute("src", imageUrl);
+
+    /* The image has to be placed after a setTimeout because of bug 62517. */
+    setTimeout(placeImage, 0, imageFrame, imageUrl);
   }
+}
+
+function placeImage(imageFrame, imageUrl)
+{
+  var imageDoc = imageFrame.contentDocument;
+  var imageNode = imageDoc.createElement("img");
+  imageNode.setAttribute("src", imageUrl);
+
+  imageDoc.documentElement.appendChild(imageNode);
 }
 
 function BrowserClose()
