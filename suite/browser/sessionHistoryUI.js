@@ -104,6 +104,7 @@ function executeUrlBarHistoryCommand( aTarget )
         var uri = getShortcutOrURI(label);
         if (gURLBar) {
           gURLBar.value = uri;
+          addToUrlbarHistory();
           BrowserLoadURL();
         }
         else
