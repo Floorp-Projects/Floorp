@@ -231,6 +231,8 @@ Contributor(s): ______________________________________. -->
       <menuitem value="&pageInfoCmd.label;" oncommand="BrowserPageInfo();"/>
       <menuseparator />
       <menuitem value="&translateMenu.label;" oncommand="Translate();"/>
+      <menuitem value="&webContentMenu.label;" 
+                oncommand="loadXURL('urn:clienturl:viewmenu:intlwebcontent');"/>
       <menuseparator />
 <!-- Deprecated BEGIN
                 <menu value="&dcharMenu.label;">
