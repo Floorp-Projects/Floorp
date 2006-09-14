@@ -36,7 +36,6 @@
 
 <window id="main-window"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  title="&pageInfo.title;" 
   titlemodifier="&mainWindow.titlemodifier;" 
   titlepreface="&mainWindow.preface;"
   titlemenuseparator ="&mainWindow.titlemodifierseperator;"  
@@ -47,7 +46,7 @@
   persist="screenX screenY width height sizemode">
 
   <script type="application/x-javascript" src="chrome://navigator/content/pageInfo.js"/>
-  <stringbundle src="chrome://navigator/locale/pageInfo.properties" id="bundle_pageInfo"/>
+  <stringbundle id="pageinfobundle" src="chrome://navigator/locale/pageInfo.properties"/>
 
   <vbox id="cont" flex="1">  
    <label class="header" value="&pageInfo.description;"/>
@@ -62,7 +61,6 @@
 
     <!-- General page information -->
     <vbox>
-      <label class="header label" value="&pageInfo.description;"/>
       <vbox class="inset" id="documentinfo">
         <grid>
           <columns> 
