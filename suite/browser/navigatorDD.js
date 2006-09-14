@@ -101,7 +101,7 @@ var personalToolbarObserver = {
 
       var flavourList = { };
       flavourList["moz/toolbaritem"] = { width: 2, data: uri };
-      flavourList["text/x-moz-url"] = { width: 2, data: escape(uri) + " " + "[ TEMP TITLE ]" };
+      flavourList["text/x-moz-url"] = { width: 2, data: uri + " " + "[ TEMP TITLE ]" };
       flavourList["text/html"] = { width: 2, data: htmlString };
       flavourList["text/unicode"] = { width: 2, data: uri };
       return flavourList;
@@ -288,7 +288,7 @@ var contentAreaDNDObserver = {
         }
       else 
         {
-          dump("dragging DOM node: <" + aEvent.target.localName + ">\n");
+          dump("didnt get here\n");
           switch (aEvent.target.localName) 
             {
               case 'AREA':
@@ -355,11 +355,11 @@ var contentAreaDNDObserver = {
                 break;
             }
         }
-
+  
       var flavourList = { };
       flavourList["text/html"] = { width: 2, data: htmlstring };
-      if (isLink)
-        flavourList["text/x-moz-url"] = { width: 2, data: escape(textstring) + " " + "( TEMP TITLE )" };
+      if (isLink) 
+        flavourList["text/x-moz-url"] = { width: 2, data: textstring + " " + "( TEMP TITLE )" };
       flavourList["text/unicode"] = { width: 2, data: textstring };
       return flavourList;
     },
@@ -380,10 +380,7 @@ var contentAreaDNDObserver = {
       var url = retrieveURLFromData(data);
       if (url.length == 0)
         return;
-      // this is a hacky fix for #40911 so that dragging
-      // and dropping text from the same window into itself
-      // does not load that text as a URL.
-      // see bug #52519 for related problems with this fix
+      // valid urls don't contain spaces ' '; if we have a space it isn't a valid url so bail out
       var urlstr = url.toString();
       if ( urlstr.indexOf(" ", 0) != -1 )
         return;
@@ -436,7 +433,7 @@ var proxyIconDNDObserver = {
       var urlBar = document.getElementById("urlbar");
       var flavourList = { };
       flavourList["text/unicode"] = { width: 2, data: urlBar.value };
-      flavourList["text/x-moz-url"] = { width: 2, data: escape(urlBar.value) + " " + window.title };
+      flavourList["text/x-moz-url"] = { width: 2, data: urlBar.value + " " + window._content.document.title };
       var htmlString = "<a href=\"" + urlBar.value + "\">" + urlBar.value + "</a>";
       flavourList["text/html"] = { width: 2, data: htmlString };
       return flavourList;
@@ -475,7 +472,7 @@ var homeButtonObserver = {
         setHomepage = true;
       if (setHomepage) 
         {
-          nsPreferences.setUnicharPref("browser.startup.homepage", url);
+          nsPreferences.setUnicharPref("browser.startup.homepage", url);                                           
           setTooltipText("homebutton", url);
         }
     },
@@ -502,7 +499,7 @@ var homeButtonObserver = {
     {
       var homepage = nsPreferences.getLocalizedUnicharPref("browser.startup.homepage", "about:blank");
       var flavourList = { };
-      flavourList["text/x-moz-url"] = { width: 2, data: escape(homepage) + " " + "[ TEMP - Home Page ]" };
+      flavourList["text/x-moz-url"] = { width: 2, data: homepage + " " + "[ TEMP - Home Page ]" };
       flavourList["text/html"] = { width: 2, data: htmlString };
       flavourList["text/unicode"] = { width: 2, data: homepage };
       var htmlString = "<a href=\"" + homepage + "\">" + homepage + "</a>";
@@ -524,9 +521,8 @@ function retrieveURLFromData (aData)
     switch (aData.flavour)
       {
         case "text/unicode":
-          return aData.data.data; // XXX this is busted. 
         case "text/x-moz-url":
-          return unescape(aData.data.data); // XXX this is busted. 
+          return aData.data.data; // XXX this is busted. 
           break;
         case "application/x-moz-file":
           var dataObj = aData.data.data.QueryInterface(Components.interfaces.nsIFile);
