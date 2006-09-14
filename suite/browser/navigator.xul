@@ -321,7 +321,7 @@ Contributor(s): ______________________________________. -->
 
   </toolbox>
     
-  <hbox flex="1" >
+  <hbox flex="1">
     <vbox id="sidebar-box" class="chromeclass-extrachrome"/>
     <splitter id="sidebar-splitter" class="chromeclass-extrachrome" />
   
