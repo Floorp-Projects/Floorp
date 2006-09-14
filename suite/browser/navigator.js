@@ -162,7 +162,7 @@ function loadEventHandlers(event)
 function getContentAreaFrameCount()
 {
   var saveFrameItem = document.getElementById("savepage");
-  if (!_content.frames.length || !isDocumentFrame(document.commandDispatcher.focusedWindow))
+  if (!_content || !_content.frames.length || !isDocumentFrame(document.commandDispatcher.focusedWindow))
     saveFrameItem.setAttribute("hidden", "true");
   else
     saveFrameItem.removeAttribute("hidden");
@@ -1080,16 +1080,83 @@ function BrowserLoadURL(aTriggeringEvent)
   if (url.match(/^view-source:/)) {
     BrowserViewSourceOfURL(url.replace(/^view-source:/, ""), null, null);
   } else {
-    if (pref && pref.getBoolPref("browser.tabs.opentabfor.urlbar") &&
-        getBrowser().localName == "tabbrowser" &&
-        aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
-        aTriggeringEvent.ctrlKey) {
-      var t = getBrowser().addTab(getShortcutOrURI(url)); // open link in new tab
-      getBrowser().selectedTab = t;
+    // Check the pressed modifiers: (also see bug 97123)
+    // Modifier Mac | Modifier PC | Action
+    // -------------+-------------+-----------
+    // Command      | Control     | New Window/Tab
+    // Shift+Cmd    | Shift+Ctrl  | New Window/Tab behind current one
+    // Option       | Shift       | Save URL (show Filepicker)
+
+    // If false, the save modifier is Alt, which is Option on Mac.
+    var modifierIsShift = true;
+    try {
+      modifierIsShift = pref.getBoolPref("ui.key.saveLink.shift");
     }
-    else  
-      loadURI(getShortcutOrURI(url));
-    _content.focus();
+    catch (ex) {}
+
+    var shiftPressed = false;
+    var saveModifier = false; // if the save modifier was pressed
+    if (aTriggeringEvent && 'shiftKey' in aTriggeringEvent &&
+        'altKey' in aTriggeringEvent) {
+      saveModifier = modifierIsShift ? aTriggeringEvent.shiftKey
+                     : aTriggeringEvent.altKey;
+      shiftPressed = aTriggeringEvent.shiftKey;
+    }
+
+    url = getShortcutOrURI(url);
+    // Accept both Control and Meta (=Command) as New-Window-Modifiers
+    if (aTriggeringEvent &&
+          ('ctrlKey' in aTriggeringEvent && aTriggeringEvent.ctrlKey) ||
+          ('metaKey' in aTriggeringEvent && aTriggeringEvent.metaKey)) {
+      // Check if user requests Tabs instead of windows
+      var openTab = false;
+      try {
+        openTab = pref.getBoolPref("browser.tabs.opentabfor.urlbar");
+      }
+      catch (ex) {}
+
+      if (openTab && getBrowser().localName == "tabbrowser") {
+        // Open link in new tab
+        var t = getBrowser().addTab(url);
+        // Focus new tab unless shift is pressed
+        if (!shiftPressed)
+          getBrowser().selectedTab = t;
+      }
+      else {
+        // Open a new window with the URL
+        var newWin = openDialog(getBrowserURL(), "_blank", "all,dialog=no", url);
+        // Reset url in the urlbar, copied from handleURLBarRevert()
+        var oldURL = getWebNavigation().currentURI.spec;
+        if (oldURL != "about:blank") {
+          gURLBar.value = oldURL;
+          SetPageProxyState("valid", null);
+        }
+        else
+          gURLBar.value = "";
+
+        // Focus old window if shift was pressed, as there's no
+        // way to open a new window in the background
+        // XXX this doesn't seem to work
+        if (shiftPressed) {
+          //newWin.blur();
+          content.focus();
+        }
+      }
+    }
+    else if (saveModifier) {
+      // Firstly, fixup the url so that (e.g.) "www.foo.com" works
+      const nsIURIFixup = Components.interfaces.nsIURIFixup;
+      var uriFixup = Components.classes["@mozilla.org/docshell/urifixup;1"].getService(nsIURIFixup);
+      url = uriFixup.createFixupURI(url, nsIURIFixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI).spec;
+      // Open filepicker to save the url
+      saveURL(url, "");
+    }
+    else {
+      // No modifier was pressed, load the URL normally and
+      // focus the content area
+      loadURI(url);
+      content.focus();
+    }
   }
 }
 
