@@ -26,7 +26,7 @@
    Chris McAfee <mcafee@netscape.com>
    Daniel Brooks <db48x@yahoo.com>
    Gervase Markham <gerv@gerv.net>
-   Florian QUEZE <f.qu@laposte.net>
+   Florian QUEZE <f.qu@queze.net>
 
  Alternatively, the contents of this file may be used under the terms of
  either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -63,7 +63,9 @@
   <script type="application/x-javascript" src="chrome://navigator/content/pageInfo.js"/>
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
-  <stringbundle id="pageinfobundle" src="chrome://navigator/locale/pageInfo.properties"/>
+  <stringbundleset id="pageinfobundleset">
+    <stringbundle id="pageinfobundle" src="chrome://navigator/locale/pageInfo.properties"/>
+  </stringbundleset>
 
   <commandset>
     <command id="cmd_close"     oncommand="window.close();"/>
