@@ -1364,8 +1364,8 @@ FeedProcessor.prototype = {
   },
   processingInstruction: function FP_processingInstruction(target, data) {
     if (target == "xml-stylesheet") {
-      var hrefAttribute = data.match(/href=\"(.*?)\"/);
-      if (hrefAttribute.length == 2) 
+      var hrefAttribute = data.match(/href=[\"\'](.*?)[\"\']/);
+      if (hrefAttribute && hrefAttribute.length == 2) 
         this._result.stylesheet = gIoService.newURI(hrefAttribute[1], null,
                                                     this._result.uri);
     }
