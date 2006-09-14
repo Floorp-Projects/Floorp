@@ -215,11 +215,11 @@
           var defaultEngine = null;
           try {
             defaultEngine = this.mPrefs.getComplexValue("browser.search.defaultengine",
-                                                        Components.interfaces.nsISupportsWString).data;
+                                                        Components.interfaces.nsISupportsString).data;
           } catch(ex) {
             this.ensureDefaultEnginePrefs(rdf, ds);
             defaultEngine = this.mPrefs.getComplexValue("browser.search.defaultengine",
-                                                        Components.interfaces.nsISupportsWString).data;
+                                                        Components.interfaces.nsISupportsString).data;
           }
           
           if (defaultEngine) {
@@ -258,11 +258,11 @@
             var engineRes = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
             var name = this.readRDFString(aDS, engineRes, kNC_Name);
             if (name == defaultName) {
-              var str = Components.classes["@mozilla.org/supports-wstring;1"]
-                                  .createInstance(Components.interfaces.nsISupportsWString);
+              var str = Components.classes["@mozilla.org/supports-string;1"]
+                                  .createInstance(Components.interfaces.nsISupportsString);
               str.data = engineRes.Value;
               this.mPrefs.setComplexValue("browser.search.defaultengine",
-                                          Components.interfaces.nsISupportsWString,
+                                          Components.interfaces.nsISupportsString,
                                           str);
             }
           }
