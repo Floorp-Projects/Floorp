@@ -751,6 +751,8 @@ function makePreview(item)
   var expirationText = theBundle.getString("unknown");
   var sizeText = theBundle.getString("unknown");
 
+  var pageSize = 0; 
+  var kbSize = 0;
   var expirationTime = 0;
   var expirationDate = null;
 
