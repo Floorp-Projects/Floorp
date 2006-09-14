@@ -285,25 +285,41 @@
 
 
 <!-- Toolbar items --> 
-<!ENTITY backButton.label "Back">
-<!ENTITY forwardButton.label "Forward">
-<!ENTITY reloadButton.label "Reload">
-<!ENTITY stopButton.label "Stop">
-<!ENTITY searchButton.label "Search">
-<!ENTITY goButton.label "Go">
-<!ENTITY printButton.label "Print">
+<!ENTITY backButton.label             "Back">
+<!ENTITY backButton.tooltip           "Go back one page">
+<!ENTITY forwardButton.label          "Forward">
+<!ENTITY forwardButton.tooltip        "Go forward one page">
+<!ENTITY reloadButton.label           "Reload">
+<!ENTITY reloadButton.tooltip         "Reload page to latest version">
+<!ENTITY stopButton.label             "Stop">
+<!ENTITY stopButton.tooltip           "Stop loading this page">
+<!ENTITY searchButton.label           "Search">
+<!ENTITY searchButton.tooltip         "Type a word in the field to the left, then click Search">
+<!ENTITY goButton.label               "Go">
+<!ENTITY goButton.tooltip             "Type a location in the field to the left, then click Go">
+<!ENTITY printButton.label            "Print">
+
+<!ENTITY throbber.tooltip             "Go to the &vendorShortName; home page">
+
+<!ENTITY locationBar.tooltip          "Location and search field">
+<!ENTITY internetKeyword.tooltip      "Choose Internet Keywords">
+
+<!ENTITY personalBar.tooltip          "Personal toolbar">
+<!ENTITY navigationBar.tooltip        "Navigation toolbar">
 
 <!-- Toolbar items --> 
-<!ENTITY  bookmarksButton.label "Bookmarks">
-<!ENTITY  homeButton.label "Home">
+<!ENTITY  bookmarksButton.label       "Bookmarks">
+<!ENTITY  bookmarksButton.tooltip     "Bookmarks list">
+<!ENTITY  homeButton.label            "Home">
+
 <!-- LOCALIZATION NOTE (bugzillaButton.label) : DONT_TRANSLATE -->
-<!ENTITY  bugzillaButton.label "Bugzilla">
+<!ENTITY  bugzillaButton.label        "Bugzilla">
 <!-- LOCALIZATION NOTE (tinderboxButton.label) : DONT_TRANSLATE -->
-<!ENTITY  tinderboxButton.label "Tinderbox">
+<!ENTITY  tinderboxButton.label       "Tinderbox">
 
 <!-- Statusbar -->
-<!ENTITY  statusText.label "Document: Done">
-<!ENTITY  buildId.label "Build ID: 2000042708">
+<!ENTITY  statusText.label            "Document: Done">
+<!ENTITY  buildId.label               "Build ID: 2000042708">
 
 <!-- Context Menu -->                 
 <!ENTITY blockImageCmd.label          "Block Image from Loading">

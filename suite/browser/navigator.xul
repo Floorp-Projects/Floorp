@@ -24,6 +24,7 @@ Contributor(s): ______________________________________. -->
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
@@ -77,11 +78,7 @@ Contributor(s): ______________________________________. -->
   
 
 <!-- This needs to go into a xul fragment, but since those don't work now, this stays here !-->
-<popupset>
-  <popup id="aTooltip" oncreate="return FillInTooltip(document.tooltipNode);"> 
-    <text id="replaceMe" crop="right"/>
-  </popup>
-</popupset>
+<popupset id="aTooltipSet"/>
 
 <!-- Context menu -->
 <script language="javascript">
@@ -217,31 +214,32 @@ Contributor(s): ______________________________________. -->
   var gBookmarkPopup = null;
 </script>
 
-  <toolbox>
+  <toolbox tooltip="aTooltip">
     <!-- Menu -->
     <menubar id="main-menubar"/>
   
-    <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar" persist="collapsed">
+    <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar" persist="collapsed" grippytooltiptext="&navigationBar.tooltip;">
       <box id="nav-bar-inner" autostretch="never" flex="1">
 	  <!--
         <button class="button-toolbar-1 top" id="back-button" crop="right" observes="canGoBack"/>  
     	  <button class="button-toolbar-1 top" id="forward-button" crop="right" observes="canGoForward"/>
        -->
-          <menubutton class="menubutton-dual" id="back-button" crop="right" orient="vertical" observes="canGoBack" oncommand="gotoHistoryIndex(event);">  
-    	  <menupopup oncreate="BrowserBackMenu(event);">
-    	  </menupopup>
+        <menubutton class="menubutton-dual" id="back-button" crop="right" orient="vertical" observes="canGoBack" oncommand="gotoHistoryIndex(event);"
+                    value="&backButton.label;"
+                    buttontooltiptext="&backButton.tooltip;">  
+       	  <menupopup oncreate="BrowserBackMenu(event);"/>
     	  </menubutton>
-          <menubutton class="menubutton-dual" id="forward-button" crop="right" orient="vertical" observes="canGoForward" oncommand="gotoHistoryIndex(event);">
-    	  <menupopup oncreate="BrowserForwardMenu(event);">
-    	  </menupopup>
+        <menubutton class="menubutton-dual" id="forward-button" crop="right" orient="vertical" observes="canGoForward" oncommand="gotoHistoryIndex(event);"
+                    value="&forwardButton.label;"
+                    buttontooltiptext="&forwardButton.tooltip;">  
+      	  <menupopup oncreate="BrowserForwardMenu(event);"/>
     	  </menubutton>
-        <button class="button-toolbar-1 top" id="reload-button" crop="right" observes="canReload" />
-        <button class="button-toolbar-1 top" id="stop-button" crop="right" observes="canStop" onclick="BrowserStop()"/>
+        <button class="button-toolbar-1 top" id="reload-button" crop="right" observes="canReload" value="&reloadButton.label;" tooltiptext="&reloadButton.tooltip;"/>
+        <button class="button-toolbar-1 top" id="stop-button" crop="right" observes="canStop" onclick="BrowserStop()" value="&stopButton.label;" tooltiptext="&stopButton.tooltip;"/>
     
-
-          <box class="box-toolbar-group" flex="1">
-          <menubutton class="menubutton-icon button-toolbar-3" id="ubhist-keyword-popup">
-          <menupopup class="button-toolbar-3" oncreate="CreateUBHistoryMenu(event);" oncommand="ExecuteUBCommand(event);">
+        <box class="box-toolbar-group" flex="1">
+          <menubutton class="menubutton-icon button-toolbar-3" id="ubhist-keyword-popup" tooltiptext="&internetKeyword.tooltip;">
+            <menupopup class="button-toolbar-3" oncreate="CreateUBHistoryMenu(event);" oncommand="ExecuteUBCommand(event);">
               <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&quoteKeyword.label;" keyword="quote"/>
               <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&localKeyword.label;" keyword="local"/>
               <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&shopKeyword.label;" keyword="shop"/>
@@ -249,32 +247,39 @@ Contributor(s): ______________________________________. -->
               <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&webmailKeyword.label;" keyword="webmail"/>
               <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&listKeywords.label;" keyword="list"/>                 
               <menuseparator/>
-          </menupopup>
+            </menupopup>
           </menubutton>
 
          
           <box autostretch="never" valign="middle" flex="1">
       			<image id="page-proxy-button" ondraggesture="DragProxyIcon(event);"/> 
-            <textfield class="plain chromeclass-location" id="urlbar" onkeypress="if( event.which == 13 ) { AddToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>
+            <textfield class="plain chromeclass-location" id="urlbar" flex="1"
+                       onkeypress="if( event.which == 13 ) { AddToUrlbarHistory(); BrowserLoadURL(); }"
+                       tooltiptext="&locationBar.tooltip;"/>
 			<!--<autocomplete class="plain chromeclass-location" searchSessionType="urlbar" id="urlbar" onkeypress="if( event.which == 13 ) { AddToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/> -->
-            <button class="button-toolbar-3" id="search-button" value="&searchButton.label;" oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" /> 
-            <button class="button-toolbar-3" id="go-button" value="&goButton.label;" oncommand="BrowserLoadURL();" /> 
+            <button class="button-toolbar-3" id="search-button" value="&searchButton.label;" 
+                    oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
+                    tooltiptext="&searchButton.tooltip;"/> 
+            <button class="button-toolbar-3" id="go-button" value="&goButton.label;" oncommand="BrowserLoadURL();" 
+                    tooltiptext="&goButton.tooltip;"/> 
           </box>
         </box>
     
       </box>
-  		<button class="plain" id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"/>
+  		<button class="plain" id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')" tooltiptext="&throbber.tooltip;"/>
     </toolbar>
   
   
     <toolbar id="PersonalToolbar" class="chromeclass-directories" persist="collapsed" dragdroparea="innermostBox"
-      ondraggesture="return BeginDragPersonalToolbar(event);"
-      ondragdrop="return DropPersonalToolbar(event);"
-      ondragover="return DragOverPersonalToolbar(event);">
+             ondraggesture="return BeginDragPersonalToolbar(event);"
+             ondragdrop="return DropPersonalToolbar(event);"
+             ondragover="return DragOverPersonalToolbar(event);"
+             grippytooltiptext="&personalBar.tooltip;">
 
       <menubutton class="button-toolbar bookmarkfolder" id="PersonalMenu" datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex" 
         ref="NC:BookmarksRoot" container="true" value="&bookmarksButton.label;"
-        oncommand="OpenBookmarkURL(event.target, document.getElementById('PersonalMenu').database)">
+        oncommand="OpenBookmarkURL(event.target, document.getElementById('PersonalMenu').database)"
+        tooltiptext="&bookmarksButton.tooltip;">
         <template>
           <rule iscontainer="true">
             <menupopup>
@@ -340,7 +345,7 @@ Contributor(s): ______________________________________. -->
 
   </toolbox>
     
-  <box flex="1">
+  <box flex="1" tooltip="aTooltip">
     <box id="sidebar-box" class="chromeclass-extrachrome"/>
     <splitter id="sidebar-splitter" class="chromeclass-extrachrome" />
   
