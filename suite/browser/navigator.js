@@ -451,9 +451,8 @@ nsBrowserAccess.prototype = {
         return window.openDialog(getBrowserURL(), "_blank", "all,dialog=no",
                                  uri, null, referrer);
       case nsIBrowserDOMWindow.OPEN_NEWTAB:
-        var newTab = gBrowser.addTab("about:blank");
-        if (!pref.getBoolPref("browser.tabs.loadDivertedInBackground"))
-          gBrowser.selectedTab = newTab;
+        var newTab = gBrowser.addTab("about:blank", null, null,
+                                     !pref.getBoolPref("browser.tabs.loadDivertedInBackground"));
         var browser = gBrowser.getBrowserForTab(newTab);
         try {
           browser.loadURIWithFlags(uri, loadflags, referrer);
