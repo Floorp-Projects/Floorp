@@ -1204,17 +1204,17 @@ function BrowserChangeTextSize(newSize)
     {
       var nodeName = node.nodeName;
       if (nodeName == "")
-        return "";
+        return null;
       nodeName = nodeName.toLowerCase();
       if (nodeName == "" || nodeName == "body"
           || nodeName == "html" || nodeName == "#document")
-        return "";
+        return null;
       var href = node.href;
       if (nodeName == "a" && href != "")
-        return href;
+        return node;
       node = node.parentNode;
     }
-    return "";
+    return null;
   }
 
    function isScrollbar(node)
@@ -1236,7 +1236,10 @@ function BrowserChangeTextSize(newSize)
     var target = event.target;
     if (pref.GetBoolPref("middlemouse.openNewWindow"))
     {
-      var href = enclosingLink(target);
+      var node = enclosingLink(target);
+      var href ="";
+      if (node)
+        href = node.href;
       if (href != "")
       {
         openNewWindowWith(href);
