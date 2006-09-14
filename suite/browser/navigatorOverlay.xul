@@ -227,6 +227,8 @@
     <rule parent="hbox" iscontainer="true" isempty="true"
           rdf:type="http://home.netscape.com/NC-rdf#Folder">
       <toolbarbutton type="menu" editable="true" class="bookmark-item"
+                     image="rdf:http://home.netscape.com/NC-rdf#Icon"
+                     validate="never"
                      rdf:type="http://home.netscape.com/NC-rdf#Folder"
                      uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name">
         <menupopup>
@@ -236,6 +238,8 @@
     </rule>
     <rule parent="hbox" iscontainer="true">
       <toolbarbutton type="menu" class="bookmark-item" uri="rdf:*" editable="true"
+                     image="rdf:http://home.netscape.com/NC-rdf#Icon"
+                     validate="never"
                      rdf:type="http://home.netscape.com/NC-rdf#Folder"
                      label="rdf:http://home.netscape.com/NC-rdf#Name">
         <menupopup/>
@@ -243,6 +247,8 @@
     </rule>
     <rule parent="hbox">
       <toolbarbutton class="bookmark-item" uri="rdf:*" editable="true" 
+                     image="rdf:http://home.netscape.com/NC-rdf#Icon"
+                     validate="never"
                      status="rdf:http://home.netscape.com/WEB-rdf#status"
                      rdf:type="http://home.netscape.com/NC-rdf#Bookmark"
                      statustext="rdf:http://home.netscape.com/NC-rdf#URL"
@@ -262,6 +268,8 @@
           rdf:type="http://home.netscape.com/NC-rdf#Folder">
       <menupopup>
         <menu class="menu-iconic bookmark-item" uri="rdf:*" 
+              image="rdf:http://home.netscape.com/NC-rdf#Icon"
+              validate="never"
               type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
               label="rdf:http://home.netscape.com/NC-rdf#Name">
           <menupopup>
@@ -273,6 +281,8 @@
     <rule iscontainer="true">
       <menupopup>
         <menu class="menu-iconic bookmark-item" uri="rdf:*"
+              image="rdf:http://home.netscape.com/NC-rdf#Icon"
+              validate="never"
               label="rdf:http://home.netscape.com/NC-rdf#Name"
               type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
           <menupopup />
@@ -287,6 +297,8 @@
     <rule>
       <menupopup>
         <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
+                  src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                  validate="never"
                   label="rdf:http://home.netscape.com/NC-rdf#Name" 
                   status="rdf:http://home.netscape.com/WEB-rdf#status"/>
       </menupopup>
