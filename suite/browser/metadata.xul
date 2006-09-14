@@ -49,7 +49,6 @@
         title="&caption.label;"
         onload="onLoad()"
         class="dialog"
-        orient="vertical"
         persist="screenX screenY"
         screenX="24" screenY="24">
 
@@ -59,10 +58,10 @@
   <stringbundle src="chrome://global/locale/languageNames.properties" id="bundle_languages"/>
   <stringbundle src="chrome://global/locale/regionNames.properties" id="bundle_regions"/>
 
-  <text id="no-properties" value="&no-properties.label;"/>
+  <label id="no-properties" value="&no-properties.label;"/>
   
   <groupbox id="link-sec">
-    <caption><text value="&link-sec.label;"/></caption>
+    <caption label="&link-sec.label;"/>
     <grid>
       <columns>
         <column/>
@@ -70,38 +69,38 @@
       </columns>
       <rows>
         <row id="link-url">
-          <text value="&link-url.label; "/>
+          <label value="&link-url.label; "/>
           <hbox>
-            <text id="link-url-text" value="" class="text-link" 
+            <label id="link-url-text" value="" class="text-link" 
                   onclick="openLink(this)"/>
             <spacer flex="1"/>
           </hbox>
         </row>
         <row id="link-target">
-          <text value="&link-target.label; "/>
-          <text id="link-target-text" value=""/>
+          <label value="&link-target.label; "/>
+          <label id="link-target-text" value=""/>
         </row>
         <row id="link-type">
-          <text value="&link-type.label; "/>
-          <text id="link-type-text" value=""/>
+          <label value="&link-type.label; "/>
+          <label id="link-type-text" value=""/>
         </row>
         <row id="link-lang">
-          <text value="&link-lang.label; "/>
-          <text id="link-lang-text" value=""/>
+          <label value="&link-lang.label; "/>
+          <label id="link-lang-text" value=""/>
         </row>
         <row id="link-rel">
-          <text value="&link-rel.label; "/>
-          <text id="link-rel-text" value=""/>
+          <label value="&link-rel.label; "/>
+          <label id="link-rel-text" value=""/>
         </row>
         <row id="link-rev">
-          <text value="&link-rev.label; "/>
-          <text id="link-rev-text" value=""/>
+          <label value="&link-rev.label; "/>
+          <label id="link-rev-text" value=""/>
         </row>
       </rows>
     </grid>
   </groupbox>
   <groupbox id="image-sec">
-    <caption><text value="&image-sec.label;"/></caption>
+    <caption label="&image-sec.label;"/>
     <grid>
       <columns>
         <column/>
@@ -109,31 +108,31 @@
       </columns>
       <rows>
         <row id="image-url">
-          <text value="&image-url.label; "/>
+          <label value="&image-url.label; "/>
           <hbox>
-            <text id="image-url-text" value="" class="text-link" 
+            <label id="image-url-text" value="" class="text-link" 
                   onclick="openLink(this)"/>
             <spacer flex="1"/>
           </hbox>
         </row>
         <row id="image-width">
-          <text value="&image-width.label; "/>
+          <label value="&image-width.label; "/>
           <hbox>
-            <text id="image-width-text" value=""/>
-            <text value=" &image-pixels.label;"/>
+            <label id="image-width-text" value=""/>
+            <label value=" &image-pixels.label;"/>
           </hbox>
         </row>
         <row id="image-height">    
-          <text value="&image-height.label; "/>
+          <label value="&image-height.label; "/>
           <hbox>
-            <text id="image-height-text" value=""/>
-            <text value=" &image-pixels.label;"/>
+            <label id="image-height-text" value=""/>
+            <label value=" &image-pixels.label;"/>
           </hbox>
         </row>
         <row id="image-desc">
-          <text value="&image-desc.label; "/>
+          <label value="&image-desc.label; "/>
           <hbox>
-            <text id="image-desc-text" value="" class="text-link" 
+            <label id="image-desc-text" value="" class="text-link" 
                   onclick="openLink(this)"/>
             <spacer flex="1"/>
           </hbox>
@@ -142,7 +141,7 @@
     </grid>
   </groupbox>
   <groupbox id="insdel-sec">
-    <caption><text value="&insdel-sec.label;"/></caption>
+    <caption label="&insdel-sec.label;"/
     <grid>
       <columns>
         <column/>
@@ -150,22 +149,22 @@
       </columns>
       <rows>
         <row id="insdel-cite">
-          <text value="&insdel-cite.label; "/>
+          <label value="&insdel-cite.label; "/>
           <hbox>
-            <text id="insdel-cite-text" value="" class="text-link" 
+            <label id="insdel-cite-text" value="" class="text-link" 
                   onclick="openLink(this)"/>
             <spacer flex="1"/>
           </hbox>
         </row>
         <row id="insdel-date">
-          <text value="&insdel-date.label; "/>
-          <text id="insdel-date-text" value=""/>
+          <label value="&insdel-date.label; "/>
+          <label id="insdel-date-text" value=""/>
         </row>
       </rows>
     </grid>
   </groupbox>
   <groupbox id="quote-sec">
-    <caption><text value="&quote-sec.label;"/></caption>
+    <caption label="&quote-sec.label;"/>
     <grid>
       <columns>
         <column/>
@@ -173,9 +172,9 @@
       </columns>
       <rows>
         <row id="quote-cite">
-          <text value="&quote-cite.label; "/>
+          <label value="&quote-cite.label; "/>
           <hbox>
-            <text id="quote-cite-text" value="" class="text-link" 
+            <label id="quote-cite-text" value="" class="text-link" 
                   onclick="openLink(this)"/>
             <spacer flex="1"/>
           </hbox>
@@ -184,7 +183,7 @@
     </grid>
   </groupbox>
   <groupbox id="misc-sec">
-    <caption><text value="&misc-sec.label;"/></caption>
+    <caption label="&misc-sec.label;"/>
     <grid>
       <columns>
         <column/>
@@ -192,18 +191,18 @@
       </columns>
       <rows>
         <row id="misc-lang">
-          <text value="&misc-lang.label; "/>
-          <text id="misc-lang-text" value=""/>
+          <label value="&misc-lang.label; "/>
+          <label id="misc-lang-text" value=""/>
         </row>
         <row id="misc-title">
-          <text value="&misc-title.label; "/>
+          <label value="&misc-title.label; "/>
           <hbox>
-          <html id="misc-title-text" width="100%" style="margin: 0px;"/>
+          <description id="misc-title-text" width="100%" style="margin: 0px;"/>
           </hbox>
         </row>
         <row id="misc-tblsummary">
-          <text value="&misc-tblsummary.label; "/>
-          <text id="misc-tblsummary-text" value=""/>
+          <label value="&misc-tblsummary.label; "/>
+          <label id="misc-tblsummary-text" value=""/>
         </row>
       </rows>
     </grid>

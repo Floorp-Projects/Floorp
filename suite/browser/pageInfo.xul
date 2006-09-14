@@ -34,7 +34,7 @@
 %pageInfoDTD;
 ]>
 
-<window id="main-window" xmlns:html="http://www.w3.org/1999/xhtml"
+<window id="main-window"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&pageInfo.title;" 
   titlemodifier="&mainWindow.titlemodifier;" 
@@ -42,7 +42,6 @@
   titlemenuseparator ="&mainWindow.titlemodifierseperator;"  
   windowtype="Browser:page-info"
   onload="onLoadPageInfo()"
-  orient="vertical" class="dialog"
   width="400" height="450"
   screenX="10" screenY="10"
   persist="screenX screenY width height sizemode">
@@ -50,11 +49,8 @@
   <script type="application/x-javascript" src="chrome://navigator/content/pageInfo.js"/>
   <stringbundle src="chrome://navigator/locale/pageInfo.properties" id="bundle_pageInfo"/>
 
-  <!-- keys are appended from the overlay -->
-  <keyset id="dialogKeys"/>
-
   <vbox id="cont" flex="1">  
-   <text class="header label" value="&pageInfo.description;"/>
+   <label class="header" value="&pageInfo.description;"/>
    <tabbox id="tabbox" flex="1">
     <tabs id="tabs">
       <tab id="generalTab" label="&pageInfo.generalTab;"/>
@@ -66,7 +62,7 @@
 
     <!-- General page information -->
     <vbox>
-      <text class="header label" value="&pageInfo.description;"/>
+      <label class="header label" value="&pageInfo.description;"/>
       <vbox class="inset" id="documentinfo">
         <grid>
           <columns> 
@@ -75,16 +71,16 @@
           </columns>
           <rows>
             <row>
-              <text class="label" value="&pageInfo.pageTitle;"/>
-              <text class="label" id="titletext" value=""/>
+              <label value="&pageInfo.pageTitle;"/>
+              <label id="titletext" value=""/>
             </row>
             <row>
-              <text class="label" value="&pageInfo.URL;"/>
-              <text class="label" id="urltext" value=""/>
+              <label value="&pageInfo.URL;"/>
+              <label id="urltext" value=""/>
             </row>
             <row>
-              <text class="label" value="&pageInfo.lastModified;"/>
-              <text class="label" id="lastmodifiedtext" value=""/>
+              <label value="&pageInfo.lastModified;"/>
+              <label id="lastmodifiedtext" value=""/>
             </row>
           </rows>  
         </grid>
@@ -93,8 +89,8 @@
 
     <!-- Form information -->
     <vbox id="formTreeContainer" flex="1" collapsed="true">
-      <text class="header label" value="&pageInfo.formHeader;"/>
-      <tree id="formTree" class="inset" flex="1">
+      <label class="header" value="&pageInfo.formHeader;"/>
+      <tree id="formTree" flex="1">
         <treecolgroup>
           <treecol flex="2"/>
           <splitter class="tree-splitter"/>
@@ -115,8 +111,8 @@
 
     <!-- Image information -->
     <vbox id="imageTreeContainer" flex="1" collapsed="true">
-      <text class="header label" value="&pageInfo.imageHeader;"/>
-      <tree id="imageTree" class="inset" onselect="onImageSelect()" flex="1">
+      <label class="header" value="&pageInfo.imageHeader;"/>
+      <tree id="imageTree" onselect="onImageSelect()" flex="1">
         <treecolgroup>
           <treecol flex="7"/>
           <splitter class="tree-splitter"/>

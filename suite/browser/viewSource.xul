@@ -36,8 +36,8 @@
 %contentAreaCommandsDTD;
 ]>
 
-<window id="main-window" xmlns:html="http://www.w3.org/1999/xhtml"
-     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window id="main-window"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	onload="onLoadViewSource();"
 	contenttitlesetting="true"
 	title="&mainWindow.title;" 
@@ -45,7 +45,7 @@
 	titlepreface="&mainWindow.preface;"
 	titlemenuseparator ="&mainWindow.titlemodifierseperator;"  
 	windowtype="navigator:view-source"
-	orient="vertical" width="640" height="480"
+	width="640" height="480"
 	screenX="10" screenY="10"
 	persist="screenX screenY width height sizemode">
  
