@@ -1257,9 +1257,6 @@ function BrowserEditBookmarks()
     if (aZoomFactor < 1 || aZoomFactor > 5000)
       return;
 
-    if (aZoomFactor == zoomFactor)
-      return;
-
     zoomFactor = aZoomFactor;
 
     if (isZoomFactorInRange(zoomFactor)) {
