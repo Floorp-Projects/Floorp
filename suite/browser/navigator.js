@@ -1512,3 +1512,34 @@ function updateToolbarStates(toolbarMenuElt)
   updateComponentBarBroadcaster();
 }
 
+// Fill in tooltips for personal toolbar
+function FillInPTTooltip(tipElement)
+{
+
+  var title = tipElement.label;
+  var url = tipElement.statusText;
+
+  if (!title && !url) {
+    // bail out early if there is nothing to show
+    return false;
+  }
+
+  var tooltipTitle = document.getElementById("ptTitleText");
+  var tooltipUrl = document.getElementById("ptUrlText"); 
+
+  if (title && title != url) {
+    tooltipTitle.removeAttribute("hidden");
+    tooltipTitle.setAttribute("value", title);
+  } else  {
+    tooltipTitle.setAttribute("hidden", "true");
+  }
+
+  if (url) {
+    tooltipUrl.removeAttribute("hidden");
+    tooltipUrl.setAttribute("value", url);
+  } else {
+    tooltipUrl.setAttribute("hidden", "true");
+  }
+
+  return true; // show tooltip
+}
