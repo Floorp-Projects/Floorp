@@ -2573,7 +2573,7 @@ function uploadFile(fileURL)
   var persist = Components.classes["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
                           .createInstance(CI.nsIWebBrowserPersist);
 
-  dialog.init(fileURL, targetURI, leafName, null, Date.now()*1000, persist);
+  dialog.init(fileURL, targetURI, leafName, null, Date.now()*1000, null, persist);
   dialog.open(window);
 
   persist.progressListener = dialog;
