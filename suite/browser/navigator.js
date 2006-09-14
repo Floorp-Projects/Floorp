@@ -1181,34 +1181,9 @@ function BrowserOpenFileWindow()
   }
 }
 
-// Set up a lame hack to avoid opening two bookmarks.
-// Could otherwise happen with two Ctrl-B's in a row.
-var gDisableBookmarks = false;
-function enableBookmarks()
-{
-  gDisableBookmarks = false;
-}
-
 function BrowserEditBookmarks()
 {
-  // Use a single sidebar bookmarks dialog
-  var windowManager = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                                .getService(Components.interfaces.nsIWindowMediator);
-
-  var bookmarksWindow = windowManager.getMostRecentWindow("bookmarks:manager");
-
-  if (bookmarksWindow) {
-    bookmarksWindow.focus();
-  } else {
-    // while disabled, don't open new bookmarks window
-    if (!gDisableBookmarks) {
-      gDisableBookmarks = true;
-
-      open("chrome://communicator/content/bookmarks/bookmarksManager.xul", "_blank",
-        "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
-      setTimeout(enableBookmarks, 2000);
-    }
-  }
+  toOpenWindowByType("bookmarks:manager", "chrome://communicator/content/bookmarks/bookmarksManager.xul");
 }
 
 function updateCloseItems()
@@ -2194,40 +2169,9 @@ function StatusbarViewPopupManager() {
                       "chrome,resizable=yes", hostPort, false);
 }
 
-// Set up a lame hack to avoid opening two bookmarks.
-// Could otherwise happen with two Ctrl-B's in a row.
-var gDisableHistory = false;
-function enableHistory() {
-  gDisableHistory = false;
-}
-
 function toHistory()
 {
-  // Use a single sidebar history dialog
-
-  var cwindowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-  var iwindowManager = Components.interfaces.nsIWindowMediator;
-  var windowManager  = cwindowManager.QueryInterface(iwindowManager);
-
-  var historyWindow = windowManager.getMostRecentWindow('history:manager');
-
-  if (historyWindow) {
-    //debug("Reuse existing history window");
-    historyWindow.focus();
-  } else {
-    //debug("Open a new history dialog");
-
-    if (true == gDisableHistory) {
-      //debug("Recently opened one. Wait a little bit.");
-      return;
-    }
-    gDisableHistory = true;
-
-    window.open( "chrome://communicator/content/history/history.xul", "_blank",
-        "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar" );
-    setTimeout(enableHistory, 2000);
-  }
-
+  toOpenWindowByType("history:manager", "chrome://communicator/content/history/history.xul");
 }
 
 function checkTheme()
