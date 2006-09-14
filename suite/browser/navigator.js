@@ -984,7 +984,7 @@ function BrowserCanFindAgain()
 function loadURI(uri)
 {
   try {
-    getWebNavigation().loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE);
+    getWebNavigation().loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
   } catch (e) {
   }
 }
