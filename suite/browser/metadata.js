@@ -186,9 +186,9 @@ function checkForImage(elem, htmllocalname)
 
     if (img) {
 
-        var imgInfo = imgType == "object" ? img.data : img.src;
-        setInfo ("image-url", imgInfo);
-        var size = getSize(imgInfo);
+        var imgURL = imgType == "object" ? img.data : img.src;
+        setInfo("image-url", imgURL);
+        var size = getSize(imgURL);
 
         if (size != -1) {
             var kbSize = size / 1024;
