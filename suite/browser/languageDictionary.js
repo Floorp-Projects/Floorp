@@ -74,7 +74,7 @@ LanguageDictionary.createDictionary = function()
     var property = e.getNext();
     property = property.QueryInterface(
         Components.interfaces.nsIPropertyElement);
-    dictionary[property.getKey()] = property.getValue();
+    dictionary[property.key] = property.value;
   }
 
   return dictionary;
