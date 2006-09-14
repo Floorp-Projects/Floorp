@@ -114,6 +114,7 @@ static AppListMenuFactory* sAppListMenuFactoryInstance = nil;
   [menu addItem:[NSMenuItem separatorItem]];
   
   BOOL insertedDefaultApp = NO;
+  BOOL shouldInsertSeperatorAtEnd = NO;
   NSEnumerator* feedAppsEnum = [feedApps objectEnumerator];
   NSString* curBundleID = nil;
   while ((curBundleID = [feedAppsEnum nextObject])) {
@@ -135,8 +136,10 @@ static AppListMenuFactory* sAppListMenuFactoryInstance = nil;
       [menu insertItem:menuItem atIndex:0];
       insertedDefaultApp = YES;
     }
-    else
+    else {
       [menu addItem:menuItem];
+      shouldInsertSeperatorAtEnd = YES;
+    }
   }
   
   // The user selected an application that is not registered for "feed://".
@@ -147,19 +150,20 @@ static AppListMenuFactory* sAppListMenuFactoryInstance = nil;
                                         withBundleID:defaultFeedViewerID
                                            andAction:nil 
                                            andTarget:inTarget];
-      [[inPopupButton menu] insertItem:menuItem atIndex:0];
+      [menu insertItem:menuItem atIndex:0];
     }
     // Since we couldn't find a default application, add a blank menu item.
     else {
       NSMenuItem* dummyItem = [[NSMenuItem alloc] init];
       [dummyItem setTitle:@""];
-      [[inPopupButton menu] insertItem:dummyItem atIndex:0];
+      [menu insertItem:dummyItem atIndex:0];
       [dummyItem release];
     }
   }
   
   // allow the user to select a feed application
-  [menu addItem:[NSMenuItem separatorItem]];
+  if (shouldInsertSeperatorAtEnd)
+    [menu addItem:[NSMenuItem separatorItem]];
   NSMenuItem* selectItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Select...", nil)
                                                       action:inSelectAction 
                                                keyEquivalent:@""];
