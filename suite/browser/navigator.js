@@ -71,7 +71,6 @@ catch (ex)
 
 // focused frame URL
 var gFocusedURL = null;
-var gNavigated = -1;
 
 /**
  * Save the document at a given location to disk
@@ -99,7 +98,6 @@ function savePage( url )
  **/
 function getContentAreaFrameCount()
 {
-  gNavigated++;
   var saveFrameItem = document.getElementById("savepage");
   if (!window._content.frames.length ||
       !isDocumentFrame(document.commandDispatcher.focusedWindow))
@@ -929,8 +927,7 @@ function RevealSearchPanel()
       fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText | 
 			nsIFilePicker.filterAll | nsIFilePicker.filterImages | nsIFilePicker.filterXML);
       if (fp.show() == nsIFilePicker.returnOK) {
-        var fn = !gNavigated ? openTopWin : openNewWindowWith;
-        fn(fp.fileURL.spec);
+        openTopWin(fp.fileURL.spec);
       }
     } catch (ex) { }
   }
