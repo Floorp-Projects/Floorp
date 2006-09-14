@@ -11,7 +11,8 @@
   <RDF:Description about="urn:mozilla:package:navigator"
         chrome:displayName="Navigator"
         chrome:author="mozilla.org"
-        chrome:name="navigator">
+        chrome:name="navigator"
+		chrome:skinVersion="1">
   </RDF:Description>
 
 </RDF:RDF>
