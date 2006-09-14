@@ -195,22 +195,16 @@ LinkElementDecorator.prototype.isIgnored =
 function()
 {
   if (!this.rel) return true;
-  for (var i = 0; i < this.relValues.length; i++) {
-    var testVal = this.relValues[i].toLowerCase();
-    if ((testVal == "stylesheet") || 
-      (testVal == "icon") ||
-      (testVal == "fontdef") ||
-      (testVal.match(/^p3pv/)) ||
-      (testVal.match(/^schema./)))
+  for (var i = 0; i < this.relValues.length; i++)
+    if (/^stylesheet$|^icon$|^fontdef$|^p3pv|^schema./i.test(this.relValues[i]))
       return true;
-  }
   return false;
 }
 
 LinkElementDecorator.convertRevMade =
 function(rel, rev) 
 {
-  if (!rel && rev && LinkElementDecorator.findWord("made", rev.toLowerCase()))
+  if (!rel && rev && /\bmade\b/i.test(rev))
     return rev;
   else
     return rel;
@@ -245,9 +239,7 @@ function()
   // XXX: lookup more meaningful and localized version of media, 
   //   i.e. media="print" becomes "Printable" or some such
   // XXX: use localized version of ":" separator
-  if (this.media 
-      && !LinkElementDecorator.findWord("all", this.media.toLowerCase())
-      && !LinkElementDecorator.findWord("screen", this.media.toLowerCase()))
+  if (this.media && !/\ball\b|\bscreen\b/i.test(this.media))
     prefix += this.media + ": ";
   if (this.hreflang)
     prefix += languageDictionary.lookupLanguageName(this.hreflang)
@@ -255,27 +247,6 @@ function()
 
   return this.title ? prefix + this.title : prefix;
 }
-
-LinkElementDecorator.findWord =
-function(word, string)
-{
-  var barePattern = eval("/^" + word + "$/");
-  var middlePattern = eval("/[-\\W]" + word + "[-\\W]/");
-  var startPattern = eval("/^" + word + "[-\\W]/");
-  var endPattern = eval("/[-\\W]" + word + "$/");
-
-  if (string.search(barePattern) != -1)
-    return true;
-  if (string.search(middlePattern) != -1)
-    return true;
-  if (string.search(startPattern) != -1)
-    return true;
-  if (string.search(endPattern) != -1)
-    return true;
-
-  return false;
-}
-
 
 function AnchorElementDecorator(element) {
   this.constructor(element);
