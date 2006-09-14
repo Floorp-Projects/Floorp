@@ -400,7 +400,7 @@ Contributor(s): ______________________________________. -->
 
 	<!-- throbber area of navigation toolbar -->
 	<box id="toolbar_throbber_box" align="vertical">
-		<titledbutton id="Throbber" onclick="window.content.location.href='&throbber.url;'">
+		<titledbutton id="Throbber" onclick='goClickThrobber("browser.throbber.url")'>
 			<observes element="Browser:Throbber" attribute="busy"/>
 		</titledbutton>
 	</box>
