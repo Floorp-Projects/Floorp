@@ -40,14 +40,12 @@
 
     <em:id>{e2fda1a4-762b-4020-b5ad-a41df1933103}</em:id>
     <em:name>Lightning</em:name>
-    <em:version>0.1+</em:version>
-
-    <em:description>An experimental calendar extension (build @BUILD_ID@)</em:description>
-    <em:creator>Mozilla Calendar Squad</em:creator>
-
+    <em:version>@LIGHTNING_VERSION@</em:version>
+    <em:description>An integrated calendar for Thunderbird (build @BUILD_ID@)</em:description>
+    <em:creator>Mozilla Calendar Project</em:creator>
     <em:updateURL>http://www.mozilla.org/projects/calendar/lightning/@TARGET_PLATFORM@/update.rdf</em:updateURL>
-    <em:homepageURL>http://wiki.mozilla.org/Calendar:Lightning:0.1:Release_Notes</em:homepageURL>
+    <em:homepageURL>http://www.mozilla.org/projects/calendar/releases/sunbird@LIGHTNING_VERSION@.html</em:homepageURL>
+    <em:iconURL>chrome://calendar/skin/cal-icon32.png</em:iconURL>
     <em:targetPlatform>@TARGET_PLATFORM@</em:targetPlatform>
-
   </Description>
 </RDF>

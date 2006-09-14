@@ -97,6 +97,7 @@ classic.jar:
 #expand  skin/classic/lightning/lightning.css	(themes/__THEME__/lightning.css)
 #expand  skin/classic/lightning/imip.css        (themes/__THEME__/imip.css)
 #expand  skin/classic/lightning/cal-icon16.png  (themes/__THEME__/cal-icon16.png)
+#expand  skin/classic/calendar/cal-icon32.png   (/calendar/base/themes/__THEME__/cal-icon32.png)
 #expand  skin/classic/calendar/prevnextarrow.png	(/calendar/sunbird/themes/__THEME__/sunbird/prevnextarrow.png)
 #expand  skin/classic/calendar/pageupdown.png	(/calendar/sunbird/themes/__THEME__/sunbird/pageupdown.png)
 #expand  skin/classic/calendar/calendar-toolbar.css	(/calendar/base/themes/__THEME__/calendar-toolbar.css)
