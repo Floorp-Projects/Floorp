@@ -292,6 +292,8 @@
 <!ENTITY  buildId.label "Build ID: 2000030708">
 
 <!-- Context Menu -->                 
+<!ENTITY blockImageCmd.label          "Block Image from Loading">
+<!ENTITY blockImageCmd.accesskey      "k">
 <!ENTITY openLinkCmd.label            "Open Link in New Window">
 <!ENTITY openLinkCmd.accesskey        "o">
 <!ENTITY editLinkCmd.label            "Edit Link in Composer">
