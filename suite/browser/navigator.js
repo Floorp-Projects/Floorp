@@ -427,8 +427,10 @@ function Startup()
   if (homePage)
     document.getElementById("home-button").setAttribute("tooltiptext", homePage);
 
+  //initConsoleListener();
+
   // load appropriate initial page from commandline
-  var isPageCycling;
+  var isPageCycling = false;
 
   // page cycling for tinderbox tests
   if (!appCore.cmdLineURLUsed)
@@ -436,10 +438,14 @@ function Startup()
 
   // only load url passed in when we're not page cycling
   if (!isPageCycling) {
-    var cmdLineService = Components.classes["@mozilla.org/appshell/commandLineService;1"]
-                                   .getService(Components.interfaces.nsICmdLineService);
-    var startPage = cmdLineService.URLToLoad;
-    appCore.cmdLineURLUsed = true;
+    var startPage;
+
+    if (!appCore.cmdLineURLUsed) {
+      var cmdLineService = Components.classes["@mozilla.org/appshell/commandLineService;1"]
+                                     .getService(Components.interfaces.nsICmdLineService);
+      startPage = cmdLineService.URLToLoad;
+      appCore.cmdLineURLUsed = true;
+    }
 
     // Check for window.arguments[0]. If present, use that for startPage.
     if (!startPage && "arguments" in window && window.arguments.length > 0)
@@ -447,12 +453,10 @@ function Startup()
 
     if (startPage)
       loadURI(startPage);
+
+    // Perform default browser checking.
+    checkForDefaultBrowser();
   }
-
-  //initConsoleListener();
-
-  // Perform default browser checking.
-  checkForDefaultBrowser();
 }
 
 function Shutdown()
