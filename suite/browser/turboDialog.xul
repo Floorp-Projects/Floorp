@@ -78,7 +78,7 @@
       <!-- checkbox -->
       <hbox align="start">
         <checkbox id="showAgain" label="&exitWarningCheckbox.label;"
-                  accesskey="&exitWarningCheckbox.accesskey;" checked="true"/>
+                  accesskey="&exitWarningCheckbox.accesskey;"/>
       </hbox>
     </vbox>
   </hbox>
