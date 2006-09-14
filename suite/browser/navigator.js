@@ -692,6 +692,7 @@ function OpenBookmarkURL(node, datasources)
 
 function OpenSearch(tabName, forceDialogFlag, searchStr)
 {
+  //This function needs to be split up someday.
   var autoOpenSearchPanel = false;
   var defaultSearchURL = null;
   var fallbackDefaultSearchURL = gNavigatorRegionBundle.getString("fallbackDefaultSearchURL");
@@ -699,6 +700,11 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
   //     till we figure out why. See bug 61886.
   // var url = getWebNavigation().currentURI.spec;
   var url = _content.location.href;
+
+  //Check to see if search string contains "://" or ".". 
+  //If it does treat as url and match for pattern
+  var urlmatch= /:\/\/|\./ ;
+  var result = urlmatch.test(searchStr);
 
   try {
     autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
@@ -709,14 +715,24 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
   // Fallback to a default url (one that we can get sidebar search results for)
   if (!defaultSearchURL)
     defaultSearchURL = fallbackDefaultSearchURL;
+  
+  //Check to see if content url equals url in location bar.
+  //If they match then go to default search URL engine
 
-  if (!searchStr || searchStr == url) {
-    if (defaultSearchURL != fallbackDefaultSearchURL)
+  if ((!searchStr || searchStr == url)) {
+  if (defaultSearchURL != fallbackDefaultSearchURL)
       loadURI(defaultSearchURL);
     else
       loadURI(gNavigatorRegionBundle.getString("otherSearchURL"));
 
   } else {
+  
+  //Check to see if location bar field is a url
+  //If it is a url go to URL.  A Url is "://" or "." as commented above
+  //Otherwise search on entry
+  if (result) {
+     BrowserLoadURL()
+   } else {
     var searchMode = 0;
     try {
       searchMode = pref.GetIntPref("browser.search.powermode");
@@ -746,18 +762,18 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
                                  .getService(Components.interfaces.nsIInternetSearchService);
 
         searchDS.RememberLastSearchText(escapedSearchStr);
-
         try {
           var searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
-          if (searchEngineURI) {
+		  if (searchEngineURI) {
             var searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr);
-            if (searchURL)
+          if (searchURL)
               defaultSearchURL = searchURL;
           }
         } catch (ex) {
         }
-        loadURI(defaultSearchURL);
+		loadURI(defaultSearchURL);
       }
+     } 
     }
   }
 
