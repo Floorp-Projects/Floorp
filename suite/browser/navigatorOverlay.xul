@@ -333,10 +333,19 @@ END of Deprecated -->
        	    <menuitem id="simpleSearch" type="radio" value="&simpleMode.label;" oncommand="setBrowserSearchMode(0);" />
        	    <menuitem id="advancedSearch" type="radio" value="&advancedMode.label;" oncommand="setBrowserSearchMode(1);" />
        	  </menupopup>
-       	</menu>
+       </menu>
      </menupopup>
    </menu>
   
+  <menu accesskey="&goMenu.accesskey;" id="gomenu" value="&goMenu.label;" oncommand="gotoHistoryIndex(event);">
+	  <menupopup oncreate="updateGoMenu(event);">
+		  <menuitem id="menuitem-back" value="&goBackCmd.label;" accesskey="&goBackCmd.accesskey;"  key="goBackKb" observes="canGoBack"/>
+		  <menuitem id="menuitem-forward" value="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;"  key="goForwardKb" observes="canGoForward" />
+		  <menuitem id="menuitem-home" accesskey="&goHomeCmd.accesskey;" key="goHomeKb" observes="Browser:Home"/>
+		  <menuseparator />
+	  </menupopup>
+  </menu>       
+
       <menu accesskey="&bookmarksMenu.accesskey;" value="&bookmarksMenu.label;"
                            datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" id="BookmarksMenu" ref="NC:BookmarksRoot">
 		<template>
