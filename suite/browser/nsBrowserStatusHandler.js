@@ -256,10 +256,21 @@ nsBrowserStatusHandler.prototype =
           var location = aRequest.QueryInterface(nsIChannel).URI.spec;
           var msg = "";
           if (location != "about:blank") {
-            // Record page loading time.
-            var elapsed = ((new Date()).getTime() - this.startTime) / 1000;
-            msg = gNavigatorBundle.getString("nv_done");
-            msg = msg.replace(/%elapsed%/, elapsed);
+            const kErrorBindingAborted = 2152398850;
+            const kErrorNetTimeout = 2152398862;
+            switch (aStatus) {
+              case kErrorBindingAborted:
+                msg = gNavigatorBundle.getString("nv_stopped");
+                break;
+              case kErrorNetTimeout:
+                msg = gNavigatorBundle.getString("nv_timeout");
+                break;
+              default:
+                // Record page loading time.
+                var elapsed = ((new Date()).getTime() - this.startTime) / 1000;
+                msg = gNavigatorBundle.getString("nv_done");
+                msg = msg.replace(/%elapsed%/, elapsed);
+            }
           }
           this.status = "";
           this.setDefaultStatus(msg);
