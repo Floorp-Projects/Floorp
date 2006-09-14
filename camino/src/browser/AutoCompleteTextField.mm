@@ -283,6 +283,11 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
   [self rightMouseDown:theEvent];
 }
 
+- (void)resetCursorRects
+{
+  [self addCursorRect:[self bounds] cursor:[NSCursor arrowCursor]];
+}
+
 @end
 
 #pragma mark -
