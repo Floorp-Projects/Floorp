@@ -71,7 +71,7 @@
 <!ENTITY helpButton.label "Help">
 <!ENTITY searchButton.label "Search">
 
-<!ENTITY authorButton.label "Authors">
+<!ENTITY authorButton.label "Author(s)">
 <!ENTITY copyrightButton.label "Copyright">
 
 <!ENTITY bookmarkButton.label "Bookmarks">
