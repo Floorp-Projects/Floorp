@@ -282,6 +282,7 @@
 <!ENTITY browserbuster.label "chofmann's browser buster">
 <!ENTITY editor-test-page.label "Composer with test page">
 <!ENTITY install-psm.label "Install PSM">
+<!ENTITY flush-memory.label "Flush Memory">
 <!-- LOCALIZATION NOTE END : DO not localize the entities above; debug --> 
 
 <!-- LOCALIZATION NOTE BEGIN : DO not localize the entities below; test case --> 
