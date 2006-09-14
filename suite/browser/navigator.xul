@@ -313,8 +313,6 @@ Contributor(s): ______________________________________. -->
         <browser id="content" type="content-primary" src="about:blank"
                  flex="1" tooltip="aHTMLTooltip"
                  context="contentAreaContextMenu"
-                 onmouseover="if (throbberElement)
-                                EnableBusyCursor(throbberElement.getAttribute('busy') == 'true');"   
                  onclick="return contentAreaClick(event);"
                  ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
       </box>
