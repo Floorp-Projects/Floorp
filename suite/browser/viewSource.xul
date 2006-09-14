@@ -1,45 +1,51 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 
+<?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
+
 <!DOCTYPE window SYSTEM "chrome://navigator/locale/viewSource.dtd" >
 <window id="main-window" xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="onLoadViewSource()"
-        title="&mainWindow.title;" 
-		  titlemodifier="&mainWindow.titlemodifier;" 
-        titlepreface="&mainWindow.preface;"
-        titlemenuseparator ="&mainWindow.titlemodifierseperator;"  
-		  windowtype="Browser:view-source"
-		  align="vertical" width="640" height="480"> 
+     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	onload="onLoadViewSource()"
+	title="&mainWindow.title;" 
+	titlemodifier="&mainWindow.titlemodifier;" 
+	titlepreface="&mainWindow.preface;"
+	titlemenuseparator ="&mainWindow.titlemodifierseperator;"  
+	windowtype="Browser:view-source"
+	align="vertical" width="640" height="480"
+	screenX="10" screenY="10"
+	persist="screenX screenY width height sizemode"> 
   
-  <html:script src="chrome://navigator/content/viewsource.js"></html:script>
+
+  <script language="javascript" src="chrome://global/content/nsJSSupportsUtils.js"></script>
+  <script language="javascript" src="chrome://global/content/nsJSComponentManager.js"></script>
+  <script language="javascript" src="chrome://global/content/nsTransferable.js"></script>
+  <script language="javascript" src="chrome://global/content/nsDragAndDrop.js"></script>
+
+  <script language="javascript" src="chrome://navigator/content/viewSourceDD.js"></script>
+  <script language="javascript" src="chrome://navigator/content/viewsource.js"></script>
+
+  <broadcasterset id="broadcasterset"/>
+
+	<commands id="commands">
+		<commandset id="globalEditMenuItems"/>
+		<commandset id="selectEditMenuItems"/>
+		<commandset id="undoEditMenuItems"/>
+		<commandset id="clipboardEditMenuItems"/>
+	</commands>
+
+  <!-- keys are appended from the overlay -->
+  <keyset id="keyset"/>
 
   <!-- Menu -->
   
-  <iframe id="content-frame" type="content-primary" name="content" src="about:blank" flex="100%"/>
+    <box id="appcontent" align="vertical" flex="1"
+      ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
+      ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);">
 
-  <!--
-  <box align="horizontal" id="status-bar">
- 
-	<box id="security-box" class="insecure" align="horizontal" flex="100%">
-		<box align="vertical" style="width:100px">
-			<spring flex="100%"/>
-			<progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()">
-				<observes element="Browser:LoadingProgress" attribute="mode"/>
-				<observes element="Browser:Throbber" attribute="busy" onbroadcast="onProgress()"/>
-			</progressmeter>
-			<spring flex="100%"/>
-		</box>
+      <iframe id="content-frame" type="content-primary" name="content" src="about:blank" flex="1"/>
 
-		<titledbutton id="statusText" align="right" flex="100%" value="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
-					   <observes element="Browser:Status" attribute="value" onbroadcast="onStatus()"/>			
-		</titledbutton>
-
-		<spring flex="100%"/>		
-
-		<titledbutton align="right" value="Build ID: 2000020608" style="font-family:sans-serif;font-size:2.5mm;"/>
-     </box>
   </box>
-  -->
- 
+
 </window>

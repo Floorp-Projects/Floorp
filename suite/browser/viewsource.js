@@ -45,7 +45,7 @@ function onLoadViewSource()
     }
 
     catch(ex) {
-          dump("*** Failed to SetDocumentCharset...\n");
+        dump("*** Failed to SetDocumentCharset...\n");
     }
 
     webNav.loadURI(window.arguments[0]);
@@ -55,11 +55,43 @@ function onLoadViewSource()
 
 function createBrowserInstance()
 {
-    appCore = Components
-                .classes[ "component://netscape/appshell/component/browser/instance" ]
-                  .createInstance( Components.interfaces.nsIBrowserInstance );
-    if ( !appCore ) {
-        alert( "Error creating browser instance\n" );
+  appCore = Components
+    .classes[ "component://netscape/appshell/component/browser/instance" ]
+    .createInstance( Components.interfaces.nsIBrowserInstance );
+  if ( !appCore ) {
+    dump("Error creating browser instance\n");
+  }
+}
+
+function BrowserClose()
+{
+  window.close();
+}
+
+function BrowserFind()
+{
+  if (appCore) {
+    appCore.find();      
+  } else {
+    dump("BrowserAppCore has not been created!\n");
+  }
+}
+
+
+function BrowserFindAgain()
+{
+  if (appCore) {
+    appCore.findNext();      
+  } else {
+    dump("BrowserAppCore has not been created!\n");
+  }
+}
+
+  function BrowserSelectAll() {
+    if (appCore != null) {
+        appCore.selectAll();
+    } else {
+        dump("BrowserAppCore has not been created!\n");
     }
   }
 
