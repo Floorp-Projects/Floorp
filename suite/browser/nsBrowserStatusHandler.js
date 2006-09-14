@@ -141,6 +141,11 @@ nsBrowserStatusHandler.prototype =
     }
   },
 
+  onLinkIconAvailable : function(aHref) {
+    if (gProxyFavIcon)
+      gProxyFavIcon.setAttribute("src", aHref);
+  },
+
   onProgressChange : function (aWebProgress, aRequest,
                                aCurSelfProgress, aMaxSelfProgress,
                                aCurTotalProgress, aMaxTotalProgress)
@@ -261,7 +266,7 @@ nsBrowserStatusHandler.prototype =
     // Do not update urlbar if there was a subframe navigation
     if (domWindow == domWindow.top) {
       this.urlBar.value = location;
-      SetPageProxyState("valid");
+      SetPageProxyState("valid", aLocation);
     }
     UpdateBackForwardButtons();
   },
