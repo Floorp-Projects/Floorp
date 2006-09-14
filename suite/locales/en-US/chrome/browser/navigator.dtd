@@ -41,6 +41,13 @@
 <!ENTITY printCmd.accesskey "p">
 <!ENTITY printCmd.commandkey "p">
 
+<!ENTITY cutCmd.label "Cut">
+<!ENTITY cutCmd.accesskey "u">
+<!ENTITY copyCmd.label "Copy">
+<!ENTITY copyCmd.accesskey "c">
+<!ENTITY pasteCmd.label "Paste">
+<!ENTITY pasteCmd.accesskey "p">
+
 <!ENTITY viewMenu.label "View">
 <!ENTITY toolbarsCmd.label "Toolbars">
 <!ENTITY navbarCmd.label "Navigation Toolbar">
@@ -119,8 +126,10 @@
 <!ENTITY searchMenu.label "Search">
 <!ENTITY findOnCmd.label "Find on this Page...">
 <!ENTITY findOnCmd.accesskey "f">
+<!ENTITY findOnCmd.commandkey "f">
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY findAgainCmd.accesskey "g">
+<!ENTITY findAgainCmd.commandkey "g">
 <!ENTITY searchBookmarksHistoryCmd.label "Search Bookmarks/History">
 <!ENTITY searchBookmarksHistoryCmd.accesskey "b">
 <!ENTITY searchInternetCmd.label "Search the Web">
