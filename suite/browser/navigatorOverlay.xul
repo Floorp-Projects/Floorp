@@ -243,22 +243,12 @@
         <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
         <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
         <menuseparator />
-
+        
         <menuitem accesskey="&translateMenu.accesskey;" label="&translateMenu.label;" id="menuitem-translate" oncommand="Translate();"/>
-        <menu label="&webContentMenu.label;" accesskey="&webContentMenu.accesskey;">
-          <menupopup datasources="rdf:chrome"  ref="urn:mozilla:locale:root" 
-                     sortResource="http://www.mozilla.org/rdf/chrome#name"
-                     sortDirection="ascending" oncommand="selectLocale(event)">
-            <menuitem label="&downloadMore.label;" accesskey="&downloadMore.accesskey;" 
-                      oncommand="loadXURL('urn:clienturl:viewmenu:intlwebcontent');"/>
-            <menuseparator/>
-            <template>
-              <menuitem class="standard" uri="rdf:*" 
-                        label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
-                        value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
-            </template>
-          </menupopup>
-        </menu>
+        
+        <menuitem label="&webContentMenu.label;" accesskey="&webContentMenu.accesskey;" oncommand="goPreferences('pref-contentpacks.xul','chrome://content-packs/content/pref-contentpacks.xul');">
+        </menuitem>
+        
         <menu id="charsetMenu" />
 
         <menuseparator/>
