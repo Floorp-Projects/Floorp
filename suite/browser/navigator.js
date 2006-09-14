@@ -214,7 +214,7 @@ function nsButtonPrefListener()
 nsButtonPrefListener.prototype =
 {
   domain: "browser.toolbars.showbutton",
-  Observe: function(subject, topic, prefName)
+  observe: function(subject, topic, prefName)
   {
     // verify that we're changing a button pref
     if (topic != "nsPref:changed") return;

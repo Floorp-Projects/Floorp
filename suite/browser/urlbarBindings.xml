@@ -26,7 +26,7 @@
         ({
           urlbar: this,
           
-          Observe: function(aObserver, aBlah, aPref) {
+          observe: function(aObserver, aBlah, aPref) {
             if (!aPref.indexOf("browser.urlbar"))
               this.urlbar.updatePref(aPref);
           }
@@ -116,7 +116,7 @@
         ({
           resultsPopup: this,
           
-          Observe: function(aObserver, aBlah, aPref) {
+          observe: function(aObserver, aBlah, aPref) {
             if (!aPref.indexOf("browser.search"))
               this.resultsPopup.updateEngines();
             else if (!aPref.indexOf("browser.urlbar"))
