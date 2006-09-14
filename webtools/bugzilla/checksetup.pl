@@ -36,201 +36,7 @@
 #                 A. Karl Kornel <karl@kornel.name>
 #                 Marc Schumann <wurblzap@gmail.com>
 
-=head1 NAME
-
-checksetup.pl - A do-it-all upgrade and installation script for Bugzilla.
-
-=head1 SYNOPSIS
-
- ./checksetup.pl [--help|--check-modules]
- ./checksetup.pl [SCRIPT [--verbose]] [--no-templates|-t]
- ./checksetup.pl --make-admin=user@domain.com
-
-=head1 OPTIONS
-
-=over
-
-=item F<SCRIPT>
-
-Name of script to drive non-interactive mode. This script should
-define an C<%answer> hash whose keys are variable names and the
-values answers to all the questions checksetup.pl asks. For details
-on the format of this script, do C<perldoc checksetup.pl> and look for
-the L</"RUNNING CHECKSETUP NON-INTERACTIVELY"> section.
-
-=item B<--help>
-
-Display this help text
-
-=item B<--check-modules>
-
-Only check for correct module dependencies and quit afterward.
-
-=item B<--make-admin>=username@domain.com
-
-Makes the specified user into a Bugzilla administrator. This is
-in case you accidentally lock yourself out of the Bugzilla administrative
-interface.
-
-=item B<--no-templates> (B<-t>) 
-
-Don't compile the templates at all. Existing compiled templates will 
-remain; missing compiled templates will not be created. (Used primarily
-by developers to speed up checksetup.) Use this switch at your own risk.
-
-=item B<--verbose>
-
-Output results of SCRIPT being processed.
-
-=back
-
-=head1 DESCRIPTION
-
-Hey, what's this?
-
-F<checksetup.pl> is a script that is supposed to run during 
-installation time and also after every upgrade.
-
-The goal of this script is to make the installation even easier.
-It does this by doing things for you as well as testing for problems
-in advance.
-
-You can run the script whenever you like. You SHOULD run it after
-you update Bugzilla, because it may then update your SQL table
-definitions to resync them with the code.
-
-Currently, this script does the following:
-
-=over
-
-=item * 
-
-Check for required perl modules
-
-=item * 
-
-Set defaults for local configuration variables
-
-=item * 
-
-Create and populate the F<data> directory after installation
-
-=item * 
-
-Set the proper rights for the F<*.cgi>, F<*.html>, etc. files
-
-=item * 
-
-Verify that the code can access the database server
-
-=item * 
-
-Creates the database C<bugs> if it does not exist
-
-=item * 
-
-Creates the tables inside the database if they don't exist
-
-=item * 
-
-Automatically changes the table definitions if they are from
-an older version of Bugzilla
-
-=item * 
-
-Populates the groups
-
-=item * 
-
-Puts the first user into all groups so that the system can
-be administered
-
-=item * 
-
-...And a whole lot more.
-
-=back
-
-=head1 MODIFYING CHECKSETUP
-
-There should be no need for Bugzilla Administrators to modify
-this script; all user-configurable stuff has been moved 
-into a local configuration file called F<localconfig>. When that file
-in changed and F<checksetup.pl> is run, then the user's changes
-will be reflected back into the database.
-
-Developers, however, have to modify this file at various places. To
-make this easier, there are some special tags for which one
-can search.
-
- To                                               Search for
-
- add/delete local configuration variables         --LOCAL--
- check for more required modules                  --MODULES--
- add more database-related checks                 --DATABASE--
- change the defaults for local configuration vars --DATA--
- update the assigned file permissions             --CHMOD--
- change table definitions                         --TABLE--
- add more groups                                  --GROUPS--
- add user-adjustable settings                     --SETTINGS--
- create initial administrator account             --ADMIN--
-
-Note: sometimes those special comments occur more than once. For
-example, C<--LOCAL--> is used at least 3 times in this code!  C<--TABLE-->
-is also used more than once, so search for each and every occurrence!
-
-=head2 Modifying the Database
-
-Sometimes you'll want to modify the database. In fact, that's mostly
-what checksetup does, is upgrade old Bugzilla databases to the modern
-format.
-
-If you'd like to know how to make changes to the datbase, see
-the information in the Bugzilla Developer's Guide, at:
-L<http:E<sol>E<sol>www.bugzilla.orgE<sol>docsE<sol>developer.html#sql-schema>
-
-Also see L<Bugzilla::DB/"Schema Modification Methods"> and 
-L<Bugzilla::DB/"Schema Information Methods">.
-
-=head1 RUNNING CHECKSETUP NON-INTERACTIVELY
-
-To operate checksetup non-interactively, run it with a single argument
-specifying a filename that contains the information usually obtained by
-prompting the user or by editing localconfig.
-
-The format of that file is as follows:
-
- $answer{'db_host'}   = 'localhost';
- $answer{'db_driver'} = 'mydbdriver';
- $answer{'db_port'}   = 0;
- $answer{'db_name'}   = 'mydbname';
- $answer{'db_user'}   = 'mydbuser';
- $answer{'db_pass'}   = 'mydbpass';
-
- $answer{'urlbase'} = 'http://bugzilla.mydomain.com/';
-
- (Any localconfig variable or parameter can be specified as above.)
-
- $answer{'ADMIN_EMAIL'} = 'myadmin@mydomain.net';
- $answer{'ADMIN_PASSWORD'} = 'fooey';
- $answer{'ADMIN_REALNAME'} = 'Joel Peshkin';
-
- $answer{'SMTP_SERVER'} = 'mail.mydomain.net';
-
-Note: Only information that supersedes defaults from C<LocalVar()>
-function calls needs to be specified in this file.
-
-=head1 SEE ALSO
-
-L<Bugzilla::Install::Requirements>,
-L<Bugzilla::Install::Localconfig>,
-L<Bugzilla::Install::Filesystem>,
-L<Bugzilla::Install::DB>,
-L<Bugzilla::Install>,
-L<Bugzilla::Config/update_params>, and
-L<Bugzilla::DB/CONNECTION>
-
-=cut
+# This file has detailed POD docs, do "perldoc checksetup.pl" to see them.
 
 ######################################################################
 # Initialization
@@ -241,7 +47,6 @@ use 5.008;
 use File::Basename;
 use Getopt::Long qw(:config bundling);
 use Pod::Usage;
-use POSIX ();
 use Safe;
 
 BEGIN { chdir dirname($0); }
@@ -284,23 +89,10 @@ pod2usage({-verbose => 1, -exitval => 1}) if $switch{'help'};
 # Read in the "answers" file if it exists, for running in 
 # non-interactive mode.
 our %answer = %{read_answers_file()};
+
 my $silent = scalar(keys %answer) && !$switch{'verbose'};
 
-# Display version information
-unless ($silent) {
-    printf "\n* This is Bugzilla " . BUGZILLA_VERSION . " on perl %vd\n",
-           $^V;
-    my @os_details = POSIX::uname;
-    # 0 is the name of the OS, 2 is the major version,
-    my $os_name = $os_details[0] . ' ' . $os_details[2];
-    if (ON_WINDOWS) {
-        require Win32;
-        $os_name = Win32::GetOSName();
-    }
-    # 3 is the minor version.
-    print "* Running on $os_name $os_details[3]\n"
-}
-
+display_version_and_os() unless $silent;
 # Check required --MODULES--
 my $module_results = check_requirements(!$silent);
 exit if !$module_results->{pass};
@@ -324,18 +116,6 @@ $::ENV{'PATH'} = $env;
 require Bugzilla::Config;
 import Bugzilla::Config qw(:admin);
 
-require Bugzilla::User::Setting;
-import Bugzilla::User::Setting qw(add_setting);
-
-require Bugzilla::Util;
-import Bugzilla::Util qw(bz_crypt trim html_quote is_7bit_clean
-                         clean_text url_quote);
-
-require Bugzilla::User;
-
-require Bugzilla::Bug;
-import Bugzilla::Bug qw(is_open_state);
-
 require Bugzilla::Install::Localconfig;
 import Bugzilla::Install::Localconfig qw(update_localconfig);
 
@@ -343,7 +123,6 @@ require Bugzilla::Install::Filesystem;
 import Bugzilla::Install::Filesystem qw(update_filesystem create_htaccess
                                         fix_all_file_permissions);
 require Bugzilla::Install::DB;
-
 require Bugzilla::DB;
 require Bugzilla::Template;
 require Bugzilla::Field;
@@ -372,14 +151,8 @@ Bugzilla::DB::bz_create_database() if $lc_hash->{'db_check'};
 
 # now get a handle to the database:
 my $dbh = Bugzilla->dbh;
-
-###########################################################################
-# Create tables
-###########################################################################
-
-# Note: --TABLE-- definitions are now in Bugzilla::DB::Schema.
+# Create the tables, and do any database-specific schema changes.
 $dbh->bz_setup_database();
-
 # Populate the tables that hold the values for the <select> fields.
 $dbh->bz_populate_enum_tables();
 
@@ -411,10 +184,8 @@ fix_all_file_permissions(!$silent);
 # Check GraphViz setup
 ###########################################################################
 
-#
 # If we are using a local 'dot' binary, verify the specified binary exists
 # and that the generated images are accessible.
-#
 check_graphviz(!$silent) if Bugzilla->params->{'webdotbase'};
 
 ###########################################################################
@@ -465,19 +236,265 @@ Bugzilla::Install::create_default_product();
 
 # Check if the default parameter for urlbase is still set, and if so, give
 # notification that they should go and visit editparams.cgi 
-
-my @params = Bugzilla::Config::Core::get_param_list();
-my $urlbase_default = '';
-foreach my $item (@params) {
-    next unless $item->{'name'} eq 'urlbase';
-    $urlbase_default = $item->{'default'};
-    last;
+if (Bugzilla->params->{'urlbase'} eq '') {
+    print "\n" . Bugzilla::Install::get_text('install_urlbase_default') . "\n"
+        unless $silent;
 }
 
-if (Bugzilla->params->{'urlbase'} eq $urlbase_default) {
-    print "Now that you have installed Bugzilla, you should visit the \n" .
-          "'Parameters' page (linked in the footer of the Administrator \n" .
-          "account) to ensure it is set up as you wish - this includes \n" .
-          "setting the 'urlbase' option to the correct url.\n" unless $silent;
-}
-################################################################################
+__END__
+
+=head1 NAME
+
+checksetup.pl - A do-it-all upgrade and installation script for Bugzilla.
+
+=head1 SYNOPSIS
+
+ ./checksetup.pl [--help|--check-modules]
+ ./checksetup.pl [SCRIPT [--verbose]] [--no-templates|-t]
+                 [--make-admin=user@domain.com]
+
+=head1 OPTIONS
+
+=over
+
+=item F<SCRIPT>
+
+Name of script to drive non-interactive mode. This script should
+define an C<%answer> hash whose keys are variable names and the
+values answers to all the questions checksetup.pl asks. For details
+on the format of this script, do C<perldoc checksetup.pl> and look for
+the L</"RUNNING CHECKSETUP NON-INTERACTIVELY"> section.
+
+=item B<--help>
+
+Display this help text
+
+=item B<--check-modules>
+
+Only check for correct module dependencies and quit afterward.
+
+=item B<--make-admin>=username@domain.com
+
+Makes the specified user into a Bugzilla administrator. This is
+in case you accidentally lock yourself out of the Bugzilla administrative
+interface.
+
+=item B<--no-templates> (B<-t>)
+
+Don't compile the templates at all. Existing compiled templates will
+remain; missing compiled templates will not be created. (Used primarily
+by developers to speed up checksetup.) Use this switch at your own risk.
+
+=item B<--verbose>
+
+Output results of SCRIPT being processed.
+
+=back
+
+=head1 DESCRIPTION
+
+Hey, what's this?
+
+F<checksetup.pl> is a script that is supposed to run during
+installation time and also after every upgrade.
+
+The goal of this script is to make the installation even easier.
+It does this by doing things for you as well as testing for problems
+in advance.
+
+You can run the script whenever you like. You MUST run it after
+you update Bugzilla, because it will then update your SQL table
+definitions to resync them with the code.
+
+You can see all the details of what the script does at
+L</How Checksetup Works>.
+
+=head1 MODIFYING CHECKSETUP
+
+There should be no need for Bugzilla Administrators to modify
+this script; all user-configurable stuff has been moved
+into a local configuration file called F<localconfig>. When that file
+in changed and F<checksetup.pl> is run, then the user's changes
+will be reflected back into the database.
+
+However, developers often need to modify the installation process.
+This section explains how F<checksetup.pl> works, so that you
+know the right part to modify.
+
+=head2 How Checksetup Works
+
+F<checksetup.pl> runs through several stages during installation:
+
+=over
+
+=item 1
+
+Checks if the required and optional perl modules are installed,
+using L<Bugzilla::Install::Requirements/check_requirements>.
+
+=item 2
+
+Creates or updates the F<localconfig> file, using
+L<Bugzilla::Install::Localconfig/update_localconfig>.
+
+=item 3
+
+Checks the DBD and database version, using
+L<Bugzilla::DB/bz_check_requirements>.
+
+=item 4
+
+Creates the Bugzilla database if it doesn't exist, using
+L<Bugzilla::DB/bz_create_database>.
+
+=item 5
+
+Creates all of the tables in the Bugzilla database, using
+L<Bugzilla::DB/bz_setup_database>.
+
+Note that all the table definitions are stored in
+L<Bugzilla::DB::Schema/ABSTRACT_SCHEMA>.
+
+=item 6
+
+Puts the values into the enum tables (like C<resolution>, C<bug_status>,
+etc.) using L<Bugzilla::DB/bz_populate_enum_tables>.
+
+=item 7
+
+Creates any files that Bugzilla needs but doesn't ship with, using
+L<Bugzilla::Install::Filesystem/update_filesystem>.
+
+=item 8
+
+Creates the F<.htaccess> files if you haven't specified not to
+in F<localconfig>. It does this with
+L<Bugzilla::Install::Filesystem/create_htaccess>.
+
+=item 9
+
+Updates the system parameters (stored in F<data/params>), using
+L<Bugzilla::Config/update_params>.
+
+=item 10
+
+Pre-compiles all templates, to improve the speed of Bugzilla.
+It uses L<Bugzilla::Template/precompile_templates> to do this.
+
+=item 11
+
+Fixes all file permissions to be secure. It does this differently depending
+on whether or not you've specified C<$webservergroup> in F<localconfig>.
+
+The function that does this is
+L<Bugzilla::Install::Filesystem/fix_all_file_permissions>.
+
+=item 12
+
+Populates the C<fielddefs> table, using
+L<Bugzilla::Field/populate_field_definitions>.
+
+=item 13
+
+This is the major part of checksetup--updating the table definitions
+from one version of Bugzilla to another.
+
+The code for this is in L<Bugzilla::Install::DB/update_table_definitions>.
+
+=item 14
+
+Creates the system groups--the ones like C<editbugs>, C<admin>, and so on.
+This is L<Bugzilla::Install/update_system_groups>.
+
+=item 15
+
+Creates all of the user-adjustable preferences that appear on the
+"General Preferences" screen. This is L<Bugzilla::Install/update_settings>.
+
+=item 16
+
+Creates an administrator, if one doesn't already exist, using
+L<Bugzilla::Install/create_admin>.
+
+We also can make somebody an admin at this step, if the user specified
+the C<--make-admin> switch.
+
+=item 17
+
+Creates the default Classification, Product, and Component, using
+L<Bugzilla::Install/create_default_product>.
+
+=back
+
+=head2 Modifying the Database
+
+Sometimes you'll want to modify the database. In fact, that's mostly
+what checksetup does, is upgrade old Bugzilla databases to the modern
+format.
+
+If you'd like to know how to make changes to the datbase, see
+the information in the Bugzilla Developer's Guide, at:
+L<http://www.bugzilla.org/docs/developer.html#sql-schema>
+
+Also see L<Bugzilla::DB/"Schema Modification Methods"> and
+L<Bugzilla::DB/"Schema Information Methods">.
+
+=head1 RUNNING CHECKSETUP NON-INTERACTIVELY
+
+To operate checksetup non-interactively, run it with a single argument
+specifying a filename that contains the information usually obtained by
+prompting the user or by editing localconfig.
+
+The format of that file is as follows:
+
+ $answer{'db_host'}   = 'localhost';
+ $answer{'db_driver'} = 'mydbdriver';
+ $answer{'db_port'}   = 0;
+ $answer{'db_name'}   = 'mydbname';
+ $answer{'db_user'}   = 'mydbuser';
+ $answer{'db_pass'}   = 'mydbpass';
+
+ $answer{'urlbase'} = 'http://bugzilla.mydomain.com/';
+
+ (Any localconfig variable or parameter can be specified as above.)
+
+ $answer{'ADMIN_EMAIL'} = 'myadmin@mydomain.net';
+ $answer{'ADMIN_PASSWORD'} = 'fooey';
+ $answer{'ADMIN_REALNAME'} = 'Joel Peshkin';
+
+ $answer{'SMTP_SERVER'} = 'mail.mydomain.net';
+
+=head1 SEE ALSO
+
+=over
+
+=item *
+
+L<Bugzilla::Install::Requirements>
+
+=item *
+
+L<Bugzilla::Install::Localconfig>
+
+=item *
+
+L<Bugzilla::Install::Filesystem>
+
+=item *
+
+L<Bugzilla::Install::DB>
+
+=item *
+
+L<Bugzilla::Install>
+
+=item *
+
+L<Bugzilla::Config/update_params>
+
+=item *
+
+L<Bugzilla::DB/CONNECTION>
+
+=back
+

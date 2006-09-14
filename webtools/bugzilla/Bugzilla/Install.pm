@@ -375,7 +375,8 @@ sub get_text {
     my $message;
     $template->process('global/message.txt.tmpl', $vars, \$message)
         || ThrowTemplateError($template->error());
-    $message =~ s/^\s+//gm;
+    # Remove the indenting that exists in messages.html.tmpl.
+    $message =~ s/^    //gm;
     return $message;
 }
 

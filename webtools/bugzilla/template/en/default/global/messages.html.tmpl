@@ -282,6 +282,12 @@
     Either this is your first time using [% terms.Bugzilla %], or your
     administrator's privileges might have accidentally been deleted.
 
+  [% ELSIF message_tag == "install_urlbase_default" %]
+    Now that you have installed [% terms.Bugzilla %], you should visit the
+    'Parameters' page (linked in the footer of the Administrator
+    account) to ensure it is set up as you wish - this includes
+    setting the 'urlbase' option to the correct url.
+
   [% ELSIF message_tag == "product_invalid" %]
     [% title = "$terms.Bugzilla Component Descriptions" %]
     The product <em>[% product FILTER html %]</em> does not exist
