@@ -284,7 +284,7 @@
                      label="&bookmarksButton.label;"
                      datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
                      ref="NC:BookmarksRoot" container="true" flags="dont-test-empty"
-                     oncommand="BookmarksMenu.loadBookmark(event.target, this.database)" 
+                     oncommand="BookmarksMenu.loadBookmark(event, this.database)" 
                      template="bookmarksMenuTemplate"
                      ondraggesture="if (event.target.id=='bookmarks-button') event.preventBubble()">
         <menupopup onpopupshowing="updateGroupmarkMenuitem('PT_bookmarks_groupmark');">
@@ -302,7 +302,8 @@
             context="bookmarks-context-menu" template="bookmarksMenuTemplate"
             datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
             ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
-            oncommand="BookmarksMenu.loadBookmark(event.target, this.database)"
+            oncommand="BookmarksUtils.loadBookmarkBrowser(event, this.database)"
+            onclick="if (event.button == 1) BookmarksUtils.loadBookmarkBrowser(event, this.database)"
             rdf:type="http://home.netscape.com/NC-rdf#Folder">
       </hbox>
       <hbox class="bookmarks-toolbar-overflow-items" mousethrough="always">
@@ -312,7 +313,7 @@
                        datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
                        template="bookmarksMenuTemplate" 
                        ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
-                       oncommand="BookmarksUtils.loadBookmarkBrowser(event, event.target, this.database)">
+                       oncommand="BookmarksUtils.loadBookmarkBrowser(event, this.database)">
           <menupopup id="bookmarks-chevron-popup"
                      onpopupshowing="if (event.target == this) BookmarksToolbar.updateOverflowMenu(this);"/>
         </toolbarbutton>
