@@ -473,7 +473,7 @@ nsBrowserAccess.prototype = {
         return browser.contentWindow;
       default:
         if (!aOpener) {
-          loadURIWithFlags(uri, loadflags);
+          gBrowser.loadURIWithFlags(uri, loadflags);
           return content;
         }
         aOpener = new XPCNativeWrapper(aOpener, "top").top;
