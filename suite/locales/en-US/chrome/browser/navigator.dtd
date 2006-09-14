@@ -87,6 +87,7 @@
 <!ENTITY pageSourceCmd.commandkey "u">
 <!ENTITY pageInfoCmd.label "Page Info">
 <!ENTITY pageInfoCmd.accesskey "i">
+<!ENTITY pageInfoCmd.commandkey "i">
 <!ENTITY translateMenu.label "Translate">
 <!ENTITY translateMenu.accesskey "t">
 <!ENTITY translate.commandKey "t">
