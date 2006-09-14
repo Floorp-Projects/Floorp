@@ -15,9 +15,9 @@ function onLoadViewSource()
 
         // Initialize browser instance..
         appCore.setWebShellWindow(window);
-        if ( window.content ) {
+        if ( window._content ) {
             dump("Setting content window\n");
-            appCore.setContentWindow( window.content );
+            appCore.setContentWindow( window._content );
         }
     }
 
