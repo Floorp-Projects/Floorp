@@ -71,8 +71,8 @@ Contributor(s): ______________________________________. -->
 
 	<key id="key_savePage"        xulkey="true"  key="&savePageCmd.commandkey;" observes="Browser:SavePage"/>
 		
-	<key id="goForwardKb"         xulkey="true" key="&goForwardCmd.commandkey;" observes="Browser:GoForward" />
-	<key id="goBackwardKb"        xulkey="true" key="&goBackCmd.commandkey;" observes="Browser:GoBackwards" />
+	<key id="goForwardKb"         xulkey="true" key="&goForwardCmd.commandkey;" observes="Browser:Forward" />
+	<key id="goBackKb"            xulkey="true" key="&goBackCmd.commandkey;" observes="Browser:Back" />
 	<key id="goHomeKb"            xulkey="true" key="&goHomeCmd.commandkey;" observes="Browser:Home" />
     
 	<key id="addBookmarkKb"       xulkey="true" key="&addCurPageCmd.commandkey;" observes="Browser:AddBookmark" />
@@ -128,9 +128,11 @@ Contributor(s): ______________________________________. -->
 	<broadcaster id="Browser:PrintPreview"  value="&printPreviewCmd.label;" disabled="true"  oncommand="BrowserReload();"/>
 	<broadcaster id="Browser:Print"  value="&printCmd.label;"        						 oncommand="BrowserPrint();"/>
   
-	<broadcaster id="canGoBack"	disabled="true" buttonaction="BrowserBack();"/>
-	<broadcaster id="canGoForward" disabled="true" buttonaction="BrowserForward();"/>
-	<broadcaster id="Browser:Home" value="&goHomeCmd.label;" oncommand="BrowserHome();" />
+	<broadcaster id="canGoBack"	      disabled="true" buttonaction="BrowserBack();"/>
+	<broadcaster id="canGoForward"    disabled="true" buttonaction="BrowserForward();"/>
+	<broadcaster id="Browser:Back"    value="&goBackCmd.label;"    oncommand="BrowserBack();" />
+	<broadcaster id="Browser:Forward" value="&goForwardCmd.label;" oncommand="BrowserForward();" />
+	<broadcaster id="Browser:Home"    value="&goHomeCmd.label;"    oncommand="BrowserHome();" />
   
 	<broadcaster id="Browser:Find"      value="&findOnCmd.label;"            oncommand="BrowserFind();" />
 	<broadcaster id="Browser:FindAgain" value="&findAgainCmd.label;"         oncommand="BrowserFindAgain();" />	
@@ -352,7 +354,7 @@ END of Deprecated -->
 
   <menu accesskey="&goMenu.accesskey;" id="gomenu" value="&goMenu.label;" oncommand="gotoHistoryIndex(event);">
 	  <menupopup oncreate="updateGoMenu(event);">
-		  <menuitem id="menuitem-back" value="&goBackCmd.label;" accesskey="&goBackCmd.accesskey;"  key="goBackwardKb" observes="canGoBack"/>
+		  <menuitem id="menuitem-back" value="&goBackCmd.label;" accesskey="&goBackCmd.accesskey;"  key="goBackKb" observes="canGoBack"/>
 		  <menuitem id="menuitem-forward" value="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;"  key="goForwardKb" observes="canGoForward" />
 		  <menuitem id="menuitem-home" accesskey="&goHomeCmd.accesskey;" key="goHomeKb" observes="Browser:Home"/>
 		  <menuseparator />
