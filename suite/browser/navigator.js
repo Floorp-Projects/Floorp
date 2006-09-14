@@ -1555,7 +1555,10 @@ function checkForDirectoryListing()
       typeof _content.HTTPIndex == "object" &&
       !_content.HTTPIndex.constructor) {
     // Give directory .xul/.js access to browser instance.
-    _content.defaultCharacterset = getBrowser().markupDocumentViewer.defaultCharacterSet;
+    // XXX The following line leaks (bug 61821), so the next line is a hack
+    // to avoid the leak.
+    // _content.defaultCharacterset = getBrowser().markupDocumentViewer.defaultCharacterSet;
+    _content.defaultCharacterset = getBrowser().docShell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer).defaultCharacterSet;
     _content.parentWindow = window;
   }
 }
