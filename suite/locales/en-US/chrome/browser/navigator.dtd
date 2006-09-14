@@ -169,108 +169,12 @@
 <!ENTITY releaseNotesCmd.label "Release Notes">
 <!ENTITY aboutCommunicatorCmd.label "About Communicator Prototype">
 
-<!-- LOCALIZATION NOTE BEGIN : DO not localize the entities below; debug --> 
-<!ENTITY debugMenu.label "Debug">
-<!ENTITY debugMenu.accesskey "d">
-<!ENTITY debugQA.label "QA Help">
-<!ENTITY debugQABug.label "QA Help">
-<!ENTITY debugQASmoke.label "Smoke Tests">
-<!ENTITY debugQAKnowBug.label "Known Bugs">
-<!ENTITY debugVerCmd.label "Verification">
-<!ENTITY ver1Cmd.label "Mozilla">
-<!ENTITY ver2Cmd.label "Yahoo">
-<!ENTITY ver3Cmd.label "Netscape">
-<!ENTITY ver4Cmd.label "Excite">
-<!ENTITY ver5Cmd.label "Microsoft">
-<!ENTITY ver6Cmd.label "city.net">
-<!ENTITY ver7Cmd.label "Mirabilis">
-<!ENTITY ver8Cmd.label "Time">
-<!ENTITY ver9Cmd.label "Warner Bros.">
-<!ENTITY ver10Cmd.label "CNN">
-<!ENTITY ver11Cmd.label "USA Today">
-<!ENTITY ver12Cmd.label "Disney">
-<!ENTITY ver13Cmd.label "Hotwired">
-<!ENTITY ver14Cmd.label "Hotbot">
-<!ENTITY ver15Cmd.label "Frames">
-<!ENTITY ver16Cmd.label "Tables">
-<!ENTITY ver17Cmd.label "Applets">
-<!ENTITY ver18Cmd.label "JavaScript">
-<!ENTITY ver19Cmd.label "GIF Images">
-<!ENTITY ver20Cmd.label "JPEG Images">
-<!ENTITY ver21Cmd.label "PNG Images">
-<!ENTITY ver22Cmd.label "Transparency">
-<!ENTITY ver23Cmd.label "Animation">
-<!ENTITY ver24Cmd.label "Larger page">
-<!ENTITY ver25Cmd.label "Smaller page">
-<!-- LOCALIZATION NOTE END : DO not localize the entities above; debug --> 
-
-<!-- LOCALIZATION NOTE BEGIN : DO not localize the entities below; debug --> 
-<!ENTITY viewDemoMenu.label "Viewer Demos">
-<!ENTITY demo0Cmd.label "#0 Basic Styles">
-<!ENTITY demo1Cmd.label "#1 CSS Styles">
-<!ENTITY demo2Cmd.label "#2 Images">
-<!ENTITY demo3Cmd.label "#3 Basic Tables">
-<!ENTITY demo4Cmd.label "#4 Simple Tables">
-<!ENTITY demo5Cmd.label "#5 More Styles">
-<!ENTITY demo6Cmd.label "#6 Deeply Nested Tables">
-<!ENTITY demo7Cmd.label "#7 Scaled Anim Image">
-<!ENTITY demo8Cmd.label "#8 Form">
-<!ENTITY demo9Cmd.label "#9 Frames">
-<!ENTITY demo10Cmd.label "#10 Anim Images">
-<!ENTITY demo11Cmd.label "#11 Fixed Positioning">
-<!ENTITY demo12Cmd.label "#12 More Fixed Pos">
-<!ENTITY demo13Cmd.label "#13 DHTML">
-<!ENTITY demo14Cmd.label "#14 XML Sorting">
-<!ENTITY demo15Cmd.label "#15 XML IRS">
-<!ENTITY demo16Cmd.label "#16 Gfx Widgets">
-<!-- LOCALIZATION NOTE END : DO not localize the entities above; debug --> 
-
-<!-- LOCALIZATION NOTE BEGIN : DO not localize the entities below; debug --> 
-<!ENTITY xptkMenu.label "XPToolkit">
-<!ENTITY xptk1Cmd.label "Tri-state checkbox">
-<!ENTITY xptk2Cmd.label "Toolbar">
-<!ENTITY xptk3Cmd.label "Tree">
-<!ENTITY xptk4Cmd.label "Dialog">
-<!ENTITY xptk7Cmd.label "Tab">
-<!ENTITY xptk8Cmd.label "Beep">
-<!ENTITY xptk9Cmd.label "Sound">
-<!ENTITY xptk10Cmd.label "XP Menus">
-<!ENTITY xptk11Cmd.label "Color Picker">
-<!-- LOCALIZATION NOTE END : DO not localize the entities above; debug --> 
-
-<!-- LOCALIZATION NOTE BEGIN : DO not localize the entities below; debug --> 
-<!ENTITY browserbuster.label "chofmann's browser buster">
-<!ENTITY editor-test-page.label "Composer with test page">
-<!ENTITY flush-memory.label "Flush Memory">
-<!-- LOCALIZATION NOTE END : DO not localize the entities above; debug --> 
-
 <!-- LOCALIZATION NOTE BEGIN : DO not localize the entities below; test case --> 
-<!ENTITY strresCmd.label "StringBundle Test">
 <!ENTITY languages.label "Languages">
 <!ENTITY en-US.label "English (en-US)">
 <!ENTITY da-DK-file.label "Danish (da-DK; file)">
 <!ENTITY da-DK-http.label "Danish (da-DK; http)">
 <!-- LOCALIZATION NOTE END   : DO not localize the entities above; test case --> 
-
-<!-- LOCALIZATION NOTE BEGIN : DO not localize the entities below; QA --> 
-<!ENTITY QA.label "QA">
-<!ENTITY QA.accesskey "q">
-<!ENTITY PrecheckinTests.label "Precheckin Tests">
-<!ENTITY QABugCmd.label "Bug Writing Guidelines">
-<!ENTITY QATempCmd.label "Bug Template">
-<!ENTITY QASmokeCmd.label "Smoke Tests">
-<!ENTITY QAKnownBugCmd.label "Known Bugs">
-<!ENTITY BloatDumpNewCmd.label "Bloat: Dump New Stats">
-<!ENTITY BloatDumpAllCmd.label "Bloat: Dump All Stats">
-<!ENTITY BloatClearCmd.label "Bloat: Clear Stats">
-<!ENTITY LeaksDumpLeaksCmd.label "Dump Memory Leaks">
-<!ENTITY LeaksTraceChromeCmd.label "Trace Chrome">
-<!ENTITY LeaksTraceDocumentCmd.label "Trace Document">
-<!ENTITY LeaksTraceVerboseCmd.label "Verbose">
-<!ENTITY URIDispatchingCmd.label "URI Dispatching">
-<!ENTITY URIDispatchingEnableCmd.label "Enable Dispatching">
-<!ENTITY URIDispatchingDisableCmd.label "Disable Dispatching">
-<!-- LOCALIZATION NOTE END : DO not localize the entities above; QA --> 
 
 <!ENTITY menuBar.tooltip                  "Menu Bar">
 <!ENTITY personalToolbar.tooltip          "Personal Toolbar">
@@ -303,11 +207,6 @@
 <!ENTITY  bookmarksButton.label       "Bookmarks">
 <!ENTITY  bookmarksButton.tooltip     "Bookmarks list">
 <!ENTITY  homeButton.label            "Home">
-
-<!-- LOCALIZATION NOTE (bugzillaButton.label) : DONT_TRANSLATE -->
-<!ENTITY  bugzillaButton.label        "Bugzilla">
-<!-- LOCALIZATION NOTE (tinderboxButton.label) : DONT_TRANSLATE -->
-<!ENTITY  tinderboxButton.label       "Tinderbox">
 
 <!-- Statusbar -->
 <!ENTITY  statusText.label            "Document: Done">
