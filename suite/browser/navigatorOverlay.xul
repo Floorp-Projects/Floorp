@@ -43,6 +43,7 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
 	<key id="key_newBlankPage"/>
 	<key id="openBrowserKb"     xulkey="true" key="&openCmd.commandkey;" observes="Browser:Open" />
 	<key id="openFileKb"        xulkey="true" key="&openFileCmd.commandkey;" observes="Browser:OpenFile" />
+	<key id="key_savePage"      xulkey="true"  key="&savePageCmd.commandkey;" observes="Browser:SavePage"/>
 	<key id="printKb"           xulkey="true" key="&printCmd.commandkey;" observes="Browser:Print" />
 	<key id="key_close"/>
 	<key id="key_quit"/>
@@ -59,9 +60,8 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
 	<key id="key_prefill"/>
 	<key id="key_preferences"/>
 
-	<key id="stop" keycode="VK_ESCAPE" onkeypress="BrowserStop();"/>
 
-        <!-- View Menu -->
+    <!-- View Menu -->
 	<!--
 	<key id="key_enlargeTextSize" xulkey="true"
 	     key="&enlargeTextSizeCmd.commandkey;"
@@ -70,20 +70,26 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
 	     key="&reduceTextSizeCmd.commandkey;"
 	     observes="Browser:ReduceTextSize"/>
         -->
+
 	<!-- Search Menu -->	
 	<key id="key_find"            xulkey="true"  key="&findOnCmd.commandkey;" observes="Browser:Find"/>
 	<key id="key_findAgain"       xulkey="true"  key="&findAgainCmd.commandkey;" observes="Browser:FindAgain"/>
 
-	<key id="key_savePage"        xulkey="true"  key="&savePageCmd.commandkey;" observes="Browser:SavePage"/>
-		
+	<!-- Go Menu -->		
 	<key id="goHomeKb"            alt="true" keycode="VK_HOME" observes="Browser:Home" />
 
+    <!-- Tools Menu -->
 	<key id="key_gotoHistory"     xulkey="true" shift="false" key="&history.commandKey;" onkeypress="toHistory();"/>
   
+	<!-- Bookmarks Menu -->
 	<key id="addBookmarkKb"       xulkey="true" key="&addCurPageCmd.commandkey;" observes="Browser:AddBookmark" />
 	<key id="manBookmarkKb"       xulkey="true" key="&manBookmarksCmd.commandkey;" observes="Browser:ManageBookmark" />
 
 	<!-- how to handle return, enter, tab, function keys, arrow keys, others? saari working on solution -->
+
+	<!-- Misc -->
+	<key id="stop" keycode="VK_ESCAPE" onkeypress="BrowserStop();"/>
+	
 </keyset>
 
 <!-- Broadcasters -->
@@ -152,7 +158,8 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
 	<broadcaster id="Browser:AddBookmark" value="&addCurPageCmd.label;" 	 oncommand="BrowserAddBookmark(window._content.location.href,window._content.document.title);"/>
 	<broadcaster id="Browser:ManageBookmark" value="&manBookmarksCmd.label;" oncommand="BrowserEditBookmarks();" />
 
-  <broadcaster id="Browser:SavePage" value="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" oncommand="savePage();"/>
+	<broadcaster id="Browser:SavePage" value="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" oncommand="savePage();"/>
+
 </broadcasterset>
 
 
