@@ -550,11 +550,14 @@ function Startup()
     if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0]) {
       var uriArray = window.arguments[0].toString().split('\n'); // stringify and split
       uriToLoad = uriArray.splice(0, 1)[0];
+      if (/^\s*$/.test(uriToLoad))
+        uriToLoad = "about:blank";
+
       if (uriArray.length > 0)
         window.setTimeout(function(arg) { for (var i in arg) gBrowser.addTab(arg[i]); }, 0, uriArray);
     }
     
-    if (uriToLoad && uriToLoad != "about:blank") {
+    if (uriToLoad != "about:blank") {
       gURLBar.value = uriToLoad;
       if ("arguments" in window && window.arguments.length >= 3) {
         loadURI(uriToLoad, window.arguments[2]);
@@ -1098,6 +1101,9 @@ function BrowserOpenTab()
     var handler = Components.classes['@mozilla.org/commandlinehandler/general-startup;1?type=browser']
                             .getService(Components.interfaces.nsICmdLineHandler);
     var uriToLoad = handler.defaultArgs.split("\n")[0];
+    if (/^\s*$/.test(uriToLoad))
+      uriToLoad = "about:blank";
+
     gBrowser.selectedTab = gBrowser.addTab(uriToLoad);
     var navBar = document.getElementById("nav-bar");
     if (uriToLoad == "about:blank" && !navBar.hidden && window.locationbar.visible)
