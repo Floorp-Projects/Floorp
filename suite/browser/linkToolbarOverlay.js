@@ -84,6 +84,7 @@ function(event)
     return;
 
   linkToolbarHandler.clearAllItems();
+  linkToolbarUI.deactivate();
   linkToolbarUI.fullSlowRefresh();
 }
 
