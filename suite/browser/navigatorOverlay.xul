@@ -76,9 +76,9 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
 
 	<key id="key_savePage"        xulkey="true"  key="&savePageCmd.commandkey;" observes="Browser:SavePage"/>
 		
-  <key id="goHomeKb"            alt="true" keycode="VK_HOME" observes="Browser:Home" />
+	<key id="goHomeKb"            alt="true" keycode="VK_HOME" observes="Browser:Home" />
 
-  <key id="key_gotoHistory"     xulkey="true" shift="false" key="&history.commandKey;" onkeypress="toHistory();"/>
+	<key id="key_gotoHistory"     xulkey="true" shift="false" key="&history.commandKey;" onkeypress="toHistory();"/>
   
 	<key id="addBookmarkKb"       xulkey="true" key="&addCurPageCmd.commandkey;" observes="Browser:AddBookmark" />
 	<key id="manBookmarkKb"       xulkey="true" key="&manBookmarksCmd.commandkey;" observes="Browser:ManageBookmark" />
