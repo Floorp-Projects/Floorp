@@ -107,10 +107,7 @@ function contentAreaFrameFocus()
 
 function UpdateBookmarksLastVisitedDate(event)
 {
-  // XXX This somehow causes a big leak, back to the old way
-  //     till we figure out why. See bug 61886.
-  // var url = getWebNavigation().currentURI.spec;
-  var url = _content.location.href;
+  var url = getWebNavigation().currentURI.spec;
   if (url) {
     // if the URL is bookmarked, update its "Last Visited" date
     if (!gBookmarksService)
@@ -123,7 +120,7 @@ function UpdateBookmarksLastVisitedDate(event)
 
 function HandleBookmarkIcon(iconURL, addFlag)
 {
-  var url = _content.location.href;
+  var url = getWebNavigation().currentURI.spec
   if (url) {
     // update URL with new icon reference
     if (!gBookmarksService)
@@ -136,10 +133,7 @@ function HandleBookmarkIcon(iconURL, addFlag)
 
 function UpdateInternetSearchResults(event)
 {
-  // XXX This somehow causes a big leak, back to the old way
-  //     till we figure out why. See bug 61886.
-  // var url = getWebNavigation().currentURI.spec;
-  var url = _content.location.href;
+  var url = getWebNavigation().currentURI.spec;
   if (url) {
     try {
       var autoOpenSearchPanel = 
@@ -504,11 +498,7 @@ function Translate()
 {
   var service = pref.getCharPref("browser.translation.service");
   var serviceDomain = pref.getCharPref("browser.translation.serviceDomain");
-  
-  // XXX This somehow causes a big leak, back to the old way
-  //     till we figure out why. See bug 61886.
-  // var targetURI = getWebNavigation().currentURI.spec;
-  var targetURI = _content.location.href;
+  var targetURI = getWebNavigation().currentURI.spec;
 
   // if we're already viewing a translated page, then just reload
   if (targetURI.indexOf(serviceDomain) >= 0)
@@ -1149,7 +1139,7 @@ function BrowserViewSource()
   if (focusedWindow)
     var docCharset = "charset=" + focusedWindow.document.characterSet;
 
-  BrowserViewSourceOfURL(_content.location, docCharset);
+  BrowserViewSourceOfURL(getWebNavigation().currentURI.spec, docCharset);
 }
 
 function BrowserViewSourceOfURL(url, charset)
@@ -1307,10 +1297,7 @@ if (NS_URLWIDGET_CONTRACTID in Components.classes) {
 function postURLToNativeWidget()
 {
   if (urlWidgetService) {
-    // XXX This somehow causes a big leak, back to the old way
-    //     till we figure out why. See bug 61886.
-    // var url = getWebNavigation().currentURI.spec;
-    var url = _content.location.href;
+    var url = getWebNavigation().currentURI.spec;
     try {
       urlWidgetService.SetURLToHiddenControl(url, window);
     } catch(ex) {
@@ -1571,7 +1558,7 @@ function ShowAndSelectContentsOfURLBar()
 // and highlight it, unless it is about:blank, where we reset it to "".
 function handleURLBarRevert()
 {
-  var url = _content.location.href;
+  var url = getWebNavigation().currentURI.spec;
   var throbberElement = document.getElementById("navigator-throbber");
 
   var isScrolling = gURLBar.userAction == "scrolling";
