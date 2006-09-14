@@ -35,7 +35,7 @@ try {
 function onLoadViewSource() 
 {
   viewSource(window.arguments[0]);
-  window._content.focus();
+  document.commandDispatcher.focusedWindow = content;
 }
 
 function getBrowser()
