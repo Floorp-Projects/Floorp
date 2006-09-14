@@ -210,7 +210,7 @@ function GetPrintSettings(webBrowserPrint)
       }
     }
   } catch (e) {
-    alert("GetPrintSettings "+e);
+    dump("GetPrintSettings "+e);
   }
 
   return gPrintSettings;
@@ -269,7 +269,7 @@ function BrowserPrintSetup()
     }
 
   } catch (e) {
-    alert("BrowserPrintSetup "+e);
+    dump("BrowserPrintSetup "+e);
   }
 }
 
