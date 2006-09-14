@@ -285,7 +285,7 @@ oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/p
       <menuitem id="menuitem-back"    label="&goBackCmd.label;"    accesskey="&goBackCmd.accesskey;"    observes="Browser:Back"    key="goBackKb"/>
       <menuitem id="menuitem-forward" label="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;" observes="Browser:Forward" key="goForwardKb"/>
       <menuitem id="menuitem-home"    label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    observes="Browser:Home" key="goHome"/>
-      <menuseparator />
+      <menuseparator hidden="true"/>
     </menupopup>
   </menu>       
 
