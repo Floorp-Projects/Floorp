@@ -1,0 +1,24 @@
+<!ENTITY caption.label         "Element properties">
+<!ENTITY sec-document.label    "Document properties">
+<!ENTITY document-url.label    "Location:">
+<!ENTITY document-title.label  "Title:">
+<!ENTITY sec-link.label        "Link properties">
+<!ENTITY link-url.label        "Address:">
+<!ENTITY link-lang.label       "Target language:">
+<!ENTITY link-type.label       "Target type:">
+<!ENTITY link-rel.label        "Relation:">
+<!ENTITY link-rev.label        "Reversed relation:">
+<!ENTITY link-target.label     "Will open in:">
+<!ENTITY sec-image.label       "Image properties">
+<!ENTITY image-url.label       "Location:">
+<!ENTITY image-desc.label      "Description:">
+<!ENTITY sec-insdel.label      "Insert/Delete properties">
+<!ENTITY insdel-cite.label     "Info:">
+<!ENTITY insdel-date.label     "Date:">
+<!ENTITY sec-quote.label       "Quote properties">
+<!ENTITY quote-cite.label      "Info:">
+<!ENTITY sec-misc.label        "Miscellaneus properties">
+<!ENTITY misc-title.label      "Text title:">
+<!ENTITY misc-lang.label       "Text language:">
+<!ENTITY misc-tblsummary.label "Table summary:">
+
