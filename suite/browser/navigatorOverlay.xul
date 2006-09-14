@@ -191,7 +191,7 @@
         <menuitem label="&editPageCmd.label;" accesskey="&editPageCmd.accesskey;" key="key_editPage" command="Browser:EditPage" />
         <menuseparator/>
         <!-- Page setup gets inserted here on some platforms -->
-        <menuitem id="printPreviewMenuItem" label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" command="Browser:PrintPreview"/>
+        <!-- <menuitem id="printPreviewMenuItem" label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" command="Browser:PrintPreview"/> -->
         <menuitem id="printMenuItem" label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="printKb" command="Browser:Print"/>
         <menuseparator/>
         <menuitem id="offlineGoOfflineCmd"/>
