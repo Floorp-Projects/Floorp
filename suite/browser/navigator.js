@@ -2172,7 +2172,7 @@ function StatusbarViewPopupManager() {
   
   // open whitelist with site prefilled to unblock
   window.openDialog("chrome://communicator/content/popupManager.xul", "",
-                      "chrome,resizable=yes", hostPort, false);
+                      "chrome,resizable=yes", hostPort);
 }
 
 function toHistory()
