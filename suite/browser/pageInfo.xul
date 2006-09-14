@@ -87,7 +87,9 @@
       <tree id="forms_tree" class="inset" flex="1">
         <treecolgroup>
           <treecol flex="2"/>
+          <splitter class="tree-splitter"/>
           <treecol flex="1"/>
+          <splitter class="tree-splitter"/>
           <treecol flex="1"/>
         </treecolgroup>
         <treehead>
