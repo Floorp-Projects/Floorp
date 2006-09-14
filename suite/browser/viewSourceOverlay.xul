@@ -168,7 +168,7 @@
                     label="&pageInfoCmd.label;" accesskey="&pageInfoCmd.accesskey;"/>
           <menuseparator id="file_moduleSeparator"/>-->
           <menu id="charsetMenu"/>
-          <menuitem id="menu_wrapLongLines"type="checkbox" command="cmd_wrapLongLines"
+          <menuitem id="menu_wrapLongLines" type="checkbox" command="cmd_wrapLongLines"
                     label="&menu_wrapLongLines.title;" accesskey="&menu_wrapLongLines.accesskey;"/>
           <menuitem type="checkbox" command="cmd_highlightSyntax"
                     label="&menu_highlightSyntax.label;" accesskey="&menu_highlightSyntax.accesskey;"/>
