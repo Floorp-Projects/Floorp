@@ -78,7 +78,8 @@ const gButtonPrefListener =
   {
     var array = pref.getChildList(this.domain, {});
     for (var i in array)
-      this.observe(pref, "nsPref:changed", array[i]);
+      this.updateButton(array[i]);
+    this.updateSeparator();
   },
   observe: function(subject, topic, prefName)
   {
@@ -86,23 +87,22 @@ const gButtonPrefListener =
     if (topic != "nsPref:changed")
       return;
 
+    this.updateButton(prefName);
+    this.updateSeparator();
+  },
+  updateButton: function(prefName)
+  {
     var buttonName = prefName.substr(this.domain.length+1);
     var buttonId = buttonName + "-button";
     var button = document.getElementById(buttonId);
-
-    // We need to explicitly set "hidden" to "false"
-    // in order for persistence to work correctly
-    var show = pref.getBoolPref(prefName);
-    if (show)
-      button.setAttribute("hidden","false");
-    else
-      button.setAttribute("hidden", "true");
-
+    if (button)
+      button.hidden = !pref.getBoolPref(prefName);
+  },
+  updateSeparator: function()
+  {
     // If all buttons before the separator are hidden, also hide the separator
-    if (allLeftButtonsAreHidden())
-      document.getElementById("home-bm-separator").setAttribute("hidden", "true");
-    else
-      document.getElementById("home-bm-separator").removeAttribute("hidden");
+    var separator = document.getElementById("home-bm-separator");
+    separator.hidden = allLeftButtonsAreHidden();
   }
 };
 
