@@ -221,18 +221,15 @@ Contributor(s): ______________________________________. -->
   
     <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar" persist="collapsed" grippytooltiptext="&navigationBar.tooltip;">
       <box id="nav-bar-inner" autostretch="never" flex="1">
-	  <!--
-        <button class="button-toolbar-1 top" id="back-button" crop="right" observes="canGoBack"/>  
-    	  <button class="button-toolbar-1 top" id="forward-button" crop="right" observes="canGoForward"/>
-       -->
-        <menubutton class="menubutton-dual" id="back-button" crop="right" orient="vertical" observes="canGoBack" oncommand="gotoHistoryIndex(event);"
-                    value="&backButton.label;"
-                    buttontooltiptext="&backButton.tooltip;">  
+        <menubutton class="menubutton-dual toolbar" id="back-button" value="&backButton.label;" 
+                    crop="right" observes="canGoBack" oncommand="gotoHistoryIndex(event);"
+                    buttonaction="BrowserBack();" buttontooltiptext="&backButton.tooltip;">  
        	  <menupopup oncreate="BrowserBackMenu(event);"/>
     	  </menubutton>
-        <menubutton class="menubutton-dual" id="forward-button" crop="right" orient="vertical" observes="canGoForward" oncommand="gotoHistoryIndex(event);"
-                    value="&forwardButton.label;"
-                    buttontooltiptext="&forwardButton.tooltip;">  
+        <menubutton class="menubutton-dual toolbar" id="forward-button" 
+                    crop="right" orient="vertical" observes="canGoForward" 
+                    oncommand="gotoHistoryIndex(event);" buttonaction="BrowserForward();"
+                    value="&forwardButton.label;" buttontooltiptext="&forwardButton.tooltip;">  
       	  <menupopup oncreate="BrowserForwardMenu(event);"/>
     	  </menubutton>
         <button class="button-toolbar-1 top" id="reload-button" crop="right" observes="canReload" value="&reloadButton.label;" tooltiptext="&reloadButton.tooltip;"/>
@@ -240,26 +237,25 @@ Contributor(s): ______________________________________. -->
     
         <box class="box-toolbar-group" flex="1">
           <menubutton class="menubutton-icon button-toolbar-3" id="ubhist-keyword-popup" tooltiptext="&internetKeyword.tooltip;">
-           <menupopup class="button-toolbar-3" oncreate="CreateUBHistoryMenu(event);" oncommand="ExecuteUBCommand(event);">
-       <!--       <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&quoteKeyword.label;" keyword="quote"/>
+            <menupopup class="button-toolbar-3" oncreate="CreateUBHistoryMenu(event);" oncommand="ExecuteUBCommand(event);">
+              <!--       
+              <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&quoteKeyword.label;" keyword="quote"/>
               <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&localKeyword.label;" keyword="local"/>
               <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&shopKeyword.label;" keyword="shop"/>
               <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&careerKeyword.label;" keyword="career"/>
               <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&webmailKeyword.label;" keyword="webmail"/>
               <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&listKeywords.label;" keyword="list"/>                 
-              <menuseparator/>  -->
+              <menuseparator/>  
+              -->
             </menupopup>
           </menubutton>
 
          
           <box autostretch="never" valign="middle" flex="1">
       			<image id="page-proxy-button" ondraggesture="DragProxyIcon(event);"/> 
-           <!--<textfield class="plain chromeclass-location" id="urlbar" flex="1"
-                       onkeypress="if( event.which == 13 ) { AddToUrlbarHistory(); BrowserLoadURL(); }"
-                       tooltiptext="&locationBar.tooltip;"/> -->
-			<textfield autocomplete="false" timeout="300" class="plain chromeclass-location" 
-		 	 searchSessionType="urlbar" id="urlbar" tooltiptext="&locationBar.tooltip;"
-			 onkeypress="if( event.which == 13 ) { AddToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>  
+			      <textfield autocomplete="false" timeout="300" class="plain chromeclass-location" 
+		 	                 searchSessionType="urlbar" id="urlbar" tooltiptext="&locationBar.tooltip;"
+			                 onkeypress="if( event.which == 13 ) { AddToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>  
             <button class="button-toolbar-3" id="search-button" value="&searchButton.label;" 
                     oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
                     tooltiptext="&searchButton.tooltip;"/> 
@@ -271,7 +267,6 @@ Contributor(s): ______________________________________. -->
       </box>
   		<button class="plain" id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')" tooltiptext="&throbber.tooltip;"/>
     </toolbar>
-  
   
     <toolbar id="PersonalToolbar" class="chromeclass-directories" persist="collapsed" dragdroparea="innermostBox"
              ondraggesture="return BeginDragPersonalToolbar(event);"
