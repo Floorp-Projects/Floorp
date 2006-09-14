@@ -895,7 +895,7 @@ function BrowserSetForcedDetector()
   getBrowser().documentCharsetInfo.forcedDetector = true;
 }
 
-function BrowserClose()
+function BrowserCloseTabOrWindow()
 {
   var browser = getBrowser();
   if (browser && browser.localName == 'tabbrowser' && browser.mTabContainer.childNodes.length > 1) {
@@ -904,6 +904,11 @@ function BrowserClose()
     return;
   }
 
+  BrowserCloseWindow();
+}
+
+function BrowserCloseWindow() 
+{
   // This code replicates stuff in Shutdown().  It is here because
   // window.screenX and window.screenY have real values.  We need
   // to fix this eventually but by replicating the code here, we
