@@ -1716,8 +1716,12 @@ function FillInHTMLTooltip ( tipElement )
 
 function EnableBusyCursor(doEnable) {
   if (doEnable) {
-    window.setCursor("spinning");
-    window._content.setCursor("spinning");
+    // set the spinning cursor everywhere but mac, we have our own way to
+    // do this thankyouverymuch.
+    if ( navigator.platform.indexOf("Mac") > 0 ) {
+      window.setCursor("spinning");
+      window._content.setCursor("spinning");
+    }
   }
   else {
     window.setCursor("auto");
