@@ -237,7 +237,6 @@
         </menu>
         <menuseparator />
         <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
-        <menuitem label="&showImagesCmd.label;" accesskey="&showImagesCmd.accesskey;" disabled="true" oncommand="BrowserReload();"/>
         <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" id="menuitem-stop" disabled="true" oncommand="BrowserStop();" key="key_stop"/>
         <menuseparator />
         <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
