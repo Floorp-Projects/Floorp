@@ -130,21 +130,21 @@ nsBrowserContentListener.prototype =
 
     isPreferred: function(contentType, desiredContentType)
     {
-        // seems like we should be getting this from helper apps or something
-        switch(contentType) {
-            case "text/html":
-            case "text/xul":
-            case "text/rdf":
-            case "text/xml":
-            case "text/css":
-            case "image/gif":
-            case "image/jpeg":
-            case "image/png":
-            case "text/plain":
-            case "application/http-index-format":
+        try {
+            var catMgr = Components.classes["@mozilla.org/categorymanager;1"]
+                        .getService(Components.interfaces.nsICategoryManager);
+            var entry = catMgr.getCategoryEntry("Gecko-Content-Viewers",
+                                                contentType);
+            if (entry) {
                 return true;
+            }
+
+            return false;
+        } catch (e) {
+            // XXX propagate failures other than "NS_ERROR_NOT_AVAILABLE"?
+            // This seems to never get called, so not like it matters....
+            return false;
         }
-        return false;
     },
     canHandleContent: function(contentType, isContentPreferred, desiredContentType)
     {
