@@ -262,7 +262,7 @@ Contributor(s): ______________________________________. -->
                         type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                         label="rdf:http://home.netscape.com/NC-rdf#Name"
                         ondraggesture="event.preventBubble(); return false;">
-              <menupopup ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver);"/>
+              <menupopup ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarObserver);"/>
             </menubutton>
           </rule>
 
