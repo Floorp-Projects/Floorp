@@ -1,13 +1,15 @@
 <?xml version="1.0"?>
 
+<!DOCTYPE overlay SYSTEM "chrome://navigator-platform/locale/platformNavigationBindings.dtd">
+
 <overlay id="platformNavigationBindings"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <keyset id="navigationKeys">
     <!-- back and forward accelerators on Windows, strangely enough, are
          Alt+Left arrow and Alt+Right arrow. -->
-    <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="alt"/>
-    <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="alt"/>
+    <key id="goBackKb"  keycode="&goBackCmd.keyCode;" command="Browser:Back" modifiers="alt"/>
+    <key id="goForwardKb"  keycode="&goForwardCmd.keyCode;" command="Browser:Forward" modifiers="alt"/>
 
     <!-- Supporting IE forward and back accelerators out of courtesy
          to transitioning IE users -->
