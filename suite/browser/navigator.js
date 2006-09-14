@@ -45,6 +45,7 @@ var gProxyButton = null;
 var gProxyFavIcon = null;
 var gProxyDeck = null;
 var gBookmarksService = null;
+var gSearchService = null;
 var gNavigatorBundle;
 var gBrandBundle;
 var gNavigatorRegionBundle;
