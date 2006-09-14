@@ -348,6 +348,58 @@ function Startup()
   }
 }
 
+function BrowserFlushBookmarksAndHistory() {
+    // Flush bookmakrs and history (used when window closes or is cached).
+    try {
+        // If bookmarks are dirty, flush 'em to disk
+        var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
+                             .getService(Components.interfaces.nsIRDFRemoteDataSource);
+        bmks.Flush();
+
+        // give history a chance at flushing to disk also
+        var history = Components.classes["@mozilla.org/browser/global-history;1"]
+                                .getService(Components.interfaces.nsIRDFRemoteDataSource);
+        history.Flush();
+    } catch(ex) {
+    }
+}
+
+function BrowserCanClose() {
+  // Check for "server mode."
+  try {
+    var appShellSvc = Components.classes["@mozilla.org/appshell/appShellService;1"]
+                                .getService(Components.interfaces.nsIAppShellService);
+    var nativeSupport = appShellSvc.nativeAppSupport;
+    if (nativeSupport && nativeSupport.isServerMode) {
+      // Give native app a chance to cache this window.
+      if (nativeSupport.cacheBrowserWindow(window)) {
+        // Window is "cached" so don't close it.
+
+        // But flush bookmarks and history, as if we did close it.
+        BrowserFlushBookmarksAndHistory();
+
+        // Reset session history.
+        var webNav = getWebNavigation();
+        if (webNav) {
+          try {
+            webNav.sessionHistory.PurgeHistory( webNav.sessionHistory.count );
+          } catch(ex) {
+          }
+        }
+
+        // Go to blank page.
+        loadURI( "about:blank" );
+
+        // This stops the close.
+        return false;
+      }
+    }
+  } catch (ex) {
+  }
+  // Ok to close window.
+  return true;
+}
+
 function Shutdown()
 {
   var browser = getBrowser();
@@ -364,21 +416,7 @@ function Shutdown()
   window.XULBrowserWindow.destroy();
   window.XULBrowserWindow = null;
 
-  try {
-    // If bookmarks are dirty, flush 'em to disk
-    var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
-                         .getService(Components.interfaces.nsIRDFRemoteDataSource);
-    bmks.Flush();
-  } catch (ex) {
-  }
-
-  try {
-    // give history a chance at flushing to disk also
-    var history = Components.classes["@mozilla.org/browser/global-history;1"]
-                            .getService(Components.interfaces.nsIRDFRemoteDataSource);
-    history.Flush();
-  } catch (ex) {
-  }
+  BrowserFlushBookmarksAndHistory();
 
   // unregister us as a pref listener
   pref.removeObserver(window.buttonPrefListener.domain,
