@@ -74,7 +74,6 @@
 	<key id="key_findAgain"         key="&findAgainCmd.commandkey;" observes="Browser:FindAgain" modifiers="accel"/>
 
 	<!-- Go Menu -->		
-	<key id="goHomeKb"             keycode="VK_HOME" observes="Browser:Home"  modifiers="alt"/>
 
     <!-- Tools Menu -->
 	<key id="key_gotoHistory"       key="&history.commandKey;" oncommand="toHistory();" modifiers="accel"/>
@@ -294,7 +293,7 @@ oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/p
 	  <menupopup oncreate="updateGoMenu(event);">
 		  <menuitem id="menuitem-back" value="&goBackCmd.label;" accesskey="&goBackCmd.accesskey;"  key="goBackKb" observes="canGoBack"/>
 		  <menuitem id="menuitem-forward" value="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;"  key="goForwardKb" observes="canGoForward" />
-		  <menuitem id="menuitem-home" accesskey="&goHomeCmd.accesskey;" key="goHomeKb" observes="Browser:Home"/>
+		  <menuitem id="menuitem-home" observes="Browser:Home"/>
 		  <menuseparator />
 	  </menupopup>
   </menu>       
