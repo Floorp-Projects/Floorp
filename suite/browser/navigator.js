@@ -1035,8 +1035,12 @@ function RevealSearchPanel()
   {
     // Get filespecwithui component.            
     var fileSpec = createInstance( "component://netscape/filespecwithui", "nsIFileSpecWithUI" );
-    var url = fileSpec.chooseFile( "Open File" );
-    if ( url != "" ) {
+    var url = null;
+    try {
+        url = fileSpec.chooseFile( "Open File" );
+    } catch ( exception ) {
+    }
+    if ( url && url != "" ) {
         openNewWindowWith( url );
     }
   }
