@@ -76,9 +76,6 @@
 
 	<!-- Go Menu -->		
 
-    <!-- Tools Menu -->
-	<key id="key_gotoHistory"       key="&history.commandKey;" oncommand="toHistory();" modifiers="accel"/>
-
 	<!-- Bookmarks Menu -->
 	<key id="addBookmarkKb"        key="&addCurPageCmd.commandkey;" observes="Browser:AddBookmark"  modifiers="accel"/>
 	<key id="manBookmarkKb"        key="&manBookmarksCmd.commandkey;" observes="Browser:ManageBookmark"  modifiers="accel"/>
