@@ -295,8 +295,11 @@ nsBrowserStatusHandler.prototype =
 
     var domWindow = aWebProgress.DOMWindow;
     if (domWindow == domWindow.top) {
-      if (!this.userTyped.value)
+      if (!this.userTyped.value) {
         this.urlBar.value = location;
+        // the above causes userTyped.value to become true, reset it
+        this.userTyped.value = false;
+      }
 
       SetPageProxyState("valid", aLocation);
     }
