@@ -77,18 +77,6 @@ function loadEventHandlers(event)
     UpdateInternetSearchResults(event);
     checkForDirectoryListing();
     postURLToNativeWidget();
-
-    // This sets up the slightly odd tabbing sequence that
-    // people expect when a page is loaded:
-    //
-    //  page content -> urlbar
-
-    _content.focus();
-    var contentArea = document.getElementById("appcontent");
-    contentArea.addEventListener("keypress", tabToUrlBar, false);
-
-    // This lets us get out of the tabbing sequence if the user clicks.
-    contentArea.addEventListener("blur", removeTabListeners, true);
   }
 }
 
@@ -278,23 +266,6 @@ function allLeftButtonsAreHidden()
   return true;
 }
 
-function tabToUrlBar(event)
-{
-  if (event.keyCode == 9) {
-    removeTabListeners(event);
-
-    gURLBar.focus();
-    event.preventDefault();
-  }
-}
-
-function removeTabListeners(event)
-{
-  var contentArea = document.getElementById("appcontent");
-  contentArea.removeEventListener("keypress", tabToUrlBar, false);
-  contentArea.removeEventListener("blur", removeTabListeners, true);
-}
-
 function Startup()
 {
   // init globals
@@ -431,11 +402,12 @@ function Startup()
         return;
     }
 
-    // Focus the URL bar if the start page is blank
-    if (window.arguments[0] == "about:blank" && window.locationbar.visible)
-      setTimeout(WindowFocusTimerCallback, 0, gURLBar);
-    else
+    // Focus the content area if the caller instructed us to.
+    if ("arguments" in window && window.arguments.length >= 3 && window.arguments[2] == true ||
+        !window.locationbar.visible)
       setTimeout(WindowFocusTimerCallback, 0, _content);
+    else
+      setTimeout(WindowFocusTimerCallback, 0, gURLBar);
 
     // Perform default browser checking.
     checkForDefaultBrowser();
