@@ -307,13 +307,13 @@ END of Deprecated -->
       <menuitem value="&findAgainCmd.label;" oncommand="BrowserFindAgain();"/>
       <menuseparator />   
       <menuitem value="&searchInternetCmd.label;"
-        oncommand="OpenSearch('internet', true, null);"/>
-      <menuitem value="&searchAllMailCmd.label;" 
-        oncommand="OpenSearch('mail', true, null);"/>
-	  <menuitem value="&searchBookmarksHistoryCmd.label;" 
-        oncommand="OpenSearch('find', true, null);"/>
-      <menuitem value="&searchAddressbookCmd.label;"
-        oncommand="OpenSearch('addressbook', true, null);"/>
+        oncommand="openTopWin('http://home.netscape.com/bookmark/6_0b1/ssearch.html')"/>
+      <menuitem value="&searchAllMailCmd.label;" disabled="true"
+        oncommand=""/>
+	  <menuitem value="&searchBookmarksHistoryCmd.label;" disabled="true"
+        oncommand=""/>
+      <menuitem value="&searchAddressbookCmd.label;" disabled="true"
+        oncommand=""/>
     <!--   <menuseparator />  
     Commenting out of beta. Not in Spec   
     <menuitem value="&searchComputerCmd.label;" 
