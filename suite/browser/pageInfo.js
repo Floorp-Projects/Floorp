@@ -721,6 +721,7 @@ function saveMedia()
   var url = imageView.data[tree.currentIndex][0];
 
   if (url)
+    // XXX Mozilla specific
     saveURL(url, null, 'SaveImageTitle', false, makeURI(item.baseURI));
 }
 
