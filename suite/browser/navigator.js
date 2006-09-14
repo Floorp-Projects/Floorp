@@ -1327,7 +1327,7 @@ function BrowserChangeTextSize(newSize)
         //now try to open a view-source window while inheriting the charset
         window.openDialog( "chrome://navigator/content/viewSource.xul",
 						         "_blank",
-						         "scrollbars,chrome,dialog=no",
+						         "scrollbars,resizable,chrome,dialog=no",
 					           window._content.location, docCharset);
       }
 
