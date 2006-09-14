@@ -40,14 +40,24 @@ catch (ex) {
 }
 
   var appCore = null;
+  var explicitURL = false;
+  var textZoom = 1.0;
+
+  // Stored Status, Link and Loading values
   var defaultStatus = bundle.GetStringFromName( "defaultStatus" );
   var jsStatus = null;
   var jsDefaultStatus = null;
   var overLink = null; 
-  var explicitURL = false;
-  var statusTextFld = null;
-  var textZoom = 1.0;
+  var startTime = 0;
 
+  //cached elements/ fields
+  var statusTextFld = null;
+  var throbberElement = null;
+  var stopButton = null;
+  var stopMenu = null;
+  var locationFld = null;
+  var backButton	= null;
+  var forwardButton = null;
 
 function UpdateHistory(event)
 {
@@ -212,7 +222,68 @@ nsXULBrowserWindow.prototype =
 		else
 			overLink = link;
 		UpdateStatusField();
+		},
+	setNetworkActive : function(active)
+		{
+		if(!throbberElement)
+			throbberElement = document.getElementById("Throbber");
+		throbberElement.setAttribute("busy", active);
+
+      var meter = document.getElementById("statusbar-icon");
+		if(active) // starting network activity
+			{
+			// Remember when loading commenced.
+    		startTime = (new Date()).getTime();
+         // Turn progress meter on.
+			meter.setAttribute("mode","undetermined");
+			}
+		else // network activity finished
+			{
+			// Record page loading time.
+			var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
+			var msg = bundle.GetStringFromName("nv_done") + " (" + elapsed + " secs)";
+			dump( msg + "\n" );
+			defaultStatus = msg;
+			UpdateStatusField();
+			window.XULBrowserWindow.setDefaultStatus(msg);
+         // Turn progress meter off.
+         meter.setAttribute("mode","normal");
+			}
+		},
+	setWindowActive : function(active)
+		{
+		if(!stopButton)
+			stopButton = document.getElementById("stop-button");
+
+		if(!stopMenu)
+			stopMenu = document.getElementById("menuitem-stop");
+
+		stopButton.setAttribute("disabled", !active);
+		stopMenu.setAttribute("disabled", !active);
+		},
+	onLocationChange : function(location)
+		{
+		if(!locationFld)
+			locationFld = document.getElementById("urlbar");
+
+		// We should probably not do this if the value has changed since the user 
+		// searched
+		locationFld.setAttribute("value", location);
+
+		UpdateBackForwardButtons();
 		}
+}
+
+function UpdateBackForwardButtons()
+{
+	if(!backButton)
+		backButton = document.getElementById("canGoBack");
+	if(!forwardButton)								  
+		forwardButton = document.getElementById("canGoForward");
+		
+	backButton.setAttribute("disabled", !appCore.canGoBack);	
+	forwardButton.setAttribute("disabled", !appCore.canGoForward);
+	dump("XXX CanGoForward = " + appCore.canGoForward + "\r\n");
 }
 
 function Startup()
@@ -282,7 +353,7 @@ function Shutdown()
 
   function onLoadViaOpenDialog() {
     // See if load in progress (loading default page).
-    if ( document.getElementById("Browser:Throbber").getAttribute("busy") == "true" ) {
+    if ( document.getElementById("Throbber").getAttribute("busy") == "true" ) {
         dump( "Stopping load of default initial page\n" );
         appCore.stop();
     }
@@ -389,30 +460,6 @@ function Shutdown()
   }
 
 
-
-  function BrowserCanStop() {
-    var stop = document.getElementById("canStop");
-    if ( stop ) {
-        var stopDisabled = stop.getAttribute("disabled");
-        var stopButton   = document.getElementById( "stop-button" );
-        if ( stopButton ) {
-            if ( stopDisabled == "true") {
-                stopButton.setAttribute( "disabled", "true" );
-            } else {
-                stopButton.setAttribute( "disabled", "" );
-            }
-        }
-        //Enable/disable the stop menu item
-        var stopMenu   = document.getElementById( "menuitem-stop" );
-        if ( stopMenu ) {
-            if ( stopDisabled == "true") {
-                stopMenu.setAttribute( "disabled", "true" );
-            } else {
-                stopMenu.setAttribute( "disabled", "" );
-            }
-        }
-    }
-  }
 
   function BrowserStop() {
      // Get a handle to the "canStop" broadcast id
@@ -1048,45 +1095,11 @@ function BrowserEditBookmarks()
   }
 
 
-        var bindCount = 0;
-
         function doTests() {
         }
 
-		var startTime = 0;
-        function onProgress() {
-            var throbber = document.getElementById("Browser:Throbber");
-            var meter    = document.getElementById("Browser:LoadingProgress");
-            if ( throbber && meter ) {
-                var busy = throbber.getAttribute("busy");
-                var wasBusy = meter.getAttribute("mode") == "undetermined" ? "true" : "false";
-                if ( busy == "true" ) {
-                    if ( wasBusy == "false" ) {
-                        // Remember when loading commenced.
-    				    startTime = (new Date()).getTime();
-                        // Turn progress meter on.
-                        meter.setAttribute("mode","undetermined");
-                    }
-                    // Update status bar.
-                } else if ( busy == "false" && wasBusy == "true" ) {
-                    // Record page loading time.
-						var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
-						var msg = bundle.GetStringFromName("nv_done") + " (" + elapsed + " secs)";
-						dump( msg + "\n" );
-						defaultStatus = msg;
-						UpdateStatusField();
-						window.XULBrowserWindow.setDefaultStatus(msg);
-                    // Turn progress meter off.
-                    meter.setAttribute("mode","normal");
-                }
-            }
-        }
         function dumpProgress() {
-            var broadcaster = document.getElementById("Browser:LoadingProgress");
-            var meter       = document.getElementById("meter");
-            dump( "bindCount=" + bindCount + "\n" );
-            dump( "broadcaster mode=" + broadcaster.getAttribute("mode") + "\n" );
-            dump( "broadcaster value=" + broadcaster.getAttribute("value") + "\n" );
+            var meter       = document.getElementById("statusbar-icon");
             dump( "meter mode=" + meter.getAttribute("mode") + "\n" );
             dump( "meter value=" + meter.getAttribute("value") + "\n" );
         }
