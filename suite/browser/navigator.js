@@ -114,6 +114,21 @@ const gTabStripPrefListener =
   }
 };
 
+const gHomepagePrefListener =
+{
+  domain: "browser.startup.homepage",
+  observe: function(subject, topic, prefName)
+  {
+    // verify that we're changing the home page pref
+    if (topic != "nsPref:changed")
+      return;
+
+    var homePage = getHomePage();
+    if (homePage)
+      setTooltipText("home-button", homePage);
+  }
+};
+
 /**
 * Pref listener handler functions.
 * Both functions assume that observer.domain is set to 
@@ -361,6 +376,7 @@ function Startup()
 
   addPrefListener(gButtonPrefListener); 
   addPrefListener(gTabStripPrefListener);
+  addPrefListener(gHomepagePrefListener);
 
   window.browserContentListener =
     new nsBrowserContentListener(window, getBrowser());
@@ -558,6 +574,7 @@ function Shutdown()
   // unregister us as a pref listener
   removePrefListener(gButtonPrefListener);
   removePrefListener(gTabStripPrefListener);
+  removePrefListener(gHomepagePrefListener);
 
   window.browserContentListener.close();
   // Close the app core.

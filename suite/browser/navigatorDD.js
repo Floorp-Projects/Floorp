@@ -154,7 +154,6 @@ function openHomeDialog(aURL)
 
   if (pressedVal == 0) {
     nsPreferences.setUnicharPref("browser.startup.homepage", aURL);
-    setTooltipText("home-button", aURL);
   }
 }
 
