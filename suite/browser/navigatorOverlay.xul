@@ -135,6 +135,7 @@
     <!-- View Menu -->
     <command id="View:PageSource" oncommand="BrowserViewSource();"/>
     <command id="View:PageInfo"   oncommand="BrowserPageInfo(getBrowser().contentDocument);"/>
+    <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
   
     <!-- Search Menu -->
     <command id="Browser:Find" oncommand="BrowserFind();" observes="isImage"/>
@@ -226,6 +227,9 @@
             <menuitem label="&componentbarCmd.label;" accesskey="&componentbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewcomponentbar"/>
           </menupopup>
         </menu>   
+        <menuitem id="menuitem_fullScreen" accesskey="&fullScreenCmd.accesskey;"
+                  label="&fullScreenCmd.label;" key="key_fullScreen"
+                  command="View:FullScreen" hidden="true"/>
         <menuseparator />
   
         <!-- overlayed from viewZoomOverlay.xul -->

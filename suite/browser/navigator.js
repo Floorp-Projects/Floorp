@@ -414,8 +414,14 @@ function Startup()
       remoteService.addBrowserInstance(window);
     }
   }
+  
+  // called when we go into full screen, even if it is 
+  // initiated by a web page script
+  addEventListener("fullscreen", onFullScreen, false);
+
   // now load bookmarks after a delay
   setTimeout(LoadBookmarksCallback, 0);
+
 }
 
 function LoadBookmarksCallback()
@@ -1543,3 +1549,14 @@ function FillInPTTooltip(tipElement)
 
   return true; // show tooltip
 }
+
+function BrowserFullScreen()
+{
+  window.fullScreen = !window.fullScreen;
+}
+
+function onFullScreen()
+{
+  FullScreen.toggle();
+}
+

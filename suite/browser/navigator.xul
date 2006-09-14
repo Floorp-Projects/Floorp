@@ -60,6 +60,7 @@ Contributor(s): ______________________________________. -->
   <script type="application/x-javascript" src="chrome://global/content/nsClipboard.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/fullscreen.js"/>
   
   <!-- Content Area -->
   <script type="application/x-javascript" src="chrome://navigator/content/nsBrowserStatusHandler.js"/>
@@ -124,7 +125,7 @@ Contributor(s): ______________________________________. -->
 
     <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar" persist="collapsed" 
              grippytooltiptext="&navigationToolbar.tooltip;"
-             tbalign="stretch">
+             tbalign="stretch" fullscreentoolbar="true">
       <hbox id="nav-bar-buttons">
         <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"
                        label="&backButton.label;"
@@ -216,6 +217,17 @@ Contributor(s): ______________________________________. -->
       <hbox id="throbber-box" align="center">
         <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
                 tooltiptext="&throbber.tooltip;"/>
+      </hbox>
+      
+      <hbox id="window-controls" hidden="true" fullscreencontrol="true">
+        <toolbarbutton id="minimize-button" class="toolbarbutton-1"
+                       oncommand="window.minimize();"/>
+
+        <toolbarbutton id="restore-button" class="toolbarbutton-1"
+                       oncommand="BrowserFullScreen();"/>
+
+        <toolbarbutton id="close-button" class="toolbarbutton-1"
+                       oncommand="window.close();"/>
       </hbox>
     </toolbar>
   
