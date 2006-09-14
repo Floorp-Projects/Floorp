@@ -235,6 +235,13 @@ var contentAreaDNDObserver = {
 
   onDrop: function (aEvent, aData, aDragSession)
     {
+      // if the drag originated w/in this content area, bail early. This avoids loading
+      // a URL dragged from the content area into the very same content area (which is
+      // almost never the desired action). This code is a bit too simplistic and may
+      // have problems with nested frames, but that's not my problem ;)
+      if ( aDragSession.sourceDocument == window._content.document )
+        return;
+      
       var aData = aData.length ? aData[0] : aData;
       var url = retrieveURLFromData(aData);
       if (url.length == 0)
@@ -251,7 +258,6 @@ var contentAreaDNDObserver = {
 
   getSupportedFlavours: function ()
     {
-      dump("*** get supported flavours\n");
       var flavourList = { };
       //flavourList["moz/toolbaritem"] = { width: 2 };
       flavourList["text/unicode"] = { width: 2, iid: "nsISupportsWString" };
