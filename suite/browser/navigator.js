@@ -250,57 +250,28 @@ function Shutdown()
         appCore.setContentWindow( window.content );
         // Have browser app core load appropriate initial page.
 
+/* sspitzer: I think this code is unnecessary, but I'll leave it until I prove it */
+/* START OF UNNECESSARY CODE */
         if ( !explicitURL ) {
-            // if all else fails, use trusty "about:blank" as the start page
-            if (pref) {
-              // from mozilla/modules/libpref/src/init/all.js
-              // 0 = blank 
-              // 1 = home (browser.startup.homepage)
-              // 2 = last 
-		choice = 1;
-		try {
-              		choice = pref.GetIntPref("browser.startup.page");
-		}
-		catch (ex) {
-			dump("failed to get the browser.startup.page pref\n");
-		}
-		dump("browser.startup.page = " + choice + "\n");
-    	  switch (choice) {
-    		case 0:
-                		startpage = "about:blank";
-          			break;
-    		case 1:
-				try {
-                			startpage = pref.CopyCharPref("browser.startup.homepage");
-				}
-				catch (ex) {
-					dump("failed to get the homepage!\n");
-					startpage = startPageDefault;
-				}
-          			break;
-    		case 2:
-                		var history = Components.classes['component://netscape/browser/global-history'];
-    			if (history) {
-                   			history = history.getService();
-    	    		}
-    	    		if (history) {
-                  			history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
-    	    		}
-    	    		if (history) {
-    				startpage = history.GetLastPageVisted();
-    	    		}
-          			break;
-       		default:
-                		startpage = startPageDefault;
-    	  }
+            try {
+                var handler = Components.classes['component://netscape/appshell/component/browser/cmdhandler'];
+                handler = handler.getService();
+                handler = handler.QueryInterface(Components.interfaces.nsICmdLineHandler);
+                if (handler) {
+                    startpage = handler.defaultArgs;
+                }
             }
-            else {
-		dump("failed to QI pref service\n");
-	    }
-	    dump("startpage = " + startpage + "\n");
-          var args = document.getElementById("args")
+            catch (ex) {
+                dump("failed, reason: " + ex + "\n");
+                startpage = startPageDefault;
+            }
+
+            //dump("startpage = " + startpage + "\n");
+            var args = document.getElementById("args")
             if (args) args.setAttribute("value", startpage);
         }
+/* END OF UNNECESSARY CODE */
+
         appCore.loadInitialPage();
     } else {
         // Try again.
@@ -1164,24 +1135,4 @@ function dumpMemoryLeaks() {
 		leakDetector = createInstance("component://netscape/xpcom/leakdetector", "nsILeakDetector");
 	if (leakDetector != null)
 		leakDetector.dumpLeaks();
-}
-
-function enableUriLoading() {
-	var pref = Components.classes['component://netscape/preferences'];
-     if (pref)
-     {
-     	pref = pref.getService();   	
-     	pref = pref.QueryInterface(Components.interfaces.nsIPref);
-		pref.SetDefaultBoolPref("browser.uriloader", true);
-	 }
-}
-
-function disableUriLoading() {
-	var pref = Components.classes['component://netscape/preferences'];
-     if (pref)
-     {
-     	pref = pref.getService();   	
-     	pref = pref.QueryInterface(Components.interfaces.nsIPref);
-		pref.SetDefaultBoolPref("browser.uriloader", false);
-	 }
 }
