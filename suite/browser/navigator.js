@@ -1406,7 +1406,11 @@ function readFromClipboard()
                           .createInstance(Components.interfaces.nsITransferable);
 
     trans.addDataFlavor("text/unicode");
-    clipboard.getData(trans, clipboard.kSelectionClipboard);
+    // If available, use selection clipboard, otherwise global one
+    if (clipboard.supportsSelectionClipboard())
+      clipboard.getData(trans, clipboard.kSelectionClipboard);
+    else
+      clipboard.getData(trans, clipboard.kGlobalClipboard);
 
     var data = {};
     var dataLen = {};
