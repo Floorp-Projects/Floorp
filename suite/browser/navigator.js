@@ -341,6 +341,18 @@ function Startup()
 	    contentArea.addEventListener("load", UpdateInternetSearchResults, true);
     }
 
+    if ( window.arguments && window.arguments[1] ) {
+        if (window.arguments[1].indexOf('charset=') != -1) {
+              arrayArgComponents = window.arguments[1].split('=');
+            if (arrayArgComponents) {
+                if (appCore != null) {
+                  appCore.SetDocumentCharset(arrayArgComponents[1]);
+                } 
+                dump("*** SetDocumentCharset(" + arrayArgComponents[1] + ")\n");
+            }
+        }
+    }
+
 	 // Check for window.arguments[0].  If present, go to that url.
     if ( window.arguments && window.arguments[0] ) {
         // Load it using yet another psuedo-onload handler.
