@@ -1609,10 +1609,8 @@ function FillInHTMLTooltip ( tipElement )
       var titleText = "";
       var XLinkTitleText = "";
       var summaryText = "";
-      var linkTarget = "";
-      var linkRealHREF = "";
       
-      while ( !titleText && !summaryText && !XLinkTitleText && !linkTarget && tipElement ) {
+      while ( !titleText && !summaryText && !XLinkTitleText && tipElement ) {
         if ( tipElement.nodeType == 1 ) {
           titleText = tipElement.getAttributeNS(HTMLNS, "title");
           XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
@@ -1620,17 +1618,11 @@ function FillInHTMLTooltip ( tipElement )
               && tipElement.tagName.toLowerCase() == "table" ) {
             summaryText = tipElement.getAttributeNS(HTMLNS, "summary");
           }
-          if (tipElement.tagName.toLowerCase() == "a" &&
-              tipElement.getAttributeNS(HTMLNS, "target") != "")
-            linkTarget = bundle.GetStringFromName("linkTargetLabel") + " " + tipElement.getAttributeNS(HTMLNS, "target"); 
-          if (tipElement.tagName.toLowerCase() == "a" &&
-              tipElement.getAttributeNS(HTMLNS, "href") != "")
-            linkRealHREF = bundle.GetStringFromName("linkHREFLabel") + " " + tipElement.getAttributeNS(HTMLNS, "href"); 
         }
         tipElement = tipElement.parentNode;
       }
       
-      var texts = [ titleText, summaryText, XLinkTitleText, linkTarget, linkRealHREF ];
+      var texts = [ titleText, summaryText, XLinkTitleText ];
       
       for (var i = 0; i < texts.length; i++) {
         var t = texts[i];
