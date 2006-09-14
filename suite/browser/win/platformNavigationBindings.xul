@@ -3,22 +3,22 @@
 <overlay id="platformNavigationBindings"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <keyset id="keyset">
+  <keyset id="navigationKeys">
     <!-- back and forward accelerators on Windows, strangely enough, are
          Alt+Left arrow and Alt+Right arrow. -->
-    <key id="goBackKb"  keycode="VK_LEFT" observes="Browser:Back" modifiers="alt"/>
-    <key id="goForwardKb"  keycode="VK_RIGHT" observes="Browser:Forward" modifiers="alt"/>
+    <key id="goBackKb"  keycode="VK_LEFT" observes="canGoBack" modifiers="alt"/>
+    <key id="goForwardKb"  keycode="VK_RIGHT" observes="canGoForward" modifiers="alt"/>
 
     <!-- Supporting IE forward and back accelerators out of courtesy
          to transitioning IE users -->
-    <key id="goBackKbIE"  keycode="VK_BACK" observes="Browser:Back"/>
-    <key id="goForwardKbIE"  keycode="VK_BACK" observes="Browser:Forward" modifiers="shift"/>
+    <key keycode="VK_BACK" observes="canGoBack"/>
+    <key keycode="VK_BACK" observes="canGoForward" modifiers="shift"/>
 
     <!-- Supporting IE 'refresh' shortcut key -->
-    <key id="reloadIE" keycode="VK_F5" oncommand="BrowserReload();"/>
-    <key id="forceReloadIE" keycode="VK_F5" modifiers="control" oncommand="BrowserReloadSkipCache();"/>
+    <key keycode="VK_F5" oncommand="BrowserReload();"/>
+    <key keycode="VK_F5" modifiers="control" oncommand="BrowserReloadSkipCache();"/>
 
-    <key id="goHome" keycode="VK_HOME" observes="Browser:Home" modifiers="alt"/>
+    <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="alt"/>
 
   </keyset>  
 

@@ -25,7 +25,7 @@
 -->
 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
-<?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://navigator/locale/pageInfo.dtd">
 
@@ -44,17 +44,8 @@
 
   <script type="application/x-javascript" src="chrome://navigator/content/pageInfo.js"/>
 
-  <broadcasterset id="broadcasterset"/>
-
-  <commands id="commands">
-    <commandset id="globalEditMenuItems"/>
-    <commandset id="selectEditMenuItems"/>
-    <commandset id="undoEditMenuItems"/>
-    <commandset id="clipboardEditMenuItems"/>
-  </commands>
-
   <!-- keys are appended from the overlay -->
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
 
   <box id="cont" orient="vertical" flex="1">  
    <text class="header label" value="&pageInfo.description;"/>

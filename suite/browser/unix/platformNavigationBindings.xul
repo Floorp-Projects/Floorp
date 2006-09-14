@@ -5,17 +5,17 @@
 <overlay id="platformNavigationBindings"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <keyset id="keyset">
+  <keyset id="navigationKeys">
     <!-- proper arrow key navigation, 4.xP -->
-    <key id="goBackKb"  keycode="VK_LEFT" observes="Browser:Back" modifiers="alt"/>
-    <key id="goForwardKb"  keycode="VK_RIGHT" observes="Browser:Forward" modifiers="alt"/>
+    <key id="goBackKb"  keycode="VK_LEFT" observes="canGoBack" modifiers="alt"/>
+    <key id="goForwardKb"  keycode="VK_RIGHT" observes="canGoForward" modifiers="alt"/>
 
     <!-- Some people apparently use this combination too on Unix...
          we live and learn.  -->
-    <key id="goBackKbWacko"  key="&goBackCmd.commandKey;" observes="Browser:Back" modifiers="accel"/>
-    <key id="goForwardKbWacko"  key="&goForwardCmd.commandKey;" observes="Browser:Forward" modifiers="accel"/>
+    <key key="&goBackCmd.commandKey;" observes="canGoBack" modifiers="accel"/>
+    <key key="&goForwardCmd.commandKey;" observes="canGoForward" modifiers="accel"/>
 
-    <key id="goHome" keycode="VK_HOME" observes="Browser:Home" modifiers="alt"/>
+    <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="alt"/>
   </keyset>  
 
 </overlay>

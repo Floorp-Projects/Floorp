@@ -290,6 +290,7 @@ nsXULBrowserWindow.prototype =
         stopButton.setAttribute("disabled", true);
         stopMenu.setAttribute("disabled", true);
         stopContext.setAttribute("disabled", true);
+        alert("foo");
 
       }
     }
@@ -1389,3 +1390,20 @@ function checkForDefaultBrowser()
   } catch(e) {
   }
 }
+
+function ShowAndSelectContentsOfURLBar()
+{
+  var navBar = document.getElementById("nav-bar");
+  
+  // If it's hidden, show it.
+  if (navBar.getAttribute("hidden") == "true")
+    goToggleToolbar('nav-bar','cmd_viewnavbar');
+ 
+  var urlBar = document.getElementById("urlbar");
+  if (urlBar.value)
+    urlBar.select();
+  else
+    urlBar.focus();
+}
+  
+  

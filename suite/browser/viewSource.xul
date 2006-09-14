@@ -31,19 +31,12 @@
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/viewsource.js"/>
 
-  <broadcasterset id="broadcasterset"/>
+  <commandset id="navCommands"/>
 
-  <stringbundleset id="stringbundleset"/>
-
-  <commands id="commands">
-    <commandset id="globalEditMenuItems"/>
-    <commandset id="selectEditMenuItems"/>
-    <commandset id="undoEditMenuItems"/>
-    <commandset id="clipboardEditMenuItems"/>
-  </commands>
+  <stringbundleset id="navStringBundles"/>
 
   <!-- keys are appended from the overlay -->
-  <keyset id="keyset"/>
+  <keyset id="navKeys"/>
 
   <!-- Menu -->
   
