@@ -52,12 +52,14 @@ Contributor(s): ______________________________________. -->
 	<key id="key_preferences"/>
 
 	<!-- View Menu -->
+	<!--
 	<key id="key_enlargeTextSize" xulkey="true"
 	     key="&enlargeTextSizeCmd.commandkey;"
 	     observes="Browser:EnlargeTextSize"/>
 	<key id="key_reduceTextSize" xulkey="true"
 	     key="&reduceTextSizeCmd.commandkey;"
 	     observes="Browser:ReduceTextSize"/>
+        -->
 
 	<key id="goForwardKb"         xulkey="true" key="&goForwardCmd.commandkey;" observes="Browser:GoForward" />
 	<key id="goBackwardKb"        xulkey="true" key="&goBackCmd.commandkey;" observes="Browser:GoBackwards" />
@@ -196,11 +198,11 @@ Contributor(s): ______________________________________. -->
    
       <menuseparator />
       <menuitem value="&enlargeTextSizeCmd.label;"
-        key="key_enlargeTextSize"
         observes="Browser:EnlargeTextSize"/>
+        <!-- key="key_enlargeTextSize" -->
       <menuitem value="&reduceTextSizeCmd.label;"
-        key="key_reduceTextSize"
         observes="Browser:ReduceTextSize"/>
+        <!-- key="key_reduceTextSize" -->
       <menuseparator />
       <menu value="&useStyleSheetMenu.label;" disabled="true" oncommand="BrowserReload();">
         <menupopup>
