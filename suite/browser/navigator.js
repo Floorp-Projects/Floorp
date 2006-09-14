@@ -1599,7 +1599,7 @@ var consoleListener = {
 
 function initConsoleListener()
 {
-  var consoleService = nsJSComponentManager.getService("mozilla.consoleservice.1", "nsIConsoleService");
+  var consoleService = nsJSComponentManager.getService("@mozilla.org/consoleservice;1", "nsIConsoleService");
 
   /**
    * XXX - console launch hookup requires some work that I'm not sure how to
