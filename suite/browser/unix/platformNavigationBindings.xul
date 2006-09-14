@@ -10,8 +10,8 @@
     <key id="key_reload" alt="true" key="&reloadCmd.commandKey;" observes="canReload"/>
 
     <!-- proper arrow key navigation, 4.xP -->
-    <key id="goBackKb" xulkey="true" keycode="VK_LEFT" observes="Browser:Back"/>
-    <key id="goForwardKb" xulkey="true" keycode="VK_RIGHT" observes="Browser:Forward"/>
+    <key id="goBackKb" alt="true" keycode="VK_LEFT" observes="Browser:Back"/>
+    <key id="goForwardKb" alt="true" keycode="VK_RIGHT" observes="Browser:Forward"/>
 
     <!-- Some people apparently use this combination too on Unix...
          we live and learn.  -->
