@@ -56,21 +56,21 @@ Contributor(s): ______________________________________. -->
         screenX="10" screenY="10"
         persist="screenX screenY width height sizemode"> 
 
-  <script type="text/javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
-  <script type="text/javascript" src="chrome://global/content/nsJSComponentManager.js"/>
-  <script type="text/javascript" src="chrome://global/content/nsUserSettings.js"/>
-  <script type="text/javascript" src="chrome://global/content/nsTransferable.js"/>
-  <script type="text/javascript" src="chrome://global/content/nsClipboard.js"/>
-  <script type="text/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-  <script type="text/javascript" src="chrome://global/content/strres.js"/>
-  <script type="text/javascript" src="chrome://communicator/content/contentAreaClick.js"/>
-  <script type="text/javascript" src="chrome://communicator/content/contentAreaDD.js"/>
-  <script type="text/javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
-  <script type="text/javascript" src="chrome://navigator/content/navigator.js"/>
-  <script type="text/javascript" src="tooltip.js"/>
-  <script type="text/javascript" src="navigatorDD.js"/>
-  <!-- UI services -->
-  <script type="text/javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsUserSettings.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsClipboard.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+<script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
+<script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
+<script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
+<script type="application/x-javascript" src="chrome://navigator/content/navigator.js"/>
+<script type="application/x-javascript" src="tooltip.js"/>
+<script type="application/x-javascript" src="navigatorDD.js"/>
+<!-- UI services -->
+<script type="application/x-javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
 
   <!-- hook for stringbundle overlays -->
   <stringbundleset id="stringbundleset">
@@ -121,7 +121,7 @@ Contributor(s): ______________________________________. -->
   <!-- context menu -->
   <popupset id="contentAreaContextSet"/>
   
-  <script language="javascript">
+  <script type="application/x-javascript">
     var gBookmarkPopup = null;
   </script>
 
