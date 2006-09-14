@@ -448,7 +448,7 @@ function Startup()
     // set home button tooltip text
     var homepage; 
     try {
-      homepage = pref.CopyUnicharPref("browser.startup.homepage");
+      homepage = pref.getLocalizedUnicharPref("browser.startup.homepage");
     }
     catch(e) {
       homepage = null;
