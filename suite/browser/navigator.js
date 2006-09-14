@@ -396,9 +396,10 @@ function Startup()
   } catch (e) {
     alert("Error creating browser instance");
     window.close(); // Give up.
+    return;
   }
 
-  _content.appCore= appCore;
+  _content.appCore = appCore;
 
   // Initialize browser instance..
   appCore.setWebShellWindow(window);
@@ -409,29 +410,6 @@ function Startup()
 
   // set the offline/online mode
   setOfflineStatus();
-
-  debug("Setting content window\n");
-  appCore.setContentWindow(_content);
-  // Have browser app core load appropriate initial page.
-
-  /* START OF UNNECESSARY CODE */
-  /* sspitzer: I think this code is unnecessary, but I'll leave it until I prove it */
-  var startpage;
-  try {
-    var handler = Components.classes["@mozilla.org/commandlinehandler/general-startup;1?type=browser"]
-                            .getService(Components.interfaces.nsICmdLineHandler);
-    startpage = handler.defaultArgs;
-  } catch (ex) {
-    debug("failed, reason: " + ex + "\n");
-    // we failed to get the start page, load this
-    startpage = "about:blank";
-  }
-
-  //debug("startpage = " + startpage + "\n");
-  document.getElementById("args").setAttribute("value", startpage);
-  /* END OF UNNECESSARY CODE */
-
-  appCore.loadInitialPage();
 
   // Add a capturing event listener to the content area
   // (rjc note: not the entire window, otherwise we'll get sidebar pane loads too!)
@@ -464,18 +442,28 @@ function Startup()
   if (homePage)
     document.getElementById("home-button").setAttribute("tooltiptext", homePage);
 
-  // Check for window.arguments[0]. If present, go to that url.
-  if ("arguments" in window && window.arguments.length > 0) {
+  var startPage;
 
-    // See if load in progress (loading default page).
-    if (document.getElementById("navigator-throbber").getAttribute("busy") == "true") {
-      debug("Stopping load of default initial page\n");
-      getWebNavigation().stop();
+  if (!appCore.cmdLineURLUsed) {
+    // load appropriate initial page from commandline.
+    var isPageCycling = appCore.startPageCycler();
+
+    if (!isPageCycling) {
+      var cmdLineService = Components.classes["@mozilla.org/appshell/commandLineService;1"]
+                                     .getService(Components.interfaces.nsICmdLineService);
+      startPage = cmdLineService.URLToLoad;
+      appCore.cmdLineURLUsed = true;
     }
-
-    debug("Loading page specified via openDialog\n");
-    loadURI(window.arguments[0]);
   }
+
+  // Check for window.arguments[0]. If present, use that for startPage.
+  if (!startPage && "arguments" in window && window.arguments.length > 0)
+    startPage = window.arguments[0];
+
+  if (!startPage)
+    startPage = "about:blank";
+
+  loadURI(startPage);
 
   initConsoleListener();
 
