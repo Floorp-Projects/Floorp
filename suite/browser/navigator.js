@@ -469,6 +469,7 @@ nsBrowserAccess.prototype = {
           gBrowser.loadURIWithFlags(uri, loadflags);
           return content;
         }
+        aOpener = aOpener.top;
         try {
           aOpener.QueryInterface(nsIInterfaceRequestor)
                  .getInterface(nsIWebNavigation)
