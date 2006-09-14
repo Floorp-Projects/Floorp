@@ -92,8 +92,8 @@ Contributor(s): ______________________________________. -->
 
 	<broadcaster id="cmd_close" oncommand="BrowserClose()"/>
 
-	<broadcaster id="Browser:SendLink"  value="&sendLinkCmd.accesskey;" oncommand="BrowserSendLink(window.content.location.href, window.content.document.title);"/>
-	<broadcaster id="Browser:EditPage"  value="&editPageCmd.accesskey;" oncommand="BrowserEditPage(window.content.location.href);"/>
+	<broadcaster id="Browser:SendLink"  value="&sendLinkCmd.label;" oncommand="BrowserSendLink(window.content.location.href, window.content.document.title);"/>
+	<broadcaster id="Browser:EditPage"  value="&editPageCmd.label;" oncommand="BrowserEditPage(window.content.location.href);"/>
  	
 	<broadcaster id="Browser:GoOffline"  value="&offlineGoOfflineCmd.label;"       disabled="true" 		 oncommand="BrowserReload();"/>
 	<broadcaster id="Browser:Synchronize"  value="&offlineSynchronizeCmd.label;"   disabled="true" 		 oncommand="BrowserReload();"/>
