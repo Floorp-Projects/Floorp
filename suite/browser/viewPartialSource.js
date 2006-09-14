@@ -283,7 +283,8 @@ function drawSelection()
                 .getInterface(Components.interfaces.nsISelectionDisplay)
                 .QueryInterface(Components.interfaces.nsISelectionController)
                 .scrollSelectionIntoView(Components.interfaces.nsISelectionController.SELECTION_NORMAL,
-                                         Components.interfaces.nsISelectionController.SELECTION_ANCHOR_REGION);
+                                         Components.interfaces.nsISelectionController.SELECTION_ANCHOR_REGION,
+                                         true);
   }
   catch(e) { }
 
