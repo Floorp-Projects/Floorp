@@ -189,6 +189,107 @@
     <broadcaster id="cmd_viewcomponentbar" oncommand="goToggleToolbar('component-bar', 'cmd_viewcomponentbar');" checked="true"/>
     <broadcaster id="isImage"/>
   </broadcasterset>
+         
+  <!-- bookmarks context menu -->
+  <popupset id="bookmarksPopupset">
+    <popup id="bookmarks-context-menu" 
+           onpopupshowing="BookmarksMenu.createContextMenu(event);"
+           onpopuphidden ="BookmarksMenu.destroyContextMenu(event);"/>
+  </popupset>
+
+  <!-- bookmarks toolbar tooltip -->
+  <tooltip id="btTooltip" noautohide="true" 
+           onpopupshowing="return BookmarksToolbar.fillInBTTooltip(document.tooltipNode)">
+    <vbox id="btTooltipTextBox" flex="1">  
+      <label id="btTitleText"/>
+      <label id="btUrlText"/>
+    </vbox>
+  </tooltip>
+
+  <!-- bookmarks template -->
+  <template id="bookmarksMenuTemplate" xmlns:nc="http://home.netscape.com/NC-rdf#">
+    <rule parent="hbox" rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+      <toolbarseparator uri="rdf:*"
+                        rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
+    </rule>
+    <!-- yes, the type attribute is necessary otherwise all leaves are 
+         treated as containers for some reason -->
+    <rule parent="hbox" iscontainer="true"
+          nc:FolderGroup="true">
+      <toolbarbutton class="bookmark-item bookmark-group" uri="rdf:*" xulcontentsgenerated="true" 
+                     group="true"
+                     container="false"
+                     rdf:type="http://home.netscape.com/NC-rdf#Folder"
+                     label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+    </rule>
+    <rule parent="hbox" iscontainer="true" isempty="true"
+          rdf:type="http://home.netscape.com/NC-rdf#Folder">
+      <toolbarbutton type="menu" editable="true" class="bookmark-item"
+                     rdf:type="http://home.netscape.com/NC-rdf#Folder"
+                     uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name">
+        <menupopup>
+          <menuitem label="&emptyItem.label;" disabled="true"/>
+        </menupopup>
+      </toolbarbutton>
+    </rule>
+    <rule parent="hbox" iscontainer="true">
+      <toolbarbutton type="menu" class="bookmark-item" uri="rdf:*" editable="true"
+                     rdf:type="http://home.netscape.com/NC-rdf#Folder"
+                     label="rdf:http://home.netscape.com/NC-rdf#Name">
+        <menupopup/>
+      </toolbarbutton>
+    </rule>
+    <rule parent="hbox">
+      <toolbarbutton class="bookmark-item" uri="rdf:*" editable="true" 
+                     status="rdf:http://home.netscape.com/WEB-rdf#status"
+                     rdf:type="http://home.netscape.com/NC-rdf#Bookmark"
+                     statustext="rdf:http://home.netscape.com/NC-rdf#URL"
+                     tooltip="btTooltip"
+                     label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+    </rule>
+    <rule nc:FolderGroup="true" iscontainer="true">
+      <menupopup>
+        <menuitem class="menuitem-iconic bookmark-group" 
+                  label="rdf:http://home.netscape.com/NC-rdf#Name"
+                  group="true"
+                  uri="rdf:*"
+                  xulcontentsgenerated="true"/>
+      </menupopup>
+    </rule>
+    <rule iscontainer="true" isempty="true"
+          rdf:type="http://home.netscape.com/NC-rdf#Folder">
+      <menupopup>
+        <menu class="menu-iconic bookmark-item" uri="rdf:*" 
+              type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+              label="rdf:http://home.netscape.com/NC-rdf#Name">
+          <menupopup>
+            <menuitem label="&emptyItem.label;" disabled="true"/>
+          </menupopup>
+        </menu>
+      </menupopup>
+    </rule>
+    <rule iscontainer="true">
+      <menupopup>
+        <menu class="menu-iconic bookmark-item" uri="rdf:*"
+              label="rdf:http://home.netscape.com/NC-rdf#Name"
+              type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
+          <menupopup />
+        </menu>
+      </menupopup>
+    </rule>
+    <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+      <menupopup> 
+        <menuseparator uri="rdf:*" />
+      </menupopup>
+    </rule>
+    <rule>
+      <menupopup>
+        <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
+                  label="rdf:http://home.netscape.com/NC-rdf#Name" 
+                  status="rdf:http://home.netscape.com/WEB-rdf#status"/>
+      </menupopup>
+    </rule>
+  </template>
 
   <!-- Menu -->
   <menubar id="main-menubar" class="chromeclass-menubar">
@@ -311,51 +412,12 @@
     <menu id="BookmarksMenu" label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;" 
           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
           ref="NC:BookmarksRoot" flags="dont-test-empty" template="bookmarksMenuTemplate"
-          oncommand="OpenBookmarkURL(event.target, this.database)">
-      <template id="bookmarksMenuTemplate" xmlns:nc="http://home.netscape.com/NC-rdf#">
-        <rule nc:FolderGroup="true" iscontainer="true">
-          <menupopup>
-            <menuitem class="menuitem-iconic bookmark-group" 
-                      label="rdf:http://home.netscape.com/NC-rdf#Name"
-                      group="true"
-                      uri="rdf:*"
-                      xulcontentsgenerated="true"/>
-          </menupopup>
-        </rule>
-        <rule iscontainer="true" isempty="true"
-              rdf:type="http://home.netscape.com/NC-rdf#Folder">
-          <menupopup>
-            <menu class="menu-iconic bookmark-item" uri="rdf:*" 
-                  type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                  label="rdf:http://home.netscape.com/NC-rdf#Name">
-              <menupopup>
-                <menuitem label="&emptyItem.label;" disabled="true"/>
-              </menupopup>
-            </menu>
-          </menupopup>
-        </rule>
-        <rule iscontainer="true">
-          <menupopup>
-            <menu class="menu-iconic bookmark-item" uri="rdf:*"
-                  label="rdf:http://home.netscape.com/NC-rdf#Name"
-                  type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-              <menupopup />
-            </menu>
-          </menupopup>
-        </rule>
-        <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-          <menupopup> 
-            <menuseparator uri="rdf:*" />
-          </menupopup>
-        </rule>
-        <rule>
-          <menupopup>
-            <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
-                      label="rdf:http://home.netscape.com/NC-rdf#Name" 
-                      status="rdf:http://home.netscape.com/WEB-rdf#status"/>
-          </menupopup>
-        </rule>
-      </template>
+          oncommand="BookmarksMenu.loadBookmark(event.target, this.database)"
+          ondraggesture="nsDragAndDrop.startDrag(event, BookmarksMenuDNDObserver)"
+          ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDNDObserver); event.preventBubble()"
+          ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.preventBubble()"
+          ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.preventBubble()"
+          ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.preventBubble()">
       <menupopup onpopupshowing="updateGroupmarkMenuitem('bookmarks_groupmark');">
         <!-- for some reason these don't work as command="" -->
         <menuitem key="addBookmarkKb"   observes="Browser:AddBookmark"/>
