@@ -23,6 +23,9 @@
  *
  */
 const MAX_HISTORY_MENU_ITEMS = 15;
+var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+var localstore = rdf.GetDataSource("rdf:localstore");
 
 function FillHistoryMenu( aParent, aMenu )
   {
@@ -94,25 +97,57 @@ function executeUrlBarHistoryCommand( aTarget)
 function createUBHistoryMenu( aEvent )
   {
     var ubHistory = appCore.urlbarHistory;
-    if (ubHistory)
-      {
-        var len = ubHistory.count;
-        var end = (len > MAX_HISTORY_MENU_ITEMS) ? (len - MAX_HISTORY_MENU_ITEMS) : 0;
-        // deleteHistoryItems needs to be done even if len = 0!
-        deleteHistoryItems( aEvent ); // Delete old History Menus 
-        for (var i = len - 1; i >= end; i--)
-          createMenuItem( aEvent.target, i, ubHistory.getEntryAtIndex(i));
+    // dump("In createUbHistoryMenu\n");
+	  if (localstore) {
+	     var entries = localstore.GetTargets(rdf.GetResource("nc:urlbar-history"),
+                                    rdf.GetResource("http://home.netscape.com/NC-rdf#child"),
+                                    true);
+       //dump("localstore found\n");
+         var i= MAX_HISTORY_MENU_ITEMS;
+		    // Delete any old menu items
+		    deleteHistoryItems(aEvent);
+
+        while (entries.hasMoreElements() && (i-- > 0)) {
+		       var entry = entries.getNext();
+			     if (entry) {
+			        entry = entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
+              var url = entry.Value;
+              //dump("CREATEUBHISTORYMENU menuitem = " + url + "\n");
+			        createMenuItem(aEvent.target, i, url);
+
+			     }
+         }
       }
   }
 
 function addToUrlbarHistory()
   {
-    var ubHistory = appCore.urlbarHistory;
-    if (ubHistory) 
-      {
-        ubHistory.addEntry( gURLBar.value );
-        ubHistory.printHistory()
-      }
+    //var ubHistory = appCore.urlbarHistory;
+	var urlToAdd = gURLBar.value;
+	if (!urlToAdd)
+	   return;
+	if (localstore) {
+	   var entries = localstore.GetTargets(rdf.GetResource("nc:urlbar-history"),
+                                rdf.GetResource("http://home.netscape.com/NC-rdf#child"),
+                                true);
+
+       while (entries.hasMoreElements()) {
+	     var entry = entries.getNext();
+		 if (entry) {
+		   entry = entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
+           var url = entry.Value;
+		   if (url == urlToAdd) {
+		      dump("URL already in urlbar history\n");
+			  return;
+		   }  
+         }  //entry
+       }  //while
+	   dump("Adding " + urlToAdd + "to urlbar history\n");
+	   localstore.Assert(rdf.GetResource("nc:urlbar-history"),
+                    rdf.GetResource("http://home.netscape.com/NC-rdf#child"),
+                    rdf.GetLiteral(urlToAdd),
+                    true);
+	} //localstore		
   }
   
 function createMenuItem( aParent, aIndex, aValue)
