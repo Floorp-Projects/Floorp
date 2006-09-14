@@ -688,8 +688,8 @@ function Startup()
   // initiated by a web page script
   addEventListener("fullscreen", onFullScreen, false);
 
-  addEventListener("PopupWindow", onPopupWindow, false);
-  addEventListener("DOMPopupBlocked", onPopupBlocked, false);
+  addEventListener("PopupWindow", onPopupWindow, true);
+  addEventListener("DOMPopupBlocked", onPopupBlocked, true);
 
   // does clicking on the urlbar select its contents?
   gClickSelectsAll = pref.getBoolPref("browser.urlbar.clickSelectsAll");
