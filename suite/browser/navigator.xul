@@ -262,7 +262,8 @@ Contributor(s): ______________________________________. -->
     <menubar id="main-menubar" persist="collapsed" grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;"/>
 
     <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar" persist="collapsed" 
-             grippytooltip="aTooltip" grippytooltiptext="&navigationBar.tooltip;">
+             grippytooltip="aTooltip" grippytooltiptext="&navigationBar.tooltip;"
+             tbautostretch="always">
       <menubutton class="menubutton-dual toolbar top" id="back-button" value="&backButton.label;" 
                   crop="right" observes="canGoBack" oncommand="gotoHistoryIndex(event);"
                   tooltip="aTooltip"
@@ -281,7 +282,6 @@ Contributor(s): ______________________________________. -->
       <button class="button-toolbar-1 top" id="stop-button" crop="right" observes="canStop" onclick="BrowserStop()" value="&stopButton.label;" 
               tooltip="aTooltip" tooltiptext="&stopButton.tooltip;"/>
 
-      <toolbarseparator/>
       <box id="nav-bar-inner" autostretch="never" flex="1" style="min-width: 0px;">
         <box id="urlbar-group" class="box-toolbar-group chromeclass-location" flex="1">
           <box autostretch="never" valign="middle" flex="1" id="urlbar-container">
@@ -299,19 +299,24 @@ Contributor(s): ______________________________________. -->
           <button class="button-toolbar-3" id="go-button" value="&goButton.label;" oncommand="addToUrlbarHistory(); BrowserLoadURL();" 
                   tooltip="aTooltip" tooltiptext="&goButton.tooltip;"/> 
         </box>
+
         <button class="button-toolbar-3 chromeclass-location" id="search-button" value="&searchButton.label;" 
                 oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
                 tooltip="aTooltip" tooltiptext="&searchButton.tooltip;"/> 
-    	  <menubutton class="menubutton-dual toolbar" id="print-button" value="&printButton.label;" 
-                  crop="right" buttonaction="BrowserPrint()" tooltip="aTooltip" buttontooltiptext="&printButton.tooltip;">  
-     	  	<menupopup id="printMenu">
-    			<menuitem value="&printCmd.label;" accesskey="&printCmd.accesskey;" oncommand="BrowserPrint()" default="true"/>
-    			<menuitem observes="cmd_pageSetup" />
-		    	<menuitem value="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" disabled="true" oncommand="BrowserReload();"/>
-        	</menupopup>
-  	  	  </menubutton>
-    	<button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>
       </box>
+
+      <toolbarseparator/>
+
+      <menubutton class="menubutton-dual toolbar top" id="print-button" value="&printButton.label;" 
+                  crop="right" buttonaction="BrowserPrint()" tooltip="aTooltip" buttontooltiptext="&printButton.tooltip;">  
+        <menupopup id="printMenu">
+          <menuitem value="&printCmd.label;" accesskey="&printCmd.accesskey;" oncommand="BrowserPrint()" default="true"/>
+          <menuitem observes="cmd_pageSetup" />
+          <menuitem value="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" disabled="true" oncommand="BrowserReload();"/>
+        </menupopup>
+      </menubutton>
+
+      <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>
     </toolbar>
   
     <toolbar id="PersonalToolbar" class="chromeclass-directories" persist="collapsed" dragdroparea="innermostBox"
