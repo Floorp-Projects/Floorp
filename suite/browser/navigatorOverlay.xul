@@ -463,7 +463,7 @@ END of Deprecated -->
       <menuitem value="&PrecheckinTests.label;"  oncommand="window.content.location.href='http://www.mozilla.org/quality/precheckin-tests.html'"/>
       <menuseparator />
       <menuitem value="&QABugCmd.label;"        oncommand="window.content.location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
-      <menuitem value="&QATempCmd.label;"       oncommand="window.content.location.href='http://www.mozilla.org/quality/bug-template.html'"/>
+      <menuitem value="&QATempCmd.label;"       oncommand="window.content.location.href='http://www.mozilla.org/quality/help/bug-form.html'"/>
       <menuitem value="&QASmokeCmd.label;"      oncommand="window.content.location.href='http://www.mozilla.org/quality/smoketests/'"/>
       <menuitem value="&QAKnownBugCmd.label;"   oncommand="window.content.location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
       <menuseparator />
