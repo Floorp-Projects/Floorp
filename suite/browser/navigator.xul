@@ -256,7 +256,9 @@ Contributor(s): ______________________________________. -->
            <!--<textfield class="plain chromeclass-location" id="urlbar" flex="1"
                        onkeypress="if( event.which == 13 ) { AddToUrlbarHistory(); BrowserLoadURL(); }"
                        tooltiptext="&locationBar.tooltip;"/> -->
-			<textfield autocomplete="true" timeout="300" class="plain chromeclass-location" searchSessionType="urlbar" id="urlbar" onkeypress="if( event.which == 13 ) { AddToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>  
+			<textfield autocomplete="true" timeout="300" class="plain chromeclass-location" 
+		 	 searchSessionType="urlbar" id="urlbar" tooltiptext="&locationBar.tooltip;"
+			 onkeypress="if( event.which == 13 ) { AddToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>  
             <button class="button-toolbar-3" id="search-button" value="&searchButton.label;" 
                     oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
                     tooltiptext="&searchButton.tooltip;"/> 
