@@ -714,7 +714,12 @@ function RevealSearchPanel()
       fp.init(window, bundle.GetStringFromName("openFile"), nsIFilePicker.modeOpen);
       fp.setFilters(nsIFilePicker.filterAll);
       fp.show();
-      openNewWindowWith(fp.file.path);
+      
+      // Hack to get a file: url from an nsIFile
+      var tempFileSpec = Components.classes["component://netscape/filespec"].createInstance(Components.interfaces.nsIFileSpec);
+      tempFileSpec.nativePath = fp.file.path;
+      
+      openNewWindowWith(tempFileSpec.URLString);
     } catch (ex) { }
   }
 
