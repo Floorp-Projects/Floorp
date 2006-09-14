@@ -10,7 +10,8 @@
   <!-- package information -->
   <RDF:Description about="urn:mozilla:package:navigator-region"
         chrome:author="mozilla.org"
-        chrome:name="navigator-region">
+        chrome:name="navigator-region"
+	chrome:localeVersion="0.9.3">
   </RDF:Description>
 
 </RDF:RDF>
