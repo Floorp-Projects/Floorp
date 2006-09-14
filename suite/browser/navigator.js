@@ -1247,6 +1247,13 @@ function BrowserCloseTabOrWindow()
   BrowserCloseWindow();
 }
 
+function BrowserTryToCloseWindow()
+{
+  //give tryToClose a chance to veto if it is defined
+  if (typeof(window.tryToClose) != "function" || window.tryToClose())
+    BrowserCloseWindow();
+}
+
 function BrowserCloseWindow() 
 {
   // This code replicates stuff in Shutdown().  It is here because
