@@ -74,6 +74,8 @@ function BrowserReloadWithFlags(reloadFlags)
 
 function GetPrintSettings(webBrowserPrint)
 {
+  var prevPS = gPrintSettings;
+
   try {
     if (gPrintSettings == null) {
       var useGlobalPrintSettings = true;
@@ -88,6 +90,18 @@ function GetPrintSettings(webBrowserPrint)
       } else {
         gPrintSettings = webBrowserPrint.globalPrintSettings;
       }
+
+      // only do this the first time
+      if (prevPS == null) {
+        var defPrinterName = webBrowserPrint.defaultPrinterName;
+        if (defPrinterName != "") {
+          if (gPrintSettings.printerName == null || gPrintSettings.printerName == "") {
+            gPrintSettings.printerName = defPrinterName;
+          }
+          webBrowserPrint.initPrintSettingsFromPrinter(gPrintSettings.printerName, gPrintSettings);
+        }
+      }
+
     }
   } catch (e) {
     alert("GetPrintSettings "+e);
