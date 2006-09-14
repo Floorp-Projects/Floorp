@@ -129,8 +129,6 @@ nsBrowserStatusHandler.prototype =
   {
     this.jsStatus = status;
     this.updateStatusField();
-    // set empty so defaults show up next change
-    this.jsStatus = "";
   },
 
   setJSDefaultStatus : function(status)
@@ -155,7 +153,7 @@ nsBrowserStatusHandler.prototype =
 
   updateStatusField : function()
   {
-    var text = this.overLink || this.status || this.jsStatus || this.jsDefaultStatus || this.defaultStatus;
+    var text = this.jsStatus || this.overLink || this.status || this.jsDefaultStatus || this.defaultStatus;
 
     // check the current value so we don't trigger an attribute change
     // and cause needless (slow!) UI updates
