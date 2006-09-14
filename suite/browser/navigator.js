@@ -1434,14 +1434,30 @@ function hiddenWindowStartup()
   window.focus();
 
   // Disable menus which are not appropriate
-  var disabledItems = ['cmd_close', 'Browser:SendPage', 'Browser:EditPage', 'cmd_printSetup', /*'Browser:PrintPreview',*/
-                       'Browser:Print', 'canGoBack', 'canGoForward', 'Browser:Home', 'Browser:AddBookmark', 'cmd_undo',
-                       'cmd_redo', 'cmd_cut', 'cmd_copy','cmd_paste', 'cmd_delete', 'cmd_selectAll', 'menu_textZoom'];
+  var disabledItems = ['cmd_close', 'Browser:SendPage', 'Browser:EditPage',
+                       'cmd_printSetup', /*'Browser:PrintPreview',*/
+                       'Browser:Print', 'canGoBack', 'canGoForward',
+                       'Browser:Home', 'Browser:AddBookmark',
+                       'Browser:AddBookmarkAs', 'Browser:AddGroupmarkAs',
+                       'cmd_undo', 'cmd_redo', 'cmd_cut', 'cmd_copy',
+                       'cmd_paste', 'cmd_delete', 'cmd_selectAll',
+                       'menu_textZoom'];
   for (var id in disabledItems) {
     var broadcaster = document.getElementById(disabledItems[id]);
     if (broadcaster)
       broadcaster.setAttribute("disabled", "true");
   }
+
+  // now load bookmarks after a delay
+  setTimeout(hiddenWindowLoadBookmarksCallback, 0);
+}
+
+function hiddenWindowLoadBookmarksCallback()
+{
+  // loads the services
+  initServices();
+  initBMService();
+  BMSVC.readBookmarks();  
 }
 
 // Initialize the LeakDetector class.
