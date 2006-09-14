@@ -151,6 +151,8 @@ a[href] img {
   -moz-margin-end: 0;
   margin-top: 0;
   margin-bottom: 0;
+  max-width: 300px;
+  max-height: 150px;
 }
 
 .feedEntryContent {
