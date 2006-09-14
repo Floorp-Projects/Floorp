@@ -291,7 +291,7 @@
 
 <!ENTITY throbber.tooltip             "Go to the &vendorShortName; home page">
 
-<!ENTITY locationBar.tooltip          "Location and search field">
+<!ENTITY locationBar.tooltip          "Enter search term, keyword, or web address">
 <!ENTITY internetKeyword.tooltip      "Return to previously viewed page or choose keyword">
 
 <!ENTITY menuBar.tooltip              "Menu bar">
