@@ -277,7 +277,6 @@ public:
   void              LiveResizeEnded();
   
 #ifdef ACCESSIBILITY
-  PRBool            DispatchAccessibleEvent(nsIAccessible** aAccessible);
   void              GetDocumentAccessible(nsIAccessible** aAccessible);
 #endif
 
