@@ -113,12 +113,34 @@
 <!ENTITY dcharCp1256Cmd.label "Arabic (Windows-1256)">
 <!ENTITY searchMenu.label "Search">
 <!ENTITY findOnCmd.label "Find on this Page...">
+<!ENTITY findOnCmd.accesskey "f">
 <!ENTITY findAgainCmd.label "Find Again">
+<!ENTITY findAgainCmd.accesskey "g">
 <!ENTITY searchBookmarksHistoryCmd.label "Search Bookmarks/History">
-<!ENTITY searchInternetCmd.label "Search the Internet">
-<!ENTITY searchAllMailCmd.label "Search Mail/News">
+<!ENTITY searchBookmarksHistoryCmd.accesskey "b">
+<!ENTITY searchInternetCmd.label "Search the Web">
+<!ENTITY searchInternetCmd.accesskey "w">
+<!ENTITY searchAllMailCmd.label "Search all Mail">
+<!ENTITY searchAllMailCmd.accesskey "m">
 <!ENTITY searchAddressbookCmd.label "Search Addressbook">
+<!ENTITY searchAddressbookCmd.accesskey "a">
 <!ENTITY searchComputerCmd.label "Search on this Computer...">
+<!ENTITY searchBusinessMenu.label "Business">
+<!ENTITY searchBusinessMenu.accesskey "u">
+<!ENTITY searchYellowPages.label "Yellow Pages">
+<!ENTITY searchYellowPages.accesskey "y">
+<!ENTITY searchStockQuote.label "Stock Quote Lookup">
+<!ENTITY searchStockQuote.accesskey "s">
+<!ENTITY searchMaps.label "Maps and Directions">
+<!ENTITY searchMaps.accesskey "d">
+<!ENTITY searchPeople.label "People Finder">
+<!ENTITY searchPeople.accesskey "p">
+<!ENTITY searchReferenceDesk.label "Reference Desk">
+<!ENTITY searchReferenceDesk.accesskey "r">
+<!ENTITY searchShopping.label "Shopping Search">
+<!ENTITY searchShopping.accesskey "s">
+<!ENTITY searchInternetKeywords.label "Internet Keywords">
+<!ENTITY searchInternetKeywords.accesskey "k">
 <!ENTITY goMenu.label "Go">
 <!ENTITY goMenu.accesskey "g">
 <!ENTITY goBackCmd.label "Back">
@@ -268,7 +290,7 @@
 
 <!-- Statusbar -->
 <!ENTITY  statusText.label "Document: Done">
-<!ENTITY  buildId.label "Build ID: 1999122808">
+<!ENTITY  buildId.label "Build ID: 2000022708">
 
 <!-- Context Menu -->                 
 <!ENTITY openLinkCmd.label            "Open Link in New Window">
