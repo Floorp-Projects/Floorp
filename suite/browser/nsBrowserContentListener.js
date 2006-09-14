@@ -166,5 +166,5 @@ nsBrowserContentListener.prototype =
         return null;
     },
     loadCookie: null,
-    parentContentListener: null,
+    parentContentListener: null
 }
