@@ -263,7 +263,6 @@ nsBrowserStatusHandler.prototype =
 
   onSecurityChange : function(aWebProgress, aRequest, aState)
   {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
   },
 
   startDocumentLoad : function(aRequest)
