@@ -411,25 +411,15 @@ function allLeftButtonsAreHidden()
   return true;
 }
 
-function RegisterTabOpenObserver()
-{
-  const observer = {
-    observe: function(subject, topic, data)
-    {
-      if (topic != "open-new-tab-request" || subject != window)
-        return;
+const gTabOpenObserver = {
+  observe: function(subject, topic, data)
+  {
+    if (topic != "open-new-tab-request" || subject != window)
+      return;
 
-      delayedOpenTab(data);
-    }
-  };
-
-  var service = Components.classes["@mozilla.org/observer-service;1"]
-    .getService(Components.interfaces.nsIObserverService);
-  service.addObserver(observer, "open-new-tab-request", false);
-  // Null out service variable so the closure of the observer doesn't
-  // own the service and create a cycle (bug 170022).
-  service = null;
-}
+    delayedOpenTab(data);
+  }
+};
 
 function Startup()
 {
@@ -634,7 +624,9 @@ function Startup()
                                 .getService(Components.interfaces.nsIXRemoteService);
       remoteService.addBrowserInstance(window);
 
-      RegisterTabOpenObserver();
+      var observerService = Components.classes["@mozilla.org/observer-service;1"]
+        .getService(Components.interfaces.nsIObserverService);
+      observerService.addObserver(gTabOpenObserver, "open-new-tab-request", false);
     }
   }
   
@@ -713,6 +705,10 @@ function Shutdown()
     remoteService = Components.classes[XREMOTESERVICE_CONTRACTID]
                               .getService(Components.interfaces.nsIXRemoteService);
     remoteService.removeBrowserInstance(window);
+
+    var observerService = Components.classes["@mozilla.org/observer-service;1"]
+      .getService(Components.interfaces.nsIObserverService);
+    observerService.removeObserver(gTabOpenObserver, "open-new-tab-request", false);
   }
 
   try {
