@@ -40,6 +40,7 @@ catch (ex) {
 }
 
   var appCore = null;
+  var maxHistoryMenuItems=15;
   var explicitURL = false;
   var textZoom = 1.0;
 
@@ -584,49 +585,230 @@ function Shutdown()
   }
 
 
-  function setKeyword(index)
+
+   function FillHistoryMenu(parent, menuname)
+   {
+         var shistory;
+         if (!appCore) {
+           dump("BrowserAppCore is not initialized!!\n");
+               return;
+         }
+         //Get the content area docshell
+         var docShell=null;
+         var result = appCore.getContentDocShell(docShell);            
+         if (!docShell) {
+           dump("Couldn't get docshell from BrowserAppCore\n");
+               return;
+         }
+         //Get the session history component from docshell
+         docShell = docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
+         if (docShell)
+         shistory = docShell.sessionHistory;
+         if (!shistory) {
+            dump("Session history is not initialized!!\n");
+                return;
+       }
+         //Remove old entries if any
+         DeleteHistoryItems(parent);
+ 
+       var count = shistory.count;
+         var index = shistory.index;
+ 
+       if (menuname == 'back') 
+         {
+          var end = (index > maxHistoryMenuItems) ? index-maxHistoryMenuItems : 0;
+            for (j=index-1; j>=end; j--) {
+            
+                  var entry = shistory.getEntryAtIndex(j, false);
+                  if (!entry) {
+              dump("Error accessing Session history Entries!!\n");
+                        return;
+                  }
+                  var title = entry.getTitle();
+                  CreateMenuItem(parent, j, title);                
+          }  //for
+       }  //if(menuname==back)
+       else if (menuname == 'forward')
+         {
+          var end  = ((count-index) > maxHistoryMenuItems) ? index+maxHistoryMenuItems : count;
+ 
+                for(j=index+1; j<end; j++) {
+             var entry = shistory.getEntryAtIndex(j, false);
+                   if (!entry) {
+               dump("Error accessing Session history Entries!!\n");
+                         return;
+                   }
+                   var title = entry.getTitle();
+                   CreateMenuItem(parent, j, title);
+                }  //for
+       }
+       else if (menuname == 'go')
+         {
+             var end = (count>maxHistoryMenuItems) ? (count-maxHistoryMenuItems) : 0;
+           for(j=count-1; j>=end; j--) {
+              var entry = shistory.getEntryAtIndex(j, false);
+                    if (!entry) {
+                dump("Error accessing Session history Entries!!\n");
+                      return;
+                    }
+                    var title = entry.getTitle();
+                    CreateMenuItem(parent, j, title);
+                 }   //for
+          }
+   }
+ 
+ 
+ 
+ 
+   function ExecuteUBCommand(event) 
+   {
+      //dump("In ExecuteUBCommand\n");
+      var target = event.target;
+        var keyword = target.getAttribute("keyword");
+        if (keyword){
+           //dump("Executing Keyword\n");
+           ExecuteKeyword(keyword);
+               return;
+      }
+      var index = target.getAttribute("index");
+        if (index) {
+          var urlbar = document.getElementById("urlbar");
+                var url = target.getAttribute("value");
+                //dump("Got History item, url = " + url + "\n");
+                if (url) {
+                  urlbar.value = url;
+                  BrowserLoadURL();
+                }
+        }
+   }   //ExecuteUBCommand
+ 
+  
+   function ExecuteKeyword(keyword)
+    {
+        urlbar = document.getElementById('urlbar');
+          if (!urlbar)
+            return;
+       switch(keyword) {
+           case 'quote':                   
+                urlbar.focus();
+                        urlbar.value = bundle.GetStringFromName("quoteKeyword");
+                        urlbar.setSelectionRange(14,33);
+                        break;
+           case 'local':
+               urlbar.focus();
+                     urlbar.value = bundle.GetStringFromName("localKeyword");
+                         urlbar.setSelectionRange(12,27);                        
+                         break;
+           case 'shop':
+                 urlbar.focus();
+                     urlbar.value = bundle.GetStringFromName("shopKeyword");
+                         urlbar.setSelectionRange(13,22);
+                         break;
+           case 'career':
+                     urlbar.focus();
+                     urlbar.value = bundle.GetStringFromName("careerKeyword");
+                         urlbar.setSelectionRange(8,19);
+                       break;
+           case 'webmail':
+                       if (appCore)
+                           appCore.loadUrl(bundle.GetStringFromName("webmailKeyword"));
+                         else
+                            dump("Couldn't find instance of BrowserAppCore\n");
+                         break;
+                  
+           case 'list':
+                     if (appCore)
+                           appCore.loadUrl(bundle.GetStringFromName("keywordList"));
+                         else
+						   dump("Couldn't find instance of BrowserAppCore\n");
+				     break;
+		   }
+   }
+
+  function CreateUBHistoryMenu(event)
   {
-      urlbar = document.getElementById('urlbar');
-	  if (!urlbar)
-	    return;
-      switch(index) {
-          case 0:		    
-	    	urlbar.focus();
-			urlbar.value = bundle.GetStringFromName("quoteKeyword");
-			urlbar.setSelectionRange(14,33);
-			break;
-          case 1:
-             urlbar.focus();
-		     urlbar.value = bundle.GetStringFromName("localKeyword");
-			 urlbar.setSelectionRange(12,27);			 
-			 break;
-          case 2:
-	         urlbar.focus();
-		     urlbar.value = bundle.GetStringFromName("shopKeyword");
-			 urlbar.setSelectionRange(13,22);
-			 break;
-		  case 3:
-		     urlbar.focus();
-		     urlbar.value = bundle.GetStringFromName("careerKeyword");
-			 urlbar.setSelectionRange(8,19);
-			 break;
-		  case 4:
-			 if (appCore)
-			   appCore.loadUrl(bundle.GetStringFromName("webmailKeyword"));
-			 else
-			    dump("Couldn't find instance of BrowserAppCore\n");
-			 break;
-		  
-		  case 5:
-		     if (appCore)
-			   appCore.loadUrl(bundle.GetStringFromName("keywordList"));
-			 else
-			    dump("Couldn't find instance of BrowserAppCore\n");   
-			 break;
-		     break;		 
-	  }
+     //dump("In CreateUBHistoryMenu\n");
+       if (!appCore) {
+        dump("BrowserInstance not Initialised\n");
+              return;
+     }
+       var ubHistory = appCore.urlbarHistory;
+       if (ubHistory) {
+        var len = ubHistory.count;
+              var end = (len>maxHistoryMenuItems) ? (len-maxHistoryMenuItems) : 0;
+              if (len > 0)
+                DeleteHistoryItems(event); // Delete old History Menus
+              for (i=len-1;i>=end;i--)
+              {
+           var label = ubHistory.getEntryAtIndex(i);
+              //   dump("Got Entry At Index " + label + "\n");
+           var parent = event.target;
+                 CreateMenuItem(parent, i, label);
+              }
+       }
+  }
+
+  function AddToUrlbarHistory()
+  {
+    // dump("In AddtoUrlbarHistory\n");
+       if (!appCore) {
+        dump("BrowserInstance not initialised\n");
+              return;
+     }
+       var ubHistory = appCore.urlbarHistory;
+       if (ubHistory) {
+      //  dump("Got handle to the urlbar history component\n");
+              ubHistory.addEntry(document.getElementById('urlbar').value);
+              ubHistory.printHistory()
+     }
+       else
+          dump("Could not get handle to the urlbar Component\n");
 
   }
+
+  function CreateMenuItem(parent, index, label)
+  {
+     var menuItem = document.createElement("menuitem");
+     if (label == null){
+          label = "Error: Title Not Available";
+      }
+      menuItem.setAttribute("value", label);
+      menuItem.setAttribute("index", i);
+        dump("Created Menuitem " + label + "\n");
+      parent.appendChild(menuItem);
+  }
+
+  function DeleteHistoryItems(event)
+  {
+      var parent = event.target;
+      //dump("In DeleteHistoryItems\n");
+      var childNodes = parent.childNodes;
+        if (!childNodes) {
+           dump("Error: UB-History menu found no Children!!\n");
+           return;
+        }
+        var ccount = childNodes.length;
+          
+        for (i=ccount-1; i>=0; i--)
+        {          
+            var menuitem = childNodes.item(i);
+                  var index;
+                      if (menuitem) {
+                    index = menuitem.getAttribute("index");
+                      }
+              //      dump("Index for item to be deleted " + index + "\n");
+                      if (index) {
+              //        dump("Deleting menu item " + menuitem.getAttribute("value") + "\n");
+                        try {                  
+                           parent.removeChild(menuitem);
+                    }
+                    catch(e) {
+                       dump(e);
+                    }
+                      }
+        }  //for
+   }   //DeleteHistoryItems
+
 
   function OpenBookmarkURL(node, datasources)
   {
