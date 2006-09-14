@@ -31,7 +31,6 @@ Contributor(s): ______________________________________. -->
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/securityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/bookmarks/bookmarksOverlay.xul"?>
 
 
@@ -79,7 +78,6 @@ Contributor(s): ______________________________________. -->
   
   <!-- Navigator -->
   <script type="application/x-javascript" src="chrome://navigator/content/navigator.js"/>
-  <script type="application/x-javascript" src="tooltip.js"/>
   <script type="application/x-javascript" src="navigatorDD.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
 
