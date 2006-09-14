@@ -188,7 +188,6 @@
 <!ENTITY reloadButton.tooltip         "Reload current page">
 <!ENTITY stopButton.label             "Stop">
 <!ENTITY stopButton.tooltip           "Stop loading this page">
-<!ENTITY clearButton.tooltip          "Clear the location bar">
 <!ENTITY searchButton.label           "Search">
 <!ENTITY searchButton.tooltip         "Type a word in the field to the left, then click Search">
 <!ENTITY goButton.label               "Go">

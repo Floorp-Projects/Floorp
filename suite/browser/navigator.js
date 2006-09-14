@@ -601,12 +601,6 @@ function BrowserStop()
   }
 }
 
-function clearLocationBar()
-{
-   gURLBar.value = "";
-   gURLBar.focus();
-}
-
 function BrowserReload()
 {
   const reloadFlags = nsIWebNavigation.LOAD_FLAGS_NONE;
