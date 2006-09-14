@@ -1028,11 +1028,30 @@ function BrowserOpenWindow()
 function BrowserOpenTab()
 {
   if (!gInPrintPreviewMode) {
-    var handler = Components.classes['@mozilla.org/commandlinehandler/general-startup;1?type=browser']
-                            .getService(Components.interfaces.nsICmdLineHandler);
-    var uriToLoad = handler.defaultArgs.split("\n")[0];
-    if (/^\s*$/.test(uriToLoad))
+    var uriToLoad;
+    try {
+      switch ( pref.getIntPref("browser.tabs.loadOnNewTab") )
+      {
+        case -1:
+          var handler = Components.classes['@mozilla.org/commandlinehandler/general-startup;1?type=browser']
+                                  .getService(Components.interfaces.nsICmdLineHandler);
+          uriToLoad = handler.defaultArgs.split("\n")[0];
+          if (!/\S/.test(uriToLoad))
+            uriToLoad = "about:blank";
+          break;
+        default:
+          uriToLoad = "about:blank";
+          break;
+        case 1:
+          uriToLoad = pref.getCharPref("browser.startup.homepage");
+          break;
+        case 2:
+          uriToLoad = getWebNavigation().currentURI.spec;
+          break;
+      }
+    } catch(e) {
       uriToLoad = "about:blank";
+    }
 
     gBrowser.selectedTab = gBrowser.addTab(uriToLoad);
     var navBar = document.getElementById("nav-bar");
