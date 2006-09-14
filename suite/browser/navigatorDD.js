@@ -279,6 +279,13 @@ var contentAreaDNDObserver = {
     {
       var aData = aData.length ? aData[0] : aData;
       var url = retrieveURLFromData(aData);
+      if (url.length == 0)
+        return;
+      // valid urls don't contain spaces ' '; if we have a space it isn't a valid url so bail out
+      var urlstr = url.toString();
+      if ( urlstr.indexOf(" ", 0) != -1 )
+        return;
+
       var urlBar = document.getElementById("urlbar");
       urlBar.value = url;
       BrowserLoadURL();
