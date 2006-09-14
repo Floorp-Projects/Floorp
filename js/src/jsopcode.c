@@ -570,6 +570,7 @@ struct JSPrinter {
     uintN           indent;         /* indentation in spaces */
     JSPackedBool    pretty;         /* pretty-print: indent, use newlines */
     JSPackedBool    grouped;        /* in parenthesized expression context */
+    JSPackedBool    dvgflag;        /* js_DecompileValueGenerator magic flag */
     JSScript        *script;        /* script being printed */
     JSScope         *scope;         /* script function scope */
 #if JS_HAS_BLOCK_SCOPE
@@ -599,6 +600,7 @@ js_NewPrinter(JSContext *cx, const char *name, uintN indent, JSBool pretty)
     jp->indent = indent & ~JS_IN_GROUP_CONTEXT;
     jp->pretty = pretty;
     jp->grouped = (indent & JS_IN_GROUP_CONTEXT) != 0;
+    jp->dvgflag = JS_FALSE;
     jp->script = NULL;
     jp->scope = NULL;
 #if JS_HAS_BLOCK_SCOPE
@@ -770,20 +772,17 @@ typedef struct SprintStack {
 
 /*
  * These pseudo-ops help js_DecompileValueGenerator decompile JSOP_SETNAME,
- * JSOP_SETPROP, and JSOP_SETELEM, respectively.  See the first assertion in
- * PushOff.
+ * JSOP_SETPROP, and JSOP_SETELEM, respectively.  They are never stored in
+ * bytecode, so they don't preempt valid opcodes.
  */
-#define JSOP_GETPROP2   254
-#define JSOP_GETELEM2   255
+#define JSOP_GETPROP2   256
+#define JSOP_GETELEM2   257
 
 static JSBool
 PushOff(SprintStack *ss, ptrdiff_t off, JSOp op)
 {
     uintN top;
 
-#if JSOP_LIMIT > JSOP_GETPROP2
-#error JSOP_LIMIT must be <= JSOP_GETPROP2
-#endif
     if (!SprintAlloc(&ss->sprinter, PAREN_SLOP))
         return JS_FALSE;
 
@@ -1134,19 +1133,79 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
          */
         lastop = saveop;
         op = saveop = (JSOp) *pc;
-        if (op >= JSOP_LIMIT) {
-            switch (op) {
-              case JSOP_GETPROP2:
-                saveop = JSOP_GETPROP;
-                break;
-              case JSOP_GETELEM2:
-                saveop = JSOP_GETELEM;
-                break;
-              default:;
-            }
-        }
         cs = &js_CodeSpec[saveop];
         len = oplen = cs->length;
+
+        if (jp->dvgflag && pc + oplen == endpc) {
+            uint32 format, mode, type;
+
+            format = cs->format;
+            if (format & (JOF_SET|JOF_DEL|JOF_INCDEC|JOF_IMPORT|JOF_FOR)) {
+                mode = (format & JOF_MODEMASK);
+                if (mode == JOF_NAME) {
+                    /*
+                     * JOF_NAME does not imply JOF_CONST, so we must check for
+                     * the QARG and QVAR format types, and translate those to
+                     * JSOP_GETARG or JSOP_GETVAR appropriately, instead of to
+                     * JSOP_NAME.
+                     */
+                    type = format & JOF_TYPEMASK;
+                    op = (type == JOF_QARG)
+                         ? JSOP_GETARG
+                         : (type == JOF_QVAR)
+                         ? JSOP_GETVAR
+                         : JSOP_NAME;
+                } else {
+                    /*
+                     * We must replace the faulting pc's bytecode with a
+                     * corresponding JSOP_GET* code.  For JSOP_SET{PROP,ELEM},
+                     * we must use the "2nd" form of JSOP_GET{PROP,ELEM}, to
+                     * throw away the assignment op's right-hand operand and
+                     * decompile it as if it were a GET of its left-hand
+                     * operand.
+                     */
+                    if (mode == JOF_PROP) {
+                        op = (format & JOF_SET) ? JSOP_GETPROP2 : JSOP_GETPROP;
+                    } else if (mode == JOF_ELEM) {
+                        op = (format & JOF_SET) ? JSOP_GETELEM2 : JSOP_GETELEM;
+                    } else {
+                        /*
+                         * Zero mode means precisely that op is uncategorized
+                         * for our purposes, so we must write per-op special
+                         * case code here.
+                         */
+                        switch (op) {
+                          case JSOP_ENUMELEM:
+                            op = JSOP_GETELEM;
+                            break;
+#if JS_HAS_LVALUE_RETURN
+                          case JSOP_SETCALL:
+                            op = JSOP_CALL;
+                            break;
+#endif
+                          default:
+                            JS_ASSERT(0);
+                        }
+                    }
+                }
+            }
+
+            saveop = op;
+            if (op >= JSOP_LIMIT) {
+                switch (op) {
+                  case JSOP_GETPROP2:
+                    saveop = JSOP_GETPROP;
+                    break;
+                  case JSOP_GETELEM2:
+                    saveop = JSOP_GETELEM;
+                    break;
+                  default:;
+                }
+            }
+            JS_ASSERT(js_CodeSpec[saveop].length == oplen);
+
+            jp->dvgflag = JS_FALSE;
+        }
 
         if (cs->token) {
             switch (cs->nuses) {
@@ -3567,15 +3626,14 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
                            JSString *fallback)
 {
     JSStackFrame *fp, *down;
-    jsbytecode *pc, *begin, *end, *tmp;
+    jsbytecode *pc, *begin, *end;
     jsval *sp, *base, *limit;
     JSScript *script;
     JSOp op;
     const JSCodeSpec *cs;
-    uint32 format, mode, type;
     intN depth;
     jssrcnote *sn;
-    uintN len, off;
+    uintN len;
     JSPrinter *jp;
     JSString *name;
 
@@ -3688,12 +3746,9 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     if (op == JSOP_NULL)
         return ATOM_TO_STRING(cx->runtime->atomState.nullAtom);
 
-    cs = &js_CodeSpec[op];
-    format = cs->format;
-    mode = (format & JOF_MODEMASK);
-
     /* NAME ops are self-contained, but others require left context. */
-    if (mode == JOF_NAME) {
+    cs = &js_CodeSpec[op];
+    if ((cs->format & JOF_MODEMASK) == JOF_NAME) {
         begin = pc;
     } else {
         sn = js_GetSrcNote(script, pc);
@@ -3707,62 +3762,6 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     end = pc + cs->length;
     len = PTRDIFF(end, begin, jsbytecode);
 
-    if (format & (JOF_SET | JOF_DEL | JOF_INCDEC | JOF_IMPORT | JOF_FOR)) {
-        tmp = (jsbytecode *) JS_malloc(cx, len * sizeof(jsbytecode));
-        if (!tmp)
-            return NULL;
-        memcpy(tmp, begin, len * sizeof(jsbytecode));
-        if (mode == JOF_NAME) {
-            /*
-             * JOF_NAME does not imply JOF_CONST, so we must check for the
-             * QARG and QVAR format types and translate those to JSOP_GETARG
-             * or JSOP_GETVAR appropriately, instead of JSOP_NAME.
-             */
-            type = format & JOF_TYPEMASK;
-            tmp[0] = (type == JOF_QARG)
-                     ? JSOP_GETARG
-                     : (type == JOF_QVAR)
-                     ? JSOP_GETVAR
-                     : JSOP_NAME;
-        } else {
-            /*
-             * We must replace the faulting pc's bytecode with a corresponding
-             * JSOP_GET* code.  For JSOP_SET{PROP,ELEM}, we must use the "2nd"
-             * form of JSOP_GET{PROP,ELEM}, to throw away the assignment op's
-             * right-hand operand and decompile it as if it were a GET of its
-             * left-hand operand.
-             */
-            off = len - cs->length;
-            JS_ASSERT(off == (uintN) PTRDIFF(pc, begin, jsbytecode));
-            if (mode == JOF_PROP) {
-                tmp[off] = (format & JOF_SET) ? JSOP_GETPROP2 : JSOP_GETPROP;
-            } else if (mode == JOF_ELEM) {
-                tmp[off] = (format & JOF_SET) ? JSOP_GETELEM2 : JSOP_GETELEM;
-            } else {
-                /*
-                 * A zero mode means precisely that op is uncategorized for our
-                 * purposes, so we must write per-op special case code here.
-                 */
-                switch (op) {
-                  case JSOP_ENUMELEM:
-                    tmp[off] = JSOP_GETELEM;
-                    break;
-#if JS_HAS_LVALUE_RETURN
-                  case JSOP_SETCALL:
-                    tmp[off] = JSOP_CALL;
-                    break;
-#endif
-                  default:
-                    JS_ASSERT(0);
-                }
-            }
-        }
-        begin = tmp;
-    } else {
-        /* No need to revise script bytecode. */
-        tmp = NULL;
-    }
-
     name = NULL;
     jp = js_NewPrinter(cx, "js_DecompileValueGenerator", 0, JS_FALSE);
     if (jp) {
@@ -3770,12 +3769,11 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
             JS_ASSERT(OBJ_IS_NATIVE(fp->fun->object));
             jp->scope = OBJ_SCOPE(fp->fun->object);
         }
+        jp->dvgflag = JS_TRUE;
         if (js_DecompileCode(jp, script, begin, len))
             name = js_GetPrinterOutput(jp);
         js_DestroyPrinter(jp);
     }
-    if (tmp)
-        JS_free(cx, tmp);
     return name;
 
   do_fallback:
