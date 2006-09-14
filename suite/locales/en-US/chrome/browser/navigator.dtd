@@ -269,6 +269,9 @@
 <!ENTITY URIDispatchingDisableCmd.label "Disable Dispatching">
 <!-- LOCALIZATION NOTE END : DO not localize the entities above; QA --> 
 
+<!ENTITY menuBar.tooltip                  "Menu Bar">
+<!ENTITY personalToolbar.tooltip          "Personal Toolbar">
+<!ENTITY navigationToolbar.tooltip        "Navigation Toolbar">
 
 <!-- Toolbar items --> 
 <!ENTITY backButton.label             "Back">

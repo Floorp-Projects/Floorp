@@ -133,9 +133,11 @@ Contributor(s): ______________________________________. -->
 
   <toolbox id="navigator-toolbox" class="toolbox-top" deferattached="true">
     <!-- Menu -->
-    <menubar id="main-menubar" persist="collapsed"/>
+    <menubar id="main-menubar" persist="collapsed"
+             grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;"/>
 
     <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar" persist="collapsed" 
+             grippytooltip="aTooltip" grippytooltiptext="&navigationToolbar.tooltip;"
              tbalign="stretch">
       <hbox id="nav-bar-buttons">
         <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"
@@ -226,6 +228,7 @@ Contributor(s): ______________________________________. -->
              ondragdrop="nsDragAndDrop.drop(event, personalToolbarObserver);"
              ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarObserver);"
              ondragexit="nsDragAndDrop.dragExit(event, personalToolbarObserver);"
+             grippytooltip="aTooltip" grippytooltiptext="&personalToolbar.tooltip;"
              tbalign="stretch">
 
       <toolbarbutton id="home-button" class="bookmark-item"
