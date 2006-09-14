@@ -96,6 +96,17 @@
     <keyset id="viewZoomKeys"/>
   </keyset>
 
+  <!-- context menu -->
+  <popupset id="viewSourceContextSet">
+    <popup id="viewSourceContextMenu">
+      <menuitem label="&findNextCmd.label;" accesskey="&findNextCmd.accesskey;"  command="Browser:FindAgain"/>
+      <menuseparator/>
+      <menuitem id="menu_copy_cm" label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" observes="cmd_copy"/>
+      <menuseparator/>
+      <menuitem id="menu_selectAll_cm" label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" observes="cmd_selectAll"/>
+    </popup>
+  </popupset>
+
   <!-- Menu --> 
   <toolbox>
   <menubar id="zmain-menubar">
@@ -160,7 +171,8 @@
        ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"
        ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
 
-    <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"/>
+    <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"
+             context="viewSourceContextMenu"/>
 
   </vbox>
 
