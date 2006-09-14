@@ -197,7 +197,7 @@
         <row id="misc-title">
           <label value="&misc-title.label; "/>
           <hbox>
-          <description id="misc-title-text" width="100%" style="margin: 0px;"/>
+          <description id="misc-title-text" width="100%" style="margin: 0px;" flex="1"/>
           </hbox>
         </row>
         <row id="misc-tblsummary">
