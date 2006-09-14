@@ -132,34 +132,34 @@
         </grid>
         <separator class="thin"/>
         <text id="metahead" class="header" value="&generalMeta;"/>
-        <outliner id="metaoutliner" flex="1" class="inset">
-          <outlinercols>
-            <outlinercol persist="hidden width" flex="1" id="meta-name"    label="&generalMetaName;"/>
+        <tree id="metatree" flex="1" class="inset">
+          <treecols>
+            <treecol persist="hidden width" flex="1" id="meta-name"    label="&generalMetaName;"/>
             <splitter class="tree-splitter"/>
-            <outlinercol persist="hidden width" flex="4" id="meta-content" label="&generalMetaContent;"/>
-          </outlinercols>
-          <outlinerchildren flex="1"/>
-        </outliner>
+            <treecol persist="hidden width" flex="4" id="meta-content" label="&generalMetaContent;"/>
+          </treecols>
+          <treechildren flex="1"/>
+        </tree>
       </vbox>
 
       <!-- Form information -->
       <vbox>
-        <outliner id="formoutliner" class="inset fixedsize" onselect="onFormSelect();">
-          <outlinercols>
-            <outlinercol sortSeparators="true" persist="hidden width" flex="1" 
-                         width="1" id="form-number" label="&formNo;"/>
+        <tree id="formtree" flex="1" class="fixedsize" onselect="onFormSelect();">
+          <treecols>
+            <treecol sortSeparators="true" persist="hidden width" flex="1" 
+                     width="1" id="form-number" label="&formNo;"/>
             <splitter class="tree-splitter"/>
-            <outlinercol sortSeparators="true" persist="hidden width" flex="1" 
-                         width="1" id="form-name"   label="&formName;"/>
+            <treecol sortSeparators="true" persist="hidden width" flex="1" 
+                     width="1" id="form-name"   label="&formName;"/>
             <splitter class="tree-splitter"/>
-            <outlinercol sortSeparators="true" persist="hidden width" flex="3" 
-                         width="3" id="form-action" label="&formMethod;"/>
+            <treecol sortSeparators="true" persist="hidden width" flex="3" 
+                     width="3" id="form-action" label="&formMethod;"/>
             <splitter class="tree-splitter"/>
-            <outlinercol sortSeparators="true" persist="hidden width" flex="2" 
-                         width="2" id="form-method" label="&formAction;"/>
-          </outlinercols>
-          <outlinerchildren flex="1"/>
-        </outliner>
+            <treecol sortSeparators="true" persist="hidden width" flex="2" 
+                     width="2" id="form-method" label="&formAction;"/>
+          </treecols>
+          <treechildren flex="1"/>
+        </tree>
         <splitter orient="vertical" collapse="after"/>
         <vbox flex="1">
           <textbox class="header" id="formname"/>
@@ -183,63 +183,63 @@
             </rows>
           </grid>
           <text class="header" value="&formFields;"/>
-          <outliner id="formpreview" flex="1" class="inset">
-            <outlinercols>
-              <outlinercol sortSeparators="true" persist="hidden width" flex="1" 
+          <tree id="formpreview" flex="1" class="inset">
+            <treecols>
+              <treecol sortSeparators="true" persist="hidden width" flex="1" 
                            width="1" id="field-number" label="&formNo;"/>
               <splitter class="tree-splitter"/>
-              <outlinercol sortSeparators="true" persist="hidden width" flex="3" 
+              <treecol sortSeparators="true" persist="hidden width" flex="3" 
                            width="3" id="field-label"  label="&formLabel;"/>
               <splitter class="tree-splitter"/>
-              <outlinercol sortSeparators="true" persist="hidden width" flex="3" 
+              <treecol sortSeparators="true" persist="hidden width" flex="3" 
                            width="3" id="field-field"  label="&formFName;"/>
               <splitter class="tree-splitter"/>
-              <outlinercol sortSeparators="true" persist="hidden width" flex="1" 
+              <treecol sortSeparators="true" persist="hidden width" flex="1" 
                            width="1" id="field-type"   label="&formType;"/>
               <splitter class="tree-splitter"/>
-              <outlinercol sortSeparators="true" persist="hidden width" flex="3" 
+              <treecol sortSeparators="true" persist="hidden width" flex="3" 
                            width="3" id="field-value"  label="&formCValue;"/>
-            </outlinercols>
-            <outlinerchildren flex="1"/>
-          </outliner>
+            </treecols>
+            <treechildren flex="1"/>
+          </tree>
         </vbox>
       </vbox>
 
       <!-- Link info -->
       <vbox>
-        <outliner id="linkoutliner" flex="1" class="inset">
-          <outlinercols>
-            <outlinercol sortSeparators="true" persist="hidden width" flex="1" 
+        <tree id="linktree" flex="1" class="inset">
+          <treecols>
+            <treecol sortSeparators="true" persist="hidden width" flex="1" 
                          width="1" id="link-number"  label="&linkNo;"/>
             <splitter class="tree-splitter"/>
-            <outlinercol sortSeparators="true" persist="hidden width" flex="5" 
+            <treecol sortSeparators="true" persist="hidden width" flex="5" 
                          width="5" id="link-name"    label="&linkName;"/>
             <splitter class="tree-splitter"/>
-            <outlinercol sortSeparators="true" persist="hidden width" flex="7" 
+            <treecol sortSeparators="true" persist="hidden width" flex="7" 
                          width="7" id="link-address" label="&linkAddress;"/>
             <splitter class="tree-splitter"/>
-            <outlinercol sortSeparators="true" persist="hidden width" flex="2" 
+            <treecol sortSeparators="true" persist="hidden width" flex="2" 
                          width="2" id="link-type"    label="&linkType;"/>
-          </outlinercols>
-          <outlinerchildren flex="1"/>
-        </outliner>
+          </treecols>
+          <treechildren flex="1"/>
+        </tree>
       </vbox>
 
       <!-- Media information -->
       <vbox>
-        <outliner id="imageoutliner" class="inset fixedsize" onselect="onImageSelect();">
-          <outlinercols>
-            <outlinercol sortSeparators="true" persist="hidden width" flex="1" 
+        <tree id="imagetree" flex="1" class="inset fixedsize" onselect="onImageSelect();">
+          <treecols>
+            <treecol sortSeparators="true" persist="hidden width" flex="1" 
                          width="1"  id="image-number"  label="&mediaNo;"/>
             <splitter class="tree-splitter"/>
-            <outlinercol sortSeparators="true" persist="hidden width" flex="10" 
+            <treecol sortSeparators="true" persist="hidden width" flex="10" 
                          width="10" id="image-address" label="&mediaAddress;"/>
             <splitter class="tree-splitter"/>
-            <outlinercol sortSeparators="true" persist="hidden width" flex="2" 
+            <treecol sortSeparators="true" persist="hidden width" flex="2" 
                          width="2"  id="image-type"    label="&mediaType;"/>
-          </outlinercols>
-          <outlinerchildren flex="1"/>
-        </outliner>
+          </treecols>
+          <treechildren flex="1"/>
+        </tree>
         <splitter collapse="after" orient="vertical"/>
         <grid>
           <columns>
