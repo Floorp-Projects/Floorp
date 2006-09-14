@@ -46,7 +46,8 @@
 	<key id="key_newBlankPage"/>
 	<key id="openBrowserKb"      key="&openCmd.commandkey;" observes="Browser:Open"  modifiers="accel"/>
 	<key id="openFileKb"         key="&openFileCmd.commandkey;" observes="Browser:OpenFile"  modifiers="accel"/>
-	<key id="key_savePage"        key="&savePageCmd.commandkey;" observes="Browser:SavePage" modifiers="accel"/>
+	<key id="key_savePage"       key="&savePageCmd.commandkey;" observes="Browser:SavePage" modifiers="accel"/>
+	<key id="key_editPage"       key="&editPageCmd.commandkey;" observes="Browser:EditPage" modifiers="accel"/>
 	<key id="printKb"            key="&printCmd.commandkey;" observes="Browser:Print"  modifiers="accel"/>
 	<key id="key_close"/>
 	<key id="key_quit"/>
@@ -100,7 +101,7 @@
 	<broadcaster id="Browser:OpenFile"  value="&openFileCmd.label;" oncommand="BrowserOpenFileWindow();"/>
 	<broadcaster id="cmd_close" oncommand="BrowserClose()"/>
 	<broadcaster id="Browser:SavePage" value="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" oncommand="savePage();"/>
-	<broadcaster id="Browser:EditPage"  value="&editPageCmd.label;" oncommand="BrowserEditPage(window._content.location.href);"/>
+	<broadcaster id="Browser:EditPage" value="&editPageCmd.label;" oncommand="BrowserEditPage(window._content.location.href);"/>
 	<broadcaster id="Browser:PrintSetup"  value="&printSetupCmd.label;"     disabled ="true" oncommand="BrowserReload();"/>
 	<broadcaster id="Browser:PrintPreview"  value="&printPreviewCmd.label;" disabled="true"  oncommand="BrowserReload();"/>
 	<broadcaster id="Browser:Print"  value="&printCmd.label;"        						 oncommand="BrowserPrint();"/>
@@ -164,7 +165,7 @@
 		    <menuitem id="context-savepage" key="key_savePage" observes="Browser:SavePage"/>
 		    <menuitem id="savepage" value="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="savePage(gFocusedURL);" hidden="true"/>
 	      <menuseparator id="file_moduleSeparator"/>
-	      <menuitem accesskey="&editPageCmd.accesskey;" observes="Browser:EditPage" />
+	      <menuitem accesskey="&editPageCmd.accesskey;" key="key_editPage" observes="Browser:EditPage" />
 	      <menuseparator/>
 	      <menuitem accesskey="&printSetupCmd.accesskey;" observes="Browser:PrintSetup"/>
 	      <menuitem accesskey="&printPreviewCmd.accesskey;" observes="Browser:PrintPreview"/>
