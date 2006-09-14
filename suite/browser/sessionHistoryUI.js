@@ -223,7 +223,7 @@ function addToUrlbarHistory()
     var url = getShortcutOrURI(urlToAdd);
     var fixedUpURI = gURIFixup.createFixupURI(url, 0);
     if (!fixedUpURI.schemeIs("data"))
-      gGlobalHistory.markPageAsTyped(fixedUpURI.spec);
+      gGlobalHistory.markPageAsTyped(fixedUpURI);
   }
   catch(ex) {
   }
