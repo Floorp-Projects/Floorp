@@ -447,7 +447,7 @@
       <menu label="Verification">
         <menupopup>
           <menuitem label="Tables" oncommand="loadURI('resource:/res/samples/test6.html');"/>
-          <menuitem label="JavaScript" oncommand="loadURI('http://mozilla.org/quality/browser/standards/javascript/tcmatrix/index.html');"/>
+          <menuitem label="DOM" oncommand="loadURI('http://mozilla.org/quality/browser/standards/javascript/tcmatrix/index.html');"/>
           <menuitem label="GIF Images" oncommand="loadURI('http://www.mozilla.org/quality/browser/debugtc/bft_browser_imagemap.html');"/>
           <menuitem label="JPEG Images" oncommand="loadURI('resource:/res/samples/test2.html');"/>
           <menuitem label="PNG Images" oncommand="loadURI('http://www.libpng.org/pub/png/png-MagnoliaAlpha.html');"/>
