@@ -246,6 +246,11 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
             sortResource="http://www.mozilla.org/rdf/chrome#name"
             sortDirection="ascending" 
             >
+       <menupopup>
+          <menuitem value="&downloadMore.label;" 
+                    oncommand="loadXURL('urn:clienturl:viewmenu:intlwebcontent');"/>
+          <menuseparator />
+       </menupopup>
         <template>
           <rule>
             <menupopup>
@@ -257,11 +262,6 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
           </rule>
          </template>
 
-       <menupopup sortStaticsLast="true" >
-          <menuseparator />
-          <menuitem value="&downloadMore.label;" 
-                    oncommand="loadXURL('urn:clienturl:viewmenu:intlwebcontent');"/>
-       </menupopup>
       </menu>
 
 <!-- Deprecated BEGIN
