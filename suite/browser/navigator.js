@@ -228,6 +228,10 @@ nsXULBrowserWindow.prototype =
     else
       jsStatus = status;
     UpdateStatusField();
+    // Status is now on status bar; don't use it next time.
+    // This will cause us to revert to defaultStatus/jsDefaultStatus when the
+    // user leaves the link (e.g., if the script set window.status in onmouseover).
+    jsStatus = null;
   },
   setJSDefaultStatus : function(status)
   {
@@ -326,9 +330,6 @@ nsXULBrowserWindow.prototype =
         msg = msg.replace(/%elapsed%/, elapsed);
         defaultStatus = msg;
         UpdateStatusField();
-        //window.XULBrowserWindow.setDefaultStatus(msg);
-        //this.setDefaultStatus(msg);
-        this.setOverLink(msg);
         // Turn progress meter off.
         statusMeter.setAttribute("mode","normal");
         statusMeter.value = 0;  // be sure to clear the progress bar
