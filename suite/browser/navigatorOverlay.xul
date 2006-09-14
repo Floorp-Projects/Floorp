@@ -459,6 +459,15 @@ END of Deprecated -->
        </menupopup>
       </menu>
 
+      <menu value="XBL Demos">
+       <menupopup>
+        <menuitem value="#0 Remote XBL"  oncommand="window._content.location.href='http://www.shadowland.org/xbl/test0/test.xul'"/>
+        <menuitem value="#1 Technicolor DIV" oncommand="window._content.location.href='http://www.shadowland.org/xbl/test1/test.html'"/>
+        <menuitem value="#2 Rollover Madness" oncommand="window._content.location.href='http://www.shadowland.org/xbl/test2/test.html'"/>
+        <menuitem value="#3 Popups in HTML" oncommand="window._content.location.href='http://www.shadowland.org/xbl/test3/test.html'"/>
+       </menupopup>
+      </menu>
+
       <menu value="&xptkMenu.label;">
        <menupopup>
         <menuitem value="&xptk1Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/checkboxTest.xul'"/>
