@@ -148,6 +148,9 @@
     <command id="Browser:AddBookmarkAs" label="&addCurPageAsCmd.label;"
              accesskey="&addCurPageAsCmd.accesskey;"
              oncommand="addBookmarkAs();"/>
+    <command id="Browser:AddGroupmarkAs" label="&addCurTabsAsCmd.label;"
+             accesskey="&addCurTabsAsCmd.accesskey;"
+             oncommand="addGroupmarkAs(); event.preventBubble();"/>
     <command id="Browser:ManageBookmark" label="&manBookmarksCmd.label;" accesskey="&manBookmarksCmd.accesskey;" 
              oncommand="BrowserEditBookmarks();" />
   
@@ -331,10 +334,11 @@
           </menupopup>
         </rule>
       </template>
-      <menupopup>
+      <menupopup onpopupshowing="updateGroupmarkMenuitem('bookmarks_groupmark');">
         <!-- for some reason these don't work as command="" -->
         <menuitem key="addBookmarkKb"   observes="Browser:AddBookmark"/>
         <menuitem key="addBookmarkAsKb" observes="Browser:AddBookmarkAs"/>
+        <menuitem id="bookmarks_groupmark" observes="Browser:AddGroupmarkAs"/>
         <menuitem key="manBookmarkKb"   observes="Browser:ManageBookmark"/>
         <menuseparator/>
       </menupopup>

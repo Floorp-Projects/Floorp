@@ -458,7 +458,6 @@ function Startup()
 
   // now load bookmarks after a delay
   setTimeout(LoadBookmarksCallback, 0);
-
 }
 
 function LoadBookmarksCallback()
@@ -719,6 +718,17 @@ function addBookmarkAs()
     BookmarksUtils.addBookmarkForTabBrowser(gBrowser);
   else
     BookmarksUtils.addBookmarkForBrowser(gBrowser.webNavigation, true);
+}
+
+function addGroupmarkAs()
+{
+  BookmarksUtils.addBookmarkForTabBrowser(gBrowser, true);
+}
+
+function updateGroupmarkMenuitem(id)
+{
+  const disabled = gBrowser.browsers.length == 1;
+  document.getElementById(id).setAttribute("disabled", disabled);
 }
 
 function readRDFString(aDS,aRes,aProp)
