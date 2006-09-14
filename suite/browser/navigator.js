@@ -365,7 +365,7 @@ nsXULBrowserWindow.prototype =
 
     // We should probably not do this if the value has changed since the user 
     // searched
-    locationFld.setAttribute("value", location);
+    locationFld.value = location;
 
     UpdateBackForwardButtons();
   },
