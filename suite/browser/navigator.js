@@ -1875,7 +1875,7 @@ function applyTheme(themeName)
     return;
 
   var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-    .getService(Components.interfaces.nsIXULChromeRegistry);
+    .getService(Components.interfaces.nsIChromeRegistrySea);
 
   var oldTheme = false;
   try {
@@ -2342,7 +2342,7 @@ function checkTheme()
 {
   var theSkinKids = document.getElementById("theme");
   var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-    .getService(Components.interfaces.nsIXULChromeRegistry);
+    .getService(Components.interfaces.nsIChromeRegistrySea);
   for (var i = 0; i < theSkinKids.childNodes.length; ++i) {
     var child = theSkinKids.childNodes[i];
     var id=child.getAttribute("id");
