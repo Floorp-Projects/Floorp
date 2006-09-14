@@ -527,64 +527,79 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 		autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
 		searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
 		defaultSearchURL = pref.CopyCharPref("browser.search.defaulturl");
+		
 	}
 	catch(ex)
 	{
 	}
-	
+
 	if ((defaultSearchURL == null) || (defaultSearchURL == ""))
 	{
 		// Fallback to a Netscape default (one that we can get sidebar search results for)
 		defaultSearchURL = "http://search.netscape.com/cgi-bin/search?search=";
 	}
 
-	if ((searchMode == 1) || (forceDialogFlag == true))
+	if (window.content.location.href == searchStr) 
 	{
-		// Use a single search dialog
-		var cwindowManager = Components.classes["component://netscape/rdf/datasource?name=window-mediator"].getService();
-		var iwindowManager = Components.interfaces.nsIWindowMediator;
-		var windowManager  = cwindowManager.QueryInterface(iwindowManager);
-		var searchWindow = windowManager.getMostRecentWindow("search:window");
-		if (searchWindow)
-		{
-			searchWindow.focus();
-			if (searchWindow.loadPage)	searchWindow.loadPage(tabName, searchStr);
+	    dump(searchStr + ' Search: ' + defaultSearchURL + '\n');
+		if (!(defaultSearchURL == "http://search.netscape.com/cgi-bin/search?search=")) {
+			window.content.location.href = defaultSearchURL;
 		}
 		else
 		{
-			window.openDialog("chrome://search/content/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
+			window.content.location.href = "http://search.netscape.com/"
 		}
 	}
 	else
 	{
-		if ((!searchStr) || (searchStr == ""))	return;
-
-		var searchDS = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
-		if (searchDS)	searchDS = searchDS.QueryInterface(Components.interfaces.nsIInternetSearchService);
-
-		var	escapedSearchStr = escape(searchStr);
-		defaultSearchURL += escapedSearchStr;
-
-		if (searchDS)
+		if ((searchMode == 1) || (forceDialogFlag == true))
 		{
-			searchDS.RememberLastSearchText(escapedSearchStr);
-
-			if ((searchEngineURI != null) && (searchEngineURI != ""))
+			// Use a single search dialog
+			var cwindowManager = Components.classes["component://netscape/rdf/datasource?name=window-mediator"].getService();
+			var iwindowManager = Components.interfaces.nsIWindowMediator;
+			var windowManager  = cwindowManager.QueryInterface(iwindowManager);
+			var searchWindow = windowManager.getMostRecentWindow("search:window");
+			if (searchWindow)
 			{
-				try
-				{
-					var	searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr);
-					if ((searchURL != null) && (searchURL != ""))
-					{
-						defaultSearchURL = searchURL;
-					}
-				}
-				catch(ex)
-				{
-				}
+				searchWindow.focus();
+				if (searchWindow.loadPage)	searchWindow.loadPage(tabName, searchStr);
+			}
+			else
+			{
+				window.openDialog("chrome://search/content/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
 			}
 		}
-		window.content.location.href = defaultSearchURL;
+		else 
+		{  
+			if ((!searchStr) || (searchStr == ""))	return;
+
+			var searchDS = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
+			if (searchDS)	searchDS = searchDS.QueryInterface(Components.interfaces.nsIInternetSearchService);
+
+			var	escapedSearchStr = escape(searchStr);
+			defaultSearchURL += escapedSearchStr;
+
+			if (searchDS)
+			{
+				searchDS.RememberLastSearchText(escapedSearchStr);
+
+				if ((searchEngineURI != null) && (searchEngineURI != ""))
+				{
+					try
+					{
+						var	searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr);
+						if ((searchURL != null) && (searchURL != ""))
+						{
+							defaultSearchURL = searchURL;
+						}
+					}
+					catch(ex)
+					{
+					}
+				}
+			}  
+			window.content.location.href = defaultSearchURL;
+		}
 	}
 
 	// should we try and open up the sidebar to show the "Search Results" panel?
