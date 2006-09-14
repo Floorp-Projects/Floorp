@@ -152,7 +152,7 @@ nsBrowserStatusHandler.prototype =
     if (link)
       this.statusTextField.setAttribute('crop', 'center');
     else
-      this.statusTextField.removeAttribute('crop');
+      this.statusTextField.setAttribute('crop', 'end');
   },
 
   updateStatusField : function()
