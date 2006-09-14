@@ -15,6 +15,9 @@
 
 <!ENTITY browserCmd.label	"New Navigator Window">
 <!ENTITY browserCmd.accesskey	"n">
+<!ENTITY tabCmd.label "Navigator Tab">
+<!ENTITY tabCmd.accesskey "t">
+<!ENTITY tabCmd.commandkey "t">
 <!ENTITY openCmd.label "Open Address...">
 <!ENTITY openCmd.accesskey "r">
 <!ENTITY openCmd.commandkey "l">

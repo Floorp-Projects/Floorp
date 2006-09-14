@@ -51,6 +51,7 @@
   <keyset id="navKeys">
     <!-- File Menu -->
     <key id="key_newNavigator"/>
+    <key id="key_newNavigatorTab" key="&tabCmd.commandkey;" modifiers="control" command="cmd_newNavigatorTab"/>
     <key id="key_newBlankPage"/>
     <key id="focusURLBar"      key="&openCmd.commandkey;" oncommand="ShowAndSelectContentsOfURLBar();"
          modifiers="accel"/>
@@ -99,6 +100,8 @@
 
   <commandset id="commands">
     <command id="cmd_newNavigator"/>
+    <command id="cmd_newNavigatorTab" oncommand="BrowserOpenTab();"/>
+
     <command id="cmd_newEditor"/>
     <!-- NOT IMPLEMENTED
     <command id="cmd_newEditorTemplate"/>
@@ -170,6 +173,8 @@
           <menupopup id="menu_NewPopup">
             <!-- From globalOverlay.xul -->
             <menuitem id="menu_newNavigator" command="cmd_newNavigator"/>
+            <!-- <menuitem id="menu_newNavigatorTab" position="1" command="cmd_newNavigatorTab" key="key_newNavigatorTab"
+                           label="&tabCmd.label;" accesskey="&tabCmd.accesskey;"/> -->
             <menuitem id="menu_newEditor"    command="cmd_newEditor"/>
           </menupopup>
         </menu>

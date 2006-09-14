@@ -352,9 +352,9 @@ Contributor(s): ______________________________________. -->
 
       <!-- this box is temporary, pending XBLified <browser> -->
       <hbox id="browser" flex="1">
-        <browser id="content" type="content-primary" src="about:blank"
-                 flex="1" tooltip="aHTMLTooltip"
-                 context="contentAreaContextMenu"
+        <tabbrowser id="content"
+                 flex="1" contenttooltip="aHTMLTooltip"
+                 contentcontextmenu="contentAreaContextMenu"
                  onclick="return contentAreaClick(event);"
                  ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
       </hbox>
