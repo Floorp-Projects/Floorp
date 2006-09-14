@@ -296,7 +296,16 @@
           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
           ref="NC:BookmarksRoot" flags="dont-test-empty" template="bookmarksMenuTemplate"
           oncommand="OpenBookmarkURL(event.target, document.getElementById('BookmarksMenu').database)">
-      <template id="bookmarksMenuTemplate">
+      <template id="bookmarksMenuTemplate" xmlns:nc="http://home.netscape.com/NC-rdf#">
+        <rule nc:FolderGroup="true" iscontainer="true">
+          <menupopup>
+            <menuitem class="menuitem-iconic bookmark-group" 
+                      label="rdf:http://home.netscape.com/NC-rdf#Name"
+                      group="true"
+                      uri="rdf:*"
+                      xulcontentsgenerated="true"/>
+          </menupopup>
+        </rule>
         <rule iscontainer="true" isempty="true"
               rdf:type="http://home.netscape.com/NC-rdf#Folder">
           <menupopup>
