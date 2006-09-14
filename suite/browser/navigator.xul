@@ -278,7 +278,7 @@ Contributor(s): ______________________________________. -->
           </box>
           <menubutton class="menubutton-icon" id="ubhist">
             <menupopup id="ubhist-popup" popupalign="topright" popupanchor="bottomright"
-                       oncreate="createUBHistoryMenu(event);" oncommand="executeUrlBarHistoryCommand(event.target);"> 
+                       oncreate="createUBHistoryMenu(event.target);" oncommand="executeUrlBarHistoryCommand(event.target);"> 
               <menuitem value=" "/>
             </menupopup>                       
           </menubutton>

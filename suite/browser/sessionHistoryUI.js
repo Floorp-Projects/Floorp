@@ -18,8 +18,9 @@
  * Rights Reserved.
  *
  * Contributor(s):
- * Jason Eager <jce2@po.cwru.edu>
- * (Some other netscape person who forgot to put the NPL header!)
+ *  Jason Eager <jce2@po.cwru.edu>
+ *  Blake Ross <BlakeR1234@aol.com>
+ *  Peter Annema <disttsc@bart.nl>
  *
  */
 const MAX_HISTORY_MENU_ITEMS = 15;
@@ -29,55 +30,44 @@ var localstore = rdf.GetDataSource("rdf:localstore");
 
 function FillHistoryMenu( aParent, aMenu )
   {
-    var shistory;
-    // Get the content area docshell
-    var docShell = null;
-    var result = appCore.getContentDocShell(docShell);            
-    if (docShell)
+    if (webNavigation)
       {
-        //Get the session history component from docshell
-        docShell = docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
-        if (docShell)
+        var shistory = webNavigation.sessionHistory;
+        if (shistory)
           {
-            shistory = docShell.sessionHistory;
-            if (shistory)
+            //Remove old entries if any
+            deleteHistoryItems( aParent );
+            var count = shistory.count;
+            var index = shistory.index;
+            switch (aMenu)
               {
-                //Remove old entries if any
-                deleteHistoryItems( aParent );
-                var count = shistory.count;
-                var index = shistory.index;
-                switch (aMenu)
-                  {
-                    case "back":
-                      var end = (index > MAX_HISTORY_MENU_ITEMS) ? index - MAX_HISTORY_MENU_ITEMS : 0;
-                      for ( var j = index - 1; j >= end; j--) 
-                        {
-                          var entry = shistory.getEntryAtIndex(j, false);
-                          if (entry) 
-                            createMenuItem( aParent, j, entry.getTitle() );
-                        }
-                      break;
-                    case "forward":
-                      var end  = ((count-index) > MAX_HISTORY_MENU_ITEMS) ? index + MAX_HISTORY_MENU_ITEMS : count;
-                      for ( var j = index + 1; j < end; j++)
-                        {
-                          var entry = shistory.getEntryAtIndex(j, false);
-                          if (entry)
-                            createMenuItem( aParent, j, entry.getTitle() );
-                        }
-                      break;
-                    case "go":
-                      var end = count > MAX_HISTORY_MENU_ITEMS 
-                                  ? count - MAX_HISTORY_MENU_ITEMS 
-                                  : 0;
-                      for( var j = count - 1; j >= end; j-- )
-                        {
-                          var entry = shistory.getEntryAtIndex(j, false);
-                          if (entry)
-                            createMenuItem( aParent, j, entry.getTitle() );
-                        }
-                      break;
-                  }
+                case "back":
+                  var end = (index > MAX_HISTORY_MENU_ITEMS) ? index - MAX_HISTORY_MENU_ITEMS : 0;
+                  for ( var j = index - 1; j >= end; j--) 
+                    {
+                      var entry = shistory.getEntryAtIndex(j, false);
+                      if (entry) 
+                        createMenuItem( aParent, j, entry.title );
+                    }
+                  break;
+                case "forward":
+                  var end  = ((count-index) > MAX_HISTORY_MENU_ITEMS) ? index + MAX_HISTORY_MENU_ITEMS : count;
+                  for ( var j = index + 1; j < end; j++)
+                    {
+                      var entry = shistory.getEntryAtIndex(j, false);
+                      if (entry)
+                        createMenuItem( aParent, j, entry.title );
+                    }
+                  break;
+                case "go":
+                  var end = count > MAX_HISTORY_MENU_ITEMS ? count - MAX_HISTORY_MENU_ITEMS : 0;
+                  for( var j = count - 1; j >= end; j-- )
+                    {
+                      var entry = shistory.getEntryAtIndex(j, false);
+                      if (entry)
+                        createCheckboxMenuItem( aParent, j, entry.title, j==index );
+                    }
+                  break;
               }
           }
       }
@@ -94,7 +84,7 @@ function executeUrlBarHistoryCommand( aTarget)
       }
   } 
  
-function createUBHistoryMenu( aEvent )
+function createUBHistoryMenu( aParent )
   {
     var ubHistory = appCore.urlbarHistory;
     // dump("In createUbHistoryMenu\n");
@@ -105,7 +95,7 @@ function createUBHistoryMenu( aEvent )
        //dump("localstore found\n");
          var i= MAX_HISTORY_MENU_ITEMS;
 		    // Delete any old menu items
-		    deleteHistoryItems(aEvent);
+		    deleteHistoryItems(aParent);
 
         while (entries.hasMoreElements() && (i-- > 0)) {
 		       var entry = entries.getNext();
@@ -113,7 +103,7 @@ function createUBHistoryMenu( aEvent )
 			        entry = entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
               var url = entry.Value;
               //dump("CREATEUBHISTORYMENU menuitem = " + url + "\n");
-			        createMenuItem(aEvent.target, i, url);
+			        createMenuItem(aParent, i, url);
 
 			     }
          }
@@ -158,19 +148,30 @@ function createMenuItem( aParent, aIndex, aValue)
     aParent.appendChild( menuitem );
   }
 
-function deleteHistoryItems( aEvent )
+function createCheckboxMenuItem( aParent, aIndex, aValue, aChecked)
   {
-    var children = aEvent.target.childNodes;
+    var menuitem = document.createElement( "menuitem" );
+    menuitem.setAttribute( "type", "checkbox" );
+    menuitem.setAttribute( "value", aValue );
+    menuitem.setAttribute( "index", aIndex );
+    if (aChecked==true)
+      menuitem.setAttribute( "checked", "true" );
+    aParent.appendChild( menuitem );
+  }
+
+function deleteHistoryItems( aParent )
+  {
+    var children = aParent.childNodes;
     for (var i = 0; i < children.length; i++ )
       {
         var index = children[i].getAttribute( "index" );
         if (index)
-          aEvent.target.removeChild( children[i] );
+          aParent.removeChild( children[i] );
       }
   }
 
 function updateGoMenu(event)
   {
-    appCore.updateGoMenu(event.target);
+    FillHistoryMenu(event.target, "go");
   }
 
