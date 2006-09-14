@@ -144,6 +144,7 @@
 <!ENTITY searchMenu.label "Search">
 <!ENTITY searchMenu.accesskey "s">
 <!ENTITY findOnCmd.label "Find in This Page...">
+<!ENTITY findOnFrameCmd.label "Find in This Frame...">
 <!ENTITY findOnCmd.accesskey "f">
 <!ENTITY findOnCmd.commandkey "f">
 <!ENTITY findAgainCmd.label "Find Again">
