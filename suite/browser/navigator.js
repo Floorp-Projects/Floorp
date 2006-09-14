@@ -803,6 +803,15 @@ function getSearchUrl(attr)
   return searchURL;
 }
 
+function QualifySearchTerm()
+{
+  // If the text in the URL bar is the same as the currently loaded
+  // page's URL then treat this as an empty search term.  This way
+  // the user is taken to the search page where s/he can enter a term.
+  if (window.XULBrowserWindow.userTyped.value)
+    return document.getElementById("urlbar").value;
+  return "";
+}
 
 function OpenSearch(tabName, forceDialogFlag, searchStr, newWindowFlag)
 {
