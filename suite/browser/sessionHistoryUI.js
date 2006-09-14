@@ -148,6 +148,8 @@ function addToUrlbarHistory()
   var urlToAdd = gURLBar.value;
   if (!urlToAdd)
      return;
+  if (urlToAdd.search(/[\x00-\x1F]/) != -1) // don't store bad URLs
+     return;
   if (localstore) {
        var entries = rdfc.MakeSeq(localstore, rdf.GetResource("nc:urlbar-history"));
        if (!entries)
