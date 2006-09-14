@@ -365,6 +365,7 @@ modules/libimg/Makefile
 MAKEFILES_libjar="
 modules/libjar/Makefile
 modules/libjar/standalone/Makefile
+modules/libjar/test/Makefile
 "
 
 MAKEFILES_libreg="
