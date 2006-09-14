@@ -177,7 +177,7 @@ const COPYCOL_IMAGE_ADDRESS = 0;
 var metaView = new pageInfoTreeView(["meta-name","meta-content"], COPYCOL_META_CONTENT);
 var formView = new pageInfoTreeView(["form-name","form-method","form-action","form-node"], COPYCOL_FORM_ACTION);
 var fieldView = new pageInfoTreeView(["field-label","field-field","field-type","field-value"], COPYCOL_NONE);
-var linkView = new pageInfoTreeView(["link-name","link-address","link-type"], COPYCOL_LINK_ADDRESS);
+var linkView = new pageInfoTreeView(["link-name","link-address","link-type","link-accesskey"], COPYCOL_LINK_ADDRESS);
 var imageView = new pageInfoTreeView(["image-address","image-type","image-alt","image-node", "image-bg"], COPYCOL_IMAGE_ADDRESS);
 
 var intervalID = null;
@@ -528,7 +528,7 @@ function grabAll(elem)
   if (elem instanceof nsIAnchorElement)
   {
     linktext = getValueText(elem);
-    linkView.addRow([linktext, getAbsoluteURL(elem.href, elem), gStrings.linkAnchor, elem.target]);
+    linkView.addRow([linktext, getAbsoluteURL(elem.href, elem), gStrings.linkAnchor, elem.target, elem.accessKey]);
   }
   else if (elem instanceof nsIImageElement)
   {

@@ -211,16 +211,19 @@
         <tree id="linktree" flex="1" ondraggesture="onBeginLinkDrag(event,'link-address','link-name')">
           <treecols>
             <treecol sortSeparators="true" persist="hidden width" flex="5" 
-                         width="5" id="link-name"    label="&linkName;"/>
+                         width="5" id="link-name"     label="&linkName;"/>
             <splitter class="tree-splitter"/>
             <treecol sortSeparators="true" persist="hidden width" flex="7" 
-                         width="7" id="link-address" label="&linkAddress;"/>
+                         width="7" id="link-address"  label="&linkAddress;"/>
             <splitter class="tree-splitter"/>
             <treecol sortSeparators="true" persist="hidden width" flex="2" 
-                         width="2" id="link-type"    label="&linkType;"/>
+                         width="2" id="link-type"     label="&linkType;"/>
             <splitter class="tree-splitter"/>
             <treecol sortSeparators="true" persist="hidden width" flex="2"
-                         width="2" id="link-target"  label="&linkTarget;" hidden="true"/>
+                         width="2" id="link-target"   label="&linkTarget;" hidden="true"/>
+            <splitter class="tree-splitter"/>
+            <treecol sortSeparators="true" persist="hidden width" flex="1"
+                         width="1" id="link-acceskey" label="&linkAccessKey;" hidden="true"/>
           </treecols>
           <treechildren flex="1"/>
         </tree>
