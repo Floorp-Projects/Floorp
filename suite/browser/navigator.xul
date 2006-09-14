@@ -64,10 +64,14 @@ Contributor(s): ______________________________________. -->
   <broadcaster id="canStop"/>
   <broadcaster id="canPrint"/>
   <broadcaster id="Browser:LoadingProgress"/>
-  <broadcaster id="Browser:Status"/>
+  <broadcaster id="WebBrowserChrome"/>
   <broadcaster id="Browser:Throbber" busy="false"/>
   <broadcaster id="args" value=""/> 
 </broadcasterset>
+
+<observes element="WebBrowserChrome" attribute="status" onbroadcast="onStatus()"/>
+<observes element="WebBrowserChrome" attribute="overLink" onbroadcast="onOverLink()"/>
+<observes element="WebBrowserChrome" attribute="defaultStatus" onbroadcast="onDefaultStatus()"/>
 
 <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
 <broadcaster id="dialog.start" ready="false"/>
@@ -446,10 +450,7 @@ Contributor(s): ______________________________________. -->
         </box>
 		<spring style="width: 1em"/>
         <titledbutton id="statusText" class="status-bar" align="left" flex="100%" 
-          value="&statusText.label;"  style="min-width: 1px">
-          <observes element="Browser:Status" attribute="value"
-            onbroadcast="onStatus()"/>         
-        </titledbutton>
+          value="&statusText.label;"  style="min-width: 1px"/>
     
         <titledbutton class="status-bar" align="left" value="&buildId.label;"/>
         <titledbutton id="lock-button" class="borderless" align="left"/>    

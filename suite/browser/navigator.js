@@ -42,6 +42,8 @@ catch (ex) {
   var appCore = null;
   var defaultStatus = bundle.GetStringFromName( "defaultStatus" ); 
   var explicitURL = false;
+  var webBrowserChrome = null;
+  var statusTextFld = null;
 
 
 function UpdateHistory(event)
@@ -960,14 +962,16 @@ function BrowserEditBookmarks()
 
         var bindCount = 0;
         function onStatus() {
-            var status = document.getElementById("Browser:Status");
-            if ( status ) {
-                var text = status.getAttribute("value");
+				if(!webBrowserChrome)
+				   webBrowserChrome = document.getElementById("WebBrowserChrome");
+            if ( webBrowserChrome ) {
+                var text = webBrowserChrome.getAttribute("status");
                 if ( text == "" ) {
 //dump( "Setting default status text\n" );                    
                     text = defaultStatus;
                 }
-                var statusText = document.getElementById("statusText");
+					 if(!statusTextFld)
+                   statusText = document.getElementById("statusText");
                 if ( statusText ) {
 //dump( "Setting status text: " + text + "\n" );
                     statusText.setAttribute( "value", text );
@@ -978,6 +982,25 @@ function BrowserEditBookmarks()
                 dump("Can't find status broadcaster!\n");
             }
         }
+
+		  function onOverLink() {
+		  if(!webBrowserChrome)
+			 webBrowserChrome = document.getElementById("WebBrowserChrome");
+
+		  var text = webBrowserChrome.getAttribute("overLink");
+
+		  if(text == "")
+		    text = defaultStatus;
+
+		  if(!statusTextFld)
+			 statusTextFld = document.getElementById("statusText");
+
+		  statusTextFld = statusTextFld.setAttribute("value", text);
+		  }
+
+		  function onDefaultStatus() {
+		  // XXX Probably should do something here
+		  }
 
         function doTests() {
         }
@@ -999,12 +1022,12 @@ function BrowserEditBookmarks()
                     // Update status bar.
                 } else if ( busy == "false" && wasBusy == "true" ) {
                     // Record page loading time.
-                    var status = document.getElementById("Browser:Status");
-                    if ( status ) {
+                    var webBrowserChrome = document.getElementById("WebBrowserChrome");
+                    if ( webBrowserChrome ) {
 						var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
 						var msg = bundle.GetStringFromName("nv_done") + " (" + elapsed + " secs)";
 						dump( msg + "\n" );
-                        status.setAttribute("value",msg);
+                        webBrowserChrome.setAttribute("status",msg);
                         defaultStatus = msg;
                     }
                     // Turn progress meter off.
