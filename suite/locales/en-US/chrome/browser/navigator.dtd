@@ -300,8 +300,10 @@
 <!ENTITY BloatDumpNewCmd.label "Bloat: Dump New Stats">
 <!ENTITY BloatDumpAllCmd.label "Bloat: Dump All Stats">
 <!ENTITY BloatClearCmd.label "Bloat: Clear Stats">
-<!ENTITY BloatLeaksCmd.label "Bloat: Dump Memory Leaks">
-<!ENTITY BloatTraceCmd.label "Bloat: Trace Document">
+<!ENTITY LeaksDumpLeaksCmd.label "Dump Memory Leaks">
+<!ENTITY LeaksTraceChromeCmd.label "Trace Chrome">
+<!ENTITY LeaksTraceDocumentCmd.label "Trace Document">
+<!ENTITY LeaksTraceVerboseCmd.label "Verbose">
 <!ENTITY URIDispatchingCmd.label "URI Dispatching">
 <!ENTITY URIDispatchingEnableCmd.label "Enable Dispatching">
 <!ENTITY URIDispatchingDisableCmd.label "Disable Dispatching">
