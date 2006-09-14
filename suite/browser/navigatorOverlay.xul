@@ -600,13 +600,13 @@
 
       <menuseparator />
 
-      <menuitem label="Frequently Reported Bugs" oncommand="loadURI('http://bugzilla.mozilla.org/duplicates.cgi');"/>
+      <menuitem label="Frequently Reported Bugs" oncommand="loadURI('https://bugzilla.mozilla.org/duplicates.cgi');"/>
       <menuitem label="Bug Writing Guidelines" oncommand="loadURI('http://www.mozilla.org/quality/bug-writing-guidelines.html');"/>
-      <menuitem label="File a Bug" oncommand="loadURI('http://bugzilla.mozilla.org/enter_bug.cgi?format=guided');"/>
+      <menuitem label="File a Bug" oncommand="loadURI('https://bugzilla.mozilla.org/enter_bug.cgi?format=guided');"/>
 
       <menuseparator />
 
-      <menuitem label="Bugs Filed Today" oncommand="loadURI('http://bugzilla.mozilla.org/buglist.cgi?chfield=%5BBug+creation%5D&amp;chfieldfrom=0d&amp;chfieldto=Now&amp;product=Browser&amp;product=MailNews');"/>
+      <menuitem label="Bugs Filed Today" oncommand="loadURI('https://bugzilla.mozilla.org/buglist.cgi?chfield=%5BBug+creation%5D&amp;chfieldfrom=0d&amp;chfieldto=Now&amp;product=Browser&amp;product=MailNews');"/>
       <menuitem label="CVS Checkins Today" oncommand="loadURI('http://bonsai.mozilla.org/cvsquery.cgi?treeid=default&amp;module=SeaMonkeyAll&amp;branch=HEAD&amp;branchtype=match&amp;sortby=Date&amp;date=day&amp;cvsroot=%2Fcvsroot');"/>
       <menuitem label="Tree Status" oncommand="loadURI('http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey');"/>
 
