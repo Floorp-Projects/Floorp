@@ -345,10 +345,6 @@ function Startup()
 
   //initConsoleListener();
 
-  // wire up session history before any possible progress notifications for back/forward button updating
-  webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
-                                           .createInstance(Components.interfaces.nsISHistory);
-
   // hook up UI through progress listener
   getBrowser().addProgressListener(window.XULBrowserWindow);
 
