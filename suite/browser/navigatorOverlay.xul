@@ -101,7 +101,7 @@
 	<broadcaster id="Browser:OpenFile"  value="&openFileCmd.label;" oncommand="BrowserOpenFileWindow();"/>
 	<broadcaster id="cmd_close" oncommand="BrowserClose()"/>
 	<broadcaster id="Browser:SavePage" value="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" oncommand="savePage();"/>
-	<broadcaster id="Browser:EditPage" value="&editPageCmd.label;" oncommand="editPage(window._content.location.href);"/>
+	<broadcaster id="Browser:EditPage" value="&editPageCmd.label;" oncommand="editPage(window._content.location.href,window, false);"/>
 	<broadcaster id="Browser:PrintSetup"  value="&printSetupCmd.label;"     disabled ="true" oncommand="BrowserReload();"/>
 	<broadcaster id="Browser:PrintPreview"  value="&printPreviewCmd.label;" disabled="true"  oncommand="BrowserReload();"/>
 	<broadcaster id="Browser:Print"  value="&printCmd.label;"        						 oncommand="BrowserPrint();"/>
