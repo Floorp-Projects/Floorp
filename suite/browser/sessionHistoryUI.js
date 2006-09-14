@@ -39,7 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 const MAX_HISTORY_MENU_ITEMS = 15;
-const MAX_HISTORY_ITEMS = 100;
+const MAX_URLBAR_HISTORY_MENU_ITEMS = 30;
+const MAX_URLBAR_HISTORY_ITEMS = 100;
 var gRDF = null;
 var gRDFC = null;
 var gGlobalHistory = null;
@@ -127,7 +128,7 @@ function createUBHistoryMenu( aParent )
                           .getService(Components.interfaces.nsIRDFContainerUtils);
 
       var entries = gRDFC.MakeSeq(gLocalStore, gRDF.GetResource("nc:urlbar-history")).GetElements();
-      var i= MAX_HISTORY_MENU_ITEMS;
+      var i = MAX_URLBAR_HISTORY_MENU_ITEMS;
 
       // Delete any old menu items only if there are legitimate
       // urls to display, otherwise we want to display the
@@ -275,7 +276,7 @@ function addToUrlbarHistory()
 
        // Remove any expired history items so that we don't let
        // this grow without bound.
-       for (index = entries.GetCount(); index > MAX_HISTORY_ITEMS; --index) {
+       for (index = entries.GetCount(); index > MAX_URLBAR_HISTORY_ITEMS; --index) {
            entries.RemoveElementAt(index, true);
        }  // for
    }  // localstore
