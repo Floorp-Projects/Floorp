@@ -22,6 +22,12 @@
  *  - Ben Goodger <ben@netscape.com>
  */
 
+////////////////////////////////////////////////////////////////////////////
+// XXX - WARNING - DRAG AND DROP API CHANGE ALERT - XXX
+// This file has been extensively modified in a checkin planned for Mozilla
+// 0.8, and the API has been modified. DO NOT MODIFY THIS FILE without 
+// approval from ben@netscape.com, otherwise your changes will be lost. 
+
 var gRDFService = nsJSComponentManager.getService("@mozilla.org/rdf/rdf-service;1",
                                                   "nsIRDFService"); 
 
