@@ -311,8 +311,6 @@ Contributor(s): ______________________________________. -->
                 tooltip="aTooltip" tooltiptext="&searchButton.tooltip;"/> 
       </box>
 
-      <toolbarseparator/>
-
       <menubutton class="menubutton-dual toolbar top" id="print-button" persist="hidden" value="&printButton.label;" 
                   crop="right" buttonaction="BrowserPrint()" tooltip="aTooltip" buttontooltiptext="&printButton.tooltip;">  
         <menupopup id="printMenu" popupalign="topright" popupanchor="bottomright">
