@@ -33,7 +33,7 @@ function onLoadViewSource()
     try {
         if ( window.arguments && window.arguments[1] ) {
             if (window.arguments[1].indexOf('charset=') != -1) {
-                arrayArgComponents = window.arguments[1].split('=');
+                var arrayArgComponents = window.arguments[1].split('=');
                 if (arrayArgComponents) {
                     if (appCore != null) {
                       dump("*** SetDocumentCharset(" + arrayArgComponents[1] + ")\n");
