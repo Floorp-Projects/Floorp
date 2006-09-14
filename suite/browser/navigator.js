@@ -160,6 +160,9 @@ const gPopupPrefListener =
     var browsers = getBrowser().browsers;
     var policy = pref.getBoolPref(prefName);
 
+    if (policy && pref.getBoolPref("privacy.popups.first_popup"))
+      pref.setBoolPref("privacy.popups.first_popup", false);
+
     var hosts = [];
 
     var popupManager = Components.classes["@mozilla.org/PopupWindowManager;1"]
@@ -176,14 +179,14 @@ const gPopupPrefListener =
 
     var popupIcon = document.getElementById("popupIcon");
     
-    if (!policy) { // blacklist
+    if (!policy) {
       for (var i = 0; i < browsers.length; i++) {
         if (browsers[i].popupDomain in hosts)
           break;
         browsers[i].popupDomain = null;
         popupIcon.hidden = true;
       }
-    } else { // whitelist
+    } else {
       for (i = 0; i < browsers.length; i++) {
         if (browsers[i].popupDomain in hosts) {
           browsers[i].popupDomain = null;
@@ -475,7 +478,7 @@ function Startup()
   addPrefListener(gTabStripPrefListener);
   addPrefListener(gHomepagePrefListener);
   addPopupPermListener(gPopupPermListener);
-  addPrefListener(gPopupPrefListener);
+  addPrefListener(gPopupPrefListener);  
 
   window.browserContentListener =
     new nsBrowserContentListener(window, getBrowser());
@@ -603,6 +606,7 @@ function Startup()
   // initiated by a web page script
   addEventListener("fullscreen", onFullScreen, false);
 
+  addEventListener("PopupWindow", onPopupWindow, false);
   addEventListener("DOMPopupBlocked", onPopupBlocked, false);
 
   // does clicking on the urlbar select its contents?
@@ -1952,6 +1956,43 @@ function onFullScreen()
   FullScreen.toggle();
 }
 
+function onPopupWindow(aEvent) {
+  var firstPopup = pref.getBoolPref("privacy.popups.first_popup");
+  var blockingEnabled = pref.getBoolPref("dom.disable_open_during_load");
+  if (blockingEnabled) {
+    pref.setBoolPref("privacy.popups.first_popup", false);
+    return;
+  }
+  if (firstPopup) { 
+    var showDialog = true;
+    var specialList = "";
+    try {
+      specialList = pref.getComplexValue("privacy.popups.default_whitelist",
+                                         Components.interfaces.nsIPrefLocalizedString).data;
+    }
+    catch(ex) { }
+    if (specialList) {
+      hosts = specialList.split(",");
+      var browser = getBrowserForDocument(aEvent.target);
+      if (!browser)
+        return;
+      var currentHost = browser.currentURI.hostPort;
+      for (var i = 0; i < hosts.length; i++) {
+        var nextHost = hosts[i];
+        if (nextHost == currentHost ||
+            "."+nextHost == currentHost.substr(currentHost.length - (nextHost.length+1))) {
+          showDialog = false;
+          break;
+        }       
+      }
+    }
+    if (showDialog) {
+      window.openDialog("chrome://communicator/content/aboutPopups.xul", "",
+                        "chrome,centerscreen,resizable=yes", true);
+      pref.setBoolPref("privacy.popups.first_popup", false);
+    }
+  }
+}
 
 function onPopupBlocked(aEvent) {
   var playSound = pref.getBoolPref("privacy.popups.sound_enabled");
@@ -1962,7 +2003,6 @@ function onPopupBlocked(aEvent) {
 
     var soundUrlSpec = pref.getCharPref("privacy.popups.sound_url");
 
-    //beep if no sound file specified
     if (!soundUrlSpec)
       sound.beep();
 
@@ -1981,33 +2021,37 @@ function onPopupBlocked(aEvent) {
 
   var showIcon = pref.getBoolPref("privacy.popups.statusbar_icon_enabled");
   if (showIcon) {
-    var doc = aEvent.target;
-    var browsers = getBrowser().browsers;
-    for (var i = 0; i < browsers.length; i++) {
-      if (browsers[i].contentDocument == doc) {
-        var hostPort = browsers[i].currentURI.hostPort;
-        browsers[i].popupDomain = hostPort;
-        if (browsers[i] == getBrowser().selectedBrowser) {
-          var popupIcon = document.getElementById("popupIcon");
-          popupIcon.hidden = false;
-        }
-      }
+    var browser = getBrowserForDocument(aEvent.target);      
+    if (browser) {
+      var hostPort = browser.currentURI.hostPort;
+      browser.popupDomain = hostPort;
+      if (browser == getBrowser().selectedBrowser) {
+        var popupIcon = document.getElementById("popupIcon");
+        popupIcon.hidden = false;
+      }    
     }
   }
 }
 
+function getBrowserForDocument(doc) {  
+  var browsers = getBrowser().browsers;
+  for (var i = 0; i < browsers.length; i++) {
+    if (browsers[i].contentDocument == doc)
+      return browsers[i];
+  }
+  return null;
+}
+
 function StatusbarViewPopupManager() {
-  var policy = pref.getBoolPref("dom.disable_open_during_load");
-  
   var hostPort = "";
   try {
     hostPort = getBrowser().selectedBrowser.currentURI.hostPort;
   }
   catch(ex) { }
   
-  //open blacklist or whitelist with web site prefilled to unblock
+  // open whitelist with site prefilled to unblock
   window.openDialog("chrome://communicator/content/popupManager.xul", "",
-                      "chrome,resizable=yes", policy, hostPort, false);
+                      "chrome,resizable=yes", hostPort, false);
 }
 
 // Set up a lame hack to avoid opening two bookmarks.
