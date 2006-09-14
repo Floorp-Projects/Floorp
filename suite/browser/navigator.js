@@ -373,6 +373,7 @@ function Startup()
   // there's another bug where we throw an exception when getting
   // sessionHistory if it is null, which I'm exploiting here to
   // detect the situation described in bug 113076.
+  // The same problem caused bug 139522, also worked around below.
   try {
     getBrowser().sessionHistory;
   } catch (e) {
@@ -388,6 +389,10 @@ function Startup()
     var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
                                   .getService(Components.interfaces.nsIGlobalHistory);
     getBrowser().docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).globalHistory = globalHistory;
+
+    const selectedBrowser = getBrowser().selectedBrowser;
+    if (selectedBrowser.securityUI)
+      selectedBrowser.securityUI.init(selectedBrowser.contentWindow);
   }
 
   // hook up UI through progress listener
