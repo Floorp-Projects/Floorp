@@ -192,11 +192,11 @@ Contributor(s): ______________________________________. -->
         <menuitem id="context-selectall"
                   value="&selectAllCmd.label;"
                   accesskey="&selectAllCmd.accesskey;"
-                  oncommand="BrowserSelectAll();"/>
+                  observes="cmd_selectAll"/>
         <menuitem id="context-copy"
                   value="&copyCmd.label;"
                   accesskey="&copyCmd.accesskey;"
-                  oncommand="BrowserCopy();"/>
+                  observes="cmd_copy"/>
         <menuitem id="context-copylink"
                   value="&copyLinkCmd.label;"
                   accesskey="&copyLinkCmd.accesskey;"
@@ -225,10 +225,12 @@ Contributor(s): ______________________________________. -->
     <!-- button area of personal toolbar -->
     <box align="horizontal" flex="1" style="min-width: 1px">
 
+      <!--
       // I added the container=true on this button as a temp hack until
       // we can get this button into rdf. We can't allow drags on this
       // container so we have to be able to identify it (bug 19588).
       //     - pinkerton
+      -->
       <menu id="PersonalMenu" datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
             ref="NC:BookmarksRoot">
         <titledbutton align="right" class="bookmarkFolder toolbar-flat" container="true"
