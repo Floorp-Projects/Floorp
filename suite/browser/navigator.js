@@ -605,9 +605,15 @@ function Startup()
         return;
     }
 
-    // Focus the content area unless we're loading a blank page
+    // Focus the content area unless we're loading a blank page, or if
+    // we weren't passed any arguments. This "breaks" the
+    // javascript:window.open(); case where we don't get any arguments
+    // either, but we're loading about:blank, but focusing the content
+    // are is arguably correct in that case as well since the opener
+    // is very likely to put some content in the new window, and then
+    // the focus should be in the content area.
     var navBar = document.getElementById("nav-bar");
-    if (uriToLoad == "about:blank" && !navBar.hidden && window.locationbar.visible)
+    if ("arguments" in window && uriToLoad == "about:blank" && !navBar.hidden && window.locationbar.visible)
       setTimeout(WindowFocusTimerCallback, 0, gURLBar);
     else
       setTimeout(WindowFocusTimerCallback, 0, _content);
