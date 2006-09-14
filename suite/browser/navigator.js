@@ -1028,11 +1028,13 @@ function BrowserViewSource()
              _content.location, docCharset);
 }
 
-function BrowserPageInfo()
+// doc=null for regular page, doc=owner document for frame.
+function BrowserPageInfo(doc)
 {
   window.openDialog("chrome://navigator/content/pageInfo.xul",
                     "_blank",
-                    "chrome,dialog=no");
+                    "chrome,dialog=no",
+                    doc);
 }
 
 function hiddenWindowStartup()

@@ -26,8 +26,11 @@ var onLoadRegistry = [ ];
 
 function onLoadPageInfo()
 {
-  var page = window.opener.frames[0].document;
-  //var page = window.frames.content.document;
+  var page;
+  if ((window.arguments.length >= 1) && window.arguments[0])
+    page = window.arguments[0];
+  else
+    page = window.opener.frames[0].document;
   var root = document.getElementById("cont");
 
   makeDocument(page, root);
