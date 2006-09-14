@@ -273,7 +273,7 @@ oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/p
        <menuitem accesskey="&findAgainCmd.accesskey;" key="key_findAgain" observes="Browser:FindAgain"/>
        <menuseparator />
       <menuitem value="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="loadXURL('urn:clienturl:srchmenu:srchinternet');"/>      	
-      <menuitem value="&searchBookmarksHistoryCmd.label;" accesskey="&searchBookmarksHistoryCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'centerscreen,dialog=no,close,chrome,resizable');"/>
+      <menuitem value="&searchBookmarksHistoryCmd.label;" accesskey="&searchBookmarksHistoryCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'dialog=no,close,chrome,resizable');"/>
       <menuseparator />
        <menu value="&searchOptions.label;">
        	  <menupopup>
