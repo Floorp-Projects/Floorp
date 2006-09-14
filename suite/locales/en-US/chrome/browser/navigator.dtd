@@ -48,6 +48,8 @@
 <!ENTITY personalbarCmd.accesskey "p">
 <!ENTITY taskbarCmd.label "Status Bar">
 <!ENTITY taskbarCmd.accesskey "s">
+<!ENTITY componentbarCmd.label "Component Bar">
+<!ENTITY componentbarCmd.accesskey "C">
 
 <!ENTITY useStyleSheetMenu.label "Use Stylesheet">
 <!ENTITY useStyleSheetMenu.accesskey "u">
