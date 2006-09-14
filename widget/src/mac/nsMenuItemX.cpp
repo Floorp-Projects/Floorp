@@ -196,8 +196,7 @@ NS_METHOD nsMenuItemX::GetMenuItemType(EMenuItemType *aType)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItemX::GetNativeData(void *& aData)
 {
-  //aData = (void *)mMenu;
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-------------------------------------------------------------------------

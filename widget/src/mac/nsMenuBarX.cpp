@@ -606,7 +606,7 @@ NS_METHOD nsMenuBarX::GetMenuAt(const PRUint32 aCount, nsIMenu *& aMenu)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBarX::InsertMenuAt(const PRUint32 aCount, nsIMenu *& aMenu)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-------------------------------------------------------------------------
@@ -621,8 +621,7 @@ NS_METHOD nsMenuBarX::RemoveMenu(const PRUint32 aCount)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBarX::RemoveAll()
 {
-  NS_ASSERTION(0, "Not implemented!");
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-------------------------------------------------------------------------
@@ -635,7 +634,7 @@ NS_METHOD nsMenuBarX::GetNativeData(void *& aData)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBarX::SetNativeData(void* aData)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-------------------------------------------------------------------------
