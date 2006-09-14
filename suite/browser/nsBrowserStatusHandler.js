@@ -176,7 +176,7 @@ nsBrowserStatusHandler.prototype =
       if (!gBookmarksService)
         gBookmarksService = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
                                       .getService(Components.interfaces.nsIBookmarksService);
-      gBookmarksService.UpdateBookmarkIcon(this.urlBar.value, aHref);
+      gBookmarksService.updateBookmarkIcon(this.urlBar.value, aHref);
     }
   },
 

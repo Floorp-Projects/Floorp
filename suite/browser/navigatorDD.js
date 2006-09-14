@@ -680,6 +680,6 @@ function insertBookmarkAt(aURL, aTitle, aCharset, aFolderRes, aIndex)
   const kBMSContractID = "@mozilla.org/browser/bookmarks-service;1";
   const kBMSIID = Components.interfaces.nsIBookmarksService;
   const kBMS = Components.classes[kBMSContractID].getService(kBMSIID);
-  kBMS.insertBookmarkInFolder(aURL, aTitle, aCharset, aFolderRes, aIndex);
+  kBMS.createBookmarkEx(aTitle, aURL, aCharset, aFolderRes, aIndex);
 }
 

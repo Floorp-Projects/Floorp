@@ -114,7 +114,7 @@ function UpdateBookmarksLastVisitedDate(event)
       gBookmarksService = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
                                     .getService(Components.interfaces.nsIBookmarksService);
 
-    gBookmarksService.UpdateBookmarkLastVisitedDate(url, _content.document.characterSet);
+    gBookmarksService.updateLastVisitedDate(url, _content.document.characterSet);
   }
 }
 
@@ -126,8 +126,8 @@ function HandleBookmarkIcon(iconURL, addFlag)
     if (!gBookmarksService)
       gBookmarksService = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
                                     .getService(Components.interfaces.nsIBookmarksService);
-    if (addFlag)    gBookmarksService.UpdateBookmarkIcon(url, iconURL);
-    else            gBookmarksService.RemoveBookmarkIcon(url, iconURL);
+    if (addFlag)    gBookmarksService.updateBookmarkIcon(url, iconURL);
+    else            gBookmarksService.removeBookmarkIcon(url, iconURL);
   }
 }
 
@@ -936,7 +936,7 @@ function getShortcutOrURI(url)
       gBookmarksService = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
                                     .getService(Components.interfaces.nsIBookmarksService);
 
-    var shortcutURL = gBookmarksService.FindShortcut(url);
+    var shortcutURL = gBookmarksService.resolveKeyword(url);
     if (!shortcutURL) {
       // rjc: add support for string substitution with shortcuts (4/4/2000)
       //      (see bug # 29871 for details)
@@ -944,7 +944,7 @@ function getShortcutOrURI(url)
       if (aOffset > 0) {
         var cmd = url.substr(0, aOffset);
         var text = url.substr(aOffset+1);
-        shortcutURL = gBookmarksService.FindShortcut(cmd);
+        shortcutURL = gBookmarksService.resolveKeyword(cmd);
         if (shortcutURL && text) {
           aOffset = shortcutURL.indexOf("%s");
           if (aOffset >= 0)
