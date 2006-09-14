@@ -445,6 +445,7 @@
   <menu id="tasksMenu">
     <menupopup id="taskPopup">
       <menuitem id="menu_searchWeb" label="&searchInternetCmd.label;" key="searchInternetKb" accesskey="&searchInternetCmd.accesskey;" command="Browser:SearchInternet"/>
+      <menuitem id="menu_translate" label="&translateMenu.label;" accesskey="&translateMenu.accesskey;" oncommand="Translate();"/>  
       <menuseparator id="navBeginGlobalItems"/>
     </menupopup>
   </menu>

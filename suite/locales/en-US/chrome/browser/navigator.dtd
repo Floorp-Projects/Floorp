@@ -67,7 +67,7 @@
 <!ENTITY pageInfoCmd.commandkey "i">
 <!ENTITY fullScreenCmd.label "Full Screen">
 <!ENTITY fullScreenCmd.accesskey "f">
-<!ENTITY translateMenu.label "Translate">
+<!ENTITY translateMenu.label "Translate Page">
 <!ENTITY translateMenu.accesskey "T">
 <!ENTITY translate.commandKey "t">
 
