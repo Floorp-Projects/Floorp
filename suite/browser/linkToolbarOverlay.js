@@ -221,6 +221,8 @@ function(id, checkedItem)
 
 LinkToolbarUI.prototype.addHandlerActive = false;
 
+LinkToolbarUI.prototype.initialized = false;
+
 LinkToolbarUI.prototype.initHandlers =
 function()
 {
