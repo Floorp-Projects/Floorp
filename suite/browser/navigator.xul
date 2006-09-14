@@ -31,6 +31,7 @@ Contributor(s): ______________________________________. -->
 <?xul-overlay href="chrome://communicator/content/securityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/bookmarks/bookmarksOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -54,31 +55,39 @@ Contributor(s): ______________________________________. -->
         screenX="10" screenY="10"
         persist="screenX screenY width height sizemode"> 
 
-<script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
-<script type="application/x-javascript" src="chrome://global/content/nsUserSettings.js"/>
-<script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
-<script type="application/x-javascript" src="chrome://global/content/nsClipboard.js"/>
-<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-<script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
-<script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
-<script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
-<script type="application/x-javascript" src="chrome://navigator/content/navigator.js"/>
-<script type="application/x-javascript" src="chrome://navigator/content/nsBrowserStatusHandler.js"/>
-<script type="application/x-javascript" src="tooltip.js"/>
-<script type="application/x-javascript" src="navigatorDD.js"/>
-<!-- UI services -->
-<script type="application/x-javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
+  <!-- Generic Utility -->
+  <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsUserSettings.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsClipboard.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  
+  <!-- Content Area -->
+  <script type="application/x-javascript" src="chrome://navigator/content/nsBrowserStatusHandler.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
+
+  <!-- Shared Bookmarks Utility Library -->
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://navigator/content/personalToolbar.js"/>
+  
+  <!-- Navigator -->
+  <script type="application/x-javascript" src="chrome://navigator/content/navigator.js"/>
+  <script type="application/x-javascript" src="tooltip.js"/>
+  <script type="application/x-javascript" src="navigatorDD.js"/>
+  <script type="application/x-javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
 
   <!-- hook for stringbundle overlays -->
-  <stringbundleset id="navStringBundles">
+  <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_navigator" src="chrome://navigator/locale/navigator.properties"/>
     <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
     <stringbundle id="bundle_navigator_region" src="chrome://navigator-region/locale/region.properties"/>
     <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
   </stringbundleset>
 
-  <commandset id="navCommands">    
+  <commandset id="commands">    
     <commandset id="globalEditMenuItems"/>
     <commandset id="selectEditMenuItems"/>
     <commandset id="undoEditMenuItems"/>
@@ -101,18 +110,18 @@ Contributor(s): ______________________________________. -->
     <popup id="aHTMLTooltip" class="tooltip" oncreate="return FillInHTMLTooltip(document.tooltipNode);" > 
       <box id="HTML_TOOLTIP_tooltipBox" orient="vertical"/>
     </popup>
+  </popupset>
+  
+  <popupset id="popupset">
     <popup id="backMenu" oncreate="BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
     <popup id="forwardMenu" oncreate="BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
-    <popup id="contextual" oncreate="return fillContextMenu('contextual', 'innermostBox');" >
-      <menu />
-    </popup>
- 
-    <!-- context menu -->
-    <popupset id="contentAreaContextSet"/>
-    
-    <!-- tooltips -->
-    <popupset id="aTooltipSet"/>
   </popupset>
+ 
+  <!-- context menu -->
+  <popupset id="contentAreaContextSet"/>
+    
+  <!-- tooltips -->
+  <popupset id="aTooltipSet"/>
   
   <script type="application/x-javascript">
     var gBookmarkPopup = null;
@@ -191,97 +200,109 @@ Contributor(s): ______________________________________. -->
              grippytooltip="aTooltip" grippytooltiptext="&personalBar.tooltip;"
              tbautostretch="always">
 
+      <button class="button-toolbar bookmark-item" id="home-button" label="&homeButton.label;"
+              tooltip="aTooltip" persist="hidden"
+              ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver);"
+              ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
+              ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
+              ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
+              oncommand="BrowserHome(); event.preventBubble();"/>
+  
       <!-- "Bookmarks" button on personal toolbar -->                           
       <menubutton class="button-toolbar bookmark-item" id="bookmarks-button"   
                   persist="hidden" label="&bookmarksButton.label;" hidden="false"
                   datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
                   ref="NC:BookmarksRoot" container="true" flags="dont-test-empty"
-                  oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)" >
-        <template>
-          <rule iscontainer="true">
-            <menupopup>
-              <menu class="menu-iconic bookmark-item" uri="rdf:*"
-                    label="rdf:http://home.netscape.com/NC-rdf#Name" >
-                <menupopup/>
-              </menu>
-            </menupopup>
-           </rule>
-          <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-            <menupopup>
-              <menuseparator uri="rdf:*"/>
-            </menupopup>
-          </rule>
-          <rule>
-            <menupopup>
-              <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
-                        label="rdf:http://home.netscape.com/NC-rdf#Name" />
-            </menupopup>
-           </rule>
-        </template>
+                  oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)" 
+                  template="bookmarksMenuTemplate">
         <menupopup>
-          <menuitem label="&addCurPageCmd.label;" accesskey="&addCurPageCmd.accesskey;"
-                    key="addBookmarkKb" command="Browser:AddBookmark"/>
-          <menuitem label="&manBookmarksCmd.label;" accesskey="&manBookmarksCmd.accesskey;"
-                    key="manBookmarkKb" command="Browser:ManageBookmark"/>
+          <menuitem accesskey="&addCurPageCmd.accesskey;" key="addBookmarkKb" observes="Browser:AddBookmark"/>
+          <menuitem accesskey="&addCurPageAsCmd.accesskey;" key="addBookmarkAsKb" observes="Browser:AddBookmarkAs"/>
+          <menuseparator/>
+          <menuitem accesskey="&manBookmarksCmd.accesskey;" key="manBookmarkKb" observes="Browser:ManageBookmark"/>
           <menuseparator/>
         </menupopup>
       </menubutton>
+
+      <toolbarseparator/>
  
       <!-- Personal toolbar items -->
-      <hbox id="innermostBox" flex="1" style="min-width: 1px;" context="contextual"
+      <hbox id="innermostBox" flex="1" style="min-width: 1px;" context="bmContext" 
            datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
            ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
+           type="http://home.netscape.com/NC-rdf#Folder"
            oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)">
         <template>
+          <rule parent="hbox" rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+            <toolbarseparator uri="rdf:*"
+                              type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
+          </rule>
+
+          <!-- yes, the type attribute is necessary otherwise all leaves are 
+               treated as containers for some reason -->
+          <rule parent="hbox" iscontainer="true" isempty="true"
+                rdf:type="http://home.netscape.com/NC-rdf#Folder">
+            <menubutton class="button-toolbar bookmark-item" uri="rdf:*" editable="true" 
+                        type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                        label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menupopup>
+                <menuitem label="&emptyItem.label;" disabled="true"/>
+              </menupopup>
+            </menubutton>
+          </rule>
+
           <rule parent="hbox" iscontainer="true">
-            <menubutton class="button-toolbar bookmark-item" uri="rdf:*" 
-                        tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
+            <menubutton class="button-toolbar bookmark-item" uri="rdf:*" editable="true" 
+                        type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                         label="rdf:http://home.netscape.com/NC-rdf#Name">
               <menupopup/>
             </menubutton>
           </rule>
 
-          <rule parent="hbox" rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-            <toolbarseparator uri="rdf:*"/>
+          <rule parent="hbox">
+            <button class="button-toolbar bookmark-item" uri="rdf:*" editable="true" 
+                    tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
+                    type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                    label="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"/>
           </rule>
 
-          <rule parent="hbox">
-            <button class="button-toolbar bookmark-item" uri="rdf:*" 
-              tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
-              label="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"/>
+          <rule iscontainer="true" isempty="true"
+                rdf:type="http://home.netscape.com/NC-rdf#Folder">
+            <menupopup>
+              <menu class="menu-iconic bookmark-item" uri="rdf:*" 
+                    type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                    label="rdf:http://home.netscape.com/NC-rdf#Name">
+                <menupopup>
+                  <menuitem label="&emptyItem.label;" disabled="true"/>
+                </menupopup>
+              </menu>
+            </menupopup>
           </rule>
-        
+
           <rule iscontainer="true">
             <menupopup>
               <menu class="menu-iconic bookmark-item" uri="rdf:*" 
+                    type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                     label="rdf:http://home.netscape.com/NC-rdf#Name">
                 <menupopup/>
               </menu>
             </menupopup>
           </rule>
+
           <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
             <menupopup>
-              <menuseparator uri="rdf:*" />
+              <menuseparator uri="rdf:*"
+                             type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
             </menupopup>
           </rule>
           <rule>
             <menupopup>
               <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
+                        type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                         label="rdf:http://home.netscape.com/NC-rdf#Name"/>
             </menupopup>
           </rule>
         </template>
-       
-        <button class="button-toolbar bookmark-item" id="home-button" label="&homeButton.label;"
-                tooltip="aTooltip" persist="hidden"
-                ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver);"
-                ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
-                ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
-                ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
-                oncommand="BrowserHome(); event.preventBubble();"/>
-    
-        <toolbarseparator/>
-    
       </hbox>
     </toolbar>
 
