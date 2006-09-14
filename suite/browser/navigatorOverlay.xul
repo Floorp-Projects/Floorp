@@ -50,6 +50,7 @@ Contributor(s): ______________________________________. -->
 	<key id="key_copy"/>
 	<key id="key_paste"/>
 	<key id="key_delete"/>
+	<key id="key_backspace"/>
 	<key id="key_selectAll"/>
 	<key id="key_preferences"/>
 
