@@ -1598,7 +1598,7 @@ function BrowserEditBookmarks()
       return middleMousePaste(event);
     }
 
-    return false;
+    return true;
   }
 
   function handleLinkClick(event, node)
