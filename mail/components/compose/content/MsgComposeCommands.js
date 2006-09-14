@@ -271,11 +271,6 @@ var gComposeRecyclingListener = {
   },
 
   onReopen: function(params) {
-    // Reset focus to avoid undesirable visual effect when reopening the window
-    var identityElement = document.getElementById("msgIdentity");
-    if (identityElement)
-      identityElement.focus();
-
     InitializeGlobalVariables();
     ComposeStartup(true, params);
 
