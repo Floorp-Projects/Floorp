@@ -83,6 +83,7 @@
     <key id="key_findAgain"         key="&findAgainCmd.commandkey;" command="Browser:FindAgain" modifiers="accel"/>
 
     <!-- Go Menu -->
+    <key id="key_gotoHistory" key="&history.commandKey;" oncommand="openHistory();" modifiers="accel"/>
 
     <!-- Bookmarks Menu -->
     <key id="addBookmarkKb" key="&addCurPageCmd.commandkey;" command="Browser:AddBookmark" modifiers="accel"/>
@@ -288,12 +289,61 @@
       </menupopup>
     </menu>
 
-    <menu accesskey="&goMenu.accesskey;" label="&goMenu.label;" oncommand="gotoHistoryIndex(event);">
+    <menu accesskey="&goMenu.accesskey;" label="&goMenu.label;" 
+          oncommand="loadHistoryItem(event);"
+          datasources="rdf:history rdf:bookmarks" ref="NC:HistoryByDate"
+          template="historyMenuTemplate">
       <menupopup onpopupshowing="updateGoMenu(event);">
         <menuitem label="&goBackCmd.label;"    accesskey="&goBackCmd.accesskey;"    key="goBackKb"    command="Browser:Back"/>
         <menuitem label="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;" key="goForwardKb" command="Browser:Forward"/>
         <menuitem label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    command="Browser:Home" key="goHome"/>
-        <menuseparator hidden="true"/>
+        <menuseparator/>
+        <menuseparator id="after-session-history-separator" hidden="true"/>
+        <menuitem label="&historyCmd.label;" accesskey="&historyCmd.accesskey;" 
+                  oncommand="openHistory()" key="key_gotoHistory"/>
+        <menuseparator />
+        <template id="historyMenuTemplate">
+          <rule rdf:type="rdf:http://home.netscape.com/NC-rdf#Folder">
+            <menupopup>
+              <menu class="menu-iconic bookmark-item" uri="rdf:*" 
+                    src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                    validate="never"
+                    type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                    label="rdf:http://home.netscape.com/NC-rdf#Name">
+                <menupopup>
+                  <menuitem label="&emptyItem.label;" disabled="true"/>
+                </menupopup>
+              </menu>
+            </menupopup>
+          </rule>
+          <rule rdf:type="http://home.netscape.com/NC-rdf#Separator">
+            <menupopup>
+              <menuseparator uri="rdf:*"/>
+            </menupopup>
+          </rule>
+          <rule iscontainer="true">
+            <menupopup>
+              <menu class="menu-iconic bookmark-item" uri="rdf:*"
+                    src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                    validate="never" container="true"
+                    type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                    label="rdf:http://home.netscape.com/NC-rdf#Name">
+                <menupopup />
+              </menu>
+            </menupopup>
+          </rule>
+          <rule>
+            <menupopup>
+              <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
+                        src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                        url="rdf:http://home.netscape.com/NC-rdf#URL"
+                        validate="never"
+                        label="rdf:http://home.netscape.com/NC-rdf#Name" 
+                        status="rdf:http://home.netscape.com/WEB-rdf#status"/>
+            </menupopup>
+          </rule>
+          
+        </template>
       </menupopup>
     </menu>         
     
