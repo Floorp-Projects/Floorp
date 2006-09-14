@@ -23,6 +23,10 @@
 <!ENTITY sendLinkCmd.accesskey "i">
 <!ENTITY editPageCmd.label					"Edit Page">
 <!ENTITY editPageCmd.accesskey				"d">
+<!ENTITY editFrameCmd.label					"Edit Frame">
+<!ENTITY editFrameCmd.accesskey				"m">
+<!ENTITY editFrameSetCmd.label		  "Edit Frameset">
+<!ENTITY editFrameSetCmd.accesskey		"t">
 <!ENTITY offlineMenu.label "Offline">
 <!ENTITY offlineMenu.accesskey "f">
 <!ENTITY offlineGoOfflineCmd.label "Go Offline">
