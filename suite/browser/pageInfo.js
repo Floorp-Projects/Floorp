@@ -466,13 +466,13 @@ function makeLinkTab()
     {
       case "a":
         linktext = getValueText(elem);
-        linkView.addRow([++linkIndex, linktext, elem.href, linkAnchor]);
+        linkView.addRow([++linkIndex, linktext, elem.href, linkAnchor, elem.target]);
         break;
       case "area":
-        linkView.addRow([++linkIndex, elem.alt, elem.href, linkArea]);
+        linkView.addRow([++linkIndex, elem.alt, elem.href, linkArea, elem.target]);
         break;
       case "input":
-        linkView.addRow([++linkIndex, elem.value || linkSubmit, elem.form.getAttribute("action"), linkSubmission]); // use getAttribute() due to bug 122128
+        linkView.addRow([++linkIndex, elem.value || linkSubmit, elem.form.getAttribute("action"), linkSubmission, elem.form.getAttribute("target")]); // use getAttribute() due to bug 122128
         break;
       case "link":
         if (elem.rel)
@@ -485,13 +485,13 @@ function makeLinkTab()
         }
         else
           linktext = linkRev;
-        linkView.addRow([++linkIndex, elem.rel || elem.rev, elem.href, linktext]);
+        linkView.addRow([++linkIndex, elem.rel || elem.rev, elem.href, linktext, elem.target]);
         break;
       default:
         if (elem.hasAttributeNS(XLinkNS, "href"))
         {
           linktext = getValueText(elem);
-          linkView.AddRow([++linkIndex, linktext, elem.href, linkX]);
+          linkView.AddRow([++linkIndex, linktext, elem.href, linkX, ""]);
         }
         else
           dump("Page Info - makeLinkTab(): Hey, that's an odd one! ("+elem+")");
@@ -1087,4 +1087,5 @@ pageInfoTreeView.prototype = {
   performAction: function(action) { },
   performActionOnCell: function(action, row, column) { }
 };
+
 

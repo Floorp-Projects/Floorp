@@ -81,6 +81,7 @@
 <!ENTITY  linkName              "Name">
 <!ENTITY  linkAddress           "Address">
 <!ENTITY  linkType              "Type">
+<!ENTITY  linkTarget            "Target">
 
 <!ENTITY  mediaTab              "Media">
 <!ENTITY  mediaAccesskey        "i">

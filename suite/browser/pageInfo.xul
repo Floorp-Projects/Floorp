@@ -227,6 +227,9 @@
             <splitter class="tree-splitter"/>
             <treecol sortSeparators="true" persist="hidden width" flex="2" 
                          width="2" id="link-type"    label="&linkType;"/>
+            <splitter class="tree-splitter"/>
+            <treecol sortSeparators="true" persist="hidden width" flex="2"
+                         width="2" id="link-target"  label="&linkTarget;"/>
           </treecols>
           <treechildren flex="1"/>
         </tree>
