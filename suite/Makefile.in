@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= \
 		branding \
+		browser \
 		common \
 		locales \
 		$(NULL)
@@ -55,7 +56,6 @@ ifdef MOZ_XUL_APP
 # if you add DIRS here, care that app is always at the bottom of the list
 # as it packages up the built files on mac...
 DIRS += \
-		browser \
 		profile \
 		build \
 		app \

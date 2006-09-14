@@ -9,7 +9,7 @@
 
   <!-- package information -->
   <RDF:Description about="urn:mozilla:package:navigator-platform"
-        chrome:displayName="Mac Specific Resources"
+        chrome:displayName="Platform Specific Resources"
         chrome:author="mozilla.org"
         chrome:name="navigator-platform"
 #expand 	chrome:localeVersion="__MOZILLA_LOCALE_VERSION__">

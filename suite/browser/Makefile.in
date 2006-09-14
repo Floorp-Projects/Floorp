@@ -42,9 +42,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# XXX Once SeaMonkey becomes a fully fledged xul app, we can remove
+# this ifdef.
+ifdef MOZ_XUL_APP
 EXTRA_COMPONENTS = nsBrowserContentHandler.js
 
 PREF_JS_EXPORTS = $(srcdir)/browser-prefs.js
+endif
 
 DEFINES += -DMOZ_APP_NAME="$(MOZ_APP_NAME)" \
            -DMOZ_APP_DISPLAYNAME="$(MOZ_APP_DISPLAYNAME)" \
