@@ -431,11 +431,13 @@ function Shutdown()
 	    return true;
 	 }
 	 else {
+	 /* NOT NEEDED NOW 
 	   var id = event.target.getAttribute("id");
 	   if (id == "menuitem-back")
 	      BrowserBack();
 	   else if (id == "menuitem-forward")
 	      BrowserForward();	  
+	 */
      }
   }
 
