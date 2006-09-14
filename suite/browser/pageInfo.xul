@@ -27,7 +27,12 @@
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://navigator/locale/pageInfo.dtd">
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % pageInfoDTD SYSTEM "chrome://navigator/locale/pageInfo.dtd" >
+%pageInfoDTD;
+]>
 
 <window id="main-window" xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
