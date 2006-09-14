@@ -288,7 +288,7 @@ Contributor(s): ______________________________________. -->
         <menupopup/>
       </menubutton>
 
-      <box id="innermostBox" flex="1" style="min-width: 0px;" datasources="rdf:bookmarks" ref="NC:PersonalToolbarFolder">
+      <box id="innermostBox" flex="1" style="min-width: 1px;" datasources="rdf:bookmarks" ref="NC:PersonalToolbarFolder">
     
         <template>
           <rule parent="box" iscontainer="true">
