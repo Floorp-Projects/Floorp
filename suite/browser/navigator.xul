@@ -247,7 +247,7 @@ Contributor(s): ______________________________________. -->
           </rule>
           <rule>
             <menupopup>
-              <menuitem class="standard" align="left" uri="..." 
+              <menuitem class="standard" align="left" uri="rdf:*" 
                 value="rdf:http://home.netscape.com/NC-rdf#Name"
                 oncommand="OpenBookmarkURL(event.target, document.getElementById('PersonalMenu').database)"/>
             </menupopup>
@@ -297,7 +297,7 @@ Contributor(s): ______________________________________. -->
 		      </rule>
 		      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
 		        <menupopup>
-		          <menuseparator/>
+		          <menuseparator uri="rdf:*" />
 		        </menupopup>
 		      </rule>
 		      <rule>
