@@ -332,7 +332,7 @@ END of Deprecated -->
       <menuseparator /> 
       <menuitem value="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="openTopWin('http://home.netscape.com/bookmark/6_0b1/ssearch.html')"/>
       <menuitem value="&searchAllMailCmd.label;" accesskey="&searchAllMailCmd.accesskey;" disabled="true" oncommand=""/>
-      <menuitem value="&searchBookmarksHistoryCmd.label;" accesskey="&searchBookmarksHistoryCmd.accesskey;" oncommand="OpenSearch('find', true, null);"/>
+      <menuitem value="&searchBookmarksHistoryCmd.label;" accesskey="&searchBookmarksHistoryCmd.accesskey;" oncommand="window.openDialog('chrome://bookmarks/content/bm-find.xul', 'FindBookmarksWindow', 'centerscreen,dialog=no,close,chrome,resizable');"/>
       <menuitem value="&searchAddressbookCmd.label;" accesskey="&searchAddressbookCmd.accesskey;" disabled="true" oncommand="OpenSearch('addressbook', true, null);"/>
 	</menupopup>
   </menu>
