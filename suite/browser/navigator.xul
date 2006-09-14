@@ -279,12 +279,12 @@ Contributor(s): ______________________________________. -->
       <hbox id="innermostBox" flex="1" style="min-width: 1px;" context="bmContext" 
            datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
            ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
-           type="http://home.netscape.com/NC-rdf#Folder"
+           rdf:type="http://home.netscape.com/NC-rdf#Folder"
            oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)">
         <template>
           <rule parent="hbox" rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
             <toolbarseparator uri="rdf:*"
-                              type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
+                              rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
           </rule>
 
           <!-- yes, the type attribute is necessary otherwise all leaves are 
@@ -292,6 +292,7 @@ Contributor(s): ______________________________________. -->
           <rule parent="hbox" iscontainer="true" isempty="true"
                 rdf:type="http://home.netscape.com/NC-rdf#Folder">
             <toolbarbutton type="menu" editable="true" class="bookmark-item"
+                           rdf:type="http://home.netscape.com/NC-rdf#Folder"
                            uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name"
                            ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }">
               <menupopup>
@@ -302,6 +303,7 @@ Contributor(s): ______________________________________. -->
 
           <rule parent="hbox" iscontainer="true">
             <toolbarbutton type="menu" class="bookmark-item" uri="rdf:*" editable="true"
+                           rdf:type="http://home.netscape.com/NC-rdf#Folder"
                            label="rdf:http://home.netscape.com/NC-rdf#Name"
                           ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }">
               <menupopup ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarObserver);"/>
@@ -311,6 +313,7 @@ Contributor(s): ______________________________________. -->
           <rule parent="hbox">
             <toolbarbutton class="bookmark-item" uri="rdf:*" editable="true" 
                            status="rdf:http://home.netscape.com/WEB-rdf#status"
+                           rdf:type="http://home.netscape.com/NC-rdf#Bookmark"
                            tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
                            label="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"/>
           </rule>
