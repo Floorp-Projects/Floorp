@@ -767,15 +767,6 @@ function makePreview(row)
   }
   document.getElementById("imagelongdesctext").value = ("longDesc" in item && item.longDesc) || gStrings.notSet;
 
-  // find out the mime type
-  var mimeType = gStrings.unknown;
-  if (item.nodeName.toLowerCase() != "input")
-    mimeType = ("type" in item && item.type) ||
-               ("codeType" in item && item.codeType) ||
-               ("contentType" in item && item.contentType) ||
-               gStrings.unknown;
-  document.getElementById("imagetypetext").value = mimeType;
-
   // get cache info
   var sourceText = theBundle.getString("generalNotCached");
   var expirationText = gStrings.unknown;
@@ -803,12 +794,6 @@ function makePreview(row)
           sourceText = cacheEntryDescriptor.deviceID;
           break;
       }
-
-      pageSize = cacheEntryDescriptor.dataSize;
-      kbSize = pageSize / 1024;
-      sizeText = theBundle.getFormattedString("generalSize", [Math.round(kbSize*100)/100, pageSize]);
-
-      expirationText = formatDate(cacheEntryDescriptor.expirationTime*1000, gStrings.notSet);
     }
   }
   catch(ex)
@@ -830,12 +815,6 @@ function makePreview(row)
             sourceText = cacheEntryDescriptor.deviceID;
             break;
         }
-
-        pageSize = cacheEntryDescriptor.dataSize;
-        kbSize = pageSize / 1024;
-        sizeText = theBundle.getFormattedString("generalSize", [Math.round(kbSize*100)/100, pageSize]);
-
-        expirationText = formatDate(cacheEntryDescriptor.expirationTime*1000, gStrings.notSet);
       }
     }
     catch(ex2)
@@ -843,6 +822,33 @@ function makePreview(row)
       sourceText = theBundle.getString("generalNotCached");
     }
   }
+
+  // find out the mime type, file size and expiration date
+  var mimeType = gStrings.unknown, httpType;
+  if (cacheEntryDescriptor)
+  {
+    var headers, match;
+
+    pageSize = cacheEntryDescriptor.dataSize;
+    kbSize = pageSize / 1024;
+    sizeText = theBundle.getFormattedString("generalSize", [Math.round(kbSize*100)/100, pageSize]);
+
+    expirationText = formatDate(cacheEntryDescriptor.expirationTime*1000, gStrings.notSet);
+
+    headers = cacheEntryDescriptor.getMetaDataElement("response-head");
+
+    match = /^Content-Type:\s*(.*?)\s*(?:\;|$)/mi.exec(headers);
+    if (match)
+      httpType = match[1];
+  }
+
+  if (item.nodeName.toLowerCase() != "input")
+    mimeType = ("type" in item && item.type) ||
+               ("codeType" in item && item.codeType) ||
+               ("contentType" in item && item.contentType) ||
+               httpType || gStrings.unknown;
+
+  document.getElementById("imagetypetext").value = mimeType;
   document.getElementById("imagesourcetext").value = sourceText;
   document.getElementById("imageexpirestext").value = expirationText;
   document.getElementById("imagesizetext").value = sizeText;
@@ -856,10 +862,14 @@ function makePreview(row)
   var isProtocolAllowed = regex.test(absoluteURL); 
   var newImage = new Image();
   newImage.setAttribute("id", "thepreviewimage");
-  if ((nn == "link" || nn == "input" || nn == "img" || isBG) &&
-      isProtocolAllowed) 
+  var physWidth = physHeight = 0;
+
+  if ((nn == "link" || nn == "input" || nn == "img" || isBG) && isProtocolAllowed) 
   {
     newImage.src = absoluteURL;
+    physWidth = newImage.width;
+    physHeight = newImage.height;
+
     if ("width" in item && item.width)
       newImage.width = item.width;
     if ("height" in item && item.height)
@@ -876,8 +886,17 @@ function makePreview(row)
 
   var width = ("width" in item && item.width) || ("width" in newImage && newImage.width) || "0";
   var height = ("height" in item && item.height) || ("height" in newImage && newImage.height) || "0";
-  document.getElementById("imagewidth").value = theBundle.getFormattedString("mediaWidth", [width]);
-  document.getElementById("imageheight").value = theBundle.getFormattedString("mediaHeight", [height]);
+
+  document.getElementById("imageSize").value = theBundle.getFormattedString("mediaSize", [width, height]);
+
+  if (width != physWidth || height != physHeight)
+  {
+    document.getElementById("physSize").hidden = "false";
+    document.getElementById("physSize").value = theBundle.getFormattedString("mediaPhysSize", [physWidth, physHeight]);
+  }
+  else
+    document.getElementById("physSize").hidden = "true";
+
 
   imageContainer.removeChild(oldImage);
   imageContainer.appendChild(newImage);
