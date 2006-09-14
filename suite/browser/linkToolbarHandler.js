@@ -60,14 +60,15 @@ function(element)
 
   if (linkElement.isIgnored()) return;
 
-  if (!this.hasItems) {
-    this.hasItems = true;
-    linkToolbarUI.activate();
-  }
-
   for (var i = 0; i < linkElement.relValues.length; i++) {
     var linkType = LinkToolbarHandler.getLinkType(linkElement.relValues[i]);
-    this.getItemForLinkType(linkType).displayLink(linkElement);
+    if (linkType) {
+      if (!this.hasItems) {
+        this.hasItems = true;
+        linkToolbarUI.activate();
+      }
+      this.getItemForLinkType(linkType).displayLink(linkElement);
+    }
   }
 }
 
@@ -107,6 +108,9 @@ function(relAttribute)
     case "contents":
     case "toc":
       return "toc";
+
+    case "prefetch":
+      return null;
 
     default:
       return relAttribute.toLowerCase();
