@@ -24,7 +24,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/dialogs.css" type="text/css"?>
 
-<!DOCTYPE window [
+<!DOCTYPE dialog [
   <!ENTITY % turboDialogDTD SYSTEM "chrome://navigator/locale/turboDialog.dtd" >
   %turboDialogDTD;
   <!ENTITY % dialogOverlayDTD SYSTEM "chrome://global-platform/locale/platformDialogOverlay.dtd" >
