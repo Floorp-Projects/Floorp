@@ -53,22 +53,18 @@
 <!ENTITY navbarCmd.label "Navigation Toolbar">
 <!ENTITY personalbarCmd.label "Personal Toolbar">
 <!ENTITY taskbarCmd.label "Taskbar">
-<!ENTITY enlargeTextSizeCmd.label "Enlarge Text Size">
-<!ENTITY enlargeTextSizeCmd.commandkey "+">
-<!ENTITY reduceTextSizeCmd.label "Reduce Text Size">
-<!ENTITY reduceTextSizeCmd.commandkey "-">
-<!ENTITY textSizeMenu.label "Text Size">
-<!ENTITY textSizeMenu.accesskey "x">
-<!ENTITY largestTextSizeCmd.label "Largest">
-<!ENTITY largestTextSizeCmd.accesskey "g">
-<!ENTITY largerTextSizeCmd.label "Larger">
-<!ENTITY largerTextSizeCmd.accesskey "l">
-<!ENTITY mediumTextSizeCmd.label "Medium">
-<!ENTITY mediumTextSizeCmd.accesskey "m">
-<!ENTITY smallerTextSizeCmd.label "Smaller">
-<!ENTITY smallerTextSizeCmd.accesskey "s">
-<!ENTITY smallestTextSizeCmd.label "Smallest">
-<!ENTITY smallestTextSizeCmd.accesskey "a">
+
+<!-- the command keys for Larger and Smaller were intended to be + and -, but see bug 52756 -->
+<!ENTITY textZoomEnlargeCmd.label "Larger">
+<!ENTITY textZoomEnlargeCmd.accesskey "l">
+<!ENTITY textZoomEnlargeCmd.commandkey "k">
+<!ENTITY textZoomReduceCmd.label "Smaller">
+<!ENTITY textZoomReduceCmd.accesskey "m">
+<!ENTITY textZoomReduceCmd.commandkey "j">
+<!-- textZoomsee otherLabel in navigator.properties -->
+<!ENTITY textZoomMenu.accesskey "z">
+<!ENTITY textZoomOtherCmd.accesskey "o">
+
 <!ENTITY useStyleSheetMenu.label "Use Stylesheet">
 <!ENTITY useStyleSheetNone.label "None">
 <!ENTITY reloadCmd.label "Reload">
@@ -353,7 +349,7 @@
 
 <!-- Statusbar -->
 <!ENTITY  statusText.label            "Document: Done">
-<!ENTITY  buildId.label               "Build ID: 2000082508">
+<!ENTITY  buildId.label               "Build ID: 2000091312">
 
 <!-- Context Menu -->                 
 <!ENTITY blockImageCmd.label          "Block Image from Loading">

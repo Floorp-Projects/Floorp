@@ -1,23 +1,26 @@
 <?xml version="1.0"?> 
 <!-- The contents of this file are subject to the Netscape Public
-License Version 1.1 (the "License"); you may not use this file
-except in compliance with the License. You may obtain a copy of
-the License at http://www.mozilla.org/NPL/
-
-Software distributed under the License is distributed on an "AS
-IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-implied. See the License for the specific language governing
-rights and limitations under the License.
-
-The Original Code is Mozilla Communicator client code, released
-March 31, 1998.
-
-The Initial Developer of the Original Code is Netscape
-Communications Corporation. Portions created by Netscape are
-Copyright (C) 1998-1999 Netscape Communications Corporation. All
-Rights Reserved.
-
-Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/NPL/
+   - 
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   - 
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corporation. Portions created by Netscape are
+   - Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   - Rights Reserved.
+   - 
+   - Contributor(s):
+   -   Blake Ross <BlakeR1234@aol.com>
+   -   Peter Annema <disttsc@bart.nl>
+   -->
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
@@ -63,16 +66,10 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
 
     <!-- View Menu -->
 	<key id="key_reload" xulkey="true" key="&reloadCmd.commandkey;" observes="canReload"/>
-	<!--
-	<key id="key_enlargeTextSize" xulkey="true"
-	     key="&enlargeTextSizeCmd.commandkey;"
-	     observes="Browser:EnlargeTextSize"/>
-	<key id="key_reduceTextSize" xulkey="true"
-	     key="&reduceTextSizeCmd.commandkey;"
-	     observes="Browser:ReduceTextSize"/>
-        -->
 	<key id="key_viewsource"  xulkey="true"  key="&pageSourceCmd.commandkey;" observes="View:PageSource"/>
 
+	<key id="key_textZoomReduce"  xulkey="true" key="&textZoomReduceCmd.commandkey;"  observes="cmd_viewTextZoomReduce" />
+	<key id="key_textZoomEnlarge" xulkey="true" key="&textZoomEnlargeCmd.commandkey;" observes="cmd_viewTextZoomEnlarge"/>
 
 	<!-- Search Menu -->	
 	<key id="key_find"            xulkey="true"  key="&findOnCmd.commandkey;" observes="Browser:Find"/>
@@ -83,7 +80,7 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
 
     <!-- Tools Menu -->
 	<key id="key_gotoHistory"     xulkey="true" shift="false" key="&history.commandKey;" onkeypress="toHistory();"/>
-  
+
 	<!-- Bookmarks Menu -->
 	<key id="addBookmarkKb"       xulkey="true" key="&addCurPageCmd.commandkey;" observes="Browser:AddBookmark" />
 	<key id="manBookmarkKb"       xulkey="true" key="&manBookmarksCmd.commandkey;" observes="Browser:ManageBookmark" />
@@ -102,6 +99,14 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
 	<broadcaster id="cmd_newEditor"/>
 	<broadcaster id="cmd_newEditorTemplate"/>
 	<broadcaster id="cmd_newEditorDraft"/>
+	<broadcaster id="Browser:Open"  value="&openCmd.label;"        	oncommand="BrowserOpenWindow();"/>
+	<broadcaster id="Browser:OpenFile"  value="&openFileCmd.label;" oncommand="BrowserOpenFileWindow();"/>
+	<broadcaster id="cmd_close" oncommand="BrowserClose()"/>
+	<broadcaster id="Browser:SavePage" value="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" oncommand="savePage();"/>
+	<broadcaster id="Browser:EditPage"  value="&editPageCmd.label;" oncommand="BrowserEditPage(window._content.location.href);"/>
+	<broadcaster id="Browser:PrintSetup"  value="&printSetupCmd.label;"     disabled ="true" oncommand="BrowserReload();"/>
+	<broadcaster id="Browser:PrintPreview"  value="&printPreviewCmd.label;" disabled="true"  oncommand="BrowserReload();"/>
+	<broadcaster id="Browser:Print"  value="&printCmd.label;"        						 oncommand="BrowserPrint();"/>
 	<broadcaster id="cmd_quit"/>
 
 	<!-- Edit Menu -->
@@ -117,19 +122,8 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
 	<broadcaster id="cmd_preferences"/>
 	
 	<!-- View Menu -->
-	<broadcaster id="Browser:EnlargeTextSize"
-	             oncommand="BrowserChangeTextZoom(1);"/>
-	<broadcaster id="Browser:ReduceTextSize"
-	             oncommand="BrowserChangeTextZoom(-1);"/>
-	<broadcaster id="largestTextSizeCmd" value="&largestTextSizeCmd.label;"
-                                  accesskey="&largestTextSizeCmd.accesskey;" oncommand="BrowserChangeTextSize(5);"/>
-	<broadcaster id="largerTextSizeCmd" value="&largerTextSizeCmd.label;"
-                                  accesskey="&largerTextSizeCmd.accesskey;" oncommand="BrowserChangeTextSize(4);"/>
-	<broadcaster id="mediumTextSizeCmd" value="&mediumTextSizeCmd.label;"
-                                  accesskey="&mediumTextSizeCmd.accesskey;" oncommand="BrowserChangeTextSize(3);"/>
-	<broadcaster id="smallerTextSizeCmd" value="&smallerTextSizeCmd.label;"
-                                  accesskey="&smallerTextSizeCmd.accesskey;" oncommand="BrowserChangeTextSize(2);"/>
-	<broadcaster id="smallestTextSizeCmd" value="&smallestTextSizeCmd.label;"                                   accesskey="&smallestTextSizeCmd.accesskey;" oncommand="BrowserChangeTextSize(1);"/>
+	<broadcaster id="cmd_viewTextZoomReduce"  value="&textZoomReduceCmd.label;"    oncommand="reduceTextZoom();"/>
+	<broadcaster id="cmd_viewTextZoomEnlarge" value="&textZoomEnlargeCmd.label;"   oncommand="enlargeTextZoom();"/>
 	<broadcaster id="cmd_viewnavbar" type="checkbox" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
 	<broadcaster id="cmd_viewpersonaltoolbar" type="checkbox" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
 	<broadcaster id="cmd_viewtaskbar" type="checkbox" oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
@@ -139,31 +133,20 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
 	<broadcaster id="cmd_viewtaskbar" class="menuitem-iconic" type="checkbox" oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
 	<broadcaster id="View:PageSource"  value="&pageSourceCmd.label;" oncommand="BrowserViewSource();"/>
 
-
-	<broadcaster id="Browser:Open"  value="&openCmd.label;"        	oncommand="BrowserOpenWindow();"/>
-	<broadcaster id="Browser:OpenFile"  value="&openFileCmd.label;" oncommand="BrowserOpenFileWindow();"/>
-
-	<broadcaster id="cmd_close" oncommand="BrowserClose()"/>
-
-	<broadcaster id="Browser:EditPage"  value="&editPageCmd.label;" oncommand="BrowserEditPage(window._content.location.href);"/>
- 	
-	<broadcaster id="Browser:PrintSetup"  value="&printSetupCmd.label;"     disabled ="true" oncommand="BrowserReload();"/>
-	<broadcaster id="Browser:PrintPreview"  value="&printPreviewCmd.label;" disabled="true"  oncommand="BrowserReload();"/>
-	<broadcaster id="Browser:Print"  value="&printCmd.label;"        						 oncommand="BrowserPrint();"/>
-  
+	<!-- Search Menu -->
+	<broadcaster id="Browser:Find"      value="&findOnCmd.label;"            oncommand="BrowserFind();" />
+	<broadcaster id="Browser:FindAgain" value="&findAgainCmd.label;"         oncommand="BrowserFindAgain();" />	
+	
+	<!-- Go Menu -->
 	<broadcaster id="canGoBack"	      disabled="true" buttonaction="BrowserBack();"/>
 	<broadcaster id="canGoForward"    disabled="true" buttonaction="BrowserForward();"/>
 	<broadcaster id="Browser:Back"    value="&goBackCmd.label;"    oncommand="BrowserBack();" />
 	<broadcaster id="Browser:Forward" value="&goForwardCmd.label;" oncommand="BrowserForward();" />
 	<broadcaster id="Browser:Home"    value="&goHomeCmd.label;"    oncommand="BrowserHome();" />
-  
-	<broadcaster id="Browser:Find"      value="&findOnCmd.label;"            oncommand="BrowserFind();" />
-	<broadcaster id="Browser:FindAgain" value="&findAgainCmd.label;"         oncommand="BrowserFindAgain();" />	
-	
+
+	<!-- Bookmarks Menu -->
 	<broadcaster id="Browser:AddBookmark" value="&addCurPageCmd.label;" 	 oncommand="BrowserAddBookmark(window._content.location.href,window._content.document.title);"/>
 	<broadcaster id="Browser:ManageBookmark" value="&manBookmarksCmd.label;" oncommand="BrowserEditBookmarks();" />
-
-	<broadcaster id="Browser:SavePage" value="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" oncommand="savePage();"/>
 
 </broadcasterset>
 
@@ -218,7 +201,7 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
   </menu>
 
   <menu id="menu_View" accesskey="&viewMenu.accesskey;" value="&viewMenu.label;">
-    <menupopup id="menu_View_Popup">
+    <menupopup id="menu_View_Popup" oncreate="initViewMenu()">
     	 <menu value="&toolbarsCmd.label;" id="view_toolbars">
 		  	<menupopup id="view_toolbars_popup"> 
 		  		<menuitem value="&navbarCmd.label;" observes="cmd_viewnavbar"  />
@@ -227,16 +210,16 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
 		  	</menupopup>
 	</menu>   
       <menuseparator />
-	<menu id="menu_TextSize_Popup" value="&textSizeMenu.label;"                                                                                                     accesskey="&textSizeMenu.accesskey;" oldsize="3">
-		<menupopup>
-			<menuitem type="radio" observes="largestTextSizeCmd"/>
-			<menuitem type="radio" observes="largerTextSizeCmd"/>
-			<menuitem type="radio" observes="mediumTextSizeCmd" checked="true"/>
-			<menuitem type="radio" observes="smallerTextSizeCmd"/>
-			<menuitem type="radio" observes="smallestTextSizeCmd"/>
-		</menupopup>
-	</menu>
-        <!-- key="key_reduceTextSize" -->
+      <menu id="menu_TextZoom" accesskey="&textZoomMenu.accesskey;">
+        <menupopup id="textZoomPopup" oncreate="initTextZoomMenu()">
+          <menuitem key="key_textZoomReduce" accesskey="&textZoomReduceCmd.accesskey;" observes="cmd_viewTextZoomReduce"/>
+          <menuitem key="key_textZoomEnlarge" accesskey="&textZoomEnlargeCmd.accesskey;" observes="cmd_viewTextZoomEnlarge"/>
+          <menuseparator/>
+	  <!-- inserted from navigator.js -->
+          <menuseparator id="textZoomInsertBefore"/>
+          <menuitem id="textZoomOther" type="radio" name="textZoom" accesskey="&textZoomOtherCmd.accesskey;" oncommand="setTextZoomOther()"/>
+        </menupopup>
+      </menu>
       <menu value="&useStyleSheetMenu.label;" disabled="false">
         <menupopup oncreate="stylesheetFillPopup(window._content.document, this, document.getElementById('authssnoopt'))">
           <menuitem value="&useStyleSheetNone.label;" id="authssnoopt" type="radio" name="authorstyle" oncommand="stylesheetSwitch(window._content.document, '')"/>
