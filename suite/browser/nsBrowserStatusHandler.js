@@ -200,6 +200,7 @@ nsBrowserStatusHandler.prototype =
     const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
     const nsIChannel = Components.interfaces.nsIChannel;
     var domWindow;
+    var ctype;
     if (aStateFlags & nsIWebProgressListener.STATE_START) {
       if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
         // Remember when loading commenced.
@@ -250,7 +251,7 @@ nsBrowserStatusHandler.prototype =
           }
           this.status = "";
           this.setDefaultStatus(msg);
-          var ctype = aRequest.QueryInterface(nsIChannel).contentType;
+          ctype = aRequest.QueryInterface(nsIChannel).contentType;
           if (ctype.match(/^image\//))
             this.translateMenu.setAttribute('disabled', 'true');
         }
@@ -269,7 +270,7 @@ nsBrowserStatusHandler.prototype =
     }
     else if (aStateFlags & nsIWebProgressListener.STATE_TRANSFERRING) {
       if (aStateFlags & nsIWebProgressListener.STATE_IS_DOCUMENT) {
-        var ctype = aRequest.QueryInterface(nsIChannel).contentType;
+        ctype = aRequest.QueryInterface(nsIChannel).contentType;
 
         if (ctype != "text/html")
           this.useRealProgressFlag = true;
