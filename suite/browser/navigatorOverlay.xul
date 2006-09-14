@@ -419,6 +419,7 @@
          <menuitem label="#2 Popups" oncommand="window._content.location.href='http://www.mozilla.org/projects/xul/tests/popups.xul'"/>
          <menuitem label="#3 Descriptions and Labels" oncommand="window._content.location.href='http://www.mozilla.org/projects/xul/tests/label.xul'"/>
          <menuitem label="#4 Dialog Buttons" oncommand="window._content.location.href='http://www.mozilla.org/projects/xul/tests/buttons.xul'"/>
+         <menuitem label="#5 Tabindex" oncommand="window._content.location.href='http://www.mozilla.org/projects/xul/tests/tabindex.xul'"/>
         </menupopup>
       </menu>
 
