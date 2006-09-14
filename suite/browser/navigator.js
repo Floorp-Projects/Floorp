@@ -1700,6 +1700,7 @@ function setFormToolbar()
     return;
   }
   formToolbar.removeAttribute("hidden");
+  return; // skip disabling the prefill button for now -- it was causing leak and bloat
 
   // enable prefill button if there is at least one saved value for the form
 
