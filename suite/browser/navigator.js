@@ -1377,7 +1377,9 @@ function applyTheme(themeName)
   catch(e) {
   }
 
-  var str;
+  var str = Components.classes["@mozilla.org/supports-wstring;1"]
+                      .createInstance(Components.interfaces.nsISupportsWString);
+
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
   if (oldTheme) {
     var title = gNavigatorBundle.getString("oldthemetitle");
@@ -1391,8 +1393,7 @@ function applyTheme(themeName)
 
       chromeRegistry.uninstallSkin( name, true );
       // XXX - this sucks and should only be temporary.
-      str = Components.classes["@mozilla.org/supports-wstring;1"]
-                      .createInstance(Components.interfaces.nsISupportsWString);
+
       str.data = true;
       pref.setComplexValue("general.skins.removelist." + name,
                            Components.interfaces.nsISupportsWString, str);
@@ -1404,10 +1405,19 @@ function applyTheme(themeName)
     return;
   }
 
-  chromeRegistry.selectSkin(name, true);
-  chromeRegistry.refreshSkins();
-}
+ // XXX XXX BAD BAD BAD BAD !! XXX XXX                                         
+ // we STILL haven't fixed editor skin switch problems                         
+ // hacking around it yet again                                                
 
+ str.data = themeName.getAttribute("name");
+ pref.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsWString, str);
+ if (promptService) {                                                          
+   var dialogTitle = gNavigatorBundle.getString("switchskinstitle");           
+   var brandName = gBrandBundle.getString("brandShortName");                   
+   var msg = gNavigatorBundle.getFormattedString("switchskins", [brandName]);  
+   promptService.alert(window, dialogTitle, msg);                              
+ }                                                                             
+}
 
 function getNewThemes()
 {
