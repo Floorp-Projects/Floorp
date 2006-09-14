@@ -45,7 +45,7 @@
 	titlepreface="&mainWindow.preface;"
 	titlemenuseparator ="&mainWindow.titlemodifierseperator;"  
 	windowtype="navigator:view-source"
-	align="vertical" width="640" height="480"
+	orient="vertical" width="640" height="480"
 	screenX="10" screenY="10"
 	persist="screenX screenY width height sizemode">
  
@@ -151,13 +151,13 @@
   </menubar>  
   </toolbox>
 
-  <box id="appcontent" align="vertical" flex="1"
+  <vbox id="appcontent" flex="1"
        ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
        ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"
        ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
 
     <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"/>
 
-  </box>
+  </vbox>
 
 </window>

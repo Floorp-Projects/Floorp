@@ -42,7 +42,7 @@
   titlemenuseparator ="&mainWindow.titlemodifierseperator;"  
   windowtype="Browser:page-info"
   onload="onLoadPageInfo()"
-  align="vertical" class="dialog"
+  orient="vertical" class="dialog"
   width="400" height="450"
   screenX="10" screenY="10"
   persist="screenX screenY width height sizemode">
@@ -52,7 +52,7 @@
   <!-- keys are appended from the overlay -->
   <keyset id="dialogKeys"/>
 
-  <box id="cont" orient="vertical" flex="1">  
+  <vbox id="cont" flex="1">  
    <text class="header label" value="&pageInfo.description;"/>
    <tabbox id="tabbox" flex="1">
     <tabs id="tabs">
@@ -64,9 +64,9 @@
     <tabpanels id="tabpanels" flex="1">
 
     <!-- General page information -->
-    <box orient="vertical">
+    <vbox>
       <text class="header label" value="&pageInfo.description;"/>
-      <box class="inset" orient="vertical" id="documentinfo">
+      <vbox class="inset" id="documentinfo">
         <grid>
           <columns> 
             <column/>
@@ -87,11 +87,11 @@
             </row>
           </rows>  
         </grid>
-      </box>
-    </box>
+      </vbox>
+    </vbox>
 
     <!-- Form information -->
-    <box id="formTreeContainer" flex="1" orient="vertical" collapsed="true">
+    <vbox id="formTreeContainer" flex="1" collapsed="true">
       <text class="header label" value="&pageInfo.formHeader;"/>
       <tree id="formTree" class="inset" flex="1">
         <treecolgroup>
@@ -110,10 +110,10 @@
         </treehead>
         <treechildren id="formChildren" flex="1"/>
       </tree>
-    </box>
+    </vbox>
 
     <!-- Image information -->
-    <box id="imageTreeContainer" flex="1" orient="vertical" collapsed="true">
+    <vbox id="imageTreeContainer" flex="1" collapsed="true">
       <text class="header label" value="&pageInfo.imageHeader;"/>
       <tree id="imageTree" class="inset" onselect="onImageSelect()" flex="1">
         <treecolgroup>
@@ -138,13 +138,13 @@
  
       <splitter collapse="after" id="imageSplitter"/>
       
-      <box id="imagePreviewContainer" flex="1">
+      <hbox id="imagePreviewContainer" flex="1">
         <iframe id="imageFrame" class="inset" src="about:blank" flex="1"/>
-      </box>
-    </box>
+      </hbox>
+    </vbox>
 
     <!-- Others added by overlay -->
     </tabpanels>
    </tabbox>
-  </box>
+  </vbox>
 </window>

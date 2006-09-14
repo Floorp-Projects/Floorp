@@ -111,7 +111,7 @@ Contributor(s): ______________________________________. -->
   
   <popupset id="aHTMLTooltipSet">
     <popup id="aHTMLTooltip" class="tooltip" oncreate="return FillInHTMLTooltip(document.tooltipNode);" > 
-      <box id="HTML_TOOLTIP_tooltipBox" orient="vertical"/>
+      <vbox id="HTML_TOOLTIP_tooltipBox"/>
     </popup>
     <popup id="backMenu" oncreate="BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
     <popup id="forwardMenu" oncreate="BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
@@ -315,7 +315,7 @@ Contributor(s): ______________________________________. -->
   </toolbox>
     
   <hbox flex="1" >
-    <box id="sidebar-box" class="chromeclass-extrachrome"/>
+    <hbox id="sidebar-box" class="chromeclass-extrachrome"/>
     <splitter id="sidebar-splitter" class="chromeclass-extrachrome" />
   
     <vbox id="appcontent" flex="1"
@@ -336,7 +336,7 @@ Contributor(s): ______________________________________. -->
   <statusbar id="status-bar" class="chromeclass-status"
              ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
-        <box id="component-bar"/>
+        <hbox id="component-bar"/>
         <statusbarpanel id="statusbar-display" label="&statusText.label;" crop="right" flex="1"/>
         <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0"/>
         <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
