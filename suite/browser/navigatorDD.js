@@ -280,7 +280,6 @@ function BeginDragContentArea ( event )
   if ( !gDragDropEnabled )
     return;
 
-  dump ("in content area; starting drag\n");
   var dragStarted = false;
   var dragService = Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
   if ( dragService )
@@ -288,11 +287,12 @@ function BeginDragContentArea ( event )
     var trans = Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
     if ( trans )
     {
-      var src = null;
+      var genTextData = Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
       var htmlData = Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
-      if ( htmlData )
+      if ( genTextData && htmlData )
       {
         trans.addDataFlavor("text/html");
+        trans.addDataFlavor("text/unicode");
         
         var htmlstring = null;
         switch (event.target.nodeName)
@@ -335,43 +335,32 @@ function BeginDragContentArea ( event )
             if ( src != "" )
               htmlstring = "<A href=\"" + src + "\">" + src + "</A>";
             else
-              htmlstring = "<p>no html tag or link found; found "+event.target.nodeName;
+              return;
             break;
         }
         
-			  htmlData.data = htmlstring;
-	      trans.setTransferData ( "text/html", htmlData, htmlstring.length*2 );  // double byte data (len*2)
-      }
-      
-      var genTextData = 
-        Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);      
-      if ( genTextData && src != "")
-      {
-        trans.addDataFlavor("text/unicode");
-			  genTextData.data = src; // should have been set if we had html
-	      trans.setTransferData ( "text/unicode", genTextData, src.length*2 );  // double byte data
-	    }
-	    
-      var transArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
-      if ( transArray )
-      {
-        // put it into the transferable as an |nsISupports|
-        var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
-        transArray.AppendElement(genTrans);
-        var nsIDragService = Components.interfaces.nsIDragService;
-        dragService.invokeDragSession ( transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
-                                            nsIDragService.DRAGDROP_ACTION_MOVE );
-        dragStarted = true;
-      }
+        htmlData.data = htmlstring;
+        trans.setTransferData ( "text/html", htmlData, htmlstring.length * 2 );  // double byte data
 
+        genTextData.data = src;
+        trans.setTransferData ( "text/unicode", genTextData, src.length * 2 );  // double byte data
+        var transArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+        if ( transArray )
+        {
+          // put it into the transferable as an |nsISupports|
+          var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
+          transArray.AppendElement(genTrans);
+          var nsIDragService = Components.interfaces.nsIDragService;
+          dragService.invokeDragSession ( transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
+                                              nsIDragService.DRAGDROP_ACTION_MOVE );
+          dragStarted = true;
+        }
+      } // if data object
     } // if transferable
   } // if drag service
 
   if ( dragStarted )               // don't propagate the event if a drag has begun
     event.preventBubble();
-  
-  return true;
-  
 }
 
 
@@ -569,20 +558,26 @@ function DragContentLink ( event )
     var trans = 
       Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
     if ( trans ) {
-      trans.addDataFlavor("text/unicode");
       var genTextData =
         Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
-      if ( genTextData ) {
+      var htmlData =
+        Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
+      if ( genTextData && htmlData ) {
       
+      trans.addDataFlavor("text/html");
+      trans.addDataFlavor("text/unicode");
         // pull the url out of the link
         var href = enclosingLink(target);
         if ( href == "" )
           return;
         var id = href
         genTextData.data = id;
-      
+        var htmlstring = "<A href=\"" + id + "\">" + id + "</A>";
+        htmlData.data = htmlstring;
+     
         dump("ID: " + id + "\n");
 
+        trans.setTransferData ( "text/html", htmlData, htmlstring.length * 2 );  // double byte data
         trans.setTransferData ( "text/unicode", genTextData, id.length * 2 );  // double byte data
         var transArray = 
           Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
