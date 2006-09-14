@@ -44,7 +44,7 @@ function nsBrowserContentListener(toplevelWindow, contentWindow)
     // this one is not as easy as you would hope.
     // need to convert toplevelWindow to an XPConnected object, instead
     // of a DOM-based object, to be able to QI() it to nsIXULWindow
-    
+
     this.init(toplevelWindow, contentWindow);
 }
 
@@ -61,9 +61,9 @@ nsBrowserContentListener.prototype =
         var windowDocShell = this.convertWindowToDocShell(toplevelWindow);
         if (windowDocShell)
             windowDocshell.parentURIContentListener = this;
-    
+
         var registerWindow = false;
-        try {          
+        try {
           var treeItem = contentWindow.docShell.QueryInterface(Components.interfaces.nsIDocShellTreeItem);
           var treeOwner = treeItem.treeOwner;
           var interfaceRequestor = treeOwner.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
@@ -74,11 +74,11 @@ nsBrowserContentListener.prototype =
             var res = chromeFlags & nsIWebBrowserChrome.CHROME_ALL;
             var res2 = chromeFlags & nsIWebBrowserChrome.CHROME_DEFAULT;
             if ( res == nsIWebBrowserChrome.CHROME_ALL || res2 == nsIWebBrowserChrome.CHROME_DEFAULT)
-            {             
+            {
               registerWindow = true;
             }
          }
-       } catch (ex) {} 
+       } catch (ex) {}
 
         // register ourselves
        if (registerWindow)
@@ -100,8 +100,9 @@ nsBrowserContentListener.prototype =
             iid.equals(Components.interfaces.nsISupportsWeakReference) ||
             iid.equals(Components.interfaces.nsISupports))
             return this;
-        throw Components.results.NS_NOINTERFACE;
 
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
     },
     onStartURIOpen: function(uri)
     {
@@ -121,11 +122,11 @@ nsBrowserContentListener.prototype =
         } catch (ex) {
             dump(ex);
         }
-        
+
         if (!contentListener) return false;
-        
+
         return contentListener.doContent(contentType, isContentPreferred, request, contentHandler);
-        
+
     },
 
     isPreferred: function(contentType, desiredContentType)
@@ -157,7 +158,7 @@ nsBrowserContentListener.prototype =
             dump(ex);
         }
         if (!contentListener) return false;
-        
+
         return contentListener.canHandleContent(contentType, isContentPreferred, desiredContentType);
     },
     convertWindowToDocShell: function(win) {
