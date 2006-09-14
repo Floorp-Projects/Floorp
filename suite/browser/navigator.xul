@@ -323,7 +323,7 @@ Contributor(s): ______________________________________. -->
 	<box id="personaltoolbar-endcap" align="vertical" width="68px"/>
   </toolbar>
 
-  <toolbar id="nav-bar" class="main-bar" chromeclass="toolbar" persist="collapsed">
+  <toolbar id="nav-bar" class="decorated main-bar" chromeclass="toolbar" persist="collapsed">
 	<box align="horizontal" flex="100%" style="overflow: hidden">
       <titledbutton id="back-button" class="button32" crop="right" align="top" observes="canGoBack" />  
 
