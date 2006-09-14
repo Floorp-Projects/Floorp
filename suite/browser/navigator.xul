@@ -229,7 +229,7 @@ Contributor(s): ______________________________________. -->
       //     - pinkerton
       <menu id="PersonalMenu" datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
             ref="NC:BookmarksRoot">
-        <titledbutton align="right" class="bookmarkFolder" container="true"
+        <titledbutton align="right" class="bookmarkFolder toolbar-flat" container="true"
           value="&bookmarksButton.label;" crop="right"/>
         <template>
           <!-- Recursive rules for nested folders -->
@@ -275,13 +275,13 @@ Contributor(s): ______________________________________. -->
 		      <rule parent="box" iscontainer="true">
 		        <menu uri="..." class="standard">
 		          <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name"
-		                        align="right" class="bookmarkFolder"/>
+		                        align="right" class="bookmarkFolder toolbar-flat"/>
 		          <menupopup class="standard"/>
 		        </menu>
 				<spring uri="rdf:*" class="personaltoolbarspacer" flex="1"/>
 		      </rule>
 		      <rule parent="box">
-		        <titledbutton class="bookmarkbutton" uri="rdf:*" align="left" 
+		        <titledbutton class="bookmarkbutton toolbar-flat" uri="rdf:*" align="left" 
 		          value="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"
 		          oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)"/>
 		        <spring uri="rdf:*" class="personaltoolbarspacer" flex="1"/>
@@ -312,7 +312,7 @@ Contributor(s): ______________________________________. -->
 		     
 		    <titledbutton id="home-button" align="left"
 		      value="&homeButton.label;"
-			  class="bookmarkbutton"  
+			    class="bookmarkbutton toolbar-flat"  
 		      onclick="BrowserHome(); event.preventBubble();"/>
 		    <spring class="personaltoolbarspacer" flex="1"/>
 	    
