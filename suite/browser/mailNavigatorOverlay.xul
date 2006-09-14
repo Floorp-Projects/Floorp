@@ -109,7 +109,6 @@
         aDocument = window.content.document;
 
       try {
-        aDocument = new XPCNativeWrapper(aDocument, "URL", "title");
         openComposeWindow(aDocument.URL, aDocument.title, 0, null);
       } catch(ex) { dump("Cannot Send Link: " + ex + "\n"); }
     }
@@ -129,7 +128,6 @@
         
       try {
         var charset = getCharsetforSave(aDocument);
-        aDocument = new XPCNativeWrapper(aDocument, "URL", "title");
         openComposeWindow(aDocument.URL, aDocument.title, 1, charset);
       } catch(ex) { dump("Cannot Send Page: " + ex + "\n"); }
     }
@@ -223,7 +221,7 @@
       <menuitem insertafter="saveframeas"
                 label="&contextSendFrame.label;"
                 accesskey="&contextSendFrame.accesskey;"
-                oncommand="sendPage(new XPCNativeWrapper(gContextMenu.target, 'ownerDocument').ownerDocument);"/>
+                oncommand="sendPage(gContextMenu.target.ownerDocument);"/>
     </menupopup>
     </menu>
   </popup>
