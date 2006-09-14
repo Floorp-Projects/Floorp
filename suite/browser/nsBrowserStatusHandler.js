@@ -331,8 +331,8 @@ nsBrowserStatusHandler.prototype =
     if (blank ||
         !("popupDomain" in browser)) {
       browser.popupDomain = null;
-      browser.popupUrls = null;
-      browser.popupFeatures = null;
+      browser.popupUrls = [];
+      browser.popupFeatures = [];
     }
     else {
       var hostPort = "";
@@ -342,8 +342,8 @@ nsBrowserStatusHandler.prototype =
       catch(ex) { }
       if (hostPort != browser.popupDomain) {
         browser.popupDomain = null;
-        browser.popupUrls = null;
-        browser.popupFeatures = null;
+        browser.popupUrls = [];
+        browser.popupFeatures = [];
       }
     }
 
