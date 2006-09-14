@@ -77,7 +77,6 @@ nsBrowserStatusHandler.prototype =
   jsStatus : "",
   jsDefaultStatus : "",
   overLink : "",
-  startTime : 0,
 
   statusTimeoutInEffect : false,
 
@@ -213,8 +212,6 @@ nsBrowserStatusHandler.prototype =
           (aStateFlags & nsIWebProgressListener.STATE_IS_REQUEST &&
            !aWebProgress.isLoadingDocument &&
            this.totalRequests == this.finishedRequests)) {
-        // Remember when loading commenced.
-        this.startTime = Date.now();
 
         // Call start document load listeners (only if this is a network load)
         if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK &&
@@ -272,10 +269,7 @@ nsBrowserStatusHandler.prototype =
           // If msg is false then we did not have an error (channel may have
           // been null, in the case of a stray image load).
           if (!msg) {
-            // Record page loading time.
-            var elapsed = (Date.now() - this.startTime) / 1000;
             msg = gNavigatorBundle.getString("nv_done");
-            msg = msg.replace(/%elapsed%/, elapsed);
           }
           this.status = "";
           this.setDefaultStatus(msg);
