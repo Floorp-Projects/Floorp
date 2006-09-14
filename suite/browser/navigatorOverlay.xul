@@ -266,8 +266,6 @@
         <menuseparator />
         <menu label="&applyTheme.label;" accesskey="&applyTheme.accesskey;">
           <menupopup id="theme" datasources="rdf:chrome" ref="urn:mozilla:skin:root" oncommand="applyTheme(event.target)" onpopupshowing="checkTheme()">
-            <menuitem label="&themePreferencesCmd.label;" accesskey="&themePreferencesCmd.accesskey;"
-                      oncommand="goPreferences('appearance','chrome://communicator/content/pref/pref-themes.xul', 'themes-panel')"/>
             <menuitem label="&getNewThemesCmd.label;" accesskey="&getNewThemesCmd.accesskey;" oncommand="getNewThemes();"/>
             <menuseparator/>
             <template>

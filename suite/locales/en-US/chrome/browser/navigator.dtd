@@ -106,8 +106,6 @@
 <!ENTITY downloadMore.accesskey "D">
 <!ENTITY applyTheme.label	"Apply Theme"> 
 <!ENTITY applyTheme.accesskey	"A"> 
-<!ENTITY themePreferencesCmd.label "Theme Preferences..."> 
-<!ENTITY themePreferencesCmd.accesskey "T"> 
 <!ENTITY getNewThemesCmd.label "Get New Themes">
 <!ENTITY getNewThemesCmd.accesskey "G">
 <!ENTITY searchMenu.label "Search">
