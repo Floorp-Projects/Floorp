@@ -103,20 +103,24 @@ close(ENTITIES);
 # Environment Variable Checking
 ###############################################################################
 
-my ($JADE_PUB, $LDP_HOME);
-
+my ($JADE_PUB, $LDP_HOME, $build_docs);
+$build_docs = 1;
 if (defined $ENV{JADE_PUB} && $ENV{JADE_PUB} ne '') {
     $JADE_PUB = $ENV{JADE_PUB};
 }
 else {
-    die "You need to set the JADE_PUB environment variable first.";
+    print "To build 'The Bugzilla Guide', you need to set the ";
+    print "JADE_PUB environment variable first.\n";
+    $build_docs = 0;
 }
 
 if (defined $ENV{LDP_HOME} && $ENV{LDP_HOME} ne '') {
     $LDP_HOME = $ENV{LDP_HOME};
 }
 else {
-    die "You need to set the LDP_HOME environment variable first.";
+    print "To build 'The Bugzilla Guide', you need to set the ";
+    print "LDP_HOME environment variable first.\n";
+    $build_docs = 0;
 }
 
 ###############################################################################
@@ -182,6 +186,7 @@ if (!-d 'pdf') {
 }
 
 make_pod() if $pod_simple;
+exit unless $build_docs;
 
 chdir 'html';
 
