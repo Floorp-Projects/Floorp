@@ -346,19 +346,27 @@ var homeButtonObserver = {
       var aData = aData.length ? aData[0] : aData;
       var url = retrieveURLFromData(aData);
       var showDialog = nsPreferences.getBoolPref("browser.homepage.enable_home_button_drop", false);
+      var setHomepage;
       if (!showDialog)
         {
           var commonDialogService = nsJSComponentManager.getService("component://netscape/appshell/commonDialogs",
                                                                     "nsICommonDialogs");
-          var checkValue = { value: false };                                                                              
+          var checkValue = { value: false };
+          var pressedVal = { };                            
           var promptTitle = bundle.GetStringFromName("droponhometitle");
-          var promptMsg = bundle.GetStringFromName("droponhomemsg");
-          var checkMsg = bundle.GetStringFromName("dontremindme");
-          var setHomepage = commonDialogService.ConfirmCheck(window, promptTitle, promptMsg, checkMsg, checkValue);
+          var promptMsg   = bundle.GetStringFromName("droponhomemsg");
+          var checkMsg    = bundle.GetStringFromName("dontremindme");
+          var okButton    = bundle.GetStringFromName("droponhomeokbutton");
+          var iconURL     = "chrome://navigator/skin/home.gif"; // evil evil common dialog code! evil! 
+          commonDialogService.UniversalDialog(window, null, promptTitle, promptMsg, checkMsg, 
+                                              okButton, null, null, null, null, null, { }, { },
+                                              iconURL, checkValue, 2, 0, null, pressedVal);
           nsPreferences.setBoolPref("browser.homepage.enable_home_button_drop", checkValue.value);
+
+          setHomepage = pressedVal.value;
         }
       else
-        var setHomepage = true;
+        setHomepage = true;
       if (setHomepage)
         nsPreferences.setUnicharPref("browser.startup.homepage", url);                                           
     },
