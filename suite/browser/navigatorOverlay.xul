@@ -219,21 +219,9 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
 		</menupopup>
 	</menu>
         <!-- key="key_reduceTextSize" -->
-      <menu value="&useStyleSheetMenu.label;" disabled="true" oncommand="BrowserReload();">
-        <menupopup>
-          <menuitem type="radio" name="stylesheet_group"
-                    value="&useStyleSheetDefaultCmd.label;"
-                    oncommand="BrowserReload();"/>
-          <menuseparator />
-          <menuitem type="radio" name="stylesheet_group"
-                    value="&useStyleSheetEasyReadingCmd.label;"
-                    oncommand="BrowserReload();"/>
-          <menuitem type="radio" name="stylesheet_group"
-                    value="&useStyleSheetMaxInfoCmd.label;"
-                    oncommand="BrowserReload();"/>
-          <menuitem type="radio" name="stylesheet_group"
-                    value="&useStlyleSheetBizarreCmd.label;" 
-                    oncommand="BrowserReload();"/>
+      <menu value="&useStyleSheetMenu.label;" disabled="false">
+        <menupopup oncreate="stylesheetFillPopup(window._content.document, this, document.getElementById('authssnoopt'))">
+          <menuitem value="&useStyleSheetNone.label;" id="authssnoopt" type="radio" name="authorstyle" oncommand="stylesheetSwitch(window._content.document, '')"/>
         </menupopup>
       </menu>
       <menuseparator />
