@@ -31,7 +31,7 @@ function viewSource(url)
       if (window.arguments[1].indexOf('charset=') != -1) {
         var arrayArgComponents = window.arguments[1].split('=');
         if (arrayArgComponents) {
-          docShellElement.markupDocumentViewer.defaultCharacterSet = arrayArgComponents[1];
+          appCore.setDefaultCharacterSet(arrayArgComponents[1]); //XXXjag see bug 67442
         } 
       }
     }

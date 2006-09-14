@@ -517,7 +517,7 @@ function Startup()
       loadURI(startPage);
            
     // Focus the content area if the caller instructed us to.
-    if ("arguments" in window && window.arguments[2] == true)
+    if ("arguments" in window && window.arguments.length >= 3 && window.arguments[2] == true)
       _content.focus();
     else
       gURLBar.focus();
@@ -630,7 +630,7 @@ function BrowserStop()
 
 function BrowserReload()
 {
-  var reloadFlags = nsIWebNavigation.LOAD_FLAGS_NONE;
+  const reloadFlags = nsIWebNavigation.LOAD_FLAGS_NONE;
   try {
     getWebNavigation().reload(reloadFlags);
   }
@@ -641,7 +641,7 @@ function BrowserReload()
 function BrowserReloadSkipCache()
 {
   // Bypass proxy and cache.
-  var reloadFlags = nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY | nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
+  const reloadFlags = nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY | nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
   try {
     getWebNavigation().reload(reloadFlags);
   }
@@ -871,12 +871,8 @@ function BrowserPrint()
 
 function BrowserSetDefaultCharacterSet(aCharset)
 {
-  getMarkupDocumentViewer().defaultCharacterSet = aCharset;
-  try {
-    getWebNavigation().reload(nsIWebNavigation.LOAD_FLAGS_NONE);
-  } 
-  catch(ex) {
-  }
+  appCore.setDefaultCharacterSet(aCharset); //XXXjag see bug 67442
+  BrowserReload();
 }
 
 function BrowserSetForcedCharacterSet(aCharset)
