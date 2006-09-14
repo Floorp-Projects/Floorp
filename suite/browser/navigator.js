@@ -1073,10 +1073,39 @@ function RevealSearchPanel()
     bmks.AddBookmark(url, title);
   }
 
-  function BrowserEditBookmarks()
-  { 
-    window.open("chrome://bookmarks/content/", "BookmarksWindow", "chrome,menubar,resizable,scrollbars");
+// Set up a lame hack to avoid opening two bookmarks.
+// Could otherwise happen with two Ctrl-B's in a row.
+var gDisableBookmarks = false;
+function enableBookmarks() {
+  gDisableBookmarks = false;
+}
+
+function BrowserEditBookmarks()
+{ 
+  // Use a single sidebar bookmarks dialog
+
+  var cwindowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+  var iwindowManager = Components.interfaces.nsIWindowMediator;
+  var windowManager  = cwindowManager.QueryInterface(iwindowManager);
+
+  var bookmarksWindow = windowManager.GetMostRecentWindow('bookmarks:manager');
+
+  if (bookmarksWindow) {
+    debug("Reuse existing bookmarks window");
+    bookmarksWindow.focus();
+  } else {
+    debug("Open a new bookmarks dialog");
+
+    if (true == gDisableBookmarks) {
+      debug("Recently opened one. Wait a little bit.");
+      return;
+    }
+    gDisableBookmarks = true;
+
+    window.open("chrome://bookmarks/content/", "_blank", "chrome,menubar,resizable,scrollbars");
+    setTimeout(enableBookmarks, 2000);
   }
+}
 
   function BrowserPrintPreview()
   {
