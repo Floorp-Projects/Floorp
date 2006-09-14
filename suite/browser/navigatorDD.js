@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *  - Kevin Puetz (puetz@iastate.edu)
+ *  - Kevin Puetz (puetzk@iastate.edu)
  */
 
 //
@@ -296,7 +296,7 @@ function BeginDragContentArea ( event )
   var htmlstring = null;
   var textstring = null;
   var domselection = window.content.getSelection();
-  if ( domselection && !domselection.isCollapsed)
+  if ( domselection && !domselection.isCollapsed  && domselection.containsNode(event.target,false))
   {
     // the window has a selection so we should grab that rather than looking for specific elements
 //    dump(domselection);
