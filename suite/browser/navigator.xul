@@ -163,7 +163,7 @@ Contributor(s): ______________________________________. -->
                  showCommentColumn="true"
                  tooltiptext="&locationBar.tooltip;"
                  oninput="window.XULBrowserWindow.userTyped.value=true;"
-                 ontextcommand="return handleURLBarCommand(eventParam);"
+                 ontextcommand="return handleURLBarCommand(eventParam, domEvent);"
                  ontextrevert="return handleURLBarRevert();"
                  onfocus="URLBarFocusHandler(event);"
                  onblur="URLBarBlurHandler(event);">
