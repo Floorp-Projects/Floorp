@@ -283,10 +283,15 @@ var contentAreaDNDObserver = {
               case 'IMG':
                 var imgsrc = aEvent.target.getAttribute("src");
                 var baseurl = window._content.location.href;
-                // need to do some stuff with the window._content.location here (path?) 
+                // need to do some stuff with the window._content.location (path?) 
                 // to get base URL for image.
+
                 textstring = imgsrc;
                 htmlstring = "<img src=\"" + textstring + "\">";
+                if ((linkNode = this.findEnclosingLink(aEvent.target))) {
+                  htmlstring = '<a href="' + linkNode.href + '">' + htmlstring + '</a>';
+                  textstring = linkNode.href;
+                }
                 break;
               case 'A':
                 isLink = true;
@@ -313,7 +318,6 @@ var contentAreaDNDObserver = {
                   textstring = node.href;
                 if (textstring != "")
                 {
-    dump("link hit selecting link\n");
                   htmlstring = "<a href=\"" + textstring + "\">" + textstring + "</a>";
                   var parent = node.parentNode;
                   if (parent)
@@ -323,14 +327,10 @@ var contentAreaDNDObserver = {
                     for (index = 0; index<nodelist.length; index++)
                     {
                       if (nodelist.item(index) == node)
-                      {
                         break;
-                      }
                     }
                     if (index >= nodelist.length)
-                    {
                         throw Components.results.NS_ERROR_FAILURE;
-                    }
                     if (domselection)
                     {
                       domselection.collapse(parent,index);
@@ -386,6 +386,22 @@ var contentAreaDNDObserver = {
       flavourList["text/unicode"] = { width: 2, iid: "nsISupportsWString" };
       flavourList["application/x-moz-file"] = { width: 2, iid: "nsIFile" };
       return flavourList;
+    },
+
+  findEnclosingLink: function (aNode)  
+    {  
+      while (aNode) {
+        var nodeName = aNode.localName;
+        if (!nodeName) return null;
+        nodeName = nodeName.toLowerCase();
+        if (!nodeName || nodeName == "body" || 
+            nodeName == "html" || nodeName == "#document")
+          return null;
+        if (nodeName == "a" && aNode.href)
+          return aNode;
+        aNode = aNode.parentNode;
+      }
+      return null;
     },
 };
 
