@@ -183,6 +183,8 @@ function addToUrlbarHistory()
        var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                      .getService(Components.interfaces.nsIIOService);
        
+       var entryToAdd = gRDF.GetLiteral(urlToAdd);
+
        try {
          ioService.extractScheme(urlToAdd, {}, {});
        } catch(e) {
@@ -243,11 +245,10 @@ function addToUrlbarHistory()
           }
        }   // while
 
-       var entry = gRDF.GetLiteral(urlToAdd);
        // Otherwise, we've got a new URL in town. Add it!
        // Put the value as it was typed by the user in to RDF
        // Insert it to the beginning of the list.
-       entries.InsertElementAt(entry, 1, true);
+       entries.InsertElementAt(entryToAdd, 1, true);
 
        // Remove any expired history items so that we don't let
        // this grow without bound.
