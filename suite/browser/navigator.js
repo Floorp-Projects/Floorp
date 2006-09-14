@@ -1091,13 +1091,13 @@ function BrowserEditBookmarks()
   var bookmarksWindow = windowManager.GetMostRecentWindow('bookmarks:manager');
 
   if (bookmarksWindow) {
-    debug("Reuse existing bookmarks window");
+    //debug("Reuse existing bookmarks window");
     bookmarksWindow.focus();
   } else {
-    debug("Open a new bookmarks dialog");
+    //debug("Open a new bookmarks dialog");
 
     if (true == gDisableBookmarks) {
-      debug("Recently opened one. Wait a little bit.");
+      //debug("Recently opened one. Wait a little bit.");
       return;
     }
     gDisableBookmarks = true;
