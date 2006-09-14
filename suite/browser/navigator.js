@@ -64,6 +64,69 @@ var gBrowser = null;
 var gFocusedURL = null;
 var gFocusedDocument = null;
 
+// Pref listener constants
+const gButtonPrefListener =
+{
+  domain: "browser.toolbars.showbutton",
+  observe: function(subject, topic, prefName)
+  {
+    // verify that we're changing a button pref
+    if (topic != "nsPref:changed")
+      return;
+
+    var buttonName = prefName.substr(this.domain.length+1);
+    var buttonId = buttonName + "-button";
+    var button = document.getElementById(buttonId);
+
+    var show = pref.getBoolPref(prefName);
+    button.hidden = !show;
+
+    // If all buttons before the separator are hidden, also hide the separator
+    var bookmarkSeparator = document.getElementById("home-bm-separator");
+    bookmarkSeparator.hidden = allLeftButtonsAreHidden();
+  }
+};
+
+const gTabStripPrefListener =
+{
+  domain: "browser.tabs.autoHide",
+  observe: function(subject, topic, prefName)
+  {
+    // verify that we're changing the tab browser strip auto hide pref
+    if (topic != "nsPref:changed")
+      return;
+
+    var stripVisibility = !pref.getBoolPref(prefName);
+    if (gBrowser.mTabContainer.childNodes.length == 1)
+      gBrowser.setStripVisibilityTo(stripVisibility);
+  }
+};
+
+/**
+* Pref listener handler functions.
+* Both functions assume that observer.domain is set to 
+* the pref domain we want to start/stop listening to.
+*/
+function addPrefListener(observer)
+{
+  try {
+    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+    pbi.addObserver(observer.domain, observer, false);
+  } catch(ex) {
+    dump("Failed to observe prefs: " + ex + "\n");
+  }
+}
+
+function removePrefListener(observer)
+{
+  try {
+    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+    pbi.removeObserver(observer.domain, observer);
+  } catch(ex) {
+    dump("Failed to remove pref observer: " + ex + "\n");
+  }
+}
+
 /**
 * We can avoid adding multiple load event listeners and save some time by adding
 * one listener that calls all real handlers.
@@ -207,46 +270,6 @@ function UpdateBackForwardButtons()
   }
 }
 
-
-function nsButtonPrefListener()
-{
-  try {
-    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-    pbi.addObserver(this.domain, this, false);
-  } catch(ex) {
-    dump("Failed to observe prefs: " + ex + "\n");
-  }
-}
-
-// implements nsIObserver
-nsButtonPrefListener.prototype =
-{
-  domain: "browser.toolbars.showbutton",
-  observe: function(subject, topic, prefName)
-  {
-    // verify that we're changing a button pref
-    if (topic != "nsPref:changed") return;
-    if (prefName.substr(0, this.domain.length) != this.domain) return;
-
-    var buttonName = prefName.substr(this.domain.length+1);
-    var buttonId = buttonName + "-button";
-    var button = document.getElementById(buttonId);
-
-    var show = pref.getBoolPref(prefName);
-    if (show)
-      button.setAttribute("hidden","false");
-    else
-      button.setAttribute("hidden", "true");
-
-    // If all the buttons before the separator are hidden, also hide the
-    // separator
-    if(allLeftButtonsAreHidden())
-      document.getElementById("home-bm-separator").setAttribute("hidden", "true");
-    else
-      document.getElementById("home-bm-separator").removeAttribute("hidden");
-  }
-}
-
 // Function allLeftButtonsAreHidden
 // Returns true if all the buttons left of the separator in the personal
 // toolbar are hidden, false otherwise.
@@ -306,7 +329,9 @@ function Startup()
 
   // initialize observers and listeners
   window.XULBrowserWindow = new nsBrowserStatusHandler();
-  window.buttonPrefListener = new nsButtonPrefListener();
+
+  addPrefListener(gButtonPrefListener); 
+  addPrefListener(gTabStripPrefListener);
 
   window.browserContentListener =
     new nsBrowserContentListener(window, getBrowser());
@@ -493,9 +518,8 @@ function Shutdown()
   BrowserFlushBookmarksAndHistory();
 
   // unregister us as a pref listener
-  var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-  pbi.removeObserver(window.buttonPrefListener.domain,
-                     window.buttonPrefListener);
+  removePrefListener(gButtonPrefListener);
+  removePrefListener(gTabStripPrefListener);
 
   window.browserContentListener.close();
   // Close the app core.
