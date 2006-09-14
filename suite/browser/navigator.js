@@ -859,7 +859,14 @@ function BrowserPrintPreview()
 function BrowserPrint()
 {
   // using _content.print() until printing becomes scriptable on docShell
-  _content.print();
+  try {
+    _content.print();
+  } catch (e) {
+    // Pressing cancel is expressed as an NS_ERROR_FAILURE return value,
+    // causing an exception to be thrown which we catch here.
+    // Unfortunately this will also consume helpful failures, so add a
+    // dump(e); // if you need to debug
+  }
 }
 
 function BrowserSetDefaultCharacterSet(aCharset)
