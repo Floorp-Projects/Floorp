@@ -40,7 +40,7 @@
 <!ENTITY viewMenu.label "View">
 <!ENTITY viewMenu.accesskey "v">
 
-<!ENTITY toolbarsCmd.label "Show">
+<!ENTITY toolbarsCmd.label "Show/Hide">
 <!ENTITY toolbarsCmd.accesskey "w">
 <!ENTITY navbarCmd.label "Navigation Toolbar">
 <!ENTITY navbarCmd.accesskey "n">
