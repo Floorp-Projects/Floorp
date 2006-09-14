@@ -884,18 +884,18 @@ function BrowserEditBookmarks()
     if ( !clipboard || !trans )
       return;
 
-    trans.addDataFlavor( "text/plain" );
+    trans.addDataFlavor( "text/unicode" );
     clipboard.getData(trans);
 
 	var data = new Object();
 	var dataLen = new Object();
-	trans.getTransferData("text/plain", data, dataLen);
+	trans.getTransferData("text/unicode", data, dataLen);
     var url = null;
 	if (data)
     {
       data = data.value.QueryInterface(Components.interfaces
-                                                    .nsISupportsString);
-      url = data.data.substring(0, dataLen.value);
+                                                    .nsISupportsWString);
+      url = data.data.substring(0, dataLen.value / 2);
     }
 	return url;
   }
