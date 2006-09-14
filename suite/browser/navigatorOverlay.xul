@@ -269,14 +269,14 @@
     </menu>
   
     <menu accesskey="&searchMenu.accesskey;" label="&searchMenu.label;">
-      <menupopup>
+      <menupopup id="searchMenu">
         <menuitem label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;"    key="key_find" command="Browser:Find"/>
         <menuitem label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
         <menuseparator />
         <menuitem label="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="loadXURL('urn:clienturl:srchmenu:srchinternet');"/>        
         <menuitem label="&searchBookmarksHistoryCmd.label;" accesskey="&searchBookmarksHistoryCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'dialog=no,close,chrome,resizable', 'bookmarks');"/>
-        <menuseparator />
-         <menu label="&searchOptions.label;">
+        <menuseparator id="searchSeparator" />
+         <menu id="searchOptionsMenu" label="&searchOptions.label;">
             <menupopup>
               <menuitem id="simpleSearch" type="radio" label="&simpleMode.label;" oncommand="setBrowserSearchMode(0);" />
               <menuitem id="advancedSearch" type="radio" label="&advancedMode.label;" oncommand="setBrowserSearchMode(1);" />
