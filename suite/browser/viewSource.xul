@@ -75,7 +75,7 @@
       <menu id="menu_File"/>
       <menu id="menu_Edit"/>
       <menu id="menu_View">
-        <menupopup>
+        <menupopup id="menu_View_Popup">
           <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
           <menuseparator />
           <menu id="menu_textZoom"/>  
