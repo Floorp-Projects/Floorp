@@ -779,6 +779,9 @@ function BrowserOpenTab()
                           .getService(Components.interfaces.nsICmdLineHandler);
   var startpage = handler.defaultArgs;
   gBrowser.selectedTab = gBrowser.addTab(startpage);
+  setTimeout("gURLBar.focus();", 0); // bug #37638 could be relevant here in the future, depending on whether we
+                                     // decide that a non-blank page should have its content
+                                     // area focused instead.
 }
 
 /* Called from the openLocation dialog. This allows that dialog to instruct
