@@ -438,7 +438,7 @@ function nsBrowserAccess() {
 
 nsBrowserAccess.prototype = {
   openURI: function openURI(aURI, aOpener, aWhere, aContext) {
-    var isExternal = (aContext == nsCI.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+    var isExternal = (aContext == nsIBrowserDOMWindow.OPEN_EXTERNAL);
 
     if (isExternal && aURI && aURI.schemeIs("chrome")) {
       dump("use -chrome command-line option to load external chrome urls\n");
@@ -446,8 +446,9 @@ nsBrowserAccess.prototype = {
     }
 
     var loadflags = isExternal ?
-                      nsCI.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
-                      nsCI.nsIWebNavigation.LOAD_FLAGS_NONE;
+                      nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
+                      nsIWebNavigation.LOAD_FLAGS_NONE;
+
     if (aWhere == nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW)
       if (aContext == nsIBrowserDOMWindow.OPEN_EXTERNAL)
         aWhere = pref.getIntPref("browser.link.open_external");
