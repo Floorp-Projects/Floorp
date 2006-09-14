@@ -175,6 +175,6 @@
     <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"
              context="viewSourceContextMenu"/>
 
-  </vbox>
+  </vbox> 
 
 </window>
