@@ -106,11 +106,11 @@ var personalToolbarObserver = {
         if (aEvent.target.getAttribute("type") == "http://home.netscape.com/NC-rdf#Folder") {
           var child = aEvent.target.childNodes[0];                               
           if (child && child.localName == "menupopup")                                     
-            child.closePopup();                                                  
+            child.hidePopup();                                                  
           else {                                                                 
             var parent = aEvent.target.parentNode;                               
             if (parent && parent.localName == "menupopup")                                 
-            parent.closePopup();                                               
+            parent.hidePopup();                                               
           }                                                                      
         }
       }                                                                         
@@ -438,7 +438,7 @@ var bookmarksButtonObserver = {
     {
       aEvent.target.setAttribute("dragover", "true");
       if (!gDidOpen) {
-        aEvent.target.firstChild.openPopup(document.getElementById("bookmarks-button"), -1, -1, "menupopup", "bottomleft", "bottomleft");
+        aEvent.target.firstChild.showPopup(document.getElementById("bookmarks-button"), -1, -1, "menupopup", "bottomleft", "bottomleft");
         gDidOpen = true;
       }
       return true;
@@ -459,7 +459,7 @@ function closeOpenMenu()
   if (gCurrentDragOverMenu && gCurrentTarget.firstChild != gCurrentDragOverMenu) {
     if (gCurrentTarget.parentNode != gCurrentDragOverMenu) {
       gMenuIsOpen = false;
-      gCurrentDragOverMenu.closePopup();
+      gCurrentDragOverMenu.hidePopup();
       gCurrentDragOverMenu = null;
     }
   }
@@ -475,13 +475,13 @@ var menuDNDObserver = {
     if (aEvent.target.firstChild && aEvent.target.firstChild.localName == "menupopup") {
       if (aEvent.target.parentNode == document.getElementById("bookmarks-button").firstChild) {
         if (gCurrentDragOverMenu && gCurrentDragOverMenu != aEvent.target.firstChild) {
-          gCurrentDragOverMenu.closePopup();
+          gCurrentDragOverMenu.hidePopup();
           gCurrentDragOverMenu = null;
           gMenuIsOpen = false;
         }
         if (!gMenuIsOpen) {
           gCurrentDragOverMenu = aEvent.target.firstChild;
-          aEvent.target.firstChild.openPopup(aEvent.target, -1, -1, "menupopup", "topright, topright");
+          aEvent.target.firstChild.showPopup(aEvent.target, -1, -1, "menupopup", "topright, topright");
           gMenuIsOpen = true;
         }
       }
@@ -596,7 +596,7 @@ var menuDNDObserver = {
     
     // if user isn't rearranging within the menu, close it
     if (aDragSession.sourceNode.localName != "menuitem" && aDragSession.sourceNode.localName != "menu")
-      setTimeout(function() { if (gCurrentDragOverMenu) gCurrentDragOverMenu.closePopup(); document.getElementById("bookmarks-button").firstChild.closePopup(); gDidOpen = false; }, 190);    
+      setTimeout(function() { if (gCurrentDragOverMenu) gCurrentDragOverMenu.hidePopup(); document.getElementById("bookmarks-button").firstChild.hidePopup(); gDidOpen = false; }, 190);    
     
     return true;
   },
