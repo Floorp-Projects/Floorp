@@ -248,7 +248,7 @@ function removePopupPermListener(observer)
 * one listener that calls all real handlers.
 */
 
-function loadEventHandlers(event)
+function pageShowEventHandlers(event)
 {
   // Filter out events that are not about the document load we are interested in
   if (event.originalTarget == content.document) {
@@ -554,7 +554,7 @@ function Startup()
   // (rjc note: not the entire window, otherwise we'll get sidebar pane loads too!)
   //  so we'll be notified when onloads complete.
   var contentArea = document.getElementById("appcontent");
-  contentArea.addEventListener("load", loadEventHandlers, true);
+  contentArea.addEventListener("PageShow", pageShowEventHandlers, true);
   contentArea.addEventListener("focus", contentAreaFrameFocus, true);
 
   var turboMode = false;
