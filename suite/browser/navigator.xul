@@ -162,6 +162,7 @@ Contributor(s): ______________________________________. -->
                      type="autocomplete" searchSessions="history" 
                      timeout="50" maxrows="6" alwaysOpenPopup="true"
                      defaultSearchEngine="true" tabScrolling="true"
+                     showCommentColumn="true"
                      tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
                      ontextcommand="return handleURLBarCommand(userAction);"
                      ontextrevert="return handleURLBarRevert();"
