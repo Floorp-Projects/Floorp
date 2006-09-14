@@ -464,7 +464,8 @@ function findLocation(pre, line, node, offset, interlinePosition, result)
           // line, so we display that line and column instead.
           //
           if (i > 0 && offset == curPos && !interlinePosition) {
-            result.line = curPos - lineArray[i - 1].length - 1;
+            result.line = curLine - 1;
+            var prevPos = curPos - lineArray[i - 1].length;
             result.col = (i == 1 ? firstCol : 1) + offset - prevPos;
 
           } else {
