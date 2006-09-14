@@ -397,7 +397,7 @@ nsButtonPrefListener.prototype =
     
     var show = pref.GetBoolPref(prefName);
     if (show)
-      button.removeAttribute("hidden");
+      button.setAttribute("hidden","false");
     else
       button.setAttribute("hidden", "true");
   }
