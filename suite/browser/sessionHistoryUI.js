@@ -30,44 +30,54 @@ var localstore = rdf.GetDataSource("rdf:localstore");
 
 function FillHistoryMenu( aParent, aMenu )
   {
-    if (webNavigation)
+    // Get the content area docshell
+    var browserElement = document.getElementById("content");
+    if (browserElement)
       {
-        var shistory = webNavigation.sessionHistory;
-        if (shistory)
+        var docShell = browserElement.boxObject.QueryInterface(Components.interfaces.nsIBrowserBoxObject).docShell;
+        if (docShell)
           {
-            //Remove old entries if any
-            deleteHistoryItems( aParent );
-            var count = shistory.count;
-            var index = shistory.index;
-            switch (aMenu)
+            var webNavigation = docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
+            if (webNavigation)
               {
-                case "back":
-                  var end = (index > MAX_HISTORY_MENU_ITEMS) ? index - MAX_HISTORY_MENU_ITEMS : 0;
-                  for ( var j = index - 1; j >= end; j--) 
-                    {
-                      var entry = shistory.getEntryAtIndex(j, false);
-                      if (entry) 
-                        createMenuItem( aParent, j, entry.title );
-                    }
-                  break;
-                case "forward":
-                  var end  = ((count-index) > MAX_HISTORY_MENU_ITEMS) ? index + MAX_HISTORY_MENU_ITEMS : count;
-                  for ( var j = index + 1; j < end; j++)
-                    {
-                      var entry = shistory.getEntryAtIndex(j, false);
-                      if (entry)
-                        createMenuItem( aParent, j, entry.title );
-                    }
-                  break;
-                case "go":
-                  var end = count > MAX_HISTORY_MENU_ITEMS ? count - MAX_HISTORY_MENU_ITEMS : 0;
-                  for( var j = count - 1; j >= end; j-- )
-                    {
-                      var entry = shistory.getEntryAtIndex(j, false);
-                      if (entry)
-                        createCheckboxMenuItem( aParent, j, entry.title, j==index );
-                    }
-                  break;
+                var shistory = webNavigation.sessionHistory;
+                if (shistory)
+                  {
+                    //Remove old entries if any
+                    deleteHistoryItems( aParent );
+                    var count = shistory.count;
+                    var index = shistory.index;
+                    switch (aMenu)
+                      {
+                        case "back":
+                          var end = (index > MAX_HISTORY_MENU_ITEMS) ? index - MAX_HISTORY_MENU_ITEMS : 0;
+                          for ( var j = index - 1; j >= end; j--) 
+                            {
+                              var entry = shistory.getEntryAtIndex(j, false);
+                              if (entry) 
+                                createMenuItem( aParent, j, entry.title );
+                            }
+                          break;
+                        case "forward":
+                          var end  = ((count-index) > MAX_HISTORY_MENU_ITEMS) ? index + MAX_HISTORY_MENU_ITEMS : count;
+                          for ( var j = index + 1; j < end; j++)
+                            {
+                              var entry = shistory.getEntryAtIndex(j, false);
+                              if (entry)
+                                createMenuItem( aParent, j, entry.title );
+                            }
+                          break;
+                        case "go":
+                          var end = count > MAX_HISTORY_MENU_ITEMS ? count - MAX_HISTORY_MENU_ITEMS : 0;
+                          for( var j = count - 1; j >= end; j-- )
+                            {
+                              var entry = shistory.getEntryAtIndex(j, false);
+                              if (entry)
+                                createCheckboxMenuItem( aParent, j, entry.title, j==index );
+                            }
+                          break;
+                      }
+                  }
               }
           }
       }
