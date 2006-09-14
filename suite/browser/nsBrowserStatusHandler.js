@@ -147,13 +147,11 @@ nsBrowserStatusHandler.prototype =
   {
     this.overLink = link;
     this.updateStatusField();
-    // set empty so defaults show up next change
-    this.overLink = "";
   },
 
   updateStatusField : function()
   {
-    var text = this.jsStatus || this.overLink || this.status || this.jsDefaultStatus || this.defaultStatus;
+    var text = this.overLink || this.status || this.jsStatus || this.jsDefaultStatus || this.defaultStatus;
 
     // check the current value so we don't trigger an attribute change
     // and cause needless (slow!) UI updates
@@ -280,6 +278,8 @@ nsBrowserStatusHandler.prototype =
 
   onLocationChange : function(aWebProgress, aRequest, aLocation)
   {
+    this.setOverLink("", null);
+
     var location = aLocation.spec;
 
     if (this.hideAboutBlank) {
