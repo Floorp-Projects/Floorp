@@ -52,8 +52,11 @@ LinkToolbarUI = function()
 }
 
 LinkToolbarUI.prototype.refresh =
-function()
+function(event)
 {
+  if (event.originalTarget != getBrowser().contentDocument)
+    return;
+
   if (!linkToolbarUI.isLinkToolbarEnabled())
     return;
 
@@ -131,8 +134,11 @@ function()
 
 /** called on every page unload */
 LinkToolbarUI.prototype.clear =
-function()
+function(event)
 {
+  if (event.originalTarget != getBrowser().contentDocument)
+    return;
+
   if (!linkToolbarUI.isLinkToolbarEnabled())
     return;
 
