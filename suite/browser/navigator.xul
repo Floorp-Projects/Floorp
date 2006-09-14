@@ -329,14 +329,14 @@ Contributor(s): ______________________________________. -->
    </hbox>
      
       <statusbar id="status-bar" class="chromeclass-status">
-        <box id="component-bar" class="component-bar-box"/>
-        <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
+        <box id="component-bar"/>
         <statusbarpanel id="statusbar-display" label="&statusText.label;" crop="right" flex="1"/>
         <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0"/>
+        <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
         <statusbarpanel class="statusbarpanel-icononly" id="security-button"/>
       </statusbar> 
        
-      <resizer class="window-diagonal" />
+      <resizer class="window-diagonal"/>
       
 
 
