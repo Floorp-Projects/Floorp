@@ -455,7 +455,8 @@ function BrowserForwardMenu(event)
 function BrowserStop()
 {
   try {
-    getWebNavigation().stop();
+    const stopFlags = nsIWebNavigation.STOP_ALL;
+    getWebNavigation().stop(stopFlags);
   }
   catch(ex) {
   }
