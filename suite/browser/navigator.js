@@ -913,6 +913,18 @@ function BrowserForward()
   }
 }
 
+function BrowserHandleShiftBackspace()
+{
+  switch (pref.getIntPref("browser.backspace_action")) {
+  case 0:
+    BrowserForward();
+    break;
+  case 1:
+    goDoCommand("cmd_scrollPageDown");
+    break;
+  } 
+}
+
 function SetGroupHistory(popupMenu, direction)
 {
   while (popupMenu.firstChild)

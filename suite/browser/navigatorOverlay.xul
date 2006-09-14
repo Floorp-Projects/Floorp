@@ -88,7 +88,7 @@
     <key id="key_selectAll"/>
     <key id="key_switchTextDirection"/>
 
-          <!-- View Menu -->
+    <!-- View Menu -->
     <key id="key_reload"  key="&reloadCmd.commandkey;" oncommand="BrowserReload();" modifiers="accel"/>
     <key key="&reloadCmd.commandkey;" oncommand="BrowserReloadSkipCache();" modifiers="accel,shift"/>
     <key id="key_viewSource" key="&pageSourceCmd.commandkey;" command="View:PageSource" modifiers="accel"/>
@@ -106,6 +106,8 @@
     <key id="key_findTypeLinks"/>
 
     <!-- Go Menu -->
+    <key keycode="VK_BACK" command="cmd_handleBackspace"/>
+    <key keycode="VK_BACK" command="cmd_handleShiftBackspace" modifiers="shift"/>
 
     <!-- Bookmarks Menu -->
     <key id="addBookmarkAsKb" key="&addCurPageAsCmd.commandkey;" command="Browser:AddBookmarkAs" modifiers="accel"/>
@@ -128,6 +130,7 @@
     <command id="cmd_newNavigatorTab" oncommand="BrowserOpenTab();"/>
     <command id="cmd_newTabWithTarget" oncommand="contentAreaClick(event);"/>
     <command id="cmd_handleBackspace"  oncommand="BrowserHandleBackspace();" />
+    <command id="cmd_handleShiftBackspace"  oncommand="BrowserHandleShiftBackspace();" />
 
     <command id="cmd_newEditor"/>
     <!-- NOT IMPLEMENTED
