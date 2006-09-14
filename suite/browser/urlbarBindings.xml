@@ -353,12 +353,12 @@
           if (val != null) {
             this.parentNode.mSelectedIndex = null;
             this.parentNode.addEventListener("mouseover", this.parentMouseoverListener, false);
-            this.parentNode.addEventListener("popupHiding", this.parentDestroyListener, false);
+            this.parentNode.addEventListener("popuphiding", this.parentDestroyListener, false);
             if (this.activeChild)
               this.activeChild.setAttribute("menuactive", "true");
           } else {
             this.parentNode.removeEventListener("mouseover", this.parentMouseoverListener, false);
-            this.parentNode.removeEventListener("popupHiding", this.parentDestroyListener, false);
+            this.parentNode.removeEventListener("popuphiding", this.parentDestroyListener, false);
           }
         ]]></setter>
       
