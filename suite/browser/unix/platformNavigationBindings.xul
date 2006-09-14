@@ -16,7 +16,7 @@
     <key key="&goForwardCmd.commandKey;" command="Browser:Forward" modifiers="accel"/>
 
     <!-- Specific keybinding for Sun keyboard -->
-    <key key="&findOnCmd.commandkey2;" command="Browser:Find"/>
+    <key keycode="&findOnCmd.commandkey2;" command="Browser:Find"/>
 
     <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="alt"/>
     <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
