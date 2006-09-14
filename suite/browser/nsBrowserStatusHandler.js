@@ -71,10 +71,6 @@ nsBrowserStatusHandler.prototype =
     }
   },
 
-  useRealProgressFlag : false,
-  totalRequests : 0,
-  finishedRequests : 0,
-
   // Stored Status, Link and Loading values
   status : "",
   defaultStatus : "",
@@ -195,9 +191,6 @@ nsBrowserStatusHandler.prototype =
                                aCurSelfProgress, aMaxSelfProgress,
                                aCurTotalProgress, aMaxTotalProgress)
   {
-    if (!this.useRealProgressFlag && aRequest)
-      return;
-
     if (aMaxTotalProgress > 0) {
       // This is highly optimized.  Don't touch this code unless
       // you are intimately familiar with the cost of setting
@@ -209,10 +202,6 @@ nsBrowserStatusHandler.prototype =
 
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
   {  
-    //ignore local/resource:/chrome: files
-    if (aStatus == NS_NET_STATUS_READ_FROM || aStatus == NS_NET_STATUS_WROTE_TO)
-      return;
-
     const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
     const nsIChannel = Components.interfaces.nsIChannel;
     var ctype;
@@ -239,24 +228,9 @@ nsBrowserStatusHandler.prototype =
         this.stopButton.disabled = false;
         this.stopMenu.removeAttribute('disabled');
         this.stopContext.removeAttribute('disabled');
-
-        // Initialize the progress stuff...
-        this.useRealProgressFlag = false;
-        this.totalRequests = 0;
-        this.finishedRequests = 0;
-      }
-
-      if (aStateFlags & nsIWebProgressListener.STATE_IS_REQUEST) {
-        this.totalRequests += 1;
       }
     }
     else if (aStateFlags & nsIWebProgressListener.STATE_STOP) {
-      if (aStateFlags & nsIWebProgressListener.STATE_IS_REQUEST) {
-        this.finishedRequests += 1;
-        if (!this.useRealProgressFlag)
-          this.onProgressChange(null, null, 0, 0, this.finishedRequests, this.totalRequests);
-      }
-
       if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
         if (aRequest) {
           if (aWebProgress.DOMWindow == content)
@@ -326,20 +300,6 @@ nsBrowserStatusHandler.prototype =
         this.stopButton.disabled = true;
         this.stopMenu.setAttribute('disabled', 'true');
         this.stopContext.setAttribute('disabled', 'true');
-
-      }
-    }
-    else if (aStateFlags & nsIWebProgressListener.STATE_TRANSFERRING) {
-      if (aStateFlags & nsIWebProgressListener.STATE_IS_DOCUMENT) {
-        ctype = aRequest.QueryInterface(nsIChannel).contentType;
-
-        if (ctype != "text/html")
-          this.useRealProgressFlag = true;
-      }
-
-      if (aStateFlags & nsIWebProgressListener.STATE_IS_REQUEST) {
-        if (!this.useRealProgressFlag)
-          this.onProgressChange(null, null, 0, 0, this.finishedRequests, this.totalRequests);
       }
     }
   },
@@ -386,19 +346,8 @@ nsBrowserStatusHandler.prototype =
 
   onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
   {
-    //ignore local/resource:/chrome: files
-    if (aStatus == NS_NET_STATUS_READ_FROM || aStatus == NS_NET_STATUS_WROTE_TO)
-      return;
-
     this.status = aMessage;
-
-    if (!this.statusTimeoutInEffect) {
-      this.statusTimeoutInEffect = true;
-      this.updateStatusField();
-      setTimeout(function(aClosure) { aClosure.updateStatusField();
-                                      aClosure.statusTimeoutInEffect = false; },
-                 400, this);
-    }
+    this.updateStatusField();
   },
 
   onSecurityChange : function(aWebProgress, aRequest, aState)
