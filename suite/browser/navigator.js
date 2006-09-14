@@ -631,14 +631,14 @@ function BrowserStop()
 function BrowserReallyReload(event) 
   {
     var nsIWebNavigation = Components.interfaces.nsIWebNavigation;
-    // Default is loadReloadNormal.
-    var reloadType = nsIWebNavigation.loadReloadNormal;
+    // Default is no flags.
+    var reloadFlags = nsIWebNavigation.LOAD_FLAGS_NONE;
     // See if the event was a shift-click.
     if ( event.shiftKey ) {
-        // Shift key means loadReloadBypassProxyAndCache.
-        reloadType = nsIWebNavigation.loadReloadBypassProxyAndCache;
+        // Shift key means bypass proxy and cache.
+        reloadFlags = nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY | nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
     }
-    appCore.reload(reloadType);
+    appCore.reload(reloadFlags);
   }
 
 function BrowserHome()
