@@ -49,14 +49,14 @@
 
   <box id="cont" orient="vertical" flex="1">  
    <text class="header label" value="&pageInfo.description;"/>
-   <tabcontrol id="tabcontrol" flex="1">
-    <tabbox id="tabbox">
+   <tabbox id="tabbox" flex="1">
+    <tabs id="tabs">
       <tab id="generalTab" label="&pageInfo.generalTab;"/>
       <tab id="formsTab" label="&pageInfo.formsTab;" hidden="true" />
       <tab id="imagesTab" label="&pageInfo.imagesTab;" hidden="true" />
       <!-- Others added by overlay -->
-    </tabbox>
-    <tabpanel id="tabpanel" flex="1">
+    </tabs>
+    <tabpanels id="tabpanels" flex="1">
 
     <!-- General page information -->
     <box orient="vertical">
@@ -139,7 +139,7 @@
     </box>
 
     <!-- Others added by overlay -->
-    </tabpanel>
-   </tabcontrol>
+    </tabpanels>
+   </tabbox>
   </box>
 </window>
