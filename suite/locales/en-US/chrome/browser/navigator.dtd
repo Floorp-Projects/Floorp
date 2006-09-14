@@ -109,42 +109,21 @@
 <!ENTITY getNewThemesCmd.label "Get New Themes">
 <!ENTITY getNewThemesCmd.accesskey "G">
 <!ENTITY searchMenu.label "Search">
-<!ENTITY searchMenu.accesskey "s">
+<!ENTITY searchMenu.accesskey "S">
 <!ENTITY findOnCmd.label "Find in This Page...">
 <!ENTITY findOnCmd.accesskey "f">
 <!ENTITY findOnCmd.commandkey "f">
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY findAgainCmd.accesskey "g">
 <!ENTITY findAgainCmd.commandkey "g">
-<!-- XXX - boy there's a lot of crap here. -->
+
 <!ENTITY searchInternetCmd.label "Search the Web">
 <!ENTITY searchInternetCmd.accesskey "S">
-<!ENTITY searchAllMailCmd.label "Search Mail">
-<!ENTITY searchAllMailCmd.accesskey "m">
-<!ENTITY searchAddressbookCmd.label "Search Addressbook">
-<!ENTITY searchAddressbookCmd.accesskey "a">
-<!ENTITY searchComputerCmd.label "Search on this Computer...">
-<!ENTITY searchBusinessMenu.label "Business">
-<!ENTITY searchBusinessMenu.accesskey "u">
-<!ENTITY searchYellowPages.label "Yellow Pages">
-<!ENTITY searchYellowPages.accesskey "y">
-<!ENTITY searchStockQuote.label "Stock Quote Lookup">
-<!ENTITY searchStockQuote.accesskey "s">
-<!ENTITY searchMaps.label "Maps and Directions">
-<!ENTITY searchMaps.accesskey "d">
-<!ENTITY searchPeople.label "People Finder">
-<!ENTITY searchPeople.accesskey "p">
-<!ENTITY searchReferenceDesk.label "Reference Desk">
-<!ENTITY searchReferenceDesk.accesskey "r">
-<!ENTITY searchShopping.label "Shopping Search">
-<!ENTITY searchShopping.accesskey "s">
-<!ENTITY searchInternetKeywords.label "Internet Keywords">
-<!ENTITY searchInternetKeywords.accesskey "k">
+
 <!ENTITY goMenu.label "Go">
 <!ENTITY goMenu.accesskey "g">
 <!ENTITY goHomeCmd.label "Home">
 <!ENTITY goHomeCmd.accesskey "h">
-
 
 <!ENTITY bookmarksMenu.label "Bookmarks">
 <!ENTITY bookmarksMenu.accesskey "B">
