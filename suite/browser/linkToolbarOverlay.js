@@ -212,20 +212,25 @@ LinkToolbarUI.prototype.initHandlers =
 function()
 {
   var contentArea = document.getElementById("appcontent");
-  if (this.isLinkToolbarEnabled())
+  if (linkToolbarUI.isLinkToolbarEnabled())
   {
-    if (!this.handlersActive) {
+    if (!linkToolbarUI.handlersActive) {
       contentArea.addEventListener("load", linkToolbarUI.refresh, true);
       contentArea.addEventListener("unload", linkToolbarUI.clear, true);
-      this.handlersActive = true;
+      linkToolbarUI.handlersActive = true;
     }
   } else
   {
-    if (this.handlersActive) {
+    if (linkToolbarUI.handlersActive) {
       contentArea.removeEventListener("load", linkToolbarUI.refresh, true);
       contentArea.removeEventListener("unload", linkToolbarUI.clear, true);
-      this.handlersActive = false;
+      linkToolbarUI.handlersActive = false;
     }
+  }
+  if (!linkToolbarUI.initialized)
+  {
+    linkToolbarUI.initialized = true;
+    document.removeEventListener("load", linkToolbarUI.initHandlers, true);
   }
 }
 
