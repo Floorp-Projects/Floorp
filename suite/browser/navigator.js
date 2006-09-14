@@ -684,7 +684,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 		searchMode = pref.GetIntPref("browser.search.powermode");
 		autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
 		searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
-		defaultSearchURL = pref.CopyCharPref("browser.search.defaulturl");
+		defaultSearchURL = pref.getLocalizedUnicharPref("browser.search.defaulturl");
 		
 	}
 	catch(ex)
