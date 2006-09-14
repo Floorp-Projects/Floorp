@@ -78,7 +78,7 @@
 	<key id="key_find"              key="&findOnCmd.commandkey;" observes="Browser:Find" modifiers="accel"/>
 	<key id="key_findAgain"         key="&findAgainCmd.commandkey;" observes="Browser:FindAgain" modifiers="accel"/>
 
-	<!-- Go Menu -->		
+	<!-- Go Menu -->
 
 	<!-- Bookmarks Menu -->
 	<key id="addBookmarkKb"        key="&addCurPageCmd.commandkey;" observes="Browser:AddBookmark"  modifiers="accel"/>
@@ -298,7 +298,7 @@ oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/p
 	  <menupopup oncreate="updateGoMenu(event);">
 		  <menuitem id="menuitem-back"    value="&goBackCmd.label;"    accesskey="&goBackCmd.accesskey;"    observes="Browser:Back"    key="goBackKb"/>
 		  <menuitem id="menuitem-forward" value="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;" observes="Browser:Forward" key="goForwardKb"/>
-		  <menuitem id="menuitem-home"    value="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    observes="Browser:Home"/>
+		  <menuitem id="menuitem-home"    value="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    observes="Browser:Home" key="goHome"/>
 		  <menuseparator />
 	  </menupopup>
   </menu>       

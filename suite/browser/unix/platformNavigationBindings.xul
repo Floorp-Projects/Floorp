@@ -14,6 +14,8 @@
          we live and learn.  -->
     <key id="goBackKbWacko"  key="&goBackCmd.commandKey;" observes="Browser:Back" modifiers="accel"/>
     <key id="goForwardKbWacko"  key="&goForwardCmd.commandKey;" observes="Browser:Forward" modifiers="accel"/>
+
+    <key id="goHome" keycode="VK_HOME" observes="Browser:Home" modifiers="alt"/>
   </keyset>  
 
 </overlay>
