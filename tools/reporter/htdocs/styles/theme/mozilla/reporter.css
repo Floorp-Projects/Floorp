@@ -24,6 +24,7 @@ body {
 /**************** Pagination Navigation */
 #reporter-content .navigation {
     text-align: center;
+    margin-top: 4em;
 }
 
 #reporter-content .navigation .currentPage {
