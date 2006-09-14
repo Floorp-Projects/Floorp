@@ -737,11 +737,19 @@ function QueryParameter(aName, aValue) {
 function ParamSubstitution(aParamValue, aSearchTerms, aEngine) {
   var value = aParamValue;
 
+  var distributionID = MOZ_DISTRIBUTION_ID;
+  try {
+    var prefB = Cc["@mozilla.org/preferences-service;1"].
+                getService(Ci.nsIPrefBranch);
+    distributionID = prefB.getCharPref(BROWSER_SEARCH_PREF + "distributionID");
+  }
+  catch (ex) { }
+
   // Custom search parameters. These are only available to app-shipped search
   // engines.
   if (aEngine._isInAppDir) {
     value = value.replace(MOZ_PARAM_LOCALE, getLocale());
-    value = value.replace(MOZ_PARAM_DIST_ID, MOZ_DISTRIBUTION_ID);
+    value = value.replace(MOZ_PARAM_DIST_ID, distributionID);
     value = value.replace(MOZ_PARAM_OFFICIAL, MOZ_OFFICIAL);
   }
 
