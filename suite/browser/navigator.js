@@ -243,7 +243,8 @@ nsButtonPrefListener.prototype =
 // Returns true if all the buttons left of the separator in the personal
 // toolbar are hidden, false otherwise.
 // Used by nsButtonPrefListener to hide the separator if needed
-function allLeftButtonsAreHidden() {
+function allLeftButtonsAreHidden()
+{
   var buttonNode = document.getElementById("PersonalToolbar").firstChild;
   while(buttonNode.tagName != "toolbarseparator") {
     if(!buttonNode.hasAttribute("hidden") || buttonNode.getAttribute("hidden") == "false")
@@ -387,20 +388,21 @@ function Startup()
   }
 }
 
-function BrowserFlushBookmarksAndHistory() {
-    // Flush bookmakrs and history (used when window closes or is cached).
-    try {
-        // If bookmarks are dirty, flush 'em to disk
-        var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
-                             .getService(Components.interfaces.nsIRDFRemoteDataSource);
-        bmks.Flush();
+function BrowserFlushBookmarksAndHistory()
+{
+  // Flush bookmakrs and history (used when window closes or is cached).
+  try {
+    // If bookmarks are dirty, flush 'em to disk
+    var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
+                         .getService(Components.interfaces.nsIRDFRemoteDataSource);
+    bmks.Flush();
 
-        // give history a chance at flushing to disk also
-        var history = Components.classes["@mozilla.org/browser/global-history;1"]
-                                .getService(Components.interfaces.nsIRDFRemoteDataSource);
-        history.Flush();
-    } catch(ex) {
-    }
+    // give history a chance at flushing to disk also
+    var history = Components.classes["@mozilla.org/browser/global-history;1"]
+                            .getService(Components.interfaces.nsIRDFRemoteDataSource);
+    history.Flush();
+  } catch(ex) {
+  }
 }
 
 function Shutdown()
@@ -585,65 +587,62 @@ function OpenBookmarkURL(node, datasources)
 }
 
 function urlDomain(url)
-     {
-		urlReg = /http:\/\/([\w.]+)\//;
-	    return url.match(urlReg)[0];
-	 }
+{
+  urlReg = /http:\/\/([\w.]+)\//;
+  return url.match(urlReg)[0];
+}
 
 
-function readRDFString(aDS,aRes,aProp) {
-		  var n = aDS.GetTarget(aRes, aProp, true);
-          if (n)
-            return n.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+function readRDFString(aDS,aRes,aProp)
+{
+  var n = aDS.GetTarget(aRes, aProp, true);
+  return n ? n.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : "";
 }
 
 
 function ensureDefaultEnginePrefs(aRDF,aDS) 
-   {
-
-    var mPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
-    var defaultName = mPrefs.getComplexValue("browser.search.defaultenginename" , Components.interfaces.nsIPrefLocalizedString);
-    kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
-    kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");
-    kNC_Name = aRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
+{
+  var mPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
+  var defaultName = mPrefs.getComplexValue("browser.search.defaultenginename" , Components.interfaces.nsIPrefLocalizedString);
+  var kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
+  var kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");
+  var kNC_Name = aRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
           
-    var arcs = aDS.GetTargets(kNC_Root, kNC_child, true);
-    while (arcs.hasMoreElements()) {
-        var engineRes = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);       
-        var name = readRDFString(aDS, engineRes, kNC_Name);
-        if (name == defaultName)
-          mPrefs.setCharPref("browser.search.defaultengine", engineRes.Value);
-    }
+  var arcs = aDS.GetTargets(kNC_Root, kNC_child, true);
+  while (arcs.hasMoreElements()) {
+    var engineRes = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);       
+    var name = readRDFString(aDS, engineRes, kNC_Name);
+    if (name == defaultName)
+      mPrefs.setCharPref("browser.search.defaultengine", engineRes.Value);
   }
+}
 
+function ensureSearchPref()
+{
+  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+  var ds = rdf.GetDataSource("rdf:internetsearch");
+  var mPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
+  kNC_Name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
+  try {
+    defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
+  } catch(ex) {
+    ensureDefaultEnginePrefs(rdf, ds);
+    defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
+  }
+}
 
-function ensureSearchPref() {
-   
-   var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-   var ds = rdf.GetDataSource("rdf:internetsearch");
-   var mPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
-   kNC_Name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
-   try {
-            defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
-		} catch(ex) {
-            ensureDefaultEnginePrefs(rdf, ds);
-            defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
-            }
-   }
-
-
-function getSearchUrl(attr) {
-    var rdf=Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService); 
-    var ds = rdf.GetDataSource("rdf:internetsearch"); 
-    kNC_Root = rdf.GetResource("NC:SearchEngineRoot");
-    var mPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
-    var defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
-    engineRes= rdf.GetResource(defaultEngine);
-    prop = "http://home.netscape.com/NC-rdf#" + attr;
-    kNC_attr = rdf.GetResource(prop);
-    searchURL = readRDFString(ds, engineRes, kNC_attr);
-    if (searchURL)
-      return searchURL
+function getSearchUrl(attr)
+{
+  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService); 
+  var ds = rdf.GetDataSource("rdf:internetsearch"); 
+  var kNC_Root = rdf.GetResource("NC:SearchEngineRoot");
+  var mPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
+  var defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
+  var engineRes = rdf.GetResource(defaultEngine);
+  var prop = "http://home.netscape.com/NC-rdf#" + attr;
+  var kNC_attr = rdf.GetResource(prop);
+  var searchURL = readRDFString(ds, engineRes, kNC_attr);
+  return searchURL;
 }
 
 
@@ -663,8 +662,8 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
   //Check to see if search string contains "://" or "ftp." or white space.
   //If it does treat as url and match for pattern
   
-    var urlmatch= /(:\/\/|^ftp\.)[^ \S]+$/ 
-    var forceAsURL = urlmatch.test(searchStr);
+  var urlmatch= /(:\/\/|^ftp\.)[^ \S]+$/ 
+  var forceAsURL = urlmatch.test(searchStr);
 
   try {
     autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
@@ -680,61 +679,60 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
   //If they match then go to default search URL engine
 
   if ((!searchStr || searchStr == url)) {
-      loadURI(gNavigatorRegionBundle.getString("otherSearchURL"));
-
+    loadURI(gNavigatorRegionBundle.getString("otherSearchURL"));
   } else {
 
-  //Check to see if location bar field is a url
-  //If it is a url go to URL.  A Url is "://" or "." as commented above
-  //Otherwise search on entry
-  if (forceAsURL) {
-     BrowserLoadURL()
-   } else {
-    var searchMode = 0;
-    try {
-      searchMode = pref.GetIntPref("browser.search.powermode");
-    } catch(ex) {
-    }
-    if (forceDialogFlag || searchMode == 1) {
-      // Use a single search dialog
-      var windowManager = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"]
-                                    .getService(Components.interfaces.nsIWindowMediator);
-
-      var searchWindow = windowManager.getMostRecentWindow("search:window");
-      if (!searchWindow) {
-        openDialog("chrome://communicator/content/search/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
-      } else {
-        // Already had one, focus it and load the page
-        searchWindow.focus();
-
-        if ("loadPage" in searchWindow)
-          searchWindow.loadPage(tabName, searchStr);
+    //Check to see if location bar field is a url
+    //If it is a url go to URL.  A Url is "://" or "." as commented above
+    //Otherwise search on entry
+    if (forceAsURL) {
+       BrowserLoadURL()
+     } else {
+      var searchMode = 0;
+      try {
+        searchMode = pref.GetIntPref("browser.search.powermode");
+      } catch(ex) {
       }
-    } else {
-      if (searchStr) {
-		var escapedSearchStr = escape(searchStr);
-        defaultSearchURL += escapedSearchStr;
-        var searchDS = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
-                                 .getService(Components.interfaces.nsIInternetSearchService);
+      if (forceDialogFlag || searchMode == 1) {
+        // Use a single search dialog
+        var windowManager = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"]
+                                      .getService(Components.interfaces.nsIWindowMediator);
 
-        searchDS.RememberLastSearchText(escapedSearchStr);
-        try {
-          var searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
-          if (searchEngineURI) {          
-            var searchURL = getSearchUrl("actionButton");
-            if (searchURL) {
-               defaultSearchURL = searchURL + escapedSearchStr; 
-               } else {
-               var searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr);
-               if (searchURL)
-                 defaultSearchURL = searchURL;
-            }
-          }
-        } catch (ex) {
+        var searchWindow = windowManager.getMostRecentWindow("search:window");
+        if (!searchWindow) {
+          openDialog("chrome://communicator/content/search/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
+        } else {
+          // Already had one, focus it and load the page
+          searchWindow.focus();
+
+          if ("loadPage" in searchWindow)
+            searchWindow.loadPage(tabName, searchStr);
         }
-        loadURI(defaultSearchURL);
+      } else {
+        if (searchStr) {
+          var escapedSearchStr = escape(searchStr);
+          defaultSearchURL += escapedSearchStr;
+          var searchDS = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
+                                   .getService(Components.interfaces.nsIInternetSearchService);
+
+          searchDS.RememberLastSearchText(escapedSearchStr);
+          try {
+            var searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
+            if (searchEngineURI) {          
+              var searchURL = getSearchUrl("actionButton");
+              if (searchURL) {
+                defaultSearchURL = searchURL + escapedSearchStr; 
+              } else {
+                searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr);
+                if (searchURL)
+                  defaultSearchURL = searchURL;
+              }
+            }
+          } catch (ex) {
+          }
+          loadURI(defaultSearchURL);
+        }
       }
-     }
     }
   }
 
@@ -760,9 +758,8 @@ function BrowserOpenWindow()
 
 function BrowserOpenTab()
 {
-  var handler = Components.classes['@mozilla.org/commandlinehandler/general-startup;1?type=browser'];
-  handler = handler.getService();
-  handler = handler.QueryInterface(Components.interfaces.nsICmdLineHandler);
+  var handler = Components.classes['@mozilla.org/commandlinehandler/general-startup;1?type=browser']
+                          .getService(Components.interfaces.nsICmdLineHandler);
   var startpage = handler.defaultArgs;
   gBrowser.selectedTab = gBrowser.addTab(startpage);
 }
@@ -899,9 +896,9 @@ function BrowserFind()
 
 function BrowserFindAgain()
 {
-    var focusedWindow = document.commandDispatcher.focusedWindow;
-    if (!focusedWindow || focusedWindow == window)
-      focusedWindow = window._content;
+  var focusedWindow = document.commandDispatcher.focusedWindow;
+  if (!focusedWindow || focusedWindow == window)
+    focusedWindow = window._content;
 
   findAgainInPage(getBrowser(), window._content, focusedWindow)
 }
@@ -1421,7 +1418,7 @@ function ShowAndSelectContentsOfURLBar()
   // If it's hidden, show it.
   if (navBar.getAttribute("hidden") == "true")
     goToggleToolbar('nav-bar','cmd_viewnavbar');
-	
+
   if (gURLBar.value)
     gURLBar.select();
   else
@@ -1485,10 +1482,11 @@ function SetPageProxyState(aState)
 
 function PageProxyDragGesture(aEvent)
 {
-  if (gProxyButton.getAttribute("pageproxystate") == "valid")
+  if (gProxyButton.getAttribute("pageproxystate") == "valid") {
     nsDragAndDrop.startDrag(aEvent, proxyIconDNDObserver);
-  else
-    return false;
+    return true;
+  }
+  return false;
 }
 
 function updateComponentBarBroadcaster()
