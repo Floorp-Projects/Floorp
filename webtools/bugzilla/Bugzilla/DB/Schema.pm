@@ -786,7 +786,7 @@ use constant ABSTRACT_SCHEMA => {
             isbless    => {TYPE => 'BOOLEAN', NOTNULL => 1,
                            DEFAULT => 'FALSE'},
             grant_type => {TYPE => 'INT1', NOTNULL => 1,
-                           DEFAULT => '0'},
+                           DEFAULT => GRANT_DIRECT},
         ],
         INDEXES => [
             user_group_map_user_id_idx =>
@@ -807,7 +807,7 @@ use constant ABSTRACT_SCHEMA => {
             member_id  => {TYPE => 'INT3', NOTNULL => 1},
             grantor_id => {TYPE => 'INT3', NOTNULL => 1},
             grant_type => {TYPE => 'INT1', NOTNULL => 1,
-                           DEFAULT => '0'},
+                           DEFAULT => GROUP_MEMBERSHIP},
         ],
         INDEXES => [
             group_group_map_member_id_idx =>

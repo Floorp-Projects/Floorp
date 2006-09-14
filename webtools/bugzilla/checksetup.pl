@@ -421,43 +421,6 @@ fix_all_file_permissions(!$silent);
 check_graphviz(!$silent) if Bugzilla->params->{'webdotbase'};
 
 ###########################################################################
-# Populate groups table
-###########################################################################
-
-sub GroupDoesExist
-{
-    my ($name) = @_;
-    my $sth = $dbh->prepare("SELECT name FROM groups WHERE name='$name'");
-    $sth->execute;
-    if ($sth->rows) {
-        return 1;
-    }
-    return 0;
-}
-
-
-#
-# This subroutine ensures that a group exists. If not, it will be created 
-# automatically, and given the next available groupid
-#
-
-sub AddGroup {
-    my ($name, $desc, $userregexp) = @_;
-    $userregexp ||= "";
-
-    return if GroupDoesExist($name);
-    
-    print "Adding group $name ...\n";
-    my $sth = $dbh->prepare('INSERT INTO groups
-                          (name, description, userregexp, isbuggroup)
-                          VALUES (?, ?, ?, ?)');
-    $sth->execute($name, $desc, $userregexp, 0);
-
-    my $last = $dbh->bz_last_key('groups', 'id');
-    return $last;
-}
-
-###########################################################################
 # Changes to the fielddefs --TABLE--
 ###########################################################################
 
@@ -474,56 +437,63 @@ Bugzilla::Field::populate_field_definitions();
 
 Bugzilla::Install::DB::update_table_definitions();        
 
-#
+###########################################################################
 # Bugzilla uses --GROUPS-- to assign various rights to its users.
-#
+###########################################################################
 
-AddGroup('tweakparams', 'Can tweak operating parameters');
-AddGroup('editusers', 'Can edit or disable users');
-AddGroup('creategroups', 'Can create and destroy groups.');
-AddGroup('editclassifications', 'Can create, destroy, and edit classifications.');
-AddGroup('editcomponents', 'Can create, destroy, and edit components.');
-AddGroup('editkeywords', 'Can create, destroy, and edit keywords.');
-AddGroup('admin', 'Administrators');
+my $admin_group = Bugzilla::Group->new({ name => 'admin' })
+    || Bugzilla::Group->create({ 
+           name => 'admin', description => 'Administrators', isbuggroup => 0 });
 
-if (!GroupDoesExist("editbugs")) {
-    my $id = AddGroup('editbugs', 'Can edit all bug fields.', ".*");
-    my $sth = $dbh->prepare("SELECT userid FROM profiles");
-    $sth->execute();
-    while (my ($userid) = $sth->fetchrow_array()) {
-        $dbh->do("INSERT INTO user_group_map 
-            (user_id, group_id, isbless, grant_type) 
-            VALUES ($userid, $id, 0, " . GRANT_DIRECT . ")");
-    }
-}
+Bugzilla::Group->create({ name => 'tweakparams', 
+    description => 'Can tweak operating parameters', isbuggroup => 0 })
+    unless new Bugzilla::Group({ name => 'tweakparams' });
 
-if (!GroupDoesExist("canconfirm")) {
-    my $id = AddGroup('canconfirm',  'Can confirm a bug.', ".*");
-    my $sth = $dbh->prepare("SELECT userid FROM profiles");
-    $sth->execute();
-    while (my ($userid) = $sth->fetchrow_array()) {
-        $dbh->do("INSERT INTO user_group_map 
-            (user_id, group_id, isbless, grant_type) 
-            VALUES ($userid, $id, 0, " . GRANT_DIRECT . ")");
-    }
+Bugzilla::Group->create({ name => 'editusers', 
+    description => 'Can edit or disable users', isbuggroup => 0 })
+    unless new Bugzilla::Group({ name => 'editusers' });
 
-}
+Bugzilla::Group->create({ name => 'creategroups', 
+    description => 'Can create and destroy groups.', isbuggroup => 0 })
+    unless new Bugzilla::Group({ name => 'creategroups' });
+
+Bugzilla::Group->create({ name => 'editclassifications', 
+    description => 'Can create, destroy, and edit classifications.', 
+    isbuggroup => 0 })
+    unless new Bugzilla::Group({ name => 'editclassifications' });
+
+Bugzilla::Group->create({ name => 'editcomponents', 
+    description => 'Can create, destroy, and edit components.',
+    isbuggroup => 0 })
+    unless new Bugzilla::Group({ name => 'editcomponents' });
+
+Bugzilla::Group->create({ name => 'editkeywords', 
+    description => 'Can create, destroy, and edit keywords.',
+    isbuggroup => 0 })
+    unless new Bugzilla::Group({ name => 'editkeywords' });
+
+Bugzilla::Group->create({name => 'editbugs', 
+    description => 'Can edit all bug fields.', userregexp => ".*", 
+    isbuggroup => 0 })
+    unless new Bugzilla::Group({name => "editbugs"});
+
+Bugzilla::Group->create({ name => 'canconfirm',  
+    description => 'Can confirm a bug.', userregexp => ".*", 
+    isbuggroup => 0 })
+    unless new Bugzilla::Group({name => "canconfirm"});
 
 # Create bz_canusewhineatothers and bz_canusewhines
-if (!GroupDoesExist('bz_canusewhines')) {
-    my $whine_group = AddGroup('bz_canusewhines',
-                               'User can configure whine reports for self');
-    my $whineatothers_group = AddGroup('bz_canusewhineatothers',
-                                       'Can configure whine reports for ' .
-                                       'other users');
-    my $group_exists = $dbh->selectrow_array(
-        q{SELECT 1 FROM group_group_map 
-           WHERE member_id = ? AND grantor_id = ? AND grant_type = ?},
-        undef, $whineatothers_group, $whine_group, GROUP_MEMBERSHIP);
-    $dbh->do("INSERT INTO group_group_map " .
-             "(member_id, grantor_id, grant_type) " .
-             "VALUES (${whineatothers_group}, ${whine_group}, " .
-             GROUP_MEMBERSHIP . ")") unless $group_exists;
+if (!new Bugzilla::Group({name => 'bz_canusewhines'})) {
+    my $whine = Bugzilla::Group->create({name => 'bz_canusewhines',
+       description => 'User can configure whine reports for self', 
+       isbuggroup => 0 });
+    my $whineatothers = Bugzilla::Group->create({
+        name => 'bz_canusewhineatothers',
+        description => 'Can configure whine reports for other users', 
+        isbuggroup => 0 });
+
+    $dbh->do('INSERT INTO group_group_map (grantor_id, member_id) VALUES (?,?)',
+             undef, $whine->id, $whineatothers->id);
 }
 
 # 2005-08-14 bugreport@peshkin.net -- Bug 304583
@@ -563,24 +533,14 @@ while (my ($uid, $login, $gid, $rexp, $present) = $sth->fetchrow_array()) {
 }
 
 # 2005-10-10 karl@kornel.name -- Bug 204498
-if (!GroupDoesExist('bz_sudoers')) {
-    my $sudoers_group = AddGroup('bz_sudoers',
-                                 'Can perform actions as other users');
-    my $sudo_protect_group = AddGroup('bz_sudo_protect',
-                                      'Can not be impersonated by other users');
-    my ($admin_group) = $dbh->selectrow_array('SELECT id FROM groups
-                                               WHERE name = ?', undef, 'admin');
-    
-    # Admins should be given sudo access
-    # Everyone in sudo should be in sudo_protect
-    # Admins can grant membership in both groups
-    my $sth = $dbh->prepare('INSERT INTO group_group_map 
-                             (member_id, grantor_id, grant_type) 
-                             VALUES (?, ?, ?)');
-    $sth->execute($admin_group, $sudoers_group, GROUP_MEMBERSHIP);
-    $sth->execute($sudoers_group, $sudo_protect_group, GROUP_MEMBERSHIP);
-    $sth->execute($admin_group, $sudoers_group, GROUP_BLESS);
-    $sth->execute($admin_group, $sudo_protect_group, GROUP_BLESS);
+if (!new Bugzilla::Group({name => 'bz_sudoers'})) {
+    my $sudo = Bugzilla::Group->create({name => 'bz_sudoers',
+       description => 'Can perform actions as other users', isbuggroup => 0 });
+    my $sudo_protect = Bugzilla::Group->create({name => 'bz_sudo_protect',
+        description => 'Can not be impersonated by other users',
+        isbuggroup => 0 });
+    $dbh->do('INSERT INTO group_group_map (grantor_id, member_id) VALUES (?,?)',
+             undef, $sudo_protect->id, $sudo->id);
 }
 
 ###########################################################################

@@ -52,36 +52,6 @@ $user->in_group('creategroups')
 
 my $action = trim($cgi->param('action') || '');
 
-# RederiveRegexp: update user_group_map with regexp-based grants
-sub RederiveRegexp
-{
-    my $regexp = shift;
-    my $gid = shift;
-    my $dbh = Bugzilla->dbh;
-    my $sth = $dbh->prepare("SELECT userid, login_name, group_id
-                               FROM profiles
-                          LEFT JOIN user_group_map
-                                 ON user_group_map.user_id = profiles.userid
-                                AND group_id = ?
-                                AND grant_type = ?
-                                AND isbless = 0");
-    my $sthadd = $dbh->prepare("INSERT INTO user_group_map
-                                 (user_id, group_id, grant_type, isbless)
-                                 VALUES (?, ?, ?, 0)");
-    my $sthdel = $dbh->prepare("DELETE FROM user_group_map
-                                 WHERE user_id = ? AND group_id = ?
-                                 AND grant_type = ? and isbless = 0");
-    $sth->execute($gid, GRANT_REGEXP);
-    while (my ($uid, $login, $present) = $sth->fetchrow_array()) {
-        if (($regexp =~ /\S+/) && ($login =~ m/$regexp/i))
-        {
-            $sthadd->execute($uid, $gid, GRANT_REGEXP) unless $present;
-        } else {
-            $sthdel->execute($uid, $gid, GRANT_REGEXP) if $present;
-        }
-    }
-}
-
 # Add missing entries in bug_group_map for bugs created while
 # a mandatory group was disabled and which is now enabled again.
 sub fix_bug_permissions {
@@ -313,7 +283,7 @@ if ($action eq 'new') {
                   SELECT ?, products.id, 0, ?, ?, 0 FROM products',
                   undef, ($gid, CONTROLMAPSHOWN, CONTROLMAPNA));
     }
-    RederiveRegexp($regexp, $gid);
+    Bugzilla::Group::RederiveRegexp($regexp, $gid);
 
     print $cgi->header();
     $template->process("admin/groups/created.html.tmpl", $vars)
@@ -657,7 +627,7 @@ sub doGroupChanges {
         $chgs = 1;
         $dbh->do('UPDATE groups SET userregexp = ? WHERE id = ?',
                   undef, ($regexp, $gid));
-        RederiveRegexp($regexp, $gid);
+        Bugzilla::Group::RederiveRegexp($regexp, $gid);
     }
 
     my $sthInsert = $dbh->prepare('INSERT INTO group_group_map

@@ -27,6 +27,7 @@ use strict;
 package Bugzilla::Group;
 
 use base qw(Bugzilla::Object);
+use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::Error;
 
@@ -47,6 +48,15 @@ use constant DB_TABLE => 'groups';
 
 use constant LIST_ORDER => 'isbuggroup, name';
 
+use constant VALIDATORS => {
+    name        => \&_check_name,
+    description => \&_check_description,
+    userregexp  => \&_check_user_regexp,
+    isbuggroup  => \&_check_is_bug_group,
+};
+
+use constant REQUIRED_CREATE_FIELDS => qw(name description isbuggroup);
+
 ###############################
 ####      Accessors      ######
 ###############################
@@ -56,9 +66,45 @@ sub is_bug_group { return $_[0]->{'isbuggroup'};   }
 sub user_regexp  { return $_[0]->{'userregexp'};   }
 sub is_active    { return $_[0]->{'isactive'};     }
 
+###############################
+####        Methods        ####
+###############################
+
+sub _rederive_regexp {
+    my ($self) = @_;
+    RederiveRegexp($self->user_regexp, $self->id);
+}
+
 ################################
 #####  Module Subroutines    ###
 ################################
+
+sub create {
+    my $class = shift;
+    my ($params) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    print "Creating group $params->{name}...\n" unless i_am_cgi();
+
+    my $group = $class->SUPER::create(@_);
+
+    # Since we created a new group, give the "admin" group all privileges
+    # initially.
+    my $admin = new Bugzilla::Group({name => 'admin'});
+    # This function is also used to create the "admin" group itself,
+    # so there's a chance it won't exist yet.
+    if ($admin) {
+        my $sth = $dbh->prepare('INSERT INTO group_group_map
+                                 (member_id, grantor_id, grant_type)
+                                 VALUES (?, ?, ?)');
+        $sth->execute($admin->id, $group->id, GROUP_MEMBERSHIP);
+        $sth->execute($admin->id, $group->id, GROUP_BLESS);
+        $sth->execute($admin->id, $group->id, GROUP_VISIBLE);
+    }
+
+    $group->_rederive_regexp() if $group->user_regexp;
+    return $group;
+}
 
 sub ValidateGroupName {
     my ($name, @users) = (@_);
@@ -79,6 +125,65 @@ sub ValidateGroupName {
     return $ret;
 }
 
+# This sub is not perldoc'ed because we expect it to go away and
+# just become the _rederive_regexp private method.
+sub RederiveRegexp {
+    my ($regexp, $gid) = @_;
+    my $dbh = Bugzilla->dbh;
+    my $sth = $dbh->prepare("SELECT userid, login_name, group_id
+                               FROM profiles
+                          LEFT JOIN user_group_map
+                                 ON user_group_map.user_id = profiles.userid
+                                AND group_id = ?
+                                AND grant_type = ?
+                                AND isbless = 0");
+    my $sthadd = $dbh->prepare("INSERT INTO user_group_map
+                                 (user_id, group_id, grant_type, isbless)
+                                 VALUES (?, ?, ?, 0)");
+    my $sthdel = $dbh->prepare("DELETE FROM user_group_map
+                                 WHERE user_id = ? AND group_id = ?
+                                 AND grant_type = ? and isbless = 0");
+    $sth->execute($gid, GRANT_REGEXP);
+    while (my ($uid, $login, $present) = $sth->fetchrow_array()) {
+        if (($regexp =~ /\S+/) && ($login =~ m/$regexp/i))
+        {
+            $sthadd->execute($uid, $gid, GRANT_REGEXP) unless $present;
+        } else {
+            $sthdel->execute($uid, $gid, GRANT_REGEXP) if $present;
+        }
+    }
+}
+
+###############################
+###       Validators        ###
+###############################
+
+sub _check_name {
+    my ($invocant, $name) = @_;
+    $name = trim($name);
+    $name || ThrowUserError("empty_group_name");
+    my $exists = new Bugzilla::Group({name => $name });
+    ThrowUserError("group_exists", { name => $name }) if $exists;
+    return $name;
+}
+
+sub _check_description {
+    my ($invocant, $desc) = @_;
+    $desc = trim($desc);
+    $desc || ThrowUserError("empty_group_description");
+    return $desc;
+}
+
+sub _check_user_regexp {
+    my ($invocant, $regex) = @_;
+    $regex = trim($regex) || '';
+    ThrowUserError("invalid_regexp") unless (eval {qr/$regex/});
+    return $regex;
+}
+
+sub _check_is_bug_group {
+    return $_[1] ? 1 : 0;
+}
 1;
 
 __END__
@@ -112,6 +217,13 @@ provides, in addition to any methods documented below.
 =head1 SUBROUTINES
 
 =over
+
+=item C<create>
+
+Note that in addition to what L<Bugzilla::Object/create($params)>
+normally does, this function also makes the new group be inherited
+by the C<admin> group. That is, the C<admin> group will automatically
+be a member of this group.
 
 =item C<ValidateGroupName($name, @users)>
 
