@@ -125,7 +125,7 @@
     function sendPage(aDocument)
     {
       if (!aDocument)
-        aDocument = window._content.document;
+        aDocument = window.content.document;
         
       try {
         var charset = getCharsetforSave(aDocument);

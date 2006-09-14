@@ -398,7 +398,7 @@ nsBrowserStatusHandler.prototype =
     var observerService = Components.classes["@mozilla.org/observer-service;1"]
                                     .getService(Components.interfaces.nsIObserverService);
     try {
-      observerService.notifyObservers(_content, "StartDocumentLoad", urlStr);
+      observerService.notifyObservers(content, "StartDocumentLoad", urlStr);
     } catch (e) {
     }
   },
@@ -431,7 +431,7 @@ nsBrowserStatusHandler.prototype =
 
     var notification = Components.isSuccessCode(aStatus) ? "EndDocumentLoad" : "FailDocumentLoad";
     try {
-      observerService.notifyObservers(_content, notification, urlStr);
+      observerService.notifyObservers(content, notification, urlStr);
     } catch (e) {
     }
   }

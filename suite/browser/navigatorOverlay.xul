@@ -134,7 +134,7 @@
     <command id="cmd_newEditorTemplate"/>
     <command id="cmd_newEditorDraft"/> -->
     <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
-    <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
+    <command id="Browser:SavePage" oncommand="saveDocument(window.content.document);"/>
     <command id="Browser:EditPage" oncommand="editPageOrFrame();" observes="isImage"/>
     <command id="Browser:UploadFile" oncommand="BrowserUploadFile();"/>
     <command id="Browser:Open" oncommand="BrowserOpenWindow();"/>
@@ -403,7 +403,7 @@
 
         <menu label="&useStyleSheetMenu.label;" accesskey="&useStyleSheetMenu.accesskey;" disabled="false" observes="isImage">
           <menupopup onpopupshowing="stylesheetFillPopup(this);"
-                     oncommand="stylesheetSwitchAll(window._content, event.target.getAttribute('data'));">
+                     oncommand="stylesheetSwitchAll(window.content, event.target.getAttribute('data'));">
             <menuitem label="&useStyleSheetPersistentOnly.label;" accesskey="&useStyleSheetPersistentOnly.accesskey;" type="radio"/>
           </menupopup>
         </menu>

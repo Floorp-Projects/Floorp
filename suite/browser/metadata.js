@@ -252,7 +252,7 @@ function checkForLink(elem, htmllocalname)
             break;
         case "":
         case "_self":
-            if (elem.ownerDocument != elem.ownerDocument.defaultView._content.document)
+            if (elem.ownerDocument != elem.ownerDocument.defaultView.content.document)
                 setInfo("link-target", gMetadataBundle.getString("sameFrameText"));
             else
                 setInfo("link-target", gMetadataBundle.getString("sameWindowText"));
@@ -280,7 +280,7 @@ function checkForLink(elem, htmllocalname)
             break;
         case "":
         case "replace":
-            if (elem.ownerDocument != elem.ownerDocument.defaultView._content.document)
+            if (elem.ownerDocument != elem.ownerDocument.defaultView.content.document)
                 setInfo("link-target", gMetadataBundle.getString("sameFrameText"));
             else
                 setInfo("link-target", gMetadataBundle.getString("sameWindowText"));
@@ -391,12 +391,12 @@ function openLink(node)
         var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"].getService().
                          QueryInterface(nsIScriptSecurityManager);
         try {
-            secMan.checkLoadURIStr(nodeView._content.document.location,
+            secMan.checkLoadURIStr(nodeView.content.document.location,
                                    url, nsIScriptSecurityManager.STANDARD);
         } catch (e) {
             return;
         }
-        nodeView._content.document.location = url;
+        nodeView.content.document.location = url;
         window.close();
     }
 }

@@ -86,7 +86,7 @@ var proxyIconDNDObserver = {
       //       the homepage in the event of an empty urlbar.
       if (!urlBar.value) return;
 
-      var urlString = urlBar.value + "\n" + window._content.document.title;
+      var urlString = urlBar.value + "\n" + window.content.document.title;
       var htmlString = "<a href=\"" + urlBar.value + "\">" + urlBar.value + "</a>";
 
       aXferData.data = new TransferData();
