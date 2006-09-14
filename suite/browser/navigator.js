@@ -1015,7 +1015,9 @@ function BrowserViewSource()
   if (focusedWindow == window)
     focusedWindow = _content;
 
-  var docCharset = "charset=" + focusedWindow.document.characterSet;
+  dump("focusedWindow = " + focusedWindow + "\n");
+  if (focusedWindow)
+    var docCharset = "charset=" + focusedWindow.document.characterSet;
 
   //now try to open a view-source window while inheriting the charset (if any)
   openDialog("chrome://navigator/content/viewSource.xul",
