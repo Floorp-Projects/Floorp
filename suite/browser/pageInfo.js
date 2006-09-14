@@ -580,6 +580,7 @@ function makePreview(item)
   var url = ("src" in item && item.src) || ("code" in item && item.code) || ("data" in item && item.data) || ("href" in item && item.href) || unknown;  // it better have at least one of those...
   document.getElementById("imageurltext").value = url;
   document.getElementById("imagetitletext").value = item.title || notSet;
+  document.getElementById("imagealttext").value = ("alt" in item && item.alt) || getValueText(item) || notSet;
   document.getElementById("imagelongdesctext").value = ("longDesc" in item && item.longDesc) || notSet;
 
   // find out the mime type
