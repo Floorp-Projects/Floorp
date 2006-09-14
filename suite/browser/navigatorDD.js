@@ -253,7 +253,7 @@ var personalToolbarDNDObserver = {
 
       //PCH: cleanup needed here, url is already calculated in isBookmark()
       var db = document.getElementById("innermostBox").database;
-      var url = RDFUtils.getTarget(db, uri, NC_RDF("ID"));
+      var url = RDFUtils.getTarget(db, uri, NC_RDF("URL"));
       if (url)
         url = url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
       else
@@ -264,7 +264,7 @@ var personalToolbarDNDObserver = {
       else
         name = "";
       var urlString = url + "\n" + name;
-      var htmlString = "<A HREF='" + uri + "'>" + name + "</A>";
+      var htmlString = "<A HREF='" + url + "'>" + name + "</A>";
       aXferData.data = new TransferData();
       aXferData.data.addDataForFlavour("moz/rdfitem", uri);
       aXferData.data.addDataForFlavour("text/x-moz-url", urlString);
