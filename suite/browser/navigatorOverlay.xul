@@ -210,17 +210,19 @@
 		  	</menupopup>
 	</menu>   
       <menuseparator />
+<!--
+for some reason, this makes mac freak out. pulling out until i understand why (pinkerton)
       <menu id="menu_TextZoom" accesskey="&textZoomMenu.accesskey;">
         <menupopup id="textZoomPopup" oncreate="initTextZoomMenu()">
           <menuitem key="key_textZoomReduce" accesskey="&textZoomReduceCmd.accesskey;" observes="cmd_viewTextZoomReduce"/>
           <menuitem key="key_textZoomEnlarge" accesskey="&textZoomEnlargeCmd.accesskey;" observes="cmd_viewTextZoomEnlarge"/>
           <menuseparator/>
-	  <!-- inserted from navigator.js -->
           <menuseparator id="textZoomInsertBefore"/>
           <menuitem id="textZoomOther" type="radio" name="textZoom" accesskey="&textZoomOtherCmd.accesskey;" oncommand="setTextZoomOther()"/>
         </menupopup>
       </menu>
-      <menu value="&useStyleSheetMenu.label;" disabled="false">
+-->
+     <menu value="&useStyleSheetMenu.label;" disabled="false">
         <menupopup oncreate="stylesheetFillPopup(window._content.document, this, document.getElementById('authssnoopt'))">
           <menuitem value="&useStyleSheetNone.label;" id="authssnoopt" type="radio" name="authorstyle" oncommand="stylesheetSwitch(window._content.document, '')"/>
         </menupopup>
