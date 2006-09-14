@@ -137,8 +137,8 @@ Contributor(s): ______________________________________. -->
 	      <menuitem id="menu_close"/>
 		  <menuitem id="context-savepage" value="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" oncommand="savePage();"/>
 	      <menuseparator/>
-	      <menuitem accesskey="&sendLinkCmd.label;" observes="Browser:SendLink"/>
 	      <menuitem accesskey="&sendPageCmd.label;" observes="Browser:SendPage"/>
+	      <menuitem accesskey="&sendLinkCmd.label;" observes="Browser:SendLink"/>
 	      <menuitem accesskey="&editPageCmd.label;" observes="Browser:EditPage" />
 	      <menuseparator/>
 	      <menuitem accesskey="&printSetupCmd.accesskey;" observes="Browser:PrintSetup"/>
