@@ -180,8 +180,7 @@
         <parameter name="aProp"/>
         <body><![CDATA[
           var n = aDS.GetTarget(aRes, aProp, true);
-          if (n)
-             return n.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+          return n ? n.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : null;
         ]]></body>
       </method>
 
@@ -191,13 +190,14 @@
         <body><![CDATA[
           var bx = this.outliner.outlinerBoxObject;
           var view = bx.view;
+          var sel;
           if (this.selectedIndex == null && aDir < 0) {
-            var sel = this.mSearchBox.selectBy(aDir, aAmount);
+            sel = this.mSearchBox.selectBy(aDir, aAmount);
             if (sel != null)
               return null;
           } 
           
-          var sel = this.getNextIndex(aDir, aAmount, this.selectedIndex, view.rowCount-1);
+          sel = this.getNextIndex(aDir, aAmount, this.selectedIndex, view.rowCount-1);
           this.mSelectedIndex = sel;
 
           if (sel == null && aDir > 0)
