@@ -187,7 +187,7 @@ nsBrowserStatusHandler.prototype =
         this.startDocumentLoad(aRequest);
 
       // Show the progress meter
-      this.statusPanel.removeAttribute("hidden");
+      this.statusPanel.hidden = false;
       // Turn the throbber on.
       this.throbberElement.setAttribute("busy", "true");
 
@@ -247,7 +247,7 @@ nsBrowserStatusHandler.prototype =
       }
 
       // Turn the progress meter and throbber off.
-      this.statusPanel.setAttribute("hidden", "true");
+      this.statusPanel.hidden = true;
       this.statusMeter.value = 0;  // be sure to clear the progress bar
       this.throbberElement.removeAttribute("busy");
 
