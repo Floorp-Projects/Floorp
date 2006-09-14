@@ -61,6 +61,10 @@ Contributor(s): ______________________________________. -->
 <script language="javascript" src="tooltip.js"></script>
 <script language="javascript" src="navigatorDD.js"></script>
 
+<!-- UI services -->
+<script language="javascript" src="chrome://navigator/content/sessionHistoryUI.js"></script>
+<script language="javascript" src="chrome://navigator/content/keywords.js"></script>
+
 <commands id="commands">
 	<commandset id="globalEditMenuItems"/>
 	<commandset id="selectEditMenuItems"/>
@@ -237,7 +241,7 @@ Contributor(s): ______________________________________. -->
     
         <box class="box-toolbar-group" flex="1">
           <menubutton class="menubutton-icon button-toolbar-3" id="ubhist-keyword-popup" tooltiptext="&internetKeyword.tooltip;">
-            <menupopup class="button-toolbar-3" oncreate="CreateUBHistoryMenu(event);" oncommand="ExecuteUBCommand(event);">
+            <menupopup class="button-toolbar-3" oncreate="createUBHistoryMenu(event);" oncommand="executeKeywordCommand(event);"/>
               <!--       
               <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&quoteKeyword.label;" keyword="quote"/>
               <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&localKeyword.label;" keyword="local"/>
@@ -247,7 +251,6 @@ Contributor(s): ______________________________________. -->
               <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&listKeywords.label;" keyword="list"/>                 
               <menuseparator/>  
               -->
-            </menupopup>
           </menubutton>
 
          
@@ -255,11 +258,18 @@ Contributor(s): ______________________________________. -->
       			<image id="page-proxy-button" ondraggesture="DragProxyIcon(event);"/> 
 			      <textfield autocomplete="false" timeout="300" class="plain chromeclass-location" 
 		 	                 searchSessionType="urlbar" id="urlbar" tooltiptext="&locationBar.tooltip;"
-			                 onkeypress="if( event.which == 13 ) { AddToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>  
+			                 onkeypress="if( event.which == 13 ) { addToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>  
+            <!--
+            <menu id="ubhist-popup">
+              <image class="icon-dropmarker"/>
+              <menupopup oncreate="createUBHistoryMenu(event);" oncommand="executeURLBarHistoryCommand(event);"
+                         popupalign="topright" popupanchor="bottomright"/>
+            </menu>
+            -->
             <button class="button-toolbar-3" id="search-button" value="&searchButton.label;" 
                     oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
                     tooltiptext="&searchButton.tooltip;"/> 
-            <button class="button-toolbar-3" id="go-button" value="&goButton.label;" oncommand="BrowserLoadURL();" 
+            <button class="button-toolbar-3" id="go-button" value="&goButton.label;" oncommand="addToUrlbarHistory(); BrowserLoadURL();" 
                     tooltiptext="&goButton.tooltip;"/> 
           </box>
         </box>
