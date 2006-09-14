@@ -433,7 +433,7 @@
   <binding id="autocomplete-search-engine">
     <content>
       <xul:image class="autocomplete-search-engine-img" inherits="src=icon"/>
-      <xul:label class="autocomplete-search-engine-text" inherits="value=label"/>
+      <xul:label class="autocomplete-search-engine-text" inherits="value=label" crop="right" flex="1"/>
     </content>
     
     <handlers>
