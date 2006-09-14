@@ -324,13 +324,13 @@ var homeButtonObserver = {
       var url = retrieveURLFromData(aData);
       var showDialog = nsPreferences.getBoolPref("browser.homepage.enable_home_button_drop", false);
       var setHomepage;
-      if (!showDialog)
+      if (showDialog)
         {
           var commonDialogService = nsJSComponentManager.getService("component://netscape/appshell/commonDialogs",
                                                                     "nsICommonDialogs");
           var block = nsJSComponentManager.createInstanceByID("c01ad085-4915-11d3-b7a0-85cf-55c3523c",
                                                               "nsIDialogParamBlock");
-          var checkValue = { value: false };
+          var checkValue = { value: true };
           var pressedVal = { };                            
           var promptTitle = bundle.GetStringFromName("droponhometitle");
           var promptMsg   = bundle.GetStringFromName("droponhomemsg");
@@ -356,7 +356,6 @@ var homeButtonObserver = {
         }
       else
         setHomepage = true;
-    dump("*** pressedVal = " + pressedVal.value + "\n");        
       if (setHomepage)
         nsPreferences.setUnicharPref("browser.startup.homepage", url);                                           
     },
