@@ -369,6 +369,7 @@ function UpdateBackForwardButtons()
 {
   var backBroadcaster = document.getElementById("canGoBack");
   var forwardBroadcaster = document.getElementById("canGoForward");
+  var upBroadcaster = document.getElementById("canGoUp");
   var browser = getBrowser();
 
   // Avoid setting attributes on broadcasters if the value hasn't changed!
@@ -378,6 +379,7 @@ function UpdateBackForwardButtons()
 
   var backDisabled = backBroadcaster.hasAttribute("disabled");
   var forwardDisabled = forwardBroadcaster.hasAttribute("disabled");
+  var upDisabled = upBroadcaster.hasAttribute("disabled");
   if (backDisabled == browser.canGoBack) {
     if (backDisabled)
       backBroadcaster.removeAttribute("disabled");
@@ -389,6 +391,12 @@ function UpdateBackForwardButtons()
       forwardBroadcaster.removeAttribute("disabled");
     else
       forwardBroadcaster.setAttribute("disabled", true);
+  }
+  if (upDisabled != !browser.currentURI.spec.replace(/[#?].*$/, "").match(/\/[^\/]+\/./)) {
+    if (upDisabled)
+      upBroadcaster.removeAttribute("disabled");
+    else
+      upBroadcaster.setAttribute("disabled", true);
   }
 }
 
@@ -880,6 +888,11 @@ function BrowserForward()
   }
   catch(ex) {
   }
+}
+
+function BrowserUp()
+{
+  loadURI(getBrowser().currentURI.spec.replace(/[#?].*$/, "").replace(/\/[^\/]*.$/, "/"));
 }
 
 function BrowserHandleShiftBackspace()
