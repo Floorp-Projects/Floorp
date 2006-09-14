@@ -513,7 +513,7 @@ function createBrowserInstance()
   {
     //  TileWindow();
     // Make sure window fits on screen initially
-   // FitToScreen();
+    FitToScreen();
 	
     // Create the browser instance component.
     createBrowserInstance();
