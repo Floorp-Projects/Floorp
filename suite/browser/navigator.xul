@@ -376,7 +376,7 @@ Contributor(s): ______________________________________. -->
 
              <!-- this is the urlbar --> 
              <html:input id="urlbar" type="text" chromeclass="location" 
-                onkeyup="if (event.which == 13) { BrowserLoadURL(); }" 
+                onkeypress="if (event.which == 13) { BrowserLoadURL(); }" 
                 flex = "100%" /> 
   
              <!-- this is the urlbar session history popup --> 
