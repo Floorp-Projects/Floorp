@@ -53,11 +53,13 @@ function loadEventHandlers(event)
 {
   // Filter out events that are not about the document load we are interested in
   if (event.target == _content.document) {
+    dump("*** PRE date = " + (new Date()).getUTCMilliseconds() + "\n");
     UpdateBookmarksLastVisitedDate(event);
     UpdateInternetSearchResults(event);
     checkForDirectoryListing();
     getContentAreaFrameCount();
     postURLToNativeWidget();
+    dump("*** POST date = " + (new Date()).getUTCMilliseconds() + "\n");
   }
 }
 
