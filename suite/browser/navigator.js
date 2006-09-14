@@ -290,8 +290,6 @@ nsXULBrowserWindow.prototype =
         stopButton.setAttribute("disabled", true);
         stopMenu.setAttribute("disabled", true);
         stopContext.setAttribute("disabled", true);
-        alert("foo");
-
       }
     }
     else if (state & nsIWebProgressListener.STATE_TRANSFERRING) {
