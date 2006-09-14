@@ -127,11 +127,6 @@ nsBrowserStatusHandler.prototype =
     this.userTyped       = null;
   },
 
-  getFrom : function(object, property)
-  {
-    return object.__proto__.__lookupGetter__(property).call(object);
-  },
-
   setJSStatus : function(status)
   {
     this.jsStatus = status;
@@ -204,15 +199,13 @@ nsBrowserStatusHandler.prototype =
 
     const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
     const nsIChannel = Components.interfaces.nsIChannel;
-    var domWindow;
     var ctype;
     if (aStateFlags & nsIWebProgressListener.STATE_START) {
       if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
         // Remember when loading commenced.
         this.startTime = (new Date()).getTime();
 
-        domWindow = aWebProgress.DOMWindow;
-        if (aRequest && domWindow == _content)
+        if (aRequest && aWebProgress.DOMWindow == content)
           this.startDocumentLoad(aRequest);
 
         // Turn the throbber on.
@@ -241,9 +234,8 @@ nsBrowserStatusHandler.prototype =
           this.onProgressChange(null, null, 0, 0, this.finishedRequests, this.totalRequests);
       }
       if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
-        domWindow = aWebProgress.DOMWindow;
         if (aRequest) {
-          if (domWindow == this.getFrom(domWindow, "top"))
+          if (aWebProgress.DOMWindow == content)
             this.endDocumentLoad(aRequest, aStatus);
 
           var location = aRequest.QueryInterface(nsIChannel).URI.spec;
@@ -308,8 +300,7 @@ nsBrowserStatusHandler.prototype =
     // Update urlbar only if a new page was loaded on the primary content area
     // Do not update urlbar if there was a subframe navigation
 
-    var domWindow = aWebProgress.DOMWindow;
-    if (domWindow == this.getFrom(domWindow, "top")) {
+    if (aWebProgress.DOMWindow == content) {
       if (!this.userTyped.value) {
         this.urlBar.value = location;
         // the above causes userTyped.value to become true, reset it
