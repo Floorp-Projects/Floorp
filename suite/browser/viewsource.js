@@ -245,7 +245,7 @@ function BrowserReloadSkipCache()
 // Strips the |view-source:| for editPage()
 function ViewSourceEditPage()
 {
-  editPage(window.content.location.href.substring(12), window, false);
+  editPage(window.content.location.href.substring(12));
 }
 
 // Strips the |view-source:| for saveURL()
