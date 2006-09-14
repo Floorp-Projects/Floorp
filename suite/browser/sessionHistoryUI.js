@@ -129,18 +129,33 @@ function addToUrlbarHistory()
           return;
        var index = 0;
        // create the nsIURI objects for comparing the 2 urls
-       var uriToAdd = Components.classes["@mozilla.org/network/standard-url;1"]
-                            .createInstance(Components.interfaces.nsIURI);
-       uriToAdd.spec = urlToAdd;
-       var rdfUri = Components.classes["@mozilla.org/network/standard-url;1"]
-                          .createInstance(Components.interfaces.nsIURI);
+       var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                     .getService(Components.interfaces.nsIIOService);
+       
+       try {
+         var unused = { };
+         scheme = ioService.extractScheme(urlToAdd, unused, unused);
+       } catch(e) {
+        urlToAdd = "http://" + urlToAdd;
+       }
+       var uriToAdd  = ioService.newURI(urlToAdd, null);
+
        while(elements.hasMoreElements()) {
           entry = elements.getNext();
           if (entry) {
              index ++;
              entry= entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
              var rdfValue = entry.Value;
-             rdfUri.spec = rdfValue;
+
+             try {
+               var unused = { };
+               scheme = ioService.extractScheme(rdfValue, unused, unused);
+             } catch(e) {
+                rdfValue = "http://" + rdfValue;
+            }
+
+             var rdfUri = ioService.newURI(rdfValue, null);
+             
              if (rdfUri.equals(uriToAdd)) {
                  // URI already present in the database
                  // Remove it from its current position.
