@@ -329,7 +329,7 @@
   <!-- Menu -->
   <menubar id="main-menubar" class="chromeclass-menubar">
     <menu id="menu_File">
-      <menupopup id="menu_FilePopup" onpopupshowing="updateCloseItems();getContentAreaFrameCount();updateFileUploadItem();">
+      <menupopup id="menu_FilePopup" onpopupshowing="updateCloseItems();getContentAreaFrameCount();updateSavePageItems();updateFileUploadItem();">
         <menu id="menu_New">
           <menupopup id="menu_NewPopup">
             <!-- From utilityOverlay.xul -->
@@ -346,8 +346,10 @@
         <menuitem id="menu_closeOtherTabs" command="cmd_closeOtherTabs" label="&closeOtherTabs.label;"/>
         <menuitem id="menu_closeWindow" hidden="true" command="cmd_closeWindow" key="key_closeWindow" label="&closeWindow.label;"/>
         <menuseparator/>
-        <menuitem label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" key="key_savePage" command="Browser:SavePage"/>
-        <menuitem id="savepage" label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="saveFrameDocument();" hidden="true"/>
+        <menuitem id="savepage" valueSaveAs="&savePageAsCmd.label;" valueSave="&savePageCmd.label;"
+                  accesskey="&savePageCmd.accesskey;" key="key_savePage" command="Browser:SavePage"/>
+        <menuitem id="saveframe" valueSaveAs="&saveFrameAsCmd.label;" valueSave="&saveFrameCmd.label;"
+                  accesskey="&saveFrameCmd.accesskey;" oncommand="saveFrameDocument();" hidden="true"/>
         <menuseparator id="saveMenuBlockEnd"/>
         <menuitem label="&editPageCmd.label;" accesskey="&editPageCmd.accesskey;" key="key_editPage" command="Browser:EditPage" />
         <menuseparator/>

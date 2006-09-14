@@ -132,7 +132,7 @@
     <menubar id="viewSource-main-menubar">
 
       <menu id="menu_File">
-        <menupopup id="filemenu-popup">
+        <menupopup id="filemenu-popup" onpopupshowing="updateSavePageItems();">
           <menu id="menu_New">
             <menupopup id="menu_NewPopup">
               <menuitem id="menu_newNavigator"/>
@@ -141,8 +141,9 @@
           </menu>
           <menuitem id="menu_close"/>
           <menuseparator/>
-          <menuitem key="key_savePage" command="cmd_savePage"
-                    label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;"/>
+          <menuitem id="savepage" key="key_savePage" command="cmd_savePage"
+                    valueSaveAs="&savePageAsCmd.label;" valueSave="&savePageCmd.label;"
+                    accesskey="&savePageCmd.accesskey;"/>
           <menuseparator/>
           <menuitem key="key_editPage" command="cmd_editPage"
                     label="&editPageCmd.label;" accesskey="&editPageCmd.accesskey;"/>
