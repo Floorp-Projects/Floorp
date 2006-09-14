@@ -29,7 +29,7 @@ try {
   if (prefsService)
     prefsService = prefsService.getService();
   if (prefsService)
-    var gPrefs = prefsService.QueryInterface(Components.interfaces.nsIPref);
+    gPrefs = prefsService.QueryInterface(Components.interfaces.nsIPref);
 } catch (ex) {
 }
 
