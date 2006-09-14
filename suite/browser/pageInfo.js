@@ -739,9 +739,9 @@ function onBeginLinkDrag(event,urlField,descField)
 function getSource(item)
 {
   // Return the correct source without strict warnings
-  if (item.href != null)
+  if ("href" in item && item.href)
     return item.href;
-  if (item.src != null)
+  if ("src" in item && item.src)
     return item.src;
   return null;
 }
