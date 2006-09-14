@@ -42,7 +42,7 @@
 
 <!ENTITY viewMenu.label "View">
 <!ENTITY toolbarsCmd.label "Toolbars">
-<!ENTITY navbarCmd.label "Navigation ToolBar">
+<!ENTITY navbarCmd.label "Navigation Toolbar">
 <!ENTITY personalbarCmd.label "Personal Toolbar">
 <!ENTITY taskbarCmd.label "Taskbar">
 <!ENTITY enlargeTextSizeCmd.label "Enlarge Text Size">
