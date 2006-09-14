@@ -289,8 +289,6 @@ Contributor(s): ______________________________________. -->
     	      <image id="page-proxy-button" ondraggesture="nsDragAndDrop.startDrag(event, proxyIconDNDObserver);"/> 
 	          <textfield autocomplete="true" timeout="300" class="plain" 
 	                     searchSessionType="urlbar" id="urlbar" tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
-           						 onblur="URLBarBlurHandler(event);"
- 					          	 onfocus="URLBarFocusHandler(event);"
 	                     onkeypress="if( event.keyCode == 13 ) { addToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>  
           </box>
           <menubutton class="menubutton-icon" id="ubhist">
