@@ -383,8 +383,8 @@ function openLink(node)
     // Security-Critical: Only links to 'safe' protocols should be functional.
     // Specifically, javascript: and data: URLs must be made non-functional
     // here, because they will run with full privilege.
-    var safeurls = /(^http(s)?:|^file:|^chrome:|^resource:|^mailbox:|^imap:|^(s)?news:|^nntp:|^about:|^mailto:|^ftp:|^gopher:)/i;
-    if (url.search(safeurls) == 0) {
+    var safeurls = /^https?:|^file:|^chrome:|^resource:|^mailbox:|^imap:|^s?news:|^nntp:|^about:|^mailto:|^ftp:|^gopher:/i;
+    if (safeurls.test(url)) {
         var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"].getService().
                          QueryInterface(nsIScriptSecurityManager);
         try {
