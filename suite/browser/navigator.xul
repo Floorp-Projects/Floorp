@@ -114,8 +114,8 @@ Contributor(s): ______________________________________. -->
     <popup id="aHTMLTooltip" class="tooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);" > 
       <vbox id="HTML_TOOLTIP_tooltipBox"/>
     </popup>
-    <popup id="backMenu" onpopupshowing="return BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
-    <popup id="forwardMenu" onpopupshowing="return BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+    <popup id="backMenu" position="after_start" onpopupshowing="return BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+    <popup id="forwardMenu" position="after_start" onpopupshowing="return BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
     <popup id="sidebarPopup"/>
 
     <popupset id="bookmarksPopupset"/>
