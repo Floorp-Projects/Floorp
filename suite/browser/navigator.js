@@ -676,7 +676,8 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 	var searchEngineURI = null;
 	var autoOpenSearchPanel = false;
 	var defaultSearchURL = null;
-	var fallbackDefaultSearchURL = "http://search.netscape.com/cgi-bin/search?search="
+	var fallbackDefaultSearchURL = bundle.GetStringFromName("fallbackDefaultSearchURL")
+
 	try
 	{
 		searchMode = pref.GetIntPref("browser.search.powermode");
