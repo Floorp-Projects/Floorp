@@ -450,7 +450,7 @@ sub _check_assigned_to {
 sub _check_bug_file_loc {
     my ($invocant, $url) = @_;
     # If bug_file_loc is "http://", the default, use an empty value instead.
-    $url = '' if $url eq 'http://';
+    $url = '' if (!defined($url) || $url eq 'http://');
     return $url;
 }
 
