@@ -1467,12 +1467,12 @@ function getShortcutOrURI(url)
         var cmd = url.substr(0, aOffset);
         var text = url.substr(aOffset+1);
         shortcutURL = gBookmarksService.resolveKeyword(cmd);
+        // Bug 123006 : %s replace and URI escape, %S replace with raw value
         if (shortcutURL && text) {
-          aOffset = shortcutURL.indexOf("%s");
-          if (aOffset >= 0)
-            shortcutURL = shortcutURL.substr(0, aOffset) + text + shortcutURL.substr(aOffset+2);
-          else
-            shortcutURL = null;
+          shortcutURL = /%[sS]/.test(shortcutURL) ?
+              shortcutURL.replace(/%s/g, encodeURIComponent(text))
+                         .replace(/%S/g, text) :
+              null;
         }
       }
     }
