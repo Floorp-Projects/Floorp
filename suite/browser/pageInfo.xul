@@ -214,7 +214,7 @@
 
       <!-- Link info -->
       <vbox>
-        <tree id="linktree" flex="1" class="inset">
+        <tree id="linktree" flex="1" class="inset" ondraggesture="onBeginLinkDrag(event,'link-address','link-name')">
           <treecols>
             <treecol sortSeparators="true" persist="hidden width" flex="1" 
                          width="1" id="link-number"  label="&linkNo;"/>
@@ -237,7 +237,7 @@
 
       <!-- Media information -->
       <vbox>
-        <tree id="imagetree" class="inset fixedsize" onselect="onImageSelect();">
+        <tree id="imagetree" class="inset fixedsize" onselect="onImageSelect();" ondraggesture="onBeginLinkDrag(event,'image-address','image-alt')">
           <treecols>
             <treecol sortSeparators="true" hidden="true" persist="hidden width" flex="1" 
                          width="1"  id="image-number"  label="&mediaNo;"/>

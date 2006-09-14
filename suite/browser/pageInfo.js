@@ -57,6 +57,11 @@ const COPYCOL_FORM_ACTION = 3;
 const COPYCOL_LINK_ADDRESS = 2;
 const COPYCOL_IMAGE_ADDRESS = 1;
 
+const DRAGSERVICE_CONTRACTID    = "@mozilla.org/widget/dragservice;1";
+const TRANSFERABLE_CONTRACTID   = "@mozilla.org/widget/transferable;1";
+const ARRAY_CONTRACTID          = "@mozilla.org/supports-array;1";
+const WSTRING_CONTRACTID        = "@mozilla.org/supports-wstring;1";
+
 // a number of services I'll need later
 // the cache services
 const nsICacheService = Components.interfaces.nsICacheService;
@@ -562,6 +567,41 @@ function openURL(target)
 {
   var url = target.parentNode.childNodes[2].value;
   window.open(url, "_blank", "chrome");
+}
+
+function onBeginLinkDrag(event,urlField,descField)
+{
+  if (event.originalTarget.localName != "treechildren")
+    return;
+  var tree = event.target;
+  if (!("treeBoxObject" in tree))
+    tree = tree.parentNode;
+  var row = {};
+  var col = {};
+  var elt = {};
+  tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, elt);
+  if (row.value == -1)
+    return false;
+
+  // Getting drag-system needed services
+  var dragService = Components.classes[DRAGSERVICE_CONTRACTID].getService().QueryInterface(Components.interfaces.nsIDragService);
+  var transArray = Components.classes[ARRAY_CONTRACTID].createInstance(Components.interfaces.nsISupportsArray);
+  if (!transArray)
+    return;
+  var trans = Components.classes[TRANSFERABLE_CONTRACTID].createInstance(Components.interfaces.nsITransferable);
+  if (!trans)
+    return;
+  
+  // Adding URL flavor
+  trans.addDataFlavor("text/x-moz-url");
+  var url = tree.treeBoxObject.view.getCellText(row.value, urlField);
+  var desc = tree.treeBoxObject.view.getCellText(row.value, descField);
+  var stringURL = Components.classes[WSTRING_CONTRACTID].createInstance(Components.interfaces.nsISupportsWString);
+  stringURL.data = url + "\n"+desc;
+  trans.setTransferData("text/x-moz-url", stringURL, stringURL.data.length * 2 );
+  transArray.AppendElement(trans.QueryInterface(Components.interfaces.nsISupports));
+
+  dragService.invokeDragSession(event.target, transArray, null, dragService.DRAGDROP_ACTION_NONE);
 }
 
 //******** Image Stuff
