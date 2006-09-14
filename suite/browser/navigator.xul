@@ -243,12 +243,12 @@ Contributor(s): ______________________________________. -->
   var gBookmarkPopup = null;
 </script>
 
-  <toolbox class="toolbox-top">
+  <toolbox id="navigator-toolbox" class="toolbox-top" deferattached="true">
     <!-- Menu -->
-    <menubar id="main-menubar"/>
+    <menubar id="main-menubar" persist="collapsed" grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;"/>
 
-    <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar" 
-             persist="collapsed" grippytooltip="aTooltip" grippytooltiptext="&navigationBar.tooltip;">
+    <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar" persist="collapsed" 
+             grippytooltip="aTooltip" grippytooltiptext="&navigationBar.tooltip;">
       <menubutton class="menubutton-dual toolbar top" id="back-button" value="&backButton.label;" 
                   crop="right" observes="canGoBack" oncommand="gotoHistoryIndex(event);"
                   tooltip="aTooltip"
@@ -296,8 +296,9 @@ Contributor(s): ______________________________________. -->
              ondragover="nsDragAndDrop.dragOver(event, personalToolbarObserver);"
              ondragdrop="nsDragAndDrop.drop(event, personalToolbarObserver);"
              ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarObserver);"
+             ondragexit="nsDragAndDrop.dragExit(event, personalToolbarObserver);"
              grippytooltip="aTooltip" grippytooltiptext="&personalBar.tooltip;"
-             last-toolbar="true">
+             last-toolbar="true" persist="collapsed">
 
       <!-- Personal toolbar items -->
       <box id="innermostBox" flex="1" style="min-width: 1px;" context="contextual"
@@ -341,7 +342,7 @@ Contributor(s): ______________________________________. -->
           </rule>
         </template>
        
-        <button class="button-toolbar" id="homebutton" value="&homeButton.label;"
+        <button class="button-toolbar bookmarkitem" id="homebutton" value="&homeButton.label;"
                 tooltip="aTooltip"
                 ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver);"
                 ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
