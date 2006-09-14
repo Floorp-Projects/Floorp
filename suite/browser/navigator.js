@@ -396,7 +396,7 @@ function Startup()
   }
 
   // hook up UI through progress listener
-  getBrowser().addProgressListener(window.XULBrowserWindow);
+  getBrowser().addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
   // load appropriate initial page from commandline
   var isPageCycling = false;
