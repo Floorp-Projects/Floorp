@@ -130,10 +130,7 @@
     </popup>
   </popupset>
 
-  <!-- Menu --> 
-  <toolbox id="viewSource-toolbox">
-    <menubar id="viewSource-main-menubar">
-
+  <!-- Common menus --> 
       <menu id="menu_File">
         <menupopup id="filemenu-popup" onpopupshowing="updateSavePageItems();">
           <menu id="menu_New">
@@ -181,27 +178,5 @@
         </menupopup>
       </menu>
 
-      <menu id="menu_View">
-        <menupopup>
-          <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
-          <menuseparator />
-          <menu id="menu_textZoom"/>  
-          <menuseparator/>
-<!--      <menuitem key="key_viewInfo" observes="View:PageInfo"
-                    label="&pageInfoCmd.label;" accesskey="&pageInfoCmd.accesskey;"/>
-          <menuseparator id="file_moduleSeparator"/>-->
-          <menu id="charsetMenu"/>
-          <menuitem id="menu_wrapLongLines" type="checkbox" oncommand="wrapLongLines()"
-                    label="&menu_wrapLongLines.title;" accesskey="&menu_wrapLongLines.accesskey;"/>
-          <menuitem type="checkbox" id="menu_highlightSyntax" oncommand="highlightSyntax();"
-                    label="&menu_highlightSyntax.label;" accesskey="&menu_highlightSyntax.accesskey;"/>
-        </menupopup>
-      </menu>
-
-      <menu id="windowMenu"/>
-
-      <menu id="menu_Help"/>
-    </menubar>  
-  </toolbox>
 
 </overlay>
