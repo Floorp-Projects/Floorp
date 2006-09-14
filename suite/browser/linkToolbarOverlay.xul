@@ -84,7 +84,7 @@
 
   <toolbox id="navigator-toolbox">
     <toolbar id="linktoolbar" class="chromeclass-directories"
-        oncommand="event.preventBubble(); return linkToolbarUI.commanded(event);"
+        oncommand="event.stopPropagation(); return linkToolbarUI.commanded(event);"
         tbalign="stretch" hidden="true" hasitems="false">
 
       <toolbarbutton id="link-top" class="bookmark-item"

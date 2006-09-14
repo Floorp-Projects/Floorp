@@ -201,7 +201,6 @@
                    ondraggesture="PageProxyDragGesture(event);"
                    onload="this.parentNode.selectedIndex = 1;
                            event.stopPropagation();
-                           event.preventBubble();
                            HandleBookmarkIcon(this.src, true);"
                    onerror="gBrowser.addToMissedIconCache(this.src); HandleBookmarkIcon(this.src, false);"
                    tooltiptext="&proxyIcon.tooltip;"/>
@@ -265,10 +264,10 @@
     <toolbar id="PersonalToolbar" class="chromeclass-directories" persist="collapsed" 
              grippytooltiptext="&personalToolbar.tooltip;" tbalign="stretch" prefixhidden="true"
              ondraggesture="nsDragAndDrop.startDrag(event, BookmarksMenuDNDObserver)"
-             ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDNDObserver); event.preventBubble()"
-             ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.preventBubble()"
-             ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.preventBubble()"
-             ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.preventBubble()">
+             ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDNDObserver); event.stopPropagation()"
+             ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.stopPropagation()"
+             ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.stopPropagation()"
+             ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.stopPropagation()">
 
       <tooltip id="home-button-tooltip" noautohide="true">
         <vbox id="home-button-tooltip-inner" flex="1"/>
@@ -279,10 +278,10 @@
                      onclick="if (event.button == 1) BrowserHome(event);"
                      tooltip="home-button-tooltip"
                      ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver)"
-                     ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver); event.preventBubble()"
-                     ondragenter="event.preventBubble()"
-                     ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver); event.preventBubble()"
-                     ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver); event.preventBubble()"/>
+                     ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver); event.stopPropagation()"
+                     ondragenter="event.stopPropagation()"
+                     ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver); event.stopPropagation()"
+                     ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver); event.stopPropagation()"/>
   
       <toolbarseparator id="home-bm-separator"/>
  
@@ -295,7 +294,7 @@
                      oncommand="BookmarksMenu.loadBookmark(event, this.database);"
                      onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)" 
                      template="bookmarksMenuTemplate"
-                     ondraggesture="if (event.target.id=='bookmarks-button') event.preventBubble()">
+                     ondraggesture="if (event.target.id=='bookmarks-button') event.stopPropagation()">
         <menupopup onpopupshowing="updateGroupmarkCommand();">
           <menuitem command="Browser:AddBookmark"/>
           <menuitem command="Browser:AddBookmarkAs"/>
