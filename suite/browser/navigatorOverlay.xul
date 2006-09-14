@@ -355,7 +355,7 @@ oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/p
           <menuitem value="&ver18Cmd.label;" oncommand="window._content.location.href='http://www.abcnews.com'"/>
           <menuitem value="&ver19Cmd.label;" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_imagemap.html'"/>
           <menuitem value="&ver20Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test2.html'"/>
-          <menuitem value="&ver21Cmd.label;" oncommand="window._content.location.href='http://www.cdrom.com/pub/png/png-MagnoliaAlpha.html'"/>
+          <menuitem value="&ver21Cmd.label;" oncommand="window._content.location.href='http://www.libpng.org/pub/png/png-MagnoliaAlpha.html'"/>
           <menuitem value="&ver22Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test13.html'"/>
           <menuitem value="&ver23Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test2.html'"/>
           <menuitem value="&ver24Cmd.label;" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_html_mix3.html'"/>
