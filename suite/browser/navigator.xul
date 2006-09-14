@@ -283,7 +283,7 @@ Contributor(s): ______________________________________. -->
                 tooltip="aTooltip" tooltiptext="&stopButton.tooltip;"/>
       </box>
                 
-      <box id="nav-bar-inner" autostretch="never" flex="1" style="min-width: 0px;">
+      <box id="nav-bar-inner" flex="1">
         <box id="urlbar-group" class="box-toolbar-group chromeclass-location" flex="1">
           <box autostretch="never" valign="middle" flex="1" id="urlbar-container">
     	      <image id="page-proxy-button" ondraggesture="nsDragAndDrop.startDrag(event, proxyIconDNDObserver);"/> 
