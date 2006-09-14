@@ -75,6 +75,7 @@ Contributor(s): ______________________________________. -->
   <script type="application/x-javascript" src="chrome://navigator/content/personalToolbar.js"/>
   
   <!-- Navigator -->
+  <script type="application/x-javascript" src="chrome://navigator/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/navigator.js"/>
   <script type="application/x-javascript" src="navigatorDD.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>

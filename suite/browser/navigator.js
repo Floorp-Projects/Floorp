@@ -37,7 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 const XREMOTESERVICE_CONTRACTID = "@mozilla.org/browser/xremoteservice;1";
 
 var gURLBar = null;
@@ -166,20 +165,6 @@ function getBrowser()
   if (!gBrowser)
     gBrowser = document.getElementById("content");
   return gBrowser;
-}
-
-function getWebNavigation()
-{
-  try {
-    return getBrowser().webNavigation;
-  } catch (e) {
-    return null;
-  }
-}
-
-function getMarkupDocumentViewer()
-{
-  return getBrowser().markupDocumentViewer;
 }
 
 function getHomePage()
@@ -574,28 +559,6 @@ function BrowserReloadSkipCache()
   return BrowserReloadWithFlags(reloadFlags);
 }
 
-function BrowserReloadWithFlags(reloadFlags)
-{
-  /* First, we'll try to use the session history object to reload so 
-   * that framesets are handled properly. If we're in a special 
-   * window (such as view-source) that has no session history, fall 
-   * back on using the web navigation's reload method.
-   */
-
-  var webNav = getWebNavigation();
-  try {
-    var sh = webNav.sessionHistory;
-    if (sh)
-      webNav = sh.QueryInterface(Components.interfaces.nsIWebNavigation);
-  } catch (e) {
-  }
-
-  try {
-    webNav.reload(reloadFlags);
-  } catch (e) {
-  }
-}
-
 function BrowserHome()
 {
   var homePage = getHomePage();
@@ -875,56 +838,6 @@ function BrowserEditBookmarks()
   }
 }
 
-function BrowserPrintPreview()
-{
-  // using _content.print() until printing becomes scriptable on docShell
-  try {
-    _content.printPreview();
-  } catch (e) {
-    // Pressing cancel is expressed as an NS_ERROR_FAILURE return value,
-    // causing an exception to be thrown which we catch here.
-    // Unfortunately this will also consume helpful failures, so add a
-    // dump(e); // if you need to debug
-  }
-}
-
-
-function BrowserPrintSetup()
-{
-  goPageSetup();  // from utilityOverlay.js
-}
-
-function BrowserPrint()
-{
-  // using _content.print() until printing becomes scriptable on docShell
-  try {
-    _content.print();
-  } catch (e) {
-    // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
-    // causing an exception to be thrown which we catch here.
-    // Unfortunately this will also consume helpful failures, so add a
-    // dump(e); // if you need to debug
-  }
-}
-
-function BrowserSetDefaultCharacterSet(aCharset)
-{
-  // no longer needed; set when setting Force; see bug 79608
-}
-
-function BrowserSetForcedCharacterSet(aCharset)
-{
-  var docCharset = getBrowser().docShell.QueryInterface(
-                            Components.interfaces.nsIDocCharset);
-  docCharset.charset = aCharset;
-  BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
-}
-
-function BrowserSetForcedDetector()
-{
-  getBrowser().documentCharsetInfo.forcedDetector = true;
-}
-
 function BrowserCloseTabOrWindow()
 {
   var browser = getBrowser();
@@ -959,29 +872,6 @@ function BrowserCloseWindow()
   win.setAttribute( "width", w );
 
   window.close();
-}
-
-function BrowserFind()
-{
-  var focusedWindow = document.commandDispatcher.focusedWindow;
-  if (!focusedWindow || focusedWindow == window)
-    focusedWindow = window._content;
-
-  findInPage(getBrowser(), window._content, focusedWindow)
-}
-
-function BrowserFindAgain()
-{
-  var focusedWindow = document.commandDispatcher.focusedWindow;
-  if (!focusedWindow || focusedWindow == window)
-    focusedWindow = window._content;
-
-  findAgainInPage(getBrowser(), window._content, focusedWindow)
-}
-
-function BrowserCanFindAgain()
-{
-  return canFindAgainInPage();
 }
 
 function loadURI(uri)

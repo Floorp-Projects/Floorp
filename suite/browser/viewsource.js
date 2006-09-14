@@ -92,9 +92,9 @@ function viewSource(url)
   return true;
 }
 
-function getMarkupDocumentViewer()
+function ViewSourceClose()
 {
-  return getBrowser().markupDocumentViewer;
+  window.close();
 }
 
 // Strips the |view-source:| for editPage()
