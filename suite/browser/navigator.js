@@ -660,6 +660,14 @@ function Startup()
   gClickSelectsAll = pref.getBoolPref("browser.urlbar.clickSelectsAll");
   gClickAtEndSelects = pref.getBoolPref("browser.urlbar.clickAtEndSelects");
 
+  // BiDi UI
+  gShowBiDi = isBidiEnabled();
+  if (gShowBiDi) {
+    document.getElementById("documentDirection-swap").hidden = false;
+    document.getElementById("textfieldDirection-separator").hidden = false;
+    document.getElementById("textfieldDirection-swap").hidden = false;
+  }
+
   // now load bookmarks after a delay
   setTimeout(LoadBookmarksCallback, 0);
 }
@@ -2506,4 +2514,48 @@ function updateFileUploadItem()
     item.removeAttribute('disabled');
   else
     item.setAttribute('disabled', 'true');
+}
+
+function isBidiEnabled()
+{
+  var rv = false;
+
+  var systemLocale;
+  try {
+    var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
+                                 .getService(Components.interfaces.nsILocaleService);
+    systemLocale = localeService.getSystemLocale().getCategory("NSILOCALE_CTYPE");
+    rv = /^(he|ar|syr|fa|ur)-/.test(systemLocale);
+  } catch (e) {}
+
+  if (!rv) {
+    // check the overriding pref
+    try {
+      rv = pref.getBoolPref("bidi.browser.ui");
+    }
+    catch (e) {}
+  }
+
+  return rv;
+}
+
+function SwitchDocumentDirection(aWindow)
+{
+  aWindow.document.dir = (aWindow.document.dir == "ltr" ? "rtl" : "ltr");
+
+  for (var run = 0; run < aWindow.frames.length; run++)
+    SwitchDocumentDirection(aWindow.frames[run]);
+}
+
+function SwitchFocusedTextEntryDirection()
+{
+  // The keybinding shoudn't work if the menu item is hidden
+  if (gShowBiDi) {
+    var focusedElement = document.commandDispatcher.focusedElement;
+    if (focusedElement)
+      if (window.getComputedStyle(focusedElement, "").direction == "ltr")
+        focusedElement.style.direction = "rtl";
+      else
+        focusedElement.style.direction = "ltr";
+  }
 }
