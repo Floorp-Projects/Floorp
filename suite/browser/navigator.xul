@@ -126,12 +126,12 @@ Contributor(s): ______________________________________. -->
         <menubutton id="back-button" value="&backButton.label;" buttontooltiptext="&backButton.tooltip;"
                     oncommand="gotoHistoryIndex(event);" buttonaction="BrowserBack();" context="backMenu"
                     class="menubutton-dual toolbar top" crop="right" tooltip="aTooltip" observes="canGoBack">  
-       	  <menupopup oncreate="BrowserBackMenu(event);"/>
+       	  <menupopup context="" oncreate="BrowserBackMenu(event);"/>
         </menubutton>
         <menubutton id="forward-button" value="&forwardButton.label;" buttontooltiptext="&forwardButton.tooltip;"
                     oncommand="gotoHistoryIndex(event);" buttonaction="BrowserForward();" context="forwardMenu"
                     class="menubutton-dual toolbar top" crop="right" tooltip="aTooltip" observes="canGoForward">
-      	  <menupopup oncreate="BrowserForwardMenu(event);"/>
+      	  <menupopup context="" oncreate="BrowserForwardMenu(event);"/>
         </menubutton>
 
         <button class="button-toolbar-1 top" id="reload-button" crop="right" observes="canReload" value="&reloadButton.label;" 
