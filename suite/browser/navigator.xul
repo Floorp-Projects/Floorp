@@ -181,7 +181,7 @@
         <label control="urlbar" hidden="true" value="&locationBar.title;"/>
         <textbox id="urlbar" class="chromeclass-location uri-element" flex="1"
                  type="autocomplete" searchSessions="history" 
-                 timeout="50" maxrows="6" alwaysopenpopup="true"
+                 timeout="50" maxrows="6"
                  disablehistory="false" accesskey="&locationBar.accesskey;"
                  defaultSearchEngine="true" tabScrolling="true"
                  showCommentColumn="true"
