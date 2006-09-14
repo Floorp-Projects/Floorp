@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<overlay id="platformNavigationBindings"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <keyset id="keyset">
+    <!-- back and forward accelerators on Windows, strangely enough, are
+         Alt+Left arrow and Alt+Right arrow. -->
+    <key id="goBackKb" alt="true" keycode="VK_LEFT" observes="Browser:Back"/>
+    <key id="goForwardKb" alt="true" keycode="VK_RIGHT" observes="Browser:Forward"/>
+
+    <!-- Supporting IE forward and back accelerators out of courtesy
+         to transitioning IE users -->
+    <key id="goBackKbIE" shift="false" keycode="VK_BACK" observes="Browser:Back"/>
+    <key id="goForwardKbIE" shift="true" keycode="VK_BACK" observes="Browser:Forward"/>
+
+  </keyset>  
+
+</overlay>

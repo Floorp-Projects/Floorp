@@ -157,13 +157,11 @@
 <!ENTITY goMenu.accesskey "g">
 <!ENTITY goBackCmd.label "Back">
 <!ENTITY goBackCmd.accesskey "b">
-<!ENTITY goBackCmd.commandkey "[">
 <!ENTITY goForwardCmd.label "Forward">
 <!ENTITY goForwardCmd.accesskey "f">
-<!ENTITY goForwardCmd.commandkey "]">
 <!ENTITY goHomeCmd.label "Home">
 <!ENTITY goHomeCmd.accesskey "h">
-<!ENTITY goHomeCmd.commandkey "h">
+<!ENTITY history.commandKey "h">
 
 
 <!ENTITY bookmarksMenu.label "Bookmarks">

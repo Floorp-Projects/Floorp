@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<overlay id="platformNavigationBindings"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <keyset id="keyset">
+    <!-- proper arrow key navigation, 4.xP -->
+    <key id="goBackKb" xulkey="true" keycode="VK_LEFT" observes="Browser:Back"/>
+    <key id="goForwardKb" xulkey="true" keycode="VK_RIGHT" observes="Browser:Forward"/>
+
+  </keyset>  
+
+</overlay>
