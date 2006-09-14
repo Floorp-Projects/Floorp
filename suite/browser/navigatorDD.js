@@ -395,7 +395,9 @@ function DragOverContentArea ( event )
         validFlavor = true;
       else if ( dragSession.isDataFlavorSupported("text/unicode") )
         validFlavor = true;
-      //XXX other flavors here...such as files from the desktop?
+      else if ( dragSession.isDataFlavorSupported("application/file") )
+        validFlavor = true;
+      //XXX other flavors here...
       
       if ( validFlavor ) {
         // XXX do some drag feedback here, set a style maybe???
@@ -428,6 +430,7 @@ function DropOnContentArea ( event )
         Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
       if ( trans ) {
         trans.addDataFlavor("text/unicode");
+        trans.addDataFlavor("application/file");
         for ( var i = 0; i < dragSession.numDropItems; ++i ) {
           var id = "";
           dragSession.getData ( trans, i );
@@ -437,10 +440,22 @@ function DropOnContentArea ( event )
           trans.getAnyTransferData ( bestFlavor, dataObj, len );
           if ( bestFlavor.value == "text/unicode" ) {
             if ( dataObj ) dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
-            if ( dataObj ) {            
+            if ( dataObj ) {
               // pull the URL out of the data object, two byte data
               var id = dataObj.data.substring(0, len.value / 2);
               dump("ID: '" + id + "'\n");
+            }
+          }
+          else if ( bestFlavor.value == "application/file" ) {
+            if ( dataObj ) dataObj = dataObj.value.QueryInterface(Components.interfaces.nsIFile);
+            if ( dataObj ) {
+              var fileURL = Components.classes["component://netscape/network/standard-url"]
+                              .createInstance(Components.interfaces.nsIFileURL);
+              if ( fileURL ) {
+                fileURL.file = dataObj;
+                id = fileURL.spec;
+                dump("File dropped was: '" + id + "'\n");
+              }
             }
           }
           
