@@ -1668,6 +1668,7 @@ function setFormToolbar()
   if (cmd_viewformToolbar) {
     var checkValue = cmd_viewformToolbar.getAttribute("checked");
     if (checkValue == "false") {
+      formToolbar.setAttribute("hidden", "true");
       return;
     }
   }
@@ -1676,6 +1677,7 @@ function setFormToolbar()
 
   var formToolbar = document.getElementById("FormToolbar");
   if (!formToolbar) {
+    formToolbar.setAttribute("hidden", "true");
     return;
   }
   if (!window._content.document) {
