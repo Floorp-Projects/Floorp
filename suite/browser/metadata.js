@@ -20,6 +20,7 @@
  * Contributor(s):
  *   Jonas Sicking <sicking@bigfoot.com> (Original Author)
  *   Gervase Markham <gerv@gerv.net>
+ *   Heikki Toivonen <heikki@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -79,31 +80,31 @@ function showMetadataFor(elem)
     if (elem.ownerDocument.getElementsByName && !elem.ownerDocument.namespaceURI)
         htmlMode = true;
     
-    // htmltagname is "" if it's not an html tag, or the name of the tag if it is.
-    var htmltagname = "";
+    // htmllocalname is "" if it's not an html tag, or the name of the tag if it is.
+    var htmllocalname = "";
     if (isHTMLElement(elem,"")) { 
-        htmltagname = elem.tagName.toLowerCase();
+        htmllocalname = elem.localName.toLowerCase();
     }
     
     // We only look for images once
-    checkForImage(elem, htmltagname);
+    checkForImage(elem, htmllocalname);
     
     // Walk up the tree, looking for elements of interest.
     // Each of them could be at a different level in the tree, so they each
     // need their own boolean to tell us to stop looking.
     while (elem && elem.nodeType == Node.ELEMENT_NODE) {
-        if (!onLink)   checkForLink(elem, htmltagname);
-        if (!onInsDel) checkForInsDel(elem, htmltagname);
-        if (!onQuote)  checkForQuote(elem, htmltagname);
-        if (!onTable)  checkForTable(elem, htmltagname);
-        if (!onTitle)  checkForTitle(elem, htmltagname);
-        if (!onLang)   checkForLang(elem, htmltagname);
+        if (!onLink)   checkForLink(elem, htmllocalname);
+        if (!onInsDel) checkForInsDel(elem, htmllocalname);
+        if (!onQuote)  checkForQuote(elem, htmllocalname);
+        if (!onTable)  checkForTable(elem, htmllocalname);
+        if (!onTitle)  checkForTitle(elem, htmllocalname);
+        if (!onLang)   checkForLang(elem, htmllocalname);
           
         elem = elem.parentNode;
 
-        htmltagname = "";
+        htmllocalname = "";
         if (isHTMLElement(elem,"")) { 
-            htmltagname = elem.tagName.toLowerCase();
+            htmllocalname = elem.localName.toLowerCase();
         }
     }
     
@@ -130,7 +131,7 @@ function showMetadataFor(elem)
 }
 
 
-function checkForImage(elem, htmltagname)
+function checkForImage(elem, htmllocalname)
 {
     var img;
     var imgType;   // "img" = <img>
@@ -138,22 +139,22 @@ function checkForImage(elem, htmltagname)
                    // "input" = <input type=image>
                    // "background" = css background (to be added later)
 
-    if (htmltagname === "img") {
+    if (htmllocalname === "img") {
         img = elem;
         imgType = "img";
 
-    } else if (htmltagname === "object" &&
+    } else if (htmllocalname === "object" &&
                elem.type.substring(0,6) == "image/" &&
                elem.data) {
         img = elem;
         imgType = "object";
 
-    } else if (htmltagname === "input" &&
+    } else if (htmllocalname === "input" &&
                elem.type.toUpperCase() == "IMAGE") {
         img = elem;
         imgType = "input";
 
-    } else if (htmltagname === "area" || htmltagname === "a") {
+    } else if (htmllocalname === "area" || htmllocalname === "a") {
 
         // Clicked in image map?
         var map = elem;
@@ -176,10 +177,10 @@ function checkForImage(elem, htmltagname)
     }
 }
 
-function checkForLink(elem, htmltagname)
+function checkForLink(elem, htmllocalname)
 {
-    if ((htmltagname === "a" && elem.href != "") ||
-        htmltagname === "area") {
+    if ((htmllocalname === "a" && elem.href != "") ||
+        htmllocalname === "area") {
 
         setInfo("link-lang", convertLanguageCode(elem.getAttribute("hreflang")));
         setInfo("link-url",  elem.href);
@@ -243,9 +244,9 @@ function checkForLink(elem, htmltagname)
     }
 }
 
-function checkForInsDel(elem, htmltagname)
+function checkForInsDel(elem, htmllocalname)
 {
-    if ((htmltagname === "ins" || htmltagname === "del") &&
+    if ((htmllocalname === "ins" || htmllocalname === "del") &&
         (elem.cite || elem.dateTime)) {
         setInfo("insdel-cite", getAbsoluteURL(elem.cite, elem));
         setInfo("insdel-date", elem.dateTime);
@@ -254,27 +255,27 @@ function checkForInsDel(elem, htmltagname)
 }
 
 
-function checkForQuote(elem, htmltagname)
+function checkForQuote(elem, htmllocalname)
 {
-    if ((htmltagname === "q" || htmltagname === "blockquote") && elem.cite) {
+    if ((htmllocalname === "q" || htmllocalname === "blockquote") && elem.cite) {
         setInfo("quote-cite", getAbsoluteURL(elem.cite, elem));
         onQuote = true;
     } 
 }
 
-function checkForTable(elem, htmltagname)
+function checkForTable(elem, htmllocalname)
 {
-    if (htmltagname === "table" && elem.summary) {
+    if (htmllocalname === "table" && elem.summary) {
         setInfo("misc-tblsummary", elem.summary);
         onTable = true;
     }
 }
 
-function checkForLang(elem, htmltagname)
+function checkForLang(elem, htmllocalname)
 {
-    if ((htmltagname && elem.lang) || elem.getAttributeNS(XMLNS, "lang")) {
+    if ((htmllocalname && elem.lang) || elem.getAttributeNS(XMLNS, "lang")) {
         var abbr;
-        if (htmltagname && elem.lang)
+        if (htmllocalname && elem.lang)
             abbr = elem.lang;
         else
             abbr = elem.getAttributeNS(XMLNS, "lang");
@@ -284,9 +285,9 @@ function checkForLang(elem, htmltagname)
     }
 }
     
-function checkForTitle(elem, htmltagname)
+function checkForTitle(elem, htmllocalname)
 {
-    if (htmltagname && elem.title) {
+    if (htmllocalname && elem.title) {
         setInfo("misc-title", elem.title);
         onTitle = true;
     }    
@@ -439,7 +440,7 @@ function isHTMLElement(node, name)
         return false;
 
     if (htmlMode)
-        return !name || node.tagName.toLowerCase() == name;
+        return !name || node.localName.toLowerCase() == name;
 
     return (!name || node.localName == name) && node.namespaceURI == XHTMLNS;
 }
