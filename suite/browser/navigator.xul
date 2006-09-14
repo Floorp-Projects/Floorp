@@ -114,8 +114,8 @@ Contributor(s): ______________________________________. -->
     <popup id="forwardMenu" oncreate="BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
     <popup id="sidebarPopup"/>
 
-    <!-- context menu for personal toolbar -->
     <popupset id="popupset"/>
+    <popupset id="bookmarksPopupset"/>
  
     <!-- context menu -->
     <popupset id="contentAreaContextSet"/>
