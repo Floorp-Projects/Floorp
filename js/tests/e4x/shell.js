@@ -340,15 +340,16 @@ JavaScriptOptions.prototype.reset = function ()
 
 function compareSource(n, expect, actual)
 {
+    // compare source
     var expectP = expect.
-        replace(/([(){},.\[\]])/mg, ' $1 ').
+        replace(/([(){},.:\[\]])/mg, ' $1 ').
         replace(/(\w+)/mg, ' $1 ').
         replace(/<(\/)? (\w+) (\/)?>/mg, '<$1$2$3>').
         replace(/\s+/mg, ' ').
         replace(/new (\w+)\s*\(\s*\)/mg, 'new $1');
 
     var actualP = actual.
-        replace(/([(){},.\[\]])/mg, ' $1 ').
+        replace(/([(){},.:\[\]])/mg, ' $1 ').
         replace(/(\w+)/mg, ' $1 ').
         replace(/<(\/)? (\w+) (\/)?>/mg, '<$1$2$3>').
         replace(/\s+/mg, ' ').
@@ -358,4 +359,26 @@ function compareSource(n, expect, actual)
     print('actual:\n' + actualP);
 
     TEST(n, expectP, actualP);
+
+    // actual must be compilable if expect is?
+    try
+    {
+        var expectCompile = 'No Error';
+        var actualCompile;
+
+        eval(expect);
+        try
+        {
+            eval(actual);
+            actualCompile = 'No Error';
+        }
+        catch(ex1)
+        {
+            actualCompile = ex1 + '';
+        }
+        TEST(n, expectCompile, actualCompile);
+    }
+    catch(ex)
+    {
+    }
 }
