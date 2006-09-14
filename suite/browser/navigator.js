@@ -1230,14 +1230,18 @@ function BrowserEditBookmarks()
 
   function BrowserSendLink(pageUrl, pageTitle)
   {
-    window.openDialog( "chrome://messengercompose/content/", "_blank", "chrome,all,dialog=no",
-    	"body=" + pageUrl + ",subject='" + pageTitle + "'");
+    window.openDialog( "chrome://messengercompose/content/", "_blank", 
+                       "chrome,all,dialog=no",
+                       "body='" + pageUrl + "',subject='" + pageTitle +
+                       "',bodyislink=true");
   }
 
   function BrowserSendPage(pageUrl, pageTitle)
   {
-    window.openDialog( "chrome://messengercompose/content/", "_blank", "chrome,all,dialog=no",
-    	"attachment=" + escape(pageUrl) + ",body=" + pageUrl + ",subject='" + pageTitle + "'");
+    window.openDialog( "chrome://messengercompose/content/", "_blank", 
+                       "chrome,all,dialog=no", 
+                       "attachment='" + pageUrl + "',body='" + pageUrl +
+                       "',subject='" + pageTitle + "',bodyislink=true");
   }
 
   function BrowserViewSource()
