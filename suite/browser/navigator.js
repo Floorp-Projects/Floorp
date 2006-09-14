@@ -1363,6 +1363,10 @@ function loadURI(uri, referrer)
 function BrowserLoadURL(aTriggeringEvent)
 {
   var url = gURLBar.value;
+
+  // Remove leading and trailing spaces first
+  url = url.replace(/^\s+/, '').replace(/\s+$/, '');
+
   if (url.match(/^view-source:/)) {
     BrowserViewSourceOfURL(url.replace(/^view-source:/, ""), null, null);
   } else {
@@ -2033,7 +2037,7 @@ function handleURLBarRevert()
 
 function handleURLBarCommand(aUserAction, aTriggeringEvent)
 {
-  try { 
+  try {
     addToUrlbarHistory();
   } catch (ex) {
     // Things may go wrong when adding url to session history,
