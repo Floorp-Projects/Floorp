@@ -21,9 +21,17 @@
  *   Terry Hayes <thayes@netscape.com>
  */
 
-/* Overlays register init functions here */
+/* Overlays register init functions here.
+ *   Add functions to call by invoking "onLoadRegistry.append(XXXLoadFunc);"
+ *   The XXXLoadFunc should be unique to the overlay module, and will be
+ *   invoked as "XXXLoadFunc();"
+ */
 var onLoadRegistry = [ ];
 
+/* Called when PageInfo window is loaded.  Arguments are:
+ *   window.arguments[0] - window (or frame) to use for source (may be null)
+ *   window.arguments[1] - tab name to display first (may be null)
+ */
 function onLoadPageInfo()
 {
   var page;
@@ -64,7 +72,7 @@ function onLoadPageInfo()
   /* Selected the requested tab, if the name is specified */
   /*  if (window.arguments != null) { */
   if ("arguments" in window) {
-    var tabName = window.arguments[0];
+    var tabName = window.arguments[1];
 
     if (tabName)
     {
