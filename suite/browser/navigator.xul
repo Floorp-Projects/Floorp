@@ -375,6 +375,8 @@ Contributor(s): ______________________________________. -->
 
   </box>
 
-  <toolbar id="taskbar" class="chromeclass-extrachrome" />
+  <toolbox>
+    <toolbar id="taskbar" class="chromeclass-extrachrome" />
+  </toolbox>
 
 </window>
