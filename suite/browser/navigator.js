@@ -883,24 +883,48 @@ function BrowserEditBookmarks()
 	}
 
     // rjc: added support for URL shortcuts (3/30/1999)
-    try {
+    try
+    {
       var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
       bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
 
-      var shortcutURL = bmks.FindShortcut(document.getElementById('urlbar').value);
-
-      dump("FindShortcut: in='" + document.getElementById('urlbar').value + "'  out='" + shortcutURL + "'\n");
-
-      if ((shortcutURL != null) && (shortcutURL != "")) {
+      var text = document.getElementById('urlbar').value;
+      var shortcutURL = bmks.FindShortcut(text);
+      if ((shortcutURL == null) || (shortcutURL == ""))
+      {
+        // rjc: add support for string substitution with shortcuts (4/4/2000)
+        //      (see bug # 29871 for details)
+      	var aOffset = text.indexOf(" ");
+      	if (aOffset > 0)
+      	{
+      	  var cmd = text.substr(0, aOffset);
+      	  var text = text.substr(aOffset+1);
+          var shortcutURL = bmks.FindShortcut(cmd);
+          if ((shortcutURL) && (shortcutURL != "") && (text != ""))
+          {
+            aOffset = shortcutURL.indexOf("%s");
+            if (aOffset >= 0)
+            {
+              shortcutURL = shortcutURL.substr(0, aOffset) + text + shortcutURL.substr(aOffset+2);
+            }
+            else
+            {
+              shortcutURL = null;
+            }
+          }      	  
+      	}
+      }
+      if ((shortcutURL != null) && (shortcutURL != ""))
+      {
         document.getElementById('urlbar').value = shortcutURL;
       }
     }
-    catch (ex) {
+    catch (ex)
+    {
       // stifle any exceptions so we're sure to load the URL.
     }
 
-	appCore.loadUrl(document.getElementById('urlbar').value);
-      
+    appCore.loadUrl(document.getElementById('urlbar').value);
   }
 
   function readFromClipboard()
