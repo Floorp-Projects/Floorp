@@ -1399,12 +1399,20 @@ function URLBarKeyupHandler(aEvent)
 function checkForDefaultBrowser()
 {
   const NS_WINHOOKS_CONTRACTID = "@mozilla.org/winhooks;1";
+  var dialogShown = false;
   if (NS_WINHOOKS_CONTRACTID in Components.classes) {
     try {
-      Components.classes[NS_WINHOOKS_CONTRACTID]
-                .getService(Components.interfaces.nsIWindowsHooks)
-                .checkSettings(window);
+      dialogShown = Components.classes[NS_WINHOOKS_CONTRACTID]
+                      .getService(Components.interfaces.nsIWindowsHooks)
+                      .checkSettings(window);
     } catch(e) {
+    }
+
+    if (dialogShown)  
+    {
+      // Force the sidebar to build since the windows 
+      // integration dialog may have come up.
+      SidebarRebuild();
     }
   }
 }
