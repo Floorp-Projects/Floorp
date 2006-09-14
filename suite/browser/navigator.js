@@ -875,7 +875,8 @@ function BrowserEditBookmarks()
     if (!gDisableBookmarks) {
       gDisableBookmarks = true;
 
-      open("chrome://communicator/content/bookmarks/bookmarks.xul", "_blank", "chrome,menubar,resizable,scrollbars");
+      open("chrome://communicator/content/bookmarks/bookmarks.xul", "_blank",
+        "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
       setTimeout(enableBookmarks, 2000);
     }
   }
@@ -1081,12 +1082,14 @@ function readFromClipboard()
 
 function OpenMessenger()
 {
-  open("chrome://messenger/content/messenger.xul", "_blank", "chrome,menubar,toolbar,resizable");
+  open("chrome://messenger/content/messenger.xul", "_blank",
+    "chrome,extrachrome,menubar,resizable,status,toolbar");
 }
 
 function OpenAddressbook()
 {
-  open("chrome://messenger/content/addressbook/addressbook.xul", "_blank", "chrome,menubar,toolbar,resizable");
+  open("chrome://messenger/content/addressbook/addressbook.xul", "_blank",
+    "chrome,extrachrome,menubar,resizable,status,toolbar");
 }
 
 var gFullScreen = false;
