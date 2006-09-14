@@ -347,10 +347,11 @@
 <!ENTITY bookmarkPageCmd.accesskey    "b">
 <!ENTITY savePageCmd.label            "Save Page As...">
 <!ENTITY savePageCmd.accesskey        "s">
+<!ENTITY savePageCmd.commandkey       "s">
 <!ENTITY saveFrameCmd.label           "Save Frame As...">
-<!ENTITY saveFrameCmd.accesskey       "s">
+<!ENTITY saveFrameCmd.accesskey       "f">
 <!ENTITY saveLinkCmd.label            "Save Link As...">
-<!ENTITY saveLinkCmd.accesskey        "s">
+<!ENTITY saveLinkCmd.accesskey        "a">
 <!ENTITY saveImageCmd.label           "Save Image As...">
 <!ENTITY saveImageCmd.accesskey       "a">
 <!ENTITY saveBGImageCmd.label         "Save Background Image As...">
@@ -360,6 +361,6 @@
 <!ENTITY selectAllCmd.label           "Select All">
 <!ENTITY selectAllCmd.accesskey       "l">
 <!ENTITY copyLinkCmd.label            "Copy Link Location">
-<!ENTITY copyLinkCmd.accesskey        "l">
+<!ENTITY copyLinkCmd.accesskey        "n">
 <!ENTITY copyImageCmd.label           "Copy Image Location">
 <!ENTITY copyImageCmd.accesskey       "m">

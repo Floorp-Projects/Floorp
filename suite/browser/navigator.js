@@ -62,28 +62,76 @@ catch (ex)
   var backButton	= null;
   var forwardButton = null;
 
-function savePage( url ) {
-        // Default is to save current page.
-        if ( !url ) {
-            url = window.content.location.href;
-        }
-        // Use stream xfer component to prompt for destination and save.
-        var xfer = Components
-                     .classes[ "component://netscape/appshell/component/xfer" ]
-                       .getService( Components.interfaces.nsIStreamTransfer );
-        try {
-            // When Necko lands, we need to receive the real nsIChannel and
-            // do SelectFileAndTransferLocation!
+///////////////////////////// DOCUMENT SAVE ///////////////////////////////////
 
-            // Use this for now...
-            xfer.SelectFileAndTransferLocationSpec( url, window );
-        } catch( exception ) {
-            // Failed (or cancelled), give them another chance.
-            dump( "SelectFileAndTransferLocationSpec failed, rv=" + exception + "\n" );
-        }
-        return;
+// focused frame URL
+var gFocusedURL = null;
+
+/**
+ * Save the document at a given location to disk
+ **/  
+function savePage( url ) 
+{
+  // Default is to save current page.
+  url = url ? url : window.content.location.href;
+  // Use stream xfer component to prompt for destination and save.
+  var xfer = getService("component://netscape/appshell/component/xfer", "nsIStreamTransfer");
+  try {
+    // When Necko lands, we need to receive the real nsIChannel and
+    // do SelectFileAndTransferLocation!
+    // Use this for now...
+    xfer.SelectFileAndTransferLocationSpec( url, window );
+  } 
+  catch( exception ) { 
+    // suppress NS_ERROR_ABORT exceptions for cancellation 
+  }
+}
+
+/** 
+ * Determine whether or not the content area is displaying a page with frames,
+ * and if so, toggle the display of the 'save frame as' menu item.
+ **/
+function getContentAreaFrameCount()
+{
+  dump("*** check number of frames in content area \n");
+  var saveFrameItem = document.getElementById("savepage");
+  if (!window.content.frames.length ||
+      !isDocumentFrame(document.commandDispatcher.focusedWindow))
+    saveFrameItem.setAttribute("hidden", "true");
+  else 
+    saveFrameItem.removeAttribute("hidden");
+}
+
+/**
+ * When a content area frame is focused, update the focused frame URL 
+ **/
+function contentAreaFrameFocus()
+{
+  var saveFrameItem = document.getElementById("savepage");
+  var focusedWindow = document.commandDispatcher.focusedWindow;
+  if (isDocumentFrame(focusedWindow)) {
+    gFocusedURL = focusedWindow.location.href;
+    saveFrameItem.removeAttribute("hidden");
+  }
+}
+
+/** 
+ * Determine whether or not a given focused DOMWindow is in the content 
+ * area.
+ **/   
+function isDocumentFrame(aFocusedWindow)
+{
+  var contentFrames = window.content.frames;
+  if (contentFrames.length) {
+    for (var i = 0; i < contentFrames.length; i++ ) {
+      if (aFocusedWindow == contentFrames[i])
+        return true;
     }
+  }
+  return false;
+}
 
+//////////////////////////////// BOOKMARKS ////////////////////////////////////
 
 function UpdateBookmarksLastVisitedDate(event)
 {
@@ -102,8 +150,6 @@ function UpdateBookmarksLastVisitedDate(event)
 		}
 	}
 }
-
-
 
 function UpdateInternetSearchResults(event)
 {
@@ -150,7 +196,7 @@ function UpdateStatusField()
 		text = jsDefaultStatus;
 
 	if(!statusTextFld)
-		statusTextFld = document.getElementById("statusText");
+		statusTextFld = document.getElementById("statusbar-display");
 
 	statusTextFld.setAttribute("value", text);
 }
@@ -338,6 +384,8 @@ function Startup()
     {
 	    contentArea.addEventListener("load", UpdateBookmarksLastVisitedDate, true);
 	    contentArea.addEventListener("load", UpdateInternetSearchResults, true);
+      contentArea.addEventListener("load", getContentAreaFrameCount, true);
+      contentArea.addEventListener("focus", contentAreaFrameFocus, true);
     }
 
     dump("*** Pulling out the charset\n");
@@ -986,12 +1034,6 @@ function BrowserEditBookmarks()
 
   function BrowserLoadURL()
   {
-	if (appCore == null)
-	{
-		dump("BrowserAppCore has not been initialized\n");
-		return;
-	}
-
     // rjc: added support for URL shortcuts (3/30/1999)
     try
     {
@@ -1034,7 +1076,8 @@ function BrowserEditBookmarks()
       // stifle any exceptions so we're sure to load the URL.
     }
 
-    appCore.loadUrl(document.getElementById('urlbar').value);
+    appCore.loadUrl(gURLBar.value);
+    window.content.focus();
   }
 
   function readFromClipboard()
@@ -1388,3 +1431,4 @@ function dumpMemoryLeaks() {
 	if (leakDetector != null)
 		leakDetector.dumpLeaks();
 }
+

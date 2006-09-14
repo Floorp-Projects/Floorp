@@ -31,7 +31,7 @@ Contributor(s): ______________________________________. -->
 
 <overlay id="navigatorOverlay"
          xmlns:html="http://www.w3.org/TR/REC-html40"
-	 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <!-- Keysets -->
@@ -68,13 +68,15 @@ Contributor(s): ______________________________________. -->
 	<!-- Search Menu -->	
 	<key id="key_find"            xulkey="true"  key="&findOnCmd.commandkey;" observes="Browser:Find"/>
 	<key id="key_findAgain"       xulkey="true"  key="&findAgainCmd.commandkey;" observes="Browser:FindAgain"/>
+
+	<key id="key_savePage"        xulkey="true"  key="&savePageCmd.commandkey;" observes="Browser:SavePage"/>
 		
 	<key id="goForwardKb"         xulkey="true" key="&goForwardCmd.commandkey;" observes="Browser:GoForward" />
 	<key id="goBackwardKb"        xulkey="true" key="&goBackCmd.commandkey;" observes="Browser:GoBackwards" />
-    <key id="goHomeKb"            xulkey="true" key="&goHomeCmd.commandkey;" observes="Browser:GoHome" />
+  <key id="goHomeKb"            xulkey="true" key="&goHomeCmd.commandkey;" observes="Browser:GoHome" />
     
-    <key id="addBookmarkKb"        xulkey="true" key="&addCurPageCmd.commandkey;" observes="Browser:AddBookmark" />
-    <key id="manBookmarkKb"        xulkey="true" key="&manBookmarksCmd.commandkey;" observes="Browser:ManageBookmark" />
+  <key id="addBookmarkKb"        xulkey="true" key="&addCurPageCmd.commandkey;" observes="Browser:AddBookmark" />
+  <key id="manBookmarkKb"        xulkey="true" key="&manBookmarksCmd.commandkey;" observes="Browser:ManageBookmark" />
 
 	<!-- how to handle return, enter, tab, function keys, arrow keys, others? saari working on solution -->
 </keyset>
@@ -135,6 +137,8 @@ Contributor(s): ______________________________________. -->
 	
 	<broadcaster id="Browser:AddBookmark" value="&addCurPageCmd.label;" 	 oncommand="BrowserAddBookmark(window.content.location.href,window.content.document.title);"/>
 	<broadcaster id="Browser:ManageBookmark" value="&manBookmarksCmd.label;" oncommand="BrowserEditBookmarks();" />
+
+  <broadcaster id="Browser:SavePage" value="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" oncommand="savePage();"/>
 </broadcasterset>
 
 
@@ -157,7 +161,8 @@ Contributor(s): ______________________________________. -->
 	      <menuitem accesskey="&openFileCmd.accesskey;" key="openFileKb" observes="Browser:OpenFile"/>
 	      <menuseparator/>
 	      <menuitem id="menu_close"/>
-		  <menuitem id="context-savepage" value="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" oncommand="savePage();"/>
+		    <menuitem id="context-savepage" key="savePage" observes="Browser:SavePage"/>
+		    <menuitem id="savepage" value="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="savePage(gFocusedURL);" hidden="true"/>
 	      <menuseparator/>
 	      <menuitem id="menu_sendPage"  observes="cmd_sendPage"/>
 	      <menuitem accesskey="&sendLinkCmd.accesskey;" observes="Browser:SendLink"/>
@@ -491,13 +496,11 @@ END of Deprecated -->
   <spring flex="100%"/>
 </menubar>
 
-  <box id="status-bar" class="chromeclass-status">
+  <statusbar id="status-bar" class="chromeclass-status">
     <progressmeter id="statusbar-icon" mode="normal" value="0"/>
-    <spring style="width: 1em"/>
-    <image id="status-icon"/>
-    <text id="statusText" class="status-bar" flex="1" value="&statusText.label;" crop="right"/>
-    <text class="status-bar" value="&buildId.label;"/>
-    <button class="plain" id="lock-button" />
-  </box>
+    <statusbarpanel id="statusbar-display" value="&statusText.label;" crop="right" flex="1"/>
+    <statusbarpanel id="statusbar-buildid" value="&buildId.label;"/>
+    <statusbarpanel id="security-button"/>
+  </statusbar>
 
 </overlay>
