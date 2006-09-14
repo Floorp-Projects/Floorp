@@ -12,7 +12,7 @@
         chrome:displayName="Navigator"
         chrome:author="mozilla.org"
         chrome:name="navigator"
-        chrome:localeVersion="1.4a"
+        chrome:localeVersion="1.4b"
         chrome:skinVersion="1.2">
   </RDF:Description>
 
