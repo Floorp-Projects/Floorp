@@ -430,6 +430,60 @@ const gTabOpenObserver = {
   }
 };
 
+const nsIBrowserDOMWindow = Components.interfaces.nsIBrowserDOMWindow;
+const nsIInterfaceRequestor = Components.interfaces.nsIInterfaceRequestor;
+
+function nsBrowserAccess() {
+}
+
+nsBrowserAccess.prototype = {
+  openURI: function openURI(aURI, aOpener, aWhere, aContext) {
+    if (aWhere == nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW)
+      if (aContext == nsIBrowserDOMWindow.OPEN_EXTERNAL)
+        aWhere = pref.getIntPref("browser.link.open_external");
+      else
+        aWhere = pref.getIntPref("browser.link.open_newwindow");
+    var uri = aURI ? aURI.spec : "about:blank";
+    var referrer = aOpener ? aOpener.QueryInterface(nsIInterfaceRequestor)
+                                    .getInterface(nsIWebNavigation)
+                                    .currentURI : null;
+    switch (aWhere) {
+      case nsIBrowserDOMWindow.OPEN_NEWWINDOW:
+        return window.openDialog(getBrowserURL(), "_blank", "all,dialog=no",
+                                 uri, null, referrer);
+      case nsIBrowserDOMWindow.OPEN_NEWTAB:
+        var newTab = gBrowser.addTab("about:blank");
+        if (!pref.getBoolPref("browser.tabs.loadDivertedInBackground"))
+          gBrowser.selectedTab = newTab;
+        var browser = gBrowser.getBrowserForTab(newTab);
+        try {
+          browser.loadURI(uri, referrer);
+        } catch (e) {}
+        return browser.contentWindow;
+      default:
+        if (!aOpener) {
+          loadURI(uri);
+          return content;
+        }
+        aOpener = new XPCNativeWrapper(aOpener, "top").top;
+        try {
+          aOpener.QueryInterface(nsIInterfaceRequestor)
+                 .getInterface(nsIWebNavigation)
+                 .loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE,
+                          referrer, null, null);
+        } catch (e) {}
+        return aOpener;
+    }
+  },
+  isTabContentWindow: function isTabContentWindow(aWindow) {
+    var browsers = gBrowser.browsers;
+    for (var i = 0; browsers.item(i); i++)
+      if (browsers[i].contentWindow == aWindow)
+        return true;
+    return false;
+  }
+}
+
 function Startup()
 {
   // init globals
@@ -637,6 +691,9 @@ function Startup()
     // Perform default browser checking (after window opens).
     setTimeout( checkForDefaultBrowser, 0 );
 
+    // hook up browser access support
+    window.browserDOMWindow = new nsBrowserAccess();
+
     // hook up remote support
     if (XREMOTESERVICE_CONTRACTID in Components.classes) {
       var remoteService;
@@ -738,6 +795,9 @@ function Shutdown()
       .getService(Components.interfaces.nsIObserverService);
     observerService.removeObserver(gTabOpenObserver, "open-new-tab-request", false);
   }
+
+  // shut down browser access support
+  window.browserDOMWindow = null;
 
   try {
     getBrowser().removeProgressListener(window.XULBrowserWindow);
