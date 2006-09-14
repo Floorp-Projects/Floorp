@@ -14,6 +14,7 @@
         
         this.updatePref("browser.urlbar.showPopup");
         this.updatePref("browser.urlbar.autoFill");
+        this.updatePref("browser.urlbar.showSearch");
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -33,7 +34,7 @@
           urlbar: this,
           
           observe: function(aObserver, aBlah, aPref) {
-            if (!aPref.indexOf("browser.urlbar"))
+            if (/^browser\.urlbar\./.test(aPref))
               this.urlbar.updatePref(aPref);
           }
         });
@@ -42,11 +43,14 @@
       <method name="updatePref">
         <parameter name="aPref"/>
         <body><![CDATA[
-          if (!aPref.indexOf("browser.urlbar.showPopup")) {
+          if (aPref == "browser.urlbar.showPopup") {
             this.showPopup = this.mPrefs.getBoolPref("browser.urlbar.showPopup");
-          } else if (!aPref.indexOf("browser.urlbar.autoFill")) {
+          } else if (aPref == "browser.urlbar.autoFill") {
             this.autoFill = this.mPrefs.getBoolPref("browser.urlbar.autoFill");
-          } 
+          } else if (aPref == "browser.urlbar.showSearch") {
+            this.minResultsForPopup = this.mPrefs.getBoolPref("browser.urlbar.showSearch") ?
+                                      0 : 1;
+          }
         ]]></body>
       </method>
       
@@ -130,9 +134,9 @@
           resultsPopup: this,
           
           observe: function(aObserver, aBlah, aPref) {
-            if (!aPref.indexOf("browser.search"))
+            if (/^browser\.search\./.test(aPref))
               this.resultsPopup.updateEngines();
-            else if (!aPref.indexOf("browser.urlbar"))
+            else if (/^browser\.urlbar\./.test(aPref))
               this.resultsPopup.updatePref(aPref);
           }
         });
@@ -167,7 +171,7 @@
       <method name="updatePref">
         <parameter name="aPref"/>
         <body><![CDATA[
-          if (!aPref.indexOf("browser.urlbar.showSearch"))
+          if (aPref == "browser.urlbar.showSearch")
             this.showSearch = this.mPrefs.getBoolPref("browser.urlbar.showSearch");
         ]]></body>
       </method>
