@@ -313,10 +313,8 @@ Contributor(s): ______________________________________. -->
 
       <menubutton class="menubutton-dual toolbar top" id="print-button" persist="hidden" value="&printButton.label;" 
                   crop="right" buttonaction="BrowserPrint()" tooltip="aTooltip" buttontooltiptext="&printButton.tooltip;">  
-        <menupopup id="printMenu">
+        <menupopup id="printMenu" popupalign="topright" popupanchor="bottomright">
           <menuitem value="&printCmd.label;" accesskey="&printCmd.accesskey;" oncommand="BrowserPrint()" default="true"/>
-          <menuitem observes="cmd_pageSetup" />
-          <menuitem value="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" disabled="true" oncommand="BrowserReload();"/>
         </menupopup>
       </menubutton>
 
