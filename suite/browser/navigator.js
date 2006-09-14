@@ -536,7 +536,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 	var searchEngineURI = null;
 	var autoOpenSearchPanel = false;
 	var defaultSearchURL = null;
-    var fallbackDefaultSearchURL = "http://info.netscape.com/fwd/sidb1dnet/http://search.netscape.com/cgi-bin/search?search="
+	var fallbackDefaultSearchURL = "http://search.netscape.com/cgi-bin/search?search="
 	try
 	{
 		searchMode = pref.GetIntPref("browser.search.powermode");
@@ -563,7 +563,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 		}
 		else
 		{
-			window.content.location.href = "http://info.netscape.com/fwd/6_0b1/http://search.netscape.com/"
+			window.content.location.href = "http://search.netscape.com/"
 		}
 	}
 	else
