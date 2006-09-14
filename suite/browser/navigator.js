@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Blake Ross <blakeross@telocity.com>
  *   Peter Annema <disttsc@bart.nl>
+ *   Dean Tessman <dean_tessman@hotmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -51,7 +52,10 @@ var gBrandRegionBundle;
 var gLastValidURLStr = "";
 var gLastValidURL = null;
 var gHaveUpdatedToolbarState = false;
-var gClickSelectsAll = -1;
+var gClickSelectsAll = false;
+var gIgnoreFocus = false;
+var gIgnoreFocusCount = 0;
+var gMouseDownX = -1;
 
 var pref = null;
 
@@ -476,6 +480,9 @@ function Startup()
   // called when we go into full screen, even if it is 
   // initiated by a web page script
   addEventListener("fullscreen", onFullScreen, false);
+
+  // does clicking on the urlbar select its contents?
+  gClickSelectsAll = pref.getBoolPref("browser.urlbar.clickSelectsAll");
 
   // now load bookmarks after a delay
   setTimeout(LoadBookmarksCallback, 0);
@@ -1543,19 +1550,64 @@ function getNewThemes()
 
 function URLBarFocusHandler(aEvent)
 {
-  if (gURLBar) {
-    if (gClickSelectsAll == -1)
-      gClickSelectsAll = pref.getBoolPref("browser.urlbar.clickSelectsAll");
-    if (gClickSelectsAll)
-      gURLBar.setSelectionRange(0, gURLBar.textLength);
-  }
+  if (gClickSelectsAll)
+    if (!gIgnoreFocus)
+      gURLBar.select();
+    else {
+      // check if gIgnoreFocusCount >= 2 because right-clicking on the url bar
+      // causes two blur and two focus events before the context menu is displayed.
+      // we need to eat all those events and not select all, because the user
+      // may want to work with the selection (eg. copy the selection).
+      // a normal click in URLBarMouseDownHandler() primes gIgnoreFocusCount
+      // to 1 so that when it hits this code it will only ignore 1 focus event.
+      gIgnoreFocusCount++;
+      if (gIgnoreFocusCount >= 2) {
+        gIgnoreFocusCount = 0;
+        gIgnoreFocus = false;
+      }
+    }
 }
 
 function URLBarBlurHandler(aEvent)
 {
-  // XXX why the hell do we have to do this?
-  if (gClickSelectsAll)
+  // reset the selection so the next time the urlbar is focused it
+  // doesn't re-select the old selection
+  if (gClickSelectsAll && !gIgnoreFocus)
     gURLBar.setSelectionRange(0, 0);
+}
+
+function URLBarMouseDownHandler(aEvent)
+{
+  gMouseDownX = -1;
+  if (gURLBar) {
+    if (gClickSelectsAll) {
+      var focusedElement = null;
+      if (document.commandDispatcher.focusedElement)
+        focusedElement = document.commandDispatcher.focusedElement.parentNode.parentNode.parentNode;
+      if (!focusedElement || (focusedElement && focusedElement != gURLBar))
+      {
+        // clicking onto the url bar when it doesn't have focus.
+        // see note in URLBarFocusHandler() about gIgnoreFocusCount.
+        gIgnoreFocusCount = 1;
+        gIgnoreFocus = true;
+        gMouseDownX = aEvent.screenX;
+      }
+      else if (aEvent.button == 2 && focusedElement && focusedElement == gURLBar) {
+        gIgnoreFocusCount = 0;
+        gIgnoreFocus = true;
+      }
+    }
+  }
+}
+
+function URLBarMouseUpHandler(aEvent)
+{
+  if (gMouseDownX > -1 && Math.abs(aEvent.screenX - gMouseDownX) <= 2) {
+    // mouse has moved less than two horizontal pixels between mouse down
+    // and mouse up - call it a click
+    gURLBar.select();
+    gMouseDownX = -1;
+  }
 }
 
 function URLBarKeyupHandler(aEvent)
