@@ -197,7 +197,7 @@ function checkForLink(elem, htmllocalname)
         setInfo("link-rel",  elem.getAttribute("rel"));
         setInfo("link-rev",  elem.getAttribute("rev"));
 
-        target = elem.target;
+        var target = elem.target;
 
         switch (target) {
         case "_top":
