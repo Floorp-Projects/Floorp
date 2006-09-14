@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 const XREMOTESERVICE_CONTRACTID = "@mozilla.org/browser/xremoteservice;1";
-
 var gURLBar = null;
 var gProxyButton = null;
 var gProxyFavIcon = null;
@@ -194,14 +193,20 @@ function UpdateBackForwardButtons()
   // get inherited into anonymous content, broadcast to other widgets, etc.!
   // Don't do it if the value hasn't changed! - dwh
 
-  var backDisabled = (backBroadcaster.getAttribute("disabled") == "true");
-  var forwardDisabled = (forwardBroadcaster.getAttribute("disabled") == "true");
-
-  if (backDisabled == webNavigation.canGoBack)
-    backBroadcaster.setAttribute("disabled", !backDisabled);
-  
-  if (forwardDisabled == webNavigation.canGoForward)
-    forwardBroadcaster.setAttribute("disabled", !forwardDisabled);
+  var backDisabled = backBroadcaster.hasAttribute("disabled");
+  var forwardDisabled = forwardBroadcaster.hasAttribute("disabled");
+  if (backDisabled == webNavigation.canGoBack) {
+    if (backDisabled)
+      backBroadcaster.removeAttribute("disabled");
+    else
+      backBroadcaster.setAttribute("disabled", true);
+  }
+  if (forwardDisabled == webNavigation.canGoForward) {
+    if (forwardDisabled)
+      forwardBroadcaster.removeAttribute("disabled");
+    else
+      forwardBroadcaster.setAttribute("disabled", true);
+  }
 }
 
 
@@ -1367,14 +1372,14 @@ function applyTheme(themeName)
     message = message.replace(/%brand%/g, gBrandBundle.getString("brandShortName"));
 
     if (promptService.confirm(window, title, message)){
-      var inUse = chromeRegistry.isSkinSelected(themeName.getAttribute("name"), true);
+      var inUse = chromeRegistry.isSkinSelected(name, true);
 
-      chromeRegistry.uninstallSkin( themeName.getAttribute("name"), true );
+      chromeRegistry.uninstallSkin( name, true );
       // XXX - this sucks and should only be temporary.
       str = Components.classes["@mozilla.org/supports-wstring;1"]
                       .createInstance(Components.interfaces.nsISupportsWString);
       str.data = true;
-      pref.setComplexValue("general.skins.removelist." + themeName.getAttribute("name"),
+      pref.setComplexValue("general.skins.removelist." + name,
                            Components.interfaces.nsISupportsWString, str);
       
       if (inUse)
@@ -1389,7 +1394,7 @@ function applyTheme(themeName)
   // hacking around it yet again
   str = Components.classes["@mozilla.org/supports-wstring;1"]
                   .createInstance(Components.interfaces.nsISupportsWString);
-  str.data = themeName.getAttribute("name");
+  str.data = name;
   pref.setComplexValue("general.skins.selectedSkin",
                        Components.interfaces.nsISupportsWString, str);
 
@@ -1475,7 +1480,7 @@ function handleURLBarRevert()
   
   // don't revert to last valid url unless page is NOT loading
   // and user is NOT key-scrolling through autocomplete list
-  if (!throbberElement.getAttribute("busy") && !isScrolling) {
+  if (!throbberElement.hasAttribute("busy") && !isScrolling) {
     if (url != "about:blank") { 
       gURLBar.value = url;
       gURLBar.select();
@@ -1566,8 +1571,7 @@ function updateToolbarStates(toolbarMenuElt)
     return;
   }
   var mainWindow = document.getElementById("main-window");
-  var chromeHidden = mainWindow.getAttribute("chromehidden");
-  if (chromeHidden) {
+  if (mainWindow.hasAttribute("chromehidden")) {
     gHaveUpdatedToolbarState = true;
     var i;
     for (i = 0; i < toolbarMenuElt.childNodes.length; ++i)
