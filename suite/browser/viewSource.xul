@@ -30,6 +30,7 @@
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/viewsource.js"/>
 
   <commandset id="commands"/>

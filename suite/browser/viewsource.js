@@ -1,9 +1,17 @@
-
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+var gBrowser = null;
 var appCore = null;
 
 function onLoadViewSource() 
 {
   viewSource(window.arguments[0]);
+}
+
+function getBrowser()
+{
+  if (!gBrowser)
+    gBrowser = document.getElementById("content");
+  return gBrowser;
 }
 
 function viewSource(url)
@@ -23,8 +31,6 @@ function viewSource(url)
     return false;
   }
 
-  var docShellElement = document.getElementById("content");
-
   try {
     if ("arguments" in window && window.arguments.length >= 2) {
       if (window.arguments[1].indexOf('charset=') != -1) {
@@ -39,7 +45,7 @@ function viewSource(url)
 
   var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
   var viewSrcUrl = "view-source:" + url;
-  docShellElement.webNavigation.loadURI(viewSrcUrl, loadFlags);
+  getBrowser().webNavigation.loadURI(viewSrcUrl, loadFlags);
   return true;
 }
 
@@ -50,19 +56,28 @@ function BrowserClose()
 
 function getMarkupDocumentViewer()
 {
-  return document.getElementById("content").markupDocumentViewer;
+  return getBrowser().markupDocumentViewer;
 }
 
 function BrowserFind()
 {
-  if (appCore)
-    appCore.find();
-}
+  var focusedWindow = document.commandDispatcher.focusedWindow;
+  if (!focusedWindow || focusedWindow == window)
+    focusedWindow = window._content;
 
+  findInPage(getBrowser(), window._content, focusedWindow)
+}
 
 function BrowserFindAgain()
 {
-  if (appCore)
-    appCore.findNext();      
+  var focusedWindow = document.commandDispatcher.focusedWindow;
+  if (!focusedWindow || focusedWindow == window)
+    focusedWindow = window._content;
+
+  findAgainInPage(getBrowser(), window._content, focusedWindow)
 }
 
+function BrowserCanFindAgain()
+{
+  return canFindAgainInPage();
+}
