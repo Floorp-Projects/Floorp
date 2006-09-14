@@ -361,6 +361,8 @@
 <!ENTITY viewImageCmd.accesskey       "w">
 <!ENTITY bookmarkPageCmd.label        "Bookmark this Page">
 <!ENTITY bookmarkPageCmd.accesskey    "b">
+<!ENTITY bookmarkLinkCmd.label        "Bookmark this Link">
+<!ENTITY bookmarkLinkCmd.accesskey    "b">
 <!ENTITY savePageCmd.label            "Save Page As...">
 <!ENTITY savePageCmd.accesskey        "s">
 <!ENTITY savePageCmd.commandkey       "s">

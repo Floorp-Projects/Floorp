@@ -109,7 +109,7 @@ Contributor(s): ______________________________________. -->
          the user has clicked-on.
     -->
     <popup id="context"
-        oncreate="contextMenu = new nsContextMenu( this );"
+        oncreate="contextMenu = new nsContextMenu( this ); return contextMenu.shouldDisplay;"
         ondestroy="contextMenu.onDestroy(); contextMenu = null;">
 
         <!-- Open ==================================== -->
@@ -174,14 +174,19 @@ Contributor(s): ______________________________________. -->
                   value="&blockImageCmd.label;"
                   accesskey=""
                   oncommand="contextMenu.blockImage();"/>
-        <menuseparator/>
+        <menuseparator id="context-sep-view"/>
         <!-- Misc ==================================== -->
-    		<menuitem id="context-bookmarkpage"
+        <menuitem id="context-bookmarkpage"
                   value="&bookmarkPageCmd.label;"
                   accesskey="&bookmarkPageCmd.accesskey;"
                   oncommand="BrowserAddBookmark( window._content.location.href,
                                                  window._content.document.title )"/>
-               <menuseparator/>
+        <menuitem id="context-bookmarklink"
+                  value="&bookmarkLinkCmd.label;"
+                  accesskey="&bookmarkLinkCmd.accesskey;"
+                  oncommand="BrowserAddBookmark( contextMenu.linkURL(),
+                                                 contextMenu.linkText() )"/>
+        <menuseparator/>
         <!-- Save ==================================== -->
         <menuitem id="context-savepage"
                   value="&savePageCmd.label;"
@@ -203,7 +208,7 @@ Contributor(s): ______________________________________. -->
                   value="&saveBGImageCmd.label;"
                   accesskey="&saveBGImageCmd.accesskey;"
                   oncommand="contextMenu.saveBGImage();"/>
-        <menuseparator/>
+        <menuseparator id="context-sep-save"/>
         <!-- Clipboard =============================== -->
         <menuitem id="context-selectall"
                   value="&selectAllCmd.label;"
