@@ -1274,7 +1274,7 @@ nsWindow::ShowMenuBar(PRBool aShow)
 NS_IMETHODIMP
 nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
-    gint x, y = 0;
+    gint x = 0, y = 0;
 
     if (mContainer) {
         gdk_window_get_root_origin(GTK_WIDGET(mContainer)->window,
