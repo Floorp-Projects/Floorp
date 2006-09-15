@@ -506,36 +506,33 @@ nsIEProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
 NS_IMETHODIMP
 nsIEProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
 {
-  HKEY            regKey;
-  DWORD           regType;
-  DWORD           regLength;
-  unsigned char   regValue[MAX_PATH];
-  nsresult        rv;
-  
-  if (::RegOpenKeyEx(HKEY_CURRENT_USER, 
-                     "Software\\Microsoft\\Internet Explorer\\Main",
-                     0, KEY_READ, &regKey) != ERROR_SUCCESS)
+  nsCOMPtr<nsIWindowsRegKey> regKey = 
+    do_CreateInstance("@mozilla.org/windows-registry-key;1");
+  NS_NAMED_LITERAL_STRING(homeURLKey,
+                          "Software\\Microsoft\\Internet Explorer\\Main");
+  if (!regKey ||
+      NS_FAILED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                             homeURLKey, nsIWindowsRegKey::ACCESS_READ)))
     return NS_OK;
-
   // read registry data
-  regLength = MAX_PATH;
-  if (::RegQueryValueEx(regKey, "Start Page", 0,
-                        &regType, regValue, &regLength) == ERROR_SUCCESS) {
+  NS_NAMED_LITERAL_STRING(homeURLValName, "Start Page");
+  nsAutoString  homeURLVal;
+  PRUint32 type;
+  if (NS_SUCCEEDED(regKey->GetValueType(homeURLValName, &type)) &&
+      type == nsIWindowsRegKey::TYPE_STRING &&
+      NS_SUCCEEDED(regKey->ReadStringValue(homeURLValName, homeURLVal))) {
+    // Do we need this round-about way to get |homePageURL|? 
+    // Perhaps, we do to have the form of URL under our control 
+    // (cf. network.standard-url.escape-utf8)
+    // Note that Windows stores URLs in IRI in the registry
+    nsCAutoString  homePageURL;
+    nsCOMPtr<nsIURI> homePageURI;
 
-    if (regType == REG_SZ) {
-      regValue[MAX_PATH] = '\0';
-      nsCAutoString  homePageURL;
-      nsCOMPtr<nsIURI> homePageURI;
-      rv = NS_NewURI(getter_AddRefs(homePageURI), NS_REINTERPRET_CAST(char *, regValue), nsnull, nsnull);
-      if (NS_SUCCEEDED(rv)) {
-        rv = homePageURI->GetSpec(homePageURL);
-
-        if (NS_SUCCEEDED(rv) && !homePageURL.IsEmpty())
-          aResult.Assign(homePageURL);
-      }
-    }
+    if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(homePageURI), homeURLVal)))
+        if (NS_SUCCEEDED(homePageURI->GetSpec(homePageURL)) 
+            && !homePageURL.IsEmpty())
+            aResult.Assign(homePageURL);
   }
-  ::RegCloseKey(regKey);
   return NS_OK;
 }
 
@@ -1334,6 +1331,10 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
             childKey->Close();
             continue;
           }
+#ifdef MOZ_PLACES
+          bms->InsertItem(keywordsFolder, uri, -1);
+          bms->SetItemTitle(uri, keyName);
+#else
           nsCAutoString hostCStr;
           uri->GetHost(hostCStr);
           NS_ConvertUTF8toUTF16 host(hostCStr); 
@@ -1349,10 +1350,6 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
           rv = bundle->FormatStringFromName(
                        NS_LITERAL_STRING("importedSearchUrlDesc").get(),
                        descStrings, 2, getter_Copies(keywordDesc));
-#ifdef MOZ_PLACES
-          bms->InsertItem(keywordsFolder, uri, -1);
-          bms->SetItemTitle(uri, keyName);
-#else
           bms->CreateBookmarkInContainer(keywordName.get(), 
                                          url.get(),
                                          keyName.get(), 
