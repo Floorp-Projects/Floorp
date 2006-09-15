@@ -50,6 +50,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsEscape.h"
+#include "nsNetCID.h"
 #include "plbase64.h"
 #include "plstr.h"
 #include "prprf.h"
