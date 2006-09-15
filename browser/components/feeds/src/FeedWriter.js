@@ -426,6 +426,12 @@ FeedWriter.prototype = {
    * See nsIDOMEventListener
    */
   handleEvent: function(event) {
+    if (!this._window) {
+      // this._window is null unless this.write was called with a trusted
+      // window object.
+      return;
+    }
+
     if (event.target.ownerDocument != this._document) {
       LOG("FeedWriter.handleEvent: Someone passed the feed writer as a listener to the events of another document!");
       return;
@@ -692,7 +698,30 @@ FeedWriter.prototype = {
     else
       return null;
   },
-  
+
+  /**
+   * Helper util for the write method. Checks whether the
+   * window argument is a trusted object.
+   */
+  _isTrustedWindow: function(obj) {
+    var s = new Components.utils.Sandbox("http://localhost.localdomain.:0/");
+    
+    /* Some notes:
+     * 1. Doing an instanceof check outside of the sandbox is not safe because
+     *    it would call the QueryInterface method of an untrusted object.
+     * 2. Inside the sandbox (which does not have chrome privileges), the
+     *    QueryInterface method of an untrusted object will never get called
+     *    since it has a different origin.
+     * 3. We cannot check whether the object is an instance of nsIDOMWindow
+     *    because XPConnect wraps the window argument as an nsIDOMWindow
+     *    due to the argument type (nsIDOMWindow, suprise suprise).
+     */
+    s.nsIInterfaceRequestor = Ci.nsIInterfaceRequestor;
+    s.obj = obj;
+    const IS_TRUSTED_CODE = "obj instanceof nsIInterfaceRequestor;"
+    return Components.utils.evalInSandbox(IS_TRUSTED_CODE, s);
+  },
+
   _window: null,
   _document: null,
   _feedURI: null,
@@ -701,6 +730,9 @@ FeedWriter.prototype = {
    * See nsIFeedWriter
    */
   write: function FW_write(window) {
+    if (!this._isTrustedWindow(window))
+      return;
+
     this._feedURI = this._getOriginalURI(window);
     if (!this._feedURI)
       return;
@@ -844,6 +876,12 @@ FeedWriter.prototype = {
    * See nsIObserver
    */
   observe: function FW_observe(subject, topic, data) {
+    if (!this._window) {
+      // this._window is null unless this.write was called with a trusted
+      // window object.
+      return;
+    }
+
     if (topic == "nsPref:changed") {
       switch (data) {
         case PREF_SELECTED_READER:
@@ -879,6 +917,7 @@ FeedWriter.prototype = {
     if (iid.equals(Ci.nsIFeedWriter) ||
         iid.equals(Ci.nsIClassInfo) ||
         iid.equals(Ci.nsIDOMEventListener) ||
+        iid.equals(Ci.nsIObserver) ||
         iid.equals(Ci.nsISupports))
       return this;
     throw Cr.NS_ERROR_NO_INTERFACE;
