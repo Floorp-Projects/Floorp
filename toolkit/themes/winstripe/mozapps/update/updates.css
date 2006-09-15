@@ -62,7 +62,7 @@ license {
 }
 
 #incompatibleCheckingThrobber {
-  margin-right: 4px;
+  -moz-margin-end: 4px;
   background-color: transparent;
   list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
 }
