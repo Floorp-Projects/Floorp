@@ -181,7 +181,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSafeAboutProtocolHandler)
 // about
 #include "nsAboutBloat.h"
 #include "nsAboutCache.h"
-#include "nsAboutRedirector.h"
 #include "nsAboutCacheEntry.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAboutCacheEntry)
 #endif
@@ -1003,57 +1002,6 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "bloat", 
       nsAboutBloat::Create
     },
-    { "about:config",
-      NS_ABOUT_REDIRECTOR_MODULE_CID,
-      NS_ABOUT_MODULE_CONTRACTID_PREFIX "config",
-      nsAboutRedirector::Create
-    },
-    { "about:credits",
-      NS_ABOUT_REDIRECTOR_MODULE_CID,
-      NS_ABOUT_MODULE_CONTRACTID_PREFIX "credits",
-      nsAboutRedirector::Create
-    },
-    { "about:plugins",
-      NS_ABOUT_REDIRECTOR_MODULE_CID,
-      NS_ABOUT_MODULE_CONTRACTID_PREFIX "plugins",
-      nsAboutRedirector::Create
-    },
-    { "about:mozilla",
-      NS_ABOUT_REDIRECTOR_MODULE_CID,
-      NS_ABOUT_MODULE_CONTRACTID_PREFIX "mozilla",
-      nsAboutRedirector::Create
-    },
-    { "about:logo",
-      NS_ABOUT_REDIRECTOR_MODULE_CID,
-      NS_ABOUT_MODULE_CONTRACTID_PREFIX "logo",
-      nsAboutRedirector::Create
-    },
-    { "about:buildconfig",
-      NS_ABOUT_REDIRECTOR_MODULE_CID,
-      NS_ABOUT_MODULE_CONTRACTID_PREFIX "buildconfig",
-      nsAboutRedirector::Create
-    },
-    { "about:license",
-      NS_ABOUT_REDIRECTOR_MODULE_CID,
-      NS_ABOUT_MODULE_CONTRACTID_PREFIX "license",
-      nsAboutRedirector::Create
-    },
-    { "about:licence",
-      NS_ABOUT_REDIRECTOR_MODULE_CID,
-      NS_ABOUT_MODULE_CONTRACTID_PREFIX "licence",
-      nsAboutRedirector::Create
-    },
-    { "about:about",
-      NS_ABOUT_REDIRECTOR_MODULE_CID,
-      NS_ABOUT_MODULE_CONTRACTID_PREFIX "about",
-      nsAboutRedirector::Create
-    },
-    { "about:neterror",
-      NS_ABOUT_REDIRECTOR_MODULE_CID,
-      NS_ABOUT_MODULE_CONTRACTID_PREFIX "neterror",
-      nsAboutRedirector::Create
-    },
-
     { "about:cache", 
       NS_ABOUT_CACHE_MODULE_CID,
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "cache", 

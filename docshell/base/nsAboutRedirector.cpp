@@ -37,13 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAboutProtocolHandler.h"
 #include "nsAboutRedirector.h"
 #include "nsNetUtil.h"
 #include "plstr.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsAboutProtocolUtils.h"
-#include "nsSimpleNestedURI.h"
 
 NS_IMPL_ISUPPORTS1(nsAboutRedirector, nsIAboutModule)
 
