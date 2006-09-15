@@ -11,5 +11,5 @@ pref("app.update.url.details", "http://%LOCALE%.www.mozilla.com/%LOCALE%/%APP%/r
 pref("app.releaseNotesURL", "http://%LOCALE%.www.mozilla.com/%LOCALE%/%APP%/%VERSION%/releasenotes/");
 
 pref("browser.search.param.yahoo-fr", "moz2");
-pref("browser.search.param.yahoo-fr-cjkt", "fx2-moz-1");
+pref("browser.search.param.yahoo-fr-cjkt", "moz2");
 pref("browser.search.param.yahoo-f-CN", "D3_g");
