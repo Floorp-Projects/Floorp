@@ -1406,30 +1406,27 @@ nsLocalFile::GetVersionInfoField(const char* aField, nsAString& _retval)
     {
         LANGANDCODEPAGE* translate = nsnull;
         UINT pageCount;
-        BOOL queryResult = ::VerQueryValue(ver, "\\VarFileInfo\\Translation", 
+        BOOL queryResult = ::VerQueryValueW(ver, L"\\VarFileInfo\\Translation", 
                                             (void**)&translate, &pageCount);
         if (queryResult && translate) 
         {
             for (PRInt32 i = 0; i < 2; ++i) 
             { 
-                // XXX : need to make sure that we can get away with 
-                // 'VerQueryValueA' here.
-                char subBlock[MAX_PATH];
-                PR_snprintf(subBlock, sizeof(subBlock), 
-                            "\\StringFileInfo\\%04x%04x\\%s", 
-                            (i == 0 ? translate[0].wLanguage 
-                                    : ::GetUserDefaultLangID()),
-                            translate[0].wCodePage, aField);
-
+                PRUnichar subBlock[MAX_PATH];
+                _snwprintf(subBlock, MAX_PATH,
+                           L"\\StringFileInfo\\%04x%04x\\%s", 
+                           (i == 0 ? translate[0].wLanguage 
+                                   : ::GetUserDefaultLangID()),
+                           translate[0].wCodePage,
+                           NS_ConvertASCIItoUTF16(
+                               nsDependentCString(aField)).get());
+                subBlock[MAX_PATH - 1] = 0;
                 LPVOID value = nsnull;
                 UINT size;
-                queryResult = ::VerQueryValueA(ver, subBlock, &value, &size);
+                queryResult = ::VerQueryValueW(ver, subBlock, &value, &size);
                 if (queryResult && value)
                 {
-                    NS_ASSERTION(nsCRT::IsAscii((const char*) value),
-                                 "Version string has non-ASCII characters");
-                    CopyASCIItoUTF16(nsDependentCString((const char*) value),
-                                     _retval);
+                    _retval.Assign(NS_STATIC_CAST(PRUnichar*, value));
                     if (!_retval.IsEmpty()) 
                     {
                         rv = NS_OK;
@@ -2200,25 +2197,6 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
         *aDiskSpaceAvailable = liFreeBytesAvailableToCaller.QuadPart;
         return NS_OK;
     }
-
-    // use the old method of getting available disk space
-    WCHAR aDrive[_MAX_DRIVE + 2];
-    _wsplitpath( mResolvedPath.get(), aDrive, NULL, NULL, NULL);
-    wcscat(aDrive, L"\\");
-
-    DWORD dwSecPerClus, dwBytesPerSec, dwFreeClus, dwTotalClus;
-
-    if (nsWinAPIs::mGetDiskFreeSpace(aDrive, &dwSecPerClus, &dwBytesPerSec,
-                                     &dwFreeClus, &dwTotalClus))
-    {
-        __int64 bytes = dwFreeClus;
-        bytes *= dwSecPerClus;
-        bytes *= dwBytesPerSec;
-
-        *aDiskSpaceAvailable = bytes;
-        return NS_OK;
-    }
-
 #endif
     // WINCE FIX
     *aDiskSpaceAvailable = 0;
