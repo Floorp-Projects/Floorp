@@ -66,8 +66,8 @@ static RedirEntry kRedirMap[] = {
     { "config", "chrome://global/content/config.xul", PR_FALSE },
     { "logo", "chrome://global/content/logo.gif", PR_TRUE },
     { "buildconfig", "chrome://global/content/buildconfig.html", PR_TRUE },
-    { "license", "chrome://global/content/MPL-1.1.html", PR_TRUE },
-    { "licence", "chrome://global/content/MPL-1.1.html", PR_TRUE },
+    { "license", "chrome://global/content/license.html", PR_TRUE },
+    { "licence", "chrome://global/content/license.html", PR_TRUE },
     { "about", "chrome://global/content/aboutAbout.html", PR_FALSE },
     { "neterror", "chrome://global/content/netError.xhtml", PR_TRUE }
 };
