@@ -43,6 +43,7 @@
 #include "plstr.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsAboutProtocolUtils.h"
+#include "nsSimpleNestedURI.h"
 
 NS_IMPL_ISUPPORTS1(nsAboutRedirector, nsIAboutModule)
 
@@ -122,6 +123,29 @@ nsAboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
 
             NS_ADDREF(*result = tempChannel);
             return rv;
+        }
+    }
+
+    NS_ERROR("nsAboutRedirector called for unknown case");
+    return NS_ERROR_ILLEGAL_VALUE;
+}
+
+NS_IMETHODIMP
+nsAboutRedirector::GetURIFlags(nsIURI *aURI, PRUint32 *result)
+{
+    NS_ENSURE_ARG_POINTER(aURI);
+
+    nsCAutoString name;
+    nsresult rv = NS_GetAboutModuleName(aURI, name);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    for (int i=0; i < kRedirTotal; i++) 
+    {
+        if (name.EqualsASCII(kRedirMap[i].id))
+        {
+            *result = kRedirMap[i].dropChromePrivs ?
+                nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT : 0;
+            return NS_OK;
         }
     }
 
