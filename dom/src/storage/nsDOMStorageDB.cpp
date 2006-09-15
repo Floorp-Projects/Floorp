@@ -130,6 +130,12 @@ nsDOMStorageDB::Init()
                             "WHERE domain = ?1 "
                             "AND key = ?2"),
          getter_AddRefs(mRemoveKeyStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // remove all keys
+  rv = mConnection->CreateStatement(
+         NS_LITERAL_CSTRING("DELETE FROM moz_webappsstore"),
+         getter_AddRefs(mRemoveAllStatement));
 
   return rv;
 }
@@ -305,4 +311,11 @@ nsDOMStorageDB::RemoveKey(const nsAString& aDomain,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return mRemoveKeyStatement->Execute();
+}
+
+nsresult
+nsDOMStorageDB::RemoveAll()
+{
+  mozStorageStatementScoper scope(mRemoveAllStatement);
+  return mRemoveAllStatement->Execute();
 }

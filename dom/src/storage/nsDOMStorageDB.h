@@ -98,6 +98,12 @@ public:
   RemoveKey(const nsAString& aDomain,
             const nsAString& aKey);
 
+  /**
+   * Removes all keys from storage. Used when clearing storage.
+   */
+  nsresult
+  RemoveAll();
+
 protected:
 
   nsCOMPtr<mozIStorageConnection> mConnection;
@@ -108,6 +114,7 @@ protected:
   nsCOMPtr<mozIStorageStatement> mUpdateKeyStatement;
   nsCOMPtr<mozIStorageStatement> mSetSecureStatement;
   nsCOMPtr<mozIStorageStatement> mRemoveKeyStatement;
+  nsCOMPtr<mozIStorageStatement> mRemoveAllStatement;
 };
 
 #endif /* nsDOMStorageDB_h___ */

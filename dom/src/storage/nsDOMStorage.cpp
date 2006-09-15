@@ -116,12 +116,94 @@ nsSessionStorageEntry::~nsSessionStorageEntry()
 }
 
 //
+// nsDOMStorageManager
+//
+
+nsDOMStorageManager* nsDOMStorageManager::gStorageManager;
+
+NS_IMPL_ISUPPORTS1(nsDOMStorageManager, nsIObserver)
+
+//static
+nsresult
+nsDOMStorageManager::Initialize()
+{
+  gStorageManager = new nsDOMStorageManager();
+  if (!gStorageManager)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  if (!gStorageManager->mStorages.Init())
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+  if (os)
+    os->AddObserver(gStorageManager, "cookie-changed", PR_FALSE);
+
+  return NS_OK;
+}
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+ClearStorage(nsDOMStorageEntry* aEntry, void* userArg)
+{
+  aEntry->mStorage->ClearAll();
+  return PL_DHASH_REMOVE;
+}
+
+nsresult
+nsDOMStorageManager::Observe(nsISupports *aSubject,
+                             const char *aTopic,
+                             const PRUnichar *aData)
+{
+  if (!nsCRT::strcmp(aData, NS_LITERAL_STRING("cleared").get())) {
+    mStorages.EnumerateEntries(ClearStorage, nsnull);
+
+#ifdef MOZ_STORAGE
+    nsresult rv = nsDOMStorage::InitDB();
+    NS_ENSURE_SUCCESS(rv, rv);
+    return nsDOMStorage::gStorageDB->RemoveAll();
+#endif
+  }
+
+  return NS_OK;
+}
+
+void
+nsDOMStorageManager::AddToStoragesHash(nsDOMStorage* aStorage)
+{
+  nsDOMStorageEntry* entry = mStorages.PutEntry(aStorage);
+  if (entry)
+    entry->mStorage = aStorage;
+}
+
+void
+nsDOMStorageManager::RemoveFromStoragesHash(nsDOMStorage* aStorage)
+{
+ nsDOMStorageEntry* entry = mStorages.GetEntry(aStorage);
+  if (entry)
+    mStorages.RemoveEntry(entry);
+}
+
+//
 // nsDOMStorage
 //
 
 #ifdef MOZ_STORAGE
 nsDOMStorageDB* nsDOMStorage::gStorageDB = nsnull;
 #endif
+
+nsDOMStorageEntry::nsDOMStorageEntry(KeyTypePointer aStr)
+  : nsVoidPtrHashKey(aStr), mStorage(nsnull)
+{
+}
+
+nsDOMStorageEntry::nsDOMStorageEntry(const nsDOMStorageEntry& aToCopy)
+  : nsVoidPtrHashKey(aToCopy), mStorage(nsnull)
+{
+  NS_ERROR("DOMStorage horked.");
+}
+
+nsDOMStorageEntry::~nsDOMStorageEntry()
+{
+}
 
 NS_INTERFACE_MAP_BEGIN(nsDOMStorage)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStorage)
@@ -150,6 +232,8 @@ nsDOMStorage::nsDOMStorage()
   : mUseDB(PR_FALSE), mSessionOnly(PR_TRUE), mItemsCached(PR_FALSE)
 {
   mItems.Init(8);
+  if (nsDOMStorageManager::gStorageManager)
+    nsDOMStorageManager::gStorageManager->AddToStoragesHash(this);
 }
 
 nsDOMStorage::nsDOMStorage(nsIURI* aURI, const nsAString& aDomain, PRBool aUseDB)
@@ -164,10 +248,14 @@ nsDOMStorage::nsDOMStorage(nsIURI* aURI, const nsAString& aDomain, PRBool aUseDB
 #endif
 
   mItems.Init(8);
+  if (nsDOMStorageManager::gStorageManager)
+    nsDOMStorageManager::gStorageManager->AddToStoragesHash(this);
 }
 
 nsDOMStorage::~nsDOMStorage()
 {
+  if (nsDOMStorageManager::gStorageManager)
+    nsDOMStorageManager::gStorageManager->RemoveFromStoragesHash(this);
 }
 
 void
@@ -593,6 +681,19 @@ nsDOMStorage::SetSecure(const nsAString& aKey, PRBool aSecure)
   }  
 
   return NS_OK;
+}
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+ClearStorageItem(nsSessionStorageEntry* aEntry, void* userArg)
+{
+  aEntry->mItem->SetValueInternal(EmptyString());
+  return PL_DHASH_NEXT;
+}
+
+void
+nsDOMStorage::ClearAll()
+{
+  mItems.EnumerateEntries(ClearStorageItem, nsnull);
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)
