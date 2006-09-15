@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsAboutProtocolHandler.h"
 #include "nsAboutRedirector.h"
 #include "nsNetUtil.h"
 #include "plstr.h"
@@ -66,7 +67,8 @@ static RedirEntry kRedirMap[] = {
     { "buildconfig", "chrome://global/content/buildconfig.html", PR_TRUE },
     { "license", "chrome://global/content/MPL-1.1.html", PR_TRUE },
     { "licence", "chrome://global/content/MPL-1.1.html", PR_TRUE },
-    { "about", "chrome://global/content/aboutAbout.html", PR_FALSE }
+    { "about", "chrome://global/content/aboutAbout.html", PR_FALSE },
+    { "neterror", "chrome://global/content/netError.xhtml", PR_TRUE }
 };
 static const int kRedirTotal = NS_ARRAY_LENGTH(kRedirMap);
 
@@ -83,13 +85,15 @@ nsAboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
     if (NS_FAILED(rv))
         return rv;
 
+    nsAboutProtocolHandler::StripQueryAndHash(path);
+
     nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
     if (NS_FAILED(rv))
         return rv;
 
     for (int i=0; i<kRedirTotal; i++) 
     {
-        if (!PL_strcasecmp(path.get(), kRedirMap[i].id))
+        if (!strcmp(path.get(), kRedirMap[i].id))
         {
             nsCOMPtr<nsIChannel> tempChannel;
             rv = ioService->NewChannel(nsDependentCString(kRedirMap[i].url),
