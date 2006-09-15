@@ -57,12 +57,12 @@ extern PRSize _PR_MD_GetRandomNoise( void *buf, PRSize size )
 
     GETTIMEOFDAY(&tv);
 
-    if ( size >= 0 ) {
+    if ( size > 0 ) {
         s = _pr_CopyLowBits((char*)buf+n, size, &tv.tv_usec, sizeof(tv.tv_usec));
         size -= s;
         n += s;
     }
-    if ( size >= 0 ) {
+    if ( size > 0 ) {
         s = _pr_CopyLowBits((char*)buf+n, size, &tv.tv_sec, sizeof(tv.tv_usec));
         size -= s;
         n += s;
