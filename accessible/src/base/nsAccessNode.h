@@ -117,10 +117,11 @@ class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
 
     // Static cache methods for global document cache
     static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsIWeakReference *aPresShell);
-    static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsISupports *aContainer);
+    static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsISupports *aContainer, PRBool aCanCreate = PR_FALSE);
     static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsIDOMNode *aNode);
 
     static already_AddRefed<nsIDocShellTreeItem> GetDocShellTreeItemFor(nsIDOMNode *aStartNode);
+    static already_AddRefed<nsIDOMNode> GetDOMNodeForContainer(nsISupports *aContainer);
     static already_AddRefed<nsIPresShell> GetPresShellFor(nsIDOMNode *aStartNode);
     
     // Return PR_TRUE if there is a role attribute
