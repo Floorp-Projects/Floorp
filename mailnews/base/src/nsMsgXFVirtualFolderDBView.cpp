@@ -54,6 +54,7 @@
 nsMsgXFVirtualFolderDBView::nsMsgXFVirtualFolderDBView()
 {
   mSuppressMsgDisplay = PR_FALSE;
+  m_doingSearch = PR_FALSE;
   m_numUnread = m_numTotal = 0;
 }
 
@@ -142,10 +143,10 @@ nsresult nsMsgXFVirtualFolderDBView::OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey a
     {
       nsCOMPtr <nsIMsgFolder> folder;
       newHdr->GetFolder(getter_AddRefs(folder));
-      // set this to null so we don't think we're in the middle of a full-blown
-      // search and start deleting invalid hits.
-      m_curFolderGettingHits = nsnull;
+      PRBool saveDoingSearch = m_doingSearch;
+      m_doingSearch = PR_FALSE;
       OnSearchHit(newHdr, folder); 
+      m_doingSearch = saveDoingSearch;
     }
   }
   return NS_OK;
@@ -201,6 +202,14 @@ void nsMsgXFVirtualFolderDBView::UpdateCacheAndViewForFolder(nsIMsgFolder *folde
 void nsMsgXFVirtualFolderDBView::UpdateCacheAndViewForPrevSearchedFolders(nsIMsgFolder *curSearchFolder)
 {
   // Handle the most recent folder with hits, if any.
+#ifdef DEBUG
+  if (curSearchFolder)
+  {
+    nsXPIDLCString folderUri;
+    curSearchFolder->GetURI(getter_Copies(folderUri));
+    printf("UpdateCacheAndViewForPrevSearchedFolders curSearchFolder - %s\n", folderUri.get());
+  }
+#endif
   if (m_curFolderGettingHits)
   {
     PRUint32 count = m_hdrHits.Count();
@@ -211,24 +220,35 @@ void nsMsgXFVirtualFolderDBView::UpdateCacheAndViewForPrevSearchedFolders(nsIMsg
       m_hdrHits[i]->GetMessageKey(&key);
       newHits.Add(key);
     }
+    newHits.QuickSort();
     UpdateCacheAndViewForFolder(m_curFolderGettingHits, newHits.GetArray(), newHits.GetSize());
   }
 
-  while (m_foldersWithNonVerifiedCachedHits.Count() > 0)
+  while (m_foldersSearchingOver.Count() > 0)
   {
     // this new folder has cached hits.
-    if (m_foldersWithNonVerifiedCachedHits[0] == curSearchFolder)
+    if (m_foldersSearchingOver[0] == curSearchFolder)
     {
       m_curFolderHasCachedHits = PR_TRUE;
+      m_foldersSearchingOver.RemoveObjectAt(0);
       break;
     }
-    else if (m_foldersWithNonVerifiedCachedHits[0] != m_curFolderGettingHits)
+    else if (m_foldersSearchingOver[0] != m_curFolderGettingHits)
     {
-      // this must be a folder that had cached hits but no hits with 
-      // the current search. So all cached hits need to be removed. 
-      UpdateCacheAndViewForFolder(m_foldersWithNonVerifiedCachedHits[0], 0, nsnull);
+      // this must be a folder that had no hits with the current search.
+      // So all cached hits, if any, need to be removed. 
+#ifdef DEBUG
+      nsXPIDLCString folderUri;
+      m_foldersSearchingOver[0]->GetURI(getter_Copies(folderUri));
+      printf("UpdateCacheAndViewForPrevSearchedFolders 0 hits in - %s\n", folderUri.get());
+#endif
+      UpdateCacheAndViewForFolder(m_foldersSearchingOver[0], 0, nsnull);
+#ifdef DEBUG
+      m_foldersSearchingOver[0]->GetURI(getter_Copies(folderUri));
+      printf("UpdateCacheAndViewForPrevSearchedFolders removing %s\n", folderUri.get());
+#endif
+      m_foldersSearchingOver.RemoveObjectAt(0);
     }
-    m_foldersWithNonVerifiedCachedHits.RemoveObjectAt(0);
   }
 }
 NS_IMETHODIMP
@@ -242,13 +262,17 @@ nsMsgXFVirtualFolderDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *fold
   nsCOMPtr<nsIDBFolderInfo> folderInfo;
   folder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(dbToUse));
   
-  if (m_curFolderGettingHits != folder)
+  if (m_curFolderGettingHits != folder && m_doingSearch)
   {
+#ifdef DEBUG
+    nsXPIDLCString folderUri;
+    folder->GetURI(getter_Copies(folderUri));
+    printf("first hit for folder - %s\n", folderUri.get());
+#endif
     m_curFolderHasCachedHits = PR_FALSE;
     // since we've gotten a hit for a new folder, the searches for 
     // any previous folders are done, so deal with stale cached hits
     // for those folders now.
-
     UpdateCacheAndViewForPrevSearchedFolders(folder);
     m_curFolderGettingHits = folder;
     m_hdrHits.Clear();
@@ -258,7 +282,7 @@ nsMsgXFVirtualFolderDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *fold
   nsXPIDLCString searchUri;
   m_viewFolder->GetURI(getter_Copies(searchUri));
   dbToUse->HdrIsInCache(searchUri, aMsgHdr, &hdrInCache);
-  if (!m_curFolderHasCachedHits || !hdrInCache)
+  if (!m_doingSearch || !m_curFolderHasCachedHits || !hdrInCache)
   {
     if (m_sortValid)
       InsertHdrFromFolder(aMsgHdr, supports);
@@ -282,6 +306,7 @@ nsMsgXFVirtualFolderDBView::OnSearchDone(nsresult status)
   // handle any non verified hits we haven't handled yet.
   UpdateCacheAndViewForPrevSearchedFolders(nsnull);
 
+  m_doingSearch = PR_FALSE;
   //we want to set imap delete model once the search is over because setting next
   //message after deletion will happen before deleting the message and search scope
   //can change with every search.
@@ -303,7 +328,7 @@ nsMsgXFVirtualFolderDBView::OnSearchDone(nsresult status)
     m_sortValid = PR_FALSE;       //sort the results 
     Sort(m_sortType, m_sortOrder);
   }
-  m_foldersWithNonVerifiedCachedHits.Clear();
+  m_foldersSearchingOver.Clear();
   m_curFolderGettingHits = nsnull;
   return rv;
 }
@@ -315,6 +340,8 @@ nsMsgXFVirtualFolderDBView::OnNewSearch()
   PRInt32 oldSize = GetSize();
 
   RemovePendingDBListeners();
+
+  m_doingSearch = PR_TRUE;
 
   m_folders->Clear();
   m_keys.RemoveAll();
@@ -351,6 +378,12 @@ nsMsgXFVirtualFolderDBView::OnNewSearch()
         if (msgDBService)
           msgDBService->RegisterPendingListener(searchFolder, this);
 
+        m_foldersSearchingOver.AppendObject(searchFolder);
+#ifdef DEBUG
+        nsXPIDLCString folderUri;
+        searchFolder->GetURI(getter_Copies(folderUri));
+        printf("adding to m_foldersSearchingOver - %s\n", folderUri.get());
+#endif
         searchDB->GetCachedHits(searchUri, getter_AddRefs(cachedHits));
         PRBool hasMore;
         if (cachedHits)
@@ -359,7 +392,6 @@ nsMsgXFVirtualFolderDBView::OnNewSearch()
           if (hasMore)
           {
             nsMsgKey prevKey = nsMsgKey_None;
-            m_foldersWithNonVerifiedCachedHits.AppendObject(searchFolder);
             while (hasMore)
             {
               nsCOMPtr <nsIMsgDBHdr> pHeader;

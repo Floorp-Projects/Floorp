@@ -74,11 +74,12 @@ public:
 protected:
 
   PRUint32 m_cachedFolderArrayIndex; // array index of next folder with cached hits to deal with.
-  nsCOMArray<nsIMsgFolder> m_foldersWithNonVerifiedCachedHits;
+  nsCOMArray<nsIMsgFolder> m_foldersSearchingOver;
   nsCOMArray<nsIMsgDBHdr> m_hdrHits;
   nsCOMPtr <nsIMsgFolder> m_curFolderGettingHits;
   PRUint32 m_curFolderStartKeyIndex; // keeps track of the index of the first hit from the cur folder
   PRBool m_curFolderHasCachedHits;
+  PRBool m_doingSearch;
   nsWeakPtr m_searchSession;
   PRInt32 m_numUnread;
   PRInt32 m_numTotal;
