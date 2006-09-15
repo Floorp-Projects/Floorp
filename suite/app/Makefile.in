@@ -151,7 +151,12 @@ endif
 endif
 
 ifeq ($(OS_ARCH),OS2)
-RESFILE=splashos2.res
+RESFILE = splashos2.res
+RCFLAGS += -i $(topsrcdir)/toolkit/xre
+ifdef BUILD_STATIC_LIBS
+EXE_DEF_FILE = seamonkey.def
+RCFLAGS += -DMOZ_STATIC_BUILD -i $(DIST)/include/widget
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
