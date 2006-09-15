@@ -48,8 +48,8 @@
 {/if}
 
 {if $method == 'html'}
+	<div class="navigation">
 	{if $count > $show}
-		<div class="navigation">
 		{strip}
 		{if $page > 1}
 			<a href="?{$continuity_params}&amp;page={$page-1}" accesskey="p" >Previous</a>
@@ -79,8 +79,8 @@
 			TotPage:  {$pages}
 		</pre>
 		*}
+	{/if}
 		<br />
 		<p><small>Your query returned {$count} reports</small></p>
 	</div>
-	{/if}
 {/if}
