@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -37,17 +38,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAboutRedirector.h"
-#include "nsNetCID.h"
-#include "nsIIOService.h"
-#include "nsIServiceManager.h"
-#include "nsCOMPtr.h"
-#include "nsIURI.h"
-#include "nsXPIDLString.h"
-#include "nsString.h"
+#include "nsNetUtil.h"
 #include "plstr.h"
 #include "nsIScriptSecurityManager.h"
-
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 NS_IMPL_ISUPPORTS1(nsAboutRedirector, nsIAboutModule)
 
@@ -73,49 +66,59 @@ static RedirEntry kRedirMap[] = {
     { "buildconfig", "chrome://global/content/buildconfig.html", PR_TRUE },
     { "about", "chrome://global/content/aboutAbout.html", PR_FALSE }
 };
-static const int kRedirTotal = sizeof(kRedirMap)/sizeof(*kRedirMap);
+static const int kRedirTotal = NS_ARRAY_LENGTH(kRedirMap);
 
 NS_IMETHODIMP
 nsAboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
 {
-    NS_ENSURE_ARG(aURI);
-    nsCAutoString path;
-    (void)aURI->GetPath(path);
+    NS_ASSERTION(aURI, "must not be null");
+    NS_ASSERTION(result, "must not be null");
+
     nsresult rv;
-    nsCOMPtr<nsIIOService> ioService(do_GetService(kIOServiceCID, &rv));
+
+    nsCAutoString path;
+    rv = aURI->GetPath(path);
     if (NS_FAILED(rv))
         return rv;
 
-    for (int i = 0; i< kRedirTotal; i++) 
+    nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    for (int i=0; i<kRedirTotal; i++) 
     {
         if (!PL_strcasecmp(path.get(), kRedirMap[i].id))
         {
             nsCOMPtr<nsIChannel> tempChannel;
-             rv = ioService->NewChannel(nsDependentCString(kRedirMap[i].url),
-                                        nsnull, nsnull, getter_AddRefs(tempChannel));
-             // Keep the page from getting unnecessary privileges unless it needs them
-             if (NS_SUCCEEDED(rv) && result && kRedirMap[i].dropChromePrivs)
-             {
-                  nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-                           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-                  if (NS_FAILED(rv))
-                      return rv;
-            
-                  nsCOMPtr<nsIPrincipal> principal;
-                  rv = securityManager->GetCodebasePrincipal(aURI, getter_AddRefs(principal));
-                  if (NS_FAILED(rv))
-                      return rv;
-            
-                  nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
-                  rv = tempChannel->SetOwner(owner);
-             }
-             *result = tempChannel.get();
-             NS_ADDREF(*result);
-             return rv;
-        }
+            rv = ioService->NewChannel(nsDependentCString(kRedirMap[i].url),
+                                       nsnull, nsnull, getter_AddRefs(tempChannel));
+            if (NS_FAILED(rv))
+                return rv;
 
+            // Keep the page from getting unnecessary privileges unless it needs them
+            if (kRedirMap[i].dropChromePrivs)
+            {
+                nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+                         do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+                if (NS_FAILED(rv))
+                    return rv;
+            
+                nsCOMPtr<nsIPrincipal> principal;
+                rv = securityManager->GetCodebasePrincipal(aURI, getter_AddRefs(principal));
+                if (NS_FAILED(rv))
+                    return rv;
+            
+                rv = tempChannel->SetOwner(principal);
+                if (NS_FAILED(rv))
+                    return rv;
+            }
+
+            NS_ADDREF(*result = tempChannel);
+            return rv;
+        }
     }
-    NS_ASSERTION(0, "nsAboutRedirector called for unknown case");
+
+    NS_ERROR("nsAboutRedirector called for unknown case");
     return NS_ERROR_ILLEGAL_VALUE;
 }
 
@@ -130,5 +133,3 @@ nsAboutRedirector::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     NS_RELEASE(about);
     return rv;
 }
-
-////////////////////////////////////////////////////////////////////////////////
