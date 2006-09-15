@@ -10,7 +10,7 @@ RewriteRule ^app/logout(/)?(.*)$ logout.php$2 [QSA,L]
 RewriteRule ^privacy(/)? privacy.php$2 [QSA,L]
 RewriteRule ^service(/)? service.php$2 [QSA,L]
 RewriteRule ^app index.php [QSA,L]
-
+RewriteRule ^safebrowsing(/)?(lookup|update|report|getkey)(/)?(.*)$ safebrowsing_$2.php$4
 #Static Content
 #RewriteRule ^(scripts|styles)$/(.*)$ $1/$2 [QSA,L]
 </IfModule>

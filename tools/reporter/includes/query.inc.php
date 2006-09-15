@@ -456,7 +456,7 @@ class query
     function continuityParams($omit = null){
         reset($this->where);
         $standard = '';
-        
+
         // if $omit is empty, make it a blank array
         if($omit == null){ $omit = array(); }
 

@@ -94,7 +94,8 @@ $title = "Report for ".$reportQuery->fields['host_hostname']." - ".$reportQuery-
 $content->assign('report_id',              $reportQuery->fields['report_id']);
 $content->assign('report_url',             $reportQuery->fields['report_url']);
 
-$host_continuity_params = $query->continuityParams(array('report_id', 'report_product', 'report_file_date', 'product_family', 'page'));
+//$host_continuity_params = $query->continuityParams(array('report_id', 'report_product', 'report_file_date', 'product_family', 'page'));
+
 $content->assign('host_continuity_params', $host_continuity_params);
 
 $content->assign('host_url',               $config['base_url'].'/app/query/?host_hostname='.$reportQuery->fields['host_hostname'].'&amp;'.$host_continuity_params.'submit_query=Query');
@@ -117,19 +118,15 @@ if($screenshot){
     $content->assign('screenshot',              $screenshot);
 }
 
-// Last/Next Functionality
+// Navigation Functionality
+$nav_continuity_params = $query->continuityParams(array('report_id'));
+$content->assign('nav_continuity_params',             $nav_continuity_params);
+
 if(isset($_SESSION['reportList'])){
-    $nav_continuity_params = $query->continuityParams(array('report_id'));
-
-    $content->assign('nav_continuity_params',             $nav_continuity_params);
-
     $reportIndex = array_search($_GET['report_id'],   $_SESSION['reportList']);
-//print $reportIndex.$_SESSION['reportList'][$reportIndex];
-//die();
+    
     $content->assign('index',                         $reportIndex);
     $content->assign('total',                         sizeof($_SESSION['reportList']));
-
-
 
     $content->assign('showReportNavigation',          true);
 
