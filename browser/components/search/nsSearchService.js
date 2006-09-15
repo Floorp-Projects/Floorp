@@ -1806,6 +1806,7 @@ Engine.prototype = {
     this._description = searchSection["description"] || "";
     this._queryCharset = searchSection["querycharset"] ||
                          queryCharsetFromCode(searchSection["queryencoding"]);
+    this._searchForm = searchSection["searchform"];
 
     this._updateInterval = parseInt(browserSection["updatecheckdays"]);
 
