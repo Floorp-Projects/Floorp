@@ -58,6 +58,17 @@
 
 class nsDOMStorageItem;
 
+class nsDOMStorageEntry : public nsVoidPtrHashKey
+{
+public:
+  nsDOMStorageEntry(KeyTypePointer aStr);
+  nsDOMStorageEntry(const nsDOMStorageEntry& aToCopy);
+  ~nsDOMStorageEntry();
+
+  // weak reference so that it can be deleted when no longer used
+  nsDOMStorage* mStorage;
+};
+
 class nsSessionStorageEntry : public nsStringHashKey
 {
 public:
@@ -66,6 +77,29 @@ public:
   ~nsSessionStorageEntry();
 
   nsRefPtr<nsDOMStorageItem> mItem;
+};
+
+class nsDOMStorageManager : public nsIObserver
+{
+public:
+  // nsISupports
+  NS_DECL_ISUPPORTS
+
+  // nsIObserver
+  NS_DECL_NSIOBSERVER
+
+  void AddToStoragesHash(nsDOMStorage* aStorage);
+  void RemoveFromStoragesHash(nsDOMStorage* aStorage);
+
+  nsresult ClearAllStorages();
+
+  static nsresult Initialize();
+
+  static nsDOMStorageManager* gStorageManager;
+
+protected:
+
+  nsTHashtable<nsDOMStorageEntry> mStorages;
 };
 
 class nsDOMStorage : public nsIDOMStorage,
@@ -117,9 +151,14 @@ public:
   nsresult
   SetSecure(const nsAString& aKey, PRBool aSecure);
 
+  // clear all values from the store
+  void ClearAll();
+
 protected:
 
-  nsresult InitDB();
+  friend class nsDOMStorageManager;
+
+  static nsresult InitDB();
 
   // cache the keys from the database for faster lookup
   nsresult CacheKeysFromDB();

@@ -77,6 +77,7 @@
 #include "nsXBLAtoms.h"
 #include "nsXBLWindowKeyHandler.h"
 #include "txXSLTProcessor.h"
+#include "nsDOMStorage.h"
 
 #ifdef MOZ_XUL
 #include "nsXULContentUtils.h"
@@ -176,6 +177,12 @@ nsLayoutStatics::Initialize()
 
   if (!txXSLTProcessor::init()) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  rv = nsDOMStorageManager::Initialize();
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Could not initialize nsDOMStorageManager");
+    return rv;
   }
 
   return NS_OK;

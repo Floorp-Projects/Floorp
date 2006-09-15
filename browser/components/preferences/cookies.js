@@ -187,7 +187,7 @@ var gCookiesWindow = {
     this._view._rowCount += rowCountImpact;
     this._tree.treeBoxObject.rowCountChanged(oldRowCount - 1, rowCountImpact);
 
-    document.getElementById("removeAllCookies").disabled = this._view._filtered || (this._view.rowCount == 0);
+    document.getElementById("removeAllCookies").disabled = this._view._filtered;
   },
   
   _view: {
@@ -575,7 +575,7 @@ var gCookiesWindow = {
     var stringKey = selectedCookieCount == 1 ? "removeCookie" : "removeCookies";
     document.getElementById("removeCookie").label = this._bundle.getString(stringKey);
     
-    document.getElementById("removeAllCookies").disabled = this._view._filtered || (this._view.rowCount == 0);
+    document.getElementById("removeAllCookies").disabled = this._view._filtered;
     document.getElementById("removeCookie").disabled = !(seln.count > 0);
   },
   
