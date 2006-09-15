@@ -95,6 +95,8 @@ nsAboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
             if (NS_FAILED(rv))
                 return rv;
 
+            tempChannel->SetOriginalURI(aURI);
+
             // Keep the page from getting unnecessary privileges unless it needs them
             if (kRedirMap[i].dropChromePrivs)
             {
