@@ -1405,7 +1405,7 @@ XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper)
   if (xpcwrappedjs) {
     XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
 
-    return JS_FALSE;
+    return nsnull;
   }
 
   JSObject *obj = wrapper->GetNativeWrapper();
