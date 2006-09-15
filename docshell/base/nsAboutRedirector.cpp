@@ -29,6 +29,7 @@
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
 #include "plstr.h"
+#include "nsIScriptSecurityManager.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -53,10 +54,35 @@ nsAboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
     if (NS_FAILED(rv))
         return rv;
 
+    static const char kChromePrefix[] = "chrome:";
     for (int i = 0; i< kRedirTotal; i++) 
     {
         if (!PL_strcasecmp(path, kRedirMap[i][0]))
-            return ioService->NewChannel(kRedirMap[i][1], nsnull, result);
+        {
+            nsCOMPtr<nsIChannel> tempChannel;
+             rv = ioService->NewChannel(kRedirMap[i][1], nsnull, getter_AddRefs(tempChannel));
+             //-- If we're redirecting to a chrome URL, change the owner of the channel
+             //   to keep the page from getting unnecessary privileges.
+             if (NS_SUCCEEDED(rv) && result &&
+                 !PL_strncasecmp(kRedirMap[i][1], kChromePrefix, sizeof(kChromePrefix)-1))
+             {
+                  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+                  if (NS_FAILED(rv))
+                      return rv;
+            
+                  nsCOMPtr<nsIPrincipal> principal;
+                  rv = securityManager->GetCodebasePrincipal(aURI, getter_AddRefs(principal));
+                  if (NS_FAILED(rv))
+                      return rv;
+            
+                  nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
+                  rv = tempChannel->SetOwner(owner);
+             }
+             *result = tempChannel.get();
+             NS_ADDREF(*result);
+             return rv;
+        }
 
     }
     NS_ASSERTION(0, "nsAboutRedirector called for unknown case");
