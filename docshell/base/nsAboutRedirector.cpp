@@ -67,7 +67,7 @@ struct RedirEntry {
  */
 static RedirEntry kRedirMap[] = {
     { "credits", "http://www.mozilla.org/credits/", PR_TRUE },
-    { "mozilla", "chrome://global/content/mozilla.html", PR_TRUE },
+    { "mozilla", "chrome://global/content/mozilla.xhtml", PR_TRUE },
     { "plugins", "chrome://global/content/plugins.html", PR_TRUE },
     { "config", "chrome://global/content/config.xul", PR_FALSE }
 };
