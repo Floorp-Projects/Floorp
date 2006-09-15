@@ -61,6 +61,12 @@ license {
   margin: 1px 5px 4px 3px;
 }
 
+#incompatibleCheckingThrobber {
+  margin-right: 4px;
+  background-color: transparent;
+  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+}
+
 wizard[currentpageid="updatesfound"] .wizard-button[dlgtype="next"] {
   font-weight: bold;
 }

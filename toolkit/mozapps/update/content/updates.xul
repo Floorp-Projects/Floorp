@@ -97,10 +97,15 @@
     <label id="updateName" crop="right"/>
     <separator id="updateNameSep" class="thin"/>
     <description id="upgradeEvangelism">&upgrade.evangelism;</description>
-    <separator id="upgradeEvangelismSep"/>
+    <separator id="upgradeEvangelismSep" flex="1"/>
     <deck id="detailsDeck" flex="1">
       <vbox align="start">
-        <description>&incompatibleChecking.label;</description>
+        <hbox align="start">
+          <image id="incompatibleCheckingThrobber"/>
+          <vbox flex="1">
+            <description>&incompatibleChecking.label;</description>
+          </vbox>
+        </hbox>
       </vbox>
       <vbox>
         <vbox id="moreInfoContent" flex="1">
