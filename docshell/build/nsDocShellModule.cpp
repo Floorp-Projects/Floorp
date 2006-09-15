@@ -46,6 +46,8 @@
 #include "nsDefaultURIFixup.h"
 #include "nsWebNavigationInfo.h"
 
+#include "nsAboutRedirector.h"
+
 // uriloader
 #include "nsURILoader.h"
 #include "nsDocLoader.h"
@@ -131,6 +133,58 @@ static const nsModuleComponentInfo gDocShellModuleInfo[] = {
       NS_WEBNAVIGATION_INFO_CID,
       NS_WEBNAVIGATION_INFO_CONTRACTID,
       nsWebNavigationInfoConstructor
+    },
+
+    // about redirector
+    { "about:config",
+      NS_ABOUT_REDIRECTOR_MODULE_CID,
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "config",
+      nsAboutRedirector::Create
+    },
+    { "about:credits",
+      NS_ABOUT_REDIRECTOR_MODULE_CID,
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "credits",
+      nsAboutRedirector::Create
+    },
+    { "about:plugins",
+      NS_ABOUT_REDIRECTOR_MODULE_CID,
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "plugins",
+      nsAboutRedirector::Create
+    },
+    { "about:mozilla",
+      NS_ABOUT_REDIRECTOR_MODULE_CID,
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "mozilla",
+      nsAboutRedirector::Create
+    },
+    { "about:logo",
+      NS_ABOUT_REDIRECTOR_MODULE_CID,
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "logo",
+      nsAboutRedirector::Create
+    },
+    { "about:buildconfig",
+      NS_ABOUT_REDIRECTOR_MODULE_CID,
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "buildconfig",
+      nsAboutRedirector::Create
+    },
+    { "about:license",
+      NS_ABOUT_REDIRECTOR_MODULE_CID,
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "license",
+      nsAboutRedirector::Create
+    },
+    { "about:licence",
+      NS_ABOUT_REDIRECTOR_MODULE_CID,
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "licence",
+      nsAboutRedirector::Create
+    },
+    { "about:about",
+      NS_ABOUT_REDIRECTOR_MODULE_CID,
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "about",
+      nsAboutRedirector::Create
+    },
+    { "about:neterror",
+      NS_ABOUT_REDIRECTOR_MODULE_CID,
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "neterror",
+      nsAboutRedirector::Create
     },
 
     // uriloader

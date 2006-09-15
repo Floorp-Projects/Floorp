@@ -128,6 +128,7 @@ CPPSRCS		= \
 		nsGlobalHistoryAdapter.cpp \
 		nsGlobalHistory2Adapter.cpp \
 		nsWebNavigationInfo.cpp \
+		nsAboutRedirector.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a
