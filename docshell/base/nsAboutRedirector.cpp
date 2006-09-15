@@ -22,6 +22,7 @@
  */
 
 #include "nsAboutRedirector.h"
+#include "nsNetCID.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
