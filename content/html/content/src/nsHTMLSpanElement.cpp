@@ -100,7 +100,7 @@ nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
 {
   if (mNodeInfo->Equals(nsHTMLAtoms::xmp) ||
       mNodeInfo->Equals(nsHTMLAtoms::plaintext)) {
-    GetContentsAsText(aInnerHTML);
+    nsContentUtils::GetNodeTextContent(this, PR_FALSE, aInnerHTML);
     return NS_OK;
   }
 
@@ -112,7 +112,7 @@ nsHTMLSpanElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   if (mNodeInfo->Equals(nsHTMLAtoms::xmp) ||
       mNodeInfo->Equals(nsHTMLAtoms::plaintext)) {
-    return ReplaceContentsWithText(aInnerHTML, PR_TRUE);
+    return nsContentUtils::SetNodeTextContent(this, aInnerHTML, PR_TRUE);
   }
 
   return nsGenericHTMLElement::SetInnerHTML(aInnerHTML);

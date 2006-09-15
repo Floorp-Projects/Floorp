@@ -137,6 +137,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsAttrName.h"
 #include "nsIDOMUserDataHandler.h"
 #include "nsIFragmentContentSink.h"
+#include "nsContentCreatorFunctions.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -3521,4 +3522,95 @@ nsContentUtils::CreateDocument(const nsAString& aNamespaceURI,
   }
 
   return NS_OK;
+}
+
+/* static */
+nsresult
+nsContentUtils::SetNodeTextContent(nsIContent* aContent,
+                                   const nsAString& aValue,
+                                   PRBool aTryReuse)
+{
+  // Might as well stick a batch around this since we're performing several
+  // mutations.
+  mozAutoDocUpdate updateBatch(aContent->GetCurrentDoc(),
+    UPDATE_CONTENT_MODEL, PR_TRUE);
+
+  PRUint32 childCount = aContent->GetChildCount();
+
+  if (aTryReuse && !aValue.IsEmpty()) {
+    PRUint32 removeIndex = 0;
+
+    // i is unsigned, so i >= is always true
+    for (PRUint32 i = 0; i < childCount; ++i) {
+      nsIContent* child = aContent->GetChildAt(removeIndex);
+      if (removeIndex == 0 && child->IsNodeOfType(nsINode::eTEXT)) {
+        nsresult rv = child->SetText(aValue, PR_TRUE);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        removeIndex = 1;
+      }
+      else {
+        aContent->RemoveChildAt(removeIndex, PR_TRUE);
+      }
+    }
+    
+    if (removeIndex == 1) {
+      return NS_OK;
+    }
+  }
+  else {
+    // i is unsigned, so i >= is always true
+    for (PRUint32 i = childCount; i-- != 0; ) {
+      aContent->RemoveChildAt(i, PR_TRUE);
+    }
+  }
+
+  if (aValue.IsEmpty()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIContent> textContent;
+  nsresult rv = NS_NewTextNode(getter_AddRefs(textContent),
+                               aContent->NodeInfo()->NodeInfoManager());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  textContent->SetText(aValue, PR_TRUE);
+
+  return aContent->AppendChildTo(textContent, PR_TRUE);
+}
+
+static void AppendNodeTextContentsRecurse(nsINode* aNode, nsAString& aResult)
+{
+  nsIContent* child;
+  PRUint32 i;
+  for (i = 0; (child = aNode->GetChildAt(i)); ++i) {
+    if (child->IsNodeOfType(nsINode::eELEMENT)) {
+      AppendNodeTextContentsRecurse(child, aResult);
+    }
+    else if (child->IsNodeOfType(nsINode::eTEXT)) {
+      child->AppendTextTo(aResult);
+    }
+  }
+}
+
+/* static */
+void
+nsContentUtils::AppendNodeTextContent(nsINode* aNode, PRBool aDeep,
+                                      nsAString& aResult)
+{
+  if (aNode->IsNodeOfType(nsINode::eTEXT)) {
+    NS_STATIC_CAST(nsIContent*, aNode)->AppendTextTo(aResult);
+  }
+  else if (aDeep) {
+    AppendNodeTextContentsRecurse(aNode, aResult);
+  }
+  else {
+    nsIContent* child;
+    PRUint32 i;
+    for (i = 0; (child = aNode->GetChildAt(i)); ++i) {
+      if (child->IsNodeOfType(nsINode::eTEXT)) {
+        child->AppendTextTo(aResult);
+      }
+    }
+  }
 }

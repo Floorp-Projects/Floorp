@@ -626,16 +626,6 @@ protected:
   virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
 
   /**
-   * ReplaceContentsWithText will take the aText string and make sure
-   * that the only child of |this| is a textnode which corresponds to
-   * that string.
-   *
-   * @param aText the text to put in
-   * @param aNotify whether to notify the document of child adds/removes
-   */
-  nsresult ReplaceContentsWithText(const nsAString& aText, PRBool aNotify);
-
-  /**
    * Helper method for NS_IMPL_STRING_ATTR macro.
    * Gets the value of an attribute, returns empty string if
    * attribute isn't set. Only works for attributes in null namespace.

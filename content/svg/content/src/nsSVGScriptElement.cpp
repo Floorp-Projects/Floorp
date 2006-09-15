@@ -319,7 +319,7 @@ nsSVGScriptElement::GetScriptURI()
 void
 nsSVGScriptElement::GetScriptText(nsAString& text)
 {
-  GetContentsAsText(text);
+  nsContentUtils::GetNodeTextContent(this, PR_FALSE, text);
 }
 
 void

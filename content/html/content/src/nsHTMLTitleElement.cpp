@@ -101,43 +101,19 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLTitleElement)
 NS_IMETHODIMP 
 nsHTMLTitleElement::GetText(nsAString& aTitle)
 {
-  nsresult result = NS_OK;
-  nsCOMPtr<nsIDOMNode> child;
+  nsContentUtils::GetNodeTextContent(this, PR_FALSE, aTitle);
 
-  result = GetFirstChild(getter_AddRefs(child));
-
-  if ((NS_OK == result) && child) {
-    nsCOMPtr<nsIDOMText> text(do_QueryInterface(child));
-
-    if (text) {
-      text->GetData(aTitle);
-    }
-  }
-
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsHTMLTitleElement::SetText(const nsAString& aTitle)
 {
-  nsresult result = NS_OK;
-  nsCOMPtr<nsIDOMNode> child;
-
   nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(GetCurrentDoc()));
 
   if (htmlDoc) {
     htmlDoc->SetTitle(aTitle);
   }   
 
-  result = GetFirstChild(getter_AddRefs(child));
-
-  if ((NS_OK == result) && child) {
-    nsCOMPtr<nsIDOMText> text(do_QueryInterface(child));
-    
-    if (text) {
-      text->SetData(aTitle);
-    }
-  }
-
-  return result;
+  return nsContentUtils::SetNodeTextContent(this, aTitle, PR_TRUE);
 }

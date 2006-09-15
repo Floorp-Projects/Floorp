@@ -120,12 +120,6 @@ public:
   {
   }
 
-  static nsresult GetTextContent(nsIContent *aContent,
-                                 nsAString &aTextContent);
-
-  static nsresult SetTextContent(nsIContent *aContent,
-                                 const nsAString &aTextContent);
-
   /**
    * Determines whether two nodes are equal.
    *

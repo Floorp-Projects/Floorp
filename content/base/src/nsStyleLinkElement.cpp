@@ -62,6 +62,7 @@
 #include "nsCRT.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsUnicharInputStream.h"
+#include "nsContentUtils.h"
 
 nsStyleLinkElement::nsStyleLinkElement()
   : mDontLoadStyle(PR_FALSE)
@@ -278,27 +279,8 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
   PRBool doneLoading;
   nsresult rv = NS_OK;
   if (isInline) {
-    PRUint32 count = thisContent->GetChildCount();
-
     nsAutoString content;
-
-    PRUint32 i;
-    for (i = 0; i < count; ++i) {
-      nsIContent *node = thisContent->GetChildAt(i);
-      nsCOMPtr<nsIDOMText> tc = do_QueryInterface(node);
-      // Ignore nodes that are not DOMText.
-      if (!tc) {
-        nsCOMPtr<nsIDOMComment> comment = do_QueryInterface(node);
-        if (comment)
-          // Skip a comment
-          continue;
-        break;
-      }
-
-      nsAutoString tcString;
-      tc->GetData(tcString);
-      content.Append(tcString);
-    }
+    nsContentUtils::GetNodeTextContent(thisContent, PR_FALSE, content);
 
     nsCOMPtr<nsIUnicharInputStream> uin;
     rv = nsSimpleUnicharStreamFactory::GetInstance()->

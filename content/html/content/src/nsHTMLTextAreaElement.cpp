@@ -486,14 +486,14 @@ nsHTMLTextAreaElement::SetValueChanged(PRBool aValueChanged)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::GetDefaultValue(nsAString& aDefaultValue)
 {
-  GetContentsAsText(aDefaultValue);
+  nsContentUtils::GetNodeTextContent(this, PR_FALSE, aDefaultValue);
   return NS_OK;
 }  
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetDefaultValue(const nsAString& aDefaultValue)
 {
-  nsresult rv = ReplaceContentsWithText(aDefaultValue, PR_TRUE);
+  nsresult rv = nsContentUtils::SetNodeTextContent(this, aDefaultValue, PR_TRUE);
   if (NS_SUCCEEDED(rv) && !mValueChanged) {
     Reset();
   }

@@ -157,16 +157,9 @@ nsMathMLmoFrame::ProcessTextData(nsPresContext* aPresContext)
 
   // kids can be comment-nodes, attribute-nodes, text-nodes...
   // we use the DOM to ensure that we only look at text-nodes...
+  // This could be done much faster since we only care about the first char
   nsAutoString data;
-  PRUint32 numKids = mContent->GetChildCount();
-  for (PRUint32 kid = 0; kid < numKids; ++kid) {
-    nsCOMPtr<nsIDOMText> kidText(do_QueryInterface(mContent->GetChildAt(kid)));
-    if (kidText) {
-      nsAutoString kidData;
-      kidText->GetData(kidData);
-      data += kidData;
-    }
-  }
+  nsContentUtils::GetNodeTextContent(mContent, PR_FALSE, data);
   PRInt32 length = data.Length();
   PRUnichar ch = (length == 0) ? kNullCh : data[0];
 

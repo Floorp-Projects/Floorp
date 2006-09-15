@@ -482,7 +482,7 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
         // Check to see if the src attribute is xbl:text.  If so, then we need to obtain the 
         // children of the real element and get the text nodes' values.
         if (aAttribute == nsHTMLAtoms::text && aNameSpaceID == kNameSpaceID_XBL) {
-          nsXBLBinding::GetTextData(aChangedElement, value);
+          nsContentUtils::GetNodeTextContent(aChangedElement, PR_FALSE, value);
           value.StripChar(PRUnichar('\n'));
           value.StripChar(PRUnichar('\r'));
           nsAutoString stripVal(value);
@@ -852,7 +852,8 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
   PRBool attrPresent = PR_TRUE;
 
   if (src == nsHTMLAtoms::text && srcNs == kNameSpaceID_XBL) {
-    nsXBLBinding::GetTextData(changeData->mBoundElement, value);
+    nsContentUtils::GetNodeTextContent(changeData->mBoundElement, PR_FALSE,
+                                       value);
     value.StripChar(PRUnichar('\n'));
     value.StripChar(PRUnichar('\r'));
     nsAutoString stripVal(value);

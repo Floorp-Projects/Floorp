@@ -375,28 +375,8 @@ nsNode3Tearoff::GetTextContent(nsAString &aTextContent)
     return node->GetNodeValue(aTextContent);
   }
 
-  return GetTextContent(mContent, aTextContent);
-}
+  nsContentUtils::GetNodeTextContent(mContent, PR_TRUE, aTextContent);
 
-// static
-nsresult
-nsNode3Tearoff::GetTextContent(nsIContent *aContent,
-                               nsAString &aTextContent)
-{
-  NS_ENSURE_ARG_POINTER(aContent);
-
-  nsCOMPtr<nsIContentIterator> iter;
-  NS_NewContentIterator(getter_AddRefs(iter));
-  iter->Init(aContent);
-
-  aTextContent.Truncate();
-  while (!iter->IsDone()) {
-    nsIContent *content = iter->GetCurrentNode();
-    if (content->IsNodeOfType(nsINode::eTEXT)) {
-      content->AppendTextTo(aTextContent);
-    }
-    iter->Next();
-  }
   return NS_OK;
 }
 
@@ -420,33 +400,7 @@ nsNode3Tearoff::SetTextContent(const nsAString &aTextContent)
     return node->SetNodeValue(aTextContent);
   }
 
-  return SetTextContent(mContent, aTextContent);
-}
-
-// static
-nsresult
-nsNode3Tearoff::SetTextContent(nsIContent* aContent,
-                               const nsAString &aTextContent)
-{
-  PRUint32 childCount = aContent->GetChildCount();
-
-  // i is unsigned, so i >= is always true
-  for (PRUint32 i = childCount; i-- != 0; ) {
-    aContent->RemoveChildAt(i, PR_TRUE);
-  }
-
-  if (!aTextContent.IsEmpty()) {
-    nsCOMPtr<nsIContent> textContent;
-    nsresult rv = NS_NewTextNode(getter_AddRefs(textContent),
-                                 aContent->NodeInfo()->NodeInfoManager());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    textContent->SetText(aTextContent, PR_TRUE);
-
-    aContent->AppendChildTo(textContent, PR_TRUE);
-  }
-
-  return NS_OK;
+  return nsContentUtils::SetNodeTextContent(mContent, aTextContent, PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -3719,20 +3673,4 @@ nsINode::nsSlots*
 nsGenericElement::CreateSlots()
 {
   return new nsDOMSlots(mFlagsOrSlots);
-}
-
-void
-nsGenericElement::GetContentsAsText(nsAString& aText)
-{
-  aText.Truncate();
-  PRInt32 children = GetChildCount();
-
-  PRInt32 i;
-  for (i = 0; i < children; ++i) {
-    nsIContent *child = GetChildAt(i);
-
-    if (child->IsNodeOfType(eTEXT)) {
-      child->AppendTextTo(aText);
-    }
-  }
 }

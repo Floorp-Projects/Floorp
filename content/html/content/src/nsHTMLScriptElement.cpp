@@ -516,14 +516,14 @@ nsHTMLScriptElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 NS_IMETHODIMP
 nsHTMLScriptElement::GetText(nsAString& aValue)
 {
-  GetContentsAsText(aValue);
+  nsContentUtils::GetNodeTextContent(this, PR_FALSE, aValue);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLScriptElement::SetText(const nsAString& aValue)
 {
-  return ReplaceContentsWithText(aValue, PR_TRUE);
+  return nsContentUtils::SetNodeTextContent(this, aValue, PR_TRUE);
 }
 
 
@@ -537,14 +537,14 @@ NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Event, event)
 nsresult
 nsHTMLScriptElement::GetInnerHTML(nsAString& aInnerHTML)
 {
-  GetContentsAsText(aInnerHTML);
+  nsContentUtils::GetNodeTextContent(this, PR_FALSE, aInnerHTML);
   return NS_OK;
 }
 
 nsresult
 nsHTMLScriptElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
-  return ReplaceContentsWithText(aInnerHTML, PR_TRUE);
+  return nsContentUtils::SetNodeTextContent(this, aInnerHTML, PR_TRUE);
 }
 
 void
