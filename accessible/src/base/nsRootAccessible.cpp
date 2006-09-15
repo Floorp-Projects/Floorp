@@ -282,9 +282,9 @@ nsresult nsRootAccessible::AddEventListeners()
   }
 
   GetChromeEventHandler(getter_AddRefs(target));
-  NS_ASSERTION(target, "No chrome event handler for document");
-  nsresult rv = target->AddEventListener(NS_LITERAL_STRING("pagehide"), this, PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (target) {
+    target->AddEventListener(NS_LITERAL_STRING("pagehide"), this, PR_TRUE);
+  }
 
   if (!mCaretAccessible) {
     mCaretAccessible = new nsCaretAccessible(mDOMNode, mWeakShell, this);
@@ -318,8 +318,9 @@ nsresult nsRootAccessible::RemoveEventListeners()
   }
 
   GetChromeEventHandler(getter_AddRefs(target));
-  nsresult rv = target->RemoveEventListener(NS_LITERAL_STRING("pagehide"), this, PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (target) {
+    target->RemoveEventListener(NS_LITERAL_STRING("pagehide"), this, PR_TRUE);
+  }
 
   if (mCaretAccessible) {
     mCaretAccessible->RemoveSelectionListener();
