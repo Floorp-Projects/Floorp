@@ -51,12 +51,25 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 NS_IMPL_ISUPPORTS1(nsAboutRedirector, nsIAboutModule)
 
+struct RedirEntry {
+    const char* id;
+    const char* url;
+    PRBool dropChromePrivs; // if PR_TRUE, the page will not have chrome privileges
+};
+
 // if you add something here, make sure you update the total
-static const char *kRedirMap[][2] = {
-    { "credits", "http://www.mozilla.org/credits/" },
-    { "mozilla", "chrome://global/content/mozilla.html" },
-    { "plugins", "chrome://global/content/plugins.html" },
-    { "config", "chrome://global/content/config.xul" }
+/*
+  Entries with dropChromePrivs == PR_FALSE will run with chrome
+  privileges. This is potentially dangerous. Please use PR_TRUE
+  as the third argument to each map item below unless your about:
+  page really needs chrome privileges. Security review is required
+  before adding new map entries with dropChromePrivs == PR_FALSE.
+ */
+static RedirEntry kRedirMap[] = {
+    { "credits", "http://www.mozilla.org/credits/", PR_TRUE },
+    { "mozilla", "chrome://global/content/mozilla.html", PR_TRUE },
+    { "plugins", "chrome://global/content/plugins.html", PR_TRUE },
+    { "config", "chrome://global/content/config.xul", PR_FALSE }
 };
 static const int kRedirTotal = 4; // sizeof(kRedirMap)/sizeof(*kRedirMap)
 
@@ -71,18 +84,15 @@ nsAboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
     if (NS_FAILED(rv))
         return rv;
 
-    static const char kChromePrefix[] = "chrome:";
     for (int i = 0; i< kRedirTotal; i++) 
     {
-        if (!PL_strcasecmp(path.get(), kRedirMap[i][0]))
+        if (!PL_strcasecmp(path.get(), kRedirMap[i].id))
         {
             nsCOMPtr<nsIChannel> tempChannel;
-             rv = ioService->NewChannel(nsDependentCString(kRedirMap[i][1]),
+             rv = ioService->NewChannel(nsDependentCString(kRedirMap[i].url),
                                         nsnull, nsnull, getter_AddRefs(tempChannel));
-             //-- If we're redirecting to a chrome URL, change the owner of the channel
-             //   to keep the page from getting unnecessary privileges.
-             if (NS_SUCCEEDED(rv) && result &&
-                 !PL_strncasecmp(kRedirMap[i][1], kChromePrefix, sizeof(kChromePrefix)-1))
+             // Keep the page from getting unnecessary privileges unless it needs them
+             if (NS_SUCCEEDED(rv) && result && kRedirMap[i].dropChromePrivs)
              {
                   nsCOMPtr<nsIScriptSecurityManager> securityManager = 
                            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
