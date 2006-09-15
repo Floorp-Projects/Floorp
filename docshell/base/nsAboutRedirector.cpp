@@ -50,31 +50,40 @@ NS_IMPL_ISUPPORTS1(nsAboutRedirector, nsIAboutModule)
 struct RedirEntry {
     const char* id;
     const char* url;
-    PRBool dropChromePrivs; // if PR_TRUE, the page will not have chrome privileges
-    PRBool allowScripts;  // if PR_TRUE, the page will be able to run scripts
-                          // even if script is generally disabled and it
-                          // doesn't have chrome privileges.  Use sparingly!
+    PRUint32 flags;  // See nsIAboutModule.  The URI_SAFE_FOR_UNTRUSTED_CONTENT
+                     // flag does double duty here -- if it's not set, we don't
+                     // drop chrome privileges.
 };
 
 /*
-  Entries with dropChromePrivs == PR_FALSE will run with chrome
-  privileges. This is potentially dangerous. Please use PR_TRUE
-  as the third argument to each map item below unless your about:
-  page really needs chrome privileges. Security review is required
-  before adding new map entries with dropChromePrivs == PR_FALSE.
+  Entries which do not have URI_SAFE_FOR_UNTRUSTED_CONTENT will run with chrome
+  privileges. This is potentially dangerous. Please use
+  URI_SAFE_FOR_UNTRUSTED_CONTENT in the third argument to each map item below
+  unless your about: page really needs chrome privileges. Security review is
+  required before adding new map entries without
+  URI_SAFE_FOR_UNTRUSTED_CONTENT.  Also note, however, that adding
+  URI_SAFE_FOR_UNTRUSTED_CONTENT will allow random web sites to link to that
+  URI.  Perhaps we should separate the two concepts out...
  */
 static RedirEntry kRedirMap[] = {
-    { "credits", "http://www.mozilla.org/credits/", PR_TRUE, PR_FALSE },
-    { "mozilla", "chrome://global/content/mozilla.xhtml", PR_TRUE, PR_FALSE },
-    { "plugins", "chrome://global/content/plugins.html", PR_FALSE, PR_FALSE },
-    { "config", "chrome://global/content/config.xul", PR_FALSE, PR_FALSE },
-    { "logo", "chrome://global/content/logo.gif", PR_TRUE, PR_FALSE },
+    { "credits", "http://www.mozilla.org/credits/",
+      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT },
+    { "mozilla", "chrome://global/content/mozilla.xhtml",
+      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT },
+    { "plugins", "chrome://global/content/plugins.html", 0 },
+    { "config", "chrome://global/content/config.xul", 0 },
+    { "logo", "chrome://global/content/logo.gif",
+      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT},
     { "buildconfig", "chrome://global/content/buildconfig.html",
-      PR_TRUE, PR_FALSE },
-    { "license", "chrome://global/content/license.html", PR_TRUE, PR_FALSE },
-    { "licence", "chrome://global/content/license.html", PR_TRUE, PR_FALSE },
-    { "about", "chrome://global/content/aboutAbout.html", PR_FALSE, PR_FALSE },
-    { "neterror", "chrome://global/content/netError.xhtml", PR_TRUE, PR_TRUE }
+      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT },
+    { "license", "chrome://global/content/license.html",
+      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT },
+    { "licence", "chrome://global/content/license.html",
+      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT },
+    { "about", "chrome://global/content/aboutAbout.html", 0 },
+    { "neterror", "chrome://global/content/netError.xhtml",
+      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
+      nsIAboutModule::ALLOW_SCRIPT }
 };
 static const int kRedirTotal = NS_ARRAY_LENGTH(kRedirMap);
 
@@ -108,7 +117,8 @@ nsAboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
             tempChannel->SetOriginalURI(aURI);
 
             // Keep the page from getting unnecessary privileges unless it needs them
-            if (kRedirMap[i].dropChromePrivs)
+            if (kRedirMap[i].flags &
+                nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT)
             {
                 nsCOMPtr<nsIScriptSecurityManager> securityManager = 
                          do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
@@ -147,11 +157,7 @@ nsAboutRedirector::GetURIFlags(nsIURI *aURI, PRUint32 *result)
     {
         if (name.EqualsASCII(kRedirMap[i].id))
         {
-            *result = kRedirMap[i].dropChromePrivs ?
-                nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT : 0;
-            if (kRedirMap[i].allowScripts) {
-                *result |= nsIAboutModule::ALLOW_SCRIPT;
-            }
+            *result = kRedirMap[i].flags;
             return NS_OK;
         }
     }
