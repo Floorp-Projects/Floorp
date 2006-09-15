@@ -277,7 +277,8 @@
           for each (ed in this.mItemData) {
             if (aItem.hasSameIds(ed.item))
             {
-              return;
+              this.deleteItem(aItem);
+              break;
             }
           }
 
