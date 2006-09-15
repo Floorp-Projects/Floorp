@@ -51,6 +51,9 @@ struct RedirEntry {
     const char* id;
     const char* url;
     PRBool dropChromePrivs; // if PR_TRUE, the page will not have chrome privileges
+    PRBool allowScripts;  // if PR_TRUE, the page will be able to run scripts
+                          // even if script is generally disabled and it
+                          // doesn't have chrome privileges.  Use sparingly!
 };
 
 /*
@@ -61,16 +64,17 @@ struct RedirEntry {
   before adding new map entries with dropChromePrivs == PR_FALSE.
  */
 static RedirEntry kRedirMap[] = {
-    { "credits", "http://www.mozilla.org/credits/", PR_TRUE },
-    { "mozilla", "chrome://global/content/mozilla.xhtml", PR_TRUE },
-    { "plugins", "chrome://global/content/plugins.html", PR_FALSE },
-    { "config", "chrome://global/content/config.xul", PR_FALSE },
-    { "logo", "chrome://global/content/logo.gif", PR_TRUE },
-    { "buildconfig", "chrome://global/content/buildconfig.html", PR_TRUE },
-    { "license", "chrome://global/content/license.html", PR_TRUE },
-    { "licence", "chrome://global/content/license.html", PR_TRUE },
-    { "about", "chrome://global/content/aboutAbout.html", PR_FALSE },
-    { "neterror", "chrome://global/content/netError.xhtml", PR_TRUE }
+    { "credits", "http://www.mozilla.org/credits/", PR_TRUE, PR_FALSE },
+    { "mozilla", "chrome://global/content/mozilla.xhtml", PR_TRUE, PR_FALSE },
+    { "plugins", "chrome://global/content/plugins.html", PR_FALSE, PR_FALSE },
+    { "config", "chrome://global/content/config.xul", PR_FALSE, PR_FALSE },
+    { "logo", "chrome://global/content/logo.gif", PR_TRUE, PR_FALSE },
+    { "buildconfig", "chrome://global/content/buildconfig.html",
+      PR_TRUE, PR_FALSE },
+    { "license", "chrome://global/content/license.html", PR_TRUE, PR_FALSE },
+    { "licence", "chrome://global/content/license.html", PR_TRUE, PR_FALSE },
+    { "about", "chrome://global/content/aboutAbout.html", PR_FALSE, PR_FALSE },
+    { "neterror", "chrome://global/content/netError.xhtml", PR_TRUE, PR_TRUE }
 };
 static const int kRedirTotal = NS_ARRAY_LENGTH(kRedirMap);
 
@@ -145,6 +149,9 @@ nsAboutRedirector::GetURIFlags(nsIURI *aURI, PRUint32 *result)
         {
             *result = kRedirMap[i].dropChromePrivs ?
                 nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT : 0;
+            if (kRedirMap[i].allowScripts) {
+                *result |= nsIAboutModule::ALLOW_SCRIPT;
+            }
             return NS_OK;
         }
     }
