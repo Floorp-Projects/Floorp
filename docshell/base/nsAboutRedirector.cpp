@@ -42,6 +42,7 @@
 #include "nsNetUtil.h"
 #include "plstr.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsAboutProtocolUtils.h"
 
 NS_IMPL_ISUPPORTS1(nsAboutRedirector, nsIAboutModule)
 
@@ -81,11 +82,9 @@ nsAboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
     nsresult rv;
 
     nsCAutoString path;
-    rv = aURI->GetPath(path);
+    rv = NS_GetAboutModuleName(aURI, path);
     if (NS_FAILED(rv))
         return rv;
-
-    nsAboutProtocolHandler::StripQueryAndHash(path);
 
     nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
     if (NS_FAILED(rv))
