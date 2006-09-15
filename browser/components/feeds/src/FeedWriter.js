@@ -699,29 +699,6 @@ FeedWriter.prototype = {
       return null;
   },
 
-  /**
-   * Helper util for the write method. Checks whether the
-   * window argument is a trusted object.
-   */
-  _isTrustedWindow: function(obj) {
-    var s = new Components.utils.Sandbox("http://localhost.localdomain.:0/");
-    
-    /* Some notes:
-     * 1. Doing an instanceof check outside of the sandbox is not safe because
-     *    it would call the QueryInterface method of an untrusted object.
-     * 2. Inside the sandbox (which does not have chrome privileges), the
-     *    QueryInterface method of an untrusted object will never get called
-     *    since it has a different origin.
-     * 3. We cannot check whether the object is an instance of nsIDOMWindow
-     *    because XPConnect wraps the window argument as an nsIDOMWindow
-     *    due to the argument type (nsIDOMWindow, suprise suprise).
-     */
-    s.nsIInterfaceRequestor = Ci.nsIInterfaceRequestor;
-    s.obj = obj;
-    const IS_TRUSTED_CODE = "obj instanceof nsIInterfaceRequestor;"
-    return Components.utils.evalInSandbox(IS_TRUSTED_CODE, s);
-  },
-
   _window: null,
   _document: null,
   _feedURI: null,
@@ -730,8 +707,10 @@ FeedWriter.prototype = {
    * See nsIFeedWriter
    */
   write: function FW_write(window) {
-    if (!this._isTrustedWindow(window))
-      return;
+    // Explicitly wrap |window| in an XPCNativeWrapper to make sure
+    // it's a real native object! This will throw an exception if we
+    // get a non-native object.
+    window = new XPCNativeWrapper(window);
 
     this._feedURI = this._getOriginalURI(window);
     if (!this._feedURI)
