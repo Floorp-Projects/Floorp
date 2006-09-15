@@ -142,9 +142,16 @@ radio[pane=paneLightning] {
 /**
  * iMIP notification bar
  */
-.iMipNotificationBar {
+#imipNotificationImage {
+    list-style-image: url("chrome://calendar/skin/cal-icon32.png");
+    -moz-image-region: rect(0px, 32px, 32px, 0px);
+}
+
+#imipNotificationBar {
+    border: 1px solid #87bbcc;
+    -moz-border-radius: 7px;
     background-color: #baeeff;
-    color: #000000;  
-    border-bottom: 1px solid ThreeDDarkShadow;
-    padding: 3px;
+    padding: 3px 6px 4px 6px;
+    margin: 6px 6px 0px 6px;
+    color: black;
 }

@@ -212,12 +212,10 @@
 
 <vbox id="messagepanebox">
   <hbox id="imip-bar" collapsed="true" insertbefore="msgHeaderView">
-    <hbox id="imip-notificationbar"
+    <hbox id="imipNotificationBar"
           align="center"
-          class="iMipNotificationBar"
           flex="1">
-      <image id="lightningImage"
-             src="chrome://lightning/skin/cal-icon16.png"/>
+      <image id="imipNotificationImage"/>
       <description id="imip-description"
                    class="msgNotificationBarText"
                    flex="1">
