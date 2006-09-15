@@ -140,8 +140,6 @@ public:
 
   already_AddRefed<nsIDOMNodeList> GetAnonymousNodes();
 
-  static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
-
   static nsresult DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
                                 const nsAFlatCString& aClassName,
                                 void **aClassObject);

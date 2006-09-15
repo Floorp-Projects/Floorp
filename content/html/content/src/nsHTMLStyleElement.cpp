@@ -260,7 +260,7 @@ nsHTMLStyleElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 nsresult
 nsHTMLStyleElement::GetInnerHTML(nsAString& aInnerHTML)
 {
-  GetContentsAsText(aInnerHTML);
+  nsContentUtils::GetNodeTextContent(this, PR_FALSE, aInnerHTML);
   return NS_OK;
 }
 
@@ -269,7 +269,7 @@ nsHTMLStyleElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   SetEnableUpdates(PR_FALSE);
 
-  nsresult rv = ReplaceContentsWithText(aInnerHTML, PR_TRUE);
+  nsresult rv = nsContentUtils::SetNodeTextContent(this, aInnerHTML, PR_TRUE);
   
   SetEnableUpdates(PR_TRUE);
   

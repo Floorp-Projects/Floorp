@@ -44,6 +44,7 @@
 #include "nsStyleConsts.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
+#include "nsContentUtils.h"
 
 #include "nsIDOMText.h"
 #include "nsFrameManager.h"
@@ -285,17 +286,11 @@ nsMathMLTokenFrame::SetTextStyle(nsPresContext* aPresContext)
   // Get the text content that we enclose and its length
   // our content can include comment-nodes, attribute-nodes, text-nodes...
   // we use the DOM to make sure that we are only looking at text-nodes...
-  nsAutoString data;
-  PRUint32 numKids = mContent->GetChildCount();
-  for (PRUint32 kid = 0; kid < numKids; kid++) {
-    nsCOMPtr<nsIDOMText> kidText(do_QueryInterface(mContent->GetChildAt(kid)));
-    if (kidText) {
-      nsAutoString kidData;
-      kidText->GetData(kidData);
-      data += kidData;
-    }
-  }
 
+  // If it matters, this could be done much faster since all we care about is
+  // the first char.
+  nsAutoString data;
+  nsContentUtils::GetNodeTextContent(mContent, PR_FALSE, data);
   PRInt32 length = data.Length();
   if (!length)
     return;

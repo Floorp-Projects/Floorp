@@ -56,8 +56,7 @@
 #include "nsIDOMUserDataHandler.h"
 
 class nsDocumentFragment : public nsGenericElement,
-                           public nsIDOMDocumentFragment,
-                           public nsIDOM3Node
+                           public nsIDOMDocumentFragment
 {
 public:
   nsDocumentFragment(nsINodeInfo *aNodeInfo);
@@ -125,9 +124,6 @@ public:
                             const nsAString& aVersion,
                             PRBool* aReturn)
   { return nsGenericElement::IsSupported(aFeature, aVersion, aReturn); }
-
-  // nsIDOM3Node
-  NS_DECL_NSIDOM3NODE
 
   // nsIContent
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
@@ -204,10 +200,10 @@ nsDocumentFragment::IsNodeOfType(PRUint32 aFlags) const
 NS_INTERFACE_MAP_BEGIN(nsDocumentFragment)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentFragment)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
-  NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
   NS_INTERFACE_MAP_ENTRY(nsINode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGCParticipant)
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(DocumentFragment)
 NS_INTERFACE_MAP_END
@@ -230,134 +226,3 @@ nsDocumentFragment::SetPrefix(const nsAString& aPrefix)
 }
 
 NS_IMPL_ELEMENT_CLONE(nsDocumentFragment)
-
-NS_IMETHODIMP
-nsDocumentFragment::GetBaseURI(nsAString& aURI)
-{
-  aURI.Truncate();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentFragment::LookupPrefix(const nsAString& aNamespaceURI,
-                                 nsAString& aPrefix)
-{
-  aPrefix.Truncate();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentFragment::LookupNamespaceURI(const nsAString& aNamespacePrefix,
-                                       nsAString& aNamespaceURI)
-{
-  aNamespaceURI.Truncate();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentFragment::IsDefaultNamespace(const nsAString& aNamespaceURI,
-                                       PRBool* aReturn)
-{
-  *aReturn = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentFragment::CompareDocumentPosition(nsIDOMNode* aOther,
-                                            PRUint16* aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aOther);
-
-  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
-  NS_ENSURE_TRUE(other, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-
-  *aReturn = nsContentUtils::ComparePosition(other, this);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentFragment::IsSameNode(nsIDOMNode* aOther,
-                               PRBool* aReturn)
-{
-  PRBool sameNode = PR_FALSE;
-
-  if (NS_STATIC_CAST(nsIDOMNode*, this) == aOther) {
-    sameNode = PR_TRUE;
-  }
-
-  *aReturn = sameNode;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentFragment::IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aOther);
-  *aReturn = PR_FALSE;
-
-  nsCOMPtr<nsIContent> aOtherFrag = do_QueryInterface(aOther);
-  if (!aOtherFrag) {
-    return NS_OK;
-  }
-
-  *aReturn = nsNode3Tearoff::AreNodesEqual(this, aOtherFrag);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentFragment::GetFeature(const nsAString& aFeature,
-                               const nsAString& aVersion,
-                               nsISupports** aReturn)
-{
-  NS_NOTYETIMPLEMENTED("nsDocumentFragment::GetFeature()");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDocumentFragment::SetUserData(const nsAString& aKey,
-                                nsIVariant* aData,
-                                nsIDOMUserDataHandler* aHandler,
-                                nsIVariant** aResult)
-{
-  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
-  if (!key) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return nsContentUtils::SetUserData(this, key, aData, aHandler, aResult);
-}
-
-NS_IMETHODIMP
-nsDocumentFragment::GetUserData(const nsAString& aKey,
-                                nsIVariant** aResult)
-{
-  nsIDocument *document = GetOwnerDoc();
-  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
-  if (!key) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  *aResult = NS_STATIC_CAST(nsIVariant*, GetProperty(DOM_USER_DATA, key));
-  NS_IF_ADDREF(*aResult);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentFragment::GetTextContent(nsAString &aTextContent)
-{
-  return nsNode3Tearoff::GetTextContent(this, aTextContent);
-}
-
-NS_IMETHODIMP
-nsDocumentFragment::SetTextContent(const nsAString& aTextContent)
-{
-  return nsNode3Tearoff::SetTextContent(this, aTextContent);
-}
-

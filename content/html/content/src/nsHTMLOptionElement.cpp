@@ -354,27 +354,10 @@ nsHTMLOptionElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLOptionElement::GetText(nsAString& aText)
 {
-  PRUint32 i, numNodes = GetChildCount();
-
-  aText.Truncate();
-
   nsAutoString text;
-  for (i = 0; i < numNodes; i++) {
-    nsCOMPtr<nsIDOMText> domText(do_QueryInterface(GetChildAt(i)));
-
-    if (domText) {
-      nsresult rv = domText->GetData(text);
-      if (NS_FAILED(rv)) {
-        aText.Truncate();
-        return rv;
-      }
-
-      aText.Append(text);
-    }
-  }
+  nsContentUtils::GetNodeTextContent(this, PR_FALSE, text);
 
   // XXX No CompressWhitespace for nsAString.  Sad.
-  text = aText;
   text.CompressWhitespace(PR_TRUE, PR_TRUE);
   aText = text;
 
@@ -384,35 +367,7 @@ nsHTMLOptionElement::GetText(nsAString& aText)
 NS_IMETHODIMP
 nsHTMLOptionElement::SetText(const nsAString& aText)
 {
-  PRUint32 i, numNodes = GetChildCount();
-  PRBool usedExistingTextNode = PR_FALSE;  // Do we need to create a text node?
-  nsresult rv = NS_OK;
-
-  for (i = 0; i < numNodes; i++) {
-    nsCOMPtr<nsIDOMText> domText(do_QueryInterface(GetChildAt(i)));
-
-    if (domText) {
-      rv = domText->SetData(aText);
-
-      if (NS_SUCCEEDED(rv)) {
-        usedExistingTextNode = PR_TRUE;
-      }
-
-      break;
-    }
-  }
-
-  if (!usedExistingTextNode) {
-    nsCOMPtr<nsIContent> text;
-    rv = NS_NewTextNode(getter_AddRefs(text), mNodeInfo->NodeInfoManager());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    text->SetText(aText, PR_TRUE);
-
-    rv = AppendChildTo(text, PR_TRUE);
-  }
-
-  return rv;
+  return nsContentUtils::SetNodeTextContent(this, aText, PR_TRUE);
 }
 
 PRInt32

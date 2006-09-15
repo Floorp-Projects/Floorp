@@ -1184,25 +1184,6 @@ nsXBLBinding::InitClass(const nsCString& aClassName,
   return NS_OK;
 }
 
-nsresult
-nsXBLBinding::GetTextData(nsIContent *aParent, nsString& aResult)
-{
-  aResult.Truncate(0);
-
-  PRUint32 textCount = aParent->GetChildCount();
-  nsAutoString answer;
-  for (PRUint32 j = 0; j < textCount; j++) {
-    // Get the child.
-    nsCOMPtr<nsIDOMText> text(do_QueryInterface(aParent->GetChildAt(j)));
-    if (text) {
-      nsAutoString data;
-      text->GetData(data);
-      aResult += data;
-    }
-  }
-  return NS_OK;
-}
-
 PRBool
 nsXBLBinding::AllowScripts()
 {
