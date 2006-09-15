@@ -150,7 +150,7 @@
         <row align="center">
           <label value="&newevent.server.label;"/>
           <hbox align="center">
-            <menulist id="item-calendar"/>
+            <menulist id="item-calendar" oncommand="updateAccept()"/>
             <label id="read-only-cal"
                    value="&newevent.readonly.cal.warning;"
                    class="warning-text-class" hidden="true"/>
