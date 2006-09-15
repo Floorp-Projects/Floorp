@@ -65,7 +65,7 @@
 		&nbsp;
 		{strip}
 		{if $page < $pages}
-			<a href="{$base_url}/app/query/?{$continuity_params}&amp;page={$smarty.section.pageLoop.index}" accesskey="n" >Next</a>
+			<a href="{$base_url}/app/query/?{$continuity_params}&amp;page={$page+1}" accesskey="n" >Next</a>
 		{/if}
 		{/strip}
 
