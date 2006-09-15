@@ -42,7 +42,7 @@ interface nsIInputStream;
  * This interface provides crytographic hashing algorithms.
  */
 
-[scriptable, uuid(8751865e-b01d-4f33-bc13-b361dde165ed)]
+[scriptable, uuid(1e5b7c43-4688-45ce-92e1-77ed931e3bbe)]
 interface nsICryptoHash : nsISupports
 {
     /**
@@ -51,12 +51,12 @@ interface nsICryptoHash : nsISupports
      * use.  These values map directly onto the values defined
      * in mozilla/security/nss/lib/cryptohi/hasht.h.
      */
-    const short MD2    = 1;
-    const short MD5    = 2;
-    const short SHA1   = 3;
-    const short SHA256 = 4;    
-    const short SHA384 = 5;
-    const short SHA512 = 6;
+    const short MD2    = 1;  /* String value: "md2"    */
+    const short MD5    = 2;  /* String value: "md5"    */
+    const short SHA1   = 3;  /* String value: "sha1"   */
+    const short SHA256 = 4;  /* String value: "sha256" */
+    const short SHA384 = 5;  /* String value: "sha384" */
+    const short SHA512 = 6;  /* String value: "sha512" */
 
     /**
      * Initialize the hashing object. This method may be
@@ -69,11 +69,25 @@ interface nsICryptoHash : nsISupports
      * @throws NS_ERROR_INVALID_ARG if an unsupported algorithm
      *         type is passed.
      *
-     * NOTE: This method must be called before any other method on 
-     *       this interface is called.
+     * NOTE: This method or initWithString must be called
+     *       before any other method on this interface is called.
      */
     void init(in unsigned long aAlgorithm);
 
+    /**
+     * Initialize the hashing object. This method may be
+     * called multiple times with different algorithm types.
+     *
+     * @param aAlgorithm the algorithm type to be used.
+     *
+     * @throws NS_ERROR_INVALID_ARG if an unsupported algorithm
+     *         type is passed.
+     *
+     * NOTE: This method or init must be called before any
+     *       other method on this interface is called.
+     */
+    void initWithString(in ACString aAlgorithm);
+  
     /**
      * @param aData a buffer to calculate the hash over
      *
