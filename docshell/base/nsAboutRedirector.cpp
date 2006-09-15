@@ -43,7 +43,7 @@
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "plstr.h"
 #include "nsIScriptSecurityManager.h"
 
