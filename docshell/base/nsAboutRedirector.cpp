@@ -54,9 +54,10 @@ NS_IMPL_ISUPPORTS1(nsAboutRedirector, nsIAboutModule)
 static const char *kRedirMap[][2] = {
     { "credits", "http://www.mozilla.org/credits/" },
     { "mozilla", "chrome://global/content/mozilla.html" },
-    { "plugins", "chrome://global/content/plugins.html" }
+    { "plugins", "chrome://global/content/plugins.html" },
+    { "config", "chrome://global/content/config.xul" }
 };
-static const int kRedirTotal = 3; // sizeof(kRedirMap)/sizeof(*kRedirMap)
+static const int kRedirTotal = 4; // sizeof(kRedirMap)/sizeof(*kRedirMap)
 
 NS_IMETHODIMP
 nsAboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
