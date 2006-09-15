@@ -41,7 +41,14 @@
 #include "nsCaretAccessible.h"
 #include "nsHTMLSelectAccessible.h"
 #include "nsIAccessibleCaret.h"
+#include "nsIBaseWindow.h"
+#include "nsICaret.h"
 #include "nsIChromeEventHandler.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
@@ -50,7 +57,6 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMNSEvent.h"
-#include "nsPIDOMWindow.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
@@ -62,27 +68,18 @@
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIScrollableView.h"
+#include "nsISelectionPrivate.h"
 #include "nsIServiceManager.h"
 #include "nsIViewManager.h"
 #include "nsLayoutAtoms.h"
+#include "nsPIDOMWindow.h"
 #include "nsReadableUtils.h"
 #include "nsRootAccessible.h"
-#include "nsIDocShell.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIDocShellTreeNode.h"
-#include "nsIDocShellTreeOwner.h"
-#include "nsIBaseWindow.h"
 
 #ifdef MOZ_XUL
 #include "nsXULTreeAccessible.h"
 #include "nsIXULDocument.h"
 #endif
-#include "nsAccessibilityService.h"
-#include "nsISelectionPrivate.h"
-#include "nsICaret.h"
-#include "nsIDOMHTMLInputElement.h"
-#include "nsAccessibleEventData.h"
-#include "nsIDOMDocument.h"
 
 // Expanded version of NS_IMPL_ISUPPORTS_INHERITED2 
 // so we can QI directly to concrete nsRootAccessible
@@ -940,7 +937,8 @@ nsRootAccessible::GetContentDocShell(nsIDocShellTreeItem *aStart)
   PRInt32 itemType;
   aStart->GetItemType(&itemType);
   if (itemType == nsIDocShellTreeItem::typeContent) {
-    nsCOMPtr<nsIAccessibleDocument> accDoc = GetDocAccessibleFor(aStart);
+    nsCOMPtr<nsIAccessibleDocument> accDoc =
+      GetDocAccessibleFor(aStart, PR_TRUE);
     nsCOMPtr<nsIAccessible> accessible = do_QueryInterface(accDoc);
     // If ancestor chain of accessibles is not completely visible,
     // don't use this one. This happens for example if it's inside
@@ -988,8 +986,12 @@ NS_IMETHODIMP nsRootAccessible::GetAccessibleRelated(PRUint32 aRelationType,
   nsCOMPtr<nsIDocShellTreeItem> contentTreeItem = GetContentDocShell(treeItem);
   // there may be no content area, so we need a null check
   if (contentTreeItem) {
-    nsCOMPtr<nsIAccessibleDocument> accDoc = GetDocAccessibleFor(contentTreeItem);
-    return accDoc->QueryInterface(NS_GET_IID(nsIAccessible), (void**)aRelated);
+    nsCOMPtr<nsIAccessibleDocument> accDoc =
+      GetDocAccessibleFor(contentTreeItem, PR_TRUE);
+    NS_ASSERTION(accDoc, "No EMBEDS document");
+    if (accDoc) {
+      accDoc->QueryInterface(NS_GET_IID(nsIAccessible), (void**)aRelated);
+    }
   }
   return NS_OK;
 }

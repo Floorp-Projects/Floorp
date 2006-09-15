@@ -46,6 +46,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocument.h"
+#include "nsIDocumentViewer.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
@@ -509,14 +510,29 @@ nsAccessNode::GetDocAccessibleFor(nsIWeakReference *aPresShell)
 }
  
 already_AddRefed<nsIAccessibleDocument>
-nsAccessNode::GetDocAccessibleFor(nsISupports *aContainer)
+nsAccessNode::GetDocAccessibleFor(nsISupports *aContainer, PRBool aCanCreate)
 {
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
-  NS_ASSERTION(docShell, "This method currently only supports docshells");
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
-  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
-  return weakShell ? GetDocAccessibleFor(weakShell) : nsnull;
+  if (!aCanCreate) {
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
+    NS_ASSERTION(docShell, "This method currently only supports docshells");
+    nsCOMPtr<nsIPresShell> presShell;
+    docShell->GetPresShell(getter_AddRefs(presShell));
+    nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
+    return weakShell ? GetDocAccessibleFor(weakShell) : nsnull;
+  }
+
+  nsCOMPtr<nsIDOMNode> node = GetDOMNodeForContainer(aContainer);
+  if (!node) {
+    return nsnull;
+  }
+
+  nsCOMPtr<nsIAccessible> accessible;
+  GetAccService()->GetAccessibleFor(node, getter_AddRefs(accessible));
+  nsIAccessibleDocument *docAccessible = nsnull;
+  if (accessible) {
+    CallQueryInterface(accessible, &docAccessible);
+  }
+  return docAccessible;
 }
  
 already_AddRefed<nsIAccessibleDocument>
@@ -563,6 +579,27 @@ nsAccessNode::GetDocShellTreeItemFor(nsIDOMNode *aStartNode)
   }
 
   return docShellTreeItem;
+}
+
+already_AddRefed<nsIDOMNode>
+nsAccessNode::GetDOMNodeForContainer(nsISupports *aContainer)
+{
+  nsIDOMNode* node = nsnull;
+  nsCOMPtr<nsIDocShell> shell = do_QueryInterface(aContainer);
+  nsCOMPtr<nsIContentViewer> cv;
+  shell->GetContentViewer(getter_AddRefs(cv));
+  if (cv) {
+    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+    if (docv) {
+      nsCOMPtr<nsIDocument> doc;
+      docv->GetDocument(getter_AddRefs(doc));
+      if (doc) {
+        CallQueryInterface(doc.get(), &node);
+      }
+    }
+  }
+
+  return node;
 }
 
 void nsAccessNode::PutCacheEntry(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> &aCache, 
