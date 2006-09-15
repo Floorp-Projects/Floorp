@@ -66,7 +66,7 @@ fl_exceptions = [
   # ignore search plugins
   __regify(('browser', 'searchplugins\\/.+\\.xml')),
   # ignore help images
-  __regify(('browser', 'chrome\\/help\\/images\\/[a-z-_]+\\.png'))]
+  __regify(('browser', 'chrome\\/help\\/images\\/[A-Za-z-_]+\\.png'))]
 
 def do_ignore_fl(tpl):
   for mod, path in fl_exceptions:
