@@ -1073,6 +1073,15 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!wrappedNative) {
       return ThrowException(NS_ERROR_INVALID_ARG, cx);
     }
+
+    // Prevent wrapping a double-wrapped JS object in an
+    // XPCNativeWrapper!
+    nsCOMPtr<nsIXPConnectWrappedJS> xpcwrappedjs =
+      do_QueryWrappedNative(wrappedNative);
+
+    if (xpcwrappedjs) {
+      return ThrowException(NS_ERROR_INVALID_ARG, cx);
+    }
   }
 
   JSObject *wrapperObj;
@@ -1389,6 +1398,16 @@ XPCNativeWrapper::AttachNewConstructorObject(XPCCallContext &ccx,
 JSObject *
 XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper)
 {
+  // Prevent wrapping a double-wrapped JS object in an
+  // XPCNativeWrapper!
+  nsCOMPtr<nsIXPConnectWrappedJS> xpcwrappedjs(do_QueryWrappedNative(wrapper));
+
+  if (xpcwrappedjs) {
+    XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
+
+    return JS_FALSE;
+  }
+
   JSObject *obj = wrapper->GetNativeWrapper();
   if (obj) {
     return obj;

@@ -1178,7 +1178,8 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                         }
                     }
 
-                    // Out of memory
+                    // Out of memory or other failure that already
+                    // threw a JS exception.
                     NS_RELEASE(wrapper);
                     return JS_FALSE;
                 }
