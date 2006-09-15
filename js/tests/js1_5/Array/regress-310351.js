@@ -58,16 +58,19 @@ var array = Array.prototype.slice.call(nodeList, 0);
 expect = 'Array';
 actual = array.constructor.name;
 
+// nodeList is live and may change
+var saveLength = nodeList.length;
+
 reportCompare(expect, actual, summary + ': constructor test');
 
-expect = nodeList.length;
+expect = saveLength;
 actual = array.length;
 
 reportCompare(expect, actual, summary + ': length test');
 expect = true;
 actual = true;
 
-for (var i = 0; i < nodeList.length; i++)
+for (var i = 0; i < saveLength; i++)
 {
   if (array[i] != nodeList[i])
   {
