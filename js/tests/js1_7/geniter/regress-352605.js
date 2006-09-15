@@ -50,8 +50,16 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
-  
-  (function() { <y/>.(<x/>.(false), (yield 3)) })().next();
+
+  expect = 'InternalError: yield not yet supported from filtering predicate';
+  try
+  {  
+    (function() { <y/>.(<x/>.(false), (yield 3)) })().next();
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
 
   reportCompare(expect, actual, summary);
 
