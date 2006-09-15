@@ -821,6 +821,11 @@
 #define NS_AUTHPROMPT_ADAPTER_FACTORY_CONTRACTID \
   "@mozilla.org/network/authprompt-adapter-factory;1"
 
+/**
+ * Must implement nsICryptoHash.
+ */
+#define NS_CRYPTO_HASH_CONTRACTID "@mozilla.org/security/hash;1"
+
 /******************************************************************************
  * Categories
  */

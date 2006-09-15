@@ -46,7 +46,6 @@ MODULE		= caps
 GRE_MODULE	= 1
 
 XPIDLSRCS	= \
-		nsICryptoHash.idl \
 		nsIScriptSecurityManager.idl \
 		nsIPrincipal.idl \
 		nsISignatureVerifier.idl \

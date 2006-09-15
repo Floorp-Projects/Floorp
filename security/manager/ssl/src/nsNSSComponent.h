@@ -86,7 +86,6 @@
 #define NS_PSMCONTENTLISTEN_CONTRACTID "@mozilla.org/security/psmdownload;1"
 
 #define NS_CRYPTO_HASH_CLASSNAME "Mozilla Cryto Hash Function Component"
-#define NS_CRYPTO_HASH_CONTRACTID "@mozilla.org/security/hash;1"
 #define NS_CRYPTO_HASH_CID {0x36a1d3b3, 0xd886, 0x4317, {0x96, 0xff, 0x87, 0xb0, 0x00, 0x5c, 0xfe, 0xf7}}
 
 //--------------------------------------------
