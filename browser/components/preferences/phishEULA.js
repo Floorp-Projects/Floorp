@@ -78,7 +78,7 @@ var gPhishDialog = {
 
     // guaranteed to be present, because only providers with privacy policies
     // are displayed in the prefwindow
-    var formatter = Cc["@mozilla.org/browser/URLFormatterService;1"].
+    var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
                     getService(Ci.nsIURLFormatter);
     var privacyURL = formatter.formatURLPref("browser.safebrowsing.provider." +
                                              providerNum +
