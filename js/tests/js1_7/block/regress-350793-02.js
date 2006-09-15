@@ -58,7 +58,7 @@ function test()
 
   reportCompare(expect, actual, summary);
 
-  expect = 'function() { for(let y in [5,6,7,8]) yield ({}); }';
+  expect = 'function() { for(let y in [5,6,7,8]) { yield {}; }}';
   actual = gen + '';
   compareSource(expect, actual, summary);
 
