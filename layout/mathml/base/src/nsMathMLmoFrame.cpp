@@ -46,6 +46,7 @@
 #include "nsStyleConsts.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
+#include "nsContentUtils.h"
 
 #include "nsIDOMText.h"
 
