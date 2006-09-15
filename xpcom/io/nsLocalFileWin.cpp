@@ -71,7 +71,6 @@
 #include  <stdio.h>
 #include  <stdlib.h>
 #include  <mbstring.h>
-#include  <strsafe.h>
 
 #include "nsXPIDLString.h"
 #include "prproces.h"
@@ -1407,26 +1406,30 @@ nsLocalFile::GetVersionInfoField(const char* aField, nsAString& _retval)
     {
         LANGANDCODEPAGE* translate = nsnull;
         UINT pageCount;
-        BOOL queryResult = ::VerQueryValueW(ver, L"\\VarFileInfo\\Translation", 
+        BOOL queryResult = ::VerQueryValue(ver, "\\VarFileInfo\\Translation", 
                                             (void**)&translate, &pageCount);
         if (queryResult && translate) 
         {
             for (PRInt32 i = 0; i < 2; ++i) 
             { 
-                PRUnichar subBlock[MAX_PATH];
-                StringCchPrintfW(subBlock, MAX_PATH,
-                                 L"\\StringFileInfo\\%04x%04x\\%s", 
-                                 (i == 0 ? translate[0].wLanguage 
-                                         : ::GetUserDefaultLangID()),
-                                 translate[0].wCodePage,
-                                 NS_ConvertASCIItoUTF16(
-                                     nsDependentCString(aField)).get());
+                // XXX : need to make sure that we can get away with 
+                // 'VerQueryValueA' here.
+                char subBlock[MAX_PATH];
+                PR_snprintf(subBlock, sizeof(subBlock), 
+                            "\\StringFileInfo\\%04x%04x\\%s", 
+                            (i == 0 ? translate[0].wLanguage 
+                                    : ::GetUserDefaultLangID()),
+                            translate[0].wCodePage, aField);
+
                 LPVOID value = nsnull;
                 UINT size;
-                queryResult = ::VerQueryValueW(ver, subBlock, &value, &size);
+                queryResult = ::VerQueryValueA(ver, subBlock, &value, &size);
                 if (queryResult && value)
                 {
-                    _retval = nsDependentString((const PRUnichar*) value);
+                    NS_ASSERTION(nsCRT::IsAscii((const char*) value),
+                                 "Version string has non-ASCII characters");
+                    CopyASCIItoUTF16(nsDependentCString((const char*) value),
+                                     _retval);
                     if (!_retval.IsEmpty()) 
                     {
                         rv = NS_OK;
