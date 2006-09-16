@@ -10017,14 +10017,10 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
       nsFrame::ListTag(stdout, childFrame);
       printf("\n");
 
-      if (parentFrame) {
-        nsIFrameDebug* fdbg = nsnull;
-        CallQueryInterface(parentFrame, &fdbg);
-        if (fdbg)
-          fdbg->List(stdout, 0);
-      }
-      else
-        printf("  ==> no parent frame\n");
+      nsIFrameDebug* fdbg = nsnull;
+      CallQueryInterface(parentFrame, &fdbg);
+      if (fdbg)
+        fdbg->List(stdout, 0);
     }
 #endif
 
