@@ -612,9 +612,6 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
      */
     rt->gcMaxBytes = rt->gcMaxMallocBytes = maxbytes;
 
-#if JS_HAS_GENERATORS
-    rt->gcCloseState.todoTail = &rt->gcCloseState.todoHead;
-#endif
     return JS_TRUE;
 }
 
@@ -696,8 +693,7 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
     fprintf(fp, "stack segment slots scanned: %lu\n", ULSTAT(segslots));
     fprintf(fp, "reachable closeable objects: %lu\n", ULSTAT(nclose));
     fprintf(fp, "    max reachable closeable: %lu\n", ULSTAT(maxnclose));
-    fprintf(fp, "      scheduled close hooks: %lu\n",
-            UL(rt->gcCloseState.todoCount));
+    fprintf(fp, "      scheduled close hooks: %lu\n", ULSTAT(closelater));
     fprintf(fp, "  max scheduled close hooks: %lu\n", ULSTAT(maxcloselater));
 #undef UL
 #undef US
@@ -738,9 +734,7 @@ js_FinishGC(JSRuntime *rt)
 #if JS_HAS_GENERATORS
     rt->gcCloseState.reachableList = NULL;
     METER(rt->gcStats.nclose = 0);
-    rt->gcCloseState.todoHead = NULL;
-    rt->gcCloseState.todoTail = &rt->gcCloseState.todoHead;
-    rt->gcCloseState.todoCount = 0;
+    rt->gcCloseState.todoQueue = NULL;
 #endif
     FinishGCArenaLists(rt);
 
@@ -889,14 +883,14 @@ CloseIteratorStates(JSContext *cx)
 #if JS_HAS_GENERATORS
 
 void
-js_RegisterOpenGenerator(JSContext *cx, JSGenerator *gen)
+js_RegisterGenerator(JSContext *cx, JSGenerator *gen)
 {
     JSRuntime *rt;
 
     rt = cx->runtime;
     JS_ASSERT(!rt->gcRunning);
     JS_ASSERT(rt->state != JSRTS_LANDING);
-    JS_ASSERT(gen->state == JSGEN_OPEN);
+    JS_ASSERT(gen->state == JSGEN_NEWBORN);
 
     JS_LOCK_GC(rt);
     gen->next = rt->gcCloseState.reachableList;
@@ -907,11 +901,75 @@ js_RegisterOpenGenerator(JSContext *cx, JSGenerator *gen)
     JS_UNLOCK_GC(rt);
 }
 
-static void
-MarkCloseList(JSContext *cx, JSGenerator *gen)
+/*
+ * We do not run close hooks when the parent scope of the generator instance
+ * becomes unreachable to prevent denial-of-service and resource leakage from
+ * misbehaved generators.
+ *
+ * Called from the GC.
+ */
+static JSBool
+CanScheduleCloseHook(JSGenerator *gen)
 {
-    for (; gen; gen = gen->next)
-        GC_MARK(cx, gen->obj, "close list generator");
+    JSObject *parent;
+    JSBool canSchedule;
+
+    /* Avoid OBJ_GET_PARENT overhead as we are in GC. */
+    parent = JSVAL_TO_OBJECT(gen->obj->slots[JSSLOT_PARENT]);
+    canSchedule = *js_GetGCThingFlags(parent) & GCF_MARK;
+#ifdef DEBUG_igor
+    if (!canSchedule) {
+        fprintf(stderr, "GEN: Kill without schedule, gen=%p parent=%p\n",
+                (void *)gen, (void *)parent);
+    }
+#endif
+    return canSchedule;
+}
+
+/*
+ * Check if we should delay execution of the close hook.
+ *
+ * Called outside GC or any locks.
+ *
+ * XXX The current implementation is a hack that embeds the knowledge of the
+ * browser embedding pending the resolution of bug 352788. In the browser we
+ * must not close any generators that came from a page that is currently in
+ * the browser history. We detect that using the fact in the browser the scope
+ * is history if scope->outerObject->innerObject != scope.
+ */
+static JSBool
+ShouldDeferCloseHook(JSContext *cx, JSGenerator *gen, JSBool *defer)
+{
+    JSObject *parent, *obj;
+    JSClass *clasp;
+    JSExtendedClass *xclasp;
+
+    /*
+     * This is called outside any locks, so use thread-safe macros to access
+     * parent and  classes.
+     */
+    *defer = JS_FALSE;
+    parent = OBJ_GET_PARENT(cx, gen->obj);
+    clasp = OBJ_GET_CLASS(cx, parent);
+    if (clasp->flags & JSCLASS_IS_EXTENDED) {
+        xclasp = (JSExtendedClass *)clasp;
+        if (xclasp->outerObject) {
+            obj = xclasp->outerObject(cx, parent);
+            if (!obj)
+                return JS_FALSE;
+            OBJ_TO_INNER_OBJECT(cx, obj);
+            if (!obj)
+                return JS_FALSE;
+            *defer = obj != parent;
+        }
+    }
+#ifdef DEBUG_igor
+    if (*defer) {
+        fprintf(stderr, "GEN: deferring, gen=%p parent=%p\n",
+                (void *)gen, (void *)parent);
+    }
+#endif
+    return JS_TRUE;
 }
 
 /*
@@ -921,7 +979,8 @@ MarkCloseList(JSContext *cx, JSGenerator *gen)
  * generators we are going to close later.
  */
 static void
-FindAndMarkObjectsToClose(JSContext *cx, JSGCInvocationKind gckind)
+FindAndMarkObjectsToClose(JSContext *cx, JSGCInvocationKind gckind,
+                          JSGenerator **todoQueueTail)
 {
     JSRuntime *rt;
     JSGenerator *todo, **genp, *gen;
@@ -933,16 +992,15 @@ FindAndMarkObjectsToClose(JSContext *cx, JSGCInvocationKind gckind)
         if (*js_GetGCThingFlags(gen->obj) & GCF_MARK) {
             genp = &gen->next;
         } else {
-            /*
-             * Only generators that yielded or were already closed can become
-             * unreachable while still on reachableList.
-             */
-            JS_ASSERT(gen->state == JSGEN_OPEN || gen->state == JSGEN_CLOSED);
+            /* Generator must not be executing when it becomes unreachable. */
+            JS_ASSERT(gen->state == JSGEN_NEWBORN ||
+                      gen->state == JSGEN_OPEN ||
+                      gen->state == JSGEN_CLOSED);
 
             *genp = gen->next;
-            gen->next = NULL;
             if (gen->state == JSGEN_OPEN &&
-                js_FindFinallyHandler(gen->frame.script, gen->frame.pc)) {
+                js_FindFinallyHandler(gen->frame.script, gen->frame.pc) &&
+                CanScheduleCloseHook(gen)) {
                 /*
                  * Generator yielded inside a try with a finally block.
                  * Schedule it for closing.
@@ -951,16 +1009,17 @@ FindAndMarkObjectsToClose(JSContext *cx, JSGCInvocationKind gckind)
                  * with gen->state == JSGEN_OPEN. The finalizer must deal with
                  * open generators as we may skip the close hooks, see below.
                  */
-                *rt->gcCloseState.todoTail = gen;
-                rt->gcCloseState.todoTail = &gen->next;
-                rt->gcCloseState.todoCount++;
+                gen->next = NULL;
+                *todoQueueTail = gen;
+                todoQueueTail = &gen->next;
                 if (!todo)
                     todo = gen;
                 METER(JS_ASSERT(rt->gcStats.nclose));
                 METER(rt->gcStats.nclose--);
+                METER(rt->gcStats.closelater++);
                 METER(rt->gcStats.maxcloselater
                       = JS_MAX(rt->gcStats.maxcloselater,
-                               rt->gcCloseState.todoCount));
+                               rt->gcStats.closelater));
             }
         }
     }
@@ -970,21 +1029,42 @@ FindAndMarkObjectsToClose(JSContext *cx, JSGCInvocationKind gckind)
          * Remove scheduled hooks on shutdown as it is too late to run them:
          * we do not allow execution of arbitrary scripts at this point.
          */
-        if (rt->gcCloseState.todoCount != 0) {
-            JS_ASSERT(rt->gcCloseState.todoHead);
-            JS_ASSERT(rt->gcCloseState.todoTail != &rt->gcCloseState.todoHead);
-            rt->gcCloseState.todoHead = NULL;
-            rt->gcCloseState.todoTail = &rt->gcCloseState.todoHead;
-            rt->gcCloseState.todoCount = 0;
-        }
+        rt->gcCloseState.todoQueue = NULL;
     } else {
         /*
-         * Mark just found unreachable generators *after* we scan the global
-         * list so a generator that refers to other unreachable generators
-         * cannot keep them on gcCloseState.reachableList.
+         * Mark just-found unreachable generators *after* we scan the global
+         * list to prevent a generator that refers to other unreachable
+         * generators from keeping them on gcCloseState.reachableList.
          */
-        MarkCloseList(cx, todo);
+        for (gen = todo; gen; gen = gen->next)
+            GC_MARK(cx, gen->obj, "newly scheduled generator");
     }
+}
+
+/*
+ * Mark unreachable generators already scheduled to close and return the tail
+ * pointer to JSGCCloseState.todoQueue.
+ */
+static JSGenerator **
+MarkScheduledGenerators(JSContext *cx)
+{
+    JSRuntime *rt;
+    JSGenerator **genp, *gen;
+
+    rt = cx->runtime;
+    genp = &rt->gcCloseState.todoQueue;
+    while ((gen = *genp) != NULL) {
+        if (CanScheduleCloseHook(gen)) {
+            GC_MARK(cx, gen->obj, "scheduled generator");
+            genp = &gen->next;
+        } else {
+            /* Discard the generator from the list if its schedule is over. */
+            *genp = gen->next;
+            METER(JS_ASSERT(rt->gcStats.closelater > 0));
+            METER(rt->gcStats.closelater--);
+        }
+    }
+    return genp;
 }
 
 #ifdef JS_THREADSAFE
@@ -995,24 +1075,50 @@ FindAndMarkObjectsToClose(JSContext *cx, JSGCInvocationKind gckind)
     (&(cx)->runtime->gcCloseState.runningCloseHook)
 #endif
 
+typedef struct JSTempCloseList {
+    JSTempValueRooter   tvr;
+    JSGenerator         *head;
+} JSTempCloseList;
+
+JS_STATIC_DLL_CALLBACK(void)
+mark_temp_close_list(JSContext *cx, JSTempValueRooter *tvr)
+{
+    JSTempCloseList *list = (JSTempCloseList *)tvr;
+    JSGenerator *gen;
+
+    for (gen = list->head; gen; gen = gen->next)
+        GC_MARK(cx, gen->obj, "temp list generator");
+}
+
+#define JS_PUSH_TEMP_CLOSE_LIST(cx, tempList)                                 \
+    JS_PUSH_TEMP_ROOT_MARKER(cx, mark_temp_close_list, &(tempList)->tvr)
+
+#define JS_POP_TEMP_CLOSE_LIST(cx, tempList)                                  \
+    JS_BEGIN_MACRO                                                            \
+        JS_ASSERT((tempList)->tvr.u.marker == mark_temp_close_list);          \
+        JS_POP_TEMP_ROOT(cx, &(tempList)->tvr);                               \
+    JS_END_MACRO
+
 JSBool
 js_RunCloseHooks(JSContext *cx)
 {
     JSRuntime *rt;
-    JSTempValueRooter tvr;
+    JSTempCloseList tempList;
     JSStackFrame *fp;
-    size_t todoLimit = 0;        /* initialized to quell GCC warnings */
-    JSGenerator *gen;
-    JSBool ok;
+    JSGenerator **genp, *gen;
+    JSBool ok, defer;
+#if JS_GCMETER
+    uint32 deferCount;
+#endif
 
     rt = cx->runtime;
 
     /*
-     * It is OK to access todoCount outside the lock here. When many threads
-     * update the todo list, accessing some older value of todoCount in the
+     * It is OK to access todoQueue outside the lock here. When many threads
+     * update the todo list, accessing some older value of todoQueue in the
      * worst case just delays the excution of close hooks.
      */
-    if (rt->gcCloseState.todoCount == 0)
+    if (!rt->gcCloseState.todoQueue)
         return JS_TRUE;
 
     /*
@@ -1025,7 +1131,14 @@ js_RunCloseHooks(JSContext *cx)
         return JS_TRUE;
 
     *GC_RUNNING_CLOSE_HOOKS_PTR(cx) = JS_TRUE;
-    JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
+
+    JS_LOCK_GC(rt);
+    tempList.head = rt->gcCloseState.todoQueue;
+    JS_PUSH_TEMP_CLOSE_LIST(cx, &tempList);
+    rt->gcCloseState.todoQueue = NULL;
+    METER(rt->gcStats.closelater = 0);
+    rt->gcPoke = JS_TRUE;
+    JS_UNLOCK_GC(rt);
 
     /*
      * Set aside cx->fp since we do not want a close hook using caller or
@@ -1041,38 +1154,28 @@ js_RunCloseHooks(JSContext *cx)
     }
     cx->fp = NULL;
 
-    gen = NULL;
+    genp = &tempList.head;
     ok = JS_TRUE;
-    for (;;) {
-        JS_LOCK_GC(rt);
-        JS_ASSERT(rt->gcCloseState.todoCount > 0 || !rt->gcCloseState.todoHead);
-        JS_ASSERT(rt->gcCloseState.todoCount == 0 || rt->gcCloseState.todoHead);
-        if (!gen) {
-            /* First iteration, init the limit from inside the lock. */
-            todoLimit = rt->gcCloseState.todoCount;
-        }
-        if (todoLimit == 0) {
-            gen = NULL;
-        } else if ((gen = rt->gcCloseState.todoHead) != NULL) {
-            JS_ASSERT(gen->obj);
-
-            /* Root obj before unlinking the gen and executing the hook. */
-            tvr.u.value = OBJECT_TO_JSVAL(gen->obj);
-            if (!gen->next)
-                rt->gcCloseState.todoTail = &rt->gcCloseState.todoHead;
-            rt->gcCloseState.todoHead = gen->next;
-            rt->gcCloseState.todoCount--;
-            todoLimit--;
-            rt->gcPoke = JS_TRUE;
-#ifdef DEBUG
-            gen->next = NULL;
-#endif
-        }
-        JS_UNLOCK_GC(rt);
-        if (!gen)
+    while ((gen = *genp) != NULL) {
+        ok = ShouldDeferCloseHook(cx, gen, &defer);
+        if (!ok) {
+            /* Quit ASAP discarding the hook. */
+            *genp = gen->next;
             break;
-
+        }
+        if (defer) {
+            genp = &gen->next;
+            METER(deferCount++);
+            continue;
+        }
         ok = js_CloseGeneratorObject(cx, gen);
+
+        /*
+         * Unlink the generator after closing it to make sure it always stays
+         * rooted through tempList.
+         */
+        *genp = gen->next;
+
         if (cx->throwing) {
             /*
              * Report the exception thrown by the close hook and continue to
@@ -1083,9 +1186,9 @@ js_RunCloseHooks(JSContext *cx)
             ok = JS_TRUE;
         } else if (!ok) {
             /*
-             * Assume this is a stop signal from the branch callback or other
-             * quit ASAP condition. Break execution until the next invocation
-             * of js_RunCloseHooks.
+             * Assume this is a stop signal from the branch callback or
+             * other quit ASAP condition. Break execution until the next
+             * invocation of js_RunCloseHooks.
              */
             break;
         }
@@ -1097,7 +1200,28 @@ js_RunCloseHooks(JSContext *cx)
         cx->dormantFrameChain = fp->dormantNext;
         fp->dormantNext = NULL;
     }
-    JS_POP_TEMP_ROOT(cx, &tvr);
+
+    if (tempList.head) {
+        /*
+         * Some close hooks were not yet executed, put them back into the
+         * scheduled list.
+         */
+        while ((gen = *genp) != NULL) {
+            genp = &gen->next;
+            METER(deferCount++);
+        }
+
+        /* Now genp is a pointer to the tail of tempList. */
+        JS_LOCK_GC(rt);
+        *genp = rt->gcCloseState.todoQueue;
+        rt->gcCloseState.todoQueue = tempList.head;
+        METER(rt->gcStats.closelater += deferCount);
+        METER(rt->gcStats.maxcloselater
+              = JS_MAX(rt->gcStats.maxcloselater, rt->gcStats.closelater));
+        JS_UNLOCK_GC(rt);
+    }
+
+    JS_POP_TEMP_CLOSE_LIST(cx, &tempList);
     *GC_RUNNING_CLOSE_HOOKS_PTR(cx) = JS_FALSE;
 
     return ok;
@@ -2411,6 +2535,9 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     JSBool keepAtoms;
     uintN i, type;
     JSContext *iter, *acx;
+#if JS_HAS_GENERATORS
+    JSGenerator **genTodoTail;
+#endif
     JSStackFrame *fp, *chain;
     JSStackHeader *sh;
     JSTempValueRooter *tvr;
@@ -2623,8 +2750,8 @@ restart:
     js_MarkNativeIteratorStates(cx);
 
 #if JS_HAS_GENERATORS
-    /* Mark generators whose close hooks were already scheduled to run. */
-    MarkCloseList(cx, rt->gcCloseState.todoHead);
+    genTodoTail = MarkScheduledGenerators(cx);
+    JS_ASSERT(!*genTodoTail);
 #endif
 
     iter = NULL;
@@ -2681,11 +2808,13 @@ restart:
             js_MarkLocalRoots(cx, acx->localRootStack);
 
         for (tvr = acx->tempValueRooters; tvr; tvr = tvr->down) {
-            if (tvr->count < 0) {
+            if (tvr->count == -1) {
                 if (JSVAL_IS_GCTHING(tvr->u.value)) {
                     GC_MARK(cx, JSVAL_TO_GCTHING(tvr->u.value),
                             "tvr->u.value");
                 }
+            } else if (tvr->count == -2) {
+                tvr->u.marker(cx, tvr);
             } else {
                 GC_MARK_JSVALS(cx, tvr->count, tvr->u.array, "tvr->u.array");
             }
@@ -2712,7 +2841,7 @@ restart:
      * Close phase: search and mark part. See comments in
      * FindAndMarkObjectsToClose for details.
      */
-    FindAndMarkObjectsToClose(cx, gckind);
+    FindAndMarkObjectsToClose(cx, gckind, genTodoTail);
 
     /*
      * Mark children of things that caused too deep recursion during the

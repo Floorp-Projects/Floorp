@@ -703,6 +703,11 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
         goto bad;
     }
 
+    /*
+     * Register with GC to ensure that suspended finally blocks will be
+     * executed.
+     */
+    js_RegisterGenerator(cx, gen);
     return obj;
 
   bad:
@@ -813,11 +818,6 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
 JSBool
 js_CloseGeneratorObject(JSContext *cx, JSGenerator *gen)
 {
-    /* JSGenerator.closeLink must be already unlinked from all lists. */
-    JS_ASSERT(!gen->next);
-    JS_ASSERT(gen != cx->runtime->gcCloseState.reachableList);
-    JS_ASSERT(gen != cx->runtime->gcCloseState.todoHead);
-
     /* We pass null as rval since SendToGenerator never uses it with CLOSE. */
     return SendToGenerator(cx, JSGENOP_CLOSE, gen->obj, gen, JSVAL_VOID, NULL);
 }
@@ -832,7 +832,6 @@ generator_op(JSContext *cx, JSGeneratorOp op,
     JSGenerator *gen;
     JSString *str;
     jsval arg;
-    JSBool wasNewborn;
 
     if (!JS_InstanceOf(cx, obj, &js_GeneratorClass, argv))
         return JS_FALSE;
@@ -863,11 +862,9 @@ generator_op(JSContext *cx, JSGeneratorOp op,
             gen->state = JSGEN_CLOSED;
             return JS_TRUE;
         }
-        wasNewborn = JS_TRUE;
         break;
 
       case JSGEN_OPEN:
-        wasNewborn = JS_FALSE;
         break;
 
       case JSGEN_RUNNING:
@@ -901,13 +898,6 @@ generator_op(JSContext *cx, JSGeneratorOp op,
           : JSVAL_VOID;
     if (!SendToGenerator(cx, op, obj, gen, arg, rval))
         return JS_FALSE;
-    if (wasNewborn && gen->state == JSGEN_OPEN) {
-        /*
-         * The generator yielded the first time. Register it with GC to ensure
-         * that suspended finally blocks will be executed.
-         */
-        js_RegisterOpenGenerator(cx, gen);
-    }
     return JS_TRUE;
 }
 
