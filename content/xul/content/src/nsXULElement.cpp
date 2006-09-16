@@ -862,11 +862,15 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
     if (oldOwnerDocument != newOwnerDocument) {
         if (oldOwnerDocument && HasProperties()) {
-            // Copy UserData to the new document.
-            nsContentUtils::CopyUserData(oldOwnerDocument, this);
+            nsPropertyTable *oldTable = oldOwnerDocument->PropertyTable();
+            if (newOwnerDocument) {
+                nsPropertyTable *newTable = newOwnerDocument->PropertyTable();
 
-            // Remove all properties.
-            oldOwnerDocument->PropertyTable()->DeleteAllPropertiesFor(this);
+                oldTable->TransferOrDeleteAllPropertiesFor(this, newTable);
+            }
+            else {
+                oldTable->DeleteAllPropertiesFor(this);
+            }
         }
 
         if (newOwnerDocument) {
@@ -2352,8 +2356,8 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     nsCOMPtr<nsIDOMEventListener> eventListener = do_QueryInterface(popupListener);
     nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
     NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
-    rv = SetProperty(listenerAtom, popupListener,
-                     PopupListenerPropertyDtor);
+    rv = SetProperty(listenerAtom, popupListener, PopupListenerPropertyDtor,
+                     PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
     nsIXULPopupListener* listener = popupListener;
     NS_ADDREF(listener);

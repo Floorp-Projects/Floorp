@@ -95,10 +95,9 @@ private:
 };
 
 // Categories of properties
-// 0x00000000U is global.
-// 0x00000001U is reserved.
-#define DOM_USER_DATA         0x00000002U
-#define DOM_USER_DATA_HANDLER 0x00000004U
+// 0 is global.
+#define DOM_USER_DATA         1
+#define DOM_USER_DATA_HANDLER 2
 
 class nsPropertyTable
 {
@@ -115,7 +114,7 @@ class nsPropertyTable
   }
 
   void* GetProperty(nsPropertyOwner aObject,
-                    PRUint32    aCategory,
+                    PRUint16    aCategory,
                     nsIAtom    *aPropertyName,
                     nsresult   *aResult = nsnull)
   {
@@ -133,39 +132,54 @@ class nsPropertyTable
    * error to set a given property with a different destructor than was used
    * before (this will return NS_ERROR_INVALID_ARG). If aOldValue is non-null
    * it will contain the old value after the function returns (the destructor
-   * for the old value will not be run in that case).
+   * for the old value will not be run in that case). If |aTransfer| is PR_TRUE
+   * the property will be transfered to the new table when the property table
+   * for |aObject| changes (currently the tables for nodes are owned by their
+   * ownerDocument, so if the ownerDocument for a node changes, its property
+   * table changes too). If |aTransfer| is PR_FALSE the property will just be
+   * deleted instead.
    */
   NS_HIDDEN_(nsresult) SetProperty(nsPropertyOwner     aObject,
                                    nsIAtom            *aPropertyName,
                                    void               *aPropertyValue,
                                    NSPropertyDtorFunc  aDtor,
                                    void               *aDtorData,
+                                   PRBool              aTransfer = PR_FALSE,
                                    void              **aOldValue = nsnull)
   {
     return SetPropertyInternal(aObject, 0, aPropertyName, aPropertyValue,
-                               aDtor, aDtorData, aOldValue);
+                               aDtor, aDtorData, aTransfer, aOldValue);
   }
 
   /**
    * Set the value of the property |aPropertyName| in the category |aCategory|
    * to |aPropertyValue| for node |aObject|.  |aDtor| is a destructor for the
    * property value to be called if the property is removed.  It can be null
-   * if no destructor is required.  Note that the destructor is global for
-   * each property name regardless of node; it is an error to set a given
-   * property with a different destructor than was used before (this will
-   * return NS_ERROR_INVALID_ARG). If aOldValue is non-null it will contain the
-   * old value after the function returns (the destructor for the old value
-   * will not be run in that case).
+   * if no destructor is required.  |aDtorData| is an optional pointer to an
+   * opaque context to be passed to the property destructor.  Note that the
+   * destructor is global for  each property name regardless of node; it is an
+   * error to set a given property with a different destructor than was used
+   * before (this will return NS_ERROR_INVALID_ARG). If aOldValue is non-null
+   * it will contain the old value after the function returns (the destructor
+   * for the old value will not be run in that case). If aTransfer is PR_TRUE
+   * the property will be transfered to the new table when the property table
+   * for |aObject| changes (currently the tables for nodes are owned by their
+   * ownerDocument, so if the ownerDocument for a node changes, its property
+   * table changes too). If |aTransfer| is PR_FALSE the property will just be
+   * deleted instead.
    */
   NS_HIDDEN_(nsresult) SetProperty(nsPropertyOwner     aObject,
-                                   PRUint32            aCategory,
+                                   PRUint16            aCategory,
                                    nsIAtom            *aPropertyName,
                                    void               *aPropertyValue,
                                    NSPropertyDtorFunc  aDtor,
+                                   void               *aDtorData,
+                                   PRBool              aTransfer = PR_FALSE,
                                    void              **aOldValue = nsnull)
   {
     return SetPropertyInternal(aObject, aCategory, aPropertyName,
-                               aPropertyValue, aDtor, nsnull, aOldValue);
+                               aPropertyValue, aDtor, aDtorData, aTransfer,
+                               aOldValue);
   }
 
   /**
@@ -183,7 +197,7 @@ class nsPropertyTable
    * |aObject|. The property's destructor function will be called.
    */
   NS_HIDDEN_(nsresult) DeleteProperty(nsPropertyOwner aObject,
-                                      PRUint32    aCategory,
+                                      PRUint16    aCategory,
                                       nsIAtom    *aPropertyName);
 
   /**
@@ -204,7 +218,7 @@ class nsPropertyTable
    * property value is returned.
    */
   void* UnsetProperty(nsPropertyOwner aObject,
-                      PRUint32    aCategory,
+                      PRUint16    aCategory,
                       nsIAtom    *aPropertyName,
                       nsresult   *aStatus = nsnull)
   {
@@ -219,11 +233,22 @@ class nsPropertyTable
   NS_HIDDEN_(void) DeleteAllPropertiesFor(nsPropertyOwner aObject);
 
   /**
+   * Transfers all properties for object |aObject| that were set with the
+   * |aTransfer| argument as PR_TRUE to |aTable|. Deletes the other properties
+   * for object |aObject|, calling the destructor function for each property.
+   * If transfering a property fails, this deletes all the properties for
+   * object |aObject|.
+   */
+  NS_HIDDEN_(nsresult)
+    TransferOrDeleteAllPropertiesFor(nsPropertyOwner aObject,
+                                     nsPropertyTable *aOtherTable);
+
+  /**
    * Enumerate the properties in category |aCategory| for object |aObject|.
    * For every property |aCallback| will be called with as arguments |aObject|,
    * the property name, the property value and |aData|.
    */
-  NS_HIDDEN_(void) Enumerate(nsPropertyOwner aObject, PRUint32 aCategory,
+  NS_HIDDEN_(void) Enumerate(nsPropertyOwner aObject, PRUint16 aCategory,
                              NSPropertyFunc aCallback, void *aData);
 
   /**
@@ -248,19 +273,20 @@ class nsPropertyTable
 
  private:
   NS_HIDDEN_(void) DestroyPropertyList();
-  NS_HIDDEN_(PropertyList*) GetPropertyListFor(PRUint32 aCategory,
+  NS_HIDDEN_(PropertyList*) GetPropertyListFor(PRUint16 aCategory,
                                                nsIAtom *aPropertyName) const;
   NS_HIDDEN_(void*) GetPropertyInternal(nsPropertyOwner aObject,
-                                        PRUint32    aCategory,
+                                        PRUint16    aCategory,
                                         nsIAtom    *aPropertyName,
                                         PRBool      aRemove,
                                         nsresult   *aStatus);
   NS_HIDDEN_(nsresult) SetPropertyInternal(nsPropertyOwner     aObject,
-                                           PRUint32            aCategory,
+                                           PRUint16            aCategory,
                                            nsIAtom            *aPropertyName,
                                            void               *aPropertyValue,
                                            NSPropertyDtorFunc  aDtor,
                                            void               *aDtorData,
+                                           PRBool              aTransfer,
                                            void              **aOldValue);
 
   PropertyList *mPropertyList;

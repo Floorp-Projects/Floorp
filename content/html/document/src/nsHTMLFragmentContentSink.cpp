@@ -339,7 +339,7 @@ nsHTMLFragmentContentSink::AddBaseTagInfo(nsIContent* aContent)
   nsresult rv;
   if (mBaseHref) {
     rv = aContent->SetProperty(nsHTMLAtoms::htmlBaseHref, mBaseHref,
-                               nsPropertyTable::SupportsDtorFunc);
+                               nsPropertyTable::SupportsDtorFunc, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       // circumvent nsDerivedSafe
       NS_ADDREF(NS_STATIC_CAST(nsIURI*, mBaseHref));
@@ -347,7 +347,7 @@ nsHTMLFragmentContentSink::AddBaseTagInfo(nsIContent* aContent)
   }
   if (mBaseTarget) {
     rv = aContent->SetProperty(nsHTMLAtoms::htmlBaseTarget, mBaseTarget,
-                               nsPropertyTable::SupportsDtorFunc);
+                               nsPropertyTable::SupportsDtorFunc, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       // circumvent nsDerivedSafe
       NS_ADDREF(NS_STATIC_CAST(nsIAtom*, mBaseTarget));

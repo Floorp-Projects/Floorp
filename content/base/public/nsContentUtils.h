@@ -892,17 +892,6 @@ public:
                                   nsIDOMNode *aDest);
 
   /**
-   * Copy the objects and UserDataHandlers for node aNode from aOldDocument to
-   * the current ownerDocument of aNode.
-   * Should only be used to implement the DOM Level 3 UserData API.
-   *
-   * @param aOldDocument the old document
-   * @param aNode canonical nsINode pointer of the node to copy objects
-   *              and UserDataHandlers for
-   */
-  static void CopyUserData(nsIDocument *aOldDocument, const nsINode *aNode);
-
-  /**
    * Creates a DocumentFragment from text using a context node to resolve
    * namespaces.
    *

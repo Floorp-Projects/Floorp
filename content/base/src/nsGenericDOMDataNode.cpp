@@ -663,11 +663,15 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   if (oldOwnerDocument && oldOwnerDocument != newOwnerDocument &&
       HasProperties()) {
-    // Copy UserData to the new document.
-    nsContentUtils::CopyUserData(oldOwnerDocument, this);
+    nsPropertyTable *oldTable = oldOwnerDocument->PropertyTable();
+    if (newOwnerDocument) {
+      nsPropertyTable *newTable = newOwnerDocument->PropertyTable();
 
-    // Remove all properties.
-    oldOwnerDocument->PropertyTable()->DeleteAllPropertiesFor(this);
+      oldTable->TransferOrDeleteAllPropertiesFor(this, newTable);
+    }
+    else {
+      oldTable->DeleteAllPropertiesFor(this);
+    }
   }
 
   NS_POSTCONDITION(aDocument == GetCurrentDoc(), "Bound to wrong document");

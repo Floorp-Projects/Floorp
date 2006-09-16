@@ -98,8 +98,8 @@ class nsIMutationObserver;
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x59693a45, 0x7cb2, 0x41d6, \
-  { 0xaf, 0xe3, 0xa7, 0xc7, 0x6f, 0xe0, 0x54, 0xf0 } }
+{ 0x3d3a28b7, 0x6666, 0x4f93, \
+  { 0xb7, 0xe7, 0xa9, 0x56, 0xd5, 0xaf, 0xf7, 0x57 } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsINode_base : public nsIDOMGCParticipant {
@@ -313,7 +313,7 @@ public:
    *                       (though a null return value does not imply the
    *                       property was not set, i.e. it can be set to null).
    */
-  virtual void* GetProperty(PRUint32 aCategory,
+  virtual void* GetProperty(PRUint16 aCategory,
                             nsIAtom *aPropertyName,
                             nsresult *aStatus = nsnull) const;
 
@@ -326,6 +326,9 @@ public:
    * @param aValue         new value of property.
    * @param aDtor          destructor function to be used when this property
    *                       is destroyed.
+   * @param aTransfer      if PR_TRUE the property will not be deleted when the
+   *                       ownerDocument of the node changes, if PR_FALSE it
+   *                       will be deleted.
    *
    * @return NS_PROPTABLE_PROP_OVERWRITTEN (success value) if the property
    *                                       was already set
@@ -333,9 +336,10 @@ public:
    */
   nsresult SetProperty(nsIAtom *aPropertyName,
                        void *aValue,
-                       NSPropertyDtorFunc aDtor = nsnull)
+                       NSPropertyDtorFunc aDtor = nsnull,
+                       PRBool aTransfer = PR_FALSE)
   {
-    return SetProperty(0, aPropertyName, aValue, aDtor);
+    return SetProperty(0, aPropertyName, aValue, aDtor, aTransfer);
   }
 
   /**
@@ -348,16 +352,20 @@ public:
    * @param aValue          new value of property.
    * @param aDtor           destructor function to be used when this property
    *                        is destroyed.
+   * @param aTransfer       if PR_TRUE the property will not be deleted when the
+   *                        ownerDocument of the node changes, if PR_FALSE it
+   *                        will be deleted.
    * @param aOldValue [out] previous value of property.
    *
    * @return NS_PROPTABLE_PROP_OVERWRITTEN (success value) if the property
    *                                       was already set
    * @throws NS_ERROR_OUT_OF_MEMORY if that occurs
    */
-  virtual nsresult SetProperty(PRUint32 aCategory,
+  virtual nsresult SetProperty(PRUint16 aCategory,
                                nsIAtom *aPropertyName,
                                void *aValue,
                                NSPropertyDtorFunc aDtor = nsnull,
+                               PRBool aTransfer = PR_FALSE,
                                void **aOldValue = nsnull);
 
   /**
@@ -382,7 +390,7 @@ public:
    *
    * @throws NS_PROPTABLE_PROP_NOT_THERE if the property was not set
    */
-  virtual nsresult DeleteProperty(PRUint32 aCategory, nsIAtom *aPropertyName);
+  virtual nsresult DeleteProperty(PRUint16 aCategory, nsIAtom *aPropertyName);
 
   /**
    * Unset a property associated with this node. The value will not be
@@ -417,7 +425,7 @@ public:
    *                       (though a null return value does not imply the
    *                       property was not set, i.e. it can be set to null).
    */
-  virtual void* UnsetProperty(PRUint32 aCategory,
+  virtual void* UnsetProperty(PRUint16 aCategory,
                               nsIAtom *aPropertyName,
                               nsresult *aStatus = nsnull);
   
