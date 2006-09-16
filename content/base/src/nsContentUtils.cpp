@@ -3226,7 +3226,7 @@ nsContentUtils::SetUserData(nsINode *aNode, nsIAtom *aKey,
   void *data;
   if (aData) {
     rv = aNode->SetProperty(DOM_USER_DATA, aKey, aData,
-                            nsPropertyTable::SupportsDtorFunc,
+                            nsPropertyTable::SupportsDtorFunc, PR_TRUE,
                             &data);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3241,7 +3241,7 @@ nsContentUtils::SetUserData(nsINode *aNode, nsIAtom *aKey,
 
   if (aData && aHandler) {
     rv = aNode->SetProperty(DOM_USER_DATA_HANDLER, aKey, aHandler,
-                            nsPropertyTable::SupportsDtorFunc);
+                            nsPropertyTable::SupportsDtorFunc, PR_TRUE);
     if (NS_FAILED(rv)) {
       // We failed to set the handler, remove the data.
       aNode->DeleteProperty(DOM_USER_DATA, aKey);
@@ -3301,35 +3301,6 @@ nsContentUtils::CallUserDataHandler(nsIDocument *aDocument, PRUint16 aOperation,
   nsHandlerData handlerData = { aOperation, aSource, aDest };
   aDocument->PropertyTable()->Enumerate(aNode, DOM_USER_DATA_HANDLER,
                                         CallHandler, &handlerData);
-}
-
-static void
-CopyData(void *aObject, nsIAtom *aKey, void *aUserData, void *aData)
-{
-  nsPropertyTable *propertyTable = NS_STATIC_CAST(nsPropertyTable*, aData);
-  nsINode *node = NS_STATIC_CAST(nsINode*, aObject);
-  nsIDOMUserDataHandler *handler =
-    NS_STATIC_CAST(nsIDOMUserDataHandler*,
-                   propertyTable->GetProperty(node, DOM_USER_DATA_HANDLER,
-                                              aKey));
-
-  nsCOMPtr<nsIVariant> result;
-  nsContentUtils::SetUserData(node, aKey,
-                              NS_STATIC_CAST(nsIVariant*, aUserData), handler,
-                              getter_AddRefs(result));
-}
-
-/* static */
-void
-nsContentUtils::CopyUserData(nsIDocument *aOldDocument, const nsINode *aNode)
-{
-#ifdef DEBUG
-  nsCOMPtr<nsINode> node = do_QueryInterface(NS_CONST_CAST(nsINode*, aNode));
-  NS_ASSERTION(node == aNode, "Use canonical nsINode pointer!");
-#endif
-
-  nsPropertyTable *table = aOldDocument->PropertyTable();
-  table->Enumerate(aNode, DOM_USER_DATA, CopyData, table);
 }
 
 /* static */

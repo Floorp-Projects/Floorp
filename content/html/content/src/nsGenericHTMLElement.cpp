@@ -313,14 +313,14 @@ nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst) const
   void* prop;
   if ((prop = GetProperty(nsHTMLAtoms::htmlBaseHref))) {
     rv = aDst->SetProperty(nsHTMLAtoms::htmlBaseHref, prop,
-                           nsPropertyTable::SupportsDtorFunc);
+                           nsPropertyTable::SupportsDtorFunc, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       NS_ADDREF(NS_STATIC_CAST(nsIURI*, prop));
     }
   }
   if ((prop = GetProperty(nsHTMLAtoms::htmlBaseTarget))) {
     rv = aDst->SetProperty(nsHTMLAtoms::htmlBaseTarget, prop,
-                           nsPropertyTable::SupportsDtorFunc);
+                           nsPropertyTable::SupportsDtorFunc, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       NS_ADDREF(NS_STATIC_CAST(nsIAtom*, prop));
     }

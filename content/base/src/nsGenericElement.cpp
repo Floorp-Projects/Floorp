@@ -147,7 +147,7 @@ nsINode::~nsINode()
 }
 
 void*
-nsINode::GetProperty(PRUint32 aCategory, nsIAtom *aPropertyName,
+nsINode::GetProperty(PRUint16 aCategory, nsIAtom *aPropertyName,
                      nsresult *aStatus) const
 {
   nsIDocument *doc = GetOwnerDoc();
@@ -159,8 +159,9 @@ nsINode::GetProperty(PRUint32 aCategory, nsIAtom *aPropertyName,
 }
 
 nsresult
-nsINode::SetProperty(PRUint32 aCategory, nsIAtom *aPropertyName, void *aValue,
-                     NSPropertyDtorFunc aDtor, void **aOldValue)
+nsINode::SetProperty(PRUint16 aCategory, nsIAtom *aPropertyName, void *aValue,
+                     NSPropertyDtorFunc aDtor, PRBool aTransfer,
+                     void **aOldValue)
 {
   nsIDocument *doc = GetOwnerDoc();
   if (!doc)
@@ -168,7 +169,7 @@ nsINode::SetProperty(PRUint32 aCategory, nsIAtom *aPropertyName, void *aValue,
 
   nsresult rv = doc->PropertyTable()->SetProperty(this, aCategory,
                                                   aPropertyName, aValue, aDtor,
-                                                  aOldValue);
+                                                  nsnull, aTransfer, aOldValue);
   if (NS_SUCCEEDED(rv)) {
     SetFlags(NODE_HAS_PROPERTIES);
   }
@@ -177,7 +178,7 @@ nsINode::SetProperty(PRUint32 aCategory, nsIAtom *aPropertyName, void *aValue,
 }
 
 nsresult
-nsINode::DeleteProperty(PRUint32 aCategory, nsIAtom *aPropertyName)
+nsINode::DeleteProperty(PRUint16 aCategory, nsIAtom *aPropertyName)
 {
   nsIDocument *doc = GetOwnerDoc();
   if (!doc)
@@ -187,7 +188,7 @@ nsINode::DeleteProperty(PRUint32 aCategory, nsIAtom *aPropertyName)
 }
 
 void*
-nsINode::UnsetProperty(PRUint32 aCategory, nsIAtom *aPropertyName,
+nsINode::UnsetProperty(PRUint16 aCategory, nsIAtom *aPropertyName,
                        nsresult *aStatus)
 {
   nsIDocument *doc = GetOwnerDoc();
@@ -1834,11 +1835,15 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   if (oldOwnerDocument != newOwnerDocument) {
     if (oldOwnerDocument && HasProperties()) {
-      // Copy UserData to the new document.
-      nsContentUtils::CopyUserData(oldOwnerDocument, this);
+      nsPropertyTable *oldTable = oldOwnerDocument->PropertyTable();
+      if (newOwnerDocument) {
+        nsPropertyTable *newTable = newOwnerDocument->PropertyTable();
 
-      // Remove all properties.
-      oldOwnerDocument->PropertyTable()->DeleteAllPropertiesFor(this);
+        oldTable->TransferOrDeleteAllPropertiesFor(this, newTable);
+      }
+      else {
+        oldTable->DeleteAllPropertiesFor(this);
+      }
     }
 
     if (newOwnerDocument) {

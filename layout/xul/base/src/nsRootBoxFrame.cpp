@@ -349,7 +349,7 @@ nsRootBoxFrame::AddTooltipSupport(nsIContent* aNode)
 
   if (NS_SUCCEEDED(listener->Init(aNode))) {
     nsresult rv = aNode->SetProperty(nsXULAtoms::tooltiplistener, listener,
-                                     TooltipListenerPropertyDtor);
+                                     TooltipListenerPropertyDtor, PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
     nsXULTooltipListener* listenerRef = listener;
     NS_ADDREF(listenerRef);

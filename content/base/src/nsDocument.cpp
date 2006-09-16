@@ -3986,14 +3986,21 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
 
   PRUint32 i, count = nodesWithProperties.Count();
   if (!sameDocument && oldDocument) {
+    nsPropertyTable *oldTable = oldDocument->PropertyTable();
+    nsPropertyTable *newTable = PropertyTable();
     for (i = 0; i < count; ++i) {
-      nsINode *nodeWithProperties = nodesWithProperties[i];
+      rv = oldTable->TransferOrDeleteAllPropertiesFor(nodesWithProperties[i],
+                                                      newTable);
+      if (NS_FAILED(rv)) {
+        while (++i < count) {
+          oldTable->DeleteAllPropertiesFor(nodesWithProperties[i]);
+        }
 
-      // Copy UserData to the new document.
-      nsContentUtils::CopyUserData(oldDocument, nodeWithProperties);
+        // Disconnect all nodes from their parents.
+        BlastSubtreeToPieces(adoptedNode);
 
-      // Remove all properties.
-      oldDocument->PropertyTable()->DeleteAllPropertiesFor(nodeWithProperties);
+        return rv;
+      }
     }
   }
 
