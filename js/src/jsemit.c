@@ -1375,10 +1375,13 @@ EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
             break;
 
           case STMT_SUBROUTINE:
-            /* There's a retsub pc-offset on the stack that we need to pop. */
+            /*
+             * There's a [exception or hole, retsub pc-index] pair on the
+             * stack that we need to pop.
+             */
             if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
                 return JS_FALSE;
-            if (js_Emit1(cx, cg, JSOP_POP) < 0)
+            if (js_Emit1(cx, cg, JSOP_POP2) < 0)
                 return JS_FALSE;
             break;
 
