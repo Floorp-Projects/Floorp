@@ -1275,7 +1275,7 @@ nsSecureBrowserUIImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::GetSSLStatus(nsISupports** _result)
 {
-  NS_ASSERTION(_result, "non-NULL destination required");
+  NS_ENSURE_ARG_POINTER(_result);
 
   *_result = mSSLStatus;
   NS_IF_ADDREF(*_result);
