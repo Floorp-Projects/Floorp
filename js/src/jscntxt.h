@@ -472,14 +472,17 @@ typedef struct JSLocalRootStack {
 #define JSLRS_NULL_MARK ((uint32) -1)
 
 typedef struct JSTempValueRooter JSTempValueRooter;
+typedef void
+(* JS_DLL_CALLBACK JSTempValueMarker)(JSContext *cx, JSTempValueRooter *tvr);
 
 /*
  * Context-linked stack of temporary GC roots.
  *
- * If count is -1, then u.value contains the single value to root.  Otherwise
- * u.array points to a stack-allocated vector of jsvals.  Note that the vector
- * may have length 0 or 1 for full generality, so we need -1 to discriminate
- * the union.
+ * If count is -1, then u.value contains the single value to root. If count is
+ * -2, then u.marker holds a mark hook that is executed to mark the values.
+ * Otherwise u.array points to a stack-allocated vector of jsvals.  Note that
+ * the vector may have length 0 or 1 for full generality, so we need -1 to
+ * discriminate the union.
  *
  * To root a single GC-thing pointer, which need not be tagged and stored as a
  * jsval, use JS_PUSH_SINGLE_TEMP_ROOT.  The (jsval)(val) cast works because a
@@ -495,13 +498,15 @@ typedef struct JSTempValueRooter JSTempValueRooter;
  * internal API (see further below) instead.
  */
 struct JSTempValueRooter {
-    JSTempValueRooter   *down;
-    jsint               count;
+    JSTempValueRooter       *down;
+    jsint                   count;
     union {
-        jsval           value;
-        jsval           *array;
+        jsval               value;
+        jsval               *array;
+        JSTempValueMarker   marker;
     } u;
 };
+
 
 #define JS_PUSH_TEMP_ROOT_COMMON(cx,tvr)                                      \
     JS_BEGIN_MACRO                                                            \
@@ -522,6 +527,13 @@ struct JSTempValueRooter {
         JS_PUSH_TEMP_ROOT_COMMON(cx, tvr);                                    \
         (tvr)->count = (cnt);                                                 \
         (tvr)->u.array = (arr);                                               \
+    JS_END_MACRO
+
+#define JS_PUSH_TEMP_ROOT_MARKER(cx,marker_,tvr)                              \
+    JS_BEGIN_MACRO                                                            \
+        JS_PUSH_TEMP_ROOT_COMMON(cx, tvr);                                    \
+        (tvr)->count = -2;                                                    \
+        (tvr)->u.marker = (marker_);                                          \
     JS_END_MACRO
 
 #define JS_POP_TEMP_ROOT(cx,tvr)                                              \

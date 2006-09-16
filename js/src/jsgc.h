@@ -153,12 +153,10 @@ typedef struct JSGCCloseState {
     JSGenerator         *reachableList;
 
     /*
-     * Head, pointer to tail and length of the queue of generators that have
-     * already become unreachable but whose close hooks are not yet run.
+     * Head of the queue of generators that have already become unreachable but
+     * whose close hooks are not yet run.
      */
-    JSGenerator         *todoHead;
-    JSGenerator         **todoTail;
-    size_t              todoCount;
+    JSGenerator         *todoQueue;
 
 #ifndef JS_THREADSAFE
     /*
@@ -170,9 +168,9 @@ typedef struct JSGCCloseState {
 } JSGCCloseState;
 
 extern void
-js_RegisterOpenGenerator(JSContext *cx, JSGenerator *gen);
+js_RegisterGenerator(JSContext *cx, JSGenerator *gen);
 
-JSBool
+extern JSBool
 js_RunCloseHooks(JSContext *cx);
 
 #endif
@@ -301,6 +299,7 @@ typedef struct JSGCStats {
     uint32  segslots;   /* total stack segment jsval slots scanned */
     uint32  nclose;     /* number of objects with close hooks */
     uint32  maxnclose;  /* max number of objects with close hooks */
+    uint32  closelater; /* number of close hooks scheduled to run */
     uint32  maxcloselater; /* max number of close hooks scheduled to run */
 } JSGCStats;
 
