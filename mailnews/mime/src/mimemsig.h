@@ -54,7 +54,7 @@
 	 used to initialize the dexlateion engine.  NULL indicates failure;
 	 otherwise, an opaque closure object should be returned.
 
-   int crypto_data_hash (char *data, PRInt32 data_size, 
+   int crypto_data_hash (const char *data, PRInt32 data_size, 
 						 void *crypto_closure)
 
      This is called with the raw data, for which a signature has been computed.
@@ -75,7 +75,7 @@
 	 initialization here, or may wish to examine the actual headers of the
 	 signature object itself.
 
-   int crypto_signature_hash (char *data, PRInt32 data_size,
+   int crypto_signature_hash (const char *data, PRInt32 data_size,
 							  void *crypto_closure)
 
      This is called with the raw data of the detached signature block.  It will
@@ -123,9 +123,9 @@ struct MimeMultipartSignedClass {
   /* Callbacks used by dexlateion (really, signature verification) module. */
   void * (*crypto_init) (MimeObject *multipart_object);
 
-  int (*crypto_data_hash)      (char *data, PRInt32 data_size,
+  int (*crypto_data_hash)      (const char *data, PRInt32 data_size,
 								void *crypto_closure);
-  int (*crypto_signature_hash) (char *data, PRInt32 data_size,
+  int (*crypto_signature_hash) (const char *data, PRInt32 data_size,
 								void *crypto_closure);
 
   int (*crypto_data_eof)      (void *crypto_closure, PRBool abort_p);

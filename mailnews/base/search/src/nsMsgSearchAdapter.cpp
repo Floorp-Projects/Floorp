@@ -549,7 +549,7 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
       }
     }
 
-    char *value = "";
+    char *value = nsnull;
     char dateBuf[100];
     dateBuf[0] = '\0';
 
@@ -686,10 +686,15 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
     }
 
     // this should be rewritten to use nsCString
-    int len = strlen(whichMnemonic) + strlen(value) + (useNot ? strlen(m_kImapNot) : 0) + 
-      (useQuotes ? 2 : 0) + strlen(m_kImapHeader) + 
-      (orHeaderMnemonic ? (strlen(m_kImapHeader) + strlen(m_kImapOr) + (useNot ? strlen(m_kImapNot) : 0) + 
-      strlen(orHeaderMnemonic) + strlen(value) + 2 /*""*/) : 0) + 10; // add slough for imap string literals
+    int subLen =
+      (value ? strlen(value) : 0) +
+      (useNot ? strlen(m_kImapNot) : 0) +
+      strlen(m_kImapHeader);
+    int len = strlen(whichMnemonic) + subLen + (useQuotes ? 2 : 0) +
+      (orHeaderMnemonic
+       ? (subLen + strlen(m_kImapOr) + strlen(orHeaderMnemonic) + 2 /*""*/)
+       : 0) +
+      10; // add slough for imap string literals
     char *encoding = new char[len];
     if (encoding)
     {
@@ -724,7 +729,7 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
     }
 
     if (value && valueWasAllocated)
-      PR_Free (value);
+      nsCRT::free (value);
 
     *ppOutTerm = encoding;
 

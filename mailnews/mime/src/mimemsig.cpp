@@ -55,8 +55,8 @@ MimeDefClass(MimeMultipartSigned, MimeMultipartSignedClass,
 static int MimeMultipartSigned_initialize (MimeObject *);
 static int MimeMultipartSigned_create_child (MimeObject *);
 static int MimeMultipartSigned_close_child(MimeObject *);
-static int MimeMultipartSigned_parse_line (char *, PRInt32, MimeObject *);
-static int MimeMultipartSigned_parse_child_line (MimeObject *, char *, PRInt32,
+static int MimeMultipartSigned_parse_line (const char *, PRInt32, MimeObject *);
+static int MimeMultipartSigned_parse_child_line (MimeObject *, const char *, PRInt32,
 												 PRBool);
 static int MimeMultipartSigned_parse_eof (MimeObject *, PRBool);
 static void MimeMultipartSigned_finalize (MimeObject *);
@@ -176,7 +176,7 @@ MimeMultipartSigned_finalize (MimeObject *obj)
 
 
 static int
-MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
+MimeMultipartSigned_parse_line (const char *line, PRInt32 length, MimeObject *obj)
 {
   MimeMultipart *mult = (MimeMultipart *) obj;
   MimeMultipartSigned *sig = (MimeMultipartSigned *) obj;
@@ -506,7 +506,7 @@ MimeMultipartSigned_close_child (MimeObject *obj)
 
 static int
 MimeMultipartSigned_parse_child_line (MimeObject *obj,
-									  char *line, PRInt32 length,
+									  const char *line, PRInt32 length,
 									  PRBool first_line_p)
 {
   MimeMultipartSigned *sig = (MimeMultipartSigned *) obj;

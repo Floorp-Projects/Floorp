@@ -59,7 +59,7 @@ extern MimeObjectClass mimeMultipartAppleDoubleClass;
 
 static int MimeExternalBody_initialize (MimeObject *);
 static void MimeExternalBody_finalize (MimeObject *);
-static int MimeExternalBody_parse_line (char *, PRInt32, MimeObject *);
+static int MimeExternalBody_parse_line (const char *, PRInt32, MimeObject *);
 static int MimeExternalBody_parse_eof (MimeObject *, PRBool);
 static PRBool MimeExternalBody_displayable_inline_p (MimeObjectClass *clazz,
 													  MimeHeaders *hdrs);
@@ -113,7 +113,7 @@ MimeExternalBody_finalize (MimeObject *object)
 }
 
 static int
-MimeExternalBody_parse_line (char *line, PRInt32 length, MimeObject *obj)
+MimeExternalBody_parse_line (const char *line, PRInt32 length, MimeObject *obj)
 {
   MimeExternalBody *bod = (MimeExternalBody *) obj;
   int status = 0;

@@ -204,7 +204,7 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
   {
     char *placeInTokenString = nsnull;
     char *tagToken = nsnull;
-    char *commandToken = nsnull;
+    const char *commandToken = nsnull;
     PRBool inIdle = PR_FALSE;
     if (!sendingIdleDone)
     {
@@ -1136,7 +1136,7 @@ void nsImapServerResponseParser::msg_fetch()
         char *whereHeader = PL_strstr(fNextToken, "HEADER");
         if (whereHeader)
         {
-          char *startPartNum = fNextToken + 5;
+          const char *startPartNum = fNextToken + 5;
           if (whereHeader > startPartNum)
           {
             PRInt32 partLength = whereHeader - startPartNum - 1; //-1 for the dot!
@@ -2313,7 +2313,7 @@ void nsImapServerResponseParser::namespace_data()
 					char *namespacePrefix = CreateQuoted(PR_FALSE);
 
 					AdvanceToNextToken();
-					char *quotedDelimiter = fNextToken;
+					const char *quotedDelimiter = fNextToken;
 					char namespaceDelimiter = '\0';
 
 					if (quotedDelimiter[0] == '"')

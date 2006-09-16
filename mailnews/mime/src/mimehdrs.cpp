@@ -747,7 +747,7 @@ MimeHeaders_get_name(MimeHeaders *hdrs, MimeDisplayOptions *opt)
 void
 MimeHeaders_do_unix_display_hook_hack(MimeHeaders *hdrs)
 {
-  static char *cmd = 0;
+  static const char *cmd = 0;
   if (!cmd)
   {
   /* The first time we're invoked, look up the command in the
@@ -755,8 +755,6 @@ MimeHeaders_do_unix_display_hook_hack(MimeHeaders *hdrs)
     cmd = getenv("NS_MSG_DISPLAY_HOOK");
     if (!cmd)
       cmd = "";
-    else
-      cmd = nsCRT::strdup(cmd);
   }
   
   /* Invoke "cmd" at the end of a pipe, and give it the headers on stdin.

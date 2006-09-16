@@ -58,7 +58,7 @@ MimeDefClass(MimeInlineTextPlainFlowed, MimeInlineTextPlainFlowedClass,
 			 mimeInlineTextPlainFlowedClass, &MIME_SUPERCLASS);
 
 static int MimeInlineTextPlainFlowed_parse_begin (MimeObject *);
-static int MimeInlineTextPlainFlowed_parse_line (char *, PRInt32, MimeObject *);
+static int MimeInlineTextPlainFlowed_parse_line (const char *, PRInt32, MimeObject *);
 static int MimeInlineTextPlainFlowed_parse_eof (MimeObject *, PRBool);
 
 static MimeInlineTextPlainFlowedExData *MimeInlineTextPlainFlowedExDataList = nsnull;
@@ -286,7 +286,7 @@ EarlyOut:
 
 
 static int
-MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *obj)
+MimeInlineTextPlainFlowed_parse_line (const char *aLine, PRInt32 length, MimeObject *obj)
 {
   int status;
   PRBool quoting = ( obj->options
@@ -309,7 +309,9 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   if (length <= 0) return 0;
 
   uint32 linequotelevel = 0;
-  const char *linep = line;
+  nsCAutoString real_line(aLine, length);
+  char *line = real_line.BeginWriting();
+  const char *linep = real_line.BeginReading();
   // Space stuffed?
   if(' ' == *linep) {
     linep++;

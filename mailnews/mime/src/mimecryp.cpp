@@ -55,7 +55,7 @@ static int MimeEncrypted_initialize (MimeObject *);
 static void MimeEncrypted_finalize (MimeObject *);
 static int MimeEncrypted_parse_begin (MimeObject *);
 static int MimeEncrypted_parse_buffer (const char *, PRInt32, MimeObject *);
-static int MimeEncrypted_parse_line (char *, PRInt32, MimeObject *);
+static int MimeEncrypted_parse_line (const char *, PRInt32, MimeObject *);
 static int MimeEncrypted_parse_decoded_buffer (const char *, PRInt32, MimeObject *);
 static int MimeEncrypted_parse_eof (MimeObject *, PRBool);
 static int MimeEncrypted_parse_end (MimeObject *, PRBool);
@@ -177,7 +177,7 @@ MimeEncrypted_parse_buffer (const char *buffer, PRInt32 size, MimeObject *obj)
 
 
 static int
-MimeEncrypted_parse_line (char *line, PRInt32 length, MimeObject *obj)
+MimeEncrypted_parse_line (const char *line, PRInt32 length, MimeObject *obj)
 {
   NS_ASSERTION(0, "1.2 <mscott@netscape.com> 01 Nov 2001 17:59");
   /* This method shouldn't ever be called. */

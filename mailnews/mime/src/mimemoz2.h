@@ -84,11 +84,11 @@ typedef void
 /* streamclass function */
 struct _nsMIMESession {
 
-    char      * name;          /* Just for diagnostics */
+    const char * name;         /* Just for diagnostics */
 
-    void      * window_id;     /* used for progress messages, etc. */
+    void       * window_id;    /* used for progress messages, etc. */
 
-    void      * data_object;   /* a pointer to whatever
+    void       * data_object;  /* a pointer to whatever
                                 * structure you wish to have
                                 * passed to the routines below
                                 * during writes, etc...

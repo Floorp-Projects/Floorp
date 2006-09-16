@@ -617,7 +617,7 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
 
 static int
 MimeMultipartRelated_parse_child_line (MimeObject *obj,
-                     char *line, PRInt32 length,
+                     const char *line, PRInt32 length,
                      PRBool first_line_p)
 {
   MimeContainer *cont = (MimeContainer *) obj;

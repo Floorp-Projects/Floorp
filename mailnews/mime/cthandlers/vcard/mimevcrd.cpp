@@ -67,7 +67,7 @@
 static nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
 #endif
 
-static int MimeInlineTextVCard_parse_line (char *, PRInt32, MimeObject *);
+static int MimeInlineTextVCard_parse_line (const char *, PRInt32, MimeObject *);
 static int MimeInlineTextVCard_parse_eof (MimeObject *, PRBool);
 static int MimeInlineTextVCard_parse_begin (MimeObject *obj);
 
@@ -170,7 +170,7 @@ char *strcpySafe (char *dest, const char *src, size_t destLength)
 }
 
 static int
-MimeInlineTextVCard_parse_line (char *line, PRInt32 length, MimeObject *obj)
+MimeInlineTextVCard_parse_line (const char *line, PRInt32 length, MimeObject *obj)
 {
   // This routine gets fed each line of data, one at a time.    
   char* linestring;
@@ -357,7 +357,7 @@ static int WriteEachLineToStream (MimeObject *obj, const char *line)
   return status;
 }
 
-static int OutputTable (MimeObject *obj, PRBool endTable, PRBool border, char *cellspacing, char *cellpadding, char *bgcolor)
+static int OutputTable (MimeObject *obj, PRBool endTable, PRBool border, const char *cellspacing, const char *cellpadding, const char *bgcolor)
 {
   int status = 0;
   char * htmlLine = NULL;
@@ -418,9 +418,9 @@ static int OutputTable (MimeObject *obj, PRBool endTable, PRBool border, char *c
 }
 
 static int OutputTableRowOrData(MimeObject *obj, PRBool outputRow, 
-                PRBool end, char * align, 
-                char* valign, char* colspan,
-                char* width)
+                PRBool end, const char * align, 
+                const char* valign, const char* colspan,
+                const char* width)
 {
   int status = 0;
   char * htmlLine = NULL;
@@ -488,7 +488,7 @@ static int OutputTableRowOrData(MimeObject *obj, PRBool outputRow,
 }
 
 
-static int OutputFont(MimeObject *obj, PRBool endFont, char * size, char* color)
+static int OutputFont(MimeObject *obj, PRBool endFont, const char * size, const char* color)
 {
   int status = 0;
   char * htmlLine = NULL;
@@ -1910,9 +1910,7 @@ nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
 
   if (!stringBundle)
   {
-    char*       propertyURL = NULL;
-
-    propertyURL = VCARD_URL;
+    const char* propertyURL = VCARD_URL;
 
     nsCOMPtr<nsIStringBundleService> sBundleService = 
              do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res); 

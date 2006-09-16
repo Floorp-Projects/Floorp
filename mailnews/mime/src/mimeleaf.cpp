@@ -51,7 +51,7 @@ static int MimeLeaf_initialize (MimeObject *);
 static void MimeLeaf_finalize (MimeObject *);
 static int MimeLeaf_parse_begin (MimeObject *);
 static int MimeLeaf_parse_buffer (const char *, PRInt32, MimeObject *);
-static int MimeLeaf_parse_line (char *, PRInt32, MimeObject *);
+static int MimeLeaf_parse_line (const char *, PRInt32, MimeObject *);
 static int MimeLeaf_close_decoder (MimeObject *);
 static int MimeLeaf_parse_eof (MimeObject *, PRBool);
 static PRBool MimeLeaf_displayable_inline_p (MimeObjectClass *clazz,
@@ -179,7 +179,7 @@ MimeLeaf_parse_buffer (const char *buffer, PRInt32 size, MimeObject *obj)
 }
 
 static int
-MimeLeaf_parse_line (char *line, PRInt32 length, MimeObject *obj)
+MimeLeaf_parse_line (const char *line, PRInt32 length, MimeObject *obj)
 {
   NS_ASSERTION(0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   /* This method shouldn't ever be called. */

@@ -46,7 +46,7 @@
 MimeDefClass(MimeInlineTextRichtext, MimeInlineTextRichtextClass,
 			 mimeInlineTextRichtextClass, &MIME_SUPERCLASS);
 
-static int MimeInlineTextRichtext_parse_line (char *, PRInt32, MimeObject *);
+static int MimeInlineTextRichtext_parse_line (const char *, PRInt32, MimeObject *);
 static int MimeInlineTextRichtext_parse_begin (MimeObject *);
 static int MimeInlineTextRichtext_parse_eof (MimeObject *, PRBool);
 
@@ -65,7 +65,7 @@ MimeInlineTextRichtextClassInitialize(MimeInlineTextRichtextClass *clazz)
    from outside this module (no MimeObject, etc.)
  */
 int
-MimeRichtextConvert (char *line, PRInt32 length,
+MimeRichtextConvert (const char *line, PRInt32 length,
 					 int (*output_fn) (const char *buf, PRInt32 size, void *closure),
 					 void *closure,
 					 char **obufferP,
@@ -181,8 +181,8 @@ MimeRichtextConvert (char *line, PRInt32 length,
 		{
 		  /* Push out this ID. */
 		  const char *old = this_start + 1;
-		  char *tag_open  = 0;
-		  char *tag_close = 0;
+		  const char *tag_open  = 0;
+		  const char *tag_close = 0;
 		  if (*old == '/')
 			{
 			  /* This is </tag> */
@@ -330,7 +330,7 @@ MimeRichtextConvert (char *line, PRInt32 length,
 
 
 static int
-MimeInlineTextRichtext_parse_line (char *line, PRInt32 length, MimeObject *obj)
+MimeInlineTextRichtext_parse_line (const char *line, PRInt32 length, MimeObject *obj)
 {
   PRBool enriched_p = (((MimeInlineTextRichtextClass *) obj->clazz)
 						->enriched_p);

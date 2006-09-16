@@ -58,7 +58,7 @@ MimeDefClass(MimeInlineTextPlain, MimeInlineTextPlainClass,
 			 mimeInlineTextPlainClass, &MIME_SUPERCLASS);
 
 static int MimeInlineTextPlain_parse_begin (MimeObject *);
-static int MimeInlineTextPlain_parse_line (char *, PRInt32, MimeObject *);
+static int MimeInlineTextPlain_parse_line (const char *, PRInt32, MimeObject *);
 static int MimeInlineTextPlain_parse_eof (MimeObject *, PRBool);
 
 static int
@@ -304,7 +304,7 @@ MimeInlineTextPlain_parse_eof (MimeObject *obj, PRBool abort_p)
 
 
 static int
-MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
+MimeInlineTextPlain_parse_line (const char *line, PRInt32 length, MimeObject *obj)
 {
   int status;
   PRBool quoting = ( obj->options

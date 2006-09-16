@@ -56,7 +56,7 @@ static int MimeMultipartAlternative_initialize (MimeObject *);
 static void MimeMultipartAlternative_finalize (MimeObject *);
 static int MimeMultipartAlternative_parse_eof (MimeObject *, PRBool);
 static int MimeMultipartAlternative_create_child(MimeObject *);
-static int MimeMultipartAlternative_parse_child_line (MimeObject *, char *,
+static int MimeMultipartAlternative_parse_child_line (MimeObject *, const char *,
                             PRInt32, PRBool);
 static int MimeMultipartAlternative_close_child(MimeObject *);
 
@@ -182,7 +182,7 @@ MimeMultipartAlternative_create_child(MimeObject *obj)
 
 static int
 MimeMultipartAlternative_parse_child_line (MimeObject *obj,
-                       char *line, PRInt32 length,
+                       const char *line, PRInt32 length,
                        PRBool first_line_p)
 {
   MimeMultipartAlternative *malt = (MimeMultipartAlternative *) obj;

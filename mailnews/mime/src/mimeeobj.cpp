@@ -55,7 +55,7 @@ static int MimeExternalObject_initialize (MimeObject *);
 static void MimeExternalObject_finalize (MimeObject *);
 static int MimeExternalObject_parse_begin (MimeObject *);
 static int MimeExternalObject_parse_buffer (const char *, PRInt32, MimeObject *);
-static int MimeExternalObject_parse_line (char *, PRInt32, MimeObject *);
+static int MimeExternalObject_parse_line (const char *, PRInt32, MimeObject *);
 static int MimeExternalObject_parse_decoded_buffer (const char*, PRInt32, MimeObject*);
 static PRBool MimeExternalObject_displayable_inline_p (MimeObjectClass *clazz,
 														MimeHeaders *hdrs);
@@ -259,7 +259,7 @@ MimeExternalObject_parse_decoded_buffer (const char *buf, PRInt32 size,
 
 
 static int
-MimeExternalObject_parse_line (char *line, PRInt32 length, MimeObject *obj)
+MimeExternalObject_parse_line (const char *line, PRInt32 length, MimeObject *obj)
 {
   /* This method should never be called (externals do no line buffering).
    */

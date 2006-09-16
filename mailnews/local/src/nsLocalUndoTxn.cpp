@@ -465,11 +465,11 @@ NS_IMETHODIMP nsLocalUndoFolderListener::OnItemPropertyFlagChanged(nsIMsgDBHdr *
     return NS_OK;
 }
 
-NS_IMETHODIMP nsLocalUndoFolderListener::OnItemEvent(nsIMsgFolder *item, nsIAtom *event)
+NS_IMETHODIMP nsLocalUndoFolderListener::OnItemEvent(nsIMsgFolder *item, nsIAtom *aEvent)
 {
   nsCOMPtr <nsIAtom> folderLoadedAtom = do_GetAtom("FolderLoaded");
   nsCOMPtr <nsIMsgFolder> itemFolder = do_QueryInterface(item);
-  if (mTxn && mFolder && folderLoadedAtom == event && item == mFolder)
+  if (mTxn && mFolder && folderLoadedAtom == aEvent && item == mFolder)
     return mTxn->UndoTransactionInternal();
 
   return NS_ERROR_FAILURE;

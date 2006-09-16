@@ -72,7 +72,7 @@
      Called after `init' but before `parse_line' or `parse_buffer'.
 	 Can be used to initialize various parsing machinery.
 
-   int parse_line (char *line, PRInt32 length, MimeObject *obj)
+   int parse_line (const char *line, PRInt32 length, MimeObject *obj)
 
      This method is called (by parse_buffer()) for each complete line of
      data handed to the parser, and is the method which most subclasses
@@ -145,7 +145,7 @@ struct MimeObjectClass {
   void (*finalize) (MimeObject *obj);
   int (*parse_begin) (MimeObject *obj);
   int (*parse_buffer) (const char *buf, PRInt32 size, MimeObject *obj);
-  int (*parse_line) (char *line, PRInt32 length, MimeObject *obj);
+  int (*parse_line) (const char *line, PRInt32 length, MimeObject *obj);
   int (*parse_eof) (MimeObject *obj, PRBool abort_p);
   int (*parse_end) (MimeObject *obj, PRBool abort_p);
 

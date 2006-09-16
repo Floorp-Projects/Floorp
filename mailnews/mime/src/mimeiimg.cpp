@@ -52,7 +52,7 @@ MimeDefClass(MimeInlineImage, MimeInlineImageClass,
 static int MimeInlineImage_initialize (MimeObject *);
 static void MimeInlineImage_finalize (MimeObject *);
 static int MimeInlineImage_parse_begin (MimeObject *);
-static int MimeInlineImage_parse_line (char *, PRInt32, MimeObject *);
+static int MimeInlineImage_parse_line (const char *, PRInt32, MimeObject *);
 static int MimeInlineImage_parse_eof (MimeObject *, PRBool);
 static int MimeInlineImage_parse_decoded_buffer (const char *, PRInt32, MimeObject *);
 
@@ -267,7 +267,7 @@ MimeInlineImage_parse_decoded_buffer (const char *buf, PRInt32 size, MimeObject 
 
 
 static int
-MimeInlineImage_parse_line (char *line, PRInt32 length, MimeObject *obj)
+MimeInlineImage_parse_line (const char *line, PRInt32 length, MimeObject *obj)
 {
   /* This method should never be called (inline images do no line buffering).
    */

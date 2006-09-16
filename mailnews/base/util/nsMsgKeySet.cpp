@@ -1278,7 +1278,7 @@ nsMsgKeySet::test_decoder (const char *string)
 void
 nsMsgKeySet::test_adder (void)
 {
-  char *string;
+  const char *string;
   nsMsgKeySet *set;
   char *s;
   PRInt32 i;

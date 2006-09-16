@@ -63,7 +63,7 @@ static int MimeMessage_initialize (MimeObject *);
 static void MimeMessage_finalize (MimeObject *);
 static int MimeMessage_add_child (MimeObject *, MimeObject *);
 static int MimeMessage_parse_begin (MimeObject *);
-static int MimeMessage_parse_line (char *, PRInt32, MimeObject *);
+static int MimeMessage_parse_line (const char *, PRInt32, MimeObject *);
 static int MimeMessage_parse_eof (MimeObject *, PRBool);
 static int MimeMessage_close_headers (MimeObject *obj);
 static int MimeMessage_write_headers_html (MimeObject *);
@@ -146,9 +146,9 @@ MimeMessage_parse_begin (MimeObject *obj)
 
 
 static int
-MimeMessage_parse_line (char *aLine, PRInt32 aLength, MimeObject *obj)
+MimeMessage_parse_line (const char *aLine, PRInt32 aLength, MimeObject *obj)
 {
-  char * line = aLine;
+  const char * line = aLine;
   PRInt32 length = aLength;
 
   MimeMessage *msg = (MimeMessage *) obj;
@@ -508,7 +508,7 @@ MimeMessage_close_headers (MimeObject *obj)
     char  *msgID = MimeHeaders_get (msg->hdrs, HEADER_MESSAGE_ID,
 									                  PR_FALSE, PR_FALSE);
 
-    char  *outCharset = NULL;
+    const char  *outCharset = NULL;
     if (!obj->options->force_user_charset)  /* Only convert if the user prefs is false */
       outCharset = "UTF-8";
 

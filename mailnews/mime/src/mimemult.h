@@ -56,7 +56,7 @@
 
      Whether this child should be output.  Default method always says `yes'.
 
-   int parse_child_line (MimeObject *obj, char *line, PRInt32 length,
+   int parse_child_line (MimeObject *obj, const char *line, PRInt32 length,
 						 PRBool first_line_p)
 
      When we have a line which should be handed off to the currently-active
@@ -111,7 +111,7 @@ struct MimeMultipartClass {
   int (*create_child) (MimeObject *);
   PRBool (*output_child_p) (MimeObject *self, MimeObject *child);
   int (*close_child) (MimeObject *);
-  int (*parse_child_line) (MimeObject *, char *line, PRInt32 length,
+  int (*parse_child_line) (MimeObject *, const char *line, PRInt32 length,
 						   PRBool first_line_p);
   MimeMultipartBoundaryType (*check_boundary) (MimeObject *, const char *line,
 											   PRInt32 length);

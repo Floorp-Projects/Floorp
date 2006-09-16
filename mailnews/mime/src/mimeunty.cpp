@@ -51,7 +51,7 @@ MimeDefClass(MimeUntypedText, MimeUntypedTextClass,
 static int MimeUntypedText_initialize (MimeObject *);
 static void MimeUntypedText_finalize (MimeObject *);
 static int MimeUntypedText_parse_begin (MimeObject *);
-static int MimeUntypedText_parse_line (char *, PRInt32, MimeObject *);
+static int MimeUntypedText_parse_line (const char *, PRInt32, MimeObject *);
 
 static int MimeUntypedText_open_subpart (MimeObject *obj,
 										 MimeUntypedTextSubpartType ttype,
@@ -124,7 +124,7 @@ MimeUntypedText_parse_begin (MimeObject *obj)
 }
 
 static int
-MimeUntypedText_parse_line (char *line, PRInt32 length, MimeObject *obj)
+MimeUntypedText_parse_line (const char *line, PRInt32 length, MimeObject *obj)
 {
   MimeUntypedText *uty = (MimeUntypedText *) obj;
   int status = 0;

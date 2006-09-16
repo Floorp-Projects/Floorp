@@ -106,7 +106,7 @@
 /*
  * This is the write call for outputting processed stream data.
  */ 
-extern "C" int  COM_MimeObject_write(void *mimeObject, char *data, 
+extern "C" int  COM_MimeObject_write(void *mimeObject, const char *data, 
                                       PRInt32 length, 
                                       PRBool user_visible_p);
 /*

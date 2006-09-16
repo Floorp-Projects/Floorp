@@ -60,7 +60,7 @@
 MimeDefClass(MimeInlineTextHTMLAsPlaintext, MimeInlineTextHTMLAsPlaintextClass,
 			 mimeInlineTextHTMLAsPlaintextClass, &MIME_SUPERCLASS);
 
-static int MimeInlineTextHTMLAsPlaintext_parse_line (char *, PRInt32,
+static int MimeInlineTextHTMLAsPlaintext_parse_line (const char *, PRInt32,
                                                      MimeObject *);
 static int MimeInlineTextHTMLAsPlaintext_parse_begin (MimeObject *obj);
 static int MimeInlineTextHTMLAsPlaintext_parse_eof (MimeObject *, PRBool);
@@ -162,7 +162,7 @@ MimeInlineTextHTMLAsPlaintext_finalize (MimeObject *obj)
 }
 
 static int
-MimeInlineTextHTMLAsPlaintext_parse_line (char *line, PRInt32 length,
+MimeInlineTextHTMLAsPlaintext_parse_line (const char *line, PRInt32 length,
                                           MimeObject *obj)
 {
   MimeInlineTextHTMLAsPlaintext *textHTMLPlain =

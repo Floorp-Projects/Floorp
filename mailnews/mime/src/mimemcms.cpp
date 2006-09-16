@@ -62,8 +62,8 @@ MimeDefClass(MimeMultipartSignedCMS, MimeMultipartSignedCMSClass,
 static int MimeMultipartSignedCMS_initialize (MimeObject *);
 
 static void *MimeMultCMS_init (MimeObject *);
-static int MimeMultCMS_data_hash (char *, PRInt32, void *);
-static int MimeMultCMS_sig_hash  (char *, PRInt32, void *);
+static int MimeMultCMS_data_hash (const char *, PRInt32, void *);
+static int MimeMultCMS_sig_hash  (const char *, PRInt32, void *);
 static int MimeMultCMS_data_eof (void *, PRBool);
 static int MimeMultCMS_sig_eof  (void *, PRBool);
 static int MimeMultCMS_sig_init (void *, MimeObject *, MimeHeaders *);
@@ -279,7 +279,7 @@ MimeMultCMS_init (MimeObject *obj)
 }
 
 static int
-MimeMultCMS_data_hash (char *buf, PRInt32 size, void *crypto_closure)
+MimeMultCMS_data_hash (const char *buf, PRInt32 size, void *crypto_closure)
 {
   MimeMultCMSdata *data = (MimeMultCMSdata *) crypto_closure;
   if (!data || !data->data_hash_context) {
@@ -360,7 +360,7 @@ MimeMultCMS_sig_init (void *crypto_closure,
 
 
 static int
-MimeMultCMS_sig_hash (char *buf, PRInt32 size, void *crypto_closure)
+MimeMultCMS_sig_hash (const char *buf, PRInt32 size, void *crypto_closure)
 {
   MimeMultCMSdata *data = (MimeMultCMSdata *) crypto_closure;
   nsresult rv;

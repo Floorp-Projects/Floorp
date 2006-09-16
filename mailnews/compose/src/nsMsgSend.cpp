@@ -1401,7 +1401,7 @@ nsresult nsMsgComposeAndSend::BeginCryptoEncapsulation ()
 #endif // XP_MAC && DEBUG
 
 nsresult
-mime_write_message_body(nsIMsgSend *state, char *buf, PRInt32 size)
+mime_write_message_body(nsIMsgSend *state, const char *buf, PRInt32 size)
 {
   NS_ENSURE_ARG_POINTER(state);
 
@@ -1780,7 +1780,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   
   nsCString attachment1_body;
   // we'd better be "text/html" at this point
-  char          *attachment1_type = TEXT_HTML;  
+  const char  *attachment1_type = TEXT_HTML;  
 
   // Convert body to mail charset
   nsXPIDLCString    outCString;

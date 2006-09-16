@@ -692,9 +692,9 @@ mime_fix_up_html_address( char **addr)
 static void 
 mime_intl_insert_message_header_1(char        **body, 
                                   char        **hdr_value,
-                                  char        *hdr_str, 
+                                  const char  *hdr_str, 
                                   const char  *html_hdr_str,
-                                  char        *mailcharset,
+                                  const char  *mailcharset,
                                   PRBool      htmlEdit)
 {
   if (!body || !hdr_value || !hdr_str)

@@ -74,7 +74,7 @@ void nsIMAPGenericParser::ResetLexAnalyzer()
   PR_FREEIF( fCurrentLine );
   PR_FREEIF( fStartOfLineOfTokens );
   
-  fCurrentLine = fNextToken = fLineOfTokens = fStartOfLineOfTokens = fCurrentTokenPlaceHolder = nsnull;
+  fNextToken = fCurrentLine = fLineOfTokens = fStartOfLineOfTokens = fCurrentTokenPlaceHolder = nsnull;
   fAtEndOfLine = PR_FALSE;
 }
 
@@ -118,7 +118,7 @@ void nsIMAPGenericParser::skip_to_close_paren()
   while (ContinueParse())
   {
     // go through fNextToken, account for nested parens
-    char *loc;
+    const char *loc;
     for (loc = fNextToken; loc && *loc; loc++)
     {
       if (*loc == '(')
