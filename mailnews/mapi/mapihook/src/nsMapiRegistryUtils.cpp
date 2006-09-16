@@ -49,7 +49,7 @@
 #include "nsIStringBundle.h"
 #include "nsIPromptService.h"
 #include "nsXPIDLString.h"
-#include "nsSpecialSystemDirectory.h"
+#include "plstr.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
