@@ -266,8 +266,10 @@ nsProxyObjectCallInfo::CopyStrings(PRBool copy)
                 switch (type_tag) 
                 {
                     case nsXPTType::T_CHAR_STR:
-                    case nsXPTType::T_WCHAR_STR:
                         PL_strfree((char*) ptr);
+                        break;
+                    case nsXPTType::T_WCHAR_STR:
+                        nsCRT::free((PRUnichar*)ptr);
                         break;
                     case nsXPTType::T_DOMSTRING:
                     case nsXPTType::T_ASTRING:
