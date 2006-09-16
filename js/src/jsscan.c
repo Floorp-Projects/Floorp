@@ -600,9 +600,22 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
                 if (pn)
                     tp = &pn->pn_pos;
 #endif
-                index = (tp->begin.lineno == tp->end.lineno)
-                        ? tp->begin.index - ts->linepos
-                        : 0;
+                /*
+                 * FIXME: What should instead happen here is that we should
+                 * find error-tokens in userbuf, if !ts->file.  That will
+                 * allow us to deliver a more helpful error message, which
+                 * includes all or part of the bad string or bad token.  The
+                 * code here yields something that looks truncated.
+                 * See https://bugzilla.mozilla.org/show_bug.cgi?id=352970
+                 */ 
+                index = 0;
+                if (tp->begin.lineno == tp->end.lineno) {
+                    if (tp->begin.index < ts->linepos)
+                        break;
+
+                    index = tp->begin.index - ts->linepos;
+                }
+
                 report->tokenptr = linestr ? report->linebuf + index : NULL;
                 report->uclinebuf = linestr ? JS_GetStringChars(linestr) : NULL;
                 report->uctokenptr = linestr ? report->uclinebuf + index : NULL;
