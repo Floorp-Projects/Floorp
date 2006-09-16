@@ -671,10 +671,10 @@ nsLocalFile::CopyDirectoryTo(nsIFile *newParent)
     
     if (NS_FAILED(rv = newParent->Exists(&dirCheck))) 
         return rv;
+    // get the dirs old permissions
+    if (NS_FAILED(rv = GetPermissions(&oldPerms)))
+        return rv;
     if (!dirCheck) {
-        // get the dirs old permissions
-        if (NS_FAILED(rv = GetPermissions(&oldPerms)))
-            return rv;
         if (NS_FAILED(rv = newParent->Create(DIRECTORY_TYPE, oldPerms)))
             return rv;
     } else {    // dir exists lets try to use leaf
