@@ -114,8 +114,8 @@ menuitem[type="radio"] > .menu-iconic-left {
 }
 
 .menu-iconic-icon {
-  width: 16px;
-  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
   list-style-image: inherit;
 }
 
@@ -203,7 +203,7 @@ menuitem[checked="true"][_moz-menuactive="true"] {
 menulist > menupopup > menuitem,
 .menulist-menupopup > menuitem {
   max-width: none;
-  padding-right: 20px;
+  padding-right: 28px;
   font: message-box;
 }
 

@@ -110,10 +110,9 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
   color: inherit;
 }
 
-.menu-iconic-icon {
+menuitem[type="checkbox"] > .menu-iconic-left > .menu-iconic-icon,
+menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
   width: 16px;
-  height: 16px;
-  list-style-image: inherit;
 }
 
 /* ..... menu arrow box ..... */
@@ -200,19 +199,12 @@ menulist > menupopup > menuitem,
 .menulist-menupopup > menu,
 menulist > menupopup > menu {
   border: 1px solid transparent;
-  padding: 1px 30px 1px 5px;
+  padding: 1px 22px 1px 1px;
   max-width: none;
   font: message-box;
   color: -moz-FieldText;
 }
-    
-.menulist-menupopup > menuitem > .menu-iconic-left,
-menulist > menupopup > menuitem > .menu-iconic-left,
-.menulist-menupopup > menu > .menu-iconic-left,
-menulist > menupopup > menu > .menu-iconic-left {
-  display: none;
-}
-    
+
 menulist > menupopup > menuitem[_moz-menuactive="true"] {
   border: 1px dotted #F5DB95;
 }
