@@ -53,7 +53,7 @@
 #include "nsMsgComposeStringBundle.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIDocumentEncoder.h"    // for editor output flags
 #include "nsIURI.h"
 #include "nsNetCID.h"
@@ -119,12 +119,16 @@ nsMsgCreateTempFileSpec(const char *tFileName)
   if ((!tFileName) || (!*tFileName))
     tFileName = "nsmail.tmp";
 
-  nsFileSpec *tmpSpec = new nsFileSpec(nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory));
-
-  if (!tmpSpec)
+  nsFileSpec *tmpSpec = new nsFileSpec;
+  
+  if (NS_FAILED(GetSpecialDirectoryWithFileName(NS_OS_TEMP_DIR,
+                                                tFileName,
+                                                tmpSpec)))
+  {
+    delete tmpSpec;
     return nsnull;
+  }
 
-  *tmpSpec += tFileName;
   tmpSpec->MakeUnique();
 
   return tmpSpec;
@@ -141,15 +145,28 @@ nsMsgCreateTempFileName(const char *tFileName)
   if ((!tFileName) || (!*tFileName))
     tFileName = "nsmail.tmp";
 
-  nsFileSpec tmpSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory); 
-  tmpSpec += tFileName;
-  tmpSpec.MakeUnique();
+  nsCOMPtr<nsIFile> tmpFile;
 
-  char *tString = (char *)PL_strdup(tmpSpec.GetNativePathCString());
+  nsresult rv = GetSpecialDirectoryWithFileName(NS_OS_TEMP_DIR,
+                                                tFileName,
+                                                getter_AddRefs(tmpFile));
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 00600);
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  nsXPIDLCString tempString;
+  rv = tmpFile->GetNativePath(tempString);
+  if (NS_FAILED(rv))
+    return nsnull;
+  
+  char *tString = (char *)PL_strdup(tempString.get());
   if (!tString)
     return PL_strdup("mozmail.tmp");  // No need to I18N
-  else
-    return tString;
+
+  return tString;
 }
 
 static PRBool mime_headers_use_quoted_printable_p = PR_FALSE;
@@ -1673,8 +1690,6 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const PRUnichar *propose
   /* Now lose the %XX crap. */
   nsUnescape (attachment->m_real_name);
   }
-
-  PRInt32 parmFolding = 0;
 
   /* Now a special case for attaching uuencoded files...
 

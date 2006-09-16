@@ -81,7 +81,6 @@
 #include "nsIDocShell.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsSpecialSystemDirectory.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -114,6 +113,7 @@
 #include "nsIMsgComposeService.h"
 #include "nsMsgCompCID.h"
 #include "nsICacheEntryDescriptor.h"
+#include "nsDirectoryServiceDefs.h"
 
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -3108,16 +3108,15 @@ NS_IMETHODIMP nsImapMailFolder::BeginCopy(nsIMsgDBHdr *message)
   if (message)
     m_copyState->m_message = do_QueryInterface(message, &rv);
 
-  nsSpecialSystemDirectory tmpFileSpec(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-  
-  tmpFileSpec += "nscpmsg.txt";
-  tmpFileSpec.MakeUnique();
-  rv = NS_NewFileSpecWithSpec(tmpFileSpec,
-                                getter_AddRefs(m_copyState->m_tmpFileSpec));
-  nsCOMPtr<nsILocalFile> msgFile;
-  if (NS_SUCCEEDED(rv))
-    rv = NS_FileSpecToIFile(&tmpFileSpec, getter_AddRefs(msgFile));
-  NS_ENSURE_SUCCESS(rv,rv);
+  nsCOMPtr<nsIFile> msgFile;
+  rv = GetSpecialDirectoryWithFileName(NS_OS_TEMP_DIR,
+                                       "nscpmsg.txt",
+                                       getter_AddRefs(msgFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = msgFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 00600);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIOutputStream> fileOutputStream;
   rv = NS_NewLocalFileOutputStream(getter_AddRefs(fileOutputStream), msgFile, -1, 00600);
   NS_ENSURE_SUCCESS(rv,rv);

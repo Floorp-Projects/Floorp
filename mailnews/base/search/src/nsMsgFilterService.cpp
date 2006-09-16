@@ -43,7 +43,7 @@
 #include "nsMsgFilterService.h"
 #include "nsFileStream.h"
 #include "nsMsgFilterList.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIPrompt.h"
 #include "nsIDocShell.h"
 #include "nsIMsgWindow.h"
@@ -63,6 +63,7 @@
 #include "nsIOutputStream.h"
 #include "nsIMsgComposeService.h"
 #include "nsMsgCompCID.h"
+#include "nsMsgUtils.h"
 
 NS_IMPL_ISUPPORTS1(nsMsgFilterService, nsIMsgFilterService)
 
@@ -147,11 +148,9 @@ NS_IMETHODIMP	nsMsgFilterService::SaveFilterList(nsIMsgFilterList *filterList, n
   nsCOMPtr <nsIFileSpec> realFiltersFile;
   nsCOMPtr <nsIFileSpec> parentDir;
 
-
-  nsSpecialSystemDirectory tmpFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-  tmpFile += "tmprules.dat";
-
-  ret = NS_NewFileSpecWithSpec(tmpFile, getter_AddRefs(tmpFiltersFile));
+  ret = GetSpecialDirectoryWithFileName(NS_OS_TEMP_DIR,
+                                        "tmprules.dat",
+                                        getter_AddRefs(tmpFiltersFile));
 
   NS_ASSERTION(NS_SUCCEEDED(ret),"writing filters file: failed to append filename");
   if (NS_FAILED(ret)) 

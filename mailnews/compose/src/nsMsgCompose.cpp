@@ -66,7 +66,6 @@
 #include "nsMsgCompUtils.h"
 #include "nsIMsgStringService.h"
 #include "nsMsgComposeStringBundle.h"
-#include "nsSpecialSystemDirectory.h"
 #include "nsMsgSend.h"
 #include "nsMsgCreate.h"
 #include "nsMailHeaders.h"

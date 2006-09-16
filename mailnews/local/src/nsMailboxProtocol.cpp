@@ -222,7 +222,7 @@ nsresult nsMailboxProtocol::Initialize(nsIURI * aURL)
   m_initialState = MAILBOX_READ_FOLDER;
   mCurrentProgress = 0;
   
-  NS_NewFileSpecWithSpec(m_tempMsgFileSpec, getter_AddRefs(m_tempMessageFile));
+  NS_NewFileSpecFromIFile(m_tempMsgFile, getter_AddRefs(m_tempMessageFile));
   return rv;
 }
 

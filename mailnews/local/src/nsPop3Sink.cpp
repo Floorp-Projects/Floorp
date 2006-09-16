@@ -59,7 +59,7 @@
 #include "nsLocalMailFolder.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIMsgStringService.h"
 #include "nsIPrompt.h"
 #include "nsIPromptService.h"
@@ -68,6 +68,7 @@
 #include "nsIDocShell.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsEmbedCID.h"
+#include "nsMsgUtils.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsPop3Sink, nsIPop3Sink)
 
@@ -309,11 +310,10 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, nsIMsgWindow *aMsgWindow, PRB
     if (m_downloadingToTempFile)
     {
       // need to create an nsIOFileStream from a temp file...
-      nsCOMPtr <nsIFileSpec> tmpDownloadFile;
-      nsSpecialSystemDirectory tmpFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-      tmpFile += "newmsg";
-
-      rv = NS_NewFileSpecWithSpec(tmpFile, getter_AddRefs(tmpDownloadFile));
+      nsCOMPtr<nsIFileSpec> tmpDownloadFile;
+      rv = GetSpecialDirectoryWithFileName(NS_OS_TEMP_DIR,
+                                           "newmsg",
+                                           getter_AddRefs(tmpDownloadFile));
 
       NS_ASSERTION(NS_SUCCEEDED(rv),"writing tmp pop3 download file: failed to append filename");
       if (NS_FAILED(rv)) 

@@ -43,7 +43,6 @@
 #include "nsMsgMimeCID.h"
 #include "nsIMsgAccountManager.h"
 #include "nsMsgBaseCID.h"
-#include "nsSpecialSystemDirectory.h"
 #include "nsCRT.h"
 #include "nsMimeTypes.h"
 #include "prmem.h"
@@ -62,6 +61,8 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIStringBundle.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsMsgUtils.h"
 
 #define MDN_NOT_IN_TO_CC          ((int) 0x0001)
 #define MDN_OUTSIDE_DOMAIN        ((int) 0x0002)
@@ -408,12 +409,18 @@ nsresult nsMsgMdnGenerator::CreateMdnMsg()
     if (!m_reallySendMdn)
         return NS_OK;
 
-    nsSpecialSystemDirectory
-        tmpFile(nsSpecialSystemDirectory::OS_TemporaryDirectory); 
-    tmpFile += "mdnmsg";
-    tmpFile.MakeUnique();
+    
 
-    rv = NS_NewFileSpecWithSpec(tmpFile, getter_AddRefs(m_fileSpec));
+    nsCOMPtr<nsIFile> tmpFile;
+    rv = GetSpecialDirectoryWithFileName(NS_OS_TEMP_DIR,
+                                         "mdnmsg",
+                                         getter_AddRefs(tmpFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 00600);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = NS_NewFileSpecFromIFile(tmpFile, getter_AddRefs(m_fileSpec));
 
     NS_ASSERTION(NS_SUCCEEDED(rv),"creating mdn: failed to create");
     if (NS_FAILED(rv)) 

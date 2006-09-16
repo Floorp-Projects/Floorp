@@ -40,9 +40,10 @@
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsEudoraMailbox.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsEudoraCompose.h"
 #include "nspr.h"
+#include "nsMsgUtils.h"
 
 #include "EudoraDebugLog.h"
 
@@ -118,23 +119,18 @@ nsEudoraMailbox::~nsEudoraMailbox()
 
 nsresult nsEudoraMailbox::CreateTempFile( nsIFileSpec **ppSpec)
 {
-	*ppSpec = nsnull;
-	
-	nsSpecialSystemDirectory temp(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-	
-	// nsSpecialSystemDirectory temp(nsSpecialSystemDirectory::Mac_DesktopDirectory);
-	
-    temp += "impmail.txt";
-	temp.MakeUnique();
-	nsresult rv = NS_NewFileSpecWithSpec( temp, ppSpec);
-    if (NS_SUCCEEDED(rv)) {
-		if (*ppSpec)
-			return( NS_OK);
-		else
-			return( NS_ERROR_FAILURE);
-	}
+  *ppSpec = nsnull;
 
-	return( rv);
+  nsCOMPtr<nsIFile> tmpFile;
+  nsresult rv = GetSpecialDirectoryWithFileName(NS_OS_TEMP_DIR,
+                                                "impmail.txt",
+                                                getter_AddRefs(tmpFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 00600);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_NewFileSpecFromIFile(tmpFile, ppSpec);
 }
 
 nsresult nsEudoraMailbox::DeleteFile( nsIFileSpec *pSpec)

@@ -67,7 +67,6 @@
 #include "nsStreamConverter.h"
 #include "nsIMsgSend.h"
 #include "nsIMsgMailNewsUrl.h"
-#include "nsSpecialSystemDirectory.h"
 #include "mozITXTToHTMLConv.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"

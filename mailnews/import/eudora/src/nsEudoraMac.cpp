@@ -50,7 +50,7 @@
 #include "nsIImportService.h"
 #include "nsIImportMailboxDescriptor.h"
 #include "nsIImportABDescriptor.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsEudoraStringBundle.h"
 #include "nsEudoraImport.h"
 #include "nsIPop3IncomingServer.h"
@@ -112,11 +112,20 @@ PRBool nsEudoraMac::FindEudoraLocation( nsIFileSpec *pFolder, PRBool findIni, ns
 	// "Eudora Folder" (not sure if this is true for intl versions of Eudora)
 	
 	if (!pLookIn) {
-		nsSpecialSystemDirectory	sysDir( nsSpecialSystemDirectory::Mac_SystemDirectory);
-		pFolder->SetFromFileSpec( sysDir);
+        nsCOMPtr<nsIFile> sysDir;
+        nsresult rv = NS_GetSpecialDirectory(NS_OS_SYSTEM_DIR, getter_AddRefs(sysDir));
+        if (NS_FAILED(rv))
+          return (PR_FALSE);
+
+        nsCOMPtr<nsIFileSpec> sysDirSpec;
+        rv = NS_NewFileSpecFromIFile(sysDir, getter_AddRefs(sysDirSpec));
+        if (NS_FAILED(rv))
+          return (PR_FALSE);
+
+		pFolder->FromFileSpec(sysDirSpec);
 		pFolder->AppendRelativeUnixPath( "Eudora Folder");
 		PRBool	link = PR_FALSE;
-		nsresult rv = pFolder->IsSymlink( &link);
+		rv = pFolder->IsSymlink( &link);
 		if (NS_SUCCEEDED( rv) && link) {
 			rv = pFolder->ResolveSymlink();
 			if (NS_FAILED( rv))
@@ -478,9 +487,18 @@ PRBool nsEudoraMac::CreateTocFromResource( nsIFileSpec *pMail, nsIFileSpec *pToc
 	if (resH) {
 		PRInt32 sz = (PRInt32) GetHandleSize( resH);
 		if (sz) {
-			// Create the new TOC file
-			nsSpecialSystemDirectory	dir( nsSpecialSystemDirectory::OS_TemporaryDirectory);
-			rv = pToc->SetFromFileSpec( dir);
+            // Create the new TOC file
+            nsCOMPtr<nsIFile> tempDir;
+            nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tempDir));
+            if (NS_FAILED(rv))
+              return (PR_FALSE);
+
+            nsCOMPtr<nsIFileSpec> dir;
+            rv = NS_NewFileSpecFromIFile(tempDir, getter_AddRefs(dir));
+            if (NS_FAILED(rv))
+              return (PR_FALSE);
+
+			rv = pToc->FromFileSpec( dir);
 			if (NS_SUCCEEDED( rv))
 				rv = pToc->AppendRelativeUnixPath( "temp.toc");
 			if (NS_SUCCEEDED( rv))

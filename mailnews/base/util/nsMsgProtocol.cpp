@@ -43,7 +43,6 @@
 #include "nsISocketTransportService.h"
 #include "nsISocketTransport.h"
 #include "nsXPIDLString.h"
-#include "nsSpecialSystemDirectory.h"
 #include "nsILoadGroup.h"
 #include "nsIIOService.h"
 #include "nsNetUtil.h"
@@ -62,6 +61,8 @@
 #include "nsThreadUtils.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsMsgUtils.h"
 
 NS_IMPL_THREADSAFE_ADDREF(nsMsgProtocol)
 NS_IMPL_THREADSAFE_RELEASE(nsMsgProtocol)
@@ -84,9 +85,10 @@ nsMsgProtocol::nsMsgProtocol(nsIURI * aURL)
   m_readCount = 0;
   mLoadFlags = 0;
   m_socketIsOpen = PR_FALSE;
-		
-  m_tempMsgFileSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-  m_tempMsgFileSpec += "tempMessage.eml";
+
+  GetSpecialDirectoryWithFileName(NS_OS_TEMP_DIR, "tempMessage.eml",
+                                  getter_AddRefs(m_tempMsgFile));
+
   mSuppressListenerNotifications = PR_FALSE;
   InitFromURI(aURL);
 }

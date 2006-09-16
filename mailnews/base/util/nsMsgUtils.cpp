@@ -1221,6 +1221,47 @@ void GetSummaryFileLocation(nsFileSpec& fileLocation, nsFileSpec* summaryLocatio
   summaryLocation->SetLeafName(fileName);
 }
 
+// Gets a special directory and appends the supplied file name onto it.
+nsresult GetSpecialDirectoryWithFileName(const char* specialDirName,
+                                         const char* fileName,
+                                         nsIFile** result)
+{
+  nsresult rv = NS_GetSpecialDirectory(specialDirName, result);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return (*result)->AppendNative(nsDependentCString(fileName));
+}
+
+// XXX This function is provided temporarily whilst we are still working
+// on bug 33451 to remove nsIFileSpec from mailnews.
+nsresult GetSpecialDirectoryWithFileName(const char* specialDirName,
+                                         const char* fileName,
+                                         nsIFileSpec** result)
+{
+  nsCOMPtr<nsIFile> tmpFile;
+  nsresult rv = GetSpecialDirectoryWithFileName(specialDirName, fileName,
+                                                getter_AddRefs(tmpFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_NewFileSpecFromIFile(tmpFile, result);
+}
+
+// XXX This function is provided temporarily whilst we are still working
+// on bug 33451 to remove nsIFileSpec from mailnews.
+nsresult GetSpecialDirectoryWithFileName(const char* specialDirName,
+                                         const char* fileName,
+                                         nsFileSpec* result)
+{
+
+
+  nsCOMPtr<nsIFileSpec> tmpFile;
+  nsresult rv = GetSpecialDirectoryWithFileName(specialDirName, fileName,
+                                                getter_AddRefs(tmpFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return tmpFile->GetFileSpec(result);
+}
+
 PRBool MsgFindKeyword(const nsACString &keyword, nsACString &keywords, nsACString::const_iterator &start, nsACString::const_iterator &end)
 {
   keywords.BeginReading(start);

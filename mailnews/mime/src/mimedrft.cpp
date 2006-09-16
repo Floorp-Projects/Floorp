@@ -72,7 +72,7 @@
 #include "nsIMsgComposeService.h"
 #include "nsMsgI18N.h"
 #include "nsNativeCharsetUtils.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h"
 #include "nsXPIDLString.h"
@@ -121,12 +121,22 @@ nsFileSpec *
 nsMsgCreateTempFileSpec(const char *tFileName)
 {
   //Calling NS_MsgHashIfNecessary so that when Replies are forwarded - the ':' in the subject line doesn't cause problems
-  nsFileSpec *tmpSpec = new nsFileSpec(nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory));
-  NS_ASSERTION(tmpSpec, "out of memory");
+  nsCOMPtr<nsIFile> tmpFile;
+  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpFile));
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  nsCOMPtr<nsIFileSpec> tmpFileSpec;
+  rv = NS_NewFileSpecFromIFile(tmpFile, getter_AddRefs(tmpFileSpec));
+
+  if (NS_FAILED(rv))
+    return nsnull;
+  
+  nsFileSpec *tmpSpec = new nsFileSpec;
+  tmpFileSpec->GetFileSpec(tmpSpec);
   if (!tmpSpec)
     return nsnull;
 
-  nsresult rv = NS_OK;
   nsCAutoString tempName;
   if ((!tFileName) || (!*tFileName)) {
     tempName = SAFE_TMP_FILENAME;

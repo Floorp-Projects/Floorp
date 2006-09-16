@@ -47,10 +47,11 @@
 #include "nsIMsgAccountManager.h"
 #include "nsINntpIncomingServer.h"
 #include "nsIRequestObserver.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIFileStream.h"
 #include "nsIMsgCopyService.h"
 #include "nsImapProtocol.h"
+#include "nsMsgUtils.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
@@ -379,12 +380,17 @@ nsImapOfflineSync::ProcessAppendMsgOperation(nsIMsgOfflineImapOperation *current
     mailHdr->GetMessageOffset(&messageOffset);
     mailHdr->GetOfflineMessageSize(&messageSize);
     nsCOMPtr <nsIFileSpec>	tempFileSpec;
-    nsSpecialSystemDirectory tmpFileSpec(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-    
-    tmpFileSpec += "nscpmsg.txt";
-    tmpFileSpec.MakeUnique();
-    rv = NS_NewFileSpecWithSpec(tmpFileSpec,
-      getter_AddRefs(tempFileSpec));
+    nsCOMPtr<nsIFile> tmpFile;
+
+    if (NS_FAILED(GetSpecialDirectoryWithFileName(NS_OS_TEMP_DIR,
+                                                  "nscpmsg.txt",
+                                                  getter_AddRefs(tmpFile))))
+      return;
+
+    if (NS_FAILED(tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 00600)))
+      return;
+
+    NS_NewFileSpecFromIFile(tmpFile, getter_AddRefs(tempFileSpec));
     if (tempFileSpec)
     {
       nsCOMPtr <nsIOutputStream> outputStream;

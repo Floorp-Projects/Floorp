@@ -165,7 +165,7 @@ protected:
   //PRUint32	m_startPosition;
   PRInt32       m_readCount;
 
-  nsFileSpec	m_tempMsgFileSpec;  // we currently have a hack where displaying a msg involves writing it to a temp file first
+  nsCOMPtr<nsIFile> m_tempMsgFile;  // we currently have a hack where displaying a msg involves writing it to a temp file first
 
   // auth module for access to NTLM functions
   nsCOMPtr<nsIAuthModule> m_authModule;

@@ -158,6 +158,24 @@ NS_MSG_BASE nsresult GetSummaryFileLocation(nsIFileSpec* fileLocation,
 // on bug 33451 to remove nsIFileSpec from mailnews.
 NS_MSG_BASE void GetSummaryFileLocation(nsFileSpec& fileLocation,
                                         nsFileSpec* summaryLocation);
+
+// Gets a special directory and appends the supplied file name onto it.
+NS_MSG_BASE nsresult GetSpecialDirectoryWithFileName(const char* specialDirName,
+                                                     const char* fileName,
+                                                     nsIFile** result);
+
+// XXX This function is provided temporarily whilst we are still working
+// on bug 33451 to remove nsIFileSpec from mailnews.
+NS_MSG_BASE nsresult GetSpecialDirectoryWithFileName(const char* specialDirName,
+                                                     const char* fileName,
+                                                     nsIFileSpec** result);
+
+// XXX This function is provided temporarily whilst we are still working
+// on bug 33451 to remove nsIFileSpec from mailnews.
+NS_MSG_BASE nsresult GetSpecialDirectoryWithFileName(const char* specialDirName,
+                                                     const char* fileName,
+                                                     nsFileSpec* result);
+
 // fills in the position of the passed in keyword in the passed in keyword list
 // and returns false if the keyword isn't present
 NS_MSG_BASE PRBool MsgFindKeyword(const nsACString &keyword, nsACString &keywords, 

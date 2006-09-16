@@ -39,7 +39,8 @@
 #include <time.h>
 #include "nsString.h"
 #include "nsFileSpec.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsMsgUtils.h"
 
 #include "MapiDbgLog.h"
 #include "MapiApi.h"
@@ -605,14 +606,19 @@ BOOL CMapiMessage::CopyBinAttachToFile( LPATTACH lpAttach)
 	m_ownsAttachFile = FALSE;
 	m_attachPath.Truncate();
 
-        const char *tFileName = "mapiattach.tmp";
+    nsCOMPtr<nsIFile> tmpFile;
+    nsresult rv = GetSpecialDirectoryWithFileName(NS_OS_TEMP_DIR,
+                                                  "mapiattach.tmp",
+                                                  getter_AddRefs(tmpFile));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-        nsFileSpec tmpSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory); 
-        tmpSpec += tFileName;
-        tmpSpec.MakeUnique();
+    rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 00600);
+    NS_ENSURE_SUCCESS(rv, rv);
 
+    nsXPIDLCString tmpPath;
+    tmpFile->GetNativePath(tmpPath);
 	HRESULT hr = CMapiApi::OpenStreamOnFile( gpMapiAllocateBuffer, gpMapiFreeBuffer, STGM_READWRITE | STGM_CREATE,
-						(char *) tmpSpec.GetNativePathCString(), NULL, &lpStreamFile);
+						(char *) tmpPath.get(), NULL, &lpStreamFile);
 	if (HR_FAILED(hr)) {
 		MAPI_TRACE1( "~~ERROR~~ OpenStreamOnFile failed - temp path: %s\r\n", tPath);
 		return( FALSE);
@@ -644,7 +650,7 @@ BOOL CMapiMessage::CopyBinAttachToFile( LPATTACH lpAttach)
 		}
 	}
 
-	m_attachPath = tmpSpec.GetNativePathCString();
+	m_attachPath = tmpPath;
 	if (lpAttachStream)
 		lpAttachStream->Release();
 	lpStreamFile->Release();

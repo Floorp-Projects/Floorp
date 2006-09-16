@@ -52,8 +52,8 @@
 #include "nsReadableUtils.h"
 #include "nsIFileSpec.h"
 #include "nsILocalFile.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsISupportsObsolete.h"
-#include "nsSpecialSystemDirectory.h"
 #include "nsQuickSort.h"
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #include "nsIAppleFileDecoder.h"
@@ -2992,17 +2992,14 @@ nsDelAttachListener::StartProcessing(nsMessenger * aMessenger, nsIMsgWindow * aM
   // create an output stream on a temporary file. This stream will save the modified 
   // message data to a file which we will later use to replace the existing message.
   // The file is removed in the destructor.
-  nsFileSpec * msgFileSpec = new nsFileSpec(
-    nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory) );
-  if (!msgFileSpec) return NS_ERROR_OUT_OF_MEMORY;
-  *msgFileSpec += "nsmail.tmp";
-  msgFileSpec->MakeUnique();
-  rv = NS_NewFileSpecWithSpec(*msgFileSpec, getter_AddRefs(mMsgFileSpec));
-  nsCOMPtr<nsILocalFile> msgFile;
-  if (NS_SUCCEEDED(rv))
-    rv = NS_FileSpecToIFile(msgFileSpec, getter_AddRefs(msgFile));
-  delete msgFileSpec;
+  nsCOMPtr<nsIFile> msgFile;
+  rv = GetSpecialDirectoryWithFileName(NS_OS_TEMP_DIR, "nsmail.tmp",
+                                       getter_AddRefs(msgFile));
   NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = msgFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 00600);
+  NS_ENSURE_SUCCESS(rv,rv);
+
   nsCOMPtr<nsIOutputStream> fileOutputStream;
   rv = NS_NewLocalFileOutputStream(getter_AddRefs(fileOutputStream), msgFile, -1, 00600);
   NS_ENSURE_SUCCESS(rv,rv);
