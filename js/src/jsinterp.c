@@ -5057,13 +5057,13 @@ interrupt:
             obj = ATOM_TO_OBJECT(atom);
 
             /* If re-parenting, push a clone of the function object. */
+            SAVE_SP_AND_PC(fp);
             parent = js_GetScopeChain(cx, fp);
             if (!parent) {
                 ok = JS_FALSE;
                 goto out;
             }
             if (OBJ_GET_PARENT(cx, obj) != parent) {
-                SAVE_SP_AND_PC(fp);
                 obj = js_CloneFunctionObject(cx, obj, parent);
                 if (!obj) {
                     ok = JS_FALSE;
