@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Manuel Reimer (Manuel.Reimer@gmx.de)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -61,7 +62,6 @@
   
 window[chromehidden~="toolbar"] #navigator-throbber,
 #navigator-throbber[buttonstyle="text"],
-#navigator-throbber[buttonstyle="pictures"],
 #navigator-throbber[toolbarmode="small"] {
   margin: 0 5px;
   list-style-image: url("chrome://communicator/skin/brand/throbber16-single.gif");
@@ -69,7 +69,6 @@ window[chromehidden~="toolbar"] #navigator-throbber,
 
 window[chromehidden~="toolbar"] #navigator-throbber[busy="true"],
 #navigator-throbber[buttonstyle="text"][busy="true"],
-#navigator-throbber[buttonstyle="pictures"][busy="true"],
 #navigator-throbber[toolbarmode="small"][busy="true"] {
   list-style-image: url("chrome://communicator/skin/brand/throbber16-anim.gif");
 }

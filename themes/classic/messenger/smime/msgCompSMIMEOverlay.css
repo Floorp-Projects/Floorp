@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Manuel Reimer (Manuel.Reimer@gmx.de)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,21 +44,21 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 #button-security {
-  list-style-image: url("chrome://messenger/skin/smime/icons/smbtn1.gif");
-  -moz-image-region: rect(42px 23px 63px 0px);
+  list-style-image: url("chrome://messenger/skin/smime/icons/smimeicons.png");
+  -moz-image-region: rect(0 29px 29px 0px);
 }
 
 #button-security:hover {
-  -moz-image-region: rect(42px 46px 63px 23px);
+  -moz-image-region: rect(0 59px 29px 30px);
 } 
 
 #button-security:hover:active {
-  -moz-image-region: rect(42px 69px 63px 46px);
+  -moz-image-region: rect(0 89px 29px 60px);
 } 
 
 #button-security[disabled] {
-  -moz-image-region: rect(42px 92px 63px 69px) !important;
-} 
+  -moz-image-region: rect(0 119px 29px 90px) !important;
+}
 
 
 #msgcomposeWindow #signing-status {

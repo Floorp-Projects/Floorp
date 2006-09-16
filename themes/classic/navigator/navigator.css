@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt (hewitt@netscape.com)
+ *   Manuel Reimer (Manuel.Reimer@gmx.de)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -27,7 +28,7 @@
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
+0 * use your version of this file under the terms of the MPL, indicate your
  * decision by deleting the provisions above and replace them with the notice
  * and other provisions required by the GPL or the LGPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
@@ -44,89 +45,91 @@
 /* ::::: primary toolbar buttons ::::: */
 
 .toolbarbutton-1 {
-  list-style-image: url("chrome://navigator/skin/icons/btn1.gif");
+  list-style-image: url("chrome://navigator/skin/icons/navigatoricons.png");
 }
 
 #back-button {
-  -moz-image-region: rect(0px 19px 20px 0px);
+  list-style-image: url("chrome://communicator/skin/icons/communicatoricons.png");
+  -moz-image-region: rect(60px 29px 89px 0);
 }
 
 #back-button:hover {
-  -moz-image-region: rect(0px 38px 20px 19px);
+  -moz-image-region: rect(60px 59px 89px 30px);
 }
 
 #back-button:hover:active {
-  -moz-image-region: rect(0px 57px 20px 38px);
+  -moz-image-region: rect(60px 89px 89px 60px);
 }
 
 #back-button[disabled="true"] {
-  -moz-image-region: rect(0px 76px 20px 57px) !important;
+  -moz-image-region: rect(60px 119px 89px 90px) !important;
 }
 
 #forward-button {
-  -moz-image-region: rect(20px 19px 40px 0px);
+  list-style-image: url("chrome://communicator/skin/icons/communicatoricons.png");
+  -moz-image-region: rect(90px 29px 119px 0);
 }
 
 #forward-button:hover {
-  -moz-image-region: rect(20px 38px 40px 19px);
+  -moz-image-region: rect(90px 59px 119px 30px);
 }
 
 #forward-button:hover:active {
-  -moz-image-region: rect(20px 57px 40px 38px);
+  -moz-image-region: rect(90px 89px 119px 60px);
 }
 
 #forward-button[disabled="true"] {
-  -moz-image-region: rect(20px 76px 40px 57px) !important;
+  -moz-image-region: rect(90px 119px 119px 90px) !important;
 }
 
 #reload-button {
-  -moz-image-region: rect(40px 22px 60px 0px);
+  -moz-image-region: rect(0 29px 29px 0);
 }
   
 #reload-button:hover {
-  -moz-image-region: rect(40px 44px 60px 22px);
+  -moz-image-region: rect(0 59px 29px 30px);
 }
 
 #reload-button:hover:active {
-  -moz-image-region: rect(40px 66px 60px 44px);
+  -moz-image-region: rect(0 89px 29px 60px);
 }
 
 #reload-button[disabled="true"] {
-  -moz-image-region: rect(40px 88px 60px 66px) !important;
+  -moz-image-region: rect(0 119px 29px 90px) !important;
 }
 
 #stop-button {
-  list-style-image: url("chrome://communicator/skin/icons/btn1.gif");
-  -moz-image-region: rect(21px 22px 41px 0px);
+  list-style-image: url("chrome://communicator/skin/icons/communicatoricons.png");
+  -moz-image-region: rect(30px 29px 59px 0);
 }
 
 #stop-button:hover {
-  -moz-image-region: rect(21px 44px 41px 22px);
+  -moz-image-region: rect(30px 59px 59px 30px);
 } 
 
 #stop-button:hover:active {
-  -moz-image-region: rect(21px 66px 41px 44px);
+  -moz-image-region: rect(30px 89px 59px 60px);
 }
 
 #stop-button[disabled="true"] {
-  -moz-image-region: rect(21px 88px 41px 66px) !important;
+  -moz-image-region: rect(30px 119px 59px 90px) !important;
 }
 
 #print-button {
-  list-style-image: url("chrome://communicator/skin/icons/btn1.gif");
-  -moz-image-region: rect(0px 23px 21px 0px);
+  list-style-image: url("chrome://communicator/skin/icons/communicatoricons.png");
+  -moz-image-region: rect(0 29px 29px 0);
 }
 
 #print-button:hover {
-  -moz-image-region: rect(0px 46px 21px 23px);
+  -moz-image-region: rect(0 59px 29px 30px);
 }
 
 #print-button:hover:active {
-  -moz-image-region: rect(0px 69px 21px 46px);
+  -moz-image-region: rect(0 89px 29px 60px);
 }
 
 #print-button[disabled="true"] {
-  -moz-image-region: rect(0px 92px 21px 69px) !important;
+  -moz-image-region: rect(0 119px 29px 90px) !important;
 }
 
 #fullscreen-exit-button {
@@ -269,16 +272,17 @@
 }
 
 #search-button {
-  list-style-image: url("chrome://communicator/skin/icons/search.gif");
   font-weight: bold;
+  list-style-image: url("chrome://communicator/skin/icons/search.png");
+  -moz-image-region: rect(0 17px 17px 0);
 }
 
 #search-button:hover {
-  list-style-image: url("chrome://communicator/skin/icons/search-hov.gif");
+  -moz-image-region: rect(0 35px 17px 18px);
 }
 
 #search-button:hover:active {
-  list-style-image: url("chrome://communicator/skin/icons/search-act.gif");
+  -moz-image-region: rect(0 53px 17px 36px);
 }
 
 /* ::::: sidebar splitter ::::: */

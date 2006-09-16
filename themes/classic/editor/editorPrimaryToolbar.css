@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Joe Hewitt (hewitt@netscape.com)
  *   Patrick Thompson (sailfish@unforgettable.com)
+ *   Manuel Reimer (Manuel.Reimer@gmx.de)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -42,277 +43,262 @@
 /* ::::: primary toolbar buttons ::::: */
 
 .toolbarbutton-1 {
-  list-style-image: url("chrome://editor/skin/icons/btn1.gif");
+  list-style-image: url("chrome://editor/skin/icons/editoricons.png");
 }
 
 #newButton {
-  -moz-image-region: rect(0 16px 16px 0);
+  -moz-image-region: rect(120px 29px 149px 0);
 }
 
 #newButton:hover {
-  -moz-image-region: rect(0 32px 16px 16px);
+  -moz-image-region: rect(120px 59px 149px 30px);
 }
 
 #newButton:hover:active {
-  -moz-image-region: rect(0 48px 16px 32px);
+  -moz-image-region: rect(120px 89px 149px 60px);
 }
 
 #newButton[disabled="true"] {
-  -moz-image-region: rect(0 64px 16px 48px) !important;
+  -moz-image-region: rect(120px 119px 149px 90px) !important;
 }
 
 #openButton {
-  -moz-image-region: rect(48px 16px 64px 0);
+  -moz-image-region: rect(150px 29px 179px 0);
 }
 
 #openButton:hover {
-  -moz-image-region: rect(48px 32px 64px 16px);
+  -moz-image-region: rect(150px 59px 179px 30px);
 }
 
 #openButton:hover:active {
-  -moz-image-region: rect(48px 48px 64px 32px);
+  -moz-image-region: rect(150px 89px 179px 60px);
 }
 
 #openButton[disabled="true"] {
-  -moz-image-region: rect(148px 64px 64px 48px) !important;
+  -moz-image-region: rect(150px 119px 179px 90px) !important;
 }
 
 #saveButton {
-  -moz-image-region: rect(80px 16px 96px 0);
+  -moz-image-region: rect(210px 29px 239px 0);
 }
 
 #saveButton:hover {
-  -moz-image-region: rect(80px 32px 96px 16px);
+  -moz-image-region: rect(210px 59px 239px 30px);
 }
 
 #saveButton:hover:active {
-  -moz-image-region: rect(80px 48px 96px 32px);
+  -moz-image-region: rect(210px 89px 239px 60px);
 }
 
 #saveButton[disabled="true"] {
-  -moz-image-region: rect(80px 64px 96px 48px) !important;
+  -moz-image-region: rect(210px 119px 239px 90px) !important;
 }
 
 #publishButton {
-  -moz-image-region: rect(176px 16px 192px 0);
+  -moz-image-region: rect(300px 29px 329px 0);
 }
 
 #publishButton:hover {
-  -moz-image-region: rect(176px 32px 192px 16px);
+  -moz-image-region: rect(300px 59px 329px 30px);
 }
 
 #publishButton:hover:active {
-  -moz-image-region: rect(176px 48px 192px 32px);
+  -moz-image-region: rect(300px 89px 329px 60px);
 }
 
 #publishButton[disabled="true"] {
-  -moz-image-region: rect(176px 64px 192px 48px) !important;
+  -moz-image-region: rect(300px 119px 329px 90px) !important;
 }
 
 #previewButton {
-  -moz-image-region: rect(64px 16px 80px 0);
+  -moz-image-region: rect(180px 29px 209px 0);
 }
 
 #previewButton:hover {
-  -moz-image-region: rect(64px 32px 80px 16px);
+  -moz-image-region: rect(180px 59px 209px 30px);
 }
 
 #previewButton:hover:active {
-  -moz-image-region: rect(64px 48px 80px 32px);
+  -moz-image-region: rect(180px 89px 209px 60px);
 }
 
 #previewButton[disabled="true"] {
-  -moz-image-region: rect(64px 64px 80px 48px) !important;
+  -moz-image-region: rect(180px 119px 209px 90px) !important;
 }
 
 #printButton {
-  -moz-image-region: rect(160px 16px 176px 0);
+  list-style-image: url("chrome://communicator/skin/icons/communicatoricons.png");
+  -moz-image-region: rect(0 29px 29px 0);
 }
 
 #printButton:hover {
-  -moz-image-region: rect(160px 32px 176px 16px);
+  -moz-image-region: rect(0 59px 29px 30px);
 }
 
 #printButton:hover:active {
-  -moz-image-region: rect(160px 48px 176px 32px);
+  -moz-image-region: rect(0 89px 29px 60px);
 }
 
 #printButton[disabled="true"] {
-  -moz-image-region: rect(160px 64px 176px 48px) !important;
+  -moz-image-region: rect(0 119px 29px 90px);
 }
 
 #linkButton {
-  -moz-image-region: rect(16px 16px 32px 0);
+  -moz-image-region: rect(90px 29px 119px 0);
 }
 
 #linkButton:hover {
-  -moz-image-region: rect(16px 32px 32px 16px);
+  -moz-image-region: rect(90px 59px 119px 30px);
 }
 
 #linkButton:hover:active {
-  -moz-image-region: rect(16px 48px 32px 32px);
+  -moz-image-region: rect(90px 89px 119px 60px);
 }
 
 #linkButton[disabled="true"] {
-  -moz-image-region: rect(16px 64px 32px 48px) !important;
+  -moz-image-region: rect(90px 119px 119px 90px) !important;
 }
 
 #imageButton {
-  -moz-image-region: rect(144px 16px 160px 0);
+  -moz-image-region: rect(60px 29px 89px 0);
 }
 
 #imageButton:hover {
-  -moz-image-region: rect(144px 32px 160px 16px);
+  -moz-image-region: rect(60px 59px 89px 30px);
 }
 
 #imageButton:hover:active {
-  -moz-image-region: rect(144px 48px 160px 32px);
+  -moz-image-region: rect(60px 89px 89px 60px);
 }
 
 #imageButton[disabled="true"] {
-  -moz-image-region: rect(144px 64px 160px 48px) !important;
+  -moz-image-region: rect(60px 119px 89px 90px) !important;
 }
 
 #namedAnchorButton {
-  -moz-image-region: rect(128px 16px 144px 0);
+  -moz-image-region: rect(0 29px 29px 0);
 }
 
 #namedAnchorButton:hover {
-  -moz-image-region: rect(128px 32px 144px 16px);
+  -moz-image-region: rect(0 59px 29px 30px);
 }
 
 #namedAnchorButton:hover:active {
-  -moz-image-region: rect(128px 48px 144px 32px);
+  -moz-image-region: rect(0 89px 29px 60px);
 }
 
 #namedAnchorButton[disabled="true"] {
-  -moz-image-region: rect(128px 64px 144px 48px) !important;
+  -moz-image-region: rect(0 119px 29px 90px) !important;
 }
 
 #hlineButton {
-  -moz-image-region: rect(32px 16px 48px 0);
+  -moz-image-region: rect(30px 29px 59px 0);
 }
 
 #hlineButton:hover {
-  -moz-image-region: rect(32px 32px 48px 16px);
+  -moz-image-region: rect(30px 59px 59px 30px);
 }
 
 #hlineButton:hover:active {
-  -moz-image-region: rect(32px 48px 48px 32px);
+  -moz-image-region: rect(30px 89px 59px 60px);
 }
 
 #hlineButton[disabled="true"] {
-  -moz-image-region: rect(32px 64px 48px 48px) !important;
+  -moz-image-region: rect(30px 119px 59px 90px) !important;
 }
 
 #tableButton {
-  -moz-image-region: rect(112px 16px 128px 0);
+  -moz-image-region: rect(270px 29px 299px 0);
 }
 
 #tableButton:hover {
-  -moz-image-region: rect(112px 32px 128px 16px);
+  -moz-image-region: rect(270px 59px 299px 30px);
 }
 
 #tableButton:hover:active {
-  -moz-image-region: rect(112px 48px 128px 32px);
+  -moz-image-region: rect(270px 89px 299px 60px);
 }
 
 #tableButton[disabled="true"] {
-  -moz-image-region: rect(112px 64px 128px 48px) !important;
+  -moz-image-region: rect(270px 119px 299px 90px) !important;
 }
 
 #spellingButton {
-  -moz-image-region: rect(96px 16px 112px 0);
+  -moz-image-region: rect(240px 29px 269px 0);
 }
 
 #spellingButton:hover {
-  -moz-image-region: rect(96px 32px 112px 16px);
+  -moz-image-region: rect(240px 59px 269px 30px);
 }
 
 #spellingButton:hover:active {
-  -moz-image-region: rect(96px 48px 112px 32px);
+  -moz-image-region: rect(240px 89px 269px 60px);
 }
 
 #spellingButton[disabled="true"] {
-  -moz-image-region: rect(96px 64px 112px 48px) !important;
+  -moz-image-region: rect(240px 119px 269px 90px) !important;
 }
 
 #cutButton {
-  -moz-image-region: rect(192px 16px 208px 0);
+  -moz-image-region: rect(330px 29px 359px 0);
 }
 
 #cutButton:hover {
-  -moz-image-region: rect(192px 32px 208px 16px);
+  -moz-image-region: rect(330px 59px 359px 30px);
 }
 
 #cutButton:hover:active {
-  -moz-image-region: rect(192px 48px 208px 32px);
+  -moz-image-region: rect(330px 89px 359px 60px);
 }
 
 #cutButton[disabled="true"] {
-  -moz-image-region: rect(192px 64px 208px 48px) !important;
+  -moz-image-region: rect(330px 119px 359px 90px) !important;
 }
 
 #copyButton {
-  -moz-image-region: rect(208px 16px 224px 0);
+  -moz-image-region: rect(360px 29px 389px 0);
 }
 
 #copyButton:hover {
-  -moz-image-region: rect(208px 32px 224px 16px);
+  -moz-image-region: rect(360px 59px 389px 30px);
 }
 
 #copyButton:hover:active {
-  -moz-image-region: rect(208px 48px 224px 32px);
+  -moz-image-region: rect(360px 89px 389px 60px);
 }
 
 #copyButton[disabled="true"] {
-  -moz-image-region: rect(208px 64px 224px 48px) !important;
+  -moz-image-region: rect(360px 119px 389px 90px) !important;
 }
 
 #pasteButton {
-  -moz-image-region: rect(224px 16px 240px 0);
+  -moz-image-region: rect(390px 29px 419px 0);
 }
 
 #pasteButton:hover {
-  -moz-image-region: rect(224px 32px 240px 16px);
+  -moz-image-region: rect(390px 59px 419px 30px);
 }
 
 #pasteButton:hover:active {
-  -moz-image-region: rect(224px 48px 240px 32px);
+  -moz-image-region: rect(390px 89px 419px 60px);
 }
 
 #pasteButton[disabled="true"] {
-  -moz-image-region: rect(224px 64px 240px 48px) !important;
+  -moz-image-region: rect(390px 119px 419px 90px) !important;
 }
 
 #findButton {
-  -moz-image-region: rect(240px 16px 256px 0);
+  -moz-image-region: rect(420px 29px 449px 0);
 }
 
 #findButton:hover {
-  -moz-image-region: rect(240px 32px 256px 16px);
+  -moz-image-region: rect(420px 59px 449px 30px);
 }
 
 #findButton:hover:active {
-  -moz-image-region: rect(240px 48px 256px 32px);
+  -moz-image-region: rect(420px 89px 449px 60px);
 }
 
 #findButton[disabled="true"] {
-  -moz-image-region: rect(240px 64px 256px 48px) !important;
-}
-
-#formButton {
-  -moz-image-region: rect(256px 16px 272px 0);
-}
-
-#formButton:hover {
-  -moz-image-region: rect(256px 32px 272px 16px);
-}
-
-#formButton:hover:active {
-  -moz-image-region: rect(256px 48px 272px 32px);
-}
-
-#formButton[disabled="true"] {
-  -moz-image-region: rect(256px 64px 272px 48px) !important;
+  -moz-image-region: rect(420px 119px 449px 90px) !important;
 }

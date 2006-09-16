@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Manuel Reimer (Manuel.Reimer@gmx.de)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -57,13 +58,13 @@
 .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 .toolbarbutton-1[disabled="true"]:hover:active,
 .toolbarbutton-1[disabled="true"]:hover:active > .toolbarbutton-menubutton-button {
-  padding: 2px 7px 2px 6px;
+  padding: 2px 3px 2px 2px;
 }
 
 .toolbarbutton-1:hover:active,
 .toolbarbutton-1[open="true"],
 .toolbarbutton-1:hover:active > .toolbarbutton-menubutton-button {
-  padding: 3px 6px 1px 7px;
+  padding: 3px 2px 1px 3px;
 }
 
 .toolbarbutton-1[type="menu-button"],

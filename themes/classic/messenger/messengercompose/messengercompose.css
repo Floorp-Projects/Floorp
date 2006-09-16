@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt (hewitt@netscape.com)
+ *   Manuel Reimer (Manuel.Reimer@gmx.de)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -47,87 +48,89 @@
 /* ::::: primary toolbar buttons ::::: */
  
 .toolbarbutton-1 {
-  list-style-image: url("chrome://messenger/skin/icons/btn1.gif");
+  list-style-image: url("chrome://messenger/skin/icons/mailicons.png");
 }
 
 #button-send {
-  -moz-image-region: rect(294px 23px 315px 0px);
+  -moz-image-region: rect(330px 29px 359px 0);
 }
 
 #button-send:hover {
-  -moz-image-region: rect(294px 46px 315px 23px);
+  -moz-image-region: rect(330px 59px 359px 30px);
 } 
 
 #button-send:hover:active {
-  -moz-image-region: rect(294px 69px 315px 46px);
+  -moz-image-region: rect(330px 89px 359px 60px);
 } 
 
 #button-send[disabled="true"] {
-  -moz-image-region: rect(294px 92px 315px 69px) !important;
+  -moz-image-region: rect(330px 119px 359px 90px) !important;
 } 
 
 #button-address {
-  -moz-image-region: rect(231px 23px 252px 0px);
+  -moz-image-region: rect(270px 29px 299px 0);
 }
 
 #button-address:hover {
-  -moz-image-region: rect(231px 46px 252px 23px);
+  -moz-image-region: rect(270px 59px 299px 30px);
 } 
 
 #button-address:hover:active {
-  -moz-image-region: rect(231px 69px 252px 46px);
+  -moz-image-region: rect(270px 89px 299px 60px);
 } 
 
 #button-address[disabled="true"] {
-  -moz-image-region: rect(231px 92px 252px 69px) !important;
+  -moz-image-region: rect(270px 119px 299px 90px) !important;
 } 
 
 #button-attach {
-  -moz-image-region: rect(252px 23px 273px 0px);
+  -moz-image-region: rect(300px 29px 329px 0);
 }
 
 #button-attach:hover {
-  -moz-image-region: rect(252px 46px 273px 23px);
+  -moz-image-region: rect(300px 59px 329px 30px);
 } 
 
 #button-attach:hover:active {
-  -moz-image-region: rect(252px 69px 273px 46px);
+  -moz-image-region: rect(300px 89px 329px 60px);
 } 
 
 #button-attach[disabled="true"] {
-  -moz-image-region: rect(252px 92px 273px 69px) !important;
+  -moz-image-region: rect(300px 119px 329px 90px) !important;
 } 
 
 #spellingButton {
-  -moz-image-region: rect(378px 23px 399px 0px);
+  list-style-image: url("chrome://editor/skin/icons/editoricons.png");
+  -moz-image-region: rect(240px 29px 269px 0);
 }
 
 #spellingButton:hover {
-  -moz-image-region: rect(378px 46px 399px 23px);
+  -moz-image-region: rect(240px 59px 269px 30px);
 }
 
 #spellingButton:hover:active {
-  -moz-image-region: rect(378px 69px 399px 46px);
+  -moz-image-region: rect(240px 89px 269px 60px);
 }
 
 #spellingButton[disabled="true"] {
-  -moz-image-region: rect(378px 92px 399px 69px) !important;
+  -moz-image-region: rect(240px 119px 269px 90px) !important;
 }
 
 #button-save {
-  -moz-image-region: rect(273px 23px 294px 0px);
+  list-style-image: url("chrome://editor/skin/icons/editoricons.png");
+  -moz-image-region: rect(210px 29px 239px 0);
 }
 
 #button-save:hover {
-  -moz-image-region: rect(273px 46px 294px 23px);
+  -moz-image-region: rect(210px 59px 239px 30px);
 } 
 
 #button-save:hover:active {
-  -moz-image-region: rect(273px 69px 294px 46px);
+  -moz-image-region: rect(210px 89px 239px 60px);
 } 
 
 #button-save[disabled="true"] {
-  -moz-image-region: rect(273px 92px 294px 69px) !important;
+  -moz-image-region: rect(210px 119px 239px 90px) !important;
 } 
 
 /* ::::: special toolbar colors ::::: */

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt (hewitt@netscape.com)
+ *   Manuel Reimer (Manuel.Reimer@gmx.de)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -48,103 +49,104 @@
 /* ::::: primary toolbar buttons ::::: */
 
 .toolbarbutton-1 {
-  list-style-image: url("chrome://messenger/skin/icons/btn1.gif");
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/addressbookicons.png");
 }
 
 #button-newcard {
-  -moz-image-region: rect(0px 23px 21px 0px);
+  -moz-image-region: rect(60px 29px 89px 0);
 }
 
 #button-newcard:hover {
-  -moz-image-region: rect(0px 46px 21px 23px);
+  -moz-image-region: rect(60px 59px 89px 30px);
 } 
 
 #button-newcard:hover:active {
-  -moz-image-region: rect(0px 69px 21px 46px);
+  -moz-image-region: rect(60px 89px 89px 60px);
 }
 
 #button-newcard[disabled] {
-  -moz-image-region: rect(0px 92px 21px 69px) !important;
+  -moz-image-region: rect(60px 119px 89px 90px) !important;
 } 
 
 #button-newlist {
-  -moz-image-region: rect(21px 46px 42px 23px);
+  -moz-image-region: rect(90px 29px 119px 0);
 }
 
 #button-newlist:hover {
-  -moz-image-region: rect(21px 23px 42px 0px);
+  -moz-image-region: rect(90px 59px 119px 30px);
 } 
 
 #button-newlist:hover:active {
-  -moz-image-region: rect(21px 69px 42px 46px);
+  -moz-image-region: rect(90px 89px 119px 60px);
 }
 
 #button-newlist[disabled] {
-  -moz-image-region: rect(21px 92px 42px 69px) !important;
+  -moz-image-region: rect(90px 119px 119px 90px) !important;
 } 
 
 #button-editcard {
-  -moz-image-region: rect(42px 23px 63px 0px);
+  -moz-image-region: rect(30px 29px 59px 0);
 }
 
 #button-editcard:hover {
-  -moz-image-region: rect(42px 46px 63px 23px);
+  -moz-image-region: rect(30px 59px 59px 30px);
 } 
 
 #button-editcard:hover:active {
-  -moz-image-region: rect(42px 69px 63px 46px);
+  -moz-image-region: rect(30px 89px 59px 60px);
 }
 
 #button-editcard[disabled] {
-  -moz-image-region: rect(42px 92px 63px 69px) !important;
+  -moz-image-region: rect(30px 119px 59px 90px) !important;
 } 
 
 #button-newmessage {
-  -moz-image-region: rect(126px 23px 147px 0px);
+  list-style-image: url("chrome://messenger/skin/icons/messengericons.png");
+  -moz-image-region: rect(150px 29px 179px 0);
 }
 
 #button-newmessage:hover {
-  -moz-image-region: rect(126px 46px 147px 23px);
+  -moz-image-region: rect(150px 59px 179px 30px);
 } 
 
 #button-newmessage:hover:active {
-  -moz-image-region: rect(126px 69px 147px 46px);
+  -moz-image-region: rect(150px 89px 179px 60px);
 } 
 
 #button-newmessage[disabled] {
-  -moz-image-region: rect(126px 92px 147px 69px) !important;
+  -moz-image-region: rect(150px 119px 179px 90px) !important;
 }
 
 #button-newim {
- list-style-image: url("chrome://messenger/skin/addressbook/icons/im.gif");
+  -moz-image-region: rect(120px 29px 149px 0);
 }
- 
+
 #button-newim:hover {
- list-style-image: url("chrome://messenger/skin/addressbook/icons/im-hov.gif");
+  -moz-image-region: rect(120px 59px 149px 30px);
 } 
- 
-button-newim:hover:active {
- list-style-image: url("chrome://messenger/skin/addressbook/icons/im-act.gif");
+
+#button-newim:hover:active {
+  -moz-image-region: rect(120px 89px 149px 60px);
 } 
- 
+
 #button-newim[disabled] {
- list-style-image: url("chrome://messenger/skin/addressbook/icons/im-dis.gif");
+  -moz-image-region: rect(120px 119px 149px 90px) !important;
 } 
 
 #button-delete {
-  -moz-image-region: rect(210px 23px 231px 0px);
+  -moz-image-region: rect(0 29px 29px 0);
 }
 
 #button-delete:hover {
-  -moz-image-region: rect(210px 46px 231px 23px);
+  -moz-image-region: rect(0 59px 29px 30px);
 } 
 
 #button-delete:hover:active {
-  -moz-image-region: rect(210px 69px 231px 46px);
+  -moz-image-region: rect(0 89px 29px 60px);
 }
 
 #button-delete[disabled] {
-  -moz-image-region: rect(210px 92px 231px 69px) !important;
+  -moz-image-region: rect(0 119px 29px 90px) !important;
 }
 
 /* CardView styles - used in the Card View Pane */

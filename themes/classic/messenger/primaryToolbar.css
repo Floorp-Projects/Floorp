@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Manuel Reimer (Manuel.Reimer@gmx.de)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -44,202 +45,202 @@
 /* ::::: primary toolbar buttons ::::: */
 
 .toolbarbutton-1 {
-  list-style-image: url("chrome://messenger/skin/icons/btn1.gif");
+  list-style-image: url("chrome://messenger/skin/icons/messengericons.png");
 }
 
 #button-getmsg {
-  -moz-image-region: rect(105px 23px 126px 0px);
+  -moz-image-region: rect(90px 29px 119px 0);
 }
 
 #button-getmsg:hover {
-  -moz-image-region: rect(105px 46px 126px 23px);
+  -moz-image-region: rect(90px 59px 119px 30px);
 } 
 
 #button-getmsg:hover:active {
-  -moz-image-region: rect(105px 69px 126px 46px);
+  -moz-image-region: rect(90px 89px 119px 60px);
 } 
 
 #button-getmsg[disabled] {
-  -moz-image-region: rect(105px 92px 126px 69px) !important;
+  -moz-image-region: rect(90px 119px 119px 90px) !important;
 } 
 
 #button-newmsg {
-  -moz-image-region: rect(126px 23px 147px 0px);
+  -moz-image-region: rect(150px 29px 179px 0);
 }
 
 #button-newmsg:hover {
-  -moz-image-region: rect(126px 46px 147px 23px);
+  -moz-image-region: rect(150px 59px 179px 30px);
 } 
 
 #button-newmsg:hover:active {
-  -moz-image-region: rect(126px 69px 147px 46px);
+  -moz-image-region: rect(150px 89px 179px 60px);
 } 
 
 #button-newmsg[disabled] {
-  -moz-image-region: rect(126px 92px 147px 69px) !important;
+  -moz-image-region: rect(150px 119px 179px 90px) !important;
 } 
 
 #button-reply {
-  -moz-image-region: rect(168px 23px 189px 0px);
+  -moz-image-region: rect(210px 29px 239px 0);
 }
 
 #button-reply:hover {
-  -moz-image-region: rect(168px 46px 189px 23px);
+  -moz-image-region: rect(210px 59px 239px 30px);
 } 
 
 #button-reply:hover:active {
-  -moz-image-region: rect(168px 69px 189px 46px);
+  -moz-image-region: rect(210px 89px 239px 60px);
 } 
 
 #button-reply[disabled] {
-  -moz-image-region: rect(168px 92px 189px 69px) !important;
+  -moz-image-region: rect(210px 119px 239px 90px) !important;
 } 
 
 #button-replyall {
-  -moz-image-region: rect(189px 23px 210px 0px);
+  -moz-image-region: rect(240px 29px 269px 0);
 }
 
 #button-replyall:hover {
-  -moz-image-region: rect(189px 46px 210px 23px);
+  -moz-image-region: rect(240px 59px 269px 30px);
 } 
 
 #button-replyall:hover:active {
-  -moz-image-region: rect(189px 69px 210px 46px);
+  -moz-image-region: rect(240px 89px 269px 60px);
 } 
 
 #button-replyall[disabled] {
-  -moz-image-region: rect(189px 92px 210px 69px) !important;
+  -moz-image-region: rect(240px 119px 269px 90px) !important;
 } 
 
 #button-forward {
-  -moz-image-region: rect(84px 23px 105px 0px);
+  -moz-image-region: rect(60px 29px 89px 0);
 }
 
 #button-forward:hover {
-  -moz-image-region: rect(84px 46px 105px 23px);
+  -moz-image-region: rect(60px 59px 89px 30px);
 } 
 
 #button-forward:hover:active {
-  -moz-image-region: rect(84px 69px 105px 46px);
+  -moz-image-region: rect(60px 89px 89px 60px);
 } 
 
 #button-forward[disabled] {
-  -moz-image-region: rect(84px 92px 105px 69px) !important;
+  -moz-image-region: rect(60px 119px 89px 90px) !important;
 } 
 
 #button-file {
-  -moz-image-region: rect(63px 23px 84px 0px);
+  -moz-image-region: rect(30px 29px 59px 0);
 }
 
 #button-file:hover {
-  -moz-image-region: rect(63px 46px 84px 23px);
+  -moz-image-region: rect(30px 59px 59px 30px);
 } 
 
 #button-file:hover:active,
 #button-file[open] {
-  -moz-image-region: rect(63px 69px 84px 46px);
+  -moz-image-region: rect(30px 89px 59px 60px);
 } 
 
 #button-file[disabled] {
-  -moz-image-region: rect(63px 92px 84px 69px) !important;
+  -moz-image-region: rect(30px 119px 59px 90px) !important;
 } 
 
 #button-next {
-  -moz-image-region: rect(147px 23px 168px 0px);
+  -moz-image-region: rect(180px 29px 209px 0);
 }
 
 #button-next:hover {
-  -moz-image-region: rect(147px 46px 168px 23px);
+  -moz-image-region: rect(180px 59px 209px 30px);
 } 
 
 #button-next:hover:active {
-  -moz-image-region: rect(147px 69px 168px 46px);
+  -moz-image-region: rect(180px 89px 209px 60px);
 } 
 
 #button-next[disabled] {
-  -moz-image-region: rect(147px 92px 168px 69px) !important;
+  -moz-image-region: rect(180px 119px 209px 90px) !important;
 } 
 
 #button-delete {
-  -moz-image-region: rect(210px 23px 231px 0px);
+  -moz-image-region: rect(0, 29px 29px 0);
 }
 
 #button-delete:hover {
-  -moz-image-region: rect(210px 46px 231px 23px);
+  -moz-image-region: rect(0, 59px 29px 30px);
 } 
 
 #button-delete:hover:active {
-  -moz-image-region: rect(210px 69px 231px 46px);
+  -moz-image-region: rect(0 89px 29px 60px);
 }
 
 #button-delete[disabled] {
-  -moz-image-region: rect(210px 92px 231px 69px) !important;
+  -moz-image-region: rect(0 119px 29px 90px) !important;
 } 
 
 #button-mark {
-  -moz-image-region: rect(336px 23px 357px 0);
+  -moz-image-region: rect(120px 29px 149px 0);
 }
 
 #button-mark:hover {
-  -moz-image-region: rect(336px 46px 357px 23px);
+  -moz-image-region: rect(120px 59px 149px 30px);
 } 
 
 #button-mark:hover:active {
-  -moz-image-region: rect(336px 69px 357px 46px);
+  -moz-image-region: rect(120px 89px 149px 60px);
 } 
 
 #button-mark[disabled] {
-  -moz-image-region: rect(336px 92px 357px 69px) !important;
+  -moz-image-region: rect(120px 119px 149px 90px) !important;
 } 
 
-#button-junk{
-  -moz-image-region: rect(357px 23px 378px 0);
+#button-junk {
+  -moz-image-region: rect(360px 29px 389px 0);
 }
 
 #button-junk:hover {
-  -moz-image-region: rect(357px 46px 378px 23px);
+  -moz-image-region: rect(360px 59px 389px 30px);
 }
 
 #button-junk:hover:active {
-  -moz-image-region: rect(357px 69px 378px 46px);
+  -moz-image-region: rect(360px 89px 389px 60px);
 }
 
 #button-junk[disabled="true"] {
-  -moz-image-region: rect(357px 92px 378px 69px) !important;
+  -moz-image-region: rect(360px 119px 389px 90px) !important;
 }
 
 #button-print {
-  list-style-image: url("chrome://communicator/skin/icons/btn1.gif");
-  -moz-image-region: rect(0px 23px 21px 0px);
+  list-style-image: url("chrome://communicator/skin/icons/communicatoricons.png");
+  -moz-image-region: rect(0 29px 29px 0);
 }
 
 #button-print:hover {
-  -moz-image-region: rect(0px 46px 21px 23px);
+  -moz-image-region: rect(0 59px 29px 30px);
 }
 
 #button-print:hover:active {
-  -moz-image-region: rect(0px 69px 21px 46px);
+  -moz-image-region: rect(0 89px 29px 60px);
 }
 
 #button-print[disabled] {
-  -moz-image-region: rect(0px 92px 21px 69px) !important;
+  -moz-image-region: rect(0 119px 29px 90px) !important;
 }
 
 #button-stop {
-  list-style-image: url("chrome://communicator/skin/icons/btn1.gif");
-  -moz-image-region: rect(21px 22px 42px 0px);
+  list-style-image: url("chrome://communicator/skin/icons/communicatoricons.png");
+  -moz-image-region: rect(30px 29px 59px 0);
 }
 
 #button-stop:hover {
-  -moz-image-region: rect(21px 44px 42px 22px);
+  -moz-image-region: rect(30px 59px 59px 30px);
 } 
 
 #button-stop:hover:active {
-  -moz-image-region: rect(21px 66px 42px 44px);
+  -moz-image-region: rect(30px 89px 59px 60px);
 }
 
 #button-stop[disabled="true"] {
-  -moz-image-region: rect(21px 88px 42px 66px) !important;
+  -moz-image-region: rect(30px 119px 59px 90px) !important;
 }
 
 /* ::::: message notification bar style rules ::::: */
