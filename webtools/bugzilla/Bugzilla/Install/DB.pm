@@ -493,6 +493,9 @@ sub update_table_definitions {
 
     $dbh->bz_add_column('setting', 'subclass', {TYPE => 'varchar(32)'});
 
+    $dbh->bz_alter_column('longdescs', 'thetext', 
+        { TYPE => 'MEDIUMTEXT', NOTNULL => 1 }, '');
+
     ################################################################
     # New --TABLE-- changes should go *** A B O V E *** this point #
     ################################################################

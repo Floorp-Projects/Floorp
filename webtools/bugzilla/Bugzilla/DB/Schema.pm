@@ -270,7 +270,7 @@ use constant ABSTRACT_SCHEMA => {
             bug_when        => {TYPE => 'DATETIME', NOTNULL => 1},
             work_time       => {TYPE => 'decimal(5,2)', NOTNULL => 1,
                                 DEFAULT => '0'},
-            thetext         => {TYPE => 'MEDIUMTEXT'},
+            thetext         => {TYPE => 'MEDIUMTEXT', NOTNULL => 1},
             isprivate       => {TYPE => 'BOOLEAN', NOTNULL => 1,
                                 DEFAULT => 'FALSE'},
             already_wrapped => {TYPE => 'BOOLEAN', NOTNULL => 1,
