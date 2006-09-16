@@ -48,7 +48,7 @@ class nsIDOMNode;
 
 class nsP3PUtils {
   public:
-    static nsresult GetAttributeValue(nsIDOMNode* aNode, char* aAttrName, nsAString& aAttrValue);
+    static nsresult GetAttributeValue(nsIDOMNode* aNode, const char* aAttrName, nsAString& aAttrValue);
     static nsresult DeterminePolicyScope(const nsVoidArray& aNodeList, const char* aPath, PRBool* aOut);
     static nsresult GetElementsByTagName(nsIDOMNode* aNode, const nsAString& aTagName, nsVoidArray& aReturn);
     static PRBool   IsPathIncluded(const nsAString& aURI, const nsAString& aPath);

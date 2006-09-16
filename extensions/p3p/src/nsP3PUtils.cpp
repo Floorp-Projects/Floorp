@@ -43,7 +43,7 @@
 
 nsresult
 nsP3PUtils::GetAttributeValue(nsIDOMNode* aNode, 
-                              char* aAttrName, 
+                              const char* aAttrName, 
                               nsAString& aAttrValue) 
 {
   NS_ENSURE_ARG_POINTER(aNode);
