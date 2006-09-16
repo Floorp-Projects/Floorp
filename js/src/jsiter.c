@@ -837,6 +837,11 @@ generator_op(JSContext *cx, JSGeneratorOp op,
         return JS_FALSE;
 
     gen = (JSGenerator *) JS_GetPrivate(cx, obj);
+    if (gen == NULL) {
+        /* This happens when obj is the generator prototype. See bug 352885. */
+        goto closed_generator;
+    }
+
     switch (gen->state) {
       case JSGEN_NEWBORN:
         switch (op) {
@@ -880,6 +885,8 @@ generator_op(JSContext *cx, JSGeneratorOp op,
 
       default:
         JS_ASSERT(gen->state == JSGEN_CLOSED);
+
+      closed_generator:
         switch (op) {
           case JSGENOP_NEXT:
           case JSGENOP_SEND:
