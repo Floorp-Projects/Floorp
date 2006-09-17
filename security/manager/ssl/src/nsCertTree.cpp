@@ -48,6 +48,7 @@
 #include "nsNSSCertHelper.h"
 #include "nsINSSCertCache.h"
 #include "nsIMutableArray.h"
+#include "nsArrayUtils.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPCOMCID.h"
 
