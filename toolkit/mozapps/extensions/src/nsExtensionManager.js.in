@@ -7781,7 +7781,7 @@ ExtensionsDataSource.prototype = {
   _rdfGet_installDate: function(item, property) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
     var key = this.getItemProperty(id, "installLocation");
-    if (key in StartupCache.entries && id in StartupCache.entries[key] &&
+    if (key && key in StartupCache.entries && id in StartupCache.entries[key] &&
         StartupCache.entries[key][id] && StartupCache.entries[key][id].mtime)
       return EM_D(StartupCache.entries[key][id].mtime * 1000000);
     return null;
@@ -7892,7 +7892,7 @@ ExtensionsDataSource.prototype = {
   _rdfGet_hidden: function(item, property) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
     var installLocation = InstallLocations.get(this.getInstallLocationKey(id));
-    if (!installLocation.restricted)
+    if (!installLocation || !installLocation.restricted)
       return EM_L("false");
     return null;
   },
@@ -7904,7 +7904,7 @@ ExtensionsDataSource.prototype = {
   _rdfGet_locked: function(item, property) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
     var installLocation = InstallLocations.get(this.getInstallLocationKey(id));
-    if (!installLocation.restricted)
+    if (!installLocation || !installLocation.restricted)
       return EM_L("false");
     return null;
   },
