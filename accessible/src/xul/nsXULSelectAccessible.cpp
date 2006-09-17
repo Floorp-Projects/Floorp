@@ -185,8 +185,8 @@ NS_IMETHODIMP nsXULSelectableAccessible::RefSelection(PRInt32 aIndex, nsIAccessi
     nsCOMPtr<nsIAccessible> tempAccess;
     accService->GetAccessibleInWeakShell(tempDOMNode, mWeakShell, getter_AddRefs(tempAccess));
     *_retval = tempAccess;
-    NS_ADDREF(*_retval);
-    return NS_OK;
+    NS_IF_ADDREF(*_retval);
+    return *_retval ? NS_OK : NS_ERROR_FAILURE;
   }
 
   return NS_ERROR_FAILURE;
