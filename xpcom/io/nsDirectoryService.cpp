@@ -847,7 +847,7 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     // cases
     else if (inAtom == nsDirectoryService::sGRE_ComponentDirectory)
     {
-        rv = Get(NS_GRE_DIR, nsILocalFile::GetIID(), getter_AddRefs(localFile));
+        rv = Get(NS_GRE_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localFile));
         if (localFile)
              localFile->AppendNative(COMPONENT_DIRECTORY);
     }

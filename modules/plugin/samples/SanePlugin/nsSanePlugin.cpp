@@ -204,7 +204,7 @@ nsSanePluginInstance::Initialize( nsIPluginInstancePeer* peer )
     if ( NS_FAILED( result ) )
         return result;
 
-    result = peer->QueryInterface( nsIPluginTagInfo::GetIID(),
+    result = peer->QueryInterface( NS_GET_IID(nsIPluginTagInfo),
                                    ( void ** )&taginfo );
 
     if ( NS_SUCCEEDED( result ) )

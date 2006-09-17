@@ -218,7 +218,7 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
   
   nsCOMPtr<nsIX509Cert> x509Proxy;
   NS_GetProxyForObject( NS_PROXY_TO_MAIN_THREAD,
-                        nsIX509Cert::GetIID(),
+                        NS_GET_IID(nsIX509Cert),
                         NS_STATIC_CAST(nsIX509Cert*, this),
                         NS_PROXY_SYNC | NS_PROXY_ALWAYS,
                         getter_AddRefs(x509Proxy));
@@ -265,7 +265,7 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
       rv = x509Proxy->GetValidity(getter_AddRefs(originalValidity));
       if (NS_SUCCEEDED(rv) && originalValidity) {
         NS_GetProxyForObject( NS_PROXY_TO_MAIN_THREAD,
-                              nsIX509CertValidity::GetIID(),
+                              NS_GET_IID(nsIX509CertValidity),
                               originalValidity,
                               NS_PROXY_SYNC | NS_PROXY_ALWAYS,
                               getter_AddRefs(validity));
