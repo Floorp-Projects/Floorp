@@ -271,8 +271,10 @@ inFileSearch::SetFilenameCriteria(const PRUnichar* aFilenameCriteria)
       lastComma = idx;
       mFilenameCriteria[mFilenameCriteriaCount] = buf;
       ++mFilenameCriteriaCount;
-      buf = new PRUnichar[257];
-      if (!*c) going = PR_FALSE;
+      if (*c)
+        buf = new PRUnichar[257];
+      else
+        going = PR_FALSE;
     } else {
       buf[idx-lastComma-1] = *c;
     }
