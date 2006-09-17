@@ -247,17 +247,11 @@ NS_IMETHODIMP nsMsgTagService::AddTagForKey(const nsACString &key,
 {
   nsCAutoString prefName(key);
   prefName.AppendLiteral(TAG_PREF_SUFFIX_TAG);
-  SetUnicharPref(prefName.get(), tag);
-  prefName.Replace(prefName.Length() - STRLEN(TAG_PREF_SUFFIX_TAG),
-                   STRLEN(TAG_PREF_SUFFIX_TAG),
-                   NS_LITERAL_CSTRING(TAG_PREF_SUFFIX_COLOR));
-  m_prefBranch->SetCharPref(prefName.get(), PromiseFlatCString(color).get());
-  prefName.Replace(prefName.Length() - STRLEN(TAG_PREF_SUFFIX_COLOR),
-                   STRLEN(TAG_PREF_SUFFIX_COLOR),
-                   NS_LITERAL_CSTRING(TAG_PREF_SUFFIX_ORDINAL));
-  if (prefName.IsEmpty())
-    return m_prefBranch->ClearUserPref(prefName.get());
-  return m_prefBranch->SetCharPref(prefName.get(), PromiseFlatCString(ordinal).get());
+  nsresult rv = SetUnicharPref(prefName.get(), tag);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetColorForKey(key, color);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return SetOrdinalForKey(key, ordinal);
 }
 
 /* void addTag (in wstring tag, in long color); */
@@ -301,10 +295,13 @@ NS_IMETHODIMP nsMsgTagService::GetColorForKey(const nsACString &key, nsACString 
 /* void setColorForKey (in ACString key, in ACString color); */
 NS_IMETHODIMP nsMsgTagService::SetColorForKey(const nsACString & key, const nsACString & color)
 {
-  if (color.IsEmpty())
-    return NS_ERROR_ILLEGAL_VALUE;
   nsCAutoString prefName(key);
   prefName.AppendLiteral(TAG_PREF_SUFFIX_COLOR);
+  if (color.IsEmpty())
+  {
+    m_prefBranch->ClearUserPref(prefName.get());
+    return NS_OK;
+  }
   return m_prefBranch->SetCharPref(prefName.get(), PromiseFlatCString(color).get());
 }
 
@@ -325,7 +322,10 @@ NS_IMETHODIMP nsMsgTagService::SetOrdinalForKey(const nsACString & key, const ns
   nsCAutoString prefName(key);
   prefName.AppendLiteral(TAG_PREF_SUFFIX_ORDINAL);
   if (ordinal.IsEmpty())
-    return m_prefBranch->ClearUserPref(prefName.get());
+  {
+    m_prefBranch->ClearUserPref(prefName.get());
+    return NS_OK;
+  }
   return m_prefBranch->SetCharPref(prefName.get(), PromiseFlatCString(ordinal).get());
 }
 
