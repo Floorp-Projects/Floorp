@@ -266,9 +266,13 @@
         <parameter name="aChar"/>
         <parameter name="aCol"/>
         <body><![CDATA[
-          var ary = [];
-          ary[aCol] = '';
-          return ary.join(aChar);
+          if (--aCol <= 0)
+            return "";
+
+          for (var i = 2; i < aCol; i += i)
+            aChar += aChar;
+
+          return aChar + aChar.slice(0, aCol - aChar.length);
         ]]></body>
       </method>
           
