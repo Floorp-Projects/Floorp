@@ -31,16 +31,6 @@
 
 [% INCLUDE test/formattingHelp.js.tmpl %]
 
-<script type="text/javascript">
-function checkFormContents(f) {
-  return (
-          checkString(f.editform_summary, 'Summary') &&
-          verifySelected(f.product, 'Product') &&
-          verifySelected(f.editform_author_id, 'Author')
-         );
-}
-</script>
-
       <form id="edit_testcase_form" name="edit_testcase_form" method="post" action="manage_testcases.cgi" onSubmit="return checkFormContents(this);">
       <input id="editform_mode" name="editform_mode" type="hidden" value="edit">
       <input id="editform_testcase_id" name="editform_testcase_id" type="hidden" value="">

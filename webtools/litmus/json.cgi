@@ -45,8 +45,8 @@ print $c->header('text/plain');
 if ($c->param("testcase_id")) {
   my $testcase_id = $c->param("testcase_id");
   my $testcase = Litmus::DB::Testcase->retrieve($testcase_id);
-  my @testgroups = Litmus::DB::Testgroup->search_EnabledByTestcase($testcase_id);
-  my @subgroups = Litmus::DB::Subgroup->search_EnabledByTestcase($testcase_id);
+  my @testgroups = Litmus::DB::Testgroup->search_ByTestcase($testcase_id);
+  my @subgroups = Litmus::DB::Subgroup->search_ByTestcase($testcase_id);
   $testcase->{'testgroups'} = \@testgroups;
   $testcase->{'subgroups'} = \@subgroups;
   my $json = JSON->new(skipinvalid => 1, convblessed => 1);
@@ -60,8 +60,8 @@ if ($c->param("testcase_id")) {
 } elsif ($c->param("subgroup_id")) {
   my $subgroup_id = $c->param("subgroup_id");
   my $subgroup = Litmus::DB::Subgroup->retrieve($subgroup_id);
-  my @testgroups = Litmus::DB::Testgroup->search_EnabledBySubgroup($subgroup_id);
-  my @testcases = Litmus::DB::Testcase->search_EnabledBySubgroup($subgroup_id);
+  my @testgroups = Litmus::DB::Testgroup->search_BySubgroup($subgroup_id);
+  my @testcases = Litmus::DB::Testcase->search_BySubgroup($subgroup_id);
   $subgroup->{'testgroups'} = \@testgroups;
   $subgroup->{'testcases'} = \@testcases;
   my $json = JSON->new(skipinvalid => 1, convblessed => 1);
@@ -70,7 +70,7 @@ if ($c->param("testcase_id")) {
 } elsif ($c->param("testgroup_id")) {
   my $testgroup_id = $c->param("testgroup_id");
   my $testgroup = Litmus::DB::Testgroup->retrieve($testgroup_id);
-  my @subgroups = Litmus::DB::Subgroup->search_EnabledByTestgroup($testgroup_id);
+  my @subgroups = Litmus::DB::Subgroup->search_ByTestgroup($testgroup_id);
   $testgroup->{'subgroups'} = \@subgroups;
   my @branches = Litmus::DB::Branch->search_ByTestgroup($testgroup_id);
   $testgroup->{'branches'} = \@branches;

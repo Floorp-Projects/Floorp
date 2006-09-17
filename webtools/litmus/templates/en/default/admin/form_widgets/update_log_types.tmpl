@@ -1,37 +1,3 @@
-<script type="text/javascript">
-function checkAddLogTypeForm(f) {
-   return (
-           checkString(f.new_log_type_name,"log type name",false)
-          );
-}
-
-function getLogTypeByName(logTypeName) {
-    http.open('get', 'rpc.cgi?action=getLogTypeByName&logTypeName='+logTypeName);
-    http.onreadystatechange = updateLogTypeForm;
-    http.send(null);
-}
-
-function updateLogTypeForm() {
-    if(http.readyState == 4){
-        var response = http.responseText;
-        var update = new Array();
-
-        var em = document.getElementById("notification-content")
-        if(response.indexOf('|' != -1)) {
-            update = response.split('|');
-            document.getElementById("modify_log_type_id").value = update[0];
-            document.getElementById("modify_log_type_name").disabled = false;
-            document.getElementById("modify_log_type_name").value = update[1];
-            document.getElementById("delete_log_type").disabled = false;
-            document.getElementById("update_log_type").disabled = false;
-        } else {
-            document.getElementById("notification").style.display = 'block';
-            em.innerHTML = response;
-        }
-    }
-}
-</script>
-
 <div id="log_types" class="category">
 
 <h2>Log Types</h2>

@@ -200,14 +200,14 @@ sub getTestcases()
 #########################################################################
 sub getSubgroups()
 {
-    my $sql = "SELECT DISTINCT(s.subgroup_id), s.name, s.product_id, tgb.branch_id FROM subgroups s, subgroup_testgroups sgtg, testgroup_branches tgb WHERE s.enabled=1 AND s.subgroup_id=sgtg.subgroup_id AND sgtg.testgroup_id=tgb.testgroup_id ORDER BY s.name ASC, s.subgroup_id DESC";
+    my $sql = "SELECT DISTINCT(sg.subgroup_id), sg.name, sg.product_id, tgb.branch_id FROM subgroups sg LEFT JOIN subgroup_testgroups sgtg ON (sg.subgroup_id=sgtg.subgroup_id) LEFT JOIN testgroup_branches tgb ON (sgtg.testgroup_id=tgb.testgroup_id) ORDER BY sg.name ASC, sg.subgroup_id DESC";
     return _getValues($sql);
 }
 
 #########################################################################
 sub getTestgroups()
 {
-    my $sql = "SELECT testgroup_id, name, product_id FROM testgroups ORDER BY name, testgroup_id";
+    my $sql = "SELECT tg.testgroup_id, tg.name, tg.product_id, tgb.branch_id FROM testgroups tg, testgroup_branches tgb WHERE tg.testgroup_id=tgb.testgroup_id ORDER BY tg.name, tg.testgroup_id";
     return _getValues($sql);
 }
 
@@ -233,7 +233,11 @@ sub getAuthors()
   return _getValues($sql);
 }
 
-
+#########################################################################
+sub getTestRuns() {
+  my $sql = "SELECT test_run_id, name FROM test_runs ORDER BY finish_timestamp DESC, name ASC";
+  return _getValues($sql);
+}
 
 #########################################################################
 sub getFields()
@@ -323,14 +327,14 @@ sub getSortFields()
 sub _getValues($)
 {
     my ($sql) = @_;
-    my $sth = $_dbh->prepare_cached($sql);
+    my $sth = $_dbh->prepare($sql);
     $sth->execute();
     my @rows;
     while (my $data = $sth->fetchrow_hashref) {
     push @rows, $data;
     }
-    return \@rows;
     $sth->finish();
+    return \@rows;
 }
 
 1; 

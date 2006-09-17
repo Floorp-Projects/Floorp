@@ -29,33 +29,6 @@
   # $subgroup - the subgroup object to show
 #%]
 
-<script type="text/javascript">
-function checkFormContents(f) {
-  return (
-          checkString(f.editform_name, 'Name') &&
-          verifySelected(f.product, 'Product')
-         );
-}
-
-function previewTestcase(selectID) {
-  var selectBox = document.getElementById(selectID);
-  if (selectBox) {
-    if (selectBox.selectedIndex >= 0) {
-      if (selectBox.options[selectBox.selectedIndex].value != '') {
-        window.open('show_test.cgi?id=' + selectBox.options[selectBox.selectedIndex].value,
-                    'testcase_preview');
-      }
-    } else {
-      toggleMessage('failure','No testcase selected!');
-    }
-  }
-}
-
-var manageTestcasesHelpTitle="Help with Managing Testcases";
-var manageTestcasesHelpText="<p>The select box on the left contains all the testcases for the chosen product, <strong><em>INCLUDING</em></strong> any testcases already contained in the subgroup. You can use the <input type='button' value='&rArr;' disabled> button to add testcases to the subgroup, and the <input type='button' value='&lArr;' disabled> button to remove testcases from the subgroup. <strong>NOTE</strong>: neither of the actions will alter the list of testcases on the left.</p><p>You can preview any testcase from the left-hand select box by selecting the testcase, and then clicking on  the 'Preview Testcase' link below the select box. If more than one testcase is selected, only the first testcase will be previewed.</p><p>You can change the display order of testcases within the subgroup using the <input type='button' value='&uArr;' disabled> and <input type='button' value='&dArr;' disabled> buttons to the right of the right-hand select box. Testcases can be re-ordered singly or in groups by selecting multiple testcases in the right-hand select box.</p>";
-
-</script>
-
       <form id="edit_subgroup_form" name="edit_subgroup_form" method="post" action="manage_subgroups.cgi" onSubmit="selectNone('editform_testcases_for_product');selectAll('editform_subgroup_testcases');return checkFormContents(this);">
       <input id="editform_mode" name="editform_mode" type="hidden" value="edit">
       <input id="editform_subgroup_id" name="editform_subgroup_id" type="hidden" value="">

@@ -29,34 +29,6 @@
   # $testgroup - the testgroup object to show
 #%]
 
-<script type="text/javascript">
-function checkFormContents(f) {
-  return (
-          checkString(f.editform_name, 'Name') &&
-          verifySelected(f.product, 'Product') &&
-          verifySelected(f.editform_branches, 'Branch')
-         );
-}
-
-function previewSubgroup(selectID) {
-  var selectBox = document.getElementById(selectID);
-  if (selectBox) {
-    if (selectBox.selectedIndex >= 0) {
-      if (selectBox.options[selectBox.selectedIndex].value != '') {
-        window.open('manage_subgroups.cgi?subgroup_id=' + selectBox.options[selectBox.selectedIndex].value,
-                    'subgroup_preview');
-      }
-    } else {
-      toggleMessage('failure','No testgroup selected!');
-    }
-  }
-}
-
-var manageTestgroupsHelpTitle="Help with Managing Testgroups";
-var manageTestgroupsHelpText="<p>The select box on the left contains all the subgroups for the chosen product, <strong><em>INCLUDING</em></strong> any subgroups already contained in the testgroup. You can use the <input type='button' value='&rArr;' disabled> button to add subgroups to the testgroup, and the <input type='button' value='&lArr;' disabled> button to remove subgroups from the testgroup. <strong>NOTE</strong>: neither of the actions will alter the list of subgroups on the left.</p><p>You can preview any subgroup from the left-hand select box by selecting the subgroup, and then clicking on  the 'Preview Subgroup' link below the select box. If more than one subgroup is selected, only the first subgroup will be previewed.</p><p>You can change the display order of subgroups within the testgroup using the <input type='button' value='&uArr;' disabled> and <input type='button' value='&dArr;' disabled> buttons to the right of the right-hand select box. Subgroups can be re-ordered singly or in groups by selecting multiple subgroups in the right-hand select box.</p>";
-
-</script>
-
       <form id="edit_testgroup_form" name="edit_testgroup_form" method="post" action="manage_testgroups.cgi" onSubmit="selectNone('editform_subgroups_for_product');selectAll('editform_testgroup_subgroups');return checkFormContents(this);">
       <input id="editform_mode" name="editform_mode" type="hidden" value="edit">
       <input id="editform_testgroup_id" name="editform_testgroup_id" type="hidden" value="">
@@ -87,8 +59,7 @@ var manageTestgroupsHelpText="<p>The select box on the left contains all the sub
             <input name="editform_enabled" 
                    type="checkbox"
                    id="editform_enabled"
-                   value="1" disabled
-		   onChange="if (this.checked == false) {document.getElementById('editform_communityenabled').checked =false;}">
+                   value="1" disabled>
           </td>
           <td>&lArr;&nbsp;Uncheck this to completely disable this testgroup.</td>
         </tr>
