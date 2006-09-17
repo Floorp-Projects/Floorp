@@ -100,7 +100,7 @@ nsCOMPtr<nsIStringBundle> stringBundle = nsnull;
 
 
 
-static int MimeInlineTextSMIMEStub_parse_line (char *, PRInt32, MimeObject *);
+static int MimeInlineTextSMIMEStub_parse_line (const char *, PRInt32, MimeObject *);
 static int MimeInlineTextSMIMEStub_parse_eof (MimeObject *, PRBool);
 static int MimeInlineTextSMIMEStub_parse_begin (MimeObject *obj);
 
@@ -175,7 +175,7 @@ MimeInlineTextSMIMEStub_parse_begin(MimeObject *obj)
 }
 
 static int
-MimeInlineTextSMIMEStub_parse_line(char *line, PRInt32 length, MimeObject *obj)
+MimeInlineTextSMIMEStub_parse_line(const char *line, PRInt32 length, MimeObject *obj)
 {
  /* 
   * This routine gets fed each line of data, one at a time. We just buffer
