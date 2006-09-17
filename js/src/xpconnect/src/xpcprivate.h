@@ -2099,7 +2099,6 @@ private:
 
 public:
     nsCOMPtr<nsIThread>          mThread; // Don't want to overload _mOwningThread
-#endif
 };
 
 /***************************************************************************
