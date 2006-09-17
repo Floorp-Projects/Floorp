@@ -162,7 +162,7 @@ function monthPrint_format(aStream, aStart, aEnd, aCount, aItems, aTitle) {
         date.normalize();
     }
     html.appendChild(body);
-dump('\n'+html.toXMLString()+'\n');
+
     var convStream = Components.classes["@mozilla.org/intl/converter-output-stream;1"]
                                .getService(Components.interfaces.nsIConverterOutputStream);
     convStream.init(aStream, 'UTF-8', 0, 0x0000);
