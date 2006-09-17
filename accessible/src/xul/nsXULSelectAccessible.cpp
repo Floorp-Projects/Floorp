@@ -623,9 +623,8 @@ void nsXULComboboxAccessible::CacheChildren()
   if (nodeList && NS_OK == nodeList->GetLength(&numChildren)) {
     for (childIndex = 0; childIndex < numChildren; childIndex++) {
       nodeList->Item(childIndex, getter_AddRefs(childNode));
-      nsAutoString nodeName;
-      childNode->GetNodeName(nodeName);
-      if (nodeName.Equals(NS_LITERAL_STRING("menupopup"))) {
+      nsCOMPtr<nsIContent> content = do_QueryInterface(childNode);
+      if (content->NodeInfo()->Equals(nsAccessibilityAtoms::menupopup, kNameSpaceID_XUL)) {
         break;
       }
     }
@@ -647,10 +646,9 @@ void nsXULComboboxAccessible::CacheChildren()
 NS_IMETHODIMP
 nsXULComboboxAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
 {
-  nsAutoString boxName;
-  mDOMNode->GetNodeName(boxName);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
 
-  if (boxName.Equals(NS_LITERAL_STRING("textbox"))) {
+  if (content->NodeInfo()->Equals(nsAccessibilityAtoms::textbox, kNameSpaceID_XUL)) {
     // autocomplete textbox also uses nsXULComboboxAccessible and we need walk
     // anonymous children
     *aAllowsAnonChildren = PR_TRUE;
