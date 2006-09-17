@@ -261,7 +261,7 @@ EmbedPrivate::Setup()
 	supportsWeak = do_QueryInterface(mProgressGuard);
 	nsCOMPtr<nsIWeakReference> weakRef;
 	supportsWeak->GetWeakReference(getter_AddRefs(weakRef));
-	webBrowser->AddWebBrowserListener(weakRef, nsIWebProgressListener::GetIID());
+	webBrowser->AddWebBrowserListener(weakRef, NS_GET_IID(nsIWebProgressListener));
 
 	// set ourselves as the parent uri content listener
 	nsCOMPtr<nsIURIContentListener> uriListener;
@@ -326,7 +326,7 @@ EmbedPrivate::Destroy(void)
   nsCOMPtr<nsIWeakReference> weakRef;
   supportsWeak->GetWeakReference(getter_AddRefs(weakRef));
   webBrowser->RemoveWebBrowserListener(weakRef,
-				       nsIWebProgressListener::GetIID());
+				       NS_GET_IID(nsIWebProgressListener));
   weakRef = nsnull;
   supportsWeak = nsnull;
 

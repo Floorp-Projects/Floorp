@@ -60,9 +60,6 @@
 #include "nsISupportsObsolete.h"
 #include "nsIMsgMailSession.h"
 
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 
 // this is totally lame and MUST be removed by M6

@@ -184,31 +184,9 @@ nsRenderingContextOS2::~nsRenderingContextOS2()
    NS_IF_RELEASE(mSurface);
 }
 
-nsresult
-nsRenderingContextOS2::QueryInterface( REFNSIID aIID, void **aInstancePtr)
-{
-   if( !aInstancePtr)
-      return NS_ERROR_NULL_POINTER;
-
-   if( aIID.Equals( nsIRenderingContext::GetIID()))
-      *aInstancePtr = (void *) (nsIRenderingContext*) this;
-   else if( aIID.Equals( ((nsIRenderingContext*)this)->GetIID()))
-      *aInstancePtr = (void *) (nsIRenderingContext*)this;
-   else if( aIID.Equals( nsIRenderingContextOS2::GetIID()))
-      *aInstancePtr = (void *) (nsIRenderingContextOS2*) this;
-   else if( aIID.Equals( ((nsIRenderingContextOS2 *)this)->GetIID()))
-      *aInstancePtr = (void *) (nsIRenderingContextOS2*) this;
-
-   if( !*aInstancePtr)
-      return NS_NOINTERFACE;
-
-   NS_ADDREF_THIS();
-
-   return NS_OK;
-}
-
-NS_IMPL_ADDREF(nsRenderingContextOS2)
-NS_IMPL_RELEASE(nsRenderingContextOS2)
+NS_IMPL_ISUPPORTS2(nsRenderingContextOS2,
+                   nsIRenderingContext,
+                   nsIRenderingContextOS2)
 
 NS_IMETHODIMP
 nsRenderingContextOS2::Init( nsIDeviceContext *aContext,
