@@ -517,10 +517,7 @@ nsIEProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
   // read registry data
   NS_NAMED_LITERAL_STRING(homeURLValName, "Start Page");
   nsAutoString  homeURLVal;
-  PRUint32 type;
-  if (NS_SUCCEEDED(regKey->GetValueType(homeURLValName, &type)) &&
-      type == nsIWindowsRegKey::TYPE_STRING &&
-      NS_SUCCEEDED(regKey->ReadStringValue(homeURLValName, homeURLVal))) {
+  if (NS_SUCCEEDED(regKey->ReadStringValue(homeURLValName, homeURLVal))) {
     // Do we need this round-about way to get |homePageURL|? 
     // Perhaps, we do to have the form of URL under our control 
     // (cf. network.standard-url.escape-utf8)
