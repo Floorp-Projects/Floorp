@@ -1600,9 +1600,7 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
       NS_STID_FOR_ID(lang_id) {
         langCtx = mScriptContexts[NS_STID_INDEX(lang_id)];
         if (langCtx)
-          langCtx->ClearScope(
-                        currentInner->mScriptGlobals[NS_STID_INDEX(lang_id)],
-                        PR_TRUE);
+          langCtx->ClearScope(mScriptGlobals[NS_STID_INDEX(lang_id)], PR_TRUE);
       }
     }
 
