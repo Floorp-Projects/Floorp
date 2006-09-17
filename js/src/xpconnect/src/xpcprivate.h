@@ -292,7 +292,7 @@ public:
                         {nsAutoMonitor::DestroyMonitor(lock);}
 
     XPCAutoLock(XPCLock* lock)
-#ifdef DEBUG
+#ifdef DEBUG_jband
         : nsAutoLockBase(lock ? (void*) lock : (void*) this, eAutoMonitor),
 #else
         : nsAutoLockBase(lock, eAutoMonitor),
@@ -2097,7 +2097,6 @@ private:
     XPCWrappedNativeTearOffChunk mFirstChunk;
     JSObject*                    mNativeWrapper;
 
-#ifdef XPC_CHECK_WRAPPER_THREADSAFETY
 public:
     nsCOMPtr<nsIThread>          mThread; // Don't want to overload _mOwningThread
 #endif
@@ -2862,6 +2861,7 @@ public:
          mResolvingWrapper = w; return old;}
 
     void Cleanup();
+    void ReleaseNatives();
 
     PRBool IsValid() const {return mJSContextStack != nsnull;}
 
@@ -2918,6 +2918,8 @@ private:
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
     JSUint32             mWrappedNativeThreadsafetyReportDepth;
 #endif
+    PRThread*            mThread;
+    nsVoidArray          mNativesToReleaseArray;
 
     static PRLock*           gLock;
     static XPCPerThreadData* gThreads;
@@ -2966,12 +2968,15 @@ private:
 #ifndef XPCONNECT_STANDALONE
 #include "nsIScriptSecurityManager.h"
 
-class BackstagePass : public nsIScriptObjectPrincipal, public nsIXPCScriptable
+class BackstagePass : public nsIScriptObjectPrincipal,
+                      public nsIXPCScriptable,
+                      public nsIClassInfo
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXPCSCRIPTABLE
-  
+  NS_DECL_NSICLASSINFO
+
   virtual nsIPrincipal* GetPrincipal() {
     return mPrincipal;
   }
@@ -2989,11 +2994,12 @@ private:
 
 #else
 
-class BackstagePass : public nsIXPCScriptable
+class BackstagePass : public nsIXPCScriptable, public nsIClassInfo
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXPCSCRIPTABLE
+  NS_DECL_NSICLASSINFO
 
   BackstagePass()
   {
@@ -3032,7 +3038,8 @@ class nsJSRuntimeServiceImpl : public nsIJSRuntimeService,
 // 'Components' object
 
 class nsXPCComponents : public nsIXPCComponents,
-                        public nsIXPCScriptable
+                        public nsIXPCScriptable,
+                        public nsIClassInfo
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
                       , public nsISecurityCheckedComponent
 #endif
@@ -3041,6 +3048,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS
     NS_DECL_NSIXPCSCRIPTABLE
+    NS_DECL_NSICLASSINFO
 
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
     NS_DECL_NSISECURITYCHECKEDCOMPONENT
@@ -3076,7 +3084,8 @@ private:
 
 class nsXPCComponents_Interfaces :
             public nsIScriptableInterfaces,
-            public nsIXPCScriptable
+            public nsIXPCScriptable,
+            public nsIClassInfo
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
           , public nsISecurityCheckedComponent
 #endif
@@ -3086,6 +3095,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISCRIPTABLEINTERFACES
     NS_DECL_NSIXPCSCRIPTABLE
+    NS_DECL_NSICLASSINFO
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
     NS_DECL_NSISECURITYCHECKEDCOMPONENT
 #endif
