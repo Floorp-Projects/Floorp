@@ -108,6 +108,7 @@ ACCESSIBILITY_ATOM(link, "link")
 ACCESSIBILITY_ATOM(map, "map")
 ACCESSIBILITY_ATOM(math, "math")
 ACCESSIBILITY_ATOM(menu, "menu")    // XUL
+ACCESSIBILITY_ATOM(menupopup, "menupopup")     // XUL
 ACCESSIBILITY_ATOM(object, "object")
 ACCESSIBILITY_ATOM(ol, "ol")
 ACCESSIBILITY_ATOM(optgroup, "optgroup")
@@ -121,6 +122,7 @@ ACCESSIBILITY_ATOM(td, "td")
 ACCESSIBILITY_ATOM(th, "th")
 ACCESSIBILITY_ATOM(tfoot, "tfoot")
 ACCESSIBILITY_ATOM(thead, "thead")
+ACCESSIBILITY_ATOM(textbox, "textbox")   // XUL
 ACCESSIBILITY_ATOM(toolbaritem, "toolbaritem")   // XUL
 ACCESSIBILITY_ATOM(tr, "tr")
 ACCESSIBILITY_ATOM(ul, "ul")

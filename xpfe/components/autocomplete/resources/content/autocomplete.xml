@@ -253,11 +253,8 @@
       <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            // disablehistory="false": dropmarker shows up, so expose as a combobox.
-            // disablehistory="true" (default): no dropmarker, so expose as a textfield.
-            return (this.getAttribute("disablehistory") == 'true') ?
-              Components.interfaces.nsIAccessibleProvider.XULTextBox :
-              Components.interfaces.nsIAccessibleProvider.XULCombobox;
+            // Will be exposed as nsIAccessible::ROLE_AUTOCOMPLETE
+            return Components.interfaces.nsIAccessibleProvider.XULCombobox;
           ]]>
         </getter>
       </property>

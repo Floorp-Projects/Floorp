@@ -235,9 +235,8 @@ void nsXULMenuitemAccessible::CacheChildren()
   if (nodeList && NS_OK == nodeList->GetLength(&numChildren)) {
     for (childIndex = 0; childIndex < numChildren; childIndex++) {
       nodeList->Item(childIndex, getter_AddRefs(childNode));
-      nsAutoString nodeName;
-      childNode->GetNodeName(nodeName);
-      if (nodeName.EqualsLiteral("menupopup")) {
+      nsCOMPtr<nsIContent> content = do_QueryInterface(childNode);
+      if (content->NodeInfo()->Equals(nsAccessibilityAtoms::menupopup, kNameSpaceID_XUL)) {
         break;
       }
     }
