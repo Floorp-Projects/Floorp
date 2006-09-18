@@ -146,6 +146,12 @@ sub template {
     return request_cache()->{template};
 }
 
+sub template_inner {
+    my $class = shift;
+    $class->request_cache->{template_inner} ||= Bugzilla::Template->create();
+    return $class->request_cache->{template_inner};
+}
+
 sub cgi {
     my $class = shift;
     request_cache()->{cgi} ||= new Bugzilla::CGI();
@@ -451,6 +457,11 @@ that.
 =item C<template>
 
 The current C<Template> object, to be used for output
+
+=item C<template_inner>
+
+If you ever need a L<Bugzilla::Template> object while you're already
+processing a template, use this.
 
 =item C<cgi>
 

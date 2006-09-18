@@ -331,7 +331,8 @@ sub quoteUrls {
     # we have to do this in one pattern, and so this is semi-messy.
     # Also, we can't use $bug_re?$comment_re? because that will match the
     # empty string
-    my $bug_re = qr/bug\s*\#?\s*(\d+)/i;
+    my $bug_word = get_text('term', { term => 'bug' });
+    my $bug_re = qr/\Q$bug_word\E\s*\#?\s*(\d+)/i;
     my $comment_re = qr/comment\s*\#?\s*(\d+)/i;
     $text =~ s~\b($bug_re(?:\s*,?\s*$comment_re)?|$comment_re)
               ~ # We have several choices. $1 here is the link, and $2-4 are set
@@ -340,7 +341,8 @@ sub quoteUrls {
                               "<a href=\"$current_bugurl#c$4\">$1</a>")
               ~egox;
 
-    # Old duplicate markers
+    # Old duplicate markers. These don't use $bug_word because they are old
+    # and were never customizable.
     $text =~ s~(?<=^\*\*\*\ This\ bug\ has\ been\ marked\ as\ a\ duplicate\ of\ )
                (\d+)
                (?=\ \*\*\*\Z)

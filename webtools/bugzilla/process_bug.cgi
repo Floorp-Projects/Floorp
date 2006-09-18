@@ -1147,8 +1147,8 @@ SWITCH: for ($cgi->param('knob')) {
         ChangeStatus('RESOLVED');
         ChangeResolution('DUPLICATE');
         my $comment = $cgi->param('comment');
-        $comment .= "\n\n*** This bug has been marked " .
-                    "as a duplicate of bug $duplicate ***";
+        $comment .= "\n\n" 
+                    . get_text('bug_duplicate_of', { dupe_of => $duplicate });
         $cgi->param('comment', $comment);
         last SWITCH;
     };
@@ -2025,11 +2025,10 @@ foreach my $id (@idlist) {
             $dbh->do(q{INSERT INTO cc (who, bug_id) VALUES (?, ?)},
                      undef, $reporter, $duplicate);
         }
-        # Bug 171639 - Duplicate notifications do not need to be private. 
-        AppendComment($duplicate, $whoid,
-                      "*** Bug " . $cgi->param('id') .
-                      " has been marked as a duplicate of this bug. ***",
-                      0, $timestamp);
+        my $dupe_comment = get_text('bug_has_duplicate',
+                                    { dupe => $cgi->param('id') });
+        # Bug 171639 - Duplicate notifications do not need to be private.
+        AppendComment($duplicate, $whoid, $dupe_comment, 0, $timestamp);
 
         $dbh->do(q{INSERT INTO duplicates VALUES (?, ?)}, undef,
                  $duplicate, $cgi->param('id'));

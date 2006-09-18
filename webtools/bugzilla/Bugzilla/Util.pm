@@ -400,7 +400,7 @@ sub clean_text {
 
 sub get_text {
     my ($name, $vars) = @_;
-    my $template = Bugzilla->template;
+    my $template = Bugzilla->template_inner;
     $vars ||= {};
     $vars->{'message'} = $name;
     my $message;

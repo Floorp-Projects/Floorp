@@ -645,7 +645,7 @@ sub sendMail {
     };
 
     my $msg;
-    my $template = Bugzilla::Template->create();
+    my $template = Bugzilla->template_inner;
     $template->process("email/newchangedmail.txt.tmpl", $vars, \$msg)
       || ThrowTemplateError($template->error());
 

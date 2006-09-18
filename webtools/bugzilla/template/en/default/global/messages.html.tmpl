@@ -121,6 +121,12 @@
     Please add your attachment by clicking the "Create a New Attachment" link
     below.
 
+  [% ELSIF message_tag == "bug_duplicate_of" %]
+    *** This [% terms.bug %] has been marked as a duplicate of [% terms.bug %] [%+ dupe_of FILTER html %] ***
+
+  [% ELSIF message_tag == "bug_has_duplicate" %]
+    *** [% terms.Bug %] [%+ dupe FILTER html %] has been marked as a duplicate of this [% terms.bug %]. ***
+
   [% ELSIF message_tag == "buglist_adding_field" %]
     [% title = "Adding field to search page..." %]
     [% link  = "Click here if the page does not redisplay automatically." %]
@@ -385,6 +391,9 @@
       <p>For security reasons, you have been logged out automatically.
       The cookie that was remembering your login is now gone.
     [% END %]
+
+  [% ELSIF message_tag == "term" %]
+    [% terms.$term FILTER html %]
 
   [% ELSIF message_tag == "user_match_failed" %]
     You entered a username that did not match any known 
