@@ -818,6 +818,20 @@ sub init {
                                "ON $dtable.id = $atable.attach_id");
              $f = "$dtable.thedata";
          },
+         "^attachments\.submitter," => sub {
+             my $atable = "map_attachment_submitter_$chartid";
+             my $extra = "";
+             if (Bugzilla->params->{"insidergroup"}
+                 && !Bugzilla->user->in_group(Bugzilla->params->{"insidergroup"}))
+             {
+                 $extra = "AND $atable.isprivate = 0";
+             }
+             push(@supptables, "INNER JOIN attachments AS $atable " .
+                               "ON bugs.bug_id = $atable.bug_id $extra");
+             push(@supptables, "LEFT JOIN profiles AS attachers_$chartid " .
+                               "ON $atable.submitter_id = attachers_$chartid.userid");
+             $f = "attachers_$chartid.login_name";
+         },
          "^attachments\..*," => sub {
              my $table = "attachments_$chartid";
              my $extra = "";

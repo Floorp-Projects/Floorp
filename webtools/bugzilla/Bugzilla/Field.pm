@@ -142,6 +142,7 @@ use constant DEFAULT_FIELDS => (
     {name => 'attachments.ispatch',     desc => 'Attachment is patch'},
     {name => 'attachments.isobsolete',  desc => 'Attachment is obsolete'},
     {name => 'attachments.isprivate',   desc => 'Attachment is private'},
+    {name => 'attachments.submitter',   desc => 'Attachment creator'},
 
     {name => 'target_milestone',      desc => 'Target Milestone'},
     {name => 'creation_ts', desc => 'Creation date', in_new_bugmail => 1},
