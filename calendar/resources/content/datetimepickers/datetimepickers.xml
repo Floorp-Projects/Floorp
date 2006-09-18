@@ -278,8 +278,8 @@
                       xbl:inherits="disabled">
           <xul:menupopup popupanchor="bottomright" popupalign="topright"
                          anonid="datepopup"
-                         onpopupshowing="onPopup()"
-                         onpopuphiding="reshowPopup()">
+                         onpopupshowing="this.parentNode.kDatePicker.onPopup();"
+                         onpopuphiding="this.firstChild.hidePopupList();">
             <xul:minimonth/>
           </xul:menupopup>
         </xul:menulist>
@@ -304,11 +304,11 @@
             this.value = new Date();
           }
           this.kMinimonth.addEventListener("select", this.clickDate, false);
+          this.kMinimonth.addEventListener("monthchange", this.reshowPopup, false);
+          this.kMinimonth.addEventListener("popuplisthidden", this.reshowPopup, false);
+          this.mIsReshowing = false;
         ]]>
       </constructor>
-
-      <!-- We only let the popup close if this is true.-->
-      <field name="mReallyClose">false</field>
 
       <method name="update">
         <parameter name="aValue"/>
@@ -351,11 +351,7 @@
               this.mInPopup = false;
               // select all to remove cursor since can't type while popped-up
               this.select();
-              // From this point on, until the user does something we
-              // care about, we shouldn't close.
-              this.mReallyClose = false;
             }
-            this.mIsReshowing = false;
           ]]>
         </body>
       </method>
@@ -366,18 +362,14 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-            if (this.mReallyClose) {
-              return;
-            }
-
-            this.mIsReshowing = true;
-            var popup = document.getAnonymousElementByAttribute(this, "anonid", "datepopup");
-            // This must be in a timeout in order to give the popup time to 
-            // finish closing.  Otherwise, our widget will think the popup is
-            // still open, and hence it will ignore this call, and then close
-            // a split-second later. See bug 348146
-            setTimeout(popup.showPopup, 0);
-
+          var datepicker = aEvent.target.parentNode.parentNode.kDatePicker;
+          datepicker.mIsReshowing = true;
+          try { 
+            aEvent.target.parentNode.hidePopup();
+            aEvent.target.parentNode.showPopup();
+          } finally {
+            datepicker.mIsReshowing = false;
+          }
           ]]>
         </body>
       </method>
@@ -412,7 +404,6 @@
               datepicker.update(new Date(aEvent.target.value), true);
               // select changed value so no cursor appears (can't type to it).
               datepicker.select();
-              this.mReallyClose = true;
               aEvent.target.parentNode.hidePopup();
             }
           ]]>

@@ -360,6 +360,18 @@
         </body>
       </method>
 
+      <method name="hidePopupList">
+        <body>
+          <![CDATA[
+            // Close open popups (if any)
+            var popup = this.mPopup;
+            this.mPopup = null;
+            if (popup)
+              popup.hidePopup();
+          ]]>
+        </body>
+      </method>
+
       <method name="fireEvent">
         <parameter name="aEventName"/>
         <body>
@@ -374,8 +386,10 @@
       <method name="firePopupListHidden">
         <body>
           <![CDATA[
-            this.mPopup = null;
-            this.fireEvent("popuplisthidden");
+            if (this.mPopup) {
+              this.mPopup = null;
+              this.fireEvent("popuplisthidden");
+            }
           ]]>
         </body>
       </method>
@@ -608,11 +622,11 @@
             var grandparent = element.parentNode.parentNode;
             switch(grandparent) {
               case this.kMonthPopup:
-                grandparent.hidePopup();
+                this.hidePopupList();
                 this.switchMonth(element.getAttribute("index"));
                 break;
               case this.kYearPopup:
-                grandparent.hidePopup();
+                this.hidePopupList();
                 this.switchYear(element.getAttribute("value"));
                 break;
             }
