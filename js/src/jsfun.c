@@ -2234,28 +2234,21 @@ js_ValueToCallableObject(JSContext *cx, jsval *vp, uintN flags)
 void
 js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
 {
-    JSType type;
-    JSString *fallback;
+    JSStackFrame *fp;
     JSString *str;
     JSTempValueRooter tvr;
     const char *bytes, *source;
 
-    /*
-     * We provide the typename as the fallback to handle the case when
-     * valueOf is not a function, which prevents ValueToString from being
-     * called as the default case inside js_DecompileValueGenerator (and
-     * so recursing back to here).
-     */
-    type = JS_TypeOfValue(cx, *vp);
-    fallback = ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[type]);
+    for (fp = cx->fp; fp && !fp->spbase; fp = fp->down)
+        continue;
     str = js_DecompileValueGenerator(cx,
-                                     (flags & JSV2F_SEARCH_STACK)
+                                     (fp && fp->spbase <= vp && vp < fp->sp)
+                                     ? vp - fp->sp
+                                     : (flags & JSV2F_SEARCH_STACK)
                                      ? JSDVG_SEARCH_STACK
-                                     : cx->fp
-                                     ? vp - cx->fp->sp
                                      : JSDVG_IGNORE_STACK,
                                      *vp,
-                                     fallback);
+                                     NULL);
     if (str) {
         JS_PUSH_SINGLE_TEMP_ROOT(cx, str, &tvr);
         bytes = JS_GetStringBytes(str);

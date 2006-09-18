@@ -315,9 +315,8 @@ struct JSParseNode {
         jsdouble        dval;           /* aligned numeric literal value */
     } pn_u;
     JSParseNode         *pn_next;       /* to align dval and pn_u on RISCs */
-#if JS_HAS_XML_SUPPORT
-    JSTokenStream       *pn_ts;         /* token stream for XML error reports */
-#endif
+    JSTokenStream       *pn_ts;         /* token stream for error reports */
+    JSAtom              *pn_source;     /* saved source for decompilation */
 };
 
 #define pn_funAtom      pn_u.func.funAtom

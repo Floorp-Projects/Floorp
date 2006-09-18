@@ -1412,18 +1412,14 @@ EmitGoto(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
     if (!EmitNonLocalJumpFixup(cx, cg, toStmt, NULL))
         return -1;
 
-    if (label) {
+    if (label)
+        index = js_NewSrcNote2(cx, cg, noteType, (ptrdiff_t) ALE_INDEX(label));
+    else if (noteType != SRC_NULL)
         index = js_NewSrcNote(cx, cg, noteType);
-        if (index < 0)
-            return -1;
-        if (!js_SetSrcNoteOffset(cx, cg, (uintN)index, 0,
-                                 (ptrdiff_t) ALE_INDEX(label))) {
-            return -1;
-        }
-    } else if (noteType != SRC_NULL) {
-        if (js_NewSrcNote(cx, cg, noteType) < 0)
-            return -1;
-    }
+    else
+        index = 0;
+    if (index < 0)
+        return -1;
 
     return EmitBackPatchOp(cx, cg, JSOP_BACKPATCH, lastp);
 }
@@ -2269,10 +2265,10 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
 
 /*
  * Secret handshake with js_EmitTree's TOK_LP/TOK_NEW case logic, to flag all
- * uses of JSOP_GETMETHOD that implicitly qualify the method-property name with
- * a function:: prefix.  All other JSOP_GETMETHOD and JSOP_SETMETHOD uses must
- * be explicit, so need a distinct source note (SRC_PCDELTA rather than PCBASE)
- * for round-tripping through the beloved decompiler.
+ * uses of JSOP_GETMETHOD that implicitly qualify the method property's name
+ * with a function:: prefix.  All other JSOP_GETMETHOD and JSOP_SETMETHOD uses
+ * must be explicit, so we need a distinct source note (SRC_METHODBASE rather
+ * than SRC_PCBASE) for round-tripping through the beloved decompiler.
  */
 #define JSPROP_IMPLICIT_FUNCTION_NAMESPACE      0x100
 
@@ -2282,7 +2278,7 @@ SrcNoteForPropOp(JSParseNode *pn, JSOp op)
     return ((op == JSOP_GETMETHOD &&
              !(pn->pn_attrs & JSPROP_IMPLICIT_FUNCTION_NAMESPACE)) ||
             op == JSOP_SETMETHOD)
-           ? SRC_PCDELTA
+           ? SRC_METHODBASE
            : SRC_PCBASE;
 }
 
@@ -2843,11 +2839,17 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 return JS_FALSE;
             pn3->pn_offset = off;
             if (beforeCases) {
+                uintN noteCount, noteCountDelta;
+
                 /* Switch note's second offset is to first JSOP_CASE. */
+                noteCount = CG_NOTE_COUNT(cg);
                 if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 1,
                                          off - top)) {
                     return JS_FALSE;
                 }
+                noteCountDelta = CG_NOTE_COUNT(cg) - noteCount;
+                if (noteCountDelta != 0)
+                    caseNoteIndex += noteCountDelta;
                 beforeCases = JS_FALSE;
             }
         }
@@ -3330,7 +3332,8 @@ EmitDestructuringOpsHelper(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
     index = 0;
     for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
-        if (pn2->pn_type == TOK_COMMA) {
+        /* Nullary comma node makes a hole in the array destructurer. */
+        if (pn2->pn_type == TOK_COMMA && pn2->pn_arity == PN_NULLARY) {
             JS_ASSERT(pn->pn_type == TOK_RB);
             ++index;
             continue;
@@ -4207,6 +4210,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
             /* Compile a JSOP_FOR* bytecode based on the left hand side. */
             emitIFEQ = JS_TRUE;
+            op = JSOP_NOP;
             switch (type) {
 #if JS_HAS_BLOCK_SCOPE
               case TOK_LET:
@@ -4218,8 +4222,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 if (pn3->pn_type == TOK_ASSIGN) {
                     pn3 = pn3->pn_left;
                     JS_ASSERT(pn3->pn_type == TOK_RB || pn3->pn_type == TOK_RC);
-                    op = JSOP_NOP;
-                    goto destructuring_for;
                 }
                 if (pn3->pn_type == TOK_RB || pn3->pn_type == TOK_RC) {
                     op = pn2->pn_left->pn_op;
@@ -5284,6 +5286,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         /* Left parts such as a.b.c and a[b].c need a decompiler note. */
         if (pn2->pn_type != TOK_NAME &&
+#if JS_HAS_DESTRUCTURING
+            pn2->pn_type != TOK_RB &&
+            pn2->pn_type != TOK_RC &&
+#endif
             js_NewSrcNote2(cx, cg, SrcNoteForPropOp(pn2, pn2->pn_op),
                            CG_OFFSET(cg) - top) < 0) {
             return JS_FALSE;
@@ -5311,7 +5317,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #if JS_HAS_DESTRUCTURING
           case TOK_RB:
           case TOK_RC:
-            if (!EmitDestructuringOps(cx, cg, op, pn2))
+            if (!EmitDestructuringOps(cx, cg, JSOP_NOP, pn2))
                 return JS_FALSE;
             break;
 #endif
@@ -5787,7 +5793,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * statements get braces by default from the decompiler.
          */
         noteIndex = -1;
-        tmp = CG_OFFSET(cg);
         type = pn->pn_expr->pn_type;
         if (type != TOK_CATCH && type != TOK_LET && type != TOK_FOR &&
             (!(stmt = stmtInfo.down)
@@ -5807,19 +5812,26 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         ale = js_IndexAtom(cx, atom, &cg->atomList);
         if (!ale)
             return JS_FALSE;
+        JS_ASSERT(CG_OFFSET(cg) == top);
         EMIT_ATOM_INDEX_OP(JSOP_ENTERBLOCK, ALE_INDEX(ale));
 
         if (!js_EmitTree(cx, cg, pn->pn_expr))
             return JS_FALSE;
 
-        if (noteIndex >= 0 &&
-            !js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0,
-                                 CG_OFFSET(cg) - tmp)) {
-            return JS_FALSE;
+        op = pn->pn_op;
+        if (op == JSOP_LEAVEBLOCKEXPR) {
+            if (js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - top) < 0)
+                return JS_FALSE;
+        } else {
+            if (noteIndex >= 0 &&
+                !js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0,
+                                     CG_OFFSET(cg) - top)) {
+                return JS_FALSE;
+            }
         }
 
         /* Emit the JSOP_LEAVEBLOCK or JSOP_LEAVEBLOCKEXPR opcode. */
-        EMIT_UINT16_IMM_OP(pn->pn_op, count);
+        EMIT_UINT16_IMM_OP(op, count);
         cg->stackDepth -= count;
 
         ok = js_PopStatementCG(cx, cg);
@@ -6279,7 +6291,7 @@ JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[] = {
     {"switch",          2,      0,      1},
     {"funcdef",         1,      0,      0},
     {"catch",           1,      0,      1},
-    {"unused21",        0,      0,      0},
+    {"extended",       -1,      0,      0},
     {"newline",         0,      0,      0},
     {"setline",         1,      0,      0},
     {"xdelta",          0,      0,      0},
