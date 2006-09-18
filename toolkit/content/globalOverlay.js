@@ -116,14 +116,15 @@ var CommandUpdater = {
    *          The name of the command to update the XUL <command> element for
    */
   updateCommand: function(command) {
-    var controller = this._getControllerForCommand(command);
-    if (!controller)
-      return;
+    var enabled = false;
     try {
-      this.enableCommand(command, controller.isCommandEnabled(command));
+      var controller = this._getControllerForCommand(command);
+      if (controller)
+        enabled = controller.isCommandEnabled(command);
     }
-    catch (e) {
-    }
+    catch(ex) { }
+
+    this.enableCommand(command, enabled);
   },
   
   /**
