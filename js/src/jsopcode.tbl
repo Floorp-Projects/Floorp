@@ -321,7 +321,6 @@ OPDEF(JSOP_FINALLY,     134,"finally",    NULL,       1,  0,  0,  0,  JOF_BYTE)
 
 /*
  * Swap the top two stack elements.
- * XXX JSOP_SWAP doesn't swap the corresponding pc stack generating pcs.
  */
 OPDEF(JSOP_SWAP,        135,"swap",       NULL,       1,  2,  2,  0,  JOF_BYTE)
 

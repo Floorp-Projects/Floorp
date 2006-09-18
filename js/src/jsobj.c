@@ -3799,10 +3799,10 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 JSBool
 js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
 {
-    jsval v;
+    jsval v, save;
     JSString *str;
 
-    v = OBJECT_TO_JSVAL(obj);
+    v = save = OBJECT_TO_JSVAL(obj);
     switch (hint) {
       case JSTYPE_STRING:
         /*
@@ -3846,7 +3846,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
             str = NULL;
         }
         *vp = OBJECT_TO_JSVAL(obj);
-        str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, str);
+        str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, save, str);
         if (str) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_CANT_CONVERT_TO,

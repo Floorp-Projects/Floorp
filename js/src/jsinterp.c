@@ -2333,13 +2333,13 @@ interrupt:
           END_CASE(JSOP_POP2)
 
           BEGIN_CASE(JSOP_SWAP)
-            /*
-             * N.B. JSOP_SWAP doesn't swap the corresponding generating pcs
-             * for the operands it swaps.
-             */
-            ltmp = sp[-1];
-            sp[-1] = sp[-2];
+            vp = sp - depth;    /* swap generating pc's for the decompiler */
+            ltmp = vp[-1];
+            vp[-1] = vp[-2];
             sp[-2] = ltmp;
+            rtmp = sp[-1];
+            sp[-1] = sp[-2];
+            sp[-2] = rtmp;
           END_CASE(JSOP_SWAP)
 
           BEGIN_CASE(JSOP_POPV)
@@ -2941,16 +2941,22 @@ interrupt:
 
           BEGIN_CASE(JSOP_DUP)
             JS_ASSERT(sp > fp->spbase);
-            rval = sp[-1];
-            PUSH_OPND(rval);
+            vp = sp - 1;                /* address top of stack */
+            rval = *vp;
+            vp -= depth;                /* address generating pc */
+            vp[1] = *vp;
+            PUSH(rval);
           END_CASE(JSOP_DUP)
 
           BEGIN_CASE(JSOP_DUP2)
-            JS_ASSERT(sp - 1 > fp->spbase);
-            lval = FETCH_OPND(-2);
-            rval = FETCH_OPND(-1);
-            PUSH_OPND(lval);
-            PUSH_OPND(rval);
+            JS_ASSERT(sp - 2 >= fp->spbase);
+            vp = sp - 1;                /* address top of stack */
+            lval = vp[-1];
+            rval = *vp;
+            vp -= depth;                /* address generating pc */
+            vp[1] = vp[2] = *vp;
+            PUSH(lval);
+            PUSH(rval);
           END_CASE(JSOP_DUP2)
 
 #define PROPERTY_OP(n, call)                                                  \
@@ -3290,6 +3296,7 @@ interrupt:
           END_CASE(JSOP_NEW_NE)
 
           BEGIN_CASE(JSOP_CASE)
+            pc2 = (jsbytecode *) sp[-2-depth];
             NEW_EQUALITY_OP(==);
             (void) POP();
             if (cond) {
@@ -3297,10 +3304,12 @@ interrupt:
                 CHECK_BRANCH(len);
                 DO_NEXT_OP(len);
             }
+            sp[-depth] = (jsval)pc2;
             PUSH(lval);
           END_CASE(JSOP_CASE)
 
           BEGIN_CASE(JSOP_CASEX)
+            pc2 = (jsbytecode *) sp[-2-depth];
             NEW_EQUALITY_OP(==);
             (void) POP();
             if (cond) {
@@ -3308,6 +3317,7 @@ interrupt:
                 CHECK_BRANCH(len);
                 DO_NEXT_OP(len);
             }
+            sp[-depth] = (jsval)pc2;
             PUSH(lval);
           END_CASE(JSOP_CASEX)
 

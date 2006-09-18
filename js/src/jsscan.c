@@ -190,9 +190,13 @@ GrowTokenBuf(JSStringBuffer *sb, size_t newlength)
         JS_ARENA_ALLOCATE_CAST(base, jschar *, pool, tbsize);
     } else {
         length = PTRDIFF(sb->limit, base, jschar);
-        tbsize = (length + 1) * sizeof(jschar);
-        length += length + 1;
-        JS_ARENA_GROW_CAST(base, jschar *, pool, tbsize, tbsize);
+        if ((size_t)length >= ~(size_t)0 / sizeof(jschar)) {
+            base = NULL;
+        } else {
+            tbsize = (length + 1) * sizeof(jschar);
+            length += length + 1;
+            JS_ARENA_GROW_CAST(base, jschar *, pool, tbsize, tbsize);
+        }
     }
     if (!base) {
         JS_ReportOutOfMemory(cx);
@@ -530,9 +534,7 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
     JSString *linestr = NULL;
     JSTokenStream *ts = NULL;
     JSCodeGenerator *cg = NULL;
-#if JS_HAS_XML_SUPPORT
     JSParseNode *pn = NULL;
-#endif
     JSErrorReporter onError;
     JSTokenPos *tp;
     JSStackFrame *fp;
@@ -560,12 +562,10 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
       case JSREPORT_CG:
         cg = handle;
         break;
-#if JS_HAS_XML_SUPPORT
       case JSREPORT_PN:
         pn = handle;
         ts = pn->pn_ts;
         break;
-#endif
     }
 
     JS_ASSERT(!ts || ts->linebuf.limit < ts->linebuf.base + JS_LINE_LIMIT);
@@ -579,13 +579,11 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
         do {
             if (ts) {
                 report->filename = ts->filename;
-#if JS_HAS_XML_SUPPORT
                 if (pn) {
                     report->lineno = pn->pn_pos.begin.lineno;
                     if (report->lineno != ts->lineno)
                         break;
                 }
-#endif
                 report->lineno = ts->lineno;
                 linestr = js_NewStringCopyN(cx, ts->linebuf.base,
                                             PTRDIFF(ts->linebuf.limit,
@@ -596,10 +594,9 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
                                   ? JS_GetStringBytes(linestr)
                                   : NULL;
                 tp = &ts->tokens[(ts->cursor+ts->lookahead) & NTOKENS_MASK].pos;
-#if JS_HAS_XML_SUPPORT
                 if (pn)
                     tp = &pn->pn_pos;
-#endif
+
                 /*
                  * FIXME: What should instead happen here is that we should
                  * find error-tokens in userbuf, if !ts->file.  That will
@@ -607,7 +604,7 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
                  * includes all or part of the bad string or bad token.  The
                  * code here yields something that looks truncated.
                  * See https://bugzilla.mozilla.org/show_bug.cgi?id=352970
-                 */ 
+                 */
                 index = 0;
                 if (tp->begin.lineno == tp->end.lineno) {
                     if (tp->begin.index < ts->linepos)
@@ -629,8 +626,8 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
             }
 
             /*
-             * If we can't find out where the error was based on the current frame,
-             * see if the next frame has a script/pc combo we can use.
+             * If we can't find out where the error was based on the current
+             * frame, see if the next frame has a script/pc combo we can use.
              */
             for (fp = cx->fp; fp; fp = fp->down) {
                 if (fp->script && fp->pc) {

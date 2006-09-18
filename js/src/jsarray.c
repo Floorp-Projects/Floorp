@@ -1584,7 +1584,7 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
      * First, get or compute our callee, so that we error out consistently
      * when passed a non-callable object.
      */
-    callable = js_ValueToCallableObject(cx, &argv[0], 0);
+    callable = js_ValueToCallableObject(cx, &argv[0], JSV2F_SEARCH_STACK);
     if (!callable)
         return JS_FALSE;
 
