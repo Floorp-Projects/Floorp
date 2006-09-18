@@ -385,16 +385,22 @@ nsFormFillController::GetSearchAt(PRUint32 index, nsACString & _retval)
 NS_IMETHODIMP
 nsFormFillController::GetTextValue(nsAString & aTextValue)
 {
-  mFocusedInput->GetValue(aTextValue);
+  if (mFocusedInput) {
+    mFocusedInput->GetValue(aTextValue);
+  } else {
+    aTextValue.Truncate();
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFormFillController::SetTextValue(const nsAString & aTextValue)
 {
-  mSuppressOnInput = PR_TRUE;
-  mFocusedInput->SetValue(aTextValue);
-  mSuppressOnInput = PR_FALSE;
+  if (mFocusedInput) {
+    mSuppressOnInput = PR_TRUE;
+    mFocusedInput->SetValue(aTextValue);
+    mSuppressOnInput = PR_FALSE;
+  }
   return NS_OK;
 }
 
