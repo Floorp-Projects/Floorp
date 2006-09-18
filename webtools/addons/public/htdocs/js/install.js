@@ -21,12 +21,11 @@ else
 
 function getPlatformName()
 {
-    aPlatform = gPlatform;
-  if (aPlatform == PLATFORM_WINDOWS)
+  if (gPlatform == PLATFORM_WINDOWS)
     return "Windows";
-  if (aPlatform == PLATFORM_LINUX)
+  if (gPlatform == PLATFORM_LINUX)
     return "Linux";
-  if (aPlatform == PLATFORM_MACOSX)
+  if (gPlatform == PLATFORM_MACOSX)
     return "MacOSX";
   return "Unknown";
 }
@@ -64,6 +63,7 @@ function install( aEvent, extName, iconURL, extHash)  {
 
         return false;
     }
+    return true;
 }
 
 function installTheme( aEvent, extName) {
