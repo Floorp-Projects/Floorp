@@ -189,6 +189,207 @@ nsSVGFE::GetLengthInfo()
                               NS_ARRAY_LENGTH(sLengthInfo));
 }
 
+//--------------------Filter Resource-----------------------
+/**
+ * nsSVGFilterResource provides functionality for obtaining and releasing
+ * source and target images.  Images are automatically released when the
+ * Filter Resource is destroyed, but methods to manually release images are
+ * provided so that multiple source images may be used for a single filter.
+ * PLEASE NOTE that nsSVGFilterResource should ONLY be used on the stack because
+ * it has nsAutoString members
+ */
+class nsSVGFilterResource
+{
+
+public:
+  nsSVGFilterResource(nsSVGFilterInstance* aInstance);
+  ~nsSVGFilterResource();
+
+  /*
+   * Acquiring a source image will lock that image
+   * and prepare its data to be read.
+   * aIn:         the name of the filter primitive to use as the source
+   * aFilter:     the filter that is calling AcquireImage
+   * aSourceData: out parameter - the image data of the filter primitive
+   *              specified by aIn
+   */
+  nsresult AcquireSourceImage(nsIDOMSVGAnimatedString* aIn,
+                              nsSVGFE* aFilter, PRUint8** aSourceData);
+  /*
+   * Acquiring a target image will create and lock
+   * a new surface to be used as the target image.
+   * aResult:     the name by which the resulting filter primitive image will be
+   *              identified
+   * aTargetData: out parameter - the resulting filter primitive image data
+   */
+  nsresult AcquireTargetImage(nsIDOMSVGAnimatedString* aResult,
+                              PRUint8** aTargetData);
+  const nsRect& GetRect() {
+    return mRect;
+  }
+
+  /*
+   * Returns total length of data buffer in bytes
+   */
+  PRUint32 GetDataLength() {
+    return mLength;
+  }
+
+  /*
+   * Returns the total number of bytes per row of image data
+   */
+  PRInt32 GetDataStride() {
+    return mStride;
+  }
+
+private:
+  /*
+   * Unlocks the source image if it exists
+   */
+  void ReleaseSource();
+
+  /*
+   * If the target image exists then it is unlocked and FixupTarget() is called
+   */
+  void ReleaseTarget();
+
+  /*
+   * FixupTarget copies the parts of the source image that lie outside of the
+   * filter subregion into the target image.  If no source image exists, then
+   * the area outside the filter region is filled with transparent black.
+   */
+  void FixupTarget();
+
+  nsAutoString mInput, mResult;
+  nsRect mRect;
+  nsCOMPtr<nsISVGRendererSurface> mSourceImage, mTargetImage;
+  nsSVGFilterInstance* mInstance;
+  PRUint8 *mSourceData, *mTargetData;
+  PRUint32 mWidth, mHeight, mLength;
+  PRInt32 mStride;
+};
+
+nsSVGFilterResource::nsSVGFilterResource(nsSVGFilterInstance* aInstance):
+  mInstance(aInstance),
+  mSourceData(nsnull),
+  mTargetData(nsnull),
+  mWidth(0),
+  mHeight(0),
+  mLength(0),
+  mStride(0)
+{
+}
+
+nsSVGFilterResource::~nsSVGFilterResource()
+{
+  ReleaseTarget();
+  ReleaseSource();
+}
+
+nsresult
+nsSVGFilterResource::AcquireSourceImage(nsIDOMSVGAnimatedString* aIn,
+                                        nsSVGFE* aFilter, PRUint8** aSourceData)
+{
+  ReleaseSource();
+  nsRect defaultRect;
+  aIn->GetAnimVal(mInput);
+  mInstance->LookupRegion(mInput, &defaultRect);
+
+  mInstance->GetFilterSubregion(aFilter, defaultRect, &mRect);
+  mInstance->LookupImage(mInput, getter_AddRefs(mSourceImage));
+  if (!mSourceImage) {
+    return NS_ERROR_FAILURE;
+  }
+  mSourceImage->Lock();
+  mSourceImage->GetData(&mSourceData, &mLength, &mStride);
+  *aSourceData = mSourceData;
+  return NS_OK;
+}
+
+nsresult
+nsSVGFilterResource::AcquireTargetImage(nsIDOMSVGAnimatedString* aResult,
+                                        PRUint8** aTargetData)
+{
+  aResult->GetAnimVal(mResult);
+  mInstance->GetImage(getter_AddRefs(mTargetImage));
+  if (!mTargetImage) {
+    return NS_ERROR_FAILURE;
+  }
+  mTargetImage->Lock();
+  mTargetImage->GetData(&mTargetData, &mLength, &mStride);
+  mTargetImage->GetWidth(&mWidth);
+  mTargetImage->GetHeight(&mHeight);
+  *aTargetData = mTargetData;
+  return NS_OK;
+}
+
+void
+nsSVGFilterResource::ReleaseSource()
+{
+  if (!mSourceImage) {
+    return;
+  }
+  mSourceImage->Unlock();
+  mSourceImage = nsnull;
+}
+
+void
+nsSVGFilterResource::ReleaseTarget()
+{
+  if (!mTargetImage) {
+    return;
+  }
+  FixupTarget();
+  mTargetImage->Unlock();
+  mInstance->DefineImage(mResult, mTargetImage);
+  mInstance->DefineRegion(mResult, mRect);
+  mTargetImage = nsnull;
+}
+
+void
+nsSVGFilterResource::FixupTarget()
+{
+  // top
+  if (mRect.y > 0) {
+    for (PRInt32 y = 0; y < mRect.y; y++)
+      if (mSourceData) {
+        memcpy(mTargetData + y * mStride, mSourceData + y * mStride, mStride);
+      } else {
+        memset(mTargetData + y * mStride, 0, mStride);
+      }
+  }
+
+  // bottom
+  if (mRect.y + mRect.height < mHeight) {
+    for (PRInt32 y = mRect.y + mRect.height; y < mHeight; y++)
+      if (mSourceData) {
+        memcpy(mTargetData + y * mStride, mSourceData + y * mStride, mStride);
+      } else {
+        memset(mTargetData + y * mStride, 0, mStride);
+      }
+  }
+
+  // left
+  if (mRect.x > 0) {
+    for (PRInt32 y = mRect.y; y < mRect.y + mRect.height; y++)
+      memcpy(mTargetData + y * mStride, mSourceData + y * mStride, 4 * mRect.x);
+  }
+
+  // right
+  if (mRect.x + mRect.width < mWidth) {
+    for (PRInt32 y = mRect.y; y < mRect.y + mRect.height; y++)
+      if (mSourceData) {
+        memcpy(mTargetData + y * mStride + 4 * (mRect.x + mRect.width),
+               mSourceData + y * mStride + 4 * (mRect.x + mRect.width),
+               4 * (mWidth - mRect.x - mRect.width));
+      } else {
+        memset(mTargetData + y * mStride + 4 * (mRect.x + mRect.width),
+               0,
+               4 * (mWidth - mRect.x - mRect.width));
+      }
+  }
+}
+
 //---------------------Gaussian Blur------------------------
 
 typedef nsSVGFE nsSVGFEGaussianBlurElementBase;
@@ -483,84 +684,23 @@ gaussianBlur(PRUint8 *aInput, PRUint8 *aOutput,
   return NS_OK;
 }
 
-static void
-fixupTarget(PRUint8 *aSource, PRUint8 *aTarget,
-            PRUint32 aWidth, PRUint32 aHeight,
-            PRInt32 aStride, nsRect aRegion)
-{
-  // top
-  if (aRegion.y > 0)
-    for (PRInt32 y = 0; y < aRegion.y; y++)
-      if (aSource)
-        memcpy(aTarget + y * aStride, aSource + y * aStride, aStride);
-      else
-        memset(aTarget + y * aStride, 0, aStride);
-
-  // bottom
-  if (aRegion.y + aRegion.height < aHeight)
-    for (PRInt32 y = aRegion.y + aRegion.height; y < aHeight; y++)
-      if (aSource)
-        memcpy(aTarget + y * aStride, aSource + y * aStride, aStride);
-      else
-        memset(aTarget + y * aStride, 0, aStride);
-
-  // left
-  if (aRegion.x > 0)
-    for (PRInt32 y = aRegion.y; y < aRegion.y + aRegion.height; y++)
-      memcpy(aTarget + y * aStride, aSource + y * aStride, 4 * aRegion.x);
-
-  // right
-  if (aRegion.x + aRegion.width < aWidth)
-    for (PRInt32 y = aRegion.y; y < aRegion.y + aRegion.height; y++)
-      if (aSource)
-        memcpy(aTarget + y * aStride + 4 * (aRegion.x + aRegion.width),
-               aSource + y * aStride + 4 * (aRegion.x + aRegion.width),
-               4 * (aWidth - aRegion.x - aRegion.width));
-      else
-        memset(aTarget + y * aStride + 4 * (aRegion.x + aRegion.width),
-               0,
-               4 * (aWidth - aRegion.x - aRegion.width));
-}
-
 NS_IMETHODIMP
 nsSVGFEGaussianBlurElement::Filter(nsSVGFilterInstance *instance)
 {
-  nsRect rect;
-  nsIDOMSVGFilterPrimitiveStandardAttributes *attrib =
-    (nsIDOMSVGFilterPrimitiveStandardAttributes *)this;
+  nsresult rv;
+  PRUint8 *sourceData, *targetData;
+  nsSVGFilterResource fr(instance);
 
-  nsRect defaultRect;
-  nsAutoString input, result;
-  mIn1->GetAnimVal(input);
-  mResult->GetAnimVal(result);
-  instance->LookupRegion(input, &defaultRect);
-
-  instance->GetFilterSubregion(this, defaultRect, &rect);
+  rv = fr.AcquireSourceImage(mIn1, this, &sourceData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = fr.AcquireTargetImage(mResult, &targetData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsRect rect = fr.GetRect();
 
 #ifdef DEBUG_tor
   fprintf(stderr, "FILTER GAUSS rect: %d,%d  %dx%d\n",
           rect.x, rect.y, rect.width, rect.height);
 #endif
-
-  nsCOMPtr<nsISVGRendererSurface> sourceImage, targetImage;
-  instance->LookupImage(input, getter_AddRefs(sourceImage));
-  if (!sourceImage)
-    return NS_ERROR_FAILURE;
-
-  instance->GetImage(getter_AddRefs(targetImage));
-  if (!targetImage)
-    return NS_ERROR_FAILURE;
-
-  PRUint8 *sourceData, *targetData;
-  PRInt32 stride;
-  PRUint32 width, height, length;
-  sourceImage->Lock();
-  targetImage->Lock();
-  sourceImage->GetData(&sourceData, &length, &stride);
-  targetImage->GetData(&targetData, &length, &stride);
-
-  sourceImage->GetWidth(&width);
-  sourceImage->GetHeight(&height);
 
   float stdX, stdY;
   nsSVGLength2 val;
@@ -572,16 +712,9 @@ nsSVGFEGaussianBlurElement::Filter(nsSVGFilterInstance *instance)
   val.Init(nsSVGUtils::Y, 0xff, stdY, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
   stdY = instance->GetPrimitiveLength(&val);
 
-  nsresult rv = gaussianBlur(sourceData, targetData, length, 
-                             stride, rect, stdX, stdY);
+  rv = gaussianBlur(sourceData, targetData, fr.GetDataLength(),
+                    fr.GetDataStride(), rect, stdX, stdY);
   NS_ENSURE_SUCCESS(rv, rv);
-  fixupTarget(sourceData, targetData, width, height, stride, rect);
-
-  sourceImage->Unlock();
-  targetImage->Unlock();
-
-  instance->DefineImage(result, targetImage);
-  instance->DefineRegion(result, rect);
 
   return NS_OK;
 }
@@ -732,42 +865,20 @@ nsSVGFEComponentTransferElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
 NS_IMETHODIMP
 nsSVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance)
 {
-  nsRect rect;
-  nsIDOMSVGFilterPrimitiveStandardAttributes *attrib =
-    (nsIDOMSVGFilterPrimitiveStandardAttributes *)this;
+  nsresult rv;
+  PRUint8 *sourceData, *targetData;
+  nsSVGFilterResource fr(instance);
 
-  nsRect defaultRect;
-  nsAutoString input, result;
-  mIn1->GetAnimVal(input);
-  mResult->GetAnimVal(result);
-  instance->LookupRegion(input, &defaultRect);
-
-  instance->GetFilterSubregion(this, defaultRect, &rect);
+  rv = fr.AcquireSourceImage(mIn1, this, &sourceData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = fr.AcquireTargetImage(mResult, &targetData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsRect rect = fr.GetRect();
 
 #ifdef DEBUG_tor
   fprintf(stderr, "FILTER COMPONENT rect: %d,%d  %dx%d\n",
           rect.x, rect.y, rect.width, rect.height);
 #endif
-
-  nsCOMPtr<nsISVGRendererSurface> sourceImage, targetImage;
-  instance->LookupImage(input, getter_AddRefs(sourceImage));
-  if (!sourceImage)
-    return NS_ERROR_FAILURE;
-
-  instance->GetImage(getter_AddRefs(targetImage));
-  if (!targetImage)
-    return NS_ERROR_FAILURE;
-
-  PRUint8 *sourceData, *targetData;
-  PRInt32 stride;
-  PRUint32 width, height, length;
-  sourceImage->Lock();
-  targetImage->Lock();
-  sourceImage->GetData(&sourceData, &length, &stride);
-  targetImage->GetData(&targetData, &length, &stride);
-
-  sourceImage->GetWidth(&width);
-  sourceImage->GetHeight(&height);
 
   PRUint8 tableR[256], tableG[256], tableB[256], tableA[256];
   for (int i=0; i<256; i++)
@@ -789,6 +900,7 @@ nsSVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance)
       elementA->GenerateLookupTable(tableA);
   }
 
+  PRInt32 stride = fr.GetDataStride();
   for (PRInt32 y = rect.y; y < rect.y + rect.height; y++)
     for (PRInt32 x = rect.x; x < rect.x + rect.width; x++) {
       PRUint32 r, g, b, a;
@@ -797,23 +909,15 @@ nsSVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance)
         b = tableB[(255 * (PRUint32)sourceData[y * stride + 4 * x])     / a];
         g = tableG[(255 * (PRUint32)sourceData[y * stride + 4 * x + 1]) / a];
         r = tableR[(255 * (PRUint32)sourceData[y * stride + 4 * x + 2]) / a];
-      } else 
+      } else {
         b = g = r = 0;
+      }
       a = tableA[a];
       targetData[y * stride + 4 * x]     = (b * a) / 255;
       targetData[y * stride + 4 * x + 1] = (g * a) / 255;
       targetData[y * stride + 4 * x + 2] = (r * a) / 255;
       targetData[y * stride + 4 * x + 3] = a;
     }
-
-  fixupTarget(sourceData, targetData, width, height, stride, rect);
-
-  sourceImage->Unlock();
-  targetImage->Unlock();
-
-  instance->DefineImage(result, targetImage);
-  instance->DefineRegion(result, rect);
-
   return NS_OK;
 }
 
@@ -893,7 +997,7 @@ protected:
 
   enum { SLOPE, INTERCEPT, AMPLITUDE, EXPONENT, OFFSET };
   nsSVGNumber2 mNumberAttributes[5];
-  static NumberInfo sNumberInfo[5]; 
+  static NumberInfo sNumberInfo[5];
 
 };
 
@@ -922,7 +1026,7 @@ nsSVGComponentTransferFunctionElement::nsSVGComponentTransferFunctionElement(nsI
   : nsSVGComponentTransferFunctionElementBase(aNodeInfo)
 {
 }
-  
+
 nsresult
 nsSVGComponentTransferFunctionElement::Init()
 {
@@ -1396,56 +1500,36 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEMergeElement)
 NS_IMETHODIMP
 nsSVGFEMergeElement::Filter(nsSVGFilterInstance *instance)
 {
-  nsRect rect;
-  nsIDOMSVGFilterPrimitiveStandardAttributes *attrib =
-    (nsIDOMSVGFilterPrimitiveStandardAttributes *)this;
-
-  nsCOMPtr<nsISVGRendererSurface> sourceImage, targetImage;
-  instance->GetImage(getter_AddRefs(targetImage));
-  if (!targetImage)
-    return NS_ERROR_FAILURE;
-
+  nsresult rv;
   PRUint8 *sourceData, *targetData;
-  PRInt32 stride;
-  PRUint32 width, height, length;
-  targetImage->Lock();
-  targetImage->GetData(&targetData, &length, &stride);
-  targetImage->GetWidth(&width);
-  targetImage->GetHeight(&height);
-   
+
+  nsSVGFilterResource fr(instance);
+
+  rv = fr.AcquireTargetImage(mResult, &targetData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   PRUint32 count = GetChildCount();
   for (PRUint32 i = 0; i < count; i++) {
     nsCOMPtr<nsIContent> child = GetChildAt(i);
     nsCOMPtr<nsIDOMSVGFEMergeNodeElement> node = do_QueryInterface(child);
-    if (!node) 
+    if (!node)
       continue;
     nsCOMPtr<nsIDOMSVGAnimatedString> str;
     node->GetIn1(getter_AddRefs(str));
-                 
-    nsRect defaultRect;
-    nsAutoString input;
-    str->GetAnimVal(input);
-    instance->LookupRegion(input, &defaultRect);
 
-    instance->GetFilterSubregion(this, defaultRect, &rect);
+    rv = fr.AcquireSourceImage(str, this, &sourceData);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsRect rect = fr.GetRect();
 
 #ifdef DEBUG_tor
     fprintf(stderr, "FILTER MERGE rect: %d,%d  %dx%d\n",
             rect.x, rect.y, rect.width, rect.height);
 #endif
 
-    instance->LookupImage(input, getter_AddRefs(sourceImage));
-    if (!sourceImage) {
-      targetImage->Unlock();
-      return NS_ERROR_FAILURE;
-    }
-
-    sourceImage->Lock();
-    sourceImage->GetData(&sourceData, &length, &stride);
-    
 #define BLEND(target, source, alpha) \
     target = PR_MIN(255, (target * (255 - alpha))/255 + source)
 
+    PRInt32 stride = fr.GetDataStride();
     for (PRInt32 y = rect.y; y < rect.y + rect.height; y++)
       for (PRInt32 x = rect.x; x < rect.x + rect.width; x++) {
         PRUint32 a = sourceData[y * stride + 4 * x + 3];
@@ -1459,19 +1543,7 @@ nsSVGFEMergeElement::Filter(nsSVGFilterInstance *instance)
               sourceData[y * stride + 4 * x + 3], a);
       }
 #undef BLEND
-    
-    sourceImage->Unlock();
   }
-
-  fixupTarget(nsnull, targetData, width, height, stride, rect);
-
-  targetImage->Unlock();
-
-  nsAutoString result;
-  mResult->GetAnimVal(result);
-  instance->DefineImage(result, targetImage);
-  instance->DefineRegion(result, rect);
-
   return NS_OK;
 }
 
@@ -1779,42 +1851,20 @@ NS_IMETHODIMP nsSVGFEOffsetElement::GetDy(nsIDOMSVGAnimatedNumber * *aDy)
 NS_IMETHODIMP
 nsSVGFEOffsetElement::Filter(nsSVGFilterInstance *instance)
 {
-  nsRect rect;
-  nsIDOMSVGFilterPrimitiveStandardAttributes *attrib =
-    (nsIDOMSVGFilterPrimitiveStandardAttributes *)this;
+  nsresult rv;
+  PRUint8 *sourceData, *targetData;
+  nsSVGFilterResource fr(instance);
 
-  nsRect defaultRect;
-  nsAutoString input, result;
-  mIn1->GetAnimVal(input);
-  mResult->GetAnimVal(result);
-  instance->LookupRegion(input, &defaultRect);
-
-  instance->GetFilterSubregion(this, defaultRect, &rect);
+  rv = fr.AcquireSourceImage(mIn1, this, &sourceData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = fr.AcquireTargetImage(mResult, &targetData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsRect rect = fr.GetRect();
 
 #ifdef DEBUG_tor
   fprintf(stderr, "FILTER OFFSET rect: %d,%d  %dx%d\n",
           rect.x, rect.y, rect.width, rect.height);
 #endif
-
-  nsCOMPtr<nsISVGRendererSurface> sourceImage, targetImage;
-  instance->LookupImage(input, getter_AddRefs(sourceImage));
-  if (!sourceImage)
-    return NS_ERROR_FAILURE;
-
-  instance->GetImage(getter_AddRefs(targetImage));
-  if (!targetImage)
-    return NS_ERROR_FAILURE;
-
-  PRUint8 *sourceData, *targetData;
-  PRInt32 stride;
-  PRUint32 width, height, length;
-  sourceImage->Lock();
-  targetImage->Lock();
-  sourceImage->GetData(&sourceData, &length, &stride);
-  targetImage->GetData(&targetData, &length, &stride);
-
-  sourceImage->GetWidth(&width);
-  sourceImage->GetHeight(&height);
 
   PRInt32 offsetX, offsetY;
   float fltX, fltY;
@@ -1833,6 +1883,7 @@ nsSVGFEOffsetElement::Filter(nsSVGFilterInstance *instance)
       continue;
 
     PRInt32 targetColumn = rect.x + offsetX;
+    PRInt32 stride = fr.GetDataStride();
     if (targetColumn < rect.x)
       memcpy(targetData + stride * targetRow + 4 * rect.x,
              sourceData + stride * y - 4 * offsetX,
@@ -1842,15 +1893,6 @@ nsSVGFEOffsetElement::Filter(nsSVGFilterInstance *instance)
              sourceData + stride * y + 4 * rect.x,
              4 * (rect.width - offsetX));
   }
-
-  fixupTarget(sourceData, targetData, width, height, stride, rect);
-
-  sourceImage->Unlock();
-  targetImage->Unlock();
-
-  instance->DefineImage(result, targetImage);
-  instance->DefineRegion(result, rect);
-
   return NS_OK;
 }
 
