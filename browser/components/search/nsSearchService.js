@@ -1217,6 +1217,8 @@ Engine.prototype = {
     }
 
     // If requested, confirm the addition now that we have the title.
+    // This property is only ever true for engines added via
+    // nsIBrowserSearchService::addEngine.
     if (aEngine._confirm) {
       var confirmation = aEngine._confirmAddEngine();
       LOG("_onLoad: confirm is " + confirmation.confirmed +
@@ -1227,7 +1229,7 @@ Engine.prototype = {
     }
 
     // If we don't yet have a file, get one now. The only case where we would
-    // already having a file is if this is an update and _file was set above.
+    // already have a file is if this is an update and _file was set above.
     if (!aEngine._file)
       aEngine._file = getSanitizedFile(aEngine.name);
 
@@ -1240,6 +1242,10 @@ Engine.prototype = {
       // Set the new engine's icon, if it doesn't yet have one.
       if (!aEngine._iconURI && engineToUpdate._iconURI)
         aEngine._iconURI = engineToUpdate._iconURI;
+
+      // Clear the "use now" flag since we don't want to be changing the
+      // current engine for an update.
+      aEngine._useNow = false;
     }
 
     // Write the engine to file
