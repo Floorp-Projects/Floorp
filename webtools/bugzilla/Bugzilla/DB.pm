@@ -35,7 +35,6 @@ use DBI;
 # Inherit the DB class from DBI::db.
 use base qw(DBI::db);
 
-use Bugzilla::Config qw(:db);
 use Bugzilla::Constants;
 use Bugzilla::Install::Requirements;
 use Bugzilla::Install::Localconfig;
@@ -81,14 +80,17 @@ sub connect_shadow {
     die "Tried to connect to non-existent shadowdb" 
         unless $params->{'shadowdb'};
 
-    return _connect($db_driver, $params->{"shadowdbhost"},
+    my $lc = Bugzilla->localconfig;
+
+    return _connect($lc->{db_driver}, $params->{"shadowdbhost"},
                     $params->{'shadowdb'}, $params->{"shadowdbport"},
-                    $params->{"shadowdbsock"}, $db_user, $db_pass);
+                    $params->{"shadowdbsock"}, $lc->{db_user}, $lc->{db_pass});
 }
 
 sub connect_main {
-    return _connect($db_driver, $db_host, $db_name, $db_port,
-                    $db_sock, $db_user, $db_pass);
+    my $lc = Bugzilla->localconfig;
+    return _connect($lc->{db_driver}, $lc->{db_host}, $lc->{db_name}, $lc->{db_port},
+                    $lc->{db_sock}, $lc->{db_user}, $lc->{db_pass});
 }
 
 sub _connect {
@@ -120,10 +122,11 @@ sub _handle_error {
 sub bz_check_requirements {
     my ($output) = @_;
 
-    my $db = DB_MODULE->{lc($db_driver)};
+    my $lc = Bugzilla->localconfig;
+    my $db = DB_MODULE->{lc($lc->{db_driver})};
     # Only certain values are allowed for $db_driver.
     if (!defined $db) {
-        die "$db_driver is not a valid choice for \$db_driver in"
+        die "$lc->{db_driver} is not a valid choice for \$db_driver in"
             . bz_locations()->{'localconfig'};
     }
 
@@ -149,7 +152,7 @@ EOT
 
     # We don't try to connect to the actual database if $db_check is
     # disabled.
-    unless ($db_check) {
+    unless ($lc->{db_check}) {
         print "\n" if $output;
         return;
     }
@@ -186,6 +189,7 @@ sub bz_create_database {
     my $dbh;
     # See if we can connect to the actual Bugzilla database.
     my $conn_success = eval { $dbh = connect_main(); };
+    my $db_name = Bugzilla->localconfig->{db_name};
 
     if (!$conn_success) {
         $dbh = _get_no_db_connection();
@@ -209,12 +213,13 @@ sub bz_create_database {
 sub _get_no_db_connection {
     my ($sql_server) = @_;
     my $dbh;
+    my $lc = Bugzilla->localconfig;
     my $conn_success = eval {
-        $dbh = _connect($db_driver, $db_host, '', $db_port,
-                        $db_sock, $db_user, $db_pass);
+        $dbh = _connect($lc->{db_driver}, $lc->{db_host}, '', $lc->{db_port},
+                        $lc->{db_sock}, $lc->{db_user}, $lc->{db_pass});
     };
     if (!$conn_success) {
-        my $sql_server = DB_MODULE->{lc($db_driver)}->{name};
+        my $sql_server = DB_MODULE->{lc($lc->{db_driver})}->{name};
         # Can't use $dbh->errstr because $dbh is undef.
         my $error = $DBI::errstr;
         chomp($error);
@@ -230,7 +235,8 @@ sub _get_no_db_connection {
 # username, and db_new errors can show up on CGIs.
 sub _bz_connect_error_reasons {
     my $lc_file = bz_locations()->{'localconfig'};
-    my $db      = DB_MODULE->{lc($db_driver)};
+    my $lc      = Bugzilla->localconfig;
+    my $db      = DB_MODULE->{lc($lc->{db_driver})};
     my $server  = $db->{name};
 
 return <<EOT;
@@ -241,7 +247,7 @@ This might have several reasons:
   server configuration or the database access rights. Read the Bugzilla
   Guide in the doc directory. The section about database configuration
   should help.
-* Your password for the '$db_user' user, specified in \$db_pass, is 
+* Your password for the '$lc->{db_user}' user, specified in \$db_pass, is 
   incorrect, in '$lc_file'.
 * There is a subtle problem with Perl, DBI, or $server. Make
   sure all settings in '$lc_file' are correct. If all else fails, set
@@ -355,7 +361,8 @@ sub bz_server_version {
 sub bz_last_key {
     my ($self, $table, $column) = @_;
 
-    return $self->last_insert_id($db_name, undef, $table, $column);
+    return $self->last_insert_id(Bugzilla->localconfig->{db_name}, undef, 
+                                 $table, $column);
 }
 
 sub bz_get_field_defs {

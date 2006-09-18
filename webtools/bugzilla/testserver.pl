@@ -21,14 +21,8 @@
 use strict;
 use lib ".";
 
-BEGIN {
-    my $envpath = $ENV{'PATH'};
-    require Bugzilla;
-    $ENV{'PATH'} = $envpath;
-}
-
+use Bugzilla;
 use Bugzilla::Constants;
-use Bugzilla::Config qw(:localconfig);
 
 use Socket;
 
@@ -62,6 +56,7 @@ if ($^O !~ /MSWin32/i) {
 
 # Determine the numeric GID of $webservergroup
 my $webgroupnum = 0;
+my $webservergroup = Bugzilla->localconfig->{webservergroup};
 if ($webservergroup =~ /^(\d+)$/) {
     $webgroupnum = $1;
 } else {

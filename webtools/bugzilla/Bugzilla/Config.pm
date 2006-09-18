@@ -43,18 +43,13 @@ use File::Temp;
 %Bugzilla::Config::EXPORT_TAGS =
   (
    admin => [qw(update_params SetParam write_params)],
-   db => [qw($db_driver $db_host $db_port $db_name $db_user $db_pass $db_sock
-             $db_check)],
-   localconfig => [qw($cvsbin $interdiffbin $diffpath $webservergroup)],
   );
-Exporter::export_ok_tags('admin', 'db', 'localconfig');
+Exporter::export_ok_tags('admin');
 
 use vars qw(@param_list);
 
 # INITIALISATION CODE
 # Perl throws a warning if we use bz_locations() directly after do.
-our $localconfig = bz_locations()->{'localconfig'};
-do $localconfig;
 our %params;
 # Load in the param definitions
 sub _load_params {
@@ -326,10 +321,6 @@ Bugzilla::Config - Configuration parameters for Bugzilla
   update_params();
   SetParam($param, $value);
   write_params();
-
-  # Localconfig variables may also be imported
-  use Bugzilla::Config qw(:db);
-  print "Connecting to $db_name as $db_user with $db_pass\n";
 
 =head1 DESCRIPTION
 

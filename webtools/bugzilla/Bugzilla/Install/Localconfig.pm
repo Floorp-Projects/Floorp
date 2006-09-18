@@ -10,6 +10,10 @@
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
 #
+# The Initial Developer of the Original Code is Everything Solved.
+# Portions created by Everything Solved are Copyright (C) 2006
+# Everything Solved. All Rights Reserved.
+#
 # The Original Code is the Bugzilla Bug Tracking System.
 #
 # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
@@ -39,10 +43,7 @@ our @EXPORT_OK = qw(
     update_localconfig
 );
 
-# We write this constant as a sub because it has to call other
-# subroutines.
-sub LOCALCONFIG_VARS {
-    return (
+use constant LOCALCONFIG_VARS => (
     {
         name    => 'create_htaccess',
         default => 1,
@@ -156,7 +157,7 @@ EOT
     },
     {
         name    => 'cvsbin',
-        default => &_get_default_cvsbin,
+        default => \&_get_default_cvsbin,
         desc    => <<EOT
 # For some optional functions of Bugzilla (such as the pretty-print patch
 # viewer), we need the cvs binary to access files and revisions.
@@ -166,7 +167,7 @@ EOT
     },
     {
         name    => 'interdiffbin',
-        default => &_get_default_interdiffbin,
+        default => \&_get_default_interdiffbin,
         desc    => <<EOT
 # For some optional functions of Bugzilla (such as the pretty-print patch
 # viewer), we need the interdiff binary to make diffs between two patches.
@@ -176,14 +177,13 @@ EOT
     },
     {
         name    => 'diffpath',
-        default => &_get_default_diffpath,
+        default => \&_get_default_diffpath,
         desc    => <<EOT
 # The interdiff feature needs diff, so we have to have that path.
 # Please specify the directory name only; do not use trailing slash.
 EOT
     },
-    );
-}
+);
 
 use constant OLD_LOCALCONFIG_VARS => qw(
     mysqlpath
@@ -280,6 +280,7 @@ sub update_localconfig {
         my $name = $var->{name};
         if (!defined $localconfig->{$name}) {
             push(@new_vars, $name);
+            $var->{default} = &{$var->{default}} if ref($var->{default}) eq 'CODE';
             $localconfig->{$name} = $answer->{$name} || $var->{default};
         }
     }

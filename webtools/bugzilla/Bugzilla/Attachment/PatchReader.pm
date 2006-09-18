@@ -19,7 +19,6 @@ use strict;
 
 package Bugzilla::Attachment::PatchReader;
 
-use Bugzilla::Config qw(:localconfig);
 use Bugzilla::Error;
 
 
@@ -27,6 +26,7 @@ sub process_diff {
     my ($attachment, $format, $context) = @_;
     my $dbh = Bugzilla->dbh;
     my $cgi = Bugzilla->cgi;
+    my $lc  = Bugzilla->localconfig;
     my $vars = {};
 
     my ($reader, $last_reader) = setup_patch_readers(undef, $context);
@@ -42,7 +42,7 @@ sub process_diff {
     }
     else {
         $vars->{'other_patches'} = [];
-        if ($interdiffbin && $diffpath) {
+        if ($lc->{interdiffbin} && $lc->{diffpath}) {
             # Get list of attachments on this bug.
             # Ignore the current patch, but select the one right before it
             # chronologically.
@@ -84,6 +84,7 @@ sub process_diff {
 sub process_interdiff {
     my ($old_attachment, $new_attachment, $format, $context) = @_;
     my $cgi = Bugzilla->cgi;
+    my $lc  = Bugzilla->localconfig;
     my $vars = {};
 
     # Get old patch data.
@@ -95,8 +96,8 @@ sub process_interdiff {
 
     # Send through interdiff, send output directly to template.
     # Must hack path so that interdiff will work.
-    $ENV{'PATH'} = $diffpath;
-    open my $interdiff_fh, "$interdiffbin $old_filename $new_filename|";
+    $ENV{'PATH'} = $lc->{diffpath};
+    open my $interdiff_fh, "$lc->{interdiffbin} $old_filename $new_filename|";
     binmode $interdiff_fh;
     my ($reader, $last_reader) = setup_patch_readers("", $context);
 
@@ -219,7 +220,9 @@ sub setup_patch_readers {
     }
 
     # Add in cvs context if we have the necessary info to do it
-    if ($context ne 'patch' && $cvsbin && Bugzilla->params->{'cvsroot_get'}) {
+    if ($context ne 'patch' && Bugzilla->localconfig->{cvsbin} 
+        && Bugzilla->params->{'cvsroot_get'}) 
+    {
         require PatchReader::AddCVSContext;
         $last_reader->sends_data_to(
           new PatchReader::AddCVSContext($context, Bugzilla->params->{'cvsroot_get'}));
@@ -246,7 +249,8 @@ sub setup_template_patch_reader {
 
     $vars->{'collapsed'} = $cgi->param('collapsed');
     $vars->{'context'} = $context;
-    $vars->{'do_context'} = $cvsbin && Bugzilla->params->{'cvsroot_get'} && !$vars->{'newid'};
+    $vars->{'do_context'} = Bugzilla->localconfig->{cvsbin} 
+                            && Bugzilla->params->{'cvsroot_get'} && !$vars->{'newid'};
 
     # Print everything out.
     print $cgi->header(-type => 'text/html',
