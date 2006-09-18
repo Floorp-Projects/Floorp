@@ -2089,12 +2089,20 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   }
   nsIPresShell *presShell = aPresContext->PresShell();
 
-  nsFrameSelection* frameselection = GetFrameSelection();
+  nsCOMPtr<nsFrameSelection> frameselection = GetFrameSelection();
   PRBool mouseDown = frameselection->GetMouseDownState();
   if (!mouseDown)
     return NS_OK;
 
   frameselection->StopAutoScrollTimer();
+
+  // If we have capturing view, it must be ensured that |this| doesn't 
+  // get deleted during HandleDrag.
+  nsWeakFrame weakFrame = GetNearestCapturingView(this) ? this : nsnull;
+#ifdef NS_DEBUG
+  PRBool frameAlive = weakFrame.IsAlive();
+#endif
+
   // Check if we are dragging in a table cell
   nsCOMPtr<nsIContent> parentContent;
   PRInt32 contentOffset;
@@ -2112,16 +2120,22 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
     frameselection->HandleDrag(this, pt);
   }
 
-  nsIView* captureView = GetNearestCapturingView(this);
-  if (captureView) {
-    // Get the view that aEvent->point is relative to. This is disgusting.
-    nsIView* eventView = nsnull;
-    nsPoint pt = nsLayoutUtils::GetEventCoordinatesForNearestView(aEvent, this,
-                                                                  &eventView);
-    nsPoint capturePt = pt + eventView->GetOffsetTo(captureView);
-    frameselection->StartAutoScrollTimer(captureView, capturePt, 30);
+  if (weakFrame) {
+    nsIView* captureView = GetNearestCapturingView(this);
+    if (captureView) {
+      // Get the view that aEvent->point is relative to. This is disgusting.
+      nsIView* eventView = nsnull;
+      nsPoint pt = nsLayoutUtils::GetEventCoordinatesForNearestView(aEvent, this,
+                                                                    &eventView);
+      nsPoint capturePt = pt + eventView->GetOffsetTo(captureView);
+      frameselection->StartAutoScrollTimer(captureView, capturePt, 30);
+    }
   }
-
+#ifdef NS_DEBUG
+  if (frameAlive && !weakFrame.IsAlive()) {
+    NS_WARNING("nsFrame deleted during nsFrame::HandleDrag.");
+  }
+#endif
   return NS_OK;
 }
 
