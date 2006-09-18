@@ -48,7 +48,7 @@
 /* ::::: primary toolbar buttons ::::: */
  
 .toolbarbutton-1 {
-  list-style-image: url("chrome://messenger/skin/icons/mailicons.png");
+  list-style-image: url("chrome://messenger/skin/icons/messengericons.png");
 }
 
 #button-send {
