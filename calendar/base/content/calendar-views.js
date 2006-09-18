@@ -22,6 +22,7 @@
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
  *   Joey Minta <jminta@gmail.com>
  *   Michael Buettner <michael.buettner@sun.com>
+ *   gekacheka@yahoo.com
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -89,14 +90,14 @@ var calendarViewController = {
     },
 
     modifyOccurrence: function (aOccurrence, aNewStartTime, aNewEndTime) {
-        // if we can modify this thing directly (e.g. just the time changed),
+        // prompt for choice between occurrence and master for recurrent items
+        var itemToEdit = getOccurrenceOrParent(aOccurrence);
+        if (!itemToEdit) {
+            return;  // user cancelled
+        }
+        // if modifying this item directly (e.g. just dragged to new time),
         // then do so; otherwise pop up the dialog
-        var itemToEdit;
         if (aNewStartTime && aNewEndTime) {
-            itemToEdit = getOccurrenceOrParent(aOccurrence);
-            if (!itemToEdit) {
-                return;
-            }
             var instance = itemToEdit.clone();
 
             // if we're about to modify the parentItem, we need to account
@@ -132,15 +133,7 @@ var calendarViewController = {
             }
             doTransaction('modify', instance, instance.calendar, itemToEdit, null);
         } else {
-            //XXX unify these
-            if ("editEvent" in window) {
-                // Sunbird specific code
-                editEvent();
-            } else {
-                // Lightning specific code
-                itemToEdit = getOccurrenceOrParent(aOccurrence);
-                modifyEventWithDialog(itemToEdit);
-            }
+            modifyEventWithDialog(itemToEdit);
         }
     },
 
