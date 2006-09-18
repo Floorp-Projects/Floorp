@@ -86,7 +86,7 @@
 <vbox id="LinkLocationBox">
   <label control="hrefInput" accesskey="&LinkURLEditField.accessKey;" width="1">&LinkURLEditField.label;</label>
   <textbox id="hrefInput" type="autocomplete"
-           searchSessions="history" timeout="50" maxrows="6"
+           autocompletesearch="history" timeout="50" maxrows="6"
            disablehistory="false" class="uri-element"
            oninput="ChangeLinkLocation();">
     <menupopup class="autocomplete-history-popup"

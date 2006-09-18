@@ -538,7 +538,8 @@ NS_INTERFACE_MAP_BEGIN(nsGlobalHistory)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
   NS_INTERFACE_MAP_ENTRY(nsIRDFRemoteDataSource)
-  NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSession)
+  NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSearch)
+  NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteResult)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIBrowserHistory)
 NS_INTERFACE_MAP_END
 
@@ -801,16 +802,21 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
 }
 
 nsresult
-nsGlobalHistory::RemovePageInternal(const char *aSpec)
+nsGlobalHistory::RemovePageInternal(const nsCString& aSpec)
 {
   if (!mTable) return NS_ERROR_NOT_INITIALIZED;
   // find the old row, ignore it if we don't have it
   nsCOMPtr<nsIMdbRow> row;
-  nsresult rv = FindRow(kToken_URLColumn, aSpec, getter_AddRefs(row));
+  nsresult rv = FindRow(kToken_URLColumn, aSpec.get(), getter_AddRefs(row));
   if (NS_FAILED(rv)) return NS_OK;
-
   // remove the row
-  mdb_err err = mTable->CutRow(mEnv, row);
+  return RemovePageInternal(aSpec, row);
+}
+
+nsresult
+nsGlobalHistory::RemovePageInternal(const nsCString& aSpec, nsIMdbRow *aRow)
+{
+  mdb_err err = mTable->CutRow(mEnv, aRow);
   NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
 
   // if there are batches in progress, we don't want to notify
@@ -819,12 +825,12 @@ nsGlobalHistory::RemovePageInternal(const char *aSpec)
   if (!mBatchesInProgress) {
     // get the resource so we can do the notification
     nsCOMPtr<nsIRDFResource> oldRowResource;
-    gRDFService->GetResource(nsDependentCString(aSpec), getter_AddRefs(oldRowResource));
-    NotifyFindUnassertions(oldRowResource, row);
+    gRDFService->GetResource(aSpec, getter_AddRefs(oldRowResource));
+    NotifyFindUnassertions(oldRowResource, aRow);
   }
 
   // not a fatal error if we can't cut all column
-  err = row->CutAllColumns(mEnv);
+  err = aRow->CutAllColumns(mEnv);
   NS_ASSERTION(err == 0, "couldn't cut all columns");
 
   return Commit(kCompressCommit);
@@ -1029,6 +1035,22 @@ nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
   return NS_OK;
 }
 
+nsresult
+nsGlobalHistory::GetRowURL(nsIMdbRow *aRow, nsAString& aResult)
+{
+  mdbYarn yarn;
+  mdb_err err = aRow->AliasCellYarn(mEnv, kToken_URLColumn, &yarn);
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  const char* startPtr = (const char*)yarn.mYarn_Buf;
+  if (startPtr)
+    CopyUTF8toUTF16(Substring(startPtr, startPtr + yarn.mYarn_Fill), aResult);
+  else
+    aResult.Truncate();
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsGlobalHistory::GetCount(PRUint32* aCount)
 {
@@ -1109,7 +1131,7 @@ nsGlobalHistory::RemovePage(nsIURI *aURI)
   nsCAutoString spec;
   nsresult rv = aURI->GetSpec(spec);
   if (NS_SUCCEEDED(rv))
-    rv = RemovePageInternal(spec.get());
+    rv = RemovePageInternal(spec);
   return rv;
 }
 
@@ -1297,10 +1319,7 @@ nsGlobalHistory::GetLastPageVisited(nsACString& _retval)
 
   NS_ENSURE_STATE(mMetaRow);
 
-  mdb_err err = GetRowValue(mMetaRow, kToken_LastPageVisited, _retval);
-  NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
-
-  return NS_OK;
+  return GetRowValue(mMetaRow, kToken_LastPageVisited, _retval);
 }
 
 // Set the byte order in the history file.  The given string value should
@@ -1330,8 +1349,8 @@ nsGlobalHistory::GetByteOrder(char **_retval)
   NS_ENSURE_STATE(mMetaRow);
 
   nsCAutoString byteOrder;
-  mdb_err err = GetRowValue(mMetaRow, kToken_ByteOrder, byteOrder);
-  NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
+  nsresult rv = GetRowValue(mMetaRow, kToken_ByteOrder, byteOrder);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   *_retval = ToNewCString(byteOrder);
   NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
@@ -1444,11 +1463,7 @@ nsGlobalHistory::GetURIGeckoFlags(nsIURI *aURI, PRUint32* aFlags)
   if (!HasCell(mEnv, row, kToken_GeckoFlagsColumn))
     return NS_ERROR_FAILURE;
 
-  PRInt32 val;
-  mdb_err err = GetRowValue(row, kToken_GeckoFlagsColumn, &val);
-  NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
-  *aFlags = val;
-  return NS_OK;
+  return GetRowValue(row, kToken_GeckoFlagsColumn, (PRInt32*)aFlags);
 }
 
 //----------------------------------------------------------------------
@@ -2062,7 +2077,7 @@ nsGlobalHistory::Unassert(nsIRDFResource* aSource,
     }
 
     // ignore any error
-    rv = RemovePageInternal(targetUrl);
+    rv = RemovePageInternal(nsDependentCString(targetUrl));
     if (NS_FAILED(rv)) return NS_RDF_ASSERTION_REJECTED;
 
     return NS_OK;
@@ -2795,7 +2810,7 @@ nsGlobalHistory::CreateFindEnumerator(nsIRDFResource *aSource,
 
   // the enumerator will take ownership of the query
   SearchEnumerator *result =
-    new SearchEnumerator(query, kToken_HiddenColumn, this);
+    new SearchEnumerator(query, this);
   if (!result) return NS_ERROR_OUT_OF_MEMORY;
 
   rv = result->Init(mEnv, mTable);
@@ -3875,7 +3890,7 @@ nsGlobalHistory::GetFindUriPrefix(const searchQuery& aQuery,
 PRBool
 nsGlobalHistory::SearchEnumerator::IsResult(nsIMdbRow *aRow)
 {
-  if (HasCell(mEnv, aRow, mHiddenColumn))
+  if (HasCell(mEnv, aRow, mHistory->kToken_HiddenColumn))
     return PR_FALSE;
   
   mdb_err err;
@@ -4104,65 +4119,99 @@ nsGlobalHistory::SearchEnumerator::ConvertToISupports(nsIMdbRow* aRow,
 
 //----------------------------------------------------------------------
 //
-// nsGlobalHistory::AutoCompleteEnumerator
+// nsIAutoCompleteResult implementation
 //
-//   Implementation
 
-nsGlobalHistory::AutoCompleteEnumerator::~AutoCompleteEnumerator()
+NS_IMETHODIMP
+nsGlobalHistory::GetSearchString(nsAString& aSearchString)
 {
+  aSearchString = mSearchString;
+  return NS_OK;
 }
 
-
-PRBool
-nsGlobalHistory::AutoCompleteEnumerator::IsResult(nsIMdbRow* aRow)
+NS_IMETHODIMP
+nsGlobalHistory::GetSearchResult(PRUint16 *aSearchResult)
 {
-  if (!HasCell(mEnv, aRow, mTypedColumn)) {
-    if (mMatchOnlyTyped || HasCell(mEnv, aRow, mHiddenColumn))
-      return PR_FALSE;
+  NS_ENSURE_ARG_POINTER(aSearchResult);
+  *aSearchResult = mResults.Count() ? (PRUint16)RESULT_SUCCESS : (PRUint16)RESULT_NOMATCH;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalHistory::GetDefaultIndex(PRInt32 *aDefaultIndex)
+{
+  NS_ENSURE_ARG_POINTER(aDefaultIndex);
+  *aDefaultIndex = mResults.Count() ? 0 : -1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalHistory::GetErrorDescription(nsAString& aErrorDescription)
+{
+  aErrorDescription.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalHistory::GetMatchCount(PRUint32* aMatchCount)
+{
+  NS_ENSURE_ARG_POINTER(aMatchCount);
+  *aMatchCount = mResults.Count();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalHistory::GetValueAt(PRInt32 aIndex, nsAString& aValue)
+{
+  NS_ENSURE_ARG_RANGE(aIndex, 0, mResults.Count() - 1);
+  return GetRowURL(mResults[aIndex], aValue);
+}
+
+NS_IMETHODIMP
+nsGlobalHistory::GetCommentAt(PRInt32 aIndex, nsAString& aValue)
+{
+  NS_ENSURE_ARG(aIndex >= 0 && aIndex < mResults.Count());
+  return GetRowValue(mResults[aIndex], kToken_NameColumn, aValue);
+}
+
+NS_IMETHODIMP
+nsGlobalHistory::GetStyleAt(PRInt32 aIndex, nsAString& aValue)
+{
+  NS_ENSURE_ARG(aIndex >= 0 && aIndex < mResults.Count());
+  aValue.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalHistory::RemoveValueAt(PRInt32 aIndex, PRBool aRemoveFromDb)
+{
+  NS_ENSURE_ARG(aIndex >= 0 && aIndex < mResults.Count());
+  if (aRemoveFromDb) {
+    nsCAutoString url;
+    nsCOMPtr<nsIMdbRow> row = mResults[aIndex];
+    nsresult rv = GetRowValue(row, kToken_URLColumn, url);
+    if (NS_FAILED(rv))
+      return rv;
+    rv = RemovePageInternal(url, row);
+    if (NS_FAILED(rv))
+      return rv;
   }
-
-  nsCAutoString url;
-  mHistory->GetRowValue(aRow, mURLColumn, url);
-
-  NS_ConvertUTF8toUTF16 utf8Url(url);
-
-  PRBool result = mHistory->AutoCompleteCompare(utf8Url, mSelectValue, mExclude); 
-  
-  return result;
-}
-
-nsresult
-nsGlobalHistory::AutoCompleteEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports** aResult)
-{
-  nsCAutoString url;
-  mHistory->GetRowValue(aRow, mURLColumn, url);
-  nsAutoString comments;
-  mHistory->GetRowValue(aRow, mCommentColumn, comments);
-
-  nsCOMPtr<nsIAutoCompleteItem> newItem(do_CreateInstance(NS_AUTOCOMPLETEITEM_CONTRACTID));
-  NS_ENSURE_TRUE(newItem, NS_ERROR_FAILURE);
-
-  newItem->SetValue(NS_ConvertUTF8toUTF16(url.get()));
-  newItem->SetParam(aRow);
-  newItem->SetComment(comments.get());
-
-  *aResult = newItem;
-  NS_ADDREF(*aResult);
+  mResults.RemoveObjectAt(aIndex);
   return NS_OK;
 }
 
 //----------------------------------------------------------------------
 //
-// nsIAutoCompleteSession implementation
+// nsIAutoCompleteSearch implementation
 //
 
-NS_IMETHODIMP 
-nsGlobalHistory::OnStartLookup(const PRUnichar *searchString,
-                               nsIAutoCompleteResults *previousSearchResult,
-                               nsIAutoCompleteListener *listener)
+NS_IMETHODIMP
+nsGlobalHistory::StartSearch(const nsAString& aSearchString,
+                             const nsAString& aSearchParam,
+                             nsIAutoCompleteResult* aPreviousResult,
+                             nsIAutoCompleteObserver* aListener)
 {
-  NS_ASSERTION(searchString, "searchString can't be null, fix your caller");
-  NS_ENSURE_ARG_POINTER(listener);
+  NS_ENSURE_ARG_POINTER(aListener);
   NS_ENSURE_STATE(gPrefBranch);
 
   NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
@@ -4170,167 +4219,48 @@ nsGlobalHistory::OnStartLookup(const PRUnichar *searchString,
   PRBool enabled = PR_FALSE;
   gPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ENABLED, &enabled);      
 
-  if (!enabled || searchString[0] == 0) {
-    listener->OnAutoComplete(nsnull, nsIAutoCompleteStatus::ignored);
-    return NS_OK;
-  }
-  
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIAutoCompleteResults> results;
-  results = do_CreateInstance(NS_AUTOCOMPLETERESULTS_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  AutoCompleteStatus status = nsIAutoCompleteStatus::failed;
-
-  // if the search string is empty after it has had prefixes removed, then 
-  // there is no need to proceed with the search
-  nsAutoString cut(searchString);
+  nsAutoString cut(aSearchString);
   AutoCompleteCutPrefix(cut, nsnull);
-  if (cut.IsEmpty()) {
-    listener->OnAutoComplete(results, status);
+  if (cut.IsEmpty() || !enabled) {
+    mResults.Clear();
+    mSearchString = aSearchString;
+    aListener->OnSearchResult(this, this);
     return NS_OK;
   }
-  
-  // pass string through filter and then determine which prefixes to exclude
-  // when chopping prefixes off of history urls during comparison
-  nsString filtered = AutoCompletePrefilter(nsDependentString(searchString));
+
+  nsString filtered = AutoCompletePrefilter(aSearchString);
   AutocompleteExclude exclude;
   AutoCompleteGetExcludeInfo(filtered, &exclude);
-  
-  // perform the actual search here
-  rv = AutoCompleteSearch(filtered, &exclude, previousSearchResult, results);
 
-  // describe the search results
-  if (NS_SUCCEEDED(rv)) {
-  
-    results->SetSearchString(searchString);
-    results->SetDefaultItemIndex(0);
-  
-    // determine if we have found any matches or not
-    nsCOMPtr<nsISupportsArray> array;
-    rv = results->GetItems(getter_AddRefs(array));
-    if (NS_SUCCEEDED(rv)) {
-      PRUint32 nbrOfItems;
-      rv = array->Count(&nbrOfItems);
-      if (NS_SUCCEEDED(rv)) {
-        if (nbrOfItems >= 1) {
-          status = nsIAutoCompleteStatus::matchFound;
-        } else {
-          status = nsIAutoCompleteStatus::noMatch;
-        }
-      }
+  if (aPreviousResult == this &&
+      StringBeginsWith(filtered, AutoCompletePrefilter(mSearchString))) {
+    nsAutoString value;
+    PRUint32 count = mResults.Count();
+    while (count--) {
+      GetRowURL(mResults[count], value);
+      if (!AutoCompleteCompare(value, filtered, &exclude))
+        mResults.RemoveObjectAt(count);
     }
-    
-    // notify the listener
-    listener->OnAutoComplete(results, status);
-  }
-  
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsGlobalHistory::OnStopLookup()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGlobalHistory::OnAutoComplete(const PRUnichar *searchString,
-                                nsIAutoCompleteResults *previousSearchResult,
-                                nsIAutoCompleteListener *listener)
-{
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-//
-// AutoComplete stuff
-//
-
-nsresult
-nsGlobalHistory::AutoCompleteSearch(const nsAString& aSearchString,
-                                    AutocompleteExclude* aExclude,
-                                    nsIAutoCompleteResults* aPrevResults,
-                                    nsIAutoCompleteResults* aResults)
-{
-  // determine if we can skip searching the whole history and only search
-  // through the previous search results
-  PRBool searchPrevious = PR_FALSE;
-  if (aPrevResults) {
-    nsXPIDLString prevURL;
-    aPrevResults->GetSearchString(getter_Copies(prevURL));
-    // if search string begins with the previous search string, it's a go
-    searchPrevious = StringBeginsWith(aSearchString, prevURL);
-  }
-    
-  nsCOMPtr<nsISupportsArray> resultItems;
-  nsresult rv = aResults->GetItems(getter_AddRefs(resultItems));
-
-  if (searchPrevious) {
-    // searching through the previous results...
-    
-    nsCOMPtr<nsISupportsArray> prevResultItems;
-    aPrevResults->GetItems(getter_AddRefs(prevResultItems));
-    
-    PRUint32 count;
-    prevResultItems->Count(&count);
-    for (PRUint32 i = 0; i < count; ++i) {
-      nsCOMPtr<nsIAutoCompleteItem> item;
-      prevResultItems->GetElementAt(i, getter_AddRefs(item));
-
-      // make a copy of the value because AutoCompleteCompare
-      // is destructive
-      nsAutoString url;
-      item->GetValue(url);
-      
-      if (AutoCompleteCompare(url, aSearchString, aExclude))
-        resultItems->AppendElement(item);
-    }    
   } else {
-    // searching through the entire history...
-        
-    // prepare the search enumerator
-    AutoCompleteEnumerator* enumerator;
-    enumerator = new AutoCompleteEnumerator(this, kToken_URLColumn, 
-                                            kToken_NameColumn,
-                                            kToken_HiddenColumn,
-                                            kToken_TypedColumn,
-                                            mAutocompleteOnlyTyped,
-                                            aSearchString, aExclude);
-    
-    nsCOMPtr<nsISupports> kungFuDeathGrip(enumerator);
+    mResults.Clear();
 
-    rv = enumerator->Init(mEnv, mTable);
-    if (NS_FAILED(rv)) return rv;
-  
-    // store hits in an auto array initially
-    nsAutoVoidArray array;
-      
-    // not using nsCOMPtr here to avoid time spent
-    // refcounting while passing these around between the 3 arrays
-    nsISupports* entry; 
+    mdb_pos pos;
+    nsCOMPtr<nsIMdbRow> current;
+    nsCOMPtr<nsIMdbTableRowCursor> cursor;
+    NS_ENSURE_TRUE(mTable->GetTableRowCursor(mEnv, -1, getter_AddRefs(cursor)) == 0, NS_ERROR_FAILURE);
 
-    // step through the enumerator to get the items into 'array'
-    // because we don't know how many items there will be
-    PRBool hasMore;
-    while (PR_TRUE) {
-      enumerator->HasMoreElements(&hasMore);
-      if (!hasMore) break;
-      
-      // addref's each entry as it enters 'array'
-      enumerator->GetNext(&entry);
-      array.AppendElement(entry);
+    while (cursor->NextRow(mEnv, getter_AddRefs(current), &pos) == 0 && current) {
+      if (!HasCell(mEnv, current, kToken_TypedColumn)) {
+        if (mAutocompleteOnlyTyped || HasCell(mEnv, current, kToken_HiddenColumn))
+          continue;
+      }
+
+      nsAutoString url;
+      GetRowURL(current, url);
+      if (AutoCompleteCompare(url, filtered, &exclude))
+        mResults.AppendObject(current);
     }
 
-    // turn auto array into flat array for quick sort, now that we
-    // know how many items there are
-    PRUint32 count = array.Count();
-    nsIAutoCompleteItem** items = new nsIAutoCompleteItem*[count];
-    PRUint32 i;
-    for (i = 0; i < count; ++i)
-      items[i] = (nsIAutoCompleteItem*)array.ElementAt(i);
-    
     // Setup the structure we pass into the sort function,
     // including a set of url prefixes to ignore.   These prefixes 
     // must match with the logic in nsGlobalHistory::nsGlobalHistory().
@@ -4352,24 +4282,24 @@ nsGlobalHistory::AutoCompleteSearch(const nsAString& aSearchString,
     closure.prefixes[3] = &prefixHSStr;
     closure.prefixes[4] = &prefixFFStr;
     closure.prefixes[5] = &prefixFStr;
-
-    // sort it
-    NS_QuickSort(items, count, sizeof(nsIAutoCompleteItem*),
-                 AutoCompleteSortComparison,
-                 NS_STATIC_CAST(void*, &closure));
-  
-    // place the sorted array into the autocomplete results
-    for (i = 0; i < count; ++i) {
-      nsISupports* item = (nsISupports*)items[i];
-      resultItems->AppendElement(item);
-      NS_IF_RELEASE(item); // release manually since we didn't use nsCOMPtr above
-    }
-    
-    delete[] items;
+    mResults.Sort(AutoCompleteSortComparison, (void*)&closure);
   }
-    
+
+  mSearchString = aSearchString;
+  aListener->OnSearchResult(this, this);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsGlobalHistory::StopSearch()
+{
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+//
+// AutoComplete stuff
+//
 
 // If aURL begins with a protocol or domain prefix from our lists,
 // then mark their index in an AutocompleteExclude struct.
@@ -4468,25 +4398,12 @@ nsGlobalHistory::AutoCompleteCompare(nsAString& aHistoryURL,
   return StringBeginsWith(aHistoryURL, aUserURL);
 }
 
-int PR_CALLBACK 
-nsGlobalHistory::AutoCompleteSortComparison(const void *v1, const void *v2,
-                                            void *closureVoid) 
+int PR_CALLBACK
+nsGlobalHistory::AutoCompleteSortComparison(nsIMdbRow* row1, nsIMdbRow* row2,
+                                            void* closureVoid)
 {
-  //
-  // NOTE: The design and reasoning behind the following autocomplete 
-  // sort implementation is documented in bug 78270.
-  //
-
-  // cast our function parameters back into their real form
-  nsIAutoCompleteItem *item1 = *(nsIAutoCompleteItem**) v1;
-  nsIAutoCompleteItem *item2 = *(nsIAutoCompleteItem**) v2;
   AutoCompleteSortClosure* closure = 
       NS_STATIC_CAST(AutoCompleteSortClosure*, closureVoid);
-
-  // get history rows
-  nsCOMPtr<nsIMdbRow> row1, row2;
-  item1->GetParam(getter_AddRefs(row1));
-  item2->GetParam(getter_AddRefs(row2));
 
   // get visit counts - we're ignoring all errors from GetRowValue(), 
   // and relying on default values
@@ -4500,8 +4417,8 @@ nsGlobalHistory::AutoCompleteSortComparison(const void *v1, const void *v2,
 
   // get URLs
   nsAutoString url1, url2;
-  item1->GetValue(url1);
-  item2->GetValue(url2);
+  closure->history->GetRowURL(row1, url1);
+  closure->history->GetRowURL(row2, url2);
 
   // Favour websites and webpaths more than webpages by boosting 
   // their visit counts.  This assumes that URLs have been normalized, 

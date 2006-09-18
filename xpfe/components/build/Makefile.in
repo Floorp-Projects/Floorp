@@ -82,6 +82,7 @@ REQUIRES	= xpcom \
 		  browser \
 		  txmgr \
 		  chardet \
+		  autocomplete \
 		  $(NULL)
 
 CPPSRCS		= nsModule.cpp

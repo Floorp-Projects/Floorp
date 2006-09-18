@@ -97,6 +97,6 @@ interface nsIBrowserHistory : nsIGlobalHistory2
 %{ C++
 
 #define NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID \
-    "@mozilla.org/autocompleteSession;1?type=history"
+    "@mozilla.org/autocomplete/search;1?name=history"
 
 %}

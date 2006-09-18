@@ -47,9 +47,10 @@
 
       <hbox id="bxURLBarContainer" flex="1">
         <hbox align="center" flex="1">
+          <!-- request both autocomplete implementations for compatibility -->
           <textbox id="tfURLBar" type="autocomplete" flex="1"
             searchSessions="history" timeout="50" maxrows="6"
-            observes="cmdGotoURL">
+            autocompletesearch="history file" observes="cmdGotoURL">
             <image id="imgURLBarIcon"/>
             
           </textbox>

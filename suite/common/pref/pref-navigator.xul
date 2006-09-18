@@ -100,7 +100,7 @@
       <hbox align="center">
         <label value="&location.label;" accesskey="&location.accesskey;" control="browserStartupHomepage"/>
         <textbox id="browserStartupHomepage" type="autocomplete" flex="1" class="uri-element" 
-                 searchSessions="history" timeout="50" maxrows="6"
+                 autocompletesearch="history" timeout="50" maxrows="6"
                  oninput="locationInputHandler();"/>
         <button label="&browseFile.label;" accesskey="&browseFile.accesskey;"
                 oncommand="selectFile();"
