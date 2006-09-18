@@ -571,19 +571,17 @@ nsPostRefresh::~nsPostRefresh()
   // container->refresh below could ask for ContainerNeedsPostRefresh which
   // will add an item to the sContainerPostRefreshList if sRefreshing > 0.
   // So keeping this under sRefreshing-- will avoid an infinite loop.
-  if (sContainerPostRefreshList) {
-    while (sContainerPostRefreshList->Count()) {
-      PRInt32 last = sContainerPostRefreshList->Count() - 1;
-      nsIXFormsControl* container =
-        NS_STATIC_CAST(nsIXFormsControl*, sContainerPostRefreshList->ElementAt(last));
-      sContainerPostRefreshList->RemoveElementAt(last);
-      if (container) {
-        container->Refresh();
-      }
+  while (sContainerPostRefreshList && sContainerPostRefreshList->Count()) {
+    PRInt32 last = sContainerPostRefreshList->Count() - 1;
+    nsIXFormsControl* container =
+      NS_STATIC_CAST(nsIXFormsControl*, sContainerPostRefreshList->ElementAt(last));
+    sContainerPostRefreshList->RemoveElementAt(last);
+    if (container) {
+      container->Refresh();
     }
-    delete sContainerPostRefreshList;
-    sContainerPostRefreshList = nsnull;
   }
+  delete sContainerPostRefreshList;
+  sContainerPostRefreshList = nsnull;
 }
 
 const nsVoidArray* 
