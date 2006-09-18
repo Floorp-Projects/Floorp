@@ -120,7 +120,8 @@ sub _get_alter_type_sql {
     if ($new_def->{TYPE} =~ /serial/i && $old_def->{TYPE} !~ /serial/i) {
         push(@statements, "CREATE SEQUENCE ${table}_${column}_seq");
         push(@statements, "SELECT setval('${table}_${column}_seq',
-                                         MAX($table.$column))");
+                                         MAX($table.$column))
+                             FROM $table");
         push(@statements, "ALTER TABLE $table ALTER COLUMN $column 
                            SET DEFAULT nextval('${table}_${column}_seq')");
     }
