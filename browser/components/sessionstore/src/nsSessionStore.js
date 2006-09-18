@@ -1430,7 +1430,7 @@ SessionStoreService.prototype = {
     }
     
     var textArray = this.__SS_restore_text ? this.__SS_restore_text.split(" ") : [];
-    function restoreTextData(aContent) {
+    function restoreTextData(aContent, aPrefix) {
       textArray.forEach(function(aEntry) {
         if (/^((?:\d+\|)*)(#?)([^\s=]+)=(.*)$/.test(aEntry) && (!RegExp.$1 || RegExp.$1 == aPrefix)) {
           var document = aContent.document;
