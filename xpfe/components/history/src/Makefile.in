@@ -57,6 +57,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  uconv \
 		  appcomps \
+		  autocomplete \
 		  $(NULL)
 
 CPPSRCS		= nsGlobalHistory.cpp  \
