@@ -276,24 +276,28 @@ void nsAccessibleTreeWalker::UpdateFrame(PRBool aTryFirstChild)
     return;
   }
   if (aTryFirstChild) {
-    nsIFrame *parentFrame = mState.frame;
     mState.frame = mState.frame->GetFirstChild(nsnull);
     if (mState.frame && mState.siblingIndex < 0) {
       // Container frames can contain generated content frames from
       // :before and :after style rules, so we walk their frame trees
       // instead of content trees
+      // XXX Walking the frame tree doesn't get us Aural CSS nodes, e.g. 
+      // @media screen { display: none; }
+      // Asking the style system might be better (with ProbePseudoStyleFor(),
+      // except that we need to ask only for those display types that support 
+      // :before and :after (which roughly means non-replaced elements)
+      // Here's some code to see if there is an :after rule for an element
+      // nsRefPtr<nsStyleContext> pseudoContext;
+      // nsStyleContext *styleContext = primaryFrame->GetStyleContext();
+      // if (aContent) {
+      //   pseudoContext = presContext->StyleSet()->
+      //     ProbePseudoStyleFor(content, nsAccessibilityAtoms::after, aStyleContext);
       mState.domNode = do_QueryInterface(mState.frame->GetContent());
       mState.siblingIndex = eSiblingsWalkFrames;
     }
   }
   else {
-    nsIContent *currentContent = mState.frame->GetContent();
-    while (PR_TRUE) {  // Get next sibling with different content
-      mState.frame = mState.frame->GetNextSibling();
-      if (!mState.frame || mState.frame->GetContent() != currentContent) {
-        break;
-      }
-    }
+    mState.frame = mState.frame->GetNextSibling();
   }
 }
 
@@ -304,8 +308,9 @@ void nsAccessibleTreeWalker::UpdateFrame(PRBool aTryFirstChild)
 PRBool nsAccessibleTreeWalker::GetAccessible()
 {
   if (!mAccService) {
-    return false;
+    return PR_FALSE;
   }
+
   mState.accessible = nsnull;
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
 
@@ -313,8 +318,8 @@ PRBool nsAccessibleTreeWalker::GetAccessible()
                                               &mState.frame, &mState.isHidden,
                                               getter_AddRefs(mState.accessible)))) {
     NS_ASSERTION(mState.accessible, "No accessible but no failure return code");
-    return true;
+    return PR_TRUE;
   }
-  return false;
+  return PR_FALSE;
 }
 
