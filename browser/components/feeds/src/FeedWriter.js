@@ -435,12 +435,8 @@ FeedWriter.prototype = {
    * See nsIDOMEventListener
    */
   handleEvent: function(event) {
-    if (!this._window) {
-      // this._window is null unless this.write was called with a trusted
-      // window object.
-      return;
-    }
-
+    // see comments in the write method
+    event = new XPCNativeWrapper(event);
     if (event.target.ownerDocument != this._document) {
       LOG("FeedWriter.handleEvent: Someone passed the feed writer as a listener to the events of another document!");
       return;
