@@ -550,11 +550,17 @@ txXPathNodeUtils::appendNodeValue(const txXPathNode& aNode, nsAString& aResult)
         return;
     }
 
-    nsINode* node = aNode.isDocument() ?
-                    NS_STATIC_CAST(nsINode*, aNode.mDocument) :
-                    NS_STATIC_CAST(nsINode*, aNode.mContent);
+    if (aNode.isDocument() ||
+        aNode.mContent->IsNodeOfType(nsINode::eELEMENT)) {
+        nsINode* node = aNode.isDocument() ?
+                        NS_STATIC_CAST(nsINode*, aNode.mDocument) :
+                        NS_STATIC_CAST(nsINode*, aNode.mContent);
+        nsContentUtils::AppendNodeTextContent(node, PR_TRUE, aResult);
 
-    nsContentUtils::AppendNodeTextContent(node, PR_TRUE, aResult);
+        return;
+    }
+
+    aNode.mContent->AppendTextTo(aResult);
 }
 
 /* static */
