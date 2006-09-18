@@ -54,7 +54,7 @@ CocoaPromptService::~CocoaPromptService()
 {
 }
 
-NS_IMPL_ISUPPORTS3(CocoaPromptService, nsIPromptService, nsINonBlockingAlertService, nsICookiePromptService)
+NS_IMPL_ISUPPORTS4(CocoaPromptService, nsIPromptService, nsINonBlockingAlertService, nsICookiePromptService, nsIPromptFactory)
 
 /* void alert (in nsIDOMWindow parent, in wstring dialogTitle, in wstring text); */
 NS_IMETHODIMP
@@ -633,4 +633,16 @@ CocoaPromptService::CookieDialog(nsIDOMWindow *parent, nsICookie *cookie, const 
   return NS_OK;
 }
 
-
+// nsIPromptFactory implementation
+/* void getPrompt(in nsIDOMWindow aParent, in nsIIDRef iid, [iid_is(iid),retval] out nsQIResult result); */
+NS_IMETHODIMP
+CocoaPromptService::GetPrompt(nsIDOMWindow* aParent, const nsIID& iid, void** result)
+{
+  // NOTE: We must implement this interface and have a stub for this method as
+  // a signal that we have a password manager implementation.
+  // However, we don't necessarily need to return anything here - if we don't,
+  // the older nsIAuthPrompt/nsIAuthPromptWrapper interfaces will be used.
+  // Implementing this correctly does not provide much advantage at the
+  // moment.
+  return NS_NOINTERFACE;
+}
