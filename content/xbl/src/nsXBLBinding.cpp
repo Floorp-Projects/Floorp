@@ -97,7 +97,6 @@
 
 #include "nsXBLPrototypeBinding.h"
 #include "nsXBLBinding.h"
-#include "nsBindingManager.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIEventListenerManager.h"
@@ -270,16 +269,17 @@ struct EnumData {
 
 struct ContentListData : public EnumData {
   nsIBindingManager* mBindingManager;
+  nsresult           mRv;
 
   ContentListData(nsXBLBinding* aBinding, nsIBindingManager* aManager)
-    :EnumData(aBinding), mBindingManager(aManager)
+    :EnumData(aBinding), mBindingManager(aManager), mRv(NS_OK)
   {};
 };
 
-
-
-PR_STATIC_CALLBACK(PRBool)
-BuildContentLists(nsHashKey* aKey, void* aData, void* aClosure)
+PR_STATIC_CALLBACK(PLDHashOperator)
+BuildContentLists(nsISupports* aKey,
+                  nsAutoPtr<nsInsertionPointList>& aData,
+                  void* aClosure)
 {
   ContentListData* data = (ContentListData*)aClosure;
   nsIBindingManager* bm = data->mBindingManager;
@@ -287,18 +287,21 @@ BuildContentLists(nsHashKey* aKey, void* aData, void* aClosure)
 
   nsIContent *boundElement = binding->GetBoundElement();
 
-  nsVoidArray* arr = NS_STATIC_CAST(nsVoidArray*, aData);
-  PRInt32 count = arr->Count();
+  PRInt32 count = aData->Length();
   
   if (count == 0)
-    return NS_OK;
+    return PL_DHASH_NEXT;
 
   // XXX Could this array just be altered in place and passed directly to
   // SetContentListFor?  We'd save space if we could pull this off.
-  nsVoidArray* contentList = new nsVoidArray();
+  nsInsertionPointList* contentList = new nsInsertionPointList;
+  if (!contentList) {
+    data->mRv = NS_ERROR_OUT_OF_MEMORY;
+    return PL_DHASH_STOP;
+  }
 
   // Figure out the relevant content node.
-  nsXBLInsertionPoint* currPoint = NS_STATIC_CAST(nsXBLInsertionPoint*, arr->ElementAt(0));
+  nsXBLInsertionPoint* currPoint = aData->ElementAt(0);
   nsCOMPtr<nsIContent> parent = currPoint->GetInsertionParent();
   PRInt32 currIndex = currPoint->GetInsertionIndex();
 
@@ -323,14 +326,13 @@ BuildContentLists(nsHashKey* aKey, void* aData, void* aClosure)
     nodeList->Item(i, getter_AddRefs(node));
     nsCOMPtr<nsIContent> child(do_QueryInterface(node));
     if (((PRInt32)i) == currIndex) {
-      // Add the currPoint to the supports array.
-      NS_IF_ADDREF(currPoint);
+      // Add the currPoint to the insertion point list.
       contentList->AppendElement(currPoint);
 
       // Get the next real insertion point and update our currIndex.
       j++;
       if (j < count) {
-        currPoint = NS_STATIC_CAST(nsXBLInsertionPoint*, arr->ElementAt(j));
+        currPoint = aData->ElementAt(j);
         currIndex = currPoint->GetInsertionIndex();
       }
 
@@ -341,7 +343,6 @@ BuildContentLists(nsHashKey* aKey, void* aData, void* aClosure)
     if (!pseudoPoint) {
       pseudoPoint = new nsXBLInsertionPoint(parent, (PRUint32) -1, nsnull);
       if (pseudoPoint) {
-        NS_ADDREF(pseudoPoint);
         contentList->AppendElement(pseudoPoint);
       }
     }
@@ -351,11 +352,7 @@ BuildContentLists(nsHashKey* aKey, void* aData, void* aClosure)
   }
 
   // Add in all the remaining insertion points.
-  for ( ; j < count; j++) {
-    currPoint = NS_STATIC_CAST(nsXBLInsertionPoint*, arr->ElementAt(j));
-    NS_IF_ADDREF(currPoint);
-    contentList->AppendElement(currPoint);
-  }
+  contentList->AppendElements(aData->Elements() + j, count - j);
   
   // Now set the content list using the binding manager,
   // If the bound element is the parent, then we alter the anonymous node list
@@ -365,21 +362,22 @@ BuildContentLists(nsHashKey* aKey, void* aData, void* aClosure)
     bm->SetAnonymousNodesFor(parent, contentList);
   else 
     bm->SetContentListFor(parent, contentList);
-  return PR_TRUE;
+  return PL_DHASH_NEXT;
 }
 
-PR_STATIC_CALLBACK(PRBool)
-RealizeDefaultContent(nsHashKey* aKey, void* aData, void* aClosure)
+PR_STATIC_CALLBACK(PLDHashOperator)
+RealizeDefaultContent(nsISupports* aKey,
+                      nsAutoPtr<nsInsertionPointList>& aData,
+                      void* aClosure)
 {
   ContentListData* data = (ContentListData*)aClosure;
   nsIBindingManager* bm = data->mBindingManager;
   nsXBLBinding* binding = data->mBinding;
 
-  nsVoidArray* arr = (nsVoidArray*)aData;
-  PRInt32 count = arr->Count();
+  PRInt32 count = aData->Length();
  
   for (PRInt32 i = 0; i < count; i++) {
-    nsXBLInsertionPoint* currPoint = NS_STATIC_CAST(nsXBLInsertionPoint*, arr->ElementAt(i));
+    nsXBLInsertionPoint* currPoint = aData->ElementAt(i);
     PRInt32 insCount = currPoint->ChildCount();
     
     if (insCount == 0) {
@@ -391,7 +389,8 @@ RealizeDefaultContent(nsHashKey* aKey, void* aData, void* aClosure)
         nsCOMPtr<nsIContent> insParent = currPoint->GetInsertionParent();
         nsIDocument *document = insParent->GetOwnerDoc();
         if (!document) {
-          return NS_ERROR_FAILURE;
+          data->mRv = NS_ERROR_FAILURE;
+          return PL_DHASH_STOP;
         }
 
         nsCOMPtr<nsIDOMNode> clonedNode;
@@ -420,24 +419,23 @@ RealizeDefaultContent(nsHashKey* aKey, void* aData, void* aClosure)
     }
   }
 
-  return PR_TRUE;
+  return PL_DHASH_NEXT;
 }
 
-PR_STATIC_CALLBACK(PRBool)
-ChangeDocumentForDefaultContent(nsHashKey* aKey, void* aData, void* aClosure)
+PR_STATIC_CALLBACK(PLDHashOperator)
+ChangeDocumentForDefaultContent(nsISupports* aKey,
+                                nsAutoPtr<nsInsertionPointList>& aData,
+                                void* aClosure)
 {
-  nsVoidArray* arr = NS_STATIC_CAST(nsVoidArray*, aData);
-  PRInt32 count = arr->Count();
-  
+  PRInt32 count = aData->Length();
   for (PRInt32 i = 0; i < count; i++) {
-    nsXBLInsertionPoint* currPoint = NS_STATIC_CAST(nsXBLInsertionPoint*, arr->ElementAt(i));
+    nsXBLInsertionPoint* currPoint = aData->ElementAt(i);
     nsCOMPtr<nsIContent> defContent = currPoint->GetDefaultContent();
-    
     if (defContent)
       defContent->UnbindFromTree();
   }
 
-  return PR_TRUE;
+  return PL_DHASH_NEXT;
 }
 
 void
@@ -546,7 +544,10 @@ nsXBLBinding::GenerateAnonymousContent()
         // cached anonymous node list.
         ContentListData data(this, bindingManager);
         mInsertionPointTable->Enumerate(BuildContentLists, &data);
-      
+        if (NS_FAILED(data.mRv)) {
+          return;
+        }
+
         // We need to place the children
         // at their respective insertion points.
         PRUint32 index = 0;
@@ -569,12 +570,12 @@ nsXBLBinding::GenerateAnonymousContent()
               bindingManager->SetInsertionParent(childContent, point);
 
               // Find the correct nsIXBLInsertion point in our table.
-              nsVoidArray* arr;
+              nsInsertionPointList* arr = nsnull;
               GetInsertionPointsFor(point, &arr);
               nsXBLInsertionPoint* insertionPoint = nsnull;
-              PRInt32 arrCount = arr->Count();
+              PRInt32 arrCount = arr->Length();
               for (PRInt32 j = 0; j < arrCount; j++) {
-                insertionPoint = NS_STATIC_CAST(nsXBLInsertionPoint*, arr->ElementAt(j));
+                insertionPoint = arr->ElementAt(j);
                 if (insertionPoint->Matches(point, index))
                   break;
                 insertionPoint = nsnull;
@@ -602,9 +603,9 @@ nsXBLBinding::GenerateAnonymousContent()
           }
           else {
             // All of our children are shunted to this single insertion point.
-            nsVoidArray* arr;
+            nsInsertionPointList* arr = nsnull;
             GetInsertionPointsFor(singlePoint, &arr);
-            nsXBLInsertionPoint* insertionPoint = NS_STATIC_CAST(nsXBLInsertionPoint*, arr->ElementAt(0));
+            nsXBLInsertionPoint* insertionPoint = arr->ElementAt(0);
         
             nsCOMPtr<nsIDOMNode> node;
             nsCOMPtr<nsIContent> content;
@@ -624,6 +625,9 @@ nsXBLBinding::GenerateAnonymousContent()
         // nsIXBLInsertion points to see if any of them have default content that
         // needs to be built.
         mInsertionPointTable->Enumerate(RealizeDefaultContent, &data);
+        if (NS_FAILED(data.mRv)) {
+          return;
+        }
       }
     }
 
@@ -1226,34 +1230,29 @@ nsXBLBinding::AllowScripts()
   return NS_SUCCEEDED(rv) && canExecute;
 }
 
-PR_STATIC_CALLBACK(PRBool)
-DeleteVoidArray(nsHashKey* aKey, void* aData, void* aClosure)
-{
-  nsVoidArray* array = NS_STATIC_CAST(nsVoidArray*, aData);
-  if (array) {
-    array->EnumerateForwards(ReleaseInsertionPoint, nsnull);
-    delete array;
-  }
-  return PR_TRUE;
-}
-
 nsresult
-nsXBLBinding::GetInsertionPointsFor(nsIContent* aParent, nsVoidArray** aResult)
+nsXBLBinding::GetInsertionPointsFor(nsIContent* aParent,
+                                    nsInsertionPointList** aResult)
 {
   if (!mInsertionPointTable) {
-    mInsertionPointTable = new nsObjectHashtable(nsnull, nsnull,
-                                                 DeleteVoidArray, nsnull, 4);
-
-    NS_ENSURE_TRUE(mInsertionPointTable, NS_ERROR_OUT_OF_MEMORY);
+    mInsertionPointTable =
+      new nsClassHashtable<nsISupportsHashKey, nsInsertionPointList>;
+    if (!mInsertionPointTable || !mInsertionPointTable->Init(4)) {
+      delete mInsertionPointTable;
+      mInsertionPointTable = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
-  nsISupportsKey key(aParent);
-  *aResult = NS_STATIC_CAST(nsVoidArray*, mInsertionPointTable->Get(&key));
+  mInsertionPointTable->Get(aParent, aResult);
 
   if (!*aResult) {
-    *aResult = new nsVoidArray();
-    NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
-    mInsertionPointTable->Put(&key, *aResult);
+    *aResult = new nsInsertionPointList;
+    if (!*aResult || !mInsertionPointTable->Put(aParent, *aResult)) {
+      delete *aResult;
+      *aResult = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   return NS_OK;

@@ -40,6 +40,8 @@
 #include "nsAutoPtr.h"
 #include "nsIDOMNodeList.h"
 #include "nsIStyleRuleProcessor.h"
+#include "nsClassHashtable.h"
+#include "nsTArray.h"
 
 class nsXBLPrototypeBinding;
 class nsIContent;
@@ -122,9 +124,10 @@ public:
   nsXBLBinding* RootBinding();
   nsXBLBinding* GetFirstStyleBinding();
 
-  // Get the list of insertion points for aParent.  The nsVoidArray is owned
-  // by the binding, you should not delete it.
-  nsresult GetInsertionPointsFor(nsIContent* aParent, nsVoidArray** aResult);
+  // Get the list of insertion points for aParent. The nsInsertionPointList
+  // is owned by the binding, you should not delete it.
+  nsresult GetInsertionPointsFor(nsIContent* aParent,
+                                 nsInsertionPointList** aResult);
 
   nsIContent* GetInsertionPoint(nsIContent* aChild, PRUint32* aIndex);
 
@@ -161,7 +164,8 @@ protected:
   
   nsIContent* mBoundElement; // [WEAK] We have a reference, but we don't own it.
   
-  nsObjectHashtable* mInsertionPointTable;    // A hash from nsIContent* -> (a sorted array of nsXBLInsertionPoint*)
+  // A hash from nsIContent* -> (a sorted array of nsXBLInsertionPoint)
+  nsClassHashtable<nsISupportsHashKey, nsInsertionPointList>* mInsertionPointTable;
 
   PRPackedBool mIsStyleBinding;
   PRPackedBool mMarkedForDeath;

@@ -85,11 +85,13 @@ public:
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
 
   NS_IMETHOD GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResult);
-  NS_IMETHOD SetContentListFor(nsIContent* aContent, nsVoidArray* aList);
+  NS_IMETHOD SetContentListFor(nsIContent* aContent,
+                               nsInsertionPointList* aList);
   NS_IMETHOD HasContentListFor(nsIContent* aContent, PRBool* aResult);
 
   NS_IMETHOD GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
-  NS_IMETHOD SetAnonymousNodesFor(nsIContent* aContent, nsVoidArray* aList);
+  NS_IMETHOD SetAnonymousNodesFor(nsIContent* aContent,
+                                  nsInsertionPointList* aList);
 
   NS_IMETHOD GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
 
@@ -206,7 +208,5 @@ protected:
   nsVoidArray mAttachedStack;
   PRBool mProcessingAttachedStack;
 };
-
-PRBool PR_CALLBACK ReleaseInsertionPoint(void* aElement, void* aData);
 
 #endif
