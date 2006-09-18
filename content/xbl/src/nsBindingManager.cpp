@@ -89,27 +89,22 @@
 class nsAnonymousContentList : public nsGenericDOMNodeList
 {
 public:
-  nsAnonymousContentList(nsVoidArray* aElements);
+  nsAnonymousContentList(nsInsertionPointList* aElements);
   virtual ~nsAnonymousContentList();
 
   // nsIDOMNodeList interface
   NS_DECL_NSIDOMNODELIST
 
-  PRInt32 GetInsertionPointCount() { return mElements->Count(); }
+  PRInt32 GetInsertionPointCount() { return mElements->Length(); }
 
   nsXBLInsertionPoint* GetInsertionPointAt(PRInt32 i) { return NS_STATIC_CAST(nsXBLInsertionPoint*, mElements->ElementAt(i)); }
-  void RemoveInsertionPointAt(PRInt32 i) {
-    nsXBLInsertionPoint* insertionPoint =
-      NS_STATIC_CAST(nsXBLInsertionPoint*, mElements->SafeElementAt(i));
-    NS_IF_RELEASE(insertionPoint);
-    mElements->RemoveElementAt(i);
-  }
+  void RemoveInsertionPointAt(PRInt32 i) { mElements->RemoveElementAt(i); }
 
 private:
-  nsVoidArray* mElements;
+  nsInsertionPointList* mElements;
 };
 
-nsAnonymousContentList::nsAnonymousContentList(nsVoidArray* aElements)
+nsAnonymousContentList::nsAnonymousContentList(nsInsertionPointList* aElements)
   : mElements(aElements)
 {
   MOZ_COUNT_CTOR(nsAnonymousContentList);
@@ -118,18 +113,9 @@ nsAnonymousContentList::nsAnonymousContentList(nsVoidArray* aElements)
   // references). We'll be told when the Anonymous goes away.
 }
 
-PRBool PR_CALLBACK ReleaseInsertionPoint(void* aElement, void* aData)
-{
-  nsXBLInsertionPoint* insertionPoint =
-    NS_STATIC_CAST(nsXBLInsertionPoint*, aElement);
-  NS_IF_RELEASE(insertionPoint);
-  return PR_TRUE;
-}
-
 nsAnonymousContentList::~nsAnonymousContentList()
 {
   MOZ_COUNT_DTOR(nsAnonymousContentList);
-  mElements->EnumerateForwards(ReleaseInsertionPoint, nsnull);
   delete mElements;
 }
 
@@ -140,7 +126,7 @@ nsAnonymousContentList::GetLength(PRUint32* aLength)
   if (! aLength)
       return NS_ERROR_NULL_POINTER;
 
-  PRInt32 cnt = mElements->Count();
+  PRInt32 cnt = mElements->Length();
 
   *aLength = 0;
   for (PRInt32 i = 0; i < cnt; i++)
@@ -152,7 +138,7 @@ nsAnonymousContentList::GetLength(PRUint32* aLength)
 NS_IMETHODIMP    
 nsAnonymousContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
-  PRInt32 cnt = mElements->Count();
+  PRInt32 cnt = mElements->Length();
   PRUint32 pointCount = 0;
 
   for (PRInt32 i = 0; i < cnt; i++) {
@@ -500,13 +486,13 @@ nsBindingManager::GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResu
 }
 
 NS_IMETHODIMP
-nsBindingManager::SetContentListFor(nsIContent* aContent, nsVoidArray* aList)
+nsBindingManager::SetContentListFor(nsIContent* aContent,
+                                    nsInsertionPointList* aList)
 {
   nsIDOMNodeList* contentList = nsnull;
   if (aList) {
     contentList = new nsAnonymousContentList(aList);
     if (!contentList) {
-      aList->EnumerateForwards(ReleaseInsertionPoint, nsnull);
       delete aList;
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -562,13 +548,13 @@ nsBindingManager::GetAnonymousNodesFor(nsIContent* aContent,
 }
 
 NS_IMETHODIMP
-nsBindingManager::SetAnonymousNodesFor(nsIContent* aContent, nsVoidArray* aList)
+nsBindingManager::SetAnonymousNodesFor(nsIContent* aContent,
+                                       nsInsertionPointList* aList)
 {
   nsIDOMNodeList* contentList = nsnull;
   if (aList) {
     contentList = new nsAnonymousContentList(aList);
     if (!contentList) {
-      aList->EnumerateForwards(ReleaseInsertionPoint, nsnull);
       delete aList;
       return NS_ERROR_OUT_OF_MEMORY;
     }

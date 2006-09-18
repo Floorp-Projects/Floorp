@@ -56,12 +56,15 @@ class nsIStreamListener;
 class nsIURI;
 class nsIXPConnectWrappedJS;
 class nsIDOMNodeList;
-class nsVoidArray;
 class nsIMutationObserver;
+class nsXBLInsertionPoint;
+template<class E> class nsTArray;
+template<class E> class nsRefPtr;
+typedef nsTArray<nsRefPtr<nsXBLInsertionPoint> > nsInsertionPointList;
 
 #define NS_IBINDING_MANAGER_IID \
-{ 0x6abe92b0, 0x4553, 0x4301, \
- { 0xa1, 0xcb, 0x3e, 0x2d, 0x85, 0xd0, 0xec, 0x8c } }
+{ 0xda349538, 0xfda2, 0x41ed, \
+  { 0x9b, 0xba, 0x66, 0x56, 0x2c, 0x42, 0x49, 0x3d } }
 
 class nsIBindingManager : public nsISupports
 {
@@ -108,7 +111,8 @@ public:
    * Set the insertion point children for the specified element.
    * The binding manager assumes ownership of aList.
    */
-  NS_IMETHOD SetContentListFor(nsIContent* aContent, nsVoidArray* aList)=0;
+  NS_IMETHOD SetContentListFor(nsIContent* aContent,
+                               nsInsertionPointList* aList) = 0;
 
   /**
    * Determine whether or not the explicit child list has been altered
@@ -125,7 +129,8 @@ public:
    * Set the anonymous child content for the specified element.
    * The binding manager assumes ownership of aList.
    */
-  NS_IMETHOD SetAnonymousNodesFor(nsIContent* aContent, nsVoidArray* aList) = 0;
+  NS_IMETHOD SetAnonymousNodesFor(nsIContent* aContent,
+                                  nsInsertionPointList* aList) = 0;
 
   /**
    * Retrieves the anonymous list of children if the element has one;
