@@ -133,7 +133,7 @@ ifdef MOZ_SUITE
 DIRS += autocomplete/public
 endif
 
-ifdef MOZ_MACBROWSER
+ifeq ($(MOZ_BUILD_APP),camino)
 DIRS += autocomplete/public
 endif
 
