@@ -53,6 +53,7 @@ icalcomponent* icalcomponent_new(icalcomponent_kind kind);
 icalcomponent* icalcomponent_new_clone(icalcomponent* component);
 icalcomponent* icalcomponent_new_from_string(char* str);
 icalcomponent* icalcomponent_vanew(icalcomponent_kind kind, ...);
+icalcomponent* icalcomponent_new_x(const char* x_name);
 void icalcomponent_free(icalcomponent* component);
 
 char* icalcomponent_as_ical_string(icalcomponent* component);

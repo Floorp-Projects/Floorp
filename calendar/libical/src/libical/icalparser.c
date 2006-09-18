@@ -664,7 +664,12 @@ icalcomponent* icalparser_add_line(icalparser* parser,
 			 ICAL_XLICERRORTYPE_COMPONENTPARSEERROR);
         }
 
-	c  =  icalcomponent_new(comp_kind);
+
+	if (comp_kind != ICAL_X_COMPONENT) {
+	    c  =  icalcomponent_new(comp_kind);
+	} else {
+	    c  =  icalcomponent_new_x(str);
+	}
 
 	if (c == 0){
 	    c = icalcomponent_new(ICAL_XLICINVALID_COMPONENT);

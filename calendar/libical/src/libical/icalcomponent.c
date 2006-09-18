@@ -212,6 +212,19 @@ icalcomponent* icalcomponent_new_clone(icalcomponent* old)
 
 }
 
+/** @brief Constructor
+ */
+icalcomponent*
+icalcomponent_new_x (const char* x_name)
+{
+    icalcomponent* comp = icalcomponent_new_impl(ICAL_X_COMPONENT);
+    if (!comp) {
+       return 0;
+    }
+    comp->x_name = icalmemory_strdup(x_name);
+    return comp;
+}
+
 /*** @brief Destructor
  */
 void
@@ -298,7 +311,11 @@ icalcomponent_as_ical_string (icalcomponent* impl)
    icalerror_check_arg_rz( (impl!=0), "component");
    icalerror_check_arg_rz( (kind!=ICAL_NO_COMPONENT), "component kind is ICAL_NO_COMPONENT");
    
-   kind_string  = icalcomponent_kind_to_string(kind);
+   if (kind != ICAL_X_COMPONENT) {
+       kind_string  = icalcomponent_kind_to_string(kind);
+   } else {
+       kind_string = impl->x_name;
+   }
 
    icalerror_check_arg_rz( (kind_string!=0),"Unknown kind of component");
 
