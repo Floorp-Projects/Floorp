@@ -38,13 +38,40 @@
 
 #include "nsScreenGtk.h"
 
-#include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
 #include <X11/Xatom.h>
 
+static GdkFilterReturn
+root_window_event_filter(GdkXEvent *aGdkXEvent, GdkEvent *aGdkEvent,
+                         gpointer aClosure)
+{
+  XEvent *xevent = NS_STATIC_CAST(XEvent*, aGdkXEvent);
+  nsScreenGtk *ourScreen = NS_STATIC_CAST(nsScreenGtk*, aClosure);
+
+  // See comments in nsScreenGtk::Init below.
+  switch (xevent->type) {
+    case ConfigureNotify:
+      ourScreen->ReInit();
+      break;
+    case PropertyNotify:
+      {
+        XPropertyEvent *propertyEvent = &xevent->xproperty;
+        if (propertyEvent->atom == ourScreen->NetWorkareaAtom()) {
+          ourScreen->ReInit();
+        }
+      }
+      break;
+    default:
+      break;
+  }
+
+  return GDK_FILTER_CONTINUE;
+}
+
 nsScreenGtk :: nsScreenGtk (  )
-  : mScreenNum(0),
+  : mRootWindow(nsnull),
+    mScreenNum(0),
     mRect(0, 0, 0, 0),
     mAvailRect(0, 0, 0, 0)
 {
@@ -53,6 +80,11 @@ nsScreenGtk :: nsScreenGtk (  )
 
 nsScreenGtk :: ~nsScreenGtk()
 {
+  if (mRootWindow) {
+    gdk_window_remove_filter(mRootWindow, root_window_event_filter, this);
+    g_object_unref(mRootWindow);
+    mRootWindow = nsnull;
+  }
 }
 
 
@@ -106,25 +138,40 @@ nsScreenGtk :: GetColorDepth(PRInt32 *aColorDepth)
 
 
 void
-nsScreenGtk :: Init ()
+nsScreenGtk :: Init (PRBool aReInit)
 {
+  // We listen for configure events on the root window to pick up
+  // changes to this rect.  We could listen for "size_changed" signals
+  // on the default screen to do this, except that doesn't work with
+  // versions of GDK predating the GdkScreen object.  See bug 256646.
   mAvailRect = mRect = nsRect(0, 0, gdk_screen_width(), gdk_screen_height());
 
   // We need to account for the taskbar, etc in the available rect.
   // See http://freedesktop.org/Standards/wm-spec/index.html#id2767771
 
-  // XXX It doesn't change that often, but we should probably
-  // listen for changes to _NET_WORKAREA.
   // XXX do we care about _NET_WM_STRUT_PARTIAL?  That will
   // add much more complexity to the code here (our screen
   // could have a non-rectangular shape), but should
   // lead to greater accuracy.
 
+  if (!aReInit) {
 #if GTK_CHECK_VERSION(2,2,0)
-  GdkWindow *root_window = gdk_get_default_root_window();
+    mRootWindow = gdk_get_default_root_window();
 #else
-  GdkWindow *root_window = GDK_ROOT_PARENT();
+    mRootWindow = GDK_ROOT_PARENT();
 #endif // GTK_CHECK_VERSION(2,2,0)
+    g_object_ref(mRootWindow);
+
+    // GDK_STRUCTURE_MASK ==> StructureNotifyMask, for ConfigureNotify
+    // GDK_PROPERTY_CHANGE_MASK ==> PropertyChangeMask, for PropertyNotify
+    gdk_window_set_events(mRootWindow,
+                          GdkEventMask(gdk_window_get_events(mRootWindow) |
+                                       GDK_STRUCTURE_MASK |
+                                       GDK_PROPERTY_CHANGE_MASK));
+    gdk_window_add_filter(mRootWindow, root_window_event_filter, this);
+    mNetWorkareaAtom =
+      XInternAtom(GDK_WINDOW_XDISPLAY(mRootWindow), "_NET_WORKAREA", False);
+  }
 
   long *workareas;
   GdkAtom type_returned;
@@ -140,7 +187,7 @@ nsScreenGtk :: Init ()
   gdk_error_trap_push();
 
   // gdk_property_get uses (length + 3) / 4, hence G_MAXLONG - 3 here.
-  if (!gdk_property_get(root_window,
+  if (!gdk_property_get(mRootWindow,
                         gdk_atom_intern ("_NET_WORKAREA", FALSE),
                         cardinal_atom,
                         0, G_MAXLONG - 3, FALSE,
@@ -166,6 +213,13 @@ nsScreenGtk :: Init ()
       nsRect workarea(workareas[i],     workareas[i + 1],
                       workareas[i + 2], workareas[i + 3]);
       if (!mRect.Contains(workarea)) {
+        // Note that we hit this when processing screen size changes,
+        // since we'll get the configure event before the toolbars have
+        // been moved.  We'll end up cleaning this up when we get the
+        // change notification to the _NET_WORKAREA property.  However,
+        // we still want to listen to both, so we'll handle changes
+        // properly for desktop environments that don't set the
+        // _NET_WORKAREA property.
         NS_WARNING("Invalid bounds");
         continue;
       }
