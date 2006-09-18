@@ -133,4 +133,8 @@ ifdef MOZ_SUITE
 DIRS += autocomplete/public
 endif
 
+ifdef MOZ_MACBROWSER
+DIRS += autocomplete/public
+endif
+
 include $(topsrcdir)/config/rules.mk
