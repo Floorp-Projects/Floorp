@@ -76,16 +76,9 @@ function addAlarm(event)
 
 function onDismissAll()
 {
-  var now = Components.classes["@mozilla.org/calendar/datetime;1"]
-                      .createInstance(Components.interfaces.calIDateTime);
-  now.jsDate = new Date();
-  now = now.getInTimezone("UTC");
   var box = document.getElementById("alarmlist");
-  for each (kid in box.childNodes) {
-    if (!kid || !kid.item) {
-        continue;
-    }
-    onDismissWidget(kid);
+  for (var i = box.childNodes.length-1; i >= 0; i--) {
+    onDismissWidget(box.childNodes[i]);
   }
   return true;
 }
