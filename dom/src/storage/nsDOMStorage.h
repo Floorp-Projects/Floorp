@@ -56,6 +56,7 @@
 #include "nsDOMStorageDB.h"
 #endif
 
+class nsDOMStorage;
 class nsDOMStorageItem;
 
 class nsDOMStorageEntry : public nsVoidPtrHashKey
