@@ -41,10 +41,9 @@
 #include "nsAString.h"
 
 class nsIFormControl;
-class nsIDOMHTMLInputElement;
-class nsIRadioVisitor;
 class nsISimpleEnumerator;
 class nsIURI;
+template<class T> class nsTArray;
 
 #define NS_FORM_METHOD_GET  0
 #define NS_FORM_METHOD_POST 1
@@ -52,12 +51,10 @@ class nsIURI;
 #define NS_FORM_ENCTYPE_MULTIPART  1
 #define NS_FORM_ENCTYPE_TEXTPLAIN  2
 
-
-// IID for the nsIFormManager interface
+// IID for the nsIForm interface
 #define NS_IFORM_IID    \
-{ 0xab592735, 0x31d6, 0x4e28, \
-  {0xaa, 0x1c, 0x77, 0x10, 0xf6, 0x01, 0xb8, 0x45} }
-
+{ 0xd4ffda0b, 0x2396, 0x4e64, \
+  {0x97, 0x5c, 0x73, 0xab, 0x56, 0x4b, 0x14, 0x77} }
 
 /**
  * This interface provides a complete set of methods dealing with
@@ -152,13 +149,6 @@ public:
   NS_IMETHOD IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex) = 0;
 
   /**
-   * Get an enumeration that goes through all controls, including images and
-   * that ilk
-   * @param aEnum the enumeration [OUT]
-   */
-  NS_IMETHOD GetControlEnumerator(nsISimpleEnumerator** aEnum) = 0;
-
-  /**
    * Flag the form to know that a button or image triggered scripted form
    * submission. In that case the form will defer the submission until the
    * script handler returns and the return value is known.
@@ -189,10 +179,28 @@ public:
   NS_IMETHOD GetActionURL(nsIURI** aActionURL) = 0;
 
   /**
+   * Get the list of all the form's controls in document order.
+   * This list contains all form control elements, not just those
+   * returned by form.elements in JS. The controls in this list do
+   * not have additional references added.
+   *
+   * @param aControls Sorted list of form controls [out].
+   * @return NS_OK if the list was successfully created.
+   */
+  NS_IMETHOD GetSortedControls(nsTArray<nsIFormControl*>& aControls) const = 0;
+
+  /**
    * Get the default submit element. If there's no default submit element,
    * return null.
    */
    NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const = 0;
+
+   /**
+    * Return whether there is one and only one input text control.
+    *
+    * @return Whether there is exactly one input text control.
+    */
+   NS_IMETHOD_(PRBool) HasSingleTextControl() const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIForm, NS_IFORM_IID)

@@ -2341,24 +2341,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
                (content = content->GetParent()) != nsnull) /* nothing */ ;
 
         if (form) {
-          // We have a <form> element, so iterate through and try to find a submit button
-          nsCOMPtr<nsISimpleEnumerator> formControls;
-          form->GetControlEnumerator(getter_AddRefs(formControls));
-          nsCOMPtr<nsISupports> controlSupports;
-          PRBool hasMoreElements;
-          while (NS_SUCCEEDED(formControls->HasMoreElements(&hasMoreElements)) &&
-                hasMoreElements) {
-            formControls->GetNext(getter_AddRefs(controlSupports));
-            nsCOMPtr<nsIFormControl> control = do_QueryInterface(controlSupports);    
-            if (control) {
-              PRInt32 type = control->GetType();
-              if (type == NS_FORM_INPUT_SUBMIT || type == NS_FORM_BUTTON_SUBMIT ||
-                  type == NS_FORM_INPUT_IMAGE) {
-                relatedNode = do_QueryInterface(control);
-                break;
-              }
-            }
-          }
+            relatedNode = do_QueryInterface(form->GetDefaultSubmitElement());
         }
       }
       else {

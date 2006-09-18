@@ -59,6 +59,7 @@
 #include "nsGUIEvent.h"
 #include "nsCOMArray.h"
 #include "nsAutoPtr.h"
+#include "nsTArray.h"
 
 // form submission
 #include "nsIFormSubmitObserver.h"
@@ -177,13 +178,14 @@ public:
   NS_IMETHOD ResolveName(const nsAString& aName,
                          nsISupports** aReturn);
   NS_IMETHOD IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex);
-  NS_IMETHOD GetControlEnumerator(nsISimpleEnumerator** aEnumerator);
   NS_IMETHOD OnSubmitClickBegin();
   NS_IMETHOD OnSubmitClickEnd();
   NS_IMETHOD FlushPendingSubmission();
   NS_IMETHOD ForgetPendingSubmission();
   NS_IMETHOD GetActionURL(nsIURI** aActionURL);
+  NS_IMETHOD GetSortedControls(nsTArray<nsIFormControl*>& aControls) const;
   NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const;
+  NS_IMETHOD_(PRBool) HasSingleTextControl() const;
 
   // nsIRadioGroupContainer
   NS_IMETHOD SetCurrentRadioButton(const nsAString& aName,
@@ -300,11 +302,6 @@ protected:
                                  PRBool aEarlyNotify);
 
   /**
-   * Just like GetElementCount(), but doesn't flush
-   */
-  PRUint32 ElementCount() const;
-
-  /**
    * Just like ResolveName(), but takes an arg for whether to flush
    */
   nsresult DoResolveName(const nsAString& aName, PRBool aFlushContent,
@@ -319,9 +316,35 @@ protected:
    *
    * @param aNotify If true, send nsIDocumentObserver notifications on the
    *                new and previous default elements.
+   * @param aPrevDefaultInElements If true, the previous default submit element
+   *                               was in the elements list. If false, it was
+   *                               in the not-in-elements list.
+   * @param aPrevDefaultIndex The index of the previous default submit control
+   *                          in the list determined by aPrevDefaultInElements.
    */
-  nsresult ResetDefaultSubmitElement(PRBool aNotify);
+  void ResetDefaultSubmitElement(PRBool aNotify,
+                                 PRBool aPrevDefaultInElements,
+                                 PRUint32 aPrevDefaultIndex);
   
+  /**
+   * Locates the default submit control. This is defined as the first element
+   * in document order which can submit a form. Returns null if there are no
+   * submit controls.
+   *
+   * Note that this, in the worst case, needs to run through all the form's
+   * controls.
+   *
+   * @param aPrevDefaultInElements If true, the previous default submit element
+   *                               was in the elements list. If false, it was
+   *                               in the not-in-elements list.
+   * @param aPrevDefaultIndex The index of the previous default submit control
+   *                          in the list determined by aPrevDefaultInElements.
+   * @return The default submit control for the form, or null if one does
+   *         not exist.
+   */
+  nsIFormControl* FindDefaultSubmit(PRBool aPrevDefaultInElements,
+                                    PRUint32 aPrevDefaultIndex) const;
+
   //
   // Data members
   //
@@ -355,8 +378,6 @@ protected:
 
   /** The default submit element -- WEAK */
   nsIFormControl* mDefaultSubmitElement;
-
-  friend class nsFormControlEnumerator;
 
 protected:
   /** Detection of first form to notify observers */
@@ -398,17 +419,28 @@ public:
 
   void NamedItemInternal(const nsAString& aName, PRBool aFlushContent,
                          nsISupports **aResult);
+  
+  /**
+   * Create a sorted list of form control elements. This list is sorted
+   * in document order and contains the controls in the mElements and
+   * mNotInElements list. This function does not add references to the
+   * elements.
+   *
+   * @param aControls The list of sorted controls[out].
+   * @return NS_OK or NS_ERROR_OUT_OF_MEMORY.
+   */
+  nsresult GetSortedControls(nsTArray<nsIFormControl*>& aControls) const;
 
   nsHTMLFormElement* mForm;  // WEAK - the form owns me
 
-  nsAutoVoidArray mElements;  // Holds WEAK references - bug 36639
+  nsTArray<nsIFormControl*> mElements;  // Holds WEAK references - bug 36639
 
   // This array holds on to all form controls that are not contained
   // in mElements (form.elements in JS, see ShouldBeInFormControl()).
   // This is needed to properly clean up the bi-directional references
   // (both weak and strong) between the form and its form controls.
 
-  nsSmallVoidArray mNotInElements; // Holds WEAK references
+  nsTArray<nsIFormControl*> mNotInElements; // Holds WEAK references
 
 protected:
   // Drop all our references to the form elements
@@ -425,23 +457,6 @@ protected:
 
   nsInterfaceHashtable<nsStringHashKey,nsISupports> mNameLookupTable;
 };
-
-
-class nsFormControlEnumerator : public nsISimpleEnumerator {
-public:
-  nsFormControlEnumerator(nsHTMLFormElement* aForm);
-  virtual ~nsFormControlEnumerator() { };
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISIMPLEENUMERATOR
-
-private:
-  nsHTMLFormElement* mForm;
-  PRUint32 mElementsIndex;
-  nsCOMArray<nsIDOMNode> mNotInElementsSorted;
-  PRUint32 mNotInElementsIndex;
-};
-
 
 static PRBool
 ShouldBeInElements(nsIFormControl* aFormControl)
@@ -1151,24 +1166,17 @@ nsresult
 nsHTMLFormElement::WalkFormElements(nsIFormSubmission* aFormSubmission,
                                     nsIContent* aSubmitElement)
 {
-  nsCOMPtr<nsISimpleEnumerator> formControls;
-  nsresult rv = GetControlEnumerator(getter_AddRefs(formControls));
+  nsTArray<nsIFormControl*> sortedControls;
+  nsresult rv = mControls->GetSortedControls(sortedControls);
   NS_ENSURE_SUCCESS(rv, rv);
 
   //
   // Walk the list of nodes and call SubmitNamesValues() on the controls
   //
-  PRBool hasMoreElements;
-  nsCOMPtr<nsISupports> controlSupports;
-  nsCOMPtr<nsIFormControl> control;
-  while (NS_SUCCEEDED(formControls->HasMoreElements(&hasMoreElements)) &&
-         hasMoreElements) {
-    rv = formControls->GetNext(getter_AddRefs(controlSupports));
-    NS_ENSURE_SUCCESS(rv, rv);
-    control = do_QueryInterface(controlSupports);
-
+  PRUint32 len = sortedControls.Length();
+  for (PRUint32 i = 0; i < len; ++i) {
     // Tell the control to submit its name/value pairs to the submission
-    control->SubmitNamesValues(aFormSubmission, aSubmitElement);
+    sortedControls[i]->SubmitNamesValues(aFormSubmission, aSubmitElement);
   }
 
   return NS_OK;
@@ -1187,9 +1195,13 @@ NS_IMETHODIMP
 nsHTMLFormElement::GetElementAt(PRInt32 aIndex,
                                 nsIFormControl** aFormControl) const 
 {
-  *aFormControl = NS_STATIC_CAST(nsIFormControl *,
-                                 mControls->mElements.SafeElementAt(aIndex));
-  NS_IF_ADDREF(*aFormControl);
+  // Converting to unsigned int will handle negative indices.
+  if (PRUint32(aIndex) >= mControls->mElements.Length()) {
+    *aFormControl = nsnull;
+  } else {
+    *aFormControl = mControls->mElements[aIndex];
+    NS_ADDREF(*aFormControl);
+  }
 
   return NS_OK;
 }
@@ -1220,48 +1232,48 @@ NS_IMETHODIMP
 nsHTMLFormElement::AddElement(nsIFormControl* aChild,
                               PRBool aNotify)
 {
+  // Determine whether to add the new element to the elements or
+  // the not-in-elements list.
+  PRBool childInElements = ShouldBeInElements(aChild);
+  nsTArray<nsIFormControl*>& controlList = childInElements ?
+      mControls->mElements : mControls->mNotInElements;
+  
+  PRUint32 count = controlList.Length();
+  nsCOMPtr<nsIFormControl> element;
+  
+  // Optimize most common case where we insert at the end.
   PRBool lastElement = PR_FALSE;
-  if (ShouldBeInElements(aChild)) {
-    PRUint32 count = ElementCount();
+  PRInt32 position = -1;
+  if (count > 0) {
+    element = controlList[count - 1];
+    position = CompareFormControlPosition(aChild, element);
+  }
 
-    nsCOMPtr<nsIFormControl> element;
-
-    // Optimize most common case where we insert at the end.
-    PRInt32 position = -1;
-    if (count > 0) {
-      GetElementAt(count - 1, getter_AddRefs(element));
-      position = CompareFormControlPosition(aChild, element);
-    }
-
-    // If this item comes after the last element, or the elements array is
-    // empty, we append to the end. Otherwise, we do a binary search to
-    // determine where the element should go.    
-    if (position >= 0 || count == 0) {
-      // WEAK - don't addref
-      mControls->mElements.AppendElement(aChild);
-      lastElement = PR_TRUE;
-    }
-    else {
-      PRInt32 low = 0, mid, high;
-      high = count - 1;
-      
-      while (low <= high) {
-        mid = (low + high) / 2;
-        
-        GetElementAt(mid, getter_AddRefs(element));
-        position = CompareFormControlPosition(aChild, element);
-        if (position >= 0)
-          low = mid + 1;
-        else
-          high = mid - 1;
-      }
-      
-      // WEAK - don't addref
-      mControls->mElements.InsertElementAt(aChild, low);
-    }
-  } else {
+  // If this item comes after the last element, or the elements array is
+  // empty, we append to the end. Otherwise, we do a binary search to
+  // determine where the element should go.
+  if (position >= 0 || count == 0) {
     // WEAK - don't addref
-    mControls->mNotInElements.AppendElement(aChild);
+    controlList.AppendElement(aChild);
+    lastElement = PR_TRUE;
+  }
+  else {
+    PRInt32 low = 0, mid, high;
+    high = count - 1;
+      
+    while (low <= high) {
+      mid = (low + high) / 2;
+        
+      element = controlList[mid];
+      position = CompareFormControlPosition(aChild, element);
+      if (position >= 0)
+        low = mid + 1;
+      else
+        high = mid - 1;
+    }
+      
+    // WEAK - don't addref
+    controlList.InsertElementAt(low, aChild);
   }
 
   //
@@ -1290,12 +1302,16 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild,
   if (aChild->IsSubmitControl()) {
     // The new child is the default submit if there was not previously
     // a default submit element, or if the new child is before the old
-    // default submit element. To speed up parsing, the special case
-    // of the last element in a form that already has a default submit
-    // element is ignored as it cannot be the default submit element.
+    // default submit element.
+    // To speed up parsing, the special case of a form that already
+    // has a default submit that's in the same list as the new child
+    // is ignored, since the new child then cannot be the default
+    // submit element.
     nsIFormControl* oldControl = mDefaultSubmitElement;
-    if (!mDefaultSubmitElement || (!lastElement && 
-        CompareFormControlPosition(aChild, mDefaultSubmitElement) < 0)) {
+    if (!mDefaultSubmitElement ||
+        ((!lastElement ||
+          ShouldBeInElements(mDefaultSubmitElement) != childInElements) &&
+         CompareFormControlPosition(aChild, mDefaultSubmitElement) < 0)) {
       mDefaultSubmitElement = aChild;
     }
 
@@ -1339,46 +1355,35 @@ nsHTMLFormElement::RemoveElement(nsIFormControl* aChild,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (ShouldBeInElements(aChild)) {
-    mControls->mElements.RemoveElement(aChild);
-  } else {
-    mControls->mNotInElements.RemoveElement(aChild);
-  }
+  // Determine whether to remove the child from the elements list
+  // or the not in elements list.
+  PRBool childInElements = ShouldBeInElements(aChild);
+  nsTArray<nsIFormControl*>& controls = childInElements ?
+      mControls->mElements :  mControls->mNotInElements;
+  
+  // Find the index of the child. This will be used later if necessary
+  // to find the default submit.
+  PRUint32 index = controls.IndexOf(aChild);
+  NS_ASSERTION(index != controls.NoIndex, "Child not in controls");
+
+  controls.RemoveElementAt(index);
 
   if (aChild == mDefaultSubmitElement) {
     // We are removing the default submit, find the new default
-    rv = ResetDefaultSubmitElement(aNotify);
+    ResetDefaultSubmitElement(aNotify, childInElements, index );
   }
 
   return rv;
 }
 
-nsresult
-nsHTMLFormElement::ResetDefaultSubmitElement(PRBool aNotify)
+void
+nsHTMLFormElement::ResetDefaultSubmitElement(PRBool aNotify,
+                                             PRBool aPrevDefaultInElements,
+                                             PRUint32 aPrevDefaultIndex)
 {
   nsIFormControl* oldDefaultSubmit = mDefaultSubmitElement;
-  mDefaultSubmitElement = nsnull;
-
-  nsCOMPtr<nsISimpleEnumerator> formControls;
-  GetControlEnumerator(getter_AddRefs(formControls));
-
-  nsCOMPtr<nsISupports> currentControlSupports;
-  nsCOMPtr<nsIFormControl> currentControl;
-
-  // Find default submit element
-  PRBool hasMoreElements;
-  nsresult rv;
-  while (NS_SUCCEEDED(rv = formControls->HasMoreElements(&hasMoreElements)) &&
-         hasMoreElements) {
-    rv = formControls->GetNext(getter_AddRefs(currentControlSupports));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    currentControl = do_QueryInterface(currentControlSupports);
-    if (currentControl && currentControl->IsSubmitControl()) {
-        mDefaultSubmitElement = currentControl;
-        break;
-    }
-  }
+  mDefaultSubmitElement = FindDefaultSubmit(aPrevDefaultInElements,
+                                            aPrevDefaultIndex);
 
   // Inform about change.
   if (aNotify && (oldDefaultSubmit || mDefaultSubmitElement)) {
@@ -1393,9 +1398,52 @@ nsHTMLFormElement::ResetDefaultSubmitElement(PRBool aNotify)
                                      NS_EVENT_STATE_DEFAULT);
     }
   }
-
-  return rv;
  }
+
+nsIFormControl*
+nsHTMLFormElement::FindDefaultSubmit(PRBool aPrevDefaultInElements,
+                                     PRUint32 aPrevDefaultIndex) const
+{
+  nsIFormControl* defaultSubmit = nsnull;
+
+  // Find the first submit control in the elements list. This list is
+  // in document order.
+  PRUint32 length = mControls->mElements.Length();
+
+  // If the previous default submit element was in the elements
+  // list, begin the search of the elements list at that index. Given
+  // that the list is sorted, the new default submit cannot be before
+  // the index of the old child as it already would've been the default submit.
+  PRUint32 i = aPrevDefaultInElements ? aPrevDefaultIndex : 0;
+  for (; i < length; ++i) {
+    nsIFormControl* currentControl = mControls->mElements[i];
+
+    if (currentControl->IsSubmitControl()) {
+      defaultSubmit = currentControl;
+      break;
+    }
+  }
+
+  // <input type=image> elements are submit controls but are not in the
+  // elements list. Search the not-in-elements list to find any submit control
+  // that is ordered in the document before any submit element found already.
+  // See the comment above for when not to start the search at the first
+  // element.
+  length = mControls->mNotInElements.Length();
+  i = !aPrevDefaultInElements ? aPrevDefaultIndex : 0;
+  for (; i < length; ++i) {
+    nsIFormControl* currControl = mControls->mNotInElements[i];
+
+    if (currControl->IsSubmitControl()) {
+      if (!defaultSubmit ||
+          CompareFormControlPosition(currControl, defaultSubmit) < 0) {
+        defaultSubmit = currControl;
+      }
+      break;
+    }
+  }
+  return defaultSubmit;
+}
 
 NS_IMETHODIMP
 nsHTMLFormElement::RemoveElementFromTable(nsIFormControl* aElement,
@@ -1560,10 +1608,31 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
   return rv;
 }
 
+NS_IMETHODIMP
+nsHTMLFormElement::GetSortedControls(nsTArray<nsIFormControl*>& aControls) const
+{
+  return mControls->GetSortedControls(aControls);
+}
+
 NS_IMETHODIMP_(nsIFormControl*)
 nsHTMLFormElement::GetDefaultSubmitElement() const
 {
   return mDefaultSubmitElement;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsHTMLFormElement::HasSingleTextControl() const
+{
+  // Input text controls are always in the elements list.
+  PRUint32 numTextControlsFound = 0;
+  PRUint32 length = mControls->mElements.Length();
+  for (PRUint32 i = 0; i < length && numTextControlsFound < 2; ++i) {
+    PRInt32 type = mControls->mElements[i]->GetType();
+    if (type == NS_FORM_INPUT_TEXT || type == NS_FORM_INPUT_PASSWORD) {
+        numTextControlsFound++;
+    }
+  }
+  return numTextControlsFound == 1;
 }
 
 NS_IMETHODIMP
@@ -1655,15 +1724,6 @@ nsHTMLFormElement::OnSecurityChange(nsIWebProgress* aWebProgress,
                                     PRUint32 state)
 {
   NS_NOTREACHED("notification excluded in AddProgressListener(...)");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLFormElement::GetControlEnumerator(nsISimpleEnumerator** aEnum)
-{
-  *aEnum = new nsFormControlEnumerator(this);
-  NS_ENSURE_TRUE(*aEnum, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aEnum);
   return NS_OK;
 }
  
@@ -1889,18 +1949,15 @@ nsHTMLFormElement::RemoveFromRadioGroup(const nsAString& aName,
   return NS_OK;
 }
 
-PRUint32
-nsHTMLFormElement::ElementCount() const
-{
-  return mControls->mElements.Count();
-}
-
 //----------------------------------------------------------------------
 // nsFormControlList implementation, this could go away if there were
 // a lightweight collection implementation somewhere
 
 nsFormControlList::nsFormControlList(nsHTMLFormElement* aForm) :
-  mForm(aForm)
+  mForm(aForm),
+  // Initialize the elements list to have an initial capacity
+  // of 8 to reduce allocations on small forms.
+  mElements(8)
 {
 }
 
@@ -1931,21 +1988,13 @@ nsFormControlList::Clear()
 {
   // Null out childrens' pointer to me.  No refcounting here
   PRInt32 i;
-  for (i = mElements.Count()-1; i >= 0; i--) {
-    nsIFormControl* f = NS_STATIC_CAST(nsIFormControl *,
-                                       mElements.ElementAt(i));
-    if (f) {
-      f->SetForm(nsnull, PR_FALSE, PR_TRUE); 
-    }
+  for (i = mElements.Length()-1; i >= 0; i--) {
+    mElements[i]->SetForm(nsnull, PR_FALSE, PR_TRUE);
   }
   mElements.Clear();
 
-  for (i = mNotInElements.Count()-1; i >= 0; i--) {
-    nsIFormControl* f = NS_STATIC_CAST(nsIFormControl*,
-                                       mNotInElements.ElementAt(i));
-    if (f) {
-      f->SetForm(nsnull, PR_FALSE, PR_TRUE);
-    }
+  for (i = mNotInElements.Length()-1; i >= 0; i--) {
+    mNotInElements[i]->SetForm(nsnull, PR_FALSE, PR_TRUE);
   }
   mNotInElements.Clear();
 
@@ -1982,7 +2031,7 @@ NS_IMETHODIMP
 nsFormControlList::GetLength(PRUint32* aLength)
 {
   FlushPendingNotifications();
-  *aLength = mElements.Count();
+  *aLength = mElements.Length();
   return NS_OK;
 }
 
@@ -1990,14 +2039,12 @@ NS_IMETHODIMP
 nsFormControlList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   FlushPendingNotifications();
-  nsIFormControl *control = NS_STATIC_CAST(nsIFormControl *,
-                                           mElements.SafeElementAt(aIndex));
-  if (control) {
-    return CallQueryInterface(control, aReturn);
+
+  if (aIndex < mElements.Length()) {
+    return CallQueryInterface(mElements[aIndex], aReturn);
   }
 
   *aReturn = nsnull;
-
   return NS_OK;
 }
 
@@ -2196,113 +2243,78 @@ nsFormControlList::RemoveElementFromTable(nsIFormControl* aChild,
   return NS_OK;
 }
 
-// nsFormControlEnumerator
-NS_IMPL_ISUPPORTS1(nsFormControlEnumerator, nsISimpleEnumerator)
-
-nsFormControlEnumerator::nsFormControlEnumerator(nsHTMLFormElement* aForm)
-  : mForm(aForm), mElementsIndex(0), mNotInElementsIndex(0)
+nsresult
+nsFormControlList::GetSortedControls(nsTArray<nsIFormControl*>& aControls) const
 {
+  aControls.Clear();
 
-  // Create the sorted mNotInElementsSorted array
-  PRInt32 len = aForm->mControls->mNotInElements.Count();
-  for (PRInt32 indexToAdd=0; indexToAdd < len; indexToAdd++) {
-    // Ref doesn't need to be strong, don't bother making it so
-    nsIFormControl* controlToAdd = NS_STATIC_CAST(nsIFormControl*,
-        aForm->mControls->mNotInElements.ElementAt(indexToAdd));
+  // Merge the elements list and the not in elements list. Both lists are
+  // already sorted.
+  PRUint32 elementsLen = mElements.Length();
+  PRUint32 notInElementsLen = mNotInElements.Length();
+  aControls.SetCapacity(elementsLen + notInElementsLen);
 
-    // Go through the array and insert the element at the first place where
-    // it is less than the element already in the array
-    nsCOMPtr<nsIDOMNode> controlToAddNode = do_QueryInterface(controlToAdd);
-    PRBool inserted = PR_FALSE;
-    // Loop over all elements backwards (from indexToAdd to 0)
-    // indexToAdd is equal to the array length because we've been adding to it
-    // constantly
-    PRUint32 i = indexToAdd;
-    while (i > 0) {
-      i--;
-      nsCOMPtr<nsIDOMNode> existingNode = mNotInElementsSorted[i];
-      PRInt32 comparison;
-      if (NS_FAILED(nsHTMLFormElement::CompareNodes(controlToAddNode,
-                                                    existingNode,
-                                                    &comparison))) {
-        break;
+  PRUint32 elementsIdx = 0;
+  PRUint32 notInElementsIdx = 0;
+
+  while (elementsIdx < elementsLen || notInElementsIdx < notInElementsLen) {
+    // Check whether we're done with mElements
+    if (elementsIdx == elementsLen) {
+      NS_ASSERTION(notInElementsIdx < notInElementsLen,
+                   "Should have remaining not-in-elements");
+      // Append the remaining mNotInElements elements
+      if (!aControls.AppendElements(mNotInElements.Elements() +
+                                      notInElementsIdx,
+                                    notInElementsLen -
+                                      notInElementsIdx)) {
+        return NS_ERROR_OUT_OF_MEMORY;
       }
-      if (comparison > 0) {
-        if (mNotInElementsSorted.InsertObjectAt(controlToAddNode, i + 1)) {
-          inserted = PR_TRUE;
-        }
-        break;
-      }
+      break;
     }
-
-    // If it wasn't inserted yet, it is smaller than everything in the array
-    // and must be added to the beginning.
-    if (!inserted) {
-      if (!mNotInElementsSorted.InsertObjectAt(controlToAddNode, 0)) {
-        break;
+    // Check whether we're done with mNotInElements
+    if (notInElementsIdx == notInElementsLen) {
+      NS_ASSERTION(elementsIdx < elementsLen,
+                   "Should have remaining in-elements");
+      // Append the remaining mElements elements
+      if (!aControls.AppendElements(mElements.Elements() +
+                                      elementsIdx,
+                                    elementsLen -
+                                      elementsIdx)) {
+        return NS_ERROR_OUT_OF_MEMORY;
       }
+      break;
     }
-  }
-}
-
-NS_IMETHODIMP
-nsFormControlEnumerator::HasMoreElements(PRBool* aHasMoreElements)
-{
-  PRUint32 len;
-  mForm->GetElementCount(&len);
-  if (mElementsIndex < len) {
-    *aHasMoreElements = PR_TRUE;
-  } else {
-    PRUint32 notInElementsLen = mNotInElementsSorted.Count();
-    *aHasMoreElements = mNotInElementsIndex < notInElementsLen;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFormControlEnumerator::GetNext(nsISupports** aNext)
-{
-  // Holds the current form control in form.elements
-  nsCOMPtr<nsIFormControl> formControl;
-  // First get the form control in form.elements
-  PRUint32 len;
-  mForm->GetElementCount(&len);
-  if (mElementsIndex < len) {
-    mForm->GetElementAt(mElementsIndex, getter_AddRefs(formControl));
-  }
-  // If there are still controls in mNotInElementsSorted, determine whether said
-  // control is before the current control in the array, and if so, choose it
-  // instead
-  PRUint32 notInElementsLen = mNotInElementsSorted.Count();
-  if (mNotInElementsIndex < notInElementsLen) {
-    // Get the not-in-elements control - weak ref
-    nsCOMPtr<nsIFormControl> formControl2 =
-        do_QueryInterface(mNotInElementsSorted[mNotInElementsIndex]);
-
-    if (formControl) {
-      // Both form controls are there.  We have to compare them and see which
-      // one we need to choose right now.
-      nsCOMPtr<nsIDOMNode> dom1 = do_QueryInterface(formControl);
-      nsCOMPtr<nsIDOMNode> dom2 = do_QueryInterface(formControl2);
-      PRInt32 comparison = 0;
-      nsresult rv = nsHTMLFormElement::CompareNodes(dom1, dom2, &comparison);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (comparison < 0) {
-        *aNext = formControl;
-        mElementsIndex++;
-      } else {
-        *aNext = formControl2;
-        mNotInElementsIndex++;
-      }
+    // Both lists have elements left.
+    NS_ASSERTION(mElements[elementsIdx] &&
+                 mNotInElements[notInElementsIdx],
+                 "Should have remaining elements");
+    // Determine which of the two elements should be ordered
+    // first and add it to the end of the list.
+    nsIFormControl* elementToAdd;
+    if (CompareFormControlPosition(mElements[elementsIdx],
+                                   mNotInElements[notInElementsIdx]) < 0) {
+      elementToAdd = mElements[elementsIdx];
+      ++elementsIdx;
     } else {
-      *aNext = formControl2;
-      mNotInElementsIndex++;
+      elementToAdd = mNotInElements[notInElementsIdx];
+      ++notInElementsIdx;
     }
-  } else {
-    *aNext = formControl;
-    mElementsIndex++;
+    // Add the first element to the list.
+    if (!aControls.AppendElement(elementToAdd)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
-  NS_IF_ADDREF(*aNext);
+  NS_ASSERTION(aControls.Length() == elementsLen + notInElementsLen,
+               "Not all form controls were added to the sorted list");
+#ifdef DEBUG
+  if (!aControls.IsEmpty()) {
+    for (PRUint32 i = 0; i < aControls.Length() - 1; ++i) {
+      NS_ASSERTION(CompareFormControlPosition(aControls[i],
+                     aControls[i + 1]) < 0,
+                   "Form controls sorted incorrectly");
+    }
+  }
+#endif
   return NS_OK;
 }

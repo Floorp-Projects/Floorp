@@ -1033,38 +1033,12 @@ nsHTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext)
                        nsMouseEvent::eReal);
     nsEventStatus status = nsEventStatus_eIgnore;
     shell->HandleDOMEventWithTarget(submitContent, &event, &status);
-  } else {
-    PRInt32 numTextControlsFound = 0;
-    // No default submit, find the number of text controls.
-    nsCOMPtr<nsISimpleEnumerator> formControls;
-    mForm->GetControlEnumerator(getter_AddRefs(formControls));
-
-    nsCOMPtr<nsISupports> currentControlSupports;
-    nsCOMPtr<nsIFormControl> currentControl;
-    PRBool hasMoreElements;
-    nsresult rv;
-    while (NS_SUCCEEDED(rv = formControls->HasMoreElements(&hasMoreElements)) &&
-           hasMoreElements && numTextControlsFound < 2) {
-      rv = formControls->GetNext(getter_AddRefs(currentControlSupports));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      currentControl = do_QueryInterface(currentControlSupports);
-      if (currentControl) {
-        PRInt32 type = currentControl->GetType();
-        if (type == NS_FORM_INPUT_TEXT ||
-            type == NS_FORM_INPUT_PASSWORD) {
-          numTextControlsFound++;
-        }
-      }
-    }
-
-    if (numTextControlsFound == 1) {
-      // If there's only one text control, just submit the form
-      nsCOMPtr<nsIContent> form = do_QueryInterface(mForm);
-      nsFormEvent event(PR_TRUE, NS_FORM_SUBMIT);
-      nsEventStatus status  = nsEventStatus_eIgnore;
-      shell->HandleDOMEventWithTarget(form, &event, &status);
-    }
+  } else if (mForm->HasSingleTextControl()) {
+    // If there's only one text control, just submit the form
+    nsCOMPtr<nsIContent> form = do_QueryInterface(mForm);
+    nsFormEvent event(PR_TRUE, NS_FORM_SUBMIT);
+    nsEventStatus status  = nsEventStatus_eIgnore;
+    shell->HandleDOMEventWithTarget(form, &event, &status);
   }
 
   return NS_OK;
@@ -1869,7 +1843,7 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
       // assumptions about our frame based on mType, but we won't have had time
       // to recreate frames yet -- that happens later in the SetAttr()
       // process).
-      PRInt8 newType = aResult.GetEnumValue();
+      PRInt32 newType = aResult.GetEnumValue();
       if (newType == NS_FORM_INPUT_FILE) {
         // These calls aren't strictly needed any more since we'll never
         // confuse values and filenames. However they're there for backwards
