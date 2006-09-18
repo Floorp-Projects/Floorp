@@ -215,13 +215,21 @@ function ClickAndHoldMouseDownCallback(aButton)
 
 function ClickAndHoldMouseDown(aEvent)
 {
- if (aEvent.button != 0 || aEvent.target.getAttribute("anonid") != "button")
-   return;
+  /**
+   * 1. Only left click starts the click and hold timer.
+   * 2. Exclude the dropmarker area. This is done by excluding
+   *    elements which target their events directly to the toolbarbutton
+   *    element, i.e. when the nearest-parent-element which allows-events
+   *    is the toolbarbutton element itself.
+   * 3. Do not start the click-and-hold timer if the toolbarbutton is disabled.
+   */
+  if (aEvent.button != 0 ||
+      aEvent.originalTarget == aEvent.currentTarget ||
+      aEvent.currentTarget.disabled)
+    return;
 
- // relying on button.xml#menu-button-base internals for improved theme compatibility
- var button = aEvent.target._menubuttonParent;
- if (!button.disabled)
-   gClickAndHoldTimer = setTimeout(ClickAndHoldMouseDownCallback, 500, button);
+  gClickAndHoldTimer =
+    setTimeout(ClickAndHoldMouseDownCallback, 500, aEvent.currentTarget);
 }
 
 function MayStopClickAndHoldTimer(aEvent)
@@ -232,7 +240,8 @@ function MayStopClickAndHoldTimer(aEvent)
 
 function ClickAndHoldStopEvent(aEvent)
 {
-  if (aEvent.target._menubuttonParent.open)
+  if (aEvent.originalTarget.localName != "menuitem" &&
+      aEvent.currentTarget.open)
     aEvent.stopPropagation();
 }
 
@@ -254,19 +263,16 @@ function SetClickAndHoldHandlers()
     // click-and-hold opened the drop-down menu
     aElm.addEventListener("command",
                           ClickAndHoldStopEvent,
-                          false);  
+                          true);  
     aElm.addEventListener("click",
                           ClickAndHoldStopEvent,
-                          false);  
+                          true);  
   }
 
-  // The click-and-hold area does not include the dropmarkers of the buttons
-  var backButton = document.getAnonymousElementByAttribute
-    (document.getElementById("back-button"), "anonid", "button");
+  var backButton = document.getElementById("back-button");
   if (backButton)
     _addClickAndHoldListenersOnElement(backButton);
-  var forwardButton = document.getAnonymousElementByAttribute
-    (document.getElementById("forward-button"), "anonid", "button");
+  var forwardButton = document.getElementById("forward-button");
   if (forwardButton)
     _addClickAndHoldListenersOnElement(forwardButton);
 }
