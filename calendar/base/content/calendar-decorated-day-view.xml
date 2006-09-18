@@ -68,6 +68,9 @@
                           ["@mozilla.org/preferences-service;1"]
                           .getService(Components.interfaces.nsIPrefBranch2);
                 pb2.addObserver("calendar.", this.mPrefObserver, false);
+
+                viewElement.mMinVerticalPixelsPerMinute = 0.7;
+                viewElement.mMinHorizontalPixelsPerMinute = 1.5;
                 return;
             ]]></constructor>
 
