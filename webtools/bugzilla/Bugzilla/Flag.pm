@@ -416,13 +416,10 @@ sub _validate {
             }
 
             # Throw an error if the user won't be allowed to set the flag.
-            if ($flag_type->grant_group
-                && !$requestee->in_group_id($flag_type->grant_group->id))
-            {
-                ThrowUserError('flag_requestee_needs_privs',
-                               {'requestee' => $requestee,
-                                'flagtype'  => $flag_type});
-            }
+            $requestee->can_set_flag($flag_type)
+              || ThrowUserError('flag_requestee_needs_privs',
+                                {'requestee' => $requestee,
+                                 'flagtype'  => $flag_type});
         }
     }
 
@@ -433,12 +430,10 @@ sub _validate {
     # - User in the request_group can clear pending requests and set flags
     #   and can rerequest set flags.
     return if (($status eq 'X' || $status eq '?')
-               && (!$flag_type->request_group
-                   || $user->in_group_id($flag_type->request_group->id)));
+               && $user->can_request_flag($flag_type));
 
     # - User in the grant_group can set/clear flags, including "+" and "-".
-    return if (!$flag_type->grant_group
-               || $user->in_group_id($flag_type->grant_group->id));
+    return if $user->can_set_flag($flag_type);
 
     # - Any other flag modification is denied
     ThrowUserError('flag_update_denied',

@@ -642,6 +642,21 @@ sub get_enterable_products {
     return $self->{enterable_products};
 }
 
+sub can_request_flag {
+    my ($self, $flag_type) = @_;
+
+    return ($self->can_set_flag($flag_type)
+            || !$flag_type->request_group
+            || $self->in_group_id($flag_type->request_group->id)) ? 1 : 0;
+}
+
+sub can_set_flag {
+    my ($self, $flag_type) = @_;
+
+    return (!$flag_type->grant_group
+            || $self->in_group_id($flag_type->grant_group->id)) ? 1 : 0;
+}
+
 # visible_groups_inherited returns a reference to a list of all the groups
 # whose members are visible to this user.
 sub visible_groups_inherited {
@@ -1740,6 +1755,24 @@ method should be called in such a case to force reresolution of these groups.
  Params:      none
 
  Returns:     an array of product objects.
+
+=item C<can_request_flag($flag_type)>
+
+ Description: Checks whether the user can request flags of the given type.
+
+ Params:      $flag_type - a Bugzilla::FlagType object.
+
+ Returns:     1 if the user can request flags of the given type,
+              0 otherwise.
+
+=item C<can_set_flag($flag_type)>
+
+ Description: Checks whether the user can set flags of the given type.
+
+ Params:      $flag_type - a Bugzilla::FlagType object.
+
+ Returns:     1 if the user can set flags of the given type,
+              0 otherwise.
 
 =item C<get_userlist>
 

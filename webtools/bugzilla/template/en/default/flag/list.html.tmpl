@@ -104,11 +104,18 @@
           <select id="flag-[% flag.id %]" name="flag-[% flag.id %]" 
                   title="[% type.description FILTER html %]"
                   onchange="toggleRequesteeField(this);">
-            <option value="X"></option>
+            [%# Only display statuses the user is allowed to set. %]
             [% IF type.is_active %]
-              <option value="+" [% "selected" IF flag.status == "+" %]>+</option>
-              <option value="-" [% "selected" IF flag.status == "-" %]>-</option>
-              [% IF type.is_requestable || flag.status == "?" %]
+              [% IF user.can_request_flag(type) %]
+                <option value="X"></option>
+              [% END %]
+              [% IF user.can_set_flag(type) || flag.status == "+" %]
+                <option value="+" [% "selected" IF flag.status == "+" %]>+</option>
+              [% END %]
+              [% IF user.can_set_flag(type) || flag.status == "-" %]
+                <option value="-" [% "selected" IF flag.status == "-" %]>-</option>
+              [% END %]
+              [% IF (type.is_requestable && user.can_request_flag(type)) || flag.status == "?" %]
                 <option value="?" [% "selected" IF flag.status == "?" %]>?</option>
               [% END %]
             [% ELSE %]
@@ -146,11 +153,14 @@
         <td>
           <select id="flag_type-[% type.id %]" name="flag_type-[% type.id %]" 
                   title="[% type.description FILTER html %]"
+                  [% " disabled=\"disabled\"" UNLESS user.can_request_flag(type) %]
                   onchange="toggleRequesteeField(this);">
             <option value="X"></option>
-            <option value="+">+</option>
-            <option value="-">-</option>
-            [% IF type.is_requestable %]
+            [% IF user.can_set_flag(type) %]
+              <option value="+">+</option>
+              <option value="-">-</option>
+            [% END %]
+            [% IF type.is_requestable && user.can_request_flag(type) %]
               <option value="?">?</option>
             [% END %]
           </select>
@@ -186,11 +196,14 @@
       <td>
         <select id="flag_type-[% type.id %]" name="flag_type-[% type.id %]" 
                 title="[% type.description FILTER html %]"
+                [% " disabled=\"disabled\"" UNLESS user.can_request_flag(type) %]
                 onchange="toggleRequesteeField(this);">
           <option value="X"></option>
-          <option value="+">+</option>
-          <option value="-">-</option>
-          [% IF type.is_requestable %]
+          [% IF user.can_set_flag(type) %]
+            <option value="+">+</option>
+            <option value="-">-</option>
+          [% END %]
+          [% IF type.is_requestable && user.can_request_flag(type) %]
             <option value="?">?</option>
           [% END %]
         </select>
