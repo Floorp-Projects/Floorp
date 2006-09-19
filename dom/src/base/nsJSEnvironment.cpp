@@ -456,7 +456,8 @@ LocaleToUnicode(JSContext *cx, char *src, jsval *rval)
 
   if (gDecoder) {
     PRInt32 unicharLength = srcLength;
-    PRUnichar *unichars = (PRUnichar *)malloc((srcLength + 1) * sizeof(PRUnichar));
+    PRUnichar *unichars =
+      (PRUnichar *)JS_malloc(cx, (srcLength + 1) * sizeof(PRUnichar));
     if (unichars) {
       rv = gDecoder->Convert(src, &srcLength, unichars, &unicharLength);
       if (NS_SUCCEEDED(rv)) {
@@ -466,7 +467,8 @@ LocaleToUnicode(JSContext *cx, char *src, jsval *rval)
         // nsIUnicodeDecoder::Convert may use fewer than srcLength PRUnichars
         if (unicharLength + 1 < srcLength + 1) {
           PRUnichar *shrunkUnichars =
-            (PRUnichar *)realloc(unichars, (unicharLength + 1) * sizeof(PRUnichar));
+            (PRUnichar *)JS_realloc(cx, unichars,
+                                    (unicharLength + 1) * sizeof(PRUnichar));
           if (shrunkUnichars)
             unichars = shrunkUnichars;
         }
@@ -475,7 +477,7 @@ LocaleToUnicode(JSContext *cx, char *src, jsval *rval)
                              unicharLength);
       }
       if (!str)
-        free(unichars);
+        JS_free(cx, unichars);
     }
   }
 
