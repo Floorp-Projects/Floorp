@@ -260,6 +260,14 @@ public:
   static cairo_matrix_t
   ConvertSVGMatrixToCairo(nsIDOMSVGMatrix *aMatrix);
 
+  /*
+   * Hit test a given rectangle/matrix.
+   */
+  static PRBool
+  HitTestRect(nsIDOMSVGMatrix *aMatrix,
+              float aRX, float aRY, float aRWidth, float aRHeight,
+              float aX, float aY);
+
 private:
   /* Cairo computational (nil) surface */
   static cairo_surface_t *mCairoComputationalSurface;
