@@ -1029,19 +1029,17 @@ WindowStateHolder::~WindowStateHolder()
   if (mInnerWindow) {
     // This window was left in the bfcache and is now going away. We need to
     // free it up.
-    nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService(sJSStackContractID));
-    JSContext *cx = nsnull;
-
-    if (stack)
-      stack->GetSafeJSContext(&cx);
-
-    if (!cx) {
-      NS_WARNING("Trusting GC to finish cleaning up this inner window");
-      return;
+    PRUint32 lang_id;
+    NS_STID_FOR_ID(lang_id) {
+      // Note that langCtx comes from an outer window for which
+      // mInnerWindow is not the current inner window.
+      nsIScriptContext *langCtx =
+        mInnerWindow->GetScriptContextInternal(lang_id);
+      if (langCtx)
+        // FreeInnerObjects calls ClearScope, which does the JSAutoRequest
+        // thing for JS
+        mInnerWindow->FreeInnerObjects(langCtx);
     }
-
-    JSAutoRequest ar(cx);
-    mInnerWindow->FreeInnerObjects(GetScriptContextFromJSContext(cx));
   }
 }
 
@@ -1576,17 +1574,26 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
   if (!aDocShell) {
     NS_ASSERTION(!mTimeouts, "Uh, outer window holds timeouts!");
 
-    nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
+    // Call FreeInnerObjects on all inner windows, not just the current
+    // one, since some could be held by WindowStateHolder objects that
+    // are GC-owned.
+    for (nsGlobalWindow *inner = (nsGlobalWindow *)PR_LIST_HEAD(this);
+         inner != this;
+         inner = (nsGlobalWindow*)PR_NEXT_LINK(inner)) {
+      NS_ASSERTION(inner->mOuterWindow == this, "bad outer window pointer");
 
-    if (currentInner) {
       NS_STID_FOR_ID(lang_id) {
         langCtx = mScriptContexts[NS_STID_INDEX(lang_id)];
         if (langCtx)
           // FreeInnerObjects calls ClearScope, which does the JSAutoRequest
           // thing for JS
-          currentInner->FreeInnerObjects(langCtx);
+          inner->FreeInnerObjects(langCtx);
       }
+    }
 
+    nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
+
+    if (currentInner) {
       NS_ASSERTION(mDoc, "Must have doc!");
       
       // Remember the document's principal.
