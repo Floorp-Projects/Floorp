@@ -223,8 +223,6 @@ JSObjectViewer.prototype =
     if (aValue === null) {
       tc.setAttribute("class", "inspector-null-value-treecell");
     }
-    if (aName == "nodeType")
-      tc.setAttribute("tooltiptext", nodeTypeToText(aValue));
     tr.appendChild(tc);
     
     aTreeChildren.appendChild(ti);
