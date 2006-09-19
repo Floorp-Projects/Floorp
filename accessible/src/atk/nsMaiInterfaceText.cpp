@@ -345,16 +345,16 @@ getOffsetAtPointCB(AtkText *aText,
                    AtkCoordType aCoords)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-    NS_ENSURE_TRUE(accWrap, 0);
+    NS_ENSURE_TRUE(accWrap, -1);
 
     nsCOMPtr<nsIAccessibleText> accText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
                             getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, 0);
+    NS_ENSURE_TRUE(accText, -1);
 
     PRInt32 offset = 0;
-    nsresult rv = accText->GetOffsetAtPoint(aX, aY, aCoords, &offset);
-    return (NS_FAILED(rv)) ? 0 : NS_STATIC_CAST(gint, offset);
+    accText->GetOffsetAtPoint(aX, aY, aCoords, &offset);
+    return NS_STATIC_CAST(gint, offset);
 }
 
 gint
