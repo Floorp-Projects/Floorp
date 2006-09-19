@@ -6417,7 +6417,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   NS_ASSERTION(IsInnerWindow(), "Timeout running on outer window!");
   NS_ASSERTION(!IsFrozen(), "Timeout running on a window in the bfcache!");
 
-  nsTimeout *next, *prev, *timeout;
+  nsTimeout *nextTimeout, *prevTimeout, *timeout;
   nsTimeout *last_expired_timeout, **last_insertion_point;
   nsTimeout dummy_timeout;
   PRUint32 firingDepth = mTimeoutFiringDepth + 1;
@@ -6482,15 +6482,15 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   last_insertion_point = mTimeoutInsertionPoint;
   mTimeoutInsertionPoint = &dummy_timeout.mNext;
 
-  prev = nsnull;
-  for (timeout = mTimeouts; timeout != &dummy_timeout && !IsFrozen(); timeout = next) {
-    next = timeout->mNext;
+  prevTimeout = nsnull;
+  for (timeout = mTimeouts; timeout != &dummy_timeout && !IsFrozen(); timeout = nextTimeout) {
+    nextTimeout = timeout->mNext;
 
     if (timeout->mFiringDepth != firingDepth) {
       // We skip the timeout since it's on the list to run at another
       // depth.
 
-      prev = timeout;
+      prevTimeout = timeout;
 
       continue;
     }
@@ -6698,12 +6698,12 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 
     // Running a timeout can cause another timeout to be deleted, so
     // we need to reset the pointer to the following timeout.
-    next = timeout->mNext;
+    nextTimeout = timeout->mNext;
 
-    if (!prev) {
-      mTimeouts = next;
+    if (!prevTimeout) {
+      mTimeouts = nextTimeout;
     } else {
-      prev->mNext = next;
+      prevTimeout->mNext = nextTimeout;
     }
 
     // Release the timeout struct since it's out of the list
@@ -6718,10 +6718,10 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   }
 
   // Take the dummy timeout off the head of the list
-  if (!prev) {
+  if (!prevTimeout) {
     mTimeouts = dummy_timeout.mNext;
   } else {
-    prev->mNext = dummy_timeout.mNext;
+    prevTimeout->mNext = dummy_timeout.mNext;
   }
 
   mTimeoutInsertionPoint = last_insertion_point;
@@ -6840,9 +6840,9 @@ nsGlobalWindow::ClearTimeoutOrInterval()
 void
 nsGlobalWindow::ClearAllTimeouts()
 {
-  nsTimeout *timeout, *next;
+  nsTimeout *timeout, *nextTimeout;
 
-  for (timeout = mTimeouts; timeout; timeout = next) {
+  for (timeout = mTimeouts; timeout; timeout = nextTimeout) {
     /* If RunTimeout() is higher up on the stack for this
        window, e.g. as a result of document.write from a timeout,
        then we need to reset the list insertion point for
@@ -6851,7 +6851,7 @@ nsGlobalWindow::ClearAllTimeouts()
     if (mRunningTimeout == timeout)
       mTimeoutInsertionPoint = &mTimeouts;
 
-    next = timeout->mNext;
+    nextTimeout = timeout->mNext;
 
     if (timeout->mTimer) {
       timeout->mTimer->Cancel();
