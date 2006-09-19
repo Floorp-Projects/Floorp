@@ -120,19 +120,30 @@ PaintDebugPlaceholder(nsIFrame* aFrame, nsIRenderingContext* aCtx,
   aCtx->FillRect(aPt.x, aPt.y + y,
                  NSIntPixelsToTwips(3, p2t), NSIntPixelsToTwips(10, p2t));
 }
+#endif // DEBUG
+
+#if defined(DEBUG) || (defined(MOZ_REFLOW_PERF_DSP) && defined(MOZ_REFLOW_PERF))
 
 NS_IMETHODIMP
 nsPlaceholderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
 {
+  DO_GLOBAL_REFLOW_COUNT_DSP("nsPlaceholderFrame");
+  
+#ifdef DEBUG
   if (!GetShowFrameBorders())
     return NS_OK;
   
   return aLists.Outlines()->AppendNewToTop(new (aBuilder)
       nsDisplayGeneric(this, PaintDebugPlaceholder, "DebugPlaceholder"));
+#else // DEBUG
+  return NS_OK;
+#endif // DEBUG
 }
+#endif // DEBUG || (MOZ_REFLOW_PERF_DSP && MOZ_REFLOW_PERF)
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsPlaceholderFrame::GetFrameName(nsAString& aResult) const
 {

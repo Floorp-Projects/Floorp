@@ -2003,6 +2003,8 @@ nsTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 {
   if (!IsVisibleForPainting(aBuilder))
     return NS_OK;
+
+  DO_GLOBAL_REFLOW_COUNT_DSP("nsTextFrame");
   
   if ((0 != (mState & TEXT_BLINK_ON)) && nsBlinkTimer::GetBlinkIsOff())
     return NS_OK;

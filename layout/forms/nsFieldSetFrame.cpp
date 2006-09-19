@@ -213,6 +213,8 @@ nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   
     rv = DisplayOutlineUnconditional(aBuilder, aLists);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    DO_GLOBAL_REFLOW_COUNT_DSP("nsFieldSetFrame");
   }
 
   if (mLegendFrame) {
