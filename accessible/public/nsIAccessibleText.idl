@@ -46,7 +46,7 @@ typedef long nsAccessibleCoordType;
 
 interface nsIAccessible;
 
-[scriptable, uuid(c3a9526c-4834-4237-822c-c02ef5b6b8b1)]
+[scriptable, uuid(80e64909-e96b-45e9-81c9-3521a2dea7bb)]
 interface nsIAccessibleText : nsISupports
 {
   const nsAccessibleTextBoundary BOUNDARY_CHAR = 0;
@@ -119,6 +119,10 @@ interface nsIAccessibleText : nsISupports
                         out long height,
                         in nsAccessibleCoordType coordType);
 
+  /**
+   * Get the text offset at the given point, or return -1
+   * if no character exists at that point
+   */
   long getOffsetAtPoint (in long x, in long y,
                          in nsAccessibleCoordType coordType);
 

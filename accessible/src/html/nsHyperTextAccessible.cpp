@@ -40,6 +40,7 @@
 #include "nsHyperTextAccessible.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibilityService.h"
+#include "nsAccessibleTreeWalker.h"
 #include "nsPIAccessNode.h"
 #include "nsIClipboard.h"
 #include "nsContentCID.h"
@@ -840,16 +841,16 @@ NS_IMETHODIMP nsHyperTextAccessible::GetRangeExtents(PRInt32 aStartOffset, PRInt
  */
 NS_IMETHODIMP nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY, nsAccessibleCoordType aCoordType, PRInt32 *aOffset)
 {
-  *aOffset = 0;
+  *aOffset = -1;
   nsCOMPtr<nsIPresShell> shell = GetPresShell();
   if (!shell) {
     return NS_ERROR_FAILURE;
   }
-  nsIFrame *frame = GetFrame();
-  if (!frame) {
+  nsIFrame *hyperFrame = GetFrame();
+  if (!hyperFrame) {
     return NS_ERROR_FAILURE;
   }
-  nsIntRect frameScreenRect = frame->GetScreenRectExternal();
+  nsIntRect frameScreenRect = hyperFrame->GetScreenRectExternal();
 
   if (aCoordType == COORD_TYPE_WINDOW) {
     nsCOMPtr<nsIDocument> doc = shell->GetDocument();
@@ -876,53 +877,49 @@ NS_IMETHODIMP nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY, ns
   if (!frameScreenRect.Contains(aX, aY)) {
     return NS_ERROR_FAILURE;
   }
-  nsPoint pointInFrame(aX - frameScreenRect.x, aY - frameScreenRect.y);
+  nsPoint pointInHyperText(aX - frameScreenRect.x, aY - frameScreenRect.y);
+  nsPresContext *context = GetPresContext();
+  NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
+  // Convert to twips
+  float p2t = context->PixelsToTwips();
+  pointInHyperText.x = NSIntPixelsToTwips(pointInHyperText.x, p2t);
+  pointInHyperText.y = NSIntPixelsToTwips(pointInHyperText.y, p2t);
+
   // Go through the frames to check if each one has the point.
   // When one does, add up the character offsets until we have a match
 
   // We have an point in an accessible child of this, now we need to add up the
   // offsets before it to what we already have
   nsCOMPtr<nsIAccessible> accessible;
+  PRInt32 offset = 0;
 
   while (NextChild(accessible)) {
-    PRBool finished = frame->GetRect().Contains(pointInFrame);
     nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
     nsIFrame *frame = accessNode->GetFrame();
-    if (IsText(accessible)) {
-      if (frame) {
-        if (finished) {
-          nsCOMPtr<nsIRenderingContext> rc;
-          shell->CreateRenderingContext(frame, getter_AddRefs(rc));
-          NS_ENSURE_TRUE(rc, NS_ERROR_FAILURE);
-          const nsTextFragment *textFrag = frame->GetContent()->GetText();
-          // For each character in frame->GetContent(), add to totalWidth
-          // until it is wider than the x coordinate we are looking for
-          PRInt32 length = textFrag->GetLength();
-          PRInt32 totalWidth = 0;
-          for (PRInt32 index = 0; index < length; index ++) {
-            nscoord charWidth;
-            if (NS_FAILED(rc->GetWidth(textFrag->CharAt(index), charWidth))) {
-              break;
-            }
-            totalWidth += charWidth;
-            if (pointInFrame.x < totalWidth) {
-              *aOffset += index;
-              return NS_OK;
-            }
+    NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+    while (frame) {
+      nsIContent *content = frame->GetContent();
+      NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+      nsPoint pointInFrame = pointInHyperText - frame->GetOffsetToExternal(hyperFrame);
+      nsSize frameSize = frame->GetSize();
+      if (pointInFrame.x < frameSize.width && pointInFrame.y < frameSize.height) {
+        // Finished
+        if (IsText(accessible)) {
+          nsIFrame::ContentOffsets contentOffsets = frame->GetContentOffsetsFromPointExternal(pointInFrame);
+          if (contentOffsets.IsNull() || contentOffsets.content != content) {
+            return NS_ERROR_FAILURE;
           }
-          return NS_ERROR_FAILURE;
+          offset += contentOffsets.offset;
         }
-        *aOffset += TextLength(accessible);
+        *aOffset = offset;
+        return NS_OK;
       }
+      frame = frame->GetNextContinuation();
     }
-    else if (finished) {
-      break;
-    }
-    else {
-      ++*aOffset;
-    }
+    offset += TextLength(accessible);
   }
-  return NS_OK;
+
+  return NS_ERROR_FAILURE;
 }
 
 // ------- nsIAccessibleHyperText ---------------
