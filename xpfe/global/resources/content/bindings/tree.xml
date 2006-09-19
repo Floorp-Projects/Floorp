@@ -381,11 +381,12 @@
             this.treeBoxObject.scrollByLines(rows);
         ]]>
       </handler>
-      <handler event="select" phase="target" action="this.stopEditing(true);"/>
+      <handler event="select" phase="target"
+               action="if (event.originalTarget == this) this.stopEditing(true);"/>
       <handler event="focus" action="this.treeBoxObject.focused = true;"/>
       <handler event="blur" action="this.treeBoxObject.focused = false;"/>
       <handler event="blur" phase="capturing"
-               action="if (event.originalTarget == this.inputField) this.stopEditing(true);"/>
+               action="if (event.originalTarget == this.inputField.inputField) this.stopEditing(true);"/>
       <handler event="keypress" keycode="vk_enter">
         <![CDATA[
           if (this._editingColumn) {
@@ -419,8 +420,11 @@
           }
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_left" phase="target">
+      <handler event="keypress" keycode="vk_left">
         <![CDATA[
+         if (this._editingColumn)
+           return;
+
          var row = this.currentIndex;
          if (row < 0)
            return;
@@ -460,8 +464,11 @@
          }
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_right" phase="target">
+      <handler event="keypress" keycode="vk_right">
         <![CDATA[
+         if (this._editingColumn)
+           return;
+
           var row = this.currentIndex;
           if (row < 0)
             return;
@@ -510,8 +517,11 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_up"
-               modifiers="control any" phase="target">
+               modifiers="control any">
         <![CDATA[
+         if (this._editingColumn)
+           return;
+
          if (event.ctrlKey && this.view.selection.single) {
            this.treeBoxObject.scrollByLines(-1);
            return;
@@ -541,8 +551,11 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_down"
-               modifiers="control any" phase="target">
+               modifiers="control any">
         <![CDATA[
+         if (this._editingColumn)
+           return;
+
          if (event.ctrlKey && this.view.selection.single) {
            this.treeBoxObject.scrollByLines(1);
            return;
@@ -572,9 +585,9 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_up"
-               modifiers="control any, shift" phase="target">
+               modifiers="control any, shift">
         <![CDATA[
-         if (this.view.selection.single)
+         if (this._editingColumn || this.view.selection.single)
            return;
          var c = this.currentIndex;
          if (c == -1 || c == 0)
@@ -585,9 +598,9 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_down"
-               modifiers="control any, shift" phase="target">
+               modifiers="control any, shift">
         <![CDATA[
-         if (this.view.selection.single)
+         if (this._editingColumn || this.view.selection.single)
            return;
          var c = this.currentIndex;
          if (c+1 == this.view.rowCount)
@@ -598,8 +611,11 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_up"
-               modifiers="control any" phase="target">
+               modifiers="control any">
         <![CDATA[
+         if (this._editingColumn)
+           return;
+
          if (this.pageUpOrDownMovesSelection == event.ctrlKey) {
            this.treeBoxObject.scrollByPages(-1);
            return;
@@ -621,8 +637,11 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_down"
-               modifiers="control any" phase="target">
+               modifiers="control any">
         <![CDATA[
+         if (this._editingColumn)
+           return;
+
          if (this.pageUpOrDownMovesSelection == event.ctrlKey) {
            this.treeBoxObject.scrollByPages(1);
            return;
@@ -646,9 +665,9 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_up"
-               modifiers="control any, shift" phase="target">
+               modifiers="control any, shift">
         <![CDATA[
-         if (this.view.selection.single)
+         if (this._editingColumn || this.view.selection.single)
            return;
          var c = this.currentIndex;
          if (c == 0)
@@ -668,9 +687,9 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_down"
-               modifiers="control any, shift" phase="target">
+               modifiers="control any, shift">
         <![CDATA[
-         if (this.view.selection.single)
+         if (this._editingColumn || this.view.selection.single)
            return;
          var c = this.currentIndex;
           var l = this.view.rowCount - 1;
@@ -692,9 +711,9 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_home"
-               modifiers="control any" phase="target">
+               modifiers="control any">
         <![CDATA[
-         if (this.view.rowCount == 0)
+         if (this._editingColumn || this.view.rowCount == 0)
            return;
          // Normal behaviour is to select the first row
          if (!event.ctrlKey)
@@ -706,8 +725,11 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_end"
-               modifiers="control any" phase="target">
+               modifiers="control any">
         <![CDATA[
+         if (this._editingColumn)
+           return;
+
          var l = this.view.rowCount - 1;
          if (l < 0)
            return;
@@ -721,9 +743,9 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_home"
-               modifiers="control any, shift" phase="target">
+               modifiers="control any, shift">
         <![CDATA[
-         if (this.view.selection.single)
+         if (this._editingColumn || this.view.selection.single)
            return;
          // Extend the selection from the existing pivot, if any
          this.view.selection.rangedSelect(-1, 0, event.ctrlKey);
@@ -731,9 +753,9 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_end"
-               modifiers="control any, shift" phase="target">
+               modifiers="control any, shift">
         <![CDATA[
-         if (this.view.selection.single)
+         if (this._editingColumn || this.view.selection.single)
            return;
          var l = this.view.rowCount - 1;
          // Extend the selection from the existing pivot, if any
