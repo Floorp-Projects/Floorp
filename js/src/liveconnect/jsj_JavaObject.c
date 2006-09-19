@@ -99,7 +99,8 @@ static JSBool JS_DLL_CALLBACK jsj_GC_callback(JSContext *cx, JSGCStatus status)
             JavaObjectWrapper* java_wrapper = deferred_wrappers;
             while (java_wrapper) {
                 deferred_wrappers = java_wrapper->u.next;
-                (*jEnv)->DeleteGlobalRef(jEnv, java_wrapper->java_obj);
+                if (java_wrapper->java_obj)
+                    (*jEnv)->DeleteGlobalRef(jEnv, java_wrapper->java_obj);
                 jsj_ReleaseJavaClassDescriptor(cx, jEnv, java_wrapper->class_descriptor);
                 JS_free(cx, java_wrapper);
                 java_wrapper = deferred_wrappers;
@@ -300,10 +301,6 @@ JavaObject_finalize(JSContext *cx, JSObject *obj)
         return;
     java_obj = java_wrapper->java_obj;
 
-    jsj_env = jsj_EnterJava(cx, &jEnv);
-    if (!jEnv)
-        return;
-
     if (java_obj) {
         remove_java_obj_reflection_from_hashtable(java_obj, java_wrapper->u.hash_code);
 
@@ -311,11 +308,16 @@ JavaObject_finalize(JSContext *cx, JSObject *obj)
         java_wrapper->u.next = deferred_wrappers;
         deferred_wrappers = java_wrapper;
     } else {
-        jsj_ReleaseJavaClassDescriptor(cx, jEnv, java_wrapper->class_descriptor);
-        JS_free(cx, java_wrapper);
+        jsj_env = jsj_EnterJava(cx, &jEnv);
+        if (jEnv) {
+            jsj_ReleaseJavaClassDescriptor(cx, jEnv, java_wrapper->class_descriptor);
+            JS_free(cx, java_wrapper);
+            jsj_ExitJava(jsj_env);
+        } else {
+            java_wrapper->u.next = deferred_wrappers;
+            deferred_wrappers = java_wrapper;
+        }
     }
-
-    jsj_ExitJava(jsj_env);
 }
 
 /* Trivial helper for jsj_DiscardJavaObjReflections(), below */
