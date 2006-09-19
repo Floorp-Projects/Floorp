@@ -2068,7 +2068,6 @@ nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
 {
   *aAccessible = nsnull;
 
-  nsIAccessible *acc = nsnull;
   nsEventStatus status;
   nsAccessibleEvent event(PR_TRUE, NS_GETACCESSIBLE, this);
   
@@ -3943,7 +3942,7 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
 
 #ifdef DEBUG_hakan
   static PRBool testInit = PR_FALSE;
-  if (!testInit && [[nativeAccessible role] isEqualToString:@"mozRootAccessible"]) {
+  if (!testInit && [nativeAccessible isRoot]) {
     [nativeAccessible printHierarchy];
     testInit = PR_TRUE;
   }
@@ -3955,9 +3954,9 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
 /* Implementation of formal mozAccessible formal protocol (enabling mozViews
    to talk to mozAccessible objects in the accessibility module). */
 
-- (NSString*)role
+- (BOOL)isRoot
 {
-  return [[self accessible] role];
+  return [[self accessible] isRoot];
 }
 
 #ifdef DEBUG
@@ -4022,8 +4021,7 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
   // if we're the root (topmost) accessible, we need to return our native AXParent as we
   // traverse outside to the hierarchy of whoever embeds us. thus, fall back on NSView's
   // default implementation for this attribute.
-  if ([attribute isEqualToString:NSAccessibilityParentAttribute] && 
-    [[accessible role] isEqualToString:@"mozRootAccessible"]) {
+  if ([attribute isEqualToString:NSAccessibilityParentAttribute] && [accessible isRoot]) {
     id parentAccessible = [super accessibilityAttributeValue:attribute];
     return parentAccessible;
   }
