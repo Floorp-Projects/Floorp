@@ -145,10 +145,6 @@ nsDeviceContextGTK::nsDeviceContextGTK()
   mDepth = 0 ;
   mNumCells = 0;
 
-  mWidthFloat = 0.0f;
-  mHeightFloat = 0.0f;
-  mWidth = -1;
-  mHeight = -1;
   mDeviceWindow = nsnull;
 }
 
@@ -218,11 +214,8 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   nsCOMPtr<nsIScreen> screen;
   mScreenManager->GetPrimaryScreen ( getter_AddRefs(screen) );
   if ( screen ) {
-    PRInt32 x, y, width, height, depth;
-    screen->GetRect ( &x, &y, &width, &height );
+    PRInt32 depth;
     screen->GetPixelDepth ( &depth );
-    mWidthFloat = float(width);
-    mHeightFloat = float(height);
     mDepth = NS_STATIC_CAST ( PRUint32, depth );
   }
     
@@ -450,19 +443,20 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PR
   }
 #endif
 
-  if (mWidth == -1)
-    mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
+  PRInt32 width = 0, height = 0;
 
-  if (mHeight == -1)
-    mHeight = NSToIntRound(mHeightFloat * mDevUnitsToAppUnits);
+  nsCOMPtr<nsIScreen> screen;
+  mScreenManager->GetPrimaryScreen(getter_AddRefs(screen));
+  if (screen) {
+    PRInt32 x, y;
+    screen->GetRect(&x, &y, &width, &height);
+  }
 
-  aWidth = mWidth;
-  aHeight = mHeight;
+  aWidth = NSToIntRound(float(width) * mDevUnitsToAppUnits);
+  aHeight = NSToIntRound(float(height) * mDevUnitsToAppUnits);
 
   return NS_OK;
 }
-
-
 
 NS_IMETHODIMP nsDeviceContextGTK::GetRect(nsRect &aRect)
 {
