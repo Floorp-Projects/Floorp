@@ -3707,9 +3707,7 @@ js_SetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
         }
     }
     sprop = (JSScopeProperty *)prop;
-    sprop = js_ChangeNativePropertyAttrs(cx, obj, sprop,
-                                         *attrsp &
-                                         ~(JSPROP_GETTER | JSPROP_SETTER), 0,
+    sprop = js_ChangeNativePropertyAttrs(cx, obj, sprop, *attrsp, 0,
                                          sprop->getter, sprop->setter);
     if (noprop)
         OBJ_DROP_PROPERTY(cx, obj, prop);
