@@ -170,28 +170,6 @@ function dumpDOM(aNode, aIndent)
     dumpDOM(aNode.childNodes[i], aIndent);
 }
 
-var gStringBundle;
-
-// convert nodeType constant into human readable form
-function nodeTypeToText (nodeType)
-{
-  if (!gStringBundle) {
-    var strBundleService =
-       Components.classes["@mozilla.org/intl/stringbundle;1"].
-                  getService(Components.interfaces.nsIStringBundleService);
-    gStringBundle = strBundleService.createBundle("chrome://inspector/locale/inspector.properties"); 
-  }
-
-  if (gStringBundle) {
-    const nsIDOMNode = Components.interfaces.nsIDOMNode;
-    if (nodeType >= nsIDOMNode.ELEMENT_NODE && nodeType <= nsIDOMNode.NOTATION_NODE) {
-      return gStringBundle.GetStringFromName(nodeType);
-    }
-  }
-
-  return nodeType;
-}
-
 // ::::::: nsITransaction helper functions :::::::
 
 function txnQueryInterface(theUID, theResult)
