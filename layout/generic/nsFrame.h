@@ -473,14 +473,7 @@ protected:
   /**
    * @return PR_FALSE if this frame definitely has no borders at all
    */                 
-  PRBool HasBorder() {
-    const nsStyleBorder* border = GetStyleBorder();
-    for (PRInt32 i = 0; i < 4; ++i) {
-      if (border->GetBorderStyle(i) != NS_STYLE_BORDER_STYLE_NONE)
-        return PR_TRUE;
-    }
-    return PR_FALSE;
-  }
+  PRBool HasBorder();
 
   /**
    * To be called by |BuildDisplayLists| of this class or derived classes to add
