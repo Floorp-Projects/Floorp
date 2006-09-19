@@ -88,6 +88,9 @@ protected:
     void FromIcalTime(icaltimetype *icalt);
     nsresult GetIcalTZ(const nsACString& tzid, struct _icaltimezone **tzp);
 
+    PRTime IcaltimeToPRTime(const icaltimetype *const icalt, struct _icaltimezone *const tz);
+    void PRTimeToIcaltime(const PRTime time, const PRBool isdate, struct _icaltimezone *const tz, icaltimetype *icalt);
+
     PRTime mLastModified;
 };
 

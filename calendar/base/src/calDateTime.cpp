@@ -284,10 +284,12 @@ calDateTime::SubtractDate(calIDateTime *aDate, calIDuration **aDuration)
     aDate->ToIcalTime(&itt2);
 
     // same as icaltime_subtract(), but minding timezones:
-    icaltimezone * utc = icaltimezone_get_utc_timezone();
-    time_t t1t = icaltime_as_timet_with_zone(itt1, utc);
-    time_t t2t = icaltime_as_timet_with_zone(itt2, utc);
-    icaldurationtype idt = icaldurationtype_from_int((int)(t1t-t2t));
+    PRTime t2t;
+    aDate->GetNativeTime(&t2t);
+    // for a duration, need to convert the difference in microseconds (prtime)
+    // to seconds (libical), so divide by one million.
+    icaldurationtype idt = 
+        icaldurationtype_from_int(NS_STATIC_CAST(int, mNativeTime - t2t / PR_USEC_PER_SEC));
 
     nsCOMPtr<calIDuration> result(do_CreateInstance("@mozilla.org/calendar/duration;1"));
     if (!result)
@@ -320,8 +322,6 @@ calDateTime::ToString(nsACString& aResult)
 NS_IMETHODIMP
 calDateTime::SetTimeInTimezone(PRTime aTime, const nsACString& aTimezone)
 {
-    struct icaltimetype icalt;
-    time_t tt;
     icaltimezone *tz = nsnull;
 
     if (aTimezone.IsEmpty())
@@ -330,16 +330,10 @@ calDateTime::SetTimeInTimezone(PRTime aTime, const nsACString& aTimezone)
     nsresult rv = GetIcalTZ(aTimezone, &tz);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRInt64 temp, million;
-    LL_I2L(million, PR_USEC_PER_SEC);
-    LL_DIV(temp, aTime, million);
-    PRInt32 sectime;
-    LL_L2I(sectime, temp);
+    struct icaltimetype icalt = icaltime_null_time();
+    PRTimeToIcaltime(aTime, PR_FALSE, tz, &icalt);
 
-    tt = sectime;
-    icalt = icaltime_from_timet_with_zone(tt, 0, tz);
     FromIcalTime(&icalt);
-
     mIsValid = PR_TRUE;
 
     return NS_OK;
@@ -567,12 +561,74 @@ calDateTime::FromIcalTime(icaltimetype *icalt)
     // mNativeTime: not moving the existing date to UTC,
     // but merely representing it a UTC-based way.
     t.is_date = 0;
-    time_t tt = icaltime_as_timet_with_zone(t, icaltimezone_get_utc_timezone());
-    PRInt64 temp, million;
-    LL_I2L(million, PR_USEC_PER_SEC);
-    LL_I2L(temp, tt);
-    LL_MUL(temp, temp, million);
-    mNativeTime = temp;
+    mNativeTime = IcaltimeToPRTime(&t, icaltimezone_get_utc_timezone());
+}
+
+PRTime
+calDateTime::IcaltimeToPRTime(const icaltimetype *const icalt, struct _icaltimezone *const tz)
+{
+    struct icaltimetype tt = *icalt;
+    struct PRExplodedTime et;
+
+    /* If the time is the special null time, return 0. */
+    if (icaltime_is_null_time(*icalt)) {
+        return 0;
+    }
+
+    if (tz) {
+        // use libical for timezone conversion, as it can handle all ics
+        // timezones. having nspr do it is much harder.
+        tt = icaltime_convert_to_zone(*icalt, tz);
+    }
+
+    /* Empty the destination */
+    memset(&et, 0, sizeof(struct PRExplodedTime));
+
+    /* Fill the fields */
+    if (icaltime_is_date(tt)) {
+        et.tm_sec = et.tm_min = et.tm_hour = 0;
+    } else {
+        et.tm_sec = tt.second;
+        et.tm_min = tt.minute;
+        et.tm_hour = tt.hour;
+    }
+    et.tm_mday = tt.day;
+    et.tm_month = tt.month-1;
+    et.tm_year = tt.year;
+
+    return PR_ImplodeTime(&et);
+}
+
+void
+calDateTime::PRTimeToIcaltime(const PRTime time, const PRBool isdate,
+                              struct _icaltimezone *const tz,
+                              icaltimetype *icalt)
+{
+    icaltimezone *utc_zone;
+
+    struct PRExplodedTime et;
+    PR_ExplodeTime(time, PR_GMTParameters, &et);
+
+    icalt->year   = et.tm_year;
+    icalt->month  = et.tm_month + 1;
+    icalt->day    = et.tm_mday;
+
+    if (isdate) { 
+        icalt->is_date = 1;
+        return;
+    }
+
+    icalt->hour   = et.tm_hour;
+    icalt->minute = et.tm_min;
+    icalt->second = et.tm_sec;
+
+    /* Only do conversion when not in floating timezone */
+    if (tz) {
+        utc_zone = icaltimezone_get_utc_timezone();
+        icalt->is_utc = (tz == utc_zone) ? 1 : 0;
+        icalt->zone = tz;
+    }
+    return;
 }
 
 NS_IMETHODIMP
