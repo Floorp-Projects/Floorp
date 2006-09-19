@@ -706,10 +706,6 @@ Quit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_FALSE;
 }
 
-#ifdef GC_MARK_DEBUG
-extern JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
-#endif
-
 static JSBool
 GC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
