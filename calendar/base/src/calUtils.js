@@ -136,7 +136,9 @@ function getUUID() {
     if ("@mozilla.org/uuid-generator;1" in Components.classes) {
         var uuidGen = Cc["@mozilla.org/uuid-generator;1"].
                       getService(Ci.nsIUUIDGenerator);
-        return uuidGen.generateUUID().toString();
+        // generate uuids without braces to avoid problems with 
+        // CalDAV servers that don't support filenames with {}
+        return uuidGen.generateUUID().toString().replace(/[{}]/g, '');
     }
     // No uuid service (we're on the 1.8.0 branch)
     return "uuid" + (new Date()).getTime();

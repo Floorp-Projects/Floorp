@@ -196,10 +196,8 @@ calDavCalendar.prototype = {
             throw Components.interfaces.calIErrors.CAL_IS_READONLY;
         }
         
-        // CalDAV UIDs are used to construct filenames, so we strip braces to avoid
-        // problems with servers which do not support names with {}
         if (aItem.id == null && aItem.isMutable)
-            aItem.id = getUUID().replace(/[{}]/g, '');
+            aItem.id = getUUID();
 
         if (aItem.id == null) {
             if (aListener)
@@ -903,7 +901,7 @@ var calDavCalendarModule = {
     mContractID: "@mozilla.org/calendar/calendar;1?type=caldav",
 
     mUtilsLoaded: false,
-    loadUtils: function storageLoadUtils() {
+    loadUtils: function caldavLoadUtils() {
         if (this.mUtilsLoaded)
             return;
 
