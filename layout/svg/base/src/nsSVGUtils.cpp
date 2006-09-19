@@ -965,3 +965,29 @@ nsSVGUtils::ConvertSVGMatrixToCairo(nsIDOMSVGMatrix *aMatrix)
   cairo_matrix_t m = { A, B, C, D, E, F };
   return m;
 }
+
+PRBool
+nsSVGUtils::HitTestRect(nsIDOMSVGMatrix *aMatrix,
+                        float aRX, float aRY, float aRWidth, float aRHeight,
+                        float aX, float aY)
+{
+  PRBool result = PR_TRUE;
+
+  if (aMatrix) {
+    cairo_matrix_t matrix = ConvertSVGMatrixToCairo(aMatrix);
+    cairo_t *ctx = cairo_create(GetCairoComputationalSurface());
+    cairo_set_tolerance(ctx, 1.0);
+
+    cairo_set_matrix(ctx, &matrix);
+    cairo_new_path(ctx);
+    cairo_rectangle(ctx, aRX, aRY, aRWidth, aRHeight);
+    cairo_identity_matrix(ctx);
+
+    if (!cairo_in_fill(ctx, aX, aY))
+      result = PR_FALSE;
+
+    cairo_destroy(ctx);
+  }
+
+  return result;
+}

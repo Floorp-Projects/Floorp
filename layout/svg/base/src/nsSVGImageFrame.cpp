@@ -91,6 +91,7 @@ public:
 
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect);
+  NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
 
   // nsSVGGeometryFrame overload:
   // Lie about our fill/stroke so hit detection works
@@ -120,6 +121,8 @@ public:
 #endif
 
 private:
+  already_AddRefed<nsIDOMSVGMatrix> GetImageTransform();
+
   nsCOMPtr<nsIDOMSVGPreserveAspectRatio> mPreserveAspectRatio;
 
   nsCOMPtr<imgIDecoderObserver> mListener;
@@ -215,6 +218,37 @@ nsSVGImageFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                                    aAttribute, aModType);
 }
 
+already_AddRefed<nsIDOMSVGMatrix>
+nsSVGImageFrame::GetImageTransform()
+{
+  nsCOMPtr<nsIDOMSVGMatrix> ctm;
+  GetCanvasTM(getter_AddRefs(ctm));
+
+  float x, y, width, height;
+  nsSVGElement *element = NS_STATIC_CAST(nsSVGElement*, mContent);
+  element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
+
+  PRUint32 nativeWidth, nativeHeight;
+  nativeWidth = cairo_image_surface_get_width(mSurface);
+  nativeHeight = cairo_image_surface_get_height(mSurface);
+
+  nsCOMPtr<nsIDOMSVGImageElement> image = do_QueryInterface(mContent);
+  nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> ratio;
+  image->GetPreserveAspectRatio(getter_AddRefs(ratio));
+
+  nsCOMPtr<nsIDOMSVGMatrix> trans, ctmXY, fini;
+  trans = nsSVGUtils::GetViewBoxTransform(width, height,
+                                          0, 0,
+                                          nativeWidth, nativeHeight,
+                                          ratio);
+  ctm->Translate(x, y, getter_AddRefs(ctmXY));
+  ctmXY->Multiply(trans, getter_AddRefs(fini));
+
+  nsIDOMSVGMatrix *retval = nsnull;
+  fini.swap(retval);
+  return retval;
+}
+
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods:
 NS_IMETHODIMP
@@ -254,21 +288,7 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
     nsSVGElement *element = NS_STATIC_CAST(nsSVGElement*, mContent);
     element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
 
-    PRUint32 nativeWidth, nativeHeight;
-    nativeWidth = cairo_image_surface_get_width(mSurface);
-    nativeHeight = cairo_image_surface_get_height(mSurface);
-
-    nsCOMPtr<nsIDOMSVGImageElement> image = do_QueryInterface(mContent);
-    nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> ratio;
-    image->GetPreserveAspectRatio(getter_AddRefs(ratio));
-
-    nsCOMPtr<nsIDOMSVGMatrix> trans, ctmXY, fini;
-    trans = nsSVGUtils::GetViewBoxTransform(width, height,
-                                            0, 0,
-                                            nativeWidth, nativeHeight,
-                                            ratio);
-    ctm->Translate(x, y, getter_AddRefs(ctmXY));
-    ctmXY->Multiply(trans, getter_AddRefs(fini));
+    nsCOMPtr<nsIDOMSVGMatrix> fini = GetImageTransform();
 
     if (GetStyleDisplay()->IsScrollableOverflow()) {
       canvas->PushClip();
@@ -291,6 +311,27 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGImageFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
+{
+  if (GetStyleDisplay()->IsScrollableOverflow() && mSurface) {
+    PRUint32 nativeWidth, nativeHeight;
+    nativeWidth = cairo_image_surface_get_width(mSurface);
+    nativeHeight = cairo_image_surface_get_height(mSurface);
+
+    nsCOMPtr<nsIDOMSVGMatrix> fini = GetImageTransform();
+
+    if (!nsSVGUtils::HitTestRect(fini,
+                                 0, 0, nativeWidth, nativeHeight,
+                                 x, y)) {
+      *hit = nsnull;
+      return NS_OK;
+    }
+  }
+
+  return nsSVGPathGeometryFrame::GetFrameForPointSVG(x, y, hit);
 }
 
 nsIAtom *

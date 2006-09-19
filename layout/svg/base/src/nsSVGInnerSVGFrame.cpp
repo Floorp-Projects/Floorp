@@ -92,7 +92,8 @@ public:
   NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation);
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
-  
+  NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
+
   // nsSVGContainerFrame methods:
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 
@@ -233,6 +234,31 @@ nsSVGInnerSVGFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
 {
   mOverrideCTM = aCTM;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGInnerSVGFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
+{
+  if (GetStyleDisplay()->IsScrollableOverflow()) {
+    float clipX, clipY, clipWidth, clipHeight;
+    nsCOMPtr<nsIDOMSVGMatrix> clipTransform;
+
+    nsSVGElement *svg = NS_STATIC_CAST(nsSVGElement*, mContent);
+    svg->GetAnimatedLengthValues(&clipX, &clipY, &clipWidth, &clipHeight, nsnull);
+
+    nsSVGContainerFrame *parent = NS_STATIC_CAST(nsSVGContainerFrame*,
+                                                 mParent);
+    clipTransform = parent->GetCanvasTM();
+
+    if (!nsSVGUtils::HitTestRect(clipTransform,
+                                 clipX, clipY, clipWidth, clipHeight,
+                                 x, y)) {
+      *hit = nsnull;
+      return NS_OK;
+    }
+  }
+
+  return nsSVGInnerSVGFrameBase::GetFrameForPointSVG(x, y, hit);
 }
 
 //----------------------------------------------------------------------
