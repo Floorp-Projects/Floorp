@@ -2799,13 +2799,6 @@ nsFrame::Reflow(nsPresContext*          aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace)
-{
-  aUsedSpace = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
                                 nsIRenderingContext& aRC,
                                 nscoord& aDeltaWidth,

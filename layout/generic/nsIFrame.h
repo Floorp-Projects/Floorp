@@ -1067,11 +1067,6 @@ public:
    */
   NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const = 0;
 
-  // Justification helper method used to distribute extra space in a
-  // line to leaf frames. aUsedSpace is filled in with the amount of
-  // space actually used.
-  NS_IMETHOD AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace) = 0;
-
   // Justification helper method that is used to remove trailing
   // whitespace before justification.
   NS_IMETHOD TrimTrailingWhiteSpace(nsPresContext* aPresContext,
