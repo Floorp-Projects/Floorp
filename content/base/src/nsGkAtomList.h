@@ -1358,6 +1358,7 @@ GK_ATOM(computedOffsetProperty, "ComputedOffsetProperty")  // nsPoint*
 GK_ATOM(IBSplitSpecialPrevSibling, "IBSplitSpecialPrevSibling")// nsIFrame*
 GK_ATOM(IBSplitSpecialSibling, "IBSplitSpecialSibling")    // nsIFrame*
 GK_ATOM(lineCursorProperty, "LineCursorProperty") // nsLineBox*
+GK_ATOM(rowCursorProperty, "RowCursorProperty") // nsTableRowGroupFrame::FrameCursorData*
 GK_ATOM(maxElementWidthProperty, "MaxElementWidthProperty")  // nscoord*
 GK_ATOM(outOfFlowDirtyRectProperty, "OutOfFlowDirtyRectProperty") // nsRect*
 GK_ATOM(overflowAreaProperty, "OverflowArea")              // nsRect*

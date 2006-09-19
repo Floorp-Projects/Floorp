@@ -217,6 +217,7 @@ nsPropertyTable::SetPropertyInternal(nsPropertyOwner     aObject,
     if (aPropDtorFunc != propertyList->mDtorFunc ||
         aPropDtorData != propertyList->mDtorData ||
         aTransfer != propertyList->mTransfer) {
+      NS_WARNING("Destructor/data mismatch while setting property");
       return NS_ERROR_INVALID_ARG;
     }
 
