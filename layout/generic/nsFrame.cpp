@@ -917,6 +917,12 @@ nsIFrame::DisplayCaret(nsDisplayListBuilder* aBuilder,
       new (aBuilder) nsDisplayCaret(this, aBuilder->GetCaret()));
 }
 
+PRBool
+nsFrame::HasBorder()
+{
+  return GetStyleBorder()->GetBorder() != nsMargin(0,0,0,0);
+}
+
 nsresult
 nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
                                         const nsDisplayListSet& aLists,
