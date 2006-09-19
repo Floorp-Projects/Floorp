@@ -244,21 +244,20 @@ MapColAttributesIntoCSS(nsIFrame* aTableFrame,
 static void
 MapAllAttributesIntoCSS(nsIFrame* aTableFrame)
 {
-  //XXX only loop for the sake of it,
-  //mtable is simple and only has one (pseudo) row-group
+  // mtable is simple and only has one (pseudo) row-group
   nsIFrame* rowgroupFrame = aTableFrame->GetFirstChild(nsnull);
-  for ( ; rowgroupFrame; rowgroupFrame = rowgroupFrame->GetNextSibling()) {
-    nsIFrame* rowFrame = rowgroupFrame->GetFirstChild(nsnull);
-    for ( ; rowFrame; rowFrame = rowFrame->GetNextSibling()) {
-      DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TABLE_ROW);
-      if (rowFrame->GetType() == nsGkAtoms::tableRowFrame) {
-        MapRowAttributesIntoCSS(aTableFrame, rowFrame);
-        nsIFrame* cellFrame = rowFrame->GetFirstChild(nsnull);
-        for ( ; cellFrame; cellFrame = cellFrame->GetNextSibling()) {
-          DEBUG_VERIFY_THAT_FRAME_IS(cellFrame, TABLE_CELL);
-          if (IS_TABLE_CELL(cellFrame->GetType())) {
-            MapColAttributesIntoCSS(aTableFrame, rowFrame, cellFrame);
-          }
+  if (!rowgroupFrame) return;
+
+  nsIFrame* rowFrame = rowgroupFrame->GetFirstChild(nsnull);
+  for ( ; rowFrame; rowFrame = rowFrame->GetNextSibling()) {
+    DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TABLE_ROW);
+    if (rowFrame->GetType() == nsGkAtoms::tableRowFrame) {
+      MapRowAttributesIntoCSS(aTableFrame, rowFrame);
+      nsIFrame* cellFrame = rowFrame->GetFirstChild(nsnull);
+      for ( ; cellFrame; cellFrame = cellFrame->GetNextSibling()) {
+        DEBUG_VERIFY_THAT_FRAME_IS(cellFrame, TABLE_CELL);
+        if (IS_TABLE_CELL(cellFrame->GetType())) {
+          MapColAttributesIntoCSS(aTableFrame, rowFrame, cellFrame);
         }
       }
     }
@@ -333,6 +332,16 @@ nsMathMLmtableOuterFrame::~nsMathMLmtableOuterFrame()
 }
 
 NS_IMETHODIMP
+nsMathMLmtableOuterFrame::Init(nsIContent*      aContent,
+                               nsIFrame*        aParent,
+                               nsIFrame*        aPrevInFlow)
+{
+  nsresult rv = nsTableOuterFrame::Init(aContent, aParent, aPrevInFlow);
+  nsMathMLFrame::MapCommonAttributesIntoCSS(GetPresContext(), aContent);
+  return rv;
+}
+
+NS_IMETHODIMP
 nsMathMLmtableOuterFrame::InheritAutomaticData(nsIFrame* aParent)
 {
   // XXX the REC says that by default, displaystyle=false in <mtable>
@@ -341,26 +350,138 @@ nsMathMLmtableOuterFrame::InheritAutomaticData(nsIFrame* aParent)
   nsMathMLFrame::InheritAutomaticData(aParent);
 
   // see if the displaystyle attribute is there and let it override what we inherited
-  nsAutoString value;
-  GetAttribute(mContent, nsnull, nsMathMLAtoms::displaystyle_, value);
-  if (value.EqualsLiteral("true")) {
-    mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
-  }
-  else if (value.EqualsLiteral("false")) {
-    mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
-  }
+  nsMathMLFrame::FindAttrDisplaystyle(mContent, mPresentationData);
 
   return NS_OK;
 }
 
+// displaystyle is special in mtable...
+// Since UpdatePresentation() and UpdatePresentationDataFromChildAt() can be called
+// by a parent, ensure that the displaystyle attribute of mtable takes precedence
 NS_IMETHODIMP
-nsMathMLmtableOuterFrame::Init(nsIContent*      aContent,
-                               nsIFrame*        aParent,
-                               nsIFrame*        aPrevInFlow)
+nsMathMLmtableOuterFrame::UpdatePresentationData(PRInt32  aScriptLevelIncrement,
+                                                 PRUint32 aFlagsValues,
+                                                 PRUint32 aWhichFlags)
 {
-  nsresult rv = nsTableOuterFrame::Init(aContent, aParent, aPrevInFlow);
-  nsMathMLFrame::MapCommonAttributesIntoCSS(GetPresContext(), aContent);
-  return rv;
+  if (NS_MATHML_HAS_EXPLICIT_DISPLAYSTYLE(mPresentationData.flags)) {
+    // our current state takes precedence, disallow updating the displastyle
+    aWhichFlags &= ~NS_MATHML_DISPLAYSTYLE;
+    aFlagsValues &= ~NS_MATHML_DISPLAYSTYLE;
+  }
+
+  return nsMathMLFrame::UpdatePresentationData(
+    aScriptLevelIncrement, aFlagsValues, aWhichFlags);
+}
+
+NS_IMETHODIMP
+nsMathMLmtableOuterFrame::UpdatePresentationDataFromChildAt(PRInt32  aFirstIndex,
+                                                            PRInt32  aLastIndex,
+                                                            PRInt32  aScriptLevelIncrement,
+                                                            PRUint32 aFlagsValues,
+                                                            PRUint32 aWhichFlags)
+{
+  if (NS_MATHML_HAS_EXPLICIT_DISPLAYSTYLE(mPresentationData.flags)) {
+    // our current state takes precedence, disallow updating the displastyle
+    aWhichFlags &= ~NS_MATHML_DISPLAYSTYLE;
+    aFlagsValues &= ~NS_MATHML_DISPLAYSTYLE;
+  }
+
+  nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(this,
+    aFirstIndex, aLastIndex, aScriptLevelIncrement, aFlagsValues, aWhichFlags);
+
+  return NS_OK; 
+}
+
+NS_IMETHODIMP
+nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
+                                           nsIAtom* aAttribute,
+                                           PRInt32  aModType)
+{
+  // Attributes common to MathML tags
+  if (nsMathMLFrame::CommonAttributeChangedFor(GetPresContext(), mContent, aAttribute))
+    return NS_OK;
+
+  // Attributes specific to <mtable>:
+  // frame         : in mathml.css
+  // framespacing  : not yet supported 
+  // groupalign    : not yet supported
+  // equalrows     : not yet supported 
+  // equalcolumns  : not yet supported 
+  // displaystyle  : here 
+  // align         : in reflow 
+  // rowalign      : here
+  // rowlines      : here 
+  // rowspacing    : not yet supported 
+  // columnalign   : here 
+  // columnlines   : here 
+  // columnspacing : not yet supported 
+
+  // mtable is simple and only has one (pseudo) row-group inside our inner-table
+  nsIFrame* tableFrame = mFrames.FirstChild();
+  if (!tableFrame) return NS_OK;
+  nsIFrame* rowgroupFrame = tableFrame->GetFirstChild(nsnull);
+  if (!rowgroupFrame) return NS_OK;
+
+  // align - just need to issue a dirty (resize) reflow command
+  if (aAttribute == nsMathMLAtoms::align) {
+    GetPresContext()->PresShell()->
+      AppendReflowCommand(this, eReflowType_ReflowDirty, nsnull);
+    return NS_OK;
+  }
+
+  // displaystyle - may seem innocuous, but it is actually very harsh --
+  // like changing an unit. Blow away and recompute all our automatic
+  // presentational data, and issue a style-changed reflow request
+  if (aAttribute == nsMathMLAtoms::displaystyle_) {
+    nsMathMLContainerFrame::RebuildAutomaticDataForChildren(mParent);
+    nsMathMLContainerFrame::PropagateScriptStyleFor(tableFrame, mPresentationData.scriptLevel);
+    GetPresContext()->PresShell()->
+      AppendReflowCommand(mParent, eReflowType_StyleChanged, nsnull);
+    return NS_OK;
+  }
+
+  // ...and the other attributes affect rows or columns in one way or another
+  nsIAtom* MOZrowAtom = nsnull;
+  nsIAtom* MOZcolAtom = nsnull;
+  if (aAttribute == nsMathMLAtoms::rowalign_)
+    MOZrowAtom = nsMathMLAtoms::MOZrowalign;
+  else if (aAttribute == nsMathMLAtoms::rowlines_)
+    MOZrowAtom = nsMathMLAtoms::MOZrowline;
+  else if (aAttribute == nsMathMLAtoms::columnalign_)
+    MOZcolAtom = nsMathMLAtoms::MOZcolumnalign;
+  else if (aAttribute == nsMathMLAtoms::columnlines_)
+    MOZcolAtom = nsMathMLAtoms::MOZcolumnline;
+
+  if (!MOZrowAtom && !MOZcolAtom)
+    return NS_OK;
+
+  // clear any cached nsValueList for this table
+  tableFrame->DeleteProperty(aAttribute);
+
+  // unset any -moz attribute that we may have set earlier, and re-sync
+  nsIFrame* rowFrame = rowgroupFrame->GetFirstChild(nsnull);
+  for ( ; rowFrame; rowFrame = rowFrame->GetNextSibling()) {
+    if (rowFrame->GetType() == nsGkAtoms::tableRowFrame) {
+      if (MOZrowAtom) { // let rows do the work
+        rowFrame->GetContent()->UnsetAttr(kNameSpaceID_None, MOZrowAtom, PR_FALSE);
+        MapRowAttributesIntoCSS(tableFrame, rowFrame);    
+      } else { // let cells do the work
+        nsIFrame* cellFrame = rowFrame->GetFirstChild(nsnull);
+        for ( ; cellFrame; cellFrame = cellFrame->GetNextSibling()) {
+          if (IS_TABLE_CELL(cellFrame->GetType())) {
+            cellFrame->GetContent()->UnsetAttr(kNameSpaceID_None, MOZcolAtom, PR_FALSE);
+            MapColAttributesIntoCSS(tableFrame, rowFrame, cellFrame);
+          }
+        }
+      }
+    }
+  }
+
+  // Explicitly request a re-resolve and reflow in our subtree to pick up any changes
+  GetPresContext()->PresShell()->FrameConstructor()->
+    PostRestyleEvent(mContent, eReStyle_Self, nsChangeHint_ReflowFrame);
+
+  return NS_OK;
 }
 
 nsIFrame*

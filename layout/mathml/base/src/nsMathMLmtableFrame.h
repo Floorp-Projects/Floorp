@@ -59,16 +59,16 @@ public:
   InheritAutomaticData(nsIFrame* aParent);
 
   NS_IMETHOD
+  UpdatePresentationData(PRInt32  aScriptLevelIncrement,
+                         PRUint32 aFlagsValues,
+                         PRUint32 aWhichFlags);
+
+  NS_IMETHOD
   UpdatePresentationDataFromChildAt(PRInt32         aFirstIndex,
                                     PRInt32         aLastIndex,
                                     PRInt32         aScriptLevelIncrement,
                                     PRUint32        aFlagsValues,
-                                    PRUint32        aFlagsToUpdate)
-  {
-    nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(this,
-      aFirstIndex, aLastIndex, aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
-    return NS_OK;
-  }
+                                    PRUint32        aWhichFlags);
 
   NS_IMETHOD
   ReResolveScriptStyle(PRInt32 aParentScriptLevel)
@@ -89,6 +89,11 @@ public:
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
+
+  NS_IMETHOD
+  AttributeChanged(PRInt32  aNameSpaceID,
+                   nsIAtom* aAttribute,
+                   PRInt32  aModType);
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 

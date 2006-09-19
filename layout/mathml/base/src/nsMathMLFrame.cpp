@@ -80,6 +80,31 @@ nsMathMLFrame::GetMathMLFrameType()
   return eMathMLFrameType_Ordinary;  
 }
 
+// snippet of code used by <mstyle> and <mtable>, which are the only
+// two tags where the displaystyle attribute is allowed by the spec.
+/* static */ void
+nsMathMLFrame::FindAttrDisplaystyle(nsIContent*         aContent,
+                                    nsPresentationData& aPresentationData)
+{
+  NS_ASSERTION(aContent->Tag() == nsMathMLAtoms::mstyle_ ||
+               aContent->Tag() == nsMathMLAtoms::mtable_, "bad caller");
+  static nsIContent::AttrValuesArray strings[] =
+    {&nsMathMLAtoms::_false, &nsMathMLAtoms::_true, nsnull};
+  // see if the explicit displaystyle attribute is there
+  switch (aContent->FindAttrValueIn(kNameSpaceID_None,
+    nsMathMLAtoms::displaystyle_, strings, eCaseMatters)) {
+  case 0:
+    aPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
+    aPresentationData.flags |= NS_MATHML_EXPLICIT_DISPLAYSTYLE;
+    break;
+  case 1:
+    aPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+    aPresentationData.flags |= NS_MATHML_EXPLICIT_DISPLAYSTYLE;
+    break;
+  }
+  // no reset if the attr isn't found. so be sure to call it on inherited flags
+}
+
 NS_IMETHODIMP
 nsMathMLFrame::InheritAutomaticData(nsIFrame* aParent) 
 {
@@ -113,11 +138,11 @@ nsMathMLFrame::InheritAutomaticData(nsIFrame* aParent)
 NS_IMETHODIMP
 nsMathMLFrame::UpdatePresentationData(PRInt32         aScriptLevelIncrement,
                                       PRUint32        aFlagsValues,
-                                      PRUint32        aFlagsToUpdate)
+                                      PRUint32        aWhichFlags)
 {
   mPresentationData.scriptLevel += aScriptLevelIncrement;
   // update flags that are relevant to this call
-  if (NS_MATHML_IS_DISPLAYSTYLE(aFlagsToUpdate)) {
+  if (NS_MATHML_IS_DISPLAYSTYLE(aWhichFlags)) {
     // updating the displaystyle flag is allowed
     if (NS_MATHML_IS_DISPLAYSTYLE(aFlagsValues)) {
       mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
@@ -126,7 +151,7 @@ nsMathMLFrame::UpdatePresentationData(PRInt32         aScriptLevelIncrement,
       mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
     }
   }
-  if (NS_MATHML_IS_COMPRESSED(aFlagsToUpdate)) {
+  if (NS_MATHML_IS_COMPRESSED(aWhichFlags)) {
     // updating the compression flag is allowed
     if (NS_MATHML_IS_COMPRESSED(aFlagsValues)) {
       // 'compressed' means 'prime' style in App. G, TeXbook

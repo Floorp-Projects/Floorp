@@ -73,6 +73,27 @@ nsMathMLmrowFrame::InheritAutomaticData(nsIFrame* aParent)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMathMLmrowFrame::AttributeChanged(PRInt32  aNameSpaceID,
+                                    nsIAtom* aAttribute,
+                                    PRInt32  aModType)
+{
+  // Special for <mtable>: In the frame construction code, we also use
+  // this frame class as a wrapper for mtable. Hence, we should pass the
+  // notification to the real mtable
+  if (mContent->Tag() == nsMathMLAtoms::mtable_) {
+    nsIFrame* frame = mFrames.FirstChild();
+    for ( ; frame; frame = frame->GetFirstChild(nsnull)) {
+      // drill down to the real mtable
+      if (frame->GetType() == nsLayoutAtoms::tableOuterFrame)
+        return frame->AttributeChanged(aNameSpaceID, aAttribute, aModType);
+    }
+    NS_NOTREACHED("mtable wrapper without the real table frame");
+  }
+
+  return nsMathMLContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
+}
+
 nsIFrame*
 nsMathMLmrowFrame::GetContentInsertionFrame()
 {
