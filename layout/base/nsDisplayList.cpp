@@ -486,15 +486,15 @@ NonZeroStyleCoord(const nsStyleCoord& aCoord) {
 }
 
 static PRBool
-HasNonZeroBorderRadius(const nsStyleBorder* aBorder) {
+HasNonZeroSide(const nsStyleSides& aSides) {
   nsStyleCoord coord;
-  aBorder->mBorderRadius.GetTop(coord);
+  aSides.GetTop(coord);
   if (NonZeroStyleCoord(coord)) return PR_TRUE;    
-  aBorder->mBorderRadius.GetRight(coord);
+  aSides.GetRight(coord);
   if (NonZeroStyleCoord(coord)) return PR_TRUE;    
-  aBorder->mBorderRadius.GetBottom(coord);
+  aSides.GetBottom(coord);
   if (NonZeroStyleCoord(coord)) return PR_TRUE;    
-  aBorder->mBorderRadius.GetLeft(coord);
+  aSides.GetLeft(coord);
   if (NonZeroStyleCoord(coord)) return PR_TRUE;    
 
   return PR_FALSE;
@@ -512,7 +512,7 @@ nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
     nsCSSRendering::FindBackground(mFrame->GetPresContext(), mFrame, &bg, &isCanvas);
   if (!hasBG || (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) ||
       bg->mBackgroundClip != NS_STYLE_BG_CLIP_BORDER ||
-      HasNonZeroBorderRadius(mFrame->GetStyleBorder()) ||
+      HasNonZeroSide(mFrame->GetStyleBorder()->mBorderRadius) ||
       NS_GET_A(bg->mBackgroundColor) < 255)
     return PR_FALSE;
   return PR_TRUE;
@@ -531,7 +531,7 @@ nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder) {
   if (!hasBG)
     return PR_TRUE;
   if ((bg->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE) &&
-      !HasNonZeroBorderRadius(mFrame->GetStyleBorder()) &&
+      !HasNonZeroSide(mFrame->GetStyleBorder()->mBorderRadius) &&
       bg->mBackgroundClip == NS_STYLE_BG_CLIP_BORDER)
     return PR_TRUE;
   return PR_FALSE;
@@ -589,6 +589,28 @@ nsDisplayOutline::Paint(nsDisplayListBuilder* aBuilder,
                                mFrame->GetStyleContext(), 0);
 }
 
+PRBool
+nsDisplayOutline::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
+                                     nsRegion* aVisibleRegion) {
+  if (!nsDisplayItem::OptimizeVisibility(aBuilder, aVisibleRegion))
+    return PR_FALSE;
+
+  const nsStyleOutline* outline = mFrame->GetStyleOutline();
+  nsPoint origin = aBuilder->ToReferenceFrame(mFrame);
+  if (nsRect(origin, mFrame->GetSize()).Contains(aVisibleRegion->GetBounds()) &&
+      !HasNonZeroSide(outline->mOutlineRadius)) {
+    nscoord outlineOffset;
+    outline->GetOutlineOffset(outlineOffset);
+    if (outlineOffset >= 0) {
+      // the visible region is entirely inside the border-rect, and the outline
+      // isn't rendered inside the border-rect, so the outline is not visible
+      return PR_FALSE;
+    }
+  }
+
+  return PR_TRUE;
+}
+
 void
 nsDisplayCaret::Paint(nsDisplayListBuilder* aBuilder,
     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
@@ -596,6 +618,26 @@ nsDisplayCaret::Paint(nsDisplayListBuilder* aBuilder,
   // need to check for the caret's visibility.
   mCaret->PaintCaret(aBuilder, aCtx, aBuilder->ToReferenceFrame(mFrame),
                      mFrame->GetStyleColor()->mColor);
+}
+
+PRBool
+nsDisplayBorder::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
+                                    nsRegion* aVisibleRegion) {
+  if (!nsDisplayItem::OptimizeVisibility(aBuilder, aVisibleRegion))
+    return PR_FALSE;
+
+  const nsStyleBorder* border = mFrame->GetStyleBorder();
+  nsRect contentRect = GetBounds(aBuilder);
+  contentRect.Deflate(border->GetBorder());
+  if (contentRect.Contains(aVisibleRegion->GetBounds()) &&
+      !HasNonZeroSide(border->mBorderRadius)) {
+    // the visible region is entirely inside the content rect, and no part
+    // of the border is rendered inside the content rect, so we are not
+    // visible
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
 }
 
 void
