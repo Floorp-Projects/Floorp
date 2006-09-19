@@ -138,6 +138,11 @@ switch ($clean['updateVersion']) {
             if ($completePatch->hasUpdateType()) {
                 $update->setType($completePatch->updateType);
             }
+
+            // If we have a license URL, pass it along.
+            if ($completePatch->hasLicenseUrl()) {
+                $update->setLicense($completePatch->licenseUrl);
+            }
         }
 
         // We only check for a partial patch if the complete patch was successfully retrieved.

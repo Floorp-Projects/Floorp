@@ -68,15 +68,21 @@ class Xml extends AUS_Object {
         $extensionVersion = htmlentities($update->extensionVersion);
         $build = htmlentities($update->build);
         $details = htmlentities($update->details);
+        $license = htmlentities($update->license);
 
-        $details_xml = "";
-        if (strlen($details) > 0) {
+        $details_xml = '';
+        if (!empty($details)) {
             $details_xml = " detailsURL=\"{$details}\"";
+        }
+
+        $license_xml = '';
+        if (!empty($license)) {
+            $license_xml = " licenseURL=\"{$license}\"";
         }
 
         $this->xmlOutput .= <<<startUpdate
 
-    <update type="{$type}" version="{$version}" extensionVersion="{$extensionVersion}" buildID="{$build}" {$details_xml}>
+    <update type="{$type}" version="{$version}" extensionVersion="{$extensionVersion}" buildID="{$build}"{$details_xml}{$license_xml}>
 startUpdate;
 
         /**

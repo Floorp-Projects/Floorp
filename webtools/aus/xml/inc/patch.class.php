@@ -75,6 +75,7 @@ class Patch extends AUS_Object {
     var $updateType;
     var $updateVersion;
     var $updateExtensionVersion;
+    var $licenseUrl;
     
     // Do we have Update metadata information?
     var $hasUpdateInfo;
@@ -370,6 +371,13 @@ class Patch extends AUS_Object {
      */
     function hasUpdateType() {
         return isset($this->updateType);
+    }
+
+    /**
+     * Determine whether or not we have a license URL and our patch is a major update.
+     */
+    function hasLicenseUrl() {
+        return (isset($this->licenseUrl) && $this->isComplete());
     }
 
     /**

@@ -47,6 +47,8 @@ class Update extends AUS_Object {
     var $version;
     var $extensionVersion;
     var $build;
+    var $details;
+    var $license;
 
     /**
      * Default constructor.
@@ -86,7 +88,7 @@ class Update extends AUS_Object {
       * @param string $build
       */
      function setBuild($build) {
-        return $this->setVar('build',$build);
+        return $this->build = $build;
      }
 
      /**
@@ -94,8 +96,17 @@ class Update extends AUS_Object {
       * @param string $details
       */
      function setDetails($details) {
-        return $this->setVar('details',$details);
+        return $this->details = $details;
      }
+
+     /**
+      * Set the license URL.
+      * @param string $license
+      */
+     function setLicense($license) {
+        return $this->license = $license;
+     }
+
 
      /**
       * Get type.
