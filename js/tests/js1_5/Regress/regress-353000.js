@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 //-----------------------------------------------------------------------------
-var bug = 353120;
+var bug = 353100;
 var summary = 'decompilation of RegExp literal after catch block';
 var actual = '';
 var expect = '';
