@@ -1,15 +1,15 @@
 !1 Variables
 !define COMMAND_PATTERN {python %m -v %p}
-!define TEST_RUNNER {/Users/morgamic/pyfit/fit/FitServer.py}
-!define host {http://khan.mozilla.org/~morgamic/austest/update/2}
+!define TEST_RUNNER {/home/morgamic/pyfit/fit/FitServer.py}
+!define host {http://khan-vm.mozilla.org/~morgamic/austest/update/2}
 !define product {Synthetic}
 !define version {1.0}
 !define platform {platform}
 !define locale {locale}
 
-!1 Patches
+!1 Patches 
  1 only a complete
- 2 both complete and partial
+ 2 both complete and partial 
 |aus.Verify|${host}|${product}|${version}|${platform}|${locale}|
 |build|channel|complete|partial|hasUpdate?|hasComplete?|hasPartial?|isValidXml?|
 |1000000001|channel|complete001|partial001|true|true|false|true|
@@ -23,29 +23,29 @@
 
 !1 Channels and Fallback Channels
 
- 1 update exists for partner channel
- 2 update exists for normal channel
+ 1 update exists for partner channel 
+ 2 update exists for normal channel 
 |aus.Verify|${host}|${product}|${version}|${platform}|${locale}|
 |build|channel|complete|partial|hasUpdate?|hasComplete?|hasPartial?|isValidXml?|
 |3000000001|channel-cck-partner|complete-partner-003|partial-partner-003|true|true|true|true|
 |3000000001|channel|complete003|partial003|true|true|true|true|
 
  1 update for partner channel falls back and offers normal patches (complete|partial)004
- 2 update exists as expected for normal channel
+ 2 update exists as expected for normal channel 
 |aus.Verify|${host}|${product}|${version}|${platform}|${locale}|
 |build|channel|complete|partial|hasUpdate?|hasComplete?|hasPartial?|isValidXml?|
 |4000000001|channel-cck-partner|complete004|partial004|true|true|true|true|
 |4000000001|channel|complete004|partial004|true|true|true|true|
 
  1 update exists only on partner channel 
- 2 update does not exist for normal channel
+ 2 update does not exist for normal channel 
 |aus.Verify|${host}|${product}|${version}|${platform}|${locale}|
 |build|channel|complete|partial|hasUpdate?|hasComplete?|hasPartial?|isValidXml?|
 |5000000001|channel-cck-partner|complete-partner-005|partial-partner-005|true|true|true|true|
 |5000000001|channel|complete|partial|false|false|false|true|
 
- 1 no update exists for partner channel
- 2 no update exists for normal channel
+ 1 no update exists for partner channel 
+ 2 no update exists for normal channel 
 |aus.Verify|${host}|${product}|${version}|${platform}|${locale}|
 |build|channel|complete|partial|hasUpdate?|hasComplete?|hasPartial?|isValidXml?|
 |6000000001|channel-cck-partner|complete|partial|false|false|false|true|
@@ -53,7 +53,7 @@
 
 !1 Build ID Validation
  1 don't serve update if build version in uri is newer than build version in *.txt
- 2 don't serve update if build version in uri is newer than build version in *.txt, fallback channel
+ 2 don't serve update if build version in uri is newer than build version in *.txt, fallback channel 
 |aus.Verify|${host}|${product}|${version}|${platform}|${locale}|
 |build|channel|complete|partial|hasUpdate?|hasComplete?|hasPartial?|isValidXml?|
 |7000000001|channel|complete|partial|false|false|false|true|
@@ -64,23 +64,23 @@
  2 major update using new snippet schema (preed's patch)
  3 minor update using existing snippet schema (minor was the only one, previously)
 |aus.Verify|${host}|${product}|${version}|${platform}|${locale}|
-|build|channel|complete|partial|hasUpdate?|isMinorUpdate?|isMajorUpdate?|hasComplete?|hasPartial?|isValidXml?|
-|8000000001|channel|complete|partial|true|true|false|true|true|true|
-|8000000002|channel|complete|partial|true|false|true|true|true|true|
-|8000000003|channel|complete|partial|true|true|false|true|true|true|
+|build|channel|complete|partial|licenseUrl|hasUpdate?|isMinorUpdate?|isMajorUpdate?|hasLicenseUrl?|hasComplete?|hasPartial?|isValidXml?|
+|8000000001|channel|complete|partial|license8|true|true|false|false|true|true|true|
+|8000000002|channel|complete|partial|license8|true|false|true|true|true|true|true|
+|8000000003|channel|complete|partial|license8|true|true|false|false|true|true|true|
 
 !1 OS Version Compatibility
- 1 supported os version, or unknown os version
- 2 unsupported or blocked platform (exists in $unsupportedPlatforms in aus2 config)
+ 1 supported os version, or unknown os version 
+ 2 unsupported or blocked platform (exists in $unsupportedPlatforms in aus2 config) 
 |aus.Verify|${host}|${product}|${version}|${platform}|${locale}|
 |build|channel|complete|partial|osVersion|hasUpdate?|hasComplete?|hasPartial?|isValidXml?|
 |9000000001|channel|complete|partial|Web 2.0|true|true|true|true|
 |9000000001|channel|complete|partial|Windows_98|false|false|false|true|
 
-!1 Nightly Updates
+!1 Nightly Updates 
  1 outdated (>1 off) update serving only a complete (1.5.0.5->1.5.0.x)
  2 one-off update serving both complete and partial (1.5.0.5->1.5.0.x)
- 3 client already at the latest build requests an update (no update shoudl be offered)
+ 3 client already at the latest build requests an update (no update should be offered)
  4 version with no branchVersion in AUS config (6.0->?)
 |aus.Verify|${host}|${product}|${version}|${platform}|${locale}|
 |version|build|channel|complete|partial|hasUpdate?|hasComplete?|hasPartial?|isValidXml?|

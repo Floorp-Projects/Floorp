@@ -26,11 +26,13 @@ class Verify(ColumnFixture):
                "partial": "String",
                "updateType": "String",
                "osVersion": "String",
+               "licenseUrl": "String",
                "lastURI": "String",
                "newURI": "String",
                "hasUpdate": "Boolean",
                "hasComplete": "Boolean",
                "hasPartial":  "Boolean",
+               "hasLicenseUrl": "Boolean",
                "isValidXml": "Boolean",
                "isMinorUpdate": "Boolean",
                "isMajorUpdate": "Boolean"}
@@ -70,18 +72,39 @@ class Verify(ColumnFixture):
     def isMajorUpdate(self):
         return ('type="major"' in self.getXml())
 
+    # Check to see if the XML has a licenseURL.
+    def hasLicenseUrl(self):
+        return (self.licenseUrl in self.getXml())
+
     # Check if the AUS XML document is well-formed.
     def isValidXml(self):
-        return (feedparser.parse(self.getXml()).bozo==0)
+        
+        # Parse our file, creating a feedparser object.
+        xml = feedparser.parse(self.getXml())
+        print xml.version
+
+        # If xml.bozo==1, the feed was malformed and unparsable.
+        if (xml.bozo==1):
+            return False
+
+        # We should always have an xml version.
+        if ('<?xml version="1.0"?>' not in self.getXml()):
+            return False
+        
+        # We should always have a parent 'updates' element.
+        if ('<updates>' not in self.getXml()):
+            return False
+        
+        return True
 
     # Gets and returns an AUS XML document.
     def getXml(self):
         newURI = self.buildUri();
 
-        print newURI
-
         if (self.lastURI == newURI):
             return self.lastXML
+
+        print newURI
         
         newXML = urllib2.urlopen(newURI).read()
 
