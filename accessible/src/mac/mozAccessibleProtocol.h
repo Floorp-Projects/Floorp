@@ -52,8 +52,9 @@
 
 @protocol mozAccessible
 
-// returns this accessible's role name as a string.
-- (NSString*)role;
+// returns whether this accessible is the root accessible. there is one
+// root accessible per window.
+- (BOOL)isRoot;
 
 #ifdef DEBUG
 // debug utility that will print the native accessibility tree, starting

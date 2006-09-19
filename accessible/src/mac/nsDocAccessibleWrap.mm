@@ -56,8 +56,3 @@ nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessibl
   return NS_OK;
 }
 
-objc_class*
-nsDocAccessibleWrap::GetNativeType ()
-{
-  return [mozDocAccessible class];
-}

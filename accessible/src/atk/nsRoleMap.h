@@ -120,13 +120,11 @@ PRUint32 atkRoleMap[] = {
     ATK_ROLE_DESKTOP_FRAME,       // nsIAccessible::ROLE_DESKTOP_FRAME     71
     ATK_ROLE_DIRECTORY_PANE,      // nsIAccessible::ROLE_DIRECTORY_PANE    72
     ATK_ROLE_FILE_CHOOSER,        // nsIAccessible::ROLE_FILE_CHOOSER      73
-    ATK_ROLE_FILLER,              // nsIAccessible::ROLE_FILLER            74
     ATK_ROLE_FONT_CHOOSER,        // nsIAccessible::ROLE_FONT_CHOOSER      75
     ATK_ROLE_FRAME,               // nsIAccessible::ROLE_CHROME_WINDOW     76
     ATK_ROLE_GLASS_PANE,          // nsIAccessible::ROLE_GLASS_PANE        77
     ATK_ROLE_HTML_CONTAINER,      // nsIAccessible::ROLE_HTML_CONTAINER    78
     ATK_ROLE_ICON,                // nsIAccessible::ROLE_ICON              79
-    ATK_ROLE_INTERNAL_FRAME,      // nsIAccessible::ROLE_INTERNAL_FRAME    80
     ATK_ROLE_LABEL,               // nsIAccessible::ROLE_LABEL             81
     ATK_ROLE_LAYERED_PANE,        // nsIAccessible::ROLE_LAYERED_PANE      82
     ATK_ROLE_OPTION_PANE,         // nsIAccessible::ROLE_OPTION_PANE       83
@@ -150,7 +148,6 @@ PRUint32 atkRoleMap[] = {
     ATK_ROLE_RULER,               // nsIAccessible::ROLE_RULER             101
     ATK_ROLE_AUTOCOMPLETE,        // nsIAccessible::ROLE_AUTOCOMPLETE      102
     ATK_ROLE_EDITBAR,             // nsIAccessible::ROLE_EDITBAR           103
-    ATK_ROLE_EMBEDDED,            // nsIAccessible::ROLE_EMBEDDED          104
     ATK_ROLE_ENTRY,               // nsIAccessible::ROLE_ENTRY             105
     ATK_ROLE_CAPTION,             // nsIAccessible::ROLE_CAPTION           106
     ATK_ROLE_DOCUMENT_FRAME,      // nsIAccessible::ROLE_DOCUMENT_FRAME    107

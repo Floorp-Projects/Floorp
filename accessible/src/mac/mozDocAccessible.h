@@ -43,19 +43,10 @@
 #import "mozAccessibleProtocol.h"
 
 /* 
-  Represents a "document", a web area. 
-  Created by nsDocAccessibleWrap 
-*/
-@interface mozDocAccessible : mozAccessible
-{
-}
-@end
-
-/* 
   The root accessible. There is one per window.
   Created by the nsRootAccessibleWrap.
 */
-@interface mozRootAccessible : mozDocAccessible
+@interface mozRootAccessible : mozAccessible
 {
   // the mozView that we're representing.
   // all outside communication goes through the mozView.

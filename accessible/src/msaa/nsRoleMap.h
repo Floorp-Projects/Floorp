@@ -133,13 +133,11 @@ PRUint32 msaaRoleMap[] = {
     USE_ROLE_STRING,                 // nsIAccessible::ROLE_DESKTOP_FRAME
     USE_ROLE_STRING,                 // nsIAccessible::ROLE_DIRECTORY_PANE
     USE_ROLE_STRING,                 // nsIAccessible::ROLE_FILE_CHOOSER
-    USE_ROLE_STRING,                 // nsIAccessible::ROLE_FILLER
     USE_ROLE_STRING,                 // nsIAccessible::ROLE_FONT_CHOOSER
     ROLE_SYSTEM_APPLICATION,         // nsIAccessible::ROLE_CHROME_WINDOW
     USE_ROLE_STRING,                 // nsIAccessible::ROLE_GLASS_PANE
     USE_ROLE_STRING,                 // nsIAccessible::ROLE_HTML_CONTAINER
     ROLE_SYSTEM_PUSHBUTTON,          // nsIAccessible::ROLE_ICON
-    USE_ROLE_STRING,                 // nsIAccessible::ROLE_INTERNAL_FRAME
     ROLE_SYSTEM_STATICTEXT,          // nsIAccessible::ROLE_LABEL
     USE_ROLE_STRING,                 // nsIAccessible::ROLE_LAYERED_PANE
     USE_ROLE_STRING,                 // nsIAccessible::ROLE_OPTION_PANE
@@ -163,7 +161,6 @@ PRUint32 msaaRoleMap[] = {
     USE_ROLE_STRING,                 // nsIAccessible::ROLE_RULER
     ROLE_SYSTEM_COMBOBOX,            // nsIAccessible::ROLE_AUTOCOMPLETE
     ROLE_SYSTEM_TEXT,                // nsIAccessible::ROLE_EDITBAR
-    USE_ROLE_STRING,                 // nsIAccessible::ROLE_EMBEDDED
     ROLE_SYSTEM_TEXT,                // nsIAccessible::ROLE_ENTRY
     USE_ROLE_STRING,                 // nsIAccessible::ROLE_CAPTION
     USE_ROLE_STRING,                 // nsIAccessible::ROLE_DOCUMENT_FRAME
