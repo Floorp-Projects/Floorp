@@ -126,9 +126,6 @@ protected:
   void AddWindowListeners(nsIDOMWindow *aWindow);
   void RemoveWindowListeners(nsIDOMWindow *aWindow);
   
-  void AddKeyListener(nsIDOMHTMLInputElement *aInput);
-  void RemoveKeyListener();
-  
   void StartControllingInput(nsIDOMHTMLInputElement *aInput);
   void StopControllingInput();
   
