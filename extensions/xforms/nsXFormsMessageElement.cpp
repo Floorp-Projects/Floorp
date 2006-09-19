@@ -84,7 +84,7 @@
 #include "nsIXFormsEphemeralMessageUI.h"
 
 #define MESSAGE_WINDOW_PROPERTIES \
-  "location=false,scrollbars=yes,centerscreen"
+  "centerscreen,chrome,dependent,dialog"
 
 #define MESSAGE_WINDOW_URL \
   "chrome://xforms/content/xforms-message.xul"
@@ -663,8 +663,7 @@ nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
   nsresult rv;
   if (!hasBinding && !src.IsEmpty()) {
     // Creating a normal window for messages with src attribute.
-    options.AppendLiteral(",chrome=no,resizable");
-
+    options.AppendLiteral(",resizable");
     // Create a new URI so that we properly convert relative urls to absolute.
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDoc));
     NS_ENSURE_STATE(doc);
@@ -678,7 +677,6 @@ nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
   } else {
     // Cloning the content of the xf:message and creating a
     // dialog for it.
-    options.AppendLiteral(",dialog,chrome,dependent");
     nsCOMPtr<nsIDOMDocument> ddoc;
     nsCOMPtr<nsIDOMDOMImplementation> domImpl;
     rv = aDoc->GetImplementation(getter_AddRefs(domImpl));
@@ -758,8 +756,11 @@ nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
     CopyUTF8toUTF16(b64String, messageURL);
   }
 
-  if (aLevel.EqualsLiteral("modal"))
+  if (aLevel.EqualsLiteral("modal")) {
     options.AppendLiteral(",modal");
+  } else if (aLevel.EqualsLiteral("modeless")) {
+    options.AppendLiteral(",minimizable");
+  }
 
   nsCOMPtr<nsISupportsString> arg(
     do_CreateInstance("@mozilla.org/supports-string;1", &rv));

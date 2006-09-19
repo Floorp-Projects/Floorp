@@ -41,8 +41,8 @@
 <dialog id="XFormsMessageDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="[XForms]"
-        width="200px"
-        height="200px"
+        width="325px"
+        height="120px"
         buttons="accept"
         onload="loadMessageURL()">
 
