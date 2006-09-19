@@ -207,7 +207,7 @@
         <rdf:li> <rdf:Description ID="a11y-minimum-font-size" nc:name="Setting a Minimum Font Size" nc:link="accessibility.xhtml#setting_a_minimum_font_size"/> </rdf:li>
         <rdf:li> <rdf:Description ID="a11y-text-zoom" nc:name="Resizing Page Text" nc:link="accessibility.xhtml#resizing_page_text"/> </rdf:li>
         <rdf:li> <rdf:Description ID="a11y-override-colors" nc:name="Overriding Page Colors" nc:link="accessibility.xhtml#overriding_page_colors"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="a11y-high-contrast" nc:name="Using a High Contrast Theme" nc:link="accessibility.xhtml#using_a_high_contrast_theme"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="a11y-high-contrast" nc:name="Using a High Contrast Theme" nc:link="accessibility.xhtml#using_a_high_contrast_theme" nc:platform="win unix"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -264,8 +264,8 @@
         <rdf:li> <rdf:Description ID="menu-file-print" nc:name="Print..." nc:link="menu_reference.xhtml#print"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-file-import" nc:name="Import..." nc:link="menu_reference.xhtml#import"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-file-work-offline" nc:name="Work Offline" nc:link="menu_reference.xhtml#work_offline"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-exit-win" nc:name="Exit" nc:link="menu_reference.xhtml#exit" nc:platform="win os2"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-exit-nowin" nc:name="Quit" nc:link="menu_reference.xhtml#exit" nc:platform="unix mac"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-file-exit-win" nc:name="Exit" nc:link="menu_reference.xhtml#exit" nc:platform="win os2"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-file-exit-unix" nc:name="Quit" nc:link="menu_reference.xhtml#exit" nc:platform="unix"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
