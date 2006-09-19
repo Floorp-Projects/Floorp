@@ -123,10 +123,6 @@ const int kDefaultExpireDays = 9;
   // ensure that the prefs exist
   [self setPref:"browser.startup.page"   toInt:[checkboxNewWindowBlank state] ? 1 : 0];
   [self setPref:"browser.tabs.startPage" toInt:[checkboxNewTabBlank state] ? 1 : 0];
-
-  [self setPref:"camino.check_default_browser" toBoolean:([checkboxCheckDefaultBrowserOnLaunch state] == NSOnState)];
-
-  [self setPref:"camino.warn_when_closing" toBoolean:([checkboxWarnWhenClosing state] == NSOnState)];
 }
 
 - (IBAction)checkboxStartPageClicked:(id)sender
