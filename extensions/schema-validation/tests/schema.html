@@ -536,8 +536,10 @@
 
         validate("http://www.foo.com", "anyuri-test-1", true);
         validate("", "anyuri-test-1", true);
-        validate("f", "anyuri-test-1", false);
-        validate("bar..com", "anyuri-test-1", false);
+        validate("f", "anyuri-test-1", true);
+        validate("bar..com", "anyuri-test-1", true);
+        // XXX This should probably not validate
+        validate("http://ftp://#.#?###.", "anyuri-test-1", true);
 
         validate("http://www.foo.com", "anyuri-test-2", true);
         validate("http://www.f.com", "anyuri-test-2", false);

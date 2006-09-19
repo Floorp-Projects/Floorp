@@ -3440,8 +3440,12 @@ nsSchemaValidator::IsValidSchemaAnyURI(const nsAString & aString)
   if (aString.IsEmpty()) {
     isValid = PR_TRUE;
   } else {
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURI(getter_AddRefs(uri), aString);
+    nsCOMPtr<nsIURI> uri, absUri;
+
+    // Need to supply a baseURI to allow relative URIs
+    NS_NewURI(getter_AddRefs(absUri), NS_LITERAL_STRING("http://a"));
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), aString,
+                            (const char*)nsnull, absUri);
 
     if (rv == NS_OK)
       isValid = PR_TRUE;
