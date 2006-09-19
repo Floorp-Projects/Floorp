@@ -86,5 +86,24 @@ public:
   NS_IMETHOD DoAction(PRUint8 aIndex);
 };
 
+/**
+ * Accessible object for xforms:range.
+ */
+
+class nsXFormsRangeAccessible : public nsXFormsAccessible
+{
+public:
+  nsXFormsRangeAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell);
+
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+  NS_IMETHOD GetState(PRUint32 *aState);
+
+  // nsIAccessibleValue
+  NS_IMETHOD GetMaximumValue(double *aMaximumValue);
+  NS_IMETHOD GetMinimumValue(double *aMinimumValue);
+  NS_IMETHOD GetMinimumIncrement(double *aMinimumIncrement);
+  NS_IMETHOD GetCurrentValue(double *aCurrentValue);
+};
+
 #endif
 

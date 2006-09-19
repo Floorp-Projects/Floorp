@@ -75,7 +75,6 @@ protected:
   nsresult GetBoundChildElementValue(const nsAString& aTagName,
                                      nsAString& aValue);
 
-private:
   // Service allows to get some xforms functionality.
   static nsIXFormsUtilityService *sXFormsService;
 };

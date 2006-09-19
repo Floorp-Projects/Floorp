@@ -48,10 +48,10 @@
 #endif
 
 /* nsIXFormsUtilityService */
-#define NS_IXFORMSUTILITYSERVICE_IID_STR "f7276415-bb3e-4170-b746-aa57f68d7006"
+#define NS_IXFORMSUTILITYSERVICE_IID_STR "975fb01f-27a7-4dd2-a598-d00109538594"
 #define NS_IXFORMSUTILITYSERVICE_IID \
-{ 0xf7276415, 0xbb3e, 0x4170, \
-  { 0xb7, 0x46, 0xaa, 0x57, 0xf6, 0x8d, 0x70, 0x06 } }
+{ 0x975fb01f, 0x27a7, 0x4dd2, \
+  { 0xa5, 0x98, 0xd0, 0x1, 0x9, 0x53, 0x85, 0x94 } }
 
 /**
  * Private interface implemented by the nsXFormsUtilityService in XForms
@@ -61,6 +61,12 @@ class NS_NO_VTABLE nsIXFormsUtilityService : public nsISupports {
 public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXFORMSUTILITYSERVICE_IID)
+
+  enum {
+    STATE_OUT_OF_RANGE,
+    STATE_IN_RANGE,
+    STATE_NOT_A_RANGE
+  };
 
   /**
    * Return true if instance node that element is bound to is readonly.
@@ -83,10 +89,35 @@ public:
   NS_IMETHOD IsValid(nsIDOMNode *aElement, PRBool *aState) = 0;
 
   /**
+   * Return constant declared above that indicates whether instance node that
+   * element is bound to is out of range, is in range or neither. The last value
+   * is used if element can't have in-range or out-of-range state, for exmple,
+   * xforms:input.
+   */
+  NS_IMETHOD IsInRange(nsIDOMNode *aElement, PRUint32 *aState) = 0;
+
+  /**
    * Return value of instance node that element is bound to.
    */
   NS_IMETHOD GetValue(nsIDOMNode *aElement, nsAString& aValue) = 0;
 
+  /**
+   * Return @start attribute value of xforms:range element. Failure if
+   * given element is not xforms:range.
+   */
+  NS_IMETHOD GetRangeStart(nsIDOMNode *aElement, nsAString& aValue) = 0;
+
+  /**
+   * Return @end attribute value of xforms:range element. Failure if
+   * given element is not xforms:range.
+   */
+  NS_IMETHOD GetRangeEnd(nsIDOMNode *aElement, nsAString& aValue) = 0;
+
+  /**
+   * Return @step attribute value of xforms:range element. Failure if
+   * given element is not xforms:range.
+   */
+  NS_IMETHOD GetRangeStep(nsIDOMNode *aElement, nsAString& aValue) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIXFormsUtilityService,
