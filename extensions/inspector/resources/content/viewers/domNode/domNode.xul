@@ -39,23 +39,23 @@
  
   <deck id="dkContent" flex="1">
     <vbox id="bxElement">
-      <grid>
+      <grid id="olNodeInfo">
         <columns>
           <column/>
           <column flex="1"/>
         </columns>
         <rows>
           <row>
-            <label value="&nodeName.label;" />
-            <textbox id="tx_nodeName" readonly="true"/>
+            <label value="&nodeName.label;" for="tx_nodeName"/>
+            <textbox id="tx_nodeName" readonly="true" class="plain"/>
           </row>
           <row>
-            <label value="&namespaceURI.label;" />
-            <textbox id="tx_namespace" readonly="true"/>
+            <label value="&namespaceURI.label;" for="tx_namespace"/>
+            <textbox id="tx_namespace" readonly="true" class="plain"/>
           </row>
           <row>
-            <label value="&nodeType.label;" />
-            <textbox id="tx_nodeType" readonly="true"/>
+            <label value="&nodeType.label;" for="tx_nodeType"/>
+            <textbox id="tx_nodeType" readonly="true" class="plain"/>
           </row>
         </rows>
       </grid>
