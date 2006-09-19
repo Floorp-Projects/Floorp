@@ -69,6 +69,11 @@ const nsIWebDAVOperationListener =
 const calICalendar = Components.interfaces.calICalendar;
 const nsISupportsCString = Components.interfaces.nsISupportsCString;
 
+var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
+                        .getService(Components.interfaces.nsIXULAppInfo);
+var isOnBranch = appInfo.platformVersion.indexOf("1.8") == 0;
+
+
 function makeOccurrence(item, start, end)
 {
     var occ = item.createProxy();
@@ -773,6 +778,18 @@ calDavCalendar.prototype = {
             return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                              .getService(Components.interfaces.nsIWindowWatcher)
                              .getNewPrompter(null);
+        } else if (iid.equals(Components.interfaces.nsIProgressEventSink)) {
+            return this;
+        } else if (iid.equals(Components.interfaces.nsIDocShellTreeItem)) {
+            return this;
+        } else if (iid.equals(Components.interfaces.nsIAuthPromptProvider)) {
+            return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                             .getService(Components.interfaces.nsIWindowWatcher)
+                             .getNewPrompter(null);
+        } else if (!isOnBranch && iid.equals(Components.interfaces.nsIAuthPrompt2)) {
+            return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                             .getService(Components.interfaces.nsIWindowWatcher)
+                             .getNewPrompter(null);
         }
         throw Components.results.NS_ERROR_NO_INTERFACE;
     },
@@ -841,7 +858,15 @@ calDavCalendar.prototype = {
         },
     refresh: function calDAV_refresh() {
         // XXX-fill this in, get a report for modifications+onModifyItem
-    }
+    },
+    
+    // stubs to keep callbacks we don't support yet from throwing errors 
+    // we don't care about
+    // nsIProgressEventSink
+    onProgress: function onProgress(aRequest, aContext, aProgress, aProgressMax) {},
+    onStatus: function onStatus(aRequest, aContext, aStatus, aStatusArg) {},
+    // nsIDocShellTreeItem
+    findItemWithName: function findItemWithName(name, aRequestor, aOriginalRequestor) {}
 };
 
 function WebDavResource(url) {
