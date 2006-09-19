@@ -69,19 +69,25 @@ function ics_importFromStream(aStream, aCount) {
     // Read in the string. Note that it isn't a real string at this point, because
     // likely, the file is utf8. The multibyte chars show up as multiple 'chars'
     // in this string. So call it an array of octets for now.    
-    var octetArray = "";
-    var scriptableInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"]
-                                          .createInstance(Components.interfaces.nsIScriptableInputStream);
-    scriptableInputStream.init(aStream);
-    octetArray = scriptableInputStream.read(-1);
-
+    
+    var octetArray = [];
+    var binaryInputStream = Components.classes["@mozilla.org/binaryinputstream;1"]
+                                          .createInstance(Components.interfaces.nsIBinaryInputStream);
+    binaryInputStream.setInputStream(aStream);
+    octetArray = binaryInputStream.readByteArray(binaryInputStream.available());
+    
+   
     // Some other apps (most notably, sunbird 0.2) happily splits an utf8 character
     // between the octets, and adds a newline and space between them, for ics
     // folding. Unfold manually before parsing the file as utf8.
     // This is utf8 safe, because octets with the first bit 0 are always one-octet
     // characters. So the space or the newline never can be part of a multi-byte
     // char.
-    octetArray = octetArray.replace(/\n /, "");
+    for (var i=octetArray.length-2; i>=0; i--) {
+        if (octetArray[i] == "\n" && octetArray[i+1] == " ") {
+            octetArray = octetArray.splice(i, 2);
+        }
+    }
 
     // Interpret the byte-array as an utf8 string, and convert into a
     // javascript string.
@@ -89,7 +95,7 @@ function ics_importFromStream(aStream, aCount) {
                                      .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
     // ics files are always utf8
     unicodeConverter.charset = "UTF-8";
-    var str = unicodeConverter.ConvertFromUnicode(octetArray);
+    var str = unicodeConverter.convertFromByteArray(octetArray, octetArray.length);
 
 
     icssrv = Components.classes["@mozilla.org/calendar/ics-service;1"]
