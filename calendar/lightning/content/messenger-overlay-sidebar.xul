@@ -153,8 +153,9 @@
       <spacer flex="1"/>
     </hbox>
     <hbox id="ltnDateTextPickerBox">
-      <spacer width="10"/>
-      <datetextpicker flex="1" id="ltnDateTextPicker" oncommand="ltnGoToDate()"/>
+      <spacer flex="1"/>
+      <datepicker id="ltnDateTextPicker" oncommand="ltnGoToDate()"/>
+      <spacer flex="1"/> 
     </hbox>
 
     <tabbox id="ltnTabpanelBox" flex="1">
