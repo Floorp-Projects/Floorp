@@ -73,7 +73,13 @@
       <children/>
     </content>
 
-    <implementation implements="nsIXFormsUIWidget">
+    <implementation implements="nsIXFormsUIWidget, nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsRange;
+        </getter>
+      </property>
+
       <!-- The "skin", should be set via CSS -->
       <field name="strokeStyle" readonly="true">"#8f9ca4"</field>
       <field name="strokeStyleMove" readonly="true">"red"</field>
@@ -402,7 +408,7 @@
 
       <method name="getCurrentValue">
         <body>
-          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+          return this.rVal == null ? "" : this.rVal.toString();
         </body>
       </method>
 

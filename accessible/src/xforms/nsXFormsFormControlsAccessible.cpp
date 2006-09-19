@@ -143,3 +143,92 @@ nsXFormsTriggerAccessible::DoAction(PRUint8 aIndex)
   return NS_ERROR_INVALID_ARG;
 }
 
+// nsXFormsRangeAccessible
+
+nsXFormsRangeAccessible::
+  nsXFormsRangeAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell):
+  nsXFormsAccessible(aNode, aShell)
+{
+}
+
+NS_IMETHODIMP
+nsXFormsRangeAccessible::GetRole(PRUint32 *aRole)
+{
+  NS_ENSURE_ARG_POINTER(aRole);
+
+  *aRole = ROLE_SLIDER;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsRangeAccessible::GetState(PRUint32 *aState)
+{
+  nsresult rv = nsXFormsAccessible::GetState(aState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 isInRange = nsIXFormsUtilityService::STATE_NOT_A_RANGE;
+  rv = sXFormsService->IsInRange(mDOMNode, &isInRange);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (isInRange == nsIXFormsUtilityService::STATE_OUT_OF_RANGE)
+    *aState |= STATE_INVALID;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsRangeAccessible::GetMaximumValue(double *aMaximumValue)
+{
+  NS_ENSURE_ARG_POINTER(aMaximumValue);
+
+  nsAutoString value;
+  nsresult rv = sXFormsService->GetRangeEnd(mDOMNode, value);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 error = NS_OK;
+  *aMaximumValue = value.ToFloat(&error);
+  return error;
+}
+
+NS_IMETHODIMP
+nsXFormsRangeAccessible::GetMinimumValue(double *aMinimumValue)
+{
+  NS_ENSURE_ARG_POINTER(aMinimumValue);
+
+  nsAutoString value;
+  nsresult rv = sXFormsService->GetRangeStart(mDOMNode, value);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 error = NS_OK;
+  *aMinimumValue = value.ToFloat(&error);
+  return error;
+}
+
+NS_IMETHODIMP
+nsXFormsRangeAccessible::GetMinimumIncrement(double *aMinimumIncrement)
+{
+  NS_ENSURE_ARG_POINTER(aMinimumIncrement);
+
+  nsAutoString value;
+  nsresult rv = sXFormsService->GetRangeStep(mDOMNode, value);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 error = NS_OK;
+  *aMinimumIncrement = value.ToFloat(&error);
+  return error;
+}
+
+NS_IMETHODIMP
+nsXFormsRangeAccessible::GetCurrentValue(double *aCurrentValue)
+{
+  NS_ENSURE_ARG_POINTER(aCurrentValue);
+
+  nsAutoString value;
+  nsresult rv = sXFormsService->GetValue(mDOMNode, value);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 error = NS_OK;
+  *aCurrentValue = value.ToFloat(&error);
+  return error;
+}
+

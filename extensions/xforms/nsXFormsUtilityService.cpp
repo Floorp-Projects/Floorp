@@ -41,6 +41,8 @@
 
 #include "nsIXFormsDelegate.h"
 #include "nsIXFormsAccessors.h"
+#include "nsIXFormsRangeConditionAccessors.h"
+#include "nsIXFormsRangeAccessors.h"
 #include "nsXFormsUtils.h"
 
 NS_IMPL_ISUPPORTS1(nsXFormsUtilityService, nsIXFormsUtilityService)
@@ -90,9 +92,63 @@ nsXFormsUtilityService::IsValid(nsIDOMNode *aElement, PRBool *aState)
 }
 
 NS_IMETHODIMP
+nsXFormsUtilityService::IsInRange(nsIDOMNode *aElement, PRUint32 *aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+  *aState = STATE_NOT_A_RANGE;
+
+  GET_XFORMS_ACCESSORS
+  nsCOMPtr<nsIXFormsRangeConditionAccessors> raccessors(
+    do_QueryInterface(accessors));
+  if (!raccessors)
+    return NS_OK;
+
+  PRBool isInRange = PR_FALSE;
+  nsresult rv = raccessors->IsInRange(&isInRange);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (isInRange)
+    *aState = STATE_IN_RANGE;
+  else
+    *aState = STATE_OUT_OF_RANGE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsUtilityService::GetValue(nsIDOMNode *aElement, nsAString& aValue)
 {
   GET_XFORMS_ACCESSORS
   return accessors->GetValue(aValue);
+}
+
+NS_IMETHODIMP
+nsXFormsUtilityService::GetRangeStart(nsIDOMNode *aElement, nsAString& aValue)
+{
+  GET_XFORMS_ACCESSORS
+
+  nsCOMPtr<nsIXFormsRangeAccessors> raccessors(do_QueryInterface(accessors));
+  NS_ENSURE_TRUE(raccessors, NS_ERROR_FAILURE);
+  return raccessors->GetRangeStart(aValue);
+}
+
+NS_IMETHODIMP
+nsXFormsUtilityService::GetRangeEnd(nsIDOMNode *aElement, nsAString& aValue)
+{
+  GET_XFORMS_ACCESSORS
+
+  nsCOMPtr<nsIXFormsRangeAccessors> raccessors(do_QueryInterface(accessors));
+  NS_ENSURE_TRUE(raccessors, NS_ERROR_FAILURE);
+  return raccessors->GetRangeEnd(aValue);
+}
+
+NS_IMETHODIMP
+nsXFormsUtilityService::GetRangeStep(nsIDOMNode *aElement, nsAString& aValue)
+{
+  GET_XFORMS_ACCESSORS
+
+  nsCOMPtr<nsIXFormsRangeAccessors> raccessors(do_QueryInterface(accessors));
+  NS_ENSURE_TRUE(raccessors, NS_ERROR_FAILURE);
+  return raccessors->GetRangeStep(aValue);
 }
 

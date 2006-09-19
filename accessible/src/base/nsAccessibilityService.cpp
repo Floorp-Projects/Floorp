@@ -1443,6 +1443,9 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XFormsTrigger:
       *aAccessible = new nsXFormsTriggerAccessible(aNode, weakShell);
       break;
+    case nsIAccessibleProvider::XFormsRange:
+      *aAccessible = new nsXFormsRangeAccessible(aNode, weakShell);
+      break;
 #endif
 
     default:

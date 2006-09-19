@@ -55,6 +55,11 @@ public:
   NS_IMETHOD IsRelevant(nsIDOMNode *aElement, PRBool *aState);
   NS_IMETHOD IsRequired(nsIDOMNode *aElement, PRBool *aState);
   NS_IMETHOD IsValid(nsIDOMNode *aElement, PRBool *aState);
+  NS_IMETHOD IsInRange(nsIDOMNode *aElement, PRUint32 *aState);
   NS_IMETHOD GetValue(nsIDOMNode *aElement, nsAString& aValue);
+
+  NS_IMETHOD GetRangeStart(nsIDOMNode *aElement, nsAString& aValue);
+  NS_IMETHOD GetRangeEnd(nsIDOMNode *aElement, nsAString& aValue);
+  NS_IMETHOD GetRangeStep(nsIDOMNode *aElement, nsAString& aValue);
 };
 
