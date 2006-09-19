@@ -376,7 +376,11 @@ nsresult nsMsgQuickSearchDBView::GetFirstMessageHdrToDisplayInThread(nsIMsgThrea
           rv = m_db->GetMsgHdrForKey(parentId, getter_AddRefs(parent));
           if (parent)
           {
+            nsMsgKey saveParentId = parentId;
             parent->GetThreadParent(&parentId);
+            // message is it's own parent - bad, let's break out of here.
+            if (parentId == saveParentId)
+              break;
             level++;
           }
         }
