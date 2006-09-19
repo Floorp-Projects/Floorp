@@ -96,7 +96,7 @@ public:
 
     void AddAttr(char* aAttr, char* aValue);
 
-    char* GetAttr(char* aAttr);
+    const char* GetAttr(const char* aAttr);
 
     void ReadAttrs(FILE* aFile);
 
@@ -116,7 +116,7 @@ public:
     char** values;
   };
 
-  static char* Copy(char* aString);
+  static char* Copy(const char* aString);
 
   static void DumpNode(Node* aNode, FILE* aOutputFile, PRInt32 aIndent);
   static void DumpTree(Node* aNode, FILE* aOutputFile, PRInt32 aIndent);
@@ -124,15 +124,17 @@ public:
 };
 
 char*
-nsFrameUtil::Copy(char* aString)
+nsFrameUtil::Copy(const char* aString)
 {
   if (aString) {
     int l = ::strlen(aString);
     char* c = new char[l+1];
+    if (!c)
+      return nsnull;
     memcpy(c, aString, l+1);
     return c;
   }
-  return aString;
+  return nsnull;
 }
 
 //----------------------------------------------------------------------
@@ -189,9 +191,9 @@ nsFrameUtil::Node::Destroy(Node* aList)
   }
 }
 
-static PRInt32 GetInt(nsFrameUtil::Tag* aTag, char* aAttr)
+static PRInt32 GetInt(nsFrameUtil::Tag* aTag, const char* aAttr)
 {
-  char* value = aTag->GetAttr(aAttr);
+  const char* value = aTag->GetAttr(aAttr);
   if (nsnull != value) {
     return PRInt32( atoi(value) );
   }
@@ -218,7 +220,13 @@ nsFrameUtil::Node*
 nsFrameUtil::Node::Read(FILE* aFile, Tag* tag)
 {
   Node* node = new Node;
+  if (!node) {
+    /* crash() */
+  }
   node->type = Copy(tag->GetAttr("type"));
+  if (!node->type) {
+    /* crash() */
+  }
   node->state = GetInt(tag, "state");
   delete tag;
 
@@ -239,6 +247,9 @@ nsFrameUtil::Node::Read(FILE* aFile, Tag* tag)
     else if (PL_strcmp(tag->name, "child-list") == 0) {
       NodeList* list = new NodeList();
       list->name = Copy(tag->GetAttr("name"));
+      if (!list->name) {
+        /* crash() */
+      }
       list->next = node->lists;
       node->lists = list;
       delete tag;
@@ -274,9 +285,9 @@ nsFrameUtil::Node::Read(FILE* aFile, Tag* tag)
             (PL_strcmp(tag->name, "content") == 0) ||
             (PL_strcmp(tag->name, "UI") == 0) ||
             (PL_strcmp(tag->name, "print") == 0)) {
-      char* attr = tag->GetAttr("data");
+      const char* attr = tag->GetAttr("data");
       node->styleData.Append('|');
-      node->styleData.Append((const char *)(attr ? attr : "null attr"));
+      node->styleData.Append(attr ? attr : "null attr");
     }
 
     delete tag;
@@ -327,8 +338,8 @@ nsFrameUtil::Tag::AddAttr(char* aAttr, char* aValue)
   num = num + 1;
 }
 
-char*
-nsFrameUtil::Tag::GetAttr(char* aAttr)
+const char*
+nsFrameUtil::Tag::GetAttr(const char* aAttr)
 {
   PRInt32 i, n = num;
   for (i = 0; i < n; i++) {
@@ -385,6 +396,7 @@ static char* ReadIdent(FILE* aFile)
   }
   *ip = '\0';
   return nsFrameUtil::Copy(id);
+  /* may return a null pointer */
 }
 
 static char* ReadString(FILE* aFile)
@@ -405,6 +417,7 @@ static char* ReadString(FILE* aFile)
   }
   *ip = '\0';
   return nsFrameUtil::Copy(id);
+  /* may return a null pointer */
 }
 
 void
