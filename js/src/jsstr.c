@@ -2698,6 +2698,9 @@ js_ValueToString(JSContext *cx, jsval v)
 JS_FRIEND_API(JSString *)
 js_ValueToSource(JSContext *cx, jsval v)
 {
+    JSTempValueRooter tvr;
+    JSString *str;
+
     if (JSVAL_IS_STRING(v))
         return js_QuoteString(cx, JSVAL_TO_STRING(v), '"');
     if (JSVAL_IS_PRIMITIVE(v)) {
@@ -2708,14 +2711,19 @@ js_ValueToSource(JSContext *cx, jsval v)
 
             return js_NewStringCopyN(cx, js_negzero_ucNstr, 2, 0);
         }
-    } else {
-        if (!js_TryMethod(cx, JSVAL_TO_OBJECT(v),
-                          cx->runtime->atomState.toSourceAtom,
-                          0, NULL, &v)) {
-            return NULL;
-        }
+        return js_ValueToString(cx, v);
     }
-    return js_ValueToString(cx, v);
+
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
+    if (!js_TryMethod(cx, JSVAL_TO_OBJECT(v),
+                      cx->runtime->atomState.toSourceAtom,
+                      0, NULL, &tvr.u.value)) {
+        str = NULL;
+    } else {
+        str = js_ValueToString(cx, tvr.u.value);
+    }
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    return str;
 }
 
 JSHashNumber
