@@ -166,7 +166,7 @@ nsSimplePageSequenceFrame::CreateContinuingPageFrame(nsPresContext* aPresContext
 }
 
 void
-nsSimplePageSequenceFrame::GetEdgePaperMarginCoord(char* aPrefName,
+nsSimplePageSequenceFrame::GetEdgePaperMarginCoord(const char* aPrefName,
                                                    nscoord& aCoord)
 {
   nsresult rv = mPageData->mPrintOptions->
