@@ -117,7 +117,11 @@ var gSearchNotificationListener =
 
           // load the last used mail view for the folder...
           var result = dbFolderInfo.getUint32Property("current-view", 0);
-          ViewChangeByValue(result);
+          // do this on a timeout so that we don't issue a new search
+          // synchronously with the previous search's onSearchDone notification
+          // because that can cause a confusing sequence of onSearchDone and 
+          // onNewSearch notifications.
+          setTimeout('ViewChangeByValue('+result+')', 0);
 
           // now that we have finished loading a virtual folder, scroll to the correct message
           ScrollToMessageAfterFolderLoad(vFolder);
