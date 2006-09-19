@@ -36,11 +36,13 @@
         ]]>
       </handler>
 
-      <handler event="keypress" phase="target">
+      <handler event="keypress">
         <![CDATA[
-          this.menuBoxObject.activeChild = this.selectedInternal;
-          if (this.menuBoxObject.handleKeyPress(event))
-            this.menuBoxObject.activeChild.doCommand();
+          if (event.originalTarget == this) {
+            this.menuBoxObject.activeChild = this.selectedInternal;
+            if (this.menuBoxObject.handleKeyPress(event))
+              this.menuBoxObject.activeChild.doCommand();
+          }
         ]]>
       </handler>
     </handlers>
