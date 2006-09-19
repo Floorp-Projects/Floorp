@@ -3387,6 +3387,9 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   nsCollapsingMargin incomingMargin = aState.mPrevBottomMargin;
   nscoord clearance;
   while (PR_TRUE) {
+    // Save the frame's current position. We might need it later.
+    nscoord originalY = frame->GetRect().y;
+    
     clearance = 0;
     nscoord topMargin = 0;
     PRBool mayNeedRetry = PR_FALSE;
@@ -3530,6 +3533,13 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     rv = brc.ReflowBlock(availSpace, applyTopMargin, aState.mPrevBottomMargin,
                          clearance, aState.IsAdjacentWithTop(), computedOffsets,
                          blockHtmlRS, frameReflowStatus);
+
+    // If this was a second-pass reflow and the block's vertical position
+    // changed, invalidates from the first pass might have happened in the
+    // wrong places.  Invalidate the entire overflow rect at the new position.
+    if (!mayNeedRetry && clearanceFrame && frame->GetRect().y != originalY) {
+      Invalidate(frame->GetOverflowRect() + frame->GetPosition());
+    }
     
   // Remove the frame from the reflow tree.
     if (aState.mReflowState.path)
