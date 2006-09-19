@@ -282,7 +282,6 @@ public:
                         const nsHTMLReflowState*  aReflowState,
                         nsDidReflowStatus         aStatus);
   NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const;
-  NS_IMETHOD AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace);
   NS_IMETHOD TrimTrailingWhiteSpace(nsPresContext* aPresContext,
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth,
