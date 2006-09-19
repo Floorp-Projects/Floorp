@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:expandtab:shiftwidth=2:tabstop=2:
  */
 /* ***** BEGIN LICENSE BLOCK *****
@@ -40,121 +40,118 @@
 #import <Foundation/Foundation.h>
 
 const NSString* AXRoles [] = {
-  @"ROLE_NOTHING", // ROLE_NOTHING
-  @"ROLE_TITLEBAR", // ROLE_TITLEBAR
-  @"ROLE_MENUBAR", // ROLE_MENUBAR
-  @"ROLE_SCROLLBAR", // ROLE_SCROLLBAR
-  @"ROLE_GRIP", // ROLE_GRIP
-  @"ROLE_SOUND", // ROLE_SOUND
-  @"ROLE_CURSOR", // ROLE_CURSOR
-  @"ROLE_CARET", // ROLE_CARET
-  @"ROLE_ALERT", // ROLE_ALERT
-  @"ROLE_WINDOW", // ROLE_WINDOW
-  @"ROLE_CLIENT", // ROLE_CLIENT
-  @"ROLE_MENUPOPUP", // ROLE_MENUPOPUP
-  @"ROLE_MENUITEM", // ROLE_MENUITEM
-  @"ROLE_TOOLTIP", // ROLE_TOOLTIP
-  @"ROLE_APP", // ROLE_APP
-  @"ROLE_DOCUMENT", // ROLE_DOCUMENT
-  @"ROLE_PANE", // ROLE_PANE
-  @"ROLE_CHART", // ROLE_CHART
-  @"ROLE_DIALOG", // ROLE_DIALOG
-  @"ROLE_BORDER", // ROLE_BORDER
-  @"ROLE_GROUPING", // ROLE_GROUPING
-  @"ROLE_SEPARATOR", // ROLE_SEPARATOR
-  @"ROLE_TOOLBAR", // ROLE_TOOLBAR
-  @"ROLE_STATUSBAR", // ROLE_STATUSBAR
-  @"ROLE_TABLE", // ROLE_TABLE
-  @"ROLE_COLUMNHEADER", // ROLE_COLUMNHEADER
-  @"ROLE_ROWHEADER", // ROLE_ROWHEADER
-  @"ROLE_COLUMN", // ROLE_COLUMN
-  @"ROLE_ROW", // ROLE_ROW
-  @"ROLE_CELL", // ROLE_CELL
-  @"ROLE_LINK", // ROLE_LINK
-  @"ROLE_HELPBALLOON", // ROLE_HELPBALLOON
-  @"ROLE_CHARACTER", // ROLE_CHARACTER
-  @"ROLE_LIST", // ROLE_LIST
-  @"ROLE_LISTITEM", // ROLE_LISTITEM
-  @"ROLE_OUTLINE", // ROLE_OUTLINE
-  @"ROLE_OUTLINEITEM", // ROLE_OUTLINEITEM
-  @"ROLE_PAGETAB", // ROLE_PAGETAB
-  @"ROLE_PROPERTYPAGE", // ROLE_PROPERTYPAGE
-  @"ROLE_INDICATOR", // ROLE_INDICATOR
-  @"ROLE_GRAPHIC", // ROLE_GRAPHIC
-  @"ROLE_STATICTEXT", // ROLE_STATICTEXT
-  @"ROLE_TEXT", // ROLE_TEXT
-  @"ROLE_PUSHBUTTON", // ROLE_PUSHBUTTON
-  @"ROLE_CHECKBUTTON", // ROLE_CHECKBUTTON
-  @"ROLE_RADIOBUTTON", // ROLE_RADIOBUTTON
-  @"ROLE_COMBOBOX", // ROLE_COMBOBOX
-  @"ROLE_DROPLIST", // ROLE_DROPLIST
-  @"ROLE_PROGRESSBAR", // ROLE_PROGRESSBAR
-  @"ROLE_DIAL", // ROLE_DIAL
-  @"ROLE_HOTKEYFIELD", // ROLE_HOTKEYFIELD
-  @"ROLE_SLIDER", // ROLE_SLIDER
-  @"ROLE_SPINBUTTON", // ROLE_SPINBUTTON
-  @"ROLE_DIAGRAM", // ROLE_DIAGRAM
-  @"ROLE_ANIMATION", // ROLE_ANIMATION
-  @"ROLE_EQUATION", // ROLE_EQUATION
-  @"ROLE_BUTTONDROPDOWN", // ROLE_BUTTONDROPDOWN
-  @"ROLE_BUTTONMENU", // ROLE_BUTTONMENU
-  @"ROLE_BUTTONDROPDOWNGRID", // ROLE_BUTTONDROPDOWNGRID
-  @"ROLE_WHITESPACE", // ROLE_WHITESPACE
-  @"ROLE_PAGETABLIST", // ROLE_PAGETABLIST
-  @"ROLE_CLOCK", // ROLE_CLOCK
-  @"ROLE_SPLITBUTTON", // ROLE_SPLITBUTTON
-  @"ROLE_IPADDRESS", // ROLE_IPADDRESS
-  @"ROLE_ACCEL", // ROLE_ACCEL
-  @"ROLE_ARROW", // ROLE_ARROW
-  @"ROLE_CANVAS", // ROLE_CANVAS
-  @"ROLE_CHECK", // ROLE_CHECK
-  @"ROLE_COLOR", // ROLE_COLOR
-  @"ROLE_DATE", // ROLE_DATE
-  @"ROLE_DESKTOP", // ROLE_DESKTOP
-  @"ROLE_DESKTOP", // ROLE_DESKTOP
-  @"ROLE_DIRECTORY", // ROLE_DIRECTORY
-  @"ROLE_FILE", // ROLE_FILE
-  @"ROLE_FILLER", // ROLE_FILLER
-  @"ROLE_FONT", // ROLE_FONT
-  @"ROLE_CHROME", // ROLE_CHROME
-  @"ROLE_GLASS", // ROLE_GLASS
-  @"ROLE_HTML", // ROLE_HTML
-  @"ROLE_ICON", // ROLE_ICON
-  @"ROLE_INTERNAL", // ROLE_INTERNAL
-  @"ROLE_LABEL", // ROLE_LABEL
-  @"ROLE_LAYERED", // ROLE_LAYERED
-  @"ROLE_OPTION", // ROLE_OPTION
-  @"ROLE_PASSWORD", // ROLE_PASSWORD
-  @"ROLE_POPUP", // ROLE_POPUP
-  @"ROLE_RADIO", // ROLE_RADIO
-  @"ROLE_ROOT", // ROLE_ROOT
-  @"ROLE_SCROLL", // ROLE_SCROLL
-  @"ROLE_SPLIT", // ROLE_SPLIT
-  @"ROLE_TABLE", // ROLE_TABLE
-  @"ROLE_TABLE", // ROLE_TABLE
-  @"ROLE_TEAR", // ROLE_TEAR
-  @"ROLE_TERMINAL", // ROLE_TERMINAL
-  @"ROLE_TEXT", // ROLE_TEXT
-  @"ROLE_TOGGLE", // ROLE_TOGGLE
-  @"ROLE_TREE", // ROLE_TREE
-  @"ROLE_VIEWPORT", // ROLE_VIEWPORT
-  @"ROLE_HEADER", // ROLE_HEADER
-  @"ROLE_FOOTER", // ROLE_FOOTER
-  @"ROLE_PARAGRAPH", // ROLE_PARAGRAPH
-  @"ROLE_RULER", // ROLE_RULER
-  @"ROLE_AUTOCOMPLETE", // ROLE_AUTOCOMPLETE
-  @"ROLE_EDITBAR", // ROLE_EDITBAR
-  @"ROLE_EMBEDDED", // ROLE_EMBEDDED
-  @"ROLE_ENTRY", // ROLE_ENTRY
-  @"ROLE_CAPTION", // ROLE_CAPTION
-  @"ROLE_DOCUMENT", // ROLE_DOCUMENT
-  @"ROLE_HEADING", // ROLE_HEADING
-  @"ROLE_PAGE", // ROLE_PAGE
-  @"ROLE_SECTION", // ROLE_SECTION
-  @"ROLE_REDUNDANT", // ROLE_REDUNDANT
-  @"ROLE_FORM", // ROLE_FORM
-  @"ROLE_IME", // ROLE_IME
-  @"ROLE_APP", // ROLE_APP
-  @"ROLE_PARENT", // ROLE_PARENT
-  @"ROLE_LAST" // ROLE_LAST
+  NSAccessibilityUnknownRole,                   // ROLE_NOTHING
+  NSAccessibilityUnknownRole,                   // ROLE_TITLEBAR. (irrelevant on OS X; windows are always native.)
+  NSAccessibilityMenuBarRole,                   // ROLE_MENUBAR. (irrelevant on OS X; the menubar will always be native and on the top of the screen.)
+  NSAccessibilityScrollBarRole,                 // ROLE_SCROLLBAR. we might need to make this its own mozAccessible, to support the children objects (valueindicator, down/up buttons).
+  NSAccessibilitySplitterRole,                  // ROLE_GRIP
+  NSAccessibilityUnknownRole,                   // ROLE_SOUND. unused on OS X
+  NSAccessibilityUnknownRole,                   // ROLE_CURSOR. unused on OS X
+  NSAccessibilityUnknownRole,                   // ROLE_CARET. unused on OS X
+  NSAccessibilityUnknownRole,                   // ROLE_ALERT
+  NSAccessibilityWindowRole,                    // ROLE_WINDOW. irrelevant on OS X; all window a11y is handled by the system.
+  NSAccessibilityUnknownRole,                   // ROLE_CLIENT
+  NSAccessibilityPopUpButtonRole,               // ROLE_MENUPOPUP
+  NSAccessibilityMenuItemRole,                  // ROLE_MENUITEM.
+  @"AXHelpTag",                                 // ROLE_TOOLTIP. 10.4+ only, so we re-define the constant.
+  NSAccessibilityApplicationRole,               // ROLE_APPLICATION. unused on OS X. the system will take care of this.
+  NSAccessibilityGroupRole,                     // ROLE_DOCUMENT
+  NSAccessibilityGroupRole,                     // ROLE_PANE
+  NSAccessibilityUnknownRole,                   // ROLE_CHART
+  NSAccessibilityWindowRole,                    // ROLE_DIALOG. there's a dialog subrole.
+  NSAccessibilityUnknownRole,                   // ROLE_BORDER. unused on OS X
+  NSAccessibilityGroupRole,                     // ROLE_GROUPING
+  NSAccessibilityUnknownRole,                   // ROLE_SEPARATOR
+  NSAccessibilityToolbarRole,                   // ROLE_TOOLBAR
+  NSAccessibilityUnknownRole,                   // ROLE_STATUSBAR. doesn't exist on OS X (a status bar is its parts; a progressbar, a label, etc.)
+  NSAccessibilityTableRole,                     // ROLE_TABLE
+  NSAccessibilityUnknownRole,                   // ROLE_COLUMNHEADER
+  NSAccessibilityUnknownRole,                   // ROLE_ROWHEADER
+  NSAccessibilityColumnRole,                    // ROLE_COLUMN
+  NSAccessibilityRowRole,                       // ROLE_ROW
+  NSAccessibilityGroupRole,                     // ROLE_CELL
+  @"AXLink",                                    // ROLE_LINK. 10.4+ the attr first define in SDK 10.4, so we define it here too. ROLE_LINK
+  @"AXHelpTag",                                 // ROLE_HELPBALLOON
+  NSAccessibilityUnknownRole,                   // ROLE_CHARACTER. unusued on OS X
+  NSAccessibilityListRole,                      // ROLE_LIST
+  NSAccessibilityRowRole,                       // ROLE_LISTITEM
+  NSAccessibilityOutlineRole,                   // ROLE_OUTLINE
+  NSAccessibilityRowRole,                       // ROLE_OUTLINEITEM. XXX: use OutlineRow as subrole.
+  NSAccessibilityGroupRole,                     // ROLE_PAGETAB
+  NSAccessibilityGroupRole,                     // ROLE_PROPERTYPAGE
+  NSAccessibilityUnknownRole,                   // ROLE_INDICATOR
+  NSAccessibilityImageRole,                     // ROLE_GRAPHIC
+  NSAccessibilityStaticTextRole,                // ROLE_STATICTEXT
+  NSAccessibilityStaticTextRole,                // ROLE_TEXT_LEAF
+  NSAccessibilityButtonRole,                    // ROLE_PUSHBUTTON
+  NSAccessibilityCheckBoxRole,                  // ROLE_CHECKBUTTON
+  NSAccessibilityRadioButtonRole,               // ROLE_RADIOBUTTON
+  NSAccessibilityComboBoxRole,                  // ROLE_COMBOBOX
+  NSAccessibilityComboBoxRole,                  // ROLE_DROPLIST
+  NSAccessibilityProgressIndicatorRole,         // ROLE_PROGRESSBAR
+  NSAccessibilityUnknownRole,                   // ROLE_DIAL
+  NSAccessibilityUnknownRole,                   // ROLE_HOTKEYFIELD
+  NSAccessibilitySliderRole,                    // ROLE_SLIDER
+  NSAccessibilityIncrementorRole,               // ROLE_SPINBUTTON. subroles: Increment/Decrement.
+  NSAccessibilityUnknownRole,                   // ROLE_DIAGRAM
+  NSAccessibilityUnknownRole,                   // ROLE_ANIMATION
+  NSAccessibilityUnknownRole,                   // ROLE_EQUATION
+  NSAccessibilityPopUpButtonRole,               // ROLE_BUTTONDROPDOWN
+  NSAccessibilityMenuButtonRole,                // ROLE_BUTTONMENU
+  NSAccessibilityGroupRole,                     // ROLE_BUTTONDROPDOWNGRID
+  NSAccessibilityUnknownRole,                   // ROLE_WHITESPACE
+  NSAccessibilityGroupRole,                     // ROLE_PAGETABLIST
+  NSAccessibilityUnknownRole,                   // ROLE_CLOCK. unused on OS X
+  NSAccessibilityButtonRole,                    // ROLE_SPLITBUTTON
+  NSAccessibilityUnknownRole,                   // ROLE_IPADDRESS
+  NSAccessibilityStaticTextRole,                // ROLE_ACCEL_LABEL
+  NSAccessibilityUnknownRole,                   // ROLE_ARROW
+  NSAccessibilityUnknownRole,                   // ROLE_CANVAS
+  NSAccessibilityMenuItemRole,                  // ROLE_CHECK_MENU_ITEM
+  NSAccessibilityColorWellRole,                 // ROLE_COLOR_CHOOSER
+  NSAccessibilityUnknownRole,                   // ROLE_DATE_EDITOR
+  NSAccessibilityImageRole,                     // ROLE_DESKTOP_ICON
+  NSAccessibilityUnknownRole,                   // ROLE_DESKTOP_FRAME
+  NSAccessibilityBrowserRole,                   // ROLE_DIRECTORY_PANE
+  NSAccessibilityUnknownRole,                   // ROLE_FILE_CHOOSER. unused on OS X
+  NSAccessibilityUnknownRole,                   // ROLE_FONT_CHOOSER
+  NSAccessibilityUnknownRole,                   // ROLE_CHROME_WINDOW. unused on OS X
+  NSAccessibilityGroupRole,                     // ROLE_GLASS_PANE
+  NSAccessibilityUnknownRole,                   // ROLE_HTML_CONTAINER
+  NSAccessibilityImageRole,                     // ROLE_ICON
+  NSAccessibilityStaticTextRole,                // ROLE_LABEL
+  NSAccessibilityGroupRole,                     // ROLE_LAYERED_PANE
+  NSAccessibilityGroupRole,                     // ROLE_OPTION_PANE
+  NSAccessibilityTextFieldRole,                 // ROLE_PASSWORD_TEXT
+  NSAccessibilityPopUpButtonRole,               // ROLE_POPUP_MENU
+  NSAccessibilityMenuItemRole,                  // ROLE_RADIO_MENU_ITEM
+  NSAccessibilityGroupRole,                     // ROLE_ROOT_PANE
+  NSAccessibilityScrollAreaRole,                // ROLE_SCROLL_PANE
+  NSAccessibilitySplitGroupRole,                // ROLE_SPLIT_PANE
+  NSAccessibilityUnknownRole,                   // ROLE_TABLE_COLUMN_HEADER
+  NSAccessibilityUnknownRole,                   // ROLE_TABLE_ROW_HEADER
+  NSAccessibilityMenuItemRole,                  // ROLE_TEAR_OFF_MENU_ITEM
+  NSAccessibilityUnknownRole,                   // ROLE_TERMINAL
+  NSAccessibilityGroupRole,                     // ROLE_TEXT_CONTAINER
+  NSAccessibilityButtonRole,                    // ROLE_TOGGLE_BUTTON
+  NSAccessibilityTableRole,                     // ROLE_TREE_TABLE
+  NSAccessibilityUnknownRole,                   // ROLE_VIEWPORT
+  NSAccessibilityStaticTextRole,                // ROLE_HEADER
+  NSAccessibilityStaticTextRole,                // ROLE_FOOTER
+  NSAccessibilityGroupRole,                     // ROLE_PARAGRAPH
+  @"AXRuler",                                   // ROLE_RULER. 10.4+ only, so we re-define the constant.
+  NSAccessibilityUnknownRole,                   // ROLE_AUTOCOMPLETE
+  NSAccessibilityTextFieldRole,                 // ROLE_EDITBAR
+  NSAccessibilityTextFieldRole,                 // ROLE_ENTRY
+  NSAccessibilityStaticTextRole,                // ROLE_CAPTION
+  @"AXWebArea",                                 // ROLE_DOCUMENT_FRAME
+  NSAccessibilityStaticTextRole,                // ROLE_HEADING
+  NSAccessibilityGroupRole,                     // ROLE_PAGE
+  NSAccessibilityGroupRole,                     // ROLE_SECTION
+  NSAccessibilityUnknownRole,                   // ROLE_REDUNDANT_OBJECT
+  NSAccessibilityGroupRole,                     // ROLE_FORM
+  NSAccessibilityUnknownRole,                   // ROLE_IME
+  NSAccessibilityUnknownRole,                   // ROLE_APP_ROOT. unused on OS X
+  NSAccessibilityMenuItemRole,                  // ROLE_PARENT_MENUITEM
+  @"ROLE_LAST_ENTRY"                            // ROLE_LAST_ENTRY. bogus role that will never be shown (just marks the end of this array)!
 };

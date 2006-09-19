@@ -52,15 +52,6 @@ static id <mozAccessible, mozView> getNativeViewFromRootAccessible (nsAccessible
 
 #pragma mark -
 
-@implementation mozDocAccessible
-
-- (NSString*)role
-{
-  return @"mozDocAccessible";
-}
-
-@end
-
 @implementation mozRootAccessible
 
 // return the AXParent that our parallell NSView tells us about.
@@ -87,9 +78,9 @@ static id <mozAccessible, mozView> getNativeViewFromRootAccessible (nsAccessible
   return mParallelView;
 }
 
-- (NSString*)role
+- (BOOL)isRoot
 {
-  return @"mozRootAccessible";
+  return YES;
 }
 
 @end

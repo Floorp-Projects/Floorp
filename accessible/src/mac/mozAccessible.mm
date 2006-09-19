@@ -277,6 +277,11 @@ ObjectOrUnignoredAncestor(id anObject)
   return self;
 }
 
+- (BOOL)isRoot
+{
+  return NO;
+}
+
 // gets our native children lazily.
 // returns nil when there are no children.
 - (NSArray*)children
@@ -454,7 +459,7 @@ ObjectOrUnignoredAncestor(id anObject)
   
   // if we're the root accessible, our children's AXParent
   // should reference the native view. see mozDocAccessible.h
-  if ([[self role] isEqualToString:@"mozRootAccessible"])
+  if ([self isRoot])
     parentObject = [self ourself];
   else
     parentObject = self;

@@ -51,8 +51,7 @@ class nsDocAccessibleWrap: public nsDocAccessible
     
     NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, 
                                 void* aData);
-    
-    objc_class* GetNativeType ();
 };
 
 #endif
+
