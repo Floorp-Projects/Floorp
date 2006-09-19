@@ -404,7 +404,8 @@
             this.treeBoxObject.scrollByLines(rows);
         ]]>
       </handler>
-      <handler event="select" phase="target" action="this.stopEditing(true);"/>
+      <handler event="select" phase="target"
+               action="if (event.originalTarget == this) this.stopEditing(true);"/>
       <handler event="focus">
         <![CDATA[
           this.treeBoxObject.focused = true;
@@ -419,7 +420,7 @@
       </handler>
       <handler event="blur" action="this.treeBoxObject.focused = false;"/>
       <handler event="blur" phase="capturing"
-               action="if (event.originalTarget == this.inputField) this.stopEditing(true);"/>
+               action="if (event.originalTarget == this.inputField.inputField) this.stopEditing(true);"/>
       <handler event="keypress" keycode="vk_enter">
         <![CDATA[
           if (this._editingColumn) {
@@ -453,8 +454,11 @@
           }
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_left" phase="target">
+      <handler event="keypress" keycode="vk_left">
         <![CDATA[
+         if (this._editingColumn)
+           return;
+
          var row = this.currentIndex;
          if (row < 0)
            return;
@@ -494,8 +498,11 @@
          }
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_right" phase="target">
+      <handler event="keypress" keycode="vk_right">
         <![CDATA[
+         if (this._editingColumn)
+           return;
+
           var row = this.currentIndex;
           if (row < 0)
             return;
@@ -544,8 +551,11 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_up"
-               modifiers="accel any" phase="target">
+               modifiers="accel any">
         <![CDATA[
+         if (this._editingColumn)
+           return;
+
          if (this._isAccelPressed(event) && this.view.selection.single) {
            this.treeBoxObject.scrollByLines(-1);
            return;
@@ -575,8 +585,11 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_down"
-               modifiers="accel any" phase="target">
+               modifiers="accel any">
         <![CDATA[
+         if (this._editingColumn)
+           return;
+
          if (this._isAccelPressed(event) && this.view.selection.single) {
            this.treeBoxObject.scrollByLines(1);
            return;
@@ -606,9 +619,9 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_up"
-               modifiers="accel any, shift" phase="target">
+               modifiers="accel any, shift">
         <![CDATA[
-         if (this.view.selection.single)
+         if (this._editingColumn || this.view.selection.single)
            return;
          var c = this.currentIndex;
          if (c == -1 || c == 0)
@@ -620,9 +633,9 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_down"
-               modifiers="accel any, shift" phase="target">
+               modifiers="accel any, shift">
         <![CDATA[
-         if (this.view.selection.single)
+         if (this._editingColumn || this.view.selection.single)
            return;
          var c = this.currentIndex;
          if (c+1 == this.view.rowCount)
@@ -634,8 +647,11 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_up"
-               modifiers="accel any" phase="target">
+               modifiers="accel any">
         <![CDATA[
+         if (this._editingColumn)
+           return;
+
          if (this.pageUpOrDownMovesSelection == this._isAccelPressed(event)) {
            this.treeBoxObject.scrollByPages(-1);
            return;
@@ -657,8 +673,11 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_down"
-               modifiers="accel any" phase="target">
+               modifiers="accel any">
         <![CDATA[
+         if (this._editingColumn)
+           return;
+
          if (this.pageUpOrDownMovesSelection == this._isAccelPressed(event)) {
            this.treeBoxObject.scrollByPages(1);
            return;
@@ -682,9 +701,9 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_up"
-               modifiers="accel any, shift" phase="target">
+               modifiers="accel any, shift">
         <![CDATA[
-         if (this.view.selection.single)
+         if (this._editingColumn || this.view.selection.single)
            return;
          var c = this.currentIndex;
          if (c == 0)
@@ -704,9 +723,9 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_down"
-               modifiers="accel any, shift" phase="target">
+               modifiers="accel any, shift">
         <![CDATA[
-         if (this.view.selection.single)
+         if (this._editingColumn || this.view.selection.single)
            return;
          var c = this.currentIndex;
           var l = this.view.rowCount - 1;
@@ -728,9 +747,9 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_home"
-               modifiers="accel any" phase="target">
+               modifiers="accel any">
         <![CDATA[
-         if (this.view.rowCount == 0)
+         if (this._editingColumn || this.view.rowCount == 0)
            return;
          // Normal behaviour is to select the first row
          if (!this._isAccelPressed(event))
@@ -742,8 +761,11 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_end"
-               modifiers="accel any" phase="target">
+               modifiers="accel any">
         <![CDATA[
+         if (this._editingColumn)
+           return;
+
          var l = this.view.rowCount - 1;
          if (l < 0)
            return;
@@ -757,9 +779,9 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_home"
-               modifiers="accel any, shift" phase="target">
+               modifiers="accel any, shift">
         <![CDATA[
-         if (this.view.selection.single)
+         if (this._editingColumn || this.view.selection.single)
            return;
          // Extend the selection from the existing pivot, if any
          this.view.selection.rangedSelect(-1, 0, this._isAccelPressed(event));
@@ -767,9 +789,9 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_end"
-               modifiers="accel any, shift" phase="target">
+               modifiers="accel any, shift">
         <![CDATA[
-         if (this.view.selection.single)
+         if (this._editingColumn || this.view.selection.single)
            return;
          var l = this.view.rowCount - 1;
          // Extend the selection from the existing pivot, if any
