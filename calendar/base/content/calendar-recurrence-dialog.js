@@ -189,7 +189,7 @@ function loadDialog()
                     setElementValue("repeat-ntimes-count", rule.count );
                 }
             } else {
-                var endDate = rule.endDate;
+                var endDate = rule.endDate.getInTimezone("UTC");
                 if (!endDate) {
                     setElementValue("recurrence-duration", "forever");
                 } else {
