@@ -386,6 +386,9 @@ public:
    * context.
    */
   PRBool IsPaginated() const { return mPaginated; }
+  
+  PRBool GetRenderedPositionVaryingContent() const { return mRenderedPositionVaryingContent; }
+  void SetRenderedPositionVaryingContent() { mRenderedPositionVaryingContent = PR_TRUE; }
 
   /**
    * Sets whether the presentation context can scroll for a paginated
@@ -762,6 +765,7 @@ protected:
   unsigned              mPrefScrollbarSide : 2;
   unsigned              mPendingSysColorChanged : 1;
   unsigned              mPendingThemeChanged : 1;
+  unsigned              mRenderedPositionVaryingContent : 1;
 
 #ifdef IBMBIDI
   unsigned              mIsVisual : 1;

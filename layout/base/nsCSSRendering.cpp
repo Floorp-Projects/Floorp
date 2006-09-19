@@ -3092,6 +3092,9 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     nsIView* viewportView = nsnull;
     nsRect viewportArea;
 
+    // Remember that we've drawn position-varying content in this prescontext
+    aPresContext->SetRenderedPositionVaryingContent();
+
     nsIFrame* rootFrame =
       aPresContext->PresShell()->FrameManager()->GetRootFrame();
     NS_ASSERTION(rootFrame, "no root frame");
