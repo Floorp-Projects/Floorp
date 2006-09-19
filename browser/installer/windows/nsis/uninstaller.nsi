@@ -74,6 +74,7 @@ Var TmpVal
 !insertmacro un.RegCleanUninstall
 !insertmacro un.CloseApp
 !insertmacro un.GetSecondInstallPath
+!insertmacro un.IsVista
 
 Name "${BrandFullName}"
 OutFile "uninst.exe"
@@ -203,6 +204,11 @@ Section "Uninstall"
       Pop $R1
       WriteRegStr HKLM "$0" "Path" "$R1"
     ${EndIf}
+  ${EndIf}
+
+  ${un.IsVista} $R9
+  ${If} $R9 == "true"
+    DeleteRegValue HKLM "Software\RegisteredApplications" "${DDEApplication}"
   ${EndIf}
 
   ; Remove files. If we don't have a log file skip
@@ -417,7 +423,7 @@ Function .onInit
   SetShellVarContext all  ; Set $DESKTOP to All Users
 
   ; Hide icons - initiated from Set Program Access and Defaults
-  ${If} $R0 == '/ua "${AppVersion} (${AB_CD})" /hs browser'
+  ${If} $R0 == "/HideShortcuts"
     WriteRegDWORD HKLM $R1 "IconsVisible" 0
     ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
       SetShellVarContext current  ; Set $DESKTOP to the current user's desktop
@@ -450,7 +456,7 @@ Function .onInit
   ${EndIf}
 
   ; Show icons - initiated from Set Program Access and Defaults
-  ${If} $R0 == '/ua "${AppVersion} (${AB_CD})" /ss browser'
+  ${If} $R0 == "/ShowShortcuts"
     WriteRegDWORD HKLM $R1 "IconsVisible" 1
     ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
       CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0

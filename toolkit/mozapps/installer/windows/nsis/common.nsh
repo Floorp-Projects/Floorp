@@ -67,6 +67,11 @@ Exch 1   ; exchange the top of the stack with 2 below the top of the stack
 Exch $R9 ; exchange the new $R9 value with the top of the stack
 */
 
+; Modified version of the following MUI macros to support Mozilla localization.
+; MUI_LANGUAGE
+; MUI_LANGUAGEFILE_BEGIN
+; MOZ_MUI_LANGUAGEFILE_END
+; See <NSIS App Dir>/Contrib/Modern UI/System.nsh for more information
 !define MUI_INSTALLOPTIONS_READ "!insertmacro MUI_INSTALLOPTIONS_READ"
 
 !macro MOZ_MUI_LANGUAGE LANGUAGE
@@ -526,6 +531,87 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 !macroend
 
 /**
+ * Checks whether the system is running Vista. If the system is running Vista
+ * this will return true... if not, this will return false.
+ *
+ * IMPORTANT! $R9 will be overwritten by this macro with the return value so
+ *            protect yourself!
+ *
+ * @return  _RESULT
+ *          true if the system is running Vista otherwise false.
+ *
+ * $R7 = value of CurrentVersion from call to ReadRegStr
+ * $R8 = leftmost char from $R7 used for comparison. If this is 6 then the
+ *       system is running Vista.
+ * $R9 = _RESULT
+ */
+!macro IsVista
+
+  !ifndef ${_MOZFUNC_UN}IsVista
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}IsVista "!insertmacro ${_MOZFUNC_UN}IsVistaCall"
+
+    Function ${_MOZFUNC_UN}IsVista
+      Push $R7
+      Push $R8
+
+      StrCpy $R9 "false"
+
+      ClearErrors
+
+      ReadRegStr $R7 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" CurrentVersion
+      IfErrors end 0
+
+      StrCpy $R8 $R7 1
+      StrCmp $R8 "6" 0 end
+      StrCpy $R9 "true"
+
+      end:
+
+      ClearErrors
+
+      Pop $R8
+      Pop $R7
+      Push $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro IsVistaCall _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call IsVista
+  Pop ${_RESULT}
+  !verbose pop
+!macroend
+
+!macro un.IsVistaCall _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call un.IsVista
+  Pop ${_RESULT}
+  !verbose pop
+!macroend
+
+!macro un.IsVista
+  !ifndef un.IsVista
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro IsVista
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
  * Checks whether we can write to the install directory. If the install
  * directory already exists this will attempt to create a temporary file in the
  * install directory and then delete it. If it does not exist this will attempt
@@ -550,8 +636,8 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !define ${_MOZFUNC_UN}CanWriteToInstallDir "!insertmacro ${_MOZFUNC_UN}CanWriteToInstallDirCall"
 
     Function ${_MOZFUNC_UN}CanWriteToInstallDir
-      Push $R7
       Push $R8
+      Push $R7
 
       StrCpy $R9 "true"
       IfFileExists "$INSTDIR" 0 checkCreateDir
@@ -577,8 +663,8 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       end:
       ClearErrors
 
-      Pop $R8
       Pop $R7
+      Pop $R8
       Push $R9
     FunctionEnd
 
@@ -616,7 +702,6 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !verbose pop
   !endif
 !macroend
-
 
 /**
  * Checks whether there is sufficient free space available on the installation
@@ -1458,6 +1543,114 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !define _MOZFUNC_UN "un."
 
     !insertmacro CreateRegKey
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
+ * Finds an installation of the application so we can force an install into an
+ * existing location for Vista. This uses SHCTX to determine the
+ * registry hive so you must call SetShellVarContext first.
+ *
+ * IMPORTANT! $R9 will be overwritten by this macro with the return value so
+ *            protect yourself!
+ *
+ * @param   _KEY
+ *          The registry subkey (typically this will be Software\Mozilla).
+ * @return  _RESULT
+ *          false if an install isn't found, path to the main exe if an install
+ *          is found.
+ *
+ * $R3 = _KEY
+ * $R4 = value returned from the outer loop's EnumRegKey
+ * $R5 = value returned from ReadRegStr
+ * $R6 = counter for the outer loop's EnumRegKey
+ * $R7 = value returned popped from the stack for GetPathFromRegStr macro
+ * $R8 = value returned popped from the stack for GetParentDir macro
+ * $R9 = _RESULT
+ */
+!macro GetExistingInstallPath
+
+  !ifndef ${_MOZFUNC_UN}GetExistingInstallPath
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}GetExistingInstallPath "!insertmacro ${_MOZFUNC_UN}GetExistingInstallPathCall"
+
+    Function ${_MOZFUNC_UN}GetExistingInstallPath
+      Exch $R3
+      Push $R4
+      Push $R5
+      Push $R6
+      Push $R7
+      Push $R8
+
+      StrCpy $R9 "false"
+      StrCpy $R6 0  ; set the counter for the loop to 0
+
+      loop:
+      EnumRegKey $R4 SHCTX $R3 $R6
+      StrCmp $R4 "" end  ; if empty there are no more keys to enumerate
+      IntOp $R6 $R6 + 1  ; increment the loop's counter
+      ClearErrors
+      ReadRegStr $R5 SHCTX "$R3\$R4\bin" "PathToExe"
+      IfErrors loop
+      Push $R5
+      ${GetPathFromRegStr}
+      Pop $R7
+
+      IfFileExists "$R7" 0 +5
+      Push "$R7"
+      ${GetParent} "$R7" $R8
+      StrCpy $R9 "$R8"
+      GoTo end
+
+      GoTo loop
+
+      end:
+      ClearErrors
+
+      Pop $R8
+      Pop $R7
+      Pop $R6
+      Pop $R5
+      Pop $R4
+      Exch $R3
+      Push $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro GetExistingInstallPathCall _KEY _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_KEY}"
+  Call GetExistingInstallPath
+  Pop ${_RESULT}
+  !verbose pop
+!macroend
+
+!macro un.GetExistingInstallPathCall _KEY _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_KEY}"
+  Call un.GetExistingInstallPath
+  Pop ${_RESULT}
+  !verbose pop
+!macroend
+
+!macro un.GetExistingInstallPath
+  !ifndef un.GetExistingInstallPath
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro GetExistingInstallPath
 
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN
