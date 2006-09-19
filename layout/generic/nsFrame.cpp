@@ -1155,8 +1155,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   if ((GetStateBits() & NS_FRAME_REPLACED_ELEMENT) &&
       !IsVisibleForPainting(aBuilder))
     return NS_OK;
-  if (GetStyleVisibility()->mVisible == NS_STYLE_VISIBILITY_COLLAPSE)
-    return NS_OK;
 
   nsRect absPosClip;
   const nsStyleDisplay* disp = GetStyleDisplay();
@@ -1337,19 +1335,29 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     dirty.IntersectRect(dirty, aChild->GetOverflowRect());
   }
 
-  // If this child has a placeholder of interest then we must descend into
-  // it even if the child's descendant frames don't intersect the dirty
-  // area themselves.
-  // If the child is a scrollframe that we want to ignore, then we need
-  // to descend into it because its scrolled child may intersect the dirty
-  // area even if the scrollframe itself doesn't.
-  if (dirty.IsEmpty() &&
-      !(aChild->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO) && 
-      aChild != aBuilder->GetIgnoreScrollFrame())
-    return NS_OK;
+  if (!(aChild->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO)) {
+    // No need to descend into aChild to catch placeholders for visible
+    // positioned stuff. So see if we can short-circuit frame traversal here.
 
-  if (aChild->GetStyleVisibility()->mVisible == NS_STYLE_VISIBILITY_COLLAPSE)
-    return NS_OK;
+    // We can stop if aChild's intersection with the dirty area ended up empty.
+    // If the child is a scrollframe that we want to ignore, then we need
+    // to descend into it because its scrolled child may intersect the dirty
+    // area even if the scrollframe itself doesn't.
+    if (dirty.IsEmpty() && aChild != aBuilder->GetIgnoreScrollFrame())
+      return NS_OK;
+
+    // Note that aBuilder->GetRootMovingFrame() is non-null only if we're doing
+    // ComputeRepaintRegionForCopy.
+    if (aBuilder->GetRootMovingFrame() == this &&
+        !GetPresContext()->GetRenderedPositionVaryingContent()) {
+      // No position-varying content has been rendered in this prescontext.
+      // Therefore there is no need to descend into analyzing the moving frame's
+      // descendants looking for such content, because any bitblit will
+      // not be copying position-varying graphics.
+      return NS_OK;
+    }
+  }
+
   // XXX need to have inline-block and inline-table set pseudoStackingContext
   
   const nsStyleDisplay* ourDisp = GetStyleDisplay();

@@ -793,6 +793,9 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
                                            const nsRect& aCopyRect,
                                            nsRegion* aRepaintRegion)
 {
+  NS_ASSERTION(aRootFrame != aMovingFrame,
+               "The root frame shouldn't be the one that's moving, that makes no sense");
+
   // Build the 'after' display list over the whole area of interest.
   // Frames under aMovingFrame will not be allowed to affect (clip or cover)
   // non-moving frame display items ... then we can be sure the non-moving
