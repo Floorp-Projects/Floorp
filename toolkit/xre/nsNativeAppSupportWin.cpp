@@ -256,6 +256,47 @@ private:
  * whether Mozilla is already running.
  */
 
+/* Update 2006 September
+ *
+ * A change in behavior was implemented in July 2004 which made the
+ * application add on launch and remove on quit the ddexec registry key.
+ * See bug 246078.
+ * Windows Vista has changed the methods used to set an application as default
+ * and the new methods are incompatible with removing the ddeexec registry key.
+ * See bug 353089.
+ *
+ * OS DDE Sequence:
+ * 1. OS checks if the dde name is registered.
+ * 2. If it is registered the OS sends a DDE request with the WWW_OpenURL topic
+ *    and the params as specified in the default value of the ddeexec registry
+ *    key for the verb (e.g. open).
+ * 3. If it isn't registered the OS launches the executable defined in the
+ *    verb's (e.g. open) command registry key.
+ * 4. If the ifexec registry key is not present the OS sends a DDE request with
+ *    the WWW_OpenURL topic and the params as specified in the default value of
+ *    the ddeexec registry key for the verb (e.g. open).
+ * 5. If the ifexec registry key is present the OS sends a DDE request with the
+ *    WWW_OpenURL topic and the params as specified in the ifexec registry key
+ *    for the verb (e.g. open).
+ *
+ * Application DDE Sequence:
+ * 1. If the application is running a DDE request is received DDE with the
+ *    WWW_OpenURL topic and the params as specified in the default value of the
+ *    ddeexec registry key (e.g. "%1",,0,0,,,, where '%1' is the url to open)
+ *    for the verb (e.g. open).
+ * 2. If the application is not running it is launched with the -url argument.
+ *
+ * Note: Typically the application should use the DDE request to open the page
+ *       instead of using a command line argument. The command line argument is
+ *       used to work around when the DDE queue is hung by a different
+ *       application. See bug 53952.
+ *
+ * 3. The application receives a DDE request with the WWW_OpenURL topic and the
+ *    params from the ifexec key without the url (e.g. ,,0,0,,,,). The
+ *    application treats this request as a noop internally and returns the
+ *    correct values for the DDE request to the OS.
+ */
+
 class nsNativeAppSupportWin : public nsNativeAppSupportBase,
                               public nsIObserver
 {
@@ -976,23 +1017,26 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                     nsCAutoString url;
                     ParseDDEArg(hsz2, 0, url);
 
-                    // Read the 3rd argument in the command to determine if a
-                    // new window is to be used.
-                    nsCAutoString windowID;
-                    ParseDDEArg(hsz2, 2, windowID);
-                    // "" means to open the URL in a new window.
-                    if ( windowID.Equals( "" ) ) {
-                        url.Insert("mozilla -new-window ", 0);
-                    }
-                    else {
-                        url.Insert("mozilla -url ", 0);
-                    }
+                    if ( !url.Equals( "" ) ) {
+                        // Read the 3rd argument in the command to determine if a
+                        // new window is to be used.
+                        nsCAutoString windowID;
+                        ParseDDEArg(hsz2, 2, windowID);
+                        // "" means to open the URL in a new window.
+                        if ( windowID.Equals( "" ) ) {
+                            url.Insert("mozilla -new-window ", 0);
+                        }
+                        else {
+                            url.Insert("mozilla -url ", 0);
+                        }
 
 #if MOZ_DEBUG_DDE
-                    printf( "Handling dde XTYP_REQUEST request: [%s]...\n", url.get() );
+                        printf( "Handling dde XTYP_REQUEST request: [%s]...\n", url.get() );
 #endif
-                    // Now handle it.
-                    HandleCommandLine(url.get(), nsnull, nsICommandLine::STATE_REMOTE_EXPLICIT);
+                        // Now handle it.
+                        HandleCommandLine(url.get(), nsnull, nsICommandLine::STATE_REMOTE_EXPLICIT);
+                    }
+
                     // Return pseudo window ID.
                     result = CreateDDEData( 1 );
                     break;
@@ -1146,23 +1190,25 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
             nsCAutoString url;
             ParseDDEArg((const char*) request, 0, url);
 
-            // Read the 3rd argument in the command to determine if a
-            // new window is to be used.
-            nsCAutoString windowID;
-            ParseDDEArg((const char*) request, 2, windowID);
+            if ( !url.Equals( "" ) ) {
+                // Read the 3rd argument in the command to determine if a
+                // new window is to be used.
+                nsCAutoString windowID;
+                ParseDDEArg((const char*) request, 2, windowID);
 
-            // "" means to open the URL in a new window.
-            if ( windowID.Equals( "" ) ) {
-                url.Insert("mozilla -new-window ", 0);
-            }
-            else {
-                url.Insert("mozilla -url ", 0);
-            }
+                // "" means to open the URL in a new window.
+                if ( windowID.Equals( "" ) ) {
+                    url.Insert("mozilla -new-window ", 0);
+                }
+                else {
+                    url.Insert("mozilla -url ", 0);
+                }
 #if MOZ_DEBUG_DDE
-            printf( "Handling dde XTYP_REQUEST request: [%s]...\n", url.get() );
+                printf( "Handling dde XTYP_REQUEST request: [%s]...\n", url.get() );
 #endif
-            // Now handle it.
-            HandleCommandLine(url.get(), nsnull, nsICommandLine::STATE_REMOTE_EXPLICIT);
+                // Now handle it.
+                HandleCommandLine(url.get(), nsnull, nsICommandLine::STATE_REMOTE_EXPLICIT);
+            }
 
             // Release the data.
             DdeUnaccessData( hdata );

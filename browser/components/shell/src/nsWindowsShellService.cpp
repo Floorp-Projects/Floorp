@@ -145,11 +145,12 @@ OpenKeyForWriting(const char* aKeyName, HKEY* aKey, PRBool aForAllUsers, PRBool 
 //   are mapped like so:
 //
 // HKCU\SOFTWARE\Classes\<protocol>\
-//   DefaultIcon                    (default)         REG_SZ  <appname>,1
+//   DefaultIcon                    (default)         REG_SZ  <appname>,0
 //   shell\open\command             (default)         REG_SZ <appname> -url "%1"
-//   shell\open\ddeexec             (default)         REG_SZ  "%1",,-1,0,,,,
+//   shell\open\ddeexec             (default)         REG_SZ  "%1",,0,0,,,,
 //   shell\open\ddeexec             NoActivateHandler REG_SZ
 //                     \application (default)         REG_SZ  Firefox
+//                     \ifexec      (default)         REG_SZ  ,,0,0,,,,
 //                     \topic       (default)         REG_SZ  WWW_OpenURL
 //                    
 //
@@ -193,10 +194,12 @@ typedef struct {
 #define DDE "\\shell\\open\\ddeexec\\"
 #define DDE_NAME "Firefox" // This must be kept in sync with ID_DDE_APPLICATION_NAME as defined in splash.rc
 #define DDE_COMMAND "\"%1\",,0,0,,,,"
+#define DDE_IFEXEC ",,0,0,,,,"
 #define EXE "firefox.exe"
 
 #define CLS_HTML "FirefoxHTML"
-#define VAL_ICON "%APPPATH%,1"
+#define VAL_URL_ICON "%APPPATH%,0"
+#define VAL_FILE_ICON "%APPPATH%,1"
 #define VAL_OPEN "%APPPATH% -url \"%1\""
 
 #define MAKE_KEY_NAME1(PREFIX, MID) \
@@ -223,20 +226,42 @@ static SETTING gSettings[] = {
   { MAKE_KEY_NAME1(CLS, ".xhtml"),  "", CLS_HTML, NO_SUBSTITUTION | NON_ESSENTIAL },
 
   // File Extension Class
-  { MAKE_KEY_NAME2(CLS, CLS_HTML, DI),  "", VAL_ICON, PATH_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME2(CLS, CLS_HTML, DI),  "", VAL_FILE_ICON, PATH_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME2(CLS, CLS_HTML, SOP), "", VAL_OPEN, PATH_SUBSTITUTION | NON_ESSENTIAL },
 
   // Protocol Handlers
-  { MAKE_KEY_NAME2(CLS, "HTTP", DI),    "", VAL_ICON, PATH_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, "HTTP", DI),    "", VAL_URL_ICON, PATH_SUBSTITUTION },
   { MAKE_KEY_NAME2(CLS, "HTTP", SOP),   "", VAL_OPEN, PATH_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "HTTPS", DI),   "", VAL_ICON, PATH_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, "HTTPS", DI),   "", VAL_URL_ICON, PATH_SUBSTITUTION },
   { MAKE_KEY_NAME2(CLS, "HTTPS", SOP),  "", VAL_OPEN, PATH_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "FTP", DI),     "", VAL_ICON, PATH_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME2(CLS, "FTP", DI),     "", VAL_URL_ICON, PATH_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME2(CLS, "FTP", SOP),    "", VAL_OPEN, PATH_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, "GOPHER", DI),  "", VAL_ICON, PATH_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME2(CLS, "GOPHER", DI),  "", VAL_URL_ICON, PATH_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME2(CLS, "GOPHER", SOP), "", VAL_OPEN, PATH_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, "CHROME", DI),  "", VAL_ICON, PATH_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME2(CLS, "CHROME", DI),  "", VAL_URL_ICON, PATH_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME2(CLS, "CHROME", SOP), "", VAL_OPEN, PATH_SUBSTITUTION | NON_ESSENTIAL },
+
+  // DDE settings
+  { MAKE_KEY_NAME2(CLS, "HTTP", DDE), "", DDE_COMMAND, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME3(CLS, "HTTP", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME3(CLS, "HTTP", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION },
+  { MAKE_KEY_NAME3(CLS, "HTTP", DDE, "ifexec"), "", DDE_IFEXEC, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, "HTTPS", DDE), "", DDE_COMMAND, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME3(CLS, "HTTPS", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME3(CLS, "HTTPS", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION },
+  { MAKE_KEY_NAME3(CLS, "HTTPS", DDE, "ifexec"), "", DDE_IFEXEC, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, "FTP", DDE), "", DDE_COMMAND, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME3(CLS, "FTP", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME3(CLS, "FTP", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION },
+  { MAKE_KEY_NAME3(CLS, "FTP", DDE, "ifexec"), "", DDE_IFEXEC, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, "GOPHER", DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME3(CLS, "GOPHER", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME3(CLS, "GOPHER", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME3(CLS, "GOPHER", DDE, "ifexec"), "", DDE_IFEXEC, NO_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, "CHROME", DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME3(CLS, "CHROME", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME3(CLS, "CHROME", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME3(CLS, "CHROME", DDE, "ifexec"), "", DDE_IFEXEC, NO_SUBSTITUTION },
 
   // Windows XP Start Menu
   { MAKE_KEY_NAME2(SMI, "%APPEXE%", DI),  
@@ -261,29 +286,6 @@ static SETTING gSettings[] = {
   //     firefox.exe\shell\safemode          (default)   REG_SZ  Firefox &Safe Mode
 };
 
-static SETTING gDDESettings[] = {
-  { MAKE_KEY_NAME2(CLS, "HTTP", DDE), "", DDE_COMMAND, NO_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "HTTP", DDE), "NoActivateHandler", "", NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, "HTTP", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, "HTTP", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "HTTPS", DDE), "", DDE_COMMAND, NO_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "HTTPS", DDE), "NoActivateHandler", "", NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, "HTTPS", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, "HTTPS", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "FTP", DDE), "", DDE_COMMAND, NO_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "FTP", DDE), "NoActivateHandler", "", NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, "FTP", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, "FTP", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "GOPHER", DDE), "", DDE_COMMAND, NO_SUBSTITUTION  },
-  { MAKE_KEY_NAME2(CLS, "GOPHER", DDE), "NoActivateHandler", "", NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, "GOPHER", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, "GOPHER", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION  },
-  { MAKE_KEY_NAME2(CLS, "CHROME", DDE), "", DDE_COMMAND, NO_SUBSTITUTION  },
-  { MAKE_KEY_NAME2(CLS, "CHROME", DDE), "NoActivateHandler", "", NO_SUBSTITUTION },
-  { MAKE_KEY_NAME3(CLS, "CHROME", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION  },
-  { MAKE_KEY_NAME3(CLS, "CHROME", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION  }
-};
-
 NS_IMETHODIMP
 nsWindowsShellService::Register(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation,
                                 const char *componentType, const nsModuleComponentInfo *info)
@@ -300,31 +302,6 @@ nsWindowsShellService::nsWindowsShellService()
 {
   nsCOMPtr<nsIObserverService> obsServ (do_GetService("@mozilla.org/observer-service;1"));
   obsServ->AddObserver(this, "quit-application", PR_FALSE);
-}
-
-nsresult
-nsWindowsShellService::RegisterDDESupport()
-{
-  SETTING* end = gDDESettings + sizeof(gDDESettings)/sizeof(SETTING);
-  for (SETTING* settings = gDDESettings; settings < end; ++settings) {
-    nsCAutoString key(settings->keyName);    
-    nsCAutoString data(settings->valueData);    
-
-    SetRegKey(key.get(), settings->valueName, data.get(),
-              PR_FALSE, 0, PR_TRUE, PR_TRUE);
-  }
-  return NS_OK;
-}
-
-nsresult
-nsWindowsShellService::UnregisterDDESupport()
-{
-  DeleteRegKey(HKEY_CLASSES_ROOT, "HTTP\\shell\\open\\ddeexec");
-  DeleteRegKey(HKEY_CLASSES_ROOT, "HTTPS\\shell\\open\\ddeexec");
-  DeleteRegKey(HKEY_CLASSES_ROOT, "FTP\\shell\\open\\ddeexec");
-  DeleteRegKey(HKEY_CLASSES_ROOT, "CHROME\\shell\\open\\ddeexec");
-  DeleteRegKey(HKEY_CLASSES_ROOT, "GOPHER\\shell\\open\\ddeexec");
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -501,9 +478,6 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   // Close the key we opened.
   ::RegCloseKey(backupKey);
 
-  // We need to reregister DDE support
-  RegisterDDESupport();
-
   // Refresh the Shell
   ::SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, NULL,
                        (LPARAM)"SOFTWARE\\Clients\\StartMenuInternet",
@@ -554,43 +528,6 @@ nsWindowsShellService::RestoreFileSettings(PRBool aForAllUsers)
                        SMTO_NORMAL|SMTO_ABORTIFHUNG,
                        MOZ_HWND_BROADCAST_MSG_TIMEOUT, NULL);
   return NS_OK;
-}
-
-// Utility function to delete a registry subkey.
-DWORD
-nsWindowsShellService::DeleteRegKey(HKEY baseKey, const char *keyName)
-{
- // Make sure input subkey isn't null. 
- if (!keyName || !::strlen(keyName))
-   return ERROR_BADKEY;
-
- DWORD rc;
- // Open subkey.
- HKEY key;
- rc = ::RegOpenKeyEx(baseKey, keyName, 0, KEY_ENUMERATE_SUB_KEYS | DELETE, &key);
- 
- // Continue till we get an error or are done.
- while (rc == ERROR_SUCCESS) {
-   char subkeyName[_MAX_PATH];
-   DWORD len = sizeof subkeyName;
-   // Get first subkey name.  Note that we always get the
-   // first one, then delete it.  So we need to get
-   // the first one next time, also.
-   rc = ::RegEnumKeyEx(key, 0, subkeyName, &len, 0, 0, 0, 0);
-   if (rc == ERROR_NO_MORE_ITEMS) {
-     // No more subkeys.  Delete the main one.
-     rc = ::RegDeleteKey(baseKey, keyName);
-     break;
-   } 
-   if (rc == ERROR_SUCCESS) {
-     // Another subkey, delete it, recursively.
-     rc = DeleteRegKey(key, subkeyName);
-   }
- }
- 
- // Close the key we opened.
- ::RegCloseKey(key);
- return rc;
 }
 
 void
@@ -1062,8 +999,6 @@ nsWindowsShellService::Observe(nsISupports* aObject, const char* aTopic, const P
     IsDefaultBrowser(PR_FALSE, &isDefault);
     if (!isDefault)
       return NS_OK;
-
-    return RegisterDDESupport();
   }
   else if (!nsCRT::strcmp("quit-application", aTopic)) {
     PRBool isDefault;
@@ -1073,8 +1008,6 @@ nsWindowsShellService::Observe(nsISupports* aObject, const char* aTopic, const P
 
     nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
     os->RemoveObserver(this, "quit-application");
-   
-    return UnregisterDDESupport();
   }
 
   return NS_OK;
