@@ -37,3 +37,10 @@
 
 @import url("chrome://inspector/skin");
 @import url("chrome://inspector/content/extensions/treeEditable.css");
+
+#olNodeInfo label {
+  padding-right: 0.5em;
+}
+#olNodeInfo {
+  padding-bottom: 0.5em;
+}
