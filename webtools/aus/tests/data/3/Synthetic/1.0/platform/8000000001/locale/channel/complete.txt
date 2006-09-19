@@ -7,5 +7,5 @@ size=12345
 build=8000000002
 appv=1.0
 extv=1.0
-detailsUrl=http://detail.url/content.html 
+detailsUrl=http://detail.url/content.html
 updateType=minor

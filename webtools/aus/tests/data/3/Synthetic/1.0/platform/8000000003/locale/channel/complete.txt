@@ -6,5 +6,5 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 8000000004
 1.0
 1.0
-http://detail.url/content.html 
+http://detail.url/content.html
 major
