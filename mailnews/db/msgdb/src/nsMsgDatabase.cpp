@@ -3715,7 +3715,7 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
   nsresult result=NS_ERROR_UNEXPECTED;
   nsCOMPtr <nsIMsgThread> thread;
   nsCOMPtr <nsIMsgDBHdr> replyToHdr;
-  nsMsgKey threadId = nsMsgKey_None;
+  nsMsgKey threadId = nsMsgKey_None, newHdrKey;
   
   if (!newHdr)
     return NS_ERROR_NULL_POINTER;
@@ -3729,6 +3729,7 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
   // in m_newSet yet.
   newHdr->GetRawFlags(&newHdrFlags);
   newHdr->GetNumReferences(&numReferences);
+  newHdr->GetMessageKey(&newHdrKey);
   
   // try reference threading first
   for (PRInt32 i = numReferences - 1; i >= 0;  i--)
@@ -3746,6 +3747,14 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
     thread = getter_AddRefs(GetThreadForReference(reference, getter_AddRefs(replyToHdr))) ;
     if (thread)
     {
+      if (replyToHdr)
+      {
+        nsMsgKey replyToKey;
+        replyToHdr->GetMessageKey(&replyToKey);
+        // message claims to be a reply to itself - ignore that since it leads to corrupt threading.
+        if (replyToKey == newHdrKey)
+          continue;
+      }
       thread->GetThreadKey(&threadId);
       newHdr->SetThreadId(threadId);
       result = AddToThread(newHdr, thread, replyToHdr, PR_TRUE);
