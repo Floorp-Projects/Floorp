@@ -42,6 +42,7 @@
 #include "nsIAtom.h"
 #include "nsILineIterator.h"
 #include "nsTablePainter.h"
+#include "nsTArray.h"
 
 class nsTableFrame;
 class nsTableRowFrame;
@@ -89,6 +90,10 @@ struct nsRowGroupReflowState {
 #define NS_ROWGROUP_NEED_SPECIAL_REFLOW  0x20000000
 // the next is also used on rows (see nsTableRowGroupFrame::InitRepeatedFrame)
 #define NS_REPEATED_ROW_OR_ROWGROUP      0x10000000
+#define NS_ROWGROUP_HAS_ROW_CURSOR       0x08000000
+
+#define MIN_ROWS_NEEDING_CURSOR 20
+
 /**
  * nsTableRowGroupFrame is the frame that maps row groups 
  * (HTML tags THEAD, TFOOT, and TBODY). This class cannot be reused
@@ -250,6 +255,57 @@ public:
 #endif
   NS_IMETHOD GetNextSiblingOnLine(nsIFrame*& aFrame, PRInt32 aLineNumber);
 
+  // row cursor methods to speed up searching for the row(s)
+  // containing a point. The basic idea is that we set the cursor
+  // property if the rows' y and yMosts are non-decreasing (considering only
+  // rows with nonempty overflowAreas --- empty overflowAreas never participate
+  // in event handling or painting), and the rowgroup has sufficient number of
+  // rows. The cursor property points to a "recently used" row. If we get a
+  // series of requests that work on rows "near" the cursor, then we can find
+  // those nearby rows quickly by starting our search at the cursor.
+  // This code is based on the line cursor code in nsBlockFrame. It's more general
+  // though, and could be extracted and used elsewhere.
+  struct FrameCursorData {
+    nsTArray<nsIFrame*> mFrames;
+    PRUint32            mCursorIndex;
+    nscoord             mOverflowAbove;
+    nscoord             mOverflowBelow;
+    
+    FrameCursorData()
+      : mFrames(MIN_ROWS_NEEDING_CURSOR), mCursorIndex(0), mOverflowAbove(0),
+        mOverflowBelow(0) {}
+
+    PRBool AppendFrame(nsIFrame* aFrame);
+    
+    void FinishBuildingCursor() {
+      mFrames.Compact();
+    }
+  };
+
+  // Clear out row cursor because we're disturbing the rows (e.g., Reflow)
+  void ClearRowCursor();
+
+  /**
+   * Get the first row that might contain y-coord 'aY', or nsnull if you must search
+   * all rows.
+   * The actual row returned might not contain 'aY', but if not, it is guaranteed
+   * to be before any row which does contain 'aY'.
+   * aOverflowAbove is the maximum over all rows of -row.GetOverflowRect().y.
+   * To find all rows that intersect the vertical interval aY/aYMost, call
+   * GetFirstRowContaining(aY, &overflowAbove), and then iterate through all
+   * rows until reaching a row where row->GetRect().y - overflowAbove >= aYMost.
+   * That row and all subsequent rows cannot intersect the interval.
+   */
+  nsIFrame* GetFirstRowContaining(nscoord aY, nscoord* aOverflowAbove);
+
+  /**
+   * Set up the row cursor. After this, call AppendFrame for every
+   * child frame in sibling order. Ensure that the child frame y and YMost values
+   * form non-decreasing sequences (should always be true for table rows);
+   * if this is violated, call ClearRowCursor(). If we return nsnull, then we
+   * decided not to use a cursor or we already have one set up.
+   */
+  FrameCursorData* SetupRowCursor();
 
 protected:
   nsTableRowGroupFrame(nsStyleContext* aContext);

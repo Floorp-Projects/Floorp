@@ -1428,11 +1428,33 @@ static PRBool CompareByTablePartRank(nsDisplayItem* aItem1, nsDisplayItem* aItem
 }
 
 /* static */ nsresult
+nsTableFrame::GenericTraversal(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
+                               const nsRect& aDirtyRect, const nsDisplayListSet& aLists)
+{
+  // This is similar to what nsContainerFrame::BuildDisplayListForNonBlockChildren
+  // does, except that we allow the children's background and borders to go
+  // in our BorderBackground list. This doesn't really affect background
+  // painting --- the children won't actually draw their own backgrounds
+  // because the nsTableFrame already drew them, unless a child has its own
+  // stacking context, in which case the child won't use its passed-in
+  // BorderBackground list anyway. It does affect cell borders though; this
+  // lets us get cell borders into the nsTableFrame's BorderBackground list.
+  nsIFrame* kid = aFrame->GetFirstChild(nsnull);
+  while (kid) {
+    nsresult rv = aFrame->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
+    kid = kid->GetNextSibling();
+  }
+  return NS_OK;
+}
+
+/* static */ nsresult
 nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
                                       nsFrame* aFrame,
                                       const nsRect& aDirtyRect,
                                       const nsDisplayListSet& aLists,
-                                      PRBool aIsRoot)
+                                      PRBool aIsRoot,
+                                      DisplayGenericTablePartTraversal aTraversal)
 {
   nsDisplayList eventsBorderBackground;
   // If we need to sort the event backgrounds, then we'll put descendants'
@@ -1451,21 +1473,9 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // This is similar to what nsContainerFrame::BuildDisplayListForNonBlockChildren
-  // does, except that we allow the children's background and borders to go
-  // in our BorderBackground list. This doesn't really affect background
-  // painting --- the children won't actually draw their own backgrounds
-  // because the nsTableFrame already drew them, unless a child has its own
-  // stacking context, in which case the child won't use its passed-in
-  // BorderBackground list anyway. It does affect cell borders though; this
-  // lets us get cell borders into the nsTableFrame's BorderBackground list.
-  nsIFrame* kid = aFrame->GetFirstChild(nsnull);
-  while (kid) {
-    nsresult rv = aFrame->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, *lists);
-    NS_ENSURE_SUCCESS(rv, rv);
-    kid = kid->GetNextSibling();
-  }
-  
+  nsresult rv = aTraversal(aBuilder, aFrame, aDirtyRect, *lists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (sortEventBackgrounds) {
     // Ensure that the table frame event background goes before the
     // table rowgroups event backgrounds, before the table row event backgrounds,

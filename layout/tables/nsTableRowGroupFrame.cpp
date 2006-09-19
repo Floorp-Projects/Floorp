@@ -215,6 +215,58 @@ PaintRowGroupBackground(nsIFrame* aFrame, nsIRenderingContext* aCtx,
   painter.PaintRowGroup(NS_STATIC_CAST(nsTableRowGroupFrame*, aFrame));
 }
 
+// Handle the child-traversal part of DisplayGenericTablePart
+static nsresult
+DisplayRows(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
+            const nsRect& aDirtyRect, const nsDisplayListSet& aLists)
+{
+  nscoord overflowAbove;
+  nsTableRowGroupFrame* f = NS_STATIC_CAST(nsTableRowGroupFrame*, aFrame);
+  // Don't try to use the row cursor if we have to descend into placeholders;
+  // we might have rows containing placeholders, where the row's overflow
+  // area doesn't intersect the dirty rect but we need to descend into the row
+  // to see out of flows
+  nsIFrame* kid = f->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO
+    ? nsnull : f->GetFirstRowContaining(aDirtyRect.y, &overflowAbove);
+  
+  if (kid) {
+    // have a cursor, use it
+    while (kid) {
+      if (kid->GetRect().y - overflowAbove >= aDirtyRect.YMost())
+        break;
+      nsresult rv = f->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+      NS_ENSURE_SUCCESS(rv, rv);
+      kid = kid->GetNextSibling();
+    }
+    return NS_OK;
+  }
+  
+  // No cursor. Traverse children the hard way and build a cursor while we're at it
+  nsTableRowGroupFrame::FrameCursorData* cursor = f->SetupRowCursor();
+  kid = f->GetFirstChild(nsnull);
+  while (kid) {
+    nsresult rv = f->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+    if (NS_FAILED(rv)) {
+      f->ClearRowCursor();
+      return rv;
+    }
+    
+    if (cursor) {
+      if (!cursor->AppendFrame(kid)) {
+        f->ClearRowCursor();
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  
+    kid = kid->GetNextSibling();
+  }
+  if (cursor) {
+    cursor->FinishBuildingCursor();
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsTableRowGroupFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                        const nsRect&           aDirtyRect,
@@ -232,8 +284,9 @@ nsTableRowGroupFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         nsDisplayGeneric(this, PaintRowGroupBackground, "TableRowGroupBackground"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-    
-  return nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists, isRoot);
+  
+  return nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect,
+                                               aLists, isRoot, DisplayRows);
 }
 
 PRIntn
@@ -1249,6 +1302,9 @@ nsTableRowGroupFrame::Reflow(nsPresContext*          aPresContext,
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (!tableFrame) return NS_ERROR_NULL_POINTER;
 
+  // Row geometry may be going to change so we need to invalidate any row cursor.
+  ClearRowCursor();
+
   // see if a special height reflow needs to occur due to having a pct height
   if (!NeedSpecialReflow()) 
     nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
@@ -1369,6 +1425,8 @@ nsTableRowGroupFrame::AppendFrames(nsIAtom*        aListName,
 {
   NS_ASSERTION(!aListName, "unexpected child list");
 
+  ClearRowCursor();
+
   // collect the new row frames in an array
   nsAutoVoidArray rows;
   for (nsIFrame* rowFrame = aFrameList; rowFrame;
@@ -1416,6 +1474,8 @@ nsTableRowGroupFrame::InsertFrames(nsIAtom*        aListName,
   NS_ASSERTION(!aListName, "unexpected child list");
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
+
+  ClearRowCursor();
 
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (!tableFrame)
@@ -1472,6 +1532,8 @@ nsTableRowGroupFrame::RemoveFrame(nsIAtom*        aListName,
                                   nsIFrame*       aOldFrame)
 {
   NS_ASSERTION(!aListName, "unexpected child list");
+
+  ClearRowCursor();
 
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (tableFrame) {
@@ -2102,3 +2164,96 @@ nsTableRowGroupFrame::GetNextSiblingOnLine(nsIFrame*& aFrame,
 
 //end nsLineIterator methods
 
+static void
+DestroyFrameCursorData(void* aObject, nsIAtom* aPropertyName,
+                       void* aPropertyValue, void* aData)
+{
+  delete NS_STATIC_CAST(nsTableRowGroupFrame::FrameCursorData*, aPropertyValue);
+}
+
+void
+nsTableRowGroupFrame::ClearRowCursor()
+{
+  if (!(GetStateBits() & NS_ROWGROUP_HAS_ROW_CURSOR))
+    return;
+
+  RemoveStateBits(NS_ROWGROUP_HAS_ROW_CURSOR);
+  DeleteProperty(nsLayoutAtoms::rowCursorProperty);
+}
+
+nsTableRowGroupFrame::FrameCursorData*
+nsTableRowGroupFrame::SetupRowCursor()
+{
+  if (GetStateBits() & NS_ROWGROUP_HAS_ROW_CURSOR) {
+    // We already have a valid row cursor. Don't waste time rebuilding it.
+    return nsnull;
+  }
+
+  nsIFrame* f = mFrames.FirstChild();
+  PRInt32 count;
+  for (count = 0; f && count < MIN_ROWS_NEEDING_CURSOR; ++count) {
+    f = f->GetNextSibling();
+  }
+  if (!f) {
+    // Less than MIN_ROWS_NEEDING_CURSOR rows, so just don't bother
+    return nsnull;
+  }
+
+  FrameCursorData* data = new FrameCursorData();
+  if (!data)
+    return nsnull;
+  SetProperty(nsLayoutAtoms::rowCursorProperty, data, DestroyFrameCursorData);
+  AddStateBits(NS_ROWGROUP_HAS_ROW_CURSOR);
+  return data;
+}
+
+nsIFrame*
+nsTableRowGroupFrame::GetFirstRowContaining(nscoord aY, nscoord* aOverflowAbove)
+{
+  if (!(GetStateBits() & NS_ROWGROUP_HAS_ROW_CURSOR))
+    return nsnull;
+
+  FrameCursorData* property = NS_STATIC_CAST(FrameCursorData*,
+    GetProperty(nsLayoutAtoms::rowCursorProperty));
+  PRUint32 cursorIndex = property->mCursorIndex;
+  PRUint32 frameCount = property->mFrames.Length();
+  if (cursorIndex >= frameCount)
+    return nsnull;
+  nsIFrame* cursorFrame = property->mFrames[cursorIndex];
+
+  // The cursor's frame list excludes frames with empty overflow-area, so
+  // we don't need to check that here.
+  
+  // We use property->mOverflowBelow here instead of computing the frame's
+  // true overflowArea.YMost(), because it is essential for the thresholds
+  // to form a monotonically increasing sequence. Otherwise we would break
+  // encountering a row whose overflowArea.YMost() is <= aY but which has
+  // a row above it containing cell(s) that span to include aY.
+  while (cursorIndex > 0 &&
+         cursorFrame->GetRect().YMost() + property->mOverflowBelow > aY) {
+    --cursorIndex;
+    cursorFrame = property->mFrames[cursorIndex];
+  }
+  while (cursorIndex + 1 < frameCount &&
+         cursorFrame->GetRect().YMost() + property->mOverflowBelow <= aY) {
+    ++cursorIndex;
+    cursorFrame = property->mFrames[cursorIndex];
+  }
+
+  property->mCursorIndex = cursorIndex;
+  *aOverflowAbove = property->mOverflowAbove;
+  return cursorFrame;
+}
+
+PRBool
+nsTableRowGroupFrame::FrameCursorData::AppendFrame(nsIFrame* aFrame)
+{
+  nsRect overflowRect = aFrame->GetOverflowRect();
+  if (overflowRect.IsEmpty())
+    return PR_TRUE;
+  nscoord overflowAbove = -overflowRect.y;
+  nscoord overflowBelow = overflowRect.YMost() - aFrame->GetSize().height;
+  mOverflowAbove = PR_MAX(mOverflowAbove, overflowAbove);
+  mOverflowBelow = PR_MAX(mOverflowBelow, overflowBelow);
+  return mFrames.AppendElement(aFrame) != nsnull;
+}

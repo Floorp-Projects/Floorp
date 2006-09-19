@@ -265,12 +265,21 @@ public:
    * all the the frame's children.
    * @param aIsRoot true if aFrame is the table frame or a table part which
    * happens to be the root of a stacking context
+   * @param aTraversal if non-null, this is the frame to start with, and we
+   * can stop as soon as we find a frame whose overflowRect has y-coordinate
+   * below the dirty rect and is non-empty
    */
+  typedef nsresult (* DisplayGenericTablePartTraversal)
+      (nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
+       const nsRect& aDirtyRect, const nsDisplayListSet& aLists);
+  static nsresult GenericTraversal(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
+                                   const nsRect& aDirtyRect, const nsDisplayListSet& aLists);
   static nsresult DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
                                           nsFrame* aFrame,
                                           const nsRect& aDirtyRect,
                                           const nsDisplayListSet& aLists,
-                                          PRBool aIsRoot);
+                                          PRBool aIsRoot,
+                                          DisplayGenericTablePartTraversal aTraversal = GenericTraversal);
 
   // Return the closest sibling of aPriorChildFrame (including aPriroChildFrame)
   // of type aChildType.
