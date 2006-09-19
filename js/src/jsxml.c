@@ -3930,26 +3930,24 @@ out:
 static JSBool
 GetFunction(JSContext *cx, JSObject *obj, JSXML *xml, jsid id, jsval *vp)
 {
-    jsval fval;
     JSFunction *fun;
 
     do {
         /* XXXbe really want a separate scope for function::*. */
-        if (!js_GetProperty(cx, obj, id, &fval))
+        if (!js_GetProperty(cx, obj, id, vp))
             return JS_FALSE;
-        if (VALUE_IS_FUNCTION(cx, fval)) {
+        if (VALUE_IS_FUNCTION(cx, *vp)) {
             if (xml && OBJECT_IS_XML(cx, obj)) {
-                fun = (JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(fval));
+                fun = (JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(*vp));
                 if (!FUN_INTERPRETED(fun) && fun->u.n.spare &&
                     (fun->u.n.spare & CLASS_TO_MASK(xml->xml_class)) == 0) {
                     /* XML method called on XMLList or vice versa. */
-                    fval = JSVAL_VOID;
+                    *vp = JSVAL_VOID;
                 }
             }
             break;
         }
     } while ((obj = OBJ_GET_PROTO(cx, obj)) != NULL);
-    *vp = fval;
     return JS_TRUE;
 }
 
@@ -5250,45 +5248,70 @@ again:
     }
 }
 
+/*
+ * 11.2.2.1 Step 3(d) onward.
+ */
 static JSObject *
 xml_getMethod(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     JSXML *xml;
-    jsval fval;
+    JSTempValueRooter tvr;
+    jsval roots[2];
+    enum {
+        FUN_ROOT = 0,
+        OBJ_ROOT = 1
+    };
 
     JS_ASSERT(JS_InstanceOf(cx, obj, &js_XMLClass, NULL));
     xml = (JSXML *) JS_GetPrivate(cx, obj);
+    memset(roots, 0, sizeof(roots));
+    JS_PUSH_TEMP_ROOT(cx, JS_ARRAY_LENGTH(roots), roots, &tvr);
 
-retry:
-    /* 11.2.2.1 Step 3(d) onward. */
-    if (!GetFunction(cx, obj, xml, id, &fval))
-        return NULL;
-
-    if (JSVAL_IS_VOID(fval) && OBJECT_IS_XML(cx, obj)) {
+    /* From this point the control must flow through out: or bad: */
+  retry:
+    if (!GetFunction(cx, obj, xml, id, &roots[FUN_ROOT]))
+        goto bad;
+    if (JSVAL_IS_VOID(roots[FUN_ROOT]) && OBJECT_IS_XML(cx, obj)) {
         if (xml->xml_class == JSXML_CLASS_LIST) {
             if (xml->xml_kids.length == 1) {
                 xml = XMLARRAY_MEMBER(&xml->xml_kids, 0, JSXML);
                 obj = js_GetXMLObject(cx, xml);
                 if (!obj)
-                    return NULL;
+                    goto bad;
+                roots[OBJ_ROOT] = OBJECT_TO_JSVAL(obj);
                 goto retry;
             }
         } else if (HasSimpleContent(xml)) {
             JSString *str;
-            JSObject *tmp;
 
             str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
-            if (!str || !js_ValueToObject(cx, STRING_TO_JSVAL(str), &tmp))
-                return NULL;
-            if (!js_GetProperty(cx, tmp, id, &fval))
-                return NULL;
-            if (!JSVAL_IS_VOID(fval))
-                obj = tmp;
+            if (!str)
+                goto bad;
+            if (!js_ValueToObject(cx, STRING_TO_JSVAL(str), &obj))
+                goto bad;
+            roots[OBJ_ROOT] = OBJECT_TO_JSVAL(obj);
+            if (!js_GetProperty(cx, obj, id, &roots[FUN_ROOT]))
+                goto bad;
         }
     }
-
-    *vp = fval;
+  out:
+    *vp = roots[FUN_ROOT];
+    if (obj) {
+        /*
+         * If we just POP tvr, then it is possible that nothing roots obj, see
+         * bug 353165. To allow our callers to assume at least weakly rooting
+         * of the result, we root obj via newborn array. Similarly we root the
+         * value of roots[FUNCTION] since getMethod callers have a bad habit
+         * of passing a pointer to unrooted local value as vp.
+         */
+        cx->newborn[GCX_OBJECT] = (JSGCThing *)obj;
+        cx->lastInternalResult = roots[FUN_ROOT];
+    }
+    JS_POP_TEMP_ROOT(cx, &tvr);
     return obj;
+  bad:
+    obj = NULL;
+    goto out;
 }
 
 static JSBool
