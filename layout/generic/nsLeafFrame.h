@@ -41,6 +41,7 @@
 #define nsLeafFrame_h___
 
 #include "nsFrame.h"
+#include "nsDisplayList.h"
 
 /**
  * Abstract class that provides simple fixed-size layout for leaf objects
@@ -55,6 +56,7 @@ public:
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists) {
+    DO_GLOBAL_REFLOW_COUNT_DSP("nsLeafFrame");
     return DisplayBorderBackgroundOutline(aBuilder, aLists);
   }
   NS_IMETHOD Reflow(nsPresContext*      aPresContext,

@@ -206,6 +206,9 @@ nsBulletFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 {
   if (!IsVisibleForPainting(aBuilder))
     return NS_OK;
+
+  DO_GLOBAL_REFLOW_COUNT_DSP("nsBulletFrame");
+  
   return aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplayBullet(this));
 }
 

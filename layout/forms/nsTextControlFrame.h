@@ -50,6 +50,7 @@
 #include "nsIScrollableViewProvider.h"
 #include "nsIPhonetic.h"
 #include "nsContentUtils.h"
+#include "nsDisplayList.h"
 
 class nsISupportsArray;
 class nsIEditor;
@@ -87,6 +88,8 @@ public:
   NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
+
+  DECL_DO_GLOBAL_REFLOW_COUNT_DSP(nsTextControlFrame, nsStackFrame)
 
   virtual PRBool IsLeaf() const;
   

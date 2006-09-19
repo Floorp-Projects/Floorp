@@ -353,7 +353,9 @@ nsListControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // because these can have widgets? Hmm
   if (aBuilder->IsBackgroundOnly())
     return NS_OK;
-    
+
+  DO_GLOBAL_REFLOW_COUNT_DSP("nsListControlFrame");
+
   // REVIEW: The selection visibility code that used to be here is what
   // we already do by default.
   // REVIEW: There was code here to paint the theme background. But as far

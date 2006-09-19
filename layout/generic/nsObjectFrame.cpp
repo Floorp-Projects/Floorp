@@ -942,6 +942,8 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (type == nsPresContext::eContext_PrintPreview)
     return NS_OK;
 
+  DO_GLOBAL_REFLOW_COUNT_DSP("nsObjectFrame");
+  
   // determine if we are printing
   if (type == nsPresContext::eContext_Print)
     return aLists.Content()->AppendNewToTop(new (aBuilder)

@@ -812,6 +812,89 @@ protected:
 #endif
 };
 
+#if defined(MOZ_REFLOW_PERF_DSP) && defined(MOZ_REFLOW_PERF)
+/**
+ * This class implements painting of reflow counts.  Ideally, we would simply
+ * make all the frame names be those returned by nsIFrameDebug::GetFrameName
+ * (except that tosses in the content tag name!)  and support only one color
+ * and eliminate this class altogether in favor of nsDisplayGeneric, but for
+ * the time being we can't pass args to a PaintCallback, so just have a
+ * separate class to do the right thing.  Sadly, this alsmo means we need to
+ * hack all leaf frame classes to handle this.
+ *
+ * XXXbz the color thing is a bit of a mess, but 0 basically means "not set"
+ * here...  I could switch it all to nscolor, but why bother?
+ */
+class nsDisplayReflowCount : public nsDisplayItem {
+public:
+  nsDisplayReflowCount(nsIFrame* aFrame, const char* aFrameName,
+                       PRUint32 aColor = 0)
+    : nsDisplayItem(aFrame),
+      mFrameName(aFrameName),
+      mColor(aColor)
+  {
+    MOZ_COUNT_CTOR(nsDisplayReflowCount);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayReflowCount() {
+    MOZ_COUNT_DTOR(nsDisplayReflowCount);
+  }
+#endif
+  
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect) {
+    nsPoint pt = aBuilder->ToReferenceFrame(mFrame);
+    nsIRenderingContext::AutoPushTranslation translate(aCtx, pt.x, pt.y);
+    mFrame->GetPresContext()->PresShell()->PaintCount(mFrameName, aCtx,
+                                                      mFrame->GetPresContext(),
+                                                      mFrame, mColor);
+  }
+  NS_DISPLAY_DECL_NAME("nsDisplayReflowCount")
+protected:
+  const char* mFrameName;
+  nscolor mColor;
+};
+
+#define DO_GLOBAL_REFLOW_COUNT_DSP(_name)                                     \
+  PR_BEGIN_MACRO                                                              \
+    if (!aBuilder->IsBackgroundOnly() && !aBuilder->IsForEventDelivery()) {   \
+      nsresult _rv =                                                          \
+        aLists.Outlines()->AppendNewToTop(new (aBuilder)                      \
+                                          nsDisplayReflowCount(this, _name)); \
+      NS_ENSURE_SUCCESS(_rv, _rv);                                            \
+    }                                                                         \
+  PR_END_MACRO
+
+#define DO_GLOBAL_REFLOW_COUNT_DSP_COLOR(_name, _color)                       \
+  PR_BEGIN_MACRO                                                              \
+    if (!aBuilder->IsBackgroundOnly() && !aBuilder->IsForEventDelivery()) {   \
+      nsresult _rv =                                                          \
+        aLists.Outlines()->AppendNewToTop(new (aBuilder)                      \
+                                          nsDisplayReflowCount(this, _name,   \
+                                                               _color));      \
+      NS_ENSURE_SUCCESS(_rv, _rv);                                            \
+    }                                                                         \
+  PR_END_MACRO
+
+/*
+  Macro to be used for classes that don't actually implement BuildDisplayList
+ */
+#define DECL_DO_GLOBAL_REFLOW_COUNT_DSP(_class, _super)                   \
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,           \
+                              const nsRect&           aDirtyRect,         \
+                              const nsDisplayListSet& aLists) {           \
+    DO_GLOBAL_REFLOW_COUNT_DSP(#_class);                                  \
+    return _super::BuildDisplayList(aBuilder, aDirtyRect, aLists);        \
+  }
+
+#else // MOZ_REFLOW_PERF_DSP && MOZ_REFLOW_PERF
+
+#define DO_GLOBAL_REFLOW_COUNT_DSP(_name)
+#define DO_GLOBAL_REFLOW_COUNT_DSP_COLOR(_name, _color)
+#define DECL_DO_GLOBAL_REFLOW_COUNT_DSP(_class, _super)
+
+#endif // MOZ_REFLOW_PERF_DSP && MOZ_REFLOW_PERF
+
 MOZ_DECL_CTOR_COUNTER(nsDisplayCaret)
 class nsDisplayCaret : public nsDisplayItem {
 public:

@@ -1487,6 +1487,8 @@ nsTableFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleInSelection(aBuilder))
     return NS_OK;
 
+  DO_GLOBAL_REFLOW_COUNT_DSP_COLOR("nsTableFrame", NS_RGB(255,128,255));
+
   // This background is created regardless of whether this frame is
   // visible or not. Visibility decisions are delegated to the
   // table background painter.

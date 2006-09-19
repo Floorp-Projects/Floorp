@@ -75,12 +75,15 @@ public:
   NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
 
   // nsIFrame overrides
-#ifdef DEBUG
+#if defined(DEBUG) || (defined(MOZ_REFLOW_PERF_DSP) && defined(MOZ_REFLOW_PERF))
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
+#endif // DEBUG || (MOZ_REFLOW_PERF_DSP && MOZ_REFLOW_PERF)
+  
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
-#endif
+#endif // DEBUG
 
   /**
    * Get the "type" of the frame
