@@ -1402,7 +1402,7 @@ nsWindow::GetAttention(PRInt32 aCycleCount)
     GtkWidget* top_window = nsnull;
     GetToplevelWidget(&top_window);
     if (top_window && GTK_WIDGET_VISIBLE(top_window)) {
-        gdk_window_show(top_window->window);
+        gdk_window_show_unraised(top_window->window);
     }
 
     return NS_OK;
