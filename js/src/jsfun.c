@@ -427,10 +427,7 @@ args_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
             if (!js_DefineProperty(cx, obj, INT_JSVAL_TO_JSID(id),
                                    fp->argv[slot],
                                    args_getProperty, args_setProperty,
-                                   JS_VERSION_IS_ECMA(cx)
-                                   ? 0
-                                   : JSPROP_ENUMERATE,
-                                   NULL)) {
+                                   0, NULL)) {
                 return JS_FALSE;
             }
             *objp = obj;

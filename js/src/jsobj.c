@@ -3519,7 +3519,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
              * read_only_error;' case.
              */
             flags = JSREPORT_ERROR;
-            if ((attrs & JSPROP_READONLY) && JS_VERSION_IS_ECMA(cx)) {
+            if (attrs & JSPROP_READONLY) {
                 if (!JS_HAS_STRICT_OPTION(cx)) {
                     /* Just return true per ECMA if not in strict mode. */
                     return JS_TRUE;
@@ -3720,7 +3720,6 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     JSObject *proto;
     JSProperty *prop;
     JSScopeProperty *sprop;
-    JSString *str;
     JSScope *scope;
     JSBool ok;
 
@@ -3764,17 +3763,8 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     sprop = (JSScopeProperty *)prop;
     if (sprop->attrs & JSPROP_PERMANENT) {
         OBJ_DROP_PROPERTY(cx, obj, prop);
-        if (JS_VERSION_IS_ECMA(cx)) {
-            *rval = JSVAL_FALSE;
-            return JS_TRUE;
-        }
-        str = js_DecompileValueGenerator(cx, JSDVG_IGNORE_STACK,
-                                         ID_TO_VALUE(id), NULL);
-        if (str) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_PERMANENT, JS_GetStringBytes(str));
-        }
-        return JS_FALSE;
+        *rval = JSVAL_FALSE;
+        return JS_TRUE;
     }
 
     /* XXXbe called with obj locked */

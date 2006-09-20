@@ -781,12 +781,6 @@ class JSAutoTempValueRooter
     JS_HAS_OPTION(cx, JSOPTION_NATIVE_BRANCH_CALLBACK)
 
 /*
- * Wrappers for the JSVERSION_IS_* macros from jspubtd.h taking JSContext *cx
- * and masking off the XML flag and any other high order bits.
- */
-#define JS_VERSION_IS_ECMA(cx)          JSVERSION_IS_ECMA(JSVERSION_NUMBER(cx))
-
-/*
  * Common subroutine of JS_SetVersion and js_SetVersion, to update per-context
  * data that depends on version.
  */

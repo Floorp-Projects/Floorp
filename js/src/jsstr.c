@@ -1769,14 +1769,6 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
     }
 
     /*
-     * Deviate from ECMA by never splitting an empty string by any separator
-     * string into a non-empty array (an array of length 1 that contains the
-     * empty string).
-     */
-    if (!JS_VERSION_IS_ECMA(cx) && length == 0)
-        return -1;
-
-    /*
      * Special case: if sep is the empty string, split str into one character
      * substrings.  Let our caller worry about whether to split once at end of
      * string into an empty substring.
@@ -1902,16 +1894,7 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 }
                 sep->chars = NULL;
             }
-
             i = j + sep->length;
-            if (!JS_VERSION_IS_ECMA(cx)) {
-                /*
-                 * Deviate from ECMA to imitate Perl, which omits a final
-                 * split unless a limit argument is given and big enough.
-                 */
-                if (!limited && (size_t)i == JSSTRING_LENGTH(str))
-                    break;
-            }
         }
         ok = (j != -2);
     }
