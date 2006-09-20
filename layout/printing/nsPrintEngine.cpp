@@ -815,9 +815,7 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
 
           if (!doNotify) {
             // Print listener setup...
-            if (mPrt != nsnull) {
-              mPrt->OnStartPrinting();    
-            }
+            mPrt->OnStartPrinting();    
             rv = DocumentReadyForPrinting();
           }
         }
