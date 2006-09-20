@@ -75,13 +75,13 @@ CPPSRCS		= \
 		nsUTF8ConverterService.cpp \
 		nsUTF8ToUnicode.cpp \
 		nsUnicodeToUTF8.cpp \
+		nsScriptableUConv.cpp \
 		$(NULL)
 
 ifdef MOZ_USE_NATIVE_UCONV
 REQUIRES	+= ucnative
 else
 CPPSRCS         += \
-		nsScriptableUConv.cpp \
 		nsISO88591ToUnicode.cpp \
 		nsCP1252ToUnicode.cpp \
 		nsMacRomanToUnicode.cpp \

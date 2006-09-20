@@ -58,6 +58,7 @@
 #include "nsConverterInputStream.h"
 #include "nsConverterOutputStream.h"
 #include "nsPlatformCharset.h"
+#include "nsScriptableUConv.h"
 
 #ifndef MOZ_USE_NATIVE_UCONV
 #include "nsIPlatformCharset.h"
@@ -65,7 +66,6 @@
 
 #include "nsUConvDll.h"
 #include "nsIFile.h"
-#include "nsIScriptableUConv.h"
 
 #include "nsCRT.h"
 
@@ -78,7 +78,6 @@
 #include "nsUnicodeToCP1252.h"
 #include "nsUnicodeToMacRoman.h"
 #include "nsUnicodeToUTF8.h"
-#include "nsScriptableUConv.h"
 
 // ucvlatin
 #include "nsUCvLatinCID.h"
@@ -483,7 +482,6 @@ NS_CONVERTER_REGISTRY_END
 
 NS_IMPL_NSUCONVERTERREGSELF
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableUnicodeConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUTF8)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUTF8ToUnicode)
 
@@ -714,6 +712,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCharsetAlias2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsConverterInputStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsConverterOutputStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPlatformCharset, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableUnicodeConverter)
 
 static const nsModuleComponentInfo components[] = 
 {
@@ -746,6 +745,11 @@ static const nsModuleComponentInfo components[] =
     "@mozilla.org/intl/converter-output-stream;1",
     nsConverterOutputStreamConstructor 
   },   
+  { 
+    "Unicode Encoder / Decoder for Script", NS_ISCRIPTABLEUNICODECONVERTER_CID,
+    NS_ISCRIPTABLEUNICODECONVERTER_CONTRACTID, 
+    nsScriptableUnicodeConverterConstructor
+  },
 #ifdef MOZ_USE_NATIVE_UCONV
   { 
     "Native UConv Service", 
@@ -758,11 +762,6 @@ static const nsModuleComponentInfo components[] =
     "Converter to/from UTF8 with charset", NS_UTF8CONVERTERSERVICE_CID,
     NS_UTF8CONVERTERSERVICE_CONTRACTID, 
     nsUTF8ConverterServiceConstructor
-  },
-  { 
-    "Unicode Encoder / Decoder for Script", NS_ISCRIPTABLEUNICODECONVERTER_CID,
-    NS_ISCRIPTABLEUNICODECONVERTER_CONTRACTID, 
-    nsScriptableUnicodeConverterConstructor
   },
   { 
     "ISO-8859-1 To Unicode Converter", NS_ISO88591TOUNICODE_CID, 
