@@ -43,5 +43,32 @@ X-Bugzilla-Changed-Fields: [% changedfields %]
 
 -- 
 Configure bugmail: [% Param('urlbase') %]userprefs.cgi?tab=email
-[%+ reasonsbody %]
-
+------- You are receiving this mail because: -------
+[% FOREACH relationship = reasons %]
+  [% SWITCH relationship %]
+    [% CASE constants.REL_ASSIGNEE %]
+You are the assignee for the [% terms.bug %].
+    [% CASE constants.REL_REPORTER %]
+You reported the [% terms.bug %].
+    [% CASE constants.REL_QA %]
+You are the QA contact for the [% terms.bug %].
+    [% CASE constants.REL_CC %]
+You are on the CC list for the [% terms.bug %].
+    [% CASE constants.REL_VOTER %]
+You are a voter for the [% terms.bug %].
+  [% END %]
+[% END %]
+[% FOREACH relationship = reasons_watch %]
+  [% SWITCH relationship %]
+    [% CASE constants.REL_ASSIGNEE %]
+You are watching the assignee of the [% terms.bug %].
+    [% CASE constants.REL_REPORTER %]
+You watching the reporter.
+    [% CASE constants.REL_QA %]
+You are watching the QA contact of the [% terms.bug %].
+    [% CASE constants.REL_CC %]
+You are watching someone on the CC list of the [% terms.bug %].
+    [% CASE constants.REL_VOTER %]
+You are watching a voter for the [% terms.bug %].
+  [% END %]
+[% END %]

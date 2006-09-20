@@ -555,29 +555,6 @@ sub sendMail {
       return 0;
     }
     
-    # XXX: This needs making localisable, probably by passing the role to
-    # the email template and letting it choose the text.
-    my $reasonsbody = "------- You are receiving this mail because: -------\n";
-
-    while (my ($relationship, $bits) = each %{$relRef}) {
-        if ($relationship == REL_ASSIGNEE) {
-            $reasonsbody .= "You are the assignee for the bug.\n"  if ($bits & BIT_DIRECT);
-            $reasonsbody .= "You are watching the assignee for the bug.\n" if ($bits & BIT_WATCHING);
-        } elsif ($relationship == REL_REPORTER) {
-            $reasonsbody .= "You reported the bug.\n" if ($bits & BIT_DIRECT);
-            $reasonsbody .= "You are watching the reporter.\n" if ($bits & BIT_WATCHING);
-        } elsif ($relationship == REL_QA) {
-            $reasonsbody .= "You are the QA contact for the bug.\n" if ($bits & BIT_DIRECT);
-            $reasonsbody .= "You are watching the QA contact for the bug.\n" if ($bits & BIT_WATCHING);
-        } elsif ($relationship == REL_CC) {
-            $reasonsbody .= "You are on the CC list for the bug.\n" if ($bits & BIT_DIRECT);
-            $reasonsbody .= "You are watching someone on the CC list for the bug.\n" if ($bits & BIT_WATCHING);
-        } elsif ($relationship == REL_VOTER) {
-            $reasonsbody .= "You are a voter for the bug.\n" if ($bits & BIT_DIRECT);
-            $reasonsbody .= "You are watching a voter for the bug.\n" if ($bits & BIT_WATCHING);
-        }
-    }
-
     my $isnew = !$start;
     
     # If an attachment was created, then add an URL. (Note: the 'g'lobal
@@ -598,13 +575,16 @@ sub sendMail {
         $diffs = $difftext . "\n\n" . $newcomments;
     }
 
-    my (@headerrel, @watchingrel);
-    while (my ($rel, $bits) = each %{$relRef}) {
-        push @headerrel, (REL_NAMES->{$rel}) if ($bits & BIT_DIRECT);
-        push @watchingrel, (REL_NAMES->{$rel}) if ($bits & BIT_WATCHING);
+    my (@reasons, @reasons_watch);
+    while (my ($relationship, $bits) = each %{$relRef}) {
+        push(@reasons, $relationship) if ($bits & BIT_DIRECT);
+        push(@reasons_watch, $relationship) if ($bits & BIT_WATCHING);
     }
-    push @headerrel, 'None' if !scalar(@headerrel);
-    push @watchingrel, 'None' if !scalar(@watchingrel);
+
+    my @headerrel   = map { REL_NAMES->{$_} } @reasons;
+    my @watchingrel = map { REL_NAMES->{$_} } @reasons_watch;
+    push(@headerrel,   'None') unless @headerrel;
+    push(@watchingrel, 'None') unless @watchingrel;
     push @watchingrel, map { user_id_to_login($_) } @$watchingRef;
 
     my $sitespec = '@' . Bugzilla->params->{'urlbase'};
@@ -635,9 +615,10 @@ sub sendMail {
         targetmilestone => $values{'target_milestone'},
         changedfields => $values{'changed_fields'},
         summary => $values{'short_desc'},
+        reasons => \@reasons,
+        reasons_watch => \@reasons_watch,
         reasonsheader => join(" ", @headerrel),
         reasonswatchheader => join(" ", @watchingrel),
-        reasonsbody => $reasonsbody,
         changer => $values{'changer'},
         changername => $values{'changername'},
         diffs => $diffs,

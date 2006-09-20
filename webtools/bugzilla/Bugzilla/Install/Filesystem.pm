@@ -114,6 +114,7 @@ sub FILESYSTEM {
         'docs/README.docs'   => { perms => $owner_readable },
         "$datadir/bugzilla-update.xml" => { perms => $ws_writeable },
         "$datadir/params" => { perms => $ws_writeable },
+        "$datadir/mailer.testfile" => { perms => $ws_writeable },
     );
 
     # Directories that we want to set the perms on, but not
