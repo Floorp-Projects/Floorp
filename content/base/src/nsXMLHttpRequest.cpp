@@ -1049,7 +1049,7 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
 NS_IMETHODIMP
 nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
   PRBool async = PR_TRUE;
   nsAutoString user, password;
 
