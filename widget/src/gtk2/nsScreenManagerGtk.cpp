@@ -235,3 +235,16 @@ nsScreenManagerGtk :: GetNumberOfScreens(PRUint32 *aNumberOfScreens)
   
 } // GetNumberOfScreens
 
+NS_IMETHODIMP
+nsScreenManagerGtk :: ScreenForNativeWidget (void *aWidget, nsIScreen **outScreen)
+{
+  // I don't know how to go from GtkWindow to nsIScreen, especially
+  // given xinerama and stuff, so let's just do this
+  gint x, y, width, height, depth;
+  x = y = width = height = 0;
+
+  gdk_window_get_geometry(GDK_WINDOW(aWidget), &x, &y, &width, &height,
+                          &depth);
+  gdk_window_get_origin(GDK_WINDOW(aWidget), &x, &y);
+  return ScreenForRect(x, y, width, height, outScreen);
+}

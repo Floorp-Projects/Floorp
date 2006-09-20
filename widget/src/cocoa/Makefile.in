@@ -101,8 +101,6 @@ MAC_LCPPSRCS = \
 		nsMimeMapper.cpp \
 		nsStylClipboardUtils.cpp \
 		nsToolkitBase.cpp \
-		nsScreenMac.cpp \
-		nsScreenManagerMac.cpp \
 		nsDeviceContextSpecFactoryM.cpp \
 		nsDeviceContextSpecX.cpp \
 		nsPrintOptionsX.cpp \
@@ -139,6 +137,8 @@ CMMSRCS = \
 		nsNativeScrollbar.mm \
 		nsCursorManager.mm \
 		nsMacCursor.mm \
+		nsScreenCocoa.mm \
+		nsScreenManagerCocoa.mm \
 		$(NULL)
 
 XPIDLSRCS	+= \

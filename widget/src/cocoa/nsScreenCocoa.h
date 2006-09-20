@@ -1,6 +1,5 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,15 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corp.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ *   Mozilla Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
  * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -36,34 +35,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
-#include "nsIScreen.idl"
+#ifndef NS_SCREEN_COCOA_H_
+#define NS_SCREEN_COCOA_H_
 
-[scriptable, uuid(e224bd44-252b-4b66-b869-99738250904a)]
-interface nsIScreenManager : nsISupports
+#import <AppKit/AppKit.h>
+
+#include "nsIScreen.h"
+
+class nsScreenCocoa : public nsIScreen
 {
-    //
-    // Returns the screen that contains the rectangle. If the rect overlaps
-    // multiple screens, it picks the screen with the greatest area of intersection.
-    //
-    // The coordinates are in pixels (not twips) and in screen coordinates.
-    //
-  nsIScreen screenForRect ( in long left, in long top, in long width, in long height ) ;
-  
-    // The screen with the menubar/taskbar. This shouldn't be needed very
-    // often.
-  readonly attribute nsIScreen primaryScreen;
-  
-    // Holds the number of screens that are available
-  readonly attribute unsigned long numberOfScreens;
+public:
+    nsScreenCocoa (NSScreen *screen);
+    ~nsScreenCocoa ();
 
-    // Returns the nsIScreen instance for the given native widget pointer;
-    // the pointer is specific to the particular widget implementation,
-    // and is generally of the same type that NS_NATIVE_WIDGET is.
-  [noscript] nsIScreen screenForNativeWidget ( in voidPtr nativeWidget );
+    NS_DECL_ISUPPORTS
+
+    NS_DECL_NSISCREEN
+
+    NSScreen *CocoaScreen() { return mScreen; }
+
+private:
+    NSScreen *mScreen;
 };
 
-
-%{ C++
-
-%}
+#endif
