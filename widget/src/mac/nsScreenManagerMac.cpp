@@ -182,3 +182,8 @@ nsScreenManagerMac :: GetNumberOfScreens(PRUint32 *aNumberOfScreens)
   
 } // GetNumberOfScreens
 
+NS_IMETHODIMP
+nsScreenManagerMac :: ScreenForNativeWidget(void *nativeWidget, nsIScreen **aScreen)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

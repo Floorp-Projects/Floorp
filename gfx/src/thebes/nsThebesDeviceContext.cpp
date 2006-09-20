@@ -693,40 +693,8 @@ nsThebesDeviceContext::ComputeFullAreaUsingScreen(nsRect* outRect)
 void
 nsThebesDeviceContext::FindScreen(nsIScreen** outScreen)
 {
-    // now then, if we have more than one screen, we need to find which screen this
-    // window is on.
-#ifdef XP_WIN
-    HWND window = NS_REINTERPRET_CAST(HWND, mWidget);
-    if (window) {
-        RECT globalPosition;
-        ::GetWindowRect(window, &globalPosition); 
-        if (mScreenManager) {
-            mScreenManager->ScreenForRect(globalPosition.left, globalPosition.top, 
-                                          globalPosition.right - globalPosition.left,
-                                          globalPosition.bottom - globalPosition.top,
-                                          outScreen);
-            return;
-        }
-    }
-#endif
-
-#ifdef MOZ_ENABLE_GTK2
-    gint x, y, width, height, depth;
-    x = y = width = height = 0;
-
-    gdk_window_get_geometry(GDK_WINDOW(mWidget), &x, &y, &width, &height,
-                            &depth);
-    gdk_window_get_origin(GDK_WINDOW(mWidget), &x, &y);
-    if (mScreenManager) {
-        mScreenManager->ScreenForRect(x, y, width, height, outScreen);
-        return;
-    }
-
-#endif
-
-#ifdef XP_MACOSX
-    // ???
-#endif
-
-    mScreenManager->GetPrimaryScreen(outScreen);
+    if (mWidget)
+        mScreenManager->ScreenForNativeWidget(mWidget, outScreen);
+    else
+        mScreenManager->GetPrimaryScreen(outScreen);
 }
