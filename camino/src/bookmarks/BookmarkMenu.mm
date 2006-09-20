@@ -200,25 +200,22 @@ const long kOpenInTabsTag = 0xBEEF;
       [self addItem:menuItem];
 
       if (withAlternates) {
-        NSMenuItem *cmdMenuItem      = [[NSMenuItem alloc] initWithTitle:title action:@selector(openMenuBookmark:) keyEquivalent:@""];
-        NSMenuItem *cmdShiftMenuItem = [[NSMenuItem alloc] initWithTitle:title action:@selector(openMenuBookmark:) keyEquivalent:@""];
-
-        [cmdMenuItem setTarget:[NSApp delegate]];
-        [cmdMenuItem setImage:[inItem icon]];
-        [cmdMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask];
-        [cmdMenuItem setRepresentedObject:inItem];
-        [cmdMenuItem setAlternate:YES];
-
-        [cmdShiftMenuItem setTarget:[NSApp delegate]];
-        [cmdShiftMenuItem setImage:[inItem icon]];
-        [cmdShiftMenuItem setKeyEquivalentModifierMask:(NSCommandKeyMask | NSShiftKeyMask)];
-        [cmdShiftMenuItem setRepresentedObject:inItem];
-        [cmdShiftMenuItem setAlternate:YES];
-
-        [self addItem:cmdMenuItem];
-        [cmdMenuItem release];
-        [self addItem:cmdShiftMenuItem];
-        [cmdShiftMenuItem release];
+        // Create command and command-shift alternates for the "in new foo" pref and shift-toggle
+        NSMenuItem *altMenuItem  = [NSMenu alternateMenuItemWithTitle:title
+                                                               action:@selector(openMenuBookmark:)
+                                                               target:[NSApp delegate]
+                                                            modifiers:NSCommandKeyMask];
+        [altMenuItem setRepresentedObject:inItem];
+        [altMenuItem setImage:[inItem icon]];
+        [self addItem:altMenuItem];
+  
+        altMenuItem = [NSMenu alternateMenuItemWithTitle:title
+                                                  action:@selector(openMenuBookmark:)
+                                                  target:[NSApp delegate]
+                                               modifiers:(NSCommandKeyMask | NSShiftKeyMask)];
+        [altMenuItem setRepresentedObject:inItem];
+        [altMenuItem setImage:[inItem icon]];
+        [self addItem:altMenuItem];
       }
     }
     else    //separator

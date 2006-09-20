@@ -3620,6 +3620,7 @@ enum BWCOpenDest {
 
   BOOL showFrameItems = NO;
   BOOL showSpellingItems = NO;
+  BOOL needsAlternates = NO;
   
   NSMenu* menuPrototype = nil;
   int contextMenuFlags = mDataOwner->mContextMenuFlags;
@@ -3640,7 +3641,9 @@ enum BWCOpenDest {
         menuPrototype = mImageMailToLinkMenu;
       else
         menuPrototype = mImageLinkMenu;
-    } 
+
+      needsAlternates = YES;
+    }
     else {
       if (numEmailAddresses > 0)
         menuPrototype = mMailToLinkMenu;
@@ -3655,6 +3658,7 @@ enum BWCOpenDest {
   }
   else if ((contextMenuFlags & nsIContextMenuListener::CONTEXT_IMAGE) != 0) {
     menuPrototype = mImageMenu;
+    needsAlternates = YES;
   }
   else if (!contextMenuFlags || (contextMenuFlags & nsIContextMenuListener::CONTEXT_DOCUMENT) != 0) {
     // if there aren't any flags or we're in the background of a page,
@@ -3687,7 +3691,8 @@ enum BWCOpenDest {
   const int kFrameInapplicableItemsTag = 101;
   const int kSelectionRelatedItemsTag = 102;
   const int kSpellingRelatedItemsTag = 103;
-  
+  const int kItemsNeedingAlternatesTag = 104;
+
   if (showSpellingItems)
     showSpellingItems = [self prepareSpellingSuggestionMenu:result tag:kSpellingRelatedItemsTag];
 
@@ -3705,7 +3710,7 @@ enum BWCOpenDest {
     while ((selectionItem = [result itemWithTag:kSelectionRelatedItemsTag]) != nil)
       [result removeItem:selectionItem];
   }
-  
+
   if (showFrameItems) {
     NSMenuItem* frameItem;
     while ((frameItem = [result itemWithTag:kFrameInapplicableItemsTag]) != nil)
@@ -3716,7 +3721,7 @@ enum BWCOpenDest {
     while ((frameItem = [result itemWithTag:kFrameRelatedItemsTag]) != nil)
       [result removeItem:frameItem];
   }
-  
+
   // Add items to add/open each e-mail address in a mailto: link and
   // change "address" to the plural form if necessary
   if (numEmailAddresses > 0) {
@@ -3728,7 +3733,42 @@ enum BWCOpenDest {
     if (numEmailAddresses > 1)
       [[result itemWithTarget:self andAction:@selector(copyAddressToClipboard:)] setTitle:NSLocalizedString(@"Copy Addresses", @"")];
   }
-  
+
+  // Create command and command-shift alternates for applicable menu items
+  if (needsAlternates) {
+    NSArray* menuArray = [result itemArray];
+    BOOL inNewTab = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL];
+
+    int i;
+    for (i = 0; i < [menuArray count]; i++) {
+      NSMenuItem* menuItem = [menuArray objectAtIndex:i];
+
+      // Only create alternates for the items that need them
+      if ([menuItem tag] == kItemsNeedingAlternatesTag) {
+        NSString* altMenuItemTitle;
+        if (inNewTab)
+          altMenuItemTitle = [NSString stringWithFormat:NSLocalizedString(@"Action in New Tab", nil), [menuItem title]];
+        else
+          altMenuItemTitle = [NSString stringWithFormat:NSLocalizedString(@"Action in New Window", nil), [menuItem title]];
+
+        SEL action = [menuItem action];
+        id target = [menuItem target];
+
+        // Create the alternates and insert them into the two places after the menu item
+        NSMenuItem* cmdMenuItem = [NSMenu alternateMenuItemWithTitle:altMenuItemTitle
+                                                              action:action
+                                                              target:target
+                                                           modifiers:NSCommandKeyMask];
+        [result insertItem:cmdMenuItem atIndex:i + 1];
+        NSMenuItem* cmdShiftMenuItem = [NSMenu alternateMenuItemWithTitle:altMenuItemTitle
+                                                                   action:action
+                                                                   target:target
+                                                                modifiers:(NSCommandKeyMask | NSShiftKeyMask)];
+        [result insertItem:cmdShiftMenuItem atIndex:i + 2];
+      }
+    }
+  }
+
   return result;
 }
 
@@ -3947,7 +3987,7 @@ enum BWCOpenDest {
     NSString* urlStr = [NSString stringWith_nsAString: url];
     NSString* referrer = [[mBrowserView getBrowserView] getFocusedURLString];
 
-    unsigned int modifiers = [[NSApp currentEvent] modifierFlags];
+    unsigned int modifiers = [aSender keyEquivalentModifierMask];
 
     if (modifiers & NSCommandKeyMask) {
       BOOL loadInTab = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL];

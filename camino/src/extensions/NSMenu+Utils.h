@@ -71,6 +71,9 @@ extern NSString* const NSMenuClosedNotification;
 // the param should be the [NSNotification object]
 - (BOOL)isTargetOfMenuDisplayNotification:(id)inObject;
 
+// create and return an autoreleased alternate menu item
++ (NSMenuItem *)alternateMenuItemWithTitle:(NSString *)title action:(SEL)action target:(id)target modifiers:(int)modifiers;
+
 @end
 
 

@@ -180,6 +180,16 @@ static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef 
   return ([inObject pointerValue] == _NSGetCarbonMenu(self));
 }
 
++ (NSMenuItem *)alternateMenuItemWithTitle:(NSString *)title action:(SEL)action target:(id)target modifiers:(int)modifiers
+{
+  NSMenuItem* altMenuItem = [[[NSMenuItem alloc] initWithTitle:title action:action keyEquivalent:@""] autorelease];
+  [altMenuItem setTarget:target];
+  [altMenuItem setKeyEquivalentModifierMask:modifiers];
+  [altMenuItem setAlternate:YES];
+  
+  return altMenuItem;
+}
+
 @end
 
 
