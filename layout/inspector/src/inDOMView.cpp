@@ -732,18 +732,19 @@ inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
     inDOMViewNode* contentNode = nsnull;
     PRInt32 contentRow;
     PRInt32 attrRow;
-    if (NS_FAILED(NodeToRow(content, &contentRow))) {
-      return;
-    }
-    RowToNode(contentRow, &contentNode);
-    if (!contentRow || !contentNode->isOpen) {
-      return;
-    }
-    if (mRootNode == content) {
+    if (mRootNode == content &&
+        !(mWhatToShow & nsIDOMNodeFilter::SHOW_ELEMENT)) {
       // if this view has a root node but is not displaying it,
       // it is ok to act as if the changed attribute is on the root.
       attrRow = attrCount - 1;
     } else {
+      if (NS_FAILED(NodeToRow(content, &contentRow))) {
+        return;
+      }
+      RowToNode(contentRow, &contentNode);
+      if (!contentNode->isOpen) {
+        return;
+      }
       attrRow = contentRow + attrCount;
     }
 
