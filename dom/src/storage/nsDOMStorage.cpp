@@ -131,8 +131,13 @@ nsDOMStorageManager::Initialize()
   if (!gStorageManager)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  if (!gStorageManager->mStorages.Init())
+  if (!gStorageManager->mStorages.Init()) {
+    delete gStorageManager;
+    gStorageManager = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_ADDREF(gStorageManager);
 
   nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
   if (os)
