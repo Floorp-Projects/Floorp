@@ -22,7 +22,35 @@
   <div>
     <label for="time">Time:</label>
     <?php echo $html->hourOptionTag('Party/hour', null, true);?>:<?php echo $html->minuteOptionTag('Party/minute');?>
-    <?php echo $html->radio('Party/confirmed', array(0 => 'Tentative', 1 => 'Confirmed')); ?>
+    <?php echo $html->radio('Party/confirmed', array(0 => 'Tentative', 1 => 'Confirmed')); ?><br/>
+    <label for="UserTz">Timezone (current time is <?php echo gmdate("Y-m-d H:i:s"); ?>GMT):</label>
+    <select name="data[Party][tz]"  id="UserTz">
+      <option value="-12">GMT-12</option>
+      <option value="-11">GMT-11</option>
+      <option value="-10">GMT-10</option>
+      <option value="-9">GMT-9</option>
+      <option value="-8">GMT-8</option>
+      <option value="-7">GMT-7</option>
+      <option value="-6">GMT-6</option>
+      <option value="-5">GMT-5</option>
+      <option value="-4">GMT-4</option>
+      <option value="-3">GMT-3</option>
+      <option value="-2">GMT-2</option>
+      <option value="-1">GMT-1</option>
+      <option value="0" selected="selected">GMT+0</option>
+      <option value="1">GMT+1</option>
+      <option value="2">GMT+2</option>
+      <option value="3">GMT+3</option>
+      <option value="4">GMT+4</option>
+      <option value="5">GMT+5</option>
+      <option value="6">GMT+6</option>
+      <option value="7">GMT+7</option>
+      <option value="8">GMT+8</option>
+      <option value="9">GMT+9</option>
+      <option value="10">GMT+10</option>
+      <option value="11">GMT+11</option>
+      <option value="12">GMT+12</option>
+    </select>
   </div>
   <div>
     <label for="website">Web site:</label>

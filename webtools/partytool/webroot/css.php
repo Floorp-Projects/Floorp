@@ -1,5 +1,5 @@
 <?php
-/* SVN FILE: $Id: css.php,v 1.1 2006/09/11 05:56:11 reed%reedloden.com Exp $ */
+/* SVN FILE: $Id: css.php,v 1.3 2006/09/28 03:22:10 reed%reedloden.com Exp $ */
 /**
  * Short description for file.
  *
@@ -21,9 +21,9 @@
  * @package			cake
  * @subpackage		cake.app.webroot
  * @since			CakePHP v 0.2.9
- * @version			$Revision: 1.1 $
+ * @version			$Revision: 1.3 $
  * @modifiedby		$LastChangedBy: phpnut $
- * @lastmodified	$Date: 2006/09/11 05:56:11 $
+ * @lastmodified	$Date: 2006/09/28 03:22:10 $
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 if (!defined(CAKE_CORE_INCLUDE_PATH)) {

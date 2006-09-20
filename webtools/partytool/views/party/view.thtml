@@ -9,7 +9,7 @@
       if (!empty($party['Party']['vname']))
         echo 'Venue: '.$party['Party']['vname']."<br/>\n";
         
-      echo 'Date: '.(($party['Party']['confirmed'] == 1) ? date('Y-m-d h:m', $party['Party']['date']) : "TBA")."<br/>\n";
+      echo 'Date: '.(($party['Party']['confirmed'] == 1) ? gmdate('Y-m-d h:ia', $party['Party']['date'] + (@$_SESSION['User']['tz'] * 60 * 60))." GMT".@$_SESSION['User']['tz'] : "TBA")."<br/>\n";
       
       if (!empty($party['Party']['website']))
         echo 'Website: <a href="'.$party['Party']['website'].'" rel="nofollow">'.$party['Party']['website']."</a><br/>\n";
@@ -22,17 +22,24 @@
       type="text/javascript"></script>
   <script src="<?php echo $html->url('/js/maps.js'); ?>" type="text/javascript"></script>
     <div id="map" style="height: 200px; width: 400px;"></div>
-    <h2>Who's coming:</h2>
+    <h2>Who's coming</h2>
     <div>
     <?php if (isset($guests)):
       $i = 0;
       $c = count($guests) - 1;
       foreach ($guests as $guest): ?>
       <a href="<?php echo $html->url('/user/view/'.$guest); ?>"><?php echo $names[$i]; ?></a><?php echo ($i < $c) ? ", " : ""; ?>
-    <?php $i++; endforeach; endif; if (isset($_SESSION['User']['id'])):?>
+    <?php $i++; 
+      endforeach; 
+      else:
+        echo "No guests yet, be the first!";
+    endif;
+    
+    @$isguest = (isset($guests)) ? in_array($_SESSION['User']['id'], $guests) : 0;
+    
+    if (isset($_SESSION['User']['id']) && @$_SESSION['User']['id'] != $party['Party']['owner'] && ($party['Party']['inviteonly'] != 1 || $isguest)):?>
     <br/><br/>
     <form action="<?php 
-      $isguest = (isset($guests)) ? in_array($_SESSION['User']['id'], $guests) : 0;
       echo $html->url('/party/'.((!$isguest) ? 'rsvp/' : 'unrsvp/').$party['Party']['id']); ?>" method="post">
       <?php if(!$isguest): ?>
       <button>Count me in!</button>
@@ -42,16 +49,21 @@
     </form>
     <?php endif; ?>
     </div>
+    <?php if (@$_SESSION['User']['id'] == $party['Party']['owner']):?>
+    <h2>Party options</h2>
+    <a href="<?php echo $html->url('/party/edit/'.$party['Party']['id']);?>">Edit party</a>
+    <a href="<?php echo $html->url('/party/invite/'.$party['Party']['id']);?>">Invite a guest</a>
+    <?php endif; ?>
     <?php if (isset($flickr)): ?>
     <a id="photos"></a>
-    <h2>Photos:</h2>
+    <h2>Photos</h2>
     <?php foreach ($flickr as $pic): ?>
       <a href="http://www.flickr.com/photos/<?php echo $pic['owner']."/".$pic['id']."/" ?>"><img src="http://static.flickr.com/<?php echo $pic['server']."/".$pic['id']."_".$pic['secret']."_s.jpg" ?>"/></a>
     <?php endforeach; ?>
     <br/>
     <?php endif; 
       if (!empty($comments)): ?>
-    <h2>Comments:</h2>
+    <h2>Comments</h2>
     <?php $i = 0;
     foreach ($comments as $comment): 
       if ($i % 2 == 0) 
@@ -59,11 +71,14 @@
       else
         $color = "#DDD";
         $i++;?>
-      <div style="border-top: 1px solid #555; background: <?php echo $color;?>"><?php echo $comment['comments']['text']; ?><br/>Posted by <a href="<?php echo $html->url('/user/view/'.$comment['users']['uid']); ?>"><?php echo $comment['users']['name']; ?></a> on <?php echo date('Y-m-d h:ia', $comment['comments']['time']); ?></span></div>
+      <div style="border-top: 1px solid #555; background: <?php echo $color;?>"><?php echo $comment['comments']['text']; ?>
+        <br/>Posted by <a href="<?php echo $html->url('/user/view/'.$comment['users']['uid']); ?>">
+        <?php echo $comment['users']['name']; ?></a> on <?php echo date('Y-m-d h:ia', $comment['comments']['time'] - (@$_SESSION['User']['tz'] * 60 * 60))." GMT".@$_SESSION['User']['tz']; ?></span>
+      </div>
     <?php endforeach; 
           endif;
       if (isset($_SESSION['User'])): ?>
-    <h2>Add a comment:</h2>
+    <h2>Add a comment</h2>
     <form action="<?php echo $html->url('/comment/add/'.$party['Party']['id'].'/'.$_SESSION['User']['id']); ?>" method="post">
       <div>
         <?php echo $html->textarea('Comment/text', array('rows' => 10, 'cols' => 50))."<br/>".$html->submit('Submit'); ?>
@@ -93,7 +108,7 @@
       if (!empty($party['Party']['vname']))
         echo 'Venue: '.$party['Party']['vname']."<br/>\n";
         
-      echo 'Date: '.(($party['Party']['confirmed'] == 1) ? date('Y-m-d h:m', $party['Party']['date']) : "TBA")."<br/>\n";
+      echo 'Date: '.(($party['Party']['confirmed'] == 1) ? gmdate('Y-m-d h:ia', $party['Party']['date'] + (@$_SESSION['User']['tz'] * 60 * 60))." GMT".@$_SESSION['User']['tz'] : "TBA")."<br/>\n";
       
       if (!empty($party['Party']['website']))
         echo 'Website: <a href="'.$party['Party']['website'].'" rel="nofollow">'.$party['Party']['website']."</a><br/>\n";
@@ -102,7 +117,7 @@
       
     ?>
     </div>
-  <?php endforeach; 
+  <?php endforeach;
     if (isset($prev))
       echo '<a href="'.$html->url('/party/view/all/'.$prev).'">Previous Page</a> ';
     if (isset($next))

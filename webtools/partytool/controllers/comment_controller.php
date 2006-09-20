@@ -57,7 +57,7 @@ class CommentController extends AppController {
       $this->data['Comment']['text'] = preg_replace('/\n/', '<br/>', $text);
       $this->data['Comment']['owner'] = $uid;
       $this->data['Comment']['assoc'] = $pid;
-      $this->data['Comment']['time'] = time();
+      $this->data['Comment']['time'] = gmmktime();
       
       if ($this->Comment->save($this->data)) {
         $this->redirect('/party/view/'.$pid);

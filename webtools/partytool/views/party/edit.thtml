@@ -1,0 +1,124 @@
+<form action="<?php echo $html->url('/party/edit/'.$party['Party']['id']); ?>" method="post">
+  <?php echo $html->hidden('Party/id'); ?>
+  <div>
+    <h2>Details</h2>
+    <hr/>
+    <label for="name">Party Name:</label>
+    <?php echo $html->input('Party/name', array('size' => 35)); ?>
+  </div>
+  <div>
+	<label for="">Venue Name:</label>
+	<?php echo $html->input('Party/vname', array('size' => 35)); ?>
+  </div>
+  <div>
+    <label for="website">Web site:</label>
+    <?php echo $html->input('Party/website', array('size' => 35)); ?>
+  </div>
+  <div>
+    <label for="address">Address:</label>
+    <?php echo $html->input('Party/address', array('size' => 35, 'id' => 'location', 'onkeypress' => 'capture(event)', 'onblur' => 'update()')); ?>
+    <div id="suggest" style="display: none">Did you mean <span style="font-style: italic"><a id="suggest2" href="#" onclick=""></a></span>?</div>
+  </div>
+  <?php if(GMAP_API_KEY != null): ?>
+  <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo GMAP_API_KEY; ?>"
+      type="text/javascript"></script>
+  <script src="<?php echo $html->url('/js/maps.js'); ?>" type="text/javascript"></script>
+    <script type="text/javascript">
+
+    //<![CDATA[
+      function update(aSuggest) {
+        var loc;
+        if (!aSuggest)
+          loc = document.getElementById("location").value;
+        else
+          loc = aSuggest;
+        
+        if (loc != "")
+          geocode(loc);
+      }
+      
+      function capture(event) {
+        if (event.keyCode == 13) {
+          event.preventDefault();
+          update();
+        }  
+      }
+    //]]>
+    </script>
+  <div style="width: 350px; height: 200px;">
+    <div id="maperror" style="display: none" class="error"></div>
+    <div id="map" style="height: 100%; width: 100%;"></div>
+  </div>
+  <div>
+    Additional notes:<br/>
+    <?php echo $html->textarea('Party/notes'); ?>
+  </div>
+  <div>
+    <h2>Date</h2>
+    <hr/>
+    <label for="date">Date:</label>
+    <?php echo $html->yearOptionTag('Party/year', null, date('Y'), MAX_YEAR, date('Y'), null, null, false); ?>-<?php echo $html->hourOptionTag('Party/month', null, false, date('m')); ?>-<?php echo $html->dayOptionTag('Party/day', null, date('d'), null, false); ?>
+  </div>
+  <div>
+    <label for="time">Time:</label>
+    <?php echo $html->hourOptionTag('Party/hour', null, true);?>:<?php echo $html->minuteOptionTag('Party/minute');?>
+    <?php echo $html->radio('Party/confirmed', array(0 => 'Tentative', 1 => 'Confirmed')); ?>
+  </div>
+  <div>
+   <label for="UserTz">Timezone (current time is <?php echo gmdate("Y-m-d H:i:s"); ?>GMT):</label>
+    <select name="data[Party][tz]"  id="UserTz">
+      <option value="-12">GMT-12</option>
+      <option value="-11">GMT-11</option>
+      <option value="-10">GMT-10</option>
+      <option value="-9">GMT-9</option>
+      <option value="-8">GMT-8</option>
+      <option value="-7">GMT-7</option>
+      <option value="-6">GMT-6</option>
+      <option value="-5">GMT-5</option>
+      <option value="-4">GMT-4</option>
+      <option value="-3">GMT-3</option>
+      <option value="-2">GMT-2</option>
+      <option value="-1">GMT-1</option>
+      <option value="0" selected="selected">GMT+0</option>
+      <option value="1">GMT+1</option>
+      <option value="2">GMT+2</option>
+      <option value="3">GMT+3</option>
+      <option value="4">GMT+4</option>
+      <option value="5">GMT+5</option>
+      <option value="6">GMT+6</option>
+      <option value="7">GMT+7</option>
+      <option value="8">GMT+8</option>
+      <option value="9">GMT+9</option>
+      <option value="10">GMT+10</option>
+      <option value="11">GMT+11</option>
+      <option value="12">GMT+12</option>
+    </select>
+  </div>
+  <div>
+    <h2><span style="color: #0063dc">flick</span><span style="color: #ff0084">r</span> integration</h2>
+    <hr/>
+    <p>To show photos of your party, simply tag them with <strong><?php echo FLICKR_TAG_PREFIX.$party['Party']['id'] ?></strong> and fill out the information below.</p>
+    <label for="PartyUseflickr">Show photostream:</label>
+    <?php echo $html->checkbox('Party/useflickr'); ?><br/>
+    <label for="PartyFlickruse">Show:</label>
+    <?php echo $html->radio('Party/flickruse', array(0 => 'Only my photos', 1 => 'Anyone\'s photos')); ?><br/>
+    <label for="website">Flickr username:</label>
+    <?php echo $html->input('Party/flickrusr', array('size' => 35)); ?>
+  </div>
+  <div>
+    <h2>Privacy</h2>
+    <hr/>
+    <label for="PartyInviteonly">Invite only:</label>
+    <?php echo $html->checkbox('Party/inviteonly'); ?><br/>
+    <label for="PartyGuestsonly">Show full address to party guests only:</label>
+    <?php echo $html->checkbox('Party/guestsonly'); ?><br/>
+    <label for="PartyGuestcomments">Limit comments to party guests only:</label>
+    <?php echo $html->checkbox('Party/guestcomments'); ?><br/>
+  </div>
+  <?php echo $html->hidden('Party/lat', array('id' => 'lat')); 
+        echo $html->hidden('Party/long', array('id' => 'long'));
+        echo $html->hidden('Party/zoom', array('id' => 'zoom'));
+        echo $html->hidden('Party/geocoded', array('id' => 'geocoded', 'value' => 0)); ?>
+  <?php endif; ?>
+  <?php echo $html->submit('Update'); ?>
+</form>

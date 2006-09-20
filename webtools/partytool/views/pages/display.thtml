@@ -1,8 +1,9 @@
 <div style="font-size: x-large; font-weight: bold; text-align: center">
-<?php echo $pcount.(($pcount == 1) ? ' Party, ' : ' Parties, ').$ucount.(($ucount == 1) ? ' Partygoer, ' : ' Partygoers, ');
+<?php
+echo $pcount.(($pcount == 1) ? ' Party, ' : ' Parties, ').$ucount.(($ucount == 1) ? ' Partygoer, ' : ' Partygoers, ');
 $difference = 1161975280 - time();
 $days_left = floor($difference/60/60/24);
-echo $days_left." days until Firefox 2!"; ?><br/></div>
+echo "and ".$days_left." days until Firefox 2!"; ?><br/></div>
 
 <div>
 <div style="float: left; width: 75%">
@@ -18,6 +19,6 @@ Maecenas varius massa sit amet nulla. Nunc sit amet mauris. Nunc eu purus a sapi
   <li><a href="<?php echo $html->url('/party/view/all'); ?>">View all parties</a></li>
   <li><a href="<?php echo $html->url('/user/register'); ?>">Register</a></li>
   <li><a href="<?php echo $html->url('/party/register'); ?>">Create a party</a></li>
-<ul>
+</ul>
 </div>
 </div>

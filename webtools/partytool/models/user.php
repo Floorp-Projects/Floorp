@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Firefox Party Tool
+ * The Original Code is Mozilla Party Tool
  *
  * The Initial Developer of the Original Code is
  * Ryan Flint <rflint@dslr.net>
@@ -50,6 +50,32 @@ class User extends AppModel {
   function hostOf($uid) {
     $parties = $this->query("SELECT id,name FROM parties WHERE owner = ".$uid);
     return $parties;
+  }
+  
+  function getPartyId($icode) {
+    $party = $this->query("SELECT id FROM parties WHERE invitecode = \"".$icode."\"");
+    
+    if (!empty($party))
+      return $party[0]['parties']['id'];
+  }
+  
+  function addToParty($icode, $uid) {
+    $party = $this->query("SELECT id,guests FROM parties WHERE invitecode = \"".$icode."\"");
+    
+    if (!empty($party[0]['parties']['id'])) {
+      $guests = $party[0]['parties']['guests'];
+      
+      if (empty($guests)) {
+        $guests = $uid;
+      }
+      else {
+        $temp = explode(',', $guests);
+        array_push($temp, $uid);
+        $guests = implode(',', $temp);
+      }
+      
+      $this->query("UPDATE parties SET guests = \"".$guests."\" WHERE id = ".$party[0]['parties']['id']);
+    }
   }
 }
 ?>

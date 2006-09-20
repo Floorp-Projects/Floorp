@@ -25,6 +25,36 @@
     <?php echo $html->input('User/location', array('id' => 'location', 'size' => 20, 'onkeypress' => 'capture(event)')); ?>
   </div>
   <div>
+    <label for="UserTz">Timezone (current time is <?php echo gmdate("Y-m-d H:i:s"); ?>GMT):</label>
+    <select name="data[User][tz]"  id="UserTz">
+      <option value="-12">GMT-12</option>
+      <option value="-11">GMT-11</option>
+      <option value="-10">GMT-10</option>
+      <option value="-9">GMT-9</option>
+      <option value="-8">GMT-8</option>
+      <option value="-7">GMT-7</option>
+      <option value="-6">GMT-6</option>
+      <option value="-5">GMT-5</option>
+      <option value="-4">GMT-4</option>
+      <option value="-3">GMT-3</option>
+      <option value="-2">GMT-2</option>
+      <option value="-1">GMT-1</option>
+      <option value="0" selected="selected">GMT+0</option>
+      <option value="1">GMT+1</option>
+      <option value="2">GMT+2</option>
+      <option value="3">GMT+3</option>
+      <option value="4">GMT+4</option>
+      <option value="5">GMT+5</option>
+      <option value="6">GMT+6</option>
+      <option value="7">GMT+7</option>
+      <option value="8">GMT+8</option>
+      <option value="9">GMT+9</option>
+      <option value="10">GMT+10</option>
+      <option value="11">GMT+11</option>
+      <option value="12">GMT+12</option>
+    </select>
+  </div>
+  <div>
     <label for="website">Website:</label>
     <?php echo $html->input('User/website', array('size' => 20)); ?>
   </div>
@@ -56,7 +86,8 @@
   <div>
     <?php echo $html->hidden('User/lat', array('id' => 'lat')); 
           echo $html->hidden('User/long', array('id' => 'long'));
-          echo $html->hidden('User/zoom', array('id' => 'zoom')); ?>
+          echo $html->hidden('User/zoom', array('id' => 'zoom'));
+          echo $html->hidden('User/icode', array('value' => $icode)); ?>
   </div>
   <?php endif; ?>
   <?php echo $html->submit('Register'); ?>

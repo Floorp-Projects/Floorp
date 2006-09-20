@@ -5,25 +5,41 @@ class mail {
   var $subject;
   var $message;
   var $envelope;
-
-  /**
-     * Everything coming in via $params should be validated already
-     */
+  var $head = "<strong>Firefox Party!</strong><br/>";
+  var $foot;
+  
+  
   function mail($params) {
-    if (array_key_exists('from', $params)) {
+    if (array_key_exists('from', $params))
       $this->from = $params['from'];
-    }
-    if (array_key_exists('to', $params)) {
+      
+    if (array_key_exists('to', $params))
       $this->to = $params['to'];
-    }
-    if (array_key_exists('subject', $params)) {
+      
+    if (array_key_exists('subject', $params))
       $this->subject = $params['subject'];
-    }
-    if (array_key_exists('message', $params)) {
+      
+    if (array_key_exists('message', $params))
       $this->message = $params['message'];
-    }
-    if (array_key_exists('envelope', $params)) {
+    
+    if (array_key_exists('envelope', $params))
       $this->envelope = $params['envelope'];
+      
+    if (array_key_exists('type', $params)) {
+      switch($params['type']) {
+        case "act":
+          $this->message = $this->head."<br/>\nThank you for registering! To activate your account <a href=\"".$params['link']."\">click here</a>, or paste the link below into your browser<br/>".$params['link'].$this->foot;
+          break;
+
+        case "prec":
+          $this->message = $this->head."<br/>\nTo reset your password <a href=\"".$params['link']."\">click here</a>, or paste the link below into your browser<br/>".$params['link'].$this->foot;
+          break;
+          
+        case "invite":
+          $this->message = $this->head."<br/>\nYou've been invited by a friend to join them in celebrating the release of Firefox 2. To join them, just <a href=\"".$params['link']."\">click here</a> and sign up for an account.\n
+                           If you're unable to use the link above, simply paste the following URL into your browser: ".$params['link'].$this->foot;
+          break;
+      }
     }
   }
 

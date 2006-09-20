@@ -1,10 +1,15 @@
-.error {
+.error, .error_message {
   background: #ffa5a5;
   border: 1px solid red;
   text-align: center;
   font-weight: bold;
   padding: 5px;
   margin: 5px 0 5px 0;
+}
+
+.form_error {
+  background: #ffa5a5;
+  border: 1px solid red;
 }
 
 .info {
@@ -22,6 +27,8 @@ right: 0;
 }
 
 img { border: 1px solid #555 }
+
+h2 + hr { padding: 0; margin: 0;}
 
 body {
 	background: #fff url("/cake/img/body_back.png") top repeat-x;

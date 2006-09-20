@@ -1,4 +1,11 @@
 <?php
+/* REQUIRED - APP_NAME is used on all <title>s and mail names/subjects. APP_BASE
+ * should be a FQDN with protocol minus the trailing slash e.g. http://example.tld/party 
+ */
+define('APP_NAME', '');
+define('APP_EMAIL', '');
+define('APP_BASE', '');
+
 /* You should specify a Google Map API key here. Without it, all mapping features
  * will be disabled. To obtain a key, visit http://www.google.com/apis/maps/
  */ 
@@ -9,9 +16,8 @@ define('GMAP_API_KEY', '');
  */
 define('GSEARCH_API_KEY', '');
 
+/* The maximum year shown for party registrations */
 define('MAX_YEAR', 2007);
-define('APP_NAME', 'Firefox Party');
-define('APP_EMAIL', '');
 
 /* The Flickr API is used to show photos of each party on the individual party 
  * pages and home page. See http://flickr.com/services/api/keys/ to obtain a key

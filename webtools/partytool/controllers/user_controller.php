@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Firefox Party Tool
+ * The Original Code is Mozilla Party Tool
  *
  * The Initial Developer of the Original Code is
  * Ryan Flint <rflint@dslr.net>
@@ -39,72 +39,115 @@ uses('sanitize');
 class UserController extends AppController {
   var $name = 'User';
   var $helpers = array('Html');
-  
+  var $pageTitle;
+
   function index() {
-    if (!$this->Session->check('User')) {
+    if (!isset($_SESSION['User'])) {
       $this->redirect('/user/login');
     }
+    
+    $this->pageTitle = APP_NAME." - My Profile";
     
     $user = $this->Session->read('User');
     $this->set('parties', $this->User->memberOf($user['id']));
     $this->set('hparties', $this->User->hostOf($user['id']));
   }
-  
+
   function edit() {
+    if (!isset($_SESSION['User'])) {
+      $this->redirect('/user/login');
+    }
     $this->set('error', false);
-    $user = $this->User->findById($_SESSION['User']['id']);
-    $this->set('user', $user);
-    if (GMAP_API_KEY != null && !empty($user['User']['lat']))
+    $this->pageTitle = APP_NAME." - Edit My Account";
+    if (empty($this->data)) {
+      $this->User->id = $_SESSION['User']['id'];
+      $this->data = $this->User->read();
+      $this->data['User']['password'] = "";
+      
+      if (GMAP_API_KEY != null && !empty($this->data['User']['lat']))
       $this->set('body_args',
-                 ' onload="mapInit('.$user["User"]["lat"].', '.$user["User"]["long"].', '.$user["User"]["zoom"].');" onunload="GUnload()"');
-    
-    if (!empty($this->data)) {
-      //XXX TODO
-      $this->redirect('/user/');
+                 ' onload="mapInit('.$this->data["User"]["lat"].', '.$this->data["User"]["long"].', '.$this->data["User"]["zoom"].');" onunload="GUnload()"');
+    }
+
+    else {
+      $user = $this->User->findById($_SESSION['User']['id']);
+      $this->User->id = $user['User']['id'];
+
+
+      if (!empty($this->data['User']['password'])) {
+        if ($this->data['User']['password'] === $this->data['User']['confpassword']) {
+          $string = $user['User']['email'].uniqid(rand(), true).$this->data['User']['password'];
+          $this->data['User']['salt'] = substr(md5($string), 0, 9);
+          $this->data['User']['password'] = sha1($this->data['User']['password'] . $this->data['User']['salt']);
+        }
+        else {
+          $this->set('error', true);
+          $this->render();
+        }
+      }
+      else
+        $this->data['User']['password'] = $user['User']['password'];
+        
+      
+      if ($this->User->save($this->data)) {
+        $this->redirect('/user/');
+      }
     }
   }
-  
+
   function view($aUid = null) {
     if ($aUid === null || !is_numeric($aUid))
       $this->redirect('/');
-    
+      
     else {
       $user = $this->User->findById($aUid);
+      $this->pageTitle = APP_NAME." - ".$user['User']['name'];
       $this->set('user', $user);
       if (GMAP_API_KEY != null && !empty($user['User']['lat']))
         $this->set('body_args',
                    ' onload="mapInit('.$user["User"]["lat"].', '.$user["User"]["long"].', '.$user["User"]["zoom"].', \'stationary\');" onunload="GUnload()"');
       $parties = $this->User->memberOf($user['User']['id']);
       $this->set('parties', $parties);
+      $this->set('hparties', $this->User->hostOf($user['User']['id']));
     }
   }
-    
-  function register() {
+
+  function register($invite = null) {
     $this->set('error', false);
-    if ($this->Session->check('User')) {
-      $this->redirect('/user/');
+    if (isset($_SESSION['User'])) {
+      if ($invite != null) {
+        $this->redirect('/party/rsvp/'.$this->User->getPartyId($invite).'/'.$invite);
+      }
+      else
+        $this->redirect('/user/');
     }
+
+    if (empty($this->data))
+      $this->set('icode', $invite);
+
+    $this->pageTitle = APP_NAME." - Register";
     if (GMAP_API_KEY != null)
       $this->set('body_args', ' onload="mapInit()" onunload="GUnload()"');
     
     if (!empty($this->data)) {
-      
       $clean = new Sanitize();
       $temp = array('email' => $this->data['User']['email'],
                     'password' => $this->data['User']['password'],
                     'confpassword' => $this->data['User']['confpassword'],
                     'lat' => $clean->sql($this->data['User']['lat']),
-                    'long' => $clean->sql($this->data['User']['long']));
+                    'long' => $clean->sql($this->data['User']['long']),
+                    'tz' => $clean->sql($this->data['User']['tz']));
       //Nuke everything else
       $clean->cleanArray($this->data);
 
       $this->data['User']['email'] = $temp['email'];
       $this->data['User']['password'] = $temp['password'];
       $this->data['User']['confpassword'] = $temp['confpassword'];
-      $this->data['User']['lat'] = $temp['lat'];
-      $this->data['User']['long'] = $temp['long'];
+      $this->data['User']['lat'] = floatval($temp['lat']);
+      $this->data['User']['long'] = floatval($temp['long']);
       $this->data['User']['role'] = 0;
-      
+      $this->data['User']['tz'] = intval($temp['tz']);
+
       if (!$this->User->findByEmail($this->data['User']['email'])) {
         if ($this->data['User']['password'] === $this->data['User']['confpassword']) {
           if ($this->User->validates($this->data)) {
@@ -117,23 +160,28 @@ class UserController extends AppController {
             for ($i = 0; $i < 10; $i++) {
               $key .= $chars{rand(0,35)};
             }
-            
+
             $this->data['User']['active'] = $key;
+
             if ($this->User->save($this->data)) {
               $message = array(
-                        'from' => 'Firefox Party <noreply@screwedbydesign.com>',
-                        'envelope' => 'noreply@screwedbydesign.com',
+                        'from' => APP_NAME.' <'.APP_EMAIL.'>',
+                        'envelope' => APP_EMAIL,
                         'to'   => $this->data['User']['email'],
-                        'subject' => 'Your Firefox Party Registration',
-                        'message' => "You're almost ready to party! Just go to http://screwedbydesign.com/cake/user/activate/".$key." to activate your account.");
-              
+                        'subject' => 'Your '.APP_NAME.' Registration',
+                        'link' => APP_BASE.'/user/activate/'.$key,
+                        'type' => 'act');
+
               $mail = new mail($message);
               $mail->send();
-              
+
+              if (!empty($this->data['User']['icode']))
+                $this->User->addToParty($this->data['User']['icode'], $this->User->getLastInsertID());
+
               $this->redirect('/user/login/new');
             }
           }
-        
+
           else {
             $this->validateErrors($this->User);
             $this->render();
@@ -157,7 +205,7 @@ class UserController extends AppController {
   function activate($aKey = null) {
     if ($aKey == null)
       $this->redirect('/');
-    
+
     else {
       $this->data = $this->User->findByActive($aKey);
       $this->data['User']['active'] = 1;
@@ -167,28 +215,29 @@ class UserController extends AppController {
       }
     }
   }
-    
+
   function login($isNew = null) {
-    if ($this->Session->check('User')) {
+    if (isset($_SESSION['User'])) {
       $this->redirect('/user/');
     }
-    
+
+    $this->pageTitle = APP_NAME." - Login";
     $this->set('error', false);
-    
+
     if ($isNew !== null) {
       switch($isNew) {
         case "new":
           $this->set('preamble', 'Thank you for registering! To login, you\'ll need to activate your account. Please check your email for your activation link.');
           break;
-      
+
         case "rnew":
           $this->set('preamble', 'An email with instructions on how to reset your password has been sent.');
           break;
-    
+
         case "active":
           $this->set('preamble', 'Your account has been activated. You may now login.');
           break;
-    
+
         case "reset":
           $this->set('preamble', 'Your password has been reset.');
           break;
@@ -198,7 +247,7 @@ class UserController extends AppController {
     
     if (!empty($this->data)) {
       $user = $this->User->findByEmail($this->data['User']['email']);
-      
+
       if ($user['User']['active'] != 1) {
         $this->set('preamble', 'Your account hasn\'t been activated yet. 
         Please check your email (including junk/spam folders) for your
@@ -206,26 +255,27 @@ class UserController extends AppController {
         to resend your activation details.');
         $this->render();
       }
-      
+
       if ($user['User']['active'] == 1 && $user['User']['password'] == sha1($this->data['User']['password'] . $user['User']['salt'])) {
         $this->Session->write('User', $user['User']);
         $this->redirect('/user/');
       }
-      
+
       else {
         $this->set('error', true);
       }
     }
   }
-  
+
   function logout() {
     $this->Session->delete('User');
     $this->redirect('/');
   }
-  
+
   function recover($aType = null, $aCode = null, $aId = null) {
     switch ($aType) {
       case "password":
+        $this->pageTitle = APP_NAME." - Password Recovery";
         $this->set('hideInput', false);
         $this->set('url', 'password');
         if (!empty($this->data)) {
@@ -237,34 +287,35 @@ class UserController extends AppController {
           }
           else {
             $code = md5($user['User']['salt'].$user['User']['email'].$user['User']['password']);
-            $message = array('from'     => APP_NAME.'<'.APP_EMAIL.'>',
+            $message = array('from'   => APP_NAME.'<'.APP_EMAIL.'>',
                            'envelope' => APP_EMAIL,
                            'to'       => $user['User']['email'],
                            'subject'  => APP_NAME.' Password Request',
-                           'message'  => "Just go to http://screwedbydesign.com/cake/user/recover/password/".$code."/".$user['User']['id']." to reset your password.");
-      
+                           'link'     => APP_BASE.'/user/recover/password/'.$code.'/'.$user['User']['id'],
+                           'type'     => 'prec');
+
             $mail = new mail($message);
             $mail->send();
             $this->redirect('user/login/rnew');
           }
         }
-        
+
         if ($aCode !== null && $aId !== null) {
           $this->set('hideInput', true);
           $this->set('reset', false);
           $user = $this->User->findById($aId);
-          
+
           if (!$user) {
             $this->set('error', 'Invalid request. Please check the URL and try again.');
             $this->render();
           }
-          
+
           if ($aCode == md5($user['User']['salt'].$user['User']['email'].$user['User']['password'])) {
             $this->set('reset', true);
             $this->set('code', $aCode."/".$aId);
             $this->render();
           }
-          
+
           else {
             $this->set('error', 'Invalid request. Please check the URL and try again.');
             $this->render();
@@ -272,9 +323,10 @@ class UserController extends AppController {
         }
         break;
       case "activate":
+        $this->pageTitle = APP_NAME." - Resend Activation Code";
         $this->set('hideInput', false);
         $this->set('url', 'activate');
-        
+
         if (!empty($this->data)) {
           $user = $this->User->findByEmail($this->data['User']['email']);
           
@@ -282,17 +334,17 @@ class UserController extends AppController {
             $this->set('error', 'Could not find a user with that email address. Please check it and try again.');
             $this->render();
           }
-            
+
           if ($user['User']['active'] == 1)
             $this->redirect('/user/login/active');
-      
+
           else {
-            $message = array('from'     => 'Firefox Party <noreply@screwedbydesign.com>',
-                             'envelope' => 'noreply@screwedbydesign.com',
-                             'to'       => $user['User']['email'],
-                             'subject'  => 'Your Firefox Party Registration',
-                             'message'  => "You're almost ready to party! Just go to http://screwedbydesign.com/cake/user/activate/".$user['User']['active']." to activate your account.");
-      
+            $message = array('from'     => APP_NAME.' <'.APP_EMAIL.'>',
+                             'envelope' => APP_EMAIL,
+                             'to'       => $this->data['User']['email'],
+                             'subject'  => 'Your '.APP_NAME.' Registration',
+                             'link'     => APP_BASE.'/user/activate/'.$user['User']['active'],
+                             'type'     => 'act');
             $mail = new mail($message);
             $mail->send();
             $this->redirect('user/login/new');
@@ -307,7 +359,7 @@ class UserController extends AppController {
               $this->set('error', 'Invalid request. Please check the URL and try again.');
               $this->render();
             }
-          
+
             if ($aCode == md5($user['User']['salt'].$user['User']['email'].$user['User']['password'])) {
               $string = $user['User']['email'] . uniqid(rand(), true) . $this->data['User']['password'];
               $this->data['User']['salt'] = substr(md5($string), 0, 9);
@@ -323,7 +375,7 @@ class UserController extends AppController {
         $this->redirect('/');
     }
   }
-  
+
   function delete($id) {
     $role = $this->Session->read('User');
     if ($role['role'] != 2)

@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Firefox Party Tool
+ * The Original Code is Mozilla Party Tool
  *
  * The Initial Developer of the Original Code is
  * Ryan Flint <rflint@dslr.net>
@@ -38,7 +38,8 @@ class Party extends AppModel {
   var $name = 'Party';
     
   var $validate = array(
-    'name' => VALID_NOT_EMPTY
+    'name'    => VALID_NOT_EMPTY,
+    'einvite' => VALID_EMAIL
   );
 
   function getComments($pid) {
@@ -53,7 +54,7 @@ class Party extends AppModel {
   
   function getUserName($uid) {
     $rv = $this->query("SELECT name FROM users WHERE id = ".$uid);
-    return $rv[0]['users']['name'];
+    return @$rv[0]['users']['name'];
   }
 }
 ?>

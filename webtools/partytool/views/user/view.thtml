@@ -11,13 +11,28 @@
   if (!empty($user['User']['website']))
     echo 'Website: <a href="'.$user['User']['website'].'" rel="nofollow">'.$user['User']['website'].'</a><br/>';
   
-  echo "Attending: ";
-  $c = count($parties) - 1;
-  $i = 0;
-  foreach ($parties as $party) {
-    echo '<a href="'.$html->url('/party/view/'.$party['parties']['id']).'">'.$party['parties']['name'].'</a>';
-    echo ($i < $c) ? ', ' : '';
-    $i++;
+  if (!empty($parties)) {
+    echo "Attending: ";
+    $c = count($parties) - 1;
+    $i = 0;
+    
+    foreach ($parties as $party) {
+      echo '<a href="'.$html->url('/party/view/'.$party['parties']['id']).'">'.$party['parties']['name'].'</a>';
+      echo ($i < $c) ? ', ' : '<br/>';
+      $i++;
+    }
+  }
+  
+  if (!empty($hparties)) {
+    echo "Host of: ";
+    $c = count($hparties) - 1;
+    $i = 0;
+    
+    foreach ($hparties as $party) {
+      echo '<a href="'.$html->url('/party/view/'.$party['parties']['id']).'">'.$party['parties']['name'].'</a>';
+      echo ($i < $c) ? ', ' : '<br/>';
+      $i++;
+    }
   }
 ?>
 

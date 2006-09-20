@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Firefox Party Tool
+ * The Original Code is Mozilla Party Tool
  *
  * The Initial Developer of the Original Code is
  * Ryan Flint <rflint@dslr.net>
@@ -35,46 +35,70 @@
  *
  * ***** END LICENSE BLOCK ***** */
 vendor('webServices');
+vendor('mail');
 uses('sanitize');
 class PartyController extends AppController {
   var $name = 'Party';
+  var $pageTitle;
   var $components = array('RequestHandler');
   var $components = array('Security');
-  
+
   function beforeFilter() {
-    $this->Security->requirePost('rsvp','unrsvp');
+    $this->Security->requirePost('unrsvp');
   }
-  
+
   function index() {
     if (GMAP_API_KEY != null)
       $this->set('body_args', ' onload="initMashUp()" onunload="GUnload()"');
+    $this->pageTitle = APP_NAME." - Party Map";
   }
-  
+
   function register() {
     if (!$this->Session->check('User')) {
       $this->redirect('/user');
     }
-    
+
+    $this->pageTitle = APP_NAME." - Register";
+
     $this->set('error', false);
     if (GMAP_API_KEY != null)
       $this->set('body_args', ' onload="mapInit(14.944785, -156.796875, 1)" onunload="GUnload()"');
-    
+
     if (!empty($this->data)) {
       $clean = new Sanitize();
+      $temp = array('lat'  => $clean->sql($this->data['Party']['lat']),
+                    'long' => $clean->sql($this->data['Party']['long']),
+                    'tz'   => $clean->sql($this->data['Party']['tz']));
+
       $clean->cleanArray($this->data);
-      
-      $this->data['Party']['date'] = mktime($this->data['Party']['hour_hour'],
-                                            $this->data['Party']['minute_min'],
-                                            0,
-                                            $this->data['Party']['month_hour'],
-                                            $this->data['Party']['day_day'],
-                                            $this->data['Party']['year_year']);
-      
+ 
+      $this->data['Party']['lat'] = floatval($temp['lat']);
+      $this->data['Party']['long'] = floatval($temp['long']);
+      $this->data['Party']['tz'] = intval($temp['tz']);
+
+      $secoffset = ($this->data['Party']['tz'] * 60 * 60);
+
+      $offsetdate = gmmktime($this->data['Party']['hour_hour'],
+                             $this->data['Party']['minute_min'],
+                             0,
+                             $this->data['Party']['month_hour'],
+                             $this->data['Party']['day_day'],
+                             $this->data['Party']['year_year']);
+
+      $this->data['Party']['date'] = ($offsetdate + $secoffset);
       $this->data['Party']['owner'] = $_SESSION['User']['id'];
+
+      $key = null;
+      $chars = "1234567890abcdefghijklmnopqrstuvwxyz";
+      for ($i = 0; $i < 10; $i++) {
+        $key .= $chars{rand(0,35)};
+      }
+
+      $this->data['Party']['invitecode'] = $key;
       
       if (empty($this->data['Party']['lat']) && !empty($this->data['Party']['address']) &&
           $this->data['Party']['geocoded'] == 0) {
-        
+
         // Attempt to geocode the address again
         $geocoder = new webServices(array('type' => 'geocode'));
         if ($ll = $geocoder->geocode($this->data['Party']['address']) != 0) {
@@ -84,6 +108,7 @@ class PartyController extends AppController {
         else {
           // May not come back with exactly what the user was looking for, but they can always edit
           $suggest = new webServices(array('type' => 'gsuggest'));
+          $geocoder = new webServices(array('type' => 'geocode'));
           if ($suggestion = $suggest->GSuggest($this->data['Party']['address']) != 0) {
             $this->data['Party']['address'] = $suggestion;
             if ($ll = $geocoder->geocode($suggestion) != 0) {
@@ -93,30 +118,101 @@ class PartyController extends AppController {
           }
         }
       }
-      
+
       if ($this->Party->save($this->data))
         $this->redirect('party/view/'.$this->Party->getInsertId());
     }
   }
-  
+
+  function edit($id = null) {
+    $this->Party->id = $id;
+    $party = $this->Party->read();
+    $this->set('party', $party);
+    $this->pageTitle = APP_NAME." - Edit Party";
+
+    if (empty($_SESSION['User']['id']))
+      $this->redirect('/user/login/');
+
+    if ($party['Party']['owner'] != $_SESSION['User']['id'])
+      $this->redirect('/party/view/'.$id);
+
+    else {
+      if (empty($this->data)) {
+        $this->data = $party;
+
+        $this->data['Party']['hour_hour'] = intval(date('h', $party['Party']['date']));
+        $this->data['Party']['minute_min'] = intval(date('i', $party['Party']['date']));
+        $this->data['Party']['month_hour'] = intval(date('m', $party['Party']['date']));
+        $this->data['Party']['day_day'] = intval(date('d', $party['Party']['date']));
+        $this->data['Party']['year_year'] = intval(date('Y', $party['Party']['date']));
+
+        if (GMAP_API_KEY != null) {
+          if ($this->data['Party']['lat'])
+            $this->set('body_args',
+                       ' onload="mapInit('.$this->data["Party"]["lat"].', '.$this->data["Party"]["long"].', '.$this->data["Party"]["zoom"].');" onunload="GUnload()"');
+          else
+            $this->set('body_args',
+                       ' onload="mapInit(1, 1, 1);" onunload="GUnload()"');
+        }
+      }
+
+      else {
+        $clean = new Sanitize();
+        $temp = array('lat'  => $clean->sql($this->data['Party']['lat']),
+                      'long' => $clean->sql($this->data['Party']['long']),
+                      'tz'   => $clean->sql($this->data['Party']['tz']));
+
+        $clean->cleanArray($this->data);
+ 
+        $this->data['Party']['lat'] = floatval($temp['lat']);
+        $this->data['Party']['long'] = floatval($temp['long']);
+        $this->data['Party']['tz'] = intval($temp['tz']);
+
+        $secoffset = ($this->data['Party']['tz'] * 60 * 60);
+
+        $offsetdate = gmmktime($this->data['Party']['hour_hour'],
+                               $this->data['Party']['minute_min'],
+                               0,
+                               $this->data['Party']['month_hour'],
+                               $this->data['Party']['day_day'],
+                               $this->data['Party']['year_year']);
+
+        $this->data['Party']['date'] = ($offsetdate - $secoffset);
+        $this->data['Party']['owner'] = $_SESSION['User']['id'];
+        
+        if (!empty($this->data['Party']['flickrusr'])) {
+          $params = array('type' => 'flickr', 'userid' => $this->data['Party']['flickrusr']);
+          $flick = new webServices($params);
+          $this->data['Party']['flickrid'] = $flick->getFlickrId();
+        }
+
+        if ($this->Party->save($this->data))
+          $this->redirect('party/view/'.$id);
+      }
+    }
+  }
+
   function view($id = null, $page = null) {
     if ($id == "all") {
+      $this->pageTitle = APP_NAME." - All Parties";
       $count = $this->Party->findCount();
       $pages = ceil($count/10);
       if ($page == null)
         $page = 1;
-        
+
       if ($page > 1)
         $this->set('prev', $page - 1);
       if ($page < $pages)
         $this->set('next', $page + 1);
-        
+
       $this->set('parties', $this->Party->findAll(null, null, "name ASC", 10, $page));
     }
-    
+
     else if (is_numeric($id)) {
       $party = $this->Party->findById($id);
       $this->set('party', $party);
+
+      $this->pageTitle = APP_NAME." - ".$party['Party']['name'];
       
       if ($party['Party']['useflickr'] == 1) {
         $data = array('type' => 'flickr', 'userid' => $party['Party']['flickrid']);
@@ -126,39 +222,51 @@ class PartyController extends AppController {
       if (!empty($party['Party']['guests'])) {
         $guests = explode(',', $party['Party']['guests']);
         $names = array();
-        
+
         for ($i = 0; $i < count($guests); $i++)
           array_push($names, $this->Party->getUserName($guests[$i]));
-        
+
         $this->set('guests', $guests);
         $this->set('names', $names);
       }
-      
+
       $this->set('host', $this->Party->getUserName($party['Party']['owner']));
-      $this->set('comments', $this->Party->getComments($party['Party']['id']));      
+      $this->set('comments', $this->Party->getComments($party['Party']['id']));
       $this->set('body_args', ' onload="mapInit('.$party['Party']['lat'].', '.$party['Party']['long'].', '.$party['Party']['zoom'].', \'stationary\')" onunload="GUnload()"');
     }
-    
+
     else {
       $this->redirect('/party/view/all');
     }
   }
   
-  function rsvp($aParty = null) {
+  function rsvp($aParty = null, $icode = null) {
     if (!is_numeric($aParty))
       $this->redirect('/');
 
-    $party = $this->Party->findById($aParty);
+    $invited = false;
+
+    if ($icode != null) {
+      $party = $this->Party->findByInvitecode($icode);
+      if ($aParty != $party['Party']['id'])
+        $this->redirect('/party/view/'.$aParty);
+      else
+        $invited = true;
+    }
+    
+    else
+      $party = $this->Party->findById($aParty);
+      
     $user = $this->Session->read('User');
-    if (empty($user['id']))
+    if (empty($_SESSION['User']['id']))
       $this->redirect('/user/login');
     
-    else {
+    else if ($party['Party']['inviteonly'] != 1 || $invited === true) {
       if (empty($party['Party']['guests'])) {
         $this->data['Party']['guests'] = $user['id'];
         $this->data['Party']['id'] = $aParty;
       }
-    
+
       else {
         $attendees = explode(',', $party['Party']['guests']);
         if (in_array($user['id'], $attendees))
@@ -170,10 +278,13 @@ class PartyController extends AppController {
           $this->data['Party']['guests'] = $csv;
         }
       }
-    
+
       if ($this->Party->save($this->data))
         $this->redirect('/party/view/'.$aParty.'/added');
     }
+
+    else
+      $this->redirect('/party/view/'.$aParty);
   }
   
   function unrsvp($aParty) {
@@ -181,7 +292,7 @@ class PartyController extends AppController {
     if (empty($user)) {
       $this->redirect('/user/login');
     }
-    
+
     if (is_numeric($aParty)) {
       $party = $this->Party->findById($aParty);
       $temp = explode(',', $party['Party']['guests']);
@@ -199,9 +310,39 @@ class PartyController extends AppController {
     else
       $this->redirect('/');
   }
-  
-  function invite() {
-    //XXX TODO
+
+  function invite($id = null) {
+    $this->pageTitle = APP_NAME." - Invite a guest";
+    if (is_numeric($id) && isset($_SESSION['User'])) {
+      $party = $this->Party->findById($id);
+      if ($party['Party']['owner'] === $_SESSION['User']['id']) {
+        $this->set('partyid', $party['Party']['id']);
+        $this->set('inviteurl', APP_BASE.'/register/'.$party['Party']['invitecode']);
+
+        if (!empty($this->data)) {
+          if ($this->Party->validates($this->data)) {
+            $message = array('from' => APP_NAME.' <'.APP_EMAIL.'>',
+                             'envelope' => APP_EMAIL,
+                             'to'   => $this->data['Party']['einvite'],
+                             'subject' => 'You\'ve been invited to '.APP_NAME.'!',
+                             'link' => APP_BASE.'/user/register/'.$party['Party']['invitecode'],
+                             'type' => 'invite');
+
+            $mail = new mail($message);
+            $mail->send();
+            $this->set('preamble', array($this->data['Party']['einvite'], $id));
+          }
+          else {
+            $this->validateErrors($this->Party);
+            $this->render();
+          }
+        }
+      }
+      else
+        $this->redirect('/party/view/'.$id);
+    }
+    else
+      $this->redirect('/user/login');
   }
   
   function js() {

@@ -74,6 +74,10 @@ class webServices {
     }
   }
   
+  function getFlickrId() {
+    return $this->userid;
+  }
+  
   function fetchPhotos($tags, $num_results) {
     $head  = "GET /services/rest/?method=flickr.photos.search&api_key=".FLICKR_API_KEY."&user_id=".$this->userid."&tags=".$tags."&per_page=".$num_results." HTTP/1.1\r\n";
     $head .= "Host: ".$this->host."\r\n";
