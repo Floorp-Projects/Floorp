@@ -6097,7 +6097,6 @@ interrupt:
 
 #undef FAST_LOCAL_INCREMENT_OP
 
-#if JS_HAS_GENERATORS
           BEGIN_CASE(JSOP_STARTITER)
             /*
              * Start of a for-in or for-each-in loop: push two nulls.  Push
@@ -6130,6 +6129,7 @@ interrupt:
             sp -= 3;
           END_CASE(JSOP_ENDITER)
 
+#if JS_HAS_GENERATORS
           BEGIN_CASE(JSOP_GENERATOR)
             pc += JSOP_GENERATOR_LENGTH;
             SAVE_SP_AND_PC(fp);
@@ -6187,8 +6187,6 @@ interrupt:
 #endif /* JS_HAS_GENERATORS */
 
 #if !JS_HAS_GENERATORS
-          L_JSOP_STARTITER:
-          L_JSOP_ENDITER:
           L_JSOP_GENERATOR:
           L_JSOP_YIELD:
           L_JSOP_ARRAYPUSH:
