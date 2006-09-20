@@ -7166,8 +7166,13 @@ nsGlobalWindow::RestoreWindowState(nsISupports *aState)
       }
     }
 
-    if (!didFocusContent && focusedWindow)
+    if (!didFocusContent && focusedWindow) {
+      // Clear the focus controller's memory of any focused element so that
+      // the element does not get inadvertently focused again.
+      fc->ResetElementFocus();
+
       focusedWindow->Focus();
+    }
   } else if (focusedWindow) {
     // Just update the saved focus memory.
     fc->SetFocusedWindow(focusedWindow);
