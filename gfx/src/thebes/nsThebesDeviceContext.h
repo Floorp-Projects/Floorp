@@ -141,10 +141,6 @@ private:
 
     PRInt32 mWidth;
     PRInt32 mHeight;
-#ifdef MOZ_ENABLE_GTK2
-    PRInt16 mGTKScrollbarHeight;
-    PRInt16 mGTKScrollbarWidth;
-#endif
     PRBool mPrinter;
 
     nsRefPtrHashtable<nsISupportsHashKey, gfxASurface> mWidgetSurfaceCache;

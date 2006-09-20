@@ -46,6 +46,7 @@
 #include "nsThebesDrawingSurface.h"
 
 #include "nsIView.h"
+#include "nsILookAndFeel.h"
 
 #ifdef MOZ_ENABLE_GTK2
 // for getenv
@@ -237,30 +238,6 @@ nsThebesDeviceContext::Init(nsNativeWidget aWidget)
     }
     // XXX
     mDepth = 24;
-
-    // Cache scrollbar sizes for GTK.
-    GtkRequisition req;
-    GtkWidget *sb;
-
-    sb = gtk_vscrollbar_new(NULL);
-    gtk_widget_ref(sb);
-    gtk_object_sink(GTK_OBJECT(sb));
-    gtk_widget_ensure_style(sb);
-    gtk_widget_queue_resize(sb);
-    gtk_widget_size_request(sb,&req);
-    mGTKScrollbarWidth = req.width;
-    gtk_widget_destroy(sb);
-    gtk_widget_unref(sb);
-
-    sb = gtk_hscrollbar_new(NULL);
-    gtk_widget_ref(sb);
-    gtk_object_sink(GTK_OBJECT(sb));
-    gtk_widget_ensure_style(sb);
-    gtk_widget_queue_resize(sb);
-    gtk_widget_size_request(sb,&req);
-    mGTKScrollbarHeight = req.height;
-    gtk_widget_destroy(sb);
-    gtk_widget_unref(sb);
 #endif
 
 #ifdef XP_WIN
@@ -384,25 +361,26 @@ nsThebesDeviceContext::GetScrollBarDimensions(float &aWidth, float &aHeight) con
 {
     float scale;
     GetCanonicalPixelScale(scale);
-#ifdef MOZ_ENABLE_GTK2
-    aWidth = mGTKScrollbarWidth * mDevUnitsToAppUnits * scale;
-    aHeight = mGTKScrollbarHeight * mDevUnitsToAppUnits * scale;
-#elif XP_WIN
-    aWidth  = ::GetSystemMetrics(SM_CXVSCROLL) * mDevUnitsToAppUnits * scale;
-    aHeight = ::GetSystemMetrics(SM_CXHSCROLL) * mDevUnitsToAppUnits * scale;
-#else
-    NS_WARNING("Couldn't get scrollbar size from system, so setting to 10px. FIX ME!");
-    aWidth = 10.0f * mPixelsToTwips;
-    aHeight = 10.0f * mPixelsToTwips;
-#endif
+
+    //XXXispiked initialize these to something in case nsILookAndFeel barfs
+    PRInt32 tmpWidth = 16;
+    PRInt32 tmpHeight = 16;
+    // Get the scrollbar width and height from nsILookAndFeel
+    nsCOMPtr<nsILookAndFeel> lookAndFeel = do_GetService("@mozilla.org/widget/lookandfeel;1");
+    if(lookAndFeel) {
+        lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ScrollbarWidth, tmpWidth);
+        lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ScrollbarHeight, tmpHeight);
+    }
+
+    aWidth = tmpWidth * mDevUnitsToAppUnits * scale;
+    aHeight = tmpHeight * mDevUnitsToAppUnits * scale;
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesDeviceContext::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
 {
-    nsresult status = NS_OK;
-
     if (!gSystemFonts) {
 #ifdef MOZ_ENABLE_GTK2
         gSystemFonts = new nsSystemFontsGTK2(mPixelsToTwips);

@@ -505,6 +505,14 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_ScrollSliderStyle:
         aMetric = eMetric_ScrollThumbStyleProportional;
         break;
+    case eMetric_ScrollbarWidth:
+    case eMetric_ScrollbarHeight:
+        {
+            MozGtkScrollbarMetrics metrics;
+            moz_gtk_get_scrollbar_metrics(&metrics);
+            aMetric = metrics.stepper_size;
+        }
+        break;
     case eMetric_TreeOpenDelay:
         aMetric = 1000;
         break;

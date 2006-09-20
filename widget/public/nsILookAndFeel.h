@@ -199,6 +199,9 @@ public:
     eMetric_ScrollArrowStyle,                             // position of scroll arrows in a scrollbar
     eMetric_ScrollSliderStyle,                            // is scroll thumb proportional or fixed?
 
+    eMetric_ScrollbarWidth,                               // width of a vertical scrollbar
+    eMetric_ScrollbarHeight,                              // height of horizontal scrollbar
+ 
     eMetric_ScrollButtonLeftMouseButtonAction,            // each button can take one of four values:
     eMetric_ScrollButtonMiddleMouseButtonAction,          // 0 - scrolls one  line, 1 - scrolls one page
     eMetric_ScrollButtonRightMouseButtonAction,           // 2 - scrolls to end, 3 - button ignored
