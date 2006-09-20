@@ -552,7 +552,7 @@ Section "-Application" Section1
       StrCpy $0 "Software\Classes\chrome\shell\open\ddeexec\Application"
       ${WriteRegStr2} $TmpVal "$0" "" "${DDEApplication}" 0
 
-      StrCpy $0 "Software\Classes\gopher\shell\open\ddeexec\ifexec"
+      StrCpy $0 "Software\Classes\chrome\shell\open\ddeexec\ifexec"
       StrCpy $1 ",,0,0,,,,"
       ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
 
@@ -584,7 +584,7 @@ Section "-Application" Section1
     StrCpy $0 "Software\Classes\FirefoxURL\shell\open\ddeexec\Application"
     ${WriteRegStr2} $TmpVal "$0" "" "${DDEApplication}" 0
 
-    StrCpy $0 "Software\Classes\gopher\shell\open\ddeexec\ifexec"
+    StrCpy $0 "Software\Classes\FirefoxURL\shell\open\ddeexec\ifexec"
     StrCpy $1 ",,0,0,,,,"
     ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
 
@@ -607,7 +607,7 @@ Section "-Application" Section1
     StrCpy $0 "Software\Classes\FirefoxHTML\shell\open\ddeexec\Application"
     ${WriteRegStr2} $TmpVal "$0" "" "${DDEApplication}" 0
 
-    StrCpy $0 "Software\Classes\gopher\shell\open\ddeexec\ifexec"
+    StrCpy $0 "Software\Classes\FirefoxHTML\shell\open\ddeexec\ifexec"
     StrCpy $1 ",,0,0,,,,"
     ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
 
