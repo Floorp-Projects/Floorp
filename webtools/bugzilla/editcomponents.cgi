@@ -21,6 +21,7 @@
 # Contributor(s): Holger Schurig <holgerschurig@nikocity.de>
 #                 Terry Weissman <terry@mozilla.org>
 #                 Frédéric Buclin <LpSolit@gmail.com>
+#                 Akamai Technologies <bugzilla-dev@akamai.com>
 #
 # Direct any questions on this source code to
 #
@@ -38,6 +39,26 @@ use Bugzilla::User;
 use Bugzilla::Product;
 use Bugzilla::Component;
 use Bugzilla::Bug;
+
+###############
+# Subroutines #
+###############
+
+# Takes an arrayref of login names and returns an arrayref of user ids.
+sub check_initial_cc {
+    my ($user_names) = @_;
+
+    my %cc_ids;
+    foreach my $cc (@$user_names) {
+        my $id = login_to_id($cc, THROW_ERROR);
+        $cc_ids{$id} = 1;
+    }
+    return [keys %cc_ids];
+}
+
+###############
+# Main Script #
+###############
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
@@ -129,11 +150,13 @@ if ($action eq 'new') {
     Bugzilla::User::match_field ($cgi, {
         'initialowner'     => { 'type' => 'single' },
         'initialqacontact' => { 'type' => 'single' },
+        'initialcc'        => { 'type' => 'multi'  },
     });
 
     my $default_assignee   = trim($cgi->param('initialowner')     || '');
     my $default_qa_contact = trim($cgi->param('initialqacontact') || '');
     my $description        = trim($cgi->param('description')      || '');
+    my @initial_cc         = $cgi->param('initialcc');
 
     $comp_name || ThrowUserError('component_blank_name');
 
@@ -161,8 +184,12 @@ if ($action eq 'new') {
     my $default_qa_contact_id = Bugzilla->params->{'useqacontact'} ?
         (login_to_id($default_qa_contact) || undef) : undef;
 
+    my $initial_cc_ids = check_initial_cc(\@initial_cc);
+
     trick_taint($comp_name);
     trick_taint($description);
+
+    $dbh->bz_lock_tables('components WRITE', 'component_cc WRITE');
 
     $dbh->do("INSERT INTO components
                 (product_id, name, description, initialowner,
@@ -170,6 +197,17 @@ if ($action eq 'new') {
               VALUES (?, ?, ?, ?, ?)", undef,
              ($product->id, $comp_name, $description,
               $default_assignee_id, $default_qa_contact_id));
+
+    $component = new Bugzilla::Component({ product_id => $product->id,
+                                           name => $comp_name });
+
+    my $sth = $dbh->prepare("INSERT INTO component_cc 
+                             (user_id, component_id) VALUES (?, ?)");
+    foreach my $user_id (@$initial_cc_ids) {
+        $sth->execute($user_id, $component->id);
+    }
+
+    $dbh->bz_unlock_tables;
 
     # Insert default charting queries for this product.
     # If they aren't using charting, this won't do any harm.
@@ -203,10 +241,6 @@ if ($action eq 'new') {
                                           $whoid, 1, $sdata->[1], 1);
         $series->writeToDatabase();
     }
-
-    $component =
-        new Bugzilla::Component({product_id => $product->id,
-                                 name => $comp_name});
 
     $vars->{'comp'} = $component;
     $vars->{'product'} = $product;
@@ -263,12 +297,14 @@ if ($action eq 'delete') {
         }
     }
     
-    $dbh->bz_lock_tables('components WRITE', 'flaginclusions WRITE',
-                         'flagexclusions WRITE');
+    $dbh->bz_lock_tables('components WRITE', 'component_cc WRITE',
+                         'flaginclusions WRITE', 'flagexclusions WRITE');
 
     $dbh->do("DELETE FROM flaginclusions WHERE component_id = ?",
              undef, $component->id);
     $dbh->do("DELETE FROM flagexclusions WHERE component_id = ?",
+             undef, $component->id);
+    $dbh->do("DELETE FROM component_cc WHERE component_id = ?",
              undef, $component->id);
     $dbh->do("DELETE FROM components WHERE id = ?",
              undef, $component->id);
@@ -292,8 +328,12 @@ if ($action eq 'delete') {
 
 if ($action eq 'edit') {
 
-    $vars->{'comp'} =
+    my $component =
         Bugzilla::Component::check_component($product, $comp_name);
+    $vars->{'comp'} = $component;
+
+    $vars->{'initial_cc_names'} = 
+        join(', ', map($_->login, @{$component->initial_cc}));
 
     $vars->{'product'} = $product;
 
@@ -316,12 +356,14 @@ if ($action eq 'update') {
     Bugzilla::User::match_field ($cgi, {
         'initialowner'     => { 'type' => 'single' },
         'initialqacontact' => { 'type' => 'single' },
+        'initialcc'        => { 'type' => 'multi'  },
     });
 
     my $comp_old_name         = trim($cgi->param('componentold')     || '');
     my $default_assignee      = trim($cgi->param('initialowner')     || '');
     my $default_qa_contact    = trim($cgi->param('initialqacontact') || '');
     my $description           = trim($cgi->param('description')      || '');
+    my @initial_cc            = $cgi->param('initialcc');
 
     my $component_old =
         Bugzilla::Component::check_component($product, $comp_old_name);
@@ -352,7 +394,10 @@ if ($action eq 'update') {
     my $default_assignee_id   = login_to_id($default_assignee);
     my $default_qa_contact_id = login_to_id($default_qa_contact) || undef;
 
-    $dbh->bz_lock_tables('components WRITE', 'profiles READ');
+    my $initial_cc_ids = check_initial_cc(\@initial_cc);
+
+    $dbh->bz_lock_tables('components WRITE', 'component_cc WRITE', 
+                         'profiles READ');
 
     if ($comp_name ne $component_old->name) {
 
@@ -390,11 +435,29 @@ if ($action eq 'update') {
         $vars->{'updated_initialqacontact'} = 1;
     }
 
+    my @initial_cc_old = map($_->id, @{$component_old->initial_cc});
+    my ($removed, $added) = diff_arrays(\@initial_cc_old, $initial_cc_ids);
+
+    foreach my $user_id (@$removed) {
+        $dbh->do('DELETE FROM component_cc 
+                   WHERE component_id = ? AND user_id = ?', undef,
+                 $component_old->id, $user_id);
+        $vars->{'updated_initialcc'} = 1;
+    }
+
+    foreach my $user_id (@$added) {
+        $dbh->do("INSERT INTO component_cc (user_id, component_id) 
+                       VALUES (?, ?)", undef, $user_id, $component_old->id);
+        $vars->{'updated_initialcc'} = 1;
+    }
+
     $dbh->bz_unlock_tables();
 
     my $component = new Bugzilla::Component($component_old->id);
     
     $vars->{'comp'} = $component;
+    $vars->{'initial_cc_names'} = 
+        join(', ', map($_->login, @{$component->initial_cc}));
     $vars->{'product'} = $product;
     $template->process("admin/components/updated.html.tmpl",
                        $vars)

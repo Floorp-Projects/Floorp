@@ -22,6 +22,7 @@
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
 #                 Lance Larsh <lance.larsh@oracle.com>
 #                 Dennis Melentyev <dennis.melentyev@infopulse.com.ua>
+#                 Akamai Technologies <bugzilla-dev@akamai.com>
 
 package Bugzilla::DB::Schema;
 
@@ -700,6 +701,18 @@ use constant ABSTRACT_SCHEMA => {
             namedqueries_link_in_footer_id_idx => {FIELDS => [qw(namedquery_id user_id)],
                                                    TYPE => 'UNIQUE'},
             namedqueries_link_in_footer_userid_idx => ['user_id'],
+        ],
+    },
+
+    component_cc => {
+
+        FIELDS => [
+            user_id      => {TYPE => 'INT3', NOTNULL => 1},
+            component_id => {TYPE => 'INT2', NOTNULL => 1},
+        ],
+        INDEXES => [
+            component_cc_user_id_idx => {FIELDS => [qw(component_id user_id)],
+                                         TYPE => 'UNIQUE'},
         ],
     },
 

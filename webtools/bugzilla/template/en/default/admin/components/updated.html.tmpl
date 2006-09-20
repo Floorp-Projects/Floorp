@@ -17,6 +17,8 @@
   # Rights Reserved.
   #
   # Contributor(s): Gavin Shelley <bugzilla@chimpychompy.org>
+  #                 Akamai Technologies <bugzilla-dev@akamai.com>
+  #                 Max Kanat-Alexander <mkanat@bugzilla.org>
   #%]
 
 [%# INTERFACE:
@@ -32,10 +34,15 @@
   #
   # updated_initialqacontact: the default qa contact updated
   #
+  # updated_initialcc: the default initial cc list
+  #
   # comp: object; Bugzilla::Component object representing the component 
   #               user updated.
   # product: object; Bugzilla::Product object representing the product to
   #               which the component belongs.
+  #
+  # initial_cc_names: a comma-separated list of the login names of
+  #                   the Initial CC, if it was updated.
   #%]
   
 [% title = BLOCK %]Updating Component '[% comp.name FILTER html %]' of Product
@@ -72,11 +79,20 @@
   <p>Updated Component name to: '[% comp.name FILTER html %]'.</p>
 [% END %]
 
+[% IF updated_initialcc %]
+  [% IF initial_cc_names %]
+    <p>Updated Default CC list to:
+      '[% initial_cc_names FILTER html %]'.</p>
+  [% ELSE %]
+    <p>Removed the Default CC list.</p>
+  [% END %]
+[% END %]
+
 [% UNLESS updated_description || updated_initialowner || 
-          updated_initialqacontact || updated_name %]
+          updated_initialqacontact || updated_name  ||
+          updated_initialcc %]
   <p>Nothing changed for component '[% comp.name FILTER html %]'.
 [% END %]
-   
 
 [% PROCESS admin/components/footer.html.tmpl %]
 

@@ -20,6 +20,8 @@
   #                 Ville Skyttä <ville.skytta@iki.fi>
   #                 Shane H. W. Travis <travis@sedsystems.ca>
   #                 Marc Schumann <wurblzap@gmail.com>
+  #                 Akamai Technologies <bugzilla-dev@akamai.com>
+  #                 Max Kanat-Alexander <mkanat@bugzilla.org>
   #%]
 
 [% PROCESS "global/field-descs.none.tmpl" %]
@@ -28,7 +30,6 @@
   title = "Enter $terms.Bug: $product.name"
   style_urls = [ 'skins/standard/create_attachment.css' ]
   javascript_urls = [ "js/attachment.js" ]
-  onload="set_assign_to();"
 %]
 
 <script type="text/javascript">
@@ -36,6 +37,7 @@
 
 var initialowners = new Array([% product.components.size %]);
 var last_initialowner;
+var initialccs = new Array([% product.components.size %]);
 var components = new Array([% product.components.size %]);
 var flags = new Array([% product.components.size %]);
 [% IF Param("useqacontact") %]
@@ -60,6 +62,13 @@ var flags = new Array([% product.components.size %]);
     [% IF Param("useqacontact") %]
         initialqacontacts[[% count %]] = "[% c.default_qa_contact.login FILTER js %]";
     [% END %]
+
+    [% SET initial_cc_list = [] %]
+    [% FOREACH cc_user = c.initial_cc %]
+      [% initial_cc_list.push(cc_user.login) %]
+    [% END %]
+    initialccs[[% count %]] = "[% initial_cc_list.join(', ') FILTER js %]";
+
     [% count = count + 1 %]
 [%- END %]
 
@@ -90,6 +99,9 @@ function set_assign_to() {
             form.assigned_to.value = owner;
             last_initialowner = owner;
         }
+
+        document.getElementById('initial_cc').innerHTML = initialccs[index];
+
         [% IF Param("useqacontact") %]
             var contact = initialqacontacts[index];
             if (qa_contact == last_initialqacontact
@@ -316,6 +328,18 @@ function handleWantsAttachment(wants_attachment) {
          multiple => 5
        %]
     </td>
+  </tr>
+
+  <tr>
+    <th align="right">Default CC:</th>
+    <td colspan="2">
+      <div id="initial_cc">
+          <!-- This has to happen after everything above renders,
+               and onload doesn't work. So this is as good a place
+               as any to put it. -->
+          <script type="text/javascript">set_assign_to();</script>
+      </div>
+   </td>
   </tr>
   
   <tr>

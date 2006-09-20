@@ -115,7 +115,6 @@ sub VALIDATORS {
         alias          => \&_check_alias,
         bug_file_loc   => \&_check_bug_file_loc,
         bug_severity   => \&_check_bug_severity,
-        cc             => \&_check_cc,
         comment        => \&_check_comment,
         commentprivacy => \&_check_commentprivacy,
         deadline       => \&_check_deadline,
@@ -353,6 +352,8 @@ sub run_create_validators {
         $class->_check_assigned_to($component, $params->{assigned_to});
     $params->{qa_contact} =
         $class->_check_qa_contact($component, $params->{qa_contact});
+    $params->{cc} = $class->_check_cc($component, $params->{cc});
+
     # Callers cannot set Reporter, currently.
     $params->{reporter} = Bugzilla->user->id;
 
@@ -506,7 +507,7 @@ sub _check_bug_status {
 }
 
 sub _check_cc {
-    my ($invocant, $ccs) = @_;
+    my ($invocant, $component, $ccs) = @_;
     return [] unless $ccs;
 
     my %cc_ids;
@@ -515,6 +516,10 @@ sub _check_cc {
         my $id = login_to_id($person, THROW_ERROR);
         $cc_ids{$id} = 1;
     }
+
+    # Enforce Default CC
+    $cc_ids{$_->id} = 1 foreach (@{$component->initial_cc});
+
     return [keys %cc_ids];
 }
 

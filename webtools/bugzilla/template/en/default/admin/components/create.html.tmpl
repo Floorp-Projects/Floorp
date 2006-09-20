@@ -17,6 +17,7 @@
   # Rights Reserved.
   #
   # Contributor(s): Gavin Shelley <bugzilla@chimpychompy.org>
+  #                 Akamai Technologies <bugzilla-dev@akamai.com>
   #%]
 
 [%# INTERFACE:
@@ -76,6 +77,24 @@
       </td>
     </tr>
 [% END %]
+    <tr>
+      <th align="right">
+        <label for="initialcc">Default CC List:</label>
+      </th>
+      <td>
+        [% INCLUDE global/userselect.html.tmpl
+           name => "initialcc"
+           id => "initialcc"
+           value => ""
+           size => 64
+           multiple => 5
+        %]
+        <br>
+        [% IF !Param("usemenuforusers") %]
+          <em>Enter user names for the CC in a comma-separated list.</em>
+        [% END %]
+      </td>
+    </tr>
   </table>
   <hr>
   <input type="submit" id="create" value="Add">

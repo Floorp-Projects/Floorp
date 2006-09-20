@@ -14,6 +14,8 @@
 #
 # Contributor(s): Tiago R. Mello <timello@async.com.br>
 #                 Frédéric Buclin <LpSolit@gmail.com>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
+#                 Akamai Technologies <bugzilla-dev@akamai.com>
 
 use strict;
 
@@ -154,6 +156,21 @@ sub flag_types {
     return $self->{'flag_types'};
 }
 
+sub initial_cc {
+    my $self = shift;
+
+    my $dbh = Bugzilla->dbh;
+
+    if (!defined $self->{'initial_cc'}) {
+        my $cc_ids = $dbh->selectcol_arrayref(
+            "SELECT user_id FROM component_cc WHERE component_id = ?",
+            undef, $self->id);
+        my $initial_cc = Bugzilla::User->new_from_list($cc_ids);
+        $self->{'initial_cc'} = $initial_cc;
+    }
+    return $self->{'initial_cc'};
+}
+
 ###############################
 ####      Accessors        ####
 ###############################
@@ -212,6 +229,7 @@ Bugzilla::Component - Bugzilla product component class.
     my $product_id         = $component->product_id;
     my $default_assignee   = $component->default_assignee;
     my $default_qa_contact = $component->default_qa_contact;
+    my $initial_cc         = $component->initial_cc
     my $bug_flag_types     = $component->flag_types->{'bug'};
     my $attach_flag_types  = $component->flag_types->{'attachment'};
 
@@ -272,6 +290,11 @@ Component.pm represents a Product Component object.
  Params:      none.
 
  Returns:     A Bugzilla::User object.
+
+=item C<initial_cc>
+
+Returns an arrayref of L<Bugzilla::User> objects representing the
+Initial CC List.
 
 =item C<flag_types()>
 

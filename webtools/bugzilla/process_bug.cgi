@@ -26,6 +26,7 @@
 #                 Jeff Hedlund <jeff.hedlund@matrixsi.com>
 #                 Frédéric Buclin <LpSolit@gmail.com>
 #                 Lance Larsh <lance.larsh@oracle.com>
+#                 Akamai Technologies <bugzilla-dev@akamai.com>
 
 # Implementation notes for this file:
 #
@@ -1369,6 +1370,18 @@ foreach my $id (@idlist) {
             else {
                 $query .= ", qa_contact = NULL";
             }
+        }
+
+        
+
+        # And add in the Default CC for the Component.
+        my $comp_obj = $component || new Bugzilla::Component($new_comp_id);
+        my @new_init_cc = @{$comp_obj->initial_cc};
+        foreach my $cc (@new_init_cc) {
+            # NewCC must be defined or the code below won't insert
+            # any CCs.
+            $cgi->param('newcc') || $cgi->param('newcc', []);
+            $cc_add{$cc->id} = $cc->login;
         }
     }
 
