@@ -696,9 +696,15 @@ select *|*.select-choice-content, select1 *|*.select-choice-content {
   padding-left: 10px;
 }
 
+/* XXX: selectors are wrong, styles don't work (bug 351797). */
 xul|*:root select1[appearance="full"] xul|box xul|radiogroup:focus xul|radio[selected] + label,
 xul|*:root select[appearance="full"] xul|box xul|checkbox:focus + label {
   outline: 1px dotted invert;
+}
+
+xul|*:root select[appearance="full"] xul|*.checkbox-label-box,
+xul|*:root select1[appearance="full"] xul|*.radio-label-box {
+  display: none;
 }
 
 xul|*:root select, xul|*:root select1 {

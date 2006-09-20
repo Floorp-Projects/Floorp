@@ -276,6 +276,7 @@
             // 'description' element as container for label node.
             var description = this.ownerDocument.
               createElementNS(this.XUL_NS, "description");
+            description.setAttribute("anonid", "labelcontainer");
             description.appendChild(aLabel.cloneNode(true));
             box.appendChild(description);
           }
@@ -354,6 +355,14 @@
     </implementation>
 
     <handlers>
+      <handler event="click">
+        if (event.originalTarget.getAttribute("anonid") == "labelcontainer") {
+          event.originalTarget.previousSibling.checked =
+            !event.originalTarget.previousSibling.checked;
+          this.updateInstanceData(true);
+        }
+      </handler>
+
       <handler event="command">
         if (event.originalTarget.getAttribute("anonid") == "wcontrol")
           this.updateInstanceData(true);
@@ -574,6 +583,7 @@
             // 'description' element as container for label node.
             var description = this.ownerDocument.
               createElementNS(this.XUL_NS, "description");
+            description.setAttribute("anonid", "labelcontainer");
             description.appendChild(aLabel.cloneNode(true));
             box.appendChild(description);
           }
@@ -647,6 +657,13 @@
     </implementation>
 
     <handlers>
+      <handler event="click">
+        if (event.originalTarget.getAttribute("anonid") == "labelcontainer") {
+          this.control.selectedItem = event.originalTarget.previousSibling;
+          this.updateInstanceData(true);
+        }
+      </handler>
+
       <handler event="command">
         if (event.originalTarget.getAttribute("anonid") == "wcontrol")
           this.updateInstanceData(true);

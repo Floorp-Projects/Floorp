@@ -478,7 +478,7 @@
             var labelText = item.labelText;
             var textNode = this.ownerDocument.createTextNode(labelText);
 
-            var controlitem = 
+            var controlitem =
               this.control.appendItem(textNode, valueText);
 
             var selected = false;

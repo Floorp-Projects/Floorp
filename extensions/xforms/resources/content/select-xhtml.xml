@@ -242,6 +242,8 @@
         <parameter name="aGroup"/>
         <body>
           var div = document.createElementNS(this.XHTML_NS, "div");
+          div.setAttribute("anonid", "itemcontainer");
+
           var input = document.createElementNS(this.XHTML_NS, "input");
           input.setAttribute("type", "checkbox");
           input.setAttribute("value", aValue);
@@ -250,8 +252,9 @@
             input.setAttribute("disabled", "true");
 
           div.appendChild(input);
-          if (aLabel) 
+          if (aLabel) {
             div.appendChild(aLabel.cloneNode(true));
+          }
 
           if (aGroup) {
             aGroup.appendChild(div);
@@ -326,6 +329,14 @@
     </implementation>
 
     <handlers>
+      <handler event="click">
+        if (event.originalTarget.getAttribute("anonid") == "itemcontainer") {
+          event.originalTarget.firstChild.checked =
+            !event.originalTarget.firstChild.checked;
+          this.updateInstanceData(true);
+        }
+      </handler>
+
       <handler event="change">
         if (event.originalTarget.getAttribute("anonid") == "wcontrol")
           this.updateInstanceData(true);
@@ -383,6 +394,7 @@
         <parameter name="aGroup"/>
         <body>
           var div = document.createElementNS(this.XHTML_NS, "div");
+          div.setAttribute("anonid", "itemcontainer");
 
           var input = document.createElementNS(this.XHTML_NS, "input");
           input.setAttribute("type", "radio");
