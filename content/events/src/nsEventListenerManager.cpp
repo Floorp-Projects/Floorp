@@ -425,6 +425,7 @@ GenericListenersHashEnum(nsHashKey *aKey, void *aData, void* closure)
 
 nsEventListenerManager::~nsEventListenerManager() 
 {
+  NS_ASSERTION(!mTarget, "didn't call Disconnect");
   RemoveAllListeners();
 
   --mInstanceCount;

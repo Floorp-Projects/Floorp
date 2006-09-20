@@ -590,7 +590,7 @@ nsGlobalWindow::FreeInnerObjects(nsIScriptContext *scx)
 
   if (scx)
     scx->ClearScope(mScriptGlobals[NS_STID_INDEX(scx->GetScriptTypeID())],
-                         PR_TRUE);
+                    PR_TRUE);
 }
 
 //*****************************************************************************
@@ -1103,18 +1103,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
   nsCOMPtr<nsIDocument> oldDoc(do_QueryInterface(mDocument));
 
-  // Always clear watchpoints, to deal with two cases:
-  // 1.  The first document for this window is loading, and a miscreant has
-  //     preset watchpoints on the window object in order to attack the new
-  //     document's privileged information.
-  // 2.  A document loaded and used watchpoints on its own window, leaving
-  //     them set until the next document loads. We must clean up window
-  //     watchpoints here.
-  // Watchpoints set on document and subordinate objects are all cleared
-  // when those sub-window objects are finalized, after JS_ClearScope and
-  // a GC run that finds them to be garbage.
-
-  // XXXjst: Update above comment.
   nsIScriptContext *scx = GetContextInternal();
   NS_ENSURE_TRUE(scx, NS_ERROR_NOT_INITIALIZED);
 
@@ -1214,23 +1202,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
     nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
 
-    if (currentInner && !currentInner->IsFrozen()) {
-      if (!reUseInnerWindow) {
-        currentInner->ClearAllTimeouts();
-
-        currentInner->mChromeEventHandler = nsnull;
-      }
-
-      if (!reUseInnerWindow && currentInner->mListenerManager) {
-        currentInner->mListenerManager->Disconnect();
-        currentInner->mListenerManager = nsnull;
-      }
-
-      if (!reUseInnerWindow || aDocument != oldDoc) {
-        nsWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject);
-      }
-    }
-
     nsRefPtr<nsGlobalWindow> newInnerWindow;
 
     nsCOMPtr<nsIDOMChromeWindow> thisChrome =
@@ -1257,6 +1228,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       NS_ASSERTION(!currentInner->IsFrozen(),
                    "We should never be reusing a shared inner window");
       newInnerWindow = currentInner;
+
+      if (aDocument != oldDoc) {
+        nsWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject);
+      }
     } else {
       if (aState) {
         nsCOMPtr<WindowStateHolder> wsh = do_QueryInterface(aState);
@@ -1382,17 +1357,16 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         // Don't clear scope on our current inner window if it's going to be
         // held in the bfcache.
         if (!currentInner->IsFrozen()) {
-          // xxxmarkh - 'termfunc' still js impl specific...
-          if (!termFuncSet) {
-            scx->ClearScope(currentInner->mJSObject, PR_FALSE);
+          if (termFuncSet) {
+            // Passing null to FreeInnerObjects means it skips the
+            // ClearScope, which we need to do later.
+            currentInner->FreeInnerObjects(nsnull);
+          } else {
+            NS_STID_FOR_ID(st_id) {
+              nsIScriptContext *this_ctx = GetScriptContextInternal(st_id);
+              currentInner->FreeInnerObjects(scx);
+            }
           }
-
-          // Make the current inner window release its strong references
-          // to the document to prevent it from keeping everything
-          // around. But remember the document's principal.
-          currentInner->mDocument = nsnull;
-          currentInner->mDoc = nsnull;
-          currentInner->mDocumentPrincipal = oldPrincipal;
         }
       }
 
@@ -6222,25 +6196,13 @@ void
 nsGlobalWindow::ClearWindowScope(nsISupports *aWindow)
 {
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aWindow));
-  nsIScriptContext *jsscx = sgo->GetScriptContext(
-                              nsIProgrammingLanguage::JAVASCRIPT);
-  JSContext *cx = jsscx
-                  ? NS_STATIC_CAST(JSContext *, jsscx->GetNativeContext())
-                  : nsnull;
-  if (cx) {
-    JS_BeginRequest(cx);
-  }
-  
   PRUint32 lang_id;
   NS_STID_FOR_ID(lang_id) {
     nsIScriptContext *scx = sgo->GetScriptContext(lang_id);
     if (scx) {
       void *global = sgo->GetScriptGlobal(lang_id);
-      scx->ClearScope(global, PR_FALSE);
+      scx->ClearScope(global, PR_TRUE);
     }
-  }
-  if (cx) {
-    JS_EndRequest(cx);
   }
 }
 
