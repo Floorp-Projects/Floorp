@@ -584,7 +584,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetDatabaseWithReparse(nsIUrlListener *aRepa
           && rv != NS_MSG_ERROR_FOLDER_SUMMARY_MISSING && rv != NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
           return rv;
         else if (transferInfo && mDatabase)
-           SetDBTransferInfo(transferInfo);
+        {
+          transferInfo->SetNumMessages(0);
+          transferInfo->SetNumUnreadMessages(0);
+          SetDBTransferInfo(transferInfo);
+        }
       }
       
     }
