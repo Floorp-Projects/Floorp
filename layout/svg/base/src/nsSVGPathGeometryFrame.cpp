@@ -410,8 +410,12 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
 
   double xmin, ymin, xmax, ymax;
 
-  SetupCairoStrokeGeometry(ctx);
-  cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+  if (HasStroke()) {
+    SetupCairoStrokeGeometry(ctx);
+    cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+  } else {
+    cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+  }
   cairo_user_to_device(ctx, &xmin, &ymin);
   cairo_user_to_device(ctx, &xmax, &ymax);
   if (!IsDegeneratePath(xmin, ymin, xmax, ymax))
