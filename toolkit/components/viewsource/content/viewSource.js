@@ -128,7 +128,9 @@ function viewSource(url)
           var arrayArgComponents = arg.split('=');
           if (arrayArgComponents) {
             //we should "inherit" the charset menu setting in a new window
-            getMarkupDocumentViewer().defaultCharacterSet = arrayArgComponents[1];
+            var docCharset = getBrowser().docShell.QueryInterface
+                               (Components.interfaces.nsIDocCharset);
+            docCharset.charset = arrayArgComponents[1];
           } 
         }
       } catch (ex) {
@@ -598,9 +600,4 @@ function BrowserSetForcedDetector(doReload)
     var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
     PageLoader.loadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
   }
-}
-
-function getMarkupDocumentViewer()
-{
-  return gBrowser.markupDocumentViewer;
 }
