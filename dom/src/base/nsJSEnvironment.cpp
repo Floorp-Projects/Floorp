@@ -605,7 +605,7 @@ PrintWinURI(nsGlobalWindow *win)
   }
 
   nsIURI *uri = doc->GetDocumentURI();
-  if (uri) {
+  if (!uri) {
     printf("Document doesn't have a URI.\n");
     return;
   }
