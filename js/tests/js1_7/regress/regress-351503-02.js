@@ -62,7 +62,7 @@ function test()
   expect = 'TypeError: can\'t convert Object to string';
   try
   {
-    var a=1; b=2; c={toString: null}; "hahbhc".replace(/[abc]/g, eval);
+    a=1; b=2; c={toString: null}; "hahbhc".replace(/[abc]/g, eval);
     actual = 'No Error';
   }
   catch(ex)
