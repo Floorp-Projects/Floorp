@@ -10,12 +10,10 @@ function MultiplexHandler(event)
         var charset = node.getAttribute('id');
         charset = charset.substring('charset.'.length, charset.length)
         SetForcedCharset(charset);
-        SetDefaultCharacterSet(charset);
     } else if (name == 'charsetCustomize') {
         //do nothing - please remove this else statement, once the charset prefs moves to the pref window
     } else {
         SetForcedCharset(node.getAttribute('id'));
-        SetDefaultCharacterSet(node.getAttribute('id'));
     }
 }
 
@@ -53,12 +51,6 @@ function ComposerMultiplexHandler(event)
     } else {
         SetForcedEditorCharset(node.getAttribute('id'));
     }
-}
-
-function SetDefaultCharacterSet(charset)
-{
-    dump("Charset Overlay menu item pressed: " + charset + "\n");
-    BrowserSetDefaultCharacterSet(charset);
 }
 
 function SelectDetector(event, doReload)
