@@ -25,6 +25,7 @@
 use strict;
 use diagnostics;
 
+use lib qw(.);
 
 # a few configurables
 #
