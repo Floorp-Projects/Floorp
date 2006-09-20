@@ -6885,6 +6885,10 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
             priorityStr.AppendInt(priority);
             mDatabase->SetAttributesOnPendingHdr(msgDBHdr, "priority", priorityStr.get(), 0);
           }
+          nsXPIDLCString keywords;
+          msgDBHdr->GetStringProperty("keywords", getter_Copies(keywords));
+          if (!keywords.IsEmpty())
+            mDatabase->SetAttributesOnPendingHdr(msgDBHdr, "keywords", keywords.get(), 0);
         }
       }
    }
