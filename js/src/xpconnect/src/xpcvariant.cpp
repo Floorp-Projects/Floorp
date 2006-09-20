@@ -53,8 +53,10 @@ XPCVariant::XPCVariant()
 XPCVariant::~XPCVariant()
 {
     nsVariant::Cleanup(&mData);
-    
-    if(JSVAL_IS_GCTHING(mJSVal))
+
+    // We don't root strings; see comments in newVariant.  Note that even if
+    // the string went away testing JSVAL_IS_STRING(mJSVal) is safe.
+    if(JSVAL_IS_GCTHING(mJSVal) && !JSVAL_IS_STRING(mJSVal))
     {
         JSRuntime* rt;
         nsIJSRuntimeService* rtsrvc = nsXPConnect::GetJSRuntimeService();
@@ -75,7 +77,9 @@ XPCVariant* XPCVariant::newVariant(XPCCallContext& ccx, jsval aJSVal)
 
     variant->mJSVal = aJSVal;
 
-    if(JSVAL_IS_GCTHING(variant->mJSVal))
+    // We don't need to root mJSVal if it's a string -- in that case we'll just
+    // make a copy of the string data.
+    if(JSVAL_IS_GCTHING(variant->mJSVal) && !JSVAL_IS_STRING(variant->mJSVal))
     {
         JSRuntime* rt;
         if(NS_FAILED(ccx.GetRuntime()->GetJSRuntimeService()->GetRuntime(&rt))||
