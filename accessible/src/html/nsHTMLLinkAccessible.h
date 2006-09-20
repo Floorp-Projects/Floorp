@@ -52,6 +52,7 @@ public:
   NS_IMETHOD GetName(nsAString& _retval); 
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD Shutdown() { mFrame = nsnull; return nsLinkableAccessible::Shutdown(); }
   
   // nsPIAccessNode
   NS_IMETHOD_(nsIFrame *) GetFrame(void);
@@ -61,7 +62,7 @@ public:
                               void *aData);
 
 private:
-  nsIFrame *mFrame;
+  nsIFrame *mFrame;  // XXX What's special about links that we cache frames for them?
 };
 
 #endif  

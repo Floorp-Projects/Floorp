@@ -55,6 +55,7 @@ public:
   NS_IMETHOD GetState(PRUint32 *aState);
   NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
+  NS_IMETHOD Shutdown() { mFrame = nsnull; return nsTextAccessibleWrap::Shutdown(); }
   
   // nsPIAccessNode
   NS_IMETHOD_(nsIFrame *) GetFrame(void);
@@ -64,6 +65,9 @@ public:
                               void *aData);
 
 private:
+  // We cache frames for text accessibles so that the primary frame map isn't
+  // increased in size just due to accessibility. Normally the primary frame map,
+  // which is used by nsIPresShell::GetPrimaryFrameFor(), does not include text frames
   nsIFrame *mFrame; // Only valid if node is not shut down (mWeakShell != null)
 };
 
