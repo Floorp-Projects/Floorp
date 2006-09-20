@@ -1493,7 +1493,7 @@ retry:
                             c = (JS7_UNHEX(cp[0]) << 4) + JS7_UNHEX(cp[1]);
                             SkipChars(ts, 2);
                         }
-                    } else if (c == '\n' && JS_VERSION_IS_ECMA(cx)) {
+                    } else if (c == '\n') {
                         /* ECMA follows C by removing escaped newlines. */
                         continue;
                     }

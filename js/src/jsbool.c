@@ -201,15 +201,7 @@ js_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
     if (JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v)) {
         b = JS_FALSE;
     } else if (JSVAL_IS_OBJECT(v)) {
-        if (!JS_VERSION_IS_ECMA(cx)) {
-            if (!OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(v), JSTYPE_BOOLEAN, &v))
-                return JS_FALSE;
-            if (!JSVAL_IS_BOOLEAN(v))
-                v = JSVAL_TRUE;         /* non-null object is true */
-            b = JSVAL_TO_BOOLEAN(v);
-        } else {
-            b = JS_TRUE;
-        }
+        b = JS_TRUE;
     } else if (JSVAL_IS_STRING(v)) {
         b = JSSTRING_LENGTH(JSVAL_TO_STRING(v)) ? JS_TRUE : JS_FALSE;
     } else if (JSVAL_IS_INT(v)) {

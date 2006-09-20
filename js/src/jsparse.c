@@ -1496,7 +1496,7 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 static JSParseNode *
 Condition(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
-    JSParseNode *pn, *pn2;
+    JSParseNode *pn;
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_COND);
     pn = Expr(cx, ts, tc);
@@ -1505,42 +1505,20 @@ Condition(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_COND);
 
     /*
-     * Check for (a = b) and "correct" it to (a == b) iff b's operator has
-     * greater precedence than ==.
-     * XXX not ECMA, but documented in several books -- now a strict warning.
+     * Check for (a = b) and warn about possible (a == b) mistype iff b's
+     * operator has greater precedence than ==.
      */
     if (pn->pn_type == TOK_ASSIGN &&
         pn->pn_op == JSOP_NOP &&
         pn->pn_right->pn_type > TOK_EQOP)
     {
-        JSBool rewrite = !JS_VERSION_IS_ECMA(cx);
         if (!js_ReportCompileErrorNumber(cx, ts,
                                          JSREPORT_TS |
                                          JSREPORT_WARNING |
                                          JSREPORT_STRICT,
                                          JSMSG_EQUAL_AS_ASSIGN,
-                                         rewrite
-                                         ? "\nAssuming equality test"
-                                         : "")) {
+                                         "")) {
             return NULL;
-        }
-        if (rewrite) {
-            pn->pn_type = TOK_EQOP;
-            pn->pn_op = (JSOp)cx->jsop_eq;
-            pn2 = pn->pn_left;
-            switch (pn2->pn_op) {
-              case JSOP_SETNAME:
-                pn2->pn_op = JSOP_NAME;
-                break;
-              case JSOP_SETPROP:
-                pn2->pn_op = JSOP_GETPROP;
-                break;
-              case JSOP_SETELEM:
-                pn2->pn_op = JSOP_GETELEM;
-                break;
-              default:
-                JS_ASSERT(0);
-            }
         }
     }
     return pn;
