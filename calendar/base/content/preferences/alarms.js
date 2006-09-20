@@ -122,8 +122,9 @@ var gAlarmsPane = {
 
         var bundlePreferences = document.getElementById("bundlePreferences");
         var title = bundlePreferences.getString("Open");
-        fp.appendFilters(nsIFilePicker.filterAll);
         fp.init(window, title, nsIFilePicker.modeOpen);
+        fp.appendFilter("*.wav", "*.wav");
+        fp.appendFilters(nsIFilePicker.filterAll);
 
         var ret = fp.show();
 
