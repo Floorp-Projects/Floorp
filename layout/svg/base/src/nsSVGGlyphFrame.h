@@ -47,32 +47,6 @@ class nsSVGTextFrame;
 class nsSVGGlyphFrame;
 class nsISVGCairoCanvas;
 
-struct nsSVGCharacterPosition {
-  PRBool draw;
-  float x, y;
-  float angle;
-};
-
-// A helper class to deal with temporary cairo contexts.
-// It destroys the context when it goes out of scope.
-class nsSVGAutoGlyphHelperContext
-{
-public:
-  nsSVGAutoGlyphHelperContext(nsSVGGlyphFrame *aSource);
-  ~nsSVGAutoGlyphHelperContext()
-  {
-    cairo_destroy(mCT);
-  }
-
-  operator cairo_t * ()
-  {
-    return mCT;
-  }
-
-private:
-  cairo_t *mCT;
-};
-
 typedef nsSVGGeometryFrame nsSVGGlyphFrameBase;
 
 class nsSVGGlyphFrame : public nsSVGGlyphFrameBase,
@@ -170,12 +144,58 @@ public:
   NS_IMETHOD_(void) NotifyGlyphFragmentTreeSuspended();
   NS_IMETHOD_(void) NotifyGlyphFragmentTreeUnsuspended();
   
-  // nsSVGGlyphFrame
-  void GetCharacterData(nsAString & aCharacterData);
-  void SelectFont(cairo_t *ctx);
-  nsresult GetCharacterPosition(cairo_t *ctx, nsSVGCharacterPosition **aCharacterPosition);
-
 protected:
+  struct nsSVGCharacterPosition {
+    PRBool draw;
+    float x, y;
+    float angle;
+  };
+
+  // VC6 does not allow the inner class to access protected members
+  // of the outer class
+  class nsSVGAutoGlyphHelperContext;
+  friend class nsSVGAutoGlyphHelperContext;
+
+  // A helper class to deal with temporary cairo contexts.
+  // It destroys the context when it goes out of scope.
+  class nsSVGAutoGlyphHelperContext
+  {
+  public:
+    nsSVGAutoGlyphHelperContext(nsSVGGlyphFrame *aSource)
+    {
+       Init(aSource);
+    }
+
+    nsSVGAutoGlyphHelperContext(nsSVGGlyphFrame *aSource,
+                                const nsAString &aText,
+                                nsSVGCharacterPosition **cp);
+
+    ~nsSVGAutoGlyphHelperContext()
+    {
+      cairo_destroy(mCT);
+    }
+
+    operator cairo_t * ()
+    {
+      return mCT;
+    }
+
+  private:
+    void Init (nsSVGGlyphFrame *aSource);
+
+    cairo_t *mCT;
+  };
+
+  void SelectFont(cairo_t *ctx);
+  PRBool GetCharacterData(nsAString & aCharacterData);
+  nsresult GetCharacterPosition(cairo_t *ctx,
+                                const nsAString &aText,
+                                nsSVGCharacterPosition **aCharacterPosition);
+  static void LoopCharacters(cairo_t *aCtx,
+                             const nsAString &aText,
+                             const nsSVGCharacterPosition *aCP,
+                             void (*aFunc)(cairo_t *cr, const char *utf8));
+
   void UpdateGeometry(PRBool bRedraw, PRBool suppressInvalidation);
   void UpdateMetrics();
   void UpdateFragmentTree();
