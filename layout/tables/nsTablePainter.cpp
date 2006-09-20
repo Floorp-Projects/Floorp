@@ -492,13 +492,45 @@ TableBackgroundPainter::PaintRowGroup(nsTableRowGroupFrame* aFrame,
   nsRect rgRect = mRowGroup.mRect;
   mRowGroup.mRect.MoveTo(0, 0);
 
-  /* paint */
-  for (nsTableRowFrame* row = firstRow; row; row = row->GetNextRow()) {
+  /* Find the right row to start with */
+  nscoord ignored; // We don't care about overflow above, since what we really
+                   // care about are backgrounds and overflow above doesn't
+                   // correspond to backgrounds, since cells can't span up from
+                   // their originating row.  We do care about overflow below,
+                   // however, since that can be due to rowspans.
+
+  // Note that mDirtyRect is guaranteed to be in the row group's coordinate
+  // system here, so passing its .y to GetFirstRowContaining is ok.
+  nsIFrame* cursor = aFrame->GetFirstRowContaining(mDirtyRect.y, &ignored);
+
+  // Sadly, it seems like there may be non-row frames in there... or something?
+  // There are certainly null-checks in GetFirstRow() and GetNextRow().  :(
+  while (cursor && cursor->GetType() != nsLayoutAtoms::tableRowFrame) {
+    cursor = cursor->GetNextSibling();
+  }
+
+  // It's OK if cursor is null here.
+  nsTableRowFrame* row = NS_STATIC_CAST(nsTableRowFrame*, cursor);  
+  if (!row) {
+    // No useful cursor; just start at the top.  Don't bother to set up a
+    // cursor; if we've gotten this far then we've already built the display
+    // list for the rowgroup, so not having a cursor means that there's some
+    // good reason we don't have a cursor and we shouldn't create one here.
+    row = firstRow;
+  }
+  
+  /* Finally paint */
+  for (; row; row = row->GetNextRow()) {
     mRow.SetFrame(row);
-    if (mDirtyRect.YMost() >= mRow.mRect.y) { //Intersect wouldn't handle rowspans
-      nsresult rv = PaintRow(row, aPassThrough || row->IsPseudoStackingContextFromStyle());
-      if (NS_FAILED(rv)) return rv;
+    if (mDirtyRect.YMost() < mRow.mRect.y) { // Intersect wouldn't handle
+                                             // rowspans.
+
+      // All done; cells originating in later rows can't intersect mDirtyRect.
+      break;
     }
+    
+    nsresult rv = PaintRow(row, aPassThrough || row->IsPseudoStackingContextFromStyle());
+    if (NS_FAILED(rv)) return rv;
   }
 
   /* translate back into table coord system */
