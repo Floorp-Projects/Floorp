@@ -112,6 +112,9 @@ function needHomepageOverride(prefb) {
     savedmstone = prefb.getCharPref("browser.startup.homepage_override.mstone");
   } catch (e) {}
 
+  if (savedmstone == "ignore")
+    return 0;
+
   var mstone = Components.classes["@mozilla.org/network/protocol;1?name=http"]
                          .getService(nsIHttpProtocolHandler).misc;
 
