@@ -73,7 +73,7 @@ $VendorName               = "";
 #$EmbedCodesizeTest        = 1;  # mZ, require mozilla/tools/codesigns
 #$MailBloatTest            = 0;
 #$EmbedTest                = 0;  # Assumes you wanted $BuildEmbed=1
-#$LayoutPerformanceTest    = 1;  # Tp
+$LayoutPerformanceTest    = 1;  # Tp
 #$DHTMLPerformanceTest     = 0;  # Tdhtml
 #$QATest                   = 0;  
 #$XULWindowOpenTest        = 1;  # Txul
