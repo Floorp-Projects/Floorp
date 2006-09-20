@@ -234,9 +234,11 @@
                 const kKE = Components.interfaces.nsIDOMKeyEvent;
                 if (event.keyCode == kKE.DOM_VK_RETURN ||
                     event.keyCode == kKE.DOM_VK_ENTER) {
+                  event.stopPropagation();
                   this.fireEvent("item-open");
                 } else if (event.keyCode == kKE.DOM_VK_BACK_SPACE ||
                            event.keyCode == kKE.DOM_VK_DELETE) {
+                  event.stopPropagation();
                   this.fireEvent("item-delete");
                 } else if (event.keyCode == kKE.DOM_VK_SPACE) {
                   var selected = this.selectedItem;
