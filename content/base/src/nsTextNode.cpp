@@ -48,6 +48,7 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsIAttribute.h"
 #include "nsIDocument.h"
+#include "nsThreadUtils.h"
 
 /**
  * Class used to implement DOM text nodes
@@ -82,39 +83,23 @@ public:
 /**
  * class used to implement attr() generated content
  */
-class nsAttributeTextNode : public nsTextNode {
+class nsAttributeTextNode : public nsTextNode,
+                            public nsStubMutationObserver
+{
 public:
-  class nsAttrChangeListener : public nsIDOMEventListener {
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIDOMEVENTLISTENER
+  NS_DECL_ISUPPORTS_INHERITED
   
-    nsAttrChangeListener(PRInt32 aNameSpaceID, nsIAtom* aAttrName,
-                         nsIContent* aContent) :
-      mNameSpaceID(aNameSpaceID),
-      mAttrName(aAttrName),
-      mContent(aContent)
-    {
-      NS_ASSERTION(mNameSpaceID != kNameSpaceID_Unknown, "Must know namespace");
-      NS_ASSERTION(mAttrName, "Must have attr name");
-      NS_ASSERTION(mContent, "Must have text content");
-    }
-    
-    virtual PRBool IsNativeAnonymous() const { return PR_TRUE; }
-    virtual void SetNativeAnonymous(PRBool aAnonymous) {
-      NS_ASSERTION(aAnonymous,
-                   "Attempt to set nsAttributeTextNode not anonymous!");
-    }
-  protected:
-    friend class nsAttributeTextNode;
-    PRInt32 mNameSpaceID;
-    nsCOMPtr<nsIAtom> mAttrName;
-    nsIContent* mContent;  // Weak ref; it owns us
-  };
-
-  nsAttributeTextNode(nsINodeInfo *aNodeInfo) : nsTextNode(aNodeInfo)
+  nsAttributeTextNode(nsINodeInfo *aNodeInfo,
+                      PRInt32 aNameSpaceID,
+                      nsIAtom* aAttrName) :
+    nsTextNode(aNodeInfo),
+    mNameSpaceID(aNameSpaceID),
+    mAttrName(aAttrName)
   {
+    NS_ASSERTION(mNameSpaceID != kNameSpaceID_Unknown, "Must know namespace");
+    NS_ASSERTION(mAttrName, "Must have attr name");
   }
+
   virtual ~nsAttributeTextNode() {
     DetachListener();
   }
@@ -125,10 +110,18 @@ public:
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
 
+  virtual void AttributeChanged(nsIDocument* aDocument,
+                                nsIContent* aContent,
+                                PRInt32 aNameSpaceID,
+                                nsIAtom* aAttribute,
+                                PRInt32 aModType);
+
   virtual nsGenericDOMDataNode *CloneDataNode(nsINodeInfo *aNodeInfo,
                                               PRBool aCloneText) const
   {
-    nsAttributeTextNode *it = new nsAttributeTextNode(aNodeInfo);
+    nsAttributeTextNode *it = new nsAttributeTextNode(aNodeInfo,
+                                                      mNameSpaceID,
+                                                      mAttrName);
     if (it && aCloneText) {
       it->mText = mText;
     }
@@ -136,9 +129,21 @@ public:
     return it;
   }
 
-  nsRefPtr<nsAttrChangeListener> mListener;  // our listener
+  // Public method for the event to run
+  void UpdateText() {
+    UpdateText(PR_TRUE);
+  }
+
 private:
+  // Update our text to our parent's current attr value
+  void UpdateText(PRBool aNotify);
+
+  // Detach ourselves as an attribute listener.
   void DetachListener();
+
+  // What attribute we're showing
+  PRInt32 mNameSpaceID;
+  nsCOMPtr<nsIAtom> mAttrName;
 };
 
 nsresult
@@ -262,43 +267,6 @@ nsTextNode::DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const
 }
 #endif
 
-NS_IMPL_ISUPPORTS1(nsAttributeTextNode::nsAttrChangeListener,
-                   nsIDOMEventListener)
-
-NS_IMETHODIMP
-nsAttributeTextNode::nsAttrChangeListener::HandleEvent(nsIDOMEvent* aEvent)
-{
-  // If mContent is null while we still get events, something is very wrong
-  NS_ENSURE_TRUE(mContent, NS_ERROR_UNEXPECTED);
-  
-  nsCOMPtr<nsIDOMMutationEvent> event(do_QueryInterface(aEvent));
-  NS_ENSURE_TRUE(event, NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<nsIDOMEventTarget> target;
-  event->GetTarget(getter_AddRefs(target));
-  // Can't compare as an nsIDOMEventTarget, since that's implemented via a
-  // tearoff...
-  nsCOMPtr<nsIContent> targetContent(do_QueryInterface(target));
-  if (targetContent != mContent->GetParent()) {
-    // not the right node
-    return NS_OK;
-  }
-  
-  nsCOMPtr<nsIDOMNode> relatedNode;
-  event->GetRelatedNode(getter_AddRefs(relatedNode));
-  NS_ENSURE_TRUE(relatedNode, NS_ERROR_UNEXPECTED);
-  nsCOMPtr<nsIAttribute> attr(do_QueryInterface(relatedNode));
-  NS_ENSURE_TRUE(attr, NS_ERROR_UNEXPECTED);
-
-  if (attr->NodeInfo()->Equals(mAttrName, mNameSpaceID)) {
-    nsAutoString value;
-    targetContent->GetAttr(mNameSpaceID, mAttrName, value);
-    mContent->SetText(value, PR_TRUE);
-  }
-  
-  return NS_OK;
-}
-
 nsresult
 NS_NewAttributeContent(nsNodeInfoManager *aNodeInfoManager,
                        PRInt32 aNameSpaceID, nsIAtom* aAttrName,
@@ -315,21 +283,19 @@ NS_NewAttributeContent(nsNodeInfoManager *aNodeInfoManager,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsRefPtr<nsAttributeTextNode> textNode = new nsAttributeTextNode(ni);
+  nsAttributeTextNode* textNode = new nsAttributeTextNode(ni, aNameSpaceID,
+                                                          aAttrName);
   if (!textNode) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  textNode->mListener =
-    new nsAttributeTextNode::nsAttrChangeListener(aNameSpaceID,
-                                                  aAttrName,
-                                                  textNode);
-  NS_ENSURE_TRUE(textNode->mListener, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ADDREF(*aResult = textNode);
 
   return NS_OK;
 }
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsAttributeTextNode, nsTextNode,
+                             nsIMutationObserver)
 
 nsresult
 nsAttributeTextNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -341,25 +307,15 @@ nsAttributeTextNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   nsresult rv = nsTextNode::BindToTree(aDocument, aParent,
                                        aBindingParent, aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  if (mListener) {
-    // Attach it to the new parent
-    
-    nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(aParent));
-    NS_ENSURE_TRUE(eventTarget, NS_ERROR_UNEXPECTED);
-  
-    rv = eventTarget->AddEventListener(NS_LITERAL_STRING("DOMAttrModified"),
-                                       mListener,
-                                       PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoString attrValue;
-    aParent->GetAttr(mListener->mNameSpaceID, mListener->mAttrName,
-                     attrValue);
-    // Note that there is no need to notify here, since we have no
-    // frame yet at this point.
-    SetText(attrValue, PR_FALSE);
-  }
+  nsINode* parent = GetNodeParent();
+  NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
+
+  parent->AddMutationObserver(this);
+
+  // Note that there is no need to notify here, since we have no
+  // frame yet at this point.
+  UpdateText(PR_FALSE);
 
   return NS_OK;
 }
@@ -367,7 +323,7 @@ nsAttributeTextNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 void
 nsAttributeTextNode::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-  // Detach the listener while we know who our parent is!
+  // Detach as listener while we know who our parent is!
   if (aNullParent) {
     DetachListener();
   }
@@ -375,21 +331,42 @@ nsAttributeTextNode::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 }
 
 void
+nsAttributeTextNode::AttributeChanged(nsIDocument* aDocument,
+                                      nsIContent* aContent,
+                                      PRInt32 aNameSpaceID,
+                                      nsIAtom* aAttribute,
+                                      PRInt32 aModType)
+{
+  if (aNameSpaceID == mNameSpaceID && aAttribute == mAttrName &&
+      aContent == GetNodeParent()) {
+    // Since UpdateText notifies, do it asynchronously.  Note that if we get
+    // unbound while the event is up that's ok -- we'll just have no parent
+    // when it fires, and will do nothing.    
+    // XXXbz ideally we'd either process this on layout flushes or do it right
+    // after nsIMutationObserver notifications are over or something, instead
+    // of doing it fully async.
+    nsCOMPtr<nsIRunnable> ev = new nsRunnableMethod<nsAttributeTextNode>(
+            this, &nsAttributeTextNode::UpdateText);
+    NS_DispatchToCurrentThread(ev);
+  }
+}
+
+void
+nsAttributeTextNode::UpdateText(PRBool aNotify)
+{
+  nsIContent* parent = GetParent();
+  if (parent) {
+    nsAutoString attrValue;
+    parent->GetAttr(mNameSpaceID, mAttrName, attrValue);
+    SetText(attrValue, aNotify);
+  }  
+}
+
+void
 nsAttributeTextNode::DetachListener()
 {
-  if (!mListener)
-    return;
-
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(GetParent()));
-  if (target) {
-#ifdef DEBUG
-    nsresult rv =
-#endif
-      target->RemoveEventListener(NS_LITERAL_STRING("DOMAttrModified"),
-                                  mListener,
-                                  PR_FALSE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "'Leaking' listener for lifetime of this page");
+  nsINode* parent = GetNodeParent();
+  if (parent) {
+    parent->RemoveMutationObserver(this);
   }
-  mListener->mContent = nsnull;  // Make it forget us
-  mListener = nsnull; // Goodbye, listener
 }
