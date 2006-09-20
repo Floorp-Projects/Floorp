@@ -423,12 +423,16 @@ public:
   /**
    * Clear the scope object - may be called either as we are being torn down,
    * or before we are attached to a different document.
-   * XXXmarkh - aClearPolluter is quite likely bogus - just that some places
-   * that did this clear did not call InvalidateGlobalScopePolluter.  It
-   * seems likely this param should be dropped and that fn always called.
-   * OR some extra virtual added to abstract when that Invalidate need happen.
+   *
+   * aClearFromProtoChain is probably somewhat JavaScript specific.  It
+   * indicates that the global scope polluter should be removed from the
+   * prototype chain and that the objects in the prototype chain should
+   * also have their scopes cleared.  We don't do this all the time
+   * because the prototype chain is shared between inner and outer
+   * windows, and needs to stay with inner windows that we're keeping
+   * around.
    */
-  virtual void ClearScope(void* aGlobalObj, PRBool aClearPolluter) = 0;
+  virtual void ClearScope(void* aGlobalObj, PRBool aClearFromProtoChain) = 0;
 
   /**
    * Tell the context we're about to be reinitialize it.

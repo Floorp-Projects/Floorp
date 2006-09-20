@@ -343,7 +343,8 @@ protected:
   void CleanUp();
   void ClearControllers();
 
-  void FreeInnerObjects(nsIScriptContext *cx);
+  // If |scx| is non-null, also calls ClearScope on |scx|.
+  void FreeInnerObjects(nsIScriptContext *scx);
 
   nsresult SetNewDocument(nsIDocument *aDocument,
                           nsISupports *aState,
