@@ -46,7 +46,7 @@ var BookmarksMenu = {
   createContextMenu: function (aEvent)
   {
     var target = document.popupNode;
-    if (!this.isBTBookmark(target.id))
+    if (!this.isBTBookmark(target.id) && target.id != "bookmarks-ptf")
       return false;
     target.focus() // buttons in the pt have -moz-user-focus: ignore -->
     this._selection   = this.getBTSelection(target);
