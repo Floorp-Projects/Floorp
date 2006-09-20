@@ -305,13 +305,13 @@ nsXFormsUploadElement::SetFile(nsILocalFile *aFile)
 
   nsresult rv;
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mBoundNode);
-  NS_ENSURE_STATE(content);
+  nsCOMPtr<nsINode> node = do_QueryInterface(mBoundNode);
+  NS_ENSURE_STATE(node);
 
   PRBool dataChanged = PR_FALSE;
   if (!aFile) {
     // clear instance data
-    content->DeleteProperty(nsXFormsAtoms::uploadFileProperty);
+    node->DeleteProperty(nsXFormsAtoms::uploadFileProperty);
     rv = mModel->SetNodeValue(mBoundNode, EmptyString(), PR_FALSE,
                               &dataChanged);
   } else {
@@ -346,7 +346,7 @@ nsXFormsUploadElement::SetFile(nsILocalFile *aFile)
       nsIFile *fileCopy = nsnull;
       rv = aFile->Clone(&fileCopy);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = content->SetProperty(nsXFormsAtoms::uploadFileProperty, fileCopy,
+      rv = node->SetProperty(nsXFormsAtoms::uploadFileProperty, fileCopy,
                                 ReleaseObject);
     }
   }
