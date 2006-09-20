@@ -121,8 +121,6 @@ JSClass js_IteratorClass = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
-#if JS_HAS_GENERATORS
-
 static JSBool
 Iterator(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -284,8 +282,6 @@ static JSFunctionSpec iterator_methods[] = {
     {js_next_str,     iterator_next, 0,0,0},
     {0,0,0,0,0}
 };
-
-#endif /* JS_HAS_GENERATORS */
 
 JSBool
 js_NewNativeIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp)
@@ -958,14 +954,14 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
     if (stop)
         return stop;
 
-#if JS_HAS_GENERATORS
-    /* Expose Iterator and initialize the generator internals if configured. */
     proto = JS_InitClass(cx, obj, NULL, &js_IteratorClass, Iterator, 2,
                          NULL, iterator_methods, NULL, NULL);
     if (!proto)
         return NULL;
     proto->slots[JSSLOT_ITER_STATE] = JSVAL_NULL;
 
+#if JS_HAS_GENERATORS
+    /* Initialize the generator internals if configured. */
     if (!JS_InitClass(cx, obj, NULL, &js_GeneratorClass, NULL, 0,
                       NULL, generator_methods, NULL, NULL)) {
         return NULL;
