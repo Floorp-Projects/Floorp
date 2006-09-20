@@ -2697,17 +2697,6 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
 
     JSBranchCallback onbranch = gData->cx->branchCallback;
     uintN onbranchCalls = 0;
-#define ONBRANCH_CALLS_MASK             127
-#define CHECK_BRANCH()                                                         \
-    JS_BEGIN_MACRO                                                             \
-        if (onbranch &&                                                        \
-            (++onbranchCalls & ONBRANCH_CALLS_MASK) == 0 &&                    \
-            !(*onbranch)(gData->cx, NULL)) {                                   \
-            gData->ok = JS_FALSE;                                              \
-            return NULL;                                                       \
-        }                                                                      \
-    JS_END_MACRO
-
     JSBool anchor;
     jsbytecode *pc = gData->regexp->program;
     REOp op = (REOp) *pc++;
@@ -2974,7 +2963,6 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 continue;
 
               case REOP_REPEAT:
-                CHECK_BRANCH();
                 --curState;
                 do {
                     --gData->stateStackTop;
@@ -3072,7 +3060,6 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 continue;
 
               case REOP_MINIMALREPEAT:
-                CHECK_BRANCH();
                 --gData->stateStackTop;
                 --curState;
 
@@ -3138,6 +3125,18 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
           break_switch:;
         }
 
+#define ONBRANCH_CALLS_MASK             0xffff
+#define CHECK_BRANCH()                                                        \
+    JS_BEGIN_MACRO                                                            \
+        if (onbranch &&                                                       \
+            (++onbranchCalls & ONBRANCH_CALLS_MASK) == 0 &&                   \
+            !(*onbranch)(gData->cx, NULL)) {                                  \
+            gData->ok = JS_FALSE;                                             \
+            return NULL;                                                      \
+        }                                                                     \
+    JS_END_MACRO
+
+
         /*
          *  If the match failed and there's a backtrack option, take it.
          *  Otherwise this is a complete and utter failure.
@@ -3145,6 +3144,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
         if (!result) {
             if (gData->cursz == 0)
                 return NULL;
+            CHECK_BRANCH();
             backTrackData = gData->backTrackSP;
             gData->cursz = backTrackData->sz;
             gData->backTrackSP =
