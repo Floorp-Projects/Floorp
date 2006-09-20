@@ -22,6 +22,8 @@
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
  *   Dan Mosedale <dan.mosedale@oracle.com>
+ *   Michiel van Leeuwen <mvl@exedo.nl>
+ *   Clint Talbert <cmtalbert@myfastmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -289,7 +291,7 @@ calDateTime::SubtractDate(calIDateTime *aDate, calIDuration **aDuration)
     // for a duration, need to convert the difference in microseconds (prtime)
     // to seconds (libical), so divide by one million.
     icaldurationtype idt = 
-        icaldurationtype_from_int(NS_STATIC_CAST(int, mNativeTime - t2t / PR_USEC_PER_SEC));
+        icaldurationtype_from_int(NS_STATIC_CAST(int, (mNativeTime - t2t) / PR_USEC_PER_SEC));
 
     nsCOMPtr<calIDuration> result(do_CreateInstance("@mozilla.org/calendar/duration;1"));
     if (!result)
