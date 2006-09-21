@@ -49,7 +49,6 @@ REQUIRES	= xpcom \
 		  string \
 		  necko \
 		  pref \
-		  util \
 		  $(NULL)
 
 CPPSRCS		= \
