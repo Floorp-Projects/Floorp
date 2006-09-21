@@ -81,6 +81,8 @@ $StartupPerformanceTest   = 1;  # Ts
 
 $TestsPhoneHome           = 1;  # Should test report back to server?
 
+$GraphNameOverride        = 'xserve03.build.mozilla.org_Fx-Trunk';
+
 # $results_server
 #----------------------------------------------------------------------------
 # Server on which test results will be accessible.  This was originally tegu,
