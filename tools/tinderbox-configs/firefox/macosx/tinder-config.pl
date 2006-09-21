@@ -90,6 +90,7 @@ $TestsPhoneHome           = 1;  # Should test report back to server?
 #$results_server           = "build-graphs.mozilla.org";
 
 #$pageload_server          = "spider";  # localhost
+$pageload_server          = "axolotl";  # localhost
 
 #
 # Timeouts, values are in seconds.
