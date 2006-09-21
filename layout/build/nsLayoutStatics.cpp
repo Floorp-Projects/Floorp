@@ -191,6 +191,7 @@ nsLayoutStatics::Initialize()
 void
 nsLayoutStatics::Shutdown()
 {
+  nsDOMStorageManager::Shutdown();
   txXSLTProcessor::shutdown();
   nsDOMAttribute::Shutdown();
   nsDOMEventRTTearoff::Shutdown();

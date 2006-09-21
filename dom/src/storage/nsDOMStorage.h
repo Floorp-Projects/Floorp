@@ -95,6 +95,7 @@ public:
   nsresult ClearAllStorages();
 
   static nsresult Initialize();
+  static void Shutdown();
 
   static nsDOMStorageManager* gStorageManager;
 
