@@ -107,8 +107,6 @@ class nsIDOMEvent;
 class nsIScrollableView;
 class nsIArray;
 
-typedef struct nsTimeout nsTimeout;
-
 class nsBarProp;
 class nsLocation;
 class nsNavigator;
@@ -117,6 +115,7 @@ class nsHistory;
 class nsIDocShellLoadInfo;
 class WindowStateHolder;
 class nsGlobalWindowObserver;
+class nsGlobalWindow;
 
 // permissible values for CheckOpenAllow
 enum OpenAllowValue {
@@ -130,6 +129,69 @@ NS_CreateJSTimeoutHandler(nsIScriptContext *aContext,
                           PRBool aIsInterval,
                           PRInt32 *aInterval,
                           nsIScriptTimeoutHandler **aRet);
+
+/*
+ * Timeout struct that holds information about each script
+ * timeout.  Holds a strong reference to an nsIScriptTimeoutHandler, which
+ * abstracts the language specific cruft.
+ */
+struct nsTimeout : PRCList
+{
+  nsTimeout();
+  ~nsTimeout();
+
+  nsrefcnt Release();
+  nsrefcnt AddRef();
+
+  nsTimeout* Next() {
+    // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
+    return NS_STATIC_CAST(nsTimeout*, PR_NEXT_LINK(this));
+  }
+
+  nsTimeout* Prev() {
+    // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
+    return NS_STATIC_CAST(nsTimeout*, PR_PREV_LINK(this));
+  }
+
+  // Window for which this timeout fires
+  nsRefPtr<nsGlobalWindow> mWindow;
+
+  // The actual timer object
+  nsCOMPtr<nsITimer> mTimer;
+
+  // True if the timeout was cleared
+  PRPackedBool mCleared;
+
+  // True if this is one of the timeouts that are currently running
+  PRPackedBool mRunning;
+
+  // Returned as value of setTimeout()
+  PRUint32 mPublicId;
+
+  // Non-zero interval in milliseconds if repetitive timeout
+  PRUint32 mInterval;
+
+  // Nominal time (in microseconds since the epoch) to run this
+  // timeout
+  PRTime mWhen;
+
+  // Principal with which to execute
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+
+  // stack depth at which timeout is firing
+  PRUint32 mFiringDepth;
+
+  // The popup state at timeout creation time if not created from
+  // another timeout
+  PopupControlState mPopupState;
+
+  // The language-specific information about the callback.
+  nsCOMPtr<nsIScriptTimeoutHandler> mScriptHandler;
+
+private:
+  // reference count for shared usage
+  PRInt32 mRefCnt;
+};
 
 //*****************************************************************************
 // nsGlobalWindow: Global Object for Scripting
@@ -438,7 +500,9 @@ protected:
   void RunTimeout(nsTimeout *aTimeout);
 
   void ClearAllTimeouts();
-  void InsertTimeoutIntoList(nsTimeout **aInsertionPoint, nsTimeout *aTimeout);
+  // Insert aTimeout into the list, before all timeouts that would
+  // fire after it, but no earlier than mTimeoutInsertionPoint, if any.
+  void InsertTimeoutIntoList(nsTimeout *aTimeout);
   static void TimerCallback(nsITimer *aTimer, void *aClosure);
 
   // Helper Functions
@@ -514,6 +578,20 @@ protected:
 
   PRBool IsInModalState();
 
+  nsTimeout* FirstTimeout() {
+    // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
+    return NS_STATIC_CAST(nsTimeout*, PR_LIST_HEAD(&mTimeouts));
+  }
+
+  nsTimeout* LastTimeout() {
+    // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
+    return NS_STATIC_CAST(nsTimeout*, PR_LIST_TAIL(&mTimeouts));
+  }
+
+  PRBool IsTimeout(PRCList* aList) {
+    return aList != &mTimeouts;
+  }
+
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
   // could own objects that are implemented in JavaScript, then those
@@ -584,8 +662,9 @@ protected:
 
   // These member variable are used only on inner windows.
   nsCOMPtr<nsIEventListenerManager> mListenerManager;
-  nsTimeout*                    mTimeouts;
-  nsTimeout**                   mTimeoutInsertionPoint;
+  PRCList                       mTimeouts;
+  // If mTimeoutInsertionPoint is non-null, insertions should happen after it.
+  nsTimeout*                    mTimeoutInsertionPoint;
   PRUint32                      mTimeoutPublicIdCounter;
   PRUint32                      mTimeoutFiringDepth;
   nsCOMPtr<nsIDOMStorage>       mSessionStorage;
@@ -628,88 +707,6 @@ public:
 
 protected:
   nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
-};
-
-/*
- * Timeout struct that holds information about each script
- * timeout.  Holds a strong reference to an nsIScriptTimeoutHandler, which
- * abstracts the language specific cruft.
- */
-struct nsTimeout
-{
-  nsTimeout()
-  {
-#ifdef DEBUG_jst
-    {
-      extern int gTimeoutCnt;
-
-      ++gTimeoutCnt;
-    }
-#endif
-
-    memset(this, 0, sizeof(*this));
-
-    MOZ_COUNT_CTOR(nsTimeout);
-  }
-
-  ~nsTimeout()
-  {
-#ifdef DEBUG_jst
-    {
-      extern int gTimeoutCnt;
-
-      --gTimeoutCnt;
-    }
-#endif
-
-    MOZ_COUNT_DTOR(nsTimeout);
-  }
-
-  nsrefcnt Release();
-  nsrefcnt AddRef();
-
-  // Window for which this timeout fires
-  nsRefPtr<nsGlobalWindow> mWindow;
-
-  // The actual timer object
-  nsCOMPtr<nsITimer> mTimer;
-
-  // True if the timeout was cleared
-  PRPackedBool mCleared;
-
-  // True if this is one of the timeouts that are currently running
-  PRPackedBool mRunning;
-
-  // Returned as value of setTimeout()
-  PRUint32 mPublicId;
-
-  // Non-zero interval in milliseconds if repetitive timeout
-  PRUint32 mInterval;
-
-  // Nominal time (in microseconds since the epoch) to run this
-  // timeout
-  PRTime mWhen;
-
-  // Principal with which to execute
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-
-  // stack depth at which timeout is firing
-  PRUint32 mFiringDepth;
-
-  // Pointer to the next timeout in the linked list of scheduled
-  // timeouts
-  nsTimeout *mNext;
-
-  // The popup state at timeout creation time if not created from
-  // another timeout
-  PopupControlState mPopupState;
-
-  // The language-specific information about the callback.
-  nsCOMPtr<nsIScriptTimeoutHandler> mScriptHandler;
-
-private:
-  // reference count for shared usage
-  PRInt32 mRefCnt;
 };
 
 //*****************************************************************************
