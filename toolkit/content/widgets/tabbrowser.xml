@@ -2875,94 +2875,84 @@
           }
         ]]></body>
       </method>
-
-      <method name="_onHidingAllTabsPopup">
-        <body><![CDATA[
-          // clear out the menu popup and remove the listeners
-          while (this.hasChildNodes()) {
-            var menuItem = this.lastChild;
-            menuItem.removeEventListener("command", this, false);
-            menuItem.tab.removeEventListener("DOMAttrModified", this, false);
-            menuItem.tab.mCorrespondingMenuitem = null;
-            this.removeChild(menuItem);
-          }
-        ]]></body>
-      </method>
-
-      <method name="_onShowingAllTabsPopup">
-        <body><![CDATA[
-          // set up the menu popup
-          var tabcontainer = document.getBindingParent(this);
-          var tabs = tabcontainer.childNodes;
-
-          // if an animation is in progress and the user
-          // clicks on the "all tabs" button, stop the animation
-          tabcontainer._stopAnimation();
-
-          for (var i = 0; i < tabs.length; i++) {
-            var menuItem = document.createElementNS(
-              "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", 
-              "menuitem");
-            var curTab = tabs[i];
-
-            if (curTab.selected)
-              menuItem.setAttribute("selected", "true");
-            menuItem.setAttribute("class", "menuitem-iconic alltabs-item");
-
-            menuItem.setAttribute("label", curTab.label);
-            menuItem.setAttribute("crop", curTab.getAttribute("crop"));
-            menuItem.setAttribute("image", curTab.getAttribute("image"));
-            if (curTab.hasAttribute("busy"))
-              menuItem.setAttribute("busy", curTab.getAttribute("busy"));
-
-            // Keep some attributes of the menuitem in sync with its
-            // corresponding tab (e.g. the tab label)
-            curTab.mCorrespondingMenuitem = menuItem;
-            curTab.addEventListener("DOMAttrModified", this, false);
-
-            menuItem.tab = curTab;
-            menuItem.addEventListener("command", this, false);
-            this.appendChild(menuItem);
-          }
-        ]]></body>
-      </method>
-
-      <method name="_onMenuItemActive">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          if (!this._xulWindow || !this._xulWindow.XULBrowserWindow)
-            return;
-
-          var tab = aEvent.target.tab;
-          if (tab) {
-            var statusText = tab.linkedBrowser.currentURI.spec;
-            if (statusText == "about:blank") {
-              // XXXhack: Passing a space here (and not "")
-              // to make sure the the browser implementation would
-              // still consider it a hovered link.
-              statusText = " ";
-            }
-
-            this._xulWindow.XULBrowserWindow.setOverLink(statusText, null);
-          }
-        ]]></body>
-      </method>
-
-      <method name="_onMenuItemInactive">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          if (!this._xulWindow || !this._xulWindow.XULBrowserWindow)
-            return;
-
-          this._xulWindow.XULBrowserWindow.setOverLink("", null);
-        ]]></body>
-      </method>
     </implementation>
+
     <handlers>
-      <handler event="popupshowing" action="this._onShowingAllTabsPopup();"/>
-      <handler event="popuphiding" action="this._onHidingAllTabsPopup();"/>
-      <handler event="DOMMenuItemActive" action="this._onMenuItemActive(event);"/>
-      <handler event="DOMMenuItemInactive" action="this._onMenuItemInactive(event);"/>
+      <handler event="popupshowing">
+      <![CDATA[
+        // set up the menu popup
+        var tabcontainer = document.getBindingParent(this);
+        var tabs = tabcontainer.childNodes;
+
+        // if an animation is in progress and the user
+        // clicks on the "all tabs" button, stop the animation
+        tabcontainer._stopAnimation();
+
+        for (var i = 0; i < tabs.length; i++) {
+          var menuItem = document.createElementNS(
+            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", 
+            "menuitem");
+          var curTab = tabs[i];
+
+          if (curTab.selected)
+            menuItem.setAttribute("selected", "true");
+          menuItem.setAttribute("class", "menuitem-iconic alltabs-item");
+
+          menuItem.setAttribute("label", curTab.label);
+          menuItem.setAttribute("crop", curTab.getAttribute("crop"));
+          menuItem.setAttribute("image", curTab.getAttribute("image"));
+          if (curTab.hasAttribute("busy"))
+            menuItem.setAttribute("busy", curTab.getAttribute("busy"));
+
+          // Keep some attributes of the menuitem in sync with its
+          // corresponding tab (e.g. the tab label)
+          curTab.mCorrespondingMenuitem = menuItem;
+          curTab.addEventListener("DOMAttrModified", this, false);
+
+          menuItem.tab = curTab;
+          menuItem.addEventListener("command", this, false);
+          this.appendChild(menuItem);
+        }
+      ]]></handler>
+
+      <handler event="popuphiding">
+      <![CDATA[
+        // clear out the menu popup and remove the listeners
+        while (this.hasChildNodes()) {
+          var menuItem = this.lastChild;
+          menuItem.removeEventListener("command", this, false);
+          menuItem.tab.removeEventListener("DOMAttrModified", this, false);
+          menuItem.tab.mCorrespondingMenuitem = null;
+          this.removeChild(menuItem);
+        }
+      ]]></handler>
+
+      <handler event="DOMMenuItemActive">
+      <![CDATA[
+        if (!this._xulWindow || !this._xulWindow.XULBrowserWindow)
+          return;
+
+        var tab = event.target.tab;
+        if (tab) {
+          var statusText = tab.linkedBrowser.currentURI.spec;
+          if (statusText == "about:blank") {
+            // XXXhack: Passing a space here (and not "")
+            // to make sure the the browser implementation would
+            // still consider it a hovered link.
+            statusText = " ";
+          }
+
+          this._xulWindow.XULBrowserWindow.setOverLink(statusText, null);
+        }
+      ]]></handler>
+
+      <handler event="DOMMenuItemInactive">
+      <![CDATA[
+        if (!this._xulWindow || !this._xulWindow.XULBrowserWindow)
+          return;
+
+        this._xulWindow.XULBrowserWindow.setOverLink("", null);
+      ]]></handler>
     </handlers>
   </binding>
 
