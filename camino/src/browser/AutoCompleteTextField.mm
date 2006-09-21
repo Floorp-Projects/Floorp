@@ -49,6 +49,7 @@
 #include "nsIAutoCompleteSession.h"
 #include "nsIAutoCompleteResults.h"
 #include "nsIAutoCompleteListener.h"
+#include "nsIBrowserHistory.h"
 
 #include "nsIServiceManager.h"
 #include "nsIWebProgressListener.h"
@@ -501,7 +502,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
   // XXX add aSession to contract id
   nsCOMPtr<nsIAutoCompleteSession> session =
-    do_GetService("@mozilla.org/autocompleteSession;1?type=history");
+    do_GetService(NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID);
   mSession = session;
   NS_IF_ADDREF(mSession);
 }
@@ -1173,7 +1174,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
       [self selectRowBy:1];
       [self completeSelectedResult];
       return YES;
-  } else if (command == @selector(insertTab:))  {
+  } else if (command == @selector(insertTab:)) {
     if ([mPopupWin isVisible]) {
       [self selectRowBy:1];
       [self completeSelectedResult];
