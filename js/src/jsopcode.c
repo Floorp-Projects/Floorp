@@ -3610,8 +3610,7 @@ js_DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
             ss.offsets[i] = -1;
             ss.opcodes[i] = JSOP_NOP;
         }
-        if (fp && fp->pc == pc) {
-            JS_ASSERT((uintN)top == pcdepth);
+        if (fp && fp->pc == pc && (uintN)top == pcdepth) {
             for (i = 0; i < pcdepth; i++) {
                 ptrdiff_t off;
                 jsbytecode *genpc;
