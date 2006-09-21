@@ -39,6 +39,9 @@
 #include "nsXFormsDelegateStub.h"
 #include "nsXFormsRangeAccessors.h"
 #include "nsIEventStateManager.h"
+#include "nsISchema.h"
+#include "nsIStringBundle.h"
+#include "nsServiceManagerUtils.h"
 
 /**
  * Implementation of the XForms \<range\> element
@@ -57,12 +60,55 @@ public:
   // nsIXFormsDelegate overrides
   NS_IMETHOD GetXFormsAccessors(nsIXFormsAccessors **aAccessor);
 
+  // nsXFormsDelegateStub override
+  NS_IMETHOD IsTypeAllowed(PRUint16 aType, PRBool *aIsAllowed,
+                           nsRestrictionFlag *aRestriction,
+                           nsAString &aAllowedTypes);
+
 #ifdef DEBUG_smaug
   virtual const char* Name() { return "range"; }
 #endif
 };
 
 // nsIXFormsControl
+
+NS_IMETHODIMP
+nsXFormsRangeElement::IsTypeAllowed(PRUint16 aType, PRBool *aIsAllowed,
+                                    nsRestrictionFlag *aRestriction,
+                                    nsAString &aAllowedTypes)
+{
+  NS_ENSURE_ARG_POINTER(aRestriction);
+  NS_ENSURE_ARG_POINTER(aIsAllowed);
+  *aRestriction = eTypes_Inclusive;
+  *aIsAllowed = PR_FALSE;
+
+  // Range needs to have the type duration, date, time, dateTime, gYearMonth,
+  // gYear, gMonthDay, gDay, gMonth, float, decimal or double.  Or an
+  // extension or derivation of one of these types.  If not, then put an error
+  // in the console.  CSS and XBL will make sure that the control won't appear
+  // in the form.
+
+  if (aType == nsISchemaBuiltinType::BUILTIN_TYPE_DURATION ||
+      aType == nsISchemaBuiltinType::BUILTIN_TYPE_DATE ||
+      aType == nsISchemaBuiltinType::BUILTIN_TYPE_TIME ||
+      aType == nsISchemaBuiltinType::BUILTIN_TYPE_DATETIME ||
+      aType == nsISchemaBuiltinType::BUILTIN_TYPE_GYEARMONTH ||
+      aType == nsISchemaBuiltinType::BUILTIN_TYPE_GYEAR ||
+      aType == nsISchemaBuiltinType::BUILTIN_TYPE_GMONTHDAY ||
+      aType == nsISchemaBuiltinType::BUILTIN_TYPE_GDAY ||
+      aType == nsISchemaBuiltinType::BUILTIN_TYPE_GMONTH ||
+      aType == nsISchemaBuiltinType::BUILTIN_TYPE_FLOAT ||
+      aType == nsISchemaBuiltinType::BUILTIN_TYPE_DECIMAL ||
+      aType == nsISchemaBuiltinType::BUILTIN_TYPE_DOUBLE) {
+
+    *aIsAllowed = PR_TRUE;
+    return NS_OK;
+  }
+
+  // build the string of types that range can bind to
+  aAllowedTypes.AssignLiteral("xsd:duration xsd:date xsd:time xsd:dateTime xsd:gYearMonth xsd:gYear xsd:gMonthDay xsd:gDay xsd:gMonth xsd:float xsd:decimal xsd:double");
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsXFormsRangeElement::GetDefaultIntrinsicState(PRInt32 *aState)

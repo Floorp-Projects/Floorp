@@ -157,7 +157,7 @@ nsXFormsControlStubBase::ResetBoundNode(const nsString &aBindAttribute,
   RemoveIndexListeners();
 
   if (!mHasParent || !HasBindingAttribute())
-    return NS_OK;
+    return NS_OK_XFORMS_NOTREADY;
 
   nsCOMPtr<nsIDOMXPathResult> result;
   nsresult rv = ProcessNodeBinding(aBindAttribute, aResultType,
@@ -789,7 +789,8 @@ nsXFormsControlStubBase::AfterSetAttribute(nsIAtom *aName)
   if (IsBindingAttribute(aName)) {
     PRBool dummy;
     nsresult rv = Bind(&dummy);
-    if (NS_SUCCEEDED(rv) &&  rv != NS_OK_XFORMS_DEFERRED)
+    if (NS_SUCCEEDED(rv) &&
+        rv != NS_OK_XFORMS_DEFERRED && rv != NS_OK_XFORMS_NOTREADY)
       Refresh();
   }
 
@@ -803,6 +804,23 @@ nsXFormsControlStubBase::BeforeSetAttribute(nsIAtom         *aName,
     AddRemoveSNBAttr(aName, aValue);
   }
 }
+
+nsresult
+nsXFormsControlStubBase::GetBoundBuiltinType(PRUint16 *aBuiltinType)
+{
+  NS_ENSURE_ARG_POINTER(aBuiltinType);
+  *aBuiltinType = 0;
+
+  NS_ENSURE_STATE(mModel);
+
+  // get type of bound instance data
+  nsCOMPtr<nsISchemaType> schemaType;
+  nsresult rv = mModel->GetTypeForControl(this, getter_AddRefs(schemaType));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return mModel->GetRootBuiltinType(schemaType, aBuiltinType);
+}
+
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsBindableControlStub,
                              nsXFormsBindableStub,

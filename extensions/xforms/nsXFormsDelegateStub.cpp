@@ -176,6 +176,14 @@ nsXFormsDelegateStub::ReportError(const nsAString& aErrorMsg)
 }
 
 NS_IMETHODIMP
+nsXFormsDelegateStub::ReportErrorMessage(const nsAString& aErrorMsg)
+{
+  const nsPromiseFlatString& flat = PromiseFlatString(aErrorMsg);
+  nsXFormsUtils::ReportErrorMessage(flat, mElement);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsDelegateStub::WidgetAttached()
 {
   if (UpdateRepeatState() == eType_Template)
@@ -194,6 +202,19 @@ nsXFormsDelegateStub::WidgetAttached()
 }
 
 // nsXFormsDelegateStub
+
+NS_IMETHODIMP
+nsXFormsDelegateStub::IsTypeAllowed(PRUint16 aType, PRBool *aIsAllowed,
+                                    nsRestrictionFlag *aRestriction,
+                                    nsAString &aTypes)
+{
+  NS_ENSURE_ARG_POINTER(aRestriction);
+  NS_ENSURE_ARG_POINTER(aIsAllowed);
+  *aIsAllowed = PR_TRUE;
+  *aRestriction = eTypes_NoRestriction;
+  aTypes.Truncate();
+  return NS_OK;
+}
 
 nsRepeatState
 nsXFormsDelegateStub::UpdateRepeatState()
@@ -227,12 +248,14 @@ nsXFormsDelegateStub::SetMozTypeAttribute()
   NS_NAMED_LITERAL_STRING(mozTypeNs, NS_NAMESPACE_MOZ_XFORMS_TYPE);
   NS_NAMED_LITERAL_STRING(mozType, "type");
   NS_NAMED_LITERAL_STRING(mozTypeList, "typelist");
+  NS_NAMED_LITERAL_STRING(mozRejectedType, "rejectedtype");
 
   if (mModel && mBoundNode) {
     nsAutoString type, nsOrig;
     if (NS_FAILED(mModel->GetTypeAndNSFromNode(mBoundNode, type, nsOrig))) {
       mElement->RemoveAttributeNS(mozTypeNs, mozType);
       mElement->RemoveAttributeNS(mozTypeNs, mozTypeList);
+      mElement->RemoveAttributeNS(mozTypeNs, mozRejectedType);
       return;
     }
 
@@ -246,20 +269,59 @@ nsXFormsDelegateStub::SetMozTypeAttribute()
     nsresult rv = mModel->GetDerivedTypeList(type, nsOrig, attrValue);
     if (NS_SUCCEEDED(rv)) {
       mElement->SetAttributeNS(mozTypeNs, mozTypeList, attrValue);
-      return;
+    } else {
+      // Note: even if we can't build the derived type list, we should leave on
+      // mozType attribute.  We can still use the attr for validation, etc.  But
+      // the type-restricted controls like range and upload won't display since
+      // they are bound to their anonymous content by @typeList.  Make sure that
+      // we don't leave around mozTypeList if it isn't accurate.
+      mElement->RemoveAttributeNS(mozTypeNs, mozTypeList);
     }
 
-    // Note: even if we can't build the derived type list, we should leave on
-    // mozType attribute.  We can still use the attr for validation, etc.  But
-    // the type-restricted controls like range and upload won't display since
-    // they are bound to their anonymous content by @typeList.  Make sure that
-    // we don't leave around mozTypeList if it isn't accurate.
-    mElement->RemoveAttributeNS(mozTypeNs, mozTypeList);
+    // Get the builtin type that the bound type is derived from.  Then determine
+    // if this control is allowed to bind to this type.  Some controls like
+    // input, secret, textarea, upload and range can only bind to some types
+    // and not to others.
+    PRUint16 builtinType = 0;
+    rv = GetBoundBuiltinType(&builtinType);
+    if (NS_SUCCEEDED(rv)) {
+      PRBool isAllowed = PR_TRUE;
+      nsAutoString restrictedTypeList;
+      nsRestrictionFlag restriction;
+      IsTypeAllowed(builtinType, &isAllowed, &restriction, restrictedTypeList);
+      if (!isAllowed) {
+        // if this control isn't allowed to bind to this type, we'll set the
+        // 'mozType:rejectedtype' attr to true so that our default CSS will
+        // not display the control
+        mElement->SetAttributeNS(mozTypeNs, mozRejectedType,
+                                 NS_LITERAL_STRING("true"));
+
+        // build the error string that we want output to the ErrorConsole
+        nsAutoString localName;
+        mElement->GetLocalName(localName);
+        const PRUnichar *strings[] = { localName.get(), restrictedTypeList.get() };
+
+        nsXFormsUtils::ReportError(
+          restriction == eTypes_Inclusive ?
+            NS_LITERAL_STRING("boundTypeErrorInclusive") :
+            NS_LITERAL_STRING("boundTypeErrorExclusive"),
+          strings, 2, mElement, mElement);
+        return;
+      }
+    }
+    // We reached here for one of two reasons:
+    // 1) The control can handle this type
+    // 2) We don't have enough information to make a judgement.
+    //
+    // Either way, we'll remove the attribute so that the control is useable
+    mElement->RemoveAttributeNS(mozTypeNs, mozRejectedType);
+
     return;
   }
 
   mElement->RemoveAttributeNS(mozTypeNs, mozType);
   mElement->RemoveAttributeNS(mozTypeNs, mozTypeList);
+  mElement->RemoveAttributeNS(mozTypeNs, mozRejectedType);
   return;
 }
 

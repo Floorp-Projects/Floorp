@@ -601,7 +601,7 @@
       <method name="getControlElement">
         <body>
           return {
-            get value(){ return ""; }
+            get value(){ return ""; },
             set value(val){},
             set readonly(val){},
             focus: function(){}

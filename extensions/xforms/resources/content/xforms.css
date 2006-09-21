@@ -69,7 +69,8 @@ html|*:root select1[appearance='minimal'] choices {
 }
 
 /* default MIP styling */
-*:disabled {
+*:disabled,
+xf|*[mozType|rejectedtype="true"] {
   display: none;
 }
 
@@ -339,21 +340,6 @@ xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#unsignedByt
   /* input type="xsd:positiveInteger" */
 xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#positiveInteger"] {
   -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-positiveInteger');
-}
-
-html|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#base64Binary"],
-html|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#hexBinary"],
-html|*:root secret[mozType|typelist~="http://www.w3.org/2001/XMLSchema#base64Binary"],
-html|*:root secret[mozType|typelist~="http://www.w3.org/2001/XMLSchema#hexBinary"],
-html|*:root textarea[mozType|typelist~="http://www.w3.org/2001/XMLSchema#base64Binary"],
-html|*:root textarea[mozType|typelist~="http://www.w3.org/2001/XMLSchema#hexBinary"],
-xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#base64Binary"],
-xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#hexBinary"],
-xul|*:root secret[mozType|typelist~="http://www.w3.org/2001/XMLSchema#base64Binary"],
-xul|*:root secret[mozType|typelist~="http://www.w3.org/2001/XMLSchema#hexBinary"],
-xul|*:root textarea[mozType|typelist~="http://www.w3.org/2001/XMLSchema#base64Binary"],
-xul|*:root textarea[mozType|typelist~="http://www.w3.org/2001/XMLSchema#hexBinary"] {
-  display: none;
 }
 
 /* secret widgets */
@@ -715,7 +701,6 @@ xul|*:root select, xul|*:root select1 {
 /* upload widgets */
 html|*:root upload {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-upload-disabled');
-  display: none;
 }
 
 html|*:root upload[mozType|typelist~="http://www.w3.org/2001/XMLSchema#anyURI"],

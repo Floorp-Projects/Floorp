@@ -1606,9 +1606,10 @@ nsXFormsUtils::ParseTypeFromNode(nsIDOMNode             *aInstanceData,
 }
 
 /* static */ void
-nsXFormsUtils::ReportError(const nsString& aMessageName, const PRUnichar **aParams,
+nsXFormsUtils::ReportError(const nsAString& aMessage, const PRUnichar **aParams,
                            PRUint32 aParamLength, nsIDOMNode *aElement,
-                           nsIDOMNode *aContext, PRUint32 aErrorFlag)
+                           nsIDOMNode *aContext, PRUint32 aErrorFlag,
+                           PRBool aLiteralMessage)
 {
 
   nsCOMPtr<nsIScriptError> errorObject =
@@ -1617,36 +1618,46 @@ nsXFormsUtils::ReportError(const nsString& aMessageName, const PRUnichar **aPara
   nsCOMPtr<nsIConsoleService> consoleService =
     do_GetService(NS_CONSOLESERVICE_CONTRACTID);
 
-  nsCOMPtr<nsIStringBundleService> bundleService =
-    do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-
-  if (!(consoleService && errorObject && bundleService))
+  if (!(consoleService && errorObject))
     return;
+
+  nsAutoString msg;
+
+  if (!aLiteralMessage) {
+    nsCOMPtr<nsIStringBundleService> bundleService =
+      do_GetService(NS_STRINGBUNDLE_CONTRACTID);
   
-  nsAutoString msg, srcFile, srcLine;
-
-  // get the string from the bundle (xforms.properties)
-  nsCOMPtr<nsIStringBundle> bundle;
-  bundleService->CreateBundle("chrome://xforms/locale/xforms.properties",
-                              getter_AddRefs(bundle));
-  nsXPIDLString message;
-  if (aParams) {
-    bundle->FormatStringFromName(aMessageName.get(), aParams, aParamLength,
-                                 getter_Copies(message));
-    msg.Append(message);
+    if (!bundleService)
+      return;
+    
+    // get the string from the bundle (xforms.properties)
+    nsCOMPtr<nsIStringBundle> bundle;
+    bundleService->CreateBundle("chrome://xforms/locale/xforms.properties",
+                                getter_AddRefs(bundle));
+    nsXPIDLString message;
+    if (aParams) {
+      bundle->FormatStringFromName(PromiseFlatString(aMessage).get(), aParams,
+                                   aParamLength, getter_Copies(message));
+      msg.Append(message);
+    } else {
+      bundle->GetStringFromName(PromiseFlatString(aMessage).get(),
+                                getter_Copies(message));
+      msg.Append(message);
+    }
+  
+    if (msg.IsEmpty()) {
+  #ifdef DEBUG
+      printf("nsXFormsUtils::ReportError() Failed to get message string for message id '%s'!\n",
+             NS_ConvertUTF16toUTF8(aMessage).get());
+  #endif
+      return;
+    }
   } else {
-    bundle->GetStringFromName(aMessageName.get(),
-                              getter_Copies(message));
-    msg.Append(message);
+    msg.Append(aMessage);
   }
 
-  if (msg.IsEmpty()) {
-#ifdef DEBUG
-    printf("nsXFormsUtils::ReportError() Failed to get message string for message id '%s'!\n",
-           NS_ConvertUTF16toUTF8(aMessageName).get());
-#endif
-    return;
-  }
+
+  nsAutoString srcFile, srcLine;
 
   // if a context was defined, serialize it and append to the message.
   if (aContext) {

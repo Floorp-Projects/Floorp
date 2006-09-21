@@ -38,13 +38,89 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXFormsDelegateStub.h"
+#include "nsISchema.h"
+#include "nsIStringBundle.h"
+#include "nsServiceManagerUtils.h"
+
+class nsXFormsInputElement : public nsXFormsDelegateStub
+{
+public:
+
+  NS_IMETHOD IsTypeAllowed(PRUint16 aType, PRBool *aIsAllowed,
+                           nsRestrictionFlag *aRestriction,
+                           nsAString &aUnallowedTypes);
+
+  nsXFormsInputElement(const nsAString& aType)
+    : nsXFormsDelegateStub(aType)
+    {}
+};
+
+NS_IMETHODIMP
+nsXFormsInputElement::IsTypeAllowed(PRUint16 aType, PRBool *aIsAllowed,
+                                    nsRestrictionFlag *aRestriction,
+                                    nsAString &aUnallowedTypes)
+{
+  NS_ENSURE_ARG_POINTER(aRestriction);
+  NS_ENSURE_ARG_POINTER(aIsAllowed);
+  *aRestriction = eTypes_Exclusive;
+  *aIsAllowed = PR_FALSE;
+
+  // For input and secret elements, the bound type can't be xsd:hexBinary
+  // or xsd:base64Binary
+
+  if (aType != nsISchemaBuiltinType::BUILTIN_TYPE_HEXBINARY &&
+      aType != nsISchemaBuiltinType::BUILTIN_TYPE_BASE64BINARY) {
+    *aIsAllowed = PR_TRUE;
+    return NS_OK;
+  }
+
+  // build the string of types that inputs can't bind to
+  aUnallowedTypes.AssignLiteral("xsd:base64Binary xsd:hexBinary");
+  return NS_OK;
+}
+
+class nsXFormsTextareaElement : public nsXFormsDelegateStub
+{
+public:
+
+  NS_IMETHOD IsTypeAllowed(PRUint16 aType, PRBool *aIsAllowed,
+                           nsRestrictionFlag *aRestriction,
+                           nsAString &aAllowedTypes);
+
+  nsXFormsTextareaElement()
+    : nsXFormsDelegateStub(NS_LITERAL_STRING("textarea"))
+    {}
+};
+
+NS_IMETHODIMP
+nsXFormsTextareaElement::IsTypeAllowed(PRUint16 aType, PRBool *aIsAllowed,
+                                       nsRestrictionFlag *aRestriction,
+                                       nsAString &aAllowedTypes)
+{
+  NS_ENSURE_ARG_POINTER(aRestriction);
+  NS_ENSURE_ARG_POINTER(aIsAllowed);
+  *aRestriction = eTypes_Inclusive;
+  *aIsAllowed = PR_FALSE;
+
+  // Textareas can only be bound to types of xsd:string (or a type derived from
+  // xsd:string).
+
+  if (aType == nsISchemaBuiltinType::BUILTIN_TYPE_STRING) {
+    *aIsAllowed = PR_TRUE;
+    return NS_OK;
+  }
+
+  // build the string of types that textareas can bind to
+  aAllowedTypes.AssignLiteral("xsd:string");
+  return NS_OK;
+}
 
 // Creators
 
 NS_HIDDEN_(nsresult)
 NS_NewXFormsInputElement(nsIXTFElement **aResult)
 {
-  *aResult = new nsXFormsDelegateStub(NS_LITERAL_STRING("input"));
+  *aResult = new nsXFormsInputElement(NS_LITERAL_STRING("input"));
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -55,7 +131,7 @@ NS_NewXFormsInputElement(nsIXTFElement **aResult)
 NS_HIDDEN_(nsresult)
 NS_NewXFormsSecretElement(nsIXTFElement **aResult)
 {
-  *aResult = new nsXFormsDelegateStub(NS_LITERAL_STRING("secret"));
+  *aResult = new nsXFormsInputElement(NS_LITERAL_STRING("secret"));
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -66,7 +142,7 @@ NS_NewXFormsSecretElement(nsIXTFElement **aResult)
 NS_HIDDEN_(nsresult)
 NS_NewXFormsTextAreaElement(nsIXTFElement **aResult)
 {
-  *aResult = new nsXFormsDelegateStub(NS_LITERAL_STRING("textarea"));
+  *aResult = new nsXFormsTextareaElement();
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
 

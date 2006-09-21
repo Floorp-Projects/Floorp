@@ -281,6 +281,12 @@ protected:
    */
   nsresult MaybeAddToModel(nsIModelElementPrivate *aOldModel,
                            nsIXFormsControl       *aParent);
+
+  /**
+   * Returns the nsISchemaBuiltinType of the node to which this element is
+   * bound.
+   */
+  nsresult GetBoundBuiltinType(PRUint16 *aBuiltinType);
 };
 
 /**

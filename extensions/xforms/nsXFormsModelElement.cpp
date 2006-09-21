@@ -1487,7 +1487,9 @@ nsXFormsModelElement::GetTypeForControl(nsIXFormsControl  *aControl,
       validator.LoadSchema(schema);
   }
 
-  return validator.GetType(schemaTypeName, schemaTypeNamespace, aType);
+  PRBool foundType = validator.GetType(schemaTypeName, schemaTypeNamespace,
+                                       aType);
+  return foundType ? NS_OK : NS_ERROR_FAILURE;
 }
 
 /* static */ nsresult

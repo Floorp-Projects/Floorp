@@ -63,12 +63,16 @@ interface nsIXFormsDelegate : nsISupports
   void widgetAttached();
 
   /**
-   * Report an error
+   * Report an error.
    *
-   * @param errorMsg          The error message id
-   *
-   * @todo XXX this should be extended to allow for "raw strings", not
-   * necessarily kept in bundles.
+   * @param errorMsg          The error message id.
    */
   void reportError(in DOMString errorMsg);
+
+  /**
+   * Report an error.
+   *
+   * @param errorMsg          The literal/raw message to report.
+   */
+  void reportErrorMessage(in DOMString errorMsg);
 };
