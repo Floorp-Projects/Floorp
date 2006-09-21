@@ -94,7 +94,6 @@ var gCharsetMenu = null;
 var gLastBrowserCharset = null;
 var gPrevCharset = null;
 var gURLBar = null;
-var gURLBarContainer = null;
 var gProxyButton = null;
 var gProxyFavIcon = null;
 var gProxyDeck = null;
@@ -869,7 +868,6 @@ function BrowserStartup()
 function prepareForStartup()
 {
   gURLBar = document.getElementById("urlbar");
-  gURLBarContainer = document.getElementById("urlbar-container");
   gNavigatorBundle = document.getElementById("bundle_browser");
   gProgressMeterPanel = document.getElementById("statusbar-progresspanel");
   gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
@@ -1010,8 +1008,7 @@ function delayedStartup()
   window.addEventListener("fullscreen", onFullScreen, true);
 
   var element;
-  if (gIsLoadingBlank && gURLBar && !gURLBar.hidden &&
-      !gURLBarContainer.parentNode.collapsed)
+  if (gIsLoadingBlank && gURLBar && isElementVisible(gURLBar))
     element = gURLBar;
   else
     element = content;
@@ -1787,13 +1784,10 @@ function addBookmarkForBrowser(aDocShell, aIsWebPanel)
 
 function openLocation()
 {
-  if (gURLBar) {
-    var style = document.defaultView.getComputedStyle(gURLBarContainer, null);
-    if (style.visibility == "visible" && style.display != "none") {
-      gURLBar.focus();
-      gURLBar.select();
-      return;
-    }
+  if (gURLBar && isElementVisible(gURLBar)) {
+    gURLBar.focus();
+    gURLBar.select();
+    return;
   }
 #ifdef XP_MACOSX
   if (window.location.href != getBrowserURL()) {
@@ -3120,11 +3114,9 @@ const BrowserSearch = {
    */
   getSearchBar: function BrowserSearch_getSearchBar() {
     var searchBar = document.getElementById("searchbar");
-    if (searchBar) {
-      var style = window.getComputedStyle(searchBar.parentNode, null);
-      if (style.visibility == "visible" && style.display != "none")
-        return searchBar;
-    }
+    if (searchBar && isElementVisible(searchBar))
+      return searchBar;
+
     return null;
   },
 
@@ -3373,7 +3365,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   // Update global UI elements that may have been added or removed
   if (aToolboxChanged) {
     gURLBar = document.getElementById("urlbar");
-    gURLBarContainer = document.getElementById("urlbar-container");
     if (gURLBar)
       gURLBar.clickSelectsAll = gClickSelectsAll;
     gProxyButton = document.getElementById("page-proxy-button");

@@ -486,3 +486,14 @@ function buildHelpMenu()
   else
     checkForUpdates.removeAttribute("loading");
 }
+
+function isElementVisible(aElement)
+{
+  // * When an element is hidden, the width and height of its boxObject
+  //   are set to 0
+  // * css-visibility (unlike css-display) is inherited.
+  var bo = aElement.boxObject;
+  return (bo.height != 0 && bo.width != 0 &&
+          document.defaultView
+                  .getComputedStyle(aElement, null).visibility == "visible");
+}
