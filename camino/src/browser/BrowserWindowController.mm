@@ -1641,7 +1641,7 @@ enum BWCOpenDest {
 - (IBAction)openFeedPrefPane:(id)sender
 {
   [[MVPreferencesController sharedInstance] showPreferences:nil];
-  [[MVPreferencesController sharedInstance] selectPreferencePaneByIdentifier:@"org.mozilla.camino.preference.general"];
+  [[MVPreferencesController sharedInstance] selectPreferencePaneByIdentifier:@"org.mozilla.camino.preference.navigation"];
 }
 
 //
