@@ -5376,7 +5376,7 @@ function asyncOpenWebPanel(event)
  // should always return true for click to go through
  function contentAreaClick(event, fieldNormalClicks)
  {
-   if (!event.isTrusted) {
+   if (!event.isTrusted || event.getPreventDefault()) {
      return true;
    }
 
@@ -5518,7 +5518,6 @@ function asyncOpenWebPanel(event)
      }
    }
    if (event.button == 1 &&
-       !event.getPreventDefault() &&
        gPrefService.getBoolPref("middlemouse.contentLoadURL") &&
        !gPrefService.getBoolPref("general.autoScroll")) {
      middleMousePaste(event);
