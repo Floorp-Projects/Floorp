@@ -934,6 +934,10 @@ NS_IMETHODIMP nsRootAccessible::Shutdown()
 already_AddRefed<nsIDocShellTreeItem>
 nsRootAccessible::GetContentDocShell(nsIDocShellTreeItem *aStart)
 {
+  if (!aStart) {
+    return nsnull;
+  }
+
   PRInt32 itemType;
   aStart->GetItemType(&itemType);
   if (itemType == nsIDocShellTreeItem::typeContent) {
