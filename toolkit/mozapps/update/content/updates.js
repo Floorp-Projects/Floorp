@@ -745,9 +745,6 @@ var gUpdatesAvailablePage = {
    * User clicked the "More Details..." button
    */
   onShowMoreDetails: function() {
-    var detailsDeck = document.getElementById("detailsDeck");
-    detailsDeck.selectedIndex = 1;
-
     var updateTypeElement = document.getElementById("updateType");
     var moreInfoURL = document.getElementById("moreInfoURL");
     var moreInfoContent = document.getElementById("moreInfoContent");
@@ -772,6 +769,12 @@ var gUpdatesAvailablePage = {
       moreInfoURL.hidden = false;
       moreInfoContent.hidden = true;
     }
+
+    // in order to prevent showing the blank xul:browser (<license> binding)
+    // delay setting the selected index of the detailsDeck until after 
+    // we've set everything up.  see bug #352400 for more details.
+    var detailsDeck = document.getElementById("detailsDeck");
+    detailsDeck.selectedIndex = 1;
   },
 
   /**
