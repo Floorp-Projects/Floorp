@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.74 2006/05/18 19:44:24 nelson%bolyard.com Exp $ */
+/* $Id: nssinit.c,v 1.75 2006/09/21 20:08:15 julien.pierre.bugs%sun.com Exp $ */
 
 #include <ctype.h>
 #include "seccomon.h"
@@ -683,8 +683,9 @@ NSS_RegisterShutdown(NSS_ShutdownFunc sFunc, void *appData)
 	nssShutdownList.funcs = funcs;
 	nssShutdownList.maxFuncs += NSS_SHUTDOWN_STEP;
     }
-    nssShutdownList.funcs[nssShutdownList.numFuncs++].func = sFunc;
-    nssShutdownList.funcs[nssShutdownList.numFuncs++].appData = appData;
+    nssShutdownList.funcs[nssShutdownList.numFuncs].func = sFunc;
+    nssShutdownList.funcs[nssShutdownList.numFuncs].appData = appData;
+    nssShutdownList.numFuncs++;
     PZ_Unlock(nssShutdownList.lock);
     return SECSuccess;
 }
