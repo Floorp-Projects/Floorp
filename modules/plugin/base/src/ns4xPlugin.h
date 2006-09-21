@@ -82,6 +82,20 @@ typedef NS_4XPLUGIN_CALLBACK(NPError, NP_PLUGINSHUTDOWN) (void);
 #ifdef XP_MACOSX
 typedef NS_4XPLUGIN_CALLBACK(NPError, NP_PLUGINSHUTDOWN) (void);
 typedef NS_4XPLUGIN_CALLBACK(NPError, NP_MAIN) (NPNetscapeFuncs* nCallbacks, NPPluginFuncs* pCallbacks, NPP_ShutdownUPP* unloadUpp);
+
+/*  Since WebKit supports getting function pointers via NP_GetEntryPoints and
+ *  sending function pointers via NP_Initialize, it would be nice if we
+ *  supported that too. We can't do it on PPC because there is no standard for
+ *  whether or not function pointers returned via NP_GetEntryPoints or sent
+ *  via NP_Initialize are supposed to be wrapped with tvector glue. However,
+ *  since there are no tvectors on Intel we can do it on that arch.
+ */
+#ifndef __POWERPC__
+#define MACOSX_GETENTRYPOINT_SUPPORT 1
+typedef NS_4XPLUGIN_CALLBACK(NPError, NP_GETENTRYPOINTS) (NPPluginFuncs* pCallbacks);
+typedef NS_4XPLUGIN_CALLBACK(NPError, NP_PLUGININIT) (const NPNetscapeFuncs* pCallbacks);
+#endif
+
 #endif
 
 class nsIServiceManagerObsolete;
@@ -159,6 +173,9 @@ protected:
 
 #ifdef XP_MACOSX
   short fPluginRefNum;
+#ifdef MACOSX_GETENTRYPOINT_SUPPORT
+  PRBool usesGetEntryPoints;
+#endif
 #endif
 
   /**
