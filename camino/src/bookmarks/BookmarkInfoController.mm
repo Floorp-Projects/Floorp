@@ -210,15 +210,14 @@ static BookmarkInfoController* gSharedBookmarkInfoController = nil;
     if ((tabViewItem == mBookmarkInfoTabView) && isBookmark)
     {
       [mBookmarkItem setTitle:[mBookmarkNameField stringValue]];
-      // beware that [NSText string] can return a pointer to (mutable) internal strorage
-      [mBookmarkItem setItemDescription:[NSString stringWithString:[mBookmarkDescField string]]];
+      [mBookmarkItem setItemDescription:[NSString stringWithString:[mBookmarkDescField stringValue]]];
       [mBookmarkItem setKeyword:[mBookmarkKeywordField stringValue]];
       [(Bookmark *)mBookmarkItem setUrl:[mBookmarkLocationField stringValue]];
     }
     else if ([[self window] contentView] == mFolderView && !isBookmark)
     {
       [mBookmarkItem setTitle:[mFolderNameField stringValue]];
-      [mBookmarkItem setItemDescription:[NSString stringWithString:[mFolderDescField string]]];
+      [mBookmarkItem setItemDescription:[NSString stringWithString:[mFolderDescField stringValue]]];
       if ([(BookmarkFolder *)mBookmarkItem isGroup])
         [mBookmarkItem setKeyword:[mFolderKeywordField stringValue]];
     }
@@ -228,7 +227,7 @@ static BookmarkInfoController* gSharedBookmarkInfoController = nil;
   else if ((changedField == mBookmarkKeywordField) || (changedField == mFolderKeywordField))
     [mBookmarkItem setKeyword:[changedField stringValue]];
   else if ((changedField == mBookmarkDescField) || (changedField == mFolderDescField))
-    [mBookmarkItem setItemDescription:[NSString stringWithString:[changedField string]]];
+    [mBookmarkItem setItemDescription:[NSString stringWithString:[changedField stringValue]]];
   else if ((changedField == mBookmarkLocationField) && isBookmark)
     [(Bookmark *)mBookmarkItem setUrl:[changedField stringValue]];
     
@@ -298,7 +297,7 @@ static BookmarkInfoController* gSharedBookmarkInfoController = nil;
   {
     [self configureWindowForView:eBookmarkInfoView];
     [mBookmarkNameField setStringValue:[mBookmarkItem title]];
-    [mBookmarkDescField setString:[mBookmarkItem itemDescription]];
+    [mBookmarkDescField setStringValue:[mBookmarkItem itemDescription]];
     [mBookmarkKeywordField setStringValue:[mBookmarkItem keyword]];
     [mBookmarkLocationField setStringValue:[(Bookmark *)mBookmarkItem url]];
     [mNumberVisitsField setIntValue:[(Bookmark *)mBookmarkItem numberOfVisits]];
@@ -324,7 +323,7 @@ static BookmarkInfoController* gSharedBookmarkInfoController = nil;
 
     [mFolderNameField setStringValue:[mBookmarkItem title]];
     [mFolderKeywordField setStringValue:[mBookmarkItem keyword]];
-    [mFolderDescField setString:[mBookmarkItem itemDescription]];
+    [mFolderDescField setStringValue:[mBookmarkItem itemDescription]];
 
     // we can unselect dock menu - we have a fallback default
     if ([(BookmarkFolder *)mBookmarkItem isDockMenu])
@@ -337,7 +336,7 @@ static BookmarkInfoController* gSharedBookmarkInfoController = nil;
     [self configureWindowForView:eBookmarkInfoView];
     // clear stuff
     [mBookmarkNameField setStringValue:@""];
-    [mBookmarkDescField setString:@""];
+    [mBookmarkDescField setStringValue:@""];
     [mBookmarkKeywordField setStringValue:@""];
     [mBookmarkLocationField setStringValue:@""];
 
