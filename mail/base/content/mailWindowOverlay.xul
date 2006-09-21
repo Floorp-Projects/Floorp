@@ -1472,8 +1472,16 @@
               <menuitem label="&prevStarredMsgCmd.label;" accesskey="&prevStarredMsgCmd.accesskey;" observes="cmd_previousFlaggedMsg"/>
             </menupopup>
           </menu>
-          <menuitem label="&goForwardCmd.label;" key="key_goForward" observes="cmd_goForward"/>
-          <menuitem label="&goBackCmd.label;" key="key_goBack" observes="cmd_goBack"/>
+          <menuitem label="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;" observes="cmd_goForward"
+#ifndef XP_MACOSX
+                    key="key_goForward"
+#endif
+          />
+          <menuitem label="&goBackCmd.label;" accesskey="&goBackCmd.accesskey;" observes="cmd_goBack"
+#ifndef XP_MACOSX
+                    key="key_goBack"
+#endif
+          />
           <menuseparator id="goNextSeparator"/>
           <menuitem id="goStartPage" label="&startPageCmd.label;" accesskey="&startPageCmd.accesskey;" command="cmd_goStartPage"/>
         </menupopup>
