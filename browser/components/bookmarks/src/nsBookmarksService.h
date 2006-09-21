@@ -57,6 +57,7 @@
 #include "nsICacheService.h"
 #include "nsICacheSession.h"
 #include "nsIPrefBranch.h"
+#include "nsICharsetResolver.h"
 
 class nsIOutputStream;
 
@@ -70,6 +71,7 @@ class nsBookmarksService : public nsIBookmarksService,
                            public nsIRDFDataSource,
                            public nsIRDFRemoteDataSource,
                            public nsIStreamListener,
+                           public nsICharsetResolver,
                            public nsIRDFObserver,
                            public nsIObserver,
                            public nsSupportsWeakReference
@@ -178,6 +180,9 @@ protected:
 
     // nsIStreamListener methods:
     NS_DECL_NSISTREAMLISTENER
+
+    // nsICharsetResolver
+    NS_DECL_NSICHARSETRESOLVER
 
     // nsIObserver methods:
     NS_DECL_NSIOBSERVER

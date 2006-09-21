@@ -147,6 +147,11 @@ static const nsModuleComponentInfo components[] =
     NS_BOOKMARKS_DATASOURCE_CONTRACTID,
     nsBookmarksServiceConstructor },
 
+  { "Bookmarks",
+    NS_BOOKMARKS_SERVICE_CID,
+    "@mozilla.org/embeddor.implemented/bookmark-charset-resolver;1",
+    nsBookmarksServiceConstructor },
+
   { "Bookmarks Forward Proxy Inference Data Source",
     NS_RDF_FORWARDPROXY_INFER_DATASOURCE_CID,
     NS_RDF_INFER_DATASOURCE_CONTRACTID_PREFIX "forward-proxy",

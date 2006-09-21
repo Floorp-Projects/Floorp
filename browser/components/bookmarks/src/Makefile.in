@@ -54,7 +54,9 @@ REQUIRES	= xpcom \
 		  nkcache \
 		  uconv \
 		  pref \
+		  chardet \
 		  dom \
+		  docshell \
 		  content \
 		  htmlparser \
 		  intl \
