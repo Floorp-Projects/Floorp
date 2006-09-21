@@ -41,6 +41,9 @@
 #import "Tabs.h"
 #import "nsIBrowserDOMWindow.h"
 
+const int kOpenExternalLinksInNewWindow = 0;
+const int kOpenExternalLinksInNewTab = 1;
+
 @implementation OrgMozillaChimeraPreferenceTabs
 
 - (id)initWithBundle:(NSBundle *)bundle
@@ -60,11 +63,16 @@
     return;
 
   BOOL gotPref;
-  
-  [radioOpenTabsForCommand selectCellWithTag:[self getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:&gotPref]];
-  [radioOpenForAE selectCellWithTag:[self getIntPref:"browser.reuse_window" withSuccess:&gotPref]];
-  [checkboxLoadTabsInBackground setState:[self getBooleanPref:"browser.tabs.loadInBackground" withSuccess:&gotPref]];
-  [mTabBarVisiblity setState:[self getBooleanPref:"camino.tab_bar_always_visible" withSuccess:&gotPref]];
+
+  [mCheckboxOpenTabsForCommand setState:([self getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:&gotPref] ? NSOnState : NSOffState)];
+
+  int externalLinksPref = [self getIntPref:"browser.reuse_window" withSuccess:&gotPref];
+  if (externalLinksPref == kOpenExternalLinksInNewWindow)
+    [mCheckboxOpenTabsForExternalLinks setState:NSOffState];
+  else if (externalLinksPref == kOpenExternalLinksInNewTab)
+    [mCheckboxOpenTabsForExternalLinks setState:NSOnState];
+  else
+    [mCheckboxOpenTabsForExternalLinks setState:NSMixedState];
 
   int swmBehavior = [self getIntPref:"browser.link.open_newwindow" withSuccess:&gotPref];
   if (swmBehavior == nsIBrowserDOMWindow::OPEN_DEFAULTWINDOW)
@@ -73,6 +81,9 @@
     [mSingleWindowMode setState:NSOnState];
   else
     [mSingleWindowMode setState:NSMixedState];
+
+  [mCheckboxLoadTabsInBackground setState:([self getBooleanPref:"browser.tabs.loadInBackground" withSuccess:&gotPref] ? NSOnState : NSOffState)];
+  [mTabBarVisiblity setState:([self getBooleanPref:"camino.tab_bar_always_visible" withSuccess:&gotPref] ? NSOnState : NSOffState)];
 }
 
 - (IBAction)checkboxClicked:(id)sender
@@ -80,23 +91,22 @@
   if (!mPrefService)
     return;
 
-  if (sender == radioOpenTabsForCommand) {
-    [self setPref:"browser.tabs.opentabfor.middleclick" toBoolean:[[sender selectedCell] tag]];
-  }
-  else if (sender == radioOpenForAE) {
-    [self setPref:"browser.reuse_window" toInt:[[sender selectedCell] tag]];
-  }
-  else if (sender == checkboxLoadTabsInBackground) {
-    [self setPref:"browser.tabs.loadInBackground" toBoolean:[sender state]];
-  }
-  else if (sender == mTabBarVisiblity) {
-    [self setPref:"camino.tab_bar_always_visible" toBoolean:[sender state]];
+  if (sender == mCheckboxOpenTabsForCommand)
+    [self setPref:"browser.tabs.opentabfor.middleclick" toBoolean:([sender state] == NSOnState)];
+  else if (sender == mCheckboxOpenTabsForExternalLinks) {
+    [sender setAllowsMixedState:NO];
+    [self setPref:"browser.reuse_window" toInt:([sender state] == NSOnState ? kOpenExternalLinksInNewTab : kOpenExternalLinksInNewWindow)];
   }
   else if (sender == mSingleWindowMode) {
     [sender setAllowsMixedState:NO];
-    int newState = [sender state] ? nsIBrowserDOMWindow::OPEN_NEWTAB : nsIBrowserDOMWindow::OPEN_DEFAULTWINDOW;
+    int newState = ([sender state] == NSOnState) ? nsIBrowserDOMWindow::OPEN_NEWTAB : nsIBrowserDOMWindow::OPEN_DEFAULTWINDOW;
     [self setPref:"browser.link.open_newwindow" toInt:newState];
   }
+
+  else if (sender == mCheckboxLoadTabsInBackground)
+    [self setPref:"browser.tabs.loadInBackground" toBoolean:([sender state] == NSOnState)];
+  else if (sender == mTabBarVisiblity)
+    [self setPref:"camino.tab_bar_always_visible" toBoolean:([sender state] == NSOnState)];
 }
 
 @end

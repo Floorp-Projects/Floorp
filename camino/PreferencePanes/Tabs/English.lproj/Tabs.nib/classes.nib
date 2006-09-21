@@ -17,11 +17,11 @@
             CLASS = OrgMozillaChimeraPreferenceTabs; 
             LANGUAGE = ObjC; 
             OUTLETS = {
-                checkboxLoadTabsInBackground = NSButton; 
+                mCheckboxLoadTabsInBackground = NSButton; 
+                mCheckboxOpenTabsForCommand = NSButton; 
+                mCheckboxOpenTabsForExternalLinks = NSButton; 
                 mSingleWindowMode = NSButton; 
                 mTabBarVisiblity = NSButton; 
-                radioOpenForAE = NSMatrix; 
-                radioOpenTabsForCommand = NSMatrix; 
             }; 
             SUPERCLASS = PreferencePaneBase; 
         }, 
