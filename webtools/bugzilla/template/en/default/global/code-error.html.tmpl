@@ -434,7 +434,11 @@
 [%# We only want HTML error messages for ERROR_MODE_WEBPAGE %]
 [% USE Bugzilla %]
 [% IF Bugzilla.error_mode != constants.ERROR_MODE_WEBPAGE %]
-  [% error_message FILTER none %]
+  [% IF Bugzilla.usage_mode == constants.USAGE_MODE_BROWSER %]
+    [% error_message FILTER none %]
+  [% ELSE %]
+    [% error_message FILTER txt %]
+  [% END %]
   [% RETURN %]
 [% END %]
 
