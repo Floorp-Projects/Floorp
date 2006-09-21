@@ -141,19 +141,6 @@ PR_BEGIN_EXTERN_C
   static void NP_EXPORT
   _status(NPP npp, const char *message);
 
-#if 0
-
-  static void NP_EXPORT
-  _registerwindow(NPP npp, void* window);
-
-  static void NP_EXPORT
-  _unregisterwindow(NPP npp, void* window);
-
-  static int16 NP_EXPORT
-  _allocateMenuID(NPP npp, NPBool isSubmenu);
-
-#endif
-
   static void NP_EXPORT
   _memfree (void *ptr);
 
@@ -423,43 +410,64 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary,
   fCallbacks.size = sizeof(fCallbacks);
 
   nsresult result = pfnGetEntryPoints(&fCallbacks);
-  NS_ASSERTION( NS_OK == result,"Failed to get callbacks");
+  NS_ASSERTION(result == NS_OK, "Failed to get callbacks");
 
   NS_ASSERTION(HIBYTE(fCallbacks.version) >= NP_VERSION_MAJOR,
                "callback version is less than NP version");
 
   fShutdownEntry = (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
 #elif defined(XP_MACOSX)
-  // call into the entry point
-  NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "main");
-
-  if (pfnMain == NULL)
-    return;
-
-  NPP_ShutdownUPP pfnShutdown;
   NPPluginFuncs np_callbacks;
   memset((void*) &np_callbacks, 0, sizeof(np_callbacks));
   np_callbacks.size = sizeof(np_callbacks);
-  NPError error;
 
-  NS_TRY_SAFE_CALL_RETURN(error,
-                          CallNPP_MainEntryProc(pfnMain,
-                                                &(ns4xPlugin::CALLBACKS),
-                                                &np_callbacks,
-                                                &pfnShutdown),
-                          aLibrary, nsnull);
+#ifdef MACOSX_GETENTRYPOINT_SUPPORT
+  fShutdownEntry = (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
+  NP_GETENTRYPOINTS pfnGetEntryPoints = (NP_GETENTRYPOINTS)PR_FindSymbol(aLibrary, "NP_GetEntryPoints");
+  NP_PLUGININIT pfnInitialize = (NP_PLUGININIT)PR_FindSymbol(aLibrary, "NP_Initialize");
+  usesGetEntryPoints = (pfnGetEntryPoints && pfnInitialize && fShutdownEntry);
 
-  NPP_PLUGIN_LOG(PLUGIN_LOG_BASIC,
-                 ("NPP MainEntryProc called: return=%d\n",error));
+  if (usesGetEntryPoints) {
+    // we call NP_Initialize before getting function pointers to match
+    // WebKit's behavior. They implemented this first on Mac OS X.
+    if (pfnInitialize(&(ns4xPlugin::CALLBACKS)) != NS_OK)
+      return;
+    if (pfnGetEntryPoints(&np_callbacks) != NS_OK)
+      return;
+  }
+  else
+#endif
+  {
+    // call into the entry point
+    NP_MAIN pfnMain = (NP_MAIN)PR_FindSymbol(aLibrary, "main");
 
-  if (error != NPERR_NO_ERROR)
-    return;
+    if (pfnMain == NULL)
+      return;
 
-  // version is a uint16 so cast to int to avoid an invalid
-  // comparison due to limited range of the data type
-  int cb_version = np_callbacks.version;
-  if ((cb_version >> 8) < NP_VERSION_MAJOR)
-    return;
+    NPError error;
+    NPP_ShutdownUPP pfnMainShutdown;
+    NS_TRY_SAFE_CALL_RETURN(error,
+                            CallNPP_MainEntryProc(pfnMain,
+                                                  &(ns4xPlugin::CALLBACKS),
+                                                  &np_callbacks,
+                                                  &pfnMainShutdown),
+                            aLibrary,
+                            nsnull);
+    
+    NPP_PLUGIN_LOG(PLUGIN_LOG_BASIC,
+                   ("NPP MainEntryProc called: return=%d\n",error));
+    
+    if (error != NPERR_NO_ERROR)
+      return;
+    
+    fShutdownEntry = (NP_PLUGINSHUTDOWN)TV2FP(pfnMainShutdown);
+    
+    // version is a uint16 so cast to int to avoid an invalid
+    // comparison due to limited range of the data type
+    int cb_version = np_callbacks.version;
+    if ((cb_version >> 8) < NP_VERSION_MAJOR)
+      return;
+  }
 
   // wrap all plugin entry points tvectors as mach-o callable function
   // pointers.
@@ -479,7 +487,6 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary,
   fCallbacks.urlnotify = (NPP_URLNotifyUPP) TV2FP(np_callbacks.urlnotify);
   fCallbacks.getvalue = (NPP_GetValueUPP) TV2FP(np_callbacks.getvalue);
   fCallbacks.setvalue = (NPP_SetValueUPP) TV2FP(np_callbacks.setvalue);
-  fShutdownEntry = (NP_PLUGINSHUTDOWN) TV2FP(pfnShutdown);
 #else // for everyone else
   memcpy((void*) &fCallbacks, (void*) callbacks, sizeof(fCallbacks));
   fShutdownEntry = aShutdown;
