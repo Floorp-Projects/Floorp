@@ -338,20 +338,20 @@ function handleHash(hash) {
     var ctr = 1;
     while (("m" + ctr + "tb") in qsdata) {
         var prefix = "m" + ctr;
-        var tbox = qsdata[prefix + "tb"];
-        var tname = qsdata[prefix + "tn"];
-        var baseline = (qsdata[prefix + "bl"] == "1");
 
-        // passing this is pretty stupid here
-
-        var m = addGraphForm({tinderbox: tbox, testname: tname, baseline: baseline});
-        //m.handleQueryStringData("m" + ctr, qsdata);
+        var m = addGraphForm();
+        m.handleQueryStringData(prefix, qsdata);
 
         ctr++;
     }
 
     SmallPerfGraph.handleQueryStringData("sp", qsdata);
     BigPerfGraph.handleQueryStringData("bp", qsdata);
+
+    var tstart = new Number(qsdata["spstart"]);
+    var tend = new Number(qsdata["spend"]);
+
+    Tinderbox.defaultLoadRange = [tstart, tend];
 }
 
 function showStatus(s) {
