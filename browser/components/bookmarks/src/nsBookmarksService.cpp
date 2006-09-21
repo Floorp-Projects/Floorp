@@ -91,6 +91,8 @@
 #include "nsICharsetAlias.h"
 #include "nsIPlatformCharset.h"
 
+#include "nsIWebNavigation.h"
+
 #include "plbase64.h"
 
 nsIRDFResource      *kNC_IEFavoritesRoot;
@@ -2553,13 +2555,14 @@ nsBookmarksService::Release()
     }
 }
 
-NS_IMPL_QUERY_INTERFACE8(nsBookmarksService, 
+NS_IMPL_QUERY_INTERFACE9(nsBookmarksService,
              nsIBookmarksService,
              nsIRDFDataSource,
              nsIRDFRemoteDataSource,
              nsIRDFObserver,
              nsIStreamListener,
              nsIRequestObserver,
+             nsICharsetResolver,
              nsIObserver,
              nsISupportsWeakReference)
 
@@ -3435,6 +3438,75 @@ nsBookmarksService::UpdateBookmarkLastModifiedDate(nsIRDFResource *aSource)
         }
     }
     return rv;
+}
+
+NS_IMETHODIMP
+nsBookmarksService::RequestCharset(nsIWebNavigation* aWebNavigation,
+                                   nsIChannel* aChannel,
+                                   PRBool* aWantCharset,
+                                   nsISupports** aClosure,
+                                   nsACString& aResult)
+{
+    if (!mInner)
+        return NS_ERROR_UNEXPECTED;
+    *aWantCharset = PR_FALSE;
+    *aClosure = nsnull;
+
+    nsresult rv;
+
+    nsCOMPtr<nsIURI> uri;
+    rv = aChannel->GetURI(getter_AddRefs(uri));
+
+    nsCAutoString urlSpec;
+    uri->GetSpec(urlSpec);
+
+    nsCOMPtr<nsIRDFLiteral> urlLiteral;
+    rv = gRDF->GetLiteral(NS_ConvertUTF8toUTF16(urlSpec).get(),
+                          getter_AddRefs(urlLiteral));
+
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCOMPtr<nsIRDFResource> bookmark;
+    rv = GetSource(kNC_URL, urlLiteral, PR_TRUE, getter_AddRefs(bookmark));
+
+    if (NS_FAILED(rv))
+        return rv;
+
+    // No bookmark
+    if (rv == NS_RDF_NO_VALUE)
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIRDFNode> nodeType;
+    GetSynthesizedType(bookmark, getter_AddRefs(nodeType));
+    if (nodeType == kNC_Bookmark || nodeType == kNC_MicsumBookmark) {
+        nsCOMPtr<nsIRDFNode> charsetNode;
+        rv = GetTarget(bookmark, kWEB_LastCharset, PR_TRUE,
+                       getter_AddRefs(charsetNode));
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (charsetNode) {
+            nsCOMPtr<nsIRDFLiteral> charsetLiteral(do_QueryInterface(charsetNode));
+            if (charsetLiteral) {
+                const PRUnichar *charset;
+                charsetLiteral->GetValueConst(&charset);
+                LossyCopyUTF16toASCII(charset, aResult);
+
+                return NS_OK;
+            }
+        }
+    }
+    aResult.Truncate();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBookmarksService::NotifyResolvedCharset(const nsACString& aCharset,
+                                          nsISupports* aClosure)
+{
+    NS_ERROR("Unexpected call to NotifyResolvedCharset -- we never set aWantCharset to true!");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -4379,7 +4451,7 @@ nsBookmarksService::ArchiveBookmarksFile(PRInt32 numberOfBackups,
     }
 
     // construct the new leafname
-    PRTime          now64 = PR_Now(), temp64, million;
+    PRTime          now64 = PR_Now();
     PRExplodedTime  nowInfo;
     PR_ExplodeTime(now64, PR_LocalTimeParameters, &nowInfo);
     PR_NormalizeTime(&nowInfo, PR_LocalTimeParameters);

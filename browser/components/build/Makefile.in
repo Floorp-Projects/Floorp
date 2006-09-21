@@ -14,6 +14,7 @@ MODULE_NAME = nsBrowserCompsModule
 MOZILLA_INTERNAL_API = 1
 
 REQUIRES = \
+	docshell \
 	xpcom \
 	string \
 	pref \
@@ -24,6 +25,7 @@ REQUIRES = \
 	necko \
 	nkcache \
 	txmgr \
+	chardet \
 	bookmarks \
 	migration \
 	shellservice \
