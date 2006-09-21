@@ -185,7 +185,7 @@ nsSVGTransformListParser::IsTokenTransformStarter()
   nsCOMPtr<nsIAtom> keyatom;
 
   nsresult rv = GetTransformToken(getter_AddRefs(keyatom), PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   if (keyatom == nsSVGAtoms::translate ||
       keyatom == nsSVGAtoms::scale     ||
