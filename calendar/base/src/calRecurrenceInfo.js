@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Matthew Willis <lilmatt@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -405,16 +406,39 @@ calRecurrenceInfo.prototype = {
             else
                 sortedRecurrenceItems.unshift(ritem);
         }
+
+        function convertDate(date) {
+          if (date.isDate) {
+            var newDate = date.clone();
+            newDate.hour = 0;
+            newDate.minute = 0;
+            newDate.second = 0;
+            newDate.isDate = false;
+            return newDate;
+          } else {
+            return date;
+          }
+        }
+
         for each (ritem in sortedRecurrenceItems) {
             var cur_dates;
 
             // if both range start and end are specified, we ask for all of the occurrences,
             // to make sure we catch all possible exceptions.  If aRangeEnd isn't specified,
             // then we have to ask for aMaxCount, and hope for the best.
-            if (aRangeStart && aRangeEnd)
-                cur_dates = ritem.getOccurrences(startDate, searchStart, aRangeEnd, 0, {});
-            else
-                cur_dates = ritem.getOccurrences(startDate, searchStart, aRangeEnd, aMaxCount, {});
+            var maxCount;
+            if (aRangeStart && aRangeEnd) {
+                maxCount = 0;
+            } else {
+                maxCount = aMaxCount;
+            }
+            // If any of these dates are not datetime objects, it will screw
+            // up the timezone conversions and stuff, which will in turn screw
+            // up the comparisons and list of occurrences. So, we convert.
+            cur_dates = ritem.getOccurrences(convertDate(startDate),
+                                             convertDate(searchStart),
+                                             convertDate(aRangeEnd),
+                                             maxCount, {});
 
             if (cur_dates.length == 0)
                 continue;
