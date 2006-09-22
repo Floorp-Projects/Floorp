@@ -47,6 +47,16 @@ if replace:
     db.execute("DELETE FROM dataset_values WHERE dataset_id = ?", (setid,))
     db.execute("DELETE FROM dataset_extra_data WHERE dataset_id = ?", (setid,))
 
+cur = db.cursor()
+cur.execute("SELECT time FROM dataset_values WHERE dataset_id = ? ORDER BY time DESC LIMIT 1", (setid,))
+latest = cur.fetchone()
+if latest == None:
+    latest = 0
+else:
+    latest = latest[0]
+
+db.commit() # release any locks
+
 count = 0
 line = sys.stdin.readline()
 while line is not None:
@@ -63,9 +73,11 @@ while line is not None:
 
     timeval = time.mktime(map(int, string.split(datestr, ":")) + [0, 0, 0])
 
-    db.execute("INSERT INTO dataset_values (dataset_id,time,value) VALUES (?,?,?)", (setid, timeval, val))
-    db.execute("INSERT INTO dataset_extra_data (dataset_id,time,data) VALUES (?,?,?)", (setid, timeval, data))
-    count = count + 1
+    if timeval > latest:
+        db.execute("INSERT INTO dataset_values (dataset_id,time,value) VALUES (?,?,?)", (setid, timeval, val))
+        db.execute("INSERT INTO dataset_extra_data (dataset_id,time,data) VALUES (?,?,?)", (setid, timeval, data))
+        count = count + 1
+
     line = sys.stdin.readline()
 
 db.commit()
