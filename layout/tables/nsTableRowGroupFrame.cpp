@@ -2197,7 +2197,12 @@ nsTableRowGroupFrame::SetupRowCursor()
   FrameCursorData* data = new FrameCursorData();
   if (!data)
     return nsnull;
-  SetProperty(nsLayoutAtoms::rowCursorProperty, data, DestroyFrameCursorData);
+  nsresult rv = SetProperty(nsLayoutAtoms::rowCursorProperty, data,
+                            DestroyFrameCursorData);
+  if (NS_FAILED(rv)) {
+    delete data;
+    return nsnull;
+  }
   AddStateBits(NS_ROWGROUP_HAS_ROW_CURSOR);
   return data;
 }
