@@ -1183,7 +1183,7 @@ our %names_to_events = (
 # Note: the "+" signs before the constants suppress bareword quoting.
 sub wants_bug_mail {
     my $self = shift;
-    my ($bug_id, $relationship, $fieldDiffs, $commentField, $changer) = @_;
+    my ($bug_id, $relationship, $fieldDiffs, $commentField, $changer, $bug_is_new) = @_;
 
     # Don't send any mail, ever, if account is disabled 
     # XXX Temporary Compatibility Change 1 of 2:
@@ -1226,6 +1226,16 @@ sub wants_bug_mail {
                 $events{+EVT_ADDED_REMOVED} = 1;
             }
         }
+    }
+
+    # You role is new if the bug itself is.
+    # Only makes sense for the assignee, QA contact and the CC list.
+    if ($bug_is_new
+        && ($relationship == REL_ASSIGNEE
+            || $relationship == REL_QA
+            || $relationship == REL_CC))
+    {
+        $events{+EVT_ADDED_REMOVED} = 1;
     }
 
     if ($commentField =~ /Created an attachment \(/) {

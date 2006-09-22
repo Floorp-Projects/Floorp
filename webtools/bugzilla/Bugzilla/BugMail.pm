@@ -418,7 +418,8 @@ sub ProcessOneBug {
                                           $relationship, 
                                           $diffs, 
                                           $newcomments, 
-                                          $changer))
+                                          $changer,
+                                          !$start))
                 {
                     $rels_which_want{$relationship} = 
                         $recipients{$user_id}->{$relationship};
