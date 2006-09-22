@@ -100,6 +100,7 @@ getStyleAttr(txStylesheetAttr* aAttributes,
         txStylesheetAttr* attr = aAttributes + i;
         if (attr->mNamespaceID == aNamespace &&
             attr->mLocalName == aName) {
+            attr->mLocalName = nsnull;
             *aAttr = attr;
 
             return NS_OK;
@@ -144,6 +145,24 @@ parseUseAttrSets(txStylesheetAttr* aAttributes,
         rv = aState.addInstruction(instr);
         NS_ENSURE_SUCCESS(rv, rv);
     }
+    return NS_OK;
+}
+
+nsresult
+parseExcludeResultPrefixes(txStylesheetAttr* aAttributes,
+                           PRInt32 aAttrCount,
+                           PRInt32 aNamespaceID)
+{
+    txStylesheetAttr* attr = nsnull;
+    nsresult rv = getStyleAttr(aAttributes, aAttrCount, aNamespaceID,
+                               txXSLTAtoms::excludeResultPrefixes, PR_FALSE,
+                               &attr);
+    if (!attr) {
+        return rv;
+    }
+
+    // XXX Needs to be implemented.
+
     return NS_OK;
 }
 
@@ -394,6 +413,16 @@ txFnTextError(const nsAString& aStr, txStylesheetCompilerState& aState)
     return NS_ERROR_XSLT_PARSE_FAILURE;
 }
 
+void
+clearAttributes(txStylesheetAttr* aAttributes,
+                     PRInt32 aAttrCount)
+{
+    PRInt32 i;
+    for (i = 0; i < aAttrCount; ++i) {
+        aAttributes[i].mLocalName = nsnull;
+    }
+}
+
 nsresult
 txFnStartElementIgnore(PRInt32 aNamespaceID,
                        nsIAtom* aLocalName,
@@ -402,6 +431,10 @@ txFnStartElementIgnore(PRInt32 aNamespaceID,
                        PRInt32 aAttrCount,
                        txStylesheetCompilerState& aState)
 {
+    if (aNamespaceID == kNameSpaceID_XSLT && !aState.fcp()) {
+        clearAttributes(aAttributes, aAttrCount);
+    }
+
     return NS_OK;
 }
 
@@ -419,6 +452,10 @@ txFnStartElementSetIgnore(PRInt32 aNamespaceID,
                           PRInt32 aAttrCount,
                           txStylesheetCompilerState& aState)
 {
+    if (aNamespaceID == kNameSpaceID_XSLT && !aState.fcp()) {
+        clearAttributes(aAttributes, aAttrCount);
+    }
+
     return aState.pushHandlerTable(gTxIgnoreHandler);
 }
 
@@ -459,9 +496,19 @@ txFnStartStylesheet(PRInt32 aNamespaceID,
                     PRInt32 aAttrCount,
                     txStylesheetCompilerState& aState)
 {
+    // extension-element-prefixes is handled in
+    // txStylesheetCompiler::startElementInternal
+
     txStylesheetAttr* attr;
     nsresult rv = getStyleAttr(aAttributes, aAttrCount, kNameSpaceID_None,
-                               txXSLTAtoms::version, PR_TRUE, &attr);
+                               txXSLTAtoms::id, PR_FALSE, &attr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = parseExcludeResultPrefixes(aAttributes, aAttrCount, kNameSpaceID_None);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = getStyleAttr(aAttributes, aAttrCount, kNameSpaceID_None,
+                      txXSLTAtoms::version, PR_TRUE, &attr);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return aState.pushHandlerTable(gTxImportHandler);
@@ -585,10 +632,11 @@ txFnStartOtherTop(PRInt32 aNamespaceID,
                   PRInt32 aAttrCount,
                   txStylesheetCompilerState& aState)
 {
-    if (aNamespaceID == kNameSpaceID_None) {
+    if (aNamespaceID == kNameSpaceID_None ||
+        (aNamespaceID == kNameSpaceID_XSLT && !aState.fcp())) {
         return NS_ERROR_XSLT_PARSE_FAILURE;
     }
-    
+
     return aState.pushHandlerTable(gTxIgnoreHandler);
 }
 
@@ -835,6 +883,37 @@ txFnStartKey(PRInt32 aNamespaceID,
 
 nsresult
 txFnEndKey(txStylesheetCompilerState& aState)
+{
+    aState.popHandlerTable();
+
+    return NS_OK;
+}
+
+// xsl:namespace-alias
+nsresult
+txFnStartNamespaceAlias(PRInt32 aNamespaceID,
+             nsIAtom* aLocalName,
+             nsIAtom* aPrefix,
+             txStylesheetAttr* aAttributes,
+             PRInt32 aAttrCount,
+             txStylesheetCompilerState& aState)
+{
+    txStylesheetAttr* attr = nsnull;
+    nsresult rv = getStyleAttr(aAttributes, aAttrCount, kNameSpaceID_None,
+                               txXSLTAtoms::stylesheetPrefix, PR_TRUE, &attr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = getStyleAttr(aAttributes, aAttrCount, kNameSpaceID_None,
+                      txXSLTAtoms::resultPrefix, PR_TRUE, &attr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // XXX Needs to be implemented.
+
+    return aState.pushHandlerTable(gTxIgnoreHandler);
+}
+
+nsresult
+txFnEndNamespaceAlias(txStylesheetCompilerState& aState)
 {
     aState.popHandlerTable();
 
@@ -1226,6 +1305,9 @@ txFnStartLRE(PRInt32 aNamespaceID,
     rv = aState.addInstruction(instr);
     NS_ENSURE_SUCCESS(rv, rv);
     
+    rv = parseExcludeResultPrefixes(aAttributes, aAttrCount, kNameSpaceID_XSLT);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     rv = parseUseAttrSets(aAttributes, aAttrCount, PR_TRUE, aState);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1237,7 +1319,7 @@ txFnStartLRE(PRInt32 aNamespaceID,
         if (attr->mNamespaceID == kNameSpaceID_XSLT) {
             continue;
         }
-        
+
         nsAutoPtr<Expr> avt;
         rv = txExprParser::createAVT(attr->mValue, &aState,
                                      getter_Transfers(avt));
@@ -2026,6 +2108,16 @@ txFnStartNumber(PRInt32 aNamespaceID,
                     aState, format);
     NS_ENSURE_SUCCESS(rv, rv);
     
+    nsAutoPtr<Expr> lang;
+    rv = getAVTAttr(aAttributes, aAttrCount, txXSLTAtoms::lang, PR_FALSE,
+                      aState, lang);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsAutoPtr<Expr> letterValue;
+    rv = getAVTAttr(aAttributes, aAttrCount, txXSLTAtoms::letterValue, PR_FALSE,
+                    aState, letterValue);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
     nsAutoPtr<Expr> groupingSeparator;
     rv = getAVTAttr(aAttributes, aAttrCount, txXSLTAtoms::groupingSeparator,
                     PR_FALSE, aState, groupingSeparator);
@@ -2621,6 +2713,11 @@ txFnStartUnknownInstruction(PRInt32 aNamespaceID,
 {
     NS_ASSERTION(!aState.mSearchingForFallback,
                  "bad nesting of unknown-instruction and fallback handlers");
+
+    if (aNamespaceID == kNameSpaceID_XSLT && !aState.fcp()) {
+        return NS_ERROR_XSLT_PARSE_FAILURE;
+    }
+
     aState.mSearchingForFallback = PR_TRUE;
 
     return aState.pushHandlerTable(gTxFallbackHandler);
@@ -2691,6 +2788,8 @@ const txElementHandler gTxTopElementHandlers[] = {
   { kNameSpaceID_XSLT, "decimal-format", txFnStartDecimalFormat, txFnEndDecimalFormat },
   { kNameSpaceID_XSLT, "include", txFnStartInclude, txFnEndInclude },
   { kNameSpaceID_XSLT, "key", txFnStartKey, txFnEndKey },
+  { kNameSpaceID_XSLT, "namespace-alias", txFnStartNamespaceAlias,
+    txFnEndNamespaceAlias },
   { kNameSpaceID_XSLT, "output", txFnStartOutput, txFnEndOutput },
   { kNameSpaceID_XSLT, "param", txFnStartTopVariable, txFnEndTopVariable },
   { kNameSpaceID_XSLT, "preserve-space", txFnStartStripSpace, txFnEndStripSpace },
