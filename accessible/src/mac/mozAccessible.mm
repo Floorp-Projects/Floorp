@@ -85,6 +85,10 @@ ObjectOrUnignoredAncestor(id anObject)
   if ((self = [super init])) {
     mGeckoAccessible = accessible;
     mIsExpired = NO;
+    
+    // Check for OS X "role skew"; the role constants in nsIAccessible.idl need to match the ones
+    // in nsRoleMap.h.
+    NS_ASSERTION([AXRoles[nsIAccessible::ROLE_LAST_ENTRY] isEqualToString:@"ROLE_LAST_ENTRY"], "Role skew in the role map!");
   }
    
   return self;
@@ -198,11 +202,8 @@ ObjectOrUnignoredAncestor(id anObject)
   if (mIsExpired)
     return nil;
   
-#ifdef DEBUG_hakan
-  NSLog (@"(%@ hittested at (untranslated) point (%f, %f))", self, point.x, point.y);
-#endif
-  
-  // convert from cocoa's coordinate system to gecko's.
+  // Convert from cocoa's coordinate system to gecko's. According to the docs
+  // the point we're given is guaranteed to be bottom-left screen coordinates.
   nsPoint geckoPoint;
   ConvertCocoaToGeckoPoint (point, geckoPoint);
   
@@ -336,18 +337,16 @@ ObjectOrUnignoredAncestor(id anObject)
   mGeckoAccessible->GetBounds (&x, &y, &width, &height);
   NSPoint p = NSMakePoint (x, y);
   
-  // the coords we get here should be top-left.
-  // now, even if we're cocoa, it seems that NSAccessibility
-  // takes notice that our view |isFlipped| so we should
-  // just give it flipped coords (if we correspond to a ChildView).
+  // The coords we get from Gecko are top-left screen coordinates.
+  // Cocoa wants us to return bottom-left screen coordinates.
+  // This involves two steps:
+  // 1. Put the rect in the bottom-left coord space
+  // 2. Subtract the height of the rect's Y-coordinate, to make the
+  //    the rect's origin (0, 0) be in the bottom-left corner.
   
-  // workaround for bug 350018; we have the coords in cocoa coordinates, so flip them.
   float mainScreenHeight = [[[NSScreen screens] objectAtIndex:0] frame].size.height;
-  p.y = mainScreenHeight - p.y;
+  p.y = mainScreenHeight - p.y - height;
   
-#ifdef DEBUG_hakan
-  NSLog (@"[%@ position] = {%f, %f}", self, p.x, p.y);
-#endif
   return [NSValue valueWithPoint:p];
 }
 
