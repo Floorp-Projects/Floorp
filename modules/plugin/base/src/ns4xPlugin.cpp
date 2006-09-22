@@ -430,9 +430,9 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary,
   if (usesGetEntryPoints) {
     // we call NP_Initialize before getting function pointers to match
     // WebKit's behavior. They implemented this first on Mac OS X.
-    if (pfnInitialize(&(ns4xPlugin::CALLBACKS)) != NS_OK)
+    if (pfnInitialize(&(ns4xPlugin::CALLBACKS)) != NPERR_NO_ERROR)
       return;
-    if (pfnGetEntryPoints(&np_callbacks) != NS_OK)
+    if (pfnGetEntryPoints(&np_callbacks) != NPERR_NO_ERROR)
       return;
   }
   else
