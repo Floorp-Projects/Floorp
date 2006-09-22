@@ -464,6 +464,8 @@ nsFolderCompactState::FinishCompact()
 
   if (m_compactAll)
     rv = CompactNextFolder();
+  else 
+    ShowDoneStatus();
       
   return rv;
 }
@@ -486,7 +488,7 @@ void nsFolderCompactState::ShowDoneStatus()
   if (m_folder)
   {
     nsXPIDLString statusString;
-    nsresult rv = m_folder->GetStringWithFolderNameFromBundle("compactingDone", getter_Copies(statusString));
+    nsresult rv = m_folder->GetStringWithFolderNameFromBundle("doneCompacting", getter_Copies(statusString));
     if (statusString && NS_SUCCEEDED(rv))
       ShowStatusMsg(statusString);
   }
