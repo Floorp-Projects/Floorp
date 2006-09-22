@@ -276,7 +276,7 @@ function getCurrentNextOrPreviousRecurrence(calendarEvent)
 
     var occ;
     if (!occtime) {
-        var occs = calendarEvent.recurrenceInfo.getOccurrences(calendarEvent.startDate, probeTime, {});
+        var occs = calendarEvent.recurrenceInfo.getOccurrences(calendarEvent.startDate, probeTime, 0, {});
         occ = occs[occs.length -1];
     } else {
         occ = calendarEvent.recurrenceInfo.getOccurrenceFor(occtime);
