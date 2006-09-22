@@ -284,6 +284,8 @@ txStylesheetCompiler::startElementInternal(PRInt32 aNamespaceID,
                     return NS_ERROR_OUT_OF_MEMORY;
                 }
             }
+
+            attr->mLocalName = nsnull;
         }
 
         // version
@@ -337,6 +339,19 @@ txStylesheetCompiler::startElementInternal(PRInt32 aNamespaceID,
     } while (rv == NS_XSLT_GET_NEW_HANDLER);
 
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!fcp()) {
+        for (i = 0; i < aAttrCount; ++i) {
+            txStylesheetAttr& attr = aAttributes[i];
+            if (attr.mLocalName &&
+                (attr.mNamespaceID == kNameSpaceID_XSLT ||
+                 (aNamespaceID == kNameSpaceID_XSLT &&
+                  attr.mNamespaceID == kNameSpaceID_None))) {
+                // XXX ErrorReport: unknown attribute
+                return NS_ERROR_XSLT_PARSE_FAILURE;
+            }
+        }
+    }
 
     rv = pushPtr(NS_CONST_CAST(txElementHandler*, handler));
     NS_ENSURE_SUCCESS(rv, rv);
