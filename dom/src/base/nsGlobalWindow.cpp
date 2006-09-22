@@ -596,7 +596,7 @@ nsGlobalWindow::ClearControllers()
 }
 
 void
-nsGlobalWindow::FreeInnerObjects(nsIScriptContext *scx)
+nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
 {
   NS_ASSERTION(IsInnerWindow(), "Don't free inner objects on an outer window");
 
@@ -620,9 +620,16 @@ nsGlobalWindow::FreeInnerObjects(nsIScriptContext *scx)
   mDocument = nsnull;
   mDoc = nsnull;
 
-  if (scx)
-    scx->ClearScope(mScriptGlobals[NS_STID_INDEX(scx->GetScriptTypeID())],
-                    PR_TRUE);
+  if (aClearScope) {
+    PRUint32 lang_id;
+    NS_STID_FOR_ID(lang_id) {
+      // Note that scx comes from the outer window.  If this is an inner
+      // window, it may not be the current inner for its outer.
+      nsIScriptContext *scx = GetScriptContextInternal(lang_id);
+      if (scx)
+        scx->ClearScope(mScriptGlobals[NS_STID_INDEX(lang_id)], PR_TRUE);
+    }
+  }
 }
 
 //*****************************************************************************
@@ -1061,17 +1068,12 @@ WindowStateHolder::~WindowStateHolder()
   if (mInnerWindow) {
     // This window was left in the bfcache and is now going away. We need to
     // free it up.
-    PRUint32 lang_id;
-    NS_STID_FOR_ID(lang_id) {
-      // Note that langCtx comes from an outer window for which
-      // mInnerWindow is not the current inner window.
-      nsIScriptContext *langCtx =
-        mInnerWindow->GetScriptContextInternal(lang_id);
-      if (langCtx)
-        // FreeInnerObjects calls ClearScope, which does the JSAutoRequest
-        // thing for JS
-        mInnerWindow->FreeInnerObjects(langCtx);
-    }
+    // Note that FreeInnerObjects may already have been called on the
+    // inner window if its outer has already had SetDocShell(null)
+    // called.  In this case the contexts will all be null and the
+    // PR_TRUE for aClearScope won't do anything; this is OK since
+    // SetDocShell(null) already did it.
+    mInnerWindow->FreeInnerObjects(PR_TRUE);
   }
 }
 
@@ -1389,16 +1391,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         // Don't clear scope on our current inner window if it's going to be
         // held in the bfcache.
         if (!currentInner->IsFrozen()) {
-          if (termFuncSet) {
-            // Passing null to FreeInnerObjects means it skips the
-            // ClearScope, which we need to do later.
-            currentInner->FreeInnerObjects(nsnull);
-          } else {
-            NS_STID_FOR_ID(st_id) {
-              nsIScriptContext *this_ctx = GetScriptContextInternal(st_id);
-              currentInner->FreeInnerObjects(scx);
-            }
-          }
+          // Skip the ClearScope if we set a termination function to do
+          // it ourselves, later.
+          currentInner->FreeInnerObjects(!termFuncSet);
         }
       }
 
@@ -1588,14 +1583,7 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
          inner != this;
          inner = (nsGlobalWindow*)PR_NEXT_LINK(inner)) {
       NS_ASSERTION(inner->mOuterWindow == this, "bad outer window pointer");
-
-      NS_STID_FOR_ID(lang_id) {
-        langCtx = mScriptContexts[NS_STID_INDEX(lang_id)];
-        if (langCtx)
-          // FreeInnerObjects calls ClearScope, which does the JSAutoRequest
-          // thing for JS
-          inner->FreeInnerObjects(langCtx);
-      }
+      inner->FreeInnerObjects(PR_TRUE);
     }
 
     nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
@@ -1609,13 +1597,13 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
       // Release our document reference
       mDocument = nsnull;
       mDoc = nsnull;
+    }
 
-      // clear all scopes
-      NS_STID_FOR_ID(lang_id) {
-        langCtx = mScriptContexts[NS_STID_INDEX(lang_id)];
-        if (langCtx)
-          langCtx->ClearScope(mScriptGlobals[NS_STID_INDEX(lang_id)], PR_TRUE);
-      }
+    // clear all scopes
+    NS_STID_FOR_ID(lang_id) {
+      langCtx = mScriptContexts[NS_STID_INDEX(lang_id)];
+      if (langCtx)
+        langCtx->ClearScope(mScriptGlobals[NS_STID_INDEX(lang_id)], PR_TRUE);
     }
 
     // if we are closing the window while in full screen mode, be sure
