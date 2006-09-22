@@ -2864,9 +2864,6 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
                                "notify::gtk-theme-name",
                                G_CALLBACK(theme_changed_cb), this);
         g_signal_connect_after(default_settings,
-                               "notify::gtk-key-theme-name",
-                               G_CALLBACK(theme_changed_cb), this);
-        g_signal_connect_after(default_settings,
                                "notify::gtk-font-name",
                                G_CALLBACK(theme_changed_cb), this);
     }
