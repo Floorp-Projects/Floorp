@@ -954,7 +954,7 @@ function formatTime(ltime, twoLines) {
         var yr = d.getYear();
         if (yr > 100) yr -= 100;
         if (yr < 10) yr = "0" + yr;
-        var s2 = d.getMonth() + "/" + d.getDate() + "/" + yr;
+        var s2 = (d.getMonth()+1) + "/" + d.getDate() + "/" + yr;
         return s2 + " " + s1;
     }
 }
