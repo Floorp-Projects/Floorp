@@ -897,37 +897,6 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (CHBrowserView*)createBrowserWindow:(unsigned int)aMask
 {
-  BOOL showBlocker = [[PreferenceManager sharedInstance] getBooleanPref:"browser.popups.showPopupBlocker" withSuccess:NULL];
-
-  if (showBlocker) {
-    nsCOMPtr<nsIDOMWindow> domWindow = [mBrowserView getContentWindow];
-    nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(domWindow));
-    if (piWindow->IsLoadingOrRunningTimeout()) {
-      // A popup is being opened while the page is currently loading.  Offer to block the
-      // popup.
-      nsAlertController* controller = CHBrowserService::GetAlertController();
-      
-      BOOL confirm = NO;
-      NS_DURING
-        confirm = [controller confirm:[self window]
-                                title:NSLocalizedString(@"PopupBlockTitle",@"")
-                                 text:[NSString stringWithFormat:NSLocalizedString(@"PopupBlockMsg", @""), NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil)]];
-
-        // This is a one-time dialog.
-        [[PreferenceManager sharedInstance] setPref:"browser.popups.showPopupBlocker" toBoolean:NO];
-      NS_HANDLER
-      NS_ENDHANDLER
-      
-      if (confirm)
-        [[PreferenceManager sharedInstance] setPref:"dom.disable_open_during_load" toBoolean:YES];
-
-      [[PreferenceManager sharedInstance] savePrefsFile]; // really necessary?
-
-      if (confirm)
-        return nil;
-    }
-  }
-
   BrowserWindowController* controller = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
   [controller setChromeMask: aMask];
   [controller disableAutosave]; // The Web page opened this window, so we don't ever use its settings.

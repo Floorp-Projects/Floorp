@@ -135,3 +135,5 @@ pref("camino.enable_tabjumpback", true);
 // set the window.open behavior to "respect SWM unless the window.open call specifies size or features"
 pref("browser.link.open_newwindow.restriction", 2);
 
+// enable popup blocking
+pref("dom.disable_open_during_load", true);
