@@ -201,11 +201,9 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
     origin.y += border->GetBorderWidth(NS_SIDE_TOP);
 
     // And subtract out the border for the parent
-    if (parent) {
-      const nsStyleBorder* parentBorder = parent->GetStyleBorder();
-      origin.x -= parentBorder->GetBorderWidth(NS_SIDE_LEFT);
-      origin.y -= parentBorder->GetBorderWidth(NS_SIDE_TOP);
-    }
+    const nsStyleBorder* parentBorder = parent->GetStyleBorder();
+    origin.x -= parentBorder->GetBorderWidth(NS_SIDE_LEFT);
+    origin.y -= parentBorder->GetBorderWidth(NS_SIDE_TOP);
 
     // Get the Presentation Context from the Shell
     nsIPresShell* shell = GetPresShell(PR_FALSE);
