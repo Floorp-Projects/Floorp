@@ -905,7 +905,9 @@ _PR_MD_INIT_IO()
     } else 
         PR_ASSERT(0);
 
+#ifdef _NEED_351_FILE_LOCKING_HACK
     IsFileLocalInit();
+#endif /* _NEED_351_FILE_LOCKING_HACK */
 
     /*
      * UDP support: start up the continuation thread
