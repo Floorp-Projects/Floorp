@@ -43,6 +43,7 @@
 #include "nsIWindowsShellService.h"
 
 #include <windows.h>
+#include <ole2.h>
 
 class nsWindowsShellService : public nsIWindowsShellService
 {
@@ -55,6 +56,10 @@ public:
   NS_DECL_NSIWINDOWSSHELLSERVICE
 
 protected:
+  PRBool    IsDefaultBrowserVista(PRBool aStartupCheck, PRBool* aIsDefaultBrowser);
+  PRBool    SetDefaultBrowserVista();
+  PRBool    RestoreFileSettingsVista();
+
   PRBool    GetMailAccountKey(HKEY* aResult);
   void      SetRegKey(const char* aKeyName, const char* aValueName, 
                       const char* aValue, PRBool aBackup, HKEY aBackupKey,
