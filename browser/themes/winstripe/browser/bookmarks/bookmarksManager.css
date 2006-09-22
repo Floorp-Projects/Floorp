@@ -14,27 +14,14 @@
 toolbarbutton#newbookmark {
   -moz-image-region: rect(0px 24px 24px 0px);
 }
-
-toolbarbutton#newbookmark:hover {
+toolbarbutton#newbookmark:not([disabled="true"]):hover {
   -moz-image-region: rect(24px 24px 48px 0px);
 }
-
 toolbarbutton#newbookmark[disabled="true"] {
-  -moz-image-region: rect(48px 24px 72px 0px) !important;
+  -moz-image-region: rect(72px 24px 96px 0px);
 }
-
-/* new livemark */
-
-toolbarbutton#newlivemark {
-  -moz-image-region: rect(0px 24px 24px 0px);
-}
-
-toolbarbutton#newlivemark:hover {
-  -moz-image-region: rect(24px 24px 48px 0px);
-}
-
-toolbarbutton#newlivemark[disabled="true"] {
-  -moz-image-region: rect(48px 24px 72px 0px) !important;
+toolbarbutton#newbookmark:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(48px 24px 72px 0px);
 }
 
 /* new folder */
@@ -42,11 +29,14 @@ toolbarbutton#newlivemark[disabled="true"] {
 toolbarbutton#newfolder {
   -moz-image-region: rect(0px 48px 24px 24px);
 }
-toolbarbutton#newfolder:hover {
+toolbarbutton#newfolder:not([disabled="true"]):hover {
   -moz-image-region: rect(24px 48px 48px 24px);
 }
 toolbarbutton#newfolder[disabled="true"] {
-   -moz-image-region: rect(48px 48px 72px 24px) !important;
+   -moz-image-region: rect(72px 48px 96px 24px);
+}
+toolbarbutton#newfolder:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(48px 48px 72px 24px);
 }
 
 /* new separator */
@@ -54,11 +44,14 @@ toolbarbutton#newfolder[disabled="true"] {
 toolbarbutton#newseparator {
   -moz-image-region: rect(0px 72px 24px 48px);
 }
-toolbarbutton#newseparator:hover {
+toolbarbutton#newseparator:not([disabled="true"]):hover {
   -moz-image-region: rect(24px 72px 48px 48px);
 }
 toolbarbutton#newseparator[disabled="true"] {
-  -moz-image-region: rect(48px 72px 72px 48px) !important;
+  -moz-image-region: rect(72px 72px 96px 48px);
+}
+toolbarbutton#newseparator:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(48px 72px 72px 48px);
 }
 
 /* move bookmark */
@@ -66,10 +59,13 @@ toolbarbutton#newseparator[disabled="true"] {
 toolbarbutton#moveBookmark {
   -moz-image-region: rect(0px 96px 24px 72px);
 }
-toolbarbutton#moveBookmark:hover {
+toolbarbutton#moveBookmark:not([disabled="true"]):hover {
   -moz-image-region: rect(24px 96px 48px 72px);
 }
 toolbarbutton#moveBookmark[disabled="true"] {
+  -moz-image-region: rect(72px 96px 96px 72px);
+}
+toolbarbutton#moveBookmark:not([disabled="true"]):hover:active {
   -moz-image-region: rect(48px 96px 72px 72px);
 }
 
@@ -78,12 +74,14 @@ toolbarbutton#moveBookmark[disabled="true"] {
 toolbarbutton#properties {
   -moz-image-region: rect(0px 120px 24px 96px);
 }
-toolbarbutton#properties:hover {
+toolbarbutton#properties:not([disabled="true"]):hover {
   -moz-image-region: rect(24px 120px 48px 96px);
 }
-
 toolbarbutton#properties[disabled="true"] {
-  -moz-image-region: rect(48px 120px 72px 96px) !important;
+  -moz-image-region: rect(72px 120px 96px 96px);
+}
+toolbarbutton#properties:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(48px 120px 72px 96px);
 }
 
 /* rename */
@@ -91,11 +89,14 @@ toolbarbutton#properties[disabled="true"] {
 toolbarbutton#rename {
   -moz-image-region: rect(0px 144px 24px 120px);
 }
-toolbarbutton#rename:hover {
+toolbarbutton#rename:not([disabled="true"]):hover {
   -moz-image-region: rect(24px 144px 48px 120px);
 }
 toolbarbutton#rename[disabled="true"] {
-  -moz-image-region: rect(48px 144px 72px 120px) !important;
+  -moz-image-region: rect(72px 144px 96px 120px);
+}
+toolbarbutton#rename:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(48px 144px 72px 120px);
 }
 
 /* delete */
@@ -103,11 +104,14 @@ toolbarbutton#rename[disabled="true"] {
 toolbarbutton#delete {
   -moz-image-region: rect(0px 168px 24px 144px);
 }
-toolbarbutton#delete:hover {
+toolbarbutton#delete:not([disabled="true"]):hover {
   -moz-image-region: rect(24px 168px 48px 144px);
 }
 toolbarbutton#delete[disabled="true"] {
-  -moz-image-region: rect(48px 168px 72px 144px) !important;
+  -moz-image-region: rect(72px 168px 96px 144px);
+}
+toolbarbutton#delete:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(48px 168px 72px 144px);
 }
 
 #bookmark-folders-view > .bookmarksTree {
@@ -117,4 +121,3 @@ toolbarbutton#delete[disabled="true"] {
 #bookmark-views-splitter {
   border: none; 
 }
-

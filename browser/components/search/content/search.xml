@@ -64,8 +64,25 @@
     <content>
       <xul:stringbundle src="chrome://browser/locale/search.properties"
                         anonid="searchbar-stringbundle"/>
-      <xul:box class="searchbar-left" flex="1">
-        <xul:box class="searchbar-right" flex="1">
+
+      <xul:hbox class="searchbar-box" flex="1">
+        <xul:hbox flex="1">
+          <xul:button class="searchbar-engine-button"
+                      type="menu"
+                      anonid="searchbar-engine-button"
+                      popup="_child"
+                      xbl:inherits="src">
+            <xul:menupopup class="searchbar-popup"
+                           anonid="searchbar-popup"
+                           position="after_start">
+              <xul:menuseparator/>
+              <xul:menuitem class="open-engine-manager"
+                            anonid="open-engine-manager"
+                            label="&cmd_engineManager.label;"
+                            accesskey="&cmd_engineManager.accesskey;"/>
+            </xul:menupopup>
+          </xul:button>
+  
           <xul:textbox class="searchbar-textbox"
                        anonid="searchbar-textbox"
                        type="autocomplete"
@@ -78,31 +95,33 @@
                        completeselectedindex="true"
                        showcommentcolumn="true"
                        tabscrolling="true"
-                       xbl:inherits="disableautocomplete,searchengine,src">
-            <xul:button class="searchbar-engine-button"
-                        type="menu"
-                        anonid="searchbar-engine-button"
-                        popup="_child"
-                        xbl:inherits="src">
-              <xul:menupopup class="searchbar-popup"
-                             anonid="searchbar-popup"
-                             position="after_start">
-                <xul:menuseparator/>
-                <xul:menuitem class="open-engine-manager"
-                              anonid="open-engine-manager"
-                              label="&cmd_engineManager.label;"
-                              accesskey="&cmd_engineManager.accesskey;"/>
-              </xul:menupopup>
-            </xul:button>
-            <xul:hbox class="search-go-button-container">
-              <xul:toolbarbutton class="search-go-button"
-                                 anonid="search-go-button"
-                                 chromedir="&locale.dir;" />
-            </xul:hbox>
+                       xbl:inherits="disabled,disableautocomplete,searchengine,src">
           </xul:textbox>
-        </xul:box>
-      </xul:box>
+        </xul:hbox>
+
+        <xul:stack class="search-go-button-stack">
+          <xul:vbox>
+            <!-- These image segments allow the button's gradient to stretch
+                 nicely in larger urlbars. -->
+            <xul:image class="search-go-button-top search-go-button-bkgnd"
+                       chromedir="&locale.dir;"/>
+            <xul:image flex="1"
+                       class="search-go-button-mid-top search-go-button-bkgnd"
+                       chromedir="&locale.dir;"/>
+            <xul:image flex="1"
+                       class="search-go-button-mid-bottom search-go-button-bkgnd"
+                       chromedir="&locale.dir;"/>
+            <xul:image class="search-go-button-bottom search-go-button-bkgnd"
+                       chromedir="&locale.dir;"/>
+          </xul:vbox>
+          <xul:toolbarbutton class="search-go-button"
+                             anonid="search-go-button"
+                             chromedir="&locale.dir;"
+                             label="&searchEndCap.label;" />
+        </xul:stack>
+      </xul:hbox>
     </content>
+
     <implementation implements="nsIObserver">
 
       <constructor><![CDATA[
@@ -838,11 +857,20 @@
   <binding id="searchbar-engine-button"
            extends="chrome://browser/content/search/search.xml#searchbar-base">
     <content>
-      <xul:stack flex="1">
-        <xul:hbox align="center" class="searchbar-engine-image-container">
+      <xul:stack flex="1" class="searchbar-engine-button-stack">
+        <xul:vbox>
+          <xul:image class="searchbar-engine-button-top searchbar-engine-button-bkgnd"/>
+          <xul:image flex="1"
+                     class="searchbar-engine-button-mid-top searchbar-engine-button-bkgnd"/>
+          <xul:image flex="1"
+                     class="searchbar-engine-button-mid-bottom searchbar-engine-button-bkgnd"/>
+          <xul:image class="searchbar-engine-button-bottom searchbar-engine-button-bkgnd"/>
+        </xul:vbox>
+        <xul:hbox align="center"
+                  class="searchbar-engine-image-container">
           <xul:image class="searchbar-engine-image" xbl:inherits="src"/>
+          <xul:image class="searchbar-dropmarker-image"/>
         </xul:hbox>
-        <xul:image class="searchbar-dropmarker-image"/>
       </xul:stack>
       <children/>
     </content>

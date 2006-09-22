@@ -48,10 +48,11 @@ download[state="0"], download[state="-1"], download[state="4"] {
   background: url("chrome://mozapps/skin/downloads/background-gradient.gif") repeat;
 }
 
-vbox:first-child label:last-child {
+vbox:first-child > label:last-child, hbox:last-child > label:last-child {
   color: #666666;
   font-size: 95%;
 }
+
 
 /* Download View Items, implementation */
 
