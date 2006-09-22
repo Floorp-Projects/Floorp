@@ -557,7 +557,9 @@ const float kGapUnderCheckboxLine = 3.0f;
   if ([inLabelKey length] > 0)
     [self addLineLabelWithKey:inLabelKey toView:lineContainer];
 
-  float xPos = kLabelLeftOffset + [self labelColumnWidth] + kLabelGutterWidth;
+  // We're now using the same xPos as the header fields, since label text was getting cut off.  
+  float xPos = kGroupHeaderLeftOffset + kCertImageViewSize + kGroupHeaderLeftOffset;
+  
   NSRect buttonRect = NSMakeRect(xPos, 0.0f, NSWidth([self frame]) - xPos - kLabelLeftOffset, 100.0f);
   NSButton* theButton = [[[NSButton alloc] initWithFrame:[lineContainer subviewRectFromTopRelativeRect:buttonRect]] autorelease];
 
