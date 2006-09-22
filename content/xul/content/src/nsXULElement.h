@@ -571,6 +571,8 @@ public:
 
     virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+    nsresult GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
+
 protected:
     nsXULElement(nsINodeInfo* aNodeInfo);
     virtual ~nsXULElement(void);
