@@ -250,9 +250,13 @@ nsXFormsDelegateStub::SetMozTypeAttribute()
   NS_NAMED_LITERAL_STRING(mozTypeList, "typelist");
   NS_NAMED_LITERAL_STRING(mozRejectedType, "rejectedtype");
 
-  if (mModel && mBoundNode) {
+  // can't use mBoundNode here since mBoundNode can exist for xf:output, for
+  // example, even if there is no binding attribute.
+  nsCOMPtr<nsIDOMNode> boundNode;
+  GetBoundNode(getter_AddRefs(boundNode));
+  if (mModel && boundNode) {
     nsAutoString type, nsOrig;
-    if (NS_FAILED(mModel->GetTypeAndNSFromNode(mBoundNode, type, nsOrig))) {
+    if (NS_FAILED(mModel->GetTypeAndNSFromNode(boundNode, type, nsOrig))) {
       mElement->RemoveAttributeNS(mozTypeNs, mozType);
       mElement->RemoveAttributeNS(mozTypeNs, mozTypeList);
       mElement->RemoveAttributeNS(mozTypeNs, mozRejectedType);
