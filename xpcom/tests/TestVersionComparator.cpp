@@ -48,7 +48,7 @@ int main(int argc, char **argv)
 
   PRInt32 i = NS_CompareVersions(argv[1], argv[2]);
 
-  char *format;
+  const char *format;
 
   if (i < 0)
     format = "%s < %s\n";
