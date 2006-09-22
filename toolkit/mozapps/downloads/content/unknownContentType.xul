@@ -55,7 +55,7 @@
         style="width: 34em;"
         screenX="" screenY=""
         persist="screenX screenY"
-        ondialogaccept="alert('foo'); return dialog.onOK()"
+        ondialogaccept="return dialog.onOK()"
         ondialogcancel="return dialog.onCancel()">
 
   <script type="application/x-javascript" src="chrome://mozapps/content/downloads/helperApps.js"/>
