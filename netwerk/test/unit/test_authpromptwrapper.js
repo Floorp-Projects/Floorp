@@ -1,6 +1,10 @@
 // NOTE: This tests code outside of Necko. The test still lives here because
 // the contract is part of Necko.
 
+// TODO:
+// - HTTPS
+// - Proxies
+
 const nsIAuthInformation = Components.interfaces.nsIAuthInformation;
 const nsIAuthPromptAdapterFactory = Components.interfaces.nsIAuthPromptAdapterFactory;
 
@@ -41,6 +45,8 @@ function run_test() {
     user: "foo\\bar",
     pw: "bar",
 
+    scheme: "http",
+
     QueryInterface: function authprompt_qi(iid) {
       if (iid.equals(Components.interfaces.nsISupports) ||
           iid.equals(Components.interfaces.nsIAuthPrompt))
@@ -72,18 +78,21 @@ function run_test() {
     },
 
     doChecks: function ap1_check(text, realm) {
-      do_check_eq(host + ":80 (" + info.realm + ")", realm);
+      if (this.scheme == "http")
+        do_check_eq(host + ":80 (" + info.realm + ")", realm);
+      else
+        do_check_eq(this.scheme + "://" + host, realm);
 
       do_check_neq(text.indexOf(host), -1);
-      do_check_neq(text.indexOf(info.realm), -1);
+      // Only HTTP has realms
+      if (this.scheme == "http")
+        do_check_neq(text.indexOf(info.realm), -1);
       // No explicit port in the URL; message should not contain -1
       // for those cases
       do_check_eq(text.indexOf("-1"), -1);
     }
   };
 
-  var prompt1 = new Prompt1();
-  var wrapper = adapter.createAdapter(prompt1);
 
   // Also have to make up a channel
   var ios = Components.classes["@mozilla.org/network/io-service;1"]
@@ -91,8 +100,14 @@ function run_test() {
   var chan = ios.newChannel("http://" + host, "", null);
 
   function do_tests(expectedRV) {
+    var prompt1;
+    var wrapper;
+
     // 1: The simple case
+    prompt1 = new Prompt1();
     prompt1.rv = expectedRV;
+    wrapper = adapter.createAdapter(prompt1);
+
     var rv = wrapper.promptAuth(chan, 0, info);
     do_check_eq(rv, prompt1.rv);
     do_check_eq(prompt1.called, CALLED_PROMPTUP);
@@ -145,7 +160,7 @@ function run_test() {
       do_check_eq(info.password, prompt1.pw);
     }
 
-    info.flags &= ~nsIAuthInformation.ONLY_PASSWORD;
+    info.flags &= ~nsIAuthInformation.NEED_DOMAIN;
 
     info.domain = "";
     info.username = "";
@@ -169,7 +184,29 @@ function run_test() {
       do_check_eq(info.password, prompt1.pw);
     }
 
-    info.flags &= ~nsIAuthInformation.ONLY_PASSWORD;
+    info.flags &= ~nsIAuthInformation.NEED_DOMAIN;
+
+    info.domain = "";
+    info.username = "";
+    info.password = "";
+
+    // 5: FTP
+    var ftpchan = ios.newChannel("ftp://" + host, "", null);
+
+    prompt1 = new Prompt1();
+    prompt1.rv = expectedRV;
+    prompt1.scheme = "ftp";
+
+    wrapper = adapter.createAdapter(prompt1);
+    var rv = wrapper.promptAuth(ftpchan, 0, info);
+    do_check_eq(rv, prompt1.rv);
+    do_check_eq(prompt1.called, CALLED_PROMPTUP);
+
+    if (rv) {
+      do_check_eq(info.domain, "");
+      do_check_eq(info.username, prompt1.user);
+      do_check_eq(info.password, prompt1.pw);
+    }
 
     info.domain = "";
     info.username = "";

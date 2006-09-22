@@ -62,7 +62,6 @@
 #include "nsAutoLock.h"
 #include "nsAutoPtr.h"
 #include "nsIPrompt.h"
-#include "nsIAuthPrompt.h"
 #include "nsITransport.h"
 #include "nsIProxyInfo.h"
 

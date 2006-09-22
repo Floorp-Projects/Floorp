@@ -2855,8 +2855,15 @@ SINGSIGN_PromptAuth
                                                       username,
                                                       password);
 
+  PRUint32 flags = 0;
+  aAuthInfo->GetFlags(&flags);
+
   if (checked) {
     NS_SetAuthInfo(aAuthInfo, username, password);
+    // If we were only asked for a password, return immediately
+    // (to match SINGSIGN_PromptPassword)
+    if (flags & nsIAuthInformation::ONLY_PASSWORD)
+      return NS_OK;
   }
 
   PRBool remembered = checked;

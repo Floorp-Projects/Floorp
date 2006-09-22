@@ -75,6 +75,7 @@
 #include "nsChannelProperties.h"
 #include "nsStreamUtils.h"
 #include "nsIOService.h"
+#include "nsAuthInformationHolder.h"
 
 // True if the local cache should be bypassed when processing a request.
 #define BYPASS_LOCAL_CACHE(loadFlags) \
@@ -2665,99 +2666,20 @@ nsHttpChannel::ParseRealm(const char *challenge, nsACString &realm)
     }
 }
 
-class nsAuthInformationHolder : public nsIAuthInformation {
-public:
-    // aAuthType must be ASCII
-    nsAuthInformationHolder(PRUint32 aFlags, const nsString& aRealm,
-                            const nsCString& aAuthType)
-        : mFlags(aFlags), mRealm(aRealm), mAuthType(aAuthType) {}
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIAUTHINFORMATION
+class nsHTTPAuthInformation : public nsAuthInformationHolder {
+public:
+    nsHTTPAuthInformation(PRUint32 aFlags, const nsString& aRealm,
+                          const nsCString& aAuthType)
+        : nsAuthInformationHolder(aFlags, aRealm, aAuthType) {}
 
     void SetToHttpAuthIdentity(PRUint32 authFlags, nsHttpAuthIdentity& identity);
-private:
-    nsString mUser;
-    nsString mPassword;
-    nsString mDomain;
-
-    PRUint32 mFlags;
-    nsString mRealm;
-    nsCString mAuthType;
 };
 
-NS_IMPL_ISUPPORTS1(nsAuthInformationHolder, nsIAuthInformation)
-
-NS_IMETHODIMP
-nsAuthInformationHolder::GetFlags(PRUint32* aFlags)
-{
-    *aFlags = mFlags;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAuthInformationHolder::GetRealm(nsAString& aRealm)
-{
-    aRealm = mRealm;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAuthInformationHolder::GetAuthenticationScheme(nsACString& aScheme)
-{
-    aScheme = mAuthType;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAuthInformationHolder::GetUsername(nsAString& aUserName)
-{
-    aUserName = mUser;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAuthInformationHolder::SetUsername(const nsAString& aUserName)
-{
-    if (!(mFlags & ONLY_PASSWORD))
-        mUser = aUserName;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAuthInformationHolder::GetPassword(nsAString& aPassword)
-{
-    aPassword = mPassword;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAuthInformationHolder::SetPassword(const nsAString& aPassword)
-{
-    mPassword = aPassword;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAuthInformationHolder::GetDomain(nsAString& aDomain)
-{
-    aDomain = mDomain;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAuthInformationHolder::SetDomain(const nsAString& aDomain)
-{
-    if (mFlags & NEED_DOMAIN)
-        mDomain = aDomain;
-    return NS_OK;
-}
-
 void
-nsAuthInformationHolder::SetToHttpAuthIdentity(PRUint32 authFlags, nsHttpAuthIdentity& identity)
+nsHTTPAuthInformation::SetToHttpAuthIdentity(PRUint32 authFlags, nsHttpAuthIdentity& identity)
 {
-    SetIdent(identity, authFlags, ToNewUnicode(mUser), ToNewUnicode(mPassword));
-    identity.Set(mDomain.get(), mUser.get(), mPassword.get());
+    identity.Set(Domain().get(), User().get(), Password().get());
 }
 
 nsresult
@@ -2795,8 +2717,9 @@ nsHttpChannel::PromptForIdentity(PRUint32    level,
     if (authFlags & nsIHttpAuthenticator::IDENTITY_INCLUDES_DOMAIN)
         promptFlags |= nsIAuthInformation::NEED_DOMAIN;
 
-    nsRefPtr<nsAuthInformationHolder> holder =
-        new nsAuthInformationHolder(promptFlags, realmU, nsDependentCString(authType));
+    nsRefPtr<nsHTTPAuthInformation> holder =
+        new nsHTTPAuthInformation(promptFlags, realmU,
+                                  nsDependentCString(authType));
     if (!holder)
         return NS_ERROR_OUT_OF_MEMORY;
     PRBool retval = PR_FALSE;
