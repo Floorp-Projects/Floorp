@@ -38,7 +38,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.44 2006/07/03 21:42:47 mkanat%bugzilla.org Exp $
+# $Id: bug_email.pl,v 1.45 2006/09/22 23:14:53 lpsolit%gmail.com Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -1173,7 +1173,7 @@ END
     # Send the 'you did it'-reply
     Reply( $SenderShort, $Message_ID,"Bugzilla success (ID $id)", $reply );
 
-    Bugzilla::BugMail::Send($id) if( ! $test);
+    Bugzilla::BugMail::Send($id, {'changer' => $reporter}) if (!$test);
     
 } else {
     # There were critical errors in the mail - the bug couldn't be inserted. !

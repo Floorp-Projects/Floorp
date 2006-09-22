@@ -233,9 +233,19 @@ if (defined $cgi->param('rescanallBugMail')) {
                                       ORDER BY bug_id});
          
     Status(scalar(@$list) . ' bugs found with possibly unsent mail.');
-      
+
+    my $vars = {};
+    # We cannot simply look at the bugs_activity table to find who did the
+    # last change in a given bug, as e.g. adding a comment doesn't add any
+    # entry to this table. And some other changes may be private
+    # (such as time-related changes or private attachments or comments)
+    # and so choosing this user as being the last one having done a change
+    # for the bug may be problematic. So the best we can do at this point
+    # is to choose the currently logged in user for email notification.
+    $vars->{'changer'} = Bugzilla->user->login;
+
     foreach my $bugid (@$list) {
-        Bugzilla::BugMail::Send($bugid);
+        Bugzilla::BugMail::Send($bugid, $vars);
     }
 
     if (scalar(@$list) > 0) {

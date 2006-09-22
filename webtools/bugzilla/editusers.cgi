@@ -29,6 +29,7 @@ use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::User;
 use Bugzilla::Bug;
+use Bugzilla::BugMail;
 use Bugzilla::Flag;
 use Bugzilla::Field;
 use Bugzilla::Group;
@@ -716,7 +717,7 @@ if ($action eq 'search') {
     # Send mail about what we've done to bugs.
     # The deleted user is not notified of the changes.
     foreach (keys(%updatedbugs)) {
-        Bugzilla::BugMail::Send($_);
+        Bugzilla::BugMail::Send($_, {'changer' => $user->login} );
     }
 
 ###########################################################################
