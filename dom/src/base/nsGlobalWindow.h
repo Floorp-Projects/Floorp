@@ -405,8 +405,7 @@ protected:
   void CleanUp();
   void ClearControllers();
 
-  // If |scx| is non-null, also calls ClearScope on |scx|.
-  void FreeInnerObjects(nsIScriptContext *scx);
+  void FreeInnerObjects(PRBool aClearScope);
 
   nsresult SetNewDocument(nsIDocument *aDocument,
                           nsISupports *aState,
