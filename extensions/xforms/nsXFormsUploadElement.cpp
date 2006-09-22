@@ -50,6 +50,7 @@
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMAbstractView.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIAttribute.h"
 #include "nsIStringBundle.h"
 #include "nsAutoBuffer.h"
 #include "nsIEventStateManager.h"
@@ -277,13 +278,21 @@ nsXFormsUploadElement::SetFile(nsILocalFile *aFile)
 
   nsresult rv;
 
-  nsCOMPtr<nsINode> node = do_QueryInterface(mBoundNode);
-  NS_ENSURE_STATE(node);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mBoundNode);
+  nsCOMPtr<nsIAttribute> attr;
+  if (!content) {
+    attr = do_QueryInterface(mBoundNode);
+    NS_ENSURE_STATE(attr);
+  }
 
   PRBool dataChanged = PR_FALSE;
   if (!aFile) {
     // clear instance data
-    node->DeleteProperty(nsXFormsAtoms::uploadFileProperty);
+    if (content) {
+      content->DeleteProperty(nsXFormsAtoms::uploadFileProperty);
+    } else {
+      attr->DeleteProperty(nsXFormsAtoms::uploadFileProperty);
+    }
     rv = mModel->SetNodeValue(mBoundNode, EmptyString(), PR_FALSE,
                               &dataChanged);
   } else {
@@ -320,8 +329,13 @@ nsXFormsUploadElement::SetFile(nsILocalFile *aFile)
       nsIFile *fileCopy = nsnull;
       rv = aFile->Clone(&fileCopy);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = node->SetProperty(nsXFormsAtoms::uploadFileProperty, fileCopy,
-                                ReleaseObject);
+      if (content) {
+        rv = content->SetProperty(nsXFormsAtoms::uploadFileProperty, fileCopy,
+                                  ReleaseObject);
+      } else {
+        rv = attr->SetProperty(nsXFormsAtoms::uploadFileProperty, fileCopy,
+                               ReleaseObject);
+      }
     }
   }
   NS_ENSURE_SUCCESS(rv, rv);
