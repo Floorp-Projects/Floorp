@@ -53,7 +53,6 @@
 #include "nsNetUtil.h"
 #include "nsShellService.h"
 #include "nsWindowsShellService.h"
-#include "nsIObserverService.h"
 #include "nsIProcess.h"
 #include "nsICategoryManager.h"
 #include "nsBrowserCompsCID.h"
@@ -76,7 +75,7 @@
 #define REG_FAILED(val) \
   (val != ERROR_SUCCESS)
 
-NS_IMPL_ISUPPORTS3(nsWindowsShellService, nsIWindowsShellService, nsIShellService, nsIObserver)
+NS_IMPL_ISUPPORTS2(nsWindowsShellService, nsIWindowsShellService, nsIShellService)
 
 static nsresult
 OpenUserKeyForReading(HKEY aStartKey, const char* aKeyName, HKEY* aKey)
@@ -289,24 +288,6 @@ static SETTING gSettings[] = {
   //     firefox.exe\shell\properties        (default)   REG_SZ  Firefox &Options
   //     firefox.exe\shell\safemode          (default)   REG_SZ  Firefox &Safe Mode
 };
-
-NS_IMETHODIMP
-nsWindowsShellService::Register(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation,
-                                const char *componentType, const nsModuleComponentInfo *info)
-{
-    nsresult rv;
-    nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    return catman->AddCategoryEntry("app-startup", "Windows Shell Service", "service," NS_SHELLSERVICE_CONTRACTID, PR_TRUE, PR_TRUE, nsnull);
-}
-
-nsWindowsShellService::nsWindowsShellService()
-:mCheckedThisSession(PR_FALSE)
-{
-  nsCOMPtr<nsIObserverService> obsServ (do_GetService("@mozilla.org/observer-service;1"));
-  obsServ->AddObserver(this, "quit-application", PR_FALSE);
-}
 
 NS_IMETHODIMP
 nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefaultBrowser)
@@ -993,28 +974,6 @@ nsWindowsShellService::GetMailAccountKey(HKEY* aResult)
   // Close the key we opened.
   ::RegCloseKey(mailKey);
   return PR_FALSE;
-}
-
-NS_IMETHODIMP
-nsWindowsShellService::Observe(nsISupports* aObject, const char* aTopic, const PRUnichar* aMessage)
-{
-  if (!nsCRT::strcmp("app-startup", aTopic)) {
-    PRBool isDefault;
-    IsDefaultBrowser(PR_FALSE, &isDefault);
-    if (!isDefault)
-      return NS_OK;
-  }
-  else if (!nsCRT::strcmp("quit-application", aTopic)) {
-    PRBool isDefault;
-    IsDefaultBrowser(PR_FALSE, &isDefault);
-    if (!isDefault)
-      return NS_OK;
-
-    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-    os->RemoveObserver(this, "quit-application");
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
