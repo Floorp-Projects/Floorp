@@ -262,9 +262,9 @@ PRUint32             nsXULPrototypeAttribute::gNumCacheSets;
 PRUint32             nsXULPrototypeAttribute::gNumCacheFills;
 #endif
 
-
 class nsXULElementTearoff : public nsIDOMElementCSSInlineStyle
 {
+public:
   NS_DECL_ISUPPORTS
 
   nsXULElementTearoff(nsXULElement *aElement)
