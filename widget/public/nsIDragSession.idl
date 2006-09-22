@@ -56,7 +56,7 @@ interface nsIDOMNode;
 interface nsIDragSession : nsISupports
 {
   /**
-    * Set the current state of the drag whether it can be dropped or not.
+    * Set the current state of the drag, whether it can be dropped or not.
     * usually the target "frame" sets this so the native system can render the correct feedback
     */
   attribute boolean canDrop;
@@ -67,13 +67,13 @@ interface nsIDragSession : nsISupports
   attribute unsigned long dragAction;
   
   /**
-    * Sets the current width and height if the drag target area. 
+    * Sets the current width and height of the drag target area. 
     * It will contain the current size of the Frame that the drag is currently in
     */  
   [noscript] attribute nsSize targetSize;
  
   /**
-    * Get the number items that were dropped
+    * Get the number of items that were dropped
     */
   readonly attribute unsigned long numDropItems;
   
@@ -100,7 +100,7 @@ interface nsIDragSession : nsISupports
   void getData ( in nsITransferable aTransferable, in unsigned long aItemIndex ) ;
 
    /**
-    * Check to set if ant of the native data on the clipboard matches this data flavor
+    * Check to set if any of the native data on the clipboard matches this data flavor
     *
     * @result NS_OK if if the data flavor is supported and, NS_ERROR_FAILURE is it is not
     */
