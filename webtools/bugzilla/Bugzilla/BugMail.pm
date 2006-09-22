@@ -90,11 +90,6 @@ END
 # This hash usually comes from the "mailrecipients" var in a template call.
 sub Send {
     my ($id, $forced) = (@_);
-    return ProcessOneBug($id, $forced);
-}
-
-sub ProcessOneBug {
-    my ($id, $forced) = (@_);
 
     my @headerlist;
     my %defmailhead;
