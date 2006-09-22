@@ -1702,7 +1702,7 @@ CNavDTD::HandleSavedTokens(PRInt32 anIndex)
 
   nsresult  result = NS_OK;
 
-  if (anIndex > kNotFound) {
+  if (mSink && (anIndex > kNotFound)) {
     PRInt32 theBadTokenCount = mMisplacedContent.GetSize();
 
     if (theBadTokenCount > 0) {
@@ -1718,7 +1718,7 @@ CNavDTD::HandleSavedTokens(PRInt32 anIndex)
       PRInt32   theTopIndex = anIndex + 1;
       PRInt32   theTagCount = mBodyContext->GetCount();
 
-      if (mSink && mSink->IsFormOnStack()) {
+      if (mSink->IsFormOnStack()) {
         // Do this to synchronize dtd stack and the sink stack.
         // Note: FORM is never on the dtd stack because its always
         // considered as a leaf. However, in the sink FORM can either
