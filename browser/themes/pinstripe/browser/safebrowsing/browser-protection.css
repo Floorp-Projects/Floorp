@@ -104,7 +104,8 @@
 }
 
 #safebrowsing-urlbar-icon {
-  padding-right: 2px;
+  padding: 1px 2px 1px 0;
+  margin: -1px;
 }
 
 #safebrowsing-urlbar-icon[level="safe"] {

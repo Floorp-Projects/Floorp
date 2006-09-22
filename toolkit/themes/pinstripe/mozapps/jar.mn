@@ -1,5 +1,6 @@
 classic.jar:
 % skin mozapps classic/1.0 %skin/classic/mozapps/
+#ifndef MINIMO
   skin/classic/mozapps/downloads/progress-bar-paused.gif          (downloads/progress-bar-paused.gif)
   skin/classic/mozapps/downloads/progress-bar.gif                 (downloads/progress-bar.gif)
   skin/classic/mozapps/downloads/progress-remainder.gif           (downloads/progress-remainder.gif)
@@ -19,7 +20,6 @@ classic.jar:
   skin/classic/mozapps/extensions/about.css                       (extensions/about.css)
   skin/classic/mozapps/extensions/extensions.css                  (extensions/extensions.css)
   skin/classic/mozapps/extensions/update.css                      (extensions/update.css)
-  skin/classic/mozapps/plugins/missingPlugin.css                  (plugins/missingPlugin.css)
   skin/classic/mozapps/profile/profileicon.png                    (profile/profileicon.png)
   skin/classic/mozapps/profile/profileSelection.css               (profile/profileSelection.css)
   skin/classic/mozapps/shared/itemFader.png                       (shared/itemFader.png)
@@ -32,3 +32,4 @@ classic.jar:
   skin/classic/mozapps/update/update.png                          (update/update.png)
   skin/classic/mozapps/xpinstall/xpinstallItemGeneric.png         (xpinstall/xpinstallItemGeneric.png)
   skin/classic/mozapps/xpinstall/xpinstallConfirm.css             (xpinstall/xpinstallConfirm.css)
+#endif

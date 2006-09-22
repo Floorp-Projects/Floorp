@@ -619,6 +619,10 @@ tab {
   -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser-tabs");
 }
 
+.tabbrowser-arrowscrollbox {
+  -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser-arrowscrollbox");
+}
+
 .tabbrowser-tabs > .tabbrowser-tab {
   -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser-tab");
 }

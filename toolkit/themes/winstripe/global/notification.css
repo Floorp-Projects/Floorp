@@ -16,6 +16,7 @@ notification[type="critical"] {
 .messageImage {
   width: 16px;
   height: 16px;
+  margin: 0px 1px 0px 6px;
 }
 
 .messageText {

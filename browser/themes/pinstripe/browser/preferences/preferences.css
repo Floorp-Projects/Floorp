@@ -83,61 +83,90 @@ radio[pane][selected="true"] {
     color: ButtonText !important;
 }
 
+
+/* ----- GENERAL BUTTON ----- */
+
+radio[pane=paneGeneral],
 radio[pane=paneMain] {
 	-moz-image-region: rect(0px, 32px, 32px, 0px)
 }
-
-radio[pane=paneMain]:active {
+radio[pane=paneGeneral]:hover, 
+radio[pane=paneGeneral]:active,
+radio[pane=paneGeneral][selected="true"],
+radio[pane=paneMain]:hover, 
+radio[pane=paneMain]:active,
+radio[pane=paneMain][selected="true"]  {
 	-moz-image-region: rect(32px, 32px, 64px, 0px)
 }
 
-radio[pane=panePrivacy] {
-	-moz-image-region: rect(0px, 64px, 32px, 32px)
-}
-
-radio[pane=panePrivacy]:active {
-	-moz-image-region: rect(32px, 64px, 64px, 32px)
-}
-
-radio[pane=paneContent] {
-	-moz-image-region: rect(0px, 96px, 32px, 64px)
-}
-
-radio[pane=paneContent]:active {
-	-moz-image-region: rect(32px, 96px, 64px, 64px)
-}
-
-radio[pane=paneFeeds] {
-	-moz-image-region: rect(0px, 96px, 32px, 64px)
-}
-
-radio[pane=paneFeeds]:active {
-	-moz-image-region: rect(32px, 96px, 64px, 64px)
-}
+/* ----- TABS BUTTON ----- */
 
 radio[pane=paneTabs] {
-	-moz-image-region: rect(0px, 128px, 32px, 96px)
+	-moz-image-region: rect(0px, 64px, 32px, 32px);
+}
+radio[pane=paneTabs]:hover,
+radio[pane=paneTabs]:active,
+radio[pane=paneTabs][selected="true"] {
+	-moz-image-region: rect(32px, 64px, 64px, 32px);
 }
 
-radio[pane=paneTabs]:active {
-	-moz-image-region: rect(32px, 128px, 64px, 96px)
+/* ----- CONTENT BUTTON ----- */
+
+radio[pane=paneContent] {
+	-moz-image-region: rect(0px, 96px, 32px, 64px);
 }
+
+radio[pane=paneContent]:hover,
+radio[pane=paneContent]:active,
+radio[pane=paneContent][selected="true"] {
+	-moz-image-region: rect(32px, 96px, 64px, 64px);
+}
+
+/* ----- FEEDS BUTTON ----- */
+
+radio[pane=paneFeeds] {
+	-moz-image-region: rect(0px, 128px, 32px, 96px);
+}
+radio[pane=paneFeeds]:hover,
+radio[pane=paneFeeds]:active,
+radio[pane=paneFeeds][selected="true"] {
+	-moz-image-region: rect(32px, 128px, 64px, 96px);
+}
+
+/* ----- PRIVACY BUTTON ----- */
+
+radio[pane=panePrivacy] {
+	-moz-image-region: rect(0px, 160px, 32px, 128px);
+}
+radio[pane=panePrivacy]:hover,
+radio[pane=panePrivacy]:active,
+radio[pane=panePrivacy][selected="true"] {
+	-moz-image-region: rect(32px, 160px, 64px, 128px);
+}
+
+/* ----- SECURITY BUTTON ----- */
 
 radio[pane=paneSecurity] {
-	-moz-image-region: rect(0px, 224px, 32px, 192px)
+	-moz-image-region: rect(0px, 192px, 32px, 160px);
+}
+radio[pane=paneSecurity]:hover,
+radio[pane=paneSecurity]:active,
+radio[pane=paneSecurity][selected="true"] {
+	-moz-image-region: rect(32px, 192px, 64px, 160px);
 }
 
-radio[pane=paneSecurity]:active {
-	-moz-image-region: rect(32px, 224px, 64px, 192px)
-}
+/* ----- ADVANCED BUTTON ----- */
 
 radio[pane=paneAdvanced] {
-	-moz-image-region: rect(0px, 192px, 32px, 160px)
+	-moz-image-region: rect(0px, 224px, 32px, 192px);
+}
+radio[pane=paneAdvanced]:hover,
+radio[pane=paneAdvanced]:active,
+radio[pane=paneAdvanced][selected="true"] {
+	-moz-image-region: rect(32px, 224px, 64px, 192px);
 }
 
-radio[pane=paneAdvanced]:active {
-	-moz-image-region: rect(32px, 192px, 64px, 160px)
-}
+
 
 .content-box > separator {
   border: 1px solid red;

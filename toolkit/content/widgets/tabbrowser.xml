@@ -2499,13 +2499,107 @@
     </handlers>
   </binding>
 
+  <binding id="tabbrowser-arrowscrollbox" extends="chrome://global/content/bindings/scrollbox.xml#arrowscrollbox-clicktoscroll">
+    <content>
+      <xul:toolbarbutton class="scrollbutton-up" collapsed="true"
+                         xbl:inherits="orient"
+                         anonid="scrollbutton-up"
+                         onmousedown="_startScroll(-1);"
+                         onmouseup="_stopScroll();"
+                         onmouseout="_stopScroll();"
+                         chromedir="&locale.dir;"/>
+      <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1" anonid="scrollbox">
+        <children/>
+      </xul:scrollbox>
+      <xul:stack align="center" pack="end" class="scrollbutton-down-stack">
+        <!-- XXXsspitzer hack
+             this extra hbox with position: relative
+             is needed to work around two bugs.
+             see bugs #346307 and #346035 
+        -->
+        <xul:hbox style="position: relative;" class="scrollbutton-rel-box">
+          <xul:hbox flex="1" class="scrollbutton-down-box" 
+                             collapsed="true" anonid="down-box"/>
+        </xul:hbox>
+        <!-- XXXsspitzer hack
+             this extra hbox with position: relative
+             is needed to work around two bugs.
+             see bugs #346307 and #346035 
+        -->
+        <xul:hbox style="position: relative;" class="scrollbutton-rel-box">
+          <xul:hbox flex="1" class="scrollbutton-down-box-animate" 
+                             collapsed="true" anonid="down-box-animate"/>
+        </xul:hbox>
+        <!-- XXXsspitzer hack
+             this extra hbox with position: relative
+             is needed to work around two bugs.
+             see bugs #346307 and #346035 
+        -->
+        <xul:hbox style="position: relative;" class="scrollbutton-rel-box">
+          <xul:toolbarbutton class="scrollbutton-down" collapsed="true"
+                             xbl:inherits="orient"
+                             anonid="scrollbutton-down"
+                             onmousedown="_startScroll(1);"
+                             onmouseup="_stopScroll();"
+                             onmouseout="_stopScroll();"
+                             chromedir="&locale.dir;"/>
+        </xul:hbox>
+      </xul:stack>
+    </content>
+    <implementation>
+      <field name="_scrollButtonDownBox">
+        document.getAnonymousElementByAttribute(this, "anonid", "down-box");
+      </field>
+      <field name="_scrollButtonDownBoxAnimate">
+        document.getAnonymousElementByAttribute(this, "anonid", "down-box-animate");
+      </field>
+    </implementation>
+    <handlers>
+      <handler event="underflow"><![CDATA[
+        // filter underflow events which were dispatched on nested scrollboxes
+        if (event.target != this)
+          return;
+
+        this._scrollButtonDownBox.collapsed = true;
+        this._scrollButtonDownBoxAnimate.collapsed = true;
+      ]]></handler>
+
+      <handler event="overflow"><![CDATA[
+        // filter underflow events which were dispatched on nested scrollboxes
+        if (event.target != this)
+          return;
+
+        this._scrollButtonDownBox.collapsed = false;
+        this._scrollButtonDownBoxAnimate.collapsed = false;
+      ]]></handler>
+
+      <handler event="UpdatedScrollButtonsDisabledState"><![CDATA[
+        // filter underflow events which were dispatched on nested scrollboxes
+        if (event.target != this)
+          return;
+
+        // fix for bug #352353
+        // unlike the scrollup button on the tab strip (which is a 
+        // simple toolbarbutton) the scrolldown button is 
+        // a more complicated stack of boxes and a toolbarbutton
+        // so that we can animate when a tab is opened offscreen.
+        // in order to style the box with the actual background image
+        // we need to manually set the disable state to match the
+        // disable state of the toolbarbutton.
+        this._scrollButtonDownBox
+            .setAttribute("disabled", this._scrollButtonDown.disabled);
+      ]]></handler>
+
+    </handlers>
+  </binding>
+
   <binding id="tabbrowser-tabs"
            extends="chrome://global/content/bindings/tabbox.xml#tabs">
     <content>
-      <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1" style="min-width: 1px;" clicktoscroll="true">
+      <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1" style="min-width: 1px;" class="tabbrowser-arrowscrollbox">
         <children includes="tab"/>
       </xul:arrowscrollbox>
-      <xul:stack align="center" pack="end" class="scrollbutton-down-stack">
+      <xul:stack align="center" pack="end" class="tabs-alltabs-stack">
         <!-- XXXsspitzer hack
              this extra hbox with position: relative
              is needed to work around two bugs.
@@ -2520,8 +2614,18 @@
              see bugs #346307 and #346035 
         -->
         <xul:hbox style="position: relative;">
+          <xul:hbox flex="1" class="tabs-alltabs-box-animate" 
+                    anonid="alltabs-box-animate"/>
+        </xul:hbox>
+        <!-- XXXsspitzer hack
+             this extra hbox with position: relative
+             is needed to work around two bugs.
+             see bugs #346307 and #346035 
+        -->
+        <xul:hbox style="position: relative;">
           <xul:toolbarbutton class="tabs-alltabs-button" type="menu"
-                             anonid="alltabs-button" tooltipstring="&listAllTabs.label;">
+                             anonid="alltabs-button"
+                             tooltipstring="&listAllTabs.label;">
             <xul:menupopup class="tabs-alltabs-popup"
                            anonid="alltabs-popup" 
                            position="after_end"/>
@@ -2645,7 +2749,7 @@
           case 1:
             try {
               var width = this.firstChild.boxObject.width;
-              // 0 width is an invalid value and indicates 
+              // 0 width is an invalid value and indicates
               // an item without display, so ignore.
               if (width > this.mTabClipWidth || width == 0)
                 this.setAttribute("closebuttons", "alltabs");
@@ -2697,6 +2801,7 @@
               break;
             case "underflow":
               this.removeAttribute("overflow");
+              break;
           }
         ]]></body>
       </method>
@@ -2706,9 +2811,14 @@
                                                 "anonid", "alltabs-popup");
       </field>
 
-      <field name="mAllTabsBox">
+      <field name="mAllTabsBoxAnimate">
         document.getAnonymousElementByAttribute(this, 
-                                                "anonid", "alltabs-box");
+                                                "anonid",
+                                                "alltabs-box-animate");
+      </field>
+
+      <field name="mDownBoxAnimate">
+        this.mTabstrip._scrollButtonDownBoxAnimate;
       </field>
 
       <field name="mAllTabsButton">
@@ -2735,7 +2845,8 @@
               this._animateTimer.cancel();
 
             this._animateStep = -1;
-            this.mAllTabsBox.style.opacity = 0.0;
+            this.mAllTabsBoxAnimate.style.opacity = 0.0;
+            this.mDownBoxAnimate.style.opacity = 0.0;
           }
         ]]></body>
       </method>
@@ -2777,7 +2888,8 @@
             aTimer.cancel();
 
           var percent = this._animatePercents[this._animateStep];
-          this.mAllTabsBox.style.opacity = percent;
+          this.mAllTabsBoxAnimate.style.opacity = percent;
+          this.mDownBoxAnimate.style.opacity = percent;
 
           if (this._animateStep < (this._animatePercents.length - 1))
             this._animateStep++;

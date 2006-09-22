@@ -81,7 +81,6 @@ button[dlgtype="help"]:active > .button-box > .button-icon {
 button[dlgtype="help"] > .button-box > .button-text {
   display: none !important;
 }
-
 /* ::::: XBL bindings ::::: */
 
 menulist > menupopup,

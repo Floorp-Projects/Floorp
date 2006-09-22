@@ -132,7 +132,7 @@
 
 .console-row {
   list-style-image: url("chrome://global/skin/console/console-bullets.png");
-  -moz-image-region: rect(0px, 32px, 32px, 0px);
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 .console-row[type="error"],
 .console-row[type="exception"] {
@@ -140,12 +140,12 @@
 }
 
 .console-row[type="warning"] {
-  -moz-image-region: rect(0px, 64px, 32px, 32px);
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
   background-color: #F8F3CC;
 }
 
 .console-row[type="message"] {
-  -moz-image-region: rect(0px, 96px, 32px, 64px);
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
   background-color: #D3EDFF;
 }
 
@@ -179,38 +179,38 @@ toolbar#ToolbarMode toolbarbutton {
 }
 
 toolbarbutton[observes="Console:modeWarnings"] {
-  -moz-image-region: rect(0px, 32px, 32px, 0px);
+  -moz-image-region: rect(0px, 24px, 24px, 0px);
 }
 toolbarbutton[observes="Console:modeWarnings"]:hover:active {
-  -moz-image-region: rect(32px, 32px, 64px, 0px);
+  -moz-image-region: rect(24px, 24px, 48px, 0px);
 }
 
 toolbarbutton[observes="Console:modeMessages"] {
-  -moz-image-region: rect(0px, 64px, 32px, 32px);
+  -moz-image-region: rect(0px, 48px, 24px, 24px);
 }
 toolbarbutton[observes="Console:modeMessages"]:hover:active {
-  -moz-image-region: rect(32px, 64px, 64px, 32px);
+  -moz-image-region: rect(24px, 48px, 48px, 24px);
 }
 
 toolbarbutton[observes="Console:modeErrors"] {
-  -moz-image-region: rect(0px, 96px, 32px, 64px);
+  -moz-image-region: rect(0px, 72px, 24px, 48px);
 }
 toolbarbutton[observes="Console:modeErrors"]:hover:active {
-  -moz-image-region: rect(32px, 96px, 64px, 64px);
+  -moz-image-region: rect(24px, 72px, 48px, 48px);
 }
 
 toolbarbutton[observes="Console:modeAll"] {
-  -moz-image-region: rect(0px, 128px, 32px, 96px);
+  -moz-image-region: rect(0px, 96px, 24px, 72px);
 }
 toolbarbutton[observes="Console:modeAll"]:hover:active {
-  -moz-image-region: rect(32px, 128px, 64px, 96px);
+  -moz-image-region: rect(24px, 96px, 48px, 72px);
 }
 
 toolbarbutton[observes="Console:clear"] {
-  -moz-image-region: rect(0px, 160px, 32px, 128px);
+  -moz-image-region: rect(0px, 120px, 24px, 96px);
 }
 toolbarbutton[observes="Console:clear"]:hover:active {
-  -moz-image-region: rect(32px, 160px, 64px, 128px);
+  -moz-image-region: rect(24px, 120px, 48px, 96px);
 }
 
 #ConsoleBox {

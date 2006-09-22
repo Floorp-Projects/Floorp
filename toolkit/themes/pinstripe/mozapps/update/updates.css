@@ -74,12 +74,6 @@ wizard[currentpageid="updatesfound"] .wizard-page-box {
   margin: 1px 0px 4px 3px;
 }
 
-#incompatibleCheckingThrobber {
-  -moz-margin-end: 4px;
-  background-color: transparent;
-  list-style-image: url("chrome://global/skin/icons/loading_16.gif");
-}
-
 #updateMoreInfoURL, #updateMoreInfoURLLabel {
   -moz-margin-start: 0px;
   -moz-margin-end: 0px;

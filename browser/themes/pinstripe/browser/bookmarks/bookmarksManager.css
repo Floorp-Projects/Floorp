@@ -4,85 +4,94 @@
 }
 
 toolbarbutton#newbookmark {
-  -moz-image-region: rect(0px, 224px, 32px, 192px);
+  -moz-image-region: rect(0px, 168px, 24px, 144px);
 }
-toolbarbutton#newbookmark:active {
-  -moz-image-region: rect(32px, 224px, 64px, 192px);
+toolbarbutton#newbookmark:not([disabled="true"]):hover {
+  -moz-image-region: rect(24px, 168px, 48px, 144px);
 }
 toolbarbutton#newbookmark[disabled="true"] {
-  -moz-image-region: rect(64px, 224px, 96px, 192px);
+  -moz-image-region: rect(48px, 168px, 72px, 144px);
 }
-
-toolbarbutton#newlivemark {
-  -moz-image-region: rect(0px, 224px, 32px, 192px);
-}
-
-toolbarbutton#newlivemark:hover {
-  -moz-image-region: rect(32px, 224px, 64px, 192px);
-}
-
-toolbarbutton#newlivemark[disabled="true"] {
-  -moz-image-region: rect(64px, 224px, 96px, 192px);
+toolbarbutton#newbookmark:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(72px, 168px, 96px, 144px);
 }
 
 toolbarbutton#newfolder {
-  -moz-image-region: rect(0px, 32px, 32px, 0px);
+  -moz-image-region: rect(0px, 24px, 24px, 0px);
 }
-toolbarbutton#newfolder:active {
-  -moz-image-region: rect(32px, 32px, 64px, 0px);
+toolbarbutton#newfolder:not([disabled="true"]):hover {
+  -moz-image-region: rect(24px, 24px, 48px, 0px);
 }
 toolbarbutton#newfolder[disabled="true"] {
-  -moz-image-region: rect(64px, 32px, 96px, 0px);
+  -moz-image-region: rect(48px, 24px, 72px, 0px);
+}
+toolbarbutton#newfolder:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(72px, 24px, 96px, 0px);
 }
 
 toolbarbutton#newseparator {
-  -moz-image-region: rect(0px, 64px, 32px, 32px);
+  -moz-image-region: rect(0px, 48px, 24px, 24px);
 }
-toolbarbutton#newseparator:active {
-  -moz-image-region: rect(32px, 64px, 64px, 32px);
+toolbarbutton#newseparator:not([disabled="true"]):hover {
+  -moz-image-region: rect(24px, 48px, 48px, 24px);
 }
 toolbarbutton#newseparator[disabled="true"] {
-  -moz-image-region: rect(64px, 64px, 96px, 32px);
+  -moz-image-region: rect(48px, 48px, 72px, 24px);
+}
+toolbarbutton#newseparator:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(72px, 48px, 96px, 24px);
 }
 
 toolbarbutton#moveBookmark {
-  -moz-image-region: rect(0px, 96px, 32px, 64px);
+  -moz-image-region: rect(0px, 72px, 24px, 48px);
 }
-toolbarbutton#moveBookmark:active {
-  -moz-image-region: rect(32px, 96px, 64px, 64px);
+toolbarbutton#moveBookmark:not([disabled="true"]):hover {
+  -moz-image-region: rect(24px, 72px, 48px, 48px);
 }
 toolbarbutton#moveBookmark[disabled="true"] {
-  -moz-image-region: rect(64px, 96px, 96px, 64px);
+  -moz-image-region: rect(48px, 72px, 72px, 48px);
+}
+toolbarbutton#moveBookmark:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(72px, 72px, 96px, 48px);
 }
 
 toolbarbutton#properties {
-  -moz-image-region: rect(0px, 128px, 32px, 96px);
+  -moz-image-region: rect(0px, 96px, 24px, 72px);
 }
-toolbarbutton#properties:active {
-  -moz-image-region: rect(32px, 128px, 64px, 96px);
+toolbarbutton#properties:not([disabled="true"]):hover {
+  -moz-image-region: rect(24px, 96px, 48px, 72px);
 }
 toolbarbutton#properties[disabled="true"] {
-  -moz-image-region: rect(64px, 128px, 96px, 96px);
+  -moz-image-region: rect(48px, 96px, 72px, 72px);
+}
+toolbarbutton#properties:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(72px, 96px, 96px, 72px);
 }
 
 toolbarbutton#rename {
-  -moz-image-region: rect(0px, 160px, 32px, 128px);
+  -moz-image-region: rect(0px, 120px, 24px, 96px);
 }
-toolbarbutton#rename:active {
-  -moz-image-region: rect(32px, 160px, 64px, 128px);
+toolbarbutton#rename:not([disabled="true"]):hover {
+  -moz-image-region: rect(24px, 120px, 48px, 96px);
 }
 toolbarbutton#rename[disabled="true"] {
-  -moz-image-region: rect(64px, 160px, 96px, 128px);
+  -moz-image-region: rect(48px, 120px, 72px, 96px);
+}
+toolbarbutton#rename:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(72px, 120px, 96px, 96px);
 }
 
 toolbarbutton#delete {
-  -moz-image-region: rect(0px, 192px, 32px, 160px);
+  -moz-image-region: rect(0px, 144px, 24px, 120px);
 }
-toolbarbutton#delete:active {
-  -moz-image-region: rect(32px, 192px, 64px, 160px);
+toolbarbutton#delete:not([disabled="true"]):hover {
+  -moz-image-region: rect(24px, 144px, 48px, 120px);
 }
 toolbarbutton#delete[disabled="true"] {
-  -moz-image-region: rect(64px, 192px, 96px, 160px);
+  -moz-image-region: rect(48px, 144px, 72px, 120px);
+}
+toolbarbutton#delete:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(72px, 144px, 96px, 120px);
 }
 
 #bookmarks-search {

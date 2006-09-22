@@ -74,6 +74,10 @@
     list-style-image     : url("chrome://global/skin/arrow/arrow-dn-dis.gif");
   }
 
+.scrollbutton-up > .toolbarbutton-text,
+.scrollbutton-down > .toolbarbutton-text {
+  display: none;
+}
 
 autorepeatbutton
   {

@@ -26,12 +26,13 @@ html {
   -moz-padding-end: .3em;
   margin: -4em auto 0 auto;
   font-size: 110%;
-  background-color: rgb(255,255,225);
+  background: url("chrome://browser/skin/feeds/feedIcon.png") 1.4em 5.9em no-repeat rgb(255,255,225);
+  padding: 5em 3em 0 3em;
 }
 
-#feedHeader[firstrun="true"] {
-  background: url("chrome://browser/skin/feeds/feedIcon.png") 1.4em 5.9em no-repeat rgb(255,255,225);
-  padding: 5em 3em 3em 3em;
+
+#feedHeader[firstrun="true"] #feedIntroText {
+  display: block;
 }
 
 #feedIntroText {
@@ -39,73 +40,17 @@ html {
   -moz-margin-start: 2em;
 }
 
-#feedHeader[firstrun="true"] #feedIntroText {
-  display: block;
-}
-
 #feedSubscribeLine {
-  padding: 1em;
-  -moz-border-radius: 3px;
+  padding: 0 1em 1em 2em;
 }
 
-#feedHeader[firstrun="true"] #feedSubscribeLine {
-  -moz-margin-start: 1.7em;
-  background: -moz-Field;
-}
-
-#feedSubscribeHandler {
-  border: 1px solid ThreeDLightShadow;
-  -moz-border-radius: 3px;
+#alwaysUse {
   padding: 3px;
 }
 
-#feedSubscribeHandleText {
-  -moz-padding-start: 20px;
-  background: url("chrome://browser/skin/feeds/feedIcon16.png") left 0 no-repeat;
+#feedHeader[firstrun="true"] #feedSubscribeLine {
+  padding-left: 3.7em;
 }
-
-.feedSubscribeLink {
-  font-weight: bold;
-  -moz-margin-end: .4em;
-  padding: .2em .1em .2em .1em;
-}
-
-.feedSubscribeLinkBox {
-  background: url("chrome://browser/skin/feeds/feedIcon16.png") left 0 no-repeat;
-  -moz-padding-start: 19px;
-  -moz-margin-end: 0px;
-}
-
-#feedSubscribeOptionsGroup {
-  -moz-border-radius: 4px;
-  border: 2px solid ThreeDLightShadow;
-  margin-bottom: .3em;
-}
-
-#feedSubscribeOptionsGroupTitle {
-  -moz-padding-start: .3em;
-  -moz-padding-end: .3em;
-}
-
-.styleLessBorderLess {
-  -moz-appearance: none;
-  border: none;
-}
-
-#feedSubscribeOptions {
-  -moz-margin-start: 5em;
-  -moz-margin-end: 5em;
-  margin-top: 2em;
-}
-
-#feedChangeSubscribeOptions {
-  -moz-margin-start: .4em;
-}
-
-#feedSubscribeDoneChangingOptions {
-  font-weight: bold;
-}
-
 
 body {
   margin: 0;
@@ -168,53 +113,4 @@ a[href] img {
 
 .link:hover:active {
   color: #FF0000;
-}
-
-.plain {
-  -moz-appearance: none;
-  border: 0px;
-  margin: 0px;
-  padding: 0px;
-  background: none;
-}
-
-.plain > .button-box {
-  border: 1px solid transparent;
-  margin: 0px;
-  padding: 0px;
-  background: none;
-}
-
-.plain:focus > .button-box {
-  border: 1px dotted ThreeDDarkShadow;
-}
-
-#readerContainer {
-  -moz-appearance: listbox;
-}
-
-#readers {
-  -moz-appearance: none;
-  border: none;
-  margin: 0px;
-}
-
-#readers > listitem {
-  -moz-padding-start: 4px;
-}
-
-#application {
-  border-bottom: 1px solid ThreeDShadow;
-}
-
-#readerGroup {
-  -moz-padding-end: 14px;
-}
-
-.feedSubscribeButton {
-  font-weight: bold;
-  list-style-image: url("chrome://browser/skin/feeds/feedIcon16.png");
-}
-.feedSubscribeButton .button-icon {
-  -moz-margin-end: 3px;
 }
