@@ -516,7 +516,7 @@ int JAR_find_next (JAR_Context *ctx, JAR_Item **it)
       *it = ctx->next->thing;
       ctx->next = ctx->next->next;
 
-      if (!it || !*it || (*it)->type != finding)
+      if (!*it || (*it)->type != finding)
         continue;
 
       if (ctx->pattern && *ctx->pattern)
