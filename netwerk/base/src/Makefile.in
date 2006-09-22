@@ -58,6 +58,7 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
 		nsTransportUtils.cpp \
 		nsAsyncStreamCopier.cpp \
+		nsAuthInformationHolder.cpp \
 		nsBaseChannel.cpp \
 		nsBaseContentStream.cpp \
 		nsBufferedStreams.cpp \

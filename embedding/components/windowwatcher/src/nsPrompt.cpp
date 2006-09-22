@@ -667,9 +667,14 @@ nsPrompt::PromptPasswordAdapter(nsIPromptService* aService,
   PRUnichar *user = ToNewUnicode(defaultUser),
             *pass = ToNewUnicode(defaultPass);
   nsresult rv;
-  rv = aService->PromptUsernameAndPassword(aParent, nsnull, message.get(),
-                                           &user, &pass, aCheckLabel,
-                                           aCheckValue, retval);
+  if (flags & nsIAuthInformation::ONLY_PASSWORD)
+    rv = aService->PromptPassword(aParent, nsnull, message.get(),
+                                  &pass, aCheckLabel,
+                                  aCheckValue, retval);
+  else
+    rv = aService->PromptUsernameAndPassword(aParent, nsnull, message.get(),
+                                             &user, &pass, aCheckLabel,
+                                             aCheckValue, retval);
 
   nsAdoptingString userStr(user);
   nsAdoptingString passStr(pass);

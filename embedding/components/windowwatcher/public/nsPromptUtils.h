@@ -38,6 +38,8 @@
 #ifndef NSPROMPTUTILS_H_
 #define NSPROMPTUTILS_H_
 
+#include "nsIHttpChannel.h"
+
 /**
  * @file
  * This file defines some helper functions that simplify interaction
@@ -139,6 +141,15 @@ inline void
 NS_GetAuthKey(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
               nsCString& key)
 {
+  // HTTP does this differently from other protocols
+  nsCOMPtr<nsIHttpChannel> http(do_QueryInterface(aChannel));
+  if (!http) {
+    nsCOMPtr<nsIURI> uri;
+    aChannel->GetURI(getter_AddRefs(uri));
+    uri->GetPrePath(key);
+    return;
+  }
+
   // NOTE: For backwards-compatibility reasons, this must be the ASCII host.
   nsCString host;
   PRInt32 port = -1;

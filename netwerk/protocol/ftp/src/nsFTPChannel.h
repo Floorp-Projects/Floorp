@@ -56,19 +56,12 @@
 #include "netCore.h"
 #include "nsIStreamListener.h"
 #include "nsAutoLock.h"
-#include "nsIPrompt.h"
-#include "nsIAuthPrompt.h"
 #include "nsIFTPChannel.h"
 #include "nsIUploadChannel.h"
 #include "nsIProxyInfo.h"
 #include "nsIProxiedChannel.h"
 #include "nsIResumableChannel.h"
 #include "nsHashPropertyBag.h"
-
-#include "nsICacheService.h"
-#include "nsICacheEntryDescriptor.h"
-#include "nsICacheListener.h"
-#include "nsICacheSession.h"
 
 #define FTP_COMMAND_CHANNEL_SEG_SIZE 64
 #define FTP_COMMAND_CHANNEL_SEG_COUNT 8

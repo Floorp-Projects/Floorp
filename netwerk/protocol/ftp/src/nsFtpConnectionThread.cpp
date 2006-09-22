@@ -58,6 +58,7 @@
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsStreamUtils.h"
+#include "nsICacheService.h"
 #include "nsIURL.h"
 #include "nsISocketTransport.h"
 #include "nsIStreamListenerTee.h"
@@ -65,6 +66,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIStringBundle.h"
 #include "nsCPasswordManager.h"
+#include "nsAuthInformationHolder.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
@@ -658,51 +660,27 @@ nsFtpState::S_user() {
         usernameStr.AppendLiteral("anonymous");
     } else {
         if (mUsername.IsEmpty()) {
-            nsCOMPtr<nsIAuthPrompt> prompter;
-            mChannel->GetCallback(prompter);
+            nsCOMPtr<nsIAuthPrompt2> prompter;
+            NS_QueryAuthPrompt2(NS_STATIC_CAST(nsIChannel*, mChannel),
+                                getter_AddRefs(prompter));
             if (!prompter)
                 return NS_ERROR_NOT_INITIALIZED;
 
-            nsXPIDLString user, passwd;
-            nsCAutoString prePath;
-            rv = mChannel->URI()->GetPrePath(prePath);
-            if (NS_FAILED(rv))
-                return rv;
-            NS_ConvertUTF8toUTF16 prePathU(prePath);
-
-            nsCOMPtr<nsIStringBundleService> bundleService =
-                    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-            if (NS_FAILED(rv))
-                return rv;
-
-            nsCOMPtr<nsIStringBundle> bundle;
-            rv = bundleService->CreateBundle(NECKO_MSGS_URL, getter_AddRefs(bundle));
-            if (NS_FAILED(rv))
-                return rv;
-            
-            const PRUnichar *formatStrings[] = { prePathU.get() };
-            NS_NAMED_LITERAL_STRING(name, "EnterUserPasswordFor");
-
-            nsXPIDLString formattedString;
-            rv = bundle->FormatStringFromName(name.get(), formatStrings, 1,
-                                              getter_Copies(formattedString));                   
-            if (NS_FAILED(rv))
-                return rv;
+            nsRefPtr<nsAuthInformationHolder> info =
+                new nsAuthInformationHolder(nsIAuthInformation::AUTH_HOST,
+                                            EmptyString(),
+                                            EmptyCString());
 
             PRBool retval;
-            rv = prompter->PromptUsernameAndPassword(nsnull,
-                                                     formattedString,
-                                                     prePathU.get(),
-                                                     nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
-                                                     getter_Copies(user), 
-                                                     getter_Copies(passwd), 
-                                                     &retval);
+            rv = prompter->PromptAuth(mChannel, nsIAuthPrompt2::LEVEL_NONE,
+                                      info, &retval);
+
             // if the user canceled or didn't supply a username we want to fail
-            if (NS_FAILED(rv) || !retval || (user && !*user) )
+            if (NS_FAILED(rv) || !retval || info->User().IsEmpty())
                 return NS_ERROR_FAILURE;
 
-            mUsername = user;
-            mPassword = passwd;
+            mUsername = info->User();
+            mPassword = info->Password();
         }
         // XXX Is UTF-8 the best choice?
         AppendUTF16toUTF8(mUsername, usernameStr);
@@ -772,50 +750,28 @@ nsFtpState::S_pass() {
         }
     } else {
         if (mPassword.IsEmpty() || mRetryPass) {
-            nsCOMPtr<nsIAuthPrompt> prompter;
-            mChannel->GetCallback(prompter);
+            nsCOMPtr<nsIAuthPrompt2> prompter;
+            NS_QueryAuthPrompt2(NS_STATIC_CAST(nsIChannel*, mChannel),
+                                getter_AddRefs(prompter));
             if (!prompter)
                 return NS_ERROR_NOT_INITIALIZED;
 
-            nsCAutoString prePath;
-            rv = mChannel->URI()->GetPrePath(prePath);
-            if (NS_FAILED(rv))
-                return rv;
-            NS_ConvertUTF8toUTF16 prePathU(prePath);
-            
-            nsCOMPtr<nsIStringBundleService> bundleService =
-                    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-            if (NS_FAILED(rv))
-                return rv;
+            nsRefPtr<nsAuthInformationHolder> info =
+                new nsAuthInformationHolder(nsIAuthInformation::AUTH_HOST |
+                                            nsIAuthInformation::ONLY_PASSWORD,
+                                            EmptyString(),
+                                            EmptyCString());
 
-            nsCOMPtr<nsIStringBundle> bundle;
-            rv = bundleService->CreateBundle(NECKO_MSGS_URL,
-                                             getter_AddRefs(bundle));
-
-            const PRUnichar *formatStrings[2] = {
-                mUsername.get(), prePathU.get()
-            };
-            NS_NAMED_LITERAL_STRING(name, "EnterPasswordFor");
-
-            nsXPIDLString formattedString;
-            rv = bundle->FormatStringFromName(name.get(), formatStrings, 2,
-                                              getter_Copies(formattedString)); 
-            if (NS_FAILED(rv))
-                return rv;
-
-            nsXPIDLString passwd;
             PRBool retval;
-            rv = prompter->PromptPassword(nsnull,
-                                          formattedString,
-                                          prePathU.get(), 
-                                          nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
-                                          getter_Copies(passwd), &retval);
+            rv = prompter->PromptAuth(mChannel, nsIAuthPrompt2::LEVEL_NONE,
+                                      info, &retval);
+
             // we want to fail if the user canceled. Note here that if they want
             // a blank password, we will pass it along.
             if (NS_FAILED(rv) || !retval)
                 return NS_ERROR_FAILURE;
 
-            mPassword = passwd;
+            mPassword = info->Password();
         }
         // XXX Is UTF-8 the best choice?
         AppendUTF16toUTF8(mPassword, passwordStr);
