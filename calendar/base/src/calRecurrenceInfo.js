@@ -352,6 +352,12 @@ calRecurrenceInfo.prototype = {
             dump("recurrence tweaking exception:"+ex+'\n');
         }
 
+        var rangeEnd = aRangeEnd;
+        if (rangeEnd && rangeEnd.isDate) {
+            rangeEnd = aRangeEnd.clone();
+            rangeEnd.isDate = false;
+        }
+
         var startDate = this.mBaseItem.recurrenceStartDate;
         var dates = [];
         
@@ -406,20 +412,6 @@ calRecurrenceInfo.prototype = {
             else
                 sortedRecurrenceItems.unshift(ritem);
         }
-
-        function convertDate(date) {
-          if (date.isDate) {
-            var newDate = date.clone();
-            newDate.hour = 0;
-            newDate.minute = 0;
-            newDate.second = 0;
-            newDate.isDate = false;
-            return newDate;
-          } else {
-            return date;
-          }
-        }
-
         for each (ritem in sortedRecurrenceItems) {
             var cur_dates;
 
@@ -432,12 +424,9 @@ calRecurrenceInfo.prototype = {
             } else {
                 maxCount = aMaxCount;
             }
-            // If any of these dates are not datetime objects, it will screw
-            // up the timezone conversions and stuff, which will in turn screw
-            // up the comparisons and list of occurrences. So, we convert.
-            cur_dates = ritem.getOccurrences(convertDate(startDate),
-                                             convertDate(searchStart),
-                                             convertDate(aRangeEnd),
+            cur_dates = ritem.getOccurrences(startDate,
+                                             searchStart,
+                                             rangeEnd,
                                              maxCount, {});
 
             if (cur_dates.length == 0)
