@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: dbinit.c,v 1.29 2006/06/26 23:42:59 wtchang%redhat.com Exp $ */
+/* $Id: dbinit.c,v 1.30 2006/09/22 00:19:49 julien.pierre.bugs%sun.com Exp $ */
 
 #include <ctype.h>
 #include "seccomon.h"
@@ -291,6 +291,7 @@ sftk_freeCertDB(NSSLOWCERTCertDBHandle *certHandle)
    PRInt32 ref = PR_AtomicDecrement(&certHandle->ref);
    if (ref == 0) {
 	nsslowcert_ClosePermCertDB(certHandle);
+	PORT_Free(certHandle);
    }
 }
 
