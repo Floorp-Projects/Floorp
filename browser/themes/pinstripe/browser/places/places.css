@@ -118,6 +118,29 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
   margin: 6px -4px 0px 2px;
 }
 
+.textbox-input-closebutton {
+  -moz-appearance: none;
+  margin: 1px 2px 1px 1px;
+  min-width: 0;
+  background-color: transparent;
+  border: none;
+  padding: 0 !important;
+  list-style-image: url("chrome://global/skin/icons/closetab.png");
+  width: 16px;
+  height: 16px;
+  cursor: default;
+}
+
+.textbox-input-closebutton > .button-box {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.textbox-input-closebutton:hover:active {
+  list-style-image: url("chrome://global/skin/icons/closetab-active.png");
+}
+
 .small {
   font-size: x-small;
   min-width: 0px;
