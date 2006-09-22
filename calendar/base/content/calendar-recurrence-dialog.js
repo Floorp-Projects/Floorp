@@ -189,11 +189,18 @@ function loadDialog()
                     setElementValue("repeat-ntimes-count", rule.count );
                 }
             } else {
-                var endDate = rule.endDate.getInTimezone("UTC");
+                var endDate = rule.endDate;
                 if (!endDate) {
                     setElementValue("recurrence-duration", "forever");
                 } else {
-                    // convert the datetime from UTC to localtime.
+
+                    // rule.endDate is a floating datetime, however per RFC2445
+                    // it must be in UTC. Since we want the datepicker to show
+                    // the date based on our _local_ timezone, we must first
+                    // "pin" the floating datetime to UTC, and then convert
+                    // from UTC to our local timezone. We _can't_ simply
+                    // convert directly from floating to our local timezone.
+                    endDate = endDate.getInTimezone("UTC");
                     endDate = endDate.getInTimezone(calendarDefaultTimezone());
                     setElementValue("recurrence-duration", "until");
                     setElementValue("repeat-until-date", endDate.jsDate);
