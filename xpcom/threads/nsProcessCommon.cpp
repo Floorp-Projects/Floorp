@@ -287,6 +287,7 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
             }
             mExitValue = exitCode;
             CloseHandle(procInfo.hProcess);
+            CloseHandle(procInfo.hThread);
         }
         else
             status = PR_FAILURE;
