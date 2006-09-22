@@ -54,6 +54,7 @@
 #define MODULES \
     MODULE(xpcomObsoleteModule) \
     MODULE(nsI18nModule) \
+    MODULE(nsChardetModule) \
     MODULE(nsUConvModule) \
     MODULE(nsUCvMathModule) \
     MODULE(nsJarModule) \

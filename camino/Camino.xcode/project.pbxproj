@@ -1590,6 +1590,7 @@
 			dstSubfolderSpec = 6;
 			files = (
 				E4C7D98C0A32108500B455AD,
+				DEDDE2930ABFB4B400D415F2,
 				0E6A98A1097E0091007962C1,
 				82180ACB07368BF2002EFA6D,
 				3F44ACD005BDFB9F00CB4B08,
@@ -1793,6 +1794,7 @@
 				F5F181C90208006F0124611E,
 				F507A82C030BFB7901026D5D,
 				F6BD63A601B3131201A962F7,
+				DEDDE22D0ABFB21A00D415F2,
 				F6BD63A701B3131201A962F7,
 				F6BD63A801B3131201A962F7,
 				F6BD63A901B3131201A962F7,
@@ -4716,6 +4718,7 @@
 				DE74F7620AB2612700FD1D5B,
 				DE74F7650AB2618200FD1D5B,
 				DE8C61FF0AB67CDA00078871,
+				DEDDE22E0ABFB21A00D415F2,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -8641,6 +8644,7 @@
 				DE74F7630AB2612700FD1D5B,
 				DE74F7660AB2618200FD1D5B,
 				DE8C62000AB67CDA00078871,
+				DEDDE3320ABFB7E500D415F2,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -10531,6 +10535,7 @@
 				3F44AF9905BDFBA000CB4B08,
 				3F44AF9A05BDFBA000CB4B08,
 				3F44AF9B05BDFBA000CB4B08,
+				DEDDE3CC0ABFB97A00D415F2,
 				3F44AF9C05BDFBA000CB4B08,
 				3F44AF9D05BDFBA000CB4B08,
 				3F44AF9E05BDFBA000CB4B08,
@@ -14273,6 +14278,46 @@
 			refType = 4;
 			sourceTree = "<group>";
 		};
+		DEDDE22D0ABFB21A00D415F2 = {
+			isa = PBXFileReference;
+			lastKnownFileType = "compiled.mach-o.bundle";
+			name = libchardet.dylib;
+			path = ../dist/Embed/components/libchardet.dylib;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		DEDDE22E0ABFB21A00D415F2 = {
+			fileRef = DEDDE22D0ABFB21A00D415F2;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		DEDDE2930ABFB4B400D415F2 = {
+			fileRef = DEDDE22D0ABFB21A00D415F2;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		DEDDE3310ABFB7E500D415F2 = {
+			isa = PBXFileReference;
+                       lastKnownFileType = archive.ar
+			name = libchardet.a;
+			path = ../intl/chardet/src/libchardet.a;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		DEDDE3320ABFB7E500D415F2 = {
+			fileRef = DEDDE3310ABFB7E500D415F2;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		DEDDE3CC0ABFB97A00D415F2 = {
+			fileRef = DEDDE3310ABFB7E500D415F2;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 //DE0
 //DE1
 //DE2
@@ -16515,6 +16560,7 @@
 				F56F242B02AC706801A967F3,
 				F56F243302AC706801A967F3,
 				F56F244502AC714601A967F3,
+				DEDDE3310ABFB7E500D415F2,
 				F56F244602AC714601A967F3,
 				F56F244702AC714601A967F3,
 				F56F244902AC714601A967F3,
