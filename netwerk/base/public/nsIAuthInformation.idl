@@ -68,11 +68,12 @@ interface nsIAuthInformation : nsISupports
   const PRUint32 NEED_DOMAIN = 4;
 
   /**
-   * This dialog only asks for password information. The implementation SHOULD
-   * NOT show a username field. It MUST NOT modify the user attribute,
-   * although it should show its initial value to the user in some form. For
-   * example, a paragraph in the dialog might say "Please enter your password
-   * for user jsmith at server intranet".
+   * This dialog only asks for password information. Authentication prompts
+   * SHOULD NOT show a username field. Attempts to change the username field
+   * will have no effect. nsIAuthPrompt2 implementations should, however, show
+   * its initial value to the user in some form. For example, a paragraph in
+   * the dialog might say "Please enter your password for user jsmith at
+   * server intranet".
    *
    * This flag is mutually exclusive with #NEED_DOMAIN.
    */
@@ -85,7 +86,7 @@ interface nsIAuthInformation : nsISupports
    *
    * It is possible that neither #AUTH_HOST nor #AUTH_PROXY are set.
    *
-   * Implementations should ignore flags they don't understand; especially, they
+   * Auth prompts should ignore flags they don't understand; especially, they
    * should not throw an exception because of an unsupported flag.
    */
   readonly attribute unsigned long flags;
@@ -106,23 +107,25 @@ interface nsIAuthInformation : nsISupports
   readonly attribute AUTF8String authenticationScheme;
 
   /**
-   * The initial value should be used to prefill the dialog.
-   * Implementations should not show the password in clear.
+   * The initial value should be used to prefill the dialog or be shown
+   * in some other way to the user.
    * On return, this parameter should contain the username entered by
    * the user.
+   * This field can only be changed if the #ONLY_PASSWORD flag is not set.
    */
   attribute AString username;
 
   /**
-   * The initial value should be used to prefill the dialog or show it
+   * The initial value should be used to prefill the dialog or be shown
    * in some other way to the user.
-   * On return, this parameter should contain the username entered by
+   * The password should not be shown in clear.
+   * On return, this parameter should contain the password entered by
    * the user.
    */
   attribute AString password;
 
   /**
-   * The initial value should be used to prefill the dialog or show it
+   * The initial value should be used to prefill the dialog or be shown
    * in some other way to the user.
    * On return, this parameter should contain the domain entered by
    * the user.
