@@ -24,7 +24,7 @@
   # reporter:                 number of bugs reported by the user
   # assignee_or_qa:           number of bugs the user is either the assignee
   #                           or the QA contact
-  # bug_activity:             number of bugs the viewed user has activity
+  # bugs_activity:            number of bugs the viewed user has activity
   #                           entries on
   # cc                        number of bugs the viewed user is cc list member
   #                           of
@@ -134,7 +134,7 @@
 
   [% display_warning = 0 %]
 
-  [% IF reporter || bug_activity || flags.setter || longdescs || profiles_activity %]
+  [% IF reporter || bugs_activity || flags.setter || longdescs || profiles_activity %]
     <div class="criticalmessages">
       <p>The following deletions are <b>highly not recommended</b> and
       will generate referential integrity inconsistencies!</p>
