@@ -2717,7 +2717,7 @@ public:
 public:
   nsAttachmentState * mAttach;                      // list of attachments to process
   PRBool mSaveFirst;                                // detach (PR_TRUE) or delete (PR_FALSE)
-  nsCOMPtr<nsIFileSpec> mMsgFileSpec;               // temporary file (processed mail)
+  nsCOMPtr<nsIFile> mMsgFile;                       // temporary file (processed mail)
   nsCOMPtr<nsIOutputStream> mMsgFileStream;         // temporary file (processed mail)
   nsCOMPtr<nsIMsgMessageService> mMessageService;   // original message service
   nsCOMPtr<nsIMsgDBHdr> mOriginalMessage;           // original message header
@@ -2771,15 +2771,19 @@ nsDelAttachListener::OnStopRequest(nsIRequest * aRequest, nsISupports * aContext
   rv = this->QueryInterface( NS_GET_IID(nsIMsgCopyServiceListener), getter_AddRefs(listenerCopyService) );
   NS_ENSURE_SUCCESS(rv,rv);
 
+  mMsgFileStream->Close();
   mMsgFileStream = nsnull;
-  mMsgFileSpec->CloseStream();
   mNewMessageKey = PR_UINT32_MAX;
   nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID);
   PRUint32 origMsgFlags;
   mOriginalMessage->GetFlags(&origMsgFlags);
-  if (copyService)
-    rv = copyService->CopyFileMessage(mMsgFileSpec, mMessageFolder, nsnull, PR_FALSE, 
-                                      origMsgFlags, listenerCopyService, mMsgWindow);
+  if (copyService) {
+    nsCOMPtr<nsIFileSpec> fileSpec;
+    rv = NS_NewFileSpecFromIFile(mMsgFile, getter_AddRefs(fileSpec));
+    if (NS_SUCCEEDED(rv))
+      rv = copyService->CopyFileMessage(fileSpec, mMessageFolder, nsnull, PR_FALSE,
+                                        origMsgFlags, listenerCopyService, mMsgWindow);
+  }
   return rv;
 }
 
@@ -2948,13 +2952,11 @@ nsDelAttachListener::~nsDelAttachListener()
   if (mMsgFileStream)
   {
     mMsgFileStream->Close();
-    mMsgFileStream = 0;
+    mMsgFileStream = nsnull;
   }
-  if (mMsgFileSpec) 
+  if (mMsgFile) 
   {
-    mMsgFileSpec->Flush();
-    mMsgFileSpec->CloseStream();
-    mMsgFileSpec->Delete(PR_FALSE);
+    mMsgFile->Remove(PR_FALSE);
   }
 }
 
@@ -2992,16 +2994,15 @@ nsDelAttachListener::StartProcessing(nsMessenger * aMessenger, nsIMsgWindow * aM
   // create an output stream on a temporary file. This stream will save the modified 
   // message data to a file which we will later use to replace the existing message.
   // The file is removed in the destructor.
-  nsCOMPtr<nsIFile> msgFile;
   rv = GetSpecialDirectoryWithFileName(NS_OS_TEMP_DIR, "nsmail.tmp",
-                                       getter_AddRefs(msgFile));
+                                       getter_AddRefs(mMsgFile));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = msgFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 00600);
+  rv = mMsgFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 00600);
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr<nsIOutputStream> fileOutputStream;
-  rv = NS_NewLocalFileOutputStream(getter_AddRefs(fileOutputStream), msgFile, -1, 00600);
+  rv = NS_NewLocalFileOutputStream(getter_AddRefs(fileOutputStream), mMsgFile, -1, 00600);
   NS_ENSURE_SUCCESS(rv,rv);
   rv = NS_NewBufferedOutputStream(getter_AddRefs(mMsgFileStream), fileOutputStream, FOUR_K);
   NS_ENSURE_SUCCESS(rv,rv);
