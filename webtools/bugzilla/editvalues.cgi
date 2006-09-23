@@ -112,7 +112,7 @@ print $cgi->header();
 exists Bugzilla->user->groups->{'editcomponents'} ||
     ThrowUserError('auth_failure', {group  => "editcomponents",
                                     action => "edit",
-                                    object => "field values"});
+                                    object => "field_values"});
 
 #
 # often-used variables
