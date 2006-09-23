@@ -367,16 +367,11 @@ nsMsgI18NParseMetaCharset(nsFileSpec* fileSpec)
     if (PL_strstr(buffer, "META") && 
         PL_strstr(buffer, "HTTP-EQUIV") && 
         PL_strstr(buffer, "CONTENT-TYPE") && 
-        PL_strstr(buffer, "CHARSET") 
-        ) 
-    { 
-      char *cp = PL_strstr(PL_strstr(buffer, "CHARSET"), "=") + 1; 
-      char seps[]   = " \"\'"; 
-      char *token; 
-      char* newStr; 
-      token = nsCRT::strtok(cp, seps, &newStr); 
-      if (token != NULL) 
-      { 
+        PL_strstr(buffer, "CHARSET")) { 
+      char *cp = PL_strstr(PL_strstr(buffer, "CHARSET"), "=");
+      char *newStr;
+      char *token = cp ? nsCRT::strtok(cp + 1, " \"\'", &newStr) : nsnull;
+      if (token) { 
         PL_strncpy(charset, token, sizeof(charset));
         charset[sizeof(charset)-1] = '\0';
 
