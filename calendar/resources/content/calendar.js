@@ -26,7 +26,7 @@
  *                 Mike Norton <xor@ivwnet.com>
  *                 ArentJan Banck <ajbanck@planet.nl> 
  *                 Eric Belhaire <belhaire@ief.u-psud.fr>
- *                 Matthew Willis <mattwillis@gmail.com>
+ *                 Matthew Willis <lilmatt@mozilla.com>
  *                 Joey Minta <jminta@gmail.com>
  *                 Dan Mosedale <dan.mosedale@oracle.com>
  *
@@ -118,13 +118,6 @@ function calendarInit()
                   .getService(Components.interfaces.calIAlarmService);
    alarmSvc.timezone = calendarDefaultTimezone();
    alarmSvc.startup();
-
-   if (("arguments" in window) && (window.arguments.length) &&
-       (typeof(window.arguments[0]) == "object") &&
-       ("channel" in window.arguments[0]) ) {
-       gCalendarWindow.calendarManager.checkCalendarURL( 
-           window.arguments[0].channel );
-   }
 
    // a bit of a hack since the menulist doesn't remember the selected value
    var value = document.getElementById( 'event-filter-menulist' ).value;
