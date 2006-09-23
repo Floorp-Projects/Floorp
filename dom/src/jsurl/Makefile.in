@@ -62,6 +62,8 @@ REQUIRES	= xpcom \
 		  jsconsole \
 		  uconv \
 		  docshell \
+		  content \
+		  pref \
 		  $(NULL)
 
 XPIDLSRCS	= \
@@ -71,6 +73,10 @@ XPIDLSRCS	= \
 CPPSRCS		= nsJSProtocolHandler.cpp
 
 EXPORTS		= $(srcdir)/nsJSProtocolHandler.h
+
+LOCAL_INCLUDES += \
+		-I$(srcdir) \
+		-I$(srcdir)/../base \
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
