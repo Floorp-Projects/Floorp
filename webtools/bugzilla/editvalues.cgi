@@ -109,8 +109,8 @@ my $vars = {};
 
 print $cgi->header();
 
-exists Bugzilla->user->groups->{'editcomponents'} ||
-    ThrowUserError('auth_failure', {group  => "editcomponents",
+exists Bugzilla->user->groups->{'admin'} ||
+    ThrowUserError('auth_failure', {group  => "admin",
                                     action => "edit",
                                     object => "field_values"});
 
