@@ -1182,6 +1182,57 @@ nsXPConnect::RestoreWrappedNativePrototype(JSContext * aJSContext,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
+                           nsIXPConnectJSObjectHolder **_retval)
+{
+#ifdef XPCONNECT_STANDALONE
+    return NS_ERROR_NOT_AVAILABLE;
+#else /* XPCONNECT_STANDALONE */
+    XPCCallContext ccx(NATIVE_CALLER, cx);
+    if(!ccx.IsValid())
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    *_retval = nsnull;
+
+    jsval rval = JSVAL_VOID;
+    AUTO_MARK_JSVAL(ccx, &rval);
+
+    nsresult rv = xpc_CreateSandboxObject(cx, &rval, principal);
+    NS_ASSERTION(NS_FAILED(rv) || !JSVAL_IS_PRIMITIVE(rval),
+                 "Bad return value from xpc_CreateSandboxObject()!");
+
+    if (NS_SUCCEEDED(rv) && !JSVAL_IS_PRIMITIVE(rval)) {
+        *_retval = XPCJSObjectHolder::newHolder(cx, JSVAL_TO_OBJECT(rval));
+        NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
+
+        NS_ADDREF(*_retval);
+    }
+
+    return rv;
+#endif /* XPCONNECT_STANDALONE */
+}
+
+NS_IMETHODIMP
+nsXPConnect::EvalInSandboxObject(const nsAString& source, JSContext *cx,
+                                 nsIXPConnectJSObjectHolder *sandbox,
+                                 jsval *rval)
+{
+#ifdef XPCONNECT_STANDALONE
+    return NS_ERROR_NOT_AVAILABLE;
+#else /* XPCONNECT_STANDALONE */
+    if (!sandbox)
+        return NS_ERROR_INVALID_ARG;
+
+    JSObject *obj;
+    nsresult rv = sandbox->GetJSObject(&obj);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return xpc_EvalInSandbox(cx, obj, source,
+                             NS_ConvertUTF16toUTF8(source).get(), 1, rval);
+#endif /* XPCONNECT_STANDALONE */
+}
+
 /* nsIXPConnectJSObjectHolder getWrappedNativePrototype (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsIClassInfo aClassInfo); */
 NS_IMETHODIMP 
 nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext, 

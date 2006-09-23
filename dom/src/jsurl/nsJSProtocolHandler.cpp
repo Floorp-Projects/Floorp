@@ -69,6 +69,9 @@
 #include "nsIWebNavigation.h"
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"
+#include "nsIXPConnect.h"
+#include "nsContentUtils.h"
+#include "nsJSUtils.h"
 
 
 class nsJSThunk : public nsIInputStream
@@ -194,6 +197,8 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
     if (NS_FAILED(rv))
         return rv;
 
+    PRBool useSandbox = PR_TRUE;
+
     if (owner) {
         principal = do_QueryInterface(owner, &rv);
         NS_ASSERTION(principal, "Channel's owner is not a principal");
@@ -215,49 +220,84 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         if (principal != systemPrincipal) {
             rv = securityManager->CheckSameOriginPrincipal(principal,
                                                            objectPrincipal);
-            if (NS_FAILED(rv)) {
-                nsCOMPtr<nsIConsoleService> console =
-                    do_GetService("@mozilla.org/consoleservice;1");
-                if (console) {
-                    // XXX Localize me!
-                    console->LogStringMessage(
-                        NS_LITERAL_STRING("Attempt to load a javascript: URL from one host\nin a window displaying content from another host\nwas blocked by the security manager.").get());
-                }
-
-                return NS_ERROR_DOM_RETVAL_UNDEFINED;
+            if (NS_SUCCEEDED(rv)) {
+                useSandbox = PR_FALSE;
             }
+        } else {
+            useSandbox = PR_FALSE;
         }
     }
-    else {
-        // No owner from channel, use the null principal for lack of anything
-        // better.  Note that we do not use the object principal here because
-        // that would give the javascript: URL the principals of whatever page
-        // we might be remotely associated with, which is a good recipe for XSS
-        // issues.
-        principal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
 
-        if (NS_FAILED(rv) || !principal) {
-            return NS_ERROR_FAILURE;
-        }
-    }
+    nsString result;
+    PRBool isUndefined;
 
     // Finally, we have everything needed to evaluate the expression.
-    nsString result;
-    PRBool bIsUndefined;
 
-    rv = scriptContext->EvaluateString(NS_ConvertUTF8toUTF16(script),
-                                       globalJSObject, // obj
-                                       principal,
-                                       url.get(),      // url
-                                       1,              // line no
-                                       nsnull,
-                                       &result,
-                                       &bIsUndefined);
+    if (useSandbox) {
+        // No owner from channel, or we have a principal
+        // mismatch. Evaluate the javascript URL in a sandbox to
+        // prevent it from accessing data it doesn't have permissions
+        // to access.
+
+        nsIXPConnect *xpc = nsContentUtils::XPConnect();
+
+        JSContext *cx = (JSContext*)scriptContext->GetNativeContext();
+        nsCOMPtr<nsIXPConnectJSObjectHolder> sandbox;
+        rv = xpc->CreateSandbox(cx, principal, getter_AddRefs(sandbox));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        jsval rval = JSVAL_VOID;
+        nsAutoGCRoot root(&rval, &rv);
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+
+        rv = xpc->EvalInSandboxObject(NS_ConvertUTF8toUTF16(script), cx,
+                                      sandbox, &rval);
+
+        // Propagate and report exceptions that happened in the
+        // sandbox.
+        if (JS_IsExceptionPending(cx)) {
+            JS_ReportPendingException(cx);
+        }
+
+        isUndefined = rval == JSVAL_VOID;
+
+        if (!isUndefined && NS_SUCCEEDED(rv)) {
+            JSAutoRequest ar(cx);
+
+            JSString *str = JS_ValueToString(cx, rval);
+            if (!str) {
+                // Report any pending exceptions.
+                if (JS_IsExceptionPending(cx)) {
+                    JS_ReportPendingException(cx);
+                }
+
+                // We don't know why this failed, so just use a
+                // generic error code. It'll be translated to a
+                // different one below anyways.
+                rv = NS_ERROR_FAILURE;
+            } else {
+                result = nsDependentJSString(str);
+            }
+        }
+    } else {
+        // No need to use the sandbox, evaluate the script directly in
+        // the given scope.
+        rv = scriptContext->EvaluateString(NS_ConvertUTF8toUTF16(script),
+                                           globalJSObject, // obj
+                                           principal,
+                                           url.get(),      // url
+                                           1,              // line no
+                                           nsnull,
+                                           &result,
+                                           &isUndefined);
+    }
 
     if (NS_FAILED(rv)) {
         rv = NS_ERROR_MALFORMED_URI;
     }
-    else if (bIsUndefined) {
+    else if (isUndefined) {
         rv = NS_ERROR_DOM_RETVAL_UNDEFINED;
     }
     else {
@@ -270,6 +310,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         else
             rv = NS_ERROR_OUT_OF_MEMORY;
     }
+
     return rv;
 }
 

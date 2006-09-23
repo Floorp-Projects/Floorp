@@ -147,12 +147,7 @@ interface nsIXPConnect;
 interface nsIXPConnectWrappedNative;
 interface nsIInterfaceInfo;
 interface nsIXPCSecurityManager;
-
-%{C++
-#ifndef XPCONNECT_STANDALONE
-class nsIPrincipal;
-#endif
-%}
+interface nsIPrincipal;
 
 /***************************************************************************/
 [uuid(8916a320-d118-11d3-8f3a-0010a4e73d9a)]
@@ -464,7 +459,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(038ce87f-c178-4d3a-9824-f71effc63aef)]
+[uuid(0f2f96c2-0a66-4677-a3d8-ebb907e9b780)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -705,4 +700,32 @@ interface nsIXPConnect : nsISupports
                                        in JSObjectPtr  aScope,
                                        in nsIClassInfo aClassInfo,
                                        in nsIXPConnectJSObjectHolder aPrototype);
+
+    /**
+     * Create a sandbox for evaluating code in isolation using
+     * evalInSandboxObject().
+     *
+     * @param cx A context to use when creating the sandbox object.
+     * @param principal The principal (or NULL to use the null principal)
+     *                  to use when evaluating code in this sandbox.
+     */
+    [noscript] nsIXPConnectJSObjectHolder createSandbox(in JSContextPtr cx,
+                                                        in nsIPrincipal principal);
+
+    /**
+     * Evaluate script in a sandbox, completely isolated from all
+     * other running scripts.
+     *
+     * @param source The source of the script to evaluate.
+     * @param cx The context to use when setting up the evaluation of
+     *           the script. The actual evaluation will happen on a new
+     *           temporary context.
+     * @param sandbox The sandbox object to evaluate the script in.
+     * @return The result of the evaluation as a jsval. If the caller
+     *         intends to use the return value from this call the caller
+     *         is responsible for rooting the jsval before making a call
+     *         to this method.
+     */
+    [noscript] JSVal evalInSandboxObject(in AString source, in JSContextPtr cx,
+                                         in nsIXPConnectJSObjectHolder sandbox);
 };

@@ -3615,6 +3615,31 @@ JSBool xpc_IsReportableErrorCode(nsresult code);
 JSObject* xpc_CloneJSFunction(XPCCallContext &ccx, JSObject *funobj,
                               JSObject *parent);
 
+#ifndef XPCONNECT_STANDALONE
+
+// Helper for creating a sandbox object to use for evaluating
+// untrusted code completely separated from all other code in the
+// system using xpc_EvalInSandbox(). Takes the JSContext on which to
+// do setup etc on, puts the sandbox object in *vp (which must be
+// rooted by the caller), and uses the principal that's either
+// directly passed in prinOrSop or indirectly as an
+// nsIScriptObjectPrincipal holding the principal. If no principal is
+// reachable through prinOrSop, a new null principal will be created
+// and used.
+nsresult
+xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop);
+
+// Helper for evaluating scripts in a sandbox object created with
+// xpc_CreateSandboxObject(). The caller is responsible of ensuring
+// that *rval doesn't get collected during the call or usage after the
+// call. This helper will use filename and lineNo for error reporting,
+// and if no filename is provided it will use the codebase from the
+// principal and line number 1 as a fallback.
+nsresult
+xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
+                  const char *filename, PRInt32 lineNo, jsval *rval);
+#endif /* !XPCONNECT_STANDALONE */
+
 /***************************************************************************/
 // Inlined utilities.
 
