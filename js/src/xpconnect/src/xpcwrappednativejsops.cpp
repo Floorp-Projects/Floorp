@@ -666,6 +666,12 @@ MarkScopeJSObjects(JSContext *cx, XPCWrappedNativeScope* scope, void *arg)
     {
         JS_MarkGCThing(cx, obj, "XPCWrappedNativeScope::mPrototypeJSObject", arg);
     }
+
+    obj = scope->GetPrototypeJSFunction();
+    if(obj)
+    {
+        JS_MarkGCThing(cx, obj, "XPCWrappedNativeScope::mPrototypeJSFunction", arg);
+    }
 }
 
 void
