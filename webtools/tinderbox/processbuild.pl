@@ -292,7 +292,7 @@ sub compress_log_file {
       my $comp_gz = gzopen($decoded, "rb") or
           die ("$decoded: $!\n");
       my ($bytesread, $line);
-      while (($bytesread = $comp_gz->gzreadline($line)) > 0) {
+      while (($bytesread = $comp_gz->gzread($line)) > 0) {
           $gz->gzwrite($line);
       }
       $comp_gz->gzclose();
@@ -300,7 +300,7 @@ sub compress_log_file {
       my $comp_bz = bzopen($decoded, "rb") or
           die ("$decoded: $!\n");
       my ($bytesread, $line);
-      while (($bytesread = $comp_bz->bzreadline($line)) > 0) {
+      while (($bytesread = $comp_bz->bzread($line)) > 0) {
           $gz->gzwrite($line);
       }
       $comp_bz->bzclose();
