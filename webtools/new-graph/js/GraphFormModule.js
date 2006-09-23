@@ -81,10 +81,8 @@ GraphFormModule.prototype = {
         form.appendChild(td);
 
         td = new SPAN();
-        el = new IMG({ style: "border: 1px solid black; vertical-align: middle; margin: 3px;",
-                       width: 15,
-                       height: 15,
-                       src: "js/img/clear.png" });
+        el = new DIV({ id: "whee", style: "display: inline; border: 1px solid black; height: 15; " +
+                              "padding-right: 15; vertical-align: middle; margin: 3px;" });
         this.colorDiv = el;
         td.appendChild(el);
         form.appendChild(td);
@@ -130,7 +128,7 @@ GraphFormModule.prototype = {
                                                                    });
 
                                       for each (var test in sortedTests) {
-                                          var tstr = test.machine + " - " + test.test + " (" + test.test_type + ")";
+                                          var tstr = test.machine + " - " + test.test;
                                           opts.push(new OPTION({ value: test.id }, tstr));
                                       }
                                       replaceChildNodes(self.testSelect, opts);

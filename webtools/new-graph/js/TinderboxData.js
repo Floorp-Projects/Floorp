@@ -171,6 +171,8 @@ TinderboxData.prototype = {
                 self.testData[testId] = ds;
                 if (obj.annotations)
                     ds.annotations = new TimeStringDataSet(obj.annotations);
+                if (obj.baselines)
+                    ds.baselines = obj.baselines;
 
                 self.onDataSetAvailable.fire(testId, ds, startTime, endTime);
             },

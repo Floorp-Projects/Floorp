@@ -397,10 +397,16 @@ function lighterColor(col) {
 }
 
 function colorToRgbString(col) {
-    return "rgba("
+    if (col[3] < 1) {
+        return "rgba("
+            + Math.floor(col[0]*255) + ","
+            + Math.floor(col[1]*255) + ","
+            + Math.floor(col[2]*255) + ","
+            + col[3]
+            + ")";
+    }
+    return "rgb("
         + Math.floor(col[0]*255) + ","
         + Math.floor(col[1]*255) + ","
-        + Math.floor(col[2]*255) + ","
-        + col[3]
-        + ")";
+        + Math.floor(col[2]*255) + ")";
 }

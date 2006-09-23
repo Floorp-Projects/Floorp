@@ -440,6 +440,24 @@ Graph.prototype = {
                         continue;
                     }
 
+                    for (baseline in this.dataSets[i].baselines) {
+                        save();
+                        var v = ch - Math.round((this.dataSets[i].baselines[baseline] - yoffs) * this.yScale);
+                        var x0 = Math.round((this.startTime - xoffs) * xscale);
+                        var x1 = Math.round((this.endTime - xoffs) * xscale);
+                        beginPath();
+                        moveTo(x0-0.5, v+0.5);
+                        lineTo(x1+0.5, v+0.5);
+                        strokeStyle = colorToRgbString(this.dataSets[i].color);
+                        globalAlpha = 0.2;
+                        lineWidth = 5.0;
+                        stroke();
+                        restore();
+                        strokeStyle = colorToRgbString(this.dataSets[i].color);
+                        lineWidth = 1.0;
+                        stroke();
+                    }
+
                     //log ("ds start end", this.startTime, this.endTime, "timediff:", (this.endTime - this.startTime));
                     save();
                     scale(xscale, -this.yScale);

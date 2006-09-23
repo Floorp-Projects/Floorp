@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import cgitb; cgitb.enable()
 
@@ -66,7 +66,7 @@ def doListTests(fo):
     results = []
     
     cur = db.cursor()
-    cur.execute("SELECT id, machine, test, test_type, extra_data FROM dataset_info")
+    cur.execute("SELECT id, machine, test, test_type, extra_data FROM dataset_info WHERE test_type != ?", ("baseline",))
     for row in cur:
         results.append( {"id": row[0],
                          "machine": row[1],
@@ -103,6 +103,22 @@ def doSendResults(fo, setid, starttime, endtime, raw):
         fo.write("%s,'%s'," % (row[0], row[1]))
     cur.close()
     fo.write ("],")
+
+    cur = db.cursor()
+    cur.execute("SELECT test FROM dataset_info WHERE id = ?", (setid,))
+    row = cur.fetchone()
+    test_name = row[0]
+
+    cur.execute("SELECT id, extra_data FROM dataset_info WHERE test = ? and test_type = ?", (test_name, "baseline"))
+    baselines = cur.fetchall()
+
+    fo.write ("baselines: {")
+    for baseline in baselines:
+        cur.execute("SELECT value FROM dataset_values WHERE dataset_id = ? LIMIT 1", (baseline[0],))
+        row = cur.fetchone()
+        fo.write("'%s': '%s'," % (baseline[1], row[0]))
+    fo.write("},")
+    cur.close()
 
     if raw:
         cur = db.cursor()
