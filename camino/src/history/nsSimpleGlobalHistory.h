@@ -131,8 +131,8 @@ public:
   PRBool MatchExpiration(nsIMdbRow *row, PRTime* expirationDate);
   PRBool MatchHost(nsIMdbRow *row, MatchHostData *hostInfo);
   PRBool RowMatches(nsIMdbRow* aRow, SearchQueryData *aQuery);
-
-  PRTime  GetNow();
+  
+  nsresult CreateHistoryItemForRow(nsIMdbRow* inRow, nsIHistoryItem** outItem);
 
 protected:
 
@@ -164,17 +164,17 @@ protected:
   // 
   // autocomplete stuff
   //
-  nsresult    AutoCompleteSearch(const nsAString& aSearchString,
+  nsresult    AutoCompleteSearch(const nsACString& aSearchString,
                               AutocompleteExcludeData* aExclude,
                               nsIAutoCompleteResults* aPrevResults,
                               nsIAutoCompleteResults* aResults);
-  void        AutoCompleteCutPrefix(nsAString& aURL, AutocompleteExcludeData* aExclude);
-  void        AutoCompleteGetExcludeInfo(const nsAString& aURL, AutocompleteExcludeData* aExclude);
-  nsString    AutoCompletePrefilter(const nsAString& aSearchString);
-  PRBool      AutoCompleteCompare(nsAString& aHistoryURL, 
-                             const nsAString& aUserURL,
+  void        AutoCompleteCutPrefix(nsACString& aURL, AutocompleteExcludeData* aExclude);
+  void        AutoCompleteGetExcludeInfo(const nsACString& aURL, AutocompleteExcludeData* aExclude);
+  void        AutoCompletePrefilter(const nsACString& aSearchString, nsACString &outFilteredString);
+  PRBool      AutoCompleteCompare(nsACString& aHistoryURL, 
+                             const nsACString& aUserURL,
                              AutocompleteExcludeData* aExclude);
-  PR_STATIC_CALLBACK(int)   AutoCompleteSortComparison(const void *v1, const void *v2, void *unused);
+  PR_STATIC_CALLBACK(int)   AutoCompleteSortComparison(nsIHistoryItem *v1, nsIHistoryItem *v2, void *unused);
 
   //
   // sync stuff to write the db to disk every so often
@@ -203,8 +203,6 @@ protected:
   //
   // Row to history item
   //
-
-  nsresult HistoryItemFromRow(nsIMdbRow* inRow, nsIHistoryItem** outItem);
 
   nsresult StartBatching();
   nsresult EndBatching();
@@ -285,11 +283,8 @@ protected:
   
   // autocomplete stuff
   PRBool              mAutocompleteOnlyTyped;
-  nsStringArray       mIgnoreSchemes;
-  nsStringArray       mIgnoreHostnames;
 
-  // N.B., these are MDB interfaces, _not_ XPCOM interfaces.
-  // XXX does that mean we can't use nsCOMPtrs on them?
+  // N.B., these are MDB interfaces
   nsIMdbEnv*          mEnv;       // OWNER
   nsIMdbStore*        mStore;     // OWNER
   nsIMdbTable*        mTable;     // OWNER

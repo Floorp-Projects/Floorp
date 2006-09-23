@@ -45,6 +45,7 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "nsIAutoCompleteResults.h"
+#include "nsIHistoryItems.h"
 
 
 @implementation AutoCompleteDataSource
@@ -118,20 +119,20 @@
   mResults->GetItems(getter_AddRefs(items));
   
   nsCOMPtr<nsISupports> itemSupports = dont_AddRef(items->ElementAt(aRow));
-  nsCOMPtr<nsIAutoCompleteItem> item = do_QueryInterface(itemSupports);
+  nsCOMPtr<nsIHistoryItem> item = do_QueryInterface(itemSupports);
   if (!item)
     return result;
 
   if ([aColumn isEqualToString:@"icon"]) {
     return mIconImage;
   } else if ([aColumn isEqualToString:@"col1"]) {
-    nsAutoString value;
-    item->GetValue(value);
-    result = [NSString stringWith_nsAString:value];
+    nsCAutoString value;
+    item->GetURL(value);
+    result = [NSString stringWith_nsACString:value];
   } else if ([aColumn isEqualToString:@"col2"]) {
-    nsXPIDLString commentStr;
-    item->GetComment(getter_Copies(commentStr));
-    result = [NSString stringWith_nsAString:commentStr];
+    nsAutoString titleStr;
+    item->GetTitle(titleStr);
+    result = [NSString stringWith_nsAString:titleStr];
   }
 
   return result;

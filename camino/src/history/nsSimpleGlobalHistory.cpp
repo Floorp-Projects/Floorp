@@ -24,6 +24,7 @@
  *   Blake Ross <blaker@netscape.com>
  *   Simon Fraser <smfr@smfr.org>
  *   Josh Aas <josh@mozilla.com>
+ *   Håkan Waara <hwaara@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -45,9 +46,9 @@
 #include "nsNetUtil.h"
 #include "nsCRT.h"
 #include "nsQuickSort.h"
+#include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsPrintfCString.h"
 
 #include "nsIURL.h"
 #include "nsNetCID.h"
@@ -64,6 +65,8 @@
 
 #include "nsIObserverService.h"
 #include "nsITextToSubURI.h"
+
+#include "nsTArray.h"
 
 #include "nsSimpleGlobalHistory.h"
 
@@ -89,6 +92,27 @@ static const PRInt64 MSECS_PER_DAY = LL_INIT(20, 500654080);  // (1000000LL * 60
 PRInt32 nsSimpleGlobalHistory::gRefCnt;
 nsIMdbFactory* nsSimpleGlobalHistory::gMdbFactory = nsnull;
 nsIPrefBranch* nsSimpleGlobalHistory::gPrefBranch = nsnull;
+
+static const nsLiteralCString kSchemePrefixes[] = {
+  NS_LITERAL_CSTRING("http://"),
+  NS_LITERAL_CSTRING("https://"),
+  NS_LITERAL_CSTRING("ftp://")
+};
+
+static const nsLiteralCString kHostNamePrefixes[] = {
+  NS_LITERAL_CSTRING("www."),
+  NS_LITERAL_CSTRING("ftp.")
+};
+
+// Prefixes to ignore in autocomplete.
+static const nsLiteralCString kIgnoredPrefixes[] = { 
+  NS_LITERAL_CSTRING("http://www."),
+  NS_LITERAL_CSTRING("http://"),
+  NS_LITERAL_CSTRING("https://www."),
+  NS_LITERAL_CSTRING("https://"),
+  NS_LITERAL_CSTRING("ftp://ftp."),
+  NS_LITERAL_CSTRING("ftp://")
+};
 
 // list of terms, plus an optional groupby column
 struct SearchQueryData {
@@ -159,8 +183,8 @@ struct MatchQueryData {
 // Used to describe what prefixes shouldn't be cut from
 // history urls when doing an autocomplete url comparison.
 struct AutocompleteExcludeData {
-  PRInt32                 schemePrefix;
-  PRInt32                 hostnamePrefix;
+  PRUint32                 schemePrefix;
+  PRUint32                 hostnamePrefix;
 };
 
 
@@ -219,80 +243,49 @@ static PRBool HasCell(nsIMdbEnv *aEnv, nsIMdbRow* aRow, mdb_column aCol)
 
 class nsHistoryMdbTableEnumerator : public nsISimpleEnumerator
 {
+public:
+  nsHistoryMdbTableEnumerator(nsSimpleGlobalHistory *aHistory,
+                              nsIMdbTable* aTable) : mHistory(aHistory),
+                                                     mTable(aTable)
+  {
+  }
+  
+  virtual nsresult Init (nsIMdbEnv *aEnv) {
+    mEnv = aEnv;
+    
+    mdb_err err = mTable->GetTableRowCursor(mEnv, -1, getter_AddRefs(mCursor));
+    if (err != 0)
+      return NS_ERROR_FAILURE;
+    
+    return NS_OK;
+  }
+  
 protected:
-              nsHistoryMdbTableEnumerator();
   virtual     ~nsHistoryMdbTableEnumerator();
 
 public:
-  // nsISupports methods
   NS_DECL_ISUPPORTS
-
-  // nsISimpleEnumeratorMethods
-  NS_IMETHOD HasMoreElements(PRBool* _result);
-  NS_IMETHOD GetNext(nsISupports** _result);
-
-  // Implementation methods
-  virtual nsresult Init(nsIMdbEnv* aEnv, nsIMdbTable* aTable);
+  NS_DECL_NSISIMPLEENUMERATOR
 
 protected:
   virtual PRBool   IsResult(nsIMdbRow* aRow) = 0;
-  virtual nsresult ConvertToISupports(nsIMdbRow* aRow, nsISupports** aResult) = 0;
 
 protected:
 
-  nsIMdbEnv*            mEnv;
+  nsCOMPtr<nsIMdbEnv>   mEnv;
+  nsSimpleGlobalHistory *mHistory; // weak ptr
 
 private:
-
-  // subclasses should not tweak these
-  nsIMdbTable*          mTable;
-  nsIMdbTableRowCursor* mCursor;
-  nsIMdbRow*            mCurrent;
+  nsCOMPtr<nsIMdbTable>           mTable;
+  nsCOMPtr<nsIMdbTableRowCursor>  mCursor;
+  nsCOMPtr<nsIMdbRow>             mCurrent;
 
 };
 
 //----------------------------------------------------------------------
 
-nsHistoryMdbTableEnumerator::nsHistoryMdbTableEnumerator()
-  : mEnv(nsnull),
-    mTable(nsnull),
-    mCursor(nsnull),
-    mCurrent(nsnull)
-{
-}
-
-
-nsresult
-nsHistoryMdbTableEnumerator::Init(nsIMdbEnv* aEnv,
-                           nsIMdbTable* aTable)
-{
-  NS_PRECONDITION(aEnv != nsnull, "null ptr");
-  if (! aEnv)
-    return NS_ERROR_NULL_POINTER;
-
-  NS_PRECONDITION(aTable != nsnull, "null ptr");
-  if (! aTable)
-    return NS_ERROR_NULL_POINTER;
-
-  mEnv = aEnv;
-  NS_ADDREF(mEnv);
-
-  mTable = aTable;
-  NS_ADDREF(mTable);
-
-  mdb_err err;
-  err = mTable->GetTableRowCursor(mEnv, -1, &mCursor);
-  if (err != 0) return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
-
 nsHistoryMdbTableEnumerator::~nsHistoryMdbTableEnumerator()
 {
-  NS_IF_RELEASE(mCurrent);
-  NS_IF_RELEASE(mCursor);
-  NS_IF_RELEASE(mTable);
-  NS_IF_RELEASE(mEnv);
 }
 
 
@@ -302,24 +295,21 @@ NS_IMETHODIMP
 nsHistoryMdbTableEnumerator::HasMoreElements(PRBool* _result)
 {
   if (! mCurrent) {
-    mdb_err err;
-
     while (1) {
       mdb_pos pos;
-      err = mCursor->NextRow(mEnv, &mCurrent, &pos);
+      mdb_err err = mCursor->NextRow(mEnv, getter_AddRefs(mCurrent), &pos);
       if (err != 0) return NS_ERROR_FAILURE;
 
       // If there are no more rows, then bail.
       if (! mCurrent)
         break;
 
-      // If this is a result, the stop.
+      // If this is a result, then stop.
       if (IsResult(mCurrent))
         break;
 
       // Otherwise, drop the ref to the row we retrieved, and continue
       // on to the next one.
-      NS_RELEASE(mCurrent);
       mCurrent = nsnull;
     }
   }
@@ -341,9 +331,11 @@ nsHistoryMdbTableEnumerator::GetNext(nsISupports** _result)
   if (! hasMore)
     return NS_ERROR_UNEXPECTED;
 
-  rv = ConvertToISupports(mCurrent, _result);
-
-  NS_RELEASE(mCurrent);
+  nsIHistoryItem *item;
+  rv = mHistory->CreateHistoryItemForRow(mCurrent, &item); // addrefs item
+  if (item)
+    *_result = NS_STATIC_CAST(nsISupports*, item);
+    
   mCurrent = nsnull;
 
   return rv;
@@ -355,37 +347,25 @@ nsHistoryMdbTableEnumerator::GetNext(nsISupports** _result)
 class nsMdbTableAllRowsEnumerator : public nsHistoryMdbTableEnumerator
 {
 public:
-              nsMdbTableAllRowsEnumerator(nsSimpleGlobalHistory* inHistory, mdb_column inHiddenColumnToken)
-              : mHistory(inHistory)
-              , mHiddenColumnToken(inHiddenColumnToken)
-              {
-              }
-  virtual     ~nsMdbTableAllRowsEnumerator()
+  nsMdbTableAllRowsEnumerator(nsSimpleGlobalHistory* inHistory,
+                              nsIMdbTable* aTable,
+                              mdb_column inHiddenColumnToken)
+              : mHiddenColumnToken(inHiddenColumnToken),
+                nsHistoryMdbTableEnumerator(inHistory, aTable) 
+                
+              {}
+  virtual     ~nsMdbTableAllRowsEnumerator() 
               {
               }
 
 protected:
   virtual PRBool IsResult(nsIMdbRow* aRow)
   {
-    if (HasCell(mEnv, aRow, mHiddenColumnToken))
-      return PR_FALSE;
-  
-    return PR_TRUE;
-  }
-  
-  // is this required to return the same object each time, cos we ain't now
-  virtual nsresult ConvertToISupports(nsIMdbRow* aRow, nsISupports** aResult)
-  {
-    nsHistoryItem* thisItem = new nsHistoryItem;
-    thisItem->InitWithRow(mHistory, mEnv, aRow);
-    NS_ADDREF(thisItem);
-    *aResult = thisItem;
-    return NS_OK;
+    // history doesn't show hidden items (autocomplete does though).
+    return !HasCell(mEnv, aRow, mHiddenColumnToken);
   }
 
 protected:
-
-  nsSimpleGlobalHistory*    mHistory;
   mdb_column                mHiddenColumnToken;
 };
 
@@ -501,15 +481,6 @@ nsSimpleGlobalHistory::nsSimpleGlobalHistory()
     mTable(nsnull)
 {
   LL_I2L(mFileSizeOnDisk, 0);
-  
-  // commonly used prefixes that should be chopped off all 
-  // history and input urls before comparison
-
-  mIgnoreSchemes.AppendString(NS_LITERAL_STRING("http://"));
-  mIgnoreSchemes.AppendString(NS_LITERAL_STRING("https://"));
-  mIgnoreSchemes.AppendString(NS_LITERAL_STRING("ftp://"));
-  mIgnoreHostnames.AppendString(NS_LITERAL_STRING("www."));
-  mIgnoreHostnames.AppendString(NS_LITERAL_STRING("ftp."));
 }
 
 nsSimpleGlobalHistory::~nsSimpleGlobalHistory()
@@ -619,7 +590,7 @@ nsSimpleGlobalHistory::AddURI(nsIURI *aURI, PRBool aRedirect, PRBool aTopLevel, 
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  PRTime now = GetNow();
+  PRTime now = PR_Now();
 
   nsCOMPtr<nsIMdbRow> row;
   rv = FindRow(kToken_URLColumn, URISpec.get(), getter_AddRefs(row));
@@ -804,7 +775,7 @@ nsSimpleGlobalHistory::RemovePageInternal(const char *aSpec)
 }
 
 nsresult
-nsSimpleGlobalHistory::HistoryItemFromRow(nsIMdbRow* inRow, nsIHistoryItem** outItem)
+nsSimpleGlobalHistory::CreateHistoryItemForRow(nsIMdbRow* inRow, nsIHistoryItem** outItem)
 {
   // XXX get from array
   nsHistoryItem* thisItem = new nsHistoryItem;
@@ -879,7 +850,7 @@ nsSimpleGlobalHistory::NotifyObserversItemLoaded(nsIMdbRow* inRow, PRBool inFirs
     return NS_OK;
   
   nsCOMPtr<nsIHistoryItem> historyItem;
-  nsresult rv = HistoryItemFromRow(inRow, getter_AddRefs(historyItem));
+  nsresult rv = CreateHistoryItemForRow(inRow, getter_AddRefs(historyItem));
   NS_ENSURE_SUCCESS(rv, rv);
   
   PRUint32 numObservers = mHistoryObservers.Count();
@@ -902,7 +873,7 @@ nsSimpleGlobalHistory::NotifyObserversItemRemoved(nsIMdbRow* inRow)
 
   // we assume that the row is still valid at this point
   nsCOMPtr<nsIHistoryItem> historyItem;
-  nsresult rv = HistoryItemFromRow(inRow, getter_AddRefs(historyItem));
+  nsresult rv = CreateHistoryItemForRow(inRow, getter_AddRefs(historyItem));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint32 numObservers = mHistoryObservers.Count();
@@ -925,7 +896,7 @@ nsSimpleGlobalHistory::NotifyObserversItemTitleChanged(nsIMdbRow* inRow)
   
   // we assume that the row is still valid at this point
   nsCOMPtr<nsIHistoryItem> historyItem;
-  nsresult rv = HistoryItemFromRow(inRow, getter_AddRefs(historyItem));
+  nsresult rv = CreateHistoryItemForRow(inRow, getter_AddRefs(historyItem));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint32 numObservers = mHistoryObservers.Count();
@@ -1482,17 +1453,19 @@ nsSimpleGlobalHistory::GetItemEnumerator(nsISimpleEnumerator** outEnumerator)
   NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
   if (!mTable) return NS_ERROR_FAILURE;
 
-  nsMdbTableAllRowsEnumerator* allRowsEnum = new nsMdbTableAllRowsEnumerator(this, kToken_HiddenColumn);
-  NS_ADDREF(allRowsEnum);
+  nsMdbTableAllRowsEnumerator* allRowsEnum 
+      = new nsMdbTableAllRowsEnumerator(this, mTable, kToken_HiddenColumn);
   
-  nsresult rv = allRowsEnum->Init(mEnv, mTable);
-  if (NS_FAILED(rv))
-  {
-    NS_RELEASE(allRowsEnum);
+  if (!allRowsEnum)
+    return NS_ERROR_FAILURE;
+  
+  nsresult rv = allRowsEnum->Init(mEnv);
+  if (NS_FAILED(rv)) {
+    delete allRowsEnum;
     return rv;
   }
   
-  *outEnumerator = allRowsEnum;
+  NS_ADDREF(*outEnumerator = allRowsEnum);
   return NS_OK;
 }
 
@@ -1608,7 +1581,7 @@ nsSimpleGlobalHistory::MarkPageAsTyped(nsIURI *aURI)
   rv = FindRow(kToken_URLColumn, spec.get(), getter_AddRefs(row));
   if (NS_FAILED(rv))
   {
-    rv = AddNewPageToDatabase(spec.get(), GetNow(), nsnull, getter_AddRefs(row));
+    rv = AddNewPageToDatabase(spec.get(), PR_Now(), nsnull, getter_AddRefs(row));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // We don't know if this is a valid URI yet. Hide it until it finishes
@@ -2172,7 +2145,7 @@ nsSimpleGlobalHistory::ExpireEntries(PRBool inNotify)
   LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
   LL_UI2L(secondsInDays, 60 * 60 * 24 * mExpireDays);
   LL_MUL(microSecondsInExpireDays, secondsInDays, microSecondsPerSecond);
-  LL_SUB(expirationDate, GetNow(), microSecondsInExpireDays);
+  LL_SUB(expirationDate, PR_Now(), microSecondsInExpireDays);
 
   MatchExpirationData expiration;
   expiration.history = this;
@@ -2239,12 +2212,6 @@ void
 nsSimpleGlobalHistory::FireExpireTimer(nsITimer *aTimer, void *aClosure)
 {
   ((nsSimpleGlobalHistory *)aClosure)->ExpireEntries(PR_FALSE);
-}
-
-PRTime
-nsSimpleGlobalHistory::GetNow()
-{
-  return PR_Now();
 }
 
 nsresult
@@ -2514,40 +2481,36 @@ nsSimpleGlobalHistory::Observe(nsISupports *aSubject,
 class HistoryAutoCompleteEnumerator : public nsHistoryMdbTableEnumerator
 {
 protected:
-  nsSimpleGlobalHistory* mHistory;
   mdb_column mURLColumn;
   mdb_column mHiddenColumn;
   mdb_column mTypedColumn;
   mdb_column mCommentColumn;
   AutocompleteExcludeData* mExclude;
-  const nsAString& mSelectValue;
+  const nsACString& mSelectValue;
   PRBool mMatchOnlyTyped;
-
-  virtual ~HistoryAutoCompleteEnumerator()
-  {
-  }
 
 public:
   HistoryAutoCompleteEnumerator(nsSimpleGlobalHistory* aHistory,
-                         mdb_column aURLColumn,
+                                nsIMdbTable* aTable,
+                                mdb_column aURLColumn,
                          mdb_column aCommentColumn,
                          mdb_column aHiddenColumn,
                          mdb_column aTypedColumn,
                          PRBool aMatchOnlyTyped,
-                         const nsAString& aSelectValue,
+                         const nsACString& aSelectValue,
                          AutocompleteExcludeData* aExclude) :
-    mHistory(aHistory),
+    nsHistoryMdbTableEnumerator(aHistory, aTable),
     mURLColumn(aURLColumn),
     mHiddenColumn(aHiddenColumn),
     mTypedColumn(aTypedColumn),
     mCommentColumn(aCommentColumn),
     mExclude(aExclude),
     mSelectValue(aSelectValue), 
-    mMatchOnlyTyped(aMatchOnlyTyped) {}
+    mMatchOnlyTyped(aMatchOnlyTyped) 
+  {}
 
 protected:
   virtual PRBool    IsResult(nsIMdbRow* aRow);
-  virtual nsresult  ConvertToISupports(nsIMdbRow* aRow, nsISupports** aResult);
 };
 
 
@@ -2562,47 +2525,11 @@ HistoryAutoCompleteEnumerator::IsResult(nsIMdbRow* aRow)
 
   nsCAutoString url;
   mHistory->GetRowValue(aRow, mURLColumn, url);
-
-  NS_ConvertUTF8toUTF16 utf8Url(url);
-
-  PRBool result = mHistory->AutoCompleteCompare(utf8Url, mSelectValue, mExclude); 
-  
-  return result;
+  return mHistory->AutoCompleteCompare(url, mSelectValue, mExclude);
 }
 
-nsresult
-HistoryAutoCompleteEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports** aResult)
-{
-  nsCAutoString url;
-  mHistory->GetRowValue(aRow, mURLColumn, url);
-  nsAutoString comments;
-  mHistory->GetRowValue(aRow, mCommentColumn, comments);
-
-  nsCOMPtr<nsIAutoCompleteItem> newItem(do_CreateInstance(NS_AUTOCOMPLETEITEM_CONTRACTID));
-  NS_ENSURE_TRUE(newItem, NS_ERROR_FAILURE);
-
-  newItem->SetValue(NS_ConvertUTF8toUTF16(url.get()));
-  newItem->SetParam(aRow);
-  newItem->SetComment(comments.get());
-
-  *aResult = newItem;
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
-
-// Number of prefixes used in the autocomplete sort comparison function
-#define AUTOCOMPLETE_PREFIX_LIST_COUNT 6
 // Size of visit count boost to give to urls which are sites or paths
 #define AUTOCOMPLETE_NONPAGE_VISIT_COUNT_BOOST 5
-
-// AutoCompleteSortClosure - used to pass info into 
-// AutoCompleteSortComparison from the NS_QuickSort() function
-struct AutoCompleteSortClosure
-{
-  nsSimpleGlobalHistory*  history;
-  size_t                  prefixCount;
-  const nsAFlatString*    prefixes[AUTOCOMPLETE_PREFIX_LIST_COUNT];
-};
 
 #pragma mark -
 
@@ -2639,16 +2566,19 @@ nsSimpleGlobalHistory::OnStartLookup(const PRUnichar *searchString,
 
   // if the search string is empty after it has had prefixes removed, then 
   // there is no need to proceed with the search
-  nsAutoString cut(searchString);
-  AutoCompleteCutPrefix(cut, nsnull);
-  if (cut.IsEmpty()) {
+  nsCAutoString cSearchString = NS_ConvertUTF16toUTF8(searchString);
+  nsCAutoString cutString = cSearchString;
+  AutoCompleteCutPrefix(cutString, nsnull);
+  if (cutString.IsEmpty()) {
     listener->OnAutoComplete(results, status);
     return NS_OK;
   }
   
   // pass string through filter and then determine which prefixes to exclude
   // when chopping prefixes off of history urls during comparison
-  nsString filtered = AutoCompletePrefilter(nsDependentString(searchString));
+  nsCAutoString filtered;
+  AutoCompletePrefilter(cSearchString, filtered);
+  
   AutocompleteExcludeData exclude;
   AutoCompleteGetExcludeInfo(filtered, &exclude);
   
@@ -2704,7 +2634,7 @@ nsSimpleGlobalHistory::OnAutoComplete(const PRUnichar *searchString,
 //
 
 nsresult
-nsSimpleGlobalHistory::AutoCompleteSearch(const nsAString& aSearchString,
+nsSimpleGlobalHistory::AutoCompleteSearch(const nsACString& aSearchString,
                                     AutocompleteExcludeData* aExclude,
                                     nsIAutoCompleteResults* aPrevResults,
                                     nsIAutoCompleteResults* aResults)
@@ -2712,17 +2642,18 @@ nsSimpleGlobalHistory::AutoCompleteSearch(const nsAString& aSearchString,
   // determine if we can skip searching the whole history and only search
   // through the previous search results
   PRBool searchPrevious = PR_FALSE;
+  nsAutoString searchString = NS_ConvertUTF8toUTF16(aSearchString);
   if (aPrevResults) {
     nsXPIDLString prevURL;
     aPrevResults->GetSearchString(getter_Copies(prevURL));
     // if search string begins with the previous search string, it's a go
-    searchPrevious = StringBeginsWith(aSearchString, prevURL);
+    searchPrevious = StringBeginsWith(searchString, prevURL);
   }
     
   nsCOMPtr<nsISupportsArray> resultItems;
   nsresult rv = aResults->GetItems(getter_AddRefs(resultItems));
 
-  if (searchPrevious) {
+  if (NS_SUCCEEDED(rv) && searchPrevious) {
     // searching through the previous results...
     
     nsCOMPtr<nsISupportsArray> prevResultItems;
@@ -2731,13 +2662,13 @@ nsSimpleGlobalHistory::AutoCompleteSearch(const nsAString& aSearchString,
     PRUint32 count;
     prevResultItems->Count(&count);
     for (PRUint32 i = 0; i < count; ++i) {
-      nsCOMPtr<nsIAutoCompleteItem> item;
+      nsCOMPtr<nsIHistoryItem> item;
       prevResultItems->GetElementAt(i, getter_AddRefs(item));
 
       // make a copy of the value because AutoCompleteCompare
       // is destructive
-      nsAutoString url;
-      item->GetValue(url);
+      nsCAutoString url;
+      item->GetURL(url);
       
       if (AutoCompleteCompare(url, aSearchString, aExclude))
         resultItems->AppendElement(item);
@@ -2746,81 +2677,46 @@ nsSimpleGlobalHistory::AutoCompleteSearch(const nsAString& aSearchString,
     // searching through the entire history...
         
     // prepare the search enumerator
-    HistoryAutoCompleteEnumerator* enumerator;
-    enumerator = new HistoryAutoCompleteEnumerator(this, kToken_URLColumn, 
+    HistoryAutoCompleteEnumerator enumerator(this, 
+                                            mTable,
+                                            kToken_URLColumn, 
                                             kToken_NameColumn,
                                             kToken_HiddenColumn,
                                             kToken_TypedColumn,
                                             mAutocompleteOnlyTyped,
                                             aSearchString, aExclude);
     
-    nsCOMPtr<nsISupports> kungFuDeathGrip(enumerator);
+    nsresult rv = enumerator.Init(mEnv);
+    if (NS_FAILED(rv))
+      return rv;
 
-    rv = enumerator->Init(mEnv, mTable);
-    if (NS_FAILED(rv)) return rv;
-  
-    // store hits in an auto array initially
-    nsAutoVoidArray array;
-      
-    // not using nsCOMPtr here to avoid time spent
-    // refcounting while passing these around between the 3 arrays
-    nsISupports* entry; 
-
+    // light array of pointers to nsIHistoryItems. we want to avoid shuffling objects between
+    // chunky XPCOM arrays in this performance-critical area, when possible.
+    nsCOMArray<nsIHistoryItem> itemArray;
+    
     // step through the enumerator to get the items into 'array'
     // because we don't know how many items there will be
     PRBool hasMore;
-    while (PR_TRUE) {
-      enumerator->HasMoreElements(&hasMore);
-      if (!hasMore) break;
-      
-      // addref's each entry as it enters 'array'
-      enumerator->GetNext(&entry);
-      array.AppendElement(entry);
-    }
-
-    // turn auto array into flat array for quick sort, now that we
-    // know how many items there are
-    PRUint32 count = array.Count();
-    nsIAutoCompleteItem** items = new nsIAutoCompleteItem*[count];
-    PRUint32 i;
-    for (i = 0; i < count; ++i)
-      items[i] = (nsIAutoCompleteItem*)array.ElementAt(i);
     
-    // Setup the structure we pass into the sort function,
-    // including a set of url prefixes to ignore.   These prefixes 
-    // must match with the logic in nsGlobalHistory::nsGlobalHistory().
-    NS_NAMED_LITERAL_STRING(prefixHWStr, "http://www.");
-    NS_NAMED_LITERAL_STRING(prefixHStr, "http://");
-    NS_NAMED_LITERAL_STRING(prefixHSWStr, "https://www.");
-    NS_NAMED_LITERAL_STRING(prefixHSStr, "https://");
-    NS_NAMED_LITERAL_STRING(prefixFFStr, "ftp://ftp.");
-    NS_NAMED_LITERAL_STRING(prefixFStr, "ftp://");
-
-    // note: the number of prefixes stored in the closure below 
-    // must match with the constant AUTOCOMPLETE_PREFIX_LIST_COUNT
-    AutoCompleteSortClosure closure;
-    closure.history = this;
-    closure.prefixCount = AUTOCOMPLETE_PREFIX_LIST_COUNT;
-    closure.prefixes[0] = &prefixHWStr;
-    closure.prefixes[1] = &prefixHStr;
-    closure.prefixes[2] = &prefixHSWStr;
-    closure.prefixes[3] = &prefixHSStr;
-    closure.prefixes[4] = &prefixFFStr;
-    closure.prefixes[5] = &prefixFStr;
-
-    // sort it
-    NS_QuickSort(items, count, sizeof(nsIAutoCompleteItem*),
-                 AutoCompleteSortComparison,
-                 NS_STATIC_CAST(void*, &closure));
+    while (NS_SUCCEEDED(enumerator.HasMoreElements(&hasMore)) && hasMore) {
+      // GetNext() addrefs, and so will our array's AppendElement(), so we'll need to
+      // take care to release our temporary ref here.
+      nsIHistoryItem* curEntry;
+      enumerator.GetNext((nsISupports**)&curEntry);
+      itemArray.AppendObject(curEntry);
+      NS_IF_RELEASE(curEntry);
+    }
+    
+    if (itemArray.Count() > 1) {
+      // sort it
+      itemArray.Sort(AutoCompleteSortComparison, nsnull);
   
-    // place the sorted array into the autocomplete results
-    for (i = 0; i < count; ++i) {
-      nsISupports* item = (nsISupports*)items[i];
-      resultItems->AppendElement(item);
-      NS_IF_RELEASE(item); // release manually since we didn't use nsCOMPtr above
+      // place the sorted array into the autocomplete results
+      for (PRInt32 i = 0; i < itemArray.Count(); ++i) {
+        nsIHistoryItem* item = itemArray[i];
+        resultItems->AppendElement(NS_STATIC_CAST(nsISupports*, item));
+      }
     }
-    
-    delete[] items;
   }
     
   return NS_OK;
@@ -2829,25 +2725,25 @@ nsSimpleGlobalHistory::AutoCompleteSearch(const nsAString& aSearchString,
 // If aURL begins with a protocol or domain prefix from our lists,
 // then mark their index in an AutocompleteExcludeData struct.
 void
-nsSimpleGlobalHistory::AutoCompleteGetExcludeInfo(const nsAString& aURL, AutocompleteExcludeData* aExclude)
+nsSimpleGlobalHistory::AutoCompleteGetExcludeInfo(const nsACString& aURL, AutocompleteExcludeData* aExclude)
 {
   aExclude->schemePrefix = -1;
   aExclude->hostnamePrefix = -1;
   
   PRInt32 index = 0;
-  PRInt32 i;
-  for (i = 0; i < mIgnoreSchemes.Count(); ++i) {
-    nsString* string = mIgnoreSchemes.StringAt(i);    
-    if (StringBeginsWith(aURL, *string)) {
+  PRUint32 i;
+  for (i = 0; i < sizeof(kSchemePrefixes)/sizeof(kSchemePrefixes[0]); ++i) {
+    const nsACString& string = kSchemePrefixes[i];    
+    if (StringBeginsWith(aURL, string)) {
       aExclude->schemePrefix = i;
-      index = string->Length();
+      index = string.Length();
       break;
     }
   }
   
-  for (i = 0; i < mIgnoreHostnames.Count(); ++i) {
-    nsString* string = mIgnoreHostnames.StringAt(i);    
-    if (Substring(aURL, index, string->Length()).Equals(*string)) {
+  for (i = 0; i < sizeof(kHostNamePrefixes)/sizeof(kHostNamePrefixes[0]); ++i) {
+    const nsACString& string = kHostNamePrefixes[i];
+    if (Substring(aURL, index, string.Length()).Equals(string)) {
       aExclude->hostnamePrefix = i;
       break;
     }
@@ -2857,18 +2753,19 @@ nsSimpleGlobalHistory::AutoCompleteGetExcludeInfo(const nsAString& aURL, Autocom
 // Cut any protocol and domain prefixes from aURL, except for those which
 // are specified in aExclude
 void
-nsSimpleGlobalHistory::AutoCompleteCutPrefix(nsAString& aURL, AutocompleteExcludeData* aExclude)
+nsSimpleGlobalHistory::AutoCompleteCutPrefix(nsACString& aURL, AutocompleteExcludeData* aExclude)
 {
   // This comparison is case-sensitive.  Therefore, it assumes that aUserURL is a 
   // potential URL whose host name is in all lower case.
   PRInt32 idx = 0;
-  PRInt32 i;
-  for (i = 0; i < mIgnoreSchemes.Count(); ++i) {
+  PRUint32 i;
+  
+  for (i = 0; i < sizeof(kSchemePrefixes)/sizeof(kSchemePrefixes[0]); ++i) {
     if (aExclude && i == aExclude->schemePrefix)
       continue;
-    nsString* string = mIgnoreSchemes.StringAt(i);    
-    if (StringBeginsWith(aURL, *string)) {
-      idx = string->Length();
+    const nsACString &string = kSchemePrefixes[i];    
+    if (StringBeginsWith(aURL, string)) {
+      idx = string.Length();
       break;
     }
   }
@@ -2877,12 +2774,12 @@ nsSimpleGlobalHistory::AutoCompleteCutPrefix(nsAString& aURL, AutocompleteExclud
     aURL.Cut(0, idx);
 
   idx = 0;
-  for (i = 0; i < mIgnoreHostnames.Count(); ++i) {
+  for (i = 0; i < sizeof(kHostNamePrefixes)/sizeof(kHostNamePrefixes[0]); ++i) {
     if (aExclude && i == aExclude->hostnamePrefix)
       continue;
-    nsString* string = mIgnoreHostnames.StringAt(i);    
-    if (StringBeginsWith(aURL, *string)) {
-      idx = string->Length();
+    const nsACString &string = kHostNamePrefixes[i];    
+    if (StringBeginsWith(aURL, string)) {
+      idx = string.Length();
       break;
     }
   }
@@ -2891,32 +2788,29 @@ nsSimpleGlobalHistory::AutoCompleteCutPrefix(nsAString& aURL, AutocompleteExclud
     aURL.Cut(0, idx);
 }
 
-nsString
-nsSimpleGlobalHistory::AutoCompletePrefilter(const nsAString& aSearchString)
+void
+nsSimpleGlobalHistory::AutoCompletePrefilter(const nsACString& aSearchString, nsACString &outFilteredString)
 {
-  nsAutoString url(aSearchString);
-
-  PRInt32 slash = url.FindChar('/', 0);
+  outFilteredString.Assign(aSearchString);
+  PRInt32 slash = outFilteredString.FindChar('/', 0);
+  
   if (slash >= 0) {
     // if user is typing a url but has already typed past the host,
     // then convert the host to lowercase
-    nsAutoString host;
-    url.Left(host, slash);
+    nsCAutoString host(Substring(outFilteredString, 0, slash));
     ToLowerCase(host);
-    url.Assign(host + Substring(url, slash, url.Length()-slash));
+    outFilteredString.Assign(host + Substring(outFilteredString, slash, outFilteredString.Length()-slash));
   } else {
     // otherwise, assume the user could still be typing the host, and
     // convert everything to lowercase
-    ToLowerCase(url);
+    ToLowerCase(outFilteredString);
   }
-  
-  return nsString(url);
 }
 
 PRBool
-nsSimpleGlobalHistory::AutoCompleteCompare(nsAString& aHistoryURL, 
-                                     const nsAString& aUserURL, 
-                                     AutocompleteExcludeData* aExclude)
+nsSimpleGlobalHistory::AutoCompleteCompare(nsACString&              aHistoryURL, 
+                                           const nsACString&        aUserURL, 
+                                           AutocompleteExcludeData* aExclude)
 {
   AutoCompleteCutPrefix(aHistoryURL, aExclude);
   
@@ -2924,39 +2818,24 @@ nsSimpleGlobalHistory::AutoCompleteCompare(nsAString& aHistoryURL,
 }
 
 int PR_CALLBACK 
-nsSimpleGlobalHistory::AutoCompleteSortComparison(const void *v1, const void *v2,
-                                            void *closureVoid) 
+nsSimpleGlobalHistory::AutoCompleteSortComparison(nsIHistoryItem *item1, nsIHistoryItem *item2,
+                                                  void *closureVoid) 
 {
   //
   // NOTE: The design and reasoning behind the following autocomplete 
   // sort implementation is documented in bug 78270.
   //
-
-  // cast our function parameters back into their real form
-  nsIAutoCompleteItem *item1 = *(nsIAutoCompleteItem**) v1;
-  nsIAutoCompleteItem *item2 = *(nsIAutoCompleteItem**) v2;
-  AutoCompleteSortClosure* closure = 
-      NS_STATIC_CAST(AutoCompleteSortClosure*, closureVoid);
-
-  // get history rows
-  nsCOMPtr<nsIMdbRow> row1, row2;
-  item1->GetParam(getter_AddRefs(row1));
-  item2->GetParam(getter_AddRefs(row2));
-
+  
   // get visit counts - we're ignoring all errors from GetRowValue(), 
   // and relying on default values
-  PRInt32 item1visits = 0, item2visits = 0;
-  closure->history->GetRowValue(row1, 
-                                closure->history->kToken_VisitCountColumn, 
-                                &item1visits);
-  closure->history->GetRowValue(row2, 
-                                closure->history->kToken_VisitCountColumn, 
-                                &item2visits);
+  PRInt32 item1visits = 0, item2visits = 0;  
+  item1->GetVisitCount(&item1visits);
+  item2->GetVisitCount(&item2visits);
 
   // get URLs
-  nsAutoString url1, url2;
-  item1->GetValue(url1);
-  item2->GetValue(url2);
+  nsCAutoString url1, url2;
+  item1->GetURL(url1);
+  item2->GetURL(url2);
 
   // Favour websites and webpaths more than webpages by boosting 
   // their visit counts.  This assumes that URLs have been normalized, 
@@ -2975,14 +2854,14 @@ nsSimpleGlobalHistory::AutoCompleteSortComparison(const void *v1, const void *v2
   if (!url1.IsEmpty())
   {
     // url is a site/path if it has a trailing slash
-    isPath1 = (url1.Last() == PRUnichar('/'));
+    isPath1 = (url1.Last() == '/');
     if (isPath1)
       item1visits += AUTOCOMPLETE_NONPAGE_VISIT_COUNT_BOOST;
   }
   if (!url2.IsEmpty())
   {
     // url is a site/path if it has a trailing slash
-    isPath2 = (url2.Last() == PRUnichar('/'));
+    isPath2 = (url2.Last() == '/');
     if (isPath2)
       item2visits += AUTOCOMPLETE_NONPAGE_VISIT_COUNT_BOOST;
   }
@@ -3005,32 +2884,33 @@ nsSimpleGlobalHistory::AutoCompleteSortComparison(const void *v1, const void *v2
     // string - it is assumed there is no whitespace.
     PRInt32 postPrefix1 = 0, postPrefix2 = 0;
 
+    const unsigned int kNumPrefixes = sizeof(kIgnoredPrefixes)/sizeof(kIgnoredPrefixes[0]);
     size_t i;
     // iterate through our prefixes looking for a match
-    for (i=0; i<closure->prefixCount; i++)
+    for (i = 0; i < kNumPrefixes; i++)
     {
       // Check if string is prefixed.  Note: the parameters of the Find() 
       // method specify the url is searched at the 0th character and if there
       // is no match the rest of the url is not searched.
-      if (url1.Find((*closure->prefixes[i]), 0, 1) == 0)
+      if (StringBeginsWith(url1, kIgnoredPrefixes[0]))
       {
         // found a match - record post prefix position
-        postPrefix1 = closure->prefixes[i]->Length();
+        postPrefix1 = kIgnoredPrefixes[i].Length();
         // bail out of the for loop
         break;
       }
     }
 
     // iterate through our prefixes looking for a match
-    for (i=0; i<closure->prefixCount; i++)
+    for (i = 0; i < kNumPrefixes; i++)
     {
       // Check if string is prefixed.  Note: the parameters of the Find() 
       // method specify the url is searched at the 0th character and if there
       // is no match the rest of the url is not searched.
-      if (url2.Find((*closure->prefixes[i]), 0, 1) == 0)
+      if (StringBeginsWith(url2, kIgnoredPrefixes[0]))
       {
         // found a match - record post prefix position
-        postPrefix2 = closure->prefixes[i]->Length();
+        postPrefix2 = kIgnoredPrefixes[i].Length();
         // bail out of the for loop
         break;
       }
