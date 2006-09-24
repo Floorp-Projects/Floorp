@@ -269,8 +269,9 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
 
         mData.u.wstr.mWStringValue = 
             NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(str));
-        mData.u.wstr.mWStringLength =
-            NS_REINTERPRET_CAST(PRUint32, JS_GetStringLength(str));
+        // Use C-style cast, because reinterpret cast from size_t to
+        // PRUint32 is not valid on some platforms.
+        mData.u.wstr.mWStringLength = (PRUint32)JS_GetStringLength(str);
         mData.mType = nsIDataType::VTYPE_WSTRING_SIZE_IS;
         
         return JS_TRUE;
