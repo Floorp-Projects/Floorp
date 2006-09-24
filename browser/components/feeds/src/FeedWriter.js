@@ -685,9 +685,16 @@ FeedWriter.prototype = {
         window.QueryInterface(Ci.nsIInterfaceRequestor).
         getInterface(Ci.nsIWebNavigation).
         QueryInterface(Ci.nsIDocShell).currentDocumentChannel;
-    const kPrefix = "jar:file:";
-    
-    if (chan.URI.spec.substring(0, kPrefix.length) == kPrefix)
+
+    const SUBSCRIBE_PAGE_URI = "chrome://browser/content/feeds/subscribe.xhtml";
+    var uri = Cc["@mozilla.org/network/io-service;1"].
+              getService(Ci.nsIIOService).
+              newURI(SUBSCRIBE_PAGE_URI, "", null)
+    var resolvedURI = Cc["@mozilla.org/chrome/chrome-registry;1"].
+                      getService(Ci.nsIChromeRegistry).
+                      convertChromeURL(uri);
+
+    if (resolvedURI.equals(chan.URI))
       return chan.originalURI;
     else
       return null;
