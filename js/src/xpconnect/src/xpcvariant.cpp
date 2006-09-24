@@ -44,30 +44,31 @@
 
 NS_IMPL_ISUPPORTS2_CI(XPCVariant, XPCVariant, nsIVariant)
 
-XPCVariant::XPCVariant()
-    : mJSVal(JSVAL_VOID)
+XPCVariant::XPCVariant(JSRuntime* aJSRuntime)
+    : mJSVal(JSVAL_VOID),
+      mJSRuntime(aJSRuntime)
 {
     nsVariant::Initialize(&mData);
 }
 
 XPCVariant::~XPCVariant()
 {
-    nsVariant::Cleanup(&mData);
+    // If mJSVal is JSVAL_STRING, we don't need to clean anything up;
+    // simply unlocking the string is good.
+    if(!JSVAL_IS_STRING(mJSVal))
+        nsVariant::Cleanup(&mData);
     
     if(JSVAL_IS_GCTHING(mJSVal))
     {
-        JSRuntime* rt;
-        nsIJSRuntimeService* rtsrvc = nsXPConnect::GetJSRuntimeService();
-
-        if(rtsrvc && NS_SUCCEEDED(rtsrvc->GetRuntime(&rt)))
-            JS_RemoveRootRT(rt, &mJSVal);
+        NS_ASSERTION(mJSRuntime, "Must have a runtime!");
+        JS_UnlockGCThingRT(mJSRuntime, JSVAL_TO_GCTHING(mJSVal));
     }
 }
 
 // static 
 XPCVariant* XPCVariant::newVariant(XPCCallContext& ccx, jsval aJSVal)
 {
-    XPCVariant* variant = new XPCVariant();
+    XPCVariant* variant = new XPCVariant(JS_GetRuntime(ccx));
     if(!variant)
         return nsnull;
     
@@ -77,9 +78,9 @@ XPCVariant* XPCVariant::newVariant(XPCCallContext& ccx, jsval aJSVal)
 
     if(JSVAL_IS_GCTHING(variant->mJSVal))
     {
-        JSRuntime* rt;
-        if(NS_FAILED(ccx.GetRuntime()->GetJSRuntimeService()->GetRuntime(&rt))||
-           !JS_AddNamedRootRT(rt, &variant->mJSVal, "XPCVariant::mJSVal"))
+        // use JS_LockGCThingRT, because we get better performance in a lot of
+        // cases than with adding a named GC root.
+        if(!JS_LockGCThing(ccx, JSVAL_TO_GCTHING(variant->mJSVal)))
         {
             NS_RELEASE(variant); // Also sets variant to nsnull.
         }
@@ -254,9 +255,25 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
         return NS_SUCCEEDED(nsVariant::SetToEmpty(&mData));
     if(JSVAL_IS_STRING(mJSVal))
     {
-        return NS_SUCCEEDED(nsVariant::SetFromWStringWithSize(&mData, 
-                    (PRUint32)JS_GetStringLength(JSVAL_TO_STRING(mJSVal)),
-                    (PRUnichar*)JS_GetStringChars(JSVAL_TO_STRING(mJSVal))));
+        // Make our string immutable.  This will also ensure null-termination,
+        // which nsVariant assumes for its PRUnichar* stuff.
+        JSString* str = JSVAL_TO_STRING(mJSVal);
+        if(!JS_MakeStringImmutable(ccx, str))
+            return JS_FALSE;
+
+        // Don't use nsVariant::SetFromWStringWithSize, because that will copy
+        // the data.  Just handle this ourselves.  Note that it's ok to not
+        // copy because we added mJSVal as a GC root.
+        NS_ASSERTION(mData.mType == nsIDataType::VTYPE_EMPTY,
+                     "Why do we already have data?");
+
+        mData.u.wstr.mWStringValue = 
+            NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(str));
+        mData.u.wstr.mWStringLength =
+            NS_REINTERPRET_CAST(PRUint32, JS_GetStringLength(str));
+        mData.mType = nsIDataType::VTYPE_WSTRING_SIZE_IS;
+        
+        return JS_TRUE;
     }
 
     // leaving only JSObject...
