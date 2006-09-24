@@ -25,6 +25,7 @@ toolkit.jar:
         content/global/nsTransferable.js            (resources/content/nsTransferable.js) 
         content/global/nsUserSettings.js            (resources/content/nsUserSettings.js) 
         content/global/xul.css                      (resources/content/xul.css) 
+*       content/global/inlineSpellCheckUI.js        (/toolkit/content/inlineSpellCheckUI.js)
         content/global/plugins.html                 (/toolkit/content/plugins.html)
         content/global/plugins.css                  (/toolkit/content/plugins.css)
         content/global/printdialog.xul              (resources/content/printdialog.xul)
