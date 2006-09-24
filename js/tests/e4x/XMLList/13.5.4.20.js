@@ -50,6 +50,6 @@ TEST(2, "one", x.toString());
 
 x = <><alpha>one</alpha><bravo>two</bravo></>;
 
-TEST(3, "<alpha>one</alpha>" + NL() + "<bravo>two</bravo>", x.toString());
+TEST(3, "<alpha>one</alpha>\n<bravo>two</bravo>", x.toString());
 
 END();
