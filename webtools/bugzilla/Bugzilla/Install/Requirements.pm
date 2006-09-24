@@ -158,6 +158,7 @@ use constant WIN32_MODULE_NAMES => {
     'GD::Graph'         => 'GDGraph',
     'GD::Text::Align'   => 'GDTextUtil',
     'Mail::Mailer'      => 'MailTools',
+    'Net::LDAP'         => 'perl-ldap',
     # We provide Template 2.14 or lower for Win32, so it still includes
     # the GD plugin.
     'Template::Plugin::GD' => 'Template-Toolkit',
@@ -498,7 +499,7 @@ sub vers_cmp {
 
 sub install_command {
     my $module = shift;
-    if ($^O =~ /MSWin32/i) {
+    if (ON_WINDOWS) {
         return "ppm install " . WIN32_MODULE_NAMES->{$module} if
             WIN32_MODULE_NAMES->{$module};
         $module =~ s/::/-/g;
