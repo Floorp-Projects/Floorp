@@ -49,7 +49,7 @@
         onload="gChangeActionDialog.init();"
         buttons="accept,cancel,help"
         ondialogaccept="return gChangeActionDialog.onAccept();" 
-        ondialoghelp="openHelp('prefs-download-actions', 'chrome://browser/locale/help/help.rdf');"
+        ondialoghelp="openHelp('prefs-file-types', 'chrome://browser/locale/help/help.rdf');"
         xmlns:aaa="http://www.w3.org/2005/07/aaa"
         style="width: &window.width;;"
         persist="screenX screenY">
