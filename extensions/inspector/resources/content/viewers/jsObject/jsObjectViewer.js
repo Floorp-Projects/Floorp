@@ -176,9 +176,69 @@ JSObjectViewer.prototype =
   
   buildPropertyTree: function(aTreeChildren, aObject)
   {
+    // sort the properties
+    var propertyNames = [];
     for (var prop in aObject) {
+      propertyNames.push(prop);
+    }
+
+
+   /**
+    * A sorter for numeric values. Numerics come before non-numerics. If both
+    * parameters are non-numeric, returns 0.
+    *
+    * @param one object to compare
+    * @param another object to compare
+    * @return -1 if a should come before b, 1 if b should come before a, 0 if
+    *   they are equal
+    */
+    function sortNumeric(a, b) {
+      if (isNaN(a))
+        return isNaN(b) ? 0 : 1;
+      if (isNaN(b))
+        return -1;
+      return a - b;
+    }
+
+   /**
+    * A sorter for the JavaScript object properties. Sort order: constants with
+    * numeric values sorted numerically by value then alphanumerically by name,
+    * all other constants sorted alphanumerically by name, non-constants with
+    * numeric names sorted numerically by name (ex: array indices), all other
+    * non-constants sorted alphanumerically by name.
+    *
+    * @param one object to compare
+    * @param another object to compare
+    * @return -1 if a should come before b, 1 if b should come before a, 0 if
+    *   they are equal
+    */
+    function sortFunction(a, b) {
+      // assume capitalized non-numeric property names are constants
+      var aIsConstant = a == a.toUpperCase() && isNaN(a);
+      var bIsConstant = b == b.toUpperCase() && isNaN(b);
+      // constants come first
+      if (aIsConstant) {
+        if (bIsConstant) {
+          // both are constants. sort by numeric value, then non-numeric name
+          return sortNumeric(aObject[a], aObject[b]) || a.localeCompare(b);
+        }
+        //a is constant, b is not
+        return -1;
+      }
+      if (bIsConstant)
+        //b is constant, a is not
+        return 1;
+      // neither are constants. go by numeric property name, then non-numeric
+      // property name
+      return sortNumeric(a, b) || a.localeCompare(b);
+    }
+    propertyNames.sort(sortFunction);
+
+    // load them into the tree
+    for (var i = 0; i < propertyNames.length; i++) {
       try {
-        this.addTreeItem(aTreeChildren, prop, aObject[prop], aObject);
+        this.addTreeItem(aTreeChildren, propertyNames[i],
+                         aObject[propertyNames[i]], aObject);
       } catch (ex) {
         // hide unsightly NOT YET IMPLEMENTED errors when accessing certain properties
       }
