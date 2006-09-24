@@ -8323,11 +8323,12 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
   }
 
   // If we found an absolutely positioned containing block, then use the first-in-flow.
-  // If we didn't find it, then use the initial containing block. 
-  return (containingBlock) ?
-    AdjustAbsoluteContainingBlock(mPresShell->GetPresContext(),
-                                  containingBlock) :
-    mInitialContainingBlock;
+  if (containingBlock)
+    return AdjustAbsoluteContainingBlock(mPresShell->GetPresContext(),
+                                         containingBlock);
+
+  // If we didn't find it, then there isn't one.
+  return nsnull;
 }
 
 nsIFrame*
