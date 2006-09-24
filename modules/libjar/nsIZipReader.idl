@@ -90,7 +90,7 @@ interface nsIZipEntry : nsISupports
     readonly attribute boolean          isSynthetic;
 };
 
-[scriptable, uuid(08fa7e4b-4eec-4cae-b7fe-a3c1d1e9aed2)]
+[scriptable, uuid(5cce7f53-23b3-47f8-be05-122c0ba703fd)]
 interface nsIZipReader : nsISupports
 {
     /**
@@ -186,8 +186,18 @@ interface nsIZipReader : nsISupports
     /**
      * Returns an input stream containing the contents of the specified zip
      * entry.
+     * @param zipEntry the name of the entry to open the stream from
      */
     nsIInputStream getInputStream(in string zipEntry);
+
+    /**
+     * Returns an input stream containing the contents of the specified zip
+     * entry. If the entry refers to a directory (ends with '/'), a directory stream 
+     * is opened, otherwise the contents of the file entry is returned.
+     * @param aJarSpec the Spec of the URI for the JAR (only used for directory streams)
+     * @param zipEntry the name of the entry to open the stream from
+     */
+    nsIInputStream getInputStreamWithSpec(in AUTF8String aJarSpec, in string zipEntry);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
