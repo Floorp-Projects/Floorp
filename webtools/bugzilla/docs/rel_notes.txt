@@ -6,6 +6,7 @@ Table of Contents
 *****************
 
 - Introduction
+- Important Updates In This Point Release
 - Minimum Requirements
     * Perl
     * For MySQL Users
@@ -59,6 +60,46 @@ If you would like to contribute code to Bugzilla, read our
 Contributor's Guide at:
 
 http://www.bugzilla.org/docs/contributor.html
+
+
+Important Updates In This Point Release
+***************************************
+
+This section describes bugs fixed in releases after the original 2.22
+release.
+
+Version 2.22.1
+--------------
+
++ When sending mail, Bugzilla could throw the error "Insecure dependency in
+  exec while running with -T switch" (bug 340538).
+
++ Using the public webdot server (for dependency graphs) should work 
+  again (bug 351243).
+
++ The "I'm added to or removed from this capacity" email preference
+  wasn't working for new bugs (bug 349852).
+
++ The original release of 2.22 incorrectly said it required Template-Toolkit
+  version 2.08. In actual fact, Bugzilla requires version 2.10 (bug 351478).
+
++ votes.cgi would crash if your bug was the one confirming a bug (bug 351300).
+
++ checksetup.pl now correctly reports if your Template::Plugin::GD module
+  is missing. If missing, it could lead to charts and graphs not working
+  (bug 345389).
+
++ The "Keyword" field on buglist.cgi was not sorted alphabetically, so
+  it wasn't very useful for sorting (bug 342828).
+
++ Sendmail will no longer complain about there being a newline in the
+  email address, when Bugzilla sends mail (bug 331365).
+
++ contrib/bzdbcopy.pl would try to insert an invalid value into the
+  database, unnecessarily (bug 335572).
+
++ Deleting a bug now correctly deletes its attachments from the database
+  (bug 339667).
 
 
 Minimum Requirements
@@ -532,6 +573,25 @@ TRUNCATE TABLE logincookies;
 This is actually safe to do at any time--it just forces a logout of
 every single user, even those with saved sessions. (It invalidates
 every login cookie Bugzilla has ever given out.)
+
+Version 2.22.1
+--------------
+
+The Bugzilla team fixed two Information Leaks and two Cross-Site
+Scripting vulnerabilities that existed in versions of Bugzilla
+prior to 2.22.1. None of them are considered to be of critical
+severity, but we still strongly recommend that you update any
+2.22 installation to 2.22.1.
+
+In addition, we have made an enhancement to security in this version
+of Bugzilla. In previous versions, it was possible for malicious
+users to exploit administrators in certain ways. Although this has
+never happened (to our knowledge) in the real world, we thought it
+was important that we protect administrators from this sort of attack.
+
+You can see details on all the vulnerabilities and enhancements at:
+
+http://www.bugzilla.org/security/2.18.5/
 
 
 Release Notes For Previous Versions
