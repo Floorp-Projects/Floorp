@@ -344,11 +344,11 @@ nsPropertyTable::PropertyList::DeletePropertyFor(nsPropertyOwner aObject)
   if (!PL_DHASH_ENTRY_IS_BUSY(entry))
     return PR_FALSE;
 
-  if (mDtorFunc)
-    mDtorFunc(NS_CONST_CAST(void*, aObject.get()), mName,
-              entry->value, mDtorData);
-
+  void* value = entry->value;
   PL_DHashTableRawRemove(&mObjectValueMap, entry);
+
+  if (mDtorFunc)
+    mDtorFunc(NS_CONST_CAST(void*, aObject.get()), mName, value, mDtorData);
 
   return PR_TRUE;
 }
