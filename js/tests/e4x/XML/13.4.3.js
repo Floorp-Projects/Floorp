@@ -61,9 +61,9 @@ XML.ignoreComments = false;
 x = <alpha><!-- comment --><bravo>one</bravo></alpha>;
 
 correct = 
-"<alpha>" + NL() +   
-"  <!-- comment -->" + NL() +
-"  <bravo>one</bravo>" + NL() +
+"<alpha>\n" +   
+"  <!-- comment -->\n" +
+"  <bravo>one</bravo>\n" +
 "</alpha>";
 
 TEST_XML(7, correct, x);
@@ -97,9 +97,9 @@ x =
 </>;
 
 correct = 
-"<alpha>" + NL() +   
-"  <?foo version=\"1.0\" encoding=\"utf-8\"?>" + NL() +
-"  <bravo>one</bravo>" + NL() +
+"<alpha>\n" +   
+"  <?foo version=\"1.0\" encoding=\"utf-8\"?>\n" +
+"  <bravo>one</bravo>\n" +
 "</alpha>";
 
 TEST_XML(9, correct, x);
@@ -109,8 +109,8 @@ XML.setSettings();
 x = new XML("<alpha> \t\r\n\r\n<bravo> \t\r\n\r\none</bravo> \t\r\n\r\n</alpha>");
 
 correct = 
-"<alpha>" + NL() + 
-"  <bravo>one</bravo>" + NL() +
+"<alpha>\n" + 
+"  <bravo>one</bravo>\n" +
 "</alpha>";
 
 TEST_XML(10, correct, x);
@@ -137,14 +137,14 @@ x =
     </delta>
 </alpha>;
 
-correct = "<alpha>" + NL() +
-    "  one" + NL() +
-    "  <bravo>two</bravo>" + NL() +
-    "  <charlie/>" + NL() + 
-    "  <delta>" + NL() +
-    "    three" + NL() +
-    "    <echo>four</echo>" + NL() +
-    "  </delta>" + NL() +
+correct = "<alpha>\n" +
+    "  one\n" +
+    "  <bravo>two</bravo>\n" +
+    "  <charlie/>\n" + 
+    "  <delta>\n" +
+    "    three\n" +
+    "    <echo>four</echo>\n" +
+    "  </delta>\n" +
     "</alpha>";
     
 TEST(12, correct, x.toString());
@@ -160,14 +160,14 @@ TEST(15, correct, x.toXMLString());
 XML.prettyPrinting = true;
 XML.prettyIndent = 3;
 
-correct = "<alpha>" + NL() +
-    "   one" + NL() +
-    "   <bravo>two</bravo>" + NL() +
-    "   <charlie/>" + NL() + 
-    "   <delta>" + NL() +
-    "      three" + NL() +
-    "      <echo>four</echo>" + NL() +
-    "   </delta>" + NL() +
+correct = "<alpha>\n" +
+    "   one\n" +
+    "   <bravo>two</bravo>\n" +
+    "   <charlie/>\n" + 
+    "   <delta>\n" +
+    "      three\n" +
+    "      <echo>four</echo>\n" +
+    "   </delta>\n" +
     "</alpha>";
 
 TEST(16, correct, x.toString());
@@ -175,14 +175,14 @@ TEST(17, correct, x.toXMLString());
 
 XML.prettyIndent = 0;
 
-correct = "<alpha>" + NL() +
-    "one" + NL() +
-    "<bravo>two</bravo>" + NL() +
-    "<charlie/>" + NL() + 
-    "<delta>" + NL() +
-    "three" + NL() +
-    "<echo>four</echo>" + NL() +
-    "</delta>" + NL() +
+correct = "<alpha>\n" +
+    "one\n" +
+    "<bravo>two</bravo>\n" +
+    "<charlie/>\n" + 
+    "<delta>\n" +
+    "three\n" +
+    "<echo>four</echo>\n" +
+    "</delta>\n" +
     "</alpha>";
 
 TEST(18, correct, x.toString());

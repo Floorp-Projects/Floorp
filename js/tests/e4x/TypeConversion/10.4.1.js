@@ -51,7 +51,7 @@ x =
 </>;
 
 TEST(1, "xml", typeof(x));
-TEST(2, "<alpha>one</alpha>" + NL() + "<bravo>two</bravo>", x.toXMLString());
+TEST(2, "<alpha>one</alpha>\n<bravo>two</bravo>", x.toXMLString());
 
 // Load from another XMLList
 // Make sure it is copied if it's an XMLList
@@ -59,7 +59,7 @@ y = new XMLList(x);
 
 x += <charlie>three</charlie>;
 
-TEST(3, "<alpha>one</alpha>" + NL() + "<bravo>two</bravo>", y.toXMLString());
+TEST(3, "<alpha>one</alpha>\n<bravo>two</bravo>", y.toXMLString());
    
 // Load from one XML type
 x = new XMLList(<alpha>one</alpha>);
@@ -67,11 +67,11 @@ TEST(4, "<alpha>one</alpha>", x.toXMLString());
 
 // Load from Anonymous
 x = new XMLList(<><alpha>one</alpha><bravo>two</bravo></>);
-TEST(5, "<alpha>one</alpha>" + NL() + "<bravo>two</bravo>", x.toXMLString());
+TEST(5, "<alpha>one</alpha>\n<bravo>two</bravo>", x.toXMLString());
 
 // Load from Anonymous as string
 x = new XMLList("<alpha>one</alpha><bravo>two</bravo>");
-TEST(6, "<alpha>one</alpha>" + NL() + "<bravo>two</bravo>", x.toXMLString());
+TEST(6, "<alpha>one</alpha>\n<bravo>two</bravo>", x.toXMLString());
 
 // Load from illegal type
 //x = new XMLList("foobar");

@@ -50,6 +50,6 @@ TEST(2, "<alpha>one</alpha>", x.toXMLString());
 
 x = <><alpha>one</alpha><bravo>two</bravo></>;
 
-TEST(3, "<alpha>one</alpha>" + NL() + "<bravo>two</bravo>", x.toXMLString());
+TEST(3, "<alpha>one</alpha>\n<bravo>two</bravo>", x.toXMLString());
 
 END();

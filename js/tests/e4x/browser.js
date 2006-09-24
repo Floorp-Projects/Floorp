@@ -245,13 +245,4 @@ function quit()
 {
 }
 
-// override NL from shell.js.
-// assume running either on unix with \n line endings
-// or on windows under cygwin with \n line endings.
-
-function NL()
-{
-  return '\n';
-}
-
 window.onerror = reportError;

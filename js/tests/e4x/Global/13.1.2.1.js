@@ -468,7 +468,7 @@ function init()
 
 function testIsXMLName(buffer)
 {
-    var nl       = NL();
+    var nl       = "\n";
     var result   = '';
     var length   = buffer.length;
 

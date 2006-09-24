@@ -58,7 +58,7 @@ y = new XMLList(x);
 
 x += <charlie>three</charlie>;
 
-TEST(3, "<alpha>one</alpha>" + NL() + "<bravo>two</bravo>", y.toString());
+TEST(3, "<alpha>one</alpha>\n<bravo>two</bravo>", y.toString());
    
 // Load from one XML type
 x = new XMLList(<alpha>one</alpha>);
@@ -66,11 +66,11 @@ TEST_XML(4, "<alpha>one</alpha>", x);
 
 // Load from Anonymous
 x = new XMLList(<><alpha>one</alpha><bravo>two</bravo></>);
-TEST(5, "<alpha>one</alpha>" + NL() + "<bravo>two</bravo>", x.toString());
+TEST(5, "<alpha>one</alpha>\n<bravo>two</bravo>", x.toString());
 
 // Load from Anonymous as string
 x = new XMLList(<><alpha>one</alpha><bravo>two</bravo></>);
-TEST(6, "<alpha>one</alpha>" + NL() + "<bravo>two</bravo>", x.toString());
+TEST(6, "<alpha>one</alpha>\n<bravo>two</bravo>", x.toString());
 
 // Load from single textnode
 x = new XMLList("foobar");

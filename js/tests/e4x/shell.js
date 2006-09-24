@@ -186,15 +186,6 @@ function END()
 {
 }
 
-function NL() 
-{
-  try {
-    return java.lang.System.getProperty("line.separator");
-  } catch (e) {
-    return "\n";
-  }
-}
-
 /* JavaScriptOptions
    encapsulate the logic for setting and retrieving the values
    of the javascript options.
