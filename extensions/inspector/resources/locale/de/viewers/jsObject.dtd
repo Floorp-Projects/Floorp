@@ -45,4 +45,3 @@
 <!ENTITY jsEval.desc "Geben Sie einen JavaScript-Ausdruck an. Die Variable &quot;target&quot; ist die momentan ausgewählte Eigenschaft. Jeder Wert, den Sie zurückgeben, wird im Javascript-Objektbetrachter angezeigt.">
 
 <!ENTITY jsExecute.label "Ausführen">
-<!ENTITY jsCancel.label "Abbrechen">

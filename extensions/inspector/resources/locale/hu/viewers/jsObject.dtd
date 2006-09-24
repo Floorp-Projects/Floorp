@@ -45,4 +45,3 @@
 <!ENTITY jsEval.desc "Adjon meg egy JavaScript kifejezést.  A &quot;target&quot; változó a jelenleg kiválasztott tulajdonság. Minden visszatérési érték a JavaScript Objektumnézőben fog megjelenni.">
 
 <!ENTITY jsExecute.label "Végrehajtás">
-<!ENTITY jsCancel.label "Mégse">

@@ -46,4 +46,3 @@
 <!ENTITY jsEval.desc "Forneça uma expressão JavaScript. A variável &quot;target&quot; é a propriedade atualmente selecionada. Qualquer valor retornado será exibido no Javascript Object Viewer.">
 
 <!ENTITY jsExecute.label "Executar">
-<!ENTITY jsCancel.label "Cancelar">

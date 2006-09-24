@@ -45,4 +45,3 @@
 <!ENTITY jsEval.desc "Indtast et JavaScript udtryk. Variablen &quot;target&quot; er den egenskab som pt. er valgt. Enhver værdi som returneres vil blive vist i JavaScript Objektviseren.">
 
 <!ENTITY jsExecute.label "Udfør">
-<!ENTITY jsCancel.label "Afbryd">

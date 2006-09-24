@@ -45,4 +45,3 @@
 <!ENTITY jsEval.desc "Skriv inn et JavaScript-uttrykk. Variabelen &quot;target&quot; er det valgte objektet. Enhver verdi du returnerer vil vises i objektviseren for JavaScript.">
 
 <!ENTITY jsExecute.label "Utfør">
-<!ENTITY jsCancel.label "Avbryt">

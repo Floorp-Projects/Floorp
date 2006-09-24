@@ -45,4 +45,3 @@
 <!ENTITY jsEval.desc "Entrez une expression Javascript. La variable « target » est l'objet qui est actuellement sélectionné. La valeur de retour sera affichée dans la visionneuse d'objet Javascript.">
 
 <!ENTITY jsExecute.label "Exécuter">
-<!ENTITY jsCancel.label "Annuler">

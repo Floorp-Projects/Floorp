@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (original author)
+ *   Jason Barnabe <jason_barnabe@fastmail.fm>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,49 +44,25 @@
 * REQUIRED IMPORTS:
 ****************************************************************/
 
-//////////// global variables /////////////////////
+var gViewer = window.arguments[0];
+var gTarget = window.arguments[1];
 
-var dialog;
-
-//////////////////////////////////////////////////
-
-window.addEventListener("load", EvalExprDialog_initialize, false);
-
-function EvalExprDialog_initialize()
+/**
+ * Executes the JavaScript expression entered by the user.
+ */
+function execute()
 {
-  dialog = new EvalExprDialog();
-  dialog.initialize();
-}
-
-////////////////////////////////////////////////////////////////////////////
-//// class EvalExprDialog
-
-function EvalExprDialog()
-{
-  this.mViewer = window.arguments[0];
-  this.mTarget = window.arguments[1];
-}
-
-EvalExprDialog.prototype = 
-{
-  initialize: function()
-  {
-    var txf = document.getElementById("txfExprInput");
-    txf.focus();
-  },
-
-  doExec: function()
-  {
-    var txf = document.getElementById("txfExprInput");
-    var cbx = document.getElementById("cbxNewView");
-    this.mViewer.doEvalExpr(txf.value, this.mTarget, cbx.checked);
-    
-    window.close();
-  },
-  
-  doCancel: function()
-  {
-    window.close();
+  var txf = document.getElementById("txfExprInput");
+  var rad = document.getElementById("inspect-new-window");
+  try {
+    gViewer.doEvalExpr(txf.value, gTarget, rad.selected);
+  } catch (ex) {
+    // alert the user of an error in their expression, and don't close
+    Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+              .getService(Components.interfaces.nsIPromptService)
+                .alert(window, document.getElementById("strings")
+                               .getString("jsObjectExpressionError.title"), ex);
+    return false;
   }
-
-};
+  return true;
+}

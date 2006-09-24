@@ -41,4 +41,3 @@
 <!ENTITY jsValue.label "Hodnota">
 <!ENTITY jsEval.desc "Vložte výraz v jazyce Javascript.  Proměnná &quot;target&quot; je objektem, který je právě zvolen. Navrácená hodnota bude zobrazena v Javascript Object Viewer.">
 <!ENTITY jsExecute.label "Spustit">
-<!ENTITY jsCancel.label "Zrušit">
