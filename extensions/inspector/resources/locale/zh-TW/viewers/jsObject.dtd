@@ -5,4 +5,3 @@
 <!ENTITY jsValue.label "內含值">
 <!ENTITY jsEval.desc "輸入 JavaScript 運算式。變數「target」是目前所選的物件。任何傳回值都會顯示在 JavaScript 物件檢視器裡。">
 <!ENTITY jsExecute.label "執行">
-<!ENTITY jsCancel.label "取消">

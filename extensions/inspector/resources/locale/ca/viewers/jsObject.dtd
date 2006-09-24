@@ -48,4 +48,3 @@
 <!ENTITY jsEval.desc "Introduïu una expressió javascript. La variable &quot;target&quot; és l'objecte que està seleccionat ara. Qualsevol valor que retorneu es mostrarà al Visualitzador d'objectes del Javascript.">
 
 <!ENTITY jsExecute.label "Executa">
-<!ENTITY jsCancel.label "Cancel·la">

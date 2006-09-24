@@ -46,4 +46,3 @@
 <!ENTITY jsEval.desc "Skriv in ett JavaScript-uttryck.  Variabeln &quot;target&quot; är för närvarande det valda objektet. Varje värde som du stoppar in visas i objektsvisaren">
 
 <!ENTITY jsExecute.label "Kör">
-<!ENTITY jsCancel.label "Avbryt">

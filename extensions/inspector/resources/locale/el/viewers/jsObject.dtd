@@ -43,4 +43,3 @@
 <!ENTITY jsEval.desc "Εισάγετε μια έκφραση javascript.  Η μεταβλητή &quot;target&quot; είναι το αντικείμενο που έχει επιλεχθεί.  Όποια τιμή επιστρέφετε θα εμφανίζεται στο Javascript Object Viewer.">
 
 <!ENTITY jsExecute.label "Εκτέλεση">
-<!ENTITY jsCancel.label "Ακύρωση">
