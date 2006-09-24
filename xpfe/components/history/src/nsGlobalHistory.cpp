@@ -3050,6 +3050,9 @@ nsGlobalHistory::CloseDB()
   if (!mStore)
     return NS_OK;
 
+  mResults.Clear();
+  mSearchString.Truncate();
+
   mdb_err err;
 
   ExpireEntries(PR_FALSE /* don't notify */);
