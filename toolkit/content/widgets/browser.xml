@@ -568,15 +568,19 @@
         <![CDATA[
           try {
             if (!this.hasAttribute("disablehistory")) {
-              // wire up session history
-              this.webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"].createInstance(Components.interfaces.nsISHistory);
-              var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+              var os = Components.classes["@mozilla.org/observer-service;1"]
+                                 .getService(Components.interfaces.nsIObserverService);
               os.addObserver(this, "browser:purge-session-history", false);
+              // wire up session history
+              this.webNavigation.sessionHistory = 
+                      Components.classes["@mozilla.org/browser/shistory;1"]
+                                .createInstance(Components.interfaces.nsISHistory);
               // enable global history
               this.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
             }
           }
           catch (e) {
+            Components.utils.reportError(e);
           }
           try {
             this.mDragDropHandler = Components.classes["@mozilla.org:/content/content-area-dragdrop;1"].createInstance(Components.interfaces.nsIDragDropHandler);
@@ -613,9 +617,10 @@
           this.mDestroyed = true;
 
           if (!this.hasAttribute("disablehistory")) {
-            var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+            var os = Components.classes["@mozilla.org/observer-service;1"]
+                               .getService(Components.interfaces.nsIObserverService);
             try {
-              os.removeObserver(this, "browser:purge-session-history", false);
+              os.removeObserver(this, "browser:purge-session-history");
             } catch (ex) {
               // It's not clear why this sometimes throws an exception.
             }
@@ -643,7 +648,7 @@
         <parameter name="aState"/>
         <body>
           <![CDATA[
-            if (aTopic != "browser:purge-session-history")
+            if (aTopic != "browser:purge-session-history" || !this.sessionHistory)
               return;
               
             // place the entry at current index at the end of the history list, so it won't get removed
