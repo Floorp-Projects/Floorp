@@ -232,6 +232,9 @@ private:
   // Used for central directory reading, and for Test and Extract
   PRFileDesc    *mFd;
 
+  // Whether we synthesized the directory entries
+  PRPackedBool  mBuiltSynthetics;
+
   //--- private methods ---
   
   nsZipArchive& operator=(const nsZipArchive& rhs); // prevent assignments
@@ -239,6 +242,7 @@ private:
 
   nsZipItem*        CreateZipItem(PRUint16 namelen);
   nsresult          BuildFileList();
+  nsresult          BuildSynthetics();
 
   nsresult  CopyItemToDisk(PRUint32 size, PRUint32 crc, PRFileDesc* outFD);
   nsresult  InflateItem(const nsZipItem* aItem, PRFileDesc* outFD);

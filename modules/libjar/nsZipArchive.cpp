@@ -530,12 +530,8 @@ nsresult nsZipArchive::Test(const char *aEntryName)
     currItem = GetItem(aEntryName);
     if (!currItem)
       return ZIP_ERR_FNF;
-    //-- don't test synthetic items -- I think for a normal zip
-    //-- you actually *can* get away with testing a synthetic
-    //-- with no ill results except some unnecessary work, but
-    //-- for a zip which doesn't start with a zip entry (e.g.,
-    //-- a self-extracting zip) it'll fail
-    if (currItem->isSynthetic)
+    //-- don't test (synthetic) directory items
+    if (currItem->isDirectory)
       return ZIP_OK;
     return ExtractFile(currItem, 0, 0);
   }
@@ -543,7 +539,8 @@ nsresult nsZipArchive::Test(const char *aEntryName)
   // test all items in archive
   for (int i = 0; i < ZIP_TABSIZE; i++) {
     for (currItem = mFiles[i]; currItem; currItem = currItem->next) {
-      if (currItem->isSynthetic || currItem->isDirectory)
+      //-- don't test (synthetic) directory items
+      if (currItem->isDirectory)
         continue;
       nsresult rv = ExtractFile(currItem, 0, 0);
       if (rv != ZIP_OK)
@@ -597,6 +594,7 @@ nsresult nsZipArchive::CloseArchive()
     PR_Close(mFd);
     mFd = 0;
   }
+  mBuiltSynthetics = PR_FALSE;
   return ZIP_OK;
 }
 
@@ -606,6 +604,16 @@ nsresult nsZipArchive::CloseArchive()
 nsZipItem*  nsZipArchive::GetItem(const char * aEntryName)
 {
   if (aEntryName) {
+    //-- If the request is for a directory, make sure that synthetic entries 
+    //-- are created for the directories without their own entry.
+    if (!mBuiltSynthetics) {
+        PRUint32 len = strlen(aEntryName);
+        if ((len > 0) && (aEntryName[len-1] == '/')) {
+            if (BuildSynthetics() != ZIP_OK)
+                return 0;
+        }
+    }
+
     nsZipItem* item = mFiles[ HashName(aEntryName) ];
     while (item) {
       if (!strcmp(aEntryName, item->name))
@@ -686,6 +694,10 @@ nsZipArchive::FindInit(const char * aPattern, nsZipFind **aFind)
   PRBool  regExp = PR_FALSE;
   char*   pattern = 0;
 
+  // Create synthetic directory entries on demand
+  nsresult rv = BuildSynthetics();
+  if (NS_FAILED(rv)) return rv;
+
   // validate the pattern
   if (aPattern)
   {
@@ -714,8 +726,10 @@ nsZipArchive::FindInit(const char * aPattern, nsZipFind **aFind)
   }
 
   *aFind = new nsZipFind(this, pattern, regExp);
-  if (!*aFind)
+  if (!*aFind) {
+    PR_FREEIF(pattern);
     return ZIP_ERR_MEMORY;
+  }
 
   return ZIP_OK;
 }
@@ -727,19 +741,18 @@ nsZipArchive::FindInit(const char * aPattern, nsZipFind **aFind)
 //---------------------------------------------
 nsresult nsZipFind::FindNext(const char ** aResult)
 {
-  PRBool     found = PR_FALSE;
-
   if (!mArchive || !aResult)
     return ZIP_ERR_PARAM;
 
   *aResult = 0;
 
   // we start from last match, look for next
-  while (mSlot < ZIP_TABSIZE && !found)
+  while (mSlot < ZIP_TABSIZE)
   {
     // move to next in current chain, or move to new slot
     mItem = mItem ? mItem->next : mArchive->mFiles[mSlot];
 
+    PRBool found = PR_FALSE;
     if (!mItem)
       ++mSlot;                          // no more in this chain, move to next slot
     else if (!mPattern)
@@ -754,40 +767,13 @@ nsresult nsZipFind::FindNext(const char ** aResult)
       found = (PL_strcmp(mItem->name, mPattern) == 0);
 #endif
 
-    // The way that the actual zip entry for a directory overrides a synthetic
-    // entry created earlier means that a properly-constructed zip could return
-    // the "same" entry twice during enumeration.  For example, adding foo/bar
-    // and then foo/ to a new zip with Info-ZIP will return two entries for foo/
-    // during any enumeration that finds foo/.  Here's how we solve the problem:
-    //
-    //   * non-synthetic items are always matches
-    //   * a synthetic item is a match if for every prior item in
-    //     the current chain, either of the following hold:
-    //     * the prior item is not a directory (synthetic implies directory)
-    //     * the prior item's name is different from the current item's name
-    //
-    // We test whether a prior item is a directory before comparing names
-    // because name comparison involves function call overhead and because
-    // the typical zip contains more files than directories.
-    if (found && mItem->isSynthetic)
-    {
-      for (nsZipItem* curr = mArchive->mFiles[mSlot]; curr != mItem; curr = curr->next)
-      {
-        if (curr->isDirectory  && (0 == strcmp(mItem->name, curr->name)))
-        {
-          // we already found the real item with this name -- skip this item
-          found = PR_FALSE;
-          break;
-        }
-      }
+    if (found) {
+      *aResult = mItem->name;
+      return ZIP_OK;
     }
   }
 
-  if (!found)
-    return ZIP_ERR_FNF;
-
-  *aResult = mItem->name;
-  return ZIP_OK;
+  return ZIP_ERR_FNF;
 }
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
@@ -980,76 +966,6 @@ nsresult nsZipArchive::BuildFileList()
     item->next = mFiles[hash];
     mFiles[hash] = item;
 
-    //-- add entries for directories in the current item's path
-    //-- go from end to beginning, because then we can stop trying
-    //-- to create diritems if we find that the diritem we want to
-    //-- create already exists
-    //-- start just before the last char so as to not add the item
-    //-- twice if it's a directory
-    for (char* p = item->name + namelen - 2; p >= item->name; p--)
-    {
-      if ('/' != *p)
-        continue;
-
-      PRUint32 dirnamelen = p + 1 - item->name;
-
-      // See whether we need to create any more implicit directories,
-      // because if we don't we can avoid a lot of work.
-      // We can even avoid (de)allocating space for a bogus dirname with
-      // a little trickery -- save the char at item->name[dirnamelen],
-      // set it to 0, compare the strings, and restore the saved
-      // char when done
-      char savedChar = item->name[dirnamelen];
-      item->name[dirnamelen] = 0;
-
-      // Is the directory in the file table?
-      PRUint32 hash = HashName(item->name);
-      PRBool done = PR_FALSE;
-      for (nsZipItem* zi = mFiles[hash]; zi != NULL; zi = zi->next)
-      {
-        if (0 == strcmp(item->name, zi->name))
-        {
-          // we've already added this dir and all its parents
-          done = PR_TRUE;
-          break;
-        }
-      }
-
-      // restore the char immediately
-      item->name[dirnamelen] = savedChar;
-
-      // if the directory was found, break out of the directory
-      // creation loop now that we know all implicit directories
-      // are there -- otherwise, start creating the zip item
-      if (done)
-        break;
-
-      nsZipItem* diritem = CreateZipItem(dirnamelen);
-      if (!diritem)
-        return ZIP_ERR_MEMORY;
-
-      memcpy(diritem->name, item->name, dirnamelen);
-      diritem->name[dirnamelen] = 0;
-
-      diritem->isDirectory = PR_TRUE;
-      diritem->isSynthetic = PR_TRUE;
-      diritem->compression = STORED;
-      diritem->size = diritem->realsize = 0;
-      diritem->crc32 = 0;
-      diritem->mode = 0755;
-
-      // Set an obviously wrong last-modified date/time, because
-      // finding something more accurate like the most recent
-      // last-modified date/time of the dir's contents is a lot
-      // of effort.  The date/time corresponds to 1980-01-01 00:00.
-      diritem->time = 0;
-      diritem->date = 1 + (1 << 5) + (0 << 9);
-
-      // add diritem to the file table
-      diritem->next = mFiles[hash];
-      mFiles[hash] = diritem;
-    } /* end processing of dirs in item's name */
-
     //-------------------------------------------------------
     // set up to process the next item at the top of loop
     //-------------------------------------------------------
@@ -1060,6 +976,98 @@ nsresult nsZipArchive::BuildFileList()
   if (sig != ENDSIG)
     return ZIP_ERR_CORRUPT;
 
+  return ZIP_OK;
+}
+
+//---------------------------------------------
+//  nsZipArchive::BuildSynthetics
+//---------------------------------------------
+nsresult nsZipArchive::BuildSynthetics()
+{
+  if (mBuiltSynthetics)
+    return ZIP_OK;
+  mBuiltSynthetics = PR_TRUE;
+
+  // Create synthetic entries for any missing directories.
+  // Do this when all ziptable has scanned to prevent double entries.
+  for (int i = 0; i < ZIP_TABSIZE; ++i)
+  {
+    for (nsZipItem* item = mFiles[i]; item != 0; item = item->next)
+    {
+      if (item->isSynthetic)
+        continue;
+    
+      //-- add entries for directories in the current item's path
+      //-- go from end to beginning, because then we can stop trying
+      //-- to create diritems if we find that the diritem we want to
+      //-- create already exists
+      //-- start just before the last char so as to not add the item
+      //-- twice if it's a directory
+      PRUint16 namelen = strlen(item->name);
+      for (char* p = item->name + namelen - 2; p >= item->name; p--)
+      {
+        if ('/' != *p)
+          continue;
+
+        // See whether we need to create any more implicit directories,
+        // because if we don't we can avoid a lot of work.
+        // We can even avoid (de)allocating space for a bogus dirname with
+        // a little trickery -- save the char at item->name[dirnamelen],
+        // set it to 0, compare the strings, and restore the saved
+        // char when done
+        const PRUint32 dirnamelen = p + 1 - item->name;
+        const char savedChar = item->name[dirnamelen];
+        item->name[dirnamelen] = 0;
+
+        // Is the directory in the file table?
+        PRUint32 hash = HashName(item->name);
+        PRBool found = PR_FALSE;
+        for (nsZipItem* zi = mFiles[hash]; zi != NULL; zi = zi->next)
+        {
+          if (0 == strcmp(item->name, zi->name))
+          {
+            // we've already added this dir and all its parents
+            found = PR_TRUE;
+            break;
+          }
+        }
+
+        // restore the char immediately
+        item->name[dirnamelen] = savedChar;
+
+        // if the directory was found, break out of the directory
+        // creation loop now that we know all implicit directories
+        // are there -- otherwise, start creating the zip item
+        if (found)
+          break;
+
+        nsZipItem* diritem = CreateZipItem(dirnamelen);
+        if (!diritem)
+          return ZIP_ERR_MEMORY;
+
+        memcpy(diritem->name, item->name, dirnamelen);
+        diritem->name[dirnamelen] = 0;
+
+        diritem->isDirectory = PR_TRUE;
+        diritem->isSynthetic = PR_TRUE;
+        diritem->compression = STORED;
+        diritem->size = diritem->realsize = 0;
+        diritem->crc32 = 0;
+        diritem->mode = 0755;
+
+        // Set an obviously wrong last-modified date/time, because
+        // finding something more accurate like the most recent
+        // last-modified date/time of the dir's contents is a lot
+        // of effort.  The date/time corresponds to 1980-01-01 00:00.
+        diritem->time = 0;
+        diritem->date = 1 + (1 << 5) + (0 << 9);
+
+        // add diritem to the file table
+        diritem->next = mFiles[hash];
+        mFiles[hash] = diritem;
+      } /* end processing of dirs in item's name */
+    }
+  }
   return ZIP_OK;
 }
 
@@ -1273,11 +1281,12 @@ cleanup:
 // nsZipArchive constructor and destructor
 //------------------------------------------
 
+nsZipArchive::nsZipArchive() :
 #ifdef STANDALONE
-nsZipArchive::nsZipArchive() : kMagic(ZIP_MAGIC), mFd(0)
-#else
-nsZipArchive::nsZipArchive() : mFd(0)
+    kMagic(ZIP_MAGIC),
 #endif
+    mFd(0),
+    mBuiltSynthetics(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsZipArchive);
 
