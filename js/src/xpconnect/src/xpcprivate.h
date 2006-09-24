@@ -3540,6 +3540,9 @@ class XPCVariant : public nsIVariant
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIVARIANT
+    // If this class ever implements nsIWritableVariant, take special care with
+    // the case when mJSVal is JSVAL_STRING, since we don't own the data in
+    // that case.
 
     // We #define and iid so that out module local code can use QI to detect 
     // if a given nsIVariant is in fact an XPCVariant. 
@@ -3549,7 +3552,7 @@ public:
 
     jsval GetJSVal() const {return mJSVal;}
 
-    XPCVariant();
+    XPCVariant(JSRuntime* aJSRuntime);
 
     /**
      * Convert a variant into a jsval.
@@ -3574,6 +3577,9 @@ protected:
 protected:
     nsDiscriminatedUnion mData;
     jsval                mJSVal;
+
+    // For faster GC-thing locking and unlocking
+    JSRuntime*           mJSRuntime;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(XPCVariant, XPCVARIANT_IID)
