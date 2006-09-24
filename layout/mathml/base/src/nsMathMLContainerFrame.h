@@ -379,7 +379,11 @@ public:
   }
 
 protected:
-  nsMathMLmathBlockFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {}
+  nsMathMLmathBlockFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {
+    // We should always have a space manager.  Not that things can really try
+    // to float out of us anyway, but we need one for line layout.
+    AddStateBits(NS_BLOCK_SPACE_MGR);
+  }
   virtual ~nsMathMLmathBlockFrame() {}
 
   NS_IMETHOD
