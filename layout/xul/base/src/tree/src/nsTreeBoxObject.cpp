@@ -183,7 +183,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetView(nsITreeView * *aView)
       if (!mView) {
         // No tree builder, create a tree content view.
         nsresult rv = NS_NewTreeContentView(getter_AddRefs(mView));
-        NS_ENSURE_TRUE(rv, rv);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
 
       // Initialise the frame and view
