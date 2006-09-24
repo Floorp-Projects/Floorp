@@ -54,6 +54,8 @@
   #include <io.h>
 #endif
 
+static PRTime GetModTime(PRUint16 aDate, PRUint16 aTime);
+
 //----------------------------------------------
 // nsJARManifestItem declaration
 //----------------------------------------------
@@ -312,42 +314,29 @@ nsJAR::FindEntries(const char *aPattern, nsIUTF8StringEnumerator **result)
 NS_IMETHODIMP
 nsJAR::GetInputStream(const char* aFilename, nsIInputStream** result)
 {
-  return GetInputStreamWithSpec(EmptyCString(), aFilename, result);
-}
-
-NS_IMETHODIMP
-nsJAR::GetInputStreamWithSpec(const nsACString& aJarDirSpec, 
-                          const char* aEntryName, nsIInputStream** result)
-{
-  NS_ENSURE_ARG_POINTER(aEntryName);
   NS_ENSURE_ARG_POINTER(result);
 
-  // Watch out for the jar:foo.zip!/ (aDir is empty) top-level special case!
-  PRFileDesc *fd = nsnull;
-  nsZipItem *item = nsnull;
-  if (*aEntryName) {
-    // First check if item exists in jar
-    item = mZip.GetItem(aEntryName);
-    if (!item) return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
-  }
-  nsJARInputStream* jis = new nsJARInputStream();
-  // addref now so we can call InitFile/InitDirectory()
-  NS_ENSURE_TRUE(jis, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*result = jis);
+  // First check if item exists in jar
+  nsZipItem *item = mZip.GetItem(aFilename);
+  if (!item) return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
 
-  nsresult rv = NS_OK;
-  if (!item || item->isDirectory) {
-    rv = jis->InitDirectory(&mZip, aJarDirSpec, aEntryName);
-  } else {
-    // Open jarfile, to get its own filedescriptor for the stream
-    fd = OpenFile();
-    rv = fd ? jis->InitFile(&mZip, item, fd) : NS_ERROR_FAILURE;
-  }
+  // Open jarfile, to get its own filedescriptor for the stream
+  PRFileDesc *fd = OpenFile();
+  if (!fd) return NS_ERROR_FAILURE;
+
+  nsJARInputStream* jis = new nsJARInputStream();
+  if (!jis) return NS_ERROR_OUT_OF_MEMORY;
+
+  // addref now so we can call Init()
+  *result = jis;
+  NS_ADDREF(*result);
+
+  nsresult rv = jis->Init(this, item, fd);
   if (NS_FAILED(rv)) {
     NS_RELEASE(*result);
-    if (fd) PR_Close(fd);
+    return rv;
   }
-  return rv;
+  return NS_OK;
 }
 
 //----------------------------------------------
@@ -1280,7 +1269,7 @@ nsZipReaderCache::Observe(nsISupports *aSubject,
   return NS_OK;
 }
 
-PRTime GetModTime(PRUint16 aDate, PRUint16 aTime)
+static PRTime GetModTime(PRUint16 aDate, PRUint16 aTime)
 {
   char buffer[17];
 
