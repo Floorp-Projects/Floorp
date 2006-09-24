@@ -37,3 +37,9 @@
 <!ENTITY languages.customize.moveDown.label             "Move Down">
 <!ENTITY languages.customize.moveDown.accesskey         "d">
 
+<!ENTITY spelling.label                                 "Spelling">
+<!ENTITY checkSpelling.label                            "When typing check my spelling:">
+<!ENTITY checkSpelling.accesskey                        "W">
+<!ENTITY dontCheckSpelling.label                        "Never">
+<!ENTITY multilineCheckSpelling.label                   "In multiline boxes">
+<!ENTITY alwaysCheckSpelling.label                      "All boxes">

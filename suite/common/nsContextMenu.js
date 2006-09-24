@@ -89,8 +89,9 @@ nsContextMenu.prototype = {
           return;
         }
         // Get contextual info.
-        this.setTarget( document.popupNode );
-        
+        this.setTarget( document.popupNode, document.popupRangeParent,
+                        document.popupRangeOffset );
+
         this.isTextSelected = this.isTextSelection();
 
         this.initPopupURL();
@@ -103,6 +104,7 @@ nsContextMenu.prototype = {
         this.initNavigationItems();
         this.initViewItems();
         this.initMiscItems();
+        this.initSpellingItems();
         this.initSaveItems();
         this.initClipboardItems();
         this.initMetadataItems();
@@ -219,6 +221,40 @@ nsContextMenu.prototype = {
         this.showItem( "context-bidi-text-direction-toggle", this.onTextInput && gShowBiDi);
         this.showItem( "context-bidi-page-direction-toggle", !this.onTextInput && gShowBiDi);
     },
+    initSpellingItems : function () {
+        var canSpell = InlineSpellCheckerUI.canSpellCheck;
+        var onMisspelling = InlineSpellCheckerUI.overMisspelling;
+        this.showItem("spell-check-enabled", canSpell);
+        this.showItem("spell-separator", canSpell || this.possibleSpellChecking);
+        if (canSpell)
+            document.getElementById("spell-check-enabled").setAttribute("checked",
+                                                                        InlineSpellCheckerUI.enabled);
+        this.showItem("spell-add-to-dictionary", onMisspelling);
+
+        // suggestion list
+        this.showItem("spell-suggestions-separator", onMisspelling);
+        if (onMisspelling) {
+            var menu = document.getElementById("contentAreaContextMenu");
+            var suggestionsSeparator = document.getElementById("spell-add-to-dictionary");
+            var numsug = InlineSpellCheckerUI.addSuggestionsToMenu(menu, suggestionsSeparator, 5);
+            this.showItem("spell-no-suggestions", numsug == 0);
+        } else {
+            this.showItem("spell-no-suggestions", false);
+        }
+
+        // dictionary list
+        this.showItem("spell-dictionaries", InlineSpellCheckerUI.enabled);
+        if (canSpell) {
+            var dictMenu = document.getElementById("spell-dictionaries-menu");
+            var dictSep = document.getElementById("spell-language-separator");
+            InlineSpellCheckerUI.addDictionaryListToMenu(dictMenu, dictSep);
+        }
+
+        // when there is no spellchecker but we might be able to spellcheck
+        // add the add to dictionaries item. This will ensure that people
+        // with no dictionaries will be able to download them
+        this.showItem("spell-add-dictionaries-main", !canSpell && this.possibleSpellChecking);
+    },
     initClipboardItems : function () {
 
         // Copy depends on whether there is selected text.
@@ -236,7 +272,7 @@ nsContextMenu.prototype = {
         this.showItem( "context-paste", this.onTextInput );
         this.showItem( "context-delete", this.onTextInput );
         this.showItem( "context-sep-paste", this.onTextInput );
-        this.showItem( "context-selectall", true );
+        this.showItem( "context-selectall", !( this.onLink || this.onImage ) );
         this.showItem( "context-sep-selectall", this.isTextSelected && !this.onTextInput );
         // In a text area there will be nothing after select all, so we don't want a sep
         // Otherwise, if there's text selected then there are extra menu items
@@ -263,7 +299,7 @@ nsContextMenu.prototype = {
         this.showItem( "context-metadata", this.onMetaDataItem );
     },
     // Set various context menu attributes based on the state of the world.
-    setTarget : function ( node ) {
+    setTarget : function ( node, rangeParent, rangeOffset ) {
         // Initialize contextual info.
         this.onImage    = false;
         this.onLoadedImage = false;
@@ -276,6 +312,7 @@ nsContextMenu.prototype = {
         this.inFrame    = false;
         this.hasBGImage = false;
         this.bgImageURL = "";
+        this.possibleSpellChecking = false;
 
         // Remember the node that was clicked.
         this.target = node;
@@ -283,6 +320,35 @@ nsContextMenu.prototype = {
         this.autoDownload = Components.classes["@mozilla.org/preferences-service;1"]
                                       .getService(Components.interfaces.nsIPrefBranch)
                                       .getBoolPref("browser.download.autoDownload");
+
+        // Clear any old spellchecking items from the menu, this used to
+        // be in the menu hiding code but wasn't getting called in all
+        // situations. Here, we can ensure it gets cleaned up any time the
+        // menu is shown. Note: must be before uninit because that clears the
+        // internal vars
+        InlineSpellCheckerUI.clearSuggestionsFromMenu();
+        InlineSpellCheckerUI.clearDictionaryListFromMenu();
+
+        InlineSpellCheckerUI.uninit();
+
+        // if the document is editable, show context menu like in text inputs
+        var win = this.target.ownerDocument.defaultView;
+        if (win) {
+          var editingSession = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                                  .getInterface(Components.interfaces.nsIWebNavigation)
+                                  .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                                  .getInterface(Components.interfaces.nsIEditingSession);
+          if (editingSession.windowIsEditable(win)) {
+            this.onTextInput           = true;
+            this.possibleSpellChecking = true;
+            InlineSpellCheckerUI.init(editingSession.getEditorForWindow(win));
+            var canSpell = InlineSpellCheckerUI.canSpellCheck;
+            InlineSpellCheckerUI.initFromEvent(rangeParent, rangeOffset);
+            this.showItem("spell-check-enabled", canSpell);
+            this.showItem("spell-separator", canSpell);
+            return;
+          }
+        }
 
         // See if the user clicked on an image.
         if ( this.target.nodeType == Node.ELEMENT_NODE ) {
@@ -296,10 +362,20 @@ nsContextMenu.prototype = {
                 if ( this.target.ownerDocument instanceof ImageDocument )
                    this.onStandaloneImage = true;
             } else if ( this.target instanceof HTMLInputElement ) {
-               type = this.target.getAttribute("type");
-               this.onTextInput = this.isTargetATextBox(this.target);
+                this.onTextInput = this.isTargetATextBox(this.target);
+                // allow spellchecking UI on all writable text boxes except passwords
+                if (!this.target.readOnly && !this.target.disabled && this.target.type == "text") {
+                    this.possibleSpellChecking = true;
+                    InlineSpellCheckerUI.init(this.target.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor);
+                    InlineSpellCheckerUI.initFromEvent(rangeParent, rangeOffset);
+                }
             } else if ( this.target instanceof HTMLTextAreaElement ) {
-                 this.onTextInput = true;
+                this.onTextInput = true;
+                if (!this.target.readOnly && !this.target.disabled) {
+                    this.possibleSpellChecking = true;
+                    InlineSpellCheckerUI.init(this.target.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor);
+                    InlineSpellCheckerUI.initFromEvent(rangeParent, rangeOffset);
+                }
             } else if ( this.target instanceof HTMLHtmlElement ) {
                // pages with multiple <body>s are lame. we'll teach them a lesson.
                var bodyElt = this.target.ownerDocument.getElementsByTagName("body")[0];
@@ -863,6 +939,16 @@ nsContextMenu.prototype = {
         }
       }
       return false;  
+    },
+
+    addDictionaries : function()
+    {
+      try {
+        var url = pref.getComplexValue("editor.spellcheckers.url",
+                                       Components.interfaces.nsIPrefLocalizedString).data;
+        window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
+      }
+      catch (ex) {}
     }
 };
 

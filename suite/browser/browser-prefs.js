@@ -190,6 +190,13 @@ pref("news.directory",                  "");
 pref("browser.editor.disabled", false);
 pref("spellchecker.dictionary", "");
 
+// this will automatically enable inline spellchecking (if it is available) for
+// editable elements in HTML
+// 0 = spellcheck nothing
+// 1 = check multi-line controls [default]
+// 2 = check multi/single line controls
+pref("layout.spellcheckDefault", 1);
+
 // App-specific update preferences
 
 // Whether or not app updates are enabled - false initally for SeaMonkey

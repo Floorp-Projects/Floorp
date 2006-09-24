@@ -50,7 +50,7 @@
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["active_languages", "DefaultCharsetList"];
+    var _elementIDs = ["active_languages", "DefaultCharsetList", "spellcheckDefault"];
     var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
     observerService.notifyObservers(null, "charsetmenu-selected", "other");
   ]]>
@@ -109,6 +109,20 @@
             </menupopup>
           </template>
       </menulist> 
+    </hbox>
+  </groupbox>
+  <groupbox align="start">
+    <caption label="&spelling.label;"/>
+    <hbox align="center">
+      <label value="&checkSpelling.label;" accesskey="&checkSpelling.accesskey;"
+             control="spellcheckDefault"/>
+      <menulist id="spellcheckDefault" prefstring="layout.spellcheckDefault">
+        <menupopup>
+          <menuitem value="0" label="&dontCheckSpelling.label;"/>
+          <menuitem value="1" label="&multilineCheckSpelling.label;"/>
+          <menuitem value="2" label="&alwaysCheckSpelling.label;"/>
+        </menupopup>
+      </menulist>
     </hbox>
   </groupbox>
 </page>

@@ -62,6 +62,12 @@
   list-style-image: url("chrome://communicator/skin/icons/online.gif");
 }
 
+/* ::::: spell checker ::::: */
+
+.spell-suggestion {
+  font-weight: bold;
+}
+
 /* ::::: directional button icons ::::: */
 
 .up {
