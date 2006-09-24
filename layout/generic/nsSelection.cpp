@@ -4621,17 +4621,17 @@ nsTypedSelection::GetRangesForInterval(nsIDOMNode* aBeginNode, PRInt32 aBeginOff
                                        PRUint32 *aResultCount,
                                        nsIDOMRange ***aResults)
 {
-  nsresult rv;
-  *aResultCount = 0;
-  *aResults = nsnull;
   if (! aBeginNode || ! aEndNode || ! aResultCount || ! aResults)
     return NS_ERROR_NULL_POINTER;
 
+  *aResultCount = 0;
+  *aResults = nsnull;
+
   nsCOMArray<nsIDOMRange> results;
-  rv = GetRangesForIntervalCOMArray(aBeginNode, aBeginOffset,
-                                    aEndNode, aEndOffset,
-                                    aAllowAdjacent,
-                                    &results);
+  nsresult rv = GetRangesForIntervalCOMArray(aBeginNode, aBeginOffset,
+                                             aEndNode, aEndOffset,
+                                             aAllowAdjacent,
+                                             &results);
   NS_ENSURE_SUCCESS(rv, rv);
   if (results.Count() == 0)
     return NS_OK;
