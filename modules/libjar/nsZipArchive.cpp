@@ -696,8 +696,8 @@ nsZipArchive::FindInit(const char * aPattern, nsZipFind **aFind)
 
   // Create synthetic directory entries on demand
   nsresult rv = BuildSynthetics();
-  // XXX NS_FAILED doesn't exist when building STANDALONE
-  if (rv & 0x80000000) return rv;
+  if (rv != ZIP_OK)
+    return rv;
 
   // validate the pattern
   if (aPattern)
