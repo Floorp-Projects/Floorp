@@ -29,6 +29,7 @@ if len(args) != 2:
 
 (testname, tbox) = args[0:2]
 
+#DBPATH = "/home/vladimir/graphs/db/data.sqlite"
 DBPATH = "db/data.sqlite"
 db = sqlite.connect(DBPATH)
 
@@ -45,8 +46,12 @@ except:
 setid = -1
 while setid == -1:
     cur = db.cursor()
-    cur.execute("SELECT id FROM dataset_info WHERE machine=? AND test=? AND test_type=?",
-                (tbox, testname, test_type))
+    if options.baseline:
+        cur.execute("SELECT id FROM dataset_info WHERE machine=? AND test=? AND test_type=? AND extra_data=?",
+            (tbox, testname, test_type, options.baseline))
+    else:
+        cur.execute("SELECT id FROM dataset_info WHERE machine=? AND test=? AND test_type=? AND extra_data IS NULL",
+            (tbox, testname, test_type))
     res = cur.fetchall()
     cur.close()
 
@@ -72,8 +77,7 @@ db.commit() # release any locks
 
 count = 0
 linenum = 0
-line = sys.stdin.readline()
-while line is not None:
+for line in sys.stdin:
     linenum = linenum + 1
 
     chunks = string.split(line, "\t")
@@ -98,8 +102,7 @@ while line is not None:
         db.execute("INSERT INTO dataset_extra_data (dataset_id,time,data) VALUES (?,?,?)", (setid, timeval, data))
         count = count + 1
 
-    line = sys.stdin.readline()
-
 db.commit()
 
-print "Added", count, "values"
+print "(", count, ")",
+
