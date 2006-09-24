@@ -355,7 +355,9 @@ NS_IMETHODIMP nsTreeSelection::Select(PRInt32 aIndex)
 {
   mShiftSelectPivot = -1;
 
-  SetCurrentIndex(aIndex);
+  nsresult rv = SetCurrentIndex(aIndex);
+  if (NS_FAILED(rv))
+    return rv;
 
   if (mFirstRange) {
     PRBool alreadySelected = mFirstRange->Contains(aIndex);
@@ -399,9 +401,10 @@ NS_IMETHODIMP nsTreeSelection::ToggleSelect(PRInt32 aIndex)
   // (5) The addition of the item causes two ranges to be merged.
   // (6) The removal of the item causes two ranges to be split.
   mShiftSelectPivot = -1;
-  SetCurrentIndex(aIndex);
+  nsresult rv = SetCurrentIndex(aIndex);
+  if (NS_FAILED(rv))
+    return rv;
 
-  nsresult rv = NS_OK;
   if (!mFirstRange)
     Select(aIndex);
   else {
@@ -446,7 +449,9 @@ NS_IMETHODIMP nsTreeSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEndInd
   }
 
   mShiftSelectPivot = aStartIndex;
-  SetCurrentIndex(aEndIndex);
+  nsresult rv = SetCurrentIndex(aEndIndex);
+  if (NS_FAILED(rv))
+    return rv;
   
   PRInt32 start = aStartIndex < aEndIndex ? aStartIndex : aEndIndex;
   PRInt32 end = aStartIndex < aEndIndex ? aEndIndex : aStartIndex;
@@ -477,7 +482,9 @@ NS_IMETHODIMP nsTreeSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEndInd
 
 NS_IMETHODIMP nsTreeSelection::ClearRange(PRInt32 aStartIndex, PRInt32 aEndIndex)
 {
-  SetCurrentIndex(aEndIndex);
+  nsresult rv = SetCurrentIndex(aEndIndex);
+  if (NS_FAILED(rv))
+    return rv;
 
   if (mFirstRange) {
     PRInt32 start = aStartIndex < aEndIndex ? aStartIndex : aEndIndex;
@@ -605,6 +612,9 @@ NS_IMETHODIMP nsTreeSelection::GetCurrentIndex(PRInt32 *aCurrentIndex)
 
 NS_IMETHODIMP nsTreeSelection::SetCurrentIndex(PRInt32 aIndex)
 {
+  if (!mTree) {
+    return NS_ERROR_UNEXPECTED;
+  }
   if (mCurrentIndex == aIndex) {
     return NS_OK;
   }
