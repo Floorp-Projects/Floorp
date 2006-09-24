@@ -405,6 +405,7 @@ tabpanels {
  * All Tabs Button
  */
 
+/*
 .tabs-alltabs-box {
   margin-top: 2px;
   margin-bottom: 4px;
@@ -488,6 +489,7 @@ stack[chromedir="rtl"] > hbox > .tabs-alltabs-box-animate {
   background-image: url("chrome://global/skin/icons/alltabs-box-overflow-start-bkgnd-animate.png");
 }
 
+*/
 /**
  * All Tabs Menupopup 
  */
