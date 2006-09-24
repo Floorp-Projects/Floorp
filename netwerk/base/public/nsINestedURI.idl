@@ -44,6 +44,15 @@ interface nsIURI;
  * nsINestedURI is an interface that must be implemented by any nsIURI
  * implementation which has an "inner" URI that it actually gets data
  * from.
+ *
+ * For example, if URIs for the scheme "sanitize" have the structure:
+ *
+ *   sanitize:http://example.com
+ *
+ * and opening a channel on such a sanitize: URI gets the data from
+ * http://example.com, sanitizes it, and returns it, then the sanitize: URI
+ * should implement nsINestedURI and return the http://example.com URI as its
+ * inner URI.
  */
 [scriptable, uuid(6de2c874-796c-46bf-b57f-0d7bd7d6cab0)]
 interface nsINestedURI : nsISupports
