@@ -537,9 +537,6 @@ ConvertDocShellLoadInfoToLoadType(nsDocShellInfoLoadType aDocShellLoadType)
     case nsIDocShellLoadInfo::loadNormalExternal:
         loadType = LOAD_NORMAL_EXTERNAL;
         break;
-    case nsIDocShellLoadInfo::loadNormalAllowFixup:
-        loadType = LOAD_NORMAL_FIXUP;
-        break;
     case nsIDocShellLoadInfo::loadHistory:
         loadType = LOAD_HISTORY;
         break;
@@ -603,9 +600,6 @@ nsDocShell::ConvertLoadTypeToDocShellLoadInfo(PRUint32 aLoadType)
         break;
     case LOAD_NORMAL_EXTERNAL:
         docShellLoadType = nsIDocShellLoadInfo::loadNormalExternal;
-        break;
-    case LOAD_NORMAL_FIXUP:
-        docShellLoadType = nsIDocShellLoadInfo::loadNormalAllowFixup;
         break;
     case LOAD_NORMAL_BYPASS_CACHE:
         docShellLoadType = nsIDocShellLoadInfo::loadNormalBypassCache;
@@ -2887,7 +2881,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
 
     rv = NS_NewURI(getter_AddRefs(uri), uriString);
     if (uri) {
-        aLoadFlags = aLoadFlags & ~LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+        aLoadFlags &= ~LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
     }
     
     if (sURIFixup) {
@@ -2912,6 +2906,13 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
     if (NS_FAILED(rv) || !uri)
         return NS_ERROR_FAILURE;
 
+    // Don't pass the fixup flag to MAKE_LOAD_TYPE, since it isn't needed and
+    // confuses ConvertLoadTypeToDocShellLoadInfo. We do need to ensure that
+    // it is passed to LoadURI though, since it uses it to determine whether it
+    // can do fixup.
+    PRUint32 fixupFlag = (aLoadFlags & LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP);
+    aLoadFlags &= ~LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+
     nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
     rv = CreateLoadInfo(getter_AddRefs(loadInfo));
     if (NS_FAILED(rv)) return rv;
@@ -2922,8 +2923,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
     loadInfo->SetReferrer(aReferringURI);
     loadInfo->SetHeadersStream(aHeaderStream);
 
-    rv = LoadURI(uri, loadInfo,
-                 aLoadFlags & LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP, PR_TRUE);
+    rv = LoadURI(uri, loadInfo, fixupFlag, PR_TRUE);
 
     return rv;
 }
