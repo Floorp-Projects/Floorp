@@ -65,7 +65,7 @@
 [% IF results AND results.size > 0 %]
   [% subscript=0 %]
   [% FOREACH result=results %]
-<tr class="[% result.result_status_class | html %]">
+<tr class="[% result.result_status.class_name | html %]">
   <td colspan="2" align="center">[% result.created | html %]</td>
   <td align="center"><a href="single_result.cgi?id=[% result.testresult_id | html | uri%]">
     [% result.testresult_id | html %]</a><br/>
