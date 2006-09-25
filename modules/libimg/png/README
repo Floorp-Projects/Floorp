@@ -1,4 +1,4 @@
-README for libpng version 1.2.7 - September 12, 2004 (shared library 12.0)
+README for libpng version 1.2.12 - June 27, 2006 (shared library 12.0)
 See the note about version numbers near the top of png.h
 
 See INSTALL for instructions on how to install libpng.
@@ -103,17 +103,18 @@ fix.  Please mention "libpng" somewhere in the subject line.  Thanks.
 This release was created and will be supported by myself (of course
 based in a large way on Guy's and Andreas' earlier work), and the PNG group.
 
-glennrp@users.sourceforge.net
-png-implement@ccrc.wustl.edu (subscription required; write to
-majordomo@ccrc.wustl.edu with "subscribe png-implement" in the message).
+Send comments/corrections/commendations to png-mng-implement at lists.sf.net
+(subscription required; visit 
+https://lists.sourceforge.net/lists/listinfo/png-mng-implement
+to subscribe) or to glennrp at users.sourceforge.net
 
 You can't reach Guy, the original libpng author, at the addresses
 given in previous versions of this document.  He and Andreas will read mail
 addressed to the png-implement list, however.
 
 Please do not send general questions about PNG.  Send them to
-the (png-list@ccrc.wustl.edu, subscription required, write to
-majordomo@ccrc.wustl.edu with "subscribe png-list" in your message).
+the (png-list at ccrc.wustl.edu, subscription required, write to
+majordomo at ccrc.wustl.edu with "subscribe png-list" in your message).
 On the other hand,
 please do not send libpng questions to that address, send them to me
 or to the png-implement list.  I'll
@@ -188,10 +189,12 @@ Files in this distribution:
       scripts       =>  Directory containing scripts for building libpng:
        descrip.mms      =>  VMS makefile for MMS or MMK
        makefile.std     =>  Generic UNIX makefile (cc, creates static libpng.a)
+       makefile.elf     =>  Linux/ELF makefile symbol versioning,
+                            gcc, creates libpng12.so.0.1.2.12)
        makefile.linux   =>  Linux/ELF makefile
-                            (gcc, creates libpng12.so.0.1.2.7)
+                            (gcc, creates libpng12.so.0.1.2.12)
        makefile.gcmmx   =>  Linux/ELF makefile
-                            (gcc, creates libpng12.so.0.1.2.7,
+                            (gcc, creates libpng12.so.0.1.2.12,
                             uses assembler code tuned for Intel MMX platform)
        makefile.gcc     =>  Generic makefile (gcc, creates static libpng.a)
        makefile.knr     =>  Archaic UNIX Makefile that converts files with
@@ -213,12 +216,12 @@ Files in this distribution:
        makefile.openbsd =>  OpenBSD makefile
        makefile.sgi     =>  Silicon Graphics IRIX (cc, creates static lib)
        makefile.sggcc   =>  Silicon Graphics
-                            (gcc, creates libpng12.so.0.1.2.7)
+                            (gcc, creates libpng12.so.0.1.2.12)
        makefile.sunos   =>  Sun makefile
        makefile.solaris =>  Solaris 2.X makefile
-                            (gcc, creates libpng12.so.0.1.2.7)
+                            (gcc, creates libpng12.so.0.1.2.12)
        makefile.so9     =>  Solaris 9 makefile
-                            (gcc, creates libpng12.so.0.1.2.7)
+                            (gcc, creates libpng12.so.0.1.2.12)
        makefile.32sunu  =>  Sun Ultra 32-bit makefile
        makefile.64sunu  =>  Sun Ultra 64-bit makefile
        makefile.sco     =>  For SCO OSr5  ELF and Unixware 7 with Native cc
@@ -249,12 +252,12 @@ Files in this distribution:
 Good luck, and happy coding.
 
 -Glenn Randers-Pehrson (current maintainer)
- Internet: glennrp@users.sourceforge.net
+ Internet: glennrp at users.sourceforge.net
 
 -Andreas Eric Dilger (former maintainer, 1996-1997)
- Internet: adilger@enel.ucalgary.ca
+ Internet: adilger at enel.ucalgary.ca
  Web: http://www-mddsp.enel.ucalgary.ca/People/adilger/
 
 -Guy Eric Schalnat (original author and former maintainer, 1995-1996)
  (formerly of Group 42, Inc)
- Internet: gschal@infinet.com
+ Internet: gschal at infinet.com

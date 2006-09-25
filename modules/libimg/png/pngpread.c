@@ -1,9 +1,9 @@
 
 /* pngpread.c - read a png file in push mode
  *
- * libpng version 1.2.7 - September 12, 2004
+ * Last changed in libpng 1.2.11 - June 7, 2004
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2004 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2006 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  */
@@ -214,6 +214,10 @@ png_push_read_chunk(png_structp png_ptr, png_infop info_ptr)
       png_ptr->mode |= PNG_HAVE_CHUNK_HEADER;
    }
 
+   if (!png_memcmp(png_ptr->chunk_name, (png_bytep)png_IDAT, 4))
+     if(png_ptr->mode & PNG_AFTER_IDAT)
+        png_ptr->mode |= PNG_HAVE_CHUNK_AFTER_IDAT;
+
    if (!png_memcmp(png_ptr->chunk_name, png_IHDR, 4))
    {
       if (png_ptr->push_length + 4 > png_ptr->buffer_size)
@@ -281,8 +285,9 @@ png_push_read_chunk(png_structp png_ptr, png_infop info_ptr)
 
       if (png_ptr->mode & PNG_HAVE_IDAT)
       {
-         if (png_ptr->push_length == 0)
-            return;
+         if (!(png_ptr->mode & PNG_HAVE_CHUNK_AFTER_IDAT))
+           if (png_ptr->push_length == 0)
+              return;
 
          if (png_ptr->mode & PNG_AFTER_IDAT)
             png_error(png_ptr, "Too many IDAT's found");
@@ -614,7 +619,7 @@ png_push_save_buffer(png_structp png_ptr)
       png_size_t new_max;
       png_bytep old_buffer;
 
-      if (png_ptr->save_buffer_size > PNG_SIZE_MAX - 
+      if (png_ptr->save_buffer_size > PNG_SIZE_MAX -
          (png_ptr->current_buffer_size + 256))
       {
         png_error(png_ptr, "Potential overflow of save_buffer");
@@ -815,7 +820,7 @@ png_push_process_row(png_structp png_ptr)
    png_memcpy_check(png_ptr, png_ptr->prev_row, png_ptr->row_buf,
       png_ptr->rowbytes + 1);
 
-   if (png_ptr->transformations)
+   if (png_ptr->transformations || (png_ptr->flags&PNG_FLAG_STRIP_ALPHA))
       png_do_read_transformations(png_ptr);
 
 #if defined(PNG_READ_INTERLACING_SUPPORTED)
