@@ -123,3 +123,8 @@ nsScreenManagerBeOS :: GetNumberOfScreens(PRUint32 *aNumberOfScreens)
   
 } // GetNumberOfScreens
 
+NS_IMETHODIMP
+nsScreenManagerBeOS :: ScreenForNativeWidget(void *nativeWidget, nsIScreen **aScreen)                
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
