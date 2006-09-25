@@ -27,6 +27,6 @@
         <em:creator>Mozilla Calendar Project</em:creator>
         <em:homepageURL>http://www.mozilla.org/projects/calendar/</em:homepageURL>
         <em:updateURL>http://www.mozilla.org/projects/calendar/releases/%ITEM_ID%/@TARGET_PLATFORM@/update.rdf</em:updateURL>
-        <!--<em:iconURL>chrome://calendar/skin/cal-icon32.png</em:iconURL>-->
+        <em:iconURL>chrome://calendar/skin/cal-icon32.png</em:iconURL>
     </Description>
 </RDF>
