@@ -1051,8 +1051,9 @@ private:
   nsQuoteList         mQuoteList;
   nsCounterManager    mCounterManager;
   PRUint16            mUpdateCount;
-  PRPackedBool        mQuotesDirty;
-  PRPackedBool        mCountersDirty;
+  PRPackedBool        mQuotesDirty : 1;
+  PRPackedBool        mCountersDirty : 1;
+  PRPackedBool        mInitialContainingBlockIsAbsPosContainer : 1;
 
   nsRevocableEventPtr<RestyleEvent> mRestyleEvent;
 
