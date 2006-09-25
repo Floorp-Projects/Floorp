@@ -41,15 +41,9 @@
  */
 
 
-#define USE_MOZ_THREAD
-
 #include "jar.h"
 #include "jarint.h"
-
-#ifdef USE_MOZ_THREAD
-#include "jarevil.h"
-#endif
-
+#include "secpkcs7.h"
 #include "pk11func.h"
 #include "sechash.h"
 
@@ -289,14 +283,6 @@ int jar_create_pk7
     nb = JAR_FREAD (infp, buffer, sizeof (buffer));
     if (nb == 0) 
       {
-#if 0
-      if (ferror(infp)) 
-        {
-        /* PORT_SetError(SEC_ERROR_IO); */ /* FIX */
-	(* hashObj->destroy) (hashcx, PR_TRUE);
-	return JAR_ERR_GENERAL;
-        }
-#endif
       /* eof */
       break;
       }
@@ -346,17 +332,10 @@ int jar_create_pk7
 
   PORT_SetError (0);
 
-#ifdef USE_MOZ_THREAD
-  /* if calling from mozilla */
-  rv = jar_moz_encode
-             (cinfo, jar_pk7_out, outfp, 
-                 NULL,  /* pwfn */ NULL,  /* pwarg */ (void *) mw);
-#else
   /* if calling from mozilla thread*/
   rv = SEC_PKCS7Encode 
              (cinfo, jar_pk7_out, outfp, 
-                 NULL,  /* pwfn */ NULL,  /* pwarg */ (void *) mw):
-#endif
+                 NULL,  /* pwfn */ NULL,  /* pwarg */ (void *) mw);
 
   if (rv != SECSuccess)
     status = PORT_GetError();

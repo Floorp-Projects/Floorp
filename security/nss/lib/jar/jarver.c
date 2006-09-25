@@ -40,14 +40,12 @@
  *  Jarnature Parsing & Verification
  */
 
-#define USE_MOZ_THREAD
-
 #include "jar.h"
 #include "jarint.h"
+#include "certdb.h"
+#include "certt.h"
+#include "secpkcs7.h"
 
-#ifdef USE_MOZ_THREAD
-#include "jarevil.h"
-#endif
 /*#include "cdbhdl.h" */
 #include "secder.h"
 
@@ -217,12 +215,6 @@ int jar_parse_sig
 
   if (jar->globalmeta == NULL)
     return JAR_ERR_ORDER;
-
-#if 0
-  /* XXX Turn this on to disable multiple signers */
-  if (jar->digest == NULL)
-    return JAR_ERR_ORDER;
-#endif
 
   /* Determine whether or not this RSA file has
      has an associated SF file */
@@ -888,11 +880,7 @@ static int jar_add_cert
   if (fing == NULL)
     goto loser;
 
-#ifdef USE_MOZ_THREAD
-  fing->cert = jar_moz_dup (cert);
-#else
   fing->cert = CERT_DupCertificate (cert);
-#endif
 
   /* get the certkey */
 
@@ -1117,11 +1105,7 @@ int PR_CALLBACK JAR_cert_attribute
 
     if (certdb)
       {
-#ifdef USE_MOZ_THREAD
-      cert = jar_moz_nickname (certdb, (char*)key);
-#else
       cert = CERT_FindCertByNickname (certdb, key);
-#endif
 
       if (cert)
         {
@@ -1376,11 +1360,7 @@ static char *jar_choose_nickname (CERTCertificate *cert)
     {
     /* check for duplicate nickname */
 
-#ifdef USE_MOZ_THREAD
-    if (jar_moz_nickname (CERT_GetDefaultCertDB(), cert_cn) == NULL)
-#else
     if (CERT_FindCertByNickname (CERT_GetDefaultCertDB(), cert_cn) == NULL)
-#endif
       return cert_cn;
 
     /* Try the CN plus O */
@@ -1392,11 +1372,7 @@ static char *jar_choose_nickname (CERTCertificate *cert)
     PR_snprintf (cert_cn_o, cn_o_length, 
            "%s's %s Certificate", cert_cn, cert_o);
 
-#ifdef USE_MOZ_THREAD
-    if (jar_moz_nickname (CERT_GetDefaultCertDB(), cert_cn_o) == NULL)
-#else
     if (CERT_FindCertByNickname (CERT_GetDefaultCertDB(), cert_cn_o) == NULL)
-#endif
       {
       PORT_Free (cert_cn_o);
       return cert_cn;
@@ -1422,9 +1398,6 @@ static char *jar_choose_nickname (CERTCertificate *cert)
 char *JAR_cert_html
     (JAR *jar, int style, long keylen, void *key, int *result)
   {
-#ifdef notdef
-  char *html;
-#endif
   CERTCertificate *cert;
 
   *result = -1;
@@ -1440,16 +1413,6 @@ char *JAR_cert_html
   *result = -1;
 
    return NULL;
-
-#ifdef notdef
-  html = CERT_HTMLCertInfo (cert, /* show images */ PR_TRUE,
-		/*show issuer*/PR_TRUE);
-
-  if (html == NULL)
-    *result = -1;
-
-  return html;
-#endif
   }
 
 /*
@@ -1485,11 +1448,7 @@ extern int PR_CALLBACK JAR_stash_cert
   /* Attempt to give a name to the newish certificate */
   nickname = jar_choose_nickname (cert);
 
-#ifdef USE_MOZ_THREAD
-  newcert = jar_moz_nickname (certdb, nickname);
-#else
   newcert = CERT_FindCertByNickname (certdb, nickname);
-#endif
 
   if (newcert && newcert->isperm) 
     {
@@ -1505,37 +1464,11 @@ extern int PR_CALLBACK JAR_stash_cert
 
   cert->dbhandle = certdb;
 
-#if 0
-  nickname = cert->subjectName;
-  if (nickname)
-    {
-    /* Not checking for a conflict here. But this should
-       be a new cert or it would have been found earlier. */
-
-    nickname = jar_cert_element (nickname, "CN=", 1);
-
-    if (SEC_CertNicknameConflict (nickname, cert->dbhandle))
-      {
-      /* conflict */
-      nickname = PORT_Realloc (&nickname, PORT_Strlen (nickname) + 3);
-
-      /* Beyond one copy, there are probably serious problems 
-         so we will stop at two rather than counting.. */
-
-      PORT_Strcat (nickname, " #2");
-      }
-    }
-#endif
-
   if (nickname != NULL)
     {
     PORT_Memset ((void *) &trust, 0, sizeof(trust));
 
-#ifdef USE_MOZ_THREAD
-    if (jar_moz_perm (cert, nickname, &trust) != SECSuccess) 
-#else
     if (CERT_AddTempCertToPerm (cert, nickname, &trust) != SECSuccess) 
-#endif
       {
       /* XXX might want to call PORT_GetError here */
       result = JAR_ERR_GENERAL;
@@ -1574,11 +1507,7 @@ void *JAR_fetch_cert (long length, void *key)
     issuerSN.serialNumber.len = length - (2 + issuerSN.derIssuer.len);
     issuerSN.serialNumber.data = &keyData[2+issuerSN.derIssuer.len];
 
-#ifdef USE_MOZ_THREAD
-    cert = jar_moz_certkey (certdb, &issuerSN);
-#else
     cert = CERT_FindCertByIssuerAndSN (certdb, &issuerSN);
-#endif
 
     JAR_close_database (certdb);
     }
@@ -1762,15 +1691,9 @@ static int jar_validate_pkcs7
   detdig.len = SHA1_LENGTH;
   detdig.data = signer->digest->sha1;
 
-#ifdef USE_MOZ_THREAD
-  if (jar_moz_verify
-        (cinfo, certUsageObjectSigner, &detdig, HASH_AlgSHA1, PR_FALSE)==
-		SECSuccess)
-#else
   if (SEC_PKCS7VerifyDetachedSignature 
         (cinfo, certUsageObjectSigner, &detdig, HASH_AlgSHA1, PR_FALSE)==
 		PR_TRUE)
-#endif
     {
     /* signature is valid */
     signer->valid = 0;
@@ -1874,19 +1797,6 @@ CERTCertDBHandle *JAR_open_database (void)
 
 int JAR_close_database (CERTCertDBHandle *certdb)
   {
-#ifdef notdef
-  CERTCertDBHandle *defaultdb;
-
-  /* This really just retrieves the handle, nothing more */
-  defaultdb = CERT_GetDefaultCertDB();
-
-  /* If there is no default db, it means we opened 
-     the permanent database for some reason */
-
-  if (defaultdb == NULL && certdb != NULL)
-    CERT_ClosePermCertDB (certdb);
-#endif
-
   return 0;
   }
 
