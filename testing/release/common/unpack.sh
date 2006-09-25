@@ -10,15 +10,13 @@ unpack_build () {
         mac|mac-ppc) 
             cd ../
             mkdir -p mnt
-            echo "y" | PAGER="/bin/cat"  hdiutil attach \
-                -quiet -puppetstrings -noautoopen \ 
-                -mountpoint ./mnt "$pkg_file" > /dev/null
+            echo "y" | PAGER="/bin/cat"  hdiutil attach -quiet -puppetstrings -noautoopen -mountpoint ./mnt "$pkg_file" > /dev/null
             rsync -a ./mnt/* $dir_name/ 
             hdiutil detach mnt > /dev/null
             cd $dir_name
             ;;
         win32) 
-            7zr x ../"$pkg_file" > /dev/null
+            /usr/local/bin/7za x ../"$pkg_file" > /dev/null
             for file in *.xpi
             do
                 unzip -o $file > /dev/null
@@ -26,7 +24,7 @@ unpack_build () {
 
             ;;
         linux) 
-            tar xfvz ../"$pkg_file" > /dev/null
+            tar xfz ../"$pkg_file" > /dev/null
             ;;
     esac
 
