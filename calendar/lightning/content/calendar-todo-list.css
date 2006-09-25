@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Mike Shaver <shaver@mozilla.org>
+ *   Matthew Willis <lilmatt@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -40,6 +41,15 @@ calendar-todo-list {
 
 calendar-todo-item {
     -moz-binding: url("calendar-todo-list.xml#calendar-todo-item");
+}
+
+/* only allow items to be focused if the calendar-todo-item is selected */
+calendar-todo-item > * {
+    -moz-user-focus: none;
+}
+
+calendar-todo-item[selected="true"] > * {
+    -moz-user-focus: normal;
 }
 
 .calendar-todo-item-label, .calendar-todo-item-checkbox {
