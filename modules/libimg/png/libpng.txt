@@ -1,9 +1,9 @@
 libpng.txt - A description on how to use and modify libpng
 
- libpng version 1.2.12 - June 27, 2006
+ libpng version 1.2.7 - September 12, 2004
  Updated and distributed by Glenn Randers-Pehrson
- <glennrp at users.sourceforge.net>
- Copyright (c) 1998-2005 Glenn Randers-Pehrson
+ <glennrp@users.sourceforge.net>
+ Copyright (c) 1998-2004 Glenn Randers-Pehrson
  For conditions of distribution and use, see copyright
  notice in png.h.
 
@@ -771,10 +771,9 @@ in RGB RGB RGB format unless png_set_filler() or png_set_add_alpha()
 is called to insert filler bytes, either before or after each RGB triplet.
 16-bit RGB data will be returned RRGGBB RRGGBB, with the most significant
 byte of the color value first, unless png_set_strip_16() is called to
-transform it to regular RGB RGB triplets, or png_set_filler() or
-png_set_add alpha() is called to insert filler bytes, either before or
-after each RRGGBB triplet.  Similarly, 8-bit or 16-bit grayscale data can
-be modified with
+transform it to regular RGB RGB triplets, or png_set_filler|add alpha()
+is called to insert filler bytes, either before or after each RRGGBB
+triplet.  Similarly, 8-bit or 16-bit grayscale data can be modified with
 png_set_filler(), png_set_add_alpha(), or png_set_strip_16().
 
 The following code transforms grayscale images of less than 8 to 8 bits,
@@ -787,7 +786,7 @@ viewing application that wishes to treat all images in the same way.
         png_set_palette_to_rgb(png_ptr);
 
     if (color_type == PNG_COLOR_TYPE_GRAY &&
-        bit_depth < 8) png_set_expand_gray_1_2_4_to_8(png_ptr);
+        bit_depth < 8) png_set_gray_1_2_4_to_8(png_ptr);
 
     if (png_get_valid(png_ptr, info_ptr,
         PNG_INFO_tRNS)) png_set_tRNS_to_alpha(png_ptr);
@@ -796,11 +795,6 @@ These three functions are actually aliases for png_set_expand(), added
 in libpng version 1.0.4, with the function names expanded to improve code
 readability.  In some future version they may actually do different
 things.
-
-As of libpng version 1.2.9, png_set_expand_gray_1_2_4_to_8() was
-added.  It expands the sample depth without changing tRNS to alpha.
-At the same time, png_set_gray_1_2_4_to_8() was deprecated, and it
-will be removed from a future version.
 
 PNG can have files with 16 bits per channel.  If you only can handle
 8 bits per channel, this will strip the pixels down to 8 bit.
@@ -873,7 +867,7 @@ to do that, you can add a true alpha channel with
     png_set_add_alpha(png_ptr, filler, PNG_FILLER_AFTER);
 
 where "filler" contains the alpha value to assign to each pixel.
-This function was added in libpng-1.2.7.
+This function became available in libpng-1.2.7.
 
 If you are reading an image with an alpha channel, and you need the
 data as ARGB instead of the normal PNG format RGBA:
@@ -928,7 +922,7 @@ the normalized graylevel is computed:
 
 The default values approximate those recommended in the Charles
 Poynton's Color FAQ, <http://www.inforamp.net/~poynton/>
-Copyright (c) 1998-01-04 Charles Poynton <poynton at inforamp.net>
+Copyright (c) 1998-01-04 Charles Poynton poynton@inforamp.net
 
     Y = 0.212671 * R + 0.715160 * G + 0.072169 * B
 
@@ -1253,8 +1247,8 @@ the second parameter NULL.
 
 Finishing a sequential read
 
-After you are finished reading the image through the
-low-level interface, you can finish reading the file.  If you are
+After you are finished reading the image through either the high- or
+low-level interfaces, you can finish reading the file.  If you are
 interested in comments or time, which may be stored either before or
 after the image data, you should pass the separate png_info struct if
 you want to keep the comments from before and after the image
@@ -1600,14 +1594,6 @@ another way, see the discussion on libpng I/O handling in the Customizing
 Libpng section below.
 
     png_init_io(png_ptr, fp);
-
-If you are embedding your PNG into a datastream such as MNG, and don't
-want libpng to write the 8-byte signature, or if you have already
-written the signature in your application, use
-
-    png_set_sig_bytes(png_ptr, 8);
-
-to inform libpng that it should not write a signature.
 
 Write callbacks
 
@@ -2472,7 +2458,7 @@ Custom chunks
 If you need to read or write custom chunks, you may need to get deeper
 into the libpng code.  The library now has mechanisms for storing
 and writing chunks of unknown type; you can even declare callbacks
-for custom chunks.  However, this may not be good enough if the
+for custom chunks.  Hoewver, this may not be good enough if the
 library code itself needs to know about interactions between your
 chunk and existing `intrinsic' chunks.
 
@@ -2823,7 +2809,7 @@ defined:
 #if defined(PNG_USE_PNGGCCRD) && defined(PNG_ASSEMBLER_CODE_SUPPORTED) \
   && defined(PNG_THREAD_UNSAFE_OK)
     /* Disable thread-unsafe features of pnggccrd */
-    if (png_access_version_number() >= 10200)
+    if (png_access_version() >= 10200)
     {
       png_uint_32 mmx_disable_mask = 0;
       png_uint_32 asm_flags;
@@ -2917,13 +2903,13 @@ application:
 
 IX. Y2K Compliance in libpng
 
-June 27, 2006
+September 12, 2004
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.2.12 are Y2K compliant.  It is my belief that earlier
+upward through 1.2.7 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has three year fields.  One is a 2-byte unsigned integer that

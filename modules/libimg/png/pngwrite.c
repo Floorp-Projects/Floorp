@@ -1,9 +1,9 @@
 
 /* pngwrite.c - general routines to write a PNG file
  *
- * Last changed in libpng 1.2.9 April 14, 2006
+ * libpng 1.2.7 - September 12, 2004
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2006 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2004 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  */
@@ -26,15 +26,13 @@ void PNGAPI
 png_write_info_before_PLTE(png_structp png_ptr, png_infop info_ptr)
 {
    png_debug(1, "in png_write_info_before_PLTE\n");
-   if (png_ptr == NULL || info_ptr == NULL)
-      return;
    if (!(png_ptr->mode & PNG_WROTE_INFO_BEFORE_PLTE))
    {
    png_write_sig(png_ptr); /* write PNG signature */
 #if defined(PNG_MNG_FEATURES_SUPPORTED)
    if((png_ptr->mode&PNG_HAVE_PNG_SIGNATURE)&&(png_ptr->mng_features_permitted))
    {
-      png_warning(png_ptr,"MNG features are not allowed in a PNG datastream");
+      png_warning(png_ptr,"MNG features are not allowed in a PNG datastream\n");
       png_ptr->mng_features_permitted=0;
    }
 #endif
@@ -130,16 +128,13 @@ png_write_info(png_structp png_ptr, png_infop info_ptr)
 
    png_debug(1, "in png_write_info\n");
 
-   if (png_ptr == NULL || info_ptr == NULL)
-      return;
-
    png_write_info_before_PLTE(png_ptr, info_ptr);
 
    if (info_ptr->valid & PNG_INFO_PLTE)
       png_write_PLTE(png_ptr, info_ptr->palette,
          (png_uint_32)info_ptr->num_palette);
    else if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE)
-      png_error(png_ptr, "Valid palette required for paletted images");
+      png_error(png_ptr, "Valid palette required for paletted images\n");
 
 #if defined(PNG_WRITE_tRNS_SUPPORTED)
    if (info_ptr->valid & PNG_INFO_tRNS)
@@ -188,7 +183,7 @@ png_write_info(png_structp png_ptr, png_infop info_ptr)
           info_ptr->scal_s_width, info_ptr->scal_s_height);
 #else
       png_warning(png_ptr,
-          "png_write_sCAL not supported; sCAL chunk not written.");
+          "png_write_sCAL not supported; sCAL chunk not written.\n");
 #endif
 #endif
 #endif
@@ -227,7 +222,7 @@ png_write_info(png_structp png_ptr, png_infop info_ptr)
                          info_ptr->text[i].lang_key,
                          info_ptr->text[i].text);
 #else
-          png_warning(png_ptr, "Unable to write international text");
+          png_warning(png_ptr, "Unable to write international text\n");
 #endif
           /* Mark this chunk as written */
           info_ptr->text[i].compression = PNG_TEXT_COMPRESSION_NONE_WR;
@@ -241,7 +236,7 @@ png_write_info(png_structp png_ptr, png_infop info_ptr)
             info_ptr->text[i].text, 0,
             info_ptr->text[i].compression);
 #else
-         png_warning(png_ptr, "Unable to write compressed text");
+         png_warning(png_ptr, "Unable to write compressed text\n");
 #endif
          /* Mark this chunk as written */
          info_ptr->text[i].compression = PNG_TEXT_COMPRESSION_zTXt_WR;
@@ -254,7 +249,7 @@ png_write_info(png_structp png_ptr, png_infop info_ptr)
                          info_ptr->text[i].text,
                          0);
 #else
-         png_warning(png_ptr, "Unable to write uncompressed text");
+         png_warning(png_ptr, "Unable to write uncompressed text\n");
 #endif
          /* Mark this chunk as written */
          info_ptr->text[i].compression = PNG_TEXT_COMPRESSION_NONE_WR;
@@ -295,8 +290,6 @@ void PNGAPI
 png_write_end(png_structp png_ptr, png_infop info_ptr)
 {
    png_debug(1, "in png_write_end\n");
-   if (png_ptr == NULL)
-      return;
    if (!(png_ptr->mode & PNG_HAVE_IDAT))
       png_error(png_ptr, "No IDATs written into file");
 
@@ -330,7 +323,7 @@ png_write_end(png_structp png_ptr, png_infop info_ptr)
                          info_ptr->text[i].lang_key,
                          info_ptr->text[i].text);
 #else
-             png_warning(png_ptr, "Unable to write international text");
+             png_warning(png_ptr, "Unable to write international text\n");
 #endif
              /* Mark this chunk as written */
              info_ptr->text[i].compression = PNG_TEXT_COMPRESSION_NONE_WR;
@@ -343,7 +336,7 @@ png_write_end(png_structp png_ptr, png_infop info_ptr)
                info_ptr->text[i].text, 0,
                info_ptr->text[i].compression);
 #else
-            png_warning(png_ptr, "Unable to write compressed text");
+            png_warning(png_ptr, "Unable to write compressed text\n");
 #endif
             /* Mark this chunk as written */
             info_ptr->text[i].compression = PNG_TEXT_COMPRESSION_zTXt_WR;
@@ -355,7 +348,7 @@ png_write_end(png_structp png_ptr, png_infop info_ptr)
             png_write_tEXt(png_ptr, info_ptr->text[i].key,
                info_ptr->text[i].text, 0);
 #else
-            png_warning(png_ptr, "Unable to write uncompressed text");
+            png_warning(png_ptr, "Unable to write uncompressed text\n");
 #endif
 
             /* Mark this chunk as written */
@@ -561,8 +554,6 @@ png_create_write_struct_2(png_const_charp user_png_ver, png_voidp error_ptr,
 }
 
 /* Initialize png_ptr structure, and allocate any memory needed */
-#if defined(PNG_1_0_X) || defined(PNG_1_2_X)
-/* Deprecated. */
 #undef png_write_init
 void PNGAPI
 png_write_init(png_structp png_ptr)
@@ -613,7 +604,6 @@ png_write_init_2(png_structp png_ptr, png_const_charp user_png_ver,
      }
    png_write_init_3(&png_ptr, user_png_ver, png_struct_size);
 }
-#endif /* PNG_1_0_X || PNG_1_2_X */
 
 
 void PNGAPI
@@ -624,12 +614,7 @@ png_write_init_3(png_structpp ptr_ptr, png_const_charp user_png_ver,
 #ifdef PNG_SETJMP_SUPPORTED
    jmp_buf tmp_jmp; /* to save current jump buffer */
 #endif
-
    int i = 0;
-
-   if (png_ptr == NULL)
-      return;
-
    do
    {
      if (user_png_ver[i] != png_libpng_ver[i])
@@ -706,10 +691,6 @@ png_write_rows(png_structp png_ptr, png_bytepp row,
    png_bytepp rp; /* row pointer */
 
    png_debug(1, "in png_write_rows\n");
-
-   if (png_ptr == NULL)
-      return;
-
    /* loop through the rows */
    for (i = 0, rp = row; i < num_rows; i++, rp++)
    {
@@ -726,9 +707,6 @@ png_write_image(png_structp png_ptr, png_bytepp image)
    png_uint_32 i; /* row index */
    int pass, num_pass; /* pass variables */
    png_bytepp rp; /* points to current row */
-
-   if (png_ptr == NULL)
-      return;
 
    png_debug(1, "in png_write_image\n");
 #if defined(PNG_WRITE_INTERLACING_SUPPORTED)
@@ -753,11 +731,8 @@ png_write_image(png_structp png_ptr, png_bytepp image)
 void PNGAPI
 png_write_row(png_structp png_ptr, png_bytep row)
 {
-   if (png_ptr == NULL)
-      return;
    png_debug2(1, "in png_write_row (row %ld, pass %d)\n",
       png_ptr->row_number, png_ptr->pass);
-
    /* initialize transformations and other stuff if first time */
    if (png_ptr->row_number == 0 && png_ptr->pass == 0)
    {
@@ -931,8 +906,6 @@ void PNGAPI
 png_set_flush(png_structp png_ptr, int nrows)
 {
    png_debug(1, "in png_set_flush\n");
-   if (png_ptr == NULL)
-      return;
    png_ptr->flush_dist = (nrows < 0 ? 0 : nrows);
 }
 
@@ -943,8 +916,6 @@ png_write_flush(png_structp png_ptr)
    int wrote_IDAT;
 
    png_debug(1, "in png_write_flush\n");
-   if (png_ptr == NULL)
-      return;
    /* We have already written out all of the data */
    if (png_ptr->row_number >= png_ptr->num_rows)
      return;
@@ -1121,8 +1092,6 @@ void PNGAPI
 png_set_filter(png_structp png_ptr, int method, int filters)
 {
    png_debug(1, "in png_set_filter\n");
-   if (png_ptr == NULL)
-      return;
 #if defined(PNG_MNG_FEATURES_SUPPORTED)
    if((png_ptr->mng_features_permitted & PNG_FLAG_MNG_FILTER_64) &&
       (method == PNG_INTRAPIXEL_DIFFERENCING))
@@ -1231,8 +1200,6 @@ png_set_filter_heuristics(png_structp png_ptr, int heuristic_method,
    int i;
 
    png_debug(1, "in png_set_filter_heuristics\n");
-   if (png_ptr == NULL)
-      return;
    if (heuristic_method >= PNG_FILTER_HEURISTIC_LAST)
    {
       png_warning(png_ptr, "Unknown filter heuristic method");
@@ -1345,8 +1312,6 @@ void PNGAPI
 png_set_compression_level(png_structp png_ptr, int level)
 {
    png_debug(1, "in png_set_compression_level\n");
-   if (png_ptr == NULL)
-      return;
    png_ptr->flags |= PNG_FLAG_ZLIB_CUSTOM_LEVEL;
    png_ptr->zlib_level = level;
 }
@@ -1355,8 +1320,6 @@ void PNGAPI
 png_set_compression_mem_level(png_structp png_ptr, int mem_level)
 {
    png_debug(1, "in png_set_compression_mem_level\n");
-   if (png_ptr == NULL)
-      return;
    png_ptr->flags |= PNG_FLAG_ZLIB_CUSTOM_MEM_LEVEL;
    png_ptr->zlib_mem_level = mem_level;
 }
@@ -1365,8 +1328,6 @@ void PNGAPI
 png_set_compression_strategy(png_structp png_ptr, int strategy)
 {
    png_debug(1, "in png_set_compression_strategy\n");
-   if (png_ptr == NULL)
-      return;
    png_ptr->flags |= PNG_FLAG_ZLIB_CUSTOM_STRATEGY;
    png_ptr->zlib_strategy = strategy;
 }
@@ -1374,8 +1335,6 @@ png_set_compression_strategy(png_structp png_ptr, int strategy)
 void PNGAPI
 png_set_compression_window_bits(png_structp png_ptr, int window_bits)
 {
-   if (png_ptr == NULL)
-      return;
    if (window_bits > 15)
       png_warning(png_ptr, "Only compression windows <= 32k supported by PNG");
    else if (window_bits < 8)
@@ -1396,8 +1355,6 @@ void PNGAPI
 png_set_compression_method(png_structp png_ptr, int method)
 {
    png_debug(1, "in png_set_compression_method\n");
-   if (png_ptr == NULL)
-      return;
    if (method != 8)
       png_warning(png_ptr, "Only compression method 8 is supported by PNG");
    png_ptr->flags |= PNG_FLAG_ZLIB_CUSTOM_METHOD;
@@ -1407,8 +1364,6 @@ png_set_compression_method(png_structp png_ptr, int method)
 void PNGAPI
 png_set_write_status_fn(png_structp png_ptr, png_write_status_ptr write_row_fn)
 {
-   if (png_ptr == NULL)
-      return;
    png_ptr->write_row_fn = write_row_fn;
 }
 
@@ -1418,8 +1373,6 @@ png_set_write_user_transform_fn(png_structp png_ptr, png_user_transform_ptr
    write_user_transform_fn)
 {
    png_debug(1, "in png_set_write_user_transform_fn\n");
-   if (png_ptr == NULL)
-      return;
    png_ptr->transformations |= PNG_USER_TRANSFORM;
    png_ptr->write_user_transform_fn = write_user_transform_fn;
 }
@@ -1431,8 +1384,6 @@ void PNGAPI
 png_write_png(png_structp png_ptr, png_infop info_ptr,
               int transforms, voidp params)
 {
-   if (png_ptr == NULL || info_ptr == NULL)
-      return;
 #if defined(PNG_WRITE_INVERT_ALPHA_SUPPORTED)
    /* invert the alpha channel from opacity to transparency */
    if (transforms & PNG_TRANSFORM_INVERT_ALPHA)
