@@ -1,0 +1,23 @@
+#
+## hostname: tb-win32-tbox
+## CYGWIN_NT-5.2 win2k3-ref-img 1.5.19(0.150/4/2) 2006-01-20 13:28 i686 Cygwin
+#
+
+. $topsrcdir/mail/config/mozconfig
+
+mk_add_options MOZ_DEBUG_SYMBOLS=1
+mk_add_options MOZ_MAKE_FLAGS=-j1
+mk_add_options MOZ_CO_MODULE="mozilla/tools/update-packaging"
+mk_add_options MOZ_PACKAGE_NSIS=1
+
+ac_add_options --enable-default-toolkit=windows
+ac_add_options --enable-update-channel=nightly
+ac_add_options --disable-debug
+ac_add_options --enable-optimize
+ac_add_options --disable-tests
+ac_add_options --enable-official-branding
+# ac_add_options --disable-auto-deps
+ac_add_options --disable-shared
+ac_add_options --enable-static
+ac_add_options --enable-update-packaging
+ac_add_options --with-windows-version=400
