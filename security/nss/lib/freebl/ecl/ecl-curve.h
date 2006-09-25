@@ -42,6 +42,10 @@
 #ifndef __ecl_curve_h_
 #define __ecl_curve_h_
 
+#ifdef NSS_ECC_MORE_THAN_SUITE_B
+#error This source file is for Basic ECC only .
+#endif
+
 static const ECCurveParams ecCurve_NIST_P256 = {
 	"NIST-P256", ECField_GFp, 256,
 	"FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF",
