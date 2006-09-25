@@ -84,9 +84,6 @@ public:
                    nsIAtom*        aAttribute,
                    PRInt32         aModType);
 
-  virtual nsresult
-  ChildListChanged(PRInt32 aModType);
-
   // This method is called by the parent frame to ask <mo> 
   // to stretch itself.
   NS_IMETHOD
@@ -108,7 +105,7 @@ protected:
 
   // overload the base method so that we can setup our nsMathMLChar
   virtual void
-  ProcessTextData(nsPresContext* aPresContext);
+  ProcessTextData(PRBool aComputeStyleChange);
 
   // helper to get our 'form' and lookup in the Operator Dictionary to fetch 
   // our default data that may come from there, and to complete the setup

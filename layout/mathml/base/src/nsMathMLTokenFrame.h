@@ -79,6 +79,14 @@ public:
   AttributeChanged(PRInt32         aNameSpaceID,
                    nsIAtom*        aAttribute,
                    PRInt32         aModType);
+
+  virtual nsresult
+  ChildListChanged(PRInt32 aModType)
+  {
+    ProcessTextData(PR_TRUE);
+    return nsMathMLContainerFrame::ChildListChanged(aModType);
+  }
+
 protected:
   nsMathMLTokenFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLTokenFrame();
@@ -87,11 +95,11 @@ protected:
 
   // hook to perform MathML-specific actions depending on the tag
   virtual void
-  ProcessTextData(nsPresContext* aPresContext);
+  ProcessTextData(PRBool aComputeStyleChange);
 
   // helper to set the style of <mi> which has to be italic or normal
   // depending on its textual content
-  void SetTextStyle(nsPresContext* aPresContext);
+  PRBool SetTextStyle(nsPresContext* aPresContext);
 
   // helper to set the quotes of <ms>
   void SetQuotes(nsPresContext* aPresContext);

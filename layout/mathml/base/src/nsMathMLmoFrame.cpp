@@ -152,13 +152,10 @@ nsMathMLmoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 // get the text that we enclose and setup our nsMathMLChar
 void
-nsMathMLmoFrame::ProcessTextData(nsPresContext* aPresContext)
+nsMathMLmoFrame::ProcessTextData(PRBool aComputeStyleChange)
 {
   mFlags = 0;
 
-  // kids can be comment-nodes, attribute-nodes, text-nodes...
-  // we use the DOM to ensure that we only look at text-nodes...
-  // This could be done much faster since we only care about the first char
   nsAutoString data;
   nsContentUtils::GetNodeTextContent(mContent, PR_FALSE, data);
   PRInt32 length = data.Length();
@@ -173,10 +170,11 @@ nsMathMLmoFrame::ProcessTextData(nsPresContext* aPresContext)
 
   // don't bother doing anything special if we don't have a
   // single child with a visible text content
+  nsPresContext* presContext = GetPresContext();
   if (NS_MATHML_OPERATOR_IS_INVISIBLE(mFlags) || mFrames.GetLength() != 1) {
     data.Truncate(); // empty data to reset the char
-    mMathMLChar.SetData(aPresContext, data);
-    ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mMathMLChar, PR_FALSE);
+    mMathMLChar.SetData(presContext, data);
+    ResolveMathMLCharStyle(presContext, mContent, mStyleContext, &mMathMLChar, PR_FALSE);
     return;
   }
 
@@ -224,8 +222,8 @@ nsMathMLmoFrame::ProcessTextData(nsPresContext* aPresContext)
   }
 
   // cache the operator
-  mMathMLChar.SetData(aPresContext, data);
-  ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mMathMLChar, isMutable);
+  mMathMLChar.SetData(presContext, data);
+  ResolveMathMLCharStyle(presContext, mContent, mStyleContext, &mMathMLChar, isMutable);
 
   // cache the native direction -- beware of bug 133429...
   // mEmbellishData.direction must always retain our native direction, whereas
@@ -468,7 +466,7 @@ nsMathMLmoFrame::ProcessOperatorData()
 
   // For each attribute overriden by the user, turn off its bit flag.
   // symmetric|movablelimits|separator|largeop|accent|fence|stretchy|form
-  // special: accent and movablelimits are handled in ProcessEmbellishData()
+  // special: accent and movablelimits are handled above,
   // don't process them here
 
   if (NS_MATHML_OPERATOR_IS_STRETCHY(mFlags)) {
@@ -965,7 +963,7 @@ nsMathMLmoFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
   // an re-build the automatic data from the parent of our outermost embellished
   // container (we ensure that we are the core, not just a sibling of the core)
 
-  ProcessTextData(GetPresContext());
+  ProcessTextData(PR_FALSE);
 
   nsIFrame* target = this;
   nsEmbellishData embellishData;
@@ -976,13 +974,6 @@ nsMathMLmoFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
 
   // we have automatic data to update in the children of the target frame
   return ReLayoutChildren(target);
-}
-
-nsresult
-nsMathMLmoFrame::ChildListChanged(PRInt32 aModType)
-{
-  ProcessTextData(GetPresContext());
-  return nsMathMLContainerFrame::ChildListChanged(aModType);
 }
 
 NS_IMETHODIMP
