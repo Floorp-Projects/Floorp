@@ -1107,6 +1107,11 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool aState)
     }
     else {
       if (mWindowPtr) {
+#ifndef MOZ_SUNBIRD
+// XXX bug 348146 - Hiding and showing the popup rapidly screws up
+//                  Sunbird's datepicker as the hide isn't finished
+//                  before we try to show. We need to fix this.
+//
         static TransitionWindowWithOptions_type transitionFunc;
         if (mWindowType == eWindowType_popup) {
           // Popups will hide by fading out with TransitionWindowWithOptions,
@@ -1150,6 +1155,7 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool aState)
                          PR_TRUE, &transitionOptions);
         }
         else
+#endif
           ::HideWindow(mWindowPtr);
       }
       mShown = PR_FALSE;
