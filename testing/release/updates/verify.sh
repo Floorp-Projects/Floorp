@@ -20,7 +20,7 @@ do
   do
     for locale in $locales
     do
-      for patch_type in "partial complete"
+      for patch_type in partial complete
       do
         download_mars "https://aus2.mozilla.org/update/1/$product/$release/$build_id/$platform/$locale/$channel/update.xml" $patch_type
         err=$?
