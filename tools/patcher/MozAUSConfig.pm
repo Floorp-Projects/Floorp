@@ -511,7 +511,8 @@ sub CreateUpdateGraph
                                                     platform => $p,
                                                     locale => $l,
                                                     build_id => $rlp_config->{$p}->{'build_id'},
-                                                    version => $rl_config->{'version'} );
+                                                    version => $rl_config->{'version'},
+                                                    extensionVersion => $rl_config->{'extension-version'} );
                 }
             }
         } # for my $side ("from", "to")
@@ -531,6 +532,7 @@ sub GatherCompleteData
     my $release = $args{'release'};
     my $build_id = $args{'build_id'};
     my $version = $args{'version'};
+    my $extensionVersion = $args{'extensionVersion'};
 
     my $config = $args{'config'};
 
@@ -571,7 +573,14 @@ sub GatherCompleteData
     # and extv, the version needs to NOT have these -google/-yahoo identifiers.
     my $numericVersion = $version;
     $numericVersion =~ s/\-.*$//;
-    $node->{'appv'} = $node->{'extv'} = $numericVersion;
+    $node->{'appv'} = $numericVersion;
+
+    # Most of the time, the extv should be the same as the appv; sometimes,
+    # however, this won't be the case. This adds support to allow you to specify
+    # an extv that is different from the appv. 
+    $node->{'extv'} = defined($extensionVersion) ? 
+     $extensionVersion : $numericVersion;
+
 
     #chdir($startdir);
 
