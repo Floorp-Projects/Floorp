@@ -1009,6 +1009,10 @@ nsMathMLContainerFrame::ReflowForeignChild(nsIFrame*                aChildFrame,
   if (aReflowState.mLineLayout)
     aReflowState.mLineLayout->ForgetWordFrames();
 
+  nsAutoSpaceManager autoSpaceManager(NS_CONST_CAST(nsHTMLReflowState &, aReflowState));
+  nsresult rv = autoSpaceManager.CreateSpaceManagerFor(aPresContext, this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // provide a local, self-contained linelayout where to reflow the nsInlineFrame
   nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   nsLineLayout ll(aPresContext, aReflowState.mSpaceManager, aReflowState.parentReflowState,
