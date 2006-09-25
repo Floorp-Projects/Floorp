@@ -76,7 +76,7 @@ interface nsIMsgImapFolderProps : nsISupports {
 };
 
 
-[scriptable, uuid(19eeaeeb-1cb1-445f-bf19-80537189ece4)]
+[scriptable, uuid(7bf6ecd1-dc71-4472-8ea1-a081511ee17f)]
 interface nsIMsgImapMailFolder : nsISupports {
   void removeSubFolder(in nsIMsgFolder folder);
   void createClientSubfolderInfo(in string folderName, in wchar hierarchyDelimiter, in long flags, in boolean suppressNotification);
@@ -126,5 +126,17 @@ interface nsIMsgImapMailFolder : nsISupports {
   readonly attribute boolean hasAdminUrl;
   attribute boolean performingBiff;
   readonly attribute nsIMsgParseMailMsgState hdrParser;
-};
 
+  /**
+   * Quota
+   * |valid| indicates whether the server has provided quota information on
+   * this folder. This can be false
+   * - if the server does not supports quotas,
+   * - if there are no storage quotas on this folder, or
+   * - if the folder has never been opened.
+   * If it is true, the folder has a storage quota and the usedKB and
+   * maxKB attributes are set to the values provided by the server
+   * (in kilobytes), for this quota root.
+   */
+  void getQuota(out boolean valid, out unsigned long usedKB, out unsigned long maxKB);
+};
