@@ -130,7 +130,7 @@ function showMessage(aIconURL, aMessage, aButtonLabel, aButtonAccesskey,
   if (aButtonLabel)
     buttons = [new MessageButton(aButtonLabel, aButtonAccesskey, aNotifyData)];
   var oldMessage = addonsMsg.getNotificationWithValue(aMessage);
-  if (oldMessage)
+  if (oldMessage && oldMessage.parentNode)
     addonsMsg.removeNotification(oldMessage);
   if (addonsMsg.currentNotification)
     gPriorityCount += 0.0001;
@@ -498,8 +498,6 @@ function flushDataSource()
 function noUpdatesDismiss(aEvent)
 {
   window.removeEventListener("command", noUpdatesDismiss, true);
-  if (aEvent.target.localName != "notification")
-    return;
 
   var children = gExtensionsView.children;
   for (var i = 0; i < children.length; ++i) {
@@ -507,6 +505,9 @@ function noUpdatesDismiss(aEvent)
     if (child.hasAttribute("updateStatus"))
       child.removeAttribute("updateStatus");
   }
+
+  if (aEvent.target.localName != "notification")
+    document.getElementById("addonsMsg").removeCurrentNotification();
 }
 
 function setRestartMessage(aItem)
