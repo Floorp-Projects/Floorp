@@ -615,15 +615,15 @@ NS_IMETHODIMP nsAbMDBDirectory::AddMailList(nsIAbDirectory *list)
   nsCOMPtr<nsIAbMDBDirectory> dblist(do_QueryInterface(list, &rv));
   if (NS_FAILED(rv))
   {
-    // XXX fix this.
-    nsAbMDBDirProperty* dblistproperty = new nsAbMDBDirProperty ();
-    if (!dblistproperty)
+    nsCOMPtr<nsIAbDirectory> newlist(new nsAbMDBDirProperty);
+    if (!newlist)
       return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(dblistproperty);
-    nsCOMPtr<nsIAbDirectory> newlist = getter_AddRefs(NS_STATIC_CAST(nsIAbDirectory*, dblistproperty));
-    newlist->CopyMailList(list);
-    list = newlist;
-    dblist = do_QueryInterface(list, &rv);
+
+    rv = newlist->CopyMailList(list);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    dblist = do_QueryInterface(newlist, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   mDatabase->CreateMailListAndAddToDB(list, PR_TRUE);
