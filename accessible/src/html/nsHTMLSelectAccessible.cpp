@@ -975,6 +975,7 @@ NS_IMETHODIMP nsHTMLComboboxTextFieldAccessible::GetNextSibling(nsIAccessible **
     if (!*aNextSibling)
       return NS_ERROR_FAILURE;
     accessible->Init();
+    mNextSibling = accessible;
   }
   NS_ADDREF(*aNextSibling);
   return NS_OK;
@@ -1227,6 +1228,7 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetNextSibling(nsIAccessible **aNe
     if (!*aNextSibling)
       return NS_ERROR_OUT_OF_MEMORY;
     accessible->Init();
+    mNextSibling = accessible;
   }
   NS_ADDREF(*aNextSibling);
   return NS_OK;
