@@ -40,6 +40,7 @@
  *  Jarnature Parsing & Verification
  */
 
+#include "nssrenam.h"
 #include "jar.h"
 #include "jarint.h"
 #include "certdb.h"
