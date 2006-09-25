@@ -73,26 +73,6 @@ JAR_FOPEN_to_PR_Open(const char *name, const char *mode);
    with NSPR 1.0 libraries, which do not include an FSEEK. It is 
    difficult to fudge an FSEEK into 1.0 so we use stdio. */
 
-/* stdio */
-#if 0
-#define JAR_FILE FILE *
-#define JAR_FOPEN(fn,mode) fopen(fn,mode)
-#define JAR_FCLOSE fclose
-#define JAR_FSEEK fseek
-#define JAR_FREAD(fp,buf,siz) fread(buf,1,siz,fp)
-#define JAR_FWRITE(fp,buf,siz) fwrite(buf,1,siz,fp) 
-#endif
-
-#if 0
-/* nspr 1.0 suite */
-#define JAR_FILE PRFileHandle
-#define JAR_FOPEN(fn,mode) PR_OpenFile(fn,0,mode)
-#define JAR_FCLOSE PR_CLOSE
-#define JAR_FSEEK (no-equivalent)
-#define JAR_FREAD PR_READ
-#define JAR_FWRITE PR_WRITE
-#endif
-
 /* nspr 2.0 suite */
 #define JAR_FILE PRFileDesc *
 /* #define JAR_FOPEN(fn,mode) PR_Open(fn,0,0) */
@@ -101,16 +81,6 @@ JAR_FOPEN_to_PR_Open(const char *name, const char *mode);
 #define JAR_FSEEK PR_Seek
 #define JAR_FREAD PR_Read
 #define JAR_FWRITE PR_Write
-
-#if 0
-/* nav XP suite, note argument order */
-#define JAR_FILE XP_File
-#define JAR_FOPEN(fn,mode) XP_FileOpen(fn,xpURL,mode)
-#define JAR_FCLOSE XP_FileClose
-#define JAR_FSEEK XP_FileSeek
-#define JAR_FREAD(fp,buf,siz) XP_FileRead(buf,siz,fp)
-#define JAR_FWRITE(fp,buf,siz) XP_FileWrite(buf,siz,fp)
-#endif
 
 int jar_create_pk7
    (CERTCertDBHandle *certdb, void *keydb,
