@@ -729,6 +729,13 @@ nsSVGCairoCanvas::PushSurface(nsISVGRendererSurface *aSurface,
   if (!cairoSurface)
     return NS_ERROR_FAILURE;
 
+  return PushCairoSurface(cairoSurface->GetSurface(), isSubSurface);
+}
+
+NS_IMETHODIMP
+nsSVGCairoCanvas::PushCairoSurface(cairo_surface_t *aSurface,
+                                   PRBool isSubSurface)
+{
   ctxEntry *ctx = new ctxEntry;
   if (!ctx)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -743,9 +750,9 @@ nsSVGCairoCanvas::PushSurface(nsISVGRendererSurface *aSurface,
 
   mContextStack.AppendElement(NS_STATIC_CAST(void*, ctx));
 
-  mCR = cairo_create(cairoSurface->GetSurface());
-  aSurface->GetWidth(&mWidth);
-  aSurface->GetHeight(&mHeight);
+  mCR = cairo_create(aSurface);
+  mWidth = cairo_image_surface_get_width(aSurface);
+  mHeight = cairo_image_surface_get_height(aSurface);
 
   return NS_OK;
 }
@@ -822,22 +829,18 @@ nsSVGCairoCanvas::CompositeSurfaceWithMask(nsISVGRendererSurface *aSurface,
   return NS_OK;
 }
 
-/** Implements  void compositeSurface(in nsISVGRendererSurface surface,
+/** Implements  void compositeSurface(in cairo_surface_t surface,
                                       in nsIDOMSVGMatrix canvasTM,
                                       in float opacity); */
 NS_IMETHODIMP
-nsSVGCairoCanvas::CompositeSurfaceMatrix(nsISVGRendererSurface *aSurface,
+nsSVGCairoCanvas::CompositeSurfaceMatrix(cairo_surface_t *aSurface,
                                          nsIDOMSVGMatrix *aCTM, float aOpacity)
 {
-  nsCOMPtr<nsISVGCairoSurface> cairoSurface = do_QueryInterface(aSurface);
-  if (!cairoSurface)
-    return NS_ERROR_FAILURE;
-
   cairo_save(mCR);
 
   SetupCairoMatrix(aCTM);
 
-  cairo_set_source_surface(mCR, cairoSurface->GetSurface(), 0.0, 0.0);
+  cairo_set_source_surface(mCR, aSurface, 0.0, 0.0);
   cairo_paint_with_alpha(mCR, aOpacity);
   cairo_restore(mCR);
 

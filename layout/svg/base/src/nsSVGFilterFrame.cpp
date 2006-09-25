@@ -359,43 +359,39 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
   aTarget->NotifyCanvasTMChanged(PR_TRUE);
 
   // paint the target geometry
-  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-  nsCOMPtr<nsISVGRenderer> renderer;
-  nsCOMPtr<nsISVGRendererSurface> surface;
-  outerSVGFrame->GetRenderer(getter_AddRefs(renderer));
-  renderer->CreateSurface(filterResX, filterResY, getter_AddRefs(surface));
+  cairo_surface_t *surface =
+    cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
+                               filterResX, filterResY);
 
   if (!surface) {
     FilterFailCleanup(aCanvas, aTarget);
     return NS_OK;
   }
 
-  aCanvas->PushSurface(surface, PR_FALSE);
+  aCanvas->PushCairoSurface(surface, PR_FALSE);
   aTarget->PaintSVG(aCanvas, nsnull);
   aCanvas->PopSurface();
 
   mPrimitiveUnits->GetAnimVal(&type);
-  nsSVGFilterInstance instance(renderer, target, bbox,
+  nsSVGFilterInstance instance(target, bbox,
                                x, y, width, height,
                                filterResX, filterResY,
                                type);
 
   if (requirements & NS_FE_SOURCEALPHA) {
-    nsCOMPtr<nsISVGRendererSurface> alpha;
-    renderer->CreateSurface(filterResX, filterResY, getter_AddRefs(alpha));
+    cairo_surface_t *alpha =
+      cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
+                                 filterResX, filterResY);
 
     if (!alpha) {
+      cairo_surface_destroy(surface);
       FilterFailCleanup(aCanvas, aTarget);
       return NS_OK;
     }
 
-    PRUint8 *data, *alphaData;
-    PRUint32 length;
-    PRInt32 stride;
-    surface->Lock();
-    alpha->Lock();
-    surface->GetData(&data, &length, &stride);
-    alpha->GetData(&alphaData, &length, &stride);
+    PRUint8 *data = cairo_image_surface_get_data(surface);
+    PRUint8 *alphaData = cairo_image_surface_get_data(alpha);
+    PRUint32 stride = cairo_image_surface_get_stride(surface);
 
     for (PRUint32 yy=0; yy<filterResY; yy++)
       for (PRUint32 xx=0; xx<filterResX; xx++) {
@@ -405,19 +401,14 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
         alphaData[stride*yy + 4*xx + 3] = data[stride*yy + 4*xx + 3];
     }
 
-    surface->Unlock();
-    alpha->Unlock();
-
-    instance.DefineImage(NS_LITERAL_STRING("SourceAlpha"), alpha);
-    instance.DefineRegion(NS_LITERAL_STRING("SourceAlpha"), 
-                          nsRect(0, 0, filterResX, filterResY));
+    instance.DefineImage(NS_LITERAL_STRING("SourceAlpha"), alpha,
+                         nsRect(0, 0, filterResX, filterResY));
   }
 
   // this always needs to be defined last because the default image
   // for the first filter element is supposed to be SourceGraphic
-  instance.DefineImage(NS_LITERAL_STRING("SourceGraphic"), surface);
-  instance.DefineRegion(NS_LITERAL_STRING("SourceGraphic"), 
-                        nsRect(0, 0, filterResX, filterResY));
+  instance.DefineImage(NS_LITERAL_STRING("SourceGraphic"), surface,
+                       nsRect(0, 0, filterResX, filterResY));
 
   for (PRUint32 k=0; k<count; ++k) {
     nsIContent* child = mContent->GetChildAt(k);
@@ -429,8 +420,10 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
     }
   }
 
-  nsCOMPtr<nsISVGRendererSurface> filterResult;
-  instance.LookupImage(NS_LITERAL_STRING(""), getter_AddRefs(filterResult));
+  cairo_surface_t *filterResult;
+  nsRect filterRect;
+
+  instance.LookupImage(NS_LITERAL_STRING(""), &filterResult, &filterRect);
 
   nsCOMPtr<nsIDOMSVGMatrix> scale, fini;
   NS_NewSVGMatrix(getter_AddRefs(scale),
@@ -634,45 +627,43 @@ nsSVGFilterInstance::GetFilterSubregion(
 #endif
 }
 
-void
-nsSVGFilterInstance::GetImage(nsISVGRendererSurface **result)
+cairo_surface_t *
+nsSVGFilterInstance::GetImage()
 {
-  mRenderer->CreateSurface(mFilterResX, mFilterResY, result);
+  return cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
+                                    mFilterResX, mFilterResY);
 }
 
 void
-nsSVGFilterInstance::LookupImage(const nsAString &aName, 
-                                 nsISVGRendererSurface **aImage)
+nsSVGFilterInstance::LookupImage(const nsAString &aName,
+                                 cairo_surface_t **aImage,
+                                 nsRect *aRegion)
 {
-  if (aName.IsEmpty()) {
-    *aImage = mLastImage;
-    NS_IF_ADDREF(*aImage);
-  } else
-    mImageDictionary.Get(aName, aImage);
-}
+  ImageEntry *entry;
 
-void
-nsSVGFilterInstance::DefineImage(const nsAString &aName, 
-                                 nsISVGRendererSurface *aImage)
-{
-  mImageDictionary.Put(aName, aImage);
-  mLastImage = aImage;
-}
-
-void
-nsSVGFilterInstance::LookupRegion(const nsAString &aName, 
-                                  nsRect *aRect)
-{
   if (aName.IsEmpty())
-    *aRect = mLastRegion;
+    entry = mLastImage;
   else
-    mRegionDictionary.Get(aName, aRect);
+    mImageDictionary.Get(aName, &entry);
+
+  if (entry) {
+    *aImage = entry->mImage;
+    *aRegion = entry->mRegion;
+  } else {
+    *aImage = nsnull;
+    aRegion->Empty();
+  }
 }
 
 void
-nsSVGFilterInstance::DefineRegion(const nsAString &aName, 
-                                  nsRect aRect)
+nsSVGFilterInstance::DefineImage(const nsAString &aName,
+                                 cairo_surface_t *aImage,
+                                 nsRect aRegion)
 {
-  mRegionDictionary.Put(aName, aRect);
-  mLastRegion = aRect;
+  ImageEntry *entry = new ImageEntry(aImage, aRegion);
+
+  if (entry)
+    mImageDictionary.Put(aName, entry);
+
+  mLastImage = entry;
 }
