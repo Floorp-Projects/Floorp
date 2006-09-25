@@ -45,13 +45,8 @@
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
 #include "nsContentUtils.h"
-
-#include "nsIDOMText.h"
 #include "nsFrameManager.h"
-#include "nsLayoutAtoms.h"
 #include "nsStyleChangeList.h"
-#include "nsINameSpaceManager.h"
-
 #include "nsMathMLTokenFrame.h"
 
 nsIFrame*
@@ -117,10 +112,8 @@ nsMathMLTokenFrame::SetInitialChildList(nsIAtom*        aListName,
   if (NS_FAILED(rv))
     return rv;
 
-  nsPresContext* presContext = GetPresContext();
-
-  SetQuotes(presContext);
-  ProcessTextData(presContext);
+  SetQuotes(GetPresContext());
+  ProcessTextData(PR_FALSE);
   return rv;
 }
 
@@ -244,7 +237,7 @@ nsMathMLTokenFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
   // if we get this, it means it was called by the nsTextFrame beneath us, and
   // this means something changed in the text content. So re-process our text
 
-  ProcessTextData(aPresShell->GetPresContext());
+  ProcessTextData(PR_TRUE);
 
   mState |= NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN;
   return mParent->ReflowDirtyChild(aPresShell, this);
@@ -265,35 +258,46 @@ nsMathMLTokenFrame::AttributeChanged(PRInt32         aNameSpaceID,
 }
 
 void
-nsMathMLTokenFrame::ProcessTextData(nsPresContext* aPresContext)
+nsMathMLTokenFrame::ProcessTextData(PRBool aComputeStyleChange)
 {
-  SetTextStyle(aPresContext);
+  // see if the style changes from normal to italic or vice-versa
+  if (!SetTextStyle(GetPresContext()))
+    return;
+
+  // has changed but it doesn't have to be reflected straightaway
+  if (!aComputeStyleChange)
+    return;
+
+  // otherwise re-resolve the style contexts in our subtree to pick up the change
+  nsFrameManager* fm = GetPresContext()->FrameManager();
+  nsStyleChangeList changeList;
+  fm->ComputeStyleChangeFor(this, &changeList, NS_STYLE_HINT_NONE);
+#ifdef DEBUG
+  // Use the parent frame to make sure we catch in-flows and such
+  nsIFrame* parentFrame = GetParent();
+  fm->DebugVerifyStyleTree(parentFrame ? parentFrame : this);
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////
 // For <mi>, if the content is not a single character, turn the font to
 // normal (this function will also query attributes from the mstyle hierarchy)
 
-void
+PRBool
 nsMathMLTokenFrame::SetTextStyle(nsPresContext* aPresContext)
 {
   if (mContent->Tag() != nsMathMLAtoms::mi_)
-    return;
+    return PR_FALSE;
 
   if (!mFrames.FirstChild())
-    return;
+    return PR_FALSE;
 
   // Get the text content that we enclose and its length
-  // our content can include comment-nodes, attribute-nodes, text-nodes...
-  // we use the DOM to make sure that we are only looking at text-nodes...
-
-  // If it matters, this could be done much faster since all we care about is
-  // the first char.
   nsAutoString data;
   nsContentUtils::GetNodeTextContent(mContent, PR_FALSE, data);
   PRInt32 length = data.Length();
   if (!length)
-    return;
+    return PR_FALSE;
 
   // attributes may override the default behavior
   nsAutoString fontstyle;
@@ -307,17 +311,13 @@ nsMathMLTokenFrame::SetTextStyle(nsPresContext* aPresContext)
   }
 
   // set the -moz-math-font-style attribute without notifying that we want a reflow
-  mContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZfontstyle, fontstyle, PR_FALSE);
+  if (!mContent->AttrValueIs(kNameSpaceID_None, nsMathMLAtoms::MOZfontstyle,
+                             fontstyle, eCaseMatters)) {
+    mContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZfontstyle, fontstyle, PR_FALSE);
+    return PR_TRUE;
+  }
 
-  // then, re-resolve the style contexts in our subtree
-  nsFrameManager *fm = aPresContext->FrameManager();
-  nsStyleChangeList changeList;
-  fm->ComputeStyleChangeFor(this, &changeList, NS_STYLE_HINT_NONE);
-#ifdef DEBUG
-  // Use the parent frame to make sure we catch in-flows and such
-  nsIFrame* parentFrame = GetParent();
-  fm->DebugVerifyStyleTree(parentFrame ? parentFrame : this);
-#endif
+  return PR_FALSE;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -344,7 +344,7 @@ SetQuote(nsPresContext* aPresContext,
     // walk down the hierarchy of first children because they could be wrapped
     textFrame = aFrame->GetFirstChild(nsnull);
     if (textFrame) {
-      if (textFrame->GetType() == nsLayoutAtoms::textFrame)
+      if (textFrame->GetType() == nsMathMLAtoms::textFrame)
         break;
     }
     aFrame = textFrame;
