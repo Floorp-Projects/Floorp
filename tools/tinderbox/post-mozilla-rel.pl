@@ -334,20 +334,28 @@ sub packit {
     }
   } # do_installer
 
+  # Lightning stuff. Only bother if we find lightning.xpi
   my $lightningXpi = "$builddir/dist/xpi-stage/lightning.xpi";
   my $lightningXpiStageDir = undef;
-  
-  if (TinderUtils::is_windows()) {
-    $lightningXpiStageDir = 'windows-xpi';
-  } elsif (TinderUtils::is_linux()) {
-    $lightningXpiStageDir = 'linux-xpi';
-  } elsif (TinderUtils::is_mac()) {
-    $lightningXpiStageDir = 'mac-xpi';
-  }
+  if (-e $lightningXpi) {
+    if (TinderUtils::is_windows()) {
+      $lightningXpiStageDir = 'windows-xpi';
+    } elsif (TinderUtils::is_linux()) {
+      $lightningXpiStageDir = 'linux-xpi';
+    } elsif (TinderUtils::is_mac()) {
+      $lightningXpiStageDir = 'mac-xpi';
+    } else {
+      return returnStatus('lightningXpiStageDir not defined!', ('busted'));
+    }
 
-  if (-e $lightningXpi && $lightningXpiStageDir ne undef) {
+    my $lightningWcapXpi = "$builddir/dist/xpi-stage/lightning-wcap.xpi";
+    if (! -e $lightningWcapXpi) {
+        return returnStatus('lightning-wcap not found!', ('busted'));
+    }
+
     TinderUtils::run_shell_command("mkdir -p $stagedir/$lightningXpiStageDir");
     TinderUtils::run_shell_command("cp -r $lightningXpi $stagedir/$lightningXpiStageDir");
+    TinderUtils::run_shell_command("cp -r $lightningWcapXpi $stagedir/$lightningXpiStageDir");
   }
 
   if ($Settings::archive) {
