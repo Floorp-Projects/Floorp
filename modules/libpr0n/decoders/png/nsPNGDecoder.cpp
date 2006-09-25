@@ -136,7 +136,7 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgILoad *aLoad)
 
 #if defined(PNG_UNKNOWN_CHUNKS_SUPPORTED)
   /* Ignore unused chunks */
-  png_set_keep_unknown_chunks(mPNG, 1, unused_chunks,
+  png_set_keep_unknown_chunks(mPNG, 0, unused_chunks,
      (int)sizeof(unused_chunks)/5);   
 #endif
 

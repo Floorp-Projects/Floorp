@@ -1,17 +1,15 @@
 
 /* pngget.c - retrieval of values from info struct
  *
- * Last changed in libpng 1.2.9 April 14, 2006
+ * libpng 1.2.7 - September 12, 2004
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2006 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2004 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  */
 
 #define PNG_INTERNAL
 #include "png.h"
-
-#if defined(PNG_READ_SUPPORTED) || defined(PNG_WRITE_SUPPORTED)
 
 png_uint_32 PNGAPI
 png_get_valid(png_structp png_ptr, png_infop info_ptr, png_uint_32 flag)
@@ -559,9 +557,9 @@ png_get_IHDR(png_structp png_ptr, png_infop info_ptr,
          *interlace_type = info_ptr->interlace_type;
 
       /* check for potential overflow of rowbytes */
-      if (*width == 0 || *width > PNG_UINT_31_MAX)
+      if (width == 0 || *width > PNG_UINT_31_MAX)
         png_error(png_ptr, "Invalid image width");
-      if (*height == 0 || *height > PNG_UINT_31_MAX)
+      if (height == 0 || *height > PNG_UINT_31_MAX)
         png_error(png_ptr, "Invalid image height");
       if (info_ptr->width > (PNG_UINT_32_MAX
                  >> 3)      /* 8-byte RGBA pixels */
@@ -918,7 +916,6 @@ png_get_mmx_rowbytes_threshold (png_structp png_ptr)
     return (png_uint_32)(png_ptr? png_ptr->mmx_rowbytes_threshold : 0L);
 }
 #endif /* ?PNG_ASSEMBLER_CODE_SUPPORTED */
-#endif /* ?PNG_1_0_X */
 
 #ifdef PNG_SET_USER_LIMITS_SUPPORTED
 /* these functions were added to libpng 1.2.6 */
@@ -934,4 +931,4 @@ png_get_user_height_max (png_structp png_ptr)
 }
 #endif /* ?PNG_SET_USER_LIMITS_SUPPORTED */
 
-#endif /* PNG_READ_SUPPORTED || PNG_WRITE_SUPPORTED */
+#endif /* ?PNG_1_0_X */

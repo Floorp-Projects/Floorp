@@ -1,4 +1,3 @@
-
 /* pnggccrd.c - mixed C/assembler version of utilities to read a PNG file
  *
  * For Intel x86 CPU (Pentium-MMX or later) and GNU C compiler.
@@ -7,9 +6,9 @@
  *     and http://www.intel.com/drg/pentiumII/appnotes/923/923.htm
  *     for Intel's performance analysis of the MMX vs. non-MMX code.
  *
- * Last changed in libpng 1.2.9 April 14, 2006
+ * libpng version 1.2.7 - September 12, 2004
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2006 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2004 Glenn Randers-Pehrson
  * Copyright (c) 1998, Intel Corporation
  *
  * Based on MSVC code contributed by Nirav Chhatrapati, Intel Corp., 1998.
@@ -256,10 +255,9 @@ static const int FARDATA png_pass_width[7] = {8, 4, 4, 2, 2, 1, 1};
 #endif
 
 #if defined(PNG_ASSEMBLER_CODE_SUPPORTED)
-/* djgpp, Win32, Cygwin, and OS2 add their own underscores to global variables,
+/* djgpp, Win32, and Cygwin add their own underscores to global variables,
  * so define them without: */
-#if defined(__DJGPP__) || defined(WIN32) || defined(__CYGWIN__) || \
-    defined(__OS2__)
+#if defined(__DJGPP__) || defined(WIN32) || defined(__CYGWIN__)
 #  define _mmx_supported  mmx_supported
 #  define _const4         const4
 #  define _const6         const6
@@ -1739,7 +1737,6 @@ png_do_read_interlace(png_structp png_ptr)
                      int dummy_value_c;   // fix 'forbidden register spilled'
                      int dummy_value_S;
                      int dummy_value_D;
-                     int dummy_value_a;
 
                      __asm__ __volatile__ (
                         "subl $21, %%edi         \n\t"
@@ -1747,7 +1744,7 @@ png_do_read_interlace(png_structp png_ptr)
 
                      ".loop3_pass0:              \n\t"
                         "movd (%%esi), %%mm0     \n\t" // x x x x x 2 1 0
-                        "pand (%3), %%mm0        \n\t" // z z z z z 2 1 0
+                        "pand _const4, %%mm0     \n\t" // z z z z z 2 1 0
                         "movq %%mm0, %%mm1       \n\t" // z z z z z 2 1 0
                         "psllq $16, %%mm0        \n\t" // z z z 2 1 0 z z
                         "movq %%mm0, %%mm2       \n\t" // z z z 2 1 0 z z
@@ -1772,14 +1769,12 @@ png_do_read_interlace(png_structp png_ptr)
 
                         : "=c" (dummy_value_c),        // output regs (dummy)
                           "=S" (dummy_value_S),
-                          "=D" (dummy_value_D),
-                          "=a" (dummy_value_a)
-
+                          "=D" (dummy_value_D)
 
                         : "1" (sptr),      // esi      // input regs
                           "2" (dp),        // edi
                           "0" (width),     // ecx
-                          "3" (&_const4)  // %1(?)  (0x0000000000FFFFFFLL)
+                          "rim" (_const4)  // %1(?)  (0x0000000000FFFFFFLL)
 
 #if 0  /* %mm0, ..., %mm4 not supported by gcc 2.7.2.3 or egcs 1.1 */
                         : "%mm0", "%mm1", "%mm2"       // clobber list
@@ -1792,7 +1787,6 @@ png_do_read_interlace(png_structp png_ptr)
                      int dummy_value_c;   // fix 'forbidden register spilled'
                      int dummy_value_S;
                      int dummy_value_D;
-                     int dummy_value_a;
 
                      __asm__ __volatile__ (
                         "subl $9, %%edi          \n\t"
@@ -1800,7 +1794,7 @@ png_do_read_interlace(png_structp png_ptr)
 
                      ".loop3_pass2:              \n\t"
                         "movd (%%esi), %%mm0     \n\t" // x x x x x 2 1 0
-                        "pand (%3), %%mm0     \n\t" // z z z z z 2 1 0
+                        "pand _const4, %%mm0     \n\t" // z z z z z 2 1 0
                         "movq %%mm0, %%mm1       \n\t" // z z z z z 2 1 0
                         "psllq $16, %%mm0        \n\t" // z z z 2 1 0 z z
                         "movq %%mm0, %%mm2       \n\t" // z z z 2 1 0 z z
@@ -1819,13 +1813,12 @@ png_do_read_interlace(png_structp png_ptr)
 
                         : "=c" (dummy_value_c),        // output regs (dummy)
                           "=S" (dummy_value_S),
-                          "=D" (dummy_value_D),
-                          "=a" (dummy_value_a)
+                          "=D" (dummy_value_D)
 
                         : "1" (sptr),      // esi      // input regs
                           "2" (dp),        // edi
                           "0" (width),     // ecx
-                          "3" (&_const4)  // (0x0000000000FFFFFFLL)
+                          "rim" (_const4)  // (0x0000000000FFFFFFLL)
 
 #if 0  /* %mm0, ..., %mm2 not supported by gcc 2.7.2.3 or egcs 1.1 */
                         : "%mm0", "%mm1", "%mm2"       // clobber list
@@ -1846,8 +1839,6 @@ png_do_read_interlace(png_structp png_ptr)
                         int dummy_value_c;  // fix 'forbidden register spilled'
                         int dummy_value_S;
                         int dummy_value_D;
-                        int dummy_value_a;
-                        int dummy_value_d;
 
                         __asm__ __volatile__ (
                            "subl $3, %%esi          \n\t"
@@ -1859,14 +1850,14 @@ png_do_read_interlace(png_structp png_ptr)
                            "movq %%mm0, %%mm1       \n\t" // x x 5 4 3 2 1 0
                            "movq %%mm0, %%mm2       \n\t" // x x 5 4 3 2 1 0
                            "psllq $24, %%mm0        \n\t" // 4 3 2 1 0 z z z
-                           "pand (%3), %%mm1          \n\t" // z z z z z 2 1 0
+                           "pand _const4, %%mm1     \n\t" // z z z z z 2 1 0
                            "psrlq $24, %%mm2        \n\t" // z z z x x 5 4 3
                            "por %%mm1, %%mm0        \n\t" // 4 3 2 1 0 2 1 0
                            "movq %%mm2, %%mm3       \n\t" // z z z x x 5 4 3
                            "psllq $8, %%mm2         \n\t" // z z x x 5 4 3 z
                            "movq %%mm0, (%%edi)     \n\t"
                            "psrlq $16, %%mm3        \n\t" // z z z z z x x 5
-                           "pand (%4), %%mm3     \n\t" // z z z z z z z 5
+                           "pand _const6, %%mm3     \n\t" // z z z z z z z 5
                            "por %%mm3, %%mm2        \n\t" // z z x x 5 4 3 5
                            "subl $6, %%esi          \n\t"
                            "movd %%mm2, 8(%%edi)    \n\t"
@@ -1877,15 +1868,13 @@ png_do_read_interlace(png_structp png_ptr)
 
                            : "=c" (dummy_value_c),        // output regs (dummy)
                              "=S" (dummy_value_S),
-                             "=D" (dummy_value_D),
-                             "=a" (dummy_value_a),
-                             "=d" (dummy_value_d)
+                             "=D" (dummy_value_D)
 
                            : "1" (sptr),      // esi      // input regs
                              "2" (dp),        // edi
                              "0" (width_mmx), // ecx
-                             "3" (&_const4), // 0x0000000000FFFFFFLL
-                             "4" (&_const6)  // 0x00000000000000FFLL
+                             "rim" (_const4), // 0x0000000000FFFFFFLL
+                             "rim" (_const6)  // 0x00000000000000FFLL
 
 #if 0  /* %mm0, ..., %mm3 not supported by gcc 2.7.2.3 or egcs 1.1 */
                            : "%mm0", "%mm1"               // clobber list
@@ -5009,7 +4998,7 @@ png_read_filter_row_mmx_up(png_row_infop row_info, png_bytep row,
       "jz up_end                    \n\t"
 
       "cmpl $8, %%edx               \n\t" // test for less than 8 bytes
-      "jb up_lt8                    \n\t" //  [added by lcreeve at netins.net]
+      "jb up_lt8                    \n\t" //  [added by lcreeve@netins.net]
 
       "addl %%edx, %%ecx            \n\t"
       "andl $0x00000007, %%edx      \n\t" // calc bytes over mult of 8
@@ -5113,7 +5102,7 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
       case 1: sprintf(filnm, "sub-%s",
 #if defined(PNG_ASSEMBLER_CODE_SUPPORTED) && defined(PNG_THREAD_UNSAFE_OK)
 #if !defined(PNG_1_0_X)
-        (png_ptr->asm_flags & PNG_ASM_FLAG_MMX_READ_FILTER_SUB)? "MMX" :
+        (png_ptr->asm_flags & PNG_ASM_FLAG_MMX_READ_FILTER_SUB)? "MMX" : 
 #endif
 #endif
 "x86");
@@ -5350,7 +5339,6 @@ int PNGAPI
 png_mmx_support(void)
 {
 #if defined(PNG_MMX_CODE_SUPPORTED)
-    int result;
     __asm__ __volatile__ (
         "pushl %%ebx          \n\t"  // ebx gets clobbered by CPUID instruction
         "pushl %%ecx          \n\t"  // so does ecx...
@@ -5392,6 +5380,7 @@ png_mmx_support(void)
     "0:                       \n\t"  // .NOT_SUPPORTED: target label for jump instructions
         "movl $0, %%eax       \n\t"  // set return value to 0
     "1:                       \n\t"  // .RETURN: target label for jump instructions
+        "movl %%eax, _mmx_supported \n\t" // save in global static variable, too
         "popl %%edx           \n\t"  // restore edx
         "popl %%ecx           \n\t"  // restore ecx
         "popl %%ebx           \n\t"  // restore ebx
@@ -5399,17 +5388,16 @@ png_mmx_support(void)
 //      "ret                  \n\t"  // DONE:  no MMX support
                                      // (fall through to standard C "ret")
 
-        : "=a" (result)              // output list
+        :                            // output list (none)
 
         :                            // any variables used on input (none)
 
-                                     // no clobber list
+        : "%eax"                     // clobber list
 //      , "%ebx", "%ecx", "%edx"     // GRR:  we handle these manually
 //      , "memory"   // if write to a variable gcc thought was in a reg
 //      , "cc"       // "condition codes" (flag bits)
     );
-    _mmx_supported = result;
-#else
+#else     
     _mmx_supported = 0;
 #endif /* PNG_MMX_CODE_SUPPORTED */
 

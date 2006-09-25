@@ -1,9 +1,9 @@
 
 /* pngwutil.c - utilities to write a PNG file
  *
- * Last changed in libpng 1.2.11 June 4, 2006
+ * libpng version 1.2.7 - September 12, 2004
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2006 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2004 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  */
@@ -16,7 +16,7 @@
  * with unsigned numbers for convenience, although one supported
  * ancillary chunk uses signed (two's complement) numbers.
  */
-void PNGAPI
+void /* PRIVATE */
 png_save_uint_32(png_bytep buf, png_uint_32 i)
 {
    buf[0] = (png_byte)((i >> 24) & 0xff);
@@ -25,11 +25,12 @@ png_save_uint_32(png_bytep buf, png_uint_32 i)
    buf[3] = (png_byte)(i & 0xff);
 }
 
+#if defined(PNG_WRITE_pCAL_SUPPORTED) || defined(PNG_WRITE_oFFs_SUPPORTED)
 /* The png_save_int_32 function assumes integers are stored in two's
  * complement format.  If this isn't the case, then this routine needs to
  * be modified to write data in two's complement format.
  */
-void PNGAPI
+void /* PRIVATE */
 png_save_int_32(png_bytep buf, png_int_32 i)
 {
    buf[0] = (png_byte)((i >> 24) & 0xff);
@@ -37,12 +38,13 @@ png_save_int_32(png_bytep buf, png_int_32 i)
    buf[2] = (png_byte)((i >> 8) & 0xff);
    buf[3] = (png_byte)(i & 0xff);
 }
+#endif
 
 /* Place a 16-bit number into a buffer in PNG byte order.
  * The parameter is declared unsigned int, not png_uint_16,
  * just to avoid potential problems on pre-ANSI C compilers.
  */
-void PNGAPI
+void /* PRIVATE */
 png_save_uint_16(png_bytep buf, unsigned int i)
 {
    buf[0] = (png_byte)((i >> 8) & 0xff);
@@ -159,11 +161,9 @@ png_text_compress(png_structp png_ptr,
 {
    int ret;
 
-   comp->num_output_ptr = 0;
-   comp->max_output_ptr = 0;
+   comp->num_output_ptr = comp->max_output_ptr = 0;
    comp->output_ptr = NULL;
    comp->input = NULL;
-   comp->input_len = 0;
 
    /* we may just want to pass the text right through */
    if (compression == PNG_TEXT_COMPRESSION_NONE)
@@ -219,7 +219,7 @@ png_text_compress(png_structp png_ptr,
             png_error(png_ptr, "zlib error");
       }
       /* check to see if we need more room */
-      if (!(png_ptr->zstream.avail_out))
+      if (!png_ptr->zstream.avail_out && png_ptr->zstream.avail_in)
       {
          /* make sure the output array has room */
          if (comp->num_output_ptr >= comp->max_output_ptr)
@@ -357,9 +357,9 @@ png_write_compressed_data_out(png_structp png_ptr, compression_state *comp)
       png_write_chunk_data(png_ptr, png_ptr->zbuf,
          png_ptr->zbuf_size - png_ptr->zstream.avail_out);
 
-   /* reset zlib for another zTXt/iTXt or image data */
+   /* reset zlib for another zTXt/iTXt or the image data */
    deflateReset(&png_ptr->zstream);
-   png_ptr->zstream.data_type = Z_BINARY;
+
 }
 #endif
 
@@ -523,9 +523,6 @@ png_write_IHDR(png_structp png_ptr, png_uint_32 width, png_uint_32 height,
       png_ptr->zlib_mem_level, png_ptr->zlib_strategy);
    png_ptr->zstream.next_out = png_ptr->zbuf;
    png_ptr->zstream.avail_out = (uInt)png_ptr->zbuf_size;
-   /* libpng is not interested in zstream.data_type */
-   /* set it to a predefined value, to avoid its evaluation inside zlib */
-   png_ptr->zstream.data_type = Z_BINARY;
 
    png_ptr->mode = PNG_HAVE_IHDR;
 }
@@ -730,13 +727,6 @@ png_write_iCCP(png_structp png_ptr, png_charp name, int compression_type,
    compression_state comp;
 
    png_debug(1, "in png_write_iCCP\n");
-
-   comp.num_output_ptr = 0;
-   comp.max_output_ptr = 0;
-   comp.output_ptr = NULL;
-   comp.input = NULL;
-   comp.input_len = 0;
-
    if (name == NULL || (name_len = png_check_keyword(png_ptr, name,
       &new_name)) == 0)
    {
@@ -937,7 +927,8 @@ png_write_cHRM(png_structp png_ptr, double white_x, double white_y,
    itemp = (png_uint_32)(white_y * 100000.0 + 0.5);
    png_save_uint_32(buf + 4, itemp);
 
-   if (red_x < 0 ||  red_y < 0 || red_x + red_y > 1.0)
+   if (red_x < 0 || red_x > 0.8 || red_y < 0 || red_y > 0.8 ||
+       red_x + red_y > 1.0)
    {
       png_warning(png_ptr, "Invalid cHRM red point specified");
       return;
@@ -947,7 +938,8 @@ png_write_cHRM(png_structp png_ptr, double white_x, double white_y,
    itemp = (png_uint_32)(red_y * 100000.0 + 0.5);
    png_save_uint_32(buf + 12, itemp);
 
-   if (green_x < 0 || green_y < 0 || green_x + green_y > 1.0)
+   if (green_x < 0 || green_x > 0.8 || green_y < 0 || green_y > 0.8 ||
+       green_x + green_y > 1.0)
    {
       png_warning(png_ptr, "Invalid cHRM green point specified");
       return;
@@ -957,7 +949,8 @@ png_write_cHRM(png_structp png_ptr, double white_x, double white_y,
    itemp = (png_uint_32)(green_y * 100000.0 + 0.5);
    png_save_uint_32(buf + 20, itemp);
 
-   if (blue_x < 0 || blue_y < 0 || blue_x + blue_y > 1.0)
+   if (blue_x < 0 || blue_x > 0.8 || blue_y < 0 || blue_y > 0.8 ||
+       blue_x + blue_y > 1.0)
    {
       png_warning(png_ptr, "Invalid cHRM blue point specified");
       return;
@@ -995,7 +988,7 @@ png_write_cHRM_fixed(png_structp png_ptr, png_fixed_point white_x,
    png_save_uint_32(buf, (png_uint_32)white_x);
    png_save_uint_32(buf + 4, (png_uint_32)white_y);
 
-   if (red_x + red_y > 100000L)
+   if (red_x > 80000L || red_y > 80000L || red_x + red_y > 100000L)
    {
       png_warning(png_ptr, "Invalid cHRM fixed red point specified");
       return;
@@ -1003,7 +996,7 @@ png_write_cHRM_fixed(png_structp png_ptr, png_fixed_point white_x,
    png_save_uint_32(buf + 8, (png_uint_32)red_x);
    png_save_uint_32(buf + 12, (png_uint_32)red_y);
 
-   if (green_x + green_y > 100000L)
+   if (green_x > 80000L || green_y > 80000L || green_x + green_y > 100000L)
    {
       png_warning(png_ptr, "Invalid fixed cHRM green point specified");
       return;
@@ -1011,7 +1004,7 @@ png_write_cHRM_fixed(png_structp png_ptr, png_fixed_point white_x,
    png_save_uint_32(buf + 16, (png_uint_32)green_x);
    png_save_uint_32(buf + 20, (png_uint_32)green_y);
 
-   if (blue_x + blue_y > 100000L)
+   if (blue_x > 80000L || blue_y > 80000L || blue_x + blue_y > 100000L)
    {
       png_warning(png_ptr, "Invalid fixed cHRM blue point specified");
       return;
@@ -1348,12 +1341,6 @@ png_write_zTXt(png_structp png_ptr, png_charp key, png_charp text,
 
    png_debug(1, "in png_write_zTXt\n");
 
-   comp.num_output_ptr = 0;
-   comp.max_output_ptr = 0;
-   comp.output_ptr = NULL;
-   comp.input = NULL;
-   comp.input_len = 0;
-
    if (key == NULL || (key_len = png_check_keyword(png_ptr, key, &new_key))==0)
    {
       png_warning(png_ptr, "Empty keyword in zTXt chunk");
@@ -1406,11 +1393,6 @@ png_write_iTXt(png_structp png_ptr, int compression, png_charp key,
    compression_state comp;
 
    png_debug(1, "in png_write_iTXt\n");
-
-   comp.num_output_ptr = 0;
-   comp.max_output_ptr = 0;
-   comp.output_ptr = NULL;
-   comp.input = NULL;
 
    if (key == NULL || (key_len = png_check_keyword(png_ptr, key, &new_key))==0)
    {
@@ -1567,41 +1549,39 @@ png_write_pCAL(png_structp png_ptr, png_charp purpose, png_int_32 X0,
 /* write the sCAL chunk */
 #if defined(PNG_FLOATING_POINT_SUPPORTED) && !defined(PNG_NO_STDIO)
 void /* PRIVATE */
-png_write_sCAL(png_structp png_ptr, int unit, double width, double height)
+png_write_sCAL(png_structp png_ptr, int unit, double width,double height)
 {
 #ifdef PNG_USE_LOCAL_ARRAYS
    PNG_sCAL;
 #endif
-   char buf[64];
    png_size_t total_len;
+   char wbuf[32], hbuf[32];
+   png_byte bunit = unit;
 
    png_debug(1, "in png_write_sCAL\n");
 
-   buf[0] = (char)unit;
 #if defined(_WIN32_WCE)
 /* sprintf() function is not supported on WindowsCE */
    {
       wchar_t wc_buf[32];
-      size_t wc_len;
       swprintf(wc_buf, TEXT("%12.12e"), width);
-      wc_len = wcslen(wc_buf);
-      WideCharToMultiByte(CP_ACP, 0, wc_buf, -1, buf + 1, wc_len, NULL, NULL);
-      total_len = wc_len + 2;
+      WideCharToMultiByte(CP_ACP, 0, wc_buf, -1, wbuf, 32, NULL, NULL);
       swprintf(wc_buf, TEXT("%12.12e"), height);
-      wc_len = wcslen(wc_buf);
-      WideCharToMultiByte(CP_ACP, 0, wc_buf, -1, buf + total_len, wc_len,
-         NULL, NULL);
-      total_len += wc_len;
+      WideCharToMultiByte(CP_ACP, 0, wc_buf, -1, hbuf, 32, NULL, NULL);
    }
 #else
-   sprintf(buf + 1, "%12.12e", width);
-   total_len = 1 + png_strlen(buf + 1) + 1;
-   sprintf(buf + total_len, "%12.12e", height);
-   total_len += png_strlen(buf + total_len);
+   sprintf(wbuf, "%12.12e", width);
+   sprintf(hbuf, "%12.12e", height);
 #endif
+   total_len = 1 + png_strlen(wbuf)+1 + png_strlen(hbuf);
 
-   png_debug1(3, "sCAL total length = %u\n", (unsigned int)total_len);
-   png_write_chunk(png_ptr, (png_bytep)png_sCAL, (png_bytep)buf, total_len);
+   png_debug1(3, "sCAL total length = %d\n", (int)total_len);
+   png_write_chunk_start(png_ptr, (png_bytep)png_sCAL, (png_uint_32)total_len);
+   png_write_chunk_data(png_ptr, (png_bytep)&bunit, 1);
+   png_write_chunk_data(png_ptr, (png_bytep)wbuf, png_strlen(wbuf)+1);
+   png_write_chunk_data(png_ptr, (png_bytep)hbuf, png_strlen(hbuf));
+
+   png_write_chunk_end(png_ptr);
 }
 #else
 #ifdef PNG_FIXED_POINT_SUPPORTED
@@ -1612,26 +1592,23 @@ png_write_sCAL_s(png_structp png_ptr, int unit, png_charp width,
 #ifdef PNG_USE_LOCAL_ARRAYS
    PNG_sCAL;
 #endif
-   png_byte buf[64];
-   png_size_t wlen, hlen, total_len;
+   png_size_t total_len;
+   char wbuf[32], hbuf[32];
+   png_byte bunit = unit;
 
    png_debug(1, "in png_write_sCAL_s\n");
 
-   wlen = png_strlen(width);
-   hlen = png_strlen(height);
-   total_len = wlen + hlen + 2;
-   if (total_len > 64)
-   {
-      png_warning(png_ptr, "Can't write sCAL (buffer too small)");
-      return;
-   }
+   png_strcpy(wbuf,(const char *)width);
+   png_strcpy(hbuf,(const char *)height);
+   total_len = 1 + png_strlen(wbuf)+1 + png_strlen(hbuf);
 
-   buf[0] = (png_byte)unit;
-   png_memcpy(buf + 1, width, wlen + 1);      /* append the '\0' here */
-   png_memcpy(buf + wlen + 2, height, hlen);  /* do NOT append the '\0' here */
+   png_debug1(3, "sCAL total length = %d\n", total_len);
+   png_write_chunk_start(png_ptr, (png_bytep)png_sCAL, (png_uint_32)total_len);
+   png_write_chunk_data(png_ptr, (png_bytep)&bunit, 1);
+   png_write_chunk_data(png_ptr, (png_bytep)wbuf, png_strlen(wbuf)+1);
+   png_write_chunk_data(png_ptr, (png_bytep)hbuf, png_strlen(hbuf));
 
-   png_debug1(3, "sCAL total length = %u\n", (unsigned int)total_len);
-   png_write_chunk(png_ptr, (png_bytep)png_sCAL, buf, total_len);
+   png_write_chunk_end(png_ptr);
 }
 #endif
 #endif
@@ -1894,7 +1871,6 @@ png_write_finish_row(png_structp png_ptr)
    }
 
    deflateReset(&png_ptr->zstream);
-   png_ptr->zstream.data_type = Z_BINARY;
 }
 
 #if defined(PNG_WRITE_INTERLACING_SUPPORTED)
@@ -2072,7 +2048,7 @@ png_do_write_interlace(png_row_infop row_info, png_bytep row, int pass)
  * been specified by the application, and then writes the row out with the
  * chosen filter.
  */
-#define PNG_MAXSUM (((png_uint_32)(-1)) >> 1)
+#define PNG_MAXSUM (~((png_uint_32)0) >> 1)
 #define PNG_HISHIFT 10
 #define PNG_LOMASK ((png_uint_32)0xffffL)
 #define PNG_HIMASK ((png_uint_32)(~PNG_LOMASK >> PNG_HISHIFT))
