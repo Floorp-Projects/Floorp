@@ -350,18 +350,19 @@ sub SubstitutePath
 {
     my %args = @_;
 
-    my $string = $args{'path'};
-    my $platform = $args{'platform'};
-    my $locale = $args{'locale'};
-    my $version = $args{'version'};
-    my $app = $args{'app'};
+    my $string = $args{'path'} || 
+     die 'ASSERT: SubstitutePath() called with null path';
+    my $platform = $args{'platform'} || 'UNDEFINED';
+    my $locale = $args{'locale'} ||'UNDEFINED';
+    my $version = $args{'version'} || 'UNDEFINED';
+    my $app = $args{'app'} || 'UNDEFINED';
 
     my %bouncer_platforms = GetBouncerPlatformStrings();
     my $bouncer_platform = $bouncer_platforms{$platform};
 
     $string =~ s/%platform%/$platform/g;
     $string =~ s/%locale%/$locale/g;
-    $string =~ s/%bouncer-platform%/$bouncer_platform/g;
+    $string =~ s/%bouncer\-platform%/$bouncer_platform/g;
     $string =~ s/%version%/$version/g;
     $string =~ s/%app%/$app/g;
 
