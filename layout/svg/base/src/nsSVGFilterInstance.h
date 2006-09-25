@@ -40,14 +40,14 @@
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGRect.h"
 #include "nsIDOMSVGAnimatedEnum.h"
-#include "nsISVGRendererSurface.h"
 #include "nsInterfaceHashtable.h"
-#include "nsDataHashtable.h"
-#include "nsISVGRenderer.h"
+#include "nsClassHashtable.h"
 #include "nsIDOMSVGFilters.h"
 #include "nsRect.h"
 #include "nsIContent.h"
 #include "nsAutoPtr.h"
+
+#include "cairo.h"
 
 class nsSVGLength2;
 class nsSVGElement;
@@ -61,42 +61,47 @@ public:
                           nsRect defaultRegion,
                           nsRect *result);
 
-  void GetImage(nsISVGRendererSurface **result);
-  void LookupImage(const nsAString &aName, nsISVGRendererSurface **aImage);
-  void DefineImage(const nsAString &aName, nsISVGRendererSurface *aImage);
-  void LookupRegion(const nsAString &aName, nsRect *aRect);
-  void DefineRegion(const nsAString &aName, nsRect aRect);
+  cairo_surface_t *GetImage();
+  void LookupImage(const nsAString &aName,
+                   cairo_surface_t **aImage, nsRect *aRegion);
+  void DefineImage(const nsAString &aName,
+                   cairo_surface_t *aImage, nsRect aRegion);
 
-  nsSVGFilterInstance(nsISVGRenderer *aRenderer,
-                      nsSVGElement *aTarget,
+  nsSVGFilterInstance(nsSVGElement *aTarget,
                       nsIDOMSVGRect *aTargetBBox,
                       float aFilterX, float aFilterY,
                       float aFilterWidth, float aFilterHeight,
                       PRUint32 aFilterResX, PRUint32 aFilterResY,
                       PRUint16 aPrimitiveUnits) :
-    mRenderer(aRenderer),
     mTarget(aTarget),
     mTargetBBox(aTargetBBox),
+    mLastImage(nsnull),
     mFilterX(aFilterX), mFilterY(aFilterY),
     mFilterWidth(aFilterWidth), mFilterHeight(aFilterHeight),
     mFilterResX(aFilterResX), mFilterResY(aFilterResY),
     mPrimitiveUnits(aPrimitiveUnits) {
     mImageDictionary.Init();
-    mRegionDictionary.Init();
   }
 
 private:
-  nsCOMPtr<nsISVGRenderer> mRenderer;
+  class ImageEntry {
+  public:
+    ImageEntry(cairo_surface_t *aImage, nsRect aRegion) :
+      mImage(aImage), mRegion(aRegion) {}
+    ~ImageEntry() { cairo_surface_destroy(mImage); }
+
+    cairo_surface_t *mImage;
+    nsRect mRegion;
+  };
+
+  nsClassHashtable<nsStringHashKey,ImageEntry> mImageDictionary;
   nsRefPtr<nsSVGElement> mTarget;
   nsCOMPtr<nsIDOMSVGRect> mTargetBBox;
+  ImageEntry *mLastImage;
+
   float mFilterX, mFilterY, mFilterWidth, mFilterHeight;
   PRUint32 mFilterResX, mFilterResY;
   PRUint16 mPrimitiveUnits;
-
-  nsInterfaceHashtable<nsStringHashKey,nsISVGRendererSurface> mImageDictionary;
-  nsDataHashtable<nsStringHashKey,nsRect> mRegionDictionary;
-  nsCOMPtr<nsISVGRendererSurface> mLastImage;
-  nsRect mLastRegion;
 };
 
 #endif

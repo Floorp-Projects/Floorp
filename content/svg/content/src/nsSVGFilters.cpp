@@ -232,7 +232,7 @@ public:
    * Returns total length of data buffer in bytes
    */
   PRUint32 GetDataLength() {
-    return mLength;
+    return mStride * mHeight;
   }
 
   /*
@@ -243,11 +243,6 @@ public:
   }
 
 private:
-  /*
-   * Unlocks the source image if it exists
-   */
-  void ReleaseSource();
-
   /*
    * If the target image exists then it is unlocked and FixupTarget() is called
    */
@@ -262,20 +257,20 @@ private:
 
   nsAutoString mInput, mResult;
   nsRect mRect;
-  nsCOMPtr<nsISVGRendererSurface> mSourceImage, mTargetImage;
+  cairo_surface_t *mTargetImage;
   nsSVGFilterInstance* mInstance;
   PRUint8 *mSourceData, *mTargetData;
-  PRUint32 mWidth, mHeight, mLength;
+  PRUint32 mWidth, mHeight;
   PRInt32 mStride;
 };
 
 nsSVGFilterResource::nsSVGFilterResource(nsSVGFilterInstance* aInstance):
+  mTargetImage(nsnull),
   mInstance(aInstance),
   mSourceData(nsnull),
   mTargetData(nsnull),
   mWidth(0),
   mHeight(0),
-  mLength(0),
   mStride(0)
 {
 }
@@ -283,25 +278,26 @@ nsSVGFilterResource::nsSVGFilterResource(nsSVGFilterInstance* aInstance):
 nsSVGFilterResource::~nsSVGFilterResource()
 {
   ReleaseTarget();
-  ReleaseSource();
 }
 
 nsresult
 nsSVGFilterResource::AcquireSourceImage(nsIDOMSVGAnimatedString* aIn,
                                         nsSVGFE* aFilter, PRUint8** aSourceData)
 {
-  ReleaseSource();
-  nsRect defaultRect;
   aIn->GetAnimVal(mInput);
-  mInstance->LookupRegion(mInput, &defaultRect);
 
-  mInstance->GetFilterSubregion(aFilter, defaultRect, &mRect);
-  mInstance->LookupImage(mInput, getter_AddRefs(mSourceImage));
-  if (!mSourceImage) {
+  nsRect defaultRect;
+  cairo_surface_t *surface;
+  mInstance->LookupImage(mInput, &surface, &defaultRect);
+  if (!surface) {
     return NS_ERROR_FAILURE;
   }
-  mSourceImage->Lock();
-  mSourceImage->GetData(&mSourceData, &mLength, &mStride);
+
+  mInstance->GetFilterSubregion(aFilter, defaultRect, &mRect);
+
+  mSourceData = cairo_image_surface_get_data(surface);
+  mStride = cairo_image_surface_get_stride(surface);
+
   *aSourceData = mSourceData;
   return NS_OK;
 }
@@ -311,26 +307,18 @@ nsSVGFilterResource::AcquireTargetImage(nsIDOMSVGAnimatedString* aResult,
                                         PRUint8** aTargetData)
 {
   aResult->GetAnimVal(mResult);
-  mInstance->GetImage(getter_AddRefs(mTargetImage));
+  mTargetImage = mInstance->GetImage();
   if (!mTargetImage) {
     return NS_ERROR_FAILURE;
   }
-  mTargetImage->Lock();
-  mTargetImage->GetData(&mTargetData, &mLength, &mStride);
-  mTargetImage->GetWidth(&mWidth);
-  mTargetImage->GetHeight(&mHeight);
+
+  mTargetData = cairo_image_surface_get_data(mTargetImage);
+  mStride = cairo_image_surface_get_stride(mTargetImage);
+  mWidth = cairo_image_surface_get_width(mTargetImage);
+  mHeight = cairo_image_surface_get_height(mTargetImage);
+
   *aTargetData = mTargetData;
   return NS_OK;
-}
-
-void
-nsSVGFilterResource::ReleaseSource()
-{
-  if (!mSourceImage) {
-    return;
-  }
-  mSourceImage->Unlock();
-  mSourceImage = nsnull;
 }
 
 void
@@ -340,9 +328,7 @@ nsSVGFilterResource::ReleaseTarget()
     return;
   }
   FixupTarget();
-  mTargetImage->Unlock();
-  mInstance->DefineImage(mResult, mTargetImage);
-  mInstance->DefineRegion(mResult, mRect);
+  mInstance->DefineImage(mResult, mTargetImage, mRect);
   mTargetImage = nsnull;
 }
 

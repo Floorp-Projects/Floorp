@@ -40,10 +40,12 @@
 
 
 %{C++
+#include "cairo.h"
 struct nsRect;
 %}
 
 [ref] native nsRectRef(nsRect);
+[ptr] native cairo_surface_t(cairo_surface_t);
 
 typedef PRUint32 nscolor;
 
@@ -69,7 +71,7 @@ interface nsISVGRendererSurface;
  * Mozilla-native rendering object with a call to
  * nsISVGRenderer::createCanvas().
  */
-[uuid(81eb1fc4-ea69-45dd-b31e-fe2cbcab04a5)]
+[uuid(e20d952c-ed16-4beb-a3f5-e995f0688bff)]
 interface nsISVGRendererCanvas : nsISupports
 {
   /**
@@ -136,6 +138,7 @@ interface nsISVGRendererCanvas : nsISupports
    *               or as an absolute surface.
    */
   void pushSurface(in nsISVGRendererSurface surface, in boolean isSubSurface);
+  void pushCairoSurface(in cairo_surface_t surface, in boolean isSubSurface);
   void popSurface();
 
   /**
@@ -152,7 +155,7 @@ interface nsISVGRendererCanvas : nsISupports
   void compositeSurfaceWithMask(in nsISVGRendererSurface surface,
                                 in nsISVGRendererSurface mask);
 
-  void compositeSurfaceMatrix(in nsISVGRendererSurface surface,
+  void compositeSurfaceMatrix(in cairo_surface_t surface,
                               in nsIDOMSVGMatrix canvasTM,
                               in float opacity);
 };

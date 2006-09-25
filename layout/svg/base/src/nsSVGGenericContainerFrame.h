@@ -42,7 +42,6 @@
 #include "nsIDOMSVGGElement.h"
 #include "nsPresContext.h"
 #include "nsSVGContainerFrame.h"
-#include "nsISVGRendererCanvas.h"
 #include "nsLayoutAtoms.h"
 
 typedef nsSVGDisplayContainerFrame nsSVGGenericContainerFrameBase;
