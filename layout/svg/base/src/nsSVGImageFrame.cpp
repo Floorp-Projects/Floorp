@@ -295,16 +295,8 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
       canvas->SetClipRect(ctm, x, y, width, height);
     }
 
-    nsCOMPtr<nsISVGCairoCanvas> cairoCanvas = do_QueryInterface(canvas);
-    cairo_matrix_t matrix = nsSVGUtils::ConvertSVGMatrixToCairo(fini);
-    cairoCanvas->AdjustMatrixForInitialTransform(&matrix);
-    cairo_t *ctx = cairoCanvas->GetContext();
-
-    cairo_save(ctx);
-    cairo_set_matrix(ctx, &matrix);
-    cairo_set_source_surface(ctx, mSurface, 0.0, 0.0);
-    cairo_paint_with_alpha(ctx, mStyleContext->GetStyleDisplay()->mOpacity);
-    cairo_restore(ctx);
+    canvas->CompositeSurfaceMatrix(mSurface, fini,
+                                   mStyleContext->GetStyleDisplay()->mOpacity);
 
     if (GetStyleDisplay()->IsScrollableOverflow())
       canvas->PopClip();
