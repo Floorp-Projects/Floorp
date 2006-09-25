@@ -44,9 +44,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE          = lightning
 DIRS = \
-    $(topsrcdir)/calendar/lightning \
-    $(topsrcdir)/calendar/prototypes/wcap/wcap-enabler \
-    $(topsrcdir)/calendar/prototypes/wcap/lightning-wcap \
+    ../../calendar/lightning \
+    ../../calendar/prototypes/wcap/wcap-enabler \
+    ../../calendar/prototypes/wcap/lightning-wcap \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk
