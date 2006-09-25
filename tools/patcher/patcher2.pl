@@ -67,10 +67,12 @@ autoflush STDERR 1;
 ##
 
 use vars qw($PID_FILE
-            $DEFAULT_HASH_TYPE);
+            $DEFAULT_HASH_TYPE
+            $DEFAULT_CVSROOT );
 
 $PID_FILE = 'patcher2.pid';
 $DEFAULT_HASH_TYPE = 'SHA1';
+$DEFAULT_CVSROOT = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
 
 sub main {
     Startup();
@@ -155,7 +157,7 @@ sub BuildTools {
 
     { # Create and execute CVS checkout command.
         printf("Checking out source code... \n");
-        my $cvsroot = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
+        my $cvsroot = $ENV{'CVSROOT'} || $DEFAULT_CVSROOT;
         my $checkout  = "cvs -d $cvsroot co mozilla/client.mk";
         my $rv = RunShellCommand(command => $checkout, output => 1);
         if ($rv->{'exit_value'} != 0) {
