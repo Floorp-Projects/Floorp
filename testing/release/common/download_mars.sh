@@ -44,5 +44,7 @@ download_mars () {
 	      return 1
       fi
 
+      cp update/$patch_type.mar update/update.mar
+
     done
 }
