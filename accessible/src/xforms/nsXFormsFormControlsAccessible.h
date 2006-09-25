@@ -74,8 +74,6 @@ public:
 class nsXFormsTriggerAccessible : public nsXFormsAccessible
 {
 public:
-  enum { eAction_Click = 0 };
-
   nsXFormsTriggerAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell);
 
   NS_IMETHOD GetRole(PRUint32 *aRole);
@@ -85,6 +83,56 @@ public:
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 aIndex);
 };
+
+/**
+ * Accessible object for xforms:input and xforms:textarea.
+ *
+ * XXX: nsXFormsInputAccessible should implement nsIAccessibleEditableText
+ *   interface.
+ */
+
+class nsXFormsInputAccessible : public nsXFormsAccessible
+{
+public:
+  nsXFormsInputAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell);
+
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+  NS_IMETHOD GetExtState(PRUint32 *aState);
+  NS_IMETHOD GetNumActions(PRUint8 *aCount);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
+  NS_IMETHOD DoAction(PRUint8 aIndex);
+};
+
+/**
+ * Accessible object for xforms:input[type="xsd:boolean"].
+ */
+
+class nsXFormsInputBooleanAccessible : public nsXFormsAccessible
+{
+public:
+  nsXFormsInputBooleanAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell);
+
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+  NS_IMETHOD GetState(PRUint32 *aState);
+  NS_IMETHOD GetNumActions(PRUint8 *aCount);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
+  NS_IMETHOD DoAction(PRUint8 aIndex);
+};
+
+/**
+ * Accessible object for xforms:secret.
+ */
+
+class nsXFormsSecretAccessible : public nsXFormsInputAccessible
+{
+public:
+  nsXFormsSecretAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell);
+
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+  NS_IMETHOD GetState(PRUint32 *aState);
+  NS_IMETHOD GetValue(nsAString& aValue);
+};
+
 
 /**
  * Accessible object for xforms:range.

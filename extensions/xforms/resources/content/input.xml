@@ -65,7 +65,12 @@
   <binding id="xformswidget-input-base"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
 
-    <implementation implements="nsIXFormsUIWidget">
+    <implementation implements="nsIXFormsUIWidget, nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsInput;
+        </getter>
+      </property>
 
       <method name="refresh">
         <body>
@@ -119,7 +124,13 @@
   <binding id="xformswidget-input-boolean-base"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
 
-    <implementation>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsInputBoolean;
+        </getter>
+      </property>
+
       <method name="refresh">
         <body>
           this.changed = false;

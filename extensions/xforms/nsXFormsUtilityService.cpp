@@ -43,6 +43,7 @@
 #include "nsIXFormsAccessors.h"
 #include "nsIXFormsRangeConditionAccessors.h"
 #include "nsIXFormsRangeAccessors.h"
+#include "nsIXFormsUIWidget.h"
 #include "nsXFormsUtils.h"
 
 NS_IMPL_ISUPPORTS1(nsXFormsUtilityService, nsIXFormsUtilityService)
@@ -54,6 +55,11 @@ NS_ENSURE_TRUE(delegate, NS_ERROR_FAILURE);\
 nsCOMPtr<nsIXFormsAccessors> accessors;\
 delegate->GetXFormsAccessors(getter_AddRefs(accessors));\
 NS_ENSURE_TRUE(accessors, NS_ERROR_FAILURE);
+
+#define GET_XFORMS_UIWIDGET \
+NS_ENSURE_ARG_POINTER(aElement);\
+nsCOMPtr<nsIXFormsUIWidget> widget(do_QueryInterface(aElement));\
+NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);\
 
 NS_IMETHODIMP
 nsXFormsUtilityService::IsReadonly(nsIDOMNode *aElement, PRBool *aState)
@@ -118,8 +124,16 @@ nsXFormsUtilityService::IsInRange(nsIDOMNode *aElement, PRUint32 *aState)
 NS_IMETHODIMP
 nsXFormsUtilityService::GetValue(nsIDOMNode *aElement, nsAString& aValue)
 {
-  GET_XFORMS_ACCESSORS
-  return accessors->GetValue(aValue);
+  GET_XFORMS_UIWIDGET
+  return widget->GetCurrentValue(aValue);
+}
+
+NS_IMETHODIMP
+nsXFormsUtilityService::Focus(nsIDOMNode *aElement)
+{
+  GET_XFORMS_UIWIDGET
+  PRBool advanced = PR_FALSE;
+  return widget->Focus(&advanced);
 }
 
 NS_IMETHODIMP

@@ -48,10 +48,10 @@
 #endif
 
 /* nsIXFormsUtilityService */
-#define NS_IXFORMSUTILITYSERVICE_IID_STR "975fb01f-27a7-4dd2-a598-d00109538594"
+#define NS_IXFORMSUTILITYSERVICE_IID_STR "aad08d14-dff8-4acb-bcd0-b6376295c82f"
 #define NS_IXFORMSUTILITYSERVICE_IID \
-{ 0x975fb01f, 0x27a7, 0x4dd2, \
-  { 0xa5, 0x98, 0xd0, 0x1, 0x9, 0x53, 0x85, 0x94 } }
+{ 0xaad08d14, 0xdff8, 0x4acb, \
+  { 0xbc, 0xd0, 0xb6, 0x37, 0x62, 0x95, 0xc8, 0x2f } }
 
 /**
  * Private interface implemented by the nsXFormsUtilityService in XForms
@@ -100,6 +100,11 @@ public:
    * Return value of instance node that element is bound to.
    */
   NS_IMETHOD GetValue(nsIDOMNode *aElement, nsAString& aValue) = 0;
+
+  /**
+   * Set the focus to xforms element.
+   */
+  NS_IMETHOD Focus(nsIDOMNode *aElement) = 0;
 
   /**
    * Return @start attribute value of xforms:range element. Failure if

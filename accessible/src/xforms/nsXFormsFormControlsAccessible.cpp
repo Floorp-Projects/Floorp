@@ -143,6 +143,184 @@ nsXFormsTriggerAccessible::DoAction(PRUint8 aIndex)
   return NS_ERROR_INVALID_ARG;
 }
 
+// nsXFormsInputAccessible
+
+nsXFormsInputAccessible::
+  nsXFormsInputAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell):
+  nsXFormsAccessible(aNode, aShell)
+{
+}
+
+NS_IMETHODIMP
+nsXFormsInputAccessible::GetRole(PRUint32 *aRole)
+{
+  NS_ENSURE_ARG_POINTER(aRole);
+
+  *aRole = ROLE_ENTRY;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsInputAccessible::GetExtState(PRUint32 *aExtState)
+{
+  NS_ENSURE_ARG_POINTER(aExtState);
+
+  *aExtState = 0;
+
+  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
+  nsresult rv = nsXFormsAccessible::GetExtState(aExtState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool state = PR_FALSE;
+  rv = sXFormsService->IsReadonly(mDOMNode, &state);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!state) {
+    rv = sXFormsService->IsRelevant(mDOMNode, &state);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (state) {
+      *aExtState |= EXT_STATE_EDITABLE | EXT_STATE_SELECTABLE_TEXT;
+    }
+  }
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (content->NodeInfo()->Equals(nsAccessibilityAtoms::textarea))
+    *aExtState |= EXT_STATE_MULTI_LINE;
+  else
+    *aExtState |= EXT_STATE_SINGLE_LINE;
+}
+
+NS_IMETHODIMP
+nsXFormsInputAccessible::GetNumActions(PRUint8* aCount)
+{
+  NS_ENSURE_ARG_POINTER(aCount);
+
+  *aCount = 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsInputAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+{
+  if (aIndex != eAction_Click)
+    return NS_ERROR_INVALID_ARG;
+
+  nsAccessible::GetTranslatedString(NS_LITERAL_STRING("activate"), aName);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsInputAccessible::DoAction(PRUint8 aIndex)
+{
+  if (aIndex != eAction_Click)
+    return NS_ERROR_INVALID_ARG;
+
+  return sXFormsService->Focus(mDOMNode);
+}
+
+// nsXFormsInputBooleanAccessible
+
+nsXFormsInputBooleanAccessible::
+  nsXFormsInputBooleanAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell):
+  nsXFormsAccessible(aNode, aShell)
+{
+}
+
+NS_IMETHODIMP
+nsXFormsInputBooleanAccessible::GetRole(PRUint32 *aRole)
+{
+  NS_ENSURE_ARG_POINTER(aRole);
+
+  *aRole = ROLE_CHECKBUTTON;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsInputBooleanAccessible::GetState(PRUint32 *aState)
+{
+  nsresult rv = nsXFormsAccessible::GetState(aState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString value;
+  rv = sXFormsService->GetValue(mDOMNode, value);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (value.EqualsLiteral("true"))
+    *aState |= STATE_CHECKED;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsInputBooleanAccessible::GetNumActions(PRUint8 *aCount)
+{
+  NS_ENSURE_ARG_POINTER(aCount);
+
+  *aCount = 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsInputBooleanAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+{
+  if (aIndex != eAction_Click)
+    return NS_ERROR_INVALID_ARG;
+
+  nsAutoString value;
+  nsresult rv = sXFormsService->GetValue(mDOMNode, value);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (value.EqualsLiteral("true"))
+    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("uncheck"), aName);
+  else
+    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("check"), aName);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsInputBooleanAccessible::DoAction(PRUint8 aIndex)
+{
+  if (aIndex != eAction_Click)
+    return NS_ERROR_INVALID_ARG;
+
+  return DoCommand();
+}
+
+// nsXFormsSecretAccessible
+
+nsXFormsSecretAccessible::
+  nsXFormsSecretAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell):
+  nsXFormsInputAccessible(aNode, aShell)
+{
+}
+
+NS_IMETHODIMP
+nsXFormsSecretAccessible::GetRole(PRUint32 *aRole)
+{
+  NS_ENSURE_ARG_POINTER(aRole);
+
+  *aRole = ROLE_PASSWORD_TEXT;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsSecretAccessible::GetState(PRUint32 *aState)
+{
+  nsresult rv = nsXFormsInputAccessible::GetState(aState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aState |= STATE_PROTECTED;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsSecretAccessible::GetValue(nsAString& aValue)
+{
+  return NS_ERROR_FAILURE;
+}
+
+
 // nsXFormsRangeAccessible
 
 nsXFormsRangeAccessible::

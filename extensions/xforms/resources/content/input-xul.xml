@@ -496,6 +496,14 @@
       <children/>
     </content>
 
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsSecret;
+        </getter>
+      </property>
+    </implementation>
+
     <handlers>
       <handler event="keypress" keycode="VK_RETURN">
         if (event.originalTarget == this.control) {

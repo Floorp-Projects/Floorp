@@ -627,6 +627,14 @@
       <html:input anonid="control" xbl:inherits="accesskey" type="password"/>
       <children/>
     </content>
+
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsSecret;
+        </getter>
+      </property>
+    </implementation>
   </binding>
 
   
