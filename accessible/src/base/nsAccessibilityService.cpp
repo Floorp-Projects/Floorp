@@ -1443,6 +1443,15 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XFormsTrigger:
       *aAccessible = new nsXFormsTriggerAccessible(aNode, weakShell);
       break;
+    case nsIAccessibleProvider::XFormsInput:
+      *aAccessible = new nsXFormsInputAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XFormsInputBoolean:
+      *aAccessible = new nsXFormsInputBooleanAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XFormsSecret:
+      *aAccessible = new nsXFormsSecretAccessible(aNode, weakShell);
+      break;
     case nsIAccessibleProvider::XFormsRange:
       *aAccessible = new nsXFormsRangeAccessible(aNode, weakShell);
       break;

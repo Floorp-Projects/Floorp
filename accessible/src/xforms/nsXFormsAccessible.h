@@ -70,6 +70,9 @@ public:
   NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
 
 protected:
+  // Used in GetActionName() methods.
+  enum { eAction_Click = 0 };
+
   // Returns value of first child xforms element by tagname that is bound to
   // instance node.
   nsresult GetBoundChildElementValue(const nsAString& aTagName,
