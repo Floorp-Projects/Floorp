@@ -373,7 +373,11 @@ static int jar_physical_inflate
   status = inflateInit2 (&zs, -MAX_WBITS);
 
   if (status != Z_OK)
+    {
+    PORT_Free (inbuf);
+    PORT_Free (outbuf);
     return JAR_ERR_GENERAL;
+    }
 
   if ((out = JAR_FOPEN (outpath, "wb")) != NULL)
     {
@@ -388,6 +392,9 @@ static int jar_physical_inflate
       if (JAR_FREAD (fp, inbuf, chunk) != chunk)
         {
         /* incomplete read */
+        JAR_FCLOSE (out);
+        PORT_Free (inbuf);
+        PORT_Free (outbuf);
         return JAR_ERR_CORRUPT;
         }
 
@@ -411,6 +418,9 @@ static int jar_physical_inflate
         if (status != Z_OK && status != Z_STREAM_END)
           {
           /* error during decompression */
+          JAR_FCLOSE (out);
+          PORT_Free (inbuf);
+          PORT_Free (outbuf);
           return JAR_ERR_CORRUPT;
           }
 
@@ -477,6 +487,7 @@ static int jar_inflate_memory
   if (status < 0)
     {
     /* error initializing zlib stream */
+    PORT_Free (outbuf);
     return JAR_ERR_GENERAL;
     }
 
@@ -491,6 +502,7 @@ static int jar_inflate_memory
   if (status != Z_OK && status != Z_STREAM_END)
     {
     /* error during deflation */
+    PORT_Free (outbuf);
     return JAR_ERR_GENERAL; 
     }
 
@@ -499,6 +511,7 @@ static int jar_inflate_memory
   if (status != Z_OK)
     {
     /* error during deflation */
+    PORT_Free (outbuf);
     return JAR_ERR_GENERAL;
     }
 
@@ -685,6 +698,7 @@ static int jar_extract_mf (JAR *jar, jarArch format, JAR_FILE fp, char *ext)
         if (num != phy->length)
           {
           /* corrupt archive file */
+          PORT_Free (manifest);
           return JAR_ERR_CORRUPT;
           }
 
@@ -695,11 +709,15 @@ static int jar_extract_mf (JAR *jar, jarArch format, JAR_FILE fp, char *ext)
           status = jar_inflate_memory ((unsigned int) phy->compression, &length,  phy->uncompressed_length, &manifest);
 
           if (status < 0)
+            {
+            PORT_Free (manifest);
             return status;
+            }
           }
         else if (phy->compression)
           {
           /* unsupported compression method */
+          PORT_Free (manifest);
           return JAR_ERR_CORRUPT;
           }
         else

@@ -142,6 +142,7 @@ int JAR_parse_manifest
     (JAR *jar, char ZHUGEP *raw_manifest, 
         long length, const char *path, const char *url)
   {
+  int filename_free = 0;
 
 #if defined(XP_WIN16)
     PORT_Assert( !IsBadHugeReadPtr(raw_manifest, length) );
@@ -155,6 +156,7 @@ int JAR_parse_manifest
     jar->filename = PORT_Strdup (path);
     if (jar->filename == NULL)
       return JAR_ERR_MEMORY;
+    filename_free = 1;
     }
 
   /* fill in the URL, if supplied. This is the place
@@ -164,7 +166,13 @@ int JAR_parse_manifest
     {
     jar->url = PORT_Strdup (url);
     if (jar->url == NULL)
+      {
+      if (filename_free)
+        {
+        PORT_Free (jar->filename);
+        }
       return JAR_ERR_MEMORY;
+      }
     }
 
   /* Determine what kind of file this is from the META-INF 
@@ -446,6 +454,7 @@ int jar_parse_any
     if (xp_HUGE_STRLEN (raw_manifest) >= SZ)
       {
       /* almost certainly nonsense */
+      PORT_Free (met);
       continue;
       }
 
@@ -481,6 +490,16 @@ int jar_parse_any
 
       if (!PORT_Strcasecmp (line, "SHA1-Digest") || !PORT_Strcasecmp (line, "SHA-Digest"))
         sf_sha1 = (char *) met->info;
+      }
+
+    if (type != jarTypeMF)
+      {
+      PORT_Free (met->header);
+      if (type != jarTypeSF)
+        {
+        PORT_Free (met->info);
+        }
+      PORT_Free (met);
       }
     }
 
@@ -628,10 +647,17 @@ int jar_parse_any
         /* metainfo (name, value) pair is now (line, x_info) */
 
         if ((met->header = PORT_Strdup (line)) == NULL)
+          {
+          PORT_Free (met);
           return JAR_ERR_MEMORY;
+          }
 
         if ((met->info = PORT_Strdup (x_info)) == NULL)
+          {
+          PORT_Free (met->header);
+          PORT_Free (met);
           return JAR_ERR_MEMORY;
+          }
 
         ADDITEM (jar->metainfo, jarTypeMeta, 
            x_name, met, sizeof (JAR_Metainfo));
@@ -657,7 +683,10 @@ int jar_parse_any
       PORT_Assert( binary_length == MD5_LENGTH );
 
       if (binary_length != MD5_LENGTH)
+        {
+        PORT_Free (dig);
         return JAR_ERR_CORRUPT;
+        }
 
       memcpy (dig->md5, binary_digest, MD5_LENGTH);
       dig->md5_status = jarHashPresent;
@@ -672,7 +701,10 @@ int jar_parse_any
       PORT_Assert( binary_length == SHA1_LENGTH );
 
       if (binary_length != SHA1_LENGTH)
+        {
+        PORT_Free (dig);
         return JAR_ERR_CORRUPT;
+        }
 
       memcpy (dig->sha1, binary_digest, SHA1_LENGTH);
       dig->sha1_status = jarHashPresent;
@@ -690,7 +722,10 @@ int jar_parse_any
       ADDITEM (signer->sf, jarTypeSF, x_name, dig, sizeof (JAR_Digest));
       }
     else
+      {
+      PORT_Free (dig);
       return JAR_ERR_ORDER;
+      }
 
     /* we're placing these calculated digests of manifest.mf 
        sections in a list where they can subsequently be forgotten */
@@ -1097,7 +1132,10 @@ int PR_CALLBACK JAR_cert_attribute
         if (*result)
           PORT_Memcpy (*result, cert->certKey.data, *length);
         else
+          {
+          JAR_close_database (certdb);
           return JAR_ERR_MEMORY;
+          }
         }
       JAR_close_database (certdb);
       }
@@ -1359,7 +1397,11 @@ static char *jar_choose_nickname (CERTCertificate *cert)
 #else
     if (CERT_FindCertByNickname (CERT_GetDefaultCertDB(), cert_cn_o) == NULL)
 #endif
+      {
+      PORT_Free (cert_cn_o);
       return cert_cn;
+      }
+    PORT_Free (cert_cn_o);
     }
 
   /* If all that failed, use the ugly nickname */
@@ -1452,6 +1494,7 @@ extern int PR_CALLBACK JAR_stash_cert
   if (newcert && newcert->isperm) 
     {
     /* already in permanant database */
+    JAR_close_database (certdb);
     return 0;
     }
 
