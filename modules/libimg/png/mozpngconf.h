@@ -39,7 +39,9 @@
 
 #define PNG_NO_GLOBAL_ARRAYS
 
-#define PNG_NO_INFO_IMAGE
+#ifndef MOZ_PNG_READ
+#define PNG_NO_READ_SUPPORTED
+#endif
 #define PNG_NO_READ_BACKGROUND
 #define PNG_NO_READ_DITHER
 #define PNG_NO_READ_INVERT
@@ -64,13 +66,14 @@
 #define PNG_NO_READ_tIME
 #define PNG_NO_READ_UNKNOWN_CHUNKS
 #define PNG_NO_READ_USER_CHUNKS
-#define PNG_NO_USER_MEM
 #define PNG_NO_READ_EMPTY_PLTE
-#define PNG_NO_FIXED_POINT_SUPPORTED
 #define PNG_NO_READ_OPT_PLTE
-#define PNG_NO_MNG_FEATURES
+#define PNG_NO_READ_STRIP_ALPHA
+#define PNG_NO_READ_oFFs
 
-#ifdef MOZ_PNG_WRITE
+#ifndef MOZ_PNG_WRITE
+#define PNG_NO_WRITE_SUPPORTED
+#else
 #define PNG_NO_WRITE_BACKGROUND
 #define PNG_NO_WRITE_DITHER
 #define PNG_NO_WRITE_INVERT
@@ -84,8 +87,11 @@
 #define PNG_NO_WRITE_USER_TRANSFORM
 #define PNG_NO_WRITE_bKGD
 #define PNG_NO_WRITE_cHRM
+#define PNG_NO_WRITE_gAMA
+#define PNG_NO_WRITE_sRGB
 #define PNG_NO_WRITE_hIST
 #define PNG_NO_WRITE_iCCP
+#define PNG_NO_WRITE_oFFs
 #define PNG_NO_WRITE_pCAL
 #define PNG_NO_WRITE_pHYs
 #define PNG_NO_WRITE_sBIT
@@ -97,20 +103,22 @@
 #define PNG_NO_WRITE_USER_CHUNKS
 #define PNG_NO_WRITE_EMPTY_PLTE
 #define PNG_NO_WRITE_OPT_PLTE
-#else
-#define PNG_NO_WRITE_SUPPORTED
+#define PNG_NO_WRITE_WEIGHTED_FILTER
+#define PNG_NO_WRITE_INTERLACING_SUPPORTED  /* effective libpng-1.3.0 */
 #endif
 
-#define PNG_NO_READ_STRIP_ALPHA
+#define PNG_NO_INFO_IMAGE
+#define PNG_NO_USER_MEM
+#define PNG_NO_FIXED_POINT_SUPPORTED
+#define PNG_NO_MNG_FEATURES
 #define PNG_NO_USER_TRANSFORM_PTR
-#define PNG_NO_READ_oFFs
 #define PNG_NO_HANDLE_AS_UNKNOWN
 #define PNG_NO_CONSOLE_IO
 #define PNG_NO_ZALLOC_ZERO
 #define PNG_NO_ERROR_NUMBERS
 #define PNG_NO_EASY_ACCESS
-
 #define PNG_NO_SEQUENTIAL_READ_SUPPORTED
+
 
 /* Mangle names of exported libpng functions so different libpng versions
    can coexist. It is recommended that if you do this, you give your
@@ -429,6 +437,25 @@
 #define png_write_rows                  MOZ_PNG_write_rows
 #define png_zalloc                      MOZ_PNG_zalloc
 #define png_zfree                       MOZ_PNG_zfree
+#define png_write_data                  MOZ_PNG_write_data
+#define png_default_write_data          MOZ_PNG_default_write_data
+#define png_flush                       MOZ_PNG_flush
+#define png_write_sig                   MOZ_PNG_write_sig
+#define png_write_IHDR                  MOZ_PNG_write_IHDR
+#define png_write_IDAT                  MOZ_PNG_write_IDAT
+#define png_write_gAMA                  MOZ_PNG_write_gAMA
+#define png_write_sRGB                  MOZ_PNG_write_sRGB
+#define png_write_PLTE                  MOZ_PNG_write_PLTE
+#define png_write_tRNS                  MOZ_PNG_write_tRNS
+#define png_write_oFFs                  MOZ_PNG_write_oFFs
+#define png_write_IEND                  MOZ_PNG_write_IEND
+#define png_write_init                  MOZ_PNG_write_init
+#define png_write_start_row             MOZ_PNG_write_trans
+#define png_do_write_transformations    MOZ_PNG_do_write_trans
+#define png_write_find_filter           MOZ_PNG_write_find_filter
+#define png_write_destroy               MOZ_PNG_write_destroy
+#define png_write_finish_row            MOZ_PNG_write_finish_row
+#define png_write_filtered_row          MOZ_PNG_write_filtered_row
 
 /* libpng-1.2.6 additions */
 #define png_convert_size                MOZ_PNG_convert_size
@@ -439,5 +466,11 @@
 
 /* libpng-1.2.7 addition */
 #define png_set_add_alpha               MOZ_PNG_set_add_alpha
+
+/* libpng-1.2.9 additions */
+#define png_set_expand_gray_1_2_4_to_8  MOZ_PNG_set_x_g_124_to_8
+#define png_save_int_32                 MOZ_PNG_save_int_32
+#define png_save_uint_16                MOZ_PNG_save_uint_16
+#define png_save_uint_32                MOZ_PNG_save_uint_32
 
 #endif

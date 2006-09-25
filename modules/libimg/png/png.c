@@ -1,9 +1,9 @@
 
 /* png.c - location for general purpose libpng functions
  *
- * libpng version 1.2.7 - September 12, 2004
+ * Last changed in libpng 1.2.9 April 14, 2006
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2004 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2006 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  */
@@ -13,7 +13,7 @@
 #include "png.h"
 
 /* Generate a compiler error if there is an old png.h in the search path. */
-typedef version_1_2_7 Your_png_h_is_not_version_1_2_7;
+typedef version_1_2_12 Your_png_h_is_not_version_1_2_12;
 
 /* Version information for C files.  This had better match the version
  * string defined in png.h.  */
@@ -22,9 +22,12 @@ typedef version_1_2_7 Your_png_h_is_not_version_1_2_7;
 /* png_libpng_ver was changed to a function in version 1.0.5c */
 const char png_libpng_ver[18] = PNG_LIBPNG_VER_STRING;
 
+#ifdef PNG_READ_SUPPORTED
+
 /* png_sig was changed to a function in version 1.0.5c */
 /* Place to hold the signature string for a PNG file. */
 const png_byte FARDATA png_sig[8] = {137, 80, 78, 71, 13, 10, 26, 10};
+#endif /* PNG_READ_SUPPORTED */
 
 /* Invoke global declarations for constant strings for known chunk types */
 PNG_IHDR;
@@ -49,6 +52,7 @@ PNG_tIME;
 PNG_tRNS;
 PNG_zTXt;
 
+#ifdef PNG_READ_SUPPORTED
 /* arrays to facilitate easy interlacing - use pass (0 - 6) as index */
 
 /* start of interlace block */
@@ -80,7 +84,8 @@ const int FARDATA png_pass_mask[] = {0x80, 0x08, 0x88, 0x22, 0xaa, 0x55, 0xff};
 const int FARDATA png_pass_dsp_mask[]
    = {0xff, 0x0f, 0xff, 0x33, 0xff, 0x55, 0xff};
 
-#endif
+#endif /* PNG_READ_SUPPORTED */
+#endif /* PNG_USE_GLOBAL_ARRAYS */
 
 /* Tells libpng that we have already handled the first "num_bytes" bytes
  * of the PNG file signature.  If the PNG data is embedded into another
@@ -88,6 +93,7 @@ const int FARDATA png_pass_dsp_mask[]
  * or write any of the magic bytes before it starts on the IHDR.
  */
 
+#ifdef PNG_READ_SUPPORTED
 void PNGAPI
 png_set_sig_bytes(png_structp png_ptr, int num_bytes)
 {
@@ -113,10 +119,10 @@ png_sig_cmp(png_bytep sig, png_size_t start, png_size_t num_to_check)
    if (num_to_check > 8)
       num_to_check = 8;
    else if (num_to_check < 1)
-      return (0);
+      return (-1);
 
    if (start > 7)
-      return (0);
+      return (-1);
 
    if (start + num_to_check > 8)
       num_to_check = 8 - start;
@@ -124,6 +130,7 @@ png_sig_cmp(png_bytep sig, png_size_t start, png_size_t num_to_check)
    return ((int)(png_memcmp(&sig[start], &png_signature[start], num_to_check)));
 }
 
+#if defined(PNG_1_0_X) || defined(PNG_1_2_X)
 /* (Obsolete) function to check signature bytes.  It does not allow one
  * to check a partial signature.  This function might be removed in the
  * future - use png_sig_cmp().  Returns true (nonzero) if the file is a PNG.
@@ -133,7 +140,10 @@ png_check_sig(png_bytep sig, int num)
 {
   return ((int)!png_sig_cmp(sig, (png_size_t)0, (png_size_t)num));
 }
+#endif
+#endif /* PNG_READ_SUPPORTED */
 
+#if defined(PNG_READ_SUPPORTED) || defined(PNG_WRITE_SUPPORTED)
 /* Function to allocate memory for zlib and clear it to 0. */
 #ifdef PNG_1_0_X
 voidpf PNGAPI
@@ -279,6 +289,7 @@ png_destroy_info_struct(png_structp png_ptr, png_infopp info_ptr_ptr)
  * and applications using it are urged to use png_create_info_struct()
  * instead.
  */
+#if defined(PNG_1_0_X) || defined(PNG_1_2_X)
 #undef png_info_init
 void PNGAPI
 png_info_init(png_infop info_ptr)
@@ -286,6 +297,7 @@ png_info_init(png_infop info_ptr)
    /* We only come here via pre-1.0.12-compiled applications */
    png_info_init_3(&info_ptr, 0);
 }
+#endif
 
 void PNGAPI
 png_info_init_3(png_infopp ptr_ptr, png_size_t png_info_struct_size)
@@ -590,6 +602,7 @@ png_info_destroy(png_structp png_ptr, png_infop info_ptr)
 
    png_info_init_3(&info_ptr, png_sizeof(png_info));
 }
+#endif /* defined(PNG_READ_SUPPORTED) || defined(PNG_WRITE_SUPPORTED) */
 
 /* This function returns a pointer to the io_ptr associated with the user
  * functions.  The application should free any memory associated with this
@@ -601,6 +614,7 @@ png_get_io_ptr(png_structp png_ptr)
    return (png_ptr->io_ptr);
 }
 
+#if defined(PNG_READ_SUPPORTED) || defined(PNG_WRITE_SUPPORTED)
 #if !defined(PNG_NO_STDIO)
 /* Initialize the default input/output functions for the PNG file.  If you
  * use your own read or write routines, you can call either png_set_read_fn()
@@ -673,13 +687,14 @@ png_sig_bytes(void)
    return ((png_bytep)"\211\120\116\107\015\012\032\012");
 }
 #endif
+#endif /* defined(PNG_READ_SUPPORTED) || defined(PNG_WRITE_SUPPORTED) */
 
 png_charp PNGAPI
 png_get_copyright(png_structp png_ptr)
 {
    if (&png_ptr != NULL)  /* silence compiler warning about unused png_ptr */
-   return ((png_charp) "\n libpng version 1.2.7 - September 12, 2004\n\
-   Copyright (c) 1998-2004 Glenn Randers-Pehrson\n\
+   return ((png_charp) "\n libpng version 1.2.12 - June 27, 2006\n\
+   Copyright (c) 1998-2006 Glenn Randers-Pehrson\n\
    Copyright (c) 1996-1997 Andreas Dilger\n\
    Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.\n");
    return ((png_charp) "");
@@ -720,6 +735,7 @@ png_get_header_version(png_structp png_ptr)
    return ((png_charp) "");
 }
 
+#if defined(PNG_READ_SUPPORTED) || defined(PNG_WRITE_SUPPORTED)
 #ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
 int PNGAPI
 png_handle_as_unknown(png_structp png_ptr, png_bytep chunk_name)
@@ -743,6 +759,7 @@ png_reset_zstream(png_structp png_ptr)
 {
    return (inflateReset(&png_ptr->zstream));
 }
+#endif /* defined(PNG_READ_SUPPORTED) || defined(PNG_WRITE_SUPPORTED) */
 
 /* This function was added to libpng-1.0.7 */
 png_uint_32 PNGAPI
@@ -753,6 +770,7 @@ png_access_version_number(void)
 }
 
 
+#if defined(PNG_READ_SUPPORTED)
 #if !defined(PNG_1_0_X)
 #if defined(PNG_ASSEMBLER_CODE_SUPPORTED)
     /* GRR:  could add this:   && defined(PNG_MMX_CODE_SUPPORTED) */
@@ -812,7 +830,9 @@ png_mmx_support(void)
 }
 #endif
 #endif /* PNG_1_0_X */
+#endif /* PNG_READ_SUPPORTED */
 
+#if defined(PNG_READ_SUPPORTED) || defined(PNG_WRITE_SUPPORTED)
 #ifdef PNG_SIZE_T
 /* Added at libpng version 1.2.6 */
    PNG_EXTERN png_size_t PNGAPI png_convert_size PNGARG((size_t size));
@@ -824,3 +844,4 @@ png_convert_size(size_t size)
   return ((png_size_t)size);
 }
 #endif /* PNG_SIZE_T */
+#endif /* defined(PNG_READ_SUPPORTED) || defined(PNG_WRITE_SUPPORTED) */
