@@ -347,11 +347,13 @@ calRecurrenceInfo.prototype = {
         try {
             var duration = this.mBaseItem.duration.clone();
             duration.isNegative = true;
+            searchStart.isDate = false; // workaround for UTC+ timezones
             searchStart.addDuration(duration);
         } catch(ex) {
             dump("recurrence tweaking exception:"+ex+'\n');
         }
 
+        // workaround for UTC- timezones
         var rangeEnd = aRangeEnd;
         if (rangeEnd && rangeEnd.isDate) {
             rangeEnd = aRangeEnd.clone();
