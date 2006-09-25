@@ -99,10 +99,10 @@ protected:
 
   // helper to set the style of <mi> which has to be italic or normal
   // depending on its textual content
-  PRBool SetTextStyle(nsPresContext* aPresContext);
+  PRBool SetTextStyle();
 
   // helper to set the quotes of <ms>
-  void SetQuotes(nsPresContext* aPresContext);
+  void SetQuotes();
 };
 
 #endif /* nsMathMLTokentFrame_h___ */

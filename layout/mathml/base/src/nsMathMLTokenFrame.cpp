@@ -112,7 +112,7 @@ nsMathMLTokenFrame::SetInitialChildList(nsIAtom*        aListName,
   if (NS_FAILED(rv))
     return rv;
 
-  SetQuotes(GetPresContext());
+  SetQuotes();
   ProcessTextData(PR_FALSE);
   return rv;
 }
@@ -250,7 +250,7 @@ nsMathMLTokenFrame::AttributeChanged(PRInt32         aNameSpaceID,
 {
   if (nsMathMLAtoms::lquote_ == aAttribute ||
       nsMathMLAtoms::rquote_ == aAttribute) {
-    SetQuotes(GetPresContext());
+    SetQuotes();
   }
 
   return nsMathMLContainerFrame::
@@ -261,7 +261,7 @@ void
 nsMathMLTokenFrame::ProcessTextData(PRBool aComputeStyleChange)
 {
   // see if the style changes from normal to italic or vice-versa
-  if (!SetTextStyle(GetPresContext()))
+  if (!SetTextStyle())
     return;
 
   // has changed but it doesn't have to be reflected straightaway
@@ -284,7 +284,7 @@ nsMathMLTokenFrame::ProcessTextData(PRBool aComputeStyleChange)
 // normal (this function will also query attributes from the mstyle hierarchy)
 
 PRBool
-nsMathMLTokenFrame::SetTextStyle(nsPresContext* aPresContext)
+nsMathMLTokenFrame::SetTextStyle()
 {
   if (mContent->Tag() != nsMathMLAtoms::mi_)
     return PR_FALSE;
@@ -335,8 +335,7 @@ nsMathMLTokenFrame::SetTextStyle(nsPresContext* aPresContext)
 // We also check that we are not relying on null pointers...
 
 static void
-SetQuote(nsPresContext* aPresContext, 
-         nsIFrame*       aFrame, 
+SetQuote(nsIFrame*       aFrame, 
          nsString&       aValue)
 {
   nsIFrame* textFrame;
@@ -358,7 +357,7 @@ SetQuote(nsPresContext* aPresContext,
 }
 
 void
-nsMathMLTokenFrame::SetQuotes(nsPresContext* aPresContext)
+nsMathMLTokenFrame::SetQuotes()
 {
   if (mContent->Tag() != nsMathMLAtoms::ms_)
     return;
@@ -377,11 +376,11 @@ nsMathMLTokenFrame::SetQuotes(nsPresContext* aPresContext)
   // lquote
   if (GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::lquote_, value)) {
-    SetQuote(aPresContext, leftFrame, value);
+    SetQuote(leftFrame, value);
   }
   // rquote
   if (GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::rquote_, value)) {
-    SetQuote(aPresContext, rightFrame, value);
+    SetQuote(rightFrame, value);
   }
 }
