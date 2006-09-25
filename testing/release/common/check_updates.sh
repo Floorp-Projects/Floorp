@@ -31,12 +31,24 @@ check_updates () {
           ;;
   esac
 
+  if [ -f update/update.status ]; then rm update/update.status; fi
+  if [ -f update/update.log ]; then rm update/update.log; fi
+
   if [ -d source/$platform_dirname ]; then
     cd source/$platform_dirname;
     $HOME/bin/updater ../../update 0
     cd ../..
   else
     echo "FAIL: no dir in source/$platform_dirname" |tee /dev/stderr
+    return 1
+  fi
+
+  cat update/update.log
+  update_status=`cat update/update.status`
+
+  if [ "$update_status" != "succeeded" ]
+  then
+    echo "FAIL: update status was not succeeded: $update_status"
     return 1
   fi
   
