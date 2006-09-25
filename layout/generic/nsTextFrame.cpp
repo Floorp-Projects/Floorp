@@ -4427,14 +4427,15 @@ nsTextFrame::GetPointFromOffset(nsPresContext* aPresContext,
     else
     {
       PRInt32 totalLength = mContent->TextLength(); // length up to the last-in-flow frame
-      if ((hitLength == textLength) && (inOffset = mContentLength) &&
+      if ((hitLength == textLength) && (inOffset == mContentLength) &&
           (mContentOffset + mContentLength == totalLength)) {
         // no need to re-measure when at the end of the last-in-flow
       }
       else
         inRendContext->GetWidth(paintBuffer.mBuffer, hitLength, width);
     }
-    if ((hitLength == textLength) && (TEXT_TRIMMED_WS & mState)) {
+    if ((hitLength == textLength && inOffset > 0 && ip[inOffset] == ip[inOffset-1])
+        && (TEXT_TRIMMED_WS & mState)) {
       //
       // Offset must be after a space that has
       // been trimmed off the end of the frame.
