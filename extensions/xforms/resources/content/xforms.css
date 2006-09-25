@@ -215,8 +215,16 @@ xul|*:root output[mozType|type="http://www.w3.org/2001/XMLSchema#base64Binary"][
 }
 
 /* range widgets */
-range {
-  -moz-binding: url('chrome://xforms/content/range.xml#xformswidget-range');
+html|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#decimal"],
+html|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#float"],
+html|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#double"] {
+  -moz-binding: url('chrome://xforms/content/range-xhtml.xml#xformswidget-range');
+}
+
+html|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#decimal"] html|span[mozType|slider],
+html|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#float"] html|span[mozType|slider],
+html|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#double"] html|span[mozType|slider] {
+  -moz-binding: url('chrome://xforms/content/widgets-xhtml.xml#slider');
 }
 
 /* input widgets */

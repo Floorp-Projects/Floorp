@@ -168,7 +168,8 @@
 
     <!-- private -->
       <constructor>
-        this.delegate.widgetAttached();
+        if (!this.hasAttributeNS(this.MOZTYPE_NS, "deferredrefresh"))
+          this.delegate.widgetAttached();
       </constructor>
 
       <destructor>

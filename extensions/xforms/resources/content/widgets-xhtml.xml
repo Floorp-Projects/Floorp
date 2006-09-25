@@ -371,7 +371,6 @@
       </method>
 
     <!-- private -->
-
       <method name="setMin">
         <parameter name="aValue"/>
         <parameter name="aRefresh"/>
@@ -499,7 +498,10 @@
       <method name="drawSlider">
         <parameter name="aPos"/>
         <body>
+        <![CDATA[
           var boxobj = this.sliderController;
+          if (boxobj.barHeight <= 0 || boxobj.barWidth <=0)
+            return;
 
           this.context.save();
           this.context.lineWidth = 1;
@@ -523,6 +525,7 @@
           this.context.fill();
 
           this.context.restore();
+        ]]>
         </body>
       </method>
 
@@ -530,7 +533,10 @@
       <method name="eraseSlider">
         <parameter name="aPos"/>
         <body>
+        <![CDATA[
           var boxobj = this.sliderController;
+          if (boxobj.barHeight <= 0 || boxobj.barWidth <= 0)
+            return;
 
           // clear old slider
           this.context.
@@ -547,6 +553,7 @@
           mid = Math.round(boxobj.barHeight / 2);
           this.context.fillRect(boxobj.barMargin, mid - 1, boxobj.barWidth, 3);
           this.context.strokeRect(boxobj.barMargin, mid - 1, boxobj.barWidth, 3);
+        ]]>
         </body>
       </method>
 
@@ -559,6 +566,9 @@
           this.context.strokeStyle = this.strokeStyle;
 
           var boxobj = this.sliderController;
+          if (boxobj.barHeight <= 0 || boxobj.barWidth <=0)
+            return;
+
           var mid = Math.round(boxobj.barHeight / 2);
           this.context.fillRect(boxobj.barMargin, mid - 1, boxobj.barWidth, 3);
           this.context.strokeRect(boxobj.barMargin, mid - 1, boxobj.barWidth, 3);
