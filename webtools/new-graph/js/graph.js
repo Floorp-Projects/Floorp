@@ -65,7 +65,8 @@ function loadingDone() {
     Tinderbox = new TinderboxData();
     Tinderbox.init();
 
-    Bonsai = new BonsaiService();
+    if (BonsaiService)
+        Bonsai = new BonsaiService();
 
     SmallPerfGraph = new CalendarTimeGraph("smallgraph");
     SmallPerfGraph.yLabelHeight = 20;
