@@ -4406,8 +4406,6 @@ char* nsImapProtocol::CreateNewLineFromSocket()
             AlertUserEventUsingId(IMAP_CONNECTION_REFUSED_ERROR);
             break;
         case NS_ERROR_NET_TIMEOUT:
-            AlertUserEventUsingId(IMAP_NET_TIMEOUT_ERROR);
-            break;
         case NS_ERROR_NET_RESET:
         case NS_BASE_STREAM_CLOSED:
         case NS_ERROR_NET_INTERRUPT:
@@ -4416,10 +4414,12 @@ char* nsImapProtocol::CreateNewLineFromSocket()
             m_runningUrl->SetRerunningUrl(PR_TRUE);
             m_retryUrlOnError = PR_TRUE;
           }
+          else if (rv == NS_ERROR_NET_TIMEOUT)
+            AlertUserEventUsingId(IMAP_NET_TIMEOUT_ERROR);
           else
             AlertUserEventUsingId(TestFlag(IMAP_RECEIVED_GREETING) 
             ? IMAP_SERVER_DISCONNECTED : IMAP_SERVER_DROPPED_CONNECTION);
-            break;
+          break;
         default:
             break;
     }
