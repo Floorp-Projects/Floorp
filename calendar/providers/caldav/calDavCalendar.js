@@ -635,7 +635,7 @@ calDavCalendar.prototype = {
 
             // We have a result, so we must be authenticated
             if (thisCalendar.mAuthenticationStatus == kCaldavFirstRequestSent) {
-                thisCalendar.mAthenticationStatus = kCaldavFreshlyAuthenticated;
+                thisCalendar.mAuthenticationStatus = kCaldavFreshlyAuthenticated;
             }
 
             if (thisCalendar.mAuthenticationStatus == kCaldavFreshlyAuthenticated) {
