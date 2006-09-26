@@ -429,12 +429,11 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
   if (hasStroke) {
     SetupCairoStrokeGeometry(ctx);
     cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+    nsSVGUtils::UserToDeviceBBox(ctx, &xmin, &ymin, &xmax, &ymax);
   } else {
+    cairo_identity_matrix(ctx);
     cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
   }
-
-  cairo_user_to_device(ctx, &xmin, &ymin);
-  cairo_user_to_device(ctx, &xmax, &ymax);
 
   mRect = nsSVGUtils::ToBoundingPixelRect(xmin, ymin, xmax, ymax);
 
@@ -495,12 +494,11 @@ nsSVGGlyphFrame::GetBBox(nsIDOMSVGRect **_retval)
 
   LoopCharacters(ctx, text, cp, cairo_text_path);
 
+  cairo_identity_matrix(ctx);
+
   double xmin, ymin, xmax, ymax;
 
   cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
-
-  cairo_user_to_device(ctx, &xmin, &ymin);
-  cairo_user_to_device(ctx, &xmax, &ymax);
 
   return NS_NewSVGRect(_retval, xmin, ymin, xmax - xmin, ymax - ymin);
 }
@@ -873,12 +871,11 @@ nsSVGGlyphFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
     cairo_rel_line_to(ctx, 0, extent.height);
     cairo_rel_line_to(ctx, -extent.width, 0);
     cairo_close_path(ctx);
+    cairo_identity_matrix(ctx);
 
     double xmin, ymin, xmax, ymax;
 
     cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
-    cairo_user_to_device(ctx, &xmin, &ymin);
-    cairo_user_to_device(ctx, &xmax, &ymax);
 
     cairo_set_matrix(ctx, &matrix);
 
