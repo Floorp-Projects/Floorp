@@ -59,7 +59,8 @@ class nsITableLayout;
 // Change to |#define SHOW_LAYOUT_HEURISTIC DEBUG| before final release
 #define SHOW_LAYOUT_HEURISTIC
 
-class nsHTMLTableAccessible : public nsAccessibleWrap
+class nsHTMLTableAccessible : public nsAccessibleWrap,
+                              public nsIAccessibleTable
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
