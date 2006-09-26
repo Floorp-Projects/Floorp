@@ -221,7 +221,7 @@ const int kMenuTruncationChars = 60;
 
 - (unsigned int)draggingSourceOperationMaskForLocal:(BOOL)flag
 {
-	return NSDragOperationGeneric;
+	return NSDragOperationGeneric | NSDragOperationCopy;
 }
 
 // NSResponder methods

@@ -41,6 +41,7 @@
 #import "NSString+Utils.h"
 #import "NSSplitView+Utils.h"
 #import "NSMenu+Utils.h"
+#import "NSPasteboard+Utils.h"
 
 #import "BrowserWindowController.h"
 #import "BrowserWindow.h"
@@ -294,6 +295,43 @@ public:
 {
   BrowserWindowController* bwc = (BrowserWindowController *)[[[self delegate] window] delegate];
   [bwc saveURL:nil url:[self string] suggestedFilename:nil];
+}
+
+// Drag & Drop Methods to match behavior of the AutoCompleteTextField
+- (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
+{
+  NSDragOperation sourceDragMask = [sender draggingSourceOperationMask];
+  NSPasteboard *pboard = [sender draggingPasteboard];
+  if ([[pboard types] containsObject:NSURLPboardType] ||
+      [[pboard types] containsObject:NSStringPboardType] ||
+      [[pboard types] containsObject:kCorePasteboardFlavorType_url]) {
+    if (sourceDragMask & NSDragOperationCopy) {
+      return NSDragOperationCopy;
+    }
+  }
+  return NSDragOperationNone;
+}
+
+- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
+{
+  NSPasteboard *pboard = [sender draggingPasteboard];
+  NSString *dragString = nil;
+  if ([[pboard types] containsObject:kCorePasteboardFlavorType_url])
+    dragString = [pboard stringForType:kCorePasteboardFlavorType_url];
+  else if ([[pboard types] containsObject:NSURLPboardType])
+    dragString = [[NSURL URLFromPasteboard:pboard] absoluteString];
+  else if ([[pboard types] containsObject:NSStringPboardType]) {
+    dragString = [pboard stringForType:NSStringPboardType];
+    // Clean the string on the off chance it has line breaks, etc.
+    dragString = [dragString stringByRemovingCharactersInSet:[NSCharacterSet controlCharacterSet]];
+  }
+  [self setString:dragString];
+  return YES;
+}
+
+- (void)concludeDragOperation:(id <NSDraggingInfo>)sender
+{
+  [self selectAll:self];
 }
 
 @end
@@ -3739,7 +3777,7 @@ enum BWCOpenDest {
     NSArray* menuArray = [result itemArray];
     BOOL inNewTab = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL];
 
-    int i;
+    unsigned i;
     for (i = 0; i < [menuArray count]; i++) {
       NSMenuItem* menuItem = [menuArray objectAtIndex:i];
 
