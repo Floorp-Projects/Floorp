@@ -234,9 +234,14 @@
 #define FILEVIEW_MODULE
 #endif
 
+#ifdef MOZ_STORAGE
+#define STORAGE_MODULE MODULE(mozStorageModule)
+#else
+#define STORAGE_MODULE
+#endif
+
 #ifdef MOZ_PLACES
 #define PLACES_MODULES \
-    MODULE(mozStorageModule)                 \
     MODULE(nsPlacesModule)
 #else
 #if (defined(MOZ_MORK) && defined(MOZ_XUL))
@@ -303,6 +308,7 @@
     MODULE(Apprunner)                        \
     MODULE(CommandLineModule)                \
     FILEVIEW_MODULE                          \
+    STORAGE_MODULE                           \
     PLACES_MODULES                           \
     XULENABLED_MODULES                       \
     MODULE(nsToolkitCompsModule)             \

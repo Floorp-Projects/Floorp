@@ -39,7 +39,7 @@
 
 #include "nsFormFillController.h"
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_STORAGE_SATCHEL
 #include "nsStorageFormHistory.h"
 #include "nsIAutoCompleteSimpleResult.h"
 #else
@@ -494,7 +494,7 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
 {
   nsCOMPtr<nsIAutoCompleteResult> result;
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_STORAGE_SATCHEL
   // This assumes that FormHistory uses nsIAutoCompleteSimpleResult,
   // while PasswordManager does not.
   nsCOMPtr<nsIAutoCompleteSimpleResult> historyResult;
@@ -1121,7 +1121,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFormHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormFillController)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPasswordManager, nsPasswordManager::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSingleSignonPrompt)
-#if defined(MOZ_PLACES) && defined(MOZ_MORKREADER)
+#if defined(MOZ_STORAGE_SATCHEL) && defined(MOZ_MORKREADER)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormHistoryImporter)
 #endif
 
@@ -1166,7 +1166,7 @@ static const nsModuleComponentInfo components[] =
     NS_FORMHISTORYAUTOCOMPLETE_CONTRACTID,
     nsFormFillControllerConstructor },
 
-#if defined(MOZ_PLACES) && defined(MOZ_MORKREADER)
+#if defined(MOZ_STORAGE_SATCHEL) && defined(MOZ_MORKREADER)
   { "Form History Importer",
     NS_FORMHISTORYIMPORTER_CID,
     NS_FORMHISTORYIMPORTER_CONTRACTID,

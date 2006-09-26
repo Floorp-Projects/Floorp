@@ -74,13 +74,8 @@ REQUIRES =	\
 CPPSRCS = nsFormFillController.cpp \
           $(NULL)
 
-ifdef MOZ_PLACES
 REQUIRES += storage morkreader
 CPPSRCS += nsStorageFormHistory.cpp
-else
-REQUIRES += mork
-CPPSRCS += nsFormHistory.cpp
-endif
 
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../../passwordmgr/base \
@@ -94,6 +89,8 @@ SHARED_LIBRARY_LIBS = \
 EXTRA_DSO_LIBS	= gkgfx
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES += -DMOZ_STORAGE_SATCHEL
 
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \
