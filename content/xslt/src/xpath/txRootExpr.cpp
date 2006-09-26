@@ -51,29 +51,19 @@
 nsresult
 RootExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
-    const txXPathNode& context = aContext->getContextNode();
-    nsAutoPtr<txXPathNode> document(txXPathNodeUtils::getDocument(context));
-    if (!document) {
-        nsRefPtr<txNodeSet> nodes;
-        aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
-        if (!nodes) {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        NS_ADDREF(*aResult = nodes);
-
-        return NS_OK;
-    }
-
-    return aContext->recycler()->getNodeSet(*document, aResult);
-} //-- evaluate
+    txXPathTreeWalker walker(aContext->getContextNode());
+    walker.moveToRoot();
+    
+    return aContext->recycler()->getNodeSet(walker.getCurrentPosition(),
+                                            aResult);
+}
 
 TX_IMPL_EXPR_STUBS_0(RootExpr, NODESET_RESULT)
 
 PRBool
 RootExpr::isSensitiveTo(ContextSensitivity aContext)
 {
-    return !!(aContext & DOCUMENT_CONTEXT);
+    return !!(aContext & NODE_CONTEXT);
 }
 
 #ifdef TX_TO_STRING

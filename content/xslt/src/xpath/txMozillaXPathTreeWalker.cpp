@@ -73,29 +73,70 @@ txXPathTreeWalker::~txXPathTreeWalker()
 {
 }
 
+void
+txXPathTreeWalker::moveToRoot()
+{
+    if (mPosition.isDocument()) {
+        return;
+    }
+
+    nsIDocument* root = mPosition.mContent->GetCurrentDoc();
+    if (root) {
+        mPosition.mIndex = txXPathNode::eDocument;
+        mPosition.mDocument = root;
+    }
+    else {
+        nsIContent *parent, *current = mPosition.mContent;
+        while ((parent = current->GetParent())) {
+            current = parent;
+        }
+
+        mPosition.mIndex = txXPathNode::eContent;
+        mPosition.mContent = current;
+    }
+
+    mCurrentIndex = kUnknownIndex;
+    mDescendants.Clear();
+}
+
 PRBool
 txXPathTreeWalker::moveToElementById(const nsAString& aID)
 {
-    nsCOMPtr<nsIDOMDocument> document;
+    if (aID.IsEmpty()) {
+        return PR_FALSE;
+    }
+
+    nsIDocument* doc;
     if (mPosition.isDocument()) {
-        document = do_QueryInterface(mPosition.mDocument);
+        doc = mPosition.mDocument;
     }
     else {
-        document = do_QueryInterface(mPosition.mContent->GetDocument());
+        doc = mPosition.mContent->GetCurrentDoc();
     }
 
-    if (!document) {
+    nsCOMPtr<nsIContent> content;
+    if (doc) {
+        nsCOMPtr<nsIDOMDocument> document = do_QueryInterface(doc);
+        NS_ASSERTION(document, "QI failed");
+
+        nsCOMPtr<nsIDOMElement> element;
+        document->GetElementById(aID, getter_AddRefs(element));
+
+        content = do_QueryInterface(element);
+    }
+    else {
+        // We're in a disconnected subtree, search only that subtree.
+        nsIContent *parent, *current = mPosition.mContent;
+        while ((parent = current->GetParent())) {
+            current = parent;
+        }
+
+        content = nsContentUtils::MatchElementId(current, aID);
+    }
+
+    if (!content) {
         return PR_FALSE;
     }
-
-    nsCOMPtr<nsIDOMElement> element;
-    document->GetElementById(aID, getter_AddRefs(element));
-    if (!element) {
-        return PR_FALSE;
-    }
-
-    nsCOMPtr<nsIContent> content = do_QueryInterface(element);
-    NS_ENSURE_TRUE(content, PR_FALSE);
 
     mPosition.mIndex = txXPathNode::eContent;
     mPosition.mContent = content;
@@ -676,19 +717,22 @@ txXPathNodeUtils::comparePosition(const txXPathNode& aNode,
     // Get document for both nodes.
     nsIDocument* document = aNode.isDocument() ?
                             aNode.mDocument :
-                            aNode.mContent->GetDocument();
+                            aNode.mContent->GetCurrentDoc();
 
     nsIDocument* otherDocument = aOtherNode.isDocument() ?
                                  aOtherNode.mDocument :
-                                 aOtherNode.mContent->GetDocument();
+                                 aOtherNode.mContent->GetCurrentDoc();
 
-    // If the nodes have different ownerdocuments, compare the document
+    // If the nodes have different current documents, compare the document
     // pointers.
-    if (document && otherDocument && document != otherDocument) {
-        return document > otherDocument ? 1 : -1;
+    if (document != otherDocument) {
+        return document < otherDocument ? -1 : 1;
     }
 
-    // Every node comes after its ownerdocument.
+    // Now either both nodes are in orphan trees, or they are both in the
+    // same tree.
+
+    // Every node comes after its current document.
     if (aNode.isDocument()) {
         return -1;
     }
@@ -714,21 +758,14 @@ txXPathNodeUtils::comparePosition(const txXPathNode& aNode,
                 otherIndex = (PRUint32)parent->IndexOf(otherContent);
             }
             else {
-                if (!document) {
-                    if (!otherDocument) {
-                        // Neither aNode nor aOtherNode are not in a document,
-                        // compare their top ancestors.
-                        return content > otherContent ? 1 : -1;
-                    }
+                // since document == otherDocument either both content and
+                // otherContent are root nodes in respective orphan tree, or
+                // both are direct children of the same document.
 
-                    // aNode is not in the tree, compare its top ancestor with
-                    // aOtherNode's document.
-                    return (void*)content > (void*)otherDocument ? 1 : -1;
-                }
-                else if (!otherDocument) {
-                    // aOtherNode is not in a document, compare its top
-                    // ancestor with aNode's document.
-                    return (void*)document > (void*)otherContent ? 1 : -1;
+                if (!document) {
+                    // Both are roots in orphan trees.
+
+                    return content < otherContent ? -1 : 1;
                 }
 
                 // Both nodes are in the same document.
@@ -754,25 +791,6 @@ txXPathNodeUtils::comparePosition(const txXPathNode& aNode,
         otherContent = otherContent->GetParent();
     }
 
-    if (!document) {
-        if (!otherDocument) {
-            // Neither aNode nor aOtherNode are not in a document, compare
-            // their top ancestors.
-            return parents.ElementAt(parents.Count() - 1) >
-                   otherParents.ElementAt(otherParents.Count() - 1) ? 1 : -1;
-        }
-
-        // aNode is not in the tree, compare its top ancestor with aOtherNode's
-        // document.
-        return parents.ElementAt(parents.Count() - 1) > otherDocument ? 1 : -1;
-    }
-    else if (!otherDocument) {
-        // aOtherNode is not in a document, compare its top
-        // ancestor with aNode's document.
-        return document >
-               otherParents.ElementAt(otherParents.Count() - 1) ? 1 : -1;
-    }
-
     // Walk back down along the parent-chains until we find where they split.
     PRInt32 total = parents.Count() - 1;
     PRInt32 otherTotal = otherParents.Count() - 1;
@@ -790,9 +808,14 @@ txXPathNodeUtils::comparePosition(const txXPathNode& aNode,
                 index = (PRUint32)parent->IndexOf(content);
                 otherIndex = (PRUint32)parent->IndexOf(otherContent);
             }
-            else {
+            else if (document) {
                 index = (PRUint32)document->IndexOf(content);
                 otherIndex = (PRUint32)document->IndexOf(otherContent);
+            }
+            else {
+                // The two nodes are in different orphan subtrees.
+                NS_ASSERTION(i == 0, "this shouldn't happen");
+                return content < otherContent ? -1 : 1;
             }
             NS_ASSERTION(index != otherIndex && index >= 0 && otherIndex >= 0,
                          "invalid index in compareTreePosition");

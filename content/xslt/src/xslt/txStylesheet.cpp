@@ -215,13 +215,15 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
 #endif
 
     if (!matchTemplate) {
-        if (txXPathNodeUtils::isElement(aNode) ||
-            txXPathNodeUtils::isRoot(aNode)) {
-            matchTemplate = mContainerTemplate;
-        }
-        else if (txXPathNodeUtils::isAttribute(aNode) ||
-                 txXPathNodeUtils::isText(aNode)) {
+        // Test for these first since a node can be both a text node
+        // and a root (if it is orphaned)
+        if (txXPathNodeUtils::isAttribute(aNode) ||
+            txXPathNodeUtils::isText(aNode)) {
             matchTemplate = mCharactersTemplate;
+        }
+        else if (txXPathNodeUtils::isElement(aNode) ||
+                 txXPathNodeUtils::isRoot(aNode)) {
+            matchTemplate = mContainerTemplate;
         }
         else {
             matchTemplate = mEmptyTemplate;

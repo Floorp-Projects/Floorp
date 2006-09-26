@@ -122,14 +122,12 @@ public:
     typedef PRUint16 ContextSensitivity;
     enum {
         NO_CONTEXT = 0x00,
-        DOCUMENT_CONTEXT = 0x01,
-        NODE_ONLY_CONTEXT = 0x02,
-        NODE_CONTEXT = DOCUMENT_CONTEXT | NODE_ONLY_CONTEXT,
-        POSITION_CONTEXT = 0x04,
-        SIZE_CONTEXT = 0x08,
+        NODE_CONTEXT = 0x01,
+        POSITION_CONTEXT = 0x02,
+        SIZE_CONTEXT = 0x04,
         NODESET_CONTEXT = POSITION_CONTEXT | SIZE_CONTEXT,
-        VARIABLES_CONTEXT = 0x10,
-        PRIVATE_CONTEXT = 0x20,
+        VARIABLES_CONTEXT = 0x08,
+        PRIVATE_CONTEXT = 0x10,
         ANY_CONTEXT = 0xFFFF
     };
 

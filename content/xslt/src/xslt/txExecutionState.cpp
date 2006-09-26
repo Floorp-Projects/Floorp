@@ -500,12 +500,12 @@ txExecutionState::retrieveDocument(const nsAString& aUri)
 
 nsresult
 txExecutionState::getKeyNodes(const txExpandedName& aKeyName,
-                              const txXPathNode& aDocument,
+                              const txXPathNode& aRoot,
                               const nsAString& aKeyValue,
                               PRBool aIndexIfNotFound,
                               txNodeSet** aResult)
 {
-    return mKeyHash.getKeyNodes(aKeyName, aDocument, aKeyValue,
+    return mKeyHash.getKeyNodes(aKeyName, aRoot, aKeyValue,
                                 aIndexIfNotFound, *this, aResult);
 }
 

@@ -131,7 +131,7 @@ public:
     txExpandedNameMap* getParamMap();
     const txXPathNode* retrieveDocument(const nsAString& aUri);
     nsresult getKeyNodes(const txExpandedName& aKeyName,
-                         const txXPathNode& aDocument,
+                         const txXPathNode& aRoot,
                          const nsAString& aKeyValue, PRBool aIndexIfNotFound,
                          txNodeSet** aResult);
     TemplateRule* getCurrentTemplateRule();

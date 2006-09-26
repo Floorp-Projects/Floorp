@@ -59,6 +59,14 @@ txXPathTreeWalker::~txXPathTreeWalker()
 
 #define INNER mPosition.mInner
 
+void
+txXPathTreeWalker::moveToRoot()
+{
+    if (INNER->nodeType != Node::DOCUMENT_NODE) {
+        INNER = INNER->ownerDocument;
+    }
+}
+
 PRBool
 txXPathTreeWalker::moveToElementById(const nsAString& aID)
 {

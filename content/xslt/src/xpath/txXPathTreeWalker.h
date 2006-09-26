@@ -83,6 +83,7 @@ public:
 
     void moveTo(const txXPathTreeWalker& aWalker);
 
+    void moveToRoot();
     PRBool moveToParent();
     PRBool moveToElementById(const nsAString& aID);
     PRBool moveToFirstAttribute();
@@ -236,8 +237,8 @@ txXPathNodeUtils::getUniqueIdentifier(const txXPathNode& aNode)
 #ifdef TX_EXE
     return NS_PTR_TO_INT32(aNode.mInner);
 #else
-    NS_PRECONDITION(aNode.mIndex == txXPathNode::eDocument,
-                    "Only implemented for documents.");
+    NS_PRECONDITION(!aNode.isAttribute(),
+                    "Not implemented for attributes.");
     return NS_PTR_TO_INT32(aNode.mDocument);
 #endif
 }
@@ -282,7 +283,8 @@ txXPathNodeUtils::isRoot(const txXPathNode& aNode)
 #ifdef TX_EXE
     return aNode.mInner->getNodeType() == Node::DOCUMENT_NODE;
 #else
-    return aNode.isDocument();
+    return aNode.isDocument() ||
+           (aNode.isContent() && !aNode.mContent->GetNodeParent());
 #endif
 }
 

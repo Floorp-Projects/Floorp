@@ -53,17 +53,17 @@ class txKeyValueHashKey
 {
 public:
     txKeyValueHashKey(const txExpandedName& aKeyName,
-                      PRInt32 aDocumentIdentifier,
+                      PRInt32 aRootIdentifier,
                       const nsAString& aKeyValue)
         : mKeyName(aKeyName),
           mKeyValue(aKeyValue),
-          mDocumentIdentifier(aDocumentIdentifier)
+          mRootIdentifier(aRootIdentifier)
     {
     }
 
     txExpandedName mKeyName;
     nsString mKeyValue;
-    PRInt32 mDocumentIdentifier;
+    PRInt32 mRootIdentifier;
 };
 
 struct txKeyValueHashEntry : public PLDHashEntryHdr
@@ -89,14 +89,14 @@ class txIndexedKeyHashKey
 {
 public:
     txIndexedKeyHashKey(txExpandedName aKeyName,
-                        PRInt32 aDocumentIdentifier)
+                        PRInt32 aRootIdentifier)
         : mKeyName(aKeyName),
-          mDocumentIdentifier(aDocumentIdentifier)
+          mRootIdentifier(aRootIdentifier)
     {
     }
 
     txExpandedName mKeyName;
-    PRInt32 mDocumentIdentifier;
+    PRInt32 mRootIdentifier;
 };
 
 struct txIndexedKeyHashEntry : public PLDHashEntryHdr
@@ -140,14 +140,14 @@ public:
     PRBool addKey(nsAutoPtr<txPattern> aMatch, nsAutoPtr<Expr> aUse);
 
     /**
-     * Indexes a document and adds it to the hash of key values
-     * @param aDocument     Document to index and add
+     * Indexes a subtree and adds it to the hash of key values
+     * @param aRoot         Subtree root to index and add
      * @param aKeyValueHash Hash to add values to
      * @param aEs           txExecutionState to use for XPath evaluation
      */
-    nsresult indexDocument(const txXPathNode& aDocument,
-                           txKeyValueHash& aKeyValueHash,
-                           txExecutionState& aEs);
+    nsresult indexSubtreeRoot(const txXPathNode& aRoot,
+                              txKeyValueHash& aKeyValueHash,
+                              txExecutionState& aEs);
 
 private:
     /**
@@ -203,7 +203,7 @@ public:
     nsresult init();
 
     nsresult getKeyNodes(const txExpandedName& aKeyName,
-                         const txXPathNode& aDocument,
+                         const txXPathNode& aRoot,
                          const nsAString& aKeyValue,
                          PRBool aIndexIfNotFound,
                          txExecutionState& aEs,
@@ -213,7 +213,7 @@ private:
     // Hash of all indexed key-values
     txKeyValueHash mKeyValues;
 
-    // Hash showing which keys+documents has been indexed
+    // Hash showing which keys+roots has been indexed
     txIndexedKeyHash mIndexedKeys;
     
     // Map of txXSLKeys

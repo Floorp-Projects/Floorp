@@ -726,7 +726,7 @@ txCoreFunctionCall::isSensitiveTo(ContextSensitivity aContext)
         }
         case ID:
         {
-            return (aContext & DOCUMENT_CONTEXT) ||
+            return (aContext & NODE_CONTEXT) ||
                    argsSensitiveTo(aContext);
         }
         case LAST:
