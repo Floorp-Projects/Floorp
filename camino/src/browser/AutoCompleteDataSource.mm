@@ -108,8 +108,11 @@
   return count;
 }
 
-- (id) resultString:(int)aRow column:(NSString *)aColumn
+- (id) resultForRow:(int)aRow columnIdentifier:(NSString *)aColumnIdentifier
 {
+  if ([aColumnIdentifier isEqualToString:@"icon"])
+    return mIconImage;
+
   NSString* result = @"";
   
   if (!mResults)
@@ -123,13 +126,11 @@
   if (!item)
     return result;
 
-  if ([aColumn isEqualToString:@"icon"]) {
-    return mIconImage;
-  } else if ([aColumn isEqualToString:@"col1"]) {
+  else if ([aColumnIdentifier isEqualToString:@"col1"]) {
     nsCAutoString value;
     item->GetURL(value);
     result = [NSString stringWith_nsACString:value];
-  } else if ([aColumn isEqualToString:@"col2"]) {
+  } else if ([aColumnIdentifier isEqualToString:@"col2"]) {
     nsAutoString titleStr;
     item->GetTitle(titleStr);
     result = [NSString stringWith_nsAString:titleStr];
@@ -145,7 +146,7 @@
 
 -(id)tableView:(NSTableView*)aTableView objectValueForTableColumn:(NSTableColumn*)aTableColumn row:(int)aRowIndex
 {
-  return [self resultString:aRowIndex column:[aTableColumn identifier]];
+  return [self resultForRow:aRowIndex columnIdentifier:[aTableColumn identifier]];
 }
 
 @end
