@@ -142,9 +142,12 @@ static AppListMenuFactory* sAppListMenuFactoryInstance = nil;
     }
   }
   
-  // The user selected an application that is not registered for "feed://".
+  // The user selected an application that is not registered for "feed://"
+  // or has no application selected
   if (!insertedDefaultApp) {
-    NSURL* defaultFeedAppURL = [[NSWorkspace sharedWorkspace] urlOfApplicationWithIdentifier:defaultFeedViewerID];
+    NSURL* defaultFeedAppURL = nil;
+    if (defaultFeedViewerID && ([NSWorkspace isTigerOrHigher] || ![defaultFeedViewerID isEqualToString:@"com.apple.Safari"]))
+      defaultFeedAppURL = [[NSWorkspace sharedWorkspace] urlOfApplicationWithIdentifier:defaultFeedViewerID];
     if (defaultFeedAppURL) {
       NSMenuItem* menuItem = [self menuItemForAppURL:defaultFeedAppURL
                                         withBundleID:defaultFeedViewerID
