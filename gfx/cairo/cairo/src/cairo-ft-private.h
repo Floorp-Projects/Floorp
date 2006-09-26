@@ -64,11 +64,14 @@ _cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled);
 cairo_private void
 _cairo_ft_unscaled_font_unlock_face (cairo_ft_unscaled_font_t *unscaled);
 
-cairo_bool_t
+cairo_private cairo_bool_t
 _cairo_ft_scaled_font_is_vertical (cairo_scaled_font_t *scaled_font);
+
+slim_hidden_proto (cairo_ft_font_options_substitute);
+slim_hidden_proto (cairo_ft_scaled_font_lock_face);
+slim_hidden_proto (cairo_ft_scaled_font_unlock_face);
 
 CAIRO_END_DECLS
 
 #endif /* CAIRO_HAS_FT_FONT */
-
 #endif /* CAIRO_FT_PRIVATE_H */

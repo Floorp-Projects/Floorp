@@ -163,6 +163,25 @@ _cairo_paginated_surface_finish (void *abstract_surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_surface_t *
+_cairo_paginated_surface_create_image_surface (void	       *abstract_surface,
+					       int		width,
+					       int		height)
+{
+    cairo_paginated_surface_t *surface = abstract_surface;
+    cairo_surface_t *image;
+    cairo_font_options_t options;
+
+    image = _cairo_image_surface_create_with_content (surface->content,
+						      width,
+						      height);
+
+    cairo_surface_get_font_options (&surface->base, &options);
+    _cairo_surface_set_font_options (image, &options);
+
+    return image;
+}
+
 static cairo_status_t
 _cairo_paginated_surface_acquire_source_image (void	       *abstract_surface,
 					       cairo_image_surface_t **image_out,
@@ -174,9 +193,9 @@ _cairo_paginated_surface_acquire_source_image (void	       *abstract_surface,
 
     _cairo_surface_get_extents (surface->target, &extents);
 
-    image = _cairo_image_surface_create_with_content (surface->content,
-						      extents.width,
-						      extents.height);
+    image = _cairo_paginated_surface_create_image_surface (surface,
+							   extents.width,
+							   extents.height);
 
     _cairo_meta_surface_replay (surface->meta, image);
 
@@ -221,9 +240,9 @@ _paint_page (cairo_paginated_surface_t *surface)
 	double y_scale = surface->base.y_fallback_resolution / 72.0;
 	cairo_matrix_t matrix;
 
-	image = _cairo_image_surface_create_with_content (surface->content,
-							  surface->width * x_scale,
-							  surface->height * y_scale);
+	image = _cairo_paginated_surface_create_image_surface (surface,
+							       surface->width  * x_scale,
+							       surface->height * y_scale);
 	_cairo_surface_set_device_scale (image, x_scale, y_scale);
 
 	_cairo_meta_surface_replay (surface->meta, image);
@@ -460,9 +479,9 @@ _cairo_paginated_surface_snapshot (void *abstract_other)
 
     _cairo_surface_get_extents (other->target, &extents);
 
-    surface = _cairo_image_surface_create_with_content (other->content,
-							extents.width,
-							extents.height);
+    surface = _cairo_paginated_surface_create_image_surface (other,
+							     extents.width,
+							     extents.height);
 
     _cairo_meta_surface_replay (other->meta, surface);
 

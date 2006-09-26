@@ -47,7 +47,7 @@
 #define CVISIBILITY_HIDDEN
 #endif
 
-// In libxul builds we don't ever want to export cairo symbols
+/* In libxul builds we don't ever want to export cairo symbols */
 #define cairo_public extern CVISIBILITY_HIDDEN
 #define CCALLBACK
 #define CCALLBACK_DECL

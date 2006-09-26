@@ -73,9 +73,9 @@ typedef struct _cairo_sub_font_glyph {
 
 typedef struct _cairo_sub_font_collection {
     unsigned long *glyphs; /* scaled_font_glyph_index */
-    int glyphs_size;
-    int max_glyph;
-    int num_glyphs;
+    unsigned int glyphs_size;
+    unsigned int max_glyph;
+    unsigned int num_glyphs;
 
     unsigned int subset_id;
 

@@ -35,15 +35,15 @@
  *	Kristian Høgsberg <krh@redhat.com>
  */
 
-#include <png.h>
 #include <errno.h>
 #include "cairoint.h"
+#include <png.h>
 
 /* Unpremultiplies data and converts native endian ARGB => RGBA bytes */
 static void
 unpremultiply_data (png_structp png, png_row_infop row_info, png_bytep data)
 {
-    int i;
+    unsigned int i;
 
     for (i = 0; i < row_info->rowbytes; i += 4) {
         uint8_t *b = &data[i];
@@ -67,7 +67,7 @@ unpremultiply_data (png_structp png, png_row_infop row_info, png_bytep data)
 static void
 convert_data_to_bytes (png_structp png, png_row_infop row_info, png_bytep data)
 {
-    int i;
+    unsigned int i;
 
     for (i = 0; i < row_info->rowbytes; i += 4) {
         uint8_t *b = &data[i];
@@ -88,7 +88,7 @@ write_png (cairo_surface_t	*surface,
 	   void			*closure)
 {
     int i;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    volatile cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_image_surface_t *image;
     void *image_extra;
     png_struct *png;
@@ -287,6 +287,7 @@ cairo_surface_write_to_png_stream (cairo_surface_t	*surface,
 
     return write_png (surface, stream_write_func, &png_closure);
 }
+slim_hidden_def (cairo_surface_write_to_png_stream);
 
 static INLINE int
 multiply_alpha (int alpha, int color)
@@ -301,7 +302,7 @@ premultiply_data (png_structp   png,
                   png_row_infop row_info,
                   png_bytep     data)
 {
-    int i;
+    unsigned int i;
 
     for (i = 0; i < row_info->rowbytes; i += 4) {
 	uint8_t *base = &data[i];
@@ -332,7 +333,7 @@ read_png (png_rw_ptr	read_func,
 {
     cairo_surface_t *surface = (cairo_surface_t*) &_cairo_surface_nil;
     png_byte *data = NULL;
-    int i;
+    unsigned int i;
     png_struct *png = NULL;
     png_info *info;
     png_uint_32 png_width, png_height, stride;

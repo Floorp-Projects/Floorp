@@ -227,22 +227,30 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
 
     font->style = CreateSizedCopyOfStyle(style, &font->base.scale);
 
-    Fixed theSize = FloatToFixed(1.0);
-    const ATSUAttributeTag theFontStyleTags[] = { kATSUSizeTag };
-    const ByteCount theFontStyleSizes[] = { sizeof(Fixed) };
-    ATSUAttributeValuePtr theFontStyleValues[] = { &theSize };
-    err = ATSUSetAttributes(style,
-                            sizeof(theFontStyleTags) /
-                            sizeof(ATSUAttributeTag), theFontStyleTags,
-                            theFontStyleSizes, theFontStyleValues);
+    {
+	Fixed theSize = FloatToFixed(1.0);
+	const ATSUAttributeTag theFontStyleTags[] = { kATSUSizeTag };
+	const ByteCount theFontStyleSizes[] = { sizeof(Fixed) };
+	ATSUAttributeValuePtr theFontStyleValues[] = { &theSize };
+
+	err = ATSUSetAttributes(style,
+				sizeof(theFontStyleTags) /
+				sizeof(ATSUAttributeTag), theFontStyleTags,
+				theFontStyleSizes, theFontStyleValues);
+	if (err != noErr) {
+	    status = CAIRO_STATUS_NO_MEMORY;
+	    goto FAIL;
+	}
+    }
 
     font->unscaled_style = style;
-
     font->fontID = font_id;
 
     *font_out = &font->base;
 
     status = _cairo_atsui_font_set_metrics (font);
+
+  FAIL:
     if (status) {
 	cairo_scaled_font_destroy (&font->base);
 	return status;
@@ -318,15 +326,17 @@ _cairo_atsui_font_create_toy(cairo_toy_font_face_t *toy_face,
 				   kFontNoLanguageCode, &fontID);
     }
 
-    ATSUAttributeTag styleTags[] =
-        { kATSUQDItalicTag, kATSUQDBoldfaceTag, kATSUFontTag };
-    ATSUAttributeValuePtr styleValues[] = { &isItalic, &isBold, &fontID };
-    ByteCount styleSizes[] =
-        { sizeof(Boolean), sizeof(Boolean), sizeof(ATSUFontID) };
+    {
+	ATSUAttributeTag styleTags[] =
+	    { kATSUQDItalicTag, kATSUQDBoldfaceTag, kATSUFontTag };
+	ATSUAttributeValuePtr styleValues[] = { &isItalic, &isBold, &fontID };
+	ByteCount styleSizes[] =
+	    { sizeof(Boolean), sizeof(Boolean), sizeof(ATSUFontID) };
 
-    err = ATSUSetAttributes(style,
-                            sizeof(styleTags) / sizeof(styleTags[0]),
-                            styleTags, styleSizes, styleValues);
+	err = ATSUSetAttributes(style,
+				sizeof(styleTags) / sizeof(styleTags[0]),
+				styleTags, styleSizes, styleValues);
+    }
 
     return _cairo_atsui_font_create_scaled (&toy_face->base, fontID, style,
 					    font_matrix, ctm, options, font_out);
@@ -580,6 +590,10 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
     cairo_bool_t can_draw_directly;
     cairo_rectangle_int16_t rect;
 
+    ATSFontRef atsFont;
+    CGFontRef cgFont;
+    CGAffineTransform textTransform;
+
     /* Check if we can draw directly to the destination surface */
     can_draw_directly = _cairo_surface_is_quartz (generic_surface) &&
 	_cairo_pattern_is_opaque_solid (pattern) &&
@@ -637,14 +651,12 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 	CGContextSaveGState (drawingContext);
     }
 
-    ATSFontRef atsFont = FMGetATSFontRefFromFont(font->fontID);
-    CGFontRef cgFont = CGFontCreateWithPlatformFont(&atsFont);
+    atsFont = FMGetATSFontRefFromFont(font->fontID);
+    cgFont = CGFontCreateWithPlatformFont(&atsFont);
 
     CGContextSetFont(drawingContext, cgFont);
 
-    CGAffineTransform textTransform =
-        CGAffineTransformMakeWithCairoFontScale(&font->base.scale);
-
+    textTransform = CGAffineTransformMakeWithCairoFontScale(&font->base.scale);
     textTransform = CGAffineTransformScale(textTransform, 1.0f, -1.0f);
 
     CGContextSetFontSize(drawingContext, 1.0);

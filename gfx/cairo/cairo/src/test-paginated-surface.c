@@ -95,6 +95,16 @@ _test_paginated_surface_create_for_data (unsigned char		*data,
 					    &test_paginated_surface_paginated_backend);
 }
 
+static cairo_status_t
+_test_paginated_surface_finish (void *abstract_surface)
+{
+    test_paginated_surface_t *surface = abstract_surface;
+
+    cairo_surface_destroy (surface->target);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_int_status_t
 _test_paginated_surface_set_clip_region (void *abstract_surface,
 					 pixman_region16_t *region)
@@ -247,7 +257,7 @@ static const cairo_surface_backend_t test_paginated_surface_backend = {
      * surface backend interface as historical cruft and ignore it. */
 
     NULL, /* create_similar */
-    NULL, /* finish */
+    _test_paginated_surface_finish,
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
     NULL, /* acquire_dest_image */

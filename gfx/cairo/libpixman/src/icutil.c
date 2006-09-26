@@ -281,5 +281,5 @@ fbStippleTable(int bits)
     case 8:
 	return fbStipple8Bits;
     }
-    return 0;
+    return NULL;
 }

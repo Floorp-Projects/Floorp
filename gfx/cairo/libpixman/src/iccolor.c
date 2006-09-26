@@ -53,7 +53,6 @@ pixman_color_to_pixel (const pixman_format_t	*format,
     a = a << format->alpha;
     *pixel = r|g|b|a;
 }
-slim_hidden_def(pixman_color_to_pixel);
 
 static uint16_t
 FbFillColor (uint32_t pixel, int bits)

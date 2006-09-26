@@ -43,7 +43,7 @@ typedef struct _lzw_buf {
     int data_size;
     int num_data;
     uint32_t pending;
-    int pending_bits;
+    unsigned int pending_bits;
 } lzw_buf_t;
 
 /* An lzw_buf_t is a simple, growable chunk of memory for holding
@@ -67,6 +67,10 @@ _lzw_buf_init (lzw_buf_t *buf, int size)
 	size = 16;
 
     buf->status = CAIRO_STATUS_SUCCESS;
+    buf->data_size = size;
+    buf->num_data = 0;
+    buf->pending = 0;
+    buf->pending_bits = 0;
 
     buf->data = malloc (size);
     if (buf->data == NULL) {
@@ -74,11 +78,6 @@ _lzw_buf_init (lzw_buf_t *buf, int size)
 	buf->status = CAIRO_STATUS_NO_MEMORY;
 	return;
     }
-
-    buf->data_size = size;
-    buf->num_data = 0;
-    buf->pending = 0;
-    buf->pending_bits = 0;
 }
 
 /* Increase the buffer size by doubling.

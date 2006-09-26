@@ -50,7 +50,6 @@ SOFTWARE.
 #include <string.h>
 
 #include "pixregionint.h"
-#include "slim_internal.h"
 
 #if defined (__GNUC__) && !defined (NO_INLINES)
 #define INLINE	__inline
@@ -88,10 +87,6 @@ pixman_init (pixman_region16_t *region, pixman_box16_t *rect);
 
 static void
 pixman_uninit (pixman_region16_t *region);
-
-slim_hidden_proto(pixman_region_create_simple)
-slim_hidden_proto(pixman_region_copy)
-slim_hidden_proto(pixman_region_union)
 
 /*
  * The functions in this file implement the Region abstraction used extensively
@@ -327,7 +322,6 @@ pixman_region_create_simple (pixman_box16_t *extents)
 
     return region;
 }
-slim_hidden_def(pixman_region_create_simple);
 
 /*****************************************************************
  *   RegionInit(pReg, rect, size)
@@ -452,7 +446,6 @@ pixman_region_copy(pixman_region16_t *dst, pixman_region16_t *src)
 	  dst->data->numRects * sizeof(pixman_box16_t));
     return PIXMAN_REGION_STATUS_SUCCESS;
 }
-slim_hidden_def(pixman_region_copy);
 
 /*======================================================================
  *	    Generic Region Operator
@@ -988,10 +981,9 @@ pixman_region_intersectO (
 }
 
 pixman_region_status_t
-pixman_region_intersect(newReg, reg1, reg2)
-    pixman_region16_t * 	newReg;     /* destination Region */
-    pixman_region16_t * 	reg1;
-    pixman_region16_t *	reg2;       /* source regions     */
+pixman_region_intersect(pixman_region16_t * 	newReg,
+			pixman_region16_t * 	reg1,
+			pixman_region16_t *	reg2)
 {
     good(reg1);
     good(reg2);
@@ -1233,7 +1225,6 @@ pixman_region_union(pixman_region16_t *newReg, pixman_region16_t *reg1, pixman_r
     good(newReg);
     return PIXMAN_REGION_STATUS_SUCCESS;
 }
-slim_hidden_def(pixman_region_union);
 
 /*======================================================================
  *	    Batch Rectangle Union
@@ -1257,9 +1248,8 @@ slim_hidden_def(pixman_region_union);
  *
  */
 pixman_region_status_t
-pixman_region_append(dstrgn, rgn)
-    pixman_region16_t * dstrgn;
-    pixman_region16_t * rgn;
+pixman_region_append(pixman_region16_t * dstrgn,
+		     pixman_region16_t * rgn)
 {
     int numRects, dnumRects, size;
     pixman_box16_t *new, *old;
@@ -1442,9 +1432,8 @@ QuickSortRects(
  */
 
 pixman_region_status_t
-pixman_region_validate(badreg, pOverlap)
-    pixman_region16_t * badreg;
-    int *pOverlap;
+pixman_region_validate(pixman_region16_t * badreg,
+		       int *pOverlap)
 {
     /* Descriptor for regions under construction  in Step 2. */
     typedef struct {
@@ -1858,10 +1847,9 @@ pixman_region_subtractO (
  *-----------------------------------------------------------------------
  */
 pixman_region_status_t
-pixman_region_subtract(regD, regM, regS)
-    pixman_region16_t *	regD;
-    pixman_region16_t * 	regM;
-    pixman_region16_t *	regS;
+pixman_region_subtract(pixman_region16_t *	regD,
+		       pixman_region16_t * 	regM,
+		       pixman_region16_t *	regS)
 {
     int overlap; /* result ignored */
 
@@ -1923,10 +1911,9 @@ pixman_region_subtract(regD, regM, regS)
  *-----------------------------------------------------------------------
  */
 pixman_region_status_t
-pixman_region_inverse(newReg, reg1, invRect)
-    pixman_region16_t * 	  newReg;       /* Destination region */
-    pixman_region16_t * 	  reg1;         /* Region to invert */
-    pixman_box16_t *     	  invRect; 	/* Bounding box for inversion */
+pixman_region_inverse(pixman_region16_t * 	  newReg,       /* Destination region */
+		      pixman_region16_t * 	  reg1,         /* Region to invert */
+		      pixman_box16_t *     	  invRect) 	/* Bounding box for inversion */
 {
     pixman_region16_t	  invReg;   	/* Quick and dirty region made from the
 				 * bounding box */
@@ -1983,9 +1970,8 @@ pixman_region_inverse(newReg, reg1, invRect)
  */
 
 int
-pixman_region_contains_rectangle(region, prect)
-    pixman_region16_t *  region;
-    pixman_box16_t *     prect;
+pixman_region_contains_rectangle(pixman_region16_t *  region,
+				 pixman_box16_t *     prect)
 {
     int	x;
     int	y;
@@ -2200,11 +2186,11 @@ pixman_region_reset(pixman_region16_t *region, pixman_box16_t *box)
     region->data = (pixman_region16_data_t *)NULL;
 }
 
+/* box is "return" value */
 int
-pixman_region_contains_point(region, x, y, box)
-    pixman_region16_t * region;
-    int x, y;
-    pixman_box16_t * box;     /* "return" value */
+pixman_region_contains_point(pixman_region16_t * region,
+			     int x, int y,
+			     pixman_box16_t * box)
 {
     pixman_box16_t *pbox, *pboxEnd;
     int numRects;
@@ -2235,8 +2221,7 @@ pixman_region_contains_point(region, x, y, box)
 }
 
 int
-pixman_region_not_empty(region)
-    pixman_region16_t * region;
+pixman_region_not_empty(pixman_region16_t * region)
 {
     good(region);
     return(!PIXREGION_NIL(region));
@@ -2252,8 +2237,7 @@ pixman_region16_broken(pixman_region16_t * region)
 */
 
 void
-pixman_region_empty(region)
-    pixman_region16_t * region;
+pixman_region_empty(pixman_region16_t * region)
 {
     good(region);
     freeData(region);
@@ -2263,8 +2247,7 @@ pixman_region_empty(region)
 }
 
 pixman_box16_t *
-pixman_region_extents(region)
-    pixman_region16_t * region;
+pixman_region_extents(pixman_region16_t * region)
 {
     good(region);
     return(&region->extents);

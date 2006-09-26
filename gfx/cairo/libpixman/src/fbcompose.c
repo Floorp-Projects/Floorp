@@ -28,6 +28,7 @@
 #endif
 #include "pixman-xserver-compat.h"
 #include "fbpict.h"
+#include "fbmmx.h"
 
 #ifdef RENDER
 
@@ -3092,8 +3093,8 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
     if (pict->filter == PIXMAN_FILTER_NEAREST || pict->filter == PIXMAN_FILTER_FAST)
     {
         if (pict->repeat == RepeatNormal) {
-            if (PIXREGION_NUM_RECTS(pict->pCompositeClip) == 1) {
-                box = pict->pCompositeClip->extents;
+            if (PIXREGION_NUM_RECTS(pict->pSourceClip) == 1) {
+                box = pict->pSourceClip->extents;
                 for (i = 0; i < width; ++i) {
  		    if (!mask || mask[i] & maskBits)
  		    {
@@ -3128,7 +3129,7 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
 				y = MOD(v.vector[1]>>16, pict->pDrawable->height);
 				x = MOD(v.vector[0]>>16, pict->pDrawable->width);
 			    }
-			    if (pixman_region_contains_point (pict->pCompositeClip, x, y, &box))
+			    if (pixman_region_contains_point (pict->pSourceClip, x, y, &box))
 				buffer[i] = fetch(bits + (y + pict->pDrawable->y)*stride, x + pict->pDrawable->x, indexed);
 			    else
 				buffer[i] = 0;
@@ -3140,8 +3141,8 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
                 }
             }
         } else {
-            if (PIXREGION_NUM_RECTS(pict->pCompositeClip) == 1) {
-                box = pict->pCompositeClip->extents;
+            if (PIXREGION_NUM_RECTS(pict->pSourceClip) == 1) {
+                box = pict->pSourceClip->extents;
                 for (i = 0; i < width; ++i) {
  		    if (!mask || mask[i] & maskBits)
  		    {
@@ -3175,7 +3176,7 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
                             y = v.vector[1]>>16;
                             x = v.vector[0]>>16;
                         }
-                        if (pixman_region_contains_point (pict->pCompositeClip, x, y, &box))
+                        if (pixman_region_contains_point (pict->pSourceClip, x, y, &box))
                             buffer[i] = fetch(bits + (y + pict->pDrawable->y)*stride, x + pict->pDrawable->x, indexed);
                         else
                             buffer[i] = 0;
@@ -3194,8 +3195,8 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
         unit.vector[1] -= unit.vector[2]/2;
 
         if (pict->repeat == RepeatNormal) {
-            if (PIXREGION_NUM_RECTS(pict->pCompositeClip) == 1) {
-                box = pict->pCompositeClip->extents;
+            if (PIXREGION_NUM_RECTS(pict->pSourceClip) == 1) {
+                box = pict->pSourceClip->extents;
                 for (i = 0; i < width; ++i) {
 		    if (!mask || mask[i] & maskBits)
 		    {
@@ -3298,14 +3299,14 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
 
 			    b = bits + (y1 + pict->pDrawable->y)*stride;
 
-			    tl = pixman_region_contains_point(pict->pCompositeClip, x1, y1, &box)
+			    tl = pixman_region_contains_point(pict->pSourceClip, x1, y1, &box)
 				? fetch(b, x1 + pict->pDrawable->x, indexed) : 0;
-			    tr = pixman_region_contains_point(pict->pCompositeClip, x2, y1, &box)
+			    tr = pixman_region_contains_point(pict->pSourceClip, x2, y1, &box)
 				? fetch(b, x2 + pict->pDrawable->x, indexed) : 0;
 			    b = bits + (y2 + pict->pDrawable->y)*stride;
-			    bl = pixman_region_contains_point(pict->pCompositeClip, x1, y2, &box)
+			    bl = pixman_region_contains_point(pict->pSourceClip, x1, y2, &box)
 				? fetch(b, x1 + pict->pDrawable->x, indexed) : 0;
-			    br = pixman_region_contains_point(pict->pCompositeClip, x2, y2, &box)
+			    br = pixman_region_contains_point(pict->pSourceClip, x2, y2, &box)
 				? fetch(b, x2 + pict->pDrawable->x, indexed) : 0;
 
 			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
@@ -3329,8 +3330,8 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
                 }
             }
         } else {
-            if (PIXREGION_NUM_RECTS(pict->pCompositeClip) == 1) {
-                box = pict->pCompositeClip->extents;
+            if (PIXREGION_NUM_RECTS(pict->pSourceClip) == 1) {
+                box = pict->pSourceClip->extents;
                 for (i = 0; i < width; ++i) {
 		    if (!mask || mask[i] & maskBits)
 		    {
@@ -3431,14 +3432,14 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
 			    b = bits + (y1 + pict->pDrawable->y)*stride;
 			    x_off = x1 + pict->pDrawable->x;
 
-			    tl = pixman_region_contains_point(pict->pCompositeClip, x1, y1, &box)
+			    tl = pixman_region_contains_point(pict->pSourceClip, x1, y1, &box)
 				? fetch(b, x_off, indexed) : 0;
-			    tr = pixman_region_contains_point(pict->pCompositeClip, x2, y1, &box)
+			    tr = pixman_region_contains_point(pict->pSourceClip, x2, y1, &box)
 				? fetch(b, x_off + 1, indexed) : 0;
 			    b += stride;
-			    bl = pixman_region_contains_point(pict->pCompositeClip, x1, y2, &box)
+			    bl = pixman_region_contains_point(pict->pSourceClip, x1, y2, &box)
 				? fetch(b, x_off, indexed) : 0;
-			    br = pixman_region_contains_point(pict->pCompositeClip, x2, y2, &box)
+			    br = pixman_region_contains_point(pict->pSourceClip, x2, y2, &box)
 				? fetch(b, x_off + 1, indexed) : 0;
 
 			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
@@ -3500,7 +3501,7 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
 			for (x = x1; x < x2; x++) {
 			    if (*p) {
 				int tx = (pict->repeat == RepeatNormal) ? MOD (x, pict->pDrawable->width) : x;
-				if (pixman_region_contains_point (pict->pCompositeClip, tx, ty, &box)) {
+				if (pixman_region_contains_point (pict->pSourceClip, tx, ty, &box)) {
 				    FbBits *b = bits + (ty + pict->pDrawable->y)*stride;
 				    CARD32 c = fetch(b, tx + pict->pDrawable->x, indexed);
 
@@ -3755,6 +3756,24 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 	if (!compose)
 	    return;
 
+	/* XXX: The non-MMX version of some of the fbCompose functions
+	 * overwrite the source or mask data (ones that use
+	 * fbCombineMaskC, fbCombineMaskAlphaC, or fbCombineMaskValueC
+	 * as helpers).  This causes problems with the optimization in
+	 * this function that only fetches the source or mask once if
+	 * possible.  If we're on a non-MMX machine, disable this
+	 * optimization as a bandaid fix.
+	 *
+	 * https://bugs.freedesktop.org/show_bug.cgi?id=5777
+	 */
+#ifdef USE_MMX
+	if (!fbHaveMMX())
+#endif
+	{
+	    srcClass = SourcePictClassUnknown;
+	    maskClass = SourcePictClassUnknown;
+	}
+
 	for (i = 0; i < data->height; ++i) {
 	    /* fill first half of scanline with source */
 	    if (fetchSrc)
@@ -3764,7 +3783,7 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 		    /* fetch mask before source so that fetching of
 		       source can be optimized */
 		    fetchMask (data->mask, data->xMask, data->yMask + i,
-			       data->width, mask_buffer, 0, 0);
+			       data->width, mask_buffer, NULL, 0);
 
 		    if (maskClass == SourcePictClassHorizontal)
 			fetchMask = NULL;
@@ -3773,7 +3792,7 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 		if (srcClass == SourcePictClassHorizontal)
 		{
 		    fetchSrc (data->src, data->xSrc, data->ySrc + i,
-			      data->width, src_buffer, 0, 0);
+			      data->width, src_buffer, NULL, 0);
 		    fetchSrc = NULL;
 		}
 		else
@@ -3786,7 +3805,7 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 	    else if (fetchMask)
 	    {
 		fetchMask (data->mask, data->xMask, data->yMask + i,
-			   data->width, mask_buffer, 0, 0);
+			   data->width, mask_buffer, NULL, 0);
 	    }
 
 	    if (store)
@@ -3794,7 +3813,7 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 		/* fill dest into second half of scanline */
 		if (fetchDest)
 		    fetchDest (data->dest, data->xDest, data->yDest + i,
-			       data->width, dest_buffer, 0, 0);
+			       data->width, dest_buffer, NULL, 0);
 
 		/* blend */
 		compose (dest_buffer, src_buffer, mask_buffer, data->width);
@@ -3814,8 +3833,8 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
     }
     else
     {
-	CARD32 *src_mask_buffer = 0; /* squelch bogus compiler warning */
-	CARD32 *mask_buffer = 0;
+	CARD32 *src_mask_buffer = NULL; /* squelch bogus compiler warning */
+	CARD32 *mask_buffer = NULL;
 	CombineFuncU compose = composeFunctions.combineU[data->op];
 	if (!compose)
 	    return;
@@ -3832,7 +3851,7 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 		    /* fetch mask before source so that fetching of
 		       source can be optimized */
 		    fetchMask (data->mask, data->xMask, data->yMask + i,
-			       data->width, mask_buffer, 0, 0);
+			       data->width, mask_buffer, NULL, 0);
 
 		    if (maskClass == SourcePictClassHorizontal)
 			fetchMask = NULL;
@@ -3841,7 +3860,7 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 		if (srcClass == SourcePictClassHorizontal)
 		{
 		    fetchSrc (data->src, data->xSrc, data->ySrc + i,
-			      data->width, src_buffer, 0, 0);
+			      data->width, src_buffer, NULL, 0);
 
 		    if (mask_buffer)
 		    {
@@ -3870,7 +3889,7 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 	    else if (fetchMask)
 	    {
 		fetchMask (data->mask, data->xMask, data->yMask + i,
-			   data->width, mask_buffer, 0, 0);
+			   data->width, mask_buffer, NULL, 0);
 
 		fbCombineInU (mask_buffer, src_buffer, data->width);
 
@@ -3882,7 +3901,7 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 		/* fill dest into second half of scanline */
 		if (fetchDest)
 		    fetchDest (data->dest, data->xDest, data->yDest + i,
-			       data->width, dest_buffer, 0, 0);
+			       data->width, dest_buffer, NULL, 0);
 
 		/* blend */
 		compose (dest_buffer, src_mask_buffer, data->width);

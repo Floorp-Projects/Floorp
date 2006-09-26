@@ -115,7 +115,7 @@ static const cairo_hash_table_arrangement_t hash_table_arrangements [] = {
     { 268435456,	590559793,	590559791	}
 };
 
-#define NUM_HASH_TABLE_ARRANGEMENTS (sizeof(hash_table_arrangements)/sizeof(hash_table_arrangements[0]))
+#define NUM_HASH_TABLE_ARRANGEMENTS ((int)(sizeof(hash_table_arrangements)/sizeof(hash_table_arrangements[0])))
 
 struct _cairo_hash_table {
     cairo_hash_keys_equal_func_t keys_equal;

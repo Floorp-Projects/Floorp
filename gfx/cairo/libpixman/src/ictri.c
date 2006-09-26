@@ -143,7 +143,7 @@ pixman_composite_triangles (pixman_operator_t	op,
 		      const pixman_triangle_t	*tris,
 		      int		ntris)
 {
-    pixman_box16_t	bounds;
+    pixman_box16_t	bounds = {0, 0, 0, 0}; /* shut gcc up */
     pixman_image_t		*image = NULL;
     int		xDst, yDst;
     int		xRel, yRel;
@@ -215,7 +215,7 @@ pixman_composite_tri_strip (pixman_operator_t		op,
 		     int		npoints)
 {
     pixman_triangle_t		tri;
-    pixman_box16_t	bounds;
+    pixman_box16_t	bounds = {0, 0, 0, 0}; /* shut gcc up */
     pixman_image_t		*image = NULL;
     int		xDst, yDst;
     int		xRel, yRel;
@@ -292,7 +292,7 @@ pixman_composite_tri_fan (pixman_operator_t		op,
 		   int			npoints)
 {
     pixman_triangle_t		tri;
-    pixman_box16_t	bounds;
+    pixman_box16_t	bounds = {0, 0, 0, 0}; /* shut gcc up */
     pixman_image_t		*image = NULL;
     const pixman_point_fixed_t	*first;
     int		xDst, yDst;

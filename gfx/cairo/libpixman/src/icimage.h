@@ -243,7 +243,7 @@ FbComputeCompositeRegion (pixman_region16_t	*region,
 			  uint16_t	width,
 			  uint16_t	height);
 
-int
+pixman_private int
 miIsSolidAlpha (pixman_image_t *src);
 
 /*

@@ -49,7 +49,7 @@ static const cairo_font_face_backend_t _cairo_toy_font_face_backend;
 const cairo_font_face_t _cairo_font_face_nil = {
     { 0 },			/* hash_entry */
     CAIRO_STATUS_NO_MEMORY,	/* status */
-    -1,		                /* ref_count */
+    CAIRO_REF_COUNT_INVALID,	/* ref_count */
     { 0, 0, 0, NULL },		/* user_data */
     &_cairo_toy_font_face_backend
 };
@@ -82,7 +82,7 @@ cairo_font_face_reference (cairo_font_face_t *font_face)
     if (font_face == NULL)
 	return NULL;
 
-    if (font_face->ref_count == (unsigned int)-1)
+    if (font_face->ref_count == CAIRO_REF_COUNT_INVALID)
 	return font_face;
 
     /* We would normally assert (font_face->ref_count >0) here but we
@@ -93,6 +93,7 @@ cairo_font_face_reference (cairo_font_face_t *font_face)
 
     return font_face;
 }
+slim_hidden_def (cairo_font_face_reference);
 
 /**
  * cairo_font_face_destroy:
@@ -108,7 +109,7 @@ cairo_font_face_destroy (cairo_font_face_t *font_face)
     if (font_face == NULL)
 	return;
 
-    if (font_face->ref_count == (unsigned int)-1)
+    if (font_face->ref_count == CAIRO_REF_COUNT_INVALID)
 	return;
 
     assert (font_face->ref_count > 0);
@@ -129,12 +130,16 @@ cairo_font_face_destroy (cairo_font_face_t *font_face)
 
     free (font_face);
 }
+slim_hidden_def (cairo_font_face_destroy);
 
 /**
  * cairo_font_face_get_type:
  * @font_face: a #cairo_font_face_t
  *
- * Return value: The type of @font_face. See #cairo_font_type_t.
+ * This function returns the type of the backend used to create
+ * a font face. See #cairo_font_type_t for available types.
+ *
+ * Return value: The type of @font_face.
  *
  * Since: 1.2
  **/
@@ -202,7 +207,7 @@ cairo_font_face_set_user_data (cairo_font_face_t	   *font_face,
 			       void			   *user_data,
 			       cairo_destroy_func_t	    destroy)
 {
-    if (font_face->ref_count == -1)
+    if (font_face->ref_count == CAIRO_REF_COUNT_INVALID)
 	return CAIRO_STATUS_NO_MEMORY;
 
     return _cairo_user_data_array_set_data (&font_face->user_data,
