@@ -248,8 +248,6 @@ SECStatus nsNSSHttpRequestSession::addHeaderFcn(const char *http_header_name,
   //                                  PR_FALSE)));
 }
 
-#define CONDITION_WAIT_TIME PR_MillisecondsToInterval(250)
-
 SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
                                                         PRUint16 *http_response_code, 
                                                         const char **http_response_content_type, 
@@ -259,32 +257,6 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
 {
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
          ("nsNSSHttpRequestSession::trySendAndReceiveFcn to %s\n", mURL.get()));
-
-  if (NS_IsMainThread())
-  {
-    nsresult rv;
-    nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-    if (NS_FAILED(rv))
-      return SECFailure;
-
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-    if (wwatch){
-      nsCOMPtr<nsIPrompt> prompter;
-      wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
-
-      nsString message;
-      nssComponent->GetPIPNSSBundleString("OCSPDeadlock", message);
-
-      if(prompter) {
-        nsPSMUITracker tracker;
-        if (!tracker.isUIForbidden()) {
-          prompter->Alert(0, message.get());
-        }
-      }
-    }
-
-    return SECFailure;
-  }
 
   const int max_retries = 5;
   int retry_count = 0;
@@ -387,10 +359,36 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(PRBool &retryable_error,
     nsAutoLock locker(waitLock);
 
     const PRIntervalTime start_time = PR_IntervalNow();
-    const PRIntervalTime wait_interval = CONDITION_WAIT_TIME;
+    PRIntervalTime wait_interval;
+
+    PRBool running_on_main_thread = NS_IsMainThread();
+    if (running_on_main_thread)
+    {
+      // let's process events quickly
+      wait_interval = PR_MicrosecondsToInterval(50);
+    }
+    else
+    { 
+      // On a secondary thread, it's fine to wait some more for
+      // for the condition variable.
+      wait_interval = PR_MillisecondsToInterval(250);
+    }
 
     while (waitFlag)
     {
+      if (running_on_main_thread)
+      {
+        // Networking runs on the main thread, which we happen to block here.
+        // Processing events will allow the OCSP networking to run while we 
+        // are waiting. Thanks a lot to Darin Fisher for rewriting the 
+        // thread manager. Thanks a lot to Christian Biesinger who
+        // made me aware of this possibility. (kaie)
+
+        locker.unlock();
+        NS_ProcessNextEvent(nsnull);
+        locker.lock();
+      }
+
       PR_WaitCondVar(waitCondition, wait_interval);
       
       if (!waitFlag)
