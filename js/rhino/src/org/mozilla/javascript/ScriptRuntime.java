@@ -2632,7 +2632,7 @@ public class ScriptRuntime {
      *
      * @return true iff rhs appears in lhs' proto chain
      */
-    protected static boolean jsDelegatesTo(Scriptable lhs, Scriptable rhs) {
+    public static boolean jsDelegatesTo(Scriptable lhs, Scriptable rhs) {
         Scriptable proto = lhs.getPrototype();
 
         while (proto != null) {
@@ -2836,12 +2836,11 @@ public class ScriptRuntime {
 
 
     public static void enterActivationFunction(Context cx,
-                                               Scriptable activation)
+                                               NativeCall call)
     {
         if (cx.topCallScope == null)
             throw new IllegalStateException();
 
-        NativeCall call = (NativeCall)activation;
         call.parentActivationCall = cx.currentActivationCall;
         cx.currentActivationCall = call;
     }
