@@ -1,4 +1,4 @@
- /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 // vim:cindent:ts=2:et:sw=2:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -62,7 +62,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLTableColElement.h"
 #include "nsIDOMHTMLTableCaptionElem.h"
-#include "nsTableCellFrame.h" // to get IS_CELL_FRAME
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
 #include "nsStyleSet.h"
