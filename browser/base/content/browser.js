@@ -6884,7 +6884,7 @@ HistoryMenu.populateUndoSubmenu = function PHM_populateUndoSubmenu() {
   }
 
   // "open in tabs"
-  var strings = document.getElementById("placeBundle");
+  var strings = gNavigatorBundle;
   undoPopup.appendChild(document.createElement("menuseparator"));
   m = undoPopup.appendChild(document.createElement("menuitem"));
   m.setAttribute("label", strings.getString("menuOpenInTabs.label"));
