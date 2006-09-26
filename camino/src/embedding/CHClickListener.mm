@@ -235,9 +235,9 @@ CHClickListener::MouseDown(nsIDOMEvent* aEvent)
   if (!mainScreen)
     return NS_ERROR_FAILURE;
 
-  // y-flip to convert to cocoa coords
+  // y-flip and subtract the control height to convert to cocoa coords
   NSRect mainScreenFrame = [mainScreen frame];
-  selectScreenRect.origin.y = NSMaxY(mainScreenFrame) - selectScreenRect.origin.y;
+  selectScreenRect.origin.y = NSMaxY(mainScreenFrame) - selectScreenRect.origin.y - selectScreenRect.size.height;
 
   // convert to window coords
   NSRect selectFrameRect = selectScreenRect;
