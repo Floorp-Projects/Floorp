@@ -275,7 +275,7 @@ png_decompress_chunk(png_structp png_ptr, int comp_type,
       if (ret != Z_STREAM_END)
       {
 #if !defined(PNG_NO_STDIO) && !defined(_WIN32_WCE)
-         char umsg[50];
+         char umsg[52];
 
          if (ret == Z_BUF_ERROR)
             sprintf(umsg,"Buffer error in compressed datastream in %s chunk",
