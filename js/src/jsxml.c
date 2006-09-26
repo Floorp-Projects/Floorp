@@ -6038,23 +6038,76 @@ xml_hasSimpleContent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_TRUE;
 }
 
-static JSBool
-xml_inScopeNamespaces(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                      jsval *rval)
+typedef struct JSTempRootedNSArray {
+    JSTempValueRooter   tvr;
+    JSXMLArray          array;
+    jsval               value;  /* extra root for temporaries */
+} JSTempRootedNSArray;
+
+JS_STATIC_DLL_CALLBACK(void)
+mark_temp_ns_array(JSContext *cx, JSTempValueRooter *tvr)
 {
-    JSObject *arrayobj, *nsobj;
-    JSXML *xml;
-    uint32 length, i, j, n;
-    JSXMLNamespace *ns, *ns2;
-    jsval v;
+    JSTempRootedNSArray *tmp = (JSTempRootedNSArray *)tvr;
+
+    namespace_mark_vector(cx,
+                          (JSXMLNamespace **)tmp->array.vector,
+                          tmp->array.length);
+    if (JSVAL_IS_GCTHING(tmp->value))
+        GC_MARK(cx, JSVAL_TO_GCTHING(tmp->value), "temp_ns_array_value");
+}
+
+static void
+InitTempNSArray(JSContext *cx, JSTempRootedNSArray *tmp)
+{
+    XMLArrayInit(cx, &tmp->array, 0);
+    tmp->value = JSVAL_NULL;
+    JS_PUSH_TEMP_ROOT_MARKER(cx, mark_temp_ns_array, &tmp->tvr);
+}
+
+static void
+FinishTempNSArray(JSContext *cx, JSTempRootedNSArray *tmp)
+{
+    JS_ASSERT(tmp->tvr.u.marker == mark_temp_ns_array);
+    JS_POP_TEMP_ROOT(cx, &tmp->tvr);
+    XMLArrayFinish(cx, &tmp->array);
+}
+
+/*
+ * Populate a new JS array with elements of JSTempRootetNSArray.array
+ * and place the result into rval.
+ * rval must point to a rooted location.
+ */
+static JSBool
+TempNSArrayToJSArray(JSContext *cx, JSTempRootedNSArray *tmp, jsval *rval)
+{
+    JSObject *arrayobj;
+    uint32 i, n;
+    JSXMLNamespace *ns;
+    JSObject *nsobj;
 
     arrayobj = js_NewArrayObject(cx, 0, NULL);
     if (!arrayobj)
         return JS_FALSE;
     *rval = OBJECT_TO_JSVAL(arrayobj);
-    length = 0;
+    for (i = 0, n = tmp->array.length; i < n; i++) {
+        ns = XMLARRAY_MEMBER(&tmp->array, i, JSXMLNamespace);
+        nsobj = js_GetXMLNamespaceObject(cx, ns);
+        if (!nsobj)
+            return JS_FALSE;
+        tmp->value = OBJECT_TO_JSVAL(nsobj);
+        if (!OBJ_SET_PROPERTY(cx, arrayobj, INT_TO_JSID(i), &tmp->value))
+            return JS_FALSE;
+    }
+    return JS_TRUE;
+}
 
-    XML_METHOD_PROLOG;
+static JSBool
+FindInScopeNamespaces(JSContext *cx, JSXML *xml, JSXMLArray *nsarray)
+{
+    uint32 length, i, j, n;
+    JSXMLNamespace *ns, *ns2;
+
+    length = nsarray->length;
     do {
         if (xml->xml_class != JSXML_CLASS_ELEMENT)
             continue;
@@ -6062,10 +6115,7 @@ xml_inScopeNamespaces(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             ns = XMLARRAY_MEMBER(&xml->xml_namespaces, i, JSXMLNamespace);
 
             for (j = 0; j < length; j++) {
-                if (!JS_GetElement(cx, arrayobj, j, &v))
-                    return JS_FALSE;
-                nsobj = JSVAL_TO_OBJECT(v);
-                ns2 = (JSXMLNamespace *) JS_GetPrivate(cx, nsobj);
+                ns2 = XMLARRAY_MEMBER(nsarray, j, JSXMLNamespace);
                 if ((ns2->prefix && ns->prefix)
                     ? js_EqualStrings(ns2->prefix, ns->prefix)
                     : js_EqualStrings(ns2->uri, ns->uri)) {
@@ -6074,17 +6124,32 @@ xml_inScopeNamespaces(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             }
 
             if (j == length) {
-                nsobj = js_GetXMLNamespaceObject(cx, ns);
-                if (!nsobj)
-                    return JS_FALSE;
-                v = OBJECT_TO_JSVAL(nsobj);
-                if (!JS_SetElement(cx, arrayobj, length, &v))
+                if (!XMLARRAY_APPEND(cx, nsarray, ns))
                     return JS_FALSE;
                 ++length;
             }
         }
     } while ((xml = xml->parent) != NULL);
+    JS_ASSERT(length == nsarray->length);
+
     return JS_TRUE;
+}
+
+static JSBool
+xml_inScopeNamespaces(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                      jsval *rval)
+{
+    JSXML *xml;
+    JSTempRootedNSArray namespaces;
+    JSBool ok;
+
+    XML_METHOD_PROLOG;
+
+    InitTempNSArray(cx, &namespaces);
+    ok = FindInScopeNamespaces(cx, xml, &namespaces.array) &&
+         TempNSArrayToJSArray(cx, &namespaces, rval);
+    FinishTempNSArray(cx, &namespaces);
+    return ok;
 }
 
 static JSBool
@@ -6206,13 +6271,12 @@ xml_namespace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval)
 {
     JSXML *xml;
-    JSObject *arrayobj;
+    JSString *prefix;
+    JSTempRootedNSArray inScopeNSes;
     JSBool ok;
     jsuint i, length;
-    jsval v;
-    JSXMLArray inScopeNSes;
     JSXMLNamespace *ns;
-    JSString *prefix;
+    JSObject *nsobj;
 
     XML_METHOD_PROLOG;
     if (argc == 0 &&
@@ -6223,49 +6287,50 @@ xml_namespace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_TRUE;
     }
 
-    if (!xml_inScopeNamespaces(cx, obj, 0, NULL, rval))
-        return JS_FALSE;
-    arrayobj = JSVAL_TO_OBJECT(*rval);
-    ok = js_GetLengthProperty(cx, arrayobj, &length);
-    if (!ok)
-        return JS_FALSE;
-
     if (argc == 0) {
-        if (!XMLArrayInit(cx, &inScopeNSes, length))
-            return JS_FALSE;
-
-        for (i = 0; i < length; i++) {
-            ok = OBJ_GET_PROPERTY(cx, arrayobj, INT_TO_JSID(i), &v);
-            if (!ok)
-                break;
-            JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
-            ns = (JSXMLNamespace *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(v));
-            XMLARRAY_SET_MEMBER(&inScopeNSes, i, ns);
-        }
-
-        ns = ok ? GetNamespace(cx, xml->name, &inScopeNSes) : NULL;
-        XMLArrayFinish(cx, &inScopeNSes);
-        if (!ns)
-            return JS_FALSE;
-
-        *rval = OBJECT_TO_JSVAL(ns->object);
+        prefix = NULL;
     } else {
         prefix = js_ValueToString(cx, argv[0]);
         if (!prefix)
             return JS_FALSE;
         argv[0] = STRING_TO_JSVAL(prefix);      /* local root */
+    }
 
-        for (i = 0; i < length; i++) {
-            if (!OBJ_GET_PROPERTY(cx, arrayobj, INT_TO_JSID(i), &v))
-                return JS_FALSE;
-            JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
-            ns = (JSXMLNamespace *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(v));
+    /* After this point the control must flow through label out. */
+    InitTempNSArray(cx, &inScopeNSes);
+    ok = FindInScopeNamespaces(cx, xml, &inScopeNSes.array);
+    if (!ok)
+        goto out;
+
+    if (!prefix) {
+        ns = GetNamespace(cx, xml->name, &inScopeNSes.array);
+        if (!ns) {
+            ok = JS_FALSE;
+            goto out;
+        }
+    } else {
+        ns = NULL;
+        for (i = 0, length = inScopeNSes.array.length; i < length; i++) {
+            ns = XMLARRAY_MEMBER(&inScopeNSes.array, i, JSXMLNamespace);
             if (ns->prefix && js_EqualStrings(ns->prefix, prefix))
                 break;
+            ns = NULL;
         }
-
-        *rval = (i < length) ? OBJECT_TO_JSVAL(ns->object) : JSVAL_VOID;
     }
+    
+    if (!ns) {
+        *rval = JSVAL_VOID;
+    } else {
+        nsobj = js_GetXMLNamespaceObject(cx, ns);
+        if (!nsobj) {
+            ok = JS_FALSE;
+            goto out;
+        }
+        *rval = OBJECT_TO_JSVAL(nsobj);
+    }
+
+  out:
+    FinishTempNSArray(cx, &inScopeNSes);
     return JS_TRUE;
 }
 
@@ -6273,18 +6338,11 @@ static JSBool
 xml_namespaceDeclarations(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                           jsval *rval)
 {
-    JSObject *arrayobj, *nsobj;
     JSXML *xml, *yml;
     JSBool ok;
-    JSXMLArray ancestors, declared;
+    JSTempRootedNSArray ancestors, declared;
     uint32 i, n;
     JSXMLNamespace *ns;
-    jsval v;
-
-    arrayobj = js_NewArrayObject(cx, 0, NULL);
-    if (!arrayobj)
-        return JS_FALSE;
-    *rval = OBJECT_TO_JSVAL(arrayobj);
 
     XML_METHOD_PROLOG;
     if (JSXML_HAS_VALUE(xml) || xml->xml_class == JSXML_CLASS_LIST)
@@ -6292,16 +6350,16 @@ xml_namespaceDeclarations(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     /* From here, control flow must goto out to finish these arrays. */
     ok = JS_TRUE;
-    XMLArrayInit(cx, &ancestors, 0);
-    XMLArrayInit(cx, &declared, 0);
+    InitTempNSArray(cx, &ancestors);
+    InitTempNSArray(cx, &declared);
     yml = xml;
 
     while ((yml = yml->parent) != NULL) {
         JS_ASSERT(yml->xml_class == JSXML_CLASS_ELEMENT);
         for (i = 0, n = yml->xml_namespaces.length; i < n; i++) {
             ns = XMLARRAY_MEMBER(&yml->xml_namespaces, i, JSXMLNamespace);
-            if (!XMLARRAY_HAS_MEMBER(&ancestors, ns, namespace_match)) {
-                ok = XMLARRAY_APPEND(cx, &ancestors, ns);
+            if (!XMLARRAY_HAS_MEMBER(&ancestors.array, ns, namespace_match)) {
+                ok = XMLARRAY_APPEND(cx, &ancestors.array, ns);
                 if (!ok)
                     goto out;
             }
@@ -6312,29 +6370,19 @@ xml_namespaceDeclarations(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         ns = XMLARRAY_MEMBER(&xml->xml_namespaces, i, JSXMLNamespace);
         if (!ns->declared)
             continue;
-        if (!XMLARRAY_HAS_MEMBER(&ancestors, ns, namespace_match)) {
-            ok = XMLARRAY_APPEND(cx, &declared, ns);
+        if (!XMLARRAY_HAS_MEMBER(&ancestors.array, ns, namespace_match)) {
+            ok = XMLARRAY_APPEND(cx, &declared.array, ns);
             if (!ok)
                 goto out;
         }
     }
 
-    for (i = 0, n = declared.length; i < n; i++) {
-        ns = XMLARRAY_MEMBER(&declared, i, JSXMLNamespace);
-        nsobj = js_GetXMLNamespaceObject(cx, ns);
-        if (!nsobj) {
-            ok = JS_FALSE;
-            goto out;
-        }
-        v = OBJECT_TO_JSVAL(nsobj);
-        ok = OBJ_SET_PROPERTY(cx, arrayobj, INT_TO_JSID(i), &v);
-        if (!ok)
-            goto out;
-    }
+    ok = TempNSArrayToJSArray(cx, &declared, rval);
 
 out:
-    XMLArrayFinish(cx, &ancestors);
-    XMLArrayFinish(cx, &declared);
+    /* Finishing must be in reverse order of initialization to follow LIFO. */
+    FinishTempNSArray(cx, &declared);
+    FinishTempNSArray(cx, &ancestors);
     return ok;
 }
 
