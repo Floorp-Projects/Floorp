@@ -640,8 +640,9 @@ calDavCalendar.prototype = {
 
             if (thisCalendar.mAuthenticationStatus == kCaldavFreshlyAuthenticated) {
                 thisCalendar.mAuthenticationStatus = kCaldavAuthenticated;
-                for (var req in thisCalendar.mPendingStartupRequests) {
-                    thisCalendar.getItems.apply(this, req.pop());
+                while (thisCalendar.mPendingStartupRequests.length > 0) {
+                    var req = thisCalendar.mPendingStartupRequests.pop();
+                    thisCalendar.getItems(req[0], req[1], req[2], req[3], req[4]);
                 }
             }
             return;
