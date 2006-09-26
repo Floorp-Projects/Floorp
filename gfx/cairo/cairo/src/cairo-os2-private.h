@@ -1,6 +1,7 @@
+/* vim: set sw=4 sts=4 et cin: */
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2004 Red Hat, Inc
+ * Copyright (c) 2005-2006 netlabs.org
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,41 +28,50 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is Red Hat, Inc.
+ * The Initial Developer of the Original Code is
+ *     Doodle <doodle@scenergy.dfmk.hu>
  *
  * Contributor(s):
- *	Kristian Høgsberg <krh@redhat.com>
+ *     Peter Weilbacher <mozilla@Weilbacher.org>
  */
 
-#include "cairoint.h"
+#ifndef CAIRO_OS2_PRIVATE_H
+#define CAIRO_OS2_PRIVATE_H
 
-#ifndef CAIRO_FONT_SUBSET_PRIVATE_H
-#define CAIRO_FONT_SUBSET_PRIVATE_H
+#define INCL_DOS
+#define INCL_DOSSEMAPHORES
+#define INCL_DOSERRORS
+#define INCL_WIN
+#define INCL_GPI
+#ifdef __WATCOMC__
+# include <os2.h>
+#else
+# include <os2emx.h>
+#endif
 
-typedef struct cairo_font_subset_backend cairo_font_subset_backend_t;
-typedef struct cairo_font_subset cairo_font_subset_t;
-struct cairo_font_subset {
-    cairo_font_subset_backend_t *backend;
-    cairo_unscaled_font_t *unscaled_font;
-    unsigned int font_id;
-    char *base_font;
-    int num_glyphs;
-    int *widths;
-    long x_min, y_min, x_max, y_max;
-    long ascent, descent;
-};
+#include <cairo-os2.h>
+#include <cairoint.h>
 
-cairo_private int
-_cairo_font_subset_use_glyph (cairo_font_subset_t *font, int glyph);
+typedef struct _cairo_os2_surface
+{
+    cairo_surface_t        base;
 
-cairo_private cairo_status_t
-_cairo_font_subset_generate (cairo_font_subset_t *font,
-			    const char **data, unsigned long *length);
+    /* Mutex semaphore to protect private fields from concurrent access */
+    HMTX                   hmtx_use_private_fields;
+    /* Private fields: */
+    HPS                    hps_client_window;
+    HWND                   hwnd_client_window;
+    BITMAPINFO2            bitmap_info;
+    unsigned char         *pixels;
+    cairo_image_surface_t *image_surface;
+    int                    pixel_array_lend_count;
+    HEV                    hev_pixel_array_came_back;
 
-cairo_private void
-_cairo_font_subset_destroy (cairo_font_subset_t *font);
+    RECTL                  rcl_dirty_area;
+    cairo_bool_t           dirty_area_present;
 
-cairo_private cairo_font_subset_t *
-_cairo_font_subset_create (cairo_unscaled_font_t *unscaled_font);
+    /* General flags: */
+    cairo_bool_t           blit_as_changes;
+} cairo_os2_surface_t;
 
-#endif /* CAIRO_FONT_SUBSET_PRIVATE_H */
+#endif /* CAIRO_OS2_PRIVATE_H */

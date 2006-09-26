@@ -31,7 +31,7 @@
  * The Initial Developer of the Original Code is Mozilla Corporation.
  *
  * Contributor(s):
- *      Vladimir Vukicevic <vladimir@mozilla.com>
+ *	Vladimir Vukicevic <vladimir@mozilla.com>
  */
 
 #include <Carbon/Carbon.h>
@@ -50,28 +50,28 @@
 #undef NQUARTZ_DEBUG
 
 #ifdef NQUARTZ_DEBUG
-#define ND(_x)  fprintf _x
+#define ND(_x)	fprintf _x
 #else
-#define ND(_x)  do {} while(0)
+#define ND(_x)	do {} while(0)
 #endif
 
 /* This method is private, but it exists.  Its params are are exposed
  * as args to the NS* method, but not as CG.
  */
 enum PrivateCGCompositeMode {
-    kPrivateCGCompositeClear            = 0,
-    kPrivateCGCompositeCopy             = 1,
-    kPrivateCGCompositeSourceOver       = 2,
-    kPrivateCGCompositeSourceIn         = 3,
-    kPrivateCGCompositeSourceOut        = 4,
-    kPrivateCGCompositeSourceAtop       = 5,
-    kPrivateCGCompositeDestinationOver  = 6,
-    kPrivateCGCompositeDestinationIn    = 7,
-    kPrivateCGCompositeDestinationOut   = 8,
-    kPrivateCGCompositeDestinationAtop  = 9,
-    kPrivateCGCompositeXOR              = 10,
-    kPrivateCGCompositePlusDarker       = 11, // (max (0, (1-d) + (1-s)))
-    kPrivateCGCompositePlusLighter      = 12, // (min (1, s + d))
+    kPrivateCGCompositeClear		= 0,
+    kPrivateCGCompositeCopy		= 1,
+    kPrivateCGCompositeSourceOver	= 2,
+    kPrivateCGCompositeSourceIn		= 3,
+    kPrivateCGCompositeSourceOut	= 4,
+    kPrivateCGCompositeSourceAtop	= 5,
+    kPrivateCGCompositeDestinationOver	= 6,
+    kPrivateCGCompositeDestinationIn	= 7,
+    kPrivateCGCompositeDestinationOut	= 8,
+    kPrivateCGCompositeDestinationAtop	= 9,
+    kPrivateCGCompositeXOR		= 10,
+    kPrivateCGCompositePlusDarker	= 11, // (max (0, (1-d) + (1-s)))
+    kPrivateCGCompositePlusLighter	= 12, // (min (1, s + d))
 };
 typedef enum PrivateCGCompositeMode PrivateCGCompositeMode;
 CG_EXTERN void CGContextSetCompositeOperation (CGContextRef, PrivateCGCompositeMode);
@@ -683,8 +683,8 @@ _cairo_nquartz_setup_source (cairo_nquartz_surface_t *surface,
 	// pattern (which may be stack allocated)
 	CGContextSaveGState(surface->cgContext);
 
-        CGColorSpaceRef patternSpace = CGColorSpaceCreatePattern(NULL);
-        CGContextSetFillColorSpace (surface->cgContext, patternSpace);
+	CGColorSpaceRef patternSpace = CGColorSpaceCreatePattern(NULL);
+	CGContextSetFillColorSpace (surface->cgContext, patternSpace);
 	CGContextSetFillPattern (surface->cgContext, pattern, &patternAlpha);
 	CGColorSpaceRelease (patternSpace);
 
@@ -732,7 +732,7 @@ static void
 ImageDataReleaseFunc(void *info, const void *data, size_t size)
 {
     if (data != NULL) {
-        free((void *) data);
+	free((void *) data);
     }
 }
 
@@ -941,7 +941,7 @@ _cairo_nquartz_surface_acquire_dest_image (void *abstract_surface,
 
     status = _cairo_nquartz_get_image (surface, image_out, &data);
     if (status)
-        return status;
+	return status;
 
     *image_extra = data;
 
@@ -1521,7 +1521,7 @@ _cairo_nquartz_surface_create_internal (CGContextRef cgContext,
     /* Init the base surface */
     surface = malloc(sizeof(cairo_nquartz_surface_t));
     if (surface == NULL) {
-        _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
     }
 
@@ -1578,7 +1578,7 @@ cairo_nquartz_surface_create_for_agl_context (AGLContext aglContext,
     if (!surf) {
 	CGContextRelease (cgc);
 	// create_internal will have set an error
-        return (cairo_surface_t*) &_cairo_surface_nil;
+	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
     return (cairo_surface_t *) surf;
@@ -1600,7 +1600,7 @@ cairo_nquartz_surface_create_for_cg_context (CGContextRef cgContext,
     if (!surf) {
 	CGContextRelease (cgContext);
 	// create_internal will have set an error
-        return (cairo_surface_t*) &_cairo_surface_nil;
+	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
     return (cairo_surface_t *) surf;
@@ -1643,17 +1643,17 @@ cairo_nquartz_surface_create (cairo_format_t format,
 	 * quantities.
 	 */
 	_cairo_error (CAIRO_STATUS_INVALID_FORMAT);
-        return (cairo_surface_t*) &_cairo_surface_nil;
+	return (cairo_surface_t*) &_cairo_surface_nil;
     } else {
 	_cairo_error (CAIRO_STATUS_INVALID_FORMAT);
-        return (cairo_surface_t*) &_cairo_surface_nil;
+	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
     imageData = malloc (height * stride);
     if (!imageData) {
 	CGColorSpaceRelease (cgColorspace);
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-        return (cairo_surface_t*) &_cairo_surface_nil;
+	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
     cgc = CGBitmapContextCreate (imageData,
@@ -1666,7 +1666,7 @@ cairo_nquartz_surface_create (cairo_format_t format,
     CGColorSpaceRelease (cgColorspace);
 
     if (!cgc) {
-        _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
@@ -1675,7 +1675,7 @@ cairo_nquartz_surface_create (cairo_format_t format,
     if (!surf) {
 	CGContextRelease (cgc);
 	// create_internal will have set an error
-        return (cairo_surface_t*) &_cairo_surface_nil;
+	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
     surf->imageData = imageData;
@@ -1714,34 +1714,34 @@ void ExportCGImageToPNGFile(CGImageRef inImageRef, char* dest)
 
     // create the data reference
     result = QTNewDataReferenceFromFullPathCFString(inPath, kQTNativeDefaultPathStyle,
-                                                    0, &dataRef, &dataRefType);
+						    0, &dataRef, &dataRefType);
 
     if (NULL != dataRef && noErr == result) {
-        // get the PNG exporter
-        result = OpenADefaultComponent(GraphicsExporterComponentType, kQTFileTypePNG,
-                                       &grex);
+	// get the PNG exporter
+	result = OpenADefaultComponent(GraphicsExporterComponentType, kQTFileTypePNG,
+				       &grex);
 
-        if (grex) {
-            // tell the exporter where to find its source image
-            result = GraphicsExportSetInputCGImage(grex, inImageRef);
+	if (grex) {
+	    // tell the exporter where to find its source image
+	    result = GraphicsExportSetInputCGImage(grex, inImageRef);
 
-            if (noErr == result) {
-                // tell the exporter where to save the exporter image
-                result = GraphicsExportSetOutputDataReference(grex, dataRef,
-                                                              dataRefType);
+	    if (noErr == result) {
+		// tell the exporter where to save the exporter image
+		result = GraphicsExportSetOutputDataReference(grex, dataRef,
+							      dataRefType);
 
-                if (noErr == result) {
-                    // write the PNG file
-                    result = GraphicsExportDoExport(grex, &sizeWritten);
-                }
-            }
+		if (noErr == result) {
+		    // write the PNG file
+		    result = GraphicsExportDoExport(grex, &sizeWritten);
+		}
+	    }
 
-            // remember to close the component
-            CloseComponent(grex);
-        }
+	    // remember to close the component
+	    CloseComponent(grex);
+	}
 
-        // remember to dispose of the data reference handle
-        DisposeHandle(dataRef);
+	// remember to dispose of the data reference handle
+	DisposeHandle(dataRef);
     }
 }
 #endif

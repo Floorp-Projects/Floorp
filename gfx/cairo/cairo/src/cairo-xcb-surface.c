@@ -37,34 +37,9 @@
 #include "cairoint.h"
 #include "cairo-xcb.h"
 #include "cairo-xcb-xrender.h"
+#include <X11/XCB/xcb_renderutil.h>
 
 #define AllPlanes               ((unsigned long)~0L)
-
-static XCBRenderPICTFORMAT
-format_from_visual(XCBConnection *c, XCBVISUALID visual)
-{
-    static const XCBRenderPICTFORMAT nil = { 0 };
-    XCBRenderQueryPictFormatsRep *r;
-    XCBRenderPICTSCREENIter si;
-    XCBRenderPICTDEPTHIter di;
-    XCBRenderPICTVISUALIter vi;
-
-    r = XCBRenderQueryPictFormatsReply(c, XCBRenderQueryPictFormats(c), 0);
-    if(!r)
-	return nil;
-
-    for(si = XCBRenderQueryPictFormatsScreensIter(r); si.rem; XCBRenderPICTSCREENNext(&si))
-	for(di = XCBRenderPICTSCREENDepthsIter(si.data); di.rem; XCBRenderPICTDEPTHNext(&di))
-	    for(vi = XCBRenderPICTDEPTHVisualsIter(di.data); vi.rem; XCBRenderPICTVISUALNext(&vi))
-		if(vi.data->visual.id == visual.id)
-		{
-		    XCBRenderPICTFORMAT ret = vi.data->format;
-		    free(r);
-		    return ret;
-		}
-
-    return nil;
-}
 
 static cairo_content_t
 _xcb_render_format_to_content (XCBRenderPICTFORMINFO *xrender_format)
@@ -90,95 +65,6 @@ _xcb_render_format_to_content (XCBRenderPICTFORMINFO *xrender_format)
     else
 	return CAIRO_CONTENT_COLOR;
 
-}
-
-/* XXX: Why is this ridiculously complex compared to the equivalent
- * function in cairo-xlib-surface.c */
-static XCBRenderPICTFORMINFO
-_format_from_cairo(XCBConnection *c, cairo_format_t fmt)
-{
-    XCBRenderPICTFORMINFO ret = {{ 0 }};
-    struct tmpl_t {
-	XCBRenderDIRECTFORMAT direct;
-	CARD8 depth;
-    };
-    static const struct tmpl_t templates[] = {
-	/* CAIRO_FORMAT_ARGB32 */
-	{
-	    {
-		16, 0xff,
-		8,  0xff,
-		0,  0xff,
-		24, 0xff
-	    },
-	    32
-	},
-	/* CAIRO_FORMAT_RGB24 */
-	{
-	    {
-		16, 0xff,
-		8,  0xff,
-		0,  0xff,
-		0,  0x00
-	    },
-	    24
-	},
-	/* CAIRO_FORMAT_A8 */
-	{
-	    {
-		0,  0x00,
-		0,  0x00,
-		0,  0x00,
-		0,  0xff
-	    },
-	    8
-	},
-	/* CAIRO_FORMAT_A1 */
-	{
-	    {
-		0,  0x00,
-		0,  0x00,
-		0,  0x00,
-		0,  0x01
-	    },
-	    1
-	},
-    };
-    const struct tmpl_t *tmpl;
-    XCBRenderQueryPictFormatsRep *r;
-    XCBRenderPICTFORMINFOIter fi;
-
-    if(fmt < 0 || fmt >= (sizeof(templates) / sizeof(*templates)))
-	return ret;
-    tmpl = templates + fmt;
-
-    r = XCBRenderQueryPictFormatsReply(c, XCBRenderQueryPictFormats(c), 0);
-    if(!r)
-	return ret;
-
-    for(fi = XCBRenderQueryPictFormatsFormatsIter(r); fi.rem; XCBRenderPICTFORMINFONext(&fi))
-    {
-	const XCBRenderDIRECTFORMAT *t, *f;
-	if(fi.data->type != XCBRenderPictTypeDirect)
-	    continue;
-	if(fi.data->depth != tmpl->depth)
-	    continue;
-	t = &tmpl->direct;
-	f = &fi.data->direct;
-	if(t->red_mask && (t->red_mask != f->red_mask || t->red_shift != f->red_shift))
-	    continue;
-	if(t->green_mask && (t->green_mask != f->green_mask || t->green_shift != f->green_shift))
-	    continue;
-	if(t->blue_mask && (t->blue_mask != f->blue_mask || t->blue_shift != f->blue_shift))
-	    continue;
-	if(t->alpha_mask && (t->alpha_mask != f->alpha_mask || t->alpha_shift != f->alpha_shift))
-	    continue;
-
-	ret = *fi.data;
-    }
-
-    free(r);
-    return ret;
 }
 
 /*
@@ -208,6 +94,9 @@ typedef struct cairo_xcb_surface {
     int width;
     int height;
     int depth;
+
+    XCBRECTANGLE *clip_rects;
+    int num_clip_rects;
 
     XCBRenderPICTURE picture;
     XCBRenderPICTFORMINFO format;
@@ -265,7 +154,7 @@ _cairo_xcb_surface_create_similar (void		       *abstract_src,
     XCBDRAWABLE d;
     cairo_xcb_surface_t *surface;
     cairo_format_t format = _cairo_format_from_content (content);
-    XCBRenderPICTFORMINFO xrender_format = _format_from_cairo (dpy, format);
+    XCBRenderPICTFORMINFO *xrender_format;
 
     /* As a good first approximation, if the display doesn't have COMPOSITE,
      * we're better off using image surfaces for all temporary operations
@@ -280,9 +169,11 @@ _cairo_xcb_surface_create_similar (void		       *abstract_src,
 		     width <= 0 ? 1 : width,
 		     height <= 0 ? 1 : height);
 
+    xrender_format = XCBRenderUtilFindStandardFormat (XCBRenderUtilQueryFormats (dpy), format);
+    /* XXX: what to do if xrender_format is null? */
     surface = (cairo_xcb_surface_t *)
 	cairo_xcb_surface_create_with_xrender_format (dpy, d, src->screen,
-						      &xrender_format,
+						      xrender_format,
 						      width, height);
     if (surface->base.status) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -306,6 +197,8 @@ _cairo_xcb_surface_finish (void *abstract_surface)
 
     if (surface->gc.xid)
 	XCBFreeGC (surface->dpy, surface->gc);
+
+    free (surface->clip_rects);
 
     surface->dpy = NULL;
 
@@ -566,6 +459,26 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
 }
 
 static void
+_cairo_xcb_surface_set_picture_clip_rects (cairo_xcb_surface_t *surface)
+{
+    if (surface->num_clip_rects)
+	XCBRenderSetPictureClipRectangles (surface->dpy, surface->picture,
+					   0, 0,
+					   surface->num_clip_rects,
+					   surface->clip_rects);
+}
+
+static void
+_cairo_xcb_surface_set_gc_clip_rects (cairo_xcb_surface_t *surface)
+{
+    if (surface->num_clip_rects)
+	XCBSetClipRectangles(surface->dpy, XCBClipOrderingYXSorted, surface->gc,
+			     0, 0,
+			     surface->num_clip_rects,
+			     surface->clip_rects );
+}
+
+static void
 _cairo_xcb_surface_ensure_gc (cairo_xcb_surface_t *surface)
 {
     if (surface->gc.xid)
@@ -573,6 +486,7 @@ _cairo_xcb_surface_ensure_gc (cairo_xcb_surface_t *surface)
 
     surface->gc = XCBGCONTEXTNew(surface->dpy);
     XCBCreateGC (surface->dpy, surface->gc, surface->drawable, 0, 0);
+    _cairo_xcb_surface_set_gc_clip_rects(surface);
 }
 
 static cairo_status_t
@@ -1000,7 +914,8 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
     cairo_int_status_t		status;
     int				render_reference_x, render_reference_y;
     int				render_src_x, render_src_y;
-    XCBRenderPICTFORMINFO	render_format;
+    int				cairo_format;
+    XCBRenderPICTFORMINFO	*render_format;
 
     if (!CAIRO_SURFACE_RENDER_HAS_TRAPEZOIDS (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1025,28 +940,92 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
 
     switch (antialias) {
     case CAIRO_ANTIALIAS_NONE:
-	render_format = _format_from_cairo (dst->dpy, CAIRO_FORMAT_A1);
+	cairo_format = CAIRO_FORMAT_A1;
 	break;
     default:
-	render_format = _format_from_cairo (dst->dpy, CAIRO_FORMAT_A8);
+	cairo_format = CAIRO_FORMAT_A8;
 	break;
     }
+    render_format = XCBRenderUtilFindStandardFormat (XCBRenderUtilQueryFormats (dst->dpy), cairo_format);
+    /* XXX: what to do if render_format is null? */
 
     /* XXX: The XTrapezoid cast is evil and needs to go away somehow. */
-    /* XXX: _format_from_cairo is slow. should cache something. */
     status = _cairo_xcb_surface_set_attributes (src, &attributes);
     if (status == CAIRO_STATUS_SUCCESS)
 	XCBRenderTrapezoids (dst->dpy,
 			     _render_operator (op),
 			     src->picture, dst->picture,
-			     render_format.id,
+			     render_format->id,
 			     render_src_x + attributes.x_offset,
 			     render_src_y + attributes.y_offset,
-			     num_traps, (XCBRenderTRAP *) traps);
+			     num_traps, (XCBRenderTRAPEZOID *) traps);
 
     _cairo_pattern_release_surface (pattern, &src->base, &attributes);
 
     return status;
+}
+
+static cairo_int_status_t
+_cairo_xcb_surface_set_clip_region (void              *abstract_surface,
+				    pixman_region16_t *region)
+{
+    cairo_xcb_surface_t *surface = abstract_surface;
+
+    if (surface->clip_rects) {
+	free (surface->clip_rects);
+	surface->clip_rects = NULL;
+    }
+
+    surface->num_clip_rects = 0;
+
+    if (region == NULL) {
+	if (surface->gc.xid) {
+	    CARD32 mask = XCBGCClipMask;
+	    CARD32 pa[] = { XCBNone };
+
+	    XCBChangeGC (surface->dpy, surface->gc, mask, pa);
+	}
+
+	if (surface->has_format && surface->picture.xid) {
+	    CARD32 mask = XCBRenderCPClipMask;
+	    CARD32 pa[] = { XCBNone };
+
+	    XCBRenderChangePicture (surface->dpy, surface->picture, mask, pa);
+	}
+    } else {
+	pixman_box16_t *boxes;
+	XCBRECTANGLE *rects = NULL;
+	int n_boxes, i;
+
+	n_boxes = pixman_region_num_rects (region);
+	if (n_boxes > 0) {
+	    rects = malloc (sizeof(XCBRECTANGLE) * n_boxes);
+	    if (rects == NULL)
+		return CAIRO_STATUS_NO_MEMORY;
+	} else {
+	    rects = NULL;
+	}
+
+	boxes = pixman_region_rects (region);
+
+	for (i = 0; i < n_boxes; i++) {
+	    rects[i].x = boxes[i].x1;
+	    rects[i].y = boxes[i].y1;
+	    rects[i].width = boxes[i].x2 - boxes[i].x1;
+	    rects[i].height = boxes[i].y2 - boxes[i].y1;
+	}
+
+	surface->clip_rects = rects;
+	surface->num_clip_rects = n_boxes;
+
+	if (surface->gc.xid)
+	    _cairo_xcb_surface_set_gc_clip_rects (surface);
+
+	if (surface->picture.xid)
+	    _cairo_xcb_surface_set_picture_clip_rects (surface);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
@@ -1078,7 +1057,7 @@ static const cairo_surface_backend_t cairo_xcb_surface_backend = {
     _cairo_xcb_surface_composite_trapezoids,
     NULL, /* copy_page */
     NULL, /* show_page */
-    NULL, /* _cairo_xcb_surface_set_clip_region */
+    _cairo_xcb_surface_set_clip_region,
     NULL, /* intersect_clip_path */
     _cairo_xcb_surface_get_extents,
     NULL, /* old_show_glyphs */
@@ -1103,26 +1082,6 @@ _cairo_surface_is_xcb (cairo_surface_t *surface)
     return surface->backend == &cairo_xcb_surface_backend;
 }
 
-static void
-query_render_version (XCBConnection *c, cairo_xcb_surface_t *surface)
-{
-    XCBRenderQueryVersionRep *r;
-
-    surface->render_major = -1;
-    surface->render_minor = -1;
-
-    if (!XCBRenderInit(c))
-	return;
-
-    r = XCBRenderQueryVersionReply(c, XCBRenderQueryVersion(c, 0, 6), 0);
-    if (!r)
-	return;
-
-    surface->render_major = r->major_version;
-    surface->render_minor = r->minor_version;
-    free(r);
-}
-
 static cairo_surface_t *
 _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
 				    XCBDRAWABLE		      drawable,
@@ -1134,6 +1093,7 @@ _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
 				    int			      depth)
 {
     cairo_xcb_surface_t *surface;
+    const XCBRenderQueryVersionRep *r;
 
     surface = malloc (sizeof (cairo_xcb_surface_t));
     if (surface == NULL) {
@@ -1163,6 +1123,9 @@ _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
     surface->height = height;
     surface->depth = depth;
 
+    surface->clip_rects = NULL;
+    surface->num_clip_rects = 0;
+
     if (format) {
 	surface->depth = format->depth;
     } else if (visual) {
@@ -1189,30 +1152,40 @@ _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
 	;
     }
 
-    query_render_version(dpy, surface);
+    surface->render_major = -1;
+    surface->render_minor = -1;
+
+    r = XCBRenderUtilQueryVersion(dpy);
+    if (r) {
+	surface->render_major = r->major_version;
+	surface->render_minor = r->minor_version;
+    }
 
     surface->picture.xid = 0;
 
     if (CAIRO_SURFACE_RENDER_HAS_CREATE_PICTURE (surface))
     {
-	XCBRenderPICTFORMAT pict_format = {0};
-	XCBRenderPICTFORMINFO format_info;
+	static const XCBRenderPICTFORMAT nil = { 0 };
+	const XCBRenderPICTFORMAT *pict_format = &nil;
 
-	surface->picture = XCBRenderPICTURENew(dpy);
-
-	if (!format) {
-	    if (visual) {
-		pict_format = format_from_visual (dpy, visual->visual_id);
-	    } else if (depth == 1) {
-		format_info = _format_from_cairo (dpy, CAIRO_FORMAT_A1);
-		pict_format = format_info.id;
-	    }
-	    XCBRenderCreatePicture (dpy, surface->picture, drawable,
-				    pict_format, 0, NULL);
-	} else {
-	    XCBRenderCreatePicture (dpy, surface->picture, drawable,
-				    format->id, 0, NULL);
+	if (format) {
+	    pict_format = &format->id;
+	} else if (visual) {
+	    XCBRenderPICTVISUAL *pict_visual;
+	    pict_visual = XCBRenderUtilFindVisualFormat (XCBRenderUtilQueryFormats (dpy), visual->visual_id);
+	    if (pict_visual)
+		pict_format = &pict_visual->format;
+	} else if (depth == 1) {
+	    XCBRenderPICTFORMINFO *format_info;
+	    format_info = XCBRenderUtilFindStandardFormat (XCBRenderUtilQueryFormats (dpy), CAIRO_FORMAT_A1);
+	    if (format_info)
+		pict_format = &format_info->id;
 	}
+
+	/* XXX: if pict_format is nil, should we still call CreatePicture? */
+	surface->picture = XCBRenderPICTURENew(dpy);
+	XCBRenderCreatePicture (dpy, surface->picture, drawable,
+				*pict_format, 0, NULL);
     }
 
     return (cairo_surface_t *) surface;

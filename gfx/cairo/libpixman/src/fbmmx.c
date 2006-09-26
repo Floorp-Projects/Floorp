@@ -1060,7 +1060,7 @@ fbCompositeSolidMask_nx8888x8888Cmmx (pixman_operator_t	op,
 
     while (height--)
     {
-	int twidth = width;
+	unsigned int twidth = width;
 	CARD32 *p = (CARD32 *)maskLine;
 	CARD32 *q = (CARD32 *)dstLine;
 
@@ -2020,7 +2020,7 @@ fbCompositeSolidMask_nx8888x0565Cmmx (pixman_operator_t      op,
 
     while (height--)
     {
-	int twidth = width;
+	unsigned int twidth = width;
 	CARD32 *p = (CARD32 *)maskLine;
 	CARD16 *q = (CARD16 *)dstLine;
 
@@ -2270,7 +2270,7 @@ fbSolidFillmmx (FbPixels	*pDraw,
 
     while (height--)
     {
-	int w;
+	unsigned int w;
 	CARD8 *d = byte_line;
 	byte_line += stride;
 	w = byte_width;
@@ -2386,7 +2386,7 @@ fbCopyAreammx (FbPixels	*pSrc,
 
     while (height--)
     {
-	int w;
+	unsigned int w;
 	CARD8 *s = src_bytes;
 	CARD8 *d = dst_bytes;
 	src_bytes += src_stride;
@@ -2401,7 +2401,7 @@ fbCopyAreammx (FbPixels	*pSrc,
 	    d += 2;
 	}
 
-	while (w >= 4 && ((unsigned int)d & 7))
+	while (w >= 4 && ((unsigned long)d & 7))
 	{
 	    *(CARD32 *)d = *(CARD32 *)s;
 

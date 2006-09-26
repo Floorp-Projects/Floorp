@@ -128,16 +128,16 @@ typedef struct {
     }				    \
 }
 
-xFixed
+pixman_private xFixed
 RenderSampleCeilY (xFixed y, int bpp);
 
-xFixed
+pixman_private xFixed
 RenderSampleFloorY (xFixed y, int bpp);
 
-void
+pixman_private void
 RenderEdgeStep (RenderEdge *e, int n);
 
-void
+pixman_private void
 RenderEdgeInit (RenderEdge	*e,
 		int		bpp,
 		xFixed		y_start,
@@ -146,7 +146,7 @@ RenderEdgeInit (RenderEdge	*e,
 		xFixed		x_bot,
 		xFixed		y_bot);
 
-void
+pixman_private void
 RenderLineFixedEdgeInit (RenderEdge *e,
 			 int	    bpp,
 			 xFixed	    y,

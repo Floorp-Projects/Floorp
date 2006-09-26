@@ -51,4 +51,10 @@ struct _cairo_xlib_screen_info {
 cairo_private cairo_xlib_screen_info_t *
 _cairo_xlib_screen_info_get (Display *display, Screen *screen);
 
+#if CAIRO_HAS_XLIB_XRENDER_SURFACE
+
+#include "cairo-xlib-xrender.h"
+
+#endif
+
 #endif /* CAIRO_XLIB_PRIVATE_H */

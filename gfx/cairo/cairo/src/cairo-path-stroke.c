@@ -59,7 +59,7 @@ typedef struct cairo_stroker {
     cairo_stroke_face_t first_face;
 
     cairo_bool_t dashed;
-    int dash_index;
+    unsigned int dash_index;
     int dash_on;
     double dash_remain;
 } cairo_stroker_t;
@@ -114,7 +114,7 @@ _cairo_stroker_start_dash (cairo_stroker_t *stroker)
 {
     double offset;
     int	on = 1;
-    int	i = 0;
+    unsigned int i = 0;
 
     offset = stroker->style->dash_offset;
 
@@ -699,6 +699,8 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
     cairo_point_t *p2 = point;
     cairo_slope_t slope;
 
+    stroker->has_sub_path = stroker->dash_on;
+
     if (p1->x == p2->x && p1->y == p2->y)
 	return CAIRO_STATUS_SUCCESS;
 
@@ -758,6 +760,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 			    return status;
 		    }
 		}
+		stroker->has_sub_path = TRUE;
 	    }
 	    if (remain) {
 		/*

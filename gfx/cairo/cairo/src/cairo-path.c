@@ -228,8 +228,13 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
     point.x = x;
     point.y = y;
 
+    /* When there is not yet a current point, the line_to operation
+     * becomes a move_to instead. Note: We have to do this by
+     * explicitly calling into _cairo_path_fixed_line_to to ensure
+     * that the last_move_point state is updated properly.
+     */
     if (! path->has_current_point)
-	status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_MOVE_TO, &point, 1);
+	status = _cairo_path_fixed_move_to (path, point.x, point.y);
     else
 	status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_LINE_TO, &point, 1);
 
@@ -328,9 +333,11 @@ _cairo_path_fixed_close_path (cairo_path_fixed_t *path)
     if (status)
 	return status;
 
-    path->current_point.x = path->last_move_point.x;
-    path->current_point.y = path->last_move_point.y;
-    path->has_current_point = TRUE;
+    status = _cairo_path_fixed_move_to (path,
+					path->last_move_point.x,
+					path->last_move_point.y);
+    if (status)
+	return status;
 
     return CAIRO_STATUS_SUCCESS;
 }

@@ -43,7 +43,8 @@
 
 CAIRO_BEGIN_DECLS
 
-cairo_surface_t * cairo_directfb_surface_create (IDirectFB *dfb,IDirectFBSurface *surface);
+cairo_public cairo_surface_t *
+cairo_directfb_surface_create (IDirectFB *dfb,IDirectFBSurface *surface);
 
 CAIRO_END_DECLS
 

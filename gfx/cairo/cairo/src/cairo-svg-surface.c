@@ -42,7 +42,6 @@
 #include "cairo-svg.h"
 #include "cairo-svg-test.h"
 #include "cairo-path-fixed-private.h"
-#include "cairo-ft-private.h"
 #include "cairo-meta-surface-private.h"
 #include "cairo-paginated-surface-private.h"
 #include "cairo-scaled-font-subsets-private.h"
@@ -290,7 +289,7 @@ cairo_svg_surface_restrict_to_version (cairo_surface_t 		*abstract_surface,
 	return;
     }
 
-    if (version >= 0 && version < CAIRO_SVG_VERSION_LAST)
+    if (version < CAIRO_SVG_VERSION_LAST)
 	surface->document->svg_version = version;
 }
 
@@ -330,7 +329,7 @@ cairo_svg_get_versions (cairo_svg_version_t const	**versions,
 const char *
 cairo_svg_version_to_string (cairo_svg_version_t version)
 {
-    if (version < 0 || version >= CAIRO_SVG_VERSION_LAST)
+    if (version >= CAIRO_SVG_VERSION_LAST)
 	return NULL;
 
     return _cairo_svg_version_strings[version];
@@ -574,7 +573,11 @@ _cairo_svg_document_emit_bitmap_glyph_data (cairo_svg_document_t	*document,
 	return status;
 
     image = scaled_glyph->surface;
-    assert (image->format == CAIRO_FORMAT_A1);
+    if (image->format != CAIRO_FORMAT_A1) {
+	image = _cairo_image_surface_clone (image, CAIRO_FORMAT_A1);
+	if (cairo_surface_status (&image->base))
+	    return cairo_surface_status (&image->base);
+    }
 
     _cairo_output_stream_printf (document->xml_node_glyphs, "<g");
     emit_transform (document->xml_node_glyphs, " transform", ">/n", &image->base.device_transform);
@@ -593,6 +596,10 @@ _cairo_svg_document_emit_bitmap_glyph_data (cairo_svg_document_t	*document,
 	}
     }
     _cairo_output_stream_printf (document->xml_node_glyphs, "</g>\n");
+
+    if (image != scaled_glyph->surface)
+	cairo_surface_destroy (&image->base);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -626,7 +633,7 @@ _cairo_svg_document_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
 				      void				*closure)
 {
     cairo_svg_document_t *document = closure;
-    int i;
+    unsigned int i;
 
     for (i = 0; i < font_subset->num_glyphs; i++) {
 	_cairo_svg_document_emit_glyph (document,
@@ -898,7 +905,7 @@ emit_meta_surface (cairo_svg_document_t *document,
     cairo_output_stream_t *contents;
     cairo_meta_surface_t *meta;
     cairo_meta_snapshot_t *snapshot;
-    int num_elements;
+    unsigned int num_elements;
     unsigned int i, id;
 
     num_elements = document->meta_snapshots.num_elements;
@@ -1100,7 +1107,7 @@ emit_pattern_stops (cairo_output_stream_t *output,
 		    double start_offset)
 {
     double offset;
-    int i;
+    unsigned int i;
 
     for (i = 0; i < pattern->n_stops; i++) {
 	offset = start_offset + (1 - start_offset ) *
@@ -1602,7 +1609,7 @@ _cairo_svg_surface_intersect_clip_path (void			*dst,
     cairo_svg_surface_t *surface = dst;
     cairo_svg_document_t *document = surface->document;
     cairo_status_t status;
-    int i;
+    unsigned int i;
 
     if (path == NULL) {
  	for (i = 0; i < surface->clip_level; i++)
@@ -1638,10 +1645,11 @@ static void
 _cairo_svg_surface_get_font_options (void                  *abstract_surface,
 				     cairo_font_options_t  *options)
 {
-  _cairo_font_options_init_default (options);
+    _cairo_font_options_init_default (options);
 
-  cairo_font_options_set_hint_style (options, CAIRO_HINT_STYLE_NONE);
-  cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_OFF);
+    cairo_font_options_set_hint_style (options, CAIRO_HINT_STYLE_NONE);
+    cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_OFF);
+    cairo_font_options_set_antialias (options, CAIRO_ANTIALIAS_GRAY);
 }
 
 static const cairo_surface_backend_t cairo_svg_surface_backend = {
@@ -1795,8 +1803,7 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
     _cairo_output_stream_destroy (document->xml_node_glyphs);
     _cairo_output_stream_destroy (document->xml_node_defs);
 
-    status = _cairo_output_stream_get_status (output);
-    _cairo_output_stream_destroy (output);
+    status = _cairo_output_stream_destroy (output);
 
     for (i = 0; i < document->meta_snapshots.num_elements; i++) {
 	snapshot = _cairo_array_index (&document->meta_snapshots, i);

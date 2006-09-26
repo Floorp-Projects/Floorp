@@ -569,11 +569,11 @@ gfxContext::SetColor(const gfxRGBA& c)
 PRBool
 gfxContext::GetColor(gfxRGBA& c)
 {
-    return cairo_pattern_get_solid_color(cairo_get_source(mCairo),
-                                         &c.r,
-                                         &c.g,
-                                         &c.b,
-                                         &c.a) == CAIRO_STATUS_SUCCESS;
+    return cairo_pattern_get_rgba(cairo_get_source(mCairo),
+                                  &c.r,
+                                  &c.g,
+                                  &c.b,
+                                  &c.a) == CAIRO_STATUS_SUCCESS;
 }
 
 void

@@ -23,7 +23,7 @@
 
 #include "icint.h"
 
-#define Mask(n)	((n) == 32 ? 0xffffffff : ((1 << (n))-1))
+#define Mask(n)	((n) == 32 ? 0xffffffff : (unsigned) ((1 << (n))-1))
 
 pixman_format_t *
 pixman_format_create (pixman_format_name_t name)
@@ -53,6 +53,18 @@ pixman_format_create (pixman_format_name_t name)
 					   0xf800,
 					   0x07e0,
 					   0x001f);
+    case PIXMAN_FORMAT_NAME_ABGR32:
+	return pixman_format_create_masks (32,
+				    0xff000000,
+				    0x000000ff,
+				    0x0000ff00,
+				    0x00ff0000);
+    case PIXMAN_FORMAT_NAME_BGR24:
+	return pixman_format_create_masks (32,
+				    0x0,
+				    0x000000ff,
+				    0x0000ff00,
+				    0x00ff0000);
     }
 
     return NULL;
@@ -159,7 +171,6 @@ pixman_format_init (pixman_format_t *format, int format_code)
 			     (format->blueMask << format->blue) |
 			     (format->greenMask << format->green));
 }
-slim_hidden_def(pixman_format_init);
 
 void
 pixman_format_destroy (pixman_format_t *format)
@@ -169,11 +180,11 @@ pixman_format_destroy (pixman_format_t *format)
 
 void
 pixman_format_get_masks (pixman_format_t *format,
-                         int *bpp,
-                         int *alpha_mask,
-                         int *red_mask,
-                         int *green_mask,
-                         int *blue_mask)
+                         unsigned int *bpp,
+                         unsigned int *alpha_mask,
+                         unsigned int *red_mask,
+                         unsigned int *green_mask,
+                         unsigned int *blue_mask)
 {
     *bpp = PICT_FORMAT_BPP (format->format_code);
 

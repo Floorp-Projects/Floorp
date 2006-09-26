@@ -99,6 +99,14 @@ SOFTWARE.
 
 #include "pixman-remap.h"
 
+#if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__)
+#define pixman_private		__attribute__((__visibility__("hidden")))
+#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+#define pixman_private		__hidden
+#else /* not gcc >= 3.3 and not Sun Studio >= 8 */
+#define pixman_private
+#endif
+
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
 #endif
@@ -118,37 +126,37 @@ typedef enum {
 
 /* creation/destruction */
 
-pixman_region16_t *
+pixman_private pixman_region16_t *
 pixman_region_create (void);
 
-pixman_region16_t *
+pixman_private pixman_region16_t *
 pixman_region_create_simple (pixman_box16_t *extents);
 
-void
+pixman_private void
 pixman_region_destroy (pixman_region16_t *region);
 
 /* manipulation */
 
-void
+pixman_private void
 pixman_region_translate (pixman_region16_t *region, int x, int y);
 
-pixman_region_status_t
+pixman_private pixman_region_status_t
 pixman_region_copy (pixman_region16_t *dest, pixman_region16_t *source);
 
-pixman_region_status_t
+pixman_private pixman_region_status_t
 pixman_region_intersect (pixman_region16_t *newReg, pixman_region16_t *reg1, pixman_region16_t *reg2);
 
-pixman_region_status_t
+pixman_private pixman_region_status_t
 pixman_region_union (pixman_region16_t *newReg, pixman_region16_t *reg1, pixman_region16_t *reg2);
 
-pixman_region_status_t
+pixman_private pixman_region_status_t
 pixman_region_union_rect(pixman_region16_t *dest, pixman_region16_t *source,
 			 int x, int y, unsigned int width, unsigned int height);
 
-pixman_region_status_t
+pixman_private pixman_region_status_t
 pixman_region_subtract (pixman_region16_t *regD, pixman_region16_t *regM, pixman_region16_t *regS);
 
-pixman_region_status_t
+pixman_private pixman_region_status_t
 pixman_region_inverse (pixman_region16_t *newReg, pixman_region16_t *reg1, pixman_box16_t *invRect);
 
 /* XXX: Need to fix this so it doesn't depend on an X data structure
@@ -159,10 +167,10 @@ RectsTopixman_region16_t (int nrects, xRectanglePtr prect, int ctype);
 /* querying */
 
 /* XXX: These should proably be combined: pixman_region_get_rects? */
-int
+pixman_private int
 pixman_region_num_rects (pixman_region16_t *region);
 
-pixman_box16_t *
+pixman_private pixman_box16_t *
 pixman_region_rects (pixman_region16_t *region);
 
 /* XXX: Change to an enum */
@@ -170,36 +178,36 @@ pixman_region_rects (pixman_region16_t *region);
 #define rgnIN  1
 #define rgnPART 2
 
-int
+pixman_private int
 pixman_region_contains_point (pixman_region16_t *region, int x, int y, pixman_box16_t *box);
 
-int
+pixman_private int
 pixman_region_contains_rectangle (pixman_region16_t *pixman_region16_t, pixman_box16_t *prect);
 
-int
+pixman_private int
 pixman_region_not_empty (pixman_region16_t *region);
 
-pixman_box16_t *
+pixman_private pixman_box16_t *
 pixman_region_extents (pixman_region16_t *region);
 
 /* mucking around */
 
 /* WARNING: calling pixman_region_append may leave dest as an invalid
    region. Follow-up with pixman_region_validate to fix it up. */
-pixman_region_status_t
+pixman_private pixman_region_status_t
 pixman_region_append (pixman_region16_t *dest, pixman_region16_t *region);
 
-pixman_region_status_t
+pixman_private pixman_region_status_t
 pixman_region_validate (pixman_region16_t *badreg, int *pOverlap);
 
 /* Unclassified functionality
  * XXX: Do all of these need to be exported?
  */
 
-void
+pixman_private void
 pixman_region_reset (pixman_region16_t *region, pixman_box16_t *pBox);
 
-void
+pixman_private void
 pixman_region_empty (pixman_region16_t *region);
 
 /* ic.h */
@@ -227,37 +235,39 @@ typedef enum pixman_format_name {
     PIXMAN_FORMAT_NAME_RGB24,
     PIXMAN_FORMAT_NAME_A8,
     PIXMAN_FORMAT_NAME_A1,
-    PIXMAN_FORMAT_NAME_RGB16_565
+    PIXMAN_FORMAT_NAME_RGB16_565,
+    PIXMAN_FORMAT_NAME_ABGR32,
+    PIXMAN_FORMAT_NAME_BGR24
 } pixman_format_name_t;
 
 typedef struct pixman_format pixman_format_t;
 
-pixman_format_t *
+pixman_private pixman_format_t *
 pixman_format_create (pixman_format_name_t name);
 
-pixman_format_t *
+pixman_private pixman_format_t *
 pixman_format_create_masks (int bpp,
 			    int alpha_mask,
 			    int red_mask,
 			    int green_mask,
 			    int blue_mask);
 
-void
+pixman_private void
 pixman_format_destroy (pixman_format_t *format);
 
-void
+pixman_private void
 pixman_format_get_masks (pixman_format_t *format,
-                         int *bpp,
-                         int *alpha_mask,
-                         int *red_mask,
-                         int *green_mask,
-                         int *blue_mask);
+                         unsigned int *bpp,
+                         unsigned int *alpha_mask,
+                         unsigned int *red_mask,
+                         unsigned int *green_mask,
+                         unsigned int *blue_mask);
 
 /* icimage.c */
 
 typedef struct pixman_image pixman_image_t;
 
-pixman_image_t *
+pixman_private pixman_image_t *
 pixman_image_create (pixman_format_t	*format,
 		     int	width,
 		     int	height);
@@ -282,16 +292,16 @@ pixman_image_create (pixman_format_t	*format,
 typedef uint32_t pixman_bits_t;
 #endif
 
-pixman_image_t *
+pixman_private pixman_image_t *
 pixman_image_create_for_data (pixman_bits_t *data,
 			      pixman_format_t *format,
 			      int width, int height,
 			      int bpp, int stride);
 
-void
+pixman_private void
 pixman_image_destroy (pixman_image_t *image);
 
-int
+pixman_private int
 pixman_image_set_clip_region (pixman_image_t	*image,
 			      pixman_region16_t	*region);
 
@@ -366,11 +376,11 @@ typedef enum {
     PIXMAN_FILTER_BILINEAR
 } pixman_filter_t;
 
-void
+pixman_private void
 pixman_image_set_component_alpha (pixman_image_t *image,
 				  int		 component_alpha);
 
-int
+pixman_private int
 pixman_image_set_transform (pixman_image_t	*image,
 			    pixman_transform_t	*transform);
 
@@ -382,57 +392,57 @@ typedef enum {
     PIXMAN_REPEAT_REFLECT
 } pixman_repeat_t;
 
-void
+pixman_private void
 pixman_image_set_repeat (pixman_image_t		*image,
 			 pixman_repeat_t	repeat);
 
-void
+pixman_private void
 pixman_image_set_filter (pixman_image_t		*image,
 			 pixman_filter_t	filter);
 
-int
+pixman_private int
 pixman_image_get_width (pixman_image_t	*image);
 
-int
+pixman_private int
 pixman_image_get_height (pixman_image_t	*image);
 
-int
+pixman_private int
 pixman_image_get_stride (pixman_image_t	*image);
 
-int
+pixman_private int
 pixman_image_get_depth (pixman_image_t	*image);
 
-pixman_format_t *
+pixman_private pixman_format_t *
 pixman_image_get_format (pixman_image_t	*image);
 
-pixman_bits_t *
+pixman_private pixman_bits_t *
 pixman_image_get_data (pixman_image_t	*image);
 
-pixman_image_t *
+pixman_private pixman_image_t *
 pixman_image_create_linear_gradient (const pixman_linear_gradient_t *gradient,
 				     const pixman_gradient_stop_t   *stops,
 				     int			    n_stops);
 
-pixman_image_t *
+pixman_private pixman_image_t *
 pixman_image_create_radial_gradient (const pixman_radial_gradient_t *gradient,
 				     const pixman_gradient_stop_t   *stops,
 				     int			    n_stops);
 
 /* iccolor.c */
 
-void
+pixman_private void
 pixman_color_to_pixel (const pixman_format_t	*format,
 		       const pixman_color_t	*color,
 		       pixman_bits_t		*pixel);
 
-void
+pixman_private void
 pixman_pixel_to_color (const pixman_format_t	*format,
 		       pixman_bits_t		pixel,
 		       pixman_color_t		*color);
 
 /* icrect.c */
 
-void
+pixman_private void
 pixman_fill_rectangle (pixman_operator_t	op,
 		       pixman_image_t		*dst,
 		       const pixman_color_t	*color,
@@ -441,7 +451,7 @@ pixman_fill_rectangle (pixman_operator_t	op,
 		       unsigned int		width,
 		       unsigned int		height);
 
-void
+pixman_private void
 pixman_fill_rectangles (pixman_operator_t		op,
 			pixman_image_t			*dst,
 			const pixman_color_t		*color,
@@ -450,7 +460,7 @@ pixman_fill_rectangles (pixman_operator_t		op,
 
 /* ictrap.c */
 
-void
+pixman_private void
 pixman_composite_trapezoids (pixman_operator_t		op,
 			     pixman_image_t		*src,
 			     pixman_image_t		*dst,
@@ -459,7 +469,7 @@ pixman_composite_trapezoids (pixman_operator_t		op,
 			     const pixman_trapezoid_t *traps,
 			     int			ntrap);
 
-void
+pixman_private void
 pixman_add_trapezoids (pixman_image_t		*dst,
 		       int			x_off,
 		       int			y_off,
@@ -468,7 +478,7 @@ pixman_add_trapezoids (pixman_image_t		*dst,
 
 /* ictri.c */
 
-void
+pixman_private void
 pixman_composite_triangles (pixman_operator_t		op,
 			    pixman_image_t		*src,
 			    pixman_image_t		*dst,
@@ -477,7 +487,7 @@ pixman_composite_triangles (pixman_operator_t		op,
 			    const pixman_triangle_t	*tris,
 			    int				ntris);
 
-void
+pixman_private void
 pixman_composite_tri_strip (pixman_operator_t		op,
 			    pixman_image_t		*src,
 			    pixman_image_t		*dst,
@@ -486,7 +496,7 @@ pixman_composite_tri_strip (pixman_operator_t		op,
 			    const pixman_point_fixed_t	*points,
 			    int				npoints);
 
-void
+pixman_private void
 pixman_composite_tri_fan (pixman_operator_t		op,
 			  pixman_image_t		*src,
 			  pixman_image_t		*dst,
@@ -497,7 +507,7 @@ pixman_composite_tri_fan (pixman_operator_t		op,
 
 /* ic.c */
 
-void
+pixman_private void
 pixman_composite (pixman_operator_t	op,
 		  pixman_image_t	*iSrc,
 		  pixman_image_t	*iMask,

@@ -121,11 +121,11 @@ public:
 
     /* returns TRUE if it succeeded */
     PRBool GetSolidColor(gfxRGBA& aColor) {
-        return cairo_pattern_get_solid_color(mPattern,
-                                             &aColor.r,
-                                             &aColor.g,
-                                             &aColor.b,
-                                             &aColor.a) == CAIRO_STATUS_SUCCESS;
+        return cairo_pattern_get_rgba(mPattern,
+                                      &aColor.r,
+                                      &aColor.g,
+                                      &aColor.b,
+                                      &aColor.a) == CAIRO_STATUS_SUCCESS;
     }
 
 protected:

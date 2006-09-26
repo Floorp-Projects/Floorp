@@ -615,6 +615,26 @@ static const cairo_surface_backend_t cairo_meta_surface_backend = {
     _cairo_meta_surface_snapshot
 };
 
+static cairo_path_fixed_t *
+_cairo_command_get_path (cairo_command_t *command)
+{
+    switch (command->type) {
+    case CAIRO_COMMAND_PAINT:
+    case CAIRO_COMMAND_MASK:
+    case CAIRO_COMMAND_SHOW_GLYPHS:
+	return NULL;
+    case CAIRO_COMMAND_STROKE:
+	return &command->stroke.path;
+    case CAIRO_COMMAND_FILL:
+	return &command->fill.path;
+    case CAIRO_COMMAND_INTERSECT_CLIP_PATH:
+	return command->intersect_clip_path.path_pointer;
+    }
+
+    ASSERT_NOT_REACHED;
+    return NULL;
+}
+
 cairo_status_t
 _cairo_meta_surface_replay (cairo_surface_t *surface,
 			    cairo_surface_t *target)
@@ -624,6 +644,9 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
     int i, num_elements;
     cairo_int_status_t status;
     cairo_clip_t clip;
+    cairo_bool_t has_device_transform = _cairo_surface_has_device_transform (target);
+    cairo_matrix_t *device_transform = &target->device_transform;
+    cairo_path_fixed_t path_copy, *dev_path;
 
     meta = (cairo_meta_surface_t *) surface;
     status = CAIRO_STATUS_SUCCESS;
@@ -634,88 +657,117 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
     elements = _cairo_array_index (&meta->commands, 0);
     for (i = meta->replay_start_idx; i < num_elements; i++) {
 	command = elements[i];
-	switch (command->type) {
-	case CAIRO_COMMAND_PAINT:
+
+	/* For all commands except intersect_clip_path, we have to
+	 * ensure the current clip gets set on the surface. */
+	if (command->type != CAIRO_COMMAND_INTERSECT_CLIP_PATH) {
 	    status = _cairo_surface_set_clip (target, &clip);
 	    if (status)
 		break;
+	}
 
+	dev_path = _cairo_command_get_path (command);
+	if (dev_path && has_device_transform) {
+	    _cairo_path_fixed_init_copy (&path_copy, dev_path);
+	    _cairo_path_fixed_device_transform (&path_copy, device_transform);
+	    dev_path = &path_copy;
+	}
+
+	switch (command->type) {
+	case CAIRO_COMMAND_PAINT:
 	    status = _cairo_surface_paint (target,
 					   command->paint.op,
 					   &command->paint.source.base);
 	    break;
-
 	case CAIRO_COMMAND_MASK:
-	    status = _cairo_surface_set_clip (target, &clip);
-	    if (status)
-		break;
-
 	    status = _cairo_surface_mask (target,
 					  command->mask.op,
 					  &command->mask.source.base,
 					  &command->mask.mask.base);
 	    break;
-
 	case CAIRO_COMMAND_STROKE:
-	    status = _cairo_surface_set_clip (target, &clip);
-	    if (status)
-		break;
+	{
+	    cairo_matrix_t dev_ctm = command->stroke.ctm;
+	    cairo_matrix_t dev_ctm_inverse = command->stroke.ctm_inverse;
+	    cairo_matrix_t tmp;
+
+	    if (has_device_transform) {
+		cairo_matrix_multiply (&dev_ctm, &dev_ctm, device_transform);
+		tmp = surface->device_transform;
+		status = cairo_matrix_invert (&tmp);
+		assert (status == CAIRO_STATUS_SUCCESS);
+		cairo_matrix_multiply (&dev_ctm_inverse, &tmp, &dev_ctm_inverse);
+	    }
 
 	    status = _cairo_surface_stroke (target,
 					    command->stroke.op,
 					    &command->stroke.source.base,
-					    &command->stroke.path,
+					    dev_path,
 					    &command->stroke.style,
-					    &command->stroke.ctm,
-					    &command->stroke.ctm_inverse,
+					    &dev_ctm,
+					    &dev_ctm_inverse,
 					    command->stroke.tolerance,
 					    command->stroke.antialias);
 	    break;
-
+	}
 	case CAIRO_COMMAND_FILL:
-	    status = _cairo_surface_set_clip (target, &clip);
-	    if (status)
-		break;
-
 	    status = _cairo_surface_fill (target,
 					  command->fill.op,
 					  &command->fill.source.base,
-					  &command->fill.path,
+					  dev_path,
 					  command->fill.fill_rule,
 					  command->fill.tolerance,
 					  command->fill.antialias);
 	    break;
-
 	case CAIRO_COMMAND_SHOW_GLYPHS:
-	    status = _cairo_surface_set_clip (target, &clip);
-	    if (status)
-		break;
+	{
+	    cairo_glyph_t *glyphs = command->show_glyphs.glyphs;
+	    cairo_glyph_t *dev_glyphs = glyphs;
+	    int i, num_glyphs = command->show_glyphs.num_glyphs;
+
+	    if (has_device_transform) {
+		dev_glyphs = malloc (sizeof (cairo_glyph_t) * num_glyphs);
+		if (dev_glyphs == NULL) {
+		    status = CAIRO_STATUS_NO_MEMORY;
+		    break;
+		}
+		for (i = 0; i < num_glyphs; i++) {
+		    dev_glyphs[i] = glyphs[i];
+		    cairo_matrix_transform_point (device_transform,
+						  &dev_glyphs[i].x,
+						  &dev_glyphs[i].y);
+		}
+	    }
 
 	    status = _cairo_surface_show_glyphs	(target,
 						 command->show_glyphs.op,
 						 &command->show_glyphs.source.base,
-						 command->show_glyphs.glyphs,
-						 command->show_glyphs.num_glyphs,
+						 dev_glyphs, num_glyphs,
 						 command->show_glyphs.scaled_font);
-	    break;
 
+	    if (dev_glyphs != glyphs)
+		free (dev_glyphs);
+
+	    break;
+	}
 	case CAIRO_COMMAND_INTERSECT_CLIP_PATH:
 	    /* XXX Meta surface clipping is broken and requires some
 	     * cairo-gstate.c rewriting.  Work around it for now. */
-	    if (command->intersect_clip_path.path_pointer == NULL)
+	    if (dev_path == NULL)
 		status = _cairo_clip_reset (&clip);
 	    else
-		status = _cairo_clip_clip (&clip,
-					   command->intersect_clip_path.path_pointer,
+		status = _cairo_clip_clip (&clip, dev_path,
 					   command->intersect_clip_path.fill_rule,
 					   command->intersect_clip_path.tolerance,
 					   command->intersect_clip_path.antialias,
 					   target);
 	    break;
-
 	default:
 	    ASSERT_NOT_REACHED;
 	}
+
+	if (dev_path == &path_copy)
+	    _cairo_path_fixed_fini (&path_copy);
 
 	if (status)
 	    break;

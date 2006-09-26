@@ -45,7 +45,6 @@ pixman_image_create (pixman_format_t	*format,
 
     return image;
 }
-slim_hidden_def(pixman_image_create);
 
 pixman_image_t *
 pixman_image_create_for_data (FbBits *data, pixman_format_t *format, int width, int height, int bpp, int stride)
@@ -188,8 +187,8 @@ _pixman_create_source_image (void)
     pixman_image_t *image;
 
     image = (pixman_image_t *) malloc (sizeof (pixman_image_t));
-    image->pDrawable   = 0;
-    image->pixels      = 0;
+    image->pDrawable   = NULL;
+    image->pixels      = NULL;
     image->format_code = PICT_a8r8g8b8;
 
     pixman_image_init (image);
@@ -206,18 +205,18 @@ pixman_image_create_linear_gradient (const pixman_linear_gradient_t *gradient,
     pixman_image_t		   *image;
 
     if (n_stops < 2)
-	return 0;
+	return NULL;
 
     image = _pixman_create_source_image ();
     if (!image)
-	return 0;
+	return NULL;
 
     linear = malloc (sizeof (pixman_linear_gradient_image_t) +
 		     sizeof (pixman_gradient_stop_t) * n_stops);
     if (!linear)
     {
 	free (image);
-	return 0;
+	return NULL;
     }
 
     linear->stops  = (pixman_gradient_stop_t *) (linear + 1);
@@ -233,8 +232,9 @@ pixman_image_create_linear_gradient (const pixman_linear_gradient_t *gradient,
 
     if (_pixman_init_gradient (&image->pSourcePict->gradient, stops, n_stops))
     {
+	free (linear);
 	free (image);
-	return 0;
+	return NULL;
     }
 
     return image;
@@ -250,18 +250,18 @@ pixman_image_create_radial_gradient (const pixman_radial_gradient_t *gradient,
     double			   x;
 
     if (n_stops < 2)
-	return 0;
+	return NULL;
 
     image = _pixman_create_source_image ();
     if (!image)
-	return 0;
+	return NULL;
 
     radial = malloc (sizeof (pixman_radial_gradient_image_t) +
 		     sizeof (pixman_gradient_stop_t) * n_stops);
     if (!radial)
     {
 	free (image);
-	return 0;
+	return NULL;
     }
 
     radial->stops  = (pixman_gradient_stop_t *) (radial + 1);
@@ -288,8 +288,9 @@ pixman_image_create_radial_gradient (const pixman_radial_gradient_t *gradient,
 
     if (_pixman_init_gradient (&image->pSourcePict->gradient, stops, n_stops))
     {
+	free (radial);
 	free (image);
-	return 0;
+	return NULL;
     }
 
     return image;
@@ -367,7 +368,6 @@ pixman_image_set_component_alpha (pixman_image_t	*image,
     if (image)
 	image->componentAlpha = component_alpha;
 }
-slim_hidden_def(pixman_image_set_component_alpha);
 
 int
 pixman_image_set_transform (pixman_image_t		*image,
@@ -410,7 +410,6 @@ pixman_image_set_repeat (pixman_image_t		*image,
     if (image)
 	image->repeat = repeat;
 }
-slim_hidden_def(pixman_image_set_repeat);
 
 void
 pixman_image_set_filter (pixman_image_t	*image,
@@ -468,7 +467,7 @@ pixman_image_get_data (pixman_image_t	*image)
     if (image->pixels)
 	return image->pixels->data;
 
-    return 0;
+    return NULL;
 }
 
 void
@@ -503,7 +502,6 @@ pixman_image_destroy (pixman_image_t *image)
 
     free (image);
 }
-slim_hidden_def(pixman_image_destroy);
 
 void
 pixman_image_destroyClip (pixman_image_t *image)

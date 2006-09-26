@@ -48,6 +48,7 @@
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
 #include FT_IMAGE_H
+#include FT_TRUETYPE_TABLES_H
 #if HAVE_FT_GLYPHSLOT_EMBOLDEN
 #include FT_SYNTHESIS_H
 #endif
@@ -97,6 +98,7 @@ struct _cairo_ft_unscaled_font {
     double y_scale;             /* Extracted Y scale factor */
     cairo_bool_t have_shape;	/* true if the current scale has a non-scale component*/
     cairo_matrix_t current_shape;
+    FT_Matrix Current_Shape;
 
     int lock;		/* count of how many times this font has been locked */
 
@@ -550,6 +552,7 @@ _cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled)
 
     return face;
 }
+slim_hidden_def (cairo_ft_scaled_font_lock_face);
 
 /* Unlock unscaled font locked with _cairo_ft_unscaled_font_lock_face
  */
@@ -560,6 +563,7 @@ _cairo_ft_unscaled_font_unlock_face (cairo_ft_unscaled_font_t *unscaled)
 
     unscaled->lock--;
 }
+slim_hidden_def (cairo_ft_scaled_font_unlock_face);
 
 static void
 _compute_transform (cairo_ft_font_transform_t *sf,
@@ -601,7 +605,6 @@ _cairo_ft_unscaled_font_set_scale (cairo_ft_unscaled_font_t *unscaled,
 {
     cairo_ft_font_transform_t sf;
     FT_Matrix mat;
-    FT_UInt pixel_width, pixel_height;
     FT_Error error;
 
     assert (unscaled->face != NULL);
@@ -631,6 +634,7 @@ _cairo_ft_unscaled_font_set_scale (cairo_ft_unscaled_font_t *unscaled,
 			    mat.xy != 0x00000 ||
 			    mat.yy != 0x10000);
 
+    unscaled->Current_Shape = mat;
     cairo_matrix_init (&unscaled->current_shape,
 		       sf.shape[0][0], sf.shape[0][1],
 		       sf.shape[1][0], sf.shape[1][1],
@@ -639,18 +643,15 @@ _cairo_ft_unscaled_font_set_scale (cairo_ft_unscaled_font_t *unscaled,
     FT_Set_Transform(unscaled->face, &mat, NULL);
 
     if ((unscaled->face->face_flags & FT_FACE_FLAG_SCALABLE) != 0) {
-	pixel_width = sf.x_scale;
-	pixel_height = sf.y_scale;
 	error = FT_Set_Char_Size (unscaled->face,
 				  sf.x_scale * 64.0,
 				  sf.y_scale * 64.0,
 				  0, 0);
+	assert (error == 0);
     } else {
 	double min_distance = DBL_MAX;
 	int i;
 	int best_i = 0;
-
-	pixel_width = pixel_height = 0;
 
 	for (i = 0; i < unscaled->face->num_fixed_sizes; i++) {
 #if HAVE_FT_BITMAP_SIZE_Y_PPEM
@@ -675,9 +676,8 @@ _cairo_ft_unscaled_font_set_scale (cairo_ft_unscaled_font_t *unscaled,
 	    error = FT_Set_Pixel_Sizes (unscaled->face,
 					unscaled->face->available_sizes[best_i].width,
 					unscaled->face->available_sizes[best_i].height);
+	assert (error == 0);
     }
-
-    assert (error == 0);
 }
 
 /* Empirically-derived subpixel filtering values thanks to Keith
@@ -978,6 +978,7 @@ _render_glyph_outline (FT_Face                    face,
 	    switch (font_options->subpixel_order) {
 	    case CAIRO_SUBPIXEL_ORDER_RGB:
 	    case CAIRO_SUBPIXEL_ORDER_BGR:
+	    case CAIRO_SUBPIXEL_ORDER_DEFAULT:
 	    default:
 		matrix.xx *= 3;
 		hmul = 3;
@@ -1231,6 +1232,8 @@ _get_pattern_ft_options (FcPattern *pattern)
 	antialias = FcTrue;
     
     if (antialias) {
+	cairo_subpixel_order_t subpixel_order;
+
 	if (!bitmap)
 	    ft_options.load_flags |= FT_LOAD_NO_BITMAP;
 	
@@ -1245,25 +1248,28 @@ _get_pattern_ft_options (FcPattern *pattern)
 
 	switch (rgba) {
 	case FC_RGBA_RGB:
-	    ft_options.base.subpixel_order = CAIRO_SUBPIXEL_ORDER_RGB;
+	    subpixel_order = CAIRO_SUBPIXEL_ORDER_RGB;
 	    break;
 	case FC_RGBA_BGR:
-	    ft_options.base.subpixel_order = CAIRO_SUBPIXEL_ORDER_BGR;
+	    subpixel_order = CAIRO_SUBPIXEL_ORDER_BGR;
 	    break;
 	case FC_RGBA_VRGB:
-	    ft_options.base.subpixel_order = CAIRO_SUBPIXEL_ORDER_VRGB;
+	    subpixel_order = CAIRO_SUBPIXEL_ORDER_VRGB;
 	    break;
 	case FC_RGBA_VBGR:
-	    ft_options.base.subpixel_order = CAIRO_SUBPIXEL_ORDER_VBGR;
+	    subpixel_order = CAIRO_SUBPIXEL_ORDER_VBGR;
 	    break;
 	case FC_RGBA_UNKNOWN:
 	case FC_RGBA_NONE:
 	default:
+	    subpixel_order = CAIRO_SUBPIXEL_ORDER_DEFAULT;
 	    break;
 	}
 
-	if (ft_options.base.subpixel_order != CAIRO_SUBPIXEL_ORDER_DEFAULT)
+	if (subpixel_order != CAIRO_SUBPIXEL_ORDER_DEFAULT) {
+	    ft_options.base.subpixel_order = subpixel_order;
 	    ft_options.base.antialias = CAIRO_ANTIALIAS_SUBPIXEL;
+	}
 
 #ifdef FC_HINT_STYLE    
 	if (FcPatternGetInteger (pattern, 
@@ -1458,7 +1464,7 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 	fs_metrics.ascent =        DOUBLE_FROM_26_6(metrics->ascender) * y_factor;
 	fs_metrics.descent =       DOUBLE_FROM_26_6(- metrics->descender) * y_factor;
 	fs_metrics.height =        DOUBLE_FROM_26_6(metrics->height) * y_factor;
-	if (!(scaled_font->ft_options.load_flags & FT_LOAD_VERTICAL_LAYOUT)) {
+	if (!_cairo_ft_scaled_font_is_vertical (&scaled_font->base)) {
 	    fs_metrics.max_x_advance = DOUBLE_FROM_26_6(metrics->max_advance) * x_factor;
 	    fs_metrics.max_y_advance = 0;
 	} else {
@@ -1471,7 +1477,7 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 	fs_metrics.ascent =        face->ascender / scale;
 	fs_metrics.descent =       - face->descender / scale;
 	fs_metrics.height =        face->height / scale;
-	if (!(scaled_font->ft_options.load_flags & FT_LOAD_VERTICAL_LAYOUT)) {
+	if (!_cairo_ft_scaled_font_is_vertical (&scaled_font->base)) {
 	    fs_metrics.max_x_advance = face->max_advance_width / scale;
 	    fs_metrics.max_y_advance = 0;
 	} else {
@@ -1726,16 +1732,21 @@ _decompose_glyph_outline (FT_Face		  face,
  * Translate glyph to match its metrics.
  */
 static void
-_cairo_ft_scaled_glyph_vertical_layout_bearing_fix (FT_GlyphSlot glyph)
+_cairo_ft_scaled_glyph_vertical_layout_bearing_fix (void        *abstract_font,
+						    FT_GlyphSlot glyph)
 {
-    FT_Pos x = glyph->metrics.vertBearingX - glyph->metrics.horiBearingX;
-    FT_Pos y = -glyph->metrics.vertBearingY - glyph->metrics.horiBearingY;
+    cairo_ft_scaled_font_t *scaled_font = abstract_font;
+    FT_Vector vector;
 
-    if (glyph->format == FT_GLYPH_FORMAT_OUTLINE)
-	FT_Outline_Translate(&glyph->outline, x, y);
-    else if (glyph->format == FT_GLYPH_FORMAT_BITMAP) {
-	glyph->bitmap_left += x / 64;
-	glyph->bitmap_top  += y / 64;
+    vector.x = glyph->metrics.vertBearingX - glyph->metrics.horiBearingX;
+    vector.y = -glyph->metrics.vertBearingY - glyph->metrics.horiBearingY;
+
+    if (glyph->format == FT_GLYPH_FORMAT_OUTLINE) {
+	FT_Vector_Transform (&vector, &scaled_font->unscaled->Current_Shape);
+	FT_Outline_Translate(&glyph->outline, vector.x, vector.y);
+    } else if (glyph->format == FT_GLYPH_FORMAT_BITMAP) {
+	glyph->bitmap_left += vector.x / 64;
+	glyph->bitmap_top  += vector.y / 64;
     }
 }
 
@@ -1796,7 +1807,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 #endif
 
     if (vertical_layout)
-	_cairo_ft_scaled_glyph_vertical_layout_bearing_fix (glyph);
+	_cairo_ft_scaled_glyph_vertical_layout_bearing_fix (scaled_font, glyph);
 
     if (info & CAIRO_SCALED_GLYPH_INFO_METRICS) {
 	/*
@@ -1815,8 +1826,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	    y_factor = 1 / unscaled->y_scale;
 
 	/*
-	 * Note: the font's coordinate system is upside down from ours, so the
-	 * Y coordinates of the bearing and advance need to be negated.
+	 * Note: Y coordinates of the horizontal bearing need to be negated.
 	 *
 	 * Scale metrics back to glyph space from the scaled glyph space returned
 	 * by FreeType
@@ -1934,7 +1944,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 		FT_GlyphSlot_Embolden (glyph);
 #endif
 	    if (vertical_layout)
-		_cairo_ft_scaled_glyph_vertical_layout_bearing_fix (glyph);
+		_cairo_ft_scaled_glyph_vertical_layout_bearing_fix (scaled_font, glyph);
 
 	}
 	if (glyph->format == FT_GLYPH_FORMAT_OUTLINE)
@@ -1990,6 +2000,36 @@ _cairo_ft_show_glyphs (void		       *abstract_font,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
+static cairo_int_status_t
+_cairo_ft_load_truetype_table (void	       *abstract_font,
+                              unsigned long     tag,
+                              long              offset,
+                              unsigned char    *buffer,
+                              unsigned long    *length)
+{
+    cairo_ft_scaled_font_t *scaled_font = abstract_font;
+    cairo_ft_unscaled_font_t *unscaled = scaled_font->unscaled;
+    FT_Face face;
+    cairo_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (_cairo_ft_scaled_font_is_vertical (&scaled_font->base))
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+
+#if HAVE_FT_LOAD_SFNT_TABLE
+    face = _cairo_ft_unscaled_font_lock_face (unscaled);
+    if (!face)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    if (FT_IS_SFNT (face) &&
+	FT_Load_Sfnt_Table (face, tag, offset, buffer, length) == 0)
+        status = CAIRO_STATUS_SUCCESS;
+
+    _cairo_ft_unscaled_font_unlock_face (unscaled);
+#endif
+
+    return status;
+}
+
 const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend = {
     CAIRO_FONT_TYPE_FT,
     _cairo_ft_scaled_font_create_toy,
@@ -1998,6 +2038,7 @@ const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend = {
     NULL,			/* text_to_glyphs */
     _cairo_ft_ucs4_to_index,
     _cairo_ft_show_glyphs,
+    _cairo_ft_load_truetype_table,
 };
 
 /* cairo_ft_font_face_t */
@@ -2157,6 +2198,10 @@ cairo_ft_font_options_substitute (const cairo_font_options_t *options,
 	if (FcPatternGet (pattern, FC_ANTIALIAS, 0, &v) == FcResultNoMatch)
 	{
 	    FcPatternAddBool (pattern, FC_ANTIALIAS, options->antialias != CAIRO_ANTIALIAS_NONE);
+	    if (options->antialias != CAIRO_ANTIALIAS_SUBPIXEL) {
+		FcPatternDel (pattern, FC_RGBA);
+		FcPatternAddInteger (pattern, FC_RGBA, FC_RGBA_NONE);
+	    }
 	}
     }
 
@@ -2204,6 +2249,9 @@ cairo_ft_font_options_substitute (const cairo_font_options_t *options,
 	    int hint_style;
 
 	    switch (options->hint_style) {
+	    case CAIRO_HINT_STYLE_NONE:
+		hint_style = FC_HINT_NONE;
+		break;
 	    case CAIRO_HINT_STYLE_SLIGHT:
 		hint_style = FC_HINT_SLIGHT;
 		break;
@@ -2211,6 +2259,7 @@ cairo_ft_font_options_substitute (const cairo_font_options_t *options,
 		hint_style = FC_HINT_MEDIUM;
 		break;
 	    case CAIRO_HINT_STYLE_FULL:
+	    case CAIRO_HINT_STYLE_DEFAULT:
 	    default:
 		hint_style = FC_HINT_FULL;
 		break;
@@ -2221,6 +2270,7 @@ cairo_ft_font_options_substitute (const cairo_font_options_t *options,
 #endif
     }
 }
+slim_hidden_def (cairo_ft_font_options_substitute);
 
 /**
  * cairo_ft_font_face_create_for_pattern:

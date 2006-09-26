@@ -125,9 +125,6 @@ _cpdc_close_path (void *closure)
 
     cpdc->count += 1;
 
-    cpdc->current_point.x = 0;
-    cpdc->current_point.y = 0;
-
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -303,9 +300,6 @@ _cpdp_close_path (void *closure)
     data->header.length = 1;
 
     cpdp->data += data->header.length;
-
-    cpdp->current_point.x = 0;
-    cpdp->current_point.y = 0;
 
     return CAIRO_STATUS_SUCCESS;
 }

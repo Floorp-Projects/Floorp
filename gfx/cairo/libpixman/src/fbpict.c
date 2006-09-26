@@ -1349,7 +1349,7 @@ pixman_composite (pixman_operator_t	op,
     Bool	    maskAlphaMap = FALSE;
     Bool	    dstAlphaMap = pDst->alphaMap != 0;
     int		    x_msk, y_msk, x_src, y_src, x_dst, y_dst;
-    int		    w, h, w_this, h_this;
+    unsigned int    w, h, w_this, h_this;
 
 #ifdef USE_MMX
     static Bool mmx_setup = FALSE;
@@ -1798,6 +1798,17 @@ pixman_composite (pixman_operator_t	op,
 	    }
 	}
 	break;
+    case PIXMAN_OPERATOR_CLEAR:
+    case PIXMAN_OPERATOR_DST:
+    case PIXMAN_OPERATOR_OVER_REVERSE:
+    case PIXMAN_OPERATOR_IN:
+    case PIXMAN_OPERATOR_IN_REVERSE:
+    case PIXMAN_OPERATOR_OUT:
+    case PIXMAN_OPERATOR_OUT_REVERSE:
+    case PIXMAN_OPERATOR_ATOP:
+    case PIXMAN_OPERATOR_ATOP_REVERSE:
+    case PIXMAN_OPERATOR_XOR:
+    case PIXMAN_OPERATOR_SATURATE:
     default:
 	/* For any operator not specifically handled above we default out to the general code. */
 	func = NULL;
@@ -1891,7 +1902,6 @@ pixman_composite (pixman_operator_t	op,
     }
     pixman_region_destroy (region);
 }
-slim_hidden_def(pixman_composite);
 
 /* The CPU detection code needs to be in a file not compiled with
  * "-mmmx -msse", as gcc would generate CMOV instructions otherwise

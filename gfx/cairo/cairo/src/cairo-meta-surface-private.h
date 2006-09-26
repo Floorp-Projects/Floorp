@@ -97,7 +97,7 @@ typedef struct _cairo_command_show_glyphs {
     cairo_operator_t		 op;
     cairo_pattern_union_t	 source;
     cairo_glyph_t		*glyphs;
-    int				 num_glyphs;
+    unsigned int		 num_glyphs;
     cairo_scaled_font_t		*scaled_font;
 } cairo_command_show_glyphs_t;
 

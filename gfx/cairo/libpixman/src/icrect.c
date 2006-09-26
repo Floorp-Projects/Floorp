@@ -363,4 +363,3 @@ bail1:
 	;
     }
 }
-slim_hidden_def(pixman_fill_rectangles);

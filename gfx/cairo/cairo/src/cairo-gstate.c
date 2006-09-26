@@ -492,9 +492,9 @@ _cairo_gstate_get_line_join (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-_cairo_gstate_set_dash (cairo_gstate_t *gstate, double *dash, int num_dashes, double offset)
+_cairo_gstate_set_dash (cairo_gstate_t *gstate, const double *dash, int num_dashes, double offset)
 {
-    int i;
+    unsigned int i;
     double dash_total;
 
     if (gstate->stroke_style.dash)
@@ -704,6 +704,25 @@ _cairo_gstate_backend_to_user (cairo_gstate_t *gstate, double *x, double *y)
 {
     cairo_matrix_transform_point (&gstate->target->device_transform_inverse, x, y);
     cairo_matrix_transform_point (&gstate->ctm_inverse, x, y);
+}
+
+void
+_cairo_gstate_backend_to_user_rectangle (cairo_gstate_t *gstate,
+                                         double *x1, double *y1,
+                                         double *x2, double *y2,
+                                         cairo_bool_t *is_tight)
+{
+    double width = *x2 - *x1;
+    double height = *y2 - *y1;
+    cairo_matrix_t matrix_inverse;
+
+    cairo_matrix_multiply (&matrix_inverse, &gstate->ctm_inverse,
+                           &gstate->target->device_transform_inverse);
+    _cairo_matrix_transform_bounding_box (
+        &matrix_inverse, x1, y1, &width, &height, is_tight);
+
+    *x2 = *x1 + width;
+    *y2 = *y1 + height;
 }
 
 /* XXX: NYI
@@ -1041,6 +1060,29 @@ _cairo_gstate_show_page (cairo_gstate_t *gstate)
     return status;
 }
 
+static void
+_cairo_gstate_traps_extents_to_user_rectangle (cairo_gstate_t	  *gstate,
+                                               cairo_traps_t      *traps,
+                                               double *x1, double *y1,
+                                               double *x2, double *y2)
+{
+    cairo_box_t extents;
+
+    _cairo_traps_extents (traps, &extents);
+
+    if (extents.p1.x >= extents.p2.x || extents.p1.y >= extents.p2.y) {
+        /* no traps, so we actually won't draw anything */
+        *x1 = *y1 = *x2 = *y2 = 0;
+    } else {
+        *x1 = _cairo_fixed_to_double (extents.p1.x);
+        *y1 = _cairo_fixed_to_double (extents.p1.y);
+        *x2 = _cairo_fixed_to_double (extents.p2.x);
+        *y2 = _cairo_fixed_to_double (extents.p2.y);
+
+        _cairo_gstate_backend_to_user_rectangle (gstate, x1, y1, x2, y2, NULL);
+    }
+}
+
 cairo_status_t
 _cairo_gstate_stroke_extents (cairo_gstate_t	 *gstate,
 			      cairo_path_fixed_t *path,
@@ -1049,7 +1091,6 @@ _cairo_gstate_stroke_extents (cairo_gstate_t	 *gstate,
 {
     cairo_status_t status;
     cairo_traps_t traps;
-    cairo_box_t extents;
 
     _cairo_traps_init (&traps);
 
@@ -1059,20 +1100,10 @@ _cairo_gstate_stroke_extents (cairo_gstate_t	 *gstate,
 						&gstate->ctm_inverse,
 						gstate->tolerance,
 						&traps);
-    if (status)
-	goto BAIL;
+    if (status == CAIRO_STATUS_SUCCESS) {
+        _cairo_gstate_traps_extents_to_user_rectangle(gstate, &traps, x1, y1, x2, y2);
+    }
 
-    _cairo_traps_extents (&traps, &extents);
-
-    *x1 = _cairo_fixed_to_double (extents.p1.x);
-    *y1 = _cairo_fixed_to_double (extents.p1.y);
-    *x2 = _cairo_fixed_to_double (extents.p2.x);
-    *y2 = _cairo_fixed_to_double (extents.p2.y);
-
-    _cairo_gstate_backend_to_user (gstate, x1, y1);
-    _cairo_gstate_backend_to_user (gstate, x2, y2);
-
-BAIL:
     _cairo_traps_fini (&traps);
 
     return status;
@@ -1094,20 +1125,10 @@ _cairo_gstate_fill_extents (cairo_gstate_t     *gstate,
 					      gstate->fill_rule,
 					      gstate->tolerance,
 					      &traps);
-    if (status)
-	goto BAIL;
+    if (status == CAIRO_STATUS_SUCCESS) {
+        _cairo_gstate_traps_extents_to_user_rectangle(gstate, &traps, x1, y1, x2, y2);
+    }
 
-    _cairo_traps_extents (&traps, &extents);
-
-    *x1 = _cairo_fixed_to_double (extents.p1.x);
-    *y1 = _cairo_fixed_to_double (extents.p1.y);
-    *x2 = _cairo_fixed_to_double (extents.p2.x);
-    *y2 = _cairo_fixed_to_double (extents.p2.y);
-
-    _cairo_gstate_backend_to_user (gstate, x1, y1);
-    _cairo_gstate_backend_to_user (gstate, x2, y2);
-
-BAIL:
     _cairo_traps_fini (&traps);
 
     return status;
@@ -1125,6 +1146,40 @@ _cairo_gstate_clip (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     return _cairo_clip_clip (&gstate->clip,
 			     path, gstate->fill_rule, gstate->tolerance,
 			     gstate->antialias, gstate->target);
+}
+
+cairo_status_t
+_cairo_gstate_clip_extents (cairo_gstate_t *gstate,
+		            double         *x1,
+		            double         *y1,
+        		    double         *x2,
+        		    double         *y2)
+{
+    cairo_rectangle_int16_t extents;
+    cairo_status_t status;
+    
+    status = _cairo_surface_get_extents (gstate->target, &extents);
+    if (status)
+        return status;
+
+    status = _cairo_clip_intersect_to_rectangle (&gstate->clip, &extents);
+    if (status)
+        return status;
+    
+    *x1 = extents.x;
+    *y1 = extents.y;
+    *x2 = extents.x + extents.width;
+    *y2 = extents.y + extents.height;
+
+    _cairo_gstate_backend_to_user_rectangle (gstate, x1, y1, x2, y2, NULL);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_rectangle_list_t*
+_cairo_gstate_copy_clip_rectangles (cairo_gstate_t *gstate)
+{
+    return _cairo_clip_copy_rectangles (&gstate->clip, gstate);
 }
 
 static void
@@ -1411,7 +1466,7 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
 
 cairo_status_t
 _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
-			   cairo_glyph_t *glyphs,
+			   const cairo_glyph_t *glyphs,
 			   int num_glyphs)
 {
     cairo_status_t status;
@@ -1436,10 +1491,12 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 
     for (i = 0; i < num_glyphs; ++i)
     {
-	transformed_glyphs[i] = glyphs[i];
-	_cairo_gstate_user_to_device (gstate,
-				      &transformed_glyphs[i].x,
-				      &transformed_glyphs[i].y);
+	transformed_glyphs[i].index = glyphs[i].index;
+	transformed_glyphs[i].x = glyphs[i].x + gstate->font_matrix.x0;
+	transformed_glyphs[i].y = glyphs[i].y + gstate->font_matrix.y0;
+	_cairo_gstate_user_to_backend (gstate,
+				       &transformed_glyphs[i].x,
+				       &transformed_glyphs[i].y);
     }
 
     _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
@@ -1477,7 +1534,9 @@ _cairo_gstate_glyph_path (cairo_gstate_t     *gstate,
 
     for (i = 0; i < num_glyphs; ++i)
     {
-	transformed_glyphs[i] = glyphs[i];
+	transformed_glyphs[i].index = glyphs[i].index;
+	transformed_glyphs[i].x = glyphs[i].x + gstate->font_matrix.x0;
+	transformed_glyphs[i].y = glyphs[i].y + gstate->font_matrix.y0;
 	_cairo_gstate_user_to_backend (gstate,
 				       &(transformed_glyphs[i].x),
 				       &(transformed_glyphs[i].y));
@@ -1504,22 +1563,4 @@ cairo_antialias_t
 _cairo_gstate_get_antialias (cairo_gstate_t *gstate)
 {
     return gstate->antialias;
-}
-
-cairo_bool_t
-_cairo_gstate_has_clip (cairo_gstate_t *gstate)
-{
-   return _cairo_clip_has_clip (&gstate->clip);
-}
-
-cairo_bool_t
-_cairo_gstate_extract_clip_rectangles (cairo_gstate_t *gstate,
-                                       int max_rectangles,
-                                       cairo_clip_rect_t *rectangles_out,
-                                       int *num_rectangles_out)
-{
-    return _cairo_clip_extract_rectangles (&gstate->clip,
-                                           max_rectangles,
-                                           rectangles_out,
-                                           num_rectangles_out);
 }

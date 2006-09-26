@@ -1,3 +1,4 @@
+/* -*- Mode: c; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 8; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
@@ -44,7 +45,7 @@
 #define CAIRO_TOLERANCE_MINIMUM	0.0002 /* We're limited by 16 bits of sub-pixel precision */
 
 static const cairo_t cairo_nil = {
-  (unsigned int)-1,		/* ref_count */
+  CAIRO_REF_COUNT_INVALID,	/* ref_count */
   CAIRO_STATUS_NO_MEMORY,	/* status */
   { 				/* path */
     NULL, NULL,			/* op_buf_head, op_buf_tail */
@@ -62,7 +63,7 @@ static const cairo_t cairo_nil = {
  * a bit of a pain, but it should be easy to always catch as long as
  * one adds a new test case to test a trigger of the new status value.
  */
-#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_DSC_COMMENT
+#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_INDEX
 
 /**
  * _cairo_error:
@@ -206,6 +207,7 @@ cairo_create (cairo_surface_t *target)
 
     return cr;
 }
+slim_hidden_def (cairo_create);
 
 /**
  * cairo_reference:
@@ -223,7 +225,7 @@ cairo_reference (cairo_t *cr)
     if (cr == NULL)
 	return NULL;
 
-    if (cr->ref_count == (unsigned int)-1)
+    if (cr->ref_count == CAIRO_REF_COUNT_INVALID)
 	return cr;
 
     assert (cr->ref_count > 0);
@@ -247,7 +249,7 @@ cairo_destroy (cairo_t *cr)
     if (cr == NULL)
 	return;
 
-    if (cr->ref_count == (unsigned int)-1)
+    if (cr->ref_count == CAIRO_REF_COUNT_INVALID)
 	return;
 
     assert (cr->ref_count > 0);
@@ -267,6 +269,7 @@ cairo_destroy (cairo_t *cr)
 
     free (cr);
 }
+slim_hidden_def (cairo_destroy);
 
 /**
  * cairo_save:
@@ -571,6 +574,7 @@ cairo_set_operator (cairo_t *cr, cairo_operator_t op)
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
+slim_hidden_def (cairo_set_operator);
 
 /**
  * cairo_set_source_rgb
@@ -674,6 +678,7 @@ cairo_set_source_surface (cairo_t	  *cr,
     cairo_set_source (cr, pattern);
     cairo_pattern_destroy (pattern);
 }
+slim_hidden_def (cairo_set_source_surface);
 
 /**
  * cairo_set_source
@@ -714,6 +719,7 @@ cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
+slim_hidden_def (cairo_set_source);
 
 /**
  * cairo_get_source:
@@ -928,10 +934,10 @@ cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
  * #CAIRO_STATUS_INVALID_DASH.
  **/
 void
-cairo_set_dash (cairo_t	*cr,
-		double	*dashes,
-		int	 num_dashes,
-		double	 offset)
+cairo_set_dash (cairo_t	     *cr,
+		const double *dashes,
+		int	      num_dashes,
+		double	      offset)
 {
     if (cr->status)
 	return;
@@ -940,6 +946,64 @@ cairo_set_dash (cairo_t	*cr,
 					 dashes, num_dashes, offset);
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
+}
+
+/**
+ * cairo_get_dash_count:
+ * @cr: a #cairo_t
+ * @count: return value for the number of dash values, or %NULL
+ *
+ * Gets the length of the dash array in @cr.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS, or error status set on
+ * @cr.
+ *
+ * Since: 1.4
+ */
+cairo_status_t
+cairo_get_dash_count (cairo_t *cr,
+		      int     *count)
+{
+    if (cr->status)
+	return cr->status;
+
+    if (count)
+	*count = cr->gstate->stroke_style.num_dashes;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/**
+ * cairo_get_dash:
+ * @cr: a #cairo_t
+ * @dashes: return value for the dash array, or %NULL
+ * @offset: return value for the current dash offset, or %NULL
+ *
+ * Gets the current dash array.  If not %NULL, @dashes should be big
+ * enough to hold at least the number of values returned by
+ * cairo_get_dash_count().
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS, or error status set on
+ * @cr.
+ *
+ * Since: 1.4
+ **/
+cairo_status_t
+cairo_get_dash (cairo_t *cr,
+		double  *dashes,
+		double  *offset)
+{
+    if (cr->status)
+	return cr->status;
+
+    memcpy (dashes,
+	    cr->gstate->stroke_style.dash,
+	    sizeof(double) * cr->gstate->stroke_style.num_dashes);
+
+    if (offset)
+	*offset = cr->gstate->stroke_style.dash_offset;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 void
@@ -1268,6 +1332,7 @@ cairo_line_to (cairo_t *cr, double x, double y)
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
+slim_hidden_def (cairo_line_to);
 
 /**
  * cairo_curve_to:
@@ -1321,6 +1386,7 @@ cairo_curve_to (cairo_t *cr,
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
+slim_hidden_def (cairo_curve_to);
 
 /**
  * cairo_arc:
@@ -1645,6 +1711,14 @@ cairo_stroke_to_path (cairo_t *cr)
  *
  * If there is no current point before the call to cairo_close_path,
  * this function will have no effect.
+ *
+ * Note: As of cairo version 1.2.4 any call to cairo_close_path will
+ * place an explicit MOVE_TO element into the path immediately after
+ * the CLOSE_PATH element, (which can be seen in cairo_copy_path() for
+ * example). This can simplify path processing in some cases as it may
+ * not be necessary to save the "last move_to point" during processing
+ * as the MOVE_TO immediately after the CLOSE_PATH will provide that
+ * point.
  **/
 void
 cairo_close_path (cairo_t *cr)
@@ -1675,6 +1749,7 @@ cairo_paint (cairo_t *cr)
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
+slim_hidden_def (cairo_paint);
 
 /**
  * cairo_paint_with_alpha:
@@ -1722,7 +1797,7 @@ cairo_paint_with_alpha (cairo_t *cr,
  *
  * A drawing operator that paints the current source
  * using the alpha channel of @pattern as a mask. (Opaque
- * areas of @mask are painted with the source, transparent
+ * areas of @pattern are painted with the source, transparent
  * areas are not painted.)
  */
 void
@@ -1746,6 +1821,7 @@ cairo_mask (cairo_t         *cr,
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
+slim_hidden_def (cairo_mask);
 
 /**
  * cairo_mask_surface:
@@ -1887,6 +1963,15 @@ cairo_fill_preserve (cairo_t *cr)
 }
 slim_hidden_def(cairo_fill_preserve);
 
+/**
+ * cairo_copy_page:
+ * @cr: a cairo context
+ *
+ * Emits the current page for backends that support multiple pages, but
+ * doesn't clear it, so, the contents of the current page will be retained
+ * for the next page too.  Use cairo_show_page() if you want to get an
+ * empty page after the emission.
+ **/
 void
 cairo_copy_page (cairo_t *cr)
 {
@@ -1898,6 +1983,13 @@ cairo_copy_page (cairo_t *cr)
 	_cairo_set_error (cr, cr->status);
 }
 
+/**
+ * cairo_show_page:
+ * @cr: a cairo context
+ *
+ * Emits and clears the current page for backends that support multiple
+ * pages.  Use cairo_copy_page() if you don't want to clear the page.
+ **/
 void
 cairo_show_page (cairo_t *cr)
 {
@@ -1909,6 +2001,20 @@ cairo_show_page (cairo_t *cr)
 	_cairo_set_error (cr, cr->status);
 }
 
+/**
+ * cairo_in_stroke:
+ * @cr: a cairo context
+ * @x: X coordinate of the point to test
+ * @y: Y coordinate of the point to test
+ *
+ * Tests whether the given point is on the area stroked by doing a
+ * cairo_stroke() operation on @cr given the current path and stroking
+ * parameters.
+ *
+ * See cairo_stroke, cairo_set_line_width(), cairo_set_line_join(),
+ * cairo_set_line_cap(), cairo_set_dash(), and
+ * cairo_stroke_preserve().
+ **/
 cairo_bool_t
 cairo_in_stroke (cairo_t *cr, double x, double y)
 {
@@ -1926,6 +2032,18 @@ cairo_in_stroke (cairo_t *cr, double x, double y)
     return inside;
 }
 
+/**
+ * cairo_in_fill:
+ * @cr: a cairo context
+ * @x: X coordinate of the point to test
+ * @y: Y coordinate of the point to test
+ *
+ * Tests whether the given point is on the area filled by doing a
+ * cairo_stroke() operation on @cr given the current path and filling
+ * parameters.
+ *
+ * See cairo_fill(), cairo_set_fill_rule() and cairo_fill_preserve().
+ **/
 cairo_bool_t
 cairo_in_fill (cairo_t *cr, double x, double y)
 {
@@ -1945,6 +2063,19 @@ cairo_in_fill (cairo_t *cr, double x, double y)
     return inside;
 }
 
+/**
+ * cairo_stroke_extents:
+ * @cr: a cairo context
+ * @x1: left of the resulting extents
+ * @y1: top of the resulting extents
+ * @x2: right of the resulting extents
+ * @y2: bottom of the resulting extents
+ *
+ * Computes a bounding box in user coordinates covering all area that will
+ * be stroked by the current path with the current stroking parameters. If
+ * the current path is empty, returns an empty rectangle. Surface dimensions
+ * and clipping are not taken into account.
+ **/
 void
 cairo_stroke_extents (cairo_t *cr,
                       double *x1, double *y1, double *x2, double *y2)
@@ -1959,6 +2090,19 @@ cairo_stroke_extents (cairo_t *cr,
 	_cairo_set_error (cr, cr->status);
 }
 
+/**
+ * cairo_fill_extents:
+ * @cr: a cairo context
+ * @x1: left of the resulting extents
+ * @y1: top of the resulting extents
+ * @x2: right of the resulting extents
+ * @y2: bottom of the resulting extents
+ *
+ * Computes a bounding box in user coordinates covering all area that will
+ * be filled by the current path. If the current path is empty, returns an
+ * empty rectangle. Surface dimensions and clipping are not taken into
+ * account.
+ **/
 void
 cairo_fill_extents (cairo_t *cr,
                     double *x1, double *y1, double *x2, double *y2)
@@ -2062,6 +2206,67 @@ cairo_reset_clip (cairo_t *cr)
     cr->status = _cairo_gstate_reset_clip (cr->gstate);
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
+}
+
+/**
+ * cairo_clip_extents:
+ * @cr: a cairo context
+ * @x1: left of the resulting extents
+ * @y1: top of the resulting extents
+ * @x2: right of the resulting extents
+ * @y2: bottom of the resulting extents
+ *
+ * Computes a bounding box in user coordinates covering the area inside the
+ * current clip.
+ **/
+void
+cairo_clip_extents (cairo_t *cr,
+		    double *x1, double *y1,
+		    double *x2, double *y2)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_clip_extents (cr->gstate, x1, y1, x2, y2);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
+}
+
+static cairo_rectangle_list_t *
+_cairo_rectangle_list_create_for_status (cairo_status_t status)
+{
+    cairo_rectangle_list_t *list;
+
+    list = malloc (sizeof (cairo_rectangle_list_t));
+    if (list == NULL)
+        return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
+    list->status = status;
+    list->rectangles = NULL;
+    list->num_rectangles = 0;
+    return list;
+}
+
+/**
+ * cairo_copy_clip_rectangles:
+ *
+ * Returns the current clip region as a list of rectangles in user coordinates.
+ * Never returns %NULL.
+ *
+ * The status in the list may be CAIRO_STATUS_CLIP_NOT_REPRESENTABLE to
+ * indicate that the clip region cannot be represented as a list of
+ * user-space rectangles. The status may have other values to indicate
+ * other errors.
+ *
+ * The caller must always call cairo_rectangle_list_destroy on the result of
+ * this function.
+ **/
+cairo_rectangle_list_t *
+cairo_copy_clip_rectangles (cairo_t *cr)
+{
+    if (cr->status)
+        return _cairo_rectangle_list_create_for_status (cr->status);
+
+    return _cairo_gstate_copy_clip_rectangles (cr->gstate);
 }
 
 /**
@@ -2478,7 +2683,7 @@ cairo_show_text (cairo_t *cr, const char *utf8)
 }
 
 void
-cairo_show_glyphs (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs)
+cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
 {
     if (cr->status)
 	return;
@@ -2564,6 +2769,7 @@ cairo_get_tolerance (cairo_t *cr)
 {
     return _cairo_gstate_get_tolerance (cr->gstate);
 }
+slim_hidden_def (cairo_get_tolerance);
 
 /**
  * cairo_get_antialias:
@@ -2707,6 +2913,7 @@ cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix)
 {
     _cairo_gstate_get_matrix (cr->gstate, matrix);
 }
+slim_hidden_def (cairo_get_matrix);
 
 /**
  * cairo_get_target:
@@ -2862,7 +3069,8 @@ cairo_append_path (cairo_t	*cr,
     }
 
     if (path->status) {
-	if (path->status <= CAIRO_STATUS_LAST_STATUS)
+	if (path->status > CAIRO_STATUS_SUCCESS &&
+	    path->status <= CAIRO_STATUS_LAST_STATUS)
 	    _cairo_set_error (cr, path->status);
 	else
 	    _cairo_set_error (cr, CAIRO_STATUS_INVALID_STATUS);
@@ -2892,6 +3100,7 @@ cairo_status (cairo_t *cr)
 {
     return cr->status;
 }
+slim_hidden_def (cairo_status);
 
 /**
  * cairo_status_to_string:
@@ -2947,6 +3156,10 @@ cairo_status_to_string (cairo_status_t status)
 	return "invalid value for a dash setting";
     case CAIRO_STATUS_INVALID_DSC_COMMENT:
 	return "invalid value for a DSC comment";
+    case CAIRO_STATUS_INVALID_INDEX:
+	return "invalid index passed to getter";
+    case CAIRO_STATUS_CLIP_NOT_REPRESENTABLE:
+        return "clip region not representable in desired format";
     }
 
     return "<unknown error status>";
@@ -2959,43 +3172,4 @@ _cairo_restrict_value (double *value, double min, double max)
 	*value = min;
     else if (*value > max)
 	*value = max;
-}
-
-/**
- * cairo_has_clip
- * @cr: a cairo context
- * 
- * Returns TRUE if the cairo context has any clipping active, otherwise
- * FALSE.
- */
-cairo_bool_t
-cairo_has_clip (cairo_t *cr)
-{
-    if (cr->status)
-        return FALSE;
-    return _cairo_gstate_has_clip (cr->gstate);
-}
-
-/**
- * cairo_extract_clip_rectangles
- * @cr: a cairo context
- * @max_rectangles: the maximum number of rectangles to be returned
- * @rectangles_out: the output buffer for the rectangles
- * @num_rectangles_out: the number of rectangles returned
- * 
- * If the current clip can be expressed as the union of at most
- * 'max_rectangles' device-coordinate rectangles, then we fill in the array
- * with the rectangles, and return True. Otherwise we return False. When there
- * is no clipping active, we return False.
- */
-cairo_bool_t
-cairo_extract_clip_rectangles (cairo_t *cr,
-                               int max_rectangles,
-                               cairo_clip_rect_t *rectangles_out,
-                               int *num_rectangles_out)
-{
-    if (cr->status)
-        return FALSE;
-    return _cairo_gstate_extract_clip_rectangles (cr->gstate, max_rectangles,
-                                                  rectangles_out, num_rectangles_out);
 }

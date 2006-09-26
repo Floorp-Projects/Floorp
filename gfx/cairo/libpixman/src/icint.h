@@ -33,8 +33,6 @@
 #include <string.h>
 #include <limits.h>
 
-#include "slim_internal.h"
-
 #ifndef __GNUC__
 #define __inline
 #endif
@@ -813,7 +811,7 @@ fbRasterizeTrapezoid (pixman_image_t		*pMask,
 # endif
 #else
 # define ICINT_NEED_IC_ONES
-int
+pixman_private int
 _FbOnes(unsigned long mask);
 #endif
 
@@ -851,17 +849,6 @@ FbPixelsDestroy (FbPixels *pixels);
 pixman_private int
 pixman_transform_point (pixman_transform_t	*transform,
 		  pixman_vector_t	*vector);
-
-/* Avoid unnessecary PLT entries.  */
-
-slim_hidden_proto(pixman_image_create)
-slim_hidden_proto(pixman_color_to_pixel)
-slim_hidden_proto(pixman_format_init)
-slim_hidden_proto(pixman_image_destroy)
-slim_hidden_proto(pixman_fill_rectangles)
-slim_hidden_proto(pixman_image_set_component_alpha)
-slim_hidden_proto(pixman_image_set_repeat)
-slim_hidden_proto(pixman_composite)
 
 #include "icrop.h"
 

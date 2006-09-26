@@ -170,6 +170,7 @@ cairo_matrix_translate (cairo_matrix_t *matrix, double tx, double ty)
 
     cairo_matrix_multiply (matrix, &tmp, matrix);
 }
+slim_hidden_def (cairo_matrix_translate);
 
 /**
  * cairo_matrix_init_scale:
@@ -357,7 +358,8 @@ slim_hidden_def(cairo_matrix_transform_point);
 void
 _cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
 				      double *x, double *y,
-				      double *width, double *height)
+				      double *width, double *height,
+				      cairo_bool_t *is_tight)
 {
     int i;
     double quad_x[4], quad_y[4];
@@ -404,6 +406,21 @@ _cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
     *y = min_y;
     *width = max_x - min_x;
     *height = max_y - min_y;
+    
+    if (is_tight) {
+        /* it's tight if and only if the four corner points form an axis-aligned
+           rectangle.
+           And that's true if and only if we can derive corners 0 and 3 from
+           corners 1 and 2 in one of two straightforward ways...
+           We could use a tolerance here but for now we'll fall back to FALSE in the case
+           of floating point error.
+        */
+        *is_tight =
+            (quad_x[1] == quad_x[0] && quad_y[1] == quad_y[3] &&
+             quad_x[2] == quad_x[3] && quad_y[2] == quad_y[0]) ||
+            (quad_x[1] == quad_x[3] && quad_y[1] == quad_y[0] &&
+             quad_x[2] == quad_x[0] && quad_y[2] == quad_y[3]);
+    }
 }
 
 static void

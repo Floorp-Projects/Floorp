@@ -159,7 +159,7 @@ _cairo_array_grow_by (cairo_array_t *array, int additional)
  * beyond @num_elements are simply "forgotten".
  **/
 void
-_cairo_array_truncate (cairo_array_t *array, int num_elements)
+_cairo_array_truncate (cairo_array_t *array, unsigned int num_elements)
 {
     assert (! array->is_snapshot);
 
@@ -187,7 +187,7 @@ _cairo_array_truncate (cairo_array_t *array, int num_elements)
  *	    ... use values[i] here ...
  **/
 void *
-_cairo_array_index (cairo_array_t *array, int index)
+_cairo_array_index (cairo_array_t *array, unsigned int index)
 {
     /* We allow an index of 0 for the no-elements case.
      * This makes for cleaner calling code which will often look like:
@@ -203,7 +203,7 @@ _cairo_array_index (cairo_array_t *array, int index)
     if (index == 0 && array->num_elements == 0)
 	return NULL;
 
-    assert (0 <= index && index < array->num_elements);
+    assert (index < array->num_elements);
 
     return (void *) &(*array->elements)[index * array->element_size];
 }
@@ -287,7 +287,7 @@ _cairo_array_append_multiple (cairo_array_t	*array,
  **/
 cairo_status_t
 _cairo_array_allocate (cairo_array_t	 *array,
-		       int		  num_elements,
+		       unsigned int	  num_elements,
 		       void		**elements)
 {
     cairo_status_t status;
@@ -316,6 +316,18 @@ int
 _cairo_array_num_elements (cairo_array_t *array)
 {
     return array->num_elements;
+}
+
+/**
+ * _cairo_array_size:
+ *
+ * Return value: The number of elements for which there is currently
+ * space allocated in array.
+ **/
+int
+_cairo_array_size (cairo_array_t *array)
+{
+    return array->size;
 }
 
 /* cairo_user_data_array_t */

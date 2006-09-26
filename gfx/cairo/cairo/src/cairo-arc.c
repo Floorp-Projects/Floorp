@@ -231,7 +231,7 @@ _cairo_arc_in_direction (cairo_t	  *cr,
 }
 
 /**
- * _cairo_arc_path_negative:
+ * _cairo_arc_path
  * @cr: a cairo context
  * @xc: X position of the center of the arc
  * @yc: Y position of the center of the arc
@@ -266,7 +266,7 @@ _cairo_arc_path (cairo_t *cr,
  * @angle2: the end angle, in radians
  * @ctm: the current transformation matrix
  * @tolerance: the current tolerance value
- * @path: the path onto which th earc will be appended
+ * @path: the path onto which the arc will be appended
  *
  * Compute a path for the given arc (defined in the negative
  * direction) and append it onto the current path within @cr. The arc
