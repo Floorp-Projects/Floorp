@@ -71,6 +71,7 @@ extern NSString* const kTabBarBackgroundDoubleClickedNotification;
 
 - (BrowserTabViewItem*)itemWithTag:(int)tag;
 - (void)refreshTabBar:(BOOL)rebuild;
+- (void)refreshTab:(BrowserTabViewItem*)tab;
 - (BOOL)isVisible;
 // inform the view that it will be shown or hidden; e.g. prior to showing or hiding the bookmarks
 - (void)setVisible:(BOOL)show;

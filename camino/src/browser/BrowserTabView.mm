@@ -232,6 +232,12 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
   }
 }
 
+- (void)refreshTab:(BrowserTabViewItem*)tab
+{
+  if ([self tabsVisible]) {
+    [mTabBar setNeedsDisplayInRect:[[tab tabButtonCell] frame]];
+  }
+}
 
 // Only to be used with the 2 types of tab view which we use in Camino.
 - (void)showOrHideTabsAsAppropriate

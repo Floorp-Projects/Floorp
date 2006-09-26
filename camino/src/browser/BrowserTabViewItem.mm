@@ -88,7 +88,7 @@ const int kMenuTruncationChars = 60;
 
 @implementation BrowserTabItemContainerView
 
-- (id)initWithFrame:(NSRect)frameRect andTabItem:(NSTabViewItem*)tabViewItem
+- (id)initWithFrame:(NSRect)frameRect andTabItem:(BrowserTabViewItem*)tabViewItem
 {
   if ( (self = [super initWithFrame:frameRect]) )
   {
@@ -441,7 +441,7 @@ const int kMenuTruncationChars = 60;
   NSAttributedString* labelString = [[[NSAttributedString alloc] initWithString:label attributes:mLabelAttributes] autorelease];
   [[mTabContentsView labelCell] setAttributedStringValue:labelString];
   [mMenuItem setTitle:[label stringByTruncatingTo:kMenuTruncationChars at:kTruncateAtMiddle]];
-  [(BrowserTabView *)[self tabView] refreshTabBar:NO];
+  [(BrowserTabView *)[self tabView] refreshTab:self];
 
   [super setLabel:label];
 }
@@ -466,7 +466,7 @@ const int kMenuTruncationChars = 60;
   [super setTabIcon:newIcon];
   [[mTabContentsView labelCell] setImage:mTabIcon];
   [mMenuItem setImage:mTabIcon];
-  [(BrowserTabView *)[self tabView] refreshTabBar:NO];
+  [(BrowserTabView *)[self tabView] refreshTab:self];
 }
 
 - (void)setTabIcon:(NSImage *)newIcon isDraggable:(BOOL)draggable
@@ -491,7 +491,7 @@ const int kMenuTruncationChars = 60;
 #if USE_PROGRESS_SPINNER
   // add spinner to tab view and start animation
   [[mTabContentsView labelCell] addProgressIndicator:mProgressWheel];
-  [(BrowserTabView *)[self tabView] refreshTabBar:NO];
+  [(BrowserTabView *)[self tabView] refreshTab:self];
   [mProgressWheel startAnimation:self];
 #else
   // allow the favicon to display if there's no spinner
@@ -510,7 +510,7 @@ const int kMenuTruncationChars = 60;
   // stop animation and remove spinner from tab view
   [mProgressWheel stopAnimation:self];
   [[mTabContentsView labelCell] removeProgressIndicator];
-  [(BrowserTabView *)[self tabView] refreshTabBar:NO];
+  [(BrowserTabView *)[self tabView] refreshTab:self];
 #endif
 }
 
