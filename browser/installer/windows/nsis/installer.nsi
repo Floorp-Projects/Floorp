@@ -206,6 +206,14 @@ Section "-Application" Section1
     ClearErrors
   ${EndIf}
 
+  ; During an install Vista checks if a new entry is added under the uninstall
+  ; registry key (e.g. ARP). When the same version of the app is installed on
+  ; top of an existing install the key is deleted / added and the Program
+  ; Compatibility Assistant doesn't see this as a new entry and displays an
+  ; error to the user. See Bug 354000.
+  StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} (${AppVersion})"
+  DeleteRegKey HKLM "$0"
+
   ; For a "Standard" upgrade without talkback installed add the InstallDisabled
   ; file to the talkback source files so it will be disabled by the extension
   ; manager. This is done at the start of the installation since we check for
