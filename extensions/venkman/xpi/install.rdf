@@ -43,7 +43,7 @@
 
 		<!-- front-end metadata -->
 		<em:name>JavaScript Debugger</em:name>
-		<em:description></em:description>
+		<em:description>JavaScript debugger and profiler</em:description>
 		<em:creator>Robert Ginda</em:creator>
 		<em:contributor>Christopher Aillon</em:contributor>
 		<em:contributor>James Ross</em:contributor>
