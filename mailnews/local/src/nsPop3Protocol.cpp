@@ -714,13 +714,19 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword, PRBool *okayValue)
     server->GetRealHostName(getter_Copies(hostName));
     server->GetRealUsername(getter_Copies(userName));
     nsXPIDLString passwordTemplate;
+    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url, &rv);
+    nsCOMPtr<nsIMsgWindow> msgWindow;
+    if (mailnewsUrl)
+      mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
     // if the last prompt got us a bad password then show a special dialog
     if (TestFlag(POP3_PASSWORD_FAILED))
     {
       // if we haven't successfully logged onto the server in this session
       // and tried at least twice or if the server threw the specific error,
-      // forget the password.
-      if ((!isAuthenticated || m_pop3ConData->logonFailureCount > 2))
+      // forget the password. 
+      // Only do this if it's not check for new mail, since biff shouldn't
+      // cause passwords to get forgotten at all. 
+      if ((!isAuthenticated || m_pop3ConData->logonFailureCount > 2) && msgWindow)
         rv = server->ForgetPassword();
       if (NS_FAILED(rv)) return rv;
       mStringService->GetStringByID(POP3_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC, getter_Copies(passwordTemplate));
@@ -730,18 +736,13 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword, PRBool *okayValue)
     if (passwordTemplate)
       passwordPromptString = nsTextFormatter::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
     // now go get the password!!!!
-    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url, &rv);
-    if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIMsgWindow> aMsgWindow;
-    rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(aMsgWindow));
-    if (NS_FAILED(rv)) return rv;
     nsXPIDLString passwordTitle;
     mStringService->GetStringByID(POP3_ENTER_PASSWORD_PROMPT_TITLE, getter_Copies(passwordTitle));
     if (passwordPromptString)
     {
       if (passwordTitle)
         rv =  server->GetPasswordWithUI(passwordPromptString, passwordTitle.get(),
-                                        aMsgWindow, okayValue, aPassword);
+                                        msgWindow, okayValue, aPassword);
       nsTextFormatter::smprintf_free(passwordPromptString);
       ClearFlag(POP3_PASSWORD_FAILED|POP3_AUTH_FAILURE);
     }
@@ -1498,6 +1499,7 @@ PRInt32 nsPop3Protocol::AuthFallback()
                          ? POP3_PASSWORD_FAILURE : POP3_USERNAME_FAILURE);
             SetFlag(POP3_PASSWORD_FAILED);
             ClearFlag(POP3_AUTH_FAILURE);
+            m_pop3ConData->logonFailureCount++;
             return 0;
         }
 
