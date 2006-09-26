@@ -64,9 +64,9 @@ public:
   nsSVGPatternFrame(nsStyleContext* aContext) : nsSVGPatternFrameBase(aContext) {}
 
   nsresult PaintPattern(nsISVGRendererCanvas *canvas,
-			nsISVGRendererSurface **surface,
-			nsIDOMSVGMatrix **patternMatrix,
-			nsSVGGeometryFrame *aSource);
+                        cairo_surface_t **surface,
+                        nsIDOMSVGMatrix **patternMatrix,
+                        nsSVGGeometryFrame *aSource);
 
   // nsSVGPaintServerFrame methods:
   virtual nsresult SetupPaintServer(nsISVGRendererCanvas *aCanvas,
@@ -141,8 +141,7 @@ protected:
                               nsIDOMSVGRect *bbox,
                               nsIDOMSVGMatrix *callerCTM);
   nsresult   ConstructCTM(nsIDOMSVGMatrix **ctm, nsIDOMSVGRect *callerBBox);
-  nsresult   CreateSurface(nsISVGRendererSurface **aSurface,
-                           nsIDOMSVGRect *bbox);
+  cairo_surface_t *CreateSurface(nsIDOMSVGRect *bbox);
   nsresult   GetCallerGeometry(nsIDOMSVGMatrix **aCTM, 
                                nsIDOMSVGRect **aBBox,
                                nsSVGElement **aContent, 
