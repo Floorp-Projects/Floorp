@@ -745,7 +745,7 @@ ProcessKeyUsageExtension(SECItem *extData, nsAString &text,
     text.Append(NS_LITERAL_STRING(SEPARATOR).get());
   }
   if (keyUsage & KU_CRL_SIGN) {
-    nssComponent->GetPIPNSSBundleString("CertDumpKUCRLSign", local);
+    nssComponent->GetPIPNSSBundleString("CertDumpKUCRLSigner", local);
     text.Append(local.get());
     text.Append(NS_LITERAL_STRING(SEPARATOR).get());
   }
