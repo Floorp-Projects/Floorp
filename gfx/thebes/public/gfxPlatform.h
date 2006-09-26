@@ -102,6 +102,8 @@ public:
                                              PRUint32 height,
                                              PRUint32 stride);
 
+    void GetPrefFonts(const char *aLangGroup, nsString& array);
+
 protected:
     gfxPlatform() { }
     virtual ~gfxPlatform() { }

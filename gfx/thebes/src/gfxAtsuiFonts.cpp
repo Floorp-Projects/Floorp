@@ -256,6 +256,7 @@ gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
 PRBool
 gfxAtsuiFontGroup::FindATSUFont(const nsAString& aName,
                                 const nsACString& aGenericName,
+                                const nsACString& aLangGroup,
                                 void *closure)
 {
     gfxAtsuiFontGroup *fontGroup = (gfxAtsuiFontGroup*) closure;

@@ -292,7 +292,7 @@ gfxPlatformGtk::GetFontList(const nsACString& aLangGroup,
             continue;
         }
 
-        aListOfFonts.AppendString(NS_ConvertASCIItoUTF16(nsDependentCString(family)));
+        aListOfFonts.AppendString(NS_ConvertUTF8toUTF16(nsDependentCString(family)));
     }
 
     aListOfFonts.Sort();

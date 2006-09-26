@@ -94,6 +94,7 @@ public:
 protected:
     static PRBool FindATSUFont(const nsAString& aName,
                                const nsACString& aGenericName,
+                               const nsACString& aLangGroup,
                                void *closure);
 
     ATSUFontFallbacks mFallbacks;
