@@ -1,6 +1,7 @@
 download_mars () {
     update_url="$1"
     only="$2"
+    test_only="$3"
 
     echo "Using  $update_url"
     curl -sk $update_url > update.xml
@@ -22,7 +23,13 @@ download_mars () {
       command=`echo $line | sed -e 's/^.*<patch //' -e 's:/>.*$::' -e 's:\&amp;:\&:g'`
       eval "export $command"
 
-      wget -nv -O update/$patch_type.mar $URL 2>&1 
+      if [ "$test_only" == "1" ]
+      then
+        curl -sIL $URL
+        return
+      else
+        wget -nv -O update/$patch_type.mar $URL 2>&1 
+      fi
       if [ "$?" != 0 ]; then
         echo "Could not download $patch_type!"
         echo "from: $URL"
