@@ -6488,7 +6488,7 @@ PresShell::ReflowEvent::Run() {
       // Set a kung fu death grip on the view manager associated with the pres shell
       // before processing that pres shell's reflow commands.  Fixes bug 54868.
       nsCOMPtr<nsIViewManager> viewManager = ps->GetViewManager();
-
+      NS_ENSURE_TRUE(viewManager, NS_OK);
       viewManager->BeginUpdateViewBatch();
       ps->ProcessReflowCommands(PR_TRUE);
       viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
