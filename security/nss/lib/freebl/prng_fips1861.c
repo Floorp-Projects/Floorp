@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: prng_fips1861.c,v 1.24 2006/07/29 00:28:12 wtchang%redhat.com Exp $ */
+/* $Id: prng_fips1861.c,v 1.25 2006/09/26 22:20:18 julien.pierre.bugs%sun.com Exp $ */
 
 #include "prerr.h"
 #include "secerr.h"
@@ -169,15 +169,26 @@ struct RNGContextStr {
 };
 typedef struct RNGContextStr RNGContext;
 static RNGContext *globalrng = NULL;
+static RNGContext theGlobalRng;
 
 /*
- * Free the global RNG context
+ * Clean up the global RNG context
  */
 static void
 freeRNGContext()
 {
+    unsigned char inputhash[BSIZE];
+    SECStatus rv;
+
+    /* destroy context lock */
     PZ_DestroyLock(globalrng->lock);
-    PORT_ZFree(globalrng, sizeof *globalrng);
+
+    /* zero global RNG context except for XKEY to preserve entropy */
+    rv = B_HASH_BUF(inputhash, globalrng->XKEY, BSIZE);
+    PORT_Assert(SECSuccess == rv);
+    memset(globalrng, 0, sizeof(*globalrng));
+    memcpy(globalrng->XKEY, inputhash, BSIZE);
+
     globalrng = NULL;
 }
 
@@ -332,22 +343,19 @@ done:
 /* Use NSPR to prevent RNG_RNGInit from being called from separate
  * threads, creating a race condition.
  */
-static PRCallOnceType coRNGInit = { 0, 0, 0 };
+static const PRCallOnceType pristineCallOnce;
+static PRCallOnceType coRNGInit;
 static PRStatus rng_init(void)
 {
     unsigned char bytes[120];
     unsigned int numBytes;
     if (globalrng == NULL) {
 	/* create a new global RNG context */
-	globalrng = (RNGContext *)PORT_ZAlloc(sizeof(RNGContext));
-	if (globalrng == NULL) {
-	    PORT_SetError(PR_OUT_OF_MEMORY_ERROR);
-	    return PR_FAILURE;
-	}
+	globalrng = &theGlobalRng;
+        PORT_Assert(NULL == globalrng->lock);
 	/* create a lock for it */
 	globalrng->lock = PZ_NewLock(nssILockOther);
 	if (globalrng->lock == NULL) {
-	    PORT_Free(globalrng);
 	    globalrng = NULL;
 	    PORT_SetError(PR_OUT_OF_MEMORY_ERROR);
 	    return PR_FAILURE;
@@ -538,8 +546,8 @@ RNG_RNGShutdown(void)
     }
     /* clear */
     freeRNGContext();
-    /* zero the callonce struct to allow a new call to RNG_RNGInit() */
-    memset(&coRNGInit, 0, sizeof coRNGInit);
+    /* reset the callonce struct to allow a new call to RNG_RNGInit() */
+    coRNGInit = pristineCallOnce;
 }
 
 /*

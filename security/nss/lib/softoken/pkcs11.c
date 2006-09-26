@@ -3115,18 +3115,8 @@ CK_RV nsc_CommonFinalize (CK_VOID_PTR pReserved, PRBool isFIPS)
     nsslowcert_DestroyFreeLists();
     nsslowcert_DestroyGlobalLocks();
 
-#ifdef LEAK_TEST
-    /*
-     * do we really want to throw away all our hard earned entropy here!!?
-     * No we don't! Not calling RNG_RNGShutdown only 'leaks' data on the 
-     * initial call to RNG_Init(). So the only reason to call this is to clean
-     * up leak detection warnings on shutdown. In many cases we *don't* want
-     * to free up the global RNG context because the application has Finalized
-     * simply to swap profiles. We don't want to loose the entropy we've 
-     * already collected.
-     */
+    /* This function does not discard all our previously aquired entropy. */
     RNG_RNGShutdown();
-#endif
 
     /* tell freeBL to clean up after itself */
     BL_Cleanup();
