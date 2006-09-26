@@ -53,7 +53,7 @@ class nsIAutoCompleteResults;
 - (id) init;
 
 - (int) rowCount;
-- (id) resultString:(int)aRow column:(NSString *)aColumn;
+- (id) resultForRow:(int)aRow columnIdentifier:(NSString *)aColumnIdentifier;
 
 - (void) setErrorMessage: (NSString*) error;
 - (NSString*) errorMessage;

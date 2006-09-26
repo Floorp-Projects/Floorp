@@ -801,7 +801,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     // user to see what they have typed and what change the autocomplete
     // makes while allowing them to continue typing w/out having to
     // reset the insertion point. 
-    NSString *result = [mDataSource resultString:aRow column:@"col1"];
+    NSString *result = [mDataSource resultForRow:aRow columnIdentifier:@"col1"];
     
     // figure out where to start the match, depending on whether the user typed the protocol part
     int protocolLength = 0;
@@ -825,7 +825,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 - (void) enterResult:(int)aRow
 {
   if (aRow >= 0 && [mDataSource rowCount] > 0) {
-    [self setStringUndoably:[mDataSource resultString:[mTableView selectedRow] column:@"col1"] fromLocation:0];
+    [self setStringUndoably:[mDataSource resultForRow:[mTableView selectedRow] columnIdentifier:@"col1"] fromLocation:0];
     [self closePopup];
   } else if (mOpenTimer) {
     // if there was a search timer going when we hit enter, cancel it
