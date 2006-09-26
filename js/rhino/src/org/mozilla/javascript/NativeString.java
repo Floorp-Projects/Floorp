@@ -37,6 +37,8 @@
 
 package org.mozilla.javascript;
 
+import java.text.Collator;
+
 /**
  * This class implements the String native object.
  *
@@ -145,6 +147,7 @@ final class NativeString extends IdScriptableObject
           case Id_match:            arity=1; s="match";            break;
           case Id_search:           arity=1; s="search";           break;
           case Id_replace:          arity=1; s="replace";          break;
+          case Id_localeCompare:    arity=1; s="localeCompare";    break;
           default: throw new IllegalArgumentException(String.valueOf(id));
         }
         initPrototypeMethod(STRING_TAG, id, s, arity);
@@ -297,6 +300,16 @@ final class NativeString extends IdScriptableObject
                 return ScriptRuntime.checkRegExpProxy(cx).
                     action(cx, scope, thisObj, args, actionType);
             }
+          case Id_localeCompare:
+          {
+              // ECMA-262 1 5.5.4.9
+              Collator collator = Collator.getInstance(cx.getLocale());
+              collator.setStrength(Collator.IDENTICAL);
+              collator.setDecomposition(Collator.CANONICAL_DECOMPOSITION);
+              return ScriptRuntime.wrapNumber(collator.compare(
+                      ScriptRuntime.toString(thisObj), 
+                      ScriptRuntime.toString(args, 0)));
+          }
         }
         throw new IllegalArgumentException(String.valueOf(id));
     }
@@ -751,7 +764,7 @@ final class NativeString extends IdScriptableObject
     protected int findPrototypeId(String s)
     {
         int id;
-// #generated# Last update: 2004-03-17 13:44:29 CET
+// #generated# Last update: 2006-09-26 14:27:05 CEST
         L0: { id = 0; String X = null; int c;
             L: switch (s.length()) {
             case 3: c=s.charAt(2);
@@ -802,6 +815,7 @@ final class NativeString extends IdScriptableObject
                 case 'n': X="constructor";id=Id_constructor; break L;
                 case 's': X="lastIndexOf";id=Id_lastIndexOf; break L;
                 } break L;
+            case 13: X="localeCompare";id=Id_localeCompare; break L;
             case 16: X="equalsIgnoreCase";id=Id_equalsIgnoreCase; break L;
             }
             if (X!=null && X!=s && !X.equals(s)) id = 0;
@@ -846,8 +860,8 @@ final class NativeString extends IdScriptableObject
         Id_match                     = 31,
         Id_search                    = 32,
         Id_replace                   = 33,
-
-        MAX_PROTOTYPE_ID             = 33;
+        Id_localeCompare             = 34,
+        MAX_PROTOTYPE_ID             = 34;
 
 // #/string_id_map#
 
