@@ -991,3 +991,25 @@ nsSVGUtils::HitTestRect(nsIDOMSVGMatrix *aMatrix,
 
   return result;
 }
+
+void
+nsSVGUtils::UserToDeviceBBox(cairo_t *ctx,
+                             double *xmin, double *ymin,
+                             double *xmax, double *ymax)
+{
+  double x[3], y[3];
+  x[0] = *xmin;  y[0] = *ymax;
+  x[1] = *xmax;  y[1] = *ymax;
+  x[2] = *xmax;  y[2] = *ymin;
+
+  cairo_user_to_device(ctx, xmin, ymin);
+  *xmax = *xmin;
+  *ymax = *ymin;
+  for (int i = 0; i < 3; i++) {
+    cairo_user_to_device(ctx, &x[i], &y[i]);
+    *xmin = PR_MIN(*xmin, x[i]);
+    *xmax = PR_MAX(*xmax, x[i]);
+    *ymin = PR_MIN(*ymin, y[i]);
+    *ymax = PR_MAX(*ymax, y[i]);
+  }
+}

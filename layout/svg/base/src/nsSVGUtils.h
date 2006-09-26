@@ -268,6 +268,14 @@ public:
               float aRX, float aRY, float aRWidth, float aRHeight,
               float aX, float aY);
 
+  /*
+   * Convert a rectangle from cairo user space to device space.
+   */
+  static void
+  UserToDeviceBBox(cairo_t *ctx,
+                   double *xmin, double *ymin,
+                   double *xmax, double *ymax);
+
 private:
   /* Cairo computational (nil) surface */
   static cairo_surface_t *mCairoComputationalSurface;
