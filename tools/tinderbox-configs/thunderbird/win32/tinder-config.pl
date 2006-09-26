@@ -184,7 +184,7 @@ $update_ver_file = "mail/config/version.txt";
 $update_platform = "WINNT_x86-msvc";
 $update_hash = "md5";
 $update_filehost = "ftp.mozilla.org";
-$update_pushinfo = 1;
+$update_pushinfo = 0;
 
 # Reboot the OS at the end of build-and-test cycle. This is primarily
 # intended for Win9x, which can't last more than a few cycles before
