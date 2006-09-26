@@ -63,7 +63,8 @@ PRBool
 gfxFontGroup::ForEachFont(FontCreationCallback fc,
                           void *closure)
 {
-    return ForEachFont(mFamilies, mStyle.langGroup, fc, closure);
+    return ForEachFontInternal(mFamilies, mStyle.langGroup,
+                               PR_TRUE, fc, closure);
 }
 
 PRBool
@@ -73,15 +74,15 @@ gfxFontGroup::ForEachFont(const nsAString& aFamilies,
                           void *closure)
 {
     return ForEachFontInternal(aFamilies, aLangGroup,
-                               fc, closure, PR_TRUE);
+                               PR_FALSE, fc, closure);
 }
 
 PRBool
 gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
                                   const nsACString& aLangGroup,
+                                  PRBool aResolveGeneric,
                                   FontCreationCallback fc,
-                                  void *closure,
-                                  PRBool aAllowRecursive)
+                                  void *closure)
 {
     const PRUnichar kSingleQuote  = PRUnichar('\'');
     const PRUnichar kDoubleQuote  = PRUnichar('\"');
@@ -97,6 +98,9 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
     nsAutoString family;
     nsCAutoString lcFamily;
     nsAutoString genericFamily;
+    nsCAutoString lang(aLangGroup);
+    if (lang.IsEmpty())
+        lang.Assign("x-unicode"); // XXX or should use "x-user-def"?
 
     while (p < p_end) {
         while (nsCRT::IsAsciiSpace(*p))
@@ -131,11 +135,12 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
             family = Substring(nameStart, p);
             family.CompressWhitespace(PR_FALSE, PR_TRUE);
 
-            if (family.LowerCaseEqualsLiteral("serif") ||
-                family.LowerCaseEqualsLiteral("sans-serif") ||
-                family.LowerCaseEqualsLiteral("monospace") ||
-                family.LowerCaseEqualsLiteral("cursive") ||
-                family.LowerCaseEqualsLiteral("fantasy"))
+            if (aResolveGeneric &&
+                (family.LowerCaseEqualsLiteral("serif") ||
+                 family.LowerCaseEqualsLiteral("sans-serif") ||
+                 family.LowerCaseEqualsLiteral("monospace") ||
+                 family.LowerCaseEqualsLiteral("cursive") ||
+                 family.LowerCaseEqualsLiteral("fantasy")))
             {
                 generic = PR_TRUE;
 
@@ -144,7 +149,7 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
                 nsCAutoString prefName("font.name.");
                 prefName.Append(lcFamily);
                 prefName.AppendLiteral(".");
-                prefName.Append(aLangGroup);
+                prefName.Append(lang);
 
                 // prefs file always uses (must use) UTF-8 so that we can use
                 // |GetCharPref| and treat the result as a UTF-8 string.
@@ -161,11 +166,12 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
         }
         
         if (!family.IsEmpty()) {
-            if (!((*fc) (family, NS_LossyConvertUTF16toASCII(genericFamily), closure)))
+            if (!((*fc) (family, NS_LossyConvertUTF16toASCII(genericFamily),
+                         lang, closure)))
                 return PR_FALSE;
         }
 
-        if (generic && aAllowRecursive) {
+        if (generic && aResolveGeneric) {
             nsCAutoString prefName("font.name-list.");
             prefName.Append(lcFamily);
             prefName.AppendLiteral(".");
@@ -173,7 +179,7 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
             nsXPIDLString value;
             nsresult rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(value));
             if (NS_SUCCEEDED(rv)) {
-                ForEachFontInternal(value, aLangGroup, fc, closure, PR_FALSE);
+                ForEachFontInternal(value, lang, PR_FALSE, fc, closure);
             }
         }
 
@@ -207,7 +213,8 @@ gfxFontGroup::FindGenericFontFromStyle(FontCreationCallback fc,
 
         rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(familyName));
         if (NS_SUCCEEDED(rv)) {
-            (*fc)(familyName, NS_LossyConvertUTF16toASCII(genericName), closure);
+            (*fc)(familyName, NS_LossyConvertUTF16toASCII(genericName),
+                  mStyle.langGroup, closure);
         }
 
         prefName.AssignLiteral("font.name-list.");
@@ -218,7 +225,7 @@ gfxFontGroup::FindGenericFontFromStyle(FontCreationCallback fc,
         rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(familyName));
         if (NS_SUCCEEDED(rv)) {
             ForEachFontInternal(familyName, mStyle.langGroup,
-                                fc, closure, PR_FALSE);
+                                PR_FALSE, fc, closure);
         }
     }
 }

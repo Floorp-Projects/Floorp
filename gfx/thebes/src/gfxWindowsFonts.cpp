@@ -384,7 +384,10 @@ gfxWindowsFont::FillLogFont(PRInt16 currentWeight)
  **********************************************************************/
 
 PRBool
-gfxWindowsFontGroup::MakeFont(const nsAString& aName, const nsACString& aGenericName, void *closure)
+gfxWindowsFontGroup::MakeFont(const nsAString& aName,
+                              const nsACString& aGenericName,
+                              const nsACString& aLangGroup,
+                              void *closure)
 {
     if (!aName.IsEmpty()) {
         gfxWindowsFontGroup *fg = NS_STATIC_CAST(gfxWindowsFontGroup*, closure);
@@ -941,6 +944,7 @@ public:
 
     static PRBool AddFontCallback(const nsAString& aName,
                                   const nsACString& aGenericName,
+                                  const nsACString& aLangGroup,
                                   void *closure) {
         if (aName.IsEmpty())
             return PR_TRUE;
@@ -1243,7 +1247,7 @@ private:
 
     void AppendPrefFonts(const char *aLangGroup) {
         NS_ASSERTION(aLangGroup, "aLangGroup is null");
-        gfxWindowsPlatform *platform = gfxWindowsPlatform::GetPlatform();
+        gfxPlatform *platform = gfxPlatform::GetPlatform();
         nsString fonts;
         platform->GetPrefFonts(aLangGroup, fonts);
         if (fonts.IsEmpty())

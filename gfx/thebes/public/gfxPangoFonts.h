@@ -44,16 +44,24 @@
 #include <pango/pango.h>
 #include <X11/Xft/Xft.h>
 
+#include "nsDataHashtable.h"
+
 class gfxPangoFont : public gfxFont {
 public:
     gfxPangoFont (const nsAString& aName,
-                  const gfxFontStyle *aFontStyle);
+                  const gfxFontStyle *aFontStyle,
+                  PangoLanguage* aPangoLang = nsnull);
     virtual ~gfxPangoFont ();
 
     virtual const gfxFont::Metrics& GetMetrics();
 
     PangoFontDescription* GetPangoFontDescription() { RealizeFont(); return mPangoFontDesc; }
     PangoContext* GetPangoContext() { RealizeFont(); return mPangoCtx; }
+
+    void GetMozLang(nsACString &aMozLang);
+    void GetActualFontFamily(nsACString &aFamily);
+    PangoFont* GetPangoFont();
+
     XftFont * GetXftFont () { RealizeXftFont (); return mXftFont; }
 
 protected:
@@ -64,6 +72,10 @@ protected:
 
     PRBool mHasMetrics;
     Metrics mMetrics;
+
+    PangoLanguage *mPangoLang;
+    nsCString      mMozLang;
+    nsCString      mActualFontFamily;
 
     void RealizeFont(PRBool force = PR_FALSE);
     void RealizeXftFont(PRBool force = PR_FALSE);
@@ -84,10 +96,24 @@ public:
                               NS_STATIC_CAST(gfxFont*, mFonts[i]));
     }
 
+    gfxPangoFont *GetCachedFont(const nsAString& aName) const {
+        nsRefPtr<gfxPangoFont> font;
+        if (mFontCache.Get(aName, &font))
+            return font;
+        return nsnull;
+    }
+
+    void PutCachedFont(const nsAString& aName, gfxPangoFont *aFont) {
+        mFontCache.Put(aName, aFont);
+    }
 protected:
     static PRBool FontCallback (const nsAString& fontName,
                                 const nsACString& genericName,
+                                const nsACString& aLangGroup,
                                 void *closure);
+private:
+    nsDataHashtable<nsStringHashKey, nsRefPtr<gfxPangoFont> > mFontCache;
+    nsTArray<gfxFontStyle> mAdditionalStyles;
 };
 
 class THEBES_API gfxXftTextRun : public gfxTextRun {
@@ -133,9 +159,15 @@ private:
     gfxPangoFontGroup *mGroup;
 
     PangoLayout *mPangoLayout;
-    int mWidth, mHeight;
+    int mWidth;
 
-    void EnsurePangoLayout(gfxContext *aContext = nsnull);
+    int MeasureOrDraw(gfxContext *aContext, PRBool aDraw, gfxPoint aPt);
+    int MeasureOrDrawFast(gfxContext *aContext, PRBool aDraw,
+                          gfxPoint aPt, nsAFlatCString &aUTF8Str,
+                          PRBool aIsRTL, gfxPangoFont *aFont);
+    int MeasureOrDrawItemizing(gfxContext *aContext, PRBool aDraw,
+                               gfxPoint aPt, nsAFlatCString &aUTF8Str,
+                               PRBool aIsRTL, gfxPangoFont *aFont);
 
     nsTArray<gfxFloat> mSpacing;
     nsTArray<PRInt32>  mUTF8Spacing;

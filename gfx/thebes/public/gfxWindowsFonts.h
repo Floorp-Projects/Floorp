@@ -452,7 +452,10 @@ public:
     }
 
 protected:
-    static PRBool MakeFont(const nsAString& fontName, const nsACString& genericName, void *closure);
+    static PRBool MakeFont(const nsAString& fontName,
+                           const nsACString& genericName,
+                           const nsACString& aLangGroup,
+                           void *closure);
 
 private:
     friend class gfxWindowsTextRun;

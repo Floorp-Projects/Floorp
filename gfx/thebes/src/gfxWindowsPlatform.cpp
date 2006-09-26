@@ -254,60 +254,6 @@ gfxWindowsPlatform::FindFontForChar(nsStringHashKey::KeyType aKey,
     return PL_DHASH_NEXT;
 }
 
-static void
-AppendGenericFontFromPref(nsString& aFonts, const char *aLangGroup, const char *aGenericName)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-    if (!prefs)
-        return;
-
-    nsCAutoString prefName;
-    nsXPIDLString value;
-
-    nsXPIDLString genericName;
-    if (aGenericName) {
-        genericName = NS_ConvertASCIItoUTF16(aGenericName);
-    } else {
-        prefName.AssignLiteral("font.default.");
-        prefName.Append(aLangGroup);
-        prefs->CopyUnicharPref(prefName.get(), getter_Copies(genericName));
-    }
-
-    nsCAutoString genericDotLang;
-    genericDotLang.Assign(NS_ConvertUTF16toUTF8(genericName));
-    genericDotLang.AppendLiteral(".");
-    genericDotLang.Append(aLangGroup);
-
-    prefName.AssignLiteral("font.name.");
-    prefName.Append(genericDotLang);
-    rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(value));
-    if (NS_SUCCEEDED(rv)) {
-        if (!aFonts.IsEmpty())
-            aFonts.AppendLiteral(", ");
-        aFonts.Append(value);
-    }
-
-    prefName.AssignLiteral("font.name-list.");
-    prefName.Append(genericDotLang);
-    rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(value));
-    if (NS_SUCCEEDED(rv)) {
-        if (!aFonts.IsEmpty())
-            aFonts.AppendLiteral(", ");
-        aFonts.Append(value);
-    }
-}
-
-void
-gfxWindowsPlatform::GetPrefFonts(const char *aLangGroup, nsString& aFonts)
-{
-    aFonts.Truncate();
-
-    AppendGenericFontFromPref(aFonts, aLangGroup, nsnull);
-    AppendGenericFontFromPref(aFonts, "x-unicode", nsnull);
-}
-
 void
 gfxWindowsPlatform::FindOtherFonts(const PRUnichar* aString, PRUint32 aLength, const char *aLangGroup, const char *aGeneric, nsString& fonts)
 {

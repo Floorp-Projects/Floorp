@@ -184,7 +184,10 @@ public:
     /* helper function for splitting font families on commas and
      * calling a function for each family to fill the mFonts array
      */
-    typedef PRBool (*FontCreationCallback) (const nsAString& aName, const nsACString& aGenericName, void *closure);
+    typedef PRBool (*FontCreationCallback) (const nsAString& aName,
+                                            const nsACString& aGenericName,
+                                            const nsACString& aLangGroup,
+                                            void *closure);
     static PRBool ForEachFont(const nsAString& aFamilies,
                               const nsACString& aLangGroup,
                               FontCreationCallback fc,
@@ -201,9 +204,9 @@ protected:
 
     static PRBool ForEachFontInternal(const nsAString& aFamilies,
                                       const nsACString& aLangGroup,
+                                      PRBool aResolveGeneric,
                                       FontCreationCallback fc,
-                                      void *closure,
-                                      PRBool aAllowRecursive);
+                                      void *closure);
 };
 
 
