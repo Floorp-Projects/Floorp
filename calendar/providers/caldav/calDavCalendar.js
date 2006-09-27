@@ -63,6 +63,7 @@ const xmlHeader = '<?xml version="1.0" encoding="UTF-8"?>\n';
 function calDavCalendar() {
     this.wrappedJSObject = this;
     this.mObservers = Array();
+    this.unmappedProperties = [];
 }
 
 // some shorthand
@@ -326,6 +327,11 @@ calDavCalendar.prototype = {
             return;
         }
 
+        if (aNewItem.parentItem != aNewItem) {
+            aNewItem.parentItem.recurrenceInfo.modifyException(aNewItem);
+            aNewItem = aNewItem.parentItem;
+        }
+
         var eventUri = this.mCalendarUri.clone();
         try {
             eventUri.spec = this.mCalendarUri.spec + aNewItem.getProperty("X-MOZ-LOCATIONPATH");
@@ -335,10 +341,38 @@ calDavCalendar.prototype = {
             eventUri.spec = eventUri.spec + aNewItem.id + ".ics";
         }
 
+        if (aOldItem.parentItem.generation != aNewItem.generation) {
+            if (aListener) {
+                aListener.onOperationComplete (this.calendarToReturn,
+                                               Components.results.NS_ERROR_FAILURE,
+                                               aListener.MODIFY,
+                                               aNewItem.id,
+                                               "generation mismatch in modifyItem");
+            }
+            return;
+        }
+
+        aNewItem.generation += 1;
+
         var eventResource = new WebDavResource(eventUri);
 
         var listener = new WebDavListener();
         var thisCalendar = this;
+
+        const icssvc = Cc["@mozilla.org/calendar/ics-service;1"].
+                       getService(Components.interfaces.calIICSService);
+        var modifiedItem = icssvc.createIcalComponent("VCALENDAR");
+        modifiedItem.prodid = "-//Mozilla Calendar//NONSGML Sunbird//EN";
+        modifiedItem.version = "2.0";
+        modifiedItem.addSubcomponent(aNewItem.icalComponent);
+        if (aNewItem.recurrenceInfo) {
+            var exceptions = aNewItem.recurrenceInfo.getExceptionIds({});
+            for each (var exc in exceptions) {
+                modifiedItem.addSubcomponent(aNewItem.recurrenceInfo.getExceptionFor(exc, true).icalComponent);
+            }
+        }
+        var modifiedItemICS = modifiedItem.serializeToICS();
+
         listener.onOperationComplete = function(aStatusCode, aResource,
                                                 aOperation, aClosure) {
 
@@ -379,7 +413,7 @@ calDavCalendar.prototype = {
 
             // notify observers
             if (Components.isSuccessCode(retVal)) {
-                thisCalendar.observeModifyItem(aNewItem, aOldItem);
+                thisCalendar.observeModifyItem(aNewItem, aOldItem.parentItem);
             }
 
             return;
@@ -392,7 +426,7 @@ calDavCalendar.prototype = {
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
             .getService(Components.interfaces.nsIWebDAVService);
         webSvc.putFromString(eventResource, "text/calendar",
-                             aNewItem.icalString, listener, this, null);
+                             modifiedItemICS, listener, this, null);
 
         return;
     },
@@ -565,11 +599,7 @@ calDavCalendar.prototype = {
                 var C = new Namespace("urn:ietf:params:xml:ns:caldav");
                 var D = new Namespace("DAV:");
 
-                // create a local event item
-                // XXX not just events
-                var item = createEvent();
-
-                // cause returned data to be parsed into the event item
+                // cause returned data to be parsed into the item
                 var calData = responseElement..C::["calendar-data"];
                 if (!calData.toString().length) {
                   Components.utils.reportError(
@@ -579,16 +609,98 @@ calDavCalendar.prototype = {
                   return;
                 }
                 LOG("item result = \n" + calData);
-                // XXX try-catch
-                item.icalString = calData;
-                item.calendar = thisCalendar;
+                this.mICSService = Cc["@mozilla.org/calendar/ics-service;1"].
+                                   getService(Components.interfaces.calIICSService);
+                var rootComp = this.mICSService.parseICS(calData);
 
-                // save the location name in case we need to modify
-                var locationPath = decodeURIComponent(aResource.path)
-                    .substr(thisCalendar.mCalendarUri.path.length);
-                item.setProperty("X-MOZ-LOCATIONPATH", locationPath);
-                LOG("X-MOZ-LOCATIONPATH = " + locationPath);
-                item.makeImmutable();
+                var calComp;
+                if (rootComp.componentType == 'VCALENDAR') {
+                    calComp = rootComp;
+                } else {
+                    calComp = rootComp.getFirstSubcomponent('VCALENDAR');
+                }
+
+                var unexpandedItems = [];
+                var uid2parent = {};
+                var excItems = [];
+
+                while (calComp) {
+                    // Get unknown properties
+                    var prop = calComp.getFirstProperty("ANY");
+                    while (prop) {
+                        thisCalendar.unmappedProperties.push(prop);
+                        prop = calComp.getNextProperty("ANY");
+                    }
+
+                    var subComp = calComp.getFirstSubcomponent("ANY");
+                    while (subComp) {
+                        // Place each subcomp in a try block, to hopefully get as
+                        // much of a bad calendar as possible
+                        try {
+                            var item = null;
+                            switch (subComp.componentType) {
+                            case "VEVENT":
+                                item = Cc["@mozilla.org/calendar/event;1"].
+                                       createInstance(Components.interfaces.calIEvent);
+                                break;
+                            case "VTODO":
+                                item = Cc["@mozilla.org/calendar/todo;1"].
+                                       createInstance(Components.interfaces.calITodo);
+                                break;
+                            case "VTIMEZONE":
+                                // we should already have this, so there's no need to
+                                // do anything with it here.
+                                break;
+                            default:
+                                this.unmappedComponents.push(subComp);
+                            }
+                            if (item != null) {
+
+                                item.icalComponent = subComp;
+                                // save the location name in case we need to modify
+                                // need to build using thisCalendar since aResource.spec
+                                // won't contain any auth info embedded in the URI
+                                var locationPath = decodeURIComponent(aResource.path)
+                                                   .substr(thisCalendar.mCalendarUri.path.length);
+                                item.setProperty("X-MOZ-LOCATIONPATH", locationPath);
+
+                                var rid = item.recurrenceId;
+                                if (rid == null) {
+                                    unexpandedItems.push( item );
+                                    if (item.recurrenceInfo != null) {
+                                        uid2parent[item.id] = item;
+                                    }
+                                } else {
+                                    item.calendar = thisCalendar;
+                                    // force no recurrence info so we can
+                                    // rebuild it cleanly below
+                                    item.recurrenceInfo = null;
+                                    excItems.push(item);
+                                }
+                            }
+                        } catch (ex) { 
+                            this.mObserver.onError(ex.result, ex.toString());
+                        }
+                        subComp = calComp.getNextSubcomponent("ANY");
+                    }
+                    calComp = rootComp.getNextSubcomponent('VCALENDAR');
+                }
+
+                // tag "exceptions", i.e. items with rid:
+                for each (var item in excItems) {
+                    var parent = uid2parent[item.id];
+                    if (parent == null) {
+                        LOG( "no parent item for rid=" + item.recurrenceId );
+                    } else {
+                        item.parentItem = parent;
+                        item.parentItem.recurrenceInfo.modifyException(item);
+                    }
+                }
+                // if we loop over both excItems and unexpandedItems using 'item'
+                // we can be confident that 'item' means something below
+                for each (var item in unexpandedItems) {
+                    item.calendar = thisCalendar;
+                }
 
                 // figure out what type of item to return
                 var iid;
@@ -995,7 +1107,7 @@ var calDavCalendarModule = {
             var fileurl = iosvc.newFileURI(f);
             loader.loadSubScript(fileurl.spec, this.__parent__.__parent__);
         } catch (e) {
-            dump("Error while loading " + fileurl.spec + "\n");
+            LOG("Error while loading " + fileurl.spec );
             throw e;
         }
 
