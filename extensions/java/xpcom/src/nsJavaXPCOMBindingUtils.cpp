@@ -100,7 +100,7 @@ jclass stringArrayClass = nsnull;
 
 jclass nsISupportsClass = nsnull;
 
-jclass exceptionClass = nsnull;
+jclass xpcomExceptionClass = nsnull;
 
 /**************************************
  *  Java<->XPCOM binding stores
@@ -342,8 +342,8 @@ InitializeJavaGlobals(JNIEnv *env)
         return PR_FALSE;
     }
   
-    if (!(clazz = env->FindClass("java/lang/Exception")) ||
-        !(exceptionClass = (jclass) env->NewGlobalRef(clazz)))
+    if (!(clazz = env->FindClass("org/mozilla/xpcom/XPCOMException")) ||
+        !(xpcomExceptionClass = (jclass) env->NewGlobalRef(clazz)))
     {
         return PR_FALSE;
     }
@@ -518,12 +518,14 @@ CreateJavaXPCOMInstance(nsISupports* aXPCOMObject, const nsIID* aIID)
 void
 ThrowXPCOMException(JNIEnv* env, int aFailureCode)
 {
-  // only throw this exception if one hasn't already been thrown
+  // Only throw this exception if one hasn't already been thrown, so we don't
+  // mask a previous exception/error.
   jthrowable throwObj = env->ExceptionOccurred();
-  if (throwObj != nsnull) {
-    char exp_msg[32];
-    sprintf(exp_msg, "\nInternal Gecko Error: %x", aFailureCode);
-    env->ThrowNew(exceptionClass, exp_msg);
+  if (throwObj == nsnull) {
+    char exp_msg[40];
+    sprintf(exp_msg, "\nInternal XPCOM Error: %x", aFailureCode);
+    jint rc = env->ThrowNew(xpcomExceptionClass, exp_msg);
+    NS_ASSERTION(rc == 0, "Failed to throw XPCOMException");
   }
 }
 
