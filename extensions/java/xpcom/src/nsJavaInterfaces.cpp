@@ -55,8 +55,8 @@ PRBool gEmbeddingInitialized = PR_FALSE;
 
 
 extern "C" JNIEXPORT void JNICALL
-GECKO_NATIVE(NS_1InitEmbedding) (JNIEnv* env, jclass, jobject aMozBinDirectory,
-                                 jobject aAppFileLocProvider)
+GECKO_NATIVE(initEmbedding) (JNIEnv* env, jclass, jobject aMozBinDirectory,
+                             jobject aAppFileLocProvider)
 {
   if (!InitializeJavaGlobals(env)) {
     FreeJavaGlobals(env);
@@ -98,7 +98,7 @@ GECKO_NATIVE(NS_1InitEmbedding) (JNIEnv* env, jclass, jobject aMozBinDirectory,
 }
 
 extern "C" JNIEXPORT void JNICALL
-GECKO_NATIVE(NS_1TermEmbedding) (JNIEnv *env, jclass)
+GECKO_NATIVE(termEmbedding) (JNIEnv *env, jclass)
 {
   FreeJavaGlobals(env);
 
@@ -115,8 +115,8 @@ GECKO_NATIVE(NS_1TermEmbedding) (JNIEnv *env, jclass)
  * NULL and just create it lazily.
  */
 extern "C" JNIEXPORT jobject JNICALL
-GECKO_NATIVE(NS_1NewLocalFile) (JNIEnv *env, jclass, jstring aPath,
-                                jboolean aFollowLinks)
+GECKO_NATIVE(newLocalFile) (JNIEnv *env, jclass, jstring aPath,
+                            jboolean aFollowLinks)
 {
   if (!InitializeJavaGlobals(env)) {
     FreeJavaGlobals(env);
@@ -165,7 +165,7 @@ GECKO_NATIVE(NS_1NewLocalFile) (JNIEnv *env, jclass, jstring aPath,
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-GECKO_NATIVE(NS_1GetComponentManager) (JNIEnv *env, jclass)
+GECKO_NATIVE(getComponentManager) (JNIEnv *env, jclass)
 {
   jobject java_stub = nsnull;
 
@@ -196,7 +196,7 @@ GECKO_NATIVE(NS_1GetComponentManager) (JNIEnv *env, jclass)
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-GECKO_NATIVE(NS_1GetServiceManager) (JNIEnv *env, jclass)
+GECKO_NATIVE(getServiceManager) (JNIEnv *env, jclass)
 {
   jobject java_stub = nsnull;
 
@@ -212,95 +212,6 @@ GECKO_NATIVE(NS_1GetServiceManager) (JNIEnv *env, jclass)
     if (inst) {
       // create java stub
       java_stub = CreateJavaWrapper(env, "nsIServiceManager");
-
-      if (java_stub) {
-        // Associate XPCOM object w/ Java stub
-        AddJavaXPCOMBinding(env, java_stub, inst);
-      }
-    }
-  }
-
-  if (java_stub == nsnull)
-    ThrowXPCOMException(env, 0);
-
-  return java_stub;
-}
-
-extern "C" JNIEXPORT jobject JNICALL
-GECKO_NATIVE(NS_1NewSingletonEnumerator) (JNIEnv *env, jclass, jobject aSingleton)
-{
-  void* inst = GetMatchingXPCOMObject(env, aSingleton);
-  if (inst == nsnull) {
-    // If there is not corresponding XPCOM object, then that means that the
-    // parameter is non-generated class (that is, it is not one of our
-    // Java stubs that represent an exising XPCOM object).  So we need to
-    // create an XPCOM stub, that can route any method calls to the class.
-
-    // Get interface info for class
-    nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
-    nsCOMPtr<nsIInterfaceInfo> iinfo;
-    iim->GetInfoForIID(&NS_GET_IID(nsISupports), getter_AddRefs(iinfo));
-
-    // Create XPCOM stub
-    nsJavaXPTCStub* xpcomStub = new nsJavaXPTCStub(env, aSingleton, iinfo);
-    NS_ADDREF(xpcomStub);
-    inst = SetAsXPTCStub(xpcomStub);
-    AddJavaXPCOMBinding(env, aSingleton, inst);
-  }
-
-  nsISupports* singleton;
-  if (IsXPTCStub(inst))
-    GetXPTCStubAddr(inst)->QueryInterface(NS_GET_IID(nsISupports),
-                                          (void**) &singleton);
-  else {
-    JavaXPCOMInstance* xpcomInst = (JavaXPCOMInstance*) inst;
-    singleton = xpcomInst->GetInstance();
-  }
-
-  // Call XPCOM method
-  jobject java_stub = nsnull;
-	nsISimpleEnumerator *enumerator = nsnull;
-	nsresult rv = NS_NewSingletonEnumerator(&enumerator, singleton);
-
-  if (NS_SUCCEEDED(rv)) {
-    // wrap xpcom instance
-    JavaXPCOMInstance* inst;
-    inst = CreateJavaXPCOMInstance(enumerator, &NS_GET_IID(nsISimpleEnumerator));
-
-    if (inst) {
-      // create java stub
-      java_stub = CreateJavaWrapper(env, "nsISimpleEnumerator");
-
-      if (java_stub) {
-        // Associate XPCOM object w/ Java stub
-        AddJavaXPCOMBinding(env, java_stub, inst);
-      }
-    }
-  }
-
-  if (java_stub == nsnull)
-    ThrowXPCOMException(env, 0);
-
-  return java_stub;
-}
-
-extern "C" JNIEXPORT jobject JNICALL
-GECKO_NATIVE(NS_1NewArray) (JNIEnv *env, jclass)
-{
-  jobject java_stub = nsnull;
-
-  // Call XPCOM method
-  nsCOMPtr<nsIMutableArray> array;
-  nsresult rv = NS_NewArray(getter_AddRefs(array));
-
-  if (NS_SUCCEEDED(rv)) {
-    // wrap xpcom instance
-    JavaXPCOMInstance* inst;
-    inst = CreateJavaXPCOMInstance(array, &NS_GET_IID(nsIMutableArray));
-
-    if (inst) {
-      // create java stub
-      java_stub = CreateJavaWrapper(env, "nsIMutableArray");
 
       if (java_stub) {
         // Associate XPCOM object w/ Java stub
@@ -550,7 +461,7 @@ XPCOM_NATIVE(FinalizeStub) (JNIEnv *env, jclass that, jobject aJavaObject)
   jclass clazz = env->GetObjectClass(aJavaObject);
   jstring name = (jstring) env->CallObjectMethod(clazz, getNameMID);
   const char* javaObjectName = env->GetStringUTFChars(name, &isCopy);
-  fprintf(stderr, "*** Finalize(java_obj=%s)\n", javaObjectName);
+  LOG("*** Finalize(java_obj=%s)\n", javaObjectName);
   if (isCopy)
     env->ReleaseStringUTFChars(name, javaObjectName);
 #endif
