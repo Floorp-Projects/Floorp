@@ -460,24 +460,29 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
       switch (retvalInfo->GetType().TagPart())
       {
         case nsXPTType::T_I8:
-        case nsXPTType::T_U8:
           retval.b = env->CallByteMethodA(javaObject, mid, java_params);
           break;
 
         case nsXPTType::T_I16:
-        case nsXPTType::T_U16:
+        case nsXPTType::T_U8:
           retval.s = env->CallShortMethodA(javaObject, mid, java_params);
           break;
 
         case nsXPTType::T_I32:
-        case nsXPTType::T_U32:
+        case nsXPTType::T_U16:
           retval.i = env->CallIntMethodA(javaObject, mid, java_params);
+          break;
+
+        case nsXPTType::T_I64:
+        case nsXPTType::T_U32:
+          retval.i = env->CallLongMethodA(javaObject, mid, java_params);
           break;
 
         case nsXPTType::T_FLOAT:
           retval.f = env->CallFloatMethodA(javaObject, mid, java_params);
           break;
 
+        case nsXPTType::T_U64:
         case nsXPTType::T_DOUBLE:
           retval.d = env->CallDoubleMethodA(javaObject, mid, java_params);
           break;
