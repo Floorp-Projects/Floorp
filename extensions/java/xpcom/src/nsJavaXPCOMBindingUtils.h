@@ -74,6 +74,7 @@ extern jclass stringClass;
 extern jclass nsISupportsClass;
 extern jclass xpcomExceptionClass;
 extern jclass xpcomJavaProxyClass;
+extern jclass weakReferenceClass;
 
 extern jmethodID hashCodeMID;
 extern jmethodID booleanValueMID;
@@ -95,6 +96,9 @@ extern jmethodID doubleInitMID;
 extern jmethodID createProxyMID;
 extern jmethodID isXPCOMJavaProxyMID;
 extern jmethodID getNativeXPCOMInstMID;
+extern jmethodID weakReferenceConstructorMID;
+extern jmethodID getReferentMID;
+extern jmethodID clearReferentMID;
 
 #ifdef DEBUG_JAVAXPCOM
 extern jmethodID getNameMID;
