@@ -72,6 +72,9 @@ var bookmarksView = {
 };
 var bookmarksController = {
   __proto__: baseController,
+  get path() {
+    return 'results/' + this.tag + '/bookmarks-results.json';
+  },
   beforeSelect: function() {
     this.result = {};
     this.isShown = false;

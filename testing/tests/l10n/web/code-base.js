@@ -66,7 +66,32 @@ function JSON_c() {
   };
 };
 JSON_c.prototype = {
+  cache : {
+    MAX_SIZE: 6,
+    _objs: {},
+    _lru: [],
+    get: function(aURL) {
+      if (!(aURL in this._objs)) {
+        return null;
+      }
+      var i = this._lru.indexOf(aURL);
+      for (var j = i; j>0; j--) {
+        this._lru[j] = this._lru[j-1];
+      }
+      this._lru[0] = aURL;
+      return this._objs[aURL];
+    },
+    put: function(aURL, aObject) {
+      this._lru.unshift(aURL);
+      this._objs[aURL] = aObject;
+    }
+  },
   get : function(aURL, aCallback) {
+    var obj = this.cache.get(aURL);
+    if (obj) {
+      controller.delay(controller, aCallback, [obj]);
+      return;
+    }
     var _t = this;
     var req = this._getRequest();
     req.overrideMimeType("text/plain"); // don't parse XML, this is js
@@ -78,6 +103,7 @@ JSON_c.prototype = {
       _t.handleSuccess(event.target);
       event.stopPropagation();
     };
+    req._mURL = aURL;
     if (aCallback) {
       req.callback = aCallback;
     }
@@ -86,7 +112,7 @@ JSON_c.prototype = {
       req.send(null);
     } catch (e) {
       // work around send sending errors, but not the callback
-      controller.handleFailure(req);
+      this.handleFailure(req);
     }
     return req;
   },
@@ -96,6 +122,7 @@ JSON_c.prototype = {
       throw "expected response text in handleSuccess";
     if (o.callback) {
       var obj = eval('('+o.responseText+')');
+      this.cache.put(o._mURL, obj);
       o.callback(obj);
       delete o.callback;
     }
@@ -234,6 +261,9 @@ baseController = {
     baseController._tag = aTag;
     view.setTag(aTag);
   },
+  get path() {
+    throw 'not implemented';
+  },
   addLocales: function(lst) {
     var nl = lst.filter(function(el,i,a) {return this._l.indexOf(el) < 0;}, this);
     this._l = this._l.concat(nl);
@@ -253,6 +283,10 @@ baseController = {
     controller._target = aKey;
     view.selectTab(aKey);
     this.delay(controller, controller.showView, []);
+    //controller.ensureData(aKey, nCV.controller.showView, nCV.controller);
+  },
+  ensureData: function(aKey, aCallback, aController) {
+    var p = a;
   },
   showView: function(aClosure) {
     view.updateView(controller.locales, aClosure);
@@ -264,7 +298,7 @@ baseController = {
     var dlg = new YAHOO.widget.SimpleDialog("log-dlg", dlgProps);
     var prefix = '';
     if (aLocale) {
-      prefix  = '[' + aLocale * '] ';
+      prefix  = '[' + aLocale + '] ';
     }
     dlg.setHeader(prefix + 'build log, ' + aTag);
     dlg.setBody('Loading &hellip;');
@@ -279,6 +313,7 @@ baseController = {
     dlg.cfg.queueProperty("buttons", [okButton]);
     dlg.render(document.body);
     dlg.moveTo(10, 10);
+    document.body.scrollTop = 0;
     var callback = function(obj) {
       _t.handleLog.apply(_t, [obj, dlg, aLocale]);
     };
@@ -286,14 +321,46 @@ baseController = {
   },
   handleLog: function(aLog, aDlg, aLocale) {
     var df = document.createDocumentFragment();
+    var filter = function(lr) {
+      return true;
+    }
+    if (aLocale) {
+      filter = function(lr) {
+        var logName = lr[0];
+        var level = lr[1];
+        var msg = lr[2];
+        var loc = '/' + aLocale + '/';
+        if (logName == 'cvsco') {
+          return msg.indexOf('mozilla/') >= 0 ||
+            msg.indexOf(loc) >= 0 ||
+            msg.indexOf('make[') >= 0 ||
+            msg.indexOf('checkout') >= 0;
+        }
+        if (logName == 'locales') {
+          return msg.indexOf(loc) >= 0;
+        }
+        return logName == ('locales.' + aLocale);
+      }
+    }
     for each (var r in aLog) {
+      if (!filter(r)) {
+        continue;
+      }
       var d = document.createElement('pre');
       d.className = 'log-row ' + r[1];
       // XXX filter on r[0:1]
-      d.textContent = r[2].replace(/[\n\r]$/, '');
+      d.textContent = r[2];
       df.appendChild(d);
     }
     aDlg.setBody(df);
+  },
+  showDetails: function(aTag, aLoc) {
+    var cells = [];
+    for (var key in baseController._c) {
+      if (key != 'waterfall') {
+        cells.push(baseController._c[key].controller.getContent(aLoc));
+      }
+    }
   },
   getContent: function(aLoc) {
     if (! this._target) return;
