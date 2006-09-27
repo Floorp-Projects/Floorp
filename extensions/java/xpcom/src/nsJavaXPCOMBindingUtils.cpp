@@ -62,6 +62,7 @@ jclass stringClass = nsnull;
 jclass nsISupportsClass = nsnull;
 jclass xpcomExceptionClass = nsnull;
 jclass xpcomJavaProxyClass = nsnull;
+jclass weakReferenceClass = nsnull;
 
 jmethodID hashCodeMID = nsnull;
 jmethodID booleanValueMID = nsnull;
@@ -83,6 +84,9 @@ jmethodID doubleInitMID = nsnull;
 jmethodID createProxyMID = nsnull;
 jmethodID isXPCOMJavaProxyMID = nsnull;
 jmethodID getNativeXPCOMInstMID = nsnull;
+jmethodID weakReferenceConstructorMID = nsnull;
+jmethodID getReferentMID = nsnull;
+jmethodID clearReferentMID = nsnull;
 
 #ifdef DEBUG_JAVAXPCOM
 jmethodID getNameMID = nsnull;
@@ -255,6 +259,19 @@ InitializeJavaGlobals(JNIEnv *env)
     goto init_error;
   }
 
+  if (!(clazz = env->FindClass("java/lang/ref/WeakReference")) ||
+      !(weakReferenceClass = (jclass) env->NewGlobalRef(clazz)) ||
+      !(weakReferenceConstructorMID = env->GetMethodID(weakReferenceClass, 
+                                           "<init>","(Ljava/lang/Object;)V")) ||
+      !(getReferentMID = env->GetMethodID(weakReferenceClass,
+                                          "get", "()Ljava/lang/Object;")) ||
+      !(clearReferentMID = env->GetMethodID(weakReferenceClass, 
+                                            "clear", "()V")))
+  {
+    NS_WARNING("Problem creating java.lang.ref.WeakReference globals");
+    goto init_error;
+  }
+
 #ifdef DEBUG_JAVAXPCOM
   if (!(clazz = env->FindClass("java/lang/Class")) ||
       !(getNameMID = env->GetMethodID(clazz, "getName","()Ljava/lang/String;")))
@@ -392,6 +409,10 @@ FreeJavaGlobals(JNIEnv* env)
     env->DeleteGlobalRef(xpcomJavaProxyClass);
     xpcomJavaProxyClass = nsnull;
   }
+  if (weakReferenceClass) {
+    env->DeleteGlobalRef(weakReferenceClass);
+    weakReferenceClass = nsnull;
+  }
 
   if (gJavaKeywords) {
     delete gJavaKeywords;
@@ -449,7 +470,7 @@ DestroyJavaProxyMappingEnum(PLDHashTable* aTable, PLDHashEntryHdr* aHeader,
   NativeToJavaProxyMap::ProxyList* item = entry->list;
   while(item != nsnull) {
     void* xpcom_obj;
-    jobject javaObject = env->NewLocalRef(item->javaObject);
+    jobject javaObject = env->CallObjectMethod(item->javaObject, getReferentMID);
     rv = GetXPCOMInstFromProxy(env, javaObject, &xpcom_obj);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get XPCOM instance from Java proxy");
 
@@ -466,6 +487,8 @@ DestroyJavaProxyMappingEnum(PLDHashTable* aTable, PLDHashEntryHdr* aHeader,
     }
 
     NativeToJavaProxyMap::ProxyList* next = item->next;
+    env->CallVoidMethod(item->javaObject, clearReferentMID);
+    env->DeleteGlobalRef(item->javaObject);
     delete item;
     item = next;
   }
@@ -498,11 +521,15 @@ NativeToJavaProxyMap::Add(JNIEnv* env, nsISupports* aXPCOMObject,
   if (!e)
     return NS_ERROR_FAILURE;
 
-  jweak ref = env->NewWeakGlobalRef(aProxy);
+  jobject ref = nsnull;
+  jobject weakRefObj = env->NewObject(weakReferenceClass,
+                                      weakReferenceConstructorMID, aProxy);
+  if (weakRefObj)
+    ref = env->NewGlobalRef(weakRefObj);
   if (!ref)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  // Add Java proxy ref to start of list
+  // Add Java proxy weak reference ref to start of list
   ProxyList* item = new ProxyList(ref, aIID, e->list);
   e->key = aXPCOMObject;
   e->list = item;
@@ -538,9 +565,10 @@ NativeToJavaProxyMap::Find(JNIEnv* env, nsISupports* aNativeObject,
   ProxyList* item = e->list;
   while (item != nsnull && *aResult == nsnull) {
     if (item->iid.Equals(aIID)) {
-      jobject javaObject = env->NewLocalRef(item->javaObject);
-      if (javaObject) {
-        *aResult = javaObject;
+      jobject referentObj = env->CallObjectMethod(item->javaObject,
+                                                  getReferentMID);
+      if (!env->IsSameObject(referentObj, NULL)) {
+        *aResult = referentObj;
 #ifdef DEBUG_JAVAXPCOM
         char* iid_str = aIID.ToString();
         LOG(("< NativeToJavaProxyMap (Java=%08x | XPCOM=%08x | IID=%s)\n",
@@ -584,9 +612,8 @@ NativeToJavaProxyMap::Remove(JNIEnv* env, nsISupports* aNativeObject,
       PR_Free(iid_str);
 #endif
 
-      jweak weakref = NS_STATIC_CAST(jweak,
-                                     NS_CONST_CAST(jobject, item->javaObject));
-      env->DeleteWeakGlobalRef(weakref);
+      env->CallVoidMethod(item->javaObject, clearReferentMID);
+      env->DeleteGlobalRef(item->javaObject);
       if (item == e->list) {
         e->list = item->next;
         if (e->list == nsnull)
