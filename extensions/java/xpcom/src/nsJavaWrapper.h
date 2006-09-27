@@ -42,11 +42,31 @@
 #include "nsISupports.h"
 
 
-void CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
-                     jint aMethodIndex, jobjectArray aParams, jvalue &aResult);
-
-// Creates a Java proxy for the given XPCOM object.
+/**
+ * Creates a Java proxy around an XPCOM C++ object.
+ *
+ * @param env           pointer to Java context
+ * @param aXPCOMObject  XPCOM object to create proxy for
+ * @param aIID          IID for XPCOM object
+ * @param aResult       on exit, holds reference to Java proxy
+ *
+ * @return NS_OK if Java proxy was successfully created;
+ *         any other value denotes an error condition.
+ */
 nsresult CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject,
                          const nsIID& aIID, jobject* aResult);
+
+/**
+ * Returns the XPCOM object for which the given Java proxy was created.
+ *
+ * @param env           pointer to Java context
+ * @param aJavaObject   a Java proxy created by CreateJavaProxy()
+ * @param aResult       on exit, holds pointer to XPCOM instance
+ *
+ * @return NS_OK if the XPCOM object was successfully retrieved;
+ *         any other value denotes an error condition.
+ */
+nsresult GetXPCOMInstFromProxy(JNIEnv* env, jobject aJavaObject,
+                               void** aResult);
 
 #endif // _nsJavaWrapper_h_
