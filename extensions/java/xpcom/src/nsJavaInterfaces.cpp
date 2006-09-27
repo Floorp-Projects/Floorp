@@ -164,7 +164,7 @@ XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jobject, jobject aServMgr)
   if (aServMgr) {
     // Get native XPCOM instance
     rv = GetNewOrUsedXPCOMObject(env, aServMgr, NS_GET_IID(nsIServiceManager),
-                                 getter_AddRefs(servMgr), nsnull);
+                                 getter_AddRefs(servMgr));
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get XPCOM obj for ServiceMgr.");
 
     // Even if we failed to get the matching xpcom object, we don't abort this
