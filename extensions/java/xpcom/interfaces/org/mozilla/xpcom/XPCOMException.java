@@ -37,20 +37,20 @@
 
 package org.mozilla.xpcom;
 
-import java.lang.*;
-
 
 /**
  * This exception is thrown whenever an internal XPCOM/Gecko error occurs.
  * You can query the error ID returned by XPCOM by checking
  * <code>errorcode</code> field.
  */
-public final class XPCOMException extends RuntimeException {
+public class XPCOMException extends RuntimeException {
 
   /**
    * The XPCOM error value.
    */
   public long errorcode;
+
+  private static final long serialVersionUID = 198521829884000593L;
 
   /**
    * Constructs a new XPCOMException instance, with a default error
