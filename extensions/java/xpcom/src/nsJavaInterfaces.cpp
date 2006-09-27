@@ -45,7 +45,6 @@
 #include "nsIInterfaceInfoManager.h"
 #include "nsIInputStream.h"
 #include "nsEnumeratorUtils.h"
-#include "nsArray.h"
 #include "nsAppFileLocProviderProxy.h"
 #include "nsIEventQueueService.h"
 #include "nsXULAppAPI.h"
