@@ -266,14 +266,11 @@ protected:
  * @param aXPCOMObject  XPCOM object for which to find/create Java object
  * @param aIID          desired interface IID for Java object
  * @param aResult       on success, holds reference to Java object
- * @param aIsNewProxy   on success, holds PR_TRUE if aResult points to newlyXPTCStub;
- *                      created Java proxy; PR_FALSE otherwise
  *
  * @return  NS_OK if succeeded; all other return values are error codes.
  */
 nsresult GetNewOrUsedJavaObject(JNIEnv* env, nsISupports* aXPCOMObject,
-                                const nsIID& aIID, jobject* aResult,
-                                PRBool* aIsNewProxy);
+                                const nsIID& aIID, jobject* aResult);
 
 /**
  * Finds the associated XPCOM object for the given Java object and IID.  If no
