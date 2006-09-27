@@ -689,15 +689,11 @@ JavaXPCOMInstance::~JavaXPCOMInstance()
 
 nsresult
 GetNewOrUsedJavaObject(JNIEnv* env, nsISupports* aXPCOMObject,
-                       const nsIID& aIID, jobject* aResult, PRBool* aIsNewProxy)
+                       const nsIID& aIID, jobject* aResult)
 {
   NS_PRECONDITION(aResult != nsnull, "null ptr");
   if (!aResult)
     return NS_ERROR_NULL_POINTER;
-
-  if (aIsNewProxy) {
-    *aIsNewProxy = PR_FALSE;
-  }
 
   nsresult rv;
   nsJavaXPTCStub* stub = nsnull;
@@ -719,9 +715,6 @@ GetNewOrUsedJavaObject(JNIEnv* env, nsISupports* aXPCOMObject,
 
   // No Java object is associated with the given XPCOM object, so we
   // create a Java proxy.
-  if (aIsNewProxy) {
-    *aIsNewProxy = PR_TRUE;
-  }
   return CreateJavaProxy(env, aXPCOMObject, aIID, aResult);
 }
 
