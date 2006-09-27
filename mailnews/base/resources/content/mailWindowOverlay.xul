@@ -574,10 +574,10 @@
         <menuitem id="threadPaneContext-tagRemoveAll" oncommand="RemoveAllMessageTags();"/>
         <menuseparator/>
         <menuseparator/>
-        <menuitem id="threadPaneContext-tagNew"
-                  label="&newTag.label;"
-                  accesskey="&newTag.accesskey;"
-                  oncommand="AddTag()"/>
+        <menuitem id="threadPaneContext-tagCustomize"
+                  label="&tagCustomize.label;"
+                  accesskey="&tagCustomize.accesskey;"
+                  oncommand="goPreferences('mailnews', 'chrome://messenger/content/pref-labels.xul', 'mailtagspref');"/>
       </menupopup>
     </menu>
     <menu id="threadPaneContext-mark" label="&markMenu.label;" accesskey="&markMenu.accesskey;">
@@ -895,10 +895,10 @@
         <menuitem id="messagePaneContext-tagRemoveAll" oncommand="RemoveAllMessageTags();"/>
         <menuseparator/>
         <menuseparator/>
-        <menuitem id="messagePaneContext-tagNew"
-                  label="&newTag.label;"
-                  accesskey="&newTag.accesskey;"
-                  oncommand="AddTag()"/>
+        <menuitem id="messagePaneContext-tagCustomize"
+                  label="&tagCustomize.label;"
+                  accesskey="&tagCustomize.accesskey;"
+                  oncommand="goPreferences('mailnews', 'chrome://messenger/content/pref-labels.xul', 'mailtagspref');"/>
       </menupopup>
     </menu>
     <menu id="messagePaneContext-mark" label="&markMenu.label;" accesskey="&markMenu.accesskey;">
@@ -1566,10 +1566,10 @@
         <menuitem id="tagMenu-tagRemoveAll" oncommand="RemoveAllMessageTags();"/>
         <menuseparator/>
         <menuseparator/>
-        <menuitem id="tagMenu-tagNew"
-                  label="&newTag.label;"
-                  accesskey="&newTag.accesskey;"
-                  oncommand="AddTag()"/>
+        <menuitem id="tagMenu-tagCustomize"
+                  label="&tagCustomize.label;"
+                  accesskey="&tagCustomize.accesskey;"
+                  oncommand="goPreferences('mailnews', 'chrome://messenger/content/pref-labels.xul', 'mailtagspref');"/>
       </menupopup>
     </menu>
     <menu id="markMenu" label="&markMenu.label;" accesskey="&markMenu.accesskey;">

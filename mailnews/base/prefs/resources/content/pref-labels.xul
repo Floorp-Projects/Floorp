@@ -48,39 +48,62 @@
 <!DOCTYPE page SYSTEM "chrome://messenger/locale/pref-labels.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://messenger/content/pref-labels.xul');"
+      onload="InitTagPanel()"
       headertitle="&pref.tags.title;">
   <script type="application/x-javascript" src="chrome://messenger/content/pref-labels.js"/>
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["addTag", "deleteTag", "restoreDefaults"];
+    var _elementIDs = ["addTagButton", "deleteTagButton",
+                       "raiseTagButton", "lowerTagButton",
+                       "restoreDefaultsButton"];
   ]]>
   </script>
-  
 
   <groupbox flex="1">
     <caption label="&pref.tags.caption;"/>
     <description>&pref.tags.description;</description>
     <hbox flex="1">
-      <listbox id="tagList" flex="1"/>
+      <listbox id="tagList" flex="1" onselect="UpdateButtonStates();">
+        <listcols>
+          <listcol flex="1"/>
+          <listcol/>
+        </listcols>
+        <listhead>
+          <listheader label="&tagColumn.label;"/>
+          <listheader label="&colorColumn.label;"/>
+        </listhead>
+      </listbox>
+
       <vbox>
-        <button id="addTag"
+        <button id="addTagButton"
                 label="&addTagButton.label;"
                 accesskey="&addTagButton.accesskey;"
+                defaulttagname="&defaultTagName.label;"
                 prefstring="pref.tags.disable_button.add"
                 oncommand="AddTag();"/>
-        <button id="deleteTag"
-                label="&deleteTagButton.label;" 
+        <button id="deleteTagButton"
+                label="&deleteTagButton.label;"
                 accesskey="&deleteTagButton.accesskey;"
                 prefstring="pref.tags.disable_button.delete"
                 oncommand="DeleteTag();"/>
         <spacer flex="1"/>
-        <button id="restoreDefaults"
-                label="&restoreDefaults.label;"
-                accesskey="&restoreDefaults.accesskey;"
+        <button id="raiseTagButton"
+                label="&raiseTagButton.label;"
+                accesskey="&raiseTagButton.accesskey;"
+                prefstring="pref.tags.disable_button.raise"
+                oncommand="MoveTag(true);"/>
+        <button id="lowerTagButton"
+                label="&lowerTagButton.label;"
+                accesskey="&lowerTagButton.accesskey;"
+                prefstring="pref.tags.disable_button.lower"
+                oncommand="MoveTag(false);"/>
+        <spacer flex="1"/>
+        <button id="restoreButton"
+                label="&restoreButton.label;"
+                accesskey="&restoreButton.accesskey;"
                 prefstring="pref.tags.disable_button.restore"
-                oncommand="RestoreDefaults();"/>
+                oncommand="Restore();"/>
       </vbox>
     </hbox>
   </groupbox>

@@ -38,10 +38,17 @@
 
 <!ENTITY pref.tags.title            "Tags">
 <!ENTITY pref.tags.caption          "Customize Tags">
-<!ENTITY pref.tags.description      "Tags can be used to categorize and prioritize your messages.">
+<!ENTITY pref.tags.description      "Tags can be used to categorize and prioritize your messages. Modify the appearance and importance of tags using the settings below. Tags near the top are more important than those further down.">
+<!ENTITY tagColumn.label            "Tag">
+<!ENTITY colorColumn.label          "Color">
+<!ENTITY defaultTagName.label       "Untitled Tag">
 <!ENTITY addTagButton.label         "Add">
 <!ENTITY addTagButton.accesskey     "A">
 <!ENTITY deleteTagButton.label      "Delete">
 <!ENTITY deleteTagButton.accesskey  "D">
-<!ENTITY restoreDefaults.label      "Restore Defaults">
-<!ENTITY restoreDefaults.accesskey  "R">
+<!ENTITY raiseTagButton.label       "Raise Importance">
+<!ENTITY raiseTagButton.accesskey   "R">
+<!ENTITY lowerTagButton.label       "Lower Importance">
+<!ENTITY lowerTagButton.accesskey   "L">
+<!ENTITY restoreButton.label        "Restore Defaults">
+<!ENTITY restoreButton.accesskey    "s">

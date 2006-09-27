@@ -394,8 +394,8 @@
 <!ENTITY addAllToAddressBookCmd.accesskey "A">
 <!ENTITY tagMenu.label "Tag">
 <!ENTITY tagMenu.accesskey "g">
-<!ENTITY newTag.label "New Tag...">
-<!ENTITY newTag.accesskey "N">
+<!ENTITY tagCustomize.label "Customize...">
+<!ENTITY tagCustomize.accesskey "C">
 <!ENTITY tagCmd0.key "0">
 <!ENTITY tagCmd1.key "1">
 <!ENTITY tagCmd2.key "2">

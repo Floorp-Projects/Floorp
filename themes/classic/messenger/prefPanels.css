@@ -44,3 +44,23 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+/* ::::: Tags ::::: */
+
+@-moz-document url("chrome://messenger/content/pref-labels.xul")
+{
+  .listheader-label
+  {
+    text-align: center;
+  }
+
+  listcell
+  {
+    padding-left:  16px;
+    padding-right: 16px;
+  }
+
+  textbox
+  {
+    -moz-box-flex: 1;
+  }
+}
