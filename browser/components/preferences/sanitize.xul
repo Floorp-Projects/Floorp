@@ -42,7 +42,7 @@
 
 <!DOCTYPE dialog [
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-  <!ENTITY % sanitizeDTD SYSTEM "chrome://browser/locale/preferences/sanitize.dtd">
+  <!ENTITY % sanitizeDTD SYSTEM "chrome://browser/locale/sanitize.dtd">
   %brandDTD;
   %sanitizeDTD;
 ]>
@@ -74,8 +74,8 @@
     <checkbox label="&itemDownloads.label;"
               accesskey="&itemDownloads.accesskey;"
               preference="privacy.item.downloads"/>
-    <checkbox label="&itemFormData.label;"
-              accesskey="&itemFormData.accesskey;"
+    <checkbox label="&itemFormSearchHistory.label;"
+              accesskey="&itemFormSearchHistory.accesskey;"
               preference="privacy.item.formdata"/>
     <checkbox label="&itemCache.label;"
               accesskey="&itemCache.accesskey;"
