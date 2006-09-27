@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -92,27 +92,6 @@ static const PRInt64 MSECS_PER_DAY = LL_INIT(20, 500654080);  // (1000000LL * 60
 PRInt32 nsSimpleGlobalHistory::gRefCnt;
 nsIMdbFactory* nsSimpleGlobalHistory::gMdbFactory = nsnull;
 nsIPrefBranch* nsSimpleGlobalHistory::gPrefBranch = nsnull;
-
-static const nsLiteralCString kSchemePrefixes[] = {
-  NS_LITERAL_CSTRING("http://"),
-  NS_LITERAL_CSTRING("https://"),
-  NS_LITERAL_CSTRING("ftp://")
-};
-
-static const nsLiteralCString kHostNamePrefixes[] = {
-  NS_LITERAL_CSTRING("www."),
-  NS_LITERAL_CSTRING("ftp.")
-};
-
-// Prefixes to ignore in autocomplete.
-static const nsLiteralCString kIgnoredPrefixes[] = { 
-  NS_LITERAL_CSTRING("http://www."),
-  NS_LITERAL_CSTRING("http://"),
-  NS_LITERAL_CSTRING("https://www."),
-  NS_LITERAL_CSTRING("https://"),
-  NS_LITERAL_CSTRING("ftp://ftp."),
-  NS_LITERAL_CSTRING("ftp://")
-};
 
 // list of terms, plus an optional groupby column
 struct SearchQueryData {
@@ -481,6 +460,14 @@ nsSimpleGlobalHistory::nsSimpleGlobalHistory()
     mTable(nsnull)
 {
   LL_I2L(mFileSizeOnDisk, 0);
+  
+  // these strings can't be static global, because then they'd
+  // be inited before XPCOM, and things will crash.
+  mSchemePrefixes = new nsCStringArray(3);
+  mSchemePrefixes->ParseString("http:// https:// ftp://", " ");
+
+  mHostNamePrefixes = new nsCStringArray(2);
+  mHostNamePrefixes->ParseString("www. ftp.", " ");
 }
 
 nsSimpleGlobalHistory::~nsSimpleGlobalHistory()
@@ -2731,9 +2718,9 @@ nsSimpleGlobalHistory::AutoCompleteGetExcludeInfo(const nsACString& aURL, Autoco
   aExclude->hostnamePrefix = -1;
   
   PRInt32 index = 0;
-  PRUint32 i;
-  for (i = 0; i < sizeof(kSchemePrefixes)/sizeof(kSchemePrefixes[0]); ++i) {
-    const nsACString& string = kSchemePrefixes[i];    
+  PRInt32 i;
+  for (i = 0; i < mSchemePrefixes->Count(); ++i) {
+     nsACString& string = *mSchemePrefixes->CStringAt(i);    
     if (StringBeginsWith(aURL, string)) {
       aExclude->schemePrefix = i;
       index = string.Length();
@@ -2741,8 +2728,8 @@ nsSimpleGlobalHistory::AutoCompleteGetExcludeInfo(const nsACString& aURL, Autoco
     }
   }
   
-  for (i = 0; i < sizeof(kHostNamePrefixes)/sizeof(kHostNamePrefixes[0]); ++i) {
-    const nsACString& string = kHostNamePrefixes[i];
+  for (i = 0; i < mHostNamePrefixes->Count(); ++i) {
+    const nsACString& string = *mHostNamePrefixes->CStringAt(i);
     if (Substring(aURL, index, string.Length()).Equals(string)) {
       aExclude->hostnamePrefix = i;
       break;
@@ -2758,12 +2745,12 @@ nsSimpleGlobalHistory::AutoCompleteCutPrefix(nsACString& aURL, AutocompleteExclu
   // This comparison is case-sensitive.  Therefore, it assumes that aUserURL is a 
   // potential URL whose host name is in all lower case.
   PRInt32 idx = 0;
-  PRUint32 i;
+  PRInt32 i;
   
-  for (i = 0; i < sizeof(kSchemePrefixes)/sizeof(kSchemePrefixes[0]); ++i) {
-    if (aExclude && i == aExclude->schemePrefix)
+  for (i = 0; i < mSchemePrefixes->Count(); ++i) {
+    if (aExclude && i == (PRInt32)aExclude->schemePrefix)
       continue;
-    const nsACString &string = kSchemePrefixes[i];    
+    const nsACString &string = *mSchemePrefixes->CStringAt(i);    
     if (StringBeginsWith(aURL, string)) {
       idx = string.Length();
       break;
@@ -2774,10 +2761,10 @@ nsSimpleGlobalHistory::AutoCompleteCutPrefix(nsACString& aURL, AutocompleteExclu
     aURL.Cut(0, idx);
 
   idx = 0;
-  for (i = 0; i < sizeof(kHostNamePrefixes)/sizeof(kHostNamePrefixes[0]); ++i) {
-    if (aExclude && i == aExclude->hostnamePrefix)
+  for (i = 0; i < mHostNamePrefixes->Count(); ++i) {
+    if (aExclude && i == (PRInt32)aExclude->hostnamePrefix)
       continue;
-    const nsACString &string = kHostNamePrefixes[i];    
+    const nsACString &string = *mHostNamePrefixes->CStringAt(i);    
     if (StringBeginsWith(aURL, string)) {
       idx = string.Length();
       break;
@@ -2883,6 +2870,16 @@ nsSimpleGlobalHistory::AutoCompleteSortComparison(nsIHistoryItem *item1, nsIHist
     // above prefixes.  Only check for the prefix once, in the far left of the 
     // string - it is assumed there is no whitespace.
     PRInt32 postPrefix1 = 0, postPrefix2 = 0;
+    
+    // Prefixes to ignore in autocomplete.
+    static const nsLiteralCString kIgnoredPrefixes[] = { 
+      NS_LITERAL_CSTRING("http://www."),
+      NS_LITERAL_CSTRING("http://"),
+      NS_LITERAL_CSTRING("https://www."),
+      NS_LITERAL_CSTRING("https://"),
+      NS_LITERAL_CSTRING("ftp://ftp."),
+      NS_LITERAL_CSTRING("ftp://")
+    };
 
     const unsigned int kNumPrefixes = sizeof(kIgnoredPrefixes)/sizeof(kIgnoredPrefixes[0]);
     size_t i;

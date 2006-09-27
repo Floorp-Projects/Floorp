@@ -268,6 +268,9 @@ protected:
 
   static nsIMdbFactory* gMdbFactory;
   static nsIPrefBranch* gPrefBranch;
+  
+  nsCStringArray      *mHostNamePrefixes;
+  nsCStringArray      *mSchemePrefixes;
 
   PRInt64             mFileSizeOnDisk;
   PRInt32             mExpireDays;
