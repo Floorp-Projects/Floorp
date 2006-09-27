@@ -187,7 +187,7 @@ public class XPCOMJavaProxy implements InvocationHandler {
    *          <code>false</code> otherwise
    */
   protected static boolean isXPCOMJavaProxy(Object aObject) {
-    if (Proxy.isProxyClass(aObject.getClass())) {
+    if (aObject != null && Proxy.isProxyClass(aObject.getClass())) {
       InvocationHandler h = Proxy.getInvocationHandler(aObject);
       if (h instanceof XPCOMJavaProxy) {
         return true;
