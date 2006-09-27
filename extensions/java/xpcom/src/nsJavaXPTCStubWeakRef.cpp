@@ -71,7 +71,6 @@ nsJavaXPTCStubWeakRef::QueryReferent(const nsIID& aIID, void** aInstancePtr)
   // Java object has not been garbage collected.  Do we have an
   // associated nsJavaXPTCStub?
   void* inst = GetMatchingXPCOMObject(mJavaEnv, javaObject);
-  NS_ASSERTION(IsXPTCStub(inst), "Found xpcom object was not an XPTCStub");
 
   if (!inst) {
     // No XPTCStub exists, so create one
@@ -90,6 +89,7 @@ nsJavaXPTCStubWeakRef::QueryReferent(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*) xpcomStub;
     return NS_OK;
   }
+  NS_ASSERTION(IsXPTCStub(inst), "Found xpcom object was not an XPTCStub");
 
   // We have an exising XPTCStub, so return QI result
   nsJavaXPTCStub* xpcomStub = GetXPTCStubAddr(inst);
