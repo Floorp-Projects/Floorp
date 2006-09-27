@@ -480,7 +480,7 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
 
         case nsXPTType::T_I64:
         case nsXPTType::T_U32:
-          retval.i = env->CallLongMethodA(javaObject, mid, java_params);
+          retval.j = env->CallLongMethodA(javaObject, mid, java_params);
           break;
 
         case nsXPTType::T_FLOAT:
@@ -514,7 +514,7 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
           break;
 
         case nsXPTType::T_VOID:
-          retval.i = env->CallIntMethodA(javaObject, mid, java_params);
+          retval.j = env->CallLongMethodA(javaObject, mid, java_params);
           break;
 
         default:
@@ -1026,26 +1026,26 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     }
     break;
 
-    // Pass the 'void*' address as an integer
+    // Pass the 'void*' address as a long
     case nsXPTType::T_VOID:
     {
       if (!aParamInfo.IsOut()) {  // 'in'
-        aJValue.i = (jint) aVariant.val.p;
-        aMethodSig.Append('I');
+        aJValue.j = (jlong) aVariant.val.p;
+        aMethodSig.Append('J');
       } else {  // 'inout' & 'out'
         if (aVariant.val.p) {
-          jintArray array = env->NewIntArray(1);
+          jlongArray array = env->NewLongArray(1);
           if (!array) {
             rv = NS_ERROR_OUT_OF_MEMORY;
             break;
           }
 
-          env->SetIntArrayRegion(array, 0, 1, (jint*) aVariant.val.p);
+          env->SetLongArrayRegion(array, 0, 1, (jlong*) aVariant.val.p);
           aJValue.l = array;
         } else {
           aJValue.l = nsnull;
         }
-        aMethodSig.AppendLiteral("[I");
+        aMethodSig.AppendLiteral("[J");
       }
     }
     break;
@@ -1154,7 +1154,7 @@ nsJavaXPTCStub::GetRetvalSig(const nsXPTParamInfo* aParamInfo,
       break;
 
     case nsXPTType::T_VOID:
-      aRetvalSig.Append('I');
+      aRetvalSig.Append('J');
       break;
 
     case nsXPTType::T_ARRAY:
@@ -1659,10 +1659,10 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_VOID:
     {
       if (aParamInfo.IsRetval()) {  // 'retval'
-        *((PRUint32 *) aVariant.val.p) = aJValue.i;
+        aVariant.val.p = NS_REINTERPRET_CAST(void*, aJValue.j);
       } else if (aJValue.l) {  // 'inout' & 'out'
-        env->GetIntArrayRegion((jintArray) aJValue.l, 0, 1,
-                               (jint*) aVariant.val.p);
+        env->GetLongArrayRegion((jlongArray) aJValue.l, 0, 1,
+                                (jlong*) aVariant.val.p);
       }
     }
     break;
