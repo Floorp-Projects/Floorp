@@ -210,7 +210,9 @@
   [% USE Bugzilla %]
   [% FOREACH field = Bugzilla.get_fields({ obsolete => 0, custom => 1 }) %]
     <tr>
-      [% PROCESS bug/field.html.tmpl value=dontchange editable=1 %]
+      [% PROCESS bug/field.html.tmpl value = dontchange
+                                     editable = 1
+                                     allow_dont_change = 1 %]
     </tr>
   [% END %]
 

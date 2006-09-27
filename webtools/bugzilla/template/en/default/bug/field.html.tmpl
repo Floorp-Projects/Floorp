@@ -25,6 +25,7 @@
   #   value: The value of the field for this bug.
   #   editable: Whether the field should be displayed as an editable
   #             <input> or as just the plain text of its value.
+  #   allow_dont_change: display the --do_not_change-- option for select fields.
   #   value_span: A colspan for the table cell containing
   #               the field value.
   #%]
@@ -44,6 +45,11 @@
         <input name="[% field.name FILTER html %]" value="[% value FILTER html %]" size="60">
     [% CASE constants.FIELD_TYPE_SINGLE_SELECT %]
         <select id="[% field.name FILTER html %]" name="[% field.name FILTER html %]">
+          [% IF allow_dont_change %]
+            <option value="[% dontchange FILTER html %]">
+              [% dontchange FILTER html %]
+            </option>
+          [% END %]
           [% FOREACH legal_value = field.legal_values %]
             <option value="[% legal_value FILTER html %]"
                 [%- " selected=\"selected\"" IF value == legal_value %]>
