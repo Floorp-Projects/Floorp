@@ -1519,9 +1519,17 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
   }
 
   // Call the XPCOM method
-  nsresult invokeResult;
-  invokeResult = XPTC_InvokeByIndex(inst->GetInstance(), methodIndex,
-                                    paramCount, params);
+  const nsIID* iid;
+  iinfo->GetIIDShared(&iid);
+  nsISupports* realObject;
+  rv = inst->GetInstance()->QueryInterface(*iid, (void**) &realObject);
+  if (NS_FAILED(rv)) {
+    ThrowException(env, rv, "Failed to get real XPCOM object");
+    return nsnull;
+  }
+  nsresult invokeResult = XPTC_InvokeByIndex(realObject, methodIndex,
+                                             paramCount, params);
+  NS_RELEASE(realObject);
 
   // Clean up params
   jobject result = nsnull;
@@ -1754,5 +1762,28 @@ JAVAPROXY_NATIVE(finalizeProxy) (JNIEnv *env, jclass that, jobject aJavaProxy)
   LOG(("- Finalize (Java=%08x | XPCOM=%08x)\n",
        (PRUint32) env->CallIntMethod(aJavaProxy, hashCodeMID), xpcom_addr));
 #endif
+}
+
+/**
+ *  org.mozilla.xpcom.XPCOMJavaProxy.isSameXPCOMObject
+ */
+extern "C" NS_EXPORT jboolean
+JAVAPROXY_NATIVE(isSameXPCOMObject) (JNIEnv *env, jclass that,
+                                     jobject aProxy1, jobject aProxy2)
+{
+  void* xpcom_obj1;
+  nsresult rv = GetXPCOMInstFromProxy(env, aProxy1, &xpcom_obj1);
+  if (NS_SUCCEEDED(rv)) {
+    void* xpcom_obj2;
+    rv = GetXPCOMInstFromProxy(env, aProxy2, &xpcom_obj2);
+    if (NS_SUCCEEDED(rv)) {
+      JavaXPCOMInstance* inst1 = NS_STATIC_CAST(JavaXPCOMInstance*, xpcom_obj1);
+      JavaXPCOMInstance* inst2 = NS_STATIC_CAST(JavaXPCOMInstance*, xpcom_obj2);
+      if (inst1->GetInstance() == inst2->GetInstance()) {
+        return JNI_TRUE;
+      }
+    }
+  }
+  return JNI_FALSE;
 }
 
