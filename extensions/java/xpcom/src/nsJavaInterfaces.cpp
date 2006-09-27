@@ -178,18 +178,15 @@ XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jclass, jstring aPath,
                             jboolean aFollowLinks)
 {
   // Create a Mozilla string from the jstring
-  jboolean isCopy;
   const PRUnichar* buf = nsnull;
   if (aPath) {
-    buf = env->GetStringChars(aPath, &isCopy);
+    buf = env->GetStringChars(aPath, nsnull);
     if (!buf)
       return nsnull;  // exception already thrown
   }
 
   nsAutoString path_str(buf);
-  if (isCopy) {
-    env->ReleaseStringChars(aPath, buf);
-  }
+  env->ReleaseStringChars(aPath, buf);
 
   // Make call to given function
   nsILocalFile* file = nsnull;
@@ -477,13 +474,11 @@ XPCOMPRIVATE_NATIVE(FinalizeStub) (JNIEnv *env, jclass that,
                                    jobject aJavaObject)
 {
 #ifdef DEBUG_pedemonte
-  jboolean isCopy;
   jclass clazz = env->GetObjectClass(aJavaObject);
   jstring name = (jstring) env->CallObjectMethod(clazz, getNameMID);
-  const char* javaObjectName = env->GetStringUTFChars(name, &isCopy);
+  const char* javaObjectName = env->GetStringUTFChars(name, nsnull);
   LOG(("*** Finalize(java_obj=%s)\n", javaObjectName));
-  if (isCopy)
-    env->ReleaseStringUTFChars(name, javaObjectName);
+  env->ReleaseStringUTFChars(name, javaObjectName);
 #endif
 
   void* obj = gBindings->GetXPCOMObject(env, aJavaObject);
