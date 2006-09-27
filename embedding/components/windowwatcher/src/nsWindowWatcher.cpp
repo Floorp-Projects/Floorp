@@ -985,9 +985,9 @@ nsWindowWatcher::GetPrompt(nsIDOMWindow *aParent, const nsIID& aIID,
         if (!*_retval)
           rv = NS_ERROR_NOT_AVAILABLE;
       }
-
-      return rv;
     }
+
+    return rv;
   }
 
   return NS_NOINTERFACE;
