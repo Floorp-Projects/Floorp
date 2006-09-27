@@ -390,7 +390,6 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
 
   nsresult rv = NS_OK;
   JNIEnv* env = GetJNIEnv();
-
   jobject javaObject = env->NewLocalRef(mJavaWeakRef);
 
   nsCAutoString methodSig("(");
@@ -446,6 +445,10 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
     } else {
       methodName.AppendASCII(aMethodInfo->GetName());
       methodName.SetCharAt(tolower(methodName[0]), 0);
+    }
+    // If it's a Java keyword, then prepend an underscore
+    if (gJavaKeywords->GetEntry(methodName.get())) {
+      methodName.Insert('_', 0);
     }
 
     jclass clazz = env->GetObjectClass(javaObject);
@@ -849,7 +852,7 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
         iid = *variant;
       }
 
-      jobject str;
+      jobject str = nsnull;
       if (iid) {
         char* iid_str = iid->ToString();
         if (iid_str) {
@@ -860,8 +863,6 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
           break;
         }
         PR_Free(iid_str);
-      } else {
-        str = nsnull;
       }
 
       if (!aParamInfo.IsOut()) {  // 'in'
@@ -1030,7 +1031,7 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_VOID:
     {
       if (!aParamInfo.IsOut()) {  // 'in'
-        aJValue.j = (jlong) aVariant.val.p;
+        aJValue.j = NS_REINTERPRET_CAST(jlong, aVariant.val.p);
         aMethodSig.Append('J');
       } else {  // 'inout' & 'out'
         if (aVariant.val.p) {
