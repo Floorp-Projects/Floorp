@@ -142,10 +142,19 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
   LOG("JavaStub::QueryInterface()\n");
   nsJavaXPTCStub *master = mMaster ? mMaster : this;
 
+  // This helps us differentiate between the help classes.
+  if (aIID.Equals(NS_GET_IID(nsJavaXPTCStub)))
+  {
+    *aInstancePtr = master;
+    NS_ADDREF(this);
+    return NS_OK;
+  }
+
   // always return the master stub for nsISupports
   if (aIID.Equals(NS_GET_IID(nsISupports)))
   {
-    *aInstancePtr = master;
+    *aInstancePtr = NS_STATIC_CAST(nsISupports*,
+                                   NS_STATIC_CAST(nsXPTCStubBase*, master));
     NS_ADDREF(master);
     return NS_OK;
   }
@@ -153,7 +162,7 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
   // All Java objects support weak references
   if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference)))
   {
-    *aInstancePtr = (void*) NS_STATIC_CAST(nsISupportsWeakReference*, master);
+    *aInstancePtr = NS_STATIC_CAST(nsISupportsWeakReference*, master);
     NS_ADDREF(master);
     return NS_OK;
   }
@@ -217,7 +226,7 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
   }
 
   *aInstancePtr = nsnull;
-  return NS_OK;
+  return NS_NOINTERFACE;
 }
 
 PRBool
@@ -618,7 +627,7 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_INTERFACE:
     case nsXPTType::T_INTERFACE_IS:
     {
-      jobject java_stub;
+      jobject java_stub = nsnull;
       if (aVariant.val.p) {
         java_stub = GetMatchingJavaObject(mJavaEnv, aVariant.val.p);
 
@@ -646,8 +655,6 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
             }
           }
         }
-      } else {
-        java_stub = nsnull;
       }
 
       if (!aParamInfo.IsOut()) {
