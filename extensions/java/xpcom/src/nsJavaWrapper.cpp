@@ -796,38 +796,40 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_INTERFACE_IS:
     {
       if (aVariant.val.p) {
-        nsID iid;
-        rv = GetIIDForMethodParam(aIInfo, aMethodInfo, aParamInfo,
-                                  aMethodIndex, aDispatchParams, PR_TRUE, iid);
-        if (NS_FAILED(rv))
-          return rv;
+        jobject java_obj = GetMatchingJavaObject(env, aVariant.val.p);
 
-        jobject java_stub = nsnull;
+        if (java_obj == nsnull) {
+          nsID iid;
+          JavaXPCOMInstance* inst;
+          rv = GetIIDForMethodParam(aIInfo, aMethodInfo, aParamInfo,
+                                    aMethodIndex, aDispatchParams, PR_TRUE, iid);
+          if (NS_FAILED(rv))
+            return rv;
 
-        // wrap XPCOM object
-        nsCOMPtr<nsIInterfaceInfo> info;
-        JavaXPCOMInstance* inst = nsnull;
-        nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
-        NS_ASSERTION(iim != nsnull, "Failed to get InterfaceInfoManager");
-        if (iim) {
-          iim->GetInfoForIID(&iid, getter_AddRefs(info));
+          inst = CreateJavaXPCOMInstance((nsISupports*) aVariant.val.p, &iid);
 
-          inst = new JavaXPCOMInstance((nsISupports*)aVariant.val.p, info);
-          NS_ADDREF((nsISupports*)aVariant.val.p);
-        }
+          if (inst) {
+            // create java stub
+            char* iface_name;
+            inst->InterfaceInfo()->GetName(&iface_name);
+            java_obj = CreateJavaWrapper(env, iface_name);
 
-        if (inst) {
-          // create java stub
-          char* iface_name;
-          info->GetName(&iface_name);
-          java_stub = CreateJavaWrapper(env, iface_name);
-
-          if (java_stub) {
-            AddJavaXPCOMBinding(env, java_stub, inst);
-
-            aResult.l = java_stub;
+            if (java_obj)
+              AddJavaXPCOMBinding(env, java_obj, inst);
           }
         }
+
+        // XXX not sure if this is necessary
+        // If returned object is an nsJavaXPTCStub, release it.
+        nsISupports* xpcom_obj = NS_STATIC_CAST(nsISupports*, aVariant.val.p);
+        nsJavaXPTCStub* stub = nsnull;
+        xpcom_obj->QueryInterface(NS_GET_IID(nsJavaXPTCStub), (void**) &stub);
+        if (stub) {
+          NS_RELEASE(xpcom_obj);
+          NS_RELEASE(stub);
+        }
+
+        aResult.l = java_obj;
       } else {
         aResult.l = nsnull;
       }
