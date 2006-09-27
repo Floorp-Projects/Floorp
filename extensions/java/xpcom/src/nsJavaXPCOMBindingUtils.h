@@ -43,9 +43,9 @@
 #include "nsCOMPtr.h"
 
 #ifdef DEBUG_pedemonte
-#define LOG(...)  printf(__VA_ARGS__)
+#define LOG(x)  printf x
 #else
-#define LOG(...)  /* nothing */
+#define LOG(x)  /* nothing */
 #endif
 
 
