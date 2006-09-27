@@ -56,7 +56,7 @@ nsJavaXPTCStubWeakRef::~nsJavaXPTCStubWeakRef()
 NS_IMPL_ADDREF(nsJavaXPTCStubWeakRef)
 NS_IMPL_RELEASE(nsJavaXPTCStubWeakRef)
 
-NS_IMPL_THREADSAFE_QUERY_INTERFACE1(nsJavaXPTCStubWeakRef, nsIWeakReference)
+NS_IMPL_QUERY_INTERFACE1(nsJavaXPTCStubWeakRef, nsIWeakReference)
 
 NS_IMETHODIMP
 nsJavaXPTCStubWeakRef::QueryReferent(const nsIID& aIID, void** aInstancePtr)
