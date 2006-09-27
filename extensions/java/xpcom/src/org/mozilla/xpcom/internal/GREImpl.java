@@ -45,35 +45,14 @@ public class GREImpl implements IGRE {
 
   public void initEmbedding(File aLibXULDirectory, File aAppDirectory,
                             IAppFileLocProvider aAppDirProvider) {
-    loadDependentLibraries(aLibXULDirectory);
-    initEmbeddingNative(aLibXULDirectory, aAppDirectory, aAppDirProvider);
-  }
-
-  private void loadDependentLibraries(File binPath) {
+    // load JNI library
     String path = "";
-    if (binPath != null) {
-      path = binPath + File.separator;
+    if (aLibXULDirectory != null) {
+      path = aLibXULDirectory + File.separator;
     }
+    System.load(path + System.mapLibraryName("javaxpcomglue"));
 
-    System.load(path + System.mapLibraryName("nspr4"));
-    System.load(path + System.mapLibraryName("plds4"));
-    System.load(path + System.mapLibraryName("plc4"));
-    try {
-      /* try loading Win32 DLL */
-      System.load(path + System.mapLibraryName("js3250"));
-    } catch (UnsatisfiedLinkError e) { }
-    try {
-      /* try loading Linux DLL */
-      System.load(path + System.mapLibraryName("mozjs"));
-    } catch (UnsatisfiedLinkError e) { }
-    System.load(path + System.mapLibraryName("softokn3"));
-    System.load(path + System.mapLibraryName("nss3"));
-    System.load(path + System.mapLibraryName("smime3"));
-    System.load(path + System.mapLibraryName("ssl3"));
-    System.load(path + System.mapLibraryName("xul"));
-    System.load(path + System.mapLibraryName("xpcom"));
-
-    System.load(path + System.mapLibraryName("javaxpcom"));
+    initEmbeddingNative(aLibXULDirectory, aAppDirectory, aAppDirProvider);
   }
 
   public native void initEmbeddingNative(File aLibXULDirectory,
