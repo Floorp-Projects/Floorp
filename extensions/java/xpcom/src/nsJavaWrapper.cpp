@@ -58,23 +58,21 @@ CreateJavaArray(JNIEnv* env, PRUint8 aType, PRUint32 aSize, const nsID& aIID,
   switch (aType)
   {
     case nsXPTType::T_I8:
-    case nsXPTType::T_U8:
       array = env->NewByteArray(aSize);
       break;
 
     case nsXPTType::T_I16:
-    case nsXPTType::T_U16:
+    case nsXPTType::T_U8:
       array = env->NewShortArray(aSize);
       break;
 
     case nsXPTType::T_I32:
-    case nsXPTType::T_U32:
-    case nsXPTType::T_VOID:
+    case nsXPTType::T_U16:
       array = env->NewIntArray(aSize);
       break;
 
     case nsXPTType::T_I64:
-    case nsXPTType::T_U64:
+    case nsXPTType::T_U32:
       array = env->NewLongArray(aSize);
       break;
 
@@ -82,6 +80,8 @@ CreateJavaArray(JNIEnv* env, PRUint8 aType, PRUint32 aSize, const nsID& aIID,
       array = env->NewFloatArray(aSize);
       break;
 
+    // XXX how do we handle unsigned 64-bit values?
+    case nsXPTType::T_U64:
     case nsXPTType::T_DOUBLE:
       array = env->NewDoubleArray(aSize);
       break;
@@ -135,6 +135,10 @@ CreateJavaArray(JNIEnv* env, PRUint8 aType, PRUint32 aSize, const nsID& aIID,
       array = env->NewObjectArray(aSize, ifaceClass, nsnull);
       break;
     }
+
+    case nsXPTType::T_VOID:
+      array = env->NewIntArray(aSize);
+      break;
 
     default:
       NS_WARNING("unknown type");
@@ -251,7 +255,6 @@ CreateNativeArray(PRUint8 aType, PRUint32 aSize, void** aResult)
 
     case nsXPTType::T_I32:
     case nsXPTType::T_U32:
-    case nsXPTType::T_VOID:
       array = PR_Malloc(aSize * sizeof(PRUint32));
       break;
 
@@ -292,6 +295,10 @@ CreateNativeArray(PRUint8 aType, PRUint32 aSize, void** aResult)
       array = PR_Malloc(aSize * sizeof(void*));
       break;
 
+    case nsXPTType::T_VOID:
+      array = PR_Malloc(aSize * sizeof(PRUint32));
+      break;
+
     default:
       NS_WARNING("unknown type");
       return NS_ERROR_FAILURE;
@@ -317,11 +324,10 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
   switch (aType)
   {
     case nsXPTType::T_I8:
-    case nsXPTType::T_U8:
     {
       LOG(("byte\n"));
       if (!aIsOut && !aIsArrayElement) {  // 'in'
-        aVariant.val.u8 = env->CallByteMethod(aParam, byteValueMID);
+        aVariant.val.i8 = env->CallByteMethod(aParam, byteValueMID);
       } else { // 'inout' & 'array'
         jbyte value;
         if (aParam) {
@@ -330,25 +336,25 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
 
         if (aIsOut) { // 'inout'
           if (aParam) {
-            aVariant.val.u8 = value;
+            aVariant.val.i8 = value;
             aVariant.ptr = &aVariant.val;
           } else {
             aVariant.ptr = nsnull;
           }
           aVariant.SetPtrIsData();
         } else {  // 'array'
-          NS_STATIC_CAST(PRUint8*, aVariant.val.p)[aIndex] = value;
+          NS_STATIC_CAST(PRInt8*, aVariant.val.p)[aIndex] = value;
         }
       }
       break;
     }
 
     case nsXPTType::T_I16:
-    case nsXPTType::T_U16:
+    case nsXPTType::T_U8:   // C++ unsigned octet <=> Java short
     {
       LOG(("short\n"));
       if (!aIsOut && !aIsArrayElement) {  // 'in'
-        aVariant.val.u16 = env->CallShortMethod(aParam, shortValueMID);
+        aVariant.val.i16 = env->CallShortMethod(aParam, shortValueMID);
       } else { // 'inout' & 'array'
         jshort value;
         if (aParam) {
@@ -357,25 +363,28 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
 
         if (aIsOut) { // 'inout'
           if (aParam) {
-            aVariant.val.u16 = value;
+            aVariant.val.i16 = value;
             aVariant.ptr = &aVariant.val;
           } else {
             aVariant.ptr = nsnull;
           }
           aVariant.SetPtrIsData();
         } else {  // 'array'
-          NS_STATIC_CAST(PRUint16*, aVariant.val.p)[aIndex] = value;
+          if (aType == nsXPTType::T_I16)
+            NS_STATIC_CAST(PRInt16*, aVariant.val.p)[aIndex] = value;
+          else
+            NS_STATIC_CAST(PRUint8*, aVariant.val.p)[aIndex] = value;
         }
       }
       break;
     }
 
     case nsXPTType::T_I32:
-    case nsXPTType::T_U32:
+    case nsXPTType::T_U16:  // C++ unsigned short <=> Java int
     {
       LOG(("int\n"));
       if (!aIsOut && !aIsArrayElement) {  // 'in'
-        aVariant.val.u32 = env->CallIntMethod(aParam, intValueMID);
+        aVariant.val.i32 = env->CallIntMethod(aParam, intValueMID);
       } else { // 'inout' & 'array'
         jint value;
         if (aParam) {
@@ -384,25 +393,28 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
 
         if (aIsOut) { // 'inout'
           if (aParam) {
-            aVariant.val.u32 = value;
+            aVariant.val.i32 = value;
             aVariant.ptr = &aVariant.val;
           } else {
             aVariant.ptr = nsnull;
           }
           aVariant.SetPtrIsData();
         } else {  // 'array'
-          NS_STATIC_CAST(PRUint32*, aVariant.val.p)[aIndex] = value;
+          if (aType == nsXPTType::T_I32)
+            NS_STATIC_CAST(PRInt32*, aVariant.val.p)[aIndex] = value;
+          else
+            NS_STATIC_CAST(PRUint16*, aVariant.val.p)[aIndex] = value;
         }
       }
       break;
     }
 
     case nsXPTType::T_I64:
-    case nsXPTType::T_U64:
+    case nsXPTType::T_U32:  // C++ unsigned int <=> Java long
     {
       LOG(("long\n"));
       if (!aIsOut && !aIsArrayElement) {  // 'in'
-        aVariant.val.u64 = env->CallLongMethod(aParam, longValueMID);
+        aVariant.val.i64 = env->CallLongMethod(aParam, longValueMID);
       } else { // 'inout' & 'array'
         jlong value;
         if (aParam) {
@@ -411,14 +423,17 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
 
         if (aIsOut) { // 'inout'
           if (aParam) {
-            aVariant.val.u64 = value;
+            aVariant.val.i64 = value;
             aVariant.ptr = &aVariant.val;
           } else {
             aVariant.ptr = nsnull;
           }
           aVariant.SetPtrIsData();
         } else {  // 'array'
-          NS_STATIC_CAST(PRUint64*, aVariant.val.p)[aIndex] = value;
+          if (aType == nsXPTType::T_I64)
+            NS_STATIC_CAST(PRInt64*, aVariant.val.p)[aIndex] = value;
+          else
+            NS_STATIC_CAST(PRUint32*, aVariant.val.p)[aIndex] = value;
         }
       }
       break;
@@ -450,11 +465,17 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
       break;
     }
 
+    // XXX how do we handle unsigned 64-bit value?
+    case nsXPTType::T_U64:  // C++ unsigned long <=> Java double
     case nsXPTType::T_DOUBLE:
     {
       LOG(("double\n"));
       if (!aIsOut && !aIsArrayElement) {  // 'in'
-        aVariant.val.d = env->CallDoubleMethod(aParam, doubleValueMID);
+        jdouble value = env->CallDoubleMethod(aParam, doubleValueMID);
+        if (aType == nsXPTType::T_DOUBLE)
+          aVariant.val.d = value;
+        else
+          aVariant.val.u64 = NS_STATIC_CAST(PRUint64, value);
       } else { // 'inout' & 'array'
         jdouble value;
         if (aParam) {
@@ -463,14 +484,21 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
 
         if (aIsOut) { // 'inout'
           if (aParam) {
-            aVariant.val.d = value;
+            if (aType == nsXPTType::T_DOUBLE)
+              aVariant.val.d = value;
+            else
+              aVariant.val.u64 = NS_STATIC_CAST(PRUint64, value);
             aVariant.ptr = &aVariant.val;
           } else {
             aVariant.ptr = nsnull;
           }
           aVariant.SetPtrIsData();
         } else {  // 'array'
-          NS_STATIC_CAST(double*, aVariant.val.p)[aIndex] = value;
+          if (aType == nsXPTType::T_DOUBLE)
+            NS_STATIC_CAST(double*, aVariant.val.p)[aIndex] = value;
+          else
+            NS_STATIC_CAST(PRUint64*, aVariant.val.p)[aIndex] =
+                                                NS_STATIC_CAST(PRUint64, value);
         }
       }
       break;
@@ -900,10 +928,9 @@ FinalizeParams(JNIEnv *env, const nsXPTParamInfo &aParamInfo, PRUint8 aType,
   switch (aType)
   {
     case nsXPTType::T_I8:
-    case nsXPTType::T_U8:
     {
       if (NS_SUCCEEDED(aInvokeResult)) {
-        jbyte value = aVariant.val.u8;
+        jbyte value = aVariant.val.i8;
         if (aParamInfo.IsRetval() && !aIsArrayElement) {
           *aParam = env->NewObject(byteClass, byteInitMID, value);
         } else if ((aParamInfo.IsOut() || aIsArrayElement) && *aParam) {
@@ -914,10 +941,11 @@ FinalizeParams(JNIEnv *env, const nsXPTParamInfo &aParamInfo, PRUint8 aType,
     }
 
     case nsXPTType::T_I16:
-    case nsXPTType::T_U16:
+    case nsXPTType::T_U8:
     {
       if (NS_SUCCEEDED(aInvokeResult)) {
-        jshort value = aVariant.val.u16;
+        jshort value = (aType == nsXPTType::T_I16) ? aVariant.val.i16 :
+                                                     aVariant.val.u8;
         if (aParamInfo.IsRetval() && !aIsArrayElement) {
           *aParam = env->NewObject(shortClass, shortInitMID, value);
         } else if ((aParamInfo.IsOut() || aIsArrayElement) && aParam) {
@@ -928,10 +956,11 @@ FinalizeParams(JNIEnv *env, const nsXPTParamInfo &aParamInfo, PRUint8 aType,
     }
 
     case nsXPTType::T_I32:
-    case nsXPTType::T_U32:
+    case nsXPTType::T_U16:
     {
       if (NS_SUCCEEDED(aInvokeResult)) {
-        jint value = aVariant.val.u32;
+        jint value = (aType == nsXPTType::T_I32) ? aVariant.val.i32 :
+                                                   aVariant.val.u16;
         if (aParamInfo.IsRetval() && !aIsArrayElement) {
           *aParam = env->NewObject(intClass, intInitMID, value);
         } else if ((aParamInfo.IsOut() || aIsArrayElement) && *aParam) {
@@ -942,10 +971,11 @@ FinalizeParams(JNIEnv *env, const nsXPTParamInfo &aParamInfo, PRUint8 aType,
     }
 
     case nsXPTType::T_I64:
-    case nsXPTType::T_U64:
+    case nsXPTType::T_U32:
     {
       if (NS_SUCCEEDED(aInvokeResult)) {
-        jlong value = aVariant.val.u64;
+        jlong value = (aType == nsXPTType::T_I64) ? aVariant.val.i64 :
+                                                    aVariant.val.u32;
         if (aParamInfo.IsRetval() && !aIsArrayElement) {
           *aParam = env->NewObject(longClass, longInitMID, value);
         } else if ((aParamInfo.IsOut() || aIsArrayElement) && *aParam) {
@@ -968,10 +998,13 @@ FinalizeParams(JNIEnv *env, const nsXPTParamInfo &aParamInfo, PRUint8 aType,
       break;
     }
 
+    // XXX how do we handle unsigned 64-bit values?
+    case nsXPTType::T_U64:
     case nsXPTType::T_DOUBLE:
     {
       if (NS_SUCCEEDED(aInvokeResult)) {
-        jdouble value = aVariant.val.d;
+        jdouble value = (aType == nsXPTType::T_DOUBLE) ? aVariant.val.d :
+                                                         aVariant.val.u64;
         if (aParamInfo.IsRetval() && !aIsArrayElement) {
           *aParam = env->NewObject(doubleClass, doubleInitMID, value);
         } else if ((aParamInfo.IsOut() || aIsArrayElement) && *aParam) {
