@@ -62,7 +62,7 @@ public interface IGRE {
    *
    * @throws XPCOMException  if a failure occurred during initialization
    */
-  public void initEmbedding(File aLibXULDirectory, File aAppDirectory,
+  void initEmbedding(File aLibXULDirectory, File aAppDirectory,
           IAppFileLocProvider aAppDirProvider) throws XPCOMException;
 
   /**
@@ -73,7 +73,7 @@ public interface IGRE {
    *
    * @throws XPCOMException  if a failure occurred during initialization
    */
-  public void termEmbedding() throws XPCOMException;
+  void termEmbedding() throws XPCOMException;
 
 }
 
