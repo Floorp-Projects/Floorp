@@ -42,7 +42,7 @@
 #include "xptcall.h"
 #include "nsCOMPtr.h"
 
-#ifdef DEBUG
+#ifdef DEBUG_pedemonte
 #define LOG(...)  printf(__VA_ARGS__)
 #else
 #define LOG(format, ...)
@@ -134,10 +134,13 @@ JavaXPCOMInstance* CreateJavaXPCOMInstance(nsISupports* aXPCOMObject,
 /**************************************
  *  Java<->XPCOM binding stores
  **************************************/
-void AddJavaXPCOMBinding(JNIEnv* env, jobject aJavaStub, void* aXPCOMObject);
-nsISupports* RemoveXPCOMBinding(JNIEnv* env, jobject aJavaObject);
-void* GetMatchingXPCOMObject(JNIEnv* env, jobject aJavaObject);
-jobject GetMatchingJavaObject(void* aXPCOMObject);
+void          AddJavaXPCOMBinding(JNIEnv* env, jobject aJavaStub,
+                                  void* aXPCOMObject);
+nsISupports*  RemoveXPCOMBinding(JNIEnv* env, jobject aJavaObject);
+void          RemoveJavaXPCOMBinding(JNIEnv* env, jobject aJavaObject,
+                                     void* aXPCOMObject);
+void*         GetMatchingXPCOMObject(JNIEnv* env, jobject aJavaObject);
+jobject       GetMatchingJavaObject(JNIEnv* env, void* aXPCOMObject);
 
 
 void ThrowXPCOMException(JNIEnv* env, int aFailureCode);
