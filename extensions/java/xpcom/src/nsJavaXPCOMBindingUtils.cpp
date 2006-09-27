@@ -46,10 +46,6 @@
 #include "nsProxyRelease.h"
 
 
-#ifdef DEBUG
-extern PRBool gEmbeddingInitialized;
-#endif
-
 /* Java JNI globals */
 jclass intClass = nsnull;
 jclass intArrayClass = nsnull;
@@ -438,46 +434,20 @@ JavaXPCOMInstance::~JavaXPCOMInstance()
   NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get MainEventQ");
 }
 
-nsIInterfaceInfo*
-JavaXPCOMInstance::InterfaceInfo()
-{
-  // We lazily create the interfaceInfo for nsILocalFile.
-  if (!mIInfo) {
-    NS_ASSERTION(gEmbeddingInitialized, "Trying to create interface info, but XPCOM not inited");
-
-    // Get interface info for class
-    nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
-    NS_ASSERTION(iim != nsnull, "Failed to get InterfaceInfoManager");
-    if (iim) {
-      iim->GetInfoForIID(&NS_GET_IID(nsILocalFile), getter_AddRefs(mIInfo));
-    }
-  }
-
-  NS_ASSERTION(mIInfo, "No interfaceInfo for JavaXPCOMInstance");
-  return mIInfo;
-}
-
 JavaXPCOMInstance*
 CreateJavaXPCOMInstance(nsISupports* aXPCOMObject, const nsIID* aIID)
 {
   JavaXPCOMInstance* inst = nsnull;
 
-  // We can't call XPTI_GetInterfaceInfoManager() before NS_InitEmbedding(),
-  // so for NS_NewLocalFile (which can be called before NS_InitEmbedding), we
-  // pass in a null aIID, and create the interface info lazily later.
-  if (!aIID) {
-    inst = new JavaXPCOMInstance(aXPCOMObject, nsnull);
-  } else {
-    // Get interface info for class
-    nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
-    NS_ASSERTION(iim != nsnull, "Failed to get InterfaceInfoManager");
-    if (iim) {
-      nsCOMPtr<nsIInterfaceInfo> info;
-      iim->GetInfoForIID(aIID, getter_AddRefs(info));
+  // Get interface info for class
+  nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
+  NS_ASSERTION(iim != nsnull, "Failed to get InterfaceInfoManager");
+  if (iim) {
+    nsCOMPtr<nsIInterfaceInfo> info;
+    iim->GetInfoForIID(aIID, getter_AddRefs(info));
 
-      // Wrap XPCOM object
-      inst = new JavaXPCOMInstance(aXPCOMObject, info);
-    }
+    // Wrap XPCOM object
+    inst = new JavaXPCOMInstance(aXPCOMObject, info);
   }
 
   return inst;
@@ -546,5 +516,66 @@ GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
       rv = NS_ERROR_UNEXPECTED;
   }
   return rv;
+}
+
+
+/*******************************
+ *  JNI helper functions
+ *******************************/
+nsAString*
+jstring_to_nsAString(JNIEnv* env, jstring aString)
+{
+  jboolean isCopy = JNI_FALSE;
+  const PRUnichar* buf = nsnull;
+  if (aString) {
+    buf = env->GetStringChars(aString, &isCopy);
+  }
+
+  nsString* str = new nsString(buf);
+  if (isCopy) {
+    env->ReleaseStringChars(aString, buf);
+  }
+
+  return str;
+}
+
+nsACString*
+jstring_to_nsACString(JNIEnv* env, jstring aString)
+{
+  jboolean isCopy = JNI_FALSE;
+  const char* buf = nsnull;
+  if (aString) {
+    buf = env->GetStringUTFChars(aString, &isCopy);
+  }
+
+  nsCString* str = new nsCString(buf);
+  if (isCopy) {
+    env->ReleaseStringUTFChars(aString, buf);
+  }
+
+  return str;
+}
+
+nsresult
+File_to_nsILocalFile(JNIEnv* env, jobject aFile, nsILocalFile** aLocalFile)
+{
+  jstring pathName = nsnull;
+  jclass clazz = env->FindClass("java/io/File");
+  if (clazz) {
+    jmethodID pathMID = env->GetMethodID(clazz, "getCanonicalPath",
+                                         "()Ljava/lang/String;");
+    if (pathMID) {
+      pathName = (jstring) env->CallObjectMethod(aFile, pathMID);
+    }
+  }
+
+  if (pathName) {
+    nsAString* path = jstring_to_nsAString(env, pathName);
+    nsresult rv = NS_NewLocalFile(*path, false, aLocalFile);
+    delete path;
+    return rv;
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
