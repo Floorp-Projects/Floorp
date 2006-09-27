@@ -45,8 +45,6 @@
 #include "nsIInputStream.h"
 #include "nsEnumeratorUtils.h"
 #include "nsArray.h"
-#include "nsEventQueueUtils.h"
-#include "nsProxyRelease.h"
 
 #define GECKO_NATIVE(func) Java_org_mozilla_xpcom_GeckoEmbed_##func
 #define XPCOM_NATIVE(func) Java_org_mozilla_xpcom_XPCOM_##func
@@ -139,13 +137,14 @@ GECKO_NATIVE(newLocalFile) (JNIEnv *env, jclass, jstring aPath,
   }
 
   // Make call to given function
-  nsCOMPtr<nsILocalFile> file;
-  nsresult rv = NS_NewLocalFile(path_str, aFollowLinks, getter_AddRefs(file));
+  nsILocalFile* file = nsnull;
+  nsresult rv = NS_NewLocalFile(path_str, aFollowLinks, &file);
 
   if (NS_SUCCEEDED(rv)) {
     // wrap xpcom instance
     JavaXPCOMInstance* inst;
     inst = CreateJavaXPCOMInstance(file, nsnull);
+    NS_RELEASE(file);   // JavaXPCOMInstance has owning ref
 
     if (inst) {
       // create java stub
@@ -170,13 +169,14 @@ GECKO_NATIVE(getComponentManager) (JNIEnv *env, jclass)
   jobject java_stub = nsnull;
 
   // Call XPCOM method
-  nsCOMPtr<nsIComponentManager> cm;
-  nsresult rv = NS_GetComponentManager(getter_AddRefs(cm));
+  nsIComponentManager* cm = nsnull;
+  nsresult rv = NS_GetComponentManager(&cm);
 
   if (NS_SUCCEEDED(rv)) {
     // wrap xpcom instance
     JavaXPCOMInstance* inst;
     inst = CreateJavaXPCOMInstance(cm, &NS_GET_IID(nsIComponentManager));
+    NS_RELEASE(cm);   // JavaXPCOMInstance has owning ref
 
     if (inst) {
       // create java stub
@@ -201,13 +201,14 @@ GECKO_NATIVE(getServiceManager) (JNIEnv *env, jclass)
   jobject java_stub = nsnull;
 
   // Call XPCOM method
-  nsCOMPtr<nsIServiceManager> sm;
-  nsresult rv = NS_GetServiceManager(getter_AddRefs(sm));
+  nsIServiceManager* sm = nsnull;
+  nsresult rv = NS_GetServiceManager(&sm);
 
   if (NS_SUCCEEDED(rv)) {
     // wrap xpcom instance
     JavaXPCOMInstance* inst;
     inst = CreateJavaXPCOMInstance(sm, &NS_GET_IID(nsIServiceManager));
+    NS_RELEASE(sm);   // JavaXPCOMInstance has owning ref
 
     if (inst) {
       // create java stub
@@ -468,15 +469,7 @@ XPCOM_NATIVE(FinalizeStub) (JNIEnv *env, jclass that, jobject aJavaObject)
 
   void* obj = GetMatchingXPCOMObject(env, aJavaObject);
   NS_ASSERTION(!IsXPTCStub(obj), "Expecting JavaXPCOMInstance, got nsJavaXPTCStub");
-  nsISupports* xpcom_obj = ((JavaXPCOMInstance*)obj)->GetInstance();
-
   RemoveJavaXPCOMBinding(env, aJavaObject, nsnull);
   delete (JavaXPCOMInstance*) obj;
-
-  nsCOMPtr<nsIEventQueue> eventQ;
-  nsresult rv = NS_GetMainEventQ(getter_AddRefs(eventQ));
-  if (NS_SUCCEEDED(rv))
-    rv = NS_ProxyRelease(eventQ, xpcom_obj);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get MainEventQ");
 }
 
