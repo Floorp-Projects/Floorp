@@ -171,7 +171,7 @@ nsJavaXPTCStub::Destroy()
       delete (nsJavaXPTCStub*) mChildren[i];
     }
 
-    if (gJavaXPCOMMonitor) {  // if Javaconnect is still initialized
+    if (gJavaXPCOMInitialized) {
       gJavaToXPTCStubMap->Remove(mJavaEnv, mJavaStrongRef);
     }
   }
