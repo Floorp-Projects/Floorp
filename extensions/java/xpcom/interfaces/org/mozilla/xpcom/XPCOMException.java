@@ -37,27 +37,58 @@
 
 package org.mozilla.xpcom;
 
+import java.lang.*;
+
 
 /**
  * This exception is thrown whenever an internal XPCOM/Gecko error occurs.
- * The internal Mozilla error ID is contained in the message.
+ * You can query the error ID returned by XPCOM by checking
+ * <code>errorcode</code> field.
  */
 public final class XPCOMException extends RuntimeException {
 
   /**
-   * Constructs a new XPCOMException instance.
+   * The XPCOM error value.
+   */
+  public long errorcode;
+
+  /**
+   * Constructs a new XPCOMException instance, with a default error
+   * (NS_ERROR_FAILURE) and message.
    */
   public XPCOMException() {
-    super();
+    this(0x80004005L, "Unspecified internal XPCOM error");
   }
 
   /**
-   * Constructs a new XPCOMException instance.
+   * Constructs a new XPCOMException instance with the given message, passing
+   * NS_ERROR_FAILURE as the error code.
    *
-   * @param message  detailed message of exception
+   * @param message   detailed message of exception
    */
   public XPCOMException(String message) {
-    super(message);
+    this(0x80004005L, message);
+  }
+
+  /**
+   * Constructs a new XPCOMException instance with the given code, passing
+   * a default message.
+   *
+   * @param code      internal XPCOM error ID
+   */
+  public XPCOMException(long code) {
+    this(code, "Internal XPCOM error");
+  }
+
+  /**
+   * Constructs a new XPCOMException instance with an error code and message.
+   *
+   * @param code      internal XPCOM error ID
+   * @param message   detailed message of exception
+   */
+  public XPCOMException(long code, String message) {
+    super(message + "  (0x" + Long.toHexString(code) + ")");
+    this.errorcode = code;
   }
 
 }
