@@ -882,6 +882,22 @@ public class Mozilla implements IGRE, IXPCOM, IXPCOMError {
 
     return iid;
   }
+  
+  /**
+   * @see IGRE#lockProfileDirectory(File, nsISupports)
+   */
+  public nsISupports lockProfileDirectory(File aDirectory)
+    throws XPCOMException
+  {
+    return gre.lockProfileDirectory(aDirectory);
+  }
+
+  /**
+   * @see IGRE#notifyProfile()
+   */
+  public void notifyProfile() {
+    gre.notifyProfile();
+  }
 
 }
 
