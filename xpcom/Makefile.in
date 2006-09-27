@@ -57,6 +57,7 @@ DIRS		= \
 		threads \
 		reflect \
 		proxy \
+                system \
 		build \
 		$(NULL)
 

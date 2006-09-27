@@ -630,6 +630,7 @@ xpcom/tools/Makefile
 xpcom/tools/registry/Makefile
 xpcom/stub/Makefile
 xpcom/windbgdlg/Makefile
+xpcom/system/Makefile
 $MAKEFILES_libreg
 $MAKEFILES_libjar
 intl/unicharutil/public/Makefile
@@ -972,7 +973,7 @@ toolkit/components/downloads/public/Makefile
 toolkit/components/downloads/Makefile
 toolkit/components/downloads/src/Makefile
 toolkit/components/filepicker/Makefile
-toolkit/components/gnome/Makefile
+toolkit/system/gnome/Makefile
 toolkit/components/help/Makefile
 toolkit/components/history/Makefile
 toolkit/components/history/public/Makefile
@@ -1229,8 +1230,7 @@ fi
 
 MAKEFILES_gnome="
     toolkit/Makefile
-    toolkit/components/Makefile
-    toolkit/components/gnome/Makefile
+    toolkit/system/gnome/Makefile
 "
 
 #
