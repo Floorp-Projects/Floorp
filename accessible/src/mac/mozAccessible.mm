@@ -47,6 +47,11 @@
 
 #include "nsIAccessible.h"
 
+// These constants are only defined in OS X SDK 10.4, so we define them in order
+// to be able to use for earlier OS versions.
+const NSString *kInstanceDescriptionAttribute = @"AXDescription";     // NSAccessibilityDescriptionAttribute
+const NSString *kTopLevelUIElementAttribute = @"AXTopLevelUIElement"; // NSAccessibilityTopLevelUIElementAttribute
+
 // converts a screen-global point in the cocoa coordinate system (with origo in the bottom-left corner
 // of the screen), into a top-left screen point, that gecko can use.
 static inline void
