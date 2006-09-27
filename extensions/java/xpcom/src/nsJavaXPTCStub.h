@@ -58,7 +58,7 @@ class nsJavaXPTCStub : public nsXPTCStubBase,
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISUPPORTSWEAKREFERENCE
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_JAVAXPTCSTUB_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_JAVAXPTCSTUB_IID)
 
   nsJavaXPTCStub(jobject aJavaObject, nsIInterfaceInfo *aIInfo);
 
@@ -128,5 +128,7 @@ private:
 
   nsAutoRefCnt    mWeakRefCnt;  // count for number of associated weak refs
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsJavaXPTCStub, NS_JAVAXPTCSTUB_IID)
 
 #endif // _nsJavaXPTCStub_h_
