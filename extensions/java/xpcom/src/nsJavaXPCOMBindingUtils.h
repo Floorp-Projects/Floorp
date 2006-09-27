@@ -41,6 +41,7 @@
 #include "jni.h"
 #include "xptcall.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
 
 #ifdef DEBUG_pedemonte
 #define LOG(x)  printf x
@@ -86,7 +87,7 @@ public:
   ~JavaXPCOMInstance();
 
 	nsISupports* GetInstance()	{ return mInstance; }
-	nsIInterfaceInfo* InterfaceInfo();
+	nsIInterfaceInfo* InterfaceInfo() { return mIInfo; }
 
 private:
 	nsISupports*               mInstance;
@@ -117,5 +118,16 @@ nsresult GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
                               nsXPTCMiniVariant *dispatchParams,
                               PRBool isFullVariantArray,
                               nsID &result);
+
+/*******************************
+ *  JNI helper functions
+ *******************************/
+// java.lang.String to nsAString/nsACString
+nsAString* jstring_to_nsAString(JNIEnv* env, jstring aString);
+nsACString* jstring_to_nsACString(JNIEnv* env, jstring aString);
+
+// java.io.File to nsILocalFile
+nsresult File_to_nsILocalFile(JNIEnv* env, jobject aFile,
+                              nsILocalFile** aLocalFile);
 
 #endif // _nsJavaXPCOMBindingUtils_h_
