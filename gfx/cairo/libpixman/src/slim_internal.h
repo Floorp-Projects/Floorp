@@ -27,6 +27,8 @@
 #ifndef _SLIM_INTERNAL_H_
 #define _SLIM_INTERNAL_H_ 1
 
+/* XXX THIS DOCUMENTATION IS BLOODY WRONG. SOMEONE DID NOT ACTUALLY
+       CONSULT WITH THE COMPILERS THEY CLAIMED TO SUPPORT */
 /* This macro marks a symbol as STV_HIDDEN, which prevents it from being
    added to the dynamic symbol table of the shared library.  This prevents
    users of the library from knowingly or unknowingly accessing library
@@ -40,7 +42,8 @@
 	somefunction(void);
 
    or after a data name,
-
+    XXX THIS IS WRONG. YOU CAN NOT DO THIS WITH THE COMPILERS THAT
+        THIS PACKAGE CLAIMS TO SUPPORT.
 	extern int somedata pixman_private;
 
    The ELF visibility attribute did not exist before gcc 3.3.  */
