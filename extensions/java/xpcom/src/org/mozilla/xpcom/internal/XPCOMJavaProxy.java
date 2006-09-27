@@ -83,7 +83,13 @@ public class XPCOMJavaProxy implements InvocationHandler {
    * @return  Proxy of given XPCOM object
    */
   protected static Object createProxy(Class aInterface, long aXPCOMInstance) {
-    return Proxy.newProxyInstance(aInterface.getClassLoader(),
+    // XXX We should really get the class loader from |aInterface|.  However,
+    //     that class loader doesn't know about |XPCOMJavaProxyBase|.  So for
+    //     now, we get the class loader that loaded |XPCOMJavaProxy|.  When
+    //     we get rid of the "XPCOMJavaProxyBase.java" class, we can revert
+    //     to the old method below.
+//    return Proxy.newProxyInstance(aInterface.getClassLoader(),
+    return Proxy.newProxyInstance(XPCOMJavaProxy.class.getClassLoader(),
             new Class[] { aInterface, XPCOMJavaProxyBase.class },
             new XPCOMJavaProxy(aXPCOMInstance));
   }
