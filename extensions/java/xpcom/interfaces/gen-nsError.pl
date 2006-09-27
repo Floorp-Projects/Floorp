@@ -113,6 +113,10 @@ while (<STDIN>) {
     #define NS_ERROR_FACTORY_EXISTS            (NS_ERROR_BASE + 0x100)
     print "  public static final long $1 = $2 + $3$4L;\n";
   }
+  elsif (/^\s*#define\s+(NS_[A-Z_]+)\s+(NS_[A-Z_]+)\s\s*/) {
+    #define NS_ERROR_NO_INTERFACE              NS_NOINTERFACE
+    print "  public static final long $1 = $2;\n";
+  }
   elsif (/^\s*#define\s+(NS_[A-Z_]+)\s+\(\(nsresult\)\s*(0x)?([0-9a-fA-F]+)L?\)\s*$/) { 
     #define NS_ERROR_BASE                      ((nsresult) 0xC1F30000)
     #define NS_ERROR_ABORT                     ((nsresult) 0x80004004L)
