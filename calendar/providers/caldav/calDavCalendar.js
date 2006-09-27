@@ -414,9 +414,16 @@ calDavCalendar.prototype = {
             return;
         }
 
-        // XXX how are we REALLY supposed to figure this out?
         var eventUri = this.mCalendarUri.clone();
-        eventUri.spec = eventUri.spec + aItem.id + ".ics";
+        try {
+            eventUri.spec = this.mCalendarUri.spec +
+                            aItem.getProperty("X-MOZ-LOCATIONPATH");
+            LOG("using X-MOZ-LOCATIONPATH: " + eventUri.spec);
+        } catch (ex) {
+            // XXX how are we REALLY supposed to figure this out?
+            eventUri.spec = eventUri.spec + aItem.id + ".ics";
+        }
+
         var eventResource = new WebDavResource(eventUri);
 
         var listener = new WebDavListener();
