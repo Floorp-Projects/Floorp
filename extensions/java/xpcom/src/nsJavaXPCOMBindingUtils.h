@@ -103,20 +103,6 @@ private:
   nsCOMPtr<nsIInterfaceInfo> mIInfo;
 };
 
-/**
- * Creates a new JavaXPCOMInstance which holds the xpcom object and its
- * interface info based on the given IID.
- *
- * @param aXPCOMObject  xpcom object to wrap
- * @param aIID          interface IID for aXPCOMObject
- * @param aResult       pointer that will hold new JavaXPCOMInstance
- *
- * @return NS_ERROR_OUT_OF_MEMORY if out of memory;
- *         NS_ERROR_FAILURE for any other error condition
- */
-nsresult CreateJavaXPCOMInstance(nsISupports* aXPCOMObject, const nsIID* aIID,
-                                 JavaXPCOMInstance** aResult);
-
 
 /**************************************
  *  Java<->XPCOM binding stores
@@ -145,9 +131,10 @@ public:
   // Given a Java object, returns the associated XPCOM object.
   void* GetXPCOMObject(JNIEnv* env, jobject aJavaObject);
 
-  // Given an XPCOM object, returns the associated Java Object.
-  jobject GetJavaObject(JNIEnv* env, void* aXPCOMObject);
-
+  // Given an XPCOM object, returns the associated Java Object.  If a Java
+  // object doesn't exist, then create a Java proxy for the XPCOM object.
+  NS_IMETHOD GetJavaObject(JNIEnv* env, void* aXPCOMObject, const nsIID& aIID,
+                           PRBool aDoReleaseObject, jobject* aResult);
 private:
   PLDHashTable* mJAVAtoXPCOMBindings;
   PLDHashTable* mXPCOMtoJAVABindings;

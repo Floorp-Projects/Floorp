@@ -669,39 +669,16 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
       if (aParamInfo.IsOut() && aParam) { // 'inout' & 'out'
         jobject java_obj = nsnull;
         if (xpcom_obj) {
-          // Find matching Java object for given xpcom object
-          java_obj = gBindings->GetJavaObject(env, xpcom_obj);
+          nsID iid;
+          rv = GetIIDForMethodParam(aIInfo, aMethodInfo, aParamInfo,
+                                    aMethodIndex, aDispatchParams, PR_TRUE, iid);
+          if (NS_FAILED(rv))
+            break;
 
-          // If no matching Java object exists, create one
-          if (java_obj == nsnull) {
-            // wrap xpcom instance
-            nsID iid;
-            JavaXPCOMInstance* inst;
-            rv = GetIIDForMethodParam(aIInfo, aMethodInfo, aParamInfo,
-                                      aMethodIndex, aDispatchParams,
-                                      PR_TRUE, iid);
-            if (NS_FAILED(rv))
-              return rv;
-
-            nsISupports* variant;
-            variant = NS_REINTERPRET_CAST(nsISupports*, xpcom_obj);
-            rv = CreateJavaXPCOMInstance(variant, &iid, &inst);
-            if (NS_FAILED(rv))
-              break;
-            NS_RELEASE(variant);   // JavaXPCOMInstance has owning ref
-
-            // create java stub
-            char* iface_name;
-            rv = inst->InterfaceInfo()->GetName(&iface_name);
-            if (NS_FAILED(rv))
-              break;
-            java_obj = CreateJavaWrapper(env, iface_name);
-
-            if (java_obj) {
-              // Associate XPCOM object w/ Java stub
-              gBindings->AddBinding(env, java_obj, inst);
-            }
-          }
+          // Get matching Java object for given xpcom object
+          rv = gBindings->GetJavaObject(env, xpcom_obj, iid, PR_TRUE, &java_obj);
+          if (NS_FAILED(rv))
+            break;
         }
 
         // put new Java object into output array
@@ -889,33 +866,18 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_INTERFACE_IS:
     {
       if (aVariant.val.p) {
-        jobject java_obj = gBindings->GetJavaObject(env, aVariant.val.p);
+        nsID iid;
+        rv = GetIIDForMethodParam(aIInfo, aMethodInfo, aParamInfo, aMethodIndex,
+                                  aDispatchParams, PR_TRUE, iid);
+        if (NS_FAILED(rv))
+          break;
 
-        if (java_obj == nsnull) {
-          nsID iid;
-          JavaXPCOMInstance* inst;
-          rv = GetIIDForMethodParam(aIInfo, aMethodInfo, aParamInfo,
-                                    aMethodIndex, aDispatchParams, PR_TRUE, iid);
-          if (NS_FAILED(rv))
-            return rv;
-
-          nsISupports* variant;
-          variant = NS_REINTERPRET_CAST(nsISupports*, aVariant.val.p);
-          rv = CreateJavaXPCOMInstance(variant, &iid, &inst);
-          if (NS_FAILED(rv))
-            break;
-          NS_RELEASE(variant);   // JavaXPCOMInstance has owning ref
-
-          // create java stub
-          char* iface_name;
-          rv = inst->InterfaceInfo()->GetName(&iface_name);
-          if (NS_FAILED(rv))
-            break;
-          java_obj = CreateJavaWrapper(env, iface_name);
-
-          if (java_obj)
-            gBindings->AddBinding(env, java_obj, inst);
-        }
+        // Get matching Java object for given xpcom object
+        jobject java_obj;
+        rv = gBindings->GetJavaObject(env, aVariant.val.p, iid, PR_TRUE,
+                                      &java_obj);
+        if (NS_FAILED(rv))
+          break;
 
         // If returned object is an nsJavaXPTCStub, release it.
         nsISupports* xpcom_obj = NS_STATIC_CAST(nsISupports*, aVariant.val.p);
@@ -1132,27 +1094,67 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
   return;
 }
 
-jobject
-CreateJavaWrapper(JNIEnv* env, const char* aClassName)
+nsresult
+CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
+                jobject* aResult)
 {
-  jobject java_stub = nsnull;
+  NS_PRECONDITION(aResult != nsnull, "null ptr");
+  if (!aResult)
+    return NS_ERROR_NULL_POINTER;
 
-  // Create stub class name
-  nsCAutoString class_name("org/mozilla/xpcom/stubs/");
-  class_name.AppendASCII(aClassName);
-  class_name.AppendLiteral("_Stub");
+  jobject java_obj = nsnull;
 
-  // Create Java stub for XPCOM object
-  jclass clazz;
-  clazz = env->FindClass(class_name.get());
+  nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
+  NS_ASSERTION(iim != nsnull, "Failed to get InterfaceInfoManager");
+  if (!iim)
+    return NS_ERROR_FAILURE;
 
-  if (clazz) {
-    jmethodID constructor = env->GetMethodID(clazz, "<init>", "()V");
-    if (constructor) {
-      java_stub = env->NewObject(clazz, constructor);
+  // Get interface info for class
+  nsCOMPtr<nsIInterfaceInfo> info;
+  nsresult rv = iim->GetInfoForIID(&aIID, getter_AddRefs(info));
+  if (NS_FAILED(rv))
+    return rv;
+
+  // Wrap XPCOM object
+  JavaXPCOMInstance* inst = new JavaXPCOMInstance(aXPCOMObject, info);
+  if (!inst)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // Get interface name
+  char* iface_name;
+  rv = info->GetName(&iface_name);
+
+  if (NS_SUCCEEDED(rv)) {
+    // Create proxy class name
+    nsCAutoString class_name("org/mozilla/xpcom/stubs/");
+    class_name.AppendASCII(iface_name);
+    class_name.AppendLiteral("_Stub");
+    nsMemory::Free(iface_name);
+
+    // Create java proxy object
+    jclass clazz;
+    clazz = env->FindClass(class_name.get());
+    if (clazz) {
+      jmethodID constructor = env->GetMethodID(clazz, "<init>", "()V");
+      if (constructor) {
+        java_obj = env->NewObject(clazz, constructor);
+      }
+    }
+
+    if (java_obj) {
+      // Associate XPCOM object with Java proxy
+      rv = gBindings->AddBinding(env, java_obj, inst);
+      if (NS_SUCCEEDED(rv)) {
+        *aResult = java_obj;
+        return NS_OK;
+      }
+    } else {
+      rv = NS_ERROR_FAILURE;
     }
   }
 
-  return java_stub;
+  // If there was an error, clean up.
+  delete inst;
+  return rv;
 }
 
