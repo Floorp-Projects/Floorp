@@ -63,8 +63,6 @@
 
 #include <mbstring.h>
 
-#define MOZ_BACKUP_REGISTRY "SOFTWARE\\Mozilla\\Desktop"
-
 #ifndef MAX_BUF
 #define MAX_BUF 4096
 #endif
@@ -465,11 +463,6 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   if (SetDefaultBrowserVista())
     return NS_OK;
 
-  // Locate the Backup key
-  HKEY backupKey;
-  nsresult rv = OpenKeyForWriting(MOZ_BACKUP_REGISTRY, &backupKey, aForAllUsers, PR_TRUE);
-  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) return rv;
-
   SETTING* settings;
   SETTING* end = gSettings + sizeof(gSettings)/sizeof(SETTING);
 
@@ -502,20 +495,20 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
     }
 
     PRBool replaceExisting = aClaimAllTypes ? PR_TRUE : !(settings->flags & NON_ESSENTIAL);
-    SetRegKey(key.get(), settings->valueName, data.get(),
-              PR_TRUE, backupKey, replaceExisting, aForAllUsers);
+    SetRegKey(key.get(), settings->valueName, data.get(), replaceExisting,
+              aForAllUsers);
   }
 
   // Select the Default Browser for the Windows XP Start Menu
-  SetRegKey(NS_LITERAL_CSTRING(SMI).get(), "", exeName.get(), PR_TRUE, 
-            backupKey, aClaimAllTypes, aForAllUsers);
+  SetRegKey(NS_LITERAL_CSTRING(SMI).get(), "", exeName.get(), aClaimAllTypes,
+            aForAllUsers);
 
   nsCOMPtr<nsIStringBundleService> bundleService(do_GetService("@mozilla.org/intl/stringbundle;1"));
   if (!bundleService)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIStringBundle> bundle, brandBundle;
-  rv = bundleService->CreateBundle(SHELLSERVICE_PROPERTIES, getter_AddRefs(bundle));
+  nsresult rv = bundleService->CreateBundle(SHELLSERVICE_PROPERTIES, getter_AddRefs(bundle));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = bundleService->CreateBundle(BRAND_PROPERTIES, getter_AddRefs(brandBundle));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -531,8 +524,8 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   nsCAutoString key1(NS_LITERAL_CSTRING(SMI));
   key1.Append(exeName);
   key1.Append("\\");
-  SetRegKey(key1.get(), "", nativeFullName.get(), PR_TRUE, 
-            backupKey, aClaimAllTypes, aForAllUsers);
+  SetRegKey(key1.get(), "", nativeFullName.get(), aClaimAllTypes,
+            aForAllUsers);
 
   // Set the Options and Safe Mode start menu context menu item labels
   nsCAutoString optionsKey(NS_LITERAL_CSTRING(SMI "%APPEXE%\\shell\\properties"));
@@ -560,15 +553,12 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   nsCAutoString nativeTitle;
   // For the now, we use 'A' APIs (see bug 240272,  239279)
   NS_CopyUnicodeToNative(optionsTitle, nativeTitle);
-  SetRegKey(optionsKey.get(), "", nativeTitle.get(), PR_TRUE, backupKey,
-            aClaimAllTypes, aForAllUsers);
+  SetRegKey(optionsKey.get(), "", nativeTitle.get(), aClaimAllTypes,
+            aForAllUsers);
   // For the now, we use 'A' APIs (see bug 240272,  239279)
   NS_CopyUnicodeToNative(safeModeTitle, nativeTitle);
-  SetRegKey(safeModeKey.get(), "", nativeTitle.get(), PR_TRUE, backupKey,
-            aClaimAllTypes, aForAllUsers);
-
-  // Close the key we opened.
-  ::RegCloseKey(backupKey);
+  SetRegKey(safeModeKey.get(), "", nativeTitle.get(), aClaimAllTypes,
+            aForAllUsers);
 
   // Refresh the Shell
   SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, 0, 0);
@@ -577,8 +567,7 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
 
 void
 nsWindowsShellService::SetRegKey(const char* aKeyName, const char* aValueName, 
-                                 const char* aValue, PRBool aBackup,
-                                 HKEY aBackupKey, PRBool aReplaceExisting,
+                                 const char* aValue, PRBool aReplaceExisting,
                                  PRBool aForAllUsers)
 {
   char buf[MAX_BUF];
@@ -595,10 +584,6 @@ nsWindowsShellService::SetRegKey(const char* aKeyName, const char* aValueName,
 
   // Get the old value
   DWORD result = ::RegQueryValueEx(theKey, aValueName, NULL, NULL, (LPBYTE)buf, &len);
-
-  // Back up the old value
-  if (aBackup && REG_SUCCEEDED(result))
-    ::RegSetValueEx(aBackupKey, aKeyName, 0, REG_SZ, (LPBYTE)buf, len);
 
   // Set the new value
   if (REG_FAILED(result) || strcmp(buf, aValue) != 0)
