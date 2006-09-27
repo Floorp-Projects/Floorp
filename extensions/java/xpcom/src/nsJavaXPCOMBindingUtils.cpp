@@ -619,18 +619,15 @@ ThrowException(JNIEnv* env, const nsresult aErrorCode, const char* aMessage)
 nsAString*
 jstring_to_nsAString(JNIEnv* env, jstring aString)
 {
-  jboolean isCopy = JNI_FALSE;
   const PRUnichar* buf = nsnull;
   if (aString) {
-    buf = env->GetStringChars(aString, &isCopy);
+    buf = env->GetStringChars(aString, nsnull);
     if (!buf)
       return nsnull;  // exception already thrown
   }
 
   nsString* str = new nsString(buf);
-  if (isCopy) {
-    env->ReleaseStringChars(aString, buf);
-  }
+  env->ReleaseStringChars(aString, buf);
 
   // returns string, or nsnull if 'new' failed
   return str;
@@ -639,18 +636,15 @@ jstring_to_nsAString(JNIEnv* env, jstring aString)
 nsACString*
 jstring_to_nsACString(JNIEnv* env, jstring aString)
 {
-  jboolean isCopy = JNI_FALSE;
   const char* buf = nsnull;
   if (aString) {
-    buf = env->GetStringUTFChars(aString, &isCopy);
+    buf = env->GetStringUTFChars(aString, nsnull);
     if (!buf)
       return nsnull;  // exception already thrown
   }
 
   nsCString* str = new nsCString(buf);
-  if (isCopy) {
-    env->ReleaseStringUTFChars(aString, buf);
-  }
+  env->ReleaseStringUTFChars(aString, buf);
 
   // returns string, or nsnull if 'new' failed
   return str;
