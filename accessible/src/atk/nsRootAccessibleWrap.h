@@ -59,6 +59,10 @@ public:
     NS_IMETHOD Init();
     NS_IMETHOD Shutdown();
     NS_IMETHOD GetParent(nsIAccessible **  aParent);
+protected:
+    virtual nsresult HandleEventWithTarget(nsIDOMEvent *aEvent, 
+                                           nsIDOMNode  *aTargetNode);
+    
 };
 
 // For gtk+ native window

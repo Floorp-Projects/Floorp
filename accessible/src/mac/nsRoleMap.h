@@ -48,9 +48,9 @@ const NSString* AXRoles [] = {
   NSAccessibilityUnknownRole,                   // ROLE_SOUND. unused on OS X
   NSAccessibilityUnknownRole,                   // ROLE_CURSOR. unused on OS X
   NSAccessibilityUnknownRole,                   // ROLE_CARET. unused on OS X
-  NSAccessibilityUnknownRole,                   // ROLE_ALERT
+  NSAccessibilityWindowRole,                    // ROLE_ALERT
   NSAccessibilityWindowRole,                    // ROLE_WINDOW. irrelevant on OS X; all window a11y is handled by the system.
-  NSAccessibilityUnknownRole,                   // ROLE_CLIENT
+  @"AXWebArea",                                 // ROLE_CLIENT
   NSAccessibilityPopUpButtonRole,               // ROLE_MENUPOPUP
   NSAccessibilityMenuItemRole,                  // ROLE_MENUITEM.
   @"AXHelpTag",                                 // ROLE_TOOLTIP. 10.4+ only, so we re-define the constant.
@@ -106,7 +106,7 @@ const NSString* AXRoles [] = {
   NSAccessibilityUnknownRole,                   // ROLE_IPADDRESS
   NSAccessibilityStaticTextRole,                // ROLE_ACCEL_LABEL
   NSAccessibilityUnknownRole,                   // ROLE_ARROW
-  NSAccessibilityUnknownRole,                   // ROLE_CANVAS
+  NSAccessibilityImageRole,                     // ROLE_CANVAS
   NSAccessibilityMenuItemRole,                  // ROLE_CHECK_MENU_ITEM
   NSAccessibilityColorWellRole,                 // ROLE_COLOR_CHOOSER
   NSAccessibilityUnknownRole,                   // ROLE_DATE_EDITOR
@@ -140,7 +140,7 @@ const NSString* AXRoles [] = {
   NSAccessibilityStaticTextRole,                // ROLE_FOOTER
   NSAccessibilityGroupRole,                     // ROLE_PARAGRAPH
   @"AXRuler",                                   // ROLE_RULER. 10.4+ only, so we re-define the constant.
-  NSAccessibilityUnknownRole,                   // ROLE_AUTOCOMPLETE
+  NSAccessibilityTextFieldRole,                 // ROLE_AUTOCOMPLETE
   NSAccessibilityTextFieldRole,                 // ROLE_EDITBAR
   NSAccessibilityTextFieldRole,                 // ROLE_ENTRY
   NSAccessibilityStaticTextRole,                // ROLE_CAPTION
@@ -155,3 +155,5 @@ const NSString* AXRoles [] = {
   NSAccessibilityMenuItemRole,                  // ROLE_PARENT_MENUITEM
   @"ROLE_LAST_ENTRY"                            // ROLE_LAST_ENTRY. bogus role that will never be shown (just marks the end of this array)!
 };
+
+

@@ -41,9 +41,11 @@
 
 #include "nsMai.h"
 #include "nsRootAccessibleWrap.h"
+#include "nsIAccessibleTreeCache.h"
 #include "nsAppRootAccessible.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
+#include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIFocusController.h"
 
 nsRootAccessibleWrap::nsRootAccessibleWrap(nsIDOMNode *aDOMNode,
@@ -89,6 +91,152 @@ NS_IMETHODIMP nsRootAccessibleWrap::GetParent(nsIAccessible **  aParent)
         rv = NS_ERROR_FAILURE;
     }
     return rv;
+}
+
+/* virtual */
+nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
+                                                     nsIDOMNode  *aTargetNode)
+{
+    // first let the cross-platform code dispatch any events, before
+    // we start doing platform-specific things
+    nsRootAccessible::HandleEventWithTarget(aEvent, aTargetNode);
+    
+    nsCOMPtr<nsIAccessible> accessible;
+    nsCOMPtr<nsIAccessibilityService> accService = GetAccService();
+    if (NS_FAILED(accService->GetAccessibleFor(aTargetNode, getter_AddRefs(accessible))))
+        return NS_OK;
+    
+    nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(accessible));
+    
+    nsAutoString eventType;
+    aEvent->GetType(eventType);
+    nsAutoString localName;
+    aTargetNode->GetLocalName(localName);
+    
+#ifdef MOZ_XUL
+  // If it's a tree element, need the currently selected item
+    nsCOMPtr<nsIAccessible> treeItemAccessible;
+    if (localName.EqualsLiteral("tree")) {
+        nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
+            do_QueryInterface(aTargetNode);
+        if (multiSelect) {
+            PRInt32 treeIndex = -1;
+            multiSelect->GetCurrentIndex(&treeIndex);
+            if (treeIndex >= 0) {
+                nsCOMPtr<nsIAccessibleTreeCache> treeCache(do_QueryInterface(accessible));
+                if (!treeCache || 
+                    NS_FAILED(treeCache->GetCachedTreeitemAccessible(
+                    treeIndex,
+                    nsnull,
+                    getter_AddRefs(treeItemAccessible))) ||
+                    !treeItemAccessible) {
+                        return NS_ERROR_OUT_OF_MEMORY;
+                }
+                accessible = treeItemAccessible;
+            }
+        }
+    }
+#endif
+  
+    AtkStateChange stateData;
+    if (eventType.LowerCaseEqualsLiteral("focus")) {
+#ifdef MOZ_XUL
+        if (treeItemAccessible) { // use focused treeitem
+            privAcc = do_QueryInterface(treeItemAccessible);
+            privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
+                                      treeItemAccessible, nsnull);
+        }
+        else
+#endif 
+        if (localName.EqualsIgnoreCase("radiogroup")) {
+            // fire focus event for checked radio instead of radiogroup
+            PRInt32 childCount = 0;
+            accessible->GetChildCount(&childCount);
+            nsCOMPtr<nsIAccessible> radioAcc;
+            for (PRInt32 index = 0; index < childCount; index++) {
+                accessible->GetChildAt(index, getter_AddRefs(radioAcc));
+                if (radioAcc) {
+                    radioAcc->GetFinalState(&stateData.state);
+                    if (stateData.state & (STATE_CHECKED | STATE_SELECTED)) {
+                        break;
+                    }
+                }
+            }
+            if (radioAcc) {
+                privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, radioAcc, nsnull);
+            }
+        }
+        else
+            FireAccessibleFocusEvent(accessible, aTargetNode, aEvent);
+    }
+    else if (eventType.LowerCaseEqualsLiteral("select")) {
+#ifdef MOZ_XUL
+        if (treeItemAccessible) { // it's a XUL <tree>
+            // use EVENT_FOCUS instead of EVENT_ATK_SELECTION_CHANGE
+            privAcc = do_QueryInterface(treeItemAccessible);
+            privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
+                                    treeItemAccessible, nsnull);
+        }
+        else 
+#endif
+        if (localName.LowerCaseEqualsLiteral("tabpanels")) {
+            // make GOK refresh "UI-Grab" window
+            privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_REORDER, accessible, nsnull);
+        }
+    }
+    // Value change events for ATK are done with 
+    // AtkPropertyChange, PROP_VALUE. Need the old and new value.
+    // Don't bother sending old value, it's not used.
+    else if (eventType.LowerCaseEqualsLiteral("valuechange")) { 
+        AtkPropertyChange propChange;
+        propChange.type = PROP_VALUE;
+        propChange.oldvalue = 0; // Not used
+        propChange.newvalue = 0; // ATK code will get the value directly from accessible
+        privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_PROPERTY_CHANGE, 
+                                  accessible, &propChange);
+    }
+    else if (eventType.LowerCaseEqualsLiteral("checkboxstatechange") || // it's a XUL <checkbox>
+             eventType.LowerCaseEqualsLiteral("radiostatechange")) { // it's a XUL <radio>
+        accessible->GetFinalState(&stateData.state);
+        // prefPane tab is implemented as list items in A11y, so we need to check STATE_SELECTED also
+        stateData.enable = (stateData.state & (STATE_CHECKED | STATE_SELECTED)) != 0;
+        stateData.state = STATE_CHECKED;
+        privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, accessible, &stateData);
+        // only fire focus event for checked radio
+        if (eventType.LowerCaseEqualsLiteral("radiostatechange") &&
+            stateData.enable) {
+            FireAccessibleFocusEvent(accessible, aTargetNode, aEvent);
+        }
+    }
+    else if (eventType.LowerCaseEqualsLiteral("openstatechange")) { // collapsed/expanded changed
+        accessible->GetFinalState(&stateData.state);
+        stateData.enable = (stateData.state & STATE_EXPANDED) != 0;
+        stateData.state = STATE_EXPANDED;
+        privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, accessible, &stateData);
+    }
+    else if (eventType.LowerCaseEqualsLiteral("popuphiding")) {
+        // If accessible focus was inside popup that closes,
+        // then restore it to true current focus.
+        // This is the case when we've been getting DOMMenuItemActive events
+        // inside of a combo box that closes. The real focus is on the combo box.
+        if (!gLastFocusedNode) {
+            return NS_OK;
+        }
+        nsCOMPtr<nsIDOMNode> parentOfFocus;
+        gLastFocusedNode->GetParentNode(getter_AddRefs(parentOfFocus));
+        if (parentOfFocus != aTargetNode) {
+            return NS_OK;
+        }
+        // Focus was inside of popup that's being hidden
+        FireCurrentFocusEvent();
+    }
+    else if (eventType.LowerCaseEqualsLiteral("popupshown")) {
+        FireAccessibleFocusEvent(accessible, aTargetNode, aEvent);
+    }
+    else if (eventType.EqualsLiteral("DOMMenuInactive")) {
+        //FireAccessibleFocusEvent(accessible, aTargetNode);  // Not yet used in ATK
+    }
+    return NS_OK;
 }
 
 nsNativeRootAccessibleWrap::nsNativeRootAccessibleWrap(AtkObject *aAccessible):
