@@ -62,6 +62,7 @@
  * Java JNI globals
  *********************/
 
+extern jclass systemClass;
 extern jclass booleanClass;
 extern jclass charClass;
 extern jclass byteClass;
@@ -244,12 +245,12 @@ public:
 
   nsresult Destroy();
 
-  nsresult Add(JNIEnv* env, jobject aJavaObject, nsJavaXPTCStub* aProxy);
+  nsresult Add(jint aJavaObjectHashCode, nsJavaXPTCStub* aProxy);
 
-  nsresult Find(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
+  nsresult Find(jint aJavaObjectHashCode, const nsIID& aIID,
                 nsJavaXPTCStub** aResult);
 
-  nsresult Remove(JNIEnv* env, jobject aJavaObject);
+  nsresult Remove(jint aJavaObjectHashCode);
 
 protected:
   PLDHashTable* mHashTable;
