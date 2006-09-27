@@ -26,6 +26,7 @@ HashMgr::HashMgr(const char * tpath)
     fflush(stderr);
     if (tableptr) {
       free(tableptr);
+      tableptr = 0;
     }
     tablesize = 0;
   }
@@ -144,23 +145,36 @@ int HashMgr::load_tables(const char * tpath)
 {
   int wl, al;
   char * ap;
-
+  
   // raw dictionary - munched file
   FILE * rawdict = fopen(tpath, "r");
-  if (rawdict == NULL) return 1;
+  if (rawdict == NULL) {
+    return 1;
+  }
 
   // first read the first line of file to get hash table size */
   char ts[MAXDELEN];
-  if (! fgets(ts, MAXDELEN-1,rawdict)) return 2;
+  if (!fgets(ts, MAXDELEN-1,rawdict)) {
+    fclose(rawdict);
+    return 2;
+  }
+
   mychomp(ts);
   tablesize = atoi(ts);
-  if (!tablesize) return 4; 
+  if (!tablesize) {
+    fclose(rawdict);
+    return 4; 
+  }
+
   tablesize = tablesize + 5;
   if ((tablesize %2) == 0) tablesize++;
 
   // allocate the hash table
   tableptr = (struct hentry *) calloc(tablesize, sizeof(struct hentry));
-  if (! tableptr) return 3;
+  if (!tableptr) {
+    fclose(rawdict);
+    return 3;
+  }
 
   // loop through all words on much list and add to hash
   // table and create word and affix strings
@@ -181,8 +195,10 @@ int HashMgr::load_tables(const char * tpath)
     wl = strlen(ts);
 
     // add the word and its index
-    if (add_word(ts,wl,ap,al)) 
-      return 5;;
+    if (add_word(ts,wl,ap,al)) { 
+      fclose(rawdict);
+      return 5;
+    }
 
   }
 
