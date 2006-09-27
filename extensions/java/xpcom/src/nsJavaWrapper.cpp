@@ -649,7 +649,10 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
           if (NS_FAILED(rv))
             return rv;
 
-          inst = CreateJavaXPCOMInstance((nsISupports*) aVariant.val.p, &iid);
+          nsISupports* variant =
+                              NS_REINTERPRET_CAST(nsISupports*, aVariant.val.p);
+          inst = CreateJavaXPCOMInstance(variant, &iid);
+          NS_RELEASE(variant);   // JavaXPCOMInstance has owning ref
 
           if (inst) {
             // create java stub
@@ -816,7 +819,10 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
           if (NS_FAILED(rv))
             return rv;
 
-          inst = CreateJavaXPCOMInstance((nsISupports*) aVariant.val.p, &iid);
+          nsISupports* variant =
+                              NS_REINTERPRET_CAST(nsISupports*, aVariant.val.p);
+          inst = CreateJavaXPCOMInstance(variant, &iid);
+          NS_RELEASE(variant);   // JavaXPCOMInstance has owning ref
 
           if (inst) {
             // create java stub
