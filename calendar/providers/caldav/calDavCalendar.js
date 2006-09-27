@@ -822,16 +822,14 @@ calDavCalendar.prototype = {
                              .getNewPrompter(null);
         } else if (iid.equals(Components.interfaces.nsIProgressEventSink)) {
             return this;
-        } else if (iid.equals(Components.interfaces.nsIDocShellTreeItem)) {
-            return this;
         } else if (iid.equals(Components.interfaces.nsIAuthPromptProvider)) {
             return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                              .getService(Components.interfaces.nsIWindowWatcher)
                              .getNewPrompter(null);
         } else if (!isOnBranch && iid.equals(Components.interfaces.nsIAuthPrompt2)) {
             return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                             .getService(Components.interfaces.nsIWindowWatcher)
-                             .getNewPrompter(null);
+                             .getService(Components.interfaces.nsIPromptFactory)
+                             .getPrompt(null, iid)
         }
         throw Components.results.NS_ERROR_NO_INTERFACE;
     },
@@ -907,8 +905,6 @@ calDavCalendar.prototype = {
     // nsIProgressEventSink
     onProgress: function onProgress(aRequest, aContext, aProgress, aProgressMax) {},
     onStatus: function onStatus(aRequest, aContext, aStatus, aStatusArg) {},
-    // nsIDocShellTreeItem
-    findItemWithName: function findItemWithName(name, aRequestor, aOriginalRequestor) {}
 };
 
 function WebDavResource(url) {
