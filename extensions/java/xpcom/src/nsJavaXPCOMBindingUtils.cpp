@@ -457,23 +457,26 @@ JavaXPCOMInstance::~JavaXPCOMInstance()
   NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to release using NS_ProxyRelease");
 }
 
-JavaXPCOMInstance*
-CreateJavaXPCOMInstance(nsISupports* aXPCOMObject, const nsIID* aIID)
+nsresult
+CreateJavaXPCOMInstance(nsISupports* aXPCOMObject, const nsIID* aIID,
+                        JavaXPCOMInstance** aResult)
 {
-  JavaXPCOMInstance* inst = nsnull;
-
-  // Get interface info for class
   nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
   NS_ASSERTION(iim != nsnull, "Failed to get InterfaceInfoManager");
-  if (iim) {
-    nsCOMPtr<nsIInterfaceInfo> info;
-    iim->GetInfoForIID(aIID, getter_AddRefs(info));
+  if (!iim)
+    return NS_ERROR_FAILURE;
 
-    // Wrap XPCOM object
-    inst = new JavaXPCOMInstance(aXPCOMObject, info);
+  // Get interface info for class
+  nsCOMPtr<nsIInterfaceInfo> info;
+  nsresult rv = iim->GetInfoForIID(aIID, getter_AddRefs(info));
+
+  // Wrap XPCOM object
+  if (NS_SUCCEEDED(rv)) {
+    *aResult = new JavaXPCOMInstance(aXPCOMObject, info);
+    if (!*aResult)
+      rv = NS_ERROR_OUT_OF_MEMORY;
   }
-
-  return inst;
+  return rv;
 }
 
 
@@ -496,14 +499,16 @@ GetIIDForMethodParam(nsIInterfaceInfo *iinfo, const nsXPTMethodInfo *methodInfo,
       PRUint8 argnum;
       rv = iinfo->GetInterfaceIsArgNumberForParam(methodIndex, &paramInfo, &argnum);
       if (NS_FAILED(rv))
-        return rv;
+        break;
 
       const nsXPTParamInfo& arg_param = methodInfo->GetParam(argnum);
       const nsXPTType& arg_type = arg_param.GetType();
 
       // The xpidl compiler ensures this. We reaffirm it for safety.
-      if (!arg_type.IsPointer() || arg_type.TagPart() != nsXPTType::T_IID)
-        return NS_ERROR_UNEXPECTED;
+      if (!arg_type.IsPointer() || arg_type.TagPart() != nsXPTType::T_IID) {
+        rv = NS_ERROR_UNEXPECTED;
+        break;
+      }
 
       nsID *p = nsnull;
       if (isFullVariantArray) {
@@ -530,18 +535,37 @@ GetIIDForMethodParam(nsIInterfaceInfo *iinfo, const nsXPTMethodInfo *methodInfo,
  *******************************/
 
 void
-ThrowXPCOMException(JNIEnv* env, const nsresult aErrorCode,
-                    const char* aMessage)
+ThrowException(JNIEnv* env, const nsresult aErrorCode, const char* aMessage)
 {
   // Only throw this exception if one hasn't already been thrown, so we don't
   // mask a previous exception/error.
   if (env->ExceptionCheck())
     return;
 
+  // If the error code we get is for an Out Of Memory error, try to throw an
+  // OutOfMemoryError.  The JVM may have enough memory to create this error.
+  if (aErrorCode == NS_ERROR_OUT_OF_MEMORY) {
+    jclass clazz = env->FindClass("java/lang/OutOfMemoryError");
+    if (clazz) {
+      env->ThrowNew(clazz, aMessage);
+    }
+    env->DeleteLocalRef(clazz);
+    return;
+  }
+
+  // If the error was not handled above, then create an XPCOMException with the
+  // given error code and message.
+
   // Create parameters and method signature. Max of 2 params.  The error code
   // comes before the message string.
   PRUint32 index = 0;
   jvalue* args = new jvalue[2];
+  if (!args) {
+    ThrowException(env, NS_ERROR_OUT_OF_MEMORY,
+                   "Out of memory while throwing another exception");
+    return;
+  }
+
   nsCAutoString methodSig("(");
   if (aErrorCode) {
     args[index++].j = aErrorCode;
@@ -549,6 +573,10 @@ ThrowXPCOMException(JNIEnv* env, const nsresult aErrorCode,
   }
   if (aMessage) {
     args[index].l = env->NewStringUTF(aMessage);
+    if (args[index].l == nsnull) {
+      delete[] args;
+      return;
+    }
     methodSig.AppendLiteral("Ljava/lang/String;");
   }
   methodSig.AppendLiteral(")V");
@@ -578,6 +606,8 @@ jstring_to_nsAString(JNIEnv* env, jstring aString)
   const PRUnichar* buf = nsnull;
   if (aString) {
     buf = env->GetStringChars(aString, &isCopy);
+    if (!buf)
+      return nsnull;  // exception already thrown
   }
 
   nsString* str = new nsString(buf);
@@ -585,6 +615,7 @@ jstring_to_nsAString(JNIEnv* env, jstring aString)
     env->ReleaseStringChars(aString, buf);
   }
 
+  // returns string, or nsnull if 'new' failed
   return str;
 }
 
@@ -595,6 +626,8 @@ jstring_to_nsACString(JNIEnv* env, jstring aString)
   const char* buf = nsnull;
   if (aString) {
     buf = env->GetStringUTFChars(aString, &isCopy);
+    if (!buf)
+      return nsnull;  // exception already thrown
   }
 
   nsCString* str = new nsCString(buf);
@@ -602,12 +635,14 @@ jstring_to_nsACString(JNIEnv* env, jstring aString)
     env->ReleaseStringUTFChars(aString, buf);
   }
 
+  // returns string, or nsnull if 'new' failed
   return str;
 }
 
 nsresult
 File_to_nsILocalFile(JNIEnv* env, jobject aFile, nsILocalFile** aLocalFile)
 {
+  nsresult rv = NS_ERROR_FAILURE;
   jstring pathName = nsnull;
   jclass clazz = env->FindClass("java/io/File");
   if (clazz) {
@@ -615,16 +650,22 @@ File_to_nsILocalFile(JNIEnv* env, jobject aFile, nsILocalFile** aLocalFile)
                                          "()Ljava/lang/String;");
     if (pathMID) {
       pathName = (jstring) env->CallObjectMethod(aFile, pathMID);
+      if (pathName != nsnull && !env->ExceptionCheck())
+        rv = NS_OK;
     }
   }
 
-  if (pathName) {
+  if (NS_SUCCEEDED(rv)) {
     nsAString* path = jstring_to_nsAString(env, pathName);
-    nsresult rv = NS_NewLocalFile(*path, false, aLocalFile);
-    delete path;
-    return rv;
+    if (!path)
+      rv = NS_ERROR_OUT_OF_MEMORY;
+
+    if (NS_SUCCEEDED(rv)) {
+      rv = NS_NewLocalFile(*path, false, aLocalFile);
+      delete path;
+    }
   }
 
-  return NS_ERROR_FAILURE;
+  return rv;
 }
 
