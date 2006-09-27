@@ -186,6 +186,10 @@ LIBRARY			:= $(NULL)
 endif
 endif
 
+ifdef JAVA_LIBRARY_NAME
+JAVA_LIBRARY := $(JAVA_LIBRARY_NAME).jar
+endif
+
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 ifndef GNU_CC
 
@@ -244,7 +248,7 @@ HOST_PDBFILE=$(basename $(@F)).pdb
 endif
 
 ifndef TARGETS
-TARGETS			= $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $(HOST_PROGRAM) $(HOST_SIMPLE_PROGRAMS)
+TARGETS			= $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $(HOST_PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(JAVA_LIBRARY)
 endif
 
 ifndef OBJS
@@ -682,7 +686,7 @@ HOST_LIBS_DEPS = $(filter %.$(LIB_SUFFIX), $(HOST_LIBS))
 DSO_LDOPTS_DEPS = $(EXTRA_DSO_LIBS) $(filter %.$(LIB_SUFFIX), $(EXTRA_DSO_LDOPTS))
 
 ##############################################
-libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS) $(MAPS)
+libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS) $(MAPS) $(JAVA_LIBRARY)
 ifndef NO_DIST_INSTALL
 ifneq (,$(BUILD_STATIC_LIBS)$(FORCE_STATIC_LIB))
 ifdef LIBRARY
@@ -730,6 +734,13 @@ endif
 ifdef HOST_LIBRARY
 	$(INSTALL) $(IFLAGS1) $(HOST_LIBRARY) $(DIST)/host/lib
 endif
+ifdef JAVA_LIBRARY
+ifdef IS_COMPONENT
+	$(INSTALL) $(IFLAGS1) $(JAVA_LIBRARY) $(FINAL_TARGET)/components
+else
+	$(INSTALL) $(IFLAGS1) $(JAVA_LIBRARY) $(FINAL_TARGET)
+endif
+endif # JAVA_LIBRARY
 endif # !NO_DIST_INSTALL
 	+$(LOOP_OVER_DIRS)
 
@@ -790,6 +801,21 @@ else
 	$(SYSINSTALL) $(IFLAGS2) $(SIMPLE_PROGRAMS) $(DESTDIR)$(mozappdir)
 endif
 endif # SIMPLE_PROGRAMS
+ifdef JAVA_LIBRARY
+ifdef IS_COMPONENT
+ifdef MRE_DIST
+	$(SYSINSTALL) $(IFLAGS2) $(JAVA_LIBRARY) $(DESTDIR)$(mredir)/components
+else
+	$(SYSINSTALL) $(IFLAGS2) $(JAVA_LIBRARY) $(DESTDIR)$(mozappdir)/components
+endif
+else
+ifdef MRE_DIST
+	$(SYSINSTALL) $(IFLAGS2) $(JAVA_LIBRARY) $(DESTDIR)$(mredir)
+else
+	$(SYSINSTALL) $(IFLAGS2) $(JAVA_LIBRARY) $(DESTDIR)$(mozappdir)
+endif
+endif
+endif # JAVA_LIBRARY
 endif # NO_INSTALL
 
 checkout:
@@ -1245,6 +1271,45 @@ endif
 %: s.%
 
 %: SCCS/s.%
+
+###############################################################################
+# Java rules
+###############################################################################
+ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
+SEP := ;
+else
+SEP := :
+endif
+
+EMPTY :=
+SPACE := $(EMPTY) $(EMPTY)
+
+ifdef JAVA_SOURCEPATH
+SP = $(subst $(SPACE),$(SEP),$(strip $(JAVA_SOURCEPATH)))
+_JAVA_SOURCEPATH = ".$(SEP)$(srcdir)$(SEP)$(SP)"
+else
+_JAVA_SOURCEPATH = ".$(SEP)$(srcdir)"
+endif
+
+ifdef JAVA_CLASSPATH
+CP = $(subst $(SPACE),$(SEP),$(strip $(JAVA_CLASSPATH)))
+_JAVA_CLASSPATH = ".$(SEP)$(CP)"
+else
+_JAVA_CLASSPATH = .
+endif
+
+_JAVA_DIR = _java
+$(_JAVA_DIR)::
+	$(NSINSTALL) -D $@
+
+$(_JAVA_DIR)/%.class: %.java Makefile Makefile.in $(_JAVA_DIR)
+	$(CYGWIN_WRAPPER) $(JAVAC) $(JAVAC_FLAGS) -cp $(_JAVA_CLASSPATH) \
+			-sourcepath $(_JAVA_SOURCEPATH) -d $(_JAVA_DIR) $(_VPATH_SRCS)
+
+$(JAVA_LIBRARY): $(addprefix $(_JAVA_DIR)/,$(JAVA_SRCS:.java=.class)) Makefile Makefile.in
+	$(JAR) cf $@ -C $(_JAVA_DIR) .
+
+GARBAGE_DIRS += $(_JAVA_DIR)
 
 ###############################################################################
 # Update Makefiles

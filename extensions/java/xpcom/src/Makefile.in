@@ -37,7 +37,7 @@
 DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
-VPATH		= @srcdir@ ; @srcdir@/..
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -64,17 +64,6 @@ CPPSRCS		= \
 		nsJavaXPCOMBindingUtils.cpp \
 		$(NULL)
 
-JARFILE = javaxpcom.jar
-JARFILE_SRC = $(patsubst %.jar,%-src.jar,$(JARFILE))
-
-JAVA_SRCS = \
-		$(srcdir)/../XPCOMJavaProxy.java \
-		$(srcdir)/../XPCOMJavaProxyBase.java \
-		$(srcdir)/GREImpl.java \
-		$(srcdir)/XPCOMImpl.java \
-		$(srcdir)/JavaXPCOMMethods.java \
-		$(NULL)
-
 LOCAL_INCLUDES	= -I$(JAVA_INCLUDE_PATH)
 
 ifeq ($(OS_ARCH),WINNT)
@@ -83,50 +72,30 @@ else
 LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/linux
 endif
 
-# necessary until we do 'cvs move' to put files in correct directories
-LOCAL_INCLUDES += -I$(srcdir)
+# Don't set JAVA_LIBRARY_NAME, since we don't want to build during 'libs'
+# stage, but rather when explicitly called.
+#JAVA_LIBRARY_NAME = javaxpcom
+JARFILE = javaxpcom.jar
 
-GARBAGE += $(JARFILE) $(JARFILE_SRC) java.files .done
-GARBAGE_DIRS += _javagen org
+JAVA_SRCS = \
+		org/mozilla/xpcom/internal/XPCOMJavaProxy.java \
+		org/mozilla/xpcom/internal/XPCOMJavaProxyBase.java \
+		org/mozilla/xpcom/internal/GREImpl.java \
+		org/mozilla/xpcom/internal/XPCOMImpl.java \
+		org/mozilla/xpcom/internal/JavaXPCOMMethods.java \
+		$(NULL)
+
+JAVA_CLASSPATH = \
+	../interfaces/MozillaInterfaces.jar \
+	../interfaces/MozillaGlue.jar \
+	$(NULL)
+
+GARBAGE += $(JARFILE)
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH),WINNT)
-RUN =
-SEP = ;
-else
-RUN = $(DIST)/bin/run-mozilla.sh
-SEP = :
-endif
+$(JARFILE): $(addprefix $(_JAVA_DIR)/,$(JAVA_SRCS:.java=.class)) Makefile Makefile.in
+	$(JAR) cf $@ -C $(_JAVA_DIR) .
 
-_javagen/org/mozilla/xpcom/internal/.iface_done: $(JAVA_SRCS)
-	@if test ! -d _javagen/org/mozilla/xpcom/internal; then \
-		touch .done; \
-		$(INSTALL) -m 644 .done _javagen/org/mozilla/xpcom/internal; \
-	fi
-	@echo Copying Java source files
-	@$(INSTALL) -m 644 $(JAVA_SRCS) \
-			_javagen/org/mozilla/xpcom/internal
-	@touch $@
-
-# Using the temporary "java.files" avoids an "argument list too long"
-# error on Windows when using *.java
-org/mozilla/xpcom/internal/.class_done: _javagen/org/mozilla/xpcom/internal/.iface_done ../interfaces/MozillaInterfaces.jar
-	@echo Compiling Java implementation classes
-	find _javagen -name "*.java" > java.files
-	$(JAVAC) $(JAVAC_FLAGS) \
-	  -classpath ".$(SEP)../interfaces/MozillaInterfaces.jar" \
-	  -d . -sourcepath _javagen @java.files
-	@touch $@
-
-$(JARFILE): org/mozilla/xpcom/internal/.class_done Makefile
-	$(JAR) cf $@ org
-
-$(JARFILE_SRC): $(JARFILE)
-	$(JAR) cf $@ -C _javagen org
-
-#libs:: $(JARFILE)
-#	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin
 jarfile:: $(JARFILE) $(JARFILE_SRC)
 	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin
-
