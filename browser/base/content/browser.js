@@ -6433,8 +6433,12 @@ var FeedHandler = {
     // Get the list of unique feeds, and if there's only one unique entry, 
     // show the feed in the browser rather than displaying a menu. 
     var feeds = this.harvestFeeds(feeds);
-    if (feeds.length == 1)
+    if (feeds.length == 1) {
+      var feedButton = document.getElementById("feed-button");
+      if (feedButton)
+        feedButton.setAttribute("feed", feeds[0].href);
       return false;
+    }
 
     // Build the menu showing the available feed choices for viewing. 
     for (var i = 0; i < feeds.length; ++i) {
