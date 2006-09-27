@@ -59,6 +59,7 @@
 #include "nsNativeCharsetUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "shlobj.h"
 
 #include <mbstring.h>
 
@@ -290,11 +291,9 @@ static SETTING gSettings[] = {
   //     firefox.exe\shell\safemode          (default)   REG_SZ  Firefox &Safe Mode
 };
 
- 
-#ifndef __shobjidl_h__
 
-// This block should be removed when our build environment
-// is migrated to the latest windows sdk.
+// Support for versions of shlobj.h that don't include the Vista API's
+#if !defined(IApplicationAssociationRegistration)
 
 typedef enum tagASSOCIATIONLEVEL
 {
@@ -585,10 +584,7 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   ::RegCloseKey(backupKey);
 
   // Refresh the Shell
-  ::SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, NULL,
-                       (LPARAM)"SOFTWARE\\Clients\\StartMenuInternet",
-                       SMTO_NORMAL|SMTO_ABORTIFHUNG,
-                       MOZ_HWND_BROADCAST_MSG_TIMEOUT, NULL);
+  SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, 0, 0);
   return NS_OK;
 }
 
