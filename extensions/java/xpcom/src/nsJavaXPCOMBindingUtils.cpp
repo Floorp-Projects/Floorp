@@ -266,35 +266,34 @@ InitializeJavaGlobals(JNIEnv *env)
     return PR_TRUE;
 
   jclass clazz;
-
   if (!(clazz = env->FindClass("java/lang/Object")) ||
       !(hashCodeMID = env->GetMethodID(clazz, "hashCode","()I")))
   {
-      return PR_FALSE;
+    goto init_error;
   }
 
   if (!(clazz = env->FindClass("java/lang/Boolean")) ||
       !(booleanValueMID = env->GetMethodID(clazz,"booleanValue","()Z")))
   {
-      return PR_FALSE;
+    goto init_error;
   }
 
   if (!(clazz = env->FindClass("java/lang/Character")) ||
       !(charValueMID = env->GetMethodID(clazz,"charValue","()C")))
   {
-      return PR_FALSE;
+    goto init_error;
   }
 
   if (!(clazz = env->FindClass("java/lang/Byte")) ||
       !(byteValueMID = env->GetMethodID(clazz,"byteValue","()B")))
   {
-      return PR_FALSE;
+    goto init_error;
   }
 
   if (!(clazz = env->FindClass("java/lang/Short")) ||
       !(shortValueMID = env->GetMethodID(clazz,"shortValue","()S")))
   {
-      return PR_FALSE;
+    goto init_error;
   }
 
   if (!(clazz = env->FindClass("java/lang/Integer")) ||
@@ -303,49 +302,50 @@ InitializeJavaGlobals(JNIEnv *env)
       !(intArrayClass = (jclass) env->NewGlobalRef(clazz)) ||
       !(intValueMID = env->GetMethodID(intClass,"intValue","()I")))
   {
-      return PR_FALSE;
+    goto init_error;
   }
 
   if (!(clazz = env->FindClass("java/lang/Long")) ||
       !(longValueMID = env->GetMethodID(clazz,"longValue","()J")))
   {
-      return PR_FALSE;
+    goto init_error;
   }
 
   if (!(clazz = env->FindClass("java/lang/Float")) ||
       !(floatValueMID = env->GetMethodID(clazz,"floatValue","()F")))
   {
-      return PR_FALSE;
+    goto init_error;
   }
 
   if (!(clazz = env->FindClass("java/lang/Double")) ||
       !(doubleValueMID = env->GetMethodID(clazz,"doubleValue","()D")))
   {
-      return PR_FALSE;
+    goto init_error;
   }
 
   if (!(clazz = env->FindClass("java/lang/String")) ||
       !(stringClass = (jclass) env->NewGlobalRef(clazz)))
   {
-      return PR_FALSE;
+    goto init_error;
   }
 
   if (!(clazz = env->FindClass("org/mozilla/xpcom/nsISupports")) ||
       !(nsISupportsClass = (jclass) env->NewGlobalRef(clazz)))
   {
-      return PR_FALSE;
+    goto init_error;
   }
 
   if (!(clazz = env->FindClass("org/mozilla/xpcom/XPCOMException")) ||
       !(xpcomExceptionClass = (jclass) env->NewGlobalRef(clazz)))
   {
-      return PR_FALSE;
+    goto init_error;
   }
 
 #ifdef DEBUG
   if (!(clazz = env->FindClass("java/lang/Class")) ||
-      !(getNameMID = env->GetMethodID(clazz, "getName","()Ljava/lang/String;"))) {
-      return PR_FALSE;
+      !(getNameMID = env->GetMethodID(clazz, "getName","()Ljava/lang/String;")))
+  {
+    goto init_error;
   }
 #endif
 
@@ -365,7 +365,7 @@ InitializeJavaGlobals(JNIEnv *env)
   gJAVAtoXPCOMBindings = PL_NewDHashTable(&java_to_xpcom_hash_ops, nsnull,
                                           sizeof(JavaXPCOMBindingEntry), 16);
   if (!gJAVAtoXPCOMBindings) {
-    return PR_FALSE;
+    goto init_error;
   }
 
   static PLDHashTableOps xpcom_to_java_hash_ops =
@@ -384,12 +384,17 @@ InitializeJavaGlobals(JNIEnv *env)
   gXPCOMtoJAVABindings = PL_NewDHashTable(&xpcom_to_java_hash_ops, nsnull,
                                           sizeof(JavaXPCOMBindingEntry), 16);
   if (!gXPCOMtoJAVABindings) {
-    return PR_FALSE;
+    goto init_error;
   }
 
   gInitialized = PR_TRUE;
-
   return PR_TRUE;
+
+init_error:
+  // If we encounter an error during initialization, then free any globals that
+  // were allocated, and return false.
+  FreeJavaGlobals(env);
+  return PR_FALSE;
 }
 
 /*************************
@@ -398,17 +403,35 @@ InitializeJavaGlobals(JNIEnv *env)
 void
 FreeJavaGlobals(JNIEnv* env)
 {
-  if (!gInitialized)
-    return;
+  if (intClass) {
+    env->DeleteGlobalRef(intClass);
+    intClass = nsnull;
+  }
+  if (intArrayClass) {
+    env->DeleteGlobalRef(intArrayClass);
+    intArrayClass = nsnull;
+  }
+  if (stringClass) {
+    env->DeleteGlobalRef(stringClass);
+    stringClass = nsnull;
+  }
+  if (nsISupportsClass) {
+    env->DeleteGlobalRef(nsISupportsClass);
+    nsISupportsClass = nsnull;
+  }
+  if (xpcomExceptionClass) {
+    env->DeleteGlobalRef(xpcomExceptionClass);
+    xpcomExceptionClass = nsnull;
+  }
 
-  env->DeleteGlobalRef(intClass);
-  env->DeleteGlobalRef(intArrayClass);
-  env->DeleteGlobalRef(stringClass);
-  env->DeleteGlobalRef(nsISupportsClass);
-  env->DeleteGlobalRef(xpcomExceptionClass);
-
-  PL_DHashTableDestroy(gJAVAtoXPCOMBindings);
-  PL_DHashTableDestroy(gXPCOMtoJAVABindings);
+  if (gJAVAtoXPCOMBindings) {
+    PL_DHashTableDestroy(gJAVAtoXPCOMBindings);
+    gJAVAtoXPCOMBindings = nsnull;
+  }
+  if (gXPCOMtoJAVABindings) {
+    PL_DHashTableDestroy(gXPCOMtoJAVABindings);
+    gXPCOMtoJAVABindings = nsnull;
+  }
 
   gInitialized = PR_FALSE;
 }
@@ -419,8 +442,8 @@ FreeJavaGlobals(JNIEnv* env)
  *********************************************************/
 JavaXPCOMInstance::JavaXPCOMInstance(nsISupports* aInstance,
                                      nsIInterfaceInfo* aIInfo)
-		: mInstance(aInstance),
-		  mIInfo(aIInfo)
+    : mInstance(aInstance),
+      mIInfo(aIInfo)
 {
   NS_ADDREF(mInstance);
 }
@@ -455,13 +478,10 @@ CreateJavaXPCOMInstance(nsISupports* aXPCOMObject, const nsIID* aIID)
 
 
 nsresult
-GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
-                                         const nsXPTMethodInfo *methodInfo,
-                                         const nsXPTParamInfo &paramInfo,
-                                         PRUint16 methodIndex,
-                                         nsXPTCMiniVariant *dispatchParams,
-                                         PRBool isFullVariantArray,
-                                         nsID &result)
+GetIIDForMethodParam(nsIInterfaceInfo *iinfo, const nsXPTMethodInfo *methodInfo,
+                     const nsXPTParamInfo &paramInfo, PRUint16 methodIndex,
+                     nsXPTCMiniVariant *dispatchParams,
+                     PRBool isFullVariantArray, nsID &result)
 {
   nsresult rv;
 
