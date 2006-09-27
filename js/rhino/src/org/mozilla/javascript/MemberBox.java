@@ -307,8 +307,9 @@ final class MemberBox implements Serializable
     outer:
         for (int i=0; i < parms.length; i++) {
             Class parm = parms[i];
-            out.writeBoolean(parm.isPrimitive());
-            if (!parm.isPrimitive()) {
+            boolean primitive = parm.isPrimitive();
+            out.writeBoolean(primitive);
+            if (!primitive) {
                 out.writeObject(parm);
                 continue;
             }
