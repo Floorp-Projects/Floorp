@@ -90,13 +90,13 @@ class nsRootAccessible : public nsDocAccessibleWrap,
 
   private:
     nsCOMPtr<nsITimer> mFireFocusTimer;
-    NS_IMETHOD HandleEventWithTarget(nsIDOMEvent* aEvent, 
-                             nsCOMPtr<nsIDOMNode> aTargetNode);
     static void FireFocusCallback(nsITimer *aTimer, void *aClosure);
     
   protected:
     nsresult AddEventListeners();
     nsresult RemoveEventListeners();
+    virtual nsresult HandleEventWithTarget(nsIDOMEvent* aEvent, 
+                                           nsIDOMNode* aTargetNode);
     static void GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNode);
     void TryFireEarlyLoadEvent(nsIDOMNode *aDocNode);
     void FireAccessibleFocusEvent(nsIAccessible *focusAccessible,

@@ -40,14 +40,12 @@
 
 // to get the mozView formal protocol, that all gecko's ChildViews implement.
 #import "mozView.h"
+#import "nsRoleMap.h"
 
 #include "nsRect.h"
 #include "nsCoord.h"
 
-#import "nsRoleMap.h"
-
 #include "nsIAccessible.h"
-
 
 // converts a screen-global point in the cocoa coordinate system (with origo in the bottom-left corner
 // of the screen), into a top-left screen point, that gecko can use.
@@ -96,6 +94,13 @@ ObjectOrUnignoredAncestor(id anObject)
 
 - (void)dealloc
 {
+  // post a notification that we've gone away, if we're not ignored.
+  // XXX: is this expensive perf-wise?
+  if (![self accessibilityIsIgnored]) {
+    NSAccessibilityPostNotification([self ourself],
+                                    NSAccessibilityUIElementDestroyedNotification);
+  }
+  
   [mChildren release];
   [super dealloc];
 }
@@ -104,7 +109,9 @@ ObjectOrUnignoredAncestor(id anObject)
 
 - (BOOL)accessibilityIsIgnored
 {
-  return mIsExpired;
+  // unknown (either unimplemented, or irrelevant) elements are marked as ignored
+  // as well as expired elements.
+  return mIsExpired || [[self role] isEqualToString:NSAccessibilityUnknownRole];
 }
 
 - (NSArray*)accessibilityAttributeNames
@@ -126,10 +133,9 @@ ObjectOrUnignoredAncestor(id anObject)
                                                            NSAccessibilityPositionAttribute,
                                                            NSAccessibilitySizeAttribute,
                                                            NSAccessibilityWindowAttribute,
-                                                           NSAccessibilityFocusedUIElementAttribute,
                                                            NSAccessibilityFocusedAttribute,
-                                                           NSAccessibilityTopLevelUIElementAttribute, // XXX: 10.4+ only!
-                                                           NSAccessibilityDescriptionAttribute, // XXX: 10.4+ only!
+                                                           kTopLevelUIElementAttribute,
+                                                           // kInstanceDescriptionAttribute, // XXX: not implemented yet
                                                            nil];
   }
 
@@ -150,8 +156,6 @@ ObjectOrUnignoredAncestor(id anObject)
   NSLog (@"(%@ responding to attr %@)", self, attribute);
 #endif
   
-  if ([attribute isEqualToString:NSAccessibilityDescriptionAttribute])
-    return [self customDescription];
   if ([attribute isEqualToString:NSAccessibilityPositionAttribute]) 
     return [self position];
   if ([attribute isEqualToString:NSAccessibilityRoleAttribute])
@@ -161,16 +165,14 @@ ObjectOrUnignoredAncestor(id anObject)
   if ([attribute isEqualToString:NSAccessibilityValueAttribute])
     return [self value];
   if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute])
-    return @""; // default to no role description
-  if ([attribute isEqualToString:NSAccessibilityFocusedUIElementAttribute])
-    return [self accessibilityFocusedUIElement];
+    return NSAccessibilityRoleDescription([self role], nil);
   if ([attribute isEqualToString:NSAccessibilityFocusedAttribute])
     return [NSNumber numberWithBool:[self isFocused]];
   if ([attribute isEqualToString:NSAccessibilitySizeAttribute])
     return [self size];
   if ([attribute isEqualToString:NSAccessibilityWindowAttribute])
     return [self window];
-  if ([attribute isEqualToString:NSAccessibilityTopLevelUIElementAttribute])
+  if ([attribute isEqualToString:kTopLevelUIElementAttribute])
     // most apps seem to return the window as the top level ui element attr.
     return [self window];
   if ([attribute isEqualToString:NSAccessibilityTitleAttribute])
@@ -405,11 +407,21 @@ ObjectOrUnignoredAncestor(id anObject)
   return (state & nsIAccessible::STATE_FOCUSABLE) != 0;
 }
 
-// should only be called if canBeFocused returns YES.
 - (BOOL)focus
 {
   nsresult rv = mGeckoAccessible->TakeFocus();
-  return NS_SUCCEEDED (rv);
+  return NS_SUCCEEDED(rv);
+}
+
+// The root accessible calls this when the focused node was
+// changed to us.
+- (void)didReceiveFocus
+{
+  #ifdef DEBUG_hakan
+    NSLog (@"%@ received focus!", self);
+  #endif
+  NSAccessibilityPostNotification([self ourself],
+                                  NSAccessibilityFocusedUIElementChangedNotification);
 }
 
 - (NSWindow*)window

@@ -42,6 +42,10 @@
 
 #import "mozAccessibleProtocol.h"
 
+// These constants are only defined in OS X SDK 10.4, so we define them in order
+// to be able to use for earlier OS versions.
+const NSString *kInstanceDescriptionAttribute = @"AXDescription";     // NSAccessibilityDescriptionAttribute
+const NSString *kTopLevelUIElementAttribute = @"AXTopLevelUIElement"; // NSAccessibilityTopLevelUIElementAttribute
 
 @class mozRootAccessible;
 
@@ -97,6 +101,9 @@
 
 // returns NO if for some reason we were unable to focus the element.
 - (BOOL)focus;
+
+// sends out a notification to listening accessible providers.
+- (void)didReceiveFocus;
 
 #pragma mark -
 

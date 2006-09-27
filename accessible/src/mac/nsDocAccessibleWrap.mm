@@ -38,7 +38,7 @@
 
 #include "nsDocAccessibleWrap.h"
 
-#import "mozDocAccessible.h"
+#import "mozAccessible.h"
 #import "mozAccessibleWrapper.h"
 
 nsDocAccessibleWrap::nsDocAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference *aShell): 
@@ -53,6 +53,26 @@ nsDocAccessibleWrap::~nsDocAccessibleWrap()
 NS_IMETHODIMP
 nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData)
 {
+  NS_ENSURE_ARG_POINTER(aAccessible);
+  
+  // ignore everything but focus-changed events for now.
+  if (aEvent != nsIAccessibleEvent::EVENT_FOCUS)
+    return NS_OK;
+  
+  // this will notify xpcom observers, before we notify the OS
+  nsDocAccessible::FireToolkitEvent(aEvent, aAccessible, aData);
+  
+  mozAccessible *nativeAcc = nil;
+  aAccessible->GetNativeInterface((void**)&nativeAcc);
+  if (!nativeAcc)
+    return NS_ERROR_FAILURE;
+  
+  switch (aEvent) {
+    case nsIAccessibleEvent::EVENT_FOCUS:
+      [nativeAcc didReceiveFocus];
+      break;
+  }
+  
   return NS_OK;
 }
 
