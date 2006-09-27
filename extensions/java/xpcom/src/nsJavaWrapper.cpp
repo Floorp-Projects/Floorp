@@ -926,8 +926,6 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
       LOG("\t Param %d: ", i);
       const nsXPTParamInfo &paramInfo = methodInfo->GetParam(i);
 
-      NS_ASSERTION(!paramInfo.IsDipper(), "Dipper!");
-
       if (!paramInfo.IsRetval() && !paramInfo.IsDipper()) {
         rv = SetupParams(env, env->GetObjectArrayElement(aParams, i), paramInfo,
                          methodInfo, iinfo, aMethodIndex, params, params[i]);
