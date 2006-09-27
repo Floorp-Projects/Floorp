@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -295,7 +295,7 @@ nsresult GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject,
 nsresult GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
                               const nsXPTMethodInfo *methodInfo,
                               const nsXPTParamInfo &paramInfo,
-                              PRUint16 methodIndex,
+                              PRUint8 paramType, PRUint16 methodIndex,
                               nsXPTCMiniVariant *dispatchParams,
                               PRBool isFullVariantArray,
                               nsID &result);
