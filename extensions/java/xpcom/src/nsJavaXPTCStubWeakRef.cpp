@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -56,17 +56,16 @@
  * finding an XPTCStub for the required IID.
  */
 
-nsJavaXPTCStubWeakRef::nsJavaXPTCStubWeakRef(JNIEnv* env, jobject aJavaObject,
+nsJavaXPTCStubWeakRef::nsJavaXPTCStubWeakRef(jobject aJavaObject,
                                              nsJavaXPTCStub* aXPTCStub)
-  : mJavaEnv(env)
-  , mXPTCStub(aXPTCStub)
+  : mXPTCStub(aXPTCStub)
 {
-  mWeakRef = mJavaEnv->NewWeakGlobalRef(aJavaObject);
+  mWeakRef = GetJNIEnv()->NewWeakGlobalRef(aJavaObject);
 }
 
 nsJavaXPTCStubWeakRef::~nsJavaXPTCStubWeakRef()
 {
-  mJavaEnv->DeleteWeakGlobalRef(mWeakRef);
+  GetJNIEnv()->DeleteWeakGlobalRef(mWeakRef);
   mXPTCStub->ReleaseWeakRef();
 }
 
@@ -83,7 +82,7 @@ nsJavaXPTCStubWeakRef::QueryReferent(const nsIID& aIID, void** aInstancePtr)
   // Is weak ref still valid?
   // We create a strong local ref to make sure Java object isn't garbage
   // collected during this call.
-  jobject javaObject = mJavaEnv->NewLocalRef(mWeakRef);
+  jobject javaObject = GetJNIEnv()->NewLocalRef(mWeakRef);
   if (!javaObject)
     return NS_ERROR_NULL_POINTER;
 
