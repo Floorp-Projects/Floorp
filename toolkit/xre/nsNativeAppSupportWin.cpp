@@ -719,50 +719,6 @@ nsNativeAppSupportWin::FindTopic( HSZ topic ) {
     return -1;
 }
 
-// Utility function to delete a registry subkey.
-static DWORD deleteKey( HKEY baseKey, const char *keyName ) {
-    // Make sure input subkey isn't null.
-    DWORD rc;
-    if ( keyName && ::strlen(keyName) ) {
-        // Open subkey.
-        HKEY key;
-        rc = ::RegOpenKeyEx( baseKey,
-                             keyName,
-                             0,
-                             KEY_ENUMERATE_SUB_KEYS | DELETE,
-                             &key );
-        // Continue till we get an error or are done.
-        while ( rc == ERROR_SUCCESS ) {
-            char subkeyName[_MAX_PATH];
-            DWORD len = sizeof subkeyName;
-            // Get first subkey name.  Note that we always get the
-            // first one, then delete it.  So we need to get
-            // the first one next time, also.
-            rc = ::RegEnumKeyEx( key,
-                                 0,
-                                 subkeyName,
-                                 &len,
-                                 0,
-                                 0,
-                                 0,
-                                 0 );
-            if ( rc == ERROR_NO_MORE_ITEMS ) {
-                // No more subkeys.  Delete the main one.
-                rc = ::RegDeleteKey( baseKey, keyName );
-                break;
-            } else if ( rc == ERROR_SUCCESS ) {
-                // Another subkey, delete it, recursively.
-                rc = deleteKey( key, subkeyName );
-            }
-        }
-        // Close the key we opened.
-        ::RegCloseKey( key );
-    } else {
-        rc = ERROR_BADKEY;
-    }
-    return rc;
-}
-
 
 // Start DDE server.
 //
