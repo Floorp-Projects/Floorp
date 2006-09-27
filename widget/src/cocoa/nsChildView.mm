@@ -2083,17 +2083,24 @@ void
 nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
 {
   *aAccessible = nsnull;
+  
+  nsCOMPtr<nsIAccessible> accessible = do_QueryReferent(mAccessible);
+  if (!mAccessible) {
+    // need to fetch the accessible anew, because it has gone away.
+    nsEventStatus status;
+    nsAccessibleEvent event(PR_TRUE, NS_GETACCESSIBLE, this);
+  
+    // maybe we can figure out a way to cache this, instead of re-sending
+    // the event down to gecko every time?
+    DispatchEvent(&event, status);
+  
+    // cache the accessible in our weak ptr
+    mAccessible = do_GetWeakReference(event.accessible);
+  }
+  
+  accessible = do_QueryReferent(mAccessible);
+  NS_IF_ADDREF(*aAccessible = accessible.get());
 
-  nsEventStatus status;
-  nsAccessibleEvent event(PR_TRUE, NS_GETACCESSIBLE, this);
-  
-  // maybe we can figure out a way to cache this, instead of re-sending
-  // the event down to gecko every time?
-  DispatchEvent(&event, status);
-  
-  // if the event returned an accessible, return it.
-  NS_IF_ADDREF(*aAccessible = event.accessible);
-  
   return;
 }
 #endif
