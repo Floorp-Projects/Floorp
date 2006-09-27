@@ -123,14 +123,14 @@ NS_IMETHODIMP nsMsgFilterList::SaveToFile(nsIOFileStream *stream)
 
 NS_IMETHODIMP nsMsgFilterList::EnsureLogFile()
 {
-  nsCOMPtr <nsIFileSpec> file;
+  nsCOMPtr <nsILocalFile> file;
   nsresult rv = GetLogFileSpec(getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv,rv);
 
   PRBool exists;
   rv = file->Exists(&exists);
   if (NS_SUCCEEDED(rv) && !exists) {
-    rv = file->Touch();
+    rv = file->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
     NS_ENSURE_SUCCESS(rv,rv);
   }
   return NS_OK;
@@ -142,11 +142,12 @@ nsresult nsMsgFilterList::TruncateLog()
   nsresult rv = SetLogStream(nsnull);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsCOMPtr <nsIFileSpec> file;
+  nsCOMPtr <nsILocalFile> file;
   rv = GetLogFileSpec(getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = file->Truncate(0);
+  file->Remove(PR_FALSE);
+  rv = file->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
   NS_ENSURE_SUCCESS(rv,rv);
   return rv;
 }
@@ -166,9 +167,9 @@ NS_IMETHODIMP nsMsgFilterList::ClearLog()
 }
 
 nsresult 
-nsMsgFilterList::GetLogFileSpec(nsIFileSpec **aFileSpec)
+nsMsgFilterList::GetLogFileSpec(nsILocalFile **aFile)
 {
-  NS_ENSURE_ARG_POINTER(aFileSpec);
+  NS_ENSURE_ARG_POINTER(aFile);
 
   // XXX todo
   // the path to the log file won't change
@@ -201,31 +202,41 @@ nsMsgFilterList::GetLogFileSpec(nsIFileSpec **aFileSpec)
     rv = m_folder->GetPath(getter_AddRefs(thisFolder));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr <nsIFileSpec> filterLogFile = do_CreateInstance(NS_FILESPEC_CONTRACTID, &rv);
+    nsFileSpec spec;
+    rv = thisFolder->GetFileSpec(&spec);
     NS_ENSURE_SUCCESS(rv, rv);
-    
-    rv = filterLogFile->FromFileSpec(thisFolder);
+
+    nsCOMPtr<nsILocalFile> filterLogFile;
+    rv = NS_FileSpecToIFile(&spec, getter_AddRefs(filterLogFile));
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     // NOTE:
     // we don't we need to call NS_MsgHashIfNecessary()
     // it's already been hashed, if necessary
-    nsXPIDLCString filterLogName;
-    rv = filterLogFile->GetLeafName(getter_Copies(filterLogName));
-    NS_ENSURE_SUCCESS(rv,rv);
-    
-    filterLogName.Append(".htm");
-    
-    rv = filterLogFile->SetLeafName(filterLogName.get());
+    nsAutoString filterLogName;
+    rv = filterLogFile->GetLeafName(filterLogName);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    NS_IF_ADDREF(*aFileSpec = filterLogFile);
+    filterLogName.Append(NS_LITERAL_STRING(".htm"));
+
+    rv = filterLogFile->SetLeafName(filterLogName);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    NS_IF_ADDREF(*aFile = filterLogFile);
   }
   else {
-    rv = server->GetLocalPath(aFileSpec);
+    nsCOMPtr<nsIFileSpec> fileSpec;
+    rv = server->GetLocalPath(getter_AddRefs(fileSpec));
     NS_ENSURE_SUCCESS(rv,rv);
-    
-    rv = (*aFileSpec)->AppendRelativeUnixPath("filterlog.html");
+
+    nsFileSpec spec;
+    rv = fileSpec->GetFileSpec(&spec);
+    NS_ENSURE_SUCCESS(rv,rv);
+ 
+    rv = NS_FileSpecToIFile(&spec, aFile);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = (*aFile)->AppendNative(NS_LITERAL_CSTRING("filterlog.html"));
     NS_ENSURE_SUCCESS(rv,rv);
   }
   return NS_OK;
@@ -236,13 +247,17 @@ nsMsgFilterList::GetLogURL(char **aLogURL)
 {
   NS_ENSURE_ARG_POINTER(aLogURL);
 
-  nsCOMPtr <nsIFileSpec> file;
+  nsCOMPtr <nsILocalFile> file;
   nsresult rv = GetLogFileSpec(getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv,rv);
   
-  rv = file->GetURLString(aLogURL);
+  nsCString url;
+  rv = NS_GetURLSpecFromFile(file, url);
   NS_ENSURE_SUCCESS(rv,rv);
-  return NS_OK;
+
+  *aLogURL = ToNewCString(url);
+
+  return *aLogURL ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
@@ -270,18 +285,8 @@ nsMsgFilterList::GetLogStream(nsIOutputStream **aLogStream)
   nsresult rv;
 
   if (!m_logStream) {
-    nsCOMPtr <nsIFileSpec> file;
-    rv = GetLogFileSpec(getter_AddRefs(file));
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsXPIDLCString nativePath;
-    rv = file->GetNativePath(getter_Copies(nativePath));
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsCOMPtr <nsILocalFile> logFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = logFile->InitWithNativePath(nsDependentCString(nativePath));
+    nsCOMPtr <nsILocalFile> logFile;
+    rv = GetLogFileSpec(getter_AddRefs(logFile));
     NS_ENSURE_SUCCESS(rv,rv);
 
     // append to the end of the log file

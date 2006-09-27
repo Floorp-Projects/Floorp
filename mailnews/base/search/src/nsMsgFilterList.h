@@ -44,6 +44,7 @@
 #include "nsIMsgFilterList.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
+#include "nsILocalFile.h"
 #include "nsIFileSpec.h"
 #include "nsIOutputStream.h"
 
@@ -105,7 +106,7 @@ protected:
 
 private:
   nsresult TruncateLog();
-  nsresult GetLogFileSpec(nsIFileSpec **aFileSpec);
+  nsresult GetLogFileSpec(nsILocalFile **aFileSpec);
   nsCOMPtr<nsIOutputStream> m_logStream;
 };
 
