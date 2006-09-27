@@ -755,6 +755,14 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
       }
     }
     break;
+
+    case nsXPTType::T_ARRAY:
+      NS_WARNING("array types are not yet supported");
+      return NS_ERROR_NOT_IMPLEMENTED;
+
+    default:
+      NS_WARNING("unexpected parameter type");
+      return NS_ERROR_UNEXPECTED;
   }
 
   return rv;
@@ -770,9 +778,9 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
           nsXPTCVariant &aVariant, jobject* result)
 {
   nsresult rv = NS_OK;
-  const nsXPTType &type = aParamInfo.GetType();
 
-  switch (type.TagPart())
+  PRUint8 type = aParamInfo.GetType().TagPart();
+  switch (type)
   {
     case nsXPTType::T_I8:
     case nsXPTType::T_U8:
@@ -816,8 +824,8 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_CHAR_STR:
     {
-      if (aVariant.ptr) {
-        *result = env->NewStringUTF((const char*) aVariant.ptr);
+      if (aVariant.val.p) {
+        *result = env->NewStringUTF((const char*) aVariant.val.p);
         if (*result == nsnull) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
@@ -828,9 +836,9 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_WCHAR_STR:
     {
-      if (aVariant.ptr) {
-        PRUint32 length = nsCRT::strlen((const PRUnichar*) aVariant.ptr);
-        *result = env->NewString((const jchar*) aVariant.ptr, length);
+      if (aVariant.val.p) {
+        PRUint32 length = nsCRT::strlen((const PRUnichar*) aVariant.val.p);
+        *result = env->NewString((const jchar*) aVariant.val.p, length);
         if (*result == nsnull) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
@@ -841,8 +849,8 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_IID:
     {
-      if (aVariant.ptr) {
-        nsID* iid = (nsID*) aVariant.ptr;
+      if (aVariant.val.p) {
+        nsID* iid = (nsID*) aVariant.val.p;
         char* iid_str = iid->ToString();
         if (iid_str) {
           *result = env->NewStringUTF(iid_str);
@@ -893,8 +901,8 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_ASTRING:
     case nsXPTType::T_DOMSTRING:
     {
-      if (aVariant.ptr) {
-        nsString* str = NS_STATIC_CAST(nsString*, aVariant.ptr);
+      if (aVariant.val.p) {
+        nsString* str = NS_STATIC_CAST(nsString*, aVariant.val.p);
         *result = env->NewString(str->get(), str->Length());
         if (*result == nsnull) {
           rv = NS_ERROR_OUT_OF_MEMORY;
@@ -908,8 +916,8 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_UTF8STRING:
     case nsXPTType::T_CSTRING:
     {
-      if (aVariant.ptr) {
-        nsCString* str = NS_STATIC_CAST(nsCString*, aVariant.ptr);
+      if (aVariant.val.p) {
+        nsCString* str = NS_STATIC_CAST(nsCString*, aVariant.val.p);
         *result = env->NewStringUTF(str->get());
         if (*result == nsnull) {
           rv = NS_ERROR_OUT_OF_MEMORY;
@@ -1095,26 +1103,24 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
         {
           case nsXPTType::T_ASTRING:
           case nsXPTType::T_DOMSTRING:
-            params[i].val.p = params[i].ptr = new nsString();
+            params[i].val.p = new nsString();
             if (params[i].val.p == nsnull) {
               rv = NS_ERROR_OUT_OF_MEMORY;
               break;
             }
             params[i].type = type;
-            params[i].flags = nsXPTCVariant::PTR_IS_DATA |
-                              nsXPTCVariant::VAL_IS_DOMSTR;
+            params[i].flags = nsXPTCVariant::VAL_IS_DOMSTR;
             break;
 
           case nsXPTType::T_UTF8STRING:
           case nsXPTType::T_CSTRING:
-            params[i].val.p = params[i].ptr = new nsCString();
+            params[i].val.p = new nsCString();
             if (params[i].val.p == nsnull) {
               rv = NS_ERROR_OUT_OF_MEMORY;
               break;
             }
             params[i].type = type;
-            params[i].flags = nsXPTCVariant::PTR_IS_DATA |
-                              nsXPTCVariant::VAL_IS_CSTR;
+            params[i].flags = nsXPTCVariant::VAL_IS_CSTR;
             break;
 
           default:
