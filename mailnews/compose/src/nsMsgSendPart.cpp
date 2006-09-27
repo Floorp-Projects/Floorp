@@ -751,8 +751,20 @@ nsMsgSendPart::Write()
     while (!myStream.eof()) 
     {
       if ((status = myStream.read(buffer, MIME_BUFFER_SIZE)) < 0)
-        goto FAIL;
-      
+      {  
+        nsCOMPtr<nsIMsgSendReport> sendReport;
+        m_state->GetSendReport(getter_AddRefs(sendReport));
+        if (sendReport)
+        {
+          nsAutoString error_msg;
+          nsAutoString path;
+          NS_CopyNativeToUnicode(nsDependentCString(m_filespec->GetNativePathCString()), path);
+          nsMsgBuildErrorMessageByID(NS_MSG_UNABLE_TO_OPEN_FILE, error_msg, &path, nsnull);
+          sendReport->SetMessage(nsIMsgSendReport::process_Current, error_msg.get(), PR_FALSE);
+          status = NS_MSG_UNABLE_TO_OPEN_FILE;
+          goto FAIL;
+        }
+      }
       status = PushBody(buffer, status);
       if (status < 0)
         goto FAIL;
