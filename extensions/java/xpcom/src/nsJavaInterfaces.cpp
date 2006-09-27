@@ -51,8 +51,8 @@ PRBool gEmbeddingInitialized = PR_FALSE;
 
 
 extern "C" JNIEXPORT void JNICALL
-XPCOM_NATIVE(NS_1InitEmbedding) (JNIEnv* env, jclass, jstring aMozBinDirectory,
-                                 jint aAppFileLocProvider)
+XPCOM_NATIVE(NS_1InitEmbedding) (JNIEnv* env, jclass, jobject aMozBinDirectory,
+                                 jobject aAppFileLocProvider)
 {
   if (!InitializeJavaGlobals(env)) {
     FreeJavaGlobals(env);
@@ -64,14 +64,16 @@ XPCOM_NATIVE(NS_1InitEmbedding) (JNIEnv* env, jclass, jstring aMozBinDirectory,
   nsCOMPtr<nsILocalFile> directory;
   if (aMozBinDirectory)
   {
-    jboolean isCopy;
-    const PRUnichar* buf = env->GetStringChars(aMozBinDirectory, &isCopy);
-    nsAutoString path(buf);
-    rv = NS_NewLocalFile(path, PR_TRUE, getter_AddRefs(directory));
-    if (NS_FAILED(rv)) {
-      ThrowXPCOMException(env, rv);
+    // Find corresponding XPCOM object
+    void* xpcomObj = GetMatchingXPCOMObject(env, aMozBinDirectory);
+    NS_ASSERTION(xpcomObj != nsnull, "Failed to get matching XPCOM object");
+    if (xpcomObj == nsnull) {
+      ThrowXPCOMException(env, 0);
       return;
     }
+
+    NS_ASSERTION(!IsXPTCStub(xpcomObj), "Expected JavaXPCOMInstance, but got nsJavaXPTCStub");
+    directory = do_QueryInterface(((JavaXPCOMInstance*) xpcomObj)->GetInstance());
   }
 
   /* XXX How do we handle AppFileLocProvider, if we can't create any of the
@@ -112,13 +114,13 @@ extern "C" JNIEXPORT jobject JNICALL
 XPCOM_NATIVE(NS_1NewLocalFile) (JNIEnv *env, jclass, jstring aPath,
                                 jboolean aFollowLinks)
 {
-  jobject java_stub = nsnull;
-
-  // XXX For now, return if we haven't called NS_InitEmbedding yet
-  if (!gEmbeddingInitialized) {
+  if (!InitializeJavaGlobals(env)) {
+    FreeJavaGlobals(env);
     ThrowXPCOMException(env, 0);
     return nsnull;
   }
+
+  jobject java_stub = nsnull;
 
   // Create a Mozilla string from the jstring
   jboolean isCopy;
@@ -139,7 +141,7 @@ XPCOM_NATIVE(NS_1NewLocalFile) (JNIEnv *env, jclass, jstring aPath,
   if (NS_SUCCEEDED(rv)) {
     // wrap xpcom instance
     JavaXPCOMInstance* inst;
-    inst = CreateJavaXPCOMInstance(file, &NS_GET_IID(nsILocalFile));
+    inst = CreateJavaXPCOMInstance(file, nsnull);
 
     if (inst) {
       // create java stub
