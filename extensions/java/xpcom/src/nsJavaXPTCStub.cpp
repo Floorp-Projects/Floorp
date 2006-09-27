@@ -43,6 +43,7 @@
 #include "nsString.h"
 #include "nsString.h"
 #include "nsCRT.h"
+#include "nsServiceManagerUtils.h"
 
 
 nsJavaXPTCStub::nsJavaXPTCStub(jobject aJavaObject, nsIInterfaceInfo *aIInfo)
@@ -210,6 +211,8 @@ nsJavaXPTCStub::DeleteStrongRef()
 NS_IMETHODIMP
 nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
 {
+  nsresult rv;
+
   LOG(("JavaStub::QueryInterface()\n"));
   *aInstancePtr = nsnull;
   nsJavaXPTCStub *master = mMaster ? mMaster : this;
@@ -289,10 +292,12 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
     return NS_NOINTERFACE;
 
   // Get interface info for new java object
-  nsCOMPtr<nsIInterfaceInfoManager> iim =
-    getter_AddRefs(XPTI_GetInterfaceInfoManager());
+  nsCOMPtr<nsIInterfaceInfoManager>
+    iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIInterfaceInfo> iinfo;
-  nsresult rv = iim->GetInfoForIID(&aIID, getter_AddRefs(iinfo));
+  rv = iim->GetInfoForIID(&aIID, getter_AddRefs(iinfo));
   if (NS_FAILED(rv))
     return rv;
 
@@ -897,8 +902,11 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
 
       // get name of interface
       char* iface_name = nsnull;
-      nsCOMPtr<nsIInterfaceInfoManager> iim =
-        getter_AddRefs(XPTI_GetInterfaceInfoManager());
+      nsCOMPtr<nsIInterfaceInfoManager>
+        iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID, &rv));
+      if (NS_FAILED(rv))
+        break;
+
       rv = iim->GetNameForIID(&iid, &iface_name);
       if (NS_FAILED(rv) || !iface_name)
         break;
@@ -1125,8 +1133,11 @@ nsJavaXPTCStub::GetRetvalSig(const nsXPTParamInfo* aParamInfo,
 
       // get name of interface
       char* iface_name = nsnull;
-      nsCOMPtr<nsIInterfaceInfoManager> iim =
-        getter_AddRefs(XPTI_GetInterfaceInfoManager());
+      nsCOMPtr<nsIInterfaceInfoManager>
+        iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID, &rv));
+      if (NS_FAILED(rv))
+        break;
+
       rv = iim->GetNameForIID(&iid, &iface_name);
       if (NS_FAILED(rv) || !iface_name)
         break;
