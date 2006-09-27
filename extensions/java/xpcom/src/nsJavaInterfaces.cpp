@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsJavaInterfaces.h"
 #include "nsJavaWrapper.h"
 #include "nsJavaXPCOMBindingUtils.h"
 #include "nsJavaXPTCStub.h"
@@ -49,9 +50,6 @@
 #include "nsIEventQueueService.h"
 #include "nsXULAppAPI.h"
 #include "nsILocalFile.h"
-
-#define GRE_NATIVE(func) Java_org_mozilla_xpcom_internal_GREImpl_##func
-#define XPCOM_NATIVE(func) Java_org_mozilla_xpcom_internal_XPCOMImpl_##func
 
 
 nsresult
@@ -89,9 +87,9 @@ InitEmbedding_Impl(JNIEnv* env, jobject aLibXULDirectory,
   return rv;
 }
 
-extern "C" JX_EXPORT void JNICALL
-GRE_NATIVE(initEmbeddingNative) (JNIEnv* env, jobject, jobject aLibXULDirectory,
-                                 jobject aAppDirectory, jobject aAppDirProvider)
+extern "C" NS_EXPORT void
+GRE_NATIVE(initEmbedding) (JNIEnv* env, jobject, jobject aLibXULDirectory,
+                           jobject aAppDirectory, jobject aAppDirProvider)
 {
   nsresult rv = InitEmbedding_Impl(env, aLibXULDirectory, aAppDirectory,
                                    aAppDirProvider);
@@ -102,7 +100,7 @@ GRE_NATIVE(initEmbeddingNative) (JNIEnv* env, jobject, jobject aLibXULDirectory,
   }
 }
 
-extern "C" JX_EXPORT void JNICALL
+extern "C" NS_EXPORT void
 GRE_NATIVE(termEmbedding) (JNIEnv *env, jobject)
 {
   // Free globals before calling XRE_TermEmbedding(), since we need some
@@ -158,7 +156,7 @@ InitXPCOM_Impl(JNIEnv* env, jobject aMozBinDirectory,
   return rv;
 }
 
-extern "C" JX_EXPORT jobject JNICALL
+extern "C" NS_EXPORT jobject
 XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jobject, jobject aMozBinDirectory,
                          jobject aAppFileLocProvider)
 {
@@ -173,7 +171,7 @@ XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jobject, jobject aMozBinDirectory,
   return nsnull;
 }
 
-extern "C" JX_EXPORT void JNICALL
+extern "C" NS_EXPORT void
 XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jobject, jobject aServMgr)
 {
   nsresult rv;
@@ -202,7 +200,7 @@ XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jobject, jobject aServMgr)
     ThrowException(env, rv, "NS_ShutdownXPCOM failed");
 }
 
-extern "C" JX_EXPORT jobject JNICALL
+extern "C" NS_EXPORT jobject
 XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jobject, jstring aPath,
                             jboolean aFollowLinks)
 {
@@ -233,7 +231,7 @@ XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jobject, jstring aPath,
   return nsnull;
 }
 
-extern "C" JX_EXPORT jobject JNICALL
+extern "C" NS_EXPORT jobject
 XPCOM_NATIVE(getComponentManager) (JNIEnv *env, jobject)
 {
   // Call XPCOM method
@@ -252,7 +250,7 @@ XPCOM_NATIVE(getComponentManager) (JNIEnv *env, jobject)
   return nsnull;
 }
 
-extern "C" JX_EXPORT jobject JNICALL
+extern "C" NS_EXPORT jobject
 XPCOM_NATIVE(getComponentRegistrar) (JNIEnv *env, jobject)
 {
   // Call XPCOM method
@@ -271,7 +269,7 @@ XPCOM_NATIVE(getComponentRegistrar) (JNIEnv *env, jobject)
   return nsnull;
 }
 
-extern "C" JX_EXPORT jobject JNICALL
+extern "C" NS_EXPORT jobject
 XPCOM_NATIVE(getServiceManager) (JNIEnv *env, jobject)
 {
   // Call XPCOM method
