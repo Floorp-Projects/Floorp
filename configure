@@ -217,9 +217,9 @@ ac_help="$ac_help
 ac_help="$ac_help
   --disable-mathml        Disable MathML support"
 ac_help="$ac_help
-  --enable-canvas          Enable html:canvas feature"
+  --disable-canvas          Disable html:canvas feature"
 ac_help="$ac_help
-  --enable-svg            Enable SVG support"
+  --disable-svg            Disable SVG support"
 ac_help="$ac_help
   --disable-svg-foreignobject
                         Disable SVG <foreignObject> support"
@@ -15573,16 +15573,16 @@ fi
 # Check whether --enable-canvas or --disable-canvas was given.
 if test "${enable_canvas+set}" = set; then
   enableval="$enable_canvas"
-  if test "$enableval" = "yes"; then
-    MOZ_ENABLE_CANVAS=1
-  elif test "$enableval" = "no"; then
-    MOZ_ENABLE_CANVAS= 
+  if test "$enableval" = "no"; then
+    MOZ_ENABLE_CANVAS=
+  elif test "$enableval" = "yes"; then
+    MOZ_ENABLE_CANVAS=1 
   else
     { echo "configure: error: Option, canvas, does not take an argument ($enableval)." 1>&2; exit 1; }
   fi
 fi
 
-if test "$MOZ_ENABLE_CANVAS"; then
+if test -n "$MOZ_ENABLE_CANVAS"; then
     cat >> confdefs.h <<\EOF
 #define MOZ_ENABLE_CANVAS 1
 EOF
@@ -15593,10 +15593,10 @@ fi
 # Check whether --enable-svg or --disable-svg was given.
 if test "${enable_svg+set}" = set; then
   enableval="$enable_svg"
-  if test "$enableval" = "yes"; then
-    MOZ_SVG=1
-  elif test "$enableval" = "no"; then
-    MOZ_SVG= 
+  if test "$enableval" = "no"; then
+    MOZ_SVG=
+  elif test "$enableval" = "yes"; then
+    MOZ_SVG=1 
   else
     { echo "configure: error: Option, svg, does not take an argument ($enableval)." 1>&2; exit 1; }
   fi
