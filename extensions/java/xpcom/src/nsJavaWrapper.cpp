@@ -572,14 +572,15 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
         if (uniLength > 0) {
           if (aType == nsXPTType::T_CHAR_STR) {
             jsize utf8Length = env->GetStringUTFLength(data);
-            buf = nsMemory::Alloc(utf8Length + 1);
+            buf = nsMemory::Alloc((utf8Length + 1) * sizeof(char));
             if (!buf) {
               rv = NS_ERROR_OUT_OF_MEMORY;
               break;
             }
 
-            env->GetStringUTFRegion(data, 0, uniLength, (char*) buf);
-            ((char*)buf)[utf8Length] = '\0';
+            char* char_str = NS_STATIC_CAST(char*, buf);
+            env->GetStringUTFRegion(data, 0, uniLength, char_str);
+            char_str[utf8Length] = '\0';
 
           } else {  // if T_WCHAR_STR
             buf = nsMemory::Alloc((uniLength + 1) * sizeof(jchar));
@@ -588,8 +589,9 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
               break;
             }
 
-            env->GetStringRegion(data, 0, uniLength, (jchar*) buf);
-            ((jchar*)buf)[uniLength] = '\0';
+            jchar* jchar_str = NS_STATIC_CAST(jchar*, buf);
+            env->GetStringRegion(data, 0, uniLength, jchar_str);
+            jchar_str[uniLength] = '\0';
           }
         } else {
           // create empty string
@@ -1075,7 +1077,10 @@ FinalizeParams(JNIEnv *env, const nsXPTParamInfo &aParamInfo, PRUint8 aType,
       }
 
       // Ordinarily, we would delete 'iid' here.  But we cannot do that until
-      // we've handled all of the params.  See comment in CallXPCOMMethod
+      // we've handled all of the params.  See comment in CallXPCOMMethod.
+      // We can safely delete array elements, though.
+      if (aIsArrayElement)
+        delete iid;
 
       break;
     }
@@ -1217,6 +1222,18 @@ FinalizeParams(JNIEnv *env, const nsXPTParamInfo &aParamInfo, PRUint8 aType,
       }
 
       // cleanup
+      // If this is not an out param or if the invokeResult is a failure case,
+      // then the array elements have not been cleaned up.  Do so now.
+      if (!aParamInfo.IsOut() || NS_FAILED(aInvokeResult)) {
+        nsXPTCVariant var;
+        for (PRUint32 i = 0; i < aArraySize; i++) {
+          rv = GetNativeArrayElement(aArrayType, aVariant.val.p, i, &var);
+          if (NS_SUCCEEDED(rv)) {
+            FinalizeParams(env, aParamInfo, aArrayType, var, aIID, PR_TRUE,
+                           0, 0, i, NS_ERROR_FAILURE, nsnull);
+          }
+        }
+      }
       PR_Free(aVariant.val.p);
       break;
     }
