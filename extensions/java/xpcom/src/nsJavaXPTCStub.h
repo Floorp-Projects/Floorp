@@ -43,12 +43,16 @@
 #include "nsVoidArray.h"
 #include "nsIInterfaceInfo.h"
 #include "nsCOMPtr.h"
+#include "nsWeakReference.h"
+#include "nsJavaXPTCStubWeakRef.h"
 
 
-class nsJavaXPTCStub : public nsXPTCStubBase
+class nsJavaXPTCStub : public nsXPTCStubBase,
+                       public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSISUPPORTSWEAKREFERENCE
 
   nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject, nsIInterfaceInfo *aIInfo);
 
