@@ -334,7 +334,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
       void* xpcom_obj;
       if (java_obj) {
         // Check if we already have a corresponding XPCOM object
-        void* inst = GetMatchingXPCOMObject(env, java_obj);
+        void* inst = gBindings->GetXPCOMObject(env, java_obj);
 
         // Get IID for this param
         nsID iid;
@@ -366,7 +366,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
             break;
           }
           inst = SetAsXPTCStub(xpcomStub);
-          AddJavaXPCOMBinding(env, java_obj, inst);
+          gBindings->AddBinding(env, java_obj, inst);
         }
 
         if (isWeakRef) {
@@ -670,7 +670,7 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
         jobject java_obj = nsnull;
         if (xpcom_obj) {
           // Find matching Java object for given xpcom object
-          java_obj = GetMatchingJavaObject(env, xpcom_obj);
+          java_obj = gBindings->GetJavaObject(env, xpcom_obj);
 
           // If no matching Java object exists, create one
           if (java_obj == nsnull) {
@@ -699,7 +699,7 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
 
             if (java_obj) {
               // Associate XPCOM object w/ Java stub
-              AddJavaXPCOMBinding(env, java_obj, inst);
+              gBindings->AddBinding(env, java_obj, inst);
             }
           }
         }
@@ -889,7 +889,7 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_INTERFACE_IS:
     {
       if (aVariant.val.p) {
-        jobject java_obj = GetMatchingJavaObject(env, aVariant.val.p);
+        jobject java_obj = gBindings->GetJavaObject(env, aVariant.val.p);
 
         if (java_obj == nsnull) {
           nsID iid;
@@ -914,10 +914,9 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
           java_obj = CreateJavaWrapper(env, iface_name);
 
           if (java_obj)
-            AddJavaXPCOMBinding(env, java_obj, inst);
+            gBindings->AddBinding(env, java_obj, inst);
         }
 
-        // XXX not sure if this is necessary
         // If returned object is an nsJavaXPTCStub, release it.
         nsISupports* xpcom_obj = NS_STATIC_CAST(nsISupports*, aVariant.val.p);
         nsJavaXPTCStub* stub = nsnull;
@@ -989,7 +988,7 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
                 jint aMethodIndex, jobjectArray aParams, jvalue &aResult)
 {
   // Find corresponding XPCOM object
-  void* xpcomObj = GetMatchingXPCOMObject(env, aJavaObject);
+  void* xpcomObj = gBindings->GetXPCOMObject(env, aJavaObject);
   if (xpcomObj == nsnull) {
     ThrowException(env, 0, "Failed to get matching XPCOM object");
     return;
@@ -1008,7 +1007,7 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
     return;
   }
 
-#ifdef DEBUG
+#ifdef DEBUG_pedemonte
   const char* ifaceName;
   iinfo->GetNameShared(&ifaceName);
   LOG(("=> Calling %s::%s()\n", ifaceName, methodInfo->GetName()));
