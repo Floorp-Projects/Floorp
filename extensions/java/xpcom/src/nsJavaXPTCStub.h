@@ -53,6 +53,8 @@
 class nsJavaXPTCStub : public nsXPTCStubBase,
                        public nsSupportsWeakReference
 {
+  friend class nsJavaXPTCStubWeakRef;
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISUPPORTSWEAKREFERENCE
@@ -76,14 +78,23 @@ public:
   jobject GetJavaObject();
 
 private:
-//  NS_HIDDEN ~JavaStub();
+  NS_IMETHOD_(nsrefcnt) AddRefInternal();
+  NS_IMETHOD_(nsrefcnt) ReleaseInternal();
+
+  // Deletes this object and its members.  Called by ReleaseInternal() and
+  // ReleaseWeakRef().
+  void Destroy();
+
+  // When a nsJavaXPTCStubWeakRef associated with this object is released, it
+  // calls this function to let this object know that there is one less weak
+  // ref.  If there are no more weakrefs referencing this object, and no one
+  // holds a strong ref, then this function takes care of deleting the object.
+  void ReleaseWeakRef();
 
   // returns a weak reference to a child supporting the specified interface
-//  NS_HIDDEN_(JavaStub *) FindStubSupportingIID(const nsID &aIID);
   nsJavaXPTCStub * FindStubSupportingIID(const nsID &aIID);
 
   // returns true if this stub supports the specified interface
-//  NS_HIDDEN_(PRBool) SupportsIID(const nsID &aIID);
   PRBool SupportsIID(const nsID &aIID);
 
   nsresult SetupJavaParams(const nsXPTParamInfo &aParamInfo,
@@ -103,23 +114,14 @@ private:
   nsresult SetXPCOMRetval();
 
   JNIEnv*                     mJavaEnv;
-  jobject                     mJavaObject;
+  jweak                       mJavaWeakRef;
+  jobject                     mJavaStrongRef;
   nsCOMPtr<nsIInterfaceInfo>  mIInfo;
 
   nsVoidArray     mChildren; // weak references (cleared by the children)
   nsJavaXPTCStub *mMaster;   // strong reference
+
+  nsAutoRefCnt    mWeakRefCnt;  // count for number of associated weak refs
 };
-
-inline void* SetAsXPTCStub(nsJavaXPTCStub* ptr)
-  { NS_PRECONDITION(ptr, "null pointer");
-    return (void*) (((unsigned long) ptr) | 0x1); }
-
-inline PRBool IsXPTCStub(void* ptr)
-  { NS_PRECONDITION(ptr, "null pointer");
-    return ((unsigned long) ptr) & 0x1; }
-
-inline nsJavaXPTCStub* GetXPTCStubAddr(void* ptr)
-  { NS_PRECONDITION(ptr, "null pointer");
-    return (nsJavaXPTCStub*) (((unsigned long) ptr) & ~0x1); }
 
 #endif // _nsJavaXPTCStub_h_
