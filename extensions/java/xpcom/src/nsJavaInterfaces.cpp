@@ -82,8 +82,8 @@ GECKO_NATIVE(initEmbedding) (JNIEnv* env, jclass, jobject aMozBinDirectory,
     }
   }
 
-  FreeJavaGlobals(env);
   ThrowXPCOMException(env, NS_FAILED(rv) ? rv : NS_ERROR_FAILURE);
+  FreeJavaGlobals(env);
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -142,8 +142,8 @@ XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jclass, jobject aMozBinDirectory,
     }
   }
 
-  FreeJavaGlobals(env);
   ThrowXPCOMException(env, NS_FAILED(rv) ? rv : NS_ERROR_FAILURE);
+  FreeJavaGlobals(env);
   return nsnull;
 }
 
