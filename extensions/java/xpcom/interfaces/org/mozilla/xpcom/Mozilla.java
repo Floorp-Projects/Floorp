@@ -116,7 +116,13 @@ public class Mozilla implements IGRE, IXPCOM, IXPCOMError {
       return null;
     }
 
-    // search for GRE in platform specific locations
+    // Search for GRE in platform specific locations.  We want a GRE that
+    // supports Java, so we look for the "javaxpcom" property by default.
+    if (aProperties == null) {
+      aProperties = new Properties();
+    }
+    aProperties.setProperty("javaxpcom", "1");
+
     String osName = System.getProperty("os.name").toLowerCase();
     if (osName.startsWith("mac os x")) {
       grePath = getGREPathMacOSX(aVersions);
@@ -194,6 +200,9 @@ public class Mozilla implements IGRE, IXPCOM, IXPCOMError {
             File xpcomLib = new File(xulDir, "libxpcom.dylib");
             if (xpcomLib.canRead()) {
               File grePath = xpcomLib.getCanonicalFile().getParentFile();
+
+              // Since GRE Properties aren't supported on Mac OS X, we check
+              // for the existence of the "javaxpcom.jar" file in the GRE.
               File jar = new File(grePath, JAVAXPCOM_JAR);
               if (jar.canRead()) {
                 // found GRE
@@ -224,6 +233,9 @@ public class Mozilla implements IGRE, IXPCOM, IXPCOMError {
     for (int i = 0; i < files.length; i++) {
       if (checkVersion(files[i].getName(), aVersions)) {
         File xpcomLib = new File(files[i], "libxpcom.dylib");
+
+        // Since GRE Properties aren't supported on Mac OS X, we check
+        // for the existence of the "javaxpcom.jar" file in the GRE.
         File jar = new File(files[i], JAVAXPCOM_JAR);
         if (xpcomLib.canRead() && jar.canRead()) {
           return files[i];
@@ -382,8 +394,7 @@ public class Mozilla implements IGRE, IXPCOM, IXPCOMError {
         File grePath = new File(pathStr);
         if (grePath.exists()) {
           File xpcomLib = new File(grePath, "xpcom.dll");
-          File jar = new File(grePath, JAVAXPCOM_JAR);
-          if (xpcomLib.canRead() && jar.canRead()) {
+          if (xpcomLib.canRead()) {
             // found a good GRE
             return grePath;
           }
@@ -499,8 +510,7 @@ public class Mozilla implements IGRE, IXPCOM, IXPCOMError {
         File grePath = new File(pathStr);
         if (grePath.exists()) {
           File xpcomLib = new File(grePath, "libxpcom.so");
-          File jar = new File(grePath, JAVAXPCOM_JAR);
-          if (xpcomLib.canRead() && jar.canRead()) {
+          if (xpcomLib.canRead()) {
             // found a good GRE
             return grePath;
           }
