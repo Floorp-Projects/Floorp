@@ -2089,9 +2089,6 @@ nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
     // need to fetch the accessible anew, because it has gone away.
     nsEventStatus status;
     nsAccessibleEvent event(PR_TRUE, NS_GETACCESSIBLE, this);
-  
-    // maybe we can figure out a way to cache this, instead of re-sending
-    // the event down to gecko every time?
     DispatchEvent(&event, status);
   
     // cache the accessible in our weak ptr
