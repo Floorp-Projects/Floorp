@@ -110,7 +110,10 @@ extern NativeToJavaProxyMap* gNativeToJavaProxyMap;
 class JavaToXPTCStubMap;
 extern JavaToXPTCStubMap* gJavaToXPTCStubMap;
 
-extern PRLock* gJavaXPCOMLock;
+// The Java garbage collector runs in a separate thread.  Since it calls the
+// finalizeProxy() function in nsJavaWrapper.cpp, we need to make sure that
+// all the structures touched by finalizeProxy() are multithread aware.
+extern PRMonitor* gJavaXPCOMMonitor;
 
 /**
  * Initialize global structures used by Javaconnect.
@@ -154,6 +157,11 @@ private:
  */
 class NativeToJavaProxyMap
 {
+  friend PLDHashOperator DestroyJavaProxyMappingEnum(PLDHashTable* aTable,
+                                                     PLDHashEntryHdr* aHeader,
+                                                     PRUint32 aNumber,
+                                                     void* aData);
+
 protected:
   struct ProxyList
   {
@@ -179,9 +187,15 @@ public:
     : mHashTable(nsnull)
   { }
 
-  ~NativeToJavaProxyMap();
+  ~NativeToJavaProxyMap()
+  {
+    NS_ASSERTION(mHashTable == nsnull,
+                 "MUST call Destroy() before deleting object");
+  }
 
   nsresult Init();
+
+  nsresult Destroy(JNIEnv* env);
 
   nsresult Add(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
                jobject aProxy);
@@ -200,11 +214,15 @@ protected:
  */
 class JavaToXPTCStubMap
 {
+  friend PLDHashOperator DestroyXPTCMappingEnum(PLDHashTable* aTable,
+                                                PLDHashEntryHdr* aHeader,
+                                                PRUint32 aNumber, void* aData);
+
 protected:
   struct Entry : public PLDHashEntryHdr
   {
-    jint        key;
-    nsJavaXPTCStub* xptcstub;
+    jint              key;
+    nsJavaXPTCStub*   xptcstub;
   };
 
 public:
@@ -212,9 +230,15 @@ public:
     : mHashTable(nsnull)
   { }
 
-  ~JavaToXPTCStubMap();
+  ~JavaToXPTCStubMap()
+  {
+    NS_ASSERTION(mHashTable == nsnull,
+                 "MUST call Destroy() before deleting object");
+  }
 
   nsresult Init();
+
+  nsresult Destroy();
 
   nsresult Add(JNIEnv* env, jobject aJavaObject, nsJavaXPTCStub* aProxy);
 
@@ -300,7 +324,7 @@ void ThrowException(JNIEnv* env, const nsresult aErrorCode,
 
 /**
  * Helper functions for converting from java.lang.String to
- * nsAString/nsACstring.
+ * nsAString/nsACstring.  Caller must delete nsAString/nsACString.
  *
  * @param env       Java environment pointer
  * @param aString   Java string to convert
