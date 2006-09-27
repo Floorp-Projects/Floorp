@@ -340,7 +340,6 @@ SetupParams(JNIEnv *env, const jobject aParam,
 
           // Create XPCOM stub
           nsJavaXPTCStub* xpcomStub = new nsJavaXPTCStub(env, data, iinfo);
-          NS_ADDREF(xpcomStub);
           inst = SetAsXPTCStub(xpcomStub);
           AddJavaXPCOMBinding(env, data, inst);
         }
@@ -371,9 +370,11 @@ SetupParams(JNIEnv *env, const jobject aParam,
         }
 #endif
 
-        if (IsXPTCStub(inst))
-          aVariant.val.p = aVariant.ptr = (void*) GetXPTCStubAddr(inst);
-        else {
+        if (IsXPTCStub(inst)) {
+          nsJavaXPTCStub* xpcomStub = GetXPTCStubAddr(inst);
+          NS_ADDREF(xpcomStub);
+          aVariant.val.p = aVariant.ptr = (void*) xpcomStub;
+        } else {
           JavaXPCOMInstance* xpcomInst = (JavaXPCOMInstance*) inst;
           aVariant.val.p = aVariant.ptr = (void*) xpcomInst->GetInstance();
         }
@@ -654,7 +655,7 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
     case nsXPTType::T_INTERFACE_IS:
     {
       if (aVariant.val.p && aParamInfo.IsOut()) {
-        jobject java_obj = GetMatchingJavaObject(aVariant.val.p);
+        jobject java_obj = GetMatchingJavaObject(env, aVariant.val.p);
 
         if (java_obj == nsnull) {
           // wrap xpcom instance
