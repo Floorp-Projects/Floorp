@@ -55,7 +55,7 @@ public:
   NS_DECL_NSISUPPORTSWEAKREFERENCE
 
   nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject,
-                 nsIInterfaceInfo *aIInfo, nsJavaXPTCStub* aMaster = nsnull);
+                 nsIInterfaceInfo *aIInfo);
 
   virtual ~nsJavaXPTCStub();
 
