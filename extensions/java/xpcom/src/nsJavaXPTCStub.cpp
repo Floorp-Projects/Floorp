@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -883,7 +883,8 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
       jobject java_stub = nsnull;
       if (xpcom_obj) {
         nsID iid;
-        rv = GetIIDForMethodParam(mIInfo, aMethodInfo, aParamInfo, aMethodIndex,
+        rv = GetIIDForMethodParam(mIInfo, aMethodInfo, aParamInfo,
+                                  aParamInfo.GetType().TagPart(), aMethodIndex,
                                   aDispatchParams, PR_FALSE, iid);
         if (NS_FAILED(rv))
           break;
@@ -1413,8 +1414,8 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
         // Get IID for this param
         nsID iid;
         rv = GetIIDForMethodParam(mIInfo, aMethodInfo, aParamInfo,
-                                  aMethodIndex, aDispatchParams,
-                                  PR_FALSE, iid);
+                                  aParamInfo.GetType().TagPart(), aMethodIndex,
+                                  aDispatchParams, PR_FALSE, iid);
         if (NS_FAILED(rv))
           break;
 
