@@ -41,12 +41,15 @@
 
 #include "nsMai.h"
 #include "nsRootAccessibleWrap.h"
-#include "nsIAccessibleTreeCache.h"
 #include "nsAppRootAccessible.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIFocusController.h"
+
+#ifdef MOZ_XUL
+#include "nsIAccessibleTreeCache.h"
+#endif
 
 nsRootAccessibleWrap::nsRootAccessibleWrap(nsIDOMNode *aDOMNode,
                                            nsIWeakReference* aShell):
