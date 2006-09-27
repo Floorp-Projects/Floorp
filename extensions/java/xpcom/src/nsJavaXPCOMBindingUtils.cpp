@@ -47,26 +47,47 @@
 
 
 /* Java JNI globals */
+jclass booleanClass = nsnull;
+jclass charClass = nsnull;
+jclass byteClass = nsnull;
+jclass shortClass = nsnull;
+jclass intClass = nsnull;
+jclass longClass = nsnull;
+jclass floatClass = nsnull;
+jclass doubleClass = nsnull;
 jclass stringClass = nsnull;
 jclass nsISupportsClass = nsnull;
 jclass xpcomExceptionClass = nsnull;
+jclass xpcomJavaProxyClass = nsnull;
 
 jmethodID hashCodeMID = nsnull;
 jmethodID booleanValueMID = nsnull;
+jmethodID booleanInitMID = nsnull;
 jmethodID charValueMID = nsnull;
+jmethodID charInitMID = nsnull;
 jmethodID byteValueMID = nsnull;
+jmethodID byteInitMID = nsnull;
 jmethodID shortValueMID = nsnull;
+jmethodID shortInitMID = nsnull;
 jmethodID intValueMID = nsnull;
+jmethodID intInitMID = nsnull;
 jmethodID longValueMID = nsnull;
+jmethodID longInitMID = nsnull;
 jmethodID floatValueMID = nsnull;
+jmethodID floatInitMID = nsnull;
 jmethodID doubleValueMID = nsnull;
+jmethodID doubleInitMID = nsnull;
+jmethodID createProxyMID = nsnull;
+jmethodID isXPCOMJavaProxyMID = nsnull;
+jmethodID getNativeXPCOMInstMID = nsnull;
 
-#ifdef DEBUG
+#ifdef DEBUG_JAVAXPCOM
 jmethodID getNameMID = nsnull;
+jmethodID proxyToStringMID = nsnull;
 #endif
 
 nsJavaXPCOMBindings* gBindings = nsnull;
-PRBool gJavaXPCOMInitialized = PR_FALSE;
+PRLock* gJavaXPCOMLock = nsnull;
 
 
 /**************************************
@@ -274,7 +295,7 @@ nsJavaXPCOMBindings::GetXPCOMObject(JNIEnv* env, jobject aJavaObject)
                                         PL_DHASH_LOOKUP));
 
   if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-#ifdef DEBUG_pedemonte
+#ifdef DEBUG_JAVAXPCOM
     void* xpcomObjKey = nsnull;
     if (IsXPTCStub(entry->mXPCOMInstance))
       xpcomObjKey = GetXPTCStubAddr(entry->mXPCOMInstance);
@@ -331,7 +352,7 @@ nsJavaXPCOMBindings::GetJavaObject(JNIEnv* env, void* aXPCOMObject,
       NS_RELEASE(xpcom_obj);   // Owning ref passed on
   }
 
-#ifdef DEBUG_pedemonte
+#ifdef DEBUG_JAVAXPCOM
   if (*aResult) {
     LOG(("< Get Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
          env->CallIntMethod(*aResult, hashCodeMID), (int) aXPCOMObject));
@@ -348,96 +369,148 @@ nsJavaXPCOMBindings::GetJavaObject(JNIEnv* env, void* aXPCOMObject,
 PRBool
 InitializeJavaGlobals(JNIEnv *env)
 {
-  if (gJavaXPCOMInitialized)
+  if (gJavaXPCOMLock)
     return PR_TRUE;
 
   jclass clazz;
   if (!(clazz = env->FindClass("java/lang/Object")) ||
       !(hashCodeMID = env->GetMethodID(clazz, "hashCode","()I")))
   {
+    NS_WARNING("Problem creating java.lang.Object globals");
     goto init_error;
   }
 
   if (!(clazz = env->FindClass("java/lang/Boolean")) ||
-      !(booleanValueMID = env->GetMethodID(clazz,"booleanValue","()Z")))
+      !(booleanClass = (jclass) env->NewGlobalRef(clazz)) ||
+      !(booleanValueMID = env->GetMethodID(clazz, "booleanValue", "()Z")) ||
+      !(booleanInitMID = env->GetMethodID(clazz, "<init>", "(Z)V")))
   {
+    NS_WARNING("Problem creating java.lang.Boolean globals");
     goto init_error;
   }
 
   if (!(clazz = env->FindClass("java/lang/Character")) ||
-      !(charValueMID = env->GetMethodID(clazz,"charValue","()C")))
+      !(charClass = (jclass) env->NewGlobalRef(clazz)) ||
+      !(charValueMID = env->GetMethodID(clazz, "charValue", "()C")) ||
+      !(charInitMID = env->GetMethodID(clazz, "<init>", "(C)V")))
   {
+    NS_WARNING("Problem creating java.lang.Character globals");
     goto init_error;
   }
 
   if (!(clazz = env->FindClass("java/lang/Byte")) ||
-      !(byteValueMID = env->GetMethodID(clazz,"byteValue","()B")))
+      !(byteClass = (jclass) env->NewGlobalRef(clazz)) ||
+      !(byteValueMID = env->GetMethodID(clazz, "byteValue", "()B")) ||
+      !(byteInitMID = env->GetMethodID(clazz, "<init>", "(B)V")))
   {
+    NS_WARNING("Problem creating java.lang.Byte globals");
     goto init_error;
   }
 
   if (!(clazz = env->FindClass("java/lang/Short")) ||
-      !(shortValueMID = env->GetMethodID(clazz,"shortValue","()S")))
+      !(shortClass = (jclass) env->NewGlobalRef(clazz)) ||
+      !(shortValueMID = env->GetMethodID(clazz, "shortValue", "()S")) ||
+      !(shortInitMID = env->GetMethodID(clazz, "<init>", "(S)V")))
   {
+    NS_WARNING("Problem creating java.lang.Short globals");
     goto init_error;
   }
 
   if (!(clazz = env->FindClass("java/lang/Integer")) ||
-      !(intValueMID = env->GetMethodID(clazz,"intValue","()I")))
+      !(intClass = (jclass) env->NewGlobalRef(clazz)) ||
+      !(intValueMID = env->GetMethodID(clazz, "intValue", "()I")) ||
+      !(intInitMID = env->GetMethodID(clazz, "<init>", "(I)V")))
   {
+    NS_WARNING("Problem creating java.lang.Integer globals");
     goto init_error;
   }
 
   if (!(clazz = env->FindClass("java/lang/Long")) ||
-      !(longValueMID = env->GetMethodID(clazz,"longValue","()J")))
+      !(longClass = (jclass) env->NewGlobalRef(clazz)) ||
+      !(longValueMID = env->GetMethodID(clazz, "longValue", "()J")) ||
+      !(longInitMID = env->GetMethodID(clazz, "<init>", "(J)V")))
   {
+    NS_WARNING("Problem creating java.lang.Long globals");
     goto init_error;
   }
 
   if (!(clazz = env->FindClass("java/lang/Float")) ||
-      !(floatValueMID = env->GetMethodID(clazz,"floatValue","()F")))
+      !(floatClass = (jclass) env->NewGlobalRef(clazz)) ||
+      !(floatValueMID = env->GetMethodID(clazz, "floatValue", "()F")) ||
+      !(floatInitMID = env->GetMethodID(clazz, "<init>", "(F)V")))
   {
+    NS_WARNING("Problem creating java.lang.Float globals");
     goto init_error;
   }
 
   if (!(clazz = env->FindClass("java/lang/Double")) ||
-      !(doubleValueMID = env->GetMethodID(clazz,"doubleValue","()D")))
+      !(doubleClass = (jclass) env->NewGlobalRef(clazz)) ||
+      !(doubleValueMID = env->GetMethodID(clazz, "doubleValue", "()D")) ||
+      !(doubleInitMID = env->GetMethodID(clazz, "<init>", "(D)V")))
   {
+    NS_WARNING("Problem creating java.lang.Double globals");
     goto init_error;
   }
 
   if (!(clazz = env->FindClass("java/lang/String")) ||
       !(stringClass = (jclass) env->NewGlobalRef(clazz)))
   {
+    NS_WARNING("Problem creating java.lang.String globals");
     goto init_error;
   }
 
   if (!(clazz = env->FindClass("org/mozilla/xpcom/nsISupports")) ||
       !(nsISupportsClass = (jclass) env->NewGlobalRef(clazz)))
   {
+    NS_WARNING("Problem creating org.mozilla.xpcom.nsISupports globals");
     goto init_error;
   }
 
   if (!(clazz = env->FindClass("org/mozilla/xpcom/XPCOMException")) ||
       !(xpcomExceptionClass = (jclass) env->NewGlobalRef(clazz)))
   {
+    NS_WARNING("Problem creating org.mozilla.xpcom.XPCOMException globals");
     goto init_error;
   }
 
-#ifdef DEBUG
+  if (!(clazz = env->FindClass("org/mozilla/xpcom/XPCOMJavaProxy")) ||
+      !(xpcomJavaProxyClass = (jclass) env->NewGlobalRef(clazz)) ||
+      !(createProxyMID = env->GetStaticMethodID(clazz, "createProxy",
+                                   "(Ljava/lang/Class;J)Ljava/lang/Object;")) ||
+      !(isXPCOMJavaProxyMID = env->GetStaticMethodID(clazz, "isXPCOMJavaProxy",
+                                                    "(Ljava/lang/Object;)Z")) ||
+      !(getNativeXPCOMInstMID = env->GetStaticMethodID(xpcomJavaProxyClass,
+                                                       "getNativeXPCOMInstance",
+                                                       "(Ljava/lang/Object;)J")))
+  {
+    NS_WARNING("Problem creating org.mozilla.xpcom.XPCOMJavaProxy globals");
+    goto init_error;
+  }
+
+#ifdef DEBUG_JAVAXPCOM
   if (!(clazz = env->FindClass("java/lang/Class")) ||
       !(getNameMID = env->GetMethodID(clazz, "getName","()Ljava/lang/String;")))
   {
+    NS_WARNING("Problem creating java.lang.Class globals");
+    goto init_error;
+  }
+
+  if (!(proxyToStringMID = env->GetStaticMethodID(xpcomJavaProxyClass,
+                                                  "proxyToString",
+                                     "(Ljava/lang/Object;)Ljava/lang/String;")))
+  {
+    NS_WARNING("Problem creating proxyToString global");
     goto init_error;
   }
 #endif
 
   gBindings = new nsJavaXPCOMBindings();
   if (NS_FAILED(gBindings->Init())) {
+    NS_WARNING("Problem creating JavaXPCOMBindings");
     goto init_error;
   }
 
-  gJavaXPCOMInitialized = PR_TRUE;
+  gJavaXPCOMLock = PR_NewLock();
   return PR_TRUE;
 
 init_error:
@@ -453,6 +526,40 @@ init_error:
 void
 FreeJavaGlobals(JNIEnv* env)
 {
+  PR_Lock(gJavaXPCOMLock);
+
+  if (booleanClass) {
+    env->DeleteGlobalRef(booleanClass);
+    booleanClass = nsnull;
+  }
+  if (charClass) {
+    env->DeleteGlobalRef(charClass);
+    charClass = nsnull;
+  }
+  if (byteClass) {
+    env->DeleteGlobalRef(byteClass);
+    byteClass = nsnull;
+  }
+  if (shortClass) {
+    env->DeleteGlobalRef(shortClass);
+    shortClass = nsnull;
+  }
+  if (intClass) {
+    env->DeleteGlobalRef(intClass);
+    intClass = nsnull;
+  }
+  if (longClass) {
+    env->DeleteGlobalRef(longClass);
+    longClass = nsnull;
+  }
+  if (floatClass) {
+    env->DeleteGlobalRef(floatClass);
+    floatClass = nsnull;
+  }
+  if (doubleClass) {
+    env->DeleteGlobalRef(doubleClass);
+    doubleClass = nsnull;
+  }
   if (stringClass) {
     env->DeleteGlobalRef(stringClass);
     stringClass = nsnull;
@@ -465,13 +572,19 @@ FreeJavaGlobals(JNIEnv* env)
     env->DeleteGlobalRef(xpcomExceptionClass);
     xpcomExceptionClass = nsnull;
   }
+  if (xpcomJavaProxyClass) {
+    env->DeleteGlobalRef(xpcomJavaProxyClass);
+    xpcomJavaProxyClass = nsnull;
+  }
 
   if (gBindings) {
     delete gBindings;
     gBindings = nsnull;
   }
 
-  gJavaXPCOMInitialized = PR_FALSE;
+  PR_Unlock(gJavaXPCOMLock);
+  PR_DestroyLock(gJavaXPCOMLock);
+  gJavaXPCOMLock = nsnull;
 }
 
 
@@ -484,14 +597,18 @@ JavaXPCOMInstance::JavaXPCOMInstance(nsISupports* aInstance,
       mIInfo(aIInfo)
 {
   NS_ADDREF(mInstance);
+  NS_ADDREF(mIInfo);
 }
 
 JavaXPCOMInstance::~JavaXPCOMInstance()
 {
+  // Need to release these objects on the main thread.
   nsCOMPtr<nsIEventQueue> eventQ;
   nsresult rv = NS_GetMainEventQ(getter_AddRefs(eventQ));
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) {
     rv = NS_ProxyRelease(eventQ, mInstance);
+    rv += NS_ProxyRelease(eventQ, mIInfo);
+  }
   NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to release using NS_ProxyRelease");
 }
 
