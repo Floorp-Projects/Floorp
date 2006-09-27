@@ -1714,10 +1714,21 @@
       </method>
 
       <method name="formatDate">
-        <parameter name="aValue"/>
+        <parameter name="aDate"/>
         <body>
           <![CDATA[
-            return aValue.toLocaleFormat("%x");
+            // workaround for bugs 354073/327869:
+            // aDate.toLocaleFormat("%x") exits application
+            // if year before 1900 (e.g., typo) on MSWindows (due to MS bug).
+            var nsIScriptableDateFormat =
+              Components.interfaces.nsIScriptableDateFormat;
+            var dateService =
+              Components.classes["@mozilla.org/intl/scriptabledateformat;1"]
+                        .getService(nsIScriptableDateFormat);
+            return dateService.FormatDate("", dateService.dateFormatShort,
+                                          aDate.getFullYear(),
+                                          aDate.getMonth()+1,
+                                          aDate.getDate());
           ]]>
         </body>
       </method>
