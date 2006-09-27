@@ -411,7 +411,8 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
     methodSig.Append(')');
     if (retvalInfo) {
       nsCAutoString retvalSig;
-      rv = GetRetvalSig(retvalInfo, retvalSig);
+      rv = GetRetvalSig(retvalInfo, aMethodInfo, aMethodIndex, aParams,
+                        retvalSig);
       methodSig.Append(retvalSig);
     } else {
       methodSig.Append('V');
@@ -885,15 +886,22 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
         xpcom_obj = *variant;
       }
 
+      nsID iid;
+      rv = GetIIDForMethodParam(mIInfo, aMethodInfo, aParamInfo,
+                                aParamInfo.GetType().TagPart(), aMethodIndex,
+                                aDispatchParams, PR_FALSE, iid);
+      if (NS_FAILED(rv))
+        break;
+
+      // get name of interface
+      char* iface_name = nsnull;
+      nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
+      rv = iim->GetNameForIID(&iid, &iface_name);
+      if (NS_FAILED(rv) || !iface_name)
+        break;
+
       jobject java_stub = nsnull;
       if (xpcom_obj) {
-        nsID iid;
-        rv = GetIIDForMethodParam(mIInfo, aMethodInfo, aParamInfo,
-                                  aParamInfo.GetType().TagPart(), aMethodIndex,
-                                  aDispatchParams, PR_FALSE, iid);
-        if (NS_FAILED(rv))
-          break;
-
         // Get matching Java object for given xpcom object
         rv = GetNewOrUsedJavaObject(mJavaEnv, xpcom_obj, iid, &java_stub);
         if (NS_FAILED(rv))
@@ -902,7 +910,6 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
 
       if (!aParamInfo.IsOut()) {  // 'in'
         aJValue.l = java_stub;
-        aMethodSig.AppendLiteral("Lorg/mozilla/xpcom/nsISupports;");
       } else {  // 'inout' & 'out'
         if (aVariant.val.p) {
           aJValue.l = mJavaEnv->NewObjectArray(1, nsISupportsClass, java_stub);
@@ -913,8 +920,18 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
         } else {
           aJValue.l = nsnull;
         }
-        aMethodSig.AppendLiteral("[Lorg/mozilla/xpcom/nsISupports;");
+        aMethodSig.Append('[');
       }
+
+      if (tag != nsXPTType::T_INTERFACE_IS) {
+        aMethodSig.AppendLiteral("Lorg/mozilla/xpcom/");
+        aMethodSig.AppendASCII(iface_name);
+        aMethodSig.Append(';');
+      } else {
+        aMethodSig.AppendLiteral("Lorg/mozilla/xpcom/nsISupports;");
+      }
+
+      nsMemory::Free(iface_name);
     }
     break;
 
@@ -1039,11 +1056,13 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
 
 nsresult
 nsJavaXPTCStub::GetRetvalSig(const nsXPTParamInfo* aParamInfo,
-                           nsACString &aRetvalSig)
+                             const nsXPTMethodInfo* aMethodInfo,
+                             PRUint16 aMethodIndex,
+                             nsXPTCMiniVariant* aDispatchParams,
+                             nsACString &aRetvalSig)
 {
-  const nsXPTType &type = aParamInfo->GetType();
-  PRUint8 tag = type.TagPart();
-  switch (tag)
+  PRUint8 type = aParamInfo->GetType().TagPart();
+  switch (type)
   {
     case nsXPTType::T_I8:
       aRetvalSig.Append('B');
@@ -1093,6 +1112,28 @@ nsJavaXPTCStub::GetRetvalSig(const nsXPTParamInfo* aParamInfo,
       break;
 
     case nsXPTType::T_INTERFACE:
+    {
+      nsID iid;
+      nsresult rv = GetIIDForMethodParam(mIInfo, aMethodInfo, *aParamInfo, type,
+                                         aMethodIndex, aDispatchParams,
+                                         PR_FALSE, iid);
+      if (NS_FAILED(rv))
+        break;
+
+      // get name of interface
+      char* iface_name = nsnull;
+      nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
+      rv = iim->GetNameForIID(&iid, &iface_name);
+      if (NS_FAILED(rv) || !iface_name)
+        break;
+
+      aRetvalSig.AppendLiteral("Lorg/mozilla/xpcom/");
+      aRetvalSig.AppendASCII(iface_name);
+      aRetvalSig.Append(';');
+      nsMemory::Free(iface_name);
+      break;
+    }
+
     case nsXPTType::T_INTERFACE_IS:
       aRetvalSig.AppendLiteral("Lorg/mozilla/xpcom/nsISupports;");
       break;
