@@ -60,8 +60,8 @@ nsJavaXPTCStub::nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject,
   mIInfo->GetInterfaceIID(&iid);
   char* iid_str = iid->ToString();
   LOG(("+ nsJavaXPTCStub (Java=%08x | XPCOM=%08x | IID=%s)\n",
-       aJavaEnv->CallIntMethod(aJavaObject, hashCodeMID),
-       (int) this, iid_str));
+       (PRUint32) aJavaEnv->CallIntMethod(aJavaObject, hashCodeMID),
+       (PRUint32) this, iid_str));
   PR_Free(iid_str);
   nsMemory::Free(iid);
 #endif
@@ -69,33 +69,6 @@ nsJavaXPTCStub::nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject,
 
 nsJavaXPTCStub::~nsJavaXPTCStub()
 {
-}
-
-void
-nsJavaXPTCStub::Destroy()
-{
-#ifdef DEBUG_JAVAXPCOM
-  nsIID* iid;
-  mIInfo->GetInterfaceIID(&iid);
-  char* iid_str = iid->ToString();
-  jobject javaObject = mJavaEnv->NewLocalRef(mJavaWeakRef);
-  LOG(("- nsJavaXPTCStub (Java=%08x | XPCOM=%08x | IID=%s)\n",
-       mJavaEnv->CallIntMethod(javaObject, hashCodeMID),
-       (int) this, iid_str));
-  PR_Free(iid_str);
-  nsMemory::Free(iid);
-#endif
-
-  if (!mMaster) {
-    // delete each child stub
-    for (PRInt32 i = 0; i < mChildren.Count(); i++) {
-      delete (nsJavaXPTCStub*) mChildren[i];
-    }
-
-    gJavaToXPTCStubMap->Remove(mJavaEnv, mJavaStrongRef);
-  }
-
-  mJavaEnv->DeleteWeakGlobalRef(mJavaWeakRef);
 }
 
 NS_IMETHODIMP_(nsrefcnt)
@@ -178,6 +151,35 @@ nsJavaXPTCStub::Release()
 }
 
 void
+nsJavaXPTCStub::Destroy()
+{
+#ifdef DEBUG_JAVAXPCOM
+  nsIID* iid;
+  mIInfo->GetInterfaceIID(&iid);
+  char* iid_str = iid->ToString();
+  jobject javaObject = mJavaEnv->NewLocalRef(mJavaWeakRef);
+  LOG(("- nsJavaXPTCStub (Java=%08x | XPCOM=%08x | IID=%s)\n",
+       (PRUint32) mJavaEnv->CallIntMethod(javaObject, hashCodeMID),
+       (PRUint32) this, iid_str));
+  PR_Free(iid_str);
+  nsMemory::Free(iid);
+#endif
+
+  if (!mMaster) {
+    // delete each child stub
+    for (PRInt32 i = 0; i < mChildren.Count(); i++) {
+      delete (nsJavaXPTCStub*) mChildren[i];
+    }
+
+    if (gJavaXPCOMMonitor) {  // if Javaconnect is still initialized
+      gJavaToXPTCStubMap->Remove(mJavaEnv, mJavaStrongRef);
+    }
+  }
+
+  mJavaEnv->DeleteWeakGlobalRef(mJavaWeakRef);
+}
+
+void
 nsJavaXPTCStub::ReleaseWeakRef()
 {
   // if this is a child
@@ -194,6 +196,13 @@ nsJavaXPTCStub::ReleaseWeakRef()
     Destroy();
     delete this;
   }
+}
+
+void
+nsJavaXPTCStub::DeleteStrongRef()
+{
+  mJavaEnv->DeleteGlobalRef(mJavaStrongRef);
+  mJavaStrongRef = nsnull;
 }
 
 NS_IMETHODIMP
@@ -1440,6 +1449,7 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
               rv = NS_ERROR_OUT_OF_MEMORY;
               break;
             }
+            NS_RELEASE(xpcom_obj);
             xpcom_obj = weakref;
             NS_ADDREF(xpcom_obj);
           } else { // if is native XPCOM object
@@ -1448,6 +1458,7 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
             if (supportsweak) {
               nsWeakPtr weakref;
               supportsweak->GetWeakReference(getter_AddRefs(weakref));
+              NS_RELEASE(xpcom_obj);
               xpcom_obj = weakref;
               NS_ADDREF(xpcom_obj);
             } else {
@@ -1629,8 +1640,8 @@ nsJavaXPTCStub::GetJavaObject()
   mIInfo->GetInterfaceIID(&iid);
   char* iid_str = iid->ToString();
   LOG(("< nsJavaXPTCStub (Java=%08x | XPCOM=%08x | IID=%s)\n",
-       mJavaEnv->CallIntMethod(javaObject, hashCodeMID),
-       (int) this, iid_str));
+       (PRUint32) mJavaEnv->CallIntMethod(javaObject, hashCodeMID),
+       (PRUint32) this, iid_str));
   PR_Free(iid_str);
   nsMemory::Free(iid);
 #endif
