@@ -95,6 +95,34 @@ JavaToXPTCStubMap* gJavaToXPTCStubMap = nsnull;
 PRBool gJavaXPCOMInitialized = PR_FALSE;
 PRLock* gJavaXPCOMLock = nsnull;
 
+static const char* kJavaKeywords[] = {
+  "abstract", "default"  , "if"        , "private"     , "throw"       ,
+  "boolean" , "do"       , "implements", "protected"   , "throws"      ,
+  "break"   , "double"   , "import",     "public"      , "transient"   ,
+  "byte"    , "else"     , "instanceof", "return"      , "try"         ,
+  "case"    , "extends"  , "int"       , "short"       , "void"        ,
+  "catch"   , "final"    , "interface" , "static"      , "volatile"    ,
+  "char"    , "finally"  , "long"      , "super"       , "while"       ,
+  "class"   , "float"    , "native"    , "switch"      ,
+  "const"   , "for"      , "new"       , "synchronized",
+  "continue", "goto"     , "package"   , "this"        ,
+    /* added in Java 1.2 */
+  "strictfp",
+    /* added in Java 1.4 */
+  "assert"  ,
+    /* added in Java 5.0 */
+  "enum"    ,
+    /* Java constants */
+  "true"    , "false"    , "null"      ,
+    /* java.lang.Object methods                                           *
+     *    - don't worry about "toString", since it does the same thing    *
+     *      as Object's "toString"                                        */
+  "clone"   , "equals"   , "finalize"  , "getClass"    , "hashCode"    ,
+  "notify"  , "notifyAll", /*"toString"  ,*/ "wait"
+};
+
+nsTHashtable<nsDepCharHashKey>* gJavaKeywords = nsnull;
+
 
 /******************************
  *  InitializeJavaGlobals
@@ -245,14 +273,33 @@ InitializeJavaGlobals(JNIEnv *env)
 #endif
 
   gNativeToJavaProxyMap = new NativeToJavaProxyMap();
-  if (NS_FAILED(gNativeToJavaProxyMap->Init())) {
+  if (!gNativeToJavaProxyMap || NS_FAILED(gNativeToJavaProxyMap->Init())) {
     NS_WARNING("Problem creating NativeToJavaProxyMap");
     goto init_error;
   }
   gJavaToXPTCStubMap = new JavaToXPTCStubMap();
-  if (NS_FAILED(gJavaToXPTCStubMap->Init())) {
+  if (!gJavaToXPTCStubMap || NS_FAILED(gJavaToXPTCStubMap->Init())) {
     NS_WARNING("Problem creating JavaToXPTCStubMap");
     goto init_error;
+  }
+
+  {
+    nsresult rv = NS_OK;
+    PRUint32 size = NS_ARRAY_LENGTH(kJavaKeywords);
+    gJavaKeywords = new nsTHashtable<nsDepCharHashKey>();
+    if (!gJavaKeywords || NS_FAILED(gJavaKeywords->Init(size))) {
+      NS_WARNING("Failed to init JavaKeywords HashSet");
+      goto init_error;
+    }
+    for (PRUint32 i = 0; i < size && NS_SUCCEEDED(rv); i++) {
+      if (!gJavaKeywords->PutEntry(kJavaKeywords[i])) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to populate JavaKeywords hash");
+      goto init_error;
+    }
   }
 
   gJavaXPCOMLock = PR_NewLock();
@@ -344,6 +391,11 @@ FreeJavaGlobals(JNIEnv* env)
   if (xpcomJavaProxyClass) {
     env->DeleteGlobalRef(xpcomJavaProxyClass);
     xpcomJavaProxyClass = nsnull;
+  }
+
+  if (gJavaKeywords) {
+    delete gJavaKeywords;
+    gJavaKeywords = nsnull;
   }
 
   if (tempLock) {
