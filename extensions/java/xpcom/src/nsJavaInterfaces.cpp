@@ -39,89 +39,142 @@
 #include "nsJavaXPCOMBindingUtils.h"
 #include "nsJavaXPTCStub.h"
 #include "nsEmbedAPI.h"
+#include "nsIComponentRegistrar.h"
 #include "nsString.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsIInputStream.h"
 #include "nsEnumeratorUtils.h"
 #include "nsArray.h"
+#include "nsAppFileLocProviderProxy.h"
 
 #define GECKO_NATIVE(func) Java_org_mozilla_xpcom_GeckoEmbed_##func
 #define XPCOM_NATIVE(func) Java_org_mozilla_xpcom_XPCOM_##func
-
-PRBool gEmbeddingInitialized = PR_FALSE;
 
 
 extern "C" JNIEXPORT void JNICALL
 GECKO_NATIVE(initEmbedding) (JNIEnv* env, jclass, jobject aMozBinDirectory,
                              jobject aAppFileLocProvider)
 {
-  if (!InitializeJavaGlobals(env)) {
-    FreeJavaGlobals(env);
-    ThrowXPCOMException(env, 0);
-    return;
-  }
-
-  nsresult rv;
-  nsCOMPtr<nsILocalFile> directory;
-  if (aMozBinDirectory)
+  nsresult rv = NS_OK;
+  if (InitializeJavaGlobals(env))
   {
-    // Find corresponding XPCOM object
-    void* xpcomObj = GetMatchingXPCOMObject(env, aMozBinDirectory);
-    NS_ASSERTION(xpcomObj != nsnull, "Failed to get matching XPCOM object");
-    if (xpcomObj == nsnull) {
-      ThrowXPCOMException(env, 0);
-      return;
+    // Create an nsILocalFile from given java.io.File
+    nsCOMPtr<nsILocalFile> directory;
+    if (aMozBinDirectory) {
+      rv = File_to_nsILocalFile(env, aMozBinDirectory, getter_AddRefs(directory));
     }
 
-    NS_ASSERTION(!IsXPTCStub(xpcomObj), "Expected JavaXPCOMInstance, but got nsJavaXPTCStub");
-    directory = do_QueryInterface(((JavaXPCOMInstance*) xpcomObj)->GetInstance());
+    if (NS_SUCCEEDED(rv)) {
+      nsAppFileLocProviderProxy* provider = nsnull;
+      if (aAppFileLocProvider) {
+        provider = new nsAppFileLocProviderProxy(env, aAppFileLocProvider);
+      }
+
+      rv = NS_InitEmbedding(directory, provider);
+      if (provider) {
+        delete provider;
+      }
+      if (NS_SUCCEEDED(rv)) {
+        return;
+      }
+    }
   }
 
-  /* XXX How do we handle AppFileLocProvider, if we can't create any of the
-   * Java<->XPCOM mappings before NS_InitEmbedding has been called?
-   */
-  nsIDirectoryServiceProvider* provider = nsnull;
-/*  if (aAppFileLocProvider)
-  {
-    JavaXPCOMInstance* inst = (JavaXPCOMInstance*) aMozBinDirectory;
-    provider = (nsIDirectoryServiceProvider*) inst->GetInstance();
-  } */
-
-  rv = NS_InitEmbedding(directory, provider);
-  if (NS_FAILED(rv))
-    ThrowXPCOMException(env, rv);
-
-  gEmbeddingInitialized = PR_TRUE;
+  FreeJavaGlobals(env);
+  ThrowXPCOMException(env, NS_FAILED(rv) ? rv : NS_ERROR_FAILURE);
 }
 
 extern "C" JNIEXPORT void JNICALL
 GECKO_NATIVE(termEmbedding) (JNIEnv *env, jclass)
 {
-  FreeJavaGlobals(env);
-
 	nsresult rv = NS_TermEmbedding();
   if (NS_FAILED(rv))
     ThrowXPCOMException(env, rv);
+
+  FreeJavaGlobals(env);
 }
 
-/* XXX This can be called before XPCOM is init'd.  So we need to find a way
- * to create an appropriate Java class for this, such that if it is passed
- * through the JNI code (or if we make NS_InitEmbedding take it as a param),
- * then we can deal with it accordingly, since it won't yet have an
- * InterfaceInfo attached to it.  Perhaps we can set its InterfaceInfo to
- * NULL and just create it lazily.
- */
 extern "C" JNIEXPORT jobject JNICALL
-GECKO_NATIVE(newLocalFile) (JNIEnv *env, jclass, jstring aPath,
-                            jboolean aFollowLinks)
+XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jclass, jobject aMozBinDirectory,
+                         jobject aAppFileLocProvider)
 {
-  if (!InitializeJavaGlobals(env)) {
-    FreeJavaGlobals(env);
-    ThrowXPCOMException(env, 0);
-    return nsnull;
+  nsresult rv = NS_OK;
+  if (InitializeJavaGlobals(env))
+  {
+    // Create an nsILocalFile from given java.io.File
+    nsCOMPtr<nsILocalFile> directory;
+    if (aMozBinDirectory) {
+      rv = File_to_nsILocalFile(env, aMozBinDirectory, getter_AddRefs(directory));
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+      nsAppFileLocProviderProxy* provider = nsnull;
+      if (aAppFileLocProvider) {
+        provider = new nsAppFileLocProviderProxy(env, aAppFileLocProvider);
+      }
+
+      nsIServiceManager* servMan = nsnull;
+      rv = NS_InitXPCOM2(&servMan, directory, provider);
+      if (provider) {
+        delete provider;
+      }
+
+      jobject java_stub = nsnull;
+      if (NS_SUCCEEDED(rv)) {
+        // wrap xpcom instance
+        JavaXPCOMInstance* inst;
+        inst = CreateJavaXPCOMInstance(servMan, &NS_GET_IID(nsIServiceManager));
+        NS_RELEASE(servMan);   // JavaXPCOMInstance has owning ref
+
+        if (inst) {
+          // create java stub
+          java_stub = CreateJavaWrapper(env, "nsIServiceManager");
+
+          if (java_stub) {
+            // Associate XPCOM object w/ Java stub
+            AddJavaXPCOMBinding(env, java_stub, inst);
+            return java_stub;
+          }
+        }
+      }
+    }
   }
 
+  FreeJavaGlobals(env);
+  ThrowXPCOMException(env, NS_FAILED(rv) ? rv : NS_ERROR_FAILURE);
+  return nsnull;
+}
+
+extern "C" JNIEXPORT void JNICALL
+XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jclass, jobject aServMgr)
+{
+  nsCOMPtr<nsIServiceManager> servMgr;
+  if (aServMgr) {
+    // Find corresponding XPCOM object
+    void* xpcomObj = GetMatchingXPCOMObject(env, aServMgr);
+    NS_ASSERTION(xpcomObj != nsnull, "Failed to get matching XPCOM object");
+    if (xpcomObj == nsnull) {
+      ThrowXPCOMException(env, NS_ERROR_FAILURE);
+      return;
+    }
+
+    NS_ASSERTION(!IsXPTCStub(xpcomObj),
+                 "Expected JavaXPCOMInstance, but got nsJavaXPTCStub");
+    servMgr = do_QueryInterface(((JavaXPCOMInstance*) xpcomObj)->GetInstance());
+  }
+
+	nsresult rv = NS_ShutdownXPCOM(servMgr);
+  if (NS_FAILED(rv))
+    ThrowXPCOMException(env, rv);
+
+  FreeJavaGlobals(env);
+}
+
+extern "C" JNIEXPORT jobject JNICALL
+XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jclass, jstring aPath,
+                            jboolean aFollowLinks)
+{
   jobject java_stub = nsnull;
 
   // Create a Mozilla string from the jstring
@@ -143,7 +196,7 @@ GECKO_NATIVE(newLocalFile) (JNIEnv *env, jclass, jstring aPath,
   if (NS_SUCCEEDED(rv)) {
     // wrap xpcom instance
     JavaXPCOMInstance* inst;
-    inst = CreateJavaXPCOMInstance(file, nsnull);
+    inst = CreateJavaXPCOMInstance(file, &NS_GET_IID(nsILocalFile));
     NS_RELEASE(file);   // JavaXPCOMInstance has owning ref
 
     if (inst) {
@@ -164,7 +217,7 @@ GECKO_NATIVE(newLocalFile) (JNIEnv *env, jclass, jstring aPath,
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-GECKO_NATIVE(getComponentManager) (JNIEnv *env, jclass)
+XPCOM_NATIVE(getComponentManager) (JNIEnv *env, jclass)
 {
   jobject java_stub = nsnull;
 
@@ -196,7 +249,39 @@ GECKO_NATIVE(getComponentManager) (JNIEnv *env, jclass)
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-GECKO_NATIVE(getServiceManager) (JNIEnv *env, jclass)
+XPCOM_NATIVE(getComponentRegistrar) (JNIEnv *env, jclass)
+{
+  jobject java_stub = nsnull;
+
+  // Call XPCOM method
+  nsIComponentRegistrar* cr = nsnull;
+  nsresult rv = NS_GetComponentRegistrar(&cr);
+
+  if (NS_SUCCEEDED(rv)) {
+    // wrap xpcom instance
+    JavaXPCOMInstance* inst;
+    inst = CreateJavaXPCOMInstance(cr, &NS_GET_IID(nsIComponentRegistrar));
+    NS_RELEASE(cr);   // JavaXPCOMInstance has owning ref
+
+    if (inst) {
+      // create java stub
+      java_stub = CreateJavaWrapper(env, "nsIComponentRegistrar");
+
+      if (java_stub) {
+        // Associate XPCOM object w/ Java stub
+        AddJavaXPCOMBinding(env, java_stub, inst);
+      }
+    }
+  }
+
+  if (java_stub == nsnull)
+    ThrowXPCOMException(env, 0);
+
+  return java_stub;
+}
+
+extern "C" JNIEXPORT jobject JNICALL
+XPCOM_NATIVE(getServiceManager) (JNIEnv *env, jclass)
 {
   jobject java_stub = nsnull;
 
