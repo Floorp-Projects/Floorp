@@ -481,10 +481,19 @@ XPCOMPRIVATE_NATIVE(FinalizeStub) (JNIEnv *env, jclass that,
   env->ReleaseStringUTFChars(name, javaObjectName);
 #endif
 
-  void* obj = gBindings->GetXPCOMObject(env, aJavaObject);
-  NS_ASSERTION(!IsXPTCStub(obj),
-               "Expecting JavaXPCOMInstance, got nsJavaXPTCStub");
-  gBindings->RemoveBinding(env, aJavaObject, nsnull);
-  delete (JavaXPCOMInstance*) obj;
+  // Due to Java's garbage collection, this finalize statement may get called
+  // after FreeJavaGlobals().  So check to make sure that everything is still
+  // initialized.
+  if (gJavaXPCOMInitialized) {
+    void* obj = gBindings->GetXPCOMObject(env, aJavaObject);
+    NS_ASSERTION(obj != nsnull, "No matching XPCOM obj in FinalizeStub");
+
+    if (obj) {
+      NS_ASSERTION(!IsXPTCStub(obj),
+                   "Expecting JavaXPCOMInstance, got nsJavaXPTCStub");
+      gBindings->RemoveBinding(env, aJavaObject, nsnull);
+      delete (JavaXPCOMInstance*) obj;
+    }
+  }
 }
 
