@@ -511,6 +511,14 @@ var messageHeaderSink = {
       if (!this.mDummyMsgHeader)
         this.mDummyMsgHeader = new nsDummyMsgHeader();
       return this.mDummyMsgHeader;
+    },
+    mProperties: null,
+    getProperties: function()
+    {
+      if (!this.mProperties)
+        this.mProperties = Components.classes["@mozilla.org/hash-property-bag;1"].
+          createInstance(Components.interfaces.nsIWritablePropertyBag2);
+      return this.mProperties;
     }
 };
 

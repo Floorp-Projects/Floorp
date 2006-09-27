@@ -45,6 +45,7 @@ interface nsIChannel;
 interface nsIMsgMailNewsUrl;
 interface nsIUTF8StringEnumerator;
 interface nsIMsgDBHdr;
+interface nsIWritablePropertyBag2;
 
 [scriptable, uuid(4644FB25-5255-11d3-82B8-444553540002)] 
 interface nsIMimeMiscStatus : nsISupports{
@@ -60,7 +61,7 @@ interface nsIMimeMiscStatus : nsISupports{
 // this is a simple interface which allows someone to listen to all the headers 
 // that are discovered by mime. We can use this when displaying a message to update
 // the msg header in JS. 
-[scriptable, uuid(0d6ebe53-de30-4797-9a8e-5f9be68d472c)] 
+[scriptable, uuid(C3C4473C-FE01-4AFC-BF91-C811BAEBEF63)] 
 interface nsIMsgHeaderSink : nsISupports 
 {
   // You must finish consuming the iterators before returning from processHeaders. aHeaderNames and aHeaderValues will ALWAYS have the same
@@ -83,4 +84,9 @@ interface nsIMsgHeaderSink : nsISupports
 
   void onMsgHasRemoteContent(in nsIMsgDBHdr aMsgHdr);
   nsIMsgDBHdr getDummyMsgHeader();
+  
+  // used as a hook for extension mime content handlers to store data that can later
+  // be accessed by other parts of the code, e.g., UI code.
+  // TODO - Should replace securityInfo
+  readonly attribute nsIWritablePropertyBag2 properties;
 };

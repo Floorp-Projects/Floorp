@@ -36,10 +36,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+interface nsIURI;
 
-[scriptable, uuid(641da207-c21b-45b0-9c0c-63866c4a66b2)]
+[scriptable, uuid(FC6E8234-BBF3-44A1-9802-5F023A929173)]
 interface nsISimpleMimeConverter : nsISupports
 {
+    // uri of message getting displayed
+    attribute nsIURI uri;
     AUTF8String convertToHTML(in ACString contentType,
                               in AUTF8String data);
 };

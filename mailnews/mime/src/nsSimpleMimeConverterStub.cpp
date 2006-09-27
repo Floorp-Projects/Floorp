@@ -38,6 +38,7 @@
 #include "mimecth.h"
 #include "mimeobj.h"
 #include "mimetext.h"
+#include "mimemoz2.h"
 #include "mimecom.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -114,6 +115,14 @@ EndGather(MimeObject *obj, PRBool abort_p)
     if (ssobj->buffer->IsEmpty())
         return 0;
     
+     mime_stream_data  *msd = (mime_stream_data *) (obj->options->stream_closure);
+     nsIChannel *channel = msd->channel;  // note the lack of ref counting...
+     if (channel)
+     {
+       nsCOMPtr<nsIURI> uri;
+       channel->GetURI(getter_AddRefs(uri));
+       ssobj->innerScriptable->SetUri(uri);
+     }
     nsCString asHTML;
     nsresult rv = ssobj->innerScriptable->ConvertToHTML(nsDependentCString(obj->content_type),
                                                         *ssobj->buffer,
@@ -148,7 +157,7 @@ static void
 Finalize(MimeObject *obj)
 {
     MimeSimpleStub *ssobj = (MimeSimpleStub *)obj;
-    ssobj->innerScriptable = 0;
+    ssobj->innerScriptable = nsnull;
     delete ssobj->buffer;
 }
 
