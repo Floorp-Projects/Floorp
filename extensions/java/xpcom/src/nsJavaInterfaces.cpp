@@ -130,7 +130,6 @@ XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jclass, jobject aMozBinDirectory,
           delete provider;
         }
 
-        jobject java_stub = nsnull;
         if (NS_SUCCEEDED(rv)) {
           // wrap xpcom instance
           JavaXPCOMInstance* inst;
@@ -140,12 +139,13 @@ XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jclass, jobject aMozBinDirectory,
 
           if (NS_SUCCEEDED(rv)) {
             // create java stub
-            java_stub = CreateJavaWrapper(env, "nsIServiceManager");
+            jobject java_stub = CreateJavaWrapper(env, "nsIServiceManager");
 
             if (java_stub) {
               // Associate XPCOM object w/ Java stub
-              AddJavaXPCOMBinding(env, java_stub, inst);
-              return java_stub;
+              rv = gBindings->AddBinding(env, java_stub, inst);
+              if (NS_SUCCEEDED(rv))
+                return java_stub;
             }
           }
         }
@@ -164,8 +164,8 @@ XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jclass, jobject aServMgr)
   nsCOMPtr<nsIServiceManager> servMgr;
   if (aServMgr) {
     // Find corresponding XPCOM object
-    void* xpcomObj = GetMatchingXPCOMObject(env, aServMgr);
-    NS_ASSERTION(xpcomObj != nsnull, "Failed to get matching XPCOM object");
+    void* xpcomObj = gBindings->GetXPCOMObject(env, aServMgr);
+    NS_ASSERTION(xpcomObj != nsnull, "Failed to get XPCOM obj for ServiceMgr.");
 
     // Even if we failed to get the matching xpcom object, we don't abort this
     // function.  Just call NS_ShutdownXPCOM with a null service manager.
@@ -188,8 +188,6 @@ extern "C" JNIEXPORT jobject JNICALL
 XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jclass, jstring aPath,
                             jboolean aFollowLinks)
 {
-  jobject java_stub = nsnull;
-
   // Create a Mozilla string from the jstring
   jboolean isCopy;
   const PRUnichar* buf = nsnull;
@@ -216,26 +214,24 @@ XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jclass, jstring aPath,
 
     if (NS_SUCCEEDED(rv)) {
       // create java stub
-      java_stub = CreateJavaWrapper(env, "nsILocalFile");
+      jobject java_stub = CreateJavaWrapper(env, "nsILocalFile");
 
       if (java_stub) {
         // Associate XPCOM object w/ Java stub
-        AddJavaXPCOMBinding(env, java_stub, inst);
+        rv = gBindings->AddBinding(env, java_stub, inst);
+        if (NS_SUCCEEDED(rv))
+          return java_stub;
       }
     }
   }
 
-  if (java_stub == nsnull)
-    ThrowException(env, rv, "Failure in newLocalFile");
-
-  return java_stub;
+  ThrowException(env, rv, "Failure in newLocalFile");
+  return nsnull;
 }
 
 extern "C" JNIEXPORT jobject JNICALL
 XPCOM_NATIVE(getComponentManager) (JNIEnv *env, jclass)
 {
-  jobject java_stub = nsnull;
-
   // Call XPCOM method
   nsIComponentManager* cm = nsnull;
   nsresult rv = NS_GetComponentManager(&cm);
@@ -248,26 +244,24 @@ XPCOM_NATIVE(getComponentManager) (JNIEnv *env, jclass)
 
     if (NS_SUCCEEDED(rv)) {
       // create java stub
-      java_stub = CreateJavaWrapper(env, "nsIComponentManager");
+      jobject java_stub = CreateJavaWrapper(env, "nsIComponentManager");
 
       if (java_stub) {
         // Associate XPCOM object w/ Java stub
-        AddJavaXPCOMBinding(env, java_stub, inst);
+        rv = gBindings->AddBinding(env, java_stub, inst);
+        if (NS_SUCCEEDED(rv))
+          return java_stub;
       }
     }
   }
 
-  if (java_stub == nsnull)
-    ThrowException(env, rv, "Failure in getComponentManager");
-
-  return java_stub;
+  ThrowException(env, rv, "Failure in getComponentManager");
+  return nsnull;
 }
 
 extern "C" JNIEXPORT jobject JNICALL
 XPCOM_NATIVE(getComponentRegistrar) (JNIEnv *env, jclass)
 {
-  jobject java_stub = nsnull;
-
   // Call XPCOM method
   nsIComponentRegistrar* cr = nsnull;
   nsresult rv = NS_GetComponentRegistrar(&cr);
@@ -280,26 +274,24 @@ XPCOM_NATIVE(getComponentRegistrar) (JNIEnv *env, jclass)
 
     if (NS_SUCCEEDED(rv)) {
       // create java stub
-      java_stub = CreateJavaWrapper(env, "nsIComponentRegistrar");
+      jobject java_stub = CreateJavaWrapper(env, "nsIComponentRegistrar");
 
       if (java_stub) {
         // Associate XPCOM object w/ Java stub
-        AddJavaXPCOMBinding(env, java_stub, inst);
+        rv = gBindings->AddBinding(env, java_stub, inst);
+        if (NS_SUCCEEDED(rv))
+          return java_stub;
       }
     }
   }
 
-  if (java_stub == nsnull)
-    ThrowException(env, rv, "Failure in getComponentRegistrar");
-
-  return java_stub;
+  ThrowException(env, rv, "Failure in getComponentRegistrar");
+  return nsnull;
 }
 
 extern "C" JNIEXPORT jobject JNICALL
 XPCOM_NATIVE(getServiceManager) (JNIEnv *env, jclass)
 {
-  jobject java_stub = nsnull;
-
   // Call XPCOM method
   nsIServiceManager* sm = nsnull;
   nsresult rv = NS_GetServiceManager(&sm);
@@ -312,19 +304,19 @@ XPCOM_NATIVE(getServiceManager) (JNIEnv *env, jclass)
 
     if (NS_SUCCEEDED(rv)) {
       // create java stub
-      java_stub = CreateJavaWrapper(env, "nsIServiceManager");
+      jobject java_stub = CreateJavaWrapper(env, "nsIServiceManager");
 
       if (java_stub) {
         // Associate XPCOM object w/ Java stub
-        AddJavaXPCOMBinding(env, java_stub, inst);
+        rv = gBindings->AddBinding(env, java_stub, inst);
+        if (NS_SUCCEEDED(rv))
+          return java_stub;
       }
     }
   }
 
-  if (java_stub == nsnull)
-    ThrowException(env, rv, "Failure in getServiceManager");
-
-  return java_stub;
+  ThrowException(env, rv, "Failure in getServiceManager");
+  return nsnull;
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -539,7 +531,7 @@ extern "C" JNIEXPORT void JNICALL
 XPCOMPRIVATE_NATIVE(FinalizeStub) (JNIEnv *env, jclass that,
                                    jobject aJavaObject)
 {
-#ifdef DEBUG
+#ifdef DEBUG_pedemonte
   jboolean isCopy;
   jclass clazz = env->GetObjectClass(aJavaObject);
   jstring name = (jstring) env->CallObjectMethod(clazz, getNameMID);
@@ -549,10 +541,10 @@ XPCOMPRIVATE_NATIVE(FinalizeStub) (JNIEnv *env, jclass that,
     env->ReleaseStringUTFChars(name, javaObjectName);
 #endif
 
-  void* obj = GetMatchingXPCOMObject(env, aJavaObject);
+  void* obj = gBindings->GetXPCOMObject(env, aJavaObject);
   NS_ASSERTION(!IsXPTCStub(obj),
                "Expecting JavaXPCOMInstance, got nsJavaXPTCStub");
-  RemoveJavaXPCOMBinding(env, aJavaObject, nsnull);
+  gBindings->RemoveBinding(env, aJavaObject, nsnull);
   delete (JavaXPCOMInstance*) obj;
 }
 
