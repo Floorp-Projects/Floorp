@@ -38,7 +38,6 @@
 #include "nsJavaWrapper.h"
 #include "nsJavaXPCOMBindingUtils.h"
 #include "nsJavaXPTCStub.h"
-#include "nsEmbedAPI.h"
 #include "nsIComponentRegistrar.h"
 #include "nsString.h"
 #include "nsISimpleEnumerator.h"
@@ -48,52 +47,54 @@
 #include "nsArray.h"
 #include "nsAppFileLocProviderProxy.h"
 #include "nsIEventQueueService.h"
+#include "nsXULAppAPI.h"
+#include "nsILocalFile.h"
 
-#define GECKO_NATIVE(func) Java_org_mozilla_xpcom_GeckoEmbed_##func
-#define XPCOM_NATIVE(func) Java_org_mozilla_xpcom_XPCOM_##func
+#define GRE_NATIVE(func) Java_org_mozilla_xpcom_internal_GREImpl_##func
+#define XPCOM_NATIVE(func) Java_org_mozilla_xpcom_internal_XPCOMImpl_##func
 
 
 nsresult
-InitEmbedding_Impl(JNIEnv* env, jobject aMozBinDirectory,
-                   jobject aAppFileLocProvider)
+InitEmbedding_Impl(JNIEnv* env, jobject aLibXULDirectory,
+                   jobject aAppDirectory, jobject aAppDirProvider)
 {
   nsresult rv;
   if (!InitializeJavaGlobals(env))
     return NS_ERROR_FAILURE;
 
   // create an nsILocalFile from given java.io.File
-  nsCOMPtr<nsILocalFile> directory;
-  if (aMozBinDirectory) {
-    rv = File_to_nsILocalFile(env, aMozBinDirectory, getter_AddRefs(directory));
+  nsCOMPtr<nsILocalFile> libXULDir;
+  if (aLibXULDirectory) {
+    rv = File_to_nsILocalFile(env, aLibXULDirectory, getter_AddRefs(libXULDir));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  nsCOMPtr<nsILocalFile> appDir;
+  if (aAppDirectory) {
+    rv = File_to_nsILocalFile(env, aAppDirectory, getter_AddRefs(appDir));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // create nsAppFileLocProviderProxy from given Java object
   nsCOMPtr<nsIDirectoryServiceProvider> provider;
-  if (aAppFileLocProvider) {
-    rv = NS_NewAppFileLocProviderProxy(aAppFileLocProvider,
+  if (aAppDirProvider) {
+    rv = NS_NewAppFileLocProviderProxy(aAppDirProvider,
                                        getter_AddRefs(provider));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // init Gecko
-  rv = NS_InitEmbedding(directory, provider);
+  // init libXUL
+  rv = XRE_InitEmbedding(libXULDir, appDir, provider);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // init Event Queue
-  nsCOMPtr<nsIEventQueueService>
-             eventQService(do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = eventQService->CreateThreadEventQueue();
 
   return rv;
 }
 
 extern "C" JX_EXPORT void JNICALL
-GECKO_NATIVE(initEmbedding) (JNIEnv* env, jclass, jobject aMozBinDirectory,
-                             jobject aAppFileLocProvider)
+GRE_NATIVE(initEmbeddingNative) (JNIEnv* env, jobject, jobject aLibXULDirectory,
+                                 jobject aAppDirectory, jobject aAppDirProvider)
 {
-  nsresult rv = InitEmbedding_Impl(env, aMozBinDirectory, aAppFileLocProvider);
+  nsresult rv = InitEmbedding_Impl(env, aLibXULDirectory, aAppDirectory,
+                                   aAppDirProvider);
 
   if (NS_FAILED(rv)) {
     ThrowException(env, rv, "Failure in initEmbedding");
@@ -102,15 +103,13 @@ GECKO_NATIVE(initEmbedding) (JNIEnv* env, jclass, jobject aMozBinDirectory,
 }
 
 extern "C" JX_EXPORT void JNICALL
-GECKO_NATIVE(termEmbedding) (JNIEnv *env, jclass)
+GRE_NATIVE(termEmbedding) (JNIEnv *env, jobject)
 {
-  // Free globals before calling NS_TermEmbedding(), since we need some
+  // Free globals before calling XRE_TermEmbedding(), since we need some
   // XPCOM services.
   FreeJavaGlobals(env);
 
-  nsresult rv = NS_TermEmbedding();
-  if (NS_FAILED(rv))
-    ThrowException(env, rv, "NS_TermEmbedding failed");
+  XRE_TermEmbedding();
 }
 
 nsresult
@@ -160,7 +159,7 @@ InitXPCOM_Impl(JNIEnv* env, jobject aMozBinDirectory,
 }
 
 extern "C" JX_EXPORT jobject JNICALL
-XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jclass, jobject aMozBinDirectory,
+XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jobject, jobject aMozBinDirectory,
                          jobject aAppFileLocProvider)
 {
   jobject servMan;
@@ -175,7 +174,7 @@ XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jclass, jobject aMozBinDirectory,
 }
 
 extern "C" JX_EXPORT void JNICALL
-XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jclass, jobject aServMgr)
+XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jobject, jobject aServMgr)
 {
   nsresult rv;
   nsCOMPtr<nsIServiceManager> servMgr;
@@ -204,7 +203,7 @@ XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jclass, jobject aServMgr)
 }
 
 extern "C" JX_EXPORT jobject JNICALL
-XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jclass, jstring aPath,
+XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jobject, jstring aPath,
                             jboolean aFollowLinks)
 {
   // Create a Mozilla string from the jstring
@@ -235,7 +234,7 @@ XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jclass, jstring aPath,
 }
 
 extern "C" JX_EXPORT jobject JNICALL
-XPCOM_NATIVE(getComponentManager) (JNIEnv *env, jclass)
+XPCOM_NATIVE(getComponentManager) (JNIEnv *env, jobject)
 {
   // Call XPCOM method
   nsIComponentManager* cm = nsnull;
@@ -254,7 +253,7 @@ XPCOM_NATIVE(getComponentManager) (JNIEnv *env, jclass)
 }
 
 extern "C" JX_EXPORT jobject JNICALL
-XPCOM_NATIVE(getComponentRegistrar) (JNIEnv *env, jclass)
+XPCOM_NATIVE(getComponentRegistrar) (JNIEnv *env, jobject)
 {
   // Call XPCOM method
   nsIComponentRegistrar* cr = nsnull;
@@ -273,7 +272,7 @@ XPCOM_NATIVE(getComponentRegistrar) (JNIEnv *env, jclass)
 }
 
 extern "C" JX_EXPORT jobject JNICALL
-XPCOM_NATIVE(getServiceManager) (JNIEnv *env, jclass)
+XPCOM_NATIVE(getServiceManager) (JNIEnv *env, jobject)
 {
   // Call XPCOM method
   nsIServiceManager* sm = nsnull;
