@@ -12996,6 +12996,10 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
     blockFrame = NS_NewBlockFrame(mPresShell, blockSC);
   }
 
+  if (! aState.mFloatedItems.containingBlock) {
+    blockFrame->AddStateBits(NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
+  }
+
   InitAndRestoreFrame(aState, aContent, aParentFrame, nsnull, blockFrame, PR_FALSE);  
 
   // Any inline frame could have a view (e.g., opacity)
