@@ -779,17 +779,19 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_I8:
     case nsXPTType::T_U8:
     {
-      if (aJValue.l) {
+      if (aParamInfo.IsOut()) {
         if (aParamInfo.IsRetval()) {
           *((PRUint8 *) aVariant.val.p) = aJValue.b;
-        } else if (aParamInfo.IsOut()) {
-          jboolean isCopy = PR_FALSE;
-          jbyte* array = mJavaEnv->GetByteArrayElements((jbyteArray) aJValue.l,
-                                                        &isCopy);
-          *((PRUint8 *) aVariant.val.p) = array[0];
-          if (isCopy) {
-            mJavaEnv->ReleaseByteArrayElements((jbyteArray) aJValue.l, array,
-                                               JNI_ABORT);
+        } else {
+          if (aJValue.l) {
+            jboolean isCopy = PR_FALSE;
+            jbyte* array = mJavaEnv->GetByteArrayElements((jbyteArray) aJValue.l,
+                                                          &isCopy);
+            *((PRUint8 *) aVariant.val.p) = array[0];
+            if (isCopy) {
+              mJavaEnv->ReleaseByteArrayElements((jbyteArray) aJValue.l, array,
+                                                 JNI_ABORT);
+            }
           }
         }
       }
@@ -799,18 +801,20 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_I16:
     case nsXPTType::T_U16:
     {
-      if (aJValue.l) {
+      if (aParamInfo.IsOut()) {
         if (aParamInfo.IsRetval()) {
           *((PRUint16 *) aVariant.val.p) = aJValue.s;
-        } else if (aParamInfo.IsOut()) {
-          jboolean isCopy = PR_FALSE;
-          jshort* array =
-                      mJavaEnv->GetShortArrayElements((jshortArray) aJValue.l,
-                                                      &isCopy);
-          *((PRUint16 *) aVariant.val.p) = array[0];
-          if (isCopy) {
-            mJavaEnv->ReleaseShortArrayElements((jshortArray) aJValue.l, array,
-                                                JNI_ABORT);
+        } else {
+          if (aJValue.l) {
+            jboolean isCopy = PR_FALSE;
+            jshort* array =
+                        mJavaEnv->GetShortArrayElements((jshortArray) aJValue.l,
+                                                        &isCopy);
+            *((PRUint16 *) aVariant.val.p) = array[0];
+            if (isCopy) {
+              mJavaEnv->ReleaseShortArrayElements((jshortArray) aJValue.l, array,
+                                                  JNI_ABORT);
+            }
           }
         }
       }
@@ -820,17 +824,19 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_I32:
     case nsXPTType::T_U32:
     {
-      if (aJValue.l) {
+      if (aParamInfo.IsOut()) {
         if (aParamInfo.IsRetval()) {
           *((PRUint32 *) aVariant.val.p) = aJValue.i;
-        } else if (aParamInfo.IsOut()) {
-          jboolean isCopy = PR_FALSE;
-          jint* array = mJavaEnv->GetIntArrayElements((jintArray) aJValue.l,
-                                                       &isCopy);
-          *((PRUint32 *) aVariant.val.p) = array[0];
-          if (isCopy) {
-            mJavaEnv->ReleaseIntArrayElements((jintArray) aJValue.l, array,
-                                              JNI_ABORT);
+        } else {
+          if (aJValue.l) {
+            jboolean isCopy = PR_FALSE;
+            jint* array = mJavaEnv->GetIntArrayElements((jintArray) aJValue.l,
+                                                         &isCopy);
+            *((PRUint32 *) aVariant.val.p) = array[0];
+            if (isCopy) {
+              mJavaEnv->ReleaseIntArrayElements((jintArray) aJValue.l, array,
+                                                JNI_ABORT);
+            }
           }
         }
       }
@@ -840,17 +846,19 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_I64:
     case nsXPTType::T_U64:
     {
-      if (aJValue.l) {
+      if (aParamInfo.IsOut()) {
         if (aParamInfo.IsRetval()) {
           *((PRUint64 *) aVariant.val.p) = aJValue.j;
-        } else if (aParamInfo.IsOut()) {
-          jboolean isCopy = PR_FALSE;
-          jlong* array = mJavaEnv->GetLongArrayElements((jlongArray) aJValue.l,
-                                                        &isCopy);
-          *((PRUint64 *) aVariant.val.p) = array[0];
-          if (isCopy) {
-            mJavaEnv->ReleaseLongArrayElements((jlongArray) aJValue.l, array,
-                                               JNI_ABORT);
+        } else {
+          if (aJValue.l) {
+            jboolean isCopy = PR_FALSE;
+            jlong* array = mJavaEnv->GetLongArrayElements((jlongArray) aJValue.l,
+                                                          &isCopy);
+            *((PRUint64 *) aVariant.val.p) = array[0];
+            if (isCopy) {
+              mJavaEnv->ReleaseLongArrayElements((jlongArray) aJValue.l, array,
+                                                 JNI_ABORT);
+            }
           }
         }
       }
@@ -859,18 +867,20 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_FLOAT:
     {
-      if (aJValue.l) {
+      if (aParamInfo.IsOut()) {
         if (aParamInfo.IsRetval()) {
           *((float *) aVariant.val.p) = aJValue.f;
-        } else if (aParamInfo.IsOut()) {
-          jboolean isCopy = PR_FALSE;
-          jfloat* array =
-                      mJavaEnv->GetFloatArrayElements((jfloatArray) aJValue.l,
-                                                      &isCopy);
-          *((float *) aVariant.val.p) = array[0];
-          if (isCopy) {
-            mJavaEnv->ReleaseFloatArrayElements((jfloatArray) aJValue.l, array,
-                                                JNI_ABORT);
+        } else {
+          if (aJValue.l) {
+            jboolean isCopy = PR_FALSE;
+            jfloat* array =
+                        mJavaEnv->GetFloatArrayElements((jfloatArray) aJValue.l,
+                                                        &isCopy);
+            *((float *) aVariant.val.p) = array[0];
+            if (isCopy) {
+              mJavaEnv->ReleaseFloatArrayElements((jfloatArray) aJValue.l, array,
+                                                  JNI_ABORT);
+            }
           }
         }
       }
@@ -879,18 +889,20 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_DOUBLE:
     {
-      if (aJValue.l) {
+      if (aParamInfo.IsOut()) {
         if (aParamInfo.IsRetval()) {
           *((double *) aVariant.val.p) = aJValue.d;
-        } else if (aParamInfo.IsOut()) {
-          jboolean isCopy = PR_FALSE;
-          jdouble* array =
+        } else {
+          if (aJValue.l) {
+            jboolean isCopy = PR_FALSE;
+            jdouble* array =
                       mJavaEnv->GetDoubleArrayElements((jdoubleArray) aJValue.l,
                                                        &isCopy);
-          *((double *) aVariant.val.p) = array[0];
-          if (isCopy) {
-            mJavaEnv->ReleaseDoubleArrayElements((jdoubleArray) aJValue.l,
-                                                 array, JNI_ABORT);
+            *((double *) aVariant.val.p) = array[0];
+            if (isCopy) {
+              mJavaEnv->ReleaseDoubleArrayElements((jdoubleArray) aJValue.l,
+                                                   array, JNI_ABORT);
+            }
           }
         }
       }
@@ -899,18 +911,20 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_BOOL:
     {
-      if (aJValue.l) {
+      if (aParamInfo.IsOut()) {
         if (aParamInfo.IsRetval()) {
           *((PRBool *) aVariant.val.p) = aJValue.z;
-        } else if (aParamInfo.IsOut()) {
-          jboolean isCopy = PR_FALSE;
-          jboolean* array =
+        } else {
+          if (aJValue.l) {
+            jboolean isCopy = PR_FALSE;
+            jboolean* array =
                     mJavaEnv->GetBooleanArrayElements((jbooleanArray) aJValue.l,
                                                       &isCopy);
-          *((PRBool *) aVariant.val.p) = array[0];
-          if (isCopy) {
-            mJavaEnv->ReleaseBooleanArrayElements((jbooleanArray) aJValue.l,
-                                                  array, JNI_ABORT);
+            *((PRBool *) aVariant.val.p) = array[0];
+            if (isCopy) {
+              mJavaEnv->ReleaseBooleanArrayElements((jbooleanArray) aJValue.l,
+                                                    array, JNI_ABORT);
+            }
           }
         }
       }
@@ -920,23 +934,25 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_CHAR:
     case nsXPTType::T_WCHAR:
     {
-      if (aJValue.l) {
+      if (aParamInfo.IsOut()) {
         if (aParamInfo.IsRetval()) {
           if (type.TagPart() == nsXPTType::T_CHAR)
             *((char *) aVariant.val.p) = aJValue.c;
           else
             *((PRUnichar *) aVariant.val.p) = aJValue.c;
-        } else if (aParamInfo.IsOut()) {
-          jboolean isCopy = PR_FALSE;
-          jchar* array = mJavaEnv->GetCharArrayElements((jcharArray) aJValue.l,
-                                                        &isCopy);
-          if (type.TagPart() == nsXPTType::T_CHAR)
-            *((char *) aVariant.val.p) = array[0];
-          else
-            *((PRUnichar *) aVariant.val.p) = array[0];
-          if (isCopy) {
-            mJavaEnv->ReleaseCharArrayElements((jcharArray) aJValue.l, array,
-                                               JNI_ABORT);
+        } else {
+          if (aJValue.l) {
+            jboolean isCopy = PR_FALSE;
+            jchar* array = mJavaEnv->GetCharArrayElements((jcharArray) aJValue.l,
+                                                          &isCopy);
+            if (type.TagPart() == nsXPTType::T_CHAR)
+              *((char *) aVariant.val.p) = array[0];
+            else
+              *((PRUnichar *) aVariant.val.p) = array[0];
+            if (isCopy) {
+              mJavaEnv->ReleaseCharArrayElements((jcharArray) aJValue.l, array,
+                                                 JNI_ABORT);
+            }
           }
         }
       }
@@ -946,7 +962,7 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_CHAR_STR:
     {
       // XXX not sure how this should be handled
-      if (aJValue.l && aParamInfo.IsOut()) {
+      if (aParamInfo.IsOut()) {
         jstring str = nsnull;
         if (aParamInfo.IsRetval()) {
           str = (jstring) aJValue.l;
@@ -958,10 +974,13 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
         if (str) {
           jboolean isCopy;
           const char* char_ptr = mJavaEnv->GetStringUTFChars(str, &isCopy);
+          // XXX is this strdup right?
           *((char **) aVariant.val.p) = strdup(char_ptr);
           if (isCopy) {
             mJavaEnv->ReleaseStringUTFChars(str, char_ptr);
           }
+        } else {
+          *((char **) aVariant.val.p) = nsnull;
         }
       }
     }
@@ -970,7 +989,7 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_WCHAR_STR:
     {
       // XXX not sure how this should be handled
-      if (aJValue.l && aParamInfo.IsOut()) {
+      if (aParamInfo.IsOut()) {
         jstring str = nsnull;
         if (aParamInfo.IsRetval()) {
           str = (jstring) aJValue.l;
@@ -992,6 +1011,8 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
           if (isCopy) {
             mJavaEnv->ReleaseStringChars(str, wchar_ptr);
           }
+        } else {
+          *((PRUnichar **) aVariant.val.p) = nsnull;
         }
       }
     }
@@ -999,7 +1020,7 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_IID:
     {
-      if (aJValue.l && aParamInfo.IsOut()) {
+      if (aParamInfo.IsOut()) {
         jstring str = nsnull;
         if (aParamInfo.IsRetval()) {
           str = (jstring) aJValue.l;
@@ -1027,6 +1048,8 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
           if (isCopy) {
             mJavaEnv->ReleaseStringUTFChars(str, char_ptr);
           }
+        } else {
+          *((nsID **) aVariant.val.p) = nsnull;
         }
       }
     }
@@ -1035,7 +1058,7 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_INTERFACE:
     case nsXPTType::T_INTERFACE_IS:
     {
-      if (aJValue.l && aParamInfo.IsOut()) {
+      if (aParamInfo.IsOut()) {
         jobject java_obj = nsnull;
         if (aParamInfo.IsRetval()) {
           java_obj = aJValue.l;
@@ -1085,6 +1108,8 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
             JavaXPCOMInstance* xpcomInst = (JavaXPCOMInstance*) inst;
             *((void **) aVariant.val.p) = (void*) xpcomInst->GetInstance();
           }
+        } else {
+          *((void **) aVariant.val.p) = nsnull;
         }
       }
     }
