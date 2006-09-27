@@ -63,7 +63,6 @@
 
 #include <mbstring.h>
 
-#define MOZ_HWND_BROADCAST_MSG_TIMEOUT 5000
 #define MOZ_BACKUP_REGISTRY "SOFTWARE\\Mozilla\\Desktop"
 
 #ifndef MAX_BUF
@@ -390,18 +389,6 @@ nsWindowsShellService::SetDefaultBrowserVista()
   return PR_FALSE;
 }
 
-PRBool
-nsWindowsShellService::RestoreFileSettingsVista()
-{
-  // With the new vista API, there is no need to restore file setting.
-  
-  if (GetVersion() >= 6)
-    return PR_TRUE;
-  
-  return PR_FALSE;
-}
-
-
 NS_IMETHODIMP
 nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefaultBrowser)
 {
@@ -585,53 +572,6 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
 
   // Refresh the Shell
   SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, 0, 0);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindowsShellService::RestoreFileSettings(PRBool aForAllUsers)
-{
-  if (RestoreFileSettingsVista())
-    return NS_OK;
-
-  // Locate the Backup key
-  HKEY backupKey;
-  nsresult rv = OpenKeyForWriting(MOZ_BACKUP_REGISTRY, &backupKey, aForAllUsers, PR_FALSE);
-  if (NS_FAILED(rv)) return rv;
-
-  DWORD i = 0;
-  do {
-    char origKeyName[MAX_BUF];
-    DWORD len = sizeof origKeyName;
-    DWORD result = ::RegEnumValue(backupKey, i++, origKeyName, &len, 0, 0, 0, 0);
-    if (REG_SUCCEEDED(result)) {
-      char origValue[MAX_BUF];
-      DWORD len = sizeof origValue;
-      result = ::RegQueryValueEx(backupKey, origKeyName, NULL, NULL, (LPBYTE)origValue, &len);
-      if (REG_SUCCEEDED(result)) {
-        HKEY origKey;
-        result = ::RegOpenKeyEx(NULL, origKeyName, 0, KEY_READ, &origKey);
-        if (REG_SUCCEEDED(result))
-        {
-          result = ::RegSetValueEx(origKey, "", 0, REG_SZ, (LPBYTE)origValue, len);
-          // Close the key we opened.
-          ::RegCloseKey(origKey);
-        }
-      }
-    }
-    else
-      break;
-  }
-  while (1);
-  
-  // Close the key we opened.
-  ::RegCloseKey(backupKey);
-
-  // Refresh the Shell
-  ::SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, NULL,
-                       (LPARAM)"SOFTWARE\\Clients\\StartMenuInternet",
-                       SMTO_NORMAL|SMTO_ABORTIFHUNG,
-                       MOZ_HWND_BROADCAST_MSG_TIMEOUT, NULL);
   return NS_OK;
 }
 

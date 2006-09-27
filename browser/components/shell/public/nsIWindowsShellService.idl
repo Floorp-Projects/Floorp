@@ -37,19 +37,9 @@
 
 #include "nsIShellService.idl"
 
-[scriptable, uuid(5a92782c-a2e8-4dd3-b18a-33acc3af4fd7)]
+[scriptable, uuid(3ee25e62-ad0f-464e-8225-c3b774137387)]
 interface nsIWindowsShellService : nsIShellService
 {
-    /**
-    * Restores system settings to what they were before Firefox 
-    * modified them.
-    *
-    * @param aForAllUsers   Whether or not Firefox should restore
-    *                       settings for all users on a multi-user
-    *                       system. 
-    */
-    void restoreFileSettings(in boolean aForAllUsers);
-
     /** 
      * The number of unread mail messages for the current user.
      * 
