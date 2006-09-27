@@ -274,8 +274,8 @@ nsJavaXPTCStub::GetInterfaceInfo(nsIInterfaceInfo **aInfo)
 
 NS_IMETHODIMP
 nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
-                         const nsXPTMethodInfo *aMethodInfo,
-                         nsXPTCMiniVariant *aParams)
+                           const nsXPTMethodInfo *aMethodInfo,
+                           nsXPTCMiniVariant *aParams)
 {
 #ifdef DEBUG
   const char* ifaceName;
@@ -310,13 +310,13 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
 
   // Finish method signature
   if (NS_SUCCEEDED(rv)) {
-    methodSig.Append(")");
+    methodSig.Append(')');
     if (retvalInfo) {
       nsCAutoString retvalSig;
       rv = GetRetvalSig(retvalInfo, retvalSig);
       methodSig.Append(retvalSig);
     } else {
-      methodSig.Append("V");
+      methodSig.Append('V');
     }
     NS_ASSERTION(NS_SUCCEEDED(rv), "GetRetvalSig failed");
   }
@@ -327,13 +327,13 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
     nsCAutoString methodName;
     if (aMethodInfo->IsGetter() || aMethodInfo->IsSetter()) {
       if (aMethodInfo->IsGetter())
-        methodName.Append("get");
+        methodName.AppendLiteral("get");
       else
-        methodName.Append("set");
-      methodName.Append(aMethodInfo->GetName());
+        methodName.AppendLiteral("set");
+      methodName.AppendASCII(aMethodInfo->GetName());
       methodName.SetCharAt(toupper(methodName[3]), 3);
     } else {
-      methodName.Append(aMethodInfo->GetName());
+      methodName.AppendASCII(aMethodInfo->GetName());
       methodName.SetCharAt(tolower(methodName[0]), 0);
     }
 
@@ -464,12 +464,12 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     {
       if (!aParamInfo.IsOut()) {
         aJValue.b = aVariant.val.u8;
-        aMethodSig.Append("B");
+        aMethodSig.Append('B');
       } else {
         jbyteArray array = mJavaEnv->NewByteArray(1);
         mJavaEnv->SetByteArrayRegion(array, 0, 1, (jbyte*) &(aVariant.val.u8));
         aJValue.l = array;
-        aMethodSig.Append("[B");
+        aMethodSig.AppendLiteral("[B");
       }
     }
     break;
@@ -479,13 +479,13 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     {
       if (!aParamInfo.IsOut()) {
         aJValue.s = aVariant.val.u16;
-        aMethodSig.Append("S");
+        aMethodSig.Append('S');
       } else {
         jshortArray array = mJavaEnv->NewShortArray(1);
         mJavaEnv->SetShortArrayRegion(array, 0, 1,
                                       (jshort*) &(aVariant.val.u16));
         aJValue.l = array;
-        aMethodSig.Append("[S");
+        aMethodSig.AppendLiteral("[S");
       }
     }
     break;
@@ -495,12 +495,12 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     {
       if (!aParamInfo.IsOut()) {
         aJValue.i = aVariant.val.u32;
-        aMethodSig.Append("I");
+        aMethodSig.Append('I');
       } else {
         jintArray array = mJavaEnv->NewIntArray(1);
         mJavaEnv->SetIntArrayRegion(array, 0, 1, (jint*) &(aVariant.val.u32));
         aJValue.l = array;
-        aMethodSig.Append("[I");
+        aMethodSig.AppendLiteral("[I");
       }
     }
     break;
@@ -510,12 +510,12 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     {
       if (!aParamInfo.IsOut()) {
         aJValue.j = aVariant.val.u64;
-        aMethodSig.Append("J");
+        aMethodSig.Append('J');
       } else {
         jlongArray array = mJavaEnv->NewLongArray(1);
         mJavaEnv->SetLongArrayRegion(array, 0, 1, (jlong*) &(aVariant.val.u64));
         aJValue.l = array;
-        aMethodSig.Append("[J");
+        aMethodSig.AppendLiteral("[J");
       }
     }
     break;
@@ -524,12 +524,12 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     {
       if (!aParamInfo.IsOut()) {
         aJValue.f = aVariant.val.f;
-        aMethodSig.Append("F");
+        aMethodSig.Append('F');
       } else {
         jfloatArray array = mJavaEnv->NewFloatArray(1);
         mJavaEnv->SetFloatArrayRegion(array, 0, 1, (jfloat*) &(aVariant.val.f));
         aJValue.l = array;
-        aMethodSig.Append("[F");
+        aMethodSig.AppendLiteral("[F");
       }
     }
     break;
@@ -538,13 +538,13 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     {
       if (!aParamInfo.IsOut()) {
         aJValue.d = aVariant.val.d;
-        aMethodSig.Append("D");
+        aMethodSig.Append('D');
       } else {
         jdoubleArray array = mJavaEnv->NewDoubleArray(1);
         mJavaEnv->SetDoubleArrayRegion(array, 0, 1,
                                        (jdouble*) &(aVariant.val.d));
         aJValue.l = array;
-        aMethodSig.Append("[D");
+        aMethodSig.AppendLiteral("[D");
       }
     }
     break;
@@ -553,13 +553,13 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     {
       if (!aParamInfo.IsOut()) {
         aJValue.z = aVariant.val.b;
-        aMethodSig.Append("Z");
+        aMethodSig.Append('Z');
       } else {
         jbooleanArray array = mJavaEnv->NewBooleanArray(1);
         mJavaEnv->SetBooleanArrayRegion(array, 0, 1,
                                         (jboolean*) &(aVariant.val.b));
         aJValue.l = array;
-        aMethodSig.Append("[Z");
+        aMethodSig.AppendLiteral("[Z");
       }
     }
     break;
@@ -569,12 +569,12 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     {
       if (!aParamInfo.IsOut()) {
         aJValue.c = aVariant.val.wc;
-        aMethodSig.Append("C");
+        aMethodSig.Append('C');
       } else {
         jcharArray array = mJavaEnv->NewCharArray(1);
         mJavaEnv->SetCharArrayRegion(array, 0, 1, (jchar*) &(aVariant.val.wc));
         aJValue.l = array;
-        aMethodSig.Append("[C");
+        aMethodSig.AppendLiteral("[C");
       }
     }
     break;
@@ -605,10 +605,10 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
 
       if (!aParamInfo.IsOut()) {
         aJValue.l = str;
-        aMethodSig.Append("Ljava/lang/String;");
+        aMethodSig.AppendLiteral("Ljava/lang/String;");
       } else {
         aJValue.l = mJavaEnv->NewObjectArray(1, stringClass, str);
-        aMethodSig.Append("[Ljava/lang/String;");
+        aMethodSig.AppendLiteral("[Ljava/lang/String;");
       }
     }
     break;
@@ -625,10 +625,10 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
 
       if (!aParamInfo.IsOut()) {
         aJValue.l = str;
-        aMethodSig.Append("Ljava/lang/String;");
+        aMethodSig.AppendLiteral("Ljava/lang/String;");
       } else {
         aJValue.l = mJavaEnv->NewObjectArray(1, stringClass, str);
-        aMethodSig.Append("[Ljava/lang/String;");
+        aMethodSig.AppendLiteral("[Ljava/lang/String;");
       }
     }
     break;
@@ -668,10 +668,10 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
 
       if (!aParamInfo.IsOut()) {
         aJValue.l = java_stub;
-        aMethodSig.Append("Lorg/mozilla/xpcom/nsISupports;");
+        aMethodSig.AppendLiteral("Lorg/mozilla/xpcom/nsISupports;");
       } else {
         aJValue.l = mJavaEnv->NewObjectArray(1, nsISupportsClass, java_stub);
-        aMethodSig.Append("[Lorg/mozilla/xpcom/nsISupports;");
+        aMethodSig.AppendLiteral("[Lorg/mozilla/xpcom/nsISupports;");
       }
     }
     break;
@@ -687,10 +687,10 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
 
       if (!aParamInfo.IsOut()) {
         aJValue.l = jstr;
-        aMethodSig.Append("Ljava/lang/String;");
+        aMethodSig.AppendLiteral("Ljava/lang/String;");
       } else {
         aJValue.l = mJavaEnv->NewObjectArray(1, stringClass, jstr);
-        aMethodSig.Append("[Ljava/lang/String;");
+        aMethodSig.AppendLiteral("[Ljava/lang/String;");
       }
     }
     break;
@@ -706,10 +706,10 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
 
       if (!aParamInfo.IsOut()) {
         aJValue.l = jstr;
-        aMethodSig.Append("Ljava/lang/String;");
+        aMethodSig.AppendLiteral("Ljava/lang/String;");
       } else {
         aJValue.l = mJavaEnv->NewObjectArray(1, stringClass, jstr);
-        aMethodSig.Append("[Ljava/lang/String;");
+        aMethodSig.AppendLiteral("[Ljava/lang/String;");
       }
     }
     break;
@@ -719,12 +719,12 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     {
       if (!aParamInfo.IsOut()) {
         aJValue.i = (jint) aVariant.val.p;
-        aMethodSig.Append("I");
+        aMethodSig.Append('I');
       } else {
         jintArray array = mJavaEnv->NewIntArray(1);
         mJavaEnv->SetIntArrayRegion(array, 0, 1, (jint*) &(aVariant.val.p));
         aJValue.l = array;
-        aMethodSig.Append("[I");
+        aMethodSig.AppendLiteral("[I");
       }
     }
     break;
@@ -754,39 +754,39 @@ nsJavaXPTCStub::GetRetvalSig(const nsXPTParamInfo* aParamInfo,
   {
     case nsXPTType::T_I8:
     case nsXPTType::T_U8:
-      aRetvalSig.Append("B");
+      aRetvalSig.Append('B');
       break;
 
     case nsXPTType::T_I16:
     case nsXPTType::T_U16:
-      aRetvalSig.Append("S");
+      aRetvalSig.Append('S');
       break;
 
     case nsXPTType::T_I32:
     case nsXPTType::T_U32:
-      aRetvalSig.Append("I");
+      aRetvalSig.Append('I');
       break;
 
     case nsXPTType::T_I64:
     case nsXPTType::T_U64:
-      aRetvalSig.Append("J");
+      aRetvalSig.Append('J');
       break;
 
     case nsXPTType::T_FLOAT:
-      aRetvalSig.Append("F");
+      aRetvalSig.Append('F');
       break;
 
     case nsXPTType::T_DOUBLE:
-      aRetvalSig.Append("D");
+      aRetvalSig.Append('D');
       break;
 
     case nsXPTType::T_BOOL:
-      aRetvalSig.Append("Z");
+      aRetvalSig.Append('Z');
       break;
 
     case nsXPTType::T_CHAR:
     case nsXPTType::T_WCHAR:
-      aRetvalSig.Append("C");
+      aRetvalSig.Append('C');
       break;
 
     case nsXPTType::T_CHAR_STR:
@@ -796,16 +796,16 @@ nsJavaXPTCStub::GetRetvalSig(const nsXPTParamInfo* aParamInfo,
     case nsXPTType::T_DOMSTRING:
     case nsXPTType::T_UTF8STRING:
     case nsXPTType::T_CSTRING:
-      aRetvalSig.Append("Ljava/lang/String;");
+      aRetvalSig.AppendLiteral("Ljava/lang/String;");
       break;
 
     case nsXPTType::T_INTERFACE:
     case nsXPTType::T_INTERFACE_IS:
-      aRetvalSig.Append("Lorg/mozilla/xpcom/nsISupports;");
+      aRetvalSig.AppendLiteral("Lorg/mozilla/xpcom/nsISupports;");
       break;
 
     case nsXPTType::T_VOID:
-      aRetvalSig.Append("I");
+      aRetvalSig.Append('I');
       break;
 
     case nsXPTType::T_ARRAY:
