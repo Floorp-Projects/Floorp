@@ -23,6 +23,7 @@
  *   Joey Minta <jminta@gmail.com>
  *   Michael Buettner <michael.buettner@sun.com>
  *   gekacheka@yahoo.com
+ *   Matthew Willis <lilmatt@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -90,39 +91,17 @@ var calendarViewController = {
     },
 
     modifyOccurrence: function (aOccurrence, aNewStartTime, aNewEndTime) {
-        // prompt for choice between occurrence and master for recurrent items
-        var itemToEdit = getOccurrenceOrParent(aOccurrence);
-        if (!itemToEdit) {
-            return;  // user cancelled
-        }
         // if modifying this item directly (e.g. just dragged to new time),
         // then do so; otherwise pop up the dialog
         if (aNewStartTime && aNewEndTime) {
-            var instance = itemToEdit.clone();
+            var instance = aOccurrence.clone();
 
-            // if we're about to modify the parentItem, we need to account
-            // for the possibility that the item passed as argument was
-            // some other occurrence, but the user said she would like to
-            // modify all ocurrences instead.  In that case, we need to figure
-            // out how much the occurrence moved, and move the occurrence by
-            // that amount.
-            if (instance.parentItem.hasSameIds(instance)) {
+            // When we made the executive decision (in bug 352862) that
+            // dragging an occurrence of a recurring event would _only_ act
+            // upon _that_ occurrence, we removed a bunch of code from this
+            // function. If we ever revert that decision, check CVS history
+            // here to get that code back.
 
-                // Figure out how much the start has moved, and adjust 
-                // aNewStartTime so that the parent moves the same amuount.
-                var instanceStart = instance.startDate || instance.entryDate;
-                var occStart = aOccurrence.startDate || aOccurrence.entryDate;
-                var startDiff = instanceStart.subtractDate(occStart);
-                aNewStartTime = aNewStartTime.clone();
-                aNewStartTime.addDuration(startDiff);
-
-                // Now do the same for end
-                var instanceEnd = instance.endDate || instance.dueDate;
-                var occEnd = aOccurrence.endDate || aOccurrence.dueDate;
-                var endDiff = instanceEnd.subtractDate(occEnd);
-                aNewEndTime = aNewEndTime.clone();
-                aNewEndTime.addDuration(endDiff);
-            }
             // Yay for variable names that make this next line look silly
             if (instance instanceof Components.interfaces.calIEvent) {
                 instance.startDate = aNewStartTime;
@@ -131,8 +110,13 @@ var calendarViewController = {
                 instance.entryDate = aNewStartTime;
                 instance.dueDate = aNewEndTime;
             }
-            doTransaction('modify', instance, instance.calendar, itemToEdit, null);
+            doTransaction('modify', instance, instance.calendar, aOccurrence, null);
         } else {
+            // prompt for choice between occurrence and master for recurrent items
+            var itemToEdit = getOccurrenceOrParent(aOccurrence);
+            if (!itemToEdit) {
+                return;  // user cancelled
+            }
             modifyEventWithDialog(itemToEdit);
         }
     },
