@@ -42,7 +42,7 @@
 #include "jni.h"
 
 
-class nsAppFileLocProviderProxy : public nsIDirectoryServiceProvider
+class nsAppFileLocProviderProxy : public nsIDirectoryServiceProvider2
 {
 public:
   nsAppFileLocProviderProxy(JNIEnv* env, jobject aJavaLocProvider);
@@ -50,6 +50,7 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER
+  NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
 
 private:
   JNIEnv*   mJavaEnv;
