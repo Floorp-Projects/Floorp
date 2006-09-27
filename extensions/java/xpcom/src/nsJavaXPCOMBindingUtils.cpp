@@ -66,6 +66,7 @@ jmethodID getNameMID = nsnull;
 #endif
 
 nsJavaXPCOMBindings* gBindings = nsnull;
+PRBool gJavaXPCOMInitialized = PR_FALSE;
 
 
 /**************************************
@@ -344,12 +345,10 @@ nsJavaXPCOMBindings::GetJavaObject(JNIEnv* env, void* aXPCOMObject,
 /******************************
  *  InitializeJavaGlobals
  ******************************/
-PRBool gInitialized = PR_FALSE;
-
 PRBool
 InitializeJavaGlobals(JNIEnv *env)
 {
-  if (gInitialized)
+  if (gJavaXPCOMInitialized)
     return PR_TRUE;
 
   jclass clazz;
@@ -438,7 +437,7 @@ InitializeJavaGlobals(JNIEnv *env)
     goto init_error;
   }
 
-  gInitialized = PR_TRUE;
+  gJavaXPCOMInitialized = PR_TRUE;
   return PR_TRUE;
 
 init_error:
@@ -472,7 +471,7 @@ FreeJavaGlobals(JNIEnv* env)
     gBindings = nsnull;
   }
 
-  gInitialized = PR_FALSE;
+  gJavaXPCOMInitialized = PR_FALSE;
 }
 
 
