@@ -234,3 +234,20 @@ nsAppFileLocProviderProxy::GetFiles(const char* aProp,
   return rv;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+nsresult
+NS_NewAppFileLocProviderProxy(jobject aJavaLocProvider,
+                              nsIDirectoryServiceProvider** aResult)
+{
+  nsAppFileLocProviderProxy* provider =
+            new nsAppFileLocProviderProxy(aJavaLocProvider);
+  if (provider == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(provider);
+
+  *aResult = provider;
+  return NS_OK;
+}
+
