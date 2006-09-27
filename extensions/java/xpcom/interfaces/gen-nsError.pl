@@ -106,33 +106,35 @@ while (<STDIN>) {
   if (/^\s*#define\s+(NS_[A-Z_]+)\s+(0x)?([0-9a-fA-F]+)\s*$/) {
     #define NS_ERROR_MODULE_XPCOM      1
     #define NS_ERROR_MODULE_BASE_OFFSET 0x45
-    print "  public static final long $1 = $2$3L;\n";
+    print "  long $1 = $2$3L;\n";
   }
   elsif (/^\s*#define\s+(NS_[A-Z_]+)\s+\((NS_[A-Z_]+)\s+\+\s+(0x)?([0-9a-fA-F]+)\s*\)\s*/) {
     #define NS_ERROR_NOT_INITIALIZED           (NS_ERROR_BASE + 1)
     #define NS_ERROR_FACTORY_EXISTS            (NS_ERROR_BASE + 0x100)
-    print "  public static final long $1 = $2 + $3$4L;\n";
+    print "  long $1 = $2 + $3$4L;\n";
   }
   elsif (/^\s*#define\s+(NS_[A-Z_]+)\s+(NS_[A-Z_]+)\s\s*/) {
     #define NS_ERROR_NO_INTERFACE              NS_NOINTERFACE
-    print "  public static final long $1 = $2;\n";
+    print "  long $1 = $2;\n";
   }
   elsif (/^\s*#define\s+(NS_[A-Z_]+)\s+\(\(nsresult\)\s*(0x)?([0-9a-fA-F]+)L?\)\s*$/) { 
     #define NS_ERROR_BASE                      ((nsresult) 0xC1F30000)
     #define NS_ERROR_ABORT                     ((nsresult) 0x80004004L)
-    print "  public static final long $1 = $2$3L;\n";
+    print "  long $1 = $2$3L;\n";
   }
   elsif (/^\s*#define\s+(NS_[A-Z_]+)\s+NS_ERROR_GENERATE_FAILURE\s*\(\s*(NS_[A-Z_]+)\s*,\s*([0-9]+)\s*\)\s*$/) { 
     #define NS_BASE_STREAM_CLOSED         NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_BASE, 2)
     $module = $2;
     $code = $3;
-    print "  public static final long $1 = ((NS_ERROR_SEVERITY_ERROR<<31) | (($module+NS_ERROR_MODULE_BASE_OFFSET)<<16) | $code);\n";
+    print "  long $1 = ((NS_ERROR_SEVERITY_ERROR<<31) |\n";
+    print "      (($module+NS_ERROR_MODULE_BASE_OFFSET)<<16) | $code);\n";
   }
   elsif (/^\s*#define\s+(NS_[A-Z_]+)\s+NS_ERROR_GENERATE_SUCCESS\s*\(\s*(NS_[A-Z_]+)\s*,\s*([0-9]+)\s*\)\s*$/) { 
     #define NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCOM,  1)
     $module = $2;
     $code = $3;
-    print "  public static final long $1 = ((NS_ERROR_SEVERITY_SUCCESS<<31) | (($module+NS_ERROR_MODULE_BASE_OFFSET)<<16) | $code);\n";
+    print "  long $1 = ((NS_ERROR_SEVERITY_SUCCESS<<31) |\n";
+    print "      (($module+NS_ERROR_MODULE_BASE_OFFSET)<<16) | $code);\n";
   }
   elsif (/^\s*\/\*(.*)\*\/\s*$/ && !/^\s*\/\*@[\{\}]\*\/\s*$/ &&
          !/^\s*\/\*\ -\*- Mode:/) {
