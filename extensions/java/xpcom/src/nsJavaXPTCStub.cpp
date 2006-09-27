@@ -580,7 +580,8 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
           nsID iid;
           JavaXPCOMInstance* inst;
           rv = GetIIDForMethodParam(mIInfo, aMethodInfo, aParamInfo,
-                                    aMethodIndex, aDispatchParams, PR_FALSE, iid);
+                                    aMethodIndex, aDispatchParams,
+                                    PR_FALSE, iid);
           if (NS_FAILED(rv))
             return rv;
 
@@ -1037,8 +1038,8 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
             // Get IID for this param
             nsID iid;
             rv = GetIIDForMethodParam(mIInfo, aMethodInfo, aParamInfo,
-                                      aMethodIndex, aDispatchParams, PR_TRUE,
-                                      iid);
+                                      aMethodIndex, aDispatchParams,
+                                      PR_FALSE, iid);
             if (NS_FAILED(rv))
               return rv;
 
@@ -1069,8 +1070,8 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
               // Get IID for this param
               nsID iid;
               rv = GetIIDForMethodParam(mIInfo, aMethodInfo, aParamInfo,
-                                        aMethodIndex, aDispatchParams, PR_TRUE,
-                                        iid);
+                                        aMethodIndex, aDispatchParams,
+                                        PR_FALSE, iid);
               if (NS_FAILED(rv))
                 return rv;
 
