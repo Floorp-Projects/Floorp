@@ -121,7 +121,7 @@ public:
 	{}
 
 	nsISupports* GetInstance()	{ return mInstance; }
-	nsIInterfaceInfo* InterfaceInfo() { return mIInfo; }
+	nsIInterfaceInfo* InterfaceInfo();
 
 private:
 	nsCOMPtr<nsISupports>      mInstance;
@@ -130,6 +130,7 @@ private:
 
 JavaXPCOMInstance* CreateJavaXPCOMInstance(nsISupports* aXPCOMObject,
                                            const nsIID* aIID);
+
 
 /**************************************
  *  Java<->XPCOM binding stores
