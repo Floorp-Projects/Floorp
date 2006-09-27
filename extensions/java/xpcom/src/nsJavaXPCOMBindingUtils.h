@@ -115,10 +115,8 @@ void FreeJavaGlobals(JNIEnv* env);
 class JavaXPCOMInstance
 {
 public:
-	JavaXPCOMInstance(nsISupports* aInstance, nsIInterfaceInfo* aIInfo)
-		: mInstance(aInstance),
-		  mIInfo(aIInfo)
-	{}
+  JavaXPCOMInstance(nsISupports* aInstance, nsIInterfaceInfo* aIInfo);
+  ~JavaXPCOMInstance();
 
 	nsISupports* GetInstance()	{ return mInstance; }
 	nsIInterfaceInfo* InterfaceInfo();
