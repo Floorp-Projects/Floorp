@@ -47,8 +47,6 @@
 
 
 /* Java JNI globals */
-jclass intClass = nsnull;
-jclass intArrayClass = nsnull;
 jclass stringClass = nsnull;
 jclass nsISupportsClass = nsnull;
 jclass xpcomExceptionClass = nsnull;
@@ -297,10 +295,7 @@ InitializeJavaGlobals(JNIEnv *env)
   }
 
   if (!(clazz = env->FindClass("java/lang/Integer")) ||
-      !(intClass = (jclass) env->NewGlobalRef(clazz)) ||
-      !(clazz = env->FindClass("[I")) ||
-      !(intArrayClass = (jclass) env->NewGlobalRef(clazz)) ||
-      !(intValueMID = env->GetMethodID(intClass,"intValue","()I")))
+      !(intValueMID = env->GetMethodID(clazz,"intValue","()I")))
   {
     goto init_error;
   }
@@ -403,14 +398,6 @@ init_error:
 void
 FreeJavaGlobals(JNIEnv* env)
 {
-  if (intClass) {
-    env->DeleteGlobalRef(intClass);
-    intClass = nsnull;
-  }
-  if (intArrayClass) {
-    env->DeleteGlobalRef(intArrayClass);
-    intArrayClass = nsnull;
-  }
   if (stringClass) {
     env->DeleteGlobalRef(stringClass);
     stringClass = nsnull;
