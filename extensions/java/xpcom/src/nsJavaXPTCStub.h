@@ -119,7 +119,7 @@ private:
                               jvalue &aJValue);
   nsresult SetXPCOMRetval();
 
-  jweak                       mJavaWeakRef;
+  jobject                     mJavaWeakRef;
   jobject                     mJavaStrongRef;
   nsCOMPtr<nsIInterfaceInfo>  mIInfo;
 
