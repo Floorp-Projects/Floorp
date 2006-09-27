@@ -274,7 +274,6 @@ DecryptString(const char *crypt, char **_retval)
     r = 0;
 
 loser:
-    if (r) nsMemory::Free(r);
     if (decrypted) nsMemory::Free(decrypted);
     if (decoded) nsMemory::Free(decoded);
  
