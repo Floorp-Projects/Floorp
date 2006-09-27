@@ -43,9 +43,12 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "pldhash.h"
+#include "nsJavaXPTCStub.h"
 #include "nsAutoLock.h"
 
 //#define DEBUG_JAVAXPCOM
+//#define DEBUG_JAVAXPCOM_REFCNT
+
 #ifdef DEBUG_JAVAXPCOM
 #define LOG(x)  printf x
 #else
@@ -62,6 +65,7 @@
 /*********************
  * Java JNI globals
  *********************/
+
 extern jclass booleanClass;
 extern jclass charClass;
 extern jclass byteClass;
@@ -101,11 +105,24 @@ extern jmethodID getNameMID;
 extern jmethodID proxyToStringMID;
 #endif
 
-class nsJavaXPCOMBindings;
-extern nsJavaXPCOMBindings* gBindings;
+class NativeToJavaProxyMap;
+extern NativeToJavaProxyMap* gNativeToJavaProxyMap;
+class JavaToXPTCStubMap;
+extern JavaToXPTCStubMap* gJavaToXPTCStubMap;
 
 extern PRLock* gJavaXPCOMLock;
+
+/**
+ * Initialize global structures used by Javaconnect.
+ * @param env   Java environment pointer
+ * @return PR_TRUE if Javaconnect is initialized; PR_FALSE if an error occurred
+ */
 PRBool InitializeJavaGlobals(JNIEnv *env);
+
+/**
+ * Frees global structures that were allocated by InitializeJavaGlobals().
+ * @param env   Java environment pointer
+ */
 void FreeJavaGlobals(JNIEnv* env);
 
 
@@ -129,42 +146,125 @@ private:
 
 
 /**************************************
- *  Java<->XPCOM binding stores
+ *  Java<->XPCOM object mappings
  **************************************/
-// This class is used to store the associations between existing Java object
-// and XPCOM objects.
-class nsJavaXPCOMBindings
+
+/**
+ * Maps native XPCOM objects to their associated Java proxy object.
+ */
+class NativeToJavaProxyMap
 {
+protected:
+  struct ProxyList
+  {
+    ProxyList(const jobject aRef, const nsIID& aIID, ProxyList* aList)
+      : javaObject(aRef)
+      , iid(aIID)
+      , next(aList)
+    { }
+
+    const jobject   javaObject;
+    const nsIID     iid;
+    ProxyList*      next;
+  };
+
+  struct Entry : public PLDHashEntryHdr
+  {
+    nsISupports*  key;
+    ProxyList*    list;
+  };
+
 public:
-  nsJavaXPCOMBindings()
-    : mJAVAtoXPCOMBindings(nsnull)
-    , mXPCOMtoJAVABindings(nsnull)
+  NativeToJavaProxyMap()
+    : mHashTable(nsnull)
   { }
-  ~nsJavaXPCOMBindings();
 
-  // Initializes internal structures.
-  NS_IMETHOD Init();
+  ~NativeToJavaProxyMap();
 
-  // Associates the given Java object with the given XPCOM object
-  NS_IMETHOD AddBinding(JNIEnv* env, jobject aJavaStub, void* aXPCOMObject);
+  nsresult Init();
 
-  // Given either a Java object or XPCOM object, removes the association
-  // between the two.
-  NS_IMETHOD RemoveBinding(JNIEnv* env, jobject aJavaObject, void* aXPCOMObject);
+  nsresult Add(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
+               jobject aProxy);
 
-  // Given a Java object, returns the associated XPCOM object.
-  void* GetXPCOMObject(JNIEnv* env, jobject aJavaObject);
+  nsresult Find(JNIEnv* env, nsISupports* aNativeObject, const nsIID& aIID,
+                jobject* aResult);
 
-  // Given an XPCOM object, returns the associated Java Object.  If a Java
-  // object doesn't exist, then create a Java proxy for the XPCOM object.
-  NS_IMETHOD GetJavaObject(JNIEnv* env, void* aXPCOMObject, const nsIID& aIID,
-                           PRBool aDoReleaseObject, jobject* aResult);
-private:
-  PLDHashTable* mJAVAtoXPCOMBindings;
-  PLDHashTable* mXPCOMtoJAVABindings;
+  nsresult Remove(JNIEnv* env, nsISupports* aNativeObject, const nsIID& aIID);
+
+protected:
+  PLDHashTable* mHashTable;
+};
+
+/**
+ * Maps Java objects to their associated nsJavaXPTCStub.
+ */
+class JavaToXPTCStubMap
+{
+protected:
+  struct Entry : public PLDHashEntryHdr
+  {
+    jint        key;
+    nsJavaXPTCStub* xptcstub;
+  };
+
+public:
+  JavaToXPTCStubMap()
+    : mHashTable(nsnull)
+  { }
+
+  ~JavaToXPTCStubMap();
+
+  nsresult Init();
+
+  nsresult Add(JNIEnv* env, jobject aJavaObject, nsJavaXPTCStub* aProxy);
+
+  nsresult Find(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
+                nsJavaXPTCStub** aResult);
+
+  nsresult Remove(JNIEnv* env, jobject aJavaObject);
+
+protected:
+  PLDHashTable* mHashTable;
 };
 
 
+/*******************************
+ *  Helper functions
+ *******************************/
+
+/**
+ * Finds the associated Java object for the given XPCOM object and IID.  If no
+ * such Java object exists, then it creates one.
+ *
+ * @param env           Java environment pointer
+ * @param aXPCOMObject  XPCOM object for which to find/create Java object
+ * @param aIID          desired interface IID for Java object
+ * @param aResult       on success, holds reference to Java object
+ * @param aIsNewProxy   on success, holds PR_TRUE if aResult points to newlyXPTCStub;
+ *                      created Java proxy; PR_FALSE otherwise
+ *
+ * @return  NS_OK if succeeded; all other return values are error codes.
+ */
+nsresult GetNewOrUsedJavaObject(JNIEnv* env, nsISupports* aXPCOMObject,
+                                const nsIID& aIID, jobject* aResult,
+                                PRBool* aIsNewProxy);
+
+/**
+ * Finds the associated XPCOM object for the given Java object and IID.  If no
+ * such XPCOM object exists, then it creates one.
+ *
+ * @param env           Java environment pointer
+ * @param aJavaObject   Java object for which to find/create XPCOM object
+ * @param aIID          desired interface IID for XPCOM object
+ * @param aResult       on success, holds AddRef'd reference to XPCOM object
+ * @param aIsXPTCStub   on success, holds PR_TRUE if aResult points to XPTCStub;
+ *                      PR_FALSE if aResult points to native XPCOM object
+ *
+ * @return  NS_OK if succeeded; all other return values are error codes.
+ */
+nsresult GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject,
+                                 const nsIID& aIID, nsISupports** aResult,
+                                 PRBool* aIsXPTCStub);
 
 nsresult GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
                               const nsXPTMethodInfo *methodInfo,
