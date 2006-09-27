@@ -497,6 +497,7 @@ function setDefaultAlarmValues(aItem)
                 try {
                     var units = alarmsBranch.getCharPref("eventalarmunit");
                     alarmOffset[units] = alarmsBranch.getIntPref("eventalarmlen");
+                    alarmOffset.isNegative = true;
                 } catch(ex) {
                     alarmOffset.minutes = 15;
                 }
@@ -519,6 +520,7 @@ function setDefaultAlarmValues(aItem)
                 try {
                     var units = alarmsBranch.getCharPref("todoalarmunit");
                     alarmOffset[units] = alarmsBranch.getIntPref("todoalarmlen");
+                    alarmOffset.isNegative = true;
                 } catch(ex) {
                     alarmOffset.minutes = 15;
                 }
