@@ -44,6 +44,7 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "prmem.h"
+#include "nsServiceManagerUtils.h"
 
 #define JAVAPROXY_NATIVE(func) \
           Java_org_mozilla_xpcom_internal_XPCOMJavaProxy_##func
@@ -109,9 +110,9 @@ CreateJavaArray(JNIEnv* env, PRUint8 aType, PRUint32 aSize, const nsID& aIID,
     case nsXPTType::T_INTERFACE:
     case nsXPTType::T_INTERFACE_IS:
     {
-      nsCOMPtr<nsIInterfaceInfoManager> iim =
-        getter_AddRefs(XPTI_GetInterfaceInfoManager());
-      NS_ASSERTION(iim != nsnull, "Failed to get InterfaceInfoManager");
+      nsCOMPtr<nsIInterfaceInfoManager>
+        iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
+      NS_ASSERTION(iim, "Failed to get InterfaceInfoManager");
       if (!iim)
         return NS_ERROR_FAILURE;
 
@@ -1618,9 +1619,9 @@ CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
   if (!aResult)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIInterfaceInfoManager> iim =
-    getter_AddRefs(XPTI_GetInterfaceInfoManager());
-  NS_ASSERTION(iim != nsnull, "Failed to get InterfaceInfoManager");
+  nsCOMPtr<nsIInterfaceInfoManager>
+    iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
+  NS_ASSERTION(iim, "Failed to get InterfaceInfoManager");
   if (!iim)
     return NS_ERROR_FAILURE;
 
