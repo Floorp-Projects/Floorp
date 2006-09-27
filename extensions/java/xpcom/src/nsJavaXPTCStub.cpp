@@ -200,18 +200,22 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
 PRBool
 nsJavaXPTCStub::SupportsIID(const nsID &iid)
 {
-  PRBool match;
-  nsCOMPtr<nsIInterfaceInfo> iter = mIInfo;
-  do
-  {
-    if (NS_SUCCEEDED(iter->IsIID(&iid, &match)) && match)
-      return PR_TRUE;
+  // Sometimes mIInfo will be null, particularly when nsJavaXPTCStub represents
+  // a custom (non-Mozilla) interface.
+  if (mIInfo) {
+    PRBool match;
+    nsCOMPtr<nsIInterfaceInfo> iter = mIInfo;
+    do
+    {
+      if (NS_SUCCEEDED(iter->IsIID(&iid, &match)) && match)
+        return PR_TRUE;
 
-    nsCOMPtr<nsIInterfaceInfo> parent;
-    iter->GetParent(getter_AddRefs(parent));
-    iter = parent;
+      nsCOMPtr<nsIInterfaceInfo> parent;
+      iter->GetParent(getter_AddRefs(parent));
+      iter = parent;
+    }
+    while (iter != nsnull);
   }
-  while (iter != nsnull);
 
   return PR_FALSE;
 }
