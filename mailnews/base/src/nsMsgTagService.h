@@ -74,14 +74,13 @@ private:
   ~nsMsgTagService();
 
 protected:
-  nsresult getPrefService() ;
   nsresult SetUnicharPref(const char *prefName,
                           const nsAString &prefValue);
   nsresult GetUnicharPref(const char *prefName,
                           nsAString &prefValue);
   nsresult MigrateLabelsToTags();
 
-  nsCOMPtr<nsIPrefBranch> m_prefBranch;
+  nsCOMPtr<nsIPrefBranch> m_tagPrefBranch;
 };
 
 #endif
