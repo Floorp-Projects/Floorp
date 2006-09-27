@@ -350,10 +350,12 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
           nsJavaXPTCStubWeakRef* weakref =
                                       new nsJavaXPTCStubWeakRef(env, java_obj);
           NS_ADDREF(weakref);
+          aVariant.flags |= nsXPTCVariant::VAL_IS_ALLOCD;
           aVariant.val.p = aVariant.ptr = (void*) weakref;
         } else if (IsXPTCStub(inst)) {
           nsJavaXPTCStub* xpcomStub = GetXPTCStubAddr(inst);
           NS_ADDREF(xpcomStub);
+          aVariant.flags |= nsXPTCVariant::VAL_IS_ALLOCD;
           aVariant.val.p = aVariant.ptr = (void*) xpcomStub;
         } else {
           JavaXPCOMInstance* xpcomInst = (JavaXPCOMInstance*) inst;
@@ -363,7 +365,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
         aVariant.val.p = aVariant.ptr = nsnull;
       }
 
-      aVariant.flags = nsXPTCVariant::PTR_IS_DATA;
+      aVariant.flags |= nsXPTCVariant::PTR_IS_DATA;
       aVariant.SetValIsInterface();
     }
     break;
@@ -663,6 +665,14 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
         }
 
         env->SetObjectArrayElement((jobjectArray) aParam, 0, java_obj);
+      }
+
+      // If VAL_IS_ALLOCD is set, that means that an XPCOM object was created
+      // is SetupParams that now needs to be released.
+      if (aVariant.val.p &&
+          (aVariant.flags & nsXPTCVariant::VAL_IS_ALLOCD)) {
+        nsISupports* variant = NS_STATIC_CAST(nsISupports*, aVariant.val.p);
+        NS_RELEASE(variant);
       }
     }
     break;
@@ -964,11 +974,6 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
   invokeResult = XPTC_InvokeByIndex(inst->GetInstance(), aMethodIndex,
                                     paramCount, params);
 
-  if (NS_FAILED(invokeResult)) {
-    ThrowXPCOMException(env, invokeResult);
-    return;
-  }
-
   for (PRUint8 i = 0; i < paramCount && NS_SUCCEEDED(rv); i++)
   {
     const nsXPTParamInfo &paramInfo = methodInfo->GetParam(i);
@@ -983,7 +988,7 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
     }
   }
   if (NS_FAILED(rv)) {
-    NS_WARNING("SetupParams failed");
+    NS_WARNING("FinalizeParams failed");
     ThrowXPCOMException(env, rv);
     return;
   }
@@ -1002,8 +1007,15 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
     }
   }
 
-  if (params)
+  if (params) {
     delete params;
+  }
+
+  // If the XPCOM method invocation failed, we don't immediately throw an
+  // exception and return so that we can clean up any parameters.
+  if (NS_FAILED(invokeResult)) {
+    ThrowXPCOMException(env, invokeResult);
+  }
 
   return;
 }
