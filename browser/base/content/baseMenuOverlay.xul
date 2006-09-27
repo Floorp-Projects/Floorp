@@ -92,7 +92,8 @@
                   accesskey="&helpForIEUsers.accesskey;"
                   oncommand="openHelp('ieusers', 'chrome://browser/locale/help/help.rdf');"/>
 #endif
-        <menuitem accesskey="&helpReleaseNotes.accesskey;"
+        <menuitem id="releaseNotes"
+                  accesskey="&helpReleaseNotes.accesskey;"
                   label="&helpReleaseNotes.label;"
                   oncommand="openReleaseNotes(event)"
                   onclick="checkForMiddleClick(this, event);"/>
