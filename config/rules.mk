@@ -1303,7 +1303,7 @@ $(_JAVA_DIR)::
 	$(NSINSTALL) -D $@
 
 $(_JAVA_DIR)/%.class: %.java Makefile Makefile.in $(_JAVA_DIR)
-	$(CYGWIN_WRAPPER) $(JAVAC) $(JAVAC_FLAGS) -cp $(_JAVA_CLASSPATH) \
+	$(CYGWIN_WRAPPER) $(JAVAC) $(JAVAC_FLAGS) -classpath $(_JAVA_CLASSPATH) \
 			-sourcepath $(_JAVA_SOURCEPATH) -d $(_JAVA_DIR) $(_VPATH_SRCS)
 
 $(JAVA_LIBRARY): $(addprefix $(_JAVA_DIR)/,$(JAVA_SRCS:.java=.class)) Makefile Makefile.in
