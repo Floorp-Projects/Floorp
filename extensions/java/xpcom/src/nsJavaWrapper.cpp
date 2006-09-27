@@ -883,9 +883,8 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
 {
   // Find corresponding XPCOM object
   void* xpcomObj = GetMatchingXPCOMObject(env, aJavaObject);
-  NS_ASSERTION(xpcomObj != nsnull, "Failed to get matching XPCOM object");
   if (xpcomObj == nsnull) {
-    ThrowXPCOMException(env, 0);
+    ThrowXPCOMException(env, 0, "Failed to get matching XPCOM object");
     return;
   }
 
@@ -951,8 +950,7 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
       }
     }
     if (NS_FAILED(rv)) {
-      NS_WARNING("SetupParams failed");
-      ThrowXPCOMException(env, rv);
+      ThrowXPCOMException(env, rv, "SetupParams failed");
       return;
     }
   }
@@ -975,8 +973,7 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
     }
   }
   if (NS_FAILED(rv)) {
-    NS_WARNING("FinalizeParams failed");
-    ThrowXPCOMException(env, rv);
+    ThrowXPCOMException(env, rv, "FinalizeParams failed");
     return;
   }
 
@@ -1001,7 +998,10 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
   // If the XPCOM method invocation failed, we don't immediately throw an
   // exception and return so that we can clean up any parameters.
   if (NS_FAILED(invokeResult)) {
-    ThrowXPCOMException(env, invokeResult);
+    nsCAutoString message("The function \"");
+    message.Append(methodInfo->GetName());
+    message.Append("\" returned an error condition");
+    ThrowXPCOMException(env, invokeResult, message.get());
   }
 
   return;
