@@ -300,16 +300,20 @@ final class NativeString extends IdScriptableObject
                 return ScriptRuntime.checkRegExpProxy(cx).
                     action(cx, scope, thisObj, args, actionType);
             }
-          case Id_localeCompare:
-          {
-              // ECMA-262 1 5.5.4.9
-              Collator collator = Collator.getInstance(cx.getLocale());
-              collator.setStrength(Collator.IDENTICAL);
-              collator.setDecomposition(Collator.CANONICAL_DECOMPOSITION);
-              return ScriptRuntime.wrapNumber(collator.compare(
-                      ScriptRuntime.toString(thisObj), 
-                      ScriptRuntime.toString(args, 0)));
-          }
+            // ECMA-262 1 5.5.4.9
+            case Id_localeCompare:
+            {
+                // For now, create and configure a collator instance. I can't
+                // actually imagine that this'd be slower than caching them
+                // a la ClassCache, so we aren't trying to outsmart ourselves
+                // with a caching mechanism for now.
+                Collator collator = Collator.getInstance(cx.getLocale());
+                collator.setStrength(Collator.IDENTICAL);
+                collator.setDecomposition(Collator.CANONICAL_DECOMPOSITION);
+                return ScriptRuntime.wrapNumber(collator.compare(
+                        ScriptRuntime.toString(thisObj), 
+                        ScriptRuntime.toString(args, 0)));
+            }
         }
         throw new IllegalArgumentException(String.valueOf(id));
     }
