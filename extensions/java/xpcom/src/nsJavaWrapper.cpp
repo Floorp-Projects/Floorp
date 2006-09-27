@@ -108,7 +108,8 @@ CreateJavaArray(JNIEnv* env, PRUint8 aType, PRUint32 aSize, const nsID& aIID,
     case nsXPTType::T_INTERFACE:
     case nsXPTType::T_INTERFACE_IS:
     {
-      nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
+      nsCOMPtr<nsIInterfaceInfoManager> iim =
+        getter_AddRefs(XPTI_GetInterfaceInfoManager());
       NS_ASSERTION(iim != nsnull, "Failed to get InterfaceInfoManager");
       if (!iim)
         return NS_ERROR_FAILURE;
@@ -1616,7 +1617,8 @@ CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
   if (!aResult)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
+  nsCOMPtr<nsIInterfaceInfoManager> iim =
+    getter_AddRefs(XPTI_GetInterfaceInfoManager());
   NS_ASSERTION(iim != nsnull, "Failed to get InterfaceInfoManager");
   if (!iim)
     return NS_ERROR_FAILURE;
