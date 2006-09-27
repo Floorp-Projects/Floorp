@@ -89,7 +89,7 @@ GECKO_NATIVE(initEmbedding) (JNIEnv* env, jclass, jobject aMozBinDirectory,
 extern "C" JNIEXPORT void JNICALL
 GECKO_NATIVE(termEmbedding) (JNIEnv *env, jclass)
 {
-	nsresult rv = NS_TermEmbedding();
+  nsresult rv = NS_TermEmbedding();
   if (NS_FAILED(rv))
     ThrowXPCOMException(env, rv, "NS_TermEmbedding failed");
 
@@ -166,7 +166,7 @@ XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jclass, jobject aServMgr)
     servMgr = do_QueryInterface(((JavaXPCOMInstance*) xpcomObj)->GetInstance());
   }
 
-	nsresult rv = NS_ShutdownXPCOM(servMgr);
+  nsresult rv = NS_ShutdownXPCOM(servMgr);
   if (NS_FAILED(rv))
     ThrowXPCOMException(env, rv, "NS_ShutdownXPCOM failed");
 
