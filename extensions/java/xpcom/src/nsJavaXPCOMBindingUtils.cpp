@@ -454,20 +454,6 @@ CreateJavaXPCOMInstance(nsISupports* aXPCOMObject, const nsIID* aIID)
 }
 
 
-void
-ThrowXPCOMException(JNIEnv* env, int aFailureCode)
-{
-  // Only throw this exception if one hasn't already been thrown, so we don't
-  // mask a previous exception/error.
-  jthrowable throwObj = env->ExceptionOccurred();
-  if (throwObj == nsnull) {
-    char exp_msg[40];
-    sprintf(exp_msg, "\nInternal XPCOM Error: %x", aFailureCode);
-    jint rc = env->ThrowNew(xpcomExceptionClass, exp_msg);
-    NS_ASSERTION(rc == 0, "Failed to throw XPCOMException");
-  }
-}
-
 nsresult
 GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
                                          const nsXPTMethodInfo *methodInfo,
@@ -522,6 +508,49 @@ GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
 /*******************************
  *  JNI helper functions
  *******************************/
+
+void
+ThrowXPCOMException(JNIEnv* env, const nsresult aErrorCode,
+                    const char* aMessage)
+{
+  // Only throw this exception if one hasn't already been thrown, so we don't
+  // mask a previous exception/error.
+  jthrowable throwObj = env->ExceptionOccurred();
+  if (throwObj != nsnull)
+    return;
+
+  // Create parameters and method signature. Max of 2 params.  The error code
+  // comes before the message string.
+  PRUint32 index = 0;
+  jvalue* args = new jvalue[2];
+  nsCAutoString methodSig("(");
+  if (aErrorCode) {
+    args[index++].j = aErrorCode;
+    methodSig.Append("J");
+  }
+  if (aMessage) {
+    args[index].l = env->NewStringUTF(aMessage);
+    methodSig.Append("Ljava/lang/String;");
+  }
+  methodSig.Append(")V");
+
+  // create exception object
+  jmethodID mid = env->GetMethodID(xpcomExceptionClass, "<init>",
+                                   methodSig.get());
+  if (mid) {
+    throwObj = (jthrowable) env->NewObjectA(xpcomExceptionClass, mid, args);
+  }
+  NS_ASSERTION(throwObj, "Failed to create XPCOMException object");
+
+  // throw exception
+  if (throwObj) {
+    env->Throw(throwObj);
+  }
+
+  // cleanup
+  delete[] args;
+}
+
 nsAString*
 jstring_to_nsAString(JNIEnv* env, jstring aString)
 {
