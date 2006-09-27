@@ -108,6 +108,9 @@ private:
                            nsXPTCMiniVariant &aVariant,
                            jvalue &aJValue, nsACString &aMethodSig);
   nsresult GetRetvalSig(const nsXPTParamInfo* aParamInfo,
+                        const nsXPTMethodInfo* aMethodInfo,
+                        PRUint16 aMethodIndex,
+                        nsXPTCMiniVariant* aDispatchParams,
                         nsACString &aRetvalSig);
   nsresult FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
                               const nsXPTMethodInfo* aMethodInfo,
