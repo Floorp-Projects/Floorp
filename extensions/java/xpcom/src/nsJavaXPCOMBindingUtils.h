@@ -57,12 +57,6 @@
 #define LOG(x)  /* nothing */
 #endif
 
-#if defined(XP_WIN) || defined(XP_MAC)
-#define JX_EXPORT   JNIEXPORT
-#else
-#define JX_EXPORT   JNIEXPORT NS_EXPORT
-#endif
-
 
 /*********************
  * Java JNI globals
