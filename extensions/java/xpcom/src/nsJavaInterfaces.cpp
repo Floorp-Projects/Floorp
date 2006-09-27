@@ -227,63 +227,6 @@ GECKO_NATIVE(getServiceManager) (JNIEnv *env, jclass)
   return java_stub;
 }
 
-// JNI wrapper for calling an nsWriteSegmentFun function
-extern "C" JNIEXPORT jint JNICALL
-XPCOM_NATIVE(nsWriteSegmentFun) (JNIEnv *env, jclass that, jint aWriterFunc,
-                                 jobject aInStream, jint aClosure,
-                                 jbyteArray aFromSegment, jint aToOffset,
-                                 jint aCount)
-{
-  nsresult rc;
-
-  void* inst = GetMatchingXPCOMObject(env, aInStream);
-  if (inst == nsnull) {
-    // If there is not corresponding XPCOM object, then that means that the
-    // parameter is non-generated class (that is, it is not one of our
-    // Java stubs that represent an exising XPCOM object).  So we need to
-    // create an XPCOM stub, that can route any method calls to the class.
-
-    // Get interface info for class
-    nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
-    nsCOMPtr<nsIInterfaceInfo> iinfo;
-    iim->GetInfoForIID(&NS_GET_IID(nsIInputStream), getter_AddRefs(iinfo));
-
-    // Create XPCOM stub
-    nsJavaXPTCStub* xpcomStub = new nsJavaXPTCStub(env, aInStream, iinfo);
-    NS_ADDREF(xpcomStub);
-    inst = SetAsXPTCStub(xpcomStub);
-    AddJavaXPCOMBinding(env, aInStream, inst);
-  }
-
-  nsIInputStream* instream;
-  if (IsXPTCStub(inst))
-    instream = (nsIInputStream*) GetXPTCStubAddr(inst);
-  else {
-    JavaXPCOMInstance* xpcomInst = (JavaXPCOMInstance*) inst;
-    instream = (nsIInputStream*) xpcomInst->GetInstance();
-  }
-
-  jbyte* fromSegment = nsnull;
-  jboolean isCopy = JNI_FALSE;
-  if (aFromSegment) {
-    fromSegment = env->GetByteArrayElements(aFromSegment, &isCopy);
-  }
-
-  PRUint32 write_count;
-	nsWriteSegmentFun writer = (nsWriteSegmentFun) aWriterFunc;
-	rc = writer(instream, (void*) aClosure, (const char*) fromSegment, aToOffset,
-              aCount, &write_count);
-  if (NS_FAILED(rc)) {
-    ThrowXPCOMException(env, rc);
-    return 0;
-  }
-
-  if (isCopy) {
-    env->ReleaseByteArrayElements(aFromSegment, fromSegment, 0);
-  }
-	return write_count;
-}
-
 extern "C" JNIEXPORT void JNICALL
 XPCOM_NATIVE(CallXPCOMMethodVoid) (JNIEnv *env, jclass that, jobject aJavaObject,
                                    jint aMethodIndex, jobjectArray aParams)
