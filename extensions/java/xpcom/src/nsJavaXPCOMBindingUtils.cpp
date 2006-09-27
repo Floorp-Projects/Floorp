@@ -175,17 +175,19 @@ RemoveXPCOMBinding(JNIEnv* env, jobject aJavaObject)
   LOG("- Removing Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
       hash, (int) xpcomObj);
 
+  nsISupports* inst = nsnull;
   if (IsXPTCStub(xpcomObj)) {
-    return (nsISupports*) GetXPTCStubAddr(xpcomObj);
+    GetXPTCStubAddr(xpcomObj)->QueryInterface(NS_GET_IID(nsISupports),
+                                              (void**) &inst);
   } else {
     JavaXPCOMInstance* xpcomInst = (JavaXPCOMInstance*) xpcomObj;
-    nsISupports* inst = xpcomInst->GetInstance();
+    inst = xpcomInst->GetInstance();
     // XXX Getting some odd thread issues when calling this.  Addreffing for
     //  now to work around the errors.
     NS_ADDREF(inst);
     delete xpcomInst;
-    return inst;
   }
+  return inst;
 }
 
 void
