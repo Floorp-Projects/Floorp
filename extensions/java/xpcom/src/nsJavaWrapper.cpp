@@ -1436,8 +1436,8 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
         PRUint8 type = params[i].type.TagPart();
 
         // is paramater an array?
-        PRUint8 arrayType;
-        PRUint32 arraySize;
+        PRUint8 arrayType = 0;
+        PRUint32 arraySize = 0;
         if (type == nsXPTType::T_ARRAY) {
           // get array type
           nsXPTType xpttype;
@@ -1530,8 +1530,8 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
     PRUint8 type = paramInfo.GetType().TagPart();
 
     // is paramater an array?
-    PRUint8 arrayType;
-    PRUint32 arraySize;
+    PRUint8 arrayType = 0;
+    PRUint32 arraySize = 0;
     if (type == nsXPTType::T_ARRAY) {
       // get array type
       nsXPTType array_xpttype;
