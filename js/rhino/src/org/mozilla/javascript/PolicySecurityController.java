@@ -24,7 +24,7 @@ import org.mozilla.classfile.ClassFileWriter;
  * (or not) that the script source files are signed in whatever 
  * implementation-specific way you're using.
  * @author Attila Szegedi
- * @version $Id: PolicySecurityController.java,v 1.1 2006/09/10 12:16:46 szegedia%freemail.hu Exp $
+ * @version $Id: PolicySecurityController.java,v 1.2 2006/09/27 08:51:18 szegedia%freemail.hu Exp $
  */
 public class PolicySecurityController extends SecurityController
 {

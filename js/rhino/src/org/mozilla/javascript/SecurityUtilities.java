@@ -42,7 +42,7 @@ import java.security.ProtectionDomain;
 
 /**
  * @author Attila Szegedi
- * @version $Id: SecurityUtilities.java,v 1.2 2006/09/06 13:35:16 szegedia%freemail.hu Exp $
+ * @version $Id: SecurityUtilities.java,v 1.3 2006/09/27 08:51:18 szegedia%freemail.hu Exp $
  */
 public class SecurityUtilities
 {

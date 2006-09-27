@@ -1,3 +1,5 @@
+This file version: $Id: CHANGELOG,v 1.2 2006/09/27 08:50:41 szegedia%freemail.hu Exp $
+
 Changes since Rhino 1.6R4
 =========================
 - Added org.mozilla.javascript.PolicySecurityController as a concrete 
@@ -7,3 +9,7 @@ Changes since Rhino 1.6R4
   the ProtectionDomain of Rhino classes.
 - Wrapped access to system properties and creation of class loaders into
   AccessController.doPrivileged() to nicely play in secured environments.
+- Fixed #353300: Rhino now implements the ECMA-262 mandatory 
+  String.localeCompare
+- Fixed #352319: Rhino threw a ClassCastException when a continuation captured 
+  from a catch() block was restarted.
