@@ -734,7 +734,7 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
                                                  NS_STATIC_CAST(nsXPTCStubBase*,
                                                                 xpcom_obj));
             nsJavaXPTCStubWeakRef* weakref;
-            weakref = new nsJavaXPTCStubWeakRef(env, java_obj, stub);
+            weakref = new nsJavaXPTCStubWeakRef(java_obj, stub);
             if (!weakref) {
               rv = NS_ERROR_OUT_OF_MEMORY;
               break;
