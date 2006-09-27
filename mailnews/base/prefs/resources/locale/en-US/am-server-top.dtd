@@ -46,8 +46,8 @@
 <!ENTITY deleteByAgeFromServer.label "For at most">
 <!ENTITY deleteByAgeFromServer.accesskey "o">
 <!ENTITY daysEnd.label "days">
-<!ENTITY deleteOnServer.label "Until I delete or move them from Inbox">
-<!ENTITY deleteOnServer.accesskey "d">
+<!ENTITY deleteOnServer2.label "Until I delete them">
+<!ENTITY deleteOnServer2.accesskey "d">
 <!ENTITY downloadOnBiff.label "Automatically download new messages">
 <!ENTITY downloadOnBiff.accesskey "m">
 <!ENTITY hostname.label "Server Hostname">

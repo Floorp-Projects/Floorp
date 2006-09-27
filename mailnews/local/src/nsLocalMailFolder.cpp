@@ -1508,7 +1508,12 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
   nsresult rv = messages->Count(&messageCount);
   if (!messageCount)
     return rv;
-
+    
+  // shift delete case - (delete to trash is handled in EndMove)
+  // this is also the case when applying retention settings.
+  if (deleteStorage && !isMove)
+    MarkMsgsOnPop3Server(messages, POP3_DELETE);
+  
   PRBool isTrashFolder = mFlags & MSG_FOLDER_FLAG_TRASH;
   if (!deleteStorage && !isTrashFolder)
   {
@@ -1532,30 +1537,31 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
       rv = GetDatabaseWOReparse(getter_AddRefs(msgDB));
       if(NS_SUCCEEDED(rv))
       {
-          nsCOMPtr<nsISupports> msgSupport;
-          MarkMsgsOnPop3Server(messages, POP3_DELETE);
+        if (deleteStorage && isMove && GetDeleteFromServerOnMove())
+            MarkMsgsOnPop3Server(messages, POP3_DELETE);
 
-          rv = EnableNotifications(allMessageCountNotifications, PR_FALSE, PR_TRUE /*dbBatching*/);
-          if (NS_SUCCEEDED(rv))
+        nsCOMPtr<nsISupports> msgSupport;
+        rv = EnableNotifications(allMessageCountNotifications, PR_FALSE, PR_TRUE /*dbBatching*/);
+        if (NS_SUCCEEDED(rv))
+        {
+          for(PRUint32 i = 0; i < messageCount; i++)
           {
-            for(PRUint32 i = 0; i < messageCount; i++)
-            {
-              msgSupport = getter_AddRefs(messages->ElementAt(i));
-              if (msgSupport)
-                DeleteMessage(msgSupport, msgWindow, PR_TRUE, PR_FALSE);
-            }
+            msgSupport = getter_AddRefs(messages->ElementAt(i));
+            if (msgSupport)
+              DeleteMessage(msgSupport, msgWindow, PR_TRUE, PR_FALSE);
           }
-          else if (rv == NS_MSG_FOLDER_BUSY)
-            ThrowAlertMsg("deletingMsgsFailed", msgWindow);
+        }
+        else if (rv == NS_MSG_FOLDER_BUSY)
+          ThrowAlertMsg("deletingMsgsFailed", msgWindow);
 
-          // we are the source folder here for a move or shift delete
-          //enable notifications because that will close the file stream
-          // we've been caching, mark the db as valid, and commit it.
-          EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_TRUE /*dbBatching*/);
-          if(!isMove)
-            NotifyFolderEvent(NS_SUCCEEDED(rv) ? mDeleteOrMoveMsgCompletedAtom : mDeleteOrMoveMsgFailedAtom);
-          if (msgWindow)
-            AutoCompact(msgWindow);
+        // we are the source folder here for a move or shift delete
+        //enable notifications because that will close the file stream
+        // we've been caching, mark the db as valid, and commit it.
+        EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_TRUE /*dbBatching*/);
+        if(!isMove)
+          NotifyFolderEvent(NS_SUCCEEDED(rv) ? mDeleteOrMoveMsgCompletedAtom : mDeleteOrMoveMsgFailedAtom);
+        if (msgWindow)
+          AutoCompact(msgWindow);
       }
   }
   return rv;
@@ -2710,6 +2716,24 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
   return rv;
 }
 
+static PRBool gGotGlobalPrefs;
+static PRBool gDeleteFromServerOnMove;
+
+PRBool nsMsgLocalMailFolder::GetDeleteFromServerOnMove()
+{
+  PRBool deleteFromServerOnMove = PR_FALSE;
+  if (!gGotGlobalPrefs)
+  {
+    nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (pPrefBranch)
+    {
+      pPrefBranch->GetBoolPref("mail.pop3.deleteFromServerOnMove", &gDeleteFromServerOnMove);
+      gGotGlobalPrefs = PR_TRUE;
+    }   
+  }
+  return gDeleteFromServerOnMove;
+}
+
 NS_IMETHODIMP nsMsgLocalMailFolder::EndMove(PRBool moveSucceeded)
 {
   nsresult result = NS_OK;
@@ -2741,6 +2765,21 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove(PRBool moveSucceeded)
     nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
     if(srcFolder)
     {
+      nsCOMPtr <nsIMsgLocalMailFolder> localSrcFolder = do_QueryInterface(srcFolder);
+      if (localSrcFolder)
+      {
+        // if we are the trash and a local msg is being moved to us, mark the source
+        // for delete from server, if so configured.
+        if (mFlags & MSG_FOLDER_FLAG_TRASH)
+        {
+          // if we're deleting on all moves, we'll mark this message for deletion when
+          // we call DeleteMessages on the source folder. So don't mark it for deletion
+          // here, in that case.
+          if (!GetDeleteFromServerOnMove())
+            localSrcFolder->MarkMsgsOnPop3Server(mCopyState->m_messages, POP3_DELETE);
+        }
+
+      }
       // lets delete these all at once - much faster that way
       result = srcFolder->DeleteMessages(mCopyState->m_messages, mCopyState->m_msgWindow, PR_TRUE, PR_TRUE, nsnull, mCopyState->m_allowUndo);
       srcFolder->NotifyFolderEvent(NS_SUCCEEDED(result) ? mDeleteOrMoveMsgCompletedAtom : mDeleteOrMoveMsgFailedAtom);

@@ -233,6 +233,8 @@ protected:
   virtual nsresult SpamFilterClassifyMessage(const char *aURI, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin);
   virtual nsresult SpamFilterClassifyMessages(const char **aURIArray, PRUint32 aURICount, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin);
   nsresult ChangeKeywordForMessages(nsISupportsArray *aMessages, const char *aKeyword, PRBool add);
+  PRBool GetDeleteFromServerOnMove();
+
 protected:
   nsLocalMailCopyState *mCopyState; //We only allow one of these at a time
   const char *mType;
