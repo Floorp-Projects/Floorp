@@ -46,7 +46,6 @@
 #include "nsIInputStream.h"
 #include "nsEnumeratorUtils.h"
 #include "nsAppFileLocProviderProxy.h"
-#include "nsIEventQueueService.h"
 #include "nsXULAppAPI.h"
 #include "nsILocalFile.h"
 
@@ -135,13 +134,6 @@ InitXPCOM_Impl(JNIEnv* env, jobject aMozBinDirectory,
   if (provider) {
     delete provider;
   }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // init Event Queue
-  nsCOMPtr<nsIEventQueueService> eventQService =
-            do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = eventQService->CreateThreadEventQueue();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // create Java proxy for service manager returned by NS_InitXPCOM2
