@@ -205,8 +205,9 @@ NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
 #elif defined(XP_BEOS)
 
 #define XPCOM_SEARCH_KEY  "ADDON_PATH"
-#define GRE_CONF_NAME ".gre.config"
-#define GRE_CONF_PATH "/boot/home/config/settings/GRE/gre.conf"
+#define GRE_CONF_NAME "gre.config"
+#define GRE_CONF_PATH "gre.conf"
+#define GRE_CONF_DIR  "gre.d"
 #define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
 #define XUL_DLL   "libxul"MOZ_DLL_SUFFIX
 
