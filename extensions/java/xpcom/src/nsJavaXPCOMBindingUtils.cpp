@@ -584,7 +584,9 @@ NativeToJavaProxyMap::Remove(JNIEnv* env, nsISupports* aNativeObject,
       PR_Free(iid_str);
 #endif
 
-      env->DeleteWeakGlobalRef(item->javaObject);
+      jweak weakref = NS_STATIC_CAST(jweak,
+                                     NS_CONST_CAST(jobject, item->javaObject));
+      env->DeleteWeakGlobalRef(weakref);
       if (item == e->list) {
         e->list = item->next;
         if (e->list == nsnull)
