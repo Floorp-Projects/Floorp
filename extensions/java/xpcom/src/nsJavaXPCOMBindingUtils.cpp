@@ -741,6 +741,8 @@ JavaXPCOMInstance::JavaXPCOMInstance(nsISupports* aInstance,
 
 JavaXPCOMInstance::~JavaXPCOMInstance()
 {
+  nsresult rv = NS_OK;
+
   // Need to release these objects on the main thread.
   nsCOMPtr<nsIThread> thread = do_GetMainThread();
   if (thread) {
