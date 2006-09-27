@@ -42,6 +42,8 @@
 #include "nsIInterfaceInfoManager.h"
 #include "pldhash.h"
 #include "nsILocalFile.h"
+#include "nsEventQueueUtils.h"
+#include "nsProxyRelease.h"
 
 
 #ifdef DEBUG
@@ -507,6 +509,23 @@ FreeJavaGlobals(JNIEnv* env)
 /**********************************************************
  *    JavaXPCOMInstance
  *********************************************************/
+JavaXPCOMInstance::JavaXPCOMInstance(nsISupports* aInstance,
+                                     nsIInterfaceInfo* aIInfo)
+		: mInstance(aInstance),
+		  mIInfo(aIInfo)
+{
+  NS_ADDREF(mInstance);
+}
+
+JavaXPCOMInstance::~JavaXPCOMInstance()
+{
+  nsCOMPtr<nsIEventQueue> eventQ;
+  nsresult rv = NS_GetMainEventQ(getter_AddRefs(eventQ));
+  if (NS_SUCCEEDED(rv))
+    rv = NS_ProxyRelease(eventQ, mInstance);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get MainEventQ");
+}
+
 nsIInterfaceInfo*
 JavaXPCOMInstance::InterfaceInfo()
 {
@@ -548,7 +567,6 @@ CreateJavaXPCOMInstance(nsISupports* aXPCOMObject, const nsIID* aIID)
       inst = new JavaXPCOMInstance(aXPCOMObject, info);
     }
   }
-  NS_ADDREF(aXPCOMObject);
 
   return inst;
 }
