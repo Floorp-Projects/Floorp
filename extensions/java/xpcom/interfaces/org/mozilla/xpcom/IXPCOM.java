@@ -65,7 +65,7 @@ public interface IXPCOM {
    *      <li> Other error codes indicate a failure during initialisation. </li>
    * </ul>
    */
-  public nsIServiceManager initXPCOM(File aMozBinDirectory,
+  nsIServiceManager initXPCOM(File aMozBinDirectory,
           IAppFileLocProvider aAppFileLocProvider) throws XPCOMException;
 
   /**
@@ -77,7 +77,7 @@ public interface IXPCOM {
    *
    * @exception XPCOMException  if a failure occurred during termination
    */
-  public void shutdownXPCOM(nsIServiceManager aServMgr) throws XPCOMException;
+  void shutdownXPCOM(nsIServiceManager aServMgr) throws XPCOMException;
 
   /**
    * Public Method to access to the service manager.
@@ -86,7 +86,7 @@ public interface IXPCOM {
    *
    * @exception XPCOMException
    */
-  public nsIServiceManager getServiceManager() throws XPCOMException;
+  nsIServiceManager getServiceManager() throws XPCOMException;
 
   /**
    * Public Method to access to the component manager.
@@ -95,7 +95,7 @@ public interface IXPCOM {
    *
    * @exception XPCOMException
    */
-  public nsIComponentManager getComponentManager() throws XPCOMException;
+  nsIComponentManager getComponentManager() throws XPCOMException;
 
   /**
    * Public Method to access to the component registration manager.
@@ -104,7 +104,7 @@ public interface IXPCOM {
    *
    * @exception XPCOMException
    */
-  public nsIComponentRegistrar getComponentRegistrar() throws XPCOMException;
+  nsIComponentRegistrar getComponentRegistrar() throws XPCOMException;
 
   /**
    * Public Method to create an instance of a nsILocalFile.
@@ -124,7 +124,7 @@ public interface IXPCOM {
    *           or relative paths (must supply full file path) </li>
    * </ul>
    */
-  public nsILocalFile newLocalFile(String aPath, boolean aFollowLinks)
+  nsILocalFile newLocalFile(String aPath, boolean aFollowLinks)
           throws XPCOMException;
 
 }
