@@ -182,7 +182,8 @@ XPCOM_NATIVE(NS_1NewSingletonEnumerator) (JNIEnv *env, jclass, jobject aSingleto
 
   nsISupports* singleton;
   if (IsXPTCStub(inst))
-    singleton = (nsISupports*) GetXPTCStubAddr(inst);
+    GetXPTCStubAddr(inst)->QueryInterface(NS_GET_IID(nsISupports),
+                                          (void**) &singleton);
   else {
     JavaXPCOMInstance* xpcomInst = (JavaXPCOMInstance*) inst;
     singleton = xpcomInst->GetInstance();
