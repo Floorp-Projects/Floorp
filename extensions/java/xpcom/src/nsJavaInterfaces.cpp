@@ -268,3 +268,46 @@ XPCOM_NATIVE(getServiceManager) (JNIEnv *env, jobject)
   return nsnull;
 }
 
+nsresult
+LockProfileDirectory_Impl(JNIEnv* env, jobject aDirectory, 
+                          jobject* aJavaLock)
+{
+
+  nsresult rv;
+
+  nsCOMPtr<nsILocalFile> profDir;
+  if (!aDirectory) return NS_ERROR_NULL_POINTER;
+  
+  rv = File_to_nsILocalFile(env, aDirectory, getter_AddRefs(profDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsISupports* lockObj;
+  rv = XRE_LockProfileDirectory(profDir, &lockObj);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = GetNewOrUsedJavaObject(env, lockObj, NS_GET_IID(nsISupports),
+                              aJavaLock);
+  NS_IF_RELEASE(lockObj);
+  return rv;
+}
+
+extern "C" NS_EXPORT jobject
+GRE_NATIVE(lockProfileDirectory) (JNIEnv* env, jobject, jobject aDirectory)
+{
+
+  jobject profLock;
+  nsresult rv = LockProfileDirectory_Impl(env, aDirectory, &profLock);
+  if (NS_SUCCEEDED(rv)) {
+    return profLock;
+  }
+
+  ThrowException(env, rv, "Failure in lockProfileDirectory");
+  return nsnull;
+}
+
+extern "C" NS_EXPORT void
+GRE_NATIVE(notifyProfile) (JNIEnv *env, jobject)
+{
+  XRE_NotifyProfile();
+}
+
