@@ -50,6 +50,7 @@
 #include "nsIPluginWidget.h"
 #include "nsIEventSink.h"
 #include "nsIScrollableView.h"
+#include "nsWeakPtr.h"
 
 #include "nsIWidget.h"
 #include "nsIKBStateControl.h"
@@ -317,6 +318,12 @@ protected:
   nsCOMPtr<nsIFontMetrics>      mFontMetrics;
   nsCOMPtr<nsIRenderingContext> mTempRenderingContext;
   PRPackedBool          mTempRenderingContextMadeHere;
+#endif
+  
+#ifdef ACCESSIBILITY
+  // weak ref to this childview's associated mozAccessible for speed reasons 
+  // (we get queried for it *a lot* but don't want to own it)
+  nsWeakPtr             mAccessible;
 #endif
 
 #ifdef MOZ_CAIRO_GFX
