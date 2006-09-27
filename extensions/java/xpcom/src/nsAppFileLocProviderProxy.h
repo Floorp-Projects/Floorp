@@ -56,5 +56,10 @@ private:
   jobject   mJavaLocProvider;
 };
 
+extern "C" nsresult
+NS_NewAppFileLocProviderProxy(jobject aJavaLocProvider,
+                              nsIDirectoryServiceProvider** aResult);
+
+
 #endif  //_nsAppFileLocProviderProxy_h_
 
