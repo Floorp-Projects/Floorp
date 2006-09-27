@@ -45,6 +45,8 @@
 #include "pldhash.h"
 #include "nsJavaXPTCStub.h"
 #include "nsAutoLock.h"
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
 
 //#define DEBUG_JAVAXPCOM
 //#define DEBUG_JAVAXPCOM_REFCNT
@@ -109,6 +111,8 @@ class NativeToJavaProxyMap;
 extern NativeToJavaProxyMap* gNativeToJavaProxyMap;
 class JavaToXPTCStubMap;
 extern JavaToXPTCStubMap* gJavaToXPTCStubMap;
+
+extern nsTHashtable<nsDepCharHashKey>* gJavaKeywords;
 
 // The Java garbage collector runs in a separate thread.  Since it calls the
 // finalizeProxy() function in nsJavaWrapper.cpp, we need to make sure that
