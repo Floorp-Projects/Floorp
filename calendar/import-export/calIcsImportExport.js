@@ -114,6 +114,52 @@ function ics_importFromStream(aStream, aCount) {
     }
 
     while (calComp) {
+        // XXX bug 354073:
+        // When Sunbird 0.2 (and earlier) creates EXDATEs, they are set to
+        // 00:00:00 floating rather than to the item's DTSTART. This fixes that.
+        //
+        // This should really be in the migration code found in bug 349586,
+        // but in the interest of getting 0.3 released, we're putting it here.
+        // When bug 349586 lands, please make sure moving this to the
+        // migrator is part of that checkin.
+        var prodId = calComp.getFirstProperty("PRODID");
+        var isFromOldSunbird;
+        if (prodId) {
+            isFromOldSunbird = (prodId.value.indexOf("NONSGML Mozilla Calendar V1.0") > -1);
+            LOG("Old Sunbird file found...");
+        }
+
+        // Helper function to deal with the busted exdates from Sunbird 0.2
+        function fixOldSunbirdExceptions(aItem) {
+            const kCalIRecurrenceDate = Components.interfaces.calIRecurrenceDate;
+
+            var ritems = aItem.recurrenceInfo.getRecurrenceItems({});
+            for (var i in ritems) {
+                var ritem = ritems[i];
+
+                // EXDATEs are represented as calIRecurrenceDates, which are
+                // negative and finite.
+                if (ritem instanceof kCalIRecurrenceDate &&
+                    ritem.isNegative && ritem.isFinite)
+                {
+                    // Only mess with the exception if its time is wrong.
+                    var oldDate = aItem.startDate || aItem.entryDate;
+                    if (ritem.date.compare(oldDate) != 0) {
+                        var newRitem = ritem.clone();
+                        // All we want from aItem is the time and timezone.
+                        newRitem.date.timezone = oldDate.timezone;
+                        newRitem.date.hour   = oldDate.hour;
+                        newRitem.date.minute = oldDate.minute;
+                        newRitem.date.second = oldDate.second;
+                        newRitem.date.normalize();
+                        aItem.recurrenceInfo.appendRecurrenceItem(newRitem);
+                        aItem.recurrenceInfo.deleteRecurrenceItem(ritem);
+                    }
+                }
+            }
+            return aItem;
+        }
+
         var subComp = calComp.getFirstSubcomponent("ANY");
         while (subComp) {
             switch (subComp.componentType) {
@@ -121,12 +167,28 @@ function ics_importFromStream(aStream, aCount) {
                 var event = Components.classes["@mozilla.org/calendar/event;1"]
                                       .createInstance(Components.interfaces.calIEvent);
                 event.icalComponent = subComp;
+
+                // Only try to fix ICS from Sunbird 0.2 (and earlier) if it
+                // has an EXDATE.
+                hasExdate = subComp.getFirstProperty("EXDATE");
+                if (isFromOldSunbird && hasExdate) {
+                    event = fixOldSunbirdExceptions(event);
+                }
+
                 items.push(event);
                 break;
             case "VTODO":
                 var todo = Components.classes["@mozilla.org/calendar/todo;1"]
                                      .createInstance(Components.interfaces.calITodo);
                 todo.icalComponent = subComp;
+
+                // Only try to fix ICS from Sunbird 0.2 (and earlier) if it
+                // has an EXDATE.
+                hasExdate = subComp.getFirstProperty("EXDATE");
+                if (isFromOldSunbird && hasExdate) {
+                    todo = fixOldSunbirdExceptions(todo);
+                }
+
                 items.push(todo);
                 break;
             default:
