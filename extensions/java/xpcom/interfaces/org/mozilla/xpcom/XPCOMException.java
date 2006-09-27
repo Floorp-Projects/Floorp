@@ -47,12 +47,16 @@ public final class XPCOMException extends RuntimeException {
     super(message);
   }
 
-  public XPCOMException(String message, Throwable cause) {
+  /* The RuntimeException constructors that take a Throwable parameter are only
+     available starting in Java 1.4.  Commenting out for now to allow use by
+     Java 1.3
+   */
+/*  public XPCOMException(String message, Throwable cause) {
     super(message, cause);
   }
 
   public XPCOMException(Throwable cause) {
     super(cause);
-  }
+  }*/
 }
 
