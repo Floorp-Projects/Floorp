@@ -45,7 +45,8 @@
 #include "nsCRT.h"
 #include "prmem.h"
 
-#define JAVAPROXY_NATIVE(func) Java_org_mozilla_xpcom_XPCOMJavaProxy_##func
+#define JAVAPROXY_NATIVE(func) \
+          Java_org_mozilla_xpcom_internal_XPCOMJavaProxy_##func
 
 static nsID nullID = {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}};
 
@@ -1379,7 +1380,7 @@ QueryMethodInfo(nsIInterfaceInfo* aIInfo, const char* aMethodName,
 }
 
 /**
- *  org.mozilla.xpcom.XPCOMJavaProxy.callXPCOMMethod
+ *  org.mozilla.xpcom.XPCOMJavaProxy.internal.callXPCOMMethod
  */
 extern "C" JX_EXPORT jobject JNICALL
 JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
@@ -1709,10 +1710,11 @@ GetXPCOMInstFromProxy(JNIEnv* env, jobject aJavaObject, void** aResult)
 }
 
 /**
- *  org.mozilla.xpcom.XPCOMJavaProxy.finalizeProxy
+ *  org.mozilla.xpcom.internal.XPCOMJavaProxy.finalizeProxyNative
  */
 extern "C" JX_EXPORT void JNICALL
-JAVAPROXY_NATIVE(finalizeProxy) (JNIEnv *env, jclass that, jobject aJavaProxy)
+JAVAPROXY_NATIVE(finalizeProxyNative) (JNIEnv *env, jclass that,
+                                       jobject aJavaProxy)
 {
 #ifdef DEBUG_JAVAXPCOM
   PRUint32 xpcom_addr = 0;
