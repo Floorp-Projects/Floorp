@@ -822,6 +822,9 @@ calDavCalendar.prototype = {
                              .getNewPrompter(null);
         } else if (iid.equals(Components.interfaces.nsIProgressEventSink)) {
             return this;
+        // Needed for Lightning on branch vvv
+        } else if (iid.equals(Components.interfaces.nsIDocShellTreeItem)) {
+            return this;
         } else if (iid.equals(Components.interfaces.nsIAuthPromptProvider)) {
             return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                              .getService(Components.interfaces.nsIWindowWatcher)
@@ -905,6 +908,8 @@ calDavCalendar.prototype = {
     // nsIProgressEventSink
     onProgress: function onProgress(aRequest, aContext, aProgress, aProgressMax) {},
     onStatus: function onStatus(aRequest, aContext, aStatus, aStatusArg) {},
+    // nsIDocShellTreeItem
+    findItemWithName: function findItemWithName(name, aRequestor, aOriginalRequestor) {}
 };
 
 function WebDavResource(url) {
