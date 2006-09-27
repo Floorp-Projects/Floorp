@@ -48,6 +48,9 @@
 static nsID nullID = {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}};
 
 
+/**
+ * Handle 'in' and 'inout' params.
+ */
 nsresult
 SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
             const nsXPTMethodInfo* aMethodInfo, nsIInterfaceInfo* aIInfo,
@@ -69,24 +72,17 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_U8:
     {
       LOG(("byte\n"));
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         aVariant.val.u8 = env->CallByteMethod(aParam, byteValueMID);
-      } else {
-        jboolean isCopy = JNI_FALSE;
-        jbyte* buf = nsnull;
+      } else {  // 'inout'
         if (aParam) {
-          buf = env->GetByteArrayElements((jbyteArray) aParam, &isCopy);
-          if (!buf) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
-          }
+          env->GetByteArrayRegion((jbyteArray) aParam, 0, 1,
+                                  (jbyte*) &(aVariant.val.u8));
+          aVariant.ptr = &aVariant.val;
+        } else {
+          aVariant.ptr = nsnull;
         }
-
-        aVariant.ptr = buf;
-        aVariant.flags = nsXPTCVariant::PTR_IS_DATA;
-        if (isCopy) {
-          aVariant.flags |= nsXPTCVariant::VAL_IS_ALLOCD;
-        }
+        aVariant.SetPtrIsData();
       }
     }
     break;
@@ -95,24 +91,17 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_U16:
     {
       LOG(("short\n"));
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         aVariant.val.u16 = env->CallShortMethod(aParam, shortValueMID);
-      } else {
-        jboolean isCopy = JNI_FALSE;
-        jshort* buf = nsnull;
+      } else {  // 'inout'
         if (aParam) {
-          buf = env->GetShortArrayElements((jshortArray) aParam, &isCopy);
-          if (!buf) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
-          }
+          env->GetShortArrayRegion((jshortArray) aParam, 0, 1,
+                                   (jshort*) &(aVariant.val.u16));
+          aVariant.ptr = &aVariant.val;
+        } else {
+          aVariant.ptr = nsnull;
         }
-
-        aVariant.ptr = buf;
-        aVariant.flags = nsXPTCVariant::PTR_IS_DATA;
-        if (isCopy) {
-          aVariant.flags |= nsXPTCVariant::VAL_IS_ALLOCD;
-        }
+        aVariant.SetPtrIsData();
       }
     }
     break;
@@ -121,24 +110,17 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_U32:
     {
       LOG(("int\n"));
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         aVariant.val.u32 = env->CallIntMethod(aParam, intValueMID);
-      } else {
-        jboolean isCopy = JNI_FALSE;
-        jint* buf = nsnull;
+      } else {  // 'inout'
         if (aParam) {
-          buf = env->GetIntArrayElements((jintArray) aParam, &isCopy);
-          if (!buf) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
-          }
+          env->GetIntArrayRegion((jintArray) aParam, 0, 1,
+                                 (jint*) &(aVariant.val.u32));
+          aVariant.ptr = &aVariant.val;
+        } else {
+          aVariant.ptr = nsnull;
         }
-
-        aVariant.ptr = buf;
-        aVariant.flags = nsXPTCVariant::PTR_IS_DATA;
-        if (isCopy) {
-          aVariant.flags |= nsXPTCVariant::VAL_IS_ALLOCD;
-        }
+        aVariant.SetPtrIsData();
       }
     }
     break;
@@ -147,24 +129,17 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_U64:
     {
       LOG(("long\n"));
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         aVariant.val.u64 = env->CallLongMethod(aParam, longValueMID);
-      } else {
-        jboolean isCopy = JNI_FALSE;
-        jlong* buf = nsnull;
+      } else {  // 'inout'
         if (aParam) {
-          buf = env->GetLongArrayElements((jlongArray) aParam, &isCopy);
-          if (!buf) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
-          }
+          env->GetLongArrayRegion((jlongArray) aParam, 0, 1,
+                                  (jlong*) &(aVariant.val.u64));
+          aVariant.ptr = &aVariant.val;
+        } else {
+          aVariant.ptr = nsnull;
         }
-
-        aVariant.ptr = buf;
-        aVariant.flags = nsXPTCVariant::PTR_IS_DATA;
-        if (isCopy) {
-          aVariant.flags |= nsXPTCVariant::VAL_IS_ALLOCD;
-        }
+        aVariant.SetPtrIsData();
       }
     }
     break;
@@ -172,24 +147,17 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_FLOAT:
     {
       LOG(("float\n"));
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         aVariant.val.f = env->CallFloatMethod(aParam, floatValueMID);
-      } else {
-        jboolean isCopy = JNI_FALSE;
-        jfloat* buf = nsnull;
+      } else {  // 'inout'
         if (aParam) {
-          buf = env->GetFloatArrayElements((jfloatArray) aParam, &isCopy);
-          if (!buf) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
-          }
+          env->GetFloatArrayRegion((jfloatArray) aParam, 0, 1,
+                                   (jfloat*) &(aVariant.val.f));
+          aVariant.ptr = &aVariant.val;
+        } else {
+          aVariant.ptr = nsnull;
         }
-
-        aVariant.ptr = buf;
-        aVariant.flags = nsXPTCVariant::PTR_IS_DATA;
-        if (isCopy) {
-          aVariant.flags |= nsXPTCVariant::VAL_IS_ALLOCD;
-        }
+        aVariant.SetPtrIsData();
       }
     }
     break;
@@ -197,24 +165,17 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_DOUBLE:
     {
       LOG(("double\n"));
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         aVariant.val.d = env->CallDoubleMethod(aParam, doubleValueMID);
-      } else {
-        jboolean isCopy = JNI_FALSE;
-        jdouble* buf = nsnull;
+      } else {  // 'inout'
         if (aParam) {
-          buf = env->GetDoubleArrayElements((jdoubleArray) aParam, &isCopy);
-          if (!buf) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
-          }
+          env->GetDoubleArrayRegion((jdoubleArray) aParam, 0, 1,
+                                    (jdouble*) &(aVariant.val.d));
+          aVariant.ptr = &aVariant.val;
+        } else {
+          aVariant.ptr = nsnull;
         }
-
-        aVariant.ptr = buf;
-        aVariant.flags = nsXPTCVariant::PTR_IS_DATA;
-        if (isCopy) {
-          aVariant.flags |= nsXPTCVariant::VAL_IS_ALLOCD;
-        }
+        aVariant.SetPtrIsData();
       }
     }
     break;
@@ -222,24 +183,17 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_BOOL:
     {
       LOG(("boolean\n"));
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         aVariant.val.b = env->CallBooleanMethod(aParam, booleanValueMID);
-      } else {
-        jboolean isCopy = JNI_FALSE;
-        jboolean* buf = nsnull;
+      } else {  // 'inout'
         if (aParam) {
-          buf = env->GetBooleanArrayElements((jbooleanArray) aParam, &isCopy);
-          if (!buf) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
-          }
+          env->GetBooleanArrayRegion((jbooleanArray) aParam, 0, 1,
+                                     (jboolean*) &(aVariant.val.b));
+          aVariant.ptr = &aVariant.val;
+        } else {
+          aVariant.ptr = nsnull;
         }
-
-        aVariant.ptr = buf;
-        aVariant.flags = nsXPTCVariant::PTR_IS_DATA;
-        if (isCopy) {
-          aVariant.flags |= nsXPTCVariant::VAL_IS_ALLOCD;
-        }
+        aVariant.SetPtrIsData();
       }
     }
     break;
@@ -248,27 +202,24 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_WCHAR:
     {
       LOG(("char\n"));
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         if (tag == nsXPTType::T_CHAR)
           aVariant.val.c = env->CallCharMethod(aParam, charValueMID);
         else
           aVariant.val.wc = env->CallCharMethod(aParam, charValueMID);
-      } else {
-        jboolean isCopy = JNI_FALSE;
-        jchar* buf = nsnull;
+      } else {  // 'inout'
         if (aParam) {
-          buf = env->GetCharArrayElements((jcharArray) aParam, &isCopy);
-          if (!buf) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
-          }
+          if (tag == nsXPTType::T_CHAR)
+            env->GetCharArrayRegion((jcharArray) aParam, 0, 1,
+                                    (jchar*) &(aVariant.val.c));
+          else
+            env->GetCharArrayRegion((jcharArray) aParam, 0, 1,
+                                    (jchar*) &(aVariant.val.wc));
+          aVariant.ptr = &aVariant.val;
+        } else {
+          aVariant.ptr = nsnull;
         }
-
-        aVariant.ptr = buf;
-        aVariant.flags = nsXPTCVariant::PTR_IS_DATA;
-        if (isCopy) {
-          aVariant.flags |= nsXPTCVariant::VAL_IS_ALLOCD;
-        }
+        aVariant.SetPtrIsData();
       }
     }
     break;
@@ -278,31 +229,53 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     {
       LOG(("String\n"));
       jstring data = nsnull;
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         data = (jstring) aParam;
-      } else {
+      } else {  // 'inout'
         if (aParam)
           data = (jstring) env->GetObjectArrayElement((jobjectArray) aParam, 0);
       }
 
-      jboolean isCopy = JNI_FALSE;
-      const void* buf = nsnull;
+      void* buf = nsnull;
       if (data) {
-        if (tag == nsXPTType::T_CHAR_STR) {
-          buf = env->GetStringUTFChars(data, &isCopy);
+        jsize uniLength = env->GetStringLength(data);
+        if (uniLength > 0) {
+          if (tag == nsXPTType::T_CHAR_STR) {
+            jsize utf8Length = env->GetStringUTFLength(data);
+            buf = nsMemory::Alloc(utf8Length + 1);
+            if (!buf) {
+              rv = NS_ERROR_OUT_OF_MEMORY;
+              break;
+            }
+
+            env->GetStringUTFRegion(data, 0, uniLength, (char*) buf);
+            ((char*)buf)[utf8Length] = '\0';
+
+          } else {  // if T_WCHAR_STR
+            buf = nsMemory::Alloc((uniLength + 1) * sizeof(jchar));
+            if (!buf) {
+              rv = NS_ERROR_OUT_OF_MEMORY;
+              break;
+            }
+
+            env->GetStringRegion(data, 0, uniLength, (jchar*) buf);
+            ((jchar*)buf)[uniLength] = '\0';
+          }
         } else {
-          buf = env->GetStringChars(data, &isCopy);
-        }
-        if (!buf) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
+          // create empty string
+          buf = nsMemory::Alloc(2);
+          if (!buf) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
+          ((jchar*)buf)[0] = '\0';
         }
       }
 
-      aVariant.val.p = aVariant.ptr = NS_CONST_CAST(void*, buf);
-      aVariant.flags = nsXPTCVariant::PTR_IS_DATA;
-      if (isCopy) {
-        aVariant.flags |= nsXPTCVariant::VAL_IS_ALLOCD;
+      aVariant.val.p = buf;
+      if (aParamInfo.IsOut()) { // 'inout'
+        aVariant.ptr = &aVariant.val;
+        aVariant.SetPtrIsData();
       }
     }
     break;
@@ -311,9 +284,9 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     {
       LOG(("String(IID)\n"));
       jstring data = nsnull;
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         data = (jstring) aParam;
-      } else {
+      } else {  // 'inout'
         if (aParam)
           data = (jstring) env->GetObjectArrayElement((jobjectArray) aParam, 0);
       }
@@ -324,24 +297,25 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
         break;
       }
       if (data) {
-        jboolean isCopy;
-        const char* str = nsnull;
-        str = env->GetStringUTFChars(data, &isCopy);
+        // extract IID string from Java string
+        const char* str = env->GetStringUTFChars(data, nsnull);
         if (!str) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
         }
 
+        // parse string into IID object
         iid->Parse(str);
-        if (isCopy) {
-          env->ReleaseStringUTFChars(data, str);
-        }
+        env->ReleaseStringUTFChars(data, str);
       } else {
         *iid = nullID;
       }
 
-      aVariant.val.p = aVariant.ptr = iid;
-      aVariant.flags = nsXPTCVariant::PTR_IS_DATA;
+      aVariant.val.p = iid;
+      if (aParamInfo.IsOut()) { // 'inout'
+        aVariant.ptr = &aVariant.val;
+        aVariant.SetPtrIsData();
+      }
     }
     break;
 
@@ -350,13 +324,14 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     {
       LOG(("nsISupports\n"));
       jobject java_obj = nsnull;
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         java_obj = (jobject) aParam;
-      } else {
+      } else {  // 'inout'
         if (aParam)
           java_obj = (jobject) env->GetObjectArrayElement((jobjectArray) aParam, 0);
       }
 
+      void* xpcom_obj;
       if (java_obj) {
         // Check if we already have a corresponding XPCOM object
         void* inst = GetMatchingXPCOMObject(env, java_obj);
@@ -404,25 +379,29 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
             break;
           }
           NS_ADDREF(weakref);
-          aVariant.flags |= nsXPTCVariant::VAL_IS_ALLOCD;
-          aVariant.val.p = aVariant.ptr = (void*) weakref;
+          xpcom_obj = (void*) weakref;
+          aVariant.SetValIsAllocated();
 
         } else if (IsXPTCStub(inst)) {
           nsJavaXPTCStub* xpcomStub = GetXPTCStubAddr(inst);
           NS_ADDREF(xpcomStub);
-          aVariant.flags |= nsXPTCVariant::VAL_IS_ALLOCD;
-          aVariant.val.p = aVariant.ptr = (void*) xpcomStub;
+          xpcom_obj = (void*) xpcomStub;
+          aVariant.SetValIsAllocated();
 
         } else {
           JavaXPCOMInstance* xpcomInst = (JavaXPCOMInstance*) inst;
-          aVariant.val.p = aVariant.ptr = (void*) xpcomInst->GetInstance();
+          xpcom_obj = (void*) xpcomInst->GetInstance();
         }
       } else {
-        aVariant.val.p = aVariant.ptr = nsnull;
+        xpcom_obj = nsnull;
       }
 
-      aVariant.flags |= nsXPTCVariant::PTR_IS_DATA;
+      aVariant.val.p = xpcom_obj;
       aVariant.SetValIsInterface();
+      if (aParamInfo.IsOut()) { // 'inout'
+        aVariant.ptr = &aVariant.val;
+        aVariant.SetPtrIsData();
+      }
     }
     break;
 
@@ -431,21 +410,30 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     {
       LOG(("String\n"));
       jstring data = nsnull;
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         data = (jstring) aParam;
-      } else {
+      } else {  // 'inout'
         if (aParam)
           data = (jstring) env->GetObjectArrayElement((jobjectArray) aParam, 0);
       }
 
-      nsAString* str = jstring_to_nsAString(env, data);
-      if (!str) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        break;
+      nsAString* str;
+      if (data) {
+        str = jstring_to_nsAString(env, data);
+        if (!str) {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+          break;
+        }
+      } else {
+        str = nsnull;
       }
 
-      aVariant.val.p = aVariant.ptr = str;
-      aVariant.flags = nsXPTCVariant::PTR_IS_DATA | nsXPTCVariant::VAL_IS_DOMSTR;
+      aVariant.val.p = str;
+      aVariant.SetValIsDOMString();
+      if (aParamInfo.IsOut()) { // 'inout'
+        aVariant.ptr = &aVariant.val;
+        aVariant.SetPtrIsData();
+      }
     }
     break;
 
@@ -454,25 +442,33 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     {
       LOG(("StringUTF\n"));
       jstring data = nsnull;
-      if (!aParamInfo.IsOut()) {
+      if (!aParamInfo.IsOut()) {  // 'in'
         data = (jstring) aParam;
-      } else {
+      } else {  // 'inout'
         if (aParam)
           data = (jstring) env->GetObjectArrayElement((jobjectArray) aParam, 0);
       }
 
-      nsACString* str = jstring_to_nsACString(env, data);
-      if (!str) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        break;
+      nsACString* str;
+      if (data) {
+        str = jstring_to_nsACString(env, data);
+        if (!str) {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+          break;
+        }
+      } else {
+        str = nsnull;
       }
 
-      aVariant.val.p = aVariant.ptr = str;
-      aVariant.flags = nsXPTCVariant::PTR_IS_DATA;
+      aVariant.val.p = str;
       if (tag == nsXPTType::T_CSTRING) {
-        aVariant.flags |= nsXPTCVariant::VAL_IS_CSTR;
+        aVariant.SetValIsCString();
       } else {
-        aVariant.flags |= nsXPTCVariant::VAL_IS_UTF8STR;
+        aVariant.SetValIsUTF8String();
+      }
+      if (aParamInfo.IsOut()) { // 'inout'
+        aVariant.ptr = &aVariant.val;
+        aVariant.SetPtrIsData();
       }
     }
     break;
@@ -480,35 +476,18 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     // handle "void *" as an "int" in Java
     case nsXPTType::T_VOID:
     {
-      if (env->IsInstanceOf(aParam, intClass))
-      {
-        if (env->IsInstanceOf(aParam, intArrayClass))
-        {
-          LOG(("int[] (void*)\n"));
-          jboolean isCopy = JNI_FALSE;
-          jint* buf = nsnull;
-          if (aParam) {
-            buf = env->GetIntArrayElements((jintArray) aParam, &isCopy);
-            if (!buf) {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              break;
-            }
-          }
-
-          aVariant.ptr = buf;
-          aVariant.flags = nsXPTCVariant::PTR_IS_DATA;
-          if (isCopy) {
-            aVariant.flags |= nsXPTCVariant::VAL_IS_ALLOCD;
-          }
+      LOG(("int (void*)\n"));
+      if (!aParamInfo.IsOut()) {  // 'in'
+        aVariant.val.p = (void*) env->CallIntMethod(aParam, intValueMID);
+      } else {  // 'inout'
+        if (aParam) {
+          env->GetIntArrayRegion((jintArray) aParam, 0, 1,
+                                 (jint*) &(aVariant.val.p));
+          aVariant.ptr = &aVariant.val;
         } else {
-          LOG(("int (void*)\n"));
-          NS_ASSERTION(type.IsPointer(),
-                       "T_VOID 'int' handler received non-pointer type");
-          aVariant.val.p = (void*) env->CallIntMethod(aParam, intValueMID);
+          aVariant.ptr = nsnull;
         }
-      } else {
-        NS_WARNING("Unhandled T_VOID");
-        return NS_ERROR_UNEXPECTED;
+        aVariant.SetPtrIsData();
       }
     }
     break;
@@ -527,6 +506,9 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
   return rv;
 }
 
+/**
+ * Handles 'in', 'out', and 'inout' params.
+ */
 nsresult
 FinalizeParams(JNIEnv *env, const jobject aParam,
                 const nsXPTParamInfo &aParamInfo,
@@ -539,19 +521,15 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
   nsresult rv = NS_OK;
   const nsXPTType &type = aParamInfo.GetType();
 
-  // Only write the array elements back if the parameter is an output param
-  jint mode = 0;
-  if (!aParamInfo.IsOut() && !aParamInfo.IsRetval())
-    mode = JNI_ABORT;
-
-  switch (type.TagPart())
+  PRUint8 tag = type.TagPart();
+  switch (tag)
   {
     case nsXPTType::T_I8:
     case nsXPTType::T_U8:
     {
-      if (aVariant.flags & nsXPTCVariant::VAL_IS_ALLOCD) {
-        env->ReleaseByteArrayElements((jbyteArray) aParam,
-                                      (jbyte*) aVariant.val.p, mode);
+      if (aParamInfo.IsOut() && aParam) { // 'inout' & 'out'
+        env->SetByteArrayRegion((jbyteArray) aParam, 0, 1,
+                                (jbyte*) aVariant.ptr);
       }
     }
     break;
@@ -559,9 +537,9 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
     case nsXPTType::T_I16:
     case nsXPTType::T_U16:
     {
-      if (aVariant.flags & nsXPTCVariant::VAL_IS_ALLOCD) {
-        env->ReleaseShortArrayElements((jshortArray) aParam,
-                                       (jshort*) aVariant.val.p, mode);
+      if (aParamInfo.IsOut() && aParam) { // 'inout' & 'out'
+        env->SetShortArrayRegion((jshortArray) aParam, 0, 1,
+                                 (jshort*) aVariant.ptr);
       }
     }
     break;
@@ -569,9 +547,9 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
     case nsXPTType::T_I32:
     case nsXPTType::T_U32:
     {
-      if (aVariant.flags & nsXPTCVariant::VAL_IS_ALLOCD) {
-        env->ReleaseIntArrayElements((jintArray) aParam,
-                                     (jint*) aVariant.val.p, mode);
+      if (aParamInfo.IsOut() && aParam) { // 'inout' & 'out'
+        env->SetIntArrayRegion((jintArray) aParam, 0, 1,
+                               (jint*) aVariant.ptr);
       }
     }
     break;
@@ -579,36 +557,36 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
     case nsXPTType::T_I64:
     case nsXPTType::T_U64:
     {
-      if (aVariant.flags & nsXPTCVariant::VAL_IS_ALLOCD) {
-        env->ReleaseLongArrayElements((jlongArray) aParam,
-                                      (jlong*) aVariant.val.p, mode);
+      if (aParamInfo.IsOut() && aParam) { // 'inout' & 'out'
+        env->SetLongArrayRegion((jlongArray) aParam, 0, 1,
+                                (jlong*) aVariant.ptr);
       }
     }
     break;
 
     case nsXPTType::T_FLOAT:
     {
-      if (aVariant.flags & nsXPTCVariant::VAL_IS_ALLOCD) {
-        env->ReleaseFloatArrayElements((jfloatArray) aParam,
-                                       (jfloat*) aVariant.val.p, mode);
+      if (aParamInfo.IsOut() && aParam) { // 'inout' & 'out'
+        env->SetFloatArrayRegion((jfloatArray) aParam, 0, 1,
+                                 (jfloat*) aVariant.ptr);
       }
     }
     break;
 
     case nsXPTType::T_DOUBLE:
     {
-      if (aVariant.flags & nsXPTCVariant::VAL_IS_ALLOCD) {
-        env->ReleaseDoubleArrayElements((jdoubleArray) aParam,
-                                        (jdouble*) aVariant.val.p, mode);
+      if (aParamInfo.IsOut() && aParam) { // 'inout' & 'out'
+        env->SetDoubleArrayRegion((jdoubleArray) aParam, 0, 1,
+                                  (jdouble*) aVariant.ptr);
       }
     }
     break;
 
     case nsXPTType::T_BOOL:
     {
-      if (aVariant.flags & nsXPTCVariant::VAL_IS_ALLOCD) {
-        env->ReleaseBooleanArrayElements((jbooleanArray) aParam,
-                                         (jboolean*) aVariant.val.p, mode);
+      if (aParamInfo.IsOut() && aParam) { // 'inout' & 'out'
+        env->SetBooleanArrayRegion((jbooleanArray) aParam, 0, 1,
+                                   (jboolean*) aVariant.ptr);
       }
     }
     break;
@@ -616,61 +594,42 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
     case nsXPTType::T_CHAR:
     case nsXPTType::T_WCHAR:
     {
-      if (aVariant.flags & nsXPTCVariant::VAL_IS_ALLOCD) {
-        env->ReleaseCharArrayElements((jcharArray) aParam,
-                                      (jchar*) aVariant.val.p, mode);
+      if (aParamInfo.IsOut() && aParam) { // 'inout' & 'out'
+        env->SetCharArrayRegion((jcharArray) aParam, 0, 1,
+                                (jchar*) aVariant.ptr);
       }
     }
     break;
 
     case nsXPTType::T_CHAR_STR:
-    {
-      // release Java string buffer
-      if (aVariant.flags & nsXPTCVariant::VAL_IS_ALLOCD) {
-        jstring data = nsnull;
-        if (!aParamInfo.IsOut()) {
-          data = (jstring) aParam;
-        } else {
-          data = (jstring) env->GetObjectArrayElement((jobjectArray) aParam, 0);
-        }
-        env->ReleaseStringUTFChars(data, (const char*) aVariant.val.p);
-      }
-
-      // If this is an output parameter, then create the string to return
-      if (aParam && aParamInfo.IsOut()) {
-        jstring str = env->NewStringUTF((const char*) aVariant.val.p);
-        if (!str) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
-        }
-        env->SetObjectArrayElement((jobjectArray) aParam, 0, str);
-      }
-    }
-    break;
-
     case nsXPTType::T_WCHAR_STR:
     {
-      // release Java string buffer
-      if (aVariant.flags & nsXPTCVariant::VAL_IS_ALLOCD) {
-        jstring data = nsnull;
-        if (!aParamInfo.IsOut()) {
-          data = (jstring) aParam;
+      if (aParamInfo.IsOut() && aParam) {  // ''inout' & 'out'
+        // create new string from data
+        jstring str;
+        if (aVariant.val.p) {
+          if (tag == nsXPTType::T_CHAR_STR) {
+            str = env->NewStringUTF((const char*) aVariant.val.p);
+          } else {
+            PRUint32 length = nsCRT::strlen((const PRUnichar*) aVariant.val.p);
+            str = env->NewString((const jchar*) aVariant.val.p, length);
+          }
+          nsMemory::Free(aVariant.val.p);
+          if (!str) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
         } else {
-          data = (jstring) env->GetObjectArrayElement((jobjectArray) aParam, 0);
+          str = nsnull;
         }
-        env->ReleaseStringChars(data, (const jchar*) aVariant.val.p);
-      }
 
-      // If this is an output parameter, then create the string to return
-      if (aParam && aParamInfo.IsOut()) {
-        PRUint32 length = nsCRT::strlen((const PRUnichar*) aVariant.val.p);
-        jstring str = env->NewString((const jchar*) aVariant.val.p, length);
-        if (!str) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
-        }
+        // put new string into output array
         env->SetObjectArrayElement((jobjectArray) aParam, 0, str);
       }
+
+      // Delete for 'in', 'inout', and 'out'
+      if (aVariant.val.p)
+        nsMemory::Free(aVariant.val.p);
     }
     break;
 
@@ -678,15 +637,22 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
     {
       nsID* iid = (nsID*) aVariant.val.p;
 
-      // If this is an output parameter, then create the string to return
-      if (iid && aParamInfo.IsOut()) {
-        char* iid_str = iid->ToString();
-        jstring str = env->NewStringUTF(iid_str);
-        if (!iid_str || !str) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
+      if (aParamInfo.IsOut() && aParam) {  // 'inout' & 'out'
+        // Create the string from nsID
+        jstring str = nsnull;
+        if (iid) {
+          char* iid_str = iid->ToString();
+          if (iid_str) {
+            str = env->NewStringUTF(iid_str);
+          }
+          if (!iid_str || !str) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
+          PR_Free(iid_str);
         }
-        PR_Free(iid_str);
+
+        // put new string into output array
         env->SetObjectArrayElement((jobjectArray) aParam, 0, str);
       }
 
@@ -698,46 +664,54 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
     case nsXPTType::T_INTERFACE:
     case nsXPTType::T_INTERFACE_IS:
     {
-      if (aVariant.val.p && aParamInfo.IsOut()) {
-        jobject java_obj = GetMatchingJavaObject(env, aVariant.val.p);
+      void* xpcom_obj = aVariant.val.p;
 
-        if (java_obj == nsnull) {
-          // wrap xpcom instance
-          nsID iid;
-          JavaXPCOMInstance* inst;
-          rv = GetIIDForMethodParam(aIInfo, aMethodInfo, aParamInfo,
-                                    aMethodIndex, aDispatchParams, PR_TRUE, iid);
-          if (NS_FAILED(rv))
-            return rv;
+      if (aParamInfo.IsOut() && aParam) { // 'inout' & 'out'
+        jobject java_obj = nsnull;
+        if (xpcom_obj) {
+          // Find matching Java object for given xpcom object
+          java_obj = GetMatchingJavaObject(env, xpcom_obj);
 
-          nsISupports* variant;
-          variant = NS_REINTERPRET_CAST(nsISupports*, aVariant.val.p);
-          rv = CreateJavaXPCOMInstance(variant, &iid, &inst);
-          if (NS_FAILED(rv))
-            break;
-          NS_RELEASE(variant);   // JavaXPCOMInstance has owning ref
+          // If no matching Java object exists, create one
+          if (java_obj == nsnull) {
+            // wrap xpcom instance
+            nsID iid;
+            JavaXPCOMInstance* inst;
+            rv = GetIIDForMethodParam(aIInfo, aMethodInfo, aParamInfo,
+                                      aMethodIndex, aDispatchParams,
+                                      PR_TRUE, iid);
+            if (NS_FAILED(rv))
+              return rv;
 
-          // create java stub
-          char* iface_name;
-          rv = inst->InterfaceInfo()->GetName(&iface_name);
-          if (NS_FAILED(rv))
-            break;
-          java_obj = CreateJavaWrapper(env, iface_name);
+            nsISupports* variant;
+            variant = NS_REINTERPRET_CAST(nsISupports*, xpcom_obj);
+            rv = CreateJavaXPCOMInstance(variant, &iid, &inst);
+            if (NS_FAILED(rv))
+              break;
+            NS_RELEASE(variant);   // JavaXPCOMInstance has owning ref
 
-          if (java_obj) {
-            // Associate XPCOM object w/ Java stub
-            AddJavaXPCOMBinding(env, java_obj, inst);
+            // create java stub
+            char* iface_name;
+            rv = inst->InterfaceInfo()->GetName(&iface_name);
+            if (NS_FAILED(rv))
+              break;
+            java_obj = CreateJavaWrapper(env, iface_name);
+
+            if (java_obj) {
+              // Associate XPCOM object w/ Java stub
+              AddJavaXPCOMBinding(env, java_obj, inst);
+            }
           }
         }
 
+        // put new Java object into output array
         env->SetObjectArrayElement((jobjectArray) aParam, 0, java_obj);
       }
 
       // If VAL_IS_ALLOCD is set, that means that an XPCOM object was created
       // is SetupParams that now needs to be released.
-      if (aVariant.val.p &&
-          (aVariant.flags & nsXPTCVariant::VAL_IS_ALLOCD)) {
-        nsISupports* variant = NS_STATIC_CAST(nsISupports*, aVariant.val.p);
+      if (xpcom_obj && aVariant.IsValAllocated()) {
+        nsISupports* variant = NS_STATIC_CAST(nsISupports*, xpcom_obj);
         NS_RELEASE(variant);
       }
     }
@@ -748,16 +722,24 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
     {
       nsString* str = (nsString*) aVariant.val.p;
 
-      if (str) {
-        if (aParamInfo.IsOut()) {
-          jstring jstr;
+      if (aParamInfo.IsOut() && aParam) { // 'inout' & 'out'
+        // Create Java string from returned nsString
+        jstring jstr;
+        if (str) {
           jstr = env->NewString((const jchar*) str->get(), str->Length());
           if (!jstr) {
             rv = NS_ERROR_OUT_OF_MEMORY;
             break;
           }
-          env->SetObjectArrayElement((jobjectArray) aParam, 0, jstr);
+        } else {
+          jstr = nsnull;
         }
+
+        // put new Java string into output array
+        env->SetObjectArrayElement((jobjectArray) aParam, 0, jstr);
+      }
+
+      if (str) {
         delete str;
       }
     }
@@ -768,15 +750,24 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
     {
       nsCString* str = (nsCString*) aVariant.val.p;
 
-      if (str) {
-        if (aParamInfo.IsOut()) {
-          jstring jstr = env->NewStringUTF((const char*) str->get());
+      if (aParamInfo.IsOut() && aParam) { // 'inout' & 'out'
+        // Create Java string from returned nsString
+        jstring jstr;
+        if (str) {
+          jstr = env->NewStringUTF((const char*) str->get());
           if (!jstr) {
             rv = NS_ERROR_OUT_OF_MEMORY;
             break;
           }
-          env->SetObjectArrayElement((jobjectArray) aParam, 0, jstr);
+        } else {
+          jstr = nsnull;
         }
+
+        // put new Java string into output array
+        env->SetObjectArrayElement((jobjectArray) aParam, 0, jstr);
+      }
+
+      if (str) {
         delete str;
       }
     }
@@ -784,9 +775,9 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
 
     case nsXPTType::T_VOID:
     {
-      if (aVariant.flags & nsXPTCVariant::VAL_IS_ALLOCD) {
-        env->ReleaseIntArrayElements((jintArray) aParam,
-                                     (jint*) aVariant.val.p, mode);
+      if (aParamInfo.IsOut() && aParam) { // 'inout' & 'out'
+        env->SetIntArrayRegion((jintArray) aParam, 0, 1,
+                               (jint*) aVariant.ptr);
       }
     }
     break;
@@ -880,7 +871,9 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
       if (aVariant.ptr) {
         nsID* iid = (nsID*) aVariant.ptr;
         char* iid_str = iid->ToString();
-        aResult.l = env->NewStringUTF(iid_str);
+        if (iid_str) {
+          aResult.l = env->NewStringUTF(iid_str);
+        }
         if (iid_str == nsnull || aResult.l == nsnull) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
@@ -1037,7 +1030,7 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
       LOG(("\t Param %d: ", i));
       const nsXPTParamInfo &paramInfo = methodInfo->GetParam(i);
 
-      if (!paramInfo.IsRetval() && !paramInfo.IsDipper()) {
+      if (paramInfo.IsIn() && !paramInfo.IsDipper()) {
         rv = SetupParams(env, env->GetObjectArrayElement(aParams, i), paramInfo,
                          methodInfo, iinfo, aMethodIndex, params, params[i]);
       } else if (paramInfo.IsDipper()) {
@@ -1074,7 +1067,7 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
             rv = NS_ERROR_UNEXPECTED;
         }
       } else {
-        LOG(("retval\n"));
+        LOG(("out/retval\n"));
         params[i].ptr = &(params[i].val);
         params[i].type = paramInfo.GetType();
         params[i].flags = nsXPTCVariant::PTR_IS_DATA;
