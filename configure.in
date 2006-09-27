@@ -5671,11 +5671,11 @@ fi
 dnl ========================================================
 dnl Canvas
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(canvas,
-[  --enable-canvas          Enable html:canvas feature],
-    MOZ_ENABLE_CANVAS=1,
-    MOZ_ENABLE_CANVAS= )
-if test "$MOZ_ENABLE_CANVAS"; then
+MOZ_ARG_DISABLE_BOOL(canvas,
+[  --disable-canvas          Disable html:canvas feature],
+    MOZ_ENABLE_CANVAS=,
+    MOZ_ENABLE_CANVAS=1 )
+if test -n "$MOZ_ENABLE_CANVAS"; then
     AC_DEFINE(MOZ_ENABLE_CANVAS)
 fi
 AC_SUBST(MOZ_ENABLE_CANVAS)
@@ -5683,10 +5683,10 @@ AC_SUBST(MOZ_ENABLE_CANVAS)
 dnl ========================================================
 dnl SVG
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(svg,
-[  --enable-svg            Enable SVG support],
-    MOZ_SVG=1,
-    MOZ_SVG= )
+MOZ_ARG_DISABLE_BOOL(svg,
+[  --disable-svg            Disable SVG support],
+    MOZ_SVG=,
+    MOZ_SVG=1 )
 if test -n "$MOZ_SVG"; then
   AC_DEFINE(MOZ_SVG)
 fi
