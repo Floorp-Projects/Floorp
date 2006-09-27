@@ -38,6 +38,8 @@
 
 #include "nsGConfService.h"
 #include "nsStringAPI.h"
+#include "nsSupportsPrimitives.h"
+#include "nsArray.h"
 
 #include <gconf/gconf-client.h>
 
@@ -120,6 +122,37 @@ nsGConfService::GetFloat(const nsACString &aKey, float* aResult)
     return NS_ERROR_FAILURE;
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGConfService::GetStringList(const nsACString &aKey, nsIArray** aResult)
+{
+  nsCOMPtr<nsIMutableArray> items;
+  NS_NewArray(getter_AddRefs(items));
+  if (!items)
+    return NS_ERROR_OUT_OF_MEMORY;
+    
+  GError* error = nsnull;
+  GSList* list = gconf_client_get_list(mClient, PromiseFlatCString(aKey).get(),
+                                       GCONF_VALUE_STRING, &error);
+  if (error) {
+    g_error_free(error);
+    return NS_ERROR_FAILURE;
+  }
+
+  for (GSList* l = list; l; l = l->next) {
+    nsSupportsCStringImpl* obj = new nsSupportsCStringImpl();
+    if (!obj) {
+      g_slist_free(list);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    obj->SetData(nsDependentCString((const char*)l->data));
+    items->AppendElement(obj, PR_FALSE);
+  }
+  
+  g_slist_free(list);
+  NS_ADDREF(*aResult = items);
   return NS_OK;
 }
 
