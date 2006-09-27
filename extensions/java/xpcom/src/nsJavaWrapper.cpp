@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsJavaInterfaces.h"
 #include "nsJavaWrapper.h"
 #include "nsJavaXPTCStub.h"
 #include "nsJavaXPCOMBindingUtils.h"
@@ -45,9 +46,6 @@
 #include "nsCRT.h"
 #include "prmem.h"
 #include "nsServiceManagerUtils.h"
-
-#define JAVAPROXY_NATIVE(func) \
-          Java_org_mozilla_xpcom_internal_XPCOMJavaProxy_##func
 
 static nsID nullID = {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}};
 
@@ -1383,7 +1381,7 @@ QueryMethodInfo(nsIInterfaceInfo* aIInfo, const char* aMethodName,
 /**
  *  org.mozilla.xpcom.XPCOMJavaProxy.internal.callXPCOMMethod
  */
-extern "C" JX_EXPORT jobject JNICALL
+extern "C" NS_EXPORT jobject
 JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
                                    jstring aMethodName, jobjectArray aParams)
 {
@@ -1711,11 +1709,10 @@ GetXPCOMInstFromProxy(JNIEnv* env, jobject aJavaObject, void** aResult)
 }
 
 /**
- *  org.mozilla.xpcom.internal.XPCOMJavaProxy.finalizeProxyNative
+ *  org.mozilla.xpcom.internal.XPCOMJavaProxy.finalizeProxy
  */
-extern "C" JX_EXPORT void JNICALL
-JAVAPROXY_NATIVE(finalizeProxyNative) (JNIEnv *env, jclass that,
-                                       jobject aJavaProxy)
+extern "C" NS_EXPORT void
+JAVAPROXY_NATIVE(finalizeProxy) (JNIEnv *env, jclass that, jobject aJavaProxy)
 {
 #ifdef DEBUG_JAVAXPCOM
   PRUint32 xpcom_addr = 0;
