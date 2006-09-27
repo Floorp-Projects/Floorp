@@ -545,13 +545,13 @@ ThrowXPCOMException(JNIEnv* env, const nsresult aErrorCode,
   nsCAutoString methodSig("(");
   if (aErrorCode) {
     args[index++].j = aErrorCode;
-    methodSig.Append("J");
+    methodSig.Append('J');
   }
   if (aMessage) {
     args[index].l = env->NewStringUTF(aMessage);
-    methodSig.Append("Ljava/lang/String;");
+    methodSig.AppendLiteral("Ljava/lang/String;");
   }
-  methodSig.Append(")V");
+  methodSig.AppendLiteral(")V");
 
   // create exception object
   jthrowable throwObj = nsnull;
