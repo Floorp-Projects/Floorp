@@ -11,15 +11,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Mozilla GNOME integration code.
+# The Original Code is the Mozilla GNOME interfaces code.
 #
 # The Initial Developer of the Original Code is
-# IBM Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2004
+# Novell Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
+#  Robert O'Callahan <robert@ocallahan.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,45 +35,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = ../../..
+DEPTH     = ../..
 topsrcdir = @top_srcdir@
-srcdir	  = @srcdir@
-VPATH	  = @srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= mozgnome
-LIBRARY_NAME	= mozgnome
-FORCE_SHARED_LIB = 1
-IS_COMPONENT	= 1
+MODULE          = xpcom
 
-REQUIRES = \
-	xpcom \
-	string \
-	necko \
-	$(NULL)
-
-CPPSRCS = \
-	nsGConfService.cpp \
-	nsGnomeVFSService.cpp \
-	nsGnomeModule.cpp \
-	$(NULL)
-
-EXTRA_DSO_LDOPTS += \
-		$(XPCOM_GLUE_LDOPTS) \
-		$(XPCOM_FROZEN_LDOPTS) \
-		$(NSPR_LIBS) \
-		$(MOZ_GCONF_LIBS) \
-		$(MOZ_GNOMEVFS_LIBS) \
-		$(MOZ_LIBGNOME_LIBS) \
-		$(GLIB_LIBS) \
-		$(NULL)
+XPIDLSRCS = \
+        nsIGConfService.idl \
+        nsIGnomeVFSService.idl \
+        $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-CXXFLAGS += \
-	$(MOZ_GCONF_CFLAGS) \
-	$(MOZ_GNOMEVFS_CFLAGS) \
-	$(MOZ_LIBGNOME_CFLAGS) \
-	$(GLIB_CFLAGS) \
-	$(NULL)

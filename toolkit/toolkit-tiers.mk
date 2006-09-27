@@ -287,12 +287,8 @@ tier_toolkit_staticdirs += directory/c-sdk
 tier_toolkit_dirs	+= directory/xpcom
 endif
 
-ifndef MINIMO
-ifdef MOZ_XUL_APP
-ifdef MOZ_ENABLE_GTK2
-tier_toolkit_dirs    += toolkit/components/gnome
-endif
-endif
+ifdef MOZ_ENABLE_GNOME_COMPONENT
+tier_toolkit_dirs    += toolkit/system/gnome
 endif
 
 ifdef MOZ_LEAKY
