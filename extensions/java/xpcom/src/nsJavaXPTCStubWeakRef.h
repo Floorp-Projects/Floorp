@@ -42,17 +42,24 @@
 #include "nsIWeakReference.h"
 
 
+class nsJavaXPTCStub;
+
+/**
+ * This class represents an XPCOM weak reference to a Java object.
+ */
 class nsJavaXPTCStubWeakRef : public nsIWeakReference
 {
 public:
-  nsJavaXPTCStubWeakRef(JNIEnv* env, jobject aJavaObject);
+  nsJavaXPTCStubWeakRef(JNIEnv* env, jobject aJavaObject,
+                        nsJavaXPTCStub* aXPTCStub);
   virtual ~nsJavaXPTCStubWeakRef();
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEAKREFERENCE
 
 protected:
-  JNIEnv* mJavaEnv;
-  jweak   mWeakRef;
+  JNIEnv*         mJavaEnv;
+  jweak           mWeakRef;
+  nsJavaXPTCStub* mXPTCStub;
 };
 
 #endif // _nsJavaXPTCStubWeakRef_h_
