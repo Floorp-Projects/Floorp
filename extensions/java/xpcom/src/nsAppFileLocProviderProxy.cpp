@@ -61,7 +61,11 @@ nsAppFileLocProviderProxy::GetFile(const char* aProp, PRBool* aIsPersistant,
 {
   // Setup params for calling Java function
   jstring prop = mJavaEnv->NewStringUTF(aProp);
+  if (!prop)
+    return NS_ERROR_OUT_OF_MEMORY;
   jbooleanArray persistant = mJavaEnv->NewBooleanArray(1);
+  if (!persistant)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // Create method ID
   jmethodID mid = nsnull;
@@ -70,23 +74,26 @@ nsAppFileLocProviderProxy::GetFile(const char* aProp, PRBool* aIsPersistant,
     mid = mJavaEnv->GetMethodID(clazz, "getFile",
                                 "(Ljava/lang/String;[Z)Ljava/io/File;");
   }
+  if (!mid)
+    return NS_ERROR_FAILURE;
 
   // Call Java function
   jobject javaFile = nsnull;
-  if (mid) {
-    javaFile = mJavaEnv->CallObjectMethod(mJavaLocProvider, mid, prop,
-                                          persistant);
-  }
-  if (javaFile == nsnull) {
+  javaFile = mJavaEnv->CallObjectMethod(mJavaLocProvider, mid, prop,
+                                        persistant);
+  if (javaFile == nsnull || mJavaEnv->ExceptionCheck())
     return NS_ERROR_FAILURE;
-  }
 
   // Set boolean output value
   jboolean isCopy = PR_FALSE;
   jboolean* array = mJavaEnv->GetBooleanArrayElements(persistant, &isCopy);
-  *aIsPersistant = array[0];
-  if (isCopy) {
-    mJavaEnv->ReleaseBooleanArrayElements(persistant, array, JNI_ABORT);
+  if (!array) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  } else {
+    *aIsPersistant = array[0];
+    if (isCopy) {
+      mJavaEnv->ReleaseBooleanArrayElements(persistant, array, JNI_ABORT);
+    }
   }
 
   // Set nsIFile result value
@@ -96,6 +103,7 @@ nsAppFileLocProviderProxy::GetFile(const char* aProp, PRBool* aIsPersistant,
   if (NS_SUCCEEDED(rv)) {
     return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)aResult);
   }
+
   return rv;
 }
 
