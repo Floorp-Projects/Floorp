@@ -289,7 +289,8 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
     return NS_NOINTERFACE;
 
   // Get interface info for new java object
-  nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
+  nsCOMPtr<nsIInterfaceInfoManager> iim =
+    getter_AddRefs(XPTI_GetInterfaceInfoManager());
   nsCOMPtr<nsIInterfaceInfo> iinfo;
   nsresult rv = iim->GetInfoForIID(&aIID, getter_AddRefs(iinfo));
   if (NS_FAILED(rv))
@@ -891,7 +892,8 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
 
       // get name of interface
       char* iface_name = nsnull;
-      nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
+      nsCOMPtr<nsIInterfaceInfoManager> iim =
+        getter_AddRefs(XPTI_GetInterfaceInfoManager());
       rv = iim->GetNameForIID(&iid, &iface_name);
       if (NS_FAILED(rv) || !iface_name)
         break;
@@ -1118,7 +1120,8 @@ nsJavaXPTCStub::GetRetvalSig(const nsXPTParamInfo* aParamInfo,
 
       // get name of interface
       char* iface_name = nsnull;
-      nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
+      nsCOMPtr<nsIInterfaceInfoManager> iim =
+        getter_AddRefs(XPTI_GetInterfaceInfoManager());
       rv = iim->GetNameForIID(&iid, &iface_name);
       if (NS_FAILED(rv) || !iface_name)
         break;
