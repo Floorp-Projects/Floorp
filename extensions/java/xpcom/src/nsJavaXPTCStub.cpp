@@ -415,8 +415,7 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
     }
 
     // Check for exception from called Java function
-    jthrowable exp = mJavaEnv->ExceptionOccurred();
-    if (exp) {
+    if (mJavaEnv->ExceptionCheck()) {
 #ifdef DEBUG
       mJavaEnv->ExceptionDescribe();
 #endif
