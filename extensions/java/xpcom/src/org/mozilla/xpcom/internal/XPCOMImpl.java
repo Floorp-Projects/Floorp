@@ -13,9 +13,8 @@
  *
  * The Original Code is Java XPCOM Bindings.
  *
- * The Initial Developer of the Original Code is
- * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -41,17 +40,11 @@ import java.io.*;
 import org.mozilla.xpcom.*;
 
 
-public class XPCOMImpl implements IXPCOM {
+public class XPCOMImpl extends JavaXPCOMMethods implements IXPCOM {
 
   public nsIServiceManager initXPCOM(File aMozBinDirectory,
           IAppFileLocProvider aAppFileLocProvider) {
-    // load JNI library
-    String path = "";
-    if (aMozBinDirectory != null) {
-      path = aMozBinDirectory + File.separator;
-    }
-    System.load(path + System.mapLibraryName("javaxpcomglue"));
-
+    registerJavaXPCOMMethods(aMozBinDirectory);
     return initXPCOMNative(aMozBinDirectory, aAppFileLocProvider);
   }
 
