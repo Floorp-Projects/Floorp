@@ -412,7 +412,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     }
     break;
 
-    // XXX How should this be handled?
+    // handle "void *" as an "int" in Java
     case nsXPTType::T_VOID:
     {
       if (env->IsInstanceOf(aParam, intClass))
@@ -469,7 +469,6 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
   nsresult rv = NS_OK;
   const nsXPTType &type = aParamInfo.GetType();
 
-  // XXX Not sure if this is necessary
   // Only write the array elements back if the parameter is an output param
   jint mode = 0;
   if (!aParamInfo.IsOut() && !aParamInfo.IsRetval())
@@ -609,9 +608,8 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
         env->SetObjectArrayElement((jobjectArray) aParam, 0, str);
       }
 
-      // XXX Cannot delete this until we've handled all of the params.  See
-      //  comment in CallXPCOMMethod
-//      delete iid;
+      // Ordinarily, we would delete 'iid' here.  But we cannot do that until
+      // we've handled all of the params.  See comment in CallXPCOMMethod
     }
     break;
 
@@ -888,21 +886,26 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
     return;
   }
 
-  NS_ASSERTION(!IsXPTCStub(xpcomObj), "Expected JavaXPCOMInstance, but got nsJavaXPTCStub");
+  NS_ASSERTION(!IsXPTCStub(xpcomObj),
+               "Expected JavaXPCOMInstance, but got nsJavaXPTCStub");
   JavaXPCOMInstance* inst = (JavaXPCOMInstance*) xpcomObj;
 
   // Get method info
   const nsXPTMethodInfo* methodInfo;
   nsIInterfaceInfo* iinfo = inst->InterfaceInfo();
   nsresult rv = iinfo->GetMethodInfo(aMethodIndex, &methodInfo);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "GetMethodInfo failed");
-  
+  if (NS_FAILED(rv)) {
+    ThrowXPCOMException(env, rv, "GetMethodInfo failed");
+    return;
+  }
+
 #ifdef DEBUG
   const char* ifaceName;
   iinfo->GetNameShared(&ifaceName);
   LOG(("=> Calling %s::%s()\n", ifaceName, methodInfo->GetName()));
 #endif
 
+  // Convert the Java params
   PRUint8 paramCount = methodInfo->GetParamCount();
   nsXPTCVariant* params = nsnull;
   if (paramCount)
@@ -955,10 +958,12 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
     }
   }
 
+  // Call the XPCOM method
   nsresult invokeResult;
   invokeResult = XPTC_InvokeByIndex(inst->GetInstance(), aMethodIndex,
                                     paramCount, params);
 
+  // Clean up params
   for (PRUint8 i = 0; i < paramCount && NS_SUCCEEDED(rv); i++)
   {
     const nsXPTParamInfo &paramInfo = methodInfo->GetParam(i);
@@ -977,10 +982,10 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
     return;
   }
 
-  // XXX Normally, we would delete any created nsID object in the above loop.
-  //  However, GetIIDForMethodParam may need some of the nsID params when it's
-  //  looking for the IID of an INTERFACE_IS.  Therefore, we can't delete it
-  //  until we've gone through the 'Finalize' loop once and created the result.
+  // Normally, we would delete any created nsID object in the above loop.
+  // However, GetIIDForMethodParam may need some of the nsID params when it's
+  // looking for the IID of an INTERFACE_IS.  Therefore, we can't delete it
+  // until we've gone through the 'Finalize' loop once and created the result.
   for (PRUint8 j = 0; j < paramCount && NS_SUCCEEDED(rv); j++)
   {
     const nsXPTParamInfo &paramInfo = methodInfo->GetParam(j);
@@ -1007,7 +1012,6 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
   return;
 }
 
-// XXX Use org.mozilla.classfile.ClassFileWriter for stubs?
 jobject
 CreateJavaWrapper(JNIEnv* env, const char* aClassName)
 {
@@ -1030,6 +1034,5 @@ CreateJavaWrapper(JNIEnv* env, const char* aClassName)
   }
 
   return java_stub;
-//  return env->NewGlobalRef(java_stub);
 }
 
