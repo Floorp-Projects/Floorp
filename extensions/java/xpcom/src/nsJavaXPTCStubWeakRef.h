@@ -48,7 +48,7 @@ public:
 	nsJavaXPTCStubWeakRef(JNIEnv* env, jobject aJavaObject);
 	virtual ~nsJavaXPTCStubWeakRef();
 	NS_DECL_ISUPPORTS
-  NS_DECL_NSIWEAKREFERENCE;
+  NS_DECL_NSIWEAKREFERENCE
 
 protected:
   JNIEnv* mJavaEnv;
