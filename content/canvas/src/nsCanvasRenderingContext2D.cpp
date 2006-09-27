@@ -628,13 +628,16 @@ nsCanvasRenderingContext2D::DoDrawImageSecurityCheck(nsIURI* aURI, PRBool forceW
     if (mCanvasElement->IsWriteOnly())
         return;
 
-    if (!aURI)
-        return;
-
+    // If we explicitly set WriteOnly just do it and get out
     if (forceWriteOnly) {
         mCanvasElement->SetWriteOnly();
         return;
     }
+
+    // Further security checks require a URI. If we don't have one the image
+    // must be another canvas and we inherit the forceWriteOnly state
+    if (!aURI)
+        return;
 
     nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
 
