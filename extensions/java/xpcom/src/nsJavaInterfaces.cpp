@@ -82,7 +82,7 @@ GECKO_NATIVE(initEmbedding) (JNIEnv* env, jclass, jobject aMozBinDirectory,
     }
   }
 
-  ThrowXPCOMException(env, NS_FAILED(rv) ? rv : NS_ERROR_FAILURE);
+  ThrowXPCOMException(env, rv, "Failure in initEmbedding");
   FreeJavaGlobals(env);
 }
 
@@ -91,7 +91,7 @@ GECKO_NATIVE(termEmbedding) (JNIEnv *env, jclass)
 {
 	nsresult rv = NS_TermEmbedding();
   if (NS_FAILED(rv))
-    ThrowXPCOMException(env, rv);
+    ThrowXPCOMException(env, rv, "NS_TermEmbedding failed");
 
   FreeJavaGlobals(env);
 }
@@ -142,7 +142,7 @@ XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jclass, jobject aMozBinDirectory,
     }
   }
 
-  ThrowXPCOMException(env, NS_FAILED(rv) ? rv : NS_ERROR_FAILURE);
+  ThrowXPCOMException(env, rv, "Failure in initXPCOM");
   FreeJavaGlobals(env);
   return nsnull;
 }
@@ -156,7 +156,8 @@ XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jclass, jobject aServMgr)
     void* xpcomObj = GetMatchingXPCOMObject(env, aServMgr);
     NS_ASSERTION(xpcomObj != nsnull, "Failed to get matching XPCOM object");
     if (xpcomObj == nsnull) {
-      ThrowXPCOMException(env, NS_ERROR_FAILURE);
+      ThrowXPCOMException(env, 0,
+                          "No matching XPCOM obj for service manager proxy");
       return;
     }
 
@@ -167,7 +168,7 @@ XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jclass, jobject aServMgr)
 
 	nsresult rv = NS_ShutdownXPCOM(servMgr);
   if (NS_FAILED(rv))
-    ThrowXPCOMException(env, rv);
+    ThrowXPCOMException(env, rv, "NS_ShutdownXPCOM failed");
 
   FreeJavaGlobals(env);
 }
@@ -212,7 +213,7 @@ XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jclass, jstring aPath,
   }
 
   if (java_stub == nsnull)
-    ThrowXPCOMException(env, 0);
+    ThrowXPCOMException(env, rv, "Failure in newLocalFile");
 
   return java_stub;
 }
@@ -244,7 +245,7 @@ XPCOM_NATIVE(getComponentManager) (JNIEnv *env, jclass)
   }
 
   if (java_stub == nsnull)
-    ThrowXPCOMException(env, 0);
+    ThrowXPCOMException(env, rv, "Failure in getComponentManager");
 
   return java_stub;
 }
@@ -276,7 +277,7 @@ XPCOM_NATIVE(getComponentRegistrar) (JNIEnv *env, jclass)
   }
 
   if (java_stub == nsnull)
-    ThrowXPCOMException(env, 0);
+    ThrowXPCOMException(env, rv, "Failure in getComponentRegistrar");
 
   return java_stub;
 }
@@ -308,7 +309,7 @@ XPCOM_NATIVE(getServiceManager) (JNIEnv *env, jclass)
   }
 
   if (java_stub == nsnull)
-    ThrowXPCOMException(env, 0);
+    ThrowXPCOMException(env, rv, "Failure in getServiceManager");
 
   return java_stub;
 }
