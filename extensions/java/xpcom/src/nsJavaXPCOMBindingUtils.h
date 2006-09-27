@@ -86,12 +86,12 @@ public:
   JavaXPCOMInstance(nsISupports* aInstance, nsIInterfaceInfo* aIInfo);
   ~JavaXPCOMInstance();
 
-	nsISupports* GetInstance()	{ return mInstance; }
-	nsIInterfaceInfo* InterfaceInfo() { return mIInfo; }
+  nsISupports* GetInstance()  { return mInstance; }
+  nsIInterfaceInfo* InterfaceInfo() { return mIInfo; }
 
 private:
-	nsISupports*               mInstance;
-	nsCOMPtr<nsIInterfaceInfo> mIInfo;
+  nsISupports*               mInstance;
+  nsCOMPtr<nsIInterfaceInfo> mIInfo;
 };
 
 JavaXPCOMInstance* CreateJavaXPCOMInstance(nsISupports* aXPCOMObject,
