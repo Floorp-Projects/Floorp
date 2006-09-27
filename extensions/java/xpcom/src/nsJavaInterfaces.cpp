@@ -519,7 +519,22 @@ XPCOM_NATIVE(FinalizeStub) (JNIEnv *env, jclass that, jobject aJavaObject)
   if (isCopy)
     env->ReleaseStringUTFChars(name, javaObjectName);
 #endif
-  nsISupports* xpcomObj = RemoveXPCOMBinding(env, aJavaObject);
-  NS_RELEASE(xpcomObj);
+
+  void* obj = GetMatchingXPCOMObject(env, aJavaObject);
+  RemoveJavaXPCOMBinding(env, aJavaObject, nsnull);
+
+  nsISupports* xpcom_obj = nsnull;
+  if (IsXPTCStub(obj)) {
+    GetXPTCStubAddr(obj)->QueryInterface(NS_GET_IID(nsISupports),
+                                         (void**) &xpcom_obj);
+  } else {
+    JavaXPCOMInstance* inst = (JavaXPCOMInstance*) obj;
+    xpcom_obj = inst->GetInstance();
+    // XXX Getting some odd thread issues when calling delete.  Addreffing for
+    //  now to work around the errors.
+//    NS_ADDREF(inst);
+    delete inst;
+  }
+  NS_RELEASE(xpcom_obj);
 }
 
