@@ -1757,6 +1757,8 @@ JAVAPROXY_NATIVE(finalizeProxy) (JNIEnv *env, jclass that, jobject aJavaProxy)
           nsMemory::Free(iid);
         }
         NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to RemoveJavaProxy");
+        // Release gJavaXPCOMLock before deleting inst (see bug 340022)
+        lock.unlock();
         delete inst;
       }
     }
