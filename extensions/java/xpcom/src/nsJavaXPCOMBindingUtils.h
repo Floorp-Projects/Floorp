@@ -42,6 +42,7 @@
 #include "xptcall.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "pldhash.h"
 
 #ifdef DEBUG_pedemonte
 #define LOG(x)  printf x
@@ -70,6 +71,9 @@ extern jmethodID doubleValueMID;
 #ifdef DEBUG
 extern jmethodID getNameMID;
 #endif
+
+class nsJavaXPCOMBindings;
+extern nsJavaXPCOMBindings* gBindings;
 
 PRBool InitializeJavaGlobals(JNIEnv *env);
 void FreeJavaGlobals(JNIEnv* env);
@@ -111,12 +115,38 @@ nsresult CreateJavaXPCOMInstance(nsISupports* aXPCOMObject, const nsIID* aIID,
 /**************************************
  *  Java<->XPCOM binding stores
  **************************************/
-void          AddJavaXPCOMBinding(JNIEnv* env, jobject aJavaStub,
-                                  void* aXPCOMObject);
-void          RemoveJavaXPCOMBinding(JNIEnv* env, jobject aJavaObject,
-                                     void* aXPCOMObject);
-void*         GetMatchingXPCOMObject(JNIEnv* env, jobject aJavaObject);
-jobject       GetMatchingJavaObject(JNIEnv* env, void* aXPCOMObject);
+// This class is used to store the associations between existing Java object
+// and XPCOM objects.
+class nsJavaXPCOMBindings
+{
+public:
+  nsJavaXPCOMBindings()
+    : mJAVAtoXPCOMBindings(nsnull)
+    , mXPCOMtoJAVABindings(nsnull)
+  { }
+  ~nsJavaXPCOMBindings();
+
+  // Initializes internal structures.
+  NS_IMETHOD Init();
+
+  // Associates the given Java object with the given XPCOM object
+  NS_IMETHOD AddBinding(JNIEnv* env, jobject aJavaStub, void* aXPCOMObject);
+
+  // Given either a Java object or XPCOM object, removes the association
+  // between the two.
+  NS_IMETHOD RemoveBinding(JNIEnv* env, jobject aJavaObject, void* aXPCOMObject);
+
+  // Given a Java object, returns the associated XPCOM object.
+  void* GetXPCOMObject(JNIEnv* env, jobject aJavaObject);
+
+  // Given an XPCOM object, returns the associated Java Object.
+  jobject GetJavaObject(JNIEnv* env, void* aXPCOMObject);
+
+private:
+  PLDHashTable* mJAVAtoXPCOMBindings;
+  PLDHashTable* mXPCOMtoJAVABindings;
+};
+
 
 
 nsresult GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
