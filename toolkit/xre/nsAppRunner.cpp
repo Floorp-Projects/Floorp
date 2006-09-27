@@ -2079,7 +2079,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   }
     
 #ifdef NS_TRACE_MALLOC
-  gArgc = argc = NS_TraceMallocStartupArgs(argc, argv);
+  gArgc = argc = NS_TraceMallocStartupArgs(gArgc, gArgv);
 #endif
 
   NS_LogInit();
