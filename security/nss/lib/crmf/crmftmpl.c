@@ -229,7 +229,7 @@ const SEC_ASN1Template CRMFSubsequentMessageTemplate[] = {
 };
 
 const SEC_ASN1Template CRMFDHMACTemplate[] = {
-    { SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_XTRN | 0,
+    { SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_XTRN | 2,
       0,
       SEC_ASN1_SUB(SEC_BitStringTemplate) },
     { 0 }
