@@ -60,7 +60,6 @@ extern "C" {
 #include "nsINetUtil.h"
 #include "nsAutoPtr.h"
 #include "nsError.h"
-#include "netCore.h"
 #include "prlog.h"
 #include "prtime.h"
 #include "prprf.h"
@@ -243,7 +242,8 @@ ProxiedAuthCallback(gconstpointer in,
     return;
 
   nsCOMPtr<nsIStringBundle> bundle;
-  bundleSvc->CreateBundle(NECKO_MSGS_URL, getter_AddRefs(bundle));
+  bundleSvc->CreateBundle("chrome://global/locale/prompts.properties",
+                          getter_AddRefs(bundle));
   if (!bundle)
     return;
 

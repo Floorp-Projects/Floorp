@@ -762,6 +762,8 @@ nsFtpState::S_pass() {
                                             EmptyString(),
                                             EmptyCString());
 
+            info->SetUserInternal(mUsername);
+
             PRBool retval;
             rv = prompter->PromptAuth(mChannel, nsIAuthPrompt2::LEVEL_NONE,
                                       info, &retval);

@@ -54,6 +54,14 @@ public:
     const nsString& User() const { return mUser; }
     const nsString& Password() const { return mPassword; }
     const nsString& Domain() const { return mDomain; }
+
+    /**
+     * This method can be used to initialize the username when the
+     * ONLY_PASSWORD flag is set.
+     */
+    void SetUserInternal(const nsString& aUsername) {
+      mUser = aUsername;
+    }
 private:
     nsString mUser;
     nsString mPassword;

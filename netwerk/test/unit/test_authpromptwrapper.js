@@ -84,12 +84,20 @@ function run_test() {
         do_check_eq(this.scheme + "://" + host, realm);
 
       do_check_neq(text.indexOf(host), -1);
-      // Only HTTP has realms
-      if (this.scheme == "http")
-        do_check_neq(text.indexOf(info.realm), -1);
-      // No explicit port in the URL; message should not contain -1
-      // for those cases
-      do_check_eq(text.indexOf("-1"), -1);
+      if (info.flags & nsIAuthInformation.ONLY_PASSWORD) {
+        // Should have the username in the text
+        do_check_neq(text.indexOf(info.username), -1);
+      } else {
+        // Make sure that we show the realm if we have one and that we don't
+        // show "" otherwise
+        if (info.realm != "")
+          do_check_neq(text.indexOf(info.realm), -1);
+        else
+          do_check_eq(text.indexOf('""'), -1);
+        // No explicit port in the URL; message should not contain -1
+        // for those cases
+        do_check_eq(text.indexOf("-1"), -1);
+      }
     }
   };
 
@@ -127,6 +135,9 @@ function run_test() {
     prompt1.rv = expectedRV;
     info.flags |= nsIAuthInformation.ONLY_PASSWORD;
 
+    // Initialize the username so that the prompt can show it
+    info.username = prompt1.user;
+
     wrapper = adapter.createAdapter(prompt1);
     rv = wrapper.promptAuth(chan, 0, info);
     do_check_eq(rv, prompt1.rv);
@@ -134,7 +145,7 @@ function run_test() {
 
     if (rv) {
       do_check_eq(info.domain, "");
-      do_check_eq(info.username, "");
+      do_check_eq(info.username, prompt1.user); // we initialized this
       do_check_eq(info.password, prompt1.pw);
     }
 
