@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Firefox Party Tool
+ * The Original Code is Mozilla Party Tool
  *
  * The Initial Developer of the Original Code is
  * Ryan Flint <rflint@dslr.net>
@@ -45,10 +45,10 @@ class CommentController extends AppController {
   }
     
   function add($pid, $uid) {
-    if (!$this->Session->check('User'))
+    if (!$this->Session->check('User') || $uid != $_SESSION['User']['id'])
       $this->redirect('/');
     
-    if (!empty($this->data)) {
+    if (!empty($this->data) && $this->Comment->canComment($pid, $uid)) {
       // Explictly destroy the last model to avoid an edit instead of an insert
       $this->Comment->create();
       
@@ -60,9 +60,12 @@ class CommentController extends AppController {
       $this->data['Comment']['time'] = gmmktime();
       
       if ($this->Comment->save($this->data)) {
-        $this->redirect('/party/view/'.$pid);
+        $this->redirect('/party/view/'.$pid.'#c'.$this->Comment->getLastInsertID());
       }
     }
+    
+    else
+      $this->redirect('/party/view/'.$pid);
   }
 }
 ?>

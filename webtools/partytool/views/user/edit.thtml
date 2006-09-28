@@ -1,24 +1,56 @@
 <?php if ($error): ?>
-<p>There was an error in your submission, please try again.</p>
+<div class="error">
+  There was an error in your submission, please try again.
+</div>
 <?php endif; ?>
-<form action="<?php echo $html->url('/user/edit'); ?>" method="post">
+<form class="fxform" action="<?php echo $html->url('/user/edit'); ?>" method="post">
    <?php echo $html->hidden('User/id'); ?>
+  <h1>Profile</h1>
   <div>
-    <h2>Profile</h2>
-    <hr/>
-    <label for="name">Name:</label>
-    <?php echo $html->input('User/name', array('size' => 20)); ?>
+    <label for="UserName" class="label-large">Name:</label>
+    <?php echo $html->input('User/name', array('size' => 40)); ?>
   </div>
   <div>
-    <label for="name">Website:</label>
-    <?php echo $html->input('User/website', array('size' => 20)); ?>
+    <label for="name" class="label-large">Website:</label>
+    <?php echo $html->input('User/website', array('size' => 40)); ?>
   </div>
   <div>
-     <label for="location">Location:</label>
-    <?php echo $html->input('User/location', array('id' => 'location', 'size' => 20, 'onkeypress' => 'capture(event)')); ?>
+     <label for="location" class="label-large">Location:</label>
+    <?php echo $html->input('User/location', array('id' => 'location', 'size' => 40, 'onkeypress' => 'capture(event)')); ?>
+  </div>
+  <div>
+    <label for="UserTz" class="label-large">Timezone:</label>
+    <?php 
+      $tzs = array('-12' => 'GMT-12',
+                 '-11' => 'GMT-11',
+                 '-10' => 'GMT-10',
+                 '-9' => 'GMT-9',
+                 '-8' => 'GMT-8',
+                 '-7' => 'GMT-7',
+                 '-6' => 'GMT-6',
+                 '-5' => 'GMT-5',
+                 '-4' => 'GMT-4',
+                 '-3' => 'GMT-3',
+                 '-2' => 'GMT-2',
+                 '-1' => 'GMT-1',
+                 '0' => 'GMT+0',
+                 '1' => 'GMT+1',
+                 '2' => 'GMT+2',
+                 '3' => 'GMT+3',
+                 '4' => 'GMT+4',
+                 '5' => 'GMT+5',
+                 '6' => 'GMT+6',
+                 '7' => 'GMT+7',
+                 '8' => 'GMT+8',
+                 '9' => 'GMT+9',
+                 '10' => 'GMT+10',
+                 '11' => 'GMT+11',
+                 '12' => 'GMT+12');
+      echo $html->selectTag('User/tz', $tzs, $utz, null, null, false); 
+    ?>
+    (current time is <?php echo gmdate("Y-m-d H:i:s"); ?>GMT)
   </div>
   <?php if(GMAP_API_KEY != null): ?>
-  <a onclick="update()">Update map</a>
   <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo GMAP_API_KEY; ?>"
       type="text/javascript"></script>
   <script src="<?php echo $html->url('/js/maps.js'); ?>" type="text/javascript"></script>
@@ -38,34 +70,29 @@
       }
     //]]>
     </script>
-  <div style="width: 400px; height: 250px">
-    <div id="maperror" style="display: none" class="error"></div>
-    <div id="map" style="height: 100%; width: 100%;"></div>
-  </div>
-  <div>
-    <h2>Privacy</h2>
-    <hr/>
-    <label for="UserShowemail">Show email:</label>
-    <?php echo $html->checkbox('User/showemail'); ?><br/>
-    <label for="UserShowloc">Show location:</label>
-    <?php echo $html->checkbox('User/showloc'); ?><br/>
-    <label for="UserShowmap">Show map:</label>
-    <?php echo $html->checkbox('User/showmap'); ?><br/>
-  </div>
-  <div>
-    <h2>Password</h2>
-    <hr/>
-    <label for="password">New password:</label>
-    <?php echo $html->password('User/password', array('size' => 20)); ?>
-    <?php echo $html->tagErrorMsg('User/password', 'Passwords don\'t match!')?>
-  </div>
-  <div>
-    <label for="confpassword">Confirm  new password:</label>
-    <?php echo $html->password('User/confpassword', array('size' => 20)); ?>
-  </div>
+    <p id="map" class="small-map"></p>
   <?php echo $html->hidden('User/lat', array('id' => 'lat')); 
         echo $html->hidden('User/long', array('id' => 'long'));
         echo $html->hidden('User/zoom', array('id' => 'zoom')); ?>
   <?php endif; ?>
+  <h1>Privacy</h1>
+  <div>
+    <label for="UserShowemail" class="label-large">Show email:</label>
+    <?php echo $html->checkbox('User/showemail'); ?><br/>
+    <label for="UserShowloc" class="label-large">Show location:</label>
+    <?php echo $html->checkbox('User/showloc'); ?><br/>
+    <label for="UserShowmap" class="label-large">Show map:</label>
+    <?php echo $html->checkbox('User/showmap'); ?><br/>
+  </div>
+  <h1>Password</h1>
+  <div>
+    <label for="UserPassword" class="label-large">New password:</label>
+    <?php echo $html->password('User/password', array('size' => 20)); ?>
+    <?php echo $html->tagErrorMsg('User/password', 'Passwords don\'t match!')?>
+  </div>
+  <div>
+    <label for="UserConfpassword" class="label-large">Confirm  new password:</label>
+    <?php echo $html->password('User/confpassword', array('size' => 20)); ?>
+  </div>
   <?php echo $html->submit('Update'); ?>
 </form>

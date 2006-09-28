@@ -1,22 +1,27 @@
+<h1>Login</h1>
 <?if ($error): ?>
-<p>The email address and password you supplied do not match. Please try again.</p>
+<div class="error">
+  The email address and password you supplied do not match. Please try again.
+</div>
 <? endif; 
   if (isset($preamble)): ?>
-  <div class="info">
-    <?php echo $preamble; ?>
-  </div> 
+<div class="info">
+  <?php echo $preamble; ?>
+</div> 
 <?php endif; ?>
-<form action="<?php echo $html->url('/user/login'); ?>" method="post">
-<div>
-    <label for="email">Email:</label>
-    <?php echo $html->input('User/email', array('size' => 20)); ?>
-</div>
-<div>
-    <label for="password">Password:</label>
-    <?php echo $html->password('User/password', array('size' => 20)); ?>
-    <a href="<?php echo $html->url('/user/recover/password'); ?>">Forgot your password?</a>
-</div>
-<div>
+<form class="fxform" action="<?php echo $html->url('/user/login'); ?>" method="post">
+  <div>
+    <label class="label-large" for="email">Email Address:</label>
+    <?php echo $html->input('User/email', array('size' => 40)); ?>
+  </div>
+  <div>
+    <label class="label-large" for="password">Password:</label>
+    <?php echo $html->password('User/password', array('size' => 40)); ?>
+  </div>
+  <div>
     <?php echo $html->submit('Login'); ?>
-</div>
+  </div>
+  <p>
+    <a href="">Create an account</a> | <a href="<?php echo $html->url('/user/recover/password'); ?>">Forgot your password?</a>
+  </p>
 </form>

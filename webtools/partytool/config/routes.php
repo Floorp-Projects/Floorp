@@ -1,5 +1,5 @@
 <?php
-/* SVN FILE: $Id: routes.php,v 1.2 2006/09/20 07:22:44 reed%reedloden.com Exp $ */
+/* SVN FILE: $Id: routes.php,v 1.3 2006/09/28 03:22:08 reed%reedloden.com Exp $ */
 /**
  * Short description for file.
  *
@@ -23,9 +23,9 @@
  * @package			cake
  * @subpackage		cake.app.config
  * @since			CakePHP v 0.2.9
- * @version			$Revision: 1.2 $
+ * @version			$Revision: 1.3 $
  * @modifiedby		$LastChangedBy: phpnut $
- * @lastmodified	$Date: 2006/09/20 07:22:44 $
+ * @lastmodified	$Date: 2006/09/28 03:22:08 $
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 /**
@@ -43,4 +43,6 @@
  * developement.
  */
 	$Route->connect('/tests', array('controller' => 'tests', 'action' => 'index'));
+  
+  $Route->connect('/privacy-policy', array('controller' => 'pages', 'action' => 'privacy'));
 ?>

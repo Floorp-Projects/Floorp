@@ -38,7 +38,6 @@ vendor('mail');
 uses('sanitize');
 class UserController extends AppController {
   var $name = 'User';
-  var $helpers = array('Html');
   var $pageTitle;
 
   function index() {
@@ -63,6 +62,7 @@ class UserController extends AppController {
       $this->User->id = $_SESSION['User']['id'];
       $this->data = $this->User->read();
       $this->data['User']['password'] = "";
+      $this->set('utz', $this->data['User']['tz']);
       
       if (GMAP_API_KEY != null && !empty($this->data['User']['lat']))
       $this->set('body_args',
@@ -72,7 +72,23 @@ class UserController extends AppController {
     else {
       $user = $this->User->findById($_SESSION['User']['id']);
       $this->User->id = $user['User']['id'];
+      
+      $clean = new Sanitize();
+      $temp = array('password' => $this->data['User']['password'],
+                    'confpassword' => $this->data['User']['confpassword'],
+                    'lat' => $clean->sql($this->data['User']['lat']),
+                    'long' => $clean->sql($this->data['User']['long']),
+                    'tz' => $clean->sql($this->data['User']['tz']));
+      //Nuke everything else
+      $clean->cleanArray($this->data);
 
+      $this->data['User']['email'] = $user['User']['email'];
+      $this->data['User']['password'] = $temp['password'];
+      $this->data['User']['confpassword'] = $temp['confpassword'];
+      $this->data['User']['lat'] = floatval($temp['lat']);
+      $this->data['User']['long'] = floatval($temp['long']);
+      $this->data['User']['tz'] = intval($temp['tz']);
+      $this->data['User']['role'] = $user['User']['role'];
 
       if (!empty($this->data['User']['password'])) {
         if ($this->data['User']['password'] === $this->data['User']['confpassword']) {
@@ -87,18 +103,21 @@ class UserController extends AppController {
       }
       else
         $this->data['User']['password'] = $user['User']['password'];
-        
-      
+
       if ($this->User->save($this->data)) {
+        $sess = $this->User->findById($user['User']['id']);
+        $this->Session->destroy();
+        $this->Session->delete('User');
+        $this->Session->write('User', $sess['User']);
         $this->redirect('/user/');
       }
     }
   }
 
   function view($aUid = null) {
-    if ($aUid === null || !is_numeric($aUid))
+    if (!is_numeric($aUid))
       $this->redirect('/');
-      
+
     else {
       $user = $this->User->findById($aUid);
       $this->pageTitle = APP_NAME." - ".$user['User']['name'];
@@ -106,8 +125,8 @@ class UserController extends AppController {
       if (GMAP_API_KEY != null && !empty($user['User']['lat']))
         $this->set('body_args',
                    ' onload="mapInit('.$user["User"]["lat"].', '.$user["User"]["long"].', '.$user["User"]["zoom"].', \'stationary\');" onunload="GUnload()"');
-      $parties = $this->User->memberOf($user['User']['id']);
-      $this->set('parties', $parties);
+
+      $this->set('parties', $this->User->memberOf($user['User']['id']));
       $this->set('hparties', $this->User->hostOf($user['User']['id']));
     }
   }
@@ -132,6 +151,7 @@ class UserController extends AppController {
     if (!empty($this->data)) {
       $clean = new Sanitize();
       $temp = array('email' => $this->data['User']['email'],
+                    'cemail' => $this->data['User']['confemail'],
                     'password' => $this->data['User']['password'],
                     'confpassword' => $this->data['User']['confpassword'],
                     'lat' => $clean->sql($this->data['User']['lat']),
@@ -141,6 +161,7 @@ class UserController extends AppController {
       $clean->cleanArray($this->data);
 
       $this->data['User']['email'] = $temp['email'];
+      $this->data['User']['confemail'] = $temp['cemail'];
       $this->data['User']['password'] = $temp['password'];
       $this->data['User']['confpassword'] = $temp['confpassword'];
       $this->data['User']['lat'] = floatval($temp['lat']);
@@ -148,55 +169,68 @@ class UserController extends AppController {
       $this->data['User']['role'] = 0;
       $this->data['User']['tz'] = intval($temp['tz']);
 
-      if (!$this->User->findByEmail($this->data['User']['email'])) {
-        if ($this->data['User']['password'] === $this->data['User']['confpassword']) {
-          if ($this->User->validates($this->data)) {
-            $string = $this->data['User']['email'].uniqid(rand(), true).$this->data['User']['password'];
-            $this->data['User']['salt'] = substr(md5($string), 0, 9);
-            $this->data['User']['password'] = sha1($this->data['User']['password'] . $this->data['User']['salt']);
+      if ($this->data['User']['email'] === $temp['cemail']) {
+        if (!$this->User->findByEmail($this->data['User']['email'])) {
+          if ($this->data['User']['password'] === $this->data['User']['confpassword']) {
+            if ($this->User->validates($this->data)) {
+              $string = $this->data['User']['email'].uniqid(rand(), true).$this->data['User']['password'];
+              $this->data['User']['salt'] = substr(md5($string), 0, 9);
+              $this->data['User']['password'] = sha1($this->data['User']['password'] . $this->data['User']['salt']);
 
-            $key = null;
-            $chars = "1234567890abcdefghijklmnopqrstuvwxyz";
-            for ($i = 0; $i < 10; $i++) {
-              $key .= $chars{rand(0,35)};
+              $key = null;
+              $chars = "1234567890abcdefghijklmnopqrstuvwxyz";
+              for ($i = 0; $i < 10; $i++) {
+                $key .= $chars{rand(0,35)};
+              }
+
+              $this->data['User']['active'] = $key;
+
+              if ($this->User->save($this->data)) {
+                $message = array('from' => APP_NAME.' <'.APP_EMAIL.'>',
+                                 'envelope' => APP_EMAIL,
+                                 'to'   => $this->data['User']['email'],
+                                 'subject' => 'Your '.APP_NAME.' Registration',
+                                 'link' => APP_BASE.'/user/activate/'.$key,
+                                 'type' => 'act');
+
+                $mail = new mail($message);
+                $mail->send();
+
+                if (!empty($this->data['User']['icode']))
+                  $this->User->addToParty($this->data['User']['icode'], $this->User->getLastInsertID());
+
+                $this->redirect('/user/login/new');
+              }
             }
 
-            $this->data['User']['active'] = $key;
-
-            if ($this->User->save($this->data)) {
-              $message = array(
-                        'from' => APP_NAME.' <'.APP_EMAIL.'>',
-                        'envelope' => APP_EMAIL,
-                        'to'   => $this->data['User']['email'],
-                        'subject' => 'Your '.APP_NAME.' Registration',
-                        'link' => APP_BASE.'/user/activate/'.$key,
-                        'type' => 'act');
-
-              $mail = new mail($message);
-              $mail->send();
-
-              if (!empty($this->data['User']['icode']))
-                $this->User->addToParty($this->data['User']['icode'], $this->User->getLastInsertID());
-
-              $this->redirect('/user/login/new');
+            else {
+              $this->validateErrors($this->User);
+              $this->data['User']['password'] = null;
+              $this->data['User']['confpassword'] = null;
+              $this->render();
             }
           }
-
+        
           else {
-            $this->validateErrors($this->User);
+            $this->User->invalidate('confpassword');
+            $this->data['User']['password'] = null;
+            $this->data['User']['confpassword'] = null;
             $this->render();
           }
         }
-        
+
         else {
-          $this->User->invalidate('password');
-          $this->User->invalidate('confpassword');
+          $this->User->invalidate('email');
+          $this->data['User']['password'] = null;
+          $this->data['User']['confpassword'] = null;
           $this->render();
         }
       }
       
       else {
-        $this->User->invalidate('email');
+        $this->User->invalidate('confemail');
+        $this->data['User']['password'] = null;
+        $this->data['User']['confpassword'] = null;
         $this->render();
       }
     }
@@ -256,7 +290,7 @@ class UserController extends AppController {
         $this->render();
       }
 
-      if ($user['User']['active'] == 1 && $user['User']['password'] == sha1($this->data['User']['password'] . $user['User']['salt'])) {
+      if ($user['User']['active'] == 1 && $user['User']['password'] == sha1($this->data['User']['password'].$user['User']['salt'])) {
         $this->Session->write('User', $user['User']);
         $this->redirect('/user/');
       }
@@ -268,6 +302,7 @@ class UserController extends AppController {
   }
 
   function logout() {
+    $this->Session->destroy();
     $this->Session->delete('User');
     $this->redirect('/');
   }
@@ -276,8 +311,10 @@ class UserController extends AppController {
     switch ($aType) {
       case "password":
         $this->pageTitle = APP_NAME." - Password Recovery";
+        $this->set('atitle', 'Password Recovery');
         $this->set('hideInput', false);
         $this->set('url', 'password');
+        
         if (!empty($this->data)) {
           $user = $this->User->findByEmail($this->data['User']['email']);
 
@@ -324,6 +361,7 @@ class UserController extends AppController {
         break;
       case "activate":
         $this->pageTitle = APP_NAME." - Resend Activation Code";
+        $this->set('atitle', 'Resend Activation Code');
         $this->set('hideInput', false);
         $this->set('url', 'activate');
 
@@ -373,6 +411,7 @@ class UserController extends AppController {
         break;
       default:
         $this->redirect('/');
+        break;
     }
   }
 

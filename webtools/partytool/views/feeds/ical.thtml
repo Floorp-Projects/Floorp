@@ -13,7 +13,7 @@ DTSTAMP:<?php echo date('Ymd\This\Z', $event['Feeds']['date'])."\n"; ?>
 LOCATION:<?php echo str_replace(",", "\,", $event['Feeds']['address'])."\n"; ?>
 SUMMARY:<?php echo $event['Feeds']['name']."\n"; ?>
 DTSTART:<?php echo date('Ymd\This', $event['Feeds']['date'])."\n"; ?>
-DURATION:PT2H
+DURATION:PT<?php echo $event['Feeds']['duration']; ?>H
 URL:<?php echo "http://".$_SERVER["SERVER_NAME"].$html->url('/party/view/'.$event['Feeds']['id'])."\n"; ?>
 STATUS:<?php echo (($event['Feeds']['confirmed'] == 1) ? "CONFIRMED" : "TENTATIVE")."\n"; ?>
 DESCRIPTION:

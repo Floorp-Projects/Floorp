@@ -10,14 +10,29 @@
   </head>
   <body<?php echo @$body_args ?>>
     <div id="container">
-      <div id="mozilla-com">
-        <a href="http://www.mozilla.com">Visit Mozilla.com</a>
+      <p class="skipLink"><a href="#content" accesskey="2">Skip to main content</a></p>
+      <div id="mozilla-com"><a href="http://www.mozilla.com/">Visit Mozilla.com</a></div>
+      <div id="header">
+        <div id="key-title">
+          <h1><a href="<?php echo $html->url('/'); ?>" title="Return to home page" accesskey="1"><img src="<?php echo $html->url('/img/firefox-title.png'); ?>" width="276" height="54" alt="Firefox Add-ons Beta"/></a></h1>
+          <div id="user"><?php echo $this->renderElement('user_options'); ?></div>
+        </div>
+        <div id="key-menu">
+          <ul id="menu-firefox">
+            <li<?php echo (@$current == "home") ? ' class="current"' : ''?>><a href="<?php echo $html->url('/'); ?>">Home</a></li>
+            <li<?php echo (@$current == "map") ? ' class="current"' : ''?>><a href="<?php echo $html->url('/party/'); ?>">View Map</a></li>
+            <li<?php echo (@$current == "parties") ? ' class="current"' : ''?>><a href="<?php echo $html->url('/party/view/all/'); ?>">View Parties</a></li>
+            <li<?php echo (@$current == "create") ? ' class="current"' : ''?>><a href="<?php echo $html->url('/party/register/'); ?>">Create Party</a></li>
+          </ul>
+        </div>
       </div>
-      <div id="user">
-        <?php echo $this->renderElement('user_options'); ?>
+      <div id="content">
+        <?php echo$content_for_layout ?>
       </div>
-      <div id="header"><br/><a href="/cake/">Firefox Party!</a></div>
-      <?php echo $content_for_layout ?>
+      <div id="footer">
+        Copyright &copy; 2006 Mozilla Corporation<br/>
+        <a href="<?php echo $html->url('/privacy-policy'); ?>">Privacy Policy</a> | <a href="http://www.mozilla.org/foundation/donate.html">Donate to Mozilla</a>
+      </div>
     </div>
   </body>
 </html>

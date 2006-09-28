@@ -6,7 +6,6 @@ class DATABASE_CONFIG {
                        'host' => 'localhost',
                        'login' => '',
                        'password' => '',
-                       'database' => '',
-                       'prefix' => '');
+                       'database' => '');
 }
 ?>

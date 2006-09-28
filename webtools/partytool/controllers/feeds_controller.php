@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Firefox Party Tool
+ * The Original Code is Mozilla Party Tool
  *
  * The Initial Developer of the Original Code is
  * Ryan Flint <rflint@dslr.net>
@@ -48,6 +48,12 @@ class FeedsController extends AppController {
     $this->layout = 'ajax';
     $this->set('latest', $this->Feed->findAll('', '', 'id DESC', 10, 1));
   }
+  
+  function users() {
+    header('Content-type: text/xml');
+    $this->layout = 'ajax';
+    $this->set('count', $this->Feed->getUserCount());
+  }
     
   function comments($id = null) {
     $this->layout = 'ajax';
@@ -67,7 +73,7 @@ class FeedsController extends AppController {
     
   function ical() {
     $this->layout = 'ajax';
-    header('Content-type: text/plain');
+    header('Content-type: text/calendar');
     $weekago = time() - 604800;
     $this->set('events', $this->Feed->findAll('WHERE date > '. $weekago, '', 'date ASC', 50, 1));
   }

@@ -40,7 +40,6 @@ uses('sanitize');
 class PartyController extends AppController {
   var $name = 'Party';
   var $pageTitle;
-  var $components = array('RequestHandler');
   var $components = array('Security');
 
   function beforeFilter() {
@@ -51,14 +50,16 @@ class PartyController extends AppController {
     if (GMAP_API_KEY != null)
       $this->set('body_args', ' onload="initMashUp()" onunload="GUnload()"');
     $this->pageTitle = APP_NAME." - Party Map";
+    $this->set('current', "map");
   }
 
   function register() {
     if (!$this->Session->check('User')) {
-      $this->redirect('/user');
+      $this->redirect('/user/login');
     }
 
     $this->pageTitle = APP_NAME." - Register";
+    $this->set('current', "create");
 
     $this->set('error', false);
     if (GMAP_API_KEY != null)
@@ -87,6 +88,7 @@ class PartyController extends AppController {
 
       $this->data['Party']['date'] = ($offsetdate + $secoffset);
       $this->data['Party']['owner'] = $_SESSION['User']['id'];
+      $this->data['Party']['duration'] = intval($this->data['Party']['duration']);
 
       $key = null;
       $chars = "1234567890abcdefghijklmnopqrstuvwxyz";
@@ -129,6 +131,7 @@ class PartyController extends AppController {
     $party = $this->Party->read();
     $this->set('party', $party);
     $this->pageTitle = APP_NAME." - Edit Party";
+    $this->set('current', "create");
 
     if (empty($_SESSION['User']['id']))
       $this->redirect('/user/login/');
@@ -139,12 +142,15 @@ class PartyController extends AppController {
     else {
       if (empty($this->data)) {
         $this->data = $party;
-
-        $this->data['Party']['hour_hour'] = intval(date('h', $party['Party']['date']));
-        $this->data['Party']['minute_min'] = intval(date('i', $party['Party']['date']));
-        $this->data['Party']['month_hour'] = intval(date('m', $party['Party']['date']));
-        $this->data['Party']['day_day'] = intval(date('d', $party['Party']['date']));
-        $this->data['Party']['year_year'] = intval(date('Y', $party['Party']['date']));
+        
+        $date = array('hour' => intval(date('h', $party['Party']['date'])),
+                      'min'  => intval(date('i', $party['Party']['date'])),
+                      'mon'  => intval(date('m', $party['Party']['date'])),
+                      'day'  => intval(date('d', $party['Party']['date'])),
+                      'year' => intval(date('Y', $party['Party']['date'])),
+                      'tz'   => $party['Party']['tz']);
+                      
+        $this->set('date', $date);
 
         if (GMAP_API_KEY != null) {
           if ($this->data['Party']['lat'])
@@ -178,10 +184,11 @@ class PartyController extends AppController {
                                $this->data['Party']['year_year']);
 
         $this->data['Party']['date'] = ($offsetdate - $secoffset);
-        $this->data['Party']['owner'] = $_SESSION['User']['id'];
-        
-        if (!empty($this->data['Party']['flickrusr'])) {
-          $params = array('type' => 'flickr', 'userid' => $this->data['Party']['flickrusr']);
+        $this->data['Party']['owner'] = $party['Party']['owner'];
+        $this->data['Party']['duration'] = intval($this->data['Party']['duration']);
+
+        if ($this->data['Party']['flickrusr'] != $party['Party']['flickrusr']) {
+          $params = array('type' => 'flickr', 'username' => $this->data['Party']['flickrusr']);
           $flick = new webServices($params);
           $this->data['Party']['flickrid'] = $flick->getFlickrId();
         }
@@ -195,6 +202,7 @@ class PartyController extends AppController {
   function view($id = null, $page = null) {
     if ($id == "all") {
       $this->pageTitle = APP_NAME." - All Parties";
+      $this->set('current', "parties");
       $count = $this->Party->findCount();
       $pages = ceil($count/10);
       if ($page == null)
@@ -213,12 +221,17 @@ class PartyController extends AppController {
       $this->set('party', $party);
 
       $this->pageTitle = APP_NAME." - ".$party['Party']['name'];
-      
-      if ($party['Party']['useflickr'] == 1) {
-        $data = array('type' => 'flickr', 'userid' => $party['Party']['flickrid']);
-        $flickr = new webServices($data);
-        $this->set('flickr', ($flickr->fetchPhotos(FLICKR_TAG_PREFIX.$party['Party']['id'], 8)));
+      $this->set('current', "parties");
+
+      if (FLICKR_API_KEY != null) {
+        if ($party['Party']['useflickr'] == 1) {
+          $data = array('type' => 'flickr', 'userid' => $party['Party']['flickrid']);
+          $flickr = new webServices($data);
+          $photoset = $flickr->fetchPhotos(FLICKR_TAG_PREFIX.$party['Party']['id'], 15, (($party['Party']['flickrperms']) ? false : true));
+          $this->set('flickr', array_slice($photoset, 0, 9));
+        }
       }
+
       if (!empty($party['Party']['guests'])) {
         $guests = explode(',', $party['Party']['guests']);
         $names = array();

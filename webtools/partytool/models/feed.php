@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Firefox Party Tool
+ * The Original Code is Mozilla Party Tool
  *
  * The Initial Developer of the Original Code is
  * Ryan Flint <rflint@dslr.net>
@@ -41,6 +41,11 @@ class Feed extends AppModel {
   function getComments($aParty) {
     $rv = $this->query("SELECT * FROM comments WHERE assoc = ".$aParty." LIMIT 10");
     return $rv;
+  }
+  
+  function getUserCount() {
+    $rv = $this->query("SELECT COUNT(*) FROM users");
+    return $rv[0][0]['COUNT(*)'];
   }
 }
 ?>

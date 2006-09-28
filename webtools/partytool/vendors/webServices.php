@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Firefox Party Tool
+ * The Original Code is Mozilla Party Tool
  *
  * The Initial Developer of the Original Code is
  * Ryan Flint <rflint@dslr.net>
@@ -78,8 +78,8 @@ class webServices {
     return $this->userid;
   }
   
-  function fetchPhotos($tags, $num_results) {
-    $head  = "GET /services/rest/?method=flickr.photos.search&api_key=".FLICKR_API_KEY."&user_id=".$this->userid."&tags=".$tags."&per_page=".$num_results." HTTP/1.1\r\n";
+  function fetchPhotos($tags, $num_results, $single_user) {
+    $head  = "GET /services/rest/?method=flickr.photos.search&api_key=".FLICKR_API_KEY.(($single_user) ? "&user_id=" : '').$this->userid."&tags=".$tags."&per_page=".$num_results." HTTP/1.1\r\n";
     $head .= "Host: ".$this->host."\r\n";
     $head .= "Connection: Close\r\n\r\n";
     
@@ -98,6 +98,9 @@ class webServices {
                          'server' => $servers[$i][1],
                          'title'  => $titles[$i][1]);
       }
+      
+      // Randomize the results
+      shuffle($arr);
       
       return $arr;
     }

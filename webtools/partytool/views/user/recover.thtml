@@ -1,4 +1,5 @@
-<form action="<?php 
+<h1><?php echo $atitle; ?></h1>
+<form class="fxform" action="<?php 
   if (isset($reset))
     echo $html->url('/user/recover/reset/'.$code);
   else
@@ -10,14 +11,14 @@
   <?php endif; ?>
   <div>
   <?php if (!$hideInput): ?>
-    <label for="UserEmail">Email address:</label>
+    <label class="label-large" for="UserEmail">Email address:</label>
     <?php echo $html->input('User/email'); ?>
   <?php endif;
     if (isset($reset)): ?>
-    <label for="UserPassword">New password:</label>
+    <label class="label-large" for="UserPassword">New password:</label>
     <?php echo $html->password('User/password'); ?>
     <br/>
-    <label for="UserConfirm">Confirm password:</label>
+    <label class="label-large" for="UserConfirm">Confirm password:</label>
     <?php echo $html->password('User/confirm'); ?>
   <?php endif; ?>
   </div>

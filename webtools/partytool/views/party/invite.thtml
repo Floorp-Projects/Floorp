@@ -1,0 +1,15 @@
+<?php if(!empty($preamble)): ?>
+<div class="info">
+<p>An email has been sent to <strong><?php echo $preamble[0]; ?></strong>. You can invite another
+  guest below or <a href="<?php echo $html->url('/party/view/'.$preamble[1]); ?>">go back</a> to your party.
+  </p>
+</div>
+<?php endif; ?>
+<p>Since your party is invite only, you'll need to invite your guests. You can do this by
+  entering their email address into the field below, or by handing them a link to
+  <strong><?php echo $inviteurl; ?></strong></p>
+<form action="<?php echo $html->url('/party/invite/'.$partyid) ?>" method="post">
+<label for="PartyEinvite">Guest's email address:</label>
+<?php echo $html->input('Party/einvite')."\n".$html->submit('Submit')."\n"; ?>
+<?php echo $html->tagErrorMsg('Party/einvite', 'Invalid email address')?>
+</form>

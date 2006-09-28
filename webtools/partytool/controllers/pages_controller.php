@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Firefox Party Tool
+ * The Original Code is Mozilla Party Tool
  *
  * The Initial Developer of the Original Code is
  * Ryan Flint <rflint@dslr.net>
@@ -40,7 +40,12 @@ class PagesController extends AppController {
   
   function display() {
     $this->pageTitle = APP_NAME." - Home";
+    $this->set('current', "home");
     $this->set('pcount', $this->Page->findCount());
     $this->set('ucount', $this->Page->getUsers());
+  }
+  
+  function privacy() {
+    $this->pageTitle = APP_NAME." - Privacy Policy";
   }
 }
