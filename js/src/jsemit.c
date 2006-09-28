@@ -1600,16 +1600,22 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
              * nor can prop be deleted.
              */
             prop = NULL;
-            if (OBJ_IS_NATIVE(obj)) {
+            if (OBJ_GET_CLASS(cx, obj) == &js_FunctionClass) {
                 ok = js_LookupHiddenProperty(cx, obj, ATOM_TO_JSID(atom),
                                              &pobj, &prop);
                 if (!ok)
                     break;
                 if (prop) {
+#ifdef DEBUG
+                    JSScopeProperty *sprop = (JSScopeProperty *)prop;
+
                     /*
                      * Any hidden property must be a formal arg or local var,
                      * which will shadow a global const of the same name.
                      */
+                    JS_ASSERT(sprop->getter == js_GetArgument ||
+                              sprop->getter == js_GetLocalVariable);
+#endif
                     OBJ_DROP_PROPERTY(cx, pobj, prop);
                     break;
                 }
