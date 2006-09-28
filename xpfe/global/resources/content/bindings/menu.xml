@@ -5,7 +5,8 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="menuitem-base">
+  <binding id="menuitem-base"
+           extends="chrome://global/content/bindings/general.xml#control-item">
     <resources>
       <stylesheet src="chrome://global/skin/menu.css"/>
     </resources>
@@ -16,6 +17,19 @@
             if (this.localName == "menuseparator")
               return Components.interfaces.nsIAccessibleProvider.XULMenuSeparator;
             return Components.interfaces.nsIAccessibleProvider.XULMenuitem;
+          ]]>
+        </getter>
+      </property>
+      <property name="selected" readonly="true"
+                onget="return this.getAttribute('selected') == 'true';"/>
+      <property name="control" readonly="true">
+        <getter>
+          <![CDATA[
+            var parent = this.parentNode;
+            if (parent &&
+                parent.parentNode instanceof Components.interfaces.nsIDOMXULSelectControlElement)
+              return parent.parentNode;
+            return null;
           ]]>
         </getter>
       </property>
@@ -33,11 +47,6 @@
       </xul:hbox>
       <children includes="menupopup"/>
     </content>
-    
-    <implementation>
-      <property name="value" onset="this.setAttribute('value',val); return val;"
-                            onget="return this.getAttribute('value');"/>
-    </implementation>  
   </binding>
 
   <binding id="menuitem" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
@@ -47,13 +56,6 @@
         <xul:label class="menu-accel" xbl:inherits="value=acceltext"/>
       </xul:hbox>
     </content>
-    
-    <implementation>
-      <property name="value" onset="this.setAttribute('value',val); return val;"
-                            onget="return this.getAttribute('value');"/>
-      <property name="label" onget="return this.getAttribute('label');"
-                             onset="this.setAttribute('label', val); return val;"/>
-    </implementation>  
   </binding>
 
   <binding id="menu-menubar" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
@@ -65,7 +67,7 @@
 
   <binding id="menu-menubar-iconic" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
     <content>
-      <xul:image class="menubar-left" xbl:inherits="image=src"/>
+      <xul:image class="menubar-left" xbl:inherits="src=image"/>
       <xul:label class="menubar-text" xbl:inherits="value=label,accesskey,crop" crop="right"/>
       <children includes="menupopup"/>
     </content>
@@ -119,11 +121,6 @@
       </xul:hbox>
       <children includes="menupopup|template"/>
     </content>
-    
-    <implementation>
-      <property name="value" onset="this.setAttribute('value',val); return val;"
-                            onget="return this.getAttribute('value');"/>
-    </implementation>  
   </binding>
   
   <binding id="menubutton-item" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
