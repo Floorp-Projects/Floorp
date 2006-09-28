@@ -61,7 +61,7 @@ JAVA_SRCS = \
 
 DIRS += dll
 
-ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
 SEP = \;
 else
 SEP = :

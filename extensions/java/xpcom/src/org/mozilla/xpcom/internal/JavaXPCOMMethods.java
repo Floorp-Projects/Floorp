@@ -47,7 +47,13 @@ public class JavaXPCOMMethods {
     if (aLibXULDirectory != null) {
       path = aLibXULDirectory + File.separator;
     }
-    System.load(path + System.mapLibraryName("javaxpcomglue"));
+
+    String osName = System.getProperty("os.name").toLowerCase();
+    if (osName.startsWith("os/2")) {
+      System.load(path + System.mapLibraryName("jxpcmglu"));
+    } else {
+      System.load(path + System.mapLibraryName("javaxpcomglue"));
+    }
 
     registerJavaXPCOMMethodsNative(aLibXULDirectory);
   }
