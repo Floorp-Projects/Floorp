@@ -43,6 +43,7 @@ endif
 include $(topsrcdir)/config/nspr/build.mk
 include $(topsrcdir)/js/src/build.mk
 include $(topsrcdir)/xpcom/build.mk
+include $(topsrcdir)/netwerk/build.mk
 
 TIERS += \
 	external \
@@ -58,10 +59,6 @@ ifndef MOZ_NATIVE_JPEG
 tier_external_dirs	+= jpeg
 endif
 
-ifndef MOZ_NATIVE_ZLIB
-tier_external_dirs	+= modules/zlib
-endif
-
 # Installer needs standalone libjar, hence standalone zlib
 ifdef MOZ_INSTALLER
 tier_external_dirs	+= modules/zlib/standalone
@@ -73,16 +70,8 @@ tier_external_dirs += modules/libmar
 endif
 
 #
-# tier "gecko" - core components (necko,gecko)
+# tier "gecko" - core components
 #
-
-ifneq (,$(MOZ_NO_XPCOM_OBSOLETE)$(MOZ_XPINSTALL))
-tier_gecko_dirs += modules/libreg
-endif
-
-ifndef MOZ_NO_XPCOM_OBSOLETE
-tier_gecko_dirs += xpcom/obsolete
-endif
 
 ifdef NS_TRACE_MALLOC
 tier_gecko_dirs += tools/trace-malloc/lib
@@ -90,7 +79,6 @@ endif
 
 tier_gecko_dirs += \
 		js/src/xpconnect \
-		intl \
 		intl/chardet \
 		$(NULL)
 
@@ -112,7 +100,6 @@ endif
 
 tier_gecko_dirs	+= \
 		modules/libutil \
-		netwerk \
 		modules/libjar \
 		db \
 		$(NULL)
@@ -138,7 +125,6 @@ endif
 
 tier_gecko_dirs	+= \
 		uriloader \
-		modules/libpref \
 		modules/libimg \
 		caps \
 		parser/expat \
@@ -163,10 +149,6 @@ tier_gecko_dirs	+= \
 # Java Embedding Plugin
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 tier_gecko_dirs += plugin/oji/JEP
-endif
-
-ifdef MOZ_AUTH_EXTENSION
-tier_gecko_dirs += extensions/auth
 endif
 
 ifdef MOZ_XMLEXTRAS

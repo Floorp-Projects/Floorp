@@ -94,8 +94,15 @@ include $(topsrcdir)/config/rules.mk
 tier_toolkit::
 	$(MAKE) tools_tier_js
 	$(MAKE) tools_tier_xpcom
+	$(MAKE) tools_tier_necko
 	$(MAKE) tools_tier_gecko
 	$(MAKE) tools_tier_toolkit
+
+ifeq (netwerk,$(MOZ_BUILD_APP))
+tier_necko::
+	$(EXIT_ON_ERROR) \
+	$(foreach tier,$(TIERS),$(MAKE) tools_tier_$(tier); )
+endif
 
 distclean::
 	cat unallmakefiles | $(XARGS) rm -f

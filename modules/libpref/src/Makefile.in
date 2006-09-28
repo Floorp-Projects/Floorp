@@ -93,7 +93,6 @@ endif
 
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
-		$(MOZ_JS_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 

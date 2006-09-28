@@ -56,7 +56,6 @@ ifdef ENABLE_TESTS
 PACKAGE_FILE += necko-tests.pkg
 endif
 
-# caps is needed for nsICryptoHash
 REQUIRES	= xpcom \
 		  string \
 		  nkcache \
@@ -66,7 +65,6 @@ REQUIRES	= xpcom \
 		  intl \
 		  uconv \
 		  unicharutil \
-		  caps \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
 

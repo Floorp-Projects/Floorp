@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,18 +11,18 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is the Mozilla build system.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Google Inc.
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either of the GNU General Public License Version 2 or later (the "GPL"),
-# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,44 +34,47 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+# NOTE: We need NSPR and xpcom, but their build.mk may or may not be
+# included yet. Include it if needed.
 
-include $(DEPTH)/config/autoconf.mk
+ifndef tier_nspr_dirs
+include $(topsrcdir)/config/nspr/build.mk
+endif
 
-CPPSRCS		= StringBundleTest.cpp
-REQUIRES	= xpcom \
-		  string \
-		  locale \
-		  necko \
-		  intl \
-		  $(NULL)
+ifndef tier_xpcom_dirs
+include $(topsrcdir)/xpcom/build.mk
+endif
 
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
+TIERS += zlib \
+	necko \
+	$(NULL)
 
-EXPORT_RESOURCE	= \
-		$(srcdir)/strres.properties \
-		$(srcdir)/strres-test.html \
-		$(srcdir)/strres-test.xul \
-		$(srcdir)/strres-test.dtd \
-		$(srcdir)/strres-test.js \
+
+ifndef MOZ_NATIVE_ZLIB
+tier_zlib_dirs	+= modules/zlib
+endif
+
+#
+# tier "necko" - the networking library and its dependencies
+#
+
+# these are only in the necko tier because libpref needs it
+
+ifneq (1_,$(MOZ_NO_XPCOM_OBSOLETE)_$(MOZ_XPINSTALL))
+tier_necko_dirs += modules/libreg
+endif
+
+ifndef MOZ_NO_XPCOM_OBSOLETE
+tier_necko_dirs += xpcom/obsolete
+endif
+
+tier_necko_dirs += \
+		modules/libpref \
+		intl \
+		netwerk \
 		$(NULL)
 
-LIBS		= \
-		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
-		$(XPCOM_LIBS) \
-		$(NSPR_LIBS) \
-		$(NULL)
-
-include $(topsrcdir)/config/rules.mk
-
-INCLUDES	+= -I$(srcdir)/../src
-
-libs::
-	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
-
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE) $(DESTDIR)$(mozappdir)/res
+ifdef MOZ_AUTH_EXTENSION
+tier_necko_dirs += extensions/auth
+endif
 
