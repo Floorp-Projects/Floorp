@@ -55,7 +55,6 @@ endif
 
 # EXTRA_COMPONENTS installs components written in JS to dist/bin/components
 EXTRA_PP_COMPONENTS = \
-         content/globalstore.js \
          src/nsSafebrowsingApplication.js \
          $(NULL)
 
