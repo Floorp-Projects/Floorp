@@ -162,9 +162,9 @@ sub new {
 
     # If we get something that looks like a word (not a number),
     # make it the "name" param.
-    if (!ref($param) && $param !~ /^\d+$/) {
+    if (!defined $param || (!ref($param) && $param !~ /^\d+$/)) {
         # But only if aliases are enabled.
-        if (Bugzilla->params->{'usebugaliases'}) {
+        if (Bugzilla->params->{'usebugaliases'} && $param) {
             $param = { name => $param };
         }
         else {
