@@ -170,7 +170,4 @@ private:
   nsresult Cleanup();
 };
 
-nsresult NS_NewAbDirectoryDataSource(const nsIID& iid, void **result);
-
-
 #endif

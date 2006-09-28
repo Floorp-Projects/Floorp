@@ -844,25 +844,3 @@ nsresult nsAbDirectoryDataSource::GetTargetHasAssertion(nsIRDFDataSource *dataSo
 	return rv;
 
 }
-
-nsresult NS_NewAbDirectoryDataSource(const nsIID& iid, void **result)
-{
-    NS_PRECONDITION(result != nsnull, "null ptr");
-    if (! result)
-        return NS_ERROR_NULL_POINTER;
-
-    nsAbDirectoryDataSource* datasource = new nsAbDirectoryDataSource();
-    if (! datasource)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult rv;
-    rv = datasource->Init();
-    if (NS_FAILED(rv)) {
-        delete datasource;
-        return rv;
-    }
-
-	return datasource->QueryInterface(iid, result);
-}
-
-
