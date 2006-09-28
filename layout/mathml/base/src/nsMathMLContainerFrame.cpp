@@ -1067,8 +1067,12 @@ printf("\n");
                       aDesiredSize.mFlags | NS_REFLOW_CALC_BOUNDING_METRICS);
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    nsReflowReason reason = (childFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)
-      ? eReflowReason_Initial : aReflowState.reason;
+    nsReflowReason reason = aReflowState.reason;
+    if (childFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)
+      reason = eReflowReason_Initial;
+    else if (aReflowState.path && aReflowState.path->mReflowCommand &&
+             aReflowState.path->mReflowCommand->Type() == eReflowType_StyleChanged)
+      reason = eReflowReason_StyleChange;
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
                                        childFrame, availSize, reason);
     rv = ReflowChild(childFrame, aPresContext, childDesiredSize,
