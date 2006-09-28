@@ -62,9 +62,13 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsInternetSearchService.cpp \
 		nsLocalSearchService.cpp \
+		nsSearchModule.cpp \
 		$(NULL)
+
+ifndef MOZ_PHOENIX
+CPPSRCS += nsInternetSearchService.cpp
+endif
 
 include $(topsrcdir)/config/rules.mk
 
