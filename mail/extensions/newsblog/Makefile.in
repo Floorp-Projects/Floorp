@@ -48,8 +48,8 @@ MODULE		= newsblog
 EXPORT_DIR	= $(DIST)/bin/defaults/isp
 EXPORT_DIR_L10N	= $(DIST)/bin/defaults/isp/$(AB_CD)
 
-GARBAGE += $(addprefix $(EXPORT_DIR)/rss.rdf) \
-		$(addprefix $(EXPORT_DIR_L10N)/rss.rdf)
+GARBAGE += $(EXPORT_DIR)/rss.rdf \
+		$(EXPORT_DIR_L10N)/rss.rdf
 
 libs:: rss.rdf
 	$(INSTALL) $^ $(EXPORT_DIR)
