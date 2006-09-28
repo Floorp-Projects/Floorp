@@ -119,10 +119,10 @@ public:
   void NotifyGlyphFragmentTreeChange(nsISVGGlyphFragmentNode* caller);
   PRBool IsMetricsSuspended();
   PRBool IsGlyphFragmentTreeSuspended();
+  void UpdateFragmentTree();
 
 private:
   void EnsureFragmentTreeUpToDate();
-  void UpdateFragmentTree();
   void UpdateGlyphPositioning();
 
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;

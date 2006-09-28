@@ -72,7 +72,7 @@ nsSVGTextContainerFrame::GetX()
     return nsnull;
 
   if (!mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::x))
-      return nsnull;
+    return nsnull;
 
   nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
   tpElement->GetX(getter_AddRefs(animLengthList));
@@ -91,7 +91,7 @@ nsSVGTextContainerFrame::GetY()
     return nsnull;
 
   if (!mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::y))
-      return nsnull;
+    return nsnull;
 
   nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
   tpElement->GetY(getter_AddRefs(animLengthList));
@@ -311,8 +311,24 @@ nsSVGTextContainerFrame::SetWhitespaceHandling()
   nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
   nsISVGGlyphFragmentNode* next;
 
-  // XXX should inspect xml:space
-  PRUint8 whitespaceHandling = (COMPRESS_WHITESPACE | TRIM_LEADING_WHITESPACE);
+  PRUint8 whitespaceHandling = COMPRESS_WHITESPACE | TRIM_LEADING_WHITESPACE;
+
+  for (nsIFrame *frame = this; frame != nsnull; frame = frame->GetParent()) {
+    nsIContent *content = frame->GetContent();
+    static nsIContent::AttrValuesArray strings[] =
+      {&nsGkAtoms::preserve, &nsGkAtoms::_default, nsnull};
+
+    PRInt32 index = content->FindAttrValueIn(kNameSpaceID_XML,
+                                             nsGkAtoms::space,
+                                             strings, eCaseMatters);
+    if (index == 0) {
+      whitespaceHandling = PRESERVE_WHITESPACE;
+      break;
+    }
+    if (index != nsIContent::ATTR_MISSING ||
+        (frame->GetStateBits() & NS_STATE_IS_OUTER_SVG))
+      break;
+  }
 
   while (node) {
     next = GetNextGlyphFragmentChildNode(node);

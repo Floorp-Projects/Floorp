@@ -61,6 +61,7 @@ class nsSVGOuterSVGFrame : public nsSVGOuterSVGFrameBase,
   NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 protected:
   nsSVGOuterSVGFrame(nsStyleContext* aContext);
+  virtual ~nsSVGOuterSVGFrame();
   NS_IMETHOD InitSVG();
 
    // nsISupports interface:

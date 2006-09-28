@@ -57,6 +57,7 @@ class nsSVGInnerSVGFrame : public nsSVGInnerSVGFrameBase,
   NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 protected:
   nsSVGInnerSVGFrame(nsStyleContext* aContext);
+  virtual void Destroy();
   
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -136,6 +137,12 @@ nsSVGInnerSVGFrame::nsSVGInnerSVGFrame(nsStyleContext* aContext) :
 #ifdef DEBUG
 //  printf("nsSVGInnerSVGFrame CTOR\n");
 #endif
+}
+
+void nsSVGInnerSVGFrame::Destroy()
+{
+  nsSVGUtils::StyleEffects(this);
+  nsSVGInnerSVGFrameBase::Destroy();
 }
 
 void

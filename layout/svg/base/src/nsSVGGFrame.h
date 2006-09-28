@@ -54,6 +54,7 @@ class nsSVGGFrame : public nsSVGGFrameBase,
 public:
   nsSVGGFrame(nsStyleContext* aContext) :
     nsSVGGFrameBase(aContext), mPropagateTransform(PR_TRUE) {}
+  virtual void Destroy();
 
   /**
    * Get the "type" of the frame

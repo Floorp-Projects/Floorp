@@ -536,6 +536,15 @@ nsSVGGlyphFrame::GetCharacterData(nsAString & aCharacterData)
     trimTrailingWhitespace = ((mWhitespaceHandling & TRIM_TRAILING_WHITESPACE) != 0);
     characterData.CompressWhitespace(trimLeadingWhitespace, 
                                      trimTrailingWhitespace);
+  } else {
+    nsAString::iterator start, end;
+    characterData.BeginWriting(start);
+    characterData.EndWriting(end);
+    while (start != end) {
+      if (NS_IsAsciiWhitespace(*start))
+        *start = ' ';
+      ++start;
+    }
   }
   aCharacterData = characterData;
 

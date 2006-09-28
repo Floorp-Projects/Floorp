@@ -60,6 +60,7 @@ class nsSVGForeignObjectFrame : public nsSVGForeignObjectFrameBase,
   NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 protected:
   nsSVGForeignObjectFrame(nsStyleContext* aContext);
+  virtual void Destroy();
   
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
