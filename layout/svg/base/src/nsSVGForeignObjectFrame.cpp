@@ -86,12 +86,6 @@ nsSVGForeignObjectFrame::nsSVGForeignObjectFrame(nsStyleContext* aContext)
 {
 }
 
-void nsSVGForeignObjectFrame::Destroy()
-{
-  nsSVGUtils::StyleEffects(this);
-  nsSVGForeignObjectFrameBase::Destroy();
-}
-
 //----------------------------------------------------------------------
 // nsISupports methods
 

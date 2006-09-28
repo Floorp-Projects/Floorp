@@ -72,12 +72,6 @@ NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* 
   return new (aPresShell) nsSVGGFrame(aContext);
 }
 
-void nsSVGGFrame::Destroy()
-{
-  nsSVGUtils::StyleEffects(this);
-  nsSVGGFrameBase::Destroy();
-}
-
 nsIAtom *
 nsSVGGFrame::GetType() const
 {
