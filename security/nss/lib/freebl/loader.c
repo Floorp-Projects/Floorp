@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.29 2006/06/26 23:42:58 wtchang%redhat.com Exp $ */
+/* $Id: loader.c,v 1.30 2006/09/28 00:40:55 julien.pierre.bugs%sun.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -187,9 +187,7 @@ static char* bl_GetOriginalPathname(const char* link)
 
 const char* softoken=SHLIB_PREFIX"softokn"SOFTOKEN_SHLIB_VERSION"."SHLIB_SUFFIX;
 
-typedef struct {
-    PRLibrary *dlh;
-} BLLibrary;
+static PRLibrary* blLib;
 
 /*
  * Load the freebl library with the file name 'name' residing in the same
@@ -224,19 +222,13 @@ bl_LoadFreeblLibInSoftokenDir(const char *softokenPath, const char *name)
     return dlh;
 }
 
-static BLLibrary *
+static PRLibrary *
 bl_LoadLibrary(const char *name)
 {
-    BLLibrary *lib = NULL;
+    PRLibrary *lib = NULL;
     PRFuncPtr fn_addr;
     char* softokenPath = NULL;
     PRLibSpec libSpec;
-
-    lib = PR_NEWZAP(BLLibrary);
-    if (NULL == lib) {
-        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
-        return NULL;
-    }
 
     /* Get the pathname for the loaded libsoftokn, i.e. /usr/lib/libsoftokn3.so
      * PR_GetLibraryFilePathname works with either the base library name or a
@@ -249,9 +241,9 @@ bl_LoadLibrary(const char *name)
     softokenPath = PR_GetLibraryFilePathname(softoken, fn_addr);
 
     if (softokenPath) {
-        lib->dlh = bl_LoadFreeblLibInSoftokenDir(softokenPath, name);
+        lib = bl_LoadFreeblLibInSoftokenDir(softokenPath, name);
 #ifdef XP_UNIX
-        if (!lib->dlh) {
+        if (!lib) {
             /*
              * If softokenPath is a symbolic link, resolve the symbolic
              * link and try again.
@@ -260,47 +252,26 @@ bl_LoadLibrary(const char *name)
             if (originalSoftokenPath) {
                 PR_Free(softokenPath);
                 softokenPath = originalSoftokenPath;
-                lib->dlh = bl_LoadFreeblLibInSoftokenDir(softokenPath, name);
+                lib = bl_LoadFreeblLibInSoftokenDir(softokenPath, name);
             }
         }
 #endif
         PR_Free(softokenPath);
     }
-    if (!lib->dlh) {
+    if (!lib) {
 #ifdef DEBUG_LOADER
         PR_fprintf(PR_STDOUT, "\nAttempting to load %s\n", name);
 #endif
         libSpec.type = PR_LibSpec_Pathname;
         libSpec.value.pathname = name;
-        lib->dlh = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW | PR_LD_LOCAL);
+        lib = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW | PR_LD_LOCAL);
     }
-    if (NULL == lib->dlh) {
+    if (NULL == lib) {
 #ifdef DEBUG_LOADER
         PR_fprintf(PR_STDOUT, "\nLoading failed : %s.\n", name);
 #endif
-        PR_Free(lib);
-        lib = NULL;
     }
     return lib;
-}
-
-static PRFuncPtr
-bl_FindSymbol(BLLibrary *lib, const char *name)
-{
-    PRFuncPtr f;
-
-    f = PR_FindFunctionSymbol(lib->dlh, name);
-    return f;
-}
-
-static PRStatus
-bl_UnloadLibrary(BLLibrary *lib)
-{
-    if (PR_SUCCESS != PR_UnloadLibrary(lib->dlh)) {
-        return PR_FAILURE;
-    }
-    PR_Free(lib);
-    return PR_SUCCESS;
 }
 
 #define LSB(x) ((x)&0xff)
@@ -314,7 +285,7 @@ static const char *libraryName = NULL;
 static PRStatus
 freebl_LoadDSO( void ) 
 {
-  BLLibrary *  handle;
+  PRLibrary *  handle;
   const char * name = getLibName();
 
   if (!name) {
@@ -324,7 +295,8 @@ freebl_LoadDSO( void )
 
   handle = bl_LoadLibrary(name);
   if (handle) {
-    PRFuncPtr address = bl_FindSymbol(handle, "FREEBL_GetVector");
+    PRFuncPtr address = PR_FindFunctionSymbol(handle, "FREEBL_GetVector");
+    PRStatus status;
     if (address) {
       FREEBLGetVectorFn  * getVector = (FREEBLGetVectorFn *)address;
       const FREEBLVector * dsoVector = getVector();
@@ -336,22 +308,26 @@ freebl_LoadDSO( void )
 	    dsoVector->length >= sizeof(FREEBLVector)) {
           vector = dsoVector;
 	  libraryName = name;
+	  blLib = handle;
 	  return PR_SUCCESS;
 	}
       }
     }
-    bl_UnloadLibrary(handle);
+    status = PR_UnloadLibrary(handle);
+    PORT_Assert(PR_SUCCESS == status);
   }
   return PR_FAILURE;
 }
+
+static const PRCallOnceType pristineCallOnce;
+static PRCallOnceType loadFreeBLOnce;
 
 static PRStatus
 freebl_RunLoaderOnce( void )
 {
   PRStatus status;
-  static PRCallOnceType once;
 
-  status = PR_CallOnce(&once, &freebl_LoadDSO);
+  status = PR_CallOnce(&loadFreeBLOnce, &freebl_LoadDSO);
   return status;
 }
 
@@ -1002,6 +978,14 @@ BL_Cleanup(void)
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return;
   (vector->p_BL_Cleanup)();
+  vector = NULL;
+  PORT_Assert(blLib);
+  if (blLib) {
+      PRStatus status = PR_UnloadLibrary(blLib);
+      PORT_Assert(PR_SUCCESS == status);
+      blLib = NULL;
+  }
+  loadFreeBLOnce = pristineCallOnce;
 }
 
 /* ============== New for 3.003 =============================== */

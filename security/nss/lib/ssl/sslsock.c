@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsock.c,v 1.48 2006/05/18 01:10:21 nelson%bolyard.com Exp $ */
+/* $Id: sslsock.c,v 1.49 2006/09/28 00:40:55 julien.pierre.bugs%sun.com Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -49,6 +49,8 @@
 #include "sslproto.h"
 #include "nspr.h"
 #include "private/pprio.h"
+#include "blapi.h"
+#include "nss.h"
 
 #define SET_ERROR_CODE   /* reminder */
 
@@ -501,6 +503,28 @@ SSL_Enable(PRFileDesc *fd, int which, PRBool on)
     return SSL_OptionSet(fd, which, on);
 }
 
+static const PRCallOnceType pristineCallOnce;
+static PRCallOnceType setupBypassOnce;
+
+static SECStatus SSL_BypassShutdown(void* appData, void* nssData)
+{
+    BL_Cleanup();
+    setupBypassOnce = pristineCallOnce;
+    return SECSuccess;
+}
+
+static PRStatus SSL_BypassRegisterShutdown(void)
+{
+    SECStatus rv = NSS_RegisterShutdown(SSL_BypassShutdown, NULL);
+    PORT_Assert(SECSuccess == rv);
+    return SECSuccess == rv ? PR_SUCCESS : PR_FAILURE;
+}
+
+static PRStatus SSL_BypassSetup(void)
+{
+    return PR_CallOnce(&setupBypassOnce, &SSL_BypassRegisterShutdown);
+}
+
 SECStatus
 SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
 {
@@ -625,7 +649,15 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
 	    PORT_SetError(PR_INVALID_STATE_ERROR);
 	    rv = SECFailure;
 	} else {
-	    ss->opt.bypassPKCS11   = on;
+            if (PR_FALSE != on) {
+                if (PR_SUCCESS == SSL_BypassSetup() ) {
+                    ss->opt.bypassPKCS11   = on;
+                } else {
+                    rv = SECFailure;
+                }
+            } else {
+                ss->opt.bypassPKCS11   = PR_FALSE;
+            }
 	}
 	break;
 
@@ -846,7 +878,15 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
 	break;
 
       case SSL_BYPASS_PKCS11:
-	ssl_defaults.bypassPKCS11   = on;
+        if (PR_FALSE != on) {
+            if (PR_SUCCESS == SSL_BypassSetup()) {
+                ssl_defaults.bypassPKCS11   = on;
+            } else {
+                return SECFailure;
+            }
+        } else {
+            ssl_defaults.bypassPKCS11   = PR_FALSE;
+        }
 	break;
 
       case SSL_NO_LOCKS:
