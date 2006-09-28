@@ -96,7 +96,14 @@ toolbarbutton[checked="true"] {
   -moz-appearance: none !important;
   border: none !important;
   background-color: transparent !important;
-  padding-left: 2px;
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
+  padding: 0 0 0 2px;
+  width: auto;
+}
+
+.toolbarbutton-menu-dropmarker[disabled="true"] {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.png");
+  padding: 0 0 0 2px !important;
 }
 
 /* ::::: toolbarbutton menu-button ::::: */
@@ -129,6 +136,14 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
   -moz-appearance: none !important;
   border: none !important;
   background-color: transparent !important;
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
+  width: auto;
+  padding: 0;
+}
+
+.toolbarbutton-menubutton-dropmarker[disabled="true"] {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.png") !important;
+  padding: 0 !important;
 }
 
 toolbarbutton.tabbable {
