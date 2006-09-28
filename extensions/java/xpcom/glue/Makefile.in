@@ -44,6 +44,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= javaxpcomglue
 LIBRARY_NAME	= javaxpcomglue
+ifeq ($(OS_ARCH),OS2)
+SHORT_LIBNAME	= jxpcmglu
+endif
 
 # On Mac OS X, JNI libraries must end with a '.jnilib' extension
 ifeq ($(OS_ARCH),Darwin)
@@ -59,7 +62,11 @@ LOCAL_INCLUDES	= -I$(JAVA_INCLUDE_PATH)
 ifeq ($(OS_ARCH),WINNT)
 LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/win32
 else
+ifeq ($(OS_ARCH),OS2)
+LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/OS2
+else
 LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/linux
+endif
 endif
 
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build

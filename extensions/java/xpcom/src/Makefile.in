@@ -69,7 +69,11 @@ LOCAL_INCLUDES	= -I$(JAVA_INCLUDE_PATH)
 ifeq ($(OS_ARCH),WINNT)
 LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/win32
 else
+ifeq ($(OS_ARCH),OS2)
+LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/OS2
+else
 LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/linux
+endif
 endif
 
 # Don't set JAVA_LIBRARY_NAME, since we don't want to build during 'libs'
