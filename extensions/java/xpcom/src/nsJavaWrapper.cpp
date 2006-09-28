@@ -355,7 +355,11 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
     {
       LOG(("short\n"));
       if (!aIsOut && !aIsArrayElement) {  // 'in'
-        aVariant.val.i16 = env->CallShortMethod(aParam, shortValueMID);
+        jshort value = env->CallShortMethod(aParam, shortValueMID);
+        if (aType == nsXPTType::T_I16)
+          aVariant.val.i16 = value;
+        else
+          aVariant.val.u8 = value;
       } else { // 'inout' & 'array'
         jshort value;
         if (aParam) {
@@ -364,7 +368,10 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
 
         if (aIsOut) { // 'inout'
           if (aParam) {
-            aVariant.val.i16 = value;
+            if (aType == nsXPTType::T_I16)
+              aVariant.val.i16 = value;
+            else
+              aVariant.val.u8 = value;
             aVariant.ptr = &aVariant.val;
           } else {
             aVariant.ptr = nsnull;
@@ -385,7 +392,11 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
     {
       LOG(("int\n"));
       if (!aIsOut && !aIsArrayElement) {  // 'in'
-        aVariant.val.i32 = env->CallIntMethod(aParam, intValueMID);
+        jint value = env->CallIntMethod(aParam, intValueMID);
+        if (aType == nsXPTType::T_I32)
+          aVariant.val.i32 = value;
+        else
+          aVariant.val.u16 = value;
       } else { // 'inout' & 'array'
         jint value;
         if (aParam) {
@@ -394,7 +405,10 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
 
         if (aIsOut) { // 'inout'
           if (aParam) {
-            aVariant.val.i32 = value;
+            if (aType == nsXPTType::T_I32)
+              aVariant.val.i32 = value;
+            else
+              aVariant.val.u16 = value;
             aVariant.ptr = &aVariant.val;
           } else {
             aVariant.ptr = nsnull;
@@ -415,7 +429,11 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
     {
       LOG(("long\n"));
       if (!aIsOut && !aIsArrayElement) {  // 'in'
-        aVariant.val.i64 = env->CallLongMethod(aParam, longValueMID);
+        jlong value = env->CallLongMethod(aParam, longValueMID);
+        if (aType == nsXPTType::T_I64)
+          aVariant.val.i64 = value;
+        else
+          aVariant.val.u32 = value;
       } else { // 'inout' & 'array'
         jlong value;
         if (aParam) {
@@ -424,7 +442,10 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
 
         if (aIsOut) { // 'inout'
           if (aParam) {
-            aVariant.val.i64 = value;
+            if (aType == nsXPTType::T_I64)
+              aVariant.val.i64 = value;
+            else
+              aVariant.val.u32 = value;
             aVariant.ptr = &aVariant.val;
           } else {
             aVariant.ptr = nsnull;
