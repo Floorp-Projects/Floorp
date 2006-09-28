@@ -582,7 +582,7 @@ MakeDialogText(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIStringBundle> bundle;
-  rv = bundleSvc->CreateBundle("chrome://necko/locale/necko.properties",
+  rv = bundleSvc->CreateBundle("chrome://global/locale/prompts.properties",
                                getter_AddRefs(bundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -600,6 +600,9 @@ MakeDialogText(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
   nsCAutoString scheme;
   uri->GetScheme(scheme);
 
+  nsAutoString username;
+  aAuthInfo->GetUsername(username);
+
   PRUint32 flags;
   aAuthInfo->GetFlags(&flags);
   PRBool proxyAuth = (flags & nsIAuthInformation::AUTH_PROXY) != 0;
@@ -615,6 +618,8 @@ MakeDialogText(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
 
   NS_NAMED_LITERAL_STRING(proxyText, "EnterUserPasswordForProxy");
   NS_NAMED_LITERAL_STRING(originText, "EnterUserPasswordForRealm");
+  NS_NAMED_LITERAL_STRING(noRealmText, "EnterUserPasswordFor");
+  NS_NAMED_LITERAL_STRING(passwordText, "EnterPasswordFor");
 
   const PRUnichar *text;
   if (proxyAuth) {
@@ -630,8 +635,18 @@ MakeDialogText(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
   }
 
   const PRUnichar *strings[] = { realm.get(), displayHost.get() };
+  PRUint32 count = NS_ARRAY_LENGTH(strings);
 
-  rv = bundle->FormatStringFromName(text, strings, 2, getter_Copies(message));
+  if (flags & nsIAuthInformation::ONLY_PASSWORD) {
+    text = passwordText.get();
+    strings[0] = username.get();
+  } else if (!proxyAuth && realm.IsEmpty()) {
+    text = noRealmText.get();
+    count--;
+    strings[0] = strings[1];
+  }
+
+  rv = bundle->FormatStringFromName(text, strings, count, getter_Copies(message));
   return rv;
 }
 
