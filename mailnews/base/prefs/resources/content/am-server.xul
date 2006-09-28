@@ -202,8 +202,8 @@
     </hbox>
 
     <checkbox wsm_persist="true" id="pop3.deleteMailLeftOnServer" class="indent"
-              label="&deleteOnServer.label;"
-              accesskey="&deleteOnServer.accesskey;"
+              label="&deleteOnServer2.label;"
+              accesskey="&deleteOnServer2.accesskey;"
               prefattribute="value"
               prefstring="mail.server.%serverkey%.delete_mail_left_on_server"/>
 
