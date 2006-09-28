@@ -272,6 +272,7 @@ nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode *aDOMNode, imgIRequest *
       nsCOMPtr<nsIDOMHTMLElement> body;
       htmlDocument->GetBody(getter_AddRefs(body));
       domNode = do_QueryInterface(body);
+      NS_ENSURE_TRUE(domNode, NS_ERROR_FAILURE);
     }
   }
   return GetBackgroundImageRequestInternal(domNode, aRequest);
