@@ -110,6 +110,7 @@ typedef struct cairo_nquartz_surface {
     /* These are stored while drawing operations are in place, set up
      * by nquartz_setup_source() and nquartz_finish_source()
      */
+    CGAffineTransform imageTransform;
     CGImageRef sourceImage;
     CGShadingRef sourceShading;
     CGPatternRef sourcePattern;
@@ -663,6 +664,8 @@ _cairo_nquartz_setup_source (cairo_nquartz_surface_t *surface,
 				  solid->color.green,
 				  solid->color.blue,
 				  solid->color.alpha);
+
+	return DO_SOLID;
     } else if (source->type == CAIRO_PATTERN_TYPE_LINEAR ||
 	       source->type == CAIRO_PATTERN_TYPE_RADIAL)
     {
@@ -671,6 +674,8 @@ _cairo_nquartz_setup_source (cairo_nquartz_surface_t *surface,
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
 	surface->sourceShading = shading;
+
+	return DO_SHADING;
     } else if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	CGPatternRef pattern = _cairo_nquartz_cairo_repeating_surface_pattern_to_quartz (surface, source);
 	if (!pattern)
@@ -695,11 +700,13 @@ _cairo_nquartz_setup_source (cairo_nquartz_surface_t *surface,
 	CGContextSetPatternPhase (surface->cgContext, CGSizeMake(0,0));
 
 	surface->sourcePattern = pattern;
+
+	return DO_PATTERN;
     } else {
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return DO_UNSUPPORTED;
     }
 
-    return CAIRO_STATUS_SUCCESS;
+    ASSERT_NOT_REACHED;
 }
 
 static void
