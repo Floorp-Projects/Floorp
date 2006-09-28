@@ -2959,6 +2959,11 @@ void sha_test(char *reqfn)
                 msg = NULL;
             }
             msgLen = atoi(&buf[i]); /* in bits */
+            if (msgLen%8 != 0) {
+                fprintf(stderr, "SHA tests are configured for "
+                    "BIT oriented implementations\n");
+                goto loser;
+            }
             msgLen = msgLen/8; /* convert to bytes */
             fputs(buf, resp);
             msg = PORT_ZAlloc(msgLen);
