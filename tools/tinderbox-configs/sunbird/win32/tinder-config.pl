@@ -177,7 +177,7 @@ $BuildNameExtra = 'Sb-Nightly';
 $BuildTree  = 'Sunbird';
 
 #$BuildName = '';
-#$BuildTag = '';
+$BuildTag = 'SUNBIRD_0_3_BRANCH';
 #$BuildConfigDir = 'mozilla/config';
 #$Topsrcdir = 'mozilla';
 

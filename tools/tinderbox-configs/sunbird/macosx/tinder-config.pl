@@ -43,7 +43,7 @@ $ENV{CVS_RSH} = "ssh";
 # Tests
 $CleanProfile             = 1;
 #$ResetHomeDirForTests     = 1;
-$ProductName              = "Calendar";
+$ProductName              = "Sunbird";
 $VendorName               = 'Mozilla';
 
 $RunMozillaTests          = 0;  # Allow turning off of all tests if needed.
@@ -158,7 +158,7 @@ $BuildNameExtra = 'Sb-Release';
 $BuildTree  = 'Sunbird';
 
 #$BuildName = '';
-#$BuildTag = '';
+$BuildTag = 'SUNBIRD_0_3_BRANCH';
 #$BuildConfigDir = 'mozilla/config';
 #$Topsrcdir = 'mozilla';
 
