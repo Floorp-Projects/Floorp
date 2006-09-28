@@ -23,6 +23,7 @@
    - Contributor(s):
    -   Vladimir Vukicevic <vladimir@pobox.com>
    -   Stefan Sitter <ssitter@googlemail.com>
+   -   Clint Talbert <cmtalbert@myfastmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -548,16 +549,26 @@
          event.stopPropagation();
          var item = session.sourceNode.occurrence;
          if (item instanceof Components.interfaces.calIEvent) {
-           var duration = item.duration;
-           newStart = adjustDate(item.startDate);
-           newEnd = newStart.clone();
+           var beginMove = item.startDate.clone();
+           beginMove.isDate = true;
+           var duration = boxDate.subtractDate(beginMove);
+           newStart = item.startDate.clone();
+           newStart.addDuration(duration);
+           newStart.normalize();
+           newEnd = item.endDate.clone();
            newEnd.addDuration(duration);
+           newEnd.normalize();
          } else if (item instanceof Components.interfaces.calITodo) {
            if (item.entryDate && item.dueDate) {
-             var duration = item.duration;
-             newStart = adjustDate(item.entryDate);
-             newEnd = newStart.clone();
+             var beginMove = item.entryDate.clone();
+             beginMove.isDate = true;
+             var duration = boxDate.subtractDate(beginMove);
+             newStart = item.entryDate.clone();
+             newStart.addDuration(duration);
+             newStart.normalize();
+             newEnd = item.dueDate.clone();
              newEnd.addDuration(duration);
+             newEnd.normalize();
            } else if (item.entryDate) {
              newStart = adjustDate(item.entryDate);
            } else { // only due date
