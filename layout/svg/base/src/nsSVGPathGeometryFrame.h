@@ -64,7 +64,7 @@ class nsSVGPathGeometryFrame : public nsSVGPathGeometryFrameBase,
 {
 public:
   nsSVGPathGeometryFrame(nsStyleContext* aContext);
-  virtual ~nsSVGPathGeometryFrame();
+  ~nsSVGPathGeometryFrame();
 
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -127,6 +127,7 @@ protected:
 private:
   void Render(nsISVGRendererCanvas *aCanvas);
   void GeneratePath(cairo_t *ctx, nsISVGCairoCanvas* aCanvas);
+  void RemovePathProperties();
 
   /*
    * Check for what cairo returns for the fill extents of a degenerate path

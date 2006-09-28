@@ -40,17 +40,103 @@
 #include "nsIDOMSVGSVGElement.h"
 #include "nsISVGRenderer.h"
 #include "nsSVGSVGElement.h"
+#include "nsSVGTextFrame.h"
 #include "nsIServiceManager.h"
 #include "nsIViewManager.h"
 #include "nsReflowPath.h"
 #include "nsSVGRect.h"
 #include "nsDisplayList.h"
 #include "nsISVGRendererCanvas.h"
+#include "nsStubMutationObserver.h"
 
 #if defined(DEBUG) && defined(SVG_DEBUG_PRINTING)
 #include "nsIDeviceContext.h"
 #include "nsTransform2D.h"
 #endif
+
+class nsSVGMutationObserver : public nsStubMutationObserver
+{
+public:
+  // nsIMutationObserver interface
+  void AttributeChanged(nsIDocument *aDocument,
+                        nsIContent *aContent,
+                        PRInt32 aNameSpaceID,
+                        nsIAtom *aAttribute,
+                        PRInt32 aModType);
+
+   // nsISupports interface:
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }
+  NS_IMETHOD_(nsrefcnt) Release() { return 1; }
+
+  static void UpdateTextFragmentTrees(nsIFrame *aFrame);
+};
+
+//----------------------------------------------------------------------
+// nsISupports methods
+
+NS_INTERFACE_MAP_BEGIN(nsSVGMutationObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+NS_INTERFACE_MAP_END
+
+static nsSVGMutationObserver sSVGMutationObserver;
+
+//----------------------------------------------------------------------
+// nsIMutationObserver methods
+
+void
+nsSVGMutationObserver::AttributeChanged(nsIDocument *aDocument,
+                                        nsIContent *aContent,
+                                        PRInt32 aNameSpaceID,
+                                        nsIAtom *aAttribute,
+                                        PRInt32 aModType)
+{
+  if (aNameSpaceID != kNameSpaceID_XML || aAttribute != nsGkAtoms::space) {
+    return;
+  }
+
+  PRUint32 count = aDocument->GetNumberOfShells();
+  for (PRUint32 i = 0; i < count; ++i) {
+    nsIFrame *frame = aDocument->GetShellAt(i)->GetPrimaryFrameFor(aContent);
+    if (!frame) {
+      continue;
+    }
+    // is the content a child of a text element
+    nsISVGTextContentMetrics* metrics;
+    CallQueryInterface(frame, &metrics);
+    if (metrics) {
+      nsSVGTextFrame* textFrame = NS_STATIC_CAST(nsSVGTextContainerFrame*,
+                                                 frame)->GetTextFrame();
+
+      if (!textFrame->IsGlyphFragmentTreeSuspended())
+        textFrame->UpdateFragmentTree();
+      continue;
+    }
+    // if not, are there text elements amongst its descendents
+    UpdateTextFragmentTrees(frame);
+  }
+}
+
+//----------------------------------------------------------------------
+// Implementation helpers
+
+void
+nsSVGMutationObserver::UpdateTextFragmentTrees(nsIFrame *aFrame)
+{
+  nsIFrame* kid = aFrame->GetFirstChild(nsnull);
+  while (kid) {
+    if (kid->GetType() == nsLayoutAtoms::svgTextFrame) {
+      nsSVGTextFrame* textFrame = NS_STATIC_CAST(nsSVGTextFrame*, kid);
+      if (!textFrame->IsGlyphFragmentTreeSuspended()) {
+        textFrame->UpdateFragmentTree();
+      }
+    } else {
+      UpdateTextFragmentTrees(kid);
+    }
+    kid = kid->GetNextSibling();
+  }
+}
 
 //----------------------------------------------------------------------
 // Implementation
@@ -77,6 +163,14 @@ nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
 {
 }
 
+nsSVGOuterSVGFrame::~nsSVGOuterSVGFrame()
+{
+  nsIDocument *doc = mContent->GetOwnerDoc();
+  if (doc) {
+    doc->RemoveMutationObserver(&sSVGMutationObserver);
+  }
+}
+
 NS_IMETHODIMP
 nsSVGOuterSVGFrame::InitSVG()
 {
@@ -96,12 +190,15 @@ nsSVGOuterSVGFrame::InitSVG()
   NS_ASSERTION(SVGElement, "wrong content element");
   SVGElement->SetParentCoordCtxProvider(this);
 
-  // we only care about our content's zoom and pan values if it's the root element
   nsIDocument* doc = mContent->GetCurrentDoc();
-  if (doc && doc->GetRootContent() == mContent) {
-    SVGElement->GetZoomAndPanEnum(getter_AddRefs(mZoomAndPan));
-    SVGElement->GetCurrentTranslate(getter_AddRefs(mCurrentTranslate));
-    SVGElement->GetCurrentScaleNumber(getter_AddRefs(mCurrentScale));
+  if (doc) {
+    // we only care about our content's zoom and pan values if it's the root element
+    if (doc->GetRootContent() == mContent) {
+      SVGElement->GetZoomAndPanEnum(getter_AddRefs(mZoomAndPan));
+      SVGElement->GetCurrentTranslate(getter_AddRefs(mCurrentTranslate));
+      SVGElement->GetCurrentScaleNumber(getter_AddRefs(mCurrentScale));
+    }
+    doc->AddMutationObserver(&sSVGMutationObserver);
   }
 
   SuspendRedraw();
