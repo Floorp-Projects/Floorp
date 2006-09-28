@@ -48,7 +48,6 @@
 #include "nsTransform2D.h"
 #include "nsPresContext.h"
 #include "nsRect.h"
-#include "nsISVGCairoSurface.h"
 #include <cairo.h>
 #include "nsSVGUtils.h"
 
@@ -720,21 +719,10 @@ struct ctxEntry {
   PRUint32 mHeight;
 };
 
-/** Implements pushSurface(in nsISVGRendererSurface surface); */
+/** Implements pushSurface(in cairo_surface_t surface); */
 NS_IMETHODIMP
-nsSVGCairoCanvas::PushSurface(nsISVGRendererSurface *aSurface,
+nsSVGCairoCanvas::PushSurface(cairo_surface_t *aSurface,
                               PRBool isSubSurface)
-{
-  nsCOMPtr<nsISVGCairoSurface> cairoSurface = do_QueryInterface(aSurface);
-  if (!cairoSurface)
-    return NS_ERROR_FAILURE;
-
-  return PushCairoSurface(cairoSurface->GetSurface(), isSubSurface);
-}
-
-NS_IMETHODIMP
-nsSVGCairoCanvas::PushCairoSurface(cairo_surface_t *aSurface,
-                                   PRBool isSubSurface)
 {
   ctxEntry *ctx = new ctxEntry;
   if (!ctx)
@@ -774,57 +762,6 @@ nsSVGCairoCanvas::PopSurface()
     if (mSubSurfaceDepth == count)
       mSubSurfaceDepth--;
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGCairoCanvas::GetSurfaceSize(PRUint32 *aWidth, PRUint32 *aHeight)
-{
-  *aWidth = mWidth;
-  *aHeight = mHeight;
-  return NS_OK;
-}
-
-/** Implements  void compositeSurface(in nsISVGRendererSurface surface,
-                                      in float opacity); */
-NS_IMETHODIMP
-nsSVGCairoCanvas::CompositeSurface(nsISVGRendererSurface *aSurface,
-                                   float aOpacity)
-{
-  nsCOMPtr<nsISVGCairoSurface> cairoSurface = do_QueryInterface(aSurface);
-  if (!cairoSurface)
-    return NS_ERROR_FAILURE;
-
-  cairo_save(mCR);
-  if (mSubSurfaceDepth == mContextStack.Count())
-    cairo_translate(mCR, -mInitialTransform.x0, -mInitialTransform.y0);
-
-  cairo_set_source_surface(mCR, cairoSurface->GetSurface(), 0.0, 0.0);
-  cairo_paint_with_alpha(mCR, aOpacity);
-  cairo_restore(mCR);
-
-  return NS_OK;
-}
-
-/** Implements void compositeSurfaceWithMask(in nsISVGRendererSurface surface,
-                                             in nsISVGRendererSurface mask); */
-NS_IMETHODIMP
-nsSVGCairoCanvas::CompositeSurfaceWithMask(nsISVGRendererSurface *aSurface,
-                                           nsISVGRendererSurface *aMask)
-{
-  nsCOMPtr<nsISVGCairoSurface> cairoSurface = do_QueryInterface(aSurface);
-  nsCOMPtr<nsISVGCairoSurface> maskSurface = do_QueryInterface(aMask);
-  if (!cairoSurface || !maskSurface)
-    return NS_ERROR_FAILURE;
-
-  cairo_save(mCR);
-  if (mSubSurfaceDepth == mContextStack.Count())
-    cairo_translate(mCR, -mInitialTransform.x0, -mInitialTransform.y0);
-
-  cairo_set_source_surface(mCR, cairoSurface->GetSurface(), 0.0, 0.0);
-  cairo_mask_surface(mCR, maskSurface->GetSurface(), 0.0, 0.0);
-  cairo_restore(mCR);
 
   return NS_OK;
 }

@@ -40,7 +40,6 @@
 #include "nsSVGClipPathFrame.h"
 #include "nsISVGRendererCanvas.h"
 #include "nsIDOMSVGAnimatedEnum.h"
-#include "nsISVGRendererSurface.h"
 #include "nsSVGAtoms.h"
 #include "nsSVGUtils.h"
 #include "nsSVGGraphicElement.h"
@@ -107,7 +106,6 @@ nsSVGClipPathFrame::InitSVG()
 
 NS_IMETHODIMP
 nsSVGClipPathFrame::ClipPaint(nsISVGRendererCanvas* canvas,
-                              nsISVGRendererSurface* aClipSurface,
                               nsISVGChildFrame* aParent,
                               nsCOMPtr<nsIDOMSVGMatrix> aMatrix)
 {
@@ -131,11 +129,8 @@ nsSVGClipPathFrame::ClipPaint(nsISVGRendererCanvas* canvas,
 
   if (isTrivial)
     rv = canvas->SetRenderMode(nsISVGRendererCanvas::SVG_RENDER_MODE_CLIP);
-  else {
+  else
     rv = canvas->SetRenderMode(nsISVGRendererCanvas::SVG_RENDER_MODE_CLIP_MASK);
-
-    canvas->PushSurface(aClipSurface, PR_TRUE);
-  }
 
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
@@ -149,9 +144,6 @@ nsSVGClipPathFrame::ClipPaint(nsISVGRendererCanvas* canvas,
       SVGFrame->PaintSVG(canvas, nsnull);
     }
   }
-
-  if (!isTrivial)
-    canvas->PopSurface();
 
   canvas->SetRenderMode(nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL);
 

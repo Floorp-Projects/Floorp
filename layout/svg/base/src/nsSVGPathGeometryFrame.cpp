@@ -57,7 +57,6 @@
 #include "nsSVGUtils.h"
 #include "nsSVGFilterFrame.h"
 #include "nsSVGMaskFrame.h"
-#include "nsISVGRendererSurface.h"
 #include "nsINameSpaceManager.h"
 #include "nsSVGGraphicElement.h"
 #include "nsSVGOuterSVGFrame.h"

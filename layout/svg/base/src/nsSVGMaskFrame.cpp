@@ -39,9 +39,9 @@
 #include "nsISVGRendererCanvas.h"
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsSVGContainerFrame.h"
-#include "nsISVGRendererSurface.h"
 #include "nsSVGMaskElement.h"
 #include "nsIDOMSVGMatrix.h"
+#include "nsISVGCairoCanvas.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -135,17 +135,16 @@ static unsigned char rgb2lin[256] = {
 239, 241, 243, 245, 248, 250, 252, 255
 };
 
-nsresult
-nsSVGMaskFrame::MaskPaint(nsISVGRendererCanvas* aCanvas,
-                          nsISVGRendererSurface* aSurface,
-                          nsISVGChildFrame* aParent,
-                          nsCOMPtr<nsIDOMSVGMatrix> aMatrix,
-                          float aOpacity)
+cairo_pattern_t *
+nsSVGMaskFrame::ComputeMaskAlpha(nsISVGRendererCanvas* aCanvas,
+                                 nsISVGChildFrame* aParent,
+                                 nsIDOMSVGMatrix* aMatrix,
+                                 float aOpacity)
 {
-  nsRect dirty;
+  nsCOMPtr<nsISVGCairoCanvas> cairoCanvas = do_QueryInterface(aCanvas);
+  cairo_t *ctx = cairoCanvas->GetContext();
 
-  if (NS_FAILED(aCanvas->PushSurface(aSurface, PR_TRUE)))
-    return NS_ERROR_FAILURE;
+  cairo_push_group(ctx);
 
   {
     nsIFrame *frame;
@@ -175,7 +174,7 @@ nsSVGMaskFrame::MaskPaint(nsISVGRendererCanvas* aCanvas,
       aParent->NotifyCanvasTMChanged(PR_TRUE);
 
       if (!bbox)
-        return NS_OK;
+        return nsnull;
 
 #ifdef DEBUG_tor
       bbox->GetX(&x);
@@ -214,22 +213,49 @@ nsSVGMaskFrame::MaskPaint(nsISVGRendererCanvas* aCanvas,
     nsSVGUtils::PaintChildWithEffects(aCanvas, nsnull, kid);
   }
 
-  aCanvas->PopSurface();
+  cairo_pattern_t *pattern = cairo_pop_group(ctx);
+  if (!pattern)
+    return nsnull;
 
-  /* Now convert to intensity (sRGB -> linearRGB -> intensity)
-     and store in alpha channel */
+  cairo_matrix_t patternMatrix;
+  cairo_pattern_get_matrix(pattern, &patternMatrix);
 
-  PRUint32 width, height, length;
-  PRUint8 *data;
-  PRInt32 stride;
+  cairo_surface_t *surface = nsnull;
+  cairo_pattern_get_surface(pattern, &surface);
 
-  aSurface->Lock();
-  aSurface->GetWidth(&width);
-  aSurface->GetHeight(&height);
-  aSurface->GetData(&data, &length, &stride);
+  double x1, y1, x2, y2;
+  cairo_clip_extents(ctx, &x1, &y1, &x2, &y2);
+
+  PRUint32 clipWidth = PRUint32(ceil(x2) - floor(x1));
+  PRUint32 clipHeight = PRUint32(ceil(y2) - floor(y1));
+
+  cairo_surface_t *image = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
+                                                      clipWidth, clipHeight);
+  if (!image)
+    return nsnull;
+
+  cairo_t *transferCtx = cairo_create(image);
+  if (!transferCtx)
+    return nsnull;
+
+  cairo_set_source_surface(transferCtx, surface, 0, 0);
+  cairo_paint(transferCtx);
+
+  cairo_destroy(transferCtx);
+  cairo_pattern_destroy(pattern);
+
+  /* Now convert to intensity (sRGB -> linearRGB -> intensity) and
+     store in alpha channel.  Reuse the transfer image instead of
+     allocating another CAIRO_FORMAT_A8 image. */
+
+  PRUint32 width  = cairo_image_surface_get_width(image);
+  PRUint32 height = cairo_image_surface_get_height(image);
+  PRUint8 *data   = cairo_image_surface_get_data(image);
+  PRInt32  stride = cairo_image_surface_get_stride(image);
+
   for (PRUint32 y = 0; y < height; y++)
     for (PRUint32 x = 0; x < width; x++) {
-      PRUint32 a; 
+      PRUint32 a;
       float r, g, b, intensity;
 
       /* un-premultiply and sRGB -> linearRGB conversion */
@@ -251,9 +277,13 @@ nsSVGMaskFrame::MaskPaint(nsISVGRendererCanvas* aCanvas,
       data[stride * y + 4 * x + 3] = (unsigned char)(intensity * 255);
     }
 
-  aSurface->Unlock();
+  cairo_pattern_t *retval = cairo_pattern_create_for_surface(image);
+  cairo_surface_destroy(image);
 
-  return NS_OK;
+  if (retval)
+    cairo_pattern_set_matrix(retval, &patternMatrix);
+
+  return retval;
 }
 
 nsIAtom *

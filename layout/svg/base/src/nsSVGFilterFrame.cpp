@@ -368,7 +368,7 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
     return NS_OK;
   }
 
-  aCanvas->PushCairoSurface(surface, PR_FALSE);
+  aCanvas->PushSurface(surface, PR_FALSE);
   aTarget->PaintSVG(aCanvas, nsnull);
   aCanvas->PopSurface();
 

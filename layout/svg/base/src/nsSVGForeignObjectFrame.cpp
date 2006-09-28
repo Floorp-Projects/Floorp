@@ -59,7 +59,6 @@
 #include "nsSVGMatrix.h"
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
-#include "nsISVGRendererSurface.h"
 #include "nsSVGForeignObjectElement.h"
 #include "nsSVGContainerFrame.h"
 
