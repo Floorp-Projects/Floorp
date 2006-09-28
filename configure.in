@@ -4104,6 +4104,7 @@ MOZ_ARG_ENABLE_STRING(application,
                             xulrunner
                             camino
                             content/xslt (Standalone Transformiix XSLT)
+                            netwerk (Standalone Necko)
                             tools/update-packaging (AUS-related packaging tools)
                             standalone (use this for standalone
                               xpcom/xpconnect or to manually drive a build)],
@@ -4394,6 +4395,16 @@ content/xslt)
   AC_DEFINE(TX_EXE)
   MOZ_XSLT_STANDALONE=1
   MOZ_APP_VERSION=$MOZILLA_VERSION
+  ;;
+
+netwerk)
+  MOZ_APP_NAME=mozilla
+  MOZ_EXTENSIONS_DEFAULT=""
+  MOZ_APP_VERSION=$MOZILLA_VERSION
+  MOZ_NO_XPCOM_OBSOLETE=1
+  MOZ_SINGLE_PROFILE=1
+  MOZ_PROFILESHARING=
+  MOZ_XPINSTALL=
   ;;
 
 standalone) 
