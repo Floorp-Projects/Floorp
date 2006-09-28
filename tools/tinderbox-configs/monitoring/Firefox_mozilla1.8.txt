@@ -1,10 +1,10 @@
-/pub/mozilla.org/firefox/nightly/latest-mozilla1.8/firefox-2.0a3.en-US.linux-i686.mar
-/pub/mozilla.org/firefox/nightly/latest-mozilla1.8/firefox-2.0a3.en-US.linux-i686.tar.gz
-/pub/mozilla.org/firefox/nightly/latest-mozilla1.8/firefox-2.0a3.en-US.mac.dmg
-/pub/mozilla.org/firefox/nightly/latest-mozilla1.8/firefox-2.0a3.en-US.mac.mar
-/pub/mozilla.org/firefox/nightly/latest-mozilla1.8/firefox-2.0a3.en-US.win32.installer.exe
-/pub/mozilla.org/firefox/nightly/latest-mozilla1.8/firefox-2.0a3.en-US.win32.mar
-/pub/mozilla.org/firefox/nightly/latest-mozilla1.8/firefox-2.0a3.en-US.win32.zip
+/pub/mozilla.org/firefox/nightly/latest-mozilla1.8/firefox-2.0.en-US.linux-i686.mar
+/pub/mozilla.org/firefox/nightly/latest-mozilla1.8/firefox-2.0.en-US.linux-i686.tar.gz
+/pub/mozilla.org/firefox/nightly/latest-mozilla1.8/firefox-2.0.en-US.mac.dmg
+/pub/mozilla.org/firefox/nightly/latest-mozilla1.8/firefox-2.0.en-US.mac.mar
+/pub/mozilla.org/firefox/nightly/latest-mozilla1.8/firefox-2.0.en-US.win32.installer.exe
+/pub/mozilla.org/firefox/nightly/latest-mozilla1.8/firefox-2.0.en-US.win32.mar
+/pub/mozilla.org/firefox/nightly/latest-mozilla1.8/firefox-2.0.en-US.win32.zip
 /pub/mozilla.org/firefox/nightly/latest-mozilla1.8/linux-xpi/adt.xpi
 /pub/mozilla.org/firefox/nightly/latest-mozilla1.8/linux-xpi/browser.xpi
 /pub/mozilla.org/firefox/nightly/latest-mozilla1.8/linux-xpi/en-US.xpi
