@@ -59,7 +59,6 @@ class nsIDOMSVGLength;
 class nsIDOMSVGMatrix;
 class nsIURI;
 class nsSVGOuterSVGFrame;
-class nsISVGRendererSurface;
 class nsIPresShell;
 class nsISVGRendererCanvas;
 class nsIDOMSVGAnimatedPreserveAspectRatio;
@@ -162,11 +161,6 @@ public:
   /* Returns the angle halfway between the two specified angles */
   static float
   AngleBisect(float a1, float a2);
-
-  /* Generate a new rendering surface the size of the current surface */
-  static nsresult GetSurface(nsSVGOuterSVGFrame *aOuterSVGFrame,
-                             nsISVGRendererCanvas *aCanvas,
-                             nsISVGRendererSurface **aSurface);
 
   /* Find the outermost SVG frame of the passed frame */
   static nsSVGOuterSVGFrame *

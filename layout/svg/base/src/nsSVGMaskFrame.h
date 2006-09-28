@@ -38,8 +38,7 @@
 #define __NS_SVGMASKFRAME_H__
 
 #include "nsSVGContainerFrame.h"
-
-class nsISVGRendererSurface;
+#include "cairo.h"
 
 typedef nsSVGContainerFrame nsSVGMaskFrameBase;
 
@@ -54,11 +53,10 @@ class nsSVGMaskFrame : public nsSVGMaskFrameBase
   nsSVGMaskFrame(nsStyleContext* aContext) : nsSVGMaskFrameBase(aContext) {}
 
   // nsSVGMaskFrame method:
-  nsresult MaskPaint(nsISVGRendererCanvas* aCanvas,
-                     nsISVGRendererSurface* aSurface,
-                     nsISVGChildFrame* aParent,
-                     nsCOMPtr<nsIDOMSVGMatrix> aMatrix,
-                     float aOpacity = 1.0f);
+  cairo_pattern_t *ComputeMaskAlpha(nsISVGRendererCanvas* aCanvas,
+                                    nsISVGChildFrame* aParent,
+                                    nsIDOMSVGMatrix* aMatrix,
+                                    float aOpacity = 1.0f);
 
   /**
    * Get the "type" of the frame

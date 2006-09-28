@@ -52,7 +52,6 @@ typedef PRUint32 nscolor;
 interface nsIRenderingContext;
 interface nsPresContext;
 interface nsIDOMSVGMatrix;
-interface nsISVGRendererSurface;
 
 /**
  * \addtogroup renderer_interfaces Rendering Engine Interfaces
@@ -71,7 +70,7 @@ interface nsISVGRendererSurface;
  * Mozilla-native rendering object with a call to
  * nsISVGRenderer::createCanvas().
  */
-[uuid(e20d952c-ed16-4beb-a3f5-e995f0688bff)]
+[uuid(8ba10d8f-9245-4aa3-af9c-9ccf456b53f1)]
 interface nsISVGRendererCanvas : nsISupports
 {
   /**
@@ -137,23 +136,12 @@ interface nsISVGRendererCanvas : nsISupports
    *               the "root" surface in terms of transformation correction
    *               or as an absolute surface.
    */
-  void pushSurface(in nsISVGRendererSurface surface, in boolean isSubSurface);
-  void pushCairoSurface(in cairo_surface_t surface, in boolean isSubSurface);
+  void pushSurface(in cairo_surface_t surface, in boolean isSubSurface);
   void popSurface();
-
-  /**
-   * Get the current drawing surface dimensions.
-   */
-  void getSurfaceSize(out unsigned long width, out unsigned long height);
 
   /**
    * Surface composition.
    */
-  void compositeSurface(in nsISVGRendererSurface surface,
-                        in float opacity);
-
-  void compositeSurfaceWithMask(in nsISVGRendererSurface surface,
-                                in nsISVGRendererSurface mask);
 
   void compositeSurfaceMatrix(in cairo_surface_t surface,
                               in nsIDOMSVGMatrix canvasTM,

@@ -45,7 +45,6 @@ struct nsRect;
 [ref] native nsRectRef(nsRect);
 
 interface nsISVGRendererCanvas;
-interface nsISVGRendererSurface;
 interface nsIRenderingContext;
 interface nsPresContext;
 
@@ -68,7 +67,7 @@ interface nsPresContext;
  * cross-platform libart engine
  * ("@mozilla.org/svg/renderer;1?tech=LIBART").
  */
-[uuid(6f9315c2-f06d-47d7-bef1-4ad7ad0b1558)]
+[uuid(9a015ea6-bcb5-4626-b98c-5df708c1fcf0)]
 interface nsISVGRenderer : nsISupports
 {
   // void Init(in nsPresContext presContext);
@@ -86,16 +85,6 @@ interface nsISVGRenderer : nsISupports
   [noscript] nsISVGRendererCanvas createCanvas(in nsIRenderingContext ctx,
                                                in nsPresContext presContext,
                                                [const] in nsRectRef dirtyRect);
-
-  /**
-   * Create a rendering engine-native surface object.
-   *
-   * @param width Width of rectangle (pixels).
-   * @param height Height of rectangle (pixels).
-   *
-   * @return A rendering engine-native surface object.
-   */
-  [noscript] nsISVGRendererSurface createSurface(in unsigned long width, in unsigned long height);
 };
 
 /** @} */

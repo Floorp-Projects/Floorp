@@ -42,7 +42,6 @@
 #include "nsCOMPtr.h"
 #include "nsISVGRenderer.h"
 #include "nsSVGCairoCanvas.h"
-#include "nsSVGCairoSurface.h"
 #include <cairo.h>
 
 /**
@@ -106,12 +105,4 @@ nsSVGRendererCairo::CreateCanvas(nsIRenderingContext *ctx,
                                  nsISVGRendererCanvas **_retval)
 {
   return NS_NewSVGCairoCanvas(_retval, ctx, presContext, dirtyRect);
-}
-
-/** Implements nsISVGRendererSurface createSurface(in float width, in float height); */
-NS_IMETHODIMP
-nsSVGRendererCairo::CreateSurface(PRUint32 width, PRUint32 height,
-                                  nsISVGRendererSurface **_retval)
-{
-  return NS_NewSVGCairoSurface(_retval, width, height);
 }

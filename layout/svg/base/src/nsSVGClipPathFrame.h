@@ -39,8 +39,6 @@
 
 #include "nsSVGContainerFrame.h"
 
-class nsISVGRendererSurface;
-
 typedef nsSVGContainerFrame nsSVGClipPathFrameBase;
 
 class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
@@ -55,7 +53,6 @@ class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
 
   // nsSVGClipPathFrame methods:
   NS_IMETHOD ClipPaint(nsISVGRendererCanvas* canvas,
-                       nsISVGRendererSurface* aClipSurface,
                        nsISVGChildFrame* aParent,
                        nsCOMPtr<nsIDOMSVGMatrix> aMatrix);
 

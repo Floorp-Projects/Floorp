@@ -71,7 +71,6 @@
 #include "nsSVGFilterFrame.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGMaskFrame.h"
-#include "nsISVGRendererSurface.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGLength2.h"
 #include "nsGenericElement.h"
@@ -79,6 +78,7 @@
 #include "nsSVGGeometryFrame.h"
 #include "nsIScriptError.h"
 #include "cairo.h"
+#include "nsISVGCairoCanvas.h"
 
 struct nsSVGFilterProperty {
   nsRect mFilterRect;
@@ -329,22 +329,6 @@ nsSVGUtils::TransformPoint(nsIDOMSVGMatrix *matrix,
   xfpoint->GetY(y);
 }
 
-nsresult
-nsSVGUtils::GetSurface(nsSVGOuterSVGFrame *aOuterSVGFrame,
-                       nsISVGRendererCanvas *aCanvas,
-                       nsISVGRendererSurface **aSurface)
-{
-  PRUint32 width, height;
-  aCanvas->GetSurfaceSize(&width, &height);
-  
-  nsCOMPtr<nsISVGRenderer> renderer;
-  aOuterSVGFrame->GetRenderer(getter_AddRefs(renderer));
-  if (renderer)
-    return renderer->CreateSurface(width, height, aSurface);
-  else
-    return NS_ERROR_FAILURE;
-}
-
 float
 nsSVGUtils::AngleBisect(float a1, float a2)
 {
@@ -583,10 +567,10 @@ AddEffectProperties(nsIFrame *aFrame)
   }
 }
 
-static already_AddRefed<nsISVGRendererSurface>
+static cairo_pattern_t *
 GetComplexClipSurface(nsISVGRendererCanvas *aCanvas, nsIFrame *aFrame)
 {
-  nsISVGRendererSurface *surface = nsnull;
+  cairo_pattern_t *pattern = nsnull;
 
   if (aFrame->GetStateBits() & NS_STATE_SVG_CLIPPED_COMPLEX) {
     nsISVGChildFrame *svgChildFrame;
@@ -596,26 +580,27 @@ GetComplexClipSurface(nsISVGRendererCanvas *aCanvas, nsIFrame *aFrame)
     clip = NS_STATIC_CAST(nsSVGClipPathFrame *,
                           aFrame->GetProperty(nsGkAtoms::clipPath));
 
-    nsSVGUtils::GetSurface(nsSVGUtils::GetOuterSVGFrame(aFrame),
-                           aCanvas, &surface);
-    if (surface) {
-      nsCOMPtr<nsIDOMSVGMatrix> matrix = nsSVGUtils::GetCanvasTM(aFrame);
-      if (NS_FAILED(clip->ClipPaint(aCanvas, surface, svgChildFrame,
-                                    matrix))) {
-        delete surface;
-        surface = nsnull;
-      }
+    nsCOMPtr<nsISVGCairoCanvas> cairoCanvas = do_QueryInterface(aCanvas);
+    cairo_t *ctx = cairoCanvas->GetContext();
+
+    cairo_push_group(ctx);
+
+    nsCOMPtr<nsIDOMSVGMatrix> matrix = nsSVGUtils::GetCanvasTM(aFrame);
+    nsresult rv = clip->ClipPaint(aCanvas, svgChildFrame, matrix);
+    pattern = cairo_pop_group(ctx);
+
+    if (NS_FAILED(rv) && pattern) {
+      cairo_pattern_destroy(pattern);
+      pattern = nsnull;
     }
   }
 
-  return surface;
+  return pattern;
 }
 
-static already_AddRefed<nsISVGRendererSurface>
+static cairo_pattern_t *
 GetMaskSurface(nsISVGRendererCanvas *aCanvas, nsIFrame *aFrame, float opacity)
 {
-  nsISVGRendererSurface *surface = nsnull;
-
   if (aFrame->GetStateBits() & NS_STATE_SVG_MASKED) {
     nsISVGChildFrame *svgChildFrame;
     CallQueryInterface(aFrame, &svgChildFrame);
@@ -624,19 +609,11 @@ GetMaskSurface(nsISVGRendererCanvas *aCanvas, nsIFrame *aFrame, float opacity)
     mask = NS_STATIC_CAST(nsSVGMaskFrame *,
                           aFrame->GetProperty(nsGkAtoms::mask));
 
-    nsSVGUtils::GetSurface(nsSVGUtils::GetOuterSVGFrame(aFrame),
-                           aCanvas, &surface);
-    if (surface) {
-      nsCOMPtr<nsIDOMSVGMatrix> matrix = nsSVGUtils::GetCanvasTM(aFrame);
-      if (NS_FAILED(mask->MaskPaint(aCanvas, surface, svgChildFrame,
-                                    matrix, opacity))) {
-        delete surface;
-        surface = nsnull;
-      }
-    }
+    nsCOMPtr<nsIDOMSVGMatrix> matrix = nsSVGUtils::GetCanvasTM(aFrame);
+    return mask->ComputeMaskAlpha(aCanvas, svgChildFrame, matrix, opacity);
   }
 
-  return surface;
+  return nsnull;
 }
 
 
@@ -653,7 +630,6 @@ nsSVGUtils::PaintChildWithEffects(nsISVGRendererCanvas *aCanvas,
   if (!svgChildFrame)
     return;
 
-  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(aFrame);
   float opacity = aFrame->GetStyleDisplay()->mOpacity;
 
   /* Properties are added lazily and may have been removed by a restyle,
@@ -687,19 +663,16 @@ nsSVGUtils::PaintChildWithEffects(nsISVGRendererCanvas *aCanvas,
    * + Merge opacity and masking if both used together.
    */
 
-  nsCOMPtr<nsISVGRendererSurface> offscreenSurface;
+  cairo_t *ctx = nsnull;
 
   /* Check if we need to do additional operations on this child's
    * rendering, which necessitates rendering into another surface. */
   if (opacity != 1.0 ||
       state & (NS_STATE_SVG_CLIPPED_COMPLEX | NS_STATE_SVG_MASKED)) {
-    nsSVGUtils::GetSurface(outerSVGFrame,
-                           aCanvas, getter_AddRefs(offscreenSurface));
-    if (offscreenSurface) {
-      aCanvas->PushSurface(offscreenSurface, PR_TRUE);
-    } else {
-      return;
-    }
+    nsCOMPtr<nsISVGCairoCanvas> cairoCanvas = do_QueryInterface(aCanvas);
+    ctx = cairoCanvas->GetContext();
+    cairo_save(ctx);
+    cairo_push_group(ctx);
   }
 
   /* If this frame has only a trivial clipPath, set up cairo's clipping now so
@@ -712,7 +685,7 @@ nsSVGUtils::PaintChildWithEffects(nsISVGRendererCanvas *aCanvas,
 
     aCanvas->PushClip();
     nsCOMPtr<nsIDOMSVGMatrix> matrix = GetCanvasTM(aFrame);
-    clip->ClipPaint(aCanvas, nsnull, svgChildFrame, matrix);
+    clip->ClipPaint(aCanvas, svgChildFrame, matrix);
   }
 
   /* Paint the child */
@@ -724,49 +697,43 @@ nsSVGUtils::PaintChildWithEffects(nsISVGRendererCanvas *aCanvas,
   } else {
     svgChildFrame->PaintSVG(aCanvas, aDirtyRect);
   }
-  
+
   if (state & NS_STATE_SVG_CLIPPED_TRIVIAL) {
     aCanvas->PopClip();
   }
 
   /* No more effects, we're done. */
-  if (!offscreenSurface)
+  if (!ctx)
     return;
 
-  aCanvas->PopSurface();
+  cairo_pop_group_to_source(ctx);
 
-  nsCOMPtr<nsISVGRendererSurface> clipMaskSurface, maskSurface;
-
-  clipMaskSurface = GetComplexClipSurface(aCanvas, aFrame);
-  maskSurface = GetMaskSurface(aCanvas, aFrame, opacity);
-
-  nsCOMPtr<nsISVGRendererSurface> clippedSurface;
+  cairo_pattern_t *maskSurface     = GetMaskSurface(aCanvas, aFrame, opacity);
+  cairo_pattern_t *clipMaskSurface = GetComplexClipSurface(aCanvas, aFrame);
 
   if (clipMaskSurface) {
     // Still more set after clipping, so clip to another surface
     if (maskSurface || opacity != 1.0) {
-      nsSVGUtils::GetSurface(outerSVGFrame, aCanvas,
-                             getter_AddRefs(clippedSurface));
-      
-      if (clippedSurface) {
-        aCanvas->PushSurface(clippedSurface, PR_TRUE);
-        aCanvas->CompositeSurfaceWithMask(offscreenSurface, clipMaskSurface);
-        aCanvas->PopSurface();
-      }
+      cairo_push_group(ctx);
+      cairo_mask(ctx, clipMaskSurface);
+      cairo_pop_group_to_source(ctx);
     } else {
-        aCanvas->CompositeSurfaceWithMask(offscreenSurface, clipMaskSurface);
+      cairo_mask(ctx, clipMaskSurface);
     }
   }
 
-  // No clipping or out of memory creating clip dest surface (skip clipping)
-  if (!clippedSurface) {
-    clippedSurface = offscreenSurface;
+  if (maskSurface) {
+    cairo_mask(ctx, maskSurface);
+  } else if (opacity != 1.0) {
+    cairo_paint_with_alpha(ctx, opacity);
   }
 
+  cairo_restore(ctx);
+
   if (maskSurface)
-    aCanvas->CompositeSurfaceWithMask(clippedSurface, maskSurface);
-  else if (opacity != 1.0)
-    aCanvas->CompositeSurface(clippedSurface, opacity);
+    cairo_pattern_destroy(maskSurface);
+  if (clipMaskSurface)
+    cairo_pattern_destroy(clipMaskSurface);
 }
 
 void

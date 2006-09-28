@@ -39,7 +39,6 @@
 #include "nsIDOMSVGTransformable.h"
 #include "nsSVGGFrame.h"
 #include "nsISVGRenderer.h"
-#include "nsISVGRendererSurface.h"
 #include "nsISVGRendererCanvas.h"
 #include "nsIFrame.h"
 #include "nsSVGMatrix.h"
