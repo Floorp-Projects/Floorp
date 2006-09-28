@@ -470,6 +470,47 @@ crmf_add_privkey_thismessage(CRMFCertReqMsg *inCertReqMsg, SECItem *encPrivKey,
 }
 
 static SECStatus
+crmf_add_privkey_dhmac(CRMFCertReqMsg *inCertReqMsg, SECItem *dhmac,
+                             CRMFPOPChoice inChoice)
+{
+    PRArenaPool           *poolp;
+    void                  *mark;
+    CRMFPOPOPrivKey       *popoPrivKey;
+    CRMFProofOfPossession *pop;
+    SECStatus              rv;
+
+    PORT_Assert(inCertReqMsg != NULL && dhmac != NULL);
+    poolp = inCertReqMsg->poolp;
+    mark = PORT_ArenaMark(poolp);
+    pop = PORT_ArenaZNew(poolp, CRMFProofOfPossession);
+    if (pop == NULL) {
+        goto loser;
+    }
+    pop->popUsed = inChoice;
+    popoPrivKey = &pop->popChoice.keyAgreement;
+
+    rv = SECITEM_CopyItem(poolp, &(popoPrivKey->message.dhMAC),
+                          dhmac);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
+    popoPrivKey->message.dhMAC.len <<= 3;
+    popoPrivKey->messageChoice = crmfDHMAC;
+    inCertReqMsg->pop = pop;
+    rv = crmf_encode_popoprivkey(poolp, inCertReqMsg, popoPrivKey,
+                                 crmf_get_template_for_privkey(inChoice));
+    if (rv != SECSuccess) {
+        goto loser;
+    }
+    PORT_ArenaUnmark(poolp, mark);
+    return SECSuccess;
+    
+ loser:
+    PORT_ArenaRelease(poolp, mark);
+    return SECFailure;
+}
+
+static SECStatus
 crmf_add_privkey_subseqmessage(CRMFCertReqMsg        *inCertReqMsg,
 			       CRMFSubseqMessOptions  subsequentMessage,
 			       CRMFPOPChoice          inChoice)
@@ -578,7 +619,11 @@ CRMF_CertReqMsgSetKeyAgreementPOP (CRMFCertReqMsg        *inCertReqMsg,
 					    crmfKeyAgreement);
 	break;
     case crmfDHMAC:
-        /* This case should be added in the future. */
+        /* In this case encPrivKey should be the calculated dhMac
+         * as specified in RFC 2511 */
+        rv = crmf_add_privkey_dhmac(inCertReqMsg, encPrivKey,
+                                    crmfKeyAgreement);
+        break;
     default:
         rv = SECFailure;
     }
