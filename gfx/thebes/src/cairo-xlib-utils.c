@@ -216,6 +216,7 @@ _draw_with_xlib_direct (cairo_t *cr,
     int max_rectangles;
     Display *dpy;
     Visual *visual;
+    cairo_bool_t have_rectangular_clip;
 
     target = cairo_get_group_target (cr);
     cairo_surface_get_device_offset (target, &device_offset_x, &device_offset_y);
@@ -245,15 +246,23 @@ _draw_with_xlib_direct (cairo_t *cr,
       max_rectangles = MAX_STATIC_CLIP_RECTANGLES;
     }
     
-    /* Check that the clip is rectangular and aligned on unit boundaries */
-    if (!_get_rectangular_clip (cr,
-                                offset_x, offset_y, bounds_width, bounds_height,
-                                &needs_clip,
-                                rectangles, max_rectangles, &rect_count)) {
+    /* Check that the clip is rectangular and aligned on unit boundaries. */
+    /* Temporarily set the matrix for _get_rectangular_clip. It's basically
+       the identity matrix, but we must adjust for the fact that our
+       offset-rect is in device coordinates. */
+    cairo_identity_matrix (cr);
+    cairo_translate (cr, -device_offset_x, -device_offset_y);
+    have_rectangular_clip =
+        _get_rectangular_clip (cr,
+                               offset_x, offset_y, bounds_width, bounds_height,
+                               &needs_clip,
+                               rectangles, max_rectangles, &rect_count);
+    cairo_set_matrix (cr, &matrix);
+    if (!have_rectangular_clip) {
         CAIRO_XLIB_DRAWING_NOTE("TAKING SLOW PATH: unsupported clip\n");
         return False;
     }
-  
+
     /* Stop now if everything is clipped out */
     if (needs_clip && rect_count == 0) {
         CAIRO_XLIB_DRAWING_NOTE("TAKING FAST PATH: all clipped\n");
