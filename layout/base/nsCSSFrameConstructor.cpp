@@ -7267,7 +7267,9 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
                                                    mrowContext);
     
     // then, create a block frame that will wrap the table frame
-    nsIFrame* blockFrame = NS_NewBlockFrame(mPresShell, blockContext);
+    nsIFrame* blockFrame = NS_NewBlockFrame(mPresShell, blockContext,
+                                            NS_BLOCK_SPACE_MGR |
+                                            NS_BLOCK_MARGIN_ROOT);
     if (NS_UNLIKELY(!newFrame)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
