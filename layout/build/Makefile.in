@@ -210,15 +210,6 @@ ifdef NS_TRACE_MALLOC
 EXTRA_DSO_LIBS	+= tracemalloc
 endif
 
-ifdef MOZ_ENABLE_GTK2
-EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS) \
-		    $(NULL)
-ifdef MOZ_ENABLE_CAIRO_GFX
-EXTRA_DSO_LDOPTS += -lXrender \
-		    $(NULL)
-endif
-endif
-
 ifndef MOZ_ENABLE_CAIRO_GFX
 ifdef MOZ_SVG
 EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS) \
@@ -231,6 +222,15 @@ ifndef MOZ_TREE_CAIRO
 # In an in-tree cairo build, cairo is part of libthebes
 # otherwise, we need to link it separately.
 EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
+endif
+endif
+
+ifdef MOZ_ENABLE_GTK2
+EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS) \
+		    $(NULL)
+ifdef MOZ_ENABLE_CAIRO_GFX
+EXTRA_DSO_LDOPTS += -lXrender \
+		    $(NULL)
 endif
 endif
 
