@@ -130,7 +130,6 @@ MODULES_necko :=                                \
   mozilla/modules/zlib                          \
   mozilla/netwerk                               \
   mozilla/xpcom                                 \
-  mozilla/extensions/auth                       \
   mozilla/tools/test-harness                    \
   $(NULL)
 
