@@ -64,6 +64,7 @@ jclass nsISupportsClass = nsnull;
 jclass xpcomExceptionClass = nsnull;
 jclass xpcomJavaProxyClass = nsnull;
 jclass weakReferenceClass = nsnull;
+jclass javaXPCOMUtilsClass = nsnull;
 
 jmethodID hashCodeMID = nsnull;
 jmethodID booleanValueMID = nsnull;
@@ -88,6 +89,7 @@ jmethodID getNativeXPCOMInstMID = nsnull;
 jmethodID weakReferenceConstructorMID = nsnull;
 jmethodID getReferentMID = nsnull;
 jmethodID clearReferentMID = nsnull;
+jmethodID findClassInLoaderMID = nsnull;
 
 #ifdef DEBUG_JAVAXPCOM
 jmethodID getNameMID = nsnull;
@@ -272,6 +274,16 @@ InitializeJavaGlobals(JNIEnv *env)
                                             "clear", "()V")))
   {
     NS_WARNING("Problem creating java.lang.ref.WeakReference globals");
+    goto init_error;
+  }
+
+  if (!(clazz = env->FindClass("org/mozilla/xpcom/internal/JavaXPCOMMethods")) ||
+      !(javaXPCOMUtilsClass = (jclass) env->NewGlobalRef(clazz)) ||
+      !(findClassInLoaderMID = env->GetStaticMethodID(clazz,
+                    "findClassInLoader",
+                    "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Class;")))
+  {
+    NS_WARNING("Problem creating org.mozilla.xpcom.internal.JavaXPCOMMethods globals");
     goto init_error;
   }
 
@@ -796,7 +808,8 @@ JavaXPCOMInstance::~JavaXPCOMInstance()
 
 nsresult
 GetNewOrUsedJavaObject(JNIEnv* env, nsISupports* aXPCOMObject,
-                       const nsIID& aIID, jobject* aResult)
+                       const nsIID& aIID, jobject aObjectLoader,
+                       jobject* aResult)
 {
   NS_PRECONDITION(aResult != nsnull, "null ptr");
   if (!aResult)
@@ -825,7 +838,7 @@ GetNewOrUsedJavaObject(JNIEnv* env, nsISupports* aXPCOMObject,
 
   // No Java object is associated with the given XPCOM object, so we
   // create a Java proxy.
-  return CreateJavaProxy(env, rootObject, aIID, aResult);
+  return CreateJavaProxy(env, rootObject, aIID, aObjectLoader, aResult);
 }
 
 nsresult
