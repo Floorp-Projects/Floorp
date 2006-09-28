@@ -118,6 +118,12 @@ toolbarbutton[checked="true"] {
   -moz-appearance: none !important;
   border: none !important;
   background-color: transparent !important;
+  padding: 0;
+  width: auto;
+}
+
+.toolbarbutton-menu-dropmarker[disabled="true"] {
+  padding: 0 !important;
 }
 
 /* ::::: toolbarbutton menu-button ::::: */
@@ -151,4 +157,9 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
   padding: 3px;
   border: none !important;
   background-color: transparent !important;
+  width: auto;
+}
+
+.toolbarbutton-menubutton-dropmarker[disabled="true"] {
+  padding: 3px !important;
 }
