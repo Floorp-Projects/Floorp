@@ -19,6 +19,7 @@ use strict;
 use lib ".";
 
 use Bugzilla;
+use Bugzilla::Error;
 
 Bugzilla->login();
 
