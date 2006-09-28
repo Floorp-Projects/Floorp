@@ -207,16 +207,11 @@
   </binding>
 
 
-  <!-- CONTROL WIDGET FOR SELECT APPEARANCE='FULL' -->
-  <binding id="controlwidget-select-full"
+  <!-- BASE CONTROL WIDGET FOR SELECT/SELECT1 APPEARANCE='FULL' -->
+  <binding id="controlwidget-selects-full-base"
            extends="chrome://xforms/content/select.xml#controlwidget-nonativewidget-base">
 
-    <content>
-      <html:div anonid="control"/>
-    </content>
-
     <implementation>
-
       <!-- XXX: not implemented -->
       <property name="selectedIndex"
                 onget="throw new Error(this.selectedIndexErrorMsg);"
@@ -241,27 +236,7 @@
         <parameter name="aValue"/>
         <parameter name="aGroup"/>
         <body>
-          var div = document.createElementNS(this.XHTML_NS, "div");
-          div.setAttribute("anonid", "itemcontainer");
-
-          var input = document.createElementNS(this.XHTML_NS, "input");
-          input.setAttribute("type", "checkbox");
-          input.setAttribute("value", aValue);
-          input.setAttribute("anonid", "wcontrol");
-          if (this.readonly)
-            input.setAttribute("disabled", "true");
-
-          div.appendChild(input);
-          if (aLabel) {
-            div.appendChild(aLabel.cloneNode(true));
-          }
-
-          if (aGroup) {
-            aGroup.appendChild(div);
-          } else {
-            this.control.appendChild(div);
-          }
-          return div;
+          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
         </body>
       </method>
 
@@ -329,14 +304,6 @@
     </implementation>
 
     <handlers>
-      <handler event="click">
-        if (event.originalTarget.getAttribute("anonid") == "itemcontainer") {
-          event.originalTarget.firstChild.checked =
-            !event.originalTarget.firstChild.checked;
-          this.updateInstanceData(true);
-        }
-      </handler>
-
       <handler event="change">
         if (event.originalTarget.getAttribute("anonid") == "wcontrol")
           this.updateInstanceData(true);
@@ -352,7 +319,57 @@
         XXX: when incremental='false' then model data should be updated on 
         'blur' event for xforms:select only
       -->
+    </handlers>
+  </binding>
 
+
+  <!-- CONTROL WIDGET FOR SELECT APPEARANCE='FULL' -->
+  <binding id="controlwidget-select-full"
+           extends="#controlwidget-selects-full-base">
+
+    <content>
+      <html:div anonid="control"/>
+    </content>
+
+    <implementation>
+      <method name="appendItem">
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <parameter name="aGroup"/>
+        <body>
+          var div = document.createElementNS(this.XHTML_NS, "div");
+          div.setAttribute("anonid", "itemcontainer");
+
+          var input = document.createElementNS(this.XHTML_NS, "input");
+          input.setAttribute("type", "checkbox");
+          input.setAttribute("value", aValue);
+          input.setAttribute("anonid", "wcontrol");
+          if (this.readonly)
+            input.setAttribute("disabled", "true");
+
+          div.appendChild(input);
+          if (aLabel) {
+            div.appendChild(aLabel.cloneNode(true));
+          }
+
+          if (aGroup) {
+            aGroup.appendChild(div);
+          } else {
+            this.control.appendChild(div);
+          }
+          return div;
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="click">
+        if (event.originalTarget.getAttribute("anonid") == "itemcontainer") {
+          event.originalTarget.firstChild.checked =
+            !event.originalTarget.firstChild.checked;
+          this.updateInstanceData(true);
+        }
+      </handler>
     </handlers>
   </binding>
 
@@ -381,7 +398,7 @@
 
   <!-- CONTROL WIDGET FOR SELECT1 APPEARANCE='FULL' -->
   <binding id="controlwidget-select1-full"
-           extends="#controlwidget-select-full">
+           extends="#controlwidget-selects-full-base">
 
     <content>
       <html:form anonid="control"/>
@@ -418,5 +435,19 @@
         </body>
       </method>
     </implementation>
+
+    <handlers>
+      <handler event="click">
+      <![CDATA[
+        if (event.originalTarget.getAttribute("anonid") == "itemcontainer" &&
+            !event.originalTarget.firstChild.checked) {
+          event.originalTarget.firstChild.checked = true;
+          this.updateInstanceData(true);
+        }
+      ]]>
+      </handler>
+    </handlers>
   </binding>
+
 </bindings>
+
