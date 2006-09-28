@@ -27,6 +27,11 @@
         padding: 0;
     }
 
+    #page-index ul
+    {
+        padding-bottom: 1em;
+    }
+
     #page-index li
     {
         list-style: none;
@@ -34,7 +39,7 @@
 
     #page-index p
     {
-        padding-bottom: 1em;
+        padding-bottom: 0.5em;
     }
 
     /* Hide from NN4 */
@@ -58,12 +63,6 @@
     #page-index #sidebar
     {
         padding-top: 1em;
-    }
-
-    /* Hide from MSIE6- */
-    #page-index [id]#sidebar
-    {
-        padding: 1em 0;
     }
 
     #new_release

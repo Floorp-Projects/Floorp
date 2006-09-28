@@ -116,6 +116,11 @@ function addSidebar() {
   [% END %]
 [% END %]
     <li id="sidebar"><a href="javascript:addSidebar()">Add to Sidebar</a> (requires a Mozilla browser like Mozilla Firefox)</li>
+    <li id="quick_search_plugin">
+      <a href="javascript:window.external.AddSearchProvider('[% Param('urlbase') %]search_plugin.cgi')">Install
+      the Quick Search plugin</a> (requires Firefox 2 or Internet Explorer 7)
+    </li>
+
 
     [%# List items of links to more things users can do on this installation. %]
     [% Hook.process("links") %]
