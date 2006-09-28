@@ -76,6 +76,7 @@ extern jclass nsISupportsClass;
 extern jclass xpcomExceptionClass;
 extern jclass xpcomJavaProxyClass;
 extern jclass weakReferenceClass;
+extern jclass javaXPCOMUtilsClass;
 
 extern jmethodID hashCodeMID;
 extern jmethodID booleanValueMID;
@@ -100,6 +101,7 @@ extern jmethodID getNativeXPCOMInstMID;
 extern jmethodID weakReferenceConstructorMID;
 extern jmethodID getReferentMID;
 extern jmethodID clearReferentMID;
+extern jmethodID findClassInLoaderMID;
 
 #ifdef DEBUG_JAVAXPCOM
 extern jmethodID getNameMID;
@@ -268,12 +270,15 @@ protected:
  * @param env           Java environment pointer
  * @param aXPCOMObject  XPCOM object for which to find/create Java object
  * @param aIID          desired interface IID for Java object
+ * @param aObjectLoader Java object whose class loader we use for finding
+ *                      classes; can be null
  * @param aResult       on success, holds reference to Java object
  *
  * @return  NS_OK if succeeded; all other return values are error codes.
  */
 nsresult GetNewOrUsedJavaObject(JNIEnv* env, nsISupports* aXPCOMObject,
-                                const nsIID& aIID, jobject* aResult);
+                                const nsIID& aIID, jobject aObjectLoader,
+                                jobject* aResult);
 
 /**
  * Finds the associated XPCOM object for the given Java object and IID.  If no
@@ -296,6 +301,35 @@ nsresult GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
                               nsXPTCMiniVariant *dispatchParams,
                               PRBool isFullVariantArray,
                               nsID &result);
+
+/**
+ * Returns the Class object associated with the class or interface with the
+ * given string name, using the class loader of the given object.
+ *
+ * @param env           Java environment pointer
+ * @param aObjectLoader Java object whose class loader is used to load class
+ * @param aClassName    fully qualified name of class to load
+ *
+ * @return java.lang.Class object of requested Class; NULL if the class
+ *         wasn't found
+ *
+ * @see http://java.sun.com/j2se/1.3/docs/guide/jni/jni-12.html#classops
+ */
+inline jclass
+FindClassInLoader(JNIEnv* env, jobject aObjectLoader, const char* aClassName)
+{
+  jclass clazz = nsnull;
+  jstring name = env->NewStringUTF(aClassName);
+  if (name)
+    clazz = (jclass) env->CallStaticObjectMethod(javaXPCOMUtilsClass,
+                                  findClassInLoaderMID, aObjectLoader, name);
+
+#ifdef DEBUG
+  if (!clazz)
+    fprintf(stderr, "WARNING: failed to find class [%s]\n", aClassName);
+#endif
+  return clazz;
+}
 
 
 /*******************************

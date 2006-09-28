@@ -537,10 +537,6 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
     // Check for exception from called Java function
     jthrowable exp = env->ExceptionOccurred();
     if (exp) {
-#ifdef DEBUG
-      env->ExceptionDescribe();
-#endif
-
       // If the exception is an instance of XPCOMException, then get the
       // nsresult from the exception instance.  Else, default to
       // NS_ERROR_FAILURE.
@@ -585,8 +581,13 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
   if (java_params)
     delete [] java_params;
 
-  LOG(("<--- (Java) %s::%s()\n", ifaceName, aMethodInfo->GetName()));
+#ifdef DEBUG
+  if (env->ExceptionCheck())
+    env->ExceptionDescribe();
+#endif
   env->ExceptionClear();
+
+  LOG(("<--- (Java) %s::%s()\n", ifaceName, aMethodInfo->GetName()));
   return rv;
 }
 
@@ -923,7 +924,8 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
       jobject java_stub = nsnull;
       if (xpcom_obj) {
         // Get matching Java object for given xpcom object
-        rv = GetNewOrUsedJavaObject(env, xpcom_obj, iid, &java_stub);
+        jobject objLoader = env->CallObjectMethod(mJavaWeakRef, getReferentMID);
+        rv = GetNewOrUsedJavaObject(env, xpcom_obj, iid, objLoader, &java_stub);
         if (NS_FAILED(rv))
           break;
       }

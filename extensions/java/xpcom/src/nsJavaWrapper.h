@@ -48,13 +48,16 @@
  * @param env           pointer to Java context
  * @param aXPCOMObject  XPCOM object to create proxy for
  * @param aIID          IID for XPCOM object
+ * @param aObjectLoader Java object whose class loader we use for finding
+ *                      classes; can be null
  * @param aResult       on exit, holds reference to Java proxy
  *
  * @return NS_OK if Java proxy was successfully created;
  *         any other value denotes an error condition.
  */
 nsresult CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject,
-                         const nsIID& aIID, jobject* aResult);
+                         const nsIID& aIID, jobject aObjectLoader,
+                         jobject* aResult);
 
 /**
  * Returns the XPCOM object for which the given Java proxy was created.

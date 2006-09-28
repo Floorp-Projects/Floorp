@@ -1115,7 +1115,7 @@ FinalizeParams(JNIEnv *env, const nsXPTParamInfo &aParamInfo, PRUint8 aType,
         jobject java_obj = nsnull;
         if (xpcom_obj) {
           // Get matching Java object for given xpcom object
-          rv = GetNewOrUsedJavaObject(env, xpcom_obj, aIID, &java_obj);
+          rv = GetNewOrUsedJavaObject(env, xpcom_obj, aIID, nsnull, &java_obj);
           if (NS_FAILED(rv))
             break;
         }
@@ -1606,7 +1606,7 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
 
 nsresult
 CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
-                jobject* aResult)
+                jobject aObjectLoader, jobject* aResult)
 {
   NS_PRECONDITION(aResult != nsnull, "null ptr");
   if (!aResult)
@@ -1637,9 +1637,9 @@ CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
     jobject java_obj = nsnull;
 
     // Create proper Java interface name
-    nsCAutoString class_name("org/mozilla/xpcom/");
+    nsCAutoString class_name("org.mozilla.xpcom.");
     class_name.AppendASCII(iface_name);
-    jclass ifaceClass = env->FindClass(class_name.get());
+    jclass ifaceClass = FindClassInLoader(env, aObjectLoader, class_name.get());
 
     if (ifaceClass) {
       java_obj = env->CallStaticObjectMethod(xpcomJavaProxyClass,

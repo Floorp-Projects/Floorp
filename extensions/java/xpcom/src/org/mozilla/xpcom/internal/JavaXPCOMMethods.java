@@ -54,5 +54,30 @@ public class JavaXPCOMMethods {
 
   public static native void
       registerJavaXPCOMMethodsNative(File aLibXULDirectory);
+
+  /**
+   * Returns the Class object associated with the class or interface with the
+   * given string name, using the class loader of the given object.
+   *
+   * @param aObject     the Java object whose class loader is used to load class
+   * @param aClassName  the fully qualified name of desired class
+   * @return  the Class object of requested Class; <code>null</code> if the
+   *          class was not found
+   *
+   * @see http://java.sun.com/j2se/1.3/docs/guide/jni/jni-12.html#classops
+   */
+  public static Class findClassInLoader(Object aObject, String aClassName) {
+    try {
+      if (aObject == null) {
+        return Class.forName(aClassName);
+      } else {
+        return Class.forName(aClassName, true,
+            aObject.getClass().getClassLoader());
+      }
+    } catch (ClassNotFoundException e) {
+      return null;
+    }
+  }
+
 }
 
