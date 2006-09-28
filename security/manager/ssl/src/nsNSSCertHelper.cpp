@@ -46,6 +46,7 @@
 #include "nsCOMPtr.h"
 #include "nsNSSCertificate.h"
 #include "cert.h"
+#include "keyhi.h"
 #include "nsNSSCertValidity.h"
 #include "nsNSSASN1Object.h"
 #include "nsNSSComponent.h"
@@ -610,7 +611,8 @@ GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsAString &text)
 #define SEPARATOR "\n"
 
 static nsresult
-ProcessRawBytes(nsINSSComponent *nssComponent, SECItem *data, nsAString &text)
+ProcessRawBytes(nsINSSComponent *nssComponent, SECItem *data, 
+                nsAString &text, PRBool wantHeader = PR_TRUE)
 {
   // This function is used to display some DER bytes
   // that we have not added support for decoding.
@@ -619,17 +621,19 @@ ProcessRawBytes(nsINSSComponent *nssComponent, SECItem *data, nsAString &text)
   // string.  We place a new line after 24 bytes
   // to break up extermaly long sequence of bytes.
 
-  nsAutoString bytelen, bitlen;
-  bytelen.AppendInt(data->len);
-  bitlen.AppendInt(data->len*8);
+  if (wantHeader) {
+    nsAutoString bytelen, bitlen;
+    bytelen.AppendInt(data->len);
+    bitlen.AppendInt(data->len*8);
+  
+    const PRUnichar *params[2] = {bytelen.get(), bitlen.get()};
+    nsresult rv = nssComponent->PIPBundleFormatStringFromName("CertDumpRawBytesHeader",
+                                                              params, 2, text);
+    if (NS_FAILED(rv))
+      return rv;
 
-  const PRUnichar *params[2] = {bytelen.get(), bitlen.get()};
-  nsresult rv = nssComponent->PIPBundleFormatStringFromName("CertDumpRawBytesHeader",
-                                                            params, 2, text);
-  if (NS_FAILED(rv))
-    return rv;
-
-  text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+  }
 
   PRUint32 i;
   char buffer[5];
@@ -1779,18 +1783,57 @@ ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki,
   spkiSequence->GetASN1Objects(getter_AddRefs(asn1Objects));
   asn1Objects->AppendElement(sequenceItem, PR_FALSE);
 
-  // The subjectPublicKey field is encoded as a bit string.
-  // ProcessRawBytes expects the lenght to be in bytes, so 
-  // let's convert the lenght into a temporary SECItem.
-  SECItem data;
-  data.data = spki->subjectPublicKey.data;
-  data.len  = spki->subjectPublicKey.len / 8;
-  text.Truncate();
-  ProcessRawBytes(nssComponent, &data, text);
   nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
   if (printableItem == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  text.Truncate();
+ 
+  SECKEYPublicKey *key = SECKEY_ExtractPublicKey(spki);
+  bool displayed = false;
+  if (key != NULL) {
+      switch (key->keyType) {
+      case rsaKey: {
+         displayed = true;
+         nsAutoString length1, length2, data1, data2;
+         length1.AppendInt(key->u.rsa.modulus.len * 8);
+         length2.AppendInt(key->u.rsa.publicExponent.len * 8);
+         ProcessRawBytes(nssComponent, &key->u.rsa.modulus, data1, 
+                         PR_FALSE);
+         ProcessRawBytes(nssComponent, &key->u.rsa.publicExponent, data2,
+                         PR_FALSE);
+         const PRUnichar *params[4] = {length1.get(), data1.get(), 
+                                       length2.get(), data2.get()};
+         nssComponent->PIPBundleFormatStringFromName("CertDumpRSATemplate",
+                                                     params, 4, text);
+         break;
+      }
+      case dhKey:
+      case dsaKey:
+      case fortezzaKey:
+      case keaKey:
+      case ecKey:
+         /* Too many parameters, to rarely used to bother displaying it */
+         break;
+      case nullKey:
+      default:
+         /* Algorithm unknown */
+         break;
+      }
+      SECKEY_DestroyPublicKey (key);
+  }
+  if (!displayed) {
+      // Algorithm unknown, display raw bytes
+      // The subjectPublicKey field is encoded as a bit string.
+      // ProcessRawBytes expects the length to be in bytes, so 
+      // let's convert the lenght into a temporary SECItem.
+      SECItem data;
+      data.data = spki->subjectPublicKey.data;
+      data.len  = spki->subjectPublicKey.len / 8;
+      ProcessRawBytes(nssComponent, &data, text);
+  
+  }
+ 
   printableItem->SetDisplayValue(text);
   nssComponent->GetPIPNSSBundleString("CertDumpSubjPubKey", text);
   printableItem->SetDisplayName(text);
