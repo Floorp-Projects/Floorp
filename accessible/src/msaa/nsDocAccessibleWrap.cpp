@@ -62,7 +62,7 @@
 //----- nsDocAccessibleWrap -----
 
 nsDocAccessibleWrap::nsDocAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference *aShell): 
-  nsDocAccessible(aDOMNode, aShell), mWasAnchor(PR_FALSE)
+  nsDocAccessible(aDOMNode, aShell)
 {
 }
 
