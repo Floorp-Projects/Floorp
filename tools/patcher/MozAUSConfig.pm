@@ -506,13 +506,14 @@ sub CreateUpdateGraph
                     }
 
                     $ul_config->{$l}->{$side} = $this->GatherCompleteData(
-                                                    release => $subu,
-                                                    completemarurl => $rl_config->{'completemarurl'},
-                                                    platform => $p,
-                                                    locale => $l,
-                                                    build_id => $rlp_config->{$p}->{'build_id'},
-                                                    version => $rl_config->{'version'},
-                                                    extensionVersion => $rl_config->{'extension-version'} );
+                     release => $subu,
+                     completemarurl => $rl_config->{'completemarurl'},
+                     platform => $p,
+                     locale => $l,
+                     build_id => $rlp_config->{$p}->{'build_id'},
+                     version => $rl_config->{'version'},
+                     extensionVersion => $rl_config->{'extension-version'},
+                     schemaVersion => $rl_config->{'schema'} );
                 }
             }
         } # for my $side ("from", "to")
@@ -533,6 +534,7 @@ sub GatherCompleteData
     my $build_id = $args{'build_id'};
     my $version = $args{'version'};
     my $extensionVersion = $args{'extensionVersion'};
+    my $schemaVersion = $args{'schemaVersion'};
 
     my $config = $args{'config'};
 
@@ -581,6 +583,9 @@ sub GatherCompleteData
     $node->{'extv'} = defined($extensionVersion) ? 
      $extensionVersion : $numericVersion;
 
+    if (defined($schemaVersion)) {
+        $node->{'schema'} = $schemaVersion;
+    }
 
     #chdir($startdir);
 
