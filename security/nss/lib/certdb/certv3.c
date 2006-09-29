@@ -37,7 +37,7 @@
 /*
  * Code for dealing with X509.V3 extensions.
  *
- * $Id: certv3.c,v 1.8 2004/04/25 15:03:03 gerv%gerv.net Exp $
+ * $Id: certv3.c,v 1.9 2006/09/29 20:20:21 alexei.volkov.bugs%sun.com Exp $
  */
 
 #include "cert.h"
@@ -102,8 +102,8 @@ char *
 CERT_FindCertURLExtension(CERTCertificate *cert, int tag, int catag)
 {
     SECStatus rv;
-    SECItem urlitem;
-    SECItem baseitem;
+    SECItem urlitem = {siBuffer,0};
+    SECItem baseitem = {siBuffer,0};
     SECItem urlstringitem = {siBuffer,0};
     SECItem basestringitem = {siBuffer,0};
     PRArenaPool *arena = NULL;
@@ -121,8 +121,6 @@ CERT_FindCertURLExtension(CERTCertificate *cert, int tag, int catag)
     }
     
     hasbase = PR_FALSE;
-    urlitem.data = NULL;
-    baseitem.data = NULL;
     
     rv = cert_FindExtension(cert->extensions, tag, &urlitem);
     if ( rv == SECSuccess ) {
