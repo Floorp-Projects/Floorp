@@ -39,7 +39,8 @@ use Time::Piece;
 
 Litmus::DB::Session->table('sessions');
 
-Litmus::DB::Session->columns(All => qw/session_id user_id sessioncookie expires/);
+Litmus::DB::Session->columns(Primary => qw/session_id/);
+Litmus::DB::Session->columns(All => qw/user_id sessioncookie expires/);
 Litmus::DB::Session->columns(TEMP => qw //);
 
 Litmus::DB::Session->has_a(user_id => "Litmus::DB::User");
