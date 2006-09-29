@@ -357,7 +357,7 @@ FeedWriter.prototype = {
    */
   _initMenuItemWithFile: function(aMenuItem, aFile) {
     aMenuItem.setAttribute("label", this._getFileDisplayName(aFile));
-    aMenuItem.setAttribute("src", this._getFileIconURL(aFile));
+    aMenuItem.setAttribute("image", this._getFileIconURL(aFile));
     aMenuItem.wrappedJSObject.file = aFile;
   },
 
@@ -638,7 +638,7 @@ FeedWriter.prototype = {
         menuItem.setAttribute("webhandlerurl", handlers[i].uri);
 
         var uri = ios.newURI(handlers[i].uri, null, null);
-        menuItem.setAttribute("src", uri.prePath + "/favicon.ico");
+        menuItem.setAttribute("image", uri.prePath + "/favicon.ico");
 
         handlersMenuPopup.appendChild(menuItem);
       }
