@@ -1,9 +1,9 @@
 
 /* pngtrans.c - transforms the data in a row (used by both readers and writers)
  *
- * libpng  1.2.7 - September 12, 2004
+ * Last changed in libpng 1.2.9 April 14, 2006
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2004 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2006 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  */
@@ -11,6 +11,7 @@
 #define PNG_INTERNAL
 #include "png.h"
 
+#if defined(PNG_READ_SUPPORTED) || defined(PNG_WRITE_SUPPORTED)
 #if defined(PNG_READ_BGR_SUPPORTED) || defined(PNG_WRITE_BGR_SUPPORTED)
 /* turn on BGR-to-RGB mapping */
 void PNGAPI
@@ -241,7 +242,7 @@ png_do_swap(png_row_infop row_info, png_bytep row)
 #endif
 
 #if defined(PNG_READ_PACKSWAP_SUPPORTED)||defined(PNG_WRITE_PACKSWAP_SUPPORTED)
-static png_byte onebppswaptable[256] = {
+static PNG_CONST png_byte onebppswaptable[256] = {
    0x00, 0x80, 0x40, 0xC0, 0x20, 0xA0, 0x60, 0xE0,
    0x10, 0x90, 0x50, 0xD0, 0x30, 0xB0, 0x70, 0xF0,
    0x08, 0x88, 0x48, 0xC8, 0x28, 0xA8, 0x68, 0xE8,
@@ -276,7 +277,7 @@ static png_byte onebppswaptable[256] = {
    0x1F, 0x9F, 0x5F, 0xDF, 0x3F, 0xBF, 0x7F, 0xFF
 };
 
-static png_byte twobppswaptable[256] = {
+static PNG_CONST png_byte twobppswaptable[256] = {
    0x00, 0x40, 0x80, 0xC0, 0x10, 0x50, 0x90, 0xD0,
    0x20, 0x60, 0xA0, 0xE0, 0x30, 0x70, 0xB0, 0xF0,
    0x04, 0x44, 0x84, 0xC4, 0x14, 0x54, 0x94, 0xD4,
@@ -311,7 +312,7 @@ static png_byte twobppswaptable[256] = {
    0x2F, 0x6F, 0xAF, 0xEF, 0x3F, 0x7F, 0xBF, 0xFF
 };
 
-static png_byte fourbppswaptable[256] = {
+static PNG_CONST png_byte fourbppswaptable[256] = {
    0x00, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70,
    0x80, 0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0,
    0x01, 0x11, 0x21, 0x31, 0x41, 0x51, 0x61, 0x71,
@@ -362,11 +363,11 @@ png_do_packswap(png_row_infop row_info, png_bytep row)
       end = row + row_info->rowbytes;
 
       if (row_info->bit_depth == 1)
-         table = onebppswaptable;
+         table = (png_bytep)onebppswaptable;
       else if (row_info->bit_depth == 2)
-         table = twobppswaptable;
+         table = (png_bytep)twobppswaptable;
       else if (row_info->bit_depth == 4)
-         table = fourbppswaptable;
+         table = (png_bytep)fourbppswaptable;
       else
          return;
 
@@ -392,7 +393,9 @@ png_do_strip_filler(png_row_infop row_info, png_bytep row, png_uint_32 flags)
       png_uint_32 row_width=row_info->width;
       png_uint_32 i;
 
-      if (row_info->color_type == PNG_COLOR_TYPE_RGB &&
+      if ((row_info->color_type == PNG_COLOR_TYPE_RGB ||
+         (row_info->color_type == PNG_COLOR_TYPE_RGB_ALPHA &&
+         (flags & PNG_FLAG_STRIP_ALPHA))) &&
          row_info->channels == 4)
       {
          if (row_info->bit_depth == 8)
@@ -471,7 +474,9 @@ png_do_strip_filler(png_row_infop row_info, png_bytep row, png_uint_32 flags)
          }
          row_info->channels = 3;
       }
-      else if (row_info->color_type == PNG_COLOR_TYPE_GRAY &&
+      else if ((row_info->color_type == PNG_COLOR_TYPE_GRAY ||
+         (row_info->color_type == PNG_COLOR_TYPE_GRAY_ALPHA &&
+         (flags & PNG_FLAG_STRIP_ALPHA))) &&
           row_info->channels == 2)
       {
          if (row_info->bit_depth == 8)
@@ -525,6 +530,8 @@ png_do_strip_filler(png_row_infop row_info, png_bytep row, png_uint_32 flags)
          }
          row_info->channels = 1;
       }
+      if (flags & PNG_FLAG_STRIP_ALPHA)
+        row_info->color_type &= ~PNG_COLOR_MASK_ALPHA;
    }
 }
 #endif
@@ -642,3 +649,4 @@ png_get_user_transform_ptr(png_structp png_ptr)
    return (NULL);
 #endif
 }
+#endif /* PNG_READ_SUPPORTED || PNG_WRITE_SUPPORTED */

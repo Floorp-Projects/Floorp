@@ -1,9 +1,9 @@
 
 /* pngrio.c - functions for data input
  *
- * libpng 1.2.7 - September 12, 2004
+ * Last changed in libpng 1.2.9 April 14, 2006
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2004 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2006 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -17,6 +17,8 @@
 
 #define PNG_INTERNAL
 #include "png.h"
+
+#if defined(PNG_READ_SUPPORTED)
 
 /* Read the data from whatever input you are using.  The default routine
    reads from a file pointer.  Note that this routine sometimes gets called
@@ -67,7 +69,7 @@ png_default_read_data(png_structp png_ptr, png_bytep data, png_size_t length)
 #define NEAR_BUF_SIZE 1024
 #define MIN(a,b) (a <= b ? a : b)
 
-static void /* PRIVATE */
+static void PNGAPI
 png_default_read_data(png_structp png_ptr, png_bytep data, png_size_t length)
 {
    int check;
@@ -159,3 +161,4 @@ png_set_read_fn(png_structp png_ptr, png_voidp io_ptr,
    png_ptr->output_flush_fn = NULL;
 #endif
 }
+#endif /* PNG_READ_SUPPORTED */
