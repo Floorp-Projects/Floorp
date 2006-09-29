@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.19 $ $Date: 2005/01/20 02:25:45 $";
+static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.20 $ $Date: 2006/09/29 20:13:30 $";
 #endif /* DEBUG */
 
 /*
@@ -379,6 +379,7 @@ nssList_CreateIterator(nssList *list)
 	if (!rvIterator->lock) {
 	    nssList_Destroy(rvIterator->list);
 	    nss_ZFreeIf(rvIterator);
+	    rvIterator = NULL;
 	}
     }
     return rvIterator;
