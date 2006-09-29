@@ -48,6 +48,7 @@
 #include "nsIServiceManager.h"
 #include "nsIMemory.h"
 #include "nsAutoPtr.h"
+#include "nsAlgorithm.h"
 #include "nsCRT.h"
 #include "prprf.h"
 #include "prmem.h"
@@ -90,6 +91,7 @@ extern "C" {
 #include "cmmf.h"
 #include "nssb64.h"
 #include "base64.h"
+#include "cert.h"
 #include "certdb.h"
 #include "secmod.h"
 #include "nsISaveAsCharset.h"
@@ -100,6 +102,9 @@ extern "C" {
 NSSCleanupAutoPtrClass(SECKEYPrivateKey, SECKEY_DestroyPrivateKey)
 NSSCleanupAutoPtrClass(PK11SlotInfo, PK11_FreeSlot)
 NSSCleanupAutoPtrClass(CERTCertNicknames, CERT_FreeNicknames)
+NSSCleanupAutoPtrClass(PK11SymKey, PK11_FreeSymKey)
+NSSCleanupAutoPtrClass_WithParam(PK11Context, PK11_DestroyContext, TrueParam, PR_TRUE)
+NSSCleanupAutoPtrClass_WithParam(SECItem, SECITEM_FreeItem, TrueParam, PR_TRUE)
 
 #include "nsNSSShutDown.h"
 #include "nsNSSCertHelper.h"
@@ -138,14 +143,41 @@ NSSCleanupAutoPtrClass(CERTCertNicknames, CERT_FreeNicknames)
  */
 typedef enum {
   rsaEnc, rsaDualUse, rsaSign, rsaNonrepudiation, rsaSignNonrepudiation,
+  ecEnc, ecDualUse, ecSign, ecNonrepudiation, ecSignNonrepudiation,
   dhEx, dsaSignNonrepudiation, dsaSign, dsaNonrepudiation, invalidKeyGen
 } nsKeyGenType;
+
+PRBool isECKeyGenType(nsKeyGenType kgt)
+{
+  switch (kgt)
+  {
+    case ecEnc:
+    case ecDualUse:
+    case ecSign:
+    case ecNonrepudiation:
+    case ecSignNonrepudiation:
+      return PR_TRUE;
+    
+    default:
+      break;
+  }
+
+  return PR_FALSE;
+}
 
 typedef struct nsKeyPairInfoStr {
   SECKEYPublicKey  *pubKey;     /* The putlic key associated with gen'd 
                                    priv key. */
   SECKEYPrivateKey *privKey;    /* The private key we generated */ 
   nsKeyGenType      keyGenType; /* What type of key gen are we doing.*/
+
+  CERTCertificate *ecPopCert;
+                   /* null: use signing for pop
+                      other than null: a cert that defines EC keygen params
+                                       and will be used for dhMac PoP. */
+
+  SECKEYPublicKey  *ecPopPubKey;
+                   /* extracted public key from ecPopCert */
 } nsKeyPairInfo;
 
 
@@ -404,8 +436,8 @@ nsCrypto::GetScriptPrincipal(JSContext *cx)
 static PRBool
 ns_can_escrow(nsKeyGenType keyGenType)
 {
-  /* For now, we only escrow rsa-encryption keys. */
-  return (PRBool)(keyGenType == rsaEnc);
+  /* For now, we only escrow rsa-encryption and ec-encryption keys. */
+  return (PRBool)(keyGenType == rsaEnc || keyGenType == ecEnc);
 }
 
 //Retrieve crypto.version so that callers know what
@@ -433,6 +465,13 @@ cryptojs_convert_to_mechanism(nsKeyGenType keyGenType)
   case rsaNonrepudiation:
   case rsaSignNonrepudiation:
     retMech = CKM_RSA_PKCS_KEY_PAIR_GEN;
+    break;
+  case ecEnc:
+  case ecDualUse:
+  case ecSign:
+  case ecNonrepudiation:
+  case ecSignNonrepudiation:
+    retMech = CKM_EC_KEY_PAIR_GEN;
     break;
   case dhEx:
     retMech = CKM_DH_PKCS_KEY_PAIR_GEN;
@@ -479,6 +518,16 @@ cryptojs_interpret_key_gen_type(char *keyAlg)
     return rsaSignNonrepudiation;
   } else if (strcmp(keyAlg, "rsa-nonrepudiation") == 0) {
     return rsaNonrepudiation;
+  } else if (strcmp(keyAlg, "ec-ex") == 0) {
+    return ecEnc;
+  } else if (strcmp(keyAlg, "ec-dual-use") == 0) {
+    return ecDualUse;
+  } else if (strcmp(keyAlg, "ec-sign") == 0) {
+    return ecSign;
+  } else if (strcmp(keyAlg, "ec-sign-nonrepudiation") == 0) {
+    return ecSignNonrepudiation;
+  } else if (strcmp(keyAlg, "ec-nonrepudiation") == 0) {
+    return ecNonrepudiation;
   } else if (strcmp(keyAlg, "dsa-sign-nonrepudiation") == 0) {
     return dsaSignNonrepudiation;
   } else if (strcmp(keyAlg, "dsa-sign") ==0 ){
@@ -491,69 +540,227 @@ cryptojs_interpret_key_gen_type(char *keyAlg)
   return invalidKeyGen;
 }
 
+/* 
+ * input: null terminated char* pointing to (the remainder of) an
+ * EC key param string.
+ *
+ * bool return value, false means "no more name=value pair found",
+ *                    true means "found, see out params"
+ * 
+ * out param name: char * pointing to name (not zero terminated)
+ * out param name_len: length of found name
+ * out param value: char * pointing to value (not zero terminated)
+ * out param value_len: length of found value
+ * out param next_pair: to be used for a follow up call to this function
+ */
+
+PRBool getNextNameValueFromECKeygenParamString(char *input,
+                                               char *&name,
+                                               int &name_len,
+                                               char *&value,
+                                               int &value_len,
+                                               char *&next_call)
+{
+  if (!input || !*input)
+    return PR_FALSE;
+
+  // we allow leading ; and leading space in front of each name value pair
+
+  while (*input && *input == ';')
+    ++input;
+
+  while (*input && *input == ' ')
+    ++input;
+
+  name = input;
+
+  while (*input && *input != '=')
+    ++input;
+
+  if (*input != '=')
+    return PR_FALSE;
+
+  name_len = input - name;
+  ++input;
+
+  value = input;
+
+  while (*input && *input != ';')
+    ++input;
+
+  value_len = input - value;
+  next_call = input;
+
+  return PR_TRUE;
+}
+
 //Take the string passed into us via crypto.generateCRMFRequest
 //as the keygen type parameter and convert it to parameters 
 //we can actually pass to the PKCS#11 layer.
 static void*
 nsConvertToActualKeyGenParams(PRUint32 keyGenMech, char *params,
-                              PRUint32 paramLen, PRInt32 keySize)
+                              PRUint32 paramLen, PRInt32 keySize,
+                              nsKeyPairInfo *keyPairInfo)
 {
   void *returnParams = nsnull;
 
-  // We don't support passing in key generation arguments from
-  // the JS code just yet.
-  if (!params) {
-    /* In this case we provide the parameters ourselves. */
-    switch (keyGenMech) {
-    case CKM_RSA_PKCS_KEY_PAIR_GEN:
-    {
-       PK11RSAGenParams *rsaParams;
-       rsaParams = NS_STATIC_CAST(PK11RSAGenParams*,
-                                  nsMemory::Alloc(sizeof(PK11RSAGenParams)));
-                                 
-       if (rsaParams == nsnull) {
-         return nsnull;
-       }
-       /* I'm just taking the same parameters used in 
-        * certdlgs.c:GenKey
-        */
-       if (keySize > 0) {
-         rsaParams->keySizeInBits = keySize;
-       } else {
-         rsaParams->keySizeInBits = 1024;
-       }
-       rsaParams->pe = DEFAULT_RSA_KEYGEN_PE;
-       returnParams = rsaParams;
-       break;
+
+  switch (keyGenMech) {
+  case CKM_RSA_PKCS_KEY_PAIR_GEN:
+  {
+    // For RSA, we don't support passing in key generation arguments from
+    // the JS code just yet.
+    if (params)
+      return nsnull;
+
+    PK11RSAGenParams *rsaParams;
+    rsaParams = NS_STATIC_CAST(PK11RSAGenParams*,
+                               nsMemory::Alloc(sizeof(PK11RSAGenParams)));
+                              
+    if (rsaParams == nsnull) {
+      return nsnull;
     }
-    case CKM_DSA_KEY_PAIR_GEN:
+    /* I'm just taking the same parameters used in 
+     * certdlgs.c:GenKey
+     */
+    if (keySize > 0) {
+      rsaParams->keySizeInBits = keySize;
+    } else {
+      rsaParams->keySizeInBits = 1024;
+    }
+    rsaParams->pe = DEFAULT_RSA_KEYGEN_PE;
+    returnParams = rsaParams;
+    break;
+  }
+  case CKM_EC_KEY_PAIR_GEN:
+  {
+    /*
+     * keygen params for generating EC keys must be composed of name=value pairs,
+     * multiple pairs allowed, separated using semicolon ;
+     *
+     * Either param "curve" or param "popcert" must be specified.
+     * curve=name-of-curve
+     * popcert=base64-encoded-cert
+     *
+     * When both params are specified, popcert will be used.
+     * If no popcert param is given, or if popcert can not be decoded,
+     * we will fall back to the curve param.
+     *
+     * Additional name=value pairs may be defined in the future.
+     *
+     * If param popcert is present and valid, the given certificate will be used
+     * to determine the key generation params. In addition the certificate
+     * will be used to produce a dhMac based Proof of Posession,
+     * using the cert's public key, subject and issuer names,
+     * as specified in RFC 2511 section 4.3 paragraph 2 and Appendix A.
+     *
+     * If neither param popcert nor param curve could be used,
+     * tse a curve based on the keysize param.
+     * NOTE: Here keysize is used only as an indication of
+     * High/Medium/Low strength; elliptic curve
+     * cryptography uses smaller keys than RSA to provide
+     * equivalent security.
+     */
+
+    char *curve = nsnull;
+
     {
-       PQGParams *pqgParams = nsnull;
-       PQGVerify *vfy = nsnull;
-       SECStatus  rv;
-       int        index;
-          
-       index = PQG_PBITS_TO_INDEX(keySize);
-       if (index == -1) {
-         returnParams = nsnull;
-         break;
-       }
-       rv = PK11_PQG_ParamGen(0, &pqgParams, &vfy);
-       if (vfy) {
-         PK11_PQG_DestroyVerify(vfy);
-       }
-       if (rv != SECSuccess) {
-         if (pqgParams) {
-           PK11_PQG_DestroyParams(pqgParams);
-         }
-         return nsnull;
-       }
-       returnParams = pqgParams;
-       break;
-     }
-     default:
-       returnParams = nsnull;
-     }
+      // extract components of name=value list
+
+      char *next_input = params;
+      char *name = nsnull;
+      char *value = nsnull;
+      int name_len = 0;
+      int value_len = 0;
+  
+      while (getNextNameValueFromECKeygenParamString(
+              next_input, name, name_len, value, value_len,
+              next_input))
+      {
+        if (PL_strncmp(name, "curve", NS_MIN(name_len, 5)) == 0)
+        {
+          curve = PL_strndup(value, value_len);
+        }
+        else if (PL_strncmp(name, "popcert", NS_MIN(name_len, 7)) == 0)
+        {
+          char *certstr = PL_strndup(value, value_len);
+          if (certstr) {
+            keyPairInfo->ecPopCert = CERT_ConvertAndDecodeCertificate(certstr);
+            PL_strfree(certstr);
+
+            if (keyPairInfo->ecPopCert)
+            {
+              keyPairInfo->ecPopPubKey = CERT_ExtractPublicKey(keyPairInfo->ecPopCert);
+            }
+          }
+        }
+      }
+    }
+
+    // first try to use the params of the provided CA cert
+    if (keyPairInfo->ecPopPubKey)
+    {
+      returnParams = SECITEM_DupItem(&keyPairInfo->ecPopPubKey->u.ec.DEREncodedParams);
+    }
+
+    // if we did not yet find good params, do we have a curve name?
+    if (!returnParams && curve)
+    {
+      returnParams = decode_ec_params(curve);
+    }
+
+    // if we did not yet find good params, do something based on keysize
+    if (!returnParams)
+    {
+      switch (keySize) {
+      case 512:
+      case 1024:
+          returnParams = decode_ec_params("secp256r1");
+          break;
+      case 2048:
+      default:
+          returnParams = decode_ec_params("secp384r1");
+          break;
+      }
+    }
+
+    if (curve)
+      PL_strfree(curve);
+
+    break;
+  }
+  case CKM_DSA_KEY_PAIR_GEN:
+  {
+    // For DSA, we don't support passing in key generation arguments from
+    // the JS code just yet.
+    if (params)
+      return nsnull;
+
+    PQGParams *pqgParams = nsnull;
+    PQGVerify *vfy = nsnull;
+    SECStatus  rv;
+    int        index;
+       
+    index = PQG_PBITS_TO_INDEX(keySize);
+    if (index == -1) {
+      returnParams = nsnull;
+      break;
+    }
+    rv = PK11_PQG_ParamGen(0, &pqgParams, &vfy);
+    if (vfy) {
+      PK11_PQG_DestroyVerify(vfy);
+    }
+    if (rv != SECSuccess) {
+      if (pqgParams) {
+        PK11_PQG_DestroyParams(pqgParams);
+      }
+      return nsnull;
+    }
+    returnParams = pqgParams;
+    break;
+  }
+  default:
+    returnParams = nsnull;
   }
   return returnParams;
 }
@@ -585,6 +792,9 @@ nsFreeKeyGenParams(CK_MECHANISM_TYPE keyGenMechanism, void *params)
   case CKM_RSA_PKCS_KEY_PAIR_GEN:
     nsMemory::Free(params);
     break;
+  case CKM_EC_KEY_PAIR_GEN:
+    SECITEM_FreeItem(NS_REINTERPRET_CAST(SECItem*, params), PR_TRUE);
+    break;
   case CKM_DSA_KEY_PAIR_GEN:
     PK11_PQG_DestroyParams(NS_STATIC_CAST(PQGParams*,params));
     break;
@@ -610,7 +820,7 @@ cryptojs_generateOneKeyPair(JSContext *cx, nsKeyPairInfo *keyPairInfo,
   PRUint32 mechanism = cryptojs_convert_to_mechanism(keyPairInfo->keyGenType);
   void *keyGenParams = nsConvertToActualKeyGenParams(mechanism, params, 
                                                      (params) ? strlen(params):0, 
-                                                     keySize);
+                                                     keySize, keyPairInfo);
 
   // Make sure the token has password already set on it before trying
   // to generate the key.
@@ -852,6 +1062,10 @@ nsFreeKeyPairInfo(nsKeyPairInfo *keyids, int numIDs)
       SECKEY_DestroyPublicKey(keyids[i].pubKey);
     if (keyids[i].privKey)
       SECKEY_DestroyPrivateKey(keyids[i].privKey);
+    if (keyids[i].ecPopCert)
+      CERT_DestroyCertificate(keyids[i].ecPopCert);
+    if (keyids[i].ecPopPubKey)
+      SECKEY_DestroyPublicKey(keyids[i].ecPopPubKey);
   }
   delete []keyids;
 }
@@ -1102,6 +1316,50 @@ nsSetRSASignNonRepudiation(CRMFCertRequest *crmfReq)
 }
 
 static nsresult
+nsSetECDualUse(CRMFCertRequest *crmfReq)
+{
+  unsigned char keyUsage =   KU_DIGITAL_SIGNATURE
+                           | KU_NON_REPUDIATION
+                           | KU_KEY_AGREEMENT;
+
+  return nsSetKeyUsageExtension(crmfReq, keyUsage);
+}
+
+static nsresult
+nsSetECKeyEx(CRMFCertRequest *crmfReq)
+{
+  unsigned char keyUsage = KU_KEY_AGREEMENT;
+
+  return nsSetKeyUsageExtension(crmfReq, keyUsage);
+}
+
+static nsresult
+nsSetECSign(CRMFCertRequest *crmfReq)
+{
+  unsigned char keyUsage = KU_DIGITAL_SIGNATURE;
+
+
+  return nsSetKeyUsageExtension(crmfReq, keyUsage);
+}
+
+static nsresult
+nsSetECNonRepudiation(CRMFCertRequest *crmfReq)
+{
+  unsigned char keyUsage = KU_NON_REPUDIATION;
+
+  return nsSetKeyUsageExtension(crmfReq, keyUsage);
+}
+
+static nsresult
+nsSetECSignNonRepudiation(CRMFCertRequest *crmfReq)
+{
+  unsigned char keyUsage = KU_DIGITAL_SIGNATURE |
+                           KU_NON_REPUDIATION;
+
+  return nsSetKeyUsageExtension(crmfReq, keyUsage);
+}
+
+static nsresult
 nsSetDH(CRMFCertRequest *crmfReq)
 {
   unsigned char keyUsage = KU_KEY_AGREEMENT;
@@ -1155,6 +1413,21 @@ nsSetKeyUsageExtension(CRMFCertRequest *crmfReq, nsKeyGenType keyGenType)
   case rsaSignNonrepudiation:
     rv = nsSetRSASignNonRepudiation(crmfReq);
     break;
+  case ecDualUse:
+    rv = nsSetECDualUse(crmfReq);
+    break;
+  case ecEnc:
+    rv = nsSetECKeyEx(crmfReq);
+    break;
+  case ecSign:
+    rv = nsSetECSign(crmfReq);
+    break;
+  case ecNonrepudiation:
+    rv = nsSetECNonRepudiation(crmfReq);
+    break;
+  case ecSignNonrepudiation:
+    rv = nsSetECSignNonRepudiation(crmfReq);
+    break;
   case dhEx:
     rv = nsSetDH(crmfReq);
     break;
@@ -1182,7 +1455,7 @@ static CRMFCertRequest*
 nsCreateSingleCertReq(nsKeyPairInfo *keyInfo, char *reqDN, char *regToken, 
                       char *authenticator, nsNSSCertificate *wrappingCert)
 {
-  PRInt32 reqID;
+  PRUint32 reqID;
   nsresult rv;
 
   //The draft says the ID of the request should be a random
@@ -1244,17 +1517,13 @@ loser:
  * this means encryption only keys.
  */
 static nsresult
-nsSetKeyEnciphermentPOP(CRMFCertReqMsg  *certReqMsg)
+nsSetKeyEnciphermentPOP(CRMFCertReqMsg *certReqMsg, PRBool isEscrowed)
 {
   SECItem       bitString;
   unsigned char der[2];
   SECStatus     srv;
-  CRMFCertRequest *certReq =  CRMF_CertReqMsgGetCertRequest(certReqMsg);
-  NS_ASSERTION(certReq,"Error getting the certRequest from the message");
-  if (!certReq)
-    return NS_ERROR_FAILURE;
 
-  if (CRMF_CertRequestIsControlPresent(certReq,crmfPKIArchiveOptionsControl)) {
+  if (isEscrowed) {
     /* For proof of possession on escrowed keys, we use the
      * this Message option of POPOPrivKey and include a zero
      * length bit string in the POP field.  This is OK because the encrypted
@@ -1276,47 +1545,271 @@ nsSetKeyEnciphermentPOP(CRMFCertReqMsg  *certReqMsg)
                                               crmfSubsequentMessage,
                                               crmfChallengeResp, nsnull);
   }
-  CRMF_DestroyCertRequest(certReq);
   return (srv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-//CRMF require ProofOfPossession to be set on a Certificate
-//Request message.  Switch on the keyGenType here and add
-//the appropriate POP.
+static void PR_CALLBACK
+nsCRMFEncoderItemCount(void *arg, const char *buf, unsigned long len);
+
+static void PR_CALLBACK
+nsCRMFEncoderItemStore(void *arg, const char *buf, unsigned long len);
+
+static nsresult
+nsSet_EC_DHMAC_ProofOfPossession(CRMFCertReqMsg *certReqMsg, 
+                                 nsKeyPairInfo  *keyInfo,
+                                 CRMFCertRequest *certReq)
+{
+  // RFC 2511 Appendix A section 2 a) defines,
+  // the "text" input for HMAC shall be the DER encoded version of
+  // of the single cert request.
+  // We'll produce that encoding and destroy it afterwards,
+  // because when sending the complete package to the CA,
+  // we'll use a different encoding, one that includes POP and
+  // allows multiple requests to be sent in one step.
+
+  unsigned long der_request_len = 0;
+  SECItem *der_request = NULL;
+  SECItemCleanerTrueParam der_request_cleaner(der_request);
+
+  if (SECSuccess != CRMF_EncodeCertRequest(certReq, 
+                                           nsCRMFEncoderItemCount, 
+                                           &der_request_len))
+    return NS_ERROR_FAILURE;
+
+  der_request = SECITEM_AllocItem(nsnull, nsnull, der_request_len);
+  if (!der_request)
+    return NS_ERROR_FAILURE;
+
+  // set len in returned SECItem back to zero, because it will
+  // be used as the destination offset inside the 
+  // nsCRMFEncoderItemStore callback.
+
+  der_request->len = 0;
+
+  if (SECSuccess != CRMF_EncodeCertRequest(certReq, 
+                                           nsCRMFEncoderItemStore, 
+                                           der_request))
+    return NS_ERROR_FAILURE;
+
+  // RFC 2511 Appendix A section 2 c):
+  // "A key K is derived from the shared secret Kec and the subject and
+  //  issuer names in the CA's certificate as follows:
+  //  K = SHA1(DER-encoded-subjectName | Kec | DER-encoded-issuerName)"
+
+  PK11SymKey *shared_secret = NULL;
+  PK11SymKeyCleaner shared_secret_cleaner(shared_secret);
+
+  PK11SymKey *subject_and_secret = NULL;
+  PK11SymKeyCleaner subject_and_secret_cleaner(subject_and_secret);
+
+  PK11SymKey *subject_and_secret_and_issuer = NULL;
+  PK11SymKeyCleaner subject_and_secret_and_issuer_cleaner(subject_and_secret_and_issuer);
+
+  PK11SymKey *sha1_of_subject_and_secret_and_issuer = NULL;
+  PK11SymKeyCleaner sha1_of_subject_and_secret_and_issuer_cleaner(sha1_of_subject_and_secret_and_issuer);
+
+  shared_secret = 
+    PK11_PubDeriveWithKDF(keyInfo->privKey, // SECKEYPrivateKey *privKey
+                          keyInfo->ecPopPubKey,  // SECKEYPublicKey *pubKey
+                          PR_FALSE, // PRBool isSender
+                          NULL, // SECItem *randomA
+                          NULL, // SECItem *randomB
+                          CKM_ECDH1_DERIVE, // CK_MECHANISM_TYPE derive
+                          CKM_CONCATENATE_DATA_AND_BASE, // CK_MECHANISM_TYPE target
+                          CKA_DERIVE, // CK_ATTRIBUTE_TYPE operation
+                          0, // int keySize
+                          CKD_NULL, // CK_ULONG kdf
+                          NULL, // SECItem *sharedData
+                          NULL); // void *wincx
+
+  if (!shared_secret)
+    return NS_ERROR_FAILURE;
+
+  CK_KEY_DERIVATION_STRING_DATA concat_data_base;
+  concat_data_base.pData = keyInfo->ecPopCert->derSubject.data;
+  concat_data_base.ulLen = keyInfo->ecPopCert->derSubject.len;
+  SECItem concat_data_base_item;
+  concat_data_base_item.data = (unsigned char*)&concat_data_base;
+  concat_data_base_item.len = sizeof(CK_KEY_DERIVATION_STRING_DATA);
+
+  subject_and_secret =
+    PK11_Derive(shared_secret, // PK11SymKey *baseKey
+                CKM_CONCATENATE_DATA_AND_BASE, // CK_MECHANISM_TYPE mechanism
+                &concat_data_base_item, // SECItem *param
+                CKM_CONCATENATE_BASE_AND_DATA, // CK_MECHANISM_TYPE target
+                CKA_DERIVE, // CK_ATTRIBUTE_TYPE operation
+                0); // int keySize
+
+  if (!subject_and_secret)
+    return NS_ERROR_FAILURE;
+
+  CK_KEY_DERIVATION_STRING_DATA concat_base_data;
+  concat_base_data.pData = keyInfo->ecPopCert->derSubject.data;
+  concat_base_data.ulLen = keyInfo->ecPopCert->derSubject.len;
+  SECItem concat_base_data_item;
+  concat_base_data_item.data = (unsigned char*)&concat_base_data;
+  concat_base_data_item.len = sizeof(CK_KEY_DERIVATION_STRING_DATA);
+
+  subject_and_secret_and_issuer =
+    PK11_Derive(subject_and_secret, // PK11SymKey *baseKey
+                CKM_CONCATENATE_BASE_AND_DATA, // CK_MECHANISM_TYPE mechanism
+                &concat_base_data_item, // SECItem *param
+                CKM_SHA1_KEY_DERIVATION, // CK_MECHANISM_TYPE target
+                CKA_DERIVE, // CK_ATTRIBUTE_TYPE operation
+                0); // int keySize
+
+  if (!subject_and_secret_and_issuer)
+    return NS_ERROR_FAILURE;
+
+  sha1_of_subject_and_secret_and_issuer =
+    PK11_Derive(subject_and_secret_and_issuer, // PK11SymKey *baseKey
+                CKM_SHA1_KEY_DERIVATION, // CK_MECHANISM_TYPE mechanism
+                NULL, // SECItem *param
+                CKM_SHA_1_HMAC, // CK_MECHANISM_TYPE target
+                CKA_SIGN, // CK_ATTRIBUTE_TYPE operation
+                0); // int keySize
+
+  if (!sha1_of_subject_and_secret_and_issuer)
+    return NS_ERROR_FAILURE;
+
+  PK11Context *context = NULL;
+  PK11ContextCleanerTrueParam context_cleaner(context);
+
+  SECItem ignore;
+  ignore.data = 0;
+  ignore.len = 0;
+
+  context = 
+    PK11_CreateContextBySymKey(CKM_SHA_1_HMAC, // CK_MECHANISM_TYPE type
+                               CKA_SIGN, // CK_ATTRIBUTE_TYPE operation
+                               sha1_of_subject_and_secret_and_issuer, // PK11SymKey *symKey
+                               &ignore); // SECItem *param
+
+  if (!context)
+    return NS_ERROR_FAILURE;
+
+  if (SECSuccess != PK11_DigestBegin(context))
+    return NS_ERROR_FAILURE;
+
+  if (SECSuccess != 
+      PK11_DigestOp(context, der_request->data, der_request->len))
+    return NS_ERROR_FAILURE;
+
+  SECItem *result_hmac_sha1_item = NULL;
+  SECItemCleanerTrueParam result_hmac_sha1_item_cleaner(result_hmac_sha1_item);
+
+  result_hmac_sha1_item = SECITEM_AllocItem(nsnull, nsnull, SHA1_LENGTH);
+  if (!result_hmac_sha1_item)
+    return NS_ERROR_FAILURE;
+
+  if (SECSuccess !=
+      PK11_DigestFinal(context, 
+                       result_hmac_sha1_item->data, 
+                       &result_hmac_sha1_item->len, 
+                       SHA1_LENGTH))
+    return NS_ERROR_FAILURE;
+
+  if (SECSuccess !=
+      CRMF_CertReqMsgSetKeyAgreementPOP(certReqMsg, crmfDHMAC,
+                                        crmfNoSubseqMess, result_hmac_sha1_item))
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
 static nsresult
 nsSetProofOfPossession(CRMFCertReqMsg *certReqMsg, 
-                       nsKeyPairInfo  *keyInfo)
+                       nsKeyPairInfo  *keyInfo,
+                       CRMFCertRequest *certReq)
 {
-  nsresult rv;
-  switch (keyInfo->keyGenType) {
-  case rsaSign:
-  case rsaDualUse:
-  case rsaNonrepudiation:
-  case rsaSignNonrepudiation:
-  case dsaSign:
-  case dsaNonrepudiation:
-  case dsaSignNonrepudiation:
-    {
-      SECStatus srv = CRMF_CertReqMsgSetSignaturePOP(certReqMsg,
-                                                     keyInfo->privKey,
-                                                     keyInfo->pubKey, nsnull,
-                                                     nsnull, nsnull);
-      rv = (srv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;
-    }
-    break;
-  case rsaEnc:
-    rv = nsSetKeyEnciphermentPOP(certReqMsg);
-    break;
-  case dhEx:
+  // Depending on the type of cert request we'll try
+  // POP mechanisms in different order,
+  // and add the result to the cert request message.
+  //
+  // For any signing or dual use cert,
+  //   try signing first,
+  //   fall back to DHMAC if we can
+  //     (EC cert requests that provide keygen param "popcert"),
+  //   otherwise fail.
+  //
+  // For encryption only certs that get escrowed, this is sufficient.
+  //
+  // For encryption only certs, that are not being escrowed, 
+  //   try DHMAC if we can 
+  //     (EC cert requests that provide keygen param "popcert"),
+  //   otherwise we'll indicate challenge response should be used.
+  
+  PRBool isEncryptionOnlyCertRequest = PR_FALSE;
+  PRBool escrowEncryptionOnlyCert = PR_FALSE;
+  
+  switch (keyInfo->keyGenType)
+  {
+    case rsaEnc:
+    case ecEnc:
+      isEncryptionOnlyCertRequest = PR_TRUE;
+      break;
+    
+    case rsaSign:
+    case rsaDualUse:
+    case rsaNonrepudiation:
+    case rsaSignNonrepudiation:
+    case ecSign:
+    case ecDualUse:
+    case ecNonrepudiation:
+    case ecSignNonrepudiation:
+    case dsaSign:
+    case dsaNonrepudiation:
+    case dsaSignNonrepudiation:
+      break;
+    
+    case dhEx:
     /* This case may be supported in the future, but for now, we just fall 
-     * though to the default case and return an error for diffie-hellman keys.
-     */
-  default:
-    rv = NS_ERROR_FAILURE;
-    break;
+      * though to the default case and return an error for diffie-hellman keys.
+    */
+    default:
+      return NS_ERROR_FAILURE;
+  };
+    
+  if (isEncryptionOnlyCertRequest)
+  {
+    escrowEncryptionOnlyCert = 
+      CRMF_CertRequestIsControlPresent(certReq,crmfPKIArchiveOptionsControl);
   }
-  return rv;
+    
+  PRBool gotDHMACParameters = PR_FALSE;
+  
+  if (isECKeyGenType(keyInfo->keyGenType) && 
+      keyInfo->ecPopCert && 
+      keyInfo->ecPopPubKey)
+  {
+    gotDHMACParameters = PR_TRUE;
+  }
+  
+  if (isEncryptionOnlyCertRequest)
+  {
+    if (escrowEncryptionOnlyCert)
+      return nsSetKeyEnciphermentPOP(certReqMsg, PR_TRUE); // escrowed
+    
+    if (gotDHMACParameters)
+      return nsSet_EC_DHMAC_ProofOfPossession(certReqMsg, keyInfo, certReq);
+    
+    return nsSetKeyEnciphermentPOP(certReqMsg, PR_FALSE); // not escrowed
+  }
+  
+  // !isEncryptionOnlyCertRequest
+  
+  SECStatus srv = CRMF_CertReqMsgSetSignaturePOP(certReqMsg,
+                                                 keyInfo->privKey,
+                                                 keyInfo->pubKey, nsnull,
+                                                 nsnull, nsnull);
 
+  if (srv == SECSuccess)
+    return NS_OK;
+  
+  if (!gotDHMACParameters)
+    return NS_ERROR_FAILURE;
+  
+  return nsSet_EC_DHMAC_ProofOfPossession(certReqMsg, keyInfo, certReq);
 }
 
 static void PR_CALLBACK
@@ -1398,7 +1891,7 @@ nsCreateReqFromKeyPairs(nsKeyPairInfo *keyids, PRInt32 numRequests,
     if (srv != SECSuccess)
       goto loser;
 
-    rv = nsSetProofOfPossession(certReqMsgs[i], &keyids[i]);
+    rv = nsSetProofOfPossession(certReqMsgs[i], &keyids[i], certReq);
     if (NS_FAILED(rv))
       goto loser;
     CRMF_DestroyCertRequest(certReq);

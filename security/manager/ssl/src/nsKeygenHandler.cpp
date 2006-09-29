@@ -21,6 +21,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Vipul Gupta <vipul.gupta@sun.com>
+ *   Douglas Stebila <douglas@stebila.ca>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -175,6 +177,134 @@ done:
     return primeBits;
 }
 
+typedef struct curveNameTagPairStr {
+    char *curveName;
+    SECOidTag curveOidTag;
+} CurveNameTagPair;
+
+static CurveNameTagPair nameTagPair[] =
+{ 
+  { "prime192v1", SEC_OID_ANSIX962_EC_PRIME192V1 },
+  { "prime192v2", SEC_OID_ANSIX962_EC_PRIME192V2 },
+  { "prime192v3", SEC_OID_ANSIX962_EC_PRIME192V3 },
+  { "prime239v1", SEC_OID_ANSIX962_EC_PRIME239V1 },
+  { "prime239v2", SEC_OID_ANSIX962_EC_PRIME239V2 },
+  { "prime239v3", SEC_OID_ANSIX962_EC_PRIME239V3 },
+  { "prime256v1", SEC_OID_ANSIX962_EC_PRIME256V1 },
+
+  { "secp112r1", SEC_OID_SECG_EC_SECP112R1},
+  { "secp112r2", SEC_OID_SECG_EC_SECP112R2},
+  { "secp128r1", SEC_OID_SECG_EC_SECP128R1},
+  { "secp128r2", SEC_OID_SECG_EC_SECP128R2},
+  { "secp160k1", SEC_OID_SECG_EC_SECP160K1},
+  { "secp160r1", SEC_OID_SECG_EC_SECP160R1},
+  { "secp160r2", SEC_OID_SECG_EC_SECP160R2},
+  { "secp192k1", SEC_OID_SECG_EC_SECP192K1},
+  { "secp192r1", SEC_OID_ANSIX962_EC_PRIME192V1 },
+  { "nistp192", SEC_OID_ANSIX962_EC_PRIME192V1 },
+  { "secp224k1", SEC_OID_SECG_EC_SECP224K1},
+  { "secp224r1", SEC_OID_SECG_EC_SECP224R1},
+  { "nistp224", SEC_OID_SECG_EC_SECP224R1},
+  { "secp256k1", SEC_OID_SECG_EC_SECP256K1},
+  { "secp256r1", SEC_OID_ANSIX962_EC_PRIME256V1 },
+  { "nistp256", SEC_OID_ANSIX962_EC_PRIME256V1 },
+  { "secp384r1", SEC_OID_SECG_EC_SECP384R1},
+  { "nistp384", SEC_OID_SECG_EC_SECP384R1},
+  { "secp521r1", SEC_OID_SECG_EC_SECP521R1},
+  { "nistp521", SEC_OID_SECG_EC_SECP521R1},
+
+  { "c2pnb163v1", SEC_OID_ANSIX962_EC_C2PNB163V1 },
+  { "c2pnb163v2", SEC_OID_ANSIX962_EC_C2PNB163V2 },
+  { "c2pnb163v3", SEC_OID_ANSIX962_EC_C2PNB163V3 },
+  { "c2pnb176v1", SEC_OID_ANSIX962_EC_C2PNB176V1 },
+  { "c2tnb191v1", SEC_OID_ANSIX962_EC_C2TNB191V1 },
+  { "c2tnb191v2", SEC_OID_ANSIX962_EC_C2TNB191V2 },
+  { "c2tnb191v3", SEC_OID_ANSIX962_EC_C2TNB191V3 },
+  { "c2onb191v4", SEC_OID_ANSIX962_EC_C2ONB191V4 },
+  { "c2onb191v5", SEC_OID_ANSIX962_EC_C2ONB191V5 },
+  { "c2pnb208w1", SEC_OID_ANSIX962_EC_C2PNB208W1 },
+  { "c2tnb239v1", SEC_OID_ANSIX962_EC_C2TNB239V1 },
+  { "c2tnb239v2", SEC_OID_ANSIX962_EC_C2TNB239V2 },
+  { "c2tnb239v3", SEC_OID_ANSIX962_EC_C2TNB239V3 },
+  { "c2onb239v4", SEC_OID_ANSIX962_EC_C2ONB239V4 },
+  { "c2onb239v5", SEC_OID_ANSIX962_EC_C2ONB239V5 },
+  { "c2pnb272w1", SEC_OID_ANSIX962_EC_C2PNB272W1 },
+  { "c2pnb304w1", SEC_OID_ANSIX962_EC_C2PNB304W1 },
+  { "c2tnb359v1", SEC_OID_ANSIX962_EC_C2TNB359V1 },
+  { "c2pnb368w1", SEC_OID_ANSIX962_EC_C2PNB368W1 },
+  { "c2tnb431r1", SEC_OID_ANSIX962_EC_C2TNB431R1 },
+
+  { "sect113r1", SEC_OID_SECG_EC_SECT113R1},
+  { "sect113r2", SEC_OID_SECG_EC_SECT113R2},
+  { "sect131r1", SEC_OID_SECG_EC_SECT131R1},
+  { "sect131r2", SEC_OID_SECG_EC_SECT131R2},
+  { "sect163k1", SEC_OID_SECG_EC_SECT163K1},
+  { "nistk163", SEC_OID_SECG_EC_SECT163K1},
+  { "sect163r1", SEC_OID_SECG_EC_SECT163R1},
+  { "sect163r2", SEC_OID_SECG_EC_SECT163R2},
+  { "nistb163", SEC_OID_SECG_EC_SECT163R2},
+  { "sect193r1", SEC_OID_SECG_EC_SECT193R1},
+  { "sect193r2", SEC_OID_SECG_EC_SECT193R2},
+  { "sect233k1", SEC_OID_SECG_EC_SECT233K1},
+  { "nistk233", SEC_OID_SECG_EC_SECT233K1},
+  { "sect233r1", SEC_OID_SECG_EC_SECT233R1},
+  { "nistb233", SEC_OID_SECG_EC_SECT233R1},
+  { "sect239k1", SEC_OID_SECG_EC_SECT239K1},
+  { "sect283k1", SEC_OID_SECG_EC_SECT283K1},
+  { "nistk283", SEC_OID_SECG_EC_SECT283K1},
+  { "sect283r1", SEC_OID_SECG_EC_SECT283R1},
+  { "nistb283", SEC_OID_SECG_EC_SECT283R1},
+  { "sect409k1", SEC_OID_SECG_EC_SECT409K1},
+  { "nistk409", SEC_OID_SECG_EC_SECT409K1},
+  { "sect409r1", SEC_OID_SECG_EC_SECT409R1},
+  { "nistb409", SEC_OID_SECG_EC_SECT409R1},
+  { "sect571k1", SEC_OID_SECG_EC_SECT571K1},
+  { "nistk571", SEC_OID_SECG_EC_SECT571K1},
+  { "sect571r1", SEC_OID_SECG_EC_SECT571R1},
+  { "nistb571", SEC_OID_SECG_EC_SECT571R1},
+
+};
+
+SECKEYECParams * 
+decode_ec_params(char *curve)
+{
+    SECKEYECParams *ecparams;
+    SECOidData *oidData = NULL;
+    SECOidTag curveOidTag = SEC_OID_UNKNOWN; /* default */
+    int i, numCurves;
+
+    if (curve && *curve) {
+        numCurves = sizeof(nameTagPair)/sizeof(CurveNameTagPair);
+        for (i = 0; ((i < numCurves) && (curveOidTag == SEC_OID_UNKNOWN)); 
+             i++) {
+            if (PL_strcmp(curve, nameTagPair[i].curveName) == 0)
+                curveOidTag = nameTagPair[i].curveOidTag;
+        }
+    }
+
+    /* Return NULL if curve name is not recognized */
+    if ((curveOidTag == SEC_OID_UNKNOWN) || 
+        (oidData = SECOID_FindOIDByTag(curveOidTag)) == NULL) {
+        return nsnull;
+    }
+
+    ecparams = SECITEM_AllocItem(NULL, NULL, (2 + oidData->oid.len));
+
+    if (!ecparams)
+      return nsnull;
+
+    /* 
+     * ecparams->data needs to contain the ASN encoding of an object ID (OID)
+     * representing the named curve. The actual OID is in 
+     * oidData->oid.data so we simply prepend 0x06 and OID length
+     */
+    ecparams->data[0] = SEC_ASN1_OBJECT_ID;
+    ecparams->data[1] = oidData->oid.len;
+    memcpy(ecparams->data + 2, oidData->oid.data, oidData->oid.len);
+
+    return ecparams;
+}
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsKeygenFormProcessor, nsIFormProcessor)
 
 nsKeygenFormProcessor::nsKeygenFormProcessor()
@@ -261,6 +391,8 @@ PRUint32 MapGenMechToAlgoMech(PRUint32 mechanism)
         /* What do we do about DES keygen? Right now, we're just using
            DES_KEY_GEN to look for tokens, because otherwise we'll have
            to search the token list three times. */
+    case CKM_EC_KEY_PAIR_GEN:
+        /* The default should also work for EC key pair generation. */
     default:
         searchMech = mechanism;
         break;
@@ -382,12 +514,12 @@ loser:
 nsresult
 nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge, 
 				    nsAFlatString& aKeyType,
-				    nsAString& aOutPublicKey, nsAString& aPqg)
+				    nsAString& aOutPublicKey, nsAString& aKeyParams)
 {
     nsNSSShutDownPreventionLock locker;
     nsresult rv = NS_ERROR_FAILURE;
     char *keystring = nsnull;
-    char *pqgString = nsnull, *str = nsnull;
+    char *keyparamsString = nsnull, *str = nsnull;
     KeyType type;
     PRUint32 keyGenMechanism;
     PRInt32 primeBits;
@@ -435,17 +567,17 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
         keyGenMechanism = CKM_RSA_PKCS_KEY_PAIR_GEN;
     } else if (aKeyType.LowerCaseEqualsLiteral("dsa")) {
         char * end;
-        pqgString = ToNewCString(aPqg);
-        if (!pqgString) {
+        keyparamsString = ToNewCString(aKeyParams);
+        if (!keyparamsString) {
             rv = NS_ERROR_OUT_OF_MEMORY;
             goto loser;
         }
 
         type = dsaKey;
         keyGenMechanism = CKM_DSA_KEY_PAIR_GEN;
-        if (strcmp(pqgString, "null") == 0)
+        if (strcmp(keyparamsString, "null") == 0)
             goto loser;
-        str = pqgString;
+        str = keyparamsString;
         do {
             end = strchr(str, ',');
             if (end != nsnull)
@@ -458,6 +590,16 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
         goto loser;
 found_match:
         pqgParams = decode_pqg_params(str);
+    } else if (aKeyType.LowerCaseEqualsLiteral("ec")) {
+        keyparamsString = ToNewCString(aKeyParams);
+        if (!keyparamsString) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            goto loser;
+        }
+
+        type = ecKey;
+        keyGenMechanism = CKM_EC_KEY_PAIR_GEN;
+        /* ecParams are initialized later */
     } else {
         goto loser;
     }
@@ -477,6 +619,48 @@ found_match:
         case CKM_DSA_KEY_PAIR_GEN:
             // XXX Fix this! XXX //
             goto loser;
+        case CKM_EC_KEY_PAIR_GEN:
+            /* XXX We ought to rethink how the KEYGEN tag is 
+             * displayed. The pulldown selections presented
+             * to the user must depend on the keytype.
+             * The displayed selection could be picked
+             * from the keyparams attribute (this is currently called
+             * the pqg attribute).
+             * For now, we pick ecparams from the keyparams field
+             * if it specifies a valid supported curve, or else 
+             * we pick one of secp384r1, secp256r1 or secp192r1
+             * respectively depending on the user's selection
+             * (High, Medium, Low). 
+             * (RSA uses RSA-2048, RSA-1024 and RSA-512 for historical
+             * reasons, while ECC choices represent a stronger mapping)
+             * NOTE: The user's selection
+             * is silently ignored when a valid curve is presented
+             * in keyparams.
+             */
+            if ((params = decode_ec_params(keyparamsString)) == nsnull) {
+                /* The keyparams attribute did not specify a valid
+                 * curve name so use a curve based on the keysize.
+                 * NOTE: Here keysize is used only as an indication of
+                 * High/Medium/Low strength; elliptic curve
+                 * cryptography uses smaller keys than RSA to provide
+                 * equivalent security.
+                 */
+                switch (keysize) {
+                case 2048:
+                    params = decode_ec_params("secp384r1");
+                    break;
+                case 1024:
+                case 512:
+                    params = decode_ec_params("secp256r1");
+                    break;
+                } 
+            }
+            /* XXX The signature algorithm ought to choose the hashing
+             * algorithm based on key size once ECDSA variations based
+             * on SHA256 SHA384 and SHA512 are standardized.
+             */
+            algTag = SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST;
+            break;
       default:
           goto loser;
       }
@@ -619,8 +803,8 @@ loser:
     if (KeygenRunnable) {
       NS_RELEASE(KeygenRunnable);
     }
-    if (pqgString) {
-        nsMemory::Free(pqgString);
+    if (keyparamsString) {
+        nsMemory::Free(keyparamsString);
     }
     if (pkac.challenge.data) {
         nsMemory::Free(pkac.challenge.data);
@@ -641,20 +825,31 @@ nsKeygenFormProcessor::ProcessValue(nsIDOMHTMLElement *aElement,
     nsAutoString keygenvalue;
     nsAutoString challengeValue;
     nsAutoString keyTypeValue;
-    nsAutoString pqgValue;
+    nsAutoString keyParamsValue;
 
     selectElement->GetAttribute(NS_LITERAL_STRING("_moz-type"), keygenvalue);
     if (keygenvalue.EqualsLiteral("-mozilla-keygen")) {
 
-      res = selectElement->GetAttribute(NS_LITERAL_STRING("pqg"), pqgValue);
       res = selectElement->GetAttribute(NS_LITERAL_STRING("keytype"), keyTypeValue);
       if (NS_FAILED(res) || keyTypeValue.IsEmpty()) {
         // If this field is not present, we default to rsa.
   	    keyTypeValue.AssignLiteral("rsa");
       }
+
+      res = selectElement->GetAttribute(NS_LITERAL_STRING("pqg"), 
+                                        keyParamsValue);
+      /* XXX We can still support the pqg attribute in the keygen 
+       * tag for backward compatibility while introducing a more 
+       * general attribute named keyparams.
+       */
+      if (NS_FAILED(res) || keyParamsValue.IsEmpty()) {
+          res = selectElement->GetAttribute(NS_LITERAL_STRING("keyparams"), 
+                                            keyParamsValue);
+      }
+
       res = selectElement->GetAttribute(NS_LITERAL_STRING("challenge"), challengeValue);
       rv = GetPublicKey(aValue, challengeValue, keyTypeValue, 
-			aValue, pqgValue);
+			aValue, keyParamsValue);
     }
   }
 
