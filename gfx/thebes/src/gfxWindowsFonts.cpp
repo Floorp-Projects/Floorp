@@ -1394,8 +1394,6 @@ public:
                                                 mItems[i+1].iCharPos - mItems[i].iCharPos,
                                                 &mItems[i],
                                                 aGroup);
-        if (!mIsComplex)
-            item->DisableShaping();
 
         return item;
     }
