@@ -612,6 +612,7 @@ CERT_DecodeAVAValue(const SECItem *derAVAValue)
           PLArenaPool      *newarena          = NULL;
 
     if (!derAVAValue || !derAVAValue->len || !derAVAValue->data) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return NULL;
     }
 
@@ -643,6 +644,7 @@ CERT_DecodeAVAValue(const SECItem *derAVAValue)
 	    theTemplate = SEC_UTF8StringTemplate;
 	    break;
 	default:
+	    PORT_SetError(SEC_ERROR_INVALID_AVA);
 	    return NULL;
     }
 
