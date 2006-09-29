@@ -3021,7 +3021,7 @@ SECU_ParseCommandLine(int argc, char **argv, char *progName, secuCommand *cmd)
     char *optstring;
     int i, j;
 
-    optstring = (char *)malloc(cmd->numCommands + 2*cmd->numOptions);
+    optstring = (char *)PORT_Alloc(cmd->numCommands + 2*cmd->numOptions);
     j = 0;
 
     for (i=0; i<cmd->numCommands; i++) {
@@ -3034,7 +3034,10 @@ SECU_ParseCommandLine(int argc, char **argv, char *progName, secuCommand *cmd)
     }
     optstring[j] = '\0';
     optstate = PL_CreateOptState(argc, argv, optstring);
-
+    if (!optstate) {
+        PORT_Free(optstring);
+        return SECFailure;
+    }
     /* Parse command line arguments */
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 
@@ -3064,16 +3067,23 @@ SECU_ParseCommandLine(int argc, char **argv, char *progName, secuCommand *cmd)
 		if (optstate->value) {
 		    cmd->options[i].arg = (char *)optstate->value;
 		} else if (cmd->options[i].needsArg) {
-                    return SECFailure;
-                }
+		    status = PL_OPT_BAD;
+		    goto loser;
+		}
 		found = PR_TRUE;
 		break;
 	    }
 	}
 
-	if (!found)
-	    return SECFailure;
+	if (!found) {
+	    status = PL_OPT_BAD;
+	    break;
+	}
     }
+
+loser:
+    PL_DestroyOptState(optstate);
+    PORT_Free(optstring);
     if (status == PL_OPT_BAD)
 	return SECFailure;
     return SECSuccess;
