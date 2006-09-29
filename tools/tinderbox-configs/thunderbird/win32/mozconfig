@@ -3,7 +3,7 @@
 ## CYGWIN_NT-5.2 win2k3-ref-img 1.5.19(0.150/4/2) 2006-01-20 13:28 i686 Cygwin
 #
 
-#. $topsrcdir/mail/config/mozconfig
+. $topsrcdir/mail/config/mozconfig
 
 mk_add_options MOZ_DEBUG_SYMBOLS=1
 mk_add_options MOZ_MAKE_FLAGS=-j1
