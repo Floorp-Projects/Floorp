@@ -109,7 +109,6 @@ ORDER BY tsg.sort_order ASC, t.testcase_id ASC
 # Check whether we have test results for the current test that correspond
 # to the provided platform, build_id, and user(optional).
 #########################################################################
-memoize('is_completed');
 sub is_completed {
   my $self = shift;
   my $platform = shift;
