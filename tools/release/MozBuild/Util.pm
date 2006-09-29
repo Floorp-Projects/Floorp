@@ -1,4 +1,4 @@
-package Util::MozUtil;
+package MozBuild::Util;
 
 # Stolen from the code for bug 336463
 
