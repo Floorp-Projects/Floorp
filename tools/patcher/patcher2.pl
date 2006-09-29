@@ -68,11 +68,16 @@ autoflush STDERR 1;
 
 use vars qw($PID_FILE
             $DEFAULT_HASH_TYPE
-            $DEFAULT_CVSROOT );
+            $DEFAULT_CVSROOT
+            $DEFAULT_SCHEMA_VERSION
+            $CURRENT_SCHEMA_VERSION);
 
 $PID_FILE = 'patcher2.pid';
 $DEFAULT_HASH_TYPE = 'SHA1';
 $DEFAULT_CVSROOT = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
+
+$DEFAULT_SCHEMA_VERSION = 0;
+$CURRENT_SCHEMA_VERSION = 1;
 
 sub main {
     Startup();
@@ -774,7 +779,8 @@ sub CreateCompletePatchinfo {
 
                     $complete_patch->{'details'} = $detailsUrl;
 
-                    write_patch_info(patch => $complete_patch);
+                    write_patch_info(patch => $complete_patch,
+                                     schemaVer => $to->{'schema'});
 
                     if (defined($u_config->{$u}->{'testchannel'})) {
                         # Deep copy this data structure, since it's a copy of 
@@ -795,7 +801,8 @@ sub CreateCompletePatchinfo {
 
                             $testPatch->{'info_path'} = "$u/aus2.test/$from_aus_app/$from_aus_version/$from_aus_platform/$from_aus_buildid/$l/$testChan/complete.txt";
 
-                            write_patch_info(patch => $testPatch);
+                            write_patch_info(patch => $testPatch,
+                                             schemaVer => $to->{'schema'});
                         }
                     }
 
@@ -948,7 +955,8 @@ sub CreatePastReleasePatchinfo {
 
                     $completePatch->{'details'} = $detailsUrl;
 
-                    write_patch_info(patch => $completePatch);
+                    write_patch_info(patch => $completePatch,
+                                     schemaVer => $patchLocaleNode->{'schema'});
                     print("done\n");
 
                     # Now, write the same information as a partial, since
@@ -959,7 +967,8 @@ sub CreatePastReleasePatchinfo {
                     PrintProgress(total => $totalPastUpdates,
                      current => ++$patchInfoFilesCreated,
                      string => "$prettyPrefix/$fromAusPlatform/$locale/$channel/partial"); 
-                    write_patch_info(patch => $completePatch);
+                    write_patch_info(patch => $completePatch,
+                                     schemaVer => $patchLocaleNode->{'schema'});
                     print("done\n");
                 }
             }
@@ -1079,7 +1088,8 @@ sub CreatePartialPatchinfo {
                     $partial_patch->{'url'} = $gen_partial_url;
                     $partial_patch->{'details'} = $detailsUrl;
 
-                    write_patch_info(patch => $partial_patch);
+                    write_patch_info(patch => $partial_patch,
+                                     schemaVer => $to->{'schema'});
 
                     if (defined($u_config->{$u}->{'testchannel'})) {
                         # Deep copy this data structure, since it's a copy of 
@@ -1101,7 +1111,8 @@ sub CreatePartialPatchinfo {
                             $testPatch->{'info_path'} = "$u/aus2.test/$from_aus_app/$from_aus_version/$from_aus_platform/$from_aus_buildid/$l/$testChan/partial.txt";
 
                             #print STDERR "Generating TEST entry: $testPatch->{'info_path'}\n";
-                            write_patch_info(patch => $testPatch);
+                            write_patch_info(patch => $testPatch,
+                                             schemaVersion => $to->{'schema'});
                         }
                     }
 
@@ -1124,27 +1135,54 @@ sub write_patch_info {
     my %args = @_;
 
     my $patch = $args{'patch'};
+    my $schemaVersion = $args{'schemaVer'} || $DEFAULT_SCHEMA_VERSION;
 
     my $info_path = $patch->{'info_path'};
     $info_path =~ m/^(.*)\/[^\/]*$/;
     my $info_path_parent = $1;
-
     my $text;
-    $text  = "$patch->{'type'}\n";
-    $text .= "$patch->{'url'}\n";
-    #$text .= "MD5\n";
-    $text .= "$patch->{'hash_type'}\n";
 
-    #$text .= "$patch->{'md5'}\n";
-    $text .= "$patch->{'hash_value'}\n";
+    if ($DEFAULT_SCHEMA_VERSION == $schemaVersion) {
+        $text  = "$patch->{'type'}\n";
+        $text .= "$patch->{'url'}\n";
+        $text .= "$patch->{'hash_type'}\n";
 
-    $text .= "$patch->{'size'}\n";
-    $text .= "$patch->{'build_id'}\n";
-    $text .= "$patch->{'appv'}\n";
-    $text .= "$patch->{'extv'}\n";
+        $text .= "$patch->{'hash_value'}\n";
 
-    if (defined($patch->{'details'})) {
-        $text .= "$patch->{'details'}\n";
+        $text .= "$patch->{'size'}\n";
+        $text .= "$patch->{'build_id'}\n";
+        $text .= "$patch->{'appv'}\n";
+        $text .= "$patch->{'extv'}\n";
+
+        if (defined($patch->{'details'})) {
+            $text .= "$patch->{'details'}\n";
+        }
+    } elsif ($CURRENT_SCHEMA_VERSION == $schemaVersion) {
+        $text = "version=1\n";
+        $text .= "type=$patch->{'type'}\n";
+        $text .= "url=$patch->{'url'}\n";
+
+        $text .= "hashFunction=$patch->{'hash_type'}\n";
+        $text .= "hashValue=$patch->{'hash_value'}\n";
+
+        $text .= "size=$patch->{'size'}\n";
+        $text .= "build=$patch->{'build_id'}\n";
+        $text .= "appv=$patch->{'appv'}\n";
+        $text .= "extv=$patch->{'extv'}\n";
+
+        if (defined($patch->{'details'})) {
+            $text .= "detailsUrl=$patch->{'details'}\n";
+        }
+
+        if (defined($patch->{'license'})) {
+            $text .= "licenseUrl=$patch->{'license'}\n";
+        }
+
+        if (defined($patch->{'updateType'})) {
+            $text .= "updateType=$patch->{'updateType'}\n";
+        }
+    } else {
+        die "ASSERT: Invalid schema version: $schemaVersion\n";
     }
 
     MkdirWithPath($info_path_parent) or
