@@ -40,6 +40,7 @@ use Time::Piece;
 Litmus::DB::Comment->table('test_result_comments');
 
 Litmus::DB::Comment->columns(All => qw/comment_id test_result_id last_updated submission_time user_id comment/);
+Litmus::DB::Comment->columns(TEMP => qw //);
 
 Litmus::DB::Comment->column_alias("test_result_id", "test_result");
 Litmus::DB::Comment->column_alias("user_id", "user");

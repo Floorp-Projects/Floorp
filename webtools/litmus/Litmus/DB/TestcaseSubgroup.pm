@@ -38,6 +38,7 @@ use base 'Litmus::DBI';
 Litmus::DB::TestcaseSubgroup->table('testcase_subgroups');
 
 Litmus::DB::TestcaseSubgroup->columns(All => qw/testcase_id subgroup_id/);
+Litmus::DB::TestcaseSubgroup->columns(TEMP => qw //);
 
 Litmus::DB::TestcaseSubgroup->has_a(testcase_id => "Litmus::DB::Testcase");
 Litmus::DB::TestcaseSubgroup->has_a(subgroup_id => "Litmus::DB::Subgroup");

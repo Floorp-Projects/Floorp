@@ -38,6 +38,7 @@ use base 'Litmus::DBI';
 Litmus::DB::ExitStatus->table('exit_status_lookup');
 
 Litmus::DB::ExitStatus->columns(All => qw/exit_status_id name/);
+Litmus::DB::ExitStatus->columns(TEMP => qw //);
 
 Litmus::DB::ExitStatus->has_many(test_results => "Litmus::DB::Testresult");
 

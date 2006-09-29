@@ -38,6 +38,7 @@ use base 'Litmus::DBI';
 Litmus::DB::Locale->table('locale_lookup');
 
 Litmus::DB::Locale->columns(All => qw/abbrev name/);
+Litmus::DB::Locale->columns(TEMP => qw //);
 
 Litmus::DB::Locale->column_alias("abbrev", "locale");
 

@@ -40,6 +40,7 @@ Litmus::DB::Platform->table('platforms');
 
 Litmus::DB::Platform->columns(All => qw/platform_id name detect_regexp iconpath/);
 Litmus::DB::Platform->columns(Essential => qw/platform_id name detect_regexp iconpath/);
+Litmus::DB::Platform->columns(TEMP => qw //);
 
 Litmus::DB::Platform->column_alias("platform_id", "platformid");
 

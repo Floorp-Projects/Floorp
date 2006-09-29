@@ -38,6 +38,7 @@ use base 'Litmus::DBI';
 Litmus::DB::Format->table('test_format_lookup');
 
 Litmus::DB::Format->columns(All => qw/format_id name/);
+Litmus::DB::Format->columns(TEMP => qw //);
 
 Litmus::DB::Format->column_alias("format_id", "formatid");
 

@@ -38,13 +38,13 @@ use base 'Litmus::DBI';
 use Date::Manip;
 use Time::Piece;
 use Time::Seconds;
-use Memoize;
 
 our $_num_results_default = 15;
 
 Litmus::DB::Testresult->table('test_results');
 
 Litmus::DB::Testresult->columns(All => qw/testresult_id testcase_id last_updated submission_time user_id opsys_id branch_id build_id user_agent result_status_id build_type_id machine_name exit_status_id duration_ms talkback_id valid vetted validated_by_user_id vetted_by_user_id validated_timestamp vetted_timestamp locale_abbrev is_automated_result/);
+Litmus::DB::Testresult->columns(TEMP => qw /summary created platform_name result_status class_name result_status_class branch_name email num_results most_recent max_id/);
 
 Litmus::DB::Testresult->column_alias("testcase_id", "testcase");
 Litmus::DB::Testresult->column_alias("submission_time", "timestamp");
@@ -85,7 +85,7 @@ Litmus::DB::Testresult->has_many(bugs => "Litmus::DB::Resultbug", {order_by => '
 Litmus::DB::Testresult->autoinflate(dates => 'Time::Piece');
 
 Litmus::DB::Testresult->set_sql(DefaultTestResults => qq{
-    SELECT DISTINCT(tr.testresult_id),tr.testcase_id,t.summary,tr.submission_time AS created,p.name AS platform_name,pr.name as product_name,trsl.name AS result_status,trsl.class_name result_status_class,b.name AS branch_name, tr.locale_abbrev, u.email
+    SELECT DISTINCT(tr.testresult_id),tr.testcase_id,t.summary,tr.submission_time AS created,p.name AS platform_name,pr.name as product_name,trsl.name AS result_status,trsl.class_name AS result_status_class,b.name AS branch_name, tr.locale_abbrev, u.email
     FROM test_results tr, testcases t, platforms p, opsyses o, branches b, products pr, test_result_status_lookup trsl, users u
     WHERE tr.testcase_id=t.testcase_id AND tr.opsys_id=o.opsys_id AND o.platform_id=p.platform_id AND tr.branch_id=b.branch_id AND b.product_id=pr.product_id AND tr.result_status_id=trsl.result_status_id AND tr.user_id=u.user_id AND tr.valid=1
     ORDER BY tr.submission_time DESC, t.testcase_id DESC

@@ -39,6 +39,7 @@ Litmus::DB::Product->table('products');
 
 Litmus::DB::Product->columns(All => qw/product_id name iconpath enabled/);
 Litmus::DB::Product->columns(Essential => qw/product_id name iconpath enabled/);
+Litmus::DB::Product->columns(TEMP => qw //);
 
 Litmus::DB::Product->column_alias("product_id", "productid");
 

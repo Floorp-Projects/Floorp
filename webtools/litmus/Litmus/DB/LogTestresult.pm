@@ -38,6 +38,7 @@ use base 'Litmus::DBI';
 Litmus::DB::LogTestresult->table('testresult_logs_join');
 
 Litmus::DB::LogTestresult->columns(Primary => qw/test_result_id log_id/);
+Litmus::DB::LogTestresult->columns(TEMP => qw //);
 
 Litmus::DB::LogTestresult->column_alias("test_result_id", "test_result");
 

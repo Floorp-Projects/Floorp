@@ -39,6 +39,7 @@ Litmus::DB::Testgroup->table('testgroups');
 
 Litmus::DB::Testgroup->columns(All => qw/testgroup_id product_id name enabled testrunner_plan_id/);
 Litmus::DB::Testgroup->columns(Essential => qw/testgroup_id product_id name enabled testrunner_plan_id/);
+Litmus::DB::Testgroup->columns(TEMP => qw //);
 
 Litmus::DB::Testgroup->column_alias("product_id", "product");
 

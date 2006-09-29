@@ -41,6 +41,7 @@ use Time::Seconds;
 Litmus::DB::TestRun->table('test_runs');
 
 Litmus::DB::TestRun->columns(All => qw/test_run_id testgroup_id name description start_timestamp finish_timestamp enabled/);
+Litmus::DB::TestRun->columns(TEMP => qw//);
 
 Litmus::DB::TestRun->column_alias("testgroup_id", "testgroup");
 

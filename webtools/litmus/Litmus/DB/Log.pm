@@ -38,6 +38,7 @@ use base 'Litmus::DBI';
 Litmus::DB::Log->table('test_result_logs');
 
 Litmus::DB::Log->columns(All => qw/log_id last_updated submission_time log_type_id log_text/);
+Litmus::DB::Log->columns(TEMP => qw //);
 
 Litmus::DB::Log->column_alias("test_results", "testresults");
 Litmus::DB::Log->column_alias("log_type_id", "log_type");

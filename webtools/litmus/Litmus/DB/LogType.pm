@@ -38,6 +38,7 @@ use base 'Litmus::DBI';
 Litmus::DB::LogType->table('log_type_lookup');
 
 Litmus::DB::LogType->columns(All => qw/log_type_id name/);
+Litmus::DB::LogType->columns(TEMP => qw //);
 
 Litmus::DB::LogType->has_many(test_result_logs => "Litmus::DB::Log");
 

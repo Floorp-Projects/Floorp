@@ -38,6 +38,7 @@ use base 'Litmus::DBI';
 Litmus::DB::BuildType->table('build_type_lookup');
 
 Litmus::DB::BuildType->columns(All => qw/build_type_id name/);
+Litmus::DB::BuildType->columns(TEMP => qw //);
 
 Litmus::DB::BuildType->has_many(test_results => "Litmus::DB::Testresult");
 
