@@ -182,7 +182,7 @@ nsMailGNOMEIntegration::KeyMatchesAppName(const char *aKeyValue) const
 }
 
 PRBool
-nsMailGNOMEIntegration::CheckDefault(const char* const *aProtocols, unsigned int aLength)
+nsMailGNOMEIntegration::checkDefault(const char* const *aProtocols, unsigned int aLength)
 {
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
 
