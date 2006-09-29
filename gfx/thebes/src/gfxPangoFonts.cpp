@@ -626,9 +626,7 @@ PangoFont*
 gfxPangoFont::GetPangoFont()
 {
     RealizeFont();
-
-    PangoFontMap* map = pango_context_get_font_map(mPangoCtx);
-    return pango_font_map_load_font(map, mPangoCtx, mPangoFontDesc);
+    return pango_context_load_font(mPangoCtx, mPangoFontDesc);
 }
 
 static const char *sCJKLangGroup[] = {
