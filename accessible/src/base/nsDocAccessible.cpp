@@ -382,7 +382,7 @@ void nsDocAccessible::CheckForEditor()
   if (editor) {
     // State readonly is now clear
 #ifdef MOZ_ACCESSIBILITY_ATK
-    AtkStateChange stateData;
+    StateChange stateData;
     stateData.enable = PR_TRUE;
     stateData.state = STATE_READONLY; // Will be translated to ATK_STATE_EDITABLE
     FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, &stateData);
@@ -622,21 +622,61 @@ nsresult nsDocAccessible::RemoveEventListeners()
 
 NS_IMETHODIMP nsDocAccessible::FireAnchorJumpEvent()
 {
+  if (!mIsContentLoaded || !mDocument) {
+    return NS_OK;
+  }
+  nsCOMPtr<nsISupports> container = mDocument->GetContainer();
+  nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(container));
+  nsCAutoString theURL;
+  if (webNav) {
+    nsCOMPtr<nsIURI> pURI;
+    webNav->GetCurrentURI(getter_AddRefs(pURI));
+    if (pURI) {
+      pURI->GetSpec(theURL);
+    }
+  }
+  static nsCAutoString lastAnchor;
+  const char kHash = '#';
+  nsCAutoString currentAnchor;
+  PRInt32 hasPosition = theURL.FindChar(kHash);
+  if (hasPosition > 0 && hasPosition < (PRInt32)theURL.Length() - 1) {
+    mIsAnchor = PR_TRUE;
+    currentAnchor.Assign(Substring(theURL,
+                                   hasPosition+1, 
+                                   (PRInt32)theURL.Length()-hasPosition-1));
+  }
+
+  if (currentAnchor.Equals(lastAnchor)) {
+    mIsAnchorJumped = PR_FALSE;
+  } else {
+    mIsAnchorJumped = PR_TRUE;
+    lastAnchor.Assign(currentAnchor);
+  }
+
+  if (mIsAnchorJumped) {
+    FireToolkitEvent(nsIAccessibleEvent::EVENT_DOCUMENT_ATTRIBUTES_CHANGED,
+                     this, nsnull);
+  }
+
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocAccessible::FireDocLoadingEvent(PRBool aIsFinished)
+NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
 {
   if (!mDocument || !mWeakShell) {
     return NS_OK;  // Document has been shut down
   }
 
-  if (mIsContentLoaded == aIsFinished) {
+  PRBool isFinished = 
+             (aEventType == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE ||
+              aEventType == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED);
+
+  if (mIsContentLoaded == isFinished) {
     return NS_OK;
   }
-  mIsContentLoaded = aIsFinished;
+  mIsContentLoaded = isFinished;
 
-  if (aIsFinished) {
+  if (isFinished) {
     // Need to wait until scrollable view is available
     AddScrollListener();
     nsCOMPtr<nsIAccessible> parent;
@@ -646,8 +686,36 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadingEvent(PRBool aIsFinished)
       // Make the parent forget about the old document as a child
       privateAccessible->InvalidateChildren();
     }
+    // Use short timer before firing state change event for finished doc,
+    // because the window is made visible asynchronously
+    if (!mDocLoadTimer) {
+      mDocLoadTimer = do_CreateInstance("@mozilla.org/timer;1");
+    }
+    if (mDocLoadTimer) {
+      mDocLoadTimer->InitWithFuncCallback(DocLoadCallback, this, 0,
+                                          nsITimer::TYPE_ONE_SHOT);
+    }
+    //fire EVENT_STATE_CHANGE to clear STATE_BUSY
+    StateChange stateData;
+    stateData.state = STATE_BUSY;
+    stateData.enable = PR_FALSE;
+    FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, &stateData);
+  } else {
+    nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShellTreeItemFor(mDOMNode);
+    if (!treeItem) {
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
+    treeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+    if (sameTypeRoot != treeItem) {
+      return NS_OK; 
+    }
+
+    FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, nsnull);
   }
 
+  FireToolkitEvent(aEventType, this, nsnull);
   return NS_OK;
 }
 
@@ -992,7 +1060,7 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
           do_QueryInterface(accessible);
         NS_ASSERTION(docAccessible, "No doc accessible for doc load event");
         if (docAccessible) {
-          docAccessible->FireDocLoadingEvent(PR_TRUE);
+          docAccessible->FireDocLoadEvents(nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE);
         }
       }
       else {
@@ -1265,5 +1333,54 @@ NS_IMETHODIMP nsDocAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* 
   NS_ENSURE_TRUE(accEvent, NS_ERROR_OUT_OF_MEMORY);
 
   return obsService->NotifyObservers(accEvent, NS_ACCESSIBLE_EVENT_TOPIC, nsnull);
+}
+
+void nsDocAccessible::DocLoadCallback(nsITimer *aTimer, void *aClosure)
+{
+  // Doc has finished loading, fire "load finished" event
+  // By using short timer we can wait make the window visible, 
+  // which it does asynchronously. This avoids confusing the screen reader with a
+  // hidden window. Waiting also allows us to see of the document has focus,
+  // which is important because we only fire doc loaded events for focused documents.
+
+  nsDocAccessible *docAcc =
+    NS_REINTERPRET_CAST(nsDocAccessible*, aClosure);
+  if (!docAcc) {
+    return;
+  }
+
+  // Fire doc finished event
+  nsCOMPtr<nsIDOMNode> docDomNode;
+  docAcc->GetDOMNode(getter_AddRefs(docDomNode));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(docDomNode));
+  if (doc) {
+    nsCOMPtr<nsISupports> container = doc->GetContainer();
+    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = do_QueryInterface(container);
+    if (!docShellTreeItem) {
+      return;
+    }
+    nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
+    docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+    if (sameTypeRoot != docShellTreeItem) {
+      // A frame or iframe has finished loading new content
+      docAcc->InvalidateCacheSubtree(nsnull, nsIAccessibleEvent::EVENT_REORDER);
+      return;
+    }
+
+    // Fire STATE_CHANGE event for doc load finish if focus is in same doc tree
+    if (gLastFocusedNode) {
+      nsCOMPtr<nsIDocShellTreeItem> focusedTreeItem =
+        GetDocShellTreeItemFor(gLastFocusedNode);
+      if (focusedTreeItem) {
+        nsCOMPtr<nsIDocShellTreeItem> sameTypeRootOfFocus;
+        focusedTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRootOfFocus));
+        if (sameTypeRoot == sameTypeRootOfFocus) {
+          docAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE,
+                                  docAcc, nsnull);
+          docAcc->FireAnchorJumpEvent();
+        }
+      }
+    }
+  }
 }
 

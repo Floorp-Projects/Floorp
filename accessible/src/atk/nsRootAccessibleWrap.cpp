@@ -141,7 +141,7 @@ nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
     }
 #endif
   
-    AtkStateChange stateData;
+    StateChange stateData;
     if (eventType.LowerCaseEqualsLiteral("focus")) {
 #ifdef MOZ_XUL
         if (treeItemAccessible) { // use focused treeitem
