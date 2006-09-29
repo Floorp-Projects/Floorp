@@ -1,0 +1,116 @@
+#!/usr/bin/perl -w
+use strict;
+
+use Getopt::Long;
+use MozBuild::Util;
+use Bootstrap::Step::Tag;
+use Bootstrap::Step::Build;
+use Bootstrap::Step::Source;
+use Bootstrap::Step::Repack;
+use Bootstrap::Step::Updates;
+use Bootstrap::Step::Stage;
+use Bootstrap::Step::Sign;
+use Bootstrap::Step::Release;
+
+my @allSteps = (
+    'Tag',
+    'Build',
+    'Source',
+    'Repack',
+    'Updates',
+    'Stage',
+    'Sign',
+    'Release',
+);
+
+my %config;
+
+sub main {
+    ProcessArgs();
+    DetermineSteps();
+}
+
+sub ProcessArgs {
+    GetOptions(
+        \%config,
+        "step|s=s", "only|o=s", "list|l", "help|h",
+    );
+
+    if ($config{'list'}) {
+        print "Bootstrap listing all steps.\n";
+        for my $step (@allSteps) {
+            print "$step\n";
+        }
+        exit(0);
+    }
+
+    if ($config{'help'}) {
+        print "Usage: release [-l] [-s Step] [-o Step] [-h]\n";
+        print "    -l list all Steps\n";
+        print "    -s start at Step\n";
+        print "    -o only run one Step\n";
+        print "    -h this usage message\n";
+        exit(0);
+    }
+}
+
+sub DetermineSteps() {
+    my $currentStep = 0;
+    my $desiredStep;
+
+    if (defined($config{'step'})) {
+        $desiredStep = $config{'step'};
+        print "Bootstrap skip to step: $desiredStep\n";
+    }
+    if (defined($config{'only'})) {
+        $desiredStep = $config{'only'};
+        print "Bootstrap only run step: $desiredStep\n";
+    }
+    if (defined($desiredStep)) {
+        my $stepNumber = 0;
+        for my $stepName (@allSteps) {
+            if ($stepName eq "$desiredStep") {
+                $currentStep = $stepNumber;
+            } else {
+                $stepNumber += 1;
+            }
+            if ($stepNumber > $#allSteps) {
+                die("Step $desiredStep not found!\n");
+            }
+        }
+    } else {
+        print "Bootstrap running default steps.\n";
+    }
+
+    while ($currentStep < $#allSteps) {
+        my $stepName = $allSteps[$currentStep];
+        PerformStep( 'stepName' => $stepName );
+        $currentStep += 1;
+        if (defined($config{'only'})) {
+            if ($config{'only'} eq $stepName) {
+                 exit(0);
+            }
+        }
+    }
+
+    print "Bootstrap finished all steps.\n";
+}
+
+
+sub PerformStep {
+    my %args = @_;
+    my $stepName = $args{'stepName'};
+    print "Bootstrap running $stepName\n";
+    my $step = "Bootstrap::Step::$stepName"->new();
+    eval {
+        $step->Execute();
+        $step->Verify();
+    };
+    if ($@) 
+    {
+        print "Step $stepName died: $@";
+        exit(1);
+    }
+}
+
+&main();
