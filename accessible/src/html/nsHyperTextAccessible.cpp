@@ -680,11 +680,18 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     }
   }
 
+  // Fix word error for the first character in word: PeekOffset() will return the previous word when 
+  // aOffset points to the first character of the word, but accessibility APIs want the current word 
+  // that the first character is in
+  if (aType == eGetAt && amount == eSelectWord && aOffset == endOffset) { 
+    return GetTextHelper(eGetAfter, aBoundaryType, aOffset, aStartOffset, aEndOffset, aText);
+  }
+
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
 
-  NS_ASSERTION(startOffset <= aOffset && aType != eGetAfter, "Incorrect results for GetTextHelper");
-  NS_ASSERTION(endOffset > aOffset && aType != eGetBefore, "Incorrect results for GetTextHelper");
+  NS_ASSERTION((startOffset < aOffset && endOffset >= aOffset) || aType != eGetBefore, "Incorrect results for GetTextHelper");
+  NS_ASSERTION((startOffset <= aOffset && endOffset > aOffset) || aType == eGetBefore, "Incorrect results for GetTextHelper");
 
   return GetPosAndText(startOffset, endOffset, &aText) ? NS_OK : NS_ERROR_FAILURE;
 }
