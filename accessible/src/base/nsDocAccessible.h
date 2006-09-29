@@ -122,6 +122,14 @@ class nsDocAccessible : public nsHyperTextAccessible,
     PRPackedBool mIsContentLoaded;
     nsCOMArray<nsIAccessibleEvent> mEventsToFire;
     nsCOMPtr<nsIEditor> mEditor;
+
+protected:
+    PRBool mIsAnchor;
+    PRBool mIsAnchorJumped;
+
+private:
+    static void DocLoadCallback(nsITimer *aTimer, void *aClosure);
+    nsCOMPtr<nsITimer> mDocLoadTimer;
 };
 
 #endif  

@@ -59,7 +59,7 @@ interface nsIDOMNode;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(87F29033-C4A6-40a3-AC7A-3BA391F9992D)]
+[scriptable, uuid(b298afc0-4158-11db-b0de-0800200c9a66)]
 interface nsIAccessibleEvent : nsISupports
 {
   /**
@@ -127,6 +127,11 @@ interface nsIAccessibleEvent : nsISupports
   const unsigned long EVENT_SCROLLINGEND       = 0x0013;
   const unsigned long EVENT_MINIMIZESTART      = 0x0016;
   const unsigned long EVENT_MINIMIZEEND        = 0x0017;
+  const unsigned long EVENT_DOCUMENT_LOAD_START         = 0x0018;
+  const unsigned long EVENT_DOCUMENT_LOAD_COMPLETE      = 0x0019;
+  const unsigned long EVENT_DOCUMENT_RELOAD             = 0x0020;
+  const unsigned long EVENT_DOCUMENT_LOAD_STOPPED       = 0x0021;
+  const unsigned long EVENT_DOCUMENT_ATTRIBUTES_CHANGED = 0x0022;
 
   // the additional events for ATK
   const unsigned long EVENT_ATK_PROPERTY_CHANGE        = 0x0100;

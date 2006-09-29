@@ -80,11 +80,11 @@ class nsAccessibleEventData: public nsIAccessibleEvent
 //     e.g., nsAccessibleTextChangeEvent: public nsIAccessibleTextChangeEvent
 //           
 
-struct AtkStateChange {
+struct StateChange {
   PRUint32 state;
   PRUint32 extState;
   PRBool   enable;
-  AtkStateChange() {
+  StateChange() {
     state = 0;
     extState = 0;
     enable = PR_FALSE;

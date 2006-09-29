@@ -336,36 +336,12 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireAnchorJumpEvent()
   // the can only relate events back to their internal model if it's a leaf.
   // There is usually an accessible for the focus node, but if it's an empty text node
   // we have to move forward in the document to get one
-  if (!mIsContentLoaded || !mDocument) {
+  nsDocAccessible::FireAnchorJumpEvent();
+  if (!mIsAnchorJumped)
     return NS_OK;
-  }
-  nsCOMPtr<nsISupports> container = mDocument->GetContainer();
-  nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(container));
-  nsCAutoString theURL;
-  if (webNav) {
-    nsCOMPtr<nsIURI> pURI;
-    webNav->GetCurrentURI(getter_AddRefs(pURI));
-    if (pURI) {
-      pURI->GetSpec(theURL);
-    }
-  }
-  const char kHash = '#';
-  PRBool hasAnchor = PR_FALSE;
-  PRInt32 hasPosition = theURL.FindChar(kHash);
-  if (hasPosition > 0 && hasPosition < (PRInt32)theURL.Length() - 1) {
-    hasAnchor = PR_TRUE;
-  }
-
-  // mWasAnchor is set when the previous URL included a named anchor.
-  // This way we still know to fire the EVENT_SCROLLINGSTART event when we
-  // move from a named anchor back to the top.
-  if (!mWasAnchor && !hasAnchor) {
-    return NS_OK;
-  }
-  mWasAnchor = hasAnchor;
 
   nsCOMPtr<nsIDOMNode> focusNode;
-  if (hasAnchor) {
+  if (mIsAnchor) {
     nsCOMPtr<nsISelectionController> selCon(do_QueryReferent(mWeakShell));
     if (!selCon) {
       return NS_OK;
@@ -387,95 +363,6 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireAnchorJumpEvent()
     privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_SCROLLINGSTART,
                                         accessible, nsnull);
   }
-  return NS_OK;
-}
-
-void nsDocAccessibleWrap::DocLoadCallback(nsITimer *aTimer, void *aClosure)
-{
-  // Doc has finished loading, fire "load finished" event
-  // By using short timer we can wait for MS Windows to make the window visible,
-  // which it does asynchronously. This avoids confusing the screen reader with a
-  // hidden window. Waiting also allows us to see of the document has focus,
-  // which is important because we only fire doc loaded events for focused documents.
-
-  nsDocAccessibleWrap *docAcc =
-    NS_REINTERPRET_CAST(nsDocAccessibleWrap*, aClosure);
-  if (!docAcc) {
-    return;
-  }
-
-  // Fire doc finished event
-  nsCOMPtr<nsIDOMNode> docDomNode;
-  docAcc->GetDOMNode(getter_AddRefs(docDomNode));
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(docDomNode));
-  if (doc) {
-    nsCOMPtr<nsISupports> container = doc->GetContainer();
-    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = do_QueryInterface(container);
-    if (!docShellTreeItem) {
-      return;
-    }
-    nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
-    docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
-    if (sameTypeRoot != docShellTreeItem) {
-      // A frame or iframe has finished loading new content
-      docAcc->InvalidateCacheSubtree(nsnull, nsIAccessibleEvent::EVENT_REORDER);
-      return;
-    }
-
-    // Fire STATE_CHANGE event for doc load finish if focus is in same doc tree
-    if (gLastFocusedNode) {
-      nsCOMPtr<nsIDocShellTreeItem> focusedTreeItem =
-        GetDocShellTreeItemFor(gLastFocusedNode);
-      if (focusedTreeItem) {
-        nsCOMPtr<nsIDocShellTreeItem> sameTypeRootOfFocus;
-        focusedTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRootOfFocus));
-        if (sameTypeRoot == sameTypeRootOfFocus) {
-          docAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE,
-                                  docAcc, nsnull);
-          docAcc->FireAnchorJumpEvent();
-        }
-      }
-    }
-  }
-}
-
-NS_IMETHODIMP nsDocAccessibleWrap::FireDocLoadingEvent(PRBool aIsFinished)
-{
-  if (!mDocument || !mWeakShell)
-    return NS_OK;  // Document has been shut down
-
-  if (mIsContentLoaded == aIsFinished) {
-    return NS_OK;  // Already fired the event
-  }
-
-  nsDocAccessible::FireDocLoadingEvent(aIsFinished);
-
-  if (aIsFinished) {
-    // Use short timer before firing state change event for finished doc,
-    // because the window is made visible asynchronously by Microsoft Windows
-    if (!mDocLoadTimer) {
-      mDocLoadTimer = do_CreateInstance("@mozilla.org/timer;1");
-    }
-    if (mDocLoadTimer) {
-      mDocLoadTimer->InitWithFuncCallback(DocLoadCallback, this, 0,
-                                          nsITimer::TYPE_ONE_SHOT);
-    }
-  }
-  else {
-    nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShellTreeItemFor(mDOMNode);
-    if (!treeItem) {
-      return NS_OK;
-    }
-
-    nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
-    treeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
-    if (sameTypeRoot != treeItem) {
-      return NS_OK; // We only fire MSAA doc loading events for root content frame
-    }
-
-    FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, nsnull);
-  }
-
   return NS_OK;
 }
 

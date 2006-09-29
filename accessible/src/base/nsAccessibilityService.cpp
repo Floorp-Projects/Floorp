@@ -79,6 +79,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIWebProgress.h"
+#include "nsNetError.h"
+#include "nsDocShellLoadTypes.h"
 
 #ifdef MOZ_XUL
 #include "nsXULAlertAccessible.h"
@@ -163,7 +165,7 @@ NS_IMETHODIMP nsAccessibilityService::OnStateChange(nsIWebProgress *aWebProgress
 {
   NS_ASSERTION(aStateFlags & STATE_IS_DOCUMENT, "Other notifications excluded");
 
-  if (0 == (aStateFlags & (STATE_START | STATE_STOP)) || NS_FAILED(aStatus)) {
+  if (0 == (aStateFlags & (STATE_START | STATE_STOP))) {
     return NS_OK;
   }
 
@@ -196,9 +198,31 @@ NS_IMETHODIMP nsAccessibilityService::OnStateChange(nsIWebProgress *aWebProgress
   nsCOMPtr<nsPIAccessibleDocument> docAccessible =
     do_QueryInterface(accessible);
   NS_ENSURE_TRUE(docAccessible, NS_ERROR_FAILURE);
-  PRBool isFinished = !(aStateFlags & STATE_START);
 
-  docAccessible->FireDocLoadingEvent(isFinished);
+  PRUint32 eventType = 0;
+  if ((aStateFlags & STATE_STOP) && NS_SUCCEEDED(aStatus)) {
+    eventType = nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE;
+  } else if ((aStateFlags & STATE_STOP) && (aStatus & NS_BINDING_ABORTED)) {
+    eventType = nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED;
+  } else if (aStateFlags & STATE_START) {
+    eventType = nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_START;
+    nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(domWindow));
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webNav));
+    NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+    PRUint32 loadType;
+    docShell->GetLoadType(&loadType);
+    if (loadType == LOAD_RELOAD_NORMAL ||
+        loadType == LOAD_RELOAD_BYPASS_CACHE ||
+        loadType == LOAD_RELOAD_BYPASS_PROXY ||
+        loadType == LOAD_RELOAD_BYPASS_PROXY_AND_CACHE) {
+      eventType = nsIAccessibleEvent::EVENT_DOCUMENT_RELOAD;
+    }
+  }
+      
+  if (eventType == 0)
+    return NS_OK; //no actural event need to be fired
+
+  docAccessible->FireDocLoadEvents(eventType);
 
   return NS_OK;
 }

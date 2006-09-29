@@ -118,34 +118,34 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
       } break;
 
     case nsIAccessibleEvent::EVENT_STATE_CHANGE:
-        AtkStateChange *pAtkStateChange;
+        StateChange *pStateChange;
         AtkStateType atkState;
 
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_STATE_CHANGE\n"));
         if (!aEventData)
             break;
 
-        pAtkStateChange = NS_REINTERPRET_CAST(AtkStateChange *, aEventData);
+        pStateChange = NS_REINTERPRET_CAST(StateChange *, aEventData);
 
-        switch (pAtkStateChange->state) {
+        switch (pStateChange->state) {
         case nsIAccessible::STATE_INVISIBLE:
             atkState = ATK_STATE_VISIBLE;
-            pAtkStateChange->enable = !pAtkStateChange->enable;
+            pStateChange->enable = !pStateChange->enable;
             break;
         case nsIAccessible::STATE_UNAVAILABLE:
             atkState = ATK_STATE_ENABLED;
-            pAtkStateChange->enable = !pAtkStateChange->enable;
+            pStateChange->enable = !pStateChange->enable;
             break;
         case nsIAccessible::STATE_READONLY:
             atkState = ATK_STATE_EDITABLE;
-            pAtkStateChange->enable = !pAtkStateChange->enable;
+            pStateChange->enable = !pStateChange->enable;
             break;
         default:
-            atkState = TranslateAState(pAtkStateChange->state, pAtkStateChange->extState);
+            atkState = TranslateAState(pStateChange->state, pStateChange->extState);
         }
 
         atk_object_notify_state_change(accWrap->GetAtkObject(),
-                                       atkState, pAtkStateChange->enable);
+                                       atkState, pStateChange->enable);
         rv = NS_OK;
         break;
       
@@ -457,6 +457,38 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
         rv = NS_OK;
       } break;
 
+    case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
+      {
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_DOCUMENT_LOAD_COMPLETE\n"));
+        g_signal_emit_by_name (accWrap->GetAtkObject(),
+                               "load_complete");
+        rv = NS_OK;
+      } break;
+
+    case nsIAccessibleEvent::EVENT_DOCUMENT_RELOAD:
+      {
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_DOCUMENT_RELOAD\n"));
+        g_signal_emit_by_name (accWrap->GetAtkObject(),
+                               "reload");
+        rv = NS_OK;
+      } break;
+
+    case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED:
+      {
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_DOCUMENT_LOAD_STOPPED\n"));
+        g_signal_emit_by_name (accWrap->GetAtkObject(),
+                               "load_stopped");
+        rv = NS_OK;
+      } break;
+
+    case nsIAccessibleEvent::EVENT_DOCUMENT_ATTRIBUTES_CHANGED:
+      {
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_DOCUMENT_ATTRIBUTES_CHANGED\n"));
+        g_signal_emit_by_name (accWrap->GetAtkObject(),
+                               "attriubtes_changed");
+        rv = NS_OK;
+      } break;
+
     default:
         // Don't transfer others
         MAI_LOG_DEBUG(("\n\nReceived an unknown event=0x%u\n", aEvent));
@@ -538,19 +570,3 @@ TranslateAState(PRUint32 aState, PRUint32 aExtState)
     return ATK_STATE_INVALID;
 }
 
-NS_IMETHODIMP nsDocAccessibleWrap::FireDocLoadingEvent(PRBool aIsFinished)
-{
-  if (!mDocument || !mWeakShell)
-    return NS_OK;  // Document has been shut down
-
-  if (!aIsFinished) {
-    // Load has been verified, it will occur, about to commence
-    AtkChildrenChange childrenData;
-    childrenData.index = -1;
-    childrenData.child = 0;
-    childrenData.add = PR_FALSE;
-    FireToolkitEvent(nsIAccessibleEvent::EVENT_REORDER, this, &childrenData);
-  }
-
-  return nsDocAccessible::FireDocLoadingEvent(aIsFinished);
-}
