@@ -1,0 +1,59 @@
+Bootstrap Release 
+-----------------
+
+Bootstrap is a release automation tool.
+Use "release -h" for help.
+
+Tools run first
+-----------------
+* checklist/config generator
+* version bump tool
+
+Steps are in dependency order. The process may be restarted at any step as 
+long as all previous steps are satisfied.
+
+PASS/FAIL verification is run after every step.
+
+Steps 
+-----------------
+1) tag 
+2) build 
+3) source
+4) repack
+5) updates
+6) stage
+7) sign
+8) release
+   
+Details
+-----------------
+tag 
+   _RELEASE and _RCn for mozilla and talkback
+build 
+  en-US build from source (based on tag)
+  push to stage
+  announce
+source
+  bz2 archive based on tag
+  push to stage
+repack
+  repack l10n, uses en-US build
+  push to stage
+  announce
+updates
+  uses patcher
+  generate partials and AUS config ("snippets")
+  push to stage
+  announce
+stage
+  uses groom-files
+  create release directory/filename structure
+  merge updates
+  announce
+sign
+  manual
+release
+  create bouncer links
+  rsync builds to mirrors
+  rsync production AUS config
+  announce
