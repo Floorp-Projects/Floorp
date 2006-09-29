@@ -31,7 +31,7 @@ sub timezone {
     my $offset = tz_offset();
     $offset = (($offset / 60) / 60) * 100;
     $offset = sprintf('%+05d', $offset);
-    return 'GMT' . $offset;
+    return $offset;
 }
 
 1;
@@ -64,8 +64,8 @@ Returns the current version of Bugzilla, as a string.
 
 =item C<timezone>
 
-Returns the timezone of the server Bugzilla is running on, in GMT(+/-)XXXX 
-format. This is important because all dates/times that the webservice
-interface returns will be in this timezone.
+Returns the timezone of the server Bugzilla is running on, in (+/-)XXXX
+(RFC 2822) format. This is important because all dates/times that the
+webservice interface returns will be in this timezone.
 
 =back
