@@ -41,7 +41,8 @@
 interface nsIAccessNode;
 interface nsIContent;
 
-[uuid(eae56f75-ee68-4120-b113-10f21b75509e)]
+[uuid(08811f23-1298-4882-9a68-6f1466c28007)]
+
 interface nsPIAccessibleDocument : nsISupports
 {
    /**
