@@ -480,25 +480,8 @@
         </menu>
 
 #ifdef XP_MACOSX
-        <menu id="windowMenu" label="&windowMenu.label;"
-            datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot"
-            onpopupshown="checkFocusedWindow();">
-            <template>
-            <rule>
-                <menupopup>
-                <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name" type="radio"
-                            name="windowList" oncommand="ShowWindowFromResource(event.target)"/>
-                </menupopup>
-            </rule>
-            </template>
-            <menupopup id="windowPopup">
-              <menuitem command="minimizeWindow" key="key_minimizeWindow"/>
-              <menuitem command="zoomWindow"/>
-              <menuseparator/>
-              <menuitem accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" oncommand="toMessengerWindow();" id="tasksMenuMail" class="menuitem-iconic icon-mail16 menu-iconic"/>
-              <menuseparator id="sep-window-list"/>  
-            </menupopup>
-        </menu>
+<!-- Mac window menu -->
+#include ../../../../toolkit/content/macWindowMenu.inc
 #endif
         <menu label="&helpMenu.label;" accesskey="&helpMenu.accesskey;">
           <menupopup id="menu_HelpPopup">

@@ -1154,9 +1154,9 @@
           </menu>
           <menuitem id="menu_close"/>
           <menuseparator/>
-          <menu label="&saveAsMenu.label;" accesskey="&saveAsMenu.accesskey;">
+          <menu id="menu_saveAs" label="&saveAsMenu.label;" accesskey="&saveAsMenu.accesskey;">
             <menupopup>
-              <menuitem label="&saveAsFileCmd.label;"
+              <menuitem id="menu_saveAsFile" label="&saveAsFileCmd.label;"
                accesskey="&saveAsFileCmd.accesskey;"
                key="key_saveAsFile"
                observes="cmd_saveAsFile"/>
@@ -1226,22 +1226,22 @@
         <menuitem id="menu_paste"/>
         <menuitem id="menu_delete" observes="cmd_delete"/>
         <menuseparator/>
-        <menu label="&selectMenu.label;" accesskey="&selectMenu.accesskey;">
+        <menu id="menu_select" label="&selectMenu.label;" accesskey="&selectMenu.accesskey;">
           <menupopup>
             <menuitem label="&all.label;" accesskey="&all.accesskey;" key="key_selectAll"
                       command="cmd_selectAll"/>
             <menuseparator/>
-            <menuitem label="&selectThreadCmd.label;"
+            <menuitem id="menu_selectThread" label="&selectThreadCmd.label;"
              accesskey="&selectThreadCmd.accesskey;"
              key="key_selectThread"
              observes="cmd_selectThread"/>
           </menupopup>
         </menu>
         <menuseparator/>
-        <menu label="&findMenu.label;" accesskey="&findMenu.accesskey;">
+        <menu id="menu_find" label="&findMenu.label;" accesskey="&findMenu.accesskey;">
           <menupopup>
-            <menuitem label="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
-            <menuitem label="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
+            <menuitem id="menu_findCmd" label="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
+            <menuitem id="menu_findAgainCmd" label="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
             <menuseparator/>
             <menuitem id="searchMailCmd" label="&searchMailCmd.label;" 
                       key="key_searchMail" 
@@ -1376,8 +1376,8 @@
               <menuseparator/>
               <menuitem id="viewIgnoredThreadsMenuItem" type="checkbox" label="&ignoredThreadsCmd.label;" disabled="true" observes="cmd_viewIgnoredThreads" accesskey="&ignoredThreadsCmd.accesskey;"/>
               <menuseparator/>
-              <menuitem label="&expandAllThreadsCmd.label;" accesskey="&expandAllThreadsCmd.accesskey;" key="key_expandAllThreads" disabled="true" observes="cmd_expandAllThreads"/>
-              <menuitem label="&collapseAllThreadsCmd.label;" accesskey="&collapseAllThreadsCmd.accesskey;" key="key_collapseAllThreads" disabled="true" observes="cmd_collapseAllThreads"/>
+              <menuitem id="menu_expandAllThreads" label="&expandAllThreadsCmd.label;" accesskey="&expandAllThreadsCmd.accesskey;" key="key_expandAllThreads" disabled="true" observes="cmd_expandAllThreads"/>
+              <menuitem id="collapseAllThreads" label="&collapseAllThreadsCmd.label;" accesskey="&collapseAllThreadsCmd.accesskey;" key="key_collapseAllThreads" disabled="true" observes="cmd_collapseAllThreads"/>
             </menupopup>
           </menu>
 
@@ -1417,11 +1417,11 @@
             oncommand="ToggleInlineAttachment(event.target)" type="checkbox" checked="true"/>
           <menuseparator/>
 
-          <menu label="&textSize.label;" accesskey="&textSize.accesskey;">
+          <menu id="viewTextSizeMenu" label="&textSize.label;" accesskey="&textSize.accesskey;">
             <menupopup>
-          <menuitem key="key_textZoomEnlarge" label="&textZoomEnlargeCmd.label;" accesskey="&textZoomEnlargeCmd.accesskey;"
+          <menuitem id="menu_textZoomEnlarge" key="key_textZoomEnlarge" label="&textZoomEnlargeCmd.label;" accesskey="&textZoomEnlargeCmd.accesskey;"
                     command="cmd_textZoomEnlarge"/>
-          <menuitem key="key_textZoomReduce" label="&textZoomReduceCmd.label;" accesskey="&textZoomReduceCmd.accesskey;"
+          <menuitem id="menu_textZoomReduce" key="key_textZoomReduce" label="&textZoomReduceCmd.label;" accesskey="&textZoomReduceCmd.accesskey;"
                     command="cmd_textZoomReduce"/>
               <menuseparator/>
               <menuitem key="key_textZoomReset" label="&textZoomResetCmd.label;" accesskey="&textZoomResetCmd.accesskey;" command="cmd_textZoomReset"/>
@@ -1439,19 +1439,19 @@
           <menupopup  onpopupshowing="InitGoMessagesMenu();">
           <menu id="goNextMenu" label="&nextMenu.label;" accesskey="&nextMenu.accesskey;">
             <menupopup>
-              <menuitem label="&nextMsgCmd.label;" accesskey="&nextMsgCmd.accesskey;" observes="cmd_nextMsg"
+              <menuitem id="menu_nextMsg" label="&nextMsgCmd.label;" accesskey="&nextMsgCmd.accesskey;" observes="cmd_nextMsg"
 #ifndef XP_MACOSX
                         key="key_nextMsg"
 #endif
               />
-              <menuitem label="&nextUnreadMsgCmd.label;" accesskey="&nextUnreadMsgCmd.accesskey;" observes="cmd_nextUnreadMsg"
+              <menuitem id="menu_nextUnreadMsg" label="&nextUnreadMsgCmd.label;" accesskey="&nextUnreadMsgCmd.accesskey;" observes="cmd_nextUnreadMsg"
 #ifndef XP_MACOSX
                         key="key_nextUnreadMsg"
 #endif
               />
-              <menuitem label="&nextStarredMsgCmd.label;" accesskey="&nextStarredMsgCmd.accesskey;" observes="cmd_nextFlaggedMsg"/>
+              <menuitem id="menu_nextStarredMsg" label="&nextStarredMsgCmd.label;" accesskey="&nextStarredMsgCmd.accesskey;" observes="cmd_nextFlaggedMsg"/>
               <menuseparator/>
-              <menuitem label="&nextUnreadThread.label;" accesskey="&nextUnreadThreadCmd.accesskey;" observes="cmd_nextUnreadThread"
+              <menuitem id="menu_nextUnreadThread" label="&nextUnreadThread.label;" accesskey="&nextUnreadThreadCmd.accesskey;" observes="cmd_nextUnreadThread"
 #ifndef XP_MACOSX
                         key="key_nextUnreadThread"
 #endif
@@ -1460,25 +1460,25 @@
           </menu>
           <menu id="goPreviousMenu" label="&prevMenu.label;" accesskey="&prevMenu.accesskey;">
             <menupopup>
-              <menuitem label="&prevMsgCmd.label;" accesskey="&previousMsgCmd.accesskey;" observes="cmd_previousMsg"
+              <menuitem id="menu_prevMsg" label="&prevMsgCmd.label;" accesskey="&previousMsgCmd.accesskey;" observes="cmd_previousMsg"
 #ifndef XP_MACOSX
                         key="key_previousMsg"
 #endif
               />
-              <menuitem label="&prevUnreadMsgCmd.label;" accesskey="&previousUnreadMsgCmd.accesskey;" observes="cmd_previousUnreadMsg"
+              <menuitem id="menu_prevUnreadMsg" label="&prevUnreadMsgCmd.label;" accesskey="&previousUnreadMsgCmd.accesskey;" observes="cmd_previousUnreadMsg"
 #ifndef XP_MACOSX
                         key="key_previousUnreadMsg"
 #endif
               />
-              <menuitem label="&prevStarredMsgCmd.label;" accesskey="&prevStarredMsgCmd.accesskey;" observes="cmd_previousFlaggedMsg"/>
+              <menuitem id="menu_prevStarredMsg" label="&prevStarredMsgCmd.label;" accesskey="&prevStarredMsgCmd.accesskey;" observes="cmd_previousFlaggedMsg"/>
             </menupopup>
           </menu>
-          <menuitem label="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;" observes="cmd_goForward"
+          <menuitem id="menu_goForward" label="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;" observes="cmd_goForward"
 #ifndef XP_MACOSX
                     key="key_goForward"
 #endif
           />
-          <menuitem label="&goBackCmd.label;" accesskey="&goBackCmd.accesskey;" observes="cmd_goBack"
+          <menuitem id="menu_goBack" label="&goBackCmd.label;" accesskey="&goBackCmd.accesskey;" observes="cmd_goBack"
 #ifndef XP_MACOSX
                     key="key_goBack"
 #endif
@@ -1506,11 +1506,11 @@
               accesskey="&replyNewsgroupCmd.accesskey;"
               key="key_reply"
               observes="cmd_replyGroup"/>
-            <menuitem label="&replyToAllMsgCmd.label;"
+            <menuitem id="menu_replyToAll" label="&replyToAllMsgCmd.label;"
               accesskey="&replyToAllMsgCmd.accesskey;"
               key="key_replyall"
               observes="cmd_replyall"/>
-            <menuitem label="&forwardMsgCmd.label;"
+            <menuitem id="menu_forwardMsg" label="&forwardMsgCmd.label;"
               accesskey="&forwardMsgCmd.accesskey;"
               key="key_forward"
               observes="cmd_forward"/>
@@ -1520,7 +1520,7 @@
                 <menuitem label="&forwardAsAttachmentCmd.label;" accesskey="&forwardAsAttachmentCmd.accesskey;" observes="cmd_forwardAttachment"/>
               </menupopup>
             </menu>
-            <menuitem label="&editMsgAsNewCmd.label;"
+            <menuitem id="menu_editMsgAsNew" label="&editMsgAsNewCmd.label;"
                 accesskey="&editMsgAsNewCmd.accesskey;"
                 key="key_editAsNew"
                 observes="cmd_editAsNew"/>
@@ -1723,17 +1723,17 @@
                       key="key_toggleRead"
 #endif
               />
-                <menuitem label="&markThreadAsReadCmd.label;" accesskey="&markThreadAsReadCmd.accesskey;" observes="cmd_markThreadAsRead"
+                <menuitem id="menu_markThreadAsRead" label="&markThreadAsReadCmd.label;" accesskey="&markThreadAsReadCmd.accesskey;" observes="cmd_markThreadAsRead"
 #ifndef XP_MACOSX
                       key="key_markThreadAsRead"
 #endif
               />
-                <menuitem label="&markReadByDateCmd.label;" accesskey="&markReadByDateCmd.accesskey;" command="cmd_markReadByDate"
+                <menuitem id="menu_markReadByDate" label="&markReadByDateCmd.label;" accesskey="&markReadByDateCmd.accesskey;" command="cmd_markReadByDate"
 #ifndef XP_MACOSX
                       key="key_markReadByDate"
 #endif
               />
-                <menuitem label="&markAllReadCmd.label;" key="key_markAllRead" accesskey="&markAllReadCmd.accesskey;" observes="cmd_markAllRead"/>
+                <menuitem id="menu_markAllRead" label="&markAllReadCmd.label;" key="key_markAllRead" accesskey="&markAllReadCmd.accesskey;" observes="cmd_markAllRead"/>
                 <menuseparator/>
                 <menuitem id="markFlaggedMenuItem" 
                           type="checkbox" 
@@ -1745,14 +1745,14 @@
 #endif
               />
                 <menuseparator/>
-                <menuitem label="&markAsJunkCmd.label;" 
+                <menuitem id="menu_markAsJunk" label="&markAsJunkCmd.label;" 
                           accesskey="&markAsJunkCmd.accesskey;" 
                           observes="cmd_markAsJunk"
 #ifndef XP_MACOSX
                       key="key_markJunk"
 #endif
               />
-                <menuitem label="&markAsNotJunkCmd.label;"
+                <menuitem id="menu_markAsNotJunk" label="&markAsNotJunkCmd.label;"
                           key="key_markNotJunk" 
                       accesskey="&markAsNotJunkCmd.accesskey;" 
                       observes="cmd_markAsNotJunk"/>
@@ -1813,7 +1813,7 @@
 	          accesskey="&deleteJunk.accesskey;"
 	          observes="cmd_deleteJunk"/>
         <menuseparator/>
-        <menuitem label="&importCmd.label;" 
+        <menuitem id="menu_import" label="&importCmd.label;" 
                   accesskey="&importCmd.accesskey;" 
                   oncommand="toImport();"/>
         <menuitem id="javaScriptConsole" label="&errorConsoleCmd.label;" accesskey="&errorConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
@@ -1836,27 +1836,8 @@
       </menu>    
 
 #ifdef XP_MACOSX
-<!-- XXXnoririty localize! -->
-      <menu id="windowMenu" label="&windowMenu.label;"
-          datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot"
-          onpopupshown="checkFocusedWindow();">
-          <template>
-          <rule>
-              <menupopup>
-              <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name" type="radio"
-                          name="windowList" oncommand="ShowWindowFromResource(event.target)"/>
-              </menupopup>
-          </rule>
-          </template>
-          <menupopup id="windowPopup">
-            <menuitem command="minimizeWindow" key="key_minimizeWindow"/>
-            <menuitem command="zoomWindow"/>
-            <menuseparator/>
-              <menuitem accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" command="Tasks:Mail" id="tasksMenuMail" class="menuitem-iconic icon-mail16 menu-iconic"/>
-              <menuitem label="&addressBookCmd.label;" accesskey="&addressBookCmd.accesskey;" key="key_addressbook" command="Tasks:AddressBook" id="tasksMenuAddressBook" class="menuitem-iconic icon-addressbook16 menu-iconic"/>
-            <menuseparator id="sep-window-list"/>  
-          </menupopup>
-      </menu>
+<!-- Mac window menu -->
+#include ../../../toolkit/content/macWindowMenu.inc
 #endif
       
       <!-- Help -->
