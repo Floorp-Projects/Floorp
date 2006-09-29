@@ -3944,8 +3944,12 @@ if test "$SYSTEM_PNG" = 1; then
 	#include <sys/types.h>
 	#include <png.h>
 	int main () {
-	    #if PNG_LIBPNG_VER >= $MOZPNG
-		exit(0);
+            #if PNG_LIBPNG_VER >= $MOZPNG
+                #ifdef PNG_UINT_31_MAX
+		    exit(0);
+	        #else
+	            exit(1);
+                #endif
 	    #else
 		exit(1);
 	    #endif
@@ -5629,6 +5633,10 @@ MOZ_ARG_ENABLE_STRING(image-decoders,
 done],
     MOZ_IMG_DECODERS="$MOZ_IMG_DECODERS_DEFAULT")
 
+if test `echo "$MOZ_IMG_DECODERS" | grep -c png` -ne 0; then
+    MOZ_PNG_CFLAGS="$MOZ_PNG_CFLAGS -DMOZ_PNG_READ"
+fi
+
 dnl Dupes are removed in the encoder section because it will also add decoders
 
 dnl ========================================================
@@ -5654,6 +5662,10 @@ MOZ_ARG_ENABLE_STRING(image-encoders,
     MOZ_IMG_ENCODERS="$MOZ_IMG_ENCODERS $addencoder"
 done],
     MOZ_IMG_ENCODERS="$MOZ_IMG_ENCODERS_DEFAULT")
+
+if test `echo "$MOZ_IMG_ENCODERS" | grep -c png` -ne 0; then
+    MOZ_PNG_CFLAGS="$MOZ_PNG_CFLAGS -DMOZ_PNG_WRITE"
+fi
 
 dnl Remove dupes
 MOZ_IMG_DECODERS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_IMG_DECODERS}`

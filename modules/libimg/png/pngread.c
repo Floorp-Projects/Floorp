@@ -1,9 +1,9 @@
 
 /* pngread.c - read a PNG file
  *
- * libpng 1.2.7 - September 12, 2004
+ * Last changed in libpng 1.2.11 June 7, 2006
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2004 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2006 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -13,6 +13,8 @@
 
 #define PNG_INTERNAL
 #include "png.h"
+
+#if defined(PNG_READ_SUPPORTED)
 
 /* Create a PNG structure for reading, and allocate any memory needed. */
 png_structp PNGAPI
@@ -75,7 +77,7 @@ png_create_read_struct_2(png_const_charp user_png_ver, png_voidp error_ptr,
       png_free(png_ptr, png_ptr->zbuf);
       png_ptr->zbuf=NULL;
 #ifdef PNG_USER_MEM_SUPPORTED
-      png_destroy_struct_2((png_voidp)png_ptr, 
+      png_destroy_struct_2((png_voidp)png_ptr,
          (png_free_ptr)free_fn, (png_voidp)mem_ptr);
 #else
       png_destroy_struct((png_voidp)png_ptr);
@@ -169,9 +171,10 @@ png_create_read_struct_2(png_const_charp user_png_ver, png_voidp error_ptr,
    return (png_ptr);
 }
 
+#if defined(PNG_1_0_X) || defined(PNG_1_2_X)
 /* Initialize PNG structure for reading, and allocate any memory needed.
    This interface is deprecated in favour of the png_create_read_struct(),
-   and it will eventually disappear. */
+   and it will disappear as of libpng-1.3.0. */
 #undef png_read_init
 void PNGAPI
 png_read_init(png_structp png_ptr)
@@ -186,7 +189,7 @@ png_read_init_2(png_structp png_ptr, png_const_charp user_png_ver,
 {
    /* We only come here via pre-1.0.12-compiled applications */
 #if !defined(PNG_NO_STDIO) && !defined(_WIN32_WCE)
-   if(png_sizeof(png_struct) > png_struct_size || 
+   if(png_sizeof(png_struct) > png_struct_size ||
       png_sizeof(png_info) > png_info_size)
    {
       char msg[80];
@@ -222,6 +225,7 @@ png_read_init_2(png_structp png_ptr, png_const_charp user_png_ver,
      }
    png_read_init_3(&png_ptr, user_png_ver, png_struct_size);
 }
+#endif /* PNG_1_0_X || PNG_1_2_X */
 
 void PNGAPI
 png_read_init_3(png_structpp ptr_ptr, png_const_charp user_png_ver,
@@ -393,7 +397,7 @@ png_read_info(png_structp png_ptr, png_infop info_ptr)
 #if defined(PNG_READ_zTXt_SUPPORTED)
       PNG_zTXt;
 #endif
-#endif /* PNG_GLOBAL_ARRAYS */
+#endif /* PNG_USE_LOCAL_ARRAYS */
       png_byte chunk_length[4];
       png_uint_32 length;
 
@@ -409,6 +413,10 @@ png_read_info(png_structp png_ptr, png_infop info_ptr)
       /* This should be a binary subdivision search or a hash for
        * matching the chunk name rather than a linear search.
        */
+      if (!png_memcmp(png_ptr->chunk_name, (png_bytep)png_IDAT, 4))
+        if(png_ptr->mode & PNG_AFTER_IDAT)
+          png_ptr->mode |= PNG_HAVE_CHUNK_AFTER_IDAT;
+
       if (!png_memcmp(png_ptr->chunk_name, png_IHDR, 4))
          png_handle_IHDR(png_ptr, info_ptr, length);
       else if (!png_memcmp(png_ptr->chunk_name, png_IEND, 4))
@@ -734,7 +742,7 @@ png_read_row(png_structp png_ptr, png_bytep row, png_bytep dsp_row)
 
    png_memcpy_check(png_ptr, png_ptr->prev_row, png_ptr->row_buf,
       png_ptr->rowbytes + 1);
-   
+
 #if defined(PNG_MNG_FEATURES_SUPPORTED)
    if((png_ptr->mng_features_permitted & PNG_FLAG_MNG_FILTER_64) &&
       (png_ptr->filter_type == PNG_INTRAPIXEL_DIFFERENCING))
@@ -744,7 +752,8 @@ png_read_row(png_structp png_ptr, png_bytep row, png_bytep dsp_row)
    }
 #endif
 
-   if (png_ptr->transformations)
+
+   if (png_ptr->transformations || (png_ptr->flags&PNG_FLAG_STRIP_ALPHA))
       png_do_read_transformations(png_ptr);
 
 #if defined(PNG_READ_INTERLACING_SUPPORTED)
@@ -803,7 +812,7 @@ png_read_row(png_structp png_ptr, png_bytep row, png_bytep dsp_row)
  * not called png_set_interlace_handling(), the display_row buffer will
  * be ignored, so pass NULL to it.
  *
- * [*] png_handle_alpha() does not exist yet, as of libpng version 1.2.7
+ * [*] png_handle_alpha() does not exist yet, as of this version of libpng
  */
 
 void PNGAPI
@@ -853,7 +862,7 @@ png_read_rows(png_structp png_ptr, png_bytepp row,
  * only call this function once.  If you desire to have an image for
  * each pass of a interlaced image, use png_read_rows() instead.
  *
- * [*] png_handle_alpha() does not exist yet, as of libpng version 1.2.7
+ * [*] png_handle_alpha() does not exist yet, as of this version of libpng
  */
 void PNGAPI
 png_read_image(png_structp png_ptr, png_bytepp image)
@@ -961,7 +970,7 @@ png_read_end(png_structp png_ptr, png_infop info_ptr)
 #if defined(PNG_READ_zTXt_SUPPORTED)
       PNG_zTXt;
 #endif
-#endif /* PNG_GLOBAL_ARRAYS */
+#endif /* PNG_USE_LOCAL_ARRAYS */
 
       png_read_data(png_ptr, chunk_length, 4);
       length = png_get_uint_31(png_ptr,chunk_length);
@@ -980,11 +989,9 @@ png_read_end(png_structp png_ptr, png_infop info_ptr)
       {
          if (!png_memcmp(png_ptr->chunk_name, png_IDAT, 4))
          {
-            if (length > 0 || png_ptr->mode & PNG_AFTER_IDAT)
+            if ((length > 0) || (png_ptr->mode & PNG_HAVE_CHUNK_AFTER_IDAT))
                png_error(png_ptr, "Too many IDAT's found");
          }
-         else
-            png_ptr->mode |= PNG_AFTER_IDAT;
          png_handle_unknown(png_ptr, info_ptr, length);
          if (!png_memcmp(png_ptr->chunk_name, png_PLTE, 4))
             png_ptr->mode |= PNG_HAVE_PLTE;
@@ -995,7 +1002,7 @@ png_read_end(png_structp png_ptr, png_infop info_ptr)
          /* Zero length IDATs are legal after the last IDAT has been
           * read, but not after other chunks have been read.
           */
-         if (length > 0 || png_ptr->mode & PNG_AFTER_IDAT)
+         if ((length > 0) || (png_ptr->mode & PNG_HAVE_CHUNK_AFTER_IDAT))
             png_error(png_ptr, "Too many IDAT's found");
          png_crc_finish(png_ptr, length);
       }
@@ -1449,5 +1456,6 @@ png_read_png(png_structp png_ptr, png_infop info_ptr,
       /* quiet compiler warnings */ return;
 
 }
-#endif
+#endif /* PNG_INFO_IMAGE_SUPPORTED */
 #endif /* PNG_NO_SEQUENTIAL_READ_SUPPORTED */
+#endif /* PNG_READ_SUPPORTED */

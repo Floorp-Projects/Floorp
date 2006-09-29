@@ -1,10 +1,8 @@
 
 Changes made to pristine png source by mozilla.org developers.
 
+2006/06/27  -- Synced with libpng-1.2.12 tree
+
 2004/10/07  -- Synced with libpng-1.2.7 tree
 
 2004/10/07  -- add mozpngconf.h (bug 208607)
-
-2006/09/22  -- fix security problem with too-small error message buffer
-
-2006/09/22  -- fix security problem with too-small gamma-shift array.
