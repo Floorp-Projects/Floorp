@@ -2697,12 +2697,12 @@ nsSimpleGlobalHistory::AutoCompleteSearch(const nsACString& aSearchString,
     if (itemArray.Count() > 1) {
       // sort it
       itemArray.Sort(AutoCompleteSortComparison, nsnull);
+    }
   
-      // place the sorted array into the autocomplete results
-      for (PRInt32 i = 0; i < itemArray.Count(); ++i) {
-        nsIHistoryItem* item = itemArray[i];
-        resultItems->AppendElement(NS_STATIC_CAST(nsISupports*, item));
-      }
+    // place the sorted array into the autocomplete results
+    for (PRInt32 i = 0; i < itemArray.Count(); ++i) {
+      nsIHistoryItem* item = itemArray[i];
+      resultItems->AppendElement(NS_STATIC_CAST(nsISupports*, item));
     }
   }
     
