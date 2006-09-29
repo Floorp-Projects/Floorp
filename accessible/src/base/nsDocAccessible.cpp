@@ -482,6 +482,11 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
     mEditor = nsnull;
   }
 
+  if (mDocLoadTimer) {
+    mDocLoadTimer->Cancel();
+    mDocLoadTimer = nsnull;
+  }
+
   RemoveEventListeners();
 
   mWeakShell = nsnull;  // Avoid reentrancy
