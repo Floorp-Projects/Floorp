@@ -2095,7 +2095,9 @@ PK11_FortezzaHasKEA(CERTCertificate *cert) {
    }
 
    oid = SECOID_FindOID(&cert->subjectPublicKeyInfo.algorithm.algorithm);
-
+   if (!oid) {
+       return PR_FALSE;
+   }
 
    return (PRBool)((oid->offset == SEC_OID_MISSI_KEA_DSS_OLD) || 
 		(oid->offset == SEC_OID_MISSI_KEA_DSS) ||
