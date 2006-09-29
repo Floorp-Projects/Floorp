@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mpi.c,v 1.44 2005/12/14 02:18:35 wtchang%redhat.com Exp $ */
+/* $Id: mpi.c,v 1.45 2006/09/29 20:12:21 alexei.volkov.bugs%sun.com Exp $ */
 
 #include "mpi-priv.h"
 #if defined(OSF1)
@@ -1003,10 +1003,13 @@ mp_err mp_div(const mp_int *a, const mp_int *b, mp_int *q, mp_int *r)
   mp_int   *pQ, *pR;
   mp_int   qtmp, rtmp, btmp;
   int      cmp;
-  mp_sign  signA = MP_SIGN(a);
-  mp_sign  signB = MP_SIGN(b);
+  mp_sign  signA;
+  mp_sign  signB;
 
   ARGCHK(a != NULL && b != NULL, MP_BADARG);
+  
+  signA = MP_SIGN(a);
+  signB = MP_SIGN(b);
 
   if(mp_cmp_z(b) == MP_EQ)
     return MP_RANGE;
