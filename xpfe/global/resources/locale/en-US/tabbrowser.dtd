@@ -12,3 +12,5 @@
 <!ENTITY  bookmarkGroup.label    "Bookmark This Group of Tabs">
 <!ENTITY  bookmarkGroup.accesskey  "B">
 <!ENTITY  newTabButton.tooltip   "Open a new tab">
+<!ENTITY  undoCloseTab.label    "Undo Close Tab">
+<!ENTITY  undoCloseTab.accesskey  "U">
