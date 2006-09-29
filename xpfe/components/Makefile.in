@@ -130,10 +130,6 @@ DIRS += \
         bookmarks/public \
         $(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
-DIRS += winhooks
-endif
-
 endif
 
 ifndef MOZ_XUL_APP
