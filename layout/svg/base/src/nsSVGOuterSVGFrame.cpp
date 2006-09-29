@@ -165,6 +165,7 @@ nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
 
 nsSVGOuterSVGFrame::~nsSVGOuterSVGFrame()
 {
+  // XXX XBL2/sXBL issue
   nsIDocument *doc = mContent->GetOwnerDoc();
   if (doc) {
     doc->RemoveMutationObserver(&sSVGMutationObserver);
@@ -190,6 +191,7 @@ nsSVGOuterSVGFrame::InitSVG()
   NS_ASSERTION(SVGElement, "wrong content element");
   SVGElement->SetParentCoordCtxProvider(this);
 
+  // XXX XBL2/sXBL issue
   nsIDocument* doc = mContent->GetCurrentDoc();
   if (doc) {
     // we only care about our content's zoom and pan values if it's the root element
