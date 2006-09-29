@@ -165,10 +165,6 @@ STDMETHODIMP nsDocAccessibleWrap::get_accChild(
 
 NS_IMETHODIMP nsDocAccessibleWrap::Shutdown()
 {
-  if (mDocLoadTimer) {
-    mDocLoadTimer->Cancel();
-    mDocLoadTimer = nsnull;
-  }
   return nsDocAccessible::Shutdown();
 }
 
