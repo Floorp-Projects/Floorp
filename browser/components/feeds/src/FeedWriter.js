@@ -142,7 +142,62 @@ FeedWriter.prototype = {
   _getString: function FW__getString(key) {
     return this._bundle.GetStringFromName(key);
   },
-  
+
+  /* Magic helper methods to be used instead of xbl properties */
+  _getSelectedItemFromMenulist: function FW__getSelectedItemFromList(aList) {
+    var node = aList.firstChild.firstChild;
+    while (node) {
+      if (node.localName == "menuitem" && node.getAttribute("selected") == "true")
+        return node;
+
+      node = node.nextSibling;
+    }
+
+    return null;
+  },
+
+  _setCheckboxCheckedState: function FW__setCheckboxCheckedState(aCheckbox, aValue) {
+    // see checkbox.xml
+    var change = (aValue != (aCheckbox.getAttribute('checked') == 'true'));
+    if (aValue)
+      aCheckbox.setAttribute('checked', 'true');
+    else
+      aCheckbox.removeAttribute('checked');
+
+    if (change) {
+      var event = this._document.createEvent('Events');
+      event.initEvent('CheckboxStateChange', true, true);
+      aCheckbox.dispatchEvent(event);
+    }
+  },
+
+  // For setting and getting the file expando property, we need to keep a
+  // reference to explict XPCNativeWrappers around the associated menuitems
+  _selectedApplicationItemWrapped: null,
+  get selectedApplicationItemWrapped() {
+    if (!this._selectedApplicationItemWrapped) {
+      this._selectedApplicationItemWrapped =
+        XPCNativeWrapper(this._document.getElementById("selectedAppMenuItem"));
+    }
+
+    return this._selectedApplicationItemWrapped;
+  },
+
+#ifdef XP_WIN
+  _defaultSystemReaderItemWrapped: null,
+  get defaultSystemReaderItemWrapped() {
+    if (!this._defaultSystemReaderItemWrapped) {
+      // Unlike the selected application item, this might not exist at all,
+      // see _initSubscriptionUI
+      var menuItem = this._document.getElementById("defaultHandlerMenuItem");
+      if (menuItem)
+        this._defaultSystemReaderItemWrapped = XPCNativeWrapper(menuItem);
+    }
+
+    return this._defaultSystemReaderItemWrapped;
+  },
+#endif
+
   /**
    * Writes the feed title into the preview document.
    * @param   container
@@ -358,7 +413,7 @@ FeedWriter.prototype = {
   _initMenuItemWithFile: function(aMenuItem, aFile) {
     aMenuItem.setAttribute("label", this._getFileDisplayName(aFile));
     aMenuItem.setAttribute("image", this._getFileIconURL(aFile));
-    aMenuItem.wrappedJSObject.file = aFile;
+    aMenuItem.file = aFile;
   },
 
   /**
@@ -388,12 +443,11 @@ FeedWriter.prototype = {
           if (fp.file.leafName != "firefox-bin") {
 #endif
 #endif
-            var selectedAppMenuItem =
-              this._document.getElementById("selectedAppMenuItem");
+            var selectedAppMenuItem = this.selectedApplicationItemWrapped;
             this._initMenuItemWithFile(selectedAppMenuItem, selectedApp);
 
             // Show and select the selected application menuitem
-            selectedAppMenuItem.wrappedJSObject.hidden = false;
+            selectedAppMenuItem.hidden = false;
             selectedAppMenuItem.doCommand();
             return true;
           }
@@ -416,7 +470,7 @@ FeedWriter.prototype = {
           alwaysUse = true;
       }
       catch(ex) { }
-      checkbox.wrappedJSObject.checked = alwaysUse;
+      this._setCheckboxCheckedState(checkbox, alwaysUse);
     }
   },
 
@@ -425,8 +479,8 @@ FeedWriter.prototype = {
     if (checkbox) {
       var handlersMenuList = this._document.getElementById("handlersMenuList");
       if (handlersMenuList) {
-        var handlerName = handlersMenuList.wrappedJSObject.selectedItem.getAttribute("label");
-        checkbox.wrappedJSObject.label = this._getFormattedString("alwaysUse", [handlerName]);
+        var handlerName = this._getSelectedItemFromMenulist(handlersMenuList)                              .getAttribute("label");
+        checkbox.setAttribute("label", this._getFormattedString("alwaysUse", [handlerName]));
       }
     }
   },
@@ -498,8 +552,7 @@ FeedWriter.prototype = {
         break;
       }
       case "client": {
-        var selectedAppMenuItem =
-          this._document.getElementById("selectedAppMenuItem");
+        var selectedAppMenuItem = this.selectedApplicationItemWrapped;
         if (selectedAppMenuItem) {
           try {
             var selectedApp = prefs.getComplexValue(PREF_SELECTED_APP,
@@ -508,17 +561,16 @@ FeedWriter.prototype = {
 
           if (selectedApp) {
             this._initMenuItemWithFile(selectedAppMenuItem, selectedApp);
-            selectedAppMenuItem.wrappedJSObject.hidden = false;
+            selectedAppMenuItem.hidden = false;
             selectedAppMenuItem.doCommand();
 
 #ifdef XP_WIN
             // Only show the default reader menuitem if the default reader
             // isn't the selected application
-            var defaultHandlerMenuItem =
-            this._document.getElementById("defaultHandlerMenuItem");
+            var defaultHandlerMenuItem = this.defaultSystemReaderItemWrapped;
             if (defaultHandlerMenuItem) {
-              defaultHandlerMenuItem.wrappedJSObject.hidden =
-                defaultHandlerMenuItem.wrappedJSObject.file.path == selectedApp.path;
+              defaultHandlerMenuItem.hidden =
+                defaultHandlerMenuItem.file.path == selectedApp.path;
             }
 #endif
             break;
@@ -547,6 +599,9 @@ FeedWriter.prototype = {
     menuItem.id = "selectedAppMenuItem";
     menuItem.className = "menuitem-iconic";
     menuItem.setAttribute("handlerType", "client");
+    handlersMenuPopup.appendChild(menuItem);
+
+    var selectedApplicationItem = this.selectedApplicationItemWrapped;
     try {
       var prefs = Cc["@mozilla.org/preferences-service;1"].
                   getService(Ci.nsIPrefBranch);
@@ -554,18 +609,17 @@ FeedWriter.prototype = {
                                           Ci.nsILocalFile);
 
       if (selectedApp.exists()) {
-        this._initMenuItemWithFile(menuItem, selectedApp);
+        this._initMenuItemWithFile(selectedApplicationItem, selectedApp);
       }
       else {
         // Hide the menuitem if the last selected application doesn't exist
-        menuItem.setAttribute("hidden", "true");
+        selectedApplicationItem.hidden = true;
       }
     }
     catch(ex) {
       // Hide the menuitem until an application is selected
-      menuItem.setAttribute("hidden", "true");
+      selectedApplicationItem.hidden = true;
     }
-    handlersMenuPopup.appendChild(menuItem);
 
 #ifdef XP_WIN
     // On Windows, also list the default feed reader
@@ -596,14 +650,15 @@ FeedWriter.prototype = {
         menuItem.id = "defaultHandlerMenuItem";
         menuItem.className = "menuitem-iconic";
         menuItem.setAttribute("handlerType", "client");
-        this._initMenuItemWithFile(menuItem, defaultReader);
+        handlersMenuPopup.appendChild(menuItem);
+
+        var defaultSystemReaderItem = this.defaultSystemReaderItemWrapped;
+        this._initMenuItemWithFile(defaultSystemReaderItem, defaultReader);
 
         // Hide the default reader item if it points to the same application
         // as the last-selected application
         if (selectedApp && selectedApp.path == defaultReader.path)
-          menuItem.setAttribute("hidden", "true");
-  
-        handlersMenuPopup.appendChild(menuItem);
+          defaultSystemReaderItem.hidden = true;
       }
     }
     catch (e) {
@@ -783,8 +838,8 @@ FeedWriter.prototype = {
     var useAsDefault = this._document.getElementById("alwaysUse")
                                      .getAttribute("checked");
 
-    var selectedItem = this._document.getElementById("handlersMenuList")
-                                     .wrappedJSObject.selectedItem;
+    var handlersMenuList = this._document.getElementById("handlersMenuList");
+    var selectedItem = this._getSelectedItemFromMenulist(handlersMenuList);
 
     // Show the file picker before subscribing if the
     // choose application menuitem was choosen using the keyboard
@@ -792,8 +847,7 @@ FeedWriter.prototype = {
       if (!this._chooseClientApp())
         return;
       
-      selectedItem = this._document.getElementById("handlersMenuList")
-                                   .wrappedJSObject.selectedItem;
+      selectedItem = this._getSelectedItemFromMenulist(handlersMenuList);
     }
 
     if (selectedItem.hasAttribute("webhandlerurl")) {
@@ -816,13 +870,17 @@ FeedWriter.prototype = {
     else {
       switch (selectedItem.id) {
         case "selectedAppMenuItem":
-#ifdef XP_WIN
-        case "defaultHandlerMenuItem":
-#endif
           prefs.setCharPref(PREF_SELECTED_READER, "client");
           prefs.setComplexValue(PREF_SELECTED_APP, Ci.nsILocalFile, 
-                                selectedItem.file);
+                                this.selectedApplicationItemWrapped.file);
+          break;   
+#ifdef XP_WIN
+        case "defaultHandlerMenuItem":
+          prefs.setCharPref(PREF_SELECTED_READER, "client");
+          prefs.setComplexValue(PREF_SELECTED_APP, Ci.nsILocalFile, 
+                                this.defaultSystemReaderItemWrapped.file);
           break;
+#endif
         case "liveBookmarksMenuItem":
           defaultHandler = "bookmarks";
           prefs.setCharPref(PREF_SELECTED_READER, "bookmarks");
