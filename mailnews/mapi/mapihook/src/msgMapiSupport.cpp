@@ -45,10 +45,14 @@
 #include "nsIComponentManager.h"
 #include "nsICategoryManager.h"
 #include "nsCRT.h"
-
+#include "Registry.h"
 #include "msgMapiSupport.h"
+
+#ifndef MOZ_THUNDERBIRD
 #include "nsMapiRegistryUtils.h" 
 #include "nsMapiRegistry.h"
+#endif
+
 #include "msgMapiImp.h"
 
 /** Implementation of the nsIMapiSupport interface.
@@ -153,18 +157,39 @@ nsMapiSupport::ShutdownMAPISupport()
     return NS_OK ;
 }
 
+NS_IMETHODIMP
+nsMapiSupport::RegisterServer()
+{
+  // TODO: Figure out what kind of error propogation to pass back
+  ::RegisterServer(CLSID_CMapiImp, "Mozilla MAPI", "MozillaMapi", "MozillaMapi.1");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMapiSupport::UnRegisterServer()
+{
+  // TODO: Figure out what kind of error propogation to pass back
+  ::UnregisterServer(CLSID_CMapiImp, "MozillaMapi", "MozillaMapi.1");
+  return NS_OK;
+}
+
+
+#ifndef MOZ_THUNDERBIRD
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMapiRegistry)
+#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMapiSupport)
 
 // The list of components we register
 static const nsModuleComponentInfo components[] = 
 {
+#ifndef MOZ_THUNDERBIRD
   {
     NS_IMAPIREGISTRY_CLASSNAME, 
     NS_IMAPIREGISTRY_CID,
     NS_IMAPIREGISTRY_CONTRACTID, 
     nsMapiRegistryConstructor
   },
+#endif
 
 {
     NS_IMAPISUPPORT_CLASSNAME,

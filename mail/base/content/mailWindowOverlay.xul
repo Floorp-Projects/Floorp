@@ -70,6 +70,7 @@
 
 <stringbundleset id="stringbundleset">
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+  <stringbundle id="bundle_shell" src="chrome://messenger/locale/shellservice.properties"/>
   <stringbundle id="bundle_findBar" src="chrome://global/locale/findbar.properties"/>  
 </stringbundleset>
  

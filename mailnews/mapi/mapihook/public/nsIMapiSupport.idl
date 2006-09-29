@@ -42,7 +42,7 @@
  * 
  */
 
-[noscript, uuid(8967fed2-c8bb-11d5-a3e9-00b0d0f3baa7)]
+[noscript, uuid(2907B676-C4BD-49af-880A-E27A0616291E)]
 interface nsIMapiSupport : nsISupports {
 
    /** Initiates MAPI support
@@ -54,6 +54,18 @@ interface nsIMapiSupport : nsISupports {
     */
 
    void shutdownMAPISupport();
+
+   /**  registerServer - register the mapi DLL with the desktop
+    *   Typically called by the window shell service when we are
+    *   made the default mail app
+    */
+   void registerServer();
+   
+   /**  unRegisterServer - unregister the mapi DLL with the desktop
+    *   Typically called by the window shell service when we are
+    *   removed as the default mail app.
+    */   
+   void unRegisterServer();
 };
 
 %{C++

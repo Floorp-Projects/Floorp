@@ -46,73 +46,43 @@ var gGeneralPane = {
     
     this.startPageCheck();
     this.mailSoundCheck();
-    
-#ifdef XP_WIN
-    document.getElementById('mail.checkDefaultMail').valueFromPreferences = this.onReadDefaultMailPref();
-    document.getElementById('mail.checkDefaultNews').valueFromPreferences = this.onReadDefaultNewsPref();
-    document.getElementById('mail.checkDefaultFeed').valueFromPreferences = this.onReadDefaultFeedPref();
-#endif
-
-#ifdef HAVE_SHELL_SERVICE
-  // first check whether nsIMapiRegistry is available.  if it's not,
-  // hide the whole default mail/news app section.
-  var mapiReg;
-  try {
-    mapiReg = Components.classes["@mozilla.org/mapiregistry;1"].getService(Components.interfaces.nsIMapiRegistry);
-  } catch (e) {}
+  },
   
-  if (!mapiReg) 
-    document.getElementById("defaultClientBox").hidden = true;
+#ifdef HAVE_SHELL_SERVICE
+  /**
+   * Checks whether Thunderbird is currently registered with the operating
+   * system as the default app for mail, rss and news.  If Thunderbird is not currently the
+   * default app, the user is given the option of making it the default for each type;
+   * otherwise, the user is informed that Thunderbird is already the default.
+   */
+  checkDefaultNow: function (aAppType) 
+  {   
+    var nsIShellService = Components.interfaces.nsIShellService;
+    var shellSvc = Components.classes["@mozilla.org/mail/shell-service;1"].getService(nsIShellService);
+    // if we are already the default for all the types we handle, then alert the user.
+    if (shellSvc.isDefaultClient(false, nsIShellService.MAIL | nsIShellService.NEWS | nsIShellService.RSS))
+    {
+      var brandBundle = document.getElementById("bundleBrand");
+      var shellBundle = document.getElementById("bundleShell");
+      var brandShortName = brandBundle.getString("brandShortName");
+      var promptTitle = shellBundle.getString("alreadyDefaultClientTitle");
+      var promptMessage;
+      const IPS = Components.interfaces.nsIPromptService;
+      var psvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                           .getService(IPS);
+
+        promptMessage = shellBundle.getFormattedString("alreadyDefault", [brandShortName]);
+        psvc.alert(window, promptTitle, promptMessage);
+    }
+    else
+    {
+      // otherwise, bring up the default client dialog
+      window.openDialog("chrome://messenger/content/defaultClientDialog.xul", "Default Client", 
+                        "modal,centerscreen,chrome,resizable=no");
+    }
+  },
 #endif
-  },
 
-#ifdef XP_WIN
-  onReadDefaultMailPref: function()
-  {
-    var mapiRegistry = Components.classes["@mozilla.org/mapiregistry;1"].getService(Components.interfaces.nsIMapiRegistry);
-    document.getElementById('defaultMailClient').checked = mapiRegistry.isDefaultMailClient;
-    return mapiRegistry.isDefaultMailClient;
-  },
-
-  onWriteDefaultMailPref: function()
-  {
-    var mapiRegistry = Components.classes["@mozilla.org/mapiregistry;1"].getService(Components.interfaces.nsIMapiRegistry);
-    var makeDefaultMailClient = document.getElementById('mail.checkDefaultMail').value;   
-    if (mapiRegistry.isDefaultMailClient != makeDefaultMailClient) 
-      mapiRegistry.isDefaultMailClient = makeDefaultMailClient;
-  },
-
-  onReadDefaultNewsPref: function()
-  {
-    var mapiRegistry = Components.classes["@mozilla.org/mapiregistry;1"].getService(Components.interfaces.nsIMapiRegistry);
-    document.getElementById('defaultNewsClient').checked = mapiRegistry.isDefaultNewsClient;   
-    return mapiRegistry.isDefaultNewsClient;   
-  },
-
-  onWriteDefaultNewsPref: function()
-  {
-    var mapiRegistry = Components.classes["@mozilla.org/mapiregistry;1"].getService(Components.interfaces.nsIMapiRegistry);
-    var makeDefaultNewsClient = document.getElementById('mail.checkDefaultNews').value;   
-    if (mapiRegistry.isDefaultNewsClient != makeDefaultNewsClient) 
-      mapiRegistry.isDefaultNewsClient = makeDefaultNewsClient;
-  },
-
-  onReadDefaultFeedPref: function()
-  {
-    var mapiRegistry = Components.classes["@mozilla.org/mapiregistry;1"].getService(Components.interfaces.nsIMapiRegistry);
-    document.getElementById('defaultFeedClient').checked = mapiRegistry.isDefaultFeedClient; 
-    return mapiRegistry.isDefaultFeedClient;   
-  },
-
-  onWriteDefaultFeed: function()
-  {
-    var mapiRegistry = Components.classes["@mozilla.org/mapiregistry;1"].getService(Components.interfaces.nsIMapiRegistry);
-    var makeDefaultFeedClient = document.getElementById('mail.checkDefaultFeed').value;  
-    if (mapiRegistry.isDefaultFeedClient != makeDefaultFeedClient) 
-      mapiRegistry.isDefaultFeedClient = makeDefaultFeedClient;
-  },
-
-#endif
   startPageCheck: function() 
   {
     document.getElementById("mailnewsStartPageUrl").disabled = !document.getElementById("mailnewsStartPageEnabled").checked;
@@ -130,15 +100,6 @@ var gGeneralPane = {
     
     this.mPane.userChangedValue(startPageUrlField);
   },
-
-#ifdef HAVE_SHELL_SERVICE
-  openDefaultClientDialog: function () 
-  {
-    document.documentElement
-            .openSubDialog("chrome://messenger/content/preferences/defaultClient.xul",
-                           "", null);
-  },
-#endif
 
   showConnections: function ()
   {

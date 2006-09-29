@@ -1,15 +1,14 @@
-<!ENTITY generalSettings.caption            "Default Settings">
-<!ENTITY generalSettings.label             "Make &brandShortName; the default application for:">
-<!ENTITY setDefaultMailClient.label        "Mail">
-<!ENTITY setDefaultMailClient.accesskey    "M">
-<!ENTITY setDefaultNewsClient.label        "News">
-<!ENTITY setDefaultNewsClient.accesskey    "N">
-<!ENTITY setDefaultFeedClient.label        "RSS Feeds">
-<!ENTITY setDefaultFeedClient.accesskey    "F">
-<!ENTITY checkDefaultMailClient.label      "&brandShortName; should check to see if it is the default mail client when starting">
-<!ENTITY checkDefaultMailClient.accesskey  "n">
-<!ENTITY defaultClientAdvanced.label       "Advanced...">
-<!ENTITY defaultClientAdvanced.accesskey   "d">
+<!ENTITY systemDefaults.label              "System Defaults">
+<!ENTITY alwaysCheckDefault.label          "Always check to see if &brandShortName; is the default mail client on startup">
+<!ENTITY alwaysCheckDefault.accesskey      "l">
+<!-- LOCALIZATION NOTE (alwaysCheckDefault.height):
+  There's some sort of bug which makes wrapping checkboxes not properly reflow,
+  causing the bottom border of the groupbox to be cut off; set this
+  appropriately if your localization causes this checkbox to wrap.
+-->
+<!ENTITY alwaysCheckDefault.height  "3em">
+<!ENTITY checkNow.label             "Check Now">
+<!ENTITY checkNow.accesskey         "N">
 
 <!ENTITY windowSettings.label             "Window Configuration">
 <!ENTITY selectWindowLayout.label         "Select the window layout you prefer for Mail.">

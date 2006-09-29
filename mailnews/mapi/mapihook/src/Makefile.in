@@ -83,10 +83,12 @@ CPPSRCS		= \
 		msgMapiImp.cpp \
 		msgMapiMain.cpp \
 		msgMapiSupport.cpp \
-		nsMapiRegistry.cpp \
-		nsMapiRegistryUtils.cpp \
 		Registry.cpp \
 		$(NULL)
+
+ifndef MOZ_THUNDERBIRD
+CPPSRCS        += nsMapiRegistry.cpp nsMapiRegistryUtils.cpp
+endif
 
 LOBJS		= ../build/msgMapi_i.$(OBJ_SUFFIX)
 

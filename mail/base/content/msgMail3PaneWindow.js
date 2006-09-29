@@ -863,6 +863,19 @@ function delayedOnLoadMessenger()
     gStartMsgKey = (window.arguments.length > 1) ? window.arguments[1]: nsMsgKey_None;
     gSearchEmailAddress = (window.arguments.length > 2) ? window.arguments[2] : null;
   }
+  
+#ifdef HAVE_SHELL_SERVICE
+  var nsIShellService = Components.interfaces.nsIShellService;
+  var shellService = Components.classes["@mozilla.org/mail/shell-service;1"].getService(nsIShellService);
+  
+  // show the default client dialog only if we have at least one account, 
+  // if we should check for the default client, 
+  // and we aren't already the default for all of our recognized types (mail, news, rss)
+  if (accountManager.defaultAccount && shellService.shouldCheckDefaultClient 
+      && !shellService.isDefaultClient(false, nsIShellService.MAIL | nsIShellService.NEWS | nsIShellService.RSS))
+    window.openDialog("chrome://messenger/content/defaultClientDialog.xul", "Default Client", 
+                      "modal,centerscreen,chrome,resizable=no");
+#endif
 
   setTimeout("loadStartFolder(gStartFolderUri);", 0);
 

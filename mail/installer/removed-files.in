@@ -157,6 +157,7 @@ components/xuldoc.xpt
 components/xultmpl.xpt
 components/downloadmanager.xpt
 #endif
+components/nsUnsetDefaultMail.js
 components/nsBackgroundUpdateService.js
 components/nsDownloadProgressListener.js
 components/xptitemp.dat

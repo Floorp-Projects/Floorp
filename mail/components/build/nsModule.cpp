@@ -61,6 +61,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsOEProfileMigrator)
 #include "nsOutlookProfileMigrator.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsOutlookProfileMigrator)
 
+#include "nsMailWinIntegration.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsShellService)
 #endif
 
 #if defined(XP_WIN32) || defined(XP_MACOSX)
@@ -107,16 +109,22 @@ static const nsModuleComponentInfo components[] = {
     NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX "eudora",
     nsEudoraProfileMigratorConstructor },
 #endif
+#ifdef XP_WIN32
+  { "Mail Windows Integration",
+    NS_MAILWININTEGRATION_CID,
+    "@mozilla.org/mail/shell-service;1",
+    nsWindowsShellServiceConstructor},
+#endif
 #ifdef MOZ_WIDGET_GTK2
   { "Mail GNOME Integration",
     NS_MAILGNOMEINTEGRATION_CID,
-    "@mozilla.org/mapiregistry;1",
+    "@mozilla.org/mail/shell-service;1",
     nsMailGNOMEIntegrationConstructor },
 #endif
 #ifdef XP_MACOSX
   { "Mail Mac Integration",
     NS_MAILMACINTEGRATION_CID,
-    "@mozilla.org/mapiregistry;1",
+    "@mozilla.org/mail/shell-service;1",
     nsMailMacIntegrationConstructor },
 #endif
 };

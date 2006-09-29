@@ -51,81 +51,36 @@
     <script type="application/x-javascript" src="chrome://messenger/content/preferences/general.js"/>
 
     <preferences>
-      <preference id="mail.checkDefaultMail"
-                  name="mail.checkDefaultMail"
-#ifdef XP_WIN
-                  onchange="return gGeneralPane.onWriteDefaultMailPref();"
-#endif
-                  type="bool"/>
-#ifdef XP_WIN
-      <preference id="mail.checkDefaultNews"
-                  name="mail.checkDefaultNews"
-                  onchange="return gGeneralPane.onWriteDefaultNewsPref();"
-                  type="bool"/>
-      <preference id="mail.checkDefaultFeed"
-                  name="mail.checkDefaultFeed"
-                  onchange="return gGeneralPane.onWriteDefaultFeed();"
-                  type="bool"/>
-#endif
+      <preference id="mail.shell.checkDefaultClient" name="mail.shell.checkDefaultClient" type="bool"/>
       <preference id="mail.pane_config.dynamic" name="mail.pane_config.dynamic" type="int"/>
       <preference id="mailnews.reuse_message_window" name="mailnews.reuse_message_window" type="bool"/>
       <preference id="mailnews.start_page.enabled" name="mailnews.start_page.enabled" type="bool"/>
       <preference id="mailnews.start_page.url" name="mailnews.start_page.url" type="wstring"/>
       <preference id="mail.biff.show_alert" name="mail.biff.show_alert" type="bool"/>
       <preference id="mail.biff.play_sound" name="mail.biff.play_sound" type="bool"/>
+      <preference id="pref.general.disable_button.default_mail"
+                  name="pref.general.disable_button.default_mail"
+                  type="bool"/>
 #ifdef XP_MACOSX
       <preference id="mail.biff.animate_dock_icon" name="mail.biff.animate_dock_icon" type="bool"/>
 #endif
     </preferences>
 
-    <groupbox align="start" id="defaultClientBox">
-      <caption label="&generalSettings.caption;"/>
-    
-#ifdef XP_WIN
-      <label value="&generalSettings.label;"/>
-      <hbox class="indent">
-        <checkbox id="defaultMailClient" label="&setDefaultMailClient.label;"
-                  accesskey="&setDefaultMailClient.accesskey;"
-                  preference="mail.checkDefaultMail"/>
-
-        <checkbox id="defaultNewsClient" label="&setDefaultNewsClient.label;"
-                  preference="mail.checkDefaultNews"
-                  accesskey="&setDefaultNewsClient.accesskey;"/>
-
-        <checkbox id="defaultFeedClient" label="&setDefaultFeedClient.label;"
-                  preference="mail.checkDefaultFeed"
-                  accesskey="&setDefaultFeedClient.accesskey;"/>
-      </hbox>
-#endif
-
 #ifdef HAVE_SHELL_SERVICE
-      <hbox flex="1" align="center">
-        <checkbox id="checkDefaultMail"
-                  preference="mail.checkDefaultMail"
-                  label="&checkDefaultMailClient.label;"
-                  accesskey="&checkDefaultMailClient.accesskey;"
-                  flex="1"/>
-        <button label="&defaultClientAdvanced.label;"
-                accesskey="&defaultClientAdvanced.accesskey;"
-                oncommand="gGeneralPane.openDefaultClientDialog()"/>
+    <stringbundle id="bundleShell" src="chrome://messenger/locale/shellservice.properties"/>
+    <stringbundle id="bundleBrand" src="chrome://branding/locale/brand.properties"/>
+
+    <groupbox id="systemDefaultsGroup" orient="vertical">
+      <caption label="&systemDefaults.label;"/>
+      <hbox id="checkDefaultBox" align="center" flex="1">
+        <checkbox id="alwaysCheckDefault" preference="mail.shell.checkDefaultClient"
+                  label="&alwaysCheckDefault.label;" accesskey="&alwaysCheckDefault.accesskey;"
+                  flex="1" style="height: &alwaysCheckDefault.height;"/>
+        <button id="checkDefaultButton" label="&checkNow.label;" accesskey="&checkNow.accesskey;"
+                oncommand="gGeneralPane.checkDefaultNow();" preference="pref.general.disable_button.default_mail"/>
       </hbox>
+    </groupbox>
 #endif
-    </groupbox>
-
-<!--
-    <groupbox>
-      <caption label="&windowSettings.label;"/>
-      <label value="&selectWindowLayout.label;" accesskey="&selectWindowLayout.accesskey;" control="mailPaneConfig"/>
-      <hbox align="center" class="indent">
-        <radiogroup id="mailPaneConfig" preference="mail.pane_config.dynamic" orient="horizontal">
-          <radio class="mailPaneConfigIcon" value="0" id="classic"/>
-          <radio class="mailPaneConfigIcon" value="1" id="wide"/>
-          <radio class="mailPaneConfigIcon" value="2" id="vertical"/>
-        </radiogroup>
-      </hbox> 
-    </groupbox>
--->
-
     <groupbox>
       <caption label="&messengerStartPage.label;"/>
         <hbox align="start">

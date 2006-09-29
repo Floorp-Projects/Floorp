@@ -1,4 +1,5 @@
-#
+<?xml version="1.0"?>
+# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,14 +13,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is the Thunderbird Default Client Dialog
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2001
+# Scott MacGregor.
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Scott MacGregor <mscott@mozilla.org
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,15 +37,33 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+<?xml-stylesheet href="chrome://global/skin/"?>
 
-include $(DEPTH)/config/autoconf.mk
+<!DOCTYPE window [
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+  %brandDTD;
+  <!ENTITY % defaultClientDTD SYSTEM "chrome://messenger/locale/defaultClientDialog.dtd" >
+  %defaultClientDTD;
+]>
 
-include $(topsrcdir)/config/rules.mk
+<dialog xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="defaultClientDialog"
+        buttons="accept,cancel"
+        onload="gDefaultClientDialog.onLoad();"
+        ondialogaccept="return gDefaultClientDialog.onAccept();"
+        title="&defaultClient.title;">
+  
+  <script type="application/x-javascript" src="chrome://messenger/content/defaultClientDialog.js"/>
+  
+  <description>&defaultClient.intro;</description>
+  <listbox rows="3" seltype="single">   
+    <listitem id="checkMail" type="checkbox" label="&email.label;"/>
+    <listitem id="checkNews" type="checkbox" label="&newsgroups.label;"/>
+    <listitem id="checkRSS"  type="checkbox" label="&rss.label;"/>    
+  </listbox>
 
-ifneq (,$(filter windows gtk2 mac cocoa, $(MOZ_WIDGET_TOOLKIT)))
-DEFINES += -DHAVE_SHELL_SERVICE=1
-endif
+  <separator class="thin"/>
+  <checkbox id="checkOnStartup" label="&checkOnStartup.label;" accesskey="&checkOnStartup.accesskey;"/>
+
+</dialog>

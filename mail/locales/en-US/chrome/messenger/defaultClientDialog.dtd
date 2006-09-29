@@ -1,0 +1,9 @@
+<!ENTITY defaultClient.title  "Default Client">
+<!ENTITY defaultClient.intro  "Use &brandShortName; as the default client for:">
+
+<!ENTITY email.label "E-Mail">
+<!ENTITY newsgroups.label "Newsgroups">
+<!ENTITY rss.label "RSS Feeds">
+
+<!ENTITY checkOnStartup.label "Always perform this check when starting &brandShortName;">
+<!ENTITY checkOnStartup.accesskey "A">

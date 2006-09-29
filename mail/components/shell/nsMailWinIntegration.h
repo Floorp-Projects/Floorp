@@ -12,15 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla GNOME integration code.
+ * The Original Code is Thunderbird Windows Integration.
  *
  * The Initial Developer of the Original Code is
- * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ *   Scott MacGregor <mscott@mozilla.org>.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,35 +35,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsMailGNOMEIntegration_h_
-#define nsMailGNOMEIntegration_h_
+#ifndef nsMailWinIntegration_h_
+#define nsMailWinIntegration_h_
 
 #include "nsIShellService.h"
+#include "nsIObserver.h"
 #include "nsIGenericFactory.h"
 #include "nsString.h"
 
-#define NS_MAILGNOMEINTEGRATION_CID \
-{0xbddef0f4, 0x5e2d, 0x4846, {0xbd, 0xec, 0x86, 0xd0, 0x78, 0x1d, 0x8d, 0xed}}
+#include <windows.h>
 
-class nsMailGNOMEIntegration : public nsIShellService
+#define NS_MAILWININTEGRATION_CID \
+{0x2ebbe84, 0xc179, 0x4598, {0xaf, 0x18, 0x1b, 0xf2, 0xc4, 0xbc, 0x1d, 0xf9}}
+
+typedef struct {
+  char* keyName;
+  char* valueName;
+  char* valueData;
+
+  PRInt32 flags;
+} SETTING;
+
+class nsWindowsShellService : public nsIShellService
 {
 public:
+  nsWindowsShellService();
+  virtual ~nsWindowsShellService() {};
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHELLSERVICE
 
-  NS_HIDDEN_(nsresult) Init();
-  nsMailGNOMEIntegration();
-
 protected:
-  virtual ~nsMailGNOMEIntegration() {};
+  void SetRegKey(const char* aKeyName, const char* aValueName, 
+                 const char* aValue, 
+                 PRBool aReplaceExisting, PRBool aForAllUsers);
 
-  PRBool KeyMatchesAppName(const char *aKeyValue) const;
-  PRBool checkDefault(const char* const *aProtocols, unsigned int aLength);
-  nsresult MakeDefault(const char* const *aProtocols, unsigned int aLength);
+  PRBool TestForDefault(SETTING aSettings[], PRInt32 aSize);
+  void setKeysForSettings(SETTING aSettings[], PRInt32 aSize, 
+                          const char * aAppname, PRBool aForAllUsers);
+  nsresult setDefaultMail(PRBool aForAllUsers);
+  nsresult setDefaultNews(PRBool aForAllUsers);
+
 private:
-  PRPackedBool mUseLocaleFilenames;
-  PRPackedBool mCheckedThisSession;
+  PRBool mCheckedThisSession;
   nsCString mAppPath;
-};
+  nsXPIDLString mBrandFullName;
+  nsXPIDLString mBrandShortName;
+ };
 
 #endif

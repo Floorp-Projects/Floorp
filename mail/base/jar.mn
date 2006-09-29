@@ -27,6 +27,8 @@ messenger.jar:
 *   content/messenger/subscribe.xul                 (content/subscribe.xul)
     content/messenger/subscribe.js                  (content/subscribe.js)
 *   content/messenger/aboutDialog.xul               (content/aboutDialog.xul)
+*   content/messenger/defaultClientDialog.xul       (content/defaultClientDialog.xul)
+*   content/messenger/defaultClientDialog.js        (content/defaultClientDialog.js)
 *   content/messenger/msgSelectOffline.xul          (content/msgSelectOffline.xul)
 *   content/messenger/msgPrintEngine.xul            (content/msgPrintEngine.xul)
 *   content/messenger/searchBar.js                  (content/searchBar.js)

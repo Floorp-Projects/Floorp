@@ -78,6 +78,7 @@ function getInvalidAccounts(accounts)
     return invalidAccounts;
 }
 
+#ifndef MOZ_THUNDERBIRD
 // This function gets called from verifyAccounts.
 // We do not have to do anything on
 // unix and mac but on windows we have to bring up a 
@@ -121,13 +122,15 @@ function showMailIntegrationDialog() {
         }
     }
 }
+#endif
 
-function verifyAccounts(wizardcallback) {
-//check to see if the function is called with the callback and if so set the global variable gReturnmycall to true
-    if(wizardcallback)
+function verifyAccounts(wizardcallback) 
+{
+  //check to see if the function is called with the callback and if so set the global variable gReturnmycall to true
+  if(wizardcallback)
 		gReturnmycall = true;
 	var openWizard = false;
-    var prefillAccount;
+  var prefillAccount;
 	var state=true;
 	var ret = true;
     
@@ -215,8 +218,12 @@ function verifyAccounts(wizardcallback) {
             messengerMigrator.createLocalMailAccount(false /* false, since we are not migrating */);
           }
         }
+        
+#ifndef MOZ_THUNDERBIRD
+        // seamonkey still uses this...
         // hack, set a time out to do this, so that the window can load first
         setTimeout("showMailIntegrationDialog();",0);
+#endif
 
         return ret;
     }

@@ -38,6 +38,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/***************************************************************************
+*
+* This File is no longer used by Thunderbird. Seamonkey is the only consumer.
+* See mozilla/mail/components/shell for the Thunderbird registry code
+*
+*****************************************************************************/
+
 #undef UNICODE
 #undef _UNICODE
 
@@ -55,6 +62,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsEmbedCID.h"
+#include "nsIMapiSupport.h"
 #include <mbstring.h>
 
 #define EXE_EXTENSION ".EXE" 
@@ -1022,9 +1030,10 @@ nsresult nsMapiRegistryUtils::setDefaultMailClient()
                               MOZ_HWND_BROADCAST_MSG_TIMEOUT,
                               NULL);
 
-    // register the new mapi server
-    RegisterServer(CLSID_CMapiImp, "Mozilla MAPI", "MozillaMapi", "MozillaMapi.1");
-    return rv;
+    // Tell the MAPI Service to register the mapi proxy dll now that we are the default mail application
+    nsCOMPtr<nsIMapiSupport> mapiService (do_GetService(NS_IMAPISUPPORT_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    return mapiService->RegisterServer();
 }
 
 nsresult nsMapiRegistryUtils::unsetDefaultNewsClient() {
@@ -1186,8 +1195,10 @@ nsresult nsMapiRegistryUtils::unsetDefaultMailClient() {
                           SMTO_NORMAL|SMTO_ABORTIFHUNG,
                           MOZ_HWND_BROADCAST_MSG_TIMEOUT,
                           NULL);
-
-    UnregisterServer(CLSID_CMapiImp, "MozillaMapi", "MozillaMapi.1");
+    // Tell the MAPI Service to unregister the mapi proxy dll now that we are the default mail application
+    nsCOMPtr<nsIMapiSupport> mapiService (do_GetService(NS_IMAPISUPPORT_CONTRACTID, &result));
+    NS_ENSURE_SUCCESS(result, result);
+    mapiService->UnRegisterServer();
     return mailKeySet;
 }
 

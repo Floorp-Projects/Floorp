@@ -112,7 +112,6 @@ bin\MapiProxy.dll
 bin\mozMapi32.dll
 bin\components\mapihook.xpt
 bin\components\nsSetDefaultMail.js
-bin\components\nsUnsetDefaultMail.js
 bin\components\offlineStartup.js
 bin\components\nsMailDefaultHandler.js
 

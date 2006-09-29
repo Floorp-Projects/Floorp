@@ -135,6 +135,7 @@ pref("extensions.dss.switchPending", false);    // Non-dynamic switch pending af
 pref("xpinstall.whitelist.add", "update.mozilla.org");
 pref("xpinstall.whitelist.add.103", "addons.mozilla.org");
 
+pref("mail.shell.checkDefaultClient", true);
 pref("mail.phishing.detection.enabled", true); // enable / disable phishing detection for link clicks
 pref("mail.spellcheck.inline", true);
 pref("mail.showPreviewText", true); // enables preview text in mail alerts and folder tooltips
@@ -212,12 +213,6 @@ pref("network.cookie.cookieBehavior", 3); // 0-Accept, 1-dontAcceptForeign, 2-do
 /////////////////////////////////////////////////////////////////
 // End seamonkey suite mailnews.js pref overrides
 ///////////////////////////////////////////////////////////////// 
-
-// whether to check if we are the default mail, news or feed client
-// on startup. 
-pref("mail.checkDefaultMail", true);
-pref("mail.checkDefaultNews", false);
-pref("mail.checkDefaultFeed", false);
 
 /////////////////////////////////////////////////////////////////
 // Overrides for generic app behavior from the seamonkey suite's all.js

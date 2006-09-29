@@ -42,10 +42,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS = public
+
 MODULE = shellservice
 LIBRARY_NAME = shellservice_s
 MODULE_NAME = nsMailShellModule
 MOZILLA_INTERNAL_API = 1
+
 
 REQUIRES = \
 	xpcom \
@@ -58,7 +61,12 @@ REQUIRES = \
 	windowwatcher \
 	pref \
 	embed_base \
+	msgMapi \
 	$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS = nsMailWinIntegration.cpp
+endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT), gtk2)
 CPPSRCS = nsMailGNOMEIntegration.cpp
@@ -71,5 +79,13 @@ endif
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
+JS_SET_MAIL_COMPONENT = nsSetDefaultMail.js
 
 CXXFLAGS += $(TK_CFLAGS)
+
+libs::
+	$(INSTALL) $(srcdir)/$(JS_SET_MAIL_COMPONENT) $(DIST)/bin/components
+
+clobber::
+	rm -f $(DIST)/bin/components/$(JS_SET_MAIL_COMPONENT)
+

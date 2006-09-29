@@ -35,15 +35,16 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH   = ../../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/rules.mk
+MODULE = shellservice
+XPIDL_MODULE  = shellservice
 
-ifneq (,$(filter windows gtk2 mac cocoa, $(MOZ_WIDGET_TOOLKIT)))
-DEFINES += -DHAVE_SHELL_SERVICE=1
-endif
+XPIDLSRCS = nsIShellService.idl
+
+include $(topsrcdir)/config/rules.mk

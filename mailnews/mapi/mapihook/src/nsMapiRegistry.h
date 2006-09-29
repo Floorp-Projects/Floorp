@@ -35,6 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/***************************************************************************
+*
+* This File is no longer used by Thunderbird. Seamonkey is the only consumer.
+* See mozilla/mail/components/shell for the Thunderbird registry code
+*
+*****************************************************************************/
+
 #ifndef nsmapiregistry_h____
 #define nsmapiregistry_h____
 

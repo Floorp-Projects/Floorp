@@ -44,6 +44,10 @@ include $(DEPTH)/config/autoconf.mk
 
 DEFINES += -DMOZ_APP_VERSION=$(MOZ_APP_VERSION)
 
+ifneq (,$(filter windows gtk2 mac cocoa, $(MOZ_WIDGET_TOOLKIT)))
+DEFINES += -DHAVE_SHELL_SERVICE=1
+endif
+
 ifndef MOZ_BRANDING_DIRECTORY
 DEFINES += -DMOZ_USE_GENERIC_BRANDING
 endif

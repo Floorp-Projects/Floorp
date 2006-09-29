@@ -39,31 +39,28 @@
 #ifndef nsMailMacIntegration_h_
 #define nsMailMacIntegration_h_
 
-#include "nsIMapiRegistry.h"
+#include "nsIShellService.h"
+#include "nsIGenericFactory.h"
+#include "nsString.h"
+
 #include <CoreFoundation/CoreFoundation.h>
 
 #define NS_MAILMACINTEGRATION_CID \
 {0x85a27035, 0xb970, 0x4079, {0xb9, 0xd2, 0xe2, 0x1f, 0x69, 0xe6, 0xb2, 0x1f}}
 
-class nsMailMacIntegration : public nsIMapiRegistry
+class nsMailMacIntegration : public nsIShellService
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIMAPIREGISTRY
+  NS_DECL_NSISHELLSERVICE
   nsMailMacIntegration();
 
 protected:
-  nsresult IsDefaultHandlerForProtocol(CFStringRef aScheme,
-                                       PRBool *aIsDefault);
-  nsresult SetAsDefaultHandlerForProtocol(CFStringRef aScheme);
+  PRBool isDefaultHandlerForProtocol(CFStringRef aScheme);
+  nsresult setAsDefaultHandlerForProtocol(CFStringRef aScheme);
 
 private:
-  ~nsMailMacIntegration() {}
-
-  PRBool mShowMailDialog;
-  PRBool mShowNewsDialog;
-  PRBool mShowFeedDialog;
-
+  virtual ~nsMailMacIntegration() {};
+  PRBool mCheckedThisSession;
 };
-
 #endif

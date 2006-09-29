@@ -61,10 +61,15 @@ REQUIRES = \
 	msgbase \
 	mailnews \
 	import \
+	shellservice \
 	$(NULL)
 
 CPPSRCS = nsModule.cpp \
           $(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+OS_LIBS += $(call EXPAND_LIBNAME,shell32)
+endif
 
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../migration/src \
@@ -75,7 +80,7 @@ SHARED_LIBRARY_LIBS = \
 	../migration/src/$(LIB_PREFIX)profilemigration_s.$(LIB_SUFFIX) \
 	$(NULL)
 
-ifneq (,$(filter mac cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter windows mac cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))
 SHARED_LIBRARY_LIBS += ../shell/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX)
 endif
 
