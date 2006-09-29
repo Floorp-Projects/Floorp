@@ -317,7 +317,7 @@ FeedWriter.prototype = {
     }
 #endif
 #ifdef XP_MACOSX
-    var lfm = file.QueryInterface(Components.interfaces.nsILocalFileMac_MOZILLA_1_8_BRANCH);
+    var lfm = file.QueryInterface(Ci.nsILocalFileMac);
     try {
       return lfm.bundleDisplayName;
     }
@@ -546,6 +546,7 @@ FeedWriter.prototype = {
     menuItem = this._document.createElementNS(XUL_NS, "menuitem");
     menuItem.id = "selectedAppMenuItem";
     menuItem.className = "menuitem-iconic";
+    menuItem.setAttribute("handlerType", "client");
     try {
       var prefs = Cc["@mozilla.org/preferences-service;1"].
                   getService(Ci.nsIPrefBranch);
@@ -553,7 +554,6 @@ FeedWriter.prototype = {
                                           Ci.nsILocalFile);
 
       if (selectedApp.exists()) {
-        menuItem.setAttribute("handlerType", "client");
         this._initMenuItemWithFile(menuItem, selectedApp);
       }
       else {
