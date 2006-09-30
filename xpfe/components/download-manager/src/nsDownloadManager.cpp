@@ -1041,10 +1041,11 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
   if (!mRequest)
     mRequest = aRequest; // used for pause/resume
 
-  // filter notifications since they come in so frequently
+  // Filter notifications since they come in so frequently, but we want to
+  // process the last notification.
   PRTime now = PR_Now();
   nsInt64 delta = now - mLastUpdate;
-  if (delta < gInterval)
+  if (delta < gInterval && aCurTotalProgress != aMaxTotalProgress)
     return NS_OK;
 
   mLastUpdate = now;
@@ -1238,7 +1239,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
     if (mDownloadState == DOWNLOADING || mDownloadState == NOTSTARTED) {
       mDownloadState = FINISHED;
 
-      // Set file size at the end of a tranfer (for unknown transfer amounts)
+      // Set file size at the end of a transfer (for unknown transfer amounts)
       if (mMaxBytes == -1)
         mMaxBytes = mCurrBytes;
 
