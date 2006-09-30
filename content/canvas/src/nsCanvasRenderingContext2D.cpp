@@ -2754,6 +2754,11 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
 #define NATIVE_SURFACE_IS_BIG_ENDIAN
 #endif
 
+// OS/2 needs this painted the other way around
+#ifdef XP_OS2
+#define NATIVE_SURFACE_IS_VERTICALLY_FLIPPED
+#endif
+
     // Convert the data
     PRUint8* dest = tmpBuf;
     PRInt32 index = 0;
@@ -2763,7 +2768,11 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
     PRUint32 BScale = ComputeScaleFactor(format.mBlueCount);
     
     for (PRInt32 i = 0; i < aSurfaceSize.height; ++i) {
+#ifdef NATIVE_SURFACE_IS_VERTICALLY_FLIPPED
+        PRUint8* src = data + (aSurfaceSize.height-1 - i)*rowSpan;
+#else
         PRUint8* src = data + i*rowSpan;
+#endif
         for (PRInt32 j = 0; j < aSurfaceSize.width; ++j) {
             /* v is the pixel value */
 #ifdef NATIVE_SURFACE_IS_BIG_ENDIAN
