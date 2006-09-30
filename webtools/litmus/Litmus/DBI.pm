@@ -32,6 +32,7 @@
 
 package Litmus::DBI;
 
+require Apache::DBI;
 use strict;
 use warnings;
 use Litmus::Config;
@@ -107,7 +108,7 @@ sub db_Main {
 	   $dbh = Apache->request()->pnotes('dbh');
    }
    if ( !$dbh ) {
-	   $dbh = DBI->connect(
+	   $dbh = DBI->connect_cached(
 		   $dsn,  $Litmus::Config::db_user,
 		   $Litmus::Config::db_pass, $db_options
 	   );
@@ -120,19 +121,18 @@ sub db_Main {
 
 # hack around a bug where auto_increment columns don't work properly unless 
 # the auto_increment key is explicitly set to null in insert statements:
-sub _insert_row {
+sub _auto_increment_value {
 	my $self = shift;
-	my $data = shift;
-	
-	my @primary_columns = $self->primary_columns;
-	if (! defined $data->{$primary_columns[0]} && @primary_columns == 1) {
-		# they key has not been explictly set in the insert statement, so we
-		# just add it in
-		$data->{$primary_columns[0]} = 'null';
-	}
-	
-	return $self->SUPER::_insert_row($data);
+	my $dbh  = $self->db_Main;
+	my $id;
+	eval { 
+		my $sth = $dbh->prepare("SELECT LAST_INSERT_ID()");
+		$sth->execute();
+		my @data = $sth->fetchrow_array();
+		$id = $data[0];
+	} or return $self->SUPER::_auto_increment_value();
+	if (! defined $id) { return $self->SUPER::_auto_increment_value() }
+	return $id;
 }
 
 1;
-
