@@ -8096,7 +8096,7 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
     *vp = OBJECT_TO_JSVAL(resobj);
 
 out:
-    fp->flags = flags;
+    fp->flags = flags | (fp->flags & JSFRAME_POP_BLOCKS);
     if (withobj) {
         fp->scopeChain = scobj;
         JS_SetPrivate(cx, withobj, NULL);
