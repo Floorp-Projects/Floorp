@@ -1398,10 +1398,14 @@ static PRBool writeTokens(FILE* stream, Tokenizer& tokenizer)
     return PR_TRUE;
 }
 
-static PRBool readTokens(FILE* stream, Tokenizer& tokenizer)
+static PRBool readTokens(FILE* stream, Tokenizer& tokenizer, PRInt64 fileSize)
 {
     PRUint32 tokenCount;
     if (readUInt32(stream, &tokenCount) != 1)
+        return PR_FALSE;
+
+    PRInt64 fpos = ftell(stream);
+    if (fpos < 0)
         return PR_FALSE;
 
     PRUint32 bufferSize = 4096;
@@ -1415,20 +1419,24 @@ static PRBool readTokens(FILE* stream, Tokenizer& tokenizer)
         PRUint32 size;
         if (readUInt32(stream, &size) != 1)
             break;
+        fpos += 8;
+        if (fpos + size > fileSize) {
+            delete[] buffer;
+            return PR_FALSE;
+        }
         if (size >= bufferSize) {
             delete[] buffer;
-            PRUint32 newBufferSize = 2 * bufferSize;
-            while (size >= newBufferSize) {
-                newBufferSize *= 2;
-                if(newBufferSize == 0) // see bug #240788
+            while (size >= bufferSize) {
+                bufferSize *= 2;
+                if (bufferSize == 0)
                     return PR_FALSE;
             }
-            buffer = new char[newBufferSize];
+            buffer = new char[bufferSize];
             if (!buffer) return PR_FALSE;
-            bufferSize = newBufferSize;
         }
         if (fread(buffer, size, 1, stream) != 1)
             break;
+        fpos += size;
         buffer[size] = '\0';
         tokenizer.add(buffer, count);
     }
@@ -1499,14 +1507,19 @@ void nsBayesianFilter::readTrainingData()
   if (NS_FAILED(rv)) 
     return;
 
+  PRInt64 fileSize;
+  rv = mTrainingFile->GetFileSize(&fileSize);
+  if (NS_FAILED(rv)) 
+    return;
+
   // FIXME:  should make sure that the tokenizers are empty.
   char cookie[4];
   if (!((fread(cookie, sizeof(cookie), 1, stream) == 1) &&
         (memcmp(cookie, kMagicCookie, sizeof(cookie)) == 0) &&
         (readUInt32(stream, &mGoodCount) == 1) &&
         (readUInt32(stream, &mBadCount) == 1) &&
-         readTokens(stream, mGoodTokens) &&
-         readTokens(stream, mBadTokens))) {
+         readTokens(stream, mGoodTokens, fileSize) &&
+         readTokens(stream, mBadTokens, fileSize))) {
       NS_WARNING("failed to read training data.");
       PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("failed to read training data."));
   }
