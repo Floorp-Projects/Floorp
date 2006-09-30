@@ -1714,9 +1714,6 @@ static JSFunctionSpec object_methods[] = {
     {js_lookupGetter_str,         obj_lookupGetter,   1,0,0},
     {js_lookupSetter_str,         obj_lookupSetter,   1,0,0},
 #endif
-#if JS_HAS_GENERATORS
-    {js_iterator_str,             js_DefaultIterator, 0,0,0},
-#endif
     {0,0,0,0,0}
 };
 
