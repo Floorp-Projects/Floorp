@@ -441,6 +441,7 @@
           this.onchange = null;
                     
           this.mColorBox = document.getAnonymousElementByAttribute(this, "anonid", "colorbox");
+          this.mColorBox.style.backgroundColor = this.color;
         
           var popup = document.getAnonymousElementByAttribute(this, "anonid", "colorpopup")
           popup._colorPicker = this;
