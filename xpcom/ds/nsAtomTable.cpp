@@ -456,6 +456,7 @@ void* AtomImpl::operator new ( size_t size, const nsACString& aString ) CPP_THRO
      */
   size += aString.Length() * sizeof(char);
   AtomImpl* ii = NS_STATIC_CAST(AtomImpl*, ::operator new(size));
+  NS_ENSURE_TRUE(ii, nsnull);
 
   char* toBegin = &ii->mString[0];
   nsACString::const_iterator fromBegin, fromEnd;
