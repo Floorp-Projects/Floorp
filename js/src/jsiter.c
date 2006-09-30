@@ -278,8 +278,8 @@ iterator_self(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 static JSFunctionSpec iterator_methods[] = {
-    {js_iterator_str, iterator_self, 0,0,0},
-    {js_next_str,     iterator_next, 0,0,0},
+    {js_iterator_str, iterator_self, 0,JSPROP_READONLY|JSPROP_PERMANENT,0},
+    {js_next_str,     iterator_next, 0,JSPROP_READONLY|JSPROP_PERMANENT,0},
     {0,0,0,0,0}
 };
 
@@ -933,10 +933,10 @@ generator_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 static JSFunctionSpec generator_methods[] = {
-    {js_iterator_str, iterator_self,     0,0,0},
-    {js_next_str,     generator_next,    0,0,0},
-    {js_send_str,     generator_send,    1,0,0},
-    {js_throw_str,    generator_throw,   1,0,0},
+    {js_iterator_str, iterator_self,     0,JSPROP_READONLY|JSPROP_PERMANENT,0},
+    {js_next_str,     generator_next,    0,JSPROP_READONLY|JSPROP_PERMANENT,0},
+    {js_send_str,     generator_send,    1,JSPROP_READONLY|JSPROP_PERMANENT,0},
+    {js_throw_str,    generator_throw,   1,JSPROP_READONLY|JSPROP_PERMANENT,0},
     {js_close_str,    generator_close,   0,JSPROP_READONLY|JSPROP_PERMANENT,0},
     {0,0,0,0,0}
 };
