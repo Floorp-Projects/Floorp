@@ -391,7 +391,6 @@ js_ValueToIterator(JSContext *cx, jsval v, uintN flags)
     JSTempValueRooter tvr;
     jsval arg, fval, rval;
     JSString *str;
-    JSFunction *fun;
     const JSAtom *atom = cx->runtime->atomState.iteratorAtom;
 
     /* XXX work around old valueOf call hidden beneath js_ValueToObject */
@@ -428,20 +427,6 @@ js_ValueToIterator(JSContext *cx, jsval v, uintN flags)
 
     iterobj = JSVAL_TO_OBJECT(rval);
 
-    /*
-     * If __iterator__ is the default native method, the native iterator it
-     * returns can be flagged as hidden from script access.  This flagging is
-     * predicated on js_ValueToIterator being called only by the for-in loop
-     * code -- the js_CloseNativeIterator early-finalization optimization
-     * based on it will break badly if script can reach iterobj.
-     */
-    if (OBJ_GET_CLASS(cx, iterobj) == &js_IteratorClass &&
-        VALUE_IS_FUNCTION(cx, fval)) {
-        fun = (JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(fval));
-        if (!FUN_INTERPRETED(fun) && fun->u.n.native == js_DefaultIterator)
-            iterobj->slots[JSSLOT_ITER_FLAGS] |= INT_TO_JSVAL(JSITER_ENUMERATE);
-    }
-
 out:
     JS_POP_TEMP_ROOT(cx, &tvr);
     return iterobj;
@@ -474,12 +459,10 @@ js_CallIteratorNext(JSContext *cx, JSObject *iterobj, uintN flags,
     const jsid id = ATOM_TO_JSID(cx->runtime->atomState.nextAtom);
 
     /* Fastest path for repeated call from for-in loop bytecode. */
-    if (iterobj == cx->cachedIterObj) {
+    if (flags & JSITER_ENUMERATE) {
         JS_ASSERT(OBJ_GET_CLASS(cx, iterobj) == &js_IteratorClass);
-        JS_ASSERT(flags & JSITER_ENUMERATE);
         if (!iterator_next(cx, iterobj, 0, NULL, rval) ||
             !CheckKeyValueReturn(cx, flags, idp, rval)) {
-            cx->cachedIterObj = NULL;
             return JS_FALSE;
         }
         return JS_TRUE;
@@ -520,8 +503,6 @@ js_CallIteratorNext(JSContext *cx, JSObject *iterobj, uintN flags,
                     !CheckKeyValueReturn(cx, flags, idp, rval)) {
                     return JS_FALSE;
                 }
-                if (flags & JSITER_ENUMERATE)
-                    cx->cachedIterObj = iterobj;
                 return JS_TRUE;
             }
         }
