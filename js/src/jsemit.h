@@ -65,6 +65,8 @@ typedef enum JSStmtType {
     STMT_LABEL,                 /* labeled statement:  L: s */
     STMT_IF,                    /* if (then) statement */
     STMT_ELSE,                  /* else clause of if statement */
+    STMT_BODY,                  /* synthetic body of function with
+                                   destructuring formal parameters */
     STMT_BLOCK,                 /* compound statement: { s1[;... sN] } */
     STMT_SWITCH,                /* switch statement */
     STMT_WITH,                  /* with statement */
@@ -81,15 +83,19 @@ typedef enum JSStmtType {
 #define STMT_TYPE_IN_RANGE(t,b,e) ((uint)((t) - (b)) <= (uintN)((e) - (b)))
 
 /*
+ * A comment on the encoding of the JSStmtType enum and type-testing macros:
+ *
  * STMT_TYPE_MAYBE_SCOPE tells whether a statement type is always, or may
  * become, a lexical scope.  It therefore includes block and switch (the two
- * "maybe" scopes) and excludes with (which has dynamic scope, pending the
- * "reformed with" in ES4/JS2).  It includes all try-catch-finally types.
+ * low-numbered "maybe" scope types) and excludes with (with has dynamic scope
+ * pending the "reformed with" in ES4/JS2).  It includes all try-catch-finally
+ * types, which are high-numbered maybe-scope types.
  *
  * STMT_TYPE_LINKS_SCOPE tells whether a JSStmtInfo of the given type eagerly
- * links to other scoping statement info records.  It excludes the two "maybe"
- * types, block and switch, as well as the try and both finally types, since
- * try, etc., don't need block scope unless they contain let declarations.
+ * links to other scoping statement info records.  It excludes the two early
+ * "maybe" types, block and switch, as well as the try and both finally types,
+ * since try and the other trailing maybe-scope types don't need block scope
+ * unless they contain let declarations.
  *
  * We treat with as a static scope because it prevents lexical binding from
  * continuing further up the static scope chain.  With the "reformed with"
@@ -523,9 +529,12 @@ typedef enum JSSrcNoteType {
                                    also used on JSOP_ENDINIT if extra comma
                                    at end of array literal: [1,2,,] */
     SRC_DECL        = 6,        /* type of a declaration (var, const, let*) */
+    SRC_DESTRUCT    = 6,        /* JSOP_DUP starting a destructuring assignment
+                                   operation, with SRC_DECL_* offset operand */
     SRC_PCDELTA     = 7,        /* distance forward from comma-operator to
                                    next POP, or from CONDSWITCH to first CASE
                                    opcode, etc. -- always a forward delta */
+    SRC_GROUPASSIGN = 7,        /* SRC_DESTRUCT variant for [a, b] = [c, d] */
     SRC_ASSIGNOP    = 8,        /* += or another assign-op follows */
     SRC_COND        = 9,        /* JSOP_IFEQ is from conditional ?: operator */
     SRC_BRACE       = 10,       /* mandatory brace, for scope or to avoid
@@ -559,11 +568,13 @@ typedef enum JSSrcNoteType {
  * instruction, so can be used to denote distinct declaration syntaxes to the
  * decompiler.
  *
- * NB: the var_prefix array in jsopcode.c depends on these dense indexes.
+ * NB: the var_prefix array in jsopcode.c depends on these dense indexes from
+ * SRC_DECL_VAR through SRC_DECL_LET.
  */
-#define SRC_DECL_VAR             0
-#define SRC_DECL_CONST           1
-#define SRC_DECL_LET             2
+#define SRC_DECL_VAR            0
+#define SRC_DECL_CONST          1
+#define SRC_DECL_LET            2
+#define SRC_DECL_NONE           3
 
 #define SN_TYPE_BITS            5
 #define SN_DELTA_BITS           3
