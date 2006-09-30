@@ -315,9 +315,6 @@ sub packit {
         TinderUtils::run_shell_command("cp -r $package_location/xpi $stagedir/windows-xpi");
       }
     } elsif (TinderUtils::is_linux()) {
-      # XXX: this seems to be removed by the packaging process above
-      mkdir($stagedir, 0775);
-
       if ($Settings::stub_installer) {
         TinderUtils::run_shell_command("cp $package_location/stub/*.tar.* $stagedir/");
       }
@@ -1345,6 +1342,8 @@ sub main {
     cleanup();
     return returnStatus("Pushing package $local_build_dir failed", ("testfailed"));
   }
+
+  TinderUtils::run_shell_command("rm -rf $local_build_dir");
 
   if ($cachebuild) { 
     # Above, we created last-built.new at the start of the cachebuild cycle.

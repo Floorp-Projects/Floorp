@@ -122,12 +122,15 @@ $SUBDIR = "$aMozAppName-installer";
 if (-e $ROOT)
 {
     if (-w $ROOT) 
-        { system("rm -rf $ROOT"); }
+        { system("rm -rf $STAGE $RAW $XPI $BLOB $STUB"); }
     else 
         { die "--- deliver.pl: check perms on $ROOT: $!"; }
 }
+else
+{
+    mkdir($ROOT, 0777)  || die "--- deliver.pl: couldn't mkdir root: $!";
+}
 
-mkdir($ROOT, 0777)  || die "--- deliver.pl: couldn't mkdir root: $!";
 mkdir($STAGE, 0777) || die "--- deliver.pl: couldn't mkdir stage: $!";
 mkdir($RAW, 0777)   || die "--- deliver.pl: couldn't mkdir raw: $!";
 mkdir($XPI, 0777)   || die "--- deliver.pl: couldn't mkdir xpi: $!";
