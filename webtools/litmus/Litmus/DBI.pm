@@ -32,7 +32,6 @@
 
 package Litmus::DBI;
 
-require Apache::DBI;
 use strict;
 use warnings;
 use Litmus::Config;
@@ -101,7 +100,7 @@ my $db_options = { __PACKAGE__->_default_attributes };
 
 __PACKAGE__->_remember_handle('Main'); # so dbi_commit works
 
-# override default to avoid using Ima::DBI closure
+# override default to avoid using Ima::DBI closure for mod_perl compatibility
 sub db_Main {
    my $dbh;
    if ( $ENV{'MOD_PERL'} and !$Apache::ServerStarting ) {
@@ -117,6 +116,22 @@ sub db_Main {
 	   }
    }
    return $dbh;
+}
+
+# hack around a bug where auto_increment columns don't work properly unless 
+# the auto_increment key is explicitly set to null in insert statements:
+sub _insert_row {
+	my $self = shift;
+	my $data = shift;
+	
+	my @primary_columns = $self->primary_columns;
+	if (! defined $data->{$primary_columns[0]} && @primary_columns == 1) {
+		# they key has not been explictly set in the insert statement, so we
+		# just add it in
+		$data->{$primary_columns[0]} = 'null';
+	}
+	
+	return $self->SUPER::_insert_row($data);
 }
 
 1;
