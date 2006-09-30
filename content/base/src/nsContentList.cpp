@@ -441,11 +441,7 @@ nsContentList::NodeWillBeDestroyed(const nsINode* aNode)
 
   // We will get no more updates, so we can never know we're up to
   // date
-  mState = LIST_DIRTY;
-
-  // Call Reset() to prevent getting bogus (or eveng dangling) items since
-  // PopulateSelf() will be a no-op after mRootNode was nulled out above
-  Reset();
+  SetDirty();
 }
 
 // static
@@ -519,7 +515,7 @@ nsContentList::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
       // We match aContent now, and it's not in our list already.  Just dirty
       // ourselves; this is simpler than trying to figure out where to insert
       // aContent.
-      mState = LIST_DIRTY;
+      SetDirty();
     }
   } else {
     // We no longer match aContent.  Remove it from our list.  If it's
@@ -583,7 +579,7 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
         if (MatchSelf(aContainer->GetChildAt(i))) {
           // Uh-oh.  We're gonna have to add elements into the middle
           // of our list. That's not worth the effort.
-          mState = LIST_DIRTY;
+          SetDirty();
           break;
         }
       }
@@ -627,7 +623,7 @@ nsContentList::ContentInserted(nsIDocument *aDocument,
       MayContainRelevantNodes(NODE_FROM(aContainer, aDocument)) &&
       !IsContentAnonymous(aChild) &&
       MatchSelf(aChild)) {
-    mState = LIST_DIRTY;
+    SetDirty();
   }
 
   ASSERT_IN_SYNC;
@@ -646,7 +642,7 @@ nsContentList::ContentRemoved(nsIDocument *aDocument,
       MayContainRelevantNodes(NODE_FROM(aContainer, aDocument)) &&
       !IsContentAnonymous(aChild) &&
       MatchSelf(aChild)) {
-    mState = LIST_DIRTY;
+    SetDirty();
   }
 
   ASSERT_IN_SYNC;
@@ -792,10 +788,9 @@ nsContentList::PopulateSelf(PRUint32 aNeededLength)
 
   ASSERT_IN_SYNC;
 
-  if (mState == LIST_DIRTY) {
-    Reset();
-  }
   PRUint32 count = mElements.Count();
+  NS_ASSERTION(mState != LIST_DIRTY || count == 0,
+               "Reset() not called when setting state to LIST_DIRTY?");
 
   if (count >= aNeededLength) // We're all set
     return;
