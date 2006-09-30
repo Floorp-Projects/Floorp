@@ -307,7 +307,7 @@ nsComboboxControlFrame::nsComboboxControlFrame(nsStyleContext* aContext)
 
   mInRedisplayText = PR_FALSE;
 
-  mRecentSelectedIndex = -1;
+  mRecentSelectedIndex = NS_SKIP_NOTIFY_INDEX;
 
   //Shrink the area around its contents
   //SetFlags(NS_BLOCK_SHRINK_WRAP);
@@ -2007,7 +2007,7 @@ PRInt32
 nsComboboxControlFrame::UpdateRecentIndex(PRInt32 aIndex)
 {
   PRInt32 index = mRecentSelectedIndex;
-  if (mRecentSelectedIndex == -1 || aIndex == -1)
+  if (mRecentSelectedIndex == NS_SKIP_NOTIFY_INDEX || aIndex == NS_SKIP_NOTIFY_INDEX)
     mRecentSelectedIndex = aIndex;
   return index;
 }

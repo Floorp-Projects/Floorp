@@ -52,6 +52,9 @@
 //#define DO_NEW_REFLOW
 #endif
 
+//Mark used to indicate when onchange has been fired for current combobox item
+#define NS_SKIP_NOTIFY_INDEX -2
+
 #include "nsAreaFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIComboboxControlFrame.h"
