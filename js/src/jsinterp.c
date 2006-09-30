@@ -5330,7 +5330,6 @@ interrupt:
              * Getters and setters are just like watchpoints from an access
              * control point of view.
              */
-            SAVE_SP_AND_PC(fp);
             ok = OBJ_CHECK_ACCESS(cx, obj, id, JSACC_WATCH, &rtmp, &attrs);
             if (!ok)
                 goto out;
