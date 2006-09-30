@@ -158,7 +158,7 @@ $BinaryName = 'thunderbird.exe';
 #$ShellOverride = '';
 
 # Release build options
-$ReleaseBuild  = 1;
+$ReleaseBuild  = 0;
 $shiptalkback  = 1;
 $build_hour    = "3";
 $package_creation_path = "/mail/installer";
