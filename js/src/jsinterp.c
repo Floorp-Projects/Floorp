@@ -1730,7 +1730,9 @@ ImportProperty(JSContext *cx, JSObject *obj, jsid id)
             ok = OBJ_SET_PROPERTY(cx, target, id, &value);
         } else {
             ok = OBJ_DEFINE_PROPERTY(cx, target, id, value, NULL, NULL,
-                                     attrs & ~JSPROP_EXPORTED,
+                                     attrs & ~(JSPROP_EXPORTED |
+                                               JSPROP_GETTER |
+                                               JSPROP_SETTER),
                                      NULL);
         }
         if (prop)
