@@ -90,6 +90,7 @@ bin\components\import.xpt
 bin\components\impComm4xMail.xpt
 bin\components\mailview.xpt
 bin\components\mailprofilemigration.xpt
+bin\components\shellservice.xpt
 
 bin\chrome\toolkit.jar
 bin\chrome\toolkit.manifest
