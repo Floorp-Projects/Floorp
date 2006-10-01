@@ -43,7 +43,7 @@
 <!ENTITY findField.accesskey "n">
 <!ENTITY replaceField.label "Replace with:">
 <!ENTITY replaceField.accesskey "e">
-<!ENTITY caseSensitiveCheckbox.label "Match upper/lower case">
+<!ENTITY caseSensitiveCheckbox.label "Match exact case">
 <!ENTITY caseSensitiveCheckbox.accesskey "c">
 <!ENTITY wrapCheckbox.label "Wrap around">
 <!ENTITY wrapCheckbox.accesskey "W">
