@@ -506,6 +506,11 @@ JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(JSObject *));
  * consults GC-thing flags stored separately from the thing to decide the type
  * of thing).
  *
+ * Alternatively, if a single pointer to rooted JSObject * is required, use
+ * JS_PUSH_TEMP_ROOT_OBJECT(cx, NULL, &tvr). Then &tvr.u.object gives the
+ * necessary pointer, which puns tvr.u.value safely because object tag bits
+ * are all zeroes.
+ *
  * If you need to protect a result value that flows out of a C function across
  * several layers of other functions, use the js_LeaveLocalRootScopeWithResult
  * internal API (see further below) instead.
@@ -548,7 +553,7 @@ struct JSTempValueRooter {
 #define JS_PUSH_TEMP_ROOT_OBJECT(cx,obj,tvr)                                  \
     JS_BEGIN_MACRO                                                            \
         JS_PUSH_TEMP_ROOT_COMMON(cx, tvr);                                    \
-        (tvr)->count = -3;                                                    \
+        (tvr)->count = -1;                                                    \
         (tvr)->u.object = (obj);                                              \
     JS_END_MACRO
 
