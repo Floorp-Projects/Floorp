@@ -275,6 +275,12 @@ $(PROGRAM): $(OBJS) $(EXTRA_LIBS)
 	@$(MAKE_OBJDIR)
 ifeq (,$(filter-out _WIN%,$(NS_USE_GCC)_$(OS_TARGET)))
 	$(MKPROG) $(subst /,\\,$(OBJS)) -Fe$@ -link $(LDFLAGS) $(subst /,\\,$(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS))
+ifdef MT
+	if test -f $@.manifest; then \
+		$(MT) -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;1; \
+		rm -f $@.manifest; \
+	fi
+endif	# MSVC with manifest tool
 else
 ifdef XP_OS2_VACPP
 	$(MKPROG) -Fe$@ $(CFLAGS) $(OBJS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)
@@ -329,6 +335,12 @@ ifdef NS_USE_GCC
 	$(LINK_DLL) $(OBJS) $(SUB_SHLOBJS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS) $(LD_LIBS) $(RES)
 else
 	$(LINK_DLL) -MAP $(DLLBASE) $(subst /,\\,$(OBJS) $(SUB_SHLOBJS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS) $(LD_LIBS) $(RES))
+ifdef MT
+	if test -f $@.manifest; then \
+		$(MT) -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;2; \
+		rm -f $@.manifest; \
+	fi
+endif	# MSVC with manifest tool
 endif
 else
 ifdef XP_OS2_VACPP
@@ -367,6 +379,12 @@ $(OBJDIR)/$(PROG_PREFIX)%$(PROG_SUFFIX): $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX)
 ifeq (,$(filter-out _WIN%,$(NS_USE_GCC)_$(OS_TARGET)))
 	$(MKPROG) $< -Fe$@ -link \
 	$(LDFLAGS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)
+ifdef MT
+	if test -f $@.manifest; then \
+		$(MT) -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;1; \
+		rm -f $@.manifest; \
+	fi
+endif	# MSVC with manifest tool
 else
 	$(MKPROG) -o $@ $(CFLAGS) $< \
 	$(LDFLAGS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)

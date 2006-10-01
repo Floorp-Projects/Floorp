@@ -61,6 +61,7 @@ else
 	RANLIB       = echo
 	BSDECHO      = echo
 	RC           = rc.exe
+	MT           = mt.exe
 endif
 
 ifdef BUILD_TREE
