@@ -158,6 +158,7 @@ Iterator(JSContext *cx, JSObject *iterobj, uintN argc, jsval *argv, jsval *rval)
     JSObject *obj;
     JSBool keyonly;
     jsid id;
+    JSObject *obj2;
     jsval fval;
 
     /* XXX work around old valueOf call hidden beneath js_ValueToObject */
@@ -178,8 +179,19 @@ Iterator(JSContext *cx, JSObject *iterobj, uintN argc, jsval *argv, jsval *rval)
     }
 
     id = ATOM_TO_JSID(cx->runtime->atomState.iteratorAtom);
-    return JS_GetMethodById(cx, obj, id, &obj, &fval) &&
-           js_InternalCall(cx, obj, fval, argc - 1, argv + 1, rval);
+    if (!JS_GetMethodById(cx, obj, id, &obj2, &fval))
+        return JS_FALSE;
+
+    if (JSVAL_IS_VOID(fval)) {
+        /* Fail over to the default enumerating native iterator. */
+        keyonly = JS_FALSE;
+        return js_ValueToBoolean(cx, argv[1], &keyonly) &&
+               js_NewNativeIterator(cx, obj,
+                                    keyonly ? 0 : JSITER_FOREACH,
+                                    rval);
+    }
+    argv[0] = OBJECT_TO_JSVAL(obj2);
+    return js_InternalCall(cx, obj2, fval, argc - 1, argv + 1, rval);
 }
 
 static JSBool
