@@ -115,17 +115,17 @@ function test()
   compareSource(expect, actual, summary + ': 12');
 
   f = function() { ({}) = 3 }   
-  expect = 'function() { ({}) = 3; }';
+  expect = 'function() { [] = 3; }';
   actual = f + '';
   compareSource(expect, actual, summary + ': 13');
 
   f = function () { while( {} = e ) ; }
-  expect = 'function () { while( {} = e ) ; }';
+  expect = 'function () { while( ([] = e) ) {} }';
   actual = f + '';
   compareSource(expect, actual, summary + ': 14');
 
   f = function () { while( {} = (a)(b) ) ; }
-  expect = 'function () { while( {} = (a)(b) ) {} }';
+  expect = 'function () { while( ([] = a(b)) ) {} }';
   actual = f + '';
   compareSource(expect, actual, summary + ': 15');
 
@@ -160,7 +160,7 @@ function test()
   compareSource(expect, actual, summary + ': 21');
 
   f = (function() { for ( let [a,b]=[c,d] in [3]) { } })
-  expect = 'function() { for ( let [a,b]=[c,d] in [3]) { } }';
+  expect = 'function() { [c, d]; for ( let [a,b] in [3]) { } }';
   actual = f + '';
   compareSource(expect, actual, summary + ': 22');
 
@@ -170,7 +170,7 @@ function test()
   compareSource(expect, actual, summary + ': 23');
 
   f = function () { for(var [x, y] = r in p) { } }
-  expect = 'function () { for(var [x, y] = r in p) { } }';
+  expect = 'function () { var [x, y] = r; for( [x, y] in p) { } }';
   actual = f + '';
   compareSource(expect, actual, summary + ': 24');
 
@@ -185,7 +185,7 @@ function test()
   compareSource(expect, actual, summary + ': 26');
 
   f = function () { delete 4..x }
-  expect = 'function () { delete 4..x; }';
+  expect = 'function () { delete (4).x; }';
   actual = f + '';
   compareSource(expect, actual, summary + ': 27');
 
