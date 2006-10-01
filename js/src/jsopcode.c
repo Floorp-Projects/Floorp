@@ -1157,7 +1157,8 @@ static jsbytecode *
 DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc);
 
 static jsbytecode *
-DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
+DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
+                          JSBool *hole)
 {
     JSContext *cx;
     JSPrinter *jp;
@@ -1168,13 +1169,15 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
     ptrdiff_t todo;
     JSAtom *atom;
 
+    *hole = JS_FALSE;
     cx = ss->sprinter.context;
     jp = ss->printer;
     LOAD_OP_DATA(pc);
 
     switch (op) {
       case JSOP_POP:
-        todo = 0;
+        *hole = JS_TRUE;
+        todo = SprintPut(&ss->sprinter, ", ", 2);
         break;
 
       case JSOP_DUP:
@@ -1297,6 +1300,7 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
     JSAtom *atom;
     jssrcnote *sn;
     JSString *str;
+    JSBool hole;
 
     LOCAL_ASSERT(*pc == JSOP_DUP);
     pc += JSOP_DUP_LENGTH;
@@ -1310,7 +1314,7 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
     if (head < 0 || !PushOff(ss, head, JSOP_NOP))
         return NULL;
     ss->sprinter.offset -= PAREN_SLOP;
-    JS_ASSERT(head == ss->sprinter.offset - 1);
+    LOCAL_ASSERT(head == ss->sprinter.offset - 1);
     LOCAL_ASSERT(*OFF2STR(&ss->sprinter, head) == '[');
 
     cx = ss->sprinter.context;
@@ -1404,7 +1408,7 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
          * and continues for a bounded number of bytecodes or stack operations
          * (and which in any event stops before endpc).
          */
-        pc = DecompileDestructuringLHS(ss, pc, endpc);
+        pc = DecompileDestructuringLHS(ss, pc, endpc, &hole);
         if (!pc)
             return NULL;
         if (pc == endpc || *pc != JSOP_DUP)
@@ -1419,7 +1423,7 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
         if (sn && SN_TYPE(sn) == SRC_DESTRUCT)
             break;
 
-        if (SprintPut(&ss->sprinter, ", ", 2) < 0)
+        if (!hole && SprintPut(&ss->sprinter, ", ", 2) < 0)
             return NULL;
 
         pc += JSOP_DUP_LENGTH;
@@ -1441,6 +1445,7 @@ DecompileGroupAssignment(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
     const JSCodeSpec *cs;
     uintN oplen, start, end, i;
     ptrdiff_t todo;
+    JSBool hole;
     const char *rval;
 
     LOAD_OP_DATA(pc);
@@ -1455,7 +1460,7 @@ DecompileGroupAssignment(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
         pc += oplen;
         if (pc == endpc)
             return pc;
-        pc = DecompileDestructuringLHS(ss, pc, endpc);
+        pc = DecompileDestructuringLHS(ss, pc, endpc, &hole);
         if (!pc)
             return NULL;
         if (pc == endpc)
@@ -1463,7 +1468,7 @@ DecompileGroupAssignment(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
         LOAD_OP_DATA(pc);
         if (op != JSOP_PUSH && op != JSOP_GETLOCAL)
             break;
-        if (SprintPut(&ss->sprinter, ", ", 2) < 0)
+        if (!hole && SprintPut(&ss->sprinter, ", ", 2) < 0)
             return NULL;
     }
 
@@ -1471,16 +1476,15 @@ DecompileGroupAssignment(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
     if (SprintPut(&ss->sprinter, "] = [", 5) < 0)
         return NULL;
 
-    start = (uintN) GET_ATOM_INDEX(pc);
+    start = GET_UINT16(pc);
     end = ss->top - 1;
-    for (i = start; i < end; ) {
+    for (i = start; i < end; i++) {
         rval = GetStr(ss, i);
-        if (SprintCString(&ss->sprinter, rval) < 0)
+        if (Sprint(&ss->sprinter, "%s%s",
+                   (i == start) ? "" : ", ",
+                   (i == end - 1 && *rval == '\0') ? ", " : rval) < 0) {
             return NULL;
-        if (++i == end)
-            break;
-        if (SprintPut(&ss->sprinter, ", ", 2) < 0)
-            return NULL;
+        }
     }
 
     if (SprintPut(&ss->sprinter, "]", 1) < 0)
@@ -2010,7 +2014,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                  * The decompiler must match the code generator's model, which
                  * is why JSOP_FINALLY pushes a cookie that JSOP_RETSUB pops.
                  */
-                newtop = (uintN) GET_ATOM_INDEX(pc);
+                newtop = (uintN) GET_UINT16(pc);
                 oldtop = ss->top;
                 LOCAL_ASSERT(newtop <= oldtop);
                 todo = -2;
@@ -2025,7 +2029,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     for (i = newtop; i < oldtop; i++) {
                         rval = OFF2STR(&ss->sprinter, ss->offsets[i]);
                         if (Sprint(&ss->sprinter, ss_format,
-                                   (i == newtop) ? "" : ", ", rval) < 0) {
+                                   (i == newtop) ? "" : ", ",
+                                   (i == oldtop - 1 && *rval == '\0')
+                                   ? ", " : rval) < 0) {
                             return NULL;
                         }
                     }

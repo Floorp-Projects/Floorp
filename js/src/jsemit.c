@@ -3488,13 +3488,16 @@ EmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSOp declOp,
 
     slot = depth;
     for (pn = lhs->pn_head; pn; pn = pn->pn_next) {
-        if (pn->pn_type != TOK_COMMA) {
-            if (slot < limit) {
-                EMIT_UINT16_IMM_OP(JSOP_GETLOCAL, slot);
-            } else {
-                if (js_Emit1(cx, cg, JSOP_PUSH) < 0)
-                    return JS_FALSE;
-            }
+        if (slot < limit) {
+            EMIT_UINT16_IMM_OP(JSOP_GETLOCAL, slot);
+        } else {
+            if (js_Emit1(cx, cg, JSOP_PUSH) < 0)
+                return JS_FALSE;
+        }
+        if (pn->pn_type == TOK_COMMA && pn->pn_arity == PN_NULLARY) {
+            if (js_Emit1(cx, cg, JSOP_POP) < 0)
+                return JS_FALSE;
+        } else {
             if (!EmitDestructuringLHS(cx, cg, pn, pn->pn_next != NULL))
                 return JS_FALSE;
         }
