@@ -86,7 +86,8 @@ static void
 Usage(const char *progName)
 {
 	fprintf(stderr, 
-	  "Usage: %s [-p port] [-c connections] [-C cipher(s)] hostname\n",
+"Usage: %s [-p port] [-c connections] [-d dbdir] [-w password]\n"
+"\t\t[-C cipher(s)] hostname\n",
 	progName);
 	exit(1);
 }
