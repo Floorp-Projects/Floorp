@@ -985,6 +985,10 @@ nsFontPSXft::FindFont(PRUnichar aChar, const nsFont& aFont,
         result = FcPatternGetCharSet(set->fonts[i], FC_CHARSET, 0, &fc_charset);
         if (result != FcResultMatch || fc_charset == nsnull)
           continue;
+        // increment reference count
+        fc_charset = FcCharSetCopy(fc_charset);
+        if (fc_charset == nsnull)
+          continue;
 
         nsXftEntry *xftEntry = new nsXftEntry(set->fonts[i]);
         if (!xftEntry)
