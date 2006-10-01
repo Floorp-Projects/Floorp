@@ -474,7 +474,9 @@ var BookmarksMenuDNDObserver = {
   {
     var target = aEvent.target;
 
-    if (aDragSession) { // this function gets its API abused by onDragStart
+    // onDragStart calls this without a drag session
+    // There will be no sourceNode for drags from external apps
+    if (aDragSession && aDragSession.sourceNode) {
       var orientation = BookmarksMenu.getBTOrientation(aEvent, target);
       if (target == aDragSession.sourceNode ||
           (target == aDragSession.sourceNode.previousSibling &&
