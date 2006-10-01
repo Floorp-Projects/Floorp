@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.90 $ $Date: 2006/08/30 17:57:20 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.91 $ $Date: 2006/10/01 05:37:24 $";
 #endif /* DEBUG */
 
 /*
@@ -706,8 +706,13 @@ STAN_GetCERTCertificateNameForInstance (
 char * 
 STAN_GetCERTCertificateName(PLArenaPool *arenaOpt, NSSCertificate *c)
 {
+    char * result;
     nssCryptokiInstance *instance = get_cert_instance(c);
-    return STAN_GetCERTCertificateNameForInstance(arenaOpt, c, instance);
+    /* It's OK to call this function, even if instance is NULL */
+    result = STAN_GetCERTCertificateNameForInstance(arenaOpt, c, instance);
+    if (instance)
+	nssCryptokiObject_Destroy(instance);
+    return result;
 }
 
 static void
