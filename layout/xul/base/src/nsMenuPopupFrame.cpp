@@ -1691,6 +1691,11 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
 NS_IMETHODIMP 
 nsMenuPopupFrame::ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFlag)
 {
+  // See if we have a context menu open.
+  nsIMenuParent *contextMenu = GetContextMenu();
+  if (contextMenu)
+    return contextMenu->ShortcutNavigation(aKeyEvent, aHandledFlag);
+
   if (mCurrentMenu) {
     PRBool isOpen = PR_FALSE;
     mCurrentMenu->MenuIsOpen(isOpen);
