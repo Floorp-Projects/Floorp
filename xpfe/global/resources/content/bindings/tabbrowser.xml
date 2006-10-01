@@ -1115,7 +1115,7 @@
               t.setAttribute("afterselected", true);
 
             // navigate back to the proper page from the light page
-            b.webNavigation.goBack();
+            b.webNavigation.gotoIndex(0);
 
             // reattach the old history
             b.webNavigation.sessionHistory = hist;
@@ -1254,7 +1254,10 @@
             var entry = oldSH.getEntryAtIndex(oldSH.index, false)
             newSH.addEntry(entry, true);
 
-            oldBrowser.loadURI("about:blank");
+            // LOAD_FLAGS_FROM_EXTERNAL forces the eviction of the current page
+            oldBrowser.loadURIWithFlags("about:blank", Components.interfaces.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL);
+            // But we don't actually want the blank page to load (bug 354927)
+            oldBrowser.stop();
 
             // remove overflow from the undo stack
             if (this.savedBrowsers.length > maxUndoDepth) {
