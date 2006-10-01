@@ -2816,8 +2816,9 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 : (pn1->pn_type != TOK_NAME &&
                    pn1->pn_type != TOK_DOT &&
 #if JS_HAS_DESTRUCTURING
-                   (pn->pn_op == JSOP_FORIN &&
-                    (pn1->pn_type != TOK_RB || pn1->pn_count != 2)) &&
+                   ((pn->pn_op == JSOP_FORIN)
+                    ? (pn1->pn_type != TOK_RB || pn1->pn_count != 2)
+                    : (pn1->pn_type != TOK_RB && pn1->pn_type != TOK_RC)) &&
 #endif
 #if JS_HAS_LVALUE_RETURN
                    pn1->pn_type != TOK_LP &&
