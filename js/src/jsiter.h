@@ -61,10 +61,6 @@ js_CloseNativeIterator(JSContext *cx, JSObject *iterobj);
 extern void
 js_CloseIteratorState(JSContext *cx, JSObject *iterobj);
 
-extern JSBool
-js_DefaultIterator(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                   jsval *rval);
-
 extern JSObject *
 js_ValueToIterator(JSContext *cx, jsval v, uintN flags);
 
