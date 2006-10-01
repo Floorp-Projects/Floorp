@@ -291,10 +291,10 @@ myGetClientAuthData(void *arg,
 			break;
 		    }
 		    secStatus = SECFailure;
-		    break;
 		}
-		CERT_FreeNicknames(names);
+		CERT_DestroyCertificate(cert);
 	    } /* for loop */
+	    CERT_FreeNicknames(names);
 	}
     }
 
