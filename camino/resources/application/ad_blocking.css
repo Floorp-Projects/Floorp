@@ -1,3 +1,41 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Simon Fraser <smfr@smfr.org>.
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Simon Fraser <smfr@smfr.org> (Original Author)
+ *   Smokey Ardisson <alqahira@mindspring.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 /*
  * CSS rules to hide various ad-related images and Flash files,
  * while avoiding too many false hits.
@@ -24,7 +62,7 @@ a:link[href*="mondomedia.com"] img,
 a:link[href*="mediaplex.com"] img,
 a:link[href*="bluestreak"] img,
 a:link[href*="doubleclick"] img,
-a:link[href*=".2mdn.net"] img,
+a:link[href*="2mdn.net"] img,
 a:link[href*="atdmt.com"] img,
 a:link[href*="serving-sys.com"] img,
 a:link[href*="linksynergy.com"] img,
@@ -32,7 +70,6 @@ a:link[href*="qksrv.net"] img,
 a:link[href*="tribalfusion"] img,
 a:link[href*="valueclick"] img,
 a:link[href*=".fastclick.net"] img,
-a:link[href*="/rd."] img,
 a:link[href*="/0AD"] img,
 a:link[href*="trackoffer."] img,
 a:link[href*="tracksponsor."] img,
@@ -74,7 +111,7 @@ embed[type="application/x-shockwave-flash"][src*="adtech.de"],
 embed[type="application/x-shockwave-flash"][src*=".falkag."],
 embed[type="application/x-shockwave-flash"][src*="adt.m7z.net"],
 embed[type="application/x-shockwave-flash"][src*="doubleclick.net"],
-embed[type="application/x-shockwave-flash"][src*=".2mdn.net"],
+embed[type="application/x-shockwave-flash"][src*="2mdn.net"],
 embed[type="application/x-shockwave-flash"][src*=".fastclick.net"],
 embed[type="application/x-shockwave-flash"][src*="serving-sys.com"],
 embed[type="application/x-shockwave-flash"][src*="atdmt.com"],
@@ -123,10 +160,12 @@ embed[type="application/x-shockwave-flash"][src*="adinterax.com"],
 embed[type="application/x-shockwave-flash"][src*="adbureau.net"],
 embed[type="application/x-shockwave-flash"][src*="yceml.net"],
 embed[type="application/x-shockwave-flash"][src*="adsys.townnews.com"],
-embed[type="application/x-shockwave-flash"][src*="2mdn.net"],
+embed[type="application/x-shockwave-flash"][src*="images.anandtech.com/banners"],
+embed[type="application/x-shockwave-flash"][src*="precisionclick.com"],
+embed[type="application/x-shockwave-flash"][src*="adsatt.espn.go.com"],
 
 img[src*="googlesyndication.com"],
-img[src*="ad.doubleclick.net"],
+img[src*=".doubleclick.net"],
 img[src*="mediaplex.com"],
 img[src*="serving-sys.com"],
 img[src*="us.yimg.com/a/"],
@@ -144,7 +183,7 @@ img[src*="/toms_skyscraper_"],
 img[src*="ad4.sina.com.cn"],
 img[src*=".ultramercial.com"],
 img[src*=".casalemedia.com"],
-img[src*=".2mdn.net"],
+img[src*="2mdn.net"],
 img[src*=".zedo.com"],
 img[src*=".mspaceads.com"],
 img[src*=".adbrite.com"],
@@ -173,8 +212,8 @@ img[src*="www.save.tv/STVAF"],
 img[src*="tradedoubler.com"],
 img[src*="yceml.net"],
 img[src*="adjuggler.com"],
-img[src*="2mdn.net"],
 img[src*="sharesale.com"],
+img[src*="content.ipro.com/images"],
 
 iframe[src*="/ad."],
 iframe[src*="/ads."],
@@ -205,7 +244,7 @@ iframe[src*="media.adlegend.com"],
 iframe[src*="bluestreak"],
 iframe[src*="doubleclick"],
 iframe[src*="casalemedia.com"],
-iframe[src*=".2mdn.net"],
+iframe[src*="2mdn.net"],
 iframe[src*="serving-sys.com"],
 iframe[src*="qksrv.net"],
 iframe[src*="tribalfusion"],
@@ -241,8 +280,11 @@ iframe[src*="adsys.townnews.com"],
 iframe[src*="media.adrevolver.com"],
 iframe[src*="kanoodle"],
 iframe[src*="nextag.com"],
-iframe[src*="2mdn.net"],
 iframe[src*="adframe"],
+iframe[src*="mm.chitika.net"],
+iframe[src*="/RealMedia/ads/"],
+iframe[src*="precisionclick.com/ad/"],
+iframe[src*="adsatt.espn.go.com"],
 
 table#overtureLinksWrapper,
 table.adbritetable,
@@ -257,11 +299,13 @@ div.yschspns,
 div#yschsec,
 div#rh>div.rh,
 div#sponsorsAd,
+div#leaderboardAd,
 div[id^="ads_"],
 div[id^="ad_"],
 div[id*="ad440x160"],
 div[id*="ad300x100"],
 div.werbeblock,
+div.werbung,
 div[id$="_ad"],
 div.top_ad_image,
 div[class*="_ad_"],
@@ -274,7 +318,8 @@ div[id*="swf_171"],
 div[id*="swf_adbox"],
 div[id*="swf_perma_flash"],
 div[id*="swf_skyscraper"],
-div[id*="km_main_div"]
+div[id*="km_main_div"],
+div#ad * object > embed[type="application/x-shockwave-flash"] 
 
 { display: none ! important }
 
@@ -283,6 +328,7 @@ a:link[href*="download."] img,
 a:link[href*="mozilla.org"] img,
 a:link[href*="netflix.com/addtoqueue"] img,
 a:link[href*="click.mp3"] img,
+a:link[href*="linksynergy.com"] img[src*="apple.com"],
 iframe[src*="mozilla.org"]
 
 { display: inline ! important }
