@@ -161,7 +161,7 @@ function reportCompare (expected, actual, description)
     }
     else
     {
-        writeLineToLog(description + ' PASSED');
+        writeLineToLog('PASSED! ' + description);
     }
     return (output == ""); // true if passed
 }
@@ -507,7 +507,7 @@ function compareSource(expect, actual, summary)
     writeLineToLog('expect:\n' + expectP);
     writeLineToLog('actual:\n' + actualP);
 
-    reportCompare(true, expectP === actualP, summary + ': compare source');
+    reportCompare(expectP, actualP, summary + ': compare source');
 
     // actual must be compilable if expect is?
     try

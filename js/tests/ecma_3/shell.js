@@ -151,6 +151,10 @@ function reportCompare (expected, actual, description)
             output = description + "\n" + output;
         reportFailure (output);   
     }
+    else
+    {
+        writeLineToLog('PASSED! ' + description);
+    }
     
     return (output == ""); // true if passed
 }
