@@ -194,6 +194,11 @@ function populateTestcase(data) {
   document.getElementById('editform_div').style.display = 'none';
   document.getElementById('testcase_display_div').style.display = 'block';
   enableModeButtons();
+
+  if (firstPassEdit) {
+    firstPassEdit = 0;
+    switchToEdit();
+  }
 }
 
 function blankTestcaseForm(formid) {

@@ -116,15 +116,15 @@ var current_user_id=[% user.user_id %];
 <script type="text/javascript">
 var em = document.getElementById('testcase_id'); 
 if (em.selectedIndex >= 0) {
-  loadTestcase(1);
-  enableForm('edit_testcase_form');
 [% IF edit %] 
   // user clicked an "edit testcase" button for a test, so switch to edit
   // right away
-  if (testcase.testcase_id == [% edit | js | html %]) {
-    switchToEdit();
-  }
+  var firstPassEdit = 1;
+[% ELSE %]
+  var firstPassEdit = 0;
 [% END %]  
+  loadTestcase(1);
+  enableForm('edit_testcase_form');
 } else {
   disableForm('edit_testcase_form');
 }
