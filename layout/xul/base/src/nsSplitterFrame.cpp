@@ -465,6 +465,8 @@ nsSplitterFrame::HandleEvent(nsPresContext* aPresContext,
                                       nsGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus)
 {
+  nsWeakFrame weakFrame(this);
+  nsRefPtr<nsSplitterFrameInner> kungFuDeathGrip(mInner);
   switch (aEvent->message) {
     case NS_MOUSE_MOVE: 
       mInner->MouseDrag(aPresContext, aEvent);
@@ -475,6 +477,7 @@ nsSplitterFrame::HandleEvent(nsPresContext* aPresContext,
     break;
   }
 
+  NS_ENSURE_STATE(weakFrame.IsAlive());
   return nsBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
