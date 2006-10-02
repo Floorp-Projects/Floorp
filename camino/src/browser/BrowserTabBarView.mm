@@ -58,6 +58,7 @@
 -(void)initOverflowMenu;
 -(NSRect)tabsRect;
 -(BOOL)isMouseInside;
+-(NSString*)view:(NSView*)view stringForToolTip:(NSToolTipTag)tag point:(NSPoint)point userData:(void*)userData;
 
 @end
 
@@ -223,6 +224,11 @@ static const int kOverflowButtonMargin = 1;
   return nil;
 }
 
+-(NSString*)view:(NSView*)view stringForToolTip:(NSToolTipTag)tag point:(NSPoint)point userData:(void*)userData
+{
+  return [(BrowserTabViewItem*)userData label];
+}
+
 -(void)drawTabBarBackgroundInRect:(NSRect)rect withActiveTabRect:(NSRect)tabRect
 {
   // draw tab bar background, omitting the selected Tab
@@ -331,24 +337,28 @@ static const int kOverflowButtonMargin = 1;
 -(void)registerTabButtonsForTracking
 {
   if ([self window] && mVisible) {
-    NSArray * tabItems = [mTabView tabViewItems];
-    if(mTrackingCells) [self unregisterTabButtonsForTracking];
-    mTrackingCells = [NSMutableArray arrayWithCapacity:[tabItems count]];
-    [mTrackingCells retain];
-    NSEnumerator *tabEnumerator = [tabItems objectEnumerator];
+    NSArray* tabItems = [mTabView tabViewItems];
+    if (mTrackingCells)
+      [self unregisterTabButtonsForTracking];
+    mTrackingCells = [[NSMutableArray alloc] initWithCapacity:[tabItems count]];
+    NSEnumerator* tabEnumerator = [tabItems objectEnumerator];
     
     NSPoint local = [[self window] convertScreenToBase:[NSEvent mouseLocation]];
     local = [self convertPoint:local fromView:nil];
     
-    BrowserTabViewItem *tab = nil;
+    BrowserTabViewItem* tab = nil;
+    float rightEdge = NSMaxX([self tabsRect]);
     while ((tab = [tabEnumerator nextObject])) {
-      TabButtonCell * tabButton = [tab tabButtonCell];
+      TabButtonCell* tabButton = [tab tabButtonCell];
       if (tabButton) {
-        [mTrackingCells addObject:tabButton];
         NSRect trackingRect = [tabButton frame];
         // only track tabs that are onscreen
-        if (NSMaxX(trackingRect) <= NSMaxX([self tabsRect]))
-          [tabButton addTrackingRectInView:self withFrame:trackingRect cursorLocation:local];
+        if (NSMaxX(trackingRect) > (rightEdge + 0.00001))
+          break;
+
+        [mTrackingCells addObject:tabButton];
+        [tabButton addTrackingRectInView:self withFrame:trackingRect cursorLocation:local];
+        [self addToolTipRect:trackingRect owner:self userData:(void*)tab];
       }
     }
   }
@@ -393,6 +403,7 @@ static const int kOverflowButtonMargin = 1;
     [mTrackingCells release];
     mTrackingCells = nil;
   }
+  [self removeAllToolTips];
 }
   
 // returns the height the tab bar should be if drawn
