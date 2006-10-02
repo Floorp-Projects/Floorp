@@ -37,6 +37,7 @@
 
 #import "NSString+Utils.h"
 #import "NSView+Utils.h"
+#import "ImageAdditions.h"
 
 #import "PreferenceManager.h"
 #import "BrowserWrapper.h"
@@ -518,9 +519,9 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   if ([self popupsBlocked] && !mBlockedPopupView) {
     [NSBundle loadNibNamed:@"PopupBlockView" owner:self];
 
-    [mBlockedPopupCloseButton setImage:[NSImage imageNamed:@"tab_close"]];
-    [mBlockedPopupCloseButton setAlternateImage:[NSImage imageNamed:@"tab_close_pressed"]];
-    [mBlockedPopupCloseButton setHoverImage:[NSImage imageNamed:@"tab_close_hover"]];
+    [mBlockedPopupCloseButton setImage:[NSImage imageNamed:@"popup_close"]];
+    [mBlockedPopupCloseButton setAlternateImage:[NSImage imageNamed:@"popup_close_pressed"]];
+    [mBlockedPopupCloseButton setHoverImage:[NSImage imageNamed:@"popup_close_hover"]];
 
     [self addSubview:mBlockedPopupView];
     [self setFrame:[self frame] resizingBrowserViewIfHidden:YES];
@@ -1135,7 +1136,15 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 #pragma mark -
 
-@implementation InformationPanel
+@implementation InformationPanelView
+
+- (id)initWithFrame:(NSRect)frameRect
+{
+  if ((self = [super initWithFrame:frameRect]))
+    mPopupBlockedBackgroundImage = [[NSImage imageNamed:@"popup_blocked_background"] retain];
+  
+  return self;
+}
 
 //
 // -drawRect:
@@ -1144,16 +1153,19 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 //
 - (void)drawRect:(NSRect)aRect
 {
-  // draw background color
-  [[NSColor colorWithCalibratedRed:1.0 green:0.9 blue:0.58 alpha:1.0] set];
-  NSRectFill([self frame]);
+  NSPoint patternOrigin = [self convertPoint:NSMakePoint(0.0f, 0.0f) toView:nil];
+  [mPopupBlockedBackgroundImage drawTiledInRect:aRect
+                                         origin:patternOrigin
+                                      operation:NSCompositeCopy];
   
-  // draw shadowed border
-  [[NSColor controlShadowColor] set];
-  NSRectFill(NSMakeRect(aRect.origin.x, 0.0, aRect.size.width, 1.0));
-
   // Call our base class method to paint contents
-  [super drawRect: aRect];
+  [super drawRect:aRect];
+}
+
+- (void)dealloc
+{
+  [mPopupBlockedBackgroundImage release];
+  [super dealloc];
 }
 
 @end
