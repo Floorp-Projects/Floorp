@@ -91,8 +91,8 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 }
 
 .menu-iconic-icon {
-  width: 16px;
-  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
   list-style-image: inherit;
 }
 
@@ -167,7 +167,7 @@ popup > menuitem[_moz-menuactive="true"] {
 menulist > menupopup > menuitem,
 .menulist-menupopup > menu,
 menulist > menupopup > menu {
-  padding-right: 26px;
+  padding-right: 30px;
   padding-top: 1px;
   padding-bottom: 1px;
   max-width: none;
