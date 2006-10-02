@@ -43,6 +43,7 @@
 #include "txForwardContext.h"
 #include "txXMLUtils.h"
 #include "txXSLTFunctions.h"
+#include "txTokenizer.h"
 #ifndef TX_EXE
 #include "nsIContent.h"
 #endif
@@ -361,20 +362,13 @@ txRootPattern::toString(nsAString& aDest)
  * This looks like the id() function, but may only have LITERALs as
  * argument.
  */
-txIdPattern::txIdPattern(const nsAString& aString)
+txIdPattern::txIdPattern(const nsSubstring& aString)
 {
-    nsAString::const_iterator pos, begin, end;
-    aString.BeginReading(begin);
-    aString.EndReading(end);
-    pos = begin;
-    while (pos != end) {
-        while (pos != end && XMLUtils::isWhitespace(*pos))
-            ++pos;
-        begin = pos;
-        while (pos != end && !XMLUtils::isWhitespace(*pos))
-            ++pos;
+    txTokenizer tokenizer(aString);
+    while (tokenizer.hasMoreTokens()) {
         // this can fail, XXX move to a Init(aString) method
-        mIds.AppendString(Substring(begin, pos));
+        nsCOMPtr<nsIAtom> atom = do_GetAtom(tokenizer.nextToken());
+        mIds.AppendObject(atom);
     }
 }
 
@@ -389,31 +383,23 @@ MBool txIdPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
     }
 
     // Get a ID attribute, if there is
-    nsAutoString value;
 #ifdef TX_EXE
     Element* elem;
     nsresult rv = txXPathNativeNode::getElement(aNode, &elem);
     NS_ASSERTION(NS_SUCCEEDED(rv), "So why claim it's an element above?");
+
+    nsAutoString value;
     if (!elem->getIDValue(value)) {
         return PR_FALSE;
     }
+    nsCOMPtr<nsIAtom> id = do_GetAtom(value);
 #else
     nsIContent* content = txXPathNativeNode::getContent(aNode);
     NS_ASSERTION(content, "a Element without nsIContent");
-    if (!content) {
-        return MB_FALSE;
-    }
 
-    nsIAtom* idAttr = content->GetIDAttributeName();
-    if (!idAttr) {
-        return MB_FALSE; // no ID for this element defined, can't match
-    }
-    content->GetAttr(kNameSpaceID_None, idAttr, value);
-    if (value.IsEmpty()) {
-        return MB_FALSE; // no ID attribute given
-    }
+    nsIAtom* id = content->GetID();
 #endif // TX_EXE
-    return mIds.IndexOf(value) > -1;
+    return id && mIds.IndexOf(id) > -1;
 }
 
 double txIdPattern::getDefaultPriority()
@@ -434,10 +420,14 @@ txIdPattern::toString(nsAString& aDest)
     aDest.AppendLiteral("id('");
     PRUint32 k, count = mIds.Count() - 1;
     for (k = 0; k < count; ++k) {
-        aDest.Append(*mIds[k]);
+        nsAutoString str;
+        mIds[k]->ToString(str);
+        aDest.Append(str);
         aDest.Append(PRUnichar(' '));
     }
-    aDest.Append(*mIds[count]);
+    nsAutoString str;
+    mIds[count]->ToString(str);
+    aDest.Append(str);
     aDest.Append(NS_LITERAL_STRING("')"));
 #ifdef DEBUG
     aDest.Append(PRUnichar('}'));

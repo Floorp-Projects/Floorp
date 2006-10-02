@@ -79,12 +79,12 @@ private:
 
     NodeDefinition* mInner;
 #else
-    txXPathNode(nsIDocument* aDocument) : mDocument(aDocument),
+    txXPathNode(nsIDocument* aDocument) : mNode(aDocument),
                                           mIndex(eDocument)
     {
     }
     txXPathNode(nsIContent* aContent, PRUint32 aIndex = eContent)
-        : mContent(aContent),
+        : mNode(aContent),
           mIndex(aIndex)
     {
     }
@@ -103,15 +103,23 @@ private:
         return mIndex != eDocument && mIndex != eContent;
     };
 
+    nsIContent* Content() const
+    {
+        NS_ASSERTION(isContent() || isAttribute(), "wrong type");
+        return NS_STATIC_CAST(nsIContent*, mNode);
+    }
+    nsIDocument* Document() const
+    {
+        NS_ASSERTION(isDocument(), "wrong type");
+        return NS_STATIC_CAST(nsIDocument*, mNode);
+    }
+
     enum PositionType
     {
         eDocument = (PRUint32)-2,
         eContent = (PRUint32)-1
     };
-    union {
-        nsIDocument* mDocument;        // eDocument
-        nsIContent* mContent;          // eContent, eAttribute
-    };
+    nsINode* mNode;
     PRUint32 mIndex;
 #endif
 };
