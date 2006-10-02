@@ -4734,7 +4734,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                      */
                     if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
                         return JS_FALSE;
-                    JS_ASSERT(count > 0);
+                    JS_ASSERT(count >= 0);
                     EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, count);
                 }
 
