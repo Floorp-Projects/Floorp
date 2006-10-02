@@ -5591,13 +5591,19 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             return NULL;
 
         MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_IN_PAREN);
-        if (pn2->pn_type == TOK_RP) {
+        if (pn2->pn_type == TOK_RP ||
+            (js_CodeSpec[pn2->pn_op].prec >= js_CodeSpec[JSOP_GETPROP].prec)) {
             /*
              * Avoid redundant JSOP_GROUP opcodes, for efficiency and mainly
              * to help the decompiler look ahead from a JSOP_ENDINIT to see a
              * JSOP_GROUP followed by a POP or POPV.  That sequence means the
              * parentheses are mandatory, to disambiguate object initialisers
              * as expression statements from block statements.
+             *
+             * Also drop pn if pn2 is a member or a primary expression of any
+             * kind.  This is required to avoid generating a JSOP_GROUP that
+             * will null the |obj| interpreter register, causing |this| in any
+             * call of that member expression to bind to the global object.
              */
             pn->pn_kid = NULL;
             RecycleTree(pn, tc);
