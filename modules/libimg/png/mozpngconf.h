@@ -42,6 +42,9 @@
 #ifndef MOZ_PNG_READ
 #define PNG_NO_READ_SUPPORTED
 #endif
+#if defined(XP_MACOSX) && !defined(PNG_NO_MMX_CODE)
+#define PNG_NO_MMX_CODE
+#endif
 #define PNG_NO_READ_BACKGROUND
 #define PNG_NO_READ_DITHER
 #define PNG_NO_READ_INVERT
