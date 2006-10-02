@@ -2320,7 +2320,10 @@ interrupt:
             goto out;
 
           EMPTY_CASE(JSOP_NOP)
-          EMPTY_CASE(JSOP_GROUP)
+
+          BEGIN_CASE(JSOP_GROUP)
+            obj = NULL;
+          END_CASE(JSOP_GROUP)
 
           BEGIN_CASE(JSOP_PUSH)
             PUSH_OPND(JSVAL_VOID);
