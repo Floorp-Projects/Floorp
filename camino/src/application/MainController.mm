@@ -1737,31 +1737,32 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
 
 - (void)openURL:(NSPasteboard *) pboard userData:(NSString *) userData error:(NSString **) error
 {
-  NSMutableString *urlString = [[[NSMutableString alloc] init] autorelease];
-  if (!urlString)
-    return;
-
   NSArray* types = [pboard types];
   if (![types containsObject:NSStringPboardType]) {
     *error = NSLocalizedString(@"Error: couldn't open URL.",
                     @"pboard couldn't give URL string.");
     return;
   }
-  NSString* pboardString = [pboard stringForType:NSStringPboardType];
-  if (!pboardString) {
+  NSString* urlString = [pboard stringForType:NSStringPboardType];
+  if (!urlString) {
     *error = NSLocalizedString(@"Error: couldn't open URL.",
                     @"pboard couldn't give URL string.");
     return;
   }
-  NSScanner* scanner = [NSScanner scannerWithString:pboardString];
-  [scanner scanCharactersFromSet:[[NSCharacterSet whitespaceAndNewlineCharacterSet] invertedSet] intoString:&urlString];
-  while (![scanner isAtEnd]) {
-    NSString *tmpString;
-    [scanner scanCharactersFromSet:[[NSCharacterSet whitespaceAndNewlineCharacterSet] invertedSet] intoString:&tmpString];
-    [urlString appendString:tmpString];
-  }
   
-  [self openNewWindowOrTabWithURL:urlString andReferrer:nil alwaysInFront:YES];
+  // check to see if it's a bookmark keyword
+  NSArray *resolvedURLs = [[BookmarkManager sharedBookmarkManager] resolveBookmarksKeyword:urlString];
+
+  if (resolvedURLs) {
+    if ([resolvedURLs count] == 1)
+      [self openNewWindowOrTabWithURL:[resolvedURLs lastObject] andReferrer:nil alwaysInFront:YES];
+    else
+      [self openBrowserWindowWithURLs:resolvedURLs behind:nil allowPopups:NO];
+  }
+  else {
+    urlString = [urlString stringByRemovingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    [self openNewWindowOrTabWithURL:urlString andReferrer:nil alwaysInFront:YES];
+  }
 }
 
 //
