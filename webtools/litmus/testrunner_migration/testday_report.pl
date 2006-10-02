@@ -94,7 +94,7 @@ my $subgroup_sql_where = "WHERE tr.submission_time>=$start_ts and tr.submission_
 my $subgroup_sql_group_by = "GROUP BY tg.product_id,tg.testgroup_id,s.subgroup_id";
 my $subgroup_sql_order_by = "ORDER BY p.name ASC, tg.name ASC, sgtg.sort_order ASC";
 
-my $user_sql_select = "SELECT u.email,count(tr.testresult_id) AS num_results,u.irc_nickname";
+my $user_sql_select = "SELECT u.user_id,u.email,count(tr.testresult_id) AS num_results,u.irc_nickname";
 my $user_sql_from = "FROM test_results tr, testcases t, users u";
 my $user_sql_where = "WHERE tr.testcase_id=t.testcase_id AND tr.submission_time>=$start_ts and tr.submission_time<$finish_ts AND tr.user_id=u.user_id";
 my $user_sql_group_by = "GROUP BY tr.user_id";
@@ -246,12 +246,16 @@ $sth->execute();
 
 my $users;
 while (my @result = $sth->fetchrow_array) {
-  my $email = $result[2];
-  $email =~ s/\@/\&\#64;/;
-  
+  my $email = $result[3];
+  if ($email) {
+    $email =~ s/\@/\&\#64;/;
+  } else {
+    $email = $result[1];
+  }
+
   print "|-\n";
   print "| " . $email . "\n";
-  print "| " . $result[1] . "\n";
+  print "| " . $result[2] . "\n";
 }
 $sth->finish;
 print "|}\n\n";
@@ -261,7 +265,11 @@ $sth->execute();
 
 my $testers;
 while (my @result = $sth->fetchrow_array) {
-  $testers->{$result[3]}->{$result[1]} = $result[2];
+  if ($result[3]) {
+    $testers->{$result[3]}->{$result[1]} = $result[2];
+  } else {
+    $testers->{$result[0]}->{$result[1]} = $result[2];
+  }
 }
 
 print "=== Result Status Breakdown By Tester ===\n\n";
