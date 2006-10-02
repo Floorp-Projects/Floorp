@@ -92,7 +92,7 @@ const int kMenuTruncationChars = 60;
 {
   if ( (self = [super initWithFrame:frameRect]) )
   {
-    mTabViewItem = tabViewItem;
+    mTabViewItem = (BrowserTabViewItem*)tabViewItem;
 
     mLabelCell = [[TruncatingTextAndImageCell alloc] init];
     [mLabelCell setControlSize:NSSmallControlSize];		// doesn't work?
@@ -566,22 +566,5 @@ const int kMenuTruncationChars = 60;
     sCloseIconHover = [[NSImage imageNamed:@"tab_close_hover"] retain];
   return sCloseIconHover;
 }
-
-#define NO_TOOLTIPS_ON_TABS 1
-
-#ifdef NO_TOOLTIPS_ON_TABS
-// bug 168719 covers crashes in AppKit after using a lot of tabs because
-// the tooltip code internal to NSTabView/NSTabViewItem gets confused and
-// tries to set a tooltip for a (probably) deallocated object. Since we can't
-// easily get into the guts, all we can do is disable tooltips to fix this
-// topcrash by stubbing out the NSTabViewItem's method that sets up the
-// toolip rects.
-//
-// It is my opinion that this is Apple's bug, but just try proving that to them.
--(void)_resetToolTipIfNecessary
-{
-  // no-op
-}
-#endif
 
 @end
