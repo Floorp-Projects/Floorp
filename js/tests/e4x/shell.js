@@ -150,7 +150,7 @@ function TEST(section, expected, actual)
     }
     else
     {
-        print(section + ' PASSED');
+        print('PASSED! ' + section);
     }
     return true;
 }
