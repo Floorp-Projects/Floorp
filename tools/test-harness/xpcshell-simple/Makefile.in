@@ -48,7 +48,7 @@ MODULE		= test_harness_xpcshell_simple
 # Here's how you let the build system know there are tests in the
 # "example" folder:
 ifdef ENABLE_TESTS
-TOOL_DIRS  += example
+DIRS  += example
 endif
 
 include $(topsrcdir)/config/rules.mk
