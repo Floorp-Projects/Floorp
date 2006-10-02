@@ -432,7 +432,10 @@ nsCertTree::UpdateUIContents()
   nsCOMPtr<nsISupports> isupport = dont_AddRef(mCertArray->ElementAt(j));
   nsCOMPtr<nsIX509Cert> orgCert = do_QueryInterface(isupport);
   for (PRInt32 i=0; i<mNumOrgs; i++) {
-    orgCert->GetIssuerOrganization(mTreeArray[i].orgName);
+    nsString &orgNameRef = mTreeArray[i].orgName;
+    orgCert->GetIssuerOrganization(orgNameRef);
+    if (orgNameRef.IsEmpty())
+      orgCert->GetCommonName(orgNameRef);
     mTreeArray[i].open = PR_TRUE;
     mTreeArray[i].certIndex = j;
     mTreeArray[i].numChildren = 1;
@@ -1028,6 +1031,8 @@ nsCertTree::CmpInitCriterion(nsIX509Cert *cert, CompareCacheHashEntry *entry,
   switch (crit) {
     case sort_IssuerOrg:
       cert->GetIssuerOrganization(str);
+      if (str.IsEmpty())
+        cert->GetCommonName(str);
       break;
     case sort_Org:
       cert->GetOrganization(str);
