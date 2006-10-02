@@ -119,7 +119,7 @@ private:
   nsCOMPtr<nsINSSComponent> mNSSComponent;
 
   treeArrayEl *GetThreadDescAtIndex(PRInt32 _index);
-  nsIX509Cert *GetCertAtIndex(PRInt32 _index);
+  nsIX509Cert *GetCertAtIndex(PRInt32 _index, PRInt32 *outAbsoluteCertOffset = nsnull);
 
   void FreeCertArray();
   nsresult UpdateUIContents();

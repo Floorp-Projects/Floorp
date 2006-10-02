@@ -261,7 +261,7 @@ nsCertTree::GetThreadDescAtIndex(PRInt32 index)
 //
 //  If the row at index is a cert, return that cert.  Otherwise, return null.
 nsIX509Cert *
-nsCertTree::GetCertAtIndex(PRInt32 index)
+nsCertTree::GetCertAtIndex(PRInt32 index, PRInt32 *outAbsoluteCertOffset)
 {
   int i, idx = 0, cIndex = 0, nc;
   nsIX509Cert *rawPtr = nsnull;
@@ -273,6 +273,8 @@ nsCertTree::GetCertAtIndex(PRInt32 index)
     nc = (mTreeArray[i].open) ? mTreeArray[i].numChildren : 0;
     if (index < idx + nc) { // cert is within range of this thread
       PRInt32 certIndex = cIndex + index - idx;
+      if (outAbsoluteCertOffset)
+        *outAbsoluteCertOffset = certIndex;
       nsCOMPtr<nsISupports> isupport = 
                              dont_AddRef(mCertArray->ElementAt(certIndex));
       nsCOMPtr<nsIX509Cert> cert = do_QueryInterface(isupport);
@@ -723,9 +725,13 @@ nsCertTree::GetCellText(PRInt32 row, nsITreeColumn* col,
       _retval.Truncate();
     return NS_OK;
   }
+
+  PRInt32 absoluteCertOffset;
+  nsCOMPtr<nsIX509Cert> cert = dont_AddRef(GetCertAtIndex(row, &absoluteCertOffset));
+
   PRInt32 colIndex;
   col->GetIndex(&colIndex);
-  PRUint32 arrayIndex=row+colIndex*mNumRows;
+  PRUint32 arrayIndex=colIndex+absoluteCertOffset*mNumRows;
   PRUint32 arrayLength=0;
   if (mCellText) {
     mCellText->GetLength(&arrayLength);
@@ -737,7 +743,7 @@ nsCertTree::GetCellText(PRInt32 row, nsITreeColumn* col,
       return NS_OK;
     }
   }
-  nsCOMPtr<nsIX509Cert> cert = dont_AddRef(GetCertAtIndex(row));
+
   if (cert == nsnull) return NS_ERROR_FAILURE;
   if (NS_LITERAL_STRING("certcol").Equals(colID)) {
     rv = cert->GetCommonName(_retval);
