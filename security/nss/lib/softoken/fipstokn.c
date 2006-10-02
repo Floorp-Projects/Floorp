@@ -108,6 +108,15 @@ libaudit_init(void)
 	audit_send_user_message_func = dlsym(libaudit_handle,
 					     "audit_send_user_message");
     }
+    if (!audit_open_func || !audit_close_func ||
+	(!audit_log_user_message_func && !audit_send_user_message_func)) {
+	dlclose(libaudit_handle);
+	libaudit_handle = NULL;
+	audit_open_func = NULL;
+	audit_close_func = NULL;
+	audit_log_user_message_func = NULL;
+	audit_send_user_message_func = NULL;
+    }
 }
 #endif /* LINUX */
 
