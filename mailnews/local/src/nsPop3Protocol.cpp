@@ -772,7 +772,8 @@ NS_IMETHODIMP nsPop3Protocol::OnStopRequest(nsIRequest *request, nsISupports * a
     if (server)
       server->SetServerBusy(PR_FALSE); // the server is not busy
   }
-  CommitState(PR_TRUE);
+  if(m_pop3ConData->list_done)
+    CommitState(PR_TRUE);
   if (NS_FAILED(aStatus) && aStatus != NS_BINDING_ABORTED)
     Abort();
   return rv;
