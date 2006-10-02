@@ -66,6 +66,7 @@
     <!-- File Menu -->
     <key id="key_newNavigator"/>
     <key id="key_newNavigatorTab" key="&tabCmd.commandkey;" modifiers="accel" command="cmd_newNavigatorTab"/>
+    <key id="key_restoreTab" key="&recentTabs.commandkey;" modifiers="accel,shift" oncommand="gBrowser.restoreTab(0);"/>
     <key id="key_newBlankPage"/>
     <key id="focusURLBar"      key="&openCmd.commandkey;" oncommand="ShowAndSelectContentsOfURLBar();"
          modifiers="accel"/>
@@ -343,6 +344,9 @@
         </menu>
         <menuitem label="&openCmd.label;" accesskey="&openCmd.accesskey;" key="openLocationKb" command="Browser:Open"/>
         <menuitem label="&openFileCmd.label;" accesskey="&openFileCmd.accesskey;" key="openFileKb" command="Browser:OpenFile"/>
+        <menu label="&recentTabs.label;" accesskey="&recentTabs.accesskey;" id="menu_recentTabs">
+          <menupopup id="menu_recentTabsPopup" onpopupshowing="updateRecentTabs(this);" oncommand="gBrowser.restoreTab(event.target.value);"/>
+        </menu>
         <menuitem id="menu_close"/>
         <menuitem id="menu_closeOtherTabs" command="cmd_closeOtherTabs" label="&closeOtherTabs.label;"/>
         <menuitem id="menu_closeWindow" hidden="true" command="cmd_closeWindow" key="key_closeWindow" label="&closeWindow.label;"/>

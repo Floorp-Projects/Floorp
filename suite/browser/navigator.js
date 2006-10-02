@@ -1389,6 +1389,33 @@ function updateCloseItems()
     document.getElementById('menu_closeWindow').hidden = true;
     document.getElementById('menu_closeOtherTabs').hidden = true;
   }
+  var recentTabsItem = document.getElementById("menu_recentTabs");
+  recentTabsItem.setAttribute("disabled", browser.getUndoList().length == 0);
+}
+
+function updateRecentTabs(menupopup)
+{
+  var browser = getBrowser();
+
+  while (menupopup.hasChildNodes())
+    menupopup.removeChild(menupopup.lastChild);
+
+  var list = browser.getUndoList();
+  for (var i = 0; i < list.length; i++) {
+    var menuitem = document.createElement("menuitem");
+    var label = list[i];
+    if (i < 9) {
+      label = gNavigatorBundle.getFormattedString("tabs.recentlyClosed.format", [i + 1, label]);
+      menuitem.setAttribute("accesskey", i + 1);
+    }
+
+    if (i == 0)
+      menuitem.setAttribute("key", "key_restoreTab");
+
+    menuitem.setAttribute("label", label);
+    menuitem.setAttribute("value", i);
+    menupopup.appendChild(menuitem);
+  }
 }
 
 function BrowserCloseOtherTabs()
