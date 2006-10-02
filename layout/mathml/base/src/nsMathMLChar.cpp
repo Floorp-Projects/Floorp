@@ -1070,7 +1070,7 @@ GetFontExtensionPref(nsIPrefBranch* aPrefBranch, const char* aKey,
   alternateKey.AssignASCII(kMathFontPrefix);
   PRInt32 ucharOffset = alternateKey.Length();
   PRInt32 ucharLength = nsDependentCString(aKey + ucharOffset).FindChar('.');
-  if (ucharLength <= 1 || ucharLength > 6) // 6 is the length of \uNNNN
+  if (ucharLength < 1 || ucharLength > 6) // 6 is the length of \uNNNN
     return PR_FALSE;
 
   PRUnichar uchar;
