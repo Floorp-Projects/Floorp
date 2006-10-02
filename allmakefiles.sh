@@ -1043,6 +1043,7 @@ mail/components/addrbook/Makefile
 mail/components/preferences/Makefile
 mail/components/build/Makefile
 mail/components/shell/Makefile
+mail/components/shell/public/Makefile
 mail/extensions/Makefile
 mail/extensions/smime/Makefile
 mail/extensions/offline/Makefile
