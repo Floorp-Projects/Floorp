@@ -350,19 +350,25 @@ public:
 
 protected:
   // Helper methods for GetNextWord (F == forwards)
-  PRInt32 ScanNormalWhiteSpace_F();
-  PRInt32 ScanNormalAsciiText_F(PRInt32* aWordLen,
+  PRInt32 ScanNormalWhiteSpace_F(PRInt32 aFragLen);
+  PRInt32 ScanNormalAsciiText_F(PRInt32  aFragLen,
+                                PRInt32* aWordLen,
                                 PRBool*  aWasTransformed);
-  PRInt32 ScanNormalAsciiText_F_ForWordBreak(PRInt32* aWordLen,
-                                PRBool*  aWasTransformed,
-                                PRBool aIsKeyboardSelect);
-  PRInt32 ScanNormalUnicodeText_F(PRBool aForLineBreak,
+  PRInt32 ScanNormalAsciiText_F_ForWordBreak(PRInt32  aFragLen,
+                                             PRInt32* aWordLen,
+                                             PRBool*  aWasTransformed,
+                                             PRBool aIsKeyboardSelect);
+  PRInt32 ScanNormalUnicodeText_F(PRInt32  aFragLen,
+                                  PRBool   aForLineBreak,
                                   PRInt32* aWordLen,
                                   PRBool*  aWasTransformed);
-  PRInt32 ScanPreWrapWhiteSpace_F(PRInt32* aWordLen);
-  PRInt32 ScanPreAsciiData_F(PRInt32* aWordLen,
+  PRInt32 ScanPreWrapWhiteSpace_F(PRInt32  aFragLen,
+                                  PRInt32* aWordLen);
+  PRInt32 ScanPreAsciiData_F(PRInt32  aFragLen,
+                             PRInt32* aWordLen,
                              PRBool*  aWasTransformed);
-  PRInt32 ScanPreData_F(PRInt32* aWordLen,
+  PRInt32 ScanPreData_F(PRInt32  aFragLen,
+                        PRInt32* aWordLen,
                         PRBool*  aWasTransformed);
 
   // Helper methods for GetPrevWord (B == backwards)
