@@ -240,14 +240,14 @@ private:
 class txIdPattern : public txPattern
 {
 public:
-    txIdPattern(const nsAString& aString);
+    txIdPattern(const nsSubstring& aString);
 
     ~txIdPattern();
 
     TX_DECL_PATTERN;
 
 private:
-    nsStringArray mIds;
+    nsCOMArray<nsIAtom> mIds;
 };
 
 class txKeyPattern : public txPattern

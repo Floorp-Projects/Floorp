@@ -48,7 +48,7 @@ public:
     /**
      * Creates a new txTokenizer using the given source string.
      */
-    txTokenizer(const nsAFlatString& aSource)
+    txTokenizer(const nsSubstring& aSource)
     {
         aSource.BeginReading(mIter);
         aSource.EndReading(mEnd);
@@ -83,7 +83,7 @@ public:
     }
 
 private:
-    nsAFlatString::const_char_iterator mIter, mEnd;
+    nsSubstring::const_char_iterator mIter, mEnd;
 };
 
 #endif /* txTokenizer_h___ */
