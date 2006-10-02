@@ -278,13 +278,12 @@ nsTextTransformer::Init(nsIFrame* aFrame,
 
 // wordlen==1, contentlen=newOffset-currentOffset, isWhitespace=t
 PRInt32
-nsTextTransformer::ScanNormalWhiteSpace_F()
+nsTextTransformer::ScanNormalWhiteSpace_F(PRInt32 aFragLen)
 {
   const nsTextFragment* frag = mFrag;
-  PRInt32 fragLen = frag->GetLength();
   PRInt32 offset = mOffset;
 
-  for (; offset < fragLen; offset++) {
+  for (; offset < aFragLen; offset++) {
     PRUnichar ch = frag->CharAt(offset);
     if (!XP_IS_SPACE(ch)) {
       // If character is not discardable then stop looping, otherwise
@@ -326,11 +325,11 @@ nsTextTransformer::ConvertTransformedTextToUnicode()
 
 // wordlen==*aWordLen, contentlen=newOffset-currentOffset, isWhitespace=f
 PRInt32
-nsTextTransformer::ScanNormalAsciiText_F(PRInt32* aWordLen,
+nsTextTransformer::ScanNormalAsciiText_F(PRInt32  aFragLen,
+                                         PRInt32* aWordLen,
                                          PRBool*  aWasTransformed)
 {
   const nsTextFragment* frag = mFrag;
-  PRInt32 fragLen = frag->GetLength();
   PRInt32 offset = mOffset;
   PRInt32 prevBufferPos = mBufferPos;
   const unsigned char* cp = (const unsigned char*)frag->Get1b() + offset;
@@ -345,7 +344,7 @@ nsTextTransformer::ScanNormalAsciiText_F(PRInt32* aWordLen,
     bp2 += mBufferPos;
   }
 
-  for (; offset < fragLen; offset++) {
+  for (; offset < aFragLen; offset++) {
     unsigned char ch = *cp++;
     if (XP_IS_SPACE(ch)) {
       break;
@@ -400,12 +399,12 @@ nsTextTransformer::ScanNormalAsciiText_F(PRInt32* aWordLen,
 }
 
 PRInt32
-nsTextTransformer::ScanNormalAsciiText_F_ForWordBreak(PRInt32* aWordLen,
-                                         PRBool*  aWasTransformed,
-                                         PRBool aIsKeyboardSelect)
+nsTextTransformer::ScanNormalAsciiText_F_ForWordBreak(PRInt32  aFragLen,
+                                                      PRInt32* aWordLen,
+                                                      PRBool*  aWasTransformed,
+                                                      PRBool   aIsKeyboardSelect)
 {
   const nsTextFragment* frag = mFrag;
-  PRInt32 fragLen = frag->GetLength();
   PRInt32 offset = mOffset;
   PRInt32 prevBufferPos = mBufferPos;
   PRBool breakAfterThis = PR_FALSE;
@@ -427,10 +426,10 @@ nsTextTransformer::ScanNormalAsciiText_F_ForWordBreak(PRInt32* aWordLen,
   // We can't trust isalnum() results for isalnum()
   // Therefore we don't stop at non-ascii (high bit) punctuation,
   // which is just fine. The punctuation we care about is low bit.
-  if (sWordSelectStopAtPunctuation && offset < fragLen)
+  if (sWordSelectStopAtPunctuation && offset < aFragLen)
     readingAlphaNumeric = isalnum((unsigned char)*cp) || !IS_ASCII_CHAR(*cp);
   
-  for (; offset < fragLen && !breakAfterThis; offset++) {
+  for (; offset < aFragLen && !breakAfterThis; offset++) {
     unsigned char ch = *cp++;
     if (CH_NBSP == ch) {
       ch = ' ';
@@ -504,18 +503,13 @@ nsTextTransformer::ScanNormalAsciiText_F_ForWordBreak(PRInt32* aWordLen,
 
 // wordlen==*aWordLen, contentlen=newOffset-currentOffset, isWhitespace=f
 PRInt32
-nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
+nsTextTransformer::ScanNormalUnicodeText_F(PRInt32  aFragLen,
+                                           PRBool   aForLineBreak,
                                            PRInt32* aWordLen,
                                            PRBool*  aWasTransformed)
 {
   const nsTextFragment* frag = mFrag;
   const PRUnichar* cp0 = frag->Get2b();
-  PRInt32 fragLen = frag->GetLength();
-#ifdef IBMBIDI
-  if (*aWordLen > 0 && *aWordLen < fragLen) {
-    fragLen = *aWordLen;
-  }
-#endif
   PRInt32 offset = mOffset;
 
   PRUnichar firstChar = frag->CharAt(offset++);
@@ -523,7 +517,7 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
 #ifdef IBMBIDI
   // Need to strip BIDI controls even when those are 'firstChars'.
   // This doesn't seem to produce bug 14280 (or similar bugs).
-  while (offset < fragLen && IS_BIDI_CONTROL(firstChar) ) {
+  while (offset < aFragLen && IS_BIDI_CONTROL(firstChar) ) {
     firstChar = frag->CharAt(offset++);
   }
 #endif // IBMBIDI
@@ -533,16 +527,16 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
   // Only evaluate complex breaking logic if there are more characters
   // beyond the first to look at.
   PRInt32 numChars = 1;
-  if (offset < fragLen) {
+  if (offset < aFragLen) {
     const PRUnichar* cp = cp0 + offset;
     PRBool breakBetween = PR_FALSE;
     if (aForLineBreak) {
       breakBetween = nsContentUtils::LineBreaker()->BreakInBetween(
-          &firstChar, 1, cp, (fragLen-offset));
+          &firstChar, 1, cp, (aFragLen-offset));
     }
     else {
       breakBetween = nsContentUtils::WordBreaker()->BreakInBetween(
-          &firstChar, 1, cp, (fragLen-offset));
+          &firstChar, 1, cp, (aFragLen-offset));
     }
 
     // don't transform the first character until after BreakInBetween is called
@@ -564,14 +558,14 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
       // Find next position
       PRInt32 next;
       if (aForLineBreak) {
-        next = nsContentUtils::LineBreaker()->Next(cp0, fragLen, offset);
+        next = nsContentUtils::LineBreaker()->Next(cp0, aFragLen, offset);
       }
       else {
-        next = nsContentUtils::WordBreaker()->NextWord(cp0, fragLen, offset);
+        next = nsContentUtils::WordBreaker()->NextWord(cp0, aFragLen, offset);
       }
       if (aForLineBreak && next == NS_LINEBREAKER_NEED_MORE_TEXT ||
           next == NS_WORDBREAKER_NEED_MORE_TEXT)
-        next = fragLen;
+        next = aFragLen;
       numChars = (PRInt32) (next - (PRUint32) offset) + 1;
 
       // Since we know the number of characters we're adding grow the buffer
@@ -630,16 +624,15 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
 
 // wordlen==*aWordLen, contentlen=newOffset-currentOffset, isWhitespace=t
 PRInt32
-nsTextTransformer::ScanPreWrapWhiteSpace_F(PRInt32* aWordLen)
+nsTextTransformer::ScanPreWrapWhiteSpace_F(PRInt32 aFragLen, PRInt32* aWordLen)
 {
   const nsTextFragment* frag = mFrag;
-  PRInt32 fragLen = frag->GetLength();
   PRInt32 offset = mOffset;
   PRUnichar* bp = mTransformBuf.GetBuffer() + mBufferPos;
   PRUnichar* endbp = mTransformBuf.GetBufferEnd();
   PRInt32 prevBufferPos = mBufferPos;
 
-  for (; offset < fragLen; offset++) {
+  for (; offset < aFragLen; offset++) {
     // This function is used for both Unicode and ascii strings so don't
     // make any assumptions about what kind of data it is
     PRUnichar ch = frag->CharAt(offset);
@@ -670,22 +663,17 @@ nsTextTransformer::ScanPreWrapWhiteSpace_F(PRInt32* aWordLen)
 
 // wordlen==*aWordLen, contentlen=newOffset-currentOffset, isWhitespace=f
 PRInt32
-nsTextTransformer::ScanPreData_F(PRInt32* aWordLen,
+nsTextTransformer::ScanPreData_F(PRInt32  aFragLen,
+                                 PRInt32* aWordLen,
                                  PRBool*  aWasTransformed)
 {
   const nsTextFragment* frag = mFrag;
-  PRInt32 fragLen = frag->GetLength();
-#ifdef IBMBIDI
-  if (*aWordLen > 0 && *aWordLen < fragLen) {
-    fragLen = *aWordLen;
-  }
-#endif
   PRInt32 offset = mOffset;
   PRUnichar* bp = mTransformBuf.GetBuffer() + mBufferPos;
   PRUnichar* endbp = mTransformBuf.GetBufferEnd();
   PRInt32 prevBufferPos = mBufferPos;
 
-  for (; offset < fragLen; offset++) {
+  for (; offset < aFragLen; offset++) {
     // This function is used for both Unicode and ascii strings so don't
     // make any assumptions about what kind of data it is
     PRUnichar ch = frag->CharAt(offset);
@@ -720,14 +708,15 @@ nsTextTransformer::ScanPreData_F(PRInt32* aWordLen,
 
 // wordlen==*aWordLen, contentlen=newOffset-currentOffset, isWhitespace=f
 PRInt32
-nsTextTransformer::ScanPreAsciiData_F(PRInt32* aWordLen,
+nsTextTransformer::ScanPreAsciiData_F(PRInt32  aFragLen,
+                                      PRInt32* aWordLen,
                                       PRBool*  aWasTransformed)
 {
   const nsTextFragment* frag = mFrag;
   PRUnichar* bp = mTransformBuf.GetBuffer() + mBufferPos;
   PRUnichar* endbp = mTransformBuf.GetBufferEnd();
   const unsigned char* cp = (const unsigned char*) frag->Get1b();
-  const unsigned char* end = cp + frag->GetLength();
+  const unsigned char* end = cp + aFragLen;
   PRInt32 prevBufferPos = mBufferPos;
   cp += mOffset;
 
@@ -853,11 +842,9 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
 {
   const nsTextFragment* frag = mFrag;
   PRInt32 fragLen = frag->GetLength();
-#ifdef IBMBIDI
   if (*aWordLenResult > 0 && *aWordLenResult < fragLen) {
     fragLen = *aWordLenResult;
   }
-#endif
   PRInt32 offset = mOffset;
   PRInt32 wordLen = 0;
   PRBool isWhitespace = PR_FALSE;
@@ -894,7 +881,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
       default:
       case eNormal:
         if (XP_IS_SPACE(firstChar)) {
-          offset = ScanNormalWhiteSpace_F();
+          offset = ScanNormalWhiteSpace_F(fragLen);
 
           // if this is just a '\n', and characters before and after it are CJK chars, 
           // we will skip this one.
@@ -938,15 +925,15 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
 #ifdef IBMBIDI
           wordLen = *aWordLenResult;
 #endif
-          offset = ScanNormalUnicodeText_F(aForLineBreak, &wordLen, aWasTransformed);
+          offset = ScanNormalUnicodeText_F(fragLen, aForLineBreak, &wordLen, aWasTransformed);
         }
         else {
           if (!aForLineBreak)
-            offset = ScanNormalAsciiText_F_ForWordBreak(&wordLen, 
+            offset = ScanNormalAsciiText_F_ForWordBreak(fragLen, &wordLen, 
                                                         aWasTransformed, 
                                                         aIsKeyboardSelect);
           else
-            offset = ScanNormalAsciiText_F(&wordLen, aWasTransformed);
+            offset = ScanNormalAsciiText_F(fragLen, &wordLen, aWasTransformed);
         }
         break;
 
@@ -961,10 +948,10 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
 #ifdef IBMBIDI
           wordLen = *aWordLenResult;
 #endif
-          offset = ScanPreData_F(&wordLen, aWasTransformed);
+          offset = ScanPreData_F(fragLen, &wordLen, aWasTransformed);
         }
         else {
-          offset = ScanPreAsciiData_F(&wordLen, aWasTransformed);
+          offset = ScanPreAsciiData_F(fragLen, &wordLen, aWasTransformed);
         }
         break;
 
@@ -976,7 +963,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
             wordLen = 1;
           }
           else {
-            offset = ScanPreWrapWhiteSpace_F(&wordLen);
+            offset = ScanPreWrapWhiteSpace_F(fragLen, &wordLen);
           }
           isWhitespace = PR_TRUE;
         }
@@ -984,14 +971,14 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
 #ifdef IBMBIDI
           wordLen = *aWordLenResult;
 #endif
-          offset = ScanNormalUnicodeText_F(aForLineBreak, &wordLen, aWasTransformed);
+          offset = ScanNormalUnicodeText_F(fragLen, aForLineBreak, &wordLen, aWasTransformed);
         }
         else {
           if (!aForLineBreak)
-            offset = ScanNormalAsciiText_F_ForWordBreak(&wordLen, aWasTransformed, 
+            offset = ScanNormalAsciiText_F_ForWordBreak(fragLen, &wordLen, aWasTransformed, 
                                                         aIsKeyboardSelect);
           else
-            offset = ScanNormalAsciiText_F(&wordLen, aWasTransformed);
+            offset = ScanNormalAsciiText_F(fragLen, &wordLen, aWasTransformed);
         }
         break;
     }

@@ -2178,15 +2178,13 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
   if (0 != (mState & TEXT_SKIP_LEADING_WS)) {
     PRBool isWhitespace, wasTransformed;
     PRInt32 wordLen, contentLen;
-#ifdef IBMBIDI
-    wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset + mContentLength : -1;
-#endif // IBMBIDI
+    // Set maximum word length. This is an ABUSE of the variable
+    // because on entry, this is DOM content length, but on exit,
+    // GetNextWord returns a transformed-string length in here!
+    wordLen = mContentOffset + mContentLength;
     aTX.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed);
     // we trip this assertion in bug 31053, but I think it's unnecessary
     //NS_ASSERTION(isWhitespace, "mState and content are out of sync");
-    if (contentLen > n) {
-      contentLen = n;
-    }
 
     if (isWhitespace) {
       if (nsnull != indexp) {
@@ -2222,9 +2220,10 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
     PRBool isWhitespace, wasTransformed;
     PRInt32 wordLen, contentLen;
 
-#ifdef IBMBIDI
-    wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset + mContentLength : -1;
-#endif // IBMBIDI
+    // Set maximum word length. This is an ABUSE of the variable
+    // because on entry, this is DOM content length, but on exit,
+    // GetNextWord returns a transformed-string length in here!
+    wordLen = mContentOffset + mContentLength;
     // Get the next word
     bp = aTX.GetNextWord(inWord, &wordLen, &contentLen, &isWhitespace, &wasTransformed);
     if (nsnull == bp) {
@@ -2234,15 +2233,6 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
         }
       }
       break;
-    }
-    // the frame may not map the entire word
-    // XXX: doesn't support the case where the first-letter expands, e.g.,
-    // with text-transform:capitalize, the German szlig; becomes SS.
-    if (contentLen > n) {
-      contentLen = n;
-    }
-    if (wordLen > n) {
-      wordLen = n;
     }
     inWord = PR_FALSE;
     if (isWhitespace) {
