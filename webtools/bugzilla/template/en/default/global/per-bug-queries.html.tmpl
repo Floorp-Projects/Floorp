@@ -35,11 +35,11 @@
     }
 
     function manage_old_lists() {
-      var old_lists = document.getElementById('oldqueryname');
+      var old_lists = document.getElementById('lob_oldqueryname');
       // If there is no saved searches available, returns.
       if (!old_lists) return;
 
-      var new_query = document.getElementById('newqueryname').value;
+      var new_query = document.getElementById('lob_newqueryname').value;
 
       if (new_query != "") {
         old_lists.disabled = true;
@@ -76,7 +76,7 @@
         <input type="text" name="bug_ids" size="12" maxlength="80">
         <span id="lob_direction">to</span>
         [% IF lists_of_bugs.size %]
-          <select id="oldqueryname" name="oldqueryname">
+          <select id="lob_oldqueryname" name="oldqueryname">
             [% FOREACH query = lists_of_bugs %]
               <option value="[% query FILTER html %]">[% query FILTER html %]</option>
             [% END %]
@@ -84,7 +84,7 @@
         [% END %]
         <span id="lob_new_query_text">
           [% " or to" IF lists_of_bugs.size %] the new saved search:
-          <input type="text" id="newqueryname" name="newqueryname" size="20" maxlength="64"
+          <input type="text" id="lob_newqueryname" name="newqueryname" size="20" maxlength="64"
                  onkeyup="manage_old_lists();">
         </span>
         <input type="submit" value="Commit" id="commit_list_of_bugs">
