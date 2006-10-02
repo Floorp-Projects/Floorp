@@ -100,10 +100,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// {7a2119bf-6c4e-4d11-afcd-1dce2eef1676}
+// {3fbdc59d-fdb1-49ed-8f17-d783dafab4f2}
 #define NS_IFRAME_IID \
-{ 0x7a2119bf, 0x6c4e, 0x4d11, \
-  { 0xaf, 0xcd, 0x1d, 0xce, 0x2e, 0xef, 0x16, 0x76 } };
+{ 0x3fbdc59d, 0xfdb1, 0x49ed, \
+  { 0x8f, 0x17, 0xd7, 0x83, 0xda, 0xfa, 0xb4, 0xf2 } };
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -848,10 +848,12 @@ public:
    * for frame lists other than the primary one.
    * @param aPoint point relative to this frame
    */
-  ContentOffsets GetContentOffsetsFromPoint(nsPoint aPoint);
+  ContentOffsets GetContentOffsetsFromPoint(nsPoint aPoint,
+                                            PRBool aIgnoreSelectionStyle = PR_FALSE);
 
-  virtual ContentOffsets GetContentOffsetsFromPointExternal(nsPoint aPoint)
-  { return GetContentOffsetsFromPoint(aPoint); }
+  virtual ContentOffsets GetContentOffsetsFromPointExternal(nsPoint aPoint,
+                                                            PRBool aIgnoreSelectionStyle = PR_FALSE)
+  { return GetContentOffsetsFromPoint(aPoint, aIgnoreSelectionStyle); }
 
   /**
    * This structure holds information about a cursor. mContainer represents a

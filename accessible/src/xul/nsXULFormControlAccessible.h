@@ -63,6 +63,7 @@ public:
 class nsXULCheckboxAccessible : public nsFormControlAccessible
 {
 public:
+  enum { eAction_Click = 0 };
   nsXULCheckboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
@@ -74,6 +75,7 @@ public:
 class nsXULDropmarkerAccessible : public nsFormControlAccessible
 {
 public:
+  enum { eAction_Click = 0 };
   nsXULDropmarkerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetState(PRUint32 *_retval); 
@@ -111,7 +113,6 @@ class nsXULRadioButtonAccessible : public nsRadioButtonAccessible
 
 public:
   nsXULRadioButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetState(PRUint32 *_retval);
 };
 

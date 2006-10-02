@@ -116,17 +116,9 @@ nsRadioButtonAccessible(aNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsHTMLRadioButtonAccessible::DoAction(PRUint8 index)
-{
-  if (index == eAction_Click) {
-    return DoCommand();
-  }
-  return NS_ERROR_INVALID_ARG;
-}
-
 NS_IMETHODIMP nsHTMLRadioButtonAccessible::GetState(PRUint32 *_retval)
 {
-  nsFormControlAccessible::GetState(_retval);
+  nsAccessibleWrap::GetState(_retval);
   PRBool checked = PR_FALSE;   // Radio buttons and check boxes can be checked
 
   nsCOMPtr<nsIDOMHTMLInputElement> htmlRadioElement(do_QueryInterface(mDOMNode));
@@ -142,7 +134,7 @@ NS_IMETHODIMP nsHTMLRadioButtonAccessible::GetState(PRUint32 *_retval)
 // ----- Button -----
 
 nsHTMLButtonAccessible::nsHTMLButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsFormControlAccessible(aNode, aShell)
+nsHyperTextAccessible(aNode, aShell)
 { 
 }
 
@@ -175,7 +167,7 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetState(PRUint32 *_retval)
   if (!element) {
     return NS_ERROR_FAILURE;  // Button accessible shut down
   }
-  nsFormControlAccessible::GetState(_retval);
+  nsHyperTextAccessible::GetState(_retval);
   nsAutoString buttonType;
   element->GetAttribute(NS_LITERAL_STRING("type"), buttonType);
   if (buttonType.LowerCaseEqualsLiteral("submit"))
@@ -276,7 +268,7 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetState(PRUint32 *_retval)
   if (!element) {
     return NS_ERROR_FAILURE;  // Button accessible shut down
   }
-  nsAccessible::GetState(_retval);
+  nsHyperTextAccessible::GetState(_retval);
   *_retval |= STATE_FOCUSABLE;
 
   nsAutoString buttonType;

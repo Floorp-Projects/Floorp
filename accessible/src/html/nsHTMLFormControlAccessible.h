@@ -46,6 +46,8 @@ class nsHTMLCheckboxAccessible : public nsFormControlAccessible
 {
 
 public:
+  enum { eAction_Click = 0 };
+
   nsHTMLCheckboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
@@ -59,14 +61,15 @@ class nsHTMLRadioButtonAccessible : public nsRadioButtonAccessible
 
 public:
   nsHTMLRadioButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetState(PRUint32 *_retval); 
 };
 
-class nsHTMLButtonAccessible : public nsFormControlAccessible
+class nsHTMLButtonAccessible : public nsHyperTextAccessible
 {
 
 public:
+  enum { eAction_Click = 0 };
+
   nsHTMLButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetState(PRUint32 *_retval); 

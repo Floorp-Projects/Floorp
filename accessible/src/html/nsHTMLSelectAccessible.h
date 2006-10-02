@@ -41,7 +41,7 @@
 
 #include "nsIAccessibleSelectable.h"
 #include "nsAccessibilityAtoms.h"
-#include "nsFormControlAccessible.h"
+#include "nsHTMLFormControlAccessible.h"
 #include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMNode.h"
@@ -148,7 +148,7 @@ protected:
 /*
  * Options inside the select, contained within the list
  */
-class nsHTMLSelectOptionAccessible : public nsLeafAccessible
+class nsHTMLSelectOptionAccessible : public nsHyperTextAccessible
 {
 public:
   enum { eAction_Select = 0 };  

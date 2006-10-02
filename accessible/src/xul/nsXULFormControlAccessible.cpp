@@ -508,15 +508,6 @@ nsRadioButtonAccessible(aNode, aShell)
 { 
 }
 
-/** Our only action is to click */
-NS_IMETHODIMP nsXULRadioButtonAccessible::DoAction(PRUint8 index)
-{
-  if (index == eAction_Click) {
-    return DoCommand();
-  }
-  return NS_ERROR_INVALID_ARG;
-}
-
 /** We are Focusable and can be Checked and focused */
 NS_IMETHODIMP nsXULRadioButtonAccessible::GetState(PRUint32 *_retval)
 {
