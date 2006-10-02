@@ -396,19 +396,19 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         }
 #elif defined(XP_OS2)
         {
-            char buffer[CCHMAXPATH] = "";
-            char *c = getenv( "TMP");
-            if( c) strcpy( buffer, c);
-            else
-            {
-                c = getenv( "TEMP");
-                if( c) strcpy( buffer, c);
+            char *tPath = PR_GetEnv("TMP");
+            if (!tPath || !*tPath) {
+                tPath = PR_GetEnv("TEMP");
+                if (!tPath || !*tPath) {
+                    // if an OS/2 system has neither TMP nor TEMP defined
+                    // then it is severely broken, so this will never happen.
+                    return NS_ERROR_UNEXPECTED;
+                }
             }
-
-            return NS_NewNativeLocalFile(nsDependentCString(buffer), 
-                                         PR_TRUE, 
+            return NS_NewNativeLocalFile(nsDependentCString(tPath),
+                                         PR_TRUE,
                                          aFile);
-        } 
+        }
 #elif defined(XP_MACOSX)
         {
             return GetOSXFolderType(kUserDomain, kTemporaryFolderType, aFile);
