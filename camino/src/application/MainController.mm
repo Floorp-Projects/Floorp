@@ -580,7 +580,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
 +(NSURL*) decodeLocalFileURL:(NSURL*)url
 {  
   NSString *urlPathString = [url path];
-  NSString *ext = [urlPathString pathExtension];
+  NSString *ext = [[urlPathString pathExtension] lowercaseString];
   OSType fileType = NSHFSTypeCodeFromFileType(NSHFSTypeOfFile(urlPathString));
 
   if ([ext isEqualToString:@"url"] || fileType == 'LINK')

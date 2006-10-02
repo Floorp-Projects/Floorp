@@ -1492,7 +1492,7 @@ static BookmarkManager* gBookmarkManager = nil;
       importFolder = [[BookmarkFolder alloc] init];
     }
     
-    NSString *extension =[pathToFile pathExtension];
+    NSString *extension = [[pathToFile pathExtension] lowercaseString];
     if ([extension isEqualToString:@""]) // we'll go out on a limb here
       success = [self readOperaFile:pathToFile intoFolder:importFolder];
     else if ([extension isEqualToString:@"html"] || [extension isEqualToString:@"htm"])
