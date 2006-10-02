@@ -74,10 +74,14 @@
 #define CCALLBACK_DECL
 #define CSTATIC_CALLBACK(__x) static __x
 
-#elif defined(XP_OS2_VACPP) 
+#elif defined(XP_OS2) 
 
+#ifdef __declspec
+#define cairo_public extern __declspec(dllexport)
+#else
 #define cairo_public extern
-#define CCALLBACK _Optlink
+#endif
+#define CCALLBACK
 #define CCALLBACK_DECL
 #define CSTATIC_CALLBACK(__x) static __x CCALLBACK
 
