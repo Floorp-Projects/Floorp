@@ -92,7 +92,6 @@ EXPORTS = \
 
 MAC_LCPPSRCS = \
 		nsBidiKeyboard.cpp \
-		nsClipboard.cpp \
 		nsDragService.cpp \
 		nsDragHelperService.cpp \
 		nsLookAndFeel.cpp \
@@ -124,6 +123,7 @@ CPPSRCS += nsNativeThemeCocoa.cpp
 endif
 
 CMMSRCS = \
+		nsClipboard.mm \
 		nsMenuX.mm \
 		nsMenuBarX.mm \
 		nsMenuItemX.mm \
