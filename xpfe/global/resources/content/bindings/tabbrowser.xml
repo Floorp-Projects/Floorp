@@ -85,7 +85,7 @@
                           xbl:inherits="oncommand=onnewtab"/>
             <xul:menuitem label="&undoCloseTab.label;" accesskey="&undoCloseTab.accesskey;" tbattr="tabbrowser-undoclosetab"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
-                                     tabbrowser.restoreTab();"/>
+                                     tabbrowser.restoreTab(0);"/>
             <xul:menuseparator/>
             <xul:menuitem label="&bookmarkGroup.label;" accesskey="&bookmarkGroup.accesskey;"
                           tbattr="tabbrowser-multiple"
@@ -653,7 +653,7 @@
         <body>
           <![CDATA[
             this.mContextTab = document.popupNode;
-            var disabled = this.mPanelContainer.childNodes.length == 1;
+            var disabled = this.mTabs.length == 1;
             var menuItems = aPopupMenu.getElementsByAttribute("tbattr", "tabbrowser-multiple");
             for (var i = 0; i < menuItems.length; i++)
               menuItems[i].setAttribute("disabled", disabled);
@@ -1094,19 +1094,30 @@
         </body>
       </method>
 
-      <method name="restoreTab">
+      <method name="getUndoList">
         <body>
           <![CDATA[
-            if (this.savedBrowsers.length == 0)
+            var list = [];
+            for (var i = 0; i < this.savedBrowsers.length; i++) {
+              var hist = this.savedBrowsers[i].history;
+              list.push(hist.getEntryAtIndex(hist.index, false).title);
+            }
+            return list;
+          ]]>
+        </body>
+      </method>
+
+      <method name="restoreTab">
+        <parameter name="aIndex"/>
+        <body>
+          <![CDATA[
+            if (aIndex >= this.savedBrowsers.length || aIndex < 0)
               return;
 
             this._browsers = null;
-            // since we don't focus the tab, updateCurrentBrowser is not called
-            this.mPreviousTab = null;
 
             var t = this.referenceTab.cloneNode(true);
-
-            var savedData = this.savedBrowsers.pop();
+            var savedData = this.savedBrowsers.splice(aIndex, 1)[0];
             var b = savedData.browser;
             var hist = savedData.history;
 
@@ -1129,19 +1140,26 @@
 
             // add back the filters
             var position = this.mTabs.length - 1;
-            var tabListener = this.mTabProgressListener(t, b, true);
+            var tabListener = this.mTabProgressListener(t, b, false);
             const filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
                                      .createInstance(Components.interfaces.nsIWebProgress);
             filter.addProgressListener(tabListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
             b.webProgress.addProgressListener(filter, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
             this.mTabListeners[position] = tabListener;
             this.mTabFilters[position] = filter;
+
+            if (this.mTabs.length == 2 &&
+                !this.mTabs[0].linkedBrowser.webNavigation.sessionHistory.count)
+              this.removeTab(this.mTabs[0]);
+            else // if there's only one tab, it's selected anyway
+              this.selectedTab = t;
           ]]>
         </body>
       </method>
 
       <method name="removeTab">
         <parameter name="aTab"/>
+        <parameter name="aDisableUndo"/>
         <body>
           <![CDATA[
             this._browsers = null; // invalidate cache
@@ -1220,7 +1238,7 @@
             // really closing the tab.  The pref controls how far you can undo
             var maxUndoDepth = this.mPrefs.getIntPref("browser.tabs.undoclose.depth");
             var oldSH = oldBrowser.webNavigation.sessionHistory;
-            if (maxUndoDepth <= 0 || oldSH.count == 0) {
+            if (maxUndoDepth <= 0 || oldSH.count == 0 || aDisableUndo) {
               // Undo is disabled/tab is blank.  Kill the browser for real.
               // Because of the way XBL works (fields just set JS
               // properties on the element) and the code we have in place
@@ -1246,7 +1264,7 @@
             //    into bfcache - allows for saving of JS modifications
             //    and also saves RAM by allowing bfcache to evict the full page
 
-            this.savedBrowsers.push({browser: oldBrowser, history: oldSH});
+            this.savedBrowsers.unshift({browser: oldBrowser, history: oldSH});
               
             var newSH = Components.classes["@mozilla.org/browser/shistory;1"]
                                     .createInstance(Components.interfaces.nsISHistoryInternal);
@@ -1276,10 +1294,10 @@
       <method name="reloadAllTabs">
         <body>
           <![CDATA[
-            var l = this.mPanelContainer.childNodes.length;
+            var l = this.mTabs.length;
             for (var i = 0; i < l; i++) {
               try {
-                this.mPanelContainer.childNodes[i].reload();
+                this.mTabs[i].linkedBrowser.reload();
               } catch (e) {
                 // ignore failure to reload so others will be reloaded
               }
@@ -1713,7 +1731,7 @@
         <body>
         <![CDATA[
           var oldBrowserGroup = [];
-          var oldCount = this.mPanelContainer.childNodes.length;
+          var oldCount = this.mTabs.length;
           var newCount = aGroup.length;
           var n = Math.max(oldCount, newCount);
           for (var i = 0; i < n; ++i) {
@@ -1721,7 +1739,7 @@
               var data = aGroup[i];
               if ("sessionHistory" in data) {
                 this.addTab("about:blank", null);
-                var browser = this.mPanelContainer.lastChild;
+                var browser = this.mTabContainer.lastChild.linkedBrowser;
                 // need to hold on to the listener so it won't go away
                 // addProgressListener only has a weak pointer to it
                 browser._SHListener =
@@ -1738,7 +1756,7 @@
                 sessionHistory : firstTab.linkedBrowser.sessionHistory
               }
               oldBrowserGroup.push(browserData);
-              this.removeTab(firstTab);
+              this.removeTab(firstTab, true);
             }
           }
           return oldBrowserGroup;
