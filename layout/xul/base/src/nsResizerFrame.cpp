@@ -92,6 +92,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
                             nsGUIEvent* aEvent,
                             nsEventStatus* aEventStatus)
 {
+  nsWeakFrame weakFrame(this);
   PRBool doDefault = PR_TRUE;
 
   switch (aEvent->message) {
@@ -231,7 +232,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
       break;
   }
 
-  if ( doDefault )
+  if (doDefault && weakFrame.IsAlive())
     return nsTitleBarFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
   else
     return NS_OK;
