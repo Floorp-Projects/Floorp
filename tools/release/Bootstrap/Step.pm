@@ -17,7 +17,7 @@ sub Shell {
     my $this = shift;
     my %args = @_;
     my $cmd = $args{'cmd'};
-    my $rv = Util::MozUtil::RunShellCommand('command' => "$cmd");
+    my $rv = MozBuild::Util::RunShellCommand('command' => "$cmd");
     my $exitValue = $rv->{'exitValue'};
     if ($exitValue != 0) {
         die("shell call returned bad exit code: $exitValue");
