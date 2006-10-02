@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapi.h,v 1.24 2006/02/01 21:18:43 wtchang%redhat.com Exp $ */
+/* $Id: blapi.h,v 1.25 2006/10/02 21:15:46 julien.pierre.bugs%sun.com Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
@@ -1087,6 +1087,8 @@ extern SECStatus   PQG_VerifyParams(const PQGParams *params,
  */
 extern void BL_Cleanup(void);
 
+/* unload freebl shared library from memory */
+extern void BL_Unload(void);
 
 /**************************************************************************
  *  Verify a given Shared library signature                               *

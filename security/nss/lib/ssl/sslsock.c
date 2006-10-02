@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsock.c,v 1.49 2006/09/28 00:40:55 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: sslsock.c,v 1.50 2006/10/02 21:15:46 julien.pierre.bugs%sun.com Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -508,7 +508,8 @@ static PRCallOnceType setupBypassOnce;
 
 static SECStatus SSL_BypassShutdown(void* appData, void* nssData)
 {
-    BL_Cleanup();
+    /* unload freeBL shared library from memory */
+    BL_Unload();
     setupBypassOnce = pristineCallOnce;
     return SECSuccess;
 }
