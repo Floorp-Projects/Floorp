@@ -2919,7 +2919,18 @@ JS_PUBLIC_API(JSBool)
 JS_GetMethodById(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                  jsval *vp)
 {
+    JSObject *obj2;
+    JSProperty *prop;
+
     CHECK_REQUEST(cx);
+
+    if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
+        return JS_FALSE;
+    if (!prop) {
+        *vp = JSVAL_VOID;
+        return JS_TRUE;
+    }
+    OBJ_DROP_PROPERTY(cx, obj2, prop);
 
 #if JS_HAS_XML_SUPPORT
     if (OBJECT_IS_XML(cx, obj)) {
