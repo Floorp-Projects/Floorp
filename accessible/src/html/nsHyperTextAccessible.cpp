@@ -882,7 +882,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY, ns
   // aX, aY are currently screen coordinates, and we need to turn them into
   // frame coordinates relative to the current accessible
   if (!frameScreenRect.Contains(aX, aY)) {
-    return NS_ERROR_FAILURE;
+    return NS_OK;   // Not found, will return -1
   }
   nsPoint pointInHyperText(aX - frameScreenRect.x, aY - frameScreenRect.y);
   nsPresContext *context = GetPresContext();
@@ -912,9 +912,9 @@ NS_IMETHODIMP nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY, ns
       if (pointInFrame.x < frameSize.width && pointInFrame.y < frameSize.height) {
         // Finished
         if (IsText(accessible)) {
-          nsIFrame::ContentOffsets contentOffsets = frame->GetContentOffsetsFromPointExternal(pointInFrame);
+          nsIFrame::ContentOffsets contentOffsets = frame->GetContentOffsetsFromPointExternal(pointInFrame, PR_TRUE);
           if (contentOffsets.IsNull() || contentOffsets.content != content) {
-            return NS_ERROR_FAILURE;
+            return NS_OK; // Not found, will return -1
           }
           offset += contentOffsets.offset;
         }
@@ -926,7 +926,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY, ns
     offset += TextLength(accessible);
   }
 
-  return NS_ERROR_FAILURE;
+  return NS_OK; // Not found, will return -1
 }
 
 // ------- nsIAccessibleHyperText ---------------

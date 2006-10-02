@@ -2664,30 +2664,38 @@ static nsIFrame* AdjustFrameForSelectionStyles(nsIFrame* aFrame) {
 }
   
 
-nsIFrame::ContentOffsets nsIFrame::GetContentOffsetsFromPoint(nsPoint aPoint)
+nsIFrame::ContentOffsets nsIFrame::GetContentOffsetsFromPoint(nsPoint aPoint,
+                                                              PRBool aIgnoreSelectionStyle)
 {
-  // This section of code deals with special selection styles.  Note that
-  // -moz-none and -moz-all exist, even though they don't need to be explicitly
-  // handled.
-  // The offset is forced not to end up in generated content; content offsets
-  // cannot represent content outside of the document's content tree.
+  nsIFrame *adjustedFrame;
+  if (aIgnoreSelectionStyle) {
+    adjustedFrame = this;
+  }
+  else {
+    // This section of code deals with special selection styles.  Note that
+    // -moz-none and -moz-all exist, even though they don't need to be explicitly
+    // handled.
+    // The offset is forced not to end up in generated content; content offsets
+    // cannot represent content outside of the document's content tree.
 
-  nsIFrame* adjustedFrame = AdjustFrameForSelectionStyles(this);
+    adjustedFrame = AdjustFrameForSelectionStyles(this);
 
-  // -moz-user-select: all needs special handling, because clicking on it
-  // should lead to the whole frame being selected
-  if (adjustedFrame && adjustedFrame->GetStyleUIReset()->mUserSelect ==
-      NS_STYLE_USER_SELECT_ALL) {
-    return OffsetsForSingleFrame(adjustedFrame, aPoint +
+    // -moz-user-select: all needs special handling, because clicking on it
+    // should lead to the whole frame being selected
+    if (adjustedFrame && adjustedFrame->GetStyleUIReset()->mUserSelect ==
+        NS_STYLE_USER_SELECT_ALL) {
+      return OffsetsForSingleFrame(adjustedFrame, aPoint +
                                    this->GetOffsetTo(adjustedFrame));
+    }
+
+    // For other cases, try to find a closest frame starting from the parent of
+    // the unselectable frame
+    if (adjustedFrame != this)
+      adjustedFrame = adjustedFrame->GetParent();
   }
 
-  // For other cases, try to find a closest frame starting from the parent of
-  // the unselectable frame
-  if (adjustedFrame != this)
-    adjustedFrame = adjustedFrame->GetParent();
-
   nsPoint adjustedPoint = aPoint + this->GetOffsetTo(adjustedFrame);
+
   FrameTarget closest = GetSelectionClosestFrame(adjustedFrame, adjustedPoint);
 
   // If the correct offset is at one end of a frame, use offset-based

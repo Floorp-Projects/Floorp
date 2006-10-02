@@ -436,7 +436,7 @@ void nsHTMLSelectListAccessible::CacheChildren()
 
 /** Default Constructor */
 nsHTMLSelectOptionAccessible::nsHTMLSelectOptionAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell):
-nsLeafAccessible(aDOMNode, aShell)
+nsHyperTextAccessible(aDOMNode, aShell)
 {
   nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
   nsCOMPtr<nsIDOMNode> parentNode;
