@@ -45,10 +45,24 @@ function onInit()
   document.getElementById('spamLevel').checked =
     document.getElementById('server.spamLevel').value > 0;
     
-  SetFolderPicker(document.getElementById('server.spamActionTargetAccount').value,
-                  'actionTargetAccount');
-  SetFolderPicker(document.getElementById('server.spamActionTargetFolder').value,
-                  'actionTargetFolder');
+  var spamActionTargetAccount = document.getElementById('server.spamActionTargetAccount').value;
+  if (!spamActionTargetAccount)
+  {
+    var server = GetMsgFolderFromUri(parent.pendingServerId, false).server;
+    if (server.canCreateFoldersOnServer && server.canSearchMessages)
+      spamActionTargetAccount = parent.pendingServerId;
+    else
+      spamActionTargetAccount = parent.accountManager.localFoldersServer.serverURI;
+    document.getElementById('server.spamActionTargetAccount').value = spamActionTargetAccount;
+  }
+  SetFolderPicker(spamActionTargetAccount, 'actionTargetAccount');
+  var spamActionTargetFolder = document.getElementById('server.spamActionTargetFolder').value;
+  if (!spamActionTargetFolder)
+  {
+    spamActionTargetFolder = parent.accountManager.localFoldersServer.serverURI + "/Junk";
+    document.getElementById('server.spamActionTargetFolder').value = spamActionTargetFolder;
+  }
+  SetFolderPicker(spamActionTargetFolder, 'actionTargetFolder');
   
   // set up the whitelist UI
   document.getElementById("whiteListAbURI").value =
