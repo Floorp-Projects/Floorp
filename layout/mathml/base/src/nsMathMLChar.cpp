@@ -78,6 +78,7 @@
 // -----------------------------------------------------------------------------------
 static const PRUnichar   kSpaceCh   = PRUnichar(' ');
 static const nsGlyphCode kNullGlyph = {0, 0};
+enum {eExtension_base, eExtension_variants, eExtension_parts};
 
 // -----------------------------------------------------------------------------------
 // nsGlyphTable is a class that provides an interface for accessing glyphs
@@ -1041,51 +1042,97 @@ GetPrefValue(nsIPrefBranch* aPrefBranch, const char* aPrefKey, nsString& aPrefVa
   return !aPrefValue.IsEmpty();
 }
 
+// Given the key:
+// "font.mathfont-family.\uNNNN.base"     -- fonts for the base size
+// "font.mathfont-family.\uNNNN.variants" -- fonts for larger glyphs
+// "font.mathfont-family.\uNNNN.parts"    -- fonts for partial glyphs
+// set aChar=\uNNNN, set aExtension, and retrieve the extension fonts from the pref
+static PRBool
+GetFontExtensionPref(nsIPrefBranch* aPrefBranch, const char* aKey, 
+                     PRUnichar& aChar, PRInt32& aExtension, nsString& aValue)
+{
+  // initialize OUT params
+  aChar = 0;
+  aExtension = -1;
+  aValue.Truncate();
+
+  // We are going to try two keys because some users specify their pref as 
+  // user_pref("font.mathfont-family.\uNNNN.base", "...") rather than
+  // user_pref("font.mathfont-family.\\uNNNN.base", "...").
+  // The \uNNNN in the former is interpreted as an UTF16 escape sequence by
+  // JavaScript and is converted to the internal UTF8 string that JavaScript uses. 
+  // But clueless users who are not savvy of JavaScript have no idea as to what 
+  // is going on and are baffled as to why their pref setting is not working.
+  // So to save countless explanations, we are going to support both keys.
+
+  static const char* kMathFontPrefix = "font.mathfont-family.";
+  nsCAutoString alternateKey;
+  alternateKey.AssignASCII(kMathFontPrefix);
+  PRInt32 ucharOffset = alternateKey.Length();
+  PRInt32 ucharLength = nsDependentCString(aKey + ucharOffset).FindChar('.');
+  if (ucharLength <= 1 || ucharLength > 6) // 6 is the length of \uNNNN
+    return PR_FALSE;
+
+  PRUnichar uchar;
+  if (*(aKey + ucharOffset) == '\\') { // \u is there, get the unicode point after it
+    PRInt32 error = 0;
+    uchar = nsDependentCString(aKey + ucharOffset + 2).ToInteger(&error, 16);
+    if (error) return PR_FALSE;
+    NS_ConvertUTF16toUTF8 tmp(&uchar, 1);
+    alternateKey.Append(tmp.get());
+  }
+  else { // \missing \u, recover the \uNNNN notation 
+    NS_ConvertUTF8toUTF16 tmp(aKey + ucharOffset, ucharLength);
+    uchar = tmp[0];
+    char ustr[10];
+    PR_snprintf(ustr, sizeof(ustr), "\\u%04X", uchar);
+    alternateKey.Append(ustr);
+  }
+
+  const char* extension = aKey + ucharOffset + ucharLength;
+  if (!strcmp(extension, ".base"))
+    aExtension = eExtension_base;
+  else if (!strcmp(extension, ".variants"))
+    aExtension = eExtension_variants;
+  else if (!strcmp(extension, ".parts"))
+    aExtension = eExtension_parts;
+  else
+    return PR_FALSE;
+
+  aChar = uchar;
+  alternateKey.AppendASCII(extension);
+  return GetPrefValue(aPrefBranch, aKey, aValue) ||
+         GetPrefValue(aPrefBranch, alternateKey.get(), aValue);
+}
+
 // Store the list of preferred extension fonts for a char
 static void
-SetPreferredFonts(const char* aKey, nsString& aFamilyList)
+SetPreferredFonts(PRUnichar aChar, PRInt32 aExtension, nsString& aFamilyList)
 {
-  NS_ASSERTION(30 < strlen(aKey), "invalid call");
-
-  // expected key:
-  // "font.mathfont-family.\uNNNN.base"     -- fonts for the base size
-  // "font.mathfont-family.\uNNNN.parts"    -- fonts for partial glyphs
-  // "font.mathfont-family.\uNNNN.variants" -- fonts for larger glyphs
-  PRInt32 error = 0;
-  // 22 is to skip "font.mathfont-family.\\u";
-  PRUnichar uchar = nsCAutoString(aKey + 22).ToInteger(&error, 16);
-  if (error) return;
-  // 27 is to skip "font.mathfont-family.\\uNNNN"
-  const char* extension = aKey + 27;
-
+  if (aChar == 0 || aExtension < 0 || aFamilyList.IsEmpty())
+    return;
 #ifdef DEBUG_rbs
-  printf("Setting preferred fonts for \\u%04X%s: %s\n", uchar, extension,
+  static const char* const kExtension[] = {".base", ".variants", ".parts"};
+  printf("Setting preferred fonts for \\u%04X%s: %s\n", aChar, kExtension[aExtension],
          NS_LossyConvertUTF16toASCII(aFamilyList).get());
 #endif
 
-  if (!strcmp(extension, ".base")) {
+  if (aExtension == eExtension_base) {
     // fonts to be used for the base size of the char (i.e., no stretching)
-    nsBaseFontEntry* entry = nsGlyphTableList::gBaseFonts->AddEntry(uchar);
+    nsBaseFontEntry* entry = nsGlyphTableList::gBaseFonts->AddEntry(aChar);
     if (entry) {
       entry->mFontFamily = aFamilyList;
     }
     return;
   }
 
-  PRBool isFontForParts;
-  if (!strcmp(extension, ".parts"))
-    isFontForParts = PR_TRUE;
-  else if (!strcmp(extension, ".variants"))
-    isFontForParts = PR_FALSE;
-  else return; // input is not applicable
-
   // Ensure that this is a valid stretchy operator
-  PRInt32 k = nsMathMLOperators::FindStretchyOperator(uchar);
+  PRInt32 k = nsMathMLOperators::FindStretchyOperator(aChar);
   if (k != kNotFound) {
     // We just want to iterate over the font-family list using the
     // callback mechanism that nsFont has...
     nsFont font(aFamilyList, 0, 0, 0, 0, 0);
-    PreferredFontEnumContext context = {k, isFontForParts, 0};
+    PreferredFontEnumContext context = {k, aExtension == eExtension_parts, 0};
     font.EnumerateFamilies(PreferredFontEnumCallback, &context);
     if (context.mFontCount) { // at least one font was retained
       // Append a null separator
@@ -1214,6 +1261,8 @@ InitGlobals(nsPresContext* aPresContext)
   // Let the particular characters have their preferred fonts
 
   // First, look the prefs of the user
+  PRUnichar uchar;
+  PRInt32 ext;
   char **allKey = nsnull;
   prefBranch->GetChildList("font.mathfont-family.", &count, &allKey);    
   for (i = 0; i < count; ++i) {
@@ -1222,9 +1271,8 @@ InitGlobals(nsPresContext* aPresContext)
     printf("Found user pref %s: %s\n", allKey[i],
            NS_LossyConvertUTF16toASCII(value).get());
 #endif
-    if ((30 < strlen(allKey[i])) && 
-        GetPrefValue(prefBranch, allKey[i], value)) {
-      SetPreferredFonts(allKey[i], value);
+    if (GetFontExtensionPref(prefBranch, allKey[i], uchar, ext, value)) {
+      SetPreferredFonts(uchar, ext, value);
     }
   }
   NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, allKey);
@@ -1239,10 +1287,10 @@ InitGlobals(nsPresContext* aPresContext)
         if (NS_SUCCEEDED(element->GetKey(key))) {
           if ((30 < key.Length()) && 
               (0 == key.Find("font.mathfont-family.\\u")) &&
-              !GetPrefValue(prefBranch, key.get(), value) && // priority to user
+               !GetFontExtensionPref(prefBranch, key.get(), uchar, ext, value) && // priority to user
               NS_SUCCEEDED(element->GetValue(value))) {
             Clean(value);
-            SetPreferredFonts(key.get(), value);
+            SetPreferredFonts(uchar, ext, value);
           }
         }
       }

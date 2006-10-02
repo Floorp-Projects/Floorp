@@ -183,8 +183,8 @@ nsMathMLmoFrame::ProcessTextData(PRBool aComputeStyleChange)
   // sign (U+2212) which looks much better. For background on this, see
   // http://groups.google.com/groups?hl=en&th=66488daf1ade7635&rnum=1
   if (1 == length && ch == '-') {
-    data = PRUnichar(0x2212);
-    mFlags |= NS_MATHML_OPERATOR_CENTERED;
+    ch = 0x2212;
+    data = ch;
   }
 
   // cache the special bits: mutable, accent, movablelimits, centered.
@@ -214,6 +214,7 @@ nsMathMLmoFrame::ProcessTextData(PRBool aComputeStyleChange)
   // fonts that are not math-aware
   if (1 == length) {
     if ((ch == '+') || (ch == '=') || (ch == '*') ||
+        (ch == 0x2212) || // &minus;
         (ch == 0x2264) || // &le;
         (ch == 0x2265) || // &ge;
         (ch == 0x00D7)) { // &times;
