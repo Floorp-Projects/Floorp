@@ -3120,6 +3120,8 @@ CK_RV nsc_CommonFinalize (CK_VOID_PTR pReserved, PRBool isFIPS)
 
     /* tell freeBL to clean up after itself */
     BL_Cleanup();
+    /* unload freeBL shared library from memory */
+    BL_Unload();
     /* clean up the default OID table */
     SECOID_Shutdown();
     nsc_init = PR_FALSE;
