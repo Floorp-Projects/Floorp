@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: softoken.h,v 1.13 2006/07/31 18:10:17 wtchang%redhat.com Exp $ */
+/* $Id: softoken.h,v 1.14 2006/10/02 22:48:31 wtchang%redhat.com Exp $ */
 
 #ifndef _SOFTOKEN_H_
 #define _SOFTOKEN_H_
@@ -183,6 +183,71 @@ unsigned long sftk_MapKeySize(CK_KEY_TYPE keyType);
 extern PRBool sftk_audit_enabled;
 
 extern void sftk_LogAuditMessage(NSSAuditSeverity severity, const char *msg);
+
+extern void sftk_AuditCreateObject(CK_SESSION_HANDLE hSession,
+			CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount,
+			CK_OBJECT_HANDLE_PTR phObject, CK_RV rv);
+
+extern void sftk_AuditCopyObject(CK_SESSION_HANDLE hSession,
+			CK_OBJECT_HANDLE hObject,
+			CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount,
+			CK_OBJECT_HANDLE_PTR phNewObject, CK_RV rv);
+
+extern void sftk_AuditDestroyObject(CK_SESSION_HANDLE hSession,
+			CK_OBJECT_HANDLE hObject, CK_RV rv);
+
+extern void sftk_AuditGetObjectSize(CK_SESSION_HANDLE hSession,
+			CK_OBJECT_HANDLE hObject, CK_ULONG_PTR pulSize,
+			CK_RV rv);
+
+extern void sftk_AuditGetAttributeValue(CK_SESSION_HANDLE hSession,
+			CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate,
+			CK_ULONG ulCount, CK_RV rv);
+
+extern void sftk_AuditSetAttributeValue(CK_SESSION_HANDLE hSession,
+			CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate,
+			CK_ULONG ulCount, CK_RV rv);
+
+extern void sftk_AuditCryptInit(const char *opName,
+			CK_SESSION_HANDLE hSession,
+			CK_MECHANISM_PTR pMechanism,
+			CK_OBJECT_HANDLE hKey, CK_RV rv);
+
+extern void sftk_AuditGenerateKey(CK_SESSION_HANDLE hSession,
+			CK_MECHANISM_PTR pMechanism,
+			CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount,
+			CK_OBJECT_HANDLE_PTR phKey, CK_RV rv);
+
+extern void sftk_AuditGenerateKeyPair(CK_SESSION_HANDLE hSession,
+			CK_MECHANISM_PTR pMechanism,
+			CK_ATTRIBUTE_PTR pPublicKeyTemplate,
+			CK_ULONG ulPublicKeyAttributeCount,
+			CK_ATTRIBUTE_PTR pPrivateKeyTemplate,
+			CK_ULONG ulPrivateKeyAttributeCount,
+			CK_OBJECT_HANDLE_PTR phPublicKey,
+			CK_OBJECT_HANDLE_PTR phPrivateKey, CK_RV rv);
+
+extern void sftk_AuditWrapKey(CK_SESSION_HANDLE hSession,
+			CK_MECHANISM_PTR pMechanism,
+			CK_OBJECT_HANDLE hWrappingKey, CK_OBJECT_HANDLE hKey,
+			CK_BYTE_PTR pWrappedKey,
+			CK_ULONG_PTR pulWrappedKeyLen, CK_RV rv);
+
+extern void sftk_AuditUnwrapKey(CK_SESSION_HANDLE hSession,
+			CK_MECHANISM_PTR pMechanism,
+			CK_OBJECT_HANDLE hUnwrappingKey,
+			CK_BYTE_PTR pWrappedKey, CK_ULONG ulWrappedKeyLen,
+			CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulAttributeCount,
+			CK_OBJECT_HANDLE_PTR phKey, CK_RV rv);
+
+extern void sftk_AuditDeriveKey(CK_SESSION_HANDLE hSession,
+			CK_MECHANISM_PTR pMechanism,
+			CK_OBJECT_HANDLE hBaseKey,
+			CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulAttributeCount,
+			CK_OBJECT_HANDLE_PTR phKey, CK_RV rv);
+
+extern void sftk_AuditDigestKey(CK_SESSION_HANDLE hSession,
+			CK_OBJECT_HANDLE hKey, CK_RV rv);
 
 /*
 ** FIPS 140-2 Error state

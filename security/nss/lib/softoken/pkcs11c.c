@@ -3813,7 +3813,7 @@ ecgn_done:
 	if (sftk_audit_enabled) {
 	    char msg[128];
 	    PR_snprintf(msg,sizeof msg,
-			"C_GenerateKeyPair(hSession=%lu, "
+			"C_GenerateKeyPair(hSession=0x%08lX, "
 			"pMechanism->mechanism=0x%08lX)=0x%08lX "
 			"self-test: pair-wise consistency test failed",
 			(PRUint32)hSession,(PRUint32)pMechanism->mechanism,

@@ -70,6 +70,7 @@ CSRCS = \
 	dbinit.c \
 	dbmshim.c \
 	ecdecode.c \
+	fipsaudt.c \
 	fipstest.c \
 	fipstokn.c \
 	keydb.c    \
