@@ -50,7 +50,6 @@
 #include "nsIDOM3Node.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMText.h"
-#include "nsIXTFXMLVisualWrapper.h"
 #include "nsString.h"
 #include "nsIXFormsUIWidget.h"
 #include "nsIDocument.h"

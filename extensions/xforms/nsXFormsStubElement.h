@@ -91,8 +91,5 @@ NS_HIDDEN_(nsresult)
 NS_NewXFormsStubElement(nsIXTFElement **aResult);
 
 NS_HIDDEN_(nsresult)
-NS_NewXFormsXMLVisualStub(nsIXTFElement **aResult);
-
-NS_HIDDEN_(nsresult)
 NS_NewXFormsBindableStub(nsIXTFElement **aResult);
 #endif

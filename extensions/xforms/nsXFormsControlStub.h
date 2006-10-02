@@ -154,7 +154,7 @@ public:
     {};
 
 protected:
-  /** The nsIXTFXMLVisualWrapper */
+  /** The nsIXTFElementWrapper */
   nsIDOMElement*                      mElement;
 
   /** The node that the control is bound to. */

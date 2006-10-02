@@ -47,9 +47,6 @@
 #include "nsIDOMXPathResult.h"
 #include "nsIDOMHTMLDivElement.h"
 
-#include "nsIXTFXMLVisual.h"
-#include "nsIXTFXMLVisualWrapper.h"
-
 #include "nsXFormsControlStub.h"
 #include "nsIModelElementPrivate.h"
 #include "nsXFormsUtils.h"

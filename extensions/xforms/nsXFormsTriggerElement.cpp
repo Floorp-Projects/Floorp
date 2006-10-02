@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIXTFXMLVisual.h"
 #include "nsIDOM3Node.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMUIEvent.h"
@@ -49,7 +48,6 @@
 #include "nsIDOMAbstractView.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsIXTFXMLVisualWrapper.h"
 #include "nsXFormsAtoms.h"
 #include "nsXFormsUtils.h"
 #include "nsXFormsControlStub.h"

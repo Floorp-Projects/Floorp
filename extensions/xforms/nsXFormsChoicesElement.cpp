@@ -46,7 +46,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIXFormsControl.h"
 #include "nsXFormsUtils.h"
-#include "nsIXTFXMLVisualWrapper.h"
 
 class nsXFormsChoicesElement : public nsXFormsBindableStub,
                                public nsIXFormsSelectChild

@@ -41,8 +41,6 @@
 //#define DEBUG_XF_OUTPUT
 #endif
 
-#include "nsIXTFXMLVisualWrapper.h"
-
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsMemory.h"

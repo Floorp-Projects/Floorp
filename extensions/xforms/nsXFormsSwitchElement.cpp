@@ -47,8 +47,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIFocusController.h"
 
-#include "nsIXTFXMLVisualWrapper.h"
-
 #include "nsXFormsUtils.h"
 #include "nsXFormsControlStub.h"
 #include "nsIModelElementPrivate.h"

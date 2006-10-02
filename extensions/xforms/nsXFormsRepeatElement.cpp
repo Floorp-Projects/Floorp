@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIXTFXMLVisualWrapper.h"
-
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsINameSpaceManager.h"
@@ -380,7 +378,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsRepeatElement,
                              nsXFormsDelegateStub,
                              nsIXFormsRepeatElement)
 
-// nsIXTFXMLVisual
+// nsIXTFBindableElement
 NS_IMETHODIMP
 nsXFormsRepeatElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
 {
