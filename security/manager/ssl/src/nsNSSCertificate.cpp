@@ -391,7 +391,13 @@ nsNSSCertificate::GetWindowTitle(char * *aWindowTitle)
     } else {
       *aWindowTitle = CERT_GetCommonName(&mCert->subject);
       if (!*aWindowTitle) {
-        *aWindowTitle = PL_strdup(mCert->subjectName);
+        if (mCert->subjectName) {
+          *aWindowTitle = PL_strdup(mCert->subjectName);
+        } else if (mCert->emailAddr) {
+          *aWindowTitle = PL_strdup(mCert->emailAddr);
+        } else {
+          *aWindowTitle = PL_strdup("");
+        }
       }
     }
   } else {
