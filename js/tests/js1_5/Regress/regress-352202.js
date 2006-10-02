@@ -54,7 +54,7 @@ function test()
   var f;
 
   f = function() { for ((~x)["y"] in z) { } } 
-  expect = 'function() { for ((~x)["y"] in z) { } }';
+  expect = 'function() { for ((~x).y in z) { } }';
   actual = f + '';
   compareSource(expect, actual, summary);
 
