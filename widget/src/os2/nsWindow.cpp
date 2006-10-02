@@ -2666,6 +2666,8 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
 
         case WM_CLOSE:  // close request
+        case WM_QUIT:   // interpret WM_QUIT as a close request, too,
+                        // so that windows can be closed from the Window List
           mWindowState |= nsWindowState_eClosing;
           DispatchStandardEvent( NS_XUL_CLOSE );
           result = PR_TRUE; // abort window closure
