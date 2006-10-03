@@ -26,8 +26,9 @@
   <p>If you choose to enter it, your location will be shown on your profile. This
     field is optional.
   <div>
-     <label class="label-large" for="UserLocation">Location:</label>
+    <label class="label-large" for="UserLocation">Location:</label>
     <?php echo $html->input('User/location', array('id' => 'location', 'size' => 40, 'onkeypress' => 'capture(event)')); ?>
+    <div id="locerr" class="info" style="display: none">Did you mean: <a id="locerrlink" onclick="geocode_suggest()" href="#"></a>?  <a href="#" onclick="shide()"><span style="font-size: x-small">(close)</span></a></div>
   </div>
   <p>If you have a website, enter the URL here. (including the http:// ) Your website will be
     shown to site visitors on your author profile page. This field is optional; if you don't
@@ -65,7 +66,7 @@
       <option value="11">GMT+11</option>
       <option value="12">GMT+12</option>
     </select>
-    (this page was loaded at <?php echo gmdate("Y-m-d H:i:s"); ?>GMT)
+    (this page was loaded at <?php echo gmdate("Y-m-d H:i:s"); ?> GMT)
   </div>
   <div>
     <label class="label-large" for="password">Password<span class="required">*</span>:</label>
@@ -82,7 +83,6 @@
       type="text/javascript"></script>
   <script src="<?php echo $html->url('/js/maps.js'); ?>" type="text/javascript"></script>
     <script type="text/javascript">
-
     //<![CDATA[
       function update() {
         var loc = document.getElementById("location").value;
@@ -103,6 +103,7 @@
     <?php echo $html->hidden('User/lat', array('id' => 'lat')); 
           echo $html->hidden('User/long', array('id' => 'long'));
           echo $html->hidden('User/zoom', array('id' => 'zoom'));
+          echo $html->hidden('User/geocoded', array('id' => 'geocoded', 'value' => 0));
           echo $html->hidden('User/icode', array('value' => @$icode)); ?>
   </div>
   <?php endif; ?>

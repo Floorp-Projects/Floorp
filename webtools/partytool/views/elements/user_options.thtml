@@ -1,9 +1,9 @@
 <?php if(!isset($_SESSION['User'])): ?>
-<strong>Welcome Guest!</strong>
+<strong>Welcome, Guest!</strong>
 <a href="<?php echo $html->url('/user/login'); ?>">Login</a>
 <a href="<?php echo $html->url('/user/register'); ?>">Register</a>
 <?php else: ?>
-<strong>Welcome <?php echo (!empty($_SESSION['User']['name'])) ? $_SESSION['User']['name'] : $_SESSION['User']['email']; ?>!</strong>
+<strong>Welcome, <?php echo (!empty($_SESSION['User']['name'])) ? $_SESSION['User']['name'] : $_SESSION['User']['email']; ?>!</strong>
 <a href="<?php echo $html->url('/user'); ?>">My Account</a>
 <a href="<?php echo $html->url('/user/logout'); ?>">Logout</a>
 <?php endif; ?>

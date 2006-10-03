@@ -14,7 +14,7 @@
       <div id="mozilla-com"><a href="http://www.mozilla.com/">Visit Mozilla.com</a></div>
       <div id="header">
         <div id="key-title">
-          <h1><a href="<?php echo $html->url('/'); ?>" title="Return to home page" accesskey="1"><img src="<?php echo $html->url('/img/firefox-title.png'); ?>" width="276" height="54" alt="Firefox Add-ons Beta"/></a></h1>
+          <h1><a href="<?php echo $html->url('/'); ?>" title="Return to home page" accesskey="1"><img src="<?php echo $html->url('/img/firefox-title.png'); ?>" width="276" height="54" alt="Firefox Party"/></a></h1>
           <div id="user"><?php echo $this->renderElement('user_options'); ?></div>
         </div>
         <div id="key-menu">

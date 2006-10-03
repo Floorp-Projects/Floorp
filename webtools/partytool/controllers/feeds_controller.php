@@ -74,6 +74,7 @@ class FeedsController extends AppController {
   function ical() {
     $this->layout = 'ajax';
     header('Content-type: text/calendar');
+    header("Content-Disposition: inline; filename=partylist.ics");
     $weekago = time() - 604800;
     $this->set('events', $this->Feed->findAll('WHERE date > '. $weekago, '', 'date ASC', 50, 1));
   }

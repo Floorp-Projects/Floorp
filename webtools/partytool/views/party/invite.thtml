@@ -1,3 +1,4 @@
+<h1>Invite a guest</h1>
 <?php if(!empty($preamble)): ?>
 <div class="info">
 <p>An email has been sent to <strong><?php echo $preamble[0]; ?></strong>. You can invite another
@@ -5,9 +6,14 @@
   </p>
 </div>
 <?php endif; ?>
+<?php if($inviteonly): ?>
 <p>Since your party is invite only, you'll need to invite your guests. You can do this by
   entering their email address into the field below, or by handing them a link to
   <strong><?php echo $inviteurl; ?></strong></p>
+<?php else: ?>
+<p>Simply enter the email of the person you wish to invite below and we'll take care of the
+  rest!</p>
+<?php endif; ?>
 <form action="<?php echo $html->url('/party/invite/'.$partyid) ?>" method="post">
 <label for="PartyEinvite">Guest's email address:</label>
 <?php echo $html->input('Party/einvite')."\n".$html->submit('Submit')."\n"; ?>

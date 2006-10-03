@@ -22,6 +22,6 @@
     <?php echo $html->submit('Login'); ?>
   </div>
   <p>
-    <a href="">Create an account</a> | <a href="<?php echo $html->url('/user/recover/password'); ?>">Forgot your password?</a>
+    <a href="<?php echo $html->url('/user/register'); ?>">Create an account</a> | <a href="<?php echo $html->url('/user/recover/password'); ?>">Forgot your password?</a>
   </p>
 </form>

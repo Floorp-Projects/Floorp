@@ -9,6 +9,7 @@
   <div>
     <label for="UserName" class="label-large">Name:</label>
     <?php echo $html->input('User/name', array('size' => 40)); ?>
+    <?php echo $html->tagErrorMsg('User/name', 'You must enter a name.')?>
   </div>
   <div>
     <label for="name" class="label-large">Website:</label>
@@ -88,11 +89,11 @@
   <div>
     <label for="UserPassword" class="label-large">New password:</label>
     <?php echo $html->password('User/password', array('size' => 20)); ?>
-    <?php echo $html->tagErrorMsg('User/password', 'Passwords don\'t match!')?>
   </div>
   <div>
     <label for="UserConfpassword" class="label-large">Confirm  new password:</label>
     <?php echo $html->password('User/confpassword', array('size' => 20)); ?>
+    <?php echo $html->tagErrorMsg('User/confpassword', 'The supplied passwords do not match!')?>
   </div>
   <?php echo $html->submit('Update'); ?>
 </form>

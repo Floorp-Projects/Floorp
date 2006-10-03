@@ -49,6 +49,9 @@
       <?php endif; ?>
     </form>
     <?php endif; ?>
+    <? if ($party['Party']['inviteonly'] == 1 && (!$isguest && @$_SESSION['User']['id'] != $party['Party']['owner'])):?>
+    <p>This party is invite only. You'll need an invite code from the host to join in.</p>
+    <?php endif; ?>
     </div>
     <?php if (@$_SESSION['User']['id'] == $party['Party']['owner']):?>
     <h1>Party options</h1>
@@ -59,7 +62,7 @@
     <h1 id="photos">Photos</h1>
     <div style="text-align: center">
       <?php if (empty($flickr)): ?>
-      <p>No photos yet, tag your flickr pictures with <?php echo FLICKR_TAG_PREFIX.$party['Party']['id']; ?> to display them here.</p>
+      <p>No photos yet. Tag your flickr pictures with <?php echo FLICKR_TAG_PREFIX.$party['Party']['id']; ?> to display them here.</p>
       <?php else: 
         foreach ($flickr as $pic): ?>
         <a href="http://www.flickr.com/photos/<?php echo $pic['owner']."/".$pic['id']."/" ?>"><img src="http://static.flickr.com/<?php echo $pic['server']."/".$pic['id']."_".$pic['secret']."_s.jpg" ?>" title="<?php echo $pic['title']; ?>"/></a>
@@ -86,7 +89,7 @@
     <?php endforeach; 
           endif;
       if (isset($_SESSION['User'])):
-        if ($party['Party']['guestcomments'] && $isguest): ?>
+        if (($party['Party']['guestcomments'] && $isguest) || !$party['Party']['guestcomments'] || @$_SESSION['User']['id'] == $party['Party']['owner']): ?>
     <h1>Add a comment</h1>
     <form action="<?php echo $html->url('/comment/add/'.$party['Party']['id'].'/'.$_SESSION['User']['id']); ?>" method="post">
       <div>

@@ -39,6 +39,7 @@ uses('sanitize');
 class UserController extends AppController {
   var $name = 'User';
   var $pageTitle;
+  var $components = array('Unicode');
 
   function index() {
     if (!isset($_SESSION['User'])) {
@@ -64,6 +65,16 @@ class UserController extends AppController {
       $this->data['User']['password'] = "";
       $this->set('utz', $this->data['User']['tz']);
       
+      $this->data['User']['name'] = preg_replace("/&#(\d{2,5});/e", 
+                                                 '$this->Unicode->unicode2utf(${1})',
+                                                 html_entity_decode($this->data['User']['name']));
+      $this->data['User']['website'] = preg_replace("/&#(\d{2,5});/e", 
+                                                    '$this->Unicode->unicode2utf(${1})',
+                                                    html_entity_decode($this->data['User']['website']));
+      $this->data['User']['location'] = preg_replace("/&#(\d{2,5});/e", 
+                                                     '$this->Unicode->unicode2utf(${1})',
+                                                     html_entity_decode($this->data['User']['location']));
+      
       if (GMAP_API_KEY != null && !empty($this->data['User']['lat']))
       $this->set('body_args',
                  ' onload="mapInit('.$this->data["User"]["lat"].', '.$this->data["User"]["long"].', '.$this->data["User"]["zoom"].');" onunload="GUnload()"');
@@ -72,7 +83,8 @@ class UserController extends AppController {
     else {
       $user = $this->User->findById($_SESSION['User']['id']);
       $this->User->id = $user['User']['id'];
-      
+      $this->set('utz', $user['User']['tz']);
+
       $clean = new Sanitize();
       $temp = array('password' => $this->data['User']['password'],
                     'confpassword' => $this->data['User']['confpassword'],
@@ -90,7 +102,7 @@ class UserController extends AppController {
       $this->data['User']['tz'] = intval($temp['tz']);
       $this->data['User']['role'] = $user['User']['role'];
 
-      if (!empty($this->data['User']['password'])) {
+      if (!empty($this->data['User']['password']) && !empty($this->data['User']['confpassword'])) {
         if ($this->data['User']['password'] === $this->data['User']['confpassword']) {
           $string = $user['User']['email'].uniqid(rand(), true).$this->data['User']['password'];
           $this->data['User']['salt'] = substr(md5($string), 0, 9);
@@ -98,18 +110,26 @@ class UserController extends AppController {
         }
         else {
           $this->set('error', true);
-          $this->render();
+          $this->User->invalidate('password');
+          $this->User->invalidate('confpassword');
         }
       }
       else
         $this->data['User']['password'] = $user['User']['password'];
 
-      if ($this->User->save($this->data)) {
-        $sess = $this->User->findById($user['User']['id']);
-        $this->Session->destroy();
-        $this->Session->delete('User');
-        $this->Session->write('User', $sess['User']);
-        $this->redirect('/user/');
+      if ($this->User->validates($this->data)) {
+        if ($this->User->save($this->data)) {
+          $sess = $this->User->findById($user['User']['id']);
+          $this->Session->write('User', $sess['User']);
+          $this->redirect('/user/');
+        }
+      }
+      
+      else {
+        $this->validateErrors($this->User);
+        $this->data['User']['password'] = null;
+        $this->data['User']['confpassword'] = null;
+        $this->render();
       }
     }
   }
@@ -241,11 +261,17 @@ class UserController extends AppController {
       $this->redirect('/');
 
     else {
-      $this->data = $this->User->findByActive($aKey);
-      $this->data['User']['active'] = 1;
+      $user = $this->User->findByActive($aKey);
+      if (empty($user['User']['id']))
+        $this->redirect('/user/login/nactive');
       
-      if ($this->User->save($this->data)) {
-        $this->redirect('/user/login/active');
+      else {
+        $this->data = $user;
+        $this->data['User']['active'] = 1;
+  
+        if ($this->User->save($this->data)) {
+          $this->redirect('/user/login/active');
+        }
       }
     }
   }
@@ -272,6 +298,10 @@ class UserController extends AppController {
           $this->set('preamble', 'Your account has been activated. You may now login.');
           break;
 
+        case "nactive":
+          $this->set('preamble', 'Your account could not be activated. Please make sure that the URL you\'re attempting to visit matches the one from your activation email.');
+          break;
+
         case "reset":
           $this->set('preamble', 'Your password has been reset.');
           break;
@@ -285,7 +315,7 @@ class UserController extends AppController {
       if ($user['User']['active'] != 1) {
         $this->set('preamble', 'Your account hasn\'t been activated yet. 
         Please check your email (including junk/spam folders) for your
-        activation link, or click <a href="/cake/user/recover/activate">here</a>
+        activation link, or click <a href="'.APP_BASE.'/user/recover/activate">here</a>
         to resend your activation details.');
         $this->render();
       }

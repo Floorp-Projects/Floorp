@@ -23,6 +23,7 @@ define('MAX_YEAR', 2007);
  * pages and home page. See http://flickr.com/services/api/keys/ to obtain a key
  */
 define('FLICKR_API_KEY', '');
+
 /* The tag prefix is used to limit the results returned to a specific party.
  * e.g. any photo tagged with FirefoxParty11 will be shown on party 11's page.
  * Photos tagged with only the prefix are shown on the front page (so choose wisely! ;) ).

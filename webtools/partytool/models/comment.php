@@ -42,10 +42,10 @@ class Comment extends AppModel {
   );
   
   function canComment($pid, $uid) {
-    $status = $this->query("SELECT guests, guestcomments FROM parties WHERE id = ".$pid);
+    $status = $this->query("SELECT owner, guests, guestcomments FROM parties WHERE id = ".$pid);
     
     if ($status[0]['parties']['guestcomments'] == 1) {
-      if (in_array($uid, explode(',', $status[0]['parties']['guests'])))
+      if (in_array($uid, explode(',', $status[0]['parties']['guests'])) || $uid == $status[0]['parties']['owner'])
         return true;
       else
         return false;

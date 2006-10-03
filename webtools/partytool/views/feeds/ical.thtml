@@ -1,7 +1,6 @@
 BEGIN:VCALENDAR
 X-WR-CALNAME:<?php echo APP_NAME."\n"; ?>
 X-WR-CALDESC:Upcoming Parties
-X-WR-TIMEZONE:US/Eastern
 PRODID:-//<?php echo $_SERVER["SERVER_NAME"]; ?>//calendar//EN
 VERSION:2.0
 CALSCALE:GREGORIAN
@@ -16,11 +15,11 @@ DTSTART:<?php echo date('Ymd\This', $event['Feeds']['date'])."\n"; ?>
 DURATION:PT<?php echo $event['Feeds']['duration']; ?>H
 URL:<?php echo "http://".$_SERVER["SERVER_NAME"].$html->url('/party/view/'.$event['Feeds']['id'])."\n"; ?>
 STATUS:<?php echo (($event['Feeds']['confirmed'] == 1) ? "CONFIRMED" : "TENTATIVE")."\n"; ?>
-DESCRIPTION:
- <?php echo $event['Feeds']['name']." \n"; ?>
- <?php echo str_replace(",", "\,", $event['Feeds']['address'])." \n"; ?>
- <?php echo date('h:ia', $event['Feeds']['date'])." \n"; ?>
- <?php echo $event['Feeds']['notes']." \n"; ?>
+DESCRIPTION;ENCODING=QUOTED-PRINTABLE:
+ <?php echo $event['Feeds']['name']."\n"; ?>
+ <?php echo str_replace(",", "\,", $event['Feeds']['address'])."\n"; ?>
+ <?php echo date('h:ia', $event['Feeds']['date'])."\n"; ?>
+ <?php echo $event['Feeds']['notes']."\n"; ?>
 END:VEVENT
 <?php endforeach; ?>
 END:VCALENDAR

@@ -16,7 +16,7 @@
   <div>
     <label for="PartyAddress" class="label-large">Address:</label>
     <?php echo $html->input('Party/address', array('size' => 40, 'id' => 'location', 'onkeypress' => 'capture(event)', 'onblur' => 'update()')); ?>
-    <div id="suggest" style="display: none">Did you mean <span style="font-style: italic"><a id="suggest2" href="#" onclick=""></a></span>?</div>
+    <div id="locerr" class="info" style="display: none">Did you mean: <a id="locerrlink" onclick="geocode_suggest()" href="#"></a>?  <a href="#" onclick="shide()"><span style="font-size: x-small">(close)</span></a></div>
   </div>
   <p>Enter your party's time and date (in your local time) here. If you're not ready to commit to a specific time or date, select the 'Tentative'
     radio button. Otherwise select 'Confirmed'.</p>
@@ -60,7 +60,7 @@
       <option value="11">GMT+11</option>
       <option value="12">GMT+12</option>
     </select>
-    (this page was loaded at <?php echo gmdate("Y-m-d H:i:s"); ?>GMT)
+    (this page was loaded at <?php echo gmdate("Y-m-d H:i:s"); ?> GMT)
   </div>
   <div>
     <label for="PartyDuration" class="label-large">Duration (in hours):</label>
@@ -81,17 +81,10 @@
       type="text/javascript"></script>
   <script src="<?php echo $html->url('/js/maps.js'); ?>" type="text/javascript"></script>
   <script type="text/javascript">
-
     //<![CDATA[
-      function update(aSuggest) {
-        var loc;
-        if (!aSuggest)
-          loc = document.getElementById("location").value;
-        else
-          loc = aSuggest;
-        
-        if (loc != "")
-          geocode(loc);
+      function update() {
+        var loc = document.getElementById("location").value;
+        geocode(loc);
       }
       
       function capture(event) {

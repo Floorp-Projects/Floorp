@@ -40,7 +40,7 @@ uses('sanitize');
 class PartyController extends AppController {
   var $name = 'Party';
   var $pageTitle;
-  var $components = array('Security');
+  var $components = array('Security', 'Unicode');
 
   function beforeFilter() {
     $this->Security->requirePost('unrsvp');
@@ -151,6 +151,24 @@ class PartyController extends AppController {
                       'tz'   => $party['Party']['tz']);
                       
         $this->set('date', $date);
+        $this->data['Party']['name'] = preg_replace("/&#(\d{2,5});/e", 
+                                                    '$this->Unicode->unicode2utf(${1})',
+                                                    html_entity_decode($this->data['Party']['name']));
+        $this->data['Party']['vname'] = preg_replace("/&#(\d{2,5});/e", 
+                                                     '$this->Unicode->unicode2utf(${1})',
+                                                     html_entity_decode($this->data['Party']['vname']));
+        $this->data['Party']['website'] = preg_replace("/&#(\d{2,5});/e", 
+                                                       '$this->Unicode->unicode2utf(${1})',
+                                                       html_entity_decode($this->data['Party']['website']));
+        $this->data['Party']['address'] = preg_replace("/&#(\d{2,5});/e", 
+                                                       '$this->Unicode->unicode2utf(${1})',
+                                                       html_entity_decode($this->data['Party']['address']));
+        $this->data['Party']['notes'] = preg_replace("/&#(\d{2,5});/e", 
+                                                     '$this->Unicode->unicode2utf(${1})',
+                                                     html_entity_decode($this->data['Party']['notes']));
+        $this->data['Party']['flickrusr'] = preg_replace("/&#(\d{2,5});/e", 
+                                                         '$this->Unicode->unicode2utf(${1})',
+                                                         html_entity_decode($this->data['Party']['flickrusr']));
 
         if (GMAP_API_KEY != null) {
           if ($this->data['Party']['lat'])
@@ -158,7 +176,7 @@ class PartyController extends AppController {
                        ' onload="mapInit('.$this->data["Party"]["lat"].', '.$this->data["Party"]["long"].', '.$this->data["Party"]["zoom"].');" onunload="GUnload()"');
           else
             $this->set('body_args',
-                       ' onload="mapInit(1, 1, 1);" onunload="GUnload()"');
+                       ' onload="mapInit(14.944785, -156.796875, 1);" onunload="GUnload()"');
         }
       }
 
@@ -218,6 +236,9 @@ class PartyController extends AppController {
 
     else if (is_numeric($id)) {
       $party = $this->Party->findById($id);
+      if (empty($party['Party']['id']))
+        $this->redirect('/party/view/all');
+
       $this->set('party', $party);
 
       $this->pageTitle = APP_NAME." - ".$party['Party']['name'];
@@ -330,7 +351,8 @@ class PartyController extends AppController {
       $party = $this->Party->findById($id);
       if ($party['Party']['owner'] === $_SESSION['User']['id']) {
         $this->set('partyid', $party['Party']['id']);
-        $this->set('inviteurl', APP_BASE.'/register/'.$party['Party']['invitecode']);
+        $this->set('inviteurl', APP_BASE.'/user/register/'.$party['Party']['invitecode']);
+        $this->set('inviteonly', $party['Party']['inviteonly']);
 
         if (!empty($this->data)) {
           if ($this->Party->validates($this->data)) {
@@ -360,7 +382,9 @@ class PartyController extends AppController {
   
   function js() {
     $this->layout = 'ajax';
-    $this->set('parties', $this->Party->findAll());
+    header('Content-type: text/javascript');
+    $parties = $this->Party->findAll();
+    $this->set('parties', $parties);
   }
 }
 ?>

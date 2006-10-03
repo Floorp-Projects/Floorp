@@ -1,5 +1,5 @@
 <?php
-/* SVN FILE: $Id: core.php,v 1.2 2006/09/20 07:22:44 reed%reedloden.com Exp $ */
+/* SVN FILE: $Id: core.php,v 1.3 2006/10/03 09:15:26 reed%reedloden.com Exp $ */
 /**
  * This is core configuration file.
  *
@@ -21,9 +21,9 @@
  * @package			cake
  * @subpackage		cake.app.config
  * @since			CakePHP v 0.2.9
- * @version			$Revision: 1.2 $
+ * @version			$Revision: 1.3 $
  * @modifiedby		$LastChangedBy: phpnut $
- * @lastmodified	$Date: 2006/09/20 07:22:44 $
+ * @lastmodified	$Date: 2006/10/03 09:15:26 $
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 /**
@@ -49,7 +49,7 @@
  * With the other debug levels you get to click the "flash message" to continue.
  *
  */
-	define('DEBUG', 1);
+	define('DEBUG', 0);
 /**
  * Turn of caching checking wide.
  * You must still use the controller var cacheAction inside you controller class.
@@ -87,12 +87,12 @@
  * Set a random string of used in session.
  *
  */
-	define('CAKE_SESSION_STRING', 'DYhG93b0qyJfIxfs2guVoUubWwvniR2G0FgaC9mi');
+	define('CAKE_SESSION_STRING', 'h874dPHn8i19CI43vZ0n30L3SHtS4mze06TkBuA91P7x2FyzXC');
 /**
  * Set the name of session cookie
  *
  */
-	define('CAKE_SESSION_COOKIE', 'CAKEPHP');
+	define('CAKE_SESSION_COOKIE', 'sess');
 /**
  * Set level of Cake security.
  *

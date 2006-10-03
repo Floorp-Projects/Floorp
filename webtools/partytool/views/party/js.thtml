@@ -1,7 +1,7 @@
 function addParties() {
 <?php foreach ($parties as $party):
   if (!empty($party['Party']['lat']) && !empty($party['Party']['long'])): ?>
-addParty(<?php echo $party['Party']['lat'];?>, <?php echo $party['Party']['long']?>, "<strong><?php echo $party['Party']['name']?></strong><br/><?php echo $party['Party']['vname']; ?><br/><?php echo $party['Party']['notes']; ?><br/><a href=\"<?php echo $html->url('/party/view/'.$party['Party']['id'])?>\">View Party</a>");
+addParty(<?php echo $party['Party']['lat'];?>, <?php echo $party['Party']['long']?>, "<strong><?php echo $party['Party']['name']?></strong><br/><?php echo $party['Party']['vname']; ?><br/><a href=\"<?php echo $html->url('/party/view/'.$party['Party']['id'])?>\">View Party</a>");
 <?php endif; endforeach;?>
 }
 //

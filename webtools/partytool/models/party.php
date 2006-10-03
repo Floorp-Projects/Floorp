@@ -48,7 +48,8 @@ class Party extends AppModel {
                         FROM users, parties, comments
                         WHERE comments.assoc = ".$pid."
                           AND users.id = comments.owner
-                          AND parties.id = ".$pid);
+                          AND parties.id = ".$pid."
+                        ORDER BY cid ASC");
     return $rv;
   }
   
