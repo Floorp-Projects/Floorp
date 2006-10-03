@@ -5635,6 +5635,15 @@ done],
 
 if test `echo "$MOZ_IMG_DECODERS" | grep -c png` -ne 0; then
     MOZ_PNG_CFLAGS="$MOZ_PNG_CFLAGS -DMOZ_PNG_READ"
+    AC_MSG_CHECKING([if pnggccrd.c can be compiled without PNG_NO_MMX_CODE])
+    AC_TRY_COMPILE([#define MOZ_PNG_READ 1
+                    #include "$_topsrcdir/modules/libimg/png/pnggccrd.c"],,
+                    _results=yes,
+                    _results=no)
+    AC_MSG_RESULT([$_results])
+    if test "$_results" = "no"; then
+        MOZ_PNG_CFLAGS="$MOZ_PNG_CFLAGS -DPNG_NO_MMX_CODE"
+    fi
 fi
 
 dnl Dupes are removed in the encoder section because it will also add decoders
