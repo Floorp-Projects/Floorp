@@ -50,8 +50,17 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
-  
-  for each (this in []) { }
+
+  expect = 'SyntaxError: invalid for/in left-hand side';
+  actual = '';
+  try
+  {  
+    eval('for each (this in []) { }');
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
 
   reportCompare(expect, actual, summary);
 
