@@ -3109,9 +3109,9 @@ js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
     if (!ok)
         return JS_FALSE;
 
-    if (!js_NewScriptFromCG(cx, cg, fun))
+    fun->u.i.script = js_NewScriptFromCG(cx, cg, fun);
+    if (!fun->u.i.script)
         return JS_FALSE;
-
     JS_ASSERT(FUN_INTERPRETED(fun));
     if (cg->treeContext.flags & TCF_FUN_HEAVYWEIGHT)
         fun->flags |= JSFUN_HEAVYWEIGHT;
