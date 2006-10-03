@@ -81,7 +81,7 @@ interface nsIChangeObserver : nsISupports
 // every menu/item from getting a call when any change to the document happens.
 //
 
-[scriptable, uuid(fb31c7e0-1dd1-11b2-8a61-f4697ef53c88)]
+[uuid(fb31c7e0-1dd1-11b2-8a61-f4697ef53c88)]
 interface nsIChangeManager : nsISupports
 {
   void Register ( in nsIContent aContent, in nsIChangeObserver aMenuObject ) ;
