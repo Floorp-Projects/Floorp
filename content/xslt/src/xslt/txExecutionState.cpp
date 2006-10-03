@@ -365,34 +365,22 @@ txExecutionState::popEvalContext()
 }
 
 nsresult
-txExecutionState::pushString(const nsAString& aStr)
+txExecutionState::pushBool(PRBool aBool)
 {
-    if (!mStringStack.AppendString(aStr)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    
-    return NS_OK;
+    return mBoolStack.AppendElement(aBool) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-void
-txExecutionState::popString(nsAString& aStr)
+PRBool
+txExecutionState::popBool()
 {
-    PRInt32 count = mStringStack.Count() - 1;
-    NS_ASSERTION(count >= 0, "stack is empty");
-    mStringStack.StringAt(count, aStr);
-    mStringStack.RemoveStringAt(count);
-}
+    NS_ASSERTION(mBoolStack.Length(), "popping from empty stack");
+    PRUint32 last = mBoolStack.Length() - 1;
+    NS_ENSURE_TRUE(last != (PRUint32)-1, PR_FALSE);
 
-nsresult
-txExecutionState::pushInt(PRInt32 aInt)
-{
-    return mIntStack.push(NS_INT32_TO_PTR(aInt));
-}
+    PRBool res = mBoolStack.ElementAt(last);
+    mBoolStack.RemoveElementAt(last);
 
-PRInt32
-txExecutionState::popInt()
-{
-    return NS_PTR_TO_INT32(mIntStack.pop());
+    return res;
 }
 
 nsresult

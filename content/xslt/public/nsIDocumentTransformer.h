@@ -48,8 +48,8 @@ class nsIPrincipal;
 class nsString;
 
 #define NS_ITRANSFORMOBSERVER_IID \
-  {0xcce88481, 0x6eb3, 0x11d6, \
-    { 0xa7, 0xf2, 0x8d, 0x82, 0xcd, 0x2a, 0xf3, 0x7c }}
+{ 0x04b2d17c, 0xe98d, 0x45f5, \
+  { 0x9a, 0x67, 0xb7, 0x01, 0x19, 0x59, 0x7d, 0xe7 } }
 
 class nsITransformObserver : public nsISupports
 {
@@ -57,10 +57,10 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITRANSFORMOBSERVER_IID)
 
-  NS_IMETHOD OnDocumentCreated(nsIDOMDocument *aResultDocument) = 0;
+  NS_IMETHOD OnDocumentCreated(nsIDocument *aResultDocument) = 0;
 
   NS_IMETHOD OnTransformDone(nsresult aResult,
-                             nsIDOMDocument *aResultDocument) = 0;
+                             nsIDocument *aResultDocument) = 0;
 
 };
 

@@ -151,7 +151,7 @@ txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
 
 nsresult
 txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
-                                         const nsAString& aName,
+                                         const nsSubstring& aName,
                                          PRInt32 aNsID,
                                          txAXMLEventHandler** aHandler)
 {
@@ -229,7 +229,7 @@ txToFragmentHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
 
 nsresult
 txToFragmentHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
-                                              const nsAString& aName,
+                                              const nsSubstring& aName,
                                               PRInt32 aNsID,
                                               txAXMLEventHandler** aHandler)
 {
@@ -1165,7 +1165,7 @@ txMozillaXSLTProcessor::notifyError()
         }
     }
 
-    mObserver->OnTransformDone(mTransformResult, errorDocument);
+    mObserver->OnTransformDone(mTransformResult, document);
 }
 
 nsresult

@@ -50,6 +50,7 @@
 #include "txKey.h"
 #include "txStylesheet.h"
 #include "txXPathTreeWalker.h"
+#include "nsTArray.h"
 
 class txAOutputHandlerFactory;
 class txAXMLEventHandler;
@@ -113,10 +114,8 @@ public:
     // Stack functions
     nsresult pushEvalContext(txIEvalContext* aContext);
     txIEvalContext* popEvalContext();
-    nsresult pushString(const nsAString& aStr);
-    void popString(nsAString& aStr);
-    nsresult pushInt(PRInt32 aInt);
-    PRInt32 popInt();
+    nsresult pushBool(PRBool aBool);
+    PRBool popBool();
     nsresult pushResultHandler(txAXMLEventHandler* aHandler);
     txAXMLEventHandler* popResultHandler();
     nsresult pushTemplateRule(txStylesheet::ImportFrame* aFrame,
@@ -159,10 +158,9 @@ private:
     txStack mReturnStack;
     txStack mLocalVarsStack;
     txStack mEvalContextStack;
-    txStack mIntStack;
+    nsTArray<PRPackedBool> mBoolStack;
     txStack mResultHandlerStack;
     txStack mParamStack;
-    nsStringArray mStringStack;
     txInstruction* mNextInstruction;
     txVariableMap* mLocalVariables;
     txVariableMap mGlobalVariableValues;

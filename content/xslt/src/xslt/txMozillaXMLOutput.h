@@ -55,6 +55,9 @@ class nsIDOMElement;
 class nsIStyleSheet;
 class nsIDOMNode;
 class nsITransformObserver;
+class nsNodeInfoManager;
+class nsIDocument;
+class nsINode;
 
 class txTransformNotifier : public nsIScriptLoaderObserver,
                             public nsICSSLoaderObserver
@@ -76,12 +79,12 @@ public:
     nsresult AddStyleSheet(nsIStyleSheet* aStyleSheet);
     void OnTransformEnd(nsresult aResult = NS_OK);
     void OnTransformStart();
-    nsresult SetOutputDocument(nsIDOMDocument* aDocument);
+    nsresult SetOutputDocument(nsIDocument* aDocument);
 
 private:
     void SignalTransformEnd(nsresult aResult = NS_OK);
 
-    nsCOMPtr<nsIDOMDocument> mDocument;
+    nsCOMPtr<nsIDocument> mDocument;
     nsCOMPtr<nsITransformObserver> mObserver;
     nsCOMArray<nsIScriptElement> mScriptElements;
     nsCOMArray<nsIStyleSheet> mStylesheets;
@@ -91,7 +94,7 @@ private:
 class txMozillaXMLOutput : public txAOutputXMLEventHandler
 {
 public:
-    txMozillaXMLOutput(const nsAString& aRootName,
+    txMozillaXMLOutput(const nsSubstring& aRootName,
                        PRInt32 aRootNsID,
                        txOutputFormat* aFormat,
                        nsIDOMDocument* aSourceDocument,
@@ -105,23 +108,34 @@ public:
     TX_DECL_TXAOUTPUTXMLEVENTHANDLER
 
 private:
-    nsresult closePrevious(PRInt8 aAction);
+    nsresult closePrevious(PRBool aFlushText);
     nsresult createTxWrapper();
-    nsresult startHTMLElement(nsIDOMElement* aElement, PRBool aXHTML);
-    nsresult endHTMLElement(nsIDOMElement* aElement);
-    void processHTTPEquiv(nsIAtom* aHeader, const nsAString& aValue);
-    nsresult createResultDocument(const nsAString& aName, PRInt32 aNsID,
+    nsresult startHTMLElement(nsIContent* aElement, PRBool aXHTML);
+    nsresult endHTMLElement(nsIContent* aElement);
+    void processHTTPEquiv(nsIAtom* aHeader, const nsString& aValue);
+    nsresult createResultDocument(const nsSubstring& aName, PRInt32 aNsID,
                                   nsIDOMDocument* aSourceDocument,
                                   nsIDOMDocument* aResultDocument);
-    nsresult createHTMLElement(const nsAString& aName,
-                               nsIDOMElement** aResult);
+    nsresult createHTMLElement(nsIAtom* aName,
+                               nsIContent** aResult);
 
-    nsCOMPtr<nsIDOMDocument> mDocument;
-    nsCOMPtr<nsIDOMNode> mCurrentNode;
-    nsCOMPtr<nsIDOMNode> mParentNode;
+    nsresult attributeInternal(nsIAtom* aPrefix, nsIAtom* aLocalName,
+                               PRInt32 aNsID, const nsString& aValue);
+    nsresult startElementInternal(nsIAtom* aPrefix, nsIAtom* aLocalName,
+                                  PRInt32 aNsID, PRInt32 aElemType);
 
-    nsCOMPtr<nsIDOMNode> mNonAddedParent;
-    nsCOMPtr<nsIDOMNode> mNonAddedNode;
+    nsCOMPtr<nsIDocument> mDocument;
+    nsCOMPtr<nsINode> mCurrentNode;     // This is updated once an element is
+                                        // 'closed' (i.e. once we're done
+                                        // adding attributes to it).
+                                        // until then the opened element is
+                                        // kept in mOpenedElement
+    nsCOMPtr<nsIContent> mOpenedElement;
+    nsRefPtr<nsNodeInfoManager> mNodeInfoManager;
+
+    nsCOMArray<nsINode> mCurrentNodeStack;
+
+    nsCOMPtr<nsIContent> mNonAddedNode;
 
     nsRefPtr<txTransformNotifier> mNotifier;
 
@@ -129,7 +143,7 @@ private:
     nsCString mRefreshString;
 
     txStack mTableStateStack;
-    enum TableState { 
+    enum TableState {
         NORMAL,      // An element needing no special treatment
         TABLE,       // A HTML table element
         ADDED_TBODY  // An inserted tbody not coming from the stylesheet
@@ -145,8 +159,9 @@ private:
     PRPackedBool mHaveTitleElement;
     PRPackedBool mHaveBaseElement;
 
-    PRPackedBool mDocumentIsHTML;
     PRPackedBool mCreatingNewDocument;
+
+    PRPackedBool mOpenedElementIsHTML;
 
     // Set to true when we know there's a root content in our document.
     PRPackedBool mRootContentCreated;

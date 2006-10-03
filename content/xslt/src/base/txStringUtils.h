@@ -79,4 +79,13 @@ void TX_ToLowerCase(const nsAString& aSource, nsAString& aDest);
 
 #endif
 
+inline already_AddRefed<nsIAtom>
+TX_ToLowerCaseAtom(nsIAtom* aAtom)
+{
+  nsAutoString str;
+  aAtom->ToString(str);
+  TX_ToLowerCase(str);
+  return do_GetAtom(str);
+}
+
 #endif // txStringUtils_h__
