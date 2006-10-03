@@ -90,13 +90,13 @@
     <key id="key_delete" oncommand="goDoCommand('cmd_delete');"/>
     <key key="&closeCmd.key;" modifiers="accel" oncommand="onSearchStop(); closeWindow(true);"/>
     <key keycode="VK_ESCAPE" xulkey="false" oncommand="onSearchStop(); closeWindow(true);"/>
-    #ifdef XP_MACOSX
+#ifdef XP_MACOSX
       <key id="key_delete2" oncommand="goDoCommand('cmd_delete');"/>
       <key id="cmd_shiftDelete" keycode="VK_BACK" xulkey="false" oncommand="goDoCommand('cmd_shiftDelete');" modifiers="shift"/>
       <key id="cmd_shiftDelete2" keycode="VK_DELETE" xulkey="false" oncommand="goDoCommand('cmd_shiftDelete');" modifiers="shift"/>
-    #else
+#else
       <key id="cmd_shiftDelete" keycode="VK_DELETE" xulkey="false" oncommand="goDoCommand('cmd_shiftDelete');" modifiers="shift"/>
-    #endif
+#endif
   </keyset>
 
   <broadcasterset id="mailBroadcasters">
