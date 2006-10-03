@@ -89,7 +89,7 @@ function test()
 
   expect = 3;
   actual = '';
-  actual = 1; for(x in (function ([y]) { })() ) { } actual = 3;
+  actual = 1; try {for(x in (function ([y]) { })() ) { }}catch(ex){} actual = 3;
   reportCompare(expect, actual, summary + ': 7');
 
   exitFunc ('test');
