@@ -53,8 +53,7 @@ interface nsCocoaWindow;
 [uuid(ce1a5550-f680-11da-974d-0800200c9a66)]
 interface nsPIWidgetCocoa : nsISupports
 {
-  // Like OS ::BringToFront, but constrains the window to its z-level
-  void ComeToFront();
+  void SendSetZLevelEvent();
 
   // Obtain the menubar for a window
   nsIMenuBar GetMenuBar();
