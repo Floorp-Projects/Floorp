@@ -51,7 +51,7 @@ while (<>) {
         print "Dir: \\$file\n";
     }
     else {
-        print "File: $file\n";
+        print "File: \\$file\n";
     }
 }
 
