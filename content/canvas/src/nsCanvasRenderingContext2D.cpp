@@ -2896,6 +2896,10 @@ nsCanvasRenderingContext2D::GetImageData()
         surfaceDataOffset = 0;
     }
 
+    PRUint32 len = w * h * 4;
+    if (len > (((PRUint32)0xfff00000)/sizeof(jsval)))
+        return NS_ERROR_INVALID_ARG;
+
     nsAutoArrayPtr<jsval> jsvector(new jsval[w * h * 4]);
     if (!jsvector)
         return NS_ERROR_OUT_OF_MEMORY;
