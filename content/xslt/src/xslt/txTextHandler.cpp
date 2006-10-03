@@ -49,15 +49,23 @@ txTextHandler::~txTextHandler()
 }
 
 nsresult
-txTextHandler::attribute(const nsAString& aName,
-                         const PRInt32 aNsID,
-                         const nsAString& aValue)
+txTextHandler::attribute(nsIAtom* aPrefix, nsIAtom* aLocalName,
+                         nsIAtom* aLowercaseLocalName, PRInt32 aNsID,
+                         const nsString& aValue)
 {
     return NS_OK;
 }
 
 nsresult
-txTextHandler::characters(const nsAString& aData, PRBool aDOE)
+txTextHandler::attribute(nsIAtom* aPrefix, const nsSubstring& aLocalName,
+                         const PRInt32 aNsID,
+                         const nsString& aValue)
+{
+    return NS_OK;
+}
+
+nsresult
+txTextHandler::characters(const nsSubstring& aData, PRBool aDOE)
 {
     if (mLevel == 0)
         mValue.Append(aData);
@@ -66,7 +74,7 @@ txTextHandler::characters(const nsAString& aData, PRBool aDOE)
 }
 
 nsresult
-txTextHandler::comment(const nsAString& aData)
+txTextHandler::comment(const nsString& aData)
 {
     return NS_OK;
 }
@@ -78,7 +86,7 @@ txTextHandler::endDocument(nsresult aResult)
 }
 
 nsresult
-txTextHandler::endElement(const nsAString& aName, const PRInt32 aNsID)
+txTextHandler::endElement()
 {
     if (mOnlyText)
         --mLevel;
@@ -87,7 +95,7 @@ txTextHandler::endElement(const nsAString& aName, const PRInt32 aNsID)
 }
 
 nsresult
-txTextHandler::processingInstruction(const nsAString& aTarget, const nsAString& aData)
+txTextHandler::processingInstruction(const nsString& aTarget, const nsString& aData)
 {
     return NS_OK;
 }
@@ -99,7 +107,18 @@ txTextHandler::startDocument()
 }
 
 nsresult
-txTextHandler::startElement(const nsAString& aName, const PRInt32 aNsID)
+txTextHandler::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
+                            nsIAtom* aLowercaseLocalName, const PRInt32 aNsID)
+{
+    if (mOnlyText)
+        ++mLevel;
+
+    return NS_OK;
+}
+
+nsresult
+txTextHandler::startElement(nsIAtom* aPrefix, const nsSubstring& aLocalName,
+                            const PRInt32 aNsID)
 {
     if (mOnlyText)
         ++mLevel;

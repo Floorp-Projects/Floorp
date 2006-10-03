@@ -228,6 +228,7 @@ public:
 
     PRInt32 mNamespaceID;
     nsCOMPtr<nsIAtom> mLocalName;
+    nsCOMPtr<nsIAtom> mLowercaseLocalName;
     nsCOMPtr<nsIAtom> mPrefix;
     nsAutoPtr<Expr> mValue;
 };
@@ -396,6 +397,7 @@ public:
 
     PRInt32 mNamespaceID;
     nsCOMPtr<nsIAtom> mLocalName;
+    nsCOMPtr<nsIAtom> mLowercaseLocalName;
     nsCOMPtr<nsIAtom> mPrefix;
 };
 

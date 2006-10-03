@@ -89,8 +89,8 @@ public:
   virtual nsISupports *GetTarget();
 
   // nsITransformObserver
-  NS_IMETHOD OnDocumentCreated(nsIDOMDocument *aResultDocument);
-  NS_IMETHOD OnTransformDone(nsresult aResult, nsIDOMDocument *aResultDocument);
+  NS_IMETHOD OnDocumentCreated(nsIDocument *aResultDocument);
+  NS_IMETHOD OnTransformDone(nsresult aResult, nsIDocument *aResultDocument);
 
   static void ParsePIData(const nsString &aData, nsString &aHref,
                           nsString &aTitle, nsString &aMedia,

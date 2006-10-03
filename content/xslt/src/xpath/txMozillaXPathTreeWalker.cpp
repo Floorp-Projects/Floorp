@@ -407,6 +407,22 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode)
     return localName;
 }
 
+nsIAtom*
+txXPathNodeUtils::getPrefix(const txXPathNode& aNode)
+{
+    if (aNode.isDocument()) {
+        return nsnull;
+    }
+
+    if (aNode.isContent()) {
+        // All other nsIContent node types but elements have a null prefix
+        // which is what we want here.
+        return aNode.Content()->NodeInfo()->GetPrefixAtom();
+    }
+
+    return aNode.Content()->GetAttrNameAt(aNode.mIndex)->GetPrefix();
+}
+
 /* static */
 void
 txXPathNodeUtils::getLocalName(const txXPathNode& aNode, nsAString& aLocalName)

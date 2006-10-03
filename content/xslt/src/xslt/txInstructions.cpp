@@ -140,51 +140,39 @@ txAttribute::execute(txExecutionState& aEs)
     const PRUnichar* colon;
     if (!XMLUtils::isValidQName(name, &colon) ||
         TX_StringEqualsAtom(name, txXMLAtoms::xmlns)) {
-        // truncate name to indicate failure
-        name.Truncate();
+        return NS_OK;
     }
 
     nsCOMPtr<nsIAtom> prefix;
+    PRUint32 lnameStart = 0;
     if (colon) {
         prefix = do_GetAtom(Substring(name.get(), colon));
+        lnameStart = colon - name.get() + 1;
     }
 
     PRInt32 nsId = kNameSpaceID_None;
-    if (!name.IsEmpty()) {
-        if (mNamespace) {
-            nsAutoString nspace;
-            rv = mNamespace->evaluateToString(aEs.getEvalContext(),
-                                              nspace);
-            NS_ENSURE_SUCCESS(rv, rv);
+    if (mNamespace) {
+        nsAutoString nspace;
+        rv = mNamespace->evaluateToString(aEs.getEvalContext(),
+                                          nspace);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-            if (!nspace.IsEmpty()) {
-                nsId = txNamespaceManager::getNamespaceID(nspace);
-                NS_ENSURE_FALSE(nsId == kNameSpaceID_Unknown,
-                                NS_ERROR_FAILURE);
-            }
-        }
-        else if (prefix) {
-            nsId = mMappings->lookupNamespace(prefix);
-            if (nsId == kNameSpaceID_Unknown) {
-                // tunkate name to indicate failure
-                name.Truncate();
-            }
+        if (!nspace.IsEmpty()) {
+            nsId = txNamespaceManager::getNamespaceID(nspace);
         }
     }
-
-    if (prefix == txXMLAtoms::xmlns) {
-        // Cut xmlns: (6 characters)
-        name.Cut(0, 6);
+    else if (colon) {
+        nsId = mMappings->lookupNamespace(prefix);
     }
 
     nsAutoPtr<txTextHandler> handler(
         NS_STATIC_CAST(txTextHandler*, aEs.popResultHandler()));
-    if (!name.IsEmpty()) {
-        // add attribute if everything was ok
-        return aEs.mResultHandler->attribute(name, nsId, handler->mValue);
-    }
 
-    return NS_OK;
+    // add attribute if everything was ok
+    return nsId != kNameSpaceID_Unknown ?
+           aEs.mResultHandler->attribute(prefix, Substring(name, lnameStart),
+                                         nsId, handler->mValue) :
+           NS_OK;
 }
 
 txCallTemplate::txCallTemplate(const txExpandedName& aName)
@@ -272,12 +260,16 @@ txCopyBase::copyNode(const txXPathNode& aNode, txExecutionState& aEs)
     switch (txXPathNodeUtils::getNodeType(aNode)) {
         case txXPathNodeType::ATTRIBUTE_NODE:
         {
-            nsAutoString nodeName, nodeValue;
-            txXPathNodeUtils::getNodeName(aNode, nodeName);
+            nsAutoString nodeValue;
             txXPathNodeUtils::appendNodeValue(aNode, nodeValue);
+
+            nsCOMPtr<nsIAtom> localName =
+                txXPathNodeUtils::getLocalName(aNode);
             return aEs.mResultHandler->
-              attribute(nodeName, txXPathNodeUtils::getNamespaceID(aNode),
-                        nodeValue);
+                attribute(txXPathNodeUtils::getPrefix(aNode),
+                          localName, nsnull,
+                          txXPathNodeUtils::getNamespaceID(aNode),
+                          nodeValue);
         }
         case txXPathNodeType::COMMENT_NODE:
         {
@@ -299,21 +291,28 @@ txCopyBase::copyNode(const txXPathNode& aNode, txExecutionState& aEs)
         }
         case txXPathNodeType::ELEMENT_NODE:
         {
-            nsAutoString name;
-            txXPathNodeUtils::getNodeName(aNode, name);
-            PRInt32 nsID = txXPathNodeUtils::getNamespaceID(aNode);
-            nsresult rv = aEs.mResultHandler->startElement(name, nsID);
+            nsCOMPtr<nsIAtom> localName =
+                txXPathNodeUtils::getLocalName(aNode);
+            nsresult rv = aEs.mResultHandler->
+                startElement(txXPathNodeUtils::getPrefix(aNode),
+                             localName, nsnull,
+                             txXPathNodeUtils::getNamespaceID(aNode));
             NS_ENSURE_SUCCESS(rv, rv);
 
             // Copy attributes
             txXPathTreeWalker walker(aNode);
             if (walker.moveToFirstAttribute()) {
                 do {
-                    nsAutoString nodeName, nodeValue;
-                    walker.getNodeName(nodeName);
+                    nsAutoString nodeValue;
                     walker.appendNodeValue(nodeValue);
+
+                    const txXPathNode& attr = walker.getCurrentPosition();
+                    localName = txXPathNodeUtils::getLocalName(attr);
                     rv = aEs.mResultHandler->
-                      attribute(nodeName, walker.getNamespaceID(), nodeValue);
+                        attribute(txXPathNodeUtils::getPrefix(attr),
+                                  localName, nsnull,
+                                  txXPathNodeUtils::getNamespaceID(attr),
+                                  nodeValue);
                     NS_ENSURE_SUCCESS(rv, rv);
                 } while (walker.moveToNextAttribute());
                 walker.moveToParent();
@@ -326,7 +325,7 @@ txCopyBase::copyNode(const txXPathNode& aNode, txExecutionState& aEs)
                 hasChild = walker.moveToNextSibling();
             }
 
-            return aEs.mResultHandler->endElement(name, nsID);
+            return aEs.mResultHandler->endElement();
         }
         case txXPathNodeType::PROCESSING_INSTRUCTION_NODE:
         {
@@ -367,28 +366,24 @@ txCopy::execute(txExecutionState& aEs)
             rv = aEs.mResultHandler->characters(empty, PR_FALSE);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            rv = aEs.pushString(empty);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            rv = aEs.pushInt(kNameSpaceID_None);
+            rv = aEs.pushBool(PR_FALSE);
             NS_ENSURE_SUCCESS(rv, rv);
 
             break;
         }
         case txXPathNodeType::ELEMENT_NODE:
         {
-            nsAutoString nodeName;
-            txXPathNodeUtils::getNodeName(node, nodeName);
-            PRInt32 nsID = txXPathNodeUtils::getNamespaceID(node);
-
-            rv = aEs.mResultHandler->startElement(nodeName, nsID);
+            nsCOMPtr<nsIAtom> localName =
+                txXPathNodeUtils::getLocalName(node);
+            nsresult rv = aEs.mResultHandler->
+                startElement(txXPathNodeUtils::getPrefix(node),
+                             localName, nsnull,
+                             txXPathNodeUtils::getNamespaceID(node));
             NS_ENSURE_SUCCESS(rv, rv);
+
             // XXX copy namespace nodes once we have them
 
-            rv = aEs.pushString(nodeName);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            rv = aEs.pushInt(nsID);
+            rv = aEs.pushBool(PR_TRUE);
             NS_ENSURE_SUCCESS(rv, rv);
 
             break;
@@ -455,14 +450,11 @@ txCopyOf::execute(txExecutionState& aEs)
 nsresult
 txEndElement::execute(txExecutionState& aEs)
 {
-    PRInt32 namespaceID = aEs.popInt();
-    nsAutoString nodeName;
-    aEs.popString(nodeName);
-    
-    
-    // For xsl:elements with a bad name we push an empty name
-    if (!nodeName.IsEmpty()) {
-        return aEs.mResultHandler->endElement(nodeName, namespaceID);
+    // This will return false if startElement was not called. This happens
+    // when <xsl:element> produces a bad name, or when <xsl:copy> copies a
+    // document node.
+    if (aEs.popBool()) {
+        return aEs.mResultHandler->endElement();
     }
 
     return NS_OK;
@@ -535,24 +527,14 @@ txLREAttribute::txLREAttribute(PRInt32 aNamespaceID, nsIAtom* aLocalName,
       mPrefix(aPrefix),
       mValue(aValue)
 {
+    if (aNamespaceID == kNameSpaceID_None) {
+        mLowercaseLocalName = TX_ToLowerCaseAtom(aLocalName);
+    }
 }
 
 nsresult
 txLREAttribute::execute(txExecutionState& aEs)
 {
-    // We should atomize the resulthandler
-    nsAutoString nodeName;
-    if (mPrefix) {
-        mPrefix->ToString(nodeName);
-        nsAutoString localName;
-        nodeName.Append(PRUnichar(':'));
-        mLocalName->ToString(localName);
-        nodeName.Append(localName);
-    }
-    else {
-        mLocalName->ToString(nodeName);
-    }
-
     nsRefPtr<txAExprResult> exprRes;
     nsresult rv = mValue->evaluate(aEs.getEvalContext(),
                                    getter_AddRefs(exprRes));
@@ -560,12 +542,16 @@ txLREAttribute::execute(txExecutionState& aEs)
 
     const nsString* value = exprRes->stringValuePointer();
     if (value) {
-        return aEs.mResultHandler->attribute(nodeName, mNamespaceID, *value);
+        return aEs.mResultHandler->attribute(mPrefix, mLocalName,
+                                             mLowercaseLocalName,
+                                             mNamespaceID, *value);
     }
 
     nsAutoString valueStr;
     exprRes->stringValue(valueStr);
-    return aEs.mResultHandler->attribute(nodeName, mNamespaceID, valueStr);
+    return aEs.mResultHandler->attribute(mPrefix, mLocalName,
+                                         mLowercaseLocalName,
+                                         mNamespaceID, valueStr);
 }
 
 txMessage::txMessage(PRBool aTerminate)
@@ -886,14 +872,18 @@ txStartElement::execute(txExecutionState& aEs)
     nsresult rv = mName->evaluateToString(aEs.getEvalContext(), name);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    const PRUnichar* colon;
-    if (!XMLUtils::isValidQName(name, &colon)) {
-        // truncate name to indicate failure
-        name.Truncate();
-    }
 
     PRInt32 nsId = kNameSpaceID_None;
-    if (!name.IsEmpty()) {
+    nsCOMPtr<nsIAtom> prefix;
+    PRUint32 lnameStart = 0;
+
+    const PRUnichar* colon;
+    if (XMLUtils::isValidQName(name, &colon)) {
+        if (colon) {
+            prefix = do_GetAtom(Substring(name.get(), colon));
+            lnameStart = colon - name.get() + 1;
+        }
+
         if (mNamespace) {
             nsAutoString nspace;
             rv = mNamespace->evaluateToString(aEs.getEvalContext(),
@@ -902,38 +892,36 @@ txStartElement::execute(txExecutionState& aEs)
 
             if (!nspace.IsEmpty()) {
                 nsId = txNamespaceManager::getNamespaceID(nspace);
-                NS_ENSURE_FALSE(nsId == kNameSpaceID_Unknown,
-                                NS_ERROR_FAILURE);
             }
         }
         else {
-            nsCOMPtr<nsIAtom> prefix;
-            if (colon) {
-                prefix = do_GetAtom(Substring(name.get(), colon));
-            }
             nsId = mMappings->lookupNamespace(prefix);
-            if (nsId == kNameSpaceID_Unknown) {
-                // truncate name to indicate failure
-                name.Truncate();
-            }
         }
     }
+    else {
+       nsId = kNameSpaceID_Unknown;
+    }
 
-    if (!name.IsEmpty()) {
-        // add element if everything was ok
-        rv = aEs.mResultHandler->startElement(name, nsId);
+    PRBool success = PR_TRUE;
+
+    if (nsId != kNameSpaceID_Unknown) {
+        rv = aEs.mResultHandler->startElement(prefix,
+                                              Substring(name, lnameStart),
+                                              nsId);
     }
     else {
+        rv = NS_ERROR_XSLT_BAD_NODE_NAME;
+    }
+
+    if (rv == NS_ERROR_XSLT_BAD_NODE_NAME) {
+        success = PR_FALSE;
         // we call characters with an empty string to "close" any element to
         // make sure that no attributes are added
         rv = aEs.mResultHandler->characters(EmptyString(), PR_FALSE);
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = aEs.pushString(name);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aEs.pushInt(nsId);
+    rv = aEs.pushBool(success);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
@@ -947,31 +935,20 @@ txStartLREElement::txStartLREElement(PRInt32 aNamespaceID,
       mLocalName(aLocalName),
       mPrefix(aPrefix)
 {
+    if (aNamespaceID == kNameSpaceID_None) {
+        mLowercaseLocalName = TX_ToLowerCaseAtom(aLocalName);
+    }
 }
 
 nsresult
 txStartLREElement::execute(txExecutionState& aEs)
 {
-    // We should atomize the resulthandler
-    nsAutoString nodeName;
-    if (mPrefix) {
-        mPrefix->ToString(nodeName);
-        nsAutoString localName;
-        nodeName.Append(PRUnichar(':'));
-        mLocalName->ToString(localName);
-        nodeName.Append(localName);
-    }
-    else {
-        mLocalName->ToString(nodeName);
-    }
-
-    nsresult rv = aEs.mResultHandler->startElement(nodeName, mNamespaceID);
+    nsresult rv = aEs.mResultHandler->startElement(mPrefix, mLocalName,
+                                                   mLowercaseLocalName,
+                                                   mNamespaceID);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = aEs.pushString(nodeName);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aEs.pushInt(mNamespaceID);
+    rv = aEs.pushBool(PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;

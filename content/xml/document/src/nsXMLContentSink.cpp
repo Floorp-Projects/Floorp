@@ -346,33 +346,36 @@ nsXMLContentSink::DidBuildModel()
 }
 
 NS_IMETHODIMP
-nsXMLContentSink::OnDocumentCreated(nsIDOMDocument* aResultDocument)
+nsXMLContentSink::OnDocumentCreated(nsIDocument* aResultDocument)
 {
   NS_ENSURE_ARG(aResultDocument);
 
   nsCOMPtr<nsIContentViewer> contentViewer;
   mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
   if (contentViewer) {
-    return contentViewer->SetDOMDocument(aResultDocument);
+    nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aResultDocument);
+    return contentViewer->SetDOMDocument(doc);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXMLContentSink::OnTransformDone(nsresult aResult,
-                                  nsIDOMDocument* aResultDocument)
+                                  nsIDocument* aResultDocument)
 {
   NS_ASSERTION(NS_FAILED(aResult) || aResultDocument,
                "Don't notify about transform success without a document.");
+
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aResultDocument);
 
   nsCOMPtr<nsIContentViewer> contentViewer;
   mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
 
   if (NS_FAILED(aResult) && contentViewer) {
     // Transform failed.
-    if (aResultDocument) {
+    if (domDoc) {
       // We have an error document.
-      contentViewer->SetDOMDocument(aResultDocument);
+      contentViewer->SetDOMDocument(domDoc);
     }
     else {
       // We don't have an error document, display the
@@ -386,7 +389,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
   if (NS_SUCCEEDED(aResult) || aResultDocument) {
     // Transform succeeded or it failed and we have an error
     // document to display.
-    mDocument = do_QueryInterface(aResultDocument);
+    mDocument = aResultDocument;
   }
 
   nsIScriptLoader *loader = originalDocument->GetScriptLoader();

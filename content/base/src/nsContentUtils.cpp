@@ -3188,6 +3188,10 @@ PRBool
 nsContentUtils::IsValidNodeName(nsIAtom *aLocalName, nsIAtom *aPrefix,
                                 PRInt32 aNamespaceID)
 {
+  if (aNamespaceID == kNameSpaceID_Unknown) {
+    return PR_FALSE;
+  }
+
   if (!aPrefix) {
     // If the prefix is null, then either the QName must be xmlns or the
     // namespace must not be XMLNS.
