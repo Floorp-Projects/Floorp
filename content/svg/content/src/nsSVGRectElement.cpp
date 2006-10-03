@@ -179,6 +179,12 @@ nsSVGRectElement::ConstructPath(cairo_t *aCtx)
   if (width <= 0 || height <= 0 || ry < 0 || rx < 0)
     return;
 
+  /* optimize the no rounded corners case */
+  if (rx == 0 && ry == 0) {
+    cairo_rectangle(aCtx, x, y, width, height);
+    return;
+  }
+
   /* Clamp rx and ry to half the rect's width and height respectively. */
   float halfWidth  = width/2;
   float halfHeight = height/2;
@@ -205,35 +211,33 @@ nsSVGRectElement::ConstructPath(cairo_t *aCtx)
   else if (ry > halfHeight)
     rx = ry = halfHeight;
 
-  if (rx == 0 && ry == 0) {
-    cairo_rectangle(aCtx, x, y, width, height);
-  } else {
-    // Conversion factor used for ellipse to bezier conversion.
-    // Gives radial error of 0.0273% in circular case.
-    // See comp.graphics.algorithms FAQ 4.04
-    const float magic = 4*(sqrt(2.)-1)/3;
+  // Conversion factor used for ellipse to bezier conversion.
+  // Gives radial error of 0.0273% in circular case.
+  // See comp.graphics.algorithms FAQ 4.04
+  const float magic = 4*(sqrt(2.)-1)/3;
+  const float magic_x = magic*rx;
+  const float magic_y = magic*ry;
 
-    cairo_move_to(aCtx, x+rx, y);
-    cairo_line_to(aCtx, x+width-rx, y);
-    cairo_curve_to(aCtx,
-                   x+width-rx + magic*rx, y,
-                   x+width, y+ry-magic*ry,
-                   x+width, y+ry);
-    cairo_line_to(aCtx, x+width, y+height-ry);
-    cairo_curve_to(aCtx,
-                   x+width, y+height-ry + magic*ry,
-                   x+width-rx + magic*rx, y+height,
-                   x+width-rx, y+height);
-    cairo_line_to(aCtx, x+rx, y+height);
-    cairo_curve_to(aCtx,
-                   x+rx - magic*rx, y+height,
-                   x, y+height-ry + magic*ry,
-                   x, y+height-ry);
-    cairo_line_to(aCtx, x, y+ry);
-    cairo_curve_to(aCtx,
-                   x, y+ry - magic*ry,
-                   x+rx - magic*rx, y,
-                   x+rx, y);
-    cairo_close_path(aCtx);
-  }
+  cairo_move_to(aCtx, x+rx, y);
+  cairo_line_to(aCtx, x+width-rx, y);
+  cairo_curve_to(aCtx,
+                 x+width-rx + magic_x, y,
+                 x+width, y+ry-magic_y,
+                 x+width, y+ry);
+  cairo_line_to(aCtx, x+width, y+height-ry);
+  cairo_curve_to(aCtx,
+                 x+width, y+height-ry + magic_y,
+                 x+width-rx + magic_x, y+height,
+                 x+width-rx, y+height);
+  cairo_line_to(aCtx, x+rx, y+height);
+  cairo_curve_to(aCtx,
+                 x+rx - magic_x, y+height,
+                 x, y+height-ry + magic_y,
+                 x, y+height-ry);
+  cairo_line_to(aCtx, x, y+ry);
+  cairo_curve_to(aCtx,
+                 x, y+ry - magic_y,
+                 x+rx - magic_x, y,
+                 x+rx, y);
+  cairo_close_path(aCtx);
 }
