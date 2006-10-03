@@ -944,12 +944,12 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     }
 
     // Now recurse into our kids
-    PRUint32 i, n = GetChildCount();
-
-    for (i = 0; i < n; ++i) {
-        rv = mAttrsAndChildren.ChildAt(i)->BindToTree(aDocument, this,
-                                                      aBindingParent,
-                                                      aCompileEventHandlers);
+    PRUint32 i;
+    for (i = 0; i < GetChildCount(); ++i) {
+        // The child can remove itself from the parent in BindToTree.
+        nsCOMPtr<nsIContent> child = mAttrsAndChildren.ChildAt(i);
+        rv = child->BindToTree(aDocument, this, aBindingParent,
+                               aCompileEventHandlers);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
