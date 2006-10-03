@@ -3392,6 +3392,13 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
                     return JS_TRUE;
                 }
 
+                /*
+                 * XXX do not warn about missing __iterator__ as the function
+                 * may be called from JS_GetMethodById. See bug 355145.
+                 */
+                if (id == ATOM_TO_JSID(cx->runtime->atomState.iteratorAtom))
+                    return JS_TRUE;
+
                 /* Kludge to allow (typeof foo == "undefined") tests. */
                 JS_ASSERT(cx->fp->script);
                 pc += js_CodeSpec[op].length;
