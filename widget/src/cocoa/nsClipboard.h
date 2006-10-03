@@ -41,8 +41,6 @@
 
 #include "nsBaseClipboard.h"
 
-#include <Cocoa/Cocoa.h>
-
 class nsITransferable;
 
 
