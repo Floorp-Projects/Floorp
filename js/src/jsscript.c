@@ -1329,15 +1329,6 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
     if (script->trynotes)
         js_FinishTakingTryNotes(cx, cg, script->trynotes);
 
-    /*
-     * We initialize fun->u.script to be the script constructed above
-     * so that the debugger has a valid FUN_SCRIPT(fun).
-     */
-    if (fun) {
-        JS_ASSERT(FUN_INTERPRETED(fun) && !FUN_SCRIPT(fun));
-        fun->u.i.script = script;
-    }
-
     /* Tell the debugger about this compiled script. */
     js_CallNewScriptHook(cx, script, fun);
     return script;
