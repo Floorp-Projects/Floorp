@@ -657,8 +657,11 @@
           boxobj: this.sliderController,
           ownerDoc: this.ownerDocument,
 
-          prevX: this.sliderController.getXCoordFromValue(this.value),
+          prevX: null,
           handleEvent: function(aEvent) {
+            if (!this.prevX) {
+              this.prevX = this.boxobj.getXCoordFromValue(this.slider.value);
+            }
             var x = this.boxobj.getXCoordFromEvent(aEvent);
             this.slider.eraseSlider(this.prevX);
 
