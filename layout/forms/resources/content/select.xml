@@ -704,6 +704,9 @@
           ]]>
       </handler>
 
+      <!-- Select element doesn't dispatch selectHas(No)Groups events anymore,
+           so this needs to be fixed if XBL form controls get activated at some
+           point. See bug 328907 -->
       <handler event="selectHasGroups">
         <![CDATA[
           document.getAnonymousElementByAttribute(this, "anonid", "treebody").setAttribute("hasgroups", "true");

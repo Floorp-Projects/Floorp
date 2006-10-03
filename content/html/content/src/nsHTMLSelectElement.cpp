@@ -540,8 +540,6 @@ nsHTMLSelectElement::InsertChildAt(nsIContent* aKid,
                                    PRUint32 aIndex,
                                    PRBool aNotify)
 {
-  PRUint32 prevOptGroups = mOptGroupCount;
-
   nsresult rv = WillAddOptions(aKid, this, aIndex);
   PRBool rebuild = NS_FAILED(rv);
 
@@ -549,11 +547,6 @@ nsHTMLSelectElement::InsertChildAt(nsIContent* aKid,
   if (rebuild || NS_FAILED(rv)) {
     RebuildOptionsArray();
     return rv;
-  }
-
-  if (mOptGroupCount && !prevOptGroups) {
-    // FIXME: Bug 328907, get rid of this event
-    DispatchDOMEvent(NS_LITERAL_STRING("selectHasGroups"));
   }
 
 #ifdef DEBUG
@@ -566,8 +559,6 @@ nsHTMLSelectElement::InsertChildAt(nsIContent* aKid,
 nsresult
 nsHTMLSelectElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
-  PRUint32 prevOptGroups = mOptGroupCount;
-
   nsresult rv = WillRemoveOptions(this, aIndex);
   PRBool rebuild = NS_FAILED(rv);
 
@@ -575,11 +566,6 @@ nsHTMLSelectElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
   if (rebuild || NS_FAILED(rv)) {
     RebuildOptionsArray();
     return rv;
-  }
-
-  if (!mOptGroupCount && prevOptGroups) {
-    // FIXME: Bug 328907, get rid of this event
-    DispatchDOMEvent(NS_LITERAL_STRING("selectHasNoGroups"));
   }
 
 #ifdef DEBUG
