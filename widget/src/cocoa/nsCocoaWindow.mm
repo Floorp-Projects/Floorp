@@ -521,6 +521,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
              didEndSelector:@selector(didEndSheet:returnCode:contextInfo:)
                 contextInfo:mSheetWindowParent];
           [[mWindow delegate] sendGotFocusAndActivate];
+          SendSetZLevelEvent();
         }
       }
       else {
@@ -533,10 +534,12 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
     else if (mWindowType == eWindowType_popup) {
       mVisible = PR_TRUE;
       [mWindow orderFront:nil];
+      SendSetZLevelEvent();
     }
     else {
       mVisible = PR_TRUE;
       [mWindow makeKeyAndOrderFront:nil];
+      SendSetZLevelEvent();
     }
   }
   else {
@@ -585,6 +588,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
           // to a real window.
           [sheetParent makeKeyAndOrderFront:nil];
         }
+        SendSetZLevelEvent();
       }
       else if (mSheetNeedsShow) {
         // This is an attempt to hide a sheet that never had a chance to
@@ -847,24 +851,19 @@ PRBool nsCocoaWindow::DragEvent ( unsigned int aMessage, Point aMouseGlobal, UIn
 }
 
 
-//
-// Like ::BringToFront, but constrains the window to its z-level
-//
-NS_IMETHODIMP nsCocoaWindow::ComeToFront()
+NS_IMETHODIMP nsCocoaWindow::SendSetZLevelEvent()
 {
-/*
   nsZLevelEvent event(PR_TRUE, NS_SETZLEVEL, this);
-  
+
   event.refPoint.x = mBounds.x;
   event.refPoint.y = mBounds.y;
   event.time = PR_IntervalNow();
-  
+
   event.mImmediate = PR_TRUE;
-  
+
   nsEventStatus status = nsEventStatus_eIgnore;
   DispatchEvent(&event, status);
-*/
-  
+
   return NS_OK;
 }
 
