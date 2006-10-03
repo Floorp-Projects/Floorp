@@ -183,6 +183,8 @@ function populateTestcase(data) {
   }
   if (testcase.regression_bug_id) {
     document.getElementById('editform_regression_bug_id').value = testcase.regression_bug_id;
+  } else {
+    document.getElementById('editform_regression_bug_id').value = "";
   }
   setAuthor(testcase.author_id.user_id);
   document.getElementById('editform_creation_date').innerHTML = testcase.creation_date;
