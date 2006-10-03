@@ -51,6 +51,7 @@
 #include "nsIImageMac.h"
 #endif
 
+#include <Cocoa/Cocoa.h>
 
 nsClipboard::nsClipboard() : nsBaseClipboard()
 {
