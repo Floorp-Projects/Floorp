@@ -49,6 +49,10 @@ static char copyright[] = "@(#) Copyright (c) 1995 Regents of the University of 
 #endif
 
 #include "ldap-int.h"
+#ifdef LDAP_SASLIO_HOOKS
+/* Valid for any ANSI C compiler */
+#include <limits.h>
+#endif
 
 #define VI_PRODUCTVERSION 3
 
@@ -88,6 +92,7 @@ int				nsldapi_initialized = 0;
 extern pthread_t pthread_self (void);
 #endif
 static pthread_key_t		nsldapi_key;
+static pthread_mutex_t		nsldapi_init_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct nsldapi_ldap_error {
         int     le_errno;
@@ -110,6 +115,7 @@ __declspec ( thread ) char	*nsldapi_gldaperror = NULL;
 
 #ifdef _WINDOWS
 #define	LDAP_MUTEX_T	HANDLE
+static LDAP_MUTEX_T		nsldapi_init_mutex;
 
 int
 pthread_mutex_init( LDAP_MUTEX_T *mp, void *attr)
@@ -317,6 +323,10 @@ get_ld_error( char **matched, char **errmsg, void *dummy )
         struct nsldapi_ldap_error *le;
 
         le = pthread_getspecific( nsldapi_key );
+
+        if (le == NULL)
+                return( LDAP_SUCCESS );
+
         if ( matched != NULL ) {
                 *matched = le->le_matched;
         }
@@ -366,8 +376,14 @@ static struct ldap_extra_thread_fns
 void
 nsldapi_initialize_defaults( void )
 {
+#ifdef _WINDOWS
+	pthread_mutex_init( &nsldapi_init_mutex, NULL );
+#endif /* _WINDOWS */
+
+	pthread_mutex_lock( &nsldapi_init_mutex );
 
 	if ( nsldapi_initialized ) {
+		pthread_mutex_unlock( &nsldapi_init_mutex );
 		return;
 	}
 
@@ -379,13 +395,25 @@ nsldapi_initialize_defaults( void )
 	dwTlsIndex = TlsAlloc();
 #endif /* USE_WINDOWS_TLS */
 
-	nsldapi_initialized = 1;
 	memset( &nsldapi_memalloc_fns, 0, sizeof( nsldapi_memalloc_fns ));
 	memset( &nsldapi_ld_defaults, 0, sizeof( nsldapi_ld_defaults ));
 	nsldapi_ld_defaults.ld_options = LDAP_BITOPT_REFERRALS;
 	nsldapi_ld_defaults.ld_version = LDAP_VERSION2;
 	nsldapi_ld_defaults.ld_lberoptions = LBER_OPT_USE_DER;
 	nsldapi_ld_defaults.ld_refhoplimit = LDAP_DEFAULT_REFHOPLIMIT;
+
+#ifdef LDAP_SASLIO_HOOKS
+	/* SASL default option settings */
+	nsldapi_ld_defaults.ld_def_sasl_mech = NULL;
+	nsldapi_ld_defaults.ld_def_sasl_realm = NULL;
+	nsldapi_ld_defaults.ld_def_sasl_authcid = NULL;
+	nsldapi_ld_defaults.ld_def_sasl_authzid = NULL;
+	/* SASL Security properties */
+	nsldapi_ld_defaults.ld_sasl_secprops.max_ssf = UINT_MAX;
+	nsldapi_ld_defaults.ld_sasl_secprops.maxbufsize = SASL_MAX_BUFF_SIZE;
+	nsldapi_ld_defaults.ld_sasl_secprops.security_flags =
+		SASL_SEC_NOPLAINTEXT | SASL_SEC_NOANONYMOUS;
+#endif
 
 #if defined( STR_TRANSLATION ) && defined( LDAP_DEFAULT_CHARSET )
 	nsldapi_ld_defaults.ld_lberoptions |= LBER_OPT_TRANSLATE_STRINGS;
@@ -401,18 +429,24 @@ nsldapi_initialize_defaults( void )
 
 #if defined(USE_PTHREADS) || defined(_WINDOWS)
         /* load up default platform specific locking routines */
-        if (ldap_set_option( NULL, LDAP_OPT_THREAD_FN_PTRS,
+        if (ldap_set_option( &nsldapi_ld_defaults, LDAP_OPT_THREAD_FN_PTRS,
                 (void *)&nsldapi_default_thread_fns) != LDAP_SUCCESS) {
+		nsldapi_initialized = 0;
+		pthread_mutex_unlock( &nsldapi_init_mutex );
                 return;
         }
 
 #ifndef _WINDOWS
         /* load up default threadid function */
-        if (ldap_set_option( NULL, LDAP_OPT_EXTRA_THREAD_FN_PTRS,
+        if (ldap_set_option( &nsldapi_ld_defaults, LDAP_OPT_EXTRA_THREAD_FN_PTRS,
                 (void *)&nsldapi_default_extra_thread_fns) != LDAP_SUCCESS) {
+		nsldapi_initialized = 0;
+		pthread_mutex_unlock( &nsldapi_init_mutex );
                 return;
         }
 #endif /* _WINDOWS */
+	nsldapi_initialized = 1;
+	pthread_mutex_unlock( &nsldapi_init_mutex );
 #endif /* use_pthreads || _windows */
 }
 
@@ -502,6 +536,10 @@ ldap_open( const char *host, int port )
  * ldap_init - initialize the LDAP library.  A magic cookie to be used for
  * future communication is returned on success, NULL on failure.
  * "defhost" may be a space-separated list of hosts or IP addresses
+ *
+ * NOTE: If you want to use IPv6, you must use prldap creating a LDAP handle
+ * with prldap_init instead of ldap_init. Or install the NSPR functions
+ * by calling prldap_install_routines. (See the nspr samples in examples)
  *
  * Example:
  *	LDAP	*ld;

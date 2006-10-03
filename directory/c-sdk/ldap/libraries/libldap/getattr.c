@@ -54,7 +54,7 @@ static char copyright[] = "@(#) Copyright (c) 1990 Regents of the University of 
 static unsigned long
 bytes_remaining( BerElement *ber )
 {
-	unsigned long	len;
+	ber_len_t	len;
 
 	if ( ber_get_option( ber, LBER_OPT_REMAINING_BYTES, &len ) != 0 ) {
 		return( 0 );	/* not sure what else to do.... */
@@ -67,9 +67,9 @@ char *
 LDAP_CALL
 ldap_first_attribute( LDAP *ld, LDAPMessage *entry, BerElement **ber )
 {
-	char	*attr;
-	int	err;
-	long	seqlength;
+	char		*attr;
+	int			err;
+	ber_len_t	seqlength;
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "ldap_first_attribute\n", 0, 0, 0 );
 

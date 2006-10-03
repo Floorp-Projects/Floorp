@@ -167,6 +167,12 @@ ldap_ld_free( LDAP *ld, LDAPControl **serverctrls,
 	if ( ld->ld_preferred_language != NULL )
 		NSLDAPI_FREE( ld->ld_preferred_language );
 	nsldapi_iostatus_free( ld );
+#ifdef LDAP_SASLIO_HOOKS
+	NSLDAPI_FREE( ld->ld_def_sasl_mech );
+	NSLDAPI_FREE( ld->ld_def_sasl_realm );
+	NSLDAPI_FREE( ld->ld_def_sasl_authcid );
+	NSLDAPI_FREE( ld->ld_def_sasl_authzid );
+#endif
 
 	/*
 	 * XXXmcs: should use cache function pointers to hook in memcache

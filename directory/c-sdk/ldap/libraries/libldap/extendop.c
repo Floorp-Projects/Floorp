@@ -61,7 +61,7 @@ ldap_extended_operation(
 )
 {
 	BerElement	*ber;
-	int		rc, berrc, msgid;
+	int		rc, msgid;
 
 	/*
 	 * the ldapv3 extended operation request looks like this:
@@ -117,19 +117,23 @@ ldap_extended_operation(
 	}
 
 	/* fill it in */
-	if (NULL == exdata) {
-	    berrc = ber_printf( ber, "{it{ts}", msgid, LDAP_REQ_EXTENDED,
-		LDAP_TAG_EXOP_REQ_OID, exoid, LDAP_TAG_EXOP_REQ_VALUE);
-	} else
-	    berrc = ber_printf( ber, "{it{tsto}", msgid, LDAP_REQ_EXTENDED,
-		LDAP_TAG_EXOP_REQ_OID, exoid, LDAP_TAG_EXOP_REQ_VALUE,
-		exdata->bv_val, (int)exdata->bv_len /* XXX lossy cast */ );
-
-	if (-1 == berrc) {
-		rc = LDAP_ENCODING_ERROR;
-		LDAP_SET_LDERRNO( ld, rc, NULL, NULL );
-		ber_free( ber, 1 );
-		return( rc );
+	if ( exdata ) {
+		if ( ber_printf( ber, "{it{tsto}", msgid, LDAP_REQ_EXTENDED,
+						 LDAP_TAG_EXOP_REQ_OID, exoid, LDAP_TAG_EXOP_REQ_VALUE,
+						 exdata->bv_val, exdata->bv_len ) == -1 ) {
+			rc = LDAP_ENCODING_ERROR;
+			LDAP_SET_LDERRNO( ld, rc, NULL, NULL );
+			ber_free( ber, 1 );
+			return( rc );
+		}
+	} else { /* some implementations are pretty strict on empty values */
+		if ( ber_printf( ber, "{it{ts}", msgid, LDAP_REQ_EXTENDED,
+						 LDAP_TAG_EXOP_REQ_OID, exoid ) == -1 ) {
+			rc = LDAP_ENCODING_ERROR;
+			LDAP_SET_LDERRNO( ld, rc, NULL, NULL );
+			ber_free( ber, 1 );
+			return( rc );
+		}
 	}
 
 	if (( rc = nsldapi_put_controls( ld, serverctrls, 1, ber ))
@@ -208,9 +212,9 @@ ldap_parse_extended_result(
 )
 {
 	struct berelement	ber;
-	unsigned long		len;
-	long			err;
-	char			*m, *e, *roid;
+	ber_len_t			len;
+	ber_int_t			err;
+	char				*m, *e, *roid;
 	struct berval		*rdata;
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "ldap_parse_extended_result\n", 0, 0, 0 );

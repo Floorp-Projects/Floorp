@@ -100,14 +100,18 @@ prldap_gethostbyaddr( const char *addr, int length, int type,
     PRHostEnt	prhent;
     PRNetAddr	iaddr;
 
-    if ( PR_SetNetAddr(PR_IpAddrNull, PRLDAP_DEFAULT_ADDRESS_FAMILY,
-		0, &iaddr) == PR_FAILURE
-		|| PR_StringToNetAddr( addr, &iaddr ) == PR_FAILURE ) {
+    if ( NULL == statusp ) {
 	return( NULL );
     }
 
-    if( !statusp || (*statusp = PR_GetHostByAddr(&iaddr, buffer,
-	     buflen, &prhent )) == PR_FAILURE ) {
+    memset( &iaddr, 0, sizeof( iaddr ));
+    if ( PR_StringToNetAddr( addr, &iaddr ) == PR_FAILURE ) {
+	return( NULL );
+    }
+    PRLDAP_SET_PORT( &iaddr, 0 );
+
+    if( PR_FAILURE == (*statusp =
+			PR_GetHostByAddr(&iaddr, buffer, buflen, &prhent ))) {
 	return( NULL );
     }
 

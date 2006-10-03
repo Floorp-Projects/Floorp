@@ -70,6 +70,15 @@
  */
 #define PRLDAP_MAX_SEND_SIZE (8*1024*1024) /* 8MB */
 
+/*
+ * Macro to set port to the 'port' field of a NSPR PRNetAddr union.
+ ** INPUTS:
+ ** PRNetAddr *myaddr   A network address.
+ ** PRUint16   myport   port to set to the 'port' field of 'addr'.
+ ** RETURN: none
+ */
+#define PRLDAP_SET_PORT(myaddr,myport) \
+    ((myaddr)->raw.family == PR_AF_INET6 ? ((myaddr)->ipv6.port = PR_htons(myport)) : ((myaddr)->inet.port = PR_htons(myport)))
 
 /*
  * Data structures:

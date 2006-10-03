@@ -129,6 +129,11 @@ ldap_get_option( LDAP *ld, int option, void *optdata )
 		    LDAP_GET_BITOPT( ld, LDAP_BITOPT_RECONNECT );
 		break;
 
+	case LDAP_OPT_NOREBIND:
+		*((int *) optdata) =
+		    LDAP_GET_BITOPT( ld, LDAP_BITOPT_NOREBIND );
+		break;
+
 #ifdef LDAP_ASYNC_IO
 	case LDAP_OPT_ASYNC_CONNECT:
 		*((int *) optdata) =
@@ -136,7 +141,6 @@ ldap_get_option( LDAP *ld, int option, void *optdata )
 		break;
 #endif /* LDAP_ASYNC_IO */
 
-	/* stuff in the sockbuf */
 	case LDAP_OPT_DESC:
 		if ( ber_sockbuf_get_option( ld->ld_sbp,
 		    LBER_SOCKBUF_OPT_DESC, optdata ) != 0 ) {
@@ -287,6 +291,61 @@ ldap_get_option( LDAP *ld, int option, void *optdata )
         case LDAP_X_OPT_CONNECT_TIMEOUT:
                 *((int *) optdata) = ld->ld_connect_timeout;
                 break;
+
+#ifdef LDAP_SASLIO_HOOKS
+	/* SASL options */
+	case LDAP_OPT_X_SASL_MECH:
+		*((char **) optdata) = nsldapi_strdup(ld->ld_def_sasl_mech);
+		break;
+	case LDAP_OPT_X_SASL_REALM:
+		*((char **) optdata) = nsldapi_strdup(ld->ld_def_sasl_realm);
+		break;
+	case LDAP_OPT_X_SASL_AUTHCID:
+		*((char **) optdata) = nsldapi_strdup(ld->ld_def_sasl_authcid);
+		break;
+	case LDAP_OPT_X_SASL_AUTHZID:
+		*((char **) optdata) = nsldapi_strdup(ld->ld_def_sasl_authzid);
+		break;
+	case LDAP_OPT_X_SASL_SSF:
+		{
+			int sc;
+			sasl_ssf_t      *ssf;
+			sasl_conn_t     *ctx;
+			if( ld->ld_defconn == NULL ) {
+				return -1;
+			}
+			ctx = (sasl_conn_t *)(ld->ld_defconn->lconn_sasl_ctx);
+			if ( ctx == NULL ) {
+				return -1;
+			}
+			sc = sasl_getprop( ctx, SASL_SSF, (const void **) &ssf );
+			if ( sc != SASL_OK ) {
+				return -1;
+			}
+			*((sasl_ssf_t *) optdata) = *ssf;
+		}
+		break;
+	case LDAP_OPT_X_SASL_SSF_MIN:
+		*((sasl_ssf_t *) optdata) = ld->ld_sasl_secprops.min_ssf;
+		break;
+	case LDAP_OPT_X_SASL_SSF_MAX:
+		*((sasl_ssf_t *) optdata) = ld->ld_sasl_secprops.max_ssf;
+		break;
+	case LDAP_OPT_X_SASL_MAXBUFSIZE:
+		*((sasl_ssf_t *) optdata) = ld->ld_sasl_secprops.maxbufsize;
+		break;
+	case LDAP_OPT_X_SASL_SSF_EXTERNAL:
+	case LDAP_OPT_X_SASL_SECPROPS:
+		/*
+		 * These options are write only.  Making these options
+		 * read/write would expose semi-private interfaces of libsasl
+		 * for which there are no cross platform/standardized
+		 * definitions.
+		 */
+		LDAP_SET_LDERRNO( ld, LDAP_PARAM_ERROR, NULL, NULL );
+		rc = -1;
+		break;
+#endif
 
 	default:
 		LDAP_SET_LDERRNO( ld, LDAP_PARAM_ERROR, NULL, NULL );

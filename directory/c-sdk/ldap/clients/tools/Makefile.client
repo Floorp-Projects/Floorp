@@ -74,10 +74,6 @@ DEFS+=-DLDAP_TOOL_ARGPIN -DLDAP_TOOL_PKCS11
 SVRCORE_LINK=-l$(SVRCORE_LIBNAME) 
 endif
 
-ifdef HAVE_LIBNLS
-INCLUDES	+= -I$(LIBNLS_INCLUDES)
-endif
-
 ifeq ($(OS_ARCH), WINNT)
 DEFS		+= -DXP_WIN -DXP_WIN32
 endif
@@ -146,7 +142,7 @@ EXTRA_LIBS = -L$(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
 	     -l$(LDIF_LIBNAME) -l$(SSLDAP_LIBNAME) -l$(PRLDAP_LIBNAME) \
              -L$(NSCP_DISTDIR)/lib $(SVRCORE_LINK) \
 	     $(LDAPTOOLS_NSS_LINK) \
-	     -lthread -lposix4 -lsocket -lnls \
+	     -lthread -lposix4 -lsocket \
 	     -ldl -lresolv -lgen 
 EXTRA_LIBS += -L$(NSCP_DISTDIR)/lib $(DYNAMICNSPR)
 endif
@@ -208,40 +204,8 @@ EXTRA_LIBS = -L$(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
              -L$(NSCP_DISTDIR)/lib $(SVRCORE_LINK) \
 	     $(LDAPTOOLS_NSS_LINK) \
 	     -ldl -brtl -lpthreads -lc_r -lm
-ifndef HAVE_LIBNLS
 EXTRA_LIBS += -liconv
-endif
 EXTRA_LIBS += -L$(NSCP_DISTDIR)/lib $(DYNAMICNSPR)
-endif
-
-ifdef HAVE_LIBNLS
-ifeq ($(OS_ARCH), WINNT)
-EXTRA_LIBS +=   $(LIBNLS_LIBDIR)/$(NSCNV_LIBNAME) \
-		$(LIBNLS_LIBDIR)/$(NSJPN_LIBNAME) \
-	        $(LIBNLS_LIBDIR)/$(NSCCK_LIBNAME) \
-		$(LIBNLS_LIBDIR)/$(NSSB_LIBNAME)
-else
-ifeq ($(OS_ARCH), SunOS)
-ifdef SOLARIS_USE_FORTE6
-SOLARIS_CXX_LIB=Crun
-else
-ifeq ($(OS_RELEASE),5.6)
-SOLARIS_CXX_LIB=C
-else
-SOLARIS_CXX_LIB=Crun
-endif
-endif
-EXTRA_LIBS +=   $(LIBNLS_LIBDIR)/$(NSCNV_LIBNAME) -l$(SOLARIS_CXX_LIB) \
-		$(LIBNLS_LIBDIR)/$(NSJPN_LIBNAME) \
-	        $(LIBNLS_LIBDIR)/$(NSCCK_LIBNAME) \
-		$(LIBNLS_LIBDIR)/$(NSSB_LIBNAME)
-else
-endif
-EXTRA_LIBS +=   $(LIBNLS_LIBDIR)/$(NSCNV_LIBNAME) \
-		$(LIBNLS_LIBDIR)/$(NSJPN_LIBNAME) \
-	        $(LIBNLS_LIBDIR)/$(NSCCK_LIBNAME) \
-		$(LIBNLS_LIBDIR)/$(NSSB_LIBNAME)
-endif
 endif
 
 LDTOOLS_LIBS += $(EXTRA_LIBS)
@@ -249,9 +213,9 @@ LIBLOCATION   = $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib
 
 ###########################################################################
 
-all::	$(OBJDEST) linklibnls libdir $(BINS)
+all::	$(OBJDEST) libdir $(BINS)
 
-libdir: linklibnls
+libdir:
 ifeq ($(OS_ARCH), WINNT)
 	$(NSINSTALL) $(LIBLOCATION)/$(LDAP_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
 	$(NSINSTALL) $(LIBLOCATION)/$(PRLDAP_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
@@ -308,28 +272,6 @@ endif
 ifeq ($(COPYFREEBL), 1)
 	$(NSINSTALL) $(NSCP_DISTDIR)/lib/lib$(HYBRID_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
 	$(NSINSTALL) $(NSCP_DISTDIR)/lib/lib$(PURE32_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
-endif
-endif
-
-linklibnls: FORCE
-ifneq ($(COMPONENT_PULL_METHOD), FTP)
-ifeq ($(HAVE_LIBNLS), 1)
-	$(RM) -f $(LIBNLS_INCLUDES)
-	$(RM) -f $(LIBNLS_LIBDIR)
-	ln -s $(LIBNLS_INCLUDES_LOC) $(LIBNLS_INCLUDES)
-	ln -s $(LIBNLS_LIB_LOC) $(LIBNLS_LIBDIR)
-endif
-else
-ifeq ($(HAVE_LIBNLS), 1)
-	@echo "Pulling libnls......"
-# The following shell script recalculates $(NLS_INCLUDE), $(NLS_LIBPATH) and
-# $(NLS_VERSION_FILE)
-	sh ../../build/compver.sh $(LIBNLS_DIR) $(LIBNLS_RELDATE) \
-	$(OBJDIR_NAME) ../../../../dist ldapsdk \
-	$(LIBNLS_RELEASE_TREE)/libnls$(NLS_LIBVERSION)/$(LIBNLS_RELDATE)/$(OBJDIR_NAME) \
-	libnls$(NLS_LIBVERSION) \
-	"include lib conv$(NLS_LIBVERSION) locale$(NLS_LIBVERSION)" \
-	../../../../../dist/libnls$(NLS_LIBVERSION)/$(OBJDIR_NAME)/locale$(NLS_LIBVERSION)/index.txt
 endif
 endif
 

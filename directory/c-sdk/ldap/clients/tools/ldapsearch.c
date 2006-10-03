@@ -53,8 +53,8 @@ static void write_ldif_value( char *type, char *value, unsigned long vallen,
 static void print_entry( LDAP *ld, LDAPMessage *entry, int attrsonly );
 static void options_callback( int option, char *optarg );
 static void parse_and_display_reference( LDAP *ld, LDAPMessage *ref );
-static char *sortresult2string(unsigned long result);
-static char *changetype_num2string( int chgtype );
+static char *sortresult2string(ber_int_t result);
+static char *changetype_num2string( ber_int_t chgtype );
 static char *msgtype2str( int msgtype );
 
 /*
@@ -87,12 +87,11 @@ usage( void )
     fprintf( stderr, "    -U\t\tproduce file URLs in conjunction with -t\n" );
     fprintf( stderr, "    -e\t\tminimize base-64 encoding of values\n" );
     fprintf( stderr, "    -u\t\tinclude User Friendly entry names in the output\n" );
-    fprintf( stderr, "    -o\t\tprint entries using old format (default is LDIF)\n" );
     fprintf( stderr, "    -r\t\tflush output after each entry is printed (useful with -C)\n" );
     fprintf( stderr, "    -T\t\tdon't fold (wrap) long lines (default is to fold)\n" );
     fprintf( stderr, "    -1\t\tomit leading \"version: %d\" line in LDIF output\n", LDIF_VERSION_ONE );
     fprintf( stderr, "    -A\t\tretrieve attribute names only (no values)\n" );
-    fprintf( stderr, "    -B\t\tprint non-ASCII values when old format (-o) is used\n" );
+    fprintf( stderr, "    -B\t\tprint non-ASCII values and use old output format (attr=value)\n" );
     fprintf( stderr, "    -x\t\tperforming sorting on server\n" );
     fprintf( stderr, "    -F sep\tprint `sep' instead of `%s' between attribute names\n", LDAPTOOL_DEFSEP );
     fprintf( stderr, "          \tand values\n" );
@@ -157,8 +156,18 @@ main( int argc, char **argv )
 
 
     ldaptool_reset_control_array( ldaptool_request_ctrls );
+#ifdef HAVE_SASL_OPTIONS
+#ifdef HAVE_SASL_OPTIONS_2
+    optind = ldaptool_process_args( argc, argv, "ABLTU1eortuxa:b:F:G:l:S:s:z:C:",
+        0, options_callback );
+#else
+    optind = ldaptool_process_args( argc, argv, "ABLTU1ertuxa:b:F:G:l:S:s:z:C:",
+        0, options_callback );
+#endif
+#else
     optind = ldaptool_process_args( argc, argv,
 	    "ABLTU1eortuxa:b:F:G:l:S:s:z:C:", 0, options_callback );
+#endif  /* HAVE_SASL_OPTIONS */
 
     if ( optind == -1 ) {
 	usage();
@@ -333,14 +342,12 @@ options_callback( int option, char *optarg )
 	break;
     case 'L':       /* print entries in LDIF format -- now the default */
 	break;
-    case 'o':	/* print entries using old ldapsearch format */
-	ldif = 0;
-	break;
     case 'r':	/* flush output after each entry is written */
 	flush_after_each_entry = 1;
 	break;
-    case 'B':	/* allow binary values to be printed, even if -o used */
+    case 'B':	/* allow binary values to be printed, use old format */
 	++allow_binary;
+	ldif = 0;
 	break;
     case '1':	/* omit leading "version: #" line from LDIF output */
 	write_ldif_version = 0;
@@ -659,7 +666,7 @@ dosearch( ld, base, scope, attrs, attrsonly, filtpatt, value )
 	vlv_data.ldvlist_before_count = vlv_before;
 	vlv_data.ldvlist_after_count = vlv_after;
 	if ( ldaptool_verbose ) {
-	    printf( "vlv data %lu, %lu, ", 
+	    printf( "vlv data %d, %d, ", 
 		    vlv_data.ldvlist_before_count,
 		    vlv_data.ldvlist_after_count 
 		);
@@ -679,7 +686,7 @@ dosearch( ld, base, scope, attrs, attrsonly, filtpatt, value )
 	    vlv_data.ldvlist_size = vlv_count;
 	    vlv_data.ldvlist_index = vlv_index;
 	    if ( ldaptool_verbose ) {
-		printf( "(null), %lu, %lu\n", vlv_data.ldvlist_size, vlv_data.ldvlist_index );
+		printf( "(null), %d, %d\n", vlv_data.ldvlist_size, vlv_data.ldvlist_index );
 	    }
 	}
 	
@@ -759,7 +766,7 @@ dosearch( ld, base, scope, attrs, attrsonly, filtpatt, value )
     } 
     /* Parse the returned sort control */
     if (server_sort) {
-	unsigned long result = 0;
+	ber_int_t result = 0;
 	char *attribute;
 	
 	if ( LDAP_SUCCESS != ldap_parse_sort_control(ld,ctrl_response_array,&result,&attribute) ) {
@@ -777,9 +784,9 @@ dosearch( ld, base, scope, attrs, attrsonly, filtpatt, value )
 	    }
 	} else {
 	    if (NULL != attribute) {
-		printf("Server reported sorting error %ld: %s, attribute in error\"%s\"\n",result,sortresult2string(result),attribute);
+		printf("Server reported sorting error %d: %s, attribute in error\"%s\"\n",result,sortresult2string(result),attribute);
 	    } else {
-		printf("Server reported sorting error %ld: %s\n",result,sortresult2string(result));
+		printf("Server reported sorting error %d: %s\n",result,sortresult2string(result));
 	    }
 	}
 
@@ -787,7 +794,7 @@ dosearch( ld, base, scope, attrs, attrsonly, filtpatt, value )
 
     if (use_vlv)
     {
-	unsigned long vpos, vcount;
+	ber_int_t vpos, vcount;
 	int vresult;
 	if ( LDAP_SUCCESS != ldap_parse_virtuallist_control(ld,ctrl_response_array,&vpos, &vcount,&vresult) ) {
 	    (void)ldaptool_print_lderror( ld, "ldap_parse_virtuallist_control",
@@ -802,10 +809,10 @@ dosearch( ld, base, scope, attrs, attrsonly, filtpatt, value )
 	    if ( ldaptool_verbose ) {
 		printf( "Server indicated virtual list positioning OK\n");
 	    }
-	    printf("index %lu content count %lu\n", vpos, vcount);
+	    printf("index %d content count %d\n", vpos, vcount);
 	    
 	} else {
-	    printf("Server reported sorting error %d: %s\n",vresult,sortresult2string(vresult));
+	    printf("Server reported sorting error %d: %s\n",vresult,sortresult2string((ber_int_t)vresult));
 
 	}
 
@@ -885,8 +892,9 @@ print_entry( ld, entry, attrsonly )
 
     if ( use_psearch ) {
 	LDAPControl	**ectrls = NULL;
-	int		chgtype, chgnumpresent;
-	long		chgnum;
+	int         chgnumpresent;
+    ber_int_t   chgtype;
+	ber_int_t	chgnum;
 	char		*prevdn, longbuf[ 128 ];
 
 	if ( ldap_get_entry_controls( ld, entry, &ectrls ) == LDAP_SUCCESS ) {
@@ -896,7 +904,7 @@ print_entry( ld, entry, attrsonly )
 			LDAPTOOL_PSEARCH_ATTR_PREFIX "changeType",
 			changetype_num2string( chgtype ), 0 );
 		if ( chgnumpresent ) {
-		    sprintf( longbuf, "%ld", chgnum );
+		    sprintf( longbuf, "%d", chgnum );
 		    write_string_attr_value(
 			    LDAPTOOL_PSEARCH_ATTR_PREFIX "changeNumber",
 			    longbuf, 0 );
@@ -1056,7 +1064,7 @@ write_ldif_value( char *type, char *value, unsigned long vallen,
 
 
 static char *
-sortresult2string(unsigned long result)
+sortresult2string(ber_int_t result)
 {
 	/*
             success                   (0), -- results are sorted
@@ -1195,7 +1203,7 @@ msgtype2str( int msgtype )
  * Return a descriptive string given a Persistent Search change type
  */
 static char *
-changetype_num2string( int chgtype )
+changetype_num2string( ber_int_t chgtype )
 {
     char	*s = "unknown";
 

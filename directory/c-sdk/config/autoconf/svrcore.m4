@@ -22,7 +22,7 @@ AC_DEFUN(AM_PATH_INTREE_SVRCORE,
             SVRCORE_CFLAGS="-I$abs_svrcoreincpath"
         fi
         if test -d "$abs_svrcorelibpath" ; then
-            SVRCORE_LIBS="-L$abs_svrcorelibpath -lsvrcore"
+            SVRCORE_LIBS="-L$abs_svrcorelibpath"
         fi
         if test -n "$SVRCORE_CFLAGS" -a -n "$SVRCORE_LIBS" ; then
             AC_MSG_CHECKING(using in-tree SVRCORE from $svrcoreincpath $svrcorelibpath)

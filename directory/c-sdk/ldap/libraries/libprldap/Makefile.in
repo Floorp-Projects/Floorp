@@ -169,7 +169,7 @@ ifeq ($(USE_DLL_EXPORTS_FILE), 1)
 # recursive gmake rule to create exported symbols file
 $(PRLDAP_EXPORT_DEFS):: $(srcdir)/libprldap.ex
 ifeq ($(OS_ARCH), WINNT)
-	$(GENEXPORTS) Win32 Standard $< $(GENEXPARGS) > $@
+	$(GENEXPORTS) Win32 $(srcdir)/../msdos/winsock/nsldappr32.tdf $< $(GENEXPARGS) > $@
 else
 ifeq ($(OS_ARCH), OS2)
 	echo LIBRARY $(PRLDAP_LIBNAME) INITINSTANCE TERMINSTANCE > $@

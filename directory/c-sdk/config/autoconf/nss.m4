@@ -149,7 +149,7 @@ AC_DEFUN(AM_PATH_GIVEN_NSS,
     AC_MSG_CHECKING(for --with-nss-inc)
     AC_ARG_WITH(nss-inc, [  --with-nss-inc=PATH        Netscape Portable Runtime (NSS) include file directory],
     [
-      if test -e "$withval"/nss.h
+      if test -f "$withval"/nss.h
       then
         AC_MSG_RESULT([using $withval])
         NSS_CFLAGS="-I$withval"

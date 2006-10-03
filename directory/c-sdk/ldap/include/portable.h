@@ -154,6 +154,10 @@
 #if defined(SOLARIS) || defined(LINUX) || defined(HPUX) || defined(AIX)
 #define HAVE_SNPRINTF
 #endif
+#if defined(_WINDOWS)
+#define snprintf _snprintf
+#define HAVE_SNPRINTF
+#endif
 #endif
 
 
@@ -452,6 +456,13 @@ int select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
 #define NSLDAPI_FOPEN( filename, mode )	fopen64( filename, mode )
 #else
 #define NSLDAPI_FOPEN( filename, mode )	fopen( filename, mode )
+#endif
+
+#if defined(LINUX) || defined(AIX) || defined(HPUX) || defined(_WINDOWS)
+size_t nsldapi_compat_strlcpy(char *dst, const char *src, size_t len);
+#define STRLCPY nsldapi_compat_strlcpy
+#else
+#define STRLCPY strlcpy
 #endif
 
 #endif /* _PORTABLE_H */

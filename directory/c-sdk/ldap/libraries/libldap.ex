@@ -247,6 +247,8 @@
 487	ldap_sasl_bind
 488	ldap_sasl_bind_s
 489	ldap_parse_sasl_bind_result
+490	ldap_sasl_interactive_bind_s
+491	ldap_sasl_interactive_bind_ext_s
 # LDAPv3 simple paging controls are not supported by Netscape at this time.
 # 490	ldap_create_page_control
 # 491	ldap_parse_page_control
@@ -296,6 +298,14 @@
 534	ldap_x_realloc
 535	ldap_x_free
 536     ldap_create_proxiedauth_control
+#
+570 ldap_passwd
+571 ldap_parse_passwd
+573 ldap_passwd_s
+#
+580 ldap_delete_result_entry
+581 ldap_add_result_entry
+#
 1000	ldap_memcache_init
 1001	ldap_memcache_set
 1002	ldap_memcache_get

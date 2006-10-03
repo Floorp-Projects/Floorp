@@ -43,7 +43,7 @@
 
 #include "examples.h"
 
-static char *changetype_num2string( int chgtype );
+static char *changetype_num2string( ber_int_t chgtype );
 
 int
 main( int argc, char **argv )
@@ -155,9 +155,10 @@ main( int argc, char **argv )
 
 	    /* print entry change info. if it was returned */
 	    if ( LDAP_SUCCESS == ldap_get_entry_controls( ld, e, &ectrls )) {
-		int	chgtype, chgnumpresent;
-		long	chgnum;
-		char	*prevdn;
+		int         chgnumpresent;
+        ber_int_t   chgtype;
+		ber_int_t   chgnum;
+		char        *prevdn;
 
 		if ( LDAP_SUCCESS == ldap_parse_entrychange_control( ld,
 			ectrls, &chgtype, &prevdn, &chgnumpresent, &chgnum )) {
@@ -201,7 +202,7 @@ main( int argc, char **argv )
 
 
 static char *
-changetype_num2string( int chgtype )
+changetype_num2string( ber_int_t chgtype )
 {
     static char buf[ 25 ];
     char	*s;

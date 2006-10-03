@@ -108,7 +108,7 @@ nsldapi_put_controls( LDAP *ld, LDAPControl **ctrls, int closeseq,
 
 		if ( c->ldctl_value.bv_val != NULL ) {
 			if ( ber_printf( ber, "o", c->ldctl_value.bv_val,
-			    (int)c->ldctl_value.bv_len /* XXX lossy cast */ )
+			    c->ldctl_value.bv_len )
 			    == -1 ) {
 				goto error_exit;
 			}
@@ -145,8 +145,9 @@ int
 nsldapi_get_controls( BerElement *ber, LDAPControl ***controlsp )
 {
 	LDAPControl		*newctrl;
-	unsigned long		tag, len;
-	int			rc, maxcontrols, curcontrols;
+	ber_tag_t		tag;
+	ber_len_t		len;
+	int				rc, maxcontrols, curcontrols;
 	char			*last;
 
 	/*

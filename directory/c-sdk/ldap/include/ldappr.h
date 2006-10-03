@@ -59,6 +59,10 @@ extern "C" {
  * this LDAP * handle from more than one thread.
  *
  * Returns an LDAP session handle (or NULL if an error occurs).
+ *
+ * NOTE: If you want to use IPv6, you must use prldap creating a LDAP handle
+ * with this function prldap_init.  Prldap_init installs the appropriate
+ * set of NSPR functions and prevents calling deprecated functions accidentally.
  */
 LDAP * LDAP_CALL prldap_init( const char *defhost, int defport, int shared );
 

@@ -156,15 +156,16 @@ LDAP_CALL
 ldap_parse_sort_control ( 	
      LDAP *ld, 
      LDAPControl **ctrlp,  
-     unsigned long *result,
+     ber_int_t *result,
      char **attribute
 )
 {
 	BerElement *ber;
-	int i, foundSortControl;
+	int			i, foundSortControl;
 	LDAPControl *sortCtrlp;
-	unsigned long len, tag;
-	char *attr;
+	ber_len_t	len;
+	ber_tag_t	tag;
+	char		*attr;
 
 	if ( !NSLDAPI_VALID_LDAP_POINTER( ld ) || result == NULL ||
 		attribute == NULL ) {

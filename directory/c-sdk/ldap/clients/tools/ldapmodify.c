@@ -839,7 +839,7 @@ domodify( char *dn, LDAPMod **pmods, int newentry )
 			notascii = !ldaptool_berval_is_ascii( bvp );
 		    }
 		    if ( notascii ) {
-			printf( "\tNOT ASCII (%ld bytes)\n", bvp->bv_len );
+			printf( "\tNOT ASCII (%d bytes)\n", bvp->bv_len );
 		    } else {
 			printf( "\t%s\n", bvp->bv_val );
 		    }

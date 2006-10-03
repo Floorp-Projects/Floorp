@@ -117,6 +117,9 @@ extern "C" {
 #define LDAP_X_CONTROL_PWPOLICY_REQUEST		"1.3.6.1.4.1.42.2.27.8.5.1"
 #define LDAP_X_CONTROL_PWPOLICY_RESPONSE	"1.3.6.1.4.1.42.2.27.8.5.1"
 
+/* Password Modify Extended Operation */
+#define LDAP_CONTROL_EXT_PASSWD_MODIFY  "1.3.6.1.4.1.4203.1.11.1"
+
 /* Suppress virtual/inherited attribute values */
 #define LDAP_CONTROL_REAL_ATTRS_ONLY	"2.16.840.1.113730.3.4.17"
 
@@ -140,7 +143,7 @@ LDAP_API(int) LDAP_CALL ldap_create_sort_control( LDAP *ld,
         LDAPsortkey **sortKeyList, const char ctl_iscritical,
         LDAPControl **ctrlp );
 LDAP_API(int) LDAP_CALL ldap_parse_sort_control( LDAP *ld,
-        LDAPControl **ctrls, unsigned long *result, char **attribute );
+        LDAPControl **ctrls, ber_int_t *result, char **attribute );
 
 LDAP_API(void) LDAP_CALL ldap_free_sort_keylist( LDAPsortkey **sortKeyList );
 LDAP_API(int) LDAP_CALL ldap_create_sort_keylist( LDAPsortkey ***sortKeyList,
@@ -156,12 +159,12 @@ LDAP_API(int) LDAP_CALL ldap_create_sort_keylist( LDAPsortkey ***sortKeyList,
  * ldap_create_virtuallist_control() if ldvlist_attrvalue is NULL.
  */
 typedef struct ldapvirtuallist {
-    unsigned long   ldvlist_before_count;       /* # entries before target */
-    unsigned long   ldvlist_after_count;        /* # entries after target */
-    char            *ldvlist_attrvalue;         /* jump to this value */
-    unsigned long   ldvlist_index;              /* list offset */
-    unsigned long   ldvlist_size;               /* number of items in vlist */
-    void            *ldvlist_extradata;         /* for use by application */
+    ber_int_t   ldvlist_before_count;       /* # entries before target */
+    ber_int_t   ldvlist_after_count;        /* # entries after target */
+    char        *ldvlist_attrvalue;         /* jump to this value */
+    ber_int_t   ldvlist_index;              /* list offset */
+    ber_int_t   ldvlist_size;               /* number of items in vlist */
+    void        *ldvlist_extradata;         /* for use by application */
 } LDAPVirtualList;
 
 /*
@@ -171,8 +174,8 @@ LDAP_API(int) LDAP_CALL ldap_create_virtuallist_control( LDAP *ld,
         LDAPVirtualList *ldvlistp, LDAPControl **ctrlp );
 
 LDAP_API(int) LDAP_CALL ldap_parse_virtuallist_control( LDAP *ld,
-        LDAPControl **ctrls, unsigned long *target_posp,
-        unsigned long *list_sizep, int *errcodep );
+        LDAPControl **ctrls, ber_int_t *target_posp,
+        ber_int_t *list_sizep, int *errcodep );
 
 /*
  * Routines for creating persistent search controls and for handling
@@ -188,8 +191,8 @@ LDAP_API(int) LDAP_CALL ldap_create_persistentsearch_control( LDAP *ld,
         int changetypes, int changesonly, int return_echg_ctls,
         char ctl_iscritical, LDAPControl **ctrlp );
 LDAP_API(int) LDAP_CALL ldap_parse_entrychange_control( LDAP *ld,
-        LDAPControl **ctrls, int *chgtypep, char **prevdnp,
-        int *chgnumpresentp, long *chgnump );
+        LDAPControl **ctrls, ber_int_t *chgtypep, char **prevdnp,
+        int *chgnumpresentp, ber_int_t *chgnump );
 
 /*
  * Routines for creating Proxied Authorization controls (an LDAPv3
@@ -596,6 +599,11 @@ void ldap_x_free( void *ptr );
  */
 #define LDAP_OPT_EXTRA_THREAD_FN_PTRS  0x65     /* 101 - API extension */
 
+/*
+ * When bind is called, don't bind if there's a connection open with the same DN
+ */
+#define LDAP_OPT_NOREBIND               0x66    /* 102 - API extension */
+
 typedef int (LDAP_C LDAP_CALLBACK LDAP_TF_MUTEX_TRYLOCK_CALLBACK)( void *m );
 typedef void *(LDAP_C LDAP_CALLBACK LDAP_TF_SEMA_ALLOC_CALLBACK)( void );
 typedef void (LDAP_C LDAP_CALLBACK LDAP_TF_SEMA_FREE_CALLBACK)( void *s );
@@ -669,6 +677,79 @@ LDAP_API(int) LDAP_CALL ldap_utf8isspace( char* s );
 #define LDAP_UTF8GETCC(s) ((0x80 & *(unsigned char*)(s)) ? ldap_utf8getcc (&s) : *s++)
 #define LDAP_UTF8GETC(s) ((0x80 & *(unsigned char*)(s)) ? ldap_utf8getcc ((const char**)&s) : *s++)
 
+/* SASL options */
+#define LDAP_OPT_X_SASL_MECH            0x6100
+#define LDAP_OPT_X_SASL_REALM           0x6101
+#define LDAP_OPT_X_SASL_AUTHCID         0x6102
+#define LDAP_OPT_X_SASL_AUTHZID         0x6103
+#define LDAP_OPT_X_SASL_SSF             0x6104 /* read-only */
+#define LDAP_OPT_X_SASL_SSF_EXTERNAL    0x6105 /* write-only */
+#define LDAP_OPT_X_SASL_SECPROPS        0x6106 /* write-only */
+#define LDAP_OPT_X_SASL_SSF_MIN         0x6107
+#define LDAP_OPT_X_SASL_SSF_MAX         0x6108
+#define LDAP_OPT_X_SASL_MAXBUFSIZE      0x6109
+
+/* ldap_interactive_bind_s Interaction flags
+ *  Interactive: prompt always - REQUIRED
+ */
+#define LDAP_SASL_AUTOMATIC     0U /* only prompt for missing items not supplied as defaults */
+#define LDAP_SASL_INTERACTIVE   1U /* prompt for everything and print defaults, if any */
+#define LDAP_SASL_QUIET         2U /* no prompts - only use defaults (e.g. for non-interactive apps) */
+
+/*
+ * V3 SASL Interaction Function Callback Prototype
+ *      when using Cyrus SASL, interact is pointer to sasl_interact_t
+ *  should likely passed in a control (and provided controls)
+ */
+typedef int (LDAP_SASL_INTERACT_PROC)
+        (LDAP *ld, unsigned flags, void* defaults, void *interact );
+
+LDAP_API(int) LDAP_CALL ldap_sasl_interactive_bind_s (
+        LDAP *ld,
+        const char *dn, /* usually NULL */
+        const char *saslMechanism,
+        LDAPControl **serverControls,
+        LDAPControl **clientControls,
+
+        /* should be client controls */
+        unsigned flags,
+        LDAP_SASL_INTERACT_PROC *proc,
+        void *defaults );
+
+LDAP_API(int) LDAP_CALL ldap_sasl_interactive_bind_ext_s (
+        LDAP *ld,
+        const char *dn, /* usually NULL */
+        const char *saslMechanism,
+        LDAPControl **serverControls,
+        LDAPControl **clientControls,
+
+        /* should be client controls */
+        unsigned flags,
+        LDAP_SASL_INTERACT_PROC *proc,
+        void *defaults,
+        LDAPControl ***responseControls );
+
+/*
+ * Password modify functions
+ */
+LDAP_API(int) LDAP_CALL ldap_passwd( LDAP *ld, struct berval *userid,
+	struct berval *oldpasswd, struct berval *newpasswd,
+	LDAPControl **serverctrls, LDAPControl **clientctrls,
+	int *msgidp );
+
+LDAP_API(int) LDAP_CALL ldap_passwd_s( LDAP *ld, struct berval *userid,
+	struct berval *oldpasswd, struct berval *newpasswd,
+	struct berval *genpasswd, LDAPControl **serverctrls,
+	LDAPControl **clientctrls );
+
+LDAP_API(int) LDAP_CALL ldap_parse_passwd( LDAP *ld, LDAPMessage *result,
+	struct berval *genpasswd );
+    
+/*
+ * in reslist.c
+ */
+LDAP_API(LDAPMessage *) LDAP_CALL ldap_delete_result_entry( LDAPMessage **list, LDAPMessage *e );
+LDAP_API(void) LDAP_CALL ldap_add_result_entry( LDAPMessage **list, LDAPMessage *e );
 
 #ifdef __cplusplus
 }

@@ -129,7 +129,7 @@ ldap_err2string( int err )
 
 
 static char *
-nsldapi_safe_strerror( e )
+nsldapi_safe_strerror( int e )
 {
 	char *s;
 
@@ -145,8 +145,10 @@ void
 LDAP_CALL
 ldap_perror( LDAP *ld, const char *s )
 {
-	int	i, err;
-	char	*matched, *errmsg, *separator;
+	int		i, err;
+	char	*matched = NULL;
+	char	*errmsg = NULL; 
+	char	*separator;
 	char    msg[1024];
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "ldap_perror\n", 0, 0, 0 );
@@ -158,13 +160,8 @@ ldap_perror( LDAP *ld, const char *s )
 	}
 
 	if ( ld == NULL ) {
-#ifdef HAVE_SNPRINTF
-		snprintf( msg, sizeof(msg),
-#else
-		sprintf( msg,
-#endif
-		    "%s%s%s", s, separator,
-		    nsldapi_safe_strerror( errno ) );
+		snprintf( msg, sizeof( msg ), 
+			"%s%s%s", s, separator, nsldapi_safe_strerror( errno ) );
 		ber_err_print( msg );
 		return;
 	}
@@ -173,13 +170,8 @@ ldap_perror( LDAP *ld, const char *s )
 	err = LDAP_GET_LDERRNO( ld, &matched, &errmsg );
 	for ( i = 0; ldap_errlist[i].e_code != -1; i++ ) {
 		if ( err == ldap_errlist[i].e_code ) {
-#ifdef HAVE_SNPRINTF
-			snprintf( msg, sizeof(msg),
-#else
-			sprintf( msg,
-#endif
-			    "%s%s%s", s, separator,
-			    ldap_errlist[i].e_reason );
+			snprintf( msg, sizeof( msg ), 
+				"%s%s%s", s, separator, ldap_errlist[i].e_reason );
 			ber_err_print( msg );
 			if ( err == LDAP_CONNECT_ERROR ) {
 				ber_err_print( " - " );
@@ -188,35 +180,21 @@ ldap_perror( LDAP *ld, const char *s )
 			}
 			ber_err_print( "\n" );
 			if ( matched != NULL && *matched != '\0' ) {
-#ifdef HAVE_SNPRINTF
-				snprintf( msg, sizeof(msg),
-#else
-				sprintf( msg,
-#endif
-				    "%s%smatched: %s\n",
-				    s, separator, matched );
+				snprintf( msg, sizeof( msg ), 
+					"%s%smatched: %s\n", s, separator, matched );
 				ber_err_print( msg );
 			}
 			if ( errmsg != NULL && *errmsg != '\0' ) {
-#ifdef HAVE_SNPRINTF
-				snprintf( msg, sizeof(msg),
-#else
-				sprintf( msg,
-#endif
-				    "%s%sadditional info: %s\n",
-				    s, separator, errmsg );
+				snprintf( msg, sizeof( msg ), 
+					"%s%sadditional info: %s\n", s, separator, errmsg );
 				ber_err_print( msg );
 			}
 			LDAP_MUTEX_UNLOCK( ld, LDAP_ERR_LOCK );
 			return;
 		}
 	}
-#ifdef HAVE_SNPRINTF
-	snprintf( msg, sizeof(msg),
-#else
-	sprintf( msg,
-#endif
-	    "%s%sNot an LDAP errno %d\n", s, separator, err );
+	snprintf( msg, sizeof( msg ), 
+		"%s%sNot an LDAP errno %d\n", s, separator, err );
 	ber_err_print( msg );
 	LDAP_MUTEX_UNLOCK( ld, LDAP_ERR_LOCK );
 }
@@ -310,6 +288,7 @@ ldap_parse_result( LDAP *ld, LDAPMessage *res, int *errcodep, char **matchednp,
 	LDAPMessage		*lm;
 	int			err, errcode;
 	char			*m, *e;
+	m = e = NULL;
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "ldap_parse_result\n", 0, 0, 0 );
 
@@ -357,9 +336,10 @@ ldap_parse_result( LDAP *ld, LDAPMessage *res, int *errcodep, char **matchednp,
 				break;
 			}
 		}
-	} else {
-		m = e = NULL;
-	}
+	} else { 
+	    /* In this case, m and e were already freed by ber_scanf */
+	    m = e = NULL; 
+	} 
 
 	if ( freeit ) {
 		ldap_msgfree( res );
@@ -367,9 +347,19 @@ ldap_parse_result( LDAP *ld, LDAPMessage *res, int *errcodep, char **matchednp,
 
 	LDAP_SET_LDERRNO( ld, ( err == LDAP_SUCCESS ) ? errcode : err, m, e );
 
+	/* nsldapi_parse_result set m and e, so we have to delete them if they exist.
+	   Only delete them if they haven't been reused for matchednp or errmsgp.
+	   if ( err == LDAP_SUCCESS ) {
+	if ( (m != NULL) && (matchednp == NULL) ) {
+	NSLDAPI_FREE( m );
+	}
+	if ( (e != NULL) && (errmsgp == NULL) ) {
+	NSLDAPI_FREE( e );
+	}
+	} */
+
 	return( err );
 }
-
 
 /*
  * returns an LDAP error code indicating success or failure of parsing
@@ -381,9 +371,9 @@ nsldapi_parse_result( LDAP *ld, int msgtype, BerElement *rber, int *errcodep,
     LDAPControl ***serverctrlsp )
 {
 	BerElement	ber;
-	unsigned long	len;
-	int		berrc, err, errcode = 0;
-	long		along = 0;
+	ber_len_t	len;
+	ber_int_t   errcode;
+	int			berrc, err;
 	char		*m, *e;
 
 	/*
@@ -428,12 +418,10 @@ nsldapi_parse_result( LDAP *ld, int msgtype, BerElement *rber, int *errcodep,
 	ber = *rber;		/* struct copy */
 
 	if ( NSLDAPI_LDAP_VERSION( ld ) < LDAP_VERSION2 ) {
-		berrc = ber_scanf( &ber, "{ia}", &along, &e );
-		errcode = (int)along;	/* XXX lossy cast */
+		berrc = ber_scanf( &ber, "{ia}", &errcode, &e );
 	} else {
-		if (( berrc = ber_scanf( &ber, "{iaa", &along, &m, &e ))
+		if (( berrc = ber_scanf( &ber, "{iaa", &errcode, &m, &e ))
 		    != LBER_ERROR ) {
-			errcode = (int)along;	/* XXX lossy cast */
 			/* check for optional referrals */
 			if ( ber_peek_tag( &ber, &len ) == LDAP_TAG_REFERRAL ) {
 				if ( referralsp == NULL ) {

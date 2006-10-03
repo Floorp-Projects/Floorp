@@ -293,7 +293,7 @@ nsldapi_send_server_request(
 		lc->lconn_status = LDAP_CONNST_CONNECTED;
 
 		LDAPDebug( LDAP_DEBUG_TRACE,
-		    "nsldapi_send_server_request: connection 0x%x -"
+		    "nsldapi_send_server_request: connection 0x%p -"
 		    " LDAP_CONNST_CONNECTING -> LDAP_CONNST_CONNECTED\n",
 		    lc, 0, 0 );
 	}
@@ -452,7 +452,7 @@ nsldapi_send_pending_requests_nolock( LDAP *ld, LDAPConn *lc )
 			    lr->lr_ber, 0 /* do not free ber */ );
 			if ( err == 0 ) {		/* send succeeded */
 				LDAPDebug( LDAP_DEBUG_TRACE,
-				    "%s: 0x%x SENT\n", logname, lr, 0 );
+				    "%s: 0x%p SENT\n", logname, lr, 0 );
 				lr->lr_ber->ber_end = lr->lr_ber->ber_ptr;
 				lr->lr_ber->ber_ptr = lr->lr_ber->ber_buf;
 				lr->lr_status = LDAP_REQST_INPROGRESS;
@@ -460,11 +460,11 @@ nsldapi_send_pending_requests_nolock( LDAP *ld, LDAPConn *lc )
 			} else if ( err == -2 ) {	/* would block */
 				rc = 0; /* not an error */
 				LDAPDebug( LDAP_DEBUG_TRACE,
-				    "%s: 0x%x WOULD BLOCK\n", logname, lr, 0 );
+				    "%s: 0x%p WOULD BLOCK\n", logname, lr, 0 );
 				break;
 			} else {			/* fatal error */
 				LDAPDebug( LDAP_DEBUG_TRACE,
-				    "%s: 0x%x FATAL ERROR\n", logname, lr, 0 );
+				    "%s: 0x%p FATAL ERROR\n", logname, lr, 0 );
 				LDAP_SET_LDERRNO( ld, LDAP_SERVER_DOWN,
 				    NULL, NULL );
 				nsldapi_free_request( ld, lr, 0 );
@@ -482,7 +482,7 @@ nsldapi_send_pending_requests_nolock( LDAP *ld, LDAPConn *lc )
 				++waiting_for_a_response;
 			} else {
 				LDAPDebug( LDAP_DEBUG_TRACE,
-				    "%s: 0x%x NO RESPONSE EXPECTED;"
+				    "%s: 0x%p NO RESPONSE EXPECTED;"
 				    " freeing request \n", logname, lr, 0 );
 				nsldapi_free_request( ld, lr, 0 );
 				lr = NULL;
@@ -761,6 +761,12 @@ nsldapi_free_connection( LDAP *ld, LDAPConn *lc, LDAPControl **serverctrls,
 		if ( lc->lconn_binddn != NULL ) {
 			NSLDAPI_FREE( lc->lconn_binddn );
 		}
+#ifdef LDAP_SASLIO_HOOKS
+		if ( lc->lconn_sasl_ctx ) { /* the sasl connection context */
+			sasl_dispose(&lc->lconn_sasl_ctx);
+			lc->lconn_sasl_ctx = NULL;
+		}
+#endif /* LDAP_SASLIO_HOOKS */
 		NSLDAPI_FREE( lc );
 		LDAPDebug( LDAP_DEBUG_TRACE, "nsldapi_free_connection: actually freed\n",
 		    0, 0, 0 );
@@ -787,7 +793,7 @@ nsldapi_dump_connection( LDAP *ld, LDAPConn *lconns, int all )
 	ber_err_print( msg );
 	for ( lc = lconns; lc != NULL; lc = lc->lconn_next ) {
 		if ( lc->lconn_server != NULL ) {
-                        sprintf( msg, "* 0x%x - host: %s  port: %d  secure: %s%s\n",
+                        sprintf( msg, "* 0x%p - host: %s  port: %d  secure: %s%s\n",
                                 lc, ( lc->lconn_server->lsrv_host == NULL ) ? "(null)"
 			    : lc->lconn_server->lsrv_host,
 			    lc->lconn_server->lsrv_port,
@@ -834,7 +840,7 @@ nsldapi_dump_requests_and_responses( LDAP *ld )
 		ber_err_print( "   Empty\n" );
 	}
 	for ( ; lr != NULL; lr = lr->lr_next ) {
-            sprintf( msg, " * 0x%x - msgid %d,  origid %d, status %s\n",
+            sprintf( msg, " * 0x%p - msgid %d,  origid %d, status %s\n",
                 lr, lr->lr_msgid, lr->lr_origid, ( lr->lr_status ==
 		LDAP_REQST_INPROGRESS ) ? "InProgress" :
 		( lr->lr_status == LDAP_REQST_CHASINGREFS ) ? "ChasingRefs" :
@@ -857,14 +863,14 @@ nsldapi_dump_requests_and_responses( LDAP *ld )
 		ber_err_print( "   Empty\n" );
 	}
 	for ( ; lm != NULLMSG; lm = lm->lm_next ) {
-                sprintf( msg, " * 0x%x - msgid %d,  type %d\n",
+                sprintf( msg, " * 0x%p - msgid %d,  type %d\n",
                     lm, lm->lm_msgid, lm->lm_msgtype );
 		ber_err_print( msg );
 		if (( l = lm->lm_chain ) != NULL ) {
 			ber_err_print( "   chained responses:\n" );
 			for ( ; l != NULLMSG; l = l->lm_chain ) {
 				sprintf( msg,
-                                    "  * 0x%x - msgid %d,  type %d\n",
+                                    "  * 0x%p - msgid %d,  type %d\n",
                                     l, l->lm_msgid, l->lm_msgtype );
 				ber_err_print( msg );
 			}
@@ -906,7 +912,7 @@ nsldapi_free_request( LDAP *ld, LDAPRequest *lr, int free_conn )
 	LDAPRequest	*tmplr, *nextlr;
 
 	LDAPDebug( LDAP_DEBUG_TRACE,
-		"nsldapi_free_request 0x%x (origid %d, msgid %d)\n",
+		"nsldapi_free_request 0x%p (origid %d, msgid %d)\n",
 		lr, lr->lr_origid, lr->lr_msgid );
 
 	if ( lr->lr_parent != NULL ) {
@@ -1303,15 +1309,15 @@ re_encode_request( LDAP *ld, BerElement *origber, int msgid, LDAPURLDesc *ludp,
 /*
  * XXX this routine knows way too much about how the lber library works!
  */
-	unsigned long		along, tag;
-	long			ver;
+	ber_int_t origmsgid;
+	ber_tag_t tag;
+	ber_int_t ver;
 	int			rc;
 	BerElement		*ber;
 	struct berelement	tmpber;
 	char			*dn, *orig_dn;
 	/* extra stuff for search request */
-	long orig_scope = -1;
-	int scope; /* scan needs long - print needs int :-P */
+	ber_int_t scope = -1;
 
 	LDAPDebug( LDAP_DEBUG_TRACE,
 	    "re_encode_request: new msgid %d, new dn <%s>\n",
@@ -1327,7 +1333,7 @@ re_encode_request( LDAP *ld, BerElement *origber, int msgid, LDAPURLDesc *ludp,
 	 */
 
 	/* skip past msgid and get operation tag */
-	if ( ber_scanf( &tmpber, "{it", &along, &tag ) == LBER_ERROR ) {
+	if ( ber_scanf( &tmpber, "{it", &origmsgid, &tag ) == LBER_ERROR ) {
 		return( LDAP_DECODING_ERROR );
 	}
 
@@ -1355,7 +1361,7 @@ re_encode_request( LDAP *ld, BerElement *origber, int msgid, LDAPURLDesc *ludp,
 		rc = ber_scanf( &tmpber, "a", &orig_dn );
 	} else if ( tag == LDAP_REQ_SEARCH ) {
 	    /* need scope */
-	    rc = ber_scanf( &tmpber, "{ae", &orig_dn, &orig_scope );
+	    rc = ber_scanf( &tmpber, "{ae", &orig_dn, &scope );
 	} else {
 	    rc = ber_scanf( &tmpber, "{a", &orig_dn );
 	}
@@ -1383,13 +1389,9 @@ re_encode_request( LDAP *ld, BerElement *origber, int msgid, LDAPURLDesc *ludp,
 	     * in the client (i.e. the correct behavior is implied)
 	     * see RFC 4511 section 4.5.3 for more information
 	     */
-	    if (orig_scope == LDAP_SCOPE_ONELEVEL) {
+	    if (scope == LDAP_SCOPE_ONELEVEL) {
 		scope = LDAP_SCOPE_BASE;
-	    } else {
-		scope = (int)orig_scope;
 	    }
-	} else {
-	    scope = (int)orig_scope;
 	}
 
 	/* allocate and build the new request */
@@ -1402,8 +1404,7 @@ re_encode_request( LDAP *ld, BerElement *origber, int msgid, LDAPURLDesc *ludp,
 	}
 
 	if ( tag == LDAP_REQ_BIND ) {
-	    rc = ber_printf( ber, "{it{is", msgid, tag,
-			     (int)ver /* XXX lossy cast */, dn );
+		rc = ber_printf( ber, "{it{is", msgid, tag, ver , dn );
 	} else if ( tag == LDAP_REQ_DELETE ) {
 	    rc = ber_printf( ber, "{its}", msgid, tag, dn );
 	} else if ( tag == LDAP_REQ_SEARCH ) {

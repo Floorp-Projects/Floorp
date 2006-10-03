@@ -43,8 +43,12 @@ NSPR_LIBS   = @NSPR_LIBS@
 NSPR_CFLAGS = @NSPR_CFLAGS@
 NSS_LIBS   = @NSS_LIBS@
 NSS_CFLAGS = @NSS_CFLAGS@
+HAVE_SVRCORE = @HAVE_SVRCORE@
 SVRCORE_LIBS   = @SVRCORE_LIBS@
 SVRCORE_CFLAGS = @SVRCORE_CFLAGS@
+HAVE_SASL = @HAVE_SASL@
+SASL_LIBS = @SASL_LIBS@
+SASL_CFLAGS = @SASL_CFLAGS@
 
 include $(MOD_DEPTH)/config/autoconf.mk
 include $(topsrcdir)/build.mk
@@ -53,6 +57,7 @@ INSTALLDIR     = $(DIST)/$(OBJDIR_NAME)/bin
 
 INCLUDES	+= $(NSS_CFLAGS) \
 		$(NSPR_CFLAGS) \
+		$(SASL_CFLAGS) \
 		-I$(DIST)/public/ldap \
 		-I$(topsrcdir)/ldap/include
 
@@ -72,10 +77,6 @@ INCLUDES += $(SVRCORE_CFLAGS)
 DEFS+=-DLDAP_TOOL_ARGPIN -DLDAP_TOOL_PKCS11
 endif
 
-ifdef HAVE_LIBNLS
-INCLUDES	+= -I$(LIBNLS_INCLUDES)
-endif
-
 ifeq ($(OS_ARCH), WINNT)
 DEFS		+= -DXP_WIN -DXP_WIN32
 endif
@@ -85,7 +86,6 @@ CXXSRCS		= convutf8.cpp
 
 OBJDEST		= $(OBJDIR_NAME)
 BINDIR		= $(OBJDIR_NAME)/bin
-LIBDIR		= $(OBJDIR_NAME)/lib
 
 ifeq ($(OS_ARCH), WINNT)
 LDAPDELETE_OBJ		= $(addprefix $(OBJDEST)/, ldapdelete.obj)
@@ -93,6 +93,7 @@ LDAPMODIFY_OBJ		= $(addprefix $(OBJDEST)/, ldapmodify.obj)
 LDAPSEARCH_OBJ		= $(addprefix $(OBJDEST)/, ldapsearch.obj)
 LDAPCOMPARE_OBJ    	= $(addprefix $(OBJDEST)/, ldapcompare.obj)
 LDAPCMP_OBJ     	= $(addprefix $(OBJDEST)/, ldapcmp.obj)
+LDAPPASSWD_OBJ		= $(addprefix $(OBJDEST)/, ldappasswd.obj)
 LDAPTOOLCOMMON_OBJ	= $(addprefix $(OBJDEST)/, common.obj) \
 			  $(addprefix $(OBJDEST)/, convutf8.obj) \
 			  $(addprefix $(OBJDEST)/, fileurl.obj) 
@@ -106,13 +107,17 @@ LDAPMODIFY_OBJ		= $(addprefix $(OBJDEST)/, ldapmodify.o)
 LDAPSEARCH_OBJ		= $(addprefix $(OBJDEST)/, ldapsearch.o)
 LDAPCOMPARE_OBJ         = $(addprefix $(OBJDEST)/, ldapcompare.o)
 LDAPCMP_OBJ     	= $(addprefix $(OBJDEST)/, ldapcmp.o)
+LDAPPASSWD_OBJ		= $(addprefix $(OBJDEST)/, ldappasswd.o)
 ifeq ($(OS_ARCH), HP-UX)
 LDAPTOOLCOMMON_OBJ	= $(addprefix $(OBJDEST)/, common.o) \
-			  $(addprefix $(OBJDEST)/, fileurl.o) 
+			  $(addprefix $(OBJDEST)/, fileurl.o)
 else
 LDAPTOOLCOMMON_OBJ	= $(addprefix $(OBJDEST)/, common.o) \
 			  $(addprefix $(OBJDEST)/, convutf8.o) \
 			  $(addprefix $(OBJDEST)/, fileurl.o) 
+endif
+ifeq ($(HAVE_SASL), 1)
+LDAPTOOLCOMMON_OBJ      += $(addprefix $(OBJDEST)/, ldaptool-sasl.o)
 endif
 ifeq ($(LDAP_TOOL_ARGPIN),1)
 LDAPTOOLCOMMON_OBJ	+= $(addprefix $(OBJDEST)/, argpin.o) \
@@ -125,18 +130,20 @@ LDAPTOOLCPPCOMMON_OBJ   = $(addprefix $(OBJDEST)/, convutf8.o)
 endif
 
 CLIENT_OBJS= $(LDAPDELETE_OBJ) $(LDAPMODIFY_OBJ) \
-	$(LDAPSEARCH_OBJ) $(LDAPCOMPARE_OBJ) $(LDAPCMP_OBJ) $(LDAPTOOLCOMMON_OBJ)
+	$(LDAPSEARCH_OBJ) $(LDAPCOMPARE_OBJ) $(LDAPCMP_OBJ) \
+	$(LDAPPASSWD_OBJ) $(LDAPTOOLCOMMON_OBJ)
 
 # For 'clean' target:
-TARGETS=$(BINDIR) $(LIBDIR) $(CLIENT_OBJS)
+TARGETS=$(BINDIR) $(CLIENT_OBJS)
 
 LDAPDELETE = $(addsuffix $(EXE_SUFFIX), $(addprefix $(BINDIR)/, ldapdelete))
 LDAPMODIFY = $(addsuffix $(EXE_SUFFIX), $(addprefix $(BINDIR)/, ldapmodify))
 LDAPSEARCH = $(addsuffix $(EXE_SUFFIX), $(addprefix $(BINDIR)/, ldapsearch))
 LDAPCOMPARE = $(addsuffix $(EXE_SUFFIX), $(addprefix $(BINDIR)/, ldapcompare))
 LDAPCMP    = $(addsuffix $(EXE_SUFFIX), $(addprefix $(BINDIR)/, ldapcmp))
+LDAPPASSWD = $(addsuffix $(EXE_SUFFIX), $(addprefix $(BINDIR)/, ldappasswd))
 
-BINS=	 $(LDAPDELETE) $(LDAPMODIFY) $(LDAPSEARCH) $(LDAPCOMPARE) $(LDAPCMP)
+BINS=	 $(LDAPDELETE) $(LDAPMODIFY) $(LDAPSEARCH) $(LDAPCOMPARE) $(LDAPCMP) $(LDAPPASSWD)
 
 LDAPTOOLS_NSS_LINK=$(NSSLINK)
 
@@ -163,6 +170,12 @@ ifeq ($(HAVE_SVRCORE), 1)
 EXTRA_LIBS += $(SVRCORE_LINK)
 endif
 EXTRA_LIBS += $(LDAPTOOLS_NSS_LINK) $(NSPRLINK)
+endif
+
+ifeq ($(HAVE_SASL), 1)
+ifneq ($(OS_ARCH), WINNT)
+EXTRA_LIBS += $(SASL_LINK)
+endif
 endif
 
 # set platform specific libs
@@ -197,65 +210,11 @@ ifeq ($(OS_ARCH), Darwin)
 PLATFORMLIBS=-liconv
 endif
 
-ifdef HAVE_LIBNLS
-ifeq ($(OS_ARCH), WINNT)
-EXTRA_LIBS +=   $(LIBNLS_LIBDIR)/$(NSCNV_LIBNAME) \
-		$(LIBNLS_LIBDIR)/$(NSJPN_LIBNAME) \
-	        $(LIBNLS_LIBDIR)/$(NSCCK_LIBNAME) \
-		$(LIBNLS_LIBDIR)/$(NSSB_LIBNAME)
-else
-ifeq ($(OS_ARCH), SunOS)
-ifdef SOLARIS_USE_FORTE6
-SOLARIS_CXX_LIB=Crun
-else
-ifeq ($(OS_RELEASE),5.6)
-SOLARIS_CXX_LIB=C
-else
-SOLARIS_CXX_LIB=Crun
-endif
-endif
-EXTRA_LIBS +=   $(LIBNLS_LIBDIR)/$(NSCNV_LIBNAME) -l$(SOLARIS_CXX_LIB) \
-		$(LIBNLS_LIBDIR)/$(NSJPN_LIBNAME) \
-	        $(LIBNLS_LIBDIR)/$(NSCCK_LIBNAME) \
-		$(LIBNLS_LIBDIR)/$(NSSB_LIBNAME)
-else
-endif
-EXTRA_LIBS +=   $(LIBNLS_LIBDIR)/$(NSCNV_LIBNAME) \
-		$(LIBNLS_LIBDIR)/$(NSJPN_LIBNAME) \
-	        $(LIBNLS_LIBDIR)/$(NSCCK_LIBNAME) \
-		$(LIBNLS_LIBDIR)/$(NSSB_LIBNAME)
-endif
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 ###########################################################################
 
-all::	$(OBJDEST) linklibnls libdir $(BINS)
-
-libdir: linklibnls
-
-linklibnls: FORCE
-ifneq ($(COMPONENT_PULL_METHOD), FTP)
-ifeq ($(HAVE_LIBNLS), 1)
-	$(RM) -f $(LIBNLS_INCLUDES)
-	$(RM) -f $(LIBNLS_LIBDIR)
-	ln -s $(LIBNLS_INCLUDES_LOC) $(LIBNLS_INCLUDES)
-	ln -s $(LIBNLS_LIB_LOC) $(LIBNLS_LIBDIR)
-endif
-else
-ifeq ($(HAVE_LIBNLS), 1)
-	@echo "Pulling libnls......"
-# The following shell script recalculates $(NLS_INCLUDE), $(NLS_LIBPATH) and
-# $(NLS_VERSION_FILE)
-	sh ../../build/compver.sh $(LIBNLS_DIR) $(LIBNLS_RELDATE) \
-	$(OBJDIR_NAME) ../../../../dist ldapsdk \
-	$(LIBNLS_RELEASE_TREE)/libnls$(NLS_LIBVERSION)/$(LIBNLS_RELDATE)/$(OBJDIR_NAME) \
-	libnls$(NLS_LIBVERSION) \
-	"include lib conv$(NLS_LIBVERSION) locale$(NLS_LIBVERSION)" \
-	../../../../../dist/libnls$(NLS_LIBVERSION)/$(OBJDIR_NAME)/locale$(NLS_LIBVERSION)/index.txt
-endif
-endif
+all::	$(OBJDEST) $(BINS)
 
 $(LDAPTOOLCOMMON_OBJ):
 
@@ -286,17 +245,21 @@ $(LDAPCMP):	$(LDAPCMP_OBJ) $(LDAPTOOLCOMMON_OBJ) \
 		$(LDAPTOOLCPPCOMMON_OBJ) $(LDTOOLS_LIBS_DEP)
 	$(LINK_EXE)
 
+$(LDAPPASSWD):	$(LDAPPASSWD_OBJ) $(LDAPTOOLCOMMON_OBJ) \
+		$(LDAPTOOLCPPCOMMON_OBJ) $(LDTOOLS_LIBS_DEP)
+	$(LINK_EXE)
+
 $(OBJDEST):	FORCE
 	$(NSINSTALL) -D $(OBJDEST)
 	$(NSINSTALL) -D $(BINDIR)
-	$(NSINSTALL) -D $(LIBDIR)
 
-export:: $(OBJDEST) libdir $(BINS)
+export:: $(OBJDEST) $(BINS)
 	$(NSINSTALL) $(LDAPDELETE) $(INSTALLDIR)
 	$(NSINSTALL) $(LDAPSEARCH) $(INSTALLDIR)
 	$(NSINSTALL) $(LDAPMODIFY) $(INSTALLDIR)
 	$(NSINSTALL) $(LDAPCOMPARE)	   $(INSTALLDIR)
 	$(NSINSTALL) $(LDAPCMP)	   $(INSTALLDIR)
+	$(NSINSTALL) $(LDAPPASSWD) $(INSTALLDIR)
 
 
 #
@@ -309,5 +272,6 @@ $(LDAPMODIFY_OBJ):	$(LDAPTOOL_COMMON_DEPS) fileurl.h
 $(LDAPSEARCH_OBJ):	$(LDAPTOOL_COMMON_DEPS) fileurl.h
 $(LDAPCOMPARE_OBJ):		$(LDAPTOOL_COMMON_DEPS)
 $(LDAPCMP_OBJ):		$(LDAPTOOL_COMMON_DEPS)
+$(LDAPPASSWD_OBJ):	$(LDAPTOOL_COMMON_DEPS)
 
 FORCE:

@@ -74,6 +74,8 @@ extern "C" {
 #if defined( _WINDOWS )
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
+#  include <basetsd.h>
+#  define ssize_t SSIZE_T
 #  include <time.h>
 /* No stderr in a 16-bit Windows DLL */
 #  if defined(_WINDLL) && !defined(_WIN32)
@@ -94,11 +96,16 @@ extern "C" {
 #include "portable.h"
 
 #ifdef _WINDOWS
+#  if defined(FD_SETSIZE)
+#  else
+#    define FD_SETSIZE 256 /* set it before winsock sets it to 64! */
+#  endif
 #include <winsock.h>
 #include <io.h>
 #endif /* _WINDOWS */
 
 #ifdef XP_OS2
+#include <os2sock.h>
 #include <io.h>
 #endif /* XP_OS2 */
 
@@ -113,8 +120,8 @@ extern "C" {
 #define NSLDAPI_LBER_SOCKET_IS_PTR
 #endif
 
-#define OLD_LBER_SEQUENCE	0x10L	/* w/o constructed bit - broken */
-#define OLD_LBER_SET		0x11L	/* w/o constructed bit - broken */
+#define OLD_LBER_SEQUENCE	0x10	/* w/o constructed bit - broken */
+#define OLD_LBER_SET		0x11	/* w/o constructed bit - broken */
 
 #ifndef _IFP
 #define _IFP
@@ -122,8 +129,8 @@ typedef int (LDAP_C LDAP_CALLBACK *IFP)();
 #endif
 
 typedef struct seqorset {
-  unsigned long	sos_clen;
-  unsigned long	sos_tag;
+  ber_len_t	sos_clen;
+  ber_tag_t	sos_tag;
   char		*sos_first;
   char		*sos_ptr;
   struct seqorset	*sos_next;
@@ -132,10 +139,9 @@ typedef struct seqorset {
 
 #define SOS_STACK_SIZE 8 /* depth of the pre-allocated sos structure stack */
 
-
-#define MAX_TAG_SIZE (1 + sizeof(long)) /* One byte for the length of the tag */
-#define MAX_LEN_SIZE (1 + sizeof(long)) /* One byte for the length of the length */
-#define MAX_VALUE_PREFIX_SIZE (2 + sizeof(long)) /* 1 byte for the tag and 1 for the len (msgid) */
+#define MAX_TAG_SIZE (1 + sizeof(ber_int_t)) /* One byte for the length of the tag */
+#define MAX_LEN_SIZE (1 + sizeof(ber_int_t)) /* One byte for the length of the length */
+#define MAX_VALUE_PREFIX_SIZE (2 + sizeof(ber_int_t)) /* 1 byte for the tag and 1 for the len (msgid) */
 #define BER_ARRAY_QUANTITY 7 /* 0:Tag   1:Length   2:Value-prefix   3:Value   4:Value-suffix  */
 #define BER_STRUCT_TAG 0     /* 5:ControlA   6:ControlB */
 #define BER_STRUCT_LEN 1
@@ -153,12 +159,13 @@ struct berelement {
   char          ber_pre_contents[MAX_VALUE_PREFIX_SIZE];
   char          ber_suf_contents[MAX_LEN_SIZE+1];
 
-  char          *ber_buf; /* update the value value when writing in case realloc is called */
+  char      *ber_buf; /* update the value value when writing in case realloc is called */
   char		*ber_ptr;
   char		*ber_end;
   struct seqorset	*ber_sos;
-  unsigned long	ber_tag; /* Remove me someday */
-  unsigned long	ber_len; /* Remove me someday */
+  ber_len_t ber_tag_len_read;
+  ber_tag_t	ber_tag; /* Remove me someday */
+  ber_len_t	ber_len; /* Remove me someday */
   int		ber_usertag;
   char		ber_options;
   char		*ber_rwptr;
@@ -166,6 +173,7 @@ struct berelement {
   BERTranslateProc ber_decode_translate_proc;
   int		ber_flags;
 #define LBER_FLAG_NO_FREE_BUFFER	1	/* don't free ber_buf */
+  unsigned  int ber_buf_reallocs;		/* realloc counter */
   int		ber_sos_stack_posn;
   Seqorset	ber_sos_stack[SOS_STACK_SIZE];
 };
@@ -214,8 +222,8 @@ struct sockbuf {
 
 	int		sb_options;	/* to support copying ber elements */
 	LBER_SOCKET	sb_copyfd;	/* for LBER_SOCKBUF_OPT_TO_FILE* opts */
-	unsigned long	sb_max_incoming;
-	unsigned long   sb_valid_tag;	/* valid tag to accept */
+	ber_len_t	sb_max_incoming;
+	ber_tag_t   sb_valid_tag;	/* valid tag to accept */
 	struct nslberi_io_fns
 			sb_io_fns;	/* classic I/O callback functions */
 
@@ -244,43 +252,19 @@ void ber_err_print( char *data );
 #define NSLBERI_VALID_SOCKBUF_POINTER( sb ) \
 	( (sb) != NULLSOCKBUF )
 
-
-#if defined(_WIN32) && defined(_ALPHA)
-#define LBER_HTONL( _l ) \
-	    ((((_l)&0xff)<<24) + (((_l)&0xff00)<<8) + \
-	     (((_l)&0xff0000)>>8) + (((_l)&0xff000000)>>24))
-#define LBER_NTOHL(_l) LBER_HTONL(_l)
-
-#elif (!defined(__alpha) || defined(VMS)) && !defined(__amd64__)
-
 #define LBER_HTONL( l )	htonl( l )
 #define LBER_NTOHL( l )	ntohl( l )
-
-#else /* __alpha || __amd64__ */
-/*
- * htonl and ntohl on the 64 bit UNIX platforms only swap the lower-order
- * 32-bits of a (64-bit) long, so we define correct versions
- * here.
- */
-#define LBER_HTONL( l )	(((long)htonl( (l) & 0x00000000FFFFFFFF )) << 32 \
-    			| htonl( ( (l) & 0xFFFFFFFF00000000 ) >> 32 ))
-
-#define LBER_NTOHL( l )	(((long)ntohl( (l) & 0x00000000FFFFFFFF )) << 32 \
-    			| ntohl( ( (l) & 0xFFFFFFFF00000000 ) >> 32 ))
-#endif /* __alpha || __amd64__ */
-
 
 /* function prototypes */
 #ifdef LDAP_DEBUG
 void lber_bprint( char *data, int len );
 #endif
+void ber_err_print( char *data );
 void *nslberi_malloc( size_t size );
 void *nslberi_calloc( size_t nelem, size_t elsize );
 void *nslberi_realloc( void *ptr, size_t size );
 void nslberi_free( void *ptr );
-int nslberi_ber_realloc( BerElement *ber, unsigned long len );
-
-
+int nslberi_ber_realloc( BerElement *ber, ber_len_t len );
 
 /* blame: dboreham 
  * slapd spends much of its time doing memcpy's for the ber code.

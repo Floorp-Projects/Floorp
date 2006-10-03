@@ -137,7 +137,7 @@ ldap_compare_ext( LDAP *ld, const char *dn, const char *attr,
 	}
 
 	if ( ber_printf( ber, "{it{s{so}}", *msgidp, LDAP_REQ_COMPARE, dn,
-	    attr, bvalue->bv_val, (int)bvalue->bv_len /* XXX lossy cast */ )
+	    attr, bvalue->bv_val, bvalue->bv_len )
 	    == -1 ) {
 		lderr = LDAP_ENCODING_ERROR;
 		LDAP_SET_LDERRNO( ld, lderr, NULL, NULL );

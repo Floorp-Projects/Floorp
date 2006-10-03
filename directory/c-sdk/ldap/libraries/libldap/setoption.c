@@ -55,8 +55,14 @@ ldap_set_option( LDAP *ld, int option, const void *optdata )
 	int		rc, i;
 	char		*matched, *errstr;
 
-	if ( !nsldapi_initialized ) {
-		nsldapi_initialize_defaults();
+	/*
+         * if ld is NULL, arrange to modify our default settings
+         */
+        if ( ld == NULL ) {
+		if ( !nsldapi_initialized ) {
+			nsldapi_initialize_defaults();
+		}
+		ld = &nsldapi_ld_defaults;
 	}
 
 	/*
@@ -96,13 +102,6 @@ ldap_set_option( LDAP *ld, int option, const void *optdata )
     }
 
 	/*
-	 * if ld is NULL, arrange to modify our default settings
-	 */
-	if ( ld == NULL ) {
-		ld = &nsldapi_ld_defaults;
-	}
-
-	/*
 	 * process options that are associated with an LDAP session handle
 	 */
 	if ( !NSLDAPI_VALID_LDAP_POINTER( ld )) {
@@ -137,6 +136,10 @@ ldap_set_option( LDAP *ld, int option, const void *optdata )
 
 	case LDAP_OPT_RECONNECT:
 		LDAP_SETCLR_BITOPT( ld, LDAP_BITOPT_RECONNECT, optdata );
+		break;
+
+	case LDAP_OPT_NOREBIND:
+		LDAP_SETCLR_BITOPT( ld, LDAP_BITOPT_NOREBIND, optdata );
 		break;
 
 #ifdef LDAP_ASYNC_IO
@@ -333,6 +336,68 @@ ldap_set_option( LDAP *ld, int option, const void *optdata )
 	case LDAP_X_OPT_CONNECT_TIMEOUT:
 		ld->ld_connect_timeout = *((int *) optdata);
 		break;
+
+#ifdef LDAP_SASLIO_HOOKS
+	/* SASL options */
+	case LDAP_OPT_X_SASL_MECH:
+		NSLDAPI_FREE(ld->ld_def_sasl_mech);
+		ld->ld_def_sasl_mech = nsldapi_strdup((char *) optdata);
+		break;
+	case LDAP_OPT_X_SASL_REALM:
+		NSLDAPI_FREE(ld->ld_def_sasl_realm);
+		ld->ld_def_sasl_realm = nsldapi_strdup((char *) optdata);
+		break;
+	case LDAP_OPT_X_SASL_AUTHCID:
+		NSLDAPI_FREE(ld->ld_def_sasl_authcid);
+		ld->ld_def_sasl_authcid = nsldapi_strdup((char *) optdata);
+		break;
+	case LDAP_OPT_X_SASL_AUTHZID:
+		NSLDAPI_FREE(ld->ld_def_sasl_authzid);
+		ld->ld_def_sasl_authzid = nsldapi_strdup((char *) optdata);
+		break;
+	case LDAP_OPT_X_SASL_SSF_EXTERNAL:
+		{
+			int sc;
+			sasl_ssf_t extprops;
+			sasl_conn_t *ctx;
+			if( ld->ld_defconn == NULL ) {
+				return -1;
+			}
+			ctx = (sasl_conn_t *)(ld->ld_defconn->lconn_sasl_ctx);
+			if ( ctx == NULL ) {
+				return -1;
+			}
+			memset(&extprops, 0L, sizeof(extprops));
+			extprops = * ((sasl_ssf_t *) optdata);
+			sc = sasl_setprop( ctx, SASL_SSF_EXTERNAL,
+					(void *) &extprops );
+			if ( sc != SASL_OK ) {
+				return -1;
+			}
+		}
+		break;
+	case LDAP_OPT_X_SASL_SECPROPS:
+		{
+			int sc;
+			sc = nsldapi_sasl_secprops( (char *) optdata,
+					&ld->ld_sasl_secprops );
+			return sc == LDAP_SUCCESS ? 0 : -1;
+		}
+		break;
+	case LDAP_OPT_X_SASL_SSF_MIN:
+		ld->ld_sasl_secprops.min_ssf = *((sasl_ssf_t *) optdata);
+		break;
+	case LDAP_OPT_X_SASL_SSF_MAX:
+		ld->ld_sasl_secprops.max_ssf = *((sasl_ssf_t *) optdata);
+		break;
+	case LDAP_OPT_X_SASL_MAXBUFSIZE:
+		ld->ld_sasl_secprops.maxbufsize = *((sasl_ssf_t *) optdata);
+		break;
+	case LDAP_OPT_X_SASL_SSF:       /* read only */
+		LDAP_SET_LDERRNO( ld, LDAP_PARAM_ERROR, NULL, NULL );
+		rc = -1;
+		break;
+#endif
 
 	default:
 		LDAP_SET_LDERRNO( ld, LDAP_PARAM_ERROR, NULL, NULL );

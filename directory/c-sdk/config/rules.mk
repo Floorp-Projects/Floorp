@@ -185,8 +185,8 @@ LOOP_OVER_DIRS		=					\
 	@for d in $(DIRS); do					\
 		if test -d $$d; then				\
 			set -e;					\
-			echo "cd $$d; $(MAKE) $@";		\
-			$(MAKE) -C $$d $@;			\
+			echo "cd $$d; $(MAKE) $(MFLAGS) $@";	\
+			$(MAKE) $(MFLAGS) -C $$d $@;			\
 			set +e;					\
 		else						\
 			echo "Skipping non-directory $$d...";	\
@@ -290,7 +290,7 @@ alltags:
 	find . -name dist -prune -o \( -name '*.[hc]' -o -name '*.cp' -o -name '*.cpp' \) -print | xargs ctags -a
 
 $(NFSPWD):
-	cd $(@D); $(MAKE) $(@F)
+	cd $(@D); $(MAKE) $(MFLAGS) $(@F)
 
 $(PROGRAM): $(OBJS)
 	@$(MAKE_OBJDIR)

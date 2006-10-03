@@ -281,6 +281,10 @@ typedef struct ldap_apifeature_info {
 /*
  * Initializing an ldap sesssion, set session handle options, and
  * closing an ldap session functions
+ *
+ * NOTE: If you want to use IPv6, you must use prldap creating a LDAP handle
+ * with prldap_init instead of ldap_init. Or install the NSPR functions
+ * by calling prldap_install_routines. (See the nspr samples in examples)
  */
 LDAP_API(LDAP *) LDAP_CALL ldap_init( const char *defhost, int defport );
 LDAP_API(int) LDAP_CALL ldap_set_option( LDAP *ld, int option,

@@ -194,7 +194,7 @@ ifeq ($(USE_DLL_EXPORTS_FILE), 1)
 # recursive gmake rule to create exported symbols file
 $(SSLDAP_EXPORT_DEFS):: ../libldap_ssl.ex
 ifeq ($(OS_ARCH), WINNT)
-	$(GENEXPORTS) Win32 Standard $< $(GENEXPARGS) > $@
+	$(GENEXPORTS) Win32 $(srcdir)/../msdos/winsock/nsldapssl32.tdf $< $(GENEXPARGS) > $@
 else
 	$(GENEXPORTS) $(OS_ARCH) Standard $< $(GENEXPARGS) > $@
 endif

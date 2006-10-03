@@ -101,6 +101,12 @@
 #  include <unistd.h>
 #endif /* USE_SYSCONF */
 
+#ifdef LDAP_SASLIO_HOOKS
+#include <sasl.h>
+#define SASL_MAX_BUFF_SIZE      65536
+#define SASL_MIN_BUFF_SIZE      4096
+#endif
+
 #if !defined(_WINDOWS) && !defined(macintosh) && !defined(BSDI) && \
     !defined(XP_OS2) && !defined(XP_BEOS) && !defined(NTO) && \
     !defined(DARWIN)
@@ -145,6 +151,9 @@ typedef enum {
     LDAP_RESULT_LOCK, 
     LDAP_PEND_LOCK, 
     LDAP_THREADID_LOCK, 
+#ifdef LDAP_SASLIO_HOOKS
+    LDAP_SASL_LOCK,
+#endif
     LDAP_MAX_LOCK 
 } LDAPLock;
 
@@ -156,7 +165,7 @@ typedef enum {
 
 struct ldapmsg {
 	int		lm_msgid;	/* the message id */
-	int		lm_msgtype;	/* the message type */
+	ber_tag_t	lm_msgtype;	/* the message type */
 	BerElement	*lm_ber;	/* the ber encoded message contents */
 	struct ldapmsg	*lm_chain;	/* for search - next msg in the resp */
 	struct ldapmsg	*lm_next;	/* next response */
@@ -193,6 +202,9 @@ typedef struct ldap_conn {
 	int			lconn_bound;	/* has a bind been done? */
 	int			lconn_pending_requests; /* count of unsent req*/
 	char			*lconn_krbinstance;
+#ifdef LDAP_SASLIO_HOOKS
+    sasl_conn_t     *lconn_sasl_ctx; /* the sasl connection context */
+#endif /* LDAP_SASLIO_HOOKS */
 	struct ldap_conn	*lconn_next;
 } LDAPConn;
 
@@ -210,7 +222,7 @@ typedef struct ldapreq {
 	int		lr_outrefcnt;	/* count of outstanding referrals */
 	int		lr_origid;	/* original request's message id */
 	int		lr_parentcnt;	/* count of parent requests */
-	int		lr_res_msgtype;	/* result message type */
+	ber_tag_t	lr_res_msgtype;	/* result message type */
 	int		lr_expect_resp;	/* if non-zero, expect a response */
 	int		lr_res_errno;	/* result LDAP errno */
 	char		*lr_res_error;	/* result error string */
@@ -296,6 +308,7 @@ struct ldap {
 #define LDAP_BITOPT_RESTART	0x10000000
 #define LDAP_BITOPT_RECONNECT	0x08000000
 #define LDAP_BITOPT_ASYNC       0x04000000
+#define LDAP_BITOPT_NOREBIND    0x02000000
 
 	char		*ld_defhost;	/* full name of default server */
 	int		ld_defport;	/* port of default server */
@@ -399,6 +412,16 @@ struct ldap {
 
 	/* connect timeout value (milliseconds) */
 	int				ld_connect_timeout;
+
+#ifdef LDAP_SASLIO_HOOKS
+	/* SASL default option settings */
+	char                    *ld_def_sasl_mech;
+	char                    *ld_def_sasl_realm;
+	char                    *ld_def_sasl_authcid;
+	char                    *ld_def_sasl_authzid;
+	/* SASL Security properties */
+	struct sasl_security_properties ld_sasl_secprops;
+#endif
 };
 
 /* allocate/free mutex */
@@ -744,6 +767,23 @@ int nsldapi_chase_v3_refs( LDAP *ld, LDAPRequest *lr, char **refs,
 int nsldapi_append_referral( LDAP *ld, char **referralsp, char *s );
 void nsldapi_connection_lost_nolock( LDAP *ld, Sockbuf *sb );
 
+#ifdef LDAP_SASLIO_HOOKS
+/*
+ * in saslbind.c
+ */
+int nsldapi_sasl_is_inited();
+int nsldapi_sasl_cvterrno( LDAP *ld, int err, char *msg );
+int nsldapi_sasl_secprops( const char *in,
+                        sasl_security_properties_t *secprops );
+
+/*
+ * in saslio.c
+ */
+int nsldapi_sasl_install( LDAP *ld, LDAPConn *lconn );
+int nsldapi_sasl_open( LDAP *ld, LDAPConn *lconn, sasl_conn_t **ctx, sasl_ssf_t ssf );
+
+#endif /* LDAP_SASLIO_HOOKS */
+
 /*
  * in search.c
  */
@@ -772,12 +812,6 @@ char **nsldapi_getdxbyname( char *domain );
  * in unescape.c
  */
 void nsldapi_hex_unescape( char *s );
-
-/*
- * in reslist.c
- */
-LDAPMessage *ldap_delete_result_entry( LDAPMessage **list, LDAPMessage *e );
-void ldap_add_result_entry( LDAPMessage **list, LDAPMessage *e );
 
 /*
  * in compat.c

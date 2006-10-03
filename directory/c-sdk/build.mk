@@ -154,6 +154,11 @@ else
 SVRCORE_LINK = $(SVRCORE_LIBS) -l$(SVRCORE_LIBNAME)
 endif
 
+# sasl library
+ifneq ($(OS_ARCH), WINNT)
+SASL_LINK = $(SASL_LIBS)
+endif
+
 #
 # NSPR library
 #
@@ -190,33 +195,6 @@ PLC_LIBNAME=$(PLCBASE)
 PLDS_LIBNAME=$(PLDSBASE)
 NSPR_LIBNAME=$(NSPRBASE)
 
-#
-# NLS library
-#
-ifeq ($(OS_ARCH), WINNT)
-NSCNV_LIBNAME	=nscnv32$(NLS_LIBVERSION).$(LIB_SUFFIX)
-NSJPN_LIBNAME	=nsjpn32$(NLS_LIBVERSION).$(LIB_SUFFIX)
-NSCCK_LIBNAME	=nscck32$(NLS_LIBVERSION).$(LIB_SUFFIX)
-NSSB_LIBNAME	=nssb32$(NLS_LIBVERSION).$(LIB_SUFFIX)
-else
-NSCNV_LIBNAME	=libnscnv$(NLS_LIBVERSION).$(LIB_SUFFIX)
-NSJPN_LIBNAME	=libnsjpn$(NLS_LIBVERSION).$(LIB_SUFFIX)
-NSCCK_LIBNAME	=libnscck$(NLS_LIBVERSION).$(LIB_SUFFIX)
-NSSB_LIBNAME	=libnssb$(NLS_LIBVERSION).$(LIB_SUFFIX)
-endif
-
-LIBNLS_INCLUDES_LOC = $(LIBNLS_RELEASE_TREE)/libnls$(NLS_LIBVERSION)/$(LIBNLS_RELDATE)/$(OBJDIR_NAME)/include
-LIBNLS_LIB_LOC	    = $(LIBNLS_RELEASE_TREE)/libnls$(NLS_LIBVERSION)/$(LIBNLS_RELDATE)/$(OBJDIR_NAME)/lib
-
-LIBNLS_DIR	    = ../../../../../dist/libnls$(NLS_LIBVERSION)
-ifeq ($(COMPONENT_PULL_METHOD), FTP)
-LIBNLS_INCLUDES =../../../../../dist/libnls$(NLS_LIBVERSION)/$(OBJDIR_NAME)/include
-LIBNLS_LIBDIR	=../../../../../dist/libnls$(NLS_LIBVERSION)/$(OBJDIR_NAME)/lib
-else
-LIBNLS_INCLUDES =../../../../../dist/public/libnls
-LIBNLS_LIBDIR	=../../../../../dist/$(OBJDIR_NAME)/libnls
-endif
-
 RM              = rm -f
 SED             = sed
 
@@ -233,11 +211,6 @@ else
 LDAP_DEBUG	= -DLDAP_DEBUG
 endif
 
-ifdef HAVE_LIBNLS
-HAVELIBNLS	= -DHAVE_LIBNLS
-else
-HAVELIBNLS	=
-endif
 
 ifdef BUILD_CLU
 BUILDCLU	= 1
@@ -248,7 +221,7 @@ endif
 #
 # DEFS are included in CFLAGS
 #
-DEFS            = $(PLATFORMCFLAGS) $(LDAP_DEBUG) $(HAVELIBNLS) \
+DEFS            = $(PLATFORMCFLAGS) $(LDAP_DEBUG) \
                   $(CLDAP) $(DEFNETSSL) $(NOLIBLCACHE) \
                   $(LDAP_REFERRALS) $(LDAP_DNS) $(STR_TRANSLATION) \
                   $(LIBLDAP_CHARSETS) $(LIBLDAP_DEF_CHARSET) \

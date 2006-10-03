@@ -82,3 +82,27 @@ nsldapi_compat_ctime_r( const time_t *clock, char *buf, int buflen )
     return buf;
 }
 #endif /* HPUX10 && _REENTRANT && !HPUX11 */
+
+#if defined(LINUX) || defined(AIX) || defined(HPUX) || defined(_WINDOWS)
+/* 
+ * Copies src to the dstsize buffer at dst. The copy will never 
+ * overflow the destination buffer and the buffer will always be null 
+ * terminated. 
+ */   
+size_t nsldapi_compat_strlcpy(char *dst, const char *src, size_t len) 
+{ 
+	size_t slen = strlen(src); 
+	size_t copied; 
+	
+	if (len == 0) 
+		return (slen); 
+	
+	if (slen >= len) 
+		copied = len - 1; 
+	else 
+		copied = slen; 
+	SAFEMEMCPY(dst, src, copied); 
+	dst[copied] = '\0'; 
+	return (slen); 
+}
+#endif
