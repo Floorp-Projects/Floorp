@@ -171,6 +171,40 @@ static PRStatus local_SSLPLCY_Install(void)
 }
 
 
+static SECStatus
+ldapssl_shutdown_handler(void *appData, void *nssData)
+{
+	SSL_ClearSessionCache();
+	if ( NSS_UnregisterShutdown(ldapssl_shutdown_handler, 
+		(void *)NULL) != SECSuccess ) {
+		return SECFailure;
+	}
+	inited = 0;
+	
+	return SECSuccess;
+}
+
+
+/*
+ * Perform necessary cleanup and attempt to shutdown NSS. All existing
+ * ld session handles should be ldap_unbind(ld) prior to calling this.
+ */
+int
+LDAP_CALL
+ldapssl_shutdown()
+{
+	if ( ldapssl_shutdown_handler( (void *)NULL, 
+		(void *)NULL ) != SECSuccess ) {
+		return( -1 );
+	}
+	if ( NSS_Shutdown() != SECSuccess ) {
+		inited = 1;
+		return( -1 );
+	}
+
+	return( LDAP_SUCCESS );
+}
+
 
 /*
  * Note: by design, the keydbpath can actually be a certdbpath.  Some
@@ -233,6 +267,11 @@ ldapssl_basic_init( const char *certdbpath, const char *keydbpath,
 	if ( NSS_Initialize(confDir,certdbPrefix,keydbPrefix,
 			secmoddbpath, NSS_INIT_READONLY) != SECSuccess) {
 		retcode = -1;
+	} else {
+		if ( NSS_RegisterShutdown(ldapssl_shutdown_handler, 
+			(void *)NULL) != SECSuccess ) {
+			retcode = -1;
+		}
 	}
 
 	ldapssl_free((void **)&certdbPrefix);
@@ -241,7 +280,6 @@ ldapssl_basic_init( const char *certdbpath, const char *keydbpath,
 
 	return (retcode);
 }
-
 
 
 /*

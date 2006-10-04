@@ -447,6 +447,9 @@ prldap_connect( const char *hostlist, int defport, int timeout,
 	ldap_memfree( host );
     }
 
+    if ( host ) {
+		ldap_memfree( host );
+	}
     ldap_x_hostlist_statusfree( status );
 
     if ( rc < 0 ) {
@@ -600,6 +603,43 @@ prldap_session_arg_from_ld( LDAP *ld, PRLDAPIOSessionArg **sessargpp )
     }
 
     *sessargpp = iofns.lextiof_session_arg;
+    return( LDAP_SUCCESS );
+}
+
+
+/*
+ * Given an LDAP session handle, retrieve a socket argument.
+ * Returns an LDAP error code.
+ */
+int
+prldap_socket_arg_from_ld( LDAP *ld, PRLDAPIOSocketArg **sockargpp )
+{
+    Sockbuf *sbp;
+    struct lber_x_ext_io_fns    extiofns;
+
+    if ( NULL == ld || NULL == sockargpp ) {
+        /* XXXmcs: NULL ld's are not supported */
+        ldap_set_lderrno( ld, LDAP_PARAM_ERROR, NULL, NULL );
+        return( LDAP_PARAM_ERROR );
+    }
+
+    if ( ldap_get_option( ld, LDAP_X_OPT_SOCKBUF, (void *)&sbp ) < 0 ) {
+        return( ldap_get_lderrno( ld, NULL, NULL ));
+    }
+
+    memset( &extiofns, 0, sizeof(extiofns));
+    extiofns.lbextiofn_size = LBER_X_EXTIO_FNS_SIZE;
+    if ( ber_sockbuf_get_option( sbp, LBER_SOCKBUF_OPT_EXT_IO_FNS,
+        (void *)&extiofns ) < 0 ) {
+        return( ldap_get_lderrno( ld, NULL, NULL ));
+    }
+
+    if ( NULL == extiofns.lbextiofn_socket_arg ) {
+        ldap_set_lderrno( ld, LDAP_LOCAL_ERROR, NULL, NULL );
+        return( LDAP_LOCAL_ERROR );
+    }
+
+    *sockargpp = extiofns.lbextiofn_socket_arg;
     return( LDAP_SUCCESS );
 }
 

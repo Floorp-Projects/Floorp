@@ -116,12 +116,15 @@ typedef LDAPHostEnt * (LDAP_C LDAP_CALLBACK LDAP_DNSFN_GETHOSTBYNAME)(
 typedef LDAPHostEnt * (LDAP_C LDAP_CALLBACK LDAP_DNSFN_GETHOSTBYADDR)(
         const char *addr, int length, int type, LDAPHostEnt *result,
         char *buffer, int buflen, int *statusp, void *extradata );
+typedef int (LDAP_C LDAP_CALLBACK LDAP_DNSFN_GETPEERNAME)(
+        LDAP *ld, struct sockaddr *netaddr, char *buffer, int buflen);
 
 struct ldap_dns_fns {
         void                            *lddnsfn_extradata;
         int                             lddnsfn_bufsize;
         LDAP_DNSFN_GETHOSTBYNAME        *lddnsfn_gethostbyname;
         LDAP_DNSFN_GETHOSTBYADDR        *lddnsfn_gethostbyaddr;
+	LDAP_DNSFN_GETPEERNAME          *lddnsfn_getpeername;
 };
 
 /*

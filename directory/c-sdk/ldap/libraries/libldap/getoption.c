@@ -141,6 +141,11 @@ ldap_get_option( LDAP *ld, int option, void *optdata )
 		break;
 #endif /* LDAP_ASYNC_IO */
 
+        /* stuff in the sockbuf */
+        case LDAP_X_OPT_SOCKBUF:
+                *((Sockbuf **) optdata) = ld->ld_sbp;
+                break;
+
 	case LDAP_OPT_DESC:
 		if ( ber_sockbuf_get_option( ld->ld_sbp,
 		    LBER_SOCKBUF_OPT_DESC, optdata ) != 0 ) {

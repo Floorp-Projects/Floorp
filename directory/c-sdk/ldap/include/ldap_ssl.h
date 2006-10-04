@@ -65,6 +65,13 @@ extern "C" {
 LDAP * LDAP_CALL ldapssl_init( const char *defhost, int defport,
 	int defsecure );
 
+/*
+ * Shutdown LDAP library for SSL :
+ * Perform necessary cleanup and attempt to shutdown NSS. All existing
+ * ld session handles should be ldap_unbind(ld) prior to calling this.
+ */	
+int LDAP_CALL ldapssl_shutdown();
+
 /* Initialize LDAP library for TLS(SSL) and sends StartTLS extended
  * operation to the Directory Server.
  * Returns LDAP_SUCCESS if all goes well.

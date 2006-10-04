@@ -49,6 +49,8 @@ static LDAPHostEnt *prldap_gethostbyname( const char *name,
 static LDAPHostEnt *prldap_gethostbyaddr( const char *addr, int length,
 	int type, LDAPHostEnt *result, char *buffer, int buflen,
 	int *statusp, void *extradata );
+static int prldap_getpeername( LDAP *ld, struct sockaddr *addr,
+	char *buffer, int buflen );
 static LDAPHostEnt *prldap_convert_hostent( LDAPHostEnt *ldhp,
 	PRHostEnt *prhp );
 
@@ -68,6 +70,7 @@ prldap_install_dns_functions( LDAP *ld )
     dnsfns.lddnsfn_bufsize = PR_NETDB_BUF_SIZE;
     dnsfns.lddnsfn_gethostbyname = prldap_gethostbyname;
     dnsfns.lddnsfn_gethostbyaddr = prldap_gethostbyaddr;
+    dnsfns.lddnsfn_getpeername = prldap_getpeername;
     if ( ldap_set_option( ld, LDAP_OPT_DNS_FN_PTRS, (void *)&dnsfns ) != 0 ) {
 	return( -1 );
     }
@@ -116,6 +119,33 @@ prldap_gethostbyaddr( const char *addr, int length, int type,
     }
 
     return( prldap_convert_hostent( result, &prhent ));
+}
+
+
+static int
+prldap_getpeername( LDAP *ld, struct sockaddr *addr, char *buffer, int buflen)
+{
+    PRLDAPIOSocketArg *sa;
+    PRNetAddr	iaddr;
+    int		ret;
+
+    if (NULL != ld) {
+	    ret = prldap_socket_arg_from_ld( ld, &sa );
+	    if (ret != LDAP_SUCCESS) {
+		return (-1);
+	    }
+	    ret = PR_GetPeerName(sa->prsock_prfd, &iaddr);
+	    if( ret == PR_FAILURE ) {
+		return( -1 );
+	    }
+	    *addr = *((struct sockaddr *)&iaddr.raw);
+	    ret = PR_NetAddrToString(&iaddr, buffer, buflen);
+	    if( ret == PR_FAILURE ) {
+		return( -1 );
+	    }
+	    return (0);
+    }
+    return (-1);
 }
 
 

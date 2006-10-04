@@ -113,6 +113,7 @@ int prldap_set_io_max_timeout( PRLDAPIOSessionArg *prsessp,
 	int io_max_timeout );
 int prldap_get_io_max_timeout( PRLDAPIOSessionArg *prsessp,
 	int *io_max_timeoutp );
+int prldap_socket_arg_from_ld( LDAP *ld, PRLDAPIOSocketArg **sockargpp );
 PRLDAPIOSocketArg *prldap_socket_arg_alloc( PRLDAPIOSessionArg *sessionarg );
 
 

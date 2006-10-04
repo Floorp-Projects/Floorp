@@ -560,6 +560,12 @@ LDAP_API(void) LDAP_CALL ldap_memcache_update( LDAPMemCache *cache );
 #define LDAP_X_OPT_CONNECT_TIMEOUT    (LDAP_OPT_PRIVATE_EXTENSION_BASE + 0x0F01)
         /* 0x4000 + 0x0F01 = 0x4F01 = 20225 - API extension */
 
+/* 
+ * Socket buffer structure associated to the LDAP connection
+ */
+#define LDAP_X_OPT_SOCKBUF            (LDAP_OPT_PRIVATE_EXTENSION_BASE + 0x0F03)
+	/* 0x4000 + 0x0F03 = 0x4F03 = 20227 - API extension */
+
 /*
  * Memory allocation callback functions (an API extension --
  * LDAP_API_FEATURE_X_MEMALLOC_FUNCTIONS).  These are global and can

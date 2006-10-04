@@ -44,3 +44,5 @@
 2017	prldap_get_session_option
 2018	prldap_is_installed
 2019	prldap_import_connection
+2020	prldap_set_default_socket_info
+2021	prldap_get_default_socket_info

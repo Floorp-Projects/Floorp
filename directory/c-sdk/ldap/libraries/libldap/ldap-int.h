@@ -343,6 +343,7 @@ struct ldap {
 #define ld_dns_bufsize		ld_dnsfn.lddnsfn_bufsize
 #define ld_dns_gethostbyname_fn	ld_dnsfn.lddnsfn_gethostbyname
 #define ld_dns_gethostbyaddr_fn	ld_dnsfn.lddnsfn_gethostbyaddr
+#define ld_dns_getpeername_fn   ld_dnsfn.lddnsfn_getpeername
 
 	/* function pointers, etc. for threading */
 	struct ldap_thread_fns	ld_thread;

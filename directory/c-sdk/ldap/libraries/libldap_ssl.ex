@@ -47,6 +47,7 @@
 461 ldapssl_set_option
 462 ldapssl_get_option
 463 ldap_start_tls_s
+464 ldapssl_shutdown
 # the last Windows ordinal number that has been reserved for SSL is 469.
 
 # Windows ordinals 1100-1150 are reserved for privately/non-published

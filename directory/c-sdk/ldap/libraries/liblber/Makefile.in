@@ -39,6 +39,8 @@
 MOD_DEPTH	= ../../..
 srcdir		= @srcdir@
 topsrcdir 	= @top_srcdir@
+HAVE_SASL	= @HAVE_SASL@
+SASL_CFLAGS	= @SASL_CFLAGS@
 
 include $(MOD_DEPTH)/config/autoconf.mk
 include $(topsrcdir)/build.mk

@@ -311,6 +311,83 @@ prldap_get_socket_info( int fd, void *socketarg, PRLDAPSocketInfo *soip )
     return( LDAP_SUCCESS );
 }
 
+
+/*
+ * Function: prldap_get_default_socket_info().
+ *
+ * Given an LDAP session handle, retrieve socket specific information.
+ * If ld is NULL, LDAP_PARAM_ERROR is returned.
+ *
+ * Returns an LDAP API error code (LDAP_SUCCESS if all goes well, in
+ * which case the fields in the structure that soip points to are filled in).
+ */
+int LDAP_CALL
+prldap_get_default_socket_info( LDAP *ld, PRLDAPSocketInfo *soip )
+{
+    int rc;
+    PRLDAPIOSocketArg *prsockp;
+
+
+    if ( NULL == soip || PRLDAP_SOCKETINFO_SIZE != soip->soinfo_size ) {
+        ldap_set_lderrno( ld, LDAP_PARAM_ERROR, NULL, NULL );
+        return( LDAP_PARAM_ERROR );
+    }
+
+    if ( NULL != ld ) {
+        if ( LDAP_SUCCESS !=
+                ( rc = prldap_socket_arg_from_ld( ld, &prsockp ))) {
+            return( rc );
+        }
+    } else {
+        ldap_set_lderrno( ld, LDAP_PARAM_ERROR, NULL, NULL );
+        return( LDAP_PARAM_ERROR );
+    }
+
+    soip->soinfo_prfd = prsockp->prsock_prfd;
+    soip->soinfo_appdata = prsockp->prsock_appdata;
+
+    return( LDAP_SUCCESS );
+}
+
+
+/*
+ * Function: prldap_set_default_socket_info().
+ *
+ * Given an LDAP session handle, set socket specific information.
+ * If ld is NULL, LDAP_PARAM_ERROR is returned.
+ *
+ * Returns an LDAP API error code (LDAP_SUCCESS if all goes well, in
+ * which case the fields in the structure that soip points to are filled in).
+ */
+int LDAP_CALL
+prldap_set_default_socket_info( LDAP *ld, PRLDAPSocketInfo *soip )
+{
+    int rc;
+    PRLDAPIOSocketArg *prsockp;
+
+
+    if ( NULL == soip || PRLDAP_SOCKETINFO_SIZE != soip->soinfo_size ) {
+        ldap_set_lderrno( ld, LDAP_PARAM_ERROR, NULL, NULL );
+        return( LDAP_PARAM_ERROR );
+    }
+
+    if ( NULL != ld ) {
+        if ( LDAP_SUCCESS !=
+                ( rc = prldap_socket_arg_from_ld( ld, &prsockp ))) {
+            return( rc );
+        }
+    } else {
+        ldap_set_lderrno( ld, LDAP_PARAM_ERROR, NULL, NULL );
+        return( LDAP_PARAM_ERROR );
+    }
+
+    prsockp->prsock_prfd = soip->soinfo_prfd;
+    prsockp->prsock_appdata = soip->soinfo_appdata;
+
+    return( LDAP_SUCCESS );
+}
+
+
 /*
 * Function: prldap_import_connection().
 * 
@@ -324,7 +401,7 @@ prldap_import_connection (LDAP *ld)
 {
 	int rc = LDAP_SUCCESS; /* optimistic */
 	int shared = 1; /* Assume shared init */
-	int orig_socket = -1;
+	LBER_SOCKET orig_socket = -1;
 	PRLDAPIOSessionArg *prsessp = NULL;
 	PRLDAPIOSocketArg *prsockp = NULL;
 	PRFileDesc *pr_socket = NULL;
