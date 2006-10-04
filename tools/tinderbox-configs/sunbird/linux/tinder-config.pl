@@ -35,7 +35,7 @@ $ENV{CVS_RSH} = "ssh";
 
 #- Default values of command-line opts
 #-
-#$BuildDepend       = 1;      # Depend or Clobber
+$BuildDepend       = 0;      # Depend or Clobber
 #$BuildDebug        = 0;      # Debug or Opt (Darwin)
 #$ReportStatus      = 1;      # Send results to server, or not
 #$ReportFinalStatus = 1;      # Finer control over $ReportStatus.
@@ -44,10 +44,10 @@ $UseTimeStamp      = 0;      # Use the CVS 'pull-by-timestamp' option, or not
 #$TestOnly          = 0;      # Only run tests, don't pull/build
 #$BuildEmbed        = 0;      # After building seamonkey, go build embed app.
 #$SkipMozilla       = 0;      # Use to debug post-mozilla.pl scripts.
-#$BuildLocales      = 0;      # Do l10n packaging?
+$BuildLocales      = 1;      # Do l10n packaging?
 
 # Tests
-#$CleanProfile             = 0;
+$CleanProfile             = 1;
 #$ResetHomeDirForTests     = 1;
 $ProductName              = "Sunbird";
 $VendorName               = 'Mozilla';
@@ -72,6 +72,14 @@ $VendorName               = 'Mozilla';
 #$StartupPerformanceTest   = 0;  # Ts
 #@CompareLocaleDirs        = (); # Run compare-locales test on these directories
 # ("network","dom","toolkit","security/manager");
+@CompareLocaleDirs = (
+  "netwerk",
+  "calendar",
+  "dom",
+  "toolkit",
+  "security/manager",
+  "other-licenses/branding/sunbird",
+);
 #$CompareLocalesAviary     = 0;  # Should the compare-locales commands use the
                                 # aviary directory structure?
 
@@ -188,7 +196,7 @@ $BinaryName = 'sunbird-bin';
 
 # Release build options
 $ReleaseBuild  = 1;
-#$LocaleProduct = "browser";
+$LocaleProduct = "calendar";
 $shiptalkback  = 1;
 #$ReleaseToLatest = 1; # Push the release to latest-<milestone>?
 #$ReleaseToDated = 1; # Push the release to YYYY-MM-DD-HH-<milestone>?
