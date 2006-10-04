@@ -542,14 +542,10 @@ nsHttpResponseHead::GetExpiresValue(PRUint32 *result)
     PRTime time;
     PRStatus st = PR_ParseTimeString(val, PR_TRUE, &time);
     if (st != PR_SUCCESS) {
-        // parsing failed... maybe this is an "Expires: 0"
-        nsCAutoString buf(val);
-        buf.StripWhitespace();
-        if (buf.Length() == 1 && buf[0] == '0') {
-            *result = 0;
-            return NS_OK;
-        }
-        return NS_ERROR_NOT_AVAILABLE;
+        // parsing failed... RFC 2616 section 14.21 says we should treat this
+        // as an expiration time in the past.
+        *result = 0;
+        return NS_OK;
     }
 
     if (LL_CMP(time, <, LL_Zero()))
