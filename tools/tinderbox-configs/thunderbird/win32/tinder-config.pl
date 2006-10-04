@@ -158,7 +158,7 @@ $BinaryName = 'thunderbird.exe';
 #$ShellOverride = '';
 
 # Release build options
-$ReleaseBuild  = 0;
+$ReleaseBuild  = 1;
 $shiptalkback  = 1;
 $build_hour    = "3";
 $package_creation_path = "/mail/installer";
@@ -166,8 +166,8 @@ $package_creation_path = "/mail/installer";
 $ssh_version   = "2";
 $ssh_user      = "cltbld";
 $ssh_server    = "stage.mozilla.org";
-$ftp_path      = "/home/ftp/pub/thunderbird/nightly";
-$url_path      = "http://ftp.mozilla.org/pub/mozilla.org/thunderbird/nightly";
+$ftp_path      = "/home/ftp/pub/thunderbird/nightly/experimental/";
+$url_path      = "http://ftp.mozilla.org/pub/mozilla.org/thunderbird/nightly/experimental/";
 $tbox_ftp_path      = "/home/ftp/pub/thunderbird/tinderbox-builds";
 $tbox_url_path      = "http://ftp.mozilla.org/pub/mozilla.org/thunderbird/tinderbox-builds";
 $milestone     = "trunk";
