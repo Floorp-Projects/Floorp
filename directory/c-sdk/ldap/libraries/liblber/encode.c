@@ -574,7 +574,7 @@ ber_printf( BerElement *ber, const char *fmt, ... )
 {
 	va_list			ap;
 	char			*s, **ss;
-	struct berval	**bv;
+	struct berval	*bval, **bv;
 	int				rc, i;
 	ber_len_t		len;
 
@@ -614,6 +614,17 @@ ber_printf( BerElement *ber, const char *fmt, ... )
 			len = va_arg( ap, int );
 			rc = ber_put_ostring( ber, s, len, ber->ber_tag );
 			break;
+
+		case 'O':	/* berval octet string */
+			if( ( bval = va_arg( ap, struct berval * ) ) == NULL )
+				break;
+			if( bval->bv_len == 0 ) {
+				rc = ber_put_ostring( ber, "", 0, ber->ber_tag );
+			} else {
+				rc = ber_put_ostring( ber, bval->bv_val, bval->bv_len,
+					ber->ber_tag );
+			}
+ 			break;
 
 		case 's':	/* string */
 			s = va_arg( ap, char * );
