@@ -826,8 +826,7 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
                                         JSMSG_SYNTAX_ERROR);
             pn = NULL;
         } else {
-            fun->u.i.script = js_NewScriptFromCG(cx, &funcg, fun);
-            if (!fun->u.i.script) {
+            if (!js_NewScriptFromCG(cx, &funcg, fun)) {
                 pn = NULL;
             } else {
                 if (funcg.treeContext.flags & TCF_FUN_HEAVYWEIGHT)
