@@ -726,6 +726,10 @@ public:
     return slots ? slots->mAttributeMap.get() : nsnull;
   }
 
+  virtual void RecompileScriptEventListeners()
+  {
+  }
+
 protected:
   /**
    * Set attribute and (if needed) notify documentobservers and fire off

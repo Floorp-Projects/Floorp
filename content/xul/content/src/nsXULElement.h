@@ -573,6 +573,8 @@ public:
 
     nsresult GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
 
+    virtual void RecompileScriptEventListeners();
+
 protected:
     nsXULElement(nsINodeInfo* aNodeInfo);
     virtual ~nsXULElement(void);
