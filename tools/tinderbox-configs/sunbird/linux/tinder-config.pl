@@ -35,7 +35,7 @@ $ENV{CVS_RSH} = "ssh";
 
 #- Default values of command-line opts
 #-
-$BuildDepend       = 0;      # Depend or Clobber
+#$BuildDepend       = 1;      # Depend or Clobber
 #$BuildDebug        = 0;      # Debug or Opt (Darwin)
 #$ReportStatus      = 1;      # Send results to server, or not
 #$ReportFinalStatus = 1;      # Finer control over $ReportStatus.
@@ -147,7 +147,7 @@ $VendorName               = 'Mozilla';
 $moz_cvsroot   = ":ext:cltbld\@cvs.mozilla.org:/cvsroot";
 
 #- Set these proper values for your tinderbox server
-$Tinderbox_server = 'tinderbox-daemon@tinderbox.mozilla.org';
+#$Tinderbox_server = 'tinderbox-daemon@tinderbox.mozilla.org';
 
 # Allow for non-client builds, e.g. camino.
 #$moz_client_mk = 'client.mk';
@@ -167,7 +167,7 @@ $BuildNameExtra = 'Sb-Release';
 # Configure only, don't build.
 #$ConfigureOnly = 0;
 %WGetFiles = (
-	      "http://stage.mozilla.org/pub/mozilla.org/calendar/sunbird/nightly/latest-trunk/sunbird-0.3.en-US.linux-i686.tar.bz2 " =>
+	      "http://stage.mozilla.org/pub/mozilla.org/calendar/sunbird/nightly/latest-trunk/sunbird-0.3.en-US.linux-i686.tar.bz2" =>
 	      "/builds/tinderbox/Sb-Trunk/Linux_2.4.21-32.0.1.EL_Depend/sunbird.tar.bz2"
 	      );
 
@@ -189,7 +189,6 @@ $BuildTag = 'SUNBIRD_0_3_BRANCH';
 #$BuildConfigDir = 'mozilla/config';
 #$Topsrcdir = 'mozilla';
 
-#$BinaryName = 'mozilla-bin';
 $BinaryName = 'sunbird-bin';
 
 #
@@ -212,7 +211,7 @@ $shiptalkback  = 1;
 #$ReleaseToLatest = 1; # Push the release to latest-<milestone>?
 #$ReleaseToDated = 1; # Push the release to YYYY-MM-DD-HH-<milestone>?
 $build_hour    = "6";
-#$package_creation_path = "/xpinstall/packager";
+$package_creation_path = "/calendar/installer";
 # needs setting for mac + talkback: $mac_bundle_path = "/browser/app";
 $ssh_version   = "2";
 #$ssh_user      = "cltbld";

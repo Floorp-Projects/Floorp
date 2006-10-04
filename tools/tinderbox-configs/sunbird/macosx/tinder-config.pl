@@ -24,6 +24,7 @@ $ENV{CVS_RSH} = "ssh";
 #- PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
 #$BuildAdministrator = "$ENV{USER}\@$ENV{HOST}";
 #$BuildAdministrator = ($ENV{USER} || "cltbld") . "\@" . ($ENV{HOST} || "dhcp");
+
 #- You'll need to change these to suit your machine's needs
 #$DisplayServer = ':0.0';
 
@@ -38,7 +39,7 @@ $UseTimeStamp      = 0;      # Use the CVS 'pull-by-timestamp' option, or not
 #$TestOnly          = 0;      # Only run tests, don't pull/build
 #$BuildEmbed        = 0;      # After building seamonkey, go build embed app.
 #$SkipMozilla       = 0;      # Use to debug post-mozilla.pl scripts.
-#$BuildLocales      = 0;      # Do l10n packaging?
+$BuildLocales      = 1;      # Do l10n packaging?
 
 # Tests
 $CleanProfile             = 1;
@@ -63,7 +64,16 @@ $RunMozillaTests          = 0;  # Allow turning off of all tests if needed.
 #$QATest                   = 0;
 #$XULWindowOpenTest        = 0;  # Txul
 #$StartupPerformanceTest   = 0;  # Ts
-#@CompareLocaleDirs        = (); # Run compare-locales test on these directories# ("network","dom","toolkit","security/manager");
+#@CompareLocaleDirs        = (); # Run compare-locales test on these directories
+# ("network","dom","toolkit","security/manager");
+@CompareLocaleDirs = (
+  "netwerk",
+  "calendar",
+  "dom",
+  "toolkit",
+  "security/manager",
+  "other-licenses/branding/sunbird",
+);
 #$CompareLocalesAviary     = 0;  # Should the compare-locales commands use the
                                 # aviary directory structure?
 
@@ -146,6 +156,17 @@ $BuildNameExtra = 'Sb-Release';
 # ex: $UserComment = "ip = 208.12.36.108";
 #$UserComment = 0;
 
+
+
+# Configure only, don't build.
+#$ConfigureOnly = 0;
+%WGetFiles = (
+	      "http://stage.mozilla.org/pub/mozilla.org/calendar/sunbird/nightly/latest-trunk/sunbird-0.3.en-US.mac.dmg" =>
+	      "/builds/tinderbox/Sb-Trunk/Darwin_7.9.0_Depend/sunbird-0.3.en-US.mac.dmg"
+	      );
+
+$BuildLocalesArgs = "ZIP_IN=/builds/tinderbox/Sb-Trunk/Darwin_7.9.0_Depend/sunbird-0.3.en-US.mac.dmg";
+
 #-
 #- The rest should not need to be changed
 #-
@@ -179,7 +200,7 @@ $BinaryName = 'sunbird-bin';
 
 # Release build options
 $ReleaseBuild  = 1;
-#$LocaleProduct = "browser";
+$LocaleProduct = "calendar";
 $shiptalkback  = 1;
 #$ReleaseToLatest = 1; # Push the release to latest-<milestone>?
 #$ReleaseToDated = 1; # Push the release to YYYY-MM-DD-HH-<milestone>?
@@ -225,4 +246,3 @@ $push_raw_xpis = 0;
 # Prevent Extension Manager from spawning child processes during tests
 # - processes that tbox scripts cannot kill.
 #$ENV{NO_EM_RESTART} = '1';
-
