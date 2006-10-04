@@ -375,6 +375,8 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
       [mWindow setLevel:kCGDesktopWindowLevelKey];
     }
 
+    [mWindow setBackgroundColor:[NSColor whiteColor]];
+
     [mWindow setContentMinSize:NSMakeSize(60, 60)];
 
     [mWindow setReleasedWhenClosed:NO];
