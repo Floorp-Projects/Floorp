@@ -81,6 +81,8 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
   // nsIContentSink
   NS_IMETHOD WillBuildModel(void);
   NS_IMETHOD DidBuildModel(void);
@@ -155,6 +157,8 @@ public:
 
   nsCOMPtr<nsIDocument> mTargetDocument;
   nsRefPtr<nsNodeInfoManager> mNodeInfoManager;
+
+  nsINodeInfo* mNodeInfoCache[NS_HTML_TAG_MAX + 1];
 };
 
 static nsresult
@@ -190,14 +194,9 @@ NS_NewHTMLFragmentContentSink(nsIFragmentContentSink** aResult)
 nsHTMLFragmentContentSink::nsHTMLFragmentContentSink(PRBool aAllContent)
   : mAllContent(aAllContent),
     mProcessing(aAllContent),
-    mSeenBody(!aAllContent),
-    mIgnoreContainer(PR_FALSE),
-    mIgnoreNextCloseHead(PR_FALSE),
-    mContentStack(nsnull),
-    mText(nsnull),
-    mTextLength(0),
-    mTextSize(0)
+    mSeenBody(!aAllContent)
 {
+  // Note: operator new zeros our memory
 }
 
 nsHTMLFragmentContentSink::~nsHTMLFragmentContentSink()
@@ -216,6 +215,11 @@ nsHTMLFragmentContentSink::~nsHTMLFragmentContentSink()
   }
 
   PR_FREEIF(mText);
+
+  PRUint32 i;
+  for (i = 0; i < NS_ARRAY_LENGTH(mNodeInfoCache); ++i) {
+    NS_IF_RELEASE(mNodeInfoCache[i]);
+  }
 }
 
 NS_IMPL_ADDREF(nsHTMLFragmentContentSink)
@@ -362,13 +366,15 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
 
   nsresult result = NS_OK;
 
-  if (aNode.GetNodeType() == eHTMLTag_html) {
+  nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
+
+  if (nodeType == eHTMLTag_html) {
     return NS_OK;
   }
 
   // Ignore repeated BODY elements. The DTD is just sending them
   // to us for compatibility reasons that don't apply here.
-  if (aNode.GetNodeType() == eHTMLTag_body) {
+  if (nodeType == eHTMLTag_body) {
     if (mSeenBody) {
       return NS_OK;
     }
@@ -378,7 +384,6 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
   if (mProcessing && !mIgnoreContainer) {
     FlushText();
 
-    nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
     nsIContent *content = nsnull;
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
@@ -388,7 +393,11 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
         mNodeInfoManager->GetNodeInfo(aNode.GetText(), nsnull,
                                       kNameSpaceID_None,
                                       getter_AddRefs(nodeInfo));
-    } else {
+    }
+    else if (mNodeInfoCache[nodeType]) {
+      nodeInfo = mNodeInfoCache[nodeType];
+    }
+    else {
       nsIParserService* parserService = nsContentUtils::GetParserService();
       if (!parserService)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -398,6 +407,7 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
 
       result = mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_None,
                                              getter_AddRefs(nodeInfo));
+      NS_IF_ADDREF(mNodeInfoCache[nodeType] = nodeInfo);
     }
 
     NS_ENSURE_SUCCESS(result, result);
@@ -482,13 +492,18 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
             mNodeInfoManager->GetNodeInfo(aNode.GetText(), nsnull,
                                           kNameSpaceID_None,
                                           getter_AddRefs(nodeInfo));
-        } else {
+        }
+        else if (mNodeInfoCache[nodeType]) {
+          nodeInfo = mNodeInfoCache[nodeType];
+        }
+        else {
           nsIAtom *name = parserService->HTMLIdToAtomTag(nodeType);
           NS_ASSERTION(name, "This should not happen!");
 
           result = mNodeInfoManager->GetNodeInfo(name, nsnull,
                                                  kNameSpaceID_None,
                                                  getter_AddRefs(nodeInfo));
+          NS_IF_ADDREF(mNodeInfoCache[nodeType] = nodeInfo);
         }
 
         NS_ENSURE_SUCCESS(result, result);

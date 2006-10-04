@@ -397,6 +397,8 @@ protected:
 
   nsCOMPtr<nsIObserverEntry> mObservers;
 
+  nsINodeInfo* mNodeInfoCache[NS_HTML_TAG_MAX + 1];
+
   void StartLayout();
 
   void TryToScrollToRef();
@@ -790,7 +792,11 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
     nsCOMPtr<nsIAtom> name = do_GetAtom(tmp);
     mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_None,
                                   getter_AddRefs(nodeInfo));
-  } else {
+  }
+  else if (mNodeInfoCache[aNodeType]) {
+    nodeInfo = mNodeInfoCache[aNodeType];
+  }
+  else {
     nsIParserService *parserService = nsContentUtils::GetParserService();
     if (!parserService)
       return nsnull;
@@ -800,6 +806,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
 
     mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_None,
                                   getter_AddRefs(nodeInfo));
+    NS_IF_ADDREF(mNodeInfoCache[aNodeType] = nodeInfo);
   }
 
   NS_ENSURE_TRUE(nodeInfo, nsnull);
@@ -1828,7 +1835,8 @@ HTMLContentSink::~HTMLContentSink()
     mContextStack.RemoveElementAt(--numContexts);
   }
 
-  for (PRInt32 i = 0; i < numContexts; i++) {
+  PRInt32 i;
+  for (i = 0; i < numContexts; i++) {
     SinkContext* sc = (SinkContext*)mContextStack.ElementAt(i);
     if (sc) {
       sc->End();
@@ -1847,6 +1855,10 @@ HTMLContentSink::~HTMLContentSink()
   delete mCurrentContext;
 
   delete mHeadContext;
+
+  for (i = 0; i < NS_ARRAY_LENGTH(mNodeInfoCache); ++i) {
+    NS_IF_RELEASE(mNodeInfoCache[i]);
+  }
 }
 
 #if DEBUG
