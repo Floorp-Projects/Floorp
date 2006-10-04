@@ -4439,13 +4439,16 @@ nsresult nsImapMailFolder::HandleCustomFlags(nsMsgKey uidOfMessage, nsIMsgDBHdr 
 {
   PRBool messageClassified = PR_TRUE;
   nsXPIDLCString::const_iterator b, e;
-  if (FindInReadable(NS_LITERAL_CSTRING("NonJunk"), keywords.BeginReading(b), keywords.EndReading(e)))
+  if (FindInReadable(NS_LITERAL_CSTRING("NonJunk"), keywords.BeginReading(b), 
+                      keywords.EndReading(e), nsCaseInsensitiveCStringComparator()))
     mDatabase->SetStringProperty(uidOfMessage, "junkscore", "0");
   // Mac Mail uses "NotJunk"
-  else if (FindInReadable(NS_LITERAL_CSTRING("NotJunk"), keywords.BeginReading(b), keywords.EndReading(e)))
+  else if (FindInReadable(NS_LITERAL_CSTRING("NotJunk"), keywords.BeginReading(b), 
+                        keywords.EndReading(e), nsCaseInsensitiveCStringComparator()))
     mDatabase->SetStringProperty(uidOfMessage, "junkscore", "0");
   // ### TODO: we really should parse the keywords into space delimited keywords before checking
-  else if (FindInReadable(NS_LITERAL_CSTRING("Junk"), keywords.BeginReading(b), keywords.EndReading(e)))
+  else if (FindInReadable(NS_LITERAL_CSTRING("Junk"), keywords.BeginReading(b), 
+                          keywords.EndReading(e), nsCaseInsensitiveCStringComparator()))
   {
     PRUint32 newFlags;
     dbHdr->AndFlags(~MSG_FLAG_NEW, &newFlags);
