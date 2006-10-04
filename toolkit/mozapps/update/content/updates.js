@@ -47,7 +47,7 @@ const PREF_UPDATE_NAGTIMER_DL       = "app.update.nagTimer.download";
 const PREF_UPDATE_NAGTIMER_RESTART  = "app.update.nagTimer.restart";
 const PREF_APP_UPDATE_LOG_BRANCH    = "app.update.log.";
 const PREF_UPDATE_TEST_LOOP         = "app.update.test.loop";
-const PREF_UPDATE_NEVER_BRANCH      = "app.update.never."
+const PREF_UPDATE_NEVER_BRANCH      = "app.update.never.";
 
 const UPDATE_TEST_LOOP_INTERVAL     = 2000;
 
