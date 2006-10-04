@@ -47,11 +47,6 @@
 #endif
 #endif
 
-// Some versions of glibc (i.e., the one that comes with RedHat 6.0 rather
-// than 6.1) seem to do things a bit differently when libpthread is involved.
-// If things don't work for you, try defining this:
-//#define JPROF_PTHREAD_HACK
-
 #include <errno.h>
 #if defined(linux)
 #include <linux/rtc.h>
@@ -66,6 +61,7 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
+#include <ucontext.h>
 
 #include "libmalloc.h"
 #include "jprof.h"
@@ -90,32 +86,33 @@ static int enableRTCSignals(bool enable);
 
 //----------------------------------------------------------------------
 
-#if defined(i386) || defined(_i386)
-static void CrawlStack(malloc_log_entry* me, void* frame_ptr, char* first)
+#if defined(i386) || defined(_i386) || defined(__x86_64__)
+static void CrawlStack(malloc_log_entry* me,
+                       void* stack_top, void* top_instr_ptr)
 {
-  void** bp = (void**)frame_ptr;
+  void **bp;
+#if defined(__i386)
+  __asm__( "movl %%ebp, %0" : "=g"(bp));
+#elif defined(__x86_64__)
+  __asm__( "movq %%rbp, %0" : "=g"(bp));
+#else
+  // It would be nice if this worked uniformly, but at least on i386 and
+  // x86_64, it stopped working with gcc 4.1, because it points to the
+  // end of the saved registers instead of the start.
+  bp = __builtin_frame_address(0);
+#endif
   u_long numpcs = 0;
 
-#ifdef JPROF_PTHREAD_HACK
-  int skip = 3;
-#else
-  me->pcs[numpcs++] = first;
+  me->pcs[numpcs++] = (char*) top_instr_ptr;
 
-  // skip 2 frames: StackHook, __restore_rt.
-  // The next frame is the frame _above_ |first|.
-  int skip = 2;
-#endif
   while (numpcs < MAX_STACK_CRAWL) {
     void** nextbp = (void**) *bp++;
     void* pc = *bp;
-#ifdef JPROF_PTHREAD_HACK
-    if ((pc < 0x08000000) || ((pc > 0x7fffffff) && (skip <= 0)) || (nextbp < bp)) {
-#else
-    if ((nextbp < bp)) {
-#endif
+    if (nextbp < bp) {
       break;
     }
-    if (--skip < 0) {
+    if (bp > stack_top) {
+      // Skip the signal handling.
       me->pcs[numpcs++] = (char*) pc;
     }
     bp = nextbp;
@@ -173,25 +170,14 @@ static void EndProfilingHook(int signum)
 //----------------------------------------------------------------------
 
 static void
-Log(u_long aTime, char *first)
+Log(u_long aTime, void* stack_top, void* top_instr_ptr)
 {
   // Static is simply to make debugging tollerable
   static malloc_log_entry me;
 
   me.delTime = aTime;
 
-  void *bp;
-#if defined(__i386) 
-  __asm__( "movl %%ebp, %0" : "=g"(bp));
-#elif defined(__x86_64__)
-  __asm__( "movq %%rbp, %0" : "=g"(bp));
-#else
-  // It would be nice if this worked uniformly, but at least on i386 and
-  // x86_64, it stopped working with gcc 4.1, because it points to the
-  // end of the saved registers instead of the start.
-  bp = __builtin_frame_address(0);
-#endif
-  CrawlStack(&me, bp, first);
+  CrawlStack(&me, stack_top, top_instr_ptr);
 
 #ifndef NTO
   write(gLogFD, &me, offsetof(malloc_log_entry, pcs) + me.numpcs*sizeof(char*));
@@ -298,7 +284,7 @@ static int enableRTCSignals(bool enable)
 static void StackHook(
 int signum,
 siginfo_t *info,
-void *mystry)
+void *ucontext)
 {
     static struct timeval tFirst;
     static int first=1;
@@ -337,16 +323,13 @@ void *mystry)
         }
     }
 
-#ifdef JPROF_PTHREAD_HACK
-    Log(millisec, NULL);
+    gregset_t &gregs = ((ucontext_t*)ucontext)->uc_mcontext.gregs;
+#ifdef __x86_64__
+    Log(millisec, (void*)gregs[REG_RSP], (void*)gregs[REG_RIP]);
 #else
-    // The mystry[19] thing is a hack to figure out where we were called from.
-    // By playing around with the debugger it looks like [19] contains the
-    // information I need.
-    // it's really ((ucontext_t *)mystry)->uc_mcontext.gregs[14] which is
-    // the EIP register when the handler was called
-    Log(millisec, ((char**)mystry)[19]);
+    Log(millisec, (void*)gregs[REG_ESP], (void*)gregs[REG_EIP]);
 #endif
+
     if (!rtcHz)
         startSignalCounter(timerMiliSec);
 }

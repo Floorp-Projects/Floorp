@@ -241,11 +241,12 @@ void leaky::open()
 //----------------------------------------------------------------------
 
 
-static ptrdiff_t symbolOrder(void const* a, void const* b)
+static int symbolOrder(void const* a, void const* b)
 {
   Symbol const* ap = (Symbol const *)a;
   Symbol const* bp = (Symbol const *)b;
-  return ap->address - bp->address;
+  ptrdiff_t diff = ap->address - bp->address;
+  return (diff == 0) ? 0 : ((diff > 0) ? 1 : -1);
 }
 
 void leaky::ReadSharedLibrarySymbols()
