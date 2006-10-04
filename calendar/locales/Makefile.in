@@ -161,7 +161,7 @@ repackage-zip: $(ZIP_IN)
 	  $(STAGEDIST)/chrome/calendar-en-US.manifest \
 	  $(STAGEDIST)/defaults/pref/sunbird-l10n.js
 	$(RM) -r $(STAGEDIST)/defaults/profile \
-	  $(STAGEDIST)/chrome/en-US
+	  $(STAGEDIST)/chrome/en-US \
 	  $(STAGEDIST)/chrome/calendar-en-US
 	$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
 	$(MAKE) libs-$(AB_CD)
