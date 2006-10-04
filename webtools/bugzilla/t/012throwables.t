@@ -19,6 +19,7 @@
 # Rights Reserved.
 # 
 # Contributor(s): Dennis Melentyev <dennis.melentyev@infopulse.com.ua>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 
 
 
@@ -29,6 +30,8 @@
 use strict;
 
 use lib 't';
+
+use Bugzilla::WebService::Constants;
 
 use File::Spec;
 use Support::Files;
@@ -63,8 +66,8 @@ foreach my $include_path (@include_paths) {
     }
 }
 
-# Count the tests
-my $tests = (scalar keys %test_modules) + (scalar keys %test_templates);
+# Count the tests. The +1 is for checking the WS_ERROR_CODE errors.
+my $tests = (scalar keys %test_modules) + (scalar keys %test_templates) + 1;
 exit 0 if !$tests;
 
 # Set requested tests counter.
@@ -162,10 +165,26 @@ foreach my $errtype (keys %Errors) {
     }
 }
 
+# And make sure that everything defined in WS_ERROR_CODE
+# is actually a valid error.
+foreach my $err_name (keys %{WS_ERROR_CODE()}) {
+    if (!defined $Errors{'code'}{$err_name} 
+        && !defined $Errors{'user'}{$err_name})
+    {
+        Register(\%test_modules, 'WS_ERROR_CODE',
+            "Error tag '$err_name' is used in WS_ERROR_CODE in"
+            . " Bugzilla/WebService/Constants.pm"
+            . " but not defined in any template, and not used in any code.");
+    }
+}
+
 # Now report modules results
 foreach my $file (sort keys %test_modules) {
     Report($file, @{$test_modules{$file}});
 }
+
+# And report WS_ERROR_CODE results
+Report('WS_ERROR_CODE', @{$test_modules{'WS_ERROR_CODE'}});
 
 # Now report templates results
 foreach my $file (sort keys %test_templates) {

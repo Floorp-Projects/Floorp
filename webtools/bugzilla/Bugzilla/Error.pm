@@ -81,16 +81,21 @@ sub _throw_error {
         $template->process($name, $vars)
           || ThrowTemplateError($template->error());
     }
-    elsif (Bugzilla->error_mode == ERROR_MODE_DIE) {
+    else {
         my $message;
         $template->process($name, $vars, \$message)
           || ThrowTemplateError($template->error());
-        die("$message\n");
-    }
-    elsif (Bugzilla->error_mode == ERROR_MODE_DIE_SOAP_FAULT) {
-        die SOAP::Fault
-            ->faultcode(ERROR_GENERAL)
-            ->faultstring($error);
+        if (Bugzilla->error_mode == ERROR_MODE_DIE) {
+            die("$message\n");
+        }
+        elsif (Bugzilla->error_mode == ERROR_MODE_DIE_SOAP_FAULT) {
+            my $code = WS_ERROR_CODE->{$error};
+            if (!$code) {
+                $code = ERROR_UNKNOWN_FATAL if $name =~ /code/i;
+                $code = ERROR_UNKNOWN_TRANSIENT if $name =~ /user/i;
+            }
+            die SOAP::Fault->faultcode($code)->faultstring($message);
+        }
     }
     exit;
 }

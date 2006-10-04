@@ -13,6 +13,7 @@
 # The Original Code is the Bugzilla Bug Tracking System.
 #
 # Contributor(s): Marc Schumann <wurblzap@gmail.com>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 
 package Bugzilla::WebService;
 
@@ -75,3 +76,39 @@ Certain parts of a method's description may be marked as B<UNSTABLE>,
 in which case those parts are not guaranteed to stay the same between
 Bugzilla versions.
 
+=head1 ERRORS
+
+If a particular webservice call fails, it will throw a standard XML-RPC
+error. There will be a numeric error code, and then the description
+field will contain descriptive text of the error. Each error that Bugzilla
+can throw has a specific code that will not change between versions of
+Bugzilla.
+
+The various errors that functions can throw are specified by the
+documentation of those functions.
+
+If your code needs to know what error Bugzilla threw, use the numeric
+code. Don't try to parse the description, because that may change
+from version to version of Bugzilla.
+
+Note that if you display the error to the user in an HTML program, make
+sure that you properly escape the error, as it will not be HTML-escaped.
+
+=head2 Transient vs. Fatal Errors
+
+If the error code is a number greater than 0, the error is considered
+"transient," which means that it was an error made by the user, not
+some problem with Bugzilla itself.
+
+If the error code is a number less than 0, the error is "fatal," which
+means that it's some error in Bugzilla itself that probably requires
+administrative attention.
+
+Negative numbers and positive numbers don't overlap. That is, if there's
+an error 302, there won't be an error -302.
+
+=head2 Unknown Errors
+
+Sometimes a function will throw an error that doesn't have a specific
+error code. In this case, the code will be C<-32000> if it's a "fatal"
+error, and C<32000> if it's a "transient" error.
