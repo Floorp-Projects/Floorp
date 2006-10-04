@@ -162,6 +162,17 @@ $BuildNameExtra = 'Sb-Release';
 # ex: $UserComment = "ip = 208.12.36.108";
 #$UserComment = 0;
 
+
+
+# Configure only, don't build.
+$ConfigureOnly = 1;
+%WGetFiles = (
+	      "http://stage.mozilla.org/pub/mozilla.org/calendar/sunbird/nightly/latest-trunk/sunbird-0.3.en-US.linux-i686.tar.bz2 " =>
+	      "/builds/tinderbox/Sb-Trunk/Linux_2.4.21-32.0.1.EL_Depend/sunbird.tar.bz2"
+	      );
+
+$BuildLocalesArgs = "ZIP_IN=/builds/tinderbox/Sb-Trunk/Linux_2.4.21-32.0.1.EL_Depend/sunbird.tar.bz2";
+
 #-
 #- The rest should not need to be changed
 #-
