@@ -221,8 +221,9 @@ sub LookupNamedQuery {
     $name || ThrowUserError("query_name_missing");
     trick_taint($name);
     if ($sharer_id) {
-        trick_taint($sharer_id);
         $owner_id = $sharer_id;
+        detaint_natural($owner_id);
+        $owner_id || ThrowUserError('illegal_user_id', {'userid' => $sharer_id});
     }
     else {
         $owner_id = $user->id;

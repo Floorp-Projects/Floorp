@@ -966,7 +966,7 @@
     [% docslinks = {'query.html' => "Searching for $terms.bugs",
                     'list.html'  => "$terms.Bug lists"} %]
     The search named <em>[% queryname FILTER html %]</em>
-    [% IF sharer_id %]
+    [% IF sharer_id && sharer_id != user.id %]
       has not been made visible to you.
     [% ELSE %]
       does not exist.
@@ -1521,8 +1521,10 @@
   # search from any error call location. %]
 
 [% namedcmd = Bugzilla.cgi.param("namedcmd") %]
+[% sharer_id = Bugzilla.cgi.param("sharer_id") %]
 [% IF namedcmd AND error != "missing_query" 
-               AND error != "saved_search_used_by_whines" %]
+               AND error != "saved_search_used_by_whines"
+               AND !sharer_id %]
   <p>  
     Alternatively, you can    
     <a href="buglist.cgi?cmdtype=dorem&amp;remaction=forget&amp;namedcmd=
