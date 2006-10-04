@@ -84,16 +84,23 @@ sub AUTOLOAD {
     
     my $col = $self->find_column($name);
     if (!$col) {
-        internalError("tried to call Litmus::DBI method $name which does not exist");
+        lastDitchError("tried to call Litmus::DBI method $name which does not exist");
     }
     
     return $self->$col(@args);
 }
-        
+
+# DBI error handler for SQL errors:        
 sub _croak {
 	my ($self, $message, %info) = @_;
-	internalError($message);
+	lastDitchError($message);
 	return;
+}
+
+sub lastDitchError($) {
+    my $message = shift;
+    print "Error - Litmus has suffered a serious fatal internal error - $message";
+    exit;
 }
 
 # Get Class::DBI's default dbh options
