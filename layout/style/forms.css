@@ -617,7 +617,9 @@ select[size="1"] {
   painted as part of the menulist. */
 select > input[type="button"],
 select > input[type="button"]:active {
-  background-image: none !important;
+  background: transparent !important;
+  -moz-appearance: none !important;
+  border: none !important;
 }
 
 option[disabled],
