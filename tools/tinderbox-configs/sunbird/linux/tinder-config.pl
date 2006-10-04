@@ -148,6 +148,7 @@ $moz_cvsroot   = ":ext:cltbld\@cvs.mozilla.org:/cvsroot";
 
 #- Set these proper values for your tinderbox server
 #$Tinderbox_server = 'tinderbox-daemon@tinderbox.mozilla.org';
+$Tinderbox_server = 'lilmatt@mozilla.com';
 
 # Allow for non-client builds, e.g. camino.
 #$moz_client_mk = 'client.mk';
