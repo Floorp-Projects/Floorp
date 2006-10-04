@@ -147,8 +147,7 @@ $VendorName               = 'Mozilla';
 $moz_cvsroot   = ":ext:cltbld\@cvs.mozilla.org:/cvsroot";
 
 #- Set these proper values for your tinderbox server
-#$Tinderbox_server = 'tinderbox-daemon@tinderbox.mozilla.org';
-$Tinderbox_server = 'lilmatt@mozilla.com';
+$Tinderbox_server = 'tinderbox-daemon@tinderbox.mozilla.org';
 
 # Allow for non-client builds, e.g. camino.
 #$moz_client_mk = 'client.mk';
@@ -166,7 +165,7 @@ $BuildNameExtra = 'Sb-Release';
 
 
 # Configure only, don't build.
-$ConfigureOnly = 1;
+#$ConfigureOnly = 0;
 %WGetFiles = (
 	      "http://stage.mozilla.org/pub/mozilla.org/calendar/sunbird/nightly/latest-trunk/sunbird-0.3.en-US.linux-i686.tar.bz2 " =>
 	      "/builds/tinderbox/Sb-Trunk/Linux_2.4.21-32.0.1.EL_Depend/sunbird.tar.bz2"
