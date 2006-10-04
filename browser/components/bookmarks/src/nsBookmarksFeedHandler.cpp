@@ -784,12 +784,14 @@ nsFeedLoadListener::TryParseAsSimpleRSS ()
                                 rv = FindTextInChildNodes(childNode, titleStr);
                             }
                             if (NS_FAILED(rv)) break;
-                        } else if (childNname.Equals(NS_LITERAL_STRING("pubDate")) ||
-                                   childNname.Equals(NS_LITERAL_STRING("updated")))
+                        } else if (dateStr.IsEmpty() &&
+                                   (childNname.Equals(NS_LITERAL_STRING("pubDate")) ||
+                                    childNname.Equals(NS_LITERAL_STRING("updated"))))
                         {
                             rv = FindTextInChildNodes (childNode, dateStr);
                             if (NS_FAILED(rv)) break;
-                        } else if (!isAtom && childNname.Equals(NS_LITERAL_STRING("guid"))) {
+                        } else if (!isAtom && childNname.Equals(NS_LITERAL_STRING("guid")) &&
+                                   linkStr.IsEmpty()) {
                             nsCOMPtr<nsIDOMElement> linkElem = do_QueryInterface(childNode);
                             if (!linkElem) break; // out of while(childNode) loop
                             
