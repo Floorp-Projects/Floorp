@@ -138,12 +138,12 @@ my $proxy = XMLRPC::Lite->proxy($Bugzilla_uri,
 =head2 Checking Bugzilla's version
 
 To make sure the Bugzilla you're connecting to supports the methods you wish to
-call, you may want to compare the result of C<Bugzilla.get_version> to the
+call, you may want to compare the result of C<Bugzilla.version> to the
 minimum required version your application needs.
 
 =cut
 
-$soapresult = $proxy->call('Bugzilla.get_version');
+$soapresult = $proxy->call('Bugzilla.version');
 _die_on_fault($soapresult);
 print 'Connecting to a Bugzilla of version ' . $soapresult->result() . ".\n";
 
