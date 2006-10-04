@@ -366,6 +366,10 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
     nodeInfo = newNodeInfo;
   }
 
+  nsGenericElement *elem = aNode->IsNodeOfType(nsINode::eELEMENT) ?
+                           NS_STATIC_CAST(nsGenericElement*, aNode) :
+                           nsnull;
+
   nsCOMPtr<nsINode> clone;
   if (aClone) {
     rv = aNode->Clone(nodeInfo, getter_AddRefs(clone));
@@ -390,6 +394,10 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
   else if (nodeInfoManager) {
     aNode->mNodeInfo.swap(newNodeInfo);
 
+    if (elem) {
+      elem->RecompileScriptEventListeners();
+    }
+
     if (aCx) {
       nsIXPConnect *xpc = nsContentUtils::XPConnect();
       if (xpc) {
@@ -405,9 +413,8 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
     }
   }
 
-  if (aNode->IsNodeOfType(nsINode::eELEMENT)) {
+  if (elem) {
     // aNode's attributes.
-    nsGenericElement *elem = NS_STATIC_CAST(nsGenericElement*, aNode);
     const nsDOMAttributeMap *map = elem->GetAttributeMap();
     if (map) {
       nsCOMPtr<nsIDOMElement> element;
