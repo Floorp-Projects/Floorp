@@ -55,10 +55,10 @@ $UseTimeStamp      = 0;      # Use the CVS 'pull-by-timestamp' option, or not
 #$TestOnly          = 0;      # Only run tests, don't pull/build
 #$BuildEmbed        = 0;      # After building seamonkey, go build embed app.
 #$SkipMozilla       = 0;      # Use to debug post-mozilla.pl scripts.
-#$BuildLocales      = 0;      # Do l10n packaging?
+$BuildLocales      = 1;      # Do l10n packaging?
 
 # Tests
-#$CleanProfile             = 0;
+$CleanProfile             = 1;
 #$ResetHomeDirForTests     = 1;
 $ProductName              = "Sunbird";
 $VendorName               = 'Mozilla';
@@ -69,10 +69,10 @@ $VendorName               = 'Mozilla';
 #$JavaTest                 = 0;
 #$ViewerTest               = 0;
 #$BloatTest                = 0;  # warren memory bloat test
-$BloatTest2                = 0;  # dbaron memory bloat test, require tracemalloc
+#$BloatTest2               = 0;  # dbaron memory bloat test, require tracemalloc
 #$DomToTextConversionTest  = 0;  
 #$XpcomGlueTest            = 0;
-$CodesizeTest              = 1;  # Z,  require mozilla/tools/codesighs
+$CodesizeTest             = 1;  # Z,  require mozilla/tools/codesighs
 #$EmbedCodesizeTest        = 0;  # mZ, require mozilla/tools/codesigns
 #$MailBloatTest            = 0;
 #$EmbedTest                = 0;  # Assumes you wanted $BuildEmbed=1
@@ -83,10 +83,18 @@ $CodesizeTest              = 1;  # Z,  require mozilla/tools/codesighs
 #$StartupPerformanceTest   = 0;  # Ts
 #@CompareLocaleDirs        = (); # Run compare-locales test on these directories
 # ("network","dom","toolkit","security/manager");
+@CompareLocaleDirs = (
+  "netwerk",
+  "calendar",
+  "dom",
+  "toolkit",
+  "security/manager",
+  "other-licenses/branding/sunbird",
+);
 #$CompareLocalesAviary     = 0;  # Should the compare-locales commands use the
                                 # aviary directory structure?
 
-$TestsPhoneHome            = 1;  # Should test report back to server?
+$TestsPhoneHome           = 1;  # Should test report back to server?
 
 # $results_server
 #----------------------------------------------------------------------------
@@ -165,6 +173,16 @@ $BuildNameExtra = 'Sb-Nightly';
 # ex: $UserComment = "ip = 208.12.36.108";
 #$UserComment = 0;
 
+# Configure only, don't build.
+#$ConfigureOnly = 0;
+%WGetFiles = (
+	      "http://stage.mozilla.org/pub/mozilla.org/calendar/sunbird/nightly/latest-trunk/sunbird-0.3.en-US.win32.zip" =>
+	      "/cygdrive/d/builds/tinderbox/Sunbird-Trunk/WINNT_5.2_Depend/sunbird.zip"
+	      "http://stage.mozilla.org/pub/mozilla.org/calendar/sunbird/nightly/latest-trunk/sunbird-0.3.en-US.win32.installer.exe" =>
+	      "/cygdrive/d/builds/tinderbox/Sunbird-Trunk/WINNT_5.2_Depend/sunbird-installer.exe"
+	      );
+
+$BuildLocalesArgs = "ZIP_IN=/cygdrive/d/builds/tinderbox/Sunbird-Trunk/WINNT_5.2_Depend/sunbird.zip WIN32_INSTALLER_IN=/cygdrive/d/builds/tinderbox/Sunbird-Trunk/WINNT_5.2_Depend/sunbird-installer.exe";
 #-
 #- The rest should not need to be changed
 #-
