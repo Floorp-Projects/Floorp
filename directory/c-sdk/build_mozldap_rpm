@@ -79,9 +79,9 @@ CVSROOT=:pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
 export CVSROOT
 
 # define the remaining variables
-PACKAGE=mozldap
-VERSION=5.17
-RELEASE=3
+PACKAGE=mozldap6
+VERSION=6.0.0
+RELEASE=1
 MOZLDAP_TAG=HEAD
 #MOZLDAP_TAG=LDAPCSDK_5_1_7_RTM
 PRJ=${PACKAGE}-${VERSION}
@@ -143,22 +143,31 @@ fi
 echo "Finished."
 
 # check out MOZLDAP code
-echo "Checking out MOZLDAP source code . . ."
-cvs -z3 export -r ${MOZLDAP_TAG} -d ${PRJ} -N DirectorySDKSourceC
-echo "Finished."
+#echo "Checking out MOZLDAP source code . . ."
+#cvs -z3 export -r ${MOZLDAP_TAG} -d ${PRJ} -N DirectorySDKSourceC
+#echo "Finished."
+
+mkdir -p /tmp/${PRJ}/mozilla/directory
+ln -s ~/mozilla/directory/c-sdk /tmp/${PRJ}/mozilla/directory/c-sdk
 
 # create a tarball from the checked out code
-echo "Creating tarball of MOZLDAP source code . . ."
-tar cf - ${PRJ} | gzip > SOURCES/${PRJ}.tar.gz
-echo "Finished."
+#echo "Creating tarball of MOZLDAP source code . . ."
+#tar cf - ${PRJ} | gzip > SOURCES/${PRJ}.tar.gz
+#echo "Finished."
+
+savedir=`pwd`
+cd /tmp
+tar chf - ${PRJ} | ( cd $savedir ; gzip > SOURCES/${PRJ}.tar.gz )
+rm -rf /tmp/${PRJ}
+cd $savedir
 
 # remove the checked out code
-echo "Removing checked out MOZLDAP source code . . ."
-rm -rf ${PRJ}
-echo "Finished."
+#echo "Removing checked out MOZLDAP source code . . ."
+#rm -rf ${PRJ}
+#echo "Finished."
 
 # create a spec file from the MOZLDAP template
-cp ${SPEC_FILENAME} SPECS/${SPEC_FILENAME}
+cp mozldap.spec SPECS/${SPEC_FILENAME}
 
 # build the ${BITSIZE} RPM and Source RPM
 echo "Executing ${BITSIZE} rpmbuild of ${SPEC_FILENAME} file . . . "

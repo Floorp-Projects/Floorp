@@ -55,9 +55,9 @@
 # EXTRACFLAGS=
 # EXTRALDFLAGS=-lsocket -lnsl 
 # EXTRANSPRLDFLAGS=-mt
-# SLDAPLIB=ldap50 -lssldap50 -lssl3 -lnss3 
-# LDAPLIB=ldap50
-# LDAPPRLIB=prldap50
+# SLDAPLIB=ldap60 -lssldap60 -lssl3 -lnss3 
+# LDAPLIB=ldap60
+# LDAPPRLIB=prldap60
 # NSPRLIB=nspr4
 # CC=cc
 
@@ -65,18 +65,18 @@
 #EXTRACFLAGS=
 #EXTRALDFLAGS=-lsocket -lnsl 
 #EXTRANSPRLDFLAGS=-mt
-#SLDAPLIB=ldap50 -lssldap50 -lssl3 -lnss3 
-#LDAPLIB=ldap50
-#LDAPPRLIB=prldap50
+#SLDAPLIB=ldap60 -lssldap60 -lssl3 -lnss3 
+#LDAPLIB=ldap60
+#LDAPPRLIB=prldap60
 #NSPRLIB=nspr4
 #CC=cc -xarch=v9
 
 # For HP/UX (32 bit)
 #EXTRACFLAGS=-Dhpux -D_HPUX_SOURCE -D_REENTRANT -Aa
 #EXTRALDFLAGS=-Wl,+s+b
-#SLDAPLIB=ldap50 -lssldap50 -lssl3 -lnss3 
-#LDAPLIB=ldap50
-#LDAPPRLIB=prldap50
+#SLDAPLIB=ldap60 -lssldap60 -lssl3 -lnss3 
+#LDAPLIB=ldap60
+#LDAPPRLIB=prldap60
 #NSPRLIB=nspr4
 #CC=cc
 
@@ -84,9 +84,9 @@
 #EXTRACFLAGS=-DHPUX11 -DIS_64 +e +DA2.0W +DChpux +DS2.0 
 #EXTRACFLAGS+=-D_LARGEFILE64_SOURCE -D_PR_HAVE_OFF64_T
 #EXTRALDFLAGS=-lpthread +DA2.0W +DS2.0
-#SLDAPLIB=ldap50 -lssldap50 -lssl3 -lnss3 
-#LDAPLIB=ldap50
-#LDAPPRLIB=prldap50
+#SLDAPLIB=ldap60 -lssldap60 -lssl3 -lnss3 
+#LDAPLIB=ldap60
+#LDAPPRLIB=prldap60
 #NSPRLIB=nspr4
 #CC=/opt/ansic/bin/cc
 
@@ -94,36 +94,36 @@
 # For IRIX
 #EXTRACFLAGS=
 #EXTRALDFLAGS=
-#SLDAPLIB=ldap50 -lssldap50 -lssl3 -lnss3 
-#LDAPLIB=ldap50
-#LDAPPRLIB=prldap50
+#SLDAPLIB=ldap60 -lssldap60 -lssl3 -lnss3 
+#LDAPLIB=ldap60
+#LDAPPRLIB=prldap60
 #NSPRLIB=nspr4
 #CC=cc
 
 # For AIX
 #EXTRACFLAGS=
 #EXTRALDFLAGS=-brtl
-#SLDAPLIB=ldap50 -lssldap50 -lssl3 -lnss3 
-#LDAPLIB=ldap50
-#LDAPPRLIB=prldap50
+#SLDAPLIB=ldap60 -lssldap60 -lssl3 -lnss3 
+#LDAPLIB=ldap60
+#LDAPPRLIB=prldap60
 #NSPRLIB=nspr4
 #CC=cc
 
 # For Digital UNIX 4.0
 #EXTRACFLAGS=
 #EXTRALDFLAGS=-taso -rpath ../lib
-#SLDAPLIB=ldap50 -lssldap50 -lssl3 -lnss3 
-#LDAPLIB=ldap50
-#LDAPPRLIB=prldap50
+#SLDAPLIB=ldap60 -lssldap60 -lssl3 -lnss3 
+#LDAPLIB=ldap60
+#LDAPPRLIB=prldap60
 #NSPRLIB=nspr4
 #CC=cc
 
 # For Linux 2.2
 EXTRACFLAGS=-I/usr/include/sasl -I/usr/include/nspr4
 EXTRALDFLAGS=-lsasl2 -lpthread
-LDAPLIB=ldapssl50
-LDAPLIB=ldap50
-LDAPPRLIB=prldap50
+LDAPLIB=ldapssl60
+LDAPLIB=ldap60
+LDAPPRLIB=prldap60
 NSPRLIB=nspr4
 CC=gcc
 

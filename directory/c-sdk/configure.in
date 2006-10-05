@@ -566,7 +566,29 @@ if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
-if test "$target" = "$host"; then
+dnl NOTE that according to the latest autoconf 2.5x manual
+dnl "Now, configure enters cross-compilation mode if and only if `--host' is passed."
+dnl However, the mozilla build system expects us to assume different target and host
+dnl means cross compiling.  But, %configure in many linux RPM build systems sets the
+dnl following:
+dnl ./configure --build=i686-redhat-linux-gnu --host=i686-redhat-linux-gnu --target=i386-redhat-linux-gnu ...
+dnl which means that the system is an i686, but we want to produce code which will run on i386 - in
+dnl this case, we _do not_ want to cross compile
+dnl So, additional logic:
+dnl if $host = $build, do not cross compile
+dnl otherwise, cross compile if host is given
+cross_compiling=no
+dnl host must be specified to cross compile
+if test -n "$host" ; then
+dnl host == build - do not cross compile
+    if test "$host" = "$build" ; then
+        cross_compiling=no
+dnl host != build or host != target - do cross compile
+    elif test "$host" != "$target" -o "$host" != "$build" ; then
+        cross_compiling=yes
+    fi
+fi
+if test "$cross_compiling" = "no"; then
     AC_PROG_CXX
     if test "$CXX" = "cl" -a -z "$CC"; then
         CC=$CXX
@@ -588,7 +610,6 @@ if test "$target" = "$host"; then
     fi
 else
     echo "cross compiling from $host to $target"
-    cross_compiling=yes
 
     _SAVE_CC="$CC"
     _SAVE_CFLAGS="$CFLAGS"

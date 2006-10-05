@@ -127,8 +127,8 @@ BSC32_SBRS= \
 	
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
-# ADD LINK32 nsldapssl32v30.lib /nologo /subsystem:windows /machine:I386
-LINK32_FLAGS=nsldapssl32v30.lib /nologo /subsystem:windows /incremental:no\
+# ADD LINK32 nsldapssl32v60.lib /nologo /subsystem:windows /machine:I386
+LINK32_FLAGS=nsldapssl32v60.lib /nologo /subsystem:windows /incremental:no\
  /pdb:"$(OUTDIR)/winldap.pdb" /machine:I386 /out:"$(OUTDIR)/winldap.exe" 
 LINK32_OBJS= \
 	"$(INTDIR)\ConnDlg.obj" \
@@ -204,8 +204,8 @@ BSC32_SBRS= \
 	
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386
-# ADD LINK32 nsldapssl32v30.lib /nologo /subsystem:windows /debug /machine:I386
-LINK32_FLAGS=nsldapssl32v30.lib /nologo /subsystem:windows /incremental:yes\
+# ADD LINK32 nsldapssl32v60.lib /nologo /subsystem:windows /debug /machine:I386
+LINK32_FLAGS=nsldapssl32v60.lib /nologo /subsystem:windows /incremental:yes\
  /pdb:"$(OUTDIR)/winldap.pdb" /debug /machine:I386 /out:"$(OUTDIR)/winldap.exe" 
 LINK32_OBJS= \
 	"$(INTDIR)\ConnDlg.obj" \
