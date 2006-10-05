@@ -156,16 +156,14 @@ $BuildNameExtra = 'Sb-Release';
 # ex: $UserComment = "ip = 208.12.36.108";
 #$UserComment = 0;
 
-
-
 # Configure only, don't build.
 #$ConfigureOnly = 0;
 %WGetFiles = (
 	      "http://stage.mozilla.org/pub/mozilla.org/calendar/sunbird/nightly/latest-trunk/sunbird-0.3.en-US.mac.dmg" =>
-	      "/builds/tinderbox/Sb-Trunk/Darwin_7.9.0_Depend/sunbird-0.3.en-US.mac.dmg"
+	      "/builds/tinderbox/Sb-Trunk/Darwin_7.9.0_Depend/sunbird.dmg"
 	      );
 
-$BuildLocalesArgs = "ZIP_IN=/builds/tinderbox/Sb-Trunk/Darwin_7.9.0_Depend/sunbird-0.3.en-US.mac.dmg";
+$BuildLocalesArgs = "ZIP_IN=/builds/tinderbox/Sb-Trunk/Darwin_7.9.0_Depend/sunbird.dmg";
 
 #-
 #- The rest should not need to be changed
