@@ -572,14 +572,22 @@ function RemoveAllMessageTags()
   if (!selectedMsgUris.length)
     return;
     
+  var msg = Components.classes["@mozilla.org/supports-array;1"]
+                          .createInstance(Components.interfaces.nsISupportsArray);
+                          
   for (var i = 0; i < selectedMsgUris.length; ++i)
   {
-    // remove all tags by removing all their tag keys at once
+    // remove all tags by removing all their tag keys, all at once.
     // (using a msgHdr's setStringProperty won't notify the threadPane!)
     var msgHdr = messenger.msgHdrFromURI(selectedMsgUris[i]);
     msgHdr.label = 0; // remove legacy label
-    msgHdr.folder.getMsgDatabase(msgWindow)
-          .setStringProperty(msgHdr.messageKey, "keywords", "");
+    msg.Clear();
+    msg.AppendElement(msgHdr);
+    
+    var keywords = msgHdr.getStringProperty("keywords");
+    // this will remove all keywords at once...
+    if (keywords.length > 0)
+      msgHdr.folder.removeKeywordFromMessages(msg, keywords);
   }
   onTagsChange();
 }
