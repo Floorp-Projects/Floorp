@@ -44,7 +44,8 @@
 ]>
 
 <overlay id="FeedsPaneOverlay"
-         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+         xmlns:aaa="http://www.w3.org/2005/07/aaa">
 
   <prefpane id="paneFeeds"
             onpaneload="gFeedsPane.init();"
@@ -88,11 +89,13 @@
       <radio value="ask"
              label="&showPreview.label;"
              accesskey="&showPreview.accesskey;"/>
-      <radio value="reader"
+      <radio value="reader" id="useReader"
              label="&subscribeUsing.label;"
-             accesskey="&subscribeUsing.accesskey;"/>
+             accesskey="&subscribeUsing.accesskey;"
+             aaa:labelledby="useReader readers"/>
       <hbox id="readerContainer" class="indent" flex="1">
         <listbox id="readers" rows="5" flex="1"
+                 aaa:labelledby="useReader"
                  onselect="gFeedsPane.writeSelectedFeedReader(); event.stopPropagation();">
           <listcols>
             <listcol flex="1"/>
