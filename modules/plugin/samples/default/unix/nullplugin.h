@@ -56,7 +56,7 @@
 #define CLICK_WHEN_DONE     "Click here after installing the plugin"
 
 #define REFRESH_PLUGIN_LIST "javascript:navigator.plugins.refresh(true)"
-#define PLUGINSPAGE_URL     "http://plugins.netscape.com/plug-in_finder.adp" /* XXX Branding: make configurable via .properties or prefs */
+#define PLUGINSPAGE_URL     "http://plugindoc.mozdev.org/winmime.html" /* XXX Branding: make configurable via .properties or prefs */
 #define OK_BUTTON           "OK"
 #define CANCEL_BUTTON       "CANCEL"
 #if defined(HPUX)
@@ -64,7 +64,7 @@
 #elif defined(VMS)
 #define JVM_SMARTUPDATE_URL "http://www.openvms.compaq.com/openvms/products/ips/mozilla_relnotes.html#java"
 #else 
-#define JVM_SMARTUPDATE_URL "http://home.netscape.com/plugins/jvm.html" /* XXX Branding: see above */
+#define JVM_SMARTUPDATE_URL "http://java.com/download" /* XXX Branding: see above */
 #endif /* HPUX */
 #define JVM_MINETYPE        "application/x-java-vm"
 #define MESSAGE "\

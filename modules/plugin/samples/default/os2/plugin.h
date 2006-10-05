@@ -110,7 +110,7 @@ public:
 };
 
 
-#define PAGE_URL_FOR_JAVASCRIPT "http://plugins.netscape.com/plug-in_finder.adp"
+#define PAGE_URL_FOR_JAVASCRIPT "http://plugindoc.mozdev.org/winmime.html"
 
 #define PLUGINFINDER_COMMAND_BEGINNING "javascript:window.open(\""
 #define PLUGINFINDER_COMMAND_END "\",\"plugin\",\"toolbar=no,status=no,resizable=no,scrollbars=no,height=252,width=626\");"

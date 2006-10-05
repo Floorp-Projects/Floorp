@@ -110,12 +110,12 @@ public:
 };
 
 
-#define PAGE_URL_FOR_JAVASCRIPT "http://plugins.netscape.com/plug-in_finder.adp"
+#define PAGE_URL_FOR_JAVASCRIPT "http://plugindoc.mozdev.org/winmime.html"
 
 #define PLUGINFINDER_COMMAND_BEGINNING ""
 #define PLUGINFINDER_COMMAND_END ""
-#define DEFAULT_PLUGINFINDER_URL "http://plugins.netscape.com/plug-in_finder.adp"
-#define JVM_SMARTUPDATE_URL "http://plugins.netscape.com/plug-in_finder.adp"
+#define DEFAULT_PLUGINFINDER_URL "http://plugindoc.mozdev.org/winmime.html"
+#define JVM_SMARTUPDATE_URL "http://java.com/download"
 
 #ifdef WIN32
 #define REGISTRY_PLACE "Software\\Netscape\\Netscape Navigator\\Default Plugin"
