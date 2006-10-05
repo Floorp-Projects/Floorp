@@ -1924,6 +1924,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_STARTITER:
+                todo = -2;
                 break;
 
               case JSOP_PUSH:
