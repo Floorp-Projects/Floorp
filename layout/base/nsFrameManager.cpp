@@ -93,6 +93,10 @@
 #include "imgIRequest.h"
 
 #include "nsFrameManager.h"
+#ifdef ACCESSIBILITY
+#include "nsIAccessibilityService.h"
+#include "nsIAccessibleEvent.h"
+#endif
 
   #ifdef DEBUG
     //#define NOISY_DEBUG
@@ -1016,6 +1020,13 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
   nsChangeHint assumeDifferenceHint = NS_STYLE_HINT_NONE;
   nsStyleContext* oldContext = aFrame->GetStyleContext();
   nsStyleSet* styleSet = aPresContext->StyleSet();
+#ifdef ACCESSIBILITY
+  PRBool isAccessibilityActive = mPresShell->IsAccessibilityActive();
+  PRBool isVisible;
+  if (isAccessibilityActive) {
+    isVisible = aFrame->GetStyleVisibility()->IsVisible();
+  }
+#endif
 
   if (oldContext) {
     oldContext->AddRef();
@@ -1333,6 +1344,21 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
     }
 
     newContext->Release();
+  }
+
+  if (isAccessibilityActive &&
+      aFrame->GetStyleVisibility()->IsVisible() != isVisible) {
+    // XXX Visibility does not affect descendents with visibility set
+    // Work on a separate, accurate mechanism for dealing with visibility changes.
+    // A significant enough change occured that this part
+    // of the accessible tree is no longer valid.
+    nsCOMPtr<nsIAccessibilityService> accService = 
+      do_GetService("@mozilla.org/accessibilityService;1");
+    if (accService) {
+      accService->InvalidateSubtreeFor(mPresShell, aFrame->GetContent(),
+                                       isVisible ? nsIAccessibleEvent::EVENT_HIDE :
+                                                   nsIAccessibleEvent::EVENT_SHOW);
+    }
   }
 
   return aMinChange;
