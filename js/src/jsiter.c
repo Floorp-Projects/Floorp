@@ -159,6 +159,7 @@ InitNativeIterator(JSContext *cx, JSObject *iterobj, JSObject *obj, uintN flags)
          * enumerator never escapes to scripts, we use the prototype slot to
          * store the original object.
          */
+        JS_ASSERT(obj != iterobj);
         iterobj->slots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(obj);
     }
     return JS_TRUE;
