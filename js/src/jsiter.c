@@ -197,15 +197,18 @@ static JSBool
 NewKeyValuePair(JSContext *cx, jsid key, jsval val, jsval *rval)
 {
     jsval vec[2];
+    JSTempValueRooter tvr;
     JSObject *aobj;
 
     vec[0] = ID_TO_VALUE(key);
     vec[1] = val;
+
+    JS_PUSH_TEMP_ROOT(cx, 2, vec, &tvr);
     aobj = js_NewArrayObject(cx, 2, vec);
-    if (!aobj)
-        return JS_FALSE;
     *rval = OBJECT_TO_JSVAL(aobj);
-    return JS_TRUE;
+    JS_POP_TEMP_ROOT(cx, &tvr);
+
+    return aobj != NULL;
 }
 
 static JSBool
