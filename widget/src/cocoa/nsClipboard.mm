@@ -264,8 +264,17 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable, PRInt32 aWh
       // The DOM only wants LF, so convert from MacOS line endings to DOM line endings.
       nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(flavorStr, (void**)&clipboardDataPtr, (PRInt32*)&dataLength);
 
+      // skip BOM (Byte Order Mark to distinguish little or big endian)      
+      unsigned char* clipboardDataPtrNoBOM = clipboardDataPtr;
+      if ((dataLength > 2) &&
+          ((clipboardDataPtr[0] == 0xFE && clipboardDataPtr[1] == 0xFF) ||
+           (clipboardDataPtr[0] == 0xFF && clipboardDataPtr[1] == 0xFE))) {
+        dataLength -= sizeof(PRUnichar);
+        clipboardDataPtrNoBOM += sizeof(PRUnichar);
+      }
+
       nsCOMPtr<nsISupports> genericDataWrapper;
-      nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, clipboardDataPtr, dataLength,
+      nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, clipboardDataPtrNoBOM, dataLength,
                                                  getter_AddRefs(genericDataWrapper));
       aTransferable->SetTransferData(flavorStr, genericDataWrapper, dataLength);
       free(clipboardDataPtr);
