@@ -730,7 +730,7 @@ function xpinstallEditPermissions(aDocShell)
                    permissionType : "install",
                    windowTitle    : bundlePreferences.getString("addons_permissions_title"),
                    introText      : bundlePreferences.getString("addonspermissionstext") };
-    wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                    .getService(Components.interfaces.nsIWindowMediator);
     var existingWindow = wm.getMostRecentWindow("Browser:Permissions");
     if (existingWindow) {
