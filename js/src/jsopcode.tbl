@@ -231,11 +231,15 @@ OPDEF(JSOP_VARINC,    100,"varinc",     NULL,         3,  0,  1, 15,  JOF_QVAR |
 OPDEF(JSOP_ARGDEC,    101,"argdec",     NULL,         3,  0,  1, 15,  JOF_QARG |JOF_NAME|JOF_DEC|JOF_POST)
 OPDEF(JSOP_VARDEC,    102,"vardec",     NULL,         3,  0,  1, 15,  JOF_QVAR |JOF_NAME|JOF_DEC|JOF_POST)
 
+/*
+ * Initialize for-in iterator. See also JSOP_FOREACH and JSOP_FOREACHKEYVAL.
+ */
+OPDEF(JSOP_FORIN,     103,"forin",      NULL,  1,  1,  1,  0,  JOF_BYTE)
+
 /* ECMA-compliant for/in ops. */
-OPDEF(JSOP_TOOBJECT,  103,"toobject",   NULL,         1,  1,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_FORNAME,   104,"forname",    NULL,         3,  0,  1, 19,  JOF_CONST|JOF_NAME|JOF_FOR)
 OPDEF(JSOP_FORPROP,   105,"forprop",    NULL,         3,  1,  1, 18,  JOF_CONST|JOF_PROP|JOF_FOR)
-OPDEF(JSOP_FORELEM,   106,"forelem",    NULL,         1,  2,  4, 18,  JOF_BYTE |JOF_ELEM|JOF_FOR)
+OPDEF(JSOP_FORELEM,   106,"forelem",    NULL,         1,  1,  3, 18,  JOF_BYTE |JOF_ELEM|JOF_FOR)
 OPDEF(JSOP_POP2,      107,"pop2",       NULL,         1,  2,  0,  0,  JOF_BYTE)
 
 /* ECMA-compliant assignment ops. */
@@ -399,7 +403,7 @@ OPDEF(JSOP_XMLCOMMENT,    182,"xmlcomment", NULL,     3,  0,  1, 19,  JOF_CONST)
 OPDEF(JSOP_XMLPI,         183,"xmlpi",      NULL,     3,  1,  1, 19,  JOF_CONST)
 OPDEF(JSOP_GETMETHOD,     184,"getmethod",  NULL,     3,  1,  1, 18,  JOF_CONST|JOF_PROP)
 OPDEF(JSOP_GETFUNNS,      185,"getfunns",   NULL,     1,  0,  1, 19,  JOF_BYTE)
-OPDEF(JSOP_FOREACH,       186,"foreach",    NULL,     1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_FOREACH,       186,"foreach",    NULL,     1,  1,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_DELDESC,       187,"deldesc",    NULL,     1,  2,  1, 17,  JOF_BYTE |JOF_ELEM|JOF_DEL)
 
 /*
@@ -454,13 +458,13 @@ OPDEF(JSOP_FORLOCAL,      207,"forlocal",    NULL,    3,  0,  1, 19,  JOF_LOCAL|
 /*
  * Iterator, generator, and array comprehension support.
  */
-OPDEF(JSOP_STARTITER,     208,"startiter",   NULL,    1,  0,  2,  0,  JOF_BYTE)
-OPDEF(JSOP_ENDITER,       209,"enditer",     NULL,    1,  3,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_STARTITER,     208,"startiter",   NULL,    1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_ENDITER,       209,"enditer",     NULL,    1,  1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_GENERATOR,     210,"generator",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_YIELD,         211,"yield",       NULL,    1,  1,  1,  1,  JOF_BYTE)
 OPDEF(JSOP_ARRAYPUSH,     212,"arraypush",   NULL,    3,  1,  0,  3,  JOF_LOCAL)
 
-OPDEF(JSOP_FOREACHKEYVAL, 213,"foreachkeyval",NULL,   1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_FOREACHKEYVAL, 213,"foreachkeyval",NULL,   1,  1,  1,  0,  JOF_BYTE)
 
 /*
  * Variant of JSOP_ENUMELEM for destructuring const (const [a, b] = ...).
@@ -472,9 +476,3 @@ OPDEF(JSOP_ENUMCONSTELEM, 214,"enumconstelem",NULL,   1,  3,  0,  3,  JOF_BYTE|J
  * which must be moved down when the block pops.
  */
 OPDEF(JSOP_LEAVEBLOCKEXPR,215,"leaveblockexpr",NULL,  3,  0,  0,  1,  JOF_UINT16)
-
-/*
- * This opcode prefixes one of JSOP_FOR{NAME,ARG,VAR,LOCAL,PROP,ELEM} in a
- * standard for-in loop.  See also JSOP_FOREACH and JSOP_FOREACHKEYVAL.
- */
-OPDEF(JSOP_FORIN,         216,"forin",         NULL,  1,  0,  0,  0,  JOF_BYTE)

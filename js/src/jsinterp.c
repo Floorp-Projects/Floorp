@@ -1364,7 +1364,7 @@ have_fun:
 
 #if JS_HAS_LVALUE_RETURN
         /* Set by JS_SetCallReturnValue2, used to return reference types. */
-        cx->rval2set = JS_RVAL2_CLEAR;
+        cx->rval2set = JS_FALSE;
 #endif
 
         /* If native, use caller varobj and scopeChain for eval. */
@@ -2041,7 +2041,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     uintN argc, attrs, flags, slot;
     jsval *vp, lval, rval, ltmp, rtmp;
     jsid id;
-    JSObject *withobj, *origobj, *iterobj;
+    JSObject *withobj, *iterobj;
     JSProperty *prop;
     JSScopeProperty *sprop;
     JSString *str, *str2;
@@ -2560,21 +2560,6 @@ interrupt:
             }
           END_CASE(JSOP_ANDX)
 
-          BEGIN_CASE(JSOP_TOOBJECT)
-            rval = FETCH_OPND(-1);
-            if (!JSVAL_IS_PRIMITIVE(rval)) {
-                obj = JSVAL_TO_OBJECT(rval);
-            } else {
-                SAVE_SP_AND_PC(fp);
-                ok = js_ValueToObject(cx, rval, &obj);
-                if (!ok)
-                    goto out;
-            }
-
-            /* Don't use STORE_OPND -- we want our input's generating pc. */
-            sp[-1] = OBJECT_TO_JSVAL(obj);
-          END_CASE(JSOP_TOOBJECT)
-
 /*
  * If the index value at sp[n] is not an int that fits in a jsval, it could
  * be an object (an XML QName, AttributeName, or AnyName), but only if we are
@@ -2619,19 +2604,34 @@ interrupt:
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
           END_CASE(JSOP_IN)
 
-          BEGIN_CASE(JSOP_FORIN)
-            flags = 0;
-          END_CASE(JSOP_FORIN)
-
           BEGIN_CASE(JSOP_FOREACH)
-            flags = JSITER_FOREACH;
-          END_CASE(JSOP_FOREACH)
+            flags = JSITER_ENUMERATE | JSITER_FOREACH;
+            goto value_to_iter;
 
 #if JS_HAS_DESTRUCTURING
           BEGIN_CASE(JSOP_FOREACHKEYVAL)
-            flags = JSITER_FOREACH | JSITER_KEYVALUE;
-          END_CASE(JSOP_FOREACHKEYVAL)
+            flags = JSITER_ENUMERATE | JSITER_FOREACH | JSITER_KEYVALUE;
+            goto value_to_iter;
 #endif
+
+          BEGIN_CASE(JSOP_FORIN)
+            /*
+             * Set JSITER_ENUMERATE to indicate that for-in loop should use
+             * the enumeration protocol's iterator for compatibility if an
+             * explicit iterator is not given via the optional __iterator__
+             * method.
+             */
+            flags = JSITER_ENUMERATE;
+
+          value_to_iter:
+            JS_ASSERT(sp > fp->spbase);
+            SAVE_SP_AND_PC(fp);
+            ok = js_ValueToIterator(cx, flags, &sp[-1]);
+            if (!ok)
+                goto out;
+            JS_ASSERT(!JSVAL_IS_PRIMITIVE(sp[-1]));
+            JS_ASSERT(JSOP_FORIN_LENGTH == js_CodeSpec[op].length);
+          END_CASE(JSOP_FORIN)
 
           BEGIN_CASE(JSOP_FORPROP)
             /*
@@ -2687,210 +2687,19 @@ interrupt:
 
           do_forinloop:
             /*
-             * ECMA-compatible for/in evals the object just once, before loop.
-             * Bad old bytecodes (since removed) did it on every iteration.
+             * Reach under the top of stack to find our property iterator, a
+             * JSObject that contains the iteration state.
              */
-            obj = JSVAL_TO_OBJECT(sp[i]);
+            JS_ASSERT(!JSVAL_IS_PRIMITIVE(sp[i]));
+            iterobj = JSVAL_TO_OBJECT(sp[i]);
 
-            /* If the thing to the right of 'in' has no properties, break. */
-            if (!obj) {
+            SAVE_SP_AND_PC(fp);
+            ok = js_CallIteratorNext(cx, iterobj, &rval);
+            if (!ok)
+                goto out;
+            if (rval == JSVAL_HOLE) {
                 rval = JSVAL_FALSE;
                 goto end_forinloop;
-            }
-
-            /*
-             * Save the thing to the right of 'in' as origobj.  Later on, we
-             * use this variable to suppress enumeration of shadowed prototype
-             * properties.
-             */
-            origobj = obj;
-
-            /*
-             * Reach under the top of stack to find our property iterator, a
-             * JSObject that contains the iteration state.  (An object is used
-             * rather than a native struct so that the iteration state is
-             * cleaned up via GC if the for-in loop terminates abruptly.)
-             */
-            vp = &sp[i - 1];
-            rval = *vp;
-
-            /*
-             * Save sp and pc in fp now, before any OBJ_* call-outs that might
-             * nest an interpreter or GC activation on this context.
-             */
-            SAVE_SP_AND_PC(fp);
-
-            /* Is this the first iteration ? */
-            if (JSVAL_IS_NULL(rval)) {
-                /* Yes, use the new iteration protocol. */
-                fp->pc = (jsbytecode *) sp[i-depth];
-                iterobj = js_ValueToIterator(cx, OBJECT_TO_JSVAL(obj), flags);
-                fp->pc = pc;
-                if (!iterobj) {
-                    ok = JS_FALSE;
-                    goto out;
-                }
-                *vp = OBJECT_TO_JSVAL(iterobj);
-                flags |= js_GetNativeIteratorFlags(cx, iterobj);
-
-                /*
-                 * Store the current object below the iterator for generality:
-                 * with the iteration protocol, we cannot assume that a native
-                 * iterator was found or created by js_ValueToIterator, so we
-                 * can't use its parent slot to track the current object being
-                 * iterated along origobj's prototype chain.  We need another
-                 * stack slot, which JSOP_STARTITER allocated for us.
-                 */
-                vp[-1] = OBJECT_TO_JSVAL(obj);
-            } else {
-                /* This is not the first iteration. Recover iterator state. */
-                JS_ASSERT(!JSVAL_IS_PRIMITIVE(rval));
-                iterobj = JSVAL_TO_OBJECT(rval);
-                flags |= js_GetNativeIteratorFlags(cx, iterobj);
-                obj = JSVAL_TO_OBJECT(vp[-1]);
-            }
-
-          enum_next_property:
-          {
-            jsid fid;
-
-            /*
-             * If enumerating, get the next jsid to be enumerated and store it
-             * in fid.  If iterating, just get rval.
-             */
-#ifdef DEBUG
-            fid = JSVAL_NULL;
-#endif
-            ok = js_CallIteratorNext(cx, iterobj, flags,
-                                     (flags & JSITER_ENUMERATE) ? &fid : NULL,
-                                     &rval);
-            if (!ok) {
-                /* Nothing more to iterate in obj, or some other exception? */
-                if (!cx->throwing ||
-                    !VALUE_IS_STOP_ITERATION(cx, cx->exception)) {
-                    /* Some other exception or error, bail out. */
-                    goto out;
-                }
-
-                /* Inline JS_ClearPendingException(cx). */
-                cx->throwing = JS_FALSE;
-                cx->exception = JSVAL_VOID;
-
-                /*
-                 * Enumerate the properties on obj's prototype chain, unless
-                 * the JSITER_ENUMERATE is clear -- in this case, do not merge
-                 * ECMA precedent and the Pythonic iteration protocol.  Loop
-                 * over only whatever values are returned by the iterator for
-                 * the directly referenced object.
-                 */
-                if (!(flags & JSITER_ENUMERATE) ||
-                    !(obj = OBJ_GET_PROTO(cx, obj))) {
-                    /* End of property list -- terminate loop. */
-                    ok = JS_TRUE;
-                    flags = 0;
-                    rval = JSVAL_FALSE;
-                    goto end_forinloop;
-                }
-
-                /*
-                 * Clear JSITER_FOREACH now that we are up the prototype chain
-                 * from the original object.  We can't expect to get the same
-                 * value from a prototype as we would if we started the get at
-                 * the original object, so we must do our own getting, further
-                 * below when testing 'if (flags & JSITER_FOREACH)'.
-                 */
-                ok = js_NewNativeIterator(cx, obj, flags & ~JSITER_FOREACH, vp);
-                if (!ok)
-                    goto out;
-                iterobj = JSVAL_TO_OBJECT(*vp);
-
-                /* Reset ok and store the current iterable in vp[-1]. */
-                ok = JS_TRUE;
-                vp[-1] = OBJECT_TO_JSVAL(obj);
-                goto enum_next_property;
-            }
-
-            /*
-             * Without the JSITER_ENUMERATE flag, do not expect to lookup fid
-             * and find anything.  The iteration protocol does not require any
-             * such thing, which would make a name collision on 'next' hazard.
-             * But if the JSITER_ENUMERATE flag is set, we must do the usual
-             * deleted-property and shadowed-proto-property tests.
-             */
-            if (flags & JSITER_ENUMERATE) {
-                /* Skip properties not in obj when looking from origobj. */
-                ok = OBJ_LOOKUP_PROPERTY(cx, origobj, fid, &obj2, &prop);
-                if (!ok)
-                    goto out;
-                if (prop)
-                    OBJ_DROP_PROPERTY(cx, obj2, prop);
-
-                /*
-                 * If the id was deleted, or found in a prototype object or an
-                 * unrelated object (specifically, not in an inner object for
-                 * obj), skip it.  This step means that all OBJ_LOOKUP_PROPERTY
-                 * implementations must return an object further along on the
-                 * prototype chain, or else possibly an object returned by the
-                 * JSExtendedClass.outerObject optional hook.
-                 */
-                if (!prop)
-                    goto enum_next_property;
-                if (obj != obj2) {
-                    cond = JS_FALSE;
-                    clasp = OBJ_GET_CLASS(cx, obj2);
-                    if (clasp->flags & JSCLASS_IS_EXTENDED) {
-                        JSExtendedClass *xclasp;
-
-                        xclasp = (JSExtendedClass *) clasp;
-                        cond = xclasp->outerObject &&
-                               xclasp->outerObject(cx, obj2) == obj;
-                    }
-                    if (!cond)
-                        goto enum_next_property;
-                }
-            }
-
-            if (flags & JSITER_FOREACH) {
-                /* Clear the local foreach flag set by our prefix bytecode. */
-                flags = 0;
-
-                /*
-                 * If enumerating up the prototype chain, we suppressed the
-                 * JSITER_FOREACH flag when we created the iterator, because
-                 * the iterator can't get the value for fid without starting
-                 * from origobj.  So we must OBJ_GET_PROPERTY here.
-                 */
-                if (origobj != obj) {
-                    ok = OBJ_GET_PROPERTY(cx, origobj, fid, &rval);
-                    if (!ok)
-                        goto out;
-                }
-            } else if (!(flags & JSITER_ENUMERATE)) {
-                /* Iterators return arbitrary values, not string ids. */
-                JS_ASSERT(fid == JSVAL_NULL);
-            } else if (JSID_IS_ATOM(fid)) {
-                /* Make rval a string for uniformity and compatibility. */
-                rval = ATOM_KEY(JSID_TO_ATOM(fid));
-            }
-#if JS_HAS_XML_SUPPORT
-            else if (JSID_IS_OBJECT(fid)) {
-                str = js_ValueToString(cx, OBJECT_JSID_TO_JSVAL(fid));
-                if (!str) {
-                    ok = JS_FALSE;
-                    goto out;
-                }
-
-                rval = STRING_TO_JSVAL(str);
-            }
-#endif
-            else {
-                str = js_NumberToString(cx, (jsdouble) JSID_TO_INT(fid));
-                if (!str) {
-                    ok = JS_FALSE;
-                    goto out;
-                }
-
-                rval = STRING_TO_JSVAL(str);
             }
 
             switch (op) {
@@ -2920,10 +2729,12 @@ interrupt:
                 break;
 
               default:
+                JS_ASSERT(op == JSOP_FORPROP || op == JSOP_FORNAME);
+
                 /* Convert lval to a non-null object containing id. */
                 VALUE_TO_OBJECT(cx, lval, obj);
-                if (i + 1 < 0)
-                    STORE_OPND(i + 1, OBJECT_TO_JSVAL(obj));
+                if (op == JSOP_FORPROP)
+                    STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
 
                 /* Set the variable obj[id] to refer to rval. */
                 fp->flags |= JSFRAME_ASSIGNING;
@@ -2942,7 +2753,6 @@ interrupt:
             PUSH_OPND(rval);
             len = js_CodeSpec[op].length;
             DO_NEXT_OP(len);
-          }
 
           BEGIN_CASE(JSOP_DUP)
             JS_ASSERT(sp > fp->spbase);
@@ -4118,51 +3928,27 @@ interrupt:
                 goto out;
             JS_RUNTIME_METER(rt, nonInlineCalls);
 #if JS_HAS_LVALUE_RETURN
-            if (cx->rval2set != JS_RVAL2_CLEAR) {
-                if (cx->rval2set == JS_RVAL2_VALUE) {
-                    /*
-                     * Use the stack depth we didn't claim in our budget, but
-                     * that we know is there on account of [fun, this] already
-                     * having been pushed, at a minimum (if no args).  Those
-                     * two slots have been popped and [rval] has been pushed,
-                     * which leaves one more slot for rval2 before we might
-                     * overflow.
-                     *
-                     * NB: rval2 must be the property identifier, and rval the
-                     * object from which to get the property.  The pair form an
-                     * ECMA "reference type", which can be used on the right-
-                     * or left-hand side of assignment ops.  Note: only native
-                     * methods can return reference types.  See JSOP_SETCALL
-                     * just below for the left-hand-side case.
-                     */
-                    PUSH_OPND(cx->rval2);
-                    ELEMENT_OP(-1, ok = OBJ_GET_PROPERTY(cx, obj, id, &rval));
-                }
-#if JS_HAS_GENERATORS
-                else {
-                    /*
-                     * A native iterator has returned an [id, value] pair with
-                     * id in cx->rval2 and value on top of stack.  Push value,
-                     * store id as a value under it, and create a new array.
-                     */
-                    JS_ASSERT(cx->rval2set == JS_RVAL2_ITERKEY);
-                    lval = ID_TO_VALUE((jsid)cx->rval2);
-                    rval = sp[-1];
-                    PUSH_OPND(rval);
-                    sp[-2] = lval;
-                    SAVE_SP_AND_PC(fp);
-                    obj = js_NewArrayObject(cx, 2, sp - 2);
-                    if (!obj) {
-                        ok = JS_FALSE;
-                        goto out;
-                    }
-                    rval = OBJECT_TO_JSVAL(obj);
-                }
-#endif /* JS_HAS_GENERATORS */
+            if (cx->rval2set) {
+                /*
+                 * Use the stack depth we didn't claim in our budget, but that
+                 * we know is there on account of [fun, this] already having
+                 * been pushed, at a minimum (if no args).  Those two slots
+                 * have been popped and [rval] has been pushed, which leaves
+                 * one more slot for rval2 before we might overflow.
+                 *
+                 * NB: rval2 must be the property identifier, and rval the
+                 * object from which to get the property.  The pair form an
+                 * ECMA "reference type", which can be used on the right- or
+                 * left-hand side of assignment ops.  Note well: only native
+                 * methods can return reference types.  See JSOP_SETCALL just
+                 * below for the left-hand-side case.
+                 */
+                PUSH_OPND(cx->rval2);
+                ELEMENT_OP(-1, ok = OBJ_GET_PROPERTY(cx, obj, id, &rval));
 
                 sp--;
                 STORE_OPND(-1, rval);
-                cx->rval2set = JS_RVAL2_CLEAR;
+                cx->rval2set = JS_FALSE;
             }
 #endif /* JS_HAS_LVALUE_RETURN */
             obj = NULL;
@@ -4178,14 +3964,14 @@ interrupt:
             LOAD_INTERRUPT_HANDLER(rt);
             if (!ok)
                 goto out;
-            if (cx->rval2set != JS_RVAL2_VALUE) {
+            if (!cx->rval2set) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_BAD_LEFTSIDE_OF_ASS);
                 ok = JS_FALSE;
                 goto out;
             }
             PUSH_OPND(cx->rval2);
-            cx->rval2set = JS_RVAL2_CLEAR;
+            cx->rval2set = JS_FALSE;
             obj = NULL;
           END_CASE(JSOP_SETCALL)
 #endif
@@ -6101,36 +5887,21 @@ interrupt:
 
 #undef FAST_LOCAL_INCREMENT_OP
 
-          BEGIN_CASE(JSOP_STARTITER)
-            /*
-             * Start of a for-in or for-each-in loop: push two nulls.  Push
-             * null instead of undefined so that code at do_forinloop: can
-             * tell that this opcode pushed the iterator slot, rather than a
-             * backward compatible JSOP_PUSH that was emitted prior to the
-             * introduction of the new iteration protocol.
-             */
-            sp[0] = sp[1] = JSVAL_NULL;
-            sp += 2;
-          END_CASE(JSOP_STARTITER)
+          EMPTY_CASE(JSOP_STARTITER)
 
           BEGIN_CASE(JSOP_ENDITER)
+            JS_ASSERT(!JSVAL_IS_PRIMITIVE(sp[-1]));
+            iterobj = JSVAL_TO_OBJECT(sp[-1]);
+
             /*
-             * For backward bytecode compatibility, the object currently being
-             * iterated is at sp[-3], and the iterator is at sp[-2].
+             * js_CloseNativeIterator checks whether the iterator is not
+             * native, and also detects the case of a native iterator that
+             * has already escaped, even though a for-in loop caused it to
+             * be created.  See jsiter.c.
              */
-            rval = sp[-2];
-            if (!JSVAL_IS_NULL(rval)) {
-                /*
-                 * js_CloseNativeIterator checks whether the iterator is not
-                 * native, and also detects the case of a native iterator that
-                 * has already escaped, even though a for-in loop caused it to
-                 * be created.  See jsiter.c.
-                 */
-                SAVE_SP_AND_PC(fp);
-                js_CloseNativeIterator(cx, JSVAL_TO_OBJECT(rval));
-                sp[-2] = JSVAL_NULL;
-            }
-            sp -= 3;
+            SAVE_SP_AND_PC(fp);
+            js_CloseNativeIterator(cx, iterobj);
+            *--sp = JSVAL_NULL;
           END_CASE(JSOP_ENDITER)
 
 #if JS_HAS_GENERATORS

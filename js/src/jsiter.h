@@ -49,44 +49,27 @@
 #define JSITER_FOREACH    0x2   /* return [key, value] pair rather than key */
 #define JSITER_KEYVALUE   0x4   /* destructuring for-in wants [key, value] */
 
-extern JSBool
-js_NewNativeIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp);
-
-extern uintN
-js_GetNativeIteratorFlags(JSContext *cx, JSObject *iterobj);
-
 extern void
 js_CloseNativeIterator(JSContext *cx, JSObject *iterobj);
 
 extern void
 js_CloseIteratorState(JSContext *cx, JSObject *iterobj);
 
-extern JSObject *
-js_ValueToIterator(JSContext *cx, jsval v, uintN flags);
-
 /*
- * Given iterobj, call iterobj.next().
- *
- * If idp is non-null, we are enumerating an iterable other than iterobj using
- * a for-in or for-each-in loop, so we must return the id of the property being
- * enumerated for shadowing and deleted-property checks.  In this case, *rval
- * will be either the key or the value from a [key, value] pair returned by the
- * iterator, depending on whether for-in or for-each-in is being used.
- *
- * But if idp is null, then we are iterating iterobj itself -- the iterator is
- * the right operand of 'in' in the for-in or for-each-in loop -- and we should
- * pass its return value back unchanged.
+ * Convert the value stored in *vp to its iteration object. The flags should
+ * contain JSITER_ENUMERATE if js_ValueToIterator is called when enumerating
+ * for-in semantics are required, and when the caller can guarantee that the
+ * iterator will never be exposed to scripts.
  */
 extern JSBool
-js_CallIteratorNext(JSContext *cx, JSObject *iterobj, uintN flags,
-                    jsid *idp, jsval *rval);
+js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp);
 
-#define VALUE_IS_STOP_ITERATION(cx,v)                                         \
-    (!JSVAL_IS_PRIMITIVE(v) &&                                                \
-     OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_StopIterationClass)
-
+/*
+ * Given iterobj, call iterobj.next().  If the iterator stopped, set *rval to
+ * JSVAL_HOLE. Otherwise set it to the result of the next call.
+ */
 extern JSBool
-js_ThrowStopIteration(JSContext *cx, JSObject *obj);
+js_CallIteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval);
 
 #if JS_HAS_GENERATORS
 
