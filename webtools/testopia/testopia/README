@@ -65,6 +65,17 @@ Good question. For the most part it should work the same as on Linux,
 substituting the appropriate paths and commands. Unfortunately I don't have
 a good Windows setup to try it on.
 
+=== Upgrading from 1.0 ===
+
+NOTE: This should only be done on a Bugzilla 2.22 installation
+
+1. Untar the testopia files.
+2. Remove testopia/tr_patch_successful
+3. run patch -p2 -i testopia/patch-2.22
+   Answering no when it asks to apply -R
+4. run tr_install.pl -nopatch
+5. run checksetup.pl
+
 === Getting Help ===
 
 First you should consult the documentation. You can reach it by clicking the 
