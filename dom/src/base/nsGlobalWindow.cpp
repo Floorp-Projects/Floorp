@@ -4691,6 +4691,76 @@ nsGlobalWindow::EnterModalState()
                                 top.get()))->mModalStateDepth++;
 }
 
+// static
+void
+nsGlobalWindow::RunPendingTimeoutsRecursive(nsGlobalWindow *aTopWindow,
+                                            nsGlobalWindow *aWindow)
+{
+  nsGlobalWindow *inner;
+
+  // Return early if we're frozen or have no inner window.
+  if (!(inner = aWindow->GetCurrentInnerWindowInternal()) ||
+      inner->IsFrozen()) {
+    return;
+  }
+
+  inner->RunTimeout(nsnull);
+
+  // Check again if we're frozen since running pending timeouts
+  // could've frozen us.
+  if (inner->IsFrozen()) {
+    return;
+  }
+
+  nsCOMPtr<nsIDOMWindowCollection> frames;
+  aWindow->GetFrames(getter_AddRefs(frames));
+
+  if (!frames) {
+    return;
+  }
+
+  PRUint32 i, length;
+  if (NS_FAILED(frames->GetLength(&length)) || !length) {
+    return;
+  }
+
+  for (i = 0; i < length && aTopWindow->mModalStateDepth == 0; i++) {
+    nsCOMPtr<nsIDOMWindow> child;
+    frames->Item(i, getter_AddRefs(child));
+
+    if (!child) {
+      return;
+    }
+
+    nsGlobalWindow *childWin =
+      NS_STATIC_CAST(nsGlobalWindow *,
+                     NS_STATIC_CAST(nsIDOMWindow *,
+                                    child.get()));
+
+    RunPendingTimeoutsRecursive(aTopWindow, childWin);
+  }
+}
+
+class nsPendingTimeoutRunner : public nsRunnable
+{
+public:
+  nsPendingTimeoutRunner(nsGlobalWindow *aWindow)
+    : mWindow(aWindow)
+  {
+    NS_ASSERTION(mWindow, "mWindow is null.");
+  }
+
+  NS_IMETHOD Run()
+  {
+    nsGlobalWindow::RunPendingTimeoutsRecursive(mWindow, mWindow);
+
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<nsGlobalWindow> mWindow;
+};
+
 void
 nsGlobalWindow::LeaveModalState()
 {
@@ -4703,9 +4773,18 @@ nsGlobalWindow::LeaveModalState()
     return;
   }
 
-  NS_STATIC_CAST(nsGlobalWindow *,
-                 NS_STATIC_CAST(nsIDOMWindow *,
-                                top.get()))->mModalStateDepth--;
+  nsGlobalWindow *topWin =
+    NS_STATIC_CAST(nsGlobalWindow *,
+                   NS_STATIC_CAST(nsIDOMWindow *,
+                                  top.get()));
+
+  topWin->mModalStateDepth--;
+
+  if (topWin->mModalStateDepth == 0) {
+    nsCOMPtr<nsIRunnable> runner = new nsPendingTimeoutRunner(topWin);
+    if (NS_FAILED(NS_DispatchToCurrentThread(runner)))
+      NS_WARNING("failed to dispatch pending timeout runnable");
+  }
 }
 
 PRBool
@@ -6397,6 +6476,12 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
 void
 nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 {
+  // If a modal dialog is open for this window, return early. Pending
+  // timeouts will run when the modal dialog is dismissed.
+  if (IsInModalState()) {
+    return;
+  }
+
   NS_ASSERTION(IsInnerWindow(), "Timeout running on outer window!");
   NS_ASSERTION(!IsFrozen(), "Timeout running on a window in the bfcache!");
 
@@ -6604,9 +6689,12 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     // If we have a regular interval timer, we re-schedule the
     // timeout, accounting for clock drift.
     if (timeout->mInterval) {
-      // Compute time to next timeout for interval timer.
-      // XXX Units?
-      PRTime nextInterval = timeout->mWhen +
+      // Compute time to next timeout for interval timer. If we're
+      // running pending timeouts because they've been temporarily
+      // disabled (!aTimeout), set the next interval to be relative to
+      // "now", and not to when the timeout that was pending should
+      // have fired.
+      PRTime nextInterval = (aTimeout ? timeout->mWhen : now) +
         ((PRTime)timeout->mInterval * PR_USEC_PER_MSEC);
       PRTime delay = nextInterval - PR_Now();
 

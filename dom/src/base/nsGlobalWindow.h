@@ -397,6 +397,9 @@ public:
   static PRBool IsCallerChrome();
   static void CloseBlockScriptTerminationFunc(nsISupports *aRef);
 
+  static void RunPendingTimeoutsRecursive(nsGlobalWindow *aTopWindow,
+                                          nsGlobalWindow *aWindow);
+
   friend class WindowStateHolder;
 
 protected:
