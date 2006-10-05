@@ -678,11 +678,19 @@ sub visible_groups_direct {
     return [] unless $self->id;
 
     my $dbh = Bugzilla->dbh;
-    my $glist = join(',',(-1,values(%{$self->groups})));
-    my $sth = $dbh->prepare("SELECT DISTINCT grantor_id
-                                FROM group_group_map
-                               WHERE member_id IN($glist)
-                                 AND grant_type=" . GROUP_VISIBLE);
+    my $sth;
+   
+    if (Bugzilla->params->{'usevisibilitygroups'}) {
+        my $glist = join(',',(-1,values(%{$self->groups})));
+        $sth = $dbh->prepare("SELECT DISTINCT grantor_id
+                                 FROM group_group_map
+                                WHERE member_id IN($glist)
+                                  AND grant_type=" . GROUP_VISIBLE);
+    }
+    else {
+        # All groups are visible if usevisibilitygroups is off.
+        $sth = $dbh->prepare('SELECT id FROM groups');
+    }
     $sth->execute();
 
     while (my ($row) = $sth->fetchrow_array) {
@@ -703,12 +711,26 @@ sub visible_groups_as_string {
 # from bless_groups instead of mirroring visible_groups_inherited, perhaps.
 sub queryshare_groups {
     my $self = shift;
+    my @queryshare_groups;
+
+    return $self->{queryshare_groups} if defined $self->{queryshare_groups};
+
     if ($self->in_group(Bugzilla->params->{'querysharegroup'})) {
-        return $self->visible_groups_inherited();
+        # We want to be allowed to share with groups we're in only.
+        # If usevisibilitygroups is on, then we need to restrict this to groups
+        # we may see.
+        if (Bugzilla->params->{'usevisibilitygroups'}) {
+            foreach(@{$self->visible_groups_inherited()}) {
+                next unless $self->in_group_id($_);
+                push(@queryshare_groups, $_);
+            }
+        }
+        else {
+            @queryshare_groups = values(%{$self->groups});
+        }
     }
-    else {
-        return [];
-    }
+
+    return $self->{queryshare_groups} = \@queryshare_groups;
 }
 
 sub queryshare_groups_as_string {
