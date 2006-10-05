@@ -66,6 +66,10 @@
 #include "jsstr.h"
 #include "jsexn.h"
 
+#if JS_HAS_GENERATORS
+# include "jsiter.h"
+#endif
+
 /* Generic function/call/arguments tinyids -- also reflected bit numbers. */
 enum {
     CALL_ARGUMENTS  = -1,       /* predefined arguments local variable */
@@ -513,6 +517,25 @@ args_enumerate(JSContext *cx, JSObject *obj)
     return JS_TRUE;
 }
 
+#if JS_HAS_GENERATORS
+/*
+ * If a generator-iterator's arguments or call object escapes, it needs to
+ * mark its generator object.
+ */
+static uint32
+args_or_call_mark(JSContext *cx, JSObject *obj, void *arg)
+{
+    JSStackFrame *fp;
+
+    fp = JS_GetPrivate(cx, obj);
+    if (fp && (fp->flags & JSFRAME_GENERATOR))
+        GC_MARK(cx, FRAME_TO_GENERATOR(fp)->obj, "FRAME_TO_GENERATOR(fp)->obj");
+    return 0;
+}
+#else
+# define args_or_call_mark NULL
+#endif
+
 /*
  * The Arguments class is not initialized via JS_InitClass, and must not be,
  * because its name is "Object".  Per ECMA, that causes instances of it to
@@ -528,11 +551,14 @@ JSClass js_ArgumentsClass = {
     js_Object_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
-    JS_PropertyStub,  args_delProperty,
-    args_getProperty, args_setProperty,
-    args_enumerate,   (JSResolveOp) args_resolve,
-    JS_ConvertStub,   JS_FinalizeStub,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    JS_PropertyStub,    args_delProperty,
+    args_getProperty,   args_setProperty,
+    args_enumerate,     (JSResolveOp) args_resolve,
+    JS_ConvertStub,     JS_FinalizeStub,
+    NULL,               NULL,
+    NULL,               NULL,
+    NULL,               NULL,
+    args_or_call_mark,  NULL
 };
 
 JSObject *
@@ -888,11 +914,14 @@ JSClass js_CallClass = {
     js_Call_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_IS_ANONYMOUS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Call),
-    JS_PropertyStub,  JS_PropertyStub,
-    call_getProperty, call_setProperty,
-    call_enumerate,   (JSResolveOp)call_resolve,
-    call_convert,     JS_FinalizeStub,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    JS_PropertyStub,    JS_PropertyStub,
+    call_getProperty,   call_setProperty,
+    call_enumerate,     (JSResolveOp)call_resolve,
+    call_convert,       JS_FinalizeStub,
+    NULL,               NULL,
+    NULL,               NULL,
+    NULL,               NULL,
+    args_or_call_mark,  NULL,
 };
 
 /*

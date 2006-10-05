@@ -109,6 +109,7 @@ typedef struct JSInlineFrame {
 #define JSFRAME_FILTERING     0x400 /* XML filtering predicate expression */
 #define JSFRAME_ITERATOR      0x800 /* trying to get an iterator for for-in */
 #define JSFRAME_POP_BLOCKS   0x1000 /* scope chain contains blocks to pop */
+#define JSFRAME_GENERATOR    0x2000 /* frame belongs to generator-iterator */
 
 #define JSFRAME_OVERRIDE_SHIFT 24   /* override bit-set params; see jsfun.c */
 #define JSFRAME_OVERRIDE_BITS  8
