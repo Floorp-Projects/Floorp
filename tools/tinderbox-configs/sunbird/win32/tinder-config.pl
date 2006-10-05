@@ -177,7 +177,7 @@ $BuildNameExtra = 'Sb-Nightly';
 #$ConfigureOnly = 0;
 %WGetFiles = (
 	      "http://stage.mozilla.org/pub/mozilla.org/calendar/sunbird/nightly/latest-trunk/sunbird-0.3.en-US.win32.zip" =>
-	      "/cygdrive/d/builds/tinderbox/Sunbird-Trunk/WINNT_5.2_Depend/sunbird.zip"
+	      "/cygdrive/d/builds/tinderbox/Sunbird-Trunk/WINNT_5.2_Depend/sunbird.zip",
 	      "http://stage.mozilla.org/pub/mozilla.org/calendar/sunbird/nightly/latest-trunk/sunbird-0.3.en-US.win32.installer.exe" =>
 	      "/cygdrive/d/builds/tinderbox/Sunbird-Trunk/WINNT_5.2_Depend/sunbird-installer.exe"
 	      );
