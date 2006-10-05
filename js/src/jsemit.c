@@ -3524,7 +3524,8 @@ MaybeEmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSOp declOp,
     JS_ASSERT(*pop == JSOP_POP || *pop == JSOP_POPV);
     lhs = pn->pn_left;
     rhs = pn->pn_right;
-    if (lhs->pn_type == TOK_RB && rhs->pn_type == TOK_RB) {
+    if (lhs->pn_type == TOK_RB && rhs->pn_type == TOK_RB &&
+        lhs->pn_count <= rhs->pn_count) {
         if (!EmitGroupAssignment(cx, cg, declOp, lhs, rhs))
             return JS_FALSE;
         *pop = JSOP_NOP;
