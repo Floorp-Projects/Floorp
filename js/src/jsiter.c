@@ -778,7 +778,7 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     /* Copy remaining state (XXX sharp* and xml* should be local vars). */
     gen->frame.sharpDepth = 0;
     gen->frame.sharpArray = NULL;
-    gen->frame.flags = fp->flags;
+    gen->frame.flags = fp->flags | JSFRAME_GENERATOR;
     gen->frame.dormantNext = NULL;
     gen->frame.xmlNamespace = NULL;
     gen->frame.blockChain = NULL;
