@@ -92,7 +92,8 @@ class EventListener:
         # Although handler is already a function object, we must re-bind to
         # new globals
         if self.globals is not None:
-            f = new.function(self.func.func_code, self.globals, self.func.func_name)
+            f = new.function(self.func.func_code, self.globals, 
+                            self.func.func_name, self.func.func_closure)
         else:
             f = self.func
         # Convert the raw pyxpcom object to a magic _nsdom one, that
