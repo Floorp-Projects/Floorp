@@ -242,6 +242,16 @@ function ics_exportToStream(aStream, aCount, aItems) {
     
     for each (item in aItems) {
         calComp.addSubcomponent(item.icalComponent);
+        var rec = item.recurrenceInfo;
+        if (rec != null) {
+            var exceptions = rec.getExceptionIds({});
+            for each ( var exid in exceptions ) {
+                var ex = rec.getExceptionFor(exid, false);
+                if (ex != null) {
+                    calComp.addSubcomponent(ex.icalComponent);
+                }
+            }
+        }    
     }
     var str = calComp.serializeToICS();
 
