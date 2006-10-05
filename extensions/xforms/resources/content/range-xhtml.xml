@@ -48,8 +48,8 @@
   -->
 
   <!-- RANGE: <NUMBER> -->
-  <binding id="xformswidget-range"
-           extends="chrome://xforms/content/range.xml#xformswidget-range-base">
+  <binding id="xformswidget-range-numeric"
+           extends="chrome://xforms/content/range.xml#xformswidget-range-numeric-base">
 
     <content mozType:deferredrefresh="true">
       <children includes="label"/>

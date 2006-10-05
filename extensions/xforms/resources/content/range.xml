@@ -41,41 +41,66 @@
 <bindings xmlns="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml">
 
-  <!-- RANGE: <NUMBER>
+  <!-- RANGE: BASE
     This binding is base for xforms range controls. It assumes successors
     bindings implement getElementControl() method that returns the object:
     {
-      get/set value(); // get/set "number" value
+      get/set value(); // get/set value
       set readonly(); // makes range disabled
-      get/set start(); // get/set @start attribute, type is "number"
-      get/set end(); // get/set @end attribute, type is "number"
-      get/set step(); // get/set @step attribute, type is "number"
+      get/set start(); // get/set @start attribute
+      get/set end(); // get/set @end attribute
+      get/set step(); // get/set @step attribute
       focus() // set the focus
+      set(); // set start, end, step, value
     }
+
+    Successor bindings should override isInRange and adjustRangeValues to do
+    what is appropriate for the particular datatype they use.
   -->
   <binding id="xformswidget-range-base"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
 
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          return Components.interfaces.nsIAccessibleProvider.XFormsRange;
-        </getter>
-      </property>
-
+    <implementation>
       <method name="refresh">
         <body>
         <![CDATA[
+          // The start/end/step attrs are all optional and if any are omitted
+          // we need to adjust their values.
+          this.adjustRangeValues(this.start, this.end, this.step);
+
+          // Start > End is an error.
+          if (this.start > this.end) {
+            this.delegate.reportError("rangeBeginEndError");
+            return;
+          }
+
           this.control.readonly = this.accessors.isReadonly();
 
-          var value = parseFloat(this.accessors.getValue());
-          if (!value)
-            return;
-
-          var inrange = this.start >= value && value <= this.end;
+          var value = this.accessors.getValue();
+          var inrange = this.isInRange(value);
           this.accessors.setInRange(inrange);
+
           this.control.set(this.start, this.end, this.step, value);
         ]]>
+        </body>
+      </method>
+
+      <!-- Determine whether or not the current value is between the start
+           and end values for the range so we can dispatch xforms-in-range
+           or xforms-out-of-range events.
+      -->
+      <method name="isInRange">
+        <body>
+          return true;
+        </body>
+      </method>
+
+       <!-- The start/end/step attrs are all optional and if any are omitted
+            we need to adjust their values.
+       -->
+      <method name="adjustRangeValues">
+        <body>
+          return true;
         </body>
       </method>
 
@@ -136,6 +161,120 @@
 
           if (!aIncremental || this.incremental)
             this.accessors.setValue(this.control.value);
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <!-- RANGE: <NUMBER>
+    This binding is base for xforms range controls with numeric types.
+    Successor bindings should implement a getElementControl() method
+    that returns numeric types.
+  -->
+  <binding id="xformswidget-range-numeric-base"
+           extends="chrome://xforms/content/range.xml#xformswidget-range-base">
+
+    <implementation implements="nsIAccessibleProvider">
+      <!-- Any range type that uses a slider widget as the element control
+        should return Components.interfaces.nsIAccessibleProvider.XFormsRange
+        as its accessible type.
+      -->
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsRange;
+        </getter>
+      </property>
+
+      <method name="isInRange">
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          var value = parseFloat(aValue);
+          if (isNaN(value))
+            return false;
+          return this.start >= value && value <= this.end;
+        ]]>
+        </body>
+      </method>
+
+      <!-- A range control with numeric types is currently implemented as a
+           slider and a slider with a large number of steps does not look
+           nice or perform very well; therefore, we limit the maximum number
+           of steps to a reasonable value of 20. The start/end/step values
+           will be adjusted accordingly if any are omitted.
+      -->
+      <method name="adjustRangeValues">
+        <parameter name="aStart"/>
+        <parameter name="aEnd"/>
+        <parameter name="aStep"/>
+        <body>
+          <![CDATA[
+          if (isNaN(aStep)) {
+            // Step is not specified and will depend on the values of start
+            // and end (which also may not be specified).
+            if (isNaN(aStart) && isNaN(aEnd)) {
+              // None of the range attributes are specified! Show a default
+              // slider with 20 steps.
+              this.start = 0;
+              this.end = 20;
+              this.step = 1;
+            } else if (!isNaN(aStart) && isNaN(aEnd)) {
+              // Start is specified but End is not. Set end to start + 20 with
+              // a default step of 1 to maintain our maximum range of 20 steps.
+              this.start = aStart;
+              this.end = this.start + 20;
+              this.step = 1;
+            } else if (isNaN(aStart) && !isNaN(aEnd)) {
+              // End is specified but Start is not. Use a default step of 1
+              // and adjust start to maintain the maximum range of 20 steps.
+              this.start = aEnd - 20;
+              this.end = aEnd;
+              this.step = 1;
+            } else {
+              // Both Start and End are specified.  Calculate a step value
+              // that will maintain our maximum range of 20 steps.
+              this.start = aStart;
+              this.end = aEnd;
+              this.step = Math.round((aEnd - aStart) / 20);
+            }
+          } else {
+            // Step is specified.  Adjust start and end to maintain our
+            // maximum range of 20 steps.
+            if (isNaN(aStart) && isNaN(aEnd)) {
+              // Neither Start nor End is specified. Calculate values for start
+              // and end such that the slider has a maximum of 20 steps of size
+              // aStep.
+              this.start = 0;
+              this.end = this.start + (aStep * 20);
+              this.step = aStep;
+            } else if (!isNaN(aStart) && isNaN(aEnd)) {
+              // Begin is specified but End is not. Adjust end such that we
+              // have 20 steps of size aStep between start and end.
+              this.start = aStart;
+              this.end = this.start + (aStep * 20);
+              this.step = aStep;
+            } else if (isNaN(aStart) && !isNaN(aEnd)) {
+              // End is specified but Start is not. Adjust start such that we
+              // have 20 steps of size aStep between start and end.
+              this.start = aEnd - (aStep * 20);
+              this.end = aEnd;
+              this.step = aStep;
+            } else {
+              // Both Start and End are specified, but the specified Step
+              // value may not be suitable for maintaining the maximum
+              // range of 20 steps.
+              if ((aEnd - aStart) / aStep > 20) {
+                // Honor the specified start and end values, but adjust
+                // the Step value.
+                this.step = Math.round((aEnd - aStart) / 20);
+              } else {
+                this.step = aStep;
+              }
+              this.start = aStart;
+              this.end = aEnd;
+            }
+          }
+          ]]>
         </body>
       </method>
     </implementation>
