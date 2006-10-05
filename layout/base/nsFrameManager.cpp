@@ -1346,6 +1346,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
     newContext->Release();
   }
 
+#ifdef ACCESSIBILITY
   if (isAccessibilityActive &&
       aFrame->GetStyleVisibility()->IsVisible() != isVisible) {
     // XXX Visibility does not affect descendents with visibility set
@@ -1360,6 +1361,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
                                                    nsIAccessibleEvent::EVENT_SHOW);
     }
   }
+#endif
 
   return aMinChange;
 }
