@@ -6,7 +6,7 @@
 <div class="front-section">
 <dl>
 <dt><img src="{$config.webpath}/search-engines-static/a9.png" alt=""/> <a href="javascript:addEngine('a9','png','General','0')">A9</a></dt><dd>Amazon's A9 search engine.</dd>
-<dt><img src="{$config.webpath}/search-engines-static/ask.gif" alt=""/> <a href="javascript:addEngine('ask','gif','General','0')">Ask.com</a></dt><dd>Better search results with keywords or questions.</dd>
+<dt><img src="{$config.webpath}/search-engines-static/ask.gif" alt=""/> <a href="javascript:addEngine('ask','gif','General','0')">Ask.com</a></dt><dd>Better tools get you better results.</dd>
 <dt><img src="{$config.webpath}/search-engines-static/bbcnews.png" alt=""/> <a href="javascript:addEngine('bbcnews','png','News','0')">BBC News</a></dt><dd>Search for the latest news on BBC.</dd>
 <dt><img src="{$config.webpath}/search-engines-static/businesscom.gif" alt=""/>
 <a href="javascript:addEngine('businesscom','gif','General','0')">Business.com</a></dt><dd>Find information to help manage and grow your business.</dd>
