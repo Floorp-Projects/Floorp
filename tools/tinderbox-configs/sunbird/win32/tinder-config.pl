@@ -55,7 +55,7 @@ $UseTimeStamp      = 0;      # Use the CVS 'pull-by-timestamp' option, or not
 #$TestOnly          = 0;      # Only run tests, don't pull/build
 #$BuildEmbed        = 0;      # After building seamonkey, go build embed app.
 #$SkipMozilla       = 0;      # Use to debug post-mozilla.pl scripts.
-$BuildLocales      = 1;      # Do l10n packaging?
+#$BuildLocales      = 1;      # Do l10n packaging?
 
 # Tests
 $CleanProfile             = 1;
@@ -193,6 +193,11 @@ $BuildLocalesArgs = "ZIP_IN=/cygdrive/d/builds/tinderbox/Sunbird-Trunk/WINNT_5.2
 #- Until you get the script working. When it works,
 #- change to the tree you're actually building
 $BuildTree  = 'Sunbird';
+
+#- If you're building locales and would like locale messages reported to a
+#- tree other than $BuildTree-ab-CD, define the tree here. -ab-CD will be
+#- appended for you.
+$LocaleTree = 'Mozilla-l10n';
 
 #$BuildName = '';
 $BuildTag = 'SUNBIRD_0_3_BRANCH';
