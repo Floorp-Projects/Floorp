@@ -47,6 +47,7 @@
 
 #include "PyXPCOM_std.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsILocalFile.h"
 #include "nsITimelineService.h"
 
@@ -131,7 +132,9 @@ void AddStandardPaths()
 	Py_XDECREF(newStr);
 	// And now try and get Python to process this directory as a "site dir" 
 	// - ie, look for .pth files, etc
-	nsCAutoString cmdBuf(NS_LITERAL_CSTRING("import site;site.addsitedir(r'") + pathCBuf + NS_LITERAL_CSTRING("')\n"));
+	nsCAutoString cmdBuf(NS_LITERAL_CSTRING("import site;site.addsitedir(r'"));
+	cmdBuf.Append(pathCBuf);
+	cmdBuf.Append(NS_LITERAL_CSTRING("')\n"));
 	if (0 != PyRun_SimpleString((char *)cmdBuf.get())) {
 		PyXPCOM_LogError("The directory '%s' could not be added as a site directory", pathCBuf.get());
 		PyErr_Clear();

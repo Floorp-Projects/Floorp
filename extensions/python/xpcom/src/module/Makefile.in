@@ -47,7 +47,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= _xpcom$(MOZ_PYTHON_DEBUG_SUFFIX)
 REQUIRES	= pyxpcom xpcom string $(NULL)
-MOZILLA_INTERNAL_API = 1
 FORCE_SHARED_LIB = 1 
 FORCE_USE_PIC = 1 
 
@@ -71,9 +70,14 @@ include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),Darwin)
 # Don't use the EXTRA_DSO_LDOPTS from rules.mk, it breaks the python module
-  EXTRA_DSO_LDOPTS = -bundle $(MOZ_COMPONENT_LIBS)
+  EXTRA_DSO_LDOPTS = -bundle $(MOZ_COMPONENT_LIBS) \
+                     $(XPCOM_GLUE_LDOPTS) \
+                     $(NULL)
+  
 else
-  EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
+  EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
+                      $(XPCOM_GLUE_LDOPTS) \
+                      $(NULL)
 endif
 IMPORT_LIBRARY		:= $(SHARED_LIBRARY:.pyd=.lib)
 

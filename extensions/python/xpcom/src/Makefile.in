@@ -48,9 +48,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= pyxpcom
 LIBRARY_NAME	= pyxpcom
-#MODULE_NAME	= 
 REQUIRES	= xpcom string $(NULL)
-MOZILLA_INTERNAL_API = 1
 FORCE_SHARED_LIB = 1 
 FORCE_USE_PIC = 1 
 
@@ -83,10 +81,14 @@ CPPSRCS= \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += -DPYTHON_SO=\"libpython$(MOZ_PYTHON_VER_DOTTED).so\"
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
+
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
+                    $(XPCOM_GLUE_LDOPTS) \
+                    $(NULL)
+
+include $(topsrcdir)/config/rules.mk
 
 clobber::
 	rm -f *.ilk *.pdb *.exp *.lib *.pyd

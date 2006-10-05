@@ -47,7 +47,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= pyloader
 IS_COMPONENT	= 1
 REQUIRES	= pyxpcom xpcom string xpcom_obsolete $(NULL)
-MOZILLA_INTERNAL_API = 1
 FORCE_SHARED_LIB = 1 
 FORCE_USE_PIC = 1
 
@@ -68,8 +67,11 @@ CPPSRCS		=		   \
 
 include $(topsrcdir)/config/config.mk
 
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
+                    $(XPCOM_GLUE_LDOPTS) \
+                    $(NULL)
+
 include $(topsrcdir)/config/rules.mk
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
 clobber::
 	rm -f *.ilk

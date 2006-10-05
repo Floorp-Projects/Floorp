@@ -42,8 +42,9 @@
 #include "nsIArray.h"
 #include "nsIAtom.h"
 #include "prtime.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsGUIEvent.h"
+#include "nsServiceManagerUtils.h"
 #include "nsDOMScriptObjectHolder.h"
 #include "nsIDOMDocument.h"
 
@@ -139,7 +140,7 @@ nsresult nsPythonContext::HandlePythonError()
     return NS_OK;
 
   nsScriptErrorEvent errorevent(PR_TRUE, NS_LOAD_ERROR);
-  nsAutoString strFilename;
+  nsString strFilename;
 
   PyObject *exc, *typ, *tb;
   PyErr_Fetch(&exc, &typ, &tb);
@@ -161,7 +162,7 @@ nsresult nsPythonContext::HandlePythonError()
       if (code) {
         PyObject *filename = PyObject_GetAttrString(code, "co_filename");
         if (filename && PyString_Check(filename)) {
-          CopyUTF8toUTF16(PyString_AsString(filename), strFilename);
+          CopyUTF8toUTF16(nsCString(PyString_AsString(filename)), strFilename);
           errorevent.fileName = strFilename.get();
         }
         Py_XDECREF(filename);

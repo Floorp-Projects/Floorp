@@ -52,6 +52,7 @@
 #include "nsIComponentRegistrar.h"
 #include "nsIConsoleService.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
 
 #include "nsILocalFile.h"
 #include "nsTraceRefcntImpl.h"
@@ -475,10 +476,10 @@ static PRBool EnsureXPCOM()
 {
 	static PRBool bHaveInitXPCOM = PR_FALSE;
 	if (!bHaveInitXPCOM) {
-		// xpcom appears to assert if already initialized
-		// Is there an official way to determine this?
-		// Been through lots of iterations - but getting the
-		// app directories appears to work.
+		// xpcom appears to assert if already initialized, but there
+		// is no official way to determine this!  Sadly though,
+		// apparently this problem is not real ;) See bug 38671.
+		// For now, getting the app directories appears to work.
 		nsCOMPtr<nsIFile> file;
 		if (NS_FAILED(NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(file)))) {
 			// not already initialized.
@@ -503,16 +504,7 @@ static PRBool EnsureXPCOM()
 
 			nsCOMPtr<nsILocalFile> ns_bin_dir;
 			NS_ConvertASCIItoUTF16 strLandmark(landmark);
-#ifdef NS_BUILD_REFCNT_LOGGING
-			// In an interesting chicken-and-egg problem, we
-			// throw assertions in creating the nsILocalFile
-			// we need to pass to InitXPCOM!
-			nsTraceRefcntImpl::SetActivityIsLegal(PR_TRUE);
-#endif
 			NS_NewLocalFile(strLandmark, PR_FALSE, getter_AddRefs(ns_bin_dir));
-#ifdef NS_BUILD_REFCNT_LOGGING
-			nsTraceRefcntImpl::SetActivityIsLegal(PR_FALSE);
-#endif
 			nsresult rv = NS_InitXPCOM2(nsnull, ns_bin_dir, nsnull);
 #else
 			// Elsewhere, Mozilla can find it itself (we hope!)

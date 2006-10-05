@@ -40,7 +40,7 @@
 
 #include "nsISupports.h"
 #include "nsIDOMClassInfo.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 
 #define NS_IDOM_SCRIPT_OBJECT_FACTORY_IID   \
   { /* {38EC7717-6CBE-44a8-B2BB-53F2BA998B31} */ \
