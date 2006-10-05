@@ -389,8 +389,16 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
     JS_PUSH_TEMP_ROOT_OBJECT(cx, obj, &tvr);
 
     atom = cx->runtime->atomState.iteratorAtom;
-    if (!JS_GetMethodById(cx, obj, ATOM_TO_JSID(atom), &obj, vp))
-        goto bad;
+#if JS_HAS_XML_SUPPORT
+    if (OBJECT_IS_XML(cx, obj)) {
+        if (!js_GetXMLFunction(cx, obj, ATOM_TO_JSID(atom), vp))
+            goto bad;
+    } else
+#endif
+    {
+        if (!OBJ_GET_PROPERTY(cx, obj, ATOM_TO_JSID(atom), vp))
+            goto bad;
+    }
 
     if (JSVAL_IS_VOID(*vp)) {
       default_iter:
@@ -411,7 +419,6 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
         if (!InitNativeIterator(cx, iterobj, obj, flags))
             goto bad;
     } else {
-        tvr.u.object = obj;
         arg = BOOLEAN_TO_JSVAL((flags & JSITER_FOREACH) == 0);
         if (!js_InternalInvoke(cx, obj, *vp, JSINVOKE_ITERATOR, 1, &arg, vp))
             goto bad;

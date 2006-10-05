@@ -292,6 +292,9 @@ extern JSBool
 js_GetXMLProperty(JSContext *cx, JSObject *obj, jsval name, jsval *vp);
 
 extern JSBool
+js_GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+
+extern JSBool
 js_SetXMLProperty(JSContext *cx, JSObject *obj, jsval name, jsval *vp);
 
 extern JSBool
