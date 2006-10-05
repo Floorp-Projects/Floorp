@@ -396,20 +396,6 @@ struct JSRuntime {
 #define JS_KEEP_ATOMS(rt)   JS_ATOMIC_INCREMENT(&(rt)->gcKeepAtoms);
 #define JS_UNKEEP_ATOMS(rt) JS_ATOMIC_DECREMENT(&(rt)->gcKeepAtoms);
 
-#if JS_HAS_LVALUE_RETURN
-/*
- * Values for the cx->rval2set flag byte.  This flag tells whether cx->rval2
- * is unset (CLEAR), set to a jsval (VALUE) naming a property in the object
- * referenced by cx->fp->rval, or set to a jsid (ITERKEY) result of a native
- * iterator's it.next() call (where the return value of it.next() is the next
- * value in the iteration).
- *
- * The ITERKEY case is just an optimization for native iterators, as general
- * iterators can return an array of length 2 to return a [key, value] pair.
- */
-enum { JS_RVAL2_CLEAR, JS_RVAL2_VALUE, JS_RVAL2_ITERKEY };
-#endif
-
 #ifdef JS_ARGUMENT_FORMATTER_DEFINED
 /*
  * Linked list mapping format strings for JS_{Convert,Push}Arguments{,VA} to
@@ -652,7 +638,7 @@ struct JSContext {
      * jsval by calling JS_SetCallReturnValue2(cx, idval).
      */
     jsval               rval2;
-    uint8               rval2set;
+    JSPackedBool        rval2set;
 #endif
 
 #if JS_HAS_XML_SUPPORT
@@ -703,9 +689,6 @@ struct JSContext {
 
     /* Stack of thread-stack-allocated temporary GC roots. */
     JSTempValueRooter   *tempValueRooters;
-
-    /* Iterator cache to speed up native default for-in loop case. */
-    JSObject            *cachedIterObj;
 
 #ifdef GC_MARK_DEBUG
     /* Top of the GC mark stack. */
