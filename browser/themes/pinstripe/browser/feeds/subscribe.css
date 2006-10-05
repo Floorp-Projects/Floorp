@@ -10,7 +10,6 @@ html {
 
 #feedBody, #feedError {
   border: 1px solid THreeDShadow;
-  -moz-border-radius: 10px;
   padding: 3em;
   -moz-padding-start: 30px;
   margin: 2em auto;
